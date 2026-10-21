@@ -11,6 +11,7 @@ import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { App, Chart } from "cdk8s";
 import { createAppsApp } from "./resources/argo-applications/platform/apps.ts";
+import { dormantCharts } from "./resources/companions/dormant.ts";
 
 /**
  * Helm Template Rendering Tests
@@ -494,7 +495,8 @@ describe("Helm Escaping - helm template (dist/)", () => {
       const glob = new Glob("*/Chart.yaml");
       const chartNames: string[] = [];
       for await (const entry of glob.scan(HELM_DIR)) {
-        chartNames.push(path.dirname(entry));
+        const name = path.dirname(entry);
+        if (!dormantCharts().has(name)) chartNames.push(name);
       }
 
       const results = await Promise.all(

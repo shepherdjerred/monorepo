@@ -1,7 +1,5 @@
 import { beforeAll, describe, expect, test, vi } from "vitest";
-import { App } from "cdk8s";
 import { z } from "zod";
-import { setupCharts } from "@shepherdjerred/homelab/cdk8s/src/setup-charts.ts";
 import type * as ReleaseConfiguration from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import {
   BASELINE_CHART_APPLICATIONS,
@@ -9,8 +7,16 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/resources/cluster-baseline/charts.ts";
 import {
   COMPANION_APPLICATIONS,
+  COMPANION_CHARTS,
   companionChartName,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/companions/names.ts";
+import { dormantCharts } from "@shepherdjerred/homelab/cdk8s/src/resources/companions/dormant.ts";
+import {
+  chartObjectsOf,
+  objectIdentity as identity,
+  type SynthesizedObject,
+  synthesizedCharts,
+} from "@shepherdjerred/homelab/cdk8s/src/testing/synthesized-charts.ts";
 
 /**
  * The window turns transition rendering on; this renders that state and
@@ -25,44 +31,19 @@ vi.mock(
   }),
 );
 
-const ManifestSchema = z.looseObject({
-  apiVersion: z.string(),
-  kind: z.string(),
-  metadata: z.looseObject({
-    name: z.string(),
-    namespace: z.string().optional(),
-  }),
-  spec: z.unknown().optional(),
-});
-type Manifest = z.infer<typeof ManifestSchema>;
 const ApplicationSchema = z.object({
   kind: z.literal("Application"),
   metadata: z.object({ name: z.string() }),
   spec: z.object({ destination: z.object({ namespace: z.string() }) }),
 });
 
-function identity(manifest: Manifest): string {
-  return `${manifest.apiVersion}/${manifest.kind}/${manifest.metadata.namespace ?? ""}/${manifest.metadata.name}`;
-}
-
-let charts: Map<string, Manifest[]>;
+let charts: ReadonlyMap<string, SynthesizedObject[]>;
 beforeAll(async () => {
-  const app = new App({ outdir: ".test-synth-companions" });
-  await setupCharts(app);
-  // Compare the objects as synthesis publishes them, lazily built specs included.
-  app.synthYaml();
-  charts = new Map(
-    app.charts.map((chart) => [
-      chart.node.id,
-      z.array(ManifestSchema).parse(chart.toJson()),
-    ]),
-  );
+  charts = await synthesizedCharts();
 });
 
-function chartObjects(id: string): Manifest[] {
-  const objects = charts.get(id);
-  if (objects === undefined) throw new Error(`Chart ${id} was not rendered`);
-  return objects;
+function chartObjects(id: string): SynthesizedObject[] {
+  return chartObjectsOf(charts, id);
 }
 
 describe("companion charts under transition rendering", () => {
@@ -118,6 +99,18 @@ describe("companion charts under transition rendering", () => {
       .map((manifest) => identity(manifest))
       .filter((key) => !owned.has(key));
     expect(orphaned).toEqual([]);
+  });
+
+  test("each companion has a Helm shell that is dormant only while the switch is off", async () => {
+    expect(dormantCharts(true)).toEqual(new Set());
+    expect(dormantCharts(false)).toEqual(COMPANION_CHARTS);
+    for (const application of COMPANION_APPLICATIONS) {
+      const name = companionChartName(application);
+      const shell = await Bun.file(
+        new URL(`../../../helm/${name}/Chart.yaml`, import.meta.url),
+      ).text();
+      expect(shell, name).toContain(`name: ${name}\n`);
+    }
   });
 
   test("companions own disjoint objects", () => {

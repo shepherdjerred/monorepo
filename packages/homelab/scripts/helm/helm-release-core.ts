@@ -323,11 +323,14 @@ export function verifyArchiveDigest(
 export async function discoverChartInputs(
   helmDirectory: string,
   synthDirectory: string,
+  /** Shells synthesis does not render yet (`dormantCharts()`); the Temporal image imports this module without the cdk8s source. */
+  dormant: ReadonlySet<string> = new Set(),
 ): Promise<ChartInput[]> {
   const chartNames: string[] = [];
   const chartGlob = new Glob("*/Chart.yaml");
   for await (const chartYamlPath of chartGlob.scan(helmDirectory)) {
-    chartNames.push(path.dirname(chartYamlPath));
+    const name = path.dirname(chartYamlPath);
+    if (!dormant.has(name)) chartNames.push(name);
   }
   chartNames.sort();
 

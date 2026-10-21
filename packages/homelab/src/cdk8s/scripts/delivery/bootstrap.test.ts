@@ -20,6 +20,7 @@ import {
 import { bootstrapOperationReceipt } from "homelab/scripts/ci/bootstrap-native.ts";
 import { bootstrapCredentials } from "homelab/scripts/ci/bootstrap-auth.ts";
 import { setupCharts } from "@shepherdjerred/homelab/cdk8s/src/setup-charts.ts";
+import { dormantCharts } from "@shepherdjerred/homelab/cdk8s/src/resources/companions/dormant.ts";
 import {
   discoverChartInputs,
   fingerprintChart,
@@ -110,6 +111,7 @@ test("actual BOTH bootstrap stages and Helm renders reviewed images while retain
     const inputs = await discoverChartInputs(
       new URL("../../helm", import.meta.url).pathname,
       output,
+      dormantCharts(),
     );
     const manifests = new Map(
       await Promise.all(
@@ -281,6 +283,7 @@ test("normal all-chart publication discovers and packages the actual control-pla
     const inputs = await discoverChartInputs(
       new URL("../../helm", import.meta.url).pathname,
       output,
+      dormantCharts(),
     );
     const controller = inputs.find(
       (input) => input.name === "delivery-control-plane",

@@ -41,15 +41,14 @@ import {
 import {
   assertReleaseNotStale,
   activeArgoRepositoryChartNames,
-  discoverChartInputs,
   planCharts,
   plannedChartRevision,
   releasePrunesChart,
   type ChartInput,
   type HelmReleasePlan,
 } from "./helm-release-core.ts";
+import { repositoryChartInputs } from "./repository-chart-inputs.ts";
 
-const HELM_DIRECTORY = "src/cdk8s/helm";
 const SYNTH_DIRECTORY = "src/cdk8s/dist";
 
 type StagedChart = {
@@ -386,10 +385,7 @@ async function synthesizeCharts(
     path.join(root, SYNTH_DIRECTORY),
     imageInputs,
   );
-  return discoverChartInputs(
-    path.join(root, HELM_DIRECTORY),
-    path.join(root, SYNTH_DIRECTORY),
-  );
+  return repositoryChartInputs(root);
 }
 
 async function main(): Promise<void> {

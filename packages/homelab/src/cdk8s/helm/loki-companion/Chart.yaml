@@ -1,0 +1,6 @@
+apiVersion: v2
+name: loki-companion
+description: Objects the loki Application renders into the root chart, owned by its service from the v2 cutover
+type: application
+version: "$version"
+appVersion: "$appVersion"
