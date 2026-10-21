@@ -1,0 +1,63 @@
+{
+  "id": "storm-forum/2",
+  "definition": {
+    "kind": "kubernetes-application",
+    "application": {
+      "name": "storm-forum",
+      "metadata": {
+        "labels": { "ci.sjer.red/managed-application": "true" },
+        "annotations": {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+          "ci.sjer.red/application-lifecycle": "retain"
+        },
+        "finalizers": []
+      },
+      "project": "workloads",
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "storm-forum"
+      },
+      "source": {
+        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "chart": "storm-forum"
+      },
+      "syncOptions": ["CreateNamespace=true", "RespectIgnoreDifferences=true"],
+      "ignoreDifferences": [
+        {
+          "group": "batch",
+          "kind": "Job",
+          "namespace": "storm-forum",
+          "jsonPointers": ["/spec/template"]
+        }
+      ],
+      "revisionHistoryLimit": 5,
+      "lifecycle": "retain"
+    },
+    "chartComponent": "chart:storm-forum",
+    "artifactParameters": { "delivery.image": "image:storm-forum" },
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "apply-safety",
+        "instance": "application:storm-forum",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "sync",
+        "instance": "application:storm-forum",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "forum-bundle",
+        "instance": "application:storm-forum",
+        "pointOfNoReturn": true,
+        "imageComponent": "image:storm-forum",
+        "bundleComponent": "archive:forum-bundle"
+      }
+    ],
+    "oracle": {
+      "probes": [{ "url": "https://ts-mc.net/readyz", "expectedStatus": 200 }],
+      "tests": []
+    }
+  }
+}

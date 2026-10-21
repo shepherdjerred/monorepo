@@ -1,0 +1,16 @@
+{
+  "id": "better-skill-capped/prod/1",
+  "definition": {
+    "archiveComponent": "archive:better-skill-capped",
+    "bucket": "better-skill-capped",
+    "immutablePrefixes": ["assets/"],
+    "extraExcludes": ["data/*"],
+    "entrypoints": ["index.html"],
+    "verification": {
+      "url": "https://better-skill-capped.com/",
+      "expectedStatus": 200
+    },
+    "cloudflareZoneId": "3584931497b83f9359a3cc2983cc5cb4",
+    "kind": "static-site"
+  }
+}

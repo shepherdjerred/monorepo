@@ -1,0 +1,26 @@
+{
+  "id": "tofu-google/prod/1",
+  "definition": {
+    "kind": "operator-run",
+    "wrapped": {
+      "kind": "tofu",
+      "stack": "google",
+      "archiveComponent": "archive:tofu-google",
+      "runner": { "service": "ci", "component": "image:ci-base" },
+      "steps": [
+        {
+          "kind": "plan",
+          "instance": "stack:google",
+          "pointOfNoReturn": false
+        },
+        {
+          "kind": "apply",
+          "instance": "stack:google",
+          "pointOfNoReturn": false
+        }
+      ],
+      "sharedLock": "platform"
+    },
+    "stages": ["plan", "apply"]
+  }
+}

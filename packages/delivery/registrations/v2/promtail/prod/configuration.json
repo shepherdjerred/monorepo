@@ -1,0 +1,7 @@
+{
+  "id": "promtail/prod/1",
+  "content": {
+    "helm.valuesObject": "{\"config\":{\"clients\":[{\"url\":\"http://loki-gateway.loki/loki/api/v1/push\"}]},\"resources\":{\"requests\":{\"cpu\":\"100m\",\"memory\":\"256Mi\"}},\"tolerations\":[{\"effect\":\"NoSchedule\",\"key\":\"ci\",\"operator\":\"Equal\",\"value\":\"only\"}]}"
+  },
+  "forwardOnly": []
+}

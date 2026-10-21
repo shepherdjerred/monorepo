@@ -1,0 +1,105 @@
+{
+  "id": "scout-prod/2",
+  "definition": {
+    "kind": "kubernetes-application",
+    "application": {
+      "name": "scout-prod",
+      "metadata": {
+        "labels": { "ci.sjer.red/managed-application": "true" },
+        "annotations": {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+          "ci.sjer.red/application-lifecycle": "retain"
+        },
+        "finalizers": []
+      },
+      "project": "workloads",
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "scout-prod"
+      },
+      "source": {
+        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "chart": "scout-prod"
+      },
+      "syncOptions": ["CreateNamespace=true"],
+      "ignoreDifferences": [],
+      "revisionHistoryLimit": 5,
+      "lifecycle": "retain"
+    },
+    "chartComponent": "chart:scout-prod",
+    "artifactParameters": {
+      "delivery.images.scout-for-lol": "image:scout-for-lol"
+    },
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "apply-safety",
+        "instance": "application:scout-prod",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "sync",
+        "instance": "application:scout-prod",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "worker-rollout",
+        "instance": "worker-pool:scout-prod",
+        "pointOfNoReturn": false,
+        "target": "scout-prod",
+        "imageComponent": "image:scout-for-lol"
+      },
+      {
+        "kind": "static-site",
+        "instance": "bucket:scout-frontend",
+        "pointOfNoReturn": false,
+        "policy": {
+          "archiveComponent": "archive:scout-frontend",
+          "bucket": "scout-frontend",
+          "immutablePrefixes": [
+            "_astro/",
+            "app/assets/",
+            "docs/_astro/",
+            "assets/scout/game/"
+          ],
+          "extraExcludes": [".release-version"],
+          "entrypoints": [
+            "index.html",
+            "app/index.html",
+            "docs/index.html",
+            "404.html"
+          ],
+          "verification": {
+            "url": "https://scout-for-lol.com/",
+            "expectedStatus": 200
+          },
+          "cloudflareZoneId": "bc4593740e6621ab2e64799c63441bfd"
+        }
+      }
+    ],
+    "oracle": {
+      "probes": [],
+      "tests": [],
+      "monitor": {
+        "component": "image:scout-for-lol",
+        "alarms": {
+          "matchers": { "alertname": "~Scout.*", "environment": "prod" },
+          "severities": ["warning", "critical"]
+        },
+        "evidence": [
+          {
+            "key": "matches-processed",
+            "query": "sum(increase(scout_durable_receipts_recorded_total{environment=\"prod\",git_sha=\"$gitSha\",outcome=\"applied\"}[$window]))",
+            "threshold": 50
+          },
+          {
+            "key": "discord-interactions",
+            "query": "sum(increase(discord_commands_total{environment=\"prod\",git_sha=\"$gitSha\"}[$window]))",
+            "threshold": 20
+          }
+        ],
+        "policy": "automatic"
+      }
+    }
+  }
+}

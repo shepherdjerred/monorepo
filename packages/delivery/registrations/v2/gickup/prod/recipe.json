@@ -1,0 +1,46 @@
+{
+  "id": "gickup/prod/1",
+  "definition": {
+    "kind": "kubernetes-application",
+    "application": {
+      "name": "gickup",
+      "metadata": {
+        "labels": { "ci.sjer.red/managed-application": "true" },
+        "annotations": {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+          "ci.sjer.red/application-lifecycle": "retain"
+        },
+        "finalizers": []
+      },
+      "project": "workloads",
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "gickup"
+      },
+      "source": {
+        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "chart": "gickup"
+      },
+      "syncOptions": [],
+      "ignoreDifferences": [],
+      "revisionHistoryLimit": 5,
+      "lifecycle": "retain"
+    },
+    "chartComponent": "chart:gickup",
+    "artifactParameters": {},
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "apply-safety",
+        "instance": "application:gickup",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "sync",
+        "instance": "application:gickup",
+        "pointOfNoReturn": false
+      }
+    ],
+    "oracle": { "probes": [], "tests": [] }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "id": "ddns/prod/1",
+  "definition": {
+    "kind": "kubernetes-application",
+    "application": {
+      "name": "ddns",
+      "metadata": {
+        "labels": { "ci.sjer.red/managed-application": "true" },
+        "annotations": {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+          "ci.sjer.red/application-lifecycle": "retain"
+        },
+        "finalizers": []
+      },
+      "project": "workloads",
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "ddns"
+      },
+      "source": {
+        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "chart": "ddns"
+      },
+      "syncOptions": ["CreateNamespace=true"],
+      "ignoreDifferences": [],
+      "revisionHistoryLimit": 5,
+      "lifecycle": "retain"
+    },
+    "chartComponent": "chart:ddns",
+    "artifactParameters": {},
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "apply-safety",
+        "instance": "application:ddns",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "sync",
+        "instance": "application:ddns",
+        "pointOfNoReturn": false
+      }
+    ],
+    "oracle": { "probes": [], "tests": [] }
+  }
+}

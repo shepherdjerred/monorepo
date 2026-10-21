@@ -293,6 +293,14 @@ components, execution adapter, verification and approval policy. The homelab's
 these release boundaries. Infrastructure remains subject to `release-root`'s
 guarded orchestration.
 
+The Delivery model's catalog (`packages/ops-model/catalog-document.json`)
+replaces these definitions at the cutover window. Its recipe and
+configuration revisions are the generated files under
+[`registrations/v2`](registrations/v2), one directory per environment; the
+homelab generator writes them from the Application constructors and its
+agreement test keeps them equal. They take new revision ids, so the v1
+definitions stay registered and readable.
+
 Registration does not transfer ownership. The reviewed service catalog's
 `deliveryDelegations` map controls the Argo Application ownership boundary.
 The retired pin writer has no deployment or Git mutation implementation.

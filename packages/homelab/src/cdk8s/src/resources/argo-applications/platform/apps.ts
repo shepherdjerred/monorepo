@@ -3,6 +3,21 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import { DELIVERY_ROOT_IGNORE_EXPRESSIONS } from "homelab/src/delivery-ownership.ts";
 import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
+/** Fields the Cloudflare operator defaults on every TunnelBinding after apply. */
+export const TUNNEL_BINDING_IGNORE_DIFFERENCES = {
+  group: "networking.cfargotunnel.com",
+  kind: "TunnelBinding",
+  jqPathExpressions: [
+    ".subjects[].kind",
+    ".subjects[].spec.http2Origin",
+    ".subjects[].spec.noTlsVerify",
+    ".subjects[].spec.proxyAddress",
+    ".subjects[].spec.proxyPort",
+    ".subjects[].spec.proxyType",
+    ".tunnelRef.disableDNSUpdates",
+  ],
+};
+
 export function createAppsApp(chart: Chart) {
   return new Application(chart, "apps-app", {
     metadata: {
@@ -30,19 +45,7 @@ export function createAppsApp(chart: Chart) {
           kind: "Application",
           jqPathExpressions: DELIVERY_ROOT_IGNORE_EXPRESSIONS,
         },
-        {
-          group: "networking.cfargotunnel.com",
-          kind: "TunnelBinding",
-          jqPathExpressions: [
-            ".subjects[].kind",
-            ".subjects[].spec.http2Origin",
-            ".subjects[].spec.noTlsVerify",
-            ".subjects[].spec.proxyAddress",
-            ".subjects[].spec.proxyPort",
-            ".subjects[].spec.proxyType",
-            ".tunnelRef.disableDNSUpdates",
-          ],
-        },
+        TUNNEL_BINDING_IGNORE_DIFFERENCES,
       ],
       syncPolicy: {
         automated: { enabled: true },

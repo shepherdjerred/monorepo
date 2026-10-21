@@ -1,0 +1,7 @@
+{
+  "id": "mc-router/prod/1",
+  "content": {
+    "helm.valuesObject": "{\"image\":{\"pullPolicy\":\"IfNotPresent\"},\"minecraftRouter\":{\"autoScale\":{\"down\":{\"after\":\"10m\",\"enabled\":true},\"up\":{\"enabled\":true}},\"connectionRateLimit\":10,\"metrics\":{\"backend\":\"prometheus\"},\"useProxyProtocol\":true},\"resources\":{\"limits\":{\"memory\":\"128Mi\"},\"requests\":{\"cpu\":\"50m\",\"memory\":\"64Mi\"}},\"services\":{\"extraServiceSpec\":{\"externalTrafficPolicy\":\"Local\"},\"minecraft\":{\"nodePort\":30000,\"port\":25565,\"type\":\"NodePort\"}}}"
+  },
+  "forwardOnly": []
+}

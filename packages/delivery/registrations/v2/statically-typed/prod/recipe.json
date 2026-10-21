@@ -1,0 +1,16 @@
+{
+  "id": "statically-typed/prod/1",
+  "definition": {
+    "archiveComponent": "archive:statically-typed",
+    "bucket": "statically-typed",
+    "immutablePrefixes": [],
+    "extraExcludes": [],
+    "entrypoints": ["index.html"],
+    "verification": {
+      "url": "https://statically-typed.com/",
+      "expectedStatus": 200
+    },
+    "cloudflareZoneId": "d4036b55fca60ca5f998866309e951d8",
+    "kind": "static-site"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "id": "postgres-operator/prod/1",
+  "definition": {
+    "kind": "kubernetes-application",
+    "application": {
+      "name": "postgres-operator",
+      "metadata": {
+        "labels": { "ci.sjer.red/managed-application": "true" },
+        "annotations": {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+          "ci.sjer.red/application-lifecycle": "retain"
+        },
+        "finalizers": []
+      },
+      "project": "cluster",
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "postgres-operator"
+      },
+      "source": {
+        "repoURL": "https://opensource.zalando.com/postgres-operator/charts/postgres-operator",
+        "chart": "postgres-operator"
+      },
+      "syncOptions": ["CreateNamespace=true"],
+      "ignoreDifferences": [
+        {
+          "group": "apiextensions.k8s.io",
+          "kind": "CustomResourceDefinition",
+          "jsonPointers": ["/status", "/spec/versions/0/schema/openAPIV3Schema"]
+        },
+        {
+          "group": "acid.zalan.do",
+          "kind": "OperatorConfiguration",
+          "jsonPointers": [
+            "/status",
+            "/configuration/enable_cross_namespace_secret"
+          ]
+        }
+      ],
+      "revisionHistoryLimit": 5,
+      "lifecycle": "retain"
+    },
+    "chartComponent": "chart:postgres-operator",
+    "artifactParameters": {},
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "apply-safety",
+        "instance": "application:postgres-operator",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "sync",
+        "instance": "application:postgres-operator",
+        "pointOfNoReturn": false
+      }
+    ],
+    "oracle": { "probes": [], "tests": [] }
+  }
+}

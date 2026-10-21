@@ -1,0 +1,46 @@
+{
+  "id": "promtail/prod/1",
+  "definition": {
+    "kind": "kubernetes-application",
+    "application": {
+      "name": "promtail",
+      "metadata": {
+        "labels": { "ci.sjer.red/managed-application": "true" },
+        "annotations": {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+          "ci.sjer.red/application-lifecycle": "retain"
+        },
+        "finalizers": []
+      },
+      "project": "cluster",
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "promtail"
+      },
+      "source": {
+        "repoURL": "https://grafana.github.io/helm-charts",
+        "chart": "promtail"
+      },
+      "syncOptions": ["CreateNamespace=true"],
+      "ignoreDifferences": [],
+      "revisionHistoryLimit": 5,
+      "lifecycle": "retain"
+    },
+    "chartComponent": "chart:promtail",
+    "artifactParameters": {},
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "apply-safety",
+        "instance": "application:promtail",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "sync",
+        "instance": "application:promtail",
+        "pointOfNoReturn": false
+      }
+    ],
+    "oracle": { "probes": [], "tests": [] }
+  }
+}

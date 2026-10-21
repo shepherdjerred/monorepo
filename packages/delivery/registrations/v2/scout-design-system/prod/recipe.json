@@ -1,0 +1,16 @@
+{
+  "id": "scout-design-system/prod/1",
+  "definition": {
+    "archiveComponent": "archive:scout-design-system",
+    "bucket": "scout-design-system",
+    "immutablePrefixes": [],
+    "extraExcludes": [],
+    "entrypoints": ["index.html"],
+    "verification": {
+      "url": "https://design.scout-for-lol.com/",
+      "expectedStatus": 200
+    },
+    "cloudflareZoneId": "bc4593740e6621ab2e64799c63441bfd",
+    "kind": "static-site"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "id": "tofu-github/prod/1",
+  "definition": {
+    "kind": "tofu",
+    "stack": "github",
+    "archiveComponent": "archive:tofu-github",
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      { "kind": "plan", "instance": "stack:github", "pointOfNoReturn": false },
+      { "kind": "apply", "instance": "stack:github", "pointOfNoReturn": false }
+    ],
+    "sharedLock": "platform"
+  }
+}

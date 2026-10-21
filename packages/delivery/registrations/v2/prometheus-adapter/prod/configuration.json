@@ -1,0 +1,7 @@
+{
+  "id": "prometheus-adapter/prod/1",
+  "content": {
+    "helm.valuesObject": "{\"prometheus\":{\"path\":\"\",\"port\":9090,\"url\":\"http://prometheus-kube-prometheus-prometheus.prometheus.svc\"},\"replicas\":1,\"resources\":{\"requests\":{\"cpu\":\"20m\",\"memory\":\"128Mi\"}},\"rules\":{\"custom\":[],\"default\":false,\"external\":[],\"resource\":{\"cpu\":{\"containerLabel\":\"container\",\"containerQuery\":\"sum by (<<.GroupBy>>) (\\n  rate(container_cpu_usage_seconds_total{container!=\\\"\\\",<<.LabelMatchers>>}[3m])\\n)\",\"nodeQuery\":\"sum by (<<.GroupBy>>) (\\n  rate(node_cpu_seconds_total{mode!=\\\"idle\\\",mode!=\\\"iowait\\\",mode!=\\\"steal\\\",<<.LabelMatchers>>}[3m])\\n)\",\"resources\":{\"overrides\":{\"namespace\":{\"resource\":\"namespace\"},\"node\":{\"resource\":\"node\"},\"pod\":{\"resource\":\"pod\"}}}},\"memory\":{\"containerLabel\":\"container\",\"containerQuery\":\"sum by (<<.GroupBy>>) (\\n  avg_over_time(container_memory_working_set_bytes{container!=\\\"\\\",<<.LabelMatchers>>}[3m])\\n)\",\"nodeQuery\":\"sum by (<<.GroupBy>>) (\\n  avg_over_time(node_memory_MemTotal_bytes{<<.LabelMatchers>>}[3m])\\n  -\\n  avg_over_time(node_memory_MemAvailable_bytes{<<.LabelMatchers>>}[3m])\\n)\",\"resources\":{\"overrides\":{\"namespace\":{\"resource\":\"namespace\"},\"node\":{\"resource\":\"node\"},\"pod\":{\"resource\":\"pod\"}}}},\"window\":\"3m\"}}}"
+  },
+  "forwardOnly": []
+}

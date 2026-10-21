@@ -1,0 +1,49 @@
+{
+  "id": "delivery-control-plane/2",
+  "definition": {
+    "kind": "kubernetes-application",
+    "application": {
+      "name": "delivery-control-plane",
+      "metadata": {
+        "labels": { "ci.sjer.red/managed-application": "true" },
+        "annotations": {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+          "ci.sjer.red/application-lifecycle": "retain"
+        },
+        "finalizers": []
+      },
+      "project": "cluster",
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "temporal"
+      },
+      "source": {
+        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "chart": "delivery-control-plane"
+      },
+      "syncOptions": ["CreateNamespace=true"],
+      "ignoreDifferences": [],
+      "revisionHistoryLimit": 5,
+      "lifecycle": "retain"
+    },
+    "chartComponent": "chart:delivery-control-plane",
+    "artifactParameters": {
+      "delivery.images.delivery-control-plane": "image:temporal-worker"
+    },
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "apply-safety",
+        "instance": "application:delivery-control-plane",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "sync",
+        "instance": "application:delivery-control-plane",
+        "pointOfNoReturn": false
+      }
+    ],
+    "sharedLock": "platform",
+    "oracle": { "probes": [], "tests": [] }
+  }
+}

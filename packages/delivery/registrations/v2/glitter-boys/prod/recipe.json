@@ -1,0 +1,16 @@
+{
+  "id": "glitter-boys/prod/1",
+  "definition": {
+    "archiveComponent": "archive:glitter-boys",
+    "bucket": "glitter-boys",
+    "immutablePrefixes": ["_astro/"],
+    "extraExcludes": ["launcher/*"],
+    "entrypoints": ["index.html"],
+    "verification": {
+      "url": "https://glitter-boys.com/",
+      "expectedStatus": 200
+    },
+    "cloudflareZoneId": "ec9aaac18b0aae64b456e54773d11e66",
+    "kind": "static-site"
+  }
+}

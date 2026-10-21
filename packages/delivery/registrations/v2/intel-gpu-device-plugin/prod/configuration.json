@@ -1,0 +1,7 @@
+{
+  "id": "intel-gpu-device-plugin/prod/1",
+  "content": {
+    "helm.valuesObject": "{\"nodeFeatureRule\":true,\"resourceManager\":false,\"sharedDevNum\":10}"
+  },
+  "forwardOnly": []
+}

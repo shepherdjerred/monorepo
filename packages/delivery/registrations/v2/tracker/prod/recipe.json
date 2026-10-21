@@ -1,0 +1,54 @@
+{
+  "id": "tracker/prod/2",
+  "definition": {
+    "kind": "kubernetes-application",
+    "application": {
+      "name": "tracker",
+      "metadata": {
+        "labels": { "ci.sjer.red/managed-application": "true" },
+        "annotations": {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+          "ci.sjer.red/application-lifecycle": "retain"
+        },
+        "finalizers": []
+      },
+      "project": "workloads",
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "tracker"
+      },
+      "source": {
+        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "chart": "tracker"
+      },
+      "syncOptions": ["CreateNamespace=true"],
+      "ignoreDifferences": [],
+      "revisionHistoryLimit": 5,
+      "lifecycle": "retain"
+    },
+    "chartComponent": "chart:tracker",
+    "artifactParameters": { "delivery.images.tracker": "image:tracker" },
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "apply-safety",
+        "instance": "application:tracker",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "sync",
+        "instance": "application:tracker",
+        "pointOfNoReturn": false
+      }
+    ],
+    "oracle": {
+      "probes": [
+        {
+          "url": "https://tracker.tailnet-1a49.ts.net/readyz",
+          "expectedStatus": 200
+        }
+      ],
+      "tests": []
+    }
+  }
+}

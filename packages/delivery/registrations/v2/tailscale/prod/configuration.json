@@ -1,0 +1,7 @@
+{
+  "id": "tailscale/prod/1",
+  "content": {
+    "helm.valuesObject": "{\"operatorConfig\":{\"resources\":{\"requests\":{\"cpu\":\"50m\",\"memory\":\"128Mi\"}}},\"proxyConfig\":{\"defaultProxyClass\":\"standard\"}}"
+  },
+  "forwardOnly": []
+}

@@ -1,0 +1,49 @@
+{
+  "id": "woodpecker/prod/1",
+  "definition": {
+    "kind": "kubernetes-application",
+    "application": {
+      "name": "woodpecker",
+      "metadata": {
+        "labels": { "ci.sjer.red/managed-application": "true" },
+        "annotations": {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+          "ci.sjer.red/application-lifecycle": "retain"
+        },
+        "finalizers": []
+      },
+      "project": "workloads",
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "woodpecker"
+      },
+      "source": {
+        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "chart": "woodpecker"
+      },
+      "syncOptions": ["CreateNamespace=true", "ServerSideApply=true"],
+      "ignoreDifferences": [],
+      "revisionHistoryLimit": 5,
+      "lifecycle": "retain"
+    },
+    "chartComponent": "chart:woodpecker",
+    "artifactParameters": {
+      "delivery.dependencies.woodpecker-config-extension": "image:woodpecker-config-extension",
+      "delivery.dependencies.temporal-worker": "image:temporal-worker"
+    },
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "apply-safety",
+        "instance": "application:woodpecker",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "sync",
+        "instance": "application:woodpecker",
+        "pointOfNoReturn": false
+      }
+    ],
+    "oracle": { "probes": [], "tests": [] }
+  }
+}

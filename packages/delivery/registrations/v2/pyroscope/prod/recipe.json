@@ -1,0 +1,131 @@
+{
+  "id": "pyroscope/prod/1",
+  "definition": {
+    "kind": "compound",
+    "subRecipes": [
+      {
+        "instance": "application:pyroscope-companion",
+        "pointOfNoReturn": false,
+        "definition": {
+          "kind": "kubernetes-application",
+          "application": {
+            "name": "pyroscope-companion",
+            "metadata": {
+              "labels": { "ci.sjer.red/managed-application": "true" },
+              "annotations": {
+                "argocd.argoproj.io/sync-options": "Prune=false",
+                "ci.sjer.red/application-lifecycle": "retain"
+              },
+              "finalizers": []
+            },
+            "project": "workloads",
+            "destination": {
+              "server": "https://kubernetes.default.svc",
+              "namespace": "pyroscope"
+            },
+            "source": {
+              "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+              "chart": "pyroscope-companion"
+            },
+            "syncOptions": [
+              "ServerSideApply=true",
+              "RespectIgnoreDifferences=true"
+            ],
+            "ignoreDifferences": [
+              {
+                "group": "networking.cfargotunnel.com",
+                "kind": "TunnelBinding",
+                "jqPathExpressions": [
+                  ".subjects[].kind",
+                  ".subjects[].spec.http2Origin",
+                  ".subjects[].spec.noTlsVerify",
+                  ".subjects[].spec.proxyAddress",
+                  ".subjects[].spec.proxyPort",
+                  ".subjects[].spec.proxyType",
+                  ".tunnelRef.disableDNSUpdates"
+                ]
+              }
+            ],
+            "revisionHistoryLimit": 5,
+            "lifecycle": "retain"
+          },
+          "chartComponent": "chart:pyroscope-companion",
+          "artifactParameters": {},
+          "runner": { "service": "ci", "component": "image:ci-base" },
+          "steps": [
+            {
+              "kind": "apply-safety",
+              "instance": "application:pyroscope-companion",
+              "pointOfNoReturn": false
+            },
+            {
+              "kind": "sync",
+              "instance": "application:pyroscope-companion",
+              "pointOfNoReturn": false
+            }
+          ],
+          "oracle": { "probes": [], "tests": [] }
+        }
+      },
+      {
+        "instance": "application:pyroscope",
+        "pointOfNoReturn": false,
+        "definition": {
+          "kind": "kubernetes-application",
+          "application": {
+            "name": "pyroscope",
+            "metadata": {
+              "labels": { "ci.sjer.red/managed-application": "true" },
+              "annotations": {
+                "argocd.argoproj.io/sync-options": "Prune=false",
+                "ci.sjer.red/application-lifecycle": "retain"
+              },
+              "finalizers": []
+            },
+            "project": "workloads",
+            "destination": {
+              "server": "https://kubernetes.default.svc",
+              "namespace": "pyroscope"
+            },
+            "source": {
+              "repoURL": "https://grafana.github.io/helm-charts",
+              "chart": "pyroscope"
+            },
+            "syncOptions": [
+              "CreateNamespace=true",
+              "ServerSideApply=true",
+              "RespectIgnoreDifferences=true"
+            ],
+            "ignoreDifferences": [
+              {
+                "group": "apps",
+                "kind": "StatefulSet",
+                "name": "pyroscope",
+                "namespace": "pyroscope",
+                "jsonPointers": ["/spec/volumeClaimTemplates"]
+              }
+            ],
+            "revisionHistoryLimit": 5,
+            "lifecycle": "retain"
+          },
+          "chartComponent": "chart:pyroscope",
+          "artifactParameters": {},
+          "runner": { "service": "ci", "component": "image:ci-base" },
+          "steps": [
+            {
+              "kind": "apply-safety",
+              "instance": "application:pyroscope",
+              "pointOfNoReturn": false
+            },
+            {
+              "kind": "sync",
+              "instance": "application:pyroscope",
+              "pointOfNoReturn": false
+            }
+          ],
+          "oracle": { "probes": [], "tests": [] }
+        }
+      }
+    ]
+  }
+}

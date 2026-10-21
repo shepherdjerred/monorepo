@@ -1,0 +1,26 @@
+{
+  "id": "tofu-argocd/prod/1",
+  "definition": {
+    "kind": "operator-run",
+    "wrapped": {
+      "kind": "tofu",
+      "stack": "argocd",
+      "archiveComponent": "archive:tofu-argocd",
+      "runner": { "service": "ci", "component": "image:ci-base" },
+      "steps": [
+        {
+          "kind": "plan",
+          "instance": "stack:argocd",
+          "pointOfNoReturn": false
+        },
+        {
+          "kind": "apply",
+          "instance": "stack:argocd",
+          "pointOfNoReturn": false
+        }
+      ],
+      "sharedLock": "platform"
+    },
+    "stages": ["plan", "apply"]
+  }
+}

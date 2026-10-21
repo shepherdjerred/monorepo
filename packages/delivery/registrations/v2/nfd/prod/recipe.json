@@ -1,0 +1,46 @@
+{
+  "id": "nfd/prod/1",
+  "definition": {
+    "kind": "kubernetes-application",
+    "application": {
+      "name": "nfd",
+      "metadata": {
+        "labels": { "ci.sjer.red/managed-application": "true" },
+        "annotations": {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+          "ci.sjer.red/application-lifecycle": "retain"
+        },
+        "finalizers": []
+      },
+      "project": "cluster",
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "node-feature-discovery"
+      },
+      "source": {
+        "repoURL": "https://kubernetes-sigs.github.io/node-feature-discovery/charts",
+        "chart": "node-feature-discovery"
+      },
+      "syncOptions": ["CreateNamespace=true"],
+      "ignoreDifferences": [],
+      "revisionHistoryLimit": 5,
+      "lifecycle": "retain"
+    },
+    "chartComponent": "chart:node-feature-discovery",
+    "artifactParameters": {},
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "apply-safety",
+        "instance": "application:nfd",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "sync",
+        "instance": "application:nfd",
+        "pointOfNoReturn": false
+      }
+    ],
+    "oracle": { "probes": [], "tests": [] }
+  }
+}

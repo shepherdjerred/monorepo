@@ -7,6 +7,8 @@ import {
 } from "homelab/src/delivery-target-policy.ts";
 import { versionCatalog } from "homelab/src/cdk8s/src/versions.ts";
 import { transitionRendering } from "homelab/src/cdk8s/src/release-configuration.ts";
+import { BASELINE_CHART_APPLICATIONS } from "homelab/src/cdk8s/src/resources/cluster-baseline/charts.ts";
+import { COMPANION_CHARTS } from "homelab/src/cdk8s/src/resources/companions/names.ts";
 
 /**
  * The three ArgoCD AppProjects. `default` is reserved for the root
@@ -76,6 +78,9 @@ const REGISTERED_APPLICATIONS: ReadonlySet<string> = new Set([
   ...Object.keys(ORDINARY_DELIVERY_ENVIRONMENTS),
   ...Object.keys(SPECIALIZED_DELIVERY_ENVIRONMENTS),
   ...SERVICE_CATALOG.services.flatMap((service) => service.argoApps),
+  // Created by Delivery from catalog recipes at the window; the root never renders them.
+  ...BASELINE_CHART_APPLICATIONS,
+  ...COMPANION_CHARTS,
 ]);
 
 /**

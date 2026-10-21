@@ -1,0 +1,19 @@
+{
+  "id": "tofu-discord/prod/1",
+  "definition": {
+    "kind": "tofu",
+    "stack": "discord",
+    "archiveComponent": "archive:tofu-discord",
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      { "kind": "plan", "instance": "stack:discord", "pointOfNoReturn": false },
+      {
+        "kind": "approve",
+        "instance": "stack:discord",
+        "pointOfNoReturn": false
+      },
+      { "kind": "apply", "instance": "stack:discord", "pointOfNoReturn": false }
+    ],
+    "sharedLock": "platform"
+  }
+}

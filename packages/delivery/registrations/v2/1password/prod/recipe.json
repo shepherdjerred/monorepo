@@ -1,0 +1,46 @@
+{
+  "id": "1password/prod/1",
+  "definition": {
+    "kind": "kubernetes-application",
+    "application": {
+      "name": "1password",
+      "metadata": {
+        "labels": { "ci.sjer.red/managed-application": "true" },
+        "annotations": {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+          "ci.sjer.red/application-lifecycle": "retain"
+        },
+        "finalizers": []
+      },
+      "project": "cluster",
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "1password"
+      },
+      "source": {
+        "repoURL": "https://1password.github.io/connect-helm-charts/",
+        "chart": "connect"
+      },
+      "syncOptions": ["CreateNamespace=true"],
+      "ignoreDifferences": [],
+      "revisionHistoryLimit": 5,
+      "lifecycle": "retain"
+    },
+    "chartComponent": "chart:connect",
+    "artifactParameters": {},
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "apply-safety",
+        "instance": "application:1password",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "sync",
+        "instance": "application:1password",
+        "pointOfNoReturn": false
+      }
+    ],
+    "oracle": { "probes": [], "tests": [] }
+  }
+}

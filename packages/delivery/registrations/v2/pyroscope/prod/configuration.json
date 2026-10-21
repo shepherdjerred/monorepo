@@ -1,0 +1,7 @@
+{
+  "id": "pyroscope/prod/1",
+  "content": {
+    "helm.valuesObject": "{\"alloy\":{\"enabled\":false},\"pyroscope\":{\"extraArgs\":{\"log.level\":\"info\"},\"persistence\":{\"enabled\":true,\"size\":\"32Gi\",\"storageClassName\":\"zfs-ssd\"},\"resources\":{\"requests\":{\"cpu\":\"50m\",\"memory\":\"256Mi\"}}}}"
+  },
+  "forwardOnly": []
+}

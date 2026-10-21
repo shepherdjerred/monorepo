@@ -1,0 +1,14 @@
+{
+  "id": "tofu-arr/prod/1",
+  "definition": {
+    "kind": "tofu",
+    "stack": "arr",
+    "archiveComponent": "archive:tofu-arr",
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      { "kind": "plan", "instance": "stack:arr", "pointOfNoReturn": false },
+      { "kind": "apply", "instance": "stack:arr", "pointOfNoReturn": false }
+    ],
+    "sharedLock": "platform"
+  }
+}

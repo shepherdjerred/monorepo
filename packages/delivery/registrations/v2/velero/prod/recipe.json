@@ -1,0 +1,124 @@
+{
+  "id": "velero/prod/1",
+  "definition": {
+    "kind": "compound",
+    "subRecipes": [
+      {
+        "instance": "application:velero-companion",
+        "pointOfNoReturn": false,
+        "definition": {
+          "kind": "kubernetes-application",
+          "application": {
+            "name": "velero-companion",
+            "metadata": {
+              "labels": { "ci.sjer.red/managed-application": "true" },
+              "annotations": {
+                "argocd.argoproj.io/sync-options": "Prune=false",
+                "ci.sjer.red/application-lifecycle": "retain"
+              },
+              "finalizers": []
+            },
+            "project": "workloads",
+            "destination": {
+              "server": "https://kubernetes.default.svc",
+              "namespace": "velero"
+            },
+            "source": {
+              "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+              "chart": "velero-companion"
+            },
+            "syncOptions": [
+              "ServerSideApply=true",
+              "RespectIgnoreDifferences=true"
+            ],
+            "ignoreDifferences": [
+              {
+                "group": "networking.cfargotunnel.com",
+                "kind": "TunnelBinding",
+                "jqPathExpressions": [
+                  ".subjects[].kind",
+                  ".subjects[].spec.http2Origin",
+                  ".subjects[].spec.noTlsVerify",
+                  ".subjects[].spec.proxyAddress",
+                  ".subjects[].spec.proxyPort",
+                  ".subjects[].spec.proxyType",
+                  ".tunnelRef.disableDNSUpdates"
+                ]
+              }
+            ],
+            "revisionHistoryLimit": 5,
+            "lifecycle": "retain"
+          },
+          "chartComponent": "chart:velero-companion",
+          "artifactParameters": {},
+          "runner": { "service": "ci", "component": "image:ci-base" },
+          "steps": [
+            {
+              "kind": "apply-safety",
+              "instance": "application:velero-companion",
+              "pointOfNoReturn": false
+            },
+            {
+              "kind": "sync",
+              "instance": "application:velero-companion",
+              "pointOfNoReturn": false
+            }
+          ],
+          "oracle": { "probes": [], "tests": [] }
+        }
+      },
+      {
+        "instance": "application:velero",
+        "pointOfNoReturn": false,
+        "definition": {
+          "kind": "kubernetes-application",
+          "application": {
+            "name": "velero",
+            "metadata": {
+              "labels": { "ci.sjer.red/managed-application": "true" },
+              "annotations": {
+                "argocd.argoproj.io/sync-options": "Prune=false",
+                "ci.sjer.red/application-lifecycle": "retain"
+              },
+              "finalizers": []
+            },
+            "project": "cluster",
+            "destination": {
+              "server": "https://kubernetes.default.svc",
+              "namespace": "velero"
+            },
+            "source": {
+              "repoURL": "https://vmware-tanzu.github.io/helm-charts",
+              "chart": "velero",
+              "helm": { "releaseName": "velero" }
+            },
+            "syncOptions": ["CreateNamespace=true"],
+            "ignoreDifferences": [],
+            "revisionHistoryLimit": 5,
+            "lifecycle": "retain"
+          },
+          "chartComponent": "chart:velero",
+          "artifactParameters": {
+            "initContainers[0].image": "image:velero-plugin-for-aws",
+            "initContainers[1].image": "image:velero-plugin",
+            "kubectl.image.tag": "image:kubectl"
+          },
+          "runner": { "service": "ci", "component": "image:ci-base" },
+          "steps": [
+            {
+              "kind": "apply-safety",
+              "instance": "application:velero",
+              "pointOfNoReturn": false
+            },
+            {
+              "kind": "sync",
+              "instance": "application:velero",
+              "pointOfNoReturn": false
+            }
+          ],
+          "oracle": { "probes": [], "tests": [] }
+        }
+      }
+    ]
+  }
+}

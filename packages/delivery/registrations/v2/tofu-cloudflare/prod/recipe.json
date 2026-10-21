@@ -1,0 +1,22 @@
+{
+  "id": "tofu-cloudflare/prod/1",
+  "definition": {
+    "kind": "tofu",
+    "stack": "cloudflare",
+    "archiveComponent": "archive:tofu-cloudflare",
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "plan",
+        "instance": "stack:cloudflare",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "apply",
+        "instance": "stack:cloudflare",
+        "pointOfNoReturn": false
+      }
+    ],
+    "sharedLock": "platform"
+  }
+}

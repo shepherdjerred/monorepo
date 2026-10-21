@@ -1,0 +1,51 @@
+{
+  "id": "redlib/prod/1",
+  "definition": {
+    "kind": "kubernetes-application",
+    "application": {
+      "name": "redlib",
+      "metadata": {
+        "labels": { "ci.sjer.red/managed-application": "true" },
+        "annotations": {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+          "ci.sjer.red/application-lifecycle": "retain"
+        },
+        "finalizers": []
+      },
+      "project": "workloads",
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "redlib"
+      },
+      "source": {
+        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "chart": "redlib"
+      },
+      "syncOptions": ["CreateNamespace=true"],
+      "ignoreDifferences": [],
+      "revisionHistoryLimit": 5,
+      "lifecycle": "retain"
+    },
+    "chartComponent": "chart:redlib",
+    "artifactParameters": { "delivery.images.redlib": "image:redlib" },
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "apply-safety",
+        "instance": "application:redlib",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "sync",
+        "instance": "application:redlib",
+        "pointOfNoReturn": false
+      }
+    ],
+    "oracle": {
+      "probes": [
+        { "url": "https://redlib.tailnet-1a49.ts.net/", "expectedStatus": 200 }
+      ],
+      "tests": []
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "tofu-anthropic-federation/prod/1",
+  "definition": {
+    "kind": "operator-run",
+    "wrapped": {
+      "kind": "tofu",
+      "stack": "anthropic-federation",
+      "archiveComponent": "archive:tofu-anthropic-federation",
+      "runner": { "service": "ci", "component": "image:ci-base" },
+      "steps": [
+        {
+          "kind": "plan",
+          "instance": "stack:anthropic-federation",
+          "pointOfNoReturn": false
+        },
+        {
+          "kind": "apply",
+          "instance": "stack:anthropic-federation",
+          "pointOfNoReturn": false
+        }
+      ],
+      "sharedLock": "platform"
+    },
+    "stages": ["plan", "apply"]
+  }
+}
