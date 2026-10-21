@@ -1,7 +1,7 @@
 import { DeliveryError } from "#domain/error.ts";
 import {
   DeploymentSchema,
-  PipelineRevisionSchema,
+  LegacyPipelineRevisionSchema,
   RequestTrmnlRepairSchema,
   type Principal,
   type RequestTrmnlRepair,
@@ -44,7 +44,7 @@ export async function requestTrmnlRepair(
     );
     await lock(tx, `environment:${source.environmentId}`);
     const env = await environment(tx, source.environmentId);
-    const pipeline = PipelineRevisionSchema.parse(
+    const pipeline = LegacyPipelineRevisionSchema.parse(
       wire(
         required(
           await tx.pipeline.findUnique({

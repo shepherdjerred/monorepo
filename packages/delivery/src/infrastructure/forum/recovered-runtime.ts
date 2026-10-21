@@ -16,7 +16,7 @@ import {
   CompleteContentRecoverySchema,
   DeploymentSchema,
   ForumRecoveredRuntimeSchema,
-  PipelineRevisionSchema,
+  LegacyPipelineRevisionSchema,
   type PipelineRevision,
   type VersionSetRevision,
 } from "#shared/contract.ts";
@@ -95,7 +95,7 @@ export async function freezeRecoveredForumRuntime(
     );
   if (proof.settlement.state !== "desired") return null;
   const source = recovery.deployment;
-  const original = PipelineRevisionSchema.parse(
+  const original = LegacyPipelineRevisionSchema.parse(
     wire(
       await tx.pipeline.findUniqueOrThrow({
         where: { id: source.pipelineRevisionId },

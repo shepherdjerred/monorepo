@@ -86,6 +86,7 @@ export function createApp(options: Options) {
         ),
       maxSize:
         c.req.path === "/api/v1/platform/plans" ||
+        c.req.path === "/api/v1/catalog/reconcile" ||
         /^\/api\/v1\/platform-recovery\/[^/]+\/plan$/.test(c.req.path)
           ? 16 * 1024 * 1024
           : 1024 * 1024,
@@ -135,7 +136,10 @@ export function createApp(options: Options) {
         /^\/api\/v1\/forum\/baselines\/[^/]+\/(?:submitted|complete|fail)$/.test(
           c.req.path,
         ) ||
-        /^\/api\/v1\/platform\/plans$/.test(c.req.path);
+        /^\/api\/v1\/platform\/plans$/.test(c.req.path) ||
+        // Registering definitions has no effect on a running system (C3);
+        // the cutover reconciles the catalog before writes resume.
+        c.req.path === "/api/v1/catalog/reconcile";
       const settlesStage = await settlesExistingStage(
         options.delivery,
         c.req.raw,

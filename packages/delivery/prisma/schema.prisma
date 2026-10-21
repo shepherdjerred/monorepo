@@ -157,6 +157,9 @@ model Environment {
   role                               String                @default("durable")
   lifecycle                          String                @default("active")
   approvalPolicy                     String                @default("none")
+  durableParentId                    String?
+  durableParent                      Environment?          @relation("ReplicaParent", fields: [durableParentId], references: [id], onDelete: Restrict)
+  replicas                           Environment[]         @relation("ReplicaParent")
   generation                         Int                   @default(0)
   desiredVersionSetRevisionId        String?
   observedVersionSetRevisionId       String?

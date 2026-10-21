@@ -2,7 +2,7 @@ import { ForumBundlePolicySchema } from "@shepherdjerred/ops-model/forum-bundle-
 import type { forumBundlePolicy } from "@shepherdjerred/ops-model/forum-bundle-policy.ts";
 import { forumBundlePolicyDigest } from "@shepherdjerred/ops-model/forum-bundle-digest.ts";
 import type { ArtifactVersion, CreateDeployment } from "#shared/contract.ts";
-import { PipelineRevisionSchema } from "#shared/contract.ts";
+import { LegacyPipelineRevisionSchema } from "#shared/contract.ts";
 import { DeliveryError } from "#domain/error.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { required, wire } from "#infrastructure/delivery-records.ts";
@@ -100,7 +100,7 @@ export async function verifyForumCandidateSource(
   if (input.kind === "rollback") return;
   const env = await environment(this.database, input.environmentId);
   if (env.serviceId !== "storm-forum") return;
-  const pipeline = PipelineRevisionSchema.parse(
+  const pipeline = LegacyPipelineRevisionSchema.parse(
       wire(
         required(
           await this.database.pipeline.findUnique({

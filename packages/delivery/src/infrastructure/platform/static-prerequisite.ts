@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
 import {
-  PipelineRevisionSchema,
+  LegacyPipelineRevisionSchema,
   PlatformReleaseSnapshotSchema,
 } from "#shared/contract.ts";
 import {
@@ -106,7 +106,7 @@ async function guardSite(
   input: { row: Release; catalog: ServiceIndex; repositoryId: number },
 ) {
   const { row } = input;
-  const pipeline = PipelineRevisionSchema.parse(
+  const pipeline = LegacyPipelineRevisionSchema.parse(
     wire(
       required(
         await tx.pipeline.findUnique({ where: { id: row.pipelineRevisionId } }),

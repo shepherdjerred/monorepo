@@ -9,7 +9,7 @@ import {
   type CreatePlatformDeployment,
   type PlatformReleaseSnapshot,
   type PipelineDefinition,
-  PipelineRevisionSchema,
+  LegacyPipelineRevisionSchema,
 } from "#shared/contract.ts";
 import {
   TofuPlanReceiptSchema,
@@ -118,7 +118,7 @@ async function rootSiteArtifacts(
       await tx.environment.findUnique({ where: { id: site.environmentId } }),
       "Reviewed root site environment",
     );
-    const pipeline = PipelineRevisionSchema.parse(
+    const pipeline = LegacyPipelineRevisionSchema.parse(
       wire(
         required(
           await tx.pipeline.findUnique({

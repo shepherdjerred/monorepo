@@ -240,11 +240,9 @@ export const VersionSetRevisionSchema = z.object({
 export const StaticSitePolicySchema = staticSites.StaticSitePolicySchema;
 export type StaticSitePolicy = staticSites.StaticSitePolicy;
 export const PipelineDefinitionSchema = pipelines.PipelineDefinitionSchema;
-export const PipelineRevisionSchema = z.object({
-  id: IdentifierSchema,
-  definition: PipelineDefinitionSchema,
-  createdAt: TimestampSchema,
-});
+export const PipelineRevisionSchema = records.PipelineRevisionSchema;
+export const LegacyPipelineRevisionSchema =
+  records.LegacyPipelineRevisionSchema;
 export const EnvironmentRoleSchema = catalogShape.EnvironmentRoleSchema;
 export const LifecycleSchema = catalogShape.LifecycleSchema;
 export const ApprovalPolicySchema = catalogShape.ApprovalPolicySchema;
@@ -276,6 +274,7 @@ export const EnvironmentSchema = z.object({
   role: EnvironmentRoleSchema,
   lifecycle: LifecycleSchema,
   approvalPolicy: ApprovalPolicySchema,
+  durableParentId: IdentifierSchema.nullable().default(null),
   generation: z.number().int().nonnegative(),
   desiredVersionSetRevisionId: IdentifierSchema.nullable(),
   observedVersionSetRevisionId: IdentifierSchema.nullable(),
@@ -468,6 +467,7 @@ export type DeploymentDetail = z.infer<typeof DeploymentDetailSchema>;
 export type Overview = z.infer<typeof OverviewSchema>;
 export type PipelineRevision = z.infer<typeof PipelineRevisionSchema>;
 export type PipelineDefinition = z.infer<typeof PipelineDefinitionSchema>;
+export type StoredRecipeDefinition = records.StoredRecipeDefinition;
 export type Principal = z.infer<typeof PrincipalSchema>;
 export type EvidenceInput = z.infer<typeof EvidenceInputSchema>;
 export type PublishBuild = z.input<typeof PublishBuildSchema>;

@@ -33,7 +33,8 @@ export function recoveryExecutionJob(
     detail.deployment.controlPlaneSnapshot;
   if (
     snapshot === null ||
-    (pipeline.kind !== "tofu" && pipeline.kind !== "control-plane")
+    (pipeline.kind !== "tofu" && pipeline.kind !== "control-plane") ||
+    !("runnerImage" in pipeline)
   )
     throw new Error("Recovery lacks an immutable supported platform source");
   return {

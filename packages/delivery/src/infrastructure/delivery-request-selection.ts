@@ -1,5 +1,5 @@
 import {
-  PipelineRevisionSchema,
+  LegacyPipelineRevisionSchema,
   WorkerPoolSnapshotSchema,
   type CreateDeployment,
   type Environment,
@@ -14,7 +14,7 @@ import { DeliveryError } from "#domain/error.ts";
  * selection for a rollback (model 4.9, P2, F1).
  */
 async function pipelineRevision(tx: Transaction, id: string) {
-  return PipelineRevisionSchema.parse(
+  return LegacyPipelineRevisionSchema.parse(
     wire(required(await tx.pipeline.findUnique({ where: { id } }), "Pipeline")),
   );
 }

@@ -5,7 +5,7 @@ import {
 import {
   ControlPlaneUpgradeSnapshotSchema,
   DeploymentSchema,
-  PipelineRevisionSchema,
+  LegacyPipelineRevisionSchema,
   RequestControlPlaneUpgradeSchema,
   type RequestControlPlaneUpgrade,
   type Principal,
@@ -58,7 +58,7 @@ export async function requestControlPlaneUpgrade(
       environmentId,
       expectedGeneration: input.expectedGeneration,
     });
-    const pipeline = PipelineRevisionSchema.parse(
+    const pipeline = LegacyPipelineRevisionSchema.parse(
       wire(
         required(
           await tx.pipeline.findUnique({

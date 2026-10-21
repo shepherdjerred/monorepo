@@ -6,7 +6,7 @@ import type { PlatformReleaseSnapshotSchema } from "#shared/contract.ts";
 import {
   CreatePlatformDeploymentSchema,
   DeploymentSchema,
-  PipelineRevisionSchema,
+  LegacyPipelineRevisionSchema,
   type CreatePlatformDeployment,
   type Principal,
 } from "#shared/contract.ts";
@@ -96,7 +96,7 @@ export async function createPlatformDeployment(
         "CONFLICT",
         "Platform environment already has pending or active work",
       );
-    const pipeline = PipelineRevisionSchema.parse(
+    const pipeline = LegacyPipelineRevisionSchema.parse(
       wire(
         required(
           await tx.pipeline.findUnique({

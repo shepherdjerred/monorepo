@@ -242,6 +242,8 @@ ALTER TABLE "Environment" ADD COLUMN "role" TEXT NOT NULL DEFAULT 'durable';
 ALTER TABLE "Environment" ADD COLUMN "lifecycle" TEXT NOT NULL DEFAULT 'active';
 ALTER TABLE "Environment" ADD COLUMN "approvalPolicy" TEXT NOT NULL DEFAULT 'none';
 ALTER TABLE "Environment" ADD COLUMN "acceptedDeploymentId" TEXT;
+-- E7: the durable environment a replica mirrors.
+ALTER TABLE "Environment" ADD COLUMN "durableParentId" TEXT;
 UPDATE "Environment" env
 SET "approvalPolicy" = 'required'
 WHERE env."serviceId" IN ('scout-for-lol', 'starlight-karma-bot')
@@ -263,6 +265,8 @@ WHERE env."acceptedDeploymentId" IS NULL
   AND (env."acceptedPlatformDeploymentId" IS NOT NULL OR env."acceptedControlPlaneDeploymentId" IS NOT NULL);
 ALTER TABLE "Environment" ADD CONSTRAINT "Environment_acceptedDeploymentId_fkey" FOREIGN KEY ("acceptedDeploymentId") REFERENCES "Deployment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "Environment" ADD CONSTRAINT "Environment_role_check" CHECK ("role" IN ('durable', 'replica', 'qualification'));
+ALTER TABLE "Environment" ADD CONSTRAINT "Environment_durableParentId_fkey" FOREIGN KEY ("durableParentId") REFERENCES "Environment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Environment" ADD CONSTRAINT "Environment_replica_parent_check" CHECK (("role" = 'replica') = ("durableParentId" IS NOT NULL));
 ALTER TABLE "Environment" ADD CONSTRAINT "Environment_lifecycle_check" CHECK ("lifecycle" IN ('active', 'retired', 'removed'));
 ALTER TABLE "Environment" ADD CONSTRAINT "Environment_approvalPolicy_check" CHECK ("approvalPolicy" IN ('none', 'required'));
 ALTER TABLE "Environment" DROP CONSTRAINT "Environment_acceptedControlPlaneDeploymentId_fkey";

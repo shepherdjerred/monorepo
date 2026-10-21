@@ -1,7 +1,7 @@
 import { deliveryOperationId } from "#shared/operation-id.ts";
 import { z } from "zod";
 import { DeliveryError } from "#domain/error.ts";
-import { PipelineRevisionSchema } from "#shared/contract.ts";
+import { LegacyPipelineRevisionSchema } from "#shared/contract.ts";
 import { required, wire } from "./delivery-records.ts";
 import { version, type Transaction } from "./delivery-data.ts";
 import { validateTrmnlSuccess } from "./trmnl-policy.ts";
@@ -49,7 +49,7 @@ export async function validateSpecializedSuccess(
   },
 ) {
   if (["adopt-worker", "retire-host"].includes(deployment.kind)) return;
-  const pipeline = PipelineRevisionSchema.parse(
+  const pipeline = LegacyPipelineRevisionSchema.parse(
     wire(
       required(
         await tx.pipeline.findUnique({

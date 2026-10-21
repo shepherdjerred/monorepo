@@ -1,6 +1,6 @@
 import { DeliveryError } from "#domain/error.ts";
 import {
-  PipelineRevisionSchema,
+  LegacyPipelineRevisionSchema,
   WorkerPoolSnapshotSchema,
 } from "#shared/contract.ts";
 import type {
@@ -151,7 +151,7 @@ async function admitQueued(
       "BUSY",
       "Executor concurrency bound is reached; the deployment stays queued",
     );
-  const pipeline = PipelineRevisionSchema.parse(
+  const pipeline = LegacyPipelineRevisionSchema.parse(
     wire(
       required(
         await tx.pipeline.findUnique({ where: { id: row.pipelineRevisionId } }),

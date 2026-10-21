@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  CatalogReconcileResultSchema,
+  type CatalogReconcileRequest,
+} from "./model/catalog-reconcile-contract.ts";
 import * as errors from "./client-error.ts";
 export const DeliveryClientError = errors.DeliveryClientError;
 export type DeliveryClientError = InstanceType<
@@ -397,6 +401,8 @@ export function createDeliveryClient(options: RequestOptions) {
       request("/pipelines", PipelineRevisionSchema, { id, definition }),
     registerEnvironment: (input: RegisterEnvironmentInput) =>
       request("/environments", EnvironmentSchema, input),
+    reconcileCatalog: (input: CatalogReconcileRequest) =>
+      request("/catalog/reconcile", CatalogReconcileResultSchema, input),
     workers: (environmentId: string) =>
       request(
         `/environments/${encodeURIComponent(environmentId)}/workers`,

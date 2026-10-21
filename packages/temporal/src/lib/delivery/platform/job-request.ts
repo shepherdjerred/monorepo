@@ -24,9 +24,10 @@ export function platformExecutionJob(
   if (
     snapshot === null ||
     snapshot.kind === "root-release" ||
-    pipeline.kind !== "tofu"
+    pipeline.kind !== "tofu" ||
+    !("runnerImage" in pipeline)
   )
-    throw new Error("Platform Job has no frozen source/recipe");
+    throw new Error("Platform Job has no frozen v1 source/recipe");
   return {
     deploymentId: id,
     stageKey: snapshot.kind,

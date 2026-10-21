@@ -31,6 +31,7 @@ import { stage, finish } from "#infrastructure/execution/stages.ts";
 import { claim } from "#infrastructure/execution/claim.ts";
 import { renewLease } from "#infrastructure/execution/ownership.ts";
 import { releaseLock } from "#infrastructure/execution/lock-release.ts";
+import { reconcileCatalog } from "#infrastructure/catalog/reconcile.ts";
 import type { DeliveryPolicy } from "./config.ts";
 import { pending, monitor, orphan, submitted } from "./delivery-dispatch.ts";
 import {
@@ -140,6 +141,7 @@ export class Delivery {
   compose = compose;
   registerPipeline = registerPipeline;
   registerEnvironment = registerEnvironment;
+  reconcileCatalog = reconcileCatalog;
   createDeployment = createDeployment;
   requestTrmnlRepair = requestTrmnlRepair;
   requestContentRecovery = requestContentRecovery;

@@ -6,9 +6,9 @@ import {
   wire,
 } from "#infrastructure/delivery-records.ts";
 import {
-  PipelineRevisionSchema,
+  LegacyPipelineRevisionSchema,
   type DeploymentDetail,
-  type PipelineDefinition,
+  type StoredRecipeDefinition,
   ContentRecoveryNativeReceiptSchema,
   ContentRecoveryIntentSchema,
 } from "#shared/contract.ts";
@@ -39,11 +39,36 @@ export function contentIntentView(row: RecoveryIntent) {
   );
 }
 
-export function contentRecoveryKind(pipeline: PipelineDefinition) {
+/** The frozen content target a recipe of either generation names, or null. */
+function contentTarget(definition: StoredRecipeDefinition): string | null {
+  switch (definition.kind) {
+    case "static-site":
+      return `bucket:${definition.bucket}`;
+    case "argocd":
+      return `application:${definition.application}`;
+    case "kubernetes-application":
+      return `application:${definition.application.name}`;
+    case "control-plane":
+    case "root-release":
+    case "tofu":
+    case "manual":
+    case "channel":
+    case "operator-run":
+    case "compound":
+      return null;
+  }
+}
+
+export function contentRecoveryKind(pipeline: StoredRecipeDefinition) {
   if (pipeline.kind === "static-site") return "static-site";
   if (pipeline.kind === "argocd") {
     if (pipeline.scoutSite !== undefined) return "static-site";
     if (pipeline.forumRelease !== undefined) return "forum";
+  }
+  if (pipeline.kind === "kubernetes-application") {
+    const kinds = new Set(pipeline.steps.map((step) => step.kind));
+    if (kinds.has("static-site")) return "static-site";
+    if (kinds.has("forum-bundle")) return "forum";
   }
   throw new DeliveryError(
     "INVALID",
@@ -65,7 +90,7 @@ export async function heldContentRecovery(
     }),
     "Quarantined content deployment",
   );
-  const pipeline = PipelineRevisionSchema.parse(
+  const pipeline = LegacyPipelineRevisionSchema.parse(
     wire(
       required(
         await tx.pipeline.findUnique({
@@ -177,13 +202,11 @@ export function contentSettlements(
   prior: DeploymentDetail | null,
 ) {
   const current = detail.pipeline.definition;
-  const before = prior?.pipeline.definition;
+  const target = contentTarget(current);
   const sameTarget =
-    current.kind === "static-site"
-      ? before?.kind === "static-site" && current.bucket === before.bucket
-      : current.kind === "argocd" &&
-        before?.kind === "argocd" &&
-        current.application === before.application;
+    prior !== null &&
+    target !== null &&
+    contentTarget(prior.pipeline.definition) === target;
   const baseline = detail.deployment.forumBaselineSnapshot;
   return {
     desired: contentSettlement(detail),

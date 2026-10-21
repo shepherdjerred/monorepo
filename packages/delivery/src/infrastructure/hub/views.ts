@@ -51,6 +51,8 @@ function activityTarget(row: AuditRow): AppTarget | null {
       return { kind: "environment", id: row.entityId };
     }
     case "artifact":
+    case "catalog":
+    case "monitor":
     case "content":
     case "control_plane":
     case "forum":

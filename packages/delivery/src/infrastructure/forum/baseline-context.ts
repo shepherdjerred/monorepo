@@ -11,7 +11,7 @@ import {
   required,
   wire,
 } from "#infrastructure/delivery-records.ts";
-import { PipelineRevisionSchema } from "#shared/contract.ts";
+import { LegacyPipelineRevisionSchema } from "#shared/contract.ts";
 import type { ArtifactVersion } from "#shared/contract.ts";
 import { DeliveryError } from "#domain/error.ts";
 
@@ -65,7 +65,7 @@ export async function forumBaselineInputs(
       "CONFLICT",
       "Forum baseline requires an idle original environment at the exact generation, before any accepted deployment",
     );
-  const pipeline = PipelineRevisionSchema.parse(
+  const pipeline = LegacyPipelineRevisionSchema.parse(
     wire(
       required(
         await tx.pipeline.findUnique({ where: { id: env.pipelineRevisionId } }),

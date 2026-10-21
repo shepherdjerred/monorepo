@@ -1,5 +1,8 @@
 import { DeliveryError } from "#domain/error.ts";
-import { DeploymentSchema, PipelineRevisionSchema } from "#shared/contract.ts";
+import {
+  DeploymentSchema,
+  LegacyPipelineRevisionSchema,
+} from "#shared/contract.ts";
 import type {
   FinishDeployment,
   Principal,
@@ -71,7 +74,7 @@ export async function stage(
       );
     const { evidence: items, ...data } = input;
     const mc = /^minecraft-preservation-[1-9]\d*$/u.test(input.key)
-      ? PipelineRevisionSchema.parse(
+      ? LegacyPipelineRevisionSchema.parse(
           wire(
             required(
               await tx.pipeline.findUnique({

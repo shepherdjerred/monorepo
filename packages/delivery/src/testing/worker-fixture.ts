@@ -1,7 +1,7 @@
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { freezeWorkerSnapshot } from "#infrastructure/worker-pool/pool.ts";
 import {
-  PipelineRevisionSchema,
+  LegacyPipelineRevisionSchema,
   workerHostSpecification,
 } from "#shared/contract.ts";
 import type { WorkerPoolTarget, WorkerVersion } from "#shared/contract.ts";
@@ -39,7 +39,7 @@ export async function workerFixture(
     },
     testOperator,
   );
-  const workerPipeline = PipelineRevisionSchema.parse({
+  const workerPipeline = LegacyPipelineRevisionSchema.parse({
     id: `${target}/frozen-worker-fixture`,
     createdAt: new Date().toISOString(),
     definition: {

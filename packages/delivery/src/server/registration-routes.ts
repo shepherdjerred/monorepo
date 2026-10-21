@@ -6,6 +6,7 @@ import {
   RegisterEnvironmentSchema,
   type Principal,
 } from "#shared/contract.ts";
+import { CatalogReconcileRequestSchema } from "#shared/model/catalog-reconcile-contract.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 
@@ -26,6 +27,15 @@ export function registerDefinitionRoutes(
         c.get("principal"),
       ),
       201,
+    );
+  });
+  app.post("/api/v1/catalog/reconcile", async (c) => {
+    requireScope(c.get("principal"), "admin");
+    return c.json(
+      await delivery.reconcileCatalog(
+        CatalogReconcileRequestSchema.parse(await c.req.json()),
+        c.get("principal"),
+      ),
     );
   });
   app.post("/api/v1/environments", async (c) => {

@@ -1,5 +1,6 @@
 import { DeliveryError } from "#domain/error.ts";
 import {
+  LegacyPipelineRevisionSchema,
   PipelineRevisionSchema,
   PublishBuildSchema,
   RegisterEnvironmentSchema,
@@ -290,7 +291,7 @@ export async function registerEnvironment(
       await tx.pipeline.findUnique({ where: { id: input.pipelineRevisionId } }),
       "Pipeline",
     );
-    const parsed = PipelineRevisionSchema.parse(wire(pipeline));
+    const parsed = LegacyPipelineRevisionSchema.parse(wire(pipeline));
     if (
       input.application !== undefined &&
       index.byArgoApp(input.application)?.id !== input.serviceId

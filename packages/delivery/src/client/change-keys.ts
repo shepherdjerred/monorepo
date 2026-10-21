@@ -35,6 +35,8 @@ const BY_DOMAIN: Record<ChangeDomain, (change: ChangeEvent) => QueryKey[]> = {
   control_plane: () => INTENT,
   trmnl: () => INTENT,
   snapshot: () => [],
+  catalog: () => [["environment"], ["service"], ["overview"]],
+  monitor: (change) => [["deployment", change.entityId], ...INTENT],
 };
 
 /** Query-key prefixes a committed change can make stale. */

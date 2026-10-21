@@ -1,6 +1,6 @@
 import type { tofuStackPolicy } from "@shepherdjerred/ops-model/platform-policy.ts";
 import {
-  PipelineRevisionSchema,
+  LegacyPipelineRevisionSchema,
   type Principal,
   type Environment,
 } from "#shared/contract.ts";
@@ -119,7 +119,7 @@ export async function reconcilePlatform(
   for (const row of await this.database.environment.findMany({
     where: { automatic: true, id: { in: enabledEnvironments } },
   })) {
-    const pipeline = PipelineRevisionSchema.parse(
+    const pipeline = LegacyPipelineRevisionSchema.parse(
       wire(
         required(
           await this.database.pipeline.findUnique({
