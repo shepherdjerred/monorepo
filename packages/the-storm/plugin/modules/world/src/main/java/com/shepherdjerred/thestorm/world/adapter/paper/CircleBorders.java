@@ -1,5 +1,7 @@
 package com.shepherdjerred.thestorm.world.adapter.paper;
 
+import static java.util.Objects.requireNonNull;
+
 import com.shepherdjerred.thestorm.world.domain.CircleEdge;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -77,7 +79,7 @@ final class CircleBorders implements Listener {
 
   @EventHandler
   public void onJoin(PlayerJoinEvent event) {
-    if (!inside(java.util.Objects.requireNonNull(event.getPlayer().getLocation()))) {
+    if (!inside(requireNonNull(event.getPlayer().getLocation()))) {
       returnInside(event.getPlayer());
     }
   }
@@ -89,10 +91,12 @@ final class CircleBorders implements Listener {
 
   /**
    * Loads the inward column's chunk off the server thread, then places the player on its surface.
-   * One return is in flight per player; moves outside the disc meanwhile do not queue more.
+   * One return is in flight per player; moves outside the disc meanwhile do not queue more. When
+   * the chunk arrives the player is checked again: one already back inside (another teleport won
+   * the race) is left alone, and one who moved to a column in another chunk starts a fresh return.
    */
   private void returnInside(Player player) {
-    var at = java.util.Objects.requireNonNull(player.getLocation());
+    var at = requireNonNull(player.getLocation());
     var edge = edges.get(at.getWorld().getName());
     if (edge == null || !returning.add(player.getUniqueId())) {
       return;
@@ -109,9 +113,20 @@ final class CircleBorders implements Listener {
               if (!player.isOnline() || !player.getWorld().equals(world)) {
                 return;
               }
-              var y = world.getHighestBlockYAt(blockX, blockZ) + 1;
+              var now = requireNonNull(player.getLocation());
+              if (inside(now)) {
+                return;
+              }
+              var current = edge.inward(now.getX(), now.getZ(), MARGIN);
+              var currentX = (int) Math.floor(current.x());
+              var currentZ = (int) Math.floor(current.z());
+              if (currentX >> 4 != chunk.getX() || currentZ >> 4 != chunk.getZ()) {
+                returnInside(player);
+                return;
+              }
+              var y = world.getHighestBlockYAt(currentX, currentZ) + 1;
               player.teleport(
-                  new Location(world, column.x(), y, column.z(), at.getYaw(), at.getPitch()));
+                  new Location(world, current.x(), y, current.z(), now.getYaw(), now.getPitch()));
               player.sendActionBar(EDGE);
             },
             mainThread)
