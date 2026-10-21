@@ -82,6 +82,7 @@ const forumBundleReader =
 const readApplication = createApplicationReader();
 const app = createApp({
   delivery,
+  readApplication,
   changeFeed,
   enrichment,
   ...(forumBundleReader === undefined

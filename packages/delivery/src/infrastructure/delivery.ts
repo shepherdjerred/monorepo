@@ -38,6 +38,12 @@ import {
   watchingMonitors,
 } from "#infrastructure/monitor/monitor.ts";
 import { requestMonitorRollback } from "#infrastructure/monitor/restoration.ts";
+import {
+  coldStartRequirement,
+  reconcileAfterRestore,
+  recordColdStartReceipt,
+  settleRestoreHold,
+} from "#infrastructure/cold-start/restore.ts";
 import type { DeliveryPolicy } from "./config.ts";
 import { pending, monitor, orphan, submitted } from "./delivery-dispatch.ts";
 import {
@@ -152,6 +158,10 @@ export class Delivery {
   observeMonitor = observeMonitor;
   monitorStatus = monitorStatus;
   requestMonitorRollback = requestMonitorRollback;
+  coldStartRequirement = coldStartRequirement;
+  recordColdStartReceipt = recordColdStartReceipt;
+  reconcileAfterRestore = reconcileAfterRestore;
+  settleRestoreHold = settleRestoreHold;
   createDeployment = createDeployment;
   requestTrmnlRepair = requestTrmnlRepair;
   requestContentRecovery = requestContentRecovery;

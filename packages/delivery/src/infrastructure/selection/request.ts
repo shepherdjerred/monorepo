@@ -4,6 +4,7 @@ import {
   CreateDeploymentSchema,
   PipelineRevisionSchema,
   WorkerPoolSnapshotSchema,
+  type DeploymentDetail,
   type Environment,
 } from "#shared/contract.ts";
 import { CreateDeploymentV2Schema } from "#shared/deployment-request-contract.ts";
@@ -154,4 +155,56 @@ export async function restoredWorkerSnapshot(
         deploymentId: restored.id,
         snapshot: WorkerPoolSnapshotSchema.parse(restored.workerSnapshot),
       };
+}
+
+/** The same request again under fresh inputs: a retry re-selects, never replays (E2). */
+export function retryRequest(detail: DeploymentDetail) {
+  const environmentId = detail.environment.id;
+  const deployment = detail.deployment;
+  switch (deployment.kind) {
+    case "deploy":
+    case "channel-publish":
+    case "operator-run":
+      return {
+        environmentId,
+        kind: deployment.kind,
+        versionSetRevisionId: detail.versionSet.id,
+      };
+    case "promote":
+      return {
+        environmentId,
+        kind: deployment.kind,
+        sourceEnvironmentId: required(
+          deployment.sourceEnvironmentId,
+          "Promotion source",
+        ),
+      };
+    case "rollback":
+      return {
+        environmentId,
+        kind: deployment.kind,
+        selectionDeploymentId: required(
+          deployment.restoredDeploymentId,
+          "Restored deployment",
+        ),
+      };
+    case "rebind":
+      return {
+        environmentId,
+        kind: deployment.kind,
+        recipeRevisionId: deployment.pipelineRevisionId,
+        configurationRevisionId: deployment.configurationId,
+      };
+    case "retire-host":
+    case "adopt-worker":
+    case "repair-trmnl":
+    case "upgrade-control-plane":
+    case "root-release":
+    case "tofu-plan":
+    case "tofu-apply":
+      throw new DeliveryError(
+        "INVALID",
+        "Request a new specialized deployment with exact fresh inputs",
+      );
+  }
 }

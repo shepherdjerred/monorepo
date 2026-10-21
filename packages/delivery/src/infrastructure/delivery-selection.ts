@@ -33,6 +33,8 @@ async function reconcileEnvironment(
   // An alarmed selection holds the environment until the monitor's
   // rollback or an operator acts (W2, D2).
   if (await alarmedAndLatest(this.database, row)) return null;
+  // A restore mismatch holds automatic deployments for an operator (section 6).
+  if (row.restoreHold !== null) return null;
   const last = await this.database.deployment.findFirst({
     where: {
       environmentId: row.id,

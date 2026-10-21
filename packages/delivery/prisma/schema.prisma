@@ -172,6 +172,8 @@ model Environment {
   acceptedDeploymentId               String?
   acceptedDeployment                 Deployment?           @relation("AcceptedSelection", fields: [acceptedDeploymentId], references: [id], onDelete: Restrict)
   observedAt                         DateTime?
+  /// Section 6: set by reconcile-after-restore on a mismatch; automatic deployments wait until an operator settles it.
+  restoreHold                        Json?
   activeDeploymentId                 String?
   createdAt                          DateTime              @default(now())
   deployments                        Deployment[]

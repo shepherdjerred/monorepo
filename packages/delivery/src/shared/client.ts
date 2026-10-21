@@ -5,6 +5,13 @@ import {
 } from "./model/catalog-reconcile-contract.ts";
 import { RollbackCandidatesSchema } from "./model/selection-contract.ts";
 import {
+  ColdStartReceiptSchema,
+  ColdStartRequirementSchema,
+  ReconcileAfterRestoreResultSchema,
+  type ColdStartReceipt,
+  type ColdStartSnapshot,
+} from "./model/cold-start-contract.ts";
+import {
   MonitorObservedSchema,
   MonitorStatusSchema,
   WatchingMonitorSchema,
@@ -427,6 +434,23 @@ export function createDeliveryClient(options: RequestOptions) {
       request(
         `/environments/${encodeURIComponent(environmentId)}/monitor`,
         MonitorStatusSchema,
+      ),
+    coldStartRequirement: (deploymentId: string) =>
+      request(
+        `/deployments/${encodeURIComponent(deploymentId)}/cold-start`,
+        ColdStartRequirementSchema,
+      ),
+    recordColdStartReceipt: (deploymentId: string, input: ColdStartReceipt) =>
+      request(
+        `/deployments/${encodeURIComponent(deploymentId)}/cold-start`,
+        ColdStartReceiptSchema,
+        input,
+      ),
+    reconcileAfterRestore: (snapshot: ColdStartSnapshot) =>
+      request(
+        "/reconcile-after-restore",
+        ReconcileAfterRestoreResultSchema,
+        snapshot,
       ),
     rollbackCandidates: (environmentId: string) =>
       request(

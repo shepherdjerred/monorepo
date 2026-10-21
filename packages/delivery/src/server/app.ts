@@ -17,17 +17,15 @@ import {
   PublishBuildSchema,
   StageInputSchema,
 } from "#shared/contract.ts";
-import type {
-  DeploymentDetail,
-  Principal,
-  PublishBuild,
-} from "#shared/contract.ts";
+import type { Principal, PublishBuild } from "#shared/contract.ts";
 import { CreateDeploymentV2Schema } from "#shared/deployment-request-contract.ts";
-import { required } from "#infrastructure/delivery-records.ts";
 import { ciIdentity } from "#infrastructure/qualification.ts";
 import type { createRecoveryInspector } from "#infrastructure/recovery.ts";
 import { registerWorkerRoutes } from "./worker-routes.ts";
 import { registerSelectionRoutes } from "./selection-routes.ts";
+import { registerColdStartRoutes } from "./cold-start-routes.ts";
+import { retryRequest } from "#infrastructure/selection/request.ts";
+import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
 import { registerPlatformRoutes } from "./platform-routes.ts";
 import { registerPlatformRecoveryRoutes } from "./platform-recovery-routes.ts";
 import { registerContentRecoveryRoutes } from "./content-recovery-routes.ts";
@@ -62,6 +60,8 @@ type Options = {
   ciOrigin: string;
   ciRepositoryId: number;
   inspectRecovery?: ReturnType<typeof createRecoveryInspector>;
+  /** Independent Application readback for reconcile-after-restore (D5). */
+  readApplication?: ApplicationReader;
   inspectMinecraftRecovery?: InspectMinecraftRecovery;
   verifyForumBundle?: VerifyForumBundle;
   inspectForumBaseline?: InspectForumBaseline;
@@ -130,7 +130,7 @@ export function createApp(options: Options) {
         requireScope(principal, "read");
     } else if (!(await options.config.writesEnabled())) {
       const resultOnly =
-        /\/deployments\/[^/]+\/(?:cancel|finish|release-lock|orphan|lease|handoff|monitor)$/.test(
+        /\/deployments\/[^/]+\/(?:cancel|finish|release-lock|orphan|lease|handoff|monitor|cold-start)$/.test(
           c.req.path,
         ) ||
         /^\/api\/v1\/dispatch\/[^/]+\/submitted$/.test(c.req.path) ||
@@ -146,7 +146,13 @@ export function createApp(options: Options) {
         /^\/api\/v1\/platform\/plans$/.test(c.req.path) ||
         // Registering definitions has no effect on a running system (C3);
         // the cutover reconciles the catalog before writes resume.
-        c.req.path === "/api/v1/catalog/reconcile";
+        c.req.path === "/api/v1/catalog/reconcile" ||
+        // A restore runs while writes are paused; it only sets or settles
+        // holds and never moves an accepted pointer (section 6).
+        c.req.path === "/api/v1/reconcile-after-restore" ||
+        /^\/api\/v1\/environments\/[^/]+\/restore-hold\/accept$/.test(
+          c.req.path,
+        );
       const settlesStage = await settlesExistingStage(
         options.delivery,
         c.req.raw,
@@ -232,6 +238,7 @@ export function createApp(options: Options) {
   registerPlatformRoutes(app, { delivery, enabled });
   registerClaimRoute(app, delivery, enabled);
   registerSelectionRoutes(app, delivery, options.config.writesEnabled);
+  registerColdStartRoutes(app, delivery, options.readApplication);
   registerTrmnlRepairRoute(app, delivery, enabled);
   registerControlPlaneRoutes(app, delivery, enabled);
   registerForumRoutes(app, delivery, {
@@ -444,56 +451,4 @@ async function authorizedDeploymentInput(
   }
   requireScope(principal, "deploy");
   return CreateDeploymentV2Schema.parse(raw);
-}
-
-/** The same request again under fresh inputs: a retry re-selects, never replays (E2). */
-function retryRequest(detail: DeploymentDetail) {
-  const environmentId = detail.environment.id;
-  const deployment = detail.deployment;
-  switch (deployment.kind) {
-    case "deploy":
-    case "channel-publish":
-    case "operator-run":
-      return {
-        environmentId,
-        kind: deployment.kind,
-        versionSetRevisionId: detail.versionSet.id,
-      };
-    case "promote":
-      return {
-        environmentId,
-        kind: deployment.kind,
-        sourceEnvironmentId: required(
-          deployment.sourceEnvironmentId,
-          "Promotion source",
-        ),
-      };
-    case "rollback":
-      return {
-        environmentId,
-        kind: deployment.kind,
-        selectionDeploymentId: required(
-          deployment.restoredDeploymentId,
-          "Restored deployment",
-        ),
-      };
-    case "rebind":
-      return {
-        environmentId,
-        kind: deployment.kind,
-        recipeRevisionId: deployment.pipelineRevisionId,
-        configurationRevisionId: deployment.configurationId,
-      };
-    case "retire-host":
-    case "adopt-worker":
-    case "repair-trmnl":
-    case "upgrade-control-plane":
-    case "root-release":
-    case "tofu-plan":
-    case "tofu-apply":
-      throw new DeliveryError(
-        "INVALID",
-        "Request a new specialized deployment with exact fresh inputs",
-      );
-  }
 }
