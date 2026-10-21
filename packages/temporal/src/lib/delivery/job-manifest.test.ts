@@ -303,3 +303,23 @@ describe("bounded revision-pinned Delivery Jobs", () => {
     });
   });
 });
+
+describe("runtime image", () => {
+  it("ships every homelab module the manifest builder imports", async () => {
+    const source = await Bun.file(
+      new URL("job-manifest.ts", import.meta.url),
+    ).text();
+    const dockerfile = await Bun.file(
+      new URL("../../../Dockerfile", import.meta.url),
+    ).text();
+    const imported = [...source.matchAll(/from "homelab\/([^"]+)"/g)].map(
+      (match) => `packages/homelab/${match[1] ?? ""}`,
+    );
+    expect(imported).toContain(
+      "packages/homelab/src/delivery-stage-admission.ts",
+    );
+    for (const path of imported) {
+      expect(dockerfile).toContain(`\n  ${path} \\\n`);
+    }
+  });
+});

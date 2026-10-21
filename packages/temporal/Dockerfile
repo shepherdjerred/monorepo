@@ -466,6 +466,7 @@ COPY --parents \
   packages/homelab/src/delivery-target-policy.ts \
   packages/homelab/src/static-site-delivery-ownership.ts \
   packages/homelab/src/delivery-platform-grants.ts \
+  packages/homelab/src/delivery-stage-admission.ts \
   packages/homelab/scripts/tofu/tofu-stack-manifest.ts \
   packages/homelab/src/minecraft-delivery-receipt.schema.json \
   packages/homelab/src/minecraft-delivery-eligibility.schema.json \
