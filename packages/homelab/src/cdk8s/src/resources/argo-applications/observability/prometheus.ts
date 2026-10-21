@@ -15,13 +15,7 @@ import {
   createGrafanaValues,
   type PrometheusValuesWithBlackbox,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/grafana-values.ts";
-import { createPrometheusMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/prometheus.ts";
-import { createSmartctlMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/smartctl.ts";
-import { createNvmeMetricsMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/nvme-metrics.ts";
-import { createZfsSnapshotsMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/zfs-snapshots.ts";
-import { createZfsZpoolMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/zfs-zpool.ts";
-import { createR2ExporterMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/r2-exporter.ts";
-import { createKubernetesEventExporter } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/kubernetes-event-exporter.ts";
+import { createPrometheusExporters } from "@shepherdjerred/homelab/cdk8s/src/resources/cluster-baseline/observability.ts";
 import { BLACKBOX_MODULES } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/blackbox-modules.ts";
 import {
   ALERTMANAGER_POSTAL_SMTP_CA_SECRET,
@@ -176,13 +170,7 @@ export async function createPrometheusApp(chart: Chart) {
 
   const monitoringAuthGateways = createMonitoringAuthGateways(chart);
 
-  createPrometheusMonitoring(chart);
-  await createSmartctlMonitoring(chart);
-  await createNvmeMetricsMonitoring(chart);
-  await createZfsSnapshotsMonitoring(chart);
-  await createZfsZpoolMonitoring(chart);
-  await createR2ExporterMonitoring(chart);
-  createKubernetesEventExporter(chart);
+  await createPrometheusExporters(chart);
 
   // Note: Some configurations bypass type checking due to incomplete generated types
   const prometheusValues: PrometheusValuesWithBlackbox = {

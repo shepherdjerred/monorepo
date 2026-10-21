@@ -6,7 +6,7 @@ import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/
 import { CI_NODE_TOLERATION } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { firstPartyImageRepository } from "@shepherdjerred/version-catalog/image-registry";
 import { dockerHubPullSecretName } from "@shepherdjerred/homelab/cdk8s/src/dockerhub-pull-secrets.ts";
-export function createOpenEBSApp(chart: Chart) {
+export function createOpenEBSNamespace(chart: Chart): void {
   new Namespace(chart, `openebs-namespace`, {
     metadata: {
       name: `openebs`,
@@ -15,6 +15,10 @@ export function createOpenEBSApp(chart: Chart) {
       },
     },
   });
+}
+
+export function createOpenEBSApp(chart: Chart) {
+  createOpenEBSNamespace(chart);
 
   const openEBSValues: HelmValuesForChart<"openebs"> = {
     engines: {

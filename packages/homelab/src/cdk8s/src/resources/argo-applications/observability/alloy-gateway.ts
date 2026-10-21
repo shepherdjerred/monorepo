@@ -279,17 +279,21 @@ ${TAILNET_METRICS_CONFIG}
  * of widening the profiler's boundary. Both releases share the `versions.alloy`
  * chart pin and move together on chart bumps.
  */
-export function createAlloyGatewayApp(chart: Chart) {
-  // Explicit Namespace (root-chart sync wave 0) rather than relying only on
-  // CreateNamespace=true: the OnePasswordItem below applies at wave -19 —
-  // before any Application could create the namespace — so the namespace has
-  // to exist independently (it shipped one release ahead of the item).
-  // Default (baseline) Pod Security applies; nothing here is privileged.
+// Explicit Namespace (root-chart sync wave 0) rather than relying only on
+// CreateNamespace=true: the OnePasswordItem in the Application applies at
+// wave -19 — before any Application could create the namespace — so the
+// namespace has to exist independently (it shipped one release ahead of the
+// item). Default (baseline) Pod Security applies; nothing here is privileged.
+export function createAlloyGatewayNamespace(chart: Chart): void {
   new Namespace(chart, "alloy-gateway-namespace", {
     metadata: {
       name: "alloy-gateway",
     },
   });
+}
+
+export function createAlloyGatewayApp(chart: Chart) {
+  createAlloyGatewayNamespace(chart);
 
   // One Phoenix system API key, shared by every per-project exporter.
   new OnePasswordItem(chart, "alloy-gateway-phoenix-1p", {

@@ -14,7 +14,7 @@ const PROXY_REQUESTS: Record<
   heavy: { cpu: "50m", memory: "256Mi" },
 };
 
-function createProxyClasses(chart: Chart): void {
+export function createTailscaleProxyClasses(chart: Chart): void {
   for (const [name, requests] of Object.entries(PROXY_REQUESTS)) {
     new ApiObject(chart, `tailscale-proxy-class-${name}`, {
       apiVersion: "tailscale.com/v1alpha1",
@@ -38,7 +38,7 @@ function createProxyClasses(chart: Chart): void {
 }
 
 export function createTailscaleApp(chart: Chart) {
-  createProxyClasses(chart);
+  createTailscaleProxyClasses(chart);
 
   new OnePasswordItem(chart, "tailscale-operator-oauth-onepassword", {
     spec: {

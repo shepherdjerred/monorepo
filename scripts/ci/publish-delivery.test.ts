@@ -310,7 +310,9 @@ test("the full catalog publication preserves the smaller coordinated root invent
     optional: async () => JSON.stringify(rootInventory),
   });
   // Actual full publication includes delegated and inactive charts, not root selections.
-  expect(charts).toHaveLength(43);
+  // The baseline charts publish but stay out of the root inventory: no root
+  // Application renders them.
+  expect(charts).toHaveLength(46);
   expect(rootInventory).toHaveLength(23);
   expect(result.charts).toEqual(charts);
   expect(result.rootInventory).toEqual(rootInventory);

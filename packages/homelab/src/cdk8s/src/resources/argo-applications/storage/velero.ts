@@ -10,7 +10,8 @@ import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { VELERO_SCHEDULES } from "@shepherdjerred/homelab/cdk8s/src/resources/velero/velero-schedules.ts";
 import { backupMonitoringAnnotations } from "@shepherdjerred/ops-model/backup-policy.ts";
-export function createVeleroApp(chart: Chart) {
+/** The Velero namespace plus the deny-all restore rehearsal namespaces. */
+export function createVeleroNamespaces(chart: Chart): void {
   for (const namespace of [
     "ops-restore-rehearsal",
     "ops-restore-rehearsal-incremental",
@@ -38,6 +39,10 @@ export function createVeleroApp(chart: Chart) {
       },
     },
   });
+}
+
+export function createVeleroApp(chart: Chart) {
+  createVeleroNamespaces(chart);
 
   // 1Password secret for cloud credentials (AWS/GCP/Azure)
   const cloudCredentials = new OnePasswordItem(

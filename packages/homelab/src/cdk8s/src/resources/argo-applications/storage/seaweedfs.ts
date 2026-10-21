@@ -37,7 +37,7 @@ export const FILER_GATEWAY_CONFIG = `{
 }
 `;
 
-export function createSeaweedfsApp(chart: Chart) {
+export function createSeaweedfsNamespace(chart: Chart): void {
   new Namespace(chart, "seaweedfs-namespace", {
     metadata: {
       name: "seaweedfs",
@@ -47,6 +47,10 @@ export function createSeaweedfsApp(chart: Chart) {
       },
     },
   });
+}
+
+export function createSeaweedfsApp(chart: Chart) {
+  createSeaweedfsNamespace(chart);
 
   // Adopt and expand the existing claims before changing immutable Helm claim
   // templates. Preserve their names and bindings; the root release owns quota

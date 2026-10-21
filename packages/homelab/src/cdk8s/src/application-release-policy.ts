@@ -3,6 +3,10 @@ import { z } from "zod";
 import { releaseChartRevisions } from "./release-configuration.ts";
 import { BURST_SERVICE_PRIORITY } from "./misc/priority-classes.ts";
 import {
+  BASELINE_CHARTS,
+  ROOT_CHART,
+} from "./resources/cluster-baseline/charts.ts";
+import {
   deliveryEnvironment,
   DELIVERY_ACTIVE_DELEGATIONS,
   DELIVERY_ENVIRONMENT_ANNOTATION,
@@ -181,11 +185,13 @@ function applyResourceReleasePolicy(
   revisions: ReturnType<typeof releaseChartRevisions>,
   seenRepositoryCharts: Set<string>,
 ): void {
-  const isRootChartResource = Chart.of(construct).node.id === "apps";
+  const chartId = Chart.of(construct).node.id;
+  const isRootChartResource = chartId === ROOT_CHART;
   const isApplication =
     construct.kind === "Application" && construct.apiGroup === "argoproj.io";
   if (!isApplication) {
-    if (isRootChartResource) {
+    // Baseline charts mirror the root's cluster objects, waves included.
+    if (BASELINE_CHARTS.has(chartId)) {
       construct.metadata.addAnnotation(
         ARGOCD_SYNC_WAVE_ANNOTATION,
         rootResourceSyncWave(construct),

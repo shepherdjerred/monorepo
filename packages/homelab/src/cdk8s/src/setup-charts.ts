@@ -42,6 +42,9 @@ import { firstPartyImageRecipe } from "./versions.ts";
 import { createTrackerChart } from "./cdk8s-charts/platform/tracker.ts";
 import { createDeliveryChart } from "./cdk8s-charts/platform/delivery.ts";
 import { createDeliveryControlPlaneChart } from "./cdk8s-charts/platform/delivery-control-plane.ts";
+import { createClusterAdmissionChart } from "./cdk8s-charts/platform/cluster-admission.ts";
+import { createClusterPlatformChart } from "./cdk8s-charts/platform/cluster-platform.ts";
+import { createClusterObservabilityChart } from "./cdk8s-charts/platform/cluster-observability.ts";
 import { deliveryActivation } from "./resources/delivery/activation.ts";
 import { applyOrdinaryDeliveryImageBindings } from "./ordinary-delivery-image-bindings.ts";
 import {
@@ -59,6 +62,11 @@ export async function setupCharts(app: App): Promise<void> {
   resetProbeRegistry();
 
   await createAppsChart(app);
+  // v2 cutover baseline: the same cluster objects the root renders above,
+  // mirrored into per-concern charts (see resources/cluster-baseline/).
+  createClusterAdmissionChart(app);
+  createClusterPlatformChart(app);
+  await createClusterObservabilityChart(app);
   const trackerImage = firstPartyImageRecipe("tracker");
   createTrackerChart(app, trackerImage);
   createDeliveryChart(app, deliveryActivation());

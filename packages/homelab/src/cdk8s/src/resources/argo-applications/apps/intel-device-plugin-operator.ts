@@ -3,7 +3,7 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Namespace } from "cdk8s-plus-31";
 
-export function createIntelDevicePluginOperatorApp(chart: Chart) {
+export function createIntelDevicePluginOperatorNamespace(chart: Chart): void {
   new Namespace(chart, "intel-plugin-namespcae", {
     metadata: {
       name: "intel-device-plugin-operator",
@@ -12,6 +12,10 @@ export function createIntelDevicePluginOperatorApp(chart: Chart) {
       },
     },
   });
+}
+
+export function createIntelDevicePluginOperatorApp(chart: Chart) {
+  createIntelDevicePluginOperatorNamespace(chart);
 
   new Application(chart, "intel-plugins-app", {
     metadata: {

@@ -6,6 +6,7 @@ import { App, Chart, Size } from "cdk8s";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { setupCharts } from "@shepherdjerred/homelab/cdk8s/src/setup-charts.ts";
+import { CLUSTER_ADMISSION_CHART } from "@shepherdjerred/homelab/cdk8s/src/resources/cluster-baseline/charts.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { createStorageClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import {
@@ -161,8 +162,12 @@ describe("PVC backup policy", () => {
         if (!parsed.success) {
           continue;
         }
-        const currentCount = admissionKinds.get(parsed.data.kind) ?? 0;
-        admissionKinds.set(parsed.data.kind, currentCount + 1);
+        // `cluster-admission` mirrors the root's admission objects one for one
+        // (cluster-baseline.test.ts), so count each policy where the root has it.
+        if (filename !== `${CLUSTER_ADMISSION_CHART}.k8s.yaml`) {
+          const currentCount = admissionKinds.get(parsed.data.kind) ?? 0;
+          admissionKinds.set(parsed.data.kind, currentCount + 1);
+        }
         if (
           parsed.data.metadata.name === "delivery-tsmc-copy-reclaim.sjer.red"
         ) {

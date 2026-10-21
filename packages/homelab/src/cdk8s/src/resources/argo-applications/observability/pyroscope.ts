@@ -20,13 +20,17 @@ import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/
  * API + ingest endpoint live at pyroscope.pyroscope.svc.cluster.local:4040 and
  * are wired into Grafana as a datasource (grafana-values.ts).
  */
-export function createPyroscopeApp(chart: Chart) {
+export function createPyroscopeNamespace(chart: Chart): void {
   new Namespace(chart, "pyroscope-namespace", {
     metadata: {
       name: "pyroscope",
       annotations: { "argocd.argoproj.io/sync-wave": "-2" },
     },
   });
+}
+
+export function createPyroscopeApp(chart: Chart) {
+  createPyroscopeNamespace(chart);
   // Expand the existing claim without replacing the immutable StatefulSet
   // template. At ~0.94 GB/day, its 32 GiB quota projected full in 17 days.
   new KubePersistentVolumeClaim(chart, "pyroscope-existing-claim-capacity", {

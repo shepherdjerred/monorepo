@@ -7,13 +7,16 @@ import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/
 // NodePort for mc-router to accept all Minecraft connections
 const MC_ROUTER_NODE_PORT = 30_000;
 
-export function createMcRouterApp(chart: Chart) {
-  // Create namespace
+export function createMcRouterNamespace(chart: Chart): void {
   new Namespace(chart, "mc-router-namespace", {
     metadata: {
       name: "mc-router",
     },
   });
+}
+
+export function createMcRouterApp(chart: Chart) {
+  createMcRouterNamespace(chart);
 
   const mcRouterValues: HelmValuesForChart<"mc-router"> = {
     image: { tag: versions["itzg/mc-router"], pullPolicy: "IfNotPresent" },

@@ -64,12 +64,51 @@ integrations:
     - pod
 `.trim();
 
-export function createKueueApp(chart: Chart) {
+export function createKueueNamespace(chart: Chart): void {
   new Namespace(chart, "kueue-namespace", {
     metadata: {
       name: "kueue-system",
     },
   });
+}
+
+// The Kueue chart's ServiceMonitor carries the chart's own labels, while
+// this cluster deliberately selects monitors with `release: prometheus`.
+// Keep a selected monitor here so kueue_pending_workloads is actually
+// scraped without broadening Prometheus to every ServiceMonitor in the
+// cluster.
+export function createKueueMetricsServiceMonitor(chart: Chart): void {
+  new ServiceMonitor(chart, "kueue-metrics-service-monitor", {
+    metadata: {
+      name: "kueue-controller-manager-metrics",
+      namespace: "kueue-system",
+      labels: { release: "prometheus" },
+      annotations: { "argocd.argoproj.io/sync-wave": "2" },
+    },
+    spec: {
+      selector: {
+        matchLabels: {
+          "control-plane": "controller-manager",
+          "app.kubernetes.io/instance": "kueue",
+          "app.kubernetes.io/name": "kueue",
+        },
+      },
+      endpoints: [
+        {
+          port: "https",
+          path: "/metrics",
+          scheme: ServiceMonitorSpecEndpointsScheme.HTTPS,
+          bearerTokenFile:
+            "/var/run/secrets/kubernetes.io/serviceaccount/token",
+          tlsConfig: { insecureSkipVerify: true },
+        },
+      ],
+    },
+  });
+}
+
+export function createKueueApp(chart: Chart) {
+  createKueueNamespace(chart);
 
   const kueueValues: HelmValuesForChart<"kueue"> = {
     // Only renders an unselected ServiceMonitor and a Role for a
@@ -102,38 +141,7 @@ export function createKueueApp(chart: Chart) {
     },
   };
 
-  // The Kueue chart's ServiceMonitor carries the chart's own labels, while
-  // this cluster deliberately selects monitors with `release: prometheus`.
-  // Keep a selected monitor here so kueue_pending_workloads is actually
-  // scraped without broadening Prometheus to every ServiceMonitor in the
-  // cluster.
-  new ServiceMonitor(chart, "kueue-metrics-service-monitor", {
-    metadata: {
-      name: "kueue-controller-manager-metrics",
-      namespace: "kueue-system",
-      labels: { release: "prometheus" },
-      annotations: { "argocd.argoproj.io/sync-wave": "2" },
-    },
-    spec: {
-      selector: {
-        matchLabels: {
-          "control-plane": "controller-manager",
-          "app.kubernetes.io/instance": "kueue",
-          "app.kubernetes.io/name": "kueue",
-        },
-      },
-      endpoints: [
-        {
-          port: "https",
-          path: "/metrics",
-          scheme: ServiceMonitorSpecEndpointsScheme.HTTPS,
-          bearerTokenFile:
-            "/var/run/secrets/kubernetes.io/serviceaccount/token",
-          tlsConfig: { insecureSkipVerify: true },
-        },
-      ],
-    },
-  });
+  createKueueMetricsServiceMonitor(chart);
 
   return new Application(chart, "kueue-app", {
     metadata: {

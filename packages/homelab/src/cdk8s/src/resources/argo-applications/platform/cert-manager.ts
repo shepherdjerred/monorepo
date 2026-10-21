@@ -63,7 +63,8 @@ export function createHomelabIssuedCertificate(
   });
 }
 
-export function createCertManagerApp(chart: Chart) {
+/** The self-signed bootstrap Issuer, the stable cluster CA and its ClusterIssuer. */
+export function createClusterCertificateAuthority(chart: Chart): void {
   new Issuer(chart, "cert-manager-self-signed-issuer", {
     metadata: {
       name: "cert-manager-self-signed",
@@ -111,6 +112,10 @@ export function createCertManagerApp(chart: Chart) {
     },
   );
   homelabCaClusterIssuer.addJsonPatch(JsonPatch.remove("/metadata/namespace"));
+}
+
+export function createCertManagerApp(chart: Chart) {
+  createClusterCertificateAuthority(chart);
 
   const certManagerValues: HelmValuesForChart<"cert-manager"> = {
     installCRDs: true,

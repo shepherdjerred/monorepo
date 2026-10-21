@@ -64,11 +64,11 @@ pyroscope.write "default" {
  * boundary is the accepted trade-off for the profiling capability.
  * It only pushes profiles to the in-cluster Pyroscope; it has no ingress.
  */
-export function createAlloyApp(chart: Chart) {
-  // The DaemonSet is privileged (hostPID + privileged container), so the namespace
-  // must opt out of the cluster-default "baseline" Pod Security enforcement.
-  // CreateNamespace=true creates a bare namespace without these labels, which
-  // blocks every pod the daemonset-controller tries to create.
+// The DaemonSet is privileged (hostPID + privileged container), so the namespace
+// must opt out of the cluster-default "baseline" Pod Security enforcement.
+// CreateNamespace=true creates a bare namespace without these labels, which
+// blocks every pod the daemonset-controller tries to create.
+export function createAlloyNamespace(chart: Chart): void {
   new Namespace(chart, "alloy-namespace", {
     metadata: {
       name: "alloy",
@@ -79,6 +79,10 @@ export function createAlloyApp(chart: Chart) {
       },
     },
   });
+}
+
+export function createAlloyApp(chart: Chart) {
+  createAlloyNamespace(chart);
 
   const alloyValues: HelmValuesForChart<"alloy"> = {
     controller: {

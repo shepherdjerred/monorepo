@@ -226,19 +226,9 @@ groups:
           description: "The profiler on {{ "{{" }} $labels.node_name {{ "}}" }} logged 'unwind info array full' and is skipping new executables. Capture diagnostics and recover only that node's profiler after verifying its peer. Map scale does not increase this table."
 `;
 
-export function createLokiApp(chart: Chart) {
-  createIngress(chart, "loki-ingress", {
-    namespace: "loki",
-    service: "loki",
-    port: 3100,
-    hosts: ["loki"],
-    proxyClass: "medium",
-    // Loki returns 404 at "/"; its readiness endpoint is /ready.
-    probePath: "/ready",
-  });
-
-  // Create ConfigMap for Loki alert rules
-  const rulesConfigMap = new ConfigMap(chart, "loki-alert-rules", {
+/** The ConfigMap Loki's ruler mounts for every repo-owned log alert. */
+export function createLokiAlertRules(chart: Chart): ConfigMap {
+  return new ConfigMap(chart, "loki-alert-rules", {
     metadata: {
       name: "loki-alert-rules",
       namespace: "loki",
@@ -251,6 +241,20 @@ export function createLokiApp(chart: Chart) {
       "alloy-rules.yaml": alloyAlertRules,
     },
   });
+}
+
+export function createLokiApp(chart: Chart) {
+  createIngress(chart, "loki-ingress", {
+    namespace: "loki",
+    service: "loki",
+    port: 3100,
+    hosts: ["loki"],
+    proxyClass: "medium",
+    // Loki returns 404 at "/"; its readiness endpoint is /ready.
+    probePath: "/ready",
+  });
+
+  const rulesConfigMap = createLokiAlertRules(chart);
 
   const lokiValues: HelmValuesForChart<"loki"> = {
     deploymentMode: "SingleBinary",

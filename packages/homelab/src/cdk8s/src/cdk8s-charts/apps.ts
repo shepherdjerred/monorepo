@@ -23,7 +23,6 @@ import { createTempoApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo
 import { createPyroscopeApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/pyroscope.ts";
 import { createAlloyApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/alloy.ts";
 import { createAlloyGatewayApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/alloy-gateway.ts";
-import { Namespace } from "cdk8s-plus-31";
 import { createStorageClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import { createPriorityClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
 import { createOpenEBSApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/openebs.ts";
@@ -58,7 +57,6 @@ import { createGrafanaDbApp } from "@shepherdjerred/homelab/cdk8s/src/resources/
 import { createS3StaticSitesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/s3-static-sites.ts";
 import { createKueueApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/kueue.ts";
 import { createKueueConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
-import { createCpuPowerCap } from "@shepherdjerred/homelab/cdk8s/src/resources/cpu-power-cap.ts";
 import { createBugsinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/bugsink.ts";
 import { createPhoenixApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/phoenix.ts";
 import { createTasknotesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/tasknotes.ts";
@@ -73,10 +71,11 @@ import { createStashApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo
 import { createStormBrainApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/storm-brain.ts";
 import { createMcSandboxApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/mc-sandbox.ts";
 import { createStormForumApplications } from "@shepherdjerred/homelab/cdk8s/src/resources/storm-forum/releases.ts";
-import { createPvcBackupAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/pvc-backup-admission.ts";
-import { createMinecraftRestorationGuard } from "@shepherdjerred/homelab/cdk8s/src/resources/minecraft-restoration-guard.ts";
-import { createArgoCdApplicationAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/argocd-application-admission.ts";
-import { createWoodpeckerCiPodGuard } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/ci-pod-guard.ts";
+import { createClusterAdmission } from "@shepherdjerred/homelab/cdk8s/src/resources/cluster-baseline/admission.ts";
+import {
+  createBaselineNamespaces,
+  createCpuPowerCapGuard,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/cluster-baseline/platform.ts";
 import { createTrackerApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/tracker.ts";
 import { createDeliveryApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/delivery.ts";
 import { deliveryActivation } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/activation.ts";
@@ -93,39 +92,8 @@ export async function createAppsChart(app: App) {
   if (deliveryActivation() !== undefined) createDeliveryApp(chart);
   createTrackerApp(chart);
   createPriorityClasses(chart);
-  createArgoCdApplicationAdmissionPolicies(chart);
-  createPvcBackupAdmissionPolicies(chart);
-  createMinecraftRestorationGuard(chart);
-  createWoodpeckerCiPodGuard(chart);
-
-  new Namespace(chart, `maintenance-namespace`, {
-    metadata: {
-      name: `maintenance`,
-      labels: {
-        "pod-security.kubernetes.io/audit": "restricted",
-      },
-    },
-  });
-
-  new Namespace(chart, "prometheus-namespace", {
-    metadata: {
-      name: "prometheus",
-      labels: {
-        "pod-security.kubernetes.io/enforce": "privileged",
-      },
-    },
-  });
-
-  // The Tailscale operator creates privileged kernel-mode proxy pods here.
-  // Without an explicit label, the cluster's baseline default rejects new proxies.
-  new Namespace(chart, "tailscale-namespace", {
-    metadata: {
-      name: "tailscale",
-      labels: {
-        "pod-security.kubernetes.io/enforce": "privileged",
-      },
-    },
-  });
+  createClusterAdmission(chart);
+  createBaselineNamespaces(chart);
 
   createAppsApp(chart);
   createOpenEBSApp(chart);
@@ -154,13 +122,7 @@ export async function createAppsChart(app: App) {
   createWoodpeckerApp(chart);
   createKueueApp(chart);
   createKueueConfig(chart);
-  // Enforces Intel stock package power limits (PL1 125 W / PL2 253 W). ASUS
-  // firmware defaults PL1 to unlimited, which drove sustained 100 °C TJMax and
-  // overheated the adjacent M.2 slots before the AIO cooler was installed
-  // (2026-05-26). The original emergency cap was 95/140; raised to stock once
-  // the AIO + per-drive NVMe cooling were verified.
-  // See the original investigation.
-  createCpuPowerCap(chart, { pl1Watts: 125, pl2Watts: 253 });
+  createCpuPowerCapGuard(chart);
   createVeleroApp(chart);
   createPostgresOperatorApp(chart);
   createSeaweedfsApp(chart);

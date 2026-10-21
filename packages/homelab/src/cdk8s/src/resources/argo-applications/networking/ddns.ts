@@ -2,7 +2,7 @@ import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { Namespace } from "cdk8s-plus-31";
 
-export function createDdnsApp(chart: Chart) {
+export function createDdnsNamespace(chart: Chart): void {
   new Namespace(chart, `ddns-namespace`, {
     metadata: {
       name: `ddns`,
@@ -11,6 +11,10 @@ export function createDdnsApp(chart: Chart) {
       },
     },
   });
+}
+
+export function createDdnsApp(chart: Chart) {
+  createDdnsNamespace(chart);
 
   return new Application(chart, "ddns-app", {
     metadata: {

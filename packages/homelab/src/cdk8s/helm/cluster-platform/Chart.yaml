@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cluster-platform
+description: Cluster platform baseline (classes, namespaces, queues, CA) mirrored from the root chart for the v2 cutover
+type: application
+version: "$version"
+appVersion: "$appVersion"
