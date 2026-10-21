@@ -725,7 +725,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "1.30.1@sha256:48b63b9bc3d042a1301c32971b01af8841c7f059b452589c5bf77f475ba44c61"
+      "value": "1.30.3@sha256:fe45c15dc79573231629588e194f142adffae6bdeae6036401011c63ba644c94"
     },
     {
       "name": "oven/bun",
@@ -1236,7 +1236,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "8.5.11-fpm-bookworm@sha256:dd198c828c224e479bdaa184cdcf04a28c73d186bf5a885493bf9cc78d7196ef"
+      "value": "8.5.12-fpm-bookworm@sha256:740a5adab5af19504d8aa0754e903e20b40b0153cfd4013c11e4df2029a7b73c"
     },
     {
       "name": "library/mariadb",
