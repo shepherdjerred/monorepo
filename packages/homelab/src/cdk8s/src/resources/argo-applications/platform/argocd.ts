@@ -156,7 +156,8 @@ if healthStatus ~= nil then
 end
 return hs`;
 
-export function createArgoCdApp(chart: Chart) {
+/** Objects the root renders beside the Application; the `argocd-companion` companion chart renders the same objects under transition rendering. */
+export function createArgoCdResources(chart: Chart): void {
   createIngress(chart, "argocd-ingress", {
     namespace: "argocd",
     service: "argocd-server",
@@ -197,6 +198,10 @@ export function createArgoCdApp(chart: Chart) {
     // TLS-skip module.
     probeModule: "https_2xx_insecure",
   });
+}
+
+export function createArgoCdApp(chart: Chart) {
+  createArgoCdResources(chart);
 
   const argoCdValues: HelmValuesForChart<"argo-cd"> = {
     global: {

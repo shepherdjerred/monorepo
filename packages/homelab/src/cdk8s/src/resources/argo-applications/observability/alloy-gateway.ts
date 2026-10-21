@@ -293,9 +293,8 @@ export function createAlloyGatewayNamespace(chart: Chart): void {
   });
 }
 
-export function createAlloyGatewayApp(chart: Chart) {
-  createAlloyGatewayNamespace(chart);
-
+/** Objects the root renders beside the Application; the `alloy-gateway-companion` companion chart renders the same objects under transition rendering. */
+export function createAlloyGatewayResources(chart: Chart): OnePasswordItem {
   // One Phoenix system API key, shared by every per-project exporter.
   new OnePasswordItem(chart, "alloy-gateway-phoenix-1p", {
     metadata: {
@@ -330,6 +329,12 @@ export function createAlloyGatewayApp(chart: Chart) {
     hosts: ["otlp-metrics"],
     probeModule: "tcp_connect",
   });
+  return monitoringAuth;
+}
+
+export function createAlloyGatewayApp(chart: Chart) {
+  createAlloyGatewayNamespace(chart);
+  const monitoringAuth = createAlloyGatewayResources(chart);
 
   const alloyGatewayValues: HelmValuesForChart<"alloy"> = {
     // Deterministic resource/Service names regardless of helm fullname logic:

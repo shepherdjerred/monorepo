@@ -8,7 +8,8 @@ import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src
 import { SATA_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
-export function createChartMuseumApp(chart: Chart) {
+/** Objects the root renders beside the Application; the `chartmuseum-companion` companion chart renders the same objects under transition rendering. */
+export function createChartMuseumResources(chart: Chart): OnePasswordItem {
   createIngress(chart, "chartmuseum-ingress", {
     namespace: "chartmuseum",
     service: "chartmuseum",
@@ -24,7 +25,7 @@ export function createChartMuseumApp(chart: Chart) {
     port: 8080,
   });
 
-  const basicAuth = new OnePasswordItem(chart, "chartmuseum-admin-password", {
+  return new OnePasswordItem(chart, "chartmuseum-admin-password", {
     spec: {
       itemPath:
         "vaults/v64ocnykdqju4ui6j6pua56xw4/items/wwoism5fsvmbisv4ef47yxqy2i",
@@ -34,6 +35,10 @@ export function createChartMuseumApp(chart: Chart) {
       namespace: "chartmuseum",
     },
   });
+}
+
+export function createChartMuseumApp(chart: Chart) {
+  const basicAuth = createChartMuseumResources(chart);
 
   const chartMuseumValues: HelmValuesForChart<"chartmuseum"> = {
     persistence: {

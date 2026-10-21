@@ -62,7 +62,8 @@ export function minecraftChartRepository(
  * PATCH_DEFINITIONS). Kubernetes carries only secrets; there are no plugin
  * URLs, config ConfigMaps or copy init containers here.
  */
-export function createMinecraftTsmcApp(chart: Chart) {
+/** Objects the root renders beside the Application; the `minecraft-tsmc-companion` companion chart renders the same objects under transition rendering. */
+export function createMinecraftTsmcResources(chart: Chart): void {
   createMinecraftProxyTrust(chart, NAMESPACE, 25_565);
   createMinecraftPublicStatus(chart);
   // The Storm bridge credentials. Required fields (UPPERCASE_SNAKE labels, matching
@@ -123,6 +124,10 @@ export function createMinecraftTsmcApp(chart: Chart) {
     // Both hostnames share one backend; its public probe uses bluemap.ts-mc.net.
     disableProbe: true,
   });
+}
+
+export function createMinecraftTsmcApp(chart: Chart) {
+  createMinecraftTsmcResources(chart);
 
   const minecraftValues: HelmValuesForChart<"minecraft"> = {
     replicaCount: 1,

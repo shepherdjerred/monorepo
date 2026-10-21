@@ -48,6 +48,8 @@ import { createClusterAdmissionChart } from "./cdk8s-charts/platform/cluster-adm
 import { createClusterPlatformChart } from "./cdk8s-charts/platform/cluster-platform.ts";
 import { createClusterObservabilityChart } from "./cdk8s-charts/platform/cluster-observability.ts";
 import { deliveryActivation } from "./resources/delivery/activation.ts";
+import { transitionRendering } from "./release-configuration.ts";
+import { createCompanionCharts } from "./resources/companions/charts.ts";
 import { applyOrdinaryDeliveryImageBindings } from "./ordinary-delivery-image-bindings.ts";
 import {
   attachDockerHubPullSecrets,
@@ -126,6 +128,9 @@ export async function setupCharts(app: App): Promise<void> {
   // Must run last: reads the probe registry populated by every
   // TailscaleIngress/createIngress/createCloudflareTunnelBinding call above.
   createServiceProbesChart(app);
+  // v2 cutover: companions of the upstream-chart Applications take over the
+  // objects their constructors render into the root (see resources/companions/).
+  if (transitionRendering()) createCompanionCharts(app);
   prepareDockerHubPullSecrets(app);
   applyOrdinaryDeliveryImageBindings(app);
   attachDockerHubPullSecrets(app);

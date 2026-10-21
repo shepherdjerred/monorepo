@@ -9,6 +9,7 @@ import {
   BASELINE_CHARTS,
   ROOT_CHART,
 } from "./resources/cluster-baseline/charts.ts";
+import { COMPANION_CHARTS } from "./resources/companions/names.ts";
 import {
   deliveryEnvironment,
   DELIVERY_ACTIVE_DELEGATIONS,
@@ -270,8 +271,8 @@ function applyResourceReleasePolicy(
   const isApplication =
     construct.kind === "Application" && construct.apiGroup === "argoproj.io";
   if (!isApplication) {
-    // Baseline charts mirror the root's cluster objects, waves included.
-    if (BASELINE_CHARTS.has(chartId)) {
+    // Baseline and companion charts mirror root objects, waves included.
+    if (BASELINE_CHARTS.has(chartId) || COMPANION_CHARTS.has(chartId)) {
       construct.metadata.addAnnotation(
         ARGOCD_SYNC_WAVE_ANNOTATION,
         baselineResourceSyncWave(construct, transition),

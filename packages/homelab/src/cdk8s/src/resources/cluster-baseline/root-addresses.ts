@@ -60,3 +60,28 @@ export function adoptRootChartAddresses(chart: Chart): void {
     }
   }
 }
+
+/**
+ * An object whose name cdk8s generated from its construct path carries the
+ * chart id, so the same construct renders `apps-argocd-ingress` under the root
+ * and `argocd-companion-argocd-ingress` under a companion. A chart that takes
+ * over root objects adopts the root's generated names; explicit names stay.
+ */
+export function adoptRootChartNames(chart: Chart): void {
+  const rootMirror = new Chart(new App(), ROOT_CHART);
+  for (const construct of chart.node.findAll()) {
+    if (!ApiObject.isApiObject(construct)) continue;
+    if (construct.name !== chart.generateObjectName(construct)) continue;
+    let mirror: Construct = rootMirror;
+    for (const id of construct.node.path
+      .slice(chart.node.path.length + 1)
+      .split("/"))
+      mirror = mirror.node.tryFindChild(id) ?? new Construct(mirror, id);
+    construct.addJsonPatch(
+      JsonPatch.replace(
+        "/metadata/name",
+        Names.toDnsLabel(mirror, { includeHash: false }),
+      ),
+    );
+  }
+}

@@ -9,7 +9,8 @@ import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/
 const CLOUDFLARE_TUNNEL_1PASSWORD_ITEM_PATH =
   "vaults/v64ocnykdqju4ui6j6pua56xw4/items/sc5kj6xthlxmdn7k4mesdr2mju";
 
-export function createCloudflareOperatorApp(chart: Chart) {
+/** Objects the root renders beside the Application; the `cloudflare-operator-companion` companion chart renders the same objects under transition rendering. */
+export function createCloudflareOperatorResources(chart: Chart): void {
   // Note: The cloudflare-operator-system namespace is created by the operator's
   // own Kustomize manifests. We don't create it here to avoid duplicate ownership.
 
@@ -24,6 +25,10 @@ export function createCloudflareOperatorApp(chart: Chart) {
       itemPath: CLOUDFLARE_TUNNEL_1PASSWORD_ITEM_PATH,
     },
   });
+}
+
+export function createCloudflareOperatorApp(chart: Chart) {
+  createCloudflareOperatorResources(chart);
 
   return new Application(chart, "cloudflare-operator-app", {
     metadata: {

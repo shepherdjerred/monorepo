@@ -33,7 +33,8 @@ const DATA_PVC_NAME = "minecraft-sjerred-rlcraft-data";
 const DYNMAP_MOD_URL =
   "https://github.com/webbukkit/dynmap/releases/download/v3.3-beta-2/Dynmap-3.3-beta-2-forge-1.12.2.jar";
 
-export function createMinecraftSjerredApp(chart: Chart) {
+/** Objects the root renders beside the Application; the `minecraft-sjerred-companion` companion chart renders the same objects under transition rendering. */
+export function createMinecraftSjerredResources(chart: Chart): void {
   createMinecraftProxyTrust(chart, NAMESPACE, 25_566);
   new KubePersistentVolumeClaim(chart, "minecraft-sjerred-rlcraft-data", {
     metadata: {
@@ -94,6 +95,10 @@ export function createMinecraftSjerredApp(chart: Chart) {
     // Hibernates at 0 replicas (see above).
     disableProbe: true,
   });
+}
+
+export function createMinecraftSjerredApp(chart: Chart) {
+  createMinecraftSjerredResources(chart);
 
   const minecraftValues: HelmValuesForChart<"minecraft"> = {
     replicaCount: 0,

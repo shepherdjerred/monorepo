@@ -46,9 +46,8 @@ export function createVeleroNamespaces(chart: Chart): void {
   });
 }
 
-export function createVeleroApp(chart: Chart) {
-  createVeleroNamespaces(chart);
-
+/** Objects the root renders beside the Application; the `velero-companion` companion chart renders the same objects under transition rendering. */
+export function createVeleroResources(chart: Chart): OnePasswordItem {
   // 1Password secret for cloud credentials (AWS/GCP/Azure)
   const cloudCredentials = new OnePasswordItem(
     chart,
@@ -121,6 +120,13 @@ export function createVeleroApp(chart: Chart) {
       },
     });
   }
+  return cloudCredentials;
+}
+
+export function createVeleroApp(chart: Chart) {
+  createVeleroNamespaces(chart);
+
+  const cloudCredentials = createVeleroResources(chart);
 
   const veleroValues: HelmValuesForChart<"velero"> = {
     image: { imagePullSecrets: ["dockerhub-pull-velero"] },
