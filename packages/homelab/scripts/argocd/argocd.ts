@@ -801,6 +801,7 @@ function operationReleasePhase(
 }
 
 const ActiveSyncRequestSchema = z.object({
+  resources: z.array(ActiveOperationResourceSchema).optional(),
   manifests: z.array(z.string()).optional(),
   prune: z.boolean().optional(),
   source: ApplicationSourceSchema.optional(),
@@ -1002,6 +1003,7 @@ async function getRenderedResourceIdentities(
 type ExpectedSyncResultIdentities = {
   readonly desired: ReadonlySet<string>;
   readonly pruned: ReadonlySet<string>;
+  readonly nonApplicationPrunes?: readonly SyncOperationResource[];
 };
 
 async function getExpectedSyncResultIdentities(
@@ -1062,6 +1064,26 @@ function appsPruneRecoveryIdentitiesFrom(
   const pruned = persistedRootPruneCandidates(source);
   if (pruned === undefined) {
     throw new Error("Apps prune recovery requires persisted prune candidates");
+  }
+  const sync = ActiveSyncRequestSchema.parse(source["sync"]);
+  if (sync.resources !== undefined && sync.resources.length > 0) {
+    const selected = operationResourceIdentities(
+      sync.resources.map(({ group, kind, name, namespace }) => ({
+        group: group ?? "",
+        kind,
+        name,
+        ...(namespace === undefined ? {} : { namespace }),
+      })),
+    );
+    if (
+      sync.resources.some((resource) => resource.kind === "Application") ||
+      !resourceIdentitySetsEqual(selected, pruned)
+    ) {
+      throw new Error(
+        "Selective root pruning must cover exactly its persisted non-Application candidates",
+      );
+    }
+    return { desired: new Set(), pruned };
   }
   return rootPruneRecoveryIdentities(pruned);
 }
@@ -1556,6 +1578,44 @@ async function finalizeRootRelease(
   );
   if (
     initialOperation.hasLiveOperation &&
+    initialOperation.liveReleasePhase === "prune" &&
+    activeOperationResourceIdentities(initialApplication) !== null
+  ) {
+    const operation = z
+      .object({ sync: ActiveSyncRequestSchema })
+      .parse(initialApplication["operation"]);
+    const resources = operation.sync.resources?.map(
+      ({ group, kind, name, namespace }) => ({
+        group: group ?? "",
+        kind,
+        name,
+        ...(namespace === undefined ? {} : { namespace }),
+      }),
+    );
+    if (resources === undefined)
+      throw new Error("Selective root prune is missing its resource selection");
+    if (
+      resources.some(({ group, kind, name }) =>
+        allDesiredIdentities.has(resourceIdentity(group, kind, name)),
+      )
+    ) {
+      throw new Error(
+        "Selective root prune cannot retire a resource in the exact desired revision",
+      );
+    }
+    await sync(rootAppName, timeoutSeconds, false, {
+      prune: true,
+      requestId: exactRequestId,
+      revision: exactRevision,
+      releasePhase: "prune",
+      terminateAfterApplied: true,
+      recoverActiveRootPrune: true,
+      rootPruneOnly: true,
+      resources,
+    });
+  }
+  if (
+    initialOperation.hasLiveOperation &&
     activeOperationResourceIdentities(initialApplication) === null
   ) {
     if (
@@ -1595,6 +1655,23 @@ async function finalizeRootRelease(
     timeoutSeconds,
     token,
   );
+
+  // A removed monitoring object may have a later wave than the root's own
+  // Application, whose health depends on this operation finishing. Its exact
+  // prune-only selection avoids that cycle after every desired batch applied.
+  const candidates = await assertRootPruneSafe(token, exactRevision);
+  const nonApplicationPrunes = candidates.nonApplicationPrunes ?? [];
+  if (nonApplicationPrunes.length > 0) {
+    await sync(rootAppName, timeoutSeconds, false, {
+      prune: true,
+      requestId: exactRequestId,
+      revision: exactRevision,
+      releasePhase: "prune",
+      terminateAfterApplied: true,
+      rootPruneOnly: true,
+      resources: nonApplicationPrunes,
+    });
+  }
 
   await sync(rootAppName, timeoutSeconds, false, {
     prune: true,
@@ -1755,6 +1832,7 @@ async function assertRootPruneSafe(
     : [];
   const candidates = new Map<string, string>();
   const nonApplicationCandidates = new Set<string>();
+  const nonApplicationPrunes: SyncOperationResource[] = [];
   for (const resource of resources) {
     // Root charts also own objects such as Probes and PrometheusRules. Argo's
     // native prune marker and the exact rendered absence identify these; an
@@ -1785,7 +1863,20 @@ async function assertRootPruneSafe(
           `Root prune candidate is still present in the exact rendered inventory: ${identity}`,
         );
       }
+      if (nonApplicationCandidates.has(identity)) {
+        throw new Error(
+          "Root prune candidates have ambiguous group/kind/name identities",
+        );
+      }
       nonApplicationCandidates.add(identity);
+      nonApplicationPrunes.push({
+        group: resource["group"] ?? "",
+        kind: resource["kind"],
+        name: resource["name"],
+        ...(typeof resource["namespace"] === "string"
+          ? { namespace: resource["namespace"] }
+          : {}),
+      });
     }
     if (
       !isRecord(resource) ||
@@ -1827,6 +1918,7 @@ async function assertRootPruneSafe(
   return {
     desired: desiredResources,
     pruned: new Set([...candidates.values(), ...nonApplicationCandidates]),
+    nonApplicationPrunes,
   };
 }
 
@@ -1848,6 +1940,7 @@ type SyncOptions = {
   releasePhase?: ReleasePhase;
   terminateAfterApplied?: boolean;
   recoverActiveRootPrune?: boolean;
+  rootPruneOnly?: boolean;
   verifiedRootDesiredIdentities?: ReadonlySet<string>;
   waitForCompletion?: boolean;
   revision?: string;
@@ -1872,6 +1965,20 @@ async function sync(
   }
   const token = requireEnv("ARGOCD_TOKEN");
   const verifiedRootDesiredIdentities = options.verifiedRootDesiredIdentities;
+  if (
+    options.rootPruneOnly === true &&
+    (appName !== "apps" ||
+      !options.prune ||
+      options.releasePhase !== "prune" ||
+      options.terminateAfterApplied !== true ||
+      options.resources === undefined ||
+      options.resources.length === 0 ||
+      options.resources.some((resource) => resource.kind === "Application") ||
+      options.manifests !== undefined)
+  )
+    throw new Error(
+      "Root prune-only operations require an exact non-Application selection",
+    );
   if (
     options.releasePhase !== undefined &&
     (options.requestId === undefined || options.revision === undefined)
@@ -1942,7 +2049,21 @@ async function sync(
         token,
         options.revision,
       );
-      if (verifiedRootDesiredIdentities === undefined) {
+      if (options.rootPruneOnly === true) {
+        const selected = operationSelectorIdentities(options.resources ?? []);
+        const expected = operationSelectorIdentities(
+          rootExpectedResourceIdentities.nonApplicationPrunes ?? [],
+        );
+        if (!resourceIdentitySetsEqual(selected, expected)) {
+          throw new Error(
+            "Root prune-only selection differs from the exact native obsolete inventory",
+          );
+        }
+        expectedResourceIdentities = {
+          desired: new Set(),
+          pruned: operationResourceIdentities(options.resources ?? []),
+        };
+      } else if (verifiedRootDesiredIdentities === undefined) {
         expectedResourceIdentities = rootExpectedResourceIdentities;
       } else {
         for (const identity of verifiedRootDesiredIdentities) {
@@ -2707,6 +2828,52 @@ async function terminateAppliedOperation(
       }
       return reissued;
     },
+  );
+}
+
+/** Cancel only the authority's own root prune; this never seals an applied result. */
+export async function cancelOwnedRootPrune(options: {
+  authority: RootReleaseAuthority;
+  timeoutSeconds: number;
+}): Promise<void> {
+  const { authority, timeoutSeconds } = options;
+  await authority.authorize();
+  const token = requireEnv("ARGOCD_TOKEN");
+  const application = await getApplication("apps", token);
+  const current = observeOperation(application);
+  if (
+    !liveOperationMatches(
+      current,
+      authority.requestId,
+      authority.revision,
+      undefined,
+      "prune",
+    )
+  ) {
+    throw new Error(
+      "Root prune cancellation requires this authority's exact live request and revision",
+    );
+  }
+  assertActiveFinalRootPrune(application, current);
+  const mismatch = activeOperationRequestMismatch(application, { prune: true });
+  if (mismatch !== null)
+    throw new Error(`Root prune cancellation refuses ${mismatch}`);
+  const operationId = requireLiveOperationId(current, "apps");
+  await authority.authorize();
+  const response = await requestOperationTermination("apps", token);
+  if (!response.ok)
+    throw new Error(`Owned root prune cancellation failed: ${response.detail}`);
+  await waitForOperationToClear(
+    "apps",
+    token,
+    authority.requestId,
+    authority.revision,
+    operationId,
+    current.startedAt,
+    timeoutSeconds,
+  );
+  console.log(
+    "Cancelled owned root prune; apply verification and fresh release completion remain required",
   );
 }
 

@@ -432,6 +432,12 @@
     "reason": "Independent stopped Storm rollback restore; retained for verification and recovery, not a new backup source"
   },
   {
+    "namespace": "minecraft-tsmc-restore-3e5117f2",
+    "name": "datadir-minecraft-tsmc-0",
+    "backup": "disabled",
+    "reason": "Independent stopped Storm creative recovery rollback copy for request 3e5117f2; retain for byte verification and recovery, exclude from recurring backups"
+  },
+  {
     "namespace": "minecraft-sjerred",
     "name": "datadir-minecraft-sjerred-0",
     "backup": "enabled",

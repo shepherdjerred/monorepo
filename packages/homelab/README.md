@@ -27,6 +27,14 @@ completion before the error propagates. Each sync keeps its exact revision,
 request ownership checks, apply-safety preflight, and workload-specific timeout
 floor. Root staging, exact resource batches, and final pruning remain sequential.
 
+Root-owned non-Application retirements use an exact prune-only resource selection
+after the desired batches apply. This lets later-wave monitoring objects retire
+without waiting for the root Application's own operation health. The final root
+sync and all release verification still run afterward. Interrupted selections
+resume only their persisted candidate inventory and exact request. An operator
+may cancel an owned full-root prune through `cancelOwnedRootPrune` with fresh
+Delivery authority; cancellation does not produce an applied release receipt.
+
 Release operations are observed immediately, then every second for ten seconds,
 every two seconds through thirty seconds, and every five seconds thereafter.
 The cadence preserves operation deadlines and the one-minute auto-sync policy

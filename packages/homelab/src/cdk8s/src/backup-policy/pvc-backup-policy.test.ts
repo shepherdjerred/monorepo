@@ -113,21 +113,27 @@ it("retires per-app tailnet state while protecting the Delivery catalog", () => 
   ).toBe("enabled");
 });
 
-it("classifies 60 included and 52 excluded PVCs without duplicates including the prepared Arcade edge", () => {
+it("classifies 60 included and 53 excluded PVCs without duplicates including independent Storm recovery storage", () => {
   const keys = PVC_BACKUP_POLICY.map((entry) =>
     pvcBackupPolicyKey(entry.namespace, entry.name),
   );
-  expect(keys).toHaveLength(112);
-  expect(new Set(keys).size).toBe(112);
+  expect(keys).toHaveLength(113);
+  expect(new Set(keys).size).toBe(113);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
   ).toHaveLength(60);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
-  ).toHaveLength(52);
+  ).toHaveLength(53);
   expect(
     getPvcBackupPolicy("minecraft-tsmc-restore", "datadir-minecraft-tsmc-0")
       .backup,
+  ).toBe("disabled");
+  expect(
+    getPvcBackupPolicy(
+      "minecraft-tsmc-restore-3e5117f2",
+      "datadir-minecraft-tsmc-0",
+    ).backup,
   ).toBe("disabled");
 });
 

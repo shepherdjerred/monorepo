@@ -406,198 +406,275 @@ test("root release finalization requires exact revision and request identity", a
   );
 });
 
-test("root release finalization applies every exact wave before accepting a partial-wave prune result", async () => {
-  const syncBodies: unknown[] = [];
-  let activeRequest: unknown;
-  let requestedOperation: Record<string, unknown> | undefined;
-  let deleteRequests = 0;
-  let finalPruneReads = 0;
-  const removedApplication = "removed-worker";
-  const removedRule = {
-    group: "monitoring.coreos.com",
-    kind: "PrometheusRule",
-    namespace: "pokemon",
-    name: "retired-goal-rules",
-  };
-  const server = Bun.serve({
-    hostname: "127.0.0.1",
-    port: 0,
-    async fetch(request) {
-      const url = new URL(request.url);
-      if (url.pathname === "/api/charts/apps") {
-        return Response.json([
+const RemovedMonitoringRule = {
+  group: "monitoring.coreos.com",
+  kind: "PrometheusRule",
+  namespace: "pokemon",
+  name: "retired-goal-rules",
+};
+
+function rootPruneObservation(state: {
+  activeRequest: unknown;
+  requestedOperation: Record<string, unknown> | undefined;
+  removedRulePruned: boolean;
+  removedRule: { group: string; kind: string; namespace: string; name: string };
+  removedApplication: string;
+  reads: { final: number; selected: number };
+}) {
+  const {
+    activeRequest,
+    requestedOperation,
+    removedRule,
+    removedApplication,
+    reads,
+  } = state;
+  if (activeRequest === undefined || requestedOperation === undefined) {
+    return Response.json({
+      status: {
+        resources: [
+          ...(state.removedRulePruned
+            ? []
+            : [{ ...removedRule, requiresPruning: true, status: "OutOfSync" }]),
           {
-            version: "2.0.0-43",
-            urls: ["charts/apps-2.0.0-43.tgz"],
-            digest: "a".repeat(64),
+            group: "argoproj.io",
+            kind: "Application",
+            name: removedApplication,
           },
-        ]);
-      }
-      if (
-        request.method === "GET" &&
-        url.pathname === "/api/v1/applications/apps/manifests"
-      ) {
-        expect(url.searchParams.get("revision")).toBe("2.0.0-43");
-        return Response.json({
-          manifests: [
-            StagedRootApplication,
-            StagedRepositoryApplication,
-            StagedExternalApplication,
-            StagedAdmissionPolicy,
-          ],
-        });
-      }
-      if (
-        request.method === "GET" &&
-        url.pathname === `/api/v1/applications/${removedApplication}`
-      ) {
-        return Response.json({
-          metadata: {
-            annotations: {
-              "ci.sjer.red/application-lifecycle": "cascade",
+        ],
+      },
+    });
+  }
+  const manifestRequest = SyncRequestSchema.safeParse(activeRequest);
+  const selectedPrune =
+    manifestRequest.success && RootSyncRequestSchema.parse(activeRequest).prune;
+  if (selectedPrune) reads.selected++;
+  if (!manifestRequest.success) reads.final++;
+  const resources = selectedPrune
+    ? [{ ...removedRule, status: reads.selected > 1 ? "Pruned" : "Synced" }]
+    : manifestRequest.success
+      ? manifestRequest.data.resources.map((resource) => ({
+          ...resource,
+          status: "Synced",
+        }))
+      : finalPruneResources(removedApplication, reads.final > 1);
+  return Response.json({
+    operation: requestedOperation,
+    status: {
+      operationState: {
+        phase: "Running",
+        startedAt: new Date().toISOString(),
+        operation: requestedOperation,
+        syncResult: { revision: "2.0.0-43", resources },
+      },
+    },
+  });
+}
+
+test.each([false, true])(
+  "root finalization covers late non-Application prunes (resume=%s)",
+  async (resumePrune) => {
+    const syncBodies: unknown[] = [];
+    let activeRequest: unknown;
+    let requestedOperation: Record<string, unknown> | undefined;
+    let deleteRequests = 0;
+    const reads = { final: 0, selected: 0 };
+    let removedRulePruned = false;
+    const removedApplication = "removed-worker";
+    const removedRule = RemovedMonitoringRule;
+    const resumedPrune = {
+      prune: true,
+      revision: "2.0.0-43",
+      resources: [removedRule],
+      infos: releaseOperationInfo("prune").map((entry) =>
+        entry.name === "ci.sjer.red/prune-candidates"
+          ? {
+              ...entry,
+              value: JSON.stringify([
+                JSON.stringify([
+                  removedRule.group,
+                  removedRule.kind,
+                  removedRule.name,
+                ]),
+              ]),
+            }
+          : entry,
+      ),
+    };
+    if (resumePrune) {
+      activeRequest = resumedPrune;
+      requestedOperation = {
+        info: resumedPrune.infos,
+        initiatedBy: { username: "delivery-platform" },
+        sync: { prune: true, revision: "2.0.0-43", resources: [removedRule] },
+      };
+    }
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      async fetch(request) {
+        const url = new URL(request.url);
+        if (url.pathname === "/api/charts/apps") {
+          return Response.json([
+            {
+              version: "2.0.0-43",
+              urls: ["charts/apps-2.0.0-43.tgz"],
+              digest: "a".repeat(64),
             },
-            finalizers: ["resources-finalizer.argocd.argoproj.io"],
-          },
-        });
-      }
-      if (
-        request.method === "POST" &&
-        url.pathname === "/api/v1/applications/apps/sync"
-      ) {
-        activeRequest = await request.json();
-        syncBodies.push(activeRequest);
-        const manifestRequest = SyncRequestSchema.safeParse(activeRequest);
-        requestedOperation = manifestRequest.success
-          ? operationForSyncRequest(activeRequest)
-          : operationForRootSyncRequest(activeRequest);
-        return Response.json({ operation: requestedOperation });
-      }
-      if (
-        request.method === "DELETE" &&
-        url.pathname === "/api/v1/applications/apps/operation"
-      ) {
-        deleteRequests += 1;
-        activeRequest = undefined;
-        requestedOperation = undefined;
-        return Response.json({});
-      }
-      if (
-        request.method === "GET" &&
-        url.pathname === "/api/v1/applications/apps"
-      ) {
-        if (activeRequest === undefined || requestedOperation === undefined) {
+          ]);
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications/apps/manifests"
+        ) {
+          expect(url.searchParams.get("revision")).toBe("2.0.0-43");
           return Response.json({
-            status: {
-              resources: [
-                { ...removedRule, requiresPruning: true, status: "OutOfSync" },
-                {
-                  group: "argoproj.io",
-                  kind: "Application",
-                  name: removedApplication,
-                },
-              ],
+            manifests: [
+              StagedRootApplication,
+              StagedRepositoryApplication,
+              StagedExternalApplication,
+              StagedAdmissionPolicy,
+            ],
+          });
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === `/api/v1/applications/${removedApplication}`
+        ) {
+          return Response.json({
+            metadata: {
+              annotations: {
+                "ci.sjer.red/application-lifecycle": "cascade",
+              },
+              finalizers: ["resources-finalizer.argocd.argoproj.io"],
             },
           });
         }
-        const manifestRequest = SyncRequestSchema.safeParse(activeRequest);
-        if (!manifestRequest.success) {
-          finalPruneReads += 1;
+        if (
+          request.method === "POST" &&
+          url.pathname === "/api/v1/applications/apps/sync"
+        ) {
+          activeRequest = await request.json();
+          syncBodies.push(activeRequest);
+          const manifestRequest = SyncRequestSchema.safeParse(activeRequest);
+          requestedOperation = manifestRequest.success
+            ? operationForSyncRequest(activeRequest)
+            : operationForRootSyncRequest(activeRequest);
+          if (
+            manifestRequest.success &&
+            RootSyncRequestSchema.parse(activeRequest).prune
+          ) {
+            requestedOperation = {
+              ...requestedOperation,
+              sync: { prune: true, resources: manifestRequest.data.resources },
+            };
+          }
+          return Response.json({ operation: requestedOperation });
         }
-        const resources = manifestRequest.success
-          ? manifestRequest.data.resources.map((resource) => ({
-              ...resource,
-              status: "Synced",
-            }))
-          : [
-              ...finalPruneResources(removedApplication, finalPruneReads > 1),
-              ...(finalPruneReads > 2
-                ? [{ ...removedRule, status: "Pruned" }]
-                : []),
-            ];
-        return Response.json({
-          operation: requestedOperation,
-          status: {
-            operationState: {
-              phase: "Running",
-              startedAt: new Date().toISOString(),
-              operation: requestedOperation,
-              syncResult: {
-                revision: "2.0.0-43",
-                resources,
-              },
-            },
-          },
-        });
-      }
-      return new Response("not found", { status: 404 });
-    },
-  });
-
-  try {
-    const { exitCode, stdout, stderr } = await runRootFinalization(
-      server.url.origin,
-    );
-
-    expect(exitCode).toBe(0);
-    expect(stderr).toBe("");
-    expect(stdout).toContain("finalize-root-release: apps at 2.0.0-43");
-    expect(stdout).toContain("syncing exact root batch 1/3 (2 resources)");
-    expect(stdout).toContain("syncing exact root batch 2/3 (1 resources)");
-    expect(stdout).toContain("syncing exact root batch 3/3 (1 resources)");
-    expect(syncBodies).toHaveLength(4);
-    expect(deleteRequests).toBe(4);
-    expect(finalPruneReads).toBeGreaterThanOrEqual(3);
-
-    const applicationRequest = SyncRequestSchema.parse(syncBodies[0]);
-    expect(applicationRequest.revision).toBe("2.0.0-43");
-    expect(applicationRequest.infos).toContainEqual(BATCH_PHASE_INFO);
-    expect(applicationRequest.resources).toEqual([
-      WorkerApplicationResource,
-      {
-        group: "argoproj.io",
-        kind: "Application",
-        name: "external",
+        if (
+          request.method === "DELETE" &&
+          url.pathname === "/api/v1/applications/apps/operation"
+        ) {
+          deleteRequests += 1;
+          if (
+            activeRequest !== undefined &&
+            SyncRequestSchema.safeParse(activeRequest).success &&
+            RootSyncRequestSchema.parse(activeRequest).prune
+          )
+            removedRulePruned = true;
+          activeRequest = undefined;
+          requestedOperation = undefined;
+          return Response.json({});
+        }
+        if (
+          request.method === "GET" &&
+          url.pathname === "/api/v1/applications/apps"
+        ) {
+          return rootPruneObservation({
+            activeRequest,
+            requestedOperation,
+            removedRulePruned,
+            removedRule,
+            removedApplication,
+            reads,
+          });
+        }
+        return new Response("not found", { status: 404 });
       },
-    ]);
-    expect(applicationRequest.manifests).toBeUndefined();
-
-    const rootApplicationRequest = SyncRequestSchema.parse(syncBodies[1]);
-    expect(rootApplicationRequest.resources).toEqual([RootApplicationResource]);
-    const rootApplicationManifests = rootApplicationRequest.manifests;
-    if (rootApplicationManifests === undefined) {
-      throw new Error("Root Application is missing its suspended manifest");
-    }
-    expect(JSON.parse(rootApplicationManifests[0] ?? "")).toMatchObject({
-      spec: { syncPolicy: { automated: { enabled: false } } },
     });
 
-    const policyRequest = SyncRequestSchema.parse(syncBodies[2]);
-    expect(policyRequest.resources).toEqual([
-      {
-        group: "admissionregistration.k8s.io",
-        kind: "ValidatingAdmissionPolicy",
-        name: "pvc-backup-policy.sjer.red",
-      },
-    ]);
-    expect(policyRequest.manifests).toBeUndefined();
-    const pruneRequest = RootSyncRequestSchema.parse(syncBodies[3]);
-    expect(pruneRequest.prune).toBe(true);
-    expect(pruneRequest.infos).toContainEqual(PRUNE_PHASE_INFO);
-    const pruneCandidates = pruneRequest.infos.find(
-      (info) => info.name === "ci.sjer.red/prune-candidates",
-    );
-    expect(JSON.parse(pruneCandidates?.value ?? "null")).toContain(
-      JSON.stringify([removedRule.group, removedRule.kind, removedRule.name]),
-    );
-    const rawPruneRequest = z
-      .record(z.string(), z.unknown())
-      .parse(syncBodies[3]);
-    expect(rawPruneRequest["resources"]).toBeUndefined();
-    expect(rawPruneRequest["manifests"]).toBeUndefined();
-  } finally {
-    await server.stop(true);
-  }
-});
+    try {
+      const { exitCode, stdout, stderr } = await runRootFinalization(
+        server.url.origin,
+      );
+
+      expect(exitCode).toBe(0);
+      expect(stderr).toBe("");
+      expect(stdout).toContain("finalize-root-release: apps at 2.0.0-43");
+      expect(stdout).toContain("syncing exact root batch 1/3 (2 resources)");
+      expect(stdout).toContain("syncing exact root batch 2/3 (1 resources)");
+      expect(stdout).toContain("syncing exact root batch 3/3 (1 resources)");
+      expect(syncBodies).toHaveLength(resumePrune ? 4 : 5);
+      expect(deleteRequests).toBe(5);
+      expect(reads.final).toBeGreaterThanOrEqual(2);
+      expect(reads.selected).toBeGreaterThanOrEqual(2);
+
+      const applicationRequest = SyncRequestSchema.parse(syncBodies[0]);
+      expect(applicationRequest.revision).toBe("2.0.0-43");
+      expect(applicationRequest.infos).toContainEqual(BATCH_PHASE_INFO);
+      expect(applicationRequest.resources).toEqual([
+        WorkerApplicationResource,
+        {
+          group: "argoproj.io",
+          kind: "Application",
+          name: "external",
+        },
+      ]);
+      expect(applicationRequest.manifests).toBeUndefined();
+
+      const rootApplicationRequest = SyncRequestSchema.parse(syncBodies[1]);
+      expect(rootApplicationRequest.resources).toEqual([
+        RootApplicationResource,
+      ]);
+      const rootApplicationManifests = rootApplicationRequest.manifests;
+      if (rootApplicationManifests === undefined) {
+        throw new Error("Root Application is missing its suspended manifest");
+      }
+      expect(JSON.parse(rootApplicationManifests[0] ?? "")).toMatchObject({
+        spec: { syncPolicy: { automated: { enabled: false } } },
+      });
+
+      const policyRequest = SyncRequestSchema.parse(syncBodies[2]);
+      expect(policyRequest.resources).toEqual([
+        {
+          group: "admissionregistration.k8s.io",
+          kind: "ValidatingAdmissionPolicy",
+          name: "pvc-backup-policy.sjer.red",
+        },
+      ]);
+      expect(policyRequest.manifests).toBeUndefined();
+      const selectedPruneRequest = SyncRequestSchema.parse(
+        resumePrune ? resumedPrune : syncBodies[3],
+      );
+      expect(selectedPruneRequest.resources).toEqual([removedRule]);
+      const pruneRequest = RootSyncRequestSchema.parse(syncBodies.at(-1));
+      expect(pruneRequest.prune).toBe(true);
+      expect(pruneRequest.infos).toContainEqual(PRUNE_PHASE_INFO);
+      const pruneCandidates = selectedPruneRequest.infos.find(
+        (info) => info.name === "ci.sjer.red/prune-candidates",
+      );
+      expect(JSON.parse(pruneCandidates?.value ?? "null")).toContain(
+        JSON.stringify([removedRule.group, removedRule.kind, removedRule.name]),
+      );
+      const rawPruneRequest = z
+        .record(z.string(), z.unknown())
+        .parse(syncBodies.at(-1));
+      expect(rawPruneRequest["resources"]).toBeUndefined();
+      expect(rawPruneRequest["manifests"]).toBeUndefined();
+    } finally {
+      await server.stop(true);
+    }
+  },
+);
 
 // A cluster-scoped selector has two equally valid spellings on the wire: Argo
 // may omit `namespace` or send it empty. Both name the same target, so adoption
