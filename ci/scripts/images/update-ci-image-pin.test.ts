@@ -702,9 +702,16 @@ describe("promotion outcome", () => {
     ).toThrow(reason);
   });
 
-  test("a promotion carrying another pending pin does not promote this candidate", () => {
+  test("a promotion carrying another pending pin or deferred late does not promote this candidate", () => {
     const carried = stateFromCandidate(candidate);
     expect(carriedPromotionOutcome(candidate, carried).promoted).toBe(true);
+    expect(carriedPromotionOutcome(candidate, undefined)).toEqual(
+      promotionOutcome(
+        candidate,
+        false,
+        "a ready promotion is already pending",
+      ),
+    );
     expect(
       carriedPromotionOutcome(candidate, {
         ...carried,

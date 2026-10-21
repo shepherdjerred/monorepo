@@ -33,11 +33,21 @@ export function promotionOutcome(
   };
 }
 
-/** The outcome once a promotion pull request carries `carried`, which may be a newer pending pin. */
+/**
+ * The outcome once the promotion pull request write finished. `carried` is the
+ * state the branch now holds, which may be a newer pending pin, or undefined
+ * when a promotion that became ready meanwhile deferred the write.
+ */
 export function carriedPromotionOutcome(
   candidate: CiImageCandidate,
-  carried: CiImagePinState,
+  carried: CiImagePinState | undefined,
 ): CiImagePromotionOutcome {
+  if (carried === undefined)
+    return promotionOutcome(
+      candidate,
+      false,
+      "a ready promotion is already pending",
+    );
   return carried.digest === candidate.digest
     ? promotionOutcome(candidate, true, "promotion pull request carries it")
     : promotionOutcome(candidate, false, "a newer pending promotion is kept");

@@ -458,14 +458,16 @@ async function promote(
       ],
       { env: auth.env },
     );
-    await openOrUpdatePullRequest({
-      cloneDir,
-      definition,
-      state: promoted,
-      env: auth.env,
-      expectedRemoteSha: pending?.sha,
-    });
-    return carriedPromotionOutcome(candidate, promoted);
+    return carriedPromotionOutcome(
+      candidate,
+      await openOrUpdatePullRequest({
+        cloneDir,
+        definition,
+        state: promoted,
+        env: auth.env,
+        expectedRemoteSha: pending?.sha,
+      }),
+    );
   } finally {
     await auth.cleanup();
     await rm(cloneDir, { recursive: true, force: true });
