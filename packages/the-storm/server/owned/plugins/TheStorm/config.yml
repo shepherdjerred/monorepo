@@ -13,7 +13,7 @@ modules:
   shops: true
   shards: true
   towns: true
-  # Recovered 2016 plot world. It must already be loaded with generator TheStorm:creative.
+  # Recovered 2016 plot terrain is required; TheStorm loads its generator before modules enable.
   creative: true
   tracks: true
   mechanics: true

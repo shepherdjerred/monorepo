@@ -107,8 +107,12 @@ remain local extended acceptance.
 
 `owned/plugins/TheStorm/config.yml` registers and enables all 27 Storm modules,
 including `creative`, `rwf`, and `rwfbots`. The creative world is the recovered
-2016 plot map: load it with generator `TheStorm:creative` before TheStorm enables,
-or that module refuses to start. Players enter with `/creative` and leave with
+2016 plot map. Keep its Multiverse `auto-load` setting false: Multiverse enables
+before TheStorm and cannot obtain its generator then. TheStorm opens existing
+legacy or native creative terrain with its plot generator before enabling the
+module. Missing terrain, linked files, truncated region files, or two conflicting
+terrain stores stop startup; production never creates an empty replacement.
+Players enter with `/creative` and leave with
 `/creative leave`; the visit stores their survival body and gives them an empty
 creative one. Recovered plots are the `plots` list in `creative.yml` (a blank
 owner is staff-held); the plugin reads that list and never writes it. A recovered
@@ -578,6 +582,13 @@ rejects replaced helper identities, injected credentials, extra containers,
 lifecycle commands, host namespaces and broader privileges. Source-volume
 readers must be removed before its writer can be accepted.
 
+`creative_install.py` is the separate additive filesystem transaction for this
+map. Its sealed payload permits only creative terrain, level metadata and the
+Multiverse world registry. It verifies the entire stopped source against the
+independent backup, retains the previous registry, resumes owned renames, and
+verifies every unrelated survival and player file remains unchanged. It runs
+inside the same guarded writer and grants no private startup or acceptance.
+
 `restoration-control.py preflight --journal <private-receipt> --request <uuid>
 --image <immutable-image>` checks the reconciled Kubernetes admission guards and
 records the exact server, claim, volume and Service identities.
@@ -610,7 +621,12 @@ backup of the exact recorded PVC and PV. It requires closed routes, stopped
 replicas and no mounted source-volume pods, and accepts completion only with
 exactly one successful volume snapshot. `restore-backup` restores only storage
 resources into `minecraft-tsmc-restore`; it cannot restore a production workload
-or route. The restore claim is explicitly excluded from scheduled backups.
+or route. If an owned Backup has finished as failed, `retry-backup` retains its
+identity and requests a new numbered Backup under the same stopped lease. It
+refuses active backups, replaced owners, any writer authorization, or an existing
+independent restore. After retrying, use `backup` to poll the new attempt. Never
+accept a partially failed copy as rollback evidence. The restore claim is
+explicitly excluded from scheduled backups.
 The recorded claim, PV and native CSI volume handle must all identify distinct
 storage. Both commands report pending controller work and can be repeated.
 Controller warnings remain recorded for operator review. A completed restore

@@ -77,6 +77,7 @@ public final class TheStormPlugin extends JavaPlugin {
   private void enableModules() {
     var config = readConfig();
     bootstrapCreativeWorld(config);
+    loadRecoveredCreativeWorld(config);
     var computeSettings =
         ConfigFiles.load(getDataPath().resolve("compute.yml"), ComputeSettings.class);
     var selected =
@@ -213,6 +214,28 @@ public final class TheStormPlugin extends JavaPlugin {
     getComponentLogger().info("Sandbox bootstrap loaded creative with the plot generator");
   }
 
+  /** Multiverse enables first, so it must leave this world's auto-load off. */
+  private void loadRecoveredCreativeWorld(PluginConfig config) {
+    if (!Boolean.TRUE.equals(config.modules().get("creative"))) {
+      return;
+    }
+    var creative = ConfigFiles.load(getDataPath().resolve("creative.yml"), CreativeConfig.class);
+    if (getServer().getWorld(creative.world()) != null) {
+      // CreativeModule still rejects an existing world with the wrong generator.
+      return;
+    }
+    RecoveredCreativeData.require(getServer().getWorldContainer().toPath(), creative.world());
+    var loaded =
+        new WorldCreator(creative.world())
+            .generator(CreativeGenerator.open(creative.grid()))
+            .generateStructures(false)
+            .createWorld();
+    if (loaded == null || !(loaded.getGenerator() instanceof CreativeGenerator)) {
+      throw new IllegalStateException("Recovered creative loaded " + generatorName(loaded));
+    }
+    getComponentLogger().info("Loaded recovered creative terrain with the plot generator");
+  }
+
   /**
    * A sandbox sometimes has {@code creative} loaded with the vanilla generator before this plugin
    * can attach the plot generator. Drop that empty world so the next create uses {@link
@@ -255,8 +278,8 @@ public final class TheStormPlugin extends JavaPlugin {
   }
 
   /**
-   * Plot generator for the recovered creative world. Multiverse and the test fixtures ask for it
-   * while loading that world, which is before {@link #onEnable()}.
+   * Plot generator for explicitly provisioned creative worlds. Production leaves Multiverse
+   * auto-load off and passes the generator instance while this plugin enables.
    */
   @Override
   public @Nullable ChunkGenerator getDefaultWorldGenerator(String worldName, @Nullable String id) {

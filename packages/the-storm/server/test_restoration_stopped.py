@@ -2,6 +2,7 @@
 
 import copy
 import importlib.util
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -87,6 +88,77 @@ class StoppedContainerTest(unittest.TestCase):
         for name in ("kube-system", "minecraft-tsmc-restore-../other", "minecraft-tsmc-restore-" + "a" * 33):
             with self.subTest(name=name), self.assertRaises(ValueError):
                 control.bind_restore_namespace(JsonObject(), name)
+
+
+class BackupRetryTest(unittest.TestCase):
+    def setUp(self):
+        self.journal = JsonObject(
+            {
+                "requestId": "3e5117f2-3f1b-46f6-a41c-2d9fb22026dc",
+                "productionWriteAuthorized": False,
+                "backup": {"name": "original", "uid": "backup-uid"},
+            }
+        )
+        self.resource = JsonObject(
+            {
+                "metadata": {"uid": "backup-uid", "labels": {control.LEASE: self.journal["requestId"]}},
+                "status": {"phase": "PartiallyFailed", "completionTimestamp": "2026-10-21T17:18:41Z"},
+            }
+        )
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.path = Path(temporary.name) / "journal.json"
+
+    def retry(self):
+        with (
+            patch.object(control, "require_offline"),
+            patch.object(control, "read", return_value=self.resource),
+            patch.object(control, "backup") as fresh,
+        ):
+            control.retry_backup(self.path, self.journal)
+            return fresh
+
+    def test_failed_identity_is_retained_before_a_fresh_request(self):
+        fresh = self.retry()
+        fresh.assert_called_once_with(self.path, self.journal)
+        self.assertEqual(self.journal["backupAttempt"], 1)
+        self.assertEqual(
+            self.journal["failedBackups"],
+            [
+                {
+                    "name": "original",
+                    "uid": "backup-uid",
+                    "phase": "PartiallyFailed",
+                }
+            ],
+        )
+        self.assertNotIn("backup", self.journal)
+
+    def test_incomplete_or_replaced_backups_cannot_be_retried(self):
+        original = copy.deepcopy(self.resource)
+        for mutation in ("active", "unfinished", "uid", "owner"):
+            with self.subTest(mutation=mutation):
+                self.resource = copy.deepcopy(original)
+                if mutation == "active":
+                    self.resource["status"]["phase"] = "InProgress"
+                elif mutation == "unfinished":
+                    self.resource["status"].pop("completionTimestamp")
+                elif mutation == "uid":
+                    self.resource["metadata"]["uid"] = "replacement"
+                else:
+                    self.resource["metadata"]["labels"][control.LEASE] = "foreign"
+                with self.assertRaisesRegex(ValueError, "terminal failed"):
+                    self.retry()
+                self.assertFalse(self.path.exists())
+
+    def test_writer_or_existing_independent_restore_prevents_new_backup(self):
+        self.journal["productionWriteAuthorized"] = True
+        with self.assertRaisesRegex(ValueError, "no writer"):
+            self.retry()
+        self.journal["productionWriteAuthorized"] = False
+        self.journal["restore"] = {"uid": "existing-restore"}
+        with self.assertRaisesRegex(ValueError, "no writer"):
+            self.retry()
 
 
 if __name__ == "__main__":

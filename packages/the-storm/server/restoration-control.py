@@ -597,6 +597,11 @@ def backup(path: Path, journal: JsonObject) -> JsonObject:
     ]:
         raise ValueError("Velero selection does not identify only the recorded Storm claim")
     name = "storm-world-" + journal.string("requestId")
+    attempt = journal.get("backupAttempt", 0)
+    if not isinstance(attempt, int) or isinstance(attempt, bool) or not 0 <= attempt <= 9:
+        raise ValueError("Invalid bounded rollback backup attempt")
+    if attempt:
+        name += "-retry-" + str(attempt)
     resource = ensure_resource(
         {
             "apiVersion": "velero.io/v1",
@@ -633,6 +638,33 @@ def backup(path: Path, journal: JsonObject) -> JsonObject:
     ):
         raise ValueError("Rollback backup did not complete exactly one volume snapshot")
     return resource
+
+
+def retry_backup(path: Path, journal: JsonObject) -> None:
+    """Retain a failed native backup and request a fresh copy before any storage writer exists."""
+    require_offline(journal)
+    if journal.get("productionWriteAuthorized") is not False or journal.get("restore"):
+        raise ValueError("Backup retry requires no writer authorization or independent restore")
+    prior = journal.object("backup")
+    actual = read("backup", prior.string("name"), "velero")
+    status = actual.object("status")
+    if (
+        actual.object("metadata").get("uid") != prior.string("uid")
+        or actual.object("metadata").strings("labels").get(LEASE) != journal.string("requestId")
+        or status.get("phase") not in ("Failed", "PartiallyFailed", "FailedValidation")
+        or not status.get("completionTimestamp")
+    ):
+        raise ValueError("Backup retry requires its exact owned terminal failed native backup")
+    attempt = journal.get("backupAttempt", 0)
+    if not isinstance(attempt, int) or isinstance(attempt, bool) or not 0 <= attempt < 9:
+        raise ValueError("Rollback backup retry limit reached")
+    history = journal.objects("failedBackups", [])
+    history.append(JsonObject({**prior, "phase": status.string("phase")}))
+    journal["failedBackups"] = history
+    journal["backupAttempt"] = attempt + 1
+    journal.pop("backup")
+    save(path, journal)
+    backup(path, journal)
 
 
 def assert_managed_restore_namespace(journal: JsonObject) -> bool:
@@ -2639,6 +2671,7 @@ def main() -> None:
             "acquire",
             "acquire-stopped",
             "backup",
+            "retry-backup",
             "restore-backup",
             "verify-backup",
             "export-backup",
@@ -2696,6 +2729,8 @@ def main() -> None:
             acquire(arguments.journal, journal, stopped_container=True)
         elif arguments.operation == "backup":
             backup(arguments.journal, journal)
+        elif arguments.operation == "retry-backup":
+            retry_backup(arguments.journal, journal)
         elif arguments.operation == "restore-backup":
             restore_backup(arguments.journal, journal)
         elif arguments.operation == "verify-backup":
