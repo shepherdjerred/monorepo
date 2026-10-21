@@ -123,7 +123,8 @@ command. PostgreSQL, Temporal and ArgoCD recovery remain available through their
 existing operator tools without requiring a healthy Delivery executor.
 
 The bounded worker proof Job runner targets `delivery-worker-jobs`
-and CI compute admission on Liskov. A source-owned recipe controls the command,
+and Delivery's reserved Kueue slot on liskov, which platform Jobs share. A
+source-owned recipe controls the command,
 credential keys, resources, and checkout. The executor records the exact Job
 UID and canonical request fingerprint before waiting, and inspects an existing
 Job before creating one. Ordinary stage Pods have no Kubernetes or vault token.

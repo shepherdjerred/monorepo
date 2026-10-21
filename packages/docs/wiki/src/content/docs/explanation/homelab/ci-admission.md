@@ -6,7 +6,8 @@ sidebar:
 ---
 
 Kueue holds CI pods until their requests fit liskov's budget, with a separate
-reserve for review and completion gates.
+reserve for review and completion gates. Delivery's executor Jobs have a
+reserve of their own beside that budget.
 
 The [admission budget](https://raw.githubusercontent.com/shepherdjerred/monorepo/refs/heads/main/packages/homelab/src/cdk8s/src/misc/ci-admission-budget.json)
 divides the existing capacity between computation and gates. Woodpecker's
@@ -79,6 +80,24 @@ The reserve slightly reduces compute capacity. It buys predictable access for
 short verdict checks without increasing the total CPU, memory, or ephemeral
 storage budget. Gate workflows need no checkout or services, so their workspace
 claims are smaller too.
+
+## Why Delivery Jobs have their own reserve
+
+Delivery runs its executor stages as Jobs on liskov. Each Job requests two
+CPUs, 8Gi of memory, and 32Gi of scratch storage.
+
+Those Jobs used to queue with CI. Their `batch-low` pod priority already
+outranked every CI priority, so a waiting Job sat at the head of the queue.
+Priority orders waiting work, but it reserves nothing. Without preemption,
+Kueue admits smaller CI pods past a head that does not fit. Under steady CI
+load, a Delivery Job waited until enough CI happened to finish at once.
+
+Delivery's ClusterQueue now holds exactly one Job's requests, and it joins no
+cohort. CI cannot borrow the idle slot, so a Delivery Job never waits for CI.
+Delivery cannot borrow CI quota either, so CI keeps its whole budget. CI's
+scratch quota never fitted two Delivery Jobs, so one slot keeps Delivery's
+existing concurrency. The cost is liskov capacity: the slot sits beside the CI
+budget rather than inside it.
 
 ## Admission priority does not preempt production
 
@@ -175,6 +194,8 @@ kubelet eviction, whatever the queue says.
   `resources/argo-applications/platform/kueue.ts`
 - Queues and quota: `resources/kueue-config.ts` and
   `misc/ci-admission-budget.json`
+- Delivery Job queue and requests:
+  `packages/homelab/src/delivery-stage-admission.ts`
 - CI namespace, `LimitRange`, and default service account:
   `resources/woodpecker/ci-namespace.ts`
 - Pod guard: `resources/woodpecker/ci-pod-guard.ts`

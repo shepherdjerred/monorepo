@@ -8,9 +8,11 @@ import {
   CI_GATE_LOCAL_QUEUE,
   CI_MAINTENANCE_CLUSTER_QUEUE,
   CI_MAINTENANCE_LOCAL_QUEUE,
+  DELIVERY_CLUSTER_QUEUE,
   createKueueConfig,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
 import { createKueueApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/kueue.ts";
+import { DELIVERY_STAGE_REQUESTS } from "homelab/src/delivery-stage-admission.ts";
 import {
   CI_ADMISSION_BUDGET,
   CI_COMPUTE_WORKFLOWS,
@@ -60,6 +62,13 @@ const ClusterQueueSchema = z.object({
     })
     .loose(),
 });
+
+const CLUSTER_QUEUES = [
+  CI_CLUSTER_QUEUE,
+  CI_GATE_CLUSTER_QUEUE,
+  CI_MAINTENANCE_CLUSTER_QUEUE,
+  DELIVERY_CLUSTER_QUEUE,
+];
 
 const LocalQueueSchema = z.object({
   apiVersion: z.literal("kueue.x-k8s.io/v1beta2"),
@@ -160,11 +169,7 @@ describe("kueue-config", () => {
     // workload requesting a resource its ClusterQueue does not cover: if this
     // drifts, every build sits gated forever. Regression guard for the
     // 2026-07-24 freeze.
-    for (const name of [
-      CI_CLUSTER_QUEUE,
-      CI_GATE_CLUSTER_QUEUE,
-      CI_MAINTENANCE_CLUSTER_QUEUE,
-    ]) {
+    for (const name of CLUSTER_QUEUES) {
       expect(
         clusterQueue(name).spec.resourceGroups[0]?.coveredResources,
       ).toEqual(["cpu", "memory", "pods", "ephemeral-storage"]);
@@ -256,6 +261,39 @@ describe("kueue-config", () => {
         CI_MAINTENANCE_CLUSTER_QUEUE,
       ],
     ]);
+  });
+
+  /**
+   * A waiting Delivery Job already outranked every CI pod, yet Kueue admits
+   * smaller CI pods past a head that does not fit. Only quota CI cannot borrow
+   * gives it precedence, and only quota outside CI's leaves CI's intact.
+   */
+  it("reserves exactly one Delivery stage Job beside the CI budget", () => {
+    const { spec } = clusterQueue(DELIVERY_CLUSTER_QUEUE);
+    expect(spec.namespaceSelector).toEqual({
+      matchExpressions: [
+        {
+          key: "kubernetes.io/metadata.name",
+          operator: "In",
+          values: ["delivery-worker-jobs", "delivery-platform-jobs"],
+        },
+      ],
+    });
+    expect(spec.preemption).toEqual({
+      withinClusterQueue: "Never",
+      reclaimWithinCohort: "Never",
+    });
+    for (const [resource, request] of Object.entries({
+      ...DELIVERY_STAGE_REQUESTS,
+      pods: "1",
+    })) {
+      expect(quota(DELIVERY_CLUSTER_QUEUE, resource)).toBe(request);
+    }
+    // In a cohort, idle quota is lent away and, without preemption, is only
+    // returned as the borrower finishes.
+    for (const name of CLUSTER_QUEUES) {
+      expect(clusterQueue(name).spec).not.toHaveProperty("cohortName");
+    }
   });
 });
 
