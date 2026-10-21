@@ -1,4 +1,3 @@
-import { open } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import { listCompletionMarkers } from "@shepherdjerred/seaweedfs-backup/manifest";
 import { SEAWEEDFS_BACKUP_POLICY } from "@shepherdjerred/seaweedfs-backup/policy";
@@ -8,6 +7,7 @@ import {
   storesFromEnvironment,
 } from "@shepherdjerred/seaweedfs-backup/store";
 import { verifySnapshot } from "@shepherdjerred/seaweedfs-backup/verify";
+import { openColdStartRecord } from "#lib/backup/cold-start-record.ts";
 
 const USAGE = `
 toolkit backup seaweedfs snapshots
@@ -64,17 +64,6 @@ async function verifyCommand(args: string[]): Promise<void> {
   console.log(
     `Verified ${result.snapshotId}: ${String(result.manifests)} manifests, ${String(result.checkedObjects)} objects present, ${String(result.hashedObjects)} checksums`,
   );
-}
-
-type RecordLine = Record<string, unknown>;
-
-/** Create the cold-start record exclusively; an existing file is never replaced. */
-async function openColdStartRecord(path: string, header: RecordLine) {
-  const handle = await open(path, "wx");
-  const append = (line: RecordLine) =>
-    handle.appendFile(`${JSON.stringify(line)}\n`);
-  await append(header);
-  return { append, close: () => handle.close() };
 }
 
 async function restoreCommand(args: string[]): Promise<void> {

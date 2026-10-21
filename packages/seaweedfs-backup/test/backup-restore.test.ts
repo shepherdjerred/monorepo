@@ -545,43 +545,43 @@ describe("incremental backup and restore", () => {
   });
 });
 
-describe("cold-start restore", () => {
-  const COLD_START_POLICY = BackupPolicySchema.parse({
-    ...POLICY,
-    buckets: [
-      ...POLICY.buckets,
-      {
-        name: "other-production",
-        mode: "protected",
-        cadences: ["daily"],
-        excludeSuffixes: [],
-        reason: "fixture",
-      },
-    ],
+const COLD_START_POLICY = BackupPolicySchema.parse({
+  ...POLICY,
+  buckets: [
+    ...POLICY.buckets,
+    {
+      name: "other-production",
+      mode: "protected",
+      cadences: ["daily"],
+      excludeSuffixes: [],
+      reason: "fixture",
+    },
+  ],
+});
+
+async function backedUp(): Promise<{
+  backup: InMemoryObjectStore;
+  snapshotId: string;
+}> {
+  const { source, backup } = stores();
+  source.seed("source", "state.json", "important");
+  source.seedWithHeaders({
+    bucket: "source",
+    key: "nested/release.tgz",
+    value: "archive",
+    headers: { contentType: "application/gzip", metadata: { build: "7" } },
   });
+  const snapshot = await runBackup({
+    source,
+    destination: backup,
+    backupBucket: "backup",
+    policy: POLICY,
+    cadence: "daily",
+  });
+  return { backup, snapshotId: snapshot.marker.snapshotId };
+}
 
-  async function backedUp(): Promise<{
-    backup: InMemoryObjectStore;
-    snapshotId: string;
-  }> {
-    const { source, backup } = stores();
-    source.seed("source", "state.json", "important");
-    source.seedWithHeaders({
-      bucket: "source",
-      key: "nested/release.tgz",
-      value: "archive",
-      headers: { contentType: "application/gzip", metadata: { build: "7" } },
-    });
-    const snapshot = await runBackup({
-      source,
-      destination: backup,
-      backupBucket: "backup",
-      policy: POLICY,
-      cadence: "daily",
-    });
-    return { backup, snapshotId: snapshot.marker.snapshotId };
-  }
-
+describe("cold-start restore", () => {
   test("refuses a production bucket without the flag and writes nothing", async () => {
     const { backup, snapshotId } = await backedUp();
     const fresh = freshSeaweedfs();
@@ -677,7 +677,9 @@ describe("cold-start restore", () => {
       restoreSnapshot({ ...base, destinationBucket: "backup" }),
     ).rejects.toThrow("production bucket");
   });
+});
 
+describe("cold-start restore races", () => {
   test("never overwrites an object that appears after the emptiness check", async () => {
     const { backup, snapshotId } = await backedUp();
     class RacedStore extends InMemoryObjectStore {
@@ -702,6 +704,36 @@ describe("cold-start restore", () => {
     ).rejects.toThrow("refused to overwrite source/nested/release.tgz");
     const survivor = await raced.getObject("source", "nested/release.tgz");
     expect(survivor.size).toBe("late arrival".length);
+  });
+
+  test("fails a cold start when another writer adds an object during the restore", async () => {
+    const { backup, snapshotId } = await backedUp();
+    class InterlopedStore extends InMemoryObjectStore {
+      public override async putObject(
+        ...input: Parameters<InMemoryObjectStore["putObject"]>
+      ) {
+        await super.putObject(...input);
+        this.seed(
+          input[0].bucket,
+          "unrelated/live-data",
+          "written by a workload",
+        );
+      }
+    }
+    const store = new InterlopedStore();
+    store.createBucket("source");
+    await expect(
+      restoreSnapshot({
+        backupStore: backup,
+        destinationStore: store,
+        backupBucket: "backup",
+        destinationBucket: "source",
+        sourceBucket: "source",
+        snapshotId,
+        policy: COLD_START_POLICY,
+        coldStart: true,
+      }),
+    ).rejects.toThrow("that are not in snapshot " + snapshotId);
   });
 
   test("never overwrites an object created between the check and the write", async () => {

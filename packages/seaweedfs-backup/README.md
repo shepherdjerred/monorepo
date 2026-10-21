@@ -72,6 +72,9 @@ The mode relaxes only the production-bucket refusal. Every other check stays:
   write itself is create-only (`If-None-Match: *`). An object that appears
   mid-restore, even between the check and the write, stops the run instead of
   being overwritten.
+- After the last object, the bucket is listed again and the restore fails if
+  it holds any key outside the snapshot, so a bucket that another writer used
+  mid-restore is never reported complete.
 - Transfer and read-back SHA-256 verification are unchanged.
 
 `--record <file>` is required with `--cold-start`. The file is created

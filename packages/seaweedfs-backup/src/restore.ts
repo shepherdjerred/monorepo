@@ -69,6 +69,26 @@ async function assertNotOverwriting(
   if (present !== undefined) throw overwriteRefusal(input, key);
 }
 
+/**
+ * The emptiness check runs once, before the first write. Re-list at the end so
+ * a cold start never reports success over a bucket another workload also wrote
+ * to while the restore ran.
+ */
+async function assertNothingElseWritten(
+  input: RestoreInput,
+  restoredKeys: ReadonlySet<string>,
+): Promise<void> {
+  if (input.coldStart !== true) return;
+  const present = await input.destinationStore.listObjects(
+    input.destinationBucket,
+  );
+  const stray = present.filter((object) => !restoredKeys.has(object.key));
+  if (stray.length === 0) return;
+  throw new Error(
+    `Cold-start restore found ${String(stray.length)} object(s) in ${input.destinationBucket} that are not in snapshot ${input.snapshotId} (first: ${stray[0]?.key ?? "unknown"}). Another writer used the bucket during the restore`,
+  );
+}
+
 function overwriteRefusal(input: RestoreInput, key: string): Error {
   return new Error(
     `Cold-start restore refused to overwrite ${input.destinationBucket}/${key}`,
@@ -165,5 +185,9 @@ export async function restoreSnapshot(
       sha256: entry.sha256,
     });
   }
+  await assertNothingElseWritten(
+    input,
+    new Set(entries.map((entry) => entry.sourceKey)),
+  );
   return { restoredObjects: entries.length, restoredBytes };
 }
