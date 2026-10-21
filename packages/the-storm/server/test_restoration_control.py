@@ -360,10 +360,14 @@ class RestorationControlTest(unittest.TestCase):
         self.assertEqual(journal.object("privateMapRepair")["renderTaskReadback"], "updating map 'world' ...")
         self.assertNotIn("acceptance", journal)
         self.assertEqual(
-            commands, [
-                ["bluemap", "reload"], ["force-update", "world"], ["force-update", "world"],
-                ["bluemap", "tasks"], ["bluemap", "tasks"],
-            ]
+            commands,
+            [
+                ["bluemap", "reload"],
+                ["force-update", "world"],
+                ["force-update", "world"],
+                ["bluemap", "tasks"],
+                ["bluemap", "tasks"],
+            ],
         )
         self.assertEqual(subprocess_result.returncode, 0)
         control.assert_closed(journal)
@@ -379,12 +383,18 @@ class RestorationControlTest(unittest.TestCase):
                 journal["acceptance"] = {"status": "VERIFIED"}
                 journal["privateMapRepair"] = {"phase": "VERIFIED"}
                 evidence = {
-                    "phase": "VERIFIED", "requestId": REQUEST, "candidateJarSha256": "b" * 64,
-                    "worldTicks": 0, "configSha256": "c" * 64,
+                    "phase": "VERIFIED",
+                    "requestId": REQUEST,
+                    "candidateJarSha256": "b" * 64,
+                    "worldTicks": 0,
+                    "configSha256": "c" * 64,
                 }
                 commands = []
+
                 def command(
-                    arguments: list[str], timeout: float = 30, rejected: str = rejected,
+                    arguments: list[str],
+                    timeout: float = 30,
+                    rejected: str = rejected,
                     commands: list[str] = commands,
                 ):
                     if "rcon-cli" not in arguments:
@@ -392,11 +402,15 @@ class RestorationControlTest(unittest.TestCase):
                     commands.append(arguments[-1])
                     if rejected == "loading" and arguments[-1] == "world":
                         return "⌛ BlueMap is still loading!\nPlease try again in a few seconds."
-                    return "No map found" if arguments[-1] == rejected else {
-                        "reload": "Reloading BlueMap...",
-                        "world": "Creating update-tasks ...",
-                        "tasks": "updating map 'world' ...",
-                    }[arguments[-1]]
+                    return (
+                        "No map found"
+                        if arguments[-1] == rejected
+                        else {
+                            "reload": "Reloading BlueMap...",
+                            "world": "Creating update-tasks ...",
+                            "tasks": "updating map 'world' ...",
+                        }[arguments[-1]]
+                    )
 
                 with (
                     patch.object(
@@ -625,7 +639,7 @@ class RestorationControlTest(unittest.TestCase):
         upload.assert_called_once()
         transfer.assert_called_once_with(journal)
         control.assert_writer(pods[control.NAMESPACE], journal)
-        control.assert_reader(pods[control.RESTORED_NAMESPACE], journal, control.RESTORED_NAMESPACE)
+        control.assert_reader(pods[control.restored_namespace], journal, control.restored_namespace)
         self.assertNotIn(control.NAMESPACE, journal.strings("readers"))
         control.require_offline(journal, writer=True)
         control.assert_closed(journal)
@@ -810,7 +824,7 @@ class RestorationControlTest(unittest.TestCase):
 
     def transfer_fixture(self):
         journal, pods, _ = self.whole_rollback_fixture()
-        for namespace in (control.NAMESPACE, control.RESTORED_NAMESPACE):
+        for namespace in (control.NAMESPACE, control.restored_namespace):
             manifest = (
                 control.writer_manifest(journal)
                 if namespace == control.NAMESPACE
@@ -819,8 +833,8 @@ class RestorationControlTest(unittest.TestCase):
             manifest.object("metadata")["uid"] = namespace + "-transfer-helper"
             pods[namespace] = manifest
         journal["writerUid"] = pods[control.NAMESPACE].object("metadata").string("uid")
-        journal.strings("readers")[control.RESTORED_NAMESPACE] = (
-            pods[control.RESTORED_NAMESPACE].object("metadata").string("uid")
+        journal.strings("readers")[control.restored_namespace] = (
+            pods[control.restored_namespace].object("metadata").string("uid")
         )
         return journal, pods
 
@@ -838,7 +852,7 @@ class RestorationControlTest(unittest.TestCase):
         self.assertEqual(spawn.call_args_list[0].kwargs["stdout"], control.subprocess.DEVNULL)
         self.assertEqual(spawn.call_args_list[1].kwargs["stderr"], control.subprocess.DEVNULL)
         self.assertIn("receive", spawn.call_args_list[0].args[0])
-        self.assertIn(control.RESTORED_NAMESPACE, spawn.call_args_list[1].args[0])
+        self.assertIn(control.restored_namespace, spawn.call_args_list[1].args[0])
         self.assertTrue(private_pipe.closed)
 
     def test_rollback_transfer_timeout_kills_both_helpers_processes_and_retains_closed_admission(self):
@@ -859,7 +873,7 @@ class RestorationControlTest(unittest.TestCase):
         control.assert_closed(journal)
 
     def test_rollback_transfer_refuses_replaced_reader_or_writer_before_starting_any_stream(self):
-        for namespace in (control.NAMESPACE, control.RESTORED_NAMESPACE):
+        for namespace in (control.NAMESPACE, control.restored_namespace):
             with self.subTest(namespace=namespace):
                 self.cluster = Cluster()
                 self.path.unlink(missing_ok=True)
@@ -1206,7 +1220,7 @@ class RestorationControlTest(unittest.TestCase):
 
     def test_abort_removes_only_owned_readers_before_reopening_without_a_verified_backup(self):
         journal, pods = self.reader_fixture()
-        for namespace in (control.NAMESPACE, control.RESTORED_NAMESPACE):
+        for namespace in (control.NAMESPACE, control.restored_namespace):
             reader = control.ensure_resource(control.reader_manifest(journal, namespace))
             journal.object("readers", {})[namespace] = reader.object("metadata").string("uid")
         self.assertEqual(journal.object("restore").get("byteVerification"), "PENDING")
@@ -1229,7 +1243,7 @@ class RestorationControlTest(unittest.TestCase):
 
         with patch.object(control.subprocess, "run", side_effect=delete):
             control.abort(self.path, journal)
-        self.assertEqual(calls, [control.NAMESPACE, control.RESTORED_NAMESPACE])
+        self.assertEqual(calls, [control.NAMESPACE, control.restored_namespace])
         self.assertIs(journal.get("readersRemoved"), True)
         self.assertEqual(journal.string("phase"), "REOPENED")
 
@@ -2184,7 +2198,7 @@ class RestorationControlTest(unittest.TestCase):
         }
         control.restore_backup(self.path, journal)
         restored = resources["Restore", "storm-verify-" + REQUEST]
-        self.assertEqual(restored.object("spec")["namespaceMapping"], {control.NAMESPACE: control.RESTORED_NAMESPACE})
+        self.assertEqual(restored.object("spec")["namespaceMapping"], {control.NAMESPACE: control.restored_namespace})
         self.assertEqual(restored.object("spec")["includedResources"], ["persistentvolumeclaims", "persistentvolumes"])
         self.assertEqual(journal.object("restore").string("byteVerification"), "PENDING")
         restored["status"] = {"phase": "Completed"}
@@ -2198,7 +2212,7 @@ class RestorationControlTest(unittest.TestCase):
                         "spec": {"csi": {"driver": "zfs.csi.openebs.io", "volumeHandle": "restored-dataset"}},
                     }
                 )
-            if namespace == control.RESTORED_NAMESPACE:
+            if namespace == control.restored_namespace:
                 return JsonObject(
                     {
                         "metadata": {"uid": "restored-claim"},
@@ -2283,7 +2297,7 @@ class RestorationControlTest(unittest.TestCase):
         def reader_read(kind: str, name: str, namespace: str = control.NAMESPACE) -> JsonObject:
             if kind == "pod":
                 return copy.deepcopy(pods[namespace])
-            if kind == "pvc" and namespace == control.RESTORED_NAMESPACE:
+            if kind == "pvc" and namespace == control.restored_namespace:
                 return JsonObject(
                     {
                         "metadata": {"uid": "restored-claim"},
@@ -2333,7 +2347,7 @@ class RestorationControlTest(unittest.TestCase):
         journal, pods = self.reader_fixture()
         with patch.object(control, "remote_fingerprint", return_value={"world/level.dat": "a" * 64}):
             control.verify_backup(self.path, journal)
-        item = self.cluster.objects["onepassworditem", "dockerhub-pull-" + control.RESTORED_NAMESPACE]
+        item = self.cluster.objects["onepassworditem", "dockerhub-pull-" + control.restored_namespace]
         self.assertEqual(item.object("spec").string("itemPath"), "vaults/test/items/registry-reader")
         self.assertEqual(item.string("type"), "kubernetes.io/dockerconfigjson")
         self.assertEqual(item.object("metadata").strings("labels"), {control.LEASE: REQUEST})
@@ -2404,12 +2418,12 @@ class RestorationControlTest(unittest.TestCase):
             return previous_run(arguments, timeout)
 
         with patch.object(control, "run", side_effect=unready), self.assertRaisesRegex(RuntimeError, "not ready"):
-            control.ensure_reader(journal, control.RESTORED_NAMESPACE)
-        self.assertNotIn(control.RESTORED_NAMESPACE, pods)
+            control.ensure_reader(journal, control.restored_namespace)
+        self.assertNotIn(control.restored_namespace, pods)
         source = self.cluster.objects["onepassworditem", "dockerhub-pull-" + control.NAMESPACE]
         source["type"] = "Opaque"
         with patch.object(control, "ensure_resource") as creating, self.assertRaisesRegex(ValueError, "Docker config"):
-            control.ensure_reader(journal, control.RESTORED_NAMESPACE)
+            control.ensure_reader(journal, control.restored_namespace)
         creating.assert_not_called()
 
     def test_complete_volume_comparison_records_only_hashes_and_keeps_admission_closed(self):
@@ -2584,7 +2598,7 @@ class RestorationControlTest(unittest.TestCase):
 
     def test_readers_use_server_file_ownership_without_capabilities_or_writable_mounts(self):
         journal, _ = self.reader_fixture()
-        for namespace in (control.NAMESPACE, control.RESTORED_NAMESPACE):
+        for namespace in (control.NAMESPACE, control.restored_namespace):
             reader = control.reader_manifest(journal, namespace)
             container = reader.object("spec").objects("containers")[0]
             security = container.object("securityContext")
@@ -2620,7 +2634,7 @@ class RestorationControlTest(unittest.TestCase):
         with patch.object(control.subprocess, "run", side_effect=delete):
             control.remove_readers(self.path, journal)
             control.remove_readers(self.path, journal)
-        self.assertEqual(calls, [control.NAMESPACE, control.RESTORED_NAMESPACE])
+        self.assertEqual(calls, [control.NAMESPACE, control.restored_namespace])
         self.assertTrue(journal["readersRemoved"])
 
     def test_reader_cleanup_refuses_an_unrelated_namespace_before_deleting_anything(self):

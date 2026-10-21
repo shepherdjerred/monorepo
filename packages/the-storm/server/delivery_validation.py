@@ -58,7 +58,7 @@ def eligibility(control: ModuleType) -> JsonObject:
     if phase in ("Running", "Terminating"):
         return JsonObject({"status": "waiting", "reason": "argocd-operation"})
     retained = control.run(
-        ["-n", control.RESTORED_NAMESPACE, "get", "pvc", control.CLAIM, "--ignore-not-found", "-o", "json"]
+        ["-n", control.restored_namespace, "get", "pvc", control.CLAIM, "--ignore-not-found", "-o", "json"]
     ).strip()
     if retained:
         return JsonObject({"status": "waiting", "reason": "validation-copy-retained"})
@@ -267,7 +267,7 @@ def main() -> None:
     arguments = parser.parse_args()
     control = load_control()
     control.__dict__["CONTEXT"] = arguments.context
-    control.__dict__["RESTORED_NAMESPACE"] = control.DELIVERY_VALIDATION_NAMESPACE
+    control.__dict__["restored_namespace"] = control.DELIVERY_VALIDATION_NAMESPACE
     if arguments.command == "eligibility":
         print(json.dumps(validate_eligibility(eligibility(control))))
         return
@@ -281,7 +281,7 @@ def main() -> None:
     # Source-owned namespace permits a narrowly scoped controller identity.
     # Its one restored claim is UID-fenced and removed after verified success.
     namespace = control.DELIVERY_VALIDATION_NAMESPACE
-    control.__dict__["RESTORED_NAMESPACE"] = namespace
+    control.__dict__["restored_namespace"] = namespace
     with control.journal_lock(arguments.journal):
         if arguments.command == "report":
             if arguments.journal.is_symlink() or not arguments.journal.is_file():

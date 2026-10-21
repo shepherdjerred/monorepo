@@ -9,7 +9,7 @@ from restoration_json import JsonObject
 
 
 def no_consumers(control: ModuleType, volume_name: str | None) -> None:
-    pods = JsonObject.parse(control.run(["-n", control.RESTORED_NAMESPACE, "get", "pods", "-o", "json"])).objects(
+    pods = JsonObject.parse(control.run(["-n", control.restored_namespace, "get", "pods", "-o", "json"])).objects(
         "items"
     )
     if any(
@@ -32,7 +32,7 @@ def delete_claim(control: ModuleType, claim: JsonObject) -> None:
             control.CONTEXT,
             "delete",
             "--raw",
-            f"/api/v1/namespaces/{control.RESTORED_NAMESPACE}/persistentvolumeclaims/{control.CLAIM}",
+            f"/api/v1/namespaces/{control.restored_namespace}/persistentvolumeclaims/{control.CLAIM}",
             "-f",
             "-",
         ],
@@ -53,7 +53,7 @@ def delete_claim(control: ModuleType, claim: JsonObject) -> None:
     if completed.returncode:
         raise RuntimeError("Validation copy deletion is ambiguous; inspect its recorded UID before retrying")
     control.run(
-        ["-n", control.RESTORED_NAMESPACE, "wait", "--for=delete", "pvc/" + control.CLAIM, "--timeout=120s"], 125
+        ["-n", control.restored_namespace, "wait", "--for=delete", "pvc/" + control.CLAIM, "--timeout=120s"], 125
     )
 
 
@@ -74,7 +74,7 @@ def cleanup_copy(control: ModuleType, path: Path, journal: JsonObject) -> None:
     ):
         raise ValueError("Original storage changed before validation-copy cleanup")
     encoded = control.run(
-        ["-n", control.RESTORED_NAMESPACE, "get", "pvc", control.CLAIM, "--ignore-not-found", "-o", "json"]
+        ["-n", control.restored_namespace, "get", "pvc", control.CLAIM, "--ignore-not-found", "-o", "json"]
     ).strip()
     validation = journal.object("deliveryValidation")
     native_restore = control.read("restore.velero.io", restored.string("name"), "velero")
@@ -137,7 +137,7 @@ def cleanup_copy(control: ModuleType, path: Path, journal: JsonObject) -> None:
                 or volume.object("spec").object("claimRef")
                 != {
                     **volume.object("spec").object("claimRef"),
-                    "namespace": control.RESTORED_NAMESPACE,
+                    "namespace": control.restored_namespace,
                     "name": control.CLAIM,
                     "uid": restored.string("claimUid"),
                 }
@@ -157,7 +157,7 @@ def cleanup_copy(control: ModuleType, path: Path, journal: JsonObject) -> None:
     if native_encoded:
         native = JsonObject.parse(native_encoded)
         if (
-            native.object("metadata").strings("labels", {}).get("velero.io/namespace") != control.RESTORED_NAMESPACE
+            native.object("metadata").strings("labels", {}).get("velero.io/namespace") != control.restored_namespace
             or native.object("metadata").strings("labels", {}).get("velero.io/volname") != journal.string("volumeName")
             or native.object("metadata").strings("annotations", {}).get("velero.io/backup")
             != journal.object("backup").string("name")

@@ -38,7 +38,7 @@ def pod_manifest(control: ModuleType, journal: JsonObject) -> JsonObject:
         r"docker\.io/shepherdjerred/the-storm-server:[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}@sha256:[a-f0-9]{64}", image
     ):
         raise ValueError("Sandbox candidate must be an exact qualified Storm image")
-    namespace = control.RESTORED_NAMESPACE
+    namespace = control.restored_namespace
     claim = control.CLAIM
     if namespace != TEMPLATE.object("metadata").string("namespace"):
         raise ValueError("Sandbox requires the reviewed fixed validation namespace")
@@ -56,7 +56,7 @@ def assert_pod(control: ModuleType, journal: JsonObject, pod: JsonObject) -> Non
     if (
         not control.includes(pod.object("spec"), expected.object("spec"))
         or pod.object("metadata").get("name") != expected.object("metadata").string("name")
-        or pod.object("metadata").get("namespace") != control.RESTORED_NAMESPACE
+        or pod.object("metadata").get("namespace") != control.restored_namespace
         or pod.object("metadata").strings("labels", {}).get(control.LEASE) != journal.string("requestId")
         or any(
             pod.object("spec").get(key)
@@ -90,7 +90,7 @@ def assert_storage(control: ModuleType, journal: JsonObject) -> None:
     """Fence both native storage identities even while the candidate owns the copy."""
     control.require_offline(journal)
     restored = journal.object("restore")
-    claim = control.read("pvc", control.CLAIM, control.RESTORED_NAMESPACE)
+    claim = control.read("pvc", control.CLAIM, control.restored_namespace)
     volume = control.read("pv", restored.string("volumeName"), "")
     if (
         claim.object("metadata").get("uid") != restored.string("claimUid")
@@ -103,7 +103,7 @@ def assert_storage(control: ModuleType, journal: JsonObject) -> None:
         or restored.strings("volumeSource")["volumeHandle"] == journal.strings("volumeSource")["volumeHandle"]
     ):
         raise ValueError("Candidate storage was replaced or aliases production")
-    pods = JsonObject.parse(control.run(["-n", control.RESTORED_NAMESPACE, "get", "pods", "-o", "json"])).objects(
+    pods = JsonObject.parse(control.run(["-n", control.restored_namespace, "get", "pods", "-o", "json"])).objects(
         "items"
     )
     for pod in pods:
@@ -117,11 +117,11 @@ def assert_storage(control: ModuleType, journal: JsonObject) -> None:
 def bridge(control: ModuleType, journal: JsonObject, method: str, route: str, body: object = None) -> JsonObject:
     name = pod_manifest(control, journal).object("metadata").string("name")
     assert_storage(control, journal)
-    pod = control.read("pod", name, control.RESTORED_NAMESPACE)
+    pod = control.read("pod", name, control.restored_namespace)
     assert_pod(control, journal, pod)
     arguments = [
         "-n",
-        control.RESTORED_NAMESPACE,
+        control.restored_namespace,
         "exec",
         name,
         "-c",
@@ -149,7 +149,7 @@ def bridge(control: ModuleType, journal: JsonObject, method: str, route: str, bo
 def delete_pod(control: ModuleType, journal: JsonObject) -> None:
     name = pod_manifest(control, journal).object("metadata").string("name")
     encoded = control.run(
-        ["-n", control.RESTORED_NAMESPACE, "get", "pod", name, "--ignore-not-found", "-o", "json"]
+        ["-n", control.restored_namespace, "get", "pod", name, "--ignore-not-found", "-o", "json"]
     ).strip()
     if not encoded:
         return
@@ -162,7 +162,7 @@ def delete_pod(control: ModuleType, journal: JsonObject) -> None:
             control.CONTEXT,
             "delete",
             "--raw",
-            f"/api/v1/namespaces/{control.RESTORED_NAMESPACE}/pods/{name}",
+            f"/api/v1/namespaces/{control.restored_namespace}/pods/{name}",
             "-f",
             "-",
         ],
@@ -183,7 +183,7 @@ def delete_pod(control: ModuleType, journal: JsonObject) -> None:
     )
     if completed.returncode:
         raise RuntimeError("Candidate deletion is ambiguous; retain maintenance ownership")
-    control.run(["-n", control.RESTORED_NAMESPACE, "wait", "--for=delete", "pod/" + name, "--timeout=150s"], 155)
+    control.run(["-n", control.restored_namespace, "wait", "--for=delete", "pod/" + name, "--timeout=150s"], 155)
 
 
 def stop_candidate(control: ModuleType, journal: JsonObject) -> None:
@@ -196,7 +196,7 @@ def stop_candidate(control: ModuleType, journal: JsonObject) -> None:
     name = pod_manifest(control, journal).object("metadata").string("name")
     while True:
         assert_storage(control, journal)
-        pod = control.read("pod", name, control.RESTORED_NAMESPACE)
+        pod = control.read("pod", name, control.restored_namespace)
         assert_pod(control, journal, pod)
         statuses = pod.object("status", {}).objects("containerStatuses", [])
         if statuses and statuses[0].object("state", {}).get("terminated") is not None:
@@ -230,7 +230,7 @@ def check_candidate(control: ModuleType, path: Path, journal: JsonObject) -> Jso
     name = pod.object("metadata").string("name")
     while True:
         assert_storage(control, journal)
-        pod = control.read("pod", name, control.RESTORED_NAMESPACE)
+        pod = control.read("pod", name, control.restored_namespace)
         assert_pod(control, journal, pod)
         if pod.object("status", {}).get("phase") in ("Failed", "Succeeded"):
             raise ValueError("Candidate terminated before compatibility acceptance")
@@ -239,7 +239,7 @@ def check_candidate(control: ModuleType, path: Path, journal: JsonObject) -> Jso
         statuses = pod.object("status", {}).objects("containerStatuses", [])
         if statuses and statuses[0].object("state", {}).get("running") is not None:
             logs = control.run(
-                ["-n", control.RESTORED_NAMESPACE, "logs", name, "-c", "candidate", "--limit-bytes=1000000"]
+                ["-n", control.restored_namespace, "logs", name, "-c", "candidate", "--limit-bytes=1000000"]
             )
             done = re.search(r"Done \([0-9.]+s\)!", logs)
             if done is not None:
@@ -265,7 +265,7 @@ def check_candidate(control: ModuleType, path: Path, journal: JsonObject) -> Jso
         control.run(
             [
                 "-n",
-                control.RESTORED_NAMESPACE,
+                control.restored_namespace,
                 "exec",
                 name,
                 "-c",

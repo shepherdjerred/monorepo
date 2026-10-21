@@ -53,21 +53,21 @@ class StoppedContainerTest(unittest.TestCase):
         ):
             with self.subTest(changes=changes):
                 self.pod = copy.deepcopy(original)
-                self.pod["status"]["containerStatuses"][0].update(changes)
+                self.pod.object("status").objects("containerStatuses")[0].update(changes)
                 with self.assertRaises(control.MaintenanceBusy):
                     self.check()
         self.pod = copy.deepcopy(original)
-        self.pod["metadata"]["ownerReferences"][0]["uid"] = "other-server"
+        self.pod.object("metadata").objects("ownerReferences")[0]["uid"] = "other-server"
         with self.assertRaises(control.MaintenanceBusy):
             self.check()
 
     def test_running_init_or_sidecar_is_refused(self):
         original = copy.deepcopy(self.pod)
-        self.pod["status"]["initContainerStatuses"] = [{"state": {"running": {}}}]
+        self.pod.object("status")["initContainerStatuses"] = [{"state": {"running": {}}}]
         with self.assertRaises(control.MaintenanceBusy):
             self.check()
         self.pod = copy.deepcopy(original)
-        self.pod["spec"]["containers"].append({"name": "sidecar"})
+        self.pod.object("spec").objects("containers").append(JsonObject({"name": "sidecar"}))
         with self.assertRaises(control.MaintenanceBusy):
             self.check()
 
@@ -140,13 +140,13 @@ class BackupRetryTest(unittest.TestCase):
             with self.subTest(mutation=mutation):
                 self.resource = copy.deepcopy(original)
                 if mutation == "active":
-                    self.resource["status"]["phase"] = "InProgress"
+                    self.resource.object("status")["phase"] = "InProgress"
                 elif mutation == "unfinished":
-                    self.resource["status"].pop("completionTimestamp")
+                    self.resource.object("status").pop("completionTimestamp")
                 elif mutation == "uid":
-                    self.resource["metadata"]["uid"] = "replacement"
+                    self.resource.object("metadata")["uid"] = "replacement"
                 else:
-                    self.resource["metadata"]["labels"][control.LEASE] = "foreign"
+                    self.resource.object("metadata").strings("labels")[control.LEASE] = "foreign"
                 with self.assertRaisesRegex(ValueError, "terminal failed"):
                     self.retry()
                 self.assertFalse(self.path.exists())

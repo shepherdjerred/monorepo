@@ -64,7 +64,7 @@ class BusyAdmissionTest(unittest.TestCase):
 class SourceNamespaceTest(unittest.TestCase):
     def test_delivery_reader_reuses_source_namespace_and_registry_item_without_creating_either(self) -> None:
         control = delivery_validation.load_control()
-        control.__dict__["RESTORED_NAMESPACE"] = control.DELIVERY_VALIDATION_NAMESPACE
+        control.__dict__["restored_namespace"] = control.DELIVERY_VALIDATION_NAMESPACE
         journal = JsonObject(
             {
                 "requestId": REQUEST,
@@ -92,7 +92,7 @@ class SourceNamespaceTest(unittest.TestCase):
             patch.object(control, "ensure_resource", side_effect=ensure),
             patch.object(control, "run"),
         ):
-            result = control.ensure_reader(journal, control.RESTORED_NAMESPACE)
+            result = control.ensure_reader(journal, control.restored_namespace)
         self.assertEqual(created, ["Pod"])
         self.assertEqual(result["kind"], "Pod")
         security = result.object("spec").object("securityContext")
@@ -107,7 +107,7 @@ class SourceNamespaceTest(unittest.TestCase):
         )
         with self.assertRaisesRegex(ValueError, "reviewed Delivery target"):
             control.assert_managed_restore_namespace(journal)
-        control.__dict__["RESTORED_NAMESPACE"] = control.DELIVERY_VALIDATION_NAMESPACE
+        control.__dict__["restored_namespace"] = control.DELIVERY_VALIDATION_NAMESPACE
         with (
             patch.object(
                 control,
@@ -124,7 +124,7 @@ class SourceNamespaceTest(unittest.TestCase):
 class CopyCleanupTest(unittest.TestCase):
     def fixture(self):
         control = delivery_validation.load_control()
-        control.__dict__["RESTORED_NAMESPACE"] = control.DELIVERY_VALIDATION_NAMESPACE
+        control.__dict__["restored_namespace"] = control.DELIVERY_VALIDATION_NAMESPACE
         state = JsonObject(
             {
                 "phase": "REOPENED",
@@ -174,7 +174,7 @@ class CopyCleanupTest(unittest.TestCase):
                 "spec": {
                     "csi": {"driver": "zfs.csi.openebs.io", "volumeHandle": "copy-handle"},
                     "persistentVolumeReclaimPolicy": "Retain",
-                    "claimRef": {"namespace": control.RESTORED_NAMESPACE, "name": control.CLAIM, "uid": "copy-claim"},
+                    "claimRef": {"namespace": control.restored_namespace, "name": control.CLAIM, "uid": "copy-claim"},
                 },
             }
         )
@@ -197,7 +197,7 @@ class CopyCleanupTest(unittest.TestCase):
             {
                 "metadata": {
                     "uid": "native-copy-uid",
-                    "labels": {"velero.io/namespace": control.RESTORED_NAMESPACE, "velero.io/volname": "original-pv"},
+                    "labels": {"velero.io/namespace": control.restored_namespace, "velero.io/volname": "original-pv"},
                     "annotations": {"velero.io/backup": "storm-world-" + REQUEST},
                 }
             }
@@ -281,7 +281,7 @@ class CopyCleanupTest(unittest.TestCase):
             options = json.loads(encoded)
             self.assertEqual(options["preconditions"], {"uid": "copy-claim", "resourceVersion": "42"})
             self.assertIn(
-                "/api/v1/namespaces/" + control.RESTORED_NAMESPACE + "/persistentvolumeclaims/" + control.CLAIM,
+                "/api/v1/namespaces/" + control.restored_namespace + "/persistentvolumeclaims/" + control.CLAIM,
                 arguments[0],
             )
             self.assertNotIn("original-pv", " ".join(arguments[0]))

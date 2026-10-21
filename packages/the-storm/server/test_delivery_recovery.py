@@ -30,7 +30,7 @@ class RecoveryReportTest(unittest.TestCase):
 
     def setUp(self) -> None:
         self.control = delivery_validation.load_control()
-        self.control.__dict__["RESTORED_NAMESPACE"] = self.control.DELIVERY_VALIDATION_NAMESPACE
+        self.control.__dict__["restored_namespace"] = self.control.DELIVERY_VALIDATION_NAMESPACE
         self.cluster = Cluster()
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
@@ -43,7 +43,7 @@ class RecoveryReportTest(unittest.TestCase):
             self.cluster.objects[kind, name].object("metadata")["resourceVersion"] = "42"
         app = self.cluster.objects["application", self.control.SERVER]
         app["metadata"] = {"uid": "application-original", "resourceVersion": "21"}
-        self.cluster.objects["namespace", self.control.RESTORED_NAMESPACE] = JsonObject(
+        self.cluster.objects["namespace", self.control.restored_namespace] = JsonObject(
             {
                 "metadata": {
                     "uid": "validation-original",

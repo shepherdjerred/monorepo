@@ -49,7 +49,7 @@ def candidate_pod(control: ModuleType, state: JsonObject) -> JsonObject:
 class CandidateIsolationTest(unittest.TestCase):
     def setUp(self) -> None:
         self.control = delivery_validation.load_control()
-        self.control.__dict__["RESTORED_NAMESPACE"] = self.control.DELIVERY_VALIDATION_NAMESPACE
+        self.control.__dict__["restored_namespace"] = self.control.DELIVERY_VALIDATION_NAMESPACE
         self.state = journal()
 
     def test_neutral_recipe_matches_receipt_policy_and_only_renders_reviewed_parameters(self) -> None:
@@ -72,7 +72,7 @@ class CandidateIsolationTest(unittest.TestCase):
             unsafe[key] = invalid
             with self.subTest(key=key), self.assertRaises(ValueError):
                 delivery_candidate.pod_manifest(self.control, unsafe)
-        self.control.__dict__["RESTORED_NAMESPACE"] = "minecraft-tsmc"
+        self.control.__dict__["restored_namespace"] = "minecraft-tsmc"
         with self.assertRaisesRegex(ValueError, "fixed validation namespace"):
             delivery_candidate.pod_manifest(self.control, self.state)
 
@@ -94,7 +94,7 @@ class CandidateIsolationTest(unittest.TestCase):
             if "persistentVolumeClaim" in volume
         ]
         self.assertEqual(claims, [self.control.CLAIM])
-        self.assertEqual(pod.object("metadata").string("namespace"), self.control.RESTORED_NAMESPACE)
+        self.assertEqual(pod.object("metadata").string("namespace"), self.control.restored_namespace)
         env = {item.string("name"): item.string("value") for item in spec.objects("containers")[0].objects("env")}
         self.assertEqual(env["SERVER_IP"], "127.0.0.1")
         self.assertEqual(env["MC_BRIDGE_BIND"], "127.0.0.1")

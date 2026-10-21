@@ -161,7 +161,7 @@ def inspect_routes(control: ModuleType, journal: JsonObject) -> list[JsonObject]
 
 def inspect_pods(control: ModuleType, journal: JsonObject, source: JsonObject) -> list[JsonObject]:
     result: list[JsonObject] = []
-    for namespace in (control.NAMESPACE, control.RESTORED_NAMESPACE):
+    for namespace in (control.NAMESPACE, control.restored_namespace):
         pods = JsonObject.parse(control.run(["-n", namespace, "get", "pods", "-o", "json"])).objects("items")
         for pod in pods:
             if pod.object("metadata").strings("labels", {}).get(control.LEASE) == journal.string("requestId"):
@@ -221,7 +221,7 @@ def report(control: ModuleType, path: Path, journal: JsonObject) -> JsonObject:
     routes = inspect_routes(control, journal)
     pods = inspect_pods(control, journal, source)
     if control.run(
-        ["-n", control.RESTORED_NAMESPACE, "get", "pvc", control.CLAIM, "--ignore-not-found", "-o", "json"]
+        ["-n", control.restored_namespace, "get", "pvc", control.CLAIM, "--ignore-not-found", "-o", "json"]
     ).strip():
         raise ValueError("Independent restored copy has not been removed")
     app = application(control)

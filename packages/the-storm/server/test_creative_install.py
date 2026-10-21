@@ -52,16 +52,16 @@ class CreativeInstallationTest(unittest.TestCase):
     def test_addition_preserves_all_original_player_and_survival_files(self):
         self.assertEqual(self.install()["phase"], "INSTALLED")
         self.assertEqual(self.install()["phase"], "INSTALLED")
-        for name, checksum in self.plan["originalFiles"].items():
+        for name, checksum in self.plan.strings("originalFiles").items():
             if name != creative_install.REGISTRY:
                 self.assertEqual(storage.digest(self.data / name), checksum)
-        retained = self.data / storage.WORKSPACE / self.plan["requestId"] / "creative-install/worlds-before.yml"
+        retained = self.data / storage.WORKSPACE / self.plan.string("requestId") / "creative-install/worlds-before.yml"
         self.assertEqual(retained.read_bytes(), b"existing worlds")
 
     def test_old_player_import_and_survival_replacement_are_refused(self):
         for name in ("creative/playerdata/old.dat", "world/level.dat", "plugins/TheStorm/the-storm.db"):
             with self.subTest(name=name):
-                plan = JsonObject({**self.plan, "files": {**self.plan["files"], name: "a" * 64}})
+                plan = JsonObject({**self.plan, "files": {**self.plan.strings("files"), name: "a" * 64}})
                 with self.assertRaises(ValueError):
                     creative_install.installation_files(plan)
 
@@ -77,7 +77,7 @@ class CreativeInstallationTest(unittest.TestCase):
     def test_resume_after_world_rename_preserves_original_registry(self):
         rename = Path.rename
 
-        def interrupted(source, target):
+        def interrupted(source: Path, target: Path) -> Path:
             result = rename(source, target)
             if source.name == "creative":
                 raise OSError("interrupted after owned world rename")

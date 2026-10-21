@@ -45,7 +45,7 @@ POLICIES = (
     ("minecraft-tsmc-world-restoration-service-write.sjer.red", "services", "UPDATE"),
     ("minecraft-tsmc-world-restoration-service-delete.sjer.red", "services", "DELETE"),
 )
-RESTORED_NAMESPACE: str = "minecraft-tsmc-restore"
+restored_namespace: str = "minecraft-tsmc-restore"
 DELIVERY_VALIDATION_NAMESPACE = "minecraft-tsmc-delivery-validation"
 DELIVERY_VALIDATION_LABEL = "delivery.shepherdjerred.com/validation-target"
 # The upstream artifact mirrored by Delivery retains its original version and bytes.
@@ -670,9 +670,9 @@ def retry_backup(path: Path, journal: JsonObject) -> None:
 def assert_managed_restore_namespace(journal: JsonObject) -> bool:
     if journal.get("managedRestoreNamespace") is not True:
         return False
-    if RESTORED_NAMESPACE != DELIVERY_VALIDATION_NAMESPACE:
+    if restored_namespace != DELIVERY_VALIDATION_NAMESPACE:
         raise ValueError("Managed restore namespace differs from the reviewed Delivery target")
-    namespace = read("namespace", RESTORED_NAMESPACE, "")
+    namespace = read("namespace", restored_namespace, "")
     expected = journal.object("deliveryValidation")
     if (
         namespace.object("metadata").string("uid") != expected.string("restoreNamespaceUid")
@@ -691,7 +691,7 @@ def restore_backup(path: Path, journal: JsonObject) -> None:
             {
                 "apiVersion": "v1",
                 "kind": "Namespace",
-                "metadata": {"name": RESTORED_NAMESPACE, "labels": {LEASE: journal.string("requestId")}},
+                "metadata": {"name": restored_namespace, "labels": {LEASE: journal.string("requestId")}},
             }
         )
     name = "storm-verify-" + journal.string("requestId")
@@ -704,7 +704,7 @@ def restore_backup(path: Path, journal: JsonObject) -> None:
                 "backupName": resource.object("metadata").string("name"),
                 "includedNamespaces": [NAMESPACE],
                 "includedResources": ["persistentvolumeclaims", "persistentvolumes"],
-                "namespaceMapping": {NAMESPACE: RESTORED_NAMESPACE},
+                "namespaceMapping": {NAMESPACE: restored_namespace},
                 "restorePVs": True,
             },
         }
@@ -718,7 +718,7 @@ def restore_backup(path: Path, journal: JsonObject) -> None:
     journal["restore"] = {
         "name": name,
         "uid": restored.object("metadata").string("uid"),
-        "namespace": RESTORED_NAMESPACE,
+        "namespace": restored_namespace,
         "phase": status.get("phase", "New"),
         "byteVerification": prior.get("byteVerification", "PENDING"),
         "warnings": status.get("warnings", 0),
@@ -732,7 +732,7 @@ def restore_backup(path: Path, journal: JsonObject) -> None:
     if status.get("phase") in ("Failed", "PartiallyFailed", "FailedValidation") or status.get("errors", 0):
         raise ValueError("Independent restore failed; admission remains closed")
     if status.get("phase") == "Completed":
-        claim = read("pvc", CLAIM, RESTORED_NAMESPACE)
+        claim = read("pvc", CLAIM, restored_namespace)
         if (
             journal.get("managedRestoreNamespace") is True
             and claim.object("metadata").strings("labels", {}).get("velero.io/restore-name") != name
@@ -764,7 +764,7 @@ def restore_backup(path: Path, journal: JsonObject) -> None:
 
 
 def reader_manifest(journal: JsonObject, namespace: str) -> JsonObject:
-    if namespace not in (NAMESPACE, RESTORED_NAMESPACE):
+    if namespace not in (NAMESPACE, restored_namespace):
         raise ValueError("Reader namespace is outside the two recorded Storm volumes")
     return JsonObject(
         {
@@ -812,7 +812,7 @@ def reader_manifest(journal: JsonObject, namespace: str) -> JsonObject:
 
 def ensure_reader(journal: JsonObject, namespace: str) -> JsonObject:
     manifest = reader_manifest(journal, namespace)
-    if namespace == RESTORED_NAMESPACE:
+    if namespace == restored_namespace:
         # The namespace belongs to this restore lease, not to ArgoCD. Declare
         # its credential through 1Password without reading or copying a Secret.
         source = read("onepassworditem", "dockerhub-pull-" + NAMESPACE)
@@ -1103,7 +1103,7 @@ def require_restore(journal: JsonObject) -> None:
     proof = journal.object("restore", {})
     if proof.get("phase") != "Completed" or not proof.get("volumeUid"):
         raise ValueError("Verification requires a completed independent rollback restore")
-    claim = read("pvc", CLAIM, RESTORED_NAMESPACE)
+    claim = read("pvc", CLAIM, restored_namespace)
     volume = read("pv", proof.string("volumeName"), "")
     if (
         claim.object("metadata").string("uid") != proof.string("claimUid")
@@ -1114,20 +1114,20 @@ def require_restore(journal: JsonObject) -> None:
         or proof.strings("volumeSource")["volumeHandle"] == journal.strings("volumeSource")["volumeHandle"]
     ):
         raise ValueError("The independently restored storage was replaced or aliases the source")
-    pods = JsonObject.parse(run(["-n", RESTORED_NAMESPACE, "get", "pods", "-o", "json"])).objects("items")
+    pods = JsonObject.parse(run(["-n", restored_namespace, "get", "pods", "-o", "json"])).objects("items")
     for pod in pods:
         if pod.object("status", {}).get("phase") not in ("Succeeded", "Failed") and any(
             volume.object("persistentVolumeClaim", {}).get("claimName") == CLAIM
             for volume in pod.object("spec").objects("volumes", [])
         ):
-            assert_reader(pod, journal, RESTORED_NAMESPACE)
+            assert_reader(pod, journal, restored_namespace)
 
 
 @verification_stage("verify-backup")
 def verify_backup(path: Path, journal: JsonObject) -> None:
     require_offline(journal, readers=True)
     require_restore(journal)
-    for namespace in (NAMESPACE, RESTORED_NAMESPACE):
+    for namespace in (NAMESPACE, restored_namespace):
         pod = ensure_reader(journal, namespace)
         assert_reader(pod, journal, namespace)
         journal.strings("readers", {})[namespace] = pod.object("metadata").string("uid")
@@ -1148,7 +1148,7 @@ def verify_backup(path: Path, journal: JsonObject) -> None:
     with verification_stage("source-fingerprint"):
         original = remote_fingerprint(journal, NAMESPACE)
     with verification_stage("restored-fingerprint"):
-        restored = remote_fingerprint(journal, RESTORED_NAMESPACE)
+        restored = remote_fingerprint(journal, restored_namespace)
     require_offline(journal, readers=True)
     require_restore(journal)
     if original != restored:
@@ -1225,8 +1225,8 @@ def export_stream(stream: IO[bytes], destination: Path, expected: dict[str, str]
 
 
 def remote_export(journal: JsonObject, destination: Path, expected: dict[str, str]) -> None:
-    name = reader_manifest(journal, RESTORED_NAMESPACE).object("metadata").string("name")
-    assert_reader(read("pod", name, RESTORED_NAMESPACE), journal, RESTORED_NAMESPACE)
+    name = reader_manifest(journal, restored_namespace).object("metadata").string("name")
+    assert_reader(read("pod", name, restored_namespace), journal, restored_namespace)
     with tempfile.TemporaryFile() as names:
         names.write(b"".join(name.encode("utf-8") + b"\0" for name in expected))
         names.seek(0)
@@ -1237,7 +1237,7 @@ def remote_export(journal: JsonObject, destination: Path, expected: dict[str, st
                 CONTEXT,
                 "--request-timeout=30m",
                 "-n",
-                RESTORED_NAMESPACE,
+                restored_namespace,
                 "exec",
                 "-i",
                 name,
@@ -1762,9 +1762,9 @@ def rollback_writer_operation(journal: JsonObject, operation: str) -> JsonObject
 
 def transfer_rollback(journal: JsonObject) -> None:
     """Pipe the independent restore directly to verified pod scratch, never workstation storage."""
-    reader = reader_manifest(journal, RESTORED_NAMESPACE).object("metadata").string("name")
+    reader = reader_manifest(journal, restored_namespace).object("metadata").string("name")
     writer = writer_manifest(journal).object("metadata").string("name")
-    assert_reader(read("pod", reader, RESTORED_NAMESPACE), journal, RESTORED_NAMESPACE)
+    assert_reader(read("pod", reader, restored_namespace), journal, restored_namespace)
     assert_writer(read("pod", writer), journal)
     kubectl = ["kubectl", "--context", CONTEXT, "--request-timeout=30m"]
     processes: list[subprocess.Popen[bytes]] = []
@@ -1798,7 +1798,7 @@ def transfer_rollback(journal: JsonObject) -> None:
             [
                 *kubectl,
                 "-n",
-                RESTORED_NAMESPACE,
+                restored_namespace,
                 "exec",
                 reader,
                 "-c",
@@ -1836,22 +1836,22 @@ def whole_rollback(path: Path, journal: JsonObject) -> None:
     proof = rollback_proof(journal)
     if "installationPlan" not in journal:
         raise ValueError("Whole-volume rollback requires a recorded installation plan")
-    name = reader_manifest(journal, RESTORED_NAMESPACE).object("metadata").string("name")
+    name = reader_manifest(journal, restored_namespace).object("metadata").string("name")
     if journal.get("readersRemoved") is True:
-        for namespace in (NAMESPACE, RESTORED_NAMESPACE):
+        for namespace in (NAMESPACE, restored_namespace):
             reader_name = reader_manifest(journal, namespace).object("metadata").string("name")
             existing = run(["-n", namespace, "get", "pod", reader_name, "--ignore-not-found", "-o", "json"]).strip()
             if not existing:
                 journal.strings("readers", {}).pop(namespace, None)
     journal["readersRemoved"] = False
     save(path, journal)
-    reader = ensure_reader(journal, RESTORED_NAMESPACE)
-    assert_reader(reader, journal, RESTORED_NAMESPACE)
-    journal.strings("readers", {})[RESTORED_NAMESPACE] = reader.object("metadata").string("uid")
+    reader = ensure_reader(journal, restored_namespace)
+    assert_reader(reader, journal, restored_namespace)
+    journal.strings("readers", {})[restored_namespace] = reader.object("metadata").string("uid")
     save(path, journal)
-    run(["-n", RESTORED_NAMESPACE, "wait", "--for=condition=Ready", "pod/" + name, "--timeout=45s"], 50)
+    run(["-n", restored_namespace, "wait", "--for=condition=Ready", "pod/" + name, "--timeout=45s"], 50)
     require_restore(journal)
-    if remote_fingerprint(journal, RESTORED_NAMESPACE) != proof.strings("files"):
+    if remote_fingerprint(journal, restored_namespace) != proof.strings("files"):
         raise ValueError("Independent whole-volume restore changed before recovery")
     writer = create_writer(path, journal)
     writer_name = writer.object("metadata").string("name")
@@ -1872,7 +1872,7 @@ def whole_rollback(path: Path, journal: JsonObject) -> None:
         raise ValueError("Rollback writer returned an unreviewed recovery phase")
     require_offline(journal, writer=True)
     require_restore(journal)
-    if remote_fingerprint(journal, RESTORED_NAMESPACE) != proof.strings("files"):
+    if remote_fingerprint(journal, restored_namespace) != proof.strings("files"):
         raise ValueError("Independent whole-volume restore changed during recovery transfer")
     rollback_proof(journal)
     result = rollback_writer_operation(journal, "restore")
@@ -2662,7 +2662,7 @@ def bind_restore_namespace(journal: JsonObject, namespace: str) -> None:
 
 
 def main() -> None:
-    global RESTORED_NAMESPACE
+    global restored_namespace
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "operation",
@@ -2701,11 +2701,11 @@ def main() -> None:
     parser.add_argument("--staging", type=Path)
     parser.add_argument("--candidate", type=Path)
     parser.add_argument("--evidence", type=Path)
-    parser.add_argument("--restore-namespace", default=RESTORED_NAMESPACE)
+    parser.add_argument("--restore-namespace", default=restored_namespace)
     arguments = parser.parse_args()
     if not re.fullmatch(r"minecraft-tsmc-restore(?:-[a-z0-9-]{1,32})?", arguments.restore_namespace):
         parser.error("Restore namespace must be a bounded Storm restoration namespace")
-    RESTORED_NAMESPACE = arguments.restore_namespace
+    restored_namespace = arguments.restore_namespace
     if arguments.operation == "export-backup" and (arguments.export_dir is None or arguments.export_proof is None):
         parser.error("export-backup requires --export-dir and --export-proof")
     if arguments.operation in ("plan-install", "install", "revise-installation", "bootstrap-resources") and (
@@ -2721,7 +2721,7 @@ def main() -> None:
                 raise ValueError("Revision requires an existing regular maintenance journal")
             image = JsonObject.parse(arguments.journal.read_bytes()).string("candidateImage")
         journal = initialize(arguments.journal, arguments.request, image)
-        bind_restore_namespace(journal, RESTORED_NAMESPACE)
+        bind_restore_namespace(journal, restored_namespace)
         save(arguments.journal, journal)
         if arguments.operation == "acquire":
             acquire(arguments.journal, journal)
