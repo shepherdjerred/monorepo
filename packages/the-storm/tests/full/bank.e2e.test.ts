@@ -59,6 +59,7 @@ async function clickAt(bot: Bot, rcon: RconClient, pos: Vec3) {
     () => bot.entity.position.distanceTo(approach) < 0.6,
   );
   await waitUntil("bank fixture loaded", () => bot.blockAt(pos) !== null);
+  await bot.waitForChunksToLoad();
   const block = bot.blockAt(pos);
   if (block === null) throw new Error("Bank fixture is missing");
   await bot.activateBlock(block);

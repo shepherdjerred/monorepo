@@ -23,6 +23,7 @@ async function click(bot: Bot, rcon: RconClient, pos: Vec3) {
       bot.entity.position.distanceTo(approach) < 0.6 &&
       bot.blockAt(pos) !== null,
   );
+  await bot.waitForChunksToLoad();
   const block = bot.blockAt(pos);
   if (block === null) throw new Error("Fixture missing");
   await bot.activateBlock(block);
