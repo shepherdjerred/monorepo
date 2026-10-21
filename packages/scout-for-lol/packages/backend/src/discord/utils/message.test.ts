@@ -260,30 +260,20 @@ describe("grapheme-safe cuts", () => {
     }
   });
 
-  test("a fenced block without newlines splits between emoji", () => {
+  test.each([
+    { name: "splits between emoji", body: EMOJI.repeat(80) },
+    {
+      name: "splits a zalgo cluster longer than a chunk",
+      body: `z${"\u{301}".repeat(120)}`,
+    },
+  ])("a fenced block without newlines $name", ({ body }) => {
     const fence = "```";
-    const message = `${fence}\n${EMOJI.repeat(80)}\n${fence}`;
-    const chunks = splitMessageIntoChunks(message, 51);
+    const chunks = splitMessageIntoChunks(`${fence}\n${body}\n${fence}`, 51);
     expect(chunks.length).toBeGreaterThan(1);
     for (const chunk of chunks) {
       expect(chunk.length).toBeLessThanOrEqual(51);
       expect(chunk.isWellFormed()).toBe(true);
     }
-    expect(chunks.map((chunk) => chunk.slice(4, -4)).join("")).toBe(
-      EMOJI.repeat(80),
-    );
-  });
-
-  test("a fenced zalgo cluster longer than a chunk still splits", () => {
-    const fence = "```";
-    const zalgo = `z${"\u{301}".repeat(120)}`;
-    const message = `${fence}\n${zalgo}\n${fence}`;
-    const chunks = splitMessageIntoChunks(message, 51);
-    expect(chunks.length).toBeGreaterThan(1);
-    for (const chunk of chunks) {
-      expect(chunk.length).toBeLessThanOrEqual(51);
-      expect(chunk.isWellFormed()).toBe(true);
-    }
-    expect(chunks.map((chunk) => chunk.slice(4, -4)).join("")).toBe(zalgo);
+    expect(chunks.map((chunk) => chunk.slice(4, -4)).join("")).toBe(body);
   });
 });
