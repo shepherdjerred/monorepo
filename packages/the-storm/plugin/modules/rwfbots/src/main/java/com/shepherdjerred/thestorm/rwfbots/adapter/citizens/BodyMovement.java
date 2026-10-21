@@ -58,7 +58,9 @@ final class BodyMovement {
       goal = bank.orElseThrow();
       hop = Hop.JUMP;
     }
-    var grounded = SnapshotCapture.onGround(player);
+    // The centre check misses a body standing on a stair's half step or a block edge; such a body
+    // kept a stale take-off origin, and every retried jump was judged from it and refused.
+    var grounded = SnapshotCapture.onGround(player) || terrain.grounded(position);
     var tick = player.getServer().getCurrentTick();
     var candidate = new Flight(position, goal, hop, tick);
     retainFlight(candidate, grounded);

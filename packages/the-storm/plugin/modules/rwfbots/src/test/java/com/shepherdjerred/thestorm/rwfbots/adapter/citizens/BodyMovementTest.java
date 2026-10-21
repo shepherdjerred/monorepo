@@ -394,4 +394,26 @@ final class BodyMovementTest {
     motion.stop(player);
     assertThat(player.getVelocity().getY()).as("sneaking holds on").isGreaterThanOrEqualTo(0);
   }
+
+  @Test
+  void aBodyOnASlabEdgeThatHasNotLeftTheGroundRetriesItsJumpFresh() {
+    // cloned-balance: a body standing on a stair's half step or a slab edge read as airborne (the
+    // centre is over air), kept its last jump's take-off origin, and every retry was judged from
+    // it with the stepped-up flight disabled: 80 refused jumps in a row.
+    for (var x = 3; x <= 6; x++) world.getBlockAt(x, 0, 2).setType(Material.STONE);
+    world.getBlockAt(3, 1, 2).setType(Material.STONE_SLAB);
+    world.getBlockAt(5, 1, 2).setType(Material.STONE);
+    world.getBlockAt(6, 1, 2).setType(Material.STONE_SLAB);
+    var player = TraversalPlayerMock.add(server, "slab-edge");
+    player.teleport(new Location(world, 4.2, 1.5, 2.5));
+    var motion = motion(survival(Optional.empty()), (body, heading) -> {});
+    var target =
+        new Bodies.MotionTarget(
+            new Location(world, 6.5, 1.5, 2.5), false, Hop.JUMP, Optional.empty());
+    var first = motion.move(player, target);
+    assertThat(first.refused()).as("first attempt %s", first).isFalse();
+    player.teleport(new Location(world, 4.2, 1.5, 2.5));
+    var again = motion.move(player, target);
+    assertThat(again.refused()).as("retry %s", again).isFalse();
+  }
 }
