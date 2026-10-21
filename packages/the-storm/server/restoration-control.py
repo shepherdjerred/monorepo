@@ -2546,15 +2546,31 @@ def assert_gitops_image(
     helm = source.object("helm")
     image = helm.object("valuesObject").object("image")
     image_parameters = [item for item in helm.objects("parameters") if item.string("name").startswith("image.")]
-    if len(image_parameters) != 1 or image_parameters[0].get("name") != "image.tag":
-        raise ValueError("Release requires one exact GitOps image.tag parameter")
-    tag = image_parameters[0].string("value")
+    names = [item.string("name") for item in image_parameters]
+    if (
+        names.count("image.tag") != 1
+        or len(set(names)) != len(names)
+        or not set(names).issubset({"image.tag", "image.repository"})
+        or any(
+            set(item) not in ({"name", "value"}, {"name", "value", "forceString"})
+            or ("forceString" in item and item.get("forceString") is not True)
+            for item in image_parameters
+        )
+    ):
+        raise ValueError(
+            "Release requires one exact GitOps image.tag parameter and only a matching repository parameter"
+        )
+    tag = next(item.string("value") for item in image_parameters if item.string("name") == "image.tag")
     declared = image.string("repository") + ":" + tag
     sync = application.object("status").object("sync")
     if (
         declared != (expected_image if expected_image is not None else journal.string("candidateImage"))
         or ("tag" in image and image.get("tag") != tag)
-        or image_parameters != [{"name": "image.tag", "value": tag}]
+        or any(
+            item.string("value") != image.string("repository")
+            for item in image_parameters
+            if item.string("name") == "image.repository"
+        )
         or set(helm) != {"parameters", "valuesObject"}
         or "sources" in spec
         or source.get("chart") != "minecraft"

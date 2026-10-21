@@ -1149,6 +1149,93 @@ class RestorationControlTest(unittest.TestCase):
         )
         self.assertEqual(control.server_image(self.cluster.server), journal.string("candidateImage"))
 
+    def delivery_image_parameters(self) -> list[dict[str, object]]:
+        application = self.cluster.objects["application", control.SERVER]
+        source = application.object("spec").object("source")
+        tag = source.object("helm").objects("parameters")[0].string("value")
+        parameters: list[dict[str, object]] = [
+            {"name": "image.repository", "value": IMAGE.split(":", 1)[0], "forceString": True},
+            {"name": "image.tag", "value": tag, "forceString": True},
+        ]
+        source.object("helm")["parameters"] = parameters
+        return parameters
+
+    def refresh_gitops_comparison_source(self) -> None:
+        application = self.cluster.objects["application", control.SERVER]
+        application.object("status").object("sync").object("comparedTo")["source"] = copy.deepcopy(
+            application.object("spec").object("source")
+        )
+
+    def test_accepted_release_supports_the_exact_delivery_repository_and_forced_string_tag(self):
+        for reversed_order in (False, True):
+            with self.subTest(reversed_order=reversed_order):
+                self.path.unlink(missing_ok=True)
+                self.cluster = Cluster()
+                journal = self.accepted_stopped_gitops()
+                parameters = self.delivery_image_parameters()
+                if reversed_order:
+                    parameters.reverse()
+                self.refresh_gitops_comparison_source()
+                with patch.dict(control.os.environ, {"ARGOCD_AUTH_TOKEN": "registered-reader-fixture"}):
+                    control.release(self.path, journal)
+                self.assertEqual(journal.string("phase"), "REOPENED")
+                self.assertNotIn(control.LEASE, control.annotations(self.cluster.server))
+
+    def test_delivery_image_parameters_refuse_foreign_duplicate_and_unreviewed_overrides(self):
+        for change in (
+            "repository",
+            "duplicate-repository",
+            "duplicate-tag",
+            "digest",
+            "force-string",
+            "numeric-flag",
+            "unknown-field",
+            "tag",
+        ):
+            with self.subTest(change=change):
+                self.path.unlink(missing_ok=True)
+                self.cluster = Cluster()
+                journal = self.accepted_stopped_gitops()
+                parameters = self.delivery_image_parameters()
+                if change == "repository":
+                    parameters[0]["value"] = "docker.io/foreign/server"
+                elif change == "duplicate-repository":
+                    parameters.append(copy.deepcopy(parameters[0]))
+                elif change == "duplicate-tag":
+                    parameters.append(copy.deepcopy(parameters[1]))
+                elif change == "digest":
+                    parameters.append({"name": "image.digest", "value": "sha256:" + "a" * 64})
+                elif change == "force-string":
+                    parameters[1]["forceString"] = False
+                elif change == "numeric-flag":
+                    parameters[1]["forceString"] = 1
+                elif change == "unknown-field":
+                    parameters[1]["extra"] = "unreviewed"
+                else:
+                    parameters[1]["value"] = "foreign"
+                self.refresh_gitops_comparison_source()
+                before = len(self.cluster.mutations)
+                with (
+                    patch.dict(control.os.environ, {"ARGOCD_AUTH_TOKEN": "registered-reader-fixture"}),
+                    self.assertRaises(ValueError),
+                ):
+                    control.release(self.path, journal)
+                self.assertEqual(len(self.cluster.mutations), before)
+                control.assert_closed(journal)
+
+    def test_delivery_parameter_tag_must_agree_with_an_explicit_image_value_tag(self):
+        journal = self.accepted_stopped_gitops()
+        self.delivery_image_parameters()
+        self.cluster.objects["application", control.SERVER].object("spec").object("source").object("helm").object(
+            "valuesObject"
+        ).object("image")["tag"] = "foreign"
+        self.refresh_gitops_comparison_source()
+        before = len(self.cluster.mutations)
+        with self.assertRaisesRegex(ValueError, "reconciled GitOps"):
+            control.release(self.path, journal)
+        self.assertEqual(len(self.cluster.mutations), before)
+        control.assert_closed(journal)
+
     def test_accepted_stop_drift_refuses_other_resources_stale_inventory_and_comparison_races(self):
         for change in (
             "image",

@@ -54,7 +54,10 @@ verifying the original archive size and SHA-256. A repository migration therefor
 preserves the maintenance lease's image, template, storage and ownership checks;
 a different chart or archive requires a separately reviewed contract update.
 The effective image tag comes from Helm's `image.tag` parameter; an optional
-image value tag must agree. A stopped release permits only the exact owned
+image value tag must agree. Delivery also supplies an exact `image.repository`
+parameter with `forceString: true`; that repository must match the image value.
+Duplicate image parameters, foreign repositories, additional image overrides and
+unknown parameter fields are refused. A stopped release permits only the exact owned
 replica difference after a fresh authenticated Argo normalized comparison proves
 every other resource unchanged. Pre-install abort requires the untouched original
 template; candidate release requires unchanged acceptance evidence, its recorded
