@@ -2459,16 +2459,47 @@ def assert_original_abort_drift(application: JsonObject, journal: JsonObject) ->
         or server.object("status", {}).get("replicas", 0) != 0
     ):
         raise ValueError("Original abort requires its unchanged stopped maintenance lease")
+    assert_stopped_replica_drift(application, journal, server)
+
+
+def assert_accepted_stop_drift(application: JsonObject, journal: JsonObject) -> None:
+    """Bind replica-only drift to the unchanged acceptance and its exact graceful stop."""
+    server = read("statefulset", SERVER)
+    assert_owner(server, journal, allow_unheld=journal.string("phase") in ("RELEASING", "REOPENED"))
+    acceptance = journal.object("acceptance")
+    stopped = journal.object("stoppedIncarnation")
+    if (
+        acceptance.get("status") != "VERIFIED"
+        or journal.get("privateStartup") != "STOPPED"
+        or restoration_files.digest(Path(acceptance.string("path"))) != acceptance.string("sha256")
+        or any(acceptance.get(key) != stopped.get(key) for key in ("podUid", "containerId", "restartCount"))
+        or server.object("spec").object("template") != acceptance.object("podTemplate")
+        or server_image(server) != journal.string("candidateImage")
+        or server.object("status").get("currentRevision") != acceptance.string("controllerRevision")
+        or server.object("status").get("updateRevision") != acceptance.string("controllerRevision")
+        or server.object("status").get("observedGeneration") != server.object("metadata").integer("generation")
+        or journal.string("phase") not in ("LEASED_OFFLINE", "RELEASING", "REOPENED")
+        or server.object("spec").integer("replicas") != 0
+        or server.object("status", {}).get("replicas", 0) != 0
+    ):
+        raise ValueError("Release requires unchanged acceptance of the exact gracefully stopped candidate")
+    assert_stopped_replica_drift(application, journal, server)
+
+
+def assert_stopped_replica_drift(application: JsonObject, journal: JsonObject, server: JsonObject) -> None:
+    """Prove the complete fresh Argo comparison differs only in owned replicas 0 -> 1."""
+    if not application.object("status").objects("resources", []):
+        raise ValueError("Release requires a reconciled GitOps resource inventory")
     token = os.environ.get("ARGOCD_AUTH_TOKEN")
     if not token:
-        raise ValueError("Original abort drift proof requires the registered Argo reader credential")
+        raise ValueError("Release requires a reconciled GitOps comparison with the registered Argo reader credential")
     request = Request(
         "https://argocd.sjer.red/api/v1/applications/minecraft-tsmc/managed-resources",
         headers={"Authorization": "Bearer " + token, "User-Agent": "delivery-restoration-control/1.0"},
     )
     with urlopen(request, timeout=30) as response:
         if response.status != 200:
-            raise ValueError("Original abort requires a fresh Argo resource comparison")
+            raise ValueError("Stopped release requires a fresh Argo resource comparison")
         resources = JsonObject.parse(response.read()).objects("items")
     expected = {
         (item.string("group", ""), item.string("kind"), item.string("namespace", ""), item.string("name"))
@@ -2479,7 +2510,7 @@ def assert_original_abort_drift(application: JsonObject, journal: JsonObject) ->
     for item in resources:
         identity = (item.string("group", ""), item.string("kind"), item.string("namespace", ""), item.string("name"))
         if identity not in expected or identity in observed:
-            raise ValueError("Original abort Argo resource inventory changed")
+            raise ValueError("Stopped release Argo resource inventory changed")
         observed.add(identity)
         live = JsonObject.parse(item.string("normalizedLiveState"))
         predicted = JsonObject.parse(item.string("predictedLiveState"))
@@ -2493,22 +2524,22 @@ def assert_original_abort_drift(application: JsonObject, journal: JsonObject) ->
             or live.object("spec").get("replicas") != 0
             or predicted.object("spec").get("replicas") != 1
         ):
-            raise ValueError("Original abort permits only the leased StatefulSet replica difference")
+            raise ValueError("Stopped release permits only the owned StatefulSet replica difference")
         live.object("spec").pop("replicas")
         predicted.object("spec").pop("replicas")
         if live != predicted:
-            raise ValueError("Original abort permits only the leased StatefulSet replica difference")
+            raise ValueError("Stopped release permits only the owned StatefulSet replica difference")
         differences += 1
     if observed != expected or differences != 1 or read("application", SERVER, "argocd") != application:
-        raise ValueError("Original abort requires an unchanged complete Argo replica-only comparison")
+        raise ValueError("Stopped release requires an unchanged complete Argo replica-only comparison")
     if read("statefulset", SERVER) != server:
-        raise ValueError("Original abort server changed during its Argo comparison")
+        raise ValueError("Stopped release server changed during its Argo comparison")
 
 
 def assert_gitops_image(
-    journal: JsonObject, expected_image: str | None = None, *, original_abort: bool = False
+    journal: JsonObject, expected_image: str | None = None, *, original_abort: bool = False, accepted_stop: bool = False
 ) -> None:
-    """Require the exact effective Helm image and reconciled source, except owned abort replica drift."""
+    """Require the exact effective Helm image and reconciled source, except proved stopped replica drift."""
     application = read("application", SERVER, "argocd")
     spec = application.object("spec")
     source = spec.object("source")
@@ -2530,16 +2561,23 @@ def assert_gitops_image(
         or source.get("repoURL") not in MINECRAFT_CHART_ARCHIVES
         or source.get("targetRevision") != MINECRAFT_CHART_VERSION
         or spec.object("destination").get("namespace") != NAMESPACE
-        or sync.get("status") not in (("Synced", "OutOfSync") if original_abort else ("Synced",))
+        or sync.get("status") not in (("Synced", "OutOfSync") if original_abort or accepted_stop else ("Synced",))
         or sync.object("comparedTo").get("source") != source
         or sync.object("comparedTo").get("destination") != spec.object("destination")
         or "operation" in application
     ):
         raise ValueError("Release requires the reconciled GitOps Application to declare the accepted candidate image")
     if sync.get("status") != "Synced":
-        if expected_image != journal.string("rollbackImage"):
-            raise ValueError("Original abort cannot select a candidate image")
-        assert_original_abort_drift(application, journal)
+        if original_abort:
+            if expected_image != journal.string("rollbackImage"):
+                raise ValueError("Original abort cannot select a candidate image")
+            assert_original_abort_drift(application, journal)
+        elif accepted_stop and expected_image == journal.string("candidateImage"):
+            assert_accepted_stop_drift(application, journal)
+        else:
+            raise ValueError(
+                "Release requires the reconciled GitOps Application to declare the accepted candidate image"
+            )
     request = Request(
         MINECRAFT_CHART_ARCHIVES[source.string("repoURL")],
         headers={"User-Agent": "the-storm-restoration/1"},
@@ -2784,7 +2822,12 @@ def reopen(
         server.object("spec").integer("replicas") != 0 or server.object("status", {}).get("replicas", 0) != 0
     ):
         raise ValueError("Release requires a gracefully stopped accepted candidate or rollback")
-    assert_gitops_image(journal, expected_image, original_abort=original_abort)
+    assert_gitops_image(
+        journal,
+        expected_image,
+        original_abort=original_abort,
+        accepted_stop=not original_abort and expected_image == journal.string("candidateImage"),
+    )
     if journal.get("phase") == "LEASED_OFFLINE":
         require_offline(journal)
         journal["phase"] = "RELEASING"

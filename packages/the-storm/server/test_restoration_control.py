@@ -1071,6 +1071,11 @@ class RestorationControlTest(unittest.TestCase):
     def original_abort_gitops(self, change: Callable[[list[dict[str, str]]], None] | None = None) -> JsonObject:
         journal = self.initialize()
         control.acquire(self.path, journal)
+        return self.stopped_gitops_comparison(journal, change)
+
+    def stopped_gitops_comparison(
+        self, journal: JsonObject, change: Callable[[list[dict[str, str]]], None] | None = None
+    ) -> JsonObject:
         application = self.cluster.objects["application", control.SERVER]
         source = application.object("spec").object("source")
         source["repoURL"] = "https://chartmuseum.sjer.red"
@@ -1118,6 +1123,99 @@ class RestorationControlTest(unittest.TestCase):
 
         self.chart_request.side_effect = response
         return journal
+
+    def accepted_stopped_gitops(self, change: Callable[[list[dict[str, str]]], None] | None = None) -> JsonObject:
+        journal = self.installation_fixture()
+        control.private_start(self.path, journal)
+        control.accept(self.path, journal, self.acceptance_evidence())
+        control.private_stop(self.path, journal)
+        return self.stopped_gitops_comparison(journal, change)
+
+    def test_accepted_candidate_releases_with_only_its_proved_graceful_stop_replica_drift(self):
+        journal = self.accepted_stopped_gitops()
+        with self.assertRaisesRegex(ValueError, "reconciled GitOps"):
+            control.assert_gitops_image(journal)
+        before = len(self.cluster.mutations)
+        with patch.dict(control.os.environ, {"ARGOCD_AUTH_TOKEN": "registered-reader-fixture"}):
+            control.release(self.path, journal)
+        self.assertEqual(journal.string("phase"), "REOPENED")
+        self.assertNotIn(control.LEASE, control.annotations(self.cluster.server))
+        self.assertEqual(
+            self.cluster.mutations[before:],
+            [
+                ("statefulset", control.SERVER),
+                *[("service", name) for name in (*control.SERVICES[1:], control.SERVICES[0])],
+            ],
+        )
+        self.assertEqual(control.server_image(self.cluster.server), journal.string("candidateImage"))
+
+    def test_accepted_stop_drift_refuses_other_resources_stale_inventory_and_comparison_races(self):
+        for change in (
+            "image",
+            "replicas",
+            "other-resource",
+            "missing",
+            "duplicate",
+            "uid",
+            "resource-version",
+            "app-race",
+            "server-race",
+        ):
+            with self.subTest(change=change):
+                self.path.unlink(missing_ok=True)
+                self.cluster = Cluster()
+
+                def modify(resources: list[dict[str, str]], change: str = change) -> None:
+                    item = resources[0]
+                    if change in ("missing", "duplicate"):
+                        resources.pop() if change == "missing" else resources.append(copy.deepcopy(item))
+                    elif change == "other-resource":
+                        resources[1]["predictedLiveState"] = '{"spec":{"ports":[]}}'
+                    elif change == "app-race":
+                        self.cluster.objects["application", control.SERVER]["operation"] = {"sync": {}}
+                    elif change == "server-race":
+                        self.cluster.server.object("metadata")["resourceVersion"] = "changed-after-comparison"
+                    elif change in ("uid", "resource-version"):
+                        raw = JsonObject.parse(item["liveState"])
+                        raw.object("metadata")["uid" if change == "uid" else "resourceVersion"] = "changed"
+                        item["liveState"] = json.dumps(raw)
+                    else:
+                        predicted = JsonObject.parse(item["predictedLiveState"])
+                        if change == "image":
+                            predicted.object("spec").object("template").object("spec").objects("containers")[0][
+                                "image"
+                            ] = "foreign"
+                        else:
+                            predicted.object("spec")["replicas"] = 2
+                        item["predictedLiveState"] = json.dumps(predicted)
+
+                journal = self.accepted_stopped_gitops(modify)
+                before = len(self.cluster.mutations)
+                with (
+                    patch.dict(control.os.environ, {"ARGOCD_AUTH_TOKEN": "registered-reader-fixture"}),
+                    self.assertRaises(ValueError),
+                ):
+                    control.release(self.path, journal)
+                self.assertEqual(len(self.cluster.mutations), before)
+                self.assertEqual(control.annotations(self.cluster.server)[control.LEASE], REQUEST)
+                control.assert_closed(journal)
+
+    def test_accepted_stop_drift_requires_reader_and_unchanged_accepted_revision(self):
+        journal = self.accepted_stopped_gitops()
+        before = len(self.cluster.mutations)
+        with (
+            patch.dict(control.os.environ, {"ARGOCD_AUTH_TOKEN": ""}),
+            self.assertRaisesRegex(ValueError, "registered Argo"),
+        ):
+            control.release(self.path, journal)
+        for field in ("currentRevision", "updateRevision", "observedGeneration"):
+            original = self.cluster.server.object("status")[field]
+            self.cluster.server.object("status")[field] = "changed"
+            with self.assertRaisesRegex(ValueError, "exact gracefully stopped candidate"):
+                control.release(self.path, journal)
+            self.cluster.server.object("status")[field] = original
+        self.assertEqual(len(self.cluster.mutations), before)
+        control.assert_closed(journal)
 
     def test_original_abort_uses_helm_parameter_and_only_owned_replica_drift(self):
         journal = self.original_abort_gitops()
