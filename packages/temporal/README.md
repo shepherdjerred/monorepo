@@ -72,10 +72,10 @@ Workflow or an unpaused/undrained dispatcher. Create the repair above after
 pausing, then run:
 
 ```bash
-toolkit temporal --namespace prod schedule pause --schedule-id delivery-dispatch --reason 'Independent fixed TRMNL repair under held quarantine'
+toolkit temporal --namespace prod schedule toggle --pause --schedule-id delivery-dispatch --reason 'Independent fixed TRMNL repair under held quarantine'
 toolkit temporal --namespace prod schedule describe --schedule-id delivery-dispatch
 bun packages/temporal/scripts/rollout/trmnl-delivery-repair.ts --deployment REPAIR_DEPLOYMENT_ID --url DELIVERY_URL
-toolkit temporal --namespace prod schedule unpause --schedule-id delivery-dispatch --reason 'Fixed plugin readbacks verified and repair completed'
+toolkit temporal --namespace prod schedule toggle --unpause --schedule-id delivery-dispatch --reason 'Fixed plugin readbacks verified and repair completed'
 ```
 
 The operator command brokers the existing executor, Argo, Temporal and narrow
@@ -275,7 +275,7 @@ while a human reviews the plan. An automated inspection that finds a partial
 target fails its intent and preserves quarantine; it never applies changes.
 
 ```bash
-toolkit temporal --namespace prod schedule pause --schedule-id delivery-dispatch --reason 'Manual platform recovery under held quarantine'
+toolkit temporal --namespace prod schedule toggle --pause --schedule-id delivery-dispatch --reason 'Manual platform recovery under held quarantine'
 toolkit temporal --namespace prod schedule describe --schedule-id delivery-dispatch
 toolkit temporal --namespace prod workflow list --query 'WorkflowType = "deliveryDispatchWorkflow" AND ExecutionStatus = "Running"'
 ```
@@ -314,7 +314,7 @@ outcome before using the host command; the next corrected root still follows
 normal exact-source `release-root`.
 
 ```bash
-toolkit temporal --namespace prod schedule unpause --schedule-id delivery-dispatch --reason 'Independent platform recovery verified and quarantine settled'
+toolkit temporal --namespace prod schedule toggle --unpause --schedule-id delivery-dispatch --reason 'Independent platform recovery verified and quarantine settled'
 ```
 
 Static archive activation is delegated by the reviewed bucket ownership map:
