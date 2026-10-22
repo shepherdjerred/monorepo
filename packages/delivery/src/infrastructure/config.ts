@@ -9,6 +9,10 @@ export const MachineCredentialSchema = z
     principal: PrincipalSchema.refine(
       (value) => value.kind === "machine" && !value.scopes.includes("approve"),
       "Machines cannot approve releases",
+    ).refine(
+      (value) =>
+        !(value.scopes.includes("attest") && value.scopes.includes("execute")),
+      "An attestation credential is a distinct operator identity; it never executes",
     ),
   })
   .strict();

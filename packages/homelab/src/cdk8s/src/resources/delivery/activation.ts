@@ -43,6 +43,23 @@ export const DELIVERY_CREDENTIAL_ITEMS: {
   npmChannel: "4fmd5otmvwcpsrxjaptrloppvu",
 };
 
+/**
+ * The operator attestation identity (model X13). Its token is the Delivery
+ * service item's `DELIVERY_ATTEST_TOKEN` field, which `toolkit deploy attest`
+ * resolves; its principal, holding only `read` and `attest`, is an entry of
+ * that item's `DELIVERY_MACHINE_CREDENTIALS`. The API refuses attestations
+ * from any `execute` credential, and no executor or workload mounts this one.
+ */
+export const DELIVERY_ATTESTOR_CREDENTIAL = {
+  itemId: "ahbp4izt7fibvwdjwd4ffhiime",
+  field: "DELIVERY_ATTEST_TOKEN",
+  principal: {
+    id: "delivery-operator-attestor",
+    kind: "machine",
+    scopes: ["read", "attest"],
+  },
+} as const;
+
 export type DeliveryActivation = {
   image: string;
   serviceItemId: string;

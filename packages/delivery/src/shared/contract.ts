@@ -414,7 +414,16 @@ export const PrincipalSchema = z.object({
   id: z.string().min(1),
   kind: z.enum(["human", "machine"]),
   scopes: z.array(
-    z.enum(["read", "publish", "deploy", "approve", "execute", "admin"]),
+    z.enum([
+      "read",
+      "publish",
+      "deploy",
+      "approve",
+      "execute",
+      "admin",
+      // Operator-run stage attestations; never held with `execute` (X13).
+      "attest",
+    ]),
   ),
 });
 export type ArtifactVersion = z.infer<typeof ArtifactVersionSchema>;

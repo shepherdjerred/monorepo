@@ -18,6 +18,14 @@ import {
   type AttestationRequest,
 } from "#shared/model/route-contract.ts";
 
+/** Acts by which an identity owns a deployment's execution (D7, D8). */
+const OWNERSHIP_ACTIONS = [
+  "deployment.claimed",
+  "deployment.lease_renewed",
+  "deployment.handed_off",
+  "deployment.handoff_claimed",
+];
+
 /**
  * An operator tool outside the cluster runs an operator-run deployment's
  * effects; Delivery records each declared stage it attests as a settled
@@ -30,8 +38,27 @@ export async function attestStage(
   raw: AttestationRequest,
   actor: Principal,
 ) {
-  // The operator tool authenticates with an operator credential (X13).
-  requireScope(actor, "execute");
+  // Attestation is the gate on an operator-run deployment, so it comes from
+  // a distinct operator identity (X13): the `attest` scope, never an
+  // executor credential, never an identity that owns this deployment.
+  requireScope(actor, "attest");
+  if (actor.scopes.includes("execute"))
+    throw new DeliveryError(
+      "FORBIDDEN",
+      "An executor credential never attests an operator-run stage",
+    );
+  const owner = await this.database.audit.count({
+    where: {
+      entityId: deploymentId,
+      actor: actor.id,
+      action: { in: OWNERSHIP_ACTIONS },
+    },
+  });
+  if (owner > 0)
+    throw new DeliveryError(
+      "FORBIDDEN",
+      "An identity that owns this deployment never attests its stages",
+    );
   const input = AttestationRequestSchema.parse(raw);
   const row = await this.database.deployment.findUniqueOrThrow({
     where: { id: deploymentId },

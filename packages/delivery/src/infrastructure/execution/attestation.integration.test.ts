@@ -3,6 +3,7 @@ import { recipeFromPipeline } from "#shared/model/recipe-adapter.ts";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import type { Principal } from "#shared/contract.ts";
 import { testExecutor, testOperator } from "#testing/seed.ts";
+import { MachineCredentialSchema } from "#infrastructure/config.ts";
 import {
   arcadePipeline,
   arcadeRegistration,
@@ -11,11 +12,11 @@ import {
 } from "#testing/model-fixture.ts";
 
 const context = useDeliveryFixture({ registration: arcadeRegistration });
-/** The operator tool's credential (X13): a machine credential with execute. */
+/** The operator tool's credential (X13): an attestor that never executes. */
 const operatorTool: Principal = {
   id: "operator-tool",
   kind: "machine",
-  scopes: ["read", "execute"],
+  scopes: ["read", "attest"],
 };
 const ran = [{ kind: "attestation" as const, summary: "ran" }];
 
@@ -53,14 +54,20 @@ test("an operator attests each declared stage of an operator-run deployment", as
       operatorTool,
     ),
   ).rejects.toThrow(/not one the recipe asks/u);
-  // A human session holds no execute scope; the tool uses its own credential.
-  await expect(
-    context.delivery.attestStage(
-      deployment.id,
-      { stage: "bootstrap", evidence: ran },
-      testOperator,
-    ),
-  ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  // Only the distinct attestor identity attests: never a human session, the
+  // executor, or a credential carrying execute alongside attest.
+  for (const actor of [
+    testOperator,
+    testExecutor,
+    { ...testExecutor, scopes: [...testExecutor.scopes, "attest" as const] },
+  ])
+    await expect(
+      context.delivery.attestStage(
+        deployment.id,
+        { stage: "bootstrap", evidence: ran },
+        actor,
+      ),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
   await expect(
     context.delivery.attestStage(
       deployment.id,
@@ -120,4 +127,49 @@ test("a deployment of another recipe kind takes no attestation", async () => {
       operatorTool,
     ),
   ).rejects.toThrow(/Only an operator-run deployment/u);
+});
+
+test("an identity that owns the deployment never attests it, under any credential", async () => {
+  const deployment = await operatorRunDeployment();
+  // The same principal once claimed it with an executor credential.
+  const owner: Principal = {
+    id: "operator-tool",
+    kind: "machine",
+    scopes: ["read", "execute"],
+  };
+  await context.delivery.renewLease(
+    deployment.id,
+    { workflowId: `delivery/${deployment.id}`, workflowRunId: "run-1" },
+    owner,
+  );
+  await expect(
+    context.delivery.attestStage(
+      deployment.id,
+      { stage: "bootstrap", evidence: ran },
+      operatorTool,
+    ),
+  ).rejects.toThrow(/owns this deployment never attests/u);
+});
+
+test("the API refuses an attestation credential that also executes", () => {
+  expect(
+    MachineCredentialSchema.safeParse({
+      token: "t".repeat(32),
+      principal: {
+        id: "attestor",
+        kind: "machine",
+        scopes: ["read", "attest", "execute"],
+      },
+    }).success,
+  ).toBe(false);
+  expect(
+    MachineCredentialSchema.safeParse({
+      token: "t".repeat(32),
+      principal: {
+        id: "attestor",
+        kind: "machine",
+        scopes: ["read", "attest"],
+      },
+    }).success,
+  ).toBe(true);
 });

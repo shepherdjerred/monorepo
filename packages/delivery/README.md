@@ -452,6 +452,15 @@ inspection works while Temporal or ArgoCD's API is unavailable. Canceling runnin
 work is a request to stop at a safe boundary, not an assertion that side effects
 were undone.
 
+Operator-run stages are attested through `POST /deployments/:id/attestations`
+by a distinct operator identity (X13): a machine credential with the `attest`
+scope. The API refuses an attestation from any `execute` credential or from an
+identity that has claimed, renewed or handed off the deployment, and it refuses
+to start with a machine credential holding both `attest` and `execute`. The
+attestor's token is the Delivery service item's `DELIVERY_ATTEST_TOKEN` field,
+and its principal (`delivery-operator-attestor`, scopes `read` and `attest`) is
+an entry of `DELIVERY_MACHINE_CREDENTIALS`.
+
 A deployment is never owned by a different executor identity (D7). A
 self-hosted service's deployment holds the global dispatch barrier (D8); after
 applying, its executor calls `POST /deployments/:id/handoff`, leaving it owned

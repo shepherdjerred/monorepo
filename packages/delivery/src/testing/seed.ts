@@ -38,6 +38,11 @@ export const fixturePrincipals: Readonly<Record<string, Principal>> = {
     kind: "machine",
     scopes: ["read", "publish"],
   },
+  attestor: {
+    id: "fixture-attestor",
+    kind: "machine",
+    scopes: ["read", "attest"],
+  },
 };
 
 export type TestRegistration = {

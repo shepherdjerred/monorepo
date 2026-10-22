@@ -238,16 +238,19 @@ describe("recovery and attestation", () => {
     expect(await status(path, "deployer", body)).toBe(403);
   });
 
-  test("attestations take a stage with at least one evidence entry", async () => {
+  test("attestations come from the attestor and take a stage with at least one evidence entry", async () => {
     const deployment = await requestDeploy();
     const path = `/deployments/${deployment.id}/attestations`;
-    expect(
-      await status(path, "executor", { stage: "bootstrap", evidence: [] }),
-    ).toBe(400);
-    const attested = await call("POST", path, "executor", {
+    const ran = {
       stage: "bootstrap",
       evidence: [{ kind: "attestation", summary: "ran the bootstrap" }],
-    });
+    };
+    // The executor never attests its own stages (X13).
+    expect(await status(path, "executor", ran)).toBe(403);
+    expect(
+      await status(path, "attestor", { stage: "bootstrap", evidence: [] }),
+    ).toBe(400);
+    const attested = await call("POST", path, "attestor", ran);
     expect(attested.status).toBe(400);
     expect(JSON.stringify(attested.json)).toMatch(/operator-run/u);
   });
