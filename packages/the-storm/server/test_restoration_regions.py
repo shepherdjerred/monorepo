@@ -11,8 +11,8 @@ from contextlib import closing
 from pathlib import Path
 from typing import Any
 
-import restoration_files as storage
 import anvil.regions as regions
+import restoration_files as storage
 
 
 def region_bytes(indices: list[int]) -> bytes:
