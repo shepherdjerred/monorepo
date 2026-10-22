@@ -31,13 +31,15 @@ Wait until every environment whose Application you will change has drained:
 the target Application's (its `delivery.shepherdjerred.com/environment`
 annotation), `argocd/prod` (step 1 always patches `argocd`), and
 `cluster-admission/prod` if you will run step 3. Every line must end in
-`null` before you continue:
+`true` before you continue; a failed request or an unexpected response prints
+`not drained` instead:
 
 ```bash
 for environment in argocd/prod cluster-admission/prod <target-environment-id>; do
   printf '%s ' "$environment"
-  curl -s "https://delivery.tailnet-1a49.ts.net/api/v1/environments/$(jq -rn --arg id "$environment" '$id | @uri')" \
-    | jq '.environment.activeDeploymentId'
+  curl -fsS "https://delivery.tailnet-1a49.ts.net/api/v1/environments/$(jq -rn --arg id "$environment" '$id | @uri')" \
+    | jq -e '.environment | has("activeDeploymentId") and .activeDeploymentId == null' \
+    || echo "not drained"
 done
 ```
 
