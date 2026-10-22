@@ -814,9 +814,11 @@ repository already keeps out of CI become the oracle of
 **Monitoring.** After acceptance, the environment's monitor watches its
 alarms until the evidence threshold is met. Scout prod is the first
 consumer: its monitor reads the existing Scout alert rules and error
-tracker, its threshold is a count of processed matches and served Discord
-interactions, and its policy is `automatic`, so an alarm during the watch
-rolls back to the last settled selection without an operator. Scout beta
+tracker, its threshold is a count of applied match receipts, and its policy
+is `automatic`, so an alarm during the watch
+rolls back to the last settled selection without an operator. Served Discord
+interactions are not evidence: beta can go a week without one, so a Discord
+threshold would never settle and would block every promotion. Scout beta
 declares the same monitor with policy `hold`, and prod promotes only from a
 settled beta.
 
