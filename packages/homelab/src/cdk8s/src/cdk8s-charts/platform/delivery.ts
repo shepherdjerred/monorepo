@@ -16,10 +16,7 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import { createDeliveryNamespace } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/namespace.ts";
 import { createSingleAppPostgreSQL } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/single-app-postgresql.ts";
 import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
-import {
-  createDeliveryApplicationReader,
-  mountDeliveryApplicationReader,
-} from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/application-reader.ts";
+import { attachDeliveryApplicationReader } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/application-reader.ts";
 import {
   setRevisionHistoryLimit,
   withCommonProps,
@@ -62,8 +59,8 @@ export function createDeliveryChart(
   if (!transitionRendering())
     createDeliveryNamespace(chart, { retained: false });
   createDeliveryCatalogRecovery(chart);
-  if (transitionRendering()) createDeliveryApplicationReader(chart);
-  else createSingleAppPostgreSQL(chart, { app: "delivery", userFlags: [] });
+  if (!transitionRendering())
+    createSingleAppPostgreSQL(chart, { app: "delivery", userFlags: [] });
   const database = Secret.fromSecretName(
     chart,
     "postgres",
@@ -106,7 +103,8 @@ export function createDeliveryChart(
     securityContext: { fsGroup: 1000 },
   });
   const observer = createDeliveryIngressObserver(deployment);
-  if (transitionRendering()) mountDeliveryApplicationReader(deployment);
+  if (transitionRendering())
+    attachDeliveryApplicationReader(deployment, observer);
   const dbEnv = {
     DB_USER: EnvValue.fromSecretValue({ secret: database, key: "username" }),
     DB_PASSWORD: EnvValue.fromSecretValue({

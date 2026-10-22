@@ -218,6 +218,33 @@ describe("ArgoCD AppProjects", () => {
     }
   });
 
+  it("lets every project reach the namespaces Delivery's readers and their workloads use", () => {
+    const required = [
+      "argocd",
+      "storm-forum",
+      "storm-forum-beta",
+      "temporal",
+      "scout-beta",
+      "scout-prod",
+    ];
+    for (const name of Object.values(ARGOCD_PROJECTS)) {
+      const project = projects.get(name);
+      for (const namespace of required)
+        expect(
+          project?.destinations.some(
+            (destination) =>
+              destination.server === IN_CLUSTER_SERVER &&
+              (destination.namespace === "*" ||
+                destination.namespace === namespace),
+          ),
+        ).toBe(true);
+      // Roles, RoleBindings and workloads are namespaced kinds; no project
+      // may filter them.
+      expect(project).not.toHaveProperty("namespaceResourceWhitelist");
+      expect(project).not.toHaveProperty("namespaceResourceBlacklist");
+    }
+  });
+
   it("derives child sources from the version catalog", () => {
     const upstream = upstreamChartRepositories();
     expect(upstream).toContain("https://argoproj.github.io/argo-helm");

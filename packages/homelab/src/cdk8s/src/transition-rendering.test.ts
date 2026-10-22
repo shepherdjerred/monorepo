@@ -246,14 +246,7 @@ describe("transition rendering", () => {
 });
 
 describe("transition rendering: Delivery's Application reader", () => {
-  test("gives Delivery a Kubernetes identity that only reads Applications", () => {
-    const account = find(
-      "delivery",
-      "ServiceAccount",
-      DELIVERY_APPLICATION_READER,
-    );
-    expect(account.metadata.namespace).toBe("delivery");
-    expect(account).toMatchObject({ automountServiceAccountToken: false });
+  test("binds a Role that only reads Applications to the Delivery API's own ServiceAccount", () => {
     expect(find("delivery", "Role", DELIVERY_APPLICATION_READER)).toMatchObject(
       {
         metadata: { namespace: "argocd" },
@@ -274,25 +267,21 @@ describe("transition rendering: Delivery's Application reader", () => {
       subjects: [
         {
           kind: "ServiceAccount",
-          name: DELIVERY_APPLICATION_READER,
           namespace: "delivery",
+          name: "delivery-forum-observer",
         },
       ],
     });
+    // No identity that no pod runs as: the reader is the API pod's account.
+    for (const kind of ["ServiceAccount", "Secret"])
+      expect(
+        names("delivery", kind).filter((name) =>
+          name.startsWith(DELIVERY_APPLICATION_READER),
+        ),
+      ).toEqual([]);
   });
 
-  test("mounts the reader identity into the Delivery API without changing its ServiceAccount", () => {
-    expect(
-      find("delivery", "Secret", `${DELIVERY_APPLICATION_READER}-token`),
-    ).toMatchObject({
-      metadata: {
-        namespace: "delivery",
-        annotations: {
-          "kubernetes.io/service-account.name": DELIVERY_APPLICATION_READER,
-        },
-      },
-      type: "kubernetes.io/service-account-token",
-    });
+  test("projects the API pod's own short-lived token into the API container only", () => {
     const pod = z
       .object({
         spec: z.object({
@@ -313,13 +302,17 @@ describe("transition rendering: Delivery's Application reader", () => {
       .parse(find("delivery", "Deployment", "delivery")).spec.template.spec;
     expect(pod.serviceAccountName).toBe("delivery-forum-observer");
     expect(pod.volumes).toContainEqual({
-      name: "application-reader",
-      secret: {
-        secretName: `${DELIVERY_APPLICATION_READER}-token`,
+      name: DELIVERY_APPLICATION_READER,
+      projected: {
         defaultMode: 0o440,
-        items: [
-          { key: "token", path: "token" },
-          { key: "ca.crt", path: "ca.crt" },
+        sources: [
+          { serviceAccountToken: { path: "token", expirationSeconds: 600 } },
+          {
+            configMap: {
+              name: "kube-root-ca.crt",
+              items: [{ key: "ca.crt", path: "ca.crt" }],
+            },
+          },
         ],
       },
     });
@@ -327,7 +320,7 @@ describe("transition rendering: Delivery's Application reader", () => {
       "delivery",
     ]);
     expect(pod.containers[0]?.volumeMounts).toContainEqual({
-      name: "application-reader",
+      name: DELIVERY_APPLICATION_READER,
       mountPath: DELIVERY_APPLICATION_READER_DIRECTORY,
       readOnly: true,
     });

@@ -1,100 +1,96 @@
-import { ApiObject, JsonPatch, type Chart } from "cdk8s";
-import type { Deployment } from "cdk8s-plus-31";
+import { ApiObject, Chart, JsonPatch } from "cdk8s";
+import type { Deployment, ServiceAccount } from "cdk8s-plus-31";
 import {
   KubeRole,
   KubeRoleBinding,
-  KubeSecret,
-  KubeServiceAccount,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { DELIVERY_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/namespace.ts";
 
 export const DELIVERY_APPLICATION_READER = "delivery-application-reader";
-/** Where the Delivery API reads this identity's `token` and `ca.crt`. */
+/** Where the Delivery API reads this reader's `token` and `ca.crt`. */
 export const DELIVERY_APPLICATION_READER_DIRECTORY =
   "/var/run/delivery-application-reader";
-const DELIVERY_APPLICATION_READER_TOKEN = `${DELIVERY_APPLICATION_READER}-token`;
 const ARGOCD_NAMESPACE = "argocd";
+const TOKEN_SECONDS = 600;
 
 /**
- * Delivery's independent Application reader (model section 8, D5 and I2): a
- * Kubernetes identity that reads Application objects straight from the API
- * server, so recovery can still observe them while ArgoCD's own API is down
- * or upgrading itself. It may only get, list and watch Applications in the
- * `argocd` namespace.
+ * Delivery's independent Application reader (model section 8, D5 and I2):
+ * recovery reads Application objects straight from the API server, never
+ * through ArgoCD's API, so it can still observe them while ArgoCD is down or
+ * upgrading itself.
  *
- * The API pod keeps its own ServiceAccount (`delivery-forum-observer`), and a
- * projected token is always issued for the pod's own account, so this
- * identity's credential is a ServiceAccount token Secret the control plane
- * populates. Its token does not expire until the Secret is deleted; the Role
- * bounds what it can do.
+ * A pod can only project a token for its own ServiceAccount, so the reader is
+ * a Role on the API pod's account (`delivery-forum-observer`): get, list and
+ * watch on Applications in `argocd`, nothing else. Only the API container
+ * receives the short-lived token and the cluster CA, in their own directory.
  */
-export function createDeliveryApplicationReader(chart: Chart): void {
-  new KubeServiceAccount(chart, "application-reader-account", {
-    metadata: {
-      name: DELIVERY_APPLICATION_READER,
-      namespace: DELIVERY_NAMESPACE,
-    },
-    automountServiceAccountToken: false,
-  });
-  new KubeRole(chart, "application-reader-role", {
-    metadata: {
-      name: DELIVERY_APPLICATION_READER,
-      namespace: ARGOCD_NAMESPACE,
-    },
-    rules: [
-      {
-        apiGroups: ["argoproj.io"],
-        resources: ["applications"],
-        verbs: ["get", "list", "watch"],
-      },
-    ],
-  });
-  new KubeRoleBinding(chart, "application-reader-binding", {
-    metadata: {
-      name: DELIVERY_APPLICATION_READER,
-      namespace: ARGOCD_NAMESPACE,
-    },
-    roleRef: {
-      apiGroup: "rbac.authorization.k8s.io",
-      kind: "Role",
-      name: DELIVERY_APPLICATION_READER,
-    },
-    subjects: [
-      {
-        kind: "ServiceAccount",
+export function attachDeliveryApplicationReader(
+  deployment: Deployment,
+  account: ServiceAccount,
+): void {
+  const chart = Chart.of(deployment);
+  new KubeRole(
+    chart,
+    `${ARGOCD_NAMESPACE}-${DELIVERY_APPLICATION_READER}-role`,
+    {
+      metadata: {
         name: DELIVERY_APPLICATION_READER,
-        namespace: DELIVERY_NAMESPACE,
+        namespace: ARGOCD_NAMESPACE,
       },
-    ],
-  });
-  new KubeSecret(chart, "application-reader-token", {
-    metadata: {
-      name: DELIVERY_APPLICATION_READER_TOKEN,
-      namespace: DELIVERY_NAMESPACE,
-      annotations: {
-        "kubernetes.io/service-account.name": DELIVERY_APPLICATION_READER,
-      },
+      rules: [
+        {
+          apiGroups: ["argoproj.io"],
+          resources: ["applications"],
+          verbs: ["get", "list", "watch"],
+        },
+      ],
     },
-    type: "kubernetes.io/service-account-token",
-  });
-}
-
-/** Mounts the reader's token and cluster CA, read-only, into the API container only. */
-export function mountDeliveryApplicationReader(deployment: Deployment): void {
+  );
+  new KubeRoleBinding(
+    chart,
+    `${ARGOCD_NAMESPACE}-${DELIVERY_APPLICATION_READER}-binding`,
+    {
+      metadata: {
+        name: DELIVERY_APPLICATION_READER,
+        namespace: ARGOCD_NAMESPACE,
+      },
+      roleRef: {
+        apiGroup: "rbac.authorization.k8s.io",
+        kind: "Role",
+        name: DELIVERY_APPLICATION_READER,
+      },
+      subjects: [
+        {
+          kind: "ServiceAccount",
+          namespace: DELIVERY_NAMESPACE,
+          name: account.name,
+        },
+      ],
+    },
+  );
   ApiObject.of(deployment).addJsonPatch(
     JsonPatch.add("/spec/template/spec/volumes/-", {
-      name: "application-reader",
-      secret: {
-        secretName: DELIVERY_APPLICATION_READER_TOKEN,
+      name: DELIVERY_APPLICATION_READER,
+      projected: {
         defaultMode: 0o440,
-        items: [
-          { key: "token", path: "token" },
-          { key: "ca.crt", path: "ca.crt" },
+        sources: [
+          {
+            serviceAccountToken: {
+              path: "token",
+              expirationSeconds: TOKEN_SECONDS,
+            },
+          },
+          {
+            configMap: {
+              name: "kube-root-ca.crt",
+              items: [{ key: "ca.crt", path: "ca.crt" }],
+            },
+          },
         ],
       },
     }),
     JsonPatch.add("/spec/template/spec/containers/0/volumeMounts/-", {
-      name: "application-reader",
+      name: DELIVERY_APPLICATION_READER,
       mountPath: DELIVERY_APPLICATION_READER_DIRECTORY,
       readOnly: true,
     }),
