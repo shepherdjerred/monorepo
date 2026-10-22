@@ -581,6 +581,23 @@ async function backedUp(): Promise<{
   return { backup, snapshotId: snapshot.marker.snapshotId };
 }
 
+function coldStartRestore(
+  backup: InMemoryObjectStore,
+  destinationStore: InMemoryObjectStore,
+  snapshotId: string,
+) {
+  return restoreSnapshot({
+    backupStore: backup,
+    destinationStore,
+    backupBucket: "backup",
+    destinationBucket: "source",
+    sourceBucket: "source",
+    snapshotId,
+    policy: COLD_START_POLICY,
+    coldStart: true,
+  });
+}
+
 describe("cold-start restore", () => {
   test("refuses a production bucket without the flag and writes nothing", async () => {
     const { backup, snapshotId } = await backedUp();
@@ -690,18 +707,9 @@ describe("cold-start restore races", () => {
     const raced = new RacedStore();
     raced.createBucket("source");
     raced.seed("source", "nested/release.tgz", "late arrival");
-    await expect(
-      restoreSnapshot({
-        backupStore: backup,
-        destinationStore: raced,
-        backupBucket: "backup",
-        destinationBucket: "source",
-        sourceBucket: "source",
-        snapshotId,
-        policy: COLD_START_POLICY,
-        coldStart: true,
-      }),
-    ).rejects.toThrow("refused to overwrite source/nested/release.tgz");
+    await expect(coldStartRestore(backup, raced, snapshotId)).rejects.toThrow(
+      "refused to overwrite source/nested/release.tgz",
+    );
     const survivor = await raced.getObject("source", "nested/release.tgz");
     expect(survivor.size).toBe("late arrival".length);
   });
@@ -722,18 +730,9 @@ describe("cold-start restore races", () => {
     }
     const store = new InterlopedStore();
     store.createBucket("source");
-    await expect(
-      restoreSnapshot({
-        backupStore: backup,
-        destinationStore: store,
-        backupBucket: "backup",
-        destinationBucket: "source",
-        sourceBucket: "source",
-        snapshotId,
-        policy: COLD_START_POLICY,
-        coldStart: true,
-      }),
-    ).rejects.toThrow("that are not in snapshot " + snapshotId);
+    await expect(coldStartRestore(backup, store, snapshotId)).rejects.toThrow(
+      "that are not in snapshot " + snapshotId,
+    );
   });
 
   /** Tampers with the first restored key once the second object has landed. */
@@ -781,18 +780,9 @@ describe("cold-start restore races", () => {
       const { backup, snapshotId } = await backedUp();
       const store = new TamperingStore(tamper);
       store.createBucket("source");
-      await expect(
-        restoreSnapshot({
-          backupStore: backup,
-          destinationStore: store,
-          backupBucket: "backup",
-          destinationBucket: "source",
-          sourceBucket: "source",
-          snapshotId,
-          policy: COLD_START_POLICY,
-          coldStart: true,
-        }),
-      ).rejects.toThrow("removed or changed after verification");
+      await expect(coldStartRestore(backup, store, snapshotId)).rejects.toThrow(
+        "removed or changed after verification",
+      );
     },
   );
 
@@ -811,18 +801,9 @@ describe("cold-start restore races", () => {
     }
     const raced = new WriteRacedStore();
     raced.createBucket("source");
-    await expect(
-      restoreSnapshot({
-        backupStore: backup,
-        destinationStore: raced,
-        backupBucket: "backup",
-        destinationBucket: "source",
-        sourceBucket: "source",
-        snapshotId,
-        policy: COLD_START_POLICY,
-        coldStart: true,
-      }),
-    ).rejects.toThrow("refused to overwrite source/nested/release.tgz");
+    await expect(coldStartRestore(backup, raced, snapshotId)).rejects.toThrow(
+      "refused to overwrite source/nested/release.tgz",
+    );
     const survivor = await raced.getObject("source", "nested/release.tgz");
     expect(survivor.size).toBe("created by another workload".length);
   });
