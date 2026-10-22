@@ -57,6 +57,8 @@ Both Java and TypeScript validate their wire fields against these files.
 Native chat, message commands, proposed signs and books, anvil names, name tags,
 and Discord ingress pass admission before publication. Unknown command arguments
 are screened; commands containing only known identifiers are audited directly.
+An approved command runs as its sender, and a command that is unknown, not
+permitted or malformed gets the same error a typed command would.
 Authentication commands and credential-shaped strings are redacted before storage.
 Allowed and rejected text, including DMs, stays in the private archive indefinitely.
 Loaded saved signs, containers and entity names are snapshots with unknown creators;
@@ -3464,9 +3466,7 @@ stalls on a step, `/rwfbots debug` shows a snapshot of its state and the first
 check that refused the step.
 
 `bun run bots:match --map <id> --count <n> --output <dir>` plays one bots-only
-showcase on that map in a disposable server and keeps its trace and recording
-(`--kits "harpooner trooper"` restricts the draft to those kits, which must
-include a starter kit);
+showcase on that map in a disposable server and keeps its trace and recording;
 `bun run bots:stuck <trace.gz>` reports, per bot, time spent standing still
 while not holding on purpose, decisions without a path, option flip-flops,
 route failures and recoveries.

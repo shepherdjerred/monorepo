@@ -26,7 +26,6 @@ const ArgsSchema = z.object({
   output: z.string().min(1),
   minutes: z.coerce.number().positive().max(30),
   jar: z.string().min(1),
-  kits: z.string().min(1).optional(),
 });
 
 const { values } = parseArgs({
@@ -37,8 +36,6 @@ const { values } = parseArgs({
     minutes: { type: "string", default: "12" },
     // Another build of TheStorm.jar, to compare bots before and after a change.
     jar: { type: "string", default: stormJar },
-    // Restrict the draft to these kit ids (space or comma separated, with a starter kit).
-    kits: { type: "string" },
   },
 });
 const args = ArgsSchema.parse(values);
@@ -52,14 +49,7 @@ const server = await startLocalStorm({
   stormJar: path.resolve(args.jar),
   dataDir,
   rwfMap: args.map,
-  rwf: {
-    ...rwfTestSettings,
-    countdown: "PT15S",
-    endLinger: "PT5S",
-    ...(args.kits === undefined
-      ? {}
-      : { kits: args.kits.split(/[\s,]+/u).filter((kit) => kit !== "") }),
-  },
+  rwf: { ...rwfTestSettings, countdown: "PT15S", endLinger: "PT5S" },
   resources: { cpus: 4, memoryLimit: "6g", heap: "4G" },
 });
 
