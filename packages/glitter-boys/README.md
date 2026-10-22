@@ -32,6 +32,9 @@ The custom homepage is an Astro page; Starlight supplies the
 Luckiest Guy display font. Its Apache 2.0 license is included beside the font
 in `src/assets/fonts/LICENSE.txt`. Animation respects reduced-motion preferences.
 
+The build verifies site-root-relative page and asset links against its output.
+The repository-wide link scan delegates those links to this owning-site check.
+
 The guides target Apple silicon macOS and Windows amd64 crossplay: MW2 MP,
 and Black Ops I/II/III MP and Zombies. The compatibility reference distinguishes
 upstream documentation from community reports and locally verified sessions.

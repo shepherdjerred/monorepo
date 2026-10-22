@@ -86,6 +86,9 @@ export const sitePaths = {
     "packages/glitter-boys-launcher/scripts/release-manifest.ts",
     "packages/glitter-boys-launcher/published-release.json",
     "packages/glitter-boys-launcher/package.json",
+    // The build runs the shared built-link checker, and the main verify step
+    // excludes this site, so checker changes must rebuild it here.
+    "scripts/checks/check-built-internal-links.ts",
     ...deployScripts,
   ],
   "site-ts-mc-docs": [

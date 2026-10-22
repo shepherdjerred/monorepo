@@ -312,5 +312,6 @@ test("Glitter Boys archives track the site and reviewed launcher publication inp
   expect(paths).toContain(
     "packages/glitter-boys-launcher/scripts/release-manifest.ts",
   );
+  expect(paths).toContain("scripts/checks/check-built-internal-links.ts");
   expect(paths).not.toContain("packages/glitter-boys-launcher/crates");
 });
