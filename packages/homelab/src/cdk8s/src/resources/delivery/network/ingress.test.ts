@@ -8,8 +8,6 @@ import {
   resetProbeRegistry,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
 import { podTemplateSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/pod-template-schema.ts";
-import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
-import { DELIVERY_APPLICATION_READER } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/application-reader.ts";
 
 beforeEach(resetProbeRegistry);
 const resources = () =>
@@ -86,21 +84,6 @@ test("actual observer bindings permit only fixed Ingress get and namespace-scope
       rules,
     })),
   ).toEqual([
-    // Under transition rendering, Delivery's independent Application reader.
-    ...(transitionRendering()
-      ? [
-          {
-            namespace: "argocd",
-            rules: [
-              {
-                apiGroups: ["argoproj.io"],
-                resources: ["applications"],
-                verbs: ["get", "list", "watch"],
-              },
-            ],
-          },
-        ]
-      : []),
     {
       namespace: "delivery",
       rules: [
@@ -142,7 +125,7 @@ test("actual observer bindings permit only fixed Ingress get and namespace-scope
       }),
     );
   }
-  expect(bindings).toHaveLength(transitionRendering() ? 3 : 2);
+  expect(bindings).toHaveLength(2);
   expect(
     rendered.filter((raw) => Named.parse(raw).kind === "ClusterRoleBinding"),
   ).toEqual([]);
@@ -153,12 +136,11 @@ test("actual observer bindings permit only fixed Ingress get and namespace-scope
           ["secrets", "pods/exec", "pods/log"].includes(resource),
         ),
       ).toBe(false);
-      // Only the Application reader watches, so recovery sees changes as
-      // they happen; nothing here may write.
-      const forbidden = ["*", "create", "update", "patch", "delete"];
-      if (role.metadata.name !== DELIVERY_APPLICATION_READER)
-        forbidden.push("watch");
-      expect(rule.verbs.some((verb) => forbidden.includes(verb))).toBe(false);
+      expect(
+        rule.verbs.some((verb) =>
+          ["*", "create", "update", "patch", "delete", "watch"].includes(verb),
+        ),
+      ).toBe(false);
     }
 });
 

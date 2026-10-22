@@ -20,10 +20,6 @@ import { APPLICATION_SOURCE_POLICY } from "./resources/argocd-application-admiss
 import { deliveryArgoPolicy } from "./resources/argo-applications/platform/delivery-rbac.ts";
 import { ARGOCD_PROJECTS } from "./resources/argo-applications/platform/projects.ts";
 import {
-  DELIVERY_APPLICATION_READER,
-  DELIVERY_APPLICATION_READER_DIRECTORY,
-} from "./resources/delivery/application-reader.ts";
-import {
   MC_SANDBOX_LOCAL_QUEUE,
   MC_SANDBOX_QUALIFICATION_QUOTA,
 } from "./resources/mc-sandbox/limits.ts";
@@ -242,87 +238,5 @@ describe("transition rendering", () => {
     expect(scout).toContain(
       "sum by (environment, kind) (increase(scout_temporal_interrupted_provider_attempts_total[30m])) > 0",
     );
-  });
-});
-
-describe("transition rendering: Delivery's Application reader", () => {
-  test("binds a Role that only reads Applications to the Delivery API's own ServiceAccount", () => {
-    expect(find("delivery", "Role", DELIVERY_APPLICATION_READER)).toMatchObject(
-      {
-        metadata: { namespace: "argocd" },
-        rules: [
-          {
-            apiGroups: ["argoproj.io"],
-            resources: ["applications"],
-            verbs: ["get", "list", "watch"],
-          },
-        ],
-      },
-    );
-    expect(
-      find("delivery", "RoleBinding", DELIVERY_APPLICATION_READER),
-    ).toMatchObject({
-      metadata: { namespace: "argocd" },
-      roleRef: { kind: "Role", name: DELIVERY_APPLICATION_READER },
-      subjects: [
-        {
-          kind: "ServiceAccount",
-          namespace: "delivery",
-          name: "delivery-forum-observer",
-        },
-      ],
-    });
-    // No identity that no pod runs as: the reader is the API pod's account.
-    for (const kind of ["ServiceAccount", "Secret"])
-      expect(
-        names("delivery", kind).filter((name) =>
-          name.startsWith(DELIVERY_APPLICATION_READER),
-        ),
-      ).toEqual([]);
-  });
-
-  test("projects the API pod's own short-lived token into the API container only", () => {
-    const pod = z
-      .object({
-        spec: z.object({
-          template: z.object({
-            spec: z.looseObject({
-              serviceAccountName: z.string(),
-              volumes: z.array(z.looseObject({ name: z.string() })),
-              containers: z.array(
-                z.looseObject({
-                  name: z.string(),
-                  volumeMounts: z.array(z.looseObject({ name: z.string() })),
-                }),
-              ),
-            }),
-          }),
-        }),
-      })
-      .parse(find("delivery", "Deployment", "delivery")).spec.template.spec;
-    expect(pod.serviceAccountName).toBe("delivery-forum-observer");
-    expect(pod.volumes).toContainEqual({
-      name: DELIVERY_APPLICATION_READER,
-      projected: {
-        defaultMode: 0o440,
-        sources: [
-          { serviceAccountToken: { path: "token", expirationSeconds: 600 } },
-          {
-            configMap: {
-              name: "kube-root-ca.crt",
-              items: [{ key: "ca.crt", path: "ca.crt" }],
-            },
-          },
-        ],
-      },
-    });
-    expect(pod.containers.map((container) => container.name)).toEqual([
-      "delivery",
-    ]);
-    expect(pod.containers[0]?.volumeMounts).toContainEqual({
-      name: DELIVERY_APPLICATION_READER,
-      mountPath: DELIVERY_APPLICATION_READER_DIRECTORY,
-      readOnly: true,
-    });
   });
 });

@@ -50,8 +50,8 @@ export function publicationImageDigests(
  *   from the `delivery` and `temporal` charts to `delivery-data` and
  *   `temporal-data`, whose Applications the root renders;
  * - children move to the `cluster` and `workloads` AppProjects, Delivery's
- *   ArgoCD account may create, update, delete and sync them, its Kubernetes
- *   reader identity exists, and only Delivery may write `spec.source`;
+ *   ArgoCD account may create, update, delete and sync them, and only
+ *   Delivery may write `spec.source`;
  * - mc-sandbox joins the CI ClusterQueue and reads its image allowlist from a
  *   deployment parameter; the Delivery monitor alert rules load.
  *
