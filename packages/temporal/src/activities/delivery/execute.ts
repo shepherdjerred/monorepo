@@ -31,6 +31,8 @@ import { workerSourceFingerprint } from "#lib/delivery/workers/worker-source.ts"
 import { prepareMinecraftDelivery } from "./minecraft.ts";
 import { requireMinecraftPreservation } from "#lib/delivery/minecraft-acceptance.ts";
 import { trmnlRepairClaim } from "./trmnl-repair.ts";
+import { executorIdentity } from "./model/stages.ts";
+import { modelRecipe } from "#lib/delivery/model/recipe.ts";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
 import {
   acknowledgeReconciledRelease,
@@ -106,12 +108,13 @@ export async function prepareDelivery(id: string) {
   if (!(await minecraftEligible(current)))
     return { status: "waiting" } as const;
   try {
-    await deliveryRequest(
-      `${path(id)}/claim`,
-      DeploymentDetailSchema,
-      (await trmnlRepairClaim(current)) ??
-        (await workerRetirementClaim(current)),
-    );
+    // The executor names itself on claim so ownership is never transferred
+    // silently (D7); specialized proofs ride in the same body.
+    await deliveryRequest(`${path(id)}/claim`, DeploymentDetailSchema, {
+      ...((await trmnlRepairClaim(current)) ??
+        (await workerRetirementClaim(current))),
+      executor: executorIdentity(),
+    });
   } catch (error) {
     if (
       error instanceof ApplicationFailure &&
@@ -133,6 +136,8 @@ export async function prepareDelivery(id: string) {
   await capturePriorWorkerSource(current);
   return {
     status: "ready",
+    // A model recipe runs on the step executor (T3).
+    model: modelRecipe(current) !== null,
     ...adapterFlags(current),
   } as const;
 }

@@ -34,6 +34,33 @@ export async function syncArgoRelease(
   selection: DeliverySelection,
   operationId: string,
 ) {
+  const prune =
+    (await forumSyncPrunes(selection, argoRequest)) ||
+    (await arcadeSyncPrunes(selection, argoRequest));
+  await runGuardedArgoCommand(
+    [
+      "sync-managed",
+      selection.application,
+      "--revision",
+      selection.revision,
+      "--request-id",
+      operationId,
+      ...(prune ? ["--prune"] : []),
+      "--timeout",
+      "1200",
+    ],
+    { operationId, application: selection.application },
+  );
+}
+
+/**
+ * Runs one subcommand of the guarded Argo CLI bundled into the worker image,
+ * heartbeating with `details` and killing it on cancellation.
+ */
+export async function runGuardedArgoCommand(
+  args: string[],
+  details: { operationId: string; application: string },
+) {
   const context = Context.current();
   const bundled = new URL("../../../dist/delivery-argocd.js", import.meta.url)
     .pathname;
@@ -46,47 +73,29 @@ export async function syncArgoRelease(
     throw new Error(
       "Required guarded Argo command is missing from the worker image",
     );
-  const prune =
-    (await forumSyncPrunes(selection, argoRequest)) ||
-    (await arcadeSyncPrunes(selection, argoRequest));
-  const process = Bun.spawn(
-    [
-      "bun",
-      command,
-      "sync-managed",
-      selection.application,
-      "--revision",
-      selection.revision,
-      "--request-id",
-      operationId,
-      ...(prune ? ["--prune"] : []),
-      "--timeout",
-      "1200",
-    ],
-    {
-      cwd: new URL("../../../../../", import.meta.url).pathname,
-      stdin: "ignore",
-      stdout: "ignore",
-      stderr: "ignore",
-      env: {
-        PATH: Bun.env["PATH"],
-        ARGOCD_SERVER_URL: Bun.env["ARGOCD_SERVER_URL"],
-        ARGOCD_TOKEN: Bun.env["ARGOCD_TOKEN"],
-      },
+  const process = Bun.spawn(["bun", command, ...args], {
+    cwd: new URL("../../../../../", import.meta.url).pathname,
+    stdin: "ignore",
+    stdout: "ignore",
+    stderr: "ignore",
+    env: {
+      PATH: Bun.env["PATH"],
+      ARGOCD_SERVER_URL: Bun.env["ARGOCD_SERVER_URL"],
+      ARGOCD_TOKEN: Bun.env["ARGOCD_TOKEN"],
     },
-  );
+  });
   const cancel = () => {
     process.kill("SIGKILL");
   };
   context.cancellationSignal.addEventListener("abort", cancel, { once: true });
   const heartbeat = setInterval(() => {
-    context.heartbeat({ operationId, application: selection.application });
+    context.heartbeat(details);
   }, 10_000);
   try {
     if (context.cancellationSignal.aborted) cancel();
     if ((await process.exited) !== 0)
       throw new Error(
-        "Guarded Argo synchronization failed; inspect the recorded request before retrying",
+        `Guarded Argo ${args[0] ?? "command"} failed; inspect the recorded request before retrying`,
       );
   } finally {
     clearInterval(heartbeat);

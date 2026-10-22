@@ -36,7 +36,11 @@ export async function runDeliveryTestStage(
   deploymentId: string,
   request: TestStageRequest,
   runJob: typeof runDeliveryJob = runDeliveryJob,
-): Promise<{ evidence: TestStageEvidence; result: TestStageResult }> {
+): Promise<{
+  evidence: TestStageEvidence;
+  result: TestStageResult;
+  operationId: string;
+}> {
   const input = TestStageInputSchema.parse({
     suite: request.suite,
     workspace: request.workspace,
@@ -69,6 +73,7 @@ export async function runDeliveryTestStage(
     throw new Error("Test stage result names another suite or workspace");
   return {
     result,
+    operationId,
     evidence: {
       kind: "test",
       summary: JSON.stringify(result),

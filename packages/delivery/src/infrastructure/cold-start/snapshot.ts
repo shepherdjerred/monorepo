@@ -10,8 +10,11 @@ import { fingerprint } from "#infrastructure/delivery-records.ts";
 type Reader = Transaction | Database;
 type Edge = { dependentId: string; prerequisiteId: string };
 
-/** Stage keys whose operation identity names the effect that converged a target. */
-const CONVERGING_STAGES = new Set(["reconcile", "sync"]);
+/**
+ * Stage keys whose operation identity names the effect that converged a
+ * target: the v1 reconcile stage and the model executor's sync step.
+ */
+const CONVERGING_STAGES = new Set(["reconcile", "step/sync"]);
 
 /**
  * The bootstrap chain (section 6): every environment of a self-hosted

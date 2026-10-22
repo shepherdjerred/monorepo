@@ -1,4 +1,6 @@
+import * as admission from "./admission-contract.ts";
 import * as approvals from "./approval-contract.ts";
+import * as coldStart from "./cold-start-contract.ts";
 import * as catalog from "./catalog-contract.ts";
 import * as deploymentRequests from "#shared/deployment-request-contract.ts";
 import * as monitors from "./monitor-contract.ts";
@@ -58,6 +60,31 @@ export function recipeFromPipeline(
 export function recipeComponents(definition: RecipeDefinition): string[] {
   return recipes.recipeComponents(definition);
 }
+export type HelmSource = recipes.HelmSource;
+export type GitSource = recipes.GitSource;
+export type ArtifactParameter = recipes.ArtifactParameter;
+export function helmSource(source: HelmSource | GitSource): HelmSource | null {
+  return recipes.helmSource(source);
+}
+export function artifactParameterComponent(value: ArtifactParameter): string {
+  return recipes.artifactParameterComponent(value);
+}
+export function renderArtifactParameter(
+  path: string,
+  artifact: { uri: string; version: string; digest: string },
+): string {
+  return recipes.renderArtifactParameter(path, artifact);
+}
+
+export const AdmissionSnapshotSchema = admission.AdmissionSnapshotSchema;
+export type AdmissionSnapshot = admission.AdmissionSnapshot;
+
+export const ColdStartRequirementSchema = coldStart.ColdStartRequirementSchema;
+export const ColdStartReceiptSchema = coldStart.ColdStartReceiptSchema;
+export const ColdStartSnapshotSchema = coldStart.ColdStartSnapshotSchema;
+export type ColdStartReceipt = coldStart.ColdStartReceipt;
+export type ColdStartSnapshot = coldStart.ColdStartSnapshot;
+
 export function recipeRunners(definition: RecipeDefinition): RunnerReference[] {
   return recipes.recipeRunners(definition);
 }
@@ -74,6 +101,7 @@ export const MonitorObservationInputSchema =
   monitors.MonitorObservationInputSchema;
 export const MonitorObservationSchema = monitors.MonitorObservationSchema;
 export const WatchingMonitorSchema = monitors.WatchingMonitorSchema;
+export const MonitorObservedSchema = monitors.MonitorObservedSchema;
 export const MonitorStatusSchema = monitors.MonitorStatusSchema;
 export const FiringAlarmSchema = monitors.FiringAlarmSchema;
 export const AlarmSeveritySchema = monitors.AlarmSeveritySchema;

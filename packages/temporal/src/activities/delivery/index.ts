@@ -41,8 +41,22 @@ import {
   dispatchDeliveryPlatformRecoveries,
 } from "./platform/recovery.ts";
 import { runDeliveryTestStage } from "./test-stage.ts";
+import {
+  acceptDeliveryModel,
+  planDeliveryModel,
+  recordDeliveryColdStart,
+  renewDeliveryLease,
+  runDeliveryModelStep,
+  settleDeliveryModel,
+} from "./model/steps.ts";
 
 export const deliveryActivities = {
+  planDeliveryModel,
+  renewDeliveryLease,
+  runDeliveryModelStep,
+  acceptDeliveryModel,
+  settleDeliveryModel,
+  recordDeliveryColdStart,
   listDeliveryReplications,
   recordDeliveryReplication,
   runDeliveryTestStage,

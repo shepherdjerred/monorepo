@@ -10,6 +10,7 @@ import type { PendingReplication } from "@shepherdjerred/delivery/artifact-contr
 import type { DeliveryActivities } from "#activities/delivery/index.ts";
 import type { PlatformDeliveryActivities } from "#activities/delivery/platform/index.ts";
 import type { DeliveryReplicationActivities } from "#activities/delivery/replication/copy.ts";
+import type { DeliveryColdStartActivities } from "#activities/delivery/model/cold-start.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const metadata = proxyActivities<DeliveryActivities>({
@@ -67,6 +68,13 @@ const controlPlane = proxyActivities<PlatformDeliveryActivities>({
     maximumInterval: "30 seconds",
   },
 });
+/** Off-cluster writes run on the backup worker, which holds the R2 credentials. */
+const backup = proxyActivities<DeliveryColdStartActivities>({
+  taskQueue: TASK_QUEUES.BACKUP,
+  scheduleToCloseTimeout: "10 minutes",
+  startToCloseTimeout: "2 minutes",
+  retry: { maximumAttempts: 5, initialInterval: "10 seconds" },
+});
 const replication = proxyActivities<DeliveryReplicationActivities>({
   taskQueue: TASK_QUEUES.BACKUP,
   // The backup worker runs one Activity at a time and the dispatch Workflow
@@ -86,6 +94,12 @@ const replication = proxyActivities<DeliveryReplicationActivities>({
  * qualification and dispatch Activities.
  */
 export const DELIVERY_REPLICATION_PATCH = "delivery-dispatch-replication-v1";
+
+/**
+ * Deployments of model recipes run the step executor (T3). Histories recorded
+ * before it never reach this branch: their prepare result carries no `model`.
+ */
+export const DELIVERY_MODEL_EXECUTOR_PATCH = "delivery-model-executor-v1";
 
 /** Artifacts replicated per dispatch tick; the rest wait for the next one. */
 const REPLICATIONS_PER_DISPATCH = 10;
@@ -151,6 +165,22 @@ async function replicatePendingArtifacts(): Promise<unknown[]> {
   return failures;
 }
 
+type Ready = Extract<
+  Awaited<ReturnType<DeliveryActivities["prepareDelivery"]>>,
+  { status: "ready" }
+>;
+
+/** TRMNL repair, control-plane and platform releases run one Activity each. */
+async function specializedRelease(deploymentId: string, ready: Ready) {
+  if (ready.trmnlRepair)
+    return await mutation.applyDeliveryTrmnlPlugins(deploymentId);
+  if (ready.controlPlane)
+    return await controlPlane.executeDeliveryControlPlane(deploymentId);
+  return ready.platform
+    ? await platform.executeDeliveryPlatform(deploymentId)
+    : null;
+}
+
 export async function deliveryDeploymentWorkflow(input: {
   deploymentId: string;
 }): Promise<void> {
@@ -163,33 +193,18 @@ export async function deliveryDeploymentWorkflow(input: {
     }
     if (ready.status === "terminal") return;
     claimed = true;
-    if (ready.trmnlRepair) {
-      const evidence = await mutation.applyDeliveryTrmnlPlugins(
-        input.deploymentId,
-      );
-      await metadata.finishDelivery(input.deploymentId, {
-        status: "succeeded",
-        evidence,
-      });
+    if (ready.model && patched(DELIVERY_MODEL_EXECUTOR_PATCH)) {
+      await runModelRecipe(input.deploymentId);
+      // The result is recorded; nothing after acceptance may rewrite it.
+      claimed = false;
+      await settleModelAcceptance(input.deploymentId);
       return;
     }
-    if (ready.controlPlane) {
-      const evidence = await controlPlane.executeDeliveryControlPlane(
-        input.deploymentId,
-      );
+    const specialized = await specializedRelease(input.deploymentId, ready);
+    if (specialized !== null) {
       await metadata.finishDelivery(input.deploymentId, {
         status: "succeeded",
-        evidence,
-      });
-      return;
-    }
-    if (ready.platform) {
-      const evidence = await platform.executeDeliveryPlatform(
-        input.deploymentId,
-      );
-      await metadata.finishDelivery(input.deploymentId, {
-        status: "succeeded",
-        evidence,
+        evidence: specialized,
       });
       return;
     }
@@ -233,6 +248,33 @@ export async function deliveryDeploymentWorkflow(input: {
     });
     throw error;
   }
+}
+
+/**
+ * The step iterator (T3): each frozen step from the first unsettled one,
+ * renewing the lease first; every step records its intent before its effect.
+ */
+async function runModelRecipe(deploymentId: string) {
+  const plan = await metadata.planDeliveryModel(deploymentId);
+  for (const key of plan.keys.slice(plan.resumeAt)) {
+    await metadata.renewDeliveryLease(deploymentId);
+    await jobs.runDeliveryModelStep(deploymentId, key);
+  }
+  const evidence = await observation.acceptDeliveryModel(deploymentId);
+  await metadata.finishDelivery(deploymentId, {
+    status: "succeeded",
+    evidence,
+  });
+}
+
+/** After acceptance: self-heal on the accepted source and the cold-start snapshot (T4, X7). */
+async function settleModelAcceptance(deploymentId: string) {
+  const coldStart = await metadata.settleDeliveryModel(deploymentId);
+  if (coldStart !== null)
+    await metadata.recordDeliveryColdStart(
+      deploymentId,
+      await backup.writeDeliveryColdStart(coldStart),
+    );
 }
 
 export async function deliveryDispatchWorkflow() {
