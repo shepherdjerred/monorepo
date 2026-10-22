@@ -299,8 +299,11 @@ const permissions: PolicyCase[] = [
     ["get", ...writes],
     true,
   ),
-  ...onCases("delivery", ["apps", "argocd"], ["get"], true),
-  ...onCases("delivery", ["apps", "argocd"], [...writes, "override"], false),
+  // ArgoCD is a self-hosted service Delivery deploys (model D8); only the
+  // retained root stays read-only.
+  ...onCases("delivery", ["argocd"], ["get", ...writes], true),
+  ...onCases("delivery", ["apps"], ["get"], true),
+  ...onCases("delivery", ["apps"], [...writes, "override"], false),
   ...onCases("delivery", [...OPERATOR_RUN_DATA_APPLICATIONS], ["get"], true),
   ...onCases(
     "delivery",
@@ -310,7 +313,7 @@ const permissions: PolicyCase[] = [
   ),
   ...onCases(
     "delivery",
-    ["arcade", "delivery-control-plane", "temporal", "storm-forum"],
+    ["arcade", "argocd", "delivery-control-plane", "temporal", "storm-forum"],
     ["override"],
     false,
   ),

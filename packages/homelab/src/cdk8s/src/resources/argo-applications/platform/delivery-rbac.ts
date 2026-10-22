@@ -63,8 +63,12 @@ export function deliveryRootApplications(
   );
 }
 export const DELIVERY_ROOT_APPLICATIONS = deliveryRootApplications();
-/** The retained root and ArgoCD itself stay read-only for Delivery. */
-const RETAINED_APPLICATIONS = new Set(["apps", "argocd"]);
+/**
+ * The retained root stays read-only for Delivery. ArgoCD itself is a
+ * self-hosted service Delivery deploys like any other Application, under the
+ * global dispatch barrier (model D8 and section 8).
+ */
+const RETAINED_APPLICATIONS = new Set(["apps"]);
 /** Under transition rendering Delivery creates, updates, deletes and syncs every other Application. */
 export function deliveryManagedApplications(
   transition: boolean = transitionRendering(),
@@ -97,7 +101,8 @@ export function deliveryArgoPolicy(
   const known = deliveryKnownApplications(transition);
   if (transition) {
     // Delivery owns every Application object end to end (model section 8),
-    // except the retained root and ArgoCD and the operator-run data layers.
+    // ArgoCD's included, except the retained root and the operator-run data
+    // layers.
     grant(
       "delivery",
       [...RETAINED_APPLICATIONS, ...OPERATOR_RUN_DATA_APPLICATIONS],
