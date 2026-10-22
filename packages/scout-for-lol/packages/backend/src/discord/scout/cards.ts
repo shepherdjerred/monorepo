@@ -1,4 +1,4 @@
-import { EmbedBuilder, escapeMarkdown } from "discord.js";
+import { EmbedBuilder, escapeMarkdown, type APIEmbed } from "discord.js";
 import type {
   ExploreLoadoutCard,
   ExploreMatchCard,
@@ -79,15 +79,47 @@ function loadoutEmbed(card: ExploreLoadoutCard): EmbedBuilder {
     );
 }
 
-/** Every card on a saved answer, match cards first, capped to fit a message. */
+/** Discord's limit on the combined text of every embed in one message. */
+const DISCORD_MAX_EMBED_CHARACTERS = 6000;
+
+/** The characters Discord counts toward that limit for one embed. */
+export function embedCharacters(embed: APIEmbed): number {
+  return (
+    (embed.title?.length ?? 0) +
+    (embed.description?.length ?? 0) +
+    (embed.footer?.text.length ?? 0) +
+    (embed.author?.name.length ?? 0) +
+    (embed.fields ?? []).reduce(
+      (sum, field) => sum + field.name.length + field.value.length,
+      0,
+    )
+  );
+}
+
+/**
+ * Every card on a saved answer, match cards first, capped to fit a message:
+ * both Discord's embed count and its combined-text budget, after what the
+ * visualization already uses. Each card that would overflow is left out — the
+ * conversation link carries every card — rather than failing the message.
+ */
 export function exploreCardEmbeds(
   message: ExploreMessage,
-  reserved: number,
+  reserved: { readonly embeds: number; readonly characters: number },
 ): EmbedBuilder[] {
-  return [
+  const kept: EmbedBuilder[] = [];
+  let characters = reserved.characters;
+  for (const embed of [
     ...message.matchCards.map((card) => matchEmbed(card)),
     ...message.loadoutCards.map((card) => loadoutEmbed(card)),
-  ].slice(0, Math.max(0, DISCORD_MAX_EMBEDS - reserved));
+  ]) {
+    if (kept.length + reserved.embeds >= DISCORD_MAX_EMBEDS) break;
+    const size = embedCharacters(embed.toJSON());
+    // Only this card is too long; a shorter one after it may still fit.
+    if (characters + size > DISCORD_MAX_EMBED_CHARACTERS) continue;
+    characters += size;
+    kept.push(embed);
+  }
+  return kept;
 }
 
 /**
@@ -100,7 +132,15 @@ export function exploreAnswerAttachments(
   message: ExploreMessage,
 ): ExploreVisualizationPayload {
   const visualization = exploreVisualizationPayload(message);
-  const cards = exploreCardEmbeds(message, visualization.embeds?.length ?? 0);
+  const visualizationEmbeds = visualization.embeds ?? [];
+  const cards = exploreCardEmbeds(message, {
+    embeds: visualizationEmbeds.length,
+    characters: visualizationEmbeds.reduce(
+      (sum, embed) =>
+        sum + embedCharacters("toJSON" in embed ? embed.toJSON() : embed),
+      0,
+    ),
+  });
   return cards.length === 0
     ? visualization
     : { ...visualization, embeds: [...(visualization.embeds ?? []), ...cards] };

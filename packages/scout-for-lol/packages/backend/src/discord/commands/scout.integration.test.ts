@@ -26,6 +26,7 @@ import {
 } from "#src/discord/commands/scout.ts";
 import { resetExploreRateLimitStateForTests } from "#src/explore/rate-limit.ts";
 import { runPersistedExploreTurn } from "#src/explore/runs/run-turn.ts";
+import { ExploreRunRateLimitedError } from "#src/explore/runs/run-manager.ts";
 import { scoutTestVisualization } from "#src/discord/scout/test-fixtures.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testAccountId } from "#src/testing/test-ids.ts";
@@ -237,6 +238,32 @@ describe("/scout ask", () => {
     expect(responseJson).toContain("The sample suggests");
     expect(responseJson).toContain("interrupted by an error");
     expect(responseJson).toContain("Post publicly");
+  });
+
+  test("a refused run takes its saved question back", async () => {
+    const before = await prisma.exploreConversation.count();
+    const refused = fakeInteraction({ question: "Refused question?" });
+    await executeScout(refused.interaction, {
+      client: prisma,
+      runTurn: () =>
+        Promise.reject(
+          new ExploreRunRateLimitedError({
+            allowed: false,
+            quota: [],
+            retryAfterSeconds: 30,
+            reason: "Another answer is still running.",
+          }),
+        ),
+    });
+    expect(JSON.stringify(refused.edits)).toContain(
+      "Another answer is still running.",
+    );
+    expect(await prisma.exploreConversation.count()).toBe(before);
+    expect(
+      await prisma.exploreMessage.count({
+        where: { content: "Refused question?" },
+      }),
+    ).toBe(0);
   });
 
   test("releases the per-user slot when command setup fails", async () => {

@@ -99,6 +99,13 @@ async function grantedPermissions(
   return createPermissionSet(memberPermissions(granted));
 }
 
+function scoutNotInstalled(): TRPCError {
+  return new TRPCError({
+    code: "NOT_FOUND",
+    message: "Scout is not installed in that guild",
+  });
+}
+
 /**
  * {@link resolveGuildPermissions} for someone Scout knows only by Discord id.
  *
@@ -116,12 +123,7 @@ export async function resolveGuildPermissionsForMember(
 ): Promise<PermissionSet> {
   const reader = botRest();
   const guild = await callDiscordForRequest(() => reader.guild(guildId));
-  if (guild === null) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "Scout is not installed in that guild",
-    });
-  }
+  if (guild === null) throw scoutNotInstalled();
   const member = await callDiscordForRequest(() =>
     reader.guildMember(guildId, discordId),
   );
@@ -132,8 +134,10 @@ export async function resolveGuildPermissionsForMember(
     });
   }
   if (guild.owner_id === discordId) return rootPermissions();
-  const roles =
-    (await callDiscordForRequest(() => reader.guildRoles(guildId))) ?? [];
+  // Null here is Discord saying the guild is gone (Scout removed since the
+  // first read), never "no roles": that would read as a plain member.
+  const roles = await callDiscordForRequest(() => reader.guildRoles(guildId));
+  if (roles === null) throw scoutNotInstalled();
   const held = new Set([guildId, ...member.roles]);
   const administrator = roles.some(
     (role) => held.has(role.id) && hasAdministrator(role.permissions),

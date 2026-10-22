@@ -22,6 +22,7 @@ import type { runPersistedExploreTurn } from "#src/explore/runs/run-turn.ts";
 import { runDurableDiscordExploreTurn } from "#src/explore/runs/discord/turn.ts";
 import { ExploreRunRateLimitedError } from "#src/explore/runs/run-manager.ts";
 import { loadExploreTranscript, startExploreTurn } from "#src/explore/store.ts";
+import { rollbackUnstartedExploreTurn } from "#src/explore/rollback.ts";
 import {
   exploreActionRow,
   exploreAnswerChunks,
@@ -138,6 +139,7 @@ async function answerOnDiscord(input: {
   }
 
   let runnerOwnsMetrics = false;
+  let created: Awaited<ReturnType<typeof startExploreTurn>> | undefined;
   try {
     const conversationId =
       input.conversationId ?? globalThis.crypto.randomUUID();
@@ -166,7 +168,7 @@ async function answerOnDiscord(input: {
         discordAvatar: interaction.user.avatar,
       },
     });
-    const created = await startExploreTurn(dependencies.client, {
+    created = await startExploreTurn(dependencies.client, {
       conversationId: input.conversationId,
       newId: conversationId,
       userId: identity.userId,
@@ -216,6 +218,18 @@ async function answerOnDiscord(input: {
   } catch (error) {
     ticket.finish();
     if (error instanceof ExploreRunRateLimitedError) {
+      // Refused after the question was saved and selected: take it back, so
+      // an unanswered question does not become the current branch and hide
+      // an answer still running elsewhere.
+      if (created !== undefined)
+        await rollbackUnstartedExploreTurn(dependencies.client, {
+          conversationId: created.conversationId,
+          messageId: created.messageId,
+          userId: identity.userId,
+          previousCurrentLeafId: created.previousCurrentLeafId,
+          createdConversation: created.createdConversation,
+          createdQuestion: created.createdQuestion,
+        });
       await interaction.editReply({ content: error.rejection.reason });
       return;
     }

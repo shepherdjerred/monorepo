@@ -5,6 +5,7 @@ capability: analysis
 tripwires:
   - A dataset preview is a sample; compute statistics over the named dataset, and report missing raw-document coverage.
 ---
+
 ## Data analysis
 
 Use these tools only when they are available in this turn.

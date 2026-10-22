@@ -4,6 +4,19 @@ import {
   parseExploreSkillFile,
 } from "#src/explore/skills/loader.ts";
 
+function surfaceSkillFile(name: string): string {
+  return [
+    "---",
+    `name: ${name}`,
+    "description: A skill.",
+    "capability: always",
+    "outputFor: [web]",
+    "tripwires: []",
+    "---",
+    "Body.",
+  ].join("\n");
+}
+
 describe("explore skill loader", () => {
   test("loads every content file with valid frontmatter", async () => {
     const skills = await loadExploreSkillFiles();
@@ -33,6 +46,18 @@ describe("explore skill loader", () => {
     expect(analysis?.body).toContain("no identity translation map is returned");
     expect(analysis?.body).not.toContain("use the mapping");
     expect(analysis?.body).not.toContain("identity mapping supports");
+  });
+
+  test("only a delivery skill may narrow itself to some surfaces", () => {
+    expect(() =>
+      parseExploreSkillFile("loadouts.md", surfaceSkillFile("loadouts")),
+    ).toThrow(/delivery-only/);
+    expect(() =>
+      parseExploreSkillFile(
+        "voice-response.md",
+        surfaceSkillFile("voice-response"),
+      ),
+    ).not.toThrow();
   });
 
   test("rejects a file without frontmatter", () => {

@@ -7,7 +7,8 @@ sidebar:
 
 Explore offers the same capabilities on the web, in Discord's `/scout ask` and
 in Scout Voice. The surface changes how a question arrives and how the answer
-is delivered. It never changes what Explore can do.
+is delivered. It never changes what Explore can do
+([`surface.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/explore/surface.ts)).
 
 Explore used to filter by surface. Creating reports, player feeds and
 competitions was web-only. Match and loadout cards never reached Discord, and
@@ -31,14 +32,17 @@ Two kinds of difference remain, and neither is a capability.
 cards as embeds and follow-up suggestions as buttons, while the web renders
 both as components. Skills that only shape delivery declare the surfaces they
 shape with `outputFor`. The skill loader rejects `outputFor` on any skill
-gated by a capability, so a capability cannot quietly become web-only again.
+gated by a capability, so a capability cannot quietly become web-only again
+([`skills/loader.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/explore/skills/loader.ts)).
 
 **How Scout learns the asker's permissions.** A web session carries the
 asker's Discord OAuth guild list. A `/scout ask` or Voice user has no OAuth
 token, so Scout's bot answers instead. It checks membership, guild ownership
 and the Administrator bit on the asker's roles, then reads the same Scout
 grants. Both paths make the same decision and raise the same errors. An
-unreachable Discord is reported as an outage, never as a missing permission.
+unreachable Discord is reported as an outage, never as a missing permission
+([`guild-permission.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/trpc/guild-permission.ts),
+[`creation/capability.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/explore/creation/capability.ts)).
 
 ## Confirmations stay with the person who asked
 

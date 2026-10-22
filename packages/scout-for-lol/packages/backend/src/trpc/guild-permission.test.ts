@@ -70,6 +70,21 @@ describe("resolveGuildPermissionsForMember", () => {
     expect(permissions.can("subscriptions", "create")).toBe(true);
   });
 
+  test("a guild gone between reads is NOT_FOUND, not a plain member", async () => {
+    restore = installBotRestReader(
+      createBotRestReader({
+        get: (route) =>
+          route === Routes.guildRoles(GUILD)
+            ? absent(10_004)
+            : transport(route),
+        botUserId: "999999999999999999",
+      }),
+    );
+    await expect(
+      resolveGuildPermissionsForMember(ADMIN, GUILD),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
   test("a role carrying Administrator is root, like the web path", async () => {
     useTransport();
     const permissions = await resolveGuildPermissionsForMember(ADMIN, GUILD);

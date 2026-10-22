@@ -12,6 +12,7 @@ import { loadExploreTranscript } from "#src/explore/store.ts";
 import { parseScoutPublishCustomId } from "#src/discord/scout/custom-id.ts";
 import {
   exploreActionRow,
+  exploreFollowUpRow,
   NO_GENERATED_MENTIONS,
   publicExploreChunks,
 } from "#src/discord/scout/messages.ts";
@@ -116,6 +117,12 @@ export async function handleScoutPublishButton(
       throw publishError;
     }
 
+    // Replacing the components replaces all of them, so the follow-up row
+    // is rebuilt too: posting an answer must not take its suggestions away.
+    const followUps = exploreFollowUpRow({
+      conversationId: parsed.conversationId,
+      answer,
+    });
     await interaction.editReply({
       components: [
         exploreActionRow({
@@ -123,6 +130,7 @@ export async function handleScoutPublishButton(
           assistantMessageId: parsed.assistantMessageId,
           posted: true,
         }),
+        ...(followUps === null ? [] : [followUps]),
       ],
     });
   } finally {

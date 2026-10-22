@@ -7,6 +7,7 @@ import {
 import {
   DISCORD_MAX_EMBEDS,
   exploreAnswerAttachments,
+  embedCharacters,
   exploreCardEmbeds,
 } from "#src/discord/scout/cards.ts";
 import { scoutTestVisualization } from "#src/discord/scout/test-fixtures.ts";
@@ -75,7 +76,10 @@ function answer(overrides: Partial<ExploreMessage> = {}): ExploreMessage {
 
 describe("exploreCardEmbeds", () => {
   test("renders a match card with both teams and a link to the match", () => {
-    const [embed] = exploreCardEmbeds(answer({ matchCards: [MATCH_CARD] }), 0);
+    const [embed] = exploreCardEmbeds(answer({ matchCards: [MATCH_CARD] }), {
+      embeds: 0,
+      characters: 0,
+    });
     const json = embed?.toJSON();
     expect(json?.title).toBe("Ranked Solo · 28:48");
     expect(json?.url).toContain("/app/explore/matches/NA1_5635906026");
@@ -89,7 +93,7 @@ describe("exploreCardEmbeds", () => {
   test("renders a loadout card with items, spells and runes", () => {
     const [embed] = exploreCardEmbeds(
       answer({ loadoutCards: [testExploreLoadoutCard("S")] }),
-      0,
+      { embeds: 0, characters: 0 },
     );
     const names = embed?.toJSON().fields?.map((field) => field.name);
     expect(names).toEqual(["Final items", "Spells", "Runes"]);
@@ -101,9 +105,50 @@ describe("exploreCardEmbeds", () => {
         matchCards: [MATCH_CARD],
         loadoutCards: [testExploreLoadoutCard("S")],
       }),
-      DISCORD_MAX_EMBEDS - 1,
+      { embeds: DISCORD_MAX_EMBEDS - 1, characters: 0 },
     );
     expect(embeds).toHaveLength(1);
+  });
+
+  test("never exceeds Discord's combined embed text", () => {
+    const cards = answer({
+      matchCards: [MATCH_CARD],
+      loadoutCards: [testExploreLoadoutCard("S")],
+    });
+    const [first] = exploreCardEmbeds(cards, { embeds: 0, characters: 0 });
+    if (first === undefined) throw new Error("Expected a card");
+    const firstSize = embedCharacters(first.toJSON());
+    // Room for exactly one card after what the visualization used.
+    const embeds = exploreCardEmbeds(cards, {
+      embeds: 1,
+      characters: 6000 - firstSize,
+    });
+    expect(embeds).toHaveLength(1);
+    expect(
+      exploreCardEmbeds(cards, { embeds: 1, characters: 6000 }),
+    ).toHaveLength(0);
+  });
+
+  test("a card too long for the budget does not hide a shorter one after it", () => {
+    const cards = answer({
+      matchCards: [MATCH_CARD],
+      loadoutCards: [testExploreLoadoutCard("S")],
+    });
+    const [match, loadout] = exploreCardEmbeds(cards, {
+      embeds: 0,
+      characters: 0,
+    });
+    if (match === undefined || loadout === undefined)
+      throw new Error("Expected both cards");
+    const loadoutSize = embedCharacters(loadout.toJSON());
+    expect(loadoutSize).toBeLessThan(embedCharacters(match.toJSON()));
+    const kept = exploreCardEmbeds(cards, {
+      embeds: 1,
+      characters: 6000 - loadoutSize,
+    });
+    expect(kept.map((embed) => embed.toJSON().fields?.[0]?.name)).toEqual([
+      "Final items",
+    ]);
   });
 });
 

@@ -9,6 +9,11 @@ import {
   exploreAnalysisEnabled,
 } from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
+import {
+  createBotRestReader,
+  installBotRestReader,
+} from "#src/lib/discord/bot-rest.ts";
+import { DiscordUpstreamError } from "#src/lib/discord-rest.ts";
 import { databaseSnapshotId } from "./snapshot-identity.ts";
 import { writableRowCounts } from "./writable-rows.ts";
 import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
@@ -874,24 +879,32 @@ async function runGuild(input: {
       chipCatalogSha256: exploreChipCatalogSha256(),
       corpusSha256: conversations.corpus?.sha256 ?? null,
       corpusVersion: conversations.corpus?.version ?? null,
+      // Cases run on the surface they were asked on, and the prompt differs
+      // by surface, so the hash covers the prompt for every surface.
       promptSha256: sha256Hex(
-        exploreAgentInstructions({
-          analysis: exploreAnalysisEnabled(),
-          bucks: config.capabilities.bucks ? { currentTime: "pinned" } : null,
-          dares: config.capabilities.dares,
-          challenges: config.capabilities.challenges,
-          creation: config.capabilities.creation,
-          riotHistory: config.capabilities.riotHistory,
-          // A non-null value adds the MVP instructions and skill entry to
-          // the prompt, so omitting it would hash the disabled prompt and
-          // record provenance the run did not have.
-          mvpVotes: config.capabilities.mvpVotes
-            ? { currentTime: "pinned" }
-            : null,
-          clash: config.capabilities.clash,
-          hallOfFame: config.capabilities.hallOfFame,
-          surface,
-        }),
+        JSON.stringify(
+          (["web", "discord", "voice"] as const).map((promptSurface) =>
+            exploreAgentInstructions({
+              analysis: exploreAnalysisEnabled(),
+              bucks: config.capabilities.bucks
+                ? { currentTime: "pinned" }
+                : null,
+              dares: config.capabilities.dares,
+              challenges: config.capabilities.challenges,
+              creation: config.capabilities.creation,
+              riotHistory: config.capabilities.riotHistory,
+              // A non-null value adds the MVP instructions and skill entry to
+              // the prompt, so omitting it would hash the disabled prompt and
+              // record provenance the run did not have.
+              mvpVotes: config.capabilities.mvpVotes
+                ? { currentTime: "pinned" }
+                : null,
+              clash: config.capabilities.clash,
+              hallOfFame: config.capabilities.hallOfFame,
+              surface: promptSurface,
+            }),
+          ),
+        ),
       ),
       flagOverrides: flagOverridesFor(config.capabilities).map((override) => ({
         flag: override.flag,
@@ -1161,22 +1174,41 @@ export async function runReplay(input: {
     );
   }
 
-  for (const config of configs) {
-    const runId =
-      input.options.resumeRunId ??
-      `${input.pin.stage}-${config.label}-${stamp}`;
-    process.stdout.write(
-      `Replaying guild ${config.label} (${config.guildId}) as run ${runId}…\n`,
-    );
-    const result = await runGuild({
-      options: input.options,
-      pin: input.pin,
-      config,
-      runId,
-    });
-    directories.push(result.directory);
-    passed = passed && result.passed;
-    process.stdout.write(`  bundle: ${result.directory}\n`);
+  // A replay is pinned: no case may ask live Discord who is in a server or
+  // which roles they hold. Every bot read fails as an outage, so Discord and
+  // voice creation stays unavailable and setup lookups report Discord as
+  // unreachable, the same on every run.
+  const restoreDiscord = installBotRestReader(
+    createBotRestReader({
+      get: () =>
+        Promise.reject(
+          new DiscordUpstreamError(
+            "fetch_error",
+            "Replays do not reach Discord.",
+          ),
+        ),
+    }),
+  );
+  try {
+    for (const config of configs) {
+      const runId =
+        input.options.resumeRunId ??
+        `${input.pin.stage}-${config.label}-${stamp}`;
+      process.stdout.write(
+        `Replaying guild ${config.label} (${config.guildId}) as run ${runId}…\n`,
+      );
+      const result = await runGuild({
+        options: input.options,
+        pin: input.pin,
+        config,
+        runId,
+      });
+      directories.push(result.directory);
+      passed = passed && result.passed;
+      process.stdout.write(`  bundle: ${result.directory}\n`);
+    }
+  } finally {
+    restoreDiscord();
   }
 
   // All three hold resources past the work. Prisma and the flag provider keep

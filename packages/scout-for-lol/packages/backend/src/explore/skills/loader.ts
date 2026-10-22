@@ -24,6 +24,13 @@ export const EXPLORE_SKILL_CAPABILITIES = [
 ] as const;
 
 export const ExploreSkillCapabilitySchema = z.enum(EXPLORE_SKILL_CAPABILITIES);
+/**
+ * The skills that only shape how an answer is delivered, and so may name the
+ * surfaces they apply to. Every other skill — including capability skills
+ * marked "always", like match-cards or loadouts — reaches every surface.
+ */
+const DELIVERY_SKILLS: ReadonlySet<string> = new Set(["voice-response"]);
+
 const ExploreSkillFrontmatterSchema = z
   .strictObject({
     name: z
@@ -41,10 +48,10 @@ const ExploreSkillFrontmatterSchema = z
     tripwires: z.array(z.string().min(1)).max(4),
   })
   .refine(
-    (skill) => skill.outputFor === undefined || skill.capability === "always",
+    (skill) => skill.outputFor === undefined || DELIVERY_SKILLS.has(skill.name),
     {
       message:
-        "outputFor is for delivery-only skills; a capability skill must reach every surface",
+        "outputFor is for delivery-only skills (DELIVERY_SKILLS); a skill that teaches a capability must reach every surface",
     },
   );
 
