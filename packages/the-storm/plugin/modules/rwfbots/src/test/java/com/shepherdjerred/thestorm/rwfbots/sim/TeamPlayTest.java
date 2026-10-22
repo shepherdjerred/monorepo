@@ -128,7 +128,7 @@ final class TeamPlayTest {
   // Failed routes recover as RECOVER steps with a re-entry walk; landed bodies route as grounded.
   // Bots route around teammates ranked ahead only; idle and recovery plans earn no commitment.
   // Holders patrol between posts about their hold instead of standing still.
-  private static final String PINNED_YARD_HASH = "074dacff56161299";
+  private static final String PINNED_YARD_HASH = "98da509b6b1b09f6";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {

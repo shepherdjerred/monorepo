@@ -75,13 +75,16 @@ final class Patrol {
   }
 
   /**
-   * The post of {@code visit} among {@code size} posts in bearing order: each visit goes to about
-   * the opposite side of the hold from the last, drifting one post every second visit so every post
-   * is used. A hashed pick could land a step from the last post, which reads as standing still.
+   * The post of {@code visit} among {@code size} posts in bearing order: visits interleave the two
+   * halves of the ring, so each goes to about the opposite side of the hold from the last (a
+   * round's end included), every post is used once a round and none twice in a row. A hashed pick
+   * could land a step from the last post, which reads as standing still.
    */
-  private static int across(int bot, long visit, int size) {
+  static int across(int bot, long visit, int size) {
     var start = Math.floorMod(mix(bot, 0), size);
-    return (int) Math.floorMod(start + visit * (size / 2) + visit / 2, (long) size);
+    if (size == 2) return (int) Math.floorMod(start + visit, 2L);
+    var half = (size + 1) / 2;
+    return (int) Math.floorMod(start + visit / 2 + (visit % 2) * half, (long) size);
   }
 
   /** The post of {@code visit}: a hashed pick that never repeats the previous visit's post. */

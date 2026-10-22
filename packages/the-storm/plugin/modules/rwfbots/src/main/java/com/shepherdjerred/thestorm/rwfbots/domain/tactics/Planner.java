@@ -766,7 +766,7 @@ public final class Planner {
     return ownBomb.get().plus(direction.scale(radius)).withY(self.pos().y());
   }
 
-  private static Vec3 approach(NavArtifact nav, BombView bomb) {
+  static Vec3 approach(NavArtifact nav, BombView bomb) {
     var node =
         nav.bombApproach(com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos.of(bomb.pos()));
     return node.isPresent() ? nav.graph().feet(node.getAsInt()) : bomb.pos();

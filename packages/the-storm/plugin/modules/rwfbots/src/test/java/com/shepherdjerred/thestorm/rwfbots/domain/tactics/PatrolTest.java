@@ -193,4 +193,21 @@ final class PatrolTest {
       assertThat(decision.waypoints()).isEmpty();
     }
   }
+
+  @Test
+  void aPatrolUsesEveryPostEachRoundWithoutRepeatingOne() {
+    for (var size = 1; size <= 9; size++) {
+      for (var bot = 0; bot < 5; bot++) {
+        var seen = new java.util.HashSet<Integer>();
+        var last = -1;
+        for (var visit = 0L; visit < size * 3L; visit++) {
+          var post = Patrol.across(bot, visit, size);
+          if (visit < size) seen.add(post);
+          if (size > 1) assertThat(post).as("size %d visit %d", size, visit).isNotEqualTo(last);
+          last = post;
+        }
+        assertThat(seen).as("size %d", size).hasSize(size);
+      }
+    }
+  }
 }
