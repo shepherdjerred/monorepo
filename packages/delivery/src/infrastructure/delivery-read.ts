@@ -4,10 +4,15 @@ import {
   DeploymentSchema,
   BuildSummarySchema,
   LatestQualifiedArtifactQuerySchema,
+  LatestRetainableArtifactQuerySchema,
   ForumBaselineIntentSchema,
 } from "#shared/contract.ts";
 import { z } from "zod";
-import type { LatestQualifiedArtifactQuery } from "#shared/contract.ts";
+import type {
+  LatestQualifiedArtifactQuery,
+  LatestRetainableArtifactQuery,
+} from "#shared/contract.ts";
+import type { Database } from "./database.ts";
 import { wire, required } from "./delivery-records.ts";
 import type { Delivery } from "./delivery.ts";
 import { readRecoveredForumRuntime } from "./forum/recovered-runtime.ts";
@@ -19,6 +24,48 @@ import {
   qualifiedBuildWhere,
 } from "./delivery-data.ts";
 
+/** The live automatic set (R4): the newest set a verified CI build of this repository composed. */
+async function liveAutomaticSet(
+  database: Database,
+  serviceId: string,
+  repositoryId: number,
+) {
+  const matches = z
+    .array(z.object({ id: IdentifierSchema, pipelineNumber: z.number() }))
+    .parse(
+      await database.$queryRaw`
+      SELECT version."id", build."pipelineNumber" FROM "VersionSet" version
+      JOIN "Build" build ON build."id" = version."qualifiedBuildId"
+      WHERE version."serviceId" = ${serviceId}
+        AND build."serviceId" = ${serviceId}
+        AND build."repositoryId" = ${repositoryId}
+        AND build."status" = 'verified'
+        AND build."sourceKind" = 'ci'
+      ORDER BY build."pipelineNumber" DESC, version."revision" DESC LIMIT 1
+    `,
+    );
+  return matches[0] ?? null;
+}
+
+async function liveEntry(
+  database: Database,
+  revisionId: string,
+  input: LatestQualifiedArtifactQuery,
+  repositoryId: number,
+) {
+  return database.versionSetEntry.findFirst({
+    where: {
+      revisionId,
+      component: input.component,
+      artifact: {
+        kind: input.kind,
+        build: qualifiedBuildWhere(input.serviceId, repositoryId),
+      },
+    },
+    include: { artifact: { include: { build: true } } },
+  });
+}
+
 /** Resolve an exact component from the newest coherent automatic version set. */
 export async function latestQualifiedArtifact(
   this: Delivery,
@@ -27,35 +74,65 @@ export async function latestQualifiedArtifact(
 ) {
   const input = LatestQualifiedArtifactQuerySchema.parse(rawInput);
   ensureService(input.serviceId);
-  const matches = z.array(z.object({ id: IdentifierSchema })).parse(
-    await this.database.$queryRaw`
-      SELECT version."id" FROM "VersionSet" version
-      JOIN "Build" build ON build."id" = version."qualifiedBuildId"
-      WHERE version."serviceId" = ${input.serviceId}
-        AND build."serviceId" = ${input.serviceId}
-        AND build."repositoryId" = ${repositoryId}
-        AND build."status" = 'verified'
-        AND build."sourceKind" = 'ci'
-      ORDER BY build."pipelineNumber" DESC, version."revision" DESC LIMIT 1
-    `,
-  );
   const selected = required(
-    matches[0] ?? null,
+    await liveAutomaticSet(this.database, input.serviceId, repositoryId),
     "Qualified automatic version set",
   );
   const row = required(
-    await this.database.versionSetEntry.findFirst({
-      where: {
-        revisionId: selected.id,
-        component: input.component,
-        artifact: {
-          kind: input.kind,
-          build: qualifiedBuildWhere(input.serviceId, repositoryId),
-        },
-      },
-      include: { artifact: { include: { build: true } } },
-    }),
+    await liveEntry(this.database, selected.id, input, repositoryId),
     `Qualified ${input.kind} artifact ${input.serviceId}/${input.component}`,
+  );
+  return artifactView(row.artifact);
+}
+
+/**
+ * A producer's comparison base (B2): the component of the newest pending or
+ * verified CI build of this repository between the live automatic set and the
+ * producer's own pipeline, else the live set's entry. A build that failed, or
+ * that references an artifact whose build failed, is never a base; builds the
+ * live set supersedes (R4) are outside the current lineage. Retaining a
+ * pending base defers the retaining build's qualification until it settles.
+ */
+export async function latestRetainableArtifact(
+  this: Delivery,
+  rawInput: LatestRetainableArtifactQuery,
+  repositoryId: number,
+) {
+  const input = LatestRetainableArtifactQuerySchema.parse(rawInput);
+  ensureService(input.serviceId);
+  const live = await liveAutomaticSet(
+    this.database,
+    input.serviceId,
+    repositoryId,
+  );
+  const newer = await this.database.buildArtifactSelection.findFirst({
+    where: {
+      component: input.component,
+      artifact: { kind: input.kind },
+      build: {
+        serviceId: input.serviceId,
+        repositoryId,
+        sourceKind: "ci",
+        status: { in: ["pending", "verified"] },
+        pipelineNumber: {
+          gt: live?.pipelineNumber ?? 0,
+          lt: input.beforePipeline,
+        },
+        selections: { none: { artifact: { build: { status: "failed" } } } },
+      },
+    },
+    orderBy: [
+      { build: { pipelineNumber: "desc" } },
+      { build: { registrationSequence: "desc" } },
+    ],
+    include: { artifact: { include: { build: true } } },
+  });
+  if (newer !== null) return artifactView(newer.artifact);
+  const row = required(
+    live === null
+      ? null
+      : await liveEntry(this.database, live.id, input, repositoryId),
+    `Retainable ${input.kind} artifact ${input.serviceId}/${input.component}`,
   );
   return artifactView(row.artifact);
 }

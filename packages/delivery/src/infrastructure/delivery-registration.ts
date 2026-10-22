@@ -156,7 +156,7 @@ export async function publish(
         ],
       };
     const buildId = id();
-    const selections = await publicationSelections(tx, input, ci.repositoryId);
+    const selections = await publicationSelections(tx, input, ci);
     await tx.build.create({
       data: {
         id: buildId,

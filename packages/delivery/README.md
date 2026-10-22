@@ -131,6 +131,7 @@ The API is rooted at `/api/v1`:
 | Environments, recent executions, eligible artifacts           | `GET /overview`                                                   |
 | Immutable version set revisions                               | `GET /versions`, `GET /versions/:id`                              |
 | Latest qualified component artifact                           | `GET /artifacts/latest-qualified?serviceId=…&component=…&kind=…`  |
+| Producer comparison base, pending or qualified                | `GET /artifacts/latest-retainable?…&kind=…&beforePipeline=…`      |
 | Register pending CI publication                               | `POST /builds`                                                    |
 | Compose exact component versions                              | `POST /versions`                                                  |
 | Register immutable pipeline revision                          | `POST /pipelines`                                                 |
@@ -188,6 +189,21 @@ component's original build must be verified in that repository. It returns the
 original artifact and source identity. Manual compositions and late outputs that
 never entered an automatic set do not affect this read-only producer lookup;
 a missing component in the newest set returns 404 without searching older sets.
+
+Producers compare against the latest-retainable lookup instead, so a pipeline
+that starts before the previous one qualifies still retains that pipeline's
+unchanged images and charts by reference (B2). It returns the component of the
+newest pending or verified CI build in the configured repository that is newer
+than the live automatic set and older than the producer's `beforePipeline`, or
+else the live set's entry. Failed builds, builds that reference a failed build,
+and builds the live set supersedes (R4) are never a base. Registration accepts
+a retained original whose build is still pending only from an earlier main
+pipeline of the same repository. Qualification then keeps the retaining build
+pending until that build verifies, and fails it, naming the retained artifact,
+if that build fails; the next pipeline rebuilds. A platform source's root chart
+and site references from an earlier pipeline gate it the same way. Builds of one
+pipeline share its CI verdict and never wait on each other, so no build waits on
+itself or on a later build.
 Artifact requirements bind dependent components to exact digests; an incompatible
 combination fails release qualification with a visible reason. Automatic selection
 coalesces only queued, unapproved automatic requests. Cancellation or rejection
@@ -195,7 +211,7 @@ suppresses that revision until a new eligible revision or explicit operator requ
 
 The image producer writes `delivery-image-digests` for every candidate it
 built, pushed, verified and found changed by runtime fingerprint, and
-`delivery-retained-image-artifacts` for every qualified original it kept:
+`delivery-retained-image-artifacts` for every retainable original it kept:
 images it did not build and candidates whose fingerprint equals the original.
 Delivery requires both handoffs; a retained original is referenced by its
 existing artifact id and never republished as a new build. The runtime

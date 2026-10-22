@@ -5,14 +5,16 @@ import { buildPublications } from "./publish-delivery.ts";
 import {
   ArtifactVersionSchema,
   type ArtifactVersion,
+  type LatestRetainableArtifactQuery,
 } from "../../packages/delivery/src/shared/contract.ts";
 import {
   CANONICAL_IMAGE_TARGETS,
   chartPublicationImages,
   imageIdentity,
   unbuiltImageOriginals,
+  type QualifiedImageInventory,
 } from "../lib/image-pin-catalog.ts";
-import { readQualifiedImages } from "../../ci/scripts/images/live-version-catalog.ts";
+import { readRetainableImages } from "../../ci/scripts/images/live-version-catalog.ts";
 import { DeliveryClientError } from "@shepherdjerred/delivery/client";
 import { DeliveryClientError as FocusedClientError } from "@shepherdjerred/delivery/client-error";
 
@@ -32,8 +34,10 @@ test("production metadata readers use the existing authenticated client and its 
   vi.stubEnv("DELIVERY_URL", "https://delivery.example.invalid");
   vi.stubEnv("DELIVERY_API_TOKEN", "synthetic-test-only");
   const paths: string[] = [];
+  const searches: (string | null)[] = [];
   vi.stubGlobal("fetch", (input: string, init: RequestInit) => {
     const url = new URL(input);
+    searches.push(url.searchParams.get("beforePipeline"));
     expect(url.origin).toBe("https://delivery.example.invalid");
     expect(new Headers(init.headers).get("Authorization")).toBe(
       "Bearer synthetic-test-only",
@@ -60,11 +64,12 @@ test("production metadata readers use the existing authenticated client and its 
     );
   });
   try {
-    expect(await readQualifiedImages()).toEqual(new Map());
+    expect(await readRetainableImages(43)).toEqual(new Map());
     expect(paths).toHaveLength(CANONICAL_IMAGE_TARGETS.length);
     expect(new Set(paths)).toEqual(
-      new Set(["/api/v1/artifacts/latest-qualified"]),
+      new Set(["/api/v1/artifacts/latest-retainable"]),
     );
+    expect(new Set(searches)).toEqual(new Set(["43"]));
     const fresh = Object.fromEntries(
       CANONICAL_IMAGE_TARGETS.map((name) => [
         `shepherdjerred/${name}`,
@@ -165,7 +170,19 @@ const arcadeOriginal = ArtifactVersionSchema.parse({
   createdAt: "2026-10-17T00:00:00.000Z",
 });
 
-async function publishCandidate(smokeFails = false) {
+async function publishCandidate(
+  options: {
+    readonly smokeFails?: boolean;
+    readonly readOriginals?: () => Promise<QualifiedImageInventory>;
+    readonly fingerprint?: (image: string) => Promise<string | undefined>;
+  } = {},
+) {
+  const {
+    smokeFails = false,
+    readOriginals = async () => new Map([["arcade", arcadeOriginal]]),
+    // Build identities differ, but the candidate's application bytes match.
+    fingerprint = async () => "identical-runtime",
+  } = options;
   const delivery: {
     digests: Readonly<Record<string, string>>;
     retained: readonly ArtifactVersion[];
@@ -185,7 +202,7 @@ async function publishCandidate(smokeFails = false) {
         return { exitCode: 0, stdout: "", stderr: "" };
       },
       environment: {},
-      readQualifiedImages: async () => new Map([["arcade", arcadeOriginal]]),
+      readRetainableImages: readOriginals,
       getManifestDigest: async (candidate) => {
         expect(candidate).toBe(
           `docker.io/shepherdjerred/arcade:candidate-${sourceRevision}`,
@@ -207,8 +224,7 @@ async function publishCandidate(smokeFails = false) {
         if (smokeFails) throw new Error("Exact candidate smoke failed");
         verified.push("smoke");
       },
-      // Build identities differ, but the candidate's application bytes match.
-      getRuntimeFingerprint: async () => "identical-runtime",
+      getRuntimeFingerprint: fingerprint,
       writeDeliveryMetadata: async (digests, retained) => {
         expect(verified).toEqual(["registry", "source", "smoke"]);
         delivery.push({ digests, retained });
@@ -268,9 +284,53 @@ test("retains the qualified original for a verified runtime-unchanged Arcade can
 });
 
 test("does not hand off an image whose exact candidate smoke failed", async () => {
-  const output = await publishCandidate(true);
+  const output = await publishCandidate({ smokeFails: true });
   await expect(output.operation).rejects.toThrow(
     "Exact candidate smoke failed",
   );
   expect(output.delivery).toEqual([]);
+});
+
+test("back-to-back pipelines retain the previous pipeline's pending image instead of republishing it", async () => {
+  // Pipeline 41 qualified Arcade before its layers were reproducible. Pipeline
+  // 42 published reproducible bytes and is still pending when pipeline 43's
+  // image step starts; 43 rebuilds byte-identical runtime content.
+  const pending = ArtifactVersionSchema.parse({
+    ...arcadeOriginal,
+    id: "ci/1/42/image/arcade",
+    buildId: "pending-arcade-build",
+    digest: `sha256:${"e".repeat(64)}`,
+    version: "2.0.0-1000042",
+  });
+  const runtime: Readonly<Record<string, string>> = {
+    [arcadeOriginal.digest]: "pre-reproducible-layers",
+    [pending.digest]: "reproducible-layers",
+    [candidateDigest]: "reproducible-layers",
+  };
+  const fingerprint = async (image: string) =>
+    runtime[image.slice(image.indexOf("@") + 1)];
+  const reads: number[] = [];
+  const delivery = async (query: LatestRetainableArtifactQuery) => {
+    reads.push(query.beforePipeline);
+    if (query.component !== "image:arcade")
+      throw new DeliveryClientError(404, "NOT_FOUND", "No original");
+    // Delivery's pending build 42 is a base only for a later pipeline.
+    return query.beforePipeline > 42 ? pending : arcadeOriginal;
+  };
+  const current = await publishCandidate({
+    readOriginals: () => readRetainableImages(43, delivery),
+    fingerprint,
+  });
+  await current.operation;
+  expect(new Set(reads)).toEqual(new Set([43]));
+  expect(current.delivery).toEqual([{ digests: {}, retained: [pending] }]);
+  // The qualified-only comparison this replaces republished the same bytes.
+  const stale = await publishCandidate({
+    readOriginals: () => readRetainableImages(42, delivery),
+    fingerprint,
+  });
+  await stale.operation;
+  expect(stale.delivery).toEqual([
+    { digests: { "shepherdjerred/arcade": candidateDigest }, retained: [] },
+  ]);
 });

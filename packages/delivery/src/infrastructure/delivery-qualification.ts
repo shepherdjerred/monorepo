@@ -1,7 +1,7 @@
 import { DeliveryError } from "#domain/error.ts";
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
-import { IdentifierSchema } from "#shared/contract.ts";
+import { IdentifierSchema, PlatformChangesSchema } from "#shared/contract.ts";
 import type { Principal, ArtifactVersion } from "#shared/contract.ts";
 import { lock, required, audit } from "./delivery-records.ts";
 import type { Delivery } from "./delivery.ts";
@@ -21,6 +21,78 @@ class AwaitingReplication extends Error {
     super("Produced artifacts await their off-cluster replica");
     this.name = "AwaitingReplication";
   }
+}
+
+/** Rolls a tentative verification back while a retained original's build is pending (B2). */
+class AwaitingRetainedBuild extends Error {
+  constructor() {
+    super("Retained artifacts await their producing build's qualification");
+    this.name = "AwaitingRetainedBuild";
+  }
+}
+
+/** Artifact ids a platform source names without producing: root charts and site archives. */
+function platformReferenceIds(build: BuildRow) {
+  const changes =
+    build.platformChanges === null
+      ? undefined
+      : PlatformChangesSchema.parse(build.platformChanges);
+  return [
+    ...Object.values(changes?.rootArtifacts ?? {}),
+    ...(changes?.sites ?? []).map((site) => site.artifactId),
+  ];
+}
+
+/**
+ * A build verifies only after every earlier pipeline's build whose artifact
+ * it retains by reference has (B2). A pending one defers this build; a failed
+ * one fails it, naming the artifact, so the next pipeline rebuilds instead of
+ * retaining it. Builds of this same pipeline share its CI verdict and are not
+ * awaited, and a later or foreign pending build is refused, so a build never
+ * waits on itself or on a later build.
+ */
+async function requireQualifiedReferences(tx: Transaction, build: BuildRow) {
+  const references = await tx.artifact.findMany({
+    where: {
+      buildId: { not: build.id },
+      OR: [
+        { selections: { some: { buildId: build.id } } },
+        { id: { in: platformReferenceIds(build) } },
+      ],
+    },
+    include: { build: true },
+    orderBy: { id: "asc" },
+  });
+  let awaiting = false;
+  for (const { id: artifactId, component, build: source } of references) {
+    const series =
+      source.sourceKind === "ci" &&
+      source.repositoryId === build.repositoryId &&
+      source.pipelineNumber !== null &&
+      build.pipelineNumber !== null;
+    if (
+      source.status === "verified" ||
+      (series && source.pipelineNumber === build.pipelineNumber)
+    )
+      continue;
+    if (source.status === "failed")
+      throw new DeliveryError(
+        "INVALID",
+        `Retained artifact ${artifactId} (${component}) belongs to build ${source.id}, which failed qualification`,
+      );
+    if (
+      !series ||
+      source.pipelineNumber === null ||
+      build.pipelineNumber === null ||
+      source.pipelineNumber > build.pipelineNumber
+    )
+      throw new DeliveryError(
+        "INVALID",
+        `Retained artifact ${artifactId} (${component}) belongs to pending build ${source.id}, which is not an earlier build of this pipeline series`,
+      );
+    awaiting = true;
+  }
+  if (awaiting) throw new AwaitingRetainedBuild();
 }
 
 async function qualifiedBase(
@@ -181,6 +253,7 @@ export async function qualify(
         requestId: id(),
       });
       if (status !== "verified") return;
+      await requireQualifiedReferences(tx, build);
       const composed =
         build.sourceKind === "ci" ? await automaticSet(tx, build) : null;
       // Incompatible outputs fail above without waiting for a replica; compatible
@@ -190,7 +263,11 @@ export async function qualify(
       if (composed !== null) await tx.versionSet.create({ data: composed });
     });
   } catch (error) {
-    if (error instanceof AwaitingReplication) return { status: "pending" };
+    if (
+      error instanceof AwaitingReplication ||
+      error instanceof AwaitingRetainedBuild
+    )
+      return { status: "pending" };
     if (!(error instanceof DeliveryError && error.code === "INVALID"))
       throw error;
     await this.database.$transaction(async (tx) => {

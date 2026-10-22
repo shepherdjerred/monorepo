@@ -375,3 +375,229 @@ test("automatic qualification retains qualified image B across a manual A compos
   expect(selected.components[query.component]?.id).toBe(b.artifactId);
   expect(selected.components["site:scout-frontend-beta"]?.id).toBe("site/c");
 });
+
+async function retaining(number: number, retainedArtifactId: string) {
+  return harness.delivery.publish(
+    {
+      requestId: `retaining/${String(number)}`,
+      serviceId: query.serviceId,
+      sourceRevision: String(number).padStart(40, "0"),
+      ciUrl: `https://woodpecker.sjer.red/repos/1/pipeline/${String(number)}`,
+      verifiedAt: new Date().toISOString(),
+      artifacts: [],
+      retainedArtifactIds: [retainedArtifactId],
+    },
+    testPublisher,
+    { repositoryId: 1, pipelineNumber: number },
+  );
+}
+
+async function buildRow(buildId: string) {
+  return harness.cluster.database.build.findUniqueOrThrow({
+    where: { id: buildId },
+  });
+}
+
+async function retainableId(beforePipeline: number) {
+  const artifact = await client().latestRetainableArtifact({
+    ...query,
+    beforePipeline,
+  });
+  return artifact.id;
+}
+
+async function qualifiedId() {
+  const artifact = await client().latestQualifiedArtifact(query);
+  return artifact.id;
+}
+
+async function serviceSets() {
+  return harness.cluster.database.versionSet.count({
+    where: { serviceId: query.serviceId },
+  });
+}
+
+describe("back-to-back pipelines retain a pending original by reference", () => {
+  test("the retainable read takes the newest pending or verified original before the producer's own pipeline", async () => {
+    await publication(8);
+    const live = await publication(10, "verified");
+    await publication(9);
+    const pending = await publication(11);
+    await publication(12, "failed");
+    await publication(14, "pending", 2);
+    expect(
+      await client().latestRetainableArtifact({ ...query, beforePipeline: 13 }),
+    ).toMatchObject({
+      id: pending.artifactId,
+      buildId: pending.buildId,
+      sourceRevision: pending.sourceRevision,
+    });
+    expect(await retainableId(12)).toBe(pending.artifactId);
+    // Its own and later pipelines are never a base, nor pending builds the
+    // live set supersedes (R4): the read falls back to the live entry.
+    expect(await retainableId(11)).toBe(live.artifactId);
+    expect(await retainableId(9)).toBe(live.artifactId);
+    expect(await qualifiedId()).toBe(live.artifactId);
+    await expect(
+      client().latestRetainableArtifact({
+        ...query,
+        kind: "chart",
+        beforePipeline: 13,
+      }),
+    ).rejects.toMatchObject({ status: 404, code: "NOT_FOUND" });
+    const path = "/api/v1/artifacts/latest-retainable";
+    const anonymous = await harness.app.request(
+      `${path}?${new URLSearchParams({ ...query, beforePipeline: "13" }).toString()}`,
+    );
+    expect(anonymous.status).toBe(401);
+    const headers = { Authorization: `Bearer ${readerToken}` };
+    for (const beforePipeline of ["", "0", "x"]) {
+      const response = await harness.app.request(
+        `${path}?${new URLSearchParams({ ...query, beforePipeline }).toString()}`,
+        { headers },
+      );
+      expect(response.status).toBe(400);
+    }
+  });
+
+  test("before the first set (R0) a pending original is the base, and with none the read is 404", async () => {
+    await expect(retainableId(2)).rejects.toMatchObject({
+      status: 404,
+      code: "NOT_FOUND",
+    });
+    const first = await publication(1);
+    expect(await retainableId(2)).toBe(first.artifactId);
+  });
+
+  test("a retaining build stays pending until the referenced build qualifies, then composes no set revision", async () => {
+    await publication(1, "verified");
+    const changed = await publication(2);
+    const baseId = await retainableId(3);
+    expect(baseId).toBe(changed.artifactId);
+    const retained = await retaining(3, baseId);
+    expect(retained.artifacts).toEqual([changed.artifactId]);
+    expect(
+      await harness.delivery.qualify(
+        retained.buildId,
+        "verified",
+        testExecutor,
+      ),
+    ).toEqual({ status: "pending" });
+    const waiting = await buildRow(retained.buildId);
+    expect(waiting.status).toBe("pending");
+    // The referenced build never waits on the later build that retains it.
+    expect(
+      await harness.delivery.qualify(changed.buildId, "verified", testExecutor),
+    ).toEqual({ status: "verified" });
+    expect(
+      await harness.delivery.qualify(
+        retained.buildId,
+        "verified",
+        testExecutor,
+      ),
+    ).toEqual({ status: "verified" });
+    // B2 and R2: the unchanged component is retained, so no set revision.
+    expect(
+      await harness.cluster.database.versionSet.count({
+        where: { qualifiedBuildId: retained.buildId },
+      }),
+    ).toBe(0);
+    expect(await serviceSets()).toBe(2);
+    expect(await qualifiedId()).toBe(changed.artifactId);
+  });
+
+  test("a failed reference fails the retaining build with a reason naming the retained artifact", async () => {
+    const live = await publication(1, "verified");
+    const changed = await publication(2);
+    const retained = await retaining(3, changed.artifactId);
+    expect(
+      await harness.delivery.qualify(changed.buildId, "failed", testExecutor),
+    ).toEqual({ status: "failed" });
+    // A build doomed by a failed reference is no longer a base: pipeline 4 rebuilds.
+    expect(await retainableId(4)).toBe(live.artifactId);
+    expect(
+      await harness.delivery.qualify(
+        retained.buildId,
+        "verified",
+        testExecutor,
+      ),
+    ).toEqual({ status: "failed" });
+    expect(await buildRow(retained.buildId)).toMatchObject({
+      status: "failed",
+      qualificationReason: `Retained artifact ${changed.artifactId} (${query.component}) belongs to build ${changed.buildId}, which failed qualification`,
+    });
+    expect(await serviceSets()).toBe(1);
+  });
+
+  test("a build never retains a pending original of its own or a later pipeline", async () => {
+    const pending = await publication(5);
+    for (const number of [5, 4])
+      await expect(retaining(number, pending.artifactId)).rejects.toMatchObject(
+        { code: "CONFLICT" },
+      );
+    const failed = await publication(6, "failed");
+    await expect(retaining(7, failed.artifactId)).rejects.toMatchObject({
+      code: "CONFLICT",
+      message: "Artifact build has not passed CI qualification",
+    });
+    expect(
+      await harness.cluster.database.build.count({
+        where: { requestId: { startsWith: "retaining/" } },
+      }),
+    ).toBe(0);
+  });
+});
+
+async function platformSource(number: number, rootArtifactId: string) {
+  const digest = `sha256:${(0xa0_00 + number).toString(16).padStart(64, "0")}`;
+  const build = await harness.delivery.publish(
+    {
+      requestId: `platform/${String(number)}`,
+      serviceId: "gitops",
+      sourceRevision: String(number).padStart(40, "0"),
+      ciUrl: `https://woodpecker.sjer.red/repos/1/pipeline/${String(number)}`,
+      verifiedAt: new Date().toISOString(),
+      artifacts: [
+        {
+          id: `apps/${String(number)}`,
+          component: "chart:apps",
+          kind: "chart",
+          uri: `https://chartmuseum.tailnet-1a49.ts.net/charts/apps-2.0.0-${String(number)}.tgz`,
+          version: `2.0.0-${String(number)}`,
+          digest,
+        },
+      ],
+      platformChanges: {
+        root: true,
+        rootArtifacts: { "scout-for-lol": rootArtifactId },
+        tofuStacks: [],
+        sites: [],
+      },
+    },
+    testPublisher,
+    { repositoryId: 1, pipelineNumber: number },
+  );
+  await replicateProducedArtifacts(harness.delivery, build.buildId);
+  return build;
+}
+
+test("a platform source awaits an earlier pipeline's pending root original but not its own pipeline's", async () => {
+  const earlier = await publication(1);
+  const source = await platformSource(2, earlier.artifactId);
+  expect(
+    await harness.delivery.qualify(source.buildId, "verified", testExecutor),
+  ).toEqual({ status: "pending" });
+  await harness.delivery.qualify(earlier.buildId, "verified", testExecutor);
+  expect(
+    await harness.delivery.qualify(source.buildId, "verified", testExecutor),
+  ).toEqual({ status: "verified" });
+  // Builds of one pipeline share its CI verdict, so none waits on another.
+  const concurrent = await publication(3);
+  const sibling = await platformSource(3, concurrent.artifactId);
+  expect(
+    await harness.delivery.qualify(sibling.buildId, "verified", testExecutor),
+  ).toEqual({ status: "verified" });
+  expect(await buildRow(concurrent.buildId)).toMatchObject({
+    status: "pending",
+  });
+});

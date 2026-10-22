@@ -193,16 +193,14 @@ const DigestSchema = z.string().regex(/^sha256:[a-f0-9]{64}$/);
 export const ArtifactInputSchema = artifacts.ArtifactInputSchema;
 export const PublishBuildSchema = artifacts.PublishBuildSchema;
 export const ArtifactVersionSchema = artifacts.ArtifactVersionSchema;
-export const LatestQualifiedArtifactQuerySchema = z
-  .object({
-    serviceId: IdentifierSchema,
-    component: IdentifierSchema,
-    kind: ArtifactInputSchema.shape.kind,
-  })
-  .strict();
-export type LatestQualifiedArtifactQuery = z.infer<
-  typeof LatestQualifiedArtifactQuerySchema
->;
+export const LatestQualifiedArtifactQuerySchema =
+  artifacts.LatestQualifiedArtifactQuerySchema;
+export type LatestQualifiedArtifactQuery =
+  artifacts.LatestQualifiedArtifactQuery;
+export const LatestRetainableArtifactQuerySchema =
+  artifacts.LatestRetainableArtifactQuerySchema;
+export type LatestRetainableArtifactQuery =
+  artifacts.LatestRetainableArtifactQuery;
 export const BuildSummarySchema = artifacts.BuildSummarySchema;
 export const ComposeVersionSetSchema = z
   .object({

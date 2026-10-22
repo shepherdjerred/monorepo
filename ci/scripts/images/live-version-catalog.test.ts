@@ -8,7 +8,7 @@ import {
   unbuiltImageOriginals,
   chartPublicationImages,
 } from "../../../scripts/lib/image-pin-catalog.ts";
-import { readQualifiedImages } from "./live-version-catalog.ts";
+import { readRetainableImages } from "./live-version-catalog.ts";
 import { includeMissingQualifiedImages } from "../selectors/select-image-targets-pins.ts";
 import {
   ServiceIndex,
@@ -167,18 +167,19 @@ test("root chart publication owns only its canonical undelegated charts", () => 
   );
 });
 
-test("qualified inventory preserves each original artifact/build/source through no-target and partial publications", async () => {
+test("retainable inventory preserves each original artifact/build/source through no-target and partial publications", async () => {
   const originals = new Map(
     CANONICAL_IMAGE_TARGETS.map((name) => [name, original(name)]),
   );
   const requested: string[] = [];
-  const actual = await readQualifiedImages(async (query) => {
+  const actual = await readRetainableImages(43, async (query) => {
     const name = query.component.slice("image:".length);
     requested.push(name);
     expect(query).toEqual({
       serviceId: imageIdentity(name).serviceId,
       component: `image:${name}`,
       kind: "image",
+      beforePipeline: 43,
     });
     return originals.get(name);
   });
@@ -194,7 +195,7 @@ test("qualified inventory preserves each original artifact/build/source through 
 });
 
 test("only404 absence selects new builds, including the fixed infra recipe group", async () => {
-  const originals = await readQualifiedImages(async (query) => {
+  const originals = await readRetainableImages(43, async (query) => {
     const name = query.component.slice("image:".length);
     if (name === "delivery" || name === "redlib")
       throw new DeliveryClientError(
@@ -215,7 +216,7 @@ test.each([401, 403, 500])(
   "API status%s cannot become missing-original rebuild or Git/history fallback",
   async (status) => {
     await expect(
-      readQualifiedImages(async () => {
+      readRetainableImages(43, async () => {
         throw new DeliveryClientError(status, "HTTP_ERROR", "refused");
       }),
     ).rejects.toMatchObject({ status });
@@ -223,7 +224,7 @@ test.each([401, 403, 500])(
 );
 
 test("malformed or foreign qualified identities are refused", async () => {
-  await expect(readQualifiedImages(async () => ({}))).rejects.toThrow();
+  await expect(readRetainableImages(43, async () => ({}))).rejects.toThrow();
   for (const mutation of [
     { serviceId: "arcade" },
     { component: "image:arcade" },
@@ -234,7 +235,7 @@ test("malformed or foreign qualified identities are refused", async () => {
     ).toThrow("canonical owner/component/repository");
   }
   await expect(
-    readQualifiedImages(async () => {
+    readRetainableImages(43, async () => {
       throw new Error("network unavailable");
     }),
   ).rejects.toThrow("network unavailable");
