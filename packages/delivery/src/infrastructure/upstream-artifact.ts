@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { composeVerifiedBuild } from "#infrastructure/composition/verified-build.ts";
 import { z } from "zod";
 import rawCatalog from "@shepherdjerred/version-catalog/catalog.json" with { type: "json" };
 import {
@@ -370,6 +371,11 @@ export async function acquireUpstreamArtifact(
           verifiedAt: new Date(),
         },
       });
+      if (changed.count > 0)
+        await composeVerifiedBuild(
+          tx,
+          await tx.build.findUniqueOrThrow({ where: { id: buildId } }),
+        );
       if (changed.count > 0)
         await audit(tx, actor, {
           action: "artifact.upstream_verified",

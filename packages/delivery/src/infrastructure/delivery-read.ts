@@ -1,12 +1,10 @@
 import {
-  IdentifierSchema,
   DeploymentDetailSchema,
   DeploymentSchema,
   BuildSummarySchema,
   LatestQualifiedArtifactQuerySchema,
   ForumBaselineIntentSchema,
 } from "#shared/contract.ts";
-import { z } from "zod";
 import type { LatestQualifiedArtifactQuery } from "#shared/contract.ts";
 import { wire, required } from "./delivery-records.ts";
 import type { Delivery } from "./delivery.ts";
@@ -31,18 +29,27 @@ export async function latestQualifiedArtifact(
 ) {
   const input = LatestQualifiedArtifactQuerySchema.parse(rawInput);
   await ensureService(this.database, input.serviceId);
-  const matches = z.array(z.object({ id: IdentifierSchema })).parse(
-    await this.database.$queryRaw`
-      SELECT version."id" FROM "VersionSet" version
-      JOIN "Build" build ON build."id" = version."qualifiedBuildId"
-      WHERE version."serviceId" = ${input.serviceId}
-        AND build."serviceId" = ${input.serviceId}
-        AND build."repositoryId" = ${repositoryId}
-        AND build."status" = 'verified'
-        AND build."sourceKind" = 'ci'
-      ORDER BY build."pipelineNumber" DESC, version."revision" DESC LIMIT 1
-    `,
-  );
+  // The newest automatic set any qualified build of this repository's
+  // service composed, by order key (B4, R4): CI, acquisition and attested
+  // builds share one total order within the service.
+  const builds = await this.database.build.findMany({
+    where: qualifiedBuildWhere(input.serviceId, repositoryId),
+    select: { id: true },
+  });
+  const matches = await this.database.versionSet.findMany({
+    where: {
+      serviceId: input.serviceId,
+      automatic: true,
+      qualifiedBuildId: { in: builds.map((build) => build.id) },
+    },
+    orderBy: [
+      { orderMajor: { sort: "desc", nulls: "last" } },
+      { orderMinor: { sort: "desc", nulls: "last" } },
+      { revision: "desc" },
+    ],
+    take: 1,
+    select: { id: true },
+  });
   const selected = required(
     matches[0] ?? null,
     "Qualified automatic version set",

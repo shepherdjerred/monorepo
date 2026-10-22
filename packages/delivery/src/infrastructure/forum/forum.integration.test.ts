@@ -122,7 +122,18 @@ test("license publication remains outside CI, fair pending queue, terminal inval
   expect(build.repositoryId).toBeNull();
   expect(build.pipelineNumber).toBeNull();
   expect(build.ciUrl).toBeNull();
-  expect(await delivery.versions("storm-forum")).toHaveLength(1);
+  // The verified attested bundle composes its own automatic set over the
+  // CI set (R0), keyed after it by registration (B4).
+  const sets = await database.versionSet.findMany({
+    where: { serviceId: "storm-forum" },
+    orderBy: [{ orderMajor: "asc" }, { orderMinor: "asc" }],
+  });
+  expect(sets).toHaveLength(2);
+  expect(sets[1]).toMatchObject({
+    automatic: true,
+    qualifiedBuildId: build.id,
+    orderMinor: build.registrationSequence,
+  });
   await database.build.update({
     where: { id: build.id },
     data: { status: "pending" },
