@@ -1,3 +1,4 @@
+import type { ExploreQuestionImage } from "#src/explore/analysis/agent-types.ts";
 import path from "node:path";
 import { chmod, mkdir } from "node:fs/promises";
 import {
@@ -116,6 +117,8 @@ async function runOne(input: {
   for (const [index, turn] of run.entry.turns.entries()) {
     try {
       const question = renderScenarioQuestion(turn.question, world);
+      const images =
+        turn.image === undefined ? [] : [await loadScenarioImage(turn.image)];
       const observation = await runReplayCase(
         {
           caseId: `${run.entry.id}/${run.surface}/${index.toString()}`,
@@ -128,6 +131,7 @@ async function runOne(input: {
           surface: run.surface,
           originChannelId:
             run.surface === "web" ? null : (world.channels[0]?.id ?? null),
+          images,
         },
         {
           executeAgent: streamExploreAgent,
@@ -150,6 +154,11 @@ async function runOne(input: {
               surface: run.surface,
               transcript,
               runtime: input.runtime,
+              // Web and Discord attach images; voice cannot.
+              imageDelivered:
+                turn.image === undefined
+                  ? null
+                  : images.length > 0 && run.surface !== "voice",
             });
       if (graded === null) {
         evidence.push({ index, question, observation });
@@ -206,6 +215,23 @@ async function runOne(input: {
   return summary;
 }
 
+const SCENARIO_IMAGE_DIR = path.join(
+  import.meta.dir,
+  "../../src/explore/scenarios/images",
+);
+
+/** A case's fixture image, as the turn runner would read it from storage. */
+async function loadScenarioImage(name: string): Promise<ExploreQuestionImage> {
+  const bytes = new Uint8Array(
+    await Bun.file(path.join(SCENARIO_IMAGE_DIR, name)).arrayBuffer(),
+  );
+  const mediaType = name.endsWith(".png")
+    ? "image/png"
+    : name.endsWith(".webp")
+      ? "image/webp"
+      : "image/jpeg";
+  return { mediaType, bytes };
+}
 export async function runScenarios(
   input: RunInput,
 ): Promise<{ readonly passed: boolean }> {

@@ -1,5 +1,6 @@
 import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import * as Sentry from "@sentry/bun";
+import { loadQuestionImages } from "#src/explore/attachments/storage.ts";
 import {
   EXPLORE_ANSWER_MAX_LENGTH,
   EXPLORE_TIMEOUT_MS,
@@ -127,6 +128,21 @@ function visibleError(outcome: ExploreTurnOutcome, error: unknown): string {
  * persisted message field. The terminal stream remains backward compatible;
  * the client refetches the complete transcript after `done`.
  */
+/**
+ * The current question's images. The transcript already lists them, so a
+ * question without any never touches the database or the bucket.
+ */
+async function questionImages(
+  client: ExtendedPrismaClient,
+  history: readonly ExploreMessage[],
+  questionId: string,
+) {
+  const question = history.at(-1);
+  return question === undefined || question.attachments.length === 0
+    ? []
+    : await loadQuestionImages(client, questionId);
+}
+
 function toStreamMessage(message: ExploreMessage) {
   // Every field added to the persisted message has to be dropped here, not
   // just the first one: the schema below is strict, so one unknown key makes
@@ -138,6 +154,7 @@ function toStreamMessage(message: ExploreMessage) {
     matchCards: _matchCards,
     loadoutCards: _loadoutCards,
     guildIds: _guildIds,
+    attachments: _attachments,
     ...streamMessage
   } = message;
   return ExploreStreamMessageSchema.parse(streamMessage);
@@ -255,6 +272,11 @@ export async function runPersistedExploreTurn(
       conversationId: input.started.conversationId,
       subject: { kind: "discord_user", id: input.identity.userId },
       question: input.started.question,
+      images: await questionImages(
+        dependencies.client,
+        input.history,
+        input.started.messageId,
+      ),
       // The last history item is the question being answered. The agent gets
       // that separately as its current turn, so replaying it duplicates it.
       history: input.history.slice(0, -1),

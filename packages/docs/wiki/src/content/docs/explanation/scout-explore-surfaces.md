@@ -35,6 +35,15 @@ shape with `outputFor`. The skill loader rejects `outputFor` on any skill
 gated by a capability, so a capability cannot quietly become web-only again
 ([`skills/loader.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/explore/skills/loader.ts)).
 
+**How an image reaches a question.** The web composer accepts a pasted,
+dropped or picked image, and `/scout ask` takes one as an attachment option.
+Both store it the same way before the question is sent: the private support
+bucket, under `explore/`, validated by its bytes. The question then claims it by
+id, so the agent sees the same image parts wherever it was asked. Voice has no
+way to attach one. Only the current question's images go to the model; earlier
+ones are replayed as a marker, which keeps every turn's input bounded. The
+storage contract lives in `packages/backend/src/explore/attachments/`.
+
 **How Scout learns the asker's permissions.** A web session carries the
 asker's Discord OAuth guild list. A `/scout ask` or Voice user has no OAuth
 token, so Scout's bot answers instead. It checks membership, guild ownership

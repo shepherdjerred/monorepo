@@ -321,6 +321,10 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
             conversationId: input.conversationId,
             question: input.question,
             attach: input.attach,
+            ...(input.attachmentIds === undefined ||
+            input.attachmentIds.length === 0
+              ? {}
+              : { attachmentIds: [...input.attachmentIds] }),
           }),
         );
         const started = applyStreamEvent(initial, {

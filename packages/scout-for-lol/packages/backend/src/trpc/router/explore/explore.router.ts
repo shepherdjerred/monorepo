@@ -42,6 +42,7 @@ import {
 } from "#src/explore/store.ts";
 import { scoutExploreSharesTotal } from "#src/metrics/explore.ts";
 import { resolvePlayerIdentities } from "#src/reports/identity.ts";
+import { exploreAttachmentProcedures } from "#src/trpc/router/explore/explore-attachment-procedures.ts";
 import { exploreCreationProcedures } from "#src/trpc/router/explore/explore-creation-procedures.ts";
 import {
   confirmationNotFound,
@@ -244,6 +245,7 @@ export const exploreRouter = router({
 
   // Confirm entities prepared by the Explore agent.
   ...exploreCreationProcedures,
+  ...exploreAttachmentProcedures,
 
   confirmDareIntent: webMutationProcedure
     .input(z.strictObject({ intentId: z.uuid() }))

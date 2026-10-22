@@ -158,6 +158,7 @@ describe("parseExploreStreamEvent", () => {
       matchCards: _matchCards,
       loadoutCards: _loadoutCards,
       guildIds: _guildIds,
+      attachments: _attachments,
       ...streamMessage
     } = message;
 
@@ -168,6 +169,7 @@ describe("parseExploreStreamEvent", () => {
     // extra key means the terminal event never parses and the answer never
     // lands. Every field added to ExploreMessageSchema has to be omitted here.
     expect(parsed).not.toHaveProperty("guildIds");
+    expect(parsed).not.toHaveProperty("attachments");
     expect(() => ExploreStreamMessageSchema.parse(message)).toThrow();
   });
 

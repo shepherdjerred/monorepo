@@ -23,6 +23,7 @@ import {
   type ExploreTurnStoreClient,
 } from "#src/explore/store.ts";
 import { runPersistedExploreTurn } from "#src/explore/runs/run-turn.ts";
+import { claimExploreAttachments } from "#src/explore/attachments/storage.ts";
 import { createLogger } from "#src/logger.ts";
 import type {
   ActiveRun,
@@ -109,6 +110,18 @@ export async function resolveTurnTarget(input: {
     attach: input.request.attach,
     origin: input.origin,
   });
+  // On the durable path this runs in the transaction that wrote the
+  // question, so a refused claim leaves no question behind.
+  const claimed = await claimExploreAttachments(input.client, {
+    ids: input.request.attachmentIds ?? [],
+    ownerId: input.identity.userId,
+    questionId: started.messageId,
+  });
+  if (!claimed) {
+    throw new ExploreInvalidTurnError(
+      "An attached image is no longer available. Attach it again.",
+    );
+  }
   return { ...started, question: input.request.question };
 }
 

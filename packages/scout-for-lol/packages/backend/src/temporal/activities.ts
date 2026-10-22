@@ -24,6 +24,11 @@ type DetachedWorkInput = Parameters<
 >[0];
 async function drainScoutSupportJobs(): Promise<void> {
   const { drainSupportJobs } = await import("#src/support/jobs.ts");
+  const { collectUnsentExploreAttachments } =
+    await import("#src/explore/attachments/cleanup.ts");
+  const { prisma } = await import("#src/database/index.ts");
+  // Abandoned Explore uploads queue DELETE_OBJECT jobs the drain then runs.
+  await collectUnsentExploreAttachments(prisma);
   await drainSupportJobs();
 }
 

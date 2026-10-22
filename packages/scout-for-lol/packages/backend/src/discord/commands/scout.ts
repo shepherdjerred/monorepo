@@ -34,6 +34,13 @@ import {
 import { parseScoutFollowUpCustomId } from "#src/discord/scout/custom-id.ts";
 import { exploreAnswerAttachments } from "#src/discord/scout/cards.ts";
 import { scoutExploreTurnsTotal } from "#src/metrics/explore.ts";
+import { claimExploreAttachments } from "#src/explore/attachments/storage.ts";
+import {
+  ASK_IMAGE_REFUSAL,
+  acceptableAskImage,
+  storeAskImage,
+  type ScoutAskImage,
+} from "#src/discord/scout/ask-image.ts";
 
 export type ScoutAskInteraction = {
   guildId: Interaction["guildId"];
@@ -41,6 +48,7 @@ export type ScoutAskInteraction = {
   options: {
     getSubcommand: () => string;
     getString: (name: string, required: true) => string;
+    getAttachment: (name: string) => ScoutAskImage | null;
   };
   deferReply: (options: { flags: MessageFlags.Ephemeral }) => Promise<unknown>;
   reply: (options: InteractionReplyOptions) => Promise<unknown>;
@@ -96,13 +104,36 @@ export async function executeScout(
     return;
   }
 
+  const image = interaction.options.getAttachment("image");
+  if (image !== null && !acceptableAskImage(image)) {
+    await interaction.reply({
+      content: ASK_IMAGE_REFUSAL,
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  const attachmentIds: string[] = [];
+  if (image !== null) {
+    const stored = await storeAskImage(
+      dependencies.client,
+      DiscordAccountIdSchema.parse(interaction.user.id),
+      image,
+    );
+    if (stored.kind === "refused") {
+      await interaction.editReply({ content: stored.message });
+      return;
+    }
+    attachmentIds.push(stored.id);
+  }
   await answerOnDiscord({
     interaction,
     guildId,
     question: question.data,
     conversationId: null,
     attach: { kind: "leaf" },
+    attachmentIds,
     dependencies,
   });
 }
@@ -127,6 +158,8 @@ async function answerOnDiscord(input: {
   question: string;
   conversationId: string | null;
   attach: ExploreAttachPoint;
+  /** Images already stored for this question; a follow-up carries none. */
+  attachmentIds?: readonly string[];
   dependencies: ScoutCommandDependencies;
 }): Promise<void> {
   const { interaction, dependencies } = input;
@@ -178,6 +211,17 @@ async function answerOnDiscord(input: {
       attach: input.attach,
       origin: "discord",
     });
+    // Just stored by this command for this user, so a refused claim is a
+    // broken contract rather than a stale client.
+    if (
+      !(await claimExploreAttachments(dependencies.client, {
+        ids: input.attachmentIds ?? [],
+        ownerId: identity.userId,
+        questionId: created.messageId,
+      }))
+    ) {
+      throw new Error("A just-stored /scout ask image could not be claimed.");
+    }
     const started = {
       ...created,
       question: input.question,

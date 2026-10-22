@@ -1,5 +1,9 @@
 import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
+import {
+  EXPLORE_MAX_ATTACHMENTS,
+  ExploreAttachmentSchema,
+} from "#src/model/reports/explore-attachment.ts";
 import { ReportQueryTextSchema } from "#src/model/reports/report.ts";
 import { VisualizationSnapshotSchema } from "#src/model/reports/temporal-analysis.ts";
 import { ReportAiPreviewSummarySchema } from "#src/model/reports/report-ai.ts";
@@ -117,8 +121,18 @@ export const ExploreTurnRequestSchema = z
     question: ExploreQuestionSchema.nullable().default(null),
     attach: ExploreAttachPointSchema.default({ kind: "leaf" }),
     model: z.enum(["gpt-6-luna", "gpt-6.1-sol"]).optional(),
+    /**
+     * Images uploaded first through `explore.uploadAttachment`, by id. They
+     * belong to the new question, so answering again carries none.
+     */
+    attachmentIds: z.array(z.uuid()).max(EXPLORE_MAX_ATTACHMENTS).optional(),
   })
-  .strict();
+  .strict()
+  .refine(
+    (request) =>
+      request.question !== null || (request.attachmentIds ?? []).length === 0,
+    { message: "Images belong to a new question.", path: ["attachmentIds"] },
+  );
 
 export type ExploreTurnRequest = z.infer<typeof ExploreTurnRequestSchema>;
 
@@ -324,6 +338,11 @@ export const ExploreMessageSchema = z
      * and so the user turn — which carries none — is not a special case.
      */
     guildIds: z.array(DiscordGuildIdSchema).default([]),
+    /** Images the asker attached to this question. */
+    attachments: z
+      .array(ExploreAttachmentSchema)
+      .max(EXPLORE_MAX_ATTACHMENTS)
+      .default([]),
     trace: z.array(ExploreTraceEntrySchema).default([]),
     createdAt: z.iso.datetime(),
   })
@@ -346,6 +365,7 @@ export const ExploreStreamMessageSchema = ExploreMessageSchema.omit({
   matchCards: true,
   loadoutCards: true,
   guildIds: true,
+  attachments: true,
 }).strict();
 export const ExploreConversationSchema = z
   .object({

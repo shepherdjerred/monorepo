@@ -20,7 +20,7 @@ export function useExploreTurnActions(params: {
   setRestoredDraft: (draft: string | null) => void;
   navigate: NavigateFunction;
 }): {
-  ask: (text: string) => void;
+  ask: (text: string, attachmentIds?: readonly string[]) => void;
   handleEdit: (message: ExploreMessage, edited: string) => void;
   handleRegenerate: (message: ExploreMessage) => void;
   handleRetry: (question: ExploreMessage) => void;
@@ -36,7 +36,7 @@ export function useExploreTurnActions(params: {
   } = params;
 
   const ask = useCallback(
-    (text: string) => {
+    (text: string, attachmentIds: readonly string[] = []) => {
       setRestoredDraft(null);
       const submittedLocationKey = locationKeyRef.current;
       void (async () => {
@@ -45,6 +45,7 @@ export function useExploreTurnActions(params: {
           conversationId,
           question: text,
           attach: { kind: "leaf" },
+          attachmentIds,
           displayQuestion: text,
           leafIdAtStart: messages.at(-1)?.id ?? null,
         });

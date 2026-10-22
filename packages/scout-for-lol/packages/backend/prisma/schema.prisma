@@ -895,6 +895,27 @@ model ExploreConversation {
   @@index([userId, updatedAt])
 }
 
+/// An image a person attached to an Explore question.
+///
+/// Uploaded before the turn starts, so `questionId` is null until the question
+/// that carries it is written. The bytes live in the private support bucket
+/// under `objectKey`; deleting the question (or its conversation) cascades the
+/// row, and the conversation delete path queues the object's deletion.
+model ExploreAttachment {
+  id         String          @id @default(uuid())
+  ownerId    String
+  questionId String?
+  objectKey  String          @unique
+  mediaType  String
+  bytes      Int
+  sha256     String
+  createdAt  DateTime        @default(now())
+  question   ExploreMessage? @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@index([ownerId, createdAt])
+}
+
 /// Full inspection data is fetched on demand, never replayed into model history.
 model ExploreToolPayload {
   id             String              @id @default(uuid())
@@ -961,6 +982,7 @@ model ExploreMessage {
   conversation ExploreConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   parent       ExploreMessage?     @relation("ExploreMessageTree", fields: [parentId], references: [id], onDelete: Cascade)
   children     ExploreMessage[]    @relation("ExploreMessageTree")
+  attachments  ExploreAttachment[]
 
   @@index([conversationId])
   @@index([conversationId, parentId])

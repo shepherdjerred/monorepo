@@ -5,18 +5,18 @@
   "model": "gpt-5.6-luna",
   "judgeModel": "gpt-5.6-terra",
   "lakeBuildId": "1792633804115-0017-scenarios",
-  "generatedAt": "2026-10-22T04:47:25.128Z",
+  "generatedAt": "2026-10-22T17:14:55.290Z",
   "passed": false,
   "summary": {
     "runs": 40,
     "passedRuns": 35,
     "failedControls": [],
     "checks": {
-      "passed": 215,
+      "passed": 217,
       "total": 218
     },
     "rubric": {
-      "met": 110,
+      "met": 112,
       "total": 116
     }
   },
@@ -761,7 +761,7 @@
       "caseId": "add-tracked-player-discord",
       "surface": "discord",
       "control": false,
-      "passed": false,
+      "passed": true,
       "turns": [
         {
           "index": 0,
@@ -788,8 +788,8 @@
               "passed": true
             }
           ],
-          "rubric": [false, true],
-          "passed": false
+          "rubric": [true, true],
+          "passed": true
         },
         {
           "index": 1,
@@ -961,7 +961,7 @@
       "caseId": "active-reports-at-limit",
       "surface": "web",
       "control": false,
-      "passed": true,
+      "passed": false,
       "turns": [
         {
           "index": 0,
@@ -988,8 +988,8 @@
               "passed": true
             }
           ],
-          "rubric": [true, true],
-          "passed": true
+          "rubric": [true, false],
+          "passed": false
         }
       ]
     },
@@ -997,7 +997,7 @@
       "caseId": "active-reports-at-limit",
       "surface": "discord",
       "control": false,
-      "passed": true,
+      "passed": false,
       "turns": [
         {
           "index": 0,
@@ -1024,8 +1024,8 @@
               "passed": true
             }
           ],
-          "rubric": [true, true],
-          "passed": true
+          "rubric": [true, false],
+          "passed": false
         }
       ]
     },
@@ -1185,7 +1185,7 @@
       "caseId": "rune-page",
       "surface": "discord",
       "control": false,
-      "passed": true,
+      "passed": false,
       "turns": [
         {
           "index": 0,
@@ -1208,8 +1208,8 @@
               "passed": true
             }
           ],
-          "rubric": [true, true],
-          "passed": true
+          "rubric": [false, true],
+          "passed": false
         }
       ]
     },
@@ -1429,7 +1429,7 @@
       "caseId": "image-scoreboard",
       "surface": "web",
       "control": false,
-      "passed": false,
+      "passed": true,
       "turns": [
         {
           "index": 0,
@@ -1449,11 +1449,11 @@
             },
             {
               "name": "image-delivered",
-              "passed": false
+              "passed": true
             }
           ],
-          "rubric": [false, false],
-          "passed": false
+          "rubric": [true, true],
+          "passed": true
         }
       ]
     },
@@ -1461,7 +1461,7 @@
       "caseId": "image-scoreboard",
       "surface": "discord",
       "control": false,
-      "passed": false,
+      "passed": true,
       "turns": [
         {
           "index": 0,
@@ -1481,11 +1481,11 @@
             },
             {
               "name": "image-delivered",
-              "passed": false
+              "passed": true
             }
           ],
-          "rubric": [false, false],
-          "passed": false
+          "rubric": [true, true],
+          "passed": true
         }
       ]
     },

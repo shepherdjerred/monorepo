@@ -225,7 +225,7 @@ export async function uploadScreenshot(
   );
 }
 
-async function readDiscordImage(
+export async function readDiscordImage(
   url: string,
   signal: AbortSignal,
 ): Promise<Uint8Array> {
@@ -239,7 +239,7 @@ async function readDiscordImage(
   );
 }
 
-async function readBoundedImageStream(
+export async function readBoundedImageStream(
   stream: ReadableStream<unknown>,
   sizeError: string,
 ): Promise<Uint8Array> {

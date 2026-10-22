@@ -29,6 +29,7 @@ import {
 import { handleBryanBucksControl } from "#src/http/bryan-bucks-control.ts";
 import { handleScoutClientRoute } from "#src/scout-client/http.ts";
 import { handleSupportScreenshot } from "#src/support/http.ts";
+import { handleExploreAttachment } from "#src/explore/attachments/http.ts";
 
 const logger = createLogger("http-server");
 
@@ -362,8 +363,10 @@ async function handleImageRoutes(
   url: URL,
 ): Promise<Response | null> {
   const supportScreenshot = await handleSupportScreenshot(request, url);
+  const exploreAttachment =
+    supportScreenshot ?? (await handleExploreAttachment(request, url));
   return (
-    supportScreenshot ??
+    exploreAttachment ??
     (await handleImageRoute(request, url, corsHeadersFor(request)))
   );
 }

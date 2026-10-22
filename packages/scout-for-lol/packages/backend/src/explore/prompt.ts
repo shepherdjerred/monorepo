@@ -214,6 +214,11 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     "For fewer than 10 games, say exactly: 'Fewer than 10 games — treat this rate as indicative only.'",
     "Describe results as matches Scout recorded, not League-wide truth. Do not extrapolate or make unsupported statistical claims. Use plain language instead of statistical terminology.",
     "",
+    "## Attached images",
+    // With a post-game scoreboard attached, Explore answered only "send the
+    // match ID" — it read the image and then analyzed nothing in it.
+    "When the question carries an image, answer from what it shows first. A scoreboard shows the result, duration, every player's champion, KDA, CS, gold and damage: compare the asker's player with their lane opponent and team, and say what the numbers point to. Then look for the recorded game by the Riot IDs and champions it shows, and use review_match when you find it. Ask for a match ID only after answering from the image, never instead of it.",
+    "",
     "## Attaching a visualization",
     "The answer is prose. A chart or table is optional supporting evidence, not the default.",
     "Set `includeVisualization` to true only when a chart or table would help the reader see a comparison, ranking, trend, distribution, or many rows they would otherwise have to scan in the prose.",

@@ -1,4 +1,5 @@
 import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
+import { queueExploreAttachmentDeletion } from "#src/explore/attachments/cleanup.ts";
 import {
   EXPLORE_TITLE_MAX_LENGTH,
   type DiscordAccountId,
@@ -25,8 +26,18 @@ import { graphemePrefix } from "@shepherdjerred/text";
 
 export type ExploreTurnStoreClient = Pick<
   ExtendedPrismaClient,
-  "exploreConversation" | "exploreMessage"
+  "exploreConversation" | "exploreMessage" | "exploreAttachment"
 >;
+
+/** Messages with the images attached to them, oldest first. */
+const MESSAGES_WITH_ATTACHMENTS = {
+  include: {
+    attachments: {
+      select: { id: true, mediaType: true },
+      orderBy: [{ createdAt: "asc" as const }, { id: "asc" as const }],
+    },
+  },
+};
 
 /**
  * Storage for explore conversations.
@@ -107,7 +118,7 @@ export async function loadExploreTranscript(
 ): Promise<ExploreTranscript | null> {
   const row = await prisma.exploreConversation.findFirst({
     where: { id: conversationId, userId },
-    include: { messages: true },
+    include: { messages: MESSAGES_WITH_ATTACHMENTS },
   });
   return row === null
     ? null
@@ -120,6 +131,9 @@ export async function loadExploreTranscript(
  *
  * Renders `sharedLeafId` — the path pinned when the link was created — so the
  * owner branching afterwards cannot change what a recipient sees.
+ *
+ * Attached images are not loaded: they are served only to their owner, so a
+ * shared transcript shows the questions without them.
  */
 export async function loadSharedExploreTranscript(
   prisma: ExtendedPrismaClient,
@@ -510,10 +524,17 @@ export async function deleteExploreConversation(
   conversationId: string,
   userId: DiscordAccountId,
 ): Promise<boolean> {
-  const result = await prisma.exploreConversation.deleteMany({
-    where: { id: conversationId, userId },
+  // The attachment rows would cascade with their messages; queue their
+  // objects for deletion first, in the same transaction.
+  return await prisma.$transaction(async (tx) => {
+    await queueExploreAttachmentDeletion(tx, {
+      question: { conversation: { id: conversationId, userId } },
+    });
+    const result = await tx.exploreConversation.deleteMany({
+      where: { id: conversationId, userId },
+    });
+    return result.count > 0;
   });
-  return result.count > 0;
 }
 
 export async function renameExploreConversation(
