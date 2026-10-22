@@ -122,6 +122,9 @@ describe("The match experience behind its flags", () => {
         const b = human(secondBot);
         await join(a);
         await join(b);
+        // Candidates load their terrain after the ballot opens and refuse
+        // visits until then; the lobby is told once they are ready.
+        await a.log.until(/Candidate maps are ready\./u, 60_000);
         bot.chat("/rwf visit training-yard");
         await a.log.until(/Visiting Training Yard/u);
         await arrives(rcon, bot, dimension, yard.region);
