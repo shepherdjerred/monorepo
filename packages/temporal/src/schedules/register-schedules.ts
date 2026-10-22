@@ -43,10 +43,13 @@ export const DELETED_SCHEDULE_IDS = [
   // July-2026 Buildkite cohort. That baseline lives in `buildkite:` recording
   // rules the migration stopped producing, so the comparison can never be
   // reproduced -- and the report's own retirement criteria (seven days and 100
-  // builds observed) had already been met. Its replacement,
-  // `ci-io-telemetry-daily`, keeps the part that was still earning its keep:
-  // watching whether the measurement chain itself is intact.
+  // builds observed) had already been met. The measurement chain is watched
+  // by the `woodpecker-ci-io-*` Prometheus alerts and the CI capacity dashboard.
   "ci-io-post-merge-impact",
+  // The daily CI I/O telemetry report emailed a failure whenever CI happened to
+  // be idle at run time, so it was noise. The Prometheus recording rules,
+  // alerts, and CI capacity dashboard panels it probed remain the signal.
+  "ci-io-telemetry-daily",
   // Replaced by the stage-specific Scout competition update Schedules owned
   // by the embedded Scout Workers.
   "scout-competition-updates-minute",
@@ -146,6 +149,8 @@ const RETIRED_WORKFLOW_TYPES: readonly RetiredWorkflowType[] = [
   // A run can start after the pre-deploy query but before this reconciliation
   // removes its schedule, so drain it before workers drop the handler.
   { workflowType: "runProtobufWatch", namespace: "prod" },
+  // Same drain for the retired daily CI I/O telemetry report.
+  { workflowType: "runCiIoTelemetry", namespace: "prod" },
 ] as const;
 
 export async function terminateRetiredWorkflowExecutions(

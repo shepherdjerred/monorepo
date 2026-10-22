@@ -192,7 +192,6 @@ export async function runKometaWorkflow(): Promise<void> {
 }
 export const runMainVulnScanWorkflow = () =>
   runMainVulnScanWorkflowImplementation();
-export const runCiIoTelemetry = maintenanceWorkflows.runCiIoTelemetry;
 export const runCiWorkspaceReaperWorkflow =
   maintenanceWorkflows.runCiWorkspaceReaperWorkflow;
 export const runTrackerAttachmentCleanup = maintenanceWorkflows.trackerCleanup;

@@ -122,7 +122,6 @@ describe("central Workflow schedule routing", () => {
     ["kometa-daily", "runKometaWorkflow", "2 hours"],
     ["ci-uv-cache-prune-weekly", "runUvCachePruneWorkflow", "2 hours"],
     ["ci-trivy-db-refresh", "runTrivyDbRefreshWorkflow", "2 hours"],
-    ["ci-io-telemetry-daily", "runCiIoTelemetry", "30 minutes"],
     ["turbo-cache-clean-daily", "runTurboCacheCleanWorkflow", "30 minutes"],
     ["ci-workspace-reaper", "runCiWorkspaceReaperWorkflow", "1 hour"],
   ] as const;
@@ -522,7 +521,6 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runKometaWorkflow",
   "runUvCachePruneWorkflow",
   "runTrivyDbRefreshWorkflow",
-  "runCiIoTelemetry",
   "runMainVulnScanWorkflow",
   "runLinkRotScanWorkflow",
   "runTurboCacheCleanWorkflow",
@@ -824,6 +822,7 @@ test("terminates workflows for schedules being removed", async () => {
   expect(queries).toEqual([
     'WorkflowType = "runOpenAiComplimentaryUsageReconciliation" AND ExecutionStatus = "Running"',
     'WorkflowType = "runProtobufWatch" AND ExecutionStatus = "Running"',
+    'WorkflowType = "runCiIoTelemetry" AND ExecutionStatus = "Running"',
   ]);
 });
 

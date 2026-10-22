@@ -8,8 +8,7 @@
  *
  * The I/O panels are rebuilt at the bottom of this file. They are the same
  * charts, re-pointed at the `woodpecker:` recording rules and at the step-key
- * label the configuration extension stamps — and the CI I/O telemetry report
- * asserts by title that they exist, so a rename here fails that report.
+ * label the configuration extension stamps.
  */
 import * as dashboard from "@grafana/grafana-foundation-sdk/dashboard";
 import { createTimeseriesPanel } from "./dashboard-panels.ts";
@@ -241,21 +240,14 @@ node_hwmon_sensor_label{node="liskov", label="Tctl"}`;
 /**
  * Nodes currently running a CI step pod.
  *
- * Mirrors ACTIVE_NODES in
- * packages/temporal/src/activities/maintenance/ci-io-observability.ts, which
- * runs the same queries as a health check. Woodpecker stamps nothing
- * identifying on a step pod, so the join goes through the step-key label the
- * configuration extension adds.
+ * Woodpecker stamps nothing identifying on a step pod, so the join goes through
+ * the step-key label the configuration extension adds.
  */
 const ACTIVE_CI_NODES =
   'max by (node) (kube_pod_info{namespace="woodpecker-ci"} * on (namespace, pod) group_left kube_pod_labels{namespace="woodpecker-ci", label_ci_sjer_red_step_key!=""})';
 
 /**
  * CI write volume and I/O pressure.
- *
- * Panel titles are load-bearing: the daily CI I/O telemetry report fetches
- * this dashboard and checks each one is present, because a silently-emptied
- * chart is exactly the failure this telemetry exists to catch.
  */
 export function addCiIoPanels(builder: dashboard.DashboardBuilder): void {
   builder.withRow(new dashboard.RowBuilder("CI I/O"));

@@ -239,8 +239,8 @@ export async function createPrometheusApp(chart: Chart) {
     },
     // cAdvisor owns the unique 10-second pod-parent counters. The normal
     // kube-state-metrics scrape adds Woodpecker identity/link metadata; missing
-    // joins remain explicit in the rules and CI I/O reporter rather than
-    // accelerating the full cluster-wide metadata endpoint.
+    // joins remain explicit in the recording rules rather than accelerating the
+    // full cluster-wide metadata endpoint.
     ...CI_IO_OBSERVABILITY_VALUES,
     grafana: createGrafanaValues(prometheusSecrets.name),
     prometheusOperator: {

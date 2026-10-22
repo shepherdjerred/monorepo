@@ -49,16 +49,6 @@ const tasknotesResult: TasknotesCanaryResult = {
 };
 
 const domainActivities = {
-  collectCiIoObservability: () => [
-    {
-      id: "telemetry",
-      query: "up",
-      minimumRequiredSeries: 1,
-      series: 1,
-      values: [1],
-      passed: true,
-    },
-  ],
   refreshScoutQueueWindows: () => queueResult,
   collectTasknotesCanary: () => tasknotesResult,
   collectHomelabAuditEvidence: (): HomelabAuditCollection => ({
@@ -130,11 +120,6 @@ function deliveryActivity(
 }
 
 const workflowCases = [
-  {
-    workflow: "runCiIoTelemetry",
-    queue: TASK_QUEUES.INFRA,
-    changedCondition: true,
-  },
   {
     workflow: "runScoutQueueWindowsWatch",
     queue: TASK_QUEUES.SCOUT,
