@@ -118,6 +118,24 @@ export const MonitorObservedSchema = z.strictObject({
   rollbackDeploymentId: IdentifierSchema.nullable(),
 });
 
+/** An accepted Application whose exact source ArgoCD self-heals (T4). */
+export const SelfHealingSchema = z.strictObject({
+  deploymentId: IdentifierSchema,
+  environmentId: IdentifierSchema,
+  application: z.string().min(1),
+  acceptedAt: z.iso.datetime(),
+});
+/** A self-heal ArgoCD ran after acceptance: drift the accepted state reverted (T4). */
+export const DriftObservationSchema = z.strictObject({
+  observedAt: z.iso.datetime(),
+  application: z.string().min(1),
+  startedAt: z.iso.datetime({ offset: true }),
+  phase: z.string().min(1),
+  revision: z.string().min(1).nullable(),
+  resources: z.array(z.string().min(1)).max(200),
+});
+export type DriftObservation = z.infer<typeof DriftObservationSchema>;
+
 /** What the executor needs to observe one watching deployment. */
 export const WatchingMonitorSchema = z
   .strictObject({

@@ -49,8 +49,14 @@ import {
   runDeliveryModelStep,
   settleDeliveryModel,
 } from "./model/steps.ts";
+import {
+  observeDeliveryDrift,
+  observeDeliveryMonitors,
+} from "./model/monitor.ts";
 
 export const deliveryActivities = {
+  observeDeliveryMonitors,
+  observeDeliveryDrift,
   planDeliveryModel,
   renewDeliveryLease,
   runDeliveryModelStep,

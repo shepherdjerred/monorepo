@@ -17,6 +17,7 @@ import {
 } from "#lib/delivery/model/recipe.ts";
 import { applySafety, enableSelfHeal, sync } from "./kubernetes.ts";
 import { oracleEvidence, runTestStep } from "./oracle.ts";
+import { awaitAttestations } from "./operator-run.ts";
 import type { ColdStartWrite } from "#lib/delivery/model/oracle-inputs.ts";
 import {
   deploymentDetail,
@@ -81,15 +82,21 @@ async function runKubernetesStep(
   }
 }
 
-/** Runs one frozen step by key; a settled step is a no-op so a resumed run never repeats it. */
-export async function runDeliveryModelStep(id: string, key: string) {
+/**
+ * Runs one frozen step by key; a settled step is a no-op so a resumed run
+ * never repeats it. `waiting` asks the Workflow to run it again later.
+ */
+export async function runDeliveryModelStep(
+  id: string,
+  key: string,
+): Promise<{ waiting: boolean }> {
   const current = await requireOwned(id);
   if (
     current.stages.some(
       (stage) => stage.key === key && stage.status === "succeeded",
     )
   )
-    return;
+    return { waiting: false };
   const recipe = requireModelRecipe(current);
   const step = requireStep(modelSteps(recipe), key);
   switch (step.adapter) {
@@ -98,14 +105,17 @@ export async function runDeliveryModelStep(id: string, key: string) {
         key,
         kind: step.step.kind,
       });
-      return;
+      return { waiting: false };
     case "test":
       await runTestStep(current, kubernetes(recipe), step);
-      return;
+      return { waiting: false };
+    case "operator-run":
+      if (recipe.kind !== "operator-run")
+        throw new Error(`A ${recipe.kind} recipe has no attestation step`);
+      return await awaitAttestations(current, recipe, key);
     case "tofu":
     case "channel":
-    case "operator-run":
-      missingAdapter(step.adapter);
+      return missingAdapter(step.adapter);
   }
 }
 
@@ -115,9 +125,13 @@ export async function acceptDeliveryModel(
 ): Promise<EvidenceInput[]> {
   const current = await requireOwned(id);
   const recipe = requireModelRecipe(current);
+  const kubernetesOracle =
+    recipe.kind === "operator-run" ? recipe.wrapped : recipe;
   return await oracleEvidence(
     current,
-    recipe.kind === "kubernetes-application" ? recipe.oracle.probes : [],
+    kubernetesOracle.kind === "kubernetes-application"
+      ? kubernetesOracle.oracle.probes
+      : [],
   );
 }
 

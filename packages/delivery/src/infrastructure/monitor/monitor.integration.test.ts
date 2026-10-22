@@ -1,62 +1,24 @@
 import { beforeEach, describe, expect, test } from "vitest";
-import { PipelineDefinitionSchema } from "#shared/pipeline-contract.ts";
-import { RegisterEnvironmentSchema } from "#shared/contract.ts";
 import { recipeFromPipeline } from "#shared/model/recipe-adapter.ts";
 import type { MonitorPolicySchema } from "#shared/model/monitor-contract.ts";
 import { deliveryMetrics } from "#server/metrics.ts";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
+import {
+  arcadePipeline,
+  arcadeRegistration,
+  publishCiRunner,
+} from "#testing/model-fixture.ts";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
 import type { z } from "zod";
 
-const pipeline = PipelineDefinitionSchema.parse(
-  await Bun.file(
-    new URL("../../../registrations/arcade.pipeline.json", import.meta.url),
-  ).json(),
-);
-const context = useDeliveryFixture({
-  registration: {
-    pipeline,
-    environment: RegisterEnvironmentSchema.parse(
-      await Bun.file(
-        new URL(
-          "../../../registrations/arcade.environment.json",
-          import.meta.url,
-        ),
-      ).json(),
-    ),
-  },
-});
-
-/** The CI runner image model recipes bind by reference (C2). */
-async function publishRunner() {
-  const build = await context.delivery.publish(
-    {
-      requestId: "publish/ci-base",
-      serviceId: "ci",
-      sourceRevision: "e".repeat(40),
-      ciUrl: "https://woodpecker.sjer.red/repos/1/pipeline/90",
-      verifiedAt: new Date().toISOString(),
-      artifacts: [
-        {
-          id: "ci-base",
-          component: "image:ci-base",
-          kind: "image",
-          uri: "docker.io/shepherdjerred/ci-base",
-          version: "1.0.0",
-          digest: `sha256:${"e".repeat(64)}`,
-        },
-      ],
-    },
-    testPublisher,
-    { repositoryId: 1, pipelineNumber: 90 },
-  );
-  await context.delivery.qualify(build.buildId, "verified", testExecutor);
-}
+const pipeline = arcadePipeline;
+const context = useDeliveryFixture({ registration: arcadeRegistration });
 
 async function declareMonitoredRecipe(
   policy: z.infer<typeof MonitorPolicySchema>,
+  selfHeal = false,
 ) {
-  await publishRunner();
+  await publishCiRunner(context.delivery);
   const recipe = recipeFromPipeline(pipeline);
   if (recipe.kind !== "kubernetes-application")
     throw new Error("arcade converts to a Kubernetes application recipe");
@@ -65,6 +27,12 @@ async function declareMonitoredRecipe(
       id: "arcade/3",
       definition: {
         ...recipe,
+        application: {
+          ...recipe.application,
+          ...(selfHeal
+            ? { syncPolicy: { automated: { selfHeal: true, prune: false } } }
+            : {}),
+        },
         oracle: {
           ...recipe.oracle,
           monitor: {
@@ -348,5 +316,37 @@ describe("monitor (4.19)", () => {
     expect(await context.delivery.monitorStatus("arcade/prod")).toMatchObject({
       state: "alarmed",
     });
+  });
+
+  test("self-heals after acceptance are drift evidence of the accepted deployment (T4)", async () => {
+    await declareMonitoredRecipe("hold", true);
+    const accepted = await deployAndAccept(context.fixture.versionSet.id);
+    expect(await context.delivery.selfHealing()).toEqual([
+      expect.objectContaining({
+        deploymentId: accepted.id,
+        environmentId: "arcade/prod",
+        application: "arcade",
+      }),
+    ]);
+    const drift = {
+      observedAt: new Date().toISOString(),
+      application: "arcade",
+      startedAt: "2026-10-21T01:00:00Z",
+      phase: "Succeeded",
+      revision: "1.0.0",
+      resources: ["apps/Deployment/arcade/arcade"],
+    };
+    await context.delivery.recordDrift(accepted.id, drift, testExecutor);
+    await context.delivery.recordDrift(accepted.id, drift, testExecutor);
+    expect(
+      await context.cluster.database.evidence.count({
+        where: { deploymentId: accepted.id, kind: "drift" },
+      }),
+    ).toBe(1);
+    const newer = await deployAndAccept(await publish(4));
+    await expect(
+      context.delivery.recordDrift(accepted.id, drift, testExecutor),
+    ).rejects.toThrow(/accepted deployment only/u);
+    expect(newer.id).not.toBe(accepted.id);
   });
 });

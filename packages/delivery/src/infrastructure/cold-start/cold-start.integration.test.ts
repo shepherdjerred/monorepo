@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { testExecutor, testOperator } from "#testing/seed.ts";
 import type { ColdStartSnapshot } from "#shared/model/cold-start-contract.ts";
+import { requestOnProd } from "#testing/model-fixture.ts";
 import { bootstrapChain } from "./snapshot.ts";
 
 const context = useDeliveryFixture();
@@ -39,19 +40,7 @@ async function chainFixture() {
 }
 
 async function acceptProd(operationId: string) {
-  const env = await context.cluster.database.environment.findUniqueOrThrow({
-    where: { id: "arcade/prod" },
-  });
-  const deployment = await context.delivery.createDeployment(
-    {
-      requestId: crypto.randomUUID(),
-      environmentId: env.id,
-      versionSetRevisionId: context.fixture.versionSet.id,
-      expectedGeneration: env.generation,
-      kind: "deploy",
-    },
-    testOperator,
-  );
+  const deployment = await requestOnProd(context, "deploy");
   await context.delivery.claim(deployment.id, testExecutor);
   await context.delivery.stage(
     deployment.id,

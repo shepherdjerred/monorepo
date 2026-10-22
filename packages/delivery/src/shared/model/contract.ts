@@ -60,6 +60,9 @@ export function recipeFromPipeline(
 export function recipeComponents(definition: RecipeDefinition): string[] {
   return recipes.recipeComponents(definition);
 }
+export function attestationStageKey(stage: string): string {
+  return recipes.attestationStageKey(stage);
+}
 export type HelmSource = recipes.HelmSource;
 export type GitSource = recipes.GitSource;
 export type ArtifactParameter = recipes.ArtifactParameter;
@@ -102,6 +105,9 @@ export const MonitorObservationInputSchema =
 export const MonitorObservationSchema = monitors.MonitorObservationSchema;
 export const WatchingMonitorSchema = monitors.WatchingMonitorSchema;
 export const MonitorObservedSchema = monitors.MonitorObservedSchema;
+export const SelfHealingSchema = monitors.SelfHealingSchema;
+export const DriftObservationSchema = monitors.DriftObservationSchema;
+export type DriftObservation = monitors.DriftObservation;
 export const MonitorStatusSchema = monitors.MonitorStatusSchema;
 export const FiringAlarmSchema = monitors.FiringAlarmSchema;
 export const AlarmSeveritySchema = monitors.AlarmSeveritySchema;

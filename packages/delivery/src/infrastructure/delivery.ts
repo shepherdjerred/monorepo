@@ -38,6 +38,8 @@ import {
   watchingMonitors,
 } from "#infrastructure/monitor/monitor.ts";
 import { requestMonitorRollback } from "#infrastructure/monitor/restoration.ts";
+import { recordDrift, selfHealing } from "#infrastructure/monitor/drift.ts";
+import { attestStage } from "#infrastructure/execution/attestation.ts";
 import {
   coldStartRequirement,
   reconcileAfterRestore,
@@ -158,6 +160,9 @@ export class Delivery {
   observeMonitor = observeMonitor;
   monitorStatus = monitorStatus;
   requestMonitorRollback = requestMonitorRollback;
+  selfHealing = selfHealing;
+  attestStage = attestStage;
+  recordDrift = recordDrift;
   coldStartRequirement = coldStartRequirement;
   recordColdStartReceipt = recordColdStartReceipt;
   reconcileAfterRestore = reconcileAfterRestore;

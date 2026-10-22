@@ -428,6 +428,11 @@ export const OperatorRunRecipeSchema = z
     "Attested stages must be unique",
   );
 
+/** The stage an operator attestation of a declared operator-run stage settles. */
+export function attestationStageKey(stage: string): string {
+  return `attest/${stage}`;
+}
+
 const nonCompoundRecipes = [
   KubernetesApplicationRecipeSchema,
   StaticSiteRecipeSchema,

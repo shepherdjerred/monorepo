@@ -2,7 +2,10 @@ import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import { describe, expect, it } from "vitest";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
-import { createDeliveryWorkers } from "#workflows/testing/delivery-workers.ts";
+import {
+  createDeliveryWorkers,
+  replayFixture,
+} from "#workflows/testing/delivery-workers.ts";
 
 const coldStart = {
   deploymentId: "deployment-7",
@@ -23,6 +26,10 @@ function modelActivities(calls: string[], failStep?: string) {
     runDeliveryModelStep: (_id: string, key: string) => {
       calls.push(key);
       if (key === failStep) throw new Error(`${key} lost its readback`);
+      // The suite waits once, as an operator-run step waits for attestations.
+      const waiting = key === "test/e2e" && !calls.includes("waited");
+      if (waiting) calls.push("waited");
+      return { waiting };
     },
     acceptDeliveryModel: () => {
       calls.push("accept");
@@ -89,6 +96,9 @@ describe("Delivery model step executor (T3)", () => {
         "step/sync",
         "lease",
         "test/e2e",
+        "waited",
+        "lease",
+        "test/e2e",
         "accept",
         "finish:succeeded",
         "settle",
@@ -131,43 +141,63 @@ describe("Delivery model step executor (T3)", () => {
 
   it("replays a deployment recorded before the model executor existed", async () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
-    const connection = {
-      connection: environment.nativeConnection,
-      namespace: "default",
-    };
-    const before = await Worker.create({
-      ...connection,
-      taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
-      workflowsPath: new URL(
-        "replay-fixtures/delivery-deployment-before-model.ts",
-        import.meta.url,
-      ).pathname,
-    });
-    const activities = await Worker.create({
-      ...connection,
-      taskQueue: TASK_QUEUES.DELIVERY,
-      activities: {
-        prepareDelivery: () => ({ status: "ready" }),
-        applyDelivery: () => Promise.resolve(),
-        verifyDelivery: () => [],
-        finishDelivery: () => Promise.resolve(),
-      },
-    });
     try {
-      const workflowId = `deployment-before-model-${crypto.randomUUID()}`;
-      await before.runUntil(
-        activities.runUntil(
-          environment.client.workflow.execute("deliveryDeploymentWorkflow", {
-            workflowId,
+      await replayFixture(environment, {
+        fixture: "delivery-deployment-before-model.ts",
+        workflowType: "deliveryDeploymentWorkflow",
+        workflowId: `deployment-before-model-${crypto.randomUUID()}`,
+        args: [{ deploymentId: "deployment-1" }],
+        activities: {
+          prepareDelivery: () => ({ status: "ready" }),
+          applyDelivery: () => Promise.resolve(),
+          verifyDelivery: () => [],
+          finishDelivery: () => Promise.resolve(),
+        },
+      });
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+
+  it("replays a dispatch tick recorded before monitor observation, then observes monitors and drift", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const observed: string[] = [];
+    const tick = {
+      listDeliveryReplications: () => ({ artifacts: [] }),
+      qualifyDeliveryBuilds: () => Promise.resolve(),
+      dispatchPendingDeliveries: () => ({ submitted: 0 }),
+      dispatchDeliveryWorkerRecoveries: () => Promise.resolve(),
+      dispatchDeliveryMinecraftRecoveries: () => Promise.resolve(),
+      qualifyDeliveryForumBundles: () => Promise.resolve(),
+      dispatchDeliveryForumBaselines: () => Promise.resolve(),
+      dispatchDeliveryPlatformRecoveries: () => Promise.resolve(),
+      observeDeliveryMonitors: () => {
+        observed.push("monitors");
+        return { observed: 1 };
+      },
+      observeDeliveryDrift: () => {
+        observed.push("drift");
+        return { recorded: 0 };
+      },
+    };
+    try {
+      await replayFixture(environment, {
+        fixture: "delivery-dispatch-before-monitor.ts",
+        workflowType: "deliveryDispatchWorkflow",
+        workflowId: `dispatch-before-monitor-${crypto.randomUUID()}`,
+        activities: tick,
+      });
+      expect(observed).toEqual([]);
+      const current = await createDeliveryWorkers(environment, tick);
+      await current.workflows.runUntil(
+        current.activities.runUntil(
+          environment.client.workflow.execute("deliveryDispatchWorkflow", {
+            workflowId: `dispatch-monitor-${crypto.randomUUID()}`,
             taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
-            args: [{ deploymentId: "deployment-1" }],
           }),
         ),
       );
-      await Worker.runReplayHistory(
-        { workflowsPath: new URL("delivery.ts", import.meta.url).pathname },
-        await environment.client.workflow.getHandle(workflowId).fetchHistory(),
-      );
+      expect(observed.toSorted()).toEqual(["drift", "monitors"]);
     } finally {
       await environment.teardown();
     }

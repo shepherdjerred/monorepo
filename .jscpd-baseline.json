@@ -1178,7 +1178,7 @@
     },
     "packages/temporal/src/workflows/delivery.ts|packages/temporal/src/workflows/replay-fixtures/delivery-dispatch-before-replication.ts": {
       "clones": 1,
-      "tokens": 160
+      "tokens": 92
     },
     "packages/temporal/src/workflows/ops-snapshot.ts|packages/temporal/src/workflows/replay-fixtures/ops-before-ops-queue.ts": {
       "clones": 1,

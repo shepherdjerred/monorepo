@@ -101,6 +101,12 @@ export const DELIVERY_REPLICATION_PATCH = "delivery-dispatch-replication-v1";
  */
 export const DELIVERY_MODEL_EXECUTOR_PATCH = "delivery-model-executor-v1";
 
+/**
+ * Monitors and self-heal drift are observed once per dispatch tick (4.19, T4).
+ * Ticks recorded before them replay without these Activities.
+ */
+export const DELIVERY_MONITOR_PATCH = "delivery-dispatch-monitor-v1";
+
 /** Artifacts replicated per dispatch tick; the rest wait for the next one. */
 const REPLICATIONS_PER_DISPATCH = 10;
 
@@ -258,7 +264,13 @@ async function runModelRecipe(deploymentId: string) {
   const plan = await metadata.planDeliveryModel(deploymentId);
   for (const key of plan.keys.slice(plan.resumeAt)) {
     await metadata.renewDeliveryLease(deploymentId);
-    await jobs.runDeliveryModelStep(deploymentId, key);
+    let step = await jobs.runDeliveryModelStep(deploymentId, key);
+    // An operator-run step waits for attestations made outside the cluster.
+    while (step.waiting) {
+      await sleep("1 minute");
+      await metadata.renewDeliveryLease(deploymentId);
+      step = await jobs.runDeliveryModelStep(deploymentId, key);
+    }
   }
   const evidence = await observation.acceptDeliveryModel(deploymentId);
   await metadata.finishDelivery(deploymentId, {
@@ -275,6 +287,18 @@ async function settleModelAcceptance(deploymentId: string) {
       deploymentId,
       await backup.writeDeliveryColdStart(coldStart),
     );
+}
+
+/** Both observations run whatever dispatch did; failures surface after it. */
+async function observeAcceptedSelections(): Promise<unknown[]> {
+  const outcomes = await Promise.allSettled([
+    observation.observeDeliveryMonitors(),
+    observation.observeDeliveryDrift(),
+  ]);
+  const failures: unknown[] = [];
+  for (const outcome of outcomes)
+    if (outcome.status === "rejected") failures.push(outcome.reason);
+  return failures;
 }
 
 export async function deliveryDispatchWorkflow() {
@@ -300,6 +324,9 @@ export async function deliveryDispatchWorkflow() {
     metadata.dispatchDeliveryForumBaselines(),
     metadata.dispatchDeliveryPlatformRecoveries(),
   ]);
+  const observationFailures = patched(DELIVERY_MONITOR_PATCH)
+    ? await observeAcceptedSelections()
+    : [];
   if (dispatched.status === "rejected") throw dispatched.reason;
   if (qualified.status === "rejected") throw qualified.reason;
   if (recovered.status === "rejected") throw recovered.reason;
@@ -308,6 +335,7 @@ export async function deliveryDispatchWorkflow() {
   if (forumBaseline.status === "rejected") throw forumBaseline.reason;
   if (platformRecovered.status === "rejected") throw platformRecovered.reason;
   if (replicationFailures.length > 0) throw replicationFailures[0];
+  if (observationFailures.length > 0) throw observationFailures[0];
   return dispatched.value;
 }
 

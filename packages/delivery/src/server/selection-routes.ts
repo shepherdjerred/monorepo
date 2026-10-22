@@ -1,7 +1,10 @@
 import type { Hono } from "hono";
 import type { Principal } from "#shared/contract.ts";
 import { RollbackCandidatesSchema } from "#shared/model/selection-contract.ts";
-import { MonitorObservationInputSchema } from "#shared/model/monitor-contract.ts";
+import {
+  DriftObservationSchema,
+  MonitorObservationInputSchema,
+} from "#shared/model/monitor-contract.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { environment } from "#infrastructure/delivery-data.ts";
@@ -37,6 +40,19 @@ export function registerSelectionRoutes(
         : null;
     return c.json({ ...observed, rollbackDeploymentId: rollback?.id ?? null });
   });
+  app.get("/api/v1/drift/self-healing", async (c) => {
+    requireScope(c.get("principal"), "execute");
+    return c.json({ applications: await delivery.selfHealing() });
+  });
+  app.post("/api/v1/deployments/:id/drift", async (c) =>
+    c.json(
+      await delivery.recordDrift(
+        c.req.param("id"),
+        DriftObservationSchema.parse(await c.req.json()),
+        c.get("principal"),
+      ),
+    ),
+  );
   app.get("/api/v1/environments/:id/monitor", async (c) => {
     requireScope(c.get("principal"), "read");
     return c.json(await delivery.monitorStatus(c.req.param("id")));

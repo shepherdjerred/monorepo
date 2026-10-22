@@ -8,6 +8,7 @@ import {
 } from "#shared/contract.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
+import { AttestStageSchema } from "#infrastructure/execution/attestation.ts";
 
 /** The executor names itself on claim and lease renewal so ownership is never transferred silently (model D7). */
 const ClaimBodySchema = z
@@ -56,6 +57,15 @@ export function registerClaimRoute(
       await delivery.handOff(c.req.param("id"), executor, c.get("principal")),
     );
   });
+  app.post("/api/v1/deployments/:id/attestations", async (c) =>
+    c.json(
+      await delivery.attestStage(
+        c.req.param("id"),
+        AttestStageSchema.parse(await c.req.json()),
+        c.get("principal"),
+      ),
+    ),
+  );
   app.post("/api/v1/deployments/:id/lease", async (c) => {
     requireScope(c.get("principal"), "execute");
     const executor = ExecutorIdentitySchema.parse(await c.req.json());
