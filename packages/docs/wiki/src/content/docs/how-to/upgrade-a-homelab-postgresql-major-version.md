@@ -426,7 +426,10 @@ rows.
 - The specialized-pointer check reads `acceptedPlatformDeploymentId`,
   `acceptedControlPlaneDeploymentId` and `acceptedForumBaselineIntentId`. Each
   must name a succeeded record of its own environment, of the kind that
-  `acceptedPointers` or forum baseline settlement would accept.
+  `acceptedPointers` or forum baseline settlement would accept. A platform
+  pointer's Deployment carries a platform snapshot of its own kind, and a
+  control-plane pointer's carries a control-plane snapshot, because the
+  consumers parse exactly those.
 - The label check reads `configurationRevision` and `configuration` on
   `Environment` and `Deployment`. It shows a label that carries two contents.
 
@@ -472,7 +475,7 @@ WHERE e."acceptedPlatformDeploymentId" IS NOT NULL
     SELECT 1 FROM "Deployment" d
     WHERE d.id = e."acceptedPlatformDeploymentId" AND d."environmentId" = e.id
       AND d.status = 'succeeded' AND d.kind IN ('root-release', 'tofu-apply')
-      AND (d."platformSnapshot" IS NOT NULL OR d."controlPlaneSnapshot" IS NOT NULL)
+      AND d."platformSnapshot"->>'kind' = d.kind
   )
 UNION ALL
 SELECT 'control-plane', e.id, e."acceptedControlPlaneDeploymentId"
@@ -482,7 +485,7 @@ WHERE e."acceptedControlPlaneDeploymentId" IS NOT NULL
     SELECT 1 FROM "Deployment" d
     WHERE d.id = e."acceptedControlPlaneDeploymentId" AND d."environmentId" = e.id
       AND d.status = 'succeeded' AND d.kind = 'upgrade-control-plane'
-      AND (d."platformSnapshot" IS NOT NULL OR d."controlPlaneSnapshot" IS NOT NULL)
+      AND d."controlPlaneSnapshot" IS NOT NULL
   )
 UNION ALL
 SELECT 'forum-baseline', e.id, e."acceptedForumBaselineIntentId"
