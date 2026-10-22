@@ -45,9 +45,8 @@ The disposable copy is excluded from new backups; the source remains included.
 Do not disable admission to make a restore pass.
 
 [Delivery's catalog recovery](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/README.md#delivery-execution)
-uses this step without the upgrade. Its source namespace is `delivery`, its
-cluster is `delivery-postgresql`, and its restore namespace is
-[`delivery-catalog-recovery`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/delivery/catalog-recovery.ts).
+uses this step without the upgrade. Its source and restore volumes, and the
+restore namespace's protections, are defined there.
 
 ### Restore the volume
 
