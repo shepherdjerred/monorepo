@@ -325,7 +325,12 @@ Environment variables are bootstrap and credentials: `DATABASE_URL`, `HOST`,
 `WOODPECKER_TOKEN`, `DELIVERY_MACHINE_CREDENTIALS`, `ARGOCD_SERVER_URL`,
 `ARGOCD_RECOVERY_TOKEN`, and the optional read-only `DELIVERY_GH_TOKEN`.
 `ARGOCD_RECOVERY_TOKEN` is a read-only ArgoCD credential for the hub's runtime
-panel only; no settlement reader uses it.
+panel only; no settlement reader uses it. The API holds no R2 credential:
+`POST /api/v1/reconcile-after-restore` takes the cold-start snapshot, its
+writer's `fingerprint` metadata and its immutable copy's key from the operator,
+who reads `latest.json` and that copy with their own credential
+(`restoreRequest` in the model contract). The API checks the fingerprint and
+the key before comparing.
 
 ArgoCD declares three separate API accounts: `delivery` may select and sync the
 reviewed workload Applications; `delivery-observer` can only read their state;

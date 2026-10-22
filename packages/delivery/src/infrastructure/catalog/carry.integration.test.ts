@@ -6,6 +6,7 @@ import { freezeAdmission } from "#infrastructure/execution/admission.ts";
 import { rollbackCandidates } from "#infrastructure/selection/candidates.ts";
 import { environmentSelection } from "#infrastructure/selection/views.ts";
 import { PipelineRevisionSchema } from "#shared/contract.ts";
+import { coldStartArchiveKey } from "#shared/model/cold-start-contract.ts";
 import { arcadePipeline } from "#testing/model-fixture.ts";
 import { catalogDocument } from "#testing/catalog-fixture.ts";
 import { useCatalogCluster } from "#testing/catalog-cluster.ts";
@@ -489,12 +490,19 @@ test("after a restore, the v1 sync of a carried selection still matches the reco
     testOperator,
     MOVED,
   );
-  const { snapshot } = await coldStartSnapshot(db, new Date().toISOString());
+  const { snapshot, fingerprint } = await coldStartSnapshot(
+    db,
+    new Date().toISOString(),
+  );
   const result = await context.delivery.reconcileAfterRestore(
-    { requestId: "restore-carried" },
+    {
+      requestId: "restore-carried",
+      snapshot,
+      fingerprint,
+      archiveKey: coldStartArchiveKey(snapshot),
+    },
     { ...testOperator, scopes: [...testOperator.scopes, "admin" as const] },
     {
-      readSnapshot: () => Promise.resolve(snapshot),
       readApplication: (name) =>
         Promise.resolve(
           name === "arcade"

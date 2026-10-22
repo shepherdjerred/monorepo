@@ -73,8 +73,6 @@ type Options = {
   inspectRecovery?: ReturnType<typeof createRecoveryInspector>;
   /** Independent Application readback for reconcile-after-restore (D5). */
   readApplication?: ApplicationReader;
-  /** The newest off-cluster cold-start snapshot (section 6). */
-  readColdStartSnapshot?: () => Promise<unknown>;
   /** Independent readers that observe a pending worker recovery (D5, I2). */
   workerRecoveryReaders?: WorkerRecoveryReaders;
   inspectMinecraftRecovery?: InspectMinecraftRecovery;
@@ -109,6 +107,7 @@ export function createApp(options: Options) {
       maxSize:
         c.req.path === "/api/v1/platform/plans" ||
         c.req.path === "/api/v1/catalog/reconcile" ||
+        c.req.path === "/api/v1/reconcile-after-restore" ||
         /^\/api\/v1\/platform-recovery\/[^/]+\/plan$/.test(c.req.path)
           ? 16 * 1024 * 1024
           : 1024 * 1024,
@@ -261,9 +260,6 @@ export function createApp(options: Options) {
     ...(options.readApplication === undefined
       ? {}
       : { readApplication: options.readApplication }),
-    ...(options.readColdStartSnapshot === undefined
-      ? {}
-      : { readColdStartSnapshot: options.readColdStartSnapshot }),
   });
   registerTrmnlRepairRoute(app, delivery, enabled);
   registerControlPlaneRoutes(app, delivery, enabled);

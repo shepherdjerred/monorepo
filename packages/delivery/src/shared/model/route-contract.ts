@@ -14,6 +14,11 @@ import { ApprovalV2Schema } from "./approval-contract.ts";
 import { MonitorStateSchema } from "./monitor-contract.ts";
 import type { RecipeKind } from "./recipe-contract.ts";
 import { SelectionSchema } from "./selection-contract.ts";
+import {
+  COLD_START_SNAPSHOT,
+  ColdStartSnapshotSchema,
+  coldStartArchiveKey,
+} from "./cold-start-contract.ts";
 
 /**
  * Request and response views of the model routes (`/api/v1`) that are not
@@ -178,10 +183,57 @@ export const ServiceLifecycleViewSchema = z.looseObject({
 });
 export type ServiceLifecycleView = z.infer<typeof ServiceLifecycleViewSchema>;
 
-/** `POST /reconcile-after-restore` (admin, section 6 cold start). */
+/**
+ * `POST /reconcile-after-restore` (admin, section 6 cold start). The
+ * operator reads the snapshot from R2 with its own credential and supplies
+ * it; the API holds no R2 credential and checks the snapshot's fingerprint
+ * and immutable copy before comparing.
+ */
 export const ReconcileAfterRestoreRequestSchema = z.strictObject({
   requestId: IdentifierSchema,
+  snapshot: ColdStartSnapshotSchema,
+  /** The writer's fingerprint, stored as the object's `fingerprint` metadata. */
+  fingerprint: z.string().regex(/^sha256:[a-f0-9]{64}$/u),
+  /** The immutable copy beside `latest.json` the operator compared it with. */
+  archiveKey: z.string().min(1).max(512),
 });
+
+/** One R2 object as the operator's own credential read it. */
+export type StoredSnapshotObject = {
+  text: string;
+  /** The object's `fingerprint` metadata; undefined when absent. */
+  fingerprint: string | undefined;
+};
+
+/**
+ * The operator side of reconcile-after-restore: read `latest.json` and the
+ * immutable copy its write time and catalog revision name, require them
+ * byte-identical with the writer's fingerprint, and build the request.
+ */
+export async function restoreRequest(
+  requestId: string,
+  read: (key: string) => Promise<StoredSnapshotObject>,
+): Promise<ReconcileAfterRestoreRequest> {
+  const latest = await read(COLD_START_SNAPSHOT.key);
+  const parsed: unknown = JSON.parse(latest.text);
+  const snapshot = ColdStartSnapshotSchema.parse(parsed);
+  const archiveKey = coldStartArchiveKey(snapshot);
+  const archive = await read(archiveKey);
+  if (
+    latest.fingerprint === undefined ||
+    archive.text !== latest.text ||
+    archive.fingerprint !== latest.fingerprint
+  )
+    throw new Error(
+      `The cold-start snapshot differs from its immutable copy ${archiveKey} or lacks its writer's fingerprint`,
+    );
+  return ReconcileAfterRestoreRequestSchema.parse({
+    requestId,
+    snapshot,
+    fingerprint: latest.fingerprint,
+    archiveKey,
+  });
+}
 export type ReconcileAfterRestoreRequest = z.infer<
   typeof ReconcileAfterRestoreRequestSchema
 >;

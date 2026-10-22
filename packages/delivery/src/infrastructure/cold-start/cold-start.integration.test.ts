@@ -9,7 +9,26 @@ import {
   publishCiRunner,
   requestOnProd,
 } from "#testing/model-fixture.ts";
-import { bootstrapChain } from "./snapshot.ts";
+import { bootstrapChain, snapshotFingerprint } from "./snapshot.ts";
+import {
+  COLD_START_SNAPSHOT,
+  coldStartArchiveKey,
+} from "#shared/model/cold-start-contract.ts";
+import {
+  ReconcileAfterRestoreRequestSchema,
+  restoreRequest,
+  type StoredSnapshotObject,
+} from "#shared/model/route-contract.ts";
+
+/** What the operator supplies after reading the snapshot from R2. */
+function restoreInput(requestId: string, snapshot: ColdStartSnapshot) {
+  return {
+    requestId,
+    snapshot,
+    fingerprint: snapshotFingerprint(snapshot),
+    archiveKey: coldStartArchiveKey(snapshot),
+  };
+}
 
 const context = useDeliveryFixture({ registration: arcadeRegistration });
 beforeEach(async () => {
@@ -241,9 +260,9 @@ describe("cold start (section 6)", () => {
     if (!requirement.required) throw new Error("Expected a snapshot");
     const snapshot = requirement.snapshot;
     const matching = await context.delivery.reconcileAfterRestore(
-      { requestId: "restore-1" },
+      restoreInput("restore-1", snapshot),
       admin,
-      { readSnapshot: async () => snapshot, readApplication: reader("op-1") },
+      { readApplication: reader("op-1") },
     );
     expect(matching.environments.every((env) => env.status === "match")).toBe(
       true,
@@ -256,12 +275,9 @@ describe("cold start (section 6)", () => {
 
     // A live target another request synced holds even when the snapshot agrees.
     const drifted = await context.delivery.reconcileAfterRestore(
-      { requestId: "restore-2" },
+      restoreInput("restore-2", snapshot),
       admin,
-      {
-        readSnapshot: async () => snapshot,
-        readApplication: reader("op-other"),
-      },
+      { readApplication: reader("op-other") },
     );
     expect(
       drifted.environments.find((env) => env.id === "arcade/prod"),
@@ -286,9 +302,9 @@ describe("cold start (section 6)", () => {
       ),
     };
     const result = await context.delivery.reconcileAfterRestore(
-      { requestId: "restore-3" },
+      restoreInput("restore-3", older),
       admin,
-      { readSnapshot: async () => older, readApplication: reader("op-1") },
+      { readApplication: reader("op-1") },
     );
     expect(
       result.environments.find((env) => env.id === "arcade/prod"),
@@ -326,25 +342,98 @@ describe("cold start (section 6)", () => {
       ),
     ).rejects.toThrow(/holds no restore mismatch/u);
     await context.delivery.reconcileAfterRestore(
-      { requestId: "restore-4" },
+      restoreInput("restore-4", older),
       admin,
-      { readSnapshot: async () => older },
+      {},
     );
     expect(await prodHold()).not.toBeNull();
     await acceptProd("op-2");
     expect(await prodHold()).toBeNull();
   });
+});
 
-  test("a corrupt stored snapshot fails the restore check loudly", async () => {
+describe("operator-supplied restore snapshot (section 6)", () => {
+  test("the API checks the operator's snapshot against its fingerprint and immutable copy", async () => {
+    await chainFixture();
+    await reconciled();
+    const accepted = await acceptProd("op-1");
+    const requirement = await context.delivery.coldStartRequirement(
+      accepted.id,
+    );
+    if (!requirement.required) throw new Error("Expected a snapshot");
+    const snapshot = requirement.snapshot;
+    expect(restoreInput("restore-5", snapshot).fingerprint).toBe(
+      requirement.fingerprint,
+    );
     await expect(
       context.delivery.reconcileAfterRestore(
-        { requestId: "restore-5" },
-        admin,
         {
-          readSnapshot: async () => ({ environments: [] }),
+          ...restoreInput("restore-5", snapshot),
+          fingerprint: `sha256:${"0".repeat(64)}`,
         },
+        admin,
+        {},
       ),
-    ).rejects.toThrow();
+    ).rejects.toThrow(/writer's fingerprint/u);
+    await expect(
+      context.delivery.reconcileAfterRestore(
+        {
+          ...restoreInput("restore-6", snapshot),
+          archiveKey: "delivery-cold-start/latest.json",
+        },
+        admin,
+        {},
+      ),
+    ).rejects.toThrow(/immutable copy key/u);
+    // A corrupt snapshot never reaches the comparison.
+    expect(
+      ReconcileAfterRestoreRequestSchema.safeParse({
+        ...restoreInput("restore-7", snapshot),
+        snapshot: { environments: [] },
+      }).success,
+    ).toBe(false);
+  });
+
+  test("the operator side reads latest.json and its byte-identical immutable copy", async () => {
+    await chainFixture();
+    await reconciled();
+    const accepted = await acceptProd("op-1");
+    const requirement = await context.delivery.coldStartRequirement(
+      accepted.id,
+    );
+    if (!requirement.required) throw new Error("Expected a snapshot");
+    const text = JSON.stringify(requirement.snapshot);
+    const objects = new Map<string, StoredSnapshotObject>([
+      [COLD_START_SNAPSHOT.key, { text, fingerprint: requirement.fingerprint }],
+      [
+        coldStartArchiveKey(requirement.snapshot),
+        { text, fingerprint: requirement.fingerprint },
+      ],
+    ]);
+    const read = async (key: string) => {
+      const object = objects.get(key);
+      if (object === undefined) throw new Error(`No object ${key}`);
+      return object;
+    };
+    const request = await restoreRequest("restore-8", read);
+    expect(request).toEqual(restoreInput("restore-8", requirement.snapshot));
+    const compared = await context.delivery.reconcileAfterRestore(
+      request,
+      admin,
+      {},
+    );
+    expect(compared.environments.length).toBeGreaterThan(0);
+    objects.set(coldStartArchiveKey(requirement.snapshot), {
+      text: `${text} `,
+      fingerprint: requirement.fingerprint,
+    });
+    await expect(restoreRequest("restore-9", read)).rejects.toThrow(
+      /differs from its immutable copy/u,
+    );
+    objects.set(COLD_START_SNAPSHOT.key, { text, fingerprint: undefined });
+    await expect(restoreRequest("restore-10", read)).rejects.toThrow(
+      /writer's fingerprint/u,
+    );
   });
 });
 
@@ -362,10 +451,9 @@ describe("cold start of compound recipes (section 6)", () => {
       live: Record<string, string | null>,
     ) => {
       const result = await context.delivery.reconcileAfterRestore(
-        { requestId },
+        restoreInput(requestId, requirement.snapshot),
         admin,
         {
-          readSnapshot: async () => requirement.snapshot,
           readApplication: async (name) => {
             const request = live[name];
             if (request === undefined)

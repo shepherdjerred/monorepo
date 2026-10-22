@@ -1,5 +1,4 @@
 import type { Hono } from "hono";
-import { DeliveryError } from "#domain/error.ts";
 import { ReconcileAfterRestoreRequestSchema } from "#shared/model/route-contract.ts";
 import type { Principal } from "#shared/contract.ts";
 import {
@@ -17,7 +16,6 @@ export function registerColdStartRoutes(
   delivery: Delivery,
   dependencies: {
     readApplication?: ApplicationReader;
-    readColdStartSnapshot?: () => Promise<unknown>;
   },
 ) {
   app.get("/api/v1/deployments/:id/cold-start", async (c) => {
@@ -37,26 +35,18 @@ export function registerColdStartRoutes(
       ),
     ),
   );
-  app.post("/api/v1/reconcile-after-restore", async (c) => {
-    const readSnapshot = dependencies.readColdStartSnapshot;
-    if (readSnapshot === undefined)
-      throw new DeliveryError(
-        "PAUSED",
-        "No cold-start snapshot store is configured",
-      );
-    return c.json(
+  // The operator supplies the snapshot it read from R2 (section 6).
+  app.post("/api/v1/reconcile-after-restore", async (c) =>
+    c.json(
       await delivery.reconcileAfterRestore(
         ReconcileAfterRestoreRequestSchema.parse(await c.req.json()),
         c.get("principal"),
-        {
-          readSnapshot,
-          ...(dependencies.readApplication === undefined
-            ? {}
-            : { readApplication: dependencies.readApplication }),
-        },
+        dependencies.readApplication === undefined
+          ? {}
+          : { readApplication: dependencies.readApplication },
       ),
-    );
-  });
+    ),
+  );
   app.post("/api/v1/environments/:id/restore-hold/accept", async (c) =>
     c.json(
       await delivery.settleRestoreHold(

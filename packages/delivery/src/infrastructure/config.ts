@@ -29,8 +29,6 @@ export const BootstrapSchema = z
     ARGOCD_RECOVERY_TOKEN: z.string().min(1).optional(),
     DELIVERY_GH_TOKEN: z.string().min(1).optional(),
     /** The homelab R2 bucket's credential, for the cold-start snapshot (section 6). */
-    CLOUDFLARE_R2_ACCESS_KEY_ID: z.string().min(1).optional(),
-    CLOUDFLARE_R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
     DELIVERY_FORUM_S3_ACCESS_KEY_ID: z.string().min(1).optional(),
     DELIVERY_FORUM_S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
     DELIVERY_FORUM_OBSERVATION_TOKEN: z.string().min(1).optional(),

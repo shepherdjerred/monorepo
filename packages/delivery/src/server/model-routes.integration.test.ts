@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { z } from "zod";
 import { createDeliveryClient } from "#shared/client.ts";
-import type { ColdStartSnapshot } from "#shared/model/cold-start-contract.ts";
+import {
+  coldStartArchiveKey,
+  type ColdStartSnapshot,
+} from "#shared/model/cold-start-contract.ts";
+import { snapshotFingerprint } from "#infrastructure/cold-start/snapshot.ts";
 import {
   MonitorStatusSchema,
   WatchingMonitorSchema,
@@ -30,10 +34,8 @@ import { createApp } from "./app.ts";
 const context = useDeliveryFixture({ registration: arcadeRegistration });
 const OPERATOR = "operator@example.com";
 const principals = fixturePrincipals;
-let snapshot: ColdStartSnapshot | undefined;
 let app: ReturnType<typeof createApp>;
 beforeEach(async () => {
-  snapshot = undefined;
   await publishCiRunner(context.delivery);
   app = createApp({
     delivery: context.delivery,
@@ -41,10 +43,6 @@ beforeEach(async () => {
     ciRepositoryId: 1,
     peerAddress: () => "127.0.0.1",
     qualifyBuild: async () => "verified",
-    readColdStartSnapshot: async () => {
-      if (snapshot === undefined) throw new Error("No snapshot stored");
-      return snapshot;
-    },
     config: {
       publicOrigin: "http://delivery.test",
       writesEnabled: async () => true,
@@ -301,14 +299,27 @@ describe("catalog, lifecycle and restore", () => {
     ).toBe(409);
   });
 
-  test("reconcile-after-restore compares every active environment with the stored snapshot", async () => {
-    const body = { requestId: "restore-1" };
-    expect(await status("/reconcile-after-restore", "admin", body)).toBe(500);
-    snapshot = {
+  test("reconcile-after-restore compares every active environment with the operator's snapshot", async () => {
+    const snapshot: ColdStartSnapshot = {
       writtenAt: new Date().toISOString(),
       catalogRevision: `sha256:${"c".repeat(64)}`,
       environments: [],
     };
+    const body = {
+      requestId: "restore-1",
+      snapshot,
+      fingerprint: snapshotFingerprint(snapshot),
+      archiveKey: coldStartArchiveKey(snapshot),
+    };
+    // The API reads nothing from R2: without the snapshot it refuses.
+    expect(
+      await status("/reconcile-after-restore", "admin", {
+        requestId: "restore-0",
+      }),
+    ).toBe(400);
+    expect(await status("/reconcile-after-restore", "executor", body)).toBe(
+      403,
+    );
     const compared = await call(
       "POST",
       "/reconcile-after-restore",

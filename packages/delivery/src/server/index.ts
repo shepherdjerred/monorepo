@@ -8,7 +8,6 @@ import { Delivery } from "#infrastructure/delivery.ts";
 import { createQualifier } from "#infrastructure/qualification.ts";
 import { createRecoveryInspector } from "#infrastructure/recovery.ts";
 import { createApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
-import { createColdStartReader } from "#infrastructure/cold-start/store.ts";
 import { createMinecraftRecoveryInspector } from "#infrastructure/minecraft-recovery/inspector.ts";
 import {
   createForumBundleReader,
@@ -88,10 +87,6 @@ const readApplication = createApplicationReader();
 const app = createApp({
   delivery,
   readApplication,
-  readColdStartSnapshot: createColdStartReader({
-    accessKeyId: bootstrap.CLOUDFLARE_R2_ACCESS_KEY_ID,
-    secretAccessKey: bootstrap.CLOUDFLARE_R2_SECRET_ACCESS_KEY,
-  }),
   workerRecoveryReaders: {
     readApplication,
     readKubernetes: createWorkerRecoveryReader(),

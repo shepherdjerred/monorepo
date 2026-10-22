@@ -170,6 +170,12 @@ export type CatalogState = routes.CatalogState;
 export type RetireServiceRequest = routes.RetireServiceRequest;
 export type ServiceLifecycleView = routes.ServiceLifecycleView;
 export type ReconcileAfterRestoreRequest = routes.ReconcileAfterRestoreRequest;
+export type StoredSnapshotObject = routes.StoredSnapshotObject;
+export function restoreRequest(
+  ...args: Parameters<typeof routes.restoreRequest>
+): ReturnType<typeof routes.restoreRequest> {
+  return routes.restoreRequest(...args);
+}
 export type ReconcileAfterRestore = routes.ReconcileAfterRestore;
 
 export function recipeRunners(definition: RecipeDefinition): RunnerReference[] {
