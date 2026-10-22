@@ -190,6 +190,21 @@ export function bindChartImageDependencies(
     .join("---\n");
 }
 
+/**
+ * The producer image digests helm-push freezes into chart bytes. Before the
+ * window's catalog flip, v1 binds each chart's Delivery dependencies (Arcade,
+ * Temporal, Flipt) and mc-sandbox's Storm allowlist from them. Under the v2
+ * catalog (`woodpecker-delivery-catalog-v2-enabled`) a deployment parameter
+ * is the only source of a first-party image, so helm-push freezes none and
+ * each chart keeps its `required` Delivery templates.
+ */
+export async function chartImageInputs(
+  options: { readonly dryRun: boolean; readonly catalogV2: boolean },
+  resolve: () => Promise<Readonly<Record<string, string>>>,
+): Promise<Readonly<Record<string, string>> | undefined> {
+  return options.dryRun || options.catalogV2 ? undefined : resolve();
+}
+
 export async function bindGeneratedDependencies(
   directory: string,
   images: Readonly<Record<string, string>> | undefined,

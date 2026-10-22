@@ -28,6 +28,7 @@ import {
   validateChartProducerVersion,
   chartValidationValues,
   bindGeneratedDependencies,
+  chartImageInputs,
   type ChartMuseumRelease,
   type ChartPlanningBase,
   type ChartPlanningClient,
@@ -373,13 +374,11 @@ async function writeReleaseArtifacts(
 }
 
 async function publicationImages(dryRun: boolean, catalogV2: boolean) {
-  if (dryRun) return;
-  const images = await chartPublicationImages(
-    undefined,
-    undefined,
-    publicationOwners(catalogV2 ? "v2" : "v1"),
+  const images = await chartImageInputs({ dryRun, catalogV2 }, () =>
+    chartPublicationImages(undefined, undefined, publicationOwners("v1")),
   );
-  Bun.env["HOMELAB_IMAGE_DIGESTS_JSON"] = JSON.stringify(images);
+  if (images === undefined) delete Bun.env["HOMELAB_IMAGE_DIGESTS_JSON"];
+  else Bun.env["HOMELAB_IMAGE_DIGESTS_JSON"] = JSON.stringify(images);
   return images;
 }
 
