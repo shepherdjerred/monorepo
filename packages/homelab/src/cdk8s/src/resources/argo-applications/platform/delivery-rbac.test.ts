@@ -332,6 +332,36 @@ const permissions: PolicyCase[] = [
   ),
   ...unregisteredCases("delivery-observer", ["get"]),
   ...platformCases("on"),
+  // Window step 3b: before the window, release-root may already read every
+  // child and sync each root-owned one in its transition project, so the
+  // final v1 root release (step 4b) keeps access after it moves them and
+  // before `argocd` syncs the transition policy. No other account gains it.
+  ...deliveryKnownApplications(true).flatMap((application) => {
+    const project = applicationProject(application, true);
+    const offCase = (subject: string, action: string, allowed: boolean) => ({
+      state: "off" as const,
+      subject,
+      action,
+      application,
+      resource: "applications",
+      project,
+      allowed,
+    });
+    return [
+      offCase("delivery-platform", "get", true),
+      offCase(
+        "delivery-platform",
+        "sync",
+        deliveryRootApplications(true).includes(application) ||
+          application === "apps" ||
+          application === "delivery-control-plane",
+      ),
+      offCase("delivery-platform", "delete", false),
+      ...(project === ARGOCD_PROJECTS.root
+        ? []
+        : [offCase("delivery", "sync", false)]),
+    ];
+  }),
 ];
 
 test.each(permissions)(
@@ -361,10 +391,14 @@ test.each(["off", "on"] as const)(
       .map((row) => row.split(",").map((cell) => cell.trim()));
     expect(rows.length).toBeGreaterThan(100);
     for (const row of rows) {
-      const [project, application] = z.string().parse(row[4]).split("/");
-      expect(project, row.join(", ")).toBe(
-        applicationProject(z.string().parse(application), state === "on"),
-      );
+      const [project, name] = z.string().parse(row[4]).split("/");
+      const application = z.string().parse(name);
+      const reviewed = [applicationProject(application, state === "on")];
+      // Off, release-root also holds its rows in the transition projects
+      // (window step 3b), so the final v1 root release keeps its access.
+      if (state === "off" && row[1] === "delivery-platform")
+        reviewed.push(applicationProject(application, true));
+      expect(reviewed, row.join(", ")).toContain(project);
     }
   },
 );

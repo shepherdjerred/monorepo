@@ -80,6 +80,41 @@ export function deliveryManagedApplications(
   );
 }
 
+function grantRows(
+  account: string,
+  applications: readonly string[],
+  actions: readonly string[],
+  transition: boolean,
+): string[] {
+  return applications.flatMap((application) => {
+    const project = applicationProject(application, transition);
+    return actions.map(
+      (action) =>
+        `p, ${account}, applications, ${action}, ${project}/${application}, allow`,
+    );
+  });
+}
+
+/**
+ * `release-root`'s account: it inspects the complete child inventory but
+ * only synchronizes root-owned children. Its local-manifest protocol belongs
+ * solely to apps.
+ */
+function releaseRootRows(transition: boolean): string[] {
+  const grant = (applications: readonly string[], actions: string[]) =>
+    grantRows("delivery-platform", applications, actions, transition);
+  return [
+    ...grant(deliveryKnownApplications(transition), ["get"]),
+    ...grant(deliveryRootApplications(transition), ["sync"]),
+    ...grant(["apps"], ["update", "sync", "override"]),
+    ...grant(["delivery-control-plane"], ["update", "sync"]),
+    ...grant(
+      ["delivery-control-plane"],
+      ["update/apps/Deployment/temporal/temporal-delivery-worker"],
+    ),
+  ];
+}
+
 /** Local accounts have explicit targets in each Application's reviewed project; only the CP dispatch barrier has an exact workload edit grant. */
 export function deliveryArgoPolicy(
   transition: boolean = transitionRendering(),
@@ -90,13 +125,7 @@ export function deliveryArgoPolicy(
     applications: string[],
     actions: string[],
   ) => {
-    for (const application of applications) {
-      const project = applicationProject(application, transition);
-      for (const action of actions)
-        rows.push(
-          `p, ${account}, applications, ${action}, ${project}/${application}, allow`,
-        );
-    }
+    rows.push(...grantRows(account, applications, actions, transition));
   };
   const known = deliveryKnownApplications(transition);
   if (transition) {
@@ -129,16 +158,15 @@ export function deliveryArgoPolicy(
       ["get"],
     );
   }
-  // release-root inspects the complete child inventory but only synchronizes
-  // root-owned children. Its local-manifest protocol belongs solely to apps.
-  grant("delivery-platform", known, ["get"]);
-  grant("delivery-platform", deliveryRootApplications(transition), ["sync"]);
-  grant("delivery-platform", ["apps"], ["update", "sync", "override"]);
-  grant("delivery-platform", ["delivery-control-plane"], ["update", "sync"]);
-  grant(
-    "delivery-platform",
-    ["delivery-control-plane"],
-    ["update/apps/Deployment/temporal/temporal-delivery-worker"],
-  );
+  rows.push(...releaseRootRows(transition));
+  // Before the window, release-root already holds its rows in the transition
+  // projects too (window step 3b installs them): the final v1 root release
+  // (step 4b) moves every child into `cluster` or `workloads` before `argocd`
+  // syncs the transition policy. A grant on a project that does not exist yet
+  // matches nothing.
+  if (!transition) {
+    const present = new Set(rows);
+    rows.push(...releaseRootRows(true).filter((row) => !present.has(row)));
+  }
   return rows.join("\n");
 }
