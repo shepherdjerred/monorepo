@@ -513,6 +513,12 @@ terminal native Jobs, stable routing, captured source identity and live hosts,
 then releases the held lock through a fresh generation CAS. The original failed
 result and pool remain unchanged. The verifier reads the Application, Deployments
 and Pods from the Delivery API's own readers, never the executor's ArgoCD token.
+A model worker deployment is classified by its frozen recipe: its step keys,
+`subN-` prefixed in a compound recipe, and the fixed sub-stages of the worker
+Jobs. A requested sync is proved against the recipe's chart selection, an
+unsynced apply-safety must leave the original hosts serving, and routing must
+follow the plan the worker preflight recorded. Any other stage, or an unsettled
+step of another sub-recipe, fails closed.
 `scripts/rollout/worker-delivery-recovery.ts` runs the same verifier through
 brokered operator credentials when Activity workers are unavailable; it never
 resumes effects or accepts the failed release.
