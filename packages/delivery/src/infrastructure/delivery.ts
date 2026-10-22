@@ -32,6 +32,7 @@ import { claim } from "#infrastructure/execution/claim.ts";
 import { handOff, renewLease } from "#infrastructure/execution/ownership.ts";
 import { releaseLock } from "#infrastructure/execution/lock-release.ts";
 import { reconcileCatalog } from "#infrastructure/catalog/reconcile.ts";
+import { retireService } from "#infrastructure/catalog/state.ts";
 import {
   monitorStatus,
   observeMonitor,
@@ -40,6 +41,10 @@ import {
 import { requestMonitorRollback } from "#infrastructure/monitor/restoration.ts";
 import { recordDrift, selfHealing } from "#infrastructure/monitor/drift.ts";
 import { attestStage } from "#infrastructure/execution/attestation.ts";
+import {
+  recoveryIntent,
+  requestRecoveryIntent,
+} from "#infrastructure/execution/recovery-request.ts";
 import {
   pendingRemovals,
   recordTargetRemoved,
@@ -160,12 +165,15 @@ export class Delivery {
   registerPipeline = registerPipeline;
   registerEnvironment = registerEnvironment;
   reconcileCatalog = reconcileCatalog;
+  retireService = retireService;
   watchingMonitors = watchingMonitors;
   observeMonitor = observeMonitor;
   monitorStatus = monitorStatus;
   requestMonitorRollback = requestMonitorRollback;
   selfHealing = selfHealing;
   attestStage = attestStage;
+  requestRecoveryIntent = requestRecoveryIntent;
+  recoveryIntent = recoveryIntent;
   pendingRemovals = pendingRemovals;
   recordTargetRemoved = recordTargetRemoved;
   recordDrift = recordDrift;

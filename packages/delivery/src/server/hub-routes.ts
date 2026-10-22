@@ -1,5 +1,6 @@
 import type { Hono } from "hono";
 import { activeEnvironmentIds } from "#infrastructure/delivery-selection.ts";
+import { approvalQueue } from "#infrastructure/selection/views.ts";
 import {
   ActivityQuerySchema,
   BuildListQuerySchema,
@@ -17,7 +18,6 @@ import {
 } from "#infrastructure/hub/executions.ts";
 import {
   activityPage,
-  approvals,
   buildPage,
   deploymentPage,
   environmentDetail,
@@ -66,7 +66,9 @@ export function registerHubRoutes(app: App, database: Database) {
       ),
     ),
   );
-  app.get("/api/v1/approvals", async (c) => c.json(await approvals(database)));
+  app.get("/api/v1/approvals", async (c) =>
+    c.json(await approvalQueue(database)),
+  );
   app.get("/api/v1/activity", async (c) =>
     c.json(
       await activityPage(database, ActivityQuerySchema.parse(c.req.query())),

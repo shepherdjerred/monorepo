@@ -1,11 +1,19 @@
-import { describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test } from "vitest";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { testExecutor, testOperator } from "#testing/seed.ts";
 import type { ColdStartSnapshot } from "#shared/model/cold-start-contract.ts";
-import { requestOnProd } from "#testing/model-fixture.ts";
+import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
+import {
+  arcadeRegistration,
+  publishCiRunner,
+  requestOnProd,
+} from "#testing/model-fixture.ts";
 import { bootstrapChain } from "./snapshot.ts";
 
-const context = useDeliveryFixture();
+const context = useDeliveryFixture({ registration: arcadeRegistration });
+beforeEach(async () => {
+  await publishCiRunner(context.delivery);
+});
 const admin = {
   ...testOperator,
   scopes: [...testOperator.scopes, "admin" as const],
@@ -77,6 +85,26 @@ async function prodHold() {
   return env.restoreHold;
 }
 
+const CATALOG_REVISION = `sha256:${"c".repeat(64)}`;
+
+/** The reconcile that names the catalog revision a snapshot is written under. */
+async function reconciled() {
+  await context.cluster.database.audit.create({
+    data: {
+      id: "catalog-reconciled",
+      actor: testOperator.id,
+      action: "catalog.reconciled",
+      entityId: CATALOG_REVISION,
+      requestId: "catalog-reconciled",
+      metadata: {},
+    },
+  });
+}
+
+function reader(requestId: string): ApplicationReader {
+  return async () => application(requestId);
+}
+
 function application(requestId: string) {
   return {
     metadata: { name: "arcade" },
@@ -105,24 +133,43 @@ describe("cold start (section 6)", () => {
       required: false,
     });
     await chainFixture();
+    await expect(acceptProd("op-unreconciled")).resolves.toBeDefined();
+    const unreconciled =
+      await context.cluster.database.environment.findUniqueOrThrow({
+        where: { id: "arcade/prod" },
+      });
+    await expect(
+      context.delivery.coldStartRequirement(
+        unreconciled.acceptedDeploymentId ?? "",
+      ),
+    ).rejects.toThrow(/No catalog was reconciled/u);
+    await reconciled();
     const accepted = await acceptProd("op-1");
     const requirement = await context.delivery.coldStartRequirement(
       accepted.id,
     );
     if (!requirement.required) throw new Error("Expected a snapshot");
+    expect(requirement.snapshot.catalogRevision).toBe(CATALOG_REVISION);
     const prod = requirement.snapshot.environments.find(
-      (env) => env.id === "arcade/prod",
+      (env) => env.environmentId === "arcade/prod",
     );
     expect(prod).toMatchObject({
-      bootstrapOrder: 0,
-      accepted: { deploymentId: accepted.id, operationId: "op-1" },
+      deploymentId: accepted.id,
+      selection: {
+        versionSetRevisionId: context.fixture.versionSet.id,
+        recipeRevisionId: accepted.pipelineRevisionId,
+      },
     });
-    expect(Object.keys(requirement.snapshot.recipes)).toEqual(["arcade/1"]);
+    expect(Object.keys(prod?.artifacts ?? {})).not.toHaveLength(0);
+    // The fingerprint covers the record, not the clock.
+    const again = await context.delivery.coldStartRequirement(accepted.id);
+    if (!again.required) throw new Error("Expected a snapshot");
+    expect(again.fingerprint).toBe(requirement.fingerprint);
     await context.delivery.recordColdStartReceipt(
       accepted.id,
       {
         fingerprint: requirement.fingerprint,
-        uri: "s3://delivery-cold-start/snapshots/1.json",
+        uri: "s3://homelab/delivery-cold-start/latest.json",
         writtenAt: new Date().toISOString(),
       },
       testExecutor,
@@ -135,40 +182,72 @@ describe("cold start (section 6)", () => {
 
   test("a restore holds each mismatched environment until an operator or an acceptance settles it", async () => {
     await chainFixture();
+    await reconciled();
     const accepted = await acceptProd("op-1");
     const requirement = await context.delivery.coldStartRequirement(
       accepted.id,
     );
     if (!requirement.required) throw new Error("Expected a snapshot");
+    const snapshot = requirement.snapshot;
     const matching = await context.delivery.reconcileAfterRestore(
-      requirement.snapshot,
+      { requestId: "restore-1" },
       admin,
-      async () => application("op-1"),
+      { readSnapshot: async () => snapshot, readApplication: reader("op-1") },
     );
-    expect(matching.environments.every((env) => !env.held)).toBe(true);
+    expect(matching.environments.every((env) => env.status === "match")).toBe(
+      true,
+    );
+    const prodMatch = matching.environments.find(
+      (env) => env.id === "arcade/prod",
+    );
+    expect(prodMatch?.live).toEqual(prodMatch?.record);
+    expect(prodMatch?.snapshot).toEqual(prodMatch?.record);
+
+    // A live target another request synced holds even when the snapshot agrees.
+    const drifted = await context.delivery.reconcileAfterRestore(
+      { requestId: "restore-2" },
+      admin,
+      {
+        readSnapshot: async () => snapshot,
+        readApplication: reader("op-other"),
+      },
+    );
     expect(
-      matching.environments.find((env) => env.environmentId === "arcade/prod"),
-    ).toMatchObject({ live: "matches" });
+      drifted.environments.find((env) => env.id === "arcade/prod"),
+    ).toMatchObject({
+      status: "held",
+      live: null,
+      reason: expect.stringMatching(/live target/u),
+    });
+    await context.delivery.settleRestoreHold(
+      "arcade/prod",
+      {
+        reason: "Inspected the live Application against the record",
+        evidence: "argocd app get arcade shows the accepted revision",
+      },
+      admin,
+    );
 
     const older: ColdStartSnapshot = {
-      ...requirement.snapshot,
-      environments: requirement.snapshot.environments.map((env) => ({
-        ...env,
-        accepted: null,
-      })),
+      ...snapshot,
+      environments: snapshot.environments.filter(
+        (env) => env.environmentId !== "arcade/prod",
+      ),
     };
     const result = await context.delivery.reconcileAfterRestore(
-      older,
+      { requestId: "restore-3" },
       admin,
-      async () => application("op-other"),
+      { readSnapshot: async () => older, readApplication: reader("op-1") },
     );
     expect(
-      result.environments.find((env) => env.environmentId === "arcade/prod"),
-    ).toMatchObject({ held: true, live: "differs", snapshot: null });
+      result.environments.find((env) => env.id === "arcade/prod"),
+    ).toMatchObject({ status: "held", snapshot: null });
     const held = await context.cluster.database.environment.findUniqueOrThrow({
       where: { id: "arcade/prod" },
     });
-    expect(held.restoreHold).not.toBeNull();
+    expect(held.restoreHold).toMatchObject({
+      catalogRevision: CATALOG_REVISION,
+    });
     expect(held.acceptedDeploymentId).toBe(accepted.id);
     await context.cluster.database.environment.update({
       where: { id: "arcade/prod" },
@@ -195,8 +274,25 @@ describe("cold start (section 6)", () => {
         admin,
       ),
     ).rejects.toThrow(/holds no restore mismatch/u);
-    await context.delivery.reconcileAfterRestore(older, admin);
+    await context.delivery.reconcileAfterRestore(
+      { requestId: "restore-4" },
+      admin,
+      { readSnapshot: async () => older },
+    );
+    expect(await prodHold()).not.toBeNull();
     await acceptProd("op-2");
     expect(await prodHold()).toBeNull();
+  });
+
+  test("a corrupt stored snapshot fails the restore check loudly", async () => {
+    await expect(
+      context.delivery.reconcileAfterRestore(
+        { requestId: "restore-5" },
+        admin,
+        {
+          readSnapshot: async () => ({ environments: [] }),
+        },
+      ),
+    ).rejects.toThrow();
   });
 });

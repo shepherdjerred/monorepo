@@ -3,32 +3,18 @@ import { createApp } from "./app.ts";
 import { createDeliveryClient } from "#shared/client.ts";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { workerFixture, freshWorkerProof } from "#testing/worker-fixture.ts";
-import type { Principal } from "#shared/contract.ts";
-import { testExecutor, testOperator } from "#testing/seed.ts";
+import {
+  fixturePrincipals,
+  testExecutor,
+  testOperator,
+} from "#testing/seed.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
 
 const context = useDeliveryFixture();
 let workers: Awaited<ReturnType<typeof workerFixture>>;
 let app: ReturnType<typeof createApp>;
 let writes = true;
-const principals: Record<string, Principal> = {
-  admin: { id: "fixture-admin", kind: "machine", scopes: ["read", "admin"] },
-  deployer: {
-    id: "fixture-deployer",
-    kind: "machine",
-    scopes: ["read", "deploy"],
-  },
-  executor: {
-    id: "fixture-executor",
-    kind: "machine",
-    scopes: ["read", "execute"],
-  },
-  publisher: {
-    id: "fixture-publisher",
-    kind: "machine",
-    scopes: ["read", "publish"],
-  },
-};
+const principals = fixturePrincipals;
 beforeEach(async () => {
   writes = true;
   workers = await workerFixture(context.delivery);

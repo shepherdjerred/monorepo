@@ -20,6 +20,25 @@ export const testExecutor: Principal = {
   kind: "machine",
   scopes: ["read", "execute"],
 };
+/** Machine principals the HTTP route tests authenticate as `fixture-<role>`. */
+export const fixturePrincipals: Readonly<Record<string, Principal>> = {
+  admin: { id: "fixture-admin", kind: "machine", scopes: ["read", "admin"] },
+  deployer: {
+    id: "fixture-deployer",
+    kind: "machine",
+    scopes: ["read", "deploy"],
+  },
+  executor: {
+    id: "fixture-executor",
+    kind: "machine",
+    scopes: ["read", "execute"],
+  },
+  publisher: {
+    id: "fixture-publisher",
+    kind: "machine",
+    scopes: ["read", "publish"],
+  },
+};
 
 export type TestRegistration = {
   pipeline: PipelineDefinition;

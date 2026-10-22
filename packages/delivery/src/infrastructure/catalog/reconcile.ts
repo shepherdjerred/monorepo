@@ -8,17 +8,46 @@ import {
   serviceLineage,
 } from "#shared/model/catalog-contract.ts";
 import {
-  CatalogReconcileRequestSchema,
-  type CatalogReconcileRequest,
+  V1_ENVIRONMENT_RENAMES,
+  V1_RETIRED_ENVIRONMENTS,
+} from "@shepherdjerred/ops-model/delivery-catalog/migration.ts";
+import {
+  CatalogReconcileResultSchema,
   type CatalogReconcileResult,
-} from "#shared/model/catalog-reconcile-contract.ts";
+} from "#shared/model/route-contract.ts";
 import type { RecipeDefinition } from "#shared/model/recipe-contract.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { id, type Transaction } from "#infrastructure/delivery-data.ts";
 import { audit, fingerprint, lock } from "#infrastructure/delivery-records.ts";
 
-type Result = CatalogReconcileResult;
+/** What one reconcile did, entity by entity; the route reports the counts. */
+type Result = {
+  catalogRevision: string;
+  services: { created: string[]; lineageChanged: string[]; retired: string[] };
+  environments: {
+    created: string[];
+    renamed: { from: string; to: string }[];
+    rebound: string[];
+    retired: string[];
+  };
+  recipes: { created: string[] };
+  configurations: { created: string[] };
+  edges: number;
+  references: number;
+  unchanged: number;
+  refused: { id: string; reason: string }[];
+};
+
+/** The v1 environments the cutover carries onto catalog ids or retires (section 7). */
+export type CatalogMigration = {
+  renames: Readonly<Record<string, string>>;
+  retired: readonly string[];
+};
+export const V1_CATALOG_MIGRATION: CatalogMigration = {
+  renames: V1_ENVIRONMENT_RENAMES,
+  retired: V1_RETIRED_ENVIRONMENTS,
+};
 type Lifecycle = "active" | "retired" | "removed";
 const LIFECYCLE_RANK = new Map<string, number>([
   ["active", 0],
@@ -35,7 +64,25 @@ function emptyResult(revision: string): Result {
     configurations: { created: [] },
     edges: 0,
     references: 0,
+    unchanged: 0,
+    refused: [],
   };
+}
+
+/** `POST /catalog/reconcile`: counts of what was created and kept, and what was refused. */
+export function reconcileSummary(result: Result): CatalogReconcileResult {
+  return CatalogReconcileResultSchema.parse({
+    catalogRevision: result.catalogRevision,
+    created: {
+      services: result.services.created.length,
+      environments: result.environments.created.length,
+      recipes: result.recipes.created.length,
+      configurations: result.configurations.created.length,
+      edges: result.edges,
+    },
+    unchanged: result.unchanged,
+    refused: result.refused,
+  });
 }
 
 /** Lifecycle moves forward only (4.2, 4.10). */
@@ -113,6 +160,18 @@ async function reconcileServices(
       result.services.created.push(service.id);
       continue;
     }
+    const { catalogRevision: _revision, ...declared } = data;
+    if (
+      fingerprint(declared) ===
+      fingerprint({
+        lifecycle: existing.lifecycle,
+        selfHosted: existing.selfHosted,
+        group: existing.group,
+        components: existing.components,
+        lineage: existing.lineage,
+      })
+    )
+      result.unchanged += 1;
     requireForward(
       `Service ${service.id}`,
       existing.lifecycle,
@@ -172,8 +231,10 @@ async function reconcileRevisions(
       });
       result.recipes.created.push(recipe.id);
     } else if (
-      fingerprint(existing.definition) !== fingerprint(recipe.definition)
+      fingerprint(existing.definition) === fingerprint(recipe.definition)
     )
+      result.unchanged += 1;
+    else
       throw new DeliveryError(
         "CONFLICT",
         `Recipe revision ${recipe.id} already holds a different definition; add a new revision (P1)`,
@@ -187,10 +248,12 @@ async function reconcileRevisions(
       await tx.configuration.create({ data: configuration });
       result.configurations.created.push(configuration.id);
     } else if (
-      fingerprint(existing.content) !== fingerprint(configuration.content) ||
-      fingerprint(existing.forwardOnly) !==
+      fingerprint(existing.content) === fingerprint(configuration.content) &&
+      fingerprint(existing.forwardOnly) ===
         fingerprint(configuration.forwardOnly)
     )
+      result.unchanged += 1;
+    else
       throw new DeliveryError(
         "CONFLICT",
         `Configuration revision ${configuration.id} already holds different content; add a new revision (F1)`,
@@ -201,7 +264,7 @@ async function reconcileRevisions(
 /** A renamed environment keeps its history and accepted selection (section 7). */
 async function renameEnvironments(
   tx: Transaction,
-  renames: Record<string, string>,
+  renames: Readonly<Record<string, string>>,
   result: Result,
 ) {
   for (const [from, to] of Object.entries(renames)) {
@@ -305,6 +368,21 @@ async function upsertEnvironments(
       existing.declaredConfigurationId !== declared.declaredConfigurationId
     )
       result.environments.rebound.push(environment.id);
+    else if (
+      existing.lifecycle === environment.lifecycle &&
+      fingerprint(declared) ===
+        fingerprint({
+          pipelineRevisionId: existing.pipelineRevisionId,
+          declaredConfigurationId: existing.declaredConfigurationId,
+          automatic: existing.automatic,
+          promotionSourceEnvironmentId: existing.promotionSourceEnvironmentId,
+          role: existing.role,
+          approvalPolicy: existing.approvalPolicy,
+          durableParentId: existing.durableParentId,
+          application: existing.application,
+        })
+    )
+      result.unchanged += 1;
     // Declaring a binding has no effect on any running system; only a
     // deployment moves the accepted selection (C3).
     await tx.environment.update({
@@ -316,29 +394,45 @@ async function upsertEnvironments(
   }
 }
 
-/** C1: whatever the record holds beyond the catalog must be renamed or retired. */
+/**
+ * C1: whatever the record holds beyond the catalog must be renamed or
+ * retired explicitly. An omitted active environment is refused and stays
+ * active; an omitted service retires once it holds no active environment.
+ */
 async function retireOmitted(
   tx: Transaction,
   document: CatalogDocument,
-  request: { retired: string[] },
+  migration: CatalogMigration,
   result: Result,
 ) {
   const declared = new Set(document.environments.map((env) => env.id));
-  for (const environmentId of request.retired)
+  for (const environmentId of migration.retired)
     await retireEnvironment(tx, environmentId, result);
   const omitted = await tx.environment.findMany({
     where: { id: { notIn: [...declared] }, lifecycle: "active" },
-    select: { id: true },
+    select: { id: true, serviceId: true },
+    orderBy: { id: "asc" },
   });
-  if (omitted.length > 0)
-    throw new DeliveryError(
-      "CONFLICT",
-      `The catalog omits active environments ${omitted.map((row) => row.id).join(", ")}; rename or retire them`,
-    );
+  for (const row of omitted)
+    result.refused.push({
+      id: row.id,
+      reason:
+        "The catalog omits this active environment; rename it or retire it explicitly (C1)",
+    });
+  const holding = new Set(omitted.map((row) => row.serviceId));
   const services = new Set(document.services.map((service) => service.id));
   for (const row of await tx.service.findMany({
     where: { id: { notIn: [...services] }, lifecycle: "active" },
+    orderBy: { id: "asc" },
   })) {
+    if (holding.has(row.id)) {
+      result.refused.push({
+        id: row.id,
+        reason:
+          "The catalog omits this service while it still holds an active environment",
+      });
+      continue;
+    }
     await requireUnowned(tx, row.id, "Retiring an omitted service");
     await tx.service.update({
       where: { id: row.id },
@@ -348,20 +442,31 @@ async function retireOmitted(
   }
 }
 
+function edgeKey(edge: {
+  dependentId: string;
+  prerequisiteId: string;
+  rule: string;
+}) {
+  return `${edge.dependentId}\u0000${edge.prerequisiteId}\u0000${edge.rule}`;
+}
+
 async function reconcileEdges(
   tx: Transaction,
   document: CatalogDocument,
   result: Result,
 ) {
+  const existing = await tx.prerequisiteEdge.findMany();
+  const before = new Set(existing.map((edge) => edgeKey(edge)));
+  const rows = document.edges.map((edge) => ({
+    dependentId: edge.dependent,
+    prerequisiteId: edge.prerequisite,
+    rule: edge.rule,
+  }));
   await tx.prerequisiteEdge.deleteMany({});
-  await tx.prerequisiteEdge.createMany({
-    data: document.edges.map((edge) => ({
-      dependentId: edge.dependent,
-      prerequisiteId: edge.prerequisite,
-      rule: edge.rule,
-    })),
-  });
-  result.edges = document.edges.length;
+  await tx.prerequisiteEdge.createMany({ data: rows });
+  const kept = rows.filter((row) => before.has(edgeKey(row))).length;
+  result.edges = rows.length - kept;
+  result.unchanged += kept;
 }
 
 /**
@@ -372,12 +477,12 @@ async function reconcileEdges(
  */
 export async function reconcileCatalog(
   this: Delivery,
-  raw: CatalogReconcileRequest,
+  raw: unknown,
   actor: Principal,
+  migration: CatalogMigration = V1_CATALOG_MIGRATION,
 ) {
   requireScope(actor, "admin");
-  const request = CatalogReconcileRequestSchema.parse(raw);
-  const parsed = CatalogDocumentSchema.safeParse(request.document);
+  const parsed = CatalogDocumentSchema.safeParse(raw);
   if (!parsed.success)
     throw new DeliveryError(
       "INVALID",
@@ -396,9 +501,9 @@ export async function reconcileCatalog(
       await reconcileServices(tx, document, result);
       await reconcileReferences(tx, document, result);
       await reconcileRevisions(tx, document, result);
-      await renameEnvironments(tx, request.renames, result);
+      await renameEnvironments(tx, migration.renames, result);
       await upsertEnvironments(tx, document, result);
-      await retireOmitted(tx, document, request, result);
+      await retireOmitted(tx, document, migration, result);
       await reconcileEdges(tx, document, result);
       await audit(tx, actor, {
         action: "catalog.reconciled",

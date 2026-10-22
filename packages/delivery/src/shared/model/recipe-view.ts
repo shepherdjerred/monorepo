@@ -101,6 +101,29 @@ export function selfHealingApplication(
     : null;
 }
 
+/**
+ * What a deployment of a stored recipe becomes (section 5). A v1 pipeline
+ * maps onto the model kind that replaces it; a v1 manual pipeline was
+ * operated outside Delivery.
+ */
+export function recipeKindOf(definition: Stored): RecipeDefinition["kind"] {
+  switch (definition.kind) {
+    case "argocd":
+    case "control-plane":
+    case "root-release":
+      return "kubernetes-application";
+    case "manual":
+      return "operator-run";
+    case "kubernetes-application":
+    case "static-site":
+    case "tofu":
+    case "channel":
+    case "operator-run":
+    case "compound":
+      return definition.kind;
+  }
+}
+
 /** Every Application a recipe deploys through, in step order. */
 export function applicationsOf(definition: Stored): ApplicationView[] {
   switch (definition.kind) {

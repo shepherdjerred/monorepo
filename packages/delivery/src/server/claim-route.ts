@@ -8,7 +8,7 @@ import {
 } from "#shared/contract.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
-import { AttestStageSchema } from "#infrastructure/execution/attestation.ts";
+import { AttestationRequestSchema } from "#shared/model/route-contract.ts";
 
 /** The executor names itself on claim and lease renewal so ownership is never transferred silently (model D7). */
 const ClaimBodySchema = z
@@ -61,7 +61,7 @@ export function registerClaimRoute(
     c.json(
       await delivery.attestStage(
         c.req.param("id"),
-        AttestStageSchema.parse(await c.req.json()),
+        AttestationRequestSchema.parse(await c.req.json()),
         c.get("principal"),
       ),
     ),

@@ -36,11 +36,6 @@ export function frozenRunnerImage(
   return `${frozen.artifact.uri}@${frozen.artifact.digest}`;
 }
 
-/** Where a cold-start snapshot is written in the off-cluster bucket. */
-export function coldStartKey(fingerprint: string): string {
-  return `delivery/cold-start/${fingerprint.slice("sha256:".length)}.json`;
-}
-
 export type ColdStartWrite = {
   deploymentId: string;
   fingerprint: string;

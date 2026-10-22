@@ -1,8 +1,19 @@
 import { z } from "zod";
-import type {
-  DriftObservation,
-  WatchingMonitor,
+import {
+  AlarmSeveritySchema,
+  FiringAlarmSchema,
+  type DriftObservation,
+  type FiringAlarm,
+  type WatchingMonitor,
 } from "@shepherdjerred/delivery/model-contract";
+
+/**
+ * Prometheus as the Delivery worker reaches it: the in-cluster Service
+ * (9090, the Caddy gateway sidecar's pod port 9091), as the worker-host
+ * poller check reads it.
+ */
+export const PROMETHEUS_SERVICE_URL =
+  "http://prometheus-kube-prometheus-prometheus.prometheus:9090";
 
 /** `$window` is the time since acceptance, never under two minutes (W4). */
 export function monitorWindow(acceptedAt: string, now: Date): string {
@@ -13,16 +24,40 @@ export function monitorWindow(acceptedAt: string, now: Date): string {
   return `${seconds.toString()}s`;
 }
 
-/** Firing alerts the monitor watches, scoped by its label matchers (W5). */
+function labelMatcher(name: string, value: string): string {
+  return value.startsWith("~")
+    ? `${name}=~${JSON.stringify(value.slice(1))}`
+    : `${name}=${JSON.stringify(value)}`;
+}
+
+/**
+ * Firing alerts the monitor watches, scoped by its label matchers (W5),
+ * each with when it became active: `ALERTS_FOR_STATE`'s sample value is the
+ * active-since time, joined to the firing `ALERTS` series.
+ */
 export function alarmQuery(monitor: WatchingMonitor["monitor"]): string {
   const matchers = [
     ...Object.entries(monitor.alarms.matchers)
       .toSorted(([left], [right]) => left.localeCompare(right))
-      .map(([name, value]) => `${name}=${JSON.stringify(value)}`),
-    'alertstate="firing"',
+      .map(([name, value]) => labelMatcher(name, value)),
     `severity=~"${monitor.alarms.severities.join("|")}"`,
   ];
-  return `ALERTS{${matchers.join(",")}}`;
+  return `ALERTS_FOR_STATE{${matchers.join(",")}} and ignoring(alertstate) ALERTS{${[...matchers, 'alertstate="firing"'].join(",")}}`;
+}
+
+/** The alarms an `alarmQuery` result names, with their activation times. */
+export function firingAlarms(
+  samples: readonly { metric: Record<string, string>; value: number }[],
+): FiringAlarm[] {
+  return samples.map((sample) => {
+    const { __name__: _series, ...labels } = sample.metric;
+    return FiringAlarmSchema.parse({
+      alertname: z.string().min(1).parse(labels["alertname"]),
+      severity: AlarmSeveritySchema.parse(labels["severity"]),
+      labels,
+      activeAt: new Date(sample.value * 1000).toISOString(),
+    });
+  });
 }
 
 const ResourceSchema = z.object({

@@ -1,20 +1,21 @@
-import { z } from "zod";
 import { DeliveryError } from "#domain/error.ts";
-import { PipelineRevisionSchema, type Principal } from "#shared/contract.ts";
-import { IdentifierSchema } from "#shared/artifact-contract.ts";
+import {
+  PipelineRevisionSchema,
+  StageSchema,
+  type Principal,
+} from "#shared/contract.ts";
 import { attestationStageKey } from "#shared/model/stage-keys.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
-import { required, wire } from "#infrastructure/delivery-records.ts";
-
-/** What an attested operator tool reports for one declared stage (section 5, operator-run). */
-export const AttestStageSchema = z.strictObject({
-  stage: IdentifierSchema,
-  operationId: z.string().min(1).max(200),
-  summary: z.string().trim().min(1).max(4000),
-  url: z.url().optional(),
-});
-export type AttestStage = z.infer<typeof AttestStageSchema>;
+import {
+  fingerprint,
+  required,
+  wire,
+} from "#infrastructure/delivery-records.ts";
+import {
+  AttestationRequestSchema,
+  type AttestationRequest,
+} from "#shared/model/route-contract.ts";
 
 /**
  * An operator tool outside the cluster runs an operator-run deployment's
@@ -25,11 +26,12 @@ export type AttestStage = z.infer<typeof AttestStageSchema>;
 export async function attestStage(
   this: Delivery,
   deploymentId: string,
-  raw: AttestStage,
+  raw: AttestationRequest,
   actor: Principal,
 ) {
-  requireScope(actor, "deploy");
-  const input = AttestStageSchema.parse(raw);
+  // The operator tool authenticates with an operator credential (X13).
+  requireScope(actor, "execute");
+  const input = AttestationRequestSchema.parse(raw);
   const row = await this.database.deployment.findUniqueOrThrow({
     where: { id: deploymentId },
   });
@@ -53,22 +55,20 @@ export async function attestStage(
       "INVALID",
       `Stage ${input.stage} is not one the recipe asks the operator to attest`,
     );
-  return this.stage(
+  // A replayed attestation carries the same evidence and the same identity.
+  const operationId =
+    input.evidence.find((entry) => entry.operationId !== undefined)
+      ?.operationId ?? `sha256:${fingerprint(input.evidence)}`;
+  const stage = await this.stage(
     deploymentId,
     {
       key: attestationStageKey(input.stage),
       status: "succeeded",
-      operationId: input.operationId,
+      operationId,
       message: `Attested by ${actor.id}`,
-      evidence: [
-        {
-          kind: "attestation",
-          operationId: input.operationId,
-          summary: input.summary,
-          ...(input.url === undefined ? {} : { url: input.url }),
-        },
-      ],
+      evidence: input.evidence,
     },
     actor,
   );
+  return StageSchema.parse(stage);
 }

@@ -26,6 +26,11 @@ import { registerSelectionRoutes } from "./selection-routes.ts";
 import { registerColdStartRoutes } from "./cold-start-routes.ts";
 import { retryRequest } from "#infrastructure/selection/request.ts";
 import {
+  approvalById,
+  deploymentDetailV2,
+  deploymentViewById,
+} from "#infrastructure/selection/views.ts";
+import {
   activeEnvironmentIds,
   requireAdmitting,
 } from "#infrastructure/delivery-selection.ts";
@@ -66,6 +71,8 @@ type Options = {
   inspectRecovery?: ReturnType<typeof createRecoveryInspector>;
   /** Independent Application readback for reconcile-after-restore (D5). */
   readApplication?: ApplicationReader;
+  /** The newest off-cluster cold-start snapshot (section 6). */
+  readColdStartSnapshot?: () => Promise<unknown>;
   inspectMinecraftRecovery?: InspectMinecraftRecovery;
   verifyForumBundle?: VerifyForumBundle;
   inspectForumBaseline?: InspectForumBaseline;
@@ -134,7 +141,7 @@ export function createApp(options: Options) {
         requireScope(principal, "read");
     } else if (!(await options.config.writesEnabled())) {
       const resultOnly =
-        /\/deployments\/[^/]+\/(?:cancel|finish|release-lock|orphan|lease|handoff|monitor|cold-start|drift|attestations)$/.test(
+        /\/deployments\/[^/]+\/(?:cancel|finish|release-lock|orphan|lease|handoff|monitor\/observations|cold-start|drift|attestations)$/.test(
           c.req.path,
         ) ||
         /^\/api\/v1\/dispatch\/[^/]+\/submitted$/.test(c.req.path) ||
@@ -209,7 +216,7 @@ export function createApp(options: Options) {
     c.json(await delivery.version(c.req.param("id"))),
   );
   app.get("/api/v1/deployments/:id", async (c) =>
-    c.json(await delivery.detail(c.req.param("id"))),
+    c.json(await deploymentDetailV2(delivery, c.req.param("id"))),
   );
   app.post("/api/v1/builds", async (c) => {
     requireScope(c.get("principal"), "publish");
@@ -238,7 +245,14 @@ export function createApp(options: Options) {
   registerPlatformRoutes(app, { delivery, enabled });
   registerClaimRoute(app, delivery, enabled);
   registerSelectionRoutes(app, delivery, options.config.writesEnabled);
-  registerColdStartRoutes(app, delivery, options.readApplication);
+  registerColdStartRoutes(app, delivery, {
+    ...(options.readApplication === undefined
+      ? {}
+      : { readApplication: options.readApplication }),
+    ...(options.readColdStartSnapshot === undefined
+      ? {}
+      : { readColdStartSnapshot: options.readColdStartSnapshot }),
+  });
   registerTrmnlRepairRoute(app, delivery, enabled);
   registerControlPlaneRoutes(app, delivery, enabled);
   registerForumRoutes(app, delivery, {
@@ -254,19 +268,16 @@ export function createApp(options: Options) {
       c.req.json(),
     );
     await enabled(input.environmentId);
-    return c.json(
-      await delivery.createDeployment(input, c.get("principal")),
-      201,
-    );
+    const created = await delivery.createDeployment(input, c.get("principal"));
+    return c.json(await deploymentViewById(delivery.database, created.id), 201);
   });
   app.post("/api/v1/deployments/:id/approval", async (c) => {
     requireScope(c.get("principal"), "approve");
     const input = ApprovalV2InputSchema.parse(await c.req.json());
     const detail = await delivery.detail(c.req.param("id"));
     await enabled(detail.environment.id);
-    return c.json(
-      await delivery.approve(detail.deployment.id, input, c.get("principal")),
-    );
+    await delivery.approve(detail.deployment.id, input, c.get("principal"));
+    return c.json(await approvalById(delivery.database, detail.deployment.id));
   });
   app.post("/api/v1/deployments/:id/cancel", async (c) => {
     requireScope(c.get("principal"), "deploy");

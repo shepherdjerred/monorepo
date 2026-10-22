@@ -452,6 +452,8 @@ model MonitorObservation {
   deployment   Deployment @relation(fields: [deploymentId], references: [id])
   sequence     Int
   observedAt   DateTime
+  /// The `$window` the evidence queries were rendered with.
+  window       String
   alarms       Json       @default("[]")
   evidence     Json       @default("{}")
   outcome      String

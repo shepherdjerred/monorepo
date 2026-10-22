@@ -22,12 +22,6 @@ const scoutProd = {
         'sum(increase(scout_durable_receipts_recorded_total{environment="prod",git_sha="$gitSha",outcome="applied"}[$window]))',
       threshold: 50,
     },
-    {
-      key: "discord-interactions",
-      query:
-        'sum(increase(discord_commands_total{environment="prod",git_sha="$gitSha"}[$window]))',
-      threshold: 20,
-    },
   ],
   policy: "automatic",
 };
@@ -38,7 +32,6 @@ describe("MonitorSchema", () => {
     expect(monitor.alarms.severities).toEqual(["warning", "critical"]);
     expect(monitor.evidence.map((entry) => entry.key)).toEqual([
       "matches-processed",
-      "discord-interactions",
     ]);
   });
 
@@ -91,7 +84,7 @@ describe("observations", () => {
     observedAt: "2026-10-20T12:00:00.000Z",
     window: "17m",
     alarms: [],
-    evidence: { "matches-processed": 60, "discord-interactions": 25 },
+    evidence: { "matches-processed": 60 },
   };
 
   test("renders placeholders from the accepted artifact", () => {
@@ -109,25 +102,34 @@ describe("observations", () => {
     expect(
       monitorOutcome(monitor, {
         ...base,
-        evidence: { "matches-processed": 60, "discord-interactions": 3 },
+        evidence: { "matches-processed": 49 },
       }),
     ).toBe("watching");
+    expect(monitorOutcome(monitor, { ...base, evidence: {} })).toBe("watching");
     expect(
       monitorOutcome(monitor, {
         ...base,
-        evidence: { "matches-processed": 60 },
-      }),
-    ).toBe("watching");
-    expect(
-      monitorOutcome(monitor, {
-        ...base,
-        alarms: [{ alertname: "ScoutDown", severity: "critical", labels: {} }],
+        alarms: [
+          {
+            alertname: "ScoutDown",
+            severity: "critical",
+            labels: {},
+            activeAt: base.observedAt,
+          },
+        ],
       }),
     ).toBe("alarmed");
     expect(
       monitorOutcome(monitor, {
         ...base,
-        alarms: [{ alertname: "ScoutNoisy", severity: "info", labels: {} }],
+        alarms: [
+          {
+            alertname: "ScoutNoisy",
+            severity: "info",
+            labels: {},
+            activeAt: base.observedAt,
+          },
+        ],
       }),
     ).toBe("settled");
   });
@@ -173,8 +175,23 @@ describe("observations", () => {
       settledAt: base.observedAt,
       alarmedAt: null,
       observations: 3,
+      monitor: scoutProd,
+      latestObservation: observation,
     };
     expect(MonitorStatusSchema.safeParse(status).success).toBe(true);
+    expect(
+      MonitorStatusSchema.safeParse({ ...status, latestObservation: null })
+        .success,
+    ).toBe(false);
+    expect(
+      MonitorStatusSchema.safeParse({
+        ...status,
+        latestObservation: { ...observation, deploymentId: "dep-2" },
+      }).success,
+    ).toBe(false);
+    expect(
+      MonitorStatusSchema.safeParse({ ...status, policy: "hold" }).success,
+    ).toBe(false);
     expect(
       MonitorStatusSchema.safeParse({ ...status, settledAt: null }).success,
     ).toBe(false);
@@ -193,6 +210,8 @@ describe("observations", () => {
         settledAt: null,
         alarmedAt: null,
         observations: 0,
+        monitor: null,
+        latestObservation: null,
       }).success,
     ).toBe(true);
     expect(
@@ -237,7 +256,9 @@ describe("observations", () => {
       policy: "automatic",
       settledAt: "2026-10-20T12:00:00.000Z",
       alarmedAt: null,
-      observations: 3,
+      observations: 0,
+      monitor: scoutProd,
+      latestObservation: null,
     };
     expect(
       MonitorStatusSchema.safeParse({ ...status, ...fields }).success,
@@ -253,6 +274,8 @@ describe("observations", () => {
         settledAt: "2026-10-20T12:00:00.000Z",
         alarmedAt: null,
         observations: 0,
+        monitor: null,
+        latestObservation: null,
       }).success,
     ).toBe(true);
   });

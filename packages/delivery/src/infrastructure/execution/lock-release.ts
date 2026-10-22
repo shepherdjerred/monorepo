@@ -51,19 +51,26 @@ export async function releaseLock(
         "Deployment does not require lock recovery",
       );
     const env = await environment(tx, row.environmentId);
-    const intent = await createIntent(tx, {
-      id: id(),
-      kind: "argo",
-      deploymentId,
-      requestedBy: actor.id,
-      reason,
-      expectedGeneration: env.generation,
-      snapshotFingerprint: fingerprint({
-        deploymentId,
-        resultFingerprint: row.resultFingerprint,
-        generation: env.generation,
-      }),
+    // An admin may have opened the intent first (4.15); its readback settles it.
+    const pending = await tx.recoveryIntent.findFirst({
+      where: { deploymentId, kind: "argo", status: "pending" },
+      orderBy: { sequence: "desc" },
     });
+    const intent =
+      pending ??
+      (await createIntent(tx, {
+        id: id(),
+        kind: "argo",
+        deploymentId,
+        requestedBy: actor.id,
+        reason,
+        expectedGeneration: env.generation,
+        snapshotFingerprint: fingerprint({
+          deploymentId,
+          resultFingerprint: row.resultFingerprint,
+          generation: env.generation,
+        }),
+      }));
     await evidence(
       tx,
       deploymentId,

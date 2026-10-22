@@ -6,26 +6,36 @@ import { PipelineRevisionSchema } from "#shared/contract.ts";
 import {
   ColdStartReceiptSchema,
   ColdStartSnapshotSchema,
-  ReconcileAfterRestoreResultSchema,
   RestoreHoldSchema,
   SettleRestoreHoldSchema,
   type ColdStartReceipt,
-  type ColdStartSnapshot,
   type SettleRestoreHold,
 } from "#shared/model/cold-start-contract.ts";
+import {
+  ReconcileAfterRestoreRequestSchema,
+  ReconcileAfterRestoreSchema,
+  type ReconcileAfterRestoreRequest,
+} from "#shared/model/route-contract.ts";
+import type { Selection } from "#shared/model/selection-contract.ts";
 import { applicationsOf } from "#shared/model/recipe-view.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { evidence, id } from "#infrastructure/delivery-data.ts";
-import { audit, lock, wire } from "#infrastructure/delivery-records.ts";
+import {
+  audit,
+  fingerprint,
+  lock,
+  wire,
+} from "#infrastructure/delivery-records.ts";
 import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
 import {
+  CONVERGING_STAGES,
   bootstrapChain,
   coldStartSnapshot,
-  snapshotFingerprint,
+  frozenSelection,
 } from "./snapshot.ts";
 
-/** Whether this acceptance moves the bootstrap chain, with the snapshot to write off-cluster. */
+/** Whether this acceptance moves the bootstrap chain, with the snapshot to write. */
 export async function coldStartRequirement(
   this: Delivery,
   deploymentId: string,
@@ -39,12 +49,11 @@ export async function coldStartRequirement(
   if (env.acceptedDeploymentId !== row.id) return { required: false as const };
   const chain = await bootstrapChain(this.database);
   if (!chain.includes(env.id)) return { required: false as const };
-  const { snapshot, fingerprint } = await coldStartSnapshot(
+  const { snapshot, fingerprint: digest } = await coldStartSnapshot(
     this.database,
-    row.id,
     new Date(),
   );
-  return { required: true as const, fingerprint, snapshot };
+  return { required: true as const, fingerprint: digest, snapshot };
 }
 
 /** The executor wrote the snapshot off-cluster; the receipt is the acceptance's backup evidence. */
@@ -90,116 +99,159 @@ const ApplicationOperation = z.object({
     .optional(),
 });
 
-type Live = "matches" | "differs" | "missing" | "not-observed";
+/** What the live target shows: a selection, absent, or not observable for its kind. */
+type Live =
+  | { kind: "selection"; selection: Selection | null }
+  | { kind: "missing" }
+  | { kind: "not-observed" };
 
-/** Live readback through the projected reader for single-Application targets (D5). */
+/**
+ * Live readback through the projected reader (D5): the selection of the
+ * deployment whose request last synced the environment's one Application.
+ */
 async function observeLive(
   this: Delivery,
   readApplication: ApplicationReader | undefined,
-  accepted: ColdStartSnapshot["environments"][number]["accepted"],
+  recipeRevisionId: string | null,
 ): Promise<Live> {
-  if (readApplication === undefined || accepted === null) return "not-observed";
+  if (readApplication === undefined || recipeRevisionId === null)
+    return { kind: "not-observed" };
   const recipe = PipelineRevisionSchema.parse(
     wire(
       await this.database.pipeline.findUniqueOrThrow({
-        where: { id: accepted.recipeRevisionId },
+        where: { id: recipeRevisionId },
       }),
     ),
   );
   const applications = applicationsOf(recipe.definition);
   const [application] = applications;
   if (application === undefined || applications.length !== 1)
-    return "not-observed";
+    return { kind: "not-observed" };
   const raw = await readApplication(application.name);
-  if (raw === null) return "missing";
-  const info =
-    ApplicationOperation.parse(raw).status?.operationState?.operation.info ??
-    [];
-  const request = info.find((entry) => entry.name === "ci.sjer.red/request-id");
-  return accepted.operationId !== null &&
-    request?.value === accepted.operationId
-    ? "matches"
-    : "differs";
+  if (raw === null) return { kind: "missing" };
+  const request = (
+    ApplicationOperation.parse(raw).status?.operationState?.operation.info ?? []
+  ).find((entry) => entry.name === "ci.sjer.red/request-id");
+  if (request === undefined) return { kind: "selection", selection: null };
+  const stage = await this.database.stage.findFirst({
+    where: { operationId: request.value, key: { in: [...CONVERGING_STAGES] } },
+    include: { deployment: true },
+  });
+  return {
+    kind: "selection",
+    selection: stage === null ? null : frozenSelection(stage.deployment),
+  };
+}
+
+function sameSelection(left: Selection | null, right: Selection | null) {
+  return fingerprint(left) === fingerprint(right);
 }
 
 function mismatch(
-  record: string | null,
-  snapshot: string | null,
+  record: Selection | null,
+  snapshot: Selection | null,
   live: Live,
 ): string | null {
-  if (record !== snapshot)
-    return `record accepts ${record ?? "nothing"} but the snapshot accepts ${snapshot ?? "nothing"}`;
-  if (live === "differs")
-    return "the live target's last operation is not the accepted deployment's";
-  return live === "missing" ? "the live target does not exist" : null;
+  if (!sameSelection(record, snapshot))
+    return "The record's accepted selection differs from the cold-start snapshot's";
+  if (live.kind === "missing") return "The live target does not exist";
+  return live.kind === "selection" && !sameSelection(live.selection, record)
+    ? "The live target was last synced by another selection than the record accepts"
+    : null;
+}
+
+export type RestoreDependencies = {
+  readSnapshot: () => Promise<unknown>;
+  readApplication?: ApplicationReader;
+};
+
+async function holdEnvironment(
+  this: Delivery,
+  environmentId: string,
+  input: { reason: string; catalogRevision: string; requestId: string },
+  actor: Principal,
+) {
+  await this.database.$transaction(async (tx) => {
+    await lock(tx, `environment:${environmentId}`);
+    await tx.environment.update({
+      where: { id: environmentId },
+      data: {
+        restoreHold: RestoreHoldSchema.parse({
+          catalogRevision: input.catalogRevision,
+          reason: input.reason,
+          heldAt: new Date().toISOString(),
+        }),
+      },
+    });
+    await audit(tx, actor, {
+      action: "environment.restore_held",
+      entityId: environmentId,
+      requestId: input.requestId,
+      metadata: input,
+    });
+  });
 }
 
 /**
- * Section 6: compare record, snapshot and live target for every environment
- * and hold automatic deployments on each mismatch until an operator accepts
- * the live state with evidence or a deployment is accepted there. Never
- * moves an accepted pointer.
+ * Section 6: compare record, cold-start snapshot and live target for every
+ * active environment and hold automatic deployments on each mismatch until
+ * an operator accepts the live state with evidence or a deployment is
+ * accepted there. Never moves an accepted pointer (X7).
  */
 export async function reconcileAfterRestore(
   this: Delivery,
-  raw: unknown,
+  raw: ReconcileAfterRestoreRequest,
   actor: Principal,
-  readApplication?: ApplicationReader,
+  dependencies: RestoreDependencies,
 ) {
   requireScope(actor, "admin");
-  const snapshot = ColdStartSnapshotSchema.parse(raw);
-  const snapshotDigest = snapshotFingerprint(snapshot);
+  const request = ReconcileAfterRestoreRequestSchema.parse(raw);
+  const snapshot = ColdStartSnapshotSchema.parse(
+    await dependencies.readSnapshot(),
+  );
   const fromSnapshot = new Map(
-    snapshot.environments.map((env) => [env.id, env]),
+    snapshot.environments.map((env) => [env.environmentId, env.selection]),
   );
   const environments = await this.database.environment.findMany({
-    where: { lifecycle: { not: "retired" } },
+    where: { lifecycle: "active" },
+    include: { acceptedDeployment: true },
     orderBy: { id: "asc" },
   });
-  const current = await coldStartSnapshot(this.database, "restore", new Date());
-  const recorded = new Map(
-    current.snapshot.environments.map((env) => [env.id, env]),
-  );
   const comparisons = [];
   for (const env of environments) {
-    const accepted = recorded.get(env.id)?.accepted ?? null;
-    const snapshotAccepted =
-      fromSnapshot.get(env.id)?.accepted?.deploymentId ?? null;
-    const live = await observeLive.call(this, readApplication, accepted);
-    const reason = mismatch(env.acceptedDeploymentId, snapshotAccepted, live);
+    const record =
+      env.acceptedDeployment === null
+        ? null
+        : frozenSelection(env.acceptedDeployment);
+    const snapshotSelection = fromSnapshot.get(env.id) ?? null;
+    const live = await observeLive.call(
+      this,
+      dependencies.readApplication,
+      env.acceptedDeployment?.pipelineRevisionId ?? null,
+    );
+    const reason = mismatch(record, snapshotSelection, live);
     if (reason !== null)
-      await this.database.$transaction(async (tx) => {
-        await lock(tx, `environment:${env.id}`);
-        await tx.environment.update({
-          where: { id: env.id },
-          data: {
-            restoreHold: RestoreHoldSchema.parse({
-              snapshotFingerprint: snapshotDigest,
-              reason,
-              heldAt: new Date().toISOString(),
-            }),
-          },
-        });
-        await audit(tx, actor, {
-          action: "environment.restore_held",
-          entityId: env.id,
-          requestId: id(),
-          metadata: { reason, snapshotFingerprint: snapshotDigest, live },
-        });
-      });
+      await holdEnvironment.call(
+        this,
+        env.id,
+        {
+          reason,
+          catalogRevision: snapshot.catalogRevision,
+          requestId: request.requestId,
+        },
+        actor,
+      );
     comparisons.push({
-      environmentId: env.id,
-      record: env.acceptedDeploymentId,
-      snapshot: snapshotAccepted,
-      live,
-      held: reason !== null,
-      reason,
+      id: env.id,
+      record,
+      snapshot: snapshotSelection,
+      live: live.kind === "selection" ? live.selection : null,
+      ...(reason === null
+        ? { status: "match" as const }
+        : { status: "held" as const, reason }),
     });
   }
-  return ReconcileAfterRestoreResultSchema.parse({
-    snapshotFingerprint: snapshotDigest,
-    environments: comparisons,
-  });
+  return ReconcileAfterRestoreSchema.parse({ environments: comparisons });
 }
 
 /** An operator accepts the live state after a restore with evidence; the hold clears. */
@@ -231,7 +283,7 @@ export async function settleRestoreHold(
             kind: "reconciliation",
             summary: JSON.stringify({
               adapter: "reconcile-after-restore",
-              snapshotFingerprint: hold.snapshotFingerprint,
+              catalogRevision: hold.catalogRevision,
               reason: input.reason,
               evidence: input.evidence,
             }),

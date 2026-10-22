@@ -12,6 +12,14 @@ import { createTestDatabase } from "#testing/postgres.ts";
 import { resetDeliveryTables } from "#testing/delivery-http-fixture.ts";
 import { catalogDocument } from "#testing/catalog-fixture.ts";
 import { testOperator, testPublisher } from "#testing/seed.ts";
+import {
+  V1_CATALOG_MIGRATION,
+  reconcileSummary,
+  type CatalogMigration,
+} from "./reconcile.ts";
+
+/** A record with no v1 environments to carry over. */
+const NO_MIGRATION: CatalogMigration = { renames: {}, retired: [] };
 
 let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
 let delivery: Delivery;
@@ -96,7 +104,11 @@ async function seedV1Site() {
 describe("catalog reconcile", () => {
   test("registers services, revisions, environments and edges, then changes nothing on a repeat", async () => {
     const document = await catalogDocument();
-    const result = await delivery.reconcileCatalog({ document }, testOperator);
+    const result = await delivery.reconcileCatalog(
+      document,
+      testOperator,
+      NO_MIGRATION,
+    );
     expect(result.catalogRevision).toMatch(/^sha256:[a-f0-9]{64}$/u);
     expect(result.recipes.created.toSorted()).toEqual([
       "arcade-beta/1",
@@ -139,7 +151,11 @@ describe("catalog reconcile", () => {
       where: { id: "static-sites" },
     });
     expect(omitted.lifecycle).toBe("retired");
-    const repeat = await delivery.reconcileCatalog({ document }, testOperator);
+    const repeat = await delivery.reconcileCatalog(
+      document,
+      testOperator,
+      NO_MIGRATION,
+    );
     expect(repeat.recipes.created).toEqual([]);
     expect(repeat.environments).toEqual({
       created: [],
@@ -148,12 +164,36 @@ describe("catalog reconcile", () => {
       retired: [],
     });
     expect(repeat.services.lineageChanged).toEqual([]);
+    expect(reconcileSummary(result).created).toEqual({
+      services: 1,
+      environments: 4,
+      recipes: 4,
+      configurations: result.configurations.created.length,
+      edges: 2,
+    });
+    expect(reconcileSummary(repeat)).toEqual({
+      catalogRevision: result.catalogRevision,
+      created: {
+        services: 0,
+        environments: 0,
+        recipes: 0,
+        configurations: 0,
+        edges: 0,
+      },
+      unchanged:
+        document.services.length +
+        document.environments.length +
+        document.recipes.length +
+        document.configurations.length +
+        document.edges.length,
+      refused: [],
+    });
     expect(await cluster.database.deployment.count()).toBe(0);
   });
 
   test("refuses to rewrite a recipe or configuration revision and persists nothing", async () => {
     const document = await catalogDocument();
-    await delivery.reconcileCatalog({ document }, testOperator);
+    await delivery.reconcileCatalog(document, testOperator, NO_MIGRATION);
     const changed = {
       ...document,
       configurations: [
@@ -162,7 +202,7 @@ describe("catalog reconcile", () => {
       ],
     };
     await expect(
-      delivery.reconcileCatalog({ document: changed }, testOperator),
+      delivery.reconcileCatalog(changed, testOperator, NO_MIGRATION),
     ).rejects.toMatchObject({ code: "CONFLICT" });
     const recipe: Document = {
       ...document,
@@ -176,7 +216,7 @@ describe("catalog reconcile", () => {
       ),
     };
     await expect(
-      delivery.reconcileCatalog({ document: recipe }, testOperator),
+      delivery.reconcileCatalog(recipe, testOperator, NO_MIGRATION),
     ).rejects.toThrow(
       /Recipe revision sjer-red\/1 already holds a different definition/u,
     );
@@ -188,7 +228,7 @@ describe("catalog reconcile", () => {
 
   test("a component-list change starts a lineage, moves generations and waits for ownership", async () => {
     const document = await catalogDocument();
-    await delivery.reconcileCatalog({ document }, testOperator);
+    await delivery.reconcileCatalog(document, testOperator, NO_MIGRATION);
     const widened: Document = {
       ...document,
       services: document.services.map((service) =>
@@ -228,7 +268,7 @@ describe("catalog reconcile", () => {
       },
     });
     await expect(
-      delivery.reconcileCatalog({ document: widened }, testOperator),
+      delivery.reconcileCatalog(widened, testOperator, NO_MIGRATION),
     ).rejects.toThrow(
       /component-list change is refused while a deployment of arcade is owned/u,
     );
@@ -237,8 +277,9 @@ describe("catalog reconcile", () => {
       data: { status: "canceled", finishedAt: new Date() },
     });
     const result = await delivery.reconcileCatalog(
-      { document: widened },
+      widened,
       testOperator,
+      NO_MIGRATION,
     );
     expect(result.services.lineageChanged).toEqual(["arcade"]);
     const environments = await cluster.database.environment.findMany({
@@ -256,13 +297,40 @@ describe("catalog reconcile of v1 environments", () => {
   test("a renamed environment keeps its accepted selection and history; omitted ones are refused", async () => {
     await seedV1Site();
     const document = await catalogDocument();
-    await expect(
-      delivery.reconcileCatalog({ document }, testOperator),
-    ).rejects.toThrow(/omits active environments static-sites\/sjer-red/u);
-    const result = await delivery.reconcileCatalog(
-      { document, renames: { "static-sites/sjer-red": "sjer-red/prod" } },
+    const refused = await delivery.reconcileCatalog(
+      document,
       testOperator,
+      NO_MIGRATION,
     );
+    expect(refused.refused).toEqual([
+      {
+        id: "static-sites/sjer-red",
+        reason: expect.stringMatching(/omits this active environment/u),
+      },
+      {
+        id: "static-sites",
+        reason: expect.stringMatching(/still holds an active environment/u),
+      },
+    ]);
+    // A refused environment stays active; the v1 migration carries it over.
+    expect(
+      await cluster.database.environment.findUniqueOrThrow({
+        where: { id: "static-sites/sjer-red" },
+      }),
+    ).toMatchObject({ lifecycle: "active" });
+    await cluster.database.prerequisiteEdge.deleteMany({
+      where: { dependentId: "sjer-red/prod" },
+    });
+    await cluster.database.environment.delete({
+      where: { id: "sjer-red/prod" },
+    });
+    const result = await delivery.reconcileCatalog(
+      document,
+      testOperator,
+      V1_CATALOG_MIGRATION,
+    );
+    expect(result.refused).toEqual([]);
+    expect(result.services.retired).toContain("static-sites");
     expect(result.environments.renamed).toEqual([
       { from: "static-sites/sjer-red", to: "sjer-red/prod" },
     ]);
@@ -294,9 +362,11 @@ describe("catalog reconcile of v1 environments", () => {
   test("retired v1 environments move their generation; lifecycles never move back", async () => {
     await seedV1Site();
     const document = await catalogDocument();
+    const retiring = { renames: {}, retired: ["static-sites/sjer-red"] };
     const result = await delivery.reconcileCatalog(
-      { document, retired: ["static-sites/sjer-red"] },
+      document,
       testOperator,
+      retiring,
     );
     expect(result.environments.retired).toEqual(["static-sites/sjer-red"]);
     expect(
@@ -312,15 +382,9 @@ describe("catalog reconcile of v1 environments", () => {
           : service,
       ),
     };
-    await delivery.reconcileCatalog(
-      { document: retiredService, retired: ["static-sites/sjer-red"] },
-      testOperator,
-    );
+    await delivery.reconcileCatalog(retiredService, testOperator, retiring);
     await expect(
-      delivery.reconcileCatalog(
-        { document, retired: ["static-sites/sjer-red"] },
-        testOperator,
-      ),
+      delivery.reconcileCatalog(document, testOperator, retiring),
     ).rejects.toThrow(
       /Service sjer-red cannot move from retired back to active/u,
     );
@@ -328,7 +392,7 @@ describe("catalog reconcile of v1 environments", () => {
 
   test("a malformed document is refused before anything is written", async () => {
     await expect(
-      delivery.reconcileCatalog({ document: { services: [] } }, testOperator),
+      delivery.reconcileCatalog({ services: [] }, testOperator),
     ).rejects.toMatchObject({ code: "INVALID" });
     expect(await cluster.database.pipeline.count()).toBe(0);
   });

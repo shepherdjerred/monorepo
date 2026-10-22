@@ -1,6 +1,7 @@
 import * as admission from "./admission-contract.ts";
 import * as render from "./application-render.ts";
 import * as stageKeys from "./stage-keys.ts";
+import * as routes from "./route-contract.ts";
 import * as approvals from "./approval-contract.ts";
 import * as coldStart from "./cold-start-contract.ts";
 import * as catalog from "./catalog-contract.ts";
@@ -103,9 +104,47 @@ export type AdmissionSnapshot = admission.AdmissionSnapshot;
 
 export const ColdStartRequirementSchema = coldStart.ColdStartRequirementSchema;
 export const ColdStartReceiptSchema = coldStart.ColdStartReceiptSchema;
-export const ColdStartSnapshotSchema = coldStart.ColdStartSnapshotSchema;
 export type ColdStartReceipt = coldStart.ColdStartReceipt;
+export const COLD_START_SNAPSHOT = coldStart.COLD_START_SNAPSHOT;
+export function coldStartArchiveKey(
+  snapshot: Parameters<typeof coldStart.coldStartArchiveKey>[0],
+): string {
+  return coldStart.coldStartArchiveKey(snapshot);
+}
+export const SnapshotArtifactSchema = coldStart.SnapshotArtifactSchema;
+export const SnapshotEnvironmentSchema = coldStart.SnapshotEnvironmentSchema;
+export const ColdStartSnapshotSchema = coldStart.ColdStartSnapshotSchema;
+export type SnapshotArtifact = coldStart.SnapshotArtifact;
+export type SnapshotEnvironment = coldStart.SnapshotEnvironment;
 export type ColdStartSnapshot = coldStart.ColdStartSnapshot;
+
+export const RecipeKindSchema = routes.RecipeKindSchema;
+export const EnvironmentSelectionSchema = routes.EnvironmentSelectionSchema;
+export const DeploymentV2Schema = routes.DeploymentV2Schema;
+export const DeploymentDetailV2Schema = routes.DeploymentDetailV2Schema;
+export const ApprovalQueueItemSchema = routes.ApprovalQueueItemSchema;
+export const RecoveryIntentRequestSchema = routes.RecoveryIntentRequestSchema;
+export const AttestationRequestSchema = routes.AttestationRequestSchema;
+export const CatalogReconcileResultSchema = routes.CatalogReconcileResultSchema;
+export const CatalogStateSchema = routes.CatalogStateSchema;
+export const RetireServiceRequestSchema = routes.RetireServiceRequestSchema;
+export const ServiceLifecycleViewSchema = routes.ServiceLifecycleViewSchema;
+export const ReconcileAfterRestoreRequestSchema =
+  routes.ReconcileAfterRestoreRequestSchema;
+export const RestoreComparisonSchema = routes.RestoreComparisonSchema;
+export const ReconcileAfterRestoreSchema = routes.ReconcileAfterRestoreSchema;
+export type EnvironmentSelection = routes.EnvironmentSelection;
+export type DeploymentV2 = routes.DeploymentV2;
+export type DeploymentDetailV2 = routes.DeploymentDetailV2;
+export type ApprovalQueueItem = routes.ApprovalQueueItem;
+export type RecoveryIntentRequest = routes.RecoveryIntentRequest;
+export type AttestationRequest = routes.AttestationRequest;
+export type CatalogReconcileResult = routes.CatalogReconcileResult;
+export type CatalogState = routes.CatalogState;
+export type RetireServiceRequest = routes.RetireServiceRequest;
+export type ServiceLifecycleView = routes.ServiceLifecycleView;
+export type ReconcileAfterRestoreRequest = routes.ReconcileAfterRestoreRequest;
+export type ReconcileAfterRestore = routes.ReconcileAfterRestore;
 
 export function recipeRunners(definition: RecipeDefinition): RunnerReference[] {
   return recipes.recipeRunners(definition);
@@ -123,7 +162,6 @@ export const MonitorObservationInputSchema =
   monitors.MonitorObservationInputSchema;
 export const MonitorObservationSchema = monitors.MonitorObservationSchema;
 export const WatchingMonitorSchema = monitors.WatchingMonitorSchema;
-export const MonitorObservedSchema = monitors.MonitorObservedSchema;
 export const SelfHealingSchema = monitors.SelfHealingSchema;
 export const DriftObservationSchema = monitors.DriftObservationSchema;
 export type DriftObservation = monitors.DriftObservation;
@@ -137,6 +175,7 @@ export type MonitorObservationInput = monitors.MonitorObservationInput;
 export type MonitorObservation = monitors.MonitorObservation;
 export type WatchingMonitor = monitors.WatchingMonitor;
 export type MonitorStatus = monitors.MonitorStatus;
+export type FiringAlarm = monitors.FiringAlarm;
 export function unknownMonitorPlaceholders(query: string): string[] {
   return monitors.unknownMonitorPlaceholders(query);
 }

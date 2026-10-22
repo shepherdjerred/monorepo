@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { recipeFromPipeline } from "#shared/model/recipe-adapter.ts";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
+import type { Principal } from "#shared/contract.ts";
 import { testExecutor, testOperator } from "#testing/seed.ts";
 import {
   arcadePipeline,
@@ -10,6 +11,13 @@ import {
 } from "#testing/model-fixture.ts";
 
 const context = useDeliveryFixture({ registration: arcadeRegistration });
+/** The operator tool's credential (X13): a machine credential with execute. */
+const operatorTool: Principal = {
+  id: "operator-tool",
+  kind: "machine",
+  scopes: ["read", "execute"],
+};
+const ran = [{ kind: "attestation" as const, summary: "ran" }];
 
 /** arcade/prod deployed by an operator tool outside the cluster. */
 async function operatorRunDeployment() {
@@ -41,27 +49,48 @@ test("an operator attests each declared stage of an operator-run deployment", as
   await expect(
     context.delivery.attestStage(
       deployment.id,
-      { stage: "unknown", operationId: "op-0", summary: "ran" },
-      testOperator,
+      { stage: "unknown", evidence: ran },
+      operatorTool,
     ),
   ).rejects.toThrow(/not one the recipe asks/u);
+  // A human session holds no execute scope; the tool uses its own credential.
   await expect(
     context.delivery.attestStage(
       deployment.id,
-      { stage: "bootstrap", operationId: "op-1", summary: "ran" },
-      testExecutor,
+      { stage: "bootstrap", evidence: ran },
+      testOperator,
     ),
   ).rejects.toMatchObject({ code: "FORBIDDEN" });
-  await context.delivery.attestStage(
+  await expect(
+    context.delivery.attestStage(
+      deployment.id,
+      { stage: "bootstrap", evidence: [] },
+      operatorTool,
+    ),
+  ).rejects.toThrow();
+  const attestation = {
+    stage: "bootstrap",
+    evidence: [
+      {
+        kind: "attestation" as const,
+        operationId: "op-1",
+        summary: "bootstrap tool applied the chart at the frozen revision",
+        url: "https://github.com/shepherdjerred/monorepo/actions/runs/1",
+      },
+    ],
+  };
+  const stage = await context.delivery.attestStage(
     deployment.id,
-    {
-      stage: "bootstrap",
-      operationId: "op-1",
-      summary: "bootstrap tool applied the chart at the frozen revision",
-      url: "https://github.com/shepherdjerred/monorepo/actions/runs/1",
-    },
-    testOperator,
+    attestation,
+    operatorTool,
   );
+  expect(stage).toMatchObject({
+    key: "attest/bootstrap",
+    status: "succeeded",
+    operationId: "op-1",
+  });
+  // A replay records nothing new.
+  await context.delivery.attestStage(deployment.id, attestation, operatorTool);
   const detail = await context.delivery.detail(deployment.id);
   expect(detail.stages).toContainEqual(
     expect.objectContaining({
@@ -73,6 +102,13 @@ test("an operator attests each declared stage of an operator-run deployment", as
   expect(
     detail.evidence.filter((entry) => entry.kind === "attestation"),
   ).toHaveLength(1);
+  // Without an operation id the evidence itself identifies the attestation.
+  const verified = await context.delivery.attestStage(
+    deployment.id,
+    { stage: "verify", evidence: ran },
+    operatorTool,
+  );
+  expect(verified.operationId).toMatch(/^sha256:[a-f0-9]{64}$/u);
 });
 
 test("a deployment of another recipe kind takes no attestation", async () => {
@@ -80,8 +116,8 @@ test("a deployment of another recipe kind takes no attestation", async () => {
   await expect(
     context.delivery.attestStage(
       deployment.id,
-      { stage: "bootstrap", operationId: "op-1", summary: "ran" },
-      testOperator,
+      { stage: "bootstrap", evidence: ran },
+      operatorTool,
     ),
   ).rejects.toThrow(/Only an operator-run deployment/u);
 });

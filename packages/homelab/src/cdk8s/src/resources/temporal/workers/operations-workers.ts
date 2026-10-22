@@ -14,6 +14,7 @@ import { temporalRuntimeEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { opsSnapshotEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/ops-snapshot-env.ts";
 import { rwfArchiveEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/rwf-archive-env.ts";
+import { deliveryColdStartEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/cold-start-credential.ts";
 
 function s3Env(secret: ISecret): Record<string, EnvValue> {
   return {
@@ -304,6 +305,7 @@ export function createTemporalOperationsWorkers(
         key: "R2_BACKUP_SECRET_ACCESS_KEY",
       }),
       R2_BACKUP_BUCKET: EnvValue.fromValue("seaweedfs-backups"),
+      ...deliveryColdStartEnvironment(chart, "temporal-delivery-cold-start"),
     },
   });
 

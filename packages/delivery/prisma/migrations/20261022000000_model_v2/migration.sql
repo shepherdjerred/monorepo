@@ -464,6 +464,7 @@ CREATE TABLE "MonitorObservation" (
   "deploymentId" TEXT NOT NULL,
   "sequence" INTEGER NOT NULL,
   "observedAt" TIMESTAMP(3) NOT NULL,
+  "window" TEXT NOT NULL,
   "alarms" JSONB NOT NULL DEFAULT '[]',
   "evidence" JSONB NOT NULL DEFAULT '{}',
   "outcome" TEXT NOT NULL,

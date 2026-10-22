@@ -42,7 +42,11 @@ export const MonitorSchema = z.strictObject({
   /** The image component whose accepted artifact renders `$version` and `$gitSha`. */
   component: ImageComponentNameSchema,
   alarms: z.strictObject({
-    /** Label matchers over the firing `ALERTS` series; `environment` scopes them to this environment (W5). */
+    /**
+     * Label matchers over the firing `ALERTS` series; `environment` scopes
+     * them to this environment (W5). A value starting with `~` is a
+     * regular-expression matcher (`=~`), any other value an exact one.
+     */
     matchers: z
       .record(LabelNameSchema, z.string().min(1))
       .refine(
@@ -86,8 +90,14 @@ export const FiringAlarmSchema = z.strictObject({
   alertname: z.string().min(1),
   severity: AlarmSeveritySchema,
   labels: z.record(LabelNameSchema, z.string()).default({}),
-  activeAt: z.iso.datetime().optional(),
+  /**
+   * When the alert became active (`ALERTS_FOR_STATE`). Only an alarm active
+   * at or after the deployment's claim counts against it; an older one is
+   * recorded as pre-existing and neither rolls back nor blocks settlement.
+   */
+  activeAt: z.iso.datetime({ offset: true }),
 });
+export type FiringAlarm = z.infer<typeof FiringAlarmSchema>;
 /** One executor observation of a watching deployment. */
 export const MonitorObservationInputSchema = z.strictObject({
   observedAt: z.iso.datetime(),
@@ -108,15 +118,6 @@ export const MonitorObservationSchema = MonitorObservationInputSchema.extend({
   createdAt: z.iso.datetime(),
 });
 export type MonitorObservation = z.infer<typeof MonitorObservationSchema>;
-
-/** The result of recording one observation; an automatic rollback it requested is named (W2). */
-export const MonitorObservedSchema = z.strictObject({
-  deploymentId: IdentifierSchema,
-  sequence: z.number().int().positive(),
-  outcome: MonitorOutcomeSchema,
-  policy: MonitorPolicySchema,
-  rollbackDeploymentId: IdentifierSchema.nullable(),
-});
 
 /** An accepted Application whose exact source ArgoCD self-heals (T4). */
 export const SelfHealingSchema = z.strictObject({
@@ -172,6 +173,12 @@ const monitorStateTimestamps: Record<
   alarmed: { settledAt: false, alarmedAt: true },
 };
 
+/**
+ * `GET /environments/:id/monitor`: the monitor of the accepted deployment.
+ * `monitor` is the declaration its frozen recipe carries, so each evidence
+ * value can be read against its threshold; `latestObservation` is the newest
+ * observation the executor recorded, with its firing alarms.
+ */
 export const MonitorStatusSchema = z
   .strictObject({
     deploymentId: IdentifierSchema.nullable(),
@@ -180,8 +187,28 @@ export const MonitorStatusSchema = z
     settledAt: z.iso.datetime().nullable(),
     alarmedAt: z.iso.datetime().nullable(),
     observations: z.number().int().nonnegative(),
+    monitor: MonitorSchema.nullable(),
+    latestObservation: MonitorObservationSchema.nullable(),
   })
   .superRefine((status, context) => {
+    const refuse = (message: string) => {
+      context.addIssue({ code: "custom", message });
+    };
+    if ((status.monitor === null) !== (status.state === "unmonitored")) {
+      refuse("Only an unmonitored selection has no declared monitor");
+    }
+    if (status.monitor !== null && status.monitor.policy !== status.policy) {
+      refuse("The rollback policy is the declared monitor's policy");
+    }
+    if ((status.latestObservation === null) !== (status.observations === 0)) {
+      refuse("The latest observation is present exactly when one was recorded");
+    }
+    if (
+      status.latestObservation !== null &&
+      status.latestObservation.deploymentId !== status.deploymentId
+    ) {
+      refuse("Observations belong to the accepted deployment they watch");
+    }
     const timestamps = monitorStateTimestamps[status.state];
     if (
       (status.settledAt !== null) !== timestamps.settledAt &&

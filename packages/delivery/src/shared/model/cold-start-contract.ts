@@ -1,92 +1,84 @@
 import { z } from "zod";
+import {
+  ComponentNameSchema,
+  EnvironmentIdSchema,
+} from "@shepherdjerred/ops-model/catalog-document-shape.ts";
 import { IdentifierSchema } from "#shared/artifact-contract.ts";
-
-const Fingerprint = z.string().regex(/^sha256:[a-f0-9]{64}$/u);
-
-/** One environment's accepted selection as the record held it when the snapshot was written. */
-export const ColdStartEnvironmentSchema = z.strictObject({
-  id: IdentifierSchema,
-  serviceId: IdentifierSchema,
-  lifecycle: z.enum(["active", "deprecated", "retired"]),
-  /** Position in the bootstrap chain, prerequisites first; null outside it. */
-  bootstrapOrder: z.number().int().nonnegative().nullable(),
-  accepted: z
-    .strictObject({
-      deploymentId: IdentifierSchema,
-      versionSetRevisionId: IdentifierSchema,
-      recipeRevisionId: IdentifierSchema,
-      configurationRevisionId: IdentifierSchema,
-      /** The recorded operation that converged the target, when one did. */
-      operationId: z.string().min(1).nullable(),
-      artifacts: z.record(
-        z.string().min(1),
-        z.strictObject({
-          uri: z.string().min(1),
-          digest: z.string().regex(/^sha256:[a-f0-9]{64}$/u),
-          version: z.string().min(1),
-        }),
-      ),
-    })
-    .nullable(),
-});
-export type ColdStartEnvironment = z.infer<typeof ColdStartEnvironmentSchema>;
+import { SelectionSchema } from "./selection-contract.ts";
 
 /**
- * The cold-start snapshot (model section 6, X7): written off-cluster on every
- * acceptance of a bootstrap-chain environment. The bootstrap tool walks it in
- * order; it sets observed selections only, never an accepted pointer.
+ * The cold-start snapshot (model section 6, X7): every environment's
+ * accepted selection with the artifacts of its set revision, written
+ * off-cluster on each acceptance of a bootstrap-chain environment. It sets
+ * observed selections during a cold start and never an accepted pointer.
  */
-export const ColdStartSnapshotSchema = z.strictObject({
-  schema: z.literal("delivery-cold-start/v1"),
-  writtenAt: z.iso.datetime(),
-  /** The acceptance that triggered this write. */
+
+/** Where the snapshot writer puts the newest snapshot and operators read it (R2). */
+export const COLD_START_SNAPSHOT = {
+  /** Cloudflare R2's S3 endpoint for the homelab account, beside Velero and WAL-G. */
+  endpoint: "https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com",
+  bucket: "homelab",
+  key: "delivery-cold-start/latest.json",
+} as const;
+
+/** The immutable copy each write also leaves beside `latest.json`. */
+export function coldStartArchiveKey(snapshot: {
+  writtenAt: string;
+  catalogRevision: string;
+}): string {
+  return `delivery-cold-start/${snapshot.writtenAt}-${snapshot.catalogRevision}.json`;
+}
+
+const DigestSchema = z.string().regex(/^sha256:[a-f0-9]{64}$/u);
+export const SnapshotArtifactSchema = z.strictObject({
+  uri: z.string().min(1).max(2048),
+  version: z.string().min(1).max(160),
+  digest: DigestSchema,
+});
+export type SnapshotArtifact = z.infer<typeof SnapshotArtifactSchema>;
+
+export const SnapshotEnvironmentSchema = z.strictObject({
+  environmentId: EnvironmentIdSchema,
+  /** The accepted deployment, which names the selection within its environment (L1). */
   deploymentId: IdentifierSchema,
-  recipes: z.record(IdentifierSchema, z.unknown()),
-  configurations: z.record(IdentifierSchema, z.record(z.string(), z.unknown())),
-  edges: z.array(
-    z.strictObject({
-      dependentId: IdentifierSchema,
-      prerequisiteId: IdentifierSchema,
-      rule: z.string().min(1),
-    }),
-  ),
-  environments: z.array(ColdStartEnvironmentSchema),
+  acceptedAt: z.iso.datetime(),
+  selection: SelectionSchema,
+  /** Every component of the selected set revision, by component name. */
+  artifacts: z.record(ComponentNameSchema, SnapshotArtifactSchema),
+});
+export type SnapshotEnvironment = z.infer<typeof SnapshotEnvironmentSchema>;
+
+export const ColdStartSnapshotSchema = z.strictObject({
+  writtenAt: z.iso.datetime(),
+  catalogRevision: DigestSchema,
+  environments: z
+    .array(SnapshotEnvironmentSchema)
+    .refine(
+      (environments) =>
+        new Set(environments.map((entry) => entry.environmentId)).size ===
+        environments.length,
+      "The snapshot records each environment once",
+    ),
 });
 export type ColdStartSnapshot = z.infer<typeof ColdStartSnapshotSchema>;
 
+/** Executor: whether an acceptance moved the bootstrap chain, with the snapshot to write. */
 export const ColdStartRequirementSchema = z.discriminatedUnion("required", [
   z.strictObject({ required: z.literal(false) }),
   z.strictObject({
     required: z.literal(true),
-    fingerprint: Fingerprint,
+    fingerprint: DigestSchema,
     snapshot: ColdStartSnapshotSchema,
   }),
 ]);
 
 /** What the executor reports after writing the snapshot off-cluster. */
 export const ColdStartReceiptSchema = z.strictObject({
-  fingerprint: Fingerprint,
+  fingerprint: DigestSchema,
   uri: z.string().regex(/^s3:\/\/[a-z0-9.-]+\/.+$/u),
   writtenAt: z.iso.datetime(),
 });
 export type ColdStartReceipt = z.infer<typeof ColdStartReceiptSchema>;
-
-/** Per environment: whether record, snapshot and live target agree after a restore. */
-export const RestoreComparisonSchema = z.strictObject({
-  environmentId: IdentifierSchema,
-  record: IdentifierSchema.nullable(),
-  snapshot: IdentifierSchema.nullable(),
-  live: z.enum(["matches", "differs", "missing", "not-observed"]),
-  held: z.boolean(),
-  reason: z.string().nullable(),
-});
-export const ReconcileAfterRestoreResultSchema = z.strictObject({
-  snapshotFingerprint: Fingerprint,
-  environments: z.array(RestoreComparisonSchema),
-});
-export type ReconcileAfterRestoreResult = z.infer<
-  typeof ReconcileAfterRestoreResultSchema
->;
 
 /** An operator settles a restore hold by accepting the live state with evidence. */
 export const SettleRestoreHoldSchema = z.strictObject({
@@ -95,8 +87,9 @@ export const SettleRestoreHoldSchema = z.strictObject({
 });
 export type SettleRestoreHold = z.infer<typeof SettleRestoreHoldSchema>;
 
+/** Environment.restoreHold: why reconcile-after-restore held automatic deployments. */
 export const RestoreHoldSchema = z.strictObject({
-  snapshotFingerprint: Fingerprint,
+  catalogRevision: DigestSchema,
   reason: z.string().min(1),
   heldAt: z.iso.datetime(),
 });

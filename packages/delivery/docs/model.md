@@ -704,6 +704,9 @@ is met or an alarm fires; `settled` when the threshold is met with no alarm;
   settled selection if D9 permits one. That rollback is authorised by a
   `restoration` approval (H5), not by a new decision. With no permitted
   candidate the environment is held (D2) for an operator with the reason.
+  An alarm counts only when it became active at or after the deployment's
+  claim; one already active before the claim is recorded as pre-existing
+  evidence and neither rolls back nor blocks settlement.
 - W3. `promote` out of an environment requires its current selection to be
   `settled`.
 - W4. Thresholds are evidence counts. Where a service has no traffic signal,
