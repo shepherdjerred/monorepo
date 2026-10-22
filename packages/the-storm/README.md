@@ -3327,7 +3327,11 @@ When a route fails, tactics records the goal as blocked and substitutes a
 started at. If that step cannot be routed either, the bot walks straight back
 to its nearest node, so a failed route never leaves a bot standing while any
 node is in reach. A bot hanging on a climb that reaches no spawn (vines that
-hang under an island into the void) lets go instead. `RECOVER` is never scored
+hang under an island into the void) lets go instead, and one stranded anywhere
+else no spawn can be reached from (a pool the graph has no exit from) swims
+through it to the nearest bank at most a block above the water that leads home
+and climbs out, as a player does (a stair's half step above the water cannot be
+climbed out onto). Cover is never chosen in water or in such a sink. `RECOVER` is never scored
 or drawn and earns no commitment bonus. A bot body that has stood on solid ground for two ticks has its fall
 distance cleared, and the router treats a grounded body as landed: an NPC body
 does not refresh vanilla's collision on-ground flag while standing still, so a
@@ -3357,7 +3361,10 @@ corner that holds nothing are left out of routes. As in vanilla, a body holds
 onto a ladder or vine only while climbing or sneaking; otherwise it slides down.
 A walk may cross a point where only part of its footprint is on a block (a
 one-block walkway, blocks touching at a corner) but must end fully supported,
-and a refused walk leaves an airborne body's momentum alone. When a body still refuses or
+and a refused walk leaves an airborne body's momentum alone. A drop whose flight
+clips a low ceiling or a stair is taken when a body walking down the steps,
+half a block at a time, stays clear, rounding a stair turn or column corner
+along one axis and then the other when the straight line cuts through it. When a body still refuses or
 stalls on a step, `/rwfbots debug` shows a snapshot of its state and the first
 check that refused the step.
 

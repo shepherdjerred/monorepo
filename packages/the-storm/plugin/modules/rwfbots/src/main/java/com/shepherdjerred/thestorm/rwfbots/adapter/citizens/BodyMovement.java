@@ -58,7 +58,9 @@ final class BodyMovement {
       goal = bank.orElseThrow();
       hop = Hop.JUMP;
     }
-    var grounded = SnapshotCapture.onGround(player);
+    // The centre check misses a body standing on a stair's half step or a block edge; such a body
+    // kept a stale take-off origin, and every retried jump was judged from it and refused.
+    var grounded = SnapshotCapture.onGround(player) || terrain.grounded(position);
     var tick = player.getServer().getCurrentTick();
     var candidate = new Flight(position, goal, hop, tick);
     retainFlight(candidate, grounded);
@@ -155,7 +157,8 @@ final class BodyMovement {
 
   private static Optional<Vec3> bankExit(
       MovementTerrain terrain, Vec3 position, Vec3 goal, Hop hop) {
-    if (!terrain.inWater(position) || (hop == Hop.SWIM && goal.y() < position.y()))
+    if (!terrain.inWater(position)
+        || ((hop == Hop.SWIM || hop == Hop.DROP) && goal.y() < position.y()))
       return Optional.empty();
     return terrain.bankExit(position, goal);
   }
@@ -163,7 +166,11 @@ final class BodyMovement {
   private boolean survives(Player player, MovementTerrain terrain, Vec3 goal, Hop hop) {
     var position = feet(player);
     if (hop == Hop.CLIMB && terrain.climbable(position)) return true;
-    if (hop == Hop.CLIMB && !terrain.climbable(goal) && !terrain.supported(goal, 0.1)) return false;
+    // A climb's step onto the top of a ladder (the cell above it) grabs the ladder as it drops
+    // in, as the movement gate's grip does; it never falls past it.
+    if (hop == Hop.CLIMB && (terrain.climbable(goal) || terrain.climbable(goal.plus(0, -1, 0))))
+      return true;
+    if (hop == Hop.CLIMB && !terrain.supported(goal, 0.1)) return false;
     if (hop == Hop.WALK) {
       var direction = goal.minus(position).horizontal();
       if (!direction.isZero())
@@ -193,7 +200,7 @@ final class BodyMovement {
     var next = accelerated(player, steering);
     if (swimming) {
       next =
-          steering.hop() == Hop.SWIM
+          (steering.hop() == Hop.SWIM || (steering.hop() == Hop.DROP && heading.y() < 0))
               ? SwimmingMotion.directed(next, heading.y(), steering.leavingWater())
               : SwimmingMotion.buoyancy(
                   next, position.y(), terrain.waterSurface(position), steering.leavingWater());

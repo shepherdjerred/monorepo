@@ -581,7 +581,9 @@ public final class Planner {
       Situation situation, TacticsContext context, Vec3 goal, Vec3 threat) {
     var nav = context.nav();
     var node = situation.board().claimedCover().get(situation.self().id());
-    if (node == null || !coverAvailable(situation, context, node)) {
+    if (node == null
+        || !coverAvailable(situation, context, node)
+        || !RecoverySteps.usable(situation, context, node)) {
       return Optional.empty();
     }
     var feet = nav.graph().feet(node);
@@ -653,6 +655,7 @@ public final class Planner {
     for (var point : nav.cover().protectingFrom(nav.graph(), near, threat, radius)) {
       var feet = nav.graph().feet(point.node());
       if (situation.board().isCoverClaimed(point.node(), self)
+          || !RecoverySteps.usable(situation, context, point.node())
           || poisonDanger(situation, feet, POISON_MARGIN)
           || feet.horizontalDistance(threat) <= TOO_CLOSE_COVER
           || taken.stream().anyMatch(other -> other.horizontalDistance(feet) < COVER_ROOM)
@@ -842,7 +845,9 @@ public final class Planner {
             ? patrolRoute(situation, context, pos, radius)
             : Optional.<RouteResult>empty();
     if (patrol.isPresent()) return patrol.orElseThrow();
-    return arrived
+    // A RECOVER hold only stands: routing back to it pulled a bot that had swum out of a pool, or
+    // slid down vines it let go of, back to where it stood when it recovered.
+    return arrived || plan.option() == Option.RECOVER
         ? new RouteResult.Arrived()
         : pathTo(situation, context, pos, new Way(stance, true));
   }
@@ -1237,6 +1242,7 @@ public final class Planner {
       if (point.protectsStanding(sector)
           || !beside
           || crowded
+          || !RecoverySteps.usable(situation, context, point.node())
           || !nav.grid().canSee(feet.plus(0, CombatantView.EYE_HEIGHT, 0), enemy.plus(0, 1.3, 0))
           || !coverAvailable(situation, context, point.node())) {
         continue;

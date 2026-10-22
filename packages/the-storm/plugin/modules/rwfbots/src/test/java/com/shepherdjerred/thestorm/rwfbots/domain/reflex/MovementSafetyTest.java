@@ -54,6 +54,11 @@ final class MovementSafetyTest {
     public boolean footing(Vec3 feet, double drop) {
       return floor.test(feet);
     }
+
+    @Override
+    public boolean submerged(Vec3 feet) {
+      return false;
+    }
   }
 
   private static MovementSafety.Result move(Terrain terrain, Vec3 target, Hop hop) {
@@ -168,6 +173,11 @@ final class MovementSafetyTest {
       @Override
       public boolean footing(Vec3 feet, double drop) {
         return floor.test(feet);
+      }
+
+      @Override
+      public boolean submerged(Vec3 feet) {
+        return false;
       }
     };
   }

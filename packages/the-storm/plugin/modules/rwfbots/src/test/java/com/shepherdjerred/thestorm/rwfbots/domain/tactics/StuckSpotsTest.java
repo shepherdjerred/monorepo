@@ -300,4 +300,236 @@ final class StuckSpotsTest {
     }
     assertThat(targets).isNotEmpty();
   }
+
+  @ParameterizedTest
+  @MethodSource("pools")
+  void aBotInAPoolTheGraphHasNoExitFromSwimsToABankItCanClimbOutOnto(Vec3 pool) {
+    // cloned-balance: one-block-deep pools the bake gives no way out of. Bots in them circled in
+    // RECOVER for minutes; the nearest edge out is a stair's half step above the water, which a
+    // swimmer cannot climb, so the escape must swim to a bank at most a block up.
+    var nav = nav("cloned-balance");
+    var graph = nav.graph();
+    var spawn = nav.approachNode(nav.sites().spawns().getFirst()).orElseThrow();
+    assertThat(graph.reachable(graph.nearestNode(pool).orElseThrow(), spawn))
+        .as("the pool is a sink")
+        .isFalse();
+    var goal = graph.feet(spawn);
+    var state =
+        new TacticsState(
+            Optional.of(Plan.of(Option.TAKE_SLOT, 95, new PlanStep.Route(goal, Stance.CAUTIOUS))),
+            95,
+            0,
+            0,
+            RewindClock.UNSTARTED,
+            TacticalMemory.EMPTY);
+    var self = combatant(1, RED, pool).withMotion(false, false);
+    var thought =
+        Tactics.think(
+            state,
+            situation(nav, self, Optional.of(goal), 100),
+            context(nav),
+            new SplittableRandom(1));
+
+    assertThat(thought.trace().movement().recovery()).isEqualTo(DecisionTrace.Recovery.ESCAPE);
+    var waypoints = thought.decision().waypoints();
+    var bank = waypoints.getLast().pos();
+    var water =
+        waypoints.size() > 1
+            ? waypoints.get(waypoints.size() - 2).pos()
+            : graph.feet(graph.nearestNode(pool).orElseThrow());
+    assertThat(bank.y() - water.y())
+        .as("bank rise")
+        .isLessThanOrEqualTo(RecoverySteps.BANK_RISE + 1e-6);
+    assertThat(graph.reachable(graph.nearestNode(bank).orElseThrow(), spawn)).isTrue();
+  }
+
+  static List<Vec3> pools() {
+    return List.of(new Vec3(4151.0, 24.0, 1113.0), new Vec3(4142.3, 24.6, 1088.5));
+  }
+
+  @Test
+  void coverIsNeverInWaterOrAPoolWithNoWayOut() {
+    // cloned-balance: slot cover was chosen inside a pool the graph has no exit from, and the
+    // bots sent there never got out.
+    var nav = nav("cloned-balance");
+    var graph = nav.graph();
+    var context = context(nav);
+    var pool = new Vec3(4150.5, 24.0, 1113.5);
+    for (var threat : List.of(pool.plus(20, 0, 0), pool.plus(-20, 0, 0), pool.plus(0, 0, 20))) {
+      var self = combatant(1, RED, pool.plus(0, 2, -6)).withMotion(false, true);
+      var cover =
+          Planner.coverNear(
+              situation(nav, self, Optional.empty(), 100),
+              context,
+              new Planner.CoverSearch(pool, threat, 8));
+      cover.ifPresent(
+          spot -> {
+            assertThat(graph.water().contains(graph.cell(spot.node()))).as("in water").isFalse();
+            assertThat(RecoverySteps.sink(context, spot.node())).as("in a sink").isFalse();
+          });
+    }
+  }
+
+  @Test
+  void aBotLettingGoOfDeadEndVinesIsNotPulledBackUpToWhereItLetGo() {
+    // hemispheres: a bot fell off the rim into a vine shaft and let go, but its RECOVER plan held
+    // the spot it let go at, so every time it slid down the plan climbed it back: 160 s on a vine.
+    var nav = nav("hemispheres");
+    var graph = nav.graph();
+    var letGoAt = new Vec3(2128.5, 38.3, 3253.5);
+    var slid = new Vec3(2128.5, 35.5, 3253.5);
+    var node = graph.nearestNode(slid).orElseThrow();
+    assertThat(graph.climbable(node)).as("on the vines").isTrue();
+    var spawn = nav.approachNode(nav.sites().spawns().getFirst()).orElseThrow();
+    assertThat(graph.reachable(node, spawn)).as("the vines lead nowhere").isFalse();
+    var state =
+        new TacticsState(
+            Optional.of(
+                Plan.of(
+                    Option.RECOVER,
+                    95,
+                    new PlanStep.Hold(letGoAt, letGoAt.plus(5, 0, 0), Stance.CAUTIOUS))),
+            95,
+            0,
+            0,
+            RewindClock.UNSTARTED,
+            TacticalMemory.EMPTY);
+    var self = combatant(1, RED, slid).withMotion(false, false);
+    var thought =
+        Tactics.think(
+            state,
+            situation(nav, self, Optional.empty(), 100),
+            context(nav),
+            new SplittableRandom(1));
+
+    assertThat(thought.trace().movement().recovery()).isEqualTo(DecisionTrace.Recovery.LET_GO);
+    assertThat(thought.decision().waypoints()).isEmpty();
+  }
+
+  @Test
+  void coverABotCannotRouteToIsNeverOffered() {
+    // the-harshest-harvest: slot cover was chosen where the bot could not route, every route failed
+    // and the bot stepped back and forth in recovery for 80 s.
+    var nav = nav("the-harshest-harvest");
+    var graph = nav.graph();
+    var context = context(nav);
+    var here = new Vec3(6172.9, 13.0, 4138.5);
+    var start = graph.nearestNode(here).orElseThrow();
+    var situation =
+        situation(nav, combatant(1, RED, here).withMotion(false, true), Optional.empty(), 100);
+    var unreachable = 0;
+    var usable = 0;
+    for (var point : nav.cover().points()) {
+      if (!graph.reachable(start, point.node())) {
+        unreachable++;
+        assertThat(RecoverySteps.usable(situation, context, point.node())).isFalse();
+      } else if (RecoverySteps.leavable(context, point.node())) {
+        usable++;
+        assertThat(RecoverySteps.usable(situation, context, point.node())).isTrue();
+      }
+    }
+    assertThat(unreachable).as("cover the bot cannot reach exists").isPositive();
+    assertThat(usable).as("reachable dry cover exists").isPositive();
+  }
+
+  @Test
+  void aBotThatSwamOutOfAPoolIsNotRoutedBackIntoIt() {
+    // Review finding: the RECOVER hold a stranded bot recovers with stayed its plan for a while,
+    // and once out on the bank the hold routed it back into the pool it had escaped.
+    var nav = nav("cloned-balance");
+    var graph = nav.graph();
+    var pool = new Vec3(4142.3, 24.6, 1088.5);
+    var spawn = nav.approachNode(nav.sites().spawns().getFirst()).orElseThrow();
+    var goal = graph.feet(spawn);
+    var escape =
+        Tactics.think(
+            new TacticsState(
+                Optional.of(
+                    Plan.of(Option.TAKE_SLOT, 95, new PlanStep.Route(goal, Stance.CAUTIOUS))),
+                95,
+                0,
+                0,
+                RewindClock.UNSTARTED,
+                TacticalMemory.EMPTY),
+            situation(
+                nav, combatant(1, RED, pool).withMotion(false, false), Optional.of(goal), 100),
+            context(nav),
+            new SplittableRandom(1));
+    var bank = escape.decision().waypoints().getLast().pos();
+    var held =
+        new TacticsState(
+            Optional.of(
+                Plan.of(
+                    Option.RECOVER,
+                    100,
+                    new PlanStep.Hold(pool, pool.plus(5, 0, 0), Stance.CAUTIOUS))),
+            100,
+            0,
+            0,
+            RewindClock.UNSTARTED,
+            TacticalMemory.EMPTY);
+    var thought =
+        Tactics.think(
+            held,
+            situation(nav, combatant(1, RED, bank).withMotion(false, true), Optional.empty(), 110),
+            context(nav),
+            new SplittableRandom(1));
+    assertThat(thought.decision().waypoints())
+        .allSatisfy(
+            waypoint ->
+                assertThat(graph.water().contains(BlockPos.of(waypoint.pos())))
+                    .as("back into the water at %s", waypoint.pos())
+                    .isFalse());
+  }
+
+  /** A deep, exitless well beside open ground: water up to y 14, walls three blocks above it. */
+  private record DeepWell()
+      implements com.shepherdjerred.thestorm.rwfbots.domain.map.BlockClassification {
+    @Override
+    public com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds bounds() {
+      return new com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds(
+          new BlockPos(0, 0, 0), 9, 20, 9);
+    }
+
+    @Override
+    public com.shepherdjerred.thestorm.rwfbots.domain.map.BlockShape shape(int x, int y, int z) {
+      var inWell = x >= 3 && x <= 5 && z >= 3 && z <= 5;
+      if (y == 0) return com.shepherdjerred.thestorm.rwfbots.domain.map.BlockShape.FULL;
+      if (inWell)
+        return y <= 14
+            ? com.shepherdjerred.thestorm.rwfbots.domain.map.BlockShape.LIQUID
+            : com.shepherdjerred.thestorm.rwfbots.domain.map.BlockShape.PASSABLE;
+      return y <= 16
+          ? com.shepherdjerred.thestorm.rwfbots.domain.map.BlockShape.FULL
+          : com.shepherdjerred.thestorm.rwfbots.domain.map.BlockShape.PASSABLE;
+    }
+
+    @Override
+    public boolean blocksSight(int x, int y, int z) {
+      return shape(x, y, z).blocksMovement();
+    }
+  }
+
+  @Test
+  void aBotDeepInAWellTheGraphHasNoExitFromIsStranded() {
+    // Review finding: a deep water column keeps only its portal nodes, so the node nearest a
+    // swimmer at mid-depth may be far above or below it; the standing check must not reject it.
+    var nav =
+        com.shepherdjerred.thestorm.rwfbots.domain.map.MapBaker.bake(
+            "deep-well",
+            new DeepWell(),
+            new com.shepherdjerred.thestorm.rwfbots.domain.map.NavSites(
+                List.of(
+                    new com.shepherdjerred.thestorm.rwfbots.domain.map.NavSites.Site(
+                        "red", Optional.of("red"), new BlockPos(7, 17, 7))),
+                List.of()));
+    var swimmer = new Vec3(4.5, 7.5, 4.5);
+    var node = nav.graph().nearestNode(swimmer).orElseThrow();
+    assertThat(Math.abs(nav.graph().feet(node).y() - swimmer.y()))
+        .as("the nearest node is far from the swimmer")
+        .isGreaterThan(1.5);
+    var self = combatant(1, RED, swimmer).withMotion(false, false);
+    assertThat(RecoverySteps.stranded(situation(nav, self, Optional.empty(), 100), context(nav)))
+        .isTrue();
+  }
 }

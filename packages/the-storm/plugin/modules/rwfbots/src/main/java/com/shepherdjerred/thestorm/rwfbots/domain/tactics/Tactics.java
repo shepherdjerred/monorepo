@@ -206,6 +206,10 @@ public final class Tactics {
   private static Routed route(Planning planning, Situation situation, TacticsContext context) {
     var plan = planning.plan();
     var memory = planning.objective().memory();
+    // A held RECOVER plan would pull a stranded bot back to where it stood: up the vines it let go
+    // of, back into the middle of the pool it is swimming out of.
+    if (RecoverySteps.stranded(situation, context))
+      return recover(planning, situation, context, new Setback(memory, Optional.empty()));
     if (planning.objective().forced().isEmpty()
         && (plan.option() == Option.TAKE_SLOT || plan.option() == Option.HOLD_SLOT)) {
       var excluded =
@@ -246,6 +250,17 @@ public final class Tactics {
           memory,
           failure,
           DecisionTrace.Recovery.LET_GO);
+    }
+    var escape = RecoverySteps.escape(situation, context);
+    if (escape.isPresent()) {
+      var stand = Planner.letGo(situation, context);
+      return new Routed(
+          stand,
+          Planner.decide(stand, situation, context, planning.lifeEpoch())
+              .withWaypoints(escape.orElseThrow()),
+          memory,
+          failure,
+          DecisionTrace.Recovery.ESCAPE);
     }
     var plan = Planner.recovery(situation, context);
     var decision = Planner.decide(plan, situation, context, planning.lifeEpoch());

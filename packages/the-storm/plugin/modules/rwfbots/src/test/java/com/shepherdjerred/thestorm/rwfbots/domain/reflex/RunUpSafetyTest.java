@@ -47,6 +47,11 @@ final class RunUpSafetyTest {
     public boolean footing(Vec3 feet, double drop) {
       return supported(feet, drop);
     }
+
+    @Override
+    public boolean submerged(Vec3 feet) {
+      return false;
+    }
   }
 
   @Test

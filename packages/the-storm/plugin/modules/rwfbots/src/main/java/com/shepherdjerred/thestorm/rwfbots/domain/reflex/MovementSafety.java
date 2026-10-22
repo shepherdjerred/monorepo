@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 /** The last movement gate, including local combat steering and bounded recovery sidesteps. */
@@ -18,6 +19,8 @@ public final class MovementSafety {
   private static final double STEP_HEIGHT = 0.6;
   // How far from its footing a body still only needs footing, while it steps back from an edge.
   private static final double LEAVING = 0.5;
+  // The height of a stair step or a slab, the grain a staircase descends in.
+  private static final double HALF_STEP = 0.5;
   // Within this of its cell's centre a body already takes off from there.
   private static final double CENTRED = 0.05;
   private static final double[] ANGLES = {0, 30, -30, 60, -60, 90, -90};
@@ -42,6 +45,9 @@ public final class MovementSafety {
 
     /** Whether any part of the body's footprint there rests on floor within {@code drop}. */
     boolean footing(Vec3 feet, double drop);
+
+    /** Whether a body there is in water. */
+    boolean submerged(Vec3 feet);
   }
 
   public record Request(Vec3 from, Vec3 target, Hop hop, Optional<Vec3> takeoff) {
@@ -81,10 +87,12 @@ public final class MovementSafety {
       return swim(terrain, request.from(), request.target());
     }
     if (request.hop() == Hop.LEAP || request.hop() == Hop.DROP || request.hop() == Hop.JUMP) {
-      if (traversal(terrain, request))
+      if (traversal(terrain, request) || walksDown(terrain, request))
         return new Result(Optional.of(request.target()), Reason.CLEAR);
       return takeoff(terrain, request)
-          .map(centre -> new Result(Optional.of(centre), Reason.REDIRECTED))
+          .or(() -> sinkFirst(terrain, request))
+          .or(() -> dropAround(terrain, request))
+          .map(corner -> new Result(Optional.of(corner), Reason.REDIRECTED))
           .orElseGet(() -> new Result(Optional.empty(), Reason.BLOCKED));
     }
     var heading = request.target().minus(request.from()).horizontal();
@@ -113,6 +121,100 @@ public final class MovementSafety {
     return walkCorridor(terrain, from, centre, true)
             && traversal(terrain, new Request(centre, request.target(), request.hop()))
         ? Optional.of(centre)
+        : Optional.empty();
+  }
+
+  /**
+   * Whether a drop is a walk down a staircase: a grounded body that follows the highest footing
+   * under it, half a block at a time between its feet and the landing, stays clear all the way. A
+   * flight held at the take-off height hits the low ceiling over a stairwell or the next turn of
+   * its stairs, though the body walking down never rises that high (hemispheres: tower stairs).
+   */
+  private static boolean walksDown(Terrain terrain, Request request) {
+    var from = request.from();
+    var target = request.target();
+    if (request.hop() != Hop.DROP
+        || request.takeoff().isPresent()
+        || target.y() >= from.y()
+        || from.horizontalDistance(target) > MAX_LEAP_SPAN
+        || !terrain.grounded(from)
+        || !safe(terrain, target)
+        || !terrain.supported(target, WALK_DROP)) return false;
+    return downLeg(terrain, from, target, new Band(from.y(), target.y()));
+  }
+
+  /**
+   * For a drop blocked straight, the axis turn a grounded body walks down by instead, rounding the
+   * corner of a stair turn or a column the straight line cuts through (hemispheres: tower stairs).
+   */
+  private static Optional<Vec3> dropAround(Terrain terrain, Request request) {
+    var from = request.from();
+    var target = request.target();
+    if (request.hop() != Hop.DROP
+        || request.takeoff().isPresent()
+        || target.y() > from.y()
+        || !terrain.grounded(from)
+        || !safe(terrain, target)
+        || !terrain.supported(target, WALK_DROP)) return Optional.empty();
+    for (var corner : turns(from, target)) {
+      if (corner.horizontalDistance(from) < CENTRED || corner.horizontalDistance(target) < CENTRED)
+        continue;
+      var band = new Band(from.y(), target.y());
+      if (downLeg(terrain, from, corner, band) && downLeg(terrain, corner, target, band))
+        return Optional.of(corner);
+    }
+    return Optional.empty();
+  }
+
+  /** The heights a body walking down stays between: its take-off height and its landing's. */
+  private record Band(double top, double bottom) {}
+
+  /** Whether a body walking down from {@code from} to {@code to} passes every sample. */
+  private static boolean downLeg(Terrain terrain, Vec3 from, Vec3 to, Band band) {
+    var count = Math.max(1, (int) Math.ceil(from.horizontalDistance(to) / SAMPLE_GAP));
+    for (var index = 0; index <= count; index++) {
+      if (!passesDown(terrain, from.lerp(to, (double) index / count), band.top(), band.bottom()))
+        return false;
+    }
+    return true;
+  }
+
+  /**
+   * Whether a body walking down passes {@code sample}: clear at the highest half-block height from
+   * {@code top} down to {@code bottom} it has footing at, or, with footing at none (stepping off
+   * one onto the next), clear at any of them as it falls between.
+   */
+  private static boolean passesDown(Terrain terrain, Vec3 sample, double top, double bottom) {
+    var clearAbove = false;
+    for (var height = top; height >= bottom - 1e-9; height -= HALF_STEP) {
+      var point = sample.withY(Math.max(height, bottom));
+      var clear = safe(terrain, point);
+      if (terrain.grounded(point)) return clear || clearAbove;
+      clearAbove |= clear;
+    }
+    return clearAbove;
+  }
+
+  /**
+   * For a drop from water whose flight is blocked, the point straight below at the target's height
+   * when the body can sink there through water and then cross to the target: the way out of a well
+   * is down the column and out through its side, not across at the surface.
+   */
+  private static Optional<Vec3> sinkFirst(Terrain terrain, Request request) {
+    var from = request.from();
+    var target = request.target();
+    if (request.hop() != Hop.DROP || !terrain.submerged(from) || target.y() >= from.y())
+      return Optional.empty();
+    var corner = from.withY(target.y());
+    if (corner.horizontalDistance(target) < CENTRED) return Optional.empty();
+    var count = Math.max(1, (int) Math.ceil((from.y() - corner.y()) / SAMPLE_GAP));
+    for (var index = 0; index <= count; index++) {
+      var point = from.lerp(corner, (double) index / count);
+      if (!safe(terrain, point) || (index < count && !terrain.submerged(point)))
+        return Optional.empty();
+    }
+    return clearFlight(terrain, corner, target, corner.y())
+        ? Optional.of(corner)
         : Optional.empty();
   }
 
@@ -291,9 +393,30 @@ public final class MovementSafety {
     var flat = "flight " + leg(terrain, from.withY(flightY), target.withY(flightY), Check.CLEAR);
     if (request.takeoff().isPresent() || !terrain.grounded(from)) return flat;
     var stepped = flightY + STEP_HEIGHT;
-    return flat
-        + ", stepped up "
-        + leg(terrain, from.withY(stepped), target.withY(stepped), Check.CLEAR);
+    var both =
+        flat
+            + ", stepped up "
+            + leg(terrain, from.withY(stepped), target.withY(stepped), Check.CLEAR);
+    return request.hop() == Hop.DROP && target.y() < from.y()
+        ? both + ", walking down " + walkingDown(terrain, from, target)
+        : both;
+  }
+
+  /** The first sample a walk down from {@code from} to {@code target} does not pass, or clear. */
+  private static String walkingDown(Terrain terrain, Vec3 from, Vec3 target) {
+    var count = Math.max(1, (int) Math.ceil(from.horizontalDistance(target) / SAMPLE_GAP));
+    for (var index = 0; index <= count; index++) {
+      var sample = from.lerp(target, (double) index / count);
+      if (!passesDown(terrain, sample, from.y(), target.y()))
+        return String.format(
+            Locale.ROOT,
+            "sample %d/%d at %.2f,%.2f blocked at every height",
+            index,
+            count,
+            sample.x(),
+            sample.z());
+    }
+    return "clear";
   }
 
   /**

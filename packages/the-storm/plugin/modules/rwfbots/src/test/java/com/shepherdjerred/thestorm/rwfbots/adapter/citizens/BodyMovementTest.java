@@ -394,4 +394,46 @@ final class BodyMovementTest {
     motion.stop(player);
     assertThat(player.getVelocity().getY()).as("sneaking holds on").isGreaterThanOrEqualTo(0);
   }
+
+  @Test
+  void aBodyOnASlabEdgeThatHasNotLeftTheGroundRetriesItsJumpFresh() {
+    // cloned-balance: a body standing on a stair's half step or a slab edge read as airborne (the
+    // centre is over air), kept its last jump's take-off origin, and every retry was judged from
+    // it with the stepped-up flight disabled: 80 refused jumps in a row.
+    for (var x = 3; x <= 6; x++) world.getBlockAt(x, 0, 2).setType(Material.STONE);
+    world.getBlockAt(3, 1, 2).setType(Material.STONE_SLAB);
+    world.getBlockAt(5, 1, 2).setType(Material.STONE);
+    world.getBlockAt(6, 1, 2).setType(Material.STONE_SLAB);
+    var player = TraversalPlayerMock.add(server, "slab-edge");
+    player.teleport(new Location(world, 4.2, 1.5, 2.5));
+    var motion = motion(survival(Optional.empty()), (body, heading) -> {});
+    var target =
+        new Bodies.MotionTarget(
+            new Location(world, 6.5, 1.5, 2.5), false, Hop.JUMP, Optional.empty());
+    var first = motion.move(player, target);
+    assertThat(first.refused()).as("first attempt %s", first).isFalse();
+    player.teleport(new Location(world, 4.2, 1.5, 2.5));
+    var again = motion.move(player, target);
+    assertThat(again.refused()).as("retry %s", again).isFalse();
+  }
+
+  @Test
+  void aBodyAtAShaftTopStepsOntoTheLadderBelowRatherThanRefusingTheClimbDown() {
+    // cloned-balance: at the top of a ladder shaft the climb down first steps across onto the top
+    // of the ladder (the air above it); the landing check read that as a fall down the shaft and
+    // refused it, so bots stood at the shaft top.
+    for (var y = 1; y <= 4; y++) world.getBlockAt(3, y, 2).setType(Material.STONE);
+    for (var y = 1; y <= 3; y++) world.getBlockAt(2, y, 2).setType(Material.LADDER);
+    world.getBlockAt(2, 3, 3).setType(Material.STONE);
+    var player = TraversalPlayerMock.add(server, "shaft-top");
+    player.teleport(new Location(world, 2.53, 4.0, 2.91));
+    player.setVelocity(new org.bukkit.util.Vector(0, -0.08, 0));
+    var motion = motion(survival(Optional.empty()), (body, heading) -> {});
+    var reason =
+        motion.move(
+            player,
+            new Bodies.MotionTarget(
+                new Location(world, 2.5, 2.0, 2.5), false, Hop.CLIMB, Optional.empty()));
+    assertThat(reason.refused()).as("%s %s", reason, motion.lastRefusal()).isFalse();
+  }
 }
