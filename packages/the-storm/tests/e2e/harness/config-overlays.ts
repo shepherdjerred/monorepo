@@ -76,6 +76,8 @@ export async function overlaySweep(
 export type RwfOverlay = {
   /** The map world matches are fought in. */
   world: string;
+  /** Restricts the kit pool every draft offers (rwf.yml experience.kits); all kits when absent. */
+  kits?: string[];
   /** The lobby world players wait in. */
   lobbyWorld: string;
   /** How long before the countdown ends the map vote closes; the owned value when absent. */
@@ -139,6 +141,11 @@ export async function overlayRwf(
       ? {}
       : { maxCombatants: rwf.maxCombatants }),
   });
+  if (rwf.kits !== undefined) {
+    await overlaySection(stagedRwfYml, "experience", {
+      kits: `[${rwf.kits.join(", ")}]`,
+    });
+  }
   if (rwf.loadtest !== undefined) {
     await overlaySection(stagedRwfYml, "loadtest", {
       enabled: rwf.loadtest.toString(),

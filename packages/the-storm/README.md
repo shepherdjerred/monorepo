@@ -3464,7 +3464,9 @@ stalls on a step, `/rwfbots debug` shows a snapshot of its state and the first
 check that refused the step.
 
 `bun run bots:match --map <id> --count <n> --output <dir>` plays one bots-only
-showcase on that map in a disposable server and keeps its trace and recording;
+showcase on that map in a disposable server and keeps its trace and recording
+(`--kits "harpooner trooper"` restricts the draft to those kits, which must
+include a starter kit);
 `bun run bots:stuck <trace.gz>` reports, per bot, time spent standing still
 while not holding on purpose, decisions without a path, option flip-flops,
 route failures and recoveries.
