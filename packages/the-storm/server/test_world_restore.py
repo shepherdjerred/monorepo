@@ -1005,7 +1005,7 @@ class RestoreTest(unittest.TestCase):
             writer.close()
         self.assertEqual(restore.table_rows(database)["towns_town"], {("late",)})
 
-    def activation_fixture(self, extra=()):
+    def activation_fixture(self, extra: tuple[str, ...] = ()):
         staging, modern = self.root / "stage", self.root / "modern"
         source = staging / "arena-preserved-layout/world"
         (source / "dimensions/minecraft/overworld/region").mkdir(parents=True)
