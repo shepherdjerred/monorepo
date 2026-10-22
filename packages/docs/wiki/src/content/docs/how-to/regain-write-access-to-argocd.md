@@ -25,15 +25,20 @@ Delivery re-applies each Application's full body and self-heals drift. Turn
 environment, as in
 [Check the Flipt flag inventory](/how-to/check-flipt-flag-inventory/). Delivery
 then admits no new deployment, but a running deployment can still finish and
-re-apply the Application you are about to change.
+re-apply an Application this procedure changes.
 
-Wait until the environment that deploys that Application has drained. Its
-environment id is the Application's `delivery.shepherdjerred.com/environment`
-annotation. This must print `null` before you continue:
+Wait until every environment whose Application you will change has drained:
+the target Application's (its `delivery.shepherdjerred.com/environment`
+annotation), `argocd/prod` (step 1 always patches `argocd`), and
+`cluster-admission/prod` if you will run step 3. Every line must end in
+`null` before you continue:
 
 ```bash
-curl -s https://delivery.tailnet-1a49.ts.net/api/v1/environments/<environment-id> \
-  | jq '.environment.activeDeploymentId'
+for environment in argocd/prod cluster-admission/prod <target-environment-id>; do
+  printf '%s ' "$environment"
+  curl -s "https://delivery.tailnet-1a49.ts.net/api/v1/environments/$(jq -rn --arg id "$environment" '$id | @uri')" \
+    | jq '.environment.activeDeploymentId'
+done
 ```
 
 Then stop ArgoCD from reverting its own settings:
@@ -63,8 +68,8 @@ recreates the binding on its next reconciliation. Save its current policy so
 step 4 can restore it:
 
 ```bash
-kubectl -n argocd get application cluster-admission \
-  -o jsonpath='{.spec.syncPolicy.automated}' > cluster-admission-automated.json
+kubectl -n argocd get application cluster-admission -o json \
+  | jq -c '.spec.syncPolicy.automated // empty' > cluster-admission-automated.json
 kubectl -n argocd patch application cluster-admission --type merge \
   -p '{"spec":{"syncPolicy":{"automated":null}}}'
 ```
@@ -87,7 +92,7 @@ kubectl delete validatingadmissionpolicybinding argocd-application-source.sjer.r
    ```
 
    An empty file means it had no automated policy; skip the patch.
-   `kubectl -n argocd get application cluster-admission -o jsonpath='{.spec.syncPolicy.automated}'`
+   `kubectl -n argocd get application cluster-admission -o json | jq -c '.spec.syncPolicy.automated'`
    prints the saved policy. Then re-sync `cluster-admission` so the binding is
    back: `kubectl get validatingadmissionpolicybinding argocd-application-source.sjer.red`
    finds it.
