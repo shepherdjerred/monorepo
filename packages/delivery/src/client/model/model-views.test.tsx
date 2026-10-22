@@ -8,6 +8,7 @@ import { ApprovalQueue } from "./approval-queue.tsx";
 import { DeploymentModel } from "./deployment-model.tsx";
 import { EnvironmentModel } from "./environment-model.tsx";
 import { MonitorPanel } from "./monitor-panel.tsx";
+import { PlanApproval } from "./plan-approval.tsx";
 import {
   awaitsDecision,
   firingAlarms,
@@ -238,5 +239,60 @@ describe("approval queue", () => {
     expect(waiting).toContain("Override");
     expect(expired).toContain("scout-prod-36");
     expect(expired).toContain("binding generation");
+  });
+});
+
+/** The plan approval control for one detail and principal, as static markup. */
+function plan(
+  detail: typeof fixtures.planWaiting,
+  principal = fixtures.operator,
+) {
+  return render(<PlanApproval detail={detail} principal={principal} />);
+}
+
+describe("plan approval", () => {
+  test("shows the waiting saved plan with approve and reject", () => {
+    const html = plan(fixtures.planWaiting);
+    expect(html).toContain("Plan approval");
+    expect(html).toContain(fixtures.savedPlan.planDigest);
+    expect(html).toContain("Create 2 · update 1 · delete 0 · replace 0");
+    expect(html).toContain("tofu-cloudflare:r7");
+    expect(html).toMatch(/<button[^>]*>Approve plan<\/button>/u);
+    expect(html).toMatch(/<button[^>]*>Reject plan<\/button>/u);
+  });
+
+  test("a reader without approval access sees the plan but cannot approve it", () => {
+    const html = plan(fixtures.planWaiting, {
+      ...fixtures.operator,
+      scopes: ["read"],
+    });
+    expect(html).toContain(fixtures.savedPlan.planDigest);
+    expect(html).toContain("A human with approval access must approve");
+    expect(html).not.toContain("Approve plan");
+    expect(html).not.toContain("Reject plan");
+  });
+
+  test("an approved plan, or a step that is not waiting, shows no control", () => {
+    const approved = {
+      ...fixtures.planWaiting,
+      stages: [
+        ...fixtures.planWaiting.stages,
+        {
+          ...fixtures.attestedStage,
+          key: "approve/plan",
+          deploymentId: "tofu-cloudflare-prod-7",
+        },
+      ],
+    };
+    expect(plan(approved)).toBe("");
+    expect(
+      plan({
+        ...fixtures.planWaiting,
+        stages: fixtures.planWaiting.stages.slice(0, 1),
+      }),
+    ).toBe("");
+    expect(plan(fixtures.deploymentDetails[0] ?? fixtures.planWaiting)).toBe(
+      "",
+    );
   });
 });

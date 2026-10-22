@@ -22,6 +22,7 @@ import { ErrorNotice } from "#client/components/notices.tsx";
 import { ApprovalForm } from "#client/forms/approval-form.tsx";
 import { DeploymentRecord, sourceLabel } from "#client/deployment-detail.tsx";
 import { DeploymentModel } from "#client/model/deployment-model.tsx";
+import { PlanApproval } from "#client/model/plan-approval.tsx";
 import type { RecoveryDecision } from "#client/platform-recovery.tsx";
 import { canApprove, canDeploy, isTerminal } from "#client/presentation.ts";
 import { Route as rootRoute } from "./root.tsx";
@@ -180,6 +181,9 @@ function DeploymentPage() {
             </ConfirmButton>
           )}
         </div>
+      )}
+      {principal !== undefined && (
+        <PlanApproval detail={detail} principal={principal} />
       )}
       <DeploymentModel detail={detail} />
       {principal !== undefined && (

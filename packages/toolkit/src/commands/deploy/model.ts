@@ -33,6 +33,7 @@ export const MODEL_COMMANDS = [
   "retire",
   "catalog",
   "attest",
+  "approve-plan",
   "recover",
   "recovery",
   "snapshot",
@@ -105,6 +106,15 @@ export function validateModelCommand(
       if (options.evidence === undefined)
         throw new Error("--evidence is required");
       IdentifierSchema.parse(options.stage);
+      return;
+    }
+    case "approve-plan": {
+      if (options.machine)
+        throw new Error(
+          "Plan approval requires trusted human identity; omit --machine",
+        );
+      if (options.reason === undefined || options.reason.trim() === "")
+        throw new Error("--reason is required");
       return;
     }
     case "snapshot": {
@@ -271,6 +281,26 @@ async function administer(
   }
 }
 
+/**
+ * Approve the exact saved plan a model `tofu` recipe's approve step waits on
+ * (section 5): the digest comes from the deployment's own saved plan, so an
+ * approval never names a plan the deployment did not produce.
+ */
+async function approvePlan(
+  client: DeliveryClient,
+  deploymentId: string,
+  options: ModelOptions,
+): ModelResult {
+  const { savedPlan } = await client.deployment(deploymentId);
+  if (savedPlan === null)
+    throw new Error(`${deploymentId} has no saved plan to approve`);
+  const result = await client.approvePlan(deploymentId, {
+    planDigest: savedPlan.planDigest,
+    reason: required(options.reason).trim(),
+  });
+  return { result, exitCode: 0 };
+}
+
 export async function runModelCommand(
   client: DeliveryClient,
   command: string,
@@ -302,6 +332,9 @@ export async function runModelCommand(
     }
     case "recovery": {
       return { result: await client.recoveryIntent(target), exitCode: 0 };
+    }
+    case "approve-plan": {
+      return approvePlan(client, target, options);
     }
     case "render-application": {
       return runRenderCommand(target, options);

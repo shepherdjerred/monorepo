@@ -1,5 +1,7 @@
 import { createTestDatabase } from "#testing/postgres.ts";
+import { z } from "zod";
 import { Delivery } from "#infrastructure/delivery.ts";
+import { MachineCredentialSchema } from "#infrastructure/config.ts";
 import { serveHarness } from "./harness.ts";
 import { MODEL_ENVIRONMENTS, seedModelBrowser } from "./model.ts";
 
@@ -15,6 +17,13 @@ try {
     delivery,
     port: 17_355,
     enabledEnvironments: MODEL_ENVIRONMENTS,
+    // Optional disposable machine tokens, so toolkit verbs can be run
+    // against this harness; none are accepted unless the variable is set.
+    machineCredentials: z
+      .array(MachineCredentialSchema)
+      .parse(
+        JSON.parse(Bun.env["DELIVERY_HARNESS_MACHINE_CREDENTIALS"] ?? "[]"),
+      ),
   });
 } catch (error) {
   await cluster.close();

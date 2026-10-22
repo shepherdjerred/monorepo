@@ -117,6 +117,7 @@ export function detailView(
   row: Deployment & {
     approval: Approval | null;
     recoveryIntents: RecoveryIntent[];
+    preparedPlatformPlan: { receipt: unknown } | null;
   },
 ) {
   return DeploymentDetailV2Schema.parse({
@@ -126,6 +127,7 @@ export function detailView(
     recoveryIntents: row.recoveryIntents.map((intent) =>
       recoveryIntentView(intent),
     ),
+    savedPlan: row.preparedPlatformPlan?.receipt ?? null,
   });
 }
 
@@ -190,6 +192,7 @@ export async function deploymentDetailV2(
     include: {
       approval: true,
       recoveryIntents: { orderBy: { sequence: "asc" } },
+      preparedPlatformPlan: { select: { receipt: true } },
     },
   });
   return detailView(detail, row);

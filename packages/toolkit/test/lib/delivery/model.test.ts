@@ -72,6 +72,14 @@ afterAll(async () => {
 describe("model verbs refuse incomplete requests before credentials", () => {
   test.each([
     ["rebind", [fixtures.PROD], [], "--recipe, --configuration"],
+    ["approve-plan", ["tofu-cloudflare-prod-7"], [], "--reason"],
+    [
+      "approve-plan",
+      ["tofu-cloudflare-prod-7"],
+      ["--machine", "--reason", "Reviewed"],
+      "trusted human identity",
+    ],
+    ["approve-plan", [], ["--reason", "Reviewed"], "Invalid operands"],
     ["retire", ["webring-legacy"], ["--reason", "Replaced"], "--machine"],
     ["retire", ["webring-legacy"], ["--machine"], "--reason"],
     ["catalog", ["apply"], ["--machine"], "deploy catalog reconcile"],
@@ -379,6 +387,40 @@ describe("start, promote and recovery reads", () => {
       result: intent,
       exitCode: 0,
     });
+  });
+});
+
+describe("plan approval", () => {
+  test("approve-plan approves the deployment's own saved plan by its digest", async () => {
+    const { client, sent } = delivery({
+      "GET /deployments/tofu-cloudflare-prod-7": fixtures.planWaiting,
+      "POST /deployments/tofu-cloudflare-prod-7/plan-approval":
+        fixtures.attestedStage,
+    });
+    const result = await run(client, "approve-plan", [
+      "tofu-cloudflare-prod-7",
+      "--reason",
+      "  Two DNS records and one tunnel route, reviewed  ",
+    ]);
+    expect(result).toEqual({ result: fixtures.attestedStage, exitCode: 0 });
+    expect(sent.at(-1)).toEqual({
+      method: "POST",
+      path: "/deployments/tofu-cloudflare-prod-7/plan-approval",
+      body: {
+        planDigest: fixtures.savedPlan.planDigest,
+        reason: "Two DNS records and one tunnel route, reviewed",
+      },
+    });
+  });
+
+  test("approve-plan refuses a deployment with no saved plan before sending", async () => {
+    const { client, sent } = delivery({
+      "GET /deployments/scout-prod-43": fixtures.deploymentDetails[0],
+    });
+    await expect(
+      run(client, "approve-plan", ["scout-prod-43", "--reason", "Reviewed"]),
+    ).rejects.toThrow("has no saved plan to approve");
+    expect(sent.every((request) => request.method === "GET")).toBe(true);
   });
 });
 

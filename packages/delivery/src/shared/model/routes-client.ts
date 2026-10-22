@@ -20,6 +20,7 @@ import {
 } from "./monitor-contract.ts";
 import {
   AttestationRequestSchema,
+  ApproveTofuPlanSchema,
   CatalogReconcileResultSchema,
   CatalogStateSchema,
   DeploymentV2Schema,
@@ -31,6 +32,7 @@ import {
   RetireServiceRequestSchema,
   ServiceLifecycleViewSchema,
   type AttestationRequest,
+  type ApproveTofuPlan,
   type ReconcileAfterRestoreRequest,
   type RecoveryIntentRequest,
   type RetireServiceRequest,
@@ -132,6 +134,13 @@ export function modelRoutes(request: ReturnType<typeof createRequester>) {
         deploymentPath(deploymentId, "attestations"),
         StageSchema,
         checked(AttestationRequestSchema, input),
+      ),
+    /** A human approves the exact unexpired saved plan a `tofu` recipe's approve step waits for. */
+    approvePlan: (deploymentId: string, input: ApproveTofuPlan) =>
+      request(
+        deploymentPath(deploymentId, "plan-approval"),
+        StageSchema,
+        checked(ApproveTofuPlanSchema, input),
       ),
     /** Admin: register the catalog document's services, environments, revisions and edges. */
     reconcileCatalog: (document: CatalogDocumentRequest) =>

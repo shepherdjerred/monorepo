@@ -12,7 +12,11 @@ import {
   RecoveryIntentKindSchema,
   RecoveryIntentV2Schema,
 } from "#shared/recovery-intent.ts";
-import { DeploymentDetailSchema, DeploymentSchema } from "#shared/contract.ts";
+import {
+  DeploymentDetailSchema,
+  DeploymentSchema,
+  TofuPlanReceiptSchema,
+} from "#shared/contract.ts";
 import { ApprovalV2Schema } from "./approval-contract.ts";
 import { RestoreHoldSchema } from "./cold-start-contract.ts";
 import { MonitorStateSchema } from "./monitor-contract.ts";
@@ -94,6 +98,12 @@ export const DeploymentDetailV2Schema = DeploymentDetailSchema.extend({
   deployment: DeploymentV2Schema,
   approval: ApprovalV2Schema.nullable().default(null),
   recoveryIntents: z.array(RecoveryIntentV2Schema).default([]),
+  /**
+   * The saved plan a `tofu` recipe's plan step produced (section 5): its
+   * digest, expiry, state serial and change summary. The encrypted plan stays
+   * with the executor.
+   */
+  savedPlan: TofuPlanReceiptSchema.nullable().default(null),
 });
 export type DeploymentDetailV2 = z.infer<typeof DeploymentDetailV2Schema>;
 

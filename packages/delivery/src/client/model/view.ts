@@ -1,9 +1,33 @@
-import type {
-  ApprovalQueueItem,
-  EnvironmentSelection,
-  MonitorStatus,
-  Selection,
+import {
+  PLAN_APPROVAL_STAGE_KEY,
+  stepStageKey,
+  type ApprovalQueueItem,
+  type DeploymentDetailV2,
+  type EnvironmentSelection,
+  type MonitorStatus,
+  type Selection,
 } from "#shared/model/contract.ts";
+
+/**
+ * The saved plan a model `tofu` recipe's approve step is waiting on (section
+ * 5), or null when the recipe has no approve step, the step is not running,
+ * or the plan is already approved.
+ */
+export function waitingPlan(detail: DeploymentDetailV2) {
+  const recipe = detail.pipeline.definition;
+  if (
+    recipe.kind !== "tofu" ||
+    !("steps" in recipe) ||
+    !recipe.steps.some((step) => step.kind === "approve")
+  )
+    return null;
+  const stage = (key: string) =>
+    detail.stages.find((entry) => entry.key === key);
+  if (stage(PLAN_APPROVAL_STAGE_KEY)?.status === "succeeded") return null;
+  return stage(stepStageKey("step", "approve"))?.status === "running"
+    ? detail.savedPlan
+    : null;
+}
 
 /** The three coordinates of a selection (4.9), in reading order. */
 export function selectionCoordinates(selection: Selection) {

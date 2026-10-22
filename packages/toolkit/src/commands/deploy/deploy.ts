@@ -70,6 +70,7 @@ render-application <ENVIRONMENT> --snapshot <PATH> --file <PATH>  Print the cold
 status [DEPLOYMENT_ID]                 Inspect one deployment or all environments
 wait <DEPLOYMENT_ID>                   Foreground wait for completion
 approve|reject <DEPLOYMENT_ID>         Human decision; --reason required, --override for an override approval
+approve-plan <DEPLOYMENT_ID> --reason <TEXT>  Approve the exact saved plan a tofu approve step waits on
 cancel <DEPLOYMENT_ID>                 Request cancellation at a safe boundary
 retry <DEPLOYMENT_ID>                  Create a new attempt
 recover <DEPLOYMENT_ID> --expected-generation <N> --reason <TEXT> [--step <S>] [--operation-id <ID>] --machine  Open a recovery intent; --operation-id settles an ordinary Argo operation by readback
@@ -139,6 +140,7 @@ const COMMAND_ARITY: Record<string, number | readonly number[]> = {
   retire: 1,
   catalog: 1,
   attest: 1,
+  "approve-plan": 1,
   snapshot: [0, 1, 2],
   "render-application": 1,
   recovery: 1,

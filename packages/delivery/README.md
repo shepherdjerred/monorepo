@@ -41,9 +41,14 @@ for local interaction tests: `e2e/server.ts` on port 17353 for the release
 specs, and `e2e/model-server.ts` on port 17355 for `model.spec.ts`. The model
 harness reconciles its own catalog and records Arcade's releases, a
 configuration rebind, monitor observations, a restore hold and a quarantined
-deploy through Delivery's own APIs (`e2e/model.ts`), so its pages read the
-real model routes. `src/testing/model-fixtures.ts` holds contract-validated
-route responses for unit tests of the hub views and the toolkit.
+deploy through Delivery's own APIs (`e2e/model.ts`), plus a tofu stack waiting
+at its approve step and archives for an operator-run stack and a channel
+(`e2e/model-plan.ts`), so its pages read the real model routes. Setting
+`DELIVERY_HARNESS_MACHINE_CREDENTIALS` to a JSON array of disposable machine
+credentials lets a client drive the admin and execute routes; the proxy then
+passes their bearer tokens through. `src/testing/model-fixtures.ts` holds
+contract-validated route responses for unit tests of the hub views and the
+toolkit.
 
 ## Browser hub
 
@@ -57,7 +62,7 @@ TanStack Router definitions in `src/client/router.tsx`:
 | `/pipelines/:id`               | Promotion: source, build, test, version set, environments    |
 | `/pipelines/:id/executions`    | Every build or composed version set and where it deployed    |
 | `/builds/:id`, `/versions/:id` | One change end to end, with commit, CI run and artifacts     |
-| `/deployments/:id`             | Steps, selection, previous and restored selections, approval |
+| `/deployments/:id`             | Steps, selection, approval, a tofu plan waiting for approval |
 | `/environments/:id`            | Restore hold, selection, monitor, rollback candidates, form  |
 | `/recovery-intents/:id`        | One unified recovery intent and its inspection evidence      |
 | `/deployments`, `/approvals`   | Deployment history; waiting and recently decided approvals   |
@@ -157,30 +162,31 @@ before sending and each response before use.
 
 The API is rooted at `/api/v1`:
 
-| Operation                                                  | Route                                                                         |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| Authenticated principal                                    | `GET /identity`                                                               |
-| Environments, recent executions, eligible artifacts        | `GET /overview`                                                               |
-| Immutable version set revisions                            | `GET /versions`, `GET /versions/:id`                                          |
-| Latest qualified component artifact                        | `GET /artifacts/latest-qualified?serviceId=…&component=…&kind=…`              |
-| Producer comparison base, pending or qualified             | `GET /artifacts/latest-retainable?…&kind=…&beforePipeline=…`                  |
-| Register pending CI publication                            | `POST /builds`                                                                |
-| Compose exact component versions                           | `POST /versions`                                                              |
-| Register immutable pipeline revision                       | `POST /pipelines`                                                             |
-| Register environment/configuration                         | `POST /environments`                                                          |
-| Request deployment, promotion, or rollback                 | `POST /deployments`                                                           |
-| Execution, stages, approval, evidence                      | `GET /deployments/:id`                                                        |
-| Human production approval                                  | `POST /deployments/:id/approval`                                              |
-| Cancel or retry                                            | `POST /deployments/:id/cancel`, `POST /deployments/:id/retry`                 |
-| Open a recovery intent; settle an ambiguous Argo operation | `POST /deployments/:id/recovery-intents`, `POST /recovery-intents/:id/settle` |
-| Request native site/Forum recovery under the retained lock | `POST /deployments/:id/content-recovery`                                      |
-| Inspect frozen content recovery and native receipts        | `GET /content-recovery/:id`                                                   |
-| Hub, service pipeline and paginated executions             | `GET /hub`, `GET /services/:id/pipeline`, `…/executions`                      |
-| One change, traced from build or version set               | `GET /builds/:id`, `GET /versions/:id/trace`                                  |
-| Paginated deployments, builds and audit activity           | `GET /deployments`, `GET /builds`, `GET /activity`                            |
-| Environment detail and approval queue                      | `GET /environments/:id`, `GET /approvals`                                     |
-| Woodpecker, GitHub and ArgoCD enrichment                   | `GET /builds/:id/ci`, `…/source`, `GET /environments/:id/runtime`             |
-| Committed change stream                                    | `GET /events`                                                                 |
+| Operation                                                       | Route                                                                         |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Authenticated principal                                         | `GET /identity`                                                               |
+| Environments, recent executions, eligible artifacts             | `GET /overview`                                                               |
+| Immutable version set revisions                                 | `GET /versions`, `GET /versions/:id`                                          |
+| Latest qualified component artifact                             | `GET /artifacts/latest-qualified?serviceId=…&component=…&kind=…`              |
+| Producer comparison base, pending or qualified                  | `GET /artifacts/latest-retainable?…&kind=…&beforePipeline=…`                  |
+| Register pending CI publication                                 | `POST /builds`                                                                |
+| Compose exact component versions                                | `POST /versions`                                                              |
+| Register immutable pipeline revision                            | `POST /pipelines`                                                             |
+| Register environment/configuration                              | `POST /environments`                                                          |
+| Request deployment, promotion, or rollback                      | `POST /deployments`                                                           |
+| Execution, stages, approval, evidence                           | `GET /deployments/:id`                                                        |
+| Human production approval                                       | `POST /deployments/:id/approval`                                              |
+| Human approval or rejection of a tofu recipe's exact saved plan | `POST /deployments/:id/plan-approval`                                         |
+| Cancel or retry                                                 | `POST /deployments/:id/cancel`, `POST /deployments/:id/retry`                 |
+| Open a recovery intent; settle an ambiguous Argo operation      | `POST /deployments/:id/recovery-intents`, `POST /recovery-intents/:id/settle` |
+| Request native site/Forum recovery under the retained lock      | `POST /deployments/:id/content-recovery`                                      |
+| Inspect frozen content recovery and native receipts             | `GET /content-recovery/:id`                                                   |
+| Hub, service pipeline and paginated executions                  | `GET /hub`, `GET /services/:id/pipeline`, `…/executions`                      |
+| One change, traced from build or version set                    | `GET /builds/:id`, `GET /versions/:id/trace`                                  |
+| Paginated deployments, builds and audit activity                | `GET /deployments`, `GET /builds`, `GET /activity`                            |
+| Environment detail and approval queue                           | `GET /environments/:id`, `GET /approvals`                                     |
+| Woodpecker, GitHub and ArgoCD enrichment                        | `GET /builds/:id/ci`, `…/source`, `GET /environments/:id/runtime`             |
+| Committed change stream                                         | `GET /events`                                                                 |
 
 Execute-scoped workers use `/qualification/pending`, `/builds/:id/qualify`,
 `/replication/pending`, `/artifacts/replication`, `/reconcile`, `/dispatch/pending`, `/dispatch/monitor`, `/dispatch/:id/submitted`,

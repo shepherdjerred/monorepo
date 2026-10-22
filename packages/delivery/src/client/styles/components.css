@@ -456,6 +456,9 @@ button:disabled {
 .panel-attention {
   border-color: var(--failed);
 }
+.panel-waiting {
+  border-color: var(--waiting);
+}
 /* A command to copy wraps at phone width instead of scrolling. */
 pre.command {
   white-space: pre-wrap;

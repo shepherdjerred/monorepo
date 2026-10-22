@@ -192,6 +192,7 @@ toolkit deploy monitor <ENVIRONMENT_ID>
 toolkit deploy retire <SERVICE_ID> --reason "Replaced by Arcade" --machine
 toolkit deploy catalog reconcile --file <CATALOG_DOCUMENT_JSON> --machine
 toolkit deploy attest <DEPLOYMENT_ID> --stage <STAGE> --evidence <EVIDENCE_JSON> --machine
+toolkit deploy approve-plan <DEPLOYMENT_ID> --reason "Reviewed the saved plan's changes"
 toolkit deploy recover <DEPLOYMENT_ID> --expected-generation <N> --reason "Inspect the target and settle ownership" [--step <STEP>] --machine
 toolkit deploy recovery <INTENT_ID>
 toolkit deploy snapshot --output <FILE>
@@ -221,7 +222,9 @@ catalog document `--file` names, validates it against the catalog contract
 before sending, and exits 1 when the server refuses any entry. `recover` creates the one recovery intent of a
 `recovery-required` deployment, bound to the expected binding generation and,
 for a compound target, the named sub-step; `recovery` reads an intent and its
-inspection evidence. `attest` records operator-attested evidence for one stage
+inspection evidence. `approve-plan` approves the exact unexpired saved plan
+a model `tofu` recipe's approve step waits on: it reads the digest from the
+deployment's saved plan and requires a human identity. `attest` records operator-attested evidence for one stage
 of an `operator-run` deployment; the evidence file is a JSON array of evidence
 entries, and the command uses the execute-scoped `DELIVERY_EXECUTOR_TOKEN`
 rather than the admin credential.

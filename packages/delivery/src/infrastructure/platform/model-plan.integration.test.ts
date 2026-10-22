@@ -14,6 +14,7 @@ import {
   stackPlanJob,
   startStackPlan,
 } from "#testing/tofu-stack-fixture.ts";
+import { deploymentDetailV2 } from "#infrastructure/selection/views.ts";
 
 const context = useDeliveryFixture();
 /** tofu-cloudflare/prod running a model tofu recipe from its stack archive. */
@@ -33,6 +34,10 @@ test("a model tofu deployment records the plan its plan step produced, then take
     ),
   ).rejects.toThrow(/frozen source/u);
   await context.delivery.recordTofuPlan(plan, testExecutor);
+  // The model detail view shows the saved plan, never its encrypted bytes.
+  const view = await deploymentDetailV2(context.delivery, deployment.id);
+  expect(view.savedPlan).toEqual(plan.receipt);
+  expect(JSON.stringify(view)).not.toContain(plan.encryptedPlan.ciphertext);
   await expect(
     context.delivery.approveTofuPlan(
       deployment.id,

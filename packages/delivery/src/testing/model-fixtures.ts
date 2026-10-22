@@ -13,6 +13,7 @@ import {
 import {
   CatalogReconcileResultSchema,
   CatalogStateSchema,
+  DeploymentDetailV2Schema,
   EnvironmentSelectionSchema,
   ReconcileAfterRestoreSchema,
   ServiceLifecycleViewSchema,
@@ -332,4 +333,78 @@ export const coldStartSnapshot = ColdStartSnapshotSchema.parse({
       },
     },
   ],
+});
+
+const planCreated = Date.parse(at(50));
+/** The saved plan a model tofu deployment's plan step produced (section 5). */
+export const savedPlan = {
+  schema: "delivery-tofu-plan/v1" as const,
+  deploymentId: "tofu-cloudflare-prod-7",
+  sourceBuildId: "tofu-cloudflare:build:7",
+  sourceRevision: sha("c"),
+  stack: "cloudflare" as const,
+  createdAt: new Date(planCreated).toISOString(),
+  expiresAt: new Date(planCreated + 6 * 60 * 60 * 1000).toISOString(),
+  planDigest: digest("7"),
+  state: { lineage: "cloudflare-state", serial: 41 },
+  nativeJob: {
+    namespace: "delivery-platform-jobs" as const,
+    name: `delivery-${"9".repeat(40)}`,
+    uid: "33333333-3333-4333-8333-333333333333",
+    specFingerprint: "f".repeat(64),
+    requestId: "tofu-cloudflare-prod-7",
+  },
+  changes: { create: 2, update: 1, delete: 0, replace: 0 },
+};
+
+const planStage = (key: string, status: "running" | "succeeded") =>
+  StageSchema.parse({
+    id: `stage/tofu-cloudflare-prod-7/${key}`,
+    deploymentId: "tofu-cloudflare-prod-7",
+    key,
+    status,
+    operationId: `tofu-cloudflare-prod-7/${key}`,
+    message: key === "step-plan" ? "Saved plan recorded" : "Waiting",
+    startedAt: at(50),
+    updatedAt: at(51),
+  });
+
+/** A model tofu deployment whose approve step waits for a human (section 5). */
+export const planWaiting = DeploymentDetailV2Schema.parse({
+  ...records.deploymentDetail(records.deployments.settled41),
+  deployment: {
+    ...records.deployments.settled41,
+    id: "tofu-cloudflare-prod-7",
+    environmentId: "tofu-cloudflare/prod",
+    serviceId: "tofu-cloudflare",
+    pipelineRevisionId: "tofu-cloudflare/1",
+    configurationId: "tofu-cloudflare/1",
+    status: "running",
+    finishedAt: null,
+    selection: {
+      versionSetRevisionId: "tofu-cloudflare:r7",
+      recipeRevisionId: "tofu-cloudflare/1",
+      configurationRevisionId: "tofu-cloudflare/1",
+    },
+  },
+  pipeline: {
+    id: "tofu-cloudflare/1",
+    definition: {
+      kind: "tofu",
+      stack: "cloudflare",
+      archiveComponent: "archive:tofu-cloudflare",
+      runner: { service: "ci", component: "image:ci-base" },
+      steps: ["plan", "approve", "apply"].map((kind) => ({
+        kind,
+        instance: "stack:cloudflare",
+      })),
+      sharedLock: "platform",
+    },
+    createdAt: at(0),
+  },
+  stages: [
+    planStage("step-plan", "succeeded"),
+    planStage("step-approve", "running"),
+  ],
+  savedPlan,
 });

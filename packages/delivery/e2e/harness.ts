@@ -4,6 +4,8 @@ import type { Delivery } from "#infrastructure/delivery.ts";
 import { createApp } from "#server/app.ts";
 import { createChangeListener } from "#infrastructure/change-feed/listener.ts";
 import { fixtureEnrichment } from "#testing/enrichment-fixture.ts";
+import type { MachineCredentialSchema } from "#infrastructure/config.ts";
+import type { z } from "zod";
 
 // An isolated acceptance harness, never a production entrypoint: the real
 // Delivery app over a disposable database, behind a proxy that signs every
@@ -18,6 +20,8 @@ export async function serveHarness(options: {
   delivery: Delivery;
   port: number;
   enabledEnvironments: string[];
+  /** Machine tokens the app accepts, so a CLI can drive admin and execute routes. */
+  machineCredentials?: z.infer<typeof MachineCredentialSchema>[];
 }) {
   const { cluster } = options;
   const origin = `http://127.0.0.1:${String(options.port)}`;
@@ -34,7 +38,7 @@ export async function serveHarness(options: {
     peerAddress: (request) => backend.requestIP(request)?.address ?? null,
     config: {
       publicOrigin: origin,
-      machineCredentials: [],
+      machineCredentials: options.machineCredentials ?? [],
       writesEnabled: () => Promise.resolve(true),
       enabledEnvironments: () => Promise.resolve(options.enabledEnvironments),
       operatorLogins: () => Promise.resolve([testOperator.id]),
@@ -59,8 +63,15 @@ export async function serveHarness(options: {
         );
         const headers = new Headers(request.headers);
         headers.delete("tailscale-user-login");
-        headers.delete("authorization");
-        headers.set("tailscale-user-login", testOperator.id);
+        // A configured machine token passes through; every other request
+        // signs in as the test operator.
+        if (
+          (options.machineCredentials ?? []).length === 0 ||
+          !headers.has("authorization")
+        ) {
+          headers.delete("authorization");
+          headers.set("tailscale-user-login", testOperator.id);
+        }
         return fetch(
           new Request(target, {
             method: request.method,

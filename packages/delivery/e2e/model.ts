@@ -4,6 +4,14 @@ import { coldStartSnapshot } from "#infrastructure/cold-start/snapshot.ts";
 import { catalogDocument } from "#testing/catalog-fixture.ts";
 import { publishCiRunner } from "#testing/model-fixture.ts";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
+import {
+  CHANNEL_PROD,
+  OPERATOR_PROD,
+  STACK_PROD,
+  seedOperatorRun,
+  seedWaitingPlan,
+  withStack,
+} from "./model-plan.ts";
 
 // The model state the browser specs read, built only through Delivery's own
 // catalog, publication, request, approval, execution, monitor and restore
@@ -16,6 +24,9 @@ export const MODEL_ENVIRONMENTS = [
   MODEL_PROD,
   "delivery/prod",
   "sjer-red/prod",
+  STACK_PROD,
+  OPERATOR_PROD,
+  CHANNEL_PROD,
 ];
 
 type Document = Awaited<ReturnType<typeof catalogDocument>>;
@@ -62,7 +73,7 @@ function document(base: Document, revision: 1 | 2 | 3) {
   };
   const arcade = base.recipes.find((entry) => entry.id === "arcade/3");
   if (arcade === undefined) throw new Error("fixture catalog has arcade/3");
-  return {
+  return withStack({
     ...base,
     edges: [],
     environments: base.environments.map((env) => ({
@@ -99,7 +110,12 @@ function document(base: Document, revision: 1 | 2 | 3) {
             },
           ]),
     ],
-  };
+  });
+}
+
+/** The catalog document the harness reconciles at one revision. */
+export async function modelCatalog(revision: 1 | 2 | 3) {
+  return document(await catalogDocument(), revision);
 }
 
 async function publish(delivery: Delivery, database: Database, n: number) {
@@ -306,6 +322,8 @@ export async function seedModelBrowser(delivery: Delivery, database: Database) {
     testOperator,
   );
   await quarantine(delivery, database, fourth);
+  await seedWaitingPlan(delivery, database);
+  await seedOperatorRun(delivery);
 }
 
 /**

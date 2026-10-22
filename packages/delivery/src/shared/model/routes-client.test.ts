@@ -139,6 +139,20 @@ const table: Route[] = [
     fixtures.recoveryIntents.pending,
   ],
   [
+    "approvePlan",
+    (delivery) =>
+      delivery.approvePlan("tofu-cloudflare-prod-7", {
+        planDigest: fixtures.savedPlan.planDigest,
+        reason: "Two DNS records and one tunnel route, reviewed",
+      }),
+    "/deployments/tofu-cloudflare-prod-7/plan-approval",
+    {
+      planDigest: fixtures.savedPlan.planDigest,
+      reason: "Two DNS records and one tunnel route, reviewed",
+    },
+    fixtures.attestedStage,
+  ],
+  [
     "attest",
     (delivery) =>
       delivery.attest("cluster-admission-prod-3", {

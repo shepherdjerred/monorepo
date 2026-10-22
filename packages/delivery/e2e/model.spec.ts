@@ -211,6 +211,46 @@ async function quarantined(page: Page) {
   return deployment.id;
 }
 
+/** The Cloudflare stack deploy the harness left waiting at its approve step. */
+async function waitingStack(page: Page) {
+  const { items } = await api(
+    page,
+    `/api/v1/deployments?environmentId=${encodeURIComponent("tofu-cloudflare/prod")}`,
+    DeploymentPageSchema,
+  );
+  const [deployment] = items;
+  if (deployment === undefined) throw new Error("seeded stack deploy");
+  return deployment.id;
+}
+
+test("a tofu approve step shows its saved plan and approves it by digest", async ({
+  page,
+}) => {
+  const id = await waitingStack(page);
+  await page.goto(`/deployments/${id}`);
+  const panel = page.getByRole("region", { name: "Plan approval" });
+  await expect(panel).toContainText(`sha256:${"7".repeat(64)}`);
+  await expect(panel).toContainText(
+    "Create 2 · update 1 · delete 0 · replace 0",
+  );
+  await expect(panel).toContainText("cloudflare · state serial 41");
+  await expect(
+    panel.getByRole("button", { name: "Reject plan" }),
+  ).toBeEnabled();
+  const { promise, resolve } = Promise.withResolvers<unknown>();
+  await page.route("**/api/v1/deployments/*/plan-approval", async (route) => {
+    resolve(route.request().postDataJSON());
+    await route.abort("failed");
+  });
+  await panel.getByLabel("Reason").fill("Two DNS records and one tunnel route");
+  await panel.getByRole("button", { name: "Approve plan" }).click();
+  expect(await promise).toEqual({
+    planDigest: `sha256:${"7".repeat(64)}`,
+    reason: "Two DNS records and one tunnel route",
+  });
+  await expectNoHorizontalOverflow(page);
+});
+
 test("a quarantined deployment links its recovery intent", async ({ page }) => {
   await page.goto(`/deployments/${await quarantined(page)}`);
   await page
@@ -268,7 +308,7 @@ test("the activity trail shows what each catalog reconcile changed", async ({
   await expect(entries.nth(1)).toContainText(
     "Configuration revisions created (1)",
   );
-  await expect(entries.nth(2)).toContainText("Environments created (4)");
+  await expect(entries.nth(2)).toContainText("Environments created (7)");
   await expectNoHorizontalOverflow(page);
 });
 
@@ -285,6 +325,7 @@ for (const scheme of ["light", "dark"] as const) {
       `/deployments/${z.string().parse(view.acceptedDeploymentId)}`,
       `/deployments/${await quarantined(page)}`,
       "/recovery-intents/argo/model/beta/recovery",
+      `/deployments/${await waitingStack(page)}`,
       "/approvals",
       "/activity?action=catalog.",
     ])
