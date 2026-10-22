@@ -118,9 +118,9 @@
     "classic aram mayhem": [
       {
         "start": "2026-07-29",
-        "end": null,
+        "end": "2026-08-24",
         "source": "manual",
-        "note": "ARAM: Mayhem Classic-ish launch; no announced end date"
+        "note": "ARAM: Mayhem Classic-ish, announced as a limited-time mode (https://www.leagueoflegends.com/en-us/news/dev/tldw-classic-mayhem-more-dev-update/); available through Patch 26.16. End date inferred from the Patch 26.17 rollout on 2026-08-25, not announced by Riot"
       }
     ],
     "easy doom bots": [

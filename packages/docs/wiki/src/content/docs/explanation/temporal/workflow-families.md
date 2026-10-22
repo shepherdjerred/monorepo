@@ -128,6 +128,11 @@ is always human-reviewed.
 **One auto-merges conditionally.** `queue-windows` auto-merges `open`/`reopen`
 edits, which are additive, but disarms auto-merge for any `close` edit, because
 closing retires a live mode. Reversibility decides the review requirement.
+Its drift is deterministic, but zero tracked matches cannot tell an ended mode
+from an unpopular one, so each such sparse warning gets a web-search LLM
+liveness check. The model only proposes: a `live` verdict counts only when it
+cites a Riot or League wiki page its own search returned, and everything else
+keeps the warning escalating.
 
 `scout-image-gc` carries a scar: it refuses to prune at all if the showcase
 exemption manifest fails to fetch, after a run without it deleted 60% of the
