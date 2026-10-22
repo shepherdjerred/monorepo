@@ -458,3 +458,32 @@ test.each(
     ).toBe(true);
   },
 );
+
+test("under transition rendering Delivery creates the baseline and companion Applications, and only reads the operator-run ones", () => {
+  const rows = deliveryArgoPolicy(true).split("\n");
+  const actions = (application: string) =>
+    rows
+      .filter(
+        (row) =>
+          row.startsWith("p, delivery, ") &&
+          row.endsWith(`/${application}, allow`),
+      )
+      .map((row) => row.split(", ")[3])
+      .toSorted((left = "", right = "") => left.localeCompare(right));
+  const full = ["create", "delete", "get", "sync", "update"];
+  for (const application of [
+    "cluster-platform",
+    "cluster-observability",
+    "argocd-companion",
+    "velero-companion",
+    "velero-schedules",
+  ])
+    expect(actions(application), application).toEqual(full);
+  for (const application of [
+    "cluster-admission",
+    "delivery-data",
+    "temporal-data",
+  ])
+    expect(actions(application), application).toEqual(["get"]);
+  expect(deliveryArgoPolicy(false)).not.toContain("cluster-platform");
+});

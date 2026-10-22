@@ -6,6 +6,8 @@ import {
 } from "homelab/src/delivery-target-policy.ts";
 import { applicationProject } from "./projects.ts";
 import { transitionRendering } from "homelab/src/cdk8s/src/release-configuration.ts";
+import { BASELINE_CHART_APPLICATIONS } from "homelab/src/cdk8s/src/resources/cluster-baseline/charts.ts";
+import { COMPANION_CHARTS } from "homelab/src/cdk8s/src/resources/companions/names.ts";
 
 export const DELIVERY_ARGO_ACCOUNTS = {
   "accounts.delivery": "apiKey",
@@ -42,12 +44,27 @@ const CATALOG_APPLICATIONS = [
     ...SERVICE_CATALOG.services.flatMap((service) => service.argoApps),
   ]),
 ].sort();
+/**
+ * Applications only the v2 catalog creates: the cluster baseline charts and
+ * the companion charts, which Delivery creates from recipes at the window.
+ */
+const CATALOG_ONLY_APPLICATIONS = [
+  ...BASELINE_CHART_APPLICATIONS,
+  ...COMPANION_CHARTS,
+];
+/** Operator-run Applications Delivery only reads: the data layers and cluster admission. */
+const OPERATOR_RUN_APPLICATIONS: ReadonlySet<string> = new Set([
+  ...OPERATOR_RUN_DATA_APPLICATIONS,
+  "cluster-admission",
+]);
 /** Every Application the rendered root and Delivery know, by switch state. */
 export function deliveryKnownApplications(
   transition: boolean = transitionRendering(),
 ): string[] {
   return transition
-    ? CATALOG_APPLICATIONS
+    ? [
+        ...new Set([...CATALOG_APPLICATIONS, ...CATALOG_ONLY_APPLICATIONS]),
+      ].sort()
     : CATALOG_APPLICATIONS.filter(
         (name) => !OPERATOR_RUN_DATA_APPLICATIONS.has(name),
       );
@@ -59,6 +76,7 @@ export function deliveryRootApplications(
   return deliveryKnownApplications(transition).filter(
     (name) =>
       name !== "apps" &&
+      !CATALOG_ONLY_APPLICATIONS.includes(name) &&
       applicationReleasePolicy(name).owner === "release-root",
   );
 }
@@ -75,8 +93,7 @@ export function deliveryManagedApplications(
 ): string[] {
   return deliveryKnownApplications(transition).filter(
     (name) =>
-      !RETAINED_APPLICATIONS.has(name) &&
-      !OPERATOR_RUN_DATA_APPLICATIONS.has(name),
+      !RETAINED_APPLICATIONS.has(name) && !OPERATOR_RUN_APPLICATIONS.has(name),
   );
 }
 
@@ -134,7 +151,7 @@ export function deliveryArgoPolicy(
     // layers.
     grant(
       "delivery",
-      [...RETAINED_APPLICATIONS, ...OPERATOR_RUN_DATA_APPLICATIONS],
+      [...RETAINED_APPLICATIONS, ...OPERATOR_RUN_APPLICATIONS],
       ["get"],
     );
     grant("delivery", deliveryManagedApplications(transition), [
