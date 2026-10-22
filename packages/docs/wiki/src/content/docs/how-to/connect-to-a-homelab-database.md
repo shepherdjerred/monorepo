@@ -15,6 +15,7 @@ clusters; they have no public database ingress.
 | Cluster                 | Namespace    | User         | Databases                         |
 | ----------------------- | ------------ | ------------ | --------------------------------- |
 | `bugsink-postgresql`    | `bugsink`    | `bugsink`    | `bugsink_db`                      |
+| `delivery-postgresql`   | `delivery`   | `delivery`   | `delivery_db`                     |
 | `grafana-postgresql`    | `prometheus` | `grafana`    | `grafana`                         |
 | `phoenix-postgresql`    | `phoenix`    | `phoenix`    | `phoenix_db`                      |
 | `scout-beta-postgresql` | `scout-beta` | `scout`      | `scout`                           |
@@ -24,7 +25,9 @@ clusters; they have no public database ingress.
 
 They are defined in
 [`packages/homelab/src/cdk8s/src/resources/postgres/`](https://github.com/shepherdjerred/monorepo/tree/main/packages/homelab/src/cdk8s/src/resources/postgres).
-Each is a single instance with a node-local ZFS volume. Read the running server
+Delivery's platform chart declares its cluster in
+[`cdk8s-charts/platform/delivery.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/cdk8s-charts/platform/delivery.ts)
+with the same single-app helper. Each is a single instance with a node-local ZFS volume. Read the running server
 version before selecting a dump or restore client.
 
 :::caution[Every command needs an explicit namespace]
@@ -66,6 +69,30 @@ If you would rather not assume the pod name, select it by label:
 kubectl get pod -n temporal \
   -l application=spilo,cluster-name=temporal-postgresql,spilo-role=master
 ```
+
+### Read-only session
+
+Inspect a production database with read-only transactions. `PGOPTIONS` sets
+`default_transaction_read_only` for the whole session:
+
+```bash
+kubectl exec -n delivery -it delivery-postgresql-0 -c postgres -- \
+  su postgres -c "PGOPTIONS='-c default_transaction_read_only=on' psql -U postgres delivery_db"
+```
+
+To run a local SQL file, drop `-t` and feed the file to `psql` on standard
+input:
+
+```bash
+kubectl exec -n delivery -i delivery-postgresql-0 -c postgres -- \
+  su postgres -c "PGOPTIONS='-c default_transaction_read_only=on' psql -X -v ON_ERROR_STOP=1 -U postgres -d delivery_db -f -" \
+  < checks.sql
+```
+
+:::note[Read-only transactions guard against mistakes]
+A session can still run `SET default_transaction_read_only = off`. This path
+prevents an accidental write; it does not restrict a superuser.
+:::
 
 ## Option 2 — port-forward and use a local client
 
