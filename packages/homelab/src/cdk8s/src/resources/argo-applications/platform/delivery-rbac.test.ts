@@ -429,7 +429,9 @@ const registrations = await Promise.all(
   })),
 );
 test("registered release inventory includes all reviewed application/controller destinations", () => {
-  expect(registrationFiles.length).toBeGreaterThan(20);
+  // Shared-site and root registrations are retired (X4, X6); their
+  // successors come from the catalog document.
+  expect(registrationFiles).toHaveLength(18);
 });
 test.each(
   registrations
