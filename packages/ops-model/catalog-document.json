@@ -993,6 +993,10 @@
           "producer": "first-party"
         },
         {
+          "name": "chart:storm-forum-beta",
+          "producer": "first-party"
+        },
+        {
           "name": "archive:forum-bundle",
           "producer": "acquisition"
         }
