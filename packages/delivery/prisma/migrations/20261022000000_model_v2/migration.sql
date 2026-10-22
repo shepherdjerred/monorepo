@@ -252,6 +252,15 @@ ALTER TABLE "Approval" ADD CONSTRAINT "Approval_decision_identity_check" CHECK (
   OR ("status" IN ('granted', 'rejected') AND "actor" IS NOT NULL AND "reason" IS NOT NULL AND "decidedAt" IS NOT NULL)
   OR ("status" = 'expired' AND "decidedAt" IS NOT NULL)
 );
+-- H4 and D6: a deployment whose one approval is its plan decision records
+-- the override of its selection rules separately, before the plan runs.
+ALTER TABLE "Approval" ADD COLUMN "overrideActor" TEXT;
+ALTER TABLE "Approval" ADD COLUMN "overrideReason" TEXT;
+ALTER TABLE "Approval" ADD COLUMN "overrideDecidedAt" TIMESTAMP(3);
+ALTER TABLE "Approval" ADD CONSTRAINT "Approval_override_decision_check" CHECK (
+  ("overrideActor" IS NULL AND "overrideReason" IS NULL AND "overrideDecidedAt" IS NULL)
+  OR ("override" AND "overrideActor" IS NOT NULL AND "overrideReason" IS NOT NULL AND "overrideDecidedAt" IS NOT NULL)
+);
 
 -- 4.10 Environment: accepted selection pointer, role, lifecycle, approval policy.
 ALTER TABLE "Environment" ADD COLUMN "role" TEXT NOT NULL DEFAULT 'durable';

@@ -62,8 +62,26 @@ export function deploymentView(row: Deployment) {
 
 export function approvalView(row: Approval | null) {
   if (row === null) return null;
-  const { boundFingerprint: _bound, ...view } = row;
-  return ApprovalV2Schema.parse(wire(view));
+  const {
+    boundFingerprint: _bound,
+    overrideActor,
+    overrideReason,
+    overrideDecidedAt,
+    ...view
+  } = row;
+  return ApprovalV2Schema.parse(
+    wire({
+      ...view,
+      overrideDecision:
+        overrideDecidedAt === null
+          ? null
+          : {
+              actor: overrideActor,
+              reason: overrideReason,
+              decidedAt: overrideDecidedAt,
+            },
+    }),
+  );
 }
 
 /** The unified recovery intent (4.15) a row records. */

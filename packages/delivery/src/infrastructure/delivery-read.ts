@@ -8,6 +8,7 @@ import {
 } from "#shared/contract.ts";
 import type { LatestQualifiedArtifactQuery } from "#shared/contract.ts";
 import { wire, required } from "./delivery-records.ts";
+import { approvalView } from "./selection/views.ts";
 import { selfHealingApplication } from "#shared/model/recipe-view.ts";
 import type { Delivery } from "./delivery.ts";
 import { readRecoveredForumRuntime } from "./forum/recovered-runtime.ts";
@@ -213,13 +214,4 @@ export async function overview(this: Delivery) {
       ForumBaselineIntentSchema.parse(wire(entry)),
     ),
   };
-}
-
-/** The approval as the API shows it; the bound selection fingerprint stays internal. */
-function approvalView<T extends { boundFingerprint: string }>(
-  row: T | null,
-): Omit<T, "boundFingerprint"> | null {
-  if (row === null) return null;
-  const { boundFingerprint: _bound, ...view } = row;
-  return view;
 }

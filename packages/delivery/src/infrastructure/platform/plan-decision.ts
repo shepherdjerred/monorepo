@@ -2,6 +2,7 @@ import { DeliveryError } from "#domain/error.ts";
 import {
   PipelineRevisionSchema,
   TofuPlanReceiptSchema,
+  type PipelineRevision,
   type Principal,
   type TofuPlanReceipt,
 } from "#shared/contract.ts";
@@ -31,29 +32,65 @@ type DecisionRow = {
   configurationId: string;
 };
 type DecidedApproval = {
+  id: string;
   status: string;
   actor: string | null;
   reason: string | null;
+  overrideDecidedAt: Date | null;
 };
 
-async function requireApproveStep(tx: Transaction, row: DecisionRow) {
-  const recipe = PipelineRevisionSchema.parse(
+/**
+ * D6 and 4.13: a `tofu` recipe with an approve step takes its one approval
+ * at the plan, bound to the plan digest. The environment's approval policy
+ * is satisfied there, never by a selection approval.
+ */
+export function approvesAtPlan(definition: PipelineRevision["definition"]) {
+  return (
+    definition.kind === "tofu" &&
+    "steps" in definition &&
+    definition.steps.some((step) => step.kind === "approve")
+  );
+}
+
+export async function recipeDefinition(
+  tx: Transaction,
+  pipelineRevisionId: string,
+) {
+  return PipelineRevisionSchema.parse(
     wire(
       required(
-        await tx.pipeline.findUnique({ where: { id: row.pipelineRevisionId } }),
+        await tx.pipeline.findUnique({ where: { id: pipelineRevisionId } }),
         "Recipe",
       ),
     ),
   ).definition;
-  if (
-    recipe.kind !== "tofu" ||
-    !("steps" in recipe) ||
-    !recipe.steps.some((step) => step.kind === "approve")
-  )
+}
+
+async function requireApproveStep(tx: Transaction, row: DecisionRow) {
+  if (!approvesAtPlan(await recipeDefinition(tx, row.pipelineRevisionId)))
     throw new DeliveryError(
       "INVALID",
       "Only a model tofu recipe with an approve step takes a plan approval",
     );
+}
+
+/**
+ * The approval a running deployment's plan decision fills: none yet, or the
+ * pending override approval whose override was cleared before the plan ran
+ * (H4). A decided approval is never decided again.
+ */
+function undecided(row: DecisionRow, approval: DecidedApproval | null) {
+  if (row.status !== "running")
+    throw new DeliveryError(
+      "CONFLICT",
+      "Only a running deployment's approve step takes a plan decision",
+    );
+  if (approval !== null && approval.overrideDecidedAt === null)
+    throw new DeliveryError(
+      "CONFLICT",
+      "A running deployment's pending approval must have its override cleared",
+    );
+  return approval;
 }
 
 const approvalStatus = (input: ApproveTofuPlan) =>
@@ -131,7 +168,9 @@ function planBinding(row: DecisionRow, plan: TofuPlanReceipt) {
  * The approve step of a model tofu recipe (section 5): a human's one
  * decision (4.13) on the exact saved plan this deployment produced. It
  * records the Approval with its approver and reason, bound to the plan, and
- * settles the stage the executor's approve step waits on. A rejection
+ * settles the stage the executor's approve step waits on. It satisfies the
+ * environment's approval policy; a `required` policy creates no selection
+ * approval for such a recipe, only an override does (H4). A rejection
  * (H3) discards the encrypted plan in the same transaction, so the
  * executor ends the deployment failed without applying.
  */
@@ -154,29 +193,24 @@ export async function approveTofuPlan(
       "Deployment",
     );
     await requireApproveStep(tx, row);
-    if (row.approval !== null)
+    if (row.approval !== null && row.approval.status !== "pending")
       return repeatedDecision(tx, deploymentId, row.approval, {
         input,
         actor,
       });
-    if (row.status !== "running")
-      throw new DeliveryError(
-        "CONFLICT",
-        "Only a running deployment's approve step takes a plan decision",
-      );
+    const pending = undecided(row, row.approval);
     const plan = await namedPlan(tx, deploymentId, input);
     const rejected = input.decision === "rejected";
-    await tx.approval.create({
-      data: {
-        id: id(),
-        deploymentId,
-        status: approvalStatus(input),
-        actor: actor.id,
-        reason: input.reason,
-        decidedAt: new Date(),
-        boundFingerprint: planBinding(row, plan),
-      },
-    });
+    const decision = {
+      status: approvalStatus(input),
+      actor: actor.id,
+      reason: input.reason,
+      decidedAt: new Date(),
+      boundFingerprint: planBinding(row, plan),
+    };
+    await (pending === null
+      ? tx.approval.create({ data: { id: id(), deploymentId, ...decision } })
+      : tx.approval.update({ where: { id: pending.id }, data: decision }));
     const settled = await recordStageIn(
       tx,
       deploymentId,

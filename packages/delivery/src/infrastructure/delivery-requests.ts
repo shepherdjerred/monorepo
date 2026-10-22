@@ -3,8 +3,10 @@ import { persistDeploymentRequest } from "#infrastructure/delivery-records.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { DeploymentSchema, deliveryWorkflowId } from "#shared/contract.ts";
 import type { Principal } from "#shared/contract.ts";
+import type { Approval } from "#generated/prisma/client.ts";
 import {
   ApprovalV2InputSchema,
+  type ApprovalV2Input,
   type ApprovalV2Request,
 } from "#shared/model/approval-contract.ts";
 import {
@@ -43,6 +45,7 @@ import {
   requireWorkerAdmission,
 } from "./worker-pool/baseline.ts";
 import { requireScope } from "./auth.ts";
+import { approvesAtPlan, recipeDefinition } from "./platform/plan-decision.ts";
 import { validateScoutSiteSelection } from "./scout-site-policy.ts";
 import { validateTrmnlSelection } from "./trmnl-policy.ts";
 import { verifyForumCandidateSource } from "./forum/source-policy.ts";
@@ -51,6 +54,19 @@ import {
   validateForumCandidate,
 } from "./forum/freezer.ts";
 import { freezeRecoveredForumRuntime } from "./forum/recovered-runtime.ts";
+
+/**
+ * Whether the request waits for an approval of its selection. A recipe that
+ * approves its tofu plan meets the policy at the plan instead (D6); only an
+ * override is approved with its selection (H4).
+ */
+function selectionApprovalRequired(
+  policy: string,
+  definition: Parameters<typeof approvesAtPlan>[0],
+  override: boolean,
+) {
+  return override || (policy === "required" && !approvesAtPlan(definition));
+}
 
 /**
  * Request one deployment of an environment: freeze its selection, check
@@ -170,7 +186,11 @@ export async function createDeployment(
       baseline: parsed.adoption?.workerBaseline,
       repositoryId: this.repositoryId,
     });
-    const approvalRequired = env.approvalPolicy === "required" || override;
+    const approvalRequired = selectionApprovalRequired(
+      env.approvalPolicy,
+      pipeline.definition,
+      override,
+    );
     const row = await tx.deployment.create({
       data: {
         id: deploymentId,
@@ -221,6 +241,46 @@ export async function createDeployment(
   });
 }
 
+const decidedStatus = (input: ApprovalV2Input) =>
+  input.decision === "approve" ? "granted" : "rejected";
+
+/** The approval a decision names; an override is decided as one, an ordinary one never is (H4). */
+function decidableApproval(
+  approval: Approval | null,
+  input: ApprovalV2Input,
+  atPlan: boolean,
+) {
+  if (approval === null)
+    throw new DeliveryError(
+      "CONFLICT",
+      atPlan
+        ? "This deployment's one approval is its plan decision at the approve step"
+        : "Deployment requires no approval under its environment's policy",
+    );
+  if (approval.override !== input.override)
+    throw new DeliveryError(
+      "INVALID",
+      approval.override
+        ? "This non-eligible deploy needs an approval marked override"
+        : "Only a non-eligible deploy takes an override approval",
+    );
+  return approval;
+}
+
+/** Only the identical decision repeats; a cleared override repeats as one. */
+function repeats(
+  approval: Approval,
+  input: ApprovalV2Input,
+  decision: { actor: string; overrideOnly: boolean },
+) {
+  return decision.overrideOnly
+    ? approval.overrideActor === decision.actor &&
+        approval.overrideReason === input.reason
+    : approval.status === decidedStatus(input) &&
+        approval.actor === decision.actor &&
+        approval.reason === input.reason;
+}
+
 export async function approve(
   this: Delivery,
   deploymentId: string,
@@ -242,27 +302,15 @@ export async function approve(
       }),
       "Deployment",
     );
-    const approval = row.approval;
-    if (approval === null)
-      throw new DeliveryError(
-        "CONFLICT",
-        "Deployment requires no approval under its environment's policy",
-      );
-    const status = input.decision === "approve" ? "granted" : "rejected";
-    // An override approval is decided as one; an ordinary one never is (H4).
-    if (approval.override !== input.override)
-      throw new DeliveryError(
-        "INVALID",
-        approval.override
-          ? "This non-eligible deploy needs an approval marked override"
-          : "Only a non-eligible deploy takes an override approval",
-      );
-    if (approval.status !== "pending") {
-      if (
-        approval.status !== status ||
-        approval.actor !== actor.id ||
-        approval.reason !== input.reason
-      )
+    const atPlan = approvesAtPlan(
+      await recipeDefinition(tx, row.pipelineRevisionId),
+    );
+    const approval = decidableApproval(row.approval, input, atPlan);
+    // A recipe that approves its plan clears only the override here; its
+    // one decision waits for the plan (D6, H4).
+    const overrideOnly = atPlan && input.decision === "approve";
+    if (approval.status !== "pending" || approval.overrideDecidedAt !== null) {
+      if (!repeats(approval, input, { actor: actor.id, overrideOnly }))
         throw new DeliveryError(
           "CONFLICT",
           "Approval has already been decided",
@@ -313,12 +361,18 @@ export async function approve(
       );
     await tx.approval.update({
       where: { id: approval.id },
-      data: {
-        status,
-        actor: actor.id,
-        reason: input.reason,
-        decidedAt: now,
-      },
+      data: overrideOnly
+        ? {
+            overrideActor: actor.id,
+            overrideReason: input.reason,
+            overrideDecidedAt: now,
+          }
+        : {
+            status: decidedStatus(input),
+            actor: actor.id,
+            reason: input.reason,
+            decidedAt: now,
+          },
     });
     const updated = await tx.deployment.update({
       where: { id: deploymentId },
@@ -336,7 +390,7 @@ export async function approve(
       action: `deployment.${input.decision}`,
       entityId: deploymentId,
       requestId: id(),
-      metadata: { override: input.override },
+      metadata: { override: input.override, decidedAtPlan: atPlan },
     });
     return DeploymentSchema.parse(wire(updated));
   });

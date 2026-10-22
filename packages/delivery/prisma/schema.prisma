@@ -396,6 +396,11 @@ model Approval {
   restorationOf             Deployment? @relation("RestorationApproval", fields: [restorationOfDeploymentId], references: [id], onDelete: Restrict)
   reason                    String?
   actor                     String?
+  /// H4: who cleared the selection override of a deployment whose one
+  /// approval is its plan decision (D6), before the plan ran.
+  overrideActor             String?
+  overrideReason            String?
+  overrideDecidedAt         DateTime?
   createdAt                 DateTime    @default(now())
   decidedAt                 DateTime?
 }

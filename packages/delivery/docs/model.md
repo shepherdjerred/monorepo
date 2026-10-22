@@ -575,6 +575,11 @@ recorded.
   selection being restored, and it is valid only for a rollback to a
   selection that was itself approved and settled in that environment. It is
   the one exception to H1.
+- H6. A `tofu` recipe with an approve step takes its approval at that step,
+  on the saved plan (D6), and that decision satisfies the environment's
+  policy; its selection alone is never approved. An override (H4) of such
+  a deployment is cleared before the plan runs and recorded on the same
+  approval, apart from the plan decision.
 
 ### 4.14 Acceptance
 
