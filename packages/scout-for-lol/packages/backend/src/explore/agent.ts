@@ -142,7 +142,7 @@ async function streamExploreAgentInternal(
 
   const agent = new ToolLoopAgent({
     id: "scout-explore-agent",
-    instructions: `${exploreAgentInstructions(skillOptions)}\n\n${exploreAskerSection(asker)}`,
+    instructions: `${exploreAgentInstructions(skillOptions)}\n\n${exploreAskerSection(asker, { canCreate: creationCapability !== null })}`,
     model: withExploreSpend(runtime.languageModel(model, ["tools"]), {
       ownerId: params.requesterId,
       runId: params.runId,

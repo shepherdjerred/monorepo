@@ -189,6 +189,12 @@ export const PrepareSubscriptionToolInputSchema = z.strictObject({
     .describe(
       "null unless the user said who this player is on Discord. Links the tracked player to that member so match posts can mention them. Never invent one, never guess from the Riot ID, and never ask for it.",
     ),
+  joinExistingPlayer: z
+    .boolean()
+    .default(false)
+    .describe(
+      "true only when the user said this account belongs to a player the server already tracks under this alias (a second account). Otherwise a taken alias is refused, so two people are never merged under one name.",
+    ),
 });
 
 const CompetitionDatesToolInputSchema = z.discriminatedUnion("type", [

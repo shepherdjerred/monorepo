@@ -61,6 +61,12 @@ const creationIntentPayloadArms = [
     region: RegionSchema,
     alias: PlayerAliasSchema,
     discordUserId: DiscordAccountIdSchema.optional(),
+    /**
+     * Whether the account joins an existing player under this alias (true) or
+     * starts a new one (false). Re-checked at confirm, so the alias changing
+     * hands in between cannot merge two people. Absent on older intents.
+     */
+    joinExistingPlayer: z.boolean().optional(),
     filters: SubscriptionFilterSpecSchema.nullable().optional(),
     /**
      * The PUUID and Riot-canonical Riot ID are frozen when the intent is

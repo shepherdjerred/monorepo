@@ -29,7 +29,10 @@ import type { Db } from "#src/database/index.ts";
 import type { AuditDetail } from "#src/lib/audit/audited-mutation.ts";
 import { createCompetitionForActor } from "#src/lib/competitions/create.ts";
 import { createReportInTransaction } from "#src/lib/reports/create.ts";
-import { addSubscription } from "#src/lib/subscription/add.ts";
+import {
+  addSubscription,
+  lockPlayerIdentity,
+} from "#src/lib/subscription/add.ts";
 import type { AddSubscriptionResult } from "#src/lib/subscription/types.ts";
 
 export type CreationIntentOutcome =
@@ -264,12 +267,72 @@ function subscriptionRefusal(
   };
 }
 
+/**
+ * Whether the tracked players moved since the card was prepared, in a way
+ * that would make confirming it do something other than what it said: the
+ * alias now belongs (or no longer belongs) to a player, or the member to be
+ * linked is now linked to a different player.
+ */
+async function trackedPlayersChanged(
+  tx: Db,
+  guildId: DiscordGuildId,
+  payload: {
+    alias: string;
+    discordUserId?: DiscordAccountId | undefined;
+    joinExistingPlayer?: boolean | undefined;
+  },
+): Promise<string | null> {
+  // Decided under the same lock every subscription writer takes, so another
+  // card or a dashboard add cannot claim this alias or member in between.
+  await lockPlayerIdentity(
+    tx,
+    guildId,
+    payload.alias,
+    payload.discordUserId ?? null,
+  );
+  const existing = await tx.player.findUnique({
+    where: { serverId_alias: { serverId: guildId, alias: payload.alias } },
+    select: { id: true, discordId: true },
+  });
+  if (
+    payload.joinExistingPlayer !== undefined &&
+    (existing !== null) !== payload.joinExistingPlayer
+  ) {
+    return `The tracked players changed since this was prepared: "${payload.alias}" ${existing === null ? "no longer exists" : "is now someone else's name"}. Nothing was created; ask Scout to prepare it again.`;
+  }
+  if (payload.discordUserId === undefined) return null;
+  // Joining keeps the player's own link, so it must still be the member the
+  // card promised.
+  if (
+    existing !== null &&
+    payload.joinExistingPlayer === true &&
+    existing.discordId !== payload.discordUserId
+  ) {
+    return `"${payload.alias}" is no longer linked to the Discord member this card named. Nothing was created; ask Scout to prepare it again.`;
+  }
+  const linked = await tx.player.findFirst({
+    where: { serverId: guildId, discordId: payload.discordUserId },
+    select: { alias: true },
+  });
+  return linked !== null && linked.alias !== payload.alias
+    ? `That Discord member is now linked to the tracked player "${linked.alias}". Nothing was created; ask Scout to prepare it again.`
+    : null;
+}
+
 async function executeSubscription(
   tx: Db,
   params: ExecuteCreationIntentParams & { payload: { kind: "subscription" } },
 ): Promise<CreationExecution> {
   const { payload, guildId, actorDiscordId, initialHistoryImportEnabled } =
     params;
+  const changed = await trackedPlayersChanged(tx, guildId, payload);
+  if (changed !== null) {
+    return {
+      outcome: { kind: "invalid_configuration", message: changed },
+      audit: null,
+      postCommit: null,
+    };
+  }
   const result = await addSubscription(
     {
       guildId,

@@ -12,6 +12,7 @@
  * no limit is raised to make room for them.
  */
 
+import { MEMBER_SEARCH_LIMIT } from "#src/explore/creation/prepare-subscription.ts";
 import { tool } from "ai";
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -66,7 +67,7 @@ const defaultDependencies: CreationToolDependencies = {
   resolveAccess: (input) => resolveCreationAccess(input),
   listChannels: listPostableChannels,
   findMembers: (guildId, query) =>
-    searchGuildMembers({ guildId, query, limit: 10 }),
+    searchGuildMembers({ guildId, query, limit: MEMBER_SEARCH_LIMIT }),
   isMember: async (guildId, userId) =>
     (await botRest().guildMember(guildId, userId)) !== null,
   resolvePuuid: resolveSubscriptionPuuid,

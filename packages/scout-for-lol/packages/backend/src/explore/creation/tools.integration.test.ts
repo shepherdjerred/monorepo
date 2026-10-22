@@ -51,14 +51,14 @@ const resolvedAccess: CreationAccess = {
 const MEMBERS = [
   {
     id: "300000000000000001",
-    username: "shadowpumpkin23",
-    displayName: "ShadowPumpkin",
+    username: "emberfox42",
+    displayName: "EmberFox",
     avatar: "",
   },
   {
     id: "300000000000000002",
-    username: "shadowfox",
-    displayName: "Shadow",
+    username: "emberfrost",
+    displayName: "Frost",
     avatar: "",
   },
 ];
@@ -78,6 +78,7 @@ function executors(overrides?: {
   access?: CreationAccess;
   listChannels?: (guildId: DiscordGuildId) => Promise<PostableChannel[]>;
   findMembers?: typeof searchMembers;
+  isMember?: (guildId: DiscordGuildId, userId: string) => Promise<boolean>;
 }) {
   return createCreationToolExecutors({
     capability: { guildIds: [GUILD], surface: "web" },
@@ -91,8 +92,10 @@ function executors(overrides?: {
         ((guildId: DiscordGuildId) =>
           Promise.resolve(guildId === GUILD ? CHANNELS : [])),
       findMembers: overrides?.findMembers ?? searchMembers,
-      isMember: (_guildId, userId) =>
-        Promise.resolve(MEMBERS.some((member) => member.id === userId)),
+      isMember:
+        overrides?.isMember ??
+        ((_guildId, userId) =>
+          Promise.resolve(MEMBERS.some((member) => member.id === userId))),
       resolvePuuid: () =>
         Promise.resolve({
           kind: "ok",
@@ -280,16 +283,16 @@ async function preparedDiscordUserId(): Promise<string | undefined> {
 describe("prepare_subscription_creation Discord links", () => {
   test("links a member by the username the user typed, with no id asked for", async () => {
     const result = await executors().prepareSubscription(
-      subscriptionInput({ discordMember: { username: "@shadowpumpkin23" } }),
+      subscriptionInput({ discordMember: { username: "@emberfox42" } }),
     );
     expect(result.kind).toBe("creation_confirmation_required");
-    expect(result.intent?.summary).toContain("linked to @shadowpumpkin23");
+    expect(result.intent?.summary).toContain("linked to @emberfox42");
     await expect(preparedDiscordUserId()).resolves.toBe("300000000000000001");
   });
 
   test("an exact nickname beats a longer prefix match", async () => {
     const result = await executors().prepareSubscription(
-      subscriptionInput({ discordMember: { username: "Shadow" } }),
+      subscriptionInput({ discordMember: { username: "Frost" } }),
     );
     expect(result.kind).toBe("creation_confirmation_required");
     await expect(preparedDiscordUserId()).resolves.toBe("300000000000000002");
@@ -297,11 +300,11 @@ describe("prepare_subscription_creation Discord links", () => {
 
   test("an ambiguous name names the candidates instead of guessing", async () => {
     const result = await executors().prepareSubscription(
-      subscriptionInput({ discordMember: { username: "shad" } }),
+      subscriptionInput({ discordMember: { username: "ember" } }),
     );
     expect(result.kind).toBe("invalid");
-    expect(result.message).toContain("@shadowpumpkin23");
-    expect(result.message).toContain("@shadowfox");
+    expect(result.message).toContain("@emberfox42");
+    expect(result.message).toContain("@emberfrost");
     await expect(prisma.confirmationIntent.count()).resolves.toBe(0);
   });
 
@@ -318,9 +321,93 @@ describe("prepare_subscription_creation Discord links", () => {
       findMembers: () =>
         Promise.reject(new DiscordUpstreamError("http_error", "down", 503)),
     }).prepareSubscription(
-      subscriptionInput({ discordMember: { username: "pumpkin" } }),
+      subscriptionInput({ discordMember: { username: "emberfox" } }),
     );
     expect(result.kind).toBe("verification_unavailable");
+  });
+
+  test("a Discord outage during an id check is not 'not a member'", async () => {
+    const result = await executors({
+      isMember: () =>
+        Promise.reject(new DiscordUpstreamError("http_error", "down", 503)),
+    }).prepareSubscription(
+      subscriptionInput({ discordMember: { id: "300000000000000001" } }),
+    );
+    expect(result.kind).toBe("verification_unavailable");
+  });
+
+  test("a full page of nickname matches asks for the exact username", async () => {
+    const crowd = Array.from({ length: 10 }, (_, index) => ({
+      id: `30000000000000010${index.toString()}`,
+      username: `ember${index.toString()}`,
+      displayName: "Ember",
+      avatar: "",
+    }));
+    const result = await executors({
+      findMembers: () => Promise.resolve(crowd),
+    }).prepareSubscription(
+      subscriptionInput({ discordMember: { username: "Ember" } }),
+    );
+    expect(result.kind).toBe("invalid");
+    expect(result.message).toContain("exact Discord username");
+  });
+
+  test("a taken alias is refused unless the account joins that player", async () => {
+    await prisma.player.create({
+      data: {
+        alias: "Prepared",
+        serverId: GUILD,
+        creatorDiscordId: REQUESTER,
+        createdTime: new Date(),
+        updatedTime: new Date(),
+      },
+    });
+    const refused = await executors().prepareSubscription(subscriptionInput());
+    expect(refused.kind).toBe("invalid");
+    expect(refused.message).toContain("already a tracked player");
+
+    const joined = await executors().prepareSubscription(
+      subscriptionInput({ joinExistingPlayer: true }),
+    );
+    expect(joined.kind).toBe("creation_confirmation_required");
+    expect(joined.intent?.summary).toContain(
+      'to the tracked player "Prepared"',
+    );
+
+    const relinked = await executors().prepareSubscription(
+      subscriptionInput({
+        joinExistingPlayer: true,
+        discordMember: { asker: true },
+      }),
+    );
+    expect(relinked.kind).toBe("invalid");
+    expect(relinked.message).toContain("different Discord member");
+  });
+
+  test("a bare @ names nobody", async () => {
+    const result = await executors().prepareSubscription(
+      subscriptionInput({ discordMember: { username: "@" } }),
+    );
+    expect(result.kind).toBe("invalid");
+    expect(result.message).toContain("No Discord username was given");
+  });
+
+  test("a member already tracked as another player is not linked twice", async () => {
+    await prisma.player.create({
+      data: {
+        alias: "Someone Else",
+        discordId: REQUESTER,
+        serverId: GUILD,
+        creatorDiscordId: REQUESTER,
+        createdTime: new Date(),
+        updatedTime: new Date(),
+      },
+    });
+    const result = await executors().prepareSubscription(
+      subscriptionInput({ discordMember: { asker: true } }),
+    );
+    expect(result.kind).toBe("invalid");
+    expect(result.message).toContain('already tracked as "Someone Else"');
   });
 
   test("null means no Discord link", async () => {
