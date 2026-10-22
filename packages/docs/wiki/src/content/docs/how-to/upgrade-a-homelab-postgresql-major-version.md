@@ -302,13 +302,27 @@ WHERE e."acceptedVersionSetRevisionId" IS NOT NULL
       AND d.kind NOT IN ('adopt-worker', 'repair-trmnl')
   )
 ORDER BY 1;
+\echo == held work: active pointers and platform locks
+SELECT 'active' AS holder, e.id AS scope, d.id AS deployment, d.status,
+       d."finishedAt" IS NOT NULL AS finished, d."recoveryRequired",
+       d."environmentId" = e.id AS same_environment
+FROM "Environment" e
+LEFT JOIN "Deployment" d ON d.id = e."activeDeploymentId"
+WHERE e."activeDeploymentId" IS NOT NULL
+UNION ALL
+SELECT 'platform-lock', p.id, d.id, d.status,
+       d."finishedAt" IS NOT NULL, d."recoveryRequired", NULL
+FROM "PlatformLock" p
+JOIN "Deployment" d ON d.id = p."deploymentId"
+ORDER BY 1, 2;
 ```
 
-| Check            | Pass on the copy                                                                            |
-| ---------------- | ------------------------------------------------------------------------------------------- |
-| Migrations       | The same migrations as production, each finished and none rolled back.                      |
-| Latest writes    | Each timestamp matches production's. A newer production timestamp must postdate the backup. |
-| Accepted pointer | No rows. Every accepted set revision has a succeeded Deployment in its environment.         |
+| Check            | Pass on the copy                                                                                                |
+| ---------------- | --------------------------------------------------------------------------------------------------------------- |
+| Migrations       | The same migrations as production, each finished and none rolled back.                                          |
+| Latest writes    | Each timestamp matches production's. A newer production timestamp must postdate the backup.                     |
+| Accepted pointer | No rows. Every accepted set revision has a succeeded Deployment in its environment.                             |
+| Held work        | Every row names a Deployment, and `same_environment` is never `f`. A `finished` row has `recoveryRequired` `t`. |
 
 The accepted-pointer check ignores `adopt-worker` and `repair-trmnl`
 Deployments. Neither
@@ -317,13 +331,27 @@ nor a
 [TRMNL repair](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/README.md)
 moves an accepted pointer.
 
-The next check names v1-only columns: `configurationRevision` and
-`configuration` on `Environment` and `Deployment`. Delivery's v2 schema
-replaces them with a `Configuration` table, so the query fails there. Run it
-only against a v1 catalog. It must return no rows, meaning each configuration
-label carries one content.
+A Deployment holds its locks and its environment's active pointer while it
+runs. After it finishes, it keeps them only when `recoveryRequired` holds the
+work in quarantine
+([release logic](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/delivery-execution.ts)).
+Each held-work row is therefore in-flight or quarantined work that the backup
+captured. Reconcile every row with Temporal and native state before resuming
+submissions.
+
+The next two checks name v1-only schema: the `ApplicationLock` table, and the
+`configurationRevision` and `configuration` columns on `Environment` and
+`Deployment`. Delivery's v2 schema replaces them with `TargetLock` and a
+`Configuration` table, so these queries fail there. Run them only against a v1
+catalog. Each application lock follows the held-work rule. The label query must
+return no rows, meaning each configuration label carries one content.
 
 ```sql
+SELECT a.application, d.id AS deployment, d.status,
+       d."finishedAt" IS NOT NULL AS finished, d."recoveryRequired"
+FROM "ApplicationLock" a
+JOIN "Deployment" d ON d.id = a."deploymentId"
+ORDER BY 1;
 SELECT label, count(DISTINCT content) AS contents
 FROM (
   SELECT "configurationRevision" AS label, configuration AS content FROM "Environment"
