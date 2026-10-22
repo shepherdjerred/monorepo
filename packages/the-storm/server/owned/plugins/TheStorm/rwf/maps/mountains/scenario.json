@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "mountains-trooper-duel-v1",
   "map": "mountains",
-  "mapSha256": "a517f5ccecdfeec4f1c51c6e4b462cf2a2785b6139b9d4d5d15864823a3f90ea",
+  "mapSha256": "0c64dc51893aa60ccc732c27845fc307ba81d85c4b5529f1e1553d73d39856fc",
   "world": "minecraft:rwf",
   "region": {
     "min": {

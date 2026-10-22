@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "floating-isles-trooper-duel-v1",
   "map": "floating-isles",
-  "mapSha256": "20e371135462bd28142a2bed75cd01aa883a23a3f9575416fc733096be4efebc",
+  "mapSha256": "05d440c80d8be0d851ea38dae6e85b771c5913b9f4ff0d2b1c93b27e31945d5f",
   "world": "minecraft:rwf",
   "region": {
     "min": {

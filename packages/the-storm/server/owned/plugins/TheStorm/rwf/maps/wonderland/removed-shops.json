@@ -2,7 +2,7 @@
   "schema": 1,
   "policy": "remove-legacy-buy-signs-both-faces",
   "originalBlocksSha256": "1a3439362a72d36e168b6b2af278e37bf4b29cb79f5d5bb274962c81c58ea272",
-  "blocksSha256": "e966c68f5c4e4f5acdd0522c5fe91a75f80a88ceb199c067fe01796f99f61138",
+  "blocksSha256": "008d3997041596f59f87f954f45910bee6ac62fe0ced47e65d222ee7181c787d",
   "removed": [
     {
       "sign": {
@@ -224,5 +224,13 @@
       },
       "state": "minecraft:oak_wall_sign[facing=south,waterlogged=false]"
     }
-  ]
+  ],
+  "shopRemovalBlocksSha256": "e966c68f5c4e4f5acdd0522c5fe91a75f80a88ceb199c067fe01796f99f61138",
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "wonderland",
+    "changed": 712,
+    "before": "e966c68f5c4e4f5acdd0522c5fe91a75f80a88ceb199c067fe01796f99f61138",
+    "after": "008d3997041596f59f87f954f45910bee6ac62fe0ced47e65d222ee7181c787d"
+  }
 }

@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "id": "battle-scarred",
-  "blocksSha256": "7f9809a78d4bc3b15002fac2db31c07607e378fc1766b0a5ec045e5e62b608c4",
-  "detailsSha256": "29845c901d5a3d58d6147d431b3a2d12aa84219c4fdf97673c4fb0f3842e7d1a",
+  "blocksSha256": "53f81d76c95fa3c64e82e9d440c367a3948d806db49b78d8676da8b4095b6bca",
+  "detailsSha256": "6c9a5d2ea06e646de650f21b08feb8cd4a23307ab225924dd97ae01e9a0e90d6",
   "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
@@ -1591,5 +1591,17 @@
     "state": "complete",
     "containers": 0,
     "signs": 37
+  },
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "battle-scarred",
+    "changed": 801,
+    "before": "7f9809a78d4bc3b15002fac2db31c07607e378fc1766b0a5ec045e5e62b608c4",
+    "after": "53f81d76c95fa3c64e82e9d440c367a3948d806db49b78d8676da8b4095b6bca",
+    "fixturesSha256": "da4bf2944e267ba7c30e8e81cfc4e77eb8bf2a084ef0d6459098cd194a1d1977",
+    "paperVersion": "26.2",
+    "paperBuild": 129,
+    "paperSha256": "b1d8f6bfa1b6101fa8e947b53041cb3bdf5540e7b83b6547ca19ba7edefeb083",
+    "secondPassChanged": 0
   }
 }

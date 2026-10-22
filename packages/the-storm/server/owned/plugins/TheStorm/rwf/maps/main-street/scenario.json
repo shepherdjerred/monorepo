@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "main-street-trooper-duel-v1",
   "map": "main-street",
-  "mapSha256": "9b726b3189f878cdda9c76c6601edca91835c50cfa065e4be707edc495d47728",
+  "mapSha256": "578ba8be7252d90d3830774d4241f1713ed3c284cd6bd410429fc268771eb68e",
   "world": "minecraft:rwf",
   "region": {
     "min": {

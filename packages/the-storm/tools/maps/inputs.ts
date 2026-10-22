@@ -24,10 +24,12 @@ export async function freezeInputs(root: string, output: string) {
     cp(path.join(root, "server/owned/plugins/TheStorm"), content, {
       recursive: true,
     }),
-    cp(
-      path.join(root, "server/owned/plugins/Citizens"),
-      path.join(producer, "plugins/Citizens"),
-      { recursive: true },
+    ...["Citizens", "GrimAC"].map((plugin) =>
+      cp(
+        path.join(root, "server/owned/plugins", plugin),
+        path.join(producer, "plugins", plugin),
+        { recursive: true },
+      ),
     ),
     cp(path.join(root, "plugin/tools/rwfmap/build/install/rwfmap"), mapTool, {
       recursive: true,

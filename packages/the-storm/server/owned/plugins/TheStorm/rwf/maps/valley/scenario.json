@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "valley-trooper-duel-v1",
   "map": "valley",
-  "mapSha256": "aa01a5409c6f0915d62f584d84ab7e89239edc65abc427b4bbeedca1050ca6ea",
+  "mapSha256": "1706b0336b51c978369d8e73e73c742568adbb32f3043a8f0cc20d9e41df1a9a",
   "world": "minecraft:rwf",
   "region": {
     "min": {

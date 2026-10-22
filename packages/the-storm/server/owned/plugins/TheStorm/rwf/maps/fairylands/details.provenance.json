@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "id": "fairylands",
-  "blocksSha256": "e8c5dbd3c72576624d01cca42d8db130985b4004e99ec5c43eb6a19f6ee52c83",
-  "detailsSha256": "34ec30de72dab97106de561dd154d15c11fda0daaa9c108127047815e39a6240",
+  "blocksSha256": "054fe538b0d0152d7a94acaa385bb87d2796470a71989462800acba2f59c2933",
+  "detailsSha256": "5dd226ea481d45d2deb6675c9c1ab514ee35c66efa4b8532de7e07ce61246308",
   "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
@@ -1591,5 +1591,17 @@
     "state": "complete",
     "containers": 1,
     "signs": 17
+  },
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "fairylands",
+    "changed": 228,
+    "before": "e8c5dbd3c72576624d01cca42d8db130985b4004e99ec5c43eb6a19f6ee52c83",
+    "after": "054fe538b0d0152d7a94acaa385bb87d2796470a71989462800acba2f59c2933",
+    "fixturesSha256": "da4bf2944e267ba7c30e8e81cfc4e77eb8bf2a084ef0d6459098cd194a1d1977",
+    "paperVersion": "26.2",
+    "paperBuild": 129,
+    "paperSha256": "b1d8f6bfa1b6101fa8e947b53041cb3bdf5540e7b83b6547ca19ba7edefeb083",
+    "secondPassChanged": 0
   }
 }

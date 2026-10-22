@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "the-lost-kingdom-trooper-duel-v1",
   "map": "the-lost-kingdom",
-  "mapSha256": "e9ad48a282114bcd52d698fc72e7fba48a5f0cfba2770b8b066ca73aa67edeee",
+  "mapSha256": "87c11f91bc9e49bdd7e4cdfda88db99fe368bf54e1f3daaee341b7c82c49f47d",
   "world": "minecraft:rwf",
   "region": {
     "min": {

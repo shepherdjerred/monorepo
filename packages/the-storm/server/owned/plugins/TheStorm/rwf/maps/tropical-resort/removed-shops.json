@@ -2,7 +2,7 @@
   "schema": 1,
   "policy": "remove-legacy-buy-signs-both-faces",
   "originalBlocksSha256": "cfe852902b09f30ae7fa349c41b9c971eae5f3e878f57dce6fb96621799fc144",
-  "blocksSha256": "cefe83c08ad91326e8ff05909e443db44f9336832c63841c18d4a1d16f90318a",
+  "blocksSha256": "fa80af0119ca05ee4107a4de1b4c88b9e2949403159bd93341f0dd21b1385cd7",
   "removed": [
     {
       "sign": {
@@ -356,5 +356,13 @@
       },
       "state": "minecraft:oak_wall_sign[facing=north,waterlogged=false]"
     }
-  ]
+  ],
+  "shopRemovalBlocksSha256": "cefe83c08ad91326e8ff05909e443db44f9336832c63841c18d4a1d16f90318a",
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "tropical-resort",
+    "changed": 738,
+    "before": "cefe83c08ad91326e8ff05909e443db44f9336832c63841c18d4a1d16f90318a",
+    "after": "fa80af0119ca05ee4107a4de1b4c88b9e2949403159bd93341f0dd21b1385cd7"
+  }
 }

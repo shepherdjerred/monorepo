@@ -2,7 +2,7 @@
   "schema": 1,
   "policy": "remove-legacy-buy-signs-both-faces",
   "originalBlocksSha256": "54e6353a02662007d315775c5187bdfa9a43433f19a5ea145158ad7fe5bff131",
-  "blocksSha256": "f94d53f1f1cc4f672cc6e414ec9700428ebd80e4239d377963dfb60a63a7a311",
+  "blocksSha256": "f014ae8a2ab9892e777ab19f319067d10b69e74bcb0360608c09e5ac2ec26421",
   "removed": [
     {
       "sign": {
@@ -268,5 +268,13 @@
       },
       "state": "minecraft:oak_wall_sign[facing=north,waterlogged=false]"
     }
-  ]
+  ],
+  "shopRemovalBlocksSha256": "f94d53f1f1cc4f672cc6e414ec9700428ebd80e4239d377963dfb60a63a7a311",
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "flying-ships",
+    "changed": 362,
+    "before": "f94d53f1f1cc4f672cc6e414ec9700428ebd80e4239d377963dfb60a63a7a311",
+    "after": "f014ae8a2ab9892e777ab19f319067d10b69e74bcb0360608c09e5ac2ec26421"
+  }
 }

@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.e2e.maps;
 import com.google.gson.Gson;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.shepherdjerred.thestorm.rwf.adapter.content.SchematicReader;
+import com.shepherdjerred.thestorm.rwf.adapter.content.SchematicWriter;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard;
 import com.sk89q.worldedit.extent.clipboard.io.BuiltInClipboardFormat;
@@ -218,10 +219,20 @@ public final class MapExportFixtures implements AutoCloseable {
       try (var output = BuiltInClipboardFormat.SPONGE_V3_SCHEMATIC.getWriter(bytes)) {
         output.write(clipboard);
       }
-      var schematic = SchematicReader.read(new ByteArrayInputStream(bytes.toByteArray()));
+      var schematic =
+          MapConnections.normalize(
+                  SchematicReader.read(new ByteArrayInputStream(bytes.toByteArray())))
+              .blocks();
+      var normalized =
+          SchematicWriter.write(
+              schematic,
+              com.sk89q.worldedit.WorldEdit.getInstance()
+                  .getPlatformManager()
+                  .queryCapability(com.sk89q.worldedit.extension.platform.Capability.WORLD_EDITING)
+                  .getDataVersion());
       var directory = plugin.getDataFolder().toPath().resolve("map-export");
       Files.createDirectories(directory);
-      Files.write(directory.resolve("blocks.schem"), bytes.toByteArray());
+      Files.write(directory.resolve("blocks.schem"), normalized);
       Files.writeString(directory.resolve("removed-data.json"), GSON.toJson(removed));
       status =
           "{\"state\":\"complete\",\"minY\":"

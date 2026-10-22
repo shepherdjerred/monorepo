@@ -2652,5 +2652,17 @@
     "blocksSha256": "9f2410e4bb372f5dbccb8a9785901174c0746ddb6c41be109ff88058957240a4",
     "count": 20,
     "receipt": "removed-shops.json"
+  },
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "rotated-hemispheres",
+    "changed": 3498,
+    "before": "9f2410e4bb372f5dbccb8a9785901174c0746ddb6c41be109ff88058957240a4",
+    "after": "a63ad66c0b0cf8d7a5fe2c95565e49badbc6de6ca9a95dd2b4fc2072ff95005f",
+    "fixturesSha256": "da4bf2944e267ba7c30e8e81cfc4e77eb8bf2a084ef0d6459098cd194a1d1977",
+    "paperVersion": "26.2",
+    "paperBuild": 129,
+    "paperSha256": "b1d8f6bfa1b6101fa8e947b53041cb3bdf5540e7b83b6547ca19ba7edefeb083",
+    "secondPassChanged": 0
   }
 }

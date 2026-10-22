@@ -2,7 +2,7 @@
   "schema": 1,
   "policy": "remove-legacy-buy-signs-both-faces",
   "originalBlocksSha256": "dbf2499bf25527672bc0dc5f6a6c595821186486795293245006845f8c2ee036",
-  "blocksSha256": "04a2938ad4cb1e62a677ed42ad46c52431ab6003bd3f676029724a8bbf1f9f77",
+  "blocksSha256": "10916907b2e468e3ace53d4089f1e87fbdb8273ef5f96196ffe0e5d5bd1a207e",
   "removed": [
     {
       "sign": {
@@ -620,5 +620,13 @@
       },
       "state": "minecraft:oak_wall_sign[facing=west,waterlogged=false]"
     }
-  ]
+  ],
+  "shopRemovalBlocksSha256": "04a2938ad4cb1e62a677ed42ad46c52431ab6003bd3f676029724a8bbf1f9f77",
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "warlords-castles",
+    "changed": 900,
+    "before": "04a2938ad4cb1e62a677ed42ad46c52431ab6003bd3f676029724a8bbf1f9f77",
+    "after": "10916907b2e468e3ace53d4089f1e87fbdb8273ef5f96196ffe0e5d5bd1a207e"
+  }
 }

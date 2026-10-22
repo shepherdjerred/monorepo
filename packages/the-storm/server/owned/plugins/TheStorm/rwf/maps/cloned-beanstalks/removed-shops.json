@@ -2,7 +2,7 @@
   "schema": 1,
   "policy": "remove-legacy-buy-signs-both-faces",
   "originalBlocksSha256": "df935f0283bea60b25010afdb0bcb61e2e5d480548bfb93f1008e3484026dde5",
-  "blocksSha256": "68b8b91db7445c0d51b18fb96eaaecccb64fbe9967e491ddf3095734cfada2a4",
+  "blocksSha256": "d750f6e99a729045a96f9944e3dda27772b93c5b302a3c88c01d7d6a2fce7f44",
   "removed": [
     {
       "sign": {
@@ -796,5 +796,13 @@
       },
       "state": "minecraft:oak_wall_sign[facing=north,waterlogged=false]"
     }
-  ]
+  ],
+  "shopRemovalBlocksSha256": "68b8b91db7445c0d51b18fb96eaaecccb64fbe9967e491ddf3095734cfada2a4",
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "cloned-beanstalks",
+    "changed": 1069,
+    "before": "68b8b91db7445c0d51b18fb96eaaecccb64fbe9967e491ddf3095734cfada2a4",
+    "after": "d750f6e99a729045a96f9944e3dda27772b93c5b302a3c88c01d7d6a2fce7f44"
+  }
 }

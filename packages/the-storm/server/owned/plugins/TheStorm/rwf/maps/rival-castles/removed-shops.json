@@ -2,7 +2,7 @@
   "schema": 1,
   "policy": "remove-legacy-buy-signs-both-faces",
   "originalBlocksSha256": "6a03d2d3199886f778cb1570c783808b27703eb181e0dd32f96ebbe42f7fca23",
-  "blocksSha256": "7830c4ef0631f8095eb7d80ac9e9afb0535a435175fe3a5f351f787fd6056ffc",
+  "blocksSha256": "d6227b9c0c222f5fb2281ef85b36aea632c3a629258148a8cf356e2a4dfdbf2a",
   "removed": [
     {
       "sign": {
@@ -268,5 +268,13 @@
       },
       "state": "minecraft:oak_wall_sign[facing=west,waterlogged=false]"
     }
-  ]
+  ],
+  "shopRemovalBlocksSha256": "7830c4ef0631f8095eb7d80ac9e9afb0535a435175fe3a5f351f787fd6056ffc",
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "rival-castles",
+    "changed": 902,
+    "before": "7830c4ef0631f8095eb7d80ac9e9afb0535a435175fe3a5f351f787fd6056ffc",
+    "after": "d6227b9c0c222f5fb2281ef85b36aea632c3a629258148a8cf356e2a4dfdbf2a"
+  }
 }

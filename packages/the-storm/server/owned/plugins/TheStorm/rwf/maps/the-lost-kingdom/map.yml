@@ -257,5 +257,5 @@
       { id: red-1, team: RED, at: { x: 2126, "y": 6, z: 5121 } },
     ],
   nukes: [],
-  blocksSha256: e9ad48a282114bcd52d698fc72e7fba48a5f0cfba2770b8b066ca73aa67edeee,
+  blocksSha256: 87c11f91bc9e49bdd7e4cdfda88db99fe368bf54e1f3daaee341b7c82c49f47d,
 }

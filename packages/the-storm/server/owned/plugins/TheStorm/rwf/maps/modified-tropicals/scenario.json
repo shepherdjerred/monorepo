@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "modified-tropicals-trooper-duel-v1",
   "map": "modified-tropicals",
-  "mapSha256": "a0d1c097adc2f3ea157dff78278435e22a1d6d714d1d1d2029f51544f05e548b",
+  "mapSha256": "1b6342ec19eb7475c72c806adf1bceca6f30e53f25886ca598f08e184654a1cb",
   "world": "minecraft:rwf",
   "region": {
     "min": {

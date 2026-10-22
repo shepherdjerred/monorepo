@@ -2,7 +2,7 @@
   "schema": 1,
   "policy": "remove-legacy-buy-signs-both-faces",
   "originalBlocksSha256": "83be36752e818a81f6e7ec06b17aa7ab3342e8200beddd5193fd9f4d3814804b",
-  "blocksSha256": "f9c4494866360ee327faa781030c54298a7361623dff39518364a8f345e77c13",
+  "blocksSha256": "c86dfe5e9e716e44798366c8a99d0ebfd9396363098b0b7bdd7953e81d02c665",
   "removed": [
     {
       "sign": {
@@ -224,5 +224,13 @@
       },
       "state": "minecraft:oak_wall_sign[facing=south,waterlogged=false]"
     }
-  ]
+  ],
+  "shopRemovalBlocksSha256": "f9c4494866360ee327faa781030c54298a7361623dff39518364a8f345e77c13",
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "the-harshest-harvest",
+    "changed": 374,
+    "before": "f9c4494866360ee327faa781030c54298a7361623dff39518364a8f345e77c13",
+    "after": "c86dfe5e9e716e44798366c8a99d0ebfd9396363098b0b7bdd7953e81d02c665"
+  }
 }

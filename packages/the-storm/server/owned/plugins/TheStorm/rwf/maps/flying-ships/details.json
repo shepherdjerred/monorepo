@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "blocksSha256": "f94d53f1f1cc4f672cc6e414ec9700428ebd80e4239d377963dfb60a63a7a311",
+  "blocksSha256": "f014ae8a2ab9892e777ab19f319067d10b69e74bcb0360608c09e5ac2ec26421",
   "containers": [
     {
       "at": {
@@ -120,22 +120,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Built by",
-          "HeraCrossing",
-          "for the ",
-          "EoE Network"
-        ],
+        "lines": ["Built by", "HeraCrossing", "for the ", "EoE Network"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -149,22 +139,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Built by ",
-          "HeraCrossing",
-          "for the",
-          "EoE Network"
-        ],
+        "lines": ["Built by ", "HeraCrossing", "for the", "EoE Network"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },

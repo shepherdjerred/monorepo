@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "the-red-sand-seas-trooper-duel-v1",
   "map": "the-red-sand-seas",
-  "mapSha256": "3536cd852e0d9a52fdb02ac90e343bf04df802714fffdc3a3c134b7c30c0c5af",
+  "mapSha256": "b9e39099fc3c3c989230414cb6c8cfcb5952ec1c04fc2f12baa71c50d2b1a402",
   "world": "minecraft:rwf",
   "region": {
     "min": {

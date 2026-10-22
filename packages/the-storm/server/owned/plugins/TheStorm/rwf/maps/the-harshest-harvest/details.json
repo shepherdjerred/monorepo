@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "blocksSha256": "f9c4494866360ee327faa781030c54298a7361623dff39518364a8f345e77c13",
+  "blocksSha256": "c86dfe5e9e716e44798366c8a99d0ebfd9396363098b0b7bdd7953e81d02c665",
   "containers": [
     {
       "at": {
@@ -102,22 +102,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Map made by",
-          "A22518Y",
-          "",
-          ""
-        ],
+        "lines": ["Map made by", "A22518Y", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -131,22 +121,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Fish caught by",
-          "",
-          "Wait that's no ",
-          "fish..."
-        ],
+        "lines": ["Fish caught by", "", "Wait that's no ", "fish..."],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -160,22 +140,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Fish caught by",
-          "",
-          "A22518Y",
-          ""
-        ],
+        "lines": ["Fish caught by", "", "A22518Y", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -189,22 +159,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Fish caught by",
-          "",
-          "Nemo",
-          ""
-        ],
+        "lines": ["Fish caught by", "", "Nemo", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -218,22 +178,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Fish caught by",
-          "",
-          "Manabat1",
-          ""
-        ],
+        "lines": ["Fish caught by", "", "Manabat1", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -247,22 +197,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "The Inn of the",
-          "Hissing TNT",
-          ""
-        ],
+        "lines": ["", "The Inn of the", "Hissing TNT", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -276,22 +216,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Here lies",
-          "Treasure",
-          "Wait! No I mean",
-          "a dead guy!"
-        ],
+        "lines": ["Here lies", "Treasure", "Wait! No I mean", "a dead guy!"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },

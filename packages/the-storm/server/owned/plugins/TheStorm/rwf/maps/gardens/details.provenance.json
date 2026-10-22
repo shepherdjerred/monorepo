@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "id": "gardens",
-  "blocksSha256": "169e0b907a799c6b30300bc2fd231d1fb0aba0ce374b1914df45464a157f3074",
-  "detailsSha256": "6d0003c26278e59c4278caa8172429f4ea23ec8e03146ef5130c2fbe154b3f07",
+  "blocksSha256": "a5ac24ec3afe55f446c2694ce854e8529a2cd882e1d3d5eb3b2e3362f905a853",
+  "detailsSha256": "ba809b1a9ce85164f0a8ed9a84339528cba550fef83c4c2fda664545e3df983a",
   "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
@@ -1591,5 +1591,17 @@
     "state": "complete",
     "containers": 0,
     "signs": 11
+  },
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "gardens",
+    "changed": 310,
+    "before": "169e0b907a799c6b30300bc2fd231d1fb0aba0ce374b1914df45464a157f3074",
+    "after": "a5ac24ec3afe55f446c2694ce854e8529a2cd882e1d3d5eb3b2e3362f905a853",
+    "fixturesSha256": "da4bf2944e267ba7c30e8e81cfc4e77eb8bf2a084ef0d6459098cd194a1d1977",
+    "paperVersion": "26.2",
+    "paperBuild": 129,
+    "paperSha256": "b1d8f6bfa1b6101fa8e947b53041cb3bdf5540e7b83b6547ca19ba7edefeb083",
+    "secondPassChanged": 0
   }
 }

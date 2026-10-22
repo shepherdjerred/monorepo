@@ -6,10 +6,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.shepherdjerred.thestorm.core.nbt.NbtReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.List;
+import java.util.Map;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import org.junit.jupiter.api.Test;
 
@@ -37,6 +40,16 @@ final class SchematicReaderTest {
     assertThat(read.palette()).isEqualTo(schematic.palette());
     assertThat(read.sha256()).isEqualTo(schematic.sha256());
     assertThat(read.blockState(1, 2, 3)).isEqualTo(schematic.blockState(1, 2, 3));
+  }
+
+  @Test
+  void preservesTheNativeDataVersionWhenWritingConvertedTerrain() throws IOException {
+    var bytes = SchematicWriter.write(sample(), 4903);
+    try (var in = new DataInputStream(new GZIPInputStream(new ByteArrayInputStream(bytes)))) {
+      assertThat(NbtReader.readRoot(in).get("Schematic"))
+          .isInstanceOfSatisfying(
+              Map.class, tags -> assertThat(tags.get("DataVersion")).isEqualTo(4903));
+    }
   }
 
   @Test

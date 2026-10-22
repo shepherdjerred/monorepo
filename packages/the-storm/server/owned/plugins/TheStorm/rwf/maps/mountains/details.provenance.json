@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "id": "mountains",
-  "blocksSha256": "a517f5ccecdfeec4f1c51c6e4b462cf2a2785b6139b9d4d5d15864823a3f90ea",
-  "detailsSha256": "6725b66a622c1e03d0041102cbc64fe12f194c6f27604471e61e3426cc2d3792",
+  "blocksSha256": "0c64dc51893aa60ccc732c27845fc307ba81d85c4b5529f1e1553d73d39856fc",
+  "detailsSha256": "549536849ab783df8df25ca7096f3d68a47e2ba0b6cb92cd2ecabf6af883832a",
   "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
@@ -1591,5 +1591,17 @@
     "state": "complete",
     "containers": 10,
     "signs": 16
+  },
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "mountains",
+    "changed": 105,
+    "before": "a517f5ccecdfeec4f1c51c6e4b462cf2a2785b6139b9d4d5d15864823a3f90ea",
+    "after": "0c64dc51893aa60ccc732c27845fc307ba81d85c4b5529f1e1553d73d39856fc",
+    "fixturesSha256": "da4bf2944e267ba7c30e8e81cfc4e77eb8bf2a084ef0d6459098cd194a1d1977",
+    "paperVersion": "26.2",
+    "paperBuild": 129,
+    "paperSha256": "b1d8f6bfa1b6101fa8e947b53041cb3bdf5540e7b83b6547ca19ba7edefeb083",
+    "secondPassChanged": 0
   }
 }

@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "id": "the-harshest-harvest",
-  "blocksSha256": "f9c4494866360ee327faa781030c54298a7361623dff39518364a8f345e77c13",
-  "detailsSha256": "8510ad9bcb757a0c5b948ad684735bc8f68570906a45268a00ba7f6fc3f1ec0c",
+  "blocksSha256": "c86dfe5e9e716e44798366c8a99d0ebfd9396363098b0b7bdd7953e81d02c665",
+  "detailsSha256": "9e1b67e0f5d1579ce2f51c784bc59e7aeab772a80bb13e5b9411f691239a6b0b",
   "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
@@ -1591,5 +1591,17 @@
     "state": "complete",
     "containers": 10,
     "signs": 17
+  },
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "the-harshest-harvest",
+    "changed": 374,
+    "before": "f9c4494866360ee327faa781030c54298a7361623dff39518364a8f345e77c13",
+    "after": "c86dfe5e9e716e44798366c8a99d0ebfd9396363098b0b7bdd7953e81d02c665",
+    "fixturesSha256": "da4bf2944e267ba7c30e8e81cfc4e77eb8bf2a084ef0d6459098cd194a1d1977",
+    "paperVersion": "26.2",
+    "paperBuild": 129,
+    "paperSha256": "b1d8f6bfa1b6101fa8e947b53041cb3bdf5540e7b83b6547ca19ba7edefeb083",
+    "secondPassChanged": 0
   }
 }

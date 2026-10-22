@@ -2,7 +2,7 @@
   "schema": 1,
   "policy": "remove-legacy-buy-signs-both-faces",
   "originalBlocksSha256": "b00a376da2d2792c0fa675e85f5f4dad506ce719d6c07b8a3e7dae2e287d22f3",
-  "blocksSha256": "a517f5ccecdfeec4f1c51c6e4b462cf2a2785b6139b9d4d5d15864823a3f90ea",
+  "blocksSha256": "0c64dc51893aa60ccc732c27845fc307ba81d85c4b5529f1e1553d73d39856fc",
   "removed": [
     {
       "sign": {
@@ -290,5 +290,13 @@
       },
       "state": "minecraft:oak_wall_sign[facing=west,waterlogged=false]"
     }
-  ]
+  ],
+  "shopRemovalBlocksSha256": "a517f5ccecdfeec4f1c51c6e4b462cf2a2785b6139b9d4d5d15864823a3f90ea",
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "mountains",
+    "changed": 105,
+    "before": "a517f5ccecdfeec4f1c51c6e4b462cf2a2785b6139b9d4d5d15864823a3f90ea",
+    "after": "0c64dc51893aa60ccc732c27845fc307ba81d85c4b5529f1e1553d73d39856fc"
+  }
 }
