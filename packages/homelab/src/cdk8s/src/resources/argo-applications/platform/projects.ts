@@ -87,11 +87,19 @@ const REGISTERED_APPLICATIONS: ReadonlySet<string> = new Set([
  * The reviewed project of a registered Application; unregistered names fail.
  * Until transition rendering is on, every Application stays in `default`.
  */
+/**
+ * The Application that renders the AppProjects themselves. It cannot sit in a
+ * project it creates, so it uses `default`, which ArgoCD recreates on its own
+ * when missing, and a cold recovery can restore every other project from it.
+ */
+const PROJECT_OWNER_APPLICATION = "argocd-companion";
+
 export function applicationProject(
   name: string,
   transition: boolean = transitionRendering(),
 ): ArgoCdProject {
-  if (name === "apps") return ARGOCD_PROJECTS.root;
+  if (name === "apps" || name === PROJECT_OWNER_APPLICATION)
+    return ARGOCD_PROJECTS.root;
   if (!REGISTERED_APPLICATIONS.has(name))
     throw new Error(
       `Application ${name} has no reviewed ArgoCD project; register it in the service catalog first`,

@@ -18,7 +18,7 @@
               },
               "finalizers": []
             },
-            "project": "workloads",
+            "project": "default",
             "destination": {
               "server": "https://kubernetes.default.svc",
               "namespace": "argocd"

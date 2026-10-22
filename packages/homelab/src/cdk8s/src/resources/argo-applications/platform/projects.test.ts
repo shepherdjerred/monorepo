@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, test, vi } from "vitest";
 import type * as ReleaseConfiguration from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import { App } from "cdk8s";
 import { z } from "zod";
@@ -279,4 +279,13 @@ describe("ArgoCD AppProjects", () => {
       earliestOther,
     );
   });
+});
+
+test("the Application that renders the AppProjects lives in default, which ArgoCD recreates on its own", () => {
+  expect(applicationProject("argocd-companion", true)).toBe(
+    ARGOCD_PROJECTS.root,
+  );
+  expect(applicationProject("velero-companion", true)).not.toBe(
+    ARGOCD_PROJECTS.root,
+  );
 });
