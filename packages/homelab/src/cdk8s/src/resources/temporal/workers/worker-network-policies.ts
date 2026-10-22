@@ -5,6 +5,31 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createTemporalScoutBetaNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/scout-beta-network.ts";
 import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import {
+  ALERTMANAGER_GATEWAY_PORT,
+  PROMETHEUS_GATEWAY_PORT,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
+
+/**
+ * Prometheus and Alertmanager listen on loopback behind a same-pod
+ * authenticated gateway, and their Services map 9090 and 9093 onto the
+ * gateway's pod ports. NetworkPolicy matches the destination pod port, so a
+ * rule naming a Service port admits nothing once a controller enforces it.
+ */
+export function monitoringEgress(
+  port: typeof PROMETHEUS_GATEWAY_PORT | typeof ALERTMANAGER_GATEWAY_PORT,
+) {
+  return {
+    to: [
+      {
+        namespaceSelector: {
+          matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+        },
+      },
+    ],
+    ports: [{ port: IntOrString.fromNumber(port), protocol: "TCP" }],
+  };
+}
 
 function metricsIngress(ports: readonly number[]) {
   return [
@@ -233,9 +258,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
           ],
         },
       ],
-      egress: [
-        { ports: [{ port: IntOrString.fromNumber(9093), protocol: "TCP" }] },
-      ],
+      egress: [monitoringEgress(ALERTMANAGER_GATEWAY_PORT)],
     },
   });
 
@@ -246,7 +269,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
       policyTypes: ["Egress"],
       egress: [
         { ports: [{ port: IntOrString.fromNumber(5000), protocol: "TCP" }] },
-        { ports: [{ port: IntOrString.fromNumber(9093), protocol: "TCP" }] },
+        monitoringEgress(ALERTMANAGER_GATEWAY_PORT),
       ],
     },
   });
@@ -256,9 +279,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
     spec: {
       podSelector: { matchLabels: { component: "repo-worker" } },
       policyTypes: ["Egress"],
-      egress: [
-        { ports: [{ port: IntOrString.fromNumber(9093), protocol: "TCP" }] },
-      ],
+      egress: [monitoringEgress(ALERTMANAGER_GATEWAY_PORT)],
     },
   });
 
@@ -292,7 +313,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
       policyTypes: ["Egress"],
       egress: [
         { ports: [{ port: IntOrString.fromNumber(6443), protocol: "TCP" }] },
-        { ports: [{ port: IntOrString.fromNumber(9090), protocol: "TCP" }] },
+        monitoringEgress(PROMETHEUS_GATEWAY_PORT),
         { ports: [{ port: IntOrString.fromNumber(7341), protocol: "TCP" }] },
         {
           to: [
@@ -322,16 +343,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
           // The HTTP service targets Grafana's named backend port (3000).
           ports: [{ port: IntOrString.fromString("grafana"), protocol: "TCP" }],
         },
-        {
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(9093), protocol: "TCP" }],
-        },
+        monitoringEgress(ALERTMANAGER_GATEWAY_PORT),
         {
           to: [
             {

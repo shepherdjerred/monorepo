@@ -4,6 +4,8 @@ import {
   KubeNetworkPolicy,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { PROMETHEUS_GATEWAY_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
+import { monitoringEgress } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/worker-network-policies.ts";
 
 /**
  * Record the agent worker's narrow topology independently from the broad infra
@@ -47,18 +49,7 @@ export function createTemporalAgentWorkerNetworkPolicy(chart: Chart): void {
           ],
           ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
         },
-        {
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "prometheus",
-                },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(9090), protocol: "TCP" }],
-        },
+        monitoringEgress(PROMETHEUS_GATEWAY_PORT),
         {
           to: [
             {
