@@ -932,8 +932,7 @@
         "versioning": "semver",
         "packageName": "kueue/charts/kueue"
       },
-      "value": "0.20.1@sha256:909f655fee23166bfe112b2e0fd18193d10e463e1f7287ff99c285060da87981",
-      "component": true
+      "value": "0.20.1@sha256:909f655fee23166bfe112b2e0fd18193d10e463e1f7287ff99c285060da87981"
     },
     {
       "name": "tonistiigi/binfmt",
