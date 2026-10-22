@@ -4,6 +4,10 @@ import type {
   DeploymentDetail,
   VersionSetRevision,
 } from "@shepherdjerred/delivery/contract";
+import {
+  applicationOf,
+  forumReleaseOf,
+} from "@shepherdjerred/delivery/model-contract";
 
 function image(set: VersionSetRevision, component: string): string {
   const artifact = set.components[component];
@@ -109,29 +113,42 @@ function previousRelease(
   };
 }
 
-/** Bind migration and pre-upgrade backup inputs to the frozen accepted snapshot. */
+/** The release Job a deployment's migration runs as; its name carries the deployment (T5). */
+export function forumReleaseId(deploymentId: string): string {
+  return createHash("sha256").update(deploymentId).digest("hex").slice(0, 32);
+}
+
+/**
+ * Bind migration and pre-upgrade backup inputs to the frozen accepted
+ * snapshot, for a v1 `forumRelease` block or a model `forum-bundle` step.
+ */
 export function forumReleaseParameters(
   detail: ForumDetail,
 ): Record<string, string> {
-  const pipeline = detail.pipeline.definition;
-  if (pipeline.kind !== "argocd" || pipeline.forumRelease === undefined)
-    return {};
+  const definition = detail.pipeline.definition;
+  const forum = forumReleaseOf(definition);
+  if (forum === undefined) return {};
+  const application = applicationOf(definition);
   if (detail.deployment.kind === "rollback")
     throw new Error(
       "Forum database upgrades require the independent restoration procedure; a blind image rollback is unsafe",
     );
   if (
+    application === null ||
     detail.deployment.serviceId !== "storm-forum" ||
-    !["storm-forum", "storm-forum-beta"].includes(pipeline.application)
+    !["storm-forum", "storm-forum-beta"].includes(application.name)
   ) {
     throw new Error(
       "Forum release adapter is restricted to registered forum Applications",
     );
   }
-  const previous = previousRelease(detail, pipeline.forumRelease);
-  const { imageComponent, bundleComponent } = pipeline.forumRelease;
+  const previous = previousRelease(detail, forum);
+  const { imageComponent, bundleComponent } = forum;
+  // An artifact parameter binds the forum image the release migrates to.
   if (
-    !Object.values(pipeline.artifactParameters).includes(imageComponent) ||
+    !Object.values(application.artifactParameters).some(
+      (parameter) => parameter.component === imageComponent,
+    ) ||
     !/^\d+\.\d+\.\d+$/u.test(
       detail.configuration.content["forum.xenforoVersion"] ?? "",
     )
@@ -148,13 +165,9 @@ export function forumReleaseParameters(
     throw new Error(
       "Forum selected bundle differs from the exact configured XenForo version",
     );
-  const releaseId = createHash("sha256")
-    .update(detail.deployment.id)
-    .digest("hex")
-    .slice(0, 32);
   return {
     "delivery.image": image(detail.versionSet, imageComponent),
-    "delivery.releaseId": releaseId,
+    "delivery.releaseId": forumReleaseId(detail.deployment.id),
     "delivery.bundleKey": new URL(selectedBundle.uri).pathname.slice(1),
     "delivery.bundleSha256": selectedBundle.digest.slice("sha256:".length),
     "delivery.previousBundleSha256": previous.bundle.digest.slice(

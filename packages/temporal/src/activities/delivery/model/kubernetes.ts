@@ -25,6 +25,7 @@ import { runGuardedArgoCommand } from "#activities/delivery/argocd.ts";
 import { recordStage, requireOwned } from "./stages.ts";
 import { workerRolloutPreflight } from "./worker-rollout.ts";
 import { minecraftSyncFence } from "./minecraft-upgrade.ts";
+import { forumSyncFence } from "./forum-bundle.ts";
 
 const READBACK_ATTEMPTS = 120;
 const READBACK_INTERVAL_MS = 5000;
@@ -202,9 +203,11 @@ export async function sync(
   // Argo effect: the server accepts it only from the executor that owns the
   // deployment under a live lease (D7), which a read cannot prove.
   await recordStage(current, key, "running", { operationId: requestId });
-  // A preserved world switches images only with fresh preservation proof.
-  if (!before.requested) minecraftSyncFence(current, recipe);
-  if (!before.requested)
+  if (!before.requested) {
+    // A preserved world switches images only with fresh preservation proof.
+    minecraftSyncFence(current, recipe);
+    // A forum's first migration re-observes its original baseline first.
+    await forumSyncFence(current);
     await runGuardedArgoCommand(
       [
         "sync-managed",
@@ -218,6 +221,7 @@ export async function sync(
       ],
       { operationId: requestId, application: rendered.name },
     );
+  }
   const proof = await waitForReadback(
     rendered,
     requestId,

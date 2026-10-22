@@ -2,8 +2,10 @@ import type { DeploymentDetail } from "@shepherdjerred/delivery/contract";
 import {
   renderApplication as renderShared,
   type RenderArtifact,
+  renderArtifactParameter,
   type RenderedApplication as RenderedBody,
 } from "@shepherdjerred/delivery/model-contract";
+import { forumReleaseParameters } from "#lib/delivery/forum.ts";
 import type { KubernetesApplicationRecipe } from "./recipe.ts";
 import { workerPoolParameters } from "#lib/delivery/workers/worker-pool.ts";
 import { minecraftModelParameters } from "#lib/delivery/minecraft.ts";
@@ -38,6 +40,36 @@ function runtimeParameters(
 }
 
 /**
+ * A forum-bundle step's release inputs as Helm parameters: the chart's
+ * release Job, named by this deployment, verifies and migrates the frozen
+ * bundle. An input an artifact parameter already binds (the image) must
+ * render identically and is left to that parameter.
+ */
+function forumInputs(
+  detail: DeploymentDetail,
+  recipe: KubernetesApplicationRecipe,
+): Record<string, string> {
+  const inputs = forumReleaseParameters(detail);
+  for (const [path, parameter] of Object.entries(recipe.artifactParameters)) {
+    const input = inputs[path];
+    if (input === undefined) continue;
+    const artifact = detail.versionSet.components[parameter.component];
+    if (
+      artifact === undefined ||
+      renderArtifactParameter(parameter.format, artifact) !== input
+    )
+      throw new Error(
+        `Forum release input ${path} differs from its artifact parameter`,
+      );
+  }
+  return Object.fromEntries(
+    Object.entries(inputs).filter(
+      ([path]) => recipe.artifactParameters[path] === undefined,
+    ),
+  );
+}
+
+/**
  * The Application a deployment writes, from the one shared renderer the
  * cold-start tool also uses, over the deployment's frozen selection.
  */
@@ -52,6 +84,7 @@ export function renderApplication(
     configuration: {
       ...detail.configuration.content,
       ...runtimeParameters(detail, recipe),
+      ...forumInputs(detail, recipe),
     },
     artifacts: selectionArtifacts(detail),
   });
