@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import java.util.Optional;
 import org.bukkit.Material;
 import org.junit.jupiter.api.AfterEach;
@@ -44,6 +45,25 @@ final class MovementTerrainTest {
     assertThat(terrain.supported(new Vec3(0.1, 1, 2.5), 1.1)).isFalse();
     world.getBlockAt(2, 0, 2).setType(Material.AIR);
     assertThat(terrain.supported(new Vec3(2.5, 1, 2.5), 1.1)).isFalse();
+  }
+
+  @Test
+  void aBodyPerchedOnAFencePostsCornerStandsAndCanWalkOff() {
+    // floating-isles: a bot rested on an unconnected fence post by one corner of its footprint,
+    // read as floorless, and refused every walk off it for three and a half minutes.
+    world.getBlockAt(2, 1, 2).setType(Material.OAK_FENCE);
+    for (var x = 0; x < 5; x++) world.getBlockAt(x, 1, 1).setType(Material.STONE_SLAB);
+    var perched = new Vec3(2.9, 2.5, 2.8);
+    assertThat(terrain.grounded(perched)).isTrue();
+    assertThat(terrain.grounded(new Vec3(3.4, 2.5, 3.4))).as("clear of the post").isFalse();
+    var off =
+        new com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Request(
+            perched, new Vec3(2.5, 1.5, 1.5), Hop.WALK);
+    var walk =
+        com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.choose(terrain, off);
+    assertThat(walk.reason())
+        .as(com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.explain(terrain, off))
+        .isEqualTo(com.shepherdjerred.thestorm.rwfbots.domain.reflex.MovementSafety.Reason.CLEAR);
   }
 
   @Test

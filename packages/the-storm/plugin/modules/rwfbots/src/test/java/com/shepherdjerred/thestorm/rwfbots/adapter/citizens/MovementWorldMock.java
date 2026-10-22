@@ -61,7 +61,7 @@ final class MovementWorldMock extends WorldMock {
     public boolean isPassable() {
       return switch (getType()) {
         case AIR, FIRE, WATER, LAVA, LADDER -> true;
-        case STONE, STONE_SLAB, STONE_STAIRS, MAGMA_BLOCK, SCAFFOLDING -> false;
+        case STONE, STONE_SLAB, STONE_STAIRS, OAK_FENCE, MAGMA_BLOCK, SCAFFOLDING -> false;
         default -> throw new IllegalStateException("terrain fixture does not model " + getType());
       };
     }
@@ -80,6 +80,9 @@ final class MovementWorldMock extends WorldMock {
       var boxes =
           switch (getType()) {
             case STONE_SLAB -> java.util.List.of(new BoundingBox(0, 0, 0, 1, 0.5, 1));
+            // An unconnected post, as vanilla shapes one: a block and a half tall.
+            case OAK_FENCE ->
+                java.util.List.of(new BoundingBox(0.375, 0, 0.375, 0.625, 1.5, 0.625));
             case STONE_STAIRS ->
                 java.util.List.of(
                     new BoundingBox(0, 0, 0, 1, 0.5, 1), new BoundingBox(0, 0.5, 0, 1, 1, 0.5));

@@ -101,6 +101,9 @@ public final class CitizensBodies implements Bodies, Listener {
     npc.data().set(NPC.Metadata.KNOCKBACK, true);
     npc.data().set(NPC.Metadata.SWIM, true);
     npc.data().set(NPC.Metadata.NAMEPLATE_VISIBLE, true);
+    // Citizens runs a body's vanilla touch step, which picks things up, only with this flag: a
+    // harpooner's Loyalty trident flew back and hovered beside it for the rest of its life.
+    npc.data().set(NPC.Metadata.PICKUP_ITEMS, true);
     // Citizens applies its one-block default after NPCSpawnEvent unless an attribute trait owns
     // the value. Retain the ordinary player step across initial spawn and skin replacement.
     npc.getOrAddTrait(AttributeTrait.class).setAttributeValue(Attribute.STEP_HEIGHT, 0.6);

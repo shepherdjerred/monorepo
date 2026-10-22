@@ -264,13 +264,14 @@ public final class MovementSafety {
 
   /**
    * Whether a walk refused only for want of floor within a step is a safe drop instead: the target
-   * lies more than a step below, with clear flight to it and a supported landing. A body perched on
-   * a block edge, a stall counter or a roof is routed from the graph node beneath it, so its next
-   * waypoint is an ordinary walk; refusing to step off left it standing there for minutes. The
-   * body's final landing check still rules out damage it must not take.
+   * lies more than half a block below, with clear flight to it and a supported landing. A body
+   * perched on a block edge, a stall counter, a roof or a fence post is routed from the graph node
+   * beneath it, so its next waypoint is an ordinary walk; refusing to step off left it standing
+   * there for minutes (a fence post a block above a floating-isles walkway, for three and a half).
+   * The body's final landing check still rules out damage it must not take.
    */
   private static boolean steppingDown(Terrain terrain, Request request) {
-    return request.from().y() - request.target().y() > WALK_DROP
+    return request.from().y() - request.target().y() > HALF_STEP
         && traversal(terrain, new Request(request.from(), request.target(), Hop.DROP));
   }
 

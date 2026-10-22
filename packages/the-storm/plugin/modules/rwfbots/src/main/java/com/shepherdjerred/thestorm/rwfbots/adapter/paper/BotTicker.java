@@ -68,6 +68,8 @@ public final class BotTicker {
   /** Which bot bodies stood on solid ground last tick. */
   private final Map<UUID, Boolean> groundedLastTick = new HashMap<>();
 
+  private final NaturalRegeneration regeneration = new NaturalRegeneration();
+
   private long tick;
   private Optional<BotChat> chat = Optional.empty();
 
@@ -198,11 +200,11 @@ public final class BotTicker {
   }
 
   /**
-   * Clears the fall distance of a bot body that has stood on solid ground for two ticks. Vanilla
-   * resets it from its own collision on-ground flag, which an NPC body without client movement does
-   * not refresh while standing still, so a body could keep a landed fall's distance indefinitely
-   * and plan every route as a fatal drop. The landing tick itself is left to vanilla, so a real
-   * fall still deals its damage.
+   * Runs each bot body's food tick ({@link NaturalRegeneration}) and clears the fall distance of a
+   * bot body that has stood on solid ground for two ticks. Vanilla resets it from its own collision
+   * on-ground flag, which an NPC body without client movement does not refresh while standing
+   * still, so a body could keep a landed fall's distance indefinitely and plan every route as a
+   * fatal drop. The landing tick itself is left to vanilla, so a real fall still deals its damage.
    */
   private void settleLandings() {
     Set<UUID> present = new HashSet<>();
@@ -214,8 +216,10 @@ public final class BotTicker {
       var grounded = SnapshotCapture.onGround(body);
       var wasGrounded = Boolean.TRUE.equals(groundedLastTick.put(bot.uuid(), grounded));
       if (grounded && wasGrounded && body.getFallDistance() > 0) body.setFallDistance(0);
+      regeneration.tick(body);
     }
     groundedLastTick.keySet().retainAll(present);
+    regeneration.retain(present);
   }
 
   /**

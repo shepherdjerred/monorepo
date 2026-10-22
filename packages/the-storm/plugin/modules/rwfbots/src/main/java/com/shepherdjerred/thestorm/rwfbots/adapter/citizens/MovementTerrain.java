@@ -131,7 +131,15 @@ final class MovementTerrain implements MovementSafety.Terrain {
             && surface.getAsDouble() >= point.y() - drop;
       }
     }
-    return false;
+    // A fence or wall stands a block and a half tall, so a body on its top has its feet in the
+    // cell above it: read as floorless, a bot perched on a fence post refused every way off it.
+    var tall = block(new BlockPos(top.x(), bottom - 1, top.z()));
+    if (tall.isPassable() || hazard(tall) || water(tall)) return false;
+    var surface = topUnder(tall, point);
+    return surface.isPresent()
+        && surface.getAsDouble() > bottom
+        && surface.getAsDouble() <= point.y() + EPSILON
+        && surface.getAsDouble() >= point.y() - drop;
   }
 
   @Override
