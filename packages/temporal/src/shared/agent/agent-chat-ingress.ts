@@ -1,4 +1,16 @@
+import { truncateGraphemes } from "@shepherdjerred/text";
+
 const MAX_INGRESS_FUTURE_SKEW_MS = 5 * 60 * 1000;
+const MAX_GENERATED_TITLE_LENGTH = 80;
+
+/** A single-line chat title from a prompt, cut on grapheme boundaries. */
+export function agentChatTitleFromPrompt(prompt: string): string {
+  return truncateGraphemes(
+    prompt.replaceAll(/\s+/g, " ").trim(),
+    MAX_GENERATED_TITLE_LENGTH,
+    "...",
+  );
+}
 
 export class AgentChatTimestampInFutureError extends Error {
   public constructor() {

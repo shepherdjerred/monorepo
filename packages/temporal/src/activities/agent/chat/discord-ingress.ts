@@ -1,5 +1,6 @@
 import { ApplicationFailure, Context } from "@temporalio/activity";
 import { REST } from "discord.js";
+import { chunkGraphemes } from "@shepherdjerred/text";
 import { z } from "zod/v4";
 import { createTemporalClient } from "#client";
 import { continueAgentChat, runAgentChatTurn } from "#lib/agent-chat-client.ts";
@@ -31,21 +32,9 @@ function requiredEnvironment(name: string): string {
 }
 
 export function chunkDiscordAgentChatText(text: string): string[] {
-  if (text.length === 0) return ["(Agent returned no text.)"];
-  const chunks: string[] = [];
-  for (let offset = 0; offset < text.length;) {
-    let end = Math.min(offset + DISCORD_MESSAGE_LIMIT, text.length);
-    const boundaryCodePoint = text.codePointAt(end - 1);
-    if (boundaryCodePoint === undefined) {
-      throw new Error("Discord message boundary is outside the response");
-    }
-    if (boundaryCodePoint > 65_535) {
-      end -= 1;
-    }
-    chunks.push(text.slice(offset, end));
-    offset = end;
-  }
-  return chunks;
+  return text.length === 0
+    ? ["(Agent returned no text.)"]
+    : chunkGraphemes(text, DISCORD_MESSAGE_LIMIT);
 }
 
 export async function executeDiscordAgentChatCommand(

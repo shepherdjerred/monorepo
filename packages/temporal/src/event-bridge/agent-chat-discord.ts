@@ -32,6 +32,7 @@ import type {
   AgentChatProvider,
 } from "#shared/agent/agent-chat.ts";
 import { AgentChatIdSchema } from "#shared/agent/agent-chat.ts";
+import { agentChatTitleFromPrompt } from "#shared/agent/agent-chat-ingress.ts";
 import {
   DISCORD_MESSAGE_LIMIT,
   DiscordAgentChatCommandSchema,
@@ -227,18 +228,6 @@ export function discordBinding(
   return { kind: "discord", channelId: interaction.channelId };
 }
 
-function generatedTitle(prompt: string): string {
-  const singleLine = prompt.replaceAll(/\s+/g, " ").trim();
-  if (singleLine.length <= 80) return singleLine;
-  let title = "";
-  const segments = new Intl.Segmenter(undefined, { granularity: "grapheme" });
-  for (const { segment } of segments.segment(singleLine)) {
-    if (title.length + segment.length > 77) break;
-    title += segment;
-  }
-  return `${title}...`;
-}
-
 async function handleNew(
   temporal: TemporalClient,
   interaction: ChatInputCommandInteraction,
@@ -262,7 +251,9 @@ async function handleNew(
     ...(source.threadId === undefined ? {} : { threadId: source.threadId }),
     provider,
     prompt,
-    title: interaction.options.getString("title") ?? generatedTitle(prompt),
+    title:
+      interaction.options.getString("title") ??
+      agentChatTitleFromPrompt(prompt),
     model,
     submittedAt: timestamp,
   });

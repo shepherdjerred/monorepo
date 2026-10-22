@@ -4,6 +4,7 @@ import {
   REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
 } from "#shared/reports/report-delivery-policy.ts";
 import { proxyActivities } from "@temporalio/workflow";
+import { graphemePrefix } from "@shepherdjerred/text";
 import type { DepsSummaryActivities } from "#activities/maintenance/deps-summary/deps-summary.ts";
 import type { DependencyChange } from "#shared/deps-summary-types.ts";
 import type { MissingReleaseNote } from "#activities/maintenance/deps-summary/deps-summary-release-notes.ts";
@@ -226,7 +227,7 @@ export async function generateDependencySummary(
           detail:
             note === undefined
               ? change.commitSubject
-              : `${note.notes.slice(0, 1000)}${note.url === undefined ? "" : ` (${note.url})`}`,
+              : `${graphemePrefix(note.notes, 1000)}${note.url === undefined ? "" : ` (${note.url})`}`,
           evidenceReceiptIds: ["catalog-diff", "release-note-resolution"],
         };
       }),

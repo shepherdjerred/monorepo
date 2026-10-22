@@ -1,3 +1,4 @@
+import { truncateGraphemes } from "@shepherdjerred/text";
 import type { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
 import type {
@@ -70,7 +71,7 @@ export function daysBefore(now: Date, days: number): Date {
 }
 
 export function truncate(text: string, max: number): string {
-  return text.length <= max ? text : `${text.slice(0, max - 1)}…`;
+  return truncateGraphemes(text, max);
 }
 
 /** Service id for a Kubernetes namespace, when the catalog claims it. */

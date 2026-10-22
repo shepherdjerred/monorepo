@@ -56,6 +56,15 @@ describe("Discord agent chat activities", () => {
     expect(chunks.join("")).toBe(text);
   });
 
+  it("does not split a flag or ZWJ sequence across messages", () => {
+    const family = "👨‍👩‍👧‍👦";
+    const text = `${"x".repeat(1996)}🇯🇵${family}y`;
+    const chunks = chunkDiscordAgentChatText(text);
+
+    expect(chunks).toEqual([`${"x".repeat(1996)}🇯🇵`, `${family}y`]);
+    expect(chunks.every((chunk) => chunk.isWellFormed())).toBe(true);
+  });
+
   it("does not retry definitive Discord delivery rejections", async () => {
     activityMocks.restPost.mockRejectedValueOnce({ status: 403 });
     const previousToken = Bun.env["AGENT_CHAT_DISCORD_TOKEN"];

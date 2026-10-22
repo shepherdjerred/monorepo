@@ -1,3 +1,4 @@
+import { graphemePrefix } from "@shepherdjerred/text";
 import type { AlertmanagerAlert } from "#lib/alertmanager.ts";
 import type { TemporalNamespace } from "#shared/infra/temporal-namespace.ts";
 
@@ -40,7 +41,9 @@ export type WorkflowFailureDetail = {
 };
 
 function truncate(value: string, maxChars: number): string {
-  return value.length <= maxChars ? value : `${value.slice(0, maxChars)}…`;
+  return value.length <= maxChars
+    ? value
+    : `${graphemePrefix(value, maxChars)}…`;
 }
 
 /** Direct link to the failed run's history in the Temporal UI — not just "check the UI". */

@@ -77,6 +77,7 @@ COPY --parents \
   packages/mc-build/src/registry/lighting.ts \
   packages/config \
   packages/sentry-config \
+  packages/text \
   packages/ops-model \
   packages/ops-clients \
   packages/version-catalog/package.json \
@@ -478,6 +479,7 @@ COPY --parents \
   packages/temporal-observability \
   packages/config \
   packages/sentry-config \
+  packages/text \
   packages/feature-flags \
   packages/code-review \
   packages/glitter-context \
