@@ -88,7 +88,7 @@ const PREBUILT_SITES = [
   { lane: "site-wiki", site: "wiki", artifact: "wiki-dist" },
 ] as const;
 
-function siteCommands(): string[] {
+function siteCommands(catalogV2: boolean): string[] {
   const archiveFlag = " --archive";
   const lines: string[] = [
     ". ci/scripts/toolchain.sh",
@@ -148,18 +148,20 @@ function siteCommands(): string[] {
     "fi",
   );
 
-  lines.push("bun --no-install scripts/ci/write-site-archive-handoff.ts");
+  lines.push(
+    `bun --no-install scripts/ci/write-site-archive-handoff.ts${catalogV2 ? " --catalog-v2" : ""}`,
+  );
 
   return lines;
 }
 
-export function siteSteps(images: CiImages): CiStep[] {
+export function siteSteps(images: CiImages, catalogV2 = false): CiStep[] {
   return [
     {
       key: "sites",
       label: "publish site archives",
       image: images.base,
-      commands: siteCommands(),
+      commands: siteCommands(catalogV2),
       dependsOn: [
         "verify",
         "playwright-e2e",

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { CATALOG_CORE } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
+import { publicationOwners } from "@shepherdjerred/ops-model/delivery-catalog/publication-owners.ts";
 import { buildPublications } from "./publish-delivery.ts";
 import { siteArchivePublications } from "./write-site-archive-handoff.ts";
 
@@ -23,14 +24,31 @@ const scout = [
     }),
   },
 ];
-const catalog = CATALOG_CORE;
+const catalog = publicationOwners("v2");
 /** The catalog document as it would read without the sjer.red site service. */
-const withoutSjerRed = {
-  ...CATALOG_CORE,
-  services: CATALOG_CORE.services.filter(
-    (service) => service.id !== "sjer-red",
-  ),
-};
+const withoutSjerRed = publicationOwners("v2", {
+  core: {
+    ...CATALOG_CORE,
+    services: CATALOG_CORE.services.filter(
+      (service) => service.id !== "sjer-red",
+    ),
+  },
+});
+
+describe("v1 static site handoff, before the window's catalog flip", () => {
+  test("registers every independent archive under static-sites, as v1 does", () => {
+    const publications = siteArchivePublications(
+      [...scout, { ...scout[0], serviceId: "static-sites" }],
+      [siteArchive("sjer-red"), siteArchive("not-in-the-catalog")],
+    );
+    expect(publications.map((entry) => entry.serviceId)).toEqual([
+      "scout-for-lol",
+      "static-sites",
+      "static-sites",
+      "static-sites",
+    ]);
+  });
+});
 
 describe("static site handoff ownership", () => {
   test("stamps each independent archive with its own bucket-named service and keeps Scout's owner", () => {
@@ -87,6 +105,7 @@ describe("static site handoff ownership", () => {
         pipelineNumber: 42,
         repositoryId: 1,
         capturedAt: "2026-10-17T10:00:00.000Z",
+        owners: catalog,
       },
       {
         inspectImage: () => {
@@ -118,7 +137,7 @@ describe("static site handoff ownership", () => {
           pipelineNumber: 42,
           repositoryId: 1,
           capturedAt: "2026-10-17T10:00:00.000Z",
-          catalogCore: withoutSjerRed,
+          owners: withoutSjerRed,
         },
         {
           inspectImage: () => {

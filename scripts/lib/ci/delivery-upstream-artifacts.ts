@@ -9,6 +9,11 @@ import {
   ServiceIndex,
 } from "@shepherdjerred/ops-model/catalog.ts";
 import {
+  CATALOG_CORE,
+  type CatalogCore,
+} from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
+import type { OwnerRegistry } from "@shepherdjerred/ops-model/delivery-catalog/publication-owners.ts";
+import {
   componentEntries,
   type VersionCatalog,
   type VersionCatalogEntry,
@@ -33,6 +38,13 @@ export type UpstreamProducer = {
   sourceRevision: string;
 };
 export type ComponentArtifactOptions = {
+  /**
+   * v1 registers each component under its services.json owner; v2 under every
+   * catalog service that acquires it. v1 until the window's catalog flip.
+   */
+  registry?: OwnerRegistry;
+  /** The catalog document v2 reads acquiring services from. */
+  core?: CatalogCore;
   credentials: () => { username: string; password: string };
   mirror?: typeof acquireUpstreamChart;
   transport?: ChartTransport;
@@ -54,20 +66,105 @@ type UpstreamClient = Pick<
   "latestQualifiedArtifact" | "acquireUpstreamArtifact"
 >;
 
-function chartIntent(entry: VersionCatalogEntry): UpstreamIntent {
-  const owner = new ServiceIndex(SERVICE_CATALOG).byChart(entry.name);
-  if (owner === undefined)
-    throw new Error(`Chart ${entry.name} requires a service catalog owner`);
+/**
+ * The version-catalog entries v1 acquires: only the Minecraft chart. Every
+ * other `component: true` entry is acquired from the window's catalog flip
+ * on; WP4 deletes this with the v1 path.
+ */
+const V1_ACQUIRED_ENTRIES: ReadonlySet<string> = new Set([
+  "helm-chart:minecraft",
+]);
+
+/** The catalog as v1 acquires it: the other component entries stay unacquired. */
+export function v1AcquisitionCatalog(catalog: VersionCatalog): VersionCatalog {
+  return {
+    ...catalog,
+    entries: catalog.entries.map((entry) =>
+      entry.component === true &&
+      !V1_ACQUIRED_ENTRIES.has(`${entry.artifactType}:${entry.name}`)
+        ? { ...entry, component: false }
+        : entry,
+    ),
+  };
+}
+
+/** The catalog component an entry is: a chart by name, an image by repository basename. */
+export function catalogComponentName(entry: VersionCatalogEntry): string {
+  switch (entry.artifactType) {
+    case "helm-chart":
+      return `chart:${entry.name}`;
+    case "image":
+      return `image:${entry.name.slice(entry.name.lastIndexOf("/") + 1)}`;
+    case "package":
+    case "source":
+      throw new Error(
+        `Component ${entry.name} is a ${entry.artifactType}, which Delivery cannot acquire`,
+      );
+  }
+}
+
+/** One intent per catalog service that acquires the entry's component. */
+function catalogIntents(
+  entry: VersionCatalogEntry,
+  core: CatalogCore,
+): UpstreamIntent[] {
+  const component = catalogComponentName(entry);
+  const owners = core.services.filter((service) =>
+    service.components.some(
+      (candidate) =>
+        candidate.name === component && candidate.producer === "acquisition",
+    ),
+  );
+  if (owners.length === 0)
+    throw new Error(`Component ${component} has no acquiring catalog service`);
+  const identity =
+    entry.artifactType === "helm-chart"
+      ? chartIdentity(entry)
+      : imageIdentity(entry);
+  return owners.map((owner) => ({
+    ...identity,
+    component,
+    serviceId: owner.id,
+  }));
+}
+
+function chartIdentity(
+  entry: VersionCatalogEntry,
+): Omit<UpstreamIntent, "serviceId"> {
   if (!entry.management.managed || entry.management.registryUrl === undefined)
     throw new Error(`Component chart ${entry.name} has no registryUrl`);
   return {
-    serviceId: owner.id,
     component: `chart:${entry.name}`,
     kind: "chart",
     name: entry.name,
     version: entry.value,
     repository: helmRepositoryUrl(entry.management.registryUrl),
   };
+}
+
+function imageIdentity(
+  entry: VersionCatalogEntry,
+): Omit<UpstreamIntent, "serviceId"> {
+  if (!entry.management.managed || entry.management.registryUrl === undefined)
+    throw new Error(`Component image ${entry.name} has no registryUrl`);
+  const pinned = /^([^@\s]+)@(sha256:[a-f0-9]{64})$/u.exec(entry.value);
+  if (pinned?.[1] === undefined || pinned[2] === undefined)
+    throw new Error(`Component image ${entry.name} must pin tag@sha256:digest`);
+  return {
+    component: `image:${entry.name}`,
+    kind: "image",
+    name: entry.name,
+    version: pinned[1],
+    repository: entry.management.registryUrl,
+    digest: pinned[2],
+  };
+}
+
+function chartIntent(entry: VersionCatalogEntry): UpstreamIntent {
+  const owner = new ServiceIndex(SERVICE_CATALOG).byChart(entry.name);
+  if (owner === undefined)
+    throw new Error(`Chart ${entry.name} requires a service catalog owner`);
+  return { ...chartIdentity(entry), serviceId: owner.id };
 }
 
 function imageIntent(
@@ -79,20 +176,7 @@ function imageIntent(
     throw new Error(
       `Upstream image ${entry.name} has no Delivery owner; declare it in imageOwners`,
     );
-  if (!entry.management.managed || entry.management.registryUrl === undefined)
-    throw new Error(`Component image ${entry.name} has no registryUrl`);
-  const pinned = /^([^@\s]+)@(sha256:[a-f0-9]{64})$/u.exec(entry.value);
-  if (pinned?.[1] === undefined || pinned[2] === undefined)
-    throw new Error(`Component image ${entry.name} must pin tag@sha256:digest`);
-  return {
-    serviceId,
-    component: `image:${entry.name}`,
-    kind: "image",
-    name: entry.name,
-    version: pinned[1],
-    repository: entry.management.registryUrl,
-    digest: pinned[2],
-  };
+  return { ...imageIdentity(entry), serviceId };
 }
 
 function componentIntent(
@@ -207,29 +291,64 @@ export async function componentArtifactsForPublication(
   producer: UpstreamProducer,
   options: ComponentArtifactOptions,
 ): Promise<ArtifactVersion[]> {
+  const v2 = options.registry === "v2";
   const artifacts: ArtifactVersion[] = [];
   for (const entry of componentEntries(catalog)) {
-    const intent = componentIntent(entry, options);
-    const original = await retained(client, intent);
-    if (original !== undefined) {
-      artifacts.push(original);
-      continue;
-    }
-    const result = await client.acquireUpstreamArtifact({
-      requestId: `ci/${String(producer.repositoryId)}/${String(producer.pipelineNumber)}/acquire/${intent.name}/${intent.version}`,
-      serviceId: intent.serviceId,
-      sourceRevision: producer.sourceRevision,
-      pipeline: {
-        repositoryId: producer.repositoryId,
-        pipelineNumber: producer.pipelineNumber,
-      },
-      artifact: await acquiredArtifact(intent, options),
-    });
-    if (result.status !== "verified")
-      throw new Error(
-        `Upstream ${intent.component} acquisition is ${result.status}; no eligible CI reference was published`,
+    // The bytes are acquired once per entry; v2 registers them under every
+    // acquiring service, each with its own artifact and request identity.
+    let acquired: AcquireUpstreamArtifact["artifact"] | undefined;
+    for (const intent of v2
+      ? catalogIntents(entry, options.core ?? CATALOG_CORE)
+      : [componentIntent(entry, options)]) {
+      const original = await retained(client, intent);
+      if (original !== undefined) {
+        artifacts.push(original);
+        continue;
+      }
+      acquired ??= await acquiredArtifact(intent, options);
+      artifacts.push(
+        await registerAcquisition(client, producer, { intent, acquired, v2 }),
       );
-    artifacts.push(result.artifact);
+    }
   }
   return artifacts;
+}
+
+async function registerAcquisition(
+  client: UpstreamClient,
+  producer: UpstreamProducer,
+  {
+    intent,
+    acquired,
+    v2,
+  }: {
+    intent: UpstreamIntent;
+    acquired: AcquireUpstreamArtifact["artifact"];
+    v2: boolean;
+  },
+): Promise<ArtifactVersion> {
+  const pipeline = `ci/${String(producer.repositoryId)}/${String(producer.pipelineNumber)}`;
+  const result = await client.acquireUpstreamArtifact({
+    requestId: v2
+      ? `${pipeline}/acquire/${intent.serviceId}/${intent.name}/${intent.version}`
+      : `${pipeline}/acquire/${intent.name}/${intent.version}`,
+    serviceId: intent.serviceId,
+    sourceRevision: producer.sourceRevision,
+    pipeline: {
+      repositoryId: producer.repositoryId,
+      pipelineNumber: producer.pipelineNumber,
+    },
+    artifact: v2
+      ? {
+          ...acquired,
+          id: `upstream/${intent.serviceId}/${acquired.id.slice("upstream/".length)}`,
+          component: intent.component,
+        }
+      : acquired,
+  });
+  if (result.status !== "verified")
+    throw new Error(
+      `Upstream ${intent.component} acquisition is ${result.status}; no eligible CI reference was published`,
+    );
+  return result.artifact;
 }

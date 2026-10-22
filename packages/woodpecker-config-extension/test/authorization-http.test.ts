@@ -35,6 +35,7 @@ function harness(
   const sourceCacheEnabled = vi.fn(() => Promise.resolve(cacheEnabled));
   const app = createApp({
     deliveryPublicationEnabled: () => Promise.resolve(true),
+    deliveryCatalogV2Enabled: () => Promise.resolve(true),
     maintenanceEnabled: () => Promise.resolve(maintenanceEnabled),
     sourceCacheEnabled,
     ...(trustedGateImage === undefined ? {} : { trustedGateImage }),

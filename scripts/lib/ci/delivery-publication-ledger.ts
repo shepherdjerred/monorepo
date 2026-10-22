@@ -4,7 +4,6 @@ import {
   PublishBuildSchema,
 } from "@shepherdjerred/delivery/contract";
 import type { PublishBuild } from "@shepherdjerred/delivery/contract";
-import type { Catalog } from "@shepherdjerred/ops-model/catalog.ts";
 
 type Artifact = z.output<typeof PublishBuildSchema>["artifacts"][number];
 export type RetainedReference = {
@@ -24,15 +23,11 @@ export type PublicationIdentity = {
 export class PublicationLedger {
   readonly #publications = new Map<string, Artifact[]>();
   readonly #retained = new Map<string, RetainedReference[]>();
-  readonly #catalog: Catalog;
-  readonly #alsoOwns: (serviceId: string) => boolean;
+  readonly #owns: (serviceId: string) => boolean;
 
-  constructor(
-    catalog: Catalog,
-    alsoOwns: (serviceId: string) => boolean = () => false,
-  ) {
-    this.#catalog = catalog;
-    this.#alsoOwns = alsoOwns;
+  /** `owns` answers whether the producer's owner registry declares a service. */
+  constructor(owns: (serviceId: string) => boolean) {
+    this.#owns = owns;
   }
 
   add(serviceId: string, rawArtifact: z.input<typeof ArtifactInputSchema>) {
@@ -61,10 +56,7 @@ export class PublicationLedger {
   }
 
   retain(serviceId: string, reference: RetainedReference) {
-    if (
-      !this.#catalog.services.some((service) => service.id === serviceId) &&
-      !this.#alsoOwns(serviceId)
-    )
+    if (!this.#owns(serviceId))
       throw new Error("Retained artifact requires a canonical service owner");
     if (
       (this.#publications.get(serviceId) ?? []).some(

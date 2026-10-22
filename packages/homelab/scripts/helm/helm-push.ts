@@ -48,6 +48,7 @@ import {
   type HelmReleasePlan,
 } from "./helm-release-core.ts";
 import { repositoryChartInputs } from "./repository-chart-inputs.ts";
+import { publicationOwners } from "@shepherdjerred/ops-model/delivery-catalog/publication-owners.ts";
 
 const SYNTH_DIRECTORY = "src/cdk8s/dist";
 
@@ -173,6 +174,7 @@ function parseOptions(): {
   readonly buildNumber: string;
   readonly dryRun: boolean;
   readonly deliveryCatalog: boolean;
+  readonly catalogV2: boolean;
   readonly requested: ReadonlySet<string>;
 } {
   const args = Bun.argv.slice(2);
@@ -193,6 +195,7 @@ function parseOptions(): {
     dryRun,
     requested,
     deliveryCatalog: args.includes("--delivery-catalog"),
+    catalogV2: args.includes("--catalog-v2"),
   };
 }
 
@@ -211,6 +214,7 @@ function releasePlanningBases(
     readonly version: string;
     readonly dryRun: boolean;
     readonly deliveryCatalog: boolean;
+    readonly catalogV2: boolean;
     readonly inventory: ReadonlyMap<string, ChartMuseumRelease>;
     readonly temporaryDirectory: string;
     readonly pipelineNumber: number | undefined;
@@ -221,6 +225,7 @@ function releasePlanningBases(
     version: options.version,
     dryRun,
     deliveryCatalog,
+    owners: publicationOwners(options.catalogV2 ? "v2" : "v1"),
     inventory: options.inventory,
     ...(pipelineNumber === undefined ? {} : { pipelineNumber }),
     archive: (name) => {
@@ -389,7 +394,8 @@ async function synthesizeCharts(
 }
 
 async function main(): Promise<void> {
-  const { buildNumber, dryRun, requested, deliveryCatalog } = parseOptions();
+  const { buildNumber, dryRun, requested, deliveryCatalog, catalogV2 } =
+    parseOptions();
   const publication = dryRun
     ? undefined
     : ChartPublicationSchema.parse({
@@ -421,6 +427,7 @@ async function main(): Promise<void> {
       version,
       dryRun,
       deliveryCatalog,
+      catalogV2,
       inventory,
       temporaryDirectory,
       pipelineNumber: publication?.pipelineNumber,

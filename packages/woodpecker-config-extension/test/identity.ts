@@ -37,10 +37,11 @@ export const TEST_IMAGES: CiImages = {
 };
 
 /** The whole step model, built from the fixtures above. */
-export function testPipelineSteps() {
+export function testPipelineSteps(deliveryCatalogV2 = false) {
   return buildPipelineSteps({
     images: TEST_IMAGES,
     changedBase: "x",
     imageReleaseBase: "x",
+    deliveryCatalogV2,
   });
 }

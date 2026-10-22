@@ -1,4 +1,8 @@
 import { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
+import {
+  publicationOwners,
+  type PublicationOwners,
+} from "@shepherdjerred/ops-model/delivery-catalog/publication-owners.ts";
 import type { ChartPublication } from "@shepherdjerred/ops-model/chart-publication.ts";
 import { DeliveryClientError } from "@shepherdjerred/delivery/client";
 import type { DeliveryClient } from "@shepherdjerred/delivery/client";
@@ -354,6 +358,8 @@ export type ChartPlanningOptions = {
   readonly client?: ChartPlanningClient;
   /** This producer's main pipeline; Delivery bases come only from earlier ones. */
   readonly pipelineNumber?: number;
+  /** The registry that owns each chart's qualified base; v1 until the window's catalog flip. */
+  readonly owners?: PublicationOwners;
 };
 
 /**
@@ -367,14 +373,15 @@ export async function deliveryChartBase(
   client: ChartPlanningClient,
   name: string,
   beforePipeline: number,
+  owners: PublicationOwners = publicationOwners("v1"),
 ): Promise<ChartPlanningBase | undefined> {
-  const owner = new ServiceIndex().byChart(name);
-  if (owner === undefined)
-    throw new Error(`Chart ${name} requires a service catalog owner`);
+  // A chart the registry no longer registers (v2's apps) has no base.
+  const owner = owners.chart(name);
+  if (owner === undefined) return undefined;
   let artifact: ArtifactVersion;
   try {
     artifact = await client.latestRetainableArtifact({
-      serviceId: owner.id,
+      serviceId: owner,
       component: `chart:${name}`,
       kind: "chart",
       beforePipeline,
@@ -385,7 +392,7 @@ export async function deliveryChartBase(
     throw error;
   }
   if (
-    artifact.serviceId !== owner.id ||
+    artifact.serviceId !== owner ||
     artifact.component !== `chart:${name}` ||
     artifact.kind !== "chart" ||
     artifact.origin.kind !== "first-party" ||
@@ -436,6 +443,7 @@ export async function planningBases(
           options.client,
           input.name,
           options.pipelineNumber,
+          options.owners,
         ),
       ] as const;
     }),

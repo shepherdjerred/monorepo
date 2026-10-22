@@ -5,6 +5,9 @@ import {
 } from "@shepherdjerred/delivery/contract";
 import type { PublishBuild } from "@shepherdjerred/delivery/contract";
 import type { ArtifactVersionSchema } from "@shepherdjerred/delivery/contract";
+// v1's root release: it names v1 site environments, and with the catalog
+// flag on producers skip it (WP4 deletes it with the v1 path).
+import { V1_STATIC_SITE_DESTINATIONS } from "@shepherdjerred/ops-model/static-release-targets.ts";
 import {
   SERVICE_CATALOG,
   ServiceIndex,
@@ -22,14 +25,6 @@ import type {
 import { globalPaths } from "../../../ci/scripts/migration-core.ts";
 import { workspacePaths } from "../../../ci/scripts/selectors/site-lane-paths.ts";
 import { ensureAncestor } from "../../../ci/scripts/selectors/ensure-ancestor.ts";
-import { STACK_MANIFEST } from "../../../packages/homelab/scripts/tofu/tofu-stack-manifest.ts";
-import {
-  independentStaticSites,
-  isStaticSiteArtifact,
-  staticSiteBucket,
-  staticSiteEnvironment,
-  staticSiteServiceId,
-} from "./static-site-publications.ts";
 
 const managedStacks = TofuStackSchema.options.filter((stack) =>
   ["automatic", "reviewed-plan"].includes(TOFU_STACK_POLICIES[stack].mode),
@@ -59,9 +54,8 @@ export function changedPlatformStacks(
       (file) =>
         shared.some((path) => within(file, path)) ||
         within(file, `packages/homelab/src/tofu/${stack}`) ||
-        STACK_MANIFEST[stack].externalFiles.some((input) =>
-          within(file, input),
-        ) ||
+        (stack === "cloudflare" &&
+          file === "packages/homelab/src/domain-registry.json") ||
         (TOFU_STACK_POLICIES[stack].mode === "reviewed-plan" &&
           sensitiveShared.some((path) => within(file, path))),
     ),
@@ -180,32 +174,42 @@ export async function attachPlatformPublication(
       rootArtifacts[expected.name] = artifactId;
     }
   }
-  // A site archive published under its own service releases independently;
-  // one published under another owner (Scout's frontends) rides that
-  // service's combined deployment and is no root prerequisite.
-  const freshSites = publications.flatMap((build) =>
-    build.artifacts.filter(isStaticSiteArtifact).flatMap((artifact) => {
-      const bucket = staticSiteBucket(artifact.component);
-      if (build.serviceId !== staticSiteServiceId(bucket)) return [];
-      return [
-        {
-          environmentId: staticSiteEnvironment(bucket),
-          artifactId: artifact.id,
-        },
-      ];
-    }),
-  );
+  const freshSites = publications
+    .filter((build) => build.serviceId === "static-sites")
+    .flatMap((build) =>
+      build.artifacts
+        .filter(
+          (artifact) =>
+            artifact.kind === "archive" &&
+            artifact.component.startsWith("site:"),
+        )
+        .map((artifact) => {
+          const environmentId =
+            V1_STATIC_SITE_DESTINATIONS[
+              artifact.component.slice("site:".length)
+            ];
+          if (environmentId?.startsWith("static-sites/") !== true)
+            throw new Error(
+              "Independent static publication requires its reviewed bucket owner",
+            );
+          return { environmentId, artifactId: artifact.id };
+        }),
+    );
   const selectedSites = new Map(
     freshSites.map((site) => [site.environmentId, site.artifactId]),
   );
   if (retainedSite !== undefined && closure.root) {
     const originals = await Promise.all(
-      independentStaticSites()
-        .filter((site) => !selectedSites.has(site.environmentId))
-        .map(async ({ bucket, serviceId, environmentId }) => {
+      Object.entries(V1_STATIC_SITE_DESTINATIONS)
+        .filter(
+          ([, environment]) =>
+            environment.startsWith("static-sites/") &&
+            !selectedSites.has(environment),
+        )
+        .map(async ([bucket, environmentId]) => {
           const artifact = await retainedSite(bucket);
           if (
-            artifact.serviceId !== serviceId ||
+            artifact.serviceId !== "static-sites" ||
             artifact.component !== `site:${bucket}` ||
             artifact.kind !== "archive" ||
             artifact.origin.kind !== "first-party"

@@ -7,6 +7,7 @@ import { DeliveryClientError } from "@shepherdjerred/delivery/client";
 import { ArtifactVersionSchema } from "@shepherdjerred/delivery/contract";
 import type { ArtifactVersion } from "@shepherdjerred/delivery/contract";
 import { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
+import { publicationOwners } from "@shepherdjerred/ops-model/delivery-catalog/publication-owners.ts";
 import {
   ChartPublicationSchema,
   type ChartPublication,
@@ -521,4 +522,18 @@ test("without the Delivery catalog the base is ChartMuseum's newest archive", as
   });
   expect([...bases.keys()]).toEqual(["arcade"]);
   expect(result.publishOrder).toEqual(["apps"]);
+});
+
+test("after the catalog flip, bases come from the v2 owner and apps has none", async () => {
+  const client = catalogClient({
+    arcade: qualified("arcade"),
+    apps: () => {
+      throw new Error("v2 no longer registers the root chart");
+    },
+  });
+  const { bases } = await plan({ client, owners: publicationOwners("v2") });
+  expect(client.queries).toEqual([
+    { serviceId: "arcade", component: "chart:arcade", kind: "chart" },
+  ]);
+  expect([...bases.keys()]).toEqual(["arcade"]);
 });

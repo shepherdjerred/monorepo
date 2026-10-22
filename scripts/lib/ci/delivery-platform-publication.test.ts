@@ -7,12 +7,12 @@ import {
   SERVICE_CATALOG,
   ServiceIndex,
 } from "@shepherdjerred/ops-model/catalog.ts";
+import { V1_STATIC_SITE_DESTINATIONS } from "@shepherdjerred/ops-model/static-release-targets.ts";
 import {
   attachPlatformPublication,
   changedPlatformStacks,
   platformDependencyClosure,
 } from "./delivery-platform-publication.ts";
-import { independentStaticSites } from "./static-site-publications.ts";
 
 const files: string[] = [];
 const metadata = {
@@ -79,18 +79,6 @@ test("ordinary changes do not invent platform deploys; direct stacks retain thei
   ).toEqual(["cloudflare-tokens"]);
   expect(changedPlatformStacks(["bun.lock"])).toHaveLength(10);
   expect(changedPlatformStacks(undefined)).toHaveLength(10);
-});
-
-test("a stack's declared external inputs select it like its own directory", () => {
-  expect(
-    changedPlatformStacks(["packages/homelab/src/domain-registry.json"]),
-  ).toEqual(["cloudflare"]);
-  expect(changedPlatformStacks(["config/analytics-sites.json"])).toEqual([
-    "posthog",
-  ]);
-  expect(
-    changedPlatformStacks(["packages/version-catalog/src/image-registry.json"]),
-  ).toEqual([]);
 });
 
 test("root and DNS releases freeze the complete ordered dependency closure", () => {
@@ -262,7 +250,7 @@ test("site prerequisites exclude Scout's combined deployment and keep the exact 
     });
   const result = await attachPlatformPublication(
     [
-      build("sjer-red", "sjer-red"),
+      build("static-sites", "sjer-red"),
       build("scout-for-lol", "scout-frontend-beta"),
     ],
     metadata,
@@ -288,7 +276,7 @@ test("a newer root freezes unchanged original site archives so an older queued s
       lookups.push(bucket);
       return ArtifactVersionSchema.parse({
         id: `original/${bucket}`,
-        serviceId: bucket,
+        serviceId: "static-sites",
         buildId: "original-older-ci",
         sourceRevision: "b".repeat(40),
         createdAt: metadata.capturedAt,
@@ -333,27 +321,28 @@ test("a newer root freezes unchanged original site archives so an older queued s
 
 test("a first full root publication needs no retained sites when every active site archive is fresh", async () => {
   const { builds, inventory } = fullRootPublication();
-  const sitePublications = independentStaticSites().map(({ bucket }) =>
-    PublishBuildSchema.parse({
-      requestId: `ci/1/42/${bucket}`,
-      serviceId: bucket,
-      sourceRevision: metadata.sourceRevision,
-      ciUrl: metadata.ciUrl,
-      verifiedAt: metadata.capturedAt,
-      artifacts: [
-        {
-          id: `ci/1/42/site/${bucket}`,
-          component: `site:${bucket}`,
-          kind: "archive",
-          uri: `s3://delivery-artifacts/sites/${bucket}/${"c".repeat(64)}.tar`,
-          digest: `sha256:${"c".repeat(64)}`,
-          version: "build-42",
-        },
-      ],
-    }),
-  );
+  const artifacts = Object.entries(V1_STATIC_SITE_DESTINATIONS)
+    .filter(([, environment]) => environment.startsWith("static-sites/"))
+    .map(([bucket]) => ({
+      id: `ci/1/42/site/${bucket}`,
+      component: `site:${bucket}`,
+      kind: "archive",
+      uri: `s3://delivery-artifacts/sites/${bucket}/${"c".repeat(64)}.tar`,
+      digest: `sha256:${"c".repeat(64)}`,
+      version: "build-42",
+    }));
   const result = await attachPlatformPublication(
-    [...builds, ...sitePublications],
+    [
+      ...builds,
+      PublishBuildSchema.parse({
+        requestId: "ci/1/42/static-sites",
+        serviceId: "static-sites",
+        sourceRevision: metadata.sourceRevision,
+        ciUrl: metadata.ciUrl,
+        verifiedAt: metadata.capturedAt,
+        artifacts,
+      }),
+    ],
     { ...metadata, rootInventory: inventory },
     anchor,
     async () => {

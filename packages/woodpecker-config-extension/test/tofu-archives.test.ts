@@ -33,11 +33,17 @@ test("the archive producer freezes every stack on every main push with no plan, 
 });
 
 test("registration waits for the archive producer and pull requests never reach it", () => {
-  const publication = deliveryPublicationSteps(TEST_IMAGES, true, true).find(
-    (step) => step.key === "delivery-publish",
-  );
+  const publication = deliveryPublicationSteps(
+    TEST_IMAGES,
+    true,
+    true,
+    true,
+  ).find((step) => step.key === "delivery-publish");
   expect(publication?.dependsOn).toContain("tofu-archives");
-  const steps = testPipelineSteps();
+  expect(publication?.commands).toContain(
+    "bun --no-install scripts/ci/publish-delivery.ts --static-archives --catalog-v2",
+  );
+  const steps = testPipelineSteps(true);
   const main = selectSteps(steps, {
     event: "push",
     branch: "main",
@@ -52,4 +58,26 @@ test("registration waits for the archive producer and pull requests never reach 
     changedFiles: [],
   }).map((step) => step.key);
   expect(pullRequest).not.toContain("tofu-archives");
+});
+
+test("before the window's catalog flip, main builds no archives and publication registers v1 owners", () => {
+  const publication = deliveryPublicationSteps(TEST_IMAGES, true, true).find(
+    (step) => step.key === "delivery-publish",
+  );
+  expect(publication?.dependsOn).not.toContain("tofu-archives");
+  expect(publication?.commands).toContain(
+    "bun --no-install scripts/ci/publish-delivery.ts --static-archives",
+  );
+  const steps = testPipelineSteps(false);
+  expect(steps.map((step) => step.key)).not.toContain("tofu-archives");
+  const commands = steps.flatMap((step) => step.commands).join("\n");
+  expect(commands).not.toContain("--catalog-v2");
+  expect(
+    testPipelineSteps(true)
+      .filter((step) =>
+        step.commands.some((command) => command.includes("--catalog-v2")),
+      )
+      .map((step) => step.key)
+      .sort(),
+  ).toEqual(["helm-push", "sites"]);
 });

@@ -5,12 +5,15 @@ import { DeliveryClientError } from "@shepherdjerred/delivery/client";
 import type { AcquireUpstreamArtifact } from "@shepherdjerred/delivery/contract";
 import { ArtifactVersionSchema } from "@shepherdjerred/delivery/contract";
 import {
+  componentEntries,
   parseVersionCatalog,
   type VersionCatalogEntry,
 } from "@shepherdjerred/version-catalog";
 import {
+  catalogComponentName,
   componentArtifactsForPublication,
   MIRRORED_CHARTS,
+  v1AcquisitionCatalog,
 } from "./delivery-upstream-artifacts.ts";
 
 const repository = "https://itzg.github.io/minecraft-server-charts/";
@@ -458,3 +461,71 @@ test.each([
     ).rejects.toThrow("reviewed original upstream identity");
   },
 );
+
+const busybox: VersionCatalogEntry = {
+  name: "library/busybox",
+  category: "upstream",
+  artifactType: "image",
+  management: {
+    managed: true,
+    datasource: "docker",
+    registryUrl: "https://docker.io",
+    versioning: "docker",
+  },
+  value: `1.37.0@${imageDigest}`,
+  component: true,
+};
+
+test("v1 acquires only the Minecraft chart until the window's catalog flip", () => {
+  expect(
+    componentEntries(
+      v1AcquisitionCatalog(catalog(minecraftChart, minecraftImage, busybox)),
+    ).map((entry) => entry.name),
+  ).toEqual(["minecraft"]);
+});
+
+test("a catalog component is a chart by name and an image by repository basename", () => {
+  expect(catalogComponentName(minecraftChart)).toBe("chart:minecraft");
+  expect(catalogComponentName(busybox)).toBe("image:busybox");
+  expect(catalogComponentName(nonComponent)).toBe("chart:kueue");
+});
+
+test("v2 registers one acquisition under every catalog service that acquires the component", async () => {
+  const requests: AcquireUpstreamArtifact[] = [];
+  const selected = await componentArtifactsForPublication(
+    {
+      latestQualifiedArtifact: async () => {
+        throw new DeliveryClientError(404, "NOT_FOUND", "No original");
+      },
+      acquireUpstreamArtifact: async (input) => {
+        requests.push(input);
+        return verified(input);
+      },
+    },
+    catalog(busybox),
+    producer,
+    { credentials, registry: "v2" },
+  );
+  expect(
+    selected.map((artifact) => [artifact.serviceId, artifact.component]),
+  ).toEqual([
+    ["minecraft-shuxin", "image:busybox"],
+    ["minecraft-sjerred", "image:busybox"],
+  ]);
+  expect(requests.map((request) => request.requestId)).toEqual([
+    "ci/1/42/acquire/minecraft-shuxin/library/busybox/1.37.0",
+    "ci/1/42/acquire/minecraft-sjerred/library/busybox/1.37.0",
+  ]);
+  expect(new Set(requests.map((request) => request.artifact.id)).size).toBe(2);
+  await expect(
+    componentArtifactsForPublication(
+      {
+        latestQualifiedArtifact: unexpected,
+        acquireUpstreamArtifact: unexpected,
+      },
+      catalog({ ...busybox, name: "library/not-in-the-catalog" }),
+      producer,
+      { credentials, registry: "v2" },
+    ),
+  ).rejects.toThrow("has no acquiring catalog service");
+});

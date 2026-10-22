@@ -30,6 +30,7 @@ function chartPublicationRequested(): string[] {
 export function artifactPublicationSteps(
   images: CiImages,
   environment: Readonly<Record<string, string>>,
+  catalogV2 = false,
 ): CiStep[] {
   return [
     {
@@ -75,7 +76,7 @@ export function artifactPublicationSteps(
         "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter homelab --filter '@homelab/cdk8s' --production",
         ...chartPublicationRequested(),
         "MISE_TOOLCHAIN_SCOPE=deployment . ci/scripts/toolchain.sh",
-        'bun --no-install packages/homelab/scripts/helm/helm-push.ts "$CI_RELEASE_NUMBER" --delivery-catalog',
+        `bun --no-install packages/homelab/scripts/helm/helm-push.ts "$CI_RELEASE_NUMBER" --delivery-catalog${catalogV2 ? " --catalog-v2" : ""}`,
         "bun --no-install scripts/ci/write-ci-handoff.ts argocd-release-expected < argocd-release-expected.json",
         "bun --no-install scripts/ci/write-ci-handoff.ts helm-release-plan < helm-release-plan.json",
         "bun --no-install scripts/ci/write-ci-handoff.ts delivery-chart-publications < delivery-chart-publications.json",

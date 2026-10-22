@@ -9,10 +9,10 @@
  */
 import { ArtifactInputSchema } from "@shepherdjerred/delivery/contract";
 import {
-  CATALOG_CORE,
-  type CatalogCore,
-  catalogOwnsService,
-} from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
+  publicationOwners,
+  type PublicationOwners,
+} from "@shepherdjerred/ops-model/delivery-catalog/publication-owners.ts";
+import { parseArgs } from "node:util";
 import { z } from "zod";
 import { readRequiredHandoff, writeJsonHandoff } from "../lib/ci/ci-handoff.ts";
 import {
@@ -29,6 +29,13 @@ const ScoutPublicationSchema = z
     artifact: ArtifactInputSchema,
   })
   .strict();
+/** v1 accepted Scout receipts under either owner (WP4 deletes it). */
+const V1ScoutPublicationSchema = z
+  .object({
+    serviceId: z.enum(["static-sites", "scout-for-lol"]),
+    artifact: ArtifactInputSchema,
+  })
+  .strict();
 
 export type SiteArchivePublication = {
   serviceId: string;
@@ -38,8 +45,21 @@ export type SiteArchivePublication = {
 export function siteArchivePublications(
   scout: unknown,
   archives: readonly unknown[],
-  catalog: CatalogCore = CATALOG_CORE,
+  owners: PublicationOwners = publicationOwners("v1"),
 ): SiteArchivePublication[] {
+  if (owners.registry === "v1") {
+    // Until the window's catalog flip, every independent site registers under
+    // v1's shared static-sites service.
+    const publications: SiteArchivePublication[] = z
+      .array(V1ScoutPublicationSchema)
+      .parse(scout);
+    for (const raw of archives)
+      publications.push({
+        serviceId: "static-sites",
+        artifact: ArtifactInputSchema.parse(raw),
+      });
+    return publications;
+  }
   const publications: SiteArchivePublication[] = z
     .array(ScoutPublicationSchema)
     .parse(scout);
@@ -50,7 +70,7 @@ export function siteArchivePublications(
         `Static site handoff requires a site archive, not ${artifact.component}`,
       );
     const serviceId = staticSiteServiceId(staticSiteBucket(artifact.component));
-    if (!catalogOwnsService(serviceId, catalog))
+    if (!owners.owns(serviceId))
       throw new Error(
         `Static site ${artifact.component} requires a service catalog owner ${serviceId}`,
       );
@@ -60,6 +80,13 @@ export function siteArchivePublications(
 }
 
 async function main(): Promise<void> {
+  const { values } = parseArgs({
+    args: Bun.argv.slice(2),
+    strict: true,
+    allowPositionals: false,
+    options: { "catalog-v2": { type: "boolean", default: false } },
+  });
+  const owners = publicationOwners(values["catalog-v2"] ? "v2" : "v1");
   const rawScout: unknown = JSON.parse(
     await readRequiredHandoff("scout-site-artifacts"),
   );
@@ -76,7 +103,7 @@ async function main(): Promise<void> {
     );
   await writeJsonHandoff(
     "site-artifacts",
-    siteArchivePublications(rawScout, archives),
+    siteArchivePublications(rawScout, archives, owners),
   );
 }
 
