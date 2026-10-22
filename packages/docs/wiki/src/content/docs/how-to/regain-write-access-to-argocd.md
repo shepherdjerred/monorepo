@@ -43,9 +43,12 @@ for environment in argocd/prod cluster-admission/prod <target-environment-id>; d
 done
 ```
 
-Then stop ArgoCD from reverting its own settings:
+Then stop ArgoCD from reverting its own settings. Save the `argocd`
+Application's current policy first so step 4 can restore it:
 
 ```bash
+kubectl -n argocd get application argocd -o json \
+  | jq -c '.spec.syncPolicy.automated // empty' > argocd-automated.json
 kubectl -n argocd patch application argocd --type merge \
   -p '{"spec":{"syncPolicy":{"automated":null}}}'
 ```
@@ -99,9 +102,21 @@ kubectl delete validatingadmissionpolicybinding argocd-application-source.sjer.r
    back: `kubectl get validatingadmissionpolicybinding argocd-application-source.sjer.red`
    finds it.
 
-2. Re-sync the `argocd` Application from its accepted source. Confirm
+2. Restore the `argocd` Application's saved automated policy. A sync
+   reconciles only its child resources, and Delivery rewrites an
+   Application's sync policy only when it next deploys that environment, so
+   nothing else restores it:
+
+   ```bash
+   kubectl -n argocd patch application argocd --type merge \
+     -p "{\"spec\":{\"syncPolicy\":{\"automated\":$(cat argocd-automated.json)}}}"
+   ```
+
+   An empty file means it had no automated policy; skip the patch. Then
+   re-sync `argocd` from its accepted source and confirm
    `kubectl -n argocd get configmap argocd-cm -o jsonpath='{.data.admin\.enabled}'`
    prints `false`.
+
 3. Turn `delivery-writes-enabled` back on. Delivery restores automated sync and
    self-heal on the Applications it owns at its next deployment of each.
 
