@@ -72,14 +72,20 @@ export function fixedCorpusLaneMetadata(
 export function parseBakeArguments(rawArguments: readonly string[]): {
   readonly affected: boolean;
   readonly push: boolean;
+  /** Look up retained images under the Delivery v2 catalog's owners. */
+  readonly catalogV2: boolean;
 } {
   const flags = new Set(rawArguments);
   for (const argument of flags) {
-    if (argument !== "--affected" && argument !== "--push") {
+    if (!["--affected", "--push", "--catalog-v2"].includes(argument)) {
       throw new Error(`Unknown argument: ${argument}`);
     }
   }
-  return { affected: flags.has("--affected"), push: flags.has("--push") };
+  return {
+    affected: flags.has("--affected"),
+    push: flags.has("--push"),
+    catalogV2: flags.has("--catalog-v2"),
+  };
 }
 export function expandTargets(selected: readonly string[]): string[] {
   const targets = [...selected].filter((target) => target !== "infra");

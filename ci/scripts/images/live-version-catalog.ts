@@ -6,6 +6,10 @@ import {
   qualifiedImage,
   type QualifiedImageInventory,
 } from "../../../scripts/lib/image-pin-catalog.ts";
+import {
+  publicationOwners,
+  type PublicationOwners,
+} from "../../../packages/ops-model/src/delivery-catalog/publication-owners.ts";
 import { requireEnv } from "../../../scripts/lib/run.ts";
 import { ensureAncestor } from "../selectors/ensure-ancestor.ts";
 import type { BuildxCommandResult } from "./bake-retry.ts";
@@ -36,10 +40,13 @@ export function currentPipelineNumber(
  * before this pipeline. A pipeline that starts before the previous one
  * qualifies still compares against, and retains, that pipeline's images (B2);
  * Delivery verifies the retaining build only after the original's build.
+ * Images are looked up under the registry's owners (v1 until the window's
+ * catalog flip).
  */
 export async function readRetainableImages(
   read?: RetainableImageReader,
   beforePipeline = currentPipelineNumber(),
+  owners: PublicationOwners = publicationOwners("v1"),
 ): Promise<QualifiedImageInventory> {
   let reader = read;
   if (reader === undefined) {
@@ -52,13 +59,14 @@ export async function readRetainableImages(
   }
   const entries = await Promise.all(
     CANONICAL_IMAGE_TARGETS.map(async (name) => {
-      const { serviceId, component, kind } = imageIdentity(name);
+      const { serviceId, component, kind } = imageIdentity(name, owners);
       try {
         return [
           name,
           qualifiedImage(
             name,
             await reader({ serviceId, component, kind, beforePipeline }),
+            owners,
           ),
         ] as const;
       } catch (error) {

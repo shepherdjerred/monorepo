@@ -8,6 +8,7 @@ import {
   unbuiltImageOriginals,
   chartPublicationImages,
 } from "../../../scripts/lib/image-pin-catalog.ts";
+import { publicationOwners } from "../../../packages/ops-model/src/delivery-catalog/publication-owners.ts";
 import {
   currentPipelineNumber,
   readRetainableImages,
@@ -250,4 +251,23 @@ test("the base bound is this exact main pipeline number", () => {
     expect(() => currentPipelineNumber({ CI_PIPELINE_NUMBER: raw })).toThrow(
       "CI_PIPELINE_NUMBER must be a positive safe integer",
     );
+});
+
+test("after the window's catalog flip, retained images are looked up under their v2 owners", async () => {
+  const queried: string[] = [];
+  const inventory = await readRetainableImages(
+    async (query) => {
+      queried.push(`${query.component}=${query.serviceId}`);
+      throw new DeliveryClientError(404, "NOT_FOUND", "No original");
+    },
+    43,
+    publicationOwners("v2"),
+  );
+  expect(inventory.size).toBe(0);
+  expect(queried).toContain("image:caddy-s3proxy=static-site-proxy");
+  expect(queried).toContain("image:woodpecker-config-extension=woodpecker");
+  expect(imageIdentity("redlib", publicationOwners("v2")).serviceId).toBe(
+    "redlib",
+  );
+  expect(imageIdentity("redlib").serviceId).toBe("self-hosted-apps");
 });

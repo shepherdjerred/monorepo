@@ -79,5 +79,5 @@ test("before the window's catalog flip, main builds no archives and publication 
       )
       .map((step) => step.key)
       .sort(),
-  ).toEqual(["helm-push", "sites"]);
+  ).toEqual(["helm-push", "images", "sites"]);
 });

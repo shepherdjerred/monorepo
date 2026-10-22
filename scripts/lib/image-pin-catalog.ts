@@ -1,7 +1,7 @@
 import {
-  ServiceIndex,
-  SERVICE_CATALOG,
-} from "@shepherdjerred/ops-model/catalog.ts";
+  publicationOwners,
+  type PublicationOwners,
+} from "@shepherdjerred/ops-model/delivery-catalog/publication-owners.ts";
 import { ArtifactVersionSchema } from "@shepherdjerred/delivery/artifact-contract";
 import type { ArtifactVersion } from "@shepherdjerred/delivery/contract";
 import {
@@ -20,14 +20,15 @@ export const CANONICAL_IMAGE_TARGETS = [
 ];
 export type QualifiedImageInventory = ReadonlyMap<string, ArtifactVersion>;
 
-export function imageIdentity(name: string) {
+/** An image's Delivery identity; its owner comes from the producer's registry (v1 until the window's catalog flip). */
+export function imageIdentity(
+  name: string,
+  owners: PublicationOwners = publicationOwners("v1"),
+) {
   if (!CANONICAL_IMAGE_TARGETS.includes(name))
     throw new Error(`Unknown CI image recipe ${name}`);
-  const owner = new ServiceIndex(SERVICE_CATALOG).byImage(name);
-  if (owner === undefined)
-    throw new Error(`Image ${name} has no canonical service owner`);
   return {
-    serviceId: owner.id,
+    serviceId: owners.image(name),
     component: `image:${name}`,
     kind: "image" as const,
     uri: firstPartyImageRepository(name),
@@ -35,8 +36,12 @@ export function imageIdentity(name: string) {
 }
 
 /** A reuse record is the original qualified artifact, never a new producer output. */
-export function qualifiedImage(name: string, raw: unknown): ArtifactVersion {
-  const identity = imageIdentity(name);
+export function qualifiedImage(
+  name: string,
+  raw: unknown,
+  owners: PublicationOwners = publicationOwners("v1"),
+): ArtifactVersion {
+  const identity = imageIdentity(name, owners);
   const artifact = ArtifactVersionSchema.parse(raw);
   if (
     artifact.serviceId !== identity.serviceId ||
@@ -77,6 +82,7 @@ export async function chartPublicationImages(
       components: Record<string, ArtifactVersion>;
     }>;
   },
+  owners: PublicationOwners = publicationOwners("v1"),
 ) {
   let client = injectedClient;
   if (client === undefined) {
@@ -100,7 +106,7 @@ export async function chartPublicationImages(
   const images: Record<string, string> = {};
   for (const original of retained) {
     const name = original.component.slice("image:".length);
-    qualifiedImage(name, original);
+    qualifiedImage(name, original, owners);
     const key = `shepherdjerred/${name}`;
     if (images[key] !== undefined || fresh[key] !== undefined)
       throw new Error("Fresh and retained chart image originals overlap");
@@ -108,7 +114,7 @@ export async function chartPublicationImages(
   }
   for (const [key, digest] of Object.entries(fresh)) {
     const name = key.replace(/^shepherdjerred\//u, "");
-    imageIdentity(name);
+    imageIdentity(name, owners);
     if (key !== `shepherdjerred/${name}`)
       throw new Error("Chart image key is not canonical");
     images[key] = digest;
@@ -120,10 +126,11 @@ export async function chartPublicationImages(
     qualifiedImage(
       "the-storm-server",
       await client.latestQualifiedArtifact({
-        serviceId: "minecraft",
+        serviceId: owners.image("the-storm-server"),
         component: "image:the-storm-server",
         kind: "image",
       }),
+      owners,
     ).digest;
   const overview = await client.overview();
   const environment = overview.environments.find(
@@ -139,8 +146,9 @@ export async function chartPublicationImages(
     const original = qualifiedImage(
       "the-storm-server",
       accepted.components["image:the-storm-server"],
+      owners,
     );
-    if (accepted.serviceId !== "minecraft")
+    if (accepted.serviceId !== owners.image("the-storm-server"))
       throw new Error("Accepted Minecraft release owner differs");
     images["shepherdjerred/the-storm-server/accepted"] = original.digest;
   }

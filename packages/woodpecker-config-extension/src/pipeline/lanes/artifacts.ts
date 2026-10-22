@@ -46,7 +46,7 @@ export function artifactPublicationSteps(
         "MISE_TOOLCHAIN_SCOPE=automation . ci/scripts/toolchain.sh",
         DOCKERHUB_PUBLISH_LOGIN,
         "bun --no-install scripts/ci/read-ci-handoff.ts caddyfile | jq -r . > /tmp/caddyfile.generated",
-        `${smokeVariable}=${smokePath} bun --no-install ci/scripts/images/bake-images.ts --push`,
+        `${smokeVariable}=${smokePath} bun --no-install ci/scripts/images/bake-images.ts --push${catalogV2 ? " --catalog-v2" : ""}`,
       ],
       dependsOn: ["verify"],
       timeoutMinutes: 60,

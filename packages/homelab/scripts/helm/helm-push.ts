@@ -372,9 +372,13 @@ async function writeReleaseArtifacts(
   );
 }
 
-async function publicationImages(dryRun: boolean) {
+async function publicationImages(dryRun: boolean, catalogV2: boolean) {
   if (dryRun) return;
-  const images = await chartPublicationImages();
+  const images = await chartPublicationImages(
+    undefined,
+    undefined,
+    publicationOwners(catalogV2 ? "v2" : "v1"),
+  );
   Bun.env["HOMELAB_IMAGE_DIGESTS_JSON"] = JSON.stringify(images);
   return images;
 }
@@ -409,7 +413,7 @@ async function main(): Promise<void> {
   const version = `2.0.0-${buildNumber}`;
   validateChartProducerVersion(publication, buildNumber);
   const root = homelabRoot();
-  const imageInputs = await publicationImages(dryRun);
+  const imageInputs = await publicationImages(dryRun, catalogV2);
   delete Bun.env["HOMELAB_CHART_REVISIONS_JSON"];
   const inputs = await synthesizeCharts(root, imageInputs);
   for (const chart of requested) {
