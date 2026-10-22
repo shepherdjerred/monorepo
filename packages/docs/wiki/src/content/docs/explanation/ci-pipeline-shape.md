@@ -211,8 +211,15 @@ remain unchanged.
   three stages of one release, not three independent Scout test suites.
 - **Toolchain image candidates** rebuild `ci-base` and `ci-playwright`. Main
   builds publish a content-addressed candidate and open a pull request that
-  moves the committed digest. The macOS and Windows cross-compiler build lanes
-  are paused; they do not add work to the default pipeline.
+  moves the committed digest. Under the Delivery v2 catalog, Delivery's `ci`
+  service records the committed digests, not the candidate: every main push
+  registers one build that covers both (`ci-images-register`), retaining each
+  image Delivery already qualified, so a new set appears only when a digest
+  changed or the service has none yet. Delivery qualifies that build against
+  the push pipeline itself, which it would refuse for the manual maintenance
+  pipeline that runs the refresh.
+  The macOS and Windows cross-compiler build lanes are paused; they do not add
+  work to the default pipeline, and their images have no Delivery producer.
 
 ## Native Apple checks are paused
 

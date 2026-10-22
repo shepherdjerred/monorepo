@@ -1,6 +1,8 @@
-import { expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
 import { buildPipelineSteps } from "#src/pipeline/steps.ts";
 import { selectSteps } from "#src/pipeline/select.ts";
+import { separateMaintenance } from "#src/pipeline/maintenance.ts";
+import type { CiStep } from "#src/pipeline/model.ts";
 import { TEST_IMAGES } from "./identity.ts";
 
 const steps = () =>
@@ -206,6 +208,100 @@ test.each(["ci-base", "ci-playwright"])(
     );
   },
 );
+
+const catalogV2Steps = () =>
+  buildPipelineSteps({
+    images: TEST_IMAGES,
+    changedBase: "base",
+    deliveryCatalogV2: true,
+  });
+function holders(graph: readonly CiStep[], env: string): string[] {
+  return graph
+    .filter((step) => step.secrets?.some((grant) => grant.env === env))
+    .map((step) => step.key)
+    .toSorted();
+}
+
+describe("the v2 catalog's ci service", () => {
+  test.each(["ci-base", "ci-playwright"])(
+    "the %s refresh builds and pins without a Delivery identity",
+    (image) => {
+      const refresh = catalogV2Steps().find(
+        (step) => step.key === `${image}-refresh`,
+      );
+      if (refresh === undefined) throw new Error(`${image} refresh missing`);
+      expect(refresh.environment?.["DELIVERY_URL"]).toBeUndefined();
+      expect(refresh.secrets?.map((grant) => grant.secret)).not.toContain(
+        "ci-delivery-credentials",
+      );
+      expect(refresh.commands.join("\n")).not.toContain(
+        "register-ci-image-build.ts",
+      );
+      expect(refresh.commands).toContain(
+        `bun --no-install ci/scripts/images/update-ci-image-pin.ts --candidate ${image}-candidate.json --outcome-out ${image}-promotion.json`,
+      );
+    },
+  );
+
+  test("every main push registers ci from its pins with the publisher and registry reader identities", () => {
+    const graph = catalogV2Steps();
+    const register = graph.find((step) => step.key === "ci-images-register");
+    if (register === undefined) throw new Error("ci registration missing");
+    expect(register.defaultBranchOnly).toBe(true);
+    // Pins are committed source; nothing from the refresh lane is needed, so
+    // maintenance separation cannot strand it.
+    expect(register.dependsOn).toEqual(["verify"]);
+    expect(register.environment?.["DELIVERY_URL"]).toBe(
+      "http://delivery.delivery.svc.cluster.local:7353",
+    );
+    expect(register.commands).toEqual([
+      "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
+      "bun --no-install ci/scripts/reporting/dockerhub-env.ts --reader",
+      "bun --no-install ci/scripts/images/register-ci-service-build.ts",
+    ]);
+    expect(register.secrets).toEqual([
+      {
+        secret: "dockerhub-pull-woodpecker-ci",
+        key: ".dockerconfigjson",
+        env: "DOCKERHUB_READ_CONFIG_JSON",
+      },
+      {
+        secret: "ci-delivery-credentials",
+        key: "DELIVERY_PUBLISHER_TOKEN",
+        env: "DELIVERY_API_TOKEN",
+      },
+    ]);
+    expect(holders(graph, "DOCKERHUB_PUBLISH_TOKEN")).toEqual([
+      "ci-base-refresh",
+      "ci-playwright-refresh",
+      "images",
+    ]);
+    expect(holders(graph, "DOCKERHUB_READ_CONFIG_JSON")).toEqual([
+      "ci-images-register",
+      "scout-site-archives",
+    ]);
+    expect(
+      separateMaintenance(graph).some(
+        (step) => step.key === "ci-images-register",
+      ),
+    ).toBe(true);
+    // A pull request never reaches it.
+    expect(
+      selectSteps(graph, {
+        event: "pull_request",
+        branch: "main",
+        defaultBranch: "main",
+        changedFiles: [],
+      }).some((step) => step.key === "ci-images-register"),
+    ).toBe(false);
+  });
+
+  test("the v1 graph has no pin registration step", () => {
+    expect(steps().some((step) => step.key === "ci-images-register")).toBe(
+      false,
+    );
+  });
+});
 
 test.each([false, true])(
   "chart publication checks fresh content-unchanged Storm artifacts (fresh=%s)",
