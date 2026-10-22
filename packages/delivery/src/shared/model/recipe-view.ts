@@ -11,6 +11,7 @@ import {
   type RecipeDefinition,
   referenceParameters,
 } from "./recipe-contract.ts";
+import { stepStageKey } from "./stage-keys.ts";
 
 /**
  * Generation-agnostic views of a stored recipe. Pre-cutover rows hold v1
@@ -256,6 +257,20 @@ export function siteReleaseOf(
   if (definition.kind === "argocd") return definition.scoutSite;
   const site = firstStep(definition, "static-site");
   return site?.kind === "static-site" ? site.policy : undefined;
+}
+
+/**
+ * The stage that settles a site activation or plugin archive step, whose
+ * operation identity is `<deployment>:<stage>`: v1's fixed key, or the
+ * model step's own key (T3).
+ */
+export function specializedStageKey(
+  definition: Stored,
+  step: "static-site" | "archive",
+): string {
+  if (definition.kind === "argocd")
+    return step === "static-site" ? "scout-site" : "trmnl-plugins";
+  return stepStageKey("step", step);
 }
 
 /** The Forum image and licensed bundle a release migrates to (v1 `forumRelease`). */

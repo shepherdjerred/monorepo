@@ -7,6 +7,8 @@ import {
   PipelineDefinitionSchema,
   type FinishDeployment,
 } from "#shared/contract.ts";
+import { recipeFromPipeline } from "#shared/model/recipe-adapter.ts";
+import { publishCiRunner } from "#testing/model-fixture.ts";
 import { specializedOperationId } from "./specialized-success.ts";
 
 const context = useDeliveryFixture();
@@ -26,11 +28,23 @@ async function policy(stage: "beta" | "prod" = "beta") {
   return { ...parsed, scoutSite: parsed.scoutSite };
 }
 
-async function selectedRelease() {
+/** The model names every archive `archive:` (4.3); the set carries it beside the v1 name. */
+const MODEL_ARCHIVE = "archive:scout-frontend-beta";
+
+async function selectedRelease(options: { model?: boolean } = {}) {
   const fixture = await workerFixture(context.delivery, "scout-beta");
   const release = await fixture.requestedRelease(1);
   await context.delivery.cancel(release.deployment.id, testOperator);
   const pipeline = await policy();
+  const archiveFields = {
+    kind: "archive" as const,
+    uri: `s3://delivery-artifacts/sites/scout-frontend-beta/${"a".repeat(64)}.tar`,
+    digest: `sha256:${"a".repeat(64)}`,
+    version: "archive/2",
+    requires: {
+      "image:scout-for-lol": `sha256:${"1".padStart(64, "0")}`,
+    },
+  };
   const published = await context.delivery.publish(
     {
       requestId: "site/publish",
@@ -42,14 +56,17 @@ async function selectedRelease() {
         {
           id: "scout/archive/2",
           component: pipeline.scoutSite.archiveComponent,
-          kind: "archive",
-          uri: `s3://delivery-artifacts/sites/scout-frontend-beta/${"a".repeat(64)}.tar`,
-          digest: `sha256:${"a".repeat(64)}`,
-          version: "archive/2",
-          requires: {
-            "image:scout-for-lol": `sha256:${"1".padStart(64, "0")}`,
-          },
+          ...archiveFields,
         },
+        ...(options.model === true
+          ? [
+              {
+                id: "scout/archive/model",
+                component: MODEL_ARCHIVE,
+                ...archiveFields,
+              },
+            ]
+          : []),
       ],
     },
     testPublisher,
@@ -71,10 +88,22 @@ async function selectedRelease() {
     testOperator,
   );
   await context.delivery.registerPipeline("combined/1", pipeline, testOperator);
+  if (options.model === true) {
+    await publishCiRunner(context.delivery);
+    await context.cluster.database.pipeline.create({
+      data: {
+        id: "combined/model",
+        definition: recipeFromPipeline(pipeline),
+      },
+    });
+  }
   // This persistence test supplies a frozen guarded definition without enabling worker rollout.
   await context.cluster.database.deployment.update({
     where: { id: deployment.id },
-    data: { pipelineRevisionId: "combined/1" },
+    data: {
+      pipelineRevisionId:
+        options.model === true ? "combined/model" : "combined/1",
+    },
   });
   await context.delivery.claim(deployment.id, testExecutor);
   const operationId = specializedOperationId(`${deployment.id}:scout-site`);
@@ -276,4 +305,64 @@ test("a different archive cannot satisfy combined acceptance and missing backend
       testOperator,
     ),
   ).rejects.toThrow("exact selected backend image");
+});
+
+test("a model recipe's site step settles only under its own step key with its model archive", async () => {
+  const { deployment, finish, version, pipeline } = await selectedRelease({
+    model: true,
+  });
+  const key = "step-static-site";
+  const operationId = specializedOperationId(`${deployment.id}:${key}`);
+  const summary = {
+    adapter: "static-site",
+    archiveArtifactId: "scout/archive/model",
+    archiveDigest: `sha256:${"a".repeat(64)}`,
+    versionSetRevisionId: version.id,
+    bucket: pipeline.scoutSite.bucket,
+  };
+  // The v1 stage key and v1 archive no longer prove a model recipe's step.
+  const legacyOperation = specializedOperationId(`${deployment.id}:scout-site`);
+  await context.delivery.stage(
+    deployment.id,
+    {
+      key: "scout-site",
+      operationId: legacyOperation,
+      status: "succeeded",
+      message: "Archive activated under the v1 key",
+      evidence: [
+        {
+          kind: "acceptance",
+          operationId: legacyOperation,
+          summary: JSON.stringify({
+            ...summary,
+            adapter: "scout-site",
+            archiveArtifactId: "scout/archive/2",
+          }),
+        },
+      ],
+    },
+    testExecutor,
+  );
+  await expect(
+    context.delivery.finish(deployment.id, finish, testExecutor),
+  ).rejects.toMatchObject({ code: "INVALID" });
+  await context.delivery.stage(
+    deployment.id,
+    {
+      key,
+      operationId,
+      status: "succeeded",
+      message: `${key}: succeeded`,
+      evidence: [
+        { kind: "acceptance", operationId, summary: JSON.stringify(summary) },
+      ],
+    },
+    testExecutor,
+  );
+  await context.delivery.finish(deployment.id, finish, testExecutor);
+  expect(
+    await context.cluster.database.environment.findUnique({
+      where: { id: "scout-for-lol/beta" },
+    }),
+  ).toMatchObject({ acceptedVersionSetRevisionId: version.id });
 });

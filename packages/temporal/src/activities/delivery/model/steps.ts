@@ -26,6 +26,7 @@ import { runWorkerRolloutStep } from "./worker-rollout.ts";
 import { runMinecraftUpgradeStep } from "./minecraft-upgrade.ts";
 import { runChannelStep } from "./channel.ts";
 import { stepLease, withLeaseRenewal } from "./lease.ts";
+import { runStaticSiteStep } from "./static-site.ts";
 import type { ColdStartWrite } from "#lib/delivery/model/oracle-inputs.ts";
 import {
   deploymentDetail,
@@ -92,6 +93,9 @@ async function runKubernetesStep(
       requireSettledBefore(steps, current.stages, key);
       return await runMinecraftUpgradeStep(current, key);
     case "static-site":
+      requireSettledBefore(steps, current.stages, key);
+      await runStaticSiteStep(current, step.policy, key);
+      return { waiting: false };
     case "archive":
     case "forum-bundle":
       return missingAdapter(step.kind);
@@ -132,7 +136,8 @@ async function runOwnedStep(
     case "kubernetes":
       return await runKubernetesStep(current, kubernetes(owner), steps, step);
     case "static-site":
-      return missingAdapter(step.adapter);
+      await runStaticSiteStep(current, step.policy, key);
+      return { waiting: false };
     case "test":
       await runTestStep(current, kubernetes(owner), step);
       return { waiting: false };

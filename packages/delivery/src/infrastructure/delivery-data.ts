@@ -255,6 +255,23 @@ async function existingEvidence(
   });
 }
 
+/**
+ * Whether an evidence id was recorded by exactly this stage, as `evidence`
+ * names it: `<deployment>/stage/<key>/<entry>`. A sub-stage keyed
+ * `<key>/<name>` is a different stage.
+ */
+export function recordedByStage(
+  evidenceId: string,
+  deploymentId: string,
+  key: string,
+): boolean {
+  const scope = `${deploymentId}/stage/${key}/`;
+  return (
+    evidenceId.startsWith(scope) &&
+    !evidenceId.slice(scope.length).includes("/")
+  );
+}
+
 export async function evidence(
   tx: Transaction,
   deploymentId: string,

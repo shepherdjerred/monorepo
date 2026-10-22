@@ -1,0 +1,71 @@
+import type {
+  DeploymentDetail,
+  EvidenceInput,
+} from "@shepherdjerred/delivery/contract";
+import { deliveryOperationId } from "@shepherdjerred/delivery/operation-id";
+import type { StaticSiteStepPolicy } from "#lib/delivery/model/recipe.ts";
+import {
+  activateStaticSelection,
+  LIVE_STATIC_SITE_IO,
+  withStaticActivityRuntime,
+  type StaticSiteIo,
+  type StaticSiteRuntime,
+} from "#activities/delivery/static-site.ts";
+import { modelStaticSiteSelection } from "#activities/delivery/static-site-selection.ts";
+import { recordStage, stageOf } from "./stages.ts";
+
+export type StaticSiteStepEffects = {
+  io: StaticSiteIo;
+  record: typeof recordStage;
+  run: <T>(operation: (runtime: StaticSiteRuntime) => Promise<T>) => Promise<T>;
+  owners?: Readonly<Record<string, string>>;
+};
+const LIVE: StaticSiteStepEffects = {
+  io: LIVE_STATIC_SITE_IO,
+  record: recordStage,
+  run: withStaticActivityRuntime,
+};
+
+/**
+ * The static-site step (section 5), standalone or inside an Application
+ * recipe: the frozen archive is fetched from `delivery-artifacts` by its
+ * digest, synced to the recipe's bucket under an activation receipt naming
+ * this deployment, the cache is purged, and bucket bytes, entrypoints and
+ * the public receipt are read back against that digest. A resumed step
+ * keeps its recorded intent; the receipt decides whether the bucket already
+ * holds this deployment, so the sync never runs for a proven activation.
+ */
+export async function runStaticSiteStep(
+  current: DeploymentDetail,
+  policy: StaticSiteStepPolicy,
+  key: string,
+  effects: StaticSiteStepEffects = LIVE,
+): Promise<void> {
+  const site = modelStaticSiteSelection(current, policy, effects.owners);
+  const operationId = deliveryOperationId(`${current.deployment.id}:${key}`);
+  const evidence = await effects.run(
+    async (runtime) =>
+      await activateStaticSelection(site, runtime, effects.io, async () => {
+        if (stageOf(current, key) !== undefined) return;
+        await effects.record(current, key, "running", {
+          operationId,
+          message: `Activating archive ${site.archive.digest} in bucket ${site.pipeline.bucket} under receipt ${current.deployment.id}`,
+        });
+      }),
+  );
+  const acceptance: EvidenceInput = {
+    kind: "acceptance",
+    operationId,
+    summary: JSON.stringify({
+      adapter: "static-site",
+      archiveArtifactId: site.archive.id,
+      archiveDigest: site.archive.digest,
+      versionSetRevisionId: current.versionSet.id,
+      bucket: site.pipeline.bucket,
+    }),
+  };
+  await effects.record(current, key, "succeeded", {
+    operationId,
+    evidence: [...evidence, acceptance],
+  });
+}

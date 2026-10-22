@@ -1,5 +1,11 @@
-import type { DeploymentDetail } from "@shepherdjerred/delivery/contract";
-import { assertStaticSiteDeliveryOwner } from "homelab/src/static-site-delivery-ownership.ts";
+import type {
+  DeploymentDetail,
+  StaticSitePolicy,
+} from "@shepherdjerred/delivery/contract";
+import {
+  assertStaticSiteDeliveryOwner,
+  staticSiteDeliveryOwner,
+} from "homelab/src/static-site-delivery-ownership.ts";
 import { staticArchivePath } from "@shepherdjerred/root-scripts/lib/static-site-archive.ts";
 import { validateStaticArchiveUri } from "@shepherdjerred/root-scripts/lib/static-site-publication.ts";
 import type { StaticActivationReceipt } from "./static-site-effects.ts";
@@ -10,6 +16,7 @@ type SelectionDetail = {
   versionSet: Pick<DeploymentDetail["versionSet"], "id" | "components">;
   deployment: Pick<DeploymentDetail["deployment"], "id" | "kind">;
 };
+type SitePolicy = StaticSitePolicy & { kind: "static-site" };
 
 /** Scout's frontend is a stage of its backend release, with the same lock and set. */
 export function staticSiteSelection(
@@ -25,6 +32,31 @@ export function staticSiteSelection(
         : null;
   if (pipeline === null)
     throw new Error("Expected a static-site release policy");
+  assertStaticSiteDeliveryOwner(pipeline.bucket, detail.environment.id, owners);
+  return selectedSite(detail, pipeline);
+}
+
+/**
+ * A model recipe or step names its bucket as its lock instance: the catalog
+ * binds that instance to exactly one environment (T6) and the deployment
+ * holds its lock (T1). Reviewed infrastructure must still delegate the
+ * bucket to Delivery.
+ */
+export function modelStaticSiteSelection(
+  detail: SelectionDetail,
+  policy: StaticSitePolicy,
+  owners?: Readonly<Record<string, string>>,
+) {
+  if (staticSiteDeliveryOwner(policy.bucket, owners) === undefined)
+    throw new Error(
+      `Static bucket ${policy.bucket} is not delegated to Delivery in reviewed infrastructure`,
+    );
+  return selectedSite(detail, { kind: "static-site", ...policy });
+}
+
+export type StaticSiteSelection = ReturnType<typeof selectedSite>;
+
+function selectedSite(detail: SelectionDetail, pipeline: SitePolicy) {
   if (
     detail.deployment.kind === "adopt-worker" ||
     detail.deployment.kind === "retire-host"
@@ -32,7 +64,6 @@ export function staticSiteSelection(
     throw new Error(
       "Worker lifecycle operations cannot activate frontend archives",
     );
-  assertStaticSiteDeliveryOwner(pipeline.bucket, detail.environment.id, owners);
   const archive = detail.versionSet.components[pipeline.archiveComponent];
   if (archive?.kind !== "archive")
     throw new Error("Selected static-site archive is missing");
