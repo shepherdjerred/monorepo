@@ -27,6 +27,7 @@ import {
   verifyCandidateImageBuildId,
 } from "#lib/worker-deployment-proofs.ts";
 import type { RolloutCommandRunner } from "#lib/worker-deployment-proofs.ts";
+import { workerRolloutTarget } from "./worker-pool.ts";
 
 export type DeliveryWorkerConnection = { address: string; tls?: boolean };
 export type DeliveryWorkerReceipt = {
@@ -43,10 +44,9 @@ function rolloutOptions(
   detail: WorkerRolloutSnapshot,
   connection: DeliveryWorkerConnection,
 ) {
-  const pipeline = detail.pipeline.definition;
-  if (pipeline.kind !== "argocd" || pipeline.workerRollout === undefined)
+  const policy = workerRolloutTarget(detail);
+  if (policy === undefined)
     throw new Error("Deployment does not declare a worker rollout");
-  const policy = pipeline.workerRollout;
   const pool = detail.deployment.workerSnapshot;
   if (pool?.target !== policy.target || pool.workerOperation !== "rollout")
     throw new Error("Worker routing requires its immutable retained-host pool");
@@ -74,7 +74,7 @@ function rolloutOptions(
   )
     throw new Error("Worker candidate is absent from the retained-host pool");
   const application = policy.target === "central" ? "temporal" : policy.target;
-  if (pipeline.application !== application)
+  if (policy.application !== application)
     throw new Error("Worker rollout target differs from its Argo application");
   return {
     ...connection,

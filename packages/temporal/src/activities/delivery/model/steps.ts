@@ -12,6 +12,7 @@ import {
   modelSteps,
   oracleProbes,
   requireModelRecipe,
+  requireSettledBefore,
   requireStep,
   resumeAt,
   stepRecipe,
@@ -21,6 +22,7 @@ import {
 import { applySafety, enableSelfHeal, sync } from "./kubernetes.ts";
 import { oracleEvidence, runTestStep } from "./oracle.ts";
 import { awaitAttestations } from "./operator-run.ts";
+import { runWorkerRolloutStep } from "./worker-rollout.ts";
 import type { ColdStartWrite } from "#lib/delivery/model/oracle-inputs.ts";
 import {
   deploymentDetail,
@@ -68,6 +70,7 @@ function missingAdapter(kind: string): never {
 async function runKubernetesStep(
   current: Awaited<ReturnType<typeof requireOwned>>,
   recipe: KubernetesApplicationRecipe,
+  steps: readonly ModelStep[],
   frozen: Extract<ModelStep, { adapter: "kubernetes" }>,
 ) {
   const { key, step } = frozen;
@@ -79,6 +82,9 @@ async function runKubernetesStep(
       await sync(current, recipe, key);
       return;
     case "worker-rollout":
+      requireSettledBefore(steps, current.stages, key);
+      await runWorkerRolloutStep(current, key);
+      return;
     case "static-site":
     case "archive":
     case "forum-bundle":
@@ -109,7 +115,7 @@ export async function runDeliveryModelStep(
   const owner = stepRecipe(recipe, key);
   switch (step.adapter) {
     case "kubernetes":
-      await runKubernetesStep(current, kubernetes(owner), step);
+      await runKubernetesStep(current, kubernetes(owner), steps, step);
       return { waiting: false };
     case "static-site":
       return missingAdapter(step.adapter);

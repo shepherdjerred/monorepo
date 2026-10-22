@@ -25,6 +25,11 @@ import {
 } from "#lib/delivery/workers/worker-control-plane.ts";
 import { workerApplicationResources } from "#lib/delivery/workers/worker-hosts.ts";
 import { argoRequest } from "#activities/delivery/argocd.ts";
+import { workerRolloutTarget } from "#lib/delivery/workers/worker-pool.ts";
+import {
+  workerPlanEvidence,
+  workerRunnerImage,
+} from "#lib/delivery/workers/worker-plan.ts";
 
 async function workerJob(
   detail: DeploymentDetail,
@@ -32,18 +37,17 @@ async function workerJob(
   recipe: "worker-preflight" | "worker-step" | "worker-images",
   input: unknown,
 ) {
-  const pipeline = detail.pipeline.definition;
-  if (pipeline.kind !== "argocd" || pipeline.workerRollout === undefined)
+  const rollout = workerRolloutTarget(detail);
+  if (rollout === undefined)
     throw new Error("Deployment has no worker rollout definition");
-  const image =
-    detail.versionSet.components[pipeline.workerRollout.imageComponent];
+  const image = detail.versionSet.components[rollout.imageComponent];
   if (image?.kind !== "image")
     throw new Error("Worker rollout lacks a qualified candidate image");
   const request: DeliveryJobRequest = {
     deploymentId: detail.deployment.id,
     stageKey: stage,
     recipe,
-    runnerImage: pipeline.workerRollout.runnerImage,
+    runnerImage: workerRunnerImage(detail),
     // Controller implementation belongs to the running qualified executor;
     // candidate replay/canaries use their own immutable source checkout.
     sourceRevision: z
@@ -161,7 +165,11 @@ export async function prepareDeliveryWorker(
       status: "succeeded",
       operationId: job.operationId,
       message: JSON.stringify(job.native),
-      evidence: job.nativeEvidence,
+      // The plan is evidence, so a resumed rollout routes by the same plan.
+      evidence: [
+        ...job.nativeEvidence,
+        workerPlanEvidence(plan, job.operationId),
+      ],
     },
   );
   return plan;

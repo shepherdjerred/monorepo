@@ -21,6 +21,7 @@ import type { KubernetesApplicationRecipe } from "#lib/delivery/model/recipe.ts"
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
 import { runGuardedArgoCommand } from "#activities/delivery/argocd.ts";
 import { recordStage, requireOwned, stageOf } from "./stages.ts";
+import { workerRolloutPreflight } from "./worker-rollout.ts";
 
 const READBACK_ATTEMPTS = 120;
 const READBACK_INTERVAL_MS = 5000;
@@ -120,6 +121,8 @@ export async function applySafety(
   const rendered = renderApplication(current, recipe);
   const operationId = deliveryOperationId(current.deployment.id);
   const source = await verifySourceBytes(rendered, operationId);
+  // A worker pool's images and routes are proved before its hosts change.
+  await workerRolloutPreflight(current);
   await recordStage(current, key, "running", { operationId });
   const written = await writeBody(rendered);
   await runGuardedArgoCommand(

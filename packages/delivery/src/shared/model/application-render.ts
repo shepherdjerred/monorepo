@@ -64,6 +64,31 @@ function source(
       throw new Error("A Git source takes no Helm configuration");
     return { repoURL: body.repoURL, path: body.path, targetRevision: revision };
   }
+  const values = helmValues(recipe, configuration, artifacts);
+  return {
+    repoURL: body.repoURL,
+    chart: body.chart,
+    targetRevision: revision,
+    helm: {
+      ...body.helm,
+      ...(values.valuesObject === undefined
+        ? {}
+        : { valuesObject: values.valuesObject }),
+      parameters: helmParameters(values.parameters),
+    },
+  };
+}
+
+/**
+ * The Helm values a Helm-source recipe renders before strvals escaping:
+ * configuration parameters plus artifact parameters in their formats, and
+ * the configuration's `helm.valuesObject`.
+ */
+export function helmValues(
+  recipe: KubernetesRecipe,
+  configuration: Readonly<Record<string, string>>,
+  artifacts: Readonly<Record<string, RenderArtifact>>,
+): { parameters: Record<string, string>; valuesObject: unknown } {
   const document = configurationDocument(configuration);
   const parameters: Record<string, string> = { ...document.helm.parameters };
   for (const [path, parameter] of Object.entries(recipe.artifactParameters)) {
@@ -76,18 +101,7 @@ function source(
       selected(artifacts, parameter.component),
     );
   }
-  return {
-    repoURL: body.repoURL,
-    chart: body.chart,
-    targetRevision: revision,
-    helm: {
-      ...body.helm,
-      ...(document.helm.valuesObject === undefined
-        ? {}
-        : { valuesObject: document.helm.valuesObject }),
-      parameters: helmParameters(parameters),
-    },
-  };
+  return { parameters, valuesObject: document.helm.valuesObject };
 }
 
 /**

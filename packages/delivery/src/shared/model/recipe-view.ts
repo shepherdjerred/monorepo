@@ -316,3 +316,28 @@ export function legacyRunnerImage(definition: Stored): string | undefined {
       return undefined;
   }
 }
+
+/**
+ * The model Application recipe that carries a step of `kind`: the server
+ * of a compound Minecraft recipe, the worker Application of a rollout.
+ */
+export function stepRecipeOf(
+  definition: Stored,
+  kind: KubernetesStep["kind"],
+): KubernetesRecipe | null {
+  return (
+    kubernetesRecipes(definition).find((recipe) =>
+      recipe.steps.some((step) => step.kind === kind),
+    ) ?? null
+  );
+}
+
+/** The Application a step acts through; a v1 pipeline has exactly one. */
+export function stepApplicationOf(
+  definition: Stored,
+  kind: KubernetesStep["kind"],
+): ApplicationView | null {
+  if (definition.kind === "argocd") return applicationOf(definition);
+  const recipe = stepRecipeOf(definition, kind);
+  return recipe === null ? null : modelApplication(recipe);
+}

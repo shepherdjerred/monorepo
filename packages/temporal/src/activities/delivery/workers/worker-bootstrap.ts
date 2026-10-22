@@ -90,24 +90,28 @@ const external: WorkerBootstrapEffects = {
       operationId,
     );
   },
-  async routing(pool) {
-    const connection = await Connection.connect({
-      address:
-        "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
-      connectTimeout: "10 seconds",
-    });
-    try {
-      await connection.withDeadline(Date.now() + 30_000, async () => {
-        await requirePoolRoutingCoverage(
-          pool,
-          retirementEffects(connection).routing,
-        );
-      });
-    } finally {
-      await connection.close();
-    }
-  },
+  routing: requireLiveRoutingCoverage,
 };
+
+/** Every served namespace and queue routes to a host the frozen pool keeps. */
+export async function requireLiveRoutingCoverage(
+  pool: NonNullable<DeploymentDetail["deployment"]["workerSnapshot"]>,
+): Promise<void> {
+  const connection = await Connection.connect({
+    address: "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
+    connectTimeout: "10 seconds",
+  });
+  try {
+    await connection.withDeadline(Date.now() + 30_000, async () => {
+      await requirePoolRoutingCoverage(
+        pool,
+        retirementEffects(connection).routing,
+      );
+    });
+  } finally {
+    await connection.close();
+  }
+}
 
 /** Keep legacy pollers until exact replacement Pods and every served route are observed. */
 export async function bootstrapDeliveryWorkerHosts(

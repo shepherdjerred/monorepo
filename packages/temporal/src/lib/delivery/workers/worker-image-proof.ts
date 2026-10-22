@@ -6,18 +6,23 @@ import {
 import { z } from "zod";
 import { deliverySelection } from "#lib/delivery/selection.ts";
 import { WorkerChartProofSchema } from "./worker-control-plane.ts";
+import { modelWorkerChartSelection } from "#lib/delivery/model/worker-selection.ts";
 export const WorkerImageProofInputSchema = z.strictObject({
   detail: WorkerRolloutSnapshotSchema,
   controlPlane: WorkerChartProofSchema.nullable(),
 });
 export function workerImageProofInput(detail: DeploymentDetail) {
+  if (detail.deployment.workerSnapshot?.target !== "central")
+    return WorkerImageProofInputSchema.parse({ detail, controlPlane: null });
+  if (detail.pipeline.definition.kind !== "argocd")
+    return WorkerImageProofInputSchema.parse({
+      detail,
+      controlPlane: modelWorkerChartSelection(detail),
+    });
   const selected = deliverySelection(detail);
   return WorkerImageProofInputSchema.parse({
     detail,
-    controlPlane:
-      detail.deployment.workerSnapshot?.target === "central"
-        ? { selection: selected.selection, chart: selected.chart }
-        : null,
+    controlPlane: { selection: selected.selection, chart: selected.chart },
   });
 }
 import {

@@ -28,6 +28,7 @@ import { verifyWorkerHosts } from "./workers/worker-hosts.ts";
 import { acceptWorkerBaseline } from "./workers/worker-baseline.ts";
 import { withBackupActivityHeartbeat } from "#activities/homelab/seaweedfs-backup-heartbeat.ts";
 import { workerSourceFingerprint } from "#lib/delivery/workers/worker-source.ts";
+import { workerRolloutTarget } from "#lib/delivery/workers/worker-pool.ts";
 import { prepareMinecraftDelivery } from "./minecraft.ts";
 import { requireMinecraftPreservation } from "#lib/delivery/minecraft-acceptance.ts";
 import { trmnlRepairClaim } from "./trmnl-repair.ts";
@@ -49,11 +50,10 @@ async function capturePriorWorkerSource(current: DeploymentDetail) {
     current.stages.some((item) => item.key === "worker-prior-source")
   )
     return;
-  if (current.pipeline.definition.kind !== "argocd")
-    throw new Error("Worker snapshot lacks Argo definition");
-  const observed = await argoRequest(
-    encodeURIComponent(current.pipeline.definition.application),
-  );
+  const rollout = workerRolloutTarget(current);
+  if (rollout === undefined)
+    throw new Error("Worker snapshot lacks its worker Application");
+  const observed = await argoRequest(encodeURIComponent(rollout.application));
   const fingerprint = workerSourceFingerprint(observed);
   const revision = z
     .object({ metadata: z.object({ resourceVersion: z.string().min(1) }) })

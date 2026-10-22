@@ -192,6 +192,14 @@ fixed traffic bake periods; original hosts remain until independent drainage
 proof permits retirement. A partial routing response is inspected before
 repeating the same step.
 
+A model recipe's `worker-rollout` step runs the same Jobs. Its apply-safety
+step first proves every retained image's Build ID and the served routes, and
+refuses a pool that still has legacy pollers. Only then does it write the
+Application, whose sync renders the retained-host pool. The step itself records
+its intent, proves every host, then records the preflight's routing plan as
+evidence before promoting and verifying. A resumed step routes by that recorded
+plan and reattaches to any Job whose stage is already recorded.
+
 Poller proofs make bounded exact-build instant readbacks when active polling
 briefly reaches zero; success requires a fresh positive result, and query or
 schema errors fail immediately. Minecraft preservation and recovery

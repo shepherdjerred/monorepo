@@ -11,6 +11,8 @@ import * as adapter from "./recipe-adapter.ts";
 import * as recipes from "./recipe-contract.ts";
 import * as recovery from "#shared/recovery-intent.ts";
 import * as selections from "./selection-contract.ts";
+import * as views from "./recipe-view.ts";
+import type { StoredRecipeDefinition } from "./record-contract.ts";
 
 /**
  * Contracts for the Delivery model (`docs/model.md`). They are additive: the
@@ -97,6 +99,18 @@ export function renderApplication(
   input: Parameters<typeof render.renderApplication>[0],
 ): RenderedApplication {
   return render.renderApplication(input);
+}
+
+/** Generation-agnostic views of a stored recipe, for executors of either generation. */
+export function applicationOf(
+  definition: StoredRecipeDefinition,
+): ReturnType<typeof views.applicationOf> {
+  return views.applicationOf(definition);
+}
+export function forumReleaseOf(
+  definition: StoredRecipeDefinition,
+): ReturnType<typeof views.forumReleaseOf> {
+  return views.forumReleaseOf(definition);
 }
 
 export const AdmissionSnapshotSchema = admission.AdmissionSnapshotSchema;
@@ -216,3 +230,36 @@ export const ApprovalV2Schema = approvals.ApprovalV2Schema;
 export type ApprovalStatus = approvals.ApprovalStatus;
 export type ApprovalV2Input = approvals.ApprovalV2Input;
 export type ApprovalV2 = approvals.ApprovalV2;
+
+/** The worker pool a stored recipe rolls an image onto (v1 `workerRollout`). */
+export function workerRolloutOf(
+  definition: StoredRecipeDefinition,
+): ReturnType<typeof views.workerRolloutOf> {
+  return views.workerRolloutOf(definition);
+}
+/** The preserved Minecraft world upgrade a stored recipe declares. */
+export function minecraftUpgradeOf(
+  definition: StoredRecipeDefinition,
+): ReturnType<typeof views.minecraftUpgradeOf> {
+  return views.minecraftUpgradeOf(definition);
+}
+/** The model Application recipe that carries a step of `kind`. */
+export function stepRecipeOf(
+  definition: StoredRecipeDefinition,
+  kind: KubernetesStep["kind"],
+): ReturnType<typeof views.stepRecipeOf> {
+  return views.stepRecipeOf(definition, kind);
+}
+/** The Application a step acts through; a v1 pipeline has exactly one. */
+export function stepApplicationOf(
+  definition: StoredRecipeDefinition,
+  kind: KubernetesStep["kind"],
+): ReturnType<typeof views.stepApplicationOf> {
+  return views.stepApplicationOf(definition, kind);
+}
+/** The Helm values a Helm-source recipe renders, before strvals escaping. */
+export function helmValues(
+  ...input: Parameters<typeof render.helmValues>
+): ReturnType<typeof render.helmValues> {
+  return render.helmValues(...input);
+}
