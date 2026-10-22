@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   DELIVERY_ENVIRONMENT_ANNOTATION,
   DELIVERY_ROOT_IGNORE_EXPRESSIONS,
+  TRANSITION_ROOT_IGNORE_EXPRESSIONS,
   deliveryEnvironment,
 } from "#delivery-ownership";
 
@@ -179,8 +180,13 @@ export function assertDeliveryRootPreservesSelection(input: unknown): void {
     !root.spec.syncPolicy.syncOptions.includes(
       "RespectIgnoreDifferences=true",
     ) ||
-    DELIVERY_ROOT_IGNORE_EXPRESSIONS.some(
-      (expression) => !expressions.has(expression),
+    // Either rendering state preserves v1's delegated fields; the live root
+    // moves to the transition form at the window's final v1 root release.
+    ![
+      DELIVERY_ROOT_IGNORE_EXPRESSIONS,
+      TRANSITION_ROOT_IGNORE_EXPRESSIONS,
+    ].some((required) =>
+      required.every((expression) => expressions.has(expression)),
     )
   )
     throw new Error(

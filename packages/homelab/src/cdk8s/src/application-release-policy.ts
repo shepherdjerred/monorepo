@@ -17,6 +17,7 @@ import {
 } from "homelab/src/delivery-ownership.ts";
 
 import * as releaseContract from "homelab/src/application-release-contract.ts";
+import { catalogApplicationEnvironment } from "@shepherdjerred/ops-model/delivery-catalog/applications.ts";
 export const APPLICATION_RESOURCES_FINALIZER =
   releaseContract.APPLICATION_RESOURCES_FINALIZER;
 export const APPLICATION_LIFECYCLE_ANNOTATION =
@@ -249,12 +250,26 @@ function applyLifecyclePolicy(
   }
 }
 
-function applyDeliveryOwnership(construct: ApiObject, applicationName: string) {
-  const delegatedEnvironment = DELIVERY_ACTIVE_DELEGATIONS[applicationName];
-  if (delegatedEnvironment !== undefined) {
+/**
+ * v1's active delegations carry their v1 environment. Under transition
+ * rendering every other root child carries its catalog environment, so the
+ * first v2 deployment finds its target; a v1 delegation keeps its v1 id until
+ * v1 retires, and the window's migration maps the two it renames.
+ */
+function applyDeliveryOwnership(
+  construct: ApiObject,
+  applicationName: string,
+  stampCatalogEnvironment: boolean,
+) {
+  const environment =
+    DELIVERY_ACTIVE_DELEGATIONS[applicationName] ??
+    (stampCatalogEnvironment
+      ? catalogApplicationEnvironment(applicationName)
+      : undefined);
+  if (environment !== undefined) {
     construct.metadata.addAnnotation(
       DELIVERY_ENVIRONMENT_ANNOTATION,
-      delegatedEnvironment,
+      environment,
     );
     deliveryEnvironment(construct.toJson());
   }
@@ -290,7 +305,11 @@ function applyResourceReleasePolicy(
   }
   const manifest = parsedManifest.data;
   const applicationName = manifest.metadata.name;
-  applyDeliveryOwnership(construct, applicationName);
+  applyDeliveryOwnership(
+    construct,
+    applicationName,
+    transition && isRootChartResource,
+  );
   if (isRootChartResource) {
     construct.metadata.addAnnotation(
       ARGOCD_SYNC_WAVE_ANNOTATION,

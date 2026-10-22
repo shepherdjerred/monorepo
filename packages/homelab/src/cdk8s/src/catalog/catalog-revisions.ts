@@ -10,6 +10,7 @@ import {
 } from "@shepherdjerred/delivery/model-contract";
 import type { CatalogCore } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import { catalogEnvironmentOf } from "@shepherdjerred/ops-model/delivery-catalog/migration.ts";
+import { ENVIRONMENT_APPLICATIONS } from "@shepherdjerred/ops-model/delivery-catalog/applications.ts";
 import {
   type CatalogConfiguration,
   environmentService,
@@ -24,7 +25,6 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/resources/companions/names.ts";
 import {
   CHANNEL_RECIPES,
-  ENVIRONMENT_APPLICATIONS,
   ENVIRONMENT_MONITORS,
   ENVIRONMENT_TESTS,
   OPERATOR_RUN_STAGES,

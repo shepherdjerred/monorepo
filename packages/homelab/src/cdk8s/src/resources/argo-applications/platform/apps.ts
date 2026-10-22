@@ -1,6 +1,7 @@
 import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
-import { DELIVERY_ROOT_IGNORE_EXPRESSIONS } from "homelab/src/delivery-ownership.ts";
+import { deliveryRootIgnoreExpressions } from "homelab/src/delivery-ownership.ts";
+import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 /** Fields the Cloudflare operator defaults on every TunnelBinding after apply. */
@@ -43,7 +44,9 @@ export function createAppsApp(chart: Chart) {
         {
           group: "argoproj.io",
           kind: "Application",
-          jqPathExpressions: DELIVERY_ROOT_IGNORE_EXPRESSIONS,
+          jqPathExpressions: deliveryRootIgnoreExpressions(
+            transitionRendering(),
+          ),
         },
         TUNNEL_BINDING_IGNORE_DIFFERENCES,
       ],
