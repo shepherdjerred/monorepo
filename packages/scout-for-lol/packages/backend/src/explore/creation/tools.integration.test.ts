@@ -48,9 +48,36 @@ const resolvedAccess: CreationAccess = {
   ],
 };
 
+const MEMBERS = [
+  {
+    id: "300000000000000001",
+    username: "shadowpumpkin23",
+    displayName: "ShadowPumpkin",
+    avatar: "",
+  },
+  {
+    id: "300000000000000002",
+    username: "shadowfox",
+    displayName: "Shadow",
+    avatar: "",
+  },
+];
+
+/** A prefix search over {@link MEMBERS}, like Discord's member search. */
+function searchMembers(_guildId: DiscordGuildId, query: string) {
+  return Promise.resolve(
+    MEMBERS.filter(
+      (member) =>
+        member.username.startsWith(query) ||
+        member.displayName.toLowerCase().startsWith(query),
+    ),
+  );
+}
+
 function executors(overrides?: {
   access?: CreationAccess;
   listChannels?: (guildId: DiscordGuildId) => Promise<PostableChannel[]>;
+  findMembers?: typeof searchMembers;
 }) {
   return createCreationToolExecutors({
     capability: { guildIds: [GUILD], surface: "web" },
@@ -63,6 +90,9 @@ function executors(overrides?: {
         overrides?.listChannels ??
         ((guildId: DiscordGuildId) =>
           Promise.resolve(guildId === GUILD ? CHANNELS : [])),
+      findMembers: overrides?.findMembers ?? searchMembers,
+      isMember: (_guildId, userId) =>
+        Promise.resolve(MEMBERS.some((member) => member.id === userId)),
       resolvePuuid: () =>
         Promise.resolve({
           kind: "ok",
@@ -235,6 +265,88 @@ describe("prepare_report_creation", () => {
 
     expect(result.kind).toBe("verification_unavailable");
     await expect(prisma.confirmationIntent.count()).resolves.toBe(0);
+  });
+});
+
+async function preparedDiscordUserId(): Promise<string | undefined> {
+  const row = await prisma.confirmationIntent.findFirstOrThrow();
+  const payload = ConfirmationIntentPayloadSchema.parse(
+    JSON.parse(row.payload),
+  );
+  if (payload.kind !== "subscription") throw new Error("Not a subscription.");
+  return payload.discordUserId;
+}
+
+describe("prepare_subscription_creation Discord links", () => {
+  test("links a member by the username the user typed, with no id asked for", async () => {
+    const result = await executors().prepareSubscription(
+      subscriptionInput({ discordMember: { username: "@shadowpumpkin23" } }),
+    );
+    expect(result.kind).toBe("creation_confirmation_required");
+    expect(result.intent?.summary).toContain("linked to @shadowpumpkin23");
+    await expect(preparedDiscordUserId()).resolves.toBe("300000000000000001");
+  });
+
+  test("an exact nickname beats a longer prefix match", async () => {
+    const result = await executors().prepareSubscription(
+      subscriptionInput({ discordMember: { username: "Shadow" } }),
+    );
+    expect(result.kind).toBe("creation_confirmation_required");
+    await expect(preparedDiscordUserId()).resolves.toBe("300000000000000002");
+  });
+
+  test("an ambiguous name names the candidates instead of guessing", async () => {
+    const result = await executors().prepareSubscription(
+      subscriptionInput({ discordMember: { username: "shad" } }),
+    );
+    expect(result.kind).toBe("invalid");
+    expect(result.message).toContain("@shadowpumpkin23");
+    expect(result.message).toContain("@shadowfox");
+    await expect(prisma.confirmationIntent.count()).resolves.toBe(0);
+  });
+
+  test("tracking yourself links the asker", async () => {
+    const result = await executors().prepareSubscription(
+      subscriptionInput({ discordMember: { asker: true } }),
+    );
+    expect(result.kind).toBe("creation_confirmation_required");
+    await expect(preparedDiscordUserId()).resolves.toBe(REQUESTER);
+  });
+
+  test("a Discord outage is not 'no such member'", async () => {
+    const result = await executors({
+      findMembers: () =>
+        Promise.reject(new DiscordUpstreamError("http_error", "down", 503)),
+    }).prepareSubscription(
+      subscriptionInput({ discordMember: { username: "pumpkin" } }),
+    );
+    expect(result.kind).toBe("verification_unavailable");
+  });
+
+  test("null means no Discord link", async () => {
+    const result = await executors().prepareSubscription(
+      subscriptionInput({ discordMember: null }),
+    );
+    expect(result.kind).toBe("creation_confirmation_required");
+    expect(result.intent?.summary).not.toContain("linked to");
+    await expect(preparedDiscordUserId()).resolves.toBeUndefined();
+  });
+
+  test("an id that is not a member of the server is refused", async () => {
+    const result = await executors().prepareSubscription(
+      subscriptionInput({ discordMember: { id: "300000000000000009" } }),
+    );
+    expect(result.kind).toBe("invalid");
+    expect(result.message).toContain("not a member of this server");
+    await expect(prisma.confirmationIntent.count()).resolves.toBe(0);
+  });
+
+  test("the tool input refuses a bare discordUserId field", async () => {
+    await expect(
+      executors().prepareSubscription(
+        subscriptionInput({ discordUserId: "300000000000000001" }),
+      ),
+    ).rejects.toThrow();
   });
 });
 

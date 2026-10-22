@@ -23,6 +23,10 @@ import { exploreModel, exploreAnalysisEnabled } from "#src/config/dynamic.ts";
 import { createExploreTools, type RunState } from "#src/explore/agent-tools.ts";
 import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
 import { resolveCreationCapability } from "#src/explore/creation/capability.ts";
+import {
+  exploreAskerSection,
+  loadExploreAsker,
+} from "#src/explore/identity/asker.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
 import { drainExploreStreams } from "#src/explore/stream.ts";
 import {
@@ -131,9 +135,14 @@ async function streamExploreAgentInternal(
     surface: params.surface,
   };
 
+  const asker = await loadExploreAsker({
+    requesterId: params.requesterId,
+    guildIds: params.guildIds,
+  });
+
   const agent = new ToolLoopAgent({
     id: "scout-explore-agent",
-    instructions: exploreAgentInstructions(skillOptions),
+    instructions: `${exploreAgentInstructions(skillOptions)}\n\n${exploreAskerSection(asker)}`,
     model: withExploreSpend(runtime.languageModel(model, ["tools"]), {
       ownerId: params.requesterId,
       runId: params.runId,
