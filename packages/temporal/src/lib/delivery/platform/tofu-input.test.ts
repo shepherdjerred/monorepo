@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   tofuJobInput,
   tofuJobInputFor,
+  tofuModelJobInput,
+  tofuOperation,
   tofuJobRequestInput,
   tofuStackDirectory,
   tofuStateMarkerKey,
@@ -93,16 +95,14 @@ describe("Tofu Job input", () => {
     ).toThrow("not an archive artifact");
   });
   it("resolves the extracted directory only in archive mode", () => {
-    expect(
-      tofuStackDirectory({ snapshot, archive: undefined }, {}),
-    ).toBeUndefined();
+    expect(tofuStackDirectory({ archive: undefined }, {})).toBeUndefined();
     expect(
       tofuStackDirectory(
-        { snapshot, archive },
+        { archive },
         { DELIVERY_STACK_ARCHIVE_DIR: "/workspace/stack" },
       ),
     ).toBe("/workspace/stack");
-    expect(() => tofuStackDirectory({ snapshot, archive }, {})).toThrow(
+    expect(() => tofuStackDirectory({ archive }, {})).toThrow(
       "missing its extracted stack directory",
     );
   });
@@ -150,5 +150,25 @@ describe("Tofu state marker", () => {
         marker,
       ),
     ).rejects.toThrow("readback differs");
+  });
+
+  it("reads a model step input and a v1 snapshot as the same operation", () => {
+    const model = {
+      kind: "plan" as const,
+      stack: snapshot.stack,
+      sourceBuildId: snapshot.source.id,
+      sourceRevision: snapshot.source.sourceRevision,
+    };
+    expect(tofuOperation(tofuModelJobInput(model, archive))).toEqual({
+      operation: model,
+      archive,
+    });
+    expect(tofuOperation({ snapshot, archive })).toEqual({
+      operation: model,
+      archive,
+    });
+    expect(() =>
+      tofuModelJobInput(model, { ...archive, digest: "x" }),
+    ).toThrow();
   });
 });

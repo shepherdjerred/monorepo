@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { PlatformReleaseSnapshotSchema } from "@shepherdjerred/delivery/contract";
+import {
+  PlatformReleaseSnapshotSchema,
+  TofuPlanReceiptSchema,
+} from "@shepherdjerred/delivery/contract";
+import { TofuStackSchema } from "@shepherdjerred/ops-model/platform-policy.ts";
 import type { DeploymentDetail } from "@shepherdjerred/delivery/contract";
 import {
   DeliveryJobArchiveSchema,
@@ -40,6 +44,69 @@ export function tofuJobInput(raw: unknown): TofuJobInput {
   return { snapshot, archive: parsed.archive };
 }
 
+const SourceRevisionSchema = z.string().regex(/^[a-f0-9]{40}$/u);
+/**
+ * A model tofu recipe's step as a Job input (section 5, X8): the stack runs
+ * from its frozen archive; plan and apply belong to the same deployment.
+ */
+export const TofuModelOperationSchema = z.discriminatedUnion("kind", [
+  z.strictObject({
+    kind: z.literal("plan"),
+    stack: TofuStackSchema,
+    sourceBuildId: z.string().min(1),
+    sourceRevision: SourceRevisionSchema,
+  }),
+  z.strictObject({
+    kind: z.literal("apply"),
+    stack: TofuStackSchema,
+    sourceRevision: SourceRevisionSchema,
+    planDeploymentId: z.string().min(1),
+    plan: TofuPlanReceiptSchema,
+  }),
+]);
+export type TofuOperation = z.infer<typeof TofuModelOperationSchema>;
+const TofuModelInputSchema = z.strictObject({
+  model: TofuModelOperationSchema,
+  archive: DeliveryJobArchiveSchema,
+});
+
+/** What a Tofu Job does, from either a v1 frozen snapshot or a model step input. */
+export function tofuOperation(raw: unknown): {
+  operation: TofuOperation;
+  archive: DeliveryJobArchive | undefined;
+} {
+  const model = TofuModelInputSchema.safeParse(raw);
+  if (model.success)
+    return { operation: model.data.model, archive: model.data.archive };
+  const { snapshot, archive } = tofuJobInput(raw);
+  return {
+    archive,
+    operation:
+      snapshot.kind === "tofu-plan"
+        ? {
+            kind: "plan",
+            stack: snapshot.stack,
+            sourceBuildId: snapshot.source.id,
+            sourceRevision: snapshot.source.sourceRevision,
+          }
+        : {
+            kind: "apply",
+            stack: snapshot.stack,
+            sourceRevision: snapshot.source.sourceRevision,
+            planDeploymentId: snapshot.planDeploymentId,
+            plan: snapshot.plan,
+          },
+  };
+}
+
+/** The wire form of a model step's Tofu Job input. */
+export function tofuModelJobInput(
+  operation: TofuOperation,
+  archive: DeliveryJobArchive,
+): unknown {
+  return TofuModelInputSchema.parse({ model: operation, archive });
+}
+
 /** The component that carries a stack's archive once CI produces it (X8). */
 export function tofuArchiveComponent(stack: string) {
   return `archive:tofu-${stack}`;
@@ -75,7 +142,7 @@ export function tofuJobRequestInput(input: TofuJobInput): unknown {
 
 /** Where the bootstrap extracted the verified archive; absent in source checkout mode. */
 export function tofuStackDirectory(
-  input: TofuJobInput,
+  input: { archive: DeliveryJobArchive | undefined },
   env: Record<string, string | undefined> = Bun.env,
 ): string | undefined {
   if (input.archive === undefined) return undefined;

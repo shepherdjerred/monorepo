@@ -263,14 +263,19 @@ export async function deliveryDeploymentWorkflow(input: {
  */
 async function runModelRecipe(deploymentId: string) {
   const plan = await metadata.planDeliveryModel(deploymentId);
+  // Tofu steps hold platform authority and run on the platform queue.
+  const run = async (key: string) =>
+    plan.platform.includes(key)
+      ? await platform.runDeliveryModelPlatformStep(deploymentId, key)
+      : await jobs.runDeliveryModelStep(deploymentId, key);
   for (const key of plan.keys.slice(plan.resumeAt)) {
     await metadata.renewDeliveryLease(deploymentId);
-    let step = await jobs.runDeliveryModelStep(deploymentId, key);
-    // An operator-run step waits for attestations made outside the cluster.
+    let step = await run(key);
+    // Operator-run and approve steps wait for a person outside the executor.
     while (step.waiting) {
       await sleep("1 minute");
       await metadata.renewDeliveryLease(deploymentId);
-      step = await jobs.runDeliveryModelStep(deploymentId, key);
+      step = await run(key);
     }
   }
   const evidence = await observation.acceptDeliveryModel(deploymentId);

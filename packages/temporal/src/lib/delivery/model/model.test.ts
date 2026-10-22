@@ -52,15 +52,15 @@ describe("model recipes (T3)", () => {
   test("steps keep their frozen order with oracle suites last, and resume at the first unsettled one", () => {
     const steps = modelSteps(requireModelRecipe(helm));
     expect(steps.map((step) => step.key)).toEqual([
-      "step/apply-safety",
-      "step/sync",
-      "test/e2e",
+      "step-apply-safety",
+      "step-sync",
+      "test-e2e",
     ]);
     expect(resumeAt(steps, [])).toBe(0);
     expect(
       resumeAt(steps, [
-        { key: "step/apply-safety", status: "succeeded" },
-        { key: "step/sync", status: "running" },
+        { key: "step-apply-safety", status: "succeeded" },
+        { key: "step-sync", status: "running" },
       ]),
     ).toBe(1);
     expect(

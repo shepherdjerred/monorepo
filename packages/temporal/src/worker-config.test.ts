@@ -64,10 +64,13 @@ describe("Temporal worker role contracts", () => {
       "executeDeliveryControlPlane",
       "executeDeliveryPlatform",
       "inspectDeliveryPlatformRecovery",
+      "runDeliveryModelPlatformStep",
     ]);
-    expect(activityNamesFor("delivery")).not.toContain(
+    for (const platformOnly of [
       "executeDeliveryPlatform",
-    );
+      "runDeliveryModelPlatformStep",
+    ])
+      expect(activityNamesFor("delivery")).not.toContain(platformOnly);
   });
   it("leaves forum activities with the workers that mount each forum's files", () => {
     for (const taskQueue of [

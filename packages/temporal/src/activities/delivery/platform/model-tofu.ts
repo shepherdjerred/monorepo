@@ -1,0 +1,219 @@
+import { z } from "zod";
+import {
+  RecordTofuPlanSchema,
+  type DeploymentDetail,
+  type EvidenceInput,
+} from "@shepherdjerred/delivery/contract";
+import { PLAN_APPROVAL_STAGE_KEY } from "@shepherdjerred/delivery/model-contract";
+import { canonicalJson } from "homelab/scripts/canonical-json.ts";
+import { deliveryRequest } from "#lib/delivery/client.ts";
+import { runDeliveryJob } from "#lib/delivery/job.ts";
+import { deliveryJobManifest } from "#lib/delivery/job-manifest.ts";
+import {
+  modelSteps,
+  requireModelRecipe,
+  requireStep,
+  type TofuRecipe,
+} from "#lib/delivery/model/recipe.ts";
+import { frozenRunnerImage } from "#lib/delivery/model/oracle-inputs.ts";
+import {
+  modelApplyInput,
+  modelPlanInput,
+  modelTofuSource,
+} from "#lib/delivery/model/tofu.ts";
+import { platformNativeEvidence } from "#lib/delivery/platform/native-job.ts";
+import { TofuStateMarkerSchema } from "#lib/delivery/platform/tofu-input.ts";
+import { deliveryOperationId } from "#lib/delivery/selection.ts";
+import type {
+  DeliveryJobReceipt,
+  DeliveryJobRequest,
+} from "#shared/delivery-job.ts";
+import {
+  recordStage,
+  requireOwned,
+  stageOf,
+} from "#activities/delivery/model/stages.ts";
+
+type Step = { current: DeploymentDetail; recipe: TofuRecipe; key: string };
+
+/** Runs one Tofu Job, recording its native identity as the step's intent first. */
+async function runTofuJob(
+  step: Step,
+  input: { recipe: "tofu-plan" | "tofu-apply"; jobInput: unknown },
+  runJob: typeof runDeliveryJob,
+) {
+  const source = modelTofuSource(step.current, step.recipe);
+  const request: DeliveryJobRequest = {
+    deploymentId: step.current.deployment.id,
+    stageKey: step.key,
+    recipe: input.recipe,
+    runnerImage: frozenRunnerImage(step.current, step.recipe.runner),
+    sourceRevision: source.sourceRevision,
+    input: input.jobInput,
+  };
+  const operationId = z
+    .string()
+    .parse(deliveryJobManifest(request).metadata?.name);
+  let receipt: DeliveryJobReceipt | undefined;
+  const result = await runJob(request, async (native) => {
+    receipt = native;
+    await recordStage(step.current, step.key, "running", {
+      operationId,
+      message: JSON.stringify(native),
+      evidence: platformNativeEvidence(native),
+    });
+  });
+  if (receipt === undefined)
+    throw new Error("Tofu Job has no persisted native receipt");
+  return { result, receipt, operationId };
+}
+
+async function plan(step: Step, runJob: typeof runDeliveryJob) {
+  const { result, receipt, operationId } = await runTofuJob(
+    step,
+    {
+      recipe: "tofu-plan",
+      jobInput: modelPlanInput(step.current, step.recipe),
+    },
+    runJob,
+  );
+  const saved = RecordTofuPlanSchema.parse(result);
+  const source = modelTofuSource(step.current, step.recipe);
+  if (
+    canonicalJson(saved.receipt.nativeJob) !== canonicalJson(receipt) ||
+    saved.receipt.deploymentId !== step.current.deployment.id ||
+    saved.receipt.sourceBuildId !== source.sourceBuildId ||
+    saved.receipt.sourceRevision !== source.sourceRevision ||
+    saved.receipt.stack !== step.recipe.stack
+  )
+    throw new Error(
+      "Saved plan differs from its frozen stack archive or actual native Job",
+    );
+  await deliveryRequest("platform/plans", z.unknown(), saved);
+  await recordStage(step.current, step.key, "succeeded", {
+    operationId,
+    message: JSON.stringify(receipt),
+    evidence: [
+      ...platformNativeEvidence(receipt),
+      {
+        kind: "preflight",
+        operationId: receipt.uid,
+        summary: JSON.stringify({
+          adapter: "tofu",
+          step: "plan",
+          stack: step.recipe.stack,
+          planDigest: saved.receipt.planDigest,
+          changes: saved.receipt.changes,
+        }),
+      },
+    ],
+  });
+}
+
+/** The approve step waits for a human approval of the exact saved plan. */
+async function approve(step: Step): Promise<{ waiting: boolean }> {
+  const operationId = deliveryOperationId(step.current.deployment.id);
+  const approval = stageOf(step.current, PLAN_APPROVAL_STAGE_KEY);
+  if (approval?.status !== "succeeded") {
+    if (stageOf(step.current, step.key) === undefined)
+      await recordStage(step.current, step.key, "running", { operationId });
+    return { waiting: true };
+  }
+  await recordStage(step.current, step.key, "succeeded", {
+    operationId,
+    evidence: [
+      {
+        kind: "preflight",
+        operationId: approval.operationId,
+        summary: `Saved plan ${approval.operationId} approved: ${approval.message}`,
+      },
+    ],
+  });
+  return { waiting: false };
+}
+
+async function apply(step: Step, runJob: typeof runDeliveryJob) {
+  const id = step.current.deployment.id;
+  const stored = await deliveryRequest(
+    `platform/plans/${encodeURIComponent(id)}`,
+    RecordTofuPlanSchema,
+  );
+  if (Date.parse(stored.receipt.expiresAt) <= Date.now())
+    throw new Error(
+      "Saved plan expired before apply; request a new deployment",
+    );
+  const { result, receipt, operationId } = await runTofuJob(
+    step,
+    {
+      recipe: "tofu-apply",
+      jobInput: modelApplyInput(step.current, step.recipe, stored.receipt),
+    },
+    runJob,
+  );
+  const applied = z
+    .object({
+      stack: z.literal(step.recipe.stack),
+      planDeploymentId: z.literal(id),
+      planDigest: z.literal(stored.receipt.planDigest),
+      outcome: z.literal("applied-saved-plan"),
+      state: z.object({
+        lineage: z.literal(stored.receipt.state.lineage),
+        serial: z.number().int().min(stored.receipt.state.serial),
+      }),
+      marker: TofuStateMarkerSchema.refine(
+        (marker) =>
+          marker.deploymentId === id && marker.stack === step.recipe.stack,
+        "State marker names another deployment or stack",
+      ),
+    })
+    .strict()
+    .parse(result);
+  const evidence: EvidenceInput[] = [
+    ...platformNativeEvidence(receipt),
+    {
+      kind: "reconciliation",
+      operationId: receipt.uid,
+      summary: JSON.stringify({
+        adapter: "tofu",
+        step: "apply",
+        stack: step.recipe.stack,
+        planDigest: applied.planDigest,
+        stateSerial: applied.marker.stateSerial,
+      }),
+    },
+  ];
+  await recordStage(step.current, step.key, "succeeded", {
+    operationId,
+    message: JSON.stringify(receipt),
+    evidence,
+  });
+}
+
+/**
+ * A model tofu recipe's step on the platform queue, the only one holding
+ * platform authority: plan from the frozen stack archive, wait for the
+ * approval of the exact saved plan, apply it (section 5, X8, T5).
+ */
+export async function runDeliveryModelPlatformStep(
+  id: string,
+  key: string,
+  runJob: typeof runDeliveryJob = runDeliveryJob,
+): Promise<{ waiting: boolean }> {
+  const current = await requireOwned(id);
+  if (stageOf(current, key)?.status === "succeeded") return { waiting: false };
+  const recipe = requireModelRecipe(current);
+  const step = requireStep(modelSteps(recipe), key);
+  if (recipe.kind !== "tofu" || step.adapter !== "tofu")
+    throw new Error(`Step ${key} is not a Tofu step of a tofu recipe`);
+  const frozen = { current, recipe, key };
+  switch (step.kind) {
+    case "plan":
+      await plan(frozen, runJob);
+      return { waiting: false };
+    case "approve":
+      return await approve(frozen);
+    case "apply":
+      await apply(frozen, runJob);
+      return { waiting: false };
+  }
+}

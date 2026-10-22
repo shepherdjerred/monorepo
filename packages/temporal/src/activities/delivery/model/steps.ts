@@ -33,6 +33,10 @@ export async function planDeliveryModel(id: string) {
   return {
     keys: steps.map((step) => step.key),
     resumeAt: resumeAt(steps, current.stages),
+    // Tofu steps hold platform authority and run on its own queue.
+    platform: steps
+      .filter((step) => step.adapter === "tofu")
+      .map((step) => step.key),
   };
 }
 
@@ -114,6 +118,9 @@ export async function runDeliveryModelStep(
         throw new Error(`A ${recipe.kind} recipe has no attestation step`);
       return await awaitAttestations(current, recipe, key);
     case "tofu":
+      throw new Error(
+        `Tofu step ${key} runs on the platform queue, never the Delivery queue`,
+      );
     case "channel":
       return missingAdapter(step.adapter);
   }

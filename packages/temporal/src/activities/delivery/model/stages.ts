@@ -23,7 +23,11 @@ export async function recordStage(
   current: DeploymentDetail,
   key: string,
   status: "running" | "succeeded",
-  receipt: { operationId: string; evidence?: EvidenceInput[] },
+  receipt: {
+    operationId: string;
+    evidence?: EvidenceInput[];
+    message?: string;
+  },
 ) {
   await deliveryRequest(
     `${deploymentPath(current.deployment.id)}/stages`,
@@ -32,7 +36,7 @@ export async function recordStage(
       key,
       status,
       operationId: receipt.operationId,
-      message: `${key}: ${status}`,
+      message: receipt.message ?? `${key}: ${status}`,
       evidence: receipt.evidence ?? [],
     },
   );

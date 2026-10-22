@@ -54,23 +54,23 @@ describe("operator-run step", () => {
       await awaitAttestations(
         first.current,
         first.value,
-        "step/attestation",
+        "step-attestation",
         record,
       ),
     ).toEqual({ waiting: true });
     expect(recorded).toEqual([
-      { key: "step/attestation", status: "running", evidence: [] },
+      { key: "step-attestation", status: "running", evidence: [] },
     ]);
     recorded.splice(0);
     const again = attested([
-      { key: "step/attestation", status: "running" },
+      { key: "step-attestation", status: "running" },
       { key: "attest/bootstrap", status: "succeeded" },
     ]);
     expect(
       await awaitAttestations(
         again.current,
         again.value,
-        "step/attestation",
+        "step-attestation",
         record,
       ),
     ).toEqual({ waiting: true });
@@ -79,7 +79,7 @@ describe("operator-run step", () => {
 
   it("settles the step with attestation evidence when every stage is attested", async () => {
     const done = attested([
-      { key: "step/attestation", status: "running" },
+      { key: "step-attestation", status: "running" },
       { key: "attest/bootstrap", status: "succeeded" },
       { key: "attest/verify", status: "succeeded" },
     ]);
@@ -87,13 +87,13 @@ describe("operator-run step", () => {
       await awaitAttestations(
         done.current,
         done.value,
-        "step/attestation",
+        "step-attestation",
         record,
       ),
     ).toEqual({ waiting: false });
     expect(recorded).toEqual([
       {
-        key: "step/attestation",
+        key: "step-attestation",
         status: "succeeded",
         evidence: [
           expect.objectContaining({

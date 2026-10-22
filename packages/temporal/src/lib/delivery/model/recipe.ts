@@ -1,6 +1,7 @@
 import type { DeploymentDetail } from "@shepherdjerred/delivery/contract";
 import {
   RecipeDefinitionSchema,
+  stepStageKey,
   type KubernetesStep,
   type RecipeDefinition,
 } from "@shepherdjerred/delivery/model-contract";
@@ -48,16 +49,24 @@ export type ModelStep =
  * A compound recipe is not executed as one deployment.
  */
 export function modelSteps(recipe: ModelRecipe): ModelStep[] {
+  const steps = recipeSteps(recipe);
+  const keys = new Set(steps.map((step) => step.key));
+  if (keys.size !== steps.length)
+    throw new Error("Two frozen steps share one stage key");
+  return steps;
+}
+
+function recipeSteps(recipe: ModelRecipe): ModelStep[] {
   switch (recipe.kind) {
     case "kubernetes-application":
       return [
         ...recipe.steps.map((step): ModelStep => ({
-          key: `step/${step.kind}`,
+          key: stepStageKey("step", step.kind),
           adapter: "kubernetes",
           step,
         })),
         ...recipe.oracle.tests.map((test): ModelStep => ({
-          key: `test/${test.suite}`,
+          key: stepStageKey("test", test.suite),
           adapter: "test",
           suite: test.suite,
           resultPath: test.resultPath,
@@ -65,16 +74,16 @@ export function modelSteps(recipe: ModelRecipe): ModelStep[] {
       ];
     case "tofu":
       return recipe.steps.map((step): ModelStep => ({
-        key: `step/${step.kind}`,
+        key: stepStageKey("step", step.kind),
         adapter: "tofu",
         kind: step.kind,
       }));
     case "channel":
-      return [{ key: "step/publish", adapter: "channel" }];
+      return [{ key: stepStageKey("step", "publish"), adapter: "channel" }];
     case "operator-run":
       return [
         {
-          key: "step/attestation",
+          key: stepStageKey("step", "attestation"),
           adapter: "operator-run",
           stages: recipe.stages,
         },

@@ -87,7 +87,7 @@ import {
   findQualifiedArtifact,
 } from "./upstream-artifact.ts";
 import { createPlatformDeployment } from "./platform/requests.ts";
-import { recordTofuPlan, tofuPlan } from "./platform/plans.ts";
+import { approveTofuPlan, recordTofuPlan, tofuPlan } from "./platform/plans.ts";
 import { requestControlPlaneUpgrade } from "./control-plane/requests.ts";
 import {
   publishForumBundle,
@@ -222,6 +222,7 @@ export class Delivery {
   createPlatformDeployment = createPlatformDeployment;
   recordTofuPlan = recordTofuPlan;
   tofuPlan = tofuPlan;
+  approveTofuPlan = approveTofuPlan;
   requestControlPlaneUpgrade = requestControlPlaneUpgrade;
   publishForumBundle = publishForumBundle;
   pendingForumBundles = pendingForumBundles;

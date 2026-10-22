@@ -1,6 +1,9 @@
 import { z } from "zod";
+import { modelRecipe } from "#lib/delivery/model/recipe.ts";
+import { modelApplyInput } from "#lib/delivery/model/tofu.ts";
 import {
   DeploymentDetailSchema,
+  RecordTofuPlanSchema,
   type EvidenceInput,
   type DeploymentDetail,
 } from "@shepherdjerred/delivery/contract";
@@ -26,10 +29,23 @@ export function platformNativeEvidence(
   ];
 }
 
-function frozenJobInput(
+async function frozenJobInput(
   current: DeploymentDetail,
   request: DeliveryJobRequest,
-): unknown {
+): Promise<unknown> {
+  const model = modelRecipe(current);
+  if (model !== null) {
+    // A model tofu apply runs the saved plan its own plan step recorded.
+    if (model.kind !== "tofu" || request.recipe !== "tofu-apply")
+      throw new Error(
+        "Native platform Job differs from its model recipe's apply step",
+      );
+    const stored = await deliveryRequest(
+      `platform/plans/${encodeURIComponent(current.deployment.id)}`,
+      RecordTofuPlanSchema,
+    );
+    return modelApplyInput(current, model, stored.receipt);
+  }
   if (request.recipe === "control-plane") {
     if (
       current.deployment.controlPlaneSnapshot?.source.sourceRevision !==
@@ -65,7 +81,7 @@ export async function admitPlatformNativeJob(request: DeliveryJobRequest) {
   });
   const base = `deployments/${encodeURIComponent(request.deploymentId)}`;
   const current = await deliveryRequest(base, DeploymentDetailSchema);
-  const expected = frozenJobInput(current, request);
+  const expected = await frozenJobInput(current, request);
   const snapshot = current.deployment.platformSnapshot;
   const controller = current.deployment.controlPlaneSnapshot;
   const stage = current.stages.find((item) => item.key === request.stageKey);

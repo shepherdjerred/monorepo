@@ -60,6 +60,10 @@ export function recipeFromPipeline(
 export function recipeComponents(definition: RecipeDefinition): string[] {
   return recipes.recipeComponents(definition);
 }
+export const PLAN_APPROVAL_STAGE_KEY = recipes.PLAN_APPROVAL_STAGE_KEY;
+export function stepStageKey(prefix: "step" | "test", name: string): string {
+  return recipes.stepStageKey(prefix, name);
+}
 export function attestationStageKey(stage: string): string {
   return recipes.attestationStageKey(stage);
 }

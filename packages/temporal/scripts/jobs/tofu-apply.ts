@@ -10,7 +10,7 @@ import type { DeliveryJobRequest } from "#shared/delivery-job.ts";
 import { admitPlatformNativeJob } from "#lib/delivery/platform/native-job.ts";
 import {
   stateMarkerStore,
-  tofuJobInput,
+  tofuOperation,
   tofuStackDirectory,
   writeTofuStateMarker,
   type MarkerStore,
@@ -21,18 +21,18 @@ export async function run(
   request: DeliveryJobRequest,
   markerStore: () => MarkerStore = stateMarkerStore,
 ): Promise<unknown> {
-  const input = tofuJobInput(request.input);
-  const { snapshot } = input;
+  const input = tofuOperation(request.input);
+  const { operation } = input;
   if (
-    snapshot.kind !== "tofu-apply" ||
-    snapshot.source.sourceRevision !== request.sourceRevision
+    operation.kind !== "apply" ||
+    operation.sourceRevision !== request.sourceRevision
   )
     throw new Error("Saved apply Job differs from its exact frozen source");
   const stored = await deliveryRequest(
-    `platform/plans/${encodeURIComponent(snapshot.planDeploymentId)}`,
+    `platform/plans/${encodeURIComponent(operation.planDeploymentId)}`,
     RecordTofuPlanSchema,
   );
-  if (canonicalJson(stored.receipt) !== canonicalJson(snapshot.plan))
+  if (canonicalJson(stored.receipt) !== canonicalJson(operation.plan))
     throw new Error(
       "Saved plan metadata differs from the exact approved snapshot",
     );
@@ -42,11 +42,11 @@ export async function run(
   );
   const directory = tofuStackDirectory(input);
   return await withDeliveryTofuStack(
-    snapshot.stack,
+    operation.stack,
     async (context) => {
       if (
         canonicalJson(await context.state()) !==
-        canonicalJson(snapshot.plan.state)
+        canonicalJson(operation.plan.state)
       )
         throw new Error(
           "Saved plan state lineage or serial changed before apply",
@@ -63,8 +63,8 @@ export async function run(
       ]);
       const state = await context.state();
       if (
-        state.lineage !== snapshot.plan.state.lineage ||
-        state.serial < snapshot.plan.state.serial
+        state.lineage !== operation.plan.state.lineage ||
+        state.serial < operation.plan.state.serial
       )
         throw new Error(
           "Applied plan did not preserve its recorded state lineage",
@@ -73,16 +73,16 @@ export async function run(
       const marker = await writeTofuStateMarker(markerStore(), {
         schema: "delivery-tofu-marker/v1",
         deploymentId: request.deploymentId,
-        stack: snapshot.stack,
+        stack: operation.stack,
         stateLineage: state.lineage,
         stateSerial: state.serial,
         archiveDigest: input.archive?.digest ?? null,
         appliedAt: new Date().toISOString(),
       });
       return {
-        stack: snapshot.stack,
-        planDeploymentId: snapshot.planDeploymentId,
-        planDigest: snapshot.plan.planDigest,
+        stack: operation.stack,
+        planDeploymentId: operation.planDeploymentId,
+        planDigest: operation.plan.planDigest,
         state,
         marker,
         outcome: "applied-saved-plan",

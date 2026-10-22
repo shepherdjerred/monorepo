@@ -1,4 +1,5 @@
 import { ColdStartSnapshotSchema } from "#shared/model/cold-start-contract.ts";
+import { stepStageKey } from "#shared/model/recipe-contract.ts";
 import type {
   ColdStartEnvironment,
   ColdStartSnapshot,
@@ -14,7 +15,7 @@ type Edge = { dependentId: string; prerequisiteId: string };
  * Stage keys whose operation identity names the effect that converged a
  * target: the v1 reconcile stage and the model executor's sync step.
  */
-const CONVERGING_STAGES = new Set(["reconcile", "step/sync"]);
+const CONVERGING_STAGES = new Set(["reconcile", stepStageKey("step", "sync")]);
 
 /**
  * The bootstrap chain (section 6): every environment of a self-hosted

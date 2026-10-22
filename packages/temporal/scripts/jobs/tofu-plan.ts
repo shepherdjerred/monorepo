@@ -10,7 +10,7 @@ import {
 } from "homelab/scripts/tofu/delivery-stack.ts";
 import { encryptDeliveryPlan } from "#lib/delivery/platform/plan-crypto.ts";
 import {
-  tofuJobInput,
+  tofuOperation,
   tofuStackDirectory,
 } from "#lib/delivery/platform/tofu-input.ts";
 import type { DeliveryJobRequest } from "#shared/delivery-job.ts";
@@ -21,16 +21,16 @@ import type { DeliveryJobRequest } from "#shared/delivery-job.ts";
  * receipt produced from other bytes names a different native Job.
  */
 export async function run(request: DeliveryJobRequest): Promise<unknown> {
-  const input = tofuJobInput(request.input);
-  const { snapshot } = input;
+  const input = tofuOperation(request.input);
+  const { operation } = input;
   if (
-    snapshot.kind !== "tofu-plan" ||
-    snapshot.source.sourceRevision !== request.sourceRevision
+    operation.kind !== "plan" ||
+    operation.sourceRevision !== request.sourceRevision
   )
     throw new Error("Saved plan Job differs from its qualified frozen source");
   const directory = tofuStackDirectory(input);
   return await withDeliveryTofuStack(
-    snapshot.stack,
+    operation.stack,
     async (context) => {
       const before = await context.state();
       const planPath = path.join(context.workspace, "plan.tfplan");
@@ -58,9 +58,9 @@ export async function run(request: DeliveryJobRequest): Promise<unknown> {
       const receipt = TofuPlanReceiptSchema.parse({
         schema: "delivery-tofu-plan/v1",
         deploymentId: request.deploymentId,
-        sourceBuildId: snapshot.source.id,
-        sourceRevision: snapshot.source.sourceRevision,
-        stack: snapshot.stack,
+        sourceBuildId: operation.sourceBuildId,
+        sourceRevision: operation.sourceRevision,
+        stack: operation.stack,
         createdAt: createdAt.toISOString(),
         expiresAt: new Date(
           createdAt.getTime() + 24 * 60 * 60 * 1000,

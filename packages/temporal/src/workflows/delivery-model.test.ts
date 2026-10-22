@@ -17,8 +17,9 @@ function modelActivities(calls: string[], failStep?: string) {
   return {
     prepareDelivery: () => ({ status: "ready", model: true }),
     planDeliveryModel: () => ({
-      keys: ["step/apply-safety", "step/sync", "test/e2e"],
+      keys: ["step-apply-safety", "step-sync", "test-e2e"],
       resumeAt: 1,
+      platform: [],
     }),
     renewDeliveryLease: () => {
       calls.push("lease");
@@ -27,7 +28,7 @@ function modelActivities(calls: string[], failStep?: string) {
       calls.push(key);
       if (key === failStep) throw new Error(`${key} lost its readback`);
       // The suite waits once, as an operator-run step waits for attestations.
-      const waiting = key === "test/e2e" && !calls.includes("waited");
+      const waiting = key === "test-e2e" && !calls.includes("waited");
       if (waiting) calls.push("waited");
       return { waiting };
     },
@@ -93,12 +94,12 @@ describe("Delivery model step executor (T3)", () => {
       );
       expect(calls).toEqual([
         "lease",
-        "step/sync",
+        "step-sync",
         "lease",
-        "test/e2e",
+        "test-e2e",
         "waited",
         "lease",
-        "test/e2e",
+        "test-e2e",
         "accept",
         "finish:succeeded",
         "settle",
@@ -119,7 +120,7 @@ describe("Delivery model step executor (T3)", () => {
     const calls: string[] = [];
     const { workflows, activities } = await createDeliveryWorkers(
       environment,
-      modelActivities(calls, "step/sync"),
+      modelActivities(calls, "step-sync"),
     );
     try {
       await expect(
@@ -133,7 +134,7 @@ describe("Delivery model step executor (T3)", () => {
           ),
         ),
       ).rejects.toThrow("Workflow execution failed");
-      expect(calls).toEqual(["lease", "step/sync", "finish:failed"]);
+      expect(calls).toEqual(["lease", "step-sync", "finish:failed"]);
     } finally {
       await environment.teardown();
     }
@@ -202,6 +203,65 @@ describe("Delivery model step executor (T3)", () => {
         ),
       );
       expect(observed.toSorted()).toEqual(["drift", "monitors", "removals"]);
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+
+  it("runs Tofu steps on the platform queue and waits there for the plan approval", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const calls: string[] = [];
+    const { workflows, activities } = await createDeliveryWorkers(environment, {
+      ...modelActivities(calls),
+      planDeliveryModel: () => ({
+        keys: ["step-plan", "step-approve", "step-apply"],
+        resumeAt: 0,
+        platform: ["step-plan", "step-approve", "step-apply"],
+      }),
+      settleDeliveryModel: () => {
+        calls.push("settle");
+        return null;
+      },
+    });
+    const platform = await Worker.create({
+      connection: environment.nativeConnection,
+      namespace: "default",
+      taskQueue: TASK_QUEUES.DELIVERY_PLATFORM,
+      activities: {
+        runDeliveryModelPlatformStep: (_id: string, key: string) => {
+          calls.push(`platform:${key}`);
+          const waiting = key === "step-approve" && !calls.includes("approved");
+          if (waiting) calls.push("approved");
+          return { waiting };
+        },
+      },
+    });
+    try {
+      await workflows.runUntil(
+        activities.runUntil(
+          platform.runUntil(
+            environment.client.workflow.execute("deliveryDeploymentWorkflow", {
+              workflowId: `model-tofu-${crypto.randomUUID()}`,
+              taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+              args: [{ deploymentId: "deployment-7" }],
+            }),
+          ),
+        ),
+      );
+      expect(calls).toEqual([
+        "lease",
+        "platform:step-plan",
+        "lease",
+        "platform:step-approve",
+        "approved",
+        "lease",
+        "platform:step-approve",
+        "lease",
+        "platform:step-apply",
+        "accept",
+        "finish:succeeded",
+        "settle",
+      ]);
     } finally {
       await environment.teardown();
     }

@@ -261,15 +261,17 @@ const ARCHIVE_READER_GRANTS: Grant[] = [
   },
 ];
 
-/** Tofu Jobs carry either the bare frozen snapshot or `{ snapshot, archive }`. */
+/**
+ * The stack whose grants a Tofu Job gets. Its input is a v1 frozen snapshot
+ * (bare or `{ snapshot, archive }`) or a model step `{ model, archive }`;
+ * the Job itself validates the whole input.
+ */
 function tofuJobStack(input: unknown): string {
-  const wrapped = z
-    .object({ snapshot: z.object({ stack: z.string() }).loose() })
-    .loose()
-    .safeParse(input);
-  return wrapped.success
-    ? wrapped.data.snapshot.stack
-    : z.object({ stack: z.string() }).loose().parse(input).stack;
+  const Stack = z.object({ stack: z.string() }).loose();
+  const snapshot = z.object({ snapshot: Stack }).loose().safeParse(input);
+  if (snapshot.success) return snapshot.data.snapshot.stack;
+  const model = z.object({ model: Stack }).loose().safeParse(input);
+  return model.success ? model.data.model.stack : Stack.parse(input).stack;
 }
 
 function recoveryVolumes(input: DeliveryJobRequest) {

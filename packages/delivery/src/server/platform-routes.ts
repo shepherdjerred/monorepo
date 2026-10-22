@@ -8,6 +8,7 @@ import {
 import { DeliveryError } from "#domain/error.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
+import { ApproveTofuPlanSchema } from "#infrastructure/platform/plans.ts";
 
 export function registerPlatformRoutes(
   app: Hono<{ Variables: { principal: Principal; requestId: string } }>,
@@ -44,6 +45,15 @@ export function registerPlatformRoutes(
         201,
       );
     },
+  );
+  app.post("/api/v1/deployments/:id/plan-approval", async (c) =>
+    c.json(
+      await delivery.approveTofuPlan(
+        c.req.param("id"),
+        ApproveTofuPlanSchema.parse(await c.req.json()),
+        c.get("principal"),
+      ),
+    ),
   );
   app.get("/api/v1/platform/plans/:id", async (c) =>
     c.json(await delivery.tofuPlan(c.req.param("id"), c.get("principal"))),
