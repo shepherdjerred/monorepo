@@ -1,18 +1,16 @@
 import { DeliveryError } from "#domain/error.ts";
-import { PipelineDefinitionSchema, type Principal } from "#shared/contract.ts";
-import { lock, required, audit } from "./delivery-records.ts";
+import { PipelineRevisionSchema, type Principal } from "#shared/contract.ts";
+import type { StoredRecipeDefinition } from "#shared/model/record-contract.ts";
+import { lock, required, audit, wire } from "./delivery-records.ts";
 import type { Delivery } from "./delivery.ts";
 import { id, environment, automaticTarget } from "./delivery-data.ts";
 import { reconcilePlatform } from "./platform/selection.ts";
+import { legacyPipelineOf } from "./execution/legacy-recipe.ts";
 
 /** Platform and control-plane pipelines reconcile through their own typed requests. */
-function specializedPipeline(raw: unknown) {
-  const definition = PipelineDefinitionSchema.parse(raw);
-  return (
-    definition.kind === "root-release" ||
-    definition.kind === "tofu" ||
-    definition.kind === "control-plane"
-  );
+function specializedPipeline(stored: StoredRecipeDefinition) {
+  const kind = legacyPipelineOf(stored)?.kind;
+  return kind === "root-release" || kind === "tofu" || kind === "control-plane";
 }
 
 type EnvironmentRow = Awaited<
@@ -25,10 +23,15 @@ async function reconcileEnvironment(
   row: EnvironmentRow,
   actor: Principal,
 ) {
-  const pipeline = await this.database.pipeline.findUniqueOrThrow({
-    where: { id: row.pipelineRevisionId },
-  });
-  if (specializedPipeline(pipeline.definition)) return null;
+  // A stored recipe of either generation (P1); a model recipe is no v1 pipeline.
+  const { definition } = PipelineRevisionSchema.parse(
+    wire(
+      await this.database.pipeline.findUniqueOrThrow({
+        where: { id: row.pipelineRevisionId },
+      }),
+    ),
+  );
+  if (specializedPipeline(definition)) return null;
   if (row.activeDeploymentId !== null) return null;
   // An alarmed selection holds the environment until the monitor's
   // rollback or an operator acts (W2, D2).
@@ -59,7 +62,17 @@ async function reconcileEnvironment(
     return null;
   return (await automaticSelectionBlocked.call(this, last, target.id, actor))
     ? null
-    : requestAutomatic.call(this, row, target.id, actor);
+    : requestAutomatic.call(
+        this,
+        row,
+        { id: target.id, kind: automaticKind(definition.kind) },
+        actor,
+      );
+}
+
+/** A channel recipe is realised by `channel-publish` (4.12); every other by `deploy`. */
+function automaticKind(recipeKind: string): "deploy" | "channel-publish" {
+  return recipeKind === "channel" ? "channel-publish" : "deploy";
 }
 
 async function alarmedAndLatest(
@@ -294,9 +307,10 @@ export async function requestAutomatic(
     generation: number;
     promotionSourceEnvironmentId: string | null;
   },
-  targetId: string,
+  target: { id: string; kind: "deploy" | "channel-publish" },
   actor: Principal,
 ) {
+  const targetId = target.id;
   // Automatic request identity keys on the environment's last terminal
   // deployment, not on the binding generation (D3).
   const lastTerminal = await this.database.deployment.findFirst({
@@ -316,7 +330,7 @@ export async function requestAutomatic(
             environmentId: row.id,
             versionSetRevisionId: targetId,
             expectedGeneration: row.generation,
-            kind: "deploy",
+            kind: target.kind,
           }
         : {
             requestId,

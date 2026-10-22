@@ -213,6 +213,22 @@ prefixed with its sub-recipe's position (`sub2-step-sync`). A model
 
 Rollbacks of TSMC stay refused.
 
+A `channel` recipe freezes two steps, and only the npm store has an adapter
+so far; any other store stops as a missing adapter. Both steps authenticate
+with `NPM_TOKEN` from the Delivery worker's npm channel item.
+
+- `step-publish` publishes the selected tarball under the `delivery-staged`
+  dist-tag, but only if the registry lacks that version. It reads the
+  tarball from the Delivery artifact store and verifies its digest first. It
+  then reads back until the registry serves bytes whose sha256 matches the
+  artifact.
+- `step-pointer` moves the channel's dist-tag, such as `latest`, reads back
+  that the tag resolves to the version, and drops the staging tag.
+
+The registry's integrity and shasum are recorded as evidence. A published
+version is never replaced: different bytes under the same version stop the
+deployment. A rollback finds its version present and only moves the pointer.
+
 Poller proofs make bounded exact-build instant readbacks when active polling
 briefly reaches zero; success requires a fresh positive result, and query or
 schema errors fail immediately. Minecraft preservation and recovery

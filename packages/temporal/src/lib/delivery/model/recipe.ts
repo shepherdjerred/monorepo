@@ -46,7 +46,7 @@ export type ModelStep =
   | { key: string; adapter: "kubernetes"; step: KubernetesStep }
   | { key: string; adapter: "test"; suite: string; resultPath: string }
   | { key: string; adapter: "tofu"; kind: "plan" | "approve" | "apply" }
-  | { key: string; adapter: "channel" }
+  | { key: string; adapter: "channel"; phase: "publish" | "pointer" }
   | { key: string; adapter: "static-site"; policy: StaticSiteStepPolicy }
   | { key: string; adapter: "operator-run"; stages: string[] };
 
@@ -87,7 +87,12 @@ function recipeSteps(recipe: RecipeDefinition): ModelStep[] {
         kind: step.kind,
       }));
     case "channel":
-      return [{ key: stepStageKey("step", "publish"), adapter: "channel" }];
+      // Publish the version if absent, then move the pointer (section 5).
+      return (["publish", "pointer"] as const).map((phase) => ({
+        key: stepStageKey("step", phase),
+        adapter: "channel",
+        phase,
+      }));
     case "static-site": {
       const { kind: _kind, ...policy } = recipe;
       return [

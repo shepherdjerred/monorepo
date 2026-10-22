@@ -24,6 +24,7 @@ import { oracleEvidence, runTestStep } from "./oracle.ts";
 import { awaitAttestations } from "./operator-run.ts";
 import { runWorkerRolloutStep } from "./worker-rollout.ts";
 import { runMinecraftUpgradeStep } from "./minecraft-upgrade.ts";
+import { runChannelStep } from "./channel.ts";
 import type { ColdStartWrite } from "#lib/delivery/model/oracle-inputs.ts";
 import {
   deploymentDetail,
@@ -135,7 +136,10 @@ export async function runDeliveryModelStep(
         `Tofu step ${key} runs on the platform queue, never the Delivery queue`,
       );
     case "channel":
-      return missingAdapter(step.adapter);
+      if (owner.kind !== "channel")
+        throw new Error(`A ${owner.kind} recipe has no channel step`);
+      await runChannelStep(current, owner, step);
+      return { waiting: false };
   }
 }
 

@@ -1,6 +1,6 @@
 import type { tofuStackPolicy } from "@shepherdjerred/ops-model/platform-policy.ts";
 import {
-  LegacyPipelineRevisionSchema,
+  PipelineRevisionSchema,
   type Principal,
   type Environment,
 } from "#shared/contract.ts";
@@ -8,6 +8,7 @@ import { DeliveryError } from "#domain/error.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { audit, required, wire } from "#infrastructure/delivery-records.ts";
 import { environment } from "#infrastructure/delivery-data.ts";
+import { legacyPipelineOf } from "#infrastructure/execution/legacy-recipe.ts";
 
 async function blocked(
   this: Delivery,
@@ -99,18 +100,20 @@ export async function reconcilePlatform(
   for (const row of await this.database.environment.findMany({
     where: { automatic: true, id: { in: enabledEnvironments } },
   })) {
-    const pipeline = LegacyPipelineRevisionSchema.parse(
-      wire(
-        required(
-          await this.database.pipeline.findUnique({
-            where: { id: row.pipelineRevisionId },
-          }),
-          "Pipeline",
+    // Only a v1 tofu pipeline selects here; a model recipe deploys ordinarily.
+    const definition = legacyPipelineOf(
+      PipelineRevisionSchema.parse(
+        wire(
+          required(
+            await this.database.pipeline.findUnique({
+              where: { id: row.pipelineRevisionId },
+            }),
+            "Pipeline",
+          ),
         ),
-      ),
+      ).definition,
     );
-    const definition = pipeline.definition;
-    if (definition.kind !== "tofu") continue;
+    if (definition?.kind !== "tofu") continue;
     if (
       row.activeDeploymentId !== null ||
       (await this.database.deployment.count({

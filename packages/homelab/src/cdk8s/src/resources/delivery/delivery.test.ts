@@ -289,6 +289,23 @@ describe("Delivery infrastructure", () => {
       ).toBe(false);
     }
   });
+  it("grants the npm channel token only once its item is issued", () => {
+    for (const issued of [false, true]) {
+      resetProbeRegistry();
+      const chart = new Chart(new App(), "worker");
+      createDeliveryWorker(
+        chart,
+        {
+          ...activation,
+          argocdItemId: "argo-item",
+          ...(issued ? { npmChannelItemId: "npm-item" } : {}),
+        },
+        "temporal-server",
+      );
+      const tokens = JSON.stringify(chart.toJson()).match(/"NPM_TOKEN"/gu);
+      expect(tokens?.length ?? 0).toBe(issued ? 2 : 0);
+    }
+  });
   it("confines Delivery API egress to publication, CI image registration, and the two archive producers", () => {
     const chart = new Chart(new App(), "ci-network");
     createWoodpeckerStepNetworkPolicy(chart);
