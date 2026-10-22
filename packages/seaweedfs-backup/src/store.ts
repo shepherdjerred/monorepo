@@ -36,7 +36,12 @@ export type PutObjectInput = {
   /**
    * Commit only if no object exists at the key when the write lands, sent as
    * `If-None-Match: *`. A concurrent creator makes the write fail with a
-   * precondition error instead of being overwritten.
+   * precondition error instead of being overwritten. SeaweedFS applies the
+   * condition under a lock for a single PUT, which is how an object that fits
+   * one upload part is written. A larger object goes through multipart
+   * upload, and SeaweedFS checks the condition on CompleteMultipartUpload
+   * without holding it through the write, so only stopped writers make that
+   * case safe.
    */
   createOnly?: boolean;
 };

@@ -581,6 +581,12 @@ async function backedUp(): Promise<{
   return { backup, snapshotId: snapshot.marker.snapshotId };
 }
 
+/** What `backedUp` seeds, so a test can rewrite a key with the same bytes. */
+const ORIGINAL_VALUES: Record<string, string> = {
+  "state.json": "important",
+  "nested/release.tgz": "archive",
+};
+
 function coldStartRestore(
   backup: InMemoryObjectStore,
   destinationStore: InMemoryObjectStore,
@@ -774,6 +780,20 @@ describe("cold-start restore races", () => {
         store.seed(bucket, key, "replaced by a workload");
       },
     ],
+    [
+      "rewrites with identical bytes but new headers",
+      (store: InMemoryObjectStore, bucket: string, key: string) => {
+        store.seedWithHeaders(
+          {
+            bucket,
+            key,
+            value: ORIGINAL_VALUES[key] ?? "",
+            headers: { contentType: "text/rewritten", metadata: {} },
+          },
+          new Date(Date.now() + 60_000),
+        );
+      },
+    ],
   ])(
     "fails a cold start when another writer %s a verified object",
     async (_name, tamper) => {
@@ -781,7 +801,7 @@ describe("cold-start restore races", () => {
       const store = new TamperingStore(tamper);
       store.createBucket("source");
       await expect(coldStartRestore(backup, store, snapshotId)).rejects.toThrow(
-        "removed or changed after verification",
+        "removed or rewritten after verification",
       );
     },
   );

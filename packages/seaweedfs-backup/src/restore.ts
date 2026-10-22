@@ -69,10 +69,15 @@ async function assertNotOverwriting(
   if (present !== undefined) throw overwriteRefusal(input, key);
 }
 
-type VerifiedObject = { size: number; etag: string };
+type VerifiedObject = { size: number; etag: string; modifiedAt: number };
 
 function comparableEtag(etag: string): string {
   return etag.replaceAll(/^"|"$/gu, "");
+}
+
+/** S3 reports modification times to the second. */
+function wholeSeconds(date: Date): number {
+  return Math.floor(date.getTime() / 1000);
 }
 
 /**
@@ -100,12 +105,13 @@ async function assertDestinationUnchanged(
     const actual = present.get(key);
     return (
       actual?.size !== expected.size ||
-      comparableEtag(actual.etag) !== comparableEtag(expected.etag)
+      comparableEtag(actual.etag) !== comparableEtag(expected.etag) ||
+      wholeSeconds(actual.lastModified) !== expected.modifiedAt
     );
   });
   if (changed.length > 0) {
     throw new Error(
-      `Cold-start restore found ${String(changed.length)} restored object(s) in ${input.destinationBucket} removed or changed after verification (first: ${changed[0]?.[0] ?? "unknown"}). Another writer used the bucket during the restore`,
+      `Cold-start restore found ${String(changed.length)} restored object(s) in ${input.destinationBucket} removed or rewritten after verification (first: ${changed[0]?.[0] ?? "unknown"}). Another writer used the bucket during the restore`,
     );
   }
 }
@@ -203,6 +209,7 @@ export async function restoreSnapshot(
     verified.set(entry.sourceKey, {
       size: restored.size,
       etag: restored.etag,
+      modifiedAt: wholeSeconds(restored.lastModified),
     });
     restoredBytes += entry.sourceSize;
     await input.onObjectRestored?.({

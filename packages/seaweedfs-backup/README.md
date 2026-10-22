@@ -62,6 +62,10 @@ toolkit backup seaweedfs restore --cold-start \
   --destination-bucket delivery-artifacts
 ```
 
+Stop every workload that writes the bucket before a cold start. The checks
+below catch interference and refuse to overwrite, but they cannot make a large
+object's write atomic against a concurrent writer.
+
 The mode relaxes only the production-bucket refusal. Every other check stays:
 
 - The destination must be the same bucket as `--bucket`; a production bucket
@@ -69,13 +73,17 @@ The mode relaxes only the production-bucket refusal. Every other check stays:
 - The destination bucket must already exist, and a full listing must return no
   objects. Any object fails the restore, naming the count and the first key.
 - Each key is checked with `HEAD` before it is read from the backup, and the
-  write itself is create-only (`If-None-Match: *`). An object that appears
-  mid-restore, even between the check and the write, stops the run instead of
-  being overwritten.
+  write itself is create-only (`If-None-Match: *`). SeaweedFS applies that
+  condition atomically to a single PUT, which is how an object up to the 5 MiB
+  upload part size is written, so an object created even between the check and
+  the write stops the run instead of being overwritten. A larger object is
+  uploaded in parts, and SeaweedFS checks the condition on completion without
+  holding it through the write, so only stopped writers make that case safe.
 - After the last object, the bucket is listed again and compared with what the
   restore verified. A key outside the snapshot, or a restored key that is gone
-  or whose size or ETag changed, fails the restore, so a bucket that another
-  writer used mid-restore is never reported complete.
+  or whose size, ETag, or modification time changed, fails the restore, so a
+  bucket that another writer used mid-restore is never reported complete.
+  Modification times have one-second resolution.
 - Transfer and read-back SHA-256 verification are unchanged.
 
 `--record <file>` is required with `--cold-start`. The file is created

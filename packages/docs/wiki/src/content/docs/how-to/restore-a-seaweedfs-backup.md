@@ -10,6 +10,9 @@ restore command refuses every production bucket named in policy and refuses a
 destination containing any object. The one exception is the explicit
 `--cold-start` mode for rebuilding a cluster from nothing, which restores a
 production bucket onto itself only while it is empty and never overwrites.
+Stop every workload that writes the bucket first. The
+[package README](https://github.com/shepherdjerred/monorepo/blob/main/packages/seaweedfs-backup/README.md)
+lists what the command detects and what only stopped writers prevent.
 
 ## 1. Choose a completed recovery point
 
