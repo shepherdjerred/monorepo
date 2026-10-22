@@ -1,3 +1,4 @@
+import { ApplicationFailure } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import { describe, expect, it } from "vitest";
@@ -68,6 +69,48 @@ async function backupWorker(
       },
     },
   });
+}
+
+/** A model tofu recipe whose steps run on the platform queue (section 5). */
+async function runTofuRecipe(
+  environment: TestWorkflowEnvironment,
+  calls: string[],
+  platformStep: (key: string) => { waiting: boolean },
+) {
+  const { workflows, activities } = await createDeliveryWorkers(environment, {
+    ...modelActivities(calls),
+    planDeliveryModel: () => ({
+      keys: ["step-plan", "step-approve", "step-apply"],
+      resumeAt: 0,
+      platform: ["step-plan", "step-approve", "step-apply"],
+    }),
+    settleDeliveryModel: () => {
+      calls.push("settle");
+      return null;
+    },
+  });
+  const platform = await Worker.create({
+    connection: environment.nativeConnection,
+    namespace: "default",
+    taskQueue: TASK_QUEUES.DELIVERY_PLATFORM,
+    activities: {
+      runDeliveryModelPlatformStep: (_id: string, key: string) => {
+        calls.push(`platform:${key}`);
+        return platformStep(key);
+      },
+    },
+  });
+  await workflows.runUntil(
+    activities.runUntil(
+      platform.runUntil(
+        environment.client.workflow.execute("deliveryDeploymentWorkflow", {
+          workflowId: `model-tofu-${crypto.randomUUID()}`,
+          taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+          args: [{ deploymentId: "deployment-7" }],
+        }),
+      ),
+    ),
+  );
 }
 
 describe("Delivery model step executor (T3)", () => {
@@ -211,43 +254,12 @@ describe("Delivery model step executor (T3)", () => {
   it("runs Tofu steps on the platform queue and waits there for the plan approval", async () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
     const calls: string[] = [];
-    const { workflows, activities } = await createDeliveryWorkers(environment, {
-      ...modelActivities(calls),
-      planDeliveryModel: () => ({
-        keys: ["step-plan", "step-approve", "step-apply"],
-        resumeAt: 0,
-        platform: ["step-plan", "step-approve", "step-apply"],
-      }),
-      settleDeliveryModel: () => {
-        calls.push("settle");
-        return null;
-      },
-    });
-    const platform = await Worker.create({
-      connection: environment.nativeConnection,
-      namespace: "default",
-      taskQueue: TASK_QUEUES.DELIVERY_PLATFORM,
-      activities: {
-        runDeliveryModelPlatformStep: (_id: string, key: string) => {
-          calls.push(`platform:${key}`);
-          const waiting = key === "step-approve" && !calls.includes("approved");
-          if (waiting) calls.push("approved");
-          return { waiting };
-        },
-      },
-    });
     try {
-      await workflows.runUntil(
-        activities.runUntil(
-          platform.runUntil(
-            environment.client.workflow.execute("deliveryDeploymentWorkflow", {
-              workflowId: `model-tofu-${crypto.randomUUID()}`,
-              taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
-              args: [{ deploymentId: "deployment-7" }],
-            }),
-          ),
-        ),
-      );
+      await runTofuRecipe(environment, calls, (key) => {
+        const waiting = key === "step-approve" && !calls.includes("approved");
+        if (waiting) calls.push("approved");
+        return { waiting };
+      });
       expect(calls).toEqual([
         "lease",
         "platform:step-plan",
@@ -261,6 +273,32 @@ describe("Delivery model step executor (T3)", () => {
         "accept",
         "finish:succeeded",
         "settle",
+      ]);
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+
+  it("a rejected plan finishes the deployment failed and never applies it", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const calls: string[] = [];
+    try {
+      await expect(
+        runTofuRecipe(environment, calls, (key) => {
+          if (key === "step-approve")
+            throw ApplicationFailure.nonRetryable(
+              "Saved plan was rejected; nothing was applied",
+              "DeliveryPlanRejected",
+            );
+          return { waiting: false };
+        }),
+      ).rejects.toThrow("Workflow execution failed");
+      expect(calls).toEqual([
+        "lease",
+        "platform:step-plan",
+        "lease",
+        "platform:step-approve",
+        "finish:failed",
       ]);
     } finally {
       await environment.teardown();

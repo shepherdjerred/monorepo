@@ -1,4 +1,3 @@
-import { z } from "zod";
 import {
   PLAN_APPROVAL_STAGE_KEY,
   stepStageKey,
@@ -90,6 +89,18 @@ async function planProducer(tx: Transaction, row: PlanRow) {
   };
 }
 
+/** H3: a rejected plan was discarded with its decision and is never saved again. */
+async function requireUnrejected(tx: Transaction, deploymentId: string) {
+  const decision = await tx.stage.findUnique({
+    where: { deploymentId_key: { deploymentId, key: PLAN_APPROVAL_STAGE_KEY } },
+  });
+  if (decision?.status === "failed")
+    throw new DeliveryError(
+      "CONFLICT",
+      "This deployment's saved plan was rejected and discarded",
+    );
+}
+
 export async function recordTofuPlan(
   this: Delivery,
   raw: RecordTofuPlan,
@@ -111,6 +122,7 @@ export async function recordTofuPlan(
         );
       return TofuPlanReceiptSchema.parse(existing.receipt);
     }
+    await requireUnrejected(tx, receipt.deploymentId);
     const row = required(
       await tx.deployment.findUnique({
         where: { id: receipt.deploymentId },
@@ -195,80 +207,4 @@ export async function tofuPlan(
     receipt: row.receipt,
     encryptedPlan: row.encryptedPlan,
   });
-}
-
-export const ApproveTofuPlanSchema = z.strictObject({
-  planDigest: z.string().regex(/^sha256:[a-f0-9]{64}$/u),
-  reason: z.string().trim().min(1).max(4000),
-});
-export type ApproveTofuPlan = z.infer<typeof ApproveTofuPlanSchema>;
-
-/**
- * The approve step of a model tofu recipe (section 5): a human approves the
- * exact unexpired saved plan this deployment produced before it applies.
- */
-export async function approveTofuPlan(
-  this: Delivery,
-  deploymentId: string,
-  raw: ApproveTofuPlan,
-  actor: Principal,
-) {
-  requireScope(actor, "approve");
-  const input = ApproveTofuPlanSchema.parse(raw);
-  const row = await this.database.deployment.findUniqueOrThrow({
-    where: { id: deploymentId },
-  });
-  const recipe = PipelineRevisionSchema.parse(
-    wire(
-      await this.database.pipeline.findUniqueOrThrow({
-        where: { id: row.pipelineRevisionId },
-      }),
-    ),
-  ).definition;
-  if (
-    recipe.kind !== "tofu" ||
-    !("steps" in recipe) ||
-    !recipe.steps.some((step) => step.kind === "approve")
-  )
-    throw new DeliveryError(
-      "INVALID",
-      "Only a model tofu recipe with an approve step takes a plan approval",
-    );
-  const plan = TofuPlanReceiptSchema.parse(
-    required(
-      await this.database.platformPlan.findUnique({ where: { deploymentId } }),
-      "Saved plan of this deployment",
-    ).receipt,
-  );
-  if (
-    plan.planDigest !== input.planDigest ||
-    Date.parse(plan.expiresAt) <= Date.now()
-  )
-    throw new DeliveryError(
-      "CONFLICT",
-      "Approval must name this deployment's exact unexpired saved plan",
-    );
-  return this.stage(
-    deploymentId,
-    {
-      key: PLAN_APPROVAL_STAGE_KEY,
-      status: "succeeded",
-      operationId: plan.planDigest,
-      message: `Approved by ${actor.id}`,
-      evidence: [
-        {
-          kind: "preflight",
-          operationId: plan.planDigest,
-          summary: JSON.stringify({
-            adapter: "tofu-plan-approval",
-            approver: actor.id,
-            planDigest: plan.planDigest,
-            changes: plan.changes,
-            reason: input.reason,
-          }),
-        },
-      ],
-    },
-    actor,
-  );
 }

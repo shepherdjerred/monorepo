@@ -12,7 +12,7 @@ const recorded: {
 async function record(
   _current: unknown,
   key: string,
-  status: "running" | "succeeded",
+  status: "running" | "succeeded" | "failed",
   receipt: { operationId: string; evidence?: EvidenceInput[] },
 ) {
   recorded.push({ key, status, evidence: receipt.evidence ?? [] });

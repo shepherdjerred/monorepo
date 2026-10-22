@@ -103,6 +103,19 @@ export const RecoveryIntentRequestSchema = z.strictObject({
 });
 export type RecoveryIntentRequest = z.infer<typeof RecoveryIntentRequestSchema>;
 
+/**
+ * `POST /deployments/:id/plan-approval` (approve, human): the one decision
+ * (4.13) on the exact unexpired saved plan a model `tofu` recipe's approve
+ * step waits for. `approved` lets the apply step run; `rejected` discards
+ * the plan and ends the deployment failed without applying (H3).
+ */
+export const ApproveTofuPlanSchema = z.strictObject({
+  decision: z.enum(["approved", "rejected"]),
+  planDigest: z.string().regex(/^sha256:[a-f0-9]{64}$/u),
+  reason: z.string().trim().min(1).max(4000),
+});
+export type ApproveTofuPlan = z.infer<typeof ApproveTofuPlanSchema>;
+
 /** `POST /deployments/:id/attestations`: operator-attested evidence for one stage (X13). */
 export const AttestationRequestSchema = z.strictObject({
   stage: IdentifierSchema,

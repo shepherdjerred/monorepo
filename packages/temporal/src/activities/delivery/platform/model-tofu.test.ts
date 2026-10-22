@@ -80,7 +80,9 @@ const saved = {
 };
 const plansPath = "platform/plans/deployment%2F1";
 
-function current(stages: { key: string; status: "running" | "succeeded" }[]) {
+function current(
+  stages: { key: string; status: "running" | "succeeded" | "failed" }[],
+) {
   const value = detail(tofu, archive, stages);
   api.responses.set("deployments/deployment%2F1", value);
   return value;
@@ -161,6 +163,25 @@ describe("model tofu steps (section 5, X8)", () => {
       expect.objectContaining({ key: "step-approve", status: "running" }),
       expect.objectContaining({ key: "step-approve", status: "succeeded" }),
     ]);
+  });
+
+  it("ends on a rejection: the approve step settles failed and nothing is applied", async () => {
+    current([
+      { key: "step-plan", status: "succeeded" },
+      { key: "step-approve", status: "running" },
+      { key: "approve/plan", status: "failed" },
+    ]);
+    await expect(
+      runDeliveryModelPlatformStep("deployment/1", "step-approve"),
+    ).rejects.toMatchObject({
+      type: "DeliveryPlanRejected",
+      nonRetryable: true,
+    });
+    // No stage is left running, so the failed deployment releases its locks.
+    expect(stageWrites()).toEqual([
+      expect.objectContaining({ key: "step-approve", status: "failed" }),
+    ]);
+    expect(api.calls.map((call) => call.path)).not.toContain(plansPath);
   });
 
   it("applies the saved plan this deployment produced and proves its state marker", async () => {

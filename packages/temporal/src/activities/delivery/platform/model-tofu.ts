@@ -1,3 +1,4 @@
+import { ApplicationFailure } from "@temporalio/activity";
 import { z } from "zod";
 import {
   RecordTofuPlanSchema,
@@ -110,10 +111,32 @@ async function plan(step: Step, runJob: typeof runDeliveryJob) {
   });
 }
 
-/** The approve step waits for a human approval of the exact saved plan. */
+/**
+ * The approve step waits for a human's one decision on the exact saved plan
+ * (4.13). A rejection (H3) settles the step failed, so no stage stays
+ * running and the failed deployment releases its locks; the plan was
+ * discarded with the decision and is never applied.
+ */
 async function approve(step: Step): Promise<{ waiting: boolean }> {
   const operationId = deliveryOperationId(step.current.deployment.id);
   const approval = stageOf(step.current, PLAN_APPROVAL_STAGE_KEY);
+  if (approval?.status === "failed") {
+    await recordStage(step.current, step.key, "failed", {
+      operationId,
+      message: `Saved plan ${approval.operationId} rejected: ${approval.message}`,
+      evidence: [
+        {
+          kind: "preflight",
+          operationId: approval.operationId,
+          summary: `Saved plan ${approval.operationId} rejected: ${approval.message}`,
+        },
+      ],
+    });
+    throw ApplicationFailure.nonRetryable(
+      `Saved plan ${approval.operationId} was rejected; nothing was applied`,
+      "DeliveryPlanRejected",
+    );
+  }
   if (approval?.status !== "succeeded") {
     if (stageOf(step.current, step.key) === undefined)
       await recordStage(step.current, step.key, "running", { operationId });

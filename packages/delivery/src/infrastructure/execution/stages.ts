@@ -47,75 +47,85 @@ export async function stage(
   actor: Principal,
 ) {
   const leaseSeconds = await this.policy.leaseSeconds();
-  return this.database.$transaction(async (tx) => {
-    const row = await runningDeployment(
-      tx,
-      deploymentId,
-      "Deployment must own the target before recording stages",
-    );
-    const existing = await tx.stage.findUnique({
-      where: { deploymentId_key: { deploymentId, key: input.key } },
-    });
-    if (existing === null && row.cancelRequested && input.status === "running")
-      throw new DeliveryError(
-        "CONFLICT",
-        "Cancellation was requested before this external mutation boundary",
-      );
-    if (existing !== null && existing.operationId !== input.operationId)
-      throw new DeliveryError(
-        "CONFLICT",
-        "Stage operation identity cannot change",
-      );
-    if (
-      existing !== null &&
-      existing.status !== "running" &&
-      (existing.status !== input.status || existing.message !== input.message)
-    )
-      throw new DeliveryError(
-        "CONFLICT",
-        "Completed stage cannot be rewritten",
-      );
-    const { evidence: items, ...data } = input;
-    const mc = /^minecraft-preservation-[1-9]\d*$/u.test(input.key)
-      ? LegacyPipelineRevisionSchema.parse(
-          wire(
-            required(
-              await tx.pipeline.findUnique({
-                where: { id: row.pipelineRevisionId },
-              }),
-              "Pipeline",
-            ),
-          ),
-        ).definition
-      : undefined;
-    const append = mc?.kind === "argocd" && mc.minecraftUpgrade !== undefined;
-    const updated = await tx.stage.upsert({
-      where: { deploymentId_key: { deploymentId, key: input.key } },
-      create: { id: id(), deploymentId, startedAt: new Date(), ...data },
-      update: data,
-    });
-    await evidence(
-      tx,
-      deploymentId,
-      items,
-      append ||
-        (row.kind === "upgrade-control-plane" && input.key === "control-plane")
-        ? { prefix: `stage/${input.key}`, appendOnly: true }
-        : `stage/${input.key}`,
-    );
-    // A recorded stage proves the executor is alive: it renews the lease.
-    await tx.deployment.update({
-      where: { id: deploymentId },
-      data: { leaseExpiresAt: leaseExpiry(leaseSeconds) },
-    });
-    await audit(tx, actor, {
-      action: "deployment.stage",
-      entityId: deploymentId,
-      requestId: input.operationId,
-      metadata: { stage: input.key, status: input.status },
-    });
-    return wire(updated);
+  return this.database.$transaction(async (tx) =>
+    recordStageIn(tx, deploymentId, input, { actor, leaseSeconds }),
+  );
+}
+
+/**
+ * Records one stage of a running deployment inside the caller's
+ * transaction, so a decision and the stage it settles commit together.
+ */
+export async function recordStageIn(
+  tx: Transaction,
+  deploymentId: string,
+  input: StageInput,
+  { actor, leaseSeconds }: { actor: Principal; leaseSeconds: number },
+) {
+  const row = await runningDeployment(
+    tx,
+    deploymentId,
+    "Deployment must own the target before recording stages",
+  );
+  const existing = await tx.stage.findUnique({
+    where: { deploymentId_key: { deploymentId, key: input.key } },
   });
+  if (existing === null && row.cancelRequested && input.status === "running")
+    throw new DeliveryError(
+      "CONFLICT",
+      "Cancellation was requested before this external mutation boundary",
+    );
+  if (existing !== null && existing.operationId !== input.operationId)
+    throw new DeliveryError(
+      "CONFLICT",
+      "Stage operation identity cannot change",
+    );
+  if (
+    existing !== null &&
+    existing.status !== "running" &&
+    (existing.status !== input.status || existing.message !== input.message)
+  )
+    throw new DeliveryError("CONFLICT", "Completed stage cannot be rewritten");
+  const { evidence: items, ...data } = input;
+  const mc = /^minecraft-preservation-[1-9]\d*$/u.test(input.key)
+    ? LegacyPipelineRevisionSchema.parse(
+        wire(
+          required(
+            await tx.pipeline.findUnique({
+              where: { id: row.pipelineRevisionId },
+            }),
+            "Pipeline",
+          ),
+        ),
+      ).definition
+    : undefined;
+  const append = mc?.kind === "argocd" && mc.minecraftUpgrade !== undefined;
+  const updated = await tx.stage.upsert({
+    where: { deploymentId_key: { deploymentId, key: input.key } },
+    create: { id: id(), deploymentId, startedAt: new Date(), ...data },
+    update: data,
+  });
+  await evidence(
+    tx,
+    deploymentId,
+    items,
+    append ||
+      (row.kind === "upgrade-control-plane" && input.key === "control-plane")
+      ? { prefix: `stage/${input.key}`, appendOnly: true }
+      : `stage/${input.key}`,
+  );
+  // A recorded stage proves the executor is alive: it renews the lease.
+  await tx.deployment.update({
+    where: { id: deploymentId },
+    data: { leaseExpiresAt: leaseExpiry(leaseSeconds) },
+  });
+  await audit(tx, actor, {
+    action: "deployment.stage",
+    entityId: deploymentId,
+    requestId: input.operationId,
+    metadata: { stage: input.key, status: input.status },
+  });
+  return wire(updated);
 }
 
 /** Kind-specific acceptance proof and side records of a successful result. */

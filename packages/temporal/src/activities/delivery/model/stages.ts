@@ -22,7 +22,7 @@ export function stageOf(current: DeploymentDetail, key: string) {
 export async function recordStage(
   current: DeploymentDetail,
   key: string,
-  status: "running" | "succeeded",
+  status: "running" | "succeeded" | "failed",
   receipt: {
     operationId: string;
     evidence?: EvidenceInput[];

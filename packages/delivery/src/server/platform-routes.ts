@@ -8,7 +8,7 @@ import {
 import { DeliveryError } from "#domain/error.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
-import { ApproveTofuPlanSchema } from "#infrastructure/platform/plans.ts";
+import { ApproveTofuPlanSchema } from "#shared/model/route-contract.ts";
 
 export function registerPlatformRoutes(
   app: Hono<{ Variables: { principal: Principal; requestId: string } }>,

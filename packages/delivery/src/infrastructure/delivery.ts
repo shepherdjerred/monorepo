@@ -92,7 +92,8 @@ import {
   findQualifiedArtifact,
 } from "./upstream-artifact.ts";
 import { createPlatformDeployment } from "./platform/requests.ts";
-import { approveTofuPlan, recordTofuPlan, tofuPlan } from "./platform/plans.ts";
+import { recordTofuPlan, tofuPlan } from "./platform/plans.ts";
+import { approveTofuPlan } from "./platform/plan-decision.ts";
 import { requestControlPlaneUpgrade } from "./control-plane/requests.ts";
 import {
   publishForumBundle,
