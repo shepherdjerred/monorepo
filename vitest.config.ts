@@ -227,8 +227,10 @@ export default {
           include: [
             ...defaultTestInclude,
             "../ci/scripts/**/*.{test,spec}.?(c|m)[jt]s?(x)",
-            // Qualified image reuse depends on the canonical ownership index.
+            // Qualified image reuse depends on the canonical ownership index
+            // and on the registry that names each build's owner.
             "../packages/ops-model/src/catalog.test.ts",
+            "../packages/ops-model/src/delivery-catalog/publication-owners.test.ts",
           ],
         }
       : {}),
