@@ -1,0 +1,11 @@
+{
+  "id": "webring/latest/1",
+  "definition": {
+    "kind": "channel",
+    "store": "npm",
+    "name": "webring",
+    "pointer": "latest",
+    "forwardOnly": false,
+    "artifactComponent": "archive:webring-package"
+  }
+}

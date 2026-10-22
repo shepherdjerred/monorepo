@@ -6,7 +6,29 @@
  * upstream chart's values pin. Everything else in a recipe is serialised from
  * the constructors by `catalog-revisions.ts`.
  */
-import type { Monitor } from "@shepherdjerred/delivery/model-contract";
+import type {
+  Monitor,
+  RecipeDefinition,
+} from "@shepherdjerred/delivery/model-contract";
+
+/**
+ * Channel environments (Delivery model, section 5): a release to an audience
+ * publishes the build's artifact to the store if absent, moves the pointer and
+ * reads it back. webring/latest is the npm `latest` dist-tag of the webring
+ * package; its tarball is the service's archive:webring-package component.
+ */
+export const CHANNEL_RECIPES: Readonly<
+  Record<string, Extract<RecipeDefinition, { kind: "channel" }>>
+> = {
+  "webring/latest": {
+    kind: "channel",
+    store: "npm",
+    name: "webring",
+    pointer: "latest",
+    forwardOnly: false,
+    artifactComponent: "archive:webring-package",
+  },
+};
 
 /**
  * Environments whose Application name differs from their service id. Every

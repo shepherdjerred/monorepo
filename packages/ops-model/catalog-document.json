@@ -635,6 +635,10 @@
         {
           "name": "archive:webring",
           "producer": "first-party"
+        },
+        {
+          "name": "archive:webring-package",
+          "producer": "first-party"
         }
       ],
       "ops": {
@@ -2820,6 +2824,14 @@
       "automatic": true,
       "recipeRevisionId": "webring/prod/1",
       "configurationRevisionId": "webring/prod/1"
+    },
+    {
+      "id": "webring/latest",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": false,
+      "recipeRevisionId": "webring/latest/1",
+      "configurationRevisionId": "webring/latest/1"
     },
     {
       "id": "better-skill-capped/prod",

@@ -23,6 +23,7 @@ import {
   FOLLOWING_COMPANIONS,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/companions/names.ts";
 import {
+  CHANNEL_RECIPES,
   ENVIRONMENT_APPLICATIONS,
   ENVIRONMENT_MONITORS,
   ENVIRONMENT_TESTS,
@@ -296,6 +297,40 @@ function compoundRecipe(
   });
 }
 
+/** A channel's artifact is its own component, never part of a site. */
+const CHANNEL_COMPONENTS: ReadonlySet<string> = new Set(
+  Object.values(CHANNEL_RECIPES).map((recipe) => recipe.artifactComponent),
+);
+
+/** The recipe kind an environment takes: a channel, a Tofu stack, a static site or Applications. */
+function environmentRevisions(
+  inputs: CatalogRevisionInputs,
+  environmentId: string,
+  serviceComponents: readonly { name: string }[],
+): {
+  definition: RecipeDefinition;
+  configuration: ReturnType<typeof configurationContent>;
+} {
+  const channel = CHANNEL_RECIPES[environmentId];
+  if (channel !== undefined)
+    return {
+      definition: RecipeDefinitionSchema.parse(channel),
+      configuration: { content: {}, forwardOnly: [] },
+    };
+  const serviceId = environmentService(environmentId);
+  if (serviceId.startsWith("tofu-"))
+    return tofuRevisions(inputs, environmentId);
+  const components = serviceComponents.filter(
+    (component) => !CHANNEL_COMPONENTS.has(component.name),
+  );
+  if (components.length === 1 && components[0]?.name === `archive:${serviceId}`)
+    return {
+      definition: staticSiteRevisions(inputs, environmentId),
+      configuration: { content: {}, forwardOnly: [] },
+    };
+  return kubernetesRevisions(inputs, environmentId);
+}
+
 function staticSiteRevisions(
   inputs: CatalogRevisionInputs,
   environmentId: string,
@@ -355,23 +390,11 @@ export function catalogRevisions(
     );
     if (service === undefined)
       throw new Error(`${environment.id} has no catalog service`);
-    const archives = service.components.filter((component) =>
-      component.name.startsWith("archive:"),
+    const generated = environmentRevisions(
+      inputs,
+      environment.id,
+      service.components,
     );
-    const isTofu = serviceId.startsWith("tofu-");
-    const isSite =
-      !isTofu &&
-      archives.length === 1 &&
-      service.components.length === 1 &&
-      archives[0]?.name === `archive:${serviceId}`;
-    const generated = isTofu
-      ? tofuRevisions(inputs, environment.id)
-      : isSite
-        ? {
-            definition: staticSiteRevisions(inputs, environment.id),
-            configuration: { content: {}, forwardOnly: [] },
-          }
-        : kubernetesRevisions(inputs, environment.id);
     revisions.set(environment.id, {
       recipe: {
         id: environment.recipeRevisionId,
