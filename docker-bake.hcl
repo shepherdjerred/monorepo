@@ -72,10 +72,11 @@ function "imagetags" {
 # Application pushes rewrite layer timestamps to SOURCE_DATE_EPOCH, so a
 # rebuild from byte-identical inputs reproduces the same layer diff_ids and
 # bake-images.ts classifies it content-unchanged instead of publishing a
-# duplicate. Smoke solves and local builds keep the default exporter.
+# duplicate. Smoke solves and local builds keep the default exporter, and only
+# an explicit `--push` (bake-images.ts) publishes this output.
 function "appoutput" {
   params = []
-  result = equal(PUSH_IMAGES, "true") ? ["type=image,push=true,rewrite-timestamp=true"] : []
+  result = equal(PUSH_IMAGES, "true") ? ["type=image,rewrite-timestamp=true"] : []
 }
 
 group "default" {

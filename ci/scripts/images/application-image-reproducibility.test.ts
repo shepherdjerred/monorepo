@@ -73,8 +73,10 @@ describe("application image reproducibility", () => {
     expect(app).toContain('SOURCE_DATE_EPOCH = "1767225600"');
     expect(app).toContain("output = appoutput()");
     expect(bake).toContain(
-      'result = equal(PUSH_IMAGES, "true") ? ["type=image,push=true,rewrite-timestamp=true"] : []',
+      'result = equal(PUSH_IMAGES, "true") ? ["type=image,rewrite-timestamp=true"] : []',
     );
+    // Only bake-images.ts's explicit `--push` may publish an image.
+    expect(bake).not.toContain("push=true");
   });
 
   test("every application install sees only its projected closure", async () => {
