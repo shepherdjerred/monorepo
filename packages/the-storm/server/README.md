@@ -117,6 +117,9 @@ before TheStorm and cannot obtain its generator then. TheStorm opens existing
 legacy or native creative terrain with its plot generator before enabling the
 module. Missing terrain, linked files, truncated region files, or two conflicting
 terrain stores stop startup; production never creates an empty replacement.
+On enable it freezes that world: random ticks are off, so leaves do not decay and
+crops do not grow, fire does not spread, vines and snow do not advance, and mob
+griefing, TNT, and block-breaking projectiles are off.
 Players enter with `/creative` and leave with
 `/creative leave`; the visit stores their survival body and gives them an empty
 creative one. Recovered plots are the `plots` list in `creative.yml` (a blank
