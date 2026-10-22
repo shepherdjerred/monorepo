@@ -431,7 +431,10 @@ rows.
   environment has no active Deployment and is one generation past the intent's
   expected generation, which is what
   [restoration](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/content-recovery/restoration.ts)
-  requires.
+  requires. In the other direction, every held barrier must own the
+  `shared-resources` lock, and at most one barrier may be held. Delivery takes
+  and releases a barrier together with that lock, and a held barrier blocks
+  every new claim.
 - The specialized-pointer check reads `acceptedPlatformDeploymentId`,
   `acceptedControlPlaneDeploymentId` and `acceptedForumBaselineIntentId`. Each
   must name a succeeded record of its own environment, of the kind that
@@ -493,6 +496,20 @@ WHERE NOT (
     )
   )
 )
+UNION ALL
+SELECT 'held barrier without platform lock', i.id, i."deploymentId"
+FROM "ContentRecoveryIntent" i
+WHERE i."dispatchBarrier" IS NOT NULL AND i."barrierRestoredAt" IS NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM "PlatformLock" p
+    WHERE p.id = 'shared-resources' AND p."deploymentId" = i."deploymentId"
+  )
+UNION ALL
+SELECT 'more than one held barrier', i.id, i."deploymentId"
+FROM "ContentRecoveryIntent" i
+WHERE i."dispatchBarrier" IS NOT NULL AND i."barrierRestoredAt" IS NULL
+  AND (SELECT count(*) FROM "ContentRecoveryIntent" o
+       WHERE o."dispatchBarrier" IS NOT NULL AND o."barrierRestoredAt" IS NULL) > 1
 ORDER BY 1, 2;
 SELECT 'platform' AS pointer, e.id AS environment,
        e."acceptedPlatformDeploymentId" AS record
