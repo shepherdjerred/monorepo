@@ -411,8 +411,10 @@ protected source is `delivery/pgdata-delivery-postgresql-0`; the inert,
 restricted destination is `delivery-catalog-recovery/pgdata-delivery-postgresql-0`.
 Restore only the reviewed PV/PVC backup and its complete snapshot chain into
 that destination, never application controllers, Secrets or service accounts.
-The destination has no network access or application writer and is excluded
-from new backups.
+The destination has no application writer and is excluded from new backups.
+Its deny-all NetworkPolicy is not enforced by the current Flannel CNI, so the
+how-to keeps the verification Pod offline by configuration and requires proof
+that it holds no socket.
 
 Require completed snapshots, distinct PV/CSI handles, matching server major
 version, successful crash recovery/checksums and catalog/audit/lock/outbox

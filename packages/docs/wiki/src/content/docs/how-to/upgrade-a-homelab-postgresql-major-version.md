@@ -36,7 +36,7 @@ own the desired state.
 Create a standalone full backup of the selected database's PV and PVC. Wait for
 the volume snapshot to finish; a completed backup record alone is insufficient.
 Restore only those resources into an isolated namespace with no application
-controllers, credentials, service-account token, or network access.
+controllers, credentials, or service-account token.
 
 Classify the exact restore namespace and PVC name in the
 [backup policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/backup-policy/pvc-backup-policy.json)
@@ -193,7 +193,7 @@ spec:
           echo "== controldata before start"; control
           stop() { "$BIN/pg_ctl" -D "$D" -m fast -w -t 300 stop || true; exit 143; }
           trap stop TERM INT
-          "$BIN/pg_ctl" -D "$D" -w -t 900 start -o "-c listen_addresses='' -c unix_socket_directories=/tmp -c ssl=off -c archive_mode=off -c default_transaction_read_only=on -c logging_collector=off -c log_destination=stderr -c shared_preload_libraries=PRELOAD_LIBRARIES"
+          "$BIN/pg_ctl" -D "$D" -w -t 900 start -o "-c listen_addresses='' -c unix_socket_directories=/tmp -c ssl=off -c archive_mode=off -c default_transaction_read_only=on -c logging_collector=off -c log_destination=stderr -c timescaledb.telemetry_level=off -c shared_preload_libraries=PRELOAD_LIBRARIES"
           while [ ! -f /tmp/stop ]; do sleep 2 & wait $!; done
           trap - TERM INT
           "$BIN/pg_ctl" -D "$D" -m fast -w -t 300 stop
@@ -235,6 +235,7 @@ starts. Each setting has one job:
 | `archive_mode=off`                                     | The copy must never ship WAL to production's archive.                                                                                                                                               |
 | `default_transaction_read_only=on`                     | Checks cannot write to the copy by accident.                                                                                                                                                        |
 | `logging_collector=off`, `log_destination=stderr`      | Recovery and shutdown appear in `kubectl logs`.                                                                                                                                                     |
+| `timescaledb.telemetry_level=off`                      | TimescaleDB otherwise sends telemetry over the network.                                                                                                                                             |
 | Preload list without `bg_mon` and `pg_cron`            | `bg_mon` opens an HTTP listener, and `pg_cron` runs scheduled jobs.                                                                                                                                 |
 | Wait for `/tmp/stop`, then stop and run `pg_checksums` | `pg_checksums` needs a cleanly stopped cluster in the same container.                                                                                                                               |
 
@@ -245,6 +246,21 @@ accept connections`.
 
 ```bash
 kubectl -n RECOVERY_NAMESPACE logs -f postgresql-verify
+```
+
+:::caution[The restore namespace's NetworkPolicy is not enforced]
+The homelab CNI is Flannel without a NetworkPolicy controller
+([agent task boundary](/explanation/temporal/agent-task-boundary/)). The
+namespace's deny-all policy therefore blocks nothing. The copy stays offline
+only because nothing in the Pod opens a connection.
+:::
+
+Confirm that the copy holds no TCP or UDP socket. The command must print
+nothing. If it prints a socket, delete the Pod before running any check.
+
+```bash
+kubectl -n RECOVERY_NAMESPACE exec postgresql-verify -c postgres -- \
+  sh -c 'cat /proc/net/tcp* /proc/net/udp* | grep -v local_address || true'
 ```
 
 ### Check the copy
@@ -343,7 +359,8 @@ WHERE e."activeDeploymentId" IS NOT NULL
 UNION ALL
 SELECT 'platform-lock', p.id, d.id, d.status, d."recoveryRequired",
        p.id = 'shared-resources'
-         AND EXISTS (SELECT 1 FROM "Environment" e WHERE e."activeDeploymentId" = d.id)
+         AND EXISTS (SELECT 1 FROM "Environment" e
+                     WHERE e.id = d."environmentId" AND e."activeDeploymentId" = d.id)
 FROM "PlatformLock" p
 JOIN "Deployment" d ON d.id = p."deploymentId"
 UNION ALL
@@ -388,22 +405,30 @@ An active pointer is `consistent` when it names a Deployment of its own
 environment that is either `running` without `recoveryRequired`, or `failed`
 or `canceled` with it. That Deployment must also hold any platform lock it
 needs. A platform lock is `consistent` when its ID is `shared-resources` and
-its owner is an active Deployment.
+its owner is the active Deployment of its own environment.
 A running or quarantined Deployment that is not its environment's active one
 appears as `unheld` and is never consistent. Each consistent row is running or
 quarantined work that the backup captured.
 Reconcile every row with Temporal and native state before resuming
 submissions.
 
-The next two checks name v1-only schema: the `ApplicationLock` table, and the
-`configurationRevision` and `configuration` columns on `Environment` and
-`Deployment`. Delivery's v2 schema replaces them with `TargetLock` and a
-`Configuration` table, so these queries fail there. Run them only against a v1
-catalog. Both must return no rows. The first shows an active Deployment
-without the lock on its own target, or a target lock whose owner is not active.
-The claim derives the target from the pipeline: `static-site:<bucket>`,
-`tofu:<stack>`, or otherwise the environment's application. The second shows a
-configuration label that carries two contents.
+The next three checks name v1-only schema, which Delivery's v2 schema removes,
+so they fail there. Run them only against a v1 catalog. Each must return no
+rows.
+
+- The lock check reads `ApplicationLock` and `ContentRecoveryIntent`. It shows
+  an active Deployment without the lock on its own target, or a target lock
+  whose owner is not active. The claim derives the target from the pipeline:
+  `static-site:<bucket>`, `tofu:<stack>`, or otherwise the environment's
+  application. It also shows a platform lock whose owner neither needs it nor
+  is a [content recovery](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/content-recovery/checkpoints.ts)
+  holding its producer barrier.
+- The specialized-pointer check reads `acceptedPlatformDeploymentId`,
+  `acceptedControlPlaneDeploymentId` and `acceptedForumBaselineIntentId`. Each
+  must name a succeeded record of its own environment, of the kind that
+  `acceptedPointers` or forum baseline settlement would accept.
+- The label check reads `configurationRevision` and `configuration` on
+  `Environment` and `Deployment`. It shows a label that carries two contents.
 
 ```sql
 SELECT 'active without target lock' AS problem, e.id AS scope,
@@ -427,6 +452,47 @@ FROM "ApplicationLock" a
 WHERE NOT EXISTS (
   SELECT 1 FROM "Environment" e WHERE e."activeDeploymentId" = a."deploymentId"
 )
+UNION ALL
+SELECT 'platform lock without eligible owner', p.id, p."deploymentId"
+FROM "PlatformLock" p
+JOIN "Deployment" d ON d.id = p."deploymentId"
+WHERE NOT (d.kind = 'upgrade-control-plane'
+    OR (d."platformSnapshot" IS NOT NULL AND d.kind <> 'tofu-plan'))
+  AND NOT EXISTS (
+    SELECT 1 FROM "ContentRecoveryIntent" i
+    WHERE i."deploymentId" = d.id
+      AND i."dispatchBarrier" IS NOT NULL AND i."barrierRestoredAt" IS NULL
+  )
+ORDER BY 1, 2;
+SELECT 'platform' AS pointer, e.id AS environment,
+       e."acceptedPlatformDeploymentId" AS record
+FROM "Environment" e
+WHERE e."acceptedPlatformDeploymentId" IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM "Deployment" d
+    WHERE d.id = e."acceptedPlatformDeploymentId" AND d."environmentId" = e.id
+      AND d.status = 'succeeded' AND d.kind IN ('root-release', 'tofu-apply')
+      AND (d."platformSnapshot" IS NOT NULL OR d."controlPlaneSnapshot" IS NOT NULL)
+  )
+UNION ALL
+SELECT 'control-plane', e.id, e."acceptedControlPlaneDeploymentId"
+FROM "Environment" e
+WHERE e."acceptedControlPlaneDeploymentId" IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM "Deployment" d
+    WHERE d.id = e."acceptedControlPlaneDeploymentId" AND d."environmentId" = e.id
+      AND d.status = 'succeeded' AND d.kind = 'upgrade-control-plane'
+      AND (d."platformSnapshot" IS NOT NULL OR d."controlPlaneSnapshot" IS NOT NULL)
+  )
+UNION ALL
+SELECT 'forum-baseline', e.id, e."acceptedForumBaselineIntentId"
+FROM "Environment" e
+WHERE e."acceptedForumBaselineIntentId" IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM "ForumBaselineIntent" f
+    WHERE f.id = e."acceptedForumBaselineIntentId" AND f."environmentId" = e.id
+      AND f.status = 'succeeded' AND f."finishedAt" IS NOT NULL
+  )
 ORDER BY 1, 2;
 SELECT label, count(DISTINCT content) AS contents
 FROM (
