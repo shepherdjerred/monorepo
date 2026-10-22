@@ -307,14 +307,16 @@ SELECT 'active' AS holder, e.id AS scope, d.id AS deployment, d.status,
        d."recoveryRequired",
        d."environmentId" = e.id
          AND ((d.status = 'running' AND d."finishedAt" IS NULL)
-           OR (d."finishedAt" IS NOT NULL AND d."recoveryRequired")) AS consistent
+           OR (d."finishedAt" IS NOT NULL AND d."recoveryRequired"))
+         AND (d."platformSnapshot" IS NULL OR d.kind = 'tofu-plan'
+           OR EXISTS (SELECT 1 FROM "PlatformLock" p WHERE p."deploymentId" = d.id))
+         AS consistent
 FROM "Environment" e
 LEFT JOIN "Deployment" d ON d.id = e."activeDeploymentId"
 WHERE e."activeDeploymentId" IS NOT NULL
 UNION ALL
 SELECT 'platform-lock', p.id, d.id, d.status, d."recoveryRequired",
-       (d.status = 'running' AND d."finishedAt" IS NULL)
-         OR (d."finishedAt" IS NOT NULL AND d."recoveryRequired")
+       EXISTS (SELECT 1 FROM "Environment" e WHERE e."activeDeploymentId" = d.id)
 FROM "PlatformLock" p
 JOIN "Deployment" d ON d.id = p."deploymentId"
 ORDER BY 1, 2;
@@ -334,29 +336,42 @@ nor a
 [TRMNL repair](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/README.md)
 moves an accepted pointer.
 
-A Deployment takes its locks and its environment's active pointer in the same
-transaction that sets it `running`. After it finishes, it keeps them only when
-`recoveryRequired` holds the work in quarantine
+A Deployment takes its target lock, its environment's active pointer and, for
+a platform operation other than `tofu-plan`, the shared
+[platform lock](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/platform/lifecycle.ts)
+in the same transaction that sets it `running`. After it finishes, it keeps
+them only when `recoveryRequired` holds the work in quarantine
 ([claim and release logic](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/delivery-execution.ts)).
-A row is `consistent` only in one of those two states, and only when an active
-pointer names a Deployment of its own environment. Each consistent row is
-running or quarantined work that the backup captured. Reconcile every row with
-Temporal and native state before resuming submissions.
+An active pointer is `consistent` when it names a Deployment of its own
+environment in one of those two states that also holds any platform lock it
+needs. A platform lock is `consistent` when its owner is an active Deployment.
+Each consistent row is running or quarantined work that the backup captured.
+Reconcile every row with Temporal and native state before resuming
+submissions.
 
 The next two checks name v1-only schema: the `ApplicationLock` table, and the
 `configurationRevision` and `configuration` columns on `Environment` and
 `Deployment`. Delivery's v2 schema replaces them with `TargetLock` and a
 `Configuration` table, so these queries fail there. Run them only against a v1
-catalog. Every application lock must be `consistent`. The label query must
-return no rows, meaning each configuration label carries one content.
+catalog. Both must return no rows. The first shows an active Deployment without
+its target lock, or a target lock whose owner is not active. The second shows
+a configuration label that carries two contents.
 
 ```sql
-SELECT a.application, d.id AS deployment, d.status, d."recoveryRequired",
-       (d.status = 'running' AND d."finishedAt" IS NULL)
-         OR (d."finishedAt" IS NOT NULL AND d."recoveryRequired") AS consistent
+SELECT 'active without target lock' AS problem, e.id AS scope,
+       e."activeDeploymentId" AS deployment
+FROM "Environment" e
+WHERE e."activeDeploymentId" IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM "ApplicationLock" a WHERE a."deploymentId" = e."activeDeploymentId"
+  )
+UNION ALL
+SELECT 'target lock without active owner', a.application, a."deploymentId"
 FROM "ApplicationLock" a
-JOIN "Deployment" d ON d.id = a."deploymentId"
-ORDER BY 1;
+WHERE NOT EXISTS (
+  SELECT 1 FROM "Environment" e WHERE e."activeDeploymentId" = a."deploymentId"
+)
+ORDER BY 1, 2;
 SELECT label, count(DISTINCT content) AS contents
 FROM (
   SELECT "configurationRevision" AS label, configuration AS content FROM "Environment"
