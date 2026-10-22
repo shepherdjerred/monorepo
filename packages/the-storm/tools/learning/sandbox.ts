@@ -17,10 +17,8 @@ import { InferenceClient } from "./inference.ts";
 import { InferenceLoadClient } from "./load-client.ts";
 import { gameplayFixtures } from "#e2e/gameplay-fixtures.ts";
 import { copyStormDatabase } from "#e2e/harness/storm-data.ts";
-import {
-  docker,
-  serverLogs,
-} from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
+import { docker } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
+import { serverLogs } from "#e2e/harness/external/files.ts";
 import { openNativeObserver } from "#learning/native/observer.ts";
 import { stageMap } from "#learning/maps/stage.ts";
 import { trainingMaps } from "#learning/maps/plan.ts";

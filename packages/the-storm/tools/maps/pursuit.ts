@@ -3,7 +3,7 @@ import { randomBytes } from "node:crypto";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
-import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
+import { serverLogs } from "#e2e/harness/external/files.ts";
 import { startFakeBrain } from "#e2e/harness/fake-brain.ts";
 import { startServer } from "#e2e/harness/server.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";

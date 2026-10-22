@@ -7,6 +7,7 @@ import {
   waitForMessage,
   waitUntil,
 } from "#e2e/harness/bot.ts";
+import { brainControlUrl } from "#e2e/harness/fake-brain.ts";
 
 const Probe = z.object({
   zombieAdult: z.boolean(),
@@ -28,15 +29,12 @@ describe("beginner's luck on native Paper", () => {
     server,
     secondBot,
   }) => {
-    const host = Bun.env["STORM_E2E_BRAIN_HOST"] ?? "127.0.0.1";
-    const response = await fetch(
-      `http://${host}:${brain.port.toString()}/v1/__control/beginners`,
-      {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify([bot.player.uuid]),
-      },
-    );
+    const beginners = brainControlUrl(brain.port, "/v1/__control/beginners");
+    const response = await fetch(beginners, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify([bot.player.uuid]),
+    });
     expect(response.ok).toBe(true);
     await disconnectBot(bot);
     const player = await connectBot({
@@ -134,14 +132,11 @@ describe("beginner's luck on native Paper", () => {
     } finally {
       await disconnectBot(player);
       await disconnectBot(veteran);
-      const reset = await fetch(
-        `http://${host}:${brain.port.toString()}/v1/__control/beginners`,
-        {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: "[]",
-        },
-      );
+      const reset = await fetch(beginners, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "[]",
+      });
       expect(reset.ok).toBe(true);
     }
   }, 90_000);

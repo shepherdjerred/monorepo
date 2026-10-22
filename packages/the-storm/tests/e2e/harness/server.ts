@@ -34,6 +34,7 @@ import { stageRwf } from "./rwf-staging.ts";
 import { RconClient } from "#e2e/harness/rcon.ts";
 import { stageWorld } from "./world-copy.ts";
 import { serverIcon } from "./paths.ts";
+import { ExternalServerShape } from "#e2e/harness/external/inputs.ts";
 
 const ownerLabel = "the-storm.e2e";
 const pidLabel = "the-storm.e2e.pid";
@@ -45,7 +46,7 @@ const ConnectionShape = {
   rconPassword: z.string().min(16),
 };
 
-// A run started by us in Docker, or a CI sidecar with a shared log file.
+// A run started by us in Docker, or an already-running server (external/inputs.ts).
 export const ServerInfoSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("container"),
@@ -53,11 +54,7 @@ export const ServerInfoSchema = z.discriminatedUnion("kind", [
     bootMs: z.number(),
     ...ConnectionShape,
   }),
-  z.object({
-    kind: z.literal("external"),
-    logFile: z.string().min(1),
-    ...ConnectionShape,
-  }),
+  z.object({ ...ExternalServerShape, ...ConnectionShape }),
 ]);
 export type ServerInfo = z.infer<typeof ServerInfoSchema>;
 

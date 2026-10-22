@@ -4,7 +4,7 @@ import { describe, expect } from "vitest";
 import { test } from "./fixtures.ts";
 import { waitUntil } from "./harness/bot.ts";
 import { eventually } from "./harness/rwf-match.ts";
-import { serverLogs } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
+import { serverLogs } from "#e2e/harness/external/files.ts";
 
 const bridgeDeck = [1, 2, 3].map((z) => new Vec3(400, -54, z));
 const piston = new Vec3(408, -45, 0);

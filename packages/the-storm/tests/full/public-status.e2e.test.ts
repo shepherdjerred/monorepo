@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import { describe, expect } from "vitest";
 import { z } from "zod";
 import { test } from "#e2e/fixtures.ts";
+import type { ServerInfo } from "#e2e/harness/server.ts";
 import { docker } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.ts";
 import { parsePortBinding } from "@shepherdjerred/mc-harness/providers/docker/paper-container.ts";
 import {
@@ -85,18 +86,26 @@ async function query(host: string, port: number) {
   }
 }
 
+/** Paper's UDP Query listener: the Docker binding, or the declared external port. */
+async function queryEndpoint(server: ServerInfo) {
+  if (server.kind === "container") {
+    const { stdout } = await docker(["port", server.containerId, "25565/udp"]);
+    return parsePortBinding(stdout);
+  }
+  if (server.queryPort === null)
+    throw new Error(
+      "STORM_E2E_QUERY_PORT must declare the external server's Query port",
+    );
+  return { host: server.host, port: server.queryPort };
+}
+
 describe("public Query on real Paper", () => {
   test("tracks Java joins, vanish, reveal and quits without exposing plugin inventory", async ({
     server,
     bot,
     rcon,
   }) => {
-    if (server.kind !== "container")
-      throw new Error(
-        "This local acceptance test requires the Docker UDP binding",
-      );
-    const { stdout } = await docker(["port", server.containerId, "25565/udp"]);
-    const endpoint = parsePortBinding(stdout);
+    const endpoint = await queryEndpoint(server);
     const read = () => query(endpoint.host, endpoint.port);
     const before = await read();
     expect(before.identity).toBe(publicContract.queryIdentity);
@@ -106,7 +115,7 @@ describe("public Query on real Paper", () => {
       uuid: bot.player.uuid,
     });
     expect(before.count).toBe(before.names.length);
-    // GS4 caches full responses for five seconds. These waits belong to local acceptance only.
+    // GS4 caches full responses for five seconds. These waits belong to extended acceptance only, never CI.
     await rcon.command(`op ${bot.username}`);
     bot.chat("/vanish");
     await new Promise((resolve) => setTimeout(resolve, 6000));
