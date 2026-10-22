@@ -7,6 +7,7 @@ import {
 } from "#shared/model/monitor-contract.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
+import { TargetRemovedSchema } from "#infrastructure/execution/removal.ts";
 import { environment } from "#infrastructure/delivery-data.ts";
 import { rollbackCandidates } from "#infrastructure/selection/candidates.ts";
 
@@ -49,6 +50,19 @@ export function registerSelectionRoutes(
       await delivery.recordDrift(
         c.req.param("id"),
         DriftObservationSchema.parse(await c.req.json()),
+        c.get("principal"),
+      ),
+    ),
+  );
+  app.get("/api/v1/removals", async (c) => {
+    requireScope(c.get("principal"), "execute");
+    return c.json({ removals: await delivery.pendingRemovals() });
+  });
+  app.post("/api/v1/environments/:id/removed", async (c) =>
+    c.json(
+      await delivery.recordTargetRemoved(
+        c.req.param("id"),
+        TargetRemovedSchema.parse(await c.req.json()),
         c.get("principal"),
       ),
     ),

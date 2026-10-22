@@ -53,10 +53,12 @@ import {
   observeDeliveryDrift,
   observeDeliveryMonitors,
 } from "./model/monitor.ts";
+import { removeDeliveryTargets } from "./model/removal.ts";
 
 export const deliveryActivities = {
   observeDeliveryMonitors,
   observeDeliveryDrift,
+  removeDeliveryTargets,
   planDeliveryModel,
   renewDeliveryLease,
   runDeliveryModelStep,

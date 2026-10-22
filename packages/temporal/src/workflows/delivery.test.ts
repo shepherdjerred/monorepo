@@ -80,6 +80,7 @@ function quietDispatchActivities() {
     dispatchDeliveryPlatformRecoveries: () => Promise.resolve(),
     observeDeliveryMonitors: () => ({ observed: 0 }),
     observeDeliveryDrift: () => ({ recorded: 0 }),
+    removeDeliveryTargets: () => ({ removed: 0 }),
   };
 }
 

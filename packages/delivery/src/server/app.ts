@@ -150,7 +150,7 @@ export function createApp(options: Options) {
         // A restore runs while writes are paused; it only sets or settles
         // holds and never moves an accepted pointer (section 6).
         c.req.path === "/api/v1/reconcile-after-restore" ||
-        /^\/api\/v1\/environments\/[^/]+\/restore-hold\/accept$/.test(
+        /^\/api\/v1\/environments\/[^/]+\/(?:restore-hold\/accept|removed)$/.test(
           c.req.path,
         );
       const settlesStage = await settlesExistingStage(

@@ -41,6 +41,10 @@ import { requestMonitorRollback } from "#infrastructure/monitor/restoration.ts";
 import { recordDrift, selfHealing } from "#infrastructure/monitor/drift.ts";
 import { attestStage } from "#infrastructure/execution/attestation.ts";
 import {
+  pendingRemovals,
+  recordTargetRemoved,
+} from "#infrastructure/execution/removal.ts";
+import {
   coldStartRequirement,
   reconcileAfterRestore,
   recordColdStartReceipt,
@@ -162,6 +166,8 @@ export class Delivery {
   requestMonitorRollback = requestMonitorRollback;
   selfHealing = selfHealing;
   attestStage = attestStage;
+  pendingRemovals = pendingRemovals;
+  recordTargetRemoved = recordTargetRemoved;
   recordDrift = recordDrift;
   coldStartRequirement = coldStartRequirement;
   recordColdStartReceipt = recordColdStartReceipt;

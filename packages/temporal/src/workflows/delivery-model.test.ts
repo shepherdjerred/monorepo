@@ -179,6 +179,10 @@ describe("Delivery model step executor (T3)", () => {
         observed.push("drift");
         return { recorded: 0 };
       },
+      removeDeliveryTargets: () => {
+        observed.push("removals");
+        return { removed: 0 };
+      },
     };
     try {
       await replayFixture(environment, {
@@ -197,7 +201,7 @@ describe("Delivery model step executor (T3)", () => {
           }),
         ),
       );
-      expect(observed.toSorted()).toEqual(["drift", "monitors"]);
+      expect(observed.toSorted()).toEqual(["drift", "monitors", "removals"]);
     } finally {
       await environment.teardown();
     }

@@ -102,10 +102,11 @@ export const DELIVERY_REPLICATION_PATCH = "delivery-dispatch-replication-v1";
 export const DELIVERY_MODEL_EXECUTOR_PATCH = "delivery-model-executor-v1";
 
 /**
- * Monitors and self-heal drift are observed once per dispatch tick (4.19, T4).
- * Ticks recorded before them replay without these Activities.
+ * Once per dispatch tick: monitors and self-heal drift are observed and
+ * removed environments' Applications are deleted (4.19, T4, 4.10). Ticks
+ * recorded before them replay without these Activities.
  */
-export const DELIVERY_MONITOR_PATCH = "delivery-dispatch-monitor-v1";
+export const DELIVERY_DISPATCH_MODEL_PATCH = "delivery-dispatch-model-v1";
 
 /** Artifacts replicated per dispatch tick; the rest wait for the next one. */
 const REPLICATIONS_PER_DISPATCH = 10;
@@ -289,11 +290,12 @@ async function settleModelAcceptance(deploymentId: string) {
     );
 }
 
-/** Both observations run whatever dispatch did; failures surface after it. */
+/** Every observation runs whatever dispatch did; failures surface after it. */
 async function observeAcceptedSelections(): Promise<unknown[]> {
   const outcomes = await Promise.allSettled([
     observation.observeDeliveryMonitors(),
     observation.observeDeliveryDrift(),
+    observation.removeDeliveryTargets(),
   ]);
   const failures: unknown[] = [];
   for (const outcome of outcomes)
@@ -324,7 +326,7 @@ export async function deliveryDispatchWorkflow() {
     metadata.dispatchDeliveryForumBaselines(),
     metadata.dispatchDeliveryPlatformRecoveries(),
   ]);
-  const observationFailures = patched(DELIVERY_MONITOR_PATCH)
+  const observationFailures = patched(DELIVERY_DISPATCH_MODEL_PATCH)
     ? await observeAcceptedSelections()
     : [];
   if (dispatched.status === "rejected") throw dispatched.reason;

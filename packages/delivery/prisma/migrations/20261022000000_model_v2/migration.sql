@@ -230,6 +230,8 @@ ALTER TABLE "Approval" ADD COLUMN "boundFingerprint" TEXT;
 ALTER TABLE "Approval" ADD COLUMN "decidedAt" TIMESTAMP(3);
 -- Section 6: reconcile-after-restore holds automatic deployments on a mismatch.
 ALTER TABLE "Environment" ADD COLUMN "restoreHold" JSONB;
+-- 4.10: a removed environment records when its target state was destroyed.
+ALTER TABLE "Environment" ADD COLUMN "targetRemovedAt" TIMESTAMP(3);
 -- H5: a monitor-created rollback carries the restored selection's approval.
 ALTER TABLE "Approval" ADD COLUMN "restorationOfDeploymentId" TEXT REFERENCES "Deployment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 UPDATE "Approval" a
