@@ -27,6 +27,7 @@ import { runMinecraftUpgradeStep } from "./minecraft-upgrade.ts";
 import { runChannelStep } from "./channel.ts";
 import { stepLease, withLeaseRenewal } from "./lease.ts";
 import { runStaticSiteStep } from "./static-site.ts";
+import { runArchiveStep } from "./archive.ts";
 import type { ColdStartWrite } from "#lib/delivery/model/oracle-inputs.ts";
 import {
   deploymentDetail,
@@ -97,6 +98,9 @@ async function runKubernetesStep(
       await runStaticSiteStep(current, step.policy, key);
       return { waiting: false };
     case "archive":
+      requireSettledBefore(steps, current.stages, key);
+      await runArchiveStep(current, step.archiveComponent, key);
+      return { waiting: false };
     case "forum-bundle":
       return missingAdapter(step.kind);
   }

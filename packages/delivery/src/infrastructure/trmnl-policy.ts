@@ -4,9 +4,13 @@ import type {
   StoredRecipeDefinition,
   VersionSetRevision,
 } from "#shared/contract.ts";
-import { applicationOf, trmnlPluginsOf } from "#shared/model/recipe-view.ts";
+import {
+  applicationOf,
+  specializedStageKey,
+  trmnlPluginsOf,
+} from "#shared/model/recipe-view.ts";
 import type { Transaction } from "./delivery-data.ts";
-import { version } from "./delivery-data.ts";
+import { recordedByStage, version } from "./delivery-data.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
 
 export function validateTrmnlSelection(
@@ -56,11 +60,10 @@ export async function validateTrmnlSuccess(
   const selected = await version(tx, input.versionSetRevisionId);
   validateTrmnlSelection(pipeline, selected);
   const archive = selected.components[plugins.archiveComponent];
-  const expectedOperation = deliveryOperationId(`${input.id}:trmnl-plugins`);
+  const key = specializedStageKey(pipeline, "archive");
+  const expectedOperation = deliveryOperationId(`${input.id}:${key}`);
   const stage = await tx.stage.findUnique({
-    where: {
-      deploymentId_key: { deploymentId: input.id, key: "trmnl-plugins" },
-    },
+    where: { deploymentId_key: { deploymentId: input.id, key } },
   });
   const evidence = await tx.evidence.findMany({
     where: {
@@ -78,7 +81,7 @@ export async function validateTrmnlSuccess(
     }
     const result = AcceptanceSchema.safeParse(parsed);
     return (
-      item.id.startsWith(`${input.id}/stage/trmnl-plugins/`) &&
+      recordedByStage(item.id, input.id, key) &&
       result.success &&
       result.data.archiveArtifactId === archive?.id &&
       result.data.archiveDigest === archive.digest &&

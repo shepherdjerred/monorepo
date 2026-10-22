@@ -17,6 +17,29 @@ import { configureTrmnlPlugins } from "#lib/delivery/trmnl.ts";
 import { trmnlRepairClaim, verifyTrmnlRepairBackend } from "./trmnl-repair.ts";
 import { executorIdentity } from "./model/stages.ts";
 
+/** The TRMNL API and the `delivery-artifacts` plugin reader this worker's credentials reach. */
+export function liveTrmnlClients(signal: AbortSignal) {
+  return {
+    client: createTrmnlPluginClient({
+      token: z.string().min(1).parse(Bun.env["TRMNL_API_KEY"]),
+      signal,
+    }),
+    readArchive: createTrmnlArchiveReader(
+      {
+        accessKeyId: z
+          .string()
+          .min(1)
+          .parse(Bun.env["DELIVERY_TRMNL_S3_ACCESS_KEY_ID"]),
+        secretAccessKey: z
+          .string()
+          .min(1)
+          .parse(Bun.env["DELIVERY_TRMNL_S3_SECRET_ACCESS_KEY"]),
+      },
+      signal,
+    ),
+  };
+}
+
 export async function applyDeliveryTrmnlPlugins(
   id: string,
 ): Promise<EvidenceInput[]> {
@@ -66,25 +89,7 @@ export async function applyTrmnlWithClients(
     detail.versionSet.components[pipeline.trmnlPlugins.archiveComponent];
   if (archive?.kind !== "archive")
     throw new Error("Missing frozen TRMNL plugin archive");
-  const clients = effects ?? {
-    client: createTrmnlPluginClient({
-      token: z.string().min(1).parse(Bun.env["TRMNL_API_KEY"]),
-      signal,
-    }),
-    readArchive: createTrmnlArchiveReader(
-      {
-        accessKeyId: z
-          .string()
-          .min(1)
-          .parse(Bun.env["DELIVERY_TRMNL_S3_ACCESS_KEY_ID"]),
-        secretAccessKey: z
-          .string()
-          .min(1)
-          .parse(Bun.env["DELIVERY_TRMNL_S3_SECRET_ACCESS_KEY"]),
-      },
-      signal,
-    ),
-  };
+  const clients = effects ?? liveTrmnlClients(signal);
   const bundle = await readTrmnlArchive(archive, clients.readArchive);
   const operationId = deliveryOperationId(`${id}:trmnl-plugins`);
   const stage = async (
