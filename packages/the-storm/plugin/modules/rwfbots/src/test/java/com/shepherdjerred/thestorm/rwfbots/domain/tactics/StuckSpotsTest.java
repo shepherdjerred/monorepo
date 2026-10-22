@@ -532,4 +532,31 @@ final class StuckSpotsTest {
     assertThat(RecoverySteps.stranded(situation(nav, self, Optional.empty(), 100), context(nav)))
         .isTrue();
   }
+
+  @Test
+  void aBotBesideAFirePocketWithNoWayOutNeverStepsIntoItAndJumpsForItsBank() {
+    // floating-isles: two nodes on a netherrack patch between permanent fires lead only to each
+    // other. A burning acrobat dropped in, bobbed between them for six minutes and burned to death.
+    // Its one bank lies a block up: a dry body must jump for it, as no walk climbs a block.
+    var nav = nav("floating-isles");
+    var graph = nav.graph();
+    var spawn = nav.approachNode(nav.sites().spawns().getFirst()).orElseThrow();
+    var pocket = graph.nearestNode(new Vec3(4221.5, 86, 2096.5)).orElseThrow();
+    assertThat(graph.reachable(pocket, spawn)).as("the pocket has no way out").isFalse();
+    var above = combatant(1, RED, new Vec3(4221.5, 88, 2095.5));
+    for (var tick = 100L; tick < 1100; tick += 20) {
+      var plan = Planner.recovery(situation(nav, above, Optional.empty(), tick), context(nav));
+      if (plan.current() instanceof PlanStep.Route route) {
+        var node = graph.nearestNode(route.goal()).orElseThrow();
+        assertThat(graph.reachable(node, spawn)).as("step to %s", route.goal()).isTrue();
+      }
+    }
+    var inside = combatant(1, RED, new Vec3(4221.5, 86, 2096.5));
+    var stuck = situation(nav, inside, Optional.empty(), 100);
+    assertThat(RecoverySteps.stranded(stuck, context(nav))).isTrue();
+    var out = RecoverySteps.escape(stuck, context(nav)).orElseThrow();
+    assertThat(out.getLast().hop()).isEqualTo(Hop.JUMP);
+    var exit = graph.nearestNode(out.getLast().pos()).orElseThrow();
+    assertThat(graph.reachable(exit, spawn)).as("the escape leaves the pocket").isTrue();
+  }
 }
