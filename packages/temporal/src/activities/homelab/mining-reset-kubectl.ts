@@ -1,3 +1,13 @@
+import { z } from "zod";
+
+/** The minecraft-tsmc StatefulSet's desired and ready replica counts. */
+export const StatefulSetReplicas = z.object({
+  spec: z.object({ replicas: z.number().int().nonnegative() }),
+  status: z
+    .object({ readyReplicas: z.number().int().nonnegative().optional() })
+    .optional(),
+});
+
 export type CommandResult = {
   stdout: string;
   stderr: string;

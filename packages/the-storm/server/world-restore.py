@@ -25,8 +25,8 @@ from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+import anvil.regions as restoration_regions
 import restoration_locks
-import restoration_regions
 from restoration_json import JsonObject
 
 PRIMARY_CHUNKS = 638_647

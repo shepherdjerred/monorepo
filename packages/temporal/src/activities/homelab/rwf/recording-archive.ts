@@ -9,7 +9,6 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { z } from "zod/v4";
 import { rwfRecordingArchiveConfig } from "#config/rwf-recording-archive.ts";
 import {
   decodeMarkers,
@@ -24,6 +23,7 @@ import {
 import {
   kubectl,
   run,
+  StatefulSetReplicas,
   type Command,
 } from "#activities/homelab/mining-reset-kubectl.ts";
 
@@ -133,13 +133,6 @@ const CONTAINER = "minecraft-tsmc";
 /** The plugin data folder inside the Minecraft container. */
 export const RECORDINGS_ROOT = `/data/plugins/TheStorm/${RwfArchiveContract.directory}`;
 
-const Server = z.object({
-  spec: z.object({ replicas: z.number().int().nonnegative() }),
-  status: z
-    .object({ readyReplicas: z.number().int().nonnegative().optional() })
-    .optional(),
-});
-
 function exec(command: Command, args: readonly string[], input?: string) {
   return run(
     command,
@@ -192,7 +185,7 @@ export function withoutMatchingMarker(
 export function kubectlRecordingSource(command: Command): RecordingSource {
   return {
     async awake() {
-      const server = Server.parse(
+      const server = StatefulSetReplicas.parse(
         JSON.parse(
           await run(command, [
             "--request-timeout=15s",

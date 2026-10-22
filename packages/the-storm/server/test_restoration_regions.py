@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 import restoration_files as storage
-import restoration_regions as regions
+import anvil.regions as regions
 
 
 def region_bytes(indices: list[int]) -> bytes:
