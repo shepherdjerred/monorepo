@@ -4,7 +4,19 @@ import { freshWorkerProof, workerFixture } from "#testing/worker-fixture.ts";
 import { testExecutor, testOperator } from "#testing/seed.ts";
 import { createApp } from "./app.ts";
 import { createDeliveryClient } from "#shared/client.ts";
-import type { CompleteWorkerRecovery, Principal } from "#shared/contract.ts";
+import {
+  WorkerPoolTargetSchema,
+  WorkerRecoveryObservationSchema,
+  workerHostSpecification,
+  type CompleteWorkerRecovery,
+  type Principal,
+} from "#shared/contract.ts";
+import { DELIVERY_KUBERNETES_READERS } from "@shepherdjerred/ops-model/delivery-readers.ts";
+import {
+  createWorkerRecoveryReader,
+  type WorkerRecoveryReaders,
+} from "#infrastructure/worker-pool/recovery-observation.ts";
+import { createApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
 
 const context = useDeliveryFixture();
 const admin: Principal = {
@@ -64,9 +76,10 @@ async function failedWorker() {
   });
   return { workers, baseline, deployment, pool, before };
 }
-function api() {
+function api(readers?: WorkerRecoveryReaders) {
   const app = createApp({
     delivery: context.delivery,
+    ...(readers === undefined ? {} : { workerRecoveryReaders: readers }),
     ciOrigin: "https://woodpecker.sjer.red",
     ciRepositoryId: 1,
     peerAddress: () => null,
@@ -285,4 +298,74 @@ test("pool CAS and immutable recovery failures keep original quarantine intact",
       where: { id: deployment.id },
     });
   expect(quarantined.recoveryRequired).toBe(true);
+});
+
+test("the API observes a pending worker recovery with its own readers, never an executor credential", async () => {
+  const { deployment, pool } = await failedWorker();
+  const reads: string[] = [];
+  const readers: WorkerRecoveryReaders = {
+    readApplication: async (name) => {
+      reads.push(`application:${name}`);
+      return { metadata: { name } };
+    },
+    readKubernetes: async (path) => {
+      reads.push(path);
+      const collection = path.split("?")[0]?.split("/").at(-1);
+      return { items: [{ metadata: { name: collection } }] };
+    },
+  };
+  const { app, client, post } = api(readers);
+  const intent = await client.requestWorkerRecovery(deployment.id, {
+    requestId: "observed-recovery",
+    expectedEnvironmentGeneration: pool.generation,
+    reason: "Observe the retained worker hosts with the API's own identity",
+  });
+  const observe = (via = app, credential = "executor") =>
+    via.request(`/api/v1/worker-recovery/${intent.id}/observation`, {
+      headers: { Authorization: `Bearer recovery-fixture-${credential}` },
+    });
+  expect(await responseStatus(observe(app, "admin"))).toBe(403);
+  const response = await observe();
+  expect(response.status).toBe(200);
+  expect(WorkerRecoveryObservationSchema.parse(await response.json())).toEqual({
+    application: { metadata: { name: "temporal" } },
+    deployments: [{ metadata: { name: "deployments" } }],
+    pods: [{ metadata: { name: "pods" } }],
+  });
+  expect(reads).toEqual([
+    "application:temporal",
+    "/apis/apps/v1/namespaces/temporal/deployments",
+    "/api/v1/namespaces/temporal/pods?labelSelector=worker-family",
+  ]);
+  // No configured reader or projection pauses; nothing falls back.
+  expect(await responseStatus(observe(api().app))).toBe(503);
+  const unprojected = api({
+    readApplication: createApplicationReader(() =>
+      Promise.reject(new Error("token file missing")),
+    ),
+    readKubernetes: createWorkerRecoveryReader(() =>
+      Promise.reject(new Error("token file missing")),
+    ),
+  });
+  expect(await responseStatus(observe(unprojected.app))).toBe(503);
+  const absent = api({ ...readers, readApplication: async () => null });
+  expect(await responseStatus(observe(absent.app))).toBe(409);
+  expect(
+    await responseStatus(
+      post(`/worker-recovery/${intent.id}/fail`, {
+        message: "Operator stopped this inspection",
+      }),
+    ),
+  ).toBe(200);
+  expect(await responseStatus(observe())).toBe(409);
+});
+
+test("every worker host namespace has the declared recovery reader grant", () => {
+  const granted: readonly string[] =
+    DELIVERY_KUBERNETES_READERS.workerRecovery.namespaces;
+  expect(
+    WorkerPoolTargetSchema.options.map(
+      (target) => workerHostSpecification(target).kubernetesNamespace,
+    ),
+  ).toEqual(granted);
 });

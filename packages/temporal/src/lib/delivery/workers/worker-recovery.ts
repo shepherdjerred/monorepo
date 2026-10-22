@@ -21,7 +21,8 @@ import { workerSourceFingerprint } from "./worker-source.ts";
 
 export type WorkerRecoveryEffects = {
   workflowClosed: (deploymentId: string) => Promise<string>;
-  readArgo: (path: string) => Promise<unknown>;
+  /** The Application object as the API's own reader observed it (D5, I2). */
+  readApplication: (path: string) => Promise<unknown>;
   resources: (
     application: string,
     kind: "Deployment" | "Pod",
@@ -227,7 +228,7 @@ async function recheckUnappliedBootstrap(
       JSON.stringify(observed.routes)
   )
     throw new Error("Unapplied bootstrap observations changed during proof");
-  const final = await effects.readArgo(
+  const final = await effects.readApplication(
     encodeURIComponent(
       deliverySelection(context.deployment).selection.application,
     ),
@@ -289,7 +290,7 @@ export async function proveSettledWorkerRecovery(
   const jobs = await effects.terminalJobs(context);
   const { selection } = deliverySelection(detail);
   const application = encodeURIComponent(selection.application);
-  const before = await effects.readArgo(application);
+  const before = await effects.readApplication(application);
   const unappliedBootstrap = unappliedBootstrapIntent(detail, before);
   const operated =
     !unappliedBootstrap &&
@@ -325,7 +326,7 @@ export async function proveSettledWorkerRecovery(
   if (JSON.stringify(routes) !== JSON.stringify(await effects.routes(pool)))
     throw new Error("Recovery routing changed during proof");
   requireStableRecoveryRoutes(pool, routes);
-  const after = await effects.readArgo(application);
+  const after = await effects.readApplication(application);
   const afterSync = recoverySync(after, operated);
   if (workerSourceFingerprint(before) !== workerSourceFingerprint(after))
     throw new Error("Application changed during recovery proof");

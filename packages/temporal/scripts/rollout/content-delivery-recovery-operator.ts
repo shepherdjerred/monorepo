@@ -26,7 +26,7 @@ import {
   workerApplicationResources,
   verifyWorkerPoolPods,
 } from "#lib/delivery/workers/worker-hosts.ts";
-import { workerRecoveryEffects } from "#lib/delivery/workers/worker-recovery-effects.ts";
+import { workerHostEffects } from "#lib/delivery/workers/worker-recovery-effects.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import type { RolloutCommandRunner } from "#lib/worker-deployment-proofs.ts";
 import { DeliveryJobReceiptSchema } from "#shared/delivery-job.ts";
@@ -191,10 +191,8 @@ export async function recoverContentWithOperator(
         throw new Error(
           "Scout content recovery lacks its exact frozen worker pool; use specialized worker recovery",
         );
-      const worker = workerRecoveryEffects({
+      const worker = workerHostEffects({
         connection: runtime.connection,
-        kubernetes: runtime.kubernetes,
-        readArgo: argoApplicationRequest,
         pollerRunner: runtime.command,
       });
       const routes = await worker.routes(pool);

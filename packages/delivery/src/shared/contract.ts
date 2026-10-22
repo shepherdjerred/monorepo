@@ -149,6 +149,9 @@ export const RequestWorkerRecoverySchema = recovery.RequestWorkerRecoverySchema;
 export const WorkerRecoveryIntentSchema = recovery.WorkerRecoveryIntentSchema;
 export const CompleteWorkerRecoverySchema =
   recovery.CompleteWorkerRecoverySchema;
+export const WorkerRecoveryObservationSchema =
+  recovery.WorkerRecoveryObservationSchema;
+export type WorkerRecoveryObservation = recovery.WorkerRecoveryObservation;
 export const FailWorkerRecoverySchema = recovery.FailWorkerRecoverySchema;
 export type RequestWorkerRecovery = recovery.RequestWorkerRecovery;
 export type WorkerRecoveryIntent = recovery.WorkerRecoveryIntent;

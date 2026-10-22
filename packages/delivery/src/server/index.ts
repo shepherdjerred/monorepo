@@ -23,6 +23,7 @@ import { createTrmnlArchiveReader } from "@shepherdjerred/ops-clients/trmnl-arch
 import { createTrmnlPluginClient } from "@shepherdjerred/ops-clients/trmnl.ts";
 import { createTrmnlRecoveryInspector } from "#infrastructure/trmnl-recovery.ts";
 import { createTrustedProxyAddresses } from "#infrastructure/ingress/proxy.ts";
+import { createWorkerRecoveryReader } from "#infrastructure/worker-pool/recovery-observation.ts";
 import { createChangeListener } from "#infrastructure/change-feed/listener.ts";
 import { createEnrichment } from "#infrastructure/enrichment/enrichment.ts";
 
@@ -91,6 +92,10 @@ const app = createApp({
     accessKeyId: bootstrap.CLOUDFLARE_R2_ACCESS_KEY_ID,
     secretAccessKey: bootstrap.CLOUDFLARE_R2_SECRET_ACCESS_KEY,
   }),
+  workerRecoveryReaders: {
+    readApplication,
+    readKubernetes: createWorkerRecoveryReader(),
+  },
   changeFeed,
   enrichment,
   ...(forumBundleReader === undefined

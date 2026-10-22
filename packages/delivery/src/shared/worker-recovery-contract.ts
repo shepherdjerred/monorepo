@@ -56,3 +56,19 @@ export type CompleteWorkerRecovery = z.infer<
 export const FailWorkerRecoverySchema = z
   .object({ message: z.string().min(1).max(4000) })
   .strict();
+const KubernetesObject = z.record(z.string(), z.unknown());
+/**
+ * What the API's own readers observed for one pending worker recovery: the
+ * Application object, every Deployment and every `worker-family` Pod in the
+ * pool's namespace (model D5, I2). The executor never reads these with its own credential.
+ */
+export const WorkerRecoveryObservationSchema = z
+  .object({
+    application: KubernetesObject,
+    deployments: z.array(KubernetesObject).max(500),
+    pods: z.array(KubernetesObject).max(2000),
+  })
+  .strict();
+export type WorkerRecoveryObservation = z.infer<
+  typeof WorkerRecoveryObservationSchema
+>;

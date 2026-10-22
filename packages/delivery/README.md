@@ -458,6 +458,7 @@ settlement and keeps ownership.
 | Reader identity                    | Grant                                                                                                   |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | `delivery-application-reader`      | get, list, watch Applications in `argocd`                                                               |
+| `delivery-worker-recovery-reader`  | get, list, watch Pods and Deployments in `temporal`, `scout-beta` and `scout-prod`                      |
 | `delivery-forum-baseline-reader`   | get, list, watch Pods, claims, Deployments, ReplicaSets and Jobs in the Forum namespaces                |
 | `delivery-minecraft-report-reader` | a `delivery-tsmc-controller`-audience token; the controller reviews it and allows only its report `get` |
 
@@ -689,9 +690,12 @@ that rehosts their exact original image. Deletion is a separate guarded prune.
 Worker recovery uses a separate admin-authorized `WorkerRecoveryIntent`, created
 by `POST /api/v1/deployments/:id/worker-recovery` with an exact environment
 generation, request ID and inspection reason. The intent binds the frozen
-deployment and current pool fingerprints. A scoped executor independently checks
-settled Argo and Job identities, original hosts, and stable routing in every
-served namespace. Completion accepts observations no older than sixty seconds
+deployment and current pool fingerprints. A scoped executor checks settled Argo
+and Job identities, original hosts, and stable routing in every served
+namespace. It reads the Application and the pool namespace's Deployments and
+worker Pods only through `GET /api/v1/worker-recovery/:id/observation`, which
+the API answers with its own readers, never the executor's ArgoCD token.
+Completion accepts observations no older than sixty seconds
 and rechecks the environment generation, both fingerprints and held Application
 lock in one transaction. It records the evidence and releases quarantine while
 preserving the original failed or canceled result, accepted release and worker

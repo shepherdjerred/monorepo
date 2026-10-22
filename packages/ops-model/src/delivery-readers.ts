@@ -69,6 +69,20 @@ export const DELIVERY_KUBERNETES_READERS = {
       { apiGroups: ["batch"], resources: ["jobs"], verbs: READ },
     ],
   },
+  /**
+   * Retained Temporal worker hosts: every Deployment and every
+   * `worker-family` Pod in a worker pool's namespace, a superset of its
+   * Application tree, so a stray host fails closed.
+   */
+  workerRecovery: {
+    name: "delivery-worker-recovery-reader",
+    directory: "/var/run/delivery-worker-recovery-reader",
+    namespaces: ["temporal", "scout-beta", "scout-prod"],
+    rules: [
+      { apiGroups: [""], resources: ["pods"], verbs: READ },
+      { apiGroups: ["apps"], resources: ["deployments"], verbs: READ },
+    ],
+  },
 } as const satisfies Record<string, DeliveryKubernetesReader>;
 
 /**

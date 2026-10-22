@@ -1,7 +1,10 @@
 import { Connection } from "@temporalio/client";
 import { KubeConfig } from "@kubernetes/client-node";
 import { z } from "zod";
-import { WorkerRecoveryContextSchema } from "@shepherdjerred/delivery/contract";
+import {
+  WorkerRecoveryContextSchema,
+  WorkerRecoveryObservationSchema,
+} from "@shepherdjerred/delivery/contract";
 import { resolveCredentials } from "@shepherdjerred/toolkit/lib/credentials.ts";
 import { deliveryUrl } from "@shepherdjerred/toolkit/lib/delivery/client.ts";
 import {
@@ -11,7 +14,6 @@ import {
 } from "#scripts/cli-arguments.ts";
 import { temporalConnectionOptions } from "#lib/temporal-connection.ts";
 import { deliveryRequest } from "#lib/delivery/client.ts";
-import { createDeliveryArgoReader } from "#lib/delivery/argo-transport.ts";
 import { workerRecoveryEffects } from "#lib/delivery/workers/worker-recovery-effects.ts";
 import { proveSettledWorkerRecovery } from "#lib/delivery/workers/worker-recovery.ts";
 import { resolveOperatorTemporalApiKey } from "./temporal-operator-credentials.ts";
@@ -29,11 +31,7 @@ async function main(): Promise<void> {
   Bun.env["DELIVERY_API_URL"] = deliveryUrl(
     requiredParsedArgument(flags, "--url"),
   );
-  await resolveCredentials([
-    "DELIVERY_EXECUTOR_TOKEN",
-    "ARGOCD_AUTH_TOKEN",
-    "GRAFANA_API_KEY",
-  ]);
+  await resolveCredentials(["DELIVERY_EXECUTOR_TOKEN", "GRAFANA_API_KEY"]);
   await resolveOperatorTemporalApiKey();
   Reflect.deleteProperty(Bun.env, "OP_SERVICE_ACCOUNT_TOKEN");
   const connection = await Connection.connect(
@@ -58,10 +56,12 @@ async function main(): Promise<void> {
           workerRecoveryEffects({
             connection,
             kubernetes,
-            readArgo: createDeliveryArgoReader({
-              server: "https://argocd.sjer.red",
-              token: requiredEnvironment(Bun.env, "ARGOCD_AUTH_TOKEN"),
-            }),
+            // The API reads the target with its own identity (D5, I2).
+            observe: async () =>
+              await deliveryRequest(
+                `${path}/observation`,
+                WorkerRecoveryObservationSchema,
+              ),
             pollerRunner: async (command) => {
               const child = Bun.spawn([...command], {
                 stdout: "pipe",

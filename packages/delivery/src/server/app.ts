@@ -36,6 +36,7 @@ import {
   requireAdmitting,
 } from "#infrastructure/delivery-selection.ts";
 import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
+import type { WorkerRecoveryReaders } from "#infrastructure/worker-pool/recovery-observation.ts";
 import { registerPlatformRoutes } from "./platform-routes.ts";
 import { registerPlatformRecoveryRoutes } from "./platform-recovery-routes.ts";
 import { registerContentRecoveryRoutes } from "./content-recovery-routes.ts";
@@ -74,6 +75,8 @@ type Options = {
   readApplication?: ApplicationReader;
   /** The newest off-cluster cold-start snapshot (section 6). */
   readColdStartSnapshot?: () => Promise<unknown>;
+  /** Independent readers that observe a pending worker recovery (D5, I2). */
+  workerRecoveryReaders?: WorkerRecoveryReaders;
   inspectMinecraftRecovery?: InspectMinecraftRecovery;
   verifyForumBundle?: VerifyForumBundle;
   inspectForumBaseline?: InspectForumBaseline;
@@ -186,7 +189,7 @@ export function createApp(options: Options) {
   registerOwnershipRoute(app, options);
   registerPlatformRecoveryRoutes(app, delivery, enabled);
   registerContentRecoveryRoutes(app, delivery, enabled);
-  registerWorkerRecoveryRoutes(app, delivery);
+  registerWorkerRecoveryRoutes(app, delivery, options.workerRecoveryReaders);
   registerMinecraftRecoveryRoutes(
     app,
     delivery,

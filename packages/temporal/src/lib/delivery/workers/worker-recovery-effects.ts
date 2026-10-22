@@ -1,32 +1,33 @@
 import { Client, type Connection } from "@temporalio/client";
 import type { KubeConfig } from "@kubernetes/client-node";
-import { deliveryWorkflowId } from "@shepherdjerred/delivery/contract";
+import {
+  deliveryWorkflowId,
+  type WorkerRecoveryObservation,
+} from "@shepherdjerred/delivery/contract";
 import {
   requireHealthyWorkflowPoller,
   type RolloutCommandRunner,
 } from "#lib/worker-deployment-proofs.ts";
 import type { WorkerRecoveryEffects } from "./worker-recovery.ts";
 import { retirementEffects } from "./worker-retirement.ts";
-import {
-  verifyWorkerPoolPollers,
-  workerApplicationResources,
-} from "./worker-hosts.ts";
+import { verifyWorkerPoolPollers } from "./worker-hosts.ts";
 import {
   proveTerminalWorkerJobs,
   recoveryJobReader,
 } from "./worker-recovery-jobs.ts";
 
-export function workerRecoveryEffects(input: {
+type HostEffects = Pick<
+  WorkerRecoveryEffects,
+  "workflowClosed" | "pollers" | "routes" | "noCandidateReferences"
+>;
+
+/** Temporal Workflow, poller and routing observations of retained worker hosts. */
+export function workerHostEffects(input: {
   connection: Connection;
-  kubernetes: KubeConfig;
-  readArgo: WorkerRecoveryEffects["readArgo"];
-  pollerRunner?: RolloutCommandRunner;
-}): WorkerRecoveryEffects {
+  pollerRunner?: RolloutCommandRunner | undefined;
+}): HostEffects {
   const temporal = retirementEffects(input.connection);
   return {
-    readArgo: input.readArgo,
-    resources: async (app, kind) =>
-      await workerApplicationResources(app, kind, input.readArgo),
     async workflowClosed(id) {
       const workflowId = deliveryWorkflowId(id);
       const result = await new Client({
@@ -48,11 +49,6 @@ export function workerRecoveryEffects(input: {
         throw new Error("Failed source Workflow is not independently closed");
       return `${workflowId}/${result.runId}`;
     },
-    terminalJobs: async (context) =>
-      await proveTerminalWorkerJobs(
-        context,
-        recoveryJobReader(input.kubernetes),
-      ),
     async pollers(pool) {
       if (input.pollerRunner === undefined) {
         await verifyWorkerPoolPollers(pool);
@@ -99,5 +95,34 @@ export function workerRecoveryEffects(input: {
           );
       }
     },
+  };
+}
+
+/**
+ * Recovery effects. The Application, Deployments and Pods come from the
+ * API's own readers through `observe`, read fresh on every call; the
+ * executor's ArgoCD token is never a recovery reader (D5, I2).
+ */
+export function workerRecoveryEffects(input: {
+  connection: Connection;
+  kubernetes: KubeConfig;
+  observe: () => Promise<WorkerRecoveryObservation>;
+  pollerRunner?: RolloutCommandRunner;
+}): WorkerRecoveryEffects {
+  return {
+    ...workerHostEffects(input),
+    readApplication: async () => {
+      const observed = await input.observe();
+      return observed.application;
+    },
+    resources: async (_application, kind) => {
+      const observed = await input.observe();
+      return kind === "Deployment" ? observed.deployments : observed.pods;
+    },
+    terminalJobs: async (context) =>
+      await proveTerminalWorkerJobs(
+        context,
+        recoveryJobReader(input.kubernetes),
+      ),
   };
 }

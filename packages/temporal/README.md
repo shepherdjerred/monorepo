@@ -502,9 +502,11 @@ never advance application acceptance pointers. Worker recovery uses a separate
 immutable intent: the read-only verifier checks closed source execution, exact
 terminal native Jobs, stable routing, captured source identity and live hosts,
 then releases the held lock through a fresh generation CAS. The original failed
-result and pool remain unchanged. `scripts/rollout/worker-delivery-recovery.ts`
-runs the same verifier through brokered operator credentials when Activity
-workers are unavailable; it never resumes effects or accepts the failed release.
+result and pool remain unchanged. The verifier reads the Application, Deployments
+and Pods from the Delivery API's own readers, never the executor's ArgoCD token.
+`scripts/rollout/worker-delivery-recovery.ts` runs the same verifier through
+brokered operator credentials when Activity workers are unavailable; it never
+resumes effects or accepts the failed release.
 
 TSMC's explicit `retained-volume-restart` pipeline mode skips the preservation
 Activity and uses normal owned Argo reconciliation and exact Ready image checks

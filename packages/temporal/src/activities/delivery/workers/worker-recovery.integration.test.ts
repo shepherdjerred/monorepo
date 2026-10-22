@@ -142,7 +142,7 @@ function boundary(): WorkerRecoveryEffects {
     throw new Error("Missing original host");
   return {
     workflowClosed: async () => "delivery/source/closed-run",
-    readArgo: async () => prior,
+    readApplication: async () => prior,
     terminalJobs: async (requested) =>
       await proveTerminalWorkerJobs(requested, {
         job: async () => job,
@@ -244,7 +244,7 @@ test("pre-PATCH readonly failure releases exact held ownership with original hos
 test("read-only pre-effect recovery can settle healthy comparison drift without accepting a deployment", async () => {
   const proof = await proveSettledWorkerRecovery(context, {
     ...boundary(),
-    readArgo: async () => ({
+    readApplication: async () => ({
       ...prior,
       status: {
         sync: { status: "OutOfSync" },
@@ -352,8 +352,8 @@ test.each([
     await expect(
       proveSettledWorkerRecovery(context, {
         ...external,
-        readArgo: async (application) => {
-          const observed = await external.readArgo(application);
+        readApplication: async (application) => {
+          const observed = await external.readApplication(application);
           return failure === "late source change" && ++argoReads === 3
             ? {
                 ...prior,
@@ -488,7 +488,7 @@ test("source ownership changes, beta routing changes and stale completion cannot
   await expect(
     proveSettledWorkerRecovery(context, {
       ...external,
-      readArgo: async () => ({
+      readApplication: async () => ({
         metadata: { uid: "replaced" },
         spec: { source: {} },
         status: {
@@ -553,7 +553,7 @@ test("post-PATCH bootstrap recovery requires its exact finished native operation
   const external = boundary();
   const effects: WorkerRecoveryEffects = {
     ...external,
-    readArgo: async () => application,
+    readApplication: async () => application,
     pollers: async (observed) => {
       expect(observed.versions).toHaveLength(2);
     },
@@ -575,13 +575,16 @@ test("post-PATCH bootstrap recovery requires its exact finished native operation
   await expect(
     proveSettledWorkerRecovery(context, {
       ...effects,
-      readArgo: async () => ({ ...application, operation: { sync: {} } }),
+      readApplication: async () => ({
+        ...application,
+        operation: { sync: {} },
+      }),
     }),
   ).rejects.toThrow();
   await expect(
     proveSettledWorkerRecovery(context, {
       ...effects,
-      readArgo: async () => ({
+      readApplication: async () => ({
         ...application,
         status: { ...application.status, sync: { status: "OutOfSync" } },
       }),
