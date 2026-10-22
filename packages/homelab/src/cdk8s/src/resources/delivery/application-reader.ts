@@ -1,12 +1,18 @@
-import type { Chart } from "cdk8s";
+import { ApiObject, JsonPatch, type Chart } from "cdk8s";
+import type { Deployment } from "cdk8s-plus-31";
 import {
   KubeRole,
   KubeRoleBinding,
+  KubeSecret,
   KubeServiceAccount,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { DELIVERY_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/namespace.ts";
 
 export const DELIVERY_APPLICATION_READER = "delivery-application-reader";
+/** Where the Delivery API reads this identity's `token` and `ca.crt`. */
+export const DELIVERY_APPLICATION_READER_DIRECTORY =
+  "/var/run/delivery-application-reader";
+const DELIVERY_APPLICATION_READER_TOKEN = `${DELIVERY_APPLICATION_READER}-token`;
 const ARGOCD_NAMESPACE = "argocd";
 
 /**
@@ -14,9 +20,13 @@ const ARGOCD_NAMESPACE = "argocd";
  * Kubernetes identity that reads Application objects straight from the API
  * server, so recovery can still observe them while ArgoCD's own API is down
  * or upgrading itself. It may only get, list and watch Applications in the
- * `argocd` namespace. No token is mounted automatically; the pod that hosts
- * the reader runs as this account and projects a short-lived token, like the
- * API's ingress observer.
+ * `argocd` namespace.
+ *
+ * The API pod keeps its own ServiceAccount (`delivery-forum-observer`), and a
+ * projected token is always issued for the pod's own account, so this
+ * identity's credential is a ServiceAccount token Secret the control plane
+ * populates. Its token does not expire until the Secret is deleted; the Role
+ * bounds what it can do.
  */
 export function createDeliveryApplicationReader(chart: Chart): void {
   new KubeServiceAccount(chart, "application-reader-account", {
@@ -57,4 +67,36 @@ export function createDeliveryApplicationReader(chart: Chart): void {
       },
     ],
   });
+  new KubeSecret(chart, "application-reader-token", {
+    metadata: {
+      name: DELIVERY_APPLICATION_READER_TOKEN,
+      namespace: DELIVERY_NAMESPACE,
+      annotations: {
+        "kubernetes.io/service-account.name": DELIVERY_APPLICATION_READER,
+      },
+    },
+    type: "kubernetes.io/service-account-token",
+  });
+}
+
+/** Mounts the reader's token and cluster CA, read-only, into the API container only. */
+export function mountDeliveryApplicationReader(deployment: Deployment): void {
+  ApiObject.of(deployment).addJsonPatch(
+    JsonPatch.add("/spec/template/spec/volumes/-", {
+      name: "application-reader",
+      secret: {
+        secretName: DELIVERY_APPLICATION_READER_TOKEN,
+        defaultMode: 0o440,
+        items: [
+          { key: "token", path: "token" },
+          { key: "ca.crt", path: "ca.crt" },
+        ],
+      },
+    }),
+    JsonPatch.add("/spec/template/spec/containers/0/volumeMounts/-", {
+      name: "application-reader",
+      mountPath: DELIVERY_APPLICATION_READER_DIRECTORY,
+      readOnly: true,
+    }),
+  );
 }
