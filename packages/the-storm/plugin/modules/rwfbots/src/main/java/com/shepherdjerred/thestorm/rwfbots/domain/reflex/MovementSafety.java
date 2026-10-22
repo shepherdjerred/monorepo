@@ -306,7 +306,15 @@ public final class MovementSafety {
             heading.isZero()
                 ? target
                 : from.plus(heading.normalized().scale(Math.min(LOOK_AHEAD, heading.length())));
-        yield "walk " + leg(terrain, from, to, Check.WALK);
+        var walk = leg(terrain, from, to, Check.WALK);
+        var ends = heading.length() <= LOOK_AHEAD;
+        var end = stood(terrain, to);
+        yield ends
+                && "clear".equals(walk)
+                && end.isPresent()
+                && !floor(terrain, end.orElseThrow(), to.horizontalDistance(from) <= LEAVING)
+            ? "walk ends where only part of the footprint is on a block"
+            : "walk " + walk;
       }
       case SWIM -> {
         var corner = target.y() > from.y() ? from.withY(target.y()) : target.withY(from.y());
