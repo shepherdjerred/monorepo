@@ -127,7 +127,9 @@ public final class SnapshotCapture {
   private CombatantView view(long tick, MatchState.Fighter fighter, Player entity) {
     var location = Places.at(entity);
     var pos = vec(location);
-    var health = entity.getHealth();
+    var kit = kitOf(fighter, Optional.of(entity));
+    var traversal = captureTraversal(entity, fighter.kit().orElseThrow(), tick);
+    var health = storedHealth(entity.getHealth(), traversal.maxHealth());
     var absorption = Math.max(0, entity.getAbsorptionAmount());
     var previous = last.get(fighter.uuid());
     var velocity = previous == null ? Vec3.ZERO : pos.minus(previous.pos());
@@ -136,7 +138,6 @@ public final class SnapshotCapture {
       hurtTick = tick;
     }
     last.put(fighter.uuid(), new Last(pos, health + absorption, hurtTick));
-    var kit = kitOf(fighter, Optional.of(entity));
     return new CombatantView(
         ids.combatant(fighter.uuid()),
         IdMap.team(
@@ -159,7 +160,17 @@ public final class SnapshotCapture {
         entity.isHandRaised(),
         hiddenHands(entity),
         hurtTick,
-        captureTraversal(entity, fighter.kit().orElseThrow(), tick));
+        traversal);
+  }
+
+  /**
+   * The body's health within its maximum. Minecraft stores health as a float clamped to the
+   * float-rounded maximum, which can sit one rounding step above a fractional maximum such as a
+   * Bleeder's victim has; that read once a tick threw from every bot tick and match tick while the
+   * body lived, freezing every bot. Any larger excess still fails the view's contract.
+   */
+  static double storedHealth(double health, double maxHealth) {
+    return health > maxHealth && health <= (float) maxHealth ? maxHealth : health;
   }
 
   /** Vanilla invisibility leaves either held item visible, for humans and NPC perception alike. */
