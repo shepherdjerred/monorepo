@@ -69,16 +69,22 @@ First-party release versions do not produce Git catalog edits. The
 [image producer](https://github.com/shepherdjerred/monorepo/blob/main/ci/scripts/images/bake-images.ts)
 publishes immutable candidates and preserves original qualified artifacts for
 unchanged recipes. Preservation depends on reproducible application images.
-Each install stage copies only the package manifests of its workspace closure,
-projected by `ci/scripts/images/workspace-manifests.ts`, so an edit to an
-unrelated package leaves the install and every later layer cached. A cache miss
-must then rebuild the same bytes. Bun's isolated linker can skip the bin links
-between dependency-cycle members on a cold install, so each production install
-completes them with `ci/scripts/images/complete-bin-links.ts`. Pushes clamp
-layer file times to a fixed `SOURCE_DATE_EPOCH`, and steps that write logs or
-tool state remove it in the same layer.
-Files in those images therefore share one modification time, and servers must
-not derive HTTP cache validators from it. The
+Each [install stage](https://github.com/shepherdjerred/monorepo/blob/53d083600b88a245fd1230fb8e5d49063ae20735/packages/birmel/Dockerfile)
+copies only its workspace closure's manifests, as projected by
+[`workspace-manifests.ts`](https://github.com/shepherdjerred/monorepo/blob/53d083600b88a245fd1230fb8e5d49063ae20735/ci/scripts/images/workspace-manifests.ts).
+An edit to an unrelated package therefore leaves the install and every later
+layer cached. A cache miss must still rebuild the same bytes. Bun's isolated
+linker can skip bin links between dependency-cycle members on a cold install,
+so
+[`complete-bin-links.ts`](https://github.com/shepherdjerred/monorepo/blob/53d083600b88a245fd1230fb8e5d49063ae20735/ci/scripts/images/complete-bin-links.ts)
+completes them. [Pushes](https://github.com/shepherdjerred/monorepo/blob/53d083600b88a245fd1230fb8e5d49063ae20735/docker-bake.hcl)
+clamp layer file times to a fixed `SOURCE_DATE_EPOCH`. Steps that write logs
+or tool state remove it in the same layer. Image files therefore share one
+modification time, so
+[game servers](https://github.com/shepherdjerred/monorepo/blob/53d083600b88a245fd1230fb8e5d49063ae20735/packages/discord-plays-core/src/webserver/image-file-options.ts)
+never derive HTTP cache validators from it.
+[Invariant tests](https://github.com/shepherdjerred/monorepo/blob/53d083600b88a245fd1230fb8e5d49063ae20735/ci/scripts/images/application-image-reproducibility.test.ts)
+hold every application Dockerfile to these rules. The
 [chart producer](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/helm/helm-push.ts)
 freezes those exact inputs into immutable archives. Changed-file selectors and
 the producer dependency closure determine CI work; there is no pin-only shortcut.
