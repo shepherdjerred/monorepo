@@ -300,6 +300,8 @@ WHERE e."acceptedVersionSetRevisionId" IS NOT NULL
       AND d."versionSetRevisionId" = e."acceptedVersionSetRevisionId"
       AND d.status = 'succeeded'
       AND d.kind NOT IN ('adopt-worker', 'repair-trmnl')
+      AND d."platformSnapshot" IS NULL
+      AND d."controlPlaneSnapshot" IS NULL
   )
 ORDER BY 1;
 \echo == held work: active pointers and platform locks
@@ -322,15 +324,18 @@ JOIN "Deployment" d ON d.id = p."deploymentId"
 ORDER BY 1, 2;
 ```
 
-| Check            | Pass on the copy                                                                            |
-| ---------------- | ------------------------------------------------------------------------------------------- |
-| Migrations       | The same migrations as production, each finished and none rolled back.                      |
-| Latest writes    | Each timestamp matches production's. A newer production timestamp must postdate the backup. |
-| Accepted pointer | No rows. Every accepted set revision has a succeeded Deployment in its environment.         |
-| Held work        | `consistent` is `t` on every row.                                                           |
+| Check            | Pass on the copy                                                                                |
+| ---------------- | ----------------------------------------------------------------------------------------------- |
+| Migrations       | The same migrations as production, each finished and none rolled back.                          |
+| Latest writes    | Each timestamp matches production's. A newer production timestamp must postdate the backup.     |
+| Accepted pointer | No rows. Every accepted set revision has a succeeded application Deployment in its environment. |
+| Held work        | `consistent` is `t` on every row.                                                               |
 
-The accepted-pointer check ignores `adopt-worker` and `repair-trmnl`
-Deployments. Neither
+The accepted-pointer check counts only application Deployments, as
+`acceptedPointers` in the
+[claim and release logic](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/delivery-execution.ts)
+does. Platform and control-plane Deployments carry a snapshot and move their
+own pointers instead. Neither
 [worker adoption](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/README.md#delivery-execution)
 nor a
 [TRMNL repair](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/README.md)
