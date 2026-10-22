@@ -416,4 +416,24 @@ final class BodyMovementTest {
     var again = motion.move(player, target);
     assertThat(again.refused()).as("retry %s", again).isFalse();
   }
+
+  @Test
+  void aBodyAtAShaftTopStepsOntoTheLadderBelowRatherThanRefusingTheClimbDown() {
+    // cloned-balance: at the top of a ladder shaft the climb down first steps across onto the top
+    // of the ladder (the air above it); the landing check read that as a fall down the shaft and
+    // refused it, so bots stood at the shaft top.
+    for (var y = 1; y <= 4; y++) world.getBlockAt(3, y, 2).setType(Material.STONE);
+    for (var y = 1; y <= 3; y++) world.getBlockAt(2, y, 2).setType(Material.LADDER);
+    world.getBlockAt(2, 3, 3).setType(Material.STONE);
+    var player = TraversalPlayerMock.add(server, "shaft-top");
+    player.teleport(new Location(world, 2.53, 4.0, 2.91));
+    player.setVelocity(new org.bukkit.util.Vector(0, -0.08, 0));
+    var motion = motion(survival(Optional.empty()), (body, heading) -> {});
+    var reason =
+        motion.move(
+            player,
+            new Bodies.MotionTarget(
+                new Location(world, 2.5, 2.0, 2.5), false, Hop.CLIMB, Optional.empty()));
+    assertThat(reason.refused()).as("%s %s", reason, motion.lastRefusal()).isFalse();
+  }
 }

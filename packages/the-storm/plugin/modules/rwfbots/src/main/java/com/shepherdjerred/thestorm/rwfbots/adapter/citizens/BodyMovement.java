@@ -166,7 +166,11 @@ final class BodyMovement {
   private boolean survives(Player player, MovementTerrain terrain, Vec3 goal, Hop hop) {
     var position = feet(player);
     if (hop == Hop.CLIMB && terrain.climbable(position)) return true;
-    if (hop == Hop.CLIMB && !terrain.climbable(goal) && !terrain.supported(goal, 0.1)) return false;
+    // A climb's step onto the top of a ladder (the cell above it) grabs the ladder as it drops
+    // in, as the movement gate's grip does; it never falls past it.
+    if (hop == Hop.CLIMB && (terrain.climbable(goal) || terrain.climbable(goal.plus(0, -1, 0))))
+      return true;
+    if (hop == Hop.CLIMB && !terrain.supported(goal, 0.1)) return false;
     if (hop == Hop.WALK) {
       var direction = goal.minus(position).horizontal();
       if (!direction.isZero())
