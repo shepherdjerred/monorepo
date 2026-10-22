@@ -121,7 +121,7 @@ final class KitProjectiles {
     if (((Entity) player).isOnGround() && back.getY() <= 0.01) {
       back.setY(0.2);
     }
-    player.setVelocity(back);
+    player.setVelocity(KnockbackShare.landing(runner, player, back));
   }
 
   /** The egg an RPG looks like; dressing, so one that cannot be shown does not stop the shot. */

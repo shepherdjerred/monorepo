@@ -236,7 +236,7 @@ final class CombatListener implements Listener {
   private void knockback(Strike strike) {
     var victim = strike.victim();
     var knockback = push(strike.source(), strike.attacker(), victim, context.random());
-    victim.setVelocity(Places.vector(knockback));
+    victim.setVelocity(KnockbackShare.landing(runner, victim, Places.vector(knockback)));
     if (strike.type().has(AttackType.Flag.MELEE)) {
       sprintReset(strike.attacker());
     }
@@ -431,12 +431,15 @@ final class CombatListener implements Listener {
 
   /**
    * Every push a kit's holder takes is scaled by its knockback share (the Juggernaut's 0.8), as Red
-   * Warfare's {@code PlayerVelocityEvent} handler scaled it, whatever pushed them.
+   * Warfare's {@code PlayerVelocityEvent} handler scaled it, whatever pushed them. A bot's velocity
+   * events are its own steering; its pushes are scaled where they land ({@link KnockbackShare}).
    */
   @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
   void onVelocity(PlayerVelocityEvent event) {
     var player = event.getPlayer();
-    if (!inWorld(player) || !runner.fighting(player.getUniqueId())) {
+    if (!inWorld(player)
+        || !runner.fighting(player.getUniqueId())
+        || KnockbackShare.steered(runner, player.getUniqueId())) {
       return;
     }
     runner
@@ -453,6 +456,14 @@ final class CombatListener implements Listener {
         && inWorld(victim)
         && runner.waiting(victim.getUniqueId())) {
       event.setCancelled(true);
+    }
+  }
+
+  /** A push the server lands on a bot itself, such as a blast's, takes the bot's share. */
+  @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+  void onBotKnockback(EntityKnockbackEvent event) {
+    if (inWorld(event.getEntity())) {
+      event.setKnockback(KnockbackShare.landing(runner, event.getEntity(), event.getKnockback()));
     }
   }
 

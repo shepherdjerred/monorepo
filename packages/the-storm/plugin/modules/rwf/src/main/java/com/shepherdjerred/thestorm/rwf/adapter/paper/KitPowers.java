@@ -286,7 +286,11 @@ final class KitPowers {
           runner.hooks().abilityUsed(used.id(), used.ability(), used.target());
       case AbilityEffect.Push push ->
           withPlayer(
-              push.id(), p -> p.setVelocity(p.getVelocity().add(Places.vector(push.velocity()))));
+              push.id(),
+              p ->
+                  p.setVelocity(
+                      p.getVelocity()
+                          .add(KnockbackShare.landing(runner, p, Places.vector(push.velocity())))));
       case AbilityEffect.NoFall fall ->
           noFall.put(fall.id().uuid(), runner.now().plus(fall.length()));
       case AbilityEffect.Say say -> say.to().forEach(id -> withPlayer(id, p -> say(p, say)));
