@@ -57,14 +57,14 @@ export const VersionCatalogEntrySchema = z
           entry.artifactType !== "helm-chart") ||
         !entry.management.managed ||
         entry.management.registryUrl === undefined ||
-        (entry.artifactType === "image" &&
+        ((entry.artifactType === "image" || ociChart(entry)) &&
           !/^[^@\s]+@sha256:[a-f0-9]{64}$/u.test(entry.value)))
     ) {
       context.addIssue({
         code: "custom",
         path: ["component"],
         message:
-          "component entries are managed upstream charts or digest-pinned images with a registryUrl",
+          "component entries are managed upstream charts or digest-pinned images and OCI charts with a registryUrl",
       });
     }
   });
@@ -93,6 +93,19 @@ export function catalogComponentName(entry: VersionCatalogEntry): string {
         `Component ${entry.name} is a ${entry.artifactType}, which Delivery cannot acquire`,
       );
   }
+}
+
+/**
+ * A chart served from an OCI registry (Renovate's `docker` datasource)
+ * rather than a Helm repository index; it is pinned and verified by its
+ * manifest digest, like an image.
+ */
+export function ociChart(entry: VersionCatalogEntry): boolean {
+  return (
+    entry.artifactType === "helm-chart" &&
+    entry.management.managed &&
+    entry.management.datasource === "docker"
+  );
 }
 
 /**

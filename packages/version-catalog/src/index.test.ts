@@ -6,6 +6,7 @@ import {
   VersionCatalogEntrySchema,
   catalogComponentName,
   componentEntries,
+  ociChart,
   parseVersionCatalog,
   parseVersionCatalogText,
   serializeVersionCatalog,
@@ -146,5 +147,29 @@ describe("Delivery component naming", () => {
       (entry) => catalogComponentName(entry),
     );
     expect(new Set(names).size).toBe(names.length);
+  });
+
+  test("an OCI chart is a digest-pinned chart named by its catalog name", () => {
+    const kueue = {
+      name: "kueue",
+      category: "upstream",
+      artifactType: "helm-chart",
+      management: {
+        managed: true,
+        datasource: "docker",
+        registryUrl: "https://registry.k8s.io",
+        versioning: "semver",
+        packageName: "kueue/charts/kueue",
+      },
+      value: `0.20.1@${digest}`,
+      component: true,
+    };
+    const entry = VersionCatalogEntrySchema.parse(kueue);
+    expect(ociChart(entry)).toBe(true);
+    expect(catalogComponentName(entry)).toBe("chart:kueue");
+    expect(upstreamName(entry)).toBe("kueue/charts/kueue");
+    expect(() =>
+      VersionCatalogEntrySchema.parse({ ...kueue, value: "0.20.1" }),
+    ).toThrow("digest-pinned");
   });
 });

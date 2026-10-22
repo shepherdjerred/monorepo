@@ -793,3 +793,133 @@ test("only the services the catalog document names as acquiring a component acqu
     "minecraft",
   ]);
 });
+
+/** Kueue's chart as registry.k8s.io serves it: a Helm chart OCI manifest. */
+const helmManifest = new TextEncoder().encode(
+  JSON.stringify({
+    schemaVersion: 2,
+    config: {
+      mediaType: "application/vnd.cncf.helm.config.v1+json",
+      digest: `sha256:${"e".repeat(64)}`,
+    },
+    layers: [],
+  }),
+);
+const helmDigest = `sha256:${createHash("sha256").update(helmManifest).digest("hex")}`;
+const kueue = VersionCatalogEntrySchema.parse({
+  name: "kueue",
+  category: "upstream",
+  artifactType: "helm-chart",
+  management: {
+    managed: true,
+    datasource: "docker",
+    registryUrl: "https://registry.k8s.io",
+    versioning: "semver",
+    packageName: "kueue/charts/kueue",
+  },
+  value: `0.20.1@${helmDigest}`,
+  component: true,
+});
+const ociInput = AcquireUpstreamArtifactSchema.parse({
+  requestId: "upstream/kueue",
+  serviceId: "arcade",
+  sourceRevision: "c".repeat(40),
+  pipeline: { repositoryId: 1, pipelineNumber: 8 },
+  artifact: {
+    id: "upstream/kueue/0.20.1",
+    component: "chart:kueue",
+    kind: "chart",
+    uri: "oci://registry.k8s.io/kueue/charts/kueue",
+    version: "0.20.1",
+    digest: helmDigest,
+    origin: {
+      kind: "upstream",
+      repository: "https://registry.k8s.io",
+      name: "kueue/charts/kueue",
+      version: "0.20.1",
+      checksum: helmDigest,
+    },
+  },
+});
+/** registry.k8s.io redirecting the manifest read to its Artifact Registry backing. */
+function k8sRegistry(served: Uint8Array<ArrayBuffer>) {
+  const urls: string[] = [];
+  const serve = async (url: string | URL) => {
+    const href = url.toString();
+    urls.push(href);
+    if (
+      href === "https://registry.k8s.io/v2/kueue/charts/kueue/manifests/0.20.1"
+    )
+      return new Response(null, {
+        status: 307,
+        headers: {
+          Location:
+            "https://us-west1-docker.pkg.dev/v2/k8s-artifacts-prod/images/kueue/charts/kueue/manifests/0.20.1",
+        },
+      });
+    if (href.startsWith("https://us-west1-docker.pkg.dev/"))
+      return new Response(served);
+    throw new Error(`Unexpected request ${href}`);
+  };
+  return { urls, transport: serve };
+}
+
+test("an OCI chart is acquired by resolving its version to the pinned manifest through its registry's backing redirect", async () => {
+  await declareAcquisitions(context.cluster.database, "arcade", [
+    "chart:kueue",
+  ]);
+  const { urls, transport: served } = k8sRegistry(helmManifest);
+  const acquired = await context.delivery.acquireUpstreamArtifact(
+    ociInput,
+    testPublisher,
+    { transport: served, components: [...components, kueue] },
+  );
+  expect(acquired.status).toBe("verified");
+  expect(acquired.artifact).toMatchObject({
+    component: "chart:kueue",
+    uri: "oci://registry.k8s.io/kueue/charts/kueue",
+    digest: helmDigest,
+  });
+  expect(urls).toHaveLength(2);
+  // An image manifest at that tag, or a URI without the oci scheme, is refused.
+  await declareAcquisitions(context.cluster.database, "minecraft", [
+    "chart:kueue",
+  ]);
+  const imageAtTag = AcquireUpstreamArtifactSchema.parse({
+    ...ociInput,
+    requestId: "refused/oci-image",
+    serviceId: "minecraft",
+    artifact: {
+      ...ociInput.artifact,
+      id: "upstream/minecraft/kueue/0.20.1",
+      digest: manifestDigest,
+      origin: {
+        kind: "upstream",
+        repository: "https://registry.k8s.io",
+        name: "kueue/charts/kueue",
+        version: "0.20.1",
+        checksum: manifestDigest,
+      },
+    },
+  });
+  await expect(
+    context.delivery.acquireUpstreamArtifact(imageAtTag, testPublisher, {
+      transport: k8sRegistry(manifest).transport,
+      components: [...components, kueue],
+    }),
+  ).rejects.toThrow(/not a Helm chart/u);
+  await expect(
+    context.delivery.acquireUpstreamArtifact(
+      {
+        ...ociInput,
+        requestId: "refused/oci-uri",
+        artifact: {
+          ...ociInput.artifact,
+          uri: "registry.k8s.io/kueue/charts/kueue",
+        },
+      },
+      testPublisher,
+      { transport: served, components: [...components, kueue] },
+    ),
+  ).rejects.toMatchObject({ code: "INVALID" });
+});

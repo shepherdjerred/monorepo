@@ -30,6 +30,15 @@ const DOCKER_HUB_HOSTS = new Set([
   "index.docker.io",
   "registry-1.docker.io",
 ]);
+/**
+ * Registries whose API serves every `/v2/` read from a backing registry by
+ * redirect, and the hosts each may send a manifest read to. Every other
+ * registry's manifests are read where the catalog names them.
+ */
+const MANIFEST_REDIRECTS: ReadonlyMap<string, RegExp> = new Map([
+  // registry.k8s.io (archeio) serves reads from regional Artifact Registry.
+  ["registry.k8s.io", /^[a-z0-9-]+-docker\.pkg\.dev$/u],
+]);
 const BearerChallengeSchema = z.object({
   realm: z.url(),
   service: z.string().min(1).optional(),
@@ -99,12 +108,30 @@ function bearerChallenge(header: string | null) {
   return parsed.success ? parsed.data : undefined;
 }
 
-async function manifestRequest(
+/** The one reviewed redirect a registry may answer a manifest read with. */
+function reviewedRedirect(from: string, location: string | null): string {
+  const allowed = MANIFEST_REDIRECTS.get(new URL(from).host);
+  const target = location === null ? undefined : new URL(location, from);
+  if (
+    allowed === undefined ||
+    target?.protocol !== "https:" ||
+    target.username !== "" ||
+    target.password !== "" ||
+    !allowed.test(target.hostname)
+  )
+    throw new DeliveryError(
+      "INVALID",
+      "Registry manifest redirected; manifests are read from the catalog registry or its reviewed backing registry only",
+    );
+  return target.href;
+}
+
+function sendManifestRequest(
   url: string,
   transport: RegistryTransport,
   authorization?: string,
 ) {
-  const response = await transport(url, {
+  return transport(url, {
     headers: {
       Accept: MANIFEST_ACCEPT,
       ...(authorization === undefined ? {} : { Authorization: authorization }),
@@ -112,14 +139,28 @@ async function manifestRequest(
     redirect: "manual",
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
-  if (REDIRECTS.has(response.status)) {
-    await response.body?.cancel();
-    throw new DeliveryError(
-      "INVALID",
-      "Registry manifest redirected; manifests are read from the catalog registry only",
-    );
+}
+
+/** A manifest read, following at most the one reviewed redirect; returns where it was served. */
+async function manifestRequest(
+  url: string,
+  transport: RegistryTransport,
+  authorization?: string,
+) {
+  const response = await sendManifestRequest(url, transport, authorization);
+  if (!REDIRECTS.has(response.status)) return { response, url };
+  await response.body?.cancel();
+  const target = reviewedRedirect(url, response.headers.get("location"));
+  const redirected = await sendManifestRequest(
+    target,
+    transport,
+    authorization,
+  );
+  if (REDIRECTS.has(redirected.status)) {
+    await redirected.body?.cancel();
+    reviewedRedirect(target, redirected.headers.get("location"));
   }
-  return response;
+  return { response: redirected, url: target };
 }
 
 /** Anonymous pull token from the registry's bearer challenge; the token is never logged or stored. */
@@ -174,17 +215,18 @@ async function anonymousToken(
 }
 
 /**
- * Resolve a tag to its manifest digest through the registry API: sha256 of
- * the manifest bytes as served, cross-checked against `Docker-Content-Digest`
- * when the registry sends it. Reads the manifest only, never image layers.
+ * Resolve a tag to its manifest through the registry API: the manifest bytes
+ * as served and their sha256, cross-checked against `Docker-Content-Digest`
+ * when the registry sends it. Reads the manifest only, never layers.
  */
-export async function resolveManifestDigest(
+export async function resolveManifest(
   location: Pick<RegistryLocation, "origin" | "repository">,
   reference: string,
   transport: RegistryTransport,
-): Promise<string> {
-  const url = `${location.origin}/v2/${location.repository}/manifests/${encodeURIComponent(reference)}`;
-  let response = await manifestRequest(url, transport);
+): Promise<{ digest: string; bytes: Uint8Array }> {
+  const requested = `${location.origin}/v2/${location.repository}/manifests/${encodeURIComponent(reference)}`;
+  const first = await manifestRequest(requested, transport);
+  let { response } = first;
   if (response.status === 401) {
     const challenge = bearerChallenge(response.headers.get("www-authenticate"));
     await response.body?.cancel();
@@ -198,7 +240,11 @@ export async function resolveManifestDigest(
       location.repository,
       transport,
     );
-    response = await manifestRequest(url, transport, `Bearer ${token}`);
+    ({ response } = await manifestRequest(
+      first.url,
+      transport,
+      `Bearer ${token}`,
+    ));
   }
   if (!response.ok) {
     await response.body?.cancel();
@@ -219,5 +265,15 @@ export async function resolveManifestDigest(
       "INVALID",
       "Registry content digest disagrees with the served manifest bytes",
     );
+  return { digest, bytes };
+}
+
+/** Resolve a tag to its manifest digest (see `resolveManifest`). */
+export async function resolveManifestDigest(
+  location: Pick<RegistryLocation, "origin" | "repository">,
+  reference: string,
+  transport: RegistryTransport,
+): Promise<string> {
+  const { digest } = await resolveManifest(location, reference, transport);
   return digest;
 }

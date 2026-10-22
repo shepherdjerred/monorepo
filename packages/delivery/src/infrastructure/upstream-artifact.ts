@@ -5,6 +5,7 @@ import rawCatalog from "@shepherdjerred/version-catalog/catalog.json" with { typ
 import {
   catalogComponentName,
   componentEntries,
+  ociChart,
   parseVersionCatalog,
   upstreamName,
 } from "@shepherdjerred/version-catalog";
@@ -42,7 +43,7 @@ import {
 import {
   boundedBody,
   registryLocation,
-  resolveManifestDigest,
+  resolveManifest,
 } from "./artifact-stores/oci-registry.ts";
 import type { RegistryLocation } from "./artifact-stores/oci-registry.ts";
 
@@ -78,11 +79,14 @@ type Input = z.output<typeof AcquireUpstreamArtifactSchema>;
 type Reviewed =
   | { kind: "chart"; originKey: string; name: string; repository: string }
   | {
-      kind: "image";
+      /** An image, or a chart an OCI registry serves: verified by its manifest. */
+      kind: "image" | "oci-chart";
       originKey: string;
       registry: RegistryLocation;
       tag: string;
     };
+type UpstreamOrigin = { repository: string; name: string; version: string };
+const HELM_CHART_CONFIG = "application/vnd.cncf.helm.config.v1+json";
 
 function registryUrl(entry: VersionCatalogEntry) {
   // Catalog validation guarantees this for component entries.
@@ -163,28 +167,45 @@ function reviewed(
     name: origin.name,
     version: origin.version,
   });
-  if (artifact.kind === "chart") {
-    const repository = `${registryUrl(entry).replace(/\/+$/, "")}/`;
-    if (origin.repository !== repository || origin.name !== entry.name)
-      refuse(
-        "Chart acquisition must match the catalog component's repository and name",
-      );
-    if (new URL(artifact.uri).protocol !== "https:")
-      refuse("Chart archive location must be an https URL");
-    return { kind: "chart", originKey, name: entry.name, repository };
-  }
-  // An alias entry is pulled from, and verified at, its real repository.
+  if (artifact.kind === "image" || ociChart(entry))
+    return registryReview(input, entry, { originKey, origin });
+  const repository = `${registryUrl(entry).replace(/\/+$/, "")}/`;
+  if (origin.repository !== repository || origin.name !== entry.name)
+    refuse(
+      "Chart acquisition must match the catalog component's repository and name",
+    );
+  if (new URL(artifact.uri).protocol !== "https:")
+    refuse("Chart archive location must be an https URL");
+  return { kind: "chart", originKey, name: entry.name, repository };
+}
+
+/**
+ * An image or OCI chart lives at its registry under `upstreamName`: an alias
+ * entry is pulled from, and verified at, its real repository. An OCI chart's
+ * URI names the registry with the `oci://` scheme Helm pulls it by.
+ */
+function registryReview(
+  input: Input,
+  entry: VersionCatalogEntry,
+  { originKey, origin }: { originKey: string; origin: UpstreamOrigin },
+): Reviewed {
   const name = upstreamName(entry);
   const registry = registryLocation(registryUrl(entry), name);
+  const chart = input.artifact.kind === "chart";
   if (
     origin.repository !== registryUrl(entry) ||
     origin.name !== name ||
-    artifact.uri !== registry.uri
+    input.artifact.uri !== (chart ? `oci://${registry.uri}` : registry.uri)
   )
     refuse(
-      "Image acquisition must match the catalog component's registry, repository and image URI",
+      "Registry acquisition must match the catalog component's registry, repository and URI",
     );
-  return { kind: "image", originKey, registry, tag: origin.version };
+  return {
+    kind: chart ? "oci-chart" : "image",
+    originKey,
+    registry,
+    tag: origin.version,
+  };
 }
 
 async function boundedRead(
@@ -281,12 +302,24 @@ async function verifyChart(
       );
 }
 
-async function verifyImage(
+function manifestJson(bytes: Uint8Array): unknown {
+  try {
+    return JSON.parse(new TextDecoder().decode(bytes));
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * The requested tag must resolve to the requested manifest digest; an OCI
+ * chart's manifest must also carry Helm's chart config.
+ */
+async function verifyManifest(
   input: Input,
-  plan: Extract<Reviewed, { kind: "image" }>,
+  plan: Extract<Reviewed, { kind: "image" | "oci-chart" }>,
   transport: UpstreamFetch,
 ) {
-  const digest = await resolveManifestDigest(
+  const { digest, bytes } = await resolveManifest(
     plan.registry,
     plan.tag,
     transport,
@@ -295,6 +328,13 @@ async function verifyImage(
     refuse(
       "Registry manifest for the requested tag differs from the requested digest",
     );
+  if (plan.kind === "oci-chart") {
+    const manifest = z
+      .object({ config: z.object({ mediaType: z.string() }) })
+      .safeParse(manifestJson(bytes));
+    if (manifest.data?.config.mediaType !== HELM_CHART_CONFIG)
+      refuse("Registry artifact for the chart version is not a Helm chart");
+  }
 }
 
 export async function findQualifiedArtifact(
@@ -401,7 +441,7 @@ export async function acquireUpstreamArtifact(
   });
   if (build.status !== "verified") {
     if (plan.kind === "chart") await verifyChart(input, plan, transport);
-    else await verifyImage(input, plan, transport);
+    else await verifyManifest(input, plan, transport);
     await this.database.$transaction(async (tx) => {
       const changed = await tx.build.updateMany({
         where: { id: buildId, status: { in: ["pending", "failed"] } },
