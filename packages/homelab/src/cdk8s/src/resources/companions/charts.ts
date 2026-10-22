@@ -11,7 +11,10 @@ import { createLokiResources } from "@shepherdjerred/homelab/cdk8s/src/resources
 import { createTempoResources } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/tempo.ts";
 import { createPyroscopeResources } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/pyroscope.ts";
 import { createAlloyGatewayResources } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/alloy-gateway.ts";
-import { createVeleroResources } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/storage/velero.ts";
+import {
+  createVeleroResources,
+  createVeleroSchedules,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/storage/velero.ts";
 import { createSeaweedfsResources } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/storage/seaweedfs.ts";
 import { BASELINE_CHART_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/cluster-baseline/charts.ts";
 import {
@@ -20,6 +23,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/resources/cluster-baseline/root-addresses.ts";
 import {
   COMPANION_APPLICATIONS,
+  FOLLOWING_COMPANIONS,
   type CompanionApplication,
   companionChartName,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/companions/names.ts";
@@ -52,15 +56,39 @@ const COMPANION_RESOURCES: Readonly<
  * Call after the service-probes chart: the ingress and tunnel helpers
  * register probes, and the root's own calls already registered these.
  */
-export function createCompanionCharts(app: App): Chart[] {
-  return COMPANION_APPLICATIONS.map((application) => {
-    const chart = new Chart(app, companionChartName(application), {
-      namespace: BASELINE_CHART_NAMESPACE,
-      disableResourceNameHashes: true,
-    });
-    COMPANION_RESOURCES[application](chart);
-    adoptRootChartNames(chart);
-    adoptRootChartAddresses(chart);
-    return chart;
+/** Objects a following companion renders, after its upstream Application. */
+const FOLLOWING_RESOURCES: Readonly<Record<string, (chart: Chart) => unknown>> =
+  { "velero-schedules": createVeleroSchedules };
+
+function companionChart(
+  app: App,
+  name: string,
+  render: (chart: Chart) => unknown,
+): Chart {
+  const chart = new Chart(app, name, {
+    namespace: BASELINE_CHART_NAMESPACE,
+    disableResourceNameHashes: true,
   });
+  render(chart);
+  adoptRootChartNames(chart);
+  adoptRootChartAddresses(chart);
+  return chart;
+}
+
+export function createCompanionCharts(app: App): Chart[] {
+  return [
+    ...COMPANION_APPLICATIONS.map((application) =>
+      companionChart(
+        app,
+        companionChartName(application),
+        COMPANION_RESOURCES[application],
+      ),
+    ),
+    ...Object.values(FOLLOWING_COMPANIONS).map((name) => {
+      const render = FOLLOWING_RESOURCES[name];
+      if (render === undefined)
+        throw new Error(`Following companion ${name} has no resources`);
+      return companionChart(app, name, render);
+    }),
+  ];
 }

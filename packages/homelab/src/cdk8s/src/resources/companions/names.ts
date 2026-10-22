@@ -28,7 +28,20 @@ export function companionChartName(application: CompanionApplication): string {
   return `${application}-companion`;
 }
 
-/** Chart ids of the companion charts; each renders only under transition rendering. */
-export const COMPANION_CHARTS: ReadonlySet<string> = new Set(
-  COMPANION_APPLICATIONS.map((application) => companionChartName(application)),
-);
+/**
+ * Companion objects that are custom resources of their upstream chart's own
+ * CRDs deploy after the upstream Application, from a following chart: the
+ * leading companion keeps only what the upstream needs before it starts.
+ * Velero's Schedules need its CRDs; its cloud credentials must exist first.
+ */
+export const FOLLOWING_COMPANIONS: Readonly<
+  Partial<Record<CompanionApplication, string>>
+> = { velero: "velero-schedules" };
+
+/** Chart ids of the companion charts, leading and following; each renders only under transition rendering. */
+export const COMPANION_CHARTS: ReadonlySet<string> = new Set([
+  ...COMPANION_APPLICATIONS.map((application) =>
+    companionChartName(application),
+  ),
+  ...Object.values(FOLLOWING_COMPANIONS),
+]);

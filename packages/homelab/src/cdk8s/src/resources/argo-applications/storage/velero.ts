@@ -46,7 +46,11 @@ export function createVeleroNamespaces(chart: Chart): void {
   });
 }
 
-/** Objects the root renders beside the Application; the `velero-companion` companion chart renders the same objects under transition rendering. */
+/**
+ * The cloud credentials the root renders beside the Application, which Velero
+ * needs before it starts; the `velero-companion` chart renders the same object
+ * under transition rendering and deploys before the upstream Application.
+ */
 export function createVeleroResources(chart: Chart): OnePasswordItem {
   // 1Password secret for cloud credentials (AWS/GCP/Azure)
   const cloudCredentials = new OnePasswordItem(
@@ -62,8 +66,16 @@ export function createVeleroResources(chart: Chart): OnePasswordItem {
       },
     },
   );
+  return cloudCredentials;
+}
 
-  // Create all backup schedules from configuration
+/**
+ * The backup Schedules the root renders beside the Application. They are
+ * custom resources of Velero's own CRDs, so under transition rendering the
+ * `velero-schedules` chart renders the same objects and deploys after the
+ * upstream Application.
+ */
+export function createVeleroSchedules(chart: Chart): void {
   for (const scheduleConfig of VELERO_SCHEDULES) {
     // The paused legacy schedule has no remaining backups. It is still
     // rendered, but without prune protection, so the release after its
@@ -120,13 +132,13 @@ export function createVeleroResources(chart: Chart): OnePasswordItem {
       },
     });
   }
-  return cloudCredentials;
 }
 
 export function createVeleroApp(chart: Chart) {
   createVeleroNamespaces(chart);
 
   const cloudCredentials = createVeleroResources(chart);
+  createVeleroSchedules(chart);
 
   const veleroValues: HelmValuesForChart<"velero"> = {
     image: { imagePullSecrets: ["dockerhub-pull-velero"] },

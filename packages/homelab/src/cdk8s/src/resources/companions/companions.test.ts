@@ -9,6 +9,7 @@ import {
   COMPANION_APPLICATIONS,
   COMPANION_CHARTS,
   companionChartName,
+  FOLLOWING_COMPANIONS,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/companions/names.ts";
 import { dormantCharts } from "@shepherdjerred/homelab/cdk8s/src/resources/companions/dormant.ts";
 import {
@@ -54,9 +55,9 @@ describe("companion charts under transition rendering", () => {
         manifest,
       ]),
     );
-    for (const application of COMPANION_APPLICATIONS) {
-      const objects = chartObjects(companionChartName(application));
-      expect(objects.length, application).toBeGreaterThan(0);
+    for (const name of COMPANION_CHARTS) {
+      const objects = chartObjects(name);
+      expect(objects.length, name).toBeGreaterThan(0);
       for (const manifest of objects)
         expect(manifest, identity(manifest)).toStrictEqual(
           root.get(identity(manifest)),
@@ -77,19 +78,23 @@ describe("companion charts under transition rendering", () => {
     for (const application of COMPANION_APPLICATIONS) {
       const namespace = destinations.get(application);
       expect(namespace, application).toBeDefined();
-      for (const manifest of chartObjects(companionChartName(application)))
-        expect(manifest.metadata.namespace, identity(manifest)).toBe(namespace);
+      const following = FOLLOWING_COMPANIONS[application];
+      for (const name of [
+        companionChartName(application),
+        ...(following === undefined ? [] : [following]),
+      ])
+        for (const manifest of chartObjects(name))
+          expect(manifest.metadata.namespace, identity(manifest)).toBe(
+            namespace,
+          );
     }
   });
 
   test("every root object other than Applications and AppProjects has a post-window owner", () => {
     const owned = new Set(
-      [
-        ...BASELINE_CHART_APPLICATIONS,
-        ...COMPANION_APPLICATIONS.map((application) =>
-          companionChartName(application),
-        ),
-      ].flatMap((id) => chartObjects(id).map((manifest) => identity(manifest))),
+      [...BASELINE_CHART_APPLICATIONS, ...COMPANION_CHARTS].flatMap((id) =>
+        chartObjects(id).map((manifest) => identity(manifest)),
+      ),
     );
     const orphaned = chartObjects(ROOT_CHART)
       .filter(
@@ -104,8 +109,7 @@ describe("companion charts under transition rendering", () => {
   test("each companion has a Helm shell that is dormant only while the switch is off", async () => {
     expect(dormantCharts(true)).toEqual(new Set());
     expect(dormantCharts(false)).toEqual(COMPANION_CHARTS);
-    for (const application of COMPANION_APPLICATIONS) {
-      const name = companionChartName(application);
+    for (const name of COMPANION_CHARTS) {
       const shell = await Bun.file(
         new URL(`../../../helm/${name}/Chart.yaml`, import.meta.url),
       ).text();
@@ -115,11 +119,27 @@ describe("companion charts under transition rendering", () => {
 
   test("companions own disjoint objects", () => {
     const seen = new Map<string, string>();
-    for (const application of COMPANION_APPLICATIONS)
-      for (const manifest of chartObjects(companionChartName(application))) {
+    for (const name of COMPANION_CHARTS)
+      for (const manifest of chartObjects(name)) {
         const key = identity(manifest);
         expect(seen.get(key), key).toBeUndefined();
-        seen.set(key, application);
+        seen.set(key, name);
       }
+  });
+
+  test("Velero's Schedules follow it, byte-identical, and its leading companion keeps only the credentials", () => {
+    expect(
+      chartObjects("velero-companion").map((manifest) => manifest.kind),
+    ).toEqual(["OnePasswordItem"]);
+    const schedules = chartObjects("velero-schedules");
+    expect(new Set(schedules.map((manifest) => manifest.kind))).toEqual(
+      new Set(["Schedule"]),
+    );
+    expect(schedules.map((manifest) => identity(manifest)).sort()).toEqual(
+      chartObjects(ROOT_CHART)
+        .filter((manifest) => manifest.kind === "Schedule")
+        .map((manifest) => identity(manifest))
+        .sort(),
+    );
   });
 });

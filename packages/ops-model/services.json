@@ -582,9 +582,10 @@
         "seaweedfs": "upstream",
         "seaweedfs-companion": "inactive",
         "velero": "upstream",
-        "velero-companion": "inactive"
+        "velero-companion": "inactive",
+        "velero-schedules": "inactive"
       },
-      "charts": ["seaweedfs-companion", "velero-companion"],
+      "charts": ["seaweedfs-companion", "velero-companion", "velero-schedules"],
       "images": ["velero-plugin", "zfs-driver"],
       "title": "Storage & backups",
       "kind": "platform",

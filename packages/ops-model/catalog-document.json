@@ -2366,6 +2366,10 @@
         {
           "name": "chart:velero-companion",
           "producer": "first-party"
+        },
+        {
+          "name": "chart:velero-schedules",
+          "producer": "first-party"
         }
       ],
       "ops": {
@@ -2376,9 +2380,10 @@
       "legacy": {
         "rootReleaseExclusions": {
           "velero": "upstream",
-          "velero-companion": "inactive"
+          "velero-companion": "inactive",
+          "velero-schedules": "inactive"
         },
-        "charts": ["velero-companion"]
+        "charts": ["velero-companion", "velero-schedules"]
       }
     },
     {

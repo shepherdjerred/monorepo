@@ -321,9 +321,10 @@ test("the full catalog publication preserves the smaller coordinated root invent
   // The baseline and data-layer charts publish but stay out of the root
   // inventory: no root Application renders a baseline chart, and the two
   // data layers join together once transition rendering renders theirs. The
-  // 14 upstream-chart companions are owned now and publish once transition
-  // rendering synthesizes them; none joins the root inventory.
-  expect(charts).toHaveLength(62);
+  // 14 upstream-chart companions and Velero's following Schedules chart are
+  // owned now and publish once transition rendering synthesizes them; none
+  // joins the root inventory.
+  expect(charts).toHaveLength(63);
   const dataLayers = rootInventory.filter(({ name }) =>
     ["delivery-data", "temporal-data"].includes(name),
   ).length;

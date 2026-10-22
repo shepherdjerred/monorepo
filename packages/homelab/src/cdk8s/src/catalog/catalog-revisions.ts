@@ -20,6 +20,7 @@ import {
   COMPANION_APPLICATIONS,
   type CompanionApplication,
   companionChartName,
+  FOLLOWING_COMPANIONS,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/companions/names.ts";
 import {
   ENVIRONMENT_APPLICATIONS,
@@ -255,28 +256,44 @@ function kubernetesRevisions(
     };
   }
   if (companion === undefined) return { definition: main, configuration };
-  const companionName = companionChartName(companion);
-  const companionManifest = inputs.applications.get(companionName);
-  if (companionManifest === undefined)
-    throw new Error(`Companion Application ${companionName} is missing`);
-  const companionRecipe = applicationRecipe({
-    manifest: companionManifest,
-    pipeline: undefined,
-    parameters: {},
-  });
   return {
-    definition: RecipeDefinitionSchema.parse({
-      kind: "compound",
-      subRecipes: [
-        {
-          instance: `application:${companionName}`,
-          definition: companionRecipe,
-        },
-        { instance: `application:${name}`, definition: main },
-      ],
-    }),
+    definition: compoundRecipe(inputs, companion, name, main),
     configuration,
   };
+}
+
+/**
+ * A companion's Application before its upstream Application and, for a
+ * following companion whose objects need the upstream's CRDs, one after it.
+ */
+function compoundRecipe(
+  inputs: CatalogRevisionInputs,
+  companion: CompanionApplication,
+  name: string,
+  main: RecipeDefinition,
+): RecipeDefinition {
+  const sideRecipe = (application: string) => {
+    const manifest = inputs.applications.get(application);
+    if (manifest === undefined)
+      throw new Error(`Companion Application ${application} is missing`);
+    return {
+      instance: `application:${application}`,
+      definition: applicationRecipe({
+        manifest,
+        pipeline: undefined,
+        parameters: {},
+      }),
+    };
+  };
+  const following = FOLLOWING_COMPANIONS[companion];
+  return RecipeDefinitionSchema.parse({
+    kind: "compound",
+    subRecipes: [
+      sideRecipe(companionChartName(companion)),
+      { instance: `application:${name}`, definition: main },
+      ...(following === undefined ? [] : [sideRecipe(following)]),
+    ],
+  });
 }
 
 function staticSiteRevisions(

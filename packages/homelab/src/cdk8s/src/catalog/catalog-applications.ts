@@ -15,6 +15,7 @@ import {
 import {
   COMPANION_APPLICATIONS,
   companionChartName,
+  FOLLOWING_COMPANIONS,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/companions/names.ts";
 
 /**
@@ -166,6 +167,9 @@ function adoptingApplications(
       companionChartName(application),
       namespace,
     );
+    const following = FOLLOWING_COMPANIONS[application];
+    if (following !== undefined)
+      createAdoptingApplication(chart, following, namespace);
   }
   applyApplicationReleasePolicy(scratch, true);
   return applicationsOf(scratch);
