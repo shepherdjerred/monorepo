@@ -534,10 +534,10 @@ final class StuckSpotsTest {
   }
 
   @Test
-  void aBotBesideAFirePocketWithNoWayOutNeverStepsIntoItAndJumpsForItsBank() {
+  void aBotBesideAFirePocketWithNoWayOutNeverStepsIntoItAndOneInsideHolds() {
     // floating-isles: two nodes on a netherrack patch between permanent fires lead only to each
     // other. A burning acrobat dropped in, bobbed between them for six minutes and burned to death.
-    // Its one bank lies a block up: a dry body must jump for it, as no walk climbs a block.
+    // Its one bank a block up lies diagonally past a solid corner; the rest is void or fire.
     var nav = nav("floating-isles");
     var graph = nav.graph();
     var spawn = nav.approachNode(nav.sites().spawns().getFirst()).orElseThrow();
@@ -551,12 +551,42 @@ final class StuckSpotsTest {
         assertThat(graph.reachable(node, spawn)).as("step to %s", route.goal()).isTrue();
       }
     }
-    var inside = combatant(1, RED, new Vec3(4221.5, 86, 2096.5));
-    var stuck = situation(nav, inside, Optional.empty(), 100);
+    var context = context(nav);
+    var inside = landed(new Vec3(4221.5, 86, 2096.5));
+    var away = graph.feet(spawn);
+    var state =
+        new TacticsState(
+            Optional.of(Plan.of(Option.TAKE_SLOT, 95, new PlanStep.Route(away, Stance.CAUTIOUS))),
+            95,
+            0,
+            0,
+            RewindClock.UNSTARTED,
+            TacticalMemory.EMPTY);
+    for (var tick = 100L; tick <= 140; tick += 20) {
+      var stuck = situation(nav, inside, Optional.of(away), tick);
+      assertThat(RecoverySteps.escape(stuck, context)).as("no bank past a solid corner").isEmpty();
+      var thought = Tactics.think(state, stuck, context, new SplittableRandom(1));
+      assertThat(thought.trace().movement().recovery()).isEqualTo(DecisionTrace.Recovery.HOLD);
+      assertThat(thought.decision().waypoints()).as("it holds instead of bobbing").isEmpty();
+      state = thought.state();
+    }
+  }
+
+  @Test
+  void aSwimmerTrappedInAWellIsNeverToldToHold() {
+    // Review finding: holding still at mid-depth would only sink a swimmer until it drowned.
+    var nav =
+        com.shepherdjerred.thestorm.rwfbots.domain.map.MapBaker.bake(
+            "deep-well",
+            new DeepWell(),
+            new com.shepherdjerred.thestorm.rwfbots.domain.map.NavSites(
+                List.of(
+                    new com.shepherdjerred.thestorm.rwfbots.domain.map.NavSites.Site(
+                        "red", Optional.of("red"), new BlockPos(7, 17, 7))),
+                List.of()));
+    var self = combatant(1, RED, new Vec3(4.5, 7.5, 4.5)).withMotion(false, false);
+    var stuck = situation(nav, self, Optional.empty(), 100);
     assertThat(RecoverySteps.stranded(stuck, context(nav))).isTrue();
-    var out = RecoverySteps.escape(stuck, context(nav)).orElseThrow();
-    assertThat(out.getLast().hop()).isEqualTo(Hop.JUMP);
-    var exit = graph.nearestNode(out.getLast().pos()).orElseThrow();
-    assertThat(graph.reachable(exit, spawn)).as("the escape leaves the pocket").isTrue();
+    assertThat(RecoverySteps.trapped(stuck, context(nav))).isFalse();
   }
 }

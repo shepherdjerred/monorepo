@@ -96,7 +96,9 @@ final class RecoverySteps {
 
   /**
    * The waypoint onto a node beside {@code node}, at most {@link #BANK_RISE} up, that reaches a
-   * spawn: a jump where a dry body must rise more than a step, which a walk cannot climb.
+   * spawn: a jump where a dry body must rise more than a step, which a walk cannot climb. A dry
+   * body crossing diagonally needs both corners clear where it crosses, as the movement gate does;
+   * floating-isles offered a bank past a solid corner, refused every time it was tried.
    */
   private static Optional<Waypoint> bankBeside(NavArtifact nav, int node, List<Integer> spawns) {
     var graph = nav.graph();
@@ -104,10 +106,11 @@ final class RecoverySteps {
     var from = graph.cell(node);
     for (var cell : beside(from)) {
       var bank = graph.nodeAt(cell);
-      if (bank.isEmpty() || bank.getAsInt() == node) continue;
+      var dry = !graph.water().contains(from);
+      if (bank.isEmpty() || bank.getAsInt() == node || (dry && !cornersClear(nav, from, cell)))
+        continue;
       var rise = graph.feet(bank.getAsInt()).y() - feet.y();
       if (rise <= BANK_RISE + 1e-6 && reachesAny(graph, bank.getAsInt(), spawns)) {
-        var dry = !graph.water().contains(from);
         return Optional.of(
             new Waypoint(graph.feet(bank.getAsInt()), dry && rise > STEP ? Hop.JUMP : Hop.WALK));
       }
@@ -124,6 +127,29 @@ final class RecoverySteps {
       }
     }
     return cells;
+  }
+
+  /** Whether neither corner of a diagonal crossing onto {@code to} blocks a body at its height. */
+  private static boolean cornersClear(NavArtifact nav, BlockPos from, BlockPos to) {
+    var dx = to.x() - from.x();
+    var dz = to.z() - from.z();
+    if (dx == 0 || dz == 0) return true;
+    for (var y = to.y(); y <= to.y() + 1; y++) {
+      if (nav.grid().blocksMovement(new BlockPos(from.x() + dx, y, from.z()))
+          || nav.grid().blocksMovement(new BlockPos(from.x(), y, from.z() + dz))) return false;
+    }
+    return true;
+  }
+
+  /**
+   * Whether the bot is stranded on dry ground with no way out: holding is all that is left. A
+   * swimmer is never told to hold, as it would sink and drown.
+   */
+  static boolean trapped(Situation situation, TacticsContext context) {
+    var graph = context.nav().graph();
+    return stranded(situation, context)
+        && !graph.water().contains(BlockPos.of(situation.self().pos()))
+        && escape(situation, context).isEmpty();
   }
 
   /** The waypoints from the search's start to {@code end}, then onto {@code bank}. */
