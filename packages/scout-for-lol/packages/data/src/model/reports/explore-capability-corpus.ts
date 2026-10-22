@@ -42,24 +42,30 @@ export const ExploreCapabilityCaseSchema = z
 
 export type ExploreCapabilityCase = z.infer<typeof ExploreCapabilityCaseSchema>;
 
+/** Every eval corpus keys its cases by id; a repeated id is a corpus error. */
+export function rejectDuplicateCaseIds(
+  corpus: { readonly cases: readonly { readonly id: string }[] },
+  context: z.RefinementCtx,
+): void {
+  const seen = new Set<string>();
+  for (const entry of corpus.cases) {
+    if (seen.has(entry.id)) {
+      context.addIssue({
+        code: "custom",
+        message: `Duplicate case id '${entry.id}'`,
+      });
+    }
+    seen.add(entry.id);
+  }
+}
+
 export const ExploreCapabilityCorpusSchema = z
   .object({
     version: z.number().int().positive(),
     cases: z.array(ExploreCapabilityCaseSchema).min(1),
   })
   .strict()
-  .superRefine((corpus, context) => {
-    const seen = new Set<string>();
-    for (const entry of corpus.cases) {
-      if (seen.has(entry.id)) {
-        context.addIssue({
-          code: "custom",
-          message: `Duplicate case id '${entry.id}'`,
-        });
-      }
-      seen.add(entry.id);
-    }
-  });
+  .superRefine(rejectDuplicateCaseIds);
 
 export type ExploreCapabilityCorpus = z.infer<
   typeof ExploreCapabilityCorpusSchema

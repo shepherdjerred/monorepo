@@ -52,7 +52,8 @@
     "explore:summarize": "bun run scripts/explore-replay/summarize-bundle.ts",
     "explore:judge": "bun run scripts/explore-replay/judge-bundle.ts",
     "analytics:backfill-bryan-bucks": "bun run scripts/backfill/backfill-bryan-bucks-analytics.ts",
-    "customs:anonymize": "bun run scripts/anonymize-customs-participant.ts"
+    "customs:anonymize": "bun run scripts/anonymize-customs-participant.ts",
+    "test:explore:scenarios": "bun run scripts/explore-scenarios/run-scenarios.ts"
   },
   "dependencies": {
     "@shepherdjerred/bugsink-config": "workspace:*",

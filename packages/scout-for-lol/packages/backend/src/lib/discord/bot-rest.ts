@@ -507,6 +507,23 @@ export function botRest(): BotRestReader {
   return sharedReader;
 }
 
+/**
+ * Replace the process-wide reader, returning a restore function.
+ *
+ * For model-eval harnesses that run the real Explore agent against seeded
+ * guilds with no bot token: they build a reader over a fixture transport with
+ * {@link createBotRestReader} and install it before the first tool call.
+ * Most call sites read {@link botRest} rather than taking a reader, so there
+ * is no other seam that reaches all of them.
+ */
+export function installBotRestReader(reader: BotRestReader): () => void {
+  const previous = sharedReader;
+  sharedReader = reader;
+  return () => {
+    sharedReader = previous;
+  };
+}
+
 /** The bot's current guild membership, bypassing the ordinary member cache. */
 export async function freshBotMember(
   guildId: DiscordGuildId,

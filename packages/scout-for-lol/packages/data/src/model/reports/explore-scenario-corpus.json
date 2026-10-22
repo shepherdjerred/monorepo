@@ -1,0 +1,464 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "who-am-i",
+      "asker": { "username": "rosie", "displayName": "Rosie" },
+      "guild": {
+        "name": "Bwa Town",
+        "channels": ["general", "league-stats-with-scout"],
+        "players": [
+          {
+            "alias": "Omz",
+            "linkedToAsker": true,
+            "account": { "kind": "lake", "rank": 3 },
+            "feeds": ["league-stats-with-scout"]
+          },
+          {
+            "alias": "Moon",
+            "account": { "kind": "lake", "rank": 4 }
+          }
+        ]
+      },
+      "turns": [
+        {
+          "question": "Who am i",
+          "expect": {
+            "mustMentionAnyOf": [["Omz"]],
+            "mustNotMention": [
+              "send your riot id",
+              "send me your riot id",
+              "tell me your riot id"
+            ],
+            "rubric": [
+              "Identifies the asker as the tracked player Omz in this server.",
+              "Names at least one Riot account linked to Omz.",
+              "Does not ask the user to provide their Riot ID or Scout alias."
+            ]
+          }
+        }
+      ],
+      "origin": "rosiesucks asked '/scout ask Who am i' on Discord and was told Explore cannot identify them from the chat."
+    },
+    {
+      "id": "my-latest-match",
+      "asker": { "username": "megumi", "displayName": "Megumi" },
+      "guild": {
+        "name": "Megumi's Server",
+        "channels": ["general"],
+        "players": [
+          {
+            "alias": "Megumi",
+            "linkedToAsker": true,
+            "account": { "kind": "lake", "rank": 5 }
+          }
+        ]
+      },
+      "turns": [
+        {
+          "question": "Show my latest match report",
+          "expect": {
+            "toolsCalled": [["run_report_query"]],
+            "rubric": [
+              "Describes the most recent recorded game of the tracked player Megumi, with champion and result.",
+              "Does not present a match that is not Megumi's.",
+              "Does not ask the user who they are."
+            ]
+          }
+        }
+      ],
+      "origin": "megumi4827 asked 'Show my latest match report' and got an unrelated KR match from global history."
+    },
+    {
+      "id": "why-no-match-report",
+      "asker": { "username": "megumi", "displayName": "Megumi" },
+      "guild": {
+        "name": "Megumi's Server",
+        "channels": ["general", "lol"],
+        "players": []
+      },
+      "turns": [
+        {
+          "question": "why no match report",
+          "expect": {
+            "mustNotMention": ["KR_", "EUW1_", "NA1_"],
+            "rubric": [
+              "Explains that the server tracks no players, so Scout has no games to post match reports for.",
+              "Tells the user how to fix it: track a player and post their games to a channel, or offers to prepare that.",
+              "Does not show a match from outside the server."
+            ]
+          }
+        }
+      ],
+      "origin": "megumi4827 asked 'why no match report' in a server with zero tracked players and got a random match instead of a setup diagnosis."
+    },
+    {
+      "id": "feed-by-username",
+      "surfaces": ["web", "discord"],
+      "asker": { "username": "pepper", "displayName": "pepper" },
+      "guild": {
+        "name": "Bwa Town",
+        "channels": ["general", "league-stats-with-scout"],
+        "members": [
+          { "username": "shadowpumpkin23", "displayName": "ShadowPumpkin" }
+        ]
+      },
+      "candidates": { "pumpkin": { "kind": "lake", "rank": 7 } },
+      "turns": [
+        {
+          "question": "set up a player feed in #league-stats-with-scout for {pumpkin.riotId} on {pumpkin.region}, call them Pumpkin. their discord is @shadowpumpkin23",
+          "expect": {
+            "intentMinted": "subscription",
+            "mustNotMention": [
+              "numeric discord",
+              "discord user id",
+              "discord id"
+            ],
+            "rubric": [
+              "Prepares a player feed for the named Riot account in #league-stats-with-scout, displayed as Pumpkin.",
+              "Links the feed to the Discord member shadowpumpkin23 without asking for a numeric Discord ID.",
+              "Says the feed is waiting for the user's confirmation rather than claiming it already exists."
+            ]
+          }
+        }
+      ],
+      "origin": "ulovepepper set up four player feeds; each time Explore demanded a 'numeric Discord user ID', so they pasted friends' snowflakes into chat."
+    },
+    {
+      "id": "auto-review",
+      "asker": { "username": "wicken", "displayName": "Wicken" },
+      "guild": {
+        "name": "Lecker Bierchen",
+        "channels": ["general", "league"],
+        "players": []
+      },
+      "turns": [
+        {
+          "question": "auto game review after every game",
+          "expect": {
+            "mustMentionAnyOf": [
+              ["feed", "match report", "after every game", "after each game"]
+            ],
+            "rubric": [
+              "Explains that Scout posts a match report to a channel after every game for each tracked player with a feed.",
+              "Offers to set that up, or tells the user exactly how.",
+              "Does not claim Scout cannot post something after each game."
+            ]
+          }
+        }
+      ],
+      "origin": "wickenmuller asked for 'auto game review after every game', was told Explore cannot, and removed the bot 93 minutes later — player feeds already do this."
+    },
+    {
+      "id": "edit-bot-message",
+      "asker": { "username": "suxen", "displayName": "suxen" },
+      "guild": {
+        "name": "Magyar LoL",
+        "channels": ["general", "lol-feed"],
+        "players": [
+          {
+            "alias": "Suxen",
+            "linkedToAsker": true,
+            "account": { "kind": "lake", "rank": 9 },
+            "feeds": ["lol-feed"]
+          }
+        ]
+      },
+      "turns": [
+        {
+          "question": "how can i rewrite what the bot say when someone started a game",
+          "expect": {
+            "mustNotMention": [
+              "edit message",
+              "notifications/game tracking",
+              "template option"
+            ],
+            "rubric": [
+              "Understands the user wants to change the text Scout posts, not to have their sentence rephrased.",
+              "Says plainly that Scout's notification text cannot be customized.",
+              "Does not describe a settings page, menu or option that does not exist."
+            ]
+          }
+        },
+        {
+          "question": "hol kéne lennie pontosan",
+          "expect": {
+            "mustNotMention": ["edit message", "notifications / game tracking"],
+            "rubric": [
+              "Answers in Hungarian.",
+              "Repeats that there is no place to customize the message, without inventing one."
+            ]
+          }
+        }
+      ],
+      "origin": "suxen_ asked how to change the bot's game-start message; Explore rephrased the question, then invented an 'Explore → Notifications → Edit message' path."
+    },
+    {
+      "id": "add-tracked-player-discord",
+      "surfaces": ["discord", "voice"],
+      "asker": {
+        "username": "shadowpumpkin23",
+        "displayName": "ShadowPumpkin"
+      },
+      "guild": {
+        "name": "Bwa Town",
+        "channels": ["general", "league-stats-with-scout"]
+      },
+      "candidates": { "friend": { "kind": "lake", "rank": 8 } },
+      "turns": [
+        {
+          "question": "how do i add someone to this server's tracked players",
+          "expect": {
+            "mustNotMention": [
+              "cannot change the tracked-player list",
+              "can't change the tracked-player list"
+            ],
+            "rubric": [
+              "Offers to add the player from this conversation, asking only for what it still needs (Riot ID, region, channel).",
+              "Does not claim this surface cannot add tracked players."
+            ]
+          }
+        },
+        {
+          "question": "{friend.riotId} on {friend.region}, post in #league-stats-with-scout",
+          "expect": {
+            "intentMinted": "subscription",
+            "rubric": [
+              "Prepares the tracked player and feed for confirmation.",
+              "Tells the user how to confirm it on this surface."
+            ]
+          }
+        }
+      ],
+      "origin": "shadowpumpkin23 asked on Discord how to add someone to tracked players and was told Explore cannot change the list from there, while the web surface was preparing feeds."
+    },
+    {
+      "id": "already-confirmed",
+      "surfaces": ["web", "discord"],
+      "asker": { "username": "valentinos", "displayName": "Valentinos" },
+      "guild": {
+        "name": "LEAGUE OF LEGENDS SERVER",
+        "channels": ["league-chat", "general"],
+        "players": [
+          {
+            "alias": "Val",
+            "linkedToAsker": true,
+            "account": { "kind": "lake", "rank": 10 }
+          }
+        ],
+        "reports": [
+          { "title": "Weekly Games and Win Rate", "channel": "league-chat" }
+        ]
+      },
+      "priorTurns": [
+        {
+          "question": "Sunday 12pm greek timezone",
+          "answer": "The weekly report is prepared and waiting for your confirmation in Explore — nothing has been created yet. It will post \"Weekly Games and Win Rate\" in #league-chat every Sunday at 12:00 PM Europe/Athens. The confirmation card expires in ten minutes.",
+          "intent": {
+            "kind": "report",
+            "reportTitle": "Weekly Games and Win Rate",
+            "channel": "league-chat",
+            "state": "consumed"
+          }
+        }
+      ],
+      "turns": [
+        {
+          "question": "Confirm",
+          "expect": {
+            "mustNotMention": [
+              "nothing has been created",
+              "nothing is created",
+              "has not been created"
+            ],
+            "rubric": [
+              "Says the Weekly Games and Win Rate report is already confirmed and active.",
+              "Does not tell the user to confirm it again."
+            ]
+          }
+        }
+      ],
+      "origin": "valentinos123 confirmed a report card, then typed 'Confirm' twice more and was told nothing had been created."
+    },
+    {
+      "id": "active-reports-at-limit",
+      "surfaces": ["web", "discord"],
+      "asker": { "username": "pepper", "displayName": "pepper" },
+      "guild": {
+        "name": "Bwa Town",
+        "channels": ["general", "league-stats-with-scout"],
+        "players": [
+          {
+            "alias": "pepper",
+            "linkedToAsker": true,
+            "account": { "kind": "lake", "rank": 11 }
+          }
+        ],
+        "reports": [
+          {
+            "title": "Players' Last Five Games",
+            "channel": "league-stats-with-scout"
+          },
+          { "title": "Weekly Win Rates", "channel": "general" }
+        ]
+      },
+      "turns": [
+        {
+          "question": "Show me my active reports",
+          "expect": {
+            "mustMentionAnyOf": [
+              ["Players' Last Five Games", "Players’ Last Five Games"],
+              ["Weekly Win Rates"]
+            ],
+            "rubric": [
+              "Lists both active reports with their channels.",
+              "Says the user is at their report limit and offers to disable one to make room, or explains how."
+            ]
+          }
+        }
+      ],
+      "origin": "ulovepepper hit the 2-report limit, asked to see their active reports, and Explore said it could not list them."
+    },
+    {
+      "id": "best-build",
+      "asker": { "username": "sliz", "displayName": "sliz" },
+      "guild": { "name": "Brand Mains", "channels": ["general"] },
+      "turns": [
+        {
+          "question": "Show the best Brand build in Scout's data",
+          "expect": {
+            "toolsCalled": [["run_report_query"]],
+            "mustNotMention": [
+              "Health Potion + World Atlas",
+              "World Atlas + Health Potion"
+            ],
+            "rubric": [
+              "Names a build made of completed items (legendaries and boots), not starter items or consumables.",
+              "Excludes remakes and very short games, or says it did.",
+              "States the sample size and the period or patches it covers."
+            ]
+          }
+        }
+      ],
+      "origin": "slizrvgv asked for the best Brand build on Discord and got 'Health Potion + World Atlas' — an exact final-inventory label that only trivial games repeat."
+    },
+    {
+      "id": "rune-page",
+      "asker": { "username": "sliz", "displayName": "sliz" },
+      "guild": { "name": "Brand Mains", "channels": ["general"] },
+      "turns": [
+        {
+          "question": "rune malphite",
+          "expect": {
+            "toolsCalled": [["lookup_rune", "lookup_champion"]],
+            "rubric": [
+              "Gives a complete Malphite rune page: keystone, three primary runes, two secondary runes.",
+              "Every rune named exists in the current rune data."
+            ]
+          }
+        }
+      ],
+      "origin": "slizrvgv asked 'rune malphite' on Discord; the answer had a plausible page but did not check the current rune data."
+    },
+    {
+      "id": "game-review",
+      "asker": { "username": "abdo", "displayName": "abdo" },
+      "guild": {
+        "name": "Ascend",
+        "channels": ["general"],
+        "players": [
+          {
+            "alias": "Ascendator",
+            "linkedToAsker": true,
+            "account": { "kind": "lake", "rank": 1, "withTimeline": true }
+          }
+        ]
+      },
+      "turns": [
+        {
+          "question": "review my last game in detail, what went wrong?",
+          "expect": {
+            "rubric": [
+              "Reviews the asker's most recent recorded game without asking who they are.",
+              "Uses the game's timeline: names specific deaths, objectives or turning points with game times.",
+              "Ends with concrete, specific things to do differently."
+            ]
+          }
+        }
+      ],
+      "origin": "abdo.mubarek had to type their own Riot ID to get a review, and the review said it had no timeline to name turning points from."
+    },
+    {
+      "id": "current-meta",
+      "asker": { "username": "vortech", "displayName": "vortech" },
+      "guild": { "name": "Meta Talk", "channels": ["general"] },
+      "turns": [
+        {
+          "question": "which champions are strongest right now",
+          "expect": {
+            "toolsCalled": [["run_report_query"]],
+            "rubric": [
+              "Answers for the current or most recent patches, not all history, and says which patches.",
+              "Gives game counts and uses a minimum sample.",
+              "Says this reflects games Scout records, not the whole ladder."
+            ]
+          }
+        }
+      ],
+      "origin": "vortechx. asked which champions have the highest win rate and got an all-history ranking with no patch scoping."
+    },
+    {
+      "id": "image-scoreboard",
+      "surfaces": ["web", "discord"],
+      "asker": { "username": "abdo", "displayName": "abdo" },
+      "guild": {
+        "name": "Ascend",
+        "channels": ["general"],
+        "players": [
+          {
+            "alias": "Ascendator",
+            "linkedToAsker": true,
+            "account": { "kind": "lake", "rank": 1, "withTimeline": true }
+          }
+        ]
+      },
+      "turns": [
+        {
+          "question": "what went wrong in this game?",
+          "image": "post-game-scoreboard.png",
+          "expect": {
+            "rubric": [
+              "Reads the attached post-game screenshot and refers to what it shows.",
+              "Gives specific advice grounded in the screenshot or the matching recorded game."
+            ]
+          }
+        }
+      ],
+      "origin": "Requested capability: players share post-game screenshots and want Explore to read them."
+    },
+    {
+      "id": "thin-data",
+      "control": true,
+      "asker": { "username": "pepper", "displayName": "pepper" },
+      "guild": {
+        "name": "Bwa Town",
+        "channels": ["general"],
+        "players": [
+          { "alias": "Quillbert", "account": { "kind": "unrecorded" } }
+        ]
+      },
+      "turns": [
+        {
+          "question": "Show Quillbert's last five games",
+          "expect": {
+            "rubric": [
+              "Says Scout has no recorded games for Quillbert rather than inventing any.",
+              "Does not present games from another player."
+            ]
+          }
+        }
+      ],
+      "origin": "ulovepepper asked for last five games with fewer than five recorded; Explore answered honestly. Kept as a control that should pass before any fix."
+    }
+  ]
+}

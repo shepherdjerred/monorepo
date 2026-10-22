@@ -41,6 +41,7 @@ export * from "./reports/explore-answer.ts";
 export * from "./reports/explore-match-card.ts";
 export * from "./reports/explore-loadout-card.ts";
 export * from "./reports/explore-capability-corpus.ts";
+export * from "./reports/explore-scenario-corpus.ts";
 export * from "./reports/explore-suggestions.ts";
 export * from "./core/form-inputs.ts";
 export * from "./reports/report-ai.ts";
