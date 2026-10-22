@@ -141,7 +141,7 @@ COPY --parents \
   packages/scout-for-lol/packages/report \
   packages/scout-for-lol/packages/temporal \
   packages/config \
-  packages/sentry-config \
+  packages/bugsink-config \
   packages/text \
   packages/feature-flags \
   packages/llm-models \
@@ -228,7 +228,7 @@ USER 0
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends postgresql postgresql-client && rm -rf /var/lib/apt/lists/*
 # The smoke harness ships in CI context only — the scoped source COPY
-# excludes .buildkite, so stage it here (never in the pushed image stage).
+# excludes ci/, so stage it here (never in the pushed image stage).
 # Depend on voice-smoke so an explicit `--target smoke` build proves both.
 COPY --from=voice-smoke /tmp/voice-model-smoke-passed /tmp/voice-model-smoke-passed
 COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts

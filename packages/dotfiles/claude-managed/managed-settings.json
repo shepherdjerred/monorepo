@@ -159,8 +159,6 @@
       "Bash(temporal schedule pause*)",
       "Bash(temporal operator namespace delete*)",
       "Bash(gcx resources apply*)",
-      "Bash(bk build cancel*)",
-      "Bash(bk unblock*)",
       "Bash(cf r2 buckets delete*)",
       "Bash(cf accounts tokens create*)",
       "Bash(cf accounts tokens delete*)"

@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@shepherdjerred/sentry-config": "workspace:*",
+    "@shepherdjerred/bugsink-config": "workspace:*",
     "@ai-sdk/anthropic": "^4.0.62",
     "@ai-sdk/google": "^4.0.79",
     "@ai-sdk/openai": "^4.0.74",

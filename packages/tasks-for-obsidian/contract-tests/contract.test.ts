@@ -81,7 +81,7 @@ beforeAll(async () => {
       TASKS_DIR: "TaskNotes",
       AUTH_TOKEN,
       PORT: String(PORT),
-      SENTRY_ENABLED: "false",
+      BUGSINK_ENABLED: "false",
     },
     stdout: "pipe",
     stderr: "pipe",

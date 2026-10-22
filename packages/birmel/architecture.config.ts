@@ -61,7 +61,7 @@ export default defineArchitecture({
     {
       name: "observability-does-not-depend-on-feature-slices",
       comment:
-        "Tracing, metrics and Sentry are cross-cutting: every slice reports to them. A slice they " +
+        "Tracing, metrics and Bugsink are cross-cutting: every slice reports to them. A slice they " +
         "report on in turn is a cycle waiting to happen, and it makes instrumentation impossible " +
         "to initialise before the thing it instruments.",
       from: "observability",

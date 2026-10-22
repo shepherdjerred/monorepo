@@ -99,9 +99,8 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   runUvCachePruneWorkflow: "maintenance",
   runTrivyDbRefreshWorkflow: "maintenance",
   runTurboCacheCleanWorkflow: "maintenance",
-  // security-schedule-definitions.ts workflows dispatch to
-  // TASK_QUEUES.MAINTENANCE despite predating the buildkite-PVC-only framing
-  // in that queue's doc comment — the code is the ground truth.
+  // security-schedule-definitions.ts workflows also dispatch to
+  // TASK_QUEUES.MAINTENANCE, although they do not touch the CI cache PVCs.
   runMainVulnScanWorkflow: "maintenance",
   runLinkRotScanWorkflow: "maintenance",
 

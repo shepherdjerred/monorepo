@@ -81,13 +81,13 @@ describe("callRiotOrUndefined", () => {
     expect(result).toBeUndefined();
   });
 
-  test("returns undefined on upstream 503 (no Sentry capture)", async () => {
+  test("returns undefined on upstream 503 (no Bugsink capture)", async () => {
     const result = await callRiotOrUndefined(
       {
         source: "test-503",
         schema: Schema,
         context: {},
-        sentry: true,
+        bugsink: true,
       },
       fails(httpError(503)),
     );

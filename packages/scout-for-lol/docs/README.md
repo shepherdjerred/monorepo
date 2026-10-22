@@ -73,7 +73,7 @@ over tRPC.
 | AI            | OpenAI                           |
 | External APIs | Riot Games API (native client)   |
 | Storage       | S3 (SeaweedFS) — raw match store |
-| Monitoring    | Prometheus + Sentry + PostHog    |
+| Monitoring    | Prometheus + Bugsink + PostHog   |
 
 ## Package Overview
 

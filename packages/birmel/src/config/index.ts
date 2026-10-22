@@ -100,17 +100,17 @@ function loadCoreConfig(environment: Environment) {
 
 function loadFeatureConfig(environment: Environment) {
   return {
-    sentry: {
-      enabled: parseBoolean(environment["SENTRY_ENABLED"], false),
-      dsn: environment["SENTRY_DSN"],
-      environment: environment["SENTRY_ENVIRONMENT"] ?? "development",
-      release: environment["SENTRY_RELEASE"] ?? environment["GIT_SHA"],
-      sampleRate: parseNumber(environment["SENTRY_SAMPLE_RATE"], 1),
+    bugsink: {
+      enabled: parseBoolean(environment["BUGSINK_ENABLED"], false),
+      dsn: environment["BUGSINK_DSN"],
+      environment: environment["BUGSINK_ENVIRONMENT"] ?? "development",
+      release: environment["BUGSINK_RELEASE"] ?? environment["GIT_SHA"],
+      sampleRate: parseNumber(environment["BUGSINK_SAMPLE_RATE"], 1),
       tracesSampleRate: parseNumber(
-        environment["SENTRY_TRACES_SAMPLE_RATE"],
+        environment["BUGSINK_TRACES_SAMPLE_RATE"],
         0,
       ),
-      debug: parseBoolean(environment["SENTRY_DEBUG"], false),
+      debug: parseBoolean(environment["BUGSINK_DEBUG"], false),
     },
     persona: {
       enabled: parseBoolean(environment["PERSONA_ENABLED"], true),

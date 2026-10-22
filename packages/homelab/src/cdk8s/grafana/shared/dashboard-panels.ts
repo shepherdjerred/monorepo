@@ -1,9 +1,5 @@
 /**
  * Shared Grafana panel builders.
- *
- * Lived under the Buildkite dashboard directory until that stack was removed,
- * but nothing about them is CI-provider specific -- the buildkitd dashboard
- * has always used them too.
  */
 import * as common from "@grafana/grafana-foundation-sdk/common";
 import * as dashboard from "@grafana/grafana-foundation-sdk/dashboard";

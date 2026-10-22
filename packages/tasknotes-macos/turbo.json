@@ -11,7 +11,7 @@
     // every PR. `swift build`, `swift test`, `swift-format`, and `xcodebuild`
     // all need a Swift toolchain or Xcode, which the Linux CI image does not
     // have and should not grow — macOS work follows the existing iOS
-    // precedent: Buildkite owns what runs on Linux, and anything needing a Mac
+    // precedent: Linux CI owns what runs on Linux, and anything needing a Mac
     // is a local pre-merge step (`bun run mac:verify`).
     //
     // No `outputs`: swiftlint produces none, and the win here is turbo's cached

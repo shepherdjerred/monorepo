@@ -83,7 +83,6 @@ describe("AI SDK 7 first-party provider contracts", () => {
     // The catalog's native route id is the API model name; no gateway prefix.
     expect(body).toMatchObject({ model: "gpt-5.6-luna" });
     expect(url).toContain("api.openai.com");
-    expect(url).not.toContain("openrouter");
     // Cache reads arrive as a separate, non-overlapping count.
     expect(result.usage.inputTokenDetails.cacheReadTokens).toBe(4);
   });

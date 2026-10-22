@@ -17,7 +17,7 @@ import {
   formatTranscript,
   getRecentChannelMessages,
 } from "@shepherdjerred/birmel/discord/utils/channel-history.ts";
-import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
+import { captureException } from "@shepherdjerred/birmel/observability/bugsink.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { getGuildPersona } from "@shepherdjerred/birmel/persona/guild-persona.ts";
 import { listActivePersonaAliases } from "@shepherdjerred/birmel/memory/aliases.ts";

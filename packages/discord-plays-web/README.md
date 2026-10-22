@@ -30,7 +30,7 @@ parts that behave the same in both:
   schema-validated reply with a timeout.
 - `src/session/me.ts` — `useMe()`, `signIn()`, and `useSignOut()` against the
   sign-in routes core serves.
-- `src/bootstrap/mount-game-app.tsx` — `mountGameApp()`: Sentry (DSN per
+- `src/bootstrap/mount-game-app.tsx` — `mountGameApp()`: Bugsink (DSN per
   game, release and mode from the build), react-query, and the React root.
 - `src/vite/game-vite-config.ts` — `defineGameViteConfig()`: shared plugins
   and the `vite dev` proxies for `/socket.io`, `/video`, and `/api`.

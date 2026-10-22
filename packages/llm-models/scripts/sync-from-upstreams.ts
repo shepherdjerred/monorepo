@@ -508,8 +508,7 @@ function applicableFields(entry: ModelEntry): CrossCheckField[] {
   //
   // This is a stopgap. It is the fourth model class this function has had to
   // special-case, and the real fix is for entries to declare which fields
-  // upstream owns instead of having this infer it. The implementation work is
-  // tracked in Linear as SJ-135.
+  // upstream owns instead of having this infer it.
   const fields: CrossCheckField[] =
     entry.category === "embedding" ? ["input"] : ["input", "output"];
   if (entry.contextWindow !== undefined && entry.pinnedContextWindow !== true) {

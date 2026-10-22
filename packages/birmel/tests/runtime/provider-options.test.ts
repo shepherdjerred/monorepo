@@ -11,9 +11,8 @@ describe("getAgentProviderOptions", () => {
   });
 
   test("keeps tool calls serial and forwards the configured effort", () => {
-    // The gateway took `parallelToolCalls: false` in an `openrouter` bucket. A
-    // first-party provider ignores that bucket, so the guarantee has to arrive
-    // in the provider's own key or it is silently lost.
+    // A first-party provider ignores options under any other provider's key,
+    // so the guarantee has to arrive in its own key or it is silently lost.
     expect(getAgentProviderOptions("gpt-5.6-sol")).toEqual({
       openai: { parallelToolCalls: false, reasoningEffort: "medium" },
     });

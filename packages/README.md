@@ -77,7 +77,7 @@ hold only scoped invariants that agents must keep in context.
 | [loaded](loaded/)                                 | `Loaded<T>` renderability algebra + `LoadingBlock` for async UI state          |
 | [ops-clients](ops-clients/)                       | Zod-validated upstream clients for the ops snapshot collector                  |
 | [ops-model](ops-model/)                           | Ops snapshot contract, severity policy, and the service catalog                |
-| [sentry-config](sentry-config/)                   | Browser-safe Sentry data collection policy shared by application clients       |
+| [bugsink-config](bugsink-config/)                 | Browser-safe Bugsink data collection policy shared by application clients      |
 | [text](text/)                                     | Grapheme-safe truncation and chunking for user-facing text                     |
 | [voice-assistant](voice-assistant/)               | Shared wake-word voice pipeline (local cascade + OpenAI Realtime turn)         |
 
@@ -102,7 +102,7 @@ hold only scoped invariants that agents must keep in context.
 | [toolkit](toolkit/)                                       | CLI developer tools (`pr`, `alerts`, `bugsink`, `grafana`, `discord`, …)       |
 | [windows-cross-compiler](windows-cross-compiler/)         | Linux images that cross-compile C, C++, Rust, .NET, and WinUI/MSIX for Windows |
 | [pr-fleet-controller](pr-fleet-controller/)               | AI SDK controller that drives the open-PR fleet with a live dashboard          |
-| [justin-principal-engineer](justin-principal-engineer/)   | Local Linear-to-PR queue with Docker coding turns and owner approval           |
+| [justin-principal-engineer](justin-principal-engineer/)   | Local Tracker-to-PR queue with Docker coding turns and owner approval          |
 | [release-tools](release-tools/)                           | release-please wrapper for the release lane                                    |
 | [dotfiles](dotfiles/)                                     | Dotfiles & shell config (chezmoi source)                                       |
 | [dotfiles-windows](dotfiles-windows/)                     | Windows PC chezmoi source: shell, configs, winget software record              |

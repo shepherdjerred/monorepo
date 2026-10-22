@@ -2,10 +2,8 @@
 /**
  * Smoke tests for the homelab infra images.
  *
- * Boots each freshly-built `<name>:dev` image and asserts on startup behavior,
- * translating the old Dagger smoke tests (smokeTestCaddyS3Proxy,
- * smokeTestObsidianHeadless, plus a redlib boot check) into
- * a dependency-free Bun script.
+ * Boots each freshly-built `<name>:dev` image (caddy-s3proxy, obsidian-headless
+ * and redlib) and asserts on startup behavior in a dependency-free Bun script.
  *
  * Each check runs a container via `docker run`, inspects stdout/stderr/exit code,
  * and always tears the container down with `docker rm -f`. Any failure prints a

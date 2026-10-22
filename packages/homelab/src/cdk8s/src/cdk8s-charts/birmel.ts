@@ -96,7 +96,8 @@ export function createBirmelChart(app: App) {
           ],
           ports: [{ port: IntOrString.fromNumber(9867), protocol: "TCP" }],
         },
-        // External HTTPS (Discord, OpenAI, Anthropic, GitHub, Sentry)
+        // External HTTPS (Discord, OpenAI, Anthropic, GitHub, and Bugsink via its
+        // public bugsink.sjer.red DSN host)
         {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
           ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],

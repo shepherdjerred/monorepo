@@ -59,8 +59,8 @@ const posthogSessionReplay =
       data-posthog-session-replay={posthogSessionReplay}
     ></script>
     <script>
-      import { initSentry } from "../lib/sentry";
-      initSentry();
+      import { initializeBugsink } from "../lib/bugsink";
+      initializeBugsink();
     </script>
     <MarketingTracking />
   </head>

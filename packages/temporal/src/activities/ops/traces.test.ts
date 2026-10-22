@@ -28,7 +28,7 @@ describe("mapTraces", () => {
         traces: [
           trace("a", "birmel", 300),
           trace("b", "birmel", 900),
-          trace("c", "openrouter", 400),
+          trace("c", "openai", 400),
         ],
         truncated: false,
       },
@@ -55,10 +55,10 @@ describe("mapTraces", () => {
         "b",
       ],
       [
-        "traces:error-traces:openrouter",
+        "traces:error-traces:openai",
         "error-traces",
         undefined,
-        "openrouter: 1 error trace in 1h",
+        "openai: 1 error trace in 1h",
         400,
         "c",
       ],

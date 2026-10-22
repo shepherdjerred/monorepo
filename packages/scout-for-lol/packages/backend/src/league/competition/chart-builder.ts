@@ -194,7 +194,7 @@ function resolveTimeWindow(
  * - line chart needs ≥2 historical snapshots in S3
  * - missing competition dates (schema invariant violation — logged)
  * - empty current leaderboard (nothing to render)
- * - any error during snapshot fetch / rendering (logged + Sentry, never thrown)
+ * - any error during snapshot fetch / rendering (logged + Bugsink, never thrown)
  *
  * The chart is best-effort. A missing chart never blocks the daily update.
  */

@@ -83,7 +83,7 @@ export function botCloneCacheDir(repoDir: string): string {
  * runs `lefthook install`, which would arm the full dev pre-commit suite for
  * the bot's later `git commit` — inside the worker pod, where the hook
  * environment (gitleaks binary, per-package toolchains) doesn't exist.
- * Buildkite CI on the PR the bot opens is the real quality gate. Root
+ * Woodpecker CI on the PR the bot opens is the real quality gate. Root
  * devDependencies (prettier, prettier-plugin-astro, lefthook, knip,
  * markdownlint) have no lifecycle scripts of their own, so `--ignore-scripts`
  * loses nothing else.

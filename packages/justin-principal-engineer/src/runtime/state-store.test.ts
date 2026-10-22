@@ -31,7 +31,7 @@ function state(): TaskState {
       identifier: "SJ-1",
       title: "Small task",
       description: null,
-      url: "https://linear.app/example/issue/SJ-1",
+      url: "https://tracker.tailnet-1a49.ts.net/issues/SJ-1",
       priority: 1,
       createdAt: "2026-01-01T00:00:00.000Z",
       state: { name: "Todo", type: "unstarted" },

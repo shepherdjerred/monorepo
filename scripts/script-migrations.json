@@ -10,7 +10,7 @@
     {
       "source": "ci/scripts/annotate-build-summary.sh",
       "disposition": "delete",
-      "reason": "Retired with the Buildkite cutover: its only output was a build annotation, and Woodpecker has no annotation surface."
+      "reason": "Retired with the Woodpecker migration: its only output was a build annotation, and Woodpecker has no annotation surface."
     },
     {
       "source": "ci/scripts/bake-images.sh",
@@ -130,7 +130,7 @@
     {
       "source": "ci/scripts/ci-image-refs.sh",
       "disposition": "delete",
-      "reason": "Retired with the Buildkite bootstrap: the Woodpecker extension resolves image refs in packages/woodpecker-config-extension/src/images.ts"
+      "reason": "Retired with the Woodpecker migration: the configuration extension resolves image refs in packages/woodpecker-config-extension/src/images.ts"
     },
     {
       "source": "ci/scripts/docker-env.sh",
@@ -140,7 +140,7 @@
     {
       "source": "ci/scripts/prepare-ci-changed-base.sh",
       "disposition": "delete",
-      "reason": "Retired with the Buildkite cutover: the configuration extension resolves the last green main commit before any step is generated, so no step computes it."
+      "reason": "Retired with the Woodpecker migration: the configuration extension resolves the last green main commit before any step is generated, so no step computes it."
     },
     {
       "source": "ci/scripts/review-gate.sh",
@@ -160,7 +160,7 @@
     {
       "source": "ci/scripts/upload-pipeline.sh",
       "disposition": "delete",
-      "reason": "Retired with the Buildkite cutover: pipeline upload was Buildkite's bootstrap step, and Woodpecker asks the configuration extension for the graph instead."
+      "reason": "Retired with the Woodpecker migration: Woodpecker asks the configuration extension for the pipeline graph."
     },
     {
       "source": "ci/scripts/upload-pipeline.test.sh",
@@ -170,7 +170,7 @@
     {
       "source": "ci/scripts/upload-reporting-pipeline.sh",
       "disposition": "delete",
-      "reason": "Retired with the Buildkite cutover: the separate reporting pipeline it uploaded has no successor."
+      "reason": "Retired with the Woodpecker migration: the separate reporting pipeline it uploaded has no successor."
     },
     {
       "source": "packages/anki/generate.sh",

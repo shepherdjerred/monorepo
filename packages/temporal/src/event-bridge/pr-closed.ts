@@ -35,7 +35,7 @@ function jsonLog(
 /**
  * Dedupe key for one PR head.
  *
- * Renamed from the Buildkite-era `cancel-bk-builds-` prefix. These workflows
+ * Renamed from an older CI-specific prefix. These workflows
  * live about two minutes, so the only exposure is a `closed` webhook
  * redelivered across the deploy that changes it — which would start a second
  * cancel for the same head. Cancelling twice is idempotent, so that is a

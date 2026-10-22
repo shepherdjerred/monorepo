@@ -52,7 +52,7 @@ export function parseStoredIdentity<T>(
 }
 
 /**
- * The one log + Sentry + metric shape for a corrupt-row settlement failure,
+ * The one log + Bugsink + metric shape for a corrupt-row settlement failure,
  * so the settle and stale-sweep paths cannot drift apart. Callers pass their
  * own module logger for provenance and call this after their transaction has
  * rolled back (the metric rule is post-commit only).

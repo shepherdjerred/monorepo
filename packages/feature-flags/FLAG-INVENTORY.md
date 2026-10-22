@@ -40,7 +40,7 @@ listener bootstrap stay outside Flipt.
 
 ## Keep outside Flipt
 
-- Credentials, feature-flag bootstrap variables, telemetry/Sentry, archive
+- Credentials, feature-flag bootstrap variables, telemetry/Bugsink, archive
   retention, CI/review switches, one-shot CLI options, and infrastructure shape.
 - Birmel trusted-user grants, shell/browser/repository-editor capability, and
   Streambot voice activation plus Streambot voice capture. Flipt has no

@@ -2,14 +2,14 @@
 // OTLP HTTP POST to /v1/traces. Embeds an ephemeral Bun.serve receiver on a
 // dynamically-allocated port (port: 0) so concurrent CI runs don't collide.
 //
-// The shape of this test is the regression guard: if Sentry's init re-grabs
+// The shape of this test is the regression guard: if the Sentry SDK's init re-grabs
 // the global tracer provider (enableOpenTelemetrySetup enabled), or if the OTLP
 // exporter loses its url, or if shutdown stops force-flushing — `posts` stays
 // empty and the test fails. The local stub-receiver experiment that drove the
 // original fix is exactly this assertion, codified.
 import { describe, expect, test, beforeAll, afterAll } from "vitest";
 import * as Sentry from "@sentry/bun";
-import { sentryDataCollection } from "@shepherdjerred/sentry-config";
+import { bugsinkDataCollection } from "@shepherdjerred/bugsink-config";
 import { resetOtelGlobals } from "@shepherdjerred/llm-observability/otel-globals";
 import { initializeTracing, shutdownTracing, withSpan } from "./tracing.ts";
 
@@ -42,11 +42,11 @@ describe("OTLP tracing integration", () => {
     Bun.env["LOKI_OTLP_ENDPOINT"] =
       `http://localhost:${server.url.port}/v1/logs`;
     Bun.env["TELEMETRY_SERVICE_NAME"] = "temporal-worker-test";
-    // Mirror worker.ts initSentry — the unreachable DSN means nothing actually
-    // ships to Sentry. The point is that enableOpenTelemetrySetup: false keeps
-    // Sentry from claiming the OTel globals before initializeTracing() runs.
+    // Mirror worker.ts initializeBugsink — the unreachable DSN means nothing actually
+    // ships to Bugsink. The point is that enableOpenTelemetrySetup: false keeps
+    // The Sentry SDK from claiming the OTel globals before initializeTracing() runs.
     Sentry.init({
-      dataCollection: sentryDataCollection(),
+      dataCollection: bugsinkDataCollection(),
       dsn: "https://public@127.0.0.1:1/0",
       environment: "test",
       tracesSampleRate: 0,

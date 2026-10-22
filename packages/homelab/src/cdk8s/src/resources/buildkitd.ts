@@ -53,8 +53,8 @@ const GC_MAX_USED_BYTES = 240 * 1024 * 1024 * 1024;
 const GC_MIN_FREE_BYTES = 60 * 1024 * 1024 * 1024;
 
 // buildkitd.toml: listen on tcp for the remote driver, and cap the cache with a
-// GC policy so the compressed ZFS volume stays bounded (the whole point vs the
-// old unbounded Dagger engine cache that froze the node).
+// GC policy so the compressed ZFS volume stays bounded (an unbounded build
+// cache once froze the node).
 const BUILDKITD_TOML = `
 debug = false
 

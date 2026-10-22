@@ -23,7 +23,7 @@
   "dependencies": {
     "@sentry/react": "^11.5.0",
     "@shepherdjerred/discord-plays-core": "workspace:*",
-    "@shepherdjerred/sentry-config": "workspace:*",
+    "@shepherdjerred/bugsink-config": "workspace:*",
     "@tailwindcss/vite": "^4.0.17",
     "@tanstack/react-query": "^5.70.0",
     "@vitejs/plugin-react": "^6.0.1",

@@ -56,7 +56,7 @@ export async function fetchMatchData(
       assetType: "match",
       id: matchId,
     },
-    sentry: true,
+    bugsink: true,
   };
   const fetch = () => riotClient.match.get(matchId, regionalRoute);
   const match =
@@ -141,7 +141,7 @@ export async function fetchMatchTimeline(
       assetType: "timeline",
       id: matchId,
     },
-    sentry: true,
+    bugsink: true,
   };
   const fetch = () => riotClient.match.timeline(matchId, regionalRoute);
   switch (failureMode) {

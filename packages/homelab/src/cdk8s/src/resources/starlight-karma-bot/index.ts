@@ -144,13 +144,13 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
         DATABASE_PATH: EnvValue.fromValue("/data/karma.db"),
         ENVIRONMENT: EnvValue.fromValue(stage),
         PORT: EnvValue.fromValue("8000"),
-        SENTRY_DSN: EnvValue.fromSecretValue({
+        BUGSINK_DSN: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
             chart,
-            "sentry-dsn-secret",
+            "bugsink-dsn-secret",
             onePasswordItem.name,
           ),
-          key: "SENTRY_DSN",
+          key: "BUGSINK_DSN",
         }),
       },
     }),

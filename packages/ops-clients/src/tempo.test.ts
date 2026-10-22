@@ -24,7 +24,7 @@ describe("TempoClient", () => {
       traces: [
         {
           traceID: "1c3b6f19abcd",
-          rootServiceName: "openrouter",
+          rootServiceName: "openai",
           rootTraceName: "LLM Generation",
           startTimeUnixNano: "1790361600000000000",
           durationMs: 400,
@@ -49,7 +49,7 @@ describe("TempoClient", () => {
       traces: [
         {
           traceId: "1c3b6f19abcd",
-          rootServiceName: "openrouter",
+          rootServiceName: "openai",
           rootTraceName: "LLM Generation",
           startedAt: new Date("2026-09-25T18:40:00.000Z"),
           durationMs: 400,

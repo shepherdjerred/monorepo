@@ -5,10 +5,9 @@
 # blocks during OAuth ("Failed to create OAuth client: 401 Unauthorized",
 # redlib-org/redlib#551). The glibc Dockerfile.ubuntu build is unaffected.
 #
-# The old Dagger recipe (buildRedlibImageHelper) built upstream's own
-# Dockerfile.ubuntu directly from the pinned git tree. This wrapper reproduces
-# that faithfully for `docker buildx build`: it clones redlib at the exact pin
-# and runs the same build steps that upstream's Dockerfile.ubuntu performs
+# This wrapper reproduces upstream's own Dockerfile.ubuntu for `docker buildx
+# build`: it clones redlib at the exact pin and runs the same build steps that
+# upstream's Dockerfile.ubuntu performs
 # (builder: rust:slim-bookworm → cargo build --release --locked --bin redlib;
 # release: Ubuntu 26.04 with a non-root user, EXPOSE 8080, /settings
 # healthcheck). Keeping the clone here means we track the pin without vendoring

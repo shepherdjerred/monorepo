@@ -85,9 +85,9 @@ export type DurableFacts = {
 };
 
 /**
- * Failures are reported through the log and the metric, never through Sentry.
+ * Failures are reported through the log and the metric, never through Bugsink.
  *
- * Sentry is where the pipeline's own broken invariants go, and a recorder that
+ * Bugsink is where the pipeline's own broken invariants go, and a recorder that
  * cannot reach its tables is not one of those: a durable outage would raise an
  * event per write per channel per match, drowning the errors that actually
  * stop work. `scout_durable_dualwrite_failures_total` is the signal an alert

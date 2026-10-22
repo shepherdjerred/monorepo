@@ -1,10 +1,10 @@
 import { createHandler } from "./app.ts";
 import { loadConfig } from "./config.ts";
-import { initializeSentry } from "./sentry.ts";
+import { initializeBugsink } from "./bugsink.ts";
 import { initializeDynamicConfig } from "./dynamic-config.ts";
 
 // Initialize before anything else so early failures are captured.
-initializeSentry();
+initializeBugsink();
 
 await initializeDynamicConfig({ environment: Bun.env });
 

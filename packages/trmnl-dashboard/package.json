@@ -24,7 +24,7 @@
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@shepherdjerred/sentry-config": "workspace:*",
+    "@shepherdjerred/bugsink-config": "workspace:*",
     "@sentry/bun": "^11.6.0",
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",

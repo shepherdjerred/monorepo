@@ -22,7 +22,7 @@ A Discord bot for tracking karma points, built with Bun, discord.js v14, and Pri
    VERSION=1.0.0
    ENVIRONMENT=dev
    GIT_SHA=local
-   SENTRY_DSN=https://fb2f07bfb3544bd2bd279a1ce5f1e247@bugsink.sjer.red/5
+   BUGSINK_DSN=https://fb2f07bfb3544bd2bd279a1ce5f1e247@bugsink.sjer.red/5
    PORT=8000
    DISCORD_TOKEN=your_discord_token_here
    APPLICATION_ID=your_application_id_here
@@ -127,7 +127,7 @@ Required runtime environment variables:
 
 Optional environment variables:
 
-- `SENTRY_DSN`: Sentry DSN for error tracking
+- `BUGSINK_DSN`: Bugsink DSN for error tracking
 - `PORT`: Server port (default: 8000)
 - `KARMA_ADMIN_USER_ID`: Discord user ID allowed to configure recaps without
   the Manage Server permission

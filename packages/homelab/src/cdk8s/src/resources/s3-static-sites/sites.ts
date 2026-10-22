@@ -10,7 +10,7 @@ import type { StaticSiteConfig } from "@shepherdjerred/homelab/cdk8s/src/misc/s3
  *   bootstrap and the SPA's session-replay worker, plus the production
  *   Pinterest and Reddit marketing pixels.
  * - `connect-src` allows PostHog Cloud's US ingestion host for pageviews,
- *   autocapture, typed events, and session replay, plus Bugsink Sentry
+ *   autocapture, typed events, and session replay, plus Bugsink
  *   envelopes and the production Pinterest/Reddit pixels, including Reddit's
  *   event-ingestion host.
  * - `img-src` allows Data Dragon champion/item art, the Pinterest conversion

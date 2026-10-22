@@ -1,10 +1,9 @@
 # Tempo configuration for the llm-observability end-to-end suite.
 #
 # Lives here rather than in a Kubernetes ConfigMap so the config a test runs
-# against is the one committed alongside it. The Buildkite lane mounted the
-# cluster's live ConfigMap and stripped `ingester` and `compactor` with yq at
-# start-up, because that ConfigMap is GitOps-reconciled and therefore lagged
-# any PR that changed the Tempo version. A repo file has no such lag.
+# against is the one committed alongside it. The cluster's live ConfigMap is
+# GitOps-reconciled and therefore lags any PR that changes the Tempo version.
+# A repo file has no such lag.
 stream_over_http_enabled: true
 server:
   http_listen_port: 3200

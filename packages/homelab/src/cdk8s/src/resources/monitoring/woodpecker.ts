@@ -10,12 +10,10 @@ export const CI_METRICS_SCRAPE_INTERVAL = "10s";
 /**
  * Scrapes the Woodpecker server's Prometheus endpoint.
  *
- * Successor to the agent-stack-k8s controller monitor: that controller was
- * what scheduled and cancelled Buildkite jobs, and Woodpecker's server holds
- * the equivalent state. It serves /metrics only when
- * `WOODPECKER_PROMETHEUS_AUTH_TOKEN` is set and only to a scraper presenting
- * that token, which is why this monitor carries `bearerTokenSecret` reading
- * the same key the server does.
+ * The server holds CI scheduling and cancellation state. It serves /metrics
+ * only when `WOODPECKER_PROMETHEUS_AUTH_TOKEN` is set and only to a scraper
+ * presenting that token, which is why this monitor carries `bearerTokenSecret`
+ * reading the same key the server does.
  */
 export function createWoodpeckerMonitoring(chart: Chart): void {
   new PodMonitor(chart, "woodpecker-server-pod-monitor", {

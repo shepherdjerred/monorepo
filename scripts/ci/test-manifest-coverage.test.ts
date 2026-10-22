@@ -188,7 +188,7 @@ describe("workspaceTestFiles", () => {
           "scripts/a.test.ts",
           "ci/scripts/b.test.ts",
           "ci/other.test.ts",
-          ".buildkite/scripts/retired.test.ts",
+          "ci/scripts-retired/retired.test.ts",
         ],
         ["scripts"],
       ),

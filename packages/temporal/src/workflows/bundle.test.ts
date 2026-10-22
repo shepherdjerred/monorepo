@@ -5,7 +5,7 @@ import { z } from "zod";
 
 // Smoke test: webpack-bundle the workflow entry the same way Worker.create
 // does at startup. Catches transitive imports that pull in Node-core schemes
-// webpack can't resolve (e.g. workflow code accidentally importing Sentry's
+// webpack can't resolve (e.g. workflow code accidentally importing the Sentry SDK's
 // node-core via @sentry/bun → `node:util`, `node:worker_threads`, `node:zlib`),
 // which would CrashLoopBackoff the worker pod 25 min into deploy. Runs in
 // ~1 second locally as part of `bun run test`.

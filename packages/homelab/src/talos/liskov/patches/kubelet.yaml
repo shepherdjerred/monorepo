@@ -42,8 +42,9 @@ machine:
       imageMaximumGCAge: "720h"
       imageGCHighThresholdPercent: 70
       imageGCLowThresholdPercent: 60
-      # CI is the fork-storm workload this cap was designed against (Dagger
-      # goroutines 24 -> 1164 in <60s during the 2026-07 freeze investigation).
+      # CI is the fork-storm workload this cap was designed against (a CI build
+      # engine's goroutines went 24 -> 1164 in <60s during the 2026-07 freeze
+      # investigation).
       # Watch for PIDPressure under real heavy-concurrency load.
       podPidsLimit: 4096
       enforceNodeAllocatable:

@@ -176,4 +176,9 @@ export const retiredFlagDeclarations = [
   // base inventory flag with a production override, so it exists in both.
   { environment: "beta", namespace: "scout", key: "custom_nights_enabled" },
   { environment: "prod", namespace: "scout", key: "custom_nights_enabled" },
+  // Tracker's one-time import endpoints were removed after the cutover, so the
+  // import window has no reader. It was a base inventory flag, so it exists in
+  // both environments.
+  { environment: "beta", namespace: "tracker", key: "tracker-imports-enabled" },
+  { environment: "prod", namespace: "tracker", key: "tracker-imports-enabled" },
 ] as const;

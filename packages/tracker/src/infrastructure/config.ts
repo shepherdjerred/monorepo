@@ -11,7 +11,7 @@ export const BootstrapSchema = z.object({
   S3_REGION: z.string().min(1).default("us-east-1"),
   AWS_ACCESS_KEY_ID: z.string().min(1),
   AWS_SECRET_ACCESS_KEY: z.string().min(1),
-  SENTRY_DSN: z.url().optional(),
+  BUGSINK_DSN: z.url().optional(),
   OTEL_EXPORTER_OTLP_ENDPOINT: z.url().optional(),
   ENVIRONMENT: z
     .enum(["production", "beta", "development", "test"])
@@ -27,12 +27,6 @@ export function behaviorConfig(stage: string) {
         sources: ["flag", "default"],
         default: false,
         names: { flag: "tracker-writes-enabled" },
-      },
-      importsEnabled: {
-        schema: z.boolean(),
-        sources: ["flag", "default"],
-        default: false,
-        names: { flag: "tracker-imports-enabled" },
       },
       telemetryEnabled: {
         schema: z.boolean(),
@@ -57,7 +51,6 @@ export function behaviorConfig(stage: string) {
         attributes: { stage },
         kinds: {
           writesEnabled: "boolean",
-          importsEnabled: "boolean",
           telemetryEnabled: "boolean",
           attachmentMaxBytes: "string",
         },

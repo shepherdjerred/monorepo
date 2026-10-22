@@ -91,7 +91,7 @@ metrics_generator:
       },
       // Retention configuration
       retention: "720h", // 30 days of traces
-      // Some traces (the old CI's Dagger pipelines especially) get very large;
+      // Some traces (long CI and agent runs especially) get very large;
       // Tempo defaults to 5MB and refuses traces that exceed it with
       // TRACE_TOO_LARGE, so the limit is raised.
       overrides: {

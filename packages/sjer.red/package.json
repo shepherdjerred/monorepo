@@ -16,7 +16,7 @@
     "deploy": "bun ../../scripts/release/deploy-site.ts sjer-red"
   },
   "dependencies": {
-    "@shepherdjerred/sentry-config": "workspace:*",
+    "@shepherdjerred/bugsink-config": "workspace:*",
     "@shepherdjerred/text": "workspace:*",
     "@astrojs/check": "^0.9.8",
     "@astrojs/markdown-remark": "^7.3.1",

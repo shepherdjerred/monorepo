@@ -14,11 +14,12 @@ or a manual backup), or data that predates the sweep.
 
 ## When to use this runbook
 
-Trigger any of these:
+Trigger any of these. Alertmanager sends these warning and critical alerts to
+the alert dashboard ledger and the operator email.
 
-- PagerDuty fires `R2StorageNearingLimit` (80% of 1.5 TB) or
+- The alert dashboard records `R2StorageNearingLimit` (80% of 1.5 TB) or
   `R2StorageExceedingLimit`
-- PagerDuty fires `VeleroR2OrphanPrefixes` or `VeleroR2OrphanBytesExcessive`
+- The alert dashboard records `VeleroR2OrphanPrefixes` or `VeleroR2OrphanBytesExcessive`
 - You notice the bucket growing faster than live PVC data justifies
 
 ## Prerequisites

@@ -37,14 +37,13 @@ export const WOODPECKER_CI_NAMESPACE = "woodpecker-ci";
 export const WOODPECKER_SERVER_ITEM_ID = "covttsojandjk7fx62a3dbk7em";
 
 /**
- * Per-step credential boundary, carried over from the Buildkite stack.
+ * Per-step credential boundary.
  *
  * Each entry becomes one Kubernetes Secret in the CI namespace, synced by the
  * 1Password operator. Steps reference exact keys through
  * `backend_options.kubernetes.secrets`, so a step receives only the values its
- * grant names — the same boundary the Buildkite pipeline enforced with
- * `secretKeyRef`, and the reason credentials never enter Woodpecker's own
- * secret store or database.
+ * grant names through `secretKeyRef`. That is also why credentials never enter
+ * Woodpecker's own secret store or database.
  *
  * CI has build/publication and repository automation authority only. Handoff
  * and Delivery publication use dedicated minimal items: per-key grants do not

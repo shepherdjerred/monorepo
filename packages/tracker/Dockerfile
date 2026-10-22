@@ -7,7 +7,7 @@ COPY --parents package.json bun.lock bunfig.toml patches/ scripts/package.json p
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/tracker'
 
 FROM deps AS build
-COPY --parents tsconfig.base.json packages/tracker packages/config packages/feature-flags packages/sentry-config packages/eslint-config ./
+COPY --parents tsconfig.base.json packages/tracker packages/config packages/feature-flags packages/bugsink-config packages/eslint-config ./
 RUN cd packages/tracker && bun run generate && bun run build
 
 FROM base AS prod-deps
@@ -17,7 +17,7 @@ RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/tracker
 FROM base AS runtime
 COPY --from=prod-deps /app/ /app/
 COPY --from=build --exclude=node_modules /app/packages/tracker /app/packages/tracker
-COPY --parents packages/config packages/feature-flags packages/sentry-config ./
+COPY --parents packages/config packages/feature-flags packages/bugsink-config ./
 RUN cd packages/tracker && bunx --no-install --trust prisma generate
 WORKDIR /app/packages/tracker
 ENV NODE_ENV=production HOME=/tmp

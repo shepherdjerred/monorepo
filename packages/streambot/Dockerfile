@@ -193,7 +193,7 @@ COPY --exclude=packages/streambot/test/fixtures/voice-corpus \
   packages/discord-video-stream \
   packages/voice-assistant \
   packages/config \
-  packages/sentry-config \
+  packages/bugsink-config \
   packages/text \
   packages/feature-flags \
   ./

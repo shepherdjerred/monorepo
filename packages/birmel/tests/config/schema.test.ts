@@ -228,7 +228,7 @@ describe("ConfigSchema (full)", () => {
       dailyPosts: {},
       externalApis: {},
       logging: {},
-      sentry: {},
+      bugsink: {},
       persona: {},
       responder: {},
       birthdays: {},

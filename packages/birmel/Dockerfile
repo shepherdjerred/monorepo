@@ -32,7 +32,7 @@ COPY --parents \
   tsconfig.base.json \
   packages/birmel \
   packages/config \
-  packages/sentry-config \
+  packages/bugsink-config \
   packages/text \
   packages/feature-flags \
   packages/glitter-context \
@@ -119,7 +119,7 @@ COPY --parents --chown=0:1000 --chmod=o-rwx,g=rX \
   tsconfig.base.json \
   packages/birmel \
   packages/config \
-  packages/sentry-config \
+  packages/bugsink-config \
   packages/text \
   packages/feature-flags \
   packages/llm-models \
@@ -169,7 +169,7 @@ USER 1000:1000
 RUN test -r /app/packages/birmel/package.json && \
     test ! -w /app/packages/birmel/package.json && test -w /app/data
 # The smoke harness ships in CI context only — the scoped source COPY
-# excludes .buildkite, so stage it here (never in the pushed image stage).
+# excludes ci/, so stage it here (never in the pushed image stage).
 COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
 COPY ci/scripts/images/smoke-app-configs.ts /app/ci/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=birmel

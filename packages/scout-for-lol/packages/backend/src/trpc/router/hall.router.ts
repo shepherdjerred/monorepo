@@ -88,7 +88,7 @@ export const hallRouter = router({
       });
       if (request === null) {
         // BAD_REQUEST is an expected client error: surfaced as 4xx, never
-        // shipped to Sentry.
+        // shipped to Bugsink.
         throw new TRPCError({
           code: "BAD_REQUEST",
           message:

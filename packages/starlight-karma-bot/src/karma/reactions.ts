@@ -199,7 +199,7 @@ export async function handleReactionRemoveAll(
 
 /** Wrap a handler so a failure is reported rather than becoming an unhandled
  *  rejection. Unlike an interaction there is no surface to reply on, so the
- *  only outcome is a log plus Sentry. */
+ *  only outcome is a log plus Bugsink. */
 export function guarded<A extends unknown[]>(
   name: string,
   handler: (...args: A) => Promise<void>,

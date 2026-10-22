@@ -294,9 +294,8 @@ export async function createPrometheusApp(chart: Chart) {
           volumeClaimTemplate: {
             metadata: {
               labels: {
-                // Include the alertmanager PVC in Velero backups. Replaces the removed
-                // Kyverno velero-label mutation (the chart templates volumeClaimTemplate
-                // metadata onto the PVC, same as prometheusSpec above).
+                // Include the alertmanager PVC in Velero backups. The chart templates
+                // volumeClaimTemplate metadata onto the PVC, same as prometheusSpec above.
                 "velero.io/backup": "enabled",
                 "velero.io/exclude-from-backup": "false",
               },

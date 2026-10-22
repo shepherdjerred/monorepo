@@ -334,8 +334,8 @@ describe("agent task runtime support", () => {
       GITHUB_WEBHOOK_SECRET: "github-webhook-secret",
       XCODE_CLOUD_WEBHOOK_TOKEN: "xcode-distinct-secret",
       DATABASE_URL: "postgres://user:database-secret@example",
-      SENTRY_DSN:
-        "https://sentry-public@sentry.example/42?token=sentry-query-secret",
+      BUGSINK_DSN:
+        "https://bugsink-public@bugsink.example/42?token=bugsink-query-secret",
     });
 
     expect(tokens).toContain(openAiApiKey);
@@ -346,8 +346,8 @@ describe("agent task runtime support", () => {
     expect(tokens).toContain("xcode-distinct-secret");
     expect(tokens).toContain("postgres://user:database-secret@example");
     expect(tokens).toContain("database-secret");
-    expect(tokens).toContain("sentry-public");
-    expect(tokens).toContain("sentry-query-secret");
+    expect(tokens).toContain("bugsink-public");
+    expect(tokens).toContain("bugsink-query-secret");
   });
 
   it("includes mounted service-account credentials in diagnostic redaction", async () => {

@@ -119,7 +119,7 @@ COPY --parents \
   packages/discord-plays-mario-kart/packages/frontend \
   packages/discord-plays-core \
   packages/discord-plays-web \
-  packages/sentry-config \
+  packages/bugsink-config \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \
   packages/loaded \
@@ -134,8 +134,8 @@ RUN cd packages/discord-plays-mario-kart/packages/common && bun run build
 # Generate the Prisma client for the leaderboard DB (output is gitignored).
 RUN cd packages/discord-plays-mario-kart/packages/backend && bunx --trust prisma generate
 # Build the web UI served by the backend (web.assets). Expose the release to
-# Vite BEFORE the build so the SPA's Sentry.init tags events with `release`.
-ENV VITE_SENTRY_RELEASE=dev
+# Vite BEFORE the build so the SPA's Bugsink client tags events with `release`.
+ENV VITE_BUGSINK_RELEASE=dev
 RUN cd packages/discord-plays-mario-kart/packages/frontend && bun run build
 
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
@@ -201,7 +201,7 @@ COPY --parents \
   packages/discord-plays-mario-kart/packages/backend \
   packages/discord-plays-mario-kart/packages/common \
   packages/discord-plays-core \
-  packages/sentry-config \
+  packages/bugsink-config \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \
   ./
@@ -255,7 +255,7 @@ FROM runtime AS smoke
 # the deploy UID before execution.
 USER 0
 # The smoke harness ships in CI context only — the scoped source COPY
-# excludes .buildkite, so stage it here (never in the pushed image stage).
+# excludes ci/, so stage it here (never in the pushed image stage).
 COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
 COPY ci/scripts/images/smoke-app-configs.ts /app/ci/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=discord-plays-mario-kart

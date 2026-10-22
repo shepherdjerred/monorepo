@@ -16,13 +16,12 @@ export type AgentProviderOverrides = {
  * Tools run serially so one turn cannot emit parallel side effects. Each
  * provider spells that differently, so the runtime translates it — and refuses
  * a model whose provider cannot turn parallel calls off, rather than quietly
- * dropping the guarantee. Under the gateway this was one `openrouter` bucket
- * for every model; sent to a first-party provider, that bucket is ignored
- * outright, which would have lost both serial execution and reasoning effort.
+ * dropping the guarantee. A first-party provider ignores options under any
+ * other provider's key, which would lose both serial execution and reasoning
+ * effort.
  *
- * `textVerbosity` is still not forwarded. It was held back because the
- * gateway's endpoints did not advertise it; job records keep storing the
- * preference, and forwarding it is a behaviour change to make deliberately.
+ * `textVerbosity` is not forwarded. Job records keep storing the preference,
+ * and forwarding it is a behaviour change to make deliberately.
  */
 export function getAgentProviderOptions(
   modelId: string,

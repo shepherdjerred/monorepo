@@ -104,10 +104,10 @@ public final class TaskNotesServerProcess {
         environment["PORT"] = String(port)
         environment["AUTH_TOKEN"] = authToken
         environment["HOST"] = "127.0.0.1"
-        // The server imports `./sentry.ts` at module scope; without a DSN it is
+        // The server imports `./bugsink.ts` at module scope; without a DSN it is
         // inert, but the variable is pinned empty so a developer's own DSN in
         // the ambient environment cannot make a test emit events.
-        environment["SENTRY_DSN"] = ""
+        environment["BUGSINK_DSN"] = ""
         process.environment = environment
         if let runID = environment["TASKNOTES_CI_RUN_ID"] {
             process.arguments?.append("--tasknotes-server-ci-run=\(runID)")

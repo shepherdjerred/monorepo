@@ -35,7 +35,7 @@ export const OWNER_CONTROLLED_ACTORS: readonly string[] = [
   // The repository's own GitHub App: release commits, version pin commit-back,
   // and the CI image refresh lanes all push under this identity.
   "long-summer-intern[bot]",
-  // The local Linear queue publishes its owner-requested work under this App.
+  // The local Tracker queue publishes its owner-requested work under this App.
   "justin-principal-engineer[bot]",
 ];
 

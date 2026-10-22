@@ -1,12 +1,12 @@
-import { initializeSentry, flushSentry } from "./sentry.ts";
+import { initializeBugsink, flushBugsink } from "./bugsink.ts";
 import { initializeTracing, shutdownTracing } from "./tracing.ts";
 
 /**
- * Initialize all observability systems (Sentry and OpenTelemetry).
+ * Initialize all observability systems (Bugsink and OpenTelemetry).
  * Call this early in the application startup, before other imports that might throw.
  */
 export function initializeObservability(): void {
-  initializeSentry();
+  initializeBugsink();
   initializeTracing();
 }
 
@@ -15,6 +15,6 @@ export function initializeObservability(): void {
  * Call this during application shutdown.
  */
 export async function shutdownObservability(): Promise<void> {
-  await flushSentry();
+  await flushBugsink();
   await shutdownTracing();
 }

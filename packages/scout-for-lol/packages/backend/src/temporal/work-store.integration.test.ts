@@ -102,7 +102,7 @@ describe("Scout Temporal work ownership", () => {
 
     await requeueFailedScoutTemporalWork(
       "parlay:NA1_2",
-      "OpenRouter capacity restored by operator",
+      "OpenAI capacity restored by operator",
       prisma,
     );
     await expect(
@@ -112,7 +112,7 @@ describe("Scout Temporal work ownership", () => {
     ).resolves.toMatchObject({
       state: "queued",
       requeueCount: 1,
-      lastRequeueReason: "OpenRouter capacity restored by operator",
+      lastRequeueReason: "OpenAI capacity restored by operator",
     });
 
     await expect(
@@ -156,7 +156,7 @@ describe("Scout Temporal work ownership", () => {
         payload: "{}",
         state: "queued",
         startedAt,
-        lastError: "OpenRouter weekly key limit exceeded",
+        lastError: "OpenAI quota exceeded",
       })),
     });
     await prisma.scoutTemporalWork.create({

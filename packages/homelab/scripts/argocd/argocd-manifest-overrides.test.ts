@@ -147,7 +147,7 @@ describe("Argo operation identity", () => {
   test("matches the completed operation returned by the sync POST", () => {
     const requested = {
       operation: {
-        initiatedBy: { username: "buildkite" },
+        initiatedBy: { username: "woodpecker" },
         sync: { manifests: ["current"], prune: false },
       },
     };
@@ -158,7 +158,7 @@ describe("Argo operation identity", () => {
           phase: "Succeeded",
           operation: {
             sync: { prune: false, manifests: ["current"] },
-            initiatedBy: { username: "buildkite" },
+            initiatedBy: { username: "woodpecker" },
           },
         },
       },

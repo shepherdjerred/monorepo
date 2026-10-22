@@ -130,7 +130,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         return Ok(());
     }
     // DSN is bootstrap configuration. No arbitrary payloads or bearer tokens are accepted from clients.
-    let dsn = reqwest::Url::parse(&std::env::var("SENTRY_DSN")?)?;
+    let dsn = reqwest::Url::parse(&std::env::var("BUGSINK_DSN")?)?;
     let project = dsn.path().trim_matches('/');
     if dsn.scheme() != "https"
         || project.is_empty()

@@ -5,7 +5,6 @@ import { Issues } from "#infrastructure/issues.ts";
 import { Collaboration } from "#infrastructure/collaboration.ts";
 import { Catalog } from "#infrastructure/catalog.ts";
 import { Attachments } from "#infrastructure/attachments.ts";
-import { Importer } from "#infrastructure/importer.ts";
 import { createApp } from "#server/app.ts";
 import { ActorSchema } from "#shared/actor.ts";
 import { CreateIssueSchema } from "#shared/schema.ts";
@@ -91,8 +90,6 @@ const app = createApp({
   catalog,
   collaboration: new Collaboration(suite.database, unit),
   attachments: new Attachments(suite.database, unit, memoryObjectStore()),
-  importer: new Importer(suite.database, memoryObjectStore()),
-  importsEnabled: () => Promise.resolve(false),
   writesEnabled: () => Promise.resolve(true),
   attachmentMaxBytes: () => Promise.resolve(25 * 1024 * 1024),
 });

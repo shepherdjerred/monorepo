@@ -72,7 +72,7 @@ const VerifiedToolExperienceMemorySchema = z.strictObject({
 //
 // This was provider-dependent, which is what made it survive review: providers
 // that tolerate `oneOf` pass the same schema happily, so it only appeared when
-// a request reached a strict one (then, OpenRouter routing to Azure).
+// a request reached a strict one.
 //
 // The `kind` literals stay disjoint, so parsing behaviour is unchanged; only
 // the failure message for invalid input is less specific.

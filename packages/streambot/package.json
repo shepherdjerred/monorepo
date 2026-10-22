@@ -44,7 +44,7 @@
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@shepherdjerred/sentry-config": "workspace:*",
+    "@shepherdjerred/bugsink-config": "workspace:*",
     "@shepherdjerred/text": "workspace:*",
     "react": "19.3.0",
     "react-dom": "19.3.0",

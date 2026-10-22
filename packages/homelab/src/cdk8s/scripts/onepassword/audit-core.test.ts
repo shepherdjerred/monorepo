@@ -117,7 +117,7 @@ describe("read-only vault audit", () => {
           },
           {
             id: "dsn",
-            label: "SENTRY_DSN",
+            label: "BUGSINK_DSN",
             type: "CONCEALED",
             value: "config",
           },

@@ -33,9 +33,8 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-test("the migrated season worker authenticates directly with OpenAI without the retired provider", async () => {
+test("the season worker authenticates directly with OpenAI", async () => {
   vi.stubEnv("OPENAI_API_KEY", "fixture-openai-key");
-  vi.stubEnv("OPENROUTER_API_KEY", undefined);
   mocks.secrets.mockResolvedValue({ tokens: [], refresh: vi.fn() });
   mocks.run.mockResolvedValue({
     durationMs: 1,
@@ -64,9 +63,8 @@ test("the migrated season worker authenticates directly with OpenAI without the 
   );
 });
 
-test("a retired provider credential cannot substitute for missing OpenAI authentication", async () => {
+test("missing OpenAI authentication fails before the agent runs", async () => {
   vi.stubEnv("OPENAI_API_KEY", undefined);
-  vi.stubEnv("OPENROUTER_API_KEY", "fixture-retired-key");
   await expect(runSeasonAgent(input)).rejects.toThrow(
     "OPENAI_API_KEY is required",
   );

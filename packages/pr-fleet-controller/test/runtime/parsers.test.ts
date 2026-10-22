@@ -103,9 +103,8 @@ describe("external evidence parsing", () => {
 
 describe("check evidence", () => {
   /**
-   * The Buildkite era needed the whole build fetched so each check could be matched to
-   * its job and advisory findings excluded. The advisory lanes now exit 0 when
-   * findings are not fatal, so a failing check is simply a failure.
+   * Advisory lanes exit 0 when findings are not fatal, so a failing check is
+   * simply a failure.
    */
   test("passes checks through without soft-failure correlation", () => {
     const checks: RawCheck[] = [

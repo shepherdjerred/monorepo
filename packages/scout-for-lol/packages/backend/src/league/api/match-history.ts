@@ -34,7 +34,7 @@ export async function getRecentMatchIds(
       source: "match-history",
       schema: z.array(RiotMatchIdSchema),
       context: { playerAlias, region: playerRegion },
-      sentry: true,
+      bugsink: true,
     },
     () => riotClient.match.list(playerPuuid, regionalRoute, { count }),
   );

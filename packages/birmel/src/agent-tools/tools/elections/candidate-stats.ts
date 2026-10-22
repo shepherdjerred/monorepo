@@ -8,7 +8,7 @@ import { createTool } from "@shepherdjerred/birmel/agent-runtime/tools/create-to
 import { z } from "zod";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
+import { captureException } from "@shepherdjerred/birmel/observability/bugsink.ts";
 import { withToolSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 
 const logger = loggers.tools.child("elections");

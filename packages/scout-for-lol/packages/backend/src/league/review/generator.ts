@@ -6,7 +6,7 @@
  * - Loading prompts/personality from filesystem
  * - Initializing AI clients from environment
  * - Saving traces to S3
- * - Error handling with Sentry
+ * - Error handling with Bugsink
  */
 
 import {

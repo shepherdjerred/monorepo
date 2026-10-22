@@ -43,8 +43,8 @@ const S3_ENDPOINT = "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333";
 // The [[auth]] public keys are copied verbatim from the image's default
 // /app/relay.toml (relay.md-published Ed25519 keys). Keep them in sync with the
 // image on upgrade; a mismatch breaks token validation.
-// Manual re-sync is required on every relay-server image bump; automated drift
-// detection remains tracked in Linear.
+// Manual re-sync is required on every relay-server image bump; nothing checks
+// the keys for drift automatically.
 // These are PUBLIC keys
 // (not secrets); they're assembled from fragments only to avoid a
 // no-secrets/no-secrets false positive on high-entropy base64.

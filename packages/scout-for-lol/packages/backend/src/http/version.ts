@@ -46,7 +46,7 @@ async function canViewContractMismatch(request: Request): Promise<boolean> {
  * Body of GET /api/version — the deploy identity of this backend process.
  *
  * `version` is the human-facing `2.0.0-<build>` label (image bakes stamp the
- * raw Buildkite number; `gitSha` remains the commit). The backend is
+ * raw `CI_RELEASE_NUMBER`; `gitSha` remains the commit). The backend is
  * content-gated, so this legitimately lags the site's build number in a
  * healthy release pair. `contractHash` fingerprints the tRPC contract
  * sources (packages/scout-for-lol/scripts/contract-hash.ts); the SPA

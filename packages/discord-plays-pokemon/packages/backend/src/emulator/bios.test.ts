@@ -78,7 +78,7 @@ function biosWithMemory(names: string[]): {
 }
 
 describe("bios libc imports", () => {
-  // trixie's clang-19 (the Dagger toolchain) emits memcpy/memmove/memset/
+  // trixie's clang-19 (the image toolchain) emits memcpy/memmove/memset/
   // memcmp as host imports instead of inline bulk-memory ops. Before these
   // were implemented they silently no-op'd, which blacked out all graphics.
   test("memcpy copies bytes and returns dst", () => {

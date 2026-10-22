@@ -27,7 +27,7 @@ describe("autonomous delivery policy", () => {
       identifier: "AI-104",
       title: "CLI help",
       description: null,
-      url: "https://linear.app/example/issue/AI-104",
+      url: "https://tracker.tailnet-1a49.ts.net/issues/AI-104",
       priority: 1,
       createdAt: "2026-01-01T00:00:00Z",
       team: { key: "AI" },

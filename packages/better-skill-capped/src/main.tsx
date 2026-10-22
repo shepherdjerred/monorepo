@@ -1,23 +1,23 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
-import { sentryDataCollection } from "@shepherdjerred/sentry-config";
+import { bugsinkDataCollection } from "@shepherdjerred/bugsink-config";
 import App from "./components/app.tsx";
 import { migrateStorage } from "./storage/migrate.ts";
 import "#styles/globals.css";
 
-// VITE_SENTRY_RELEASE is not currently injected for this package (the deploy
+// VITE_BUGSINK_RELEASE is not currently injected for this package (the deploy
 // entry has no buildEnvVars), so release is undefined until that changes.
 // Guard the untyped env access so `release` is `string | undefined`.
-const sentryRelease =
-  typeof import.meta.env.VITE_SENTRY_RELEASE === "string"
-    ? import.meta.env.VITE_SENTRY_RELEASE
+const bugsinkRelease =
+  typeof import.meta.env.VITE_BUGSINK_RELEASE === "string"
+    ? import.meta.env.VITE_BUGSINK_RELEASE
     : undefined;
 
 Sentry.init({
-  dataCollection: sentryDataCollection(),
+  dataCollection: bugsinkDataCollection(),
   dsn: "https://34fcb766ca0f49499b001635c5cc5cb2@bugsink.sjer.red/3",
-  release: sentryRelease,
+  release: bugsinkRelease,
   environment: import.meta.env.MODE,
 });
 

@@ -43,12 +43,10 @@ The production server serves `dist/client` itself. Migrations run with
 `prisma migrate deploy`; never use `db push` against a deployed database.
 
 Operational behavior comes from the typed configuration package and the
-`tracker` Flipt namespace. `tracker-writes-enabled` and
-`tracker-imports-enabled` default to false. `tracker-attachment-max-bytes`
-defaults to 26214400 (25 MiB) and is bounded at 100 MiB. The independent import
-gate allows a read-only rehearsal without permitting normal client writes.
-`tracker-telemetry-enabled` defaults to false; enabling tracing requires
-`OTEL_EXPORTER_OTLP_ENDPOINT`. `SENTRY_DSN` is an optional credential. Telemetry
+`tracker` Flipt namespace. `tracker-writes-enabled` defaults to false.
+`tracker-attachment-max-bytes` defaults to 26214400 (25 MiB) and is bounded at
+100 MiB. `tracker-telemetry-enabled` defaults to false; enabling tracing requires
+`OTEL_EXPORTER_OTLP_ENDPOINT`. `BUGSINK_DSN` is an optional credential. Telemetry
 does not send request bodies, actor metadata or issue descriptions.
 
 ## Contract and invariants
@@ -95,38 +93,12 @@ responses use `nosniff`. Images can be previewed in the UI.
 exports bounded request counters and issue/actor gauges. Structured errors
 include a request ID, without logging request bodies or credentials.
 
-## Linear migration contract
+## Imported history
 
-The operator commands are owned by `toolkit tracker migration`; see the
-[toolkit reference](../toolkit/README.md#tracker). Exported issue identifiers,
-timestamps, original account identities, comments, relations and uploaded files
-are retained. Workspace labels become labels in both teams. Project document
-text joins the project description. Unsupported source fields, such as cycles,
-parent links and threaded-comment metadata, remain in the raw source payload.
-Legacy `+1 hit again` comments remain comments and also produce native votes.
-Known session identities deduplicate; votes without a known session use separate
-historical identities. A shared Linear account is labelled as such instead of
-being attributed to a guessed human or agent session.
-
-Each import record has an immutable source identity and content hash. Resume the
-same frozen export after an interrupted or ambiguous response. A changed source
-record returns `CONFLICT`; it never overwrites migrated data. A dry-run checks
-the snapshot and all attachment checksums locally without observing an actor or
-writing to the destination. Live import is allowed only while imports are
-enabled and normal writes are disabled. Keep normal writes disabled until the
-team/state counts, representative historical issues, file downloads and a
-zero-write rerun have passed acceptance.
-
-If Linear changes after an import, take and back up another frozen export.
-`toolkit tracker migration catch-up-linear --previous OLD --input NEW --dry-run`
-plans additions and explicit issue/comment edits before touching Tracker.
-The live command checks the previous import hash and current destination fields,
-applies the source timestamps and content, and records a separate audit event.
-It preserves the first import event and existing historical actor observations.
-Removals, changed catalog definitions and edited vote records require explicit
-reconciliation and fail preflight. Resume the same pair after interruption;
-successful repeated updates make no database writes. Native writes must remain
-disabled and the temporary import gate must be open.
+Issues imported from the previous tracker keep their source identity in
+`ImportMapping`, their original reference in `externalRef` and unsupported
+source fields in `sourceMetadata`, which the issue view shows as imported
+metadata. The API has no import endpoints.
 
 ## Verification
 

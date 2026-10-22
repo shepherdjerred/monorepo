@@ -297,11 +297,9 @@ and the login keychain all require the GUI user context.
 
 If the Mac is powered off or waiting at FileVault login, matching hard jobs
 cannot dispatch and the workflow sits queued until its timeout expires. There
-is no separate dispatch watchdog: the Buildkite-era `macos-native-dispatch`
-step polled Buildkite's job state to bound that wait, and it was retired rather
-than ported — Woodpecker queues the workflow itself and the per-step timeout is
-the bound. The practical consequence is that an offline Mac surfaces as a
-pending check for up to the lane's timeout rather than after five minutes. Wake
+is no separate dispatch watchdog: Woodpecker queues the workflow itself and the
+per-step timeout is the bound. An offline Mac therefore surfaces as a pending
+check for up to the lane's timeout. Wake
 and log in to the host, then restart the affected workflow; do not weaken the
 steps or move signing material into a daemon context.
 
@@ -314,6 +312,7 @@ rm ~/Library/LaunchAgents/red.sjer.woodpecker-agent.plist ~/.local/bin/woodpecke
 ```
 
 The restore script requires the exact pre-bootstrap profile saved in
-`/var/db/buildkite-mac-ci-pmset-before`; it fails instead of guessing defaults.
-That filename is historical — an already-provisioned Mac holds the only copy of
-its pre-bootstrap power profile there, so renaming it would strand it.
+`/var/db/mac-ci-pmset-before`; it fails instead of guessing defaults. Hosts
+provisioned before that path existed saved the profile at
+`/var/db/buildkite-mac-ci-pmset-before`. Both scripts move that legacy file to
+the current path when only the legacy file exists, and fail when both exist.

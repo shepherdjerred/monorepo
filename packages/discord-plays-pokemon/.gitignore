@@ -6,7 +6,6 @@ config*.toml
 !config.example.toml
 !config.dev.toml
 error.png
-.tmp-earthly-out
 *.gba
 # The emulator wasm is built from source (scripts/build-wasm.ts) and never
 # committed.

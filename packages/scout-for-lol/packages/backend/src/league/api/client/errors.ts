@@ -1,7 +1,7 @@
 /**
  * HTTP status codes from the Riot API that indicate a temporary upstream
  * outage. These are expected during maintenance windows and should not be
- * reported to Sentry/Bugsink as unexpected errors.
+ * reported to Bugsink as unexpected errors.
  *
  * The standard origin failures are 502/503/504. Cloudflare 520/522/524 are
  * included because Scout has observed them as transient Riot edge failures.

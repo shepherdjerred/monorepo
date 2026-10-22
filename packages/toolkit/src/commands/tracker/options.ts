@@ -43,15 +43,6 @@ export function parseTrackerArgs(args: string[]) {
       "input-json": string,
       mutation: boolean,
       remove: boolean,
-      output: string,
-      input: string,
-      previous: string,
-      "retain-removed": multiple,
-      "retention-source": string,
-      "dry-run": boolean,
-      only: string,
-      resume: boolean,
-      profile: string,
     },
   });
 }

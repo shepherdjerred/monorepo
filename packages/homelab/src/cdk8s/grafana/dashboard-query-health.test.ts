@@ -164,6 +164,5 @@ describe("dashboard query health", () => {
     // The router and its Broadcast webhook are gone; their metric families
     // are never emitted again, so a panel on them would read zero forever.
     expect(dashboardJson).not.toContain("llm_router_attempts_total");
-    expect(dashboardJson).not.toContain("openrouter");
   });
 });

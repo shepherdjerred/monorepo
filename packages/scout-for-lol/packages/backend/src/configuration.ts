@@ -203,7 +203,7 @@ function computeConfiguration() {
     // packages/scout-for-lol/scripts/contract-hash.ts). Served by
     // /api/version; the SPA compares it against its own baked hash.
     contractHash: getRequiredEnvVar("CONTRACT_HASH"),
-    sentryDsn: getOptionalEnvVar("SENTRY_DSN"),
+    bugsinkDsn: getOptionalEnvVar("BUGSINK_DSN"),
     environment,
     productAnalytics:
       Bun.env.NODE_ENV === "test"
@@ -387,8 +387,8 @@ const configuration: Configuration = {
   get contractHash() {
     return getConfiguration().contractHash;
   },
-  get sentryDsn() {
-    return getConfiguration().sentryDsn;
+  get bugsinkDsn() {
+    return getConfiguration().bugsinkDsn;
   },
   get environment() {
     return getConfiguration().environment;

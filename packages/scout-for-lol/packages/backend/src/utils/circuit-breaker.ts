@@ -5,10 +5,10 @@ import * as Sentry from "@sentry/bun";
 const logger = createLogger("circuit-breaker");
 
 /**
- * Minimum interval (ms) between Sentry reports for the same error class.
+ * Minimum interval (ms) between Bugsink reports for the same error class.
  * During an outage window, only the first occurrence is reported.
  */
-const SENTRY_REPORT_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
+const BUGSINK_REPORT_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 
 /**
  * Number of consecutive failures before the circuit opens.
@@ -41,15 +41,15 @@ const STATE_VALUE: Readonly<Record<CircuitState, number>> = {
  * - **Half-open**: allows a single probe request. If it succeeds the circuit
  *   closes; if it fails, the circuit re-opens.
  *
- * Also provides rate-limited Sentry reporting so outage noise is bounded to
- * roughly one event per `SENTRY_REPORT_INTERVAL_MS`.
+ * Also provides rate-limited Bugsink reporting so outage noise is bounded to
+ * roughly one event per `BUGSINK_REPORT_INTERVAL_MS`.
  */
 export class CircuitBreaker {
   private readonly name: string;
   private state: CircuitState = "closed";
   private consecutiveFailures = 0;
   private openedAt: number | undefined;
-  private lastSentryReportAt: number | undefined;
+  private lastBugsinkReportAt: number | undefined;
 
   constructor(name: string) {
     this.name = name;
@@ -78,17 +78,17 @@ export class CircuitBreaker {
   }
 
   /**
-   * Record a failure and optionally report it to Sentry.
+   * Record a failure and optionally report it to Bugsink.
    *
    * Reporting is gated twice so transient blips stay out of error tracking:
    * a failure is only reported once it is sustained enough to trip the breaker
    * (`>= OPEN_THRESHOLD` consecutive), and then at most once per
-   * `SENTRY_REPORT_INTERVAL_MS`. Isolated failures that recover on the next
+   * `BUGSINK_REPORT_INTERVAL_MS`. Isolated failures that recover on the next
    * call (e.g. a single Riot 5xx for one player) are expected upstream noise —
-   * still counted in metrics and the circuit-state gauge, just not Sentry.
+   * still counted in metrics and the circuit-state gauge, just not Bugsink.
    *
    * @param error - The error to report
-   * @param tags  - Extra Sentry tags
+   * @param tags  - Extra Bugsink tags
    */
   recordFailure(error: unknown, tags: Record<string, string>): void {
     this.consecutiveFailures++;
@@ -107,13 +107,13 @@ export class CircuitBreaker {
       return;
     }
 
-    // Rate-limit Sentry reporting: at most one event per window
+    // Rate-limit Bugsink reporting: at most one event per window
     const now = Date.now();
     if (
-      this.lastSentryReportAt === undefined ||
-      now - this.lastSentryReportAt >= SENTRY_REPORT_INTERVAL_MS
+      this.lastBugsinkReportAt === undefined ||
+      now - this.lastBugsinkReportAt >= BUGSINK_REPORT_INTERVAL_MS
     ) {
-      this.lastSentryReportAt = now;
+      this.lastBugsinkReportAt = now;
       Sentry.captureException(error, {
         tags: {
           ...tags,

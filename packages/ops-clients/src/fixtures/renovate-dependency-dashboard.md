@@ -36,11 +36,11 @@ The following updates await pending status checks. To force their creation now, 
 > [!NOTE]
 > Detected dependencies section has been truncated
 
-<details><summary>buildkite (2)</summary>
+<details><summary>woodpecker (2)</summary>
 <blockquote>
 
-<details><summary>.buildkite/pipeline.yml (3)</summary>
+<details><summary>packages/tasknotes-windows/ci/windows-ci.pipeline.yml (3)</summary>
 
-- `test-collector v1.12.0`
-- `test-collector v1.12.0`
-- `test-collector v1.12.0`
+- `woodpeckerci/plugin-git 2.6.5`
+- `woodpeckerci/plugin-git 2.6.5`
+- `woodpeckerci/plugin-git 2.6.5`

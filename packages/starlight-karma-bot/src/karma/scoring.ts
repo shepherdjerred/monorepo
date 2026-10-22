@@ -18,7 +18,7 @@ export type KarmaAmount = (typeof ALLOWED_KARMA_AMOUNTS)[number];
 
 /** Thrown when a requested amount is outside {@link ALLOWED_KARMA_AMOUNTS}.
  *  Distinguished from a programming error so the command layer can answer the
- *  user rather than reporting to Sentry — a mistyped amount is boundary input,
+ *  user rather than reporting to Bugsink — a mistyped amount is boundary input,
  *  not a broken contract. */
 export class InvalidKarmaAmountError extends Error {
   constructor(readonly received: string) {

@@ -3,14 +3,13 @@
  * Build the cooklang-for-obsidian plugin, publish it to the external plugin
  * repository, and bump the monorepo manifest to track the release.
  *
- * Ports three old CI helpers (.dagger/src/release.ts):
- *  - `cooklangBuildHelper`          — `bun run build` to produce main.js / manifest.json / styles.css
- *  - `cooklangPublishHelper`        — compute next patch version, commit the three
- *                                     plugin files to the plugin repo main, update
- *                                     versions.json on a compatibility-boundary change,
- *                                     and cut a bare-version GitHub release
- *  - `cooklangVersionCommitBackHelper` — open/refresh an auto-merge PR bumping
- *                                     packages/cooklang-for-obsidian/manifest.json
+ * Three stages:
+ *  - build    — `bun run build` to produce main.js / manifest.json / styles.css
+ *  - publish  — compute next patch version, commit the three plugin files to the
+ *               plugin repo main, update versions.json on a compatibility-boundary
+ *               change, and cut a bare-version GitHub release
+ *  - bump     — open/refresh an auto-merge PR bumping
+ *               packages/cooklang-for-obsidian/manifest.json
  *
  * Usage:
  *   bun scripts/publish.ts [--plugin-repo <owner/repo>] [--dry-run]

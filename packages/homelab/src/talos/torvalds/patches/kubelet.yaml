@@ -27,7 +27,7 @@ machine:
       #
       # 24Gi = 16Gi ARC + ~8Gi kernel/OS burst. CI jobs now run on the dedicated
       # liskov worker, so the torvalds reservation no longer needs to budget for
-      # the historical BuildKit/Dagger storm. Post-migration torvalds slab peaked
+      # the historical CI build storm. Post-migration torvalds slab peaked
       # at ~7.2Gi over the retained observation window. Keep this reservation
       # above the ARC cap and re-raise it in lockstep with zfs_arc_max if a
       # production-only soak demonstrates a larger host burst.
@@ -94,8 +94,8 @@ machine:
       # clusters that set this field (more restrictive CIS-hardening guidance of
       # 1024 targets adversarial multi-tenant threat models, not this
       # single-trusted-workload homelab). Sized during the freeze
-      # investigation, which observed the (since-removed) Dagger engine's
-      # goroutine count explode 24 -> 1164 in under 60s; 4096 sits well above
+      # investigation, which observed a CI build engine's goroutine count
+      # explode 24 -> 1164 in under 60s; 4096 sits well above
       # any plausible legitimate footprint while still being a hard, finite
       # ceiling instead of unbounded.
       # Verify PID headroom under real heavy-concurrency load before trusting

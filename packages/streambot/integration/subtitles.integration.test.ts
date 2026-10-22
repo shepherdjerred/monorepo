@@ -17,8 +17,8 @@ import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 
 /**
  * Real-ffmpeg integration tests. These run ONLY via `bun run test:integration` — run it where
- * ffmpeg/ffprobe + libass + zimg + fonts are available (e.g. inside the streambot image; the Dagger
- * CI target that used to run them was removed 2026-07). They are NOT part of the plain `bun run test`
+ * ffmpeg/ffprobe + libass + zimg + fonts are available (e.g. inside the streambot image, where the
+ * image smoke runs them). They are NOT part of the plain `bun run test`
  * (scoped to `test/`). They hard-fail (never skip) if a binary is missing.
  */
 

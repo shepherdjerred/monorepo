@@ -3,10 +3,7 @@
  * ArgoCD operations: trigger a sync, wait for app or app-tree health, and wait
  * for a pruned resource (with a finalizer) to fully delete.
  *
- * Ported from the old CI's `argoCdSyncHelper` / `argoCdHealthWaitHelper` /
- * `waitForArgoCdResourceDeletionHelper` (.dagger/src/release.ts). Runs locally
- * as a plain Bun script using fetch instead of curl+jq; the polling logic and
- * timeouts are preserved.
+ * Runs locally as a plain Bun script using fetch.
  *
  * Usage:
  *   bun packages/homelab/scripts/argocd/argocd.ts sync-managed <app> [--revision <v>]
@@ -780,7 +777,7 @@ function activeOperationResourceIdentities(
 /**
  * Deliberately reads only the current info key, with no fallback to the
  * `ci.sjer.red/root-finalizer-phase` name this replaced. An operation carrying
- * the old key was started by a different Buildkite build, so
+ * the old key was started by a different CI build, so
  * `liveOperationMatches` has already refused it on the request UUID before the
  * phase is ever compared — a fallback could not change any outcome, and
  * teaching the closed-world comparison to accept a key this code never writes

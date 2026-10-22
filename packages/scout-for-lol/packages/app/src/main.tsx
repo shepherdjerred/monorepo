@@ -10,31 +10,31 @@ import { LoadingBlockDefaults } from "@shepherdjerred/loaded/react.tsx";
 import { RouterProvider } from "react-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import * as Sentry from "@sentry/react";
-import { sentryDataCollection } from "@shepherdjerred/sentry-config";
+import { bugsinkDataCollection } from "@shepherdjerred/bugsink-config";
 import { TRPCProvider, trpcClient } from "#src/lib/query/trpc.ts";
-import { filterScoutAppSentryEvent } from "#src/lib/sentry-filters.ts";
+import { filterScoutAppBugsinkEvent } from "#src/lib/bugsink-filters.ts";
 import { queryClient } from "#src/lib/query/query-client.ts";
 import { createAppRouter } from "#src/router.tsx";
 import { initAnalytics, track } from "#src/lib/analytics.ts";
 import "#src/styles/global.css";
 
-// VITE_SENTRY_RELEASE is the content-addressed site archive
+// VITE_BUGSINK_RELEASE is the content-addressed site archive
 // (`scout-site@sha256:…`). The human-facing 2.0.0-<build> and commit come
 // from the deployed backend's GET /api/version, never from the bytes.
 // Guard the untyped env access so `release` stays `string | undefined`.
-const sentryRelease =
-  typeof import.meta.env.VITE_SENTRY_RELEASE === "string"
-    ? import.meta.env.VITE_SENTRY_RELEASE
+const bugsinkRelease =
+  typeof import.meta.env.VITE_BUGSINK_RELEASE === "string"
+    ? import.meta.env.VITE_BUGSINK_RELEASE
     : undefined;
 
 Sentry.init({
-  dataCollection: sentryDataCollection(),
+  dataCollection: bugsinkDataCollection(),
   dsn: "https://337945d2208840dca4a573be311a1bbb@bugsink.sjer.red/1",
-  release: sentryRelease,
+  release: bugsinkRelease,
   environment: import.meta.env.MODE,
   // Local dev shares this DSN with production; never report from `vite dev`.
   enabled: import.meta.env.PROD,
-  beforeSend: filterScoutAppSentryEvent,
+  beforeSend: filterScoutAppBugsinkEvent,
   // Bugsink is Sentry-compatible but does not support performance tracing.
   tracesSampleRate: 0,
   // Monaco/VS Code CancellationError on unmount/nav — not app bugs.

@@ -11,10 +11,10 @@ consult a persisted per-guild high-water mark.
 ```mermaid
 flowchart LR
   accTitle: Karma bot startup and giving surfaces
-  accDescr: Startup arms Sentry, applies Prisma migrations, imports the legacy database once, binds the health server, then logs in to Discord. Three giving surfaces — a reaction, a message context menu, and a slash command — all write through one store module into SQLite. A polling dispatcher posts a scheduled recap.
+  accDescr: Startup arms Bugsink, applies Prisma migrations, imports the legacy database once, binds the health server, then logs in to Discord. Three giving surfaces — a reaction, a message context menu, and a slash command — all write through one store module into SQLite. A polling dispatcher posts a scheduled recap.
 
   subgraph Boot[Startup order]
-    S[Sentry + fatal handlers] --> M[prisma migrate deploy]
+    S[Bugsink + fatal handlers] --> M[prisma migrate deploy]
     M --> I[One-shot legacy import]
     I --> H[Health server binds]
     H --> L[Discord login]
@@ -31,7 +31,7 @@ flowchart LR
 
 Each step exists because the one before it failed in a specific way.
 
-Sentry and the process-level fatal handlers are armed **first**, before the
+Bugsink and the process-level fatal handlers are armed **first**, before the
 database work, because migrations and the import are the riskiest part of boot
 — a locked database or a half-applied migration would otherwise be visible only
 in container logs. Those handlers must terminate the process: installing an

@@ -31,7 +31,7 @@ accurate dependency resolution.
 These are standalone tools invoked manually; they are **not** wired into git
 hooks. Repo-wide pre-commit checks come from the root `lefthook.yml`
 (staged-file formatting and safety checks), and CI runs the full test graph
-through Turbo on Buildkite.
+through Turbo on Woodpecker.
 
 ### `find-dependent-tests.ts`
 

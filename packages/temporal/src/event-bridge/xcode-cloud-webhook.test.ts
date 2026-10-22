@@ -269,7 +269,7 @@ describe("real Alertmanager poster wiring (fetch capture)", () => {
     }
 
     // Filter to Alertmanager calls: the full test suite has background
-    // telemetry/Sentry fetches that would otherwise pollute a raw count.
+    // telemetry/Bugsink fetches that would otherwise pollute a raw count.
     const amCalls = captured.filter(
       (c) => c.url === "http://alertmanager.test:9093/api/v2/alerts",
     );

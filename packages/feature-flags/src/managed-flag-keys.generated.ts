@@ -64,7 +64,6 @@ export type ArcadeFlagKey = (typeof ARCADE_FLAG_KEYS)[number];
 
 export const TRACKER_BOOLEAN_FLAG_KEYS = [
   "tracker-writes-enabled",
-  "tracker-imports-enabled",
   "tracker-telemetry-enabled",
 ] as const;
 

@@ -92,9 +92,9 @@ $installer = Get-ChildItem .\packages\tasknotes-windows\AppPackages -Recurse -Fi
 `bun run windows:cross-package` builds every Windows project and the unsigned
 MSIX on Linux, in the pinned
 [`windows-cross-compiler-winui`](../windows-cross-compiler/) image, and writes
-the package to `AppPackages/cross/`. Buildkite runs the same build on every
-change as `tasknotes-windows-cross`. The image needs a linux/amd64 container
-host.
+the package to `AppPackages/cross/`. CI does not run this build while the
+Windows compiler image build is paused. The image needs a linux/amd64
+container host.
 
 The Rust core cross-compiles for `x86_64-pc-windows-msvc` with cargo-xwin, and
 `Directory.Build.targets` imports the image's `$(WindowsCrossTargets)`, which
@@ -187,7 +187,7 @@ UIA tree, screenshot, process inventory, and vault under `artifacts/e2e/`.
 
 The Windows UI lane remains local until CI has unlocked interactive
 Windows 11 x64 workers. The exact inactive lane contract is checked in at
-`ci/windows-ci.pipeline.yml`; provisioning is tracked in Linear as
-SJ-134. Until that issue is complete, a PR needs attached local
+`ci/windows-ci.pipeline.yml`; provisioning is tracked in Tracker as
+AI-148. Until that issue is complete, a PR needs attached local
 `windows:verify` evidence and must not claim packaged Windows tests are
 CI-enforced.

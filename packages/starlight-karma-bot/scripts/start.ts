@@ -5,7 +5,7 @@ import { disconnectPrisma } from "#src/db/index.ts";
 
 // Armed FIRST. Migrations are the riskiest part of startup — a locked or
 // unwritable database, or a half-applied migration — and they run before
-// `src/index.ts` is imported. Initializing Sentry there would have left
+// `src/index.ts` is imported. Initializing Bugsink there would have left
 // exactly these failures visible only in container logs.
 initObservability();
 

@@ -14,8 +14,7 @@ import { classicMatchToImage, classicMatchToSvg } from "./index.tsx";
 // These tests exercise the *committed* Classic fonts through the real
 // production render path (`bunClassicFonts()` -> satori -> resvg), so the
 // normal Scout/report test lane fails fast if a Gill Sans (or QTFrizQuad)
-// asset is omitted, empty, or unparseable — the guarantee that the deleted
-// standalone `scout-classic-visuals` Buildkite lane used to provide.
+// asset is omitted, empty, or unparseable.
 
 const PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
 

@@ -53,7 +53,7 @@ export type CallRiotConfig<T> = {
   schema: ZodType<T>;
   /**
    * Per-call context (matchId, puuid, alias, region, …) — used as the log
-   * prefix and as Sentry tags when an HTTP error is captured.
+   * prefix and as Bugsink tags when an HTTP error is captured.
    */
   context: Record<string, string | number>;
   /**
@@ -70,11 +70,11 @@ export type CallRiotConfig<T> = {
    */
   onValidationFailure?: ValidationFailureSaveToS3;
   /**
-   * Capture non-404 / non-upstream HTTP errors to Sentry.
+   * Capture non-404 / non-upstream HTTP errors to Bugsink.
    * 404 and reviewed upstream errors are never captured —
    * they're expected operational signals, not bugs to investigate.
    */
-  sentry?: boolean;
+  bugsink?: boolean;
 };
 
 type CallResult<T> =
@@ -103,7 +103,7 @@ function contextAsTags(
  * Internal core: request → metric → parse → audit → policy dispatch.
  * Returns a discriminated result so the public variants can selectively
  * fold failures into `undefined` or rethrow. All shared plumbing
- * (metrics, health updates, breadcrumbs, Sentry capture, S3 save,
+ * (metrics, health updates, breadcrumbs, Bugsink capture, S3 save,
  * unknown-key audit log) runs in here exactly once per call.
  */
 async function runRiotCall<T>(
@@ -116,7 +116,7 @@ async function runRiotCall<T>(
     context,
     schemaLabel = source,
     onValidationFailure,
-    sentry = false,
+    bugsink = false,
   } = config;
   const contextSuffix = formatContext(context);
 
@@ -180,7 +180,7 @@ async function runRiotCall<T>(
       }
       logger.error(`[${source}] ❌ HTTP ${status.toString()}${contextSuffix}`);
       riotApiErrorsTotal.inc({ source, http_status: status.toString() });
-      if (sentry) {
+      if (bugsink) {
         Sentry.captureException(error, {
           tags: {
             source,
@@ -244,7 +244,7 @@ function throwRiotFailure<T>(
 /**
  * Returns `T` on success; `undefined` on any failure (validation, 404,
  * upstream outage, HTTP error, timeout, transport error). All
- * metric/log/Sentry/S3 plumbing runs first.
+ * metric/log/Bugsink/S3 plumbing runs first.
  */
 export async function callRiotOrUndefined<T>(
   config: CallRiotConfig<T>,
@@ -257,7 +257,7 @@ export async function callRiotOrUndefined<T>(
 /**
  * Returns `T` on success and `undefined` only when Riot returns 404. All
  * validation, upstream, HTTP, timeout, and transport failures throw after
- * the shared metric/log/Sentry/S3 plumbing runs.
+ * the shared metric/log/Bugsink/S3 plumbing runs.
  */
 export async function callRiotOrUndefinedOn404<T>(
   config: CallRiotConfig<T>,

@@ -95,9 +95,9 @@ export const DELETED_SCHEDULE_IDS = [
   // Replaced by per-execution temporal-failure-watch alerts and worker-task
   // health guardrails. Delete the old aggregate alert on worker startup.
   "agent-task-timeout-watch",
-  // Monitored the one OpenAI project OpenRouter billed through. Replaced by
+  // Monitored complimentary usage on a single OpenAI project. Replaced by
   // `llm-billed-cost-hourly`, which covers every OpenAI project and Anthropic
-  // workspace now that each app calls its provider directly.
+  // workspace.
   "openai-complimentary-usage-hourly",
   // The Riot tournament lobby poller was retired with the Tournament API
   // integration; its orphaned Schedule kept starting no-op v1 realtime polls
@@ -211,7 +211,7 @@ async function pauseLegacyClaudeSchedules(client: Client): Promise<void> {
     await client.schedule
       .getHandle(schedule.scheduleId)
       .pause(
-        "Paused during the OpenRouter migration; resubmit this task with provider codex",
+        "Claude agent tasks no longer execute; resubmit this task with provider codex",
       );
     console.warn(
       `Paused legacy Claude agent-task schedule: ${schedule.scheduleId}`,

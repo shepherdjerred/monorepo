@@ -25,7 +25,7 @@ const logger = createLogger("betting-transition");
  * Discord IDs are fine in this private operational log, but not in PostHog
  * captures or browser distinct IDs, because a distinct ID is a durable
  * cross-product join key; existing code already logs channel and guild IDs and
- * puts them in Sentry tags. `subjectPuuid` is deliberately omitted: `teamId` is
+ * puts them in Bugsink tags. `subjectPuuid` is deliberately omitted: `teamId` is
  * what the wager *is*, and the PUUID is a Riot identifier that adds nothing.
  *
  * **Every call must be post-commit.** A transition logged inside a transaction

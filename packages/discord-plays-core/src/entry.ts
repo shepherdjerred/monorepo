@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/bun";
-import { sentryDataCollection } from "@shepherdjerred/sentry-config";
+import { bugsinkDataCollection } from "@shepherdjerred/bugsink-config";
 import type { SpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { createGameBot } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-bot";
 import type {
@@ -41,8 +41,8 @@ type GameBotWiring = Pick<
 export type BootGameBotOptions = {
   /** Resource `service.name` for tracing (e.g. "discord-plays-pokemon"). */
   serviceName: string;
-  /** Sentry DSN fallback baked per game; SENTRY_DSN env overrides it. */
-  sentryDsn: string;
+  /** Bugsink DSN fallback baked per game; BUGSINK_DSN env overrides it. */
+  bugsinkDsn: string;
   /** Structured logger the shared modules log through (the game's winston logger). */
   logger: Logger;
   /** createGameBot inputs the game provides. */
@@ -57,13 +57,13 @@ export type BootGameBotOptions = {
 };
 
 /**
- * Boot a discord-plays game bot: initialise Sentry + OTLP tracing, build the
+ * Boot a discord-plays game bot: initialise Bugsink + OTLP tracing, build the
  * createGameBot runtime, and arm SIGTERM/SIGINT handlers. Returns the runtime so
  * the game can wire its message/socket dispatch and then call `runtime.start()`.
  *
  * Sentry.init runs first with `enableOpenTelemetrySetup: false` so it doesn't
  * register the global OTel TracerProvider before initializeTracing()'s NodeSDK
- * does (otherwise spans route through Sentry's sampler and never reach Tempo).
+ * does (otherwise spans route through the Sentry SDK's sampler and never reach Tempo).
  */
 export function bootGameBot(
   options: BootGameBotOptions,
@@ -106,20 +106,20 @@ export function bootGameBot(
 export function initializeGameObservability(
   options: Pick<
     BootGameBotOptions,
-    "serviceName" | "sentryDsn" | "logger" | "wrapSpanProcessor"
+    "serviceName" | "bugsinkDsn" | "logger" | "wrapSpanProcessor"
   >,
 ): void {
   Sentry.init({
-    dataCollection: sentryDataCollection(),
-    dsn: Bun.env["SENTRY_DSN"] ?? options.sentryDsn,
+    dataCollection: bugsinkDataCollection(),
+    dsn: Bun.env["BUGSINK_DSN"] ?? options.bugsinkDsn,
     environment: Bun.env.NODE_ENV ?? "development",
     // VERSION is baked into the image at build time.
     release: Bun.env["VERSION"],
-    // Don't let Sentry register the global OTel TracerProvider/Propagator/
+    // Don't let the Sentry SDK register the global OTel TracerProvider/Propagator/
     // ContextManager. It runs before initializeTracing(), so it lands first and
     // the NodeSDK below fails registration ("duplicate registration of API:
-    // trace") — spans then route through Sentry's sampler (tracesSampleRate
-    // unset) and never reach Tempo. Sentry stays for errors via captureException.
+    // trace") — spans then route through the Sentry SDK's sampler (tracesSampleRate
+    // unset) and never reach Tempo. The Sentry SDK stays for errors via captureException.
     enableOpenTelemetrySetup: false,
   });
 

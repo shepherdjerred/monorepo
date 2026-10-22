@@ -1,14 +1,14 @@
-/** Sentry setup and the process-level fatal handlers.
+/** Bugsink setup and the process-level fatal handlers.
  *
  *  Its own module so the startup script can arm monitoring *before* the
  *  database bootstrap. Migrations are the riskiest part of startup, so a
  *  failure there is exactly what needs reporting — but they run before
- *  `src/index.ts` is imported, so initializing Sentry there would have left
+ *  `src/index.ts` is imported, so initializing Bugsink there would have left
  *  those failures visible only in container logs. */
 import * as Sentry from "@sentry/bun";
-import { sentryDataCollection } from "@shepherdjerred/sentry-config";
+import { bugsinkDataCollection } from "@shepherdjerred/bugsink-config";
 import configuration from "#src/configuration.ts";
-import { filterStarlightSentryEvent } from "#src/sentry-filters.ts";
+import { filterStarlightBugsinkEvent } from "#src/bugsink-filters.ts";
 
 let initialized = false;
 
@@ -21,13 +21,13 @@ export function initObservability(): void {
   initialized = true;
 
   Sentry.init({
-    dataCollection: sentryDataCollection(),
-    dsn: configuration.sentryDsn,
+    dataCollection: bugsinkDataCollection(),
+    dsn: configuration.bugsinkDsn,
     environment: configuration.environment,
     release: configuration.gitSha,
-    beforeSend: filterStarlightSentryEvent,
+    beforeSend: filterStarlightBugsinkEvent,
   });
-  console.warn("[App] Sentry initialized");
+  console.warn("[App] Bugsink initialized");
 
   process.on("unhandledRejection", (reason: unknown) => {
     exitOnFatal("unhandledRejection", reason);
@@ -55,7 +55,7 @@ export function exitOnFatal(source: string, error: unknown): void {
       // Best-effort flush; the report is lost if the process dies first.
       await Sentry.close(2000);
     } catch (flushError) {
-      console.error("[App] Failed to flush Sentry before exit:", flushError);
+      console.error("[App] Failed to flush Bugsink before exit:", flushError);
     } finally {
       process.exit(1);
     }

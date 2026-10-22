@@ -80,6 +80,6 @@ DATABASE_URL=postgres://scout@127.0.0.1:5471/scout_dev_3000
 #   bun run --filter='./packages/scout-for-lol' dev:seed
 S3_BUCKET_NAME=scout-beta
 
-# ── Optional: silence Sentry locally ──────────────────────────────────
-SENTRY_DSN=
+# ── Optional: silence Bugsink locally ──────────────────────────────────
+BUGSINK_DSN=
 TELEMETRY_ENABLED=false

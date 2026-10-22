@@ -341,10 +341,9 @@ describe("review gate source", () => {
   });
 
   /**
-   * Buildkite needed an explicit `cancel_on_build_failing: false` to stop a
-   * failing sibling step from killing the gate mid-review. Woodpecker runs
-   * each workflow independently, so the property now follows from the gate
-   * depending on nothing: no other lane's failure can reach it.
+   * Woodpecker runs each workflow independently, so the gate cannot be
+   * cancelled by a failing sibling as long as it depends on nothing: no other
+   * lane's failure can reach it.
    */
   test("the required gate cannot be cancelled by another lane failing", async () => {
     const steps = await readGeneratedSteps(

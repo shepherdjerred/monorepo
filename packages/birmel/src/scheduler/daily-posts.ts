@@ -7,7 +7,7 @@ import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
-import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
+import { captureException } from "@shepherdjerred/birmel/observability/bugsink.ts";
 
 const logger = loggers.scheduler.child("daily-posts");
 

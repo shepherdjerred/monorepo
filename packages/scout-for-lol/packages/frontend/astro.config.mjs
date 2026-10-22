@@ -58,10 +58,10 @@ export default defineConfig({
         optional: true,
       }),
       // Content-addressed site archive (`scout-site@sha256:…`). Optional:
-      // unset in local/dev builds, where Sentry release stays undefined. It is
+      // unset in local/dev builds, where Bugsink release stays undefined. It is
       // the only release identity baked in: no build number or commit, so an
       // unchanged rebuild reproduces the same bytes and Delivery retains it.
-      PUBLIC_SENTRY_RELEASE: envField.string({
+      PUBLIC_BUGSINK_RELEASE: envField.string({
         context: "client",
         access: "public",
         optional: true,

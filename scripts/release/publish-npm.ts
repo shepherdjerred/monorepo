@@ -2,8 +2,7 @@
 /**
  * Publish an npm package via `bun publish`.
  *
- * Ported from the old CI's `publishNpmHelper` (.dagger/src/release.ts). Runs
- * locally: given a package directory, it verifies NPM_TOKEN bypasses 2FA (the
+ * Runs locally: given a package directory, it verifies NPM_TOKEN bypasses 2FA (the
  * token-introspection preflight below) and then publishes from that dir.
  *
  * Usage:
@@ -219,13 +218,12 @@ export async function verifyTokenBypasses2fa(
 /**
  * Surface an imminent NPM_TOKEN expiry where someone will actually see it.
  *
- * Buildkite raised a build annotation here, precisely because a log line in a
- * PASSING step is invisible and this warning is not a failure. Woodpecker has
- * no annotation surface, so the warning is written to stderr and, in CI, also
- * to the collected report directory.
+ * A log line in a PASSING step is invisible and this warning is not a
+ * failure. Woodpecker has no annotation surface, so the warning is written to
+ * stderr and, in CI, also to the collected report directory.
  *
- * That is weaker than an annotation and is a known gap: the alarm needs a
- * durable destination (Discord or Linear, alongside the other operational
+ * That is a known gap: the alarm needs a
+ * durable destination (Discord or Tracker, alongside the other operational
  * alerts) rather than a file nobody opens. Until it has one, a token that
  * silently expires will break publishing with no warning anyone saw.
  */

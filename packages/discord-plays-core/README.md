@@ -67,7 +67,7 @@ fix lands once.
 - `src/logger.ts` — the `Logger` interface core logs through, the
   `createGameLogger()` stdout winston logger both games use, and `silentLogger`
   for tests.
-- `src/entry.ts` — `bootGameBot()`: Sentry init, tracing, bot wiring, and
+- `src/entry.ts` — `bootGameBot()`: Bugsink init, tracing, bot wiring, and
   SIGTERM/SIGINT handlers in one entrypoint.
 
 ## Consumption

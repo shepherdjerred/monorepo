@@ -60,7 +60,7 @@ async function fetchMatchIds(
       source: "explore-on-demand-list",
       schema: z.array(RiotMatchIdSchema).max(input.requestedMatches),
       context: { region: input.region },
-      sentry: true,
+      bugsink: true,
     },
     () =>
       riotClient.match.list(

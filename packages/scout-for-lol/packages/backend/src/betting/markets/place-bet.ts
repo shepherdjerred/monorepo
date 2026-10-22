@@ -42,7 +42,7 @@ const logger = createLogger("betting-place-bet");
  * Results are a discriminated union rather than thrown errors: every one of
  * these is ordinary user input at a system boundary, which the repo's
  * fail-fast rule explicitly exempts — a person clicking a stale button should
- * get a friendly ephemeral reply, not a Sentry event.
+ * get a friendly ephemeral reply, not a Bugsink event.
  */
 export type PlaceBetResult =
   | {

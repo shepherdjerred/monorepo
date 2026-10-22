@@ -47,10 +47,8 @@ const CI_POD_PEER = {
 /**
  * The network boundary CI step pods are meant to sit inside.
  *
- * Step pods run branch code with production credentials mounted, and until now
- * nothing constrained where that code could connect. The Buildkite chart did
- * not constrain it either, so this closes a gap carried over rather than one
- * the migration introduced.
+ * Step pods run branch code with production credentials mounted. Without this
+ * policy nothing would constrain where that code could connect.
  *
  * Be honest about what it buys today: the cluster runs Flannel, which does not
  * enforce NetworkPolicy, so this is a declared boundary that takes effect if

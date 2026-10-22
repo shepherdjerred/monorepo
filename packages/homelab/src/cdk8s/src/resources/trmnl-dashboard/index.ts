@@ -79,13 +79,13 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
         // The homelab screen renders from the ops snapshot the ops dashboard
         // (deployed as alert-dashboard) serves.
         OPS_DASHBOARD_URL: EnvValue.fromValue(OPS_DASHBOARD_URL),
-        // Sentry error reporting → Bugsink project 15 (TRMNL Dashboard). This
-        // is the dashboard's OWN error tracking. Required
-        // (fail-fast): the item must carry SENTRY_DSN. VERSION is baked into the
-        // image; both surface as the Sentry release/environment.
-        SENTRY_DSN: EnvValue.fromSecretValue({
+        // Bugsink error reporting → project 15 (TRMNL Dashboard). This is the
+        // dashboard's OWN error tracking. Required (fail-fast): the item must
+        // carry BUGSINK_DSN. VERSION is baked into the image; it and ENVIRONMENT
+        // become the Bugsink release and environment.
+        BUGSINK_DSN: EnvValue.fromSecretValue({
           secret,
-          key: "SENTRY_DSN",
+          key: "BUGSINK_DSN",
         }),
         ENVIRONMENT: EnvValue.fromValue("production"),
       },

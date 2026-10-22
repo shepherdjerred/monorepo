@@ -1,12 +1,9 @@
 /**
  * Configuration for the Codex SDK, pointed at OpenAI directly.
  *
- * The Codex SDK speaks the OpenAI API, so under the gateway this had to
- * override the base URL to OpenRouter and translate the catalog id into a
- * gateway route. Against OpenAI itself neither is needed: the catalog's native
- * route id IS the API model name, and the SDK's default base URL is already
- * correct — so no `baseUrl` is set, and the SDK is free to follow its own
- * default if OpenAI ever moves it.
+ * The catalog's native route id IS the OpenAI API model name, and the SDK's
+ * default base URL is already correct. No `baseUrl` is set, so the SDK is free
+ * to follow its own default if OpenAI ever moves it.
  */
 import { requireNativeRoute } from "@shepherdjerred/llm-models";
 import { z } from "zod";

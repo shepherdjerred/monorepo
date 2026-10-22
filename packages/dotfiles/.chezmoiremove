@@ -1,3 +1,6 @@
 .agents/skills/mastra-helper/SKILL.md
 .local/bin/herdr-stage
 .local/bin/herdr-board
+.agents/skills/buildkite-helper
+.agents/skills/pagerduty-helper
+.agents/skills/sentry-helper

@@ -244,10 +244,11 @@ export function createStreambotDeployment(
         LIBVA_DRIVER_NAME: EnvValue.fromValue("iHD"),
         // Prometheus /metrics endpoint (scraped by the ServiceMonitor below).
         METRICS_PORT: EnvValue.fromValue("9466"),
-        // Sentry error reporting → Bugsink project 14 (Streambot). Required
-        // (fail-fast): the streambot-config item must carry SENTRY_DSN. VERSION
-        // is baked into the image; both surface as the Sentry release/environment.
-        SENTRY_DSN: fromSecret("SENTRY_DSN"),
+        // Bugsink error reporting → project 14 (Streambot). Required
+        // (fail-fast): the streambot-config item must carry BUGSINK_DSN. VERSION
+        // is baked into the image; it and ENVIRONMENT become the Bugsink release
+        // and environment.
+        BUGSINK_DSN: fromSecret("BUGSINK_DSN"),
         ENVIRONMENT: EnvValue.fromValue("production"),
       },
       ports: [{ number: 9466, name: "metrics" }],

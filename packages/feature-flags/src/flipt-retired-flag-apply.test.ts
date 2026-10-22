@@ -22,6 +22,8 @@ const retirementScopes = [
   { environment: "prod", namespace: "trmnl-dashboard" },
   { environment: "beta", namespace: "alert-dashboard" },
   { environment: "prod", namespace: "alert-dashboard" },
+  { environment: "beta", namespace: "tracker" },
+  { environment: "prod", namespace: "tracker" },
 ] as const;
 const retiredKeys = retiredFlagDeclarations.map(
   (declaration) => declaration.key,
@@ -73,12 +75,16 @@ function fakeServer(
     ["temporal-agent-chat-imessage-claude-model", { value: "claude-opus-5" }],
     ["temporal-agent-chat-imessage-codex-model", { value: "gpt-5.6-luna" }],
   ];
+  const preservedTrackerFlags: [string, unknown][] = [
+    ["tracker-writes-enabled", { enabled: true }],
+  ];
   const preservedOtherFlags: [string, unknown][] = [
     ["unrelated-unknown", { enabled: true }],
   ];
   const preservedByNamespace = new Map([
     ["scout", preservedScoutFlags],
     ["temporal", preservedTemporalFlags],
+    ["tracker", preservedTrackerFlags],
   ]);
   const preservedFlags = (namespace: string): [string, unknown][] =>
     preservedByNamespace.get(namespace) ?? preservedOtherFlags;
@@ -209,6 +215,8 @@ test("only audited Scout and BlueBubbles keys are retired, preserving managed ta
     "prod/alert-dashboard/ops-digest-email-enabled",
     "beta/scout/custom_nights_enabled",
     "prod/scout/custom_nights_enabled",
+    "beta/tracker/tracker-imports-enabled",
+    "prod/tracker/tracker-imports-enabled",
   ]);
   const server = fakeServer();
   const managedBefore = structuredClone(
@@ -246,6 +254,11 @@ test("only audited Scout and BlueBubbles keys are retired, preserving managed ta
       "temporal-agent-chat-photon-owners",
       "temporal-agent-chat-imessage-claude-model",
       "temporal-agent-chat-imessage-codex-model",
+    ]);
+  }
+  for (const environment of environments) {
+    expect([...server.flagsIn(environment, "tracker").keys()]).toEqual([
+      "tracker-writes-enabled",
     ]);
   }
   expect(

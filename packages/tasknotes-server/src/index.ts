@@ -1,4 +1,4 @@
-import "./sentry.ts";
+import "./bugsink.ts";
 import path from "node:path";
 import { Hono } from "hono";
 

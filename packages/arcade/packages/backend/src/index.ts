@@ -51,7 +51,7 @@ import { prepareGoalAuth } from "@discord-plays-pokemon/backend/goal/codex/codex
 const logger = createGameLogger();
 initializeGameObservability({
   serviceName: "arcade",
-  sentryDsn: "",
+  bugsinkDsn: "",
   logger,
   wrapSpanProcessor: (inner) => buildArchiveSpanProcessor({ inner }),
 });

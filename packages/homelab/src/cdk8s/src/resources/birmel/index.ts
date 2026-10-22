@@ -237,18 +237,18 @@ done`,
           key: "SEAWEEDFS_SECRET_ACCESS_KEY",
         }),
 
-        // Sentry configuration
-        SENTRY_ENABLED: EnvValue.fromValue("true"),
-        SENTRY_DSN: EnvValue.fromSecretValue({
+        // Bugsink error reporting
+        BUGSINK_ENABLED: EnvValue.fromValue("true"),
+        BUGSINK_DSN: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
             chart,
-            "birmel-sentry-dsn-secret",
+            "birmel-bugsink-dsn-secret",
             onePasswordItem.name,
           ),
-          key: "SENTRY_DSN",
+          key: "BUGSINK_DSN",
         }),
-        SENTRY_ENVIRONMENT: EnvValue.fromValue("production"),
-        SENTRY_RELEASE: EnvValue.fromValue(firstPartyImageRecipe("birmel")),
+        BUGSINK_ENVIRONMENT: EnvValue.fromValue("production"),
+        BUGSINK_RELEASE: EnvValue.fromValue(firstPartyImageRecipe("birmel")),
 
         // General configuration
         LOG_LEVEL: EnvValue.fromValue("info"),

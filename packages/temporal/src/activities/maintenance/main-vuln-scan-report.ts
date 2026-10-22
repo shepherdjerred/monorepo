@@ -1,5 +1,5 @@
 // Pure report assembly for the weekly main vulnerability scan — no I/O, no
-// Sentry/observability imports, so the workflow bundle can import it directly
+// Bugsink/observability imports, so the workflow bundle can import it directly
 // (same pattern as homelab-audit-report.ts).
 import type { MainVulnScanResult } from "./main-vuln-scan.ts";
 import type { ActivityReportInput } from "#activities/reports/report-delivery.ts";

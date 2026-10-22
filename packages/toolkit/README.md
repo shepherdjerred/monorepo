@@ -219,60 +219,7 @@ need a restart or their explicit native session environment.
 
 `tracker api <procedure> --input-json '<JSON>'` is the query escape hatch;
 `--mutation` adds the same validated actor. Additional catalog mutations use
-this API. `tracker --help` lists the complete command tree. The former
-`toolkit linear` write passthrough is removed; all issue operations use Tracker.
-
-The operator migration commands preserve an immutable Linear snapshot and its
-file checksums. Export is read-only and paginates all archived records through
-the read-only GraphQL migration adapter. Its dedicated
-`LINEAR_MIGRATION_API_KEY` resolves through the registered password-manager
-reference only for export, source verification, and private file downloads.
-It is never forwarded to redirect destinations. No Linear CLI is required.
-
-```bash
-toolkit tracker migration export-linear --output /private/tmp/linear-export
-toolkit tracker migration import-linear --input /private/tmp/linear-export --dry-run
-toolkit tracker migration backup-linear --input /private/tmp/linear-export --profile seaweedfs
-toolkit tracker migration verify-linear --input /private/tmp/linear-export
-toolkit tracker migration import-linear --input /private/tmp/linear-export
-toolkit tracker migration import-linear --input /private/tmp/linear-export --resume
-toolkit tracker migration catch-up-linear --previous /private/tmp/linear-export --input /private/tmp/linear-export-new --dry-run
-toolkit tracker migration catch-up-linear --previous /private/tmp/linear-export --input /private/tmp/linear-export-new
-```
-
-`--resume` on export continues downloads from the frozen source snapshot.
-Import always relies on server idempotency and can resume after an uncertain
-response; a completed rerun reports only `unchanged` records. `--only TYPE`
-imports one entity stage whose prerequisites have already been applied.
-Dry-run validates every reference and local file before any destination access.
-Project/document comments stay in the private export. Project upload links require
-an explicit destination association and block preflight instead of importing broken links.
-Import rejects native issue collisions and requires normal writes to be paused.
-Open `tracker-imports-enabled` only for the explicit import window, then close
-it before enabling native writes. Compare the final source snapshot with Linear
-before cutover; new or changed source data requires reconciliation rather than
-silently overwriting an earlier imported record.
-
-Catch-up takes two checksummed snapshots. It appends new records in dependency
-order and reconciles source issue/comment edits only when the previous import
-hash and current destination fields still match. Every edit adds an audit event;
-the first import event and original actor observations remain intact. A repeated
-snapshot pair makes no new writes. Removals, changed catalog definitions and
-edited vote records fail preflight and need explicit reconciliation. Back up the
-new snapshot and verify it against Linear before closing the import window.
-
-`--retain-removed <ID>` explicitly preserves an already archived issue missing
-from the newer export, along with its first import event. Repeat the option for
-each historical copy to retain. It rejects active or unknown identifiers and
-other removed records. Retained issues keep their original fields and remain
-outside the active queue. Existing actors keep their original observations when
-the source still identifies the same actor key and kind.
-For later snapshot pairs, provide `--retention-source OLD` with the original
-checksummed export containing those archived copies and repeat `--retain-removed`.
-
-Backups use the private `tracker-attachments/import/` prefix and verify every
-object by reading its bytes back. Keep the export directory private; never
-commit or upload its contents through `pr asset`.
+this API. `tracker --help` lists the complete command tree.
 
 ## Platform commands
 

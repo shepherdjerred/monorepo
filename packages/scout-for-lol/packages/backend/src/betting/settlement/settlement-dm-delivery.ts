@@ -115,7 +115,7 @@ async function handleSettlementDmDeliveryError(input: {
 }): Promise<void> {
   if (input.status !== "sent") await input.tipped?.release();
   // `sendDM` handles expected Discord failures. The observer still needs
-  // a rejection to count those statuses, but they are not Sentry errors.
+  // a rejection to count those statuses, but they are not Bugsink errors.
   bettingSettlementDmsTotal.inc({
     recipient: input.recipientKind,
     result: input.status ?? "failed",

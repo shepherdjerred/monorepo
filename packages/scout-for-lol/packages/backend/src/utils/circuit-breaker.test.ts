@@ -3,7 +3,7 @@ import * as RealSentry from "@sentry/bun";
 
 // Spy on Sentry.captureException so we can assert exactly when the breaker
 // reports. Spread the real module so sibling test files that rely on other
-// Sentry exports aren't broken by this process-global mock.
+// Bugsink exports aren't broken by this process-global mock.
 const captureException = vi.fn(
   (_error: unknown, _options?: { tags?: Record<string, string> }): void =>
     undefined,

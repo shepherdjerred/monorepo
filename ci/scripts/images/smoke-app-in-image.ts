@@ -356,7 +356,7 @@ const commands: Record<
       // the deployed 9464/9465 service ports are asserted by homelab tests.
       TEMPORAL_METRICS_ADDRESS: "127.0.0.1:0",
       APP_METRICS_PORT: "0",
-      SENTRY_DSN: "",
+      BUGSINK_DSN: "",
       // main() calls initializeCallGraphTracing() -> initFeatureFlags()
       // before it ever gets to "Connecting to Temporal server", and that has
       // no default mode on purpose (see FEATURE_FLAGS_MODE's own error
@@ -458,7 +458,7 @@ const commands: Record<
         discordAuthPattern +
         '|used disallowed intents"',
     ].join("\n"),
-    env: { SENTRY_DSN: "" },
+    env: { BUGSINK_DSN: "" },
   },
   "discord-plays-mario-kart": {
     command: [
@@ -474,7 +474,7 @@ const commands: Record<
         discordAuthPattern +
         '|used disallowed intents"',
     ].join("\n"),
-    env: { SENTRY_DSN: "", DATABASE_PATH: "/tmp/smoke-leaderboard.db" },
+    env: { BUGSINK_DSN: "", DATABASE_PATH: "/tmp/smoke-leaderboard.db" },
   },
 };
 

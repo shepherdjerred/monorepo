@@ -3,7 +3,7 @@
  *
  * This module defines all types for the review generation pipeline that is shared
  * between the backend and frontend dev tool. The pipeline is designed to be:
- * - Platform-agnostic (no filesystem, S3, or Sentry dependencies)
+ * - Platform-agnostic (no filesystem, S3, or Bugsink dependencies)
  * - Fully configurable per-stage
  * - Observable with full trace output
  */

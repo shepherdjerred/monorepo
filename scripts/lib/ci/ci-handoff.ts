@@ -1,15 +1,9 @@
 /**
  * Build-scoped handoff store for CI steps.
  *
- * Buildkite supplied two mechanisms this pipeline depends on: a build-scoped
- * metadata KV (`buildkite-agent meta-data`) and an artifact store
- * (`buildkite-agent artifact`). Woodpecker provides neither, so both collapse
- * into one SeaweedFS-backed object store keyed by pipeline number.
- *
- * The old size-dependent split disappears with them. `buildkite-handoff.ts`
- * stored values up to 1 KiB inline in metadata and spilled anything larger to
- * an artifact, leaving readers to resolve an `artifact:<jobId>:<file>` pointer.
- * Every value now takes the same path regardless of size, so there is no
+ * Woodpecker has no build-scoped metadata store or artifact store, so steps
+ * pass values through one SeaweedFS-backed object store keyed by pipeline
+ * number. Every value takes the same path regardless of size, so there is no
  * pointer format, no producing-job identifier, and no second failure mode.
  */
 

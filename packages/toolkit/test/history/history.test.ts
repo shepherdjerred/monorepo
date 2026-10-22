@@ -247,8 +247,8 @@ describe("history source adapters", () => {
     expect(claude?.dialogueText).toContain("Migration is complete");
     expect(claude?.toolOutputText).toContain("bun test migration");
     expect(claude?.dialogueText).not.toContain("omit-claude");
-    expect(codex?.dialogueText).toContain("Repair Buildkite pipeline");
-    expect(codex?.toolOutputText).toContain("bk build view");
+    expect(codex?.dialogueText).toContain("Repair Woodpecker pipeline");
+    expect(codex?.toolOutputText).toContain("toolkit woodpecker pipeline view");
     expect(codex?.dialogueText).not.toContain("omit-codex-reasoning");
     expect(opencode?.dialogueText).toContain("Improve launchd ingestion");
     expect(

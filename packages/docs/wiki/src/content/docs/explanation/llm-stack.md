@@ -12,12 +12,12 @@ model-controlled web search all use that path. Each catalog model names exactly
 one first-party provider route, so there is no upstream failover: a provider
 outage fails the call rather than silently serving a different model.
 
-The runtime used to front everything with OpenRouter. That bought one key and
-one bill, but it hid which provider served a call, put a reseller between the
-repository and each provider's own spend controls, and made every cost figure a
-number someone else computed. Calling providers directly moves spend
-containment to where the money is charged — each provider's own project or
-workspace caps — and makes cost exact arithmetic on provider-reported tokens.
+No aggregating gateway sits in front of the providers. A gateway buys one key
+and one bill. It also hides which provider served a call, puts a reseller
+between the repository and each provider's spend controls, and makes every cost
+figure a number someone else computed. Calling providers directly puts spend
+containment where the money is charged: each provider's own project or
+workspace caps. It also makes cost exact arithmetic on provider-reported tokens.
 
 Claude Agent SDK and Codex SDK are the two exceptions. They are reserved for
 general-purpose coding or computer-use agents where a model needs repository
@@ -37,10 +37,10 @@ and command tools. They run in process through their native SDKs; active
   bounded semantic repair, and never extracts JSON from prose.
 - Scout and Discord Plays Pokemon keep their existing project-specific eval
   corpora and comparison processes. There is no generic eval framework.
-- A CI architecture check rejects Mastra, VoltAgent, any OpenRouter surface,
-  provider SDKs and endpoints outside the runtime, provider credentials outside
-  reviewed wiring paths, a deployed `ANTHROPIC_API_KEY`, and agent CLI
-  subprocesses.
+- A CI architecture check rejects agent frameworks (Mastra, VoltAgent), a
+  model gateway (OpenRouter), provider SDKs and endpoints outside the runtime,
+  provider credentials outside reviewed wiring paths, a deployed
+  `ANTHROPIC_API_KEY`, and agent CLI subprocesses.
 
 ## Credentials and spend containment
 
@@ -148,9 +148,9 @@ labels. The direct providers, Claude Agent SDK, and Codex SDK share:
 - `llm_request_duration_seconds`
 - `llm_tokens_total`
 
-The `provider` label now names the real provider, and `gen_ai.system` on spans
-is the real provider too, which makes the traces conform to the GenAI semantic
-conventions for the first time.
+The `provider` label and the `gen_ai.system` span attribute both name the
+provider that served the call, so the traces conform to the GenAI semantic
+conventions.
 
 `llm_cost_usd_total` is **not** shared. Both native SDKs bill against a
 subscription rather than per call, so any figure they report is an
@@ -227,23 +227,19 @@ quota requirement justifies it.
 Structured-output attempts have their own counter. Billed cost, billed OpenAI
 tokens by service tier, and reconciliation freshness are gauges.
 Project IDs, generation IDs, user IDs, prompts, and responses never become
-labels. Existing `ai_provider_errors_total` and
-`ai_provider_issue_active` series remain queryable across the cutover.
+labels. The `ai_provider_errors_total` and `ai_provider_issue_active` series
+predate the runtime and keep their names, so their history stays continuous.
 
-## Deployment acceptance
+## Production acceptance
 
-The cutover to direct providers is atomic. Before it deploys, the operator
-hands each workload's OpenAI key to 1Password and applies the operator-only
-`google` and `anthropic-federation` stacks, which write the Gemini keys and
-federation identifiers to 1Password themselves. Pods reference those items, so
-a workload whose stack has not been applied waits on its missing Secret. For each
-provider and endpoint type, verify the application span, provider child spans,
-Loki log, live cost, body archive, and full-content Tempo record; for
-Anthropic, also confirm the exchange appears in the Console's workload-identity
-history across several token rotations. Only after that, and after the old
-OpenRouter dashboard shows no traffic for a day, may the OpenRouter keys be
-revoked.
+Pods reference the 1Password items that hold their provider credentials. A
+workload whose OpenAI key has not been handed off, or whose `google` or
+`anthropic-federation` stack has not been applied, waits on its missing Secret.
+It never starts without a credential.
 
-Repository configuration or a healthy pod is not production acceptance. The
-operator must observe the real archive, Tempo, metrics, logs, and consumer
-behavior.
+Repository configuration or a healthy pod is not production acceptance. A
+provider path is accepted when the operator observes, for each provider and
+endpoint type, the application span, provider child spans, Loki log, live cost,
+body archive, and full-content Tempo record. Anthropic additionally needs the
+exchange in the Console's workload-identity history across several token
+rotations. That history is what proves federation rather than a stray key.

@@ -20,7 +20,7 @@
     "#src/*": "./src/*"
   },
   "dependencies": {
-    "@shepherdjerred/sentry-config": "workspace:*",
+    "@shepherdjerred/bugsink-config": "workspace:*",
     "@monaco-editor/react": "^4.6.0",
     "@scout-for-lol/backend": "workspace:*",
     "@scout-for-lol/data": "workspace:*",

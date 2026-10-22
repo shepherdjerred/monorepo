@@ -7,5 +7,5 @@
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- interface required for vite/client ImportMetaEnv declaration merging
 interface ImportMetaEnv {
   // Injected at build time by the CI site-deploy step (2.0.0-<build>).
-  readonly VITE_SENTRY_RELEASE?: string;
+  readonly VITE_BUGSINK_RELEASE?: string;
 }

@@ -2,12 +2,11 @@
 /**
  * Smoke test for the discord-plays-pokemon image.
  *
- * Translated from the old Dagger `smokeTestDiscordPlaysPokemonHelper`: the app
- * boots from the inner-monorepo root, loads a minimal `config.toml` that passes
- * Zod validation with dummy tokens, and attempts a Discord login that fails with
- * the expected token error. Bugsink is disabled inside the smoke container so
- * that deliberate failure remains local to CI. A clean exit or timeout-kill
- * also counts (startup ran without an unexpected crash).
+ * The app boots from the inner-monorepo root, loads a minimal `config.toml`
+ * that passes Zod validation with dummy tokens, and attempts a Discord login
+ * that fails with the expected token error. Bugsink is disabled inside the
+ * smoke container so that deliberate failure remains local to CI. A clean exit
+ * or timeout-kill also counts (startup ran without an unexpected crash).
  *
  * The config is written to a host temp file and bind-mounted into the container
  * at the path getConfig() reads (CWD/config.toml). Dependency-free: Bun.spawn +
@@ -131,7 +130,7 @@ async function main(configPath: string): Promise<void> {
     "--name",
     CONTAINER,
     "-e",
-    "SENTRY_DSN=",
+    "BUGSINK_DSN=",
     IMAGE,
   ]);
   if (create.code !== 0) {

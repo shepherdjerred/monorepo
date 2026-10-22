@@ -86,7 +86,7 @@ export async function runAgentTaskSdk(
     throw agentTurnExecutionError({
       provider: "claude",
       cause: new Error(
-        "Legacy Claude agent tasks can be decoded for replay but cannot execute after the OpenRouter migration",
+        "Legacy Claude agent tasks can be decoded for replay but cannot execute; resubmit with provider codex",
       ),
       generationStarted: false,
       possiblyAppliedEffects: false,

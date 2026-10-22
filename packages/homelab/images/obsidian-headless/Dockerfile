@@ -1,6 +1,5 @@
 # Obsidian Headless CLI for vault sync.
 #
-# Translated from the old Dagger recipe (buildObsidianHeadlessImageHelper).
 # Deliberately Node, NOT Bun: obsidian-headless depends on better-sqlite3, a
 # native Node addon that Bun does not support. python3 + build-essential are
 # needed to compile better-sqlite3's native bindings during `npm install`.

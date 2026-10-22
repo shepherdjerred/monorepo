@@ -141,7 +141,7 @@ describe("CI authorization recovery", () => {
         identifier: "SJ-1",
         title: "Fixture issue",
         description: null,
-        url: "https://linear.app/example/issue/SJ-1",
+        url: "https://tracker.tailnet-1a49.ts.net/issues/SJ-1",
         priority: 0,
         team: { key: "SJ" },
         createdAt: "2026-01-01T00:00:00Z",
@@ -255,7 +255,7 @@ async function autonomousFixture() {
       identifier: "AI-104",
       title: "CLI help",
       description: null,
-      url: "https://linear.app/example/issue/AI-104",
+      url: "https://tracker.tailnet-1a49.ts.net/issues/AI-104",
       priority: 1,
       team: { key: "AI" },
       project: {

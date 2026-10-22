@@ -1,8 +1,7 @@
 # Custom Caddy with the S3 proxy plugin.
 #
-# Translated from the old Dagger recipe (buildCaddyS3ProxyImageHelper): a builder
-# stage runs `xcaddy build` to compile a custom Caddy binary with the S3 proxy
-# module, then the binary is copied into the runtime Caddy Alpine image.
+# A builder stage runs `xcaddy build` to compile a custom Caddy binary with the
+# S3 proxy module, then the binary is copied into the runtime Caddy Alpine image.
 #
 # Uses shepherdjerred/caddy-s3-proxy as a drop-in for the upstream lindenlab
 # module — keeps the import path so existing Caddyfiles work, but adds native

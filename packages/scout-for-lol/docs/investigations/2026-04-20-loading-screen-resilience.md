@@ -15,7 +15,7 @@ What we shipped on 2026-04-20 fixes the immediate production failures and harden
 | Override-map → on-disk file | Table-driven test in `packages/data/src/data-dragon/images.test.ts` iterates every `championNameOverrides` entry through `validateChampionImage` and `validateChampionLoadingImage` | Typos in overrides; missing on-disk asset for any overridden champion                      |
 | Twisted output drift        | 16 explicit `resolveChampionKey(id)` cases in `packages/backend/src/utils/champion.test.ts` and `champion-resolver.test.ts`                                                         | Twisted version bump that changes the SCREAMING_SNAKE_CASE format for any current champion |
 | Exhaustive queue match      | `queueTypeToDisplayString` uses `.exhaustive()` over `QueueTypeSchema`                                                                                                              | Adding a value to the enum without a display string fails typecheck — can't be missed      |
-| Unknown queue ID            | `parseQueueType` logs `unknown queue type: <id>` to stderr; `buildLoadingScreenData` throws                                                                                         | Loud failure in pod logs + Sentry within minutes of a new queue appearing                  |
+| Unknown queue ID            | `parseQueueType` logs `unknown queue type: <id>` to stderr; `buildLoadingScreenData` throws                                                                                         | Loud failure in pod logs + Bugsink within minutes of a new queue appearing                 |
 | Live CDN match              | Smoke test (one-off, not in CI) confirmed Riot's CDN serves every override target at 200 OK                                                                                         | Drift between our local cache and Data Dragon's actual filenames                           |
 
 ## What is still fragile
@@ -59,9 +59,9 @@ Add a `validateChampionAssets()` call to backend startup. Iterates every champio
 
 ### P3 — Soften the queue hard-throw
 
-At `packages/backend/src/league/tasks/prematch/loading-screen-builder.ts:163-173`, instead of throwing, fall back to `gameInfo.gameMode` (e.g., "ARAM", "CLASSIC") for the display name and emit a structured Sentry event with the unknown queue ID. The notification still ships — the user gets a slightly worse title, the team gets a paged alert, the world doesn't end.
+At `packages/backend/src/league/tasks/prematch/loading-screen-builder.ts:163-173`, instead of throwing, fall back to `gameInfo.gameMode` (e.g., "ARAM", "CLASSIC") for the display name and emit a structured Bugsink event with the unknown queue ID. The notification still ships — the user gets a slightly worse title, the team gets a paged alert, the world doesn't end.
 
-**Trade-off:** Loses fail-fast loudness. Mitigated by the Sentry event being page-worthy rather than log-buried.
+**Trade-off:** Loses fail-fast loudness. Mitigated by the Bugsink event being page-worthy rather than log-buried.
 
 ### P4 — Branded `ChampionKey` type
 

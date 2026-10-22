@@ -27,7 +27,7 @@ const TOOL_ITEMS: readonly ThreadItem[] = [
     arguments: {},
     status: "completed",
   },
-  { id: "item-search", type: "web_search", query: "openrouter status" },
+  { id: "item-search", type: "web_search", query: "openai status" },
 ];
 
 const REASONING_ITEMS: readonly ThreadItem[] = [

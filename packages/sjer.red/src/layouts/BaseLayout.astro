@@ -161,18 +161,18 @@ import "@fontsource-variable/lora";
     </script>
     <script>
       import * as Sentry from "@sentry/browser";
-      import { sentryDataCollection } from "@shepherdjerred/sentry-config";
-      // PUBLIC_SENTRY_RELEASE is injected at build time by the CI site-deploy
+      import { bugsinkDataCollection } from "@shepherdjerred/bugsink-config";
+      // PUBLIC_BUGSINK_RELEASE is injected at build time by the CI site-deploy
       // step (2.0.0-<build>). Guard the untyped env access so `release` stays
       // `string | undefined`, never `any`.
-      const sentryRelease =
-        typeof import.meta.env.PUBLIC_SENTRY_RELEASE === "string"
-          ? import.meta.env.PUBLIC_SENTRY_RELEASE
+      const bugsinkRelease =
+        typeof import.meta.env.PUBLIC_BUGSINK_RELEASE === "string"
+          ? import.meta.env.PUBLIC_BUGSINK_RELEASE
           : undefined;
       Sentry.init({
-        dataCollection: sentryDataCollection(),
+        dataCollection: bugsinkDataCollection(),
         dsn: "https://41fb03e17fb24ceb98a910ad7dea3572@bugsink.sjer.red/2",
-        release: sentryRelease,
+        release: bugsinkRelease,
         environment: import.meta.env.MODE,
       });
     </script>

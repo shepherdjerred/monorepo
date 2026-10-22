@@ -1,6 +1,5 @@
 {
   "recommendations": [
-    "earthly.earthfile-syntax-highlighting",
     "esbenp.prettier-vscode",
     "davidanson.vscode-markdownlint",
     "timonwong.shellcheck",
