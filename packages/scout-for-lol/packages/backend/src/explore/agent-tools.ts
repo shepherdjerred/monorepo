@@ -2,6 +2,7 @@ import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { tool } from "ai";
 import { registerExploreToolContracts } from "#src/explore/inspection/tool-contracts.ts";
 import { exploreAnalysisEnabled } from "#src/config/dynamic.ts";
+import { createMatchReviewTools } from "#src/explore/analysis/review-tool.ts";
 import { createAnalysisTools } from "#src/explore/analysis/tools.ts";
 import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
 import { z } from "zod";
@@ -342,6 +343,7 @@ export function createExploreTools(options: ExploreToolsOptions) {
   // The system prompt carries the full language reference, so the
   // `get_report_language` reference tool is not registered here.
   return registerExploreToolContracts({
+    ...createMatchReviewTools(params, track),
     ...(exploreAnalysisEnabled() ? createAnalysisTools(params, track) : {}),
     load_skill: createLoadSkillTool({
       skills: enabledExploreSkills(skillOptions),

@@ -290,7 +290,7 @@ export type JudgeCaseInput = {
 
 /** Tools that answer from their own data rather than through ScoutQL. */
 const CAPABILITY_TOOL_PATTERN =
-  /^(?:prepare_|lookup_|run_report_query|get_bucks|query_bucks|list_dares|inspect_dare|query_mvp|list_challenge|list_my_challenge|preview_challenge|challenge_leaderboard|get_clash|get_hall|list_competitions|get_competition|get_server_setup|resolve_player|inspect_player_coverage|materialize_query_dataset|materialize_raw_documents|analyze_javascript|select_dataset_values|summarize_match_timeline)/;
+  /^(?:prepare_|lookup_|run_report_query|get_bucks|query_bucks|list_dares|inspect_dare|query_mvp|list_challenge|list_my_challenge|preview_challenge|challenge_leaderboard|get_clash|get_hall|list_competitions|get_competition|get_server_setup|resolve_player|inspect_player_coverage|materialize_query_dataset|materialize_raw_documents|analyze_javascript|select_dataset_values|summarize_match_timeline|review_match)/;
 
 /**
  * How much of one tool result the judge is shown.
@@ -312,7 +312,8 @@ function toolResultSummary(
     toolName === "analyze_javascript" || toolName === "run_report_query"
       ? 65_536
       : toolName === "select_dataset_values" ||
-          toolName === "summarize_match_timeline"
+          toolName === "summarize_match_timeline" ||
+          toolName === "review_match"
         ? 8192
         : TOOL_RESULT_MAX_LENGTH,
   );

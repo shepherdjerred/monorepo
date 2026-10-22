@@ -84,7 +84,17 @@ export const MATCH_VIRTUALS: ScoutQlColumnInfo[] = [
   virtualColumn(
     "items",
     "varchar",
-    "The final six-slot build as item names in name order (no trinket). Final inventory, not build order.",
+    "The final six-slot inventory as item names in name order (no trinket), starters, potions and components included. Final inventory, not build order; to name a build, use core_items.",
+  ),
+  virtualColumn(
+    "core_items",
+    "varchar",
+    "The completed (legendary) items in the final inventory, in name order — a build without starters, consumables, components or boots. Null when the game ended with none; final inventory, not build order.",
+  ),
+  virtualColumn(
+    "boots",
+    "varchar",
+    "The completed boots in the final inventory, or null.",
   ),
   // Looked up from this participant's team row. Numbers, not dimensions, so
   // they carry a numeric display kind rather than virtualColumn's text.

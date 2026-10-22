@@ -7,6 +7,7 @@ import {
   getPatchChangesets,
   findRunes,
   findSummonerSpells,
+  listRunes,
   items,
   suggestChampionNames,
   type AbilityFacts,
@@ -257,9 +258,44 @@ export function lookupItemText(
   return lines.join("\n");
 }
 
+/**
+ * Every rune in one tree, by slot.
+ *
+ * A rune page is a keystone and one rune from each of three slots in the
+ * primary tree, plus two runes from different slots of the secondary tree.
+ * Scout's games record only the keystone and the two trees, so the rest of a
+ * page comes from reference; this lists a tree's choices in one call instead
+ * of one lookup per rune.
+ */
+function runeTreeText(treeName: string): string | null {
+  const tree = listRunes().filter(
+    (rune) => rune.treeName.toLowerCase() === treeName.trim().toLowerCase(),
+  );
+  const [first] = tree;
+  if (first === undefined) return null;
+  const slots = Map.groupBy(tree, (rune) => rune.slot);
+  const lines = [`Rune tree: ${first.treeName}`];
+  for (const [slot, runesInSlot] of [...slots].toSorted(([a], [b]) => a - b)) {
+    lines.push(
+      `${slot === 0 ? "Keystones" : `Slot ${slot.toString()}`}: ${runesInSlot
+        .map(
+          (rune) =>
+            `[${rune.name}](scout://rune/${rune.id.toString()}) — ${stripHtml(rune.shortDesc).slice(0, 140)}`,
+        )
+        .join("; ")}`,
+    );
+  }
+  lines.push(
+    "A primary tree gives its keystone plus one rune from each of slots 1–3. A secondary tree gives two runes from two different slots among 1–3.",
+  );
+  return lines.join("\n");
+}
+
 export function lookupRuneText(
   input: z.infer<typeof leagueReferenceSchemas.lookupRune>,
 ): string {
+  const tree = runeTreeText(input.rune);
+  if (tree !== null) return tree;
   const matches = findRunes(input.rune);
   if (matches.length === 0) {
     return `Unknown rune "${input.rune}". Ask for the exact rune name or numeric ID.`;
@@ -433,7 +469,7 @@ export function createLeagueReferenceTools(track: ToolTracker) {
     }),
     lookup_rune: tool({
       description:
-        "Current bundled rune tree, slot, and descriptions by name or ID. Load league-reference first.",
+        "Current bundled rune data. Pass a rune name or ID for its tree, slot and description, or a tree name (Precision, Domination, Sorcery, Resolve, Inspiration) for every rune in that tree by slot — the way to fill in a full rune page. Load league-reference first.",
       inputSchema: leagueReferenceSchemas.lookupRune,
       outputSchema: z.string(),
       execute: (input) => track("lookup_rune", () => lookupRuneText(input)),
