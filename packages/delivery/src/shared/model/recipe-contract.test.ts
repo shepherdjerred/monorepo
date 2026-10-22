@@ -8,13 +8,15 @@ import {
   KubernetesApplicationRecipeSchema,
   OperatorRunRecipeSchema,
   RecipeDefinitionSchema,
-  recipeComponents,
-  recipeInstances,
-  recipeRunners,
   renderArtifactParameter,
   referenceParameters,
   TofuRecipeSchema,
 } from "./recipe-contract.ts";
+import {
+  recipeComponents,
+  recipeInstances,
+  recipeRunners,
+} from "./recipe-bindings.ts";
 
 const runnerImage =
   "docker.io/shepherdjerred/ci-base@sha256:01851075993f5ebf500a8ea6abe1f3ebfb074a906412a63a3df4905e06ebdd50";
@@ -639,6 +641,35 @@ describe("RecipeDefinitionSchema target kinds", () => {
         stages: ["sync", "sync"],
       }).success,
     ).toBe(false);
+    // On its own (X13): a host the operator upgrades by hand, no Application.
+    const host = OperatorRunRecipeSchema.parse({
+      kind: "operator-run",
+      wrapped: {
+        kind: "host",
+        instance: "host:liskov",
+        components: ["image:installer", "image:kubelet"],
+      },
+      stages: ["talos-upgrade", "kubernetes-upgrade"],
+    });
+    expect(recipeComponents(host)).toEqual([
+      "image:installer",
+      "image:kubelet",
+    ]);
+    expect(recipeInstances(host)).toEqual(["host:liskov"]);
+    expect(recipeRunners(host)).toEqual([]);
+    for (const wrapped of [
+      { kind: "host", instance: "application:liskov", components: ["image:a"] },
+      { kind: "host", instance: "host:liskov", components: [] },
+      { kind: "host", instance: "host:liskov", components: ["chart:a"] },
+      {
+        kind: "host",
+        instance: "host:liskov",
+        components: ["image:a", "image:a"],
+      },
+    ])
+      expect(
+        OperatorRunRecipeSchema.safeParse({ ...operatorRun, wrapped }).success,
+      ).toBe(false);
     const compound = {
       kind: "compound",
       subRecipes: [

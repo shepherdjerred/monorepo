@@ -12,6 +12,7 @@ import { MonitorSchema } from "./monitor-contract.ts";
 import { StaticSitePolicySchema } from "#shared/static-site-contract.ts";
 import { WorkerPoolTargetSchema } from "#shared/worker-contract.ts";
 import { misplacedUpgrades } from "./step-order.ts";
+import { OperatorHostTargetSchema } from "./operator-run-contract.ts";
 
 /**
  * Recipe (model 4.7): an immutable, target-typed description of how one
@@ -253,7 +254,7 @@ function stepInstanceExpectation(
   }
 }
 
-function stepComponents(step: KubernetesStep): string[] {
+export function stepComponents(step: KubernetesStep): string[] {
   switch (step.kind) {
     case "worker-rollout":
     case "minecraft-upgrade":
@@ -433,9 +434,11 @@ export const ChannelRecipeSchema = z
 export const OperatorRunRecipeSchema = z
   .strictObject({
     kind: z.literal("operator-run"),
+    /** What the operator tool executes, or a host it changes by hand. */
     wrapped: z.discriminatedUnion("kind", [
       KubernetesApplicationRecipeSchema,
       TofuRecipeSchema,
+      OperatorHostTargetSchema,
     ]),
     /** The stages an operator attestation must cover before acceptance. */
     stages: z.array(IdentifierSchema).min(1),
@@ -477,79 +480,3 @@ export const RecipeDefinitionSchema = z.discriminatedUnion("kind", [
 ]);
 export type RecipeDefinition = z.infer<typeof RecipeDefinitionSchema>;
 export type RecipeKind = RecipeDefinition["kind"];
-
-/** Components a recipe binds, for P3 checks against the owning service. */
-export function recipeComponents(definition: RecipeDefinition): string[] {
-  switch (definition.kind) {
-    case "kubernetes-application":
-      return [
-        ...new Set([
-          definition.chartComponent,
-          ...Object.values(definition.artifactParameters).map((value) =>
-            artifactParameterComponent(value),
-          ),
-          ...definition.steps.flatMap((step) => stepComponents(step)),
-          ...(definition.oracle.monitor === undefined
-            ? []
-            : [definition.oracle.monitor.component]),
-        ]),
-      ];
-    case "static-site":
-    case "tofu":
-      return [definition.archiveComponent];
-    case "channel":
-      return [definition.artifactComponent];
-    case "operator-run":
-      return recipeComponents(definition.wrapped);
-    case "compound":
-      return [
-        ...new Set(
-          definition.subRecipes.flatMap((sub) =>
-            recipeComponents(sub.definition),
-          ),
-        ),
-      ];
-  }
-}
-
-/** Lock instances a recipe acts on (T1); each is named by exactly one environment (T6). */
-export function recipeInstances(definition: RecipeDefinition): string[] {
-  switch (definition.kind) {
-    case "kubernetes-application":
-      return [...new Set(definition.steps.map((step) => step.instance))];
-    case "static-site":
-      return [`bucket:${definition.bucket}`];
-    case "tofu":
-      return [`stack:${definition.stack}`];
-    case "channel":
-      return [`channel:${definition.store}/${definition.name}`];
-    case "operator-run":
-      return recipeInstances(definition.wrapped);
-    case "compound":
-      return [
-        ...new Set(
-          definition.subRecipes.flatMap((sub) =>
-            recipeInstances(sub.definition),
-          ),
-        ),
-      ];
-  }
-}
-
-/** Runner references a recipe binds (A5). */
-export function recipeRunners(definition: RecipeDefinition): RunnerReference[] {
-  switch (definition.kind) {
-    case "kubernetes-application":
-    case "tofu":
-      return [definition.runner];
-    case "static-site":
-    case "channel":
-      return [];
-    case "operator-run":
-      return recipeRunners(definition.wrapped);
-    case "compound":
-      return definition.subRecipes.flatMap((sub) =>
-        recipeRunners(sub.definition),
-      );
-  }
-}

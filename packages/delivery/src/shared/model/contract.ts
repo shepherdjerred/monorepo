@@ -9,6 +9,7 @@ import * as deploymentRequests from "#shared/deployment-request-contract.ts";
 import * as monitors from "./monitor-contract.ts";
 import * as adapter from "./recipe-adapter.ts";
 import * as recipes from "./recipe-contract.ts";
+import * as bindings from "./recipe-bindings.ts";
 import * as recovery from "#shared/recovery-intent.ts";
 import * as selections from "./selection-contract.ts";
 import * as views from "./recipe-view.ts";
@@ -63,7 +64,7 @@ export function recipeFromPipeline(
   return adapter.recipeFromPipeline(definition);
 }
 export function recipeComponents(definition: RecipeDefinition): string[] {
-  return recipes.recipeComponents(definition);
+  return bindings.recipeComponents(definition);
 }
 export const PLAN_APPROVAL_STAGE_KEY = stageKeys.PLAN_APPROVAL_STAGE_KEY;
 export function stepStageKey(prefix: "step" | "test", name: string): string {
@@ -163,10 +164,10 @@ export type ReconcileAfterRestoreRequest = routes.ReconcileAfterRestoreRequest;
 export type ReconcileAfterRestore = routes.ReconcileAfterRestore;
 
 export function recipeRunners(definition: RecipeDefinition): RunnerReference[] {
-  return recipes.recipeRunners(definition);
+  return bindings.recipeRunners(definition);
 }
 export function recipeInstances(definition: RecipeDefinition): string[] {
-  return recipes.recipeInstances(definition);
+  return bindings.recipeInstances(definition);
 }
 
 export const MonitorSchema = monitors.MonitorSchema;

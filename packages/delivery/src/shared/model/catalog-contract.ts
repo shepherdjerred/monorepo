@@ -9,10 +9,12 @@ import {
   type ArtifactParameter,
   type RecipeDefinition,
   RecipeDefinitionSchema,
+} from "./recipe-contract.ts";
+import {
   recipeComponents,
   recipeInstances,
   recipeRunners,
-} from "./recipe-contract.ts";
+} from "./recipe-bindings.ts";
 
 /**
  * The catalog document (model 4.1) as Delivery reads it: the ops-model
@@ -116,7 +118,9 @@ export function recipeApplications(definition: RecipeDefinition): {
         },
       ];
     case "operator-run":
-      return recipeApplications(definition.wrapped);
+      return definition.wrapped.kind === "host"
+        ? []
+        : recipeApplications(definition.wrapped);
     case "compound":
       return definition.subRecipes.flatMap((sub) =>
         recipeApplications(sub.definition),

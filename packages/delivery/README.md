@@ -101,7 +101,12 @@ accompanies them.
   `artifactParameters`, a `runner` component reference, ordered `steps` with
   `pointOfNoReturn`, optional `sharedLock`, and an `oracle` of probes, tests
   and monitor), `static-site`, `tofu` (plan, approve, apply steps under the
-  `platform` lock), `channel`, `operator-run` and `compound`.
+  `platform` lock), `channel`, `operator-run` and `compound`. An
+  `operator-run` recipe wraps a `kubernetes-application` or `tofu` recipe, or
+  stands on its own around a `host` target (`model/operator-run-contract.ts`):
+  a `host:<name>` lock instance and the image components a by-hand upgrade
+  moves, as for `cluster-nodes`. Its bindings (components, instances,
+  runners) are in `model/recipe-bindings.ts`.
   `recipeFromPipeline` (`model/recipe-adapter.ts`) maps a v1 `PipelineDefinition`
   onto a recipe: runner digests become the `ci` service's `image:ci-base`
   reference, `site:` archives become `archive:`, fixed v1 blocks become

@@ -1,8 +1,8 @@
 import type { useDeliveryFixture } from "./delivery-fixture.ts";
 import { publishCiRunner } from "./model-fixture.ts";
 import { registerTestService } from "./services.ts";
-import { replicateProducedArtifacts } from "./replication.ts";
-import { testExecutor, testOperator, testPublisher } from "./seed.ts";
+import { publishVerifiedSet } from "./published-set.ts";
+import { testExecutor, testOperator } from "./seed.ts";
 
 type Context = ReturnType<typeof useDeliveryFixture>;
 
@@ -55,31 +55,21 @@ export async function requestStackDeployment(
       approvalPolicy: options.approvalPolicy ?? "none",
     },
   });
-  const build = await context.delivery.publish(
-    {
-      requestId: "publish/tofu-cloudflare",
-      serviceId: "tofu-cloudflare",
-      sourceRevision: "c".repeat(40),
-      ciUrl: "https://woodpecker.sjer.red/repos/1/pipeline/91",
-      verifiedAt: new Date().toISOString(),
-      artifacts: [
-        {
-          id: "tofu-cloudflare/archive",
-          component: "archive:tofu-cloudflare",
-          kind: "archive",
-          uri: `s3://delivery-artifacts/tofu/cloudflare/${"c".repeat(64)}.tar`,
-          version: "c".repeat(40),
-          digest: `sha256:${"c".repeat(64)}`,
-        },
-      ],
-    },
-    testPublisher,
-    { repositoryId: 1, pipelineNumber: 91 },
-  );
-  await replicateProducedArtifacts(context.delivery, build.buildId);
-  await context.delivery.qualify(build.buildId, "verified", testExecutor);
-  const [set] = await context.delivery.versions("tofu-cloudflare");
-  if (set === undefined) throw new Error("Stack archive composed no set");
+  const { set, buildId } = await publishVerifiedSet(context, {
+    serviceId: "tofu-cloudflare",
+    pipelineNumber: 91,
+    sourceRevision: "c".repeat(40),
+    artifacts: [
+      {
+        id: "tofu-cloudflare/archive",
+        component: "archive:tofu-cloudflare",
+        kind: "archive",
+        uri: `s3://delivery-artifacts/tofu/cloudflare/${"c".repeat(64)}.tar`,
+        version: "c".repeat(40),
+        digest: `sha256:${"c".repeat(64)}`,
+      },
+    ],
+  });
   if (options.override === true)
     await db.service.update({
       where: { id: "tofu-cloudflare" },
@@ -96,7 +86,7 @@ export async function requestStackDeployment(
     },
     testOperator,
   );
-  return { deployment, buildId: build.buildId };
+  return { deployment, buildId };
 }
 
 /** Claims a queued stack deployment and records its plan step's native Job. */

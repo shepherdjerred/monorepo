@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it } from "vitest";
 import type { EvidenceInput } from "@shepherdjerred/delivery/contract";
-import { requireModelRecipe } from "#lib/delivery/model/recipe.ts";
+import {
+  modelSteps,
+  oracleProbes,
+  requireModelRecipe,
+} from "#lib/delivery/model/recipe.ts";
 import { artifact, detail, recipe } from "#lib/delivery/model/testing.ts";
 import { awaitAttestations } from "./operator-run.ts";
 
@@ -104,5 +108,29 @@ describe("operator-run step", () => {
         ],
       },
     ]);
+  });
+
+  it("a standalone host recipe waits on the same attestations and has no probes", async () => {
+    const host = {
+      kind: "operator-run",
+      wrapped: {
+        kind: "host",
+        instance: "host:liskov",
+        components: ["image:installer", "image:kubelet"],
+      },
+      stages: ["talos-upgrade", "kubernetes-upgrade"],
+    };
+    const current = detail(host, chart, [
+      { key: "attest/talos-upgrade", status: "succeeded" },
+    ]);
+    const value = requireModelRecipe(current);
+    if (value.kind !== "operator-run") throw new Error("Expected operator-run");
+    expect(modelSteps(value).map((step) => step.adapter)).toEqual([
+      "operator-run",
+    ]);
+    expect(oracleProbes(value)).toEqual([]);
+    expect(
+      await awaitAttestations(current, value, "step-attestation", record),
+    ).toEqual({ waiting: true });
   });
 });

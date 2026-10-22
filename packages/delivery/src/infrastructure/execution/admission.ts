@@ -4,11 +4,11 @@ import {
   type AdmissionSnapshot,
   AdmissionSnapshotSchema,
 } from "#shared/model/admission-contract.ts";
+import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
 import {
-  RecipeDefinitionSchema,
   recipeInstances,
   recipeRunners,
-} from "#shared/model/recipe-contract.ts";
+} from "#shared/model/recipe-bindings.ts";
 import {
   artifact,
   orderKey,
@@ -50,7 +50,9 @@ function sharedLockOf(definition: ReturnType<typeof modelRecipeOf>): boolean {
     case "tofu":
       return definition.sharedLock === "platform";
     case "operator-run":
-      return sharedLockOf(definition.wrapped);
+      return (
+        definition.wrapped.kind !== "host" && sharedLockOf(definition.wrapped)
+      );
     case "compound":
       return definition.subRecipes.some((sub) => sharedLockOf(sub.definition));
     case "static-site":

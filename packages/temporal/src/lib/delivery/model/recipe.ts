@@ -158,7 +158,8 @@ export function oracleProbes(
     case "kubernetes-application":
       return recipe.oracle.probes;
     case "operator-run":
-      return oracleProbes(recipe.wrapped);
+      // A host the operator changes by hand has only its attestations.
+      return recipe.wrapped.kind === "host" ? [] : oracleProbes(recipe.wrapped);
     case "compound":
       return recipe.subRecipes.flatMap((sub) => oracleProbes(sub.definition));
     case "static-site":

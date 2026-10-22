@@ -121,7 +121,9 @@ function primaryApplication(definition: RecipeDefinition): string | null {
     case "kubernetes-application":
       return definition.application.name;
     case "operator-run":
-      return primaryApplication(definition.wrapped);
+      return definition.wrapped.kind === "host"
+        ? null
+        : primaryApplication(definition.wrapped);
     case "compound":
       for (const sub of definition.subRecipes) {
         const name = primaryApplication(sub.definition);

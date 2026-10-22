@@ -736,7 +736,10 @@ There is no `node` adapter. Talos and Kubernetes upgrades are `operator-run`
 deployments of the `cluster-nodes` service, one environment per node: the
 operator records intent, performs the procedure by hand, and attaches the
 upgrade log as attested evidence before acceptance (X13). Nothing executes
-the procedure from inside the cluster.
+the procedure from inside the cluster. Such a recipe wraps a `host` target
+rather than an Application or stack: the node's lock instance and the image
+components the upgrade moves (the Talos installer and the kubelet), acquired
+from the version catalog.
 
 ## 6. Flows
 
