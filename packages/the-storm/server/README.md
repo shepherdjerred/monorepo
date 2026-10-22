@@ -469,6 +469,15 @@ input checkpoints remain immutable.
 | `chunk-extent`              | A region directory, or an approved archive read in memory             | Saved chunk count, bounding radius and continuous origin-centred radius                          |
 | `prune-dimension`           | A stopped native dimension directory                                  | Dry-run safety report, or chunks entirely outside a circular border removed                      |
 
+Tools that read a stopped SQLite database (`prepare-dimension-locks`, and
+`prune-dimension`'s claim and CoreProtect report) open it immutably and see only
+the main file. They refuse a database whose `-wal` or `-journal` sidecar still
+holds changes. Checkpoint the stopped copy first, for example with
+`sqlite3 the-storm.db 'PRAGMA wal_checkpoint(TRUNCATE)'`.
+`prepare-activation` refuses a modern backup holding any world other than the
+vanilla dimensions and the retained arenas, so a rerun can't drop `map2`,
+`frontier`, `skylands`, `wilds` or `peaks`.
+
 Converters use the exact pinned Paper bootstrap and verify every library hash.
 The conversion guard freezes ticking before world initialization. Whole-world
 inventory checks preserve every pregenerated historical terrain chunk.

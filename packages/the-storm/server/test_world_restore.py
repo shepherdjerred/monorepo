@@ -988,7 +988,24 @@ class RestoreTest(unittest.TestCase):
         self.assertEqual(completed["phase"], "NATIVE_HERITAGE_PRESERVED")
         self.assertEqual(temporary.read_bytes(), b'{"partial":')
 
-    def activation_fixture(self):
+    def test_database_snapshots_refuse_changes_still_in_a_write_ahead_log(self):
+        database = self.root / "the-storm.db"
+        with closing(sqlite3.connect(database)) as connection:
+            connection.execute("CREATE TABLE towns_town(id TEXT PRIMARY KEY)")
+            connection.commit()
+        writer = sqlite3.connect(database)
+        try:
+            writer.execute("PRAGMA journal_mode=WAL")
+            writer.execute("PRAGMA wal_autocheckpoint=0")
+            writer.execute("INSERT INTO towns_town VALUES('late')")
+            writer.commit()
+            with self.assertRaisesRegex(ValueError, "the-storm.db-wal holds uncheckpointed changes"):
+                restore.table_rows(database)
+        finally:
+            writer.close()
+        self.assertEqual(restore.table_rows(database)["towns_town"], {("late",)})
+
+    def activation_fixture(self, extra=()):
         staging, modern = self.root / "stage", self.root / "modern"
         source = staging / "arena-preserved-layout/world"
         (source / "dimensions/minecraft/overworld/region").mkdir(parents=True)
@@ -999,7 +1016,7 @@ class RestoreTest(unittest.TestCase):
         (modern / "world/level.dat").write_bytes(b"modern metadata")
         (modern / "plugins/TheStorm").mkdir(parents=True)
         (modern / "plugins/TheStorm/the-storm.db").write_bytes(b"modern identity")
-        for name in ("settlement", "rustworks", "rwf", "wilds", "peaks"):
+        for name in ("settlement", "rustworks", "rwf", *extra):
             dimension = modern / "world/dimensions/minecraft" / name
             (dimension / "data/paper").mkdir(parents=True)
             (dimension / "region").mkdir()
@@ -1111,7 +1128,22 @@ class RestoreTest(unittest.TestCase):
                 restore.fingerprint(modern / "world/dimensions/minecraft" / name),
             )
 
-    def test_activation_assembly_preserves_arena_dimensions_and_historical_data_without_modern_resource_worlds(self):
+    def test_activation_refuses_a_backup_holding_worlds_it_would_drop(self):
+        arguments = self.activation_fixture(extra=("wilds", "peaks", "map2"))
+        staging, _, _, _, modern, _ = arguments
+        before, journal = restore.fingerprint(modern), (staging / restore.JOURNAL).read_bytes()
+        with (
+            patch.object(restore, "conversion_classpath", return_value="fixture"),
+            patch.object(restore, "run_activation_check") as verification,
+            self.assertRaisesRegex(ValueError, "would drop worlds the modern backup holds: map2, peaks, wilds"),
+        ):
+            restore.prepare_activation(*arguments)
+        verification.assert_not_called()
+        self.assertFalse((staging / "activation-layout").exists())
+        self.assertEqual((staging / restore.JOURNAL).read_bytes(), journal)
+        self.assertEqual(restore.fingerprint(modern), before)
+
+    def test_activation_assembly_preserves_arena_dimensions_and_historical_data(self):
         arguments = self.activation_fixture()
         staging, _, _, _, modern, _ = arguments
         before = restore.fingerprint(modern)
@@ -1142,8 +1174,6 @@ class RestoreTest(unittest.TestCase):
                 restore.fingerprint(assembled / "world/dimensions/minecraft" / name),
                 restore.fingerprint(modern / "world/dimensions/minecraft" / name),
             )
-        for name in ("wilds", "peaks"):
-            self.assertFalse((assembled / "world/dimensions/minecraft" / name).exists())
         self.assertEqual(restore.fingerprint(modern), before)
         journal = json.loads((staging / restore.JOURNAL).read_text())
         self.assertEqual(journal["phase"], "ACTIVATION_LAYOUT_READY")

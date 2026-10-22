@@ -1009,6 +1009,7 @@ LOCK_TABLES = ("towns_lock", "towns_lock_block", "towns_lock_restoration", "town
 
 def table_rows(database: Path) -> dict[str, set[tuple[object, ...]]]:
     """Every row of every table, read from an immutable snapshot of a stopped database."""
+    restoration_regions.require_checkpointed(database)
     with closing(sqlite3.connect(database.as_uri() + "?mode=ro&immutable=1", uri=True)) as connection:
         if connection.execute("PRAGMA integrity_check").fetchone() != ("ok",) or list(
             connection.execute("PRAGMA foreign_key_check")
@@ -1810,6 +1811,17 @@ def prepare_activation(
         modern_expected = verified_backup(modern_data, backup_proof)
         if fingerprint(source / "world") != expected:
             raise ValueError("Verified arena preservation checkpoint changed")
+        # The historical world replaces the vanilla dimensions and only the arenas carry over, so a
+        # backup holding any other world (map2, frontier, skylands, wilds, peaks...) is refused rather
+        # than silently dropped by the whole-world install.
+        dimensions = modern_data / "world/dimensions/minecraft"
+        dropped = sorted(
+            path.name
+            for path in (dimensions.iterdir() if dimensions.is_dir() else ())
+            if path.name not in ("overworld", "the_nether", "the_end", "settlement", "rustworks", "rwf")
+        )
+        if dropped:
+            raise ValueError("Activation would drop worlds the modern backup holds: " + ", ".join(dropped))
         retained = {}
         for name in ("settlement", "rustworks", "rwf"):
             directory = modern_data / "world/dimensions/minecraft" / name

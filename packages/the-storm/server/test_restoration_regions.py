@@ -177,6 +177,23 @@ class PruneDimensionTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "entirely outside the disc"):
             self.prune("refused.json", data=data, apply=True)
 
+    def test_server_report_refuses_rows_still_in_a_write_ahead_log(self):
+        data = self.server_data()
+        # A writer that has committed but not checkpointed leaves the new claim only in the WAL.
+        writer = sqlite3.connect(data / "plugins/TheStorm/the-storm.db")
+        try:
+            writer.execute("PRAGMA journal_mode=WAL")
+            writer.execute("PRAGMA wal_autocheckpoint=0")
+            writer.execute("INSERT INTO towns_claim VALUES('fixture',40,0,'t')")
+            writer.commit()
+            with self.assertRaisesRegex(ValueError, "the-storm.db-wal holds uncheckpointed changes"):
+                self.prune("stale.json", data=data)
+            self.assertFalse((self.root / "stale.json").exists())
+        finally:
+            writer.close()
+        safety = self.prune("checkpointed.json", data=data)["safety"]
+        self.assertEqual(safety["server"]["townClaims"], {"Faraway": [[30, 0], [40, 0]]})
+
     def test_held_save_lock_and_linked_inputs_are_refused(self):
         data = self.server_data()
         # Save locks are per process, so a separate writer holds the server's lock.

@@ -27,7 +27,7 @@ Open `/quests` to see your quest journal. NPCs around town offer more quests whe
 
 ## 3. Find somewhere to build
 
-Use your compass to choose a biome, or run `/rtp` to travel to a safe wilderness spot in Frontier, the main survival world. Random teleporting is free for your first seven days, although travel cooldowns still apply. `/worlds` and the hub at spawn reach [the other worlds](/survival/worlds/).
+Use your compass to choose a biome, or run `/rtp` to travel to a safe wilderness spot in Frontier, the main survival world. Random teleporting is free for your first seven days, although travel cooldowns still apply. `/worlds` reaches [the other worlds](/survival/worlds/).
 
 Gather wood and find an unoccupied place for a small shelter. Build on your own land or with permission. Use `/claim info` to check the chunk you stand in.
 

@@ -132,9 +132,20 @@ def parcel_chunks(parcels: Path, world: str) -> dict[str, set[tuple[int, int]]]:
     }
 
 
+def require_checkpointed(database: Path) -> None:
+    """An immutable read sees only the main file, so committed pages still in a sidecar are refused."""
+    for suffix in ("-wal", "-journal"):
+        sidecar = database.with_name(database.name + suffix)
+        if sidecar.is_symlink() or (sidecar.exists() and sidecar.stat().st_size > 0):
+            raise ValueError(
+                f"{database.name}{suffix} holds uncheckpointed changes; checkpoint the stopped database first"
+            )
+
+
 def read_only(database: Path) -> sqlite3.Connection:
     if database.is_symlink() or not database.is_file():
         raise ValueError("Server database must be a regular file: " + database.name)
+    require_checkpointed(database)
     return sqlite3.connect(database.resolve(strict=True).as_uri() + "?mode=ro&immutable=1", uri=True)
 
 
