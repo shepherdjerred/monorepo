@@ -5,7 +5,7 @@ import {
   SelfHealingSchema,
   type DriftObservation,
 } from "#shared/model/monitor-contract.ts";
-import { kubernetesRecipes } from "#shared/model/recipe-view.ts";
+import { selfHealingApplication } from "#shared/model/recipe-view.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { evidence } from "#infrastructure/delivery-data.ts";
@@ -15,7 +15,7 @@ import { lock, required, wire } from "#infrastructure/delivery-records.ts";
 export async function selfHealing(this: Delivery) {
   const environments = await this.database.environment.findMany({
     where: { acceptedDeploymentId: { not: null }, lifecycle: "active" },
-    include: { acceptedDeployment: true },
+    include: { acceptedDeployment: true, service: true },
     orderBy: { id: "asc" },
   });
   const watched = [];
@@ -28,19 +28,19 @@ export async function selfHealing(this: Delivery) {
         }),
       ),
     );
-    for (const kubernetes of kubernetesRecipes(recipe.definition))
-      if (kubernetes.application.syncPolicy?.automated !== undefined)
-        watched.push(
-          SelfHealingSchema.parse({
-            deploymentId: accepted.id,
-            environmentId: env.id,
-            application: kubernetes.application.name,
-            acceptedAt: required(
-              accepted.finishedAt,
-              "Acceptance time",
-            ).toISOString(),
-          }),
-        );
+    const application = selfHealingApplication(recipe.definition, env.service);
+    if (application !== null)
+      watched.push(
+        SelfHealingSchema.parse({
+          deploymentId: accepted.id,
+          environmentId: env.id,
+          application: application.name,
+          acceptedAt: required(
+            accepted.finishedAt,
+            "Acceptance time",
+          ).toISOString(),
+        }),
+      );
   }
   return watched;
 }

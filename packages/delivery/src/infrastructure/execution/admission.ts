@@ -1,9 +1,5 @@
 import { DeliveryError } from "#domain/error.ts";
-import type {
-  ArtifactVersion,
-  Environment,
-  StoredRecipeDefinition,
-} from "#shared/contract.ts";
+import type { Environment, StoredRecipeDefinition } from "#shared/contract.ts";
 import {
   type AdmissionSnapshot,
   AdmissionSnapshotSchema,
@@ -13,7 +9,6 @@ import {
   recipeInstances,
   recipeRunners,
 } from "#shared/model/recipe-contract.ts";
-import { kubernetesRecipes } from "#shared/model/recipe-view.ts";
 import {
   artifact,
   orderKey,
@@ -144,40 +139,6 @@ async function runners(
   return frozen;
 }
 
-/** `acceptedIn` parameters bind the artifact accepted elsewhere at admission (A5). */
-async function references(
-  tx: Transaction,
-  definition: StoredRecipeDefinition,
-): Promise<Record<string, ArtifactVersion>> {
-  const frozen: Record<string, ArtifactVersion> = {};
-  for (const recipe of kubernetesRecipes(definition)) {
-    for (const [path, value] of Object.entries(recipe.artifactParameters)) {
-      if (typeof value === "string") continue;
-      const source = await tx.environment.findUniqueOrThrow({
-        where: { id: value.acceptedIn },
-      });
-      const entry =
-        source.acceptedVersionSetRevisionId === null
-          ? null
-          : await tx.versionSetEntry.findUnique({
-              where: {
-                revisionId_component: {
-                  revisionId: source.acceptedVersionSetRevisionId,
-                  component: value.component,
-                },
-              },
-            });
-      if (entry === null)
-        throw new DeliveryError(
-          "BUSY",
-          `Waiting for ${value.acceptedIn} to accept ${value.component}`,
-        );
-      frozen[path] = await artifact(tx, entry.artifactId);
-    }
-  }
-  return frozen;
-}
-
 /** Freeze what admission found; any unmet input keeps the deployment queued (Z1). */
 export async function freezeAdmission(
   tx: Transaction,
@@ -187,7 +148,6 @@ export async function freezeAdmission(
   return AdmissionSnapshotSchema.parse({
     prerequisites: await prerequisites(tx, row),
     runners: await runners(tx, modelRecipeOf(definition)),
-    references: await references(tx, definition),
   });
 }
 

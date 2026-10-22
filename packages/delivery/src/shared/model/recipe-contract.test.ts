@@ -12,6 +12,7 @@ import {
   recipeInstances,
   recipeRunners,
   renderArtifactParameter,
+  referenceParameters,
   TofuRecipeSchema,
 } from "./recipe-contract.ts";
 
@@ -73,7 +74,9 @@ function application(
     kind: "kubernetes-application",
     application: applicationBody(),
     chartComponent: "chart:arcade",
-    artifactParameters: { "delivery.image": "image:arcade" },
+    artifactParameters: {
+      "delivery.image": { component: "image:arcade", format: "reference" },
+    },
     runner: { service: "ci", component: "image:ci-base" },
     steps: [
       { kind: "apply-safety", instance: "application:arcade" },
@@ -109,7 +112,10 @@ function expectArgocdMapping(file: string, pipeline: ArgocdPipeline) {
     chart: pipeline.chartName,
   });
   expect(recipe.chartComponent, file).toBe(pipeline.chartComponent);
-  expect(recipe.artifactParameters, file).toEqual(pipeline.artifactParameters);
+  // v1 rendered every artifact parameter as a complete reference.
+  expect(recipe.artifactParameters, file).toEqual(
+    referenceParameters(pipeline.artifactParameters),
+  );
   expect(recipe.runner, file).toEqual({
     service: "ci",
     component: "image:ci-base",
@@ -401,36 +407,36 @@ describe("RecipeDefinitionSchema", () => {
       /a Git source takes none/u,
     ],
     [
-      "automated pruning",
+      "a sync policy, which is the adapter's decision (T4)",
       {
         application: {
           ...applicationBody(),
-          syncPolicy: { automated: { selfHeal: true, prune: true } },
+          syncPolicy: { automated: { selfHeal: true, prune: false } },
         },
       },
-      /Invalid input/u,
+      /Unrecognized key/u,
     ],
     [
-      "a worker rollout of an image accepted elsewhere",
+      "an artifact parameter in an unnamed format",
+      {
+        artifactParameters: {
+          "delivery.image": { component: "image:arcade", format: "tag" },
+        },
+      },
+      /Invalid option/u,
+    ],
+    [
+      "an artifact parameter that names an environment",
       {
         artifactParameters: {
           "delivery.image": {
             component: "image:arcade",
+            format: "reference",
             acceptedIn: "arcade/beta",
           },
         },
-        steps: [
-          { kind: "apply-safety", instance: "application:arcade" },
-          { kind: "sync", instance: "application:arcade" },
-          {
-            kind: "worker-rollout",
-            instance: "worker-pool:central",
-            target: "central",
-            imageComponent: "image:arcade",
-          },
-        ],
       },
-      /roll out an image bound by artifactParameters/u,
+      /Unrecognized key/u,
     ],
     [
       "a monitor over an unbound image",
@@ -479,14 +485,13 @@ describe("RecipeDefinitionSchema", () => {
 });
 
 describe("RecipeDefinitionSchema source forms", () => {
-  test("accepts OCI and Git sources, self-heal, and images accepted elsewhere", () => {
+  test("accepts a scheme-less OCI chart repository and a Git path source", () => {
     const oci = KubernetesApplicationRecipeSchema.parse(
       application({
         application: {
           ...applicationBody(),
           name: "kueue",
           source: { repoURL: "registry.k8s.io/kueue/charts", chart: "kueue" },
-          syncPolicy: { automated: { selfHeal: true, prune: false } },
         },
         chartComponent: "chart:kueue",
         artifactParameters: {},
@@ -496,7 +501,10 @@ describe("RecipeDefinitionSchema source forms", () => {
         ],
       }),
     );
-    expect(oci.application.syncPolicy?.automated.selfHeal).toBe(true);
+    expect(oci.application.source).toEqual({
+      repoURL: "registry.k8s.io/kueue/charts",
+      chart: "kueue",
+    });
     const git = KubernetesApplicationRecipeSchema.parse(
       application({
         application: {
@@ -514,15 +522,22 @@ describe("RecipeDefinitionSchema source forms", () => {
     const sandbox = KubernetesApplicationRecipeSchema.parse(
       application({
         artifactParameters: {
-          "delivery.images.candidate": "image:arcade",
-          "delivery.images.accepted": {
+          "delivery.images.candidate": {
             component: "image:arcade",
-            acceptedIn: "arcade/prod",
+            format: "reference",
+          },
+          "delivery.images.accepted": {
+            component: "image:arcade-accepted",
+            format: "reference",
           },
         },
       }),
     );
-    expect(recipeComponents(sandbox)).toEqual(["chart:arcade", "image:arcade"]);
+    expect(recipeComponents(sandbox)).toEqual([
+      "chart:arcade",
+      "image:arcade",
+      "image:arcade-accepted",
+    ]);
     expect(
       KubernetesApplicationRecipeSchema.safeParse(
         application({
@@ -535,20 +550,20 @@ describe("RecipeDefinitionSchema source forms", () => {
     ).toBe(false);
   });
 
-  test("renders an artifact parameter by its Helm path form", () => {
+  test("renders an artifact parameter in each named format", () => {
     const artifact = {
-      uri: "docker.io/openebs/zfs-driver",
+      uri: "docker.io/shepherdjerred/zfs-driver",
       version: "2.8.0",
       digest: `sha256:${"a".repeat(64)}`,
     };
-    expect(
-      renderArtifactParameter("zfs-localpv.zfsPlugin.image.tag", artifact),
-    ).toBe(`2.8.0@sha256:${"a".repeat(64)}`);
-    expect(renderArtifactParameter("delivery.images.arcade", artifact)).toBe(
-      `docker.io/openebs/zfs-driver@sha256:${"a".repeat(64)}`,
+    expect(renderArtifactParameter("reference", artifact)).toBe(
+      `docker.io/shepherdjerred/zfs-driver@sha256:${"a".repeat(64)}`,
     );
-    expect(renderArtifactParameter("kubectl.image", artifact)).toBe(
-      `docker.io/openebs/zfs-driver@sha256:${"a".repeat(64)}`,
+    expect(renderArtifactParameter("tag-digest", artifact)).toBe(
+      `2.8.0@sha256:${"a".repeat(64)}`,
+    );
+    expect(renderArtifactParameter("selected-digest", artifact)).toBe(
+      `selected@sha256:${"a".repeat(64)}`,
     );
   });
 });

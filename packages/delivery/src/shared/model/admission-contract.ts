@@ -4,9 +4,9 @@ import { ArtifactVersionSchema } from "#shared/artifact-contract.ts";
 /**
  * What admission froze into a deployment (Z1, A5, C2): the accepted
  * selection of every prerequisite environment, the runner artifacts the
- * recipe binds by reference, and the artifacts accepted elsewhere that
- * `acceptedIn` parameters name. A retry rechecks the prerequisites; the
- * executor renders only what is frozen here.
+ * recipe binds by reference. Artifacts another environment accepted reach
+ * a recipe through tracking reference components of its own selection (A5).
+ * A retry rechecks the prerequisites.
  */
 export const AdmissionSnapshotSchema = z.strictObject({
   prerequisites: z.array(
@@ -25,6 +25,5 @@ export const AdmissionSnapshotSchema = z.strictObject({
       artifact: ArtifactVersionSchema,
     }),
   ),
-  references: z.record(z.string().min(1), ArtifactVersionSchema),
 });
 export type AdmissionSnapshot = z.infer<typeof AdmissionSnapshotSchema>;

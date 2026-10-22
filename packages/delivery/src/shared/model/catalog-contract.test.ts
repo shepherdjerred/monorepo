@@ -118,22 +118,49 @@ describe("CatalogDocumentSchema", () => {
     );
   });
 
-  test("refuses an accepted-in binding outside the service (A5)", async () => {
+  test("binds another environment's accepted image through a tracking reference component (A5)", async () => {
     const base = await document();
-    const binding = (acceptedIn: string) =>
-      withApplicationRecipe(base, "arcade-beta/1", (definition) => ({
+    const sandbox = withApplicationRecipe(
+      base,
+      "arcade-beta/1",
+      (definition) => ({
         ...definition,
         artifactParameters: {
           ...definition.artifactParameters,
-          "delivery.images.accepted": { component: "image:arcade", acceptedIn },
+          "delivery.images.accepted": {
+            component: "image:arcade-accepted",
+            format: "reference",
+          },
         },
-      }));
-    expect(issues(binding("delivery/prod"))).toMatch(
-      /arcade\/beta binds an image accepted in delivery\/prod, which is not another environment of arcade/u,
+      }),
     );
-    expect(
-      CatalogDocumentSchema.safeParse(binding("arcade/prod")).success,
-    ).toBe(true);
+    expect(issues(sandbox)).toMatch(
+      /binds image:arcade-accepted, which arcade does not declare \(P3\)/u,
+    );
+    const tracked = {
+      ...sandbox,
+      services: sandbox.services.map((service) =>
+        service.id === "arcade"
+          ? {
+              ...service,
+              components: [
+                ...service.components,
+                {
+                  name: "image:arcade-accepted",
+                  producer: "reference" as const,
+                  source: {
+                    service: "arcade",
+                    component: "image:arcade",
+                    mode: "tracking" as const,
+                    environment: "arcade/prod",
+                  },
+                },
+              ],
+            }
+          : service,
+      ),
+    };
+    expect(issues(tracked)).toBe("");
   });
 
   test("keeps the ops-model graph rules: promotion tree and prerequisite DAG", async () => {

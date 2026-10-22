@@ -1,5 +1,5 @@
 import { ColdStartSnapshotSchema } from "#shared/model/cold-start-contract.ts";
-import { stepStageKey } from "#shared/model/recipe-contract.ts";
+import { stepStageKey } from "#shared/model/stage-keys.ts";
 import type {
   ColdStartEnvironment,
   ColdStartSnapshot,

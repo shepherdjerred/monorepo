@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { DeploymentDetailSchema } from "@shepherdjerred/delivery/contract";
 import { artifact, detail, digest, recipe } from "./testing.ts";
-import { DELIVERY_ENVIRONMENT_ANNOTATION } from "#lib/delivery/argo-client.ts";
+import { DELIVERY_ENVIRONMENT_ANNOTATION } from "@shepherdjerred/delivery/model-contract";
 import { frozenRunnerImage, testWorkspace } from "./oracle-inputs.ts";
-import { CASCADE_FINALIZER, renderApplication } from "./application.ts";
+import { renderApplication } from "./application.ts";
 import { applicationProgress } from "./application-proof.ts";
 import {
   modelRecipe,
@@ -73,7 +73,7 @@ describe("model recipes (T3)", () => {
 });
 
 describe("Application rendering (T2, A5)", () => {
-  test("a Helm source binds the chart version, configuration and artifact parameters by path form", () => {
+  test("a Helm source binds the chart version, the configuration's values object and parameters, and artifact parameters in their formats", () => {
     const recipeValue = requireModelRecipe(helm);
     if (recipeValue.kind !== "kubernetes-application")
       throw new Error("Expected a Kubernetes recipe");
@@ -84,6 +84,7 @@ describe("Application rendering (T2, A5)", () => {
       chart: "arcade",
       targetRevision: "1.0.1",
       helm: {
+        valuesObject: { ingress: { enabled: true } },
         parameters: [
           {
             name: "image.tag",
@@ -103,7 +104,7 @@ describe("Application rendering (T2, A5)", () => {
       name: "arcade",
       namespace: "argocd",
       annotations: { [DELIVERY_ENVIRONMENT_ANNOTATION]: "arcade/prod" },
-      finalizers: [CASCADE_FINALIZER],
+      finalizers: ["resources-finalizer.argocd.argoproj.io"],
     });
     expect(rendered.body.spec).toMatchObject({
       project: "default",
@@ -120,13 +121,17 @@ describe("Application rendering (T2, A5)", () => {
       version: "c".repeat(40),
       character: "c",
     });
-    const git = detail(
+    const configured = detail(
       recipe(
         { repoURL: "https://github.com/example/operator", path: "deploy" },
         "archive:arcade",
       ),
       archive,
     );
+    const git = DeploymentDetailSchema.parse({
+      ...configured,
+      configuration: { ...configured.configuration, content: {} },
+    });
     const value = requireModelRecipe(git);
     if (value.kind !== "kubernetes-application")
       throw new Error("Expected a Kubernetes recipe");
@@ -135,6 +140,9 @@ describe("Application rendering (T2, A5)", () => {
       path: "deploy",
       targetRevision: "c".repeat(40),
     });
+    expect(() => renderApplication(configured, value)).toThrow(
+      /A Git source takes no Helm configuration/u,
+    );
   });
 
   test("the oracle runs suites in their report's workspace on the frozen runner", () => {

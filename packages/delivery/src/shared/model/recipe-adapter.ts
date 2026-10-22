@@ -6,6 +6,7 @@ import {
   type ProbeSchema,
   type RecipeDefinition,
   RecipeDefinitionSchema,
+  referenceParameters,
   type RunnerReference,
   type TofuStepKindSchema,
 } from "./recipe-contract.ts";
@@ -54,7 +55,7 @@ function kubernetesApplication(
       lifecycle: "retain",
     },
     chartComponent: body.chartComponent,
-    artifactParameters: body.artifactParameters ?? {},
+    artifactParameters: referenceParameters(body.artifactParameters ?? {}),
     runner: CI_RUNNER,
     steps: [
       { kind: "apply-safety", instance },

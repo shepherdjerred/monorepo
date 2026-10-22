@@ -332,6 +332,8 @@ export const DeploymentDetailSchema = z.object({
   evidence: z.array(EvidenceSchema),
   approval: ApprovalV2Schema.nullable().default(null),
   stages: z.array(StageSchema),
+  /** Whether the adapter enables self-heal on this selection once accepted (T4). */
+  selfHeals: z.boolean().default(false),
   minecraftRecoveries: z.array(MinecraftRecoveryIntentSchema).default([]),
   platformRecoveries: z.array(PlatformRecoveryIntentSchema).default([]),
   contentRecoveries: z

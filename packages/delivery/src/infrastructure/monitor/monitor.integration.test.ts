@@ -16,7 +16,6 @@ const context = useDeliveryFixture({ registration: arcadeRegistration });
 
 async function declareMonitoredRecipe(
   policy: z.infer<typeof MonitorPolicySchema>,
-  selfHeal = false,
 ) {
   await publishCiRunner(context.delivery);
   const recipe = recipeFromPipeline(pipeline);
@@ -27,12 +26,6 @@ async function declareMonitoredRecipe(
       id: "arcade/3",
       definition: {
         ...recipe,
-        application: {
-          ...recipe.application,
-          ...(selfHeal
-            ? { syncPolicy: { automated: { selfHeal: true, prune: false } } }
-            : {}),
-        },
         oracle: {
           ...recipe.oracle,
           monitor: {
@@ -317,9 +310,15 @@ describe("monitor (4.19)", () => {
       state: "alarmed",
     });
   });
+});
+
+describe("self-heal drift (T4)", () => {
+  beforeEach(async () => {
+    await context.cluster.database.deployment.deleteMany({});
+  });
 
   test("self-heals after acceptance are drift evidence of the accepted deployment (T4)", async () => {
-    await declareMonitoredRecipe("hold", true);
+    await declareMonitoredRecipe("hold");
     const accepted = await deployAndAccept(context.fixture.versionSet.id);
     expect(await context.delivery.selfHealing()).toEqual([
       expect.objectContaining({
@@ -343,6 +342,18 @@ describe("monitor (4.19)", () => {
         where: { deploymentId: accepted.id, kind: "drift" },
       }),
     ).toBe(1);
+    const acceptedDetail = await context.delivery.detail(accepted.id);
+    expect(acceptedDetail.selfHeals).toBe(true);
+    // The adapter never self-heals a self-hosted service's target (T4).
+    await context.cluster.database.service.update({
+      where: { id: "arcade" },
+      data: { selfHosted: true },
+    });
+    expect(await context.delivery.selfHealing()).toEqual([]);
+    await context.cluster.database.service.update({
+      where: { id: "arcade" },
+      data: { selfHosted: false },
+    });
     const newer = await deployAndAccept(await publish(4));
     await expect(
       context.delivery.recordDrift(accepted.id, drift, testExecutor),

@@ -1,4 +1,6 @@
 import * as admission from "./admission-contract.ts";
+import * as render from "./application-render.ts";
+import * as stageKeys from "./stage-keys.ts";
 import * as approvals from "./approval-contract.ts";
 import * as coldStart from "./cold-start-contract.ts";
 import * as catalog from "./catalog-contract.ts";
@@ -60,12 +62,12 @@ export function recipeFromPipeline(
 export function recipeComponents(definition: RecipeDefinition): string[] {
   return recipes.recipeComponents(definition);
 }
-export const PLAN_APPROVAL_STAGE_KEY = recipes.PLAN_APPROVAL_STAGE_KEY;
+export const PLAN_APPROVAL_STAGE_KEY = stageKeys.PLAN_APPROVAL_STAGE_KEY;
 export function stepStageKey(prefix: "step" | "test", name: string): string {
-  return recipes.stepStageKey(prefix, name);
+  return stageKeys.stepStageKey(prefix, name);
 }
 export function attestationStageKey(stage: string): string {
-  return recipes.attestationStageKey(stage);
+  return stageKeys.attestationStageKey(stage);
 }
 export type HelmSource = recipes.HelmSource;
 export type GitSource = recipes.GitSource;
@@ -76,11 +78,24 @@ export function helmSource(source: HelmSource | GitSource): HelmSource | null {
 export function artifactParameterComponent(value: ArtifactParameter): string {
   return recipes.artifactParameterComponent(value);
 }
+export const ArtifactParameterFormatSchema =
+  recipes.ArtifactParameterFormatSchema;
+export type ArtifactParameterFormat = recipes.ArtifactParameterFormat;
 export function renderArtifactParameter(
-  path: string,
+  format: ArtifactParameterFormat,
   artifact: { uri: string; version: string; digest: string },
 ): string {
-  return recipes.renderArtifactParameter(path, artifact);
+  return recipes.renderArtifactParameter(format, artifact);
+}
+
+export const DELIVERY_ENVIRONMENT_ANNOTATION =
+  render.DELIVERY_ENVIRONMENT_ANNOTATION;
+export type RenderArtifact = render.RenderArtifact;
+export type RenderedApplication = render.RenderedApplication;
+export function renderApplication(
+  input: Parameters<typeof render.renderApplication>[0],
+): RenderedApplication {
+  return render.renderApplication(input);
 }
 
 export const AdmissionSnapshotSchema = admission.AdmissionSnapshotSchema;

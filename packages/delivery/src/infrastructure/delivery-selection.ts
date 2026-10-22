@@ -107,6 +107,41 @@ async function restoreAlarmed(
   return requested;
 }
 
+/**
+ * Environments that admit deployments: v2 admits by catalog lifecycle, not
+ * by an enable-list flag (4.10). A retired or removed environment admits
+ * nothing.
+ */
+export async function activeEnvironmentIds(database: Delivery["database"]) {
+  const rows = await database.environment.findMany({
+    where: { lifecycle: "active" },
+    select: { id: true },
+    orderBy: { id: "asc" },
+  });
+  return rows.map((row) => row.id);
+}
+
+/** Refuses a deployment effect on an environment the catalog no longer keeps active. */
+export async function requireAdmitting(
+  database: Delivery["database"],
+  environmentId: string,
+) {
+  const env = await database.environment.findUnique({
+    where: { id: environmentId },
+    select: { lifecycle: true },
+  });
+  if (env === null)
+    throw new DeliveryError(
+      "NOT_FOUND",
+      `Environment ${environmentId} not found`,
+    );
+  if (env.lifecycle !== "active")
+    throw new DeliveryError(
+      "CONFLICT",
+      `Environment ${environmentId} is ${env.lifecycle} and admits no deployment`,
+    );
+}
+
 export async function reconcile(
   this: Delivery,
   enabledEnvironments: string[],

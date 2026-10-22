@@ -8,6 +8,7 @@ import {
   helmSource,
   type KubernetesStep,
   type RecipeDefinition,
+  referenceParameters,
 } from "./recipe-contract.ts";
 
 /**
@@ -85,6 +86,21 @@ export function kubernetesRecipes(definition: Stored): KubernetesRecipe[] {
   }
 }
 
+/**
+ * The Application ArgoCD may self-heal on the accepted exact source after
+ * acceptance (T4). The adapter decides, never the recipe: only a
+ * kubernetes-application recipe of a service that is not self-hosted. A
+ * data-layer recipe is operator-run and never self-heals.
+ */
+export function selfHealingApplication(
+  definition: Stored,
+  service: { selfHosted: boolean },
+): ApplicationBody | null {
+  return definition.kind === "kubernetes-application" && !service.selfHosted
+    ? definition.application
+    : null;
+}
+
 /** Every Application a recipe deploys through, in step order. */
 export function applicationsOf(definition: Stored): ApplicationView[] {
   switch (definition.kind) {
@@ -97,7 +113,9 @@ export function applicationsOf(definition: Stored): ApplicationView[] {
           chart: definition.chartName,
           path: null,
           chartComponent: definition.chartComponent,
-          artifactParameters: definition.artifactParameters,
+          artifactParameters: referenceParameters(
+            definition.artifactParameters,
+          ),
           legacyParameters: definition.parameters,
           project: "default",
           body: null,

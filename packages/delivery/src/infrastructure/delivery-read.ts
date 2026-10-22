@@ -1,4 +1,5 @@
 import {
+  PipelineRevisionSchema,
   DeploymentDetailSchema,
   DeploymentSchema,
   BuildSummarySchema,
@@ -7,6 +8,7 @@ import {
 } from "#shared/contract.ts";
 import type { LatestQualifiedArtifactQuery } from "#shared/contract.ts";
 import { wire, required } from "./delivery-records.ts";
+import { selfHealingApplication } from "#shared/model/recipe-view.ts";
 import type { Delivery } from "./delivery.ts";
 import { readRecoveredForumRuntime } from "./forum/recovered-runtime.ts";
 import { minecraftIntentView } from "./minecraft-recovery/requests.ts";
@@ -114,6 +116,12 @@ export async function detail(this: Delivery, deploymentId: string) {
   ]);
   const intents = (kind: string) =>
     row.recoveryIntents.filter((intent) => intent.kind === kind);
+  const recipe = PipelineRevisionSchema.parse(
+    wire(required(pipeline, "Pipeline")),
+  );
+  const service = await this.database.service.findUniqueOrThrow({
+    where: { id: row.serviceId },
+  });
   return DeploymentDetailSchema.parse(
     wire({
       deployment: row,
@@ -134,6 +142,7 @@ export async function detail(this: Delivery, deploymentId: string) {
       })),
       approval: approvalView(row.approval),
       stages: row.stages,
+      selfHeals: selfHealingApplication(recipe.definition, service) !== null,
       minecraftRecoveries: intents("minecraft").map((intent) =>
         minecraftIntentView(intent),
       ),

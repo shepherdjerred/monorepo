@@ -25,6 +25,10 @@ import { registerWorkerRoutes } from "./worker-routes.ts";
 import { registerSelectionRoutes } from "./selection-routes.ts";
 import { registerColdStartRoutes } from "./cold-start-routes.ts";
 import { retryRequest } from "#infrastructure/selection/request.ts";
+import {
+  activeEnvironmentIds,
+  requireAdmitting,
+} from "#infrastructure/delivery-selection.ts";
 import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
 import { registerPlatformRoutes } from "./platform-routes.ts";
 import { registerPlatformRecoveryRoutes } from "./platform-recovery-routes.ts";
@@ -162,17 +166,13 @@ export function createApp(options: Options) {
     }
     await next();
   });
+  // v2 admits by catalog lifecycle; the enable-list flag is no longer read.
   async function enabled(environmentId: string) {
-    const environments = await options.config.enabledEnvironments();
-    if (!environments.includes(environmentId))
-      throw new DeliveryError(
-        "PAUSED",
-        "Delivery execution is disabled for this environment",
-      );
+    await requireAdmitting(options.delivery.database, environmentId);
   }
   const delivery = options.delivery;
   registerEventsRoute(app, options.changeFeed);
-  registerHubRoutes(app, delivery.database, options.config);
+  registerHubRoutes(app, delivery.database);
   if (options.enrichment !== undefined)
     registerIntegrationRoutes(app, options.enrichment);
   registerOwnershipRoute(app, options);
@@ -294,7 +294,7 @@ export function createApp(options: Options) {
     requireScope(c.get("principal"), "execute");
     if (!(await options.config.writesEnabled()))
       return c.json({ deployments: [] });
-    const allowed = await options.config.enabledEnvironments();
+    const allowed = await activeEnvironmentIds(delivery.database);
     const pending = await delivery.pending();
     return c.json({
       deployments: pending.deployments.filter((entry) =>
@@ -330,7 +330,7 @@ export function createApp(options: Options) {
     requireScope(c.get("principal"), "execute");
     return c.json(
       await delivery.reconcile(
-        await options.config.enabledEnvironments(),
+        await activeEnvironmentIds(delivery.database),
         c.get("principal"),
       ),
     );

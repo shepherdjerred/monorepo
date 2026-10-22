@@ -220,12 +220,16 @@ export async function sync(
   });
 }
 
-/** After acceptance, ArgoCD self-heals the accepted exact source with pruning off (T4). */
+/**
+ * After acceptance, ArgoCD self-heals the accepted exact source with pruning
+ * off (T4), where the adapter decided it may: never for self-hosted or
+ * data-layer targets.
+ */
 export async function enableSelfHeal(
   current: DeploymentDetail,
   recipe: KubernetesApplicationRecipe,
 ) {
-  if (recipe.application.syncPolicy?.automated === undefined) return null;
+  if (!current.selfHeals) return null;
   const rendered = renderApplication(current, recipe);
   return await setArgoSelfHeal(
     rendered.name,

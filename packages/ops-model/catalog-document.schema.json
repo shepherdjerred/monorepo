@@ -315,10 +315,13 @@
           "additionalProperties": { "type": "string" }
         },
         "forwardOnly": {
-          "description": "Keys whose value may never be lowered by rollback (F3); each names a content key, or `<contentKey>#<dotted.path>` inside a JSON-object content value, holding a dotted numeric version.",
+          "description": "JSON pointers (RFC 6901) a rollback may never lower (F3), into the content's structured view: `/helm/valuesObject/...` inside the `helm.valuesObject` JSON value, `/helm/parameters/<key>` for any other key. Each names a dotted numeric version.",
           "type": "array",
           "uniqueItems": true,
-          "items": { "type": "string", "minLength": 1 }
+          "items": {
+            "type": "string",
+            "pattern": "^(?:/(?:[^~/]|~[01])*)+$"
+          }
         }
       }
     },

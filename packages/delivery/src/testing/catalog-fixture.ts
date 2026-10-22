@@ -138,7 +138,7 @@ export async function catalogDocument() {
       {
         id: "delivery/1",
         content: { "postgres.major": "17" },
-        forwardOnly: ["postgres.major"],
+        forwardOnly: ["/helm/parameters/postgres.major"],
       },
       { id: "sjer-red/1", content: {}, forwardOnly: [] },
     ],

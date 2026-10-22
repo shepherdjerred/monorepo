@@ -34,9 +34,10 @@ export const image = artifact({
   version: "1.0.1",
   character: "a",
 });
+/** What arcade/beta accepted, filled into the selection by a tracking reference (A5). */
 const accepted = artifact({
   id: "image/accepted",
-  component: "image:arcade",
+  component: "image:arcade-accepted",
   kind: "image",
   uri: "docker.io/shepherdjerred/arcade",
   version: "1.0.0",
@@ -66,15 +67,14 @@ export function recipe(
       },
       source,
       lifecycle: "cascade",
-      syncPolicy: { automated: { selfHeal: true, prune: false } },
     },
     chartComponent,
     artifactParameters: chartComponent.startsWith("chart:")
       ? {
-          "image.tag": "image:arcade",
+          "image.tag": { component: "image:arcade", format: "tag-digest" },
           "sandbox.image": {
-            component: "image:arcade",
-            acceptedIn: "arcade/beta",
+            component: "image:arcade-accepted",
+            format: "reference",
           },
         }
       : {},
@@ -122,7 +122,6 @@ export function detail(
         runners: [
           { service: "ci", component: "image:ci-base", artifact: runner },
         ],
-        references: { "sandbox.image": accepted },
       },
     },
     environment: {
@@ -156,11 +155,18 @@ export function detail(
       createdAt: timestamp,
       components: {
         "image:arcade": image,
+        "image:arcade-accepted": accepted,
         [sourceArtifact.component]: sourceArtifact,
       },
     },
     pipeline: { id: "arcade/3", createdAt: timestamp, definition },
-    configuration: { id: "config/1", content: { replicas: "2" } },
+    configuration: {
+      id: "config/1",
+      content: {
+        replicas: "2",
+        "helm.valuesObject": '{"ingress":{"enabled":true}}',
+      },
+    },
     evidence: [],
     stages: stages.map((stage) => ({
       ...stage,

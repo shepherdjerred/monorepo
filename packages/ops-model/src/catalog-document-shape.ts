@@ -192,42 +192,61 @@ export const CatalogRecipeSchema = z.strictObject({
 
 export const ForwardOnlyValueSchema = z.string().regex(/^\d+(?:\.\d+)*$/u);
 
+/** The content key whose JSON value becomes the Application's `helm.valuesObject`. */
+export const HELM_VALUES_OBJECT_KEY = "helm.valuesObject";
+
 /**
- * The value a forwardOnly key names (F3). A plain key is a content key; a
- * key of the form `<contentKey>#<dotted.path>` names a field inside a
- * content value that holds a JSON object, such as `minecraftServer.version`
- * inside `helm.valuesObject`. Returns undefined when nothing is there.
+ * The structured view of a configuration revision's content (4.8): the
+ * `helm.valuesObject` key's JSON value at `/helm/valuesObject`, every other
+ * key a Helm parameter at `/helm/parameters/<key>`. Forward-only keys are
+ * JSON pointers into this view (F3).
+ */
+export function configurationDocument(
+  content: Readonly<Record<string, string>>,
+): { helm: { valuesObject?: unknown; parameters: Record<string, string> } } {
+  const parameters: Record<string, string> = {};
+  let valuesObject: unknown;
+  for (const [key, value] of Object.entries(content)) {
+    if (key === HELM_VALUES_OBJECT_KEY) valuesObject = JSON.parse(value);
+    else parameters[key] = value;
+  }
+  return {
+    helm:
+      valuesObject === undefined
+        ? { parameters }
+        : { valuesObject, parameters },
+  };
+}
+
+/** An RFC 6901 JSON pointer such as `/helm/valuesObject/minecraftServer/version`. */
+export const JsonPointerSchema = z.string().regex(/^(?:\/(?:[^~/]|~[01])*)+$/u);
+
+/**
+ * The scalar a forward-only JSON pointer names in the configuration's
+ * structured view (F3), as a string; undefined when nothing scalar is there.
  */
 export function forwardOnlyValue(
   content: Readonly<Record<string, string>>,
-  key: string,
+  pointer: string,
 ): string | undefined {
-  const separator = key.indexOf("#");
-  if (separator === -1) {
-    return content[key];
+  let cursor: unknown = configurationDocument(content);
+  for (const token of JsonPointerSchema.parse(pointer).slice(1).split("/")) {
+    const name = token.replaceAll("~1", "/").replaceAll("~0", "~");
+    if (typeof cursor !== "object" || cursor === null) return undefined;
+    cursor = Object.entries(cursor).find(([key]) => key === name)?.[1];
   }
-  const raw = content[key.slice(0, separator)];
-  if (raw === undefined) {
-    return undefined;
-  }
-  let cursor: unknown = JSON.parse(raw);
-  for (const segment of key.slice(separator + 1).split(".")) {
-    if (typeof cursor !== "object" || cursor === null) {
-      return undefined;
-    }
-    cursor = Object.entries(cursor).find(([name]) => name === segment)?.[1];
-  }
-  if (typeof cursor === "number") {
-    return String(cursor);
-  }
+  if (typeof cursor === "number") return String(cursor);
   return typeof cursor === "string" ? cursor : undefined;
 }
 export const CatalogConfigurationSchema = z
   .strictObject({
     id: RevisionIdSchema,
     content: z.record(z.string().min(1), z.string()),
-    /** Keys a rollback may never lower (F3); each holds a dotted numeric version. */
-    forwardOnly: z.array(z.string().min(1)),
+    /**
+     * JSON pointers into the content's structured view a rollback may never
+     * lower (F3); each names a dotted numeric version.
+     */
+    forwardOnly: z.array(JsonPointerSchema),
   })
   .superRefine((configuration, context) => {
     if (

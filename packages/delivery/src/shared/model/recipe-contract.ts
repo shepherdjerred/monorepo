@@ -3,7 +3,6 @@ import {
   AppProjectNameSchema,
   ArchiveComponentNameSchema,
   ChartComponentNameSchema,
-  EnvironmentIdSchema,
   ImageComponentNameSchema,
   ServiceIdSchema,
 } from "@shepherdjerred/ops-model/catalog-document-shape.ts";
@@ -91,19 +90,8 @@ export const ApplicationBodySchema = z.strictObject({
     namespace: KubernetesNameSchema,
   }),
   source: z.union([HelmSourceSchema, GitSourceSchema]),
-  /**
-   * Self-heal on the accepted exact source (T4). Delivery enables it only
-   * after acceptance, never prunes automatically, and records any revert as
-   * drift evidence.
-   */
-  syncPolicy: z
-    .strictObject({
-      automated: z.strictObject({
-        selfHeal: z.literal(true),
-        prune: z.literal(false),
-      }),
-    })
-    .optional(),
+  // No syncPolicy: whether ArgoCD self-heals the accepted exact source is the
+  // adapter's decision (T4), never the recipe's.
   syncOptions: z.array(z.string().min(1)).default([]),
   ignoreDifferences: z
     .array(
@@ -125,33 +113,61 @@ export const ApplicationBodySchema = z.strictObject({
 export type ApplicationBody = z.infer<typeof ApplicationBodySchema>;
 
 /**
- * What fills one Helm value path. A bare image component binds this
- * deployment's own selection; `acceptedIn` binds the artifact accepted in
- * another environment of the same service, frozen at admission (A5).
+ * The literal shape a Helm value receives from an image artifact. Closed: a
+ * new shape a chart needs gets its own named member.
+ * - `reference`: `<uri>@<digest>`, a complete image reference.
+ * - `tag-digest`: `<version>@<digest>`, for a `.tag` path whose chart
+ *   prefixes its own repository.
+ * - `selected-digest`: `selected@<digest>`, for a tag whose version string
+ *   carries no meaning (openebs's zfs-driver plugin).
  */
-export const ArtifactParameterSchema = z.union([
-  ImageComponentNameSchema,
-  z.strictObject({
-    component: ImageComponentNameSchema,
-    acceptedIn: EnvironmentIdSchema,
-  }),
+export const ArtifactParameterFormatSchema = z.enum([
+  "reference",
+  "tag-digest",
+  "selected-digest",
 ]);
+export type ArtifactParameterFormat = z.infer<
+  typeof ArtifactParameterFormatSchema
+>;
+/**
+ * What fills one Helm value path: an image component of the deployment's
+ * own selection, rendered in a named format. Another environment's
+ * accepted artifact is bound by a tracking reference component of the
+ * service (A5), which composition fills and an acceptance there recomposes
+ * (R7); the parameter names that component like any other.
+ */
+export const ArtifactParameterSchema = z.strictObject({
+  component: ImageComponentNameSchema,
+  format: ArtifactParameterFormatSchema,
+});
 export type ArtifactParameter = z.infer<typeof ArtifactParameterSchema>;
 export function artifactParameterComponent(value: ArtifactParameter): string {
-  return typeof value === "string" ? value : value.component;
+  return value.component;
 }
-/**
- * The value a Helm path receives, by the path's form: a `.tag` path takes
- * `tag@digest` (the chart prefixes its own repository), every other path a
- * complete `repository@digest` reference.
- */
+/** v1 pipelines rendered every artifact parameter as a complete reference. */
+export function referenceParameters(
+  parameters: Readonly<Record<string, string>>,
+): Record<string, ArtifactParameter> {
+  return Object.fromEntries(
+    Object.entries(parameters).map(([path, component]) => [
+      path,
+      { component, format: "reference" as const },
+    ]),
+  );
+}
+/** The value a Helm path receives from the artifact, in the parameter's format. */
 export function renderArtifactParameter(
-  path: string,
+  format: ArtifactParameterFormat,
   artifact: { uri: string; version: string; digest: string },
 ): string {
-  return path.endsWith(".tag")
-    ? `${artifact.version}@${artifact.digest}`
-    : `${artifact.uri}@${artifact.digest}`;
+  switch (format) {
+    case "reference":
+      return `${artifact.uri}@${artifact.digest}`;
+    case "tag-digest":
+      return `${artifact.version}@${artifact.digest}`;
+    case "selected-digest":
+      return `selected@${artifact.digest}`;
+  }
 }
 
 const stepFields = {
@@ -315,9 +331,7 @@ export const KubernetesApplicationRecipeSchema = z
     }
     // Steps and monitors act on this deployment's own selection only.
     const images = new Set(
-      Object.values(recipe.artifactParameters).filter(
-        (value) => typeof value === "string",
-      ),
+      Object.values(recipe.artifactParameters).map((value) => value.component),
     );
     for (const [index, step] of recipe.steps.entries()) {
       const expected = stepInstanceExpectation(step, application);
@@ -427,26 +441,6 @@ export const OperatorRunRecipeSchema = z
     (recipe) => new Set(recipe.stages).size === recipe.stages.length,
     "Attested stages must be unique",
   );
-
-/**
- * The stage key of a frozen recipe step. Stage keys double as native Job
- * stage keys, so they are lower-case words joined by hyphens:
- * `step-<kind>` and `test-<suite>`.
- */
-export function stepStageKey(prefix: "step" | "test", name: string): string {
-  const key = `${prefix}-${name.toLowerCase().replaceAll(/[^a-z0-9-]+/gu, "-")}`;
-  if (!/^[a-z0-9-]{1,64}$/u.test(key))
-    throw new Error(`Step ${name} has no valid stage key`);
-  return key;
-}
-
-/** The stage a human approval of a model tofu deployment's saved plan settles. */
-export const PLAN_APPROVAL_STAGE_KEY = "approve/plan";
-
-/** The stage an operator attestation of a declared operator-run stage settles. */
-export function attestationStageKey(stage: string): string {
-  return `attest/${stage}`;
-}
 
 const nonCompoundRecipes = [
   KubernetesApplicationRecipeSchema,

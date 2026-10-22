@@ -46,7 +46,6 @@ describe("Delivery API authorization and kill switch", () => {
   let delivery: Delivery;
   let fixture: Awaited<ReturnType<typeof seedDelivery>>;
   let writes = true;
-  let enabled: string[] = ["arcade/prod"];
   let app: ReturnType<typeof createApp>;
   beforeAll(async () => {
     cluster = await createTestDatabase();
@@ -75,7 +74,8 @@ describe("Delivery API authorization and kill switch", () => {
           },
         ],
         writesEnabled: async () => writes,
-        enabledEnvironments: async () => enabled,
+        // v2 admits by lifecycle; the enable list is not read (4.10).
+        enabledEnvironments: async () => [],
         operatorLogins: async () => ["operator@example.com"],
         trustedProxyAddresses: async () => ["127.0.0.1"],
       },
@@ -112,8 +112,11 @@ describe("Delivery API authorization and kill switch", () => {
     expect(response.status).toBe(403);
     expect(await cluster.database.deployment.count()).toBe(0);
   });
-  test("disabled environment denies a correctly authenticated deployment", async () => {
-    enabled = [];
+  test("a retired environment denies a correctly authenticated deployment whatever the enable list says", async () => {
+    await cluster.database.environment.update({
+      where: { id: fixture.environment.id },
+      data: { lifecycle: "retired" },
+    });
     const response = await app.request("/api/v1/deployments", {
       method: "POST",
       headers: human,
@@ -125,8 +128,13 @@ describe("Delivery API authorization and kill switch", () => {
         kind: "deploy",
       }),
     });
-    expect(response.status).toBe(503);
-    enabled = [fixture.environment.id];
+    expect(response.status).toBe(409);
+    expect(await response.text()).toMatch(/retired and admits no deployment/u);
+    expect(await cluster.database.deployment.count()).toBe(0);
+    await cluster.database.environment.update({
+      where: { id: fixture.environment.id },
+      data: { lifecycle: "active" },
+    });
   });
   test("paused mutations deny new requests but permit canceling owned work", async () => {
     const deployment = await delivery.createDeployment(

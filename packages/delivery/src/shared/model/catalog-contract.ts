@@ -169,29 +169,6 @@ function refineProject(
     });
 }
 
-/** `acceptedIn` binds an image accepted in another environment of the same service (A5, P3). */
-function refineAcceptedIn(
-  environmentId: string,
-  parameters: Record<string, ArtifactParameter>,
-  path: (string | number)[],
-  check: BindingCheck,
-): void {
-  const serviceId = environmentService(environmentId);
-  for (const value of Object.values(parameters)) {
-    if (typeof value === "string") continue;
-    if (
-      !check.environments.has(value.acceptedIn) ||
-      environmentService(value.acceptedIn) !== serviceId ||
-      value.acceptedIn === environmentId
-    )
-      check.context.addIssue({
-        code: "custom",
-        path,
-        message: `${environmentId} binds an image accepted in ${value.acceptedIn}, which is not another environment of ${serviceId}`,
-      });
-  }
-}
-
 function refineApplicationBindings(
   document: CatalogDocumentBase,
   context: z.RefinementCtx,
@@ -220,7 +197,6 @@ function refineApplicationBindings(
     const path = ["environments", index, "recipeRevisionId"];
     for (const application of recipeApplications(definition)) {
       refineProject(environment.id, application.project, path, check);
-      refineAcceptedIn(environment.id, application.parameters, path, check);
     }
   }
 }

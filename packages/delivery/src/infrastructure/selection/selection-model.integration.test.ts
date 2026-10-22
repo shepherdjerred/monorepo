@@ -187,10 +187,18 @@ describe("selections (4.9, 4.12)", () => {
 
   test("rollback candidates state why each earlier selection is excluded (D9, F3)", async () => {
     const baseline = await acceptedBaseline();
-    await declareConfiguration("db16/1", { "db.major": "16" }, ["db.major"]);
+    await declareConfiguration(
+      "db16/1",
+      { "helm.valuesObject": '{"db":{"major":"16"}}' },
+      ["/helm/valuesObject/db/major"],
+    );
     const sixteen = await rebind("db16/1");
     await accept(sixteen.id, context.fixture.versionSet.id);
-    await declareConfiguration("db17/1", { "db.major": "17" }, ["db.major"]);
+    await declareConfiguration(
+      "db17/1",
+      { "helm.valuesObject": '{"db":{"major":17}}' },
+      ["/helm/valuesObject/db/major"],
+    );
     const seventeen = await rebind("db17/1");
     await accept(seventeen.id, context.fixture.versionSet.id);
     const candidates = await rollbackCandidates(
@@ -205,11 +213,15 @@ describe("selections (4.9, 4.12)", () => {
       ]),
     ).toEqual([
       [seventeen.id, true, null],
-      [sixteen.id, false, "would lower forwardOnly db.major from 17 to 16"],
+      [
+        sixteen.id,
+        false,
+        "would lower forwardOnly /helm/valuesObject/db/major from 17 to 16",
+      ],
       [
         baseline.id,
         false,
-        "would lower forwardOnly db.major from 17 to nothing",
+        "would lower forwardOnly /helm/valuesObject/db/major from 17 to nothing",
       ],
     ]);
     const env = await environmentRow();
@@ -225,7 +237,7 @@ describe("selections (4.9, 4.12)", () => {
         testOperator,
       ),
     ).rejects.toThrow(
-      /excluded: would lower forwardOnly db.major from 17 to 16/u,
+      /excluded: would lower forwardOnly \/helm\/valuesObject\/db\/major from 17 to 16/u,
     );
   });
 });

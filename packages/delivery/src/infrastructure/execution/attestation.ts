@@ -2,7 +2,7 @@ import { z } from "zod";
 import { DeliveryError } from "#domain/error.ts";
 import { PipelineRevisionSchema, type Principal } from "#shared/contract.ts";
 import { IdentifierSchema } from "#shared/artifact-contract.ts";
-import { attestationStageKey } from "#shared/model/recipe-contract.ts";
+import { attestationStageKey } from "#shared/model/stage-keys.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { required, wire } from "#infrastructure/delivery-records.ts";

@@ -2,7 +2,7 @@ import { z } from "zod";
 import {
   PLAN_APPROVAL_STAGE_KEY,
   stepStageKey,
-} from "#shared/model/recipe-contract.ts";
+} from "#shared/model/stage-keys.ts";
 import { DeliveryError } from "#domain/error.ts";
 import {
   PipelineRevisionSchema,

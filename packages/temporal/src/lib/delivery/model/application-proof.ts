@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
-import { DELIVERY_ENVIRONMENT_ANNOTATION } from "#lib/delivery/argo-client.ts";
+import { DELIVERY_ENVIRONMENT_ANNOTATION } from "@shepherdjerred/delivery/model-contract";
 import type { RenderedApplication } from "./application.ts";
 
 const InfoSchema = z.array(z.object({ name: z.string(), value: z.string() }));

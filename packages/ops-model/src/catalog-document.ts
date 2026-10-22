@@ -74,11 +74,16 @@ function refineReference(
     return;
   }
   const owner = check.services.get(source.service);
-  if (owner === undefined || owner.id === service.id) {
+  // A service may reference its own component only to track what another
+  // of its environments accepted (A5), such as a sandbox following prod.
+  if (
+    owner === undefined ||
+    (owner.id === service.id && source.mode !== "tracking")
+  ) {
     issue(
       check,
       [...path, "source", "service"],
-      `Reference ${component.name} on ${service.id} must name another catalog service`,
+      `Reference ${component.name} on ${service.id} must name another catalog service, or track an environment of its own`,
     );
     return;
   }
