@@ -7,6 +7,7 @@ import {
   DELIVERY_JOB_BOOTSTRAP,
   type DeliveryJobRequest,
 } from "#shared/delivery-job.ts";
+import { DELIVERY_STAGE_REQUESTS } from "homelab/src/delivery-stage-admission.ts";
 
 const request: DeliveryJobRequest = {
   deploymentId: "deployment-42",
@@ -163,6 +164,32 @@ describe("bounded revision-pinned Delivery Jobs", () => {
     });
     expect(changed.metadata?.name).not.toBe(expected.metadata?.name);
   });
+  it("queues on Delivery's reserved LocalQueue and still adopts Jobs queued with CI", () => {
+    const expected = deliveryJobManifest(request);
+    expect(expected.metadata?.labels?.["kueue.x-k8s.io/queue-name"]).toBe(
+      "delivery",
+    );
+    expect(
+      expected.spec?.template.spec?.containers[0]?.resources?.requests,
+    ).toEqual(DELIVERY_STAGE_REQUESTS);
+    const legacy = structuredClone(expected);
+    legacy.metadata!.labels!["kueue.x-k8s.io/queue-name"] = "default";
+    expect(() => assertMatchingDeliveryJob(legacy, expected)).not.toThrow();
+    for (const mutate of [
+      (labels: Record<string, string>) => {
+        labels["kueue.x-k8s.io/queue-name"] = "ci-gates";
+      },
+      (labels: Record<string, string>) => {
+        delete labels["kueue.x-k8s.io/queue-name"];
+      },
+    ]) {
+      const unqueued = structuredClone(expected);
+      mutate(unqueued.metadata!.labels!);
+      expect(() => assertMatchingDeliveryJob(unqueued, expected)).toThrow(
+        "frozen request",
+      );
+    }
+  });
   it.each(["control-plane", "root-release"] as const)(
     "keeps %s in an independent tokenless platform Job with only its fixed transport grants",
     (recipe) => {
@@ -274,5 +301,25 @@ describe("bounded revision-pinned Delivery Jobs", () => {
         key: "DELIVERY_EXECUTOR_TOKEN",
       },
     });
+  });
+});
+
+describe("runtime image", () => {
+  it("ships every homelab module the manifest builder imports", async () => {
+    const source = await Bun.file(
+      new URL("job-manifest.ts", import.meta.url),
+    ).text();
+    const dockerfile = await Bun.file(
+      new URL("../../../Dockerfile", import.meta.url),
+    ).text();
+    const imported = [...source.matchAll(/from "homelab\/([^"]+)"/g)].map(
+      (match) => `packages/homelab/${match[1] ?? ""}`,
+    );
+    expect(imported).toContain(
+      "packages/homelab/src/delivery-stage-admission.ts",
+    );
+    for (const path of imported) {
+      expect(dockerfile).toContain(`\n  ${path} \\\n`);
+    }
   });
 });

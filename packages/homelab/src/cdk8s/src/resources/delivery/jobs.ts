@@ -16,8 +16,16 @@ import {
   kubernetesApiEgressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { CI_CLUSTER_QUEUE } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
+import { PROMETHEUS_GATEWAY_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
+import {
+  CI_CLUSTER_QUEUE,
+  DELIVERY_CLUSTER_QUEUE,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
 import { DELIVERY_PLATFORM_ITEMS } from "homelab/src/delivery-platform-grants.ts";
+import {
+  DELIVERY_STAGE_LOCAL_QUEUE,
+  LEGACY_DELIVERY_STAGE_LOCAL_QUEUE,
+} from "homelab/src/delivery-stage-admission.ts";
 
 export const DELIVERY_WORKER_JOBS_NAMESPACE = "delivery-worker-jobs";
 export const DELIVERY_PLATFORM_JOBS_NAMESPACE = "delivery-platform-jobs";
@@ -48,8 +56,14 @@ export function createDeliveryJobs(
       },
     },
   });
+  new LocalQueueV1Beta2(chart, `${profile}-stage-queue`, {
+    metadata: { name: DELIVERY_STAGE_LOCAL_QUEUE, namespace },
+    spec: { clusterQueue: DELIVERY_CLUSTER_QUEUE },
+  });
+  // A LocalQueue's ClusterQueue is immutable. Jobs from Delivery workers that
+  // predate the reserved queue still name this one and share CI's quota.
   new LocalQueueV1Beta2(chart, `${profile}-jobs-queue`, {
-    metadata: { name: "default", namespace },
+    metadata: { name: LEGACY_DELIVERY_STAGE_LOCAL_QUEUE, namespace },
     spec: { clusterQueue: CI_CLUSTER_QUEUE },
   });
   new KubeServiceAccount(chart, `${profile}-stage-account`, {
@@ -149,18 +163,7 @@ export function createDeliveryJobs(
           ],
           ports: [{ protocol: "TCP", port: IntOrString.fromNumber(7233) }],
         },
-        {
-          to: [
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "prometheus",
-                },
-              },
-            },
-          ],
-          ports: [{ protocol: "TCP", port: IntOrString.fromNumber(9090) }],
-        },
+        ...(profile === "worker" ? [prometheusQueryEgressRule()] : []),
         ...(profile === "platform"
           ? [
               {
@@ -183,6 +186,29 @@ export function createDeliveryJobs(
     },
   });
   return account;
+}
+
+/**
+ * Worker proof recipes query Prometheus for Workflow pollers. NetworkPolicy
+ * matches the pod port, the authenticated gateway's, not the Service's 9090.
+ * Platform recipes never query it.
+ */
+function prometheusQueryEgressRule() {
+  return {
+    to: [
+      {
+        namespaceSelector: {
+          matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+        },
+      },
+    ],
+    ports: [
+      {
+        protocol: "TCP",
+        port: IntOrString.fromNumber(PROMETHEUS_GATEWAY_PORT),
+      },
+    ],
+  };
 }
 
 /** Only fixed recovery recipes mount this account. It cannot create, exec, read Secrets or leave its namespace. */

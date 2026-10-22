@@ -8,9 +8,11 @@ import {
   CI_GATE_LOCAL_QUEUE,
   CI_MAINTENANCE_CLUSTER_QUEUE,
   CI_MAINTENANCE_LOCAL_QUEUE,
+  DELIVERY_CLUSTER_QUEUE,
   createKueueConfig,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
 import { createKueueApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/kueue.ts";
+import { DELIVERY_STAGE_REQUESTS } from "homelab/src/delivery-stage-admission.ts";
 import {
   CI_ADMISSION_BUDGET,
   CI_COMPUTE_WORKFLOWS,
@@ -60,6 +62,13 @@ const ClusterQueueSchema = z.object({
     })
     .loose(),
 });
+
+const CLUSTER_QUEUES = [
+  CI_CLUSTER_QUEUE,
+  CI_GATE_CLUSTER_QUEUE,
+  CI_MAINTENANCE_CLUSTER_QUEUE,
+  DELIVERY_CLUSTER_QUEUE,
+];
 
 const LocalQueueSchema = z.object({
   apiVersion: z.literal("kueue.x-k8s.io/v1beta2"),
@@ -160,11 +169,7 @@ describe("kueue-config", () => {
     // workload requesting a resource its ClusterQueue does not cover: if this
     // drifts, every build sits gated forever. Regression guard for the
     // 2026-07-24 freeze.
-    for (const name of [
-      CI_CLUSTER_QUEUE,
-      CI_GATE_CLUSTER_QUEUE,
-      CI_MAINTENANCE_CLUSTER_QUEUE,
-    ]) {
+    for (const name of CLUSTER_QUEUES) {
       expect(
         clusterQueue(name).spec.resourceGroups[0]?.coveredResources,
       ).toEqual(["cpu", "memory", "pods", "ephemeral-storage"]);
@@ -173,16 +178,35 @@ describe("kueue-config", () => {
 
   it("takes the CI budget from its language-neutral source", () => {
     expect(quota(CI_CLUSTER_QUEUE, "cpu")).toBe("23");
-    expect(quota(CI_CLUSTER_QUEUE, "memory")).toBe("78Gi");
+    expect(quota(CI_CLUSTER_QUEUE, "memory")).toBe("70Gi");
     expect(quota(CI_CLUSTER_QUEUE, "ephemeral-storage")).toBe("56Gi");
     expect(quota(CI_GATE_CLUSTER_QUEUE, "cpu")).toBe("1");
     expect(quota(CI_GATE_CLUSTER_QUEUE, "memory")).toBe("2Gi");
     expect(quota(CI_GATE_CLUSTER_QUEUE, "ephemeral-storage")).toBe("4Gi");
     expect(CI_ADMISSION_BUDGET.quota).toEqual({
       cpu: "24",
-      memory: "80Gi",
+      memory: "72Gi",
       "ephemeral-storage": "60Gi",
     });
+  });
+
+  it("keeps every queue's memory plus buildkitd within liskov's allocatable memory", () => {
+    // Kueue admits against each queue alone, so an admitted pod can still sit
+    // unschedulable when the queues together exceed the node. liskov reports
+    // about 91.5Gi allocatable, and buildkitd permanently requests 5Gi
+    // (`resources/buildkitd.ts`).
+    const LISKOV_ALLOCATABLE_GIB = 91.5;
+    const BUILDKITD_REQUEST_GIB = 5;
+    const queuedGib = CLUSTER_QUEUES.map((name) => {
+      const memory = quota(name, "memory") ?? "";
+      if (!/^\d+Gi$/u.test(memory)) {
+        throw new Error(`${name} memory quota is not whole Gi: ${memory}`);
+      }
+      return Number.parseInt(memory, 10);
+    }).reduce((total, gib) => total + gib, 0);
+    expect(queuedGib + BUILDKITD_REQUEST_GIB).toBeLessThanOrEqual(
+      LISKOV_ALLOCATABLE_GIB,
+    );
   });
 
   /**
@@ -256,6 +280,39 @@ describe("kueue-config", () => {
         CI_MAINTENANCE_CLUSTER_QUEUE,
       ],
     ]);
+  });
+
+  /**
+   * A waiting Delivery Job already outranked every CI pod, yet Kueue admits
+   * smaller CI pods past a head that does not fit. Only quota CI cannot borrow
+   * gives it precedence, and only quota outside CI's leaves CI's intact.
+   */
+  it("reserves exactly one Delivery stage Job beside the CI budget", () => {
+    const { spec } = clusterQueue(DELIVERY_CLUSTER_QUEUE);
+    expect(spec.namespaceSelector).toEqual({
+      matchExpressions: [
+        {
+          key: "kubernetes.io/metadata.name",
+          operator: "In",
+          values: ["delivery-worker-jobs", "delivery-platform-jobs"],
+        },
+      ],
+    });
+    expect(spec.preemption).toEqual({
+      withinClusterQueue: "Never",
+      reclaimWithinCohort: "Never",
+    });
+    for (const [resource, request] of Object.entries({
+      ...DELIVERY_STAGE_REQUESTS,
+      pods: "1",
+    })) {
+      expect(quota(DELIVERY_CLUSTER_QUEUE, resource)).toBe(request);
+    }
+    // In a cohort, idle quota is lent away and, without preemption, is only
+    // returned as the borrower finishes.
+    for (const name of CLUSTER_QUEUES) {
+      expect(clusterQueue(name).spec).not.toHaveProperty("cohortName");
+    }
   });
 });
 

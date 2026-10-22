@@ -1,4 +1,5 @@
 import type { Chart } from "cdk8s";
+import { DELIVERY_STAGE_REQUESTS } from "homelab/src/delivery-stage-admission.ts";
 import {
   ClusterQueueV1Beta2,
   ClusterQueueV1Beta2SpecPreemptionReclaimWithinCohort,
@@ -32,6 +33,26 @@ export const CI_MAINTENANCE_CLUSTER_QUEUE = "woodpecker-maintenance";
 export const CI_MAINTENANCE_LOCAL_QUEUE = "ci-maintenance";
 
 /**
+ * Delivery's executor ClusterQueue, for stage Jobs in its two Job namespaces.
+ *
+ * Its quota is exactly one stage Job, reserved: it joins no cohort, so CI can
+ * never borrow it and Delivery never holds CI quota. Sharing `woodpecker` gave
+ * a waiting Job the highest priority (its pods' `batch-low` class outranks
+ * every CI class) but no capacity. Without preemption, Kueue admits smaller
+ * CI pods past a head that does not fit, so a Job needing 32Gi of scratch
+ * waited until enough CI happened to finish at once. That quota also never
+ * fitted two Jobs, so one reserved slot keeps Delivery's concurrency. The slot
+ * sits beside the CI budget, and the CI compute memory quota in
+ * `misc/ci-admission-budget.json` gives up the Job's 8Gi so every queue plus
+ * buildkitd still fits liskov's allocatable memory.
+ */
+export const DELIVERY_CLUSTER_QUEUE = "delivery";
+const DELIVERY_JOB_NAMESPACES = [
+  "delivery-worker-jobs",
+  "delivery-platform-jobs",
+];
+
+/**
  * Pods one workflow can have admitted at once.
  *
  * Woodpecker runs a workflow in stages: the clone pod, which finishes (and
@@ -43,6 +64,13 @@ export const CI_PODS_PER_WORKFLOW =
 const COVERED_RESOURCES = ["cpu", "memory", "pods", "ephemeral-storage"];
 
 const SYNC_WAVE = { "argocd.argoproj.io/sync-wave": "2" };
+
+/** Kueue stops a plain pod by deleting it, which Woodpecker reads as success. */
+const NEVER_PREEMPT = {
+  withinClusterQueue: ClusterQueueV1Beta2SpecPreemptionWithinClusterQueue.NEVER,
+  reclaimWithinCohort:
+    ClusterQueueV1Beta2SpecPreemptionReclaimWithinCohort.NEVER,
+};
 
 /**
  * Resource admission for CI on liskov.
@@ -132,6 +160,43 @@ export function createKueueConfig(chart: Chart) {
     CI_MAINTENANCE_LOCAL_QUEUE,
     CI_MAINTENANCE_CLUSTER_QUEUE,
   );
+
+  // The Delivery chart owns the LocalQueues that feed this queue.
+  new ClusterQueueV1Beta2(chart, "kueue-delivery-cluster-queue", {
+    metadata: { name: DELIVERY_CLUSTER_QUEUE, annotations: SYNC_WAVE },
+    spec: {
+      namespaceSelector: {
+        matchExpressions: [
+          {
+            key: "kubernetes.io/metadata.name",
+            operator: "In",
+            values: DELIVERY_JOB_NAMESPACES,
+          },
+        ],
+      },
+      preemption: NEVER_PREEMPT,
+      resourceGroups: resourceGroups({ ...DELIVERY_STAGE_REQUESTS, pods: "1" }),
+    },
+  });
+}
+
+function resourceGroups(quotas: Readonly<Record<string, string>>) {
+  return [
+    {
+      coveredResources: COVERED_RESOURCES,
+      flavors: [
+        {
+          name: "default",
+          resources: COVERED_RESOURCES.map((resource) => ({
+            name: resource,
+            nominalQuota: NominalQuota.fromString(
+              requireQuota(quotas, resource),
+            ),
+          })),
+        },
+      ],
+    },
+  ];
 }
 
 function createClusterQueue(
@@ -163,28 +228,8 @@ function createClusterQueue(
                 "kubernetes.io/metadata.name": WOODPECKER_CI_NAMESPACE,
               },
             },
-      preemption: {
-        withinClusterQueue:
-          ClusterQueueV1Beta2SpecPreemptionWithinClusterQueue.NEVER,
-        reclaimWithinCohort:
-          ClusterQueueV1Beta2SpecPreemptionReclaimWithinCohort.NEVER,
-      },
-      resourceGroups: [
-        {
-          coveredResources: COVERED_RESOURCES,
-          flavors: [
-            {
-              name: "default",
-              resources: COVERED_RESOURCES.map((resource) => ({
-                name: resource,
-                nominalQuota: NominalQuota.fromString(
-                  requireQuota(quotas, resource),
-                ),
-              })),
-            },
-          ],
-        },
-      ],
+      preemption: NEVER_PREEMPT,
+      resourceGroups: resourceGroups(quotas),
     },
   });
 }

@@ -4,6 +4,11 @@ import { z } from "zod";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
 import { deliveryTofuGrants } from "homelab/src/delivery-platform-grants.ts";
 import {
+  DELIVERY_STAGE_LOCAL_QUEUE,
+  DELIVERY_STAGE_REQUESTS,
+  LEGACY_DELIVERY_STAGE_LOCAL_QUEUE,
+} from "homelab/src/delivery-stage-admission.ts";
+import {
   DELIVERY_JOB_BOOTSTRAP,
   DeliveryJobRequestSchema,
   deliveryJobNamespace,
@@ -12,6 +17,7 @@ import {
 import { RecoveryJobInputSchema } from "./platform/recovery/request.ts";
 
 const PREFIX = "delivery.shepherdjerred.com/";
+const QUEUE_LABEL = "kueue.x-k8s.io/queue-name";
 export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
   const input = DeliveryJobRequestSchema.parse(raw);
   const hash = createHash("sha256").update(canonicalJson(input)).digest("hex");
@@ -25,7 +31,10 @@ export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
     metadata: {
       name,
       namespace,
-      labels: { app: "delivery-stage", "kueue.x-k8s.io/queue-name": "default" },
+      labels: {
+        app: "delivery-stage",
+        [QUEUE_LABEL]: DELIVERY_STAGE_LOCAL_QUEUE,
+      },
       annotations: {
         [`${PREFIX}request`]: input.deploymentId,
         [`${PREFIX}fingerprint`]: hash,
@@ -166,11 +175,7 @@ export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
                 })),
               ],
               resources: {
-                requests: {
-                  cpu: "2",
-                  memory: "8Gi",
-                  "ephemeral-storage": "32Gi",
-                },
+                requests: { ...DELIVERY_STAGE_REQUESTS },
                 limits: {
                   cpu: "8",
                   memory: "16Gi",
@@ -301,7 +306,10 @@ function jobIdentityMatches(actual: V1Job, expected: V1Job): boolean {
     metadata.annotations?.[`${PREFIX}fingerprint`] ===
       expected.metadata?.annotations?.[`${PREFIX}fingerprint`] &&
     metadata.namespace === expected.metadata?.namespace &&
-    metadata.labels?.["kueue.x-k8s.io/queue-name"] === "default" &&
+    // Jobs created before Delivery's reserved queue name the CI-shared one.
+    [DELIVERY_STAGE_LOCAL_QUEUE, LEGACY_DELIVERY_STAGE_LOCAL_QUEUE].includes(
+      metadata.labels?.[QUEUE_LABEL] ?? "",
+    ) &&
     actual.spec?.template.metadata?.labels?.["app"] === "delivery-stage"
   );
 }

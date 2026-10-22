@@ -11,6 +11,7 @@ import {
   externalHttpsEgressRule,
   kubernetesApiEgressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { PROMETHEUS_GATEWAY_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
 import { createTemporalDomainWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/domain-worker.ts";
 import type { DeliveryExecutorActivation } from "./activation.ts";
 import { createDeliveryJobs } from "./jobs.ts";
@@ -193,7 +194,9 @@ export function createDeliveryWorker(
         },
         { to: [ns("delivery")], ports: [tcp(7353)] },
         { to: [ns("flipt")], ports: [tcp(8080)] },
-        { to: [ns("prometheus")], ports: [tcp(9090)] },
+        // Worker poller proofs query Prometheus. NetworkPolicy matches the pod
+        // port, the authenticated gateway's, not the Service's 9090.
+        { to: [ns("prometheus")], ports: [tcp(PROMETHEUS_GATEWAY_PORT)] },
         ...(activation.minecraftRegistryItemId === undefined
           ? []
           : [{ to: [ns("delivery-tsmc-controller")], ports: [tcp(7356)] }]),
