@@ -359,5 +359,5 @@
       { id: blue-1, team: BLUE, at: { x: 1185, "y": 60, z: 3157 } },
     ],
   nukes: [],
-  blocksSha256: 6f792f3c6e1a5105cf790d09af5785a5f4b60814390c93c874616243e42d7d13,
+  blocksSha256: 53be44ddbbefe6ea55157a4b480734fecb2f20a10ea9faa78eef976d0d1864e2,
 }

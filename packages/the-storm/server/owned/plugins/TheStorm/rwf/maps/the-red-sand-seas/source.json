@@ -4881,5 +4881,17 @@
     "blocksSha256": "3536cd852e0d9a52fdb02ac90e343bf04df802714fffdc3a3c134b7c30c0c5af",
     "count": 10,
     "receipt": "removed-shops.json"
+  },
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "the-red-sand-seas",
+    "changed": 380,
+    "before": "3536cd852e0d9a52fdb02ac90e343bf04df802714fffdc3a3c134b7c30c0c5af",
+    "after": "b9e39099fc3c3c989230414cb6c8cfcb5952ec1c04fc2f12baa71c50d2b1a402",
+    "fixturesSha256": "da4bf2944e267ba7c30e8e81cfc4e77eb8bf2a084ef0d6459098cd194a1d1977",
+    "paperVersion": "26.2",
+    "paperBuild": 129,
+    "paperSha256": "b1d8f6bfa1b6101fa8e947b53041cb3bdf5540e7b83b6547ca19ba7edefeb083",
+    "secondPassChanged": 0
   }
 }

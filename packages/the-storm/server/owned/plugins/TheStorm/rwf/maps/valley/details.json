@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "blocksSha256": "aa01a5409c6f0915d62f584d84ab7e89239edc65abc427b4bbeedca1050ca6ea",
+  "blocksSha256": "1706b0336b51c978369d8e73e73c742568adbb32f3043a8f0cc20d9e41df1a9a",
   "containers": [],
   "signs": [
     {
@@ -21,12 +21,7 @@
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -40,22 +35,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "Keep Out",
-          "Cave in",
-          ""
-        ],
+        "lines": ["", "Keep Out", "Cave in", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -69,22 +54,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "A Room Fit for",
-          "A Snowyflake",
-          ""
-        ],
+        "lines": ["", "A Room Fit for", "A Snowyflake", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -98,22 +73,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "Press for ",
-          "instant ",
-          "pleasure"
-        ],
+        "lines": ["", "Press for ", "instant ", "pleasure"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -127,22 +92,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "Mine",
-          "Collapse",
-          ""
-        ],
+        "lines": ["", "Mine", "Collapse", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -156,22 +111,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "Mine ",
-          "Collapse",
-          ""
-        ],
+        "lines": ["", "Mine ", "Collapse", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -195,12 +140,7 @@
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -214,22 +154,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "Secret",
-          "of the universe",
-          "======>"
-        ],
+        "lines": ["", "Secret", "of the universe", "======>"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -243,22 +173,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "A Room Fit For",
-          "A Libraryaddict",
-          ""
-        ],
+        "lines": ["", "A Room Fit For", "A Libraryaddict", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -272,22 +192,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "Keep Out",
-          "Mine Cave in",
-          ""
-        ],
+        "lines": ["", "Keep Out", "Mine Cave in", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -311,12 +221,7 @@
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },

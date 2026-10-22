@@ -30,6 +30,7 @@ public final class StormFixtures extends JavaPlugin implements Listener {
   private File content;
   private World world;
   private com.shepherdjerred.thestorm.e2e.maps.MapExportFixtures mapExporter;
+  private com.shepherdjerred.thestorm.e2e.maps.MapConnectionFixtures mapConnections;
   private com.shepherdjerred.thestorm.e2e.maps.NavigationFixtures navigation;
   private com.shepherdjerred.thestorm.e2e.maps.PursuitFixtures pursuit;
   private com.shepherdjerred.thestorm.e2e.maps.TraversalFixtures traversal;
@@ -93,6 +94,8 @@ public final class StormFixtures extends JavaPlugin implements Listener {
     new BotTransferFixtures(this).register();
     mapExporter = new com.shepherdjerred.thestorm.e2e.maps.MapExportFixtures(this, world);
     mapExporter.register();
+    mapConnections = new com.shepherdjerred.thestorm.e2e.maps.MapConnectionFixtures(this);
+    mapConnections.register();
     navigation = new com.shepherdjerred.thestorm.e2e.maps.NavigationFixtures(this, world);
     navigation.register();
     pursuit = new com.shepherdjerred.thestorm.e2e.maps.PursuitFixtures(this, world);
@@ -126,6 +129,7 @@ public final class StormFixtures extends JavaPlugin implements Listener {
 
   private void closeFixtures() {
     if (mapExporter != null) mapExporter.close();
+    if (mapConnections != null) mapConnections.close();
     if (navigation != null) navigation.close();
     if (pursuit != null) pursuit.close();
     if (traversal != null) traversal.close();

@@ -7,7 +7,7 @@
       "kind": "rwf-map-scenario",
       "id": "apex-expanse-close-trooper-duel-v1",
       "map": "apex-expanse",
-      "mapSha256": "e4a52c56945c660123110b128f07f1ff9cfdff3b5b165517d17b02ff2990f4ad",
+      "mapSha256": "eb337e8fe5a3114232388b57624191bd486ba71841a58b590dcba1efa835e3cd",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -83,7 +83,7 @@
       "kind": "rwf-map-scenario",
       "id": "battle-scarred-close-trooper-duel-v1",
       "map": "battle-scarred",
-      "mapSha256": "7f9809a78d4bc3b15002fac2db31c07607e378fc1766b0a5ec045e5e62b608c4",
+      "mapSha256": "53f81d76c95fa3c64e82e9d440c367a3948d806db49b78d8676da8b4095b6bca",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -121,7 +121,7 @@
       "kind": "rwf-map-scenario",
       "id": "beanstalk-close-trooper-duel-v1",
       "map": "beanstalk",
-      "mapSha256": "c58fb426b43af7a85aaf6dd6b51fcee54fe863aea99531f4a86e92ccc9406fe7",
+      "mapSha256": "5a84c1dd68ff06a16439cb5994b937393495661296b4d2de4bf382cbebc037b0",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -197,7 +197,7 @@
       "kind": "rwf-map-scenario",
       "id": "cloned-balance-close-trooper-duel-v1",
       "map": "cloned-balance",
-      "mapSha256": "b162ba7d5c4b5121503f38e40e893f446f92f502783da4d7f7d5ac21605452f5",
+      "mapSha256": "0088da9660438ec817582ee5987450cb2ffd2b6d0ceed0f05691695ecf406605",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -235,7 +235,7 @@
       "kind": "rwf-map-scenario",
       "id": "cloned-beanstalks-close-trooper-duel-v1",
       "map": "cloned-beanstalks",
-      "mapSha256": "68b8b91db7445c0d51b18fb96eaaecccb64fbe9967e491ddf3095734cfada2a4",
+      "mapSha256": "d750f6e99a729045a96f9944e3dda27772b93c5b302a3c88c01d7d6a2fce7f44",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -349,7 +349,7 @@
       "kind": "rwf-map-scenario",
       "id": "fairylands-close-trooper-duel-v1",
       "map": "fairylands",
-      "mapSha256": "e8c5dbd3c72576624d01cca42d8db130985b4004e99ec5c43eb6a19f6ee52c83",
+      "mapSha256": "054fe538b0d0152d7a94acaa385bb87d2796470a71989462800acba2f59c2933",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -387,7 +387,7 @@
       "kind": "rwf-map-scenario",
       "id": "fancy-castles-close-trooper-duel-v1",
       "map": "fancy-castles",
-      "mapSha256": "aa970c11a7fc22ae3415edd611db6b1eedb713fd8f70790b2865b365665ce785",
+      "mapSha256": "0873698427793395190b1ce06a115fc4448bbd8106e6a395a557d369d6115fa1",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -425,7 +425,7 @@
       "kind": "rwf-map-scenario",
       "id": "fjords-close-trooper-duel-v1",
       "map": "fjords",
-      "mapSha256": "be2c84582e3fe8bd766b61ba7e85c2c22067f26180066383cc50707d7d3b127e",
+      "mapSha256": "bf81e9132c140228549cb936f211c7b8965b9c053f31e74c90bf614f4fbdca06",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -463,7 +463,7 @@
       "kind": "rwf-map-scenario",
       "id": "floating-isles-close-trooper-duel-v1",
       "map": "floating-isles",
-      "mapSha256": "20e371135462bd28142a2bed75cd01aa883a23a3f9575416fc733096be4efebc",
+      "mapSha256": "05d440c80d8be0d851ea38dae6e85b771c5913b9f4ff0d2b1c93b27e31945d5f",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -501,7 +501,7 @@
       "kind": "rwf-map-scenario",
       "id": "flying-ships-close-trooper-duel-v1",
       "map": "flying-ships",
-      "mapSha256": "f94d53f1f1cc4f672cc6e414ec9700428ebd80e4239d377963dfb60a63a7a311",
+      "mapSha256": "f014ae8a2ab9892e777ab19f319067d10b69e74bcb0360608c09e5ac2ec26421",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -577,7 +577,7 @@
       "kind": "rwf-map-scenario",
       "id": "gardens-close-trooper-duel-v1",
       "map": "gardens",
-      "mapSha256": "169e0b907a799c6b30300bc2fd231d1fb0aba0ce374b1914df45464a157f3074",
+      "mapSha256": "a5ac24ec3afe55f446c2694ce854e8529a2cd882e1d3d5eb3b2e3362f905a853",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -615,7 +615,7 @@
       "kind": "rwf-map-scenario",
       "id": "grove-wars-close-trooper-duel-v1",
       "map": "grove-wars",
-      "mapSha256": "6f792f3c6e1a5105cf790d09af5785a5f4b60814390c93c874616243e42d7d13",
+      "mapSha256": "53be44ddbbefe6ea55157a4b480734fecb2f20a10ea9faa78eef976d0d1864e2",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -653,7 +653,7 @@
       "kind": "rwf-map-scenario",
       "id": "hemispheres-close-trooper-duel-v1",
       "map": "hemispheres",
-      "mapSha256": "3c344ec7bfb9fe504491a46054eba9cdf7262c3e0cf2fced1333a262f3a03ba2",
+      "mapSha256": "2c3a64cb02bfec46f1509c205e2fa273f6eebe89d9da7ea2bf1e9d84fb5cb3f0",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -691,7 +691,7 @@
       "kind": "rwf-map-scenario",
       "id": "main-street-close-trooper-duel-v1",
       "map": "main-street",
-      "mapSha256": "9b726b3189f878cdda9c76c6601edca91835c50cfa065e4be707edc495d47728",
+      "mapSha256": "578ba8be7252d90d3830774d4241f1713ed3c284cd6bd410429fc268771eb68e",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -729,7 +729,7 @@
       "kind": "rwf-map-scenario",
       "id": "miner-dispute-close-trooper-duel-v1",
       "map": "miner-dispute",
-      "mapSha256": "3c036a70840954dabc410965f5f71bcaf43525ddbd13ef43150e21d58895c9d7",
+      "mapSha256": "0b743f1910f2522ac46edf9a99ce9a37c88491e78858044bbc4a64214b1764a0",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -767,7 +767,7 @@
       "kind": "rwf-map-scenario",
       "id": "modified-tropicals-close-trooper-duel-v1",
       "map": "modified-tropicals",
-      "mapSha256": "a0d1c097adc2f3ea157dff78278435e22a1d6d714d1d1d2029f51544f05e548b",
+      "mapSha256": "1b6342ec19eb7475c72c806adf1bceca6f30e53f25886ca598f08e184654a1cb",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -805,7 +805,7 @@
       "kind": "rwf-map-scenario",
       "id": "mountains-close-trooper-duel-v1",
       "map": "mountains",
-      "mapSha256": "a517f5ccecdfeec4f1c51c6e4b462cf2a2785b6139b9d4d5d15864823a3f90ea",
+      "mapSha256": "0c64dc51893aa60ccc732c27845fc307ba81d85c4b5529f1e1553d73d39856fc",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -881,7 +881,7 @@
       "kind": "rwf-map-scenario",
       "id": "perfect-balance-close-trooper-duel-v1",
       "map": "perfect-balance",
-      "mapSha256": "9f827db0f7980f3ef30392be0c241e16c57378f9bee72b93f3cbd39c53ae2a1f",
+      "mapSha256": "15d83d4e90b0d0e43d13913febab11bee969e079f96572bd4e79ee1f735a81c6",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -919,7 +919,7 @@
       "kind": "rwf-map-scenario",
       "id": "pirate-island-close-trooper-duel-v1",
       "map": "pirate-island",
-      "mapSha256": "43b876b8cbd3ef465a15d40d669f42a7357ac43d6d384e97e912784455f5a6aa",
+      "mapSha256": "8ef6c1798cedb949e0f5ea6484f73c3d7f1b284dea4615da25f2c86de05a55d1",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -1033,7 +1033,7 @@
       "kind": "rwf-map-scenario",
       "id": "rival-castles-close-trooper-duel-v1",
       "map": "rival-castles",
-      "mapSha256": "7830c4ef0631f8095eb7d80ac9e9afb0535a435175fe3a5f351f787fd6056ffc",
+      "mapSha256": "d6227b9c0c222f5fb2281ef85b36aea632c3a629258148a8cf356e2a4dfdbf2a",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -1071,7 +1071,7 @@
       "kind": "rwf-map-scenario",
       "id": "rotated-hemispheres-close-trooper-duel-v1",
       "map": "rotated-hemispheres",
-      "mapSha256": "9f2410e4bb372f5dbccb8a9785901174c0746ddb6c41be109ff88058957240a4",
+      "mapSha256": "a63ad66c0b0cf8d7a5fe2c95565e49badbc6de6ca9a95dd2b4fc2072ff95005f",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -1109,7 +1109,7 @@
       "kind": "rwf-map-scenario",
       "id": "saigon-close-trooper-duel-v1",
       "map": "saigon",
-      "mapSha256": "af5f781bd36a4dd5e6b45d1db2d03fe166465c843e4995d07292dfb488cfc623",
+      "mapSha256": "aac436507b5d2d613038e7c2a540672f718866436f526cecf57ffc9af7934ff5",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -1223,7 +1223,7 @@
       "kind": "rwf-map-scenario",
       "id": "the-harshest-harvest-close-trooper-duel-v1",
       "map": "the-harshest-harvest",
-      "mapSha256": "f9c4494866360ee327faa781030c54298a7361623dff39518364a8f345e77c13",
+      "mapSha256": "c86dfe5e9e716e44798366c8a99d0ebfd9396363098b0b7bdd7953e81d02c665",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -1261,7 +1261,7 @@
       "kind": "rwf-map-scenario",
       "id": "the-lost-kingdom-close-trooper-duel-v1",
       "map": "the-lost-kingdom",
-      "mapSha256": "e9ad48a282114bcd52d698fc72e7fba48a5f0cfba2770b8b066ca73aa67edeee",
+      "mapSha256": "87c11f91bc9e49bdd7e4cdfda88db99fe368bf54e1f3daaee341b7c82c49f47d",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -1299,7 +1299,7 @@
       "kind": "rwf-map-scenario",
       "id": "the-red-sand-seas-close-trooper-duel-v1",
       "map": "the-red-sand-seas",
-      "mapSha256": "3536cd852e0d9a52fdb02ac90e343bf04df802714fffdc3a3c134b7c30c0c5af",
+      "mapSha256": "b9e39099fc3c3c989230414cb6c8cfcb5952ec1c04fc2f12baa71c50d2b1a402",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -1413,7 +1413,7 @@
       "kind": "rwf-map-scenario",
       "id": "tropical-resort-close-trooper-duel-v1",
       "map": "tropical-resort",
-      "mapSha256": "cefe83c08ad91326e8ff05909e443db44f9336832c63841c18d4a1d16f90318a",
+      "mapSha256": "fa80af0119ca05ee4107a4de1b4c88b9e2949403159bd93341f0dd21b1385cd7",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -1451,7 +1451,7 @@
       "kind": "rwf-map-scenario",
       "id": "valley-close-trooper-duel-v1",
       "map": "valley",
-      "mapSha256": "aa01a5409c6f0915d62f584d84ab7e89239edc65abc427b4bbeedca1050ca6ea",
+      "mapSha256": "1706b0336b51c978369d8e73e73c742568adbb32f3043a8f0cc20d9e41df1a9a",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -1489,7 +1489,7 @@
       "kind": "rwf-map-scenario",
       "id": "village-skirmish-close-trooper-duel-v1",
       "map": "village-skirmish",
-      "mapSha256": "b44c46d1ba7ee7441eb016d440a84e795374a56153ad9cebd7b14f97dd109de3",
+      "mapSha256": "a69439dc9cbdb4edfa26117ef0d72199aacca1c9de36fcf724bab5f3a3e49b4f",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -1527,7 +1527,7 @@
       "kind": "rwf-map-scenario",
       "id": "warlords-castles-close-trooper-duel-v1",
       "map": "warlords-castles",
-      "mapSha256": "04a2938ad4cb1e62a677ed42ad46c52431ab6003bd3f676029724a8bbf1f9f77",
+      "mapSha256": "10916907b2e468e3ace53d4089f1e87fbdb8273ef5f96196ffe0e5d5bd1a207e",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -1565,7 +1565,7 @@
       "kind": "rwf-map-scenario",
       "id": "warzone-close-trooper-duel-v1",
       "map": "warzone",
-      "mapSha256": "73128445bb7b9e58dc1471161b87c354491a22d97eaaa9a6a8c4d80860bf177d",
+      "mapSha256": "d0b778984919843b2bdb0cae1e29e29ec4761c602b77c201eb3323230183f0bc",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -1603,7 +1603,7 @@
       "kind": "rwf-map-scenario",
       "id": "wet-britches-close-trooper-duel-v1",
       "map": "wet-britches",
-      "mapSha256": "82d8b307b299bf0a1a35a526de0e7b5f662834535467abb91dfbbb8485c6ed6f",
+      "mapSha256": "52e73c1af78178b4393d05a6b00cdb3ee2eb31a6863211406615fc14d86bd396",
       "world": "minecraft:rwf",
       "region": {
         "min": {
@@ -1641,7 +1641,7 @@
       "kind": "rwf-map-scenario",
       "id": "wonderland-close-trooper-duel-v1",
       "map": "wonderland",
-      "mapSha256": "e966c68f5c4e4f5acdd0522c5fe91a75f80a88ceb199c067fe01796f99f61138",
+      "mapSha256": "008d3997041596f59f87f954f45910bee6ac62fe0ced47e65d222ee7181c787d",
       "world": "minecraft:rwf",
       "region": {
         "min": {

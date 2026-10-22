@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "the-harshest-harvest-trooper-duel-v1",
   "map": "the-harshest-harvest",
-  "mapSha256": "f9c4494866360ee327faa781030c54298a7361623dff39518364a8f345e77c13",
+  "mapSha256": "c86dfe5e9e716e44798366c8a99d0ebfd9396363098b0b7bdd7953e81d02c665",
   "world": "minecraft:rwf",
   "region": {
     "min": {

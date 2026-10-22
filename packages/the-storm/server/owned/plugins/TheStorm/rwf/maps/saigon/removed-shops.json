@@ -2,7 +2,7 @@
   "schema": 1,
   "policy": "remove-legacy-buy-signs-both-faces",
   "originalBlocksSha256": "d234f07b878719a7945c588038f2e7ccd9ba998ce56dc71cc0fe75657f293995",
-  "blocksSha256": "af5f781bd36a4dd5e6b45d1db2d03fe166465c843e4995d07292dfb488cfc623",
+  "blocksSha256": "aac436507b5d2d613038e7c2a540672f718866436f526cecf57ffc9af7934ff5",
   "removed": [
     {
       "sign": {
@@ -268,5 +268,13 @@
       },
       "state": "minecraft:oak_wall_sign[facing=west,waterlogged=false]"
     }
-  ]
+  ],
+  "shopRemovalBlocksSha256": "af5f781bd36a4dd5e6b45d1db2d03fe166465c843e4995d07292dfb488cfc623",
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "saigon",
+    "changed": 338,
+    "before": "af5f781bd36a4dd5e6b45d1db2d03fe166465c843e4995d07292dfb488cfc623",
+    "after": "aac436507b5d2d613038e7c2a540672f718866436f526cecf57ffc9af7934ff5"
+  }
 }

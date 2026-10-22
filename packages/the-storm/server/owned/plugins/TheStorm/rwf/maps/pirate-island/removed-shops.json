@@ -2,7 +2,7 @@
   "schema": 1,
   "policy": "remove-legacy-buy-signs-both-faces",
   "originalBlocksSha256": "97d4c219d20bcc7c395ac9805317cfe9f02757c8fd63b7d0efce47b7f6462f3d",
-  "blocksSha256": "43b876b8cbd3ef465a15d40d669f42a7357ac43d6d384e97e912784455f5a6aa",
+  "blocksSha256": "8ef6c1798cedb949e0f5ea6484f73c3d7f1b284dea4615da25f2c86de05a55d1",
   "removed": [
     {
       "sign": {
@@ -312,5 +312,13 @@
       },
       "state": "minecraft:oak_wall_sign[facing=south,waterlogged=false]"
     }
-  ]
+  ],
+  "shopRemovalBlocksSha256": "43b876b8cbd3ef465a15d40d669f42a7357ac43d6d384e97e912784455f5a6aa",
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "pirate-island",
+    "changed": 632,
+    "before": "43b876b8cbd3ef465a15d40d669f42a7357ac43d6d384e97e912784455f5a6aa",
+    "after": "8ef6c1798cedb949e0f5ea6484f73c3d7f1b284dea4615da25f2c86de05a55d1"
+  }
 }

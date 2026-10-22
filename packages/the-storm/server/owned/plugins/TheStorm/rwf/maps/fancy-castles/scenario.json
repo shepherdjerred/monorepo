@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "fancy-castles-trooper-duel-v1",
   "map": "fancy-castles",
-  "mapSha256": "aa970c11a7fc22ae3415edd611db6b1eedb713fd8f70790b2865b365665ce785",
+  "mapSha256": "0873698427793395190b1ce06a115fc4448bbd8106e6a395a557d369d6115fa1",
   "world": "minecraft:rwf",
   "region": {
     "min": {

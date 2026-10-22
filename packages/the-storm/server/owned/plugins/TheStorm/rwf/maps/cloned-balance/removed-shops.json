@@ -2,7 +2,7 @@
   "schema": 1,
   "policy": "remove-legacy-buy-signs-both-faces",
   "originalBlocksSha256": "285b7b2ea1e50573bc464e4f805253b0b4c4dd61520dd9a2570f5f7b796a90e9",
-  "blocksSha256": "b162ba7d5c4b5121503f38e40e893f446f92f502783da4d7f7d5ac21605452f5",
+  "blocksSha256": "0088da9660438ec817582ee5987450cb2ffd2b6d0ceed0f05691695ecf406605",
   "removed": [
     {
       "sign": {
@@ -246,5 +246,13 @@
       },
       "state": "minecraft:oak_wall_sign[facing=north,waterlogged=false]"
     }
-  ]
+  ],
+  "shopRemovalBlocksSha256": "b162ba7d5c4b5121503f38e40e893f446f92f502783da4d7f7d5ac21605452f5",
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "cloned-balance",
+    "changed": 1878,
+    "before": "b162ba7d5c4b5121503f38e40e893f446f92f502783da4d7f7d5ac21605452f5",
+    "after": "0088da9660438ec817582ee5987450cb2ffd2b6d0ceed0f05691695ecf406605"
+  }
 }

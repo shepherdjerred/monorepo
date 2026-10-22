@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "blocksSha256": "73128445bb7b9e58dc1471161b87c354491a22d97eaaa9a6a8c4d80860bf177d",
+  "blocksSha256": "d0b778984919843b2bdb0cae1e29e29ec4761c602b77c201eb3323230183f0bc",
   "containers": [],
   "signs": [
     {
@@ -11,22 +11,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Made by",
-          "Snowyflake",
-          "and",
-          "libraryaddict!"
-        ],
+        "lines": ["Made by", "Snowyflake", "and", "libraryaddict!"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -40,22 +30,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Pst! Quick!",
-          "Escape here",
-          "before they",
-          "find out!"
-        ],
+        "lines": ["Pst! Quick!", "Escape here", "before they", "find out!"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -69,22 +49,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Made by",
-          "Snowyflake",
-          "and",
-          "libraryaddict!"
-        ],
+        "lines": ["Made by", "Snowyflake", "and", "libraryaddict!"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -98,22 +68,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Pst! Quick!",
-          "Escape here",
-          "before they",
-          "find out!"
-        ],
+        "lines": ["Pst! Quick!", "Escape here", "before they", "find out!"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },

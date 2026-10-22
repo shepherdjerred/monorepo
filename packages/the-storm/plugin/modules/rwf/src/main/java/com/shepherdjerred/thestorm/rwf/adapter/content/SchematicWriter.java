@@ -20,13 +20,18 @@ public final class SchematicWriter {
   private SchematicWriter() {}
 
   public static byte[] write(Schematic schematic) {
+    return write(schematic, DATA_VERSION);
+  }
+
+  /** Writes terrain exported from a specific native Minecraft version without downgrading it. */
+  public static byte[] write(Schematic schematic, int dataVersion) {
     var bytes = new ByteArrayOutputStream();
     try (var out = new DataOutputStream(new GZIPOutputStream(bytes))) {
       out.writeByte(NbtReader.COMPOUND);
       out.writeUTF("");
       compound(out, "Schematic");
       integer(out, "Version", SchematicReader.VERSION);
-      integer(out, "DataVersion", DATA_VERSION);
+      integer(out, "DataVersion", dataVersion);
       shortTag(out, "Width", schematic.width());
       shortTag(out, "Height", schematic.height());
       shortTag(out, "Length", schematic.length());

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "blocksSha256": "a0d1c097adc2f3ea157dff78278435e22a1d6d714d1d1d2029f51544f05e548b",
+  "blocksSha256": "1b6342ec19eb7475c72c806adf1bceca6f30e53f25886ca598f08e184654a1cb",
   "containers": [
     {
       "at": {
@@ -264,22 +264,12 @@
       },
       "material": "minecraft:oak_sign",
       "front": {
-        "lines": [
-          "Dinnerbone",
-          "Got ran over",
-          "by a minecart",
-          "Day 9"
-        ],
+        "lines": ["Dinnerbone", "Got ran over", "by a minecart", "Day 9"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -293,22 +283,12 @@
       },
       "material": "minecraft:oak_sign",
       "front": {
-        "lines": [
-          "Notch",
-          "Eaten by",
-          "libraryaddict",
-          "Day 1"
-        ],
+        "lines": ["Notch", "Eaten by", "libraryaddict", "Day 1"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -322,22 +302,12 @@
       },
       "material": "minecraft:oak_sign",
       "front": {
-        "lines": [
-          "Snowyflake",
-          "Banned by",
-          "libraryaddict",
-          "Day 666"
-        ],
+        "lines": ["Snowyflake", "Banned by", "libraryaddict", "Day 666"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -351,22 +321,12 @@
       },
       "material": "minecraft:oak_sign",
       "front": {
-        "lines": [
-          "Jeb",
-          "A creeper",
-          "got hungry",
-          "Day 5"
-        ],
+        "lines": ["Jeb", "A creeper", "got hungry", "Day 5"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -390,12 +350,7 @@
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -409,22 +364,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Use this in",
-          "case of a",
-          "libraryaddict",
-          "attack."
-        ],
+        "lines": ["Use this in", "case of a", "libraryaddict", "attack."],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -448,12 +393,7 @@
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -477,12 +417,7 @@
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -496,22 +431,12 @@
       },
       "material": "minecraft:oak_sign",
       "front": {
-        "lines": [
-          "Notch",
-          "Eaten by",
-          "libraryaddict",
-          "Day 1"
-        ],
+        "lines": ["Notch", "Eaten by", "libraryaddict", "Day 1"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -525,22 +450,12 @@
       },
       "material": "minecraft:oak_sign",
       "front": {
-        "lines": [
-          "Dinnerbone",
-          "Got ran over",
-          "by a minecart",
-          "Day 9"
-        ],
+        "lines": ["Dinnerbone", "Got ran over", "by a minecart", "Day 9"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -554,22 +469,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Use this in",
-          "case of a",
-          "libraryaddict",
-          "attack."
-        ],
+        "lines": ["Use this in", "case of a", "libraryaddict", "attack."],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -583,22 +488,12 @@
       },
       "material": "minecraft:oak_sign",
       "front": {
-        "lines": [
-          "Snowyflake",
-          "Banned by",
-          "libraryaddict",
-          "Day 666"
-        ],
+        "lines": ["Snowyflake", "Banned by", "libraryaddict", "Day 666"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -612,22 +507,12 @@
       },
       "material": "minecraft:oak_sign",
       "front": {
-        "lines": [
-          "Jeb",
-          "A creeper",
-          "got hungry",
-          "Day 5"
-        ],
+        "lines": ["Jeb", "A creeper", "got hungry", "Day 5"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -651,12 +536,7 @@
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },

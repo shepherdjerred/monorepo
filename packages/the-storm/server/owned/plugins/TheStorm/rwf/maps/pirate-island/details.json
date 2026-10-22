@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "blocksSha256": "43b876b8cbd3ef465a15d40d669f42a7357ac43d6d384e97e912784455f5a6aa",
+  "blocksSha256": "8ef6c1798cedb949e0f5ea6484f73c3d7f1b284dea4615da25f2c86de05a55d1",
   "containers": [
     {
       "at": {
@@ -372,22 +372,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Snowyflake's",
-          "Tavern",
-          "",
-          ""
-        ],
+        "lines": ["Snowyflake's", "Tavern", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -401,22 +391,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Made by",
-          "Snowyflake",
-          "and",
-          "libraryaddict!"
-        ],
+        "lines": ["Made by", "Snowyflake", "and", "libraryaddict!"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -430,22 +410,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Made by",
-          "Snowyflake",
-          "and",
-          "libraryaddict!"
-        ],
+        "lines": ["Made by", "Snowyflake", "and", "libraryaddict!"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -459,22 +429,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Snowyflake's",
-          "Tavern",
-          "",
-          ""
-        ],
+        "lines": ["Snowyflake's", "Tavern", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },

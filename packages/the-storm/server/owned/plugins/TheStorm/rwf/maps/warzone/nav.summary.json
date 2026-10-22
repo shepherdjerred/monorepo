@@ -5,7 +5,7 @@
   "movementModelVersion": 4,
   "costUnit": "server-ticks",
   "damageUnit": "health-points",
-  "blocksSha256": "73128445bb7b9e58dc1471161b87c354491a22d97eaaa9a6a8c4d80860bf177d",
+  "blocksSha256": "d0b778984919843b2bdb0cae1e29e29ec4761c602b77c201eb3323230183f0bc",
   "classificationSha256": "448024c11dcee50124bdac22d8ac88d0446819d529a9773fcc4f13895e8d29bd",
   "bounds": {
     "origin": { "x": 1024, "y": 55, "z": 6144 },
@@ -60,7 +60,7 @@
       "state": "minecraft:oak_fence[east=false,north=false,south=false,waterlogged=false,west=false]",
       "shape": "FENCE",
       "blocksSight": false,
-      "blocks": 110
+      "blocks": 0
     },
     {
       "state": "minecraft:redstone_lamp[lit=true]",
@@ -120,7 +120,7 @@
       "state": "minecraft:cobblestone_wall[east=none,north=none,south=none,up=false,waterlogged=false,west=none]",
       "shape": "FENCE",
       "blocksSight": false,
-      "blocks": 8
+      "blocks": 0
     },
     {
       "state": "minecraft:blue_wool",
@@ -204,25 +204,145 @@
       "state": "minecraft:stone_brick_stairs[facing=south,half=top,shape=straight,waterlogged=false]",
       "shape": "STAIRS",
       "blocksSight": true,
-      "blocks": 7
+      "blocks": 5
     },
     {
       "state": "minecraft:stone_brick_stairs[facing=west,half=top,shape=straight,waterlogged=false]",
       "shape": "STAIRS",
       "blocksSight": true,
-      "blocks": 12
+      "blocks": 10
     },
     {
       "state": "minecraft:stone_brick_stairs[facing=east,half=top,shape=straight,waterlogged=false]",
       "shape": "STAIRS",
       "blocksSight": true,
-      "blocks": 12
+      "blocks": 10
     },
     {
       "state": "minecraft:stone_brick_stairs[facing=north,half=top,shape=straight,waterlogged=false]",
       "shape": "STAIRS",
       "blocksSight": true,
-      "blocks": 7
+      "blocks": 5
+    },
+    {
+      "state": "minecraft:oak_fence[east=false,north=true,south=true,waterlogged=false,west=true]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 16
+    },
+    {
+      "state": "minecraft:oak_fence[east=true,north=true,south=true,waterlogged=false,west=false]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 16
+    },
+    {
+      "state": "minecraft:oak_fence[east=true,north=true,south=false,waterlogged=false,west=true]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 28
+    },
+    {
+      "state": "minecraft:oak_fence[east=true,north=false,south=true,waterlogged=false,west=true]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 28
+    },
+    {
+      "state": "minecraft:oak_fence[east=true,north=true,south=true,waterlogged=false,west=true]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 6
+    },
+    {
+      "state": "minecraft:oak_fence[east=true,north=false,south=true,waterlogged=false,west=false]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 5
+    },
+    {
+      "state": "minecraft:oak_fence[east=false,north=true,south=false,waterlogged=false,west=true]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 5
+    },
+    {
+      "state": "minecraft:oak_fence[east=true,north=true,south=false,waterlogged=false,west=false]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 2
+    },
+    {
+      "state": "minecraft:oak_fence[east=false,north=false,south=true,waterlogged=false,west=true]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 2
+    },
+    {
+      "state": "minecraft:cobblestone_wall[east=low,north=low,south=low,up=false,waterlogged=false,west=low]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 8
+    },
+    {
+      "state": "minecraft:oak_fence[east=false,north=true,south=false,waterlogged=false,west=false]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:oak_fence[east=false,north=false,south=true,waterlogged=false,west=false]",
+      "shape": "FENCE",
+      "blocksSight": false,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:stone_brick_stairs[facing=south,half=top,shape=outer_left,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:stone_brick_stairs[facing=west,half=top,shape=outer_left,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:stone_brick_stairs[facing=north,half=top,shape=outer_right,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:stone_brick_stairs[facing=west,half=top,shape=outer_right,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:stone_brick_stairs[facing=east,half=top,shape=outer_right,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:stone_brick_stairs[facing=south,half=top,shape=outer_right,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:stone_brick_stairs[facing=east,half=top,shape=outer_left,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 1
+    },
+    {
+      "state": "minecraft:stone_brick_stairs[facing=north,half=top,shape=outer_left,waterlogged=false]",
+      "shape": "STAIRS",
+      "blocksSight": true,
+      "blocks": 1
     }
   ],
   "cells": {
@@ -3780,5 +3900,5 @@
   },
   "distanceFields": 100,
   "problems": [],
-  "bytes": 2622718
+  "bytes": 2622699
 }

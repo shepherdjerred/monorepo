@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "village-skirmish-trooper-duel-v1",
   "map": "village-skirmish",
-  "mapSha256": "b44c46d1ba7ee7441eb016d440a84e795374a56153ad9cebd7b14f97dd109de3",
+  "mapSha256": "a69439dc9cbdb4edfa26117ef0d72199aacca1c9de36fcf724bab5f3a3e49b4f",
   "world": "minecraft:rwf",
   "region": {
     "min": {

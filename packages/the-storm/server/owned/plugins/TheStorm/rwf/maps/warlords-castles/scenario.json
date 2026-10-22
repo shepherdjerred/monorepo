@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "warlords-castles-trooper-duel-v1",
   "map": "warlords-castles",
-  "mapSha256": "04a2938ad4cb1e62a677ed42ad46c52431ab6003bd3f676029724a8bbf1f9f77",
+  "mapSha256": "10916907b2e468e3ace53d4089f1e87fbdb8273ef5f96196ffe0e5d5bd1a207e",
   "world": "minecraft:rwf",
   "region": {
     "min": {

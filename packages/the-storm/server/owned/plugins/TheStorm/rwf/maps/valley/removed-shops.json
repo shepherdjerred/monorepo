@@ -2,7 +2,7 @@
   "schema": 1,
   "policy": "remove-legacy-buy-signs-both-faces",
   "originalBlocksSha256": "901098ade07170bd0893e1620d795f8a9e1ed3d279d2ee30751a0e71c2af29e0",
-  "blocksSha256": "aa01a5409c6f0915d62f584d84ab7e89239edc65abc427b4bbeedca1050ca6ea",
+  "blocksSha256": "1706b0336b51c978369d8e73e73c742568adbb32f3043a8f0cc20d9e41df1a9a",
   "removed": [
     {
       "sign": {
@@ -290,5 +290,13 @@
       },
       "state": "minecraft:oak_wall_sign[facing=north,waterlogged=false]"
     }
-  ]
+  ],
+  "shopRemovalBlocksSha256": "aa01a5409c6f0915d62f584d84ab7e89239edc65abc427b4bbeedca1050ca6ea",
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "valley",
+    "changed": 373,
+    "before": "aa01a5409c6f0915d62f584d84ab7e89239edc65abc427b4bbeedca1050ca6ea",
+    "after": "1706b0336b51c978369d8e73e73c742568adbb32f3043a8f0cc20d9e41df1a9a"
+  }
 }

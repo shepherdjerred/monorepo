@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "blocksSha256": "9b726b3189f878cdda9c76c6601edca91835c50cfa065e4be707edc495d47728",
+  "blocksSha256": "578ba8be7252d90d3830774d4241f1713ed3c284cd6bd410429fc268771eb68e",
   "containers": [
     {
       "at": {
@@ -210,22 +210,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -239,22 +229,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -268,22 +248,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "<---MEN",
-          "",
-          ""
-        ],
+        "lines": ["", "<---MEN", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -297,22 +267,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -326,22 +286,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -355,22 +305,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -384,22 +324,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "ARCHIVES",
-          "|",
-          "|",
-          "V"
-        ],
+        "lines": ["ARCHIVES", "|", "|", "V"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -413,22 +343,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -442,22 +362,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -471,22 +381,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -500,22 +400,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -529,22 +419,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -558,22 +438,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -587,22 +457,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -616,22 +476,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "OFFICES",
-          "",
-          ""
-        ],
+        "lines": ["", "OFFICES", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -645,22 +495,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "BUY",
-          "God Sword",
-          "1 credit",
-          ""
-        ],
+        "lines": ["BUY", "God Sword", "1 credit", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -674,22 +514,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -703,22 +533,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -732,22 +552,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Map Made By:",
-          "MastaCraft123",
-          "",
-          ""
-        ],
+        "lines": ["Map Made By:", "MastaCraft123", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -761,22 +571,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "and",
-          "DeltaStrike",
-          "Force",
-          ""
-        ],
+        "lines": ["and", "DeltaStrike", "Force", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -790,22 +590,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -819,22 +609,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -848,22 +628,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -877,22 +647,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -906,22 +666,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -935,22 +685,12 @@
       },
       "material": "minecraft:oak_sign",
       "front": {
-        "lines": [
-          "",
-          "EXIT",
-          "ONLY",
-          ""
-        ],
+        "lines": ["", "EXIT", "ONLY", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -964,22 +704,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -993,22 +723,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "Do Not Enter",
-          "Sewer",
-          ""
-        ],
+        "lines": ["", "Do Not Enter", "Sewer", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1022,22 +742,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1051,22 +761,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1080,22 +780,12 @@
       },
       "material": "minecraft:oak_sign",
       "front": {
-        "lines": [
-          "",
-          "Enter",
-          "",
-          ""
-        ],
+        "lines": ["", "Enter", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1109,22 +799,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1138,22 +818,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1167,22 +837,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "Men's",
-          "",
-          ""
-        ],
+        "lines": ["", "Men's", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1196,22 +856,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1225,22 +875,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1254,22 +894,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1283,22 +913,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1312,22 +932,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1341,22 +951,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1370,22 +970,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "Women's",
-          "",
-          ""
-        ],
+        "lines": ["", "Women's", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1399,22 +989,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1428,22 +1008,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "COURTROOM",
-          "",
-          ""
-        ],
+        "lines": ["", "COURTROOM", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1457,22 +1027,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "ARCHIVES",
-          "|",
-          "|",
-          "V"
-        ],
+        "lines": ["ARCHIVES", "|", "|", "V"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1486,22 +1046,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "Women--->",
-          "",
-          ""
-        ],
+        "lines": ["", "Women--->", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1515,22 +1065,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1544,22 +1084,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1573,22 +1103,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1602,22 +1122,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "WOMEN--->",
-          "",
-          ""
-        ],
+        "lines": ["", "WOMEN--->", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1631,22 +1141,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1660,22 +1160,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1689,22 +1179,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "COURTROOM",
-          "",
-          ""
-        ],
+        "lines": ["", "COURTROOM", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1718,22 +1198,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "ARCHIVES",
-          "|",
-          "|",
-          "V"
-        ],
+        "lines": ["ARCHIVES", "|", "|", "V"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1747,22 +1217,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1776,22 +1236,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1805,22 +1255,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1834,22 +1274,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1863,22 +1293,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1892,22 +1312,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Lookin' Good",
-          "Out Der",
-          "",
-          ""
-        ],
+        "lines": ["Lookin' Good", "Out Der", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1921,22 +1331,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1950,22 +1350,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -1979,22 +1369,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2008,22 +1388,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2037,22 +1407,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2066,22 +1426,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "The",
-          "Piston",
-          "Diner",
-          ""
-        ],
+        "lines": ["The", "Piston", "Diner", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2095,22 +1445,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2124,22 +1464,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2153,22 +1483,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "\"We Extend",
-          "Our Arms",
-          "in Welcome\"",
-          ""
-        ],
+        "lines": ["\"We Extend", "Our Arms", "in Welcome\"", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2182,22 +1502,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2211,22 +1521,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2240,22 +1540,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2269,22 +1559,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2298,22 +1578,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "Congrats",
-          "Now go back",
-          ""
-        ],
+        "lines": ["", "Congrats", "Now go back", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2327,22 +1597,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2356,22 +1616,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2385,22 +1635,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "and",
-          "MastaCraft123",
-          "",
-          ""
-        ],
+        "lines": ["and", "MastaCraft123", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2414,22 +1654,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2443,22 +1673,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Map made By:",
-          "DeltaStrike",
-          "Force",
-          ""
-        ],
+        "lines": ["Map made By:", "DeltaStrike", "Force", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2472,22 +1692,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2501,22 +1711,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2530,22 +1730,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2559,22 +1749,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2588,22 +1768,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2617,22 +1787,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2646,22 +1806,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2675,22 +1825,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2704,22 +1844,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2733,22 +1863,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2762,22 +1882,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2791,22 +1901,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2820,22 +1920,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2849,22 +1939,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2878,22 +1958,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2907,22 +1977,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "OFFICES",
-          "",
-          ""
-        ],
+        "lines": ["", "OFFICES", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2936,22 +1996,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "ARCHIVES",
-          "|",
-          "|",
-          "V"
-        ],
+        "lines": ["ARCHIVES", "|", "|", "V"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2965,22 +2015,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -2994,22 +2034,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "<---Men",
-          "",
-          ""
-        ],
+        "lines": ["", "<---Men", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },

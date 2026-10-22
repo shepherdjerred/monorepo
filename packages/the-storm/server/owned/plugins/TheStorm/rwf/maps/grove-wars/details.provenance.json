@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "id": "grove-wars",
-  "blocksSha256": "6f792f3c6e1a5105cf790d09af5785a5f4b60814390c93c874616243e42d7d13",
-  "detailsSha256": "7d85a731f5cafa6d5908aa273307b6f46dccfa9c76b1363704551207f34c4b1c",
+  "blocksSha256": "53be44ddbbefe6ea55157a4b480734fecb2f20a10ea9faa78eef976d0d1864e2",
+  "detailsSha256": "e801d8e882863eaaf12ea9cd8000b4300314fb24474e747d64e3d1ee9644604e",
   "policy": "preserve-inventories-and-other-signs-remove-legacy-buy-signs",
   "producer": [
     {
@@ -1591,5 +1591,17 @@
     "state": "complete",
     "containers": 16,
     "signs": 25
+  },
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "grove-wars",
+    "changed": 801,
+    "before": "6f792f3c6e1a5105cf790d09af5785a5f4b60814390c93c874616243e42d7d13",
+    "after": "53be44ddbbefe6ea55157a4b480734fecb2f20a10ea9faa78eef976d0d1864e2",
+    "fixturesSha256": "da4bf2944e267ba7c30e8e81cfc4e77eb8bf2a084ef0d6459098cd194a1d1977",
+    "paperVersion": "26.2",
+    "paperBuild": 129,
+    "paperSha256": "b1d8f6bfa1b6101fa8e947b53041cb3bdf5540e7b83b6547ca19ba7edefeb083",
+    "secondPassChanged": 0
   }
 }

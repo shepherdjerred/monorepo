@@ -2,7 +2,7 @@
   "schema": 1,
   "policy": "remove-legacy-buy-signs-both-faces",
   "originalBlocksSha256": "9595ebb5b8b9ab3d5b32d3e722beb7f4b3959174fd8ca08af71536fb64d78a7a",
-  "blocksSha256": "e9ad48a282114bcd52d698fc72e7fba48a5f0cfba2770b8b066ca73aa67edeee",
+  "blocksSha256": "87c11f91bc9e49bdd7e4cdfda88db99fe368bf54e1f3daaee341b7c82c49f47d",
   "removed": [
     {
       "sign": {
@@ -532,5 +532,13 @@
       },
       "state": "minecraft:oak_wall_sign[facing=south,waterlogged=false]"
     }
-  ]
+  ],
+  "shopRemovalBlocksSha256": "e9ad48a282114bcd52d698fc72e7fba48a5f0cfba2770b8b066ca73aa67edeee",
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "the-lost-kingdom",
+    "changed": 561,
+    "before": "e9ad48a282114bcd52d698fc72e7fba48a5f0cfba2770b8b066ca73aa67edeee",
+    "after": "87c11f91bc9e49bdd7e4cdfda88db99fe368bf54e1f3daaee341b7c82c49f47d"
+  }
 }

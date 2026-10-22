@@ -2,7 +2,7 @@
   "schema": 1,
   "policy": "remove-legacy-buy-signs-both-faces",
   "originalBlocksSha256": "e50b259ec58662f8830a10bd65ad00b3281f5ae8b6ee9ce23d2e01d07fb65950",
-  "blocksSha256": "b44c46d1ba7ee7441eb016d440a84e795374a56153ad9cebd7b14f97dd109de3",
+  "blocksSha256": "a69439dc9cbdb4edfa26117ef0d72199aacca1c9de36fcf724bab5f3a3e49b4f",
   "removed": [
     {
       "sign": {
@@ -268,5 +268,13 @@
       },
       "state": "minecraft:oak_wall_sign[facing=north,waterlogged=false]"
     }
-  ]
+  ],
+  "shopRemovalBlocksSha256": "b44c46d1ba7ee7441eb016d440a84e795374a56153ad9cebd7b14f97dd109de3",
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "village-skirmish",
+    "changed": 1242,
+    "before": "b44c46d1ba7ee7441eb016d440a84e795374a56153ad9cebd7b14f97dd109de3",
+    "after": "a69439dc9cbdb4edfa26117ef0d72199aacca1c9de36fcf724bab5f3a3e49b4f"
+  }
 }

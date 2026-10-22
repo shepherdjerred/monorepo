@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "apex-expanse-trooper-duel-v1",
   "map": "apex-expanse",
-  "mapSha256": "e4a52c56945c660123110b128f07f1ff9cfdff3b5b165517d17b02ff2990f4ad",
+  "mapSha256": "eb337e8fe5a3114232388b57624191bd486ba71841a58b590dcba1efa835e3cd",
   "world": "minecraft:rwf",
   "region": {
     "min": {

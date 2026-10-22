@@ -1521,6 +1521,17 @@ each result to its terrain hash and exact positions, and include physics samples
 producer hashes and server logs. Geometry and traversal evidence do not establish
 bot quality or human gameplay acceptance.
 
+Legacy import resolves fence, pane, iron bar and wall connections, stair corners
+and gates against the complete exported schematic using the pinned Paper
+server's native shape rules and loaded block tags. It preserves material,
+orientation, waterlogging and other authored properties, and runs no world
+physics or fluid ticks. Runtime pastes and repairs retain those resolved states.
+`bun run maps:connect --output <new-directory>` audits existing legacy imports
+in a disposable server, runs native regression cases and verifies that a second
+conversion changes nothing. Add `--install` to replace the imported schematics,
+rebind payload and scenario hashes, and rebake and verify their navigation.
+Explicit shapes in repository-authored maps remain under their build programs.
+
 The schematic contains terrain only. The converter also exports inventories
 through Paper's versioned item API and both sign faces as literal visible text,
 including color, glow and wax. Sign actions, command blocks' commands, entities

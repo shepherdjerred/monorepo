@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "hemispheres-trooper-duel-v1",
   "map": "hemispheres",
-  "mapSha256": "3c344ec7bfb9fe504491a46054eba9cdf7262c3e0cf2fced1333a262f3a03ba2",
+  "mapSha256": "2c3a64cb02bfec46f1509c205e2fa273f6eebe89d9da7ea2bf1e9d84fb5cb3f0",
   "world": "minecraft:rwf",
   "region": {
     "min": {

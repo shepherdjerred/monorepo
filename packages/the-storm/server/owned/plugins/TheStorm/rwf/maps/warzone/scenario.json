@@ -3,7 +3,7 @@
   "kind": "rwf-map-scenario",
   "id": "warzone-trooper-duel-v1",
   "map": "warzone",
-  "mapSha256": "73128445bb7b9e58dc1471161b87c354491a22d97eaaa9a6a8c4d80860bf177d",
+  "mapSha256": "d0b778984919843b2bdb0cae1e29e29ec4761c602b77c201eb3323230183f0bc",
   "world": "minecraft:rwf",
   "region": {
     "min": {

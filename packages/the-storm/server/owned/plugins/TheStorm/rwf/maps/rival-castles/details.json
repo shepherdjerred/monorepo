@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "blocksSha256": "7830c4ef0631f8095eb7d80ac9e9afb0535a435175fe3a5f351f787fd6056ffc",
+  "blocksSha256": "d6227b9c0c222f5fb2281ef85b36aea632c3a629258148a8cf356e2a4dfdbf2a",
   "containers": [],
   "signs": [
     {
@@ -11,22 +11,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "libraryaddict",
-          "who likes",
-          "to eat little",
-          "children!"
-        ],
+        "lines": ["libraryaddict", "who likes", "to eat little", "children!"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -40,22 +30,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "§4[Enchant]",
-          "Bow",
-          "§c<enchant>",
-          "5 credits"
-        ],
+        "lines": ["§4[Enchant]", "Bow", "§c<enchant>", "5 credits"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -69,22 +49,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Made by",
-          "Snowyflake,",
-          "Petlove506",
-          "and..."
-        ],
+        "lines": ["Made by", "Snowyflake,", "Petlove506", "and..."],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -98,22 +68,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "With a little",
-          "bit here and",
-          "there by",
-          "Libraryaddict"
-        ],
+        "lines": ["With a little", "bit here and", "there by", "Libraryaddict"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -127,22 +87,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Map",
-          "Made by",
-          "Petlove506 and",
-          "Snowyflake"
-        ],
+        "lines": ["Map", "Made by", "Petlove506 and", "Snowyflake"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -156,22 +106,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Map",
-          "Made by",
-          "Petlove506 and",
-          "Snowyflake"
-        ],
+        "lines": ["Map", "Made by", "Petlove506 and", "Snowyflake"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -185,22 +125,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "With a little",
-          "bit here and",
-          "there by",
-          "Libraryaddict"
-        ],
+        "lines": ["With a little", "bit here and", "there by", "Libraryaddict"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -214,22 +144,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "§4[Enchant]",
-          "Bow",
-          "§c<enchant>",
-          "5 credits"
-        ],
+        "lines": ["§4[Enchant]", "Bow", "§c<enchant>", "5 credits"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -243,22 +163,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "libraryaddict",
-          "who likes",
-          "to eat little",
-          "children!"
-        ],
+        "lines": ["libraryaddict", "who likes", "to eat little", "children!"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -272,22 +182,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Made by",
-          "Snowyflake,",
-          "Petlove506",
-          "and..."
-        ],
+        "lines": ["Made by", "Snowyflake,", "Petlove506", "and..."],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },

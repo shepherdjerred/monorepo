@@ -2,7 +2,7 @@
   "schema": 1,
   "policy": "remove-legacy-buy-signs-both-faces",
   "originalBlocksSha256": "fb861c2db949ff3d44276b157f62f94794d7dc272c8be298e96b34e9c6dd4ccf",
-  "blocksSha256": "be2c84582e3fe8bd766b61ba7e85c2c22067f26180066383cc50707d7d3b127e",
+  "blocksSha256": "bf81e9132c140228549cb936f211c7b8965b9c053f31e74c90bf614f4fbdca06",
   "removed": [
     {
       "sign": {
@@ -180,5 +180,13 @@
       },
       "state": "minecraft:oak_wall_sign[facing=south,waterlogged=false]"
     }
-  ]
+  ],
+  "shopRemovalBlocksSha256": "be2c84582e3fe8bd766b61ba7e85c2c22067f26180066383cc50707d7d3b127e",
+  "connectionRepair": {
+    "policy": "native-neighbor-shapes",
+    "id": "fjords",
+    "changed": 606,
+    "before": "be2c84582e3fe8bd766b61ba7e85c2c22067f26180066383cc50707d7d3b127e",
+    "after": "bf81e9132c140228549cb936f211c7b8965b9c053f31e74c90bf614f4fbdca06"
+  }
 }

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "blocksSha256": "3c036a70840954dabc410965f5f71bcaf43525ddbd13ef43150e21d58895c9d7",
+  "blocksSha256": "0b743f1910f2522ac46edf9a99ce9a37c88491e78858044bbc4a64214b1764a0",
   "containers": [
     {
       "at": {
@@ -156,22 +156,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "12 x 9",
-          "golden ingot(s)",
-          "worth:",
-          "1 notch apple"
-        ],
+        "lines": ["12 x 9", "golden ingot(s)", "worth:", "1 notch apple"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -185,22 +175,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "??? x 9",
-          "redstone",
-          "worth:",
-          "nothing"
-        ],
+        "lines": ["??? x 9", "redstone", "worth:", "nothing"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -214,22 +194,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "KEEP SAFE",
-          "FROM BLUES",
-          ""
-        ],
+        "lines": ["", "KEEP SAFE", "FROM BLUES", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -243,22 +213,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "11 x 9",
-          "diamond(s)",
-          "worth:",
-          "a lot of money"
-        ],
+        "lines": ["11 x 9", "diamond(s)", "worth:", "a lot of money"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -272,22 +232,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "10 x 9",
-          "emerald(s)",
-          "worth:",
-          "a lot of flint"
-        ],
+        "lines": ["10 x 9", "emerald(s)", "worth:", "a lot of flint"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -301,22 +251,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Please do",
-          "NOT throw in",
-          "coins! We DRINK",
-          "from here!"
-        ],
+        "lines": ["Please do", "NOT throw in", "coins! We DRINK", "from here!"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -330,22 +270,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "no secrets",
-          "here. ;)",
-          ""
-        ],
+        "lines": ["", "no secrets", "here. ;)", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -359,22 +289,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "Water",
-          "Well",
-          ""
-        ],
+        "lines": ["", "Water", "Well", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -388,22 +308,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Map made by:",
-          "Smaland47",
-          "and",
-          "peppyk"
-        ],
+        "lines": ["Map made by:", "Smaland47", "and", "peppyk"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -417,22 +327,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "goto me for",
-          "secret lol",
-          ""
-        ],
+        "lines": ["", "goto me for", "secret lol", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -446,22 +346,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "12 x 9",
-          "golden ingot(s)",
-          "worth:",
-          "1 notch apple"
-        ],
+        "lines": ["12 x 9", "golden ingot(s)", "worth:", "1 notch apple"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -475,22 +365,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "11 x 9",
-          "diamond(s)",
-          "worth:",
-          "a LOT of money"
-        ],
+        "lines": ["11 x 9", "diamond(s)", "worth:", "a LOT of money"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -504,22 +384,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "KEEP AWAY ",
-          "FROM REDS ",
-          ""
-        ],
+        "lines": ["", "KEEP AWAY ", "FROM REDS ", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -533,22 +403,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "??? x 9",
-          "lapis",
-          "worth:",
-          "nothing"
-        ],
+        "lines": ["??? x 9", "lapis", "worth:", "nothing"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -562,22 +422,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "10 x 9",
-          "emerald(s)",
-          "worth:",
-          "lots of flint"
-        ],
+        "lines": ["10 x 9", "emerald(s)", "worth:", "lots of flint"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -591,22 +441,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "27 x 9",
-          "coal block(s)",
-          "worth:",
-          "wrecking ball"
-        ],
+        "lines": ["27 x 9", "coal block(s)", "worth:", "wrecking ball"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -620,22 +460,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Map made by:",
-          "peppyk",
-          "and",
-          "Smaland47"
-        ],
+        "lines": ["Map made by:", "peppyk", "and", "Smaland47"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -649,22 +479,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -678,22 +498,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -707,22 +517,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "do alt+f4",
-          "for 100 credits",
-          ""
-        ],
+        "lines": ["", "do alt+f4", "for 100 credits", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -736,22 +536,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "buy",
-          "1 credit",
-          "1 credit",
-          ""
-        ],
+        "lines": ["buy", "1 credit", "1 credit", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -765,22 +555,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Map made by:",
-          "Smaland47",
-          "and",
-          "peppyk"
-        ],
+        "lines": ["Map made by:", "Smaland47", "and", "peppyk"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },

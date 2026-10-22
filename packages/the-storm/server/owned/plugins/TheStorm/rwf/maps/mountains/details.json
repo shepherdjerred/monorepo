@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "blocksSha256": "a517f5ccecdfeec4f1c51c6e4b462cf2a2785b6139b9d4d5d15864823a3f90ea",
+  "blocksSha256": "0c64dc51893aa60ccc732c27845fc307ba81d85c4b5529f1e1553d73d39856fc",
   "containers": [
     {
       "at": {
@@ -102,22 +102,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Why you down ",
-          "here boy",
-          "Stupid boy.",
-          "Stupid boy."
-        ],
+        "lines": ["Why you down ", "here boy", "Stupid boy.", "Stupid boy."],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -131,22 +121,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "Made By",
-          "anthonyvaz",
-          "",
-          "without mods!"
-        ],
+        "lines": ["Made By", "anthonyvaz", "", "without mods!"],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
@@ -160,22 +140,12 @@
       },
       "material": "minecraft:oak_wall_sign",
       "front": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },
       "back": {
-        "lines": [
-          "",
-          "",
-          "",
-          ""
-        ],
+        "lines": ["", "", "", ""],
         "color": "BLACK",
         "glowing": false
       },

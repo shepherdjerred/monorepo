@@ -311,5 +311,5 @@
       { id: green-1, team: GREEN, at: { x: 4166, "y": 49, z: 1048 } },
     ],
   nukes: [],
-  blocksSha256: b162ba7d5c4b5121503f38e40e893f446f92f502783da4d7f7d5ac21605452f5,
+  blocksSha256: 0088da9660438ec817582ee5987450cb2ffd2b6d0ceed0f05691695ecf406605,
 }
