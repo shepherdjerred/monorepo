@@ -443,11 +443,22 @@ the exact selected revision plus reconciliation and acceptance evidence.
 Failed deployments block automatic successors. An ambiguous external mutation
 finishes with `recoveryRequired` and retains its target lock. An administrator
 supplies the exact external operation UUID and recovery reason through
-`POST /deployments/:id/release-lock`. The API independently reads ArgoCD, verifies
-the recorded request, environment delegation, finished operation, and settled
-Jobs, and retains that evidence before releasing ownership. This inspection
-works while Temporal is unavailable. Canceling running work is a
-request to stop at a safe boundary, not an assertion that side effects were undone.
+`POST /deployments/:id/release-lock`. The API independently reads the Application
+object, verifies the recorded request, environment delegation, finished operation,
+and settled Jobs, and retains that evidence before releasing ownership. This
+inspection works while Temporal or ArgoCD's API is unavailable. Canceling running
+work is a request to stop at a safe boundary, not an assertion that side effects
+were undone.
+
+Settlement readers never use the ArgoCD server or an executor credential. The
+API container projects a short-lived token of its own ServiceAccount per reader,
+and each reader's Role grants only what it reads. A missing projection pauses
+settlement and keeps ownership.
+
+| Reader identity                    | Grant                                                                                                   |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `delivery-application-reader`      | get, list, watch Applications in `argocd`                                                               |
+| `delivery-minecraft-report-reader` | a `delivery-tsmc-controller`-audience token; the controller reviews it and allows only its report `get` |
 
 Use `toolkit deploy recover <DEPLOYMENT_ID> --operation-id <ARGO_OPERATION_UUID>
 --reason <EXPLANATION> --machine` after inspecting the recorded operation directly.

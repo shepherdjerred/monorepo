@@ -29,6 +29,7 @@ import { deliveryTrmnlEnvironment } from "@shepherdjerred/homelab/cdk8s/src/reso
 import { deliveryColdStartEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/cold-start-credential.ts";
 import { createDeliveryCatalogRecovery } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/catalog-recovery.ts";
 import { attachNativeForumReader } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/forum/native-reader.ts";
+import { attachDeliveryRecoveryReaders } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/recovery-readers.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createDeliveryIngressObserver } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/ingress.ts";
 import { DELIVERY_TAILSCALE_INGRESS } from "@shepherdjerred/ops-model/delivery-ingress.ts";
@@ -212,6 +213,7 @@ export function createDeliveryChart(
     }),
   );
   setRevisionHistoryLimit(deployment);
+  attachDeliveryRecoveryReaders(deployment);
   if (
     activation.forumReaderItemId !== undefined &&
     activation.forumObserverItemId !== undefined

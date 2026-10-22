@@ -1,0 +1,218 @@
+import { App, Chart } from "cdk8s";
+import { beforeEach, expect, test } from "vitest";
+import { z } from "zod";
+import { createDeliveryChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/delivery.ts";
+import { resetProbeRegistry } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
+import {
+  DELIVERY_API_SERVICE_ACCOUNT as api,
+  DELIVERY_KUBERNETES_READERS,
+  DELIVERY_MINECRAFT_REPORT_READER as report,
+} from "@shepherdjerred/ops-model/delivery-readers.ts";
+import { createDeliveryMinecraftController } from "./minecraft-controller.ts";
+
+beforeEach(resetProbeRegistry);
+const Named = z.looseObject({
+  kind: z.string(),
+  metadata: z.looseObject({
+    name: z.string(),
+    namespace: z.string().optional(),
+  }),
+});
+const Rule = z.object({
+  apiGroups: z.array(z.string()),
+  resources: z.array(z.string()),
+  verbs: z.array(z.string()),
+  resourceNames: z.array(z.string()).optional(),
+});
+const Role = Named.extend({ rules: z.array(Rule) });
+const Binding = Named.extend({
+  roleRef: z.object({ kind: z.string(), name: z.string() }),
+  subjects: z.array(
+    z.object({ kind: z.string(), name: z.string(), namespace: z.string() }),
+  ),
+});
+const Mount = z.object({
+  name: z.string(),
+  mountPath: z.string(),
+  readOnly: z.boolean().optional(),
+});
+const Pod = z.object({
+  spec: z.object({
+    template: z.object({
+      spec: z.object({
+        serviceAccountName: z.string(),
+        automountServiceAccountToken: z.boolean(),
+        containers: z.array(
+          z.looseObject({ name: z.string(), volumeMounts: z.array(Mount) }),
+        ),
+        initContainers: z.array(
+          z.looseObject({ name: z.string(), volumeMounts: z.array(Mount) }),
+        ),
+        volumes: z.array(z.looseObject({ name: z.string() })),
+      }),
+    }),
+  }),
+});
+const readers = Object.values(DELIVERY_KUBERNETES_READERS);
+
+function apiChart() {
+  return createDeliveryChart(new App(), {
+    image: `docker.io/shepherdjerred/delivery@sha256:${"a".repeat(64)}`,
+    serviceItemId: "service-item",
+  }).toJson();
+}
+function of(rendered: unknown[], kind: string, name: string) {
+  return rendered.filter((raw) => {
+    const parsed = Named.parse(raw);
+    return parsed.kind === kind && parsed.metadata.name === name;
+  });
+}
+
+test("every settlement reader is a read-only Role on exactly its resources, bound only to the API account", () => {
+  const rendered = apiChart();
+  for (const reader of readers) {
+    const roles = of(rendered, "Role", reader.name).map((raw) =>
+      Role.parse(raw),
+    );
+    expect(roles.map((role) => role.metadata.namespace)).toEqual(
+      reader.namespaces,
+    );
+    for (const role of roles) {
+      expect(role.rules).toEqual(
+        reader.rules.map((rule) => ({
+          apiGroups: [...rule.apiGroups],
+          resources: [...rule.resources],
+          verbs: [...rule.verbs],
+        })),
+      );
+      for (const rule of role.rules) {
+        expect(rule.verbs).toEqual(["get", "list", "watch"]);
+        expect(rule.resources).not.toContain("secrets");
+        expect([...rule.apiGroups, ...rule.resources]).not.toContain("*");
+      }
+    }
+    const bindings = of(rendered, "RoleBinding", reader.name).map((raw) =>
+      Binding.parse(raw),
+    );
+    expect(bindings).toHaveLength(reader.namespaces.length);
+    for (const binding of bindings) {
+      expect(binding.roleRef).toMatchObject({
+        kind: "Role",
+        name: reader.name,
+      });
+      expect(binding.subjects).toEqual([{ kind: "ServiceAccount", ...api }]);
+    }
+  }
+  expect(
+    of(rendered, "ClusterRoleBinding", "delivery-application-reader"),
+  ).toEqual([]);
+});
+
+test("only the API container projects one short-lived token per reader, the report token bound to the controller audience", () => {
+  const rendered = apiChart();
+  const deployment = Pod.parse(
+    rendered.find((raw) => Named.parse(raw).kind === "Deployment"),
+  ).spec.template.spec;
+  expect(deployment.serviceAccountName).toBe(api.name);
+  expect(deployment.automountServiceAccountToken).toBe(false);
+  for (const reader of readers) {
+    expect(deployment.containers[0]?.volumeMounts).toContainEqual({
+      name: reader.name,
+      mountPath: reader.directory,
+      readOnly: true,
+    });
+    expect(
+      deployment.volumes.find((volume) => volume.name === reader.name),
+    ).toEqual({
+      name: reader.name,
+      projected: {
+        defaultMode: 0o440,
+        sources: [
+          { serviceAccountToken: { path: "token", expirationSeconds: 600 } },
+          {
+            configMap: {
+              name: "kube-root-ca.crt",
+              items: [{ key: "ca.crt", path: "ca.crt" }],
+            },
+          },
+        ],
+      },
+    });
+  }
+  expect(
+    deployment.volumes.find((volume) => volume.name === report.name),
+  ).toEqual({
+    name: report.name,
+    projected: {
+      defaultMode: 0o440,
+      sources: [
+        {
+          serviceAccountToken: {
+            path: "token",
+            audience: "delivery-tsmc-controller",
+            expirationSeconds: 600,
+          },
+        },
+      ],
+    },
+  });
+  expect(deployment.containers[0]?.volumeMounts).toContainEqual({
+    name: report.name,
+    mountPath: report.directory,
+    readOnly: true,
+  });
+  const names = new Set([...readers.map((reader) => reader.name), report.name]);
+  for (const init of deployment.initContainers)
+    expect(init.volumeMounts.some((mount) => names.has(mount.name))).toBe(
+      false,
+    );
+  expect(
+    new Set([...readers.map((reader) => reader.directory), report.directory])
+      .size,
+  ).toBe(readers.length + 1);
+});
+
+test("the Minecraft controller grants the API one report read and may only review tokens and access", () => {
+  const chart = new Chart(new App(), "minecraft-report-reader");
+  createDeliveryMinecraftController(chart, {
+    executorItemId: "executor-item",
+    registryItemId: "registry-item",
+    argocdItemId: "argo-item",
+  });
+  const rendered = chart.toJson();
+  expect(
+    of(rendered, "Role", report.name).map((raw) => Role.parse(raw)),
+  ).toEqual([
+    expect.objectContaining({
+      metadata: expect.objectContaining({ namespace: report.namespace }),
+      rules: [
+        {
+          apiGroups: ["delivery.shepherdjerred.com"],
+          resources: ["minecraftrecoveryreports"],
+          verbs: ["get"],
+        },
+      ],
+    }),
+  ]);
+  expect(
+    of(rendered, "RoleBinding", report.name).map((raw) => Binding.parse(raw)),
+  ).toEqual([
+    expect.objectContaining({
+      roleRef: expect.objectContaining({ kind: "Role", name: report.name }),
+      subjects: [{ kind: "ServiceAccount", ...api }],
+    }),
+  ]);
+  const controller = Role.parse(
+    of(rendered, "ClusterRole", "delivery-tsmc-controller")[0],
+  );
+  expect(controller.rules).toContainEqual({
+    apiGroups: ["authentication.k8s.io"],
+    resources: ["tokenreviews"],
+    verbs: ["create"],
+  });
+  expect(controller.rules).toContainEqual({
+    apiGroups: ["authorization.k8s.io"],
+    resources: ["subjectaccessreviews"],
+    verbs: ["create"],
+  });
+});

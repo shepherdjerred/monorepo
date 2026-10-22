@@ -112,9 +112,6 @@ const app = createApp({
   inspectMinecraftRecovery: createMinecraftRecoveryInspector({
     controllerOrigin:
       "http://delivery-tsmc-controller.delivery-tsmc-controller.svc.cluster.local:7356",
-    executorToken: bootstrap.DELIVERY_MACHINE_CREDENTIALS.find((credential) =>
-      credential.principal.scopes.includes("execute"),
-    )?.token,
     readApplication,
   }),
   config: {

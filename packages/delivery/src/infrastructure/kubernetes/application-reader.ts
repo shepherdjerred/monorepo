@@ -1,9 +1,10 @@
+import { DELIVERY_KUBERNETES_READERS } from "@shepherdjerred/ops-model/delivery-readers.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { readProjectedKubernetes } from "./projected-identity.ts";
 
-/** Where the API pod projects the `delivery/delivery-application-reader` token and cluster CA. */
+/** Where the API pod projects the `delivery-application-reader` token and cluster CA. */
 export const APPLICATION_READER_DIRECTORY =
-  "/var/run/delivery-application-reader";
+  DELIVERY_KUBERNETES_READERS.application.directory;
 
 /** An Argo Application object as stored, or null when it does not exist. */
 export type ApplicationReader = (name: string) => Promise<unknown>;

@@ -1,4 +1,8 @@
 import { ApiObject, type Chart } from "cdk8s";
+import {
+  DELIVERY_API_SERVICE_ACCOUNT,
+  DELIVERY_MINECRAFT_REPORT_READER as report,
+} from "@shepherdjerred/ops-model/delivery-readers.ts";
 
 const CONTROLLER = "delivery-tsmc-controller";
 const VALIDATION = "minecraft-tsmc-delivery-validation";
@@ -45,8 +49,40 @@ function role(chart: Chart, namespace: string, rules: Rule[]): void {
   });
 }
 
+/**
+ * `delivery-minecraft-report-reader`: the Delivery API may read a recovery
+ * report, and nothing else, with a token whose audience is this controller.
+ * The controller checks the grant with a SubjectAccessReview.
+ */
+function createReportReader(chart: Chart): void {
+  new ApiObject(chart, `${report.name}-role`, {
+    apiVersion: "rbac.authorization.k8s.io/v1",
+    kind: "Role",
+    metadata: { name: report.name, namespace: report.namespace },
+    rules: [
+      {
+        apiGroups: [...report.rule.apiGroups],
+        resources: [...report.rule.resources],
+        verbs: [...report.rule.verbs],
+      },
+    ],
+  });
+  new ApiObject(chart, `${report.name}-binding`, {
+    apiVersion: "rbac.authorization.k8s.io/v1",
+    kind: "RoleBinding",
+    metadata: { name: report.name, namespace: report.namespace },
+    roleRef: {
+      apiGroup: "rbac.authorization.k8s.io",
+      kind: "Role",
+      name: report.name,
+    },
+    subjects: [{ kind: "ServiceAccount", ...DELIVERY_API_SERVICE_ACCOUNT }],
+  });
+}
+
 /** Named target grants plus admission fences for operations RBAC cannot restrict by body. */
 export function createMinecraftControllerPermissions(chart: Chart): void {
+  createReportReader(chart);
   role(chart, CONTROLLER, [
     {
       apiGroups: [""],
@@ -164,6 +200,17 @@ export function createMinecraftControllerPermissions(chart: Chart): void {
         ],
         verbs: ["get"],
         resourceNames: GUARDS,
+      },
+      // Authenticate and authorize the API's report reader (D5, I2).
+      {
+        apiGroups: ["authentication.k8s.io"],
+        resources: ["tokenreviews"],
+        verbs: ["create"],
+      },
+      {
+        apiGroups: ["authorization.k8s.io"],
+        resources: ["subjectaccessreviews"],
+        verbs: ["create"],
       },
     ],
   });
