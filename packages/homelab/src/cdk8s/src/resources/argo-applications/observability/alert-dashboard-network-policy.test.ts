@@ -9,6 +9,10 @@ import { createFliptChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts
 import { createTrmnlDashboardChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/trmnl-dashboard.ts";
 import { createAlertDashboardApp } from "./alert-dashboard.ts";
 import {
+  ALERTMANAGER_GATEWAY_PORT,
+  PROMETHEUS_GATEWAY_PORT,
+} from "./monitoring-auth-gateways.ts";
+import {
   getRegisteredBackendProbes,
   resetProbeRegistry,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
@@ -75,7 +79,7 @@ function applicationNames(yaml: string): string[] {
     .map((result) => result.data.metadata.name);
 }
 
-function hasPort(rule: Rule, port: number): boolean {
+function hasPort(rule: Rule, port: number | string): boolean {
   return (rule.ports ?? []).some(
     (candidate) => candidate.port === port && candidate.protocol === "TCP",
   );
@@ -108,7 +112,7 @@ function allowsIngress(
 function allowsEgress(
   rules: readonly Rule[] | undefined,
   namespace: string,
-  port: number,
+  port: number | string,
 ): boolean {
   return (rules ?? []).some(
     (rule) => hasPort(rule, port) && hasPeer(rule.to, namespace),
@@ -167,7 +171,43 @@ describe("alert dashboard network paths", () => {
     );
   });
 
-  it("reaches Prometheus for series presets and Flipt for the digest flag", () => {
+  it("reaches Grafana, Prometheus and Alertmanager on their pod ports", () => {
+    const dashboard = findPolicy(
+      synthesize(
+        createAlertDashboardChart,
+        ".test-synth-alert-dashboard-monitoring",
+      ),
+      "alert-dashboard-app-netpol",
+    );
+
+    // NetworkPolicy matches the destination pod port. Prometheus and
+    // Alertmanager sit behind same-pod authenticated gateways, and Grafana's
+    // Service targets its named backend port.
+    expect(
+      allowsEgress(
+        dashboard.spec.egress,
+        "prometheus",
+        PROMETHEUS_GATEWAY_PORT,
+      ),
+    ).toBe(true);
+    expect(
+      allowsEgress(
+        dashboard.spec.egress,
+        "prometheus",
+        ALERTMANAGER_GATEWAY_PORT,
+      ),
+    ).toBe(true);
+    expect(allowsEgress(dashboard.spec.egress, "prometheus", "grafana")).toBe(
+      true,
+    );
+    for (const servicePort of [80, 9090, 9093]) {
+      expect(
+        allowsEgress(dashboard.spec.egress, "prometheus", servicePort),
+      ).toBe(false);
+    }
+  });
+
+  it("reaches Flipt for the digest flag", () => {
     const dashboard = findPolicy(
       synthesize(
         createAlertDashboardChart,
@@ -180,7 +220,6 @@ describe("alert dashboard network paths", () => {
       "flipt-ingress-netpol",
     );
 
-    expect(allowsEgress(dashboard.spec.egress, "prometheus", 9090)).toBe(true);
     expect(allowsEgress(dashboard.spec.egress, "flipt", 8080)).toBe(true);
     expect(allowsIngress(flipt.spec.ingress, "alert-dashboard", 8080)).toBe(
       true,

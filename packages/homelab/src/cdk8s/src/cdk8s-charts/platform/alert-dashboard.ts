@@ -7,6 +7,10 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createAlertDashboardDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/alert-dashboard/index.ts";
 import { FLIPT_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
+import {
+  ALERTMANAGER_GATEWAY_PORT,
+  PROMETHEUS_GATEWAY_PORT,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
 
 const tcp = (port: number) => ({
   port: IntOrString.fromNumber(port),
@@ -89,9 +93,15 @@ export function createAlertDashboardChart(app: App) {
               },
             },
           ],
-          // Grafana (80), Alertmanager (9093), and the ops series presets
-          // proxied from Prometheus (9090).
-          ports: [tcp(80), tcp(9090), tcp(9093)],
+          // Grafana, Alertmanager, and the ops series presets proxied from
+          // Prometheus. NetworkPolicy matches the destination pod port, not
+          // the Service's 80, 9090 or 9093: Grafana's named backend and the
+          // same-pod authenticated gateways in front of the loopback servers.
+          ports: [
+            { port: IntOrString.fromString("grafana"), protocol: "TCP" },
+            tcp(PROMETHEUS_GATEWAY_PORT),
+            tcp(ALERTMANAGER_GATEWAY_PORT),
+          ],
         },
         {
           to: [

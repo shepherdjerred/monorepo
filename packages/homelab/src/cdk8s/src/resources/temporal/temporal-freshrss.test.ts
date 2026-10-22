@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
+import { ALERTMANAGER_GATEWAY_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
 import {
   findTemporalResource,
   synthesizeTemporalResources,
@@ -155,7 +156,14 @@ describe("Temporal FreshRSS integration", () => {
       component: "repo-worker",
     });
     expect(alertmanagerPolicySpec.egress).toContainEqual({
-      ports: [{ port: 9093, protocol: "TCP" }],
+      to: [
+        {
+          namespaceSelector: {
+            matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+          },
+        },
+      ],
+      ports: [{ port: ALERTMANAGER_GATEWAY_PORT, protocol: "TCP" }],
     });
 
     const fliptPolicy = findTemporalResource(

@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
+  ALERTMANAGER_GATEWAY_PORT,
+  PROMETHEUS_GATEWAY_PORT,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
+import {
   findTemporalResource,
   synthesizeTemporalResources,
   type TemporalResource,
@@ -126,7 +130,11 @@ describe("Temporal ops snapshot collector", () => {
         ],
       ]),
     );
-    expect(byPort.get(9093)).toBe("prometheus");
+    // Alertmanager and Prometheus by their gateway pod ports, not Services'.
+    expect(byPort.get(ALERTMANAGER_GATEWAY_PORT)).toBe("prometheus");
+    expect(byPort.get(PROMETHEUS_GATEWAY_PORT)).toBe("prometheus");
+    expect(byPort.has(9090)).toBe(false);
+    expect(byPort.has(9093)).toBe(false);
     expect(byPort.get(3100)).toBe("loki");
     expect(byPort.get(3200)).toBe("tempo");
     expect(byPort.get(7351)).toBe("tracker");
