@@ -20,7 +20,23 @@ targets = [
 version = 2
 # No blanket ignores. An advisory that genuinely does not apply gets its own
 # entry here with a comment naming why, not a wildcard.
-ignore = []
+#
+# A stale exception fails the check instead of silently outliving its reason:
+# once the lockfile no longer contains the advisory, delete its entry.
+unused-ignored-advisory = "deny"
+ignore = [
+  # Added 2026-10-22. `basic-toml` is archived and unmaintained, and no
+  # patched release exists. It reaches this graph only through `uniffi/cli`
+  # (tasknotes-core-ffi's `cli` feature, which builds the Swift generator
+  # binary): uniffi_bindgen -> askama -> askama_derive, whose proc-macro uses
+  # it at compile time to parse uniffi_bindgen's own `askama.toml`. It is
+  # absent from the default-feature graph, so it is never linked into the
+  # shipped staticlib or cdylib. Upstream replaced it with `toml` in
+  # askama-rs/askama#771 (merged 2026-10-20; the latest release, 0.16.1,
+  # predates it). Remove this entry when an askama release with that change
+  # reaches the lockfile.
+  { id = "RUSTSEC-2026-0374", reason = "basic-toml is build-time only via the uniffi Swift generator (cli feature); fixed upstream in askama#771, awaiting a release" },
+]
 
 [licenses]
 version = 2
