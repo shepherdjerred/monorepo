@@ -9,6 +9,8 @@ import {
   parseVersionCatalog,
   type VersionCatalogEntry,
 } from "@shepherdjerred/version-catalog";
+import rawVersionCatalog from "@shepherdjerred/version-catalog/catalog.json";
+import { CATALOG_CORE } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import {
   catalogComponentName,
   componentArtifactsForPublication,
@@ -528,4 +530,23 @@ test("v2 registers one acquisition under every catalog service that acquires the
       { credentials, registry: "v2" },
     ),
   ).rejects.toThrow("has no acquiring catalog service");
+});
+
+test("the version catalog's components are exactly the charts and images catalog services acquire", () => {
+  const components = componentEntries(
+    parseVersionCatalog(rawVersionCatalog),
+  ).map((entry) => catalogComponentName(entry));
+  expect(new Set(components).size).toBe(components.length);
+  const acquired = new Set(
+    CATALOG_CORE.services.flatMap((service) =>
+      service.components
+        .filter(
+          (component) =>
+            component.producer === "acquisition" &&
+            /^(?:chart|image):/u.test(component.name),
+        )
+        .map((component) => component.name),
+    ),
+  );
+  expect([...components].sort()).toEqual([...acquired].sort());
 });

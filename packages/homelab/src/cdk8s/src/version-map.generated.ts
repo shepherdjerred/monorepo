@@ -13,6 +13,7 @@ export const VersionMapSchema = z
     "argo-cd": z.string(),
     "cert-manager": z.string(),
     "intel-device-plugins-operator": z.string(),
+    "intel-device-plugins-gpu": z.string(),
     "node-feature-discovery": z.string(),
     "kube-prometheus-stack": z.string(),
     "prometheus-adapter": z.string(),
