@@ -48,7 +48,7 @@ function platformReferenceIds(build: BuildRow) {
  * Artifacts a build references without producing them: its retained
  * selections, and a platform source's root charts and site archives.
  */
-export async function referencedArtifacts(
+async function referencedArtifacts(
   tx: Transaction | Database,
   build: BuildRow,
 ) {
@@ -66,12 +66,51 @@ export async function referencedArtifacts(
 }
 
 /**
- * A build verifies only after every earlier pipeline's build whose artifact
- * it retains by reference has (B2). A pending one defers this build; any
- * failed reference fails it, naming the artifact, so the next pipeline
- * rebuilds instead of retaining it. Pending builds of this same pipeline share
- * its CI verdict and are not awaited, and a later or foreign pending build is
- * refused, so a build never waits on itself or on a later build.
+ * Whether the qualifier will fail this build: it, or a pending build it
+ * references through any chain of pending builds, has a failed reference.
+ */
+export async function doomed(
+  tx: Transaction | Database,
+  build: BuildRow,
+  seen = new Set<string>(),
+): Promise<boolean> {
+  seen.add(build.id);
+  for (const { build: source } of await referencedArtifacts(tx, build)) {
+    if (source.status === "failed") return true;
+    if (
+      source.status === "pending" &&
+      !seen.has(source.id) &&
+      (await doomed(tx, source, seen))
+    )
+      return true;
+  }
+  return false;
+}
+
+/** Whether `source` precedes `build` in the order key: pipeline, then registration (B4). */
+function precedes(source: BuildRow, build: BuildRow) {
+  if (
+    source.sourceKind !== "ci" ||
+    source.repositoryId !== build.repositoryId ||
+    source.pipelineNumber === null ||
+    build.pipelineNumber === null
+  )
+    return false;
+  return source.pipelineNumber === build.pipelineNumber
+    ? source.registrationSequence !== null &&
+        build.registrationSequence !== null &&
+        source.registrationSequence < build.registrationSequence
+    : source.pipelineNumber < build.pipelineNumber;
+}
+
+/**
+ * A build verifies only after every build whose artifact it references has
+ * (B2), including a platform source's same-pipeline root and site producers.
+ * A pending reference defers this build; any failed reference fails it,
+ * naming the artifact, so the next pipeline rebuilds instead of retaining it.
+ * Only a build that precedes this one in the order key is awaited; any other
+ * pending reference is refused, so a build never waits on itself or on a
+ * later build and waits cannot form a cycle.
  */
 async function requireQualifiedReferences(tx: Transaction, build: BuildRow) {
   let awaiting = false;
@@ -83,18 +122,12 @@ async function requireQualifiedReferences(tx: Transaction, build: BuildRow) {
         "INVALID",
         `Retained artifact ${artifactId} (${component}) belongs to build ${source.id}, which failed qualification`,
       );
-    if (
-      source.sourceKind !== "ci" ||
-      source.repositoryId !== build.repositoryId ||
-      source.pipelineNumber === null ||
-      build.pipelineNumber === null ||
-      source.pipelineNumber > build.pipelineNumber
-    )
+    if (!precedes(source, build))
       throw new DeliveryError(
         "INVALID",
-        `Retained artifact ${artifactId} (${component}) belongs to pending build ${source.id}, which is not an earlier build of this pipeline series`,
+        `Retained artifact ${artifactId} (${component}) belongs to pending build ${source.id}, which does not precede this build in its pipeline series`,
       );
-    if (source.pipelineNumber < build.pipelineNumber) awaiting = true;
+    awaiting = true;
   }
   if (awaiting) throw new AwaitingRetainedBuild();
 }

@@ -199,15 +199,18 @@ that starts before the previous one qualifies still retains that pipeline's
 unchanged images and charts by reference (B2). It returns the component of the
 newest pending or verified CI build in the configured repository that is newer
 than the live automatic set and older than the producer's `beforePipeline`, or
-else the live set's entry. Failed builds, builds that reference a failed build,
-and builds the live set supersedes (R4) are never a base. Registration accepts
-a retained original whose build is still pending only from an earlier main
-pipeline of the same repository. Qualification keeps the retaining build
-pending until that build verifies. A failed reference fails the retaining
-build with a reason naming the artifact, and the next pipeline rebuilds. A
-platform source's root chart and site references gate it the same way. Pending
-builds of one pipeline share its CI verdict and are not awaited, so no build
-waits on itself or on a later build.
+else the live set's entry. Failed builds, builds that reach a failed build
+through their pending references, and builds the live set supersedes (R4) are
+never a base. Registration accepts a retained original whose build is still
+pending only from an earlier main pipeline of the same repository.
+Qualification keeps the retaining build pending until that build verifies. A
+failed reference fails the retaining build with a reason naming the artifact,
+and the next pipeline rebuilds. A platform source's root chart and site
+references gate it the same way, including producers registered before it in
+the same pipeline. Only a build that precedes the waiting build in the order
+key (pipeline, then registration sequence) is awaited; any other pending
+reference fails qualification, so no build waits on itself or on a later
+build.
 
 The image producer writes `delivery-image-digests` for every candidate it
 built, pushed, verified and found changed by runtime fingerprint, and

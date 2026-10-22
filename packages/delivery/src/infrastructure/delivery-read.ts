@@ -23,7 +23,7 @@ import {
   artifactView,
   qualifiedBuildWhere,
 } from "./delivery-data.ts";
-import { referencedArtifacts } from "./delivery-qualification.ts";
+import { doomed } from "./delivery-qualification.ts";
 
 const RETAINABLE_PAGE = 20;
 
@@ -92,8 +92,8 @@ export async function latestQualifiedArtifact(
  * A producer's comparison base (B2): the component of the newest pending or
  * verified CI build of this repository between the live automatic set and the
  * producer's own pipeline, else the live set's entry. A build that failed, or
- * that references an artifact whose build failed, is never a base; builds the
- * live set supersedes (R4) are outside the current lineage. Retaining a
+ * that reaches a failed build through its pending references, is never a base;
+ * builds the live set supersedes (R4) are outside the current lineage. Retaining a
  * pending base defers the retaining build's qualification until it settles.
  */
 export async function latestRetainableArtifact(
@@ -133,15 +133,10 @@ export async function latestRetainableArtifact(
       skip,
       take: RETAINABLE_PAGE,
     });
-    for (const candidate of page) {
-      // The qualifier fails a build with any failed reference, so it is no base.
-      const references = await referencedArtifacts(
-        this.database,
-        candidate.build,
-      );
-      if (references.every((reference) => reference.build.status !== "failed"))
+    // The qualifier will fail a doomed build, so it is no base.
+    for (const candidate of page)
+      if (!(await doomed(this.database, candidate.build)))
         return artifactView(candidate.artifact);
-    }
     if (page.length < RETAINABLE_PAGE) break;
   }
   const row = required(

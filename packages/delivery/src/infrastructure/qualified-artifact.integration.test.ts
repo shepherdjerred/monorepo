@@ -581,7 +581,7 @@ async function platformSource(number: number, rootArtifactId: string) {
   return build;
 }
 
-test("a platform source awaits an earlier pipeline's pending root original but not its own pipeline's", async () => {
+test("a platform source awaits every pending root original that precedes it in the order key", async () => {
   const earlier = await publication(1);
   const source = await platformSource(2, earlier.artifactId);
   expect(
@@ -591,14 +591,76 @@ test("a platform source awaits an earlier pipeline's pending root original but n
   expect(
     await harness.delivery.qualify(source.buildId, "verified", testExecutor),
   ).toEqual({ status: "verified" });
-  // Builds of one pipeline share its CI verdict, so none waits on another.
-  const concurrent = await publication(3);
-  const sibling = await platformSource(3, concurrent.artifactId);
+  // A sibling registered earlier in the same pipeline is awaited too.
+  const sibling = await publication(3);
+  const concurrent = await platformSource(3, sibling.artifactId);
   expect(
-    await harness.delivery.qualify(sibling.buildId, "verified", testExecutor),
+    await harness.delivery.qualify(
+      concurrent.buildId,
+      "verified",
+      testExecutor,
+    ),
+  ).toEqual({ status: "pending" });
+  await harness.delivery.qualify(sibling.buildId, "verified", testExecutor);
+  expect(
+    await harness.delivery.qualify(
+      concurrent.buildId,
+      "verified",
+      testExecutor,
+    ),
   ).toEqual({ status: "verified" });
-  expect(await buildRow(concurrent.buildId)).toMatchObject({
-    status: "pending",
+  // One registered after the source does not precede it: no wait, no cycle.
+  const premature = await platformSource(4, "image/1/4");
+  const later = await publication(4);
+  expect(
+    await harness.delivery.qualify(premature.buildId, "verified", testExecutor),
+  ).toEqual({ status: "failed" });
+  expect(await buildRow(later.buildId)).toMatchObject({ status: "pending" });
+});
+
+test("a build that reaches a failed build through pending references is no retainable base", async () => {
+  const site = {
+    serviceId: query.serviceId,
+    component: "site:scout-frontend-beta",
+    kind: "archive" as const,
+  };
+  const archive = (number: number) => ({
+    id: `site/${String(number)}`,
+    component: site.component,
+    kind: "archive" as const,
+    uri: `s3://delivery-artifacts/sites/scout-frontend-beta/${"b".repeat(64)}.tar`,
+    version: `build-${String(number)}`,
+    digest: `sha256:${"b".repeat(64)}`,
+  });
+  await publication(1, "verified");
+  const failing = await publication(2);
+  const publish = (number: number, input: object) =>
+    harness.delivery.publish(
+      {
+        requestId: `chain/${String(number)}`,
+        serviceId: query.serviceId,
+        sourceRevision: String(number).padStart(40, "0"),
+        ciUrl: `https://woodpecker.sjer.red/repos/1/pipeline/${String(number)}`,
+        verifiedAt: new Date().toISOString(),
+        artifacts: [],
+        ...input,
+      },
+      testPublisher,
+      { repositoryId: 1, pipelineNumber: number },
+    );
+  await publish(3, {
+    artifacts: [archive(3)],
+    retainedArtifactIds: [failing.artifactId],
+  });
+  await publish(4, { retainedArtifactIds: ["site/3"] });
+  const retainableSite = (beforePipeline: number) =>
+    client().latestRetainableArtifact({ ...site, beforePipeline });
+  await expect(retainableSite(5)).resolves.toMatchObject({ id: "site/3" });
+  await harness.delivery.qualify(failing.buildId, "failed", testExecutor);
+  // Build 4 only reaches failed build 2 through pending build 3.
+  await expect(retainableSite(5)).rejects.toMatchObject({
+    status: 404,
+    code: "NOT_FOUND",
   });
 });
 
