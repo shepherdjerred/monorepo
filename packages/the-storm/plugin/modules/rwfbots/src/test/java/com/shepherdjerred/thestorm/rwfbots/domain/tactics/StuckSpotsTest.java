@@ -570,6 +570,9 @@ final class StuckSpotsTest {
       assertThat(thought.decision().waypoints()).as("it holds instead of bobbing").isEmpty();
       state = thought.state();
     }
+    // Review finding: a bot burning in the fire beside the pocket must step off it, not hold.
+    var burning = situation(nav, inside.withLastHurtTick(198), Optional.of(away), 200);
+    assertThat(RecoverySteps.trapped(burning, context)).isFalse();
   }
 
   @Test

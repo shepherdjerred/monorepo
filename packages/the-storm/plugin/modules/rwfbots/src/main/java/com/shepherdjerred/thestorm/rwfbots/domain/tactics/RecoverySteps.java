@@ -26,6 +26,9 @@ final class RecoverySteps {
   /** The most a bank may rise above the water a swimmer climbs out of, in blocks. */
   static final double BANK_RISE = 1.0;
 
+  /** How recently a hurt body was hurt, in ticks, for it to keep stepping rather than hold. */
+  private static final long HURTING = 20;
+
   /** The highest rise a walking body steps up without jumping, in blocks. */
   private static final double STEP = 0.6;
 
@@ -151,12 +154,16 @@ final class RecoverySteps {
 
   /**
    * Whether the bot is stranded on dry ground with no way out: holding is all that is left. A
-   * swimmer is never told to hold, as it would sink and drown.
+   * swimmer is never told to hold, as it would sink and drown, nor a body still being hurt, which
+   * may stand in the fire beside its pocket and steps off it instead.
    */
   static boolean trapped(Situation situation, TacticsContext context) {
     var graph = context.nav().graph();
-    return stranded(situation, context)
-        && !graph.water().contains(BlockPos.of(situation.self().pos()))
+    var self = situation.self();
+    var hurting = self.lastHurtTick() >= 0 && situation.now() - self.lastHurtTick() <= HURTING;
+    return !hurting
+        && stranded(situation, context)
+        && !graph.water().contains(BlockPos.of(self.pos()))
         && escape(situation, context).isEmpty();
   }
 
