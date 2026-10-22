@@ -2166,11 +2166,31 @@
         {
           "name": "image:ci-playwright",
           "producer": "first-party"
-        },
+        }
+      ]
+    },
+    {
+      "id": "macos-cross-compiler",
+      "title": "macOS cross-compiler images",
+      "package": "macos-cross-compiler",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "ci",
+      "components": [
         {
           "name": "image:macos-cross-compiler",
           "producer": "first-party"
-        },
+        }
+      ]
+    },
+    {
+      "id": "windows-cross-compiler",
+      "title": "Windows cross-compiler images",
+      "package": "windows-cross-compiler",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "ci",
+      "components": [
         {
           "name": "image:windows-cross-compiler",
           "producer": "first-party"
