@@ -3,6 +3,7 @@ import {
   SettleRestoreHoldSchema,
   ColdStartSnapshotSchema,
   renderApplication,
+  restoreRequest,
 } from "@shepherdjerred/delivery/model-contract";
 import type { DeliveryClient } from "@shepherdjerred/delivery/client";
 import { createS3Client, getObjectText } from "#lib/s3/client.ts";
@@ -21,8 +22,13 @@ import {
 export const COLD_START_PROFILE = "r2";
 const location = `s3://${COLD_START_SNAPSHOT.bucket}/${COLD_START_SNAPSHOT.key}`;
 
-const readR2: ObjectReader = (object) =>
-  getObjectText(createS3Client(COLD_START_PROFILE, object.endpoint), object);
+const readR2: ObjectReader = async (object) => {
+  const { text, metadata } = await getObjectText(
+    createS3Client(COLD_START_PROFILE, object.endpoint),
+    object,
+  );
+  return { text, fingerprint: metadata["fingerprint"] };
+};
 
 export function validateSnapshotCommand(
   positionals: string[],
@@ -60,8 +66,10 @@ function settlement(options: ModelOptions) {
 
 /**
  * `snapshot --output` reads the newest cold-start snapshot from R2 directly,
- * so it works while Delivery is down; `snapshot reconcile` asks Delivery to
- * compare record, snapshot and live target and hold every mismatch.
+ * so it works while Delivery is down. `snapshot reconcile` reads it and its
+ * immutable copy with the operator's own R2 credential, requires them
+ * identical with the writer's fingerprint, and asks Delivery to compare
+ * record, snapshot and live target and hold every mismatch.
  */
 export async function runSnapshotCommand(
   client: DeliveryClient,
@@ -69,10 +77,12 @@ export async function runSnapshotCommand(
   options: ModelOptions,
 ): ModelResult {
   validateSnapshotCommand(positionals, options);
+  const read = options.readObject ?? readR2;
   if (positionals[0] === "reconcile") {
-    const result = await client.reconcileAfterRestore({
-      requestId: requestId(options),
-    });
+    const request = await restoreRequest(requestId(options), (key) =>
+      read({ ...COLD_START_SNAPSHOT, key }),
+    );
+    const result = await client.reconcileAfterRestore(request);
     const held = result.environments.some((entry) => entry.status === "held");
     return { result, exitCode: held ? 1 : 0 };
   }
@@ -83,8 +93,8 @@ export async function runSnapshotCommand(
     );
     return { result, exitCode: 0 };
   }
-  const read = options.readObject ?? readR2;
-  const raw: unknown = JSON.parse(await read(COLD_START_SNAPSHOT));
+  const latest = await read(COLD_START_SNAPSHOT);
+  const raw: unknown = JSON.parse(latest.text);
   const snapshot = ColdStartSnapshotSchema.parse(raw);
   const output = required(options.output);
   await Bun.write(output, `${JSON.stringify(snapshot, null, 2)}\n`);

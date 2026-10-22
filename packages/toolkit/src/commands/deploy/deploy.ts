@@ -71,6 +71,7 @@ status [DEPLOYMENT_ID]                 Inspect one deployment or all environment
 wait <DEPLOYMENT_ID>                   Foreground wait for completion
 approve|reject <DEPLOYMENT_ID>         Human decision; --reason required, --override for an override approval
 approve-plan <DEPLOYMENT_ID> --reason <TEXT>  Approve the exact saved plan a tofu approve step waits on
+reject-plan <DEPLOYMENT_ID> --reason <TEXT>  Reject that saved plan; the deployment ends failed without applying
 cancel <DEPLOYMENT_ID>                 Request cancellation at a safe boundary
 retry <DEPLOYMENT_ID>                  Create a new attempt
 recover <DEPLOYMENT_ID> --expected-generation <N> --reason <TEXT> [--step <S>] [--operation-id <ID>] --machine  Open a recovery intent; --operation-id settles an ordinary Argo operation by readback
@@ -87,6 +88,7 @@ Options:
   --override                           start: ask for an override approval of a non-eligible deploy;
                                        approve/reject: decide that override approval
   --step <NAME>                        Sub-step a recovery intent names
+  --operation-id <UUID>                recover: the exact Argo operation inspected; settles the intent by readback
   --recipe <ID>                        Recipe revision a rebind moves to
   --configuration <ID>                 Configuration revision a rebind moves to
   --stage <NAME>                       Operator-run stage an attestation settles
@@ -141,6 +143,7 @@ const COMMAND_ARITY: Record<string, number | readonly number[]> = {
   catalog: 1,
   attest: 1,
   "approve-plan": 1,
+  "reject-plan": 1,
   snapshot: [0, 1, 2],
   "render-application": 1,
   recovery: 1,

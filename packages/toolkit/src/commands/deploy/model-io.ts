@@ -1,12 +1,18 @@
-import { CatalogDocumentSchema } from "@shepherdjerred/delivery/model-contract";
+import {
+  CatalogDocumentSchema,
+  type StoredSnapshotObject,
+} from "@shepherdjerred/delivery/model-contract";
 import { required, type DeployOptions } from "./common.ts";
 
-/** Reads one object of the cold-start store; injected by tests. */
+/**
+ * Reads one object of the cold-start store with the writer's `fingerprint`
+ * metadata; injected by tests.
+ */
 export type ObjectReader = (location: {
   endpoint: string;
   bucket: string;
   key: string;
-}) => Promise<string>;
+}) => Promise<StoredSnapshotObject>;
 
 export type ModelOptions = DeployOptions & {
   requestNotice?: (id: string) => void;

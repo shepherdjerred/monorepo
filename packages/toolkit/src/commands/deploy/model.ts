@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { IdentifierSchema } from "@shepherdjerred/delivery/contract";
+import {
+  IdentifierSchema,
+  RecoverDeploymentSchema,
+} from "@shepherdjerred/delivery/contract";
 import {
   AttestationRequestSchema,
   RecoveryIntentRequestSchema,
@@ -34,11 +37,22 @@ export const MODEL_COMMANDS = [
   "catalog",
   "attest",
   "approve-plan",
+  "reject-plan",
   "recover",
   "recovery",
   "snapshot",
   "render-application",
 ] as const;
+
+/** The inspected Argo operation that settles an `argo` intent (4.15), when named. */
+function settlement(options: DeployOptions) {
+  return options["operation-id"] === undefined
+    ? null
+    : RecoverDeploymentSchema.parse({
+        operationId: options["operation-id"],
+        reason: options.reason,
+      });
+}
 
 function recoveryRequest(options: DeployOptions, id: string) {
   return RecoveryIntentRequestSchema.parse({
@@ -73,6 +87,7 @@ function validateAdmin(
       if (options["expected-generation"] === undefined)
         throw new Error("--expected-generation is required");
       recoveryRequest(options, options["request-id"] ?? "validation");
+      settlement(options);
       return;
     }
   }
@@ -108,10 +123,11 @@ export function validateModelCommand(
       IdentifierSchema.parse(options.stage);
       return;
     }
-    case "approve-plan": {
+    case "approve-plan":
+    case "reject-plan": {
       if (options.machine)
         throw new Error(
-          "Plan approval requires trusted human identity; omit --machine",
+          "A plan decision requires trusted human identity; omit --machine",
         );
       if (options.reason === undefined || options.reason.trim() === "")
         throw new Error("--reason is required");
@@ -262,10 +278,16 @@ async function administer(
       return { result, exitCode: result.refused.length === 0 ? 0 : 1 };
     }
     case "recover": {
-      const result = await client.createRecoveryIntent(
+      const intent = await client.createRecoveryIntent(
         target,
         recoveryRequest(options, requestId(options)),
       );
+      // Readback of the inspected operation settles an ordinary Argo intent.
+      const settle = settlement(options);
+      const result =
+        settle === null
+          ? intent
+          : await client.settleRecoveryIntent(intent.id, settle);
       return { result, exitCode: 0 };
     }
     default: {
@@ -282,19 +304,22 @@ async function administer(
 }
 
 /**
- * Approve the exact saved plan a model `tofu` recipe's approve step waits on
- * (section 5): the digest comes from the deployment's own saved plan, so an
- * approval never names a plan the deployment did not produce.
+ * Decide the exact saved plan a model `tofu` recipe's approve step waits on
+ * (section 5, 4.13): the digest comes from the deployment's own saved plan,
+ * so a decision never names a plan the deployment did not produce. A
+ * rejection discards the plan and ends the deployment failed (H3).
  */
-async function approvePlan(
+async function decidePlan(
   client: DeliveryClient,
   deploymentId: string,
   options: ModelOptions,
+  decision: "approved" | "rejected",
 ): ModelResult {
   const { savedPlan } = await client.deployment(deploymentId);
   if (savedPlan === null)
-    throw new Error(`${deploymentId} has no saved plan to approve`);
+    throw new Error(`${deploymentId} has no saved plan to decide`);
   const result = await client.approvePlan(deploymentId, {
+    decision,
     planDigest: savedPlan.planDigest,
     reason: required(options.reason).trim(),
   });
@@ -334,7 +359,10 @@ export async function runModelCommand(
       return { result: await client.recoveryIntent(target), exitCode: 0 };
     }
     case "approve-plan": {
-      return approvePlan(client, target, options);
+      return decidePlan(client, target, options, "approved");
+    }
+    case "reject-plan": {
+      return decidePlan(client, target, options, "rejected");
     }
     case "render-application": {
       return runRenderCommand(target, options);

@@ -193,7 +193,8 @@ toolkit deploy retire <SERVICE_ID> --reason "Replaced by Arcade" --machine
 toolkit deploy catalog reconcile --file <CATALOG_DOCUMENT_JSON> --machine
 toolkit deploy attest <DEPLOYMENT_ID> --stage <STAGE> --evidence <EVIDENCE_JSON> --machine
 toolkit deploy approve-plan <DEPLOYMENT_ID> --reason "Reviewed the saved plan's changes"
-toolkit deploy recover <DEPLOYMENT_ID> --expected-generation <N> --reason "Inspect the target and settle ownership" [--step <STEP>] --machine
+toolkit deploy reject-plan <DEPLOYMENT_ID> --reason "Why the saved plan must not apply"
+toolkit deploy recover <DEPLOYMENT_ID> --expected-generation <N> --reason "Inspect the target and settle ownership" [--step <STEP>] [--operation-id <ARGO_OPERATION_UUID>] --machine
 toolkit deploy recovery <INTENT_ID>
 toolkit deploy snapshot --output <FILE>
 toolkit deploy snapshot reconcile --machine
@@ -221,13 +222,17 @@ latest observation with its firing alarms.
 catalog document `--file` names, validates it against the catalog contract
 before sending, and exits 1 when the server refuses any entry. `recover` creates the one recovery intent of a
 `recovery-required` deployment, bound to the expected binding generation and,
-for a compound target, the named sub-step; `recovery` reads an intent and its
-inspection evidence. `approve-plan` approves the exact unexpired saved plan
-a model `tofu` recipe's approve step waits on: it reads the digest from the
-deployment's saved plan and requires a human identity. `attest` records operator-attested evidence for one stage
-of an `operator-run` deployment; the evidence file is a JSON array of evidence
-entries, and the command uses the execute-scoped `DELIVERY_EXECUTOR_TOKEN`
-rather than the admin credential.
+for a compound target, the named sub-step. With `--operation-id`, it then
+settles an ordinary Argo intent by independent readback of that exact
+inspected operation. `recovery` reads an intent and its inspection evidence.
+`approve-plan` and `reject-plan` record the one decision on the exact saved
+plan a model `tofu` recipe's approve step waits on: each reads the digest from
+the deployment's saved plan and requires a human identity. A rejection
+discards the plan and ends the deployment failed without applying. `attest`
+records operator-attested evidence for one stage of an `operator-run`
+deployment; the evidence file is a JSON array of evidence entries, and the
+command uses the attestor credential `DELIVERY_ATTEST_TOKEN`, which the
+executor never holds.
 
 The cold-start verbs work while Delivery is down. `snapshot --output` reads the
 newest cold-start snapshot from `s3://homelab/delivery-cold-start/latest.json`
@@ -237,9 +242,12 @@ prints the ArgoCD Application for one environment from its recipe in the
 catalog document `--file` names and the snapshot's accepted selection, with the
 one sync a cold start needs, ready for `kubectl apply`; it uses Delivery's one
 Application renderer. `snapshot reconcile` runs reconcile-after-restore once
-Delivery is back: it compares the record, the snapshot and the live target for
-every environment, holds automatic deployments on each mismatch, and exits 1
-while any environment is held. `snapshot accept` settles one hold by accepting
+Delivery is back: it reads `latest.json` and its immutable copy with the `r2`
+profile, requires them identical with the writer's fingerprint, and sends
+that snapshot, because Delivery holds no R2 credential. Delivery compares the
+record, the snapshot and the live target for every environment, holds
+automatic deployments on each mismatch, and the command exits 1 while any
+environment is held. `snapshot accept` settles one hold by accepting
 the live state with a reason and the evidence inspected.
 
 Bootstrap uses reviewed JSON files and an admin machine credential:

@@ -46,15 +46,21 @@ export async function putObject(
   );
 }
 
-/** Read a single object as text. A missing body is an error, never an empty object. */
+/**
+ * Read a single object as text with its user metadata. A missing body is an
+ * error, never an empty object.
+ */
 export async function getObjectText(
   client: S3Client,
   params: { bucket: string; key: string },
-): Promise<string> {
+): Promise<{ text: string; metadata: Record<string, string> }> {
   const response = await client.send(
     new GetObjectCommand({ Bucket: params.bucket, Key: params.key }),
   );
   if (response.Body === undefined)
     throw new Error(`s3://${params.bucket}/${params.key} returned no body`);
-  return response.Body.transformToString();
+  return {
+    text: await response.Body.transformToString(),
+    metadata: response.Metadata ?? {},
+  };
 }

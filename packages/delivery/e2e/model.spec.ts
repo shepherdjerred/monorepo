@@ -223,7 +223,7 @@ async function waitingStack(page: Page) {
   return deployment.id;
 }
 
-test("a tofu approve step shows its saved plan and approves it by digest", async ({
+test("a tofu approve step shows its saved plan and decides it by digest", async ({
   page,
 }) => {
   const id = await waitingStack(page);
@@ -237,17 +237,25 @@ test("a tofu approve step shows its saved plan and approves it by digest", async
   await expect(
     panel.getByRole("button", { name: "Reject plan" }),
   ).toBeEnabled();
-  const { promise, resolve } = Promise.withResolvers<unknown>();
+  const decisions: unknown[] = [];
   await page.route("**/api/v1/deployments/*/plan-approval", async (route) => {
-    resolve(route.request().postDataJSON());
+    decisions.push(route.request().postDataJSON());
     await route.abort("failed");
   });
   await panel.getByLabel("Reason").fill("Two DNS records and one tunnel route");
   await panel.getByRole("button", { name: "Approve plan" }).click();
-  expect(await promise).toEqual({
-    planDigest: `sha256:${"7".repeat(64)}`,
-    reason: "Two DNS records and one tunnel route",
-  });
+  await expect.poll(() => decisions.length).toBe(1);
+  // A rejection is the same one decision on the same digest (4.13, H3).
+  await panel.getByRole("button", { name: "Reject plan" }).click();
+  await page.getByRole("button", { name: "Reject and discard plan" }).click();
+  await expect.poll(() => decisions.length).toBe(2);
+  expect(decisions).toEqual(
+    (["approved", "rejected"] as const).map((decision) => ({
+      decision,
+      planDigest: `sha256:${"7".repeat(64)}`,
+      reason: "Two DNS records and one tunnel route",
+    })),
+  );
   await expectNoHorizontalOverflow(page);
 });
 

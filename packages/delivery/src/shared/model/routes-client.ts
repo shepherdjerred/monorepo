@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { StageSchema } from "#shared/contract.ts";
+import {
+  DeploymentSchema,
+  RecoverDeploymentSchema,
+  StageSchema,
+} from "#shared/contract.ts";
 import {
   CreateDeploymentSchema,
   CreateDeploymentV2Schema,
@@ -128,6 +132,16 @@ export function modelRoutes(request: ReturnType<typeof createRequester>) {
       ),
     recoveryIntent: (id: string) =>
       request(`/recovery-intents/${segment(id)}`, RecoveryIntentV2Schema),
+    /** Admin: settle a pending `argo` intent by independent readback of the inspected operation. */
+    settleRecoveryIntent: (
+      id: string,
+      input: z.input<typeof RecoverDeploymentSchema>,
+    ) =>
+      request(
+        `/recovery-intents/${segment(id)}/settle`,
+        DeploymentSchema,
+        checked(RecoverDeploymentSchema, input),
+      ),
     /** Operator: attested evidence for one stage of an `operator-run` deployment. */
     attest: (deploymentId: string, input: AttestationRequest) =>
       request(

@@ -79,6 +79,24 @@ const detail = DeploymentDetailSchema.parse({
   evidence: [],
 });
 
+/** A client that records each request and answers from `respond`. */
+function recordingClient(respond: (url: string) => unknown) {
+  const requests: { url: string; body: unknown; headers: Headers }[] = [];
+  const client = createDeliveryClient({
+    baseUrl: "https://delivery.invalid",
+    fetch: async (input, init) => {
+      const url = input instanceof Request ? input.url : input.toString();
+      requests.push({
+        url,
+        body: typeof init?.body === "string" ? JSON.parse(init.body) : null,
+        headers: new Headers(init?.headers),
+      });
+      return Response.json(respond(url));
+    },
+  });
+  return { client, requests };
+}
+
 /** A thunk validating `deploy recover deployment:1` with these arguments. */
 function recover(args: string[]) {
   return () =>
@@ -118,23 +136,11 @@ describe("delivery CLI", () => {
     expect(() => parseDeployArgs(["--token", "secret"])).toThrow();
   });
   test("start forwards exact target, revision, generation and idempotency key", async () => {
-    const requests: { url: string; body: unknown; headers: Headers }[] = [];
-    const client = createDeliveryClient({
-      baseUrl: "https://delivery.invalid",
-      fetch: async (input, init) => {
-        const url = input instanceof Request ? input.url : input.toString();
-        requests.push({
-          url,
-          body: typeof init?.body === "string" ? JSON.parse(init.body) : null,
-          headers: new Headers(init?.headers),
-        });
-        return Response.json(
-          url.endsWith("selection")
-            ? { ...fixtures.selections.beta, bindingGeneration: 4 }
-            : deployment,
-        );
-      },
-    });
+    const { client, requests } = recordingClient((url) =>
+      url.endsWith("selection")
+        ? { ...fixtures.selections.beta, bindingGeneration: 4 }
+        : deployment,
+    );
     const { values, positionals } = parseDeployArgs([
       "arcade/prod",
       "arcade:1",
@@ -188,6 +194,9 @@ describe("delivery CLI", () => {
     });
     await expect(client.identity()).rejects.toThrow("Insufficient scope");
   });
+});
+
+describe("deploy recover (4.15)", () => {
   test("a recovery intent names the generation and reason before credential resolution", () => {
     expect(recover([])).toThrow("--machine");
     expect(recover(["--machine"])).toThrow("--expected-generation");
@@ -200,7 +209,47 @@ describe("delivery CLI", () => {
         "short",
       ]),
     ).toThrow();
-    expect(() => parseDeployArgs(["--operation-id", "x"])).toThrow();
+    expect(
+      recover([
+        "--machine",
+        "--expected-generation",
+        "11",
+        "--reason",
+        "Inspected exact operation directly while Temporal was unavailable",
+        "--operation-id",
+        "not-a-uuid",
+      ]),
+    ).toThrow();
+  });
+  test("recover --operation-id opens the intent, then settles it with the exact inspected operation", async () => {
+    const operationId = "22222222-2222-4222-8222-222222222222";
+    const { client, requests } = recordingClient((url) =>
+      url.endsWith("/settle") ? deployment : fixtures.recoveryIntents.pending,
+    );
+    const { values, positionals } = parseDeployArgs([
+      deployment.id,
+      "--machine",
+      "--expected-generation",
+      "11",
+      "--operation-id",
+      operationId,
+      "--request-id",
+      "recovery/1",
+      "--reason",
+      "Inspected exact operation directly while Temporal was unavailable",
+    ]);
+    const result = await runDeployCommand(
+      client,
+      "recover",
+      positionals,
+      values,
+    );
+    expect(result).toEqual({ result: deployment, exitCode: 0 });
+    expect(requests.map((request) => request.url)).toEqual([
+      `https://delivery.invalid/api/v1/deployments/${encodeURIComponent(deployment.id)}/recovery-intents`,
+      `https://delivery.invalid/api/v1/recovery-intents/${encodeURIComponent(fixtures.recoveryIntents.pending.id)}/settle`,
+    ]);
+    expect(requests[1]?.body).toEqual({ operationId, reason: values.reason });
   });
   test("recover creates one recovery intent for the named sub-step", async () => {
     let payload: unknown;

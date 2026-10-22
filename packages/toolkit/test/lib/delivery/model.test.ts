@@ -11,6 +11,21 @@ import {
 import { parseDeployArgs } from "#commands/deploy/common.ts";
 import { deployMachineCredential } from "#commands/deploy/forum.ts";
 import type { ObjectReader } from "#commands/deploy/model-io.ts";
+import {
+  COLD_START_SNAPSHOT,
+  coldStartArchiveKey,
+} from "@shepherdjerred/delivery/model-contract";
+
+const snapshotWriterFingerprint = `sha256:${"c".repeat(64)}`;
+/** `latest.json` and its immutable copy, as the writer left them in R2. */
+const storedSnapshot: ObjectReader = (location) =>
+  location.key === COLD_START_SNAPSHOT.key ||
+  location.key === coldStartArchiveKey(fixtures.coldStartSnapshot)
+    ? Promise.resolve({
+        text: JSON.stringify(fixtures.coldStartSnapshot),
+        fingerprint: snapshotWriterFingerprint,
+      })
+    : Promise.reject(new Error(`No object ${location.key}`));
 
 type Sent = { method: string; path: string; body: unknown };
 
@@ -80,6 +95,12 @@ describe("model verbs refuse incomplete requests before credentials", () => {
       "trusted human identity",
     ],
     ["approve-plan", [], ["--reason", "Reviewed"], "Invalid operands"],
+    [
+      "reject-plan",
+      ["tofu-cloudflare-prod-7"],
+      ["--machine", "--reason", "Unsafe"],
+      "trusted human identity",
+    ],
     ["retire", ["webring-legacy"], ["--reason", "Replaced"], "--machine"],
     ["retire", ["webring-legacy"], ["--machine"], "--reason"],
     ["catalog", ["apply"], ["--machine"], "deploy catalog reconcile"],
@@ -129,9 +150,9 @@ describe("model verbs refuse incomplete requests before credentials", () => {
     ).toThrow(message);
   });
 
-  test("attestation uses the execute-scoped credential; admin verbs use the admin one", () => {
+  test("attestation uses the attestor credential the executor never holds; admin verbs use the admin one", () => {
     expect(deployMachineCredential("attest", ["deployment-1"])).toBe(
-      "DELIVERY_EXECUTOR_TOKEN",
+      "DELIVERY_ATTEST_TOKEN",
     );
     for (const command of ["retire", "catalog", "snapshot"])
       expect(deployMachineCredential(command, [])).toBe("DELIVERY_API_TOKEN");
@@ -295,14 +316,20 @@ describe("admin and operator verbs", () => {
     const held = delivery({
       "POST /reconcile-after-restore": fixtures.restoreComparison,
     });
-    const mismatch = await run(held.client, "snapshot", [
-      "reconcile",
-      "--machine",
-      "--request-id",
-      "r/1",
-    ]);
+    const mismatch = await run(
+      held.client,
+      "snapshot",
+      ["reconcile", "--machine", "--request-id", "r/1"],
+      storedSnapshot,
+    );
     expect(mismatch.exitCode).toBe(1);
-    expect(held.sent[0]?.body).toEqual({ requestId: "r/1" });
+    // The operator's own R2 read supplies the snapshot (section 6).
+    expect(held.sent[0]?.body).toEqual({
+      requestId: "r/1",
+      snapshot: fixtures.coldStartSnapshot,
+      fingerprint: snapshotWriterFingerprint,
+      archiveKey: coldStartArchiveKey(fixtures.coldStartSnapshot),
+    });
     const matching = delivery({
       "POST /reconcile-after-restore": {
         environments: fixtures.restoreComparison.environments.filter(
@@ -310,11 +337,28 @@ describe("admin and operator verbs", () => {
         ),
       },
     });
-    const match = await run(matching.client, "snapshot", [
-      "reconcile",
-      "--machine",
-    ]);
+    const match = await run(
+      matching.client,
+      "snapshot",
+      ["reconcile", "--machine"],
+      storedSnapshot,
+    );
     expect(match.exitCode).toBe(0);
+  });
+
+  test("snapshot reconcile refuses a snapshot whose immutable copy differs, before sending", async () => {
+    const { client, sent } = delivery({});
+    await expect(
+      run(client, "snapshot", ["reconcile", "--machine"], (location) =>
+        location.key === COLD_START_SNAPSHOT.key
+          ? storedSnapshot(location)
+          : Promise.resolve({
+              text: "{}",
+              fingerprint: snapshotWriterFingerprint,
+            }),
+      ),
+    ).rejects.toThrow("differs from its immutable copy");
+    expect(sent).toEqual([]);
   });
 });
 
@@ -407,9 +451,28 @@ describe("plan approval", () => {
       method: "POST",
       path: "/deployments/tofu-cloudflare-prod-7/plan-approval",
       body: {
+        decision: "approved",
         planDigest: fixtures.savedPlan.planDigest,
         reason: "Two DNS records and one tunnel route, reviewed",
       },
+    });
+  });
+
+  test("reject-plan rejects that same saved plan by its digest", async () => {
+    const { client, sent } = delivery({
+      "GET /deployments/tofu-cloudflare-prod-7": fixtures.planWaiting,
+      "POST /deployments/tofu-cloudflare-prod-7/plan-approval":
+        fixtures.attestedStage,
+    });
+    await run(client, "reject-plan", [
+      "tofu-cloudflare-prod-7",
+      "--reason",
+      "Deletes the apex record",
+    ]);
+    expect(sent.at(-1)?.body).toEqual({
+      decision: "rejected",
+      planDigest: fixtures.savedPlan.planDigest,
+      reason: "Deletes the apex record",
     });
   });
 
@@ -419,7 +482,7 @@ describe("plan approval", () => {
     });
     await expect(
       run(client, "approve-plan", ["scout-prod-43", "--reason", "Reviewed"]),
-    ).rejects.toThrow("has no saved plan to approve");
+    ).rejects.toThrow("has no saved plan to decide");
     expect(sent.every((request) => request.method === "GET")).toBe(true);
   });
 });
@@ -509,7 +572,10 @@ describe("cold start", () => {
       ["--output", output],
       (location) => {
         read.push(`${location.bucket}/${location.key}`);
-        return Promise.resolve(JSON.stringify(fixtures.coldStartSnapshot));
+        return Promise.resolve({
+          text: JSON.stringify(fixtures.coldStartSnapshot),
+          fingerprint: undefined,
+        });
       },
     );
     expect(read).toEqual(["homelab/delivery-cold-start/latest.json"]);
@@ -528,7 +594,11 @@ describe("cold start", () => {
         client,
         "snapshot",
         ["--output", path.join(directory, "broken.json")],
-        () => Promise.resolve(JSON.stringify({ environments: [] })),
+        () =>
+          Promise.resolve({
+            text: JSON.stringify({ environments: [] }),
+            fingerprint: undefined,
+          }),
       ),
     ).rejects.toThrow();
   });

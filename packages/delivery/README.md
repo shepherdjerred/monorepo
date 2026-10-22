@@ -529,8 +529,10 @@ missing projection pauses settlement and keeps ownership.
 | `delivery-forum-baseline-reader`   | get, list, watch Pods, claims, Deployments, ReplicaSets and Jobs in the Forum namespaces                |
 | `delivery-minecraft-report-reader` | a `delivery-tsmc-controller`-audience token; the controller reviews it and allows only its report `get` |
 
-Use `toolkit deploy recover <DEPLOYMENT_ID> --operation-id <ARGO_OPERATION_UUID>
---reason <EXPLANATION> --machine` after inspecting the recorded operation directly.
+Use `toolkit deploy recover <DEPLOYMENT_ID> --expected-generation <N>
+--operation-id <ARGO_OPERATION_UUID> --reason <EXPLANATION> --machine` after
+inspecting the recorded operation directly; it opens the recovery intent and
+settles it by readback.
 An active operation, mismatched identity, missing read credential, or specialized
 target keeps ownership locked. If no matching finished operation exists, use the
 [guarded Delivery recovery procedure](../docs/wiki/src/content/docs/how-to/cut-a-homelab-release.md#recover-a-delivery-operation).

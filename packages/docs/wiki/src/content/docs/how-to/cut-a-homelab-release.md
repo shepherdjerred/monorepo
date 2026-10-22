@@ -476,7 +476,7 @@ recovery retains its separate native proof. The generic helper refuses these tar
 6. Release ownership through independent observation:
 
    ```bash
-   toolkit deploy recover DEPLOYMENT_ID --operation-id ARGO_OPERATION_UUID --reason "Inspected and settled the exact frozen release with the prior executor stopped" --machine
+   toolkit deploy recover DEPLOYMENT_ID --expected-generation GENERATION --operation-id ARGO_OPERATION_UUID --reason "Inspected and settled the exact frozen release with the prior executor stopped" --machine
    ```
 
    This remains available while writes are paused and Temporal is unavailable.

@@ -14,6 +14,7 @@ export function parseDeployArgs(args: string[]) {
       "expected-generation": { type: "string" },
       "expected-worker-generation": { type: "string" },
       reason: { type: "string" },
+      "operation-id": { type: "string" },
       "plan-fingerprint": { type: "string" },
       decision: { type: "string" },
       timeout: { type: "string" },

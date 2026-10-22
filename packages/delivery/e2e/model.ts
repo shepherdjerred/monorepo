@@ -1,6 +1,10 @@
 import type { Database } from "#infrastructure/database.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
-import { coldStartSnapshot } from "#infrastructure/cold-start/snapshot.ts";
+import {
+  coldStartSnapshot,
+  snapshotFingerprint,
+} from "#infrastructure/cold-start/snapshot.ts";
+import { coldStartArchiveKey } from "#shared/model/cold-start-contract.ts";
 import { catalogDocument } from "#testing/catalog-fixture.ts";
 import { publishCiRunner } from "#testing/model-fixture.ts";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
@@ -302,10 +306,16 @@ export async function seedModelBrowser(delivery: Delivery, database: Database) {
   await execute(delivery, rebind);
   await delivery.observeMonitor(rebind.id, observation(120), testExecutor);
   await release(delivery, database, third, { requests: 40, critical: true });
+  // The operator supplies the snapshot it read from R2 (section 6).
   await delivery.reconcileAfterRestore(
-    { requestId: "model/restore" },
+    {
+      requestId: "model/restore",
+      snapshot: stale.snapshot,
+      fingerprint: snapshotFingerprint(stale.snapshot),
+      archiveKey: coldStartArchiveKey(stale.snapshot),
+    },
     testOperator,
-    { readSnapshot: () => Promise.resolve(stale.snapshot) },
+    {},
   );
   await delivery.reconcileCatalog(document(base, 3), testOperator);
   // Never accepted in beta, so only an override approval admits it (H4).
