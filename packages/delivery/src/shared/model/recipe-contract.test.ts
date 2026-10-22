@@ -263,6 +263,36 @@ describe("recipeFromPipeline", () => {
     });
   });
 
+  test("a verified-restore upgrade preserves before the sync; a restart reads back after it", async () => {
+    const tsmc = await registered("specialized/minecraft-tsmc/pipeline.json");
+    if (tsmc.kind !== "argocd" || tsmc.minecraftUpgrade === undefined)
+      throw new Error("TSMC registers a Minecraft upgrade");
+    const verified = recipeFromPipeline({
+      ...tsmc,
+      minecraftUpgrade: {
+        ...tsmc.minecraftUpgrade,
+        releaseMode: "verified-restore",
+      },
+    });
+    if (verified.kind !== "kubernetes-application")
+      throw new Error("TSMC maps onto an Application recipe");
+    expect(verified.steps.map((step) => step.kind)).toEqual([
+      "apply-safety",
+      "minecraft-upgrade",
+      "sync",
+    ]);
+    const misplaced = {
+      ...verified,
+      steps: [verified.steps[0], verified.steps[2], verified.steps[1]],
+    };
+    expect(RecipeDefinitionSchema.safeParse(misplaced).error?.issues).toEqual([
+      expect.objectContaining({
+        message:
+          "A verified-restore minecraft-upgrade runs before sync; a retained-volume restart runs after it",
+      }),
+    ]);
+  });
+
   test("maps Tofu stacks by their reviewed policy mode", () => {
     expect(tofu("github")).toMatchObject({
       kind: "tofu",

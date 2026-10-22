@@ -6,6 +6,7 @@ import {
   type DeploymentDetail,
   type StageInput,
 } from "@shepherdjerred/delivery/contract";
+import { minecraftUpgradeOf } from "@shepherdjerred/delivery/model-contract";
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import { withBackupActivityHeartbeat } from "#activities/homelab/seaweedfs-backup-heartbeat.ts";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
@@ -78,9 +79,8 @@ export async function prepareMinecraftDelivery(
 ) {
   requireActive(detail);
   if (
-    detail.pipeline.definition.kind === "argocd" &&
-    detail.pipeline.definition.minecraftUpgrade?.releaseMode ===
-      "retained-volume-restart"
+    minecraftUpgradeOf(detail.pipeline.definition)?.releaseMode ===
+    "retained-volume-restart"
   )
     return { status: "ready" } as const;
   const result = parseMinecraftEligibility(

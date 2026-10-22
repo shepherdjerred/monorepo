@@ -11,6 +11,7 @@ import { IdentifierSchema } from "#shared/artifact-contract.ts";
 import { MonitorSchema } from "./monitor-contract.ts";
 import { StaticSitePolicySchema } from "#shared/static-site-contract.ts";
 import { WorkerPoolTargetSchema } from "#shared/worker-contract.ts";
+import { misplacedUpgrades } from "./step-order.ts";
 
 /**
  * Recipe (model 4.7): an immutable, target-typed description of how one
@@ -329,6 +330,8 @@ export const KubernetesApplicationRecipeSchema = z
           "A kubernetes-application recipe runs exactly one apply-safety preflight before exactly one sync",
       });
     }
+    for (const issue of misplacedUpgrades(recipe.steps))
+      context.addIssue(issue);
     // Steps and monitors act on this deployment's own selection only.
     const images = new Set(
       Object.values(recipe.artifactParameters).map((value) => value.component),

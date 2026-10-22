@@ -34,6 +34,7 @@ import { requireMinecraftPreservation } from "#lib/delivery/minecraft-acceptance
 import { trmnlRepairClaim } from "./trmnl-repair.ts";
 import { executorIdentity } from "./model/stages.ts";
 import { modelRecipe } from "#lib/delivery/model/recipe.ts";
+import { minecraftUpgradeOf } from "@shepherdjerred/delivery/model-contract";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
 import {
   acknowledgeReconciledRelease,
@@ -71,8 +72,7 @@ async function capturePriorWorkerSource(current: DeploymentDetail) {
 }
 
 async function minecraftEligible(current: DeploymentDetail): Promise<boolean> {
-  const pipeline = current.pipeline.definition;
-  if (pipeline.kind !== "argocd" || pipeline.minecraftUpgrade === undefined)
+  if (minecraftUpgradeOf(current.pipeline.definition) === undefined)
     return true;
   const result = await prepareMinecraftDelivery(current);
   return result.status === "ready";

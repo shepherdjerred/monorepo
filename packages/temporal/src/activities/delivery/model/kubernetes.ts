@@ -22,6 +22,7 @@ import { deliveryOperationId } from "#lib/delivery/selection.ts";
 import { runGuardedArgoCommand } from "#activities/delivery/argocd.ts";
 import { recordStage, requireOwned, stageOf } from "./stages.ts";
 import { workerRolloutPreflight } from "./worker-rollout.ts";
+import { minecraftSyncFence } from "./minecraft-upgrade.ts";
 
 const READBACK_ATTEMPTS = 120;
 const READBACK_INTERVAL_MS = 5000;
@@ -192,6 +193,8 @@ export async function sync(
   const before = applicationProgress(raw, rendered, requestId);
   if (stageOf(current, key) === undefined)
     await recordStage(current, key, "running", { operationId: requestId });
+  // A preserved world switches images only with fresh preservation proof.
+  if (!before.requested) minecraftSyncFence(current, recipe);
   if (!before.requested)
     await runGuardedArgoCommand(
       [

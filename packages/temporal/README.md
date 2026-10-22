@@ -200,6 +200,19 @@ its intent, proves every host, then records the preflight's routing plan as
 evidence before promoting and verifying. A resumed step routes by that recorded
 plan and reattaches to any Job whose stage is already recorded.
 
+A compound recipe, such as TSMC's companion and server, runs its sub-recipes'
+steps in recipe order under one deployment and one lease. Each step key is
+prefixed with its sub-recipe's position (`sub2-step-sync`). A model
+`minecraft-upgrade` step has two release modes:
+
+- `verified-restore` runs before the sync, through the v1 preservation
+  controller. While players defer preservation, the step waits. The sync then
+  requires the fresh preservation proof.
+- `retained-volume-restart` runs after the sync. It reads back that the server
+  runs exactly `repository:version@digest`.
+
+Rollbacks of TSMC stay refused.
+
 Poller proofs make bounded exact-build instant readbacks when active polling
 briefly reaches zero; success requires a fresh positive result, and query or
 schema errors fail immediately. Minecraft preservation and recovery

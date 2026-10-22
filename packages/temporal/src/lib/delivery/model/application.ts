@@ -6,6 +6,7 @@ import {
 } from "@shepherdjerred/delivery/model-contract";
 import type { KubernetesApplicationRecipe } from "./recipe.ts";
 import { workerPoolParameters } from "#lib/delivery/workers/worker-pool.ts";
+import { minecraftModelParameters } from "#lib/delivery/minecraft.ts";
 
 export type RenderedApplication = {
   name: string;
@@ -21,6 +22,22 @@ export type RenderedApplication = {
 };
 
 /**
+ * Parameters a step derives from the deployment's frozen runtime state,
+ * for the Application whose recipe carries that step: the retained worker
+ * hosts (E5) and the TSMC server's image repository.
+ */
+function runtimeParameters(
+  detail: DeploymentDetail,
+  recipe: KubernetesApplicationRecipe,
+): Record<string, string> {
+  const kinds = new Set(recipe.steps.map((step) => step.kind));
+  return {
+    ...(kinds.has("worker-rollout") ? workerPoolParameters(detail) : {}),
+    ...(kinds.has("minecraft-upgrade") ? minecraftModelParameters(detail) : {}),
+  };
+}
+
+/**
  * The Application a deployment writes, from the one shared renderer the
  * cold-start tool also uses, over the deployment's frozen selection.
  */
@@ -34,8 +51,7 @@ export function renderApplication(
     environmentId: detail.deployment.environmentId,
     configuration: {
       ...detail.configuration.content,
-      // The retained worker hosts the chart runs (E5).
-      ...workerPoolParameters(detail),
+      ...runtimeParameters(detail, recipe),
     },
     artifacts: selectionArtifacts(detail),
   });

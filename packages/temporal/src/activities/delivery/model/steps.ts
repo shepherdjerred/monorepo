@@ -23,6 +23,7 @@ import { applySafety, enableSelfHeal, sync } from "./kubernetes.ts";
 import { oracleEvidence, runTestStep } from "./oracle.ts";
 import { awaitAttestations } from "./operator-run.ts";
 import { runWorkerRolloutStep } from "./worker-rollout.ts";
+import { runMinecraftUpgradeStep } from "./minecraft-upgrade.ts";
 import type { ColdStartWrite } from "#lib/delivery/model/oracle-inputs.ts";
 import {
   deploymentDetail,
@@ -72,24 +73,26 @@ async function runKubernetesStep(
   recipe: KubernetesApplicationRecipe,
   steps: readonly ModelStep[],
   frozen: Extract<ModelStep, { adapter: "kubernetes" }>,
-) {
+): Promise<{ waiting: boolean }> {
   const { key, step } = frozen;
   switch (step.kind) {
     case "apply-safety":
       await applySafety(current, recipe, key);
-      return;
+      return { waiting: false };
     case "sync":
       await sync(current, recipe, key);
-      return;
+      return { waiting: false };
     case "worker-rollout":
       requireSettledBefore(steps, current.stages, key);
       await runWorkerRolloutStep(current, key);
-      return;
+      return { waiting: false };
+    case "minecraft-upgrade":
+      requireSettledBefore(steps, current.stages, key);
+      return await runMinecraftUpgradeStep(current, key);
     case "static-site":
     case "archive":
     case "forum-bundle":
-    case "minecraft-upgrade":
-      missingAdapter(step.kind);
+      return missingAdapter(step.kind);
   }
 }
 
@@ -115,8 +118,7 @@ export async function runDeliveryModelStep(
   const owner = stepRecipe(recipe, key);
   switch (step.adapter) {
     case "kubernetes":
-      await runKubernetesStep(current, kubernetes(owner), steps, step);
-      return { waiting: false };
+      return await runKubernetesStep(current, kubernetes(owner), steps, step);
     case "static-site":
       return missingAdapter(step.adapter);
     case "test":
