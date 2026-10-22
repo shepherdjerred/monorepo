@@ -1,10 +1,13 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  CHECKED_STEP_GRAPHS,
   collectErrors,
+  generatedStepsJson,
   type RequiredEnv,
   type SecretFields,
 } from "./check-ci-env.ts";
+import { GeneratedStepsSchema } from "../../lib/ci/ci-env-generated.ts";
 import {
   assignedEnvNames,
   commandScopes,
@@ -350,4 +353,22 @@ describe("collectErrors", () => {
     });
     expect(errors).toEqual([]);
   });
+});
+
+async function generatedStepKeys(args: readonly string[]): Promise<string[]> {
+  return GeneratedStepsSchema.parse(
+    JSON.parse(await generatedStepsJson(args)),
+  ).map((step) => step.key);
+}
+
+describe("checked pipeline graphs", () => {
+  test("the grant contract covers the flag-on producers the window turns on", async () => {
+    expect(CHECKED_STEP_GRAPHS).toContainEqual(["--delivery-catalog-v2"]);
+    const flagOff = await generatedStepKeys([]);
+    const flagOn = await generatedStepKeys(["--delivery-catalog-v2"]);
+    for (const producer of ["tofu-archives", "npm-package-archives"]) {
+      expect(flagOn).toContain(producer);
+      expect(flagOff).not.toContain(producer);
+    }
+  }, 60_000);
 });

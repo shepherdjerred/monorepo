@@ -449,15 +449,27 @@ function secretFields(
 }
 
 /**
- * Ask the generator for the full step model.
+ * Every pipeline graph the generator can emit, as `dump-steps.ts` arguments.
+ * The v2 catalog flag adds producer steps (OpenTofu and npm archives) that
+ * must sit inside the same grant contract before the window turns it on.
+ */
+export const CHECKED_STEP_GRAPHS: readonly (readonly string[])[] = [
+  [],
+  ["--delivery-catalog-v2"],
+];
+
+/**
+ * Ask the generator for the full step model of one graph.
  *
  * Run as a subprocess rather than imported so this check stays usable even if
  * the generator's dependencies are not installed in this package's closure.
  */
-async function generatedStepsJson(): Promise<string> {
+export async function generatedStepsJson(
+  args: readonly string[],
+): Promise<string> {
   const child = Bun.spawn(
-    ["bun", "packages/woodpecker-config-extension/src/dump-steps.ts"],
-    { stdout: "pipe", stderr: "inherit" },
+    ["bun", "packages/woodpecker-config-extension/src/dump-steps.ts", ...args],
+    { cwd: REPOSITORY_ROOT, stdout: "pipe", stderr: "inherit" },
   );
   const [text, exitCode] = await Promise.all([
     new Response(child.stdout).text(),
@@ -488,9 +500,11 @@ async function readCredentialInputs(): Promise<{
 
 async function main(): Promise<void> {
   const { snapshot, declarations } = await readCredentialInputs();
-  const generated = GeneratedStepsSchema.parse(
-    JSON.parse(await generatedStepsJson()),
-  );
+  const generated = [];
+  for (const args of CHECKED_STEP_GRAPHS)
+    generated.push(
+      ...GeneratedStepsSchema.parse(JSON.parse(await generatedStepsJson(args))),
+    );
   const errors = validateGrantCatalog({
     grants: generated.flatMap((step) => step.secrets ?? []),
     snapshot,
@@ -545,7 +559,7 @@ async function main(): Promise<void> {
     0,
   );
   console.log(
-    `check-ci-env: OK — ${String(grantStepCount)} steps, ${String(grantCount)} exact grants, and ${String(checked)} script invocations verified.`,
+    `check-ci-env: OK — ${String(grantStepCount)} steps, ${String(grantCount)} exact grants, and ${String(checked)} script invocations verified across ${String(CHECKED_STEP_GRAPHS.length)} pipeline graphs.`,
   );
 }
 
