@@ -1,9 +1,9 @@
 import { describe, expect } from "vitest";
 import type { Bot } from "mineflayer";
 import { test } from "./fixtures.ts";
-import { waitForMessage } from "./harness/bot.ts";
+import { waitForMessage, waitUntil } from "./harness/bot.ts";
 import { waitForDecision } from "./harness/decisions.ts";
-import { setBrainMode } from "./harness/fake-brain.ts";
+import { failedTriages, setBrainMode } from "./harness/fake-brain.ts";
 
 /**
  * Claims and resolves every open ticket, so the sweep report counts only what
@@ -49,6 +49,17 @@ async function closeAllOpenTickets(bot: Bot): Promise<void> {
 }
 
 /** Runs /agent sweep, retrying when the scheduled tick holds the sweep. */
+/**
+ * Opening a ticket only starts its triage, which reads the ticket's history
+ * before calling the brain, so waits until the brain has refused that call.
+ */
+async function initialTriageFails(port: number, before: number): Promise<void> {
+  await waitUntil(
+    "the brain fails the ticket's first triage",
+    async () => (await failedTriages(port)) > before,
+  );
+}
+
 async function sweepReport(bot: Bot): Promise<RegExpExecArray> {
   let last: unknown = new Error("sweep stayed busy");
   for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -80,10 +91,12 @@ describe("stale-ticket sweep", () => {
     try {
       await rcon.command(`op ${bot.username}`);
       await closeAllOpenTickets(bot);
+      const failedBefore = await failedTriages(brain.port);
       bot.chat("/ticket grief someone broke my wall");
       const opened = await waitForMessage(bot, /Ticket #(\d+) opened/);
       const id = opened[1] ?? "0";
       expect(Number(id)).toBeGreaterThan(0);
+      await initialTriageFails(brain.port, failedBefore);
 
       // The manual sweep attempts the redrive and reports the outage.
       const failed = await sweepReport(bot);
@@ -109,10 +122,12 @@ describe("stale-ticket sweep", () => {
       await setBrainMode(brain.port, "triage-down");
       try {
         await rcon.command(`op ${bot.username}`);
+        const failedBefore = await failedTriages(brain.port);
         bot.chat("/ticket grief someone broke my fence");
         const opened = await waitForMessage(bot, /Ticket #(\d+) opened/);
         const id = opened[1] ?? "0";
         expect(Number(id)).toBeGreaterThan(0);
+        await initialTriageFails(brain.port, failedBefore);
 
         // Heal the brain and wait for the 60s tick; no /agent sweep.
         await setBrainMode(brain.port, "ok");
