@@ -19,7 +19,7 @@ tripwires:
 
 ### The sample
 
-- Recent patches: the current and previous one, found by querying `patch` ordered by game count or with lookup_patch_notes. Name them.
+- Recent patches: the two patches with the most recent games: query `patch` over the last 30 days and order by the latest `game_creation_at` in each, never by game count, which favours a long-played old patch. Scout labels patches by client version (16.21), not by the season numbering patch notes use (26.19). Name them.
 - One queue family unless the user asks otherwise: ranked solo when it has enough games, otherwise every ranked queue. Say which.
 - Played-out games only (`surrender_state = 'Played out'`).
 

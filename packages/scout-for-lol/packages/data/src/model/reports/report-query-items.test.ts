@@ -40,3 +40,19 @@ describe("report query items", () => {
     expect(closestItemName("zzzzzzzzzzzz")).toBeUndefined();
   });
 });
+
+function tierOfId(id: number) {
+  return reportItemCatalog().find((entry) => entry.rawId === id)?.item.tier;
+}
+
+describe("boots tiers", () => {
+  test("basic Boots is a component, not completed boots", () => {
+    expect(tierOfId(1001)).toBe("basic");
+  });
+
+  test("finished boots and their upgrades are boots", () => {
+    expect(tierOfId(3006)).toBe("boots");
+    expect(tierOfId(3172)).toBe("boots");
+    expect(tierOfId(3111)).toBe("boots");
+  });
+});

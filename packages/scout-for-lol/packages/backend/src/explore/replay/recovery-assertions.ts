@@ -25,6 +25,48 @@ export const RecoveryOracleSchema = z.strictObject({
 });
 export type RecoveryOracle = z.infer<typeof RecoveryOracleSchema>;
 
+const ReviewMatchCallSchema = z.looseObject({
+  rawInput: z.looseObject({
+    kind: z.literal("value"),
+    value: z.looseObject({ participantId: z.number().int() }),
+  }),
+  rawOutput: z.looseObject({
+    kind: z.literal("value"),
+    value: z.looseObject({
+      ok: z.literal(true),
+      coverage: z.looseObject({ timeline: z.enum(["complete", "partial"]) }),
+    }),
+  }),
+});
+
+/**
+ * A trace entry's name as the recovery check reads it.
+ *
+ * review_match is a timeline analysis only when it reviewed a participant
+ * and returned timeline coverage; a roster call, or one that found no
+ * timeline, is recorded under its own name so it cannot satisfy the check.
+ */
+export function recoveryToolName(entry: {
+  readonly toolName: string;
+  readonly status: string;
+  readonly rawInput: unknown;
+  readonly rawOutput: unknown;
+}): string {
+  if (entry.toolName !== "review_match") return entry.toolName;
+  if (entry.status !== "succeeded") return "review_match:incomplete";
+  const call = ReviewMatchCallSchema.safeParse(entry);
+  if (call.success) return "review_match";
+  return z
+    .looseObject({
+      rawInput: z.looseObject({
+        value: z.looseObject({ participantId: z.null() }),
+      }),
+    })
+    .safeParse(entry).success
+    ? "review_match:roster"
+    : "review_match:incomplete";
+}
+
 export type RecoveryCandidate = {
   answer: string | null;
   matchCardIds: readonly string[];
@@ -85,13 +127,13 @@ function gameAssertions(
   }
   if (!candidate.matchCardIds.includes(oracle.game.matchId))
     issues.push("missing_reviewed_match_card");
-  if (
-    !candidate.toolNames.includes("materialize_raw_documents") ||
-    !(
-      candidate.toolNames.includes("analyze_javascript") ||
-      candidate.toolNames.includes("summarize_match_timeline")
-    )
-  )
+  // review_match reads the documents and summarizes the timeline in one
+  // call; the sandbox path needs both steps.
+  const sandboxTimeline =
+    candidate.toolNames.includes("materialize_raw_documents") &&
+    (candidate.toolNames.includes("analyze_javascript") ||
+      candidate.toolNames.includes("summarize_match_timeline"));
+  if (!sandboxTimeline && !candidate.toolNames.includes("review_match"))
     issues.push("missing_timeline_analysis");
   for (const line of answer.split("\n")) {
     const claim = /^\s*(?:-\s*)?(\d{1,2}):(\d{2})\b(.*)/u.exec(line);

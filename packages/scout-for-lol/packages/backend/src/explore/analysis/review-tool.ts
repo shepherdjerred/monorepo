@@ -31,18 +31,21 @@ export function createMatchReviewTools(
   params: Pick<ExploreAgentParams, "abortSignal">,
   track: ToolTracker,
 ) {
-  // Paging through one game's events re-reads the same documents.
+  // Paging through one game's events re-reads the same documents. A game
+  // without a timeline is not cached: acquire_match_timelines may fetch it
+  // later in the same turn, and the next review must see it.
   const loaded = new Map<RiotMatchId, StoredDocuments>();
   async function documentsFor(matchId: RiotMatchId): Promise<StoredDocuments> {
     const cached = loaded.get(matchId);
     if (cached !== undefined) return cached;
     const raw = await readRawDocuments({
       matchIds: [matchId],
-      kinds: ["match", "timeline"],
+      kinds: ["match", "timeline", "prematch"],
       signal: params.abortSignal,
     });
     const data = { documents: raw.documents };
-    loaded.set(matchId, data);
+    if (raw.documents.some((document) => document.kind === "timeline"))
+      loaded.set(matchId, data);
     return data;
   }
   return {
@@ -53,7 +56,8 @@ export function createMatchReviewTools(
         matchId: RiotMatchIdSchema.describe(
           "The match_id from a query or match card, such as NA1_5123456789.",
         ),
-        participantId: z.number().int().min(1).max(10).nullable(),
+        // Arena games run to 16 players; the match decides which ids exist.
+        participantId: z.number().int().min(1).nullable(),
         offset: z.number().int().nonnegative(),
       }),
       outputSchema: z.json(),

@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import {
   recoveryAssertions,
+  recoveryToolName,
   type RecoveryOracle,
 } from "./recovery-assertions.ts";
 
@@ -142,6 +143,50 @@ test("requires timeline computation and the reviewed card", () => {
       oracle,
     ),
   ).toEqual(["missing_reviewed_match_card", "missing_timeline_analysis"]);
+});
+
+test("a roster-only review_match is not timeline analysis", () => {
+  expect(
+    recoveryToolName({
+      toolName: "review_match",
+      status: "succeeded",
+      rawInput: { kind: "value", value: { participantId: null } },
+      rawOutput: { kind: "value", value: { ok: true, participants: [] } },
+    }),
+  ).toBe("review_match:roster");
+  const game = {
+    answer:
+      "11/7/8, 243 CS, 46651 damage, 19991 gold.\n- 28:56 — killed by Locke",
+    matchCardIds: ["EUW1_1"],
+    toolNames: ["review_match:roster"],
+  };
+  expect(recoveryAssertions("conv:507d822f:2", game, oracle)).toContain(
+    "missing_timeline_analysis",
+  );
+});
+
+test("a participant review with timeline coverage counts", () => {
+  expect(
+    recoveryToolName({
+      toolName: "review_match",
+      status: "succeeded",
+      rawInput: { kind: "value", value: { participantId: 3 } },
+      rawOutput: {
+        kind: "value",
+        value: { ok: true, coverage: { timeline: "complete" } },
+      },
+    }),
+  ).toBe("review_match");
+});
+
+test("accepts review_match as the timeline analysis", () => {
+  const game = {
+    answer:
+      "11/7/8, 243 CS, 46651 damage, 19991 gold.\n- 28:56 — killed by Locke",
+    matchCardIds: ["EUW1_1"],
+    toolNames: ["review_match"],
+  };
+  expect(recoveryAssertions("conv:507d822f:2", game, oracle)).toEqual([]);
 });
 
 test("rejects a misconverted death time while allowing rounded milliseconds", () => {

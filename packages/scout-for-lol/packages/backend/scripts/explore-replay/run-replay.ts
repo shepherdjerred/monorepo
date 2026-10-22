@@ -9,6 +9,7 @@ import {
   exploreAnalysisEnabled,
 } from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
+import { recoveryToolName } from "#src/explore/replay/recovery-assertions.ts";
 import {
   createBotRestReader,
   installBotRestReader,
@@ -245,7 +246,7 @@ function observationSide(observation: ReplayObservation): ReplaySide {
     // answer rendered a visualization, so reading it there recorded null for
     // most successful queries.
     ...queryFactsFromTrace(observation.trace),
-    toolNames: observation.trace.map((entry) => entry.toolName),
+    toolNames: observation.trace.map((entry) => recoveryToolName(entry)),
     matchCardIds: observation.matchCards.map((card) => card.match.matchId),
     loadoutCardIds: observation.loadoutCards.map(
       (card) => `${card.matchId}:${card.participantId.toString()}`,
@@ -630,7 +631,7 @@ async function conversationCasesFor(stage: "beta" | "prod"): Promise<{
         followUps: turn.baseline.followUps,
         rowsReturned: turn.baseline.preview?.rowsReturned ?? null,
         rowsScanned: turn.baseline.preview?.rowsScanned ?? null,
-        toolNames: turn.baseline.trace.map((entry) => entry.toolName),
+        toolNames: turn.baseline.trace.map((entry) => recoveryToolName(entry)),
         matchCardIds: turn.baseline.matchCards.map(
           (card) => card.match.matchId,
         ),
