@@ -1,3 +1,5 @@
+import { forumNativeObservation } from "./forum/native-observation.ts";
+
 /**
  * Delivery's independent settlement readers (model D5, I2, section 8).
  *
@@ -46,6 +48,25 @@ export const DELIVERY_KUBERNETES_READERS = {
         resources: ["applications"],
         verbs: READ,
       },
+    ],
+  },
+  /** The Forum's original runtime: its Pods, claims, release Job and workloads. */
+  forumBaseline: {
+    name: "delivery-forum-baseline-reader",
+    directory: "/var/run/delivery-forum-baseline-reader",
+    namespaces: forumNativeObservation.namespaces,
+    rules: [
+      {
+        apiGroups: [""],
+        resources: ["pods", "persistentvolumeclaims"],
+        verbs: READ,
+      },
+      {
+        apiGroups: ["apps"],
+        resources: ["deployments", "replicasets"],
+        verbs: READ,
+      },
+      { apiGroups: ["batch"], resources: ["jobs"], verbs: READ },
     ],
   },
 } as const satisfies Record<string, DeliveryKubernetesReader>;

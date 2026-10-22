@@ -86,17 +86,6 @@ export const Application = z.object({
     ),
   }),
 });
-export const Tree = z.object({
-  nodes: z.array(
-    z.object({
-      kind: z.string(),
-      name: z.string(),
-      namespace: z.string().optional(),
-      uid: z.string(),
-      parentRefs: z.array(z.object({ uid: z.string() })).default([]),
-    }),
-  ),
-});
 
 function bootstrap(
   containers: z.infer<typeof Container>[],

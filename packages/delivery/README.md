@@ -324,8 +324,8 @@ Environment variables are bootstrap and credentials: `DATABASE_URL`, `HOST`,
 `PORT`, `PUBLIC_ORIGIN`, `ENVIRONMENT`, `WOODPECKER_URL`, `WOODPECKER_REPO_ID`,
 `WOODPECKER_TOKEN`, `DELIVERY_MACHINE_CREDENTIALS`, `ARGOCD_SERVER_URL`,
 `ARGOCD_RECOVERY_TOKEN`, and the optional read-only `DELIVERY_GH_TOKEN`.
-The recovery credential is read-only and independent of Temporal's mutation
-credential; the hub's runtime panel reuses it.
+`ARGOCD_RECOVERY_TOKEN` is a read-only ArgoCD credential for the hub's runtime
+panel only; no settlement reader uses it.
 
 ArgoCD declares three separate API accounts: `delivery` may select and sync the
 reviewed workload Applications; `delivery-observer` can only read their state;
@@ -458,6 +458,7 @@ settlement and keeps ownership.
 | Reader identity                    | Grant                                                                                                   |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | `delivery-application-reader`      | get, list, watch Applications in `argocd`                                                               |
+| `delivery-forum-baseline-reader`   | get, list, watch Pods, claims, Deployments, ReplicaSets and Jobs in the Forum namespaces                |
 | `delivery-minecraft-report-reader` | a `delivery-tsmc-controller`-audience token; the controller reviews it and allows only its report `get` |
 
 Use `toolkit deploy recover <DEPLOYMENT_ID> --operation-id <ARGO_OPERATION_UUID>

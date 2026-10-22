@@ -3,7 +3,13 @@ import {
   stepApplicationOf,
 } from "#shared/model/recipe-view.ts";
 import { z } from "zod";
+import { DELIVERY_KUBERNETES_READERS } from "@shepherdjerred/ops-model/delivery-readers.ts";
 import { DeliveryError } from "#domain/error.ts";
+import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
+import {
+  projectedReader,
+  type KubernetesRead,
+} from "#infrastructure/kubernetes/projected-reader.ts";
 import { fingerprint } from "#infrastructure/delivery-records.ts";
 import type { ForumBaselineContext } from "#shared/contract.ts";
 import {
@@ -11,7 +17,7 @@ import {
   ForumRuntimeStatusSchema,
 } from "#shared/forum-contract.ts";
 import type { InspectForumBaseline } from "./baseline-settlement.ts";
-import { Application, Metadata, Tree, nativeJob, nativePod } from "./native.ts";
+import { Application, Metadata, nativeJob, nativePod } from "./native.ts";
 import { requireBundlePolicy } from "./source-policy.ts";
 import type { ForumPolicyReader } from "./source-policy.ts";
 import { createOriginalForumPolicyReader } from "./legacy-policy.ts";
@@ -25,9 +31,12 @@ type Transport = (
   init?: RequestInit,
 ) => Promise<Response>;
 type Options = {
-  argoOrigin: string;
-  argoToken: string | undefined;
+  /** `delivery-application-reader`: the Forum Application object. */
+  readApplication: ApplicationReader;
+  /** `delivery-forum-baseline-reader`: the Forum namespace's runtime objects. */
+  readKubernetes: KubernetesRead;
   observationToken: string | undefined;
+  /** The installed-runtime status endpoint on the actual Pod address. */
   fetch?: Transport;
   policyReader?: ForumPolicyReader;
   nativeReader?: NativeForumReader;
@@ -81,9 +90,47 @@ async function installedStatus(
   );
 }
 
+const PATHS: Record<string, (namespace: string) => string> = {
+  Pod: (namespace) => `/api/v1/namespaces/${namespace}/pods`,
+  PersistentVolumeClaim: (namespace) =>
+    `/api/v1/namespaces/${namespace}/persistentvolumeclaims`,
+  Deployment: (namespace) =>
+    `/apis/apps/v1/namespaces/${namespace}/deployments`,
+  ReplicaSet: (namespace) =>
+    `/apis/apps/v1/namespaces/${namespace}/replicasets`,
+  Job: (namespace) => `/apis/batch/v1/namespaces/${namespace}/jobs`,
+};
+const Owned = z.object({ items: z.array(z.object({ metadata: Metadata })) });
+
+/** Objects in the Forum namespace through the baseline reader; a missing object is never evidence. */
+function forumObjects(read: KubernetesRead, namespace: string) {
+  const collection = (kind: string) => {
+    const path = PATHS[kind];
+    if (path === undefined)
+      throw new DeliveryError(
+        "INVALID",
+        `Forum inspection never reads ${kind} objects`,
+      );
+    return path(namespace);
+  };
+  return {
+    get: async (kind: string, name: string) => {
+      const raw = await read(`${collection(kind)}/${encodeURIComponent(name)}`);
+      if (raw === null)
+        throw new DeliveryError(
+          "CONFLICT",
+          `Forum ${kind} ${name} does not exist; keep target ownership`,
+        );
+      return raw;
+    },
+    list: async (kind: string) =>
+      Owned.parse(await read(collection(kind))).items,
+  };
+}
+
 async function observe(
   context: ForumBaselineContext,
-  options: Options & { argoToken: string; legacy: boolean },
+  options: Options & { legacy: boolean },
 ) {
   const definition = stepApplicationOf(
     context.pipeline.definition,
@@ -97,17 +144,19 @@ async function observe(
       "INVALID",
       "Forum baseline requires its canonical Argo policy",
     );
-  const transport = options.fetch ?? fetch,
-    path = `/api/v1/applications/${encodeURIComponent(definition.name)}`;
   const namespace = definition.name;
   if (definition.namespace !== namespace)
     throw new DeliveryError(
       "INVALID",
       "Forum native inspection requires its fixed canonical namespace",
     );
-  const argo = Application.parse(
-    await json(new URL(path, options.argoOrigin), options.argoToken, transport),
-  );
+  const raw = await options.readApplication(definition.name);
+  if (raw === null)
+    throw new DeliveryError(
+      "CONFLICT",
+      `Application ${definition.name} does not exist; keep target ownership`,
+    );
+  const argo = Application.parse(raw);
   if (
     argo.metadata.name !== definition.name ||
     (argo.operation !== undefined && argo.operation !== null)
@@ -116,24 +165,8 @@ async function observe(
       "CONFLICT",
       "Forum Application has an active or mismatched operation",
     );
-  async function resource(kind: string, name: string) {
-    const url = new URL(`${path}/resource`, options.argoOrigin);
-    url.search = new URLSearchParams({
-      group: ["Pod", "PersistentVolumeClaim"].includes(kind)
-        ? ""
-        : kind === "Job"
-          ? "batch"
-          : "apps",
-      version: "v1",
-      kind,
-      namespace,
-      resourceName: name,
-    }).toString();
-    const response = z
-      .object({ manifest: z.string() })
-      .parse(await json(url, options.argoToken, transport));
-    return JSON.parse(response.manifest) as unknown;
-  }
+  const objects = forumObjects(options.readKubernetes, namespace);
+  const resource = objects.get;
   const originalStorage = await observeForumStorage(resource);
   await requireOriginalDatabase(resource);
   const jobs = argo.status.resources.filter(
@@ -147,30 +180,27 @@ async function observe(
       "Forum baseline requires one current managed release Job",
     );
   const releaseJob = nativeJob(await resource("Job", job.name), context);
-  const tree = Tree.parse(
-    await json(
-      new URL(`${path}/resource-tree`, options.argoOrigin),
-      options.argoToken,
-      transport,
-    ),
-  );
   const deployment = z
     .object({ metadata: Metadata })
     .parse(await resource("Deployment", "storm-forum-web"));
-  const replicas = tree.nodes.filter(
-    (node) =>
-      node.kind === "ReplicaSet" &&
-      node.namespace === definition.namespace &&
-      node.parentRefs.some((parent) => parent.uid === deployment.metadata.uid),
+  // The web workload's Pods by ownership, as ArgoCD's resource tree derives them.
+  const replicaSets = await objects.list("ReplicaSet");
+  const replicas = replicaSets.filter((replica) =>
+    replica.metadata.ownerReferences.some(
+      (owner) => owner.uid === deployment.metadata.uid,
+    ),
   );
-  const pods = tree.nodes
-    .filter(
-      (node) =>
-        node.kind === "Pod" &&
-        node.namespace === definition.namespace &&
-        node.parentRefs.some((parent) =>
-          replicas.some((replica) => replica.uid === parent.uid),
-        ),
+  const namespacePods = await objects.list("Pod");
+  const pods = namespacePods
+    .map((pod) => ({
+      name: pod.metadata.name,
+      uid: pod.metadata.uid,
+      parentRefs: pod.metadata.ownerReferences,
+    }))
+    .filter((node) =>
+      node.parentRefs.some((parent) =>
+        replicas.some((replica) => replica.metadata.uid === parent.uid),
+      ),
     )
     .sort((a, b) => a.name.localeCompare(b.name));
   if (pods.length === 0 || pods.length > 20)
@@ -240,16 +270,16 @@ async function observe(
   });
 }
 
-/** Read native source, completed Job, actual Pod digests and authenticated installed DB status twice; callers supply no evidence. */
+/**
+ * Read native source, completed Job, actual Pod digests and authenticated
+ * installed DB status twice; callers supply no evidence. The Application and
+ * the runtime objects are read through the API's projected reader
+ * identities, never the ArgoCD server (D5, I2).
+ */
 export function createForumBaselineInspector(
   options: Options,
 ): InspectForumBaseline {
   return async (context) => {
-    if (options.argoToken === undefined)
-      throw new DeliveryError(
-        "PAUSED",
-        "Independent forum observation credentials are not provisioned",
-      );
     const original =
       options.policyReader === undefined
         ? await (
@@ -265,11 +295,7 @@ export function createForumBaselineInspector(
         "PAUSED",
         "Authenticated forum runtime observation is not provisioned",
       );
-    const complete = {
-        ...options,
-        argoToken: options.argoToken,
-        legacy: original.legacy,
-      },
+    const complete = { ...options, legacy: original.legacy },
       before = await observe(context, complete),
       after = await observe(context, complete);
     const { observedAt: _beforeTime, ...first } = before,
@@ -281,4 +307,11 @@ export function createForumBaselineInspector(
       );
     return after;
   };
+}
+
+/** The projected `delivery-forum-baseline-reader` identity. */
+export function createForumBaselineReader(
+  read?: KubernetesRead,
+): KubernetesRead {
+  return projectedReader(DELIVERY_KUBERNETES_READERS.forumBaseline, read);
 }

@@ -14,7 +14,10 @@ import {
   createForumBundleReader,
   createForumBundleVerifier,
 } from "#infrastructure/forum/bundle-verifier.ts";
-import { createForumBaselineInspector } from "#infrastructure/forum/baseline-inspector.ts";
+import {
+  createForumBaselineInspector,
+  createForumBaselineReader,
+} from "#infrastructure/forum/baseline-inspector.ts";
 import { createApp } from "./app.ts";
 import { createTrmnlArchiveReader } from "@shepherdjerred/ops-clients/trmnl-archive.ts";
 import { createTrmnlPluginClient } from "@shepherdjerred/ops-clients/trmnl.ts";
@@ -94,8 +97,8 @@ const app = createApp({
     ? {}
     : { verifyForumBundle: createForumBundleVerifier(forumBundleReader) }),
   inspectForumBaseline: createForumBaselineInspector({
-    argoOrigin: bootstrap.ARGOCD_SERVER_URL,
-    argoToken: bootstrap.ARGOCD_RECOVERY_TOKEN,
+    readApplication,
+    readKubernetes: createForumBaselineReader(),
     observationToken: bootstrap.DELIVERY_FORUM_OBSERVATION_TOKEN,
   }),
   ciOrigin: bootstrap.WOODPECKER_URL,
