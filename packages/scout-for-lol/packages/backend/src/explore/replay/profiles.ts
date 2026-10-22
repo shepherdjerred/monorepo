@@ -2,7 +2,6 @@ import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts"
 import { z } from "zod";
 import type { SuggestionCondition } from "@scout-for-lol/data";
 import type { FlagName } from "#src/configuration/flags.ts";
-import type { ExploreSurface } from "#src/explore/surface.ts";
 
 /**
  * What a guild can actually do, captured rather than invented.
@@ -180,17 +179,11 @@ export function flagOverridesFor(
 /** Reasons a captured config could not be reproduced, whatever the flags say. */
 export function guildConfigIssues(
   config: CapturedGuildConfig,
-  surface: ExploreSurface,
 ): readonly string[] {
   const issues: string[] = [];
   if (config.capabilities.dares && !config.capabilities.bucks) {
     issues.push(
       "dares resolve from a bucks capability; a config cannot have dares with bucks off",
-    );
-  }
-  if (surface !== "web" && config.capabilities.creation) {
-    issues.push(
-      `creation tools are web-only; surface "${surface}" cannot resolve them`,
     );
   }
   if (config.capabilities.riotHistory) {

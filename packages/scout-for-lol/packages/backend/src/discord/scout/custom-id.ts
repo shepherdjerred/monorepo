@@ -58,3 +58,69 @@ export function parseScoutPublishCustomId(
 export function isScoutCustomId(raw: string): boolean {
   return raw.startsWith(`${SCOUT_COMPONENT_NAMESPACE}:`);
 }
+
+const ScoutFollowUpCustomIdSchema = z.strictObject({
+  conversationId: ExploreConversationIdSchema,
+  assistantMessageId: z.uuid(),
+  /** Position in the answer's saved `followUps`; the text is read back from it. */
+  index: z.coerce.number().int().min(0).max(2),
+});
+
+export type ScoutFollowUpCustomId = z.infer<typeof ScoutFollowUpCustomIdSchema>;
+
+/**
+ * `scout:1:follow:<conversationId>:<assistantMessageId>:<index>`
+ *
+ * Carries an index rather than the follow-up's text: Discord caps a custom id
+ * at 100 characters, and reading the text back from the saved answer means a
+ * forged id can only ask a question Scout itself suggested.
+ */
+export function formatScoutFollowUpCustomId(
+  input: ScoutFollowUpCustomId,
+): string {
+  const parsed = ScoutFollowUpCustomIdSchema.parse(input);
+  const id = [
+    SCOUT_COMPONENT_NAMESPACE,
+    SCOUT_COMPONENT_VERSION,
+    "follow",
+    parsed.conversationId,
+    parsed.assistantMessageId,
+    parsed.index.toString(),
+  ].join(":");
+  if (id.length > MAX_CUSTOM_ID_LENGTH) {
+    throw new Error(
+      `Scout custom ID is ${id.length.toString()} characters, over Discord's ${MAX_CUSTOM_ID_LENGTH.toString()} limit.`,
+    );
+  }
+  return id;
+}
+
+export function parseScoutFollowUpCustomId(
+  raw: string,
+): ScoutFollowUpCustomId | undefined {
+  const segments = raw.split(":");
+  if (segments.length !== 6) {
+    return undefined;
+  }
+  const [
+    namespace,
+    version,
+    action,
+    conversationId,
+    assistantMessageId,
+    index,
+  ] = segments;
+  if (
+    namespace !== SCOUT_COMPONENT_NAMESPACE ||
+    version !== SCOUT_COMPONENT_VERSION ||
+    action !== "follow"
+  ) {
+    return undefined;
+  }
+  const parsed = ScoutFollowUpCustomIdSchema.safeParse({
+    conversationId,
+    assistantMessageId,
+    index,
+  });
+  return parsed.success ? parsed.data : undefined;
+}

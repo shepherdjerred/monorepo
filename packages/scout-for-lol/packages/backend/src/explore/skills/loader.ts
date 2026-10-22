@@ -24,16 +24,29 @@ export const EXPLORE_SKILL_CAPABILITIES = [
 ] as const;
 
 export const ExploreSkillCapabilitySchema = z.enum(EXPLORE_SKILL_CAPABILITIES);
-const ExploreSkillFrontmatterSchema = z.strictObject({
-  name: z
-    .string()
-    .regex(/^[a-z][a-z0-9-]*$/, "skill names are kebab-case identifiers"),
-  description: z.string().min(1),
-  capability: ExploreSkillCapabilitySchema,
-  surfaces: z.array(ExploreSurfaceSchema).min(1),
-  /** Rules that hold even when the body is never loaded; rendered in core. */
-  tripwires: z.array(z.string().min(1)).max(4),
-});
+const ExploreSkillFrontmatterSchema = z
+  .strictObject({
+    name: z
+      .string()
+      .regex(/^[a-z][a-z0-9-]*$/, "skill names are kebab-case identifiers"),
+    description: z.string().min(1),
+    capability: ExploreSkillCapabilitySchema,
+    /**
+     * Only for a skill that shapes how an answer is delivered on some surfaces
+     * (spoken output, say). What Explore can *do* is the same on web, Discord
+     * and voice, so a skill that teaches a capability never sets this.
+     */
+    outputFor: z.array(ExploreSurfaceSchema).min(1).optional(),
+    /** Rules that hold even when the body is never loaded; rendered in core. */
+    tripwires: z.array(z.string().min(1)).max(4),
+  })
+  .refine(
+    (skill) => skill.outputFor === undefined || skill.capability === "always",
+    {
+      message:
+        "outputFor is for delivery-only skills; a capability skill must reach every surface",
+    },
+  );
 
 export type ExploreSkillFile = z.infer<typeof ExploreSkillFrontmatterSchema> & {
   /** Raw Markdown body, placeholders unresolved. */

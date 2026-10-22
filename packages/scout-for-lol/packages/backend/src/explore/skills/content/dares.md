@@ -4,7 +4,6 @@ description: >-
   Authoring and managing SQL-backed dare drafts — Bryan Bucks wagers on
   observable in-game achievements. Load before calling any dare tool.
 capability: dares
-surfaces: [web, discord]
 tripwires:
   - >-
     For Dare-only answers, set queryText to null and includeVisualization to

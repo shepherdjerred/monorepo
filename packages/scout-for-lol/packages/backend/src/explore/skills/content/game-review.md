@@ -2,7 +2,6 @@
 name: game-review
 description: Review one or several games with evidence-backed turning points, strengths, and next actions.
 capability: always
-surfaces: [web, discord, voice]
 tripwires:
   - Never claim a turning point from timeline events unless every analyzed match has complete timeline coverage.
   - Preserve champion and player names returned by the data, including unfamiliar names; never substitute a familiar champion. Join killers and victims by participant ID and verify team identity before naming threats.

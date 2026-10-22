@@ -26,7 +26,7 @@ function fakeInteraction(
   const interaction: RoutableButtonInteraction = {
     customId,
     guildId,
-    user: { id: USER_ID, username: "tester" },
+    user: { id: USER_ID, username: "tester", avatar: null },
     deferred: false,
     replied: false,
     deferUpdate: vi.fn(() => {

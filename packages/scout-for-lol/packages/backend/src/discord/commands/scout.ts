@@ -1,4 +1,7 @@
-import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  DiscordGuildIdSchema,
+  type DiscordGuildId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import {
   type Interaction,
   type InteractionEditReplyOptions,
@@ -9,6 +12,7 @@ import {
   DiscordAccountIdSchema,
   EXPLORE_QUESTION_MAX_LENGTH,
   ExploreQuestionSchema,
+  type ExploreAttachPoint,
 } from "@scout-for-lol/data";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isExploreGuildAllowed } from "#src/explore/access.ts";
@@ -21,9 +25,11 @@ import { loadExploreTranscript, startExploreTurn } from "#src/explore/store.ts";
 import {
   exploreActionRow,
   exploreAnswerChunks,
+  exploreFollowUpRow,
   NO_GENERATED_MENTIONS,
 } from "#src/discord/scout/messages.ts";
-import { exploreVisualizationPayload } from "#src/discord/scout/visualization.ts";
+import { parseScoutFollowUpCustomId } from "#src/discord/scout/custom-id.ts";
+import { exploreAnswerAttachments } from "#src/discord/scout/cards.ts";
 import { scoutExploreTurnsTotal } from "#src/metrics/explore.ts";
 
 export type ScoutAskInteraction = {
@@ -88,6 +94,39 @@ export async function executeScout(
   }
 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  await answerOnDiscord({
+    interaction,
+    guildId,
+    question: question.data,
+    conversationId: null,
+    attach: { kind: "leaf" },
+    dependencies,
+  });
+}
+
+/** What every Discord-originated turn needs from its interaction. */
+type DiscordTurnInteraction = Pick<
+  ScoutAskInteraction,
+  "user" | "editReply" | "followUp"
+>;
+
+/**
+ * Ask Explore one question on Discord and deliver the answer privately.
+ *
+ * Shared by `/scout ask` (a new conversation) and the follow-up buttons under
+ * an answer (the same conversation, branching from that answer), so both
+ * apply the same rate limit, run the same durable turn and render the same
+ * reply. The interaction must already be deferred.
+ */
+async function answerOnDiscord(input: {
+  interaction: DiscordTurnInteraction;
+  guildId: DiscordGuildId;
+  question: string;
+  conversationId: string | null;
+  attach: ExploreAttachPoint;
+  dependencies: ScoutCommandDependencies;
+}): Promise<void> {
+  const { interaction, dependencies } = input;
   const identity = {
     userId: DiscordAccountIdSchema.parse(interaction.user.id),
   };
@@ -100,9 +139,18 @@ export async function executeScout(
 
   let runnerOwnsMetrics = false;
   try {
-    const conversationId = globalThis.crypto.randomUUID();
+    const conversationId =
+      input.conversationId ?? globalThis.crypto.randomUUID();
     if (!ticket.claimConversation(conversationId)) {
-      throw new Error("New Explore conversation id is already active.");
+      if (input.conversationId === null) {
+        throw new Error("New Explore conversation id is already active.");
+      }
+      ticket.finish();
+      await interaction.editReply({
+        content:
+          "Scout is still answering in this conversation. Try again when it finishes.",
+      });
+      return;
     }
     await dependencies.client.user.upsert({
       where: { discordId: identity.userId },
@@ -119,16 +167,16 @@ export async function executeScout(
       },
     });
     const created = await startExploreTurn(dependencies.client, {
-      conversationId: null,
+      conversationId: input.conversationId,
       newId: conversationId,
       userId: identity.userId,
-      question: question.data,
-      attach: { kind: "leaf" },
+      question: input.question,
+      attach: input.attach,
       origin: "discord",
     });
     const started = {
       ...created,
-      question: question.data,
+      question: input.question,
       model: resolveExploreModel(),
     };
     const transcript = await loadExploreTranscript(
@@ -138,18 +186,16 @@ export async function executeScout(
       started.messageId,
     );
     if (transcript === null) {
-      throw new Error("New Explore conversation could not be loaded.");
+      throw new Error("Explore conversation could not be loaded.");
     }
 
     runnerOwnsMetrics = true;
     const terminal = await dependencies.runTurn({
       ticket,
       identity,
-      // Discord asks always carry a guild context (global in production,
+      // Discord turns always carry a guild context (global in production,
       // guild-scoped in beta), so the invoking server is the whole alias scope.
-      guildIds: [guildId],
-      // `/scout ask` is one-shot with no confirmation UI, and the user upserted
-      // above deliberately has no OAuth token, so creation tools stay absent.
+      guildIds: [input.guildId],
       surface: "discord",
       started,
       history: transcript.messages,
@@ -180,8 +226,72 @@ export async function executeScout(
   }
 }
 
+export type ScoutFollowUpInteraction = DiscordTurnInteraction & {
+  customId: string;
+  guildId: Interaction["guildId"];
+  deferReply: ScoutAskInteraction["deferReply"];
+};
+
+/**
+ * A follow-up button under a Discord answer: ask that suggestion next.
+ *
+ * The text is read back from the saved answer, which also proves the clicker
+ * owns the conversation — `loadExploreTranscript` is scoped to its owner.
+ */
+export async function executeScoutFollowUp(
+  interaction: ScoutFollowUpInteraction,
+  dependencies: ScoutCommandDependencies = defaultDependencies,
+): Promise<void> {
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  const parsed = parseScoutFollowUpCustomId(interaction.customId);
+  if (parsed === undefined) {
+    await interaction.editReply({
+      content: "That Scout action is no longer valid.",
+    });
+    return;
+  }
+  if (interaction.guildId === null) {
+    await interaction.editReply({
+      content: "Scout Explore only works inside an enabled server.",
+    });
+    return;
+  }
+  const guildId = DiscordGuildIdSchema.parse(interaction.guildId);
+  if (!isExploreGuildAllowed(guildId)) {
+    await interaction.editReply({
+      content: "Scout Explore is not enabled in this server.",
+    });
+    return;
+  }
+  const transcript = await loadExploreTranscript(
+    dependencies.client,
+    parsed.conversationId,
+    DiscordAccountIdSchema.parse(interaction.user.id),
+    parsed.assistantMessageId,
+  );
+  const answer = transcript?.messages.at(-1);
+  const question =
+    answer?.id === parsed.assistantMessageId && answer.role === "assistant"
+      ? answer.followUps[parsed.index]
+      : undefined;
+  if (question === undefined) {
+    await interaction.editReply({
+      content: "That saved Scout answer could not be found for your account.",
+    });
+    return;
+  }
+  await answerOnDiscord({
+    interaction,
+    guildId,
+    question,
+    conversationId: parsed.conversationId,
+    attach: { kind: "message", messageId: parsed.assistantMessageId },
+    dependencies,
+  });
+}
+
 async function sendPrivateAnswer(
-  interaction: ScoutAskInteraction,
+  interaction: DiscordTurnInteraction,
   conversationId: string,
   answer: Extract<
     Awaited<ReturnType<typeof runPersistedExploreTurn>>,
@@ -193,7 +303,8 @@ async function sendPrivateAnswer(
   if (first === undefined) {
     throw new Error("Saved Explore answer had no Discord content.");
   }
-  const visualization = exploreVisualizationPayload(answer);
+  const visualization = exploreAnswerAttachments(answer);
+  const followUps = exploreFollowUpRow({ conversationId, answer });
   await interaction.editReply({
     content: first,
     components: [
@@ -202,6 +313,7 @@ async function sendPrivateAnswer(
         assistantMessageId: answer.id,
         posted: false,
       }),
+      ...(followUps === null ? [] : [followUps]),
     ],
     allowedMentions: NO_GENERATED_MENTIONS,
     ...visualization,

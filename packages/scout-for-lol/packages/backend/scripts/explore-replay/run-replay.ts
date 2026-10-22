@@ -549,10 +549,7 @@ async function loadBaseline(
  * conversation turn is a record of something that happened; borrowing another
  * identity or another guild would make the comparison meaningless.
  */
-async function conversationCasesFor(
-  stage: "beta" | "prod",
-  surface: "web",
-): Promise<{
+async function conversationCasesFor(stage: "beta" | "prod"): Promise<{
   readonly cases: ReplayCaseInput[];
   /**
    * Which corpus revision produced these cases.
@@ -645,7 +642,9 @@ async function conversationCasesFor(
         history: turn.history,
         requesterId: DiscordAccountIdSchema.parse(conversation.userId),
         guildIds: turn.guildIds,
-        surface,
+        // The surface the conversation was asked on, which curation proved
+        // from each turn's own run.
+        surface: entry.surface,
         originChannelId: null,
       });
     }
@@ -665,7 +664,7 @@ async function runGuild(input: {
 }): Promise<{ readonly directory: string; readonly passed: boolean }> {
   const { options, pin, config, runId } = input;
   const surface = "web" as const;
-  const configIssues = guildConfigIssues(config, surface);
+  const configIssues = guildConfigIssues(config);
   if (configIssues.length > 0) {
     throw new Error(
       [
@@ -788,7 +787,7 @@ async function runGuild(input: {
     // guild's busiest user: the bucks and challenge tools read the requester,
     // so borrowing someone else's identity would change what the turn can see.
     const conversations = options.includeConversations
-      ? await conversationCasesFor(pin.stage, surface)
+      ? await conversationCasesFor(pin.stage)
       : {
           cases: [] as ReplayCaseInput[],
           baselines: new Map<string, ReplayBaseline>(),

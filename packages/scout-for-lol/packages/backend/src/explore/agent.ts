@@ -214,71 +214,65 @@ async function streamExploreAgentInternal(
   ) {
     throw new Error("Voice Explore answers require spokenAnswer");
   }
-  if (params.surface === "web" || params.surface === "voice") {
-    const steps = await stream.steps;
-    const cards = await repairExploreCardSelection({
-      selection: {
-        matchCards: answer.matchCards,
-        loadoutCards: answer.loadoutCards,
-      },
-      eligibleMatchIds: state.lastMatchIds,
-      eligibleLoadoutPairs: state.lastQueryLoadoutPairs,
-      stepsUsed: steps.length,
-      outputTokensUsed: usage.outputTokens ?? EXPLORE_MAX_OUTPUT_TOKENS,
-      abortSignal: params.abortSignal,
-      correct: async ({ selection, failure, maxOutputTokens, abortSignal }) => {
-        assertWithinBudget();
-        await params.emit({
-          type: "activity",
-          text: "Checking card selections…",
-          toolCallId: null,
-          ignorable: true,
-        });
-        const correction = await generateText({
-          model: withExploreSpend(runtime.languageModel(model), {
-            ownerId: params.requesterId,
-            runId: params.runId,
-            model,
-          }),
-          output: Output.object({ schema: ExploreCardSelectionSchema }),
-          maxOutputTokens,
-          maxRetries: 0,
-          ...(abortSignal === undefined ? {} : { abortSignal }),
-          prompt: JSON.stringify({
-            instruction:
-              "Correct only the requested cards using the latest query's eligible choices. Keep valid requests. Never invent an id or reuse an earlier query. If no eligible choice supports a requested card, explicitly return no such card. No tools are available.",
-            failure: failure.message,
-            selection,
-            eligibleMatchIds: [...state.lastMatchIds],
-            eligibleLoadoutPairs: [...state.lastQueryLoadoutPairs],
-          }),
-          ...runtime.callOptions({
-            workload: "scout.explore",
-            model,
-            sessionId: params.runId,
-          }),
-        });
-        recordUsage(correction.usage);
-        return ExploreCardSelectionSchema.parse(correction.output);
-      },
-    });
-    answer = { ...answer, ...cards };
-  }
-  const matchCards =
-    params.surface === "web" || params.surface === "voice"
-      ? await hydrateExploreMatchCards({
-          requests: answer.matchCards,
-          eligibleMatchIds: state.lastMatchIds,
-        })
-      : [];
-  const loadoutCards =
-    params.surface === "web" || params.surface === "voice"
-      ? await hydrateExploreLoadoutCards({
-          requests: answer.loadoutCards,
-          eligiblePairs: state.lastQueryLoadoutPairs,
-          abortSignal: params.abortSignal,
-        })
-      : [];
+  const steps = await stream.steps;
+  const cards = await repairExploreCardSelection({
+    selection: {
+      matchCards: answer.matchCards,
+      loadoutCards: answer.loadoutCards,
+    },
+    eligibleMatchIds: state.lastMatchIds,
+    eligibleLoadoutPairs: state.lastQueryLoadoutPairs,
+    stepsUsed: steps.length,
+    outputTokensUsed: usage.outputTokens ?? EXPLORE_MAX_OUTPUT_TOKENS,
+    abortSignal: params.abortSignal,
+    correct: async ({ selection, failure, maxOutputTokens, abortSignal }) => {
+      assertWithinBudget();
+      await params.emit({
+        type: "activity",
+        text: "Checking card selections…",
+        toolCallId: null,
+        ignorable: true,
+      });
+      const correction = await generateText({
+        model: withExploreSpend(runtime.languageModel(model), {
+          ownerId: params.requesterId,
+          runId: params.runId,
+          model,
+        }),
+        output: Output.object({ schema: ExploreCardSelectionSchema }),
+        maxOutputTokens,
+        maxRetries: 0,
+        ...(abortSignal === undefined ? {} : { abortSignal }),
+        prompt: JSON.stringify({
+          instruction:
+            "Correct only the requested cards using the latest query's eligible choices. Keep valid requests. Never invent an id or reuse an earlier query. If no eligible choice supports a requested card, explicitly return no such card. No tools are available.",
+          failure: failure.message,
+          selection,
+          eligibleMatchIds: [...state.lastMatchIds],
+          eligibleLoadoutPairs: [...state.lastQueryLoadoutPairs],
+        }),
+        ...runtime.callOptions({
+          workload: "scout.explore",
+          model,
+          sessionId: params.runId,
+        }),
+      });
+      recordUsage(correction.usage);
+      return ExploreCardSelectionSchema.parse(correction.output);
+    },
+  });
+  answer = { ...answer, ...cards };
+  // Every surface selects and hydrates the same cards; Discord renders them
+  // as embeds and voice keeps them in the saved conversation.
+  const matchCards = await hydrateExploreMatchCards({
+    requests: answer.matchCards,
+    eligibleMatchIds: state.lastMatchIds,
+  });
+  const loadoutCards = await hydrateExploreLoadoutCards({
+    requests: answer.loadoutCards,
+    eligiblePairs: state.lastQueryLoadoutPairs,
+    abortSignal: params.abortSignal,
+  });
 
   // Streaming depends on the model emitting `answer` early enough for the
   // partial snapshots to carry it. If that ever stops holding — a reordered

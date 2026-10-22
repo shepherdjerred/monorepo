@@ -2,7 +2,7 @@
 name: voice-response
 description: Produce a short spoken response alongside the full saved Explore answer and support voice-to-web handoffs.
 capability: always
-surfaces: [voice]
+outputFor: [voice]
 tripwires:
   - spokenAnswer must stand alone in one to three plain sentences and must not refer to unseen UI.
 ---

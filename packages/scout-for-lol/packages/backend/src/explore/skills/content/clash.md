@@ -5,7 +5,6 @@ description: >-
   saw. Load before calling any Clash tool. Never invent brackets or current
   match results.
 capability: clash
-surfaces: [web, discord]
 tripwires:
   - >-
     Current Clash is pre-match only. Never invent brackets, winners, KDA, or

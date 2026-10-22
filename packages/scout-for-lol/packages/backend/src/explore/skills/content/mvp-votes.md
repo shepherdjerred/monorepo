@@ -4,7 +4,6 @@ description: >-
   This server's community Discord MVP ballots — who the guild voted as match
   MVP, not Riot post-game honors. Load before calling any MVP vote tool.
 capability: mvp-votes
-surfaces: [web, discord]
 tripwires:
   - >-
     Load the mvp-votes skill before calling community MVP vote tools. ScoutQL

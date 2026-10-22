@@ -142,7 +142,7 @@ export function createCreationToolExecutors(input: {
 }
 
 const PREPARE_DESCRIPTION_SUFFIX =
-  "This creates nothing. It returns a confirmation the user must accept in the Explore page within ten minutes; say plainly that nothing has been created yet.";
+  "This creates nothing. It returns a confirmation card, saved in this Explore conversation, that the user must accept within ten minutes; say plainly that nothing has been created yet.";
 
 /**
  * The tools, or nothing at all.

@@ -15,7 +15,7 @@ import {
   NO_GENERATED_MENTIONS,
   publicExploreChunks,
 } from "#src/discord/scout/messages.ts";
-import { exploreVisualizationPayload } from "#src/discord/scout/visualization.ts";
+import { exploreAnswerAttachments } from "#src/discord/scout/cards.ts";
 
 export type ScoutPublishButtonInteraction = {
   customId: string;
@@ -91,7 +91,7 @@ export async function handleScoutPublishButton(
       question: question.content,
       answer,
     });
-    const visualization = exploreVisualizationPayload(answer);
+    const visualization = exploreAnswerAttachments(answer);
     const publishedMessages: { delete: () => Promise<unknown> }[] = [];
     try {
       for (const [index, content] of chunks.entries()) {

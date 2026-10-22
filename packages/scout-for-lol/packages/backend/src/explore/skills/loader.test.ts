@@ -12,7 +12,10 @@ describe("explore skill loader", () => {
       expect(skill.name).toMatch(/^[a-z][a-z0-9-]*$/);
       expect(skill.description.length).toBeGreaterThan(0);
       expect(skill.body.length).toBeGreaterThan(0);
-      expect(skill.surfaces.length).toBeGreaterThan(0);
+      // A capability reaches every surface; only delivery skills narrow it.
+      if (skill.outputFor !== undefined) {
+        expect(skill.capability).toBe("always");
+      }
     }
   });
 
@@ -44,7 +47,6 @@ describe("explore skill loader", () => {
       "name: empty",
       "description: d",
       "capability: always",
-      "surfaces: [web]",
       "tripwires: []",
       "---",
       "",
@@ -58,7 +60,6 @@ describe("explore skill loader", () => {
       "name: x",
       "description: d",
       "capability: always",
-      "surfaces: [web]",
       "tripwires: []",
       "extra: nope",
       "---",
@@ -78,7 +79,6 @@ describe("explore skill loader", () => {
       "name: x",
       "description: d",
       "capability: always",
-      "surfaces: [web]",
       "tripwires: []",
       "---",
       "Uses {{alpha}} and {{beta}} and {{alpha}} again, but not {single}.",

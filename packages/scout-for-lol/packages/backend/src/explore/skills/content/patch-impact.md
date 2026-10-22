@@ -2,7 +2,6 @@
 name: patch-impact
 description: Connect structured patch changes to observed Scout match performance without confusing correlation and cause.
 capability: always
-surfaces: [web, discord, voice]
 tripwires:
   - Patch notes describe changes; Scout match results describe this corpus. Never claim the former caused the latter without evidence.
 ---

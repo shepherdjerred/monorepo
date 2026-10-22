@@ -8,6 +8,7 @@ import {
   type ReplayGuildSource,
 } from "#src/explore/replay/corpus.ts";
 import { ExploreDurablePayloadSchema } from "#src/explore/runs/durable-payload.ts";
+import type { ExploreSurface } from "#src/explore/surface.ts";
 import {
   ReplayPlanError,
   resolveTurnGuilds,
@@ -37,12 +38,12 @@ type Candidate = {
 };
 
 /**
- * Whether this *turn* provably ran on the surface a replay reproduces.
+ * Which surface this *turn* provably ran on.
  *
- * Per turn, not per conversation. Every case is replayed on `web`, so a
- * Discord or voice turn would be answered with a tool set it never had — the
- * web-only creation tools among them — and the comparison would measure the
- * surface rather than the agent.
+ * Per turn, not per conversation. A replay answers each turn on the surface it
+ * originally ran on, so the turn must name it. Surfaces now share one
+ * capability set, but replaying a Discord turn as web would still change how
+ * the answer is delivered and what the comparison measures.
  *
  * The `origin` column cannot decide it. The migration that added it defaults
  * every pre-existing row to `legacy`
@@ -50,7 +51,7 @@ type Candidate = {
  * before the column" and nothing about where it came from. Worse, origin is a
  * property of the conversation: a pre-migration `/scout ask` thread continued
  * on the web later has web runs, and judging the transcript as a whole would
- * admit the original Discord turn along with them.
+ * misattribute the original Discord turn.
  *
  * So each answer must name its own run. `ExploreDurablePayloadSchema.surface`
  * records it, and for rows predating that field it defaults to `web` on the
@@ -58,10 +59,12 @@ type Candidate = {
  * turn with no run of its own has no evidence either way and is refused — the
  * same rule guild recovery already follows.
  */
-function turnRanOnWeb(
+function turnSurface(
   answer: { readonly id: string },
   runs: readonly PlanRunRow[],
-): { readonly ok: true } | { readonly ok: false; readonly reason: string } {
+):
+  | { readonly ok: true; readonly surface: ExploreSurface }
+  | { readonly ok: false; readonly reason: string } {
   const own = runs.filter((run) => run.resultMessageId === answer.id);
   if (own.length === 0) {
     return {
@@ -69,6 +72,7 @@ function turnRanOnWeb(
       reason: "no durable run records the surface this turn ran on",
     };
   }
+  const surfaces = new Set<ExploreSurface>();
   for (const run of own) {
     const parsed = ExploreDurablePayloadSchema.safeParse(
       JSON.parse(run.payload) as unknown,
@@ -76,11 +80,13 @@ function turnRanOnWeb(
     if (!parsed.success) {
       return { ok: false, reason: "its durable run payload is unreadable" };
     }
-    if (parsed.data.surface !== "web") {
-      return { ok: false, reason: `it ran on ${parsed.data.surface}, not web` };
-    }
+    surfaces.add(parsed.data.surface);
   }
-  return { ok: true };
+  const [surface, ...others] = [...surfaces];
+  if (surface === undefined || others.length > 0) {
+    return { ok: false, reason: "its runs disagree about the surface" };
+  }
+  return { ok: true, surface };
 }
 
 export async function curateCorpus(input: {
@@ -128,13 +134,14 @@ export async function curateCorpus(input: {
     const path = transcript.messages;
     const turns: ReplayCorpusEntry["turns"] = [];
     let guildSource: Candidate["guildSource"] | null = null;
+    let conversationSurface: ExploreSurface | null = null;
     let unresolvable: string | null = null;
 
     for (let index = 0; index * 2 + 1 < path.length; index += 1) {
       const question = path[index * 2];
       const answer = path[index * 2 + 1];
       if (question?.role !== "user" || answer?.role !== "assistant") break;
-      const surface = turnRanOnWeb(
+      const surface = turnSurface(
         answer,
         runsByConversation.get(conversation.id) ?? [],
       );
@@ -142,6 +149,16 @@ export async function curateCorpus(input: {
         unresolvable = `turn ${index.toString()}: ${surface.reason}`;
         break;
       }
+      // One surface per conversation: the corpus entry replays every turn on
+      // it, so a thread that moved from Discord to the web is not curated.
+      if (
+        conversationSurface !== null &&
+        conversationSurface !== surface.surface
+      ) {
+        unresolvable = `turn ${index.toString()}: it ran on ${surface.surface}, earlier turns on ${conversationSurface}`;
+        break;
+      }
+      conversationSurface = surface.surface;
       try {
         const resolved = resolveTurnGuilds({
           answer,
@@ -167,7 +184,11 @@ export async function curateCorpus(input: {
       skipped.push(`${conversation.id}: ${unresolvable.slice(0, 80)}`);
       continue;
     }
-    if (turns.length < input.minTurns || guildSource === null) {
+    if (
+      turns.length < input.minTurns ||
+      guildSource === null ||
+      conversationSurface === null
+    ) {
       continue;
     }
 
@@ -184,15 +205,11 @@ export async function curateCorpus(input: {
         conversationId: conversation.id,
         leafId,
         kind,
-        // Chips and conversations both replay as web. "legacy" predates the
-        // origin field, and every conversation carrying it was a web turn;
-        // Discord and voice conversations are not curated because their
-        // surfaces change which tools exist.
-        surface: "web",
+        surface: conversationSurface,
         guildSource:
           guildSource === "message-column" ? "run-payload" : guildSource,
         turns,
-        note: `${turns.length.toString()} turn(s), ${kind}`,
+        note: `${turns.length.toString()} turn(s), ${kind}, ${conversationSurface}`,
       },
     });
   }

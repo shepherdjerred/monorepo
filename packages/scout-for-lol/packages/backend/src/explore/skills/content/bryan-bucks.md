@@ -5,7 +5,6 @@ description: >-
   positions, and profit/loss definitions for this server. Load before calling
   any bucks tool.
 capability: bucks
-surfaces: [web, discord]
 tripwires:
   - >-
     Current account balance is private to the asker; refuse another member's

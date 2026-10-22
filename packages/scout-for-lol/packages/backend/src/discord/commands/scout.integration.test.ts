@@ -20,7 +20,9 @@ import { resolveExploreModel } from "#src/config/dynamic.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import {
   executeScout,
+  executeScoutFollowUp,
   type ScoutAskInteraction,
+  type ScoutFollowUpInteraction,
 } from "#src/discord/commands/scout.ts";
 import { resetExploreRateLimitStateForTests } from "#src/explore/rate-limit.ts";
 import { runPersistedExploreTurn } from "#src/explore/runs/run-turn.ts";
@@ -252,5 +254,101 @@ describe("/scout ask", () => {
       runTurn: successfulRun,
     });
     expect(JSON.stringify(retry.edits)).toContain("Ahri wins most often.");
+  });
+});
+
+async function followingAgent(params: ExploreAgentParams) {
+  const base = await successfulAgent(params);
+  return {
+    ...base,
+    answer: {
+      ...base.answer,
+      followUps: ["How does that change in ranked solo?"],
+    },
+  };
+}
+const followingRun: typeof runPersistedExploreTurn = async (input) =>
+  await runPersistedExploreTurn(input, {
+    client: prisma,
+    executeAgent: followingAgent,
+    now: Date.now,
+    timeoutMs: 10_000,
+  });
+
+/** The custom id of the first follow-up button on the last private reply. */
+function followUpCustomId(edits: InteractionEditReplyOptions[]): string {
+  const ids = [
+    ...JSON.stringify(edits.at(-1)).matchAll(/scout:1:follow:[^"]+/g),
+  ];
+  const first = ids[0]?.[0];
+  if (first === undefined) throw new Error("No follow-up button rendered.");
+  return first;
+}
+
+function fakeButton(customId: string, clicker = userId) {
+  const edits: InteractionEditReplyOptions[] = [];
+  const interaction: ScoutFollowUpInteraction = {
+    customId,
+    guildId: allowedGuild,
+    user: { id: clicker, username: "fresh-name", avatar: null },
+    deferReply: () => Promise.resolve(undefined),
+    editReply: (options) => {
+      edits.push(options);
+      return Promise.resolve(undefined);
+    },
+    followUp: () => Promise.resolve(undefined),
+  };
+  return { interaction, edits };
+}
+
+describe("follow-up buttons", () => {
+  test("renders the answer's follow-ups as buttons that continue the conversation", async () => {
+    const ask = fakeInteraction();
+    await executeScout(ask.interaction, {
+      client: prisma,
+      runTurn: followingRun,
+    });
+    const customId = followUpCustomId(ask.edits);
+    expect(JSON.stringify(ask.edits.at(-1))).toContain(
+      "How does that change in ranked solo?",
+    );
+
+    const click = fakeButton(customId);
+    await executeScoutFollowUp(click.interaction, {
+      client: prisma,
+      runTurn: followingRun,
+    });
+
+    expect(await prisma.exploreConversation.count()).toBe(1);
+    const questions = await prisma.exploreMessage.findMany({
+      where: { role: "user" },
+      orderBy: { createdAt: "asc" },
+    });
+    expect(questions.map((message) => message.content)).toEqual([
+      "Who wins most often?",
+      "How does that change in ranked solo?",
+    ]);
+    expect(JSON.stringify(click.edits.at(-1))).toContain(
+      "Ahri wins most often.",
+    );
+  });
+
+  test("someone else's click cannot continue the conversation", async () => {
+    const ask = fakeInteraction();
+    await executeScout(ask.interaction, {
+      client: prisma,
+      runTurn: followingRun,
+    });
+
+    const click = fakeButton(followUpCustomId(ask.edits), testAccountId("82"));
+    await executeScoutFollowUp(click.interaction, {
+      client: prisma,
+      runTurn: followingRun,
+    });
+
+    expect(JSON.stringify(click.edits)).toContain("could not be found");
+    expect(await prisma.exploreMessage.count({ where: { role: "user" } })).toBe(
+      1,
+    );
   });
 });

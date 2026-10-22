@@ -123,17 +123,26 @@ describe("exploreAgentInstructions", () => {
     expect(everything).not.toContain("2026-08-29T00:00:00.000Z");
   });
 
-  test("keeps Discord answers self-contained instead of selecting web cards", () => {
+  test("Discord offers the same card and loadout skills as the web", () => {
     const instructions = exploreAgentInstructions({
       bucks: null,
       surface: "discord",
     });
 
-    expect(instructions).toContain("Set matchCards to []");
-    expect(instructions).toContain("fully self-contained");
-    expect(instructions).not.toContain("- match-cards:");
-    expect(instructions).not.toContain("- loadouts:");
+    expect(instructions).not.toContain(
+      "render only in the Explore web transcript",
+    );
+    expect(instructions).toContain("- match-cards:");
+    expect(instructions).toContain("- loadouts:");
   });
+
+  test.each(["discord", "voice"] as const)(
+    "%s never claims creations are web-only",
+    (surface) => {
+      const instructions = exploreAgentInstructions({ bucks: null, surface });
+      expect(instructions).not.toContain("never from this surface");
+    },
+  );
 
   test("offers match cards on the web surface via the skill index", () => {
     const instructions = exploreAgentInstructions({
@@ -284,6 +293,7 @@ describe("gated-off capabilities", () => {
       challenges: true,
       clash: true,
       hallOfFame: true,
+      creation: true,
     });
     expect(on).toContain("dedicated bucks tools");
     expect(on).not.toContain("not switched on for the servers in scope");

@@ -5,7 +5,6 @@ description: >-
   patch-note facts.
   Load before answering a question about current League mechanics or balance.
 capability: always
-surfaces: [web, discord, voice]
 tripwires:
   - Never answer current champion, item, rune, summoner-spell, ability, or patch facts from memory; use the League reference tools.
 ---

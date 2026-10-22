@@ -2,7 +2,6 @@
 name: player-tendencies
 description: Analyze recent player habits, champion choices, role patterns, and performance with honest samples.
 capability: always
-surfaces: [web, discord, voice]
 tripwires:
   - A tendency requires repeated evidence; label small or mixed samples instead of turning them into a rule.
 ---

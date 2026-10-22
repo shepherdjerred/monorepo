@@ -171,35 +171,28 @@ describe("flagOverridesFor", () => {
 
 describe("guildConfigIssues", () => {
   test("accepts a guild with nothing and a guild with everything", () => {
-    expect(guildConfigIssues(config(), "web")).toEqual([]);
-    expect(
-      guildConfigIssues(config({ capabilities: EVERYTHING }), "web"),
-    ).toEqual([]);
+    expect(guildConfigIssues(config())).toEqual([]);
+    expect(guildConfigIssues(config({ capabilities: EVERYTHING }))).toEqual([]);
   });
 
   test("rejects dares without bucks", () => {
     expect(
-      guildConfigIssues(
-        config({ capabilities: { ...NOTHING, dares: true } }),
-        "web",
-      ),
+      guildConfigIssues(config({ capabilities: { ...NOTHING, dares: true } })),
     ).toEqual([expect.stringContaining("dares resolve from a bucks")]);
   });
 
-  test("rejects creation off the web surface", () => {
+  test("accepts creation, which every surface now resolves", () => {
     expect(
       guildConfigIssues(
         config({ capabilities: { ...NOTHING, creation: true } }),
-        "discord",
       ),
-    ).toEqual([expect.stringContaining("creation tools are web-only")]);
+    ).toEqual([]);
   });
 
   test("rejects a captured riotHistory, which replay never reproduces", () => {
     expect(
       guildConfigIssues(
         config({ capabilities: { ...NOTHING, riotHistory: true } }),
-        "web",
       ),
     ).toEqual([expect.stringContaining("never reproduced")]);
   });

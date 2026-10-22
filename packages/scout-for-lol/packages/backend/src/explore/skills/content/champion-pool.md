@@ -2,7 +2,6 @@
 name: champion-pool
 description: Evaluate champion-pool depth, role coverage, comfort picks, and practical gaps from match evidence.
 capability: always
-surfaces: [web, discord, voice]
 tripwires:
   - Champion mastery is familiarity evidence, not proof of recent form or skill.
 ---
