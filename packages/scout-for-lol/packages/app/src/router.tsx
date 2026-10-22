@@ -190,12 +190,12 @@ const guildChildren: RouteObject[] = [
     errorElement: <RouteErrorPanel />,
   },
   {
-    path: "customs",
+    path: SCOUT_GUILD_PAGES.customs,
     element: <CustomsHistory />,
     errorElement: <RouteErrorPanel />,
   },
   {
-    path: "hall-of-fame",
+    path: SCOUT_GUILD_PAGES.hallOfFame,
     element: (
       <GuildPermissionsGate
         permissions={GUILD_ACTION_ROUTE_PERMISSIONS.hallSettings}
@@ -206,13 +206,13 @@ const guildChildren: RouteObject[] = [
     errorElement: <RouteErrorPanel />,
   },
   {
-    path: "audit",
+    path: SCOUT_GUILD_PAGES.audit,
     element: <GuildAudit />,
     loader: auditLoader,
     errorElement: <RouteErrorPanel />,
   },
   {
-    path: "access",
+    path: SCOUT_GUILD_PAGES.access,
     element: <GuildAccess />,
     loader: accessLoader,
     errorElement: <RouteErrorPanel />,

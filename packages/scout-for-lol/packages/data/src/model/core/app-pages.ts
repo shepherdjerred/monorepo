@@ -11,6 +11,10 @@ export const SCOUT_GUILD_PAGES = {
   subscriptions: "subscriptions",
   reports: "reports",
   competitions: "competitions",
+  hallOfFame: "hall-of-fame",
+  customs: "customs",
+  audit: "audit",
+  access: "access",
 } as const;
 
 export type ScoutGuildPage = keyof typeof SCOUT_GUILD_PAGES;

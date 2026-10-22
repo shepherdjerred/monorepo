@@ -63,7 +63,10 @@ const POSTABLE_CHANNEL_TYPES = new Set<number>([
 export type GuildChannelPostability = {
   readonly channels: readonly DiscordGuildChannel[];
   /** Whether Scout can actually post in this channel, right now. */
-  readonly isPostable: (channel: DiscordGuildChannel) => boolean;
+  readonly isPostable: (
+    channel: DiscordGuildChannel,
+    needsAttachments?: boolean,
+  ) => boolean;
 };
 
 /**
@@ -134,7 +137,7 @@ export async function readGuildChannelPostability(
   );
   return {
     channels,
-    isPostable: (channel) => {
+    isPostable: (channel, needsAttachments = false) => {
       if (!POSTABLE_CHANNEL_TYPES.has(channel.type)) return false;
       // Only offer channels the bot can actually post in. Without this we'd
       // show channels Scout could read but never message.
@@ -149,7 +152,9 @@ export async function readGuildChannelPostability(
       });
       return (
         hasPermission(permissions, PermissionFlagsBits.ViewChannel) &&
-        hasPermission(permissions, PermissionFlagsBits.SendMessages)
+        hasPermission(permissions, PermissionFlagsBits.SendMessages) &&
+        (!needsAttachments ||
+          hasPermission(permissions, PermissionFlagsBits.AttachFiles))
       );
     },
   };
@@ -166,12 +171,21 @@ export async function readGuildChannelPostability(
 export async function listPostableChannels(
   guildId: DiscordGuildId,
   dependencies: PostableChannelDependencies = defaultDependencies(),
+  options: {
+    /**
+     * Also require Attach Files: a match or report post carries an image and
+     * fails without it, though a plain message would send.
+     */
+    readonly needsAttachments?: boolean;
+  } = {},
 ): Promise<PostableChannel[]> {
   const guild = await readGuildChannelPostability(guildId, dependencies);
   if (guild === null) return [];
 
   const postable = guild.channels
-    .filter((channel) => guild.isPostable(channel))
+    .filter((channel) =>
+      guild.isPostable(channel, options.needsAttachments ?? false),
+    )
     .map((channel) => ({
       id: DiscordChannelIdSchema.parse(channel.id),
       name: channel.name,

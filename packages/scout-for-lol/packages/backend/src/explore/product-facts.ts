@@ -49,18 +49,31 @@ export function challengeFacts(): readonly string[] {
  * Pages are named from `SCOUT_GUILD_PAGES`, the list the app's router serves,
  * so a page this names is a page that exists.
  */
+const PAGE_LABELS: Readonly<Record<keyof typeof SCOUT_GUILD_PAGES, string>> = {
+  players: "Players",
+  subscriptions: "Subscriptions",
+  reports: "Reports",
+  competitions: "Competitions",
+  hallOfFame: "Hall of Fame settings",
+  customs: "Custom games",
+  audit: "Audit log",
+  access: "Access",
+};
+
 function page(name: keyof typeof SCOUT_GUILD_PAGES): string {
-  return `the server's ${name[0]?.toUpperCase() ?? ""}${name.slice(1)} page (/app/g/<server>/${SCOUT_GUILD_PAGES[name]})`;
+  return `the server's ${PAGE_LABELS[name]} page (/app/g/<server>/${SCOUT_GUILD_PAGES[name]})`;
 }
 
 export function setupFacts(): readonly string[] {
   return [
     `A tracked player is a Riot account Scout follows for a server, under a display name (its alias). Tracked players are listed and added on ${page("players")}.`,
-    `A player feed (a subscription) posts a match report to a chosen Discord channel after every game a tracked player finishes, with their stats and a review of the game. It is Scout's automatic post-game review. Feeds are managed on ${page("subscriptions")}, and Explore can prepare one.`,
+    `A player feed (a subscription) posts a match report with the player's stats to a chosen Discord channel after each game a tracked player finishes that the feed covers. It is Scout's automatic post-game report. A feed can be limited to certain queues by its filters, and can be muted; a muted or filtered-out game is not posted. Some reports also carry a written AI review, but only when the server has AI reviews switched on and the game stands out, so never promise a review after every game. Feeds are managed on ${page("subscriptions")}, and Explore can prepare one.`,
     `A scheduled report runs a saved question on a schedule and posts the result to a channel. Reports are listed, edited, disabled and deleted on ${page("reports")}. Each person and each server may have only a few active reports; get_server_setup says how many.`,
     `A competition ranks a server's tracked players over a period by one scoring rule. Competitions are on ${page("competitions")}.`,
-    "Every server setting lives in the Scout web app under that server, on exactly those four pages. Never name any other page, menu, tab, button or setting.",
-    "Scout's match reports and notifications cannot be customized: there is no template, wording, message or notification setting anywhere in Scout. Say so plainly; never suggest the user look for one.",
+    `The server's other pages are ${page("hallOfFame")}, ${page("access")} (who may manage what in Scout), ${page("audit")} and ${page("customs")}.`,
+    "Every server setting lives in the Scout web app under that server, on the pages named here. Never name any other page, menu, tab, button or setting.",
+    "The wording of Scout's match reports and posts cannot be customized: there is no template or message-text setting anywhere in Scout. Say so plainly; never suggest the user look for one.",
+    "The only notification choices are Bryan Bucks direct messages: each person picks which Bucks DMs they receive with /bb notifications. Those toggles choose which DMs arrive, not their wording, and they do not affect match reports.",
     "Scout cannot post a one-off message to a channel. The closest feature is a scheduled report.",
     "Scout does not send reviews by direct message. A player feed posts to a channel, and Explore reviews any recorded game on request.",
   ];

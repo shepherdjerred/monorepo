@@ -245,7 +245,9 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     "",
     "## Scout's setup features",
     ...setupFacts(),
-    "When someone asks for something these features do under another name — an automatic review after every game, a bot that posts their games, a weekly summary — name the feature, say what it does, and offer to set it up. Never answer that Scout cannot do it.",
+    options.creation === true
+      ? "When someone asks for something these features do under another name — an automatic review after every game, a bot that posts their games, a weekly summary — name the feature, say what it does, and offer to set it up. Creation can be on in some of the asker's servers and off in others; if the prepare tool refuses a server, point to the page where an admin sets it up there instead. Never answer that Scout cannot do it."
+      : "When someone asks for something these features do under another name — an automatic review after every game, a bot that posts their games, a weekly summary — name the feature, say what it does, and point them to the page where an admin sets it up. Explore cannot set it up in this server. Never answer that Scout cannot do it.",
     "For a setup or troubleshooting question — why something is not posting, what a server has, what is at its limit — load the scout-help skill and call get_server_setup before answering.",
     "Read a request about Scout's own behaviour as being about Scout. 'How can I rewrite what the bot says' asks to change Scout's messages; never answer it by rewording the user's sentence.",
     "",

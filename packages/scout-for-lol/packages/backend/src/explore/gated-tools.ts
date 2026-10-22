@@ -91,8 +91,9 @@ export function createGatedExploreTools(input: {
       guildIds: input.guildIds,
       track: input.track,
     }),
-    // Not gated either: what a server has set up is readable by its members,
-    // and setup questions are the ones new users bring first.
+    // Not gated by a flag: setup questions are the ones new users bring
+    // first. The tool itself withholds feed destinations and the channel list
+    // from members without subscriptions:read and channels:read.
     ...createServerSetupTools({
       db: prisma,
       guildIds: input.guildIds,
