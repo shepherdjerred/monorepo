@@ -1,5 +1,9 @@
 import { DeliveryError } from "#domain/error.ts";
-import { DeploymentSchema, deliveryWorkflowId } from "#shared/contract.ts";
+import {
+  DeploymentSchema,
+  deliverySuccessorWorkflowId,
+  deliveryWorkflowId,
+} from "#shared/contract.ts";
 import type { Principal } from "#shared/contract.ts";
 import { wire, lock, required, audit } from "./delivery-records.ts";
 import type { Delivery } from "./delivery.ts";
@@ -34,6 +38,9 @@ export async function monitor(this: Delivery) {
       status: entry.deployment.status,
       workflowId: entry.workflowId,
       submitted: entry.submittedAt !== null,
+      // The Workflow that owns it now; a successor after a handoff (D8).
+      ownerWorkflowId: entry.deployment.workflowId,
+      handoff: entry.deployment.handoffAt !== null,
     })),
   };
 }
@@ -44,7 +51,12 @@ export async function orphan(
   input: { workflowId: string; reason: string; workflowStatus: string },
   actor: Principal,
 ) {
-  if (input.workflowId !== deliveryWorkflowId(deploymentId))
+  if (
+    ![
+      deliveryWorkflowId(deploymentId),
+      deliverySuccessorWorkflowId(deploymentId),
+    ].includes(input.workflowId)
+  )
     throw new DeliveryError(
       "INVALID",
       "Workflow identity differs from this deployment",
@@ -64,6 +76,19 @@ export async function orphan(
       throw new DeliveryError(
         "CONFLICT",
         "Deployment has no submitted workflow to recover",
+      );
+    // The outgoing executor closes by design after a handoff (D8).
+    if (row.handoffAt !== null)
+      throw new DeliveryError(
+        "CONFLICT",
+        "Deployment awaits its successor executor; its outgoing Workflow closing is expected",
+      );
+    if (
+      (row.workflowId ?? deliveryWorkflowId(deploymentId)) !== input.workflowId
+    )
+      throw new DeliveryError(
+        "CONFLICT",
+        "A closed Workflow that does not own this deployment cannot orphan it",
       );
     const recoveryRequired = row.stages.some(
       (entry) => entry.status === "running",

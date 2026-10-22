@@ -12,22 +12,29 @@ import {
   testExecutor,
   workerFixture,
 } from "@shepherdjerred/delivery/testing";
-import { deliveryWorkflowId } from "@shepherdjerred/delivery/contract";
+import {
+  deliverySuccessorWorkflowId,
+  deliveryWorkflowId,
+} from "@shepherdjerred/delivery/contract";
 
 const temporal = vi.hoisted(() => ({
   start: vi.fn((_type: string, _options: unknown): Promise<void> =>
     Promise.resolve(),
   ),
-  describe: vi.fn(async () => ({
+  describe: vi.fn(async (_workflowId: string) => ({
     type: "deliveryDeploymentWorkflow",
     status: { name: "RUNNING" },
   })),
+  handles: Array.of<string>(),
 }));
 vi.mock("#client", () => ({
   createTemporalClient: async () => ({
     workflow: {
       start: temporal.start,
-      getHandle: () => ({ describe: temporal.describe }),
+      getHandle: (workflowId: string) => {
+        temporal.handles.push(workflowId);
+        return { describe: async () => await temporal.describe(workflowId) };
+      },
     },
   }),
 }));
@@ -74,6 +81,107 @@ async function quarantinedRecovery(store: Delivery) {
     testOperator,
   );
   return { detail, intent };
+}
+
+/**
+ * D8: a handed-off self-hosted deployment gets its one successor instead of
+ * an orphan repair, and once the successor owns it the monitor watches it.
+ */
+async function successorDispatchCase(input: {
+  store: Delivery;
+  database: Awaited<ReturnType<typeof createTestDatabase>>["database"];
+  environmentId: string;
+  versionId: string;
+}) {
+  const { store, database, environmentId, versionId } = input;
+  const env = await database.environment.findUniqueOrThrow({
+    where: { id: environmentId },
+  });
+  await database.service.update({
+    where: { id: env.serviceId },
+    data: { selfHosted: true },
+  });
+  for (const pending of await database.deployment.findMany({
+    where: { environmentId, status: { in: ["queued", "awaiting_approval"] } },
+  }))
+    await store.cancel(pending.id, testOperator);
+  const handed = await store.createDeployment(
+    {
+      requestId: "self-hosted-handoff",
+      environmentId,
+      versionSetRevisionId: versionId,
+      expectedGeneration: env.generation,
+      kind: "deploy",
+    },
+    testOperator,
+  );
+  const outgoing = {
+    workflowId: deliveryWorkflowId(handed.id),
+    workflowRunId: "outgoing-run",
+  };
+  await store.claim(handed.id, testExecutor, undefined, outgoing);
+  await store.handOff(handed.id, outgoing, testExecutor);
+  const successor = deliverySuccessorWorkflowId(handed.id);
+  expect(await dispatchPendingDeliveries()).toEqual({ submitted: 0 });
+  expect(temporal.start).toHaveBeenCalledWith(
+    "deliveryHandoffWorkflow",
+    expect.objectContaining({
+      workflowId: successor,
+      args: [{ deploymentId: handed.id }],
+    }),
+  );
+  expect(temporal.handles).not.toContain(outgoing.workflowId);
+  temporal.start.mockRejectedValueOnce(
+    new WorkflowExecutionAlreadyStartedError(
+      "successor already started",
+      successor,
+      "deliveryHandoffWorkflow",
+    ),
+  );
+  expect(await dispatchPendingDeliveries()).toEqual({ submitted: 0 });
+  expect(
+    await database.deployment.findUniqueOrThrow({
+      where: { id: handed.id },
+    }),
+  ).toMatchObject({ status: "running", recoveryRequired: false });
+  // Once the successor owns it, the monitor watches the successor.
+  await store.claimHandoff(
+    handed.id,
+    { workflowId: successor, workflowRunId: "successor-run" },
+    testExecutor,
+  );
+  temporal.handles.length = 0;
+  temporal.describe.mockImplementation(async (workflowId) => ({
+    type:
+      workflowId === successor
+        ? "deliveryHandoffWorkflow"
+        : "deliveryDeploymentWorkflow",
+    status: { name: "RUNNING" },
+  }));
+  try {
+    await dispatchPendingDeliveries();
+  } finally {
+    temporal.describe.mockReset();
+    temporal.describe.mockImplementation(async () => ({
+      type: "deliveryDeploymentWorkflow",
+      status: { name: "RUNNING" },
+    }));
+  }
+  expect(temporal.handles).toContain(successor);
+  await store.finish(
+    handed.id,
+    {
+      status: "failed",
+      message: "Fixture releases the dispatch barrier",
+      recoveryRequired: false,
+      evidence: [],
+    },
+    testExecutor,
+  );
+  await database.service.update({
+    where: { id: env.serviceId },
+    data: { selfHosted: false },
+  });
 }
 
 describe("Delivery outbox dispatch over real PostgreSQL and HTTP", () => {
@@ -209,6 +317,15 @@ describe("Delivery outbox dispatch over real PostgreSQL and HTTP", () => {
     });
     expect(untouched.submittedAt).toBeNull();
     expect(temporal.start).not.toHaveBeenCalled();
+  }, 60_000);
+  it("starts the one successor of a handed-off self-hosted deployment instead of orphaning it (D8)", async () => {
+    writesEnabled = false;
+    await successorDispatchCase({
+      store,
+      database: cluster.database,
+      environmentId,
+      versionId,
+    });
   }, 60_000);
   it("repairs a recovery Workflow's lost start response while paused without starting another attempt", async () => {
     writesEnabled = false;

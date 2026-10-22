@@ -3,6 +3,10 @@ import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { createTestApp } from "#testing/http-app.ts";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
 import { lock } from "#infrastructure/delivery-records.ts";
+import {
+  deliverySuccessorWorkflowId,
+  deliveryWorkflowId,
+} from "#shared/contract.ts";
 import { rollbackCandidates } from "./candidates.ts";
 
 const context = useDeliveryFixture();
@@ -584,60 +588,159 @@ describe("admission (Z1, D8)", () => {
       },
     ]);
   });
+});
 
-  test("a self-hosted deployment passes to its successor executor and to no one else", async () => {
-    await context.cluster.database.service.update({
-      where: { id: "arcade" },
-      data: { selfHosted: true },
-    });
-    const env = await environmentRow();
-    const deployment = await context.delivery.createDeployment(
-      {
-        requestId: "self-hosted",
-        environmentId: env.id,
-        versionSetRevisionId: context.fixture.versionSet.id,
-        expectedGeneration: env.generation,
-        kind: "deploy",
-      },
-      testOperator,
+/** A deployment of arcade claimed by its original executor run (D7). */
+async function ownedDeployment(requestId: string, selfHosted: boolean) {
+  await context.cluster.database.service.update({
+    where: { id: "arcade" },
+    data: { selfHosted },
+  });
+  const env = await environmentRow();
+  const deployment = await context.delivery.createDeployment(
+    {
+      requestId,
+      environmentId: env.id,
+      versionSetRevisionId: context.fixture.versionSet.id,
+      expectedGeneration: env.generation,
+      kind: "deploy",
+    },
+    testOperator,
+  );
+  const outgoing = {
+    workflowId: deliveryWorkflowId(deployment.id),
+    workflowRunId: "run-1",
+  };
+  await context.delivery.claim(
+    deployment.id,
+    testExecutor,
+    undefined,
+    outgoing,
+  );
+  const successor = {
+    workflowId: deliverySuccessorWorkflowId(deployment.id),
+    workflowRunId: "successor-1",
+  };
+  return { id: deployment.id, outgoing, successor };
+}
+
+describe("self-hosted handoff (D7, D8)", () => {
+  test("a self-hosted deployment passes only through its successor's handoff claim", async () => {
+    const { id, outgoing, successor } = await ownedDeployment(
+      "self-hosted",
+      true,
     );
-    const outgoing = { workflowId: "delivery/self", workflowRunId: "run-1" };
-    await context.delivery.claim(
-      deployment.id,
-      testExecutor,
-      undefined,
-      outgoing,
-    );
+    const detail = await context.delivery.detail(id);
+    expect(detail.selfHosted).toBe(true);
+    // Without the marker even the successor identity is refused (D7).
     await expect(
-      context.delivery.claim(deployment.id, testExecutor, undefined, {
-        workflowId: "delivery/self",
+      context.delivery.claimHandoff(id, successor, testExecutor),
+    ).rejects.toThrow(/holds no handoff marker/u);
+    await expect(
+      context.delivery.claim(id, testExecutor, undefined, {
+        ...outgoing,
         workflowRunId: "run-2",
       }),
     ).rejects.toThrow(/never re-owned/u);
-    const handed = await context.delivery.handOff(
-      deployment.id,
-      outgoing,
-      testExecutor,
-    );
+    const handed = await context.delivery.handOff(id, outgoing, testExecutor);
     expect(handed.handoffAt).not.toBeNull();
     expect(handed.leaseExpiresAt).toBeNull();
-    const successor = { workflowId: "delivery/self", workflowRunId: "run-2" };
-    const taken = await context.delivery.claim(
-      deployment.id,
-      testExecutor,
-      undefined,
-      successor,
-    );
-    expect(taken.deployment).toMatchObject({
-      workflowRunId: "run-2",
-      handoffAt: null,
-    });
+    // The outgoing lease stays frozen; ordinary claims never transfer the
+    // marker, and only the one successor Workflow may take it.
     await expect(
-      context.delivery.claim(deployment.id, testExecutor, undefined, {
-        workflowId: "delivery/self",
-        workflowRunId: "run-3",
-      }),
+      context.delivery.renewLease(id, outgoing, testExecutor),
+    ).rejects.toThrow(/stays frozen/u);
+    await expect(
+      context.delivery.claim(id, testExecutor, undefined, successor),
     ).rejects.toThrow(/never re-owned/u);
+    await expect(
+      context.delivery.claimHandoff(
+        id,
+        { ...outgoing, workflowRunId: "run-2" },
+        testExecutor,
+      ),
+    ).rejects.toThrow(/Only the deployment's successor executor/u);
+    const closed = (reason: string) =>
+      context.delivery.orphan(
+        id,
+        {
+          workflowId: outgoing.workflowId,
+          workflowStatus: "COMPLETED",
+          reason,
+        },
+        testExecutor,
+      );
+    // The outgoing Workflow closing after handoff is expected, not an orphan.
+    await expect(closed("Closed after handing off")).rejects.toThrow(
+      /awaits its successor executor/u,
+    );
+    const taken = await context.delivery.claimHandoff(
+      id,
+      successor,
+      testExecutor,
+    );
+    expect(taken).toMatchObject({ ...successor, handoffAt: null });
+    expect(taken.leaseExpiresAt).not.toBeNull();
+    expect(
+      await context.delivery.claimHandoff(id, successor, testExecutor),
+    ).toMatchObject(successor);
+    await expect(
+      context.delivery.claimHandoff(
+        id,
+        { ...successor, workflowRunId: "successor-2" },
+        testExecutor,
+      ),
+    ).rejects.toThrow(/never re-owned/u);
+    await expect(closed("No longer the owner")).rejects.toThrow(
+      /does not own this deployment/u,
+    );
+    await context.delivery.renewLease(id, successor, testExecutor);
+    expect(
+      await context.cluster.database.audit.count({
+        where: { action: "deployment.handoff_claimed", entityId: id },
+      }),
+    ).toBe(1);
+  });
+
+  test("the successor claim route stays open while writes are paused", async () => {
+    const { id, outgoing, successor } = await ownedDeployment(
+      "self-hosted-http",
+      true,
+    );
+    await context.delivery.handOff(id, outgoing, testExecutor);
+    const token = "test-successor-executor-credential-000";
+    const app = createTestApp(context.delivery, {
+      machineCredentials: [{ token, principal: testExecutor }],
+      writesEnabled: () => Promise.resolve(false),
+      enabledEnvironments: () => Promise.resolve([]),
+    });
+    const response = await app.request(`/api/v1/deployments/${id}/successor`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(successor),
+    });
+    expect(response.status).toBe(200);
+    expect(
+      await context.cluster.database.deployment.findUniqueOrThrow({
+        where: { id },
+      }),
+    ).toMatchObject({ workflowRunId: "successor-1", handoffAt: null });
+  });
+
+  test("an ordinary service never hands off", async () => {
+    const { id, outgoing, successor } = await ownedDeployment(
+      "ordinary",
+      false,
+    );
+    await expect(
+      context.delivery.handOff(id, outgoing, testExecutor),
+    ).rejects.toThrow(/Only a self-hosted service/u);
+    await expect(
+      context.delivery.claimHandoff(id, successor, testExecutor),
+    ).rejects.toThrow(/holds no handoff marker/u);
   });
 });
 
@@ -672,21 +775,11 @@ describe("anonymous claims (D7)", () => {
       ...owner,
       leaseExpiresAt: lapsing.toISOString(),
     });
-    // A handed-off deployment passes only to a named successor.
+    // A handed-off deployment passes only through its successor's handoff claim (D8).
     await context.delivery.handOff(deployment.id, owner, testExecutor);
-    const anonymous = await context.delivery.claim(deployment.id, testExecutor);
-    expect(anonymous.deployment.handoffAt).not.toBeNull();
-    expect(anonymous.deployment.leaseExpiresAt).toBeNull();
-    // The recorded executor still renews its own lease.
-    const successor = { workflowId: "delivery/owner", workflowRunId: "run-2" };
-    const taken = await context.delivery.claim(
-      deployment.id,
-      testExecutor,
-      undefined,
-      successor,
-    );
-    expect(taken.deployment).toMatchObject({ ...successor, handoffAt: null });
-    expect(taken.deployment.leaseExpiresAt).not.toBeNull();
+    await expect(
+      context.delivery.claim(deployment.id, testExecutor),
+    ).rejects.toThrow(/successor's handoff claim/u);
   });
 });
 

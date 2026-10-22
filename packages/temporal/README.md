@@ -32,6 +32,15 @@ credentials, and compatible Workflow workers are available. A lost start
 response is inspected by stable Workflow identity before acknowledging the row.
 Paused or occupied environments remain in a durable Workflow admission wait.
 
+A self-hosted service's model deployment hands off after its steps apply (D8):
+the executor marks it handed off and stops without accepting it. The next
+dispatch tick starts its one successor, `deliveryHandoffWorkflow` with ID
+`deliverySuccessorWorkflowId`, instead of treating the closed Workflow as an
+orphan. The successor claims the marker before anything else, then verifies
+acceptance and finishes. A refused claim changes nothing; an unverified
+successor finishes recovery-required with the locks and barrier held.
+Histories recorded before `delivery-self-hosted-handoff-v1` accept as before.
+
 `scripts/rollout/delivery-settlement-recovery.ts` provides independent result
 settlement when an unavailable executor cannot finish its recorded result.
 Its required arguments are `--deployment`, `--run`, `--activity`, `--url`, and

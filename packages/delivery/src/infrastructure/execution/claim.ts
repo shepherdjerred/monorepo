@@ -238,14 +238,18 @@ async function admitClaim(this: Delivery, tx: Transaction, input: ClaimInput) {
   );
   await requireControlPlaneQuiescence(tx, row);
   await requireDispatchBarrier(tx, row, { id: row.environmentId });
-  const successor = requireSameExecutor(row, input.executor);
+  requireSameExecutor(row, input.executor);
+  if (row.handoffAt !== null)
+    throw new DeliveryError(
+      "CONFLICT",
+      "A handed-off deployment passes only through its successor's handoff claim (D8)",
+    );
   // A lapsed lease is neither resumed nor fenced; the lease scan recovers it.
   requireLiveLease(row);
   // D7: once an executor identity owns the deployment, a claim that names
   // none (a native Job's or an in-flight step's fence) only rechecks
-  // admission. Only the recorded executor renews the lease, and only a named
-  // successor takes a handoff, so an anonymous caller never extends or takes
-  // ownership.
+  // admission. Only the recorded executor renews the lease, so an anonymous
+  // caller never extends or takes ownership.
   const fence = input.executor === undefined && row.workflowId !== null;
   if (row.kind === "repair-trmnl") {
     await claimTrmnlRepair(tx, row, repairClaimProof(input.claimProof), actor);
@@ -266,8 +270,7 @@ async function admitClaim(this: Delivery, tx: Transaction, input: ClaimInput) {
     if (fence) return { status: "claimed" } as const;
     await tx.deployment.update({
       where: { id: deploymentId },
-      // A successor executor takes a handed-off self-hosted deployment (D8).
-      data: { ...input.owned, ...(successor ? { handoffAt: null } : {}) },
+      data: input.owned,
     });
     return { status: "claimed" } as const;
   }

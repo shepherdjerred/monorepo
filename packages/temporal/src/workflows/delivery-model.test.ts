@@ -50,6 +50,39 @@ function modelActivities(calls: string[], failStep?: string) {
   };
 }
 
+/** A settled acceptance that writes its cold-start snapshot, in order. */
+const settledWithSnapshot = [
+  "accept",
+  "finish:succeeded",
+  "settle",
+  `write:${coldStart.fingerprint}`,
+  "record:s3://backup/delivery/cold-start/c.json",
+];
+
+/** Replays a recorded history against the production delivery Workflows. */
+async function replayDelivery(
+  environment: TestWorkflowEnvironment,
+  workflowId: string,
+) {
+  await Worker.runReplayHistory(
+    { workflowsPath: new URL("delivery.ts", import.meta.url).pathname },
+    await environment.client.workflow.getHandle(workflowId).fetchHistory(),
+  );
+}
+
+/** The successor executor's activities (D8). */
+function successorActivities(calls: string[]) {
+  return {
+    ...modelActivities(calls),
+    claimDeliveryHandoff: () => {
+      calls.push("claim");
+    },
+    failDeliveryHandoff: () => {
+      calls.push("fail-handoff");
+    },
+  };
+}
+
 /** The backup worker's cold-start write, failing its first `failures` attempts. */
 async function backupWorker(
   environment: TestWorkflowEnvironment,
@@ -151,16 +184,9 @@ describe("Delivery model step executor (T3)", () => {
         "waited",
         "lease",
         "test-e2e",
-        "accept",
-        "finish:succeeded",
-        "settle",
-        `write:${coldStart.fingerprint}`,
-        "record:s3://backup/delivery/cold-start/c.json",
+        ...settledWithSnapshot,
       ]);
-      await Worker.runReplayHistory(
-        { workflowsPath: new URL("delivery.ts", import.meta.url).pathname },
-        await environment.client.workflow.getHandle(workflowId).fetchHistory(),
-      );
+      await replayDelivery(environment, workflowId);
     } finally {
       await environment.teardown();
     }
@@ -381,6 +407,164 @@ describe("Delivery model cold-start snapshot (X7)", () => {
         }),
       );
       expect(calls).toContain(`write:${coldStart.fingerprint}`);
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+});
+
+describe("Delivery self-hosted handoff (D8)", () => {
+  it("a self-hosted deployment hands off after applying and neither accepts nor settles (D8)", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const calls: string[] = [];
+    const { workflows, activities } = await createDeliveryWorkers(environment, {
+      ...modelActivities(calls),
+      planDeliveryModel: () => ({
+        keys: ["step-apply-safety", "step-sync"],
+        resumeAt: 0,
+        platform: [],
+        handoff: true,
+      }),
+      handOffDelivery: () => {
+        calls.push("handoff");
+      },
+    });
+    try {
+      const workflowId = `model-handoff-${crypto.randomUUID()}`;
+      await workflows.runUntil(
+        activities.runUntil(
+          environment.client.workflow.execute("deliveryDeploymentWorkflow", {
+            workflowId,
+            taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+            args: [{ deploymentId: "deployment-7" }],
+          }),
+        ),
+      );
+      expect(calls).toEqual([
+        "lease",
+        "step-apply-safety",
+        "lease",
+        "step-sync",
+        "handoff",
+      ]);
+      await replayDelivery(environment, workflowId);
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+
+  it("replays a self-hosted deployment recorded before the handoff existed as it ran", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const calls: string[] = [];
+    try {
+      await replayFixture(environment, {
+        fixture: new URL(
+          "replay-fixtures/delivery-deployment-before-handoff.ts",
+          import.meta.url,
+        ),
+        workflowType: "deliveryDeploymentWorkflow",
+        workflowId: `deployment-before-handoff-${crypto.randomUUID()}`,
+        args: [{ deploymentId: "deployment-7" }],
+        activities: {
+          ...modelActivities(calls),
+          planDeliveryModel: () => ({
+            keys: ["step-sync"],
+            resumeAt: 0,
+            platform: [],
+            handoff: true,
+          }),
+          settleDeliveryModel: () => {
+            calls.push("settle");
+            return null;
+          },
+          handOffDelivery: () => {
+            calls.push("handoff");
+          },
+        },
+      });
+      expect(calls).toEqual([
+        "lease",
+        "step-sync",
+        "accept",
+        "finish:succeeded",
+        "settle",
+      ]);
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+
+  it("the successor claims the handoff before verifying acceptance, then finishes and settles", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const calls: string[] = [];
+    const { workflows, activities } = await createDeliveryWorkers(environment, {
+      ...successorActivities(calls),
+    });
+    const backup = await backupWorker(environment, calls);
+    try {
+      const workflowId = `handoff-${crypto.randomUUID()}`;
+      await workflows.runUntil(
+        activities.runUntil(
+          backup.runUntil(
+            environment.client.workflow.execute("deliveryHandoffWorkflow", {
+              workflowId,
+              taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+              args: [{ deploymentId: "deployment-7" }],
+            }),
+          ),
+        ),
+      );
+      expect(calls).toEqual(["claim", ...settledWithSnapshot]);
+      await replayDelivery(environment, workflowId);
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+
+  it("a refused claim touches nothing; an unverified successor leaves the deployment recovery-required", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const calls: string[] = [];
+    const refused = await createDeliveryWorkers(environment, {
+      ...successorActivities(calls),
+      claimDeliveryHandoff: () => {
+        calls.push("claim");
+        throw ApplicationFailure.nonRetryable(
+          "Deployment is owned by another executor identity; it is never re-owned",
+          "DeliveryApi:CONFLICT",
+        );
+      },
+    });
+    const execute = (workflowId: string) =>
+      environment.client.workflow.execute("deliveryHandoffWorkflow", {
+        workflowId,
+        taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+        args: [{ deploymentId: "deployment-7" }],
+      });
+    try {
+      await expect(
+        refused.workflows.runUntil(
+          refused.activities.runUntil(
+            execute(`refused-${crypto.randomUUID()}`),
+          ),
+        ),
+      ).rejects.toThrow("Workflow execution failed");
+      expect(calls).toEqual(["claim"]);
+      calls.length = 0;
+      const unverified = await createDeliveryWorkers(environment, {
+        ...successorActivities(calls),
+        acceptDeliveryModel: () => {
+          calls.push("accept");
+          throw ApplicationFailure.nonRetryable("oracle probe failed");
+        },
+      });
+      await expect(
+        unverified.workflows.runUntil(
+          unverified.activities.runUntil(
+            execute(`unverified-${crypto.randomUUID()}`),
+          ),
+        ),
+      ).rejects.toThrow("Workflow execution failed");
+      expect(calls).toEqual(["claim", "accept", "fail-handoff"]);
     } finally {
       await environment.teardown();
     }

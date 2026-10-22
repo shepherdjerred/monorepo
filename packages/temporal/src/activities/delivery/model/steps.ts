@@ -49,6 +49,8 @@ export async function planDeliveryModel(id: string) {
     platform: steps
       .filter((step) => step.adapter === "tofu")
       .map((step) => step.key),
+    // A self-hosted service's executor hands off after applying (D8).
+    handoff: current.selfHosted,
   };
 }
 

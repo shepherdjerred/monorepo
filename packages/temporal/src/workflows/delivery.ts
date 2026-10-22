@@ -124,6 +124,14 @@ export const DELIVERY_DISPATCH_MODEL_PATCH = "delivery-dispatch-model-v1";
  */
 export const DELIVERY_COLD_START_RETRY_PATCH = "delivery-cold-start-retry-v1";
 
+/**
+ * D8: a self-hosted service's outgoing executor hands off after applying
+ * instead of accepting; its successor verifies and finishes. Histories
+ * recorded before it accept as they always did.
+ */
+export const DELIVERY_SELF_HOSTED_HANDOFF_PATCH =
+  "delivery-self-hosted-handoff-v1";
+
 /** Artifacts replicated per dispatch tick; the rest wait for the next one. */
 const REPLICATIONS_PER_DISPATCH = 10;
 
@@ -217,10 +225,11 @@ export async function deliveryDeploymentWorkflow(input: {
     if (ready.status === "terminal") return;
     claimed = true;
     if (ready.model && patched(DELIVERY_MODEL_EXECUTOR_PATCH)) {
-      await runModelRecipe(input.deploymentId);
-      // The result is recorded; nothing after acceptance may rewrite it.
+      const outcome = await runModelRecipe(input.deploymentId);
+      // The result is recorded, or the successor owns it now (D8); nothing
+      // after this may rewrite it.
       claimed = false;
-      await settleModelAcceptance(input.deploymentId);
+      await settleModelAcceptance(input.deploymentId, outcome);
       return;
     }
     const specialized = await specializedRelease(input.deploymentId, ready);
@@ -277,7 +286,9 @@ export async function deliveryDeploymentWorkflow(input: {
  * The step iterator (T3): each frozen step from the first unsettled one,
  * renewing the lease first; every step records its intent before its effect.
  */
-async function runModelRecipe(deploymentId: string) {
+async function runModelRecipe(
+  deploymentId: string,
+): Promise<"accepted" | "handed-off"> {
   const plan = await metadata.planDeliveryModel(deploymentId);
   // Tofu steps hold platform authority and run on the platform queue.
   const run = async (key: string) =>
@@ -294,15 +305,52 @@ async function runModelRecipe(deploymentId: string) {
       step = await run(key);
     }
   }
+  // D8: the applied change may replace this executor; leave the deployment
+  // owned with a frozen lease for the successor, which verifies acceptance.
+  if (plan.handoff && patched(DELIVERY_SELF_HOSTED_HANDOFF_PATCH)) {
+    await metadata.handOffDelivery(deploymentId);
+    return "handed-off";
+  }
   const evidence = await observation.acceptDeliveryModel(deploymentId);
   await metadata.finishDelivery(deploymentId, {
     status: "succeeded",
     evidence,
   });
+  return "accepted";
+}
+
+/**
+ * D8: the successor executor of a handed-off self-hosted deployment. It
+ * claims the handoff marker before anything else, then verifies acceptance
+ * from the frozen record and finishes it. If it cannot, the deployment ends
+ * recovery-required with its locks and the dispatch barrier held.
+ */
+export async function deliveryHandoffWorkflow(input: {
+  deploymentId: string;
+}): Promise<void> {
+  await metadata.claimDeliveryHandoff(input.deploymentId);
+  try {
+    const evidence = await observation.acceptDeliveryModel(input.deploymentId);
+    await metadata.finishDelivery(input.deploymentId, {
+      status: "succeeded",
+      evidence,
+    });
+  } catch (error) {
+    await CancellationScope.nonCancellable(async () => {
+      await metadata.failDeliveryHandoff(input.deploymentId);
+    });
+    throw error;
+  }
+  await settleModelAcceptance(input.deploymentId, "accepted");
 }
 
 /** After acceptance: self-heal on the accepted source and the cold-start snapshot (T4, X7). */
-async function settleModelAcceptance(deploymentId: string) {
+async function settleModelAcceptance(
+  deploymentId: string,
+  outcome: "accepted" | "handed-off",
+) {
+  // A handed-off deployment is settled by its successor (D8).
+  if (outcome === "handed-off") return;
   const coldStart = await metadata.settleDeliveryModel(deploymentId);
   if (coldStart === null) return;
   const writer = patched(DELIVERY_COLD_START_RETRY_PATCH)

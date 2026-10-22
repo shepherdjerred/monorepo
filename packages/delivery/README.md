@@ -452,6 +452,16 @@ inspection works while Temporal or ArgoCD's API is unavailable. Canceling runnin
 work is a request to stop at a safe boundary, not an assertion that side effects
 were undone.
 
+A deployment is never owned by a different executor identity (D7). A
+self-hosted service's deployment holds the global dispatch barrier (D8); after
+applying, its executor calls `POST /deployments/:id/handoff`, leaving it owned
+with a handoff marker and a frozen lease. Its one successor Workflow,
+`delivery/<id>/successor`, claims the marker through
+`POST /deployments/:id/successor` before continuing. No other identity, ordinary
+claim or lease renewal takes the marker, and the outgoing Workflow's close is
+not an orphan. The successor verifies acceptance and finishes; if it cannot,
+the deployment ends recovery-required with its locks and barrier held.
+
 Settlement readers never use the ArgoCD server or an executor credential. The
 API container projects a short-lived token of its own ServiceAccount per reader,
 and each reader's Role grants only what it reads. A missing projection pauses

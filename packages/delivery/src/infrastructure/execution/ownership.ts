@@ -1,5 +1,8 @@
 import { DeliveryError } from "#domain/error.ts";
-import { DeploymentSchema } from "#shared/contract.ts";
+import {
+  DeploymentSchema,
+  deliverySuccessorWorkflowId,
+} from "#shared/contract.ts";
 import type {
   ExecutorIdentity,
   PipelineDefinition,
@@ -71,28 +74,29 @@ export function leaseExpiry(leaseSeconds: number) {
 }
 
 /**
- * A deployment is never owned by a different executor identity (D7),
- * except the successor executor of a self-hosted handoff (D8). Returns
- * whether this claim is that successor taking ownership.
+ * A deployment is never owned by a different executor identity (D7). The
+ * successor of a self-hosted handoff takes it only through `claimHandoff`
+ * (D8); no ordinary claim or renewal transfers ownership.
  */
 export function requireSameExecutor(
-  row: {
-    workflowId: string | null;
-    workflowRunId: string | null;
-    handoffAt: Date | null;
-  },
+  row: { workflowId: string | null; workflowRunId: string | null },
   executor: ExecutorIdentity | undefined,
 ) {
-  if (executor === undefined || row.workflowId === null) return false;
-  if (
+  if (executor === undefined || row.workflowId === null) return;
+  if (!sameExecutor(row, executor))
+    throw new DeliveryError(
+      "CONFLICT",
+      "Deployment is owned by another executor identity; it is never re-owned",
+    );
+}
+
+function sameExecutor(
+  row: { workflowId: string | null; workflowRunId: string | null },
+  executor: ExecutorIdentity,
+) {
+  return (
     row.workflowId === executor.workflowId &&
     row.workflowRunId === executor.workflowRunId
-  )
-    return false;
-  if (row.handoffAt !== null) return true;
-  throw new DeliveryError(
-    "CONFLICT",
-    "Deployment is owned by another executor identity; it is never re-owned",
   );
 }
 
@@ -231,6 +235,11 @@ export async function renewLease(
       "Only a running deployment holds a lease",
     );
     requireSameExecutor(row, executor);
+    if (row.handoffAt !== null)
+      throw new DeliveryError(
+        "CONFLICT",
+        "A handed-off deployment's lease stays frozen until its successor executor claims it (D8)",
+      );
     const updated = await tx.deployment.update({
       where: { id: deploymentId },
       data: { ...executor, leaseExpiresAt: leaseExpiry(leaseSeconds) },
@@ -271,6 +280,7 @@ export async function handOff(
         "INVALID",
         "Only a self-hosted service's deployment is handed to a successor executor (D8)",
       );
+    if (row.handoffAt !== null) return DeploymentSchema.parse(wire(row));
     const updated = await tx.deployment.update({
       where: { id: deploymentId },
       data: { handoffAt: new Date(), leaseExpiresAt: null },
@@ -280,6 +290,76 @@ export async function handOff(
       entityId: deploymentId,
       requestId: id(),
       metadata: executor,
+    });
+    return DeploymentSchema.parse(wire(updated));
+  });
+}
+
+/**
+ * D8: the successor executor claims the handoff marker before it continues.
+ * Only the deployment's one successor Workflow may take it, only while the
+ * marker is held, and it receives a fresh lease. Any other identity, or a
+ * deployment without the marker, is refused: work is never re-owned by a
+ * different executor identity (D7).
+ */
+export async function claimHandoff(
+  this: Delivery,
+  deploymentId: string,
+  executor: ExecutorIdentity,
+  actor: Principal,
+) {
+  const leaseSeconds = await this.policy.leaseSeconds();
+  return this.database.$transaction(async (tx) => {
+    await lock(tx, "delivery:claim");
+    const row = await runningDeployment(
+      tx,
+      deploymentId,
+      "Only a running deployment can be claimed by a successor executor",
+    );
+    if (executor.workflowId !== deliverySuccessorWorkflowId(deploymentId))
+      throw new DeliveryError(
+        "CONFLICT",
+        "Only the deployment's successor executor claims its handoff (D8)",
+      );
+    if (row.handoffAt === null) {
+      // A successor retrying its own completed claim resumes (D7).
+      if (sameExecutor(row, executor)) return DeploymentSchema.parse(wire(row));
+      throw new DeliveryError(
+        "CONFLICT",
+        "Deployment holds no handoff marker; it is never re-owned by a different executor identity (D7)",
+      );
+    }
+    const service = await tx.service.findUniqueOrThrow({
+      where: { id: row.serviceId },
+    });
+    const owner = await tx.environment.findUniqueOrThrow({
+      where: { id: row.environmentId },
+      select: { activeDeploymentId: true },
+    });
+    if (!service.selfHosted || owner.activeDeploymentId !== deploymentId)
+      throw new DeliveryError(
+        "CONFLICT",
+        "A handoff passes only a self-hosted deployment that still owns its environment (D8)",
+      );
+    const updated = await tx.deployment.update({
+      where: { id: deploymentId },
+      data: {
+        ...executor,
+        handoffAt: null,
+        leaseExpiresAt: leaseExpiry(leaseSeconds),
+      },
+    });
+    await audit(tx, actor, {
+      action: "deployment.handoff_claimed",
+      entityId: deploymentId,
+      requestId: id(),
+      metadata: {
+        outgoing: {
+          workflowId: row.workflowId,
+          workflowRunId: row.workflowRunId,
+        },
+        successor: executor,
+      },
     });
     return DeploymentSchema.parse(wire(updated));
   });

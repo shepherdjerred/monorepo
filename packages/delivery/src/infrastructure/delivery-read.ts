@@ -203,6 +203,7 @@ export async function detail(this: Delivery, deploymentId: string) {
   return DeploymentDetailSchema.parse(
     wire({
       deployment: row,
+      selfHosted: service.selfHosted,
       forumRecoveredRuntime: await readRecoveredForumRuntime(
         this.database,
         row.id,

@@ -29,7 +29,11 @@ import {
 import { failContentRecovery } from "./content-recovery/failure.ts";
 import { stage, finish } from "#infrastructure/execution/stages.ts";
 import { claim } from "#infrastructure/execution/claim.ts";
-import { handOff, renewLease } from "#infrastructure/execution/ownership.ts";
+import {
+  claimHandoff,
+  handOff,
+  renewLease,
+} from "#infrastructure/execution/ownership.ts";
 import { releaseLock } from "#infrastructure/execution/lock-release.ts";
 import { reconcileCatalog } from "#infrastructure/catalog/reconcile.ts";
 import { retireService } from "#infrastructure/catalog/state.ts";
@@ -199,6 +203,7 @@ export class Delivery {
   claim = claim;
   renewLease = renewLease;
   handOff = handOff;
+  claimHandoff = claimHandoff;
   stage = stage;
   finish = finish;
   releaseLock = releaseLock;

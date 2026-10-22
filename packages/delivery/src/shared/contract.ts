@@ -333,6 +333,8 @@ export const FinishDeploymentSchema = z
 export const DeploymentDetailSchema = z.object({
   forumRecoveredRuntime: ForumRecoveredRuntimeSchema.nullable().default(null),
   deployment: DeploymentSchema,
+  /** The service is self-hosted: its executor hands off after applying (D8). */
+  selfHosted: z.boolean().default(false),
   environment: EnvironmentSchema,
   versionSet: VersionSetRevisionSchema,
   previousAcceptedVersionSet: VersionSetRevisionSchema.nullable().default(null),
@@ -437,6 +439,10 @@ export type StageInput = z.infer<typeof StageInputSchema>;
 export type FinishDeployment = z.infer<typeof FinishDeploymentSchema>;
 export function deliveryWorkflowId(deploymentId: string) {
   return `delivery/${deploymentId}`;
+}
+/** The one successor executor of a handed-off self-hosted deployment (D8). */
+export function deliverySuccessorWorkflowId(deploymentId: string) {
+  return `delivery/${deploymentId}/successor`;
 }
 export const WorkerRolloutPlanSchema = rollout.WorkerRolloutPlanSchema;
 export type WorkerRolloutPlan = z.infer<typeof WorkerRolloutPlanSchema>;
