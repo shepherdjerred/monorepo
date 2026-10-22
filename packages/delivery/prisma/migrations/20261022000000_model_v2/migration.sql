@@ -502,3 +502,20 @@ CREATE INDEX "ComponentReference_sourceServiceId_sourceComponent_idx" ON "Compon
 -- Unverified import snapshots are replaced by the cold-start snapshot and
 -- reconcile-after-restore; nothing reads them.
 DROP TABLE "ImportedSnapshot";
+
+-- Section 7: catalog reconcile carries each accepted v1 selection onto the
+-- catalog's component names and owners. A carried artifact sits in a
+-- `migrated` build of its new owner and records the v1 artifact it came
+-- from; the carried set revision names the v1 set it carries.
+ALTER TABLE "Artifact" ADD COLUMN "migratedFrom" JSONB;
+ALTER TABLE "VersionSet" ADD COLUMN "migratedFromId" TEXT REFERENCES "VersionSet"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+CREATE UNIQUE INDEX "VersionSet_migratedFromId_serviceId_key" ON "VersionSet"("migratedFromId", "serviceId");
+ALTER TABLE "Build" DROP CONSTRAINT "Build_source_identity_check";
+ALTER TABLE "Build" ADD CONSTRAINT "Build_source_identity_check" CHECK (
+  ("sourceKind" = 'ci' AND "ciUrl" IS NOT NULL AND "repositoryId" IS NOT NULL AND "pipelineNumber" IS NOT NULL)
+  OR ("sourceKind" = 'upstream' AND "ciUrl" IS NULL AND (("repositoryId" IS NULL AND "pipelineNumber" IS NULL) OR ("repositoryId" IS NOT NULL AND "pipelineNumber" IS NOT NULL)))
+  OR ("sourceKind" IN ('licensed-bundle', 'attested', 'migrated') AND "ciUrl" IS NULL AND "repositoryId" IS NULL AND "pipelineNumber" IS NULL)
+);
+ALTER TABLE "Artifact" ADD CONSTRAINT "Artifact_migrated_identity_check" CHECK (
+  "migratedFrom" IS NULL OR ("originKey" IS NULL AND jsonb_typeof("migratedFrom") = 'object')
+);

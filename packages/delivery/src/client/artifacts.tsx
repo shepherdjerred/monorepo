@@ -21,6 +21,9 @@ function evidenceSummary(sourceKind: BuildSourceKind) {
     case "attested": {
       return "Operator attestation";
     }
+    case "migrated": {
+      return "Carried from its original qualified build";
+    }
   }
 }
 

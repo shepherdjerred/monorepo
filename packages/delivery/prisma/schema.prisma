@@ -73,6 +73,8 @@ model Artifact {
   contentFingerprint   String?
   /// Off-cluster replica receipt for bytes in a self-hosted store (PC1); null until the executor copies them.
   replication          Json?
+  /// Section 7: the v1 artifact (id, service, component) this catalog identity carries; null for every produced artifact.
+  migratedFrom         Json?
   createdAt            DateTime                    @default(now())
   entries              VersionSetEntry[]
   workerVersions       WorkerVersion[]
@@ -110,10 +112,15 @@ model VersionSet {
   /// The source environment's accepting deployment that triggered a tracking recomposition (R7).
   triggerDeploymentId String?
   triggerDeployment   Deployment?       @relation("TrackingTrigger", fields: [triggerDeploymentId], references: [id], onDelete: Restrict)
+  /// Section 7: the v1 accepted set revision this one carries onto the catalog's component names and owners.
+  migratedFromId      String?
+  migratedFrom        VersionSet?       @relation("CatalogMigration", fields: [migratedFromId], references: [id], onDelete: Restrict)
+  carriedAs           VersionSet[]      @relation("CatalogMigration")
   createdAt           DateTime          @default(now())
   entries             VersionSetEntry[]
 
   @@unique([serviceId, revision])
+  @@unique([migratedFromId, serviceId])
   @@index([serviceId, lineage, orderMajor, orderMinor], map: "VersionSet_serviceId_lineage_order_idx")
 }
 

@@ -144,18 +144,33 @@ export const ArtifactInputSchema = z
           "Licensed bundle origin requires its private content-addressed archive",
       });
   });
+/**
+ * Section 7: the v1 artifact a carried artifact stands for. Its bytes,
+ * digest, URI and original build are that artifact's; only the component
+ * name and owning service follow the catalog.
+ */
+export const MigratedFromSchema = z.strictObject({
+  artifactId: IdentifierSchema,
+  serviceId: IdentifierSchema,
+  component: IdentifierSchema,
+  buildId: IdentifierSchema,
+});
+export type MigratedFrom = z.infer<typeof MigratedFromSchema>;
 export const ArtifactVersionSchema = ArtifactInputSchema.safeExtend({
   serviceId: IdentifierSchema,
   buildId: IdentifierSchema,
   sourceRevision: Source,
   createdAt: z.iso.datetime(),
   replication: ArtifactReplicationSchema.optional(),
+  migratedFrom: MigratedFromSchema.optional(),
 });
 export const BuildSourceKindSchema = z.enum([
   "ci",
   "upstream",
   "licensed-bundle",
   "attested",
+  /** Section 7: v1 artifacts carried onto the catalog's names and owners. */
+  "migrated",
 ]);
 export type BuildSourceKind = z.infer<typeof BuildSourceKindSchema>;
 /** How a build entered Delivery, as operators read it on a pipeline. */
@@ -172,6 +187,9 @@ export function buildSourceLabel(sourceKind: string): string {
     }
     case "attested": {
       return "Operator attestation";
+    }
+    case "migrated": {
+      return "Catalog migration";
     }
   }
 }

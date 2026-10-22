@@ -104,8 +104,9 @@ export function qualifiedBuildWhere(
         sourceKind: "upstream",
         OR: [{ repositoryId }, { repositoryId: null }],
       },
+      // A carried artifact qualified with its original build (section 7).
       {
-        sourceKind: { in: ["licensed-bundle", "attested"] },
+        sourceKind: { in: ["licensed-bundle", "attested", "migrated"] },
         repositoryId: null,
       },
     ],
@@ -139,6 +140,7 @@ export function artifactView(
     originKey: _originKey,
     contentFingerprint,
     replication,
+    migratedFrom,
     store: _store,
     ...fields
   } = row;
@@ -148,6 +150,7 @@ export function artifactView(
       ...fields,
       ...(contentFingerprint === null ? {} : { contentFingerprint }),
       ...(replication === null ? {} : { replication }),
+      ...(migratedFrom === null ? {} : { migratedFrom }),
       serviceId: build.serviceId,
       sourceRevision: build.sourceRevision,
     }),

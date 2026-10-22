@@ -89,6 +89,9 @@ export async function composeVerifiedBuild(tx: Transaction, build: BuildRow) {
     }
     case "licensed-bundle":
       return null;
+    // Catalog reconcile records the carried set itself (section 7).
+    case "migrated":
+      return null;
     default:
       throw new Error(`Unknown build source kind ${build.sourceKind}`);
   }

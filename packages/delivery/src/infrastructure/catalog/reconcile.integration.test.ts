@@ -1,16 +1,7 @@
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  test,
-} from "vitest";
+import { describe, expect, test } from "vitest";
 import { serviceLineage } from "#shared/model/catalog-contract.ts";
-import { Delivery } from "#infrastructure/delivery.ts";
-import { createTestDatabase } from "#testing/postgres.ts";
-import { resetDeliveryTables } from "#testing/delivery-http-fixture.ts";
 import { catalogDocument } from "#testing/catalog-fixture.ts";
+import { useCatalogCluster } from "#testing/catalog-cluster.ts";
 import { testOperator, testPublisher } from "#testing/seed.ts";
 import {
   V1_CATALOG_MIGRATION,
@@ -21,24 +12,13 @@ import {
 /** A record with no v1 environments to carry over. */
 const NO_MIGRATION: CatalogMigration = { renames: {}, retired: [] };
 
-let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
-let delivery: Delivery;
-beforeAll(async () => {
-  cluster = await createTestDatabase();
-  delivery = new Delivery(cluster.database);
-}, 60_000);
-afterAll(async () => {
-  await cluster.close();
-});
-beforeEach(async () => {
-  await resetDeliveryTables(cluster.database);
-});
+const context = useCatalogCluster();
 
 type Document = Awaited<ReturnType<typeof catalogDocument>>;
 
 /** A v1 static-site environment with one accepted deployment, as the backfill leaves it. */
 async function seedV1Site() {
-  const db = cluster.database;
+  const db = context.cluster.database;
   await db.pipeline.create({
     data: {
       id: "static-sites/sjer-red/1",
@@ -104,7 +84,7 @@ async function seedV1Site() {
 describe("catalog reconcile", () => {
   test("registers services, revisions, environments and edges, then changes nothing on a repeat", async () => {
     const document = await catalogDocument();
-    const result = await delivery.reconcileCatalog(
+    const result = await context.delivery.reconcileCatalog(
       document,
       testOperator,
       NO_MIGRATION,
@@ -124,7 +104,7 @@ describe("catalog reconcile", () => {
     ]);
     expect(result.services.created).toEqual(["sjer-red"]);
     expect(result.edges).toBe(2);
-    const prod = await cluster.database.environment.findUniqueOrThrow({
+    const prod = await context.cluster.database.environment.findUniqueOrThrow({
       where: { id: "arcade/prod" },
     });
     expect(prod).toMatchObject({
@@ -139,7 +119,7 @@ describe("catalog reconcile", () => {
       acceptedDeploymentId: null,
       generation: 0,
     });
-    const arcade = await cluster.database.service.findUniqueOrThrow({
+    const arcade = await context.cluster.database.service.findUniqueOrThrow({
       where: { id: "arcade" },
     });
     expect(arcade.lineage).toBe(
@@ -147,11 +127,11 @@ describe("catalog reconcile", () => {
     );
     expect(arcade.catalogRevision).toBe(result.catalogRevision);
     // Services the catalog does not declare are retired, never deleted.
-    const omitted = await cluster.database.service.findUniqueOrThrow({
+    const omitted = await context.cluster.database.service.findUniqueOrThrow({
       where: { id: "static-sites" },
     });
     expect(omitted.lifecycle).toBe("retired");
-    const repeat = await delivery.reconcileCatalog(
+    const repeat = await context.delivery.reconcileCatalog(
       document,
       testOperator,
       NO_MIGRATION,
@@ -162,6 +142,7 @@ describe("catalog reconcile", () => {
       renamed: [],
       rebound: [],
       retired: [],
+      carried: [],
     });
     expect(repeat.services.lineageChanged).toEqual([]);
     expect(reconcileSummary(result).created).toEqual({
@@ -170,6 +151,7 @@ describe("catalog reconcile", () => {
       recipes: 4,
       configurations: result.configurations.created.length,
       edges: 2,
+      carriedSelections: 0,
     });
     expect(reconcileSummary(repeat)).toEqual({
       catalogRevision: result.catalogRevision,
@@ -179,6 +161,7 @@ describe("catalog reconcile", () => {
         recipes: 0,
         configurations: 0,
         edges: 0,
+        carriedSelections: 0,
       },
       unchanged:
         document.services.length +
@@ -188,12 +171,16 @@ describe("catalog reconcile", () => {
         document.edges.length,
       refused: [],
     });
-    expect(await cluster.database.deployment.count()).toBe(0);
+    expect(await context.cluster.database.deployment.count()).toBe(0);
   });
 
   test("refuses to rewrite a recipe or configuration revision and persists nothing", async () => {
     const document = await catalogDocument();
-    await delivery.reconcileCatalog(document, testOperator, NO_MIGRATION);
+    await context.delivery.reconcileCatalog(
+      document,
+      testOperator,
+      NO_MIGRATION,
+    );
     const changed = {
       ...document,
       configurations: [
@@ -202,7 +189,7 @@ describe("catalog reconcile", () => {
       ],
     };
     await expect(
-      delivery.reconcileCatalog(changed, testOperator, NO_MIGRATION),
+      context.delivery.reconcileCatalog(changed, testOperator, NO_MIGRATION),
     ).rejects.toMatchObject({ code: "CONFLICT" });
     const recipe: Document = {
       ...document,
@@ -216,19 +203,27 @@ describe("catalog reconcile", () => {
       ),
     };
     await expect(
-      delivery.reconcileCatalog(recipe, testOperator, NO_MIGRATION),
+      context.delivery.reconcileCatalog(recipe, testOperator, NO_MIGRATION),
     ).rejects.toThrow(
       /Recipe revision sjer-red\/1 already holds a different definition/u,
     );
-    const kept = await cluster.database.configuration.findUniqueOrThrow({
-      where: { id: "arcade/1" },
-    });
+    const kept = await context.cluster.database.configuration.findUniqueOrThrow(
+      {
+        where: { id: "arcade/1" },
+      },
+    );
     expect(kept.content).toEqual({});
   });
+});
 
+describe("catalog reconcile of component lists", () => {
   test("a component-list change starts a lineage, moves generations and waits for ownership", async () => {
     const document = await catalogDocument();
-    await delivery.reconcileCatalog(document, testOperator, NO_MIGRATION);
+    await context.delivery.reconcileCatalog(
+      document,
+      testOperator,
+      NO_MIGRATION,
+    );
     const widened: Document = {
       ...document,
       services: document.services.map((service) =>
@@ -243,7 +238,7 @@ describe("catalog reconcile", () => {
           : service,
       ),
     };
-    await cluster.database.versionSet.create({
+    await context.cluster.database.versionSet.create({
       data: {
         id: "arcade-set",
         serviceId: "arcade",
@@ -251,7 +246,7 @@ describe("catalog reconcile", () => {
         lineage: "0".repeat(64),
       },
     });
-    await cluster.database.deployment.create({
+    await context.cluster.database.deployment.create({
       data: {
         id: "arcade-owned",
         requestId: "arcade/owned",
@@ -268,21 +263,21 @@ describe("catalog reconcile", () => {
       },
     });
     await expect(
-      delivery.reconcileCatalog(widened, testOperator, NO_MIGRATION),
+      context.delivery.reconcileCatalog(widened, testOperator, NO_MIGRATION),
     ).rejects.toThrow(
       /component-list change is refused while a deployment of arcade is owned/u,
     );
-    await cluster.database.deployment.update({
+    await context.cluster.database.deployment.update({
       where: { id: "arcade-owned" },
       data: { status: "canceled", finishedAt: new Date() },
     });
-    const result = await delivery.reconcileCatalog(
+    const result = await context.delivery.reconcileCatalog(
       widened,
       testOperator,
       NO_MIGRATION,
     );
     expect(result.services.lineageChanged).toEqual(["arcade"]);
-    const environments = await cluster.database.environment.findMany({
+    const environments = await context.cluster.database.environment.findMany({
       where: { serviceId: "arcade" },
       orderBy: { id: "asc" },
     });
@@ -297,7 +292,7 @@ describe("catalog reconcile of v1 environments", () => {
   test("a renamed environment keeps its accepted selection and history; omitted ones are refused", async () => {
     await seedV1Site();
     const document = await catalogDocument();
-    const refused = await delivery.reconcileCatalog(
+    const refused = await context.delivery.reconcileCatalog(
       document,
       testOperator,
       NO_MIGRATION,
@@ -314,17 +309,17 @@ describe("catalog reconcile of v1 environments", () => {
     ]);
     // A refused environment stays active; the v1 migration carries it over.
     expect(
-      await cluster.database.environment.findUniqueOrThrow({
+      await context.cluster.database.environment.findUniqueOrThrow({
         where: { id: "static-sites/sjer-red" },
       }),
     ).toMatchObject({ lifecycle: "active" });
-    await cluster.database.prerequisiteEdge.deleteMany({
+    await context.cluster.database.prerequisiteEdge.deleteMany({
       where: { dependentId: "sjer-red/prod" },
     });
-    await cluster.database.environment.delete({
+    await context.cluster.database.environment.delete({
       where: { id: "sjer-red/prod" },
     });
-    const result = await delivery.reconcileCatalog(
+    const result = await context.delivery.reconcileCatalog(
       document,
       testOperator,
       V1_CATALOG_MIGRATION,
@@ -335,7 +330,7 @@ describe("catalog reconcile of v1 environments", () => {
       { from: "static-sites/sjer-red", to: "sjer-red/prod" },
     ]);
     expect(result.environments.rebound).toEqual(["sjer-red/prod"]);
-    const site = await cluster.database.environment.findUniqueOrThrow({
+    const site = await context.cluster.database.environment.findUniqueOrThrow({
       where: { id: "sjer-red/prod" },
     });
     expect(site).toMatchObject({
@@ -347,13 +342,15 @@ describe("catalog reconcile of v1 environments", () => {
       declaredConfigurationId: "sjer-red/1",
       generation: 3,
     });
-    const history = await cluster.database.deployment.findUniqueOrThrow({
-      where: { id: "static-accepted" },
-    });
+    const history = await context.cluster.database.deployment.findUniqueOrThrow(
+      {
+        where: { id: "static-accepted" },
+      },
+    );
     expect(history.environmentId).toBe("sjer-red/prod");
     expect(history.serviceId).toBe("static-sites");
     expect(
-      await cluster.database.environment.findUnique({
+      await context.cluster.database.environment.findUnique({
         where: { id: "static-sites/sjer-red" },
       }),
     ).toBeNull();
@@ -363,14 +360,14 @@ describe("catalog reconcile of v1 environments", () => {
     await seedV1Site();
     const document = await catalogDocument();
     const retiring = { renames: {}, retired: ["static-sites/sjer-red"] };
-    const result = await delivery.reconcileCatalog(
+    const result = await context.delivery.reconcileCatalog(
       document,
       testOperator,
       retiring,
     );
     expect(result.environments.retired).toEqual(["static-sites/sjer-red"]);
     expect(
-      await cluster.database.environment.findUniqueOrThrow({
+      await context.cluster.database.environment.findUniqueOrThrow({
         where: { id: "static-sites/sjer-red" },
       }),
     ).toMatchObject({ lifecycle: "retired", generation: 4 });
@@ -382,9 +379,13 @@ describe("catalog reconcile of v1 environments", () => {
           : service,
       ),
     };
-    await delivery.reconcileCatalog(retiredService, testOperator, retiring);
+    await context.delivery.reconcileCatalog(
+      retiredService,
+      testOperator,
+      retiring,
+    );
     await expect(
-      delivery.reconcileCatalog(document, testOperator, retiring),
+      context.delivery.reconcileCatalog(document, testOperator, retiring),
     ).rejects.toThrow(
       /Service sjer-red cannot move from retired back to active/u,
     );
@@ -392,8 +393,8 @@ describe("catalog reconcile of v1 environments", () => {
 
   test("a malformed document is refused before anything is written", async () => {
     await expect(
-      delivery.reconcileCatalog({ services: [] }, testOperator),
+      context.delivery.reconcileCatalog({ services: [] }, testOperator),
     ).rejects.toMatchObject({ code: "INVALID" });
-    expect(await cluster.database.pipeline.count()).toBe(0);
+    expect(await context.cluster.database.pipeline.count()).toBe(0);
   });
 });

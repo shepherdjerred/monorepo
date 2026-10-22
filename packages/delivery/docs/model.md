@@ -892,7 +892,13 @@ services render today (namespaces, volume claims, 1Password items,
 ingresses) move into a companion chart or a second Application source owned
 by the same service. Today redlib, the static proxy and ops-dashboard are
 environments of `self-hosted-apps`, `static-sites` and `ops-dashboard`; they
-become services at the cutover.
+become services at the cutover. The cutover's catalog reconcile carries each
+accepted selection onto the catalog's identities: `site:<bucket>` becomes
+`archive:<bucket>`, and a chart or image moves to the service that now owns
+it. The carried artifacts keep their bytes, digest, URI and original build,
+record the v1 artifact they stand for, and form the first set revision of
+their service's lineage (R0). They stay qualified for retention and
+rollback because their original builds qualified.
 
 ## 8. Position on ArgoCD
 

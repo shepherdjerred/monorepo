@@ -20,24 +20,8 @@ import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { id, type Transaction } from "#infrastructure/delivery-data.ts";
 import { audit, fingerprint, lock } from "#infrastructure/delivery-records.ts";
-
-/** What one reconcile did, entity by entity; the route reports the counts. */
-type Result = {
-  catalogRevision: string;
-  services: { created: string[]; lineageChanged: string[]; retired: string[] };
-  environments: {
-    created: string[];
-    renamed: { from: string; to: string }[];
-    rebound: string[];
-    retired: string[];
-  };
-  recipes: { created: string[] };
-  configurations: { created: string[] };
-  edges: number;
-  references: number;
-  unchanged: number;
-  refused: { id: string; reason: string }[];
-};
+import { carrySelections } from "./carry.ts";
+import { emptyResult, type Result } from "./result.ts";
 
 /** The v1 environments the cutover carries onto catalog ids or retires (section 7). */
 export type CatalogMigration = {
@@ -55,20 +39,6 @@ const LIFECYCLE_RANK = new Map<string, number>([
   ["removed", 2],
 ]);
 
-function emptyResult(revision: string): Result {
-  return {
-    catalogRevision: revision,
-    services: { created: [], lineageChanged: [], retired: [] },
-    environments: { created: [], renamed: [], rebound: [], retired: [] },
-    recipes: { created: [] },
-    configurations: { created: [] },
-    edges: 0,
-    references: 0,
-    unchanged: 0,
-    refused: [],
-  };
-}
-
 /** `POST /catalog/reconcile`: counts of what was created and kept, and what was refused. */
 export function reconcileSummary(result: Result): CatalogReconcileResult {
   return CatalogReconcileResultSchema.parse({
@@ -79,6 +49,7 @@ export function reconcileSummary(result: Result): CatalogReconcileResult {
       recipes: result.recipes.created.length,
       configurations: result.configurations.created.length,
       edges: result.edges,
+      carriedSelections: result.environments.carried.length,
     },
     unchanged: result.unchanged,
     refused: result.refused,
@@ -505,6 +476,7 @@ export async function reconcileCatalog(
       await reconcileRevisions(tx, document, result);
       await renameEnvironments(tx, migration.renames, result);
       await upsertEnvironments(tx, document, result);
+      await carrySelections(tx, document, result);
       await retireOmitted(tx, document, migration, result);
       await reconcileEdges(tx, document, result);
       await audit(tx, actor, {

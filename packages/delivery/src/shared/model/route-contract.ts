@@ -133,6 +133,8 @@ export const CatalogReconcileResultSchema = z.strictObject({
     recipes: CountSchema,
     configurations: CountSchema,
     edges: CountSchema,
+    /** Section 7: accepted v1 selections carried onto catalog identities. */
+    carriedSelections: CountSchema,
   }),
   unchanged: CountSchema,
   refused: z.array(

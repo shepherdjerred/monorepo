@@ -164,12 +164,35 @@ async function rebindSelection(
   };
 }
 
+/**
+ * Section 7: a v1 set revision the catalog carried for this service is
+ * selected in its carried form, under the component names and owners the
+ * catalog declares; every other set revision is selected as it is.
+ */
+async function carriedSetId(
+  tx: Transaction,
+  versionSetId: string,
+  serviceId: string,
+) {
+  const carried = await tx.versionSet.findUnique({
+    where: {
+      migratedFromId_serviceId: { migratedFromId: versionSetId, serviceId },
+    },
+    select: { id: true },
+  });
+  return carried?.id ?? versionSetId;
+}
+
 async function frozen(
   tx: Transaction,
+  env: Pick<Environment, "serviceId">,
   ids: { versionSetId: string; recipeId: string; configurationId: string },
 ) {
   return {
-    versionSet: await version(tx, ids.versionSetId),
+    versionSet: await version(
+      tx,
+      await carriedSetId(tx, ids.versionSetId, env.serviceId),
+    ),
     pipeline: await pipelineRevision(tx, ids.recipeId),
     configuration: await configurationRevision(tx, ids.configurationId),
   };
@@ -191,7 +214,7 @@ export async function selectDeployment(
     case "channel-publish":
     case "operator-run": {
       const binding = await currentBinding(tx, env);
-      const selected = await frozen(tx, {
+      const selected = await frozen(tx, env, {
         versionSetId: required(
           input.versionSetRevisionId ?? null,
           "Set revision",
@@ -211,7 +234,7 @@ export async function selectDeployment(
         env,
         input.sourceEnvironmentId,
       );
-      const selected = await frozen(tx, {
+      const selected = await frozen(tx, env, {
         versionSetId,
         ...(await currentBinding(tx, env)),
       });
@@ -241,7 +264,7 @@ export async function selectDeployment(
       // A rollback restores the selection exactly as frozen, a previous
       // lineage included (R5, P2).
       return {
-        ...(await frozen(tx, {
+        ...(await frozen(tx, env, {
           versionSetId: restored.versionSetRevisionId,
           recipeId: restored.pipelineRevisionId,
           configurationId: restored.configurationId,
@@ -253,7 +276,7 @@ export async function selectDeployment(
     }
     case "rebind":
       return {
-        ...(await frozen(tx, await rebindSelection(tx, input, env))),
+        ...(await frozen(tx, env, await rebindSelection(tx, input, env))),
         restoredDeploymentId: null,
         sourceEnvironmentId: null,
         ineligible: [],
