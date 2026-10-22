@@ -113,6 +113,7 @@ const CLUSTER_PLATFORM_INVENTORY = [
   "kueue.x-k8s.io/v1beta2/ClusterQueue/argocd/woodpecker",
   "kueue.x-k8s.io/v1beta2/ClusterQueue/argocd/woodpecker-gates",
   "kueue.x-k8s.io/v1beta2/ClusterQueue/argocd/woodpecker-maintenance",
+  "kueue.x-k8s.io/v1beta2/ClusterQueue/argocd/delivery",
   "kueue.x-k8s.io/v1beta2/LocalQueue/woodpecker-ci/default",
   "kueue.x-k8s.io/v1beta2/LocalQueue/woodpecker-ci/ci-gates",
   "kueue.x-k8s.io/v1beta2/LocalQueue/woodpecker-ci/ci-maintenance",
