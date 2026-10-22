@@ -26,6 +26,7 @@ import { rollbackUnstartedExploreTurn } from "#src/explore/rollback.ts";
 import {
   exploreActionRow,
   exploreAnswerChunks,
+  exploreCreationConfirmRow,
   exploreFollowUpRow,
   NO_GENERATED_MENTIONS,
 } from "#src/discord/scout/messages.ts";
@@ -319,9 +320,11 @@ async function sendPrivateAnswer(
   }
   const visualization = exploreAnswerAttachments(answer);
   const followUps = exploreFollowUpRow({ conversationId, answer });
+  const confirmations = exploreCreationConfirmRow(answer);
   await interaction.editReply({
     content: first,
     components: [
+      ...(confirmations === null ? [] : [confirmations]),
       exploreActionRow({
         conversationId,
         assistantMessageId: answer.id,

@@ -29,6 +29,9 @@ export const DmKindSchema = z.enum([
   "support_acknowledgement",
   "support_reply",
   "support_notification",
+  // A Confirm button for something the recipient asked Scout to set up, sent
+  // when they asked by voice and have no chat reply to put it under.
+  "explore_confirmation",
 ]);
 export type DmKind = z.infer<typeof DmKindSchema>;
 

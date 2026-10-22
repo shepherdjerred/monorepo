@@ -186,6 +186,27 @@ const CREATION_FAILED_HEADING: Record<CreationIntentKind, string> = {
   competition: "Competition was not created",
 };
 
+/**
+ * The fine print under a creation card, which must agree with its state.
+ *
+ * It once said "Nothing has been created yet" on every card, confirmed ones
+ * included, so a person who had just created a report read that it did not
+ * exist.
+ */
+export function creationCardNote(state: ConfirmationCardState): string | null {
+  switch (state) {
+    case "pending":
+    case "confirming":
+      return "Nothing has been created yet. Scout checks your permissions again when you confirm.";
+    case "expired":
+      return "Nothing was created. Ask Scout to prepare it again.";
+    case "failed":
+      return "Nothing was created.";
+    case "confirmed":
+      return null;
+  }
+}
+
 export function creationCardHeading(
   kind: CreationIntentKind,
   state: ConfirmationCardState,

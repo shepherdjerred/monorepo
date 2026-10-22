@@ -22,6 +22,8 @@ import {
   recordExploreTraceEvent,
 } from "#src/explore/trace.ts";
 import { describeThrown } from "#src/explore/replay/describe-thrown.ts";
+import { loadCreationIntentStates } from "#src/explore/creation/intent-replay.ts";
+import { prisma } from "#src/database/index.ts";
 import type { ExploreSurface } from "#src/explore/surface.ts";
 import type { ExploreCapabilitySet } from "#src/explore/replay/profiles.ts";
 import type { ToolPayloadCapture } from "#src/explore/inspection/tool-payloads.ts";
@@ -196,7 +198,10 @@ export async function runReplayCase(
   // Recorded before the call so a turn that throws still shows what it was
   // asked. A failed case with no visible prompt is the least useful row in a
   // bundle.
-  const modelMessages = buildMessages(params);
+  const modelMessages = buildMessages(
+    params,
+    await loadCreationIntentStates(prisma, params.history, new Date()),
+  );
 
   try {
     const result = await dependencies.executeAgent(params);

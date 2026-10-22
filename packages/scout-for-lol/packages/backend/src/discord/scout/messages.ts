@@ -8,9 +8,11 @@ import type { ExploreMessage } from "@scout-for-lol/data";
 import { getExploreConversationUrl } from "#src/discord/commands/links.ts";
 import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 import {
+  formatScoutCreateCustomId,
   formatScoutFollowUpCustomId,
   formatScoutPublishCustomId,
 } from "#src/discord/scout/custom-id.ts";
+import { preparedIntents } from "#src/explore/creation/intent-replay.ts";
 
 export const NO_GENERATED_MENTIONS = { parse: [] } as const;
 
@@ -58,6 +60,39 @@ export function exploreActionRow(input: {
 
 /** Discord's ceiling on a button label. */
 const MAX_BUTTON_LABEL = 80;
+/** Discord's ceiling on buttons in one row. */
+const MAX_ROW_BUTTONS = 5;
+
+function buttonLabel(text: string): string {
+  return text.length > MAX_BUTTON_LABEL
+    ? `${text.slice(0, MAX_BUTTON_LABEL - 1)}…`
+    : text;
+}
+
+/**
+ * A Confirm button for each creation the answer prepared.
+ *
+ * The same proposal the web shows as a card, accepted where the person asked.
+ * Pressing it runs the shared confirm path, which re-authorizes the clicker
+ * and claims the intent once; a second press replays the first result.
+ */
+export function exploreCreationConfirmRow(
+  answer: ExploreMessage,
+): ActionRowBuilder<ButtonBuilder> | null {
+  const intents = preparedIntents(answer.trace).slice(0, MAX_ROW_BUTTONS);
+  return intents.length === 0
+    ? null
+    : new ActionRowBuilder<ButtonBuilder>().addComponents(
+        intents.map((intent) =>
+          new ButtonBuilder()
+            .setCustomId(
+              formatScoutCreateCustomId({ intentId: intent.intentId }),
+            )
+            .setLabel(buttonLabel(`Confirm: ${intent.summary}`))
+            .setStyle(ButtonStyle.Success),
+        ),
+      );
+}
 
 /**
  * The answer's follow-up suggestions, as buttons that ask them next.
@@ -80,11 +115,7 @@ export function exploreFollowUpRow(input: {
             index,
           }),
         )
-        .setLabel(
-          followUp.length > MAX_BUTTON_LABEL
-            ? `${followUp.slice(0, MAX_BUTTON_LABEL - 1)}…`
-            : followUp,
-        )
+        .setLabel(buttonLabel(followUp))
         .setStyle(ButtonStyle.Secondary),
     ),
   );

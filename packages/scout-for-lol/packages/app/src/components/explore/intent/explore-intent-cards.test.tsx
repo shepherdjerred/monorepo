@@ -228,6 +228,8 @@ describe("CreationConfirmationView", () => {
     expect(report).toContain(`href="/g/${GUILD_ID}/reports/7"`);
     // A settled card drops the countdown rather than showing 00:00.
     expect(report).not.toContain("expires in");
+    // It once said "Nothing has been created yet" under a created report.
+    expect(report).not.toContain("Nothing has been created");
 
     expect(confirmedView("competition", 12)).toContain(
       `href="/g/${GUILD_ID}/competitions/12"`,
@@ -236,6 +238,20 @@ describe("CreationConfirmationView", () => {
     expect(confirmedView("subscription", 4)).toContain(
       `href="/g/${GUILD_ID}/subscriptions"`,
     );
+  });
+
+  test("an expired card says nothing was created and how to get it back", () => {
+    const markup = renderView({
+      kind: "report",
+      outcome: null,
+      expiresInMs: -1000,
+      expired: true,
+      confirming: false,
+    });
+    expect(markup).toContain(
+      "Nothing was created. Ask Scout to prepare it again.",
+    );
+    expect(markup).not.toContain("Nothing has been created yet");
   });
 
   test("stops offering an expired confirmation", () => {

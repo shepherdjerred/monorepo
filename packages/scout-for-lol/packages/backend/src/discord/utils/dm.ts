@@ -7,6 +7,8 @@
  */
 
 import {
+  type ActionRowBuilder,
+  type ButtonBuilder,
   type Client,
   DiscordAPIError,
   type EmbedBuilder,
@@ -80,6 +82,7 @@ const CORE_DM_KINDS: ReadonlySet<string> = new Set([
   "support_acknowledgement",
   "support_reply",
   "support_notification",
+  "explore_confirmation",
 ]);
 
 export type SendDmOptions = {
@@ -121,6 +124,11 @@ export type SendDmOptions = {
    * plain content and `message` exists purely for the audit trail.
    */
   contentWithEmbeds?: string;
+  /**
+   * Buttons under the message. Core-output only, like embeds: a budgeted DM
+   * is outreach, and outreach never asks the recipient to act.
+   */
+  components?: readonly ActionRowBuilder<ButtonBuilder>[];
 } & (
   | { client: Client; delivery?: never }
   | {
@@ -230,13 +238,20 @@ function dmMessageBody(
     options.suppressMentions === true
       ? { allowed_mentions: { parse: [] } }
       : {};
-  if (options.embeds === undefined) return { content: message, ...mentions };
+  const components =
+    options.components === undefined
+      ? {}
+      : { components: options.components.map((row) => row.toJSON()) };
+  if (options.embeds === undefined) {
+    return { content: message, ...mentions, ...components };
+  }
   return {
     ...(options.contentWithEmbeds === undefined
       ? {}
       : { content: options.contentWithEmbeds }),
     embeds: options.embeds.map((embed) => embed.toJSON()),
     ...mentions,
+    ...components,
   };
 }
 
@@ -314,6 +329,16 @@ async function recordSendOutcome(
 function validateDmOptions(options: SendDmOptions): void {
   if (options.delivery !== undefined && options.embeds !== undefined) {
     throw new Error("REST-only DM delivery does not support embeds");
+  }
+  if (options.delivery !== undefined && options.components !== undefined) {
+    throw new Error("REST-only DM delivery does not support buttons");
+  }
+  if (
+    options.components !== undefined &&
+    (options.budget !== undefined || options.reservationId !== undefined)
+  ) {
+    // Outreach never asks the recipient to act.
+    throw new Error("Budgeted DMs cannot carry buttons");
   }
 
   if (

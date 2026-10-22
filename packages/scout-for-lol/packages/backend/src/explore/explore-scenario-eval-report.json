@@ -5,18 +5,18 @@
   "model": "gpt-5.6-luna",
   "judgeModel": "gpt-5.6-terra",
   "lakeBuildId": "1792633804115-0017-scenarios",
-  "generatedAt": "2026-10-22T04:03:15.850Z",
+  "generatedAt": "2026-10-22T04:21:34.081Z",
   "passed": false,
   "summary": {
     "runs": 40,
-    "passedRuns": 28,
+    "passedRuns": 31,
     "failedControls": [],
     "checks": {
-      "passed": 212,
+      "passed": 215,
       "total": 218
     },
     "rubric": {
-      "met": 95,
+      "met": 102,
       "total": 116
     }
   },
@@ -881,7 +881,7 @@
       "caseId": "already-confirmed",
       "surface": "web",
       "control": false,
-      "passed": false,
+      "passed": true,
       "turns": [
         {
           "index": 0,
@@ -893,7 +893,7 @@
             },
             {
               "name": "avoids:nothing has been created",
-              "passed": false
+              "passed": true
             },
             {
               "name": "avoids:nothing is created",
@@ -912,8 +912,8 @@
               "passed": true
             }
           ],
-          "rubric": [false, false],
-          "passed": false
+          "rubric": [true, true],
+          "passed": true
         }
       ]
     },
@@ -921,7 +921,7 @@
       "caseId": "already-confirmed",
       "surface": "discord",
       "control": false,
-      "passed": false,
+      "passed": true,
       "turns": [
         {
           "index": 0,
@@ -933,7 +933,7 @@
             },
             {
               "name": "avoids:nothing has been created",
-              "passed": false
+              "passed": true
             },
             {
               "name": "avoids:nothing is created",
@@ -952,8 +952,8 @@
               "passed": true
             }
           ],
-          "rubric": [false, false],
-          "passed": false
+          "rubric": [true, true],
+          "passed": true
         }
       ]
     },
@@ -997,7 +997,7 @@
       "caseId": "active-reports-at-limit",
       "surface": "discord",
       "control": false,
-      "passed": false,
+      "passed": true,
       "turns": [
         {
           "index": 0,
@@ -1024,8 +1024,8 @@
               "passed": true
             }
           ],
-          "rubric": [true, false],
-          "passed": false
+          "rubric": [true, true],
+          "passed": true
         }
       ]
     },
@@ -1072,46 +1072,6 @@
     {
       "caseId": "best-build",
       "surface": "discord",
-      "control": false,
-      "passed": false,
-      "turns": [
-        {
-          "index": 0,
-          "status": "ok",
-          "checks": [
-            {
-              "name": "answered",
-              "passed": true
-            },
-            {
-              "name": "tool:run_report_query",
-              "passed": true
-            },
-            {
-              "name": "avoids:Health Potion + World Atlas",
-              "passed": false
-            },
-            {
-              "name": "avoids:World Atlas + Health Potion",
-              "passed": true
-            },
-            {
-              "name": "no-numeric-id-request",
-              "passed": true
-            },
-            {
-              "name": "follow-ups-are-questions",
-              "passed": true
-            }
-          ],
-          "rubric": [false, false, false],
-          "passed": false
-        }
-      ]
-    },
-    {
-      "caseId": "best-build",
-      "surface": "voice",
       "control": false,
       "passed": false,
       "turns": [
@@ -1150,6 +1110,46 @@
       ]
     },
     {
+      "caseId": "best-build",
+      "surface": "voice",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "tool:run_report_query",
+              "passed": true
+            },
+            {
+              "name": "avoids:Health Potion + World Atlas",
+              "passed": true
+            },
+            {
+              "name": "avoids:World Atlas + Health Potion",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, false, true],
+          "passed": false
+        }
+      ]
+    },
+    {
       "caseId": "rune-page",
       "surface": "web",
       "control": false,
@@ -1276,34 +1276,6 @@
     {
       "caseId": "game-review",
       "surface": "discord",
-      "control": false,
-      "passed": true,
-      "turns": [
-        {
-          "index": 0,
-          "status": "ok",
-          "checks": [
-            {
-              "name": "answered",
-              "passed": true
-            },
-            {
-              "name": "no-numeric-id-request",
-              "passed": true
-            },
-            {
-              "name": "follow-ups-are-questions",
-              "passed": true
-            }
-          ],
-          "rubric": [true, true, true],
-          "passed": true
-        }
-      ]
-    },
-    {
-      "caseId": "game-review",
-      "surface": "voice",
       "control": false,
       "passed": false,
       "turns": [
@@ -1326,6 +1298,34 @@
           ],
           "rubric": [false, false, false],
           "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "game-review",
+      "surface": "voice",
+      "control": false,
+      "passed": true,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true, true],
+          "passed": true
         }
       ]
     },

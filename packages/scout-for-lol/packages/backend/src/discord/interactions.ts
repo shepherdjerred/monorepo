@@ -32,9 +32,14 @@ import {
 } from "#src/discord/scout/publish.ts";
 import {
   isScoutCustomId,
+  parseScoutCreateCustomId,
   parseScoutFollowUpCustomId,
   parseScoutPublishCustomId,
 } from "#src/discord/scout/custom-id.ts";
+import {
+  handleScoutCreateButton,
+  type ScoutCreateButtonInteraction,
+} from "#src/discord/scout/confirm-creation.ts";
 import {
   executeScoutFollowUp,
   type ScoutFollowUpInteraction,
@@ -132,6 +137,7 @@ export type RoutableButtonInteraction = BetButtonInteraction &
   BucksNavigationInteraction &
   ScoutPublishButtonInteraction &
   ScoutFollowUpInteraction &
+  ScoutCreateButtonInteraction &
   DareButtonInteraction &
   VoteButtonInteraction & {
     deferUpdate: () => Promise<unknown>;
@@ -384,11 +390,34 @@ async function routeScoutFollowUp(
   }
 }
 
+async function routeScoutCreate(
+  interaction: RoutableButtonInteraction,
+): Promise<void> {
+  try {
+    await handleScoutCreateButton(interaction);
+    discordComponentsTotal.inc({ namespace: "scout", status: "success" });
+  } catch (error) {
+    logger.error("❌ Error confirming a Scout creation:", error);
+    discordComponentsTotal.inc({ namespace: "scout", status: "error" });
+    if (interaction.deferred) {
+      await interaction.editReply({
+        content:
+          "Scout could not confirm that. Nothing was created; try the button again.",
+        allowedMentions: { parse: [] },
+      });
+    }
+  }
+}
+
 async function routeScoutButton(
   interaction: RoutableButtonInteraction,
 ): Promise<void> {
   if (parseScoutFollowUpCustomId(interaction.customId) !== undefined) {
     await routeScoutFollowUp(interaction);
+    return;
+  }
+  if (parseScoutCreateCustomId(interaction.customId) !== undefined) {
+    await routeScoutCreate(interaction);
     return;
   }
   try {
