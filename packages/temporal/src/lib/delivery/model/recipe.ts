@@ -6,8 +6,11 @@ import {
   type RecipeDefinition,
 } from "@shepherdjerred/delivery/model-contract";
 
-/** Recipes the model executor runs; a static-site recipe keeps the shared site adapter. */
-export type ModelRecipe = Exclude<RecipeDefinition, { kind: "static-site" }>;
+/** The activation policy a static-site recipe or step freezes. */
+export type StaticSiteStepPolicy = Extract<
+  KubernetesStep,
+  { kind: "static-site" }
+>["policy"];
 export type KubernetesApplicationRecipe = Extract<
   RecipeDefinition,
   { kind: "kubernetes-application" }
@@ -19,14 +22,17 @@ export type OperatorRunRecipe = Extract<
   { kind: "operator-run" }
 >;
 
-/** The model recipe a deployment froze, or null for a v1 pipeline. */
-export function modelRecipe(detail: DeploymentDetail): ModelRecipe | null {
+/**
+ * The model recipe a deployment froze, or null for a v1 pipeline. A v1
+ * static-site pipeline names its archive `site:<bucket>`, which no model
+ * recipe accepts (4.3), so it keeps the v1 site adapter.
+ */
+export function modelRecipe(detail: DeploymentDetail): RecipeDefinition | null {
   const parsed = RecipeDefinitionSchema.safeParse(detail.pipeline.definition);
-  if (!parsed.success) return null;
-  return parsed.data.kind === "static-site" ? null : parsed.data;
+  return parsed.success ? parsed.data : null;
 }
 
-export function requireModelRecipe(detail: DeploymentDetail): ModelRecipe {
+export function requireModelRecipe(detail: DeploymentDetail): RecipeDefinition {
   const recipe = modelRecipe(detail);
   if (recipe === null)
     throw new Error(
@@ -41,14 +47,16 @@ export type ModelStep =
   | { key: string; adapter: "test"; suite: string; resultPath: string }
   | { key: string; adapter: "tofu"; kind: "plan" | "approve" | "apply" }
   | { key: string; adapter: "channel" }
+  | { key: string; adapter: "static-site"; policy: StaticSiteStepPolicy }
   | { key: string; adapter: "operator-run"; stages: string[] };
 
 /**
  * The ordered steps a recipe freezes, oracle test suites last (V5). Stage
  * keys are stable, so a resumed execution finds the first unsettled step.
- * A compound recipe is not executed as one deployment.
+ * A compound recipe runs its sub-recipes' steps in recipe order under one
+ * deployment, each key prefixed by its sub-recipe's position.
  */
-export function modelSteps(recipe: ModelRecipe): ModelStep[] {
+export function modelSteps(recipe: RecipeDefinition): ModelStep[] {
   const steps = recipeSteps(recipe);
   const keys = new Set(steps.map((step) => step.key));
   if (keys.size !== steps.length)
@@ -56,7 +64,7 @@ export function modelSteps(recipe: ModelRecipe): ModelStep[] {
   return steps;
 }
 
-function recipeSteps(recipe: ModelRecipe): ModelStep[] {
+function recipeSteps(recipe: RecipeDefinition): ModelStep[] {
   switch (recipe.kind) {
     case "kubernetes-application":
       return [
@@ -80,6 +88,16 @@ function recipeSteps(recipe: ModelRecipe): ModelStep[] {
       }));
     case "channel":
       return [{ key: stepStageKey("step", "publish"), adapter: "channel" }];
+    case "static-site": {
+      const { kind: _kind, ...policy } = recipe;
+      return [
+        {
+          key: stepStageKey("step", "static-site"),
+          adapter: "static-site",
+          policy,
+        },
+      ];
+    }
     case "operator-run":
       return [
         {
@@ -89,9 +107,59 @@ function recipeSteps(recipe: ModelRecipe): ModelStep[] {
         },
       ];
     case "compound":
-      throw new Error(
-        "A compound recipe has no single-deployment step executor yet; deploy its sub-recipes' environments",
+      return recipe.subRecipes.flatMap((sub, index) =>
+        recipeSteps(sub.definition).map((step) => ({
+          ...step,
+          key: subRecipeStageKey(index, step.key),
+        })),
       );
+  }
+}
+
+const SUB_RECIPE_KEY = /^sub(\d+)-/u;
+
+/** A compound sub-recipe's step key: unique across sub-recipes, still a Job stage key. */
+export function subRecipeStageKey(index: number, key: string): string {
+  const prefixed = `sub${String(index + 1)}-${key}`;
+  if (!/^[a-z0-9-]{1,64}$/u.test(prefixed))
+    throw new Error(`Sub-recipe step key ${prefixed} is not a stage key`);
+  return prefixed;
+}
+
+/**
+ * The recipe that owns a frozen step: a compound recipe's sub-recipe for a
+ * prefixed key, otherwise the recipe itself.
+ */
+export function stepRecipe(
+  recipe: RecipeDefinition,
+  key: string,
+): Exclude<RecipeDefinition, { kind: "compound" }> {
+  if (recipe.kind !== "compound") return recipe;
+  const position = SUB_RECIPE_KEY.exec(key)?.[1];
+  const sub =
+    position === undefined
+      ? undefined
+      : recipe.subRecipes[Number(position) - 1];
+  if (sub === undefined)
+    throw new Error(`Step ${key} names no sub-recipe of the compound recipe`);
+  return sub.definition;
+}
+
+/** The HTTP probes every Application recipe within the recipe declares (4.14). */
+export function oracleProbes(
+  recipe: RecipeDefinition,
+): { url: string; expectedStatus: number }[] {
+  switch (recipe.kind) {
+    case "kubernetes-application":
+      return recipe.oracle.probes;
+    case "operator-run":
+      return oracleProbes(recipe.wrapped);
+    case "compound":
+      return recipe.subRecipes.flatMap((sub) => oracleProbes(sub.definition));
+    case "static-site":
+    case "tofu":
+    case "channel":
+      return [];
   }
 }
 
@@ -118,4 +186,22 @@ export function requireStep(steps: readonly ModelStep[], key: string) {
   if (step === undefined)
     throw new Error(`Step ${key} is not part of the frozen recipe`);
   return step;
+}
+
+/**
+ * A step acts only after every step frozen before it settled (T3): a site,
+ * plugin archive or forum release never runs against an unproven backend.
+ */
+export function requireSettledBefore(
+  steps: readonly ModelStep[],
+  stages: readonly { key: string; status: string }[],
+  key: string,
+) {
+  const index = steps.findIndex((step) => step.key === key);
+  if (index === -1)
+    throw new Error(`Step ${key} is not part of the frozen recipe`);
+  if (resumeAt(steps, stages) < index)
+    throw new Error(
+      `Step ${key} runs only after every earlier frozen step settled`,
+    );
 }

@@ -5,15 +5,18 @@ import {
   ColdStartReceiptSchema,
   ColdStartRequirementSchema,
   type ColdStartReceipt,
+  type RecipeDefinition,
 } from "@shepherdjerred/delivery/model-contract";
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import {
   modelSteps,
+  oracleProbes,
   requireModelRecipe,
   requireStep,
   resumeAt,
+  stepRecipe,
   type KubernetesApplicationRecipe,
-  type ModelRecipe,
+  type ModelStep,
 } from "#lib/delivery/model/recipe.ts";
 import { applySafety, enableSelfHeal, sync } from "./kubernetes.ts";
 import { oracleEvidence, runTestStep } from "./oracle.ts";
@@ -49,7 +52,7 @@ export async function renewDeliveryLease(id: string) {
   );
 }
 
-function kubernetes(recipe: ModelRecipe): KubernetesApplicationRecipe {
+function kubernetes(recipe: RecipeDefinition): KubernetesApplicationRecipe {
   if (recipe.kind !== "kubernetes-application")
     throw new Error(`A ${recipe.kind} recipe has no Kubernetes steps`);
   return recipe;
@@ -65,17 +68,15 @@ function missingAdapter(kind: string): never {
 async function runKubernetesStep(
   current: Awaited<ReturnType<typeof requireOwned>>,
   recipe: KubernetesApplicationRecipe,
-  step: {
-    key: string;
-    kind: KubernetesApplicationRecipe["steps"][number]["kind"];
-  },
+  frozen: Extract<ModelStep, { adapter: "kubernetes" }>,
 ) {
+  const { key, step } = frozen;
   switch (step.kind) {
     case "apply-safety":
-      await applySafety(current, recipe, step.key);
+      await applySafety(current, recipe, key);
       return;
     case "sync":
-      await sync(current, recipe, step.key);
+      await sync(current, recipe, key);
       return;
     case "worker-rollout":
     case "static-site":
@@ -102,21 +103,25 @@ export async function runDeliveryModelStep(
   )
     return { waiting: false };
   const recipe = requireModelRecipe(current);
-  const step = requireStep(modelSteps(recipe), key);
+  const steps = modelSteps(recipe);
+  const step = requireStep(steps, key);
+  // A compound recipe's step runs against its own sub-recipe.
+  const owner = stepRecipe(recipe, key);
   switch (step.adapter) {
     case "kubernetes":
-      await runKubernetesStep(current, kubernetes(recipe), {
-        key,
-        kind: step.step.kind,
-      });
+      await runKubernetesStep(current, kubernetes(owner), step);
       return { waiting: false };
+    case "static-site":
+      return missingAdapter(step.adapter);
     case "test":
-      await runTestStep(current, kubernetes(recipe), step);
+      await runTestStep(current, kubernetes(owner), step);
       return { waiting: false };
     case "operator-run":
-      if (recipe.kind !== "operator-run")
-        throw new Error(`A ${recipe.kind} recipe has no attestation step`);
-      return await awaitAttestations(current, recipe, key);
+      // Attestations name the deployment's own operator-run recipe.
+      if (owner !== recipe) return missingAdapter("compound operator-run");
+      if (owner.kind !== "operator-run")
+        throw new Error(`A ${owner.kind} recipe has no attestation step`);
+      return await awaitAttestations(current, owner, key);
     case "tofu":
       throw new Error(
         `Tofu step ${key} runs on the platform queue, never the Delivery queue`,
@@ -132,14 +137,10 @@ export async function acceptDeliveryModel(
 ): Promise<EvidenceInput[]> {
   const current = await requireOwned(id);
   const recipe = requireModelRecipe(current);
-  const kubernetesOracle =
-    recipe.kind === "operator-run" ? recipe.wrapped : recipe;
   return await oracleEvidence(
     current,
     modelSteps(recipe).map((step) => step.key),
-    kubernetesOracle.kind === "kubernetes-application"
-      ? kubernetesOracle.oracle.probes
-      : [],
+    oracleProbes(recipe),
   );
 }
 
