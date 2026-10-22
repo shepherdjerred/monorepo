@@ -16,6 +16,7 @@ drops:
   # World keys, not folder names. Arena and event worlds stay out.
   worlds:
     - "minecraft:overworld"
+    - "minecraft:frontier"
     - "minecraft:the_nether"
     - "minecraft:the_end"
   # Mobs from these never drop shards: spawner and egg farms yield nothing,

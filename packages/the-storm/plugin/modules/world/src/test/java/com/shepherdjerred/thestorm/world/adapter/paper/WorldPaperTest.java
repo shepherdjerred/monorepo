@@ -34,7 +34,15 @@ final class WorldPaperTest {
   @Test
   void installsNativeBordersAndSleepRuleOnProvisionedWorlds() {
     for (var name :
-        java.util.List.of("world", "world_nether", "world_the_end", "wilds", "peaks", "mining")) {
+        java.util.List.of(
+            "world",
+            "world_nether",
+            "world_the_end",
+            "frontier",
+            "map2",
+            "skylands",
+            "wilds",
+            "peaks")) {
       server.addSimpleWorld(name);
     }
     WorldPaper.install(server, config);
@@ -56,8 +64,8 @@ final class WorldPaperTest {
     server.addSimpleWorld("world");
     assertThatThrownBy(() -> WorldPaper.install(server, config))
         .isInstanceOf(IllegalStateException.class)
-        .hasMessageContaining("wilds must be provisioned");
-    assertThat(server.getWorld("wilds")).isNull();
+        .hasMessageContaining("frontier must be provisioned");
+    assertThat(server.getWorld("frontier")).isNull();
   }
 
   @Test
@@ -67,6 +75,6 @@ final class WorldPaperTest {
     }
     assertThatThrownBy(() -> WorldPaper.install(server, config))
         .isInstanceOf(IllegalStateException.class)
-        .hasMessageContaining("border world world must be loaded");
+        .hasMessageContaining("border world world_nether must be loaded");
   }
 }

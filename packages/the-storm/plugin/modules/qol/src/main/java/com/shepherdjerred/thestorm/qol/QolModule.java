@@ -48,7 +48,9 @@ public final class QolModule implements StormModule {
     RtpPaper.install(
         context,
         new com.shepherdjerred.thestorm.qol.adapter.db.JooqQolStore(context.database()),
-        context.loadConfig("rtp.yml", com.shepherdjerred.thestorm.qol.domain.QolConfig.class));
+        context.loadConfig("rtp.yml", com.shepherdjerred.thestorm.qol.domain.QolConfig.class),
+        context.loadConfig(
+            "travel.yml", com.shepherdjerred.thestorm.qol.domain.travel.TravelConfig.class));
     services.provide(CombatStatus.class, combat);
   }
 

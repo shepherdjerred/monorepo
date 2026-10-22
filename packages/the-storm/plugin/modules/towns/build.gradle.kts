@@ -2,10 +2,12 @@ plugins { id("storm.jooq-conventions") }
 
 val libs = the<VersionCatalogsExtension>().named("libs")
 
-// TownsConfigTest reads this shipped file directly, outside the test classpath.
+// Catalog tests read these shipped files directly, outside the test classpath.
 tasks.test {
-  inputs.file(rootProject.file("../server/owned/plugins/TheStorm/towns.yml"))
-      .withPathSensitivity(PathSensitivity.RELATIVE)
+  for (name in listOf("towns.yml", "heritage.yml", "parcels.yml")) {
+    inputs.file(rootProject.file("../server/owned/plugins/TheStorm/$name"))
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+  }
 }
 
 dependencies {

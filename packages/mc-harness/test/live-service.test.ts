@@ -359,7 +359,7 @@ describe("live target reads", () => {
     ]);
   });
 
-  it("refuses everything while asleep or held by the mining reset", async () => {
+  it("refuses everything while asleep", async () => {
     const asleep = {
       ...sts,
       spec: { ...sts.spec, replicas: 0 },
@@ -369,23 +369,11 @@ describe("live target reads", () => {
     const read = await get(sleeping.ctx, "/targets/live/players");
     expect(read.status).toBe(409);
     expect(String(read.json["error"])).toMatch(/asleep/u);
-
-    const locked = {
-      ...sts,
-      metadata: {
-        ...sts.metadata,
-        annotations: {
-          ...sts.metadata.annotations,
-          "sjer.red/mining-reset-lock": "2026q4",
-        },
-      },
-    };
-    const held = await setup({ cluster: { sts: locked } });
-    const write = await post(held.ctx, "/targets/live/we", setStone, {
+    const write = await post(sleeping.ctx, "/targets/live/we", setStone, {
       reason: "x",
     });
     expect(write.status).toBe(409);
-    expect(String(write.json["error"])).toMatch(/mining reset/u);
+    expect(String(write.json["error"])).toMatch(/asleep/u);
   });
 
   it("explains how to supply the token when the daemon has none", async () => {
@@ -420,24 +408,6 @@ describe("live target reads", () => {
     expect(String(json["error"])).toMatch(/world restoration/u);
     expect(bridge.calls).toEqual([]);
     expect(cluster.calls.every((args) => args[5] === "get")).toBe(true);
-  });
-
-  it("permits file reads during a mining reset without a restoration lease", async () => {
-    const { ctx } = await setup({
-      cluster: {
-        sts: {
-          ...sts,
-          metadata: {
-            ...sts.metadata,
-            annotations: {
-              ...sts.metadata.annotations,
-              "sjer.red/mining-reset-lock": "2026q4",
-            },
-          },
-        },
-      },
-    });
-    await expect(ctx.files("live")).resolves.toBeDefined();
   });
 });
 

@@ -134,6 +134,17 @@ describe("run ids and exit codes", () => {
   });
 });
 
+/** A frozen original config.yml listing `keys`, all switched off. */
+function frozenConfig(keys: readonly string[]) {
+  const yaml = ["modules:", ...keys.map((key) => `  ${key}: false`), ""].join(
+    "\n",
+  );
+  return {
+    yaml,
+    sha256: new Bun.CryptoHasher("sha256").update(yaml).digest("hex"),
+  };
+}
+
 describe("published Storm image profiles", () => {
   it.each(["prod", "candidate"] as const)(
     "uses the original source configuration for a future %s image without a Git snapshot update",
@@ -162,6 +173,41 @@ describe("published Storm image profiles", () => {
       });
     },
   );
+
+  it("enables skylands only for images whose frozen config lists it", () => {
+    const input = publishedStorm();
+    const image = `${input.publishedArtifact.uri}@${input.publishedArtifact.digest}`;
+    // The historical snapshot stands for today's production image.
+    const current = input.publishedConfig.yaml
+      .split("\n")
+      .filter((line) => line.startsWith("  "))
+      .map((line) => line.trim().replace(/: false$/u, ""));
+    expect(current).not.toContain("skylands");
+
+    const before = stormImageConfig(image, frozenConfig(current));
+    expect(before.enabledModules).not.toContain("skylands");
+    expect(before.enabledModules).toContain("towns");
+    expect(
+      stormModuleConfig(
+        input.publishedConfig.yaml,
+        before.enabledModules,
+        before.moduleKeys,
+      ),
+    ).not.toContain("skylands");
+
+    const after = stormImageConfig(
+      image,
+      frozenConfig([...current, "skylands"]),
+    );
+    expect(after.enabledModules).toContain("skylands");
+    expect(
+      stormModuleConfig(
+        frozenConfig([...current, "skylands"]).yaml,
+        after.enabledModules,
+        after.moduleKeys,
+      ),
+    ).toContain("  skylands: true");
+  });
 
   it("requires a schema snapshot for each published image digest", () => {
     expect(() =>

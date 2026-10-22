@@ -14,7 +14,7 @@ import { parseMcArgs } from "./mc-args.ts";
 
 export const LIVE_USAGE = `Live minecraft-tsmc (--target live; the daemon needs the bridge token):
   ${LIVE_DAEMON_START_HINT}
-  toolkit mc live status [--json]        Read-only cluster view; refuses when asleep or mining-reset locked
+  toolkit mc live status [--json]        Read-only cluster view; refuses when asleep or restoration-leased
   toolkit mc live backup --reason <why> [--wait]   Velero backup of minecraft-tsmc (needed for tier-2 writes)
   toolkit mc live journal [--since 1d]   Every live write, undo and backup
   toolkit mc live undo <journal-id> --reason <why> [--allow-players] [--allow-protected]   Restore the pre-write snapshot (LIFO)

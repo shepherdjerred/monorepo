@@ -29,11 +29,6 @@
           "reason": "Forbidden"
         },
         {
-          "expression": "!(has(object.metadata.annotations) && 'sjer.red/world-restore-lease' in object.metadata.annotations) || !('sjer.red/mining-reset-lock' in object.metadata.annotations)",
-          "message": "World restoration and mining reset leases are mutually exclusive",
-          "reason": "Forbidden"
-        },
-        {
           "expression": "!(has(object.metadata.annotations) && 'sjer.red/world-restore-lease' in object.metadata.annotations) || ('sjer.red/world-restore-phase' in object.metadata.annotations && object.metadata.annotations['sjer.red/world-restore-phase'] in ['OFFLINE', 'VALIDATING'] && 'sjer.red/world-restore-image' in object.metadata.annotations)",
           "message": "A world restoration lease requires its phase and pinned image",
           "reason": "Forbidden"
@@ -100,11 +95,6 @@
         {
           "expression": "!(has(params.metadata.annotations) && 'sjer.red/world-restore-lease' in params.metadata.annotations) || !has(params.spec.template.metadata.labels) || !('sjer.red/world-restore-access' in params.spec.template.metadata.labels)",
           "message": "Restoration pod templates must omit the closed public route label",
-          "reason": "Forbidden"
-        },
-        {
-          "expression": "!(has(params.metadata.annotations) && 'sjer.red/world-restore-lease' in params.metadata.annotations) || !('sjer.red/mining-reset-lock' in params.metadata.annotations)",
-          "message": "World restoration and mining reset leases are mutually exclusive",
           "reason": "Forbidden"
         }
       ]

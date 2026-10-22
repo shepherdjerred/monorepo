@@ -1,7 +1,7 @@
 /**
  * Read-only view of live minecraft-tsmc from the cluster: the StatefulSet,
- * its pod, and the mining-reset lock. The harness never scales, patches or
- * annotates anything; an asleep or locked server is a refusal, not a wake.
+ * its pod, and the world-restoration lease. The harness never scales, patches
+ * or annotates anything; an asleep or leased server is a refusal, not a wake.
  */
 import { z } from "zod";
 import {
@@ -15,8 +15,6 @@ export const LIVE_POD = "minecraft-tsmc-0";
 /** The itzg chart names the server container after the release fullname. */
 export const LIVE_CONTAINER = "minecraft-tsmc";
 export const LIVE_BRIDGE_PORT = 25_580;
-/** Set by the Temporal mining-reset workflow while it owns the server. */
-export const MINING_RESET_LOCK_ANNOTATION = "sjer.red/mining-reset-lock";
 export const WORLD_RESTORE_LEASE_ANNOTATION = "sjer.red/world-restore-lease";
 export const VELERO_NAMESPACE = "velero";
 
@@ -59,7 +57,6 @@ export type LiveClusterStatus = {
   podPhase: string | null;
   podReady: boolean;
   image: string | null;
-  miningResetLock: string | null;
   worldRestoreLease: string | null;
 };
 
@@ -79,8 +76,6 @@ export function parseLiveStatus(
     podPhase: parsedPod?.status?.phase ?? null,
     podReady: ready,
     image: sts.spec.template.spec.containers[0]?.image ?? null,
-    miningResetLock:
-      sts.metadata.annotations?.[MINING_RESET_LOCK_ANNOTATION] ?? null,
     worldRestoreLease:
       sts.metadata.annotations?.[WORLD_RESTORE_LEASE_ANNOTATION] ?? null,
   };
@@ -103,9 +98,6 @@ export function liveRefusal(status: LiveClusterStatus): string | null {
   const restoration = restorationRefusal(status);
   if (restoration !== null) {
     return restoration;
-  }
-  if (status.miningResetLock !== null) {
-    return `the mining reset holds minecraft-tsmc (lock ${status.miningResetLock}); wait for it to finish — see the "Recover The Storm mining reset" how-to`;
   }
   if (status.replicas === 0) {
     return "minecraft-tsmc is asleep (scaled to 0). Ask the user to join ts-mc.net so mc-router wakes it; the harness never scales the server";

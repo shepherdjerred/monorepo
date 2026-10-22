@@ -23,6 +23,7 @@ import com.shepherdjerred.thestorm.seasonal.SeasonalModule;
 import com.shepherdjerred.thestorm.shards.ShardsModule;
 import com.shepherdjerred.thestorm.shops.ShopsModule;
 import com.shepherdjerred.thestorm.skills.SkillsModule;
+import com.shepherdjerred.thestorm.skylands.SkylandsModule;
 import com.shepherdjerred.thestorm.spells.SpellsModule;
 import com.shepherdjerred.thestorm.tickets.TicketsModule;
 import com.shepherdjerred.thestorm.towns.TownsModule;
@@ -31,14 +32,15 @@ import com.shepherdjerred.thestorm.world.WorldModule;
 import java.util.List;
 
 /**
- * Every module, in enable order. A module comes after every module whose ports it requires: tracks
- * needs economy; towns (the Protection provider) needs tracks and chat; essentials, shops,
- * mechanics and spells need Protection. World loads before qol, which teleports into those worlds.
- * Discord reads economy, mail and towns. Creative follows towns and seals the recovered plot world.
- * Agent needs tickets and chat, and reads essentials moderation history when that module is on.
- * Quests, arena, rwf (Search and Destroy), skills and seasonal post through discord when it is on,
- * so they come after it; arena and rwf also need economy. Rwfbots provides rwf's bot roster and so
- * comes after rwf. World loads before qol, which teleports into those worlds.
+ * Every module, in enable order. Skylands comes first: it needs no other module, and towns, mobs,
+ * travel, world and qol name its generated world in their config. A module comes after every module
+ * whose ports it requires: tracks needs economy; towns (the Protection provider) needs tracks and
+ * chat; essentials, shops, mechanics and spells need Protection. Discord reads economy, mail and
+ * towns. Creative follows towns and seals the recovered plot world. Agent needs tickets and chat,
+ * and reads essentials moderation history when that module is on. Quests, arena, rwf (Search and
+ * Destroy), skills and seasonal post through discord when it is on, so they come after it; arena
+ * and rwf also need economy. Rwfbots provides rwf's bot roster and so comes after rwf. World loads
+ * before qol, which teleports into those worlds.
  */
 final class Modules {
 
@@ -46,6 +48,7 @@ final class Modules {
 
   static List<StormModule> all() {
     return List.of(
+        new SkylandsModule(),
         new EconomyModule(),
         new MessagesModule(),
         new SafetyModule(),

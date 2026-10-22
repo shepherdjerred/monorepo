@@ -37,7 +37,10 @@ public final class RestorationDatabase {
   }
 
   public static void main(String[] args) throws Exception {
-    if (args.length < 4) throw new IllegalArgumentException("Expected schema|upgrade-copy|towns, candidate jar, database, policy|heritage, optional import instant");
+    if (args.length < 4) {
+      throw new IllegalArgumentException("Expected schema|upgrade-copy|towns|additional-towns, candidate jar, database, "
+          + "policy|heritage, optional import instant and archive world");
+    }
     var jar = Path.of(args[1]).toRealPath();
     var database = Path.of(args[2]).toAbsolutePath().normalize();
     var config = Path.of(args[3]).toRealPath();
@@ -49,6 +52,10 @@ public final class RestorationDatabase {
       case "towns" -> {
         if (args.length != 5) throw new IllegalArgumentException("Town import requires its recorded import instant");
         towns(database, parse(config, HeritageConfig.class), Instant.parse(args[4]));
+      }
+      case "additional-towns" -> {
+        if (args.length != 6) throw new IllegalArgumentException("Additional towns require an import instant and world");
+        additionalTowns(database, parse(config, HeritageConfig.class), Instant.parse(args[4]), args[5]);
       }
       default -> throw new IllegalArgumentException("Unknown database operation");
     }
@@ -83,7 +90,9 @@ public final class RestorationDatabase {
     if (!Files.isRegularFile(database) || Files.isSymbolicLink(database)) {
       throw new IllegalArgumentException("Expected an existing fresh migrated database");
     }
-    var sites = heritage.sites().stream().filter(site -> site.kind() == HeritageSite.Kind.PLAYER).toList();
+    var world = heritage.archive("main-map1-2015-07-09").orElseThrow().world();
+    var sites = heritage.sites().stream()
+        .filter(site -> site.kind() == HeritageSite.Kind.PLAYER && site.world().equals(world)).toList();
     if (sites.size() != 7) throw new IllegalArgumentException("Expected the seven proven historical mayors");
     // Use the domain's own validation and UUID function; never duplicate its identity algorithm.
     var imported = sites.stream().map(site -> Town.found(site.activeTownId().orElseThrow(),
@@ -118,5 +127,62 @@ public final class RestorationDatabase {
       connection.setAutoCommit(true);
       connection.createStatement().execute("PRAGMA wal_checkpoint(TRUNCATE)");
     }
+  }
+
+  /** Adds an additional archive world's proven towns to a stopped live database copy, refusing any collision. */
+  private static void additionalTowns(Path database, HeritageConfig heritage, Instant importedAt, String world)
+      throws Exception {
+    if (!Files.isRegularFile(database) || Files.isSymbolicLink(database)) {
+      throw new IllegalArgumentException("Expected an existing stopped database copy");
+    }
+    var archive = heritage.archiveForWorld(world)
+        .orElseThrow(() -> new IllegalArgumentException("Additional towns require a reviewed archive world"));
+    if (archive.id().equals("main-map1-2015-07-09")) {
+      throw new IllegalArgumentException("The primary archive imports its towns into a fresh database");
+    }
+    var imported = heritage.sites().stream()
+        .filter(site -> site.kind() == HeritageSite.Kind.PLAYER && site.world().equals(world))
+        .map(site -> Town.found(site.activeTownId().orElseThrow(), site.activeTownName(), importedAt,
+            site.editors().getFirst().player()))
+        .toList();
+    try (var connection = DriverManager.getConnection("jdbc:sqlite:" + database)) {
+      connection.createStatement().execute("PRAGMA foreign_keys=ON");
+      connection.setAutoCommit(false);
+      try (var existingTown = connection.prepareStatement(
+              "SELECT COUNT(*) FROM towns_town WHERE id = ? OR name = ? COLLATE NOCASE");
+          var existingMember = connection.prepareStatement("SELECT COUNT(*) FROM towns_member WHERE player_id = ?");
+          var town = connection.prepareStatement("INSERT INTO towns_town(id,name,created_at,governor_level) VALUES(?,?,?,0)");
+          var member = connection.prepareStatement("INSERT INTO towns_member(player_id,town_id,role) VALUES(?,?,'OWNER')")) {
+        for (var value : imported) {
+          existingTown.setString(1, value.id().toString());
+          existingTown.setString(2, value.name());
+          existingMember.setString(1, value.owner().toString());
+          for (var check : List.of(existingTown, existingMember)) {
+            try (var rows = check.executeQuery()) {
+              if (!rows.next() || rows.getLong(1) != 0) {
+                throw new IllegalStateException("Historical town collides with a live town or membership: " + value.name());
+              }
+            }
+          }
+          town.setString(1, value.id().toString());
+          town.setString(2, value.name());
+          town.setLong(3, value.createdAt().toEpochMilli());
+          town.executeUpdate();
+          member.setString(1, value.owner().toString());
+          member.setString(2, value.id().toString());
+          member.executeUpdate();
+        }
+        try (var invalid = connection.createStatement().executeQuery("PRAGMA foreign_key_check")) {
+          if (invalid.next()) throw new IllegalStateException("Historical import violates foreign keys");
+        }
+        connection.commit();
+      } catch (Exception failure) {
+        connection.rollback();
+        throw failure;
+      }
+      connection.setAutoCommit(true);
+      connection.createStatement().execute("PRAGMA wal_checkpoint(TRUNCATE)");
+    }
+    System.out.println("Imported historical towns: " + imported.size());
   }
 }

@@ -28,7 +28,7 @@ import { createTemporalWorkflowWorkers } from "./workflow-worker.ts";
 import { FRESHRSS_DESIRED_JSON } from "@shepherdjerred/homelab/cdk8s/src/resources/freshrss/freshrss-config.ts";
 import {
   createTemporalWorkerMaintenanceRbac,
-  createTemporalMiningResetRbac,
+  createTemporalStormRbac,
   createTemporalWorkerIngressReaderRbac,
   createTemporalWorkerServiceAccount,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/worker-rbac.ts";
@@ -100,23 +100,6 @@ export function createTemporalWorkerDeployment(
     chart,
     "temporal-starlight-bot-secret",
     starlightBotItem.name,
-  );
-  // The Storm bridge bot (the same 1Password item minecraft-tsmc uses). The
-  // infra worker posts mining-reset announcements to #server over REST only;
-  // the plugin keeps the bot's gateway connection.
-  const stormDiscordItem = new OnePasswordItem(
-    chart,
-    "temporal-storm-discord-1p",
-    {
-      spec: {
-        itemPath: vaultItemPath("yqp25gif2grm5gkg6l44e6vmxy"),
-      },
-    },
-  );
-  const stormDiscordSecret = Secret.fromSecretName(
-    chart,
-    "temporal-storm-discord-secret",
-    stormDiscordItem.name,
   );
   // The vault item keeps its original name; only the Kubernetes secret and the
   // environment variable follow the feature that still uses the credential.
@@ -221,7 +204,7 @@ export function createTemporalWorkerDeployment(
   createTemporalWorkerIngressReaderRbac(chart, [infraServiceAccount]);
   createVeleroR2AuditState(chart, infraServiceAccount);
   createTemporalWorkerMaintenanceRbac(chart, [infraServiceAccount]);
-  createTemporalMiningResetRbac(chart, infraServiceAccount);
+  createTemporalStormRbac(chart, infraServiceAccount);
 
   // Cluster-wide read-only RBAC for deterministic collectors and generic
   // report-only investigations. Only the infra worker receives the separate
@@ -406,7 +389,6 @@ export function createTemporalWorkerDeployment(
     backupSecret,
     veleroR2AuditSecret,
     billingSecret: openAiUsageMonitorSecret,
-    stormDiscordSecret,
   });
 
   return {

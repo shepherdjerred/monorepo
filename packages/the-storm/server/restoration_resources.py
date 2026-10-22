@@ -9,7 +9,7 @@ from pathlib import Path
 import restoration_files as storage
 from restoration_json import JsonObject
 
-DIMENSIONS = ("wilds", "peaks", "mining")
+DIMENSIONS = ("wilds", "peaks")
 METADATA = ("data/paper/metadata.dat", "data/paper/level_overrides.dat", "data/minecraft/world_gen_settings.dat")
 PATHS = {f"world/dimensions/minecraft/{name}/{file}" for name in DIMENSIONS for file in METADATA}
 
@@ -17,7 +17,7 @@ PATHS = {f"world/dimensions/minecraft/{name}/{file}" for name in DIMENSIONS for 
 def validate_files(value: dict[str, str]) -> dict[str, str]:
     expected = storage.checked_manifest(value)
     if set(expected) != PATHS:
-        raise ValueError("Fresh resource bootstrap allows only nine native metadata files")
+        raise ValueError("Fresh resource bootstrap allows only six native metadata files")
     return expected
 
 

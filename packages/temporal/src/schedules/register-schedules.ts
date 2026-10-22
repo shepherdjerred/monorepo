@@ -108,6 +108,10 @@ export const DELETED_SCHEDULE_IDS = [
   // Hall and Duel delivery are V2 notification intents and their legacy
   // outbox tables are dropped. Domain reconciliation remains scheduled.
   "scout-prod-progression-outbox",
+  // The Storm's resetting mining world was retired. Both schedules were
+  // paused and never started an execution, so no workflow types need draining.
+  "the-storm-mining-reset-countdown",
+  "the-storm-mining-reset-quarterly",
 ] as const;
 
 /**

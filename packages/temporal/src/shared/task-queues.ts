@@ -17,7 +17,10 @@ export const TASK_QUEUES = {
   INFRA: "infra",
   /** Bounded Ops source reads, isolated from long infra automation. */
   OPS: "ops",
-  /** Long-running mining reset, isolated from latency-sensitive infra audits. */
+  /**
+   * The Storm pod exec work (plots, recording archive), isolated from
+   * latency-sensitive infra audits. The legacy name is the live queue name.
+   */
   MINING_RESET: "mining-reset",
   /** Forum activities run beside their own PHP files and database credentials. */
   STORM_FORUM_BETA: "storm-forum-beta",

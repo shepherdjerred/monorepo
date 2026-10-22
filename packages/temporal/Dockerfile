@@ -63,7 +63,6 @@ COPY --parents \
   tsconfig.base.json \
   packages/scout-for-lol/tsconfig.base.json \
   packages/temporal \
-  packages/the-storm/maintenance-status.json \
   packages/the-storm/server/*.py \
   packages/the-storm/server/restoration-guards.json \
   packages/delivery/src/shared \
@@ -452,7 +451,6 @@ COPY --from=prod-deps --exclude=package.json --exclude=bun.lock --exclude=bunfig
 COPY --parents \
   tsconfig.base.json \
   packages/temporal \
-  packages/the-storm/maintenance-status.json \
   packages/the-storm/server/*.py \
   packages/the-storm/server/restoration-guards.json \
   packages/delivery/src/shared \

@@ -252,8 +252,8 @@ The console-only `storm-maintenance begin <owner>` atomically checks for human
 players and closes login admission when empty. Its versioned JSON response
 follows `maintenance-status.json`. Vanished humans count; NPCs do not. Repeating
 the same owner is safe. `storm-maintenance end <owner>` reopens admission only
-for that owner. The mining-reset worker uses this gate before stopping the
-always-running server; a restart clears the in-memory gate.
+for that owner. Maintenance that stops the always-running server uses this gate
+first; a restart clears the in-memory gate.
 
 The Storm implements the selected EssentialsX-style surface inside its own
 Essentials, Chat and Mail modules. Commands resolve players by real username
@@ -427,7 +427,7 @@ Every module implements `StormModule` and is listed in `dist`'s `Modules`
 (a test fails if one is missing). `plugins/TheStorm/config.yml` must name every
 module under `modules:` with `true` or `false`; a missing or unknown key stops
 the plugin. The repository owns that file; the plugin never writes it.
-The shipped `config.yml` registers 27 modules and enables all of them,
+The shipped `config.yml` registers 28 modules and enables all of them,
 including `creative` (the recovered plot world, which must already be loaded
 with generator `TheStorm:creative`, and whose CoreProtect block and WorldEdit
 history must stay on; players enter with `/creative` and leave with
@@ -462,6 +462,29 @@ schedule main-thread work only through `core.schedule.Scheduler`. No class may
 use `net.minecraft` or `org.bukkit.craftbukkit`, and `rwfbots.app` may not use
 Paper at all because it drives bots from worker threads. ArchUnit tests in
 `architecture/` enforce all of this.
+
+## Skylands
+
+The `skylands` module creates and loads the `skylands` world itself during
+startup, before `towns`, `world` and `qol` enable; it is never a Multiverse world, and
+startup fails if anything loaded the world first. The terrain shape is Beta
+1.7.3 Skylands, ported from Spottedleaf's OldGenerator (MIT, see `NOTICE`) and
+matched block for block against the upstream classes in its tests. Everything
+else is vanilla 26.2: surface rules, carvers, ores, trees, vegetation,
+structures and initial mobs run over the islands.
+
+`skylands.yml` fixes the seed, the world y of Beta's terrain floor
+(`verticalOffset`, so islands sit above the vanilla surface that gates grass),
+the structures never placed, and the water-only biomes remapped to land.
+Structure blocks and entities that would land below `verticalOffset` are
+dropped, so a village projected over the void loses only the pieces over the
+void. Vanilla's own ore bands give islands at y 80-152 coal, iron and copper;
+`ores` places diamond, redstone, lapis and gold into island cores at the rates
+vanilla gives the same islands sunk into its deep band. Lowering
+`verticalOffset` far enough for vanilla's deep ores instead leaves most island
+tops bare stone, because vanilla grows grass only above its own surface height.
+Other modules require the `SkylandsWorld` app port to treat the world as
+declared and loaded.
 
 ## NPCs and the town watch
 
@@ -571,13 +594,15 @@ disconnected rather than triggering terrain generation in the arrival event.
 The world module requires every world in `server/owned/plugins/TheStorm/world.yml`
 to be provisioned and loaded before TheStorm enables. A missing world stops the
 server rather than generating terrain during plugin startup. Operators provision
-`wilds` (large biomes),
-`peaks` (amplified), and `mining` (normal), and confirmed their loaded names and
-presets. The plugin checks the loaded name and NORMAL environment; Paper does
+the Multiverse worlds `frontier` (normal), `map2` (the restored Main Map 2),
+`wilds` (large biomes) and `peaks` (amplified); the `skylands` module creates
+`skylands` itself before any module that names it enables. The plugin checks the loaded name and NORMAL environment; Paper does
 not expose reliable preset metadata for an existing world, so preset acceptance
-remains an operator check. A mining reset must likewise make the replacement
-world available before TheStorm enables again. Multiverse remains a required
-startup dependency. Native borders are declared in the same typed file.
+remains an operator check. Multiverse remains a required startup dependency. Borders are declared in the same typed file: a
+`square` border is the native border, and a `circle` keeps the native square at
+the same diameter while the world module stops players at the disc. The first
+listed world, `frontier`, is the default random-teleport landing; `/worlds` and
+the main-spawn hub (`travel.yml`) reach every survival world.
 
 Towns separates land rights from container rights. Claims control building,
 while a lock controls opening a lockable container on claimed land. New
@@ -630,8 +655,9 @@ The server reserves the whole volume and journals its preimage before writes.
 Stock, locks and shops retain their identities; old tokens cannot place twice.
 `/plot reissue <recoveryId>` replaces a lost token through mail. Staff may resume
 or roll back an unfinished placement. The Temporal reconciliation schedule uses
-the isolated mining-reset Activity queue and skips sleeping servers without
-waking them. Its RCON protocol is validated against the shared JSON contract.
+the isolated Storm Activity queue (legacy name `mining-reset`) and skips
+sleeping servers without waking them. Its RCON protocol is validated against
+the shared JSON contract.
 
 Town deletion commits a pending treasury payout in the same transaction as
 removing the town and its claims. The treasury then pays the former owner with a

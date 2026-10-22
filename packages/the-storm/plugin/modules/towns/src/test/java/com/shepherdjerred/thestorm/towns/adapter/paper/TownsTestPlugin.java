@@ -46,6 +46,10 @@ public class TownsTestPlugin extends JavaPlugin {
   static final Path SHIPPED_CONFIG = Path.of("../../../server/owned/plugins/TheStorm/towns.yml");
   private static final Path TEST_REGIONS = Path.of("src/test/resources/admin-regions.yml");
 
+  /** The shipped {@code claims.worlds} besides the main world, which every test provisions. */
+  public static final java.util.List<String> SHIPPED_CLAIM_WORLDS =
+      java.util.List.of("frontier", "map2", "skylands", "wilds", "peaks");
+
   /** Where the test wants config and the database; set before MockBukkit loads the plugin. */
   static @Nullable Path directory;
 
@@ -71,6 +75,11 @@ public class TownsTestPlugin extends JavaPlugin {
   @Override
   public void onEnable() {
     var directory = Objects.requireNonNull(TownsTestPlugin.directory, "directory");
+    for (var claimable : SHIPPED_CLAIM_WORLDS) {
+      if (getServer().getWorld(claimable) == null) {
+        ((org.mockbukkit.mockbukkit.ServerMock) getServer()).addSimpleWorld(claimable);
+      }
+    }
     try {
       var shipped = Files.readString(SHIPPED_CONFIG);
       var regions = shipped.indexOf("\nregions:");

@@ -5,30 +5,83 @@ import argparse
 import fcntl
 import hashlib
 import importlib.util
+import io
 import json
+import math
 import os
 import re
 import selectors
 import shutil
 import sqlite3
 import stat
-import struct
 import subprocess
 import time
 import uuid
 import zipfile
+from collections.abc import Iterable, Mapping
 from contextlib import ExitStack, closing, contextmanager
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
+from typing import Any
 
+import anvil.regions as restoration_regions
 import restoration_locks
 from restoration_json import JsonObject
 
-ARCHIVE_SHA256 = "89fc7865604b5ab9ecf3030c90a192f8f9c963083cc77135949c953ae6b645fa"
-ARCHIVE_ROOT = "home/files/servers/survival/world/"
-EXPECTED_CHUNKS = 638_647
-EXPECTED_PLAYERS = 4_413
+PRIMARY_CHUNKS = 638_647
+
+
+@dataclass(frozen=True)
+class Archive:
+    """A reviewed source archive and the single native dimension it restores."""
+
+    id: str
+    sha256: str
+    root: str
+    chunks: int
+    players: int
+    dimension: str
+
+    @property
+    def primary(self) -> bool:
+        """Only the primary archive replaces the main world, its players, maps and identity database."""
+        return self.dimension == "overworld"
+
+    @property
+    def timeout_scale(self) -> int:
+        """Bounded converter deadlines grow with the reviewed chunk count, never without limit."""
+        return -(-self.chunks // PRIMARY_CHUNKS)
+
+
+ARCHIVES = {
+    archive.id: archive
+    for archive in (
+        Archive(
+            "main-map1-2015-07-09",
+            "89fc7865604b5ab9ecf3030c90a192f8f9c963083cc77135949c953ae6b645fa",
+            "home/files/servers/survival/world/",
+            PRIMARY_CHUNKS,
+            4_413,
+            "overworld",
+        ),
+        Archive(
+            "main-map2-2016-01-10",
+            "3fb8100fbf954ca8b033318957b8d87c8121c34479adc698d750e7687af1c14d",
+            "home/files/servers/survival/world/",
+            1_828_991,
+            2_285,
+            "map2",
+        ),
+    )
+}
+PRIMARY = ARCHIVES["main-map1-2015-07-09"]
+ARCHIVE_SHA256 = PRIMARY.sha256
+ARCHIVE_ROOT = PRIMARY.root
+EXPECTED_CHUNKS = PRIMARY.chunks
+EXPECTED_PLAYERS = PRIMARY.players
 JOURNAL = "restore-journal.json"
+FRESH_DIMENSIONS = ("wilds", "peaks")
 PAPER_1217_SHA256 = "83838188699cb2837e55b890fb1a1d39ad0710285ed633fbf9fc14e9f47ce078"
 
 backup_spec = importlib.util.spec_from_file_location(
@@ -51,6 +104,39 @@ def operation_lock(staging: Path):
         except BlockingIOError as error:
             raise ValueError("Another restoration operation owns this staging journal") from error
         yield
+
+
+def journal_archive(receipt: Mapping[str, object]) -> Archive:
+    """Schema 1 journals predate archive selection and can only name the primary July 2015 archive."""
+    if receipt.get("schemaVersion") == 2:
+        archive_id = receipt.get("archiveId")
+        archive = ARCHIVES.get(archive_id) if isinstance(archive_id, str) else None
+        if archive is None or receipt.get("targetDimension") != archive.dimension:
+            raise ValueError("Journal names an unreviewed archive or target dimension")
+    elif "archiveId" in receipt or "targetDimension" in receipt:
+        raise ValueError("Archive selection requires a schema 2 journal")
+    else:
+        archive = PRIMARY
+    if receipt.get("archiveSha256") != archive.sha256:
+        raise ValueError("Journal archive hash differs from its reviewed source")
+    return archive
+
+
+def checkpoint(
+    receipt: Mapping[str, object],
+    message: str,
+    primary: str | tuple[str, ...] | None,
+    terrain: str | tuple[str, ...] | None = None,
+) -> Archive:
+    """Return the journal's archive at its expected phase; terrain-only archives skip player and map phases."""
+    try:
+        archive = journal_archive(receipt)
+    except ValueError as error:
+        raise ValueError(message) from error
+    expected = primary if archive.primary else terrain
+    if expected is None or receipt.get("phase") not in ((expected,) if isinstance(expected, str) else expected):
+        raise ValueError(message)
+    return archive
 
 
 def conversion_configuration(root: Path, guard: Path) -> None:
@@ -143,8 +229,7 @@ def run_converter(root: Path, paper: Path, log: Path, timeout: float = 3600, for
 def convert_legacy(staging: Path, paper: Path, guard: Path) -> None:
     staging, paper, guard = (path.resolve(strict=True) for path in (staging, paper, guard))
     receipt = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
-    if receipt["phase"] != "PREPARED" or receipt["archiveSha256"] != ARCHIVE_SHA256:
-        raise ValueError("Conversion requires the untouched PREPARED archive copy")
+    archive = checkpoint(receipt, "Conversion requires the untouched PREPARED archive copy", "PREPARED", "PREPARED")
     if digest(paper) != PAPER_1217_SHA256:
         raise ValueError("Converter is not pinned Paper 1.21.7 build 32")
     expected = json.loads((staging / "source-files.json").read_text(encoding="utf-8"))
@@ -162,7 +247,7 @@ def convert_legacy(staging: Path, paper: Path, guard: Path) -> None:
     )
     save_json(staging / JOURNAL, receipt)
     try:
-        run_converter(root, paper, staging / "conversion-1.21.7.log")
+        run_converter(root, paper, staging / "conversion-1.21.7.log", timeout=3600 * archive.timeout_scale)
         before = json.loads((staging / "source-chunks.json").read_text(encoding="utf-8"))
         after = chunk_inventory(root / "world/region")
         if not before.keys() <= after.keys():
@@ -214,8 +299,12 @@ def conversion_classpath(root: Path, paper: Path, version: str = "1.21.7") -> st
 def convert_native_chunks(staging: Path, paper: Path, bootstrap: Path) -> None:
     staging, paper, bootstrap = (path.resolve(strict=True) for path in (staging, paper, bootstrap))
     receipt = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
-    if receipt["phase"] != "COMPANION_DATA_CONVERTED" or receipt["archiveSha256"] != ARCHIVE_SHA256:
-        raise ValueError("Native chunk conversion requires the verified legacy companion checkpoint")
+    archive = checkpoint(
+        receipt,
+        "Native chunk conversion requires the verified legacy companion checkpoint",
+        "COMPANION_DATA_CONVERTED",
+        "LEGACY_CHUNKS_CONVERTED",
+    )
     classpath = conversion_classpath(bootstrap, paper, "26.2")
     source = Path(__file__).resolve().parent / "conversion/NativeChunkConverter.java"
     source_hash = digest(source)
@@ -235,7 +324,7 @@ def convert_native_chunks(staging: Path, paper: Path, bootstrap: Path) -> None:
                 ["java", "-Xmx2G", "--class-path", classpath, str(source), str(region), str(output)],
                 stdout=log,
                 stderr=subprocess.STDOUT,
-                timeout=7200,
+                timeout=7200 * archive.timeout_scale,
             )
             log.flush()
             os.fsync(log.fileno())
@@ -243,7 +332,7 @@ def convert_native_chunks(staging: Path, paper: Path, bootstrap: Path) -> None:
             raise ValueError("Native chunk conversion failed; inspect the private log")
         converted = json.loads((output / "conversion-receipt.json").read_text(encoding="utf-8"))
         after = chunk_inventory(output)
-        if before.keys() != after.keys() or converted["chunks"] != EXPECTED_CHUNKS:
+        if before.keys() != after.keys() or converted["chunks"] != archive.chunks:
             raise ValueError("Native conversion changed the archive's complete chunk footprint")
         if converted["dataVersion"] != 4903 or converted["terrainGeneration"] or converted["worldTicks"]:
             raise ValueError("Native conversion violated the pinned offline conversion contract")
@@ -265,8 +354,7 @@ def convert_native_chunks(staging: Path, paper: Path, bootstrap: Path) -> None:
 def convert_companions(staging: Path, paper: Path) -> None:
     staging, paper = staging.resolve(strict=True), paper.resolve(strict=True)
     receipt = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
-    if receipt["phase"] != "LEGACY_CHUNKS_CONVERTED" or receipt["archiveSha256"] != ARCHIVE_SHA256:
-        raise ValueError("Companion conversion requires the guarded legacy chunk checkpoint")
+    checkpoint(receipt, "Companion conversion requires the guarded legacy chunk checkpoint", "LEGACY_CHUNKS_CONVERTED")
     expected = json.loads((staging / "source-files.json").read_text(encoding="utf-8"))
     if fingerprint(staging / "source") != expected:
         raise ValueError("Extracted archive source changed")
@@ -321,8 +409,11 @@ def convert_companions(staging: Path, paper: Path) -> None:
 def convert_native_companions(staging: Path, paper: Path, bootstrap: Path) -> None:
     staging, paper, bootstrap = (path.resolve(strict=True) for path in (staging, paper, bootstrap))
     receipt = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
-    if receipt["phase"] != "NATIVE_CHUNKS_CONVERTED" or receipt["archiveSha256"] != ARCHIVE_SHA256:
-        raise ValueError("Native companion conversion requires the verified native terrain checkpoint")
+    checkpoint(
+        receipt,
+        "Native companion conversion requires the verified native terrain checkpoint",
+        "NATIVE_CHUNKS_CONVERTED",
+    )
     classpath = conversion_classpath(bootstrap, paper, "26.2")
     conversion = Path(__file__).resolve().parent / "conversion"
     sources = [conversion / name for name in ("NativeCompanionConverter.java", "NativeTerrain.java")]
@@ -399,8 +490,12 @@ def convert_native_companions(staging: Path, paper: Path, bootstrap: Path) -> No
 def convert_native_auxiliary(staging: Path, paper: Path, bootstrap: Path) -> None:
     staging, paper, bootstrap = (path.resolve(strict=True) for path in (staging, paper, bootstrap))
     receipt = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
-    if receipt["phase"] != "NATIVE_COMPANION_DATA_CONVERTED" or receipt["archiveSha256"] != ARCHIVE_SHA256:
-        raise ValueError("Auxiliary conversion requires the verified native companion checkpoint")
+    archive = checkpoint(
+        receipt,
+        "Auxiliary conversion requires the verified native companion checkpoint",
+        "NATIVE_COMPANION_DATA_CONVERTED",
+        "NATIVE_CHUNKS_CONVERTED",
+    )
     classpath = conversion_classpath(bootstrap, paper, "26.2")
     source = Path(__file__).resolve().parent / "conversion/NativeAuxiliaryConverter.java"
     source_hash = digest(source)
@@ -418,7 +513,7 @@ def convert_native_auxiliary(staging: Path, paper: Path, bootstrap: Path) -> Non
                 ["java", "-Xmx2G", "--class-path", classpath, str(source), str(world), str(output)],
                 stdout=log,
                 stderr=subprocess.STDOUT,
-                timeout=120,
+                timeout=600 * archive.timeout_scale,
             )
             log.flush()
             os.fsync(log.fileno())
@@ -450,8 +545,12 @@ def convert_native_auxiliary(staging: Path, paper: Path, bootstrap: Path) -> Non
 def rehearse_native_layout(staging: Path, paper: Path, bootstrap: Path, guard: Path) -> None:
     staging, paper, bootstrap, guard = (path.resolve(strict=True) for path in (staging, paper, bootstrap, guard))
     receipt = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
-    if receipt["phase"] != "NATIVE_ARCHIVE_DATA_CONVERTED" or receipt["archiveSha256"] != ARCHIVE_SHA256:
-        raise ValueError("Layout rehearsal requires every verified native archive checkpoint")
+    archive = checkpoint(
+        receipt,
+        "Layout rehearsal requires every verified native archive checkpoint",
+        "NATIVE_ARCHIVE_DATA_CONVERTED",
+        "NATIVE_ARCHIVE_DATA_CONVERTED",
+    )
     classpath = conversion_classpath(bootstrap, paper, "26.2")
     if digest(guard) != receipt["guardSha256"]:
         raise ValueError("Layout rehearsal requires the same verified conversion guard")
@@ -460,7 +559,11 @@ def rehearse_native_layout(staging: Path, paper: Path, bootstrap: Path, guard: P
         for name in ("NativeLayoutMetadata.java", "NativeTerrain.java")
     ]
     source_hashes = {path.name: digest(path) for path in sources}
-    roots = ("native-chunks-26.2", "native-companion-data-26.2", "native-auxiliary-26.2")
+    roots = (
+        ("native-chunks-26.2", "native-companion-data-26.2", "native-auxiliary-26.2")
+        if archive.primary
+        else ("native-chunks-26.2", "native-auxiliary-26.2")
+    )
     manifests = {root: json.loads((staging / (root + "-files.json")).read_text(encoding="utf-8")) for root in roots}
     for root, expected in manifests.items():
         if fingerprint(staging / root) != expected:
@@ -480,8 +583,9 @@ def rehearse_native_layout(staging: Path, paper: Path, bootstrap: Path, guard: P
         shutil.copytree(
             staging / "native-chunks-26.2", world / "region", ignore=shutil.ignore_patterns("conversion-receipt.json")
         )
-        for name in ("playerdata", "stats", "data"):
-            shutil.copytree(staging / "native-companion-data-26.2" / name, world / name)
+        if archive.primary:
+            for name in ("playerdata", "stats", "data"):
+                shutil.copytree(staging / "native-companion-data-26.2" / name, world / name)
         for name in ("entities", "poi"):
             shutil.copytree(staging / "native-auxiliary-26.2" / name, world / name)
         legacy = staging / "conversion-1.21.7/world"
@@ -491,7 +595,7 @@ def rehearse_native_layout(staging: Path, paper: Path, bootstrap: Path, guard: P
         with (staging / "native-layout-metadata.log").open("x", encoding="utf-8") as log:
             command = ["java", "-Xmx2G", "--class-path", classpath, str(sources[0])]
             prepared = subprocess.run(
-                [*command, "prepare", str(legacy / "level.dat"), str(world / "level.dat")],
+                [*command, "prepare", archive.id, str(legacy / "level.dat"), str(world / "level.dat")],
                 stdout=log,
                 stderr=subprocess.STDOUT,
                 timeout=120,
@@ -499,10 +603,19 @@ def rehearse_native_layout(staging: Path, paper: Path, bootstrap: Path, guard: P
             if prepared.returncode != 0:
                 raise ValueError("Legacy spawn metadata preparation failed; inspect the private log")
             conversion_configuration(root, guard)
-            run_converter(root, paper, staging / "native-layout-rehearsal.log", force_upgrade=False)
+            run_converter(
+                root,
+                paper,
+                staging / "native-layout-rehearsal.log",
+                timeout=3600 * archive.timeout_scale,
+                force_upgrade=False,
+            )
             metadata_path = staging / "native-layout-metadata-receipt.json"
             verified = subprocess.run(
-                [*command, "verify", str(world), str(metadata_path)], stdout=log, stderr=subprocess.STDOUT, timeout=120
+                [*command, "verify", archive.id, str(world), str(metadata_path)],
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                timeout=120,
             )
             log.flush()
             os.fsync(log.fileno())
@@ -520,22 +633,15 @@ def rehearse_native_layout(staging: Path, paper: Path, bootstrap: Path, guard: P
             if name != "conversion-receipt.json"
         }:
             raise ValueError("Frozen native layout rehearsal changed terrain region files")
-        for before, after in (("playerdata", "players/data"), ("stats", "players/stats")):
-            expected = fingerprint(staging / "native-companion-data-26.2" / before)
-            actual = fingerprint(world / after)
-            if any(actual.get(name) != checksum for name, checksum in expected.items()):
-                raise ValueError("Native layout rehearsal changed converted players, statistics or maps")
-        maps = fingerprint(world / "data/minecraft/maps")
-        expected_maps = fingerprint(staging / "native-companion-data-26.2/data")
-        for name, checksum in expected_maps.items():
-            target = "last_id.dat" if name == "idcounts.dat" else name.removeprefix("map_")
-            if maps.get(target) != checksum:
-                raise ValueError("Native layout rehearsal changed a historic map or its allocation counter")
+        if archive.primary:
+            verify_rehearsed_companions(staging, world)
+        elif any(name.startswith(("players/", "data/minecraft/maps/")) for name in fingerprint(world)):
+            raise ValueError("A terrain-only layout rehearsal created player or map data")
         identity = json.loads(metadata_path.read_text(encoding="utf-8"))["worldUuid"]
         if identity != str(uuid.UUID(bytes=(legacy / "uid.dat").read_bytes())):
             raise ValueError("Native layout rehearsal changed the historic overworld identity")
-        for checkpoint, expected in manifests.items():
-            if fingerprint(staging / checkpoint) != expected:
+        for verified, expected in manifests.items():
+            if fingerprint(staging / verified) != expected:
                 raise ValueError("Layout rehearsal changed a verified input")
         if {path.name: digest(path) for path in sources} != source_hashes:
             raise ValueError("Layout rehearsal tools changed while running")
@@ -546,6 +652,20 @@ def rehearse_native_layout(staging: Path, paper: Path, bootstrap: Path, guard: P
         save_json(staging / JOURNAL, receipt)
         raise
     save_json(staging / JOURNAL, receipt)
+
+
+def verify_rehearsed_companions(staging: Path, world: Path) -> None:
+    for before, after in (("playerdata", "players/data"), ("stats", "players/stats")):
+        expected = fingerprint(staging / "native-companion-data-26.2" / before)
+        actual = fingerprint(world / after)
+        if any(actual.get(name) != checksum for name, checksum in expected.items()):
+            raise ValueError("Native layout rehearsal changed converted players, statistics or maps")
+    maps = fingerprint(world / "data/minecraft/maps")
+    expected_maps = fingerprint(staging / "native-companion-data-26.2/data")
+    for name, checksum in expected_maps.items():
+        target = "last_id.dat" if name == "idcounts.dat" else name.removeprefix("map_")
+        if maps.get(target) != checksum:
+            raise ValueError("Native layout rehearsal changed a historic map or its allocation counter")
 
 
 def fork_native_layout(original: Path, staging: Path) -> None:
@@ -565,8 +685,7 @@ def fork_native_layout(original: Path, staging: Path) -> None:
     if any(path.is_symlink() or not path.is_file() for path in evidence_paths):
         raise ValueError("Native layout evidence must be regular files")
     receipt = json.loads(journal.read_text(encoding="utf-8"))
-    if receipt["phase"] != "ACTIVATION_LAYOUT_READY" or receipt["archiveSha256"] != ARCHIVE_SHA256:
-        raise ValueError("Native layout reuse requires the completed archive preparation")
+    checkpoint(receipt, "Native layout reuse requires the completed archive preparation", "ACTIVATION_LAYOUT_READY")
     manifest = original / "native-layout-rehearsal-files.json"
     expected = json.loads(manifest.read_text(encoding="utf-8"))
     metadata = original / "native-layout-metadata-receipt.json"
@@ -621,8 +740,12 @@ def preserve_heritage(staging: Path, paper: Path, bootstrap: Path, candidate: Pa
         path.resolve(strict=True) for path in (staging, paper, bootstrap, candidate)
     )
     receipt = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
-    if receipt["phase"] != "NATIVE_LAYOUT_REHEARSED" or receipt["archiveSha256"] != ARCHIVE_SHA256:
-        raise ValueError("Heritage preservation requires the verified full native layout rehearsal")
+    archive = checkpoint(
+        receipt,
+        "Heritage preservation requires the verified full native layout rehearsal",
+        "NATIVE_LAYOUT_REHEARSED",
+        "NATIVE_LAYOUT_REHEARSED",
+    )
     source = staging / "native-layout-rehearsal"
     expected = json.loads((staging / "native-layout-rehearsal-files.json").read_text(encoding="utf-8"))
     if fingerprint(source / "world") != expected:
@@ -658,12 +781,14 @@ def preserve_heritage(staging: Path, paper: Path, bootstrap: Path, candidate: Pa
                         str(source / "world/dimensions/minecraft/overworld/region"),
                         str(root / "world/dimensions/minecraft/overworld/region"),
                         str(catalog),
+                        archive.id,
+                        str(archive.chunks),
                         str(result),
                     ],
                     cwd=root,
                     stdout=log,
                     stderr=subprocess.STDOUT,
-                    timeout=1200,
+                    timeout=1200 * archive.timeout_scale,
                 )
                 log.flush()
                 os.fsync(log.fileno())
@@ -671,8 +796,9 @@ def preserve_heritage(staging: Path, paper: Path, bootstrap: Path, candidate: Pa
                 raise ValueError("Heritage preservation failed; inspect the private checkpoint log")
             proof = json.loads(result.read_text(encoding="utf-8"))
             if (
-                proof["chunks"] != 638647
-                or proof["preservedChunks"] != EXPECTED_CHUNKS
+                proof["archiveId"] != archive.id
+                or proof["chunks"] != archive.chunks
+                or proof["preservedChunks"] != archive.chunks
                 or proof["catalogSha256"] != digest(catalog)
                 or proof["terrainChanged"] is not False
                 or proof["worldTicks"] != 0
@@ -693,6 +819,367 @@ def preserve_heritage(staging: Path, paper: Path, bootstrap: Path, candidate: Pa
             receipt.update(phase="NATIVE_HERITAGE_PRESERVED", preservationReceiptSha256=digest(result))
     except BaseException:
         receipt["phase"] = "NATIVE_HERITAGE_PRESERVATION_FAILED"
+        save_json(staging / JOURNAL, receipt)
+        raise
+    save_json(staging / JOURNAL, receipt)
+
+
+DIMENSION_FILES = re.compile(r"(?:(?:region|entities|poi)/r\.-?\d+\.-?\d+\.mca|data/(?:minecraft|paper)/[a-z_]+\.dat)")
+
+
+def export_dimension(staging: Path) -> None:
+    """Seal a preserved terrain-only archive as one installable native dimension; players and maps stay out."""
+    staging = staging.resolve(strict=True)
+    receipt = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
+    archive = checkpoint(
+        receipt,
+        "Dimension export requires the verified heritage preservation of a terrain-only archive",
+        None,
+        "NATIVE_HERITAGE_PRESERVED",
+    )
+    source = staging / "heritage-preserved-layout"
+    manifest = staging / "heritage-preserved-layout-files.json"
+    preservation = staging / "heritage-preservation-receipt.json"
+    metadata = staging / "native-layout-metadata-receipt.json"
+    if (
+        digest(preservation) != receipt["preservationReceiptSha256"]
+        or digest(metadata) != receipt["nativeLayoutReceiptSha256"]
+    ):
+        raise ValueError("Heritage preservation or native layout evidence changed")
+    expected = json.loads(manifest.read_text(encoding="utf-8"))
+    prefix = "dimensions/minecraft/overworld/"
+    # Paper writes its per-world configuration beside the data; the server image owns that file.
+    selected = {
+        name.removeprefix(prefix): checksum
+        for name, checksum in expected.items()
+        if name.startswith(prefix) and name != prefix + "paper-world.yml"
+    }
+    unexpected = sorted(name for name in selected if not DIMENSION_FILES.fullmatch(name))
+    required = {"data/paper/metadata.dat", "data/paper/level_overrides.dat", "data/minecraft/world_gen_settings.dat"}
+    if unexpected or not required.issubset(selected):
+        raise ValueError("Preserved dimension has unexpected or missing native files: " + ", ".join(unexpected))
+    root = staging / "dimension-export"
+    if root.exists() or root.is_symlink():
+        raise ValueError("Dimension export already exists; retain and inspect its receipt")
+    target = root / "world/dimensions/minecraft" / archive.dimension
+    with ExitStack() as locks:
+        stopped_locks(source, locks)
+        if fingerprint(source / "world") != expected:
+            raise ValueError("The verified heritage preservation changed before export")
+        size = sum((source / "world" / prefix / name).stat().st_size for name in selected)
+        if shutil.disk_usage(staging).free < size * 2:
+            raise ValueError("Insufficient capacity for the independent dimension export")
+        root.mkdir(mode=0o700)
+        receipt.update(phase="DIMENSION_EXPORTING")
+        save_json(staging / JOURNAL, receipt)
+        try:
+            for name in selected:
+                destination = target / name
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source / "world" / prefix / name, destination)
+            actual = fingerprint(target)
+            chunks = chunk_inventory(target / "region")
+            original = json.loads((staging / "source-chunks.json").read_text(encoding="utf-8"))
+            if actual != selected:
+                raise ValueError("Dimension export differs from the preserved checkpoint")
+            if chunks.keys() != original.keys() or len(chunks) != archive.chunks:
+                raise ValueError("Dimension export changed the archive's complete chunk footprint")
+            if fingerprint(source / "world") != expected:
+                raise ValueError("Dimension export changed its verified input")
+            layout = json.loads(metadata.read_text(encoding="utf-8"))
+            proof = json.loads(preservation.read_text(encoding="utf-8"))
+            files = staging / "dimension-export-files.json"
+            save_json(files, actual)
+            exported = staging / "dimension-export-receipt.json"
+            save_json(
+                exported,
+                {
+                    "schemaVersion": 1,
+                    "status": "VERIFIED",
+                    "archiveId": archive.id,
+                    "archiveSha256": archive.sha256,
+                    "requestId": receipt["requestId"],
+                    "dimension": archive.dimension,
+                    "installPath": "world/dimensions/minecraft/" + archive.dimension,
+                    "worldUuid": layout["worldUuid"],
+                    "seed": layout["seed"],
+                    "spawn": layout["spawn"],
+                    "chunks": len(chunks),
+                    "entityChunks": len(chunk_inventory(target / "entities")),
+                    "poiChunks": len(chunk_inventory(target / "poi")),
+                    "preservationReceiptSha256": receipt["preservationReceiptSha256"],
+                    "catalogSha256": proof["catalogSha256"],
+                    "protectedChunks": proof["protectedChunks"],
+                    "playersImported": False,
+                    "mapsImported": False,
+                    "terrainChanged": False,
+                    "worldTicks": 0,
+                    "filesSha256": digest(files),
+                },
+            )
+            receipt.update(phase="DIMENSION_EXPORT_READY", dimensionExportReceiptSha256=digest(exported))
+        except BaseException:
+            receipt["phase"] = "DIMENSION_EXPORT_FAILED"
+            save_json(staging / JOURNAL, receipt)
+            raise
+        save_json(staging / JOURNAL, receipt)
+
+
+def exported_dimension(staging: Path, receipt: Mapping[str, object], archive: Archive) -> tuple[Path, dict[str, str]]:
+    """The sealed export, or its border-pruned successor, and the manifest it must still match."""
+    if digest(staging / "dimension-export-receipt.json") != receipt["dimensionExportReceiptSha256"]:
+        raise ValueError("Dimension export receipt changed")
+    manifest = staging / "dimension-export-files.json"
+    if receipt["phase"] == "DIMENSION_EXPORT_PRUNED":
+        if digest(staging / "dimension-prune-receipt.json") != receipt["dimensionPruneReceiptSha256"]:
+            raise ValueError("Dimension prune receipt changed")
+        manifest = staging / "dimension-pruned-files.json"
+    dimension = staging / "dimension-export/world/dimensions/minecraft" / archive.dimension
+    return dimension, json.loads(manifest.read_text(encoding="utf-8"))
+
+
+def supersede_locks(staging: Path, receipt: dict[str, Any]) -> None:
+    """Retain an earlier lock preparation for review and return the journal to its export checkpoint."""
+    epoch = staging / "superseded" / str(uuid.uuid4())
+    epoch.mkdir(mode=0o700, parents=True)
+    save_json(epoch / "prior-journal.json", receipt)
+    (staging / "dimension-locks").rename(epoch / "dimension-locks")
+    for key in ("dimensionLockInputs", "dimensionLockRequestId", "dimensionLocksReceiptSha256"):
+        receipt.pop(key)
+    receipt.pop("dimensionTownsImportedAt", None)
+    receipt["supersededAttempts"] = [*receipt.get("supersededAttempts", []), str(epoch.relative_to(staging))]
+    receipt["phase"] = (
+        "DIMENSION_EXPORT_PRUNED" if "dimensionPruneReceiptSha256" in receipt else "DIMENSION_EXPORT_READY"
+    )
+    save_json(staging / JOURNAL, receipt)
+
+
+def prune_export(staging: Path, radius: int) -> None:
+    """Prune the sealed export beyond a circular border; earlier lock rehearsals are retained as superseded."""
+    staging = staging.resolve(strict=True)
+    receipt = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
+    archive = checkpoint(
+        receipt,
+        "Export pruning requires a sealed, unpruned terrain-only export",
+        None,
+        ("DIMENSION_EXPORT_READY", "DIMENSION_LOCKS_READY"),
+    )
+    if "dimensionPruneReceiptSha256" in receipt:
+        raise ValueError("Export pruning requires a sealed, unpruned terrain-only export")
+    dimension, expected = exported_dimension(staging, {**receipt, "phase": "DIMENSION_EXPORT_READY"}, archive)
+    if fingerprint(dimension) != expected:
+        raise ValueError("The sealed dimension export changed before pruning")
+    proof = staging / "dimension-prune-receipt.json"
+    if proof.exists() or proof.is_symlink():
+        raise ValueError("Export pruning evidence already exists")
+    if receipt["phase"] == "DIMENSION_LOCKS_READY":
+        # Locks prepared before pruning describe the unpruned export; keep them for review only.
+        supersede_locks(staging, receipt)
+    receipt.update(phase="DIMENSION_EXPORT_PRUNING", dimensionPruneRadius=radius)
+    save_json(staging / JOURNAL, receipt)
+    try:
+        restoration_regions.prune_dimension(
+            dimension,
+            archive.dimension,
+            radius,
+            proof,
+            data=None,
+            apply=True,
+            allow_outside_claims=False,
+            owned=Path(__file__).resolve().parent,
+        )
+        pruned = fingerprint(dimension)
+        if any(
+            not name.startswith(tuple(store + "/" for store in restoration_regions.STORES))
+            and expected.get(name) != value
+            for name, value in pruned.items()
+        ):
+            raise ValueError("Export pruning changed dimension metadata")
+        save_json(staging / "dimension-pruned-files.json", pruned)
+        receipt.update(phase="DIMENSION_EXPORT_PRUNED", dimensionPruneReceiptSha256=digest(proof))
+    except BaseException:
+        receipt["phase"] = "DIMENSION_EXPORT_PRUNE_FAILED"
+        save_json(staging / JOURNAL, receipt)
+        raise
+    save_json(staging / JOURNAL, receipt)
+
+
+LOCK_TABLES = ("towns_lock", "towns_lock_block", "towns_lock_restoration", "towns_lock_historical_owner")
+
+
+def table_rows(database: Path) -> dict[str, set[tuple[object, ...]]]:
+    """Every row of every table, read from an immutable snapshot of a stopped database."""
+    restoration_regions.require_checkpointed(database)
+    with closing(sqlite3.connect(database.as_uri() + "?mode=ro&immutable=1", uri=True)) as connection:
+        if connection.execute("PRAGMA integrity_check").fetchone() != ("ok",) or list(
+            connection.execute("PRAGMA foreign_key_check")
+        ):
+            raise ValueError("Storm database failed integrity or foreign-key checks")
+        names = [name for (name,) in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")]
+        return {name: set(connection.execute('SELECT * FROM "' + name.replace('"', '""') + '"')) for name in names}
+
+
+def prepare_dimension_locks(staging: Path, paper: Path, bootstrap: Path, candidate: Path, database: Path) -> None:
+    """Append the exported world's historical container locks to a private copy of a stopped database."""
+    paths = (staging, paper, bootstrap, candidate, database)
+    if any(path.is_symlink() for path in paths):
+        raise ValueError("Dimension lock inputs cannot be linked")
+    staging, paper, bootstrap, candidate, database = (path.resolve(strict=True) for path in paths)
+    if database.is_relative_to(staging):
+        raise ValueError("The stopped source database must be outside the archive staging")
+    receipt = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
+    archive = checkpoint(
+        receipt,
+        "Dimension locks require a verified terrain-only dimension export",
+        None,
+        ("DIMENSION_EXPORT_READY", "DIMENSION_EXPORT_PRUNED", "DIMENSION_LOCKS_READY"),
+    )
+    if receipt["phase"] == "DIMENSION_LOCKS_READY":
+        # A new database copy or catalog revision replaces the earlier preparation, which stays for review.
+        supersede_locks(staging, receipt)
+    dimension, expected = exported_dimension(staging, receipt, archive)
+    players = staging / "source/world/playerdata"
+    owned = Path(__file__).resolve().parent
+    configuration = [owned / "owned/plugins/TheStorm" / (name + ".yml") for name in ("heritage", "parcels", "towns")]
+    tools = [owned / "conversion" / name for name in ("NativeHistoricalLocks.java", "NativeTerrain.java")]
+    town_tool = owned / "conversion/RestorationDatabase.java"
+    input_paths = (*configuration, *tools, town_tool, candidate, database)
+    towns = restoration_regions.active_towns(configuration[0], archive.dimension)
+    inputs = {path.name: digest(path) for path in input_paths}
+    source_files = json.loads((staging / "source-files.json").read_text(encoding="utf-8"))
+    if fingerprint(dimension) != expected or fingerprint(staging / "source") != source_files:
+        raise ValueError("Exported dimension or archived player names changed before lock import")
+    root = staging / "dimension-locks"
+    if root.exists() or root.is_symlink():
+        raise ValueError("Dimension lock preparation exists; retain and inspect its evidence")
+    classpath = conversion_classpath(bootstrap, paper, "26.2") + os.pathsep + str(candidate)
+    before = table_rows(database)
+    root.mkdir(mode=0o700)
+    output = root / "the-storm.db"
+    shutil.copy2(database, output)
+    os.chmod(output, 0o600)
+    request = str(uuid.uuid5(uuid.UUID(receipt["requestId"]), "dimension-locks:" + digest(database)))
+    imported_at = datetime.now(UTC).isoformat()
+    receipt.update(
+        phase="DIMENSION_LOCKS_PREPARING",
+        dimensionLockInputs=inputs,
+        dimensionLockRequestId=request,
+        dimensionTownsImportedAt=imported_at,
+    )
+    save_json(staging / JOURNAL, receipt)
+    try:
+        classes = root / "native-lock-tools"
+        classes.mkdir(mode=0o700)
+        lock_receipt = root / "historical-locks.json"
+        with (root / "locks.log").open("x", encoding="utf-8") as log:
+            # Proven mayors' towns join first, so a collision with a live town aborts before any lock.
+            founded = subprocess.run(
+                [
+                    "java",
+                    "--class-path",
+                    classpath,
+                    str(town_tool),
+                    "additional-towns",
+                    str(candidate),
+                    str(output),
+                    str(configuration[0]),
+                    imported_at,
+                    archive.dimension,
+                ],
+                cwd=root,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                timeout=120,
+            )
+            if founded.returncode != 0:
+                raise ValueError("Historical town import failed; inspect the private log")
+            compiled = subprocess.run(
+                ["javac", "--class-path", classpath, "-d", str(classes), *map(str, tools)],
+                cwd=root,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                timeout=120,
+            )
+            if compiled.returncode != 0:
+                raise ValueError("Historical container importer compilation failed; inspect the private log")
+            imported = subprocess.run(
+                [
+                    "java",
+                    "-Xmx2G",
+                    "--class-path",
+                    classpath + os.pathsep + str(classes),
+                    "NativeHistoricalLocks",
+                    str(dimension),
+                    str(players),
+                    archive.dimension,
+                    "additional",
+                    str(output),
+                    *map(str, configuration),
+                    request,
+                    str(lock_receipt),
+                ],
+                cwd=root,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                timeout=1200 * archive.timeout_scale,
+            )
+            log.flush()
+            os.fsync(log.fileno())
+        if imported.returncode != 0:
+            raise ValueError("Historical container lock import failed; inspect the private log")
+        facts = json.loads(lock_receipt.read_text(encoding="utf-8"))
+        after = table_rows(output)
+        added = {table: after.get(table, set()) - rows for table, rows in before.items()}
+        counts = {
+            "towns_lock": facts["locks"],
+            "towns_lock_block": facts["containerBlocks"],
+            "towns_lock_restoration": facts["locks"],
+            "towns_lock_historical_owner": facts["historicalOwners"],
+            "towns_town": len(towns),
+            "towns_member": len(towns),
+        }
+        imported_towns = {(row[0], row[1]) for row in added.get("towns_town", set())}
+        if (
+            imported_towns != {(town_id, name) for town_id, name, _ in towns}
+            or {(row[0], row[1], row[2]) for row in added.get("towns_member", set())}
+            != {(mayor, town_id, "OWNER") for town_id, _, mayor in towns}
+            or facts["requestId"] != request
+            or facts["world"] != archive.dimension
+            or facts["importMode"] != "ADDITIONAL"
+            or facts["databaseReadback"] != "VERIFIED"
+            or facts["worldTicks"] != 0
+            or facts["terrainChanged"] is not False
+            or facts["containerContentsChanged"] is not False
+            or after.keys() != before.keys()
+            or any(not rows <= after[table] for table, rows in before.items())
+            or any(len(added[table]) != counts.get(table, 0) for table in before)
+        ):
+            raise ValueError("Dimension lock import changed other data or failed readback")
+        if fingerprint(dimension) != expected or digest(database) != inputs[database.name]:
+            raise ValueError("Dimension lock import changed its world or source database")
+        if inputs != {path.name: digest(path) for path in input_paths}:
+            raise ValueError("Dimension lock inputs changed while running")
+        save_json(
+            root / "receipt.json",
+            {
+                "schemaVersion": 1,
+                "status": "VERIFIED",
+                "archiveId": archive.id,
+                "dimension": archive.dimension,
+                "requestId": request,
+                "sourceDatabaseSha256": inputs[database.name],
+                "databaseSha256": digest(output),
+                "historicalLocksReceiptSha256": digest(lock_receipt),
+                "addedRows": counts,
+                "historicalTowns": [{"id": town_id, "name": name, "mayor": mayor} for town_id, name, mayor in towns],
+                "townsImportedAt": imported_at,
+                "otherRowsUnchanged": True,
+                "inputs": inputs,
+            },
+        )
+        receipt.update(phase="DIMENSION_LOCKS_READY", dimensionLocksReceiptSha256=digest(root / "receipt.json"))
+    except BaseException:
+        receipt["phase"] = "DIMENSION_LOCKS_FAILED"
         save_json(staging / JOURNAL, receipt)
         raise
     save_json(staging / JOURNAL, receipt)
@@ -733,11 +1220,11 @@ def restart_arenas(staging: Path, candidate: Path, modern_data: Path, backup_pro
     if staging.is_relative_to(modern_data) or modern_data.is_relative_to(staging):
         raise ValueError("Arena restart requires independent input trees")
     receipt = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
-    if (
-        receipt["phase"] not in ("ARENA_TRANSPLANT_FAILED", "ARENA_TRANSPLANT_RESTARTING")
-        or receipt["archiveSha256"] != ARCHIVE_SHA256
-    ):
-        raise ValueError("Arena restart requires a failed private transplant checkpoint")
+    checkpoint(
+        receipt,
+        "Arena restart requires a failed private transplant checkpoint",
+        ("ARENA_TRANSPLANT_FAILED", "ARENA_TRANSPLANT_RESTARTING"),
+    )
     catalog = Path(__file__).resolve().parent / "owned/plugins/TheStorm/heritage.yml"
     if any(
         receipt["arenaTransplantInputs"].get(path.name) != digest(path) for path in (catalog, candidate, backup_proof)
@@ -825,8 +1312,9 @@ def transplant_arenas(
     if staging.is_relative_to(modern_data) or modern_data.is_relative_to(staging):
         raise ValueError("Arena transplant requires independent staging and restored backup trees")
     receipt = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
-    if receipt["phase"] != "NATIVE_HERITAGE_PRESERVED" or receipt["archiveSha256"] != ARCHIVE_SHA256:
-        raise ValueError("Arena transplant requires the verified heritage preservation checkpoint")
+    checkpoint(
+        receipt, "Arena transplant requires the verified heritage preservation checkpoint", "NATIVE_HERITAGE_PRESERVED"
+    )
     source = staging / "heritage-preserved-layout"
     expected = json.loads((staging / "heritage-preserved-layout-files.json").read_text(encoding="utf-8"))
     owned = Path(__file__).resolve().parent
@@ -925,8 +1413,9 @@ def retain_arena_worlds(staging: Path, candidate: Path, modern_data: Path, backu
     if staging.is_relative_to(modern_data) or modern_data.is_relative_to(staging):
         raise ValueError("Arena retention requires independent historical staging and restored backup")
     receipt = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
-    if receipt["phase"] != "NATIVE_HERITAGE_PRESERVED" or receipt["archiveSha256"] != ARCHIVE_SHA256:
-        raise ValueError("Arena retention requires the verified historical preservation checkpoint")
+    checkpoint(
+        receipt, "Arena retention requires the verified historical preservation checkpoint", "NATIVE_HERITAGE_PRESERVED"
+    )
     catalog = Path(__file__).resolve().parent / "owned/plugins/TheStorm/heritage.yml"
     preserved = staging / "heritage-preservation-receipt.json"
     converter = Path(__file__).resolve().parent / "conversion/NativePreservationCheckpoint.java"
@@ -1002,8 +1491,7 @@ def prepare_database(
     if staging.is_relative_to(modern_data) or modern_data.is_relative_to(staging):
         raise ValueError("Database migration requires independent staging and backup trees")
     receipt = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
-    if receipt["phase"] != "ARENAS_PRESERVED" or receipt["archiveSha256"] != ARCHIVE_SHA256:
-        raise ValueError("Database preparation requires verified arena preservation")
+    checkpoint(receipt, "Database preparation requires verified arena preservation", "ARENAS_PRESERVED")
     if receipt["arenaTransplantInputs"][backup_proof.name] != digest(backup_proof):
         raise ValueError("Database preparation must use the same verified modern backup")
     if receipt["arenaTransplantInputs"][candidate.name] != digest(candidate):
@@ -1111,7 +1599,10 @@ def prepare_database(
                         "--class-path",
                         classpath + os.pathsep + str(classes),
                         "NativeHistoricalLocks",
-                        str(historical),
+                        str(historical / "dimensions/minecraft/overworld"),
+                        str(historical / "players/data"),
+                        "world",
+                        "fresh",
                         str(database),
                         str(catalog),
                         str(parcels),
@@ -1234,7 +1725,7 @@ def run_activation_check(world: Path, modern_world: Path, root: Path, classpath:
     tools = Path(__file__).resolve().parent / "conversion"
     with (root / "native-verification.log").open("x", encoding="utf-8") as log:
         for tool, arguments in (
-            ("NativeLayoutMetadata.java", ["verify", str(world), str(root / "metadata-receipt.json")]),
+            ("NativeLayoutMetadata.java", ["verify", PRIMARY.id, str(world), str(root / "metadata-receipt.json")]),
             ("NativeActivationCheck.java", [str(world), str(modern_world), str(root / "native-receipt.json")]),
         ):
             result = subprocess.run(
@@ -1272,8 +1763,11 @@ def prepare_activation(
     if staging.is_relative_to(modern_data) or modern_data.is_relative_to(staging):
         raise ValueError("Activation preparation requires independent staging and backup trees")
     receipt = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
-    if receipt["phase"] != "IDENTITY_DATABASE_READY" or receipt["archiveSha256"] != ARCHIVE_SHA256:
-        raise ValueError("Activation preparation requires verified arena and identity database checkpoints")
+    checkpoint(
+        receipt,
+        "Activation preparation requires verified arena and identity database checkpoints",
+        "IDENTITY_DATABASE_READY",
+    )
     for name, path in ((candidate.name, candidate), (backup_proof.name, backup_proof)):
         if any(receipt[key][name] != digest(path) for key in ("arenaTransplantInputs", "databaseInputs")):
             raise ValueError("Activation must use the same candidate and independently verified modern backup")
@@ -1317,6 +1811,17 @@ def prepare_activation(
         modern_expected = verified_backup(modern_data, backup_proof)
         if fingerprint(source / "world") != expected:
             raise ValueError("Verified arena preservation checkpoint changed")
+        # The historical world replaces the vanilla dimensions and only the arenas carry over, so a
+        # backup holding any other world (map2, frontier, skylands, wilds, peaks...) is refused rather
+        # than silently dropped by the whole-world install.
+        dimensions = modern_data / "world/dimensions/minecraft"
+        dropped = sorted(
+            path.name
+            for path in (dimensions.iterdir() if dimensions.is_dir() else ())
+            if path.name not in ("overworld", "the_nether", "the_end", "settlement", "rustworks", "rwf")
+        )
+        if dropped:
+            raise ValueError("Activation would drop worlds the modern backup holds: " + ", ".join(dropped))
         retained = {}
         for name in ("settlement", "rustworks", "rwf"):
             directory = modern_data / "world/dimensions/minecraft" / name
@@ -1361,9 +1866,7 @@ def prepare_activation(
                 if fingerprint(root / "world/dimensions/minecraft" / name) != files:
                     raise ValueError("Retained arena dimension changed during assembly")
             if any(
-                name.startswith("dimensions/minecraft/" + fresh + "/")
-                for name in actual
-                for fresh in ("wilds", "peaks", "mining")
+                name.startswith("dimensions/minecraft/" + fresh + "/") for name in actual for fresh in FRESH_DIMENSIONS
             ):
                 raise ValueError("Activation retained a resource world scheduled to start fresh")
             if (
@@ -1389,7 +1892,7 @@ def prepare_activation(
                     "historicalChunks": EXPECTED_CHUNKS,
                     "overworldOverlay": mode != "SEPARATE_WORLDS",
                     "retainedDimensions": retained,
-                    "freshDimensions": ["wilds", "peaks", "mining"],
+                    "freshDimensions": list(FRESH_DIMENSIONS),
                     "native": native,
                     "animalIdentityRepair": animal_identities,
                     "inputs": inputs,
@@ -1408,17 +1911,16 @@ def restart_companions(staging: Path) -> None:
     """Retain a failed or superseded private rehearsal and regenerate from the untouched archive."""
     staging = staging.resolve(strict=True)
     receipt = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
-    if (
-        receipt["phase"]
-        not in (
+    checkpoint(
+        receipt,
+        "Companion restart requires a failed native companion or layout checkpoint",
+        (
             "NATIVE_LAYOUT_REHEARSAL_FAILED",
             "NATIVE_COMPANION_CONVERSION_FAILED",
             "NATIVE_AUXILIARY_CONVERSION_FAILED",
             "NATIVE_LAYOUT_REHEARSED",
-        )
-        or receipt["archiveSha256"] != ARCHIVE_SHA256
-    ):
-        raise ValueError("Companion restart requires a failed native companion or layout checkpoint")
+        ),
+    )
     if receipt["phase"] == "NATIVE_LAYOUT_REHEARSED":
         converter = Path(__file__).resolve().parent / "conversion"
         current = {name: digest(converter / name) for name in receipt["nativeCompanionToolSha256"]}
@@ -1481,11 +1983,8 @@ def restart_companions(staging: Path) -> None:
 def reuse_native_chunks(staging: Path) -> None:
     staging = staging.resolve(strict=True)
     receipt = json.loads((staging / JOURNAL).read_text(encoding="utf-8"))
-    if (
-        receipt["phase"] != "COMPANION_DATA_CONVERTED"
-        or receipt["archiveSha256"] != ARCHIVE_SHA256
-        or not receipt.get("supersededAttempts")
-    ):
+    checkpoint(receipt, "Native chunk reuse requires a verified companion restart", "COMPANION_DATA_CONVERTED")
+    if not receipt.get("supersededAttempts"):
         raise ValueError("Native chunk reuse requires a verified companion restart")
     expected = json.loads((staging / "native-chunks-26.2-files.json").read_text(encoding="utf-8"))
     output = staging / "native-chunks-26.2"
@@ -1554,7 +2053,7 @@ def stopped_locks(root: Path, stack: ExitStack) -> None:
             raise ValueError("A world is running; stop every PVC writer first") from error
 
 
-def archive_members(archive: zipfile.ZipFile) -> list[tuple[zipfile.ZipInfo, PurePosixPath]]:
+def archive_members(archive: zipfile.ZipFile, root: str = ARCHIVE_ROOT) -> list[tuple[zipfile.ZipInfo, PurePosixPath]]:
     result = []
     seen = set()
     for entry in archive.infolist():
@@ -1565,9 +2064,9 @@ def archive_members(archive: zipfile.ZipFile) -> list[tuple[zipfile.ZipInfo, Pur
             raise ValueError("Archive contains a symlink")
         if entry.is_dir():
             continue
-        if not entry.filename.startswith(ARCHIVE_ROOT):
+        if not entry.filename.startswith(root):
             raise ValueError("Archive contains files outside the selected world")
-        relative = PurePosixPath(entry.filename[len(ARCHIVE_ROOT) :])
+        relative = PurePosixPath(entry.filename[len(root) :])
         if not relative.parts or relative in seen:
             raise ValueError("Empty or duplicate archive member")
         seen.add(relative)
@@ -1579,45 +2078,113 @@ def chunk_inventory(region: Path) -> dict[str, int]:
     """Validate Anvil allocation headers without loading or regenerating a single chunk."""
     result = {}
     for path in sorted(region.glob("r.*.*.mca")):
-        parts = path.name.split(".")
-        if len(parts) != 4:
-            raise ValueError("Malformed region filename")
-        rx, rz = int(parts[1]), int(parts[2])
-        size = path.stat().st_size
         with path.open("rb") as source:
-            header = source.read(8192)
-            if len(header) != 8192:
-                raise ValueError(f"Truncated region: {path.name}")
-            occupied = set()
-            for index in range(1024):
-                location = struct.unpack_from(">I", header, index * 4)[0]
-                if location == 0:
-                    continue
-                sector, count = location >> 8, location & 255
-                if sector < 2 or count == 0 or (sector + count) * 4096 > size:
-                    raise ValueError(f"Invalid chunk allocation: {path.name}:{index}")
-                allocation = set(range(sector, sector + count))
-                if occupied.intersection(allocation):
-                    raise ValueError(f"Overlapping chunk allocation: {path.name}:{index}")
-                occupied.update(allocation)
-                source.seek(sector * 4096)
-                length = struct.unpack(">I", source.read(4))[0]
-                compression = source.read(1)
-                if length < 1 or length + 4 > count * 4096 or compression not in (b"\x01", b"\x02", b"\x03"):
-                    raise ValueError(f"Unsupported or truncated chunk: {path.name}:{index}")
-                result[f"{rx * 32 + index % 32},{rz * 32 + index // 32}"] = length
+            result.update(restoration_regions.region_chunks(path.name, source, path.stat().st_size))
     return result
 
 
-def prepare(archive_path: Path, staging: Path) -> None:
+def archive_chunk_inventory(archive_path: Path, archive_id: str) -> dict[str, int]:
+    """Read the approved archive's region headers in memory; nothing from the archive is extracted."""
+    selected = ARCHIVES.get(archive_id)
+    if selected is None:
+        raise ValueError("Unreviewed archive id")
+    if digest(archive_path.resolve(strict=True)) != selected.sha256:
+        raise ValueError("Archive is not the approved source for " + selected.id)
+    result = {}
+    with zipfile.ZipFile(archive_path) as archive:
+        for entry, relative in archive_members(archive, selected.root):
+            if len(relative.parts) == 2 and relative.parts[0] == "region" and relative.suffix == ".mca":
+                result.update(
+                    restoration_regions.region_chunks(relative.name, io.BytesIO(archive.read(entry)), entry.file_size)
+                )
+    return result
+
+
+def chunk_extent(chunks: Iterable[str]) -> dict[str, object]:
+    """Report the saved bounding radius and the largest origin-centred square that has no missing chunk.
+
+    Radii are in blocks at chunk edges: radius R covers block coordinates -R..R-1 on both axes.
+    """
+    present = set()
+    for key in chunks:
+        x, z = key.split(",")
+        present.add((int(x), int(z)))
+    if not present:
+        raise ValueError("Chunk extent requires at least one saved chunk")
+    bounding = max(max(-16 * x, 16 * (x + 1), -16 * z, 16 * (z + 1)) for x, z in present)
+
+    def ring_saved(ring: int) -> bool:
+        edge = range(-ring - 1, ring + 1)
+        return all((x, z) in present for x in edge for z in (-ring - 1, ring)) and all(
+            (x, z) in present for z in edge for x in (-ring - 1, ring)
+        )
+
+    rings = 0
+    while ring_saved(rings):
+        rings += 1
+    xs, zs = [x for x, _ in present], [z for _, z in present]
+    return {
+        "chunks": len(present),
+        "chunkBounds": {"minX": min(xs), "maxX": max(xs), "minZ": min(zs), "maxZ": max(zs)},
+        "boundingRadius": bounding,
+        "continuousRadius": 16 * rings,
+        "continuousChunks": (2 * rings) ** 2,
+    }
+
+
+CIRCLE_COVERAGE = ((1, 1), (9999, 10000), (999, 1000))
+
+
+def chunk_extent_circle(chunks: Iterable[str]) -> dict[str, object]:
+    """Report origin-centred circular extents over saved chunks.
+
+    Chunk x covers blocks 16x..16x+15, the square [16x, 16x+16) in continuous block space, and
+    the circle is centred on the block corner 0,0 as in the square extent. The continuous radius
+    is the largest whole-block R whose open disc meets only saved chunks. Each coverage radius is
+    the smallest whole-block R whose closed disc wholly contains that fraction of saved chunks.
+    """
+    present = set()
+    for key in chunks:
+        x, z = key.split(",")
+        present.add((int(x), int(z)))
+    if not present:
+        raise ValueError("Chunk extent requires at least one saved chunk")
+
+    ring, nearest = restoration_regions.chunk_ring, restoration_regions.chunk_nearest
+    # Chunks in ring r lie at least 16r from the origin, so the search ends once
+    # no remaining ring can hold a missing chunk closer than the best found.
+    missing = math.inf
+    radius = 0
+    while 16 * radius < missing:
+        for x in range(-radius - 1, radius + 1):
+            for z in range(-radius - 1, radius + 1):
+                if max(ring(x), ring(z)) == radius and (x, z) not in present:
+                    missing = min(missing, nearest(x, z))
+        radius += 1
+    farthest = sorted(math.hypot(16 * (ring(x) + 1), 16 * (ring(z) + 1)) for x, z in present)
+    coverage = {}
+    for numerator, denominator in CIRCLE_COVERAGE:
+        inside = -(-len(farthest) * numerator // denominator)
+        limit = math.ceil(farthest[inside - 1])
+        coverage[f"{100 * numerator / denominator:g}%"] = {
+            "radius": limit,
+            "chunksOutside": sum(1 for value in farthest if value > limit),
+        }
+    return {"chunks": len(present), "continuousRadius": math.floor(missing), "coverage": coverage}
+
+
+def prepare(archive_path: Path, staging: Path, archive_id: str) -> None:
+    selected = ARCHIVES.get(archive_id)
+    if selected is None:
+        raise ValueError("Unreviewed archive id")
     archive_path = archive_path.resolve(strict=True)
     staging = staging.absolute()
     if staging.exists() or archive_path.is_relative_to(staging):
         raise ValueError("Use a new, isolated staging directory")
-    if digest(archive_path) != ARCHIVE_SHA256:
-        raise ValueError("Archive is not the approved July 2015 source")
+    if digest(archive_path) != selected.sha256:
+        raise ValueError("Archive is not the approved source for " + selected.id)
     with zipfile.ZipFile(archive_path) as archive:
-        members = archive_members(archive)
+        members = archive_members(archive, selected.root)
         if archive.testzip() is not None:
             raise ValueError("Archive CRC verification failed")
         required_bytes = sum(entry.file_size for entry, _ in members) * 3
@@ -1626,10 +2193,12 @@ def prepare(archive_path: Path, staging: Path) -> None:
             raise ValueError("Insufficient staging capacity for source, conversion copy and checkpoint")
         staging.mkdir(mode=0o700)
         receipt = {
-            "schemaVersion": 1,
+            "schemaVersion": 2,
             "requestId": str(uuid.uuid4()),
             "phase": "EXTRACTING",
-            "archiveSha256": ARCHIVE_SHA256,
+            "archiveId": selected.id,
+            "archiveSha256": selected.sha256,
+            "targetDimension": selected.dimension,
             "chunkTrimming": False,
         }
         save_json(staging / JOURNAL, receipt)
@@ -1642,7 +2211,7 @@ def prepare(archive_path: Path, staging: Path) -> None:
                 shutil.copyfileobj(source, output)
         chunks = chunk_inventory(world / "region")
         players = sorted(path.stem for path in (world / "playerdata").glob("*.dat"))
-        if len(chunks) != EXPECTED_CHUNKS or len(players) != EXPECTED_PLAYERS:
+        if len(chunks) != selected.chunks or len(players) != selected.players:
             raise ValueError("Archive chunk/player inventory disagrees with reviewed source")
         save_json(staging / "source-chunks.json", chunks)
         save_json(staging / "source-files.json", fingerprint(staging / "source"))
@@ -1779,6 +2348,7 @@ def main() -> None:
     preparing = commands.add_parser("prepare")
     preparing.add_argument("--archive", required=True, type=Path)
     preparing.add_argument("--staging", required=True, type=Path)
+    preparing.add_argument("--archive-id", required=True, choices=sorted(ARCHIVES))
     converting = commands.add_parser("convert-legacy")
     converting.add_argument("--staging", required=True, type=Path)
     converting.add_argument("--paper", required=True, type=Path)
@@ -1831,12 +2401,36 @@ def main() -> None:
         resources.add_argument("--" + name, required=True, type=Path)
     restarting = commands.add_parser("restart-companions")
     restarting.add_argument("--staging", required=True, type=Path)
+    exporting = commands.add_parser("export-dimension")
+    exporting.add_argument("--staging", required=True, type=Path)
+    export_pruning = commands.add_parser("prune-export")
+    export_pruning.add_argument("--staging", required=True, type=Path)
+    export_pruning.add_argument("--radius", required=True, type=int)
+    dimension_locks = commands.add_parser("prepare-dimension-locks")
+    for name in ("staging", "paper", "bootstrap", "candidate", "database"):
+        dimension_locks.add_argument("--" + name, required=True, type=Path)
     reusing = commands.add_parser("reuse-native-chunks")
     reusing.add_argument("--staging", required=True, type=Path)
     verifying = commands.add_parser("verify-copy")
     verifying.add_argument("--original", required=True, type=Path)
     verifying.add_argument("--restored", required=True, type=Path)
     verifying.add_argument("--output", required=True, type=Path)
+    extent = commands.add_parser("chunk-extent")
+    extent_source = extent.add_mutually_exclusive_group(required=True)
+    extent_source.add_argument("--region", type=Path)
+    extent_source.add_argument("--archive", type=Path)
+    extent.add_argument("--archive-id", choices=sorted(ARCHIVES))
+    extent.add_argument("--shape", required=True, choices=("square", "circle"))
+    pruning = commands.add_parser("prune-dimension")
+    pruning.add_argument("--dimension", required=True, type=Path)
+    pruning.add_argument("--world", required=True)
+    pruning.add_argument("--radius", required=True, type=int)
+    pruning.add_argument("--receipt", required=True, type=Path)
+    server_state = pruning.add_mutually_exclusive_group(required=True)
+    server_state.add_argument("--data", type=Path)
+    server_state.add_argument("--no-server-data", action="store_true")
+    pruning.add_argument("--apply", action="store_true")
+    pruning.add_argument("--allow-outside-claims", action="store_true")
     inventory = commands.add_parser("database-inventory")
     inventory.add_argument("--database", required=True, type=Path)
     inventory.add_argument("--output", required=True, type=Path)
@@ -1844,14 +2438,20 @@ def main() -> None:
     with ExitStack() as operations:
         if arguments.command == "fork-native-layout":
             operations.enter_context(operation_lock(arguments.original))
-        elif arguments.command not in ("prepare", "verify-copy", "database-inventory"):
+        elif arguments.command not in (
+            "prepare",
+            "verify-copy",
+            "database-inventory",
+            "chunk-extent",
+            "prune-dimension",
+        ):
             operations.enter_context(operation_lock(arguments.staging))
         execute(arguments)
 
 
 def execute(arguments: argparse.Namespace) -> None:
     if arguments.command == "prepare":
-        prepare(arguments.archive, arguments.staging)
+        prepare(arguments.archive, arguments.staging, arguments.archive_id)
     elif arguments.command == "convert-legacy":
         convert_legacy(arguments.staging, arguments.paper, arguments.guard)
     elif arguments.command == "convert-companions":
@@ -1901,6 +2501,14 @@ def execute(arguments: argparse.Namespace) -> None:
             arguments.modern_data,
             arguments.backup_proof,
         )
+    elif arguments.command == "export-dimension":
+        export_dimension(arguments.staging)
+    elif arguments.command == "prune-export":
+        prune_export(arguments.staging, arguments.radius)
+    elif arguments.command == "prepare-dimension-locks":
+        prepare_dimension_locks(
+            arguments.staging, arguments.paper, arguments.bootstrap, arguments.candidate, arguments.database
+        )
     elif arguments.command == "reuse-native-chunks":
         reuse_native_chunks(arguments.staging)
     elif arguments.command == "prepare-resources":
@@ -1916,6 +2524,27 @@ def execute(arguments: argparse.Namespace) -> None:
         verify_copy(arguments.original, arguments.restored, arguments.output)
     elif arguments.command == "database-inventory":
         database_inventory(arguments.database, arguments.output)
+    elif arguments.command == "prune-dimension":
+        facts = restoration_regions.prune_dimension(
+            arguments.dimension,
+            arguments.world,
+            arguments.radius,
+            arguments.receipt,
+            data=arguments.data,
+            apply=arguments.apply,
+            allow_outside_claims=arguments.allow_outside_claims,
+            owned=Path(__file__).resolve().parent,
+        )
+        print(json.dumps({key: facts[key] for key in ("status", "mode", "radius", "safety")}, indent=2))
+    elif arguments.command == "chunk-extent":
+        if arguments.region is not None:
+            inventory = chunk_inventory(arguments.region)
+        elif arguments.archive_id is not None:
+            inventory = archive_chunk_inventory(arguments.archive, arguments.archive_id)
+        else:
+            raise ValueError("Archive extent requires --archive-id")
+        measure = chunk_extent if arguments.shape == "square" else chunk_extent_circle
+        print(json.dumps(measure(inventory), indent=2, sort_keys=True))
     else:
         raise ValueError("Unsupported restoration operation")
 

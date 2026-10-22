@@ -1,10 +1,9 @@
 /**
- * Velero backups of live minecraft-tsmc. The manifest copies the shape the
- * Temporal mining reset uses (packages/temporal/src/activities/homelab/
- * mining-reset.ts `backupManifest`), labelled for the harness; completion is
- * judged like `assertCompletedBackup` in mining-reset-contract.ts. Tier-2
- * writes accept any clean completed backup that covers the namespace,
- * including the cluster's scheduled all-namespace backups.
+ * Velero backups of live minecraft-tsmc: an isolated snapshot of the tsmc
+ * PVC, labelled for the harness. A backup counts as complete only when Velero
+ * reports it Completed without errors and every attempted volume snapshot
+ * completed. Tier-2 writes accept any clean completed backup that covers the
+ * namespace, including the cluster's scheduled all-namespace backups.
  */
 import { z } from "zod";
 import type { Kubectl } from "#providers/kubernetes/kubectl.ts";
@@ -45,7 +44,11 @@ export function harnessBackupName(now: Date): string {
   return `mc-harness-${stamp}`;
 }
 
-/** Same scope as the mining-reset backup: the tsmc PVC, snapshotted. */
+/**
+ * The tsmc PVC, snapshotted. The ZFS provider has several snapshot locations
+ * and no default, so the backup names the incremental one, as Delivery's
+ * storm-world backups do.
+ */
 export function harnessBackupManifest(name: string): string {
   return JSON.stringify({
     apiVersion: "velero.io/v1",
@@ -60,6 +63,7 @@ export function harnessBackupManifest(name: string): string {
       labelSelector: { matchLabels: { "velero.io/backup": "enabled" } },
       snapshotVolumes: true,
       storageLocation: "default",
+      volumeSnapshotLocations: ["zfspv-incr"],
       ttl: "720h",
     },
   });

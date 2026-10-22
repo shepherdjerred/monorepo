@@ -37,14 +37,17 @@ export const STORM_PATHS = {
 /**
  * Modules `storm-dev` switches on: playable gameplay without external
  * services. `agent` needs storm-brain, `discord` a bot token and `world`
- * Flipt, so they stay off. Towns requires the mail service. Mechanics runs
- * inside TheStormMechanicsE2E, which also prepares its fixture geometry.
+ * Flipt, so they stay off. Towns requires the mail service, and its claim
+ * worlds include `skylands`, which the skylands module generates itself.
+ * Mechanics runs inside TheStormMechanicsE2E, which also prepares its fixture
+ * geometry.
  */
 export const STORM_DEV_MODULES = [
   "economy",
   "mail",
   "chat",
   "tracks",
+  "skylands",
   "towns",
   "tickets",
 ] as const;
@@ -60,15 +63,23 @@ export const STORM_DEV_WITH_CREATIVE = [
 ] as const;
 
 /**
- * Modules enabled in published-image sandboxes. Companions' local gameplay
+ * Modules a published image enables only when its frozen config lists them.
+ * Images built before a module existed neither have it nor need it.
+ */
+const STORM_IMAGE_OPTIONAL_MODULES: ReadonlySet<string> = new Set(["skylands"]);
+
+/**
+ * Modules every published-image sandbox requires. Companions' local gameplay
  * dependencies are present; RWF stays off because disposable servers do not
  * carry the provisioned `rwf` world or production recording salt.
  */
-const STORM_IMAGE_ENABLED_MODULES = [
-  ...STORM_DEV_MODULES,
+const STORM_IMAGE_REQUIRED_MODULES: readonly string[] = [
+  ...STORM_DEV_MODULES.filter(
+    (module) => !STORM_IMAGE_OPTIONAL_MODULES.has(module),
+  ),
   "safety",
   "companions",
-] as const;
+];
 
 /**
  * Config schema snapshots are keyed by the exact published image digest.
@@ -124,16 +135,19 @@ export function stormImageConfig(
       `No Storm module config snapshot for image digest ${digest}`,
     );
   }
-  const missing = STORM_IMAGE_ENABLED_MODULES.filter(
+  const missing = STORM_IMAGE_REQUIRED_MODULES.filter(
     (module) => !config.moduleKeys.includes(module),
   );
   if (missing.length > 0)
     throw new Error(
       `Storm image lacks required sandbox modules: ${missing.join(", ")}`,
     );
+  const optional = config.moduleKeys.filter((module) =>
+    STORM_IMAGE_OPTIONAL_MODULES.has(module),
+  );
   return {
     moduleKeys: config.moduleKeys,
-    enabledModules: STORM_IMAGE_ENABLED_MODULES,
+    enabledModules: [...STORM_IMAGE_REQUIRED_MODULES, ...optional],
   };
 }
 

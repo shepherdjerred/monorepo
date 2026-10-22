@@ -1,15 +1,19 @@
-"""Render untouched converted chunks without loading or ticking the historical world."""
+"""Verify converted-chunk rendering settings without loading or ticking the historical world."""
 
 import argparse
-import hashlib
 import json
-import os
 import re
 import uuid
 from pathlib import Path
 
 import restoration_files as storage
 from restoration_json import JsonObject
+
+# Repository-owned BlueMap maps for restored archive worlds. Converted 1.8 chunks
+# carry missing or zeroed light data, so each map renders without waiting for
+# light and at full ambient brightness. The image installs these files on boot.
+ARCHIVE_MAPS = {"world.conf": "minecraft:overworld", "map2.conf": "minecraft:map2"}
+LIGHTING = ("ignore-missing-light-data: true", "ambient-light: 1")
 
 
 def render_unlit(data: Path, request: str, jar_sha: str) -> JsonObject:
@@ -19,9 +23,10 @@ def render_unlit(data: Path, request: str, jar_sha: str) -> JsonObject:
         raise ValueError("Map data root cannot be linked")
     data = data.resolve(strict=True)
     workspace = data / storage.WORKSPACE / request
-    config = data / "plugins/BlueMap/maps/world.conf"
+    maps = data / "plugins/BlueMap/maps"
     receipt_path = workspace / "bluemap-render.json"
-    for path in (workspace, workspace / "journal.json", config, receipt_path, *config.parents):
+    configs = [maps / name for name in ARCHIVE_MAPS]
+    for path in (workspace, workspace / "journal.json", receipt_path, *configs, *maps.parents):
         if path.is_symlink():
             raise ValueError("Map rendering inputs cannot be linked")
     installed = JsonObject.parse((workspace / "journal.json").read_bytes())
@@ -32,51 +37,29 @@ def render_unlit(data: Path, request: str, jar_sha: str) -> JsonObject:
         or storage.digest(data / "plugins/TheStorm.jar") != jar_sha
     ):
         raise ValueError("Map rendering requires this installed candidate")
-    current = config.read_bytes()
-    if receipt_path.exists():
-        receipt = JsonObject.parse(receipt_path.read_bytes())
-        if receipt.get("requestId") != request or receipt.get("candidateJarSha256") != jar_sha:
-            raise ValueError("Map rendering receipt belongs to another candidate")
-        original = receipt.string("original").encode()
-    else:
-        original = current
-        receipt = JsonObject({"requestId": request, "candidateJarSha256": jar_sha, "original": original.decode()})
-    text = original.decode()
-    if (
-        text.splitlines().count('world: "world"') != 1
-        or text.splitlines().count('dimension: "minecraft:overworld"') != 1
-        or text.splitlines().count("ignore-missing-light-data: false") != 1
-        or text.splitlines().count("ambient-light: 0.1") != 1
-    ):
-        raise ValueError("Map rendering requires the generated main-overworld configuration")
-    missing_light_repair = text.replace(
-        "\nignore-missing-light-data: false\n", "\nignore-missing-light-data: true\n"
-    ).encode()
-    # Converted chunks can contain present but zeroed light arrays. The
-    # missing-data option alone does not brighten those already rendered tiles.
-    # Ambient lighting is a viewer setting and requires no terrain relighting.
-    updated = missing_light_repair.replace(b"\nambient-light: 0.1\n", b"\nambient-light: 1\n")
-    if updated == original or current not in (original, updated, missing_light_repair):
-        raise ValueError("Map configuration changed outside the bounded lighting repair")
-    storage.save(receipt_path, receipt)
-    if current != updated:
-        temporary = workspace / f"bluemap-config-{uuid.uuid4()}.writing"
-        owner = config.stat()
-        descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
-        try:
-            with os.fdopen(descriptor, "wb") as stream:
-                stream.write(updated)
-                stream.flush()
-                os.fchmod(stream.fileno(), owner.st_mode & 0o777)
-                os.fchown(stream.fileno(), owner.st_uid, owner.st_gid)
-                os.fsync(stream.fileno())
-            temporary.replace(config)
-        finally:
-            temporary.unlink(missing_ok=True)
-        storage.sync_directory(config.parent)
-    if config.read_bytes() != updated:
-        raise ValueError("Map configuration readback changed")
-    receipt.update({"phase": "VERIFIED", "configSha256": hashlib.sha256(updated).hexdigest(), "worldTicks": 0})
+    hashes = {}
+    for config in configs:
+        lines = config.read_text(encoding="utf-8").splitlines()
+        lighting = [line for line in lines if line.startswith(("ignore-missing-light-data:", "ambient-light:"))]
+        if (
+            lines.count('world: "world"') != 1
+            or lines.count(f'dimension: "{ARCHIVE_MAPS[config.name]}"') != 1
+            or sorted(lighting) != sorted(LIGHTING)
+        ):
+            raise ValueError("Owned map configuration lacks converted-chunk lighting: " + config.name)
+        hashes[config.name] = storage.digest(config)
+    receipt = JsonObject(
+        {
+            "requestId": request,
+            "candidateJarSha256": jar_sha,
+            "phase": "VERIFIED",
+            "configSha256": hashes["world.conf"],
+            "configs": hashes,
+            "worldTicks": 0,
+        }
+    )
+    if {name: storage.digest(config) for name, config in zip(ARCHIVE_MAPS, configs, strict=True)} != hashes:
+        raise ValueError("Map configuration changed during verification")
     storage.save(receipt_path, receipt)
     return JsonObject(
         {key: receipt[key] for key in ("requestId", "candidateJarSha256", "phase", "configSha256", "worldTicks")}

@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.core.schedule.Scheduler;
 import com.shepherdjerred.thestorm.qol.domain.QolConfig;
 import com.shepherdjerred.thestorm.qol.domain.rtp.BlockPoint;
 import com.shepherdjerred.thestorm.qol.domain.rtp.BorderRoom;
+import com.shepherdjerred.thestorm.qol.domain.rtp.BorderSearch;
 import com.shepherdjerred.thestorm.qol.domain.rtp.CandidateFilter;
 import com.shepherdjerred.thestorm.qol.domain.rtp.SearchRing;
 import com.shepherdjerred.thestorm.qol.domain.rtp.WildSpotPicker;
@@ -97,6 +98,9 @@ final class RtpSearch {
     var site = request.site();
     var room =
         BorderRoom.maxRadius(site.spawn(), site.borderCenter(), site.diameter(), borderMargin);
+    if (site.wholeBorder().isPresent()) {
+      return SearchRing.within(site.wholeBorder().get().inner(), room);
+    }
     var farthest = SearchRing.farthest(site.spawn(), centers(request.target().claims()));
     return SearchRing.around(farthest, minGap, band, room);
   }
@@ -137,8 +141,13 @@ final class RtpSearch {
     return ((long) x << 32) | (z & 0xFFFF_FFFFL);
   }
 
-  /** Where the search runs. */
-  record Site(World world, BlockPoint spawn, BlockPoint borderCenter, int diameter) {}
+  /** Where the search runs; {@code wholeBorder} searches out from spawn instead of past claims. */
+  record Site(
+      World world,
+      BlockPoint spawn,
+      BlockPoint borderCenter,
+      int diameter,
+      Optional<BorderSearch> wholeBorder) {}
 
   /** What the landing must avoid and match. */
   record Target(Optional<String> biome, List<SettledLand.Chunk> claims, List<BlockPoint> repel) {}

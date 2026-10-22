@@ -37,28 +37,47 @@ final class WorldConfigTest {
                 "America/Los_Angeles"));
     assertThat(config.worlds())
         .extracting(WorldSpec::name)
-        .containsExactly("wilds", "peaks", "mining");
+        .containsExactly("frontier", "world", "map2", "skylands", "wilds", "peaks");
     assertThat(config.worlds())
         .extracting(WorldSpec::preset)
-        .containsExactly("large_biomes", "amplified", "normal");
+        .containsExactly("normal", "normal", "normal", "skylands", "large_biomes", "amplified");
+    assertThat(config.worlds()).allMatch(WorldSpec::rtp);
+    assertThat(config.worlds().getFirst().name())
+        .as("frontier is the default random-teleport landing")
+        .isEqualTo("frontier");
+    assertThat(config.borders())
+        .extracting(WorldBorderSpec::world, WorldBorderSpec::size)
+        .contains(
+            org.assertj.core.groups.Tuple.tuple("world_nether", 6000.0),
+            org.assertj.core.groups.Tuple.tuple("world_the_end", 8000.0),
+            org.assertj.core.groups.Tuple.tuple("frontier", 7000.0),
+            org.assertj.core.groups.Tuple.tuple("skylands", 10000.0));
+    assertThat(config.borders())
+        .filteredOn(border -> border.circle().isPresent())
+        .extracting(WorldBorderSpec::world, WorldBorderSpec::size)
+        .containsExactlyInAnyOrder(
+            org.assertj.core.groups.Tuple.tuple("world", 14000.0),
+            org.assertj.core.groups.Tuple.tuple("map2", 24000.0));
     assertThat(SleepFraction.skips(1, 2, config.sleepPercentage())).isTrue();
   }
 
   @Test
   void nativeBordersRejectInvalidCentersAndDiameters() {
     for (var size : new double[] {0, -1, Double.NaN, Double.POSITIVE_INFINITY, 60_000_000}) {
-      assertThatThrownBy(() -> new WorldBorderSpec("world", 0, 0, size))
+      assertThatThrownBy(() -> new WorldBorderSpec("world", 0, 0, size, "square"))
           .isInstanceOf(IllegalArgumentException.class);
     }
-    assertThatThrownBy(() -> new WorldBorderSpec("world", Double.NaN, 0, 100))
+    assertThatThrownBy(() -> new WorldBorderSpec("world", Double.NaN, 0, 100, "square"))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new WorldBorderSpec("world", 0, 30_000_000, 100))
+    assertThatThrownBy(() -> new WorldBorderSpec("world", 0, 30_000_000, 100, "square"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new WorldBorderSpec("world", 0, 0, 100, "hexagon"))
         .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   void theCrierCannotBeMovedOutOfTheMainWorld() {
-    assertThatThrownBy(() -> new CrierConfig(true, "mining"))
+    assertThatThrownBy(() -> new CrierConfig(true, "frontier"))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("main world");
   }
@@ -66,7 +85,7 @@ final class WorldConfigTest {
   @Test
   void ambientBarksRequireMainWorldAndBoundedSpawnArea() {
     assertThatThrownBy(
-            () -> new AmbientConfig(true, "mining", 0, 64, 0, 24, 8, "America/Los_Angeles"))
+            () -> new AmbientConfig(true, "frontier", 0, 64, 0, 24, 8, "America/Los_Angeles"))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("main world");
     assertThatThrownBy(
@@ -81,7 +100,7 @@ final class WorldConfigTest {
 
   @Test
   void digestRequiresMainWorldAndCrier() {
-    assertThatThrownBy(() -> new DigestConfig(true, "mining", "America/Los_Angeles"))
+    assertThatThrownBy(() -> new DigestConfig(true, "frontier", "America/Los_Angeles"))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("main world");
     assertThatThrownBy(() -> new DigestConfig(true, "world", "not-a-zone"))
@@ -113,7 +132,7 @@ final class WorldConfigTest {
             () ->
                 new MerchantConfig(
                     true,
-                    "mining",
+                    "frontier",
                     java.util.List.of(new MerchantAnchor(10, 80, 10)),
                     12,
                     20,

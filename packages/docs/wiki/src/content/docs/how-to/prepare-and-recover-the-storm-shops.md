@@ -23,5 +23,4 @@ Use the [shop protection contract](https://github.com/shepherdjerred/monorepo/bl
 
 ## Related
 
-- [Recover The Storm mining reset](/how-to/recover-the-storm-mining-reset/)
 - [Roll out a Temporal Worker Deployment](/how-to/roll-out-a-temporal-worker-deployment/)

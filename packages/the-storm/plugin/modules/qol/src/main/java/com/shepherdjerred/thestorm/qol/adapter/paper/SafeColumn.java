@@ -6,7 +6,10 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 
-/** A solid block with two open blocks above it. */
+/**
+ * A solid block, resting on another solid block, with two open blocks above it. The block beneath
+ * keeps a landing off one-block overhangs, such as the thin edges of Skylands islands.
+ */
 final class SafeColumn {
 
   private static final Set<Material> HAZARDS =
@@ -43,6 +46,9 @@ final class SafeColumn {
   private static boolean standable(World world, int x, int y, int z) {
     var ground = world.getBlockAt(x, y, z);
     if (!ground.isSolid() || ground.isLiquid() || HAZARDS.contains(ground.getType())) {
+      return false;
+    }
+    if (!world.getBlockAt(x, y - 1, z).isSolid()) {
       return false;
     }
     return open(world.getBlockAt(x, y + 1, z)) && open(world.getBlockAt(x, y + 2, z));

@@ -118,7 +118,6 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   runTrackerAttachmentCleanup: "infra",
   runOpsSnapshot: "infra",
   runOpsDigest: "infra",
-  runMiningWorldResetWorkflow: "infra",
   maintainStormForumWorkflow: "infra",
   backupStormForumWorkflow: "infra",
 

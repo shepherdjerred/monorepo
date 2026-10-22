@@ -1,0 +1,38 @@
+# The travel hub at the main spawn: walk-in portals and /worlds. Owned by the
+# repository; the plugin never writes it. Only the main spawn has a hub; every
+# other world returns with /spawn. A `rtp` arrival is a random teleport under
+# rtp.yml and the RTP price; a `spawn` arrival is priced as a warp.
+hubWorld: world
+# Menu order. The first destination is the primary: frontier is where players
+# spend most of their survival time.
+destinations:
+  - id: frontier
+    label: Frontier
+    description: "The main survival world: a random spot in the wilderness"
+    world: frontier
+    arrival: rtp
+  - id: skylands
+    label: Skylands
+    description: "Floating islands above the void"
+    world: skylands
+    arrival: spawn
+  - id: map2
+    label: Main Map 2
+    description: "The restored 2016 main world"
+    world: map2
+    arrival: spawn
+  - id: wilds
+    label: Wilds
+    description: "Large biomes, never reset"
+    world: wilds
+    arrival: spawn
+  - id: peaks
+    label: Peaks
+    description: "Amplified mountains, never reset"
+    world: peaks
+    arrival: spawn
+# Stargate-style gates at the main spawn: an obsidian frame filled with portal
+# blocks and a destination sign. Each entry is a gate's inner volume in
+# hubWorld, inclusive corners, at most 16 blocks per axis; standing in a gate
+# never starts a vanilla Nether trip. Measured from the placed gates.
+portals: []

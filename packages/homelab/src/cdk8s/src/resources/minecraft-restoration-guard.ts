@@ -6,7 +6,7 @@ export const RESTORE_PHASE_ANNOTATION = "sjer.red/world-restore-phase";
 export const RESTORE_IMAGE_ANNOTATION = "sjer.red/world-restore-image";
 export const RESTORE_ACCESS_SELECTOR = "sjer.red/world-restore-access";
 
-/** A world restoration and the scheduled mining reset must never share the production PVC. */
+/** A world restoration owns the production PVC exclusively while its lease is held. */
 export function createMinecraftRestorationGuard(chart: Chart): void {
   const policyName = "minecraft-tsmc-world-restoration.sjer.red";
   const annotations = "object.metadata.annotations";
@@ -28,12 +28,6 @@ export function createMinecraftRestorationGuard(chart: Chart): void {
           expression: `!(${priorLeased}) || ((${leased}) && ${annotations}['${RESTORE_LEASE_ANNOTATION}'] == ${priorAnnotations}['${RESTORE_LEASE_ANNOTATION}']) || (oldObject.spec.replicas == 0 && object.spec.replicas == 0 && '${RESTORE_PHASE_ANNOTATION}' in ${priorAnnotations} && ${priorAnnotations}['${RESTORE_PHASE_ANNOTATION}'] == 'OFFLINE' && (!has(${annotations}) || (!('${RESTORE_LEASE_ANNOTATION}' in ${annotations}) && !('${RESTORE_PHASE_ANNOTATION}' in ${annotations}) && !('${RESTORE_IMAGE_ANNOTATION}' in ${annotations}))))`,
           message:
             "Keep the restoration lease owner until an explicit stopped release",
-          reason: "Forbidden",
-        },
-        {
-          expression: `!(${leased}) || !('sjer.red/mining-reset-lock' in ${annotations})`,
-          message:
-            "World restoration and mining reset leases are mutually exclusive",
           reason: "Forbidden",
         },
         {
@@ -99,12 +93,6 @@ export function createMinecraftRestorationGuard(chart: Chart): void {
           expression: `!(${parentLeased}) || !has(params.spec.template.metadata.labels) || !('${RESTORE_ACCESS_SELECTOR}' in params.spec.template.metadata.labels)`,
           message:
             "Restoration pod templates must omit the closed public route label",
-          reason: "Forbidden",
-        },
-        {
-          expression: `!(${parentLeased}) || !('sjer.red/mining-reset-lock' in ${parentAnnotations})`,
-          message:
-            "World restoration and mining reset leases are mutually exclusive",
           reason: "Forbidden",
         },
       ],

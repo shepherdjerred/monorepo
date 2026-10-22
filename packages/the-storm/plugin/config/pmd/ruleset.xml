@@ -27,11 +27,17 @@
       <property name="problemDepth" value="4"/>
     </properties>
   </rule>
+  <!--
+    Paper fixes the signatures of ChunkGenerator's generation hooks at five
+    parameters, so only those overrides, declared directly in a class that
+    extends ChunkGenerator, are exempt. Every other method, including overrides
+    of our own interfaces, stays within four.
+  -->
   <rule ref="category/java/design.xml/ExcessiveParameterList">
     <properties>
       <property name="minimum" value="5"/>
-      <!-- Paper APIs such as ChunkGenerator.generateNoise fix the parameter list. -->
-      <property name="violationSuppressXPath" value="..[@Override = true()]"/>
+      <property name="violationSuppressXPath"
+          value="./ancestor-or-self::MethodDeclaration[pmd-java:hasAnnotation('java.lang.Override')][parent::ClassBody/parent::ClassDeclaration/ExtendsList/ClassType[@SimpleName='ChunkGenerator']]"/>
     </properties>
   </rule>
   <rule ref="category/java/bestpractices.xml/UnusedPrivateField"/>

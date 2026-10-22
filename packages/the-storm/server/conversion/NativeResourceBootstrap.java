@@ -56,12 +56,8 @@ public final class NativeResourceBootstrap {
       }
     }
     var dimensions = new LinkedHashMap<String, Object>();
-    for (var name : new String[] {"wilds", "peaks", "mining"}) {
-      var preset = switch (name) {
-        case "wilds" -> "minecraft:large_biomes";
-        case "peaks" -> "minecraft:amplified";
-        default -> "minecraft:overworld";
-      };
+    for (var name : new String[] {"wilds", "peaks"}) {
+      var preset = name.equals("wilds") ? "minecraft:large_biomes" : "minecraft:amplified";
       var root = source.resolve("dimensions/minecraft/" + name);
       var generation = read(root.resolve("data/minecraft/world_gen_settings.dat"));
       var settings = generation.getCompound("data").orElseThrow();

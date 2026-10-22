@@ -22,7 +22,7 @@ import {
 export type LiveGuardConfig = {
   /** Kill switch: false refuses every live write. */
   writes: boolean;
-  /** Worlds block writes may touch (never the quarterly-reset `mining`). */
+  /** Worlds block writes may touch. */
   worlds: readonly string[];
   /** Block writes larger than this need a recent backup (tier 2). */
   maxRegionVolume: number;

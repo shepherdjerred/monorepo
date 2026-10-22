@@ -215,14 +215,14 @@ describe("PVC backup policy", () => {
     expect(operatorManagedPvcCount).toBeGreaterThan(0);
     expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(5);
     expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(5);
-    // Includes PVC backup, ArgoCD, CI pod, mining reset update/scale, restoration
-    // update/scale/delete and Service write/delete paths, mc-harness sandbox pod guards,
-    // bounded CI RAM scratch, the eleven active TSMC controller guards and the
-    // read-only Forum observer CONNECT guard.
+    // Includes PVC backup, ArgoCD, CI pod, restoration update/scale/delete and
+    // Service write/delete paths, mc-harness sandbox pod guards, bounded CI RAM
+    // scratch, the eleven active TSMC controller guards and the read-only Forum
+    // observer CONNECT guard.
     expect(admissionKinds.get("copy:ValidatingAdmissionPolicy")).toBe(1);
     expect(admissionKinds.get("copy:ValidatingAdmissionPolicyBinding")).toBe(1);
-    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(24);
-    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(24);
+    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(22);
+    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(22);
   }, 20_000);
 
   it("syncs admission policy updates before PVC changes", () => {

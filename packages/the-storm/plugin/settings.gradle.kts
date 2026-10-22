@@ -69,6 +69,7 @@ val modules =
         "qol",
         "skills",
         "seasonal",
+        "skylands",
         "world",
         "tickets",
         "agent",

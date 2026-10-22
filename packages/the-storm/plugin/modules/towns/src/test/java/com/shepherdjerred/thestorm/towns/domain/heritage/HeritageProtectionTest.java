@@ -54,7 +54,7 @@ final class HeritageProtectionTest {
   @Test
   void catalogContainsEveryReviewedSiteAndSevenProvenMayors() throws Exception {
     var catalog = catalog();
-    assertThat(catalog.sites()).hasSize(234);
+    assertThat(catalog.sites().stream().filter(site -> !site.world().equals("map2"))).hasSize(234);
     assertThat(catalog.sites().stream().filter(site -> site.id().startsWith("archive-")))
         .hasSize(166)
         .allSatisfy(
@@ -71,10 +71,70 @@ final class HeritageProtectionTest {
         .singleElement()
         .extracting(HeritageSite::world)
         .isEqualTo("rustworks");
-    assertThat(catalog.sites().stream().filter(site -> site.kind() == HeritageSite.Kind.PLAYER))
+    assertThat(
+            catalog.sites().stream()
+                .filter(
+                    site ->
+                        site.world().equals("world") && site.kind() == HeritageSite.Kind.PLAYER))
         .hasSize(7);
-    assertThat(catalog.archiveSha256())
-        .isEqualTo("89fc7865604b5ab9ecf3030c90a192f8f9c963083cc77135949c953ae6b645fa");
+    assertThat(catalog.archive("main-map1-2015-07-09"))
+        .contains(
+            new HeritageArchive(
+                "main-map1-2015-07-09",
+                "89fc7865604b5ab9ecf3030c90a192f8f9c963083cc77135949c953ae6b645fa",
+                "world",
+                "spawn"));
+    assertThat(catalog.archiveForWorld("world"))
+        .map(HeritageArchive::id)
+        .contains("main-map1-2015-07-09");
+    assertThat(catalog.archiveForWorld("map2"))
+        .contains(
+            new HeritageArchive(
+                "main-map2-2016-01-10",
+                "3fb8100fbf954ca8b033318957b8d87c8121c34479adc698d750e7687af1c14d",
+                "map2",
+                "map2-spawn"));
+    // Map 2 has no Towny data: owners come from archived signs and bed spawns, so each mayor
+    // leads one active town and leaders of Map 1 towns keep construction rights only.
+    var mapTwo = catalog.sites().stream().filter(site -> site.world().equals("map2")).toList();
+    assertThat(mapTwo)
+        .hasSize(60)
+        .allSatisfy(
+            site -> {
+              assertThat(site.id()).startsWith("map2-");
+              assertThat(site.profile()).isEqualTo(RegionProfile.SAFE);
+              assertThat(site.editingChunks().isEmpty()).isEqualTo(site.editors().isEmpty());
+            });
+    assertThat(mapTwo.stream().filter(site -> site.kind() == HeritageSite.Kind.SERVER))
+        .extracting(HeritageSite::id)
+        .containsExactly("map2-spawn");
+    assertThat(mapTwo.stream().filter(site -> site.kind() == HeritageSite.Kind.PLAYER))
+        .extracting(site -> site.activeTownName() + ":" + site.editors().getFirst().name())
+        .containsExactlyInAnyOrder(
+            "Karthil:grocketman",
+            "Leronfell:JUniZ1",
+            "Keystone_Map2:domoman25",
+            "Altaria:Smaland47",
+            "Eclipse:Grijze3MC",
+            "Asterism_Map2:WinterSolstice8",
+            "Orcale:dockozel");
+    var mapOneMayors =
+        catalog.sites().stream()
+            .filter(site -> site.world().equals("world") && site.kind() == HeritageSite.Kind.PLAYER)
+            .map(site -> site.editors().getFirst().player())
+            .toList();
+    assertThat(mapTwo.stream().filter(site -> site.kind() == HeritageSite.Kind.PLAYER))
+        .allSatisfy(
+            site -> assertThat(mapOneMayors).doesNotContain(site.editors().getFirst().player()));
+    assertThat(mapTwo.stream().filter(site -> site.id().equals("map2-the-island")))
+        .singleElement()
+        .satisfies(
+            site -> {
+              assertThat(site.kind()).isEqualTo(HeritageSite.Kind.HERITAGE);
+              assertThat(site.editors())
+                  .extracting(HeritageSite.Editor::name)
+                  .containsExactly("EdeTheWolf");
+            });
     assertThat(
             catalog.sites().stream()
                 .filter(site -> site.id().equals("heritage-003"))
@@ -108,6 +168,31 @@ final class HeritageProtectionTest {
   }
 
   @Test
+  void map2GhostSpawnAndTownsAreSafeStaffCustodyHeritage() throws Exception {
+    var state = state();
+    var engine = new ProtectionEngine(state, player -> false);
+    var stranger = new Actor(UUID.randomUUID(), false);
+    var build = new Act(Action.BUILD, Subject.BLOCK);
+    for (var point :
+        List.of(new int[] {0, 70, 8}, new int[] {0, -64, 8}, new int[] {-812, 90, -11218})) {
+      var land = state.landAt("map2", point[0], point[1], point[2]);
+      assertThat(land).isInstanceOf(Land.HeritageLand.class);
+      assertThat(land.preventsPlayerDamage()).isTrue();
+      assertThat(engine.decide(stranger, build, land).isAllowed()).isFalse();
+    }
+    // The spawn square spans X and Z -512..511 and absorbs the Mob Arena and the village west of
+    // spawn.
+    for (var point :
+        List.of(
+            new int[] {0, 8}, new int[] {200, 60}, new int[] {-240, 150}, new int[] {-512, 511})) {
+      assertThat(((Land.HeritageLand) state.landAt("map2", point[0], 70, point[1])).site().id())
+          .isEqualTo("map2-spawn");
+    }
+    assertThat(state.landAt("map2", 512, 70, 0)).isNotInstanceOf(Land.HeritageLand.class);
+    assertThat(state.landAt("map2", 6000, 70, 6000)).isInstanceOf(Land.Wilderness.class);
+  }
+
+  @Test
   void ownersEditOnlyProvenConstructionAndPrivateContainers() throws Exception {
     var state = state();
     var site =
@@ -130,6 +215,72 @@ final class HeritageProtectionTest {
     assertThat(engine.decide(owner, act, coreLand).isAllowed()).isTrue();
     assertThat(engine.decide(outsider, act, coreLand).isAllowed()).isFalse();
     assertThat(engine.decide(owner, act, bufferLand).isAllowed()).isFalse();
+  }
+
+  @Test
+  void mapTwoConstructionKeepsTwoChunksOfProtectedBufferInsideTheBorder() throws Exception {
+    var mapTwo = catalog().sites().stream().filter(site -> site.world().equals("map2")).toList();
+    var protectedChunks = new java.util.HashSet<HeritageSite.Chunk>();
+    mapTwo.forEach(
+        site ->
+            site.footprint()
+                .forEach(
+                    chunk -> protectedChunks.add(new HeritageSite.Chunk(chunk.x(), chunk.z()))));
+    for (var site : mapTwo) {
+      var unprotected =
+          site.editingChunks().stream()
+              .flatMap(HeritageProtectionTest::withinTwoChunks)
+              .filter(HeritageProtectionTest::insideMapTwoBorder)
+              .filter(chunk -> !protectedChunks.contains(chunk))
+              .toList();
+      assertThat(unprotected).as("%s unprotected buffer", site.id()).isEmpty();
+    }
+  }
+
+  private static java.util.stream.Stream<HeritageSite.Chunk> withinTwoChunks(
+      HeritageSite.Chunk core) {
+    return java.util.stream.IntStream.rangeClosed(-2, 2)
+        .boxed()
+        .flatMap(
+            dx ->
+                java.util.stream.IntStream.rangeClosed(-2, 2)
+                    .mapToObj(dz -> new HeritageSite.Chunk(core.x() + dx, core.z() + dz)));
+  }
+
+  /** Chunks that meet the open radius-12000 disc centred on block corner 0,0. */
+  private static boolean insideMapTwoBorder(HeritageSite.Chunk chunk) {
+    var x = 16 * (chunk.x() >= 0 ? chunk.x() : -chunk.x() - 1);
+    var z = 16 * (chunk.z() >= 0 ? chunk.z() : -chunk.z() - 1);
+    return Math.hypot(x, z) < 12_000;
+  }
+
+  @Test
+  void mapTwoOwnersBuildOnlyInTheirProvenConstruction() throws Exception {
+    var state = state();
+    var engine = new ProtectionEngine(state, player -> true);
+    var build = new Act(Action.BUILD, Subject.BLOCK);
+    for (var id : List.of("map2-karthil", "map2-the-island", "map2-reflectioncraft-house")) {
+      var site =
+          catalog().sites().stream()
+              .filter(value -> value.id().equals(id))
+              .findFirst()
+              .orElseThrow();
+      var core = site.editingChunks().iterator().next();
+      var buffer =
+          site.protectedChunks().stream()
+              .filter(chunk -> !site.editingChunks().contains(chunk))
+              .findFirst()
+              .orElseThrow();
+      var coreLand = state.landAt("map2", core.x() * 16, 69, core.z() * 16);
+      var bufferLand = state.landAt("map2", buffer.x() * 16, 69, buffer.z() * 16);
+      for (var editor : site.editors()) {
+        var owner = new Actor(editor.player(), false);
+        assertThat(engine.decide(owner, build, coreLand).isAllowed()).isTrue();
+        assertThat(engine.decide(owner, build, bufferLand).isAllowed()).isFalse();
+      }
+      assertThat(engine.decide(new Actor(UUID.randomUUID(), false), build, coreLand).isAllowed())
+          .isFalse();
+    }
   }
 
   @Test
@@ -220,11 +371,11 @@ final class HeritageProtectionTest {
   void directoryIncludesSpawnAndMultiwordNamesWithoutFakeMembers() throws Exception {
     var directory = new TownListings(state());
     assertThat(directory.page(1, 25).towns().getFirst().name()).isEqualTo("Spawn");
-    assertThat(directory.page(10, 25).towns()).hasSize(9);
-    var lastPageName = directory.page(10, 25).towns().getLast().name();
+    assertThat(directory.page(12, 25).towns()).hasSize(19);
+    var lastPageName = directory.page(12, 25).towns().getLast().name();
     assertThat(directory.matchingNames(lastPageName.toUpperCase(java.util.Locale.ROOT)))
         .containsExactly(lastPageName);
-    assertThat(directory.matchingNames("")).hasSize(234);
+    assertThat(directory.matchingNames("")).hasSize(294);
     var falls = directory.info("Frost_Falls").orElseThrow();
     assertThat(falls.name()).isEqualTo("Frost Falls");
     assertThat(falls.members()).isZero();
@@ -250,11 +401,11 @@ final class HeritageProtectionTest {
     state.addTown(town);
     var directory = new TownListings(state);
     assertThat(directory.info(site.name()).orElseThrow().members()).isEqualTo(1);
-    assertThat(directory.page(1, 25).total()).isEqualTo(234);
+    assertThat(directory.page(1, 25).total()).isEqualTo(294);
     state.replaceTown(town.renamed("NewIdentity"));
     assertThat(directory.info("NewIdentity").orElseThrow().name()).isEqualTo(site.name());
     assertThat(directory.info(site.name()).orElseThrow().members()).isEqualTo(1);
-    assertThat(directory.page(1, 25).total()).isEqualTo(234);
+    assertThat(directory.page(1, 25).total()).isEqualTo(294);
     state.removeTown(town.id());
     assertThat(directory.info(site.name()).orElseThrow().members()).isZero();
     assertThat(state.heritageNameReserved(site.activeTownName(), java.util.Optional.empty()))

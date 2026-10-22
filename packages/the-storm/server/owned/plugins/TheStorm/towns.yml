@@ -4,8 +4,8 @@
 # Worlds are named as the server names them (level-name in server.properties).
 
 claims:
-  # Worlds towns may claim land in.
-  worlds: [world]
+  # Worlds towns may claim land in: every permanent survival world.
+  worlds: [world, frontier, map2, skylands, wilds, peaks]
   # Chunks that must separate one town's claims from another's, on both axes.
   buffer: 2
   # The most chunks a town may hold: `base`, plus the bonus for its owner's

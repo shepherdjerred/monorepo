@@ -4,7 +4,7 @@ Only for a change the user asked for. The operator procedure is the wiki
 how-to "Operate The Storm with the agent harness".
 
 ```bash
-toolkit mc live status        # refuses while asleep or mining-reset locked
+toolkit mc live status        # refuses while asleep or restoration-leased
 toolkit mc cmd --target live --reason "daylight for screenshots" time set noon
 toolkit mc build promote <dir> --target live --reason "<why>" [--confirm <hash>]
 toolkit mc live journal --since 1d
@@ -12,7 +12,7 @@ toolkit mc live undo <journal-id> --reason "<why>"
 ```
 
 - Asleep: ask the user to join ts-mc.net. Never scale the StatefulSet, edit
-  mc-router annotations, or touch the mining-reset lock.
+  mc-router annotations, or touch the world-restoration lease.
 - No token (HTTP 412): restart the daemon from the repository root with the
   printed `scripts/onepassword/with-service-account.sh` hint. It reads the
   token through the Keychain service account; never print the token.

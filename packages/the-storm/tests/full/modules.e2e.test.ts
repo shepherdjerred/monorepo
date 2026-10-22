@@ -6,7 +6,7 @@ import { test } from "#e2e/fixtures.ts";
 import { serverLogs } from "#e2e/harness/external/files.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 
-/** The modules the shipped config enables: all 27 it registers. */
+/** The modules the shipped config enables: all 28 it registers. */
 const modules = [
   "agent",
   "arena",
@@ -30,6 +30,7 @@ const modules = [
   "shards",
   "shops",
   "skills",
+  "skylands",
   "spells",
   "tickets",
   "towns",
@@ -37,7 +38,7 @@ const modules = [
   "world",
 ].toSorted();
 
-const registeredModules = 27;
+const registeredModules = 28;
 
 const OwnedConfigSchema = z
   .object({ modules: z.record(z.string(), z.boolean()) })
@@ -49,7 +50,7 @@ const ownedConfig = path.join(
 );
 
 describe("all modules together", () => {
-  test("boots all 27 shipped modules with the shipped content", async ({
+  test("boots all 28 shipped modules with the shipped content", async ({
     server,
     rcon,
   }) => {
@@ -73,18 +74,23 @@ describe("all modules together", () => {
       "Prepared synthetic fixtures for Storm modules [world, towns, essentials, npcs, arena, shards, seasonal, rwf, creative]",
     );
     expect(logs).not.toContain("The Storm failed to enable");
+    // Skylands creates its generated world itself, before world and qol enable.
+    expect(logs).toMatch(
+      /\[TheStorm\] skylands module loaded skylands \(seed 1731, /u,
+    );
     expect(logs).not.toContain("Could not validate shard altars");
     expect(logs).not.toContain("Could not prepare arenas");
     const roster = await rcon.command("stormnpc list");
     expect(roster).toContain("36 NPCs");
     expect(roster).not.toMatch(/missing|unloaded/u);
-    expect(await rcon.command("worldborder get")).toContain("40000");
+    // world's 7000-radius disc sits inside a native square of twice that.
+    expect(await rcon.command("worldborder get")).toContain("14000");
     expect(
       await rcon.command("execute in minecraft:the_nether run worldborder get"),
-    ).toContain("10000");
+    ).toContain("6000");
     expect(
       await rcon.command("execute in minecraft:the_end run worldborder get"),
-    ).toContain("5000");
+    ).toContain("8000");
     // This suite exercises module wiring with a deliberately malformed token;
     // external Discord login remains a separate production acceptance check.
     expect(logs).toContain("Discord login failed; the bridge is offline");

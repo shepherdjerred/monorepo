@@ -7,9 +7,11 @@ import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
 import { ownedConfigDir } from "#e2e/harness/paths.ts";
 
 const CatalogSchema = z.object({
+  archives: z.array(z.object({ id: z.string(), world: z.string() })),
   sites: z.array(
     z.object({
       name: z.string(),
+      world: z.string(),
       profile: z.string(),
       protectedChunks: z.array(
         z.object({ x: z.number().int(), z: z.number().int() }),
@@ -206,8 +208,15 @@ describe("historical respawn on real Paper", () => {
         await Bun.file(path.join(ownedConfigDir, "heritage.yml")).text(),
       ),
     );
+    // The fixture platform and death use the overworld, so stay in Map 1's restored world.
+    const world = catalog.archives.find(
+      (archive) => archive.id === "main-map1-2015-07-09",
+    )?.world;
     const site = catalog.sites.find(
-      (value) => value.profile === "SAFE" && value.protectedChunks.length > 0,
+      (value) =>
+        value.world === world &&
+        value.profile === "SAFE" &&
+        value.protectedChunks.length > 0,
     );
     const chunk = site?.protectedChunks[0];
     if (chunk === undefined) throw new Error("Historical death site missing");

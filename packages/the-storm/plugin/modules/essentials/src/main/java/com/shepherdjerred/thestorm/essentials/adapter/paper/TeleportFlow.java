@@ -124,6 +124,14 @@ final class TeleportFlow implements TeleportTravel {
   }
 
   @Override
+  public void warp(
+      Player player,
+      String description,
+      Supplier<CompletableFuture<Result<Landing, Component>>> preparation) {
+    travel(player, TeleportKind.WARP, description, preparation);
+  }
+
+  @Override
   public CompletableFuture<Status> status(Player player) {
     var permissions = exemptions(player);
     var firstSeen = rtpFirstSeen;

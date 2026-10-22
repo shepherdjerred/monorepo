@@ -23,3 +23,10 @@ biomes:
   - snowy_plains
   - badlands
   - swamp
+# Restored maps whose heritage reaches their clamped border. Random teleport
+# searches from this many blocks off spawn out to the border; settled and
+# heritage chunks are still never a landing. Every other world searches past
+# its farthest settlement.
+withinBorder:
+  - { world: world, inner: 256 }
+  - { world: map2, inner: 256 }

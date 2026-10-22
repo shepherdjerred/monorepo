@@ -1,7 +1,7 @@
 /**
  * The live minecraft-tsmc target. Reaches MCBridge on the server pod through
  * a supervised `kubectl port-forward` as the scoped mc-harness ServiceAccount,
- * refuses while the server is asleep or held by the mining reset, and runs
+ * refuses while the server is asleep or held by world restoration, and runs
  * every write through the guard: reason, players, backups, a snapshot first
  * for block writes, and one journal line per write.
  *
@@ -226,7 +226,7 @@ export class LiveService {
 
   /**
    * tsmc's /data for read-only pulls. Needs a running pod but no bridge
-   * token; restoration leases block reads, but the mining-reset lock does not.
+   * token; restoration leases block reads.
    */
   async files(): Promise<DataFiles> {
     const status = await this.clusterStatus(true);
@@ -286,7 +286,7 @@ export class LiveService {
     if (assessment.read) {
       return run(await this.target());
     }
-    // Writes always re-read the cluster: the mining reset may have locked it.
+    // Writes always re-read the cluster: a restoration may have leased it.
     const target = await this.target(true);
     const players = await this.players(target);
     const latest = assessment.tier === 2 ? await this.backups.latest() : null;

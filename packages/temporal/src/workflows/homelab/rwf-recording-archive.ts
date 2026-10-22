@@ -6,7 +6,7 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 /** How many recordings one run archives at most; the next scheduled run continues. */
 const BATCH = 25;
 
-// The mining-reset worker already holds the narrow exec grant on the
+// The Storm worker on this queue already holds the narrow exec grant on the
 // Minecraft pod that reading recordings and writing markers needs.
 const { archiveRwfRecordings } = proxyActivities<RwfRecordingArchiveActivities>(
   {

@@ -38,7 +38,6 @@ PHASE = "sjer.red/world-restore-phase"
 IMAGE = "sjer.red/world-restore-image"
 ACCESS = "sjer.red/world-restore-access"
 WAKE = "mc-router.itzg.me/autoScaleUp"
-MINING = "sjer.red/mining-reset-lock"
 SERVICES = (SERVER, SERVER + "-bedrock", SERVER + "-bluemap", SERVER + "-rcon")
 POLICIES = (
     ("minecraft-tsmc-world-restoration.sjer.red", "statefulsets", "UPDATE"),
@@ -301,8 +300,6 @@ def assert_owner(server: JsonObject, journal: JsonObject, allow_unheld: bool = F
     held = annotations(server).get(LEASE)
     if (held is None and not allow_unheld) or (held is not None and held != journal.string("requestId")):
         raise ValueError("Restoration lease belongs to another request or is missing")
-    if MINING in annotations(server):
-        raise ValueError("A mining reset owns this server")
 
 
 def initialize(path: Path, request: str, image: str) -> JsonObject:
@@ -322,7 +319,7 @@ def initialize(path: Path, request: str, image: str) -> JsonObject:
             raise ValueError("Existing maintenance journal belongs to another request or target")
         return journal
     server = read("statefulset", SERVER)
-    if any(key in annotations(server) for key in (LEASE, PHASE, IMAGE, MINING)):
+    if any(key in annotations(server) for key in (LEASE, PHASE, IMAGE)):
         raise ValueError("Storm already has maintenance annotations; inspect their owner")
     claim = read("pvc", CLAIM)
     if claim.object("status").get("phase") != "Bound":

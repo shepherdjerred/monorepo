@@ -1,7 +1,12 @@
 import { Context } from "@temporalio/activity";
 import { z } from "zod";
 import protocol from "@shepherdjerred/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json" with { type: "json" };
-import { kubectl, run, type Command } from "./mining-reset-kubectl.ts";
+import {
+  kubectl,
+  run,
+  StatefulSetReplicas,
+  type Command,
+} from "./mining-reset-kubectl.ts";
 
 const State = z.enum(["RUNNING", "COMPLETE", "BUSY", "FAILED", "UNKNOWN"]);
 const Protocol = z
@@ -16,15 +21,6 @@ const Protocol = z
   .strict()
   .parse(protocol);
 const Operation = z.uuid();
-const Server = z.object({
-  metadata: z.object({
-    annotations: z.record(z.string(), z.string()).optional(),
-  }),
-  spec: z.object({ replicas: z.number().int().nonnegative() }),
-  status: z
-    .object({ readyReplicas: z.number().int().nonnegative().optional() })
-    .optional(),
-});
 
 export function plotReconcileState(
   response: string,
@@ -55,7 +51,7 @@ export async function reconcileStormPlotsWithDependencies(
   dependencies: Dependencies,
 ): Promise<PlotReconcileResult> {
   const operation = Operation.parse(operationInput);
-  const server = Server.parse(
+  const server = StatefulSetReplicas.parse(
     JSON.parse(
       await run(dependencies.command, [
         "--request-timeout=15s",
@@ -71,11 +67,6 @@ export async function reconcileStormPlotsWithDependencies(
   );
   if (server.spec.replicas === 0 || (server.status?.readyReplicas ?? 0) === 0) {
     return "sleeping";
-  }
-  if (
-    server.metadata.annotations?.["sjer.red/mining-reset-lock"] !== undefined
-  ) {
-    return "busy";
   }
   let command = `plot admin reconcile ${operation}`;
   for (let attempt = 0; attempt < 240; attempt += 1) {

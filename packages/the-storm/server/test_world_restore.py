@@ -13,7 +13,7 @@ import unittest
 import zipfile
 from contextlib import closing
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 from unittest.mock import patch
 
 from restoration_json import JsonObject
@@ -59,9 +59,450 @@ class RestoreTest(unittest.TestCase):
         archive = self.root / "wrong.zip"
         archive.write_bytes(b"wrong source")
         destination = self.root / "stage"
-        with self.assertRaisesRegex(ValueError, "approved July 2015"):
-            restore.prepare(archive, destination)
+        for archive_id in restore.ARCHIVES:
+            with self.subTest(archive=archive_id), self.assertRaisesRegex(ValueError, "approved source for"):
+                restore.prepare(archive, destination, archive_id)
+        with self.assertRaisesRegex(ValueError, "Unreviewed archive id"):
+            restore.prepare(archive, destination, "main-map3")
         self.assertFalse(destination.exists())
+
+    def region_bytes(self, indices: list[int]) -> bytes:
+        block = bytearray(8192 + 4096 * len(indices))
+        for sector, index in enumerate(indices, start=2):
+            struct.pack_into(">I", block, index * 4, (sector << 8) | 1)
+            struct.pack_into(">I", block, sector * 4096, 2)
+            block[sector * 4096 + 4 : sector * 4096 + 6] = b"\x02x"
+        return bytes(block)
+
+    def terrain_archive(self) -> tuple[Path, Any]:
+        """A reviewed terrain-only fixture archive registered for the duration of a test."""
+        path = self.root / "map-fixture.zip"
+        root = "fixture/world/"
+        with zipfile.ZipFile(path, "w") as archive:
+            archive.writestr(root + "level.dat", b"legacy level")
+            archive.writestr(root + "uid.dat", b"0123456789abcdef")
+            archive.writestr(root + "playerdata/00000000-0000-0000-0000-000000000001.dat", b"player")
+            archive.writestr(root + "region/r.0.0.mca", self.region_bytes([0, 1]))
+            archive.writestr(root + "region/r.-1.-1.mca", self.region_bytes([1023]))
+        fixture = restore.Archive("fixture-map", restore.digest(path), root, 3, 1, "fixture")
+        patcher = patch.dict(restore.ARCHIVES, {fixture.id: fixture})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        return path, fixture
+
+    def test_prepare_records_the_selected_archive_and_target_dimension(self):
+        path, fixture = self.terrain_archive()
+        staging = self.root / "stage"
+        restore.prepare(path, staging, fixture.id)
+        journal = json.loads((staging / restore.JOURNAL).read_text())
+        self.assertEqual(
+            {key: journal[key] for key in ("schemaVersion", "phase", "archiveId", "archiveSha256", "targetDimension")},
+            {
+                "schemaVersion": 2,
+                "phase": "PREPARED",
+                "archiveId": "fixture-map",
+                "archiveSha256": fixture.sha256,
+                "targetDimension": "fixture",
+            },
+        )
+        self.assertEqual(set(json.loads((staging / "source-chunks.json").read_text())), {"0,0", "1,0", "-1,-1"})
+        self.assertIs(restore.journal_archive(journal), fixture)
+
+    def test_journal_archive_selection_is_explicit_and_hash_bound(self):
+        self.assertIs(restore.journal_archive({"archiveSha256": restore.ARCHIVE_SHA256}), restore.PRIMARY)
+        map2 = restore.ARCHIVES["main-map2-2016-01-10"]
+        selected = {"schemaVersion": 2, "archiveId": map2.id, "archiveSha256": map2.sha256, "targetDimension": "map2"}
+        self.assertIs(restore.journal_archive(selected), map2)
+        self.assertFalse(map2.primary)
+        self.assertEqual(map2.timeout_scale, 3)
+        for receipt in (
+            {"archiveSha256": map2.sha256},
+            {"archiveId": map2.id, "archiveSha256": map2.sha256, "targetDimension": "map2"},
+            {**selected, "archiveSha256": restore.ARCHIVE_SHA256},
+            {**selected, "targetDimension": "overworld"},
+            {**selected, "archiveId": "main-map3"},
+        ):
+            with self.subTest(receipt=receipt), self.assertRaises(ValueError):
+                restore.journal_archive(receipt)
+
+    def terrain_journal(self, phase: str) -> dict[str, Any]:
+        map2 = restore.ARCHIVES["main-map2-2016-01-10"]
+        journal = {
+            "schemaVersion": 2,
+            "phase": phase,
+            "archiveId": map2.id,
+            "archiveSha256": map2.sha256,
+            "targetDimension": map2.dimension,
+            "requestId": "00000000-0000-0000-0000-000000000002",
+        }
+        restore.save_json(self.root / restore.JOURNAL, journal)
+        return journal
+
+    def test_terrain_only_archive_refuses_primary_player_and_activation_phases(self):
+        inputs = Path(tempfile.mkdtemp(dir=self.root.parent))
+        self.addCleanup(shutil.rmtree, inputs)
+        paper, candidate, proof = inputs / "paper.jar", inputs / "candidate.jar", inputs / "backup.json"
+        for path in (paper, candidate, proof):
+            path.write_bytes(b"fixture")
+        bootstrap = inputs / "bootstrap"
+        bootstrap.mkdir()
+        operations = [
+            ("LEGACY_CHUNKS_CONVERTED", restore.convert_companions, (self.root, paper)),
+            ("NATIVE_CHUNKS_CONVERTED", restore.convert_native_companions, (self.root, paper, bootstrap)),
+            ("COMPANION_DATA_CONVERTED", restore.convert_native_chunks, (self.root, paper, bootstrap)),
+            ("NATIVE_COMPANION_DATA_CONVERTED", restore.convert_native_auxiliary, (self.root, paper, bootstrap)),
+            ("NATIVE_HERITAGE_PRESERVED", restore.retain_arena_worlds, (self.root, candidate, bootstrap, proof)),
+            ("NATIVE_LAYOUT_REHEARSED", restore.restart_companions, (self.root,)),
+        ]
+        for phase, operation, arguments in operations:
+            self.terrain_journal(phase)
+            before = restore.fingerprint(self.root)
+            with self.subTest(operation=operation.__name__), self.assertRaisesRegex(ValueError, "requires"):
+                operation(*arguments)
+            self.assertEqual(restore.fingerprint(self.root), before)
+
+    def test_terrain_only_archive_skips_player_conversion_between_terrain_checkpoints(self):
+        paper = self.root / "paper.jar"
+        paper.write_bytes(b"fixture")
+        bootstrap = self.root / "bootstrap"
+        bootstrap.mkdir()
+        for phase, operation in (
+            ("LEGACY_CHUNKS_CONVERTED", restore.convert_native_chunks),
+            ("NATIVE_CHUNKS_CONVERTED", restore.convert_native_auxiliary),
+        ):
+            self.terrain_journal(phase)
+            with self.subTest(phase=phase), self.assertRaisesRegex(ValueError, "exact pinned Paper"):
+                operation(self.root, paper, bootstrap)
+
+    def test_chunk_extent_reports_bounding_and_continuous_origin_square(self):
+        square = {f"{x},{z}" for x in range(-3, 3) for z in range(-3, 3)}
+        self.assertEqual(
+            restore.chunk_extent(square),
+            {
+                "chunks": 36,
+                "chunkBounds": {"minX": -3, "maxX": 2, "minZ": -3, "maxZ": 2},
+                "boundingRadius": 48,
+                "continuousRadius": 48,
+                "continuousChunks": 36,
+            },
+        )
+        # A single gap in the third ring stops continuity there; far outliers only move the bounding radius.
+        holed = (square - {"2,-1"}) | {"40,0", "-7,-100"}
+        extent = restore.chunk_extent(holed)
+        self.assertEqual(extent["boundingRadius"], 1600)
+        self.assertEqual(extent["continuousRadius"], 32)
+        self.assertEqual(extent["continuousChunks"], 16)
+        self.assertEqual(restore.chunk_extent({"5,5"})["continuousRadius"], 0)
+        with self.assertRaises(ValueError):
+            restore.chunk_extent([])
+
+    def test_circular_extent_measures_from_the_origin_corner_to_chunk_edges(self):
+        square = {f"{x},{z}" for x in range(-3, 3) for z in range(-3, 3)}
+        # The nearest missing chunk, 3,0, starts 48 blocks east; the farthest corner is 48*sqrt(2).
+        self.assertEqual(
+            restore.chunk_extent_circle(square),
+            {
+                "chunks": 36,
+                "continuousRadius": 48,
+                "coverage": {share: {"radius": 68, "chunksOutside": 0} for share in ("100%", "99.99%", "99.9%")},
+            },
+        )
+        # A missing corner chunk 2,2 is 32*sqrt(2) away; whole-block radii round inward.
+        holed = restore.chunk_extent_circle((square - {"2,2"}) | {"40,0"})
+        self.assertEqual(holed["continuousRadius"], 45)
+        self.assertEqual(holed["coverage"]["100%"], {"radius": 657, "chunksOutside": 0})
+        self.assertEqual(restore.chunk_extent_circle({"5,5"})["continuousRadius"], 0)
+        with self.assertRaises(ValueError):
+            restore.chunk_extent_circle([])
+
+    def test_circular_coverage_reports_outliers_outside_each_share(self):
+        field = {f"{x},{z}" for x in range(-50, 50) for z in range(-50, 50)} | {"400,0"}
+        extent = restore.chunk_extent_circle(field)
+        self.assertEqual(extent["chunks"], 10_001)
+        self.assertEqual(extent["continuousRadius"], 800)
+        self.assertEqual(
+            extent["coverage"],
+            {
+                "100%": {"radius": 6417, "chunksOutside": 0},
+                "99.99%": {"radius": 1132, "chunksOutside": 1},
+                "99.9%": {"radius": 1121, "chunksOutside": 5},
+            },
+        )
+
+    def test_archive_chunk_extent_reads_headers_without_extracting(self):
+        path, fixture = self.terrain_archive()
+        before = set(self.root.iterdir())
+        inventory = restore.archive_chunk_inventory(path, fixture.id)
+        self.assertEqual(set(inventory), {"0,0", "1,0", "-1,-1"})
+        self.assertEqual(restore.chunk_extent(inventory)["continuousRadius"], 0)
+        self.assertEqual(set(self.root.iterdir()), before)
+        path.write_bytes(path.read_bytes() + b"tampered")
+        with self.assertRaisesRegex(ValueError, "approved source"):
+            restore.archive_chunk_inventory(path, fixture.id)
+
+    def dimension_fixture(self) -> Path:
+        staging = self.root / "stage"
+        world = staging / "heritage-preserved-layout/world"
+        dimension = world / "dimensions/minecraft/overworld"
+        for name in (
+            "region/r.0.0.mca",
+            "entities/r.0.0.mca",
+            "poi/r.0.0.mca",
+        ):
+            (dimension / name).parent.mkdir(parents=True, exist_ok=True)
+            (dimension / name).write_bytes(self.region_bytes([0, 1]))
+        for name in (
+            "data/paper/metadata.dat",
+            "data/paper/level_overrides.dat",
+            "data/minecraft/world_gen_settings.dat",
+            "data/minecraft/game_rules.dat",
+        ):
+            (dimension / name).parent.mkdir(parents=True, exist_ok=True)
+            (dimension / name).write_bytes(name.encode())
+        (dimension / "paper-world.yml").write_text("server configuration\n")
+        (world / "level.dat").write_bytes(b"terrain-only level")
+        restore.save_json(staging / "heritage-preserved-layout-files.json", restore.fingerprint(world))
+        restore.save_json(staging / "source-chunks.json", {"0,0": 2, "1,0": 2})
+        restore.save_json(
+            staging / "heritage-preservation-receipt.json", {"catalogSha256": "c" * 64, "protectedChunks": 1}
+        )
+        restore.save_json(
+            staging / "native-layout-metadata-receipt.json",
+            {"worldUuid": "97cc8be1-4b81-42c4-bc90-9b8bcf7f2423", "seed": 1, "spawn": {"x": 0.5}},
+        )
+        return staging
+
+    def test_dimension_export_contains_only_native_terrain_and_dimension_metadata(self):
+        staging = self.dimension_fixture()
+        fixture = restore.Archive("fixture-map", "f" * 64, "fixture/world/", 2, 1, "fixture")
+        patcher = patch.dict(restore.ARCHIVES, {fixture.id: fixture})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        journal = {
+            "schemaVersion": 2,
+            "phase": "NATIVE_HERITAGE_PRESERVED",
+            "archiveId": fixture.id,
+            "archiveSha256": fixture.sha256,
+            "targetDimension": "fixture",
+            "requestId": "fixture-request",
+            "preservationReceiptSha256": restore.digest(staging / "heritage-preservation-receipt.json"),
+            "nativeLayoutReceiptSha256": restore.digest(staging / "native-layout-metadata-receipt.json"),
+        }
+        restore.save_json(staging / restore.JOURNAL, journal)
+        source = staging / "heritage-preserved-layout/world/dimensions/minecraft/overworld"
+        before = restore.fingerprint(staging / "heritage-preserved-layout")
+        restore.export_dimension(staging)
+        exported = staging / "dimension-export/world/dimensions/minecraft/fixture"
+        expected = {name: value for name, value in restore.fingerprint(source).items() if name != "paper-world.yml"}
+        self.assertEqual(restore.fingerprint(exported), expected)
+        self.assertEqual(restore.fingerprint(staging / "heritage-preserved-layout"), before)
+        receipt = json.loads((staging / "dimension-export-receipt.json").read_text())
+        self.assertEqual(
+            {key: receipt[key] for key in ("status", "dimension", "installPath", "chunks", "playersImported")},
+            {
+                "status": "VERIFIED",
+                "dimension": "fixture",
+                "installPath": "world/dimensions/minecraft/fixture",
+                "chunks": 2,
+                "playersImported": False,
+            },
+        )
+        journal = json.loads((staging / restore.JOURNAL).read_text())
+        self.assertEqual(journal["phase"], "DIMENSION_EXPORT_READY")
+        self.assertEqual(
+            journal["dimensionExportReceiptSha256"], restore.digest(staging / "dimension-export-receipt.json")
+        )
+        with self.assertRaisesRegex(ValueError, "requires"):
+            restore.export_dimension(staging)
+
+    def dimension_lock_fixture(self) -> tuple[Path, Path, Path, Path, Path]:
+        staging = self.root / "stage"
+        dimension = staging / "dimension-export/world/dimensions/minecraft/map2"
+        (dimension / "region").mkdir(parents=True)
+        (dimension / "region/r.0.0.mca").write_bytes(self.region_bytes([0]))
+        restore.save_json(staging / "dimension-export-files.json", restore.fingerprint(dimension))
+        (staging / "source/world/playerdata").mkdir(parents=True)
+        (staging / "source/world/playerdata/player.dat").write_bytes(b"archived name")
+        restore.save_json(staging / "source-files.json", restore.fingerprint(staging / "source"))
+        restore.save_json(staging / "dimension-export-receipt.json", {"status": "VERIFIED"})
+        journal = self.terrain_journal("DIMENSION_EXPORT_READY")
+        journal["dimensionExportReceiptSha256"] = restore.digest(staging / "dimension-export-receipt.json")
+        restore.save_json(staging / restore.JOURNAL, journal)
+        inputs = self.root / "inputs"
+        inputs.mkdir()
+        paper, candidate, database = inputs / "paper.jar", inputs / "candidate.jar", inputs / "the-storm.db"
+        paper.write_bytes(b"paper")
+        candidate.write_bytes(b"candidate")
+        (inputs / "bootstrap").mkdir()
+        with closing(sqlite3.connect(database)) as connection:
+            connection.executescript(
+                "CREATE TABLE towns_town(id TEXT PRIMARY KEY, name TEXT, created_at INT, governor_level INT);"
+                "CREATE TABLE towns_member(player_id TEXT PRIMARY KEY, town_id TEXT, role TEXT);"
+                "INSERT INTO towns_town VALUES('live-town','Livetown',0,0);"
+                "INSERT INTO towns_member VALUES('owner','live-town','OWNER');"
+                "CREATE TABLE towns_lock(id TEXT PRIMARY KEY, owner_id TEXT);"
+                "CREATE TABLE towns_lock_block(world TEXT, x INT, lock_id TEXT);"
+                "CREATE TABLE towns_lock_restoration(lock_id TEXT, request_id TEXT);"
+                "CREATE TABLE towns_lock_historical_owner(lock_id TEXT, player_id TEXT);"
+                "CREATE TABLE towns_lock_trust(lock_id TEXT);"
+                "CREATE TABLE economy_balance(player TEXT, balance INT);"
+                "INSERT INTO towns_lock VALUES('live','owner');"
+                "INSERT INTO towns_lock_block VALUES('world',1,'live');"
+                "INSERT INTO economy_balance VALUES('owner',500);"
+            )
+            connection.commit()
+        return staging, paper, inputs / "bootstrap", candidate, database
+
+    def fake_lock_import(self, mutate_other: bool = False):
+        def run(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+            if "additional-towns" in command:
+                catalog, world = Path(command[7]), command[9]
+                with closing(sqlite3.connect(command[6])) as connection:
+                    for town, name, mayor in restore.restoration_regions.active_towns(catalog, world):
+                        connection.execute("INSERT INTO towns_town VALUES(?,?,0,0)", (town, name))
+                        connection.execute("INSERT INTO towns_member VALUES(?,?,'OWNER')", (mayor, town))
+                    connection.commit()
+            elif "NativeHistoricalLocks" in command:
+                output, request, receipt = Path(command[9]), command[13], Path(command[14])
+                with closing(sqlite3.connect(output)) as connection:
+                    connection.execute("INSERT INTO towns_lock VALUES('restored','custody')")
+                    connection.execute("INSERT INTO towns_lock_block VALUES('map2',2,'restored')")
+                    connection.execute("INSERT INTO towns_lock_restoration VALUES('restored',?)", (request,))
+                    connection.execute("INSERT INTO towns_lock_historical_owner VALUES('restored','custody')")
+                    if mutate_other:
+                        connection.execute("UPDATE economy_balance SET balance = 0")
+                    connection.commit()
+                restore.save_json(
+                    receipt,
+                    {
+                        "requestId": request,
+                        "world": "map2",
+                        "importMode": "ADDITIONAL",
+                        "databaseReadback": "VERIFIED",
+                        "worldTicks": 0,
+                        "terrainChanged": False,
+                        "containerContentsChanged": False,
+                        "locks": 1,
+                        "containerBlocks": 1,
+                        "historicalOwners": 1,
+                    },
+                )
+            return subprocess.CompletedProcess(command, 0)
+
+        return run
+
+    def test_dimension_locks_append_only_the_restored_world_to_a_private_database_copy(self):
+        staging, paper, bootstrap, candidate, database = self.dimension_lock_fixture()
+        before = database.read_bytes()
+        with (
+            patch.object(restore, "conversion_classpath", return_value="fixture"),
+            patch.object(restore.subprocess, "run", side_effect=self.fake_lock_import()) as launching,
+        ):
+            restore.prepare_dimension_locks(staging, paper, bootstrap, candidate, database)
+        command = launching.call_args_list[-1].args[0]
+        staging = staging.resolve()
+        self.assertEqual(
+            command[5:10],
+            [
+                str(staging / "dimension-export/world/dimensions/minecraft/map2"),
+                str(staging / "source/world/playerdata"),
+                "map2",
+                "additional",
+                str(staging / "dimension-locks/the-storm.db"),
+            ],
+        )
+        self.assertEqual(database.read_bytes(), before)
+        receipt = json.loads((staging / "dimension-locks/receipt.json").read_text())
+        self.assertEqual(receipt["addedRows"]["towns_lock_block"], 1)
+        self.assertEqual(receipt["databaseSha256"], restore.digest(staging / "dimension-locks/the-storm.db"))
+        journal = json.loads((staging / restore.JOURNAL).read_text())
+        self.assertEqual(journal["phase"], "DIMENSION_LOCKS_READY")
+
+    def test_export_pruning_supersedes_unpruned_locks_and_feeds_the_pruned_manifest(self):
+        staging, paper, bootstrap, candidate, database = self.dimension_lock_fixture()
+        region = staging / "dimension-export/world/dimensions/minecraft/map2/region"
+        (region / "r.30.0.mca").write_bytes(self.region_bytes([0]))
+        restore.save_json(staging / "dimension-export-files.json", restore.fingerprint(region.parent))
+        journal = json.loads((staging / restore.JOURNAL).read_text())
+        (staging / "dimension-locks").mkdir()
+        (staging / "dimension-locks/receipt.json").write_text("{}")
+        journal.update(
+            phase="DIMENSION_LOCKS_READY",
+            dimensionLockInputs={},
+            dimensionLockRequestId="old",
+            dimensionLocksReceiptSha256="old",
+        )
+        restore.save_json(staging / restore.JOURNAL, journal)
+        restore.prune_export(staging, 12000)
+        journal = json.loads((staging / restore.JOURNAL).read_text())
+        self.assertEqual(journal["phase"], "DIMENSION_EXPORT_PRUNED")
+        self.assertNotIn("dimensionLocksReceiptSha256", journal)
+        self.assertTrue((staging / journal["supersededAttempts"][0] / "dimension-locks/receipt.json").is_file())
+        self.assertFalse((region / "r.30.0.mca").exists())
+        pruned = json.loads((staging / "dimension-pruned-files.json").read_text())
+        self.assertEqual(pruned, restore.fingerprint(region.parent))
+        proof = json.loads((staging / "dimension-prune-receipt.json").read_text())
+        self.assertEqual(proof["result"]["region"]["removedRegionFiles"], ["r.30.0.mca"])
+        with (
+            patch.object(restore, "conversion_classpath", return_value="fixture"),
+            patch.object(restore.subprocess, "run", side_effect=self.fake_lock_import()),
+        ):
+            restore.prepare_dimension_locks(staging, paper, bootstrap, candidate, database)
+        self.assertEqual(json.loads((staging / restore.JOURNAL).read_text())["phase"], "DIMENSION_LOCKS_READY")
+        with self.assertRaisesRegex(ValueError, "unpruned"):
+            restore.prune_export(staging, 12000)
+
+    def test_dimension_town_ids_match_the_towns_domain_and_refuse_missing_towns(self):
+        # Java: UUID.nameUUIDFromBytes("the-storm:heritage-town:v1:map2-karthil")
+        catalog = Path(__file__).with_name("owned") / "plugins/TheStorm/heritage.yml"
+        towns = {name: (town, mayor) for town, name, mayor in restore.restoration_regions.active_towns(catalog, "map2")}
+        self.assertEqual(towns["Karthil"][0], "6a17bca5-7c95-3df1-b833-e19c5557ed3f")
+        staging, paper, bootstrap, candidate, database = self.dimension_lock_fixture()
+        locks_only = self.fake_lock_import()
+
+        def without_towns(command: list[str], **options: object) -> subprocess.CompletedProcess[str]:
+            if "additional-towns" in command:
+                return subprocess.CompletedProcess(command, 0)
+            return locks_only(command, **options)
+
+        with (
+            patch.object(restore, "conversion_classpath", return_value="fixture"),
+            patch.object(restore.subprocess, "run", side_effect=without_towns),
+            self.assertRaisesRegex(ValueError, "changed other data"),
+        ):
+            restore.prepare_dimension_locks(staging, paper, bootstrap, candidate, database)
+
+    def test_dimension_locks_refuse_changes_to_other_live_rows(self):
+        staging, paper, bootstrap, candidate, database = self.dimension_lock_fixture()
+        with (
+            patch.object(restore, "conversion_classpath", return_value="fixture"),
+            patch.object(restore.subprocess, "run", side_effect=self.fake_lock_import(mutate_other=True)),
+            self.assertRaisesRegex(ValueError, "changed other data"),
+        ):
+            restore.prepare_dimension_locks(staging, paper, bootstrap, candidate, database)
+        self.assertEqual(json.loads((staging / restore.JOURNAL).read_text())["phase"], "DIMENSION_LOCKS_FAILED")
+        self.assertFalse((staging / "dimension-locks/receipt.json").exists())
+
+    def test_dimension_export_refuses_player_data_and_the_primary_archive(self):
+        staging = self.dimension_fixture()
+        world = staging / "heritage-preserved-layout/world"
+        (world / "dimensions/minecraft/overworld/players").mkdir()
+        (world / "dimensions/minecraft/overworld/players/player.dat").write_bytes(b"player")
+        restore.save_json(staging / "heritage-preserved-layout-files.json", restore.fingerprint(world))
+        journal = self.terrain_journal("NATIVE_HERITAGE_PRESERVED")
+        journal.update(
+            preservationReceiptSha256=restore.digest(staging / "heritage-preservation-receipt.json"),
+            nativeLayoutReceiptSha256=restore.digest(staging / "native-layout-metadata-receipt.json"),
+        )
+        restore.save_json(staging / restore.JOURNAL, journal)
+        with self.assertRaisesRegex(ValueError, "unexpected or missing"):
+            restore.export_dimension(staging)
+        self.assertFalse((staging / "dimension-export").exists())
+        restore.save_json(
+            staging / restore.JOURNAL, {"phase": "NATIVE_HERITAGE_PRESERVED", "archiveSha256": restore.ARCHIVE_SHA256}
+        )
+        with self.assertRaisesRegex(ValueError, "terrain-only"):
+            restore.export_dimension(staging)
 
     def test_resource_preparation_rejects_overlapping_roots_before_any_backup_write(self):
         for relationship in ("same", "staging-inside", "backup-inside", "ancestor-link"):
@@ -547,7 +988,24 @@ class RestoreTest(unittest.TestCase):
         self.assertEqual(completed["phase"], "NATIVE_HERITAGE_PRESERVED")
         self.assertEqual(temporary.read_bytes(), b'{"partial":')
 
-    def activation_fixture(self):
+    def test_database_snapshots_refuse_changes_still_in_a_write_ahead_log(self):
+        database = self.root / "the-storm.db"
+        with closing(sqlite3.connect(database)) as connection:
+            connection.execute("CREATE TABLE towns_town(id TEXT PRIMARY KEY)")
+            connection.commit()
+        writer = sqlite3.connect(database)
+        try:
+            writer.execute("PRAGMA journal_mode=WAL")
+            writer.execute("PRAGMA wal_autocheckpoint=0")
+            writer.execute("INSERT INTO towns_town VALUES('late')")
+            writer.commit()
+            with self.assertRaisesRegex(ValueError, "the-storm.db-wal holds uncheckpointed changes"):
+                restore.table_rows(database)
+        finally:
+            writer.close()
+        self.assertEqual(restore.table_rows(database)["towns_town"], {("late",)})
+
+    def activation_fixture(self, extra: tuple[str, ...] = ()):
         staging, modern = self.root / "stage", self.root / "modern"
         source = staging / "arena-preserved-layout/world"
         (source / "dimensions/minecraft/overworld/region").mkdir(parents=True)
@@ -558,7 +1016,7 @@ class RestoreTest(unittest.TestCase):
         (modern / "world/level.dat").write_bytes(b"modern metadata")
         (modern / "plugins/TheStorm").mkdir(parents=True)
         (modern / "plugins/TheStorm/the-storm.db").write_bytes(b"modern identity")
-        for name in ("settlement", "rustworks", "rwf", "wilds", "peaks", "mining"):
+        for name in ("settlement", "rustworks", "rwf", *extra):
             dimension = modern / "world/dimensions/minecraft" / name
             (dimension / "data/paper").mkdir(parents=True)
             (dimension / "region").mkdir()
@@ -670,7 +1128,22 @@ class RestoreTest(unittest.TestCase):
                 restore.fingerprint(modern / "world/dimensions/minecraft" / name),
             )
 
-    def test_activation_assembly_preserves_arena_dimensions_and_historical_data_without_modern_resource_worlds(self):
+    def test_activation_refuses_a_backup_holding_worlds_it_would_drop(self):
+        arguments = self.activation_fixture(extra=("wilds", "peaks", "map2"))
+        staging, _, _, _, modern, _ = arguments
+        before, journal = restore.fingerprint(modern), (staging / restore.JOURNAL).read_bytes()
+        with (
+            patch.object(restore, "conversion_classpath", return_value="fixture"),
+            patch.object(restore, "run_activation_check") as verification,
+            self.assertRaisesRegex(ValueError, "would drop worlds the modern backup holds: map2, peaks, wilds"),
+        ):
+            restore.prepare_activation(*arguments)
+        verification.assert_not_called()
+        self.assertFalse((staging / "activation-layout").exists())
+        self.assertEqual((staging / restore.JOURNAL).read_bytes(), journal)
+        self.assertEqual(restore.fingerprint(modern), before)
+
+    def test_activation_assembly_preserves_arena_dimensions_and_historical_data(self):
         arguments = self.activation_fixture()
         staging, _, _, _, modern, _ = arguments
         before = restore.fingerprint(modern)
@@ -701,8 +1174,6 @@ class RestoreTest(unittest.TestCase):
                 restore.fingerprint(assembled / "world/dimensions/minecraft" / name),
                 restore.fingerprint(modern / "world/dimensions/minecraft" / name),
             )
-        for name in ("wilds", "peaks", "mining"):
-            self.assertFalse((assembled / "world/dimensions/minecraft" / name).exists())
         self.assertEqual(restore.fingerprint(modern), before)
         journal = json.loads((staging / restore.JOURNAL).read_text())
         self.assertEqual(journal["phase"], "ACTIVATION_LAYOUT_READY")
@@ -726,6 +1197,29 @@ class RestoreTest(unittest.TestCase):
         self.assertTrue((staging / "activation-layout/world").is_dir())
         self.assertEqual(json.loads((staging / restore.JOURNAL).read_text())["phase"], "ACTIVATION_PREPARATION_FAILED")
         self.assertFalse((staging / "activation-layout-receipt.json").exists())
+
+    def test_activation_check_verifies_layout_metadata_against_the_primary_archive(self):
+        calls: list[list[str]] = []
+        receipt = {
+            "status": "VERIFIED",
+            "dataVersion": 4903,
+            "entityUuidCollisions": [],
+            "terrainGeneration": False,
+            "worldTicks": 0,
+        }
+
+        def run(command: list[str], **_: object) -> subprocess.CompletedProcess[bytes]:
+            calls.append(command)
+            (self.root / "native-receipt.json").write_text(json.dumps(receipt), encoding="utf-8")
+            return subprocess.CompletedProcess(command, 0)
+
+        with patch.object(restore.subprocess, "run", side_effect=run):
+            restore.run_activation_check(self.root / "world", self.root / "modern", self.root, "fixture")
+        layout = next(call for call in calls if call[4].endswith("NativeLayoutMetadata.java"))
+        self.assertEqual(
+            layout[5:],
+            ["verify", "main-map1-2015-07-09", str(self.root / "world"), str(self.root / "metadata-receipt.json")],
+        )
 
     def test_activation_records_only_verified_animal_region_changes(self):
         arguments = self.activation_fixture()
