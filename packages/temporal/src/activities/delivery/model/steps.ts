@@ -136,6 +136,7 @@ export async function acceptDeliveryModel(
     recipe.kind === "operator-run" ? recipe.wrapped : recipe;
   return await oracleEvidence(
     current,
+    modelSteps(recipe).map((step) => step.key),
     kubernetesOracle.kind === "kubernetes-application"
       ? kubernetesOracle.oracle.probes
       : [],

@@ -37,13 +37,34 @@ export async function runTestStep(
   });
 }
 
-/** HTTP probes the oracle declares, then the acceptance summary (4.14). */
+/**
+ * One acceptance for every frozen step (T3): each settled by its own
+ * readback, whose evidence its stage holds; then the HTTP probes the oracle
+ * declares and the acceptance summary (4.14).
+ */
 export async function oracleEvidence(
   current: DeploymentDetail,
+  steps: readonly string[],
   probes: readonly { url: string; expectedStatus: number }[],
 ): Promise<EvidenceInput[]> {
   const operationId = deliveryOperationId(current.deployment.id);
-  const evidence: EvidenceInput[] = [];
+  const unsettled = steps.filter(
+    (key) =>
+      !current.stages.some(
+        (stage) => stage.key === key && stage.status === "succeeded",
+      ),
+  );
+  if (unsettled.length > 0)
+    throw new Error(
+      `Frozen steps ${unsettled.join(", ")} have not settled; the deployment is not accepted`,
+    );
+  const evidence: EvidenceInput[] = [
+    {
+      kind: "reconciliation",
+      operationId,
+      summary: `Every frozen step settled by its own readback: ${steps.join(", ")}`,
+    },
+  ];
   for (const probe of probes) {
     const response = await fetch(probe.url, {
       signal: AbortSignal.timeout(30_000),
