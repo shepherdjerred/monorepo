@@ -57,6 +57,8 @@ Both Java and TypeScript validate their wire fields against these files.
 Native chat, message commands, proposed signs and books, anvil names, name tags,
 and Discord ingress pass admission before publication. Unknown command arguments
 are screened; commands containing only known identifiers are audited directly.
+An approved command runs as its sender, and a command that is unknown, not
+permitted or malformed gets the same error a typed command would.
 Authentication commands and credential-shaped strings are redacted before storage.
 Allowed and rejected text, including DMs, stays in the private archive indefinitely.
 Loaded saved signs, containers and entity names are snapshots with unknown creators;

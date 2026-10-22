@@ -191,8 +191,8 @@ async function startMatch(
   await b.log.until(/The game has begun!/u, 30_000);
   const teams = await Promise.all([teamOf(a.log), teamOf(b.log)]);
   expect(teams[0]).not.toBe(teams[1]);
-  await lookAround(a.bot);
-  await lookAround(b.bot);
+  await lookAround(rcon, a.bot);
+  await lookAround(rcon, b.bot);
   return teams;
 }
 
@@ -615,8 +615,8 @@ describe("Search and Destroy with humans only", () => {
       );
       const [teamA, teamB] = await Promise.all([teamOf(a.log), teamOf(b.log)]);
       expect(teamA).not.toBe(teamB);
-      await lookAround(bot);
-      await lookAround(secondBot);
+      await lookAround(rcon, bot);
+      await lookAround(rcon, secondBot);
 
       const live = await status(rcon);
       expect(live.phase).toBe("Live");
@@ -1216,7 +1216,7 @@ async function nukeMatch(
   humans: Human[],
 ): Promise<{ armer: string; earned: Map<string, number> }> {
   const deaths = deathCounter(humans);
-  const teams = await playTogether(humans);
+  const teams = await playTogether(rcon, humans);
   const live = await status(rcon);
   expect([live.phase, live.humans]).toEqual(["Live", 3]);
   const pairTeam =
@@ -1303,7 +1303,7 @@ async function secondPaidMatch(
   humans: Human[],
   first: { armer: string; earned: Map<string, number>; idle: Human },
 ): Promise<void> {
-  const teams = await playTogether(humans, [first.idle]);
+  const teams = await playTogether(rcon, humans, [first.idle]);
   const begun = Date.now();
   const live = await status(rcon);
   expect([live.phase, live.humans]).toEqual(["Live", 3]);

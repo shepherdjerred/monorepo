@@ -43,7 +43,12 @@ export type FakeBrain = {
   stop: () => Promise<void>;
 };
 
-export type FakeBrainMode = "ok" | "down" | "screening-disabled";
+/**
+ * `down` fails every brain call; `triage-down` fails only ticket triage, so
+ * content screening still admits the ticket that triage then fails.
+ */
+export type FakeBrainMode =
+  "ok" | "down" | "triage-down" | "screening-disabled";
 
 type BrainState = {
   mode: FakeBrainMode;
@@ -56,6 +61,8 @@ type BrainState = {
   rwfKits: Set<string>;
   /** Players the double answers `the-storm-rwf-killstreaks-enabled: true` for. */
   rwfKillstreaks: Set<string>;
+  /** Ticket triage calls this brain has failed, so a spec can wait for one. */
+  failedTriages: number;
 };
 
 /** The managed Red Warfare match feature flags, server-wide. */
@@ -150,17 +157,29 @@ export async function setRwfKits(
   }
 }
 
+/** Whether the brain call at `pathname` fails in `mode`. */
+function outage(mode: FakeBrainMode, pathname: string): boolean {
+  return (
+    mode === "down" || (mode === "triage-down" && pathname === "/v1/triage")
+  );
+}
+
 // Test-only control hook (no auth): the specs fail and heal the brain to
 // prove the sweep redrives. Never present on the real service.
 async function control(request: Request, state: BrainState): Promise<Response> {
   if (request.method === "GET") {
-    return Response.json({ mode: state.mode });
+    return Response.json({
+      mode: state.mode,
+      failedTriages: state.failedTriages,
+    });
   }
   if (request.method !== "POST") {
     return new Response("not found\n", { status: 404 });
   }
   const seen = z
-    .object({ mode: z.enum(["ok", "down", "screening-disabled"]) })
+    .object({
+      mode: z.enum(["ok", "down", "triage-down", "screening-disabled"]),
+    })
     .safeParse(await request.json().catch(() => null));
   if (!seen.success) {
     return new Response("invalid request\n", { status: 400 });
@@ -302,6 +321,17 @@ export async function setBrainMode(
   }
 }
 
+/** How many ticket triage calls the fake brain has failed so far. */
+export async function failedTriages(port: number): Promise<number> {
+  const response = await fetch(brainControlUrl(port, "/v1/__control"));
+  if (!response.ok) {
+    throw new Error(`brain control failed: ${response.status.toString()}`);
+  }
+  return z
+    .object({ failedTriages: z.number().int().nonnegative() })
+    .parse(await response.json()).failedTriages;
+}
+
 /** Bot chat is one server-wide flag, evaluated with the rwf world as context. */
 const BotChatFlagSchema = z.strictObject({
   namespace_key: z.literal("the-storm"),
@@ -415,6 +445,7 @@ export function startFakeBrain(token: string, port = 0): FakeBrain {
     rwfKits: new Set(),
     rwfKillstreaks: new Set(),
     analytics: [],
+    failedTriages: 0,
   };
   const beginners = new BeginnerFlags();
   const testControls: typeof controls = {
@@ -469,7 +500,8 @@ export function startFakeBrain(token: string, port = 0): FakeBrain {
       ) {
         return new Response("application/json required\n", { status: 415 });
       }
-      if (state.mode === "down") {
+      if (outage(state.mode, url.pathname)) {
+        if (url.pathname === "/v1/triage") state.failedTriages += 1;
         return new Response("brain error\n", { status: 500 });
       }
       let body: unknown;

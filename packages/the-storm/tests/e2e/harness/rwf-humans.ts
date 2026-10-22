@@ -181,6 +181,7 @@ export async function joinRecovered({ bot, log }: Human): Promise<void> {
  * match reads only its own lines.
  */
 export async function playTogether(
+  rcon: RconClient,
   humans: Human[],
   idle: Human[] = [],
   beforeStart?: () => Promise<void>,
@@ -198,7 +199,7 @@ export async function playTogether(
   const teams = await Promise.all(humans.map(async ({ log }) => teamOf(log)));
   for (const one of humans) {
     if (!idle.includes(one)) {
-      await lookAround(one.bot);
+      await lookAround(rcon, one.bot);
     }
   }
   return teams;

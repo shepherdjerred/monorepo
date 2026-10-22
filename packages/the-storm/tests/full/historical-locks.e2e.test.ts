@@ -11,15 +11,19 @@ import {
 import type { RconClient } from "#e2e/harness/rcon.ts";
 
 async function target(bot: Bot, rcon: RconClient, x: number): Promise<void> {
-  await rcon.command(`minecraft:tp ${bot.username} ${x.toString()}.5 201 32.5`);
+  // `/lock` commands act on the block the server sees the player facing. Grim
+  // drops a client's turns until it confirms the client has the chunk it stands
+  // in, so a turn sent on arrival can leave the old facing; the teleport sets it.
+  const chest = `${x.toString()}.5 201.5 35.5`;
+  await rcon.command(
+    `minecraft:tp ${bot.username} ${x.toString()}.5 201 32.5 facing ${chest}`,
+  );
   await waitUntil(
     "historical chest in reach",
     () =>
       bot.entity.position.distanceTo(new Vec3(x + 0.5, 201, 32.5)) < 0.3 &&
       bot.blockAt(new Vec3(x, 201, 35))?.name === "chest",
   );
-  await bot.lookAt(new Vec3(x + 0.5, 201.5, 35.5), true);
-  await bot.waitForTicks(2);
 }
 
 async function open(bot: Bot, x: number): Promise<void> {

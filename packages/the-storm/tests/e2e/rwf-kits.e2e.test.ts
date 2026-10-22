@@ -371,6 +371,7 @@ describe("Killstreaks", () => {
             "gamerule minecraft:natural_health_regeneration false",
           );
           const teams = await playTogether(
+            rcon,
             humans,
             [],
             reward.wolves
@@ -461,7 +462,7 @@ describe("Killstreaks", () => {
           rcon,
           "gamerule minecraft:natural_health_regeneration false",
         );
-        const teams = await playTogether(humans);
+        const teams = await playTogether(rcon, humans);
         // Five split three against two. A reward is only handed to a fighter
         // in a live match, so one of the two kills two of the three and the
         // third keeps the match going.
