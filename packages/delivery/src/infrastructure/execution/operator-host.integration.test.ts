@@ -6,11 +6,11 @@ import { testExecutor, testOperator } from "#testing/seed.ts";
 import { declareAcquisitions, registerTestService } from "#testing/services.ts";
 
 const context = useDeliveryFixture();
-/** The operator tool's credential (X13). */
+/** The operator tool's credential (X13): an attestor that never executes. */
 const operatorTool: Principal = {
   id: "operator-tool",
   kind: "machine",
-  scopes: ["read", "execute"],
+  scopes: ["read", "attest"],
 };
 const components = ["image:installer", "image:kubelet"];
 
