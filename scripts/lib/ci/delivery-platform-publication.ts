@@ -8,6 +8,7 @@ import type { ArtifactVersionSchema } from "@shepherdjerred/delivery/contract";
 // v1's root release: it names v1 site environments, and with the catalog
 // flag on producers skip it (WP4 deletes it with the v1 path).
 import { V1_STATIC_SITE_DESTINATIONS } from "@shepherdjerred/ops-model/static-release-targets.ts";
+import { STACK_MANIFEST } from "../../../packages/homelab/scripts/tofu/tofu-stack-manifest.ts";
 import {
   SERVICE_CATALOG,
   ServiceIndex,
@@ -54,8 +55,9 @@ export function changedPlatformStacks(
       (file) =>
         shared.some((path) => within(file, path)) ||
         within(file, `packages/homelab/src/tofu/${stack}`) ||
-        (stack === "cloudflare" &&
-          file === "packages/homelab/src/domain-registry.json") ||
+        STACK_MANIFEST[stack].externalFiles.some((input) =>
+          within(file, input),
+        ) ||
         (TOFU_STACK_POLICIES[stack].mode === "reviewed-plan" &&
           sensitiveShared.some((path) => within(file, path))),
     ),

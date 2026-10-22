@@ -81,6 +81,18 @@ test("ordinary changes do not invent platform deploys; direct stacks retain thei
   expect(changedPlatformStacks(undefined)).toHaveLength(10);
 });
 
+test("a stack's declared external inputs select it like its own directory", () => {
+  expect(
+    changedPlatformStacks(["packages/homelab/src/domain-registry.json"]),
+  ).toEqual(["cloudflare"]);
+  expect(changedPlatformStacks(["config/analytics-sites.json"])).toEqual([
+    "posthog",
+  ]);
+  expect(
+    changedPlatformStacks(["packages/version-catalog/src/image-registry.json"]),
+  ).toEqual([]);
+});
+
 test("root and DNS releases freeze the complete ordered dependency closure", () => {
   expect(platformDependencyClosure(false, ["arr"])).toEqual({
     root: false,
