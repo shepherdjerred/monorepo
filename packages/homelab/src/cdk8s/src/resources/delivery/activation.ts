@@ -18,7 +18,11 @@ export const DELIVERY_CREDENTIAL_ITEMS: {
   trmnlKey: string | undefined;
   /** Read-only GitHub token (field DELIVERY_GH_TOKEN) for hub commit context. */
   githubReader: string | undefined;
-  /** npm automation token (field NPM_TOKEN) that npm channel deployments publish with (X12). */
+  /**
+   * npm token (field NPM_TOKEN) that npm channel deployments publish with
+   * (X12): CI's npm publish item (`CI_NPM_CREDENTIALS_ITEM`) until a
+   * package-scoped token replaces it.
+   */
   npmChannel: string | undefined;
 } = {
   service: "ahbp4izt7fibvwdjwd4ffhiime",
@@ -36,7 +40,7 @@ export const DELIVERY_CREDENTIAL_ITEMS: {
   trmnlArchiveReader: "542onhpijguqgaukmyvbujbu74",
   trmnlKey: "p7th6tqeel7k2sm47mrrto7oca",
   githubReader: undefined,
-  npmChannel: undefined,
+  npmChannel: "4fmd5otmvwcpsrxjaptrloppvu",
 };
 
 export type DeliveryActivation = {

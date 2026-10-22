@@ -53,6 +53,9 @@ export const WOODPECKER_SERVER_ITEM_ID = "covttsojandjk7fx62a3dbk7em";
  * fields in the owning GitHub item and this copy together; TOFU_GITHUB_TOKEN
  * remains only in the original item used by platform provider Jobs.
  */
+/** CI's npm publish item (field NPM_TOKEN); Delivery's npm channels publish with it too. */
+export const CI_NPM_CREDENTIALS_ITEM = "4fmd5otmvwcpsrxjaptrloppvu";
+
 const CI_CREDENTIAL_ITEMS = [
   {
     secretName: "ci-delivery-archive-credentials",
@@ -80,7 +83,7 @@ const CI_CREDENTIAL_ITEMS = [
     secretName: "ci-turbo-cache-credentials",
     itemId: "mzvcz4pqqbda75ufu7l5myd4ey",
   },
-  { secretName: "ci-npm-credentials", itemId: "4fmd5otmvwcpsrxjaptrloppvu" },
+  { secretName: "ci-npm-credentials", itemId: CI_NPM_CREDENTIALS_ITEM },
   {
     secretName: "ci-release-openai-credentials",
     itemId: "2r6nqphyvaegtnbjgcg4avff3m",
