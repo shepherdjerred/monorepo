@@ -425,13 +425,16 @@ rows.
   whose producer barrier is still held. Content recovery
   [keeps the lock](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/recovery-settlement.ts)
   after it settles and clears the active pointer, until its producer restarts.
-  A held barrier is valid in only two states. A `pending` intent's owner is
-  still active, `failed` or `canceled`, and requires recovery. A `succeeded`
-  intent's owner is `failed` or `canceled` and no longer requires recovery. Its
-  environment has no active Deployment and is one generation past the intent's
-  expected generation, which is what
+  A held barrier is valid in only two states. An unfinished `pending` intent's
+  owner is still active, `failed` or `canceled`, and requires recovery, and its
+  environment is still at the intent's expected generation. A finished
+  `succeeded` intent's owner is `failed` or `canceled` and no longer requires
+  recovery. Its environment has no active Deployment and is one generation past
+  the intent's expected generation. These are what
+  [the pending checks](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/content-recovery/context.ts)
+  and
   [restoration](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/content-recovery/restoration.ts)
-  requires. In the other direction, every held barrier must own the
+  require. In the other direction, every held barrier must own the
   `shared-resources` lock, and at most one barrier may be held. Delivery takes
   and releases a barrier together with that lock, and a held barrier blocks
   every new claim.
@@ -488,9 +491,12 @@ WHERE NOT (
       WHERE i."deploymentId" = d.id
         AND i."dispatchBarrier" IS NOT NULL AND i."barrierRestoredAt" IS NULL
         AND d.status IN ('failed', 'canceled')
-        AND ((i.status = 'pending' AND d."recoveryRequired"
-              AND e."activeDeploymentId" = d.id)
-          OR (i.status = 'succeeded' AND NOT d."recoveryRequired"
+        AND ((i.status = 'pending' AND i."finishedAt" IS NULL
+              AND d."recoveryRequired"
+              AND e."activeDeploymentId" = d.id
+              AND e.generation = i."expectedEnvironmentGeneration")
+          OR (i.status = 'succeeded' AND i."finishedAt" IS NOT NULL
+              AND NOT d."recoveryRequired"
               AND e."activeDeploymentId" IS NULL
               AND e.generation = i."expectedEnvironmentGeneration" + 1))
     )
