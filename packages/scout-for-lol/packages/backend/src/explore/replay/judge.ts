@@ -3,7 +3,11 @@ import { numericClaims } from "#src/explore/replay/diff.ts";
 import { describeThrown } from "#src/explore/replay/describe-thrown.ts";
 import type { ChipExpectation } from "#src/explore/replay/profiles.ts";
 import { LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH } from "#src/explore/lake-coverage.ts";
-import { challengeFacts, hallOfFameFacts } from "#src/explore/product-facts.ts";
+import {
+  challengeFacts,
+  hallOfFameFacts,
+  setupFacts,
+} from "#src/explore/product-facts.ts";
 
 /**
  * Grading a replayed answer on quality, which no other number here measures.
@@ -286,7 +290,7 @@ export type JudgeCaseInput = {
 
 /** Tools that answer from their own data rather than through ScoutQL. */
 const CAPABILITY_TOOL_PATTERN =
-  /^(?:prepare_|lookup_|run_report_query|get_bucks|query_bucks|list_dares|inspect_dare|query_mvp|list_challenge|list_my_challenge|preview_challenge|challenge_leaderboard|get_clash|get_hall|list_competitions|get_competition|resolve_player|inspect_player_coverage|materialize_query_dataset|materialize_raw_documents|analyze_javascript|select_dataset_values|summarize_match_timeline)/;
+  /^(?:prepare_|lookup_|run_report_query|get_bucks|query_bucks|list_dares|inspect_dare|query_mvp|list_challenge|list_my_challenge|preview_challenge|challenge_leaderboard|get_clash|get_hall|list_competitions|get_competition|get_server_setup|resolve_player|inspect_player_coverage|materialize_query_dataset|materialize_raw_documents|analyze_javascript|select_dataset_values|summarize_match_timeline)/;
 
 /**
  * How much of one tool result the judge is shown.
@@ -457,7 +461,9 @@ const JUDGE_SYSTEM_PROMPT = [
   "   'not_applicable' when nothing relevant was gated off, or it did not refuse.",
   "",
   "SCOUT PRODUCT FACTS — true without any query:",
-  ...[...hallOfFameFacts(), ...challengeFacts()].map((fact) => `  - ${fact}`),
+  ...[...hallOfFameFacts(), ...challengeFacts(), ...setupFacts()].map(
+    (fact) => `  - ${fact}`,
+  ),
   "",
   "Answer only with the structured observation. Keep notes under 60 words.",
 ].join("\n");

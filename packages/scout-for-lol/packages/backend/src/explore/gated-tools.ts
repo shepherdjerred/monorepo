@@ -11,6 +11,7 @@ import {
 import { createDareExploreTools } from "#src/explore/tools/dare-tool-definitions.ts";
 import { createChallengeExploreTools } from "#src/explore/tools/challenge-tools.ts";
 import { createChallengeReadTools } from "#src/explore/tools/challenge-read-tools.ts";
+import { createServerSetupTools } from "#src/explore/tools/server-setup-tools.ts";
 import { createCompetitionReadTools } from "#src/explore/tools/competition-read-tools.ts";
 import {
   createHallExploreTools,
@@ -88,6 +89,14 @@ export function createGatedExploreTools(input: {
     ...createCompetitionReadTools({
       db: prisma,
       guildIds: input.guildIds,
+      track: input.track,
+    }),
+    // Not gated either: what a server has set up is readable by its members,
+    // and setup questions are the ones new users bring first.
+    ...createServerSetupTools({
+      db: prisma,
+      guildIds: input.guildIds,
+      requesterId: input.requesterId,
       track: input.track,
     }),
     ...createCreationExploreTools({

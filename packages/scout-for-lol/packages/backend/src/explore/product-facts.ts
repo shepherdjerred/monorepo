@@ -1,4 +1,7 @@
-import { COMPETITIVE_PROGRESSION_CATALOG } from "@scout-for-lol/data";
+import {
+  COMPETITIVE_PROGRESSION_CATALOG,
+  SCOUT_GUILD_PAGES,
+} from "@scout-for-lol/data";
 
 /**
  * Facts about how Scout's own features work, true without any query.
@@ -33,5 +36,32 @@ export function challengeFacts(): readonly string[] {
   return [
     "Scout challenges have no end date: a challenge run stays active until it is completed or archived.",
     "Scout challenges carry no reward, prize or Bryan Bucks payout.",
+  ];
+}
+
+/**
+ * What Scout's setup features do, where they live, and what Scout does not do.
+ *
+ * Explore answers setup questions more than any other kind from people new to
+ * Scout, and every wrong answer in prod was a fact about the product, not the
+ * data: it refused an "automatic review after every game" that player feeds
+ * already post, and invented a settings page for editing notification text.
+ * Pages are named from `SCOUT_GUILD_PAGES`, the list the app's router serves,
+ * so a page this names is a page that exists.
+ */
+function page(name: keyof typeof SCOUT_GUILD_PAGES): string {
+  return `the server's ${name[0]?.toUpperCase() ?? ""}${name.slice(1)} page (/app/g/<server>/${SCOUT_GUILD_PAGES[name]})`;
+}
+
+export function setupFacts(): readonly string[] {
+  return [
+    `A tracked player is a Riot account Scout follows for a server, under a display name (its alias). Tracked players are listed and added on ${page("players")}.`,
+    `A player feed (a subscription) posts a match report to a chosen Discord channel after every game a tracked player finishes, with their stats and a review of the game. It is Scout's automatic post-game review. Feeds are managed on ${page("subscriptions")}, and Explore can prepare one.`,
+    `A scheduled report runs a saved question on a schedule and posts the result to a channel. Reports are listed, edited, disabled and deleted on ${page("reports")}. Each person and each server may have only a few active reports; get_server_setup says how many.`,
+    `A competition ranks a server's tracked players over a period by one scoring rule. Competitions are on ${page("competitions")}.`,
+    "Every server setting lives in the Scout web app under that server, on exactly those four pages. Never name any other page, menu, tab, button or setting.",
+    "Scout's match reports and notifications cannot be customized: there is no template, wording, message or notification setting anywhere in Scout. Say so plainly; never suggest the user look for one.",
+    "Scout cannot post a one-off message to a channel. The closest feature is a scheduled report.",
+    "Scout does not send reviews by direct message. A player feed posts to a channel, and Explore reviews any recorded game on request.",
   ];
 }
