@@ -17,6 +17,7 @@ import {
   forumJobFingerprint,
   forumRecoveryChild,
   assertNoOtherForumWriter,
+  forumImageProvesRelease,
   originalForumRecoveryJob,
   runForumRecoveryChild,
 } from "./forum-jobs.ts";
@@ -201,180 +202,230 @@ test.each(["status-only", "uid", "spec", "annotations", "suspension"])(
   },
 );
 
-test("original Forum recovery projects the exact chart proof while retaining its separate operation identity", async () => {
-  const { job } = original();
-  const deploymentId = "forum/original/selection";
-  job.metadata.name = `storm-forum-release-${createHash("sha256").update(deploymentId).digest("hex").slice(0, 32)}`;
-  const bytes = new TextEncoder().encode("immutable chart fixture");
-  const server = Bun.serve({
-    hostname: "127.0.0.1",
-    port: 0,
-    fetch(request) {
-      return new URL(request.url).pathname.startsWith("/charts/")
-        ? new Response(bytes)
-        : Response.json(job);
-    },
-  });
-  const createdAt = new Date().toISOString();
-  const common = {
-    serviceId: "storm-forum",
-    buildId: "forum/build",
-    sourceRevision: "a".repeat(40),
-    createdAt,
-    version: "2.3.13",
-    digest: `sha256:${"a".repeat(64)}`,
-  };
-  const version = {
-    id: "forum/set",
-    serviceId: "storm-forum",
-    revision: 1,
-    baseRevisionId: null,
-    createdAt,
-    components: {
-      image: {
-        ...common,
-        id: "forum/image",
-        component: "image",
-        kind: "image",
-        uri: "docker.io/shepherdjerred/storm-forum",
+test.each([
+  {
+    image: "a release baked with GIT_SHA",
+    config: (revision: string) => ({
+      Env: [`GIT_SHA=${revision}`],
+      Labels: { [FORUM_RECOVERY_IMAGE_LABEL]: FORUM_RECOVERY_IMAGE_ABI },
+    }),
+  },
+  {
+    image: "a legacy release labelled with its revision",
+    config: (revision: string) => ({
+      Env: [],
+      Labels: {
+        "org.opencontainers.image.revision": revision,
+        [FORUM_RECOVERY_IMAGE_LABEL]: FORUM_RECOVERY_IMAGE_ABI,
       },
-      bundle: {
-        ...common,
-        id: "forum/bundle",
-        component: "bundle",
-        kind: "archive",
-        uri: `s3://storm-forum-releases/releases/${"a".repeat(64)}.zip`,
-        origin: {
-          kind: "licensed-bundle",
-          manifestDigest: `sha256:${"b".repeat(64)}`,
-          xenforoVersion: "2.3.13",
-          producerSourceRevision: common.sourceRevision,
-        },
+    }),
+  },
+])(
+  "original Forum recovery of $image projects the exact chart proof while retaining its separate operation identity",
+  async ({ config: imageConfig }) => {
+    const { job } = original();
+    const deploymentId = "forum/original/selection";
+    job.metadata.name = `storm-forum-release-${createHash("sha256").update(deploymentId).digest("hex").slice(0, 32)}`;
+    const bytes = new TextEncoder().encode("immutable chart fixture");
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      fetch(request) {
+        return new URL(request.url).pathname.startsWith("/charts/")
+          ? new Response(bytes)
+          : Response.json(job);
       },
-      chart: {
-        ...common,
-        id: "forum/chart",
-        component: "chart",
-        kind: "chart",
-        version: "2.0.0-1",
-        uri: `${server.url.origin}/charts/storm-forum-2.0.0-1.tgz`,
-        digest: `sha256:${createHash("sha256").update(bytes).digest("hex")}`,
-      },
-    },
-  };
-  const context = ContentRecoveryContextSchema.parse({
-    intent: {
-      id: "forum/recovery",
-      deploymentId,
-      requestedBy: "operator",
-      reason: "Inspect the original frozen Forum native release Job",
-      expectedEnvironmentGeneration: 1,
-      snapshotFingerprint: "a".repeat(64),
-      status: "pending",
-      message: null,
+    });
+    const createdAt = new Date().toISOString();
+    const common = {
+      serviceId: "storm-forum",
+      buildId: "forum/build",
+      sourceRevision: "a".repeat(40),
       createdAt,
-      finishedAt: null,
-      targetKind: "forum",
-    },
-    deployment: {
-      deployment: {
-        id: deploymentId,
-        requestId: deploymentId,
-        environmentId: "storm-forum/prod",
-        serviceId: "storm-forum",
-        versionSetRevisionId: version.id,
-        pipelineRevisionId: "forum/1",
-        configurationRevision: "forum/1",
-        configuration: { "forum.xenforoVersion": "2.3.13" },
-        previousAcceptedConfiguration: { "forum.xenforoVersion": "2.3.13" },
-        expectedGeneration: 1,
-        kind: "deploy",
-        status: "failed",
-        requestedBy: "operator",
-        message: null,
-        cancelRequested: false,
-        recoveryRequired: true,
-        createdAt,
-        startedAt: createdAt,
-        finishedAt: createdAt,
-      },
-      environment: {
-        id: "storm-forum/prod",
-        serviceId: "storm-forum",
-        name: "prod",
-        application: "storm-forum",
-        pipelineRevisionId: "forum/1",
-        configurationRevision: "forum/1",
-        configuration: {},
-        generation: 1,
-        approvalRequired: false,
-        desiredVersionSetRevisionId: null,
-        observedVersionSetRevisionId: null,
-        acceptedVersionSetRevisionId: null,
-        promotionSourceEnvironmentId: null,
-        observedAt: null,
-        activeDeploymentId: deploymentId,
-        createdAt,
-      },
-      versionSet: version,
-      previousAcceptedVersionSet: version,
-      pipeline: {
-        id: "forum/1",
-        createdAt,
-        definition: {
-          kind: "argocd",
-          application: "storm-forum",
-          namespace: "storm-forum",
-          chartRepository: server.url.origin,
-          chartName: "storm-forum",
-          chartComponent: "chart",
-          artifactParameters: { "delivery.image": "image" },
-          parameters: {},
-          forumRelease: { imageComponent: "image", bundleComponent: "bundle" },
+      version: "2.3.13",
+      digest: `sha256:${"a".repeat(64)}`,
+    };
+    const version = {
+      id: "forum/set",
+      serviceId: "storm-forum",
+      revision: 1,
+      baseRevisionId: null,
+      createdAt,
+      components: {
+        image: {
+          ...common,
+          id: "forum/image",
+          component: "image",
+          kind: "image",
+          uri: "docker.io/shepherdjerred/storm-forum",
+        },
+        bundle: {
+          ...common,
+          id: "forum/bundle",
+          component: "bundle",
+          kind: "archive",
+          uri: `s3://storm-forum-releases/releases/${"a".repeat(64)}.zip`,
+          origin: {
+            kind: "licensed-bundle",
+            manifestDigest: `sha256:${"b".repeat(64)}`,
+            xenforoVersion: "2.3.13",
+            producerSourceRevision: common.sourceRevision,
+          },
+        },
+        chart: {
+          ...common,
+          id: "forum/chart",
+          component: "chart",
+          kind: "chart",
+          version: "2.0.0-1",
+          uri: `${server.url.origin}/charts/storm-forum-2.0.0-1.tgz`,
+          digest: `sha256:${createHash("sha256").update(bytes).digest("hex")}`,
         },
       },
-      evidence: [],
-      approvals: [],
-      stages: [],
-    },
-    priorDeployment: null,
-    expectedSettlements: { desired: "a".repeat(64) },
-    recoveryHistory: [],
-  });
-  const config = localKubernetes(server.url.origin);
-  const commands: string[][] = [];
-  try {
-    const result = await originalForumRecoveryJob(
-      context,
-      config,
-      async (args) => {
-        commands.push([...args]);
-        return {
-          stdout:
-            args[0] === "docker"
-              ? JSON.stringify({
-                  os: "linux",
-                  architecture: "amd64",
-                  config: {
-                    Env: [],
-                    Labels: {
-                      "org.opencontainers.image.revision":
-                        common.sourceRevision,
-                      [FORUM_RECOVERY_IMAGE_LABEL]: FORUM_RECOVERY_IMAGE_ABI,
-                    },
-                  },
-                })
-              : JSON.stringify(job),
-          stderr: "",
-          exitCode: 0,
-        };
+    };
+    const context = ContentRecoveryContextSchema.parse({
+      intent: {
+        id: "forum/recovery",
+        deploymentId,
+        requestedBy: "operator",
+        reason: "Inspect the original frozen Forum native release Job",
+        expectedEnvironmentGeneration: 1,
+        snapshotFingerprint: "a".repeat(64),
+        status: "pending",
+        message: null,
+        createdAt,
+        finishedAt: null,
+        targetKind: "forum",
       },
-    );
-    expect(result.receipt.uid).toBe(job.metadata.uid);
-    expect(commands.map((command) => command[0])).toEqual(["docker", "helm"]);
-  } finally {
-    await server.stop(true);
-  }
+      deployment: {
+        deployment: {
+          id: deploymentId,
+          requestId: deploymentId,
+          environmentId: "storm-forum/prod",
+          serviceId: "storm-forum",
+          versionSetRevisionId: version.id,
+          pipelineRevisionId: "forum/1",
+          configurationRevision: "forum/1",
+          configuration: { "forum.xenforoVersion": "2.3.13" },
+          previousAcceptedConfiguration: { "forum.xenforoVersion": "2.3.13" },
+          expectedGeneration: 1,
+          kind: "deploy",
+          status: "failed",
+          requestedBy: "operator",
+          message: null,
+          cancelRequested: false,
+          recoveryRequired: true,
+          createdAt,
+          startedAt: createdAt,
+          finishedAt: createdAt,
+        },
+        environment: {
+          id: "storm-forum/prod",
+          serviceId: "storm-forum",
+          name: "prod",
+          application: "storm-forum",
+          pipelineRevisionId: "forum/1",
+          configurationRevision: "forum/1",
+          configuration: {},
+          generation: 1,
+          approvalRequired: false,
+          desiredVersionSetRevisionId: null,
+          observedVersionSetRevisionId: null,
+          acceptedVersionSetRevisionId: null,
+          promotionSourceEnvironmentId: null,
+          observedAt: null,
+          activeDeploymentId: deploymentId,
+          createdAt,
+        },
+        versionSet: version,
+        previousAcceptedVersionSet: version,
+        pipeline: {
+          id: "forum/1",
+          createdAt,
+          definition: {
+            kind: "argocd",
+            application: "storm-forum",
+            namespace: "storm-forum",
+            chartRepository: server.url.origin,
+            chartName: "storm-forum",
+            chartComponent: "chart",
+            artifactParameters: { "delivery.image": "image" },
+            parameters: {},
+            forumRelease: {
+              imageComponent: "image",
+              bundleComponent: "bundle",
+            },
+          },
+        },
+        evidence: [],
+        approvals: [],
+        stages: [],
+      },
+      priorDeployment: null,
+      expectedSettlements: { desired: "a".repeat(64) },
+      recoveryHistory: [],
+    });
+    const config = localKubernetes(server.url.origin);
+    const commands: string[][] = [];
+    try {
+      const result = await originalForumRecoveryJob(
+        context,
+        config,
+        async (args) => {
+          commands.push([...args]);
+          return {
+            stdout:
+              args[0] === "docker"
+                ? JSON.stringify({
+                    os: "linux",
+                    architecture: "amd64",
+                    config: imageConfig(common.sourceRevision),
+                  })
+                : JSON.stringify(job),
+            stderr: "",
+            exitCode: 0,
+          };
+        },
+      );
+      expect(result.receipt.uid).toBe(job.metadata.uid);
+      expect(commands.map((command) => command[0])).toEqual(["docker", "helm"]);
+    } finally {
+      await server.stop(true);
+    }
+  },
+);
+
+function forumImage(env: string[], labels: Record<string, string>) {
+  return [
+    {
+      os: "linux" as const,
+      architecture: "amd64",
+      config: { Env: env, Labels: labels },
+    },
+  ];
+}
+
+test("a Forum image proves its release by baked GIT_SHA or a legacy revision label, plus the recovery ABI", () => {
+  const revision = "a".repeat(40);
+  const abi = { [FORUM_RECOVERY_IMAGE_LABEL]: FORUM_RECOVERY_IMAGE_ABI };
+  expect(
+    forumImageProvesRelease(forumImage([`GIT_SHA=${revision}`], abi), revision),
+  ).toBe(true);
+  expect(
+    forumImageProvesRelease(
+      forumImage([], { ...abi, "org.opencontainers.image.revision": revision }),
+      revision,
+    ),
+  ).toBe(true);
+  expect(
+    forumImageProvesRelease(
+      forumImage([`GIT_SHA=${"b".repeat(40)}`], abi),
+      revision,
+    ),
+  ).toBe(false);
+  expect(
+    forumImageProvesRelease(forumImage([`GIT_SHA=${revision}`], {}), revision),
+  ).toBe(false);
 });
 
 test("manual child is a suspended exact original PodSpec with only fixed intent/action annotations", () => {

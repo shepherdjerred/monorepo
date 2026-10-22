@@ -91,6 +91,25 @@ export function forumJobFingerprint(raw: unknown): string {
     .digest("hex");
 }
 
+/**
+ * Whether every platform of a Forum image was built from the release's source
+ * and speaks the native recovery ABI. Forum images bake their source revision
+ * as GIT_SHA, like every application image; releases built before that carried
+ * it only in the OCI revision label, and those originals stay recoverable.
+ */
+export function forumImageProvesRelease(
+  configurations: ReturnType<typeof ociImageConfigurations>,
+  sourceRevision: string,
+): boolean {
+  return configurations.every(
+    ({ config }) =>
+      (config.Env.includes(`GIT_SHA=${sourceRevision}`) ||
+        config.Labels?.["org.opencontainers.image.revision"] ===
+          sourceRevision) &&
+      config.Labels?.[FORUM_RECOVERY_IMAGE_LABEL] === FORUM_RECOVERY_IMAGE_ABI,
+  );
+}
+
 /** Original spec comes from hashed immutable chart bytes, never from caller input. */
 export async function originalForumRecoveryJob(
   context: ContentRecoveryContext,
@@ -119,12 +138,9 @@ export async function originalForumRecoveryJob(
     "{{json .Image}}",
   ]);
   if (
-    ociImageConfigurations(JSON.parse(inspected.stdout)).some(
-      (value) =>
-        value.config.Labels?.["org.opencontainers.image.revision"] !==
-          image.sourceRevision ||
-        value.config.Labels[FORUM_RECOVERY_IMAGE_LABEL] !==
-          FORUM_RECOVERY_IMAGE_ABI,
+    !forumImageProvesRelease(
+      ociImageConfigurations(JSON.parse(inspected.stdout)),
+      image.sourceRevision,
     )
   )
     throw new Error(
