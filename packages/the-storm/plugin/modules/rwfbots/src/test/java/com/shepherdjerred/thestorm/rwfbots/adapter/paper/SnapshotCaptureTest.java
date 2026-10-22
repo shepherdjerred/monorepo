@@ -186,6 +186,18 @@ final class SnapshotCaptureTest {
   }
 
   @Test
+  void fullHealthUnderAFractionalMaximumIsReadAsTheMaximum() {
+    // tsmc: a bled body at full health read 18.498516 (its float) over an 18.4985159... maximum.
+    var max = 18.49851605;
+    assertThat((double) (float) max).isGreaterThan(max);
+    assertThat(SnapshotCapture.storedHealth((float) max, max)).isEqualTo(max);
+    assertThat(SnapshotCapture.storedHealth(12.5, max)).isEqualTo(12.5);
+    assertThat(SnapshotCapture.storedHealth(max + 0.01, max))
+        .as("only float rounding is forgiven")
+        .isEqualTo(max + 0.01);
+  }
+
+  @Test
   void velocityAndHurtTicksFollowFromTheTickBefore() {
     capture.capture(1, state(MatchState.Phase.LIVE, Optional.empty()));
     alice.teleport(new Location(world, 2.7, 1, 2.5, 90, 10));
