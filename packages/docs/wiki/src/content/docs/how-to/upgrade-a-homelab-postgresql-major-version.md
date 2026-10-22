@@ -324,14 +324,17 @@ WHERE e."acceptedVersionSetRevisionId" IS NOT NULL
       AND d."controlPlaneSnapshot" IS NULL
   )
 ORDER BY 1;
-\echo == held work: active pointers and platform locks
+\echo == held work: active pointers, platform locks and unheld owners
 SELECT 'active' AS holder, e.id AS scope, d.id AS deployment, d.status,
        d."recoveryRequired",
        d."environmentId" = e.id
-         AND ((d.status = 'running' AND d."finishedAt" IS NULL)
-           OR (d."finishedAt" IS NOT NULL AND d."recoveryRequired"))
-         AND (d."platformSnapshot" IS NULL OR d.kind = 'tofu-plan'
-           OR EXISTS (SELECT 1 FROM "PlatformLock" p WHERE p."deploymentId" = d.id))
+         AND ((d.status = 'running' AND d."finishedAt" IS NULL
+               AND NOT d."recoveryRequired")
+           OR (d.status IN ('failed', 'canceled') AND d."finishedAt" IS NOT NULL
+               AND d."recoveryRequired"))
+         AND (EXISTS (SELECT 1 FROM "PlatformLock" p WHERE p."deploymentId" = d.id)
+           OR NOT (d.kind = 'upgrade-control-plane'
+             OR (d."platformSnapshot" IS NOT NULL AND d.kind <> 'tofu-plan')))
          AS consistent
 FROM "Environment" e
 LEFT JOIN "Deployment" d ON d.id = e."activeDeploymentId"
@@ -341,6 +344,14 @@ SELECT 'platform-lock', p.id, d.id, d.status, d."recoveryRequired",
        EXISTS (SELECT 1 FROM "Environment" e WHERE e."activeDeploymentId" = d.id)
 FROM "PlatformLock" p
 JOIN "Deployment" d ON d.id = p."deploymentId"
+UNION ALL
+SELECT 'unheld', d."environmentId", d.id, d.status, d."recoveryRequired", false
+FROM "Deployment" d
+WHERE (d.status = 'running' OR d."recoveryRequired")
+  AND NOT EXISTS (
+    SELECT 1 FROM "Environment" e
+    WHERE e.id = d."environmentId" AND e."activeDeploymentId" = d.id
+  )
 ORDER BY 1, 2;
 ```
 
@@ -361,16 +372,22 @@ nor a
 [TRMNL repair](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/README.md)
 moves an accepted pointer.
 
-A Deployment takes its target lock, its environment's active pointer and, for
-a platform operation other than `tofu-plan`, the shared
+A Deployment takes its target lock and its environment's active pointer in the
+same transaction that sets it `running`. A platform operation other than
+`tofu-plan`, or a control-plane upgrade, also takes the shared
 [platform lock](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/platform/lifecycle.ts)
-in the same transaction that sets it `running`. After it finishes, it keeps
+then. After it finishes, it keeps
 them only when `recoveryRequired` holds the work in quarantine
 ([claim and release logic](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/delivery-execution.ts)).
+Only a `failed` or `canceled` finish can require recovery
+([finish validation](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/delivery-records.ts)).
 An active pointer is `consistent` when it names a Deployment of its own
-environment in one of those two states that also holds any platform lock it
+environment that is either `running` without `recoveryRequired`, or `failed`
+or `canceled` with it. That Deployment must also hold any platform lock it
 needs. A platform lock is `consistent` when its owner is an active Deployment.
-Each consistent row is running or quarantined work that the backup captured.
+A running or quarantined Deployment that is not its environment's active one
+appears as `unheld` and is never consistent. Each consistent row is running or
+quarantined work that the backup captured.
 Reconcile every row with Temporal and native state before resuming
 submissions.
 
