@@ -3490,6 +3490,11 @@
   "edges": [
     {
       "dependent": "1password/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "1password/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -3500,7 +3505,17 @@
     },
     {
       "dependent": "alloy-gateway/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "alloy-gateway/prod",
       "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "alloy/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -3511,6 +3526,11 @@
     {
       "dependent": "arcade/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "arcade/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -3544,11 +3564,6 @@
       "rule": "any-accepted"
     },
     {
-      "dependent": "argocd/prod",
-      "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
       "dependent": "better-skill-capped/prod",
       "prerequisite": "tofu-seaweedfs/prod",
       "rule": "any-accepted"
@@ -3556,6 +3571,11 @@
     {
       "dependent": "birmel/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "birmel/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -3585,12 +3605,22 @@
     },
     {
       "dependent": "blackbox-exporter/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "blackbox-exporter/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
     {
       "dependent": "bugsink/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "bugsink/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -3615,6 +3645,11 @@
     },
     {
       "dependent": "buildkitd/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "buildkitd/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -3630,12 +3665,22 @@
     },
     {
       "dependent": "cert-manager/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "cert-manager/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
     {
       "dependent": "chartmuseum/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "chartmuseum/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -3655,12 +3700,27 @@
     },
     {
       "dependent": "cloudflare-tunnel/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "cloudflare-tunnel/prod",
       "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "cluster-admission/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
       "dependent": "cluster-observability/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "cluster-observability/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -3676,6 +3736,11 @@
     {
       "dependent": "cluster-platform/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "cluster-platform/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -3710,12 +3775,22 @@
     },
     {
       "dependent": "ddns/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ddns/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
     {
       "dependent": "delivery-control-plane/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "delivery-control-plane/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -3745,6 +3820,11 @@
     },
     {
       "dependent": "delivery-data/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "delivery-data/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -3770,6 +3850,11 @@
     },
     {
       "dependent": "delivery/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "delivery/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -3785,6 +3870,11 @@
     },
     {
       "dependent": "discord-plays-mario-kart/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "discord-plays-mario-kart/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -3796,6 +3886,11 @@
     {
       "dependent": "discord-plays-mario-kart/prod",
       "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "discord-plays-pokemon/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -3816,6 +3911,11 @@
     {
       "dependent": "flipt/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "flipt/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -3841,6 +3941,11 @@
     {
       "dependent": "freshrss/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "freshrss/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -3861,6 +3966,11 @@
     {
       "dependent": "gickup/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "gickup/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -3900,6 +4010,11 @@
     },
     {
       "dependent": "golink/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "golink/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -3911,6 +4026,11 @@
     {
       "dependent": "golink/prod",
       "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "grafana-db/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -3940,6 +4060,11 @@
     },
     {
       "dependent": "home/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "home/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -3955,7 +4080,17 @@
     },
     {
       "dependent": "intel-device-plugin-operator/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "intel-device-plugin-operator/prod",
       "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "intel-gpu-device-plugin/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -3975,6 +4110,11 @@
     },
     {
       "dependent": "loki/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "loki/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -3990,7 +4130,17 @@
     },
     {
       "dependent": "mc-router/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "mc-router/prod",
       "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft-shuxin/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4011,6 +4161,11 @@
     {
       "dependent": "minecraft-sjerred/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft-sjerred/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4031,6 +4186,11 @@
     {
       "dependent": "minecraft/sandbox",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft/sandbox",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4046,6 +4206,11 @@
     {
       "dependent": "minecraft/tsmc",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft/tsmc",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4065,7 +4230,17 @@
     },
     {
       "dependent": "nfd/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "nfd/prod",
       "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "openebs/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4076,6 +4251,11 @@
     {
       "dependent": "ops-dashboard/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ops-dashboard/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4105,6 +4285,11 @@
     },
     {
       "dependent": "phoenix/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "phoenix/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -4126,6 +4311,11 @@
     {
       "dependent": "pinchtab/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "pinchtab/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4185,7 +4375,17 @@
     },
     {
       "dependent": "postgres-operator/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "postgres-operator/prod",
       "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "prometheus-adapter/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4196,6 +4396,11 @@
     {
       "dependent": "prometheus/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "prometheus/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4220,7 +4425,17 @@
     },
     {
       "dependent": "promtail/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "promtail/prod",
       "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "pyroscope/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4245,12 +4460,22 @@
     },
     {
       "dependent": "redlib/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "redlib/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
     {
       "dependent": "relay/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "relay/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4280,6 +4505,11 @@
     },
     {
       "dependent": "scout-for-lol/beta",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "scout-for-lol/beta",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -4315,6 +4545,11 @@
     },
     {
       "dependent": "scout-for-lol/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "scout-for-lol/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -4350,6 +4585,11 @@
     },
     {
       "dependent": "seaweedfs/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "seaweedfs/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -4361,6 +4601,11 @@
     {
       "dependent": "seaweedfs/prod",
       "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "service-probes/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4381,6 +4626,11 @@
     {
       "dependent": "starlight-karma-bot/beta",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "starlight-karma-bot/beta",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4406,6 +4656,11 @@
     {
       "dependent": "starlight-karma-bot/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "starlight-karma-bot/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4431,6 +4686,11 @@
     {
       "dependent": "stash/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "stash/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4456,6 +4716,11 @@
     {
       "dependent": "static-site-proxy/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "static-site-proxy/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4490,6 +4755,11 @@
     },
     {
       "dependent": "storm-brain/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "storm-brain/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -4511,6 +4781,11 @@
     {
       "dependent": "storm-forum/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "storm-forum/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4541,6 +4816,11 @@
     {
       "dependent": "streambot/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "streambot/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4575,6 +4855,11 @@
     },
     {
       "dependent": "syncthing/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "syncthing/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -4595,6 +4880,11 @@
     },
     {
       "dependent": "tailscale/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tailscale/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -4606,6 +4896,11 @@
     {
       "dependent": "tasknotes-server/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tasknotes-server/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4635,6 +4930,11 @@
     },
     {
       "dependent": "tempo/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tempo/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -4646,6 +4946,11 @@
     {
       "dependent": "tempo/prod",
       "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "temporal-data/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4676,6 +4981,11 @@
     {
       "dependent": "temporal/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "temporal/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4875,6 +5185,11 @@
     },
     {
       "dependent": "tracker/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tracker/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -4910,6 +5225,11 @@
     },
     {
       "dependent": "trmnl-dashboard/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "trmnl-dashboard/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -4926,6 +5246,11 @@
     {
       "dependent": "turbo-cache/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "turbo-cache/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
@@ -4950,6 +5275,11 @@
     },
     {
       "dependent": "velero/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "velero/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -4966,6 +5296,11 @@
     {
       "dependent": "woodpecker/prod",
       "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "woodpecker/prod",
+      "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {

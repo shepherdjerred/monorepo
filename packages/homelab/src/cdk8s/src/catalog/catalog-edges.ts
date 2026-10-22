@@ -26,6 +26,12 @@ import { recipeApplications } from "@shepherdjerred/homelab/cdk8s/src/catalog/ca
  */
 
 const ADMISSION = "cluster-admission/prod";
+/**
+ * ArgoCD is the adapter every Application recipe runs through, and its service
+ * owns the AppProjects every Application names, so it precedes every other
+ * Application environment, cluster admission included.
+ */
+const ARGOCD = "argocd/prod";
 const PLATFORM = `${CLUSTER_PLATFORM_CHART}/prod`;
 /** Custom resource API groups and the environment whose chart serves the CRD. */
 const CRD_PROVIDERS: Readonly<Record<string, string>> = {
@@ -203,7 +209,7 @@ function contentPrerequisites(
   content: EnvironmentContent,
   classes: ReturnType<typeof platformClassNames>,
 ): string[] {
-  const prerequisites = [ADMISSION];
+  const prerequisites = environmentId === ARGOCD ? [] : [ADMISSION, ARGOCD];
   for (const manifest of content.objects) {
     const provider = CRD_PROVIDERS[apiGroup(manifest.apiVersion)];
     if (provider !== undefined) prerequisites.push(provider);

@@ -90,17 +90,14 @@ describe("companion charts under transition rendering", () => {
     }
   });
 
-  test("every root object other than Applications and AppProjects has a post-window owner", () => {
+  test("every root object other than Applications has a post-window owner", () => {
     const owned = new Set(
       [...BASELINE_CHART_APPLICATIONS, ...COMPANION_CHARTS].flatMap((id) =>
         chartObjects(id).map((manifest) => identity(manifest)),
       ),
     );
     const orphaned = chartObjects(ROOT_CHART)
-      .filter(
-        (manifest) =>
-          manifest.kind !== "Application" && manifest.kind !== "AppProject",
-      )
+      .filter((manifest) => manifest.kind !== "Application")
       .map((manifest) => identity(manifest))
       .filter((key) => !owned.has(key));
     expect(orphaned).toEqual([]);
@@ -141,5 +138,14 @@ describe("companion charts under transition rendering", () => {
         .map((manifest) => identity(manifest))
         .sort(),
     );
+  });
+
+  test("the argocd companion owns the three AppProjects every Application names", () => {
+    expect(
+      chartObjects("argocd-companion")
+        .filter((manifest) => manifest.kind === "AppProject")
+        .map((manifest) => manifest.metadata.name)
+        .sort(),
+    ).toEqual(["cluster", "default", "workloads"]);
   });
 });

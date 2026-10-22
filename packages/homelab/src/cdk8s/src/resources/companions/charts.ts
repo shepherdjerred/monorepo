@@ -16,7 +16,12 @@ import {
   createVeleroSchedules,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/storage/velero.ts";
 import { createSeaweedfsResources } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/storage/seaweedfs.ts";
-import { BASELINE_CHART_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/cluster-baseline/charts.ts";
+import {
+  BASELINE_CHART_NAMESPACE,
+  ROOT_CHART,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/cluster-baseline/charts.ts";
+import { createProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/project.ts";
+import { renderedClusterResources } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 import {
   adoptRootChartAddresses,
   adoptRootChartNames,
@@ -28,10 +33,20 @@ import {
   companionChartName,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/companions/names.ts";
 
+/**
+ * The argocd service owns the AppProjects every Application names, so they
+ * outlive the root: its companion re-renders the root's three projects.
+ */
+function argocdCompanion(root: Chart): (chart: Chart) => void {
+  return (chart) => {
+    createArgoCdResources(chart);
+    createProject(chart, true, renderedClusterResources(root));
+  };
+}
+
 const COMPANION_RESOURCES: Readonly<
-  Record<CompanionApplication, (chart: Chart) => unknown>
+  Record<Exclude<CompanionApplication, "argocd">, (chart: Chart) => unknown>
 > = {
-  argocd: createArgoCdResources,
   tailscale: createTailscaleResources,
   prometheus: createPrometheusResources,
   "cloudflare-operator": createCloudflareOperatorResources,
@@ -76,12 +91,17 @@ function companionChart(
 }
 
 export function createCompanionCharts(app: App): Chart[] {
+  const root = app.charts.find((chart) => chart.node.id === ROOT_CHART);
+  if (root === undefined)
+    throw new Error("Companion charts render after the root chart");
   return [
     ...COMPANION_APPLICATIONS.map((application) =>
       companionChart(
         app,
         companionChartName(application),
-        COMPANION_RESOURCES[application],
+        application === "argocd"
+          ? argocdCompanion(root)
+          : COMPANION_RESOURCES[application],
       ),
     ),
     ...Object.values(FOLLOWING_COMPANIONS).map((name) => {
