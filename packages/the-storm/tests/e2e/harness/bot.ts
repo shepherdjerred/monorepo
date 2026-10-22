@@ -1,5 +1,6 @@
 import mineflayer, { type Bot } from "mineflayer";
 import { z } from "zod";
+import type { RconClient } from "#e2e/harness/rcon.ts";
 import { botVersion } from "./pins.ts";
 
 export type BotOptions = {
@@ -132,6 +133,74 @@ export async function waitUntil(
     }
     await Bun.sleep(50);
   }
+}
+
+/** The yaw and pitch, in protocol degrees, that the server holds for `bot`. */
+async function serverFacing(
+  rcon: RconClient,
+  bot: Bot,
+): Promise<{ yaw: number; pitch: number }> {
+  const reply = await rcon.command(`data get entity ${bot.username} Rotation`);
+  const groups = /\[(?<yaw>-?[\d.]+)f, (?<pitch>-?[\d.]+)f\]$/u.exec(
+    reply.trim(),
+  )?.groups;
+  const yaw = groups?.["yaw"];
+  const pitch = groups?.["pitch"];
+  if (yaw === undefined || pitch === undefined) {
+    throw new Error(`No rotation in ${reply}`);
+  }
+  return { yaw: Number(yaw), pitch: Number(pitch) };
+}
+
+/** How far apart two angles in degrees are, the short way round. */
+function degreesApart(a: number, b: number): number {
+  return Math.abs(((((a - b) % 360) + 540) % 360) - 180);
+}
+
+/** Polls the server until it holds `bot`'s current Mineflayer facing. */
+async function facingReaches(
+  rcon: RconClient,
+  bot: Bot,
+  timeoutMs: number,
+): Promise<boolean> {
+  // Mineflayer rounds a turn to mouse steps; compare the facing it sent.
+  const yaw = 180 - (bot.entity.yaw * 180) / Math.PI;
+  const pitch = (-bot.entity.pitch * 180) / Math.PI;
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const seen = await serverFacing(rcon, bot);
+    if (
+      degreesApart(seen.yaw, yaw) < 0.5 &&
+      Math.abs(seen.pitch - pitch) < 0.5
+    ) {
+      return true;
+    }
+    await Bun.sleep(100);
+  }
+  return false;
+}
+
+/**
+ * Turns `bot` to Mineflayer `yaw` and `pitch` and waits until the server holds
+ * that facing. Grim discards movement, turns included, from a player standing
+ * in a chunk it has not confirmed the client holds, which can last for a whole
+ * match after a teleport. It never discards the position a client reports on
+ * accepting a teleport, so an in-place teleport makes the client report the
+ * facing it already turned to.
+ */
+export async function faceSeen(
+  rcon: RconClient,
+  bot: Bot,
+  yaw: number,
+  pitch: number,
+): Promise<void> {
+  await bot.look(yaw, pitch, true);
+  if (await facingReaches(rcon, bot, 1000)) return;
+  await rcon.command(
+    `execute as ${bot.username} at @s run minecraft:tp @s ~ ~ ~`,
+  );
+  if (await facingReaches(rcon, bot, 10_000)) return;
+  throw new Error(`The server never received ${bot.username}'s facing`);
 }
 
 type NbtTag = { type: string; value: unknown };

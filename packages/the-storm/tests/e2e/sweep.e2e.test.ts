@@ -67,13 +67,16 @@ async function sweepReport(bot: Bot): Promise<RegExpExecArray> {
   throw last;
 }
 
+// Ticket prose passes content screening before the ticket opens, and a full
+// brain outage withholds it (hardening.e2e.test.ts). These specs fail only
+// triage, so the ticket opens untriaged for the sweep to redrive.
 describe("stale-ticket sweep", () => {
   test("/agent sweep redrives a ticket the brain failed", async ({
     bot,
     brain,
     rcon,
   }) => {
-    await setBrainMode(brain.port, "down");
+    await setBrainMode(brain.port, "triage-down");
     try {
       await rcon.command(`op ${bot.username}`);
       await closeAllOpenTickets(bot);
@@ -103,7 +106,7 @@ describe("stale-ticket sweep", () => {
     "the scheduled sweep redrives without a command",
     { timeout: 120_000 },
     async ({ bot, brain, rcon }) => {
-      await setBrainMode(brain.port, "down");
+      await setBrainMode(brain.port, "triage-down");
       try {
         await rcon.command(`op ${bot.username}`);
         bot.chat("/ticket grief someone broke my fence");

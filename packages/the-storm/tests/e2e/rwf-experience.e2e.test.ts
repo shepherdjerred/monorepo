@@ -197,8 +197,8 @@ describe("The match experience behind its flags", () => {
         expect(bot.entity.position.distanceTo(frozenAt)).toBeLessThan(0.5);
         await a.log.until(/The game has begun!/u, 15_000);
         // Activity during the live match keeps both humans eligible for carry-over.
-        await lookAround(bot);
-        await lookAround(secondBot);
+        await lookAround(rcon, bot);
+        await lookAround(rcon, secondBot);
         const [teamA, teamB] = await Promise.all([
           teamOf(a.log),
           teamOf(b.log),
@@ -263,7 +263,7 @@ describe("The match experience behind its flags", () => {
             "the-storm-rwf-match-flow-enabled",
           ],
           async () => {
-            const teams = await playTogether(humans);
+            const teams = await playTogether(rcon, humans);
             // Three humans split two against one: the one is the victim.
             const pairs = humans.map((one, index) => ({
               one,

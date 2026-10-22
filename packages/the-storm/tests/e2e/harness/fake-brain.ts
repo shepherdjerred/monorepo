@@ -43,7 +43,12 @@ export type FakeBrain = {
   stop: () => Promise<void>;
 };
 
-export type FakeBrainMode = "ok" | "down" | "screening-disabled";
+/**
+ * `down` fails every brain call; `triage-down` fails only ticket triage, so
+ * content screening still admits the ticket that triage then fails.
+ */
+export type FakeBrainMode =
+  "ok" | "down" | "triage-down" | "screening-disabled";
 
 type BrainState = {
   mode: FakeBrainMode;
@@ -150,6 +155,13 @@ export async function setRwfKits(
   }
 }
 
+/** Whether the brain call at `pathname` fails in `mode`. */
+function outage(mode: FakeBrainMode, pathname: string): boolean {
+  return (
+    mode === "down" || (mode === "triage-down" && pathname === "/v1/triage")
+  );
+}
+
 // Test-only control hook (no auth): the specs fail and heal the brain to
 // prove the sweep redrives. Never present on the real service.
 async function control(request: Request, state: BrainState): Promise<Response> {
@@ -160,7 +172,9 @@ async function control(request: Request, state: BrainState): Promise<Response> {
     return new Response("not found\n", { status: 404 });
   }
   const seen = z
-    .object({ mode: z.enum(["ok", "down", "screening-disabled"]) })
+    .object({
+      mode: z.enum(["ok", "down", "triage-down", "screening-disabled"]),
+    })
     .safeParse(await request.json().catch(() => null));
   if (!seen.success) {
     return new Response("invalid request\n", { status: 400 });
@@ -469,7 +483,7 @@ export function startFakeBrain(token: string, port = 0): FakeBrain {
       ) {
         return new Response("application/json required\n", { status: 415 });
       }
-      if (state.mode === "down") {
+      if (outage(state.mode, url.pathname)) {
         return new Response("brain error\n", { status: 500 });
       }
       let body: unknown;

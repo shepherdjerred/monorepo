@@ -3,7 +3,7 @@ import path from "node:path";
 import type { Bot } from "mineflayer";
 import { expect } from "vitest";
 import { z } from "zod";
-import { waitForMessage } from "./bot.ts";
+import { faceSeen, waitForMessage } from "./bot.ts";
 import { ownedConfigDir } from "./paths.ts";
 import { matchDatabase } from "./rwf-match.ts";
 import type { ServerInfo } from "./server.ts";
@@ -264,10 +264,11 @@ export async function expectCredits(bot: Bot, credits: number): Promise<void> {
 
 /**
  * Turns the head 45 degrees: a live match counts a player AFK, and charges
- * them instead of paying them, until their whole-degree facing changes.
+ * them instead of paying them, until their whole-degree facing changes. The
+ * turn lands just after the match teleport, so it is confirmed on the server.
  */
-export async function lookAround(bot: Bot): Promise<void> {
-  await bot.look(bot.entity.yaw + Math.PI / 4, bot.entity.pitch, true);
+export async function lookAround(rcon: RconClient, bot: Bot): Promise<void> {
+  await faceSeen(rcon, bot, bot.entity.yaw + Math.PI / 4, bot.entity.pitch);
 }
 
 export function diamonds(bot: Bot): number {

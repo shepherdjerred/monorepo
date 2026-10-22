@@ -27,6 +27,14 @@ async function eventually(
   }
 }
 
+/** Server ticks, which advance even while the daylight cycle is frozen. */
+async function gameTime(rcon: RconClient): Promise<number> {
+  const response = await rcon.command("time query gametime");
+  const match = /(\d+) tick/u.exec(response);
+  if (match?.[1] === undefined) throw new Error(`No game time: ${response}`);
+  return Number(match[1]);
+}
+
 async function nextDay(rcon: RconClient): Promise<void> {
   await rcon.command("time add 24000");
   // The ledger observes world clocks every think interval (20 ticks).
@@ -239,9 +247,17 @@ describe("NPC spell targeting on Paper", () => {
         await waitUntil("previous scroll removed", () =>
           bot.inventory.items().every((item) => item.name !== "paper"),
         );
+        const given = await gameTime(rcon);
         await rcon.command(`spells scroll ${spell} ${bot.username}`);
         await waitUntil("spell scroll arrives", () =>
           bot.inventory.items().some((item) => item.name === "paper"),
+        );
+        // The give sends the slot at once and the next player tick sends it
+        // again. Grim ends an item use when a held-slot update changes the item
+        // it last confirmed, so a read begun before that resend is cancelled.
+        await eventually(
+          "the server resends the scroll's slot",
+          async () => (await gameTime(rcon)) >= given + 2,
         );
         const scroll = bot.inventory
           .items()

@@ -402,7 +402,7 @@ async function goesLiveMarked(match: Match, names: string[]) {
   const { bot, rcon, log, view } = match;
   await log.until(/The game has begun!/u, 30_000);
   const team = await teamOf(log);
-  await lookAround(bot);
+  await lookAround(rcon, bot);
   const live = await status(rcon);
   expect(live.phase).toBe("Live");
   expect(live.map).toBe("training-yard");
