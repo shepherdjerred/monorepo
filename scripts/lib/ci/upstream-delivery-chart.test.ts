@@ -45,18 +45,18 @@ async function fixture(
     duplicate?: boolean;
     /** Unpinned charts and versions in the shared index that break the strict entry shape. */
     nonconformingNeighbours?: boolean;
+    /** The pinned version, as the index spells it. */
+    version?: string;
   } = {},
 ) {
-  const bytes = await chartBytes(
-    "minecraft",
-    options.archiveVersion ?? version,
-  );
+  const pinned = options.version ?? version;
+  const bytes = await chartBytes("minecraft", options.archiveVersion ?? pinned);
   const calls: { url: string; method: string; authorization: string | null }[] =
     [];
   let uploaded = false;
   const entry = {
     name: "minecraft",
-    version,
+    version: pinned,
     digest: options.corrupt === true ? "0".repeat(64) : digest(bytes),
     urls: [options.archiveUrl ?? upstreamArchive],
   };
@@ -239,4 +239,26 @@ test("a chart absent from the index or pinned to an invalid version is refused b
     ),
   ).rejects.toThrow();
   expect(calls).toHaveLength(1);
+});
+
+test("a chart version the index spells with a leading v is acquired exactly as pinned", async () => {
+  const { transport } = await fixture({ version: "v1.21.2" });
+  const result = await acquireUpstreamChart(
+    { name: "minecraft", version: "v1.21.2", repository },
+    {
+      mirror: false,
+      credentials: () => {
+        throw new Error("Unmirrored charts need no publisher credentials");
+      },
+      transport,
+    },
+  );
+  expect(result).toMatchObject({ name: "minecraft", revision: "v1.21.2" });
+  expect(result.origin.version).toBe("v1.21.2");
+  await expect(
+    acquireUpstreamChart(
+      { name: "minecraft", version: "release-1.21.2", repository },
+      { mirror: false, credentials, transport },
+    ),
+  ).rejects.toThrow();
 });
