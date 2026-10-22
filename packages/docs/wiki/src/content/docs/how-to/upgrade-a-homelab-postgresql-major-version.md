@@ -153,7 +153,7 @@ spec:
   automountServiceAccountToken: false
   enableServiceLinks: false
   restartPolicy: Never
-  terminationGracePeriodSeconds: 120
+  terminationGracePeriodSeconds: 330
   securityContext:
     runAsNonRoot: true
     runAsUser: 101
@@ -208,6 +208,7 @@ starts. Each setting has one job:
 | `RuntimeDefault` seccomp, all capabilities dropped     | The restore namespace enforces the `restricted` Pod Security level.                                                                                                                                 |
 | No service-account token or Service links              | The copy gets no Kubernetes credential and no Service addresses.                                                                                                                                    |
 | `restartPolicy: Never`                                 | A failed start stays visible instead of retrying recovery on the copy.                                                                                                                              |
+| `terminationGracePeriodSeconds: 330`                   | Deleting the Pod leaves time for the trap's clean stop, which waits up to 300 seconds.                                                                                                              |
 | `listen_addresses=''`                                  | The server opens no TCP port. Only `kubectl exec` reaches it.                                                                                                                                       |
 | `unix_socket_directories=/tmp`                         | Spilo's entrypoint prepares the configured socket directory, and this Pod skips the entrypoint.                                                                                                     |
 | `ssl=off`                                              | The restored configuration names certificates that Spilo's entrypoint generates. They do not exist here.                                                                                            |
@@ -263,11 +264,14 @@ kubectl exec -i -n RECOVERY_NAMESPACE postgresql-verify -c postgres -- \
   < restore-checks.sql
 ```
 
-| Check      | Pass on the copy                                                                                                       |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Server     | Production's major version and system identifier. `checksums` `on`, `in_recovery` `f`, `read_only` `on`, `no_tcp` `t`. |
-| Catalog    | `invalid_indexes` is `0`.                                                                                              |
-| Row counts | Every production table is present. A count differs only where production wrote after the backup.                       |
+| Check      | Pass on the copy                                                                                                        |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Server     | Production's major version and system identifier. `checksums` `on`, `in_recovery` `f`, `read_only` `on`, `no_tcp` `t`.  |
+| Catalog    | `invalid_indexes` is `0`.                                                                                               |
+| Row counts | Every production table is present. Each count matches production's, or production wrote to that table after the backup. |
+
+Treat any difference that post-backup writes do not explain as a failed
+restore. Row counts show completeness, not content.
 
 For Delivery's catalog, also save these checks as `delivery-checks.sql`. Run
 them the same way against `delivery_db`.
@@ -300,11 +304,11 @@ WHERE e."acceptedVersionSetRevisionId" IS NOT NULL
 ORDER BY 1;
 ```
 
-| Check            | Pass on the copy                                                                    |
-| ---------------- | ----------------------------------------------------------------------------------- |
-| Migrations       | The same migrations as production, each finished and none rolled back.              |
-| Latest writes    | Each timestamp matches production's, unless production wrote after the backup.      |
-| Accepted pointer | No rows. Every accepted set revision has a succeeded Deployment in its environment. |
+| Check            | Pass on the copy                                                                            |
+| ---------------- | ------------------------------------------------------------------------------------------- |
+| Migrations       | The same migrations as production, each finished and none rolled back.                      |
+| Latest writes    | Each timestamp matches production's. A newer production timestamp must postdate the backup. |
+| Accepted pointer | No rows. Every accepted set revision has a succeeded Deployment in its environment.         |
 
 The accepted-pointer check ignores `adopt-worker` and `repair-trmnl`
 Deployments. Neither
