@@ -3,6 +3,7 @@
  */
 import type { Personality } from "#src/lib/review-tool/config/schema.ts";
 import { PersonalityEditor } from "./personality-editor.tsx";
+import { graphemePrefix } from "@shepherdjerred/text";
 
 type PersonalitySelectorProps = {
   personalities: Personality[];
@@ -147,7 +148,7 @@ export function PersonalitySelector({
                     )}
                   </div>
                   <p className="text-xs text-scout-subtle">
-                    {personality.instructions.slice(0, 80)}
+                    {graphemePrefix(personality.instructions, 80)}
                     {personality.instructions.length > 80 ? "..." : ""}
                   </p>
                 </div>

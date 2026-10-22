@@ -7,6 +7,7 @@ import {
   fontForText,
 } from "@scout-for-lol/design-system/satori/fonts";
 import { svgToPng } from "#src/html/index.tsx";
+import { firstGraphemes } from "@shepherdjerred/text";
 
 const CANVAS_WIDTH = 1280;
 const CANVAS_HEIGHT = 820;
@@ -143,7 +144,7 @@ function avatarColor(color: string): string {
 }
 
 function avatarLabel(label: string): string {
-  return label.trim().slice(0, 2).toUpperCase() || "S";
+  return firstGraphemes(label.trim(), 2).toUpperCase() || "S";
 }
 
 function MessageAvatar(props: { backgroundColor: string; label: string }) {

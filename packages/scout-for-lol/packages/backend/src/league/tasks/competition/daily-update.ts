@@ -23,6 +23,7 @@ import { logNotification } from "#src/utils/notification-logger.ts";
 import { createLogger } from "#src/logger.ts";
 import { recordCoreOutputDelivered } from "#src/analytics/guild-lifecycle.ts";
 import { freezeAnnouncementArtifact } from "#src/temporal/notification/product/artifacts.ts";
+import { truncateGraphemes } from "@shepherdjerred/text";
 
 /** Rendering failures leave the occurrence due; frozen artifacts must be usable. */
 export async function prepareDurableCompetitionUpdate(
@@ -80,10 +81,7 @@ async function postSnapshotErrorMessage(
       },
       {
         name: "Details",
-        value:
-          errorMessage.length > 1024
-            ? errorMessage.slice(0, 1021) + "..."
-            : errorMessage,
+        value: truncateGraphemes(errorMessage, 1024, "..."),
       },
       {
         name: "What does this mean?",

@@ -6,6 +6,7 @@ import { Button } from "@scout-for-lol/design-system/components/button";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { ToolPayloadContext } from "#src/lib/explore/tool-payload-context.ts";
 import { MarkdownAnswer } from "#src/components/scoutql/markdown-answer.tsx";
+import { graphemePrefix } from "@shepherdjerred/text";
 
 type Props = {
   label: string;
@@ -149,7 +150,7 @@ function PayloadContents(props: {
       </div>
       {instructions === null ? (
         <pre className="max-h-80 overflow-auto whitespace-pre-wrap break-words rounded-md bg-scout-hover/50 p-3 font-mono text-xs">
-          {full ? json : json.slice(0, 4000)}
+          {full ? json : graphemePrefix(json, 4000)}
           {!full && json.length > 4000
             ? "\n… Preview; full payload available above."
             : ""}

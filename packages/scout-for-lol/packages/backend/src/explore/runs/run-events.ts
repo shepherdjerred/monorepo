@@ -4,6 +4,7 @@ import {
 } from "@scout-for-lol/data";
 import { recordExploreTraceEvent } from "#src/explore/trace.ts";
 import type { ActiveRun } from "#src/explore/runs/run-manager-types.ts";
+import { graphemePrefix } from "@shepherdjerred/text";
 
 export function broadcastExploreEvent(
   run: ActiveRun,
@@ -30,9 +31,10 @@ export function recordExploreEvent(
   }
   if (event.type === "answer_delta") {
     const available = EXPLORE_ANSWER_MAX_LENGTH - run.answer.length;
-    if (available <= 0) return;
-    const text = event.text.slice(0, available);
+    if (run.answerCapped || available <= 0) return;
+    const text = graphemePrefix(event.text, available);
     run.answer += text;
+    run.answerCapped = text.length < event.text.length;
     broadcastExploreEvent(run, { type: "answer_delta", text });
     return;
   }

@@ -113,6 +113,7 @@ export const sitePaths = {
     "packages/scout-for-lol/packages/domain",
     "packages/scout-for-lol/packages/report",
     "packages/loaded",
+    "packages/text",
     "packages/scout-for-lol/scripts/build-storybook-site.ts",
     "packages/scout-for-lol/package.json",
     ...deployScripts,
@@ -122,6 +123,7 @@ export const sitePaths = {
     "packages/scout-for-lol",
     "packages/astro-opengraph-images",
     "packages/llm-models",
+    "packages/text",
     "packages/glitter-context",
     // Registry corrections must rebuild Scout with the corrected site ID.
     "config/analytics-sites.json",

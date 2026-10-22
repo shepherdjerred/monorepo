@@ -151,6 +151,7 @@ export function createActiveExploreRun(input: {
     abortController: new AbortController(),
     subscribers: new Set(),
     answer: "",
+    answerCapped: false,
     activity: "Thinking…",
     trace: [],
     preview: null,

@@ -10,6 +10,7 @@ import type { SettlementSummary } from "#src/betting/settlement/settlement-types
 import type { SettlementBet } from "#src/betting/settlement/settlement-types.ts";
 import type { ClosedPosition } from "#src/betting/settlement/sweep-types.ts";
 import type { OutcomeFraming } from "#src/betting/team.ts";
+import { truncateGraphemes } from "@shepherdjerred/text";
 
 /** Beyond this the message stops being readable, so the tail is summarised. */
 const MAX_BET_ROWS = 15;
@@ -147,9 +148,7 @@ function settlementBetLines(input: SettlementMessageInput): {
 }
 
 function formatEarningAlias(alias: string): string {
-  return alias.length <= MAX_EARNING_ALIAS_LENGTH
-    ? alias
-    : `${alias.slice(0, MAX_EARNING_ALIAS_LENGTH - 1)}…`;
+  return truncateGraphemes(alias, MAX_EARNING_ALIAS_LENGTH);
 }
 
 function settlementEarningLines(input: SettlementMessageInput): string[] {

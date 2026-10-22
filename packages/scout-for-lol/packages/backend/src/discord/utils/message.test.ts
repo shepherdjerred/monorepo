@@ -229,3 +229,51 @@ Line 3`;
     expect(sectionAChunk).toContain("Line 1");
   });
 });
+
+describe("grapheme-safe cuts", () => {
+  const EMOJI = "😀";
+
+  test("truncateDiscordMessage never leaves half an emoji", () => {
+    const result = truncateDiscordMessage(`${"a".repeat(9)}${EMOJI}bbb`, 10);
+    expect(result).toBe(`${"a".repeat(9)}...`);
+    expect(result.isWellFormed()).toBe(true);
+  });
+
+  test("embed truncators never leave half an emoji", () => {
+    const field = truncateEmbedFieldValue(`${"a".repeat(1003)}${EMOJI}b`);
+    expect(field).toBe(`${"a".repeat(1003)}...`);
+    expect(field.isWellFormed()).toBe(true);
+    const description = truncateEmbedDescription(
+      `${"a".repeat(4075)}${EMOJI}b`,
+    );
+    expect(description).toBe(`${"a".repeat(4075)}...`);
+    expect(description.isWellFormed()).toBe(true);
+  });
+
+  test("splitting a long line keeps emoji whole across chunks", () => {
+    const message = `${"a".repeat(99)}${EMOJI}`.repeat(30);
+    const chunks = splitMessageIntoChunks(message, 100);
+    expect(chunks.join("")).toBe(message);
+    for (const chunk of chunks) {
+      expect(chunk.length).toBeLessThanOrEqual(100);
+      expect(chunk.isWellFormed()).toBe(true);
+    }
+  });
+
+  test.each([
+    { name: "splits between emoji", body: EMOJI.repeat(80) },
+    {
+      name: "splits a zalgo cluster longer than a chunk",
+      body: `z${"\u{301}".repeat(120)}`,
+    },
+  ])("a fenced block without newlines $name", ({ body }) => {
+    const fence = "```";
+    const chunks = splitMessageIntoChunks(`${fence}\n${body}\n${fence}`, 51);
+    expect(chunks.length).toBeGreaterThan(1);
+    for (const chunk of chunks) {
+      expect(chunk.length).toBeLessThanOrEqual(51);
+      expect(chunk.isWellFormed()).toBe(true);
+    }
+    expect(chunks.map((chunk) => chunk.slice(4, -4)).join("")).toBe(body);
+  });
+});

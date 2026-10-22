@@ -715,3 +715,17 @@ describe("explore status with overlapping tool calls", () => {
     );
   });
 });
+
+describe("explore answer cap", () => {
+  test("the capped stream never ends in half an emoji", async () => {
+    const head = "a".repeat(EXPLORE_ANSWER_MAX_LENGTH - 1);
+    const { text } = await collect([
+      objectChunk(head),
+      objectChunk(`${head}😀`),
+      objectChunk(`${head}😀 and more`),
+    ]);
+
+    expect(text).toBe(head);
+    expect(text.isWellFormed()).toBe(true);
+  });
+});

@@ -38,6 +38,7 @@ import {
   scoutExploreTurnDurationSeconds,
   scoutExploreTurnsTotal,
 } from "#src/metrics/explore.ts";
+import { graphemePrefix } from "@shepherdjerred/text";
 
 const logger = createLogger("explore-turn");
 
@@ -222,13 +223,18 @@ export async function runPersistedExploreTurn(
 
   const trace: ExploreTraceEntry[] = [];
   let streamedAnswer = "";
+  // Once a delta is cut at the cap, later deltas must not append: the cut may
+  // have dropped a whole grapheme, and appending past it would skip text.
+  let streamedAnswerCapped = false;
   let persistedMessage: ExploreMessage | null = null;
   let generatedTitleRollback: GeneratedTitleRollback | null = null;
   const record = async (event: ExploreStreamEvent): Promise<void> => {
     if (event.type === "answer_delta") {
       const available = EXPLORE_ANSWER_MAX_LENGTH - streamedAnswer.length;
-      if (available > 0) {
-        streamedAnswer += event.text.slice(0, available);
+      if (!streamedAnswerCapped && available > 0) {
+        const text = graphemePrefix(event.text, available);
+        streamedAnswer += text;
+        streamedAnswerCapped = text.length < event.text.length;
       }
     }
     recordExploreTraceEvent(trace, event);

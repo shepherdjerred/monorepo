@@ -37,6 +37,14 @@ describe("clampAnswer", () => {
       }).answer,
     ).toBe(clamped);
   });
+
+  test("never leaves half an emoji before the ellipsis", () => {
+    const head = "x".repeat(EXPLORE_ANSWER_MAX_LENGTH - 2);
+    const clamped = clampAnswer(`${head}😀 tail`);
+
+    expect(clamped).toBe(`${head}…`);
+    expect(clamped.isWellFormed()).toBe(true);
+  });
 });
 
 /** Mirrors the runtime: writing to a closed controller throws. */
