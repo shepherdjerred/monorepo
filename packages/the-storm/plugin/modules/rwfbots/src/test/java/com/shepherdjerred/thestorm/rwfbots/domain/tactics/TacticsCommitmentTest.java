@@ -453,6 +453,30 @@ final class TacticsCommitmentTest {
   }
 
   private static Thought afterBombChange(Option option, PlanStep action, BombView bomb) {
+    return afterBombChange(option, action, bomb, TacticalMemory.EMPTY);
+  }
+
+  private static Situation bombSituation(BombView bomb) {
+    var self = combatant(1, RED, SELF);
+    var snapshot =
+        new WorldSnapshot(
+            100,
+            MatchPhase.LIVE,
+            List.of(self, combatant(2, RED, SELF.plus(-20, 0, 0))),
+            List.of(bomb),
+            PoisonView.NONE,
+            NAV.mapId(),
+            List.of());
+    return new Situation(
+        self,
+        snapshot,
+        new Percept(PerceptionState.EMPTY, List.of(), 100),
+        Blackboard.open(RED, Strategy.RUSH),
+        Role.ROTATE);
+  }
+
+  private static Thought afterBombChange(
+      Option option, PlanStep action, BombView bomb, TacticalMemory memory) {
     var self = combatant(1, RED, SELF);
     var plan =
         Plan.of(option, 90, new PlanStep.Route(new Vec3(30.5, 1, 10.5), Stance.CAUTIOUS), action);
@@ -466,7 +490,7 @@ final class TacticsCommitmentTest {
             NAV.mapId(),
             List.of());
     return Tactics.think(
-        new TacticsState(Optional.of(plan), 90, 0, 0, RewindClock.UNSTARTED, TacticalMemory.EMPTY),
+        new TacticsState(Optional.of(plan), 90, 0, 0, RewindClock.UNSTARTED, memory),
         new Situation(
             self,
             snapshot,
@@ -650,5 +674,32 @@ final class TacticsCommitmentTest {
             Tactics.earnsCommitment(
                 Plan.of(Option.TAKE_SLOT, 0, new PlanStep.Route(here, Stance.CAUTIOUS))))
         .isTrue();
+  }
+
+  @Test
+  void aBotDoesNotGoBackToArmingABombItJustFailedToRouteTo() {
+    // hemispheres: a bot re-picked ARM every few seconds, failed the same route each time and
+    // stepped about in recovery for over two minutes.
+    var id = new BombId(1);
+    var bomb =
+        new BombView(id, new BombOwner.Team(BLUE), new Vec3(30.5, 1, 10.5), new BombState.Idle());
+    var context =
+        new TacticsContext(
+            NAV,
+            levers(1),
+            new Style(0.5, 0.5, 0.5, 0.5),
+            Kit.TROOPER,
+            Archetype.TACTICIAN,
+            Set.of(),
+            42,
+            null);
+    var approach = Planner.armApproach(bombSituation(bomb), context).orElseThrow();
+    assertThat(afterBombChange(Option.ARM, new PlanStep.Arm(id), bomb).decision().option())
+        .as("a young plan to arm is kept")
+        .isEqualTo(Option.ARM);
+    var blocked = TacticalMemory.EMPTY.blocked(approach, 95);
+    assertThat(afterBombChange(Option.ARM, new PlanStep.Arm(id), bomb, blocked).decision().option())
+        .as("but not while its approach just failed to route")
+        .isNotEqualTo(Option.ARM);
   }
 }

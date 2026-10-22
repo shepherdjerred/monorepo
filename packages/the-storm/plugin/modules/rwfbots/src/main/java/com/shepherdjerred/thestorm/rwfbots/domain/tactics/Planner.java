@@ -135,6 +135,14 @@ public final class Planner {
 
   private Planner() {}
 
+  /** Where an ARM plan would route to now: its target bomb's approach, if it has one. */
+  static Optional<Vec3> armApproach(Situation situation, TacticsContext context) {
+    return situation
+        .plantTarget()
+        .or(situation::nearestArmableBomb)
+        .map(bomb -> approach(context.nav(), bomb));
+  }
+
   static Plan detourPlan(Situation situation, TacticsContext context, BombId bomb) {
     return bombPlan(Option.ARM, situation, context, situation.snapshot().bomb(bomb).orElseThrow());
   }
