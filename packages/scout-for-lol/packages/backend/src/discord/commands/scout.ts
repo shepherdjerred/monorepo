@@ -10,6 +10,7 @@ import {
 } from "discord.js";
 import {
   DiscordAccountIdSchema,
+  type DiscordAccountId,
   EXPLORE_QUESTION_MAX_LENGTH,
   ExploreQuestionSchema,
   type ExploreAttachPoint,
@@ -34,7 +35,10 @@ import {
 import { parseScoutFollowUpCustomId } from "#src/discord/scout/custom-id.ts";
 import { exploreAnswerAttachments } from "#src/discord/scout/cards.ts";
 import { scoutExploreTurnsTotal } from "#src/metrics/explore.ts";
-import { claimExploreAttachments } from "#src/explore/attachments/storage.ts";
+import {
+  claimExploreAttachments,
+  discardExploreAttachment,
+} from "#src/explore/attachments/storage.ts";
 import {
   ASK_IMAGE_REFUSAL,
   acceptableAskImage,
@@ -169,6 +173,11 @@ async function answerOnDiscord(input: {
   const ticket = tryStartExploreTurn(identity, Date.now());
   if (!ticket.allowed) {
     scoutExploreTurnsTotal.inc({ status: "rate_limited" });
+    await discardUnsentImages(
+      dependencies.client,
+      identity.userId,
+      input.attachmentIds,
+    );
     await interaction.editReply({ content: ticket.reason });
     return;
   }
@@ -263,27 +272,94 @@ async function answerOnDiscord(input: {
     );
   } catch (error) {
     ticket.finish();
-    if (error instanceof ExploreRunRateLimitedError) {
+    await failAsk(error, {
+      interaction,
+      client: dependencies.client,
+      userId: identity.userId,
+      created,
+      attachmentIds: input.attachmentIds,
+      countError: !runnerOwnsMetrics,
+    });
+  }
+}
+
+/**
+ * Finish an ask that threw: undo what it saved, then answer a refusal or
+ * rethrow anything else.
+ */
+async function failAsk(
+  error: unknown,
+  context: {
+    interaction: DiscordTurnInteraction;
+    client: ExtendedPrismaClient;
+    userId: DiscordAccountId;
+    created: Awaited<ReturnType<typeof startExploreTurn>> | undefined;
+    attachmentIds: readonly string[] | undefined;
+    /** False once the runner has counted the turn itself. */
+    countError: boolean;
+  },
+): Promise<void> {
+  const refused = error instanceof ExploreRunRateLimitedError;
+  if (!refused && context.countError) {
+    scoutExploreTurnsTotal.inc({ status: "error" });
+  }
+  try {
+    await undoUnstartedAsk(context.client, context.userId, {
       // Refused after the question was saved and selected: take it back, so
       // an unanswered question does not become the current branch and hide
-      // an answer still running elsewhere.
-      if (created !== undefined)
-        await rollbackUnstartedExploreTurn(dependencies.client, {
-          conversationId: created.conversationId,
-          messageId: created.messageId,
-          userId: identity.userId,
-          previousCurrentLeafId: created.previousCurrentLeafId,
-          createdConversation: created.createdConversation,
-          createdQuestion: created.createdQuestion,
-        });
-      await interaction.editReply({ content: error.rejection.reason });
-      return;
-    }
-    if (!runnerOwnsMetrics) {
-      scoutExploreTurnsTotal.inc({ status: "error" });
-    }
-    throw error;
+      // an answer still running elsewhere. Other failures roll back where
+      // they happen.
+      created: refused ? context.created : undefined,
+      attachmentIds: context.attachmentIds,
+    });
+  } catch (cleanupError) {
+    throw new AggregateError(
+      [error, cleanupError],
+      "Scout ask failed, and undoing its question failed too",
+      { cause: cleanupError },
+    );
   }
+  if (!refused) throw error;
+  await context.interaction.editReply({ content: error.rejection.reason });
+}
+
+/**
+ * Undo an ask that did not start: roll back its saved question when given,
+ * then free its images' upload slots. A failed start returns images to the
+ * unsent pool, and unlike the web composer nothing here sends them again.
+ */
+async function undoUnstartedAsk(
+  client: ExtendedPrismaClient,
+  userId: DiscordAccountId,
+  input: {
+    created: Awaited<ReturnType<typeof startExploreTurn>> | undefined;
+    attachmentIds: readonly string[] | undefined;
+  },
+): Promise<void> {
+  const { created } = input;
+  if (created !== undefined)
+    await rollbackUnstartedExploreTurn(client, {
+      conversationId: created.conversationId,
+      messageId: created.messageId,
+      userId,
+      previousCurrentLeafId: created.previousCurrentLeafId,
+      createdConversation: created.createdConversation,
+      createdQuestion: created.createdQuestion,
+    });
+  await discardUnsentImages(client, userId, input.attachmentIds);
+}
+
+/**
+ * Free the upload slots of images stored for a question that was not asked.
+ * An image the question already took is not unsent, so it is left alone.
+ */
+async function discardUnsentImages(
+  client: ExtendedPrismaClient,
+  ownerId: DiscordAccountId,
+  ids: readonly string[] | undefined,
+): Promise<void> {
+  for (const id of ids ?? [])
+    await discardExploreAttachment(client, ownerId, id);
 }
 
 export type ScoutFollowUpInteraction = DiscordTurnInteraction & {

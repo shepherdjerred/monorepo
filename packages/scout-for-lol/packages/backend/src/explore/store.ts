@@ -34,7 +34,7 @@ const MESSAGES_WITH_ATTACHMENTS = {
   include: {
     attachments: {
       select: { id: true, mediaType: true },
-      orderBy: [{ createdAt: "asc" as const }, { id: "asc" as const }],
+      orderBy: [{ position: "asc" as const }, { createdAt: "asc" as const }],
     },
   },
 };

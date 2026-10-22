@@ -23,6 +23,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+function askAccepted(): Promise<boolean> {
+  return Promise.resolve(true);
+}
+
 function noop(): void {
   // Story callbacks: the catalog drives no navigation, mutation or stream.
 }
@@ -85,7 +89,7 @@ export const Composer: Story = {
     <ExploreComposer
       active={false}
       restoredDraft={null}
-      onAsk={noop}
+      onAsk={askAccepted}
       onStop={noop}
     />
   ),
@@ -101,7 +105,7 @@ export const ComposerStreaming: Story = {
     <ExploreComposer
       active
       restoredDraft="Compare Lee Sin and Viego clear speed on Patch 16.17."
-      onAsk={noop}
+      onAsk={askAccepted}
       onStop={noop}
     />
   ),

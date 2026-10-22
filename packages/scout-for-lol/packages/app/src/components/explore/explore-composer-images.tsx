@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { LoaderCircle, X } from "lucide-react";
-import { ExploreAttachmentMediaTypeSchema } from "@scout-for-lol/data";
+import {
+  EXPLORE_ATTACHMENT_HOLD_MS,
+  ExploreAttachmentMediaTypeSchema,
+} from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import {
   imageRefusal,
@@ -13,7 +16,9 @@ import {
  *
  * Each upload starts as soon as it is pasted, dropped or picked, so sending
  * only names the stored ids. A failed upload stays visible with its reason
- * until removed; it is never sent.
+ * and blocks sending until removed, so a question never goes out without an
+ * image its asker can still see. While the composer is open it renews the
+ * hold on its uploads, so another tab's upload never reclaims them.
  */
 
 export type ComposerImage = {
@@ -30,6 +35,17 @@ export function useComposerImages() {
   const upload = useMutation(
     trpc.explore.uploadAttachment.mutationOptions({ retry: false }),
   );
+  // Discarding is idempotent (a gone or sent image is simply not
+  // discarded), so a transient failure is retried.
+  const discard = useMutation(
+    trpc.explore.discardAttachment.mutationOptions({ retry: 2 }),
+  );
+  const hold = useMutation(
+    trpc.explore.holdAttachments.mutationOptions({ retry: false }),
+  );
+  // Keys removed while still uploading: their upload is discarded the moment
+  // it lands, so a removed image never holds an unsent-upload slot.
+  const removedRef = useRef(new Set<string>());
   const [images, setImages] = useState<ComposerImage[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
   const imagesRef = useRef(images);
@@ -84,6 +100,10 @@ export function useComposerImages() {
               mediaType: ExploreAttachmentMediaTypeSchema.parse(file.type),
               base64: await readFileBase64(file),
             });
+            if (removedRef.current.has(key)) {
+              discard.mutate({ id: stored.id });
+              return;
+            }
             settle(key, { status: "ready", id: stored.id, error: null });
           } catch (error) {
             settle(key, {
@@ -98,35 +118,89 @@ export function useComposerImages() {
         })();
       }
     },
-    [settle, upload],
+    [discard, settle, upload],
   );
 
-  const remove = useCallback((key: string) => {
-    setImages((current) => {
-      const removed = current.find((image) => image.key === key);
-      if (removed !== undefined) URL.revokeObjectURL(removed.previewUrl);
-      return current.filter((image) => image.key !== key);
-    });
+  const drop = useCallback((image: ComposerImage) => {
+    URL.revokeObjectURL(image.previewUrl);
+    setImages((current) => current.filter((entry) => entry.key !== image.key));
   }, []);
 
-  const clear = useCallback(() => {
+  const remove = useCallback(
+    (key: string) => {
+      const removed = imagesRef.current.find((image) => image.key === key);
+      if (removed === undefined) return;
+      const { id } = removed;
+      if (id === null) {
+        removedRef.current.add(key);
+        drop(removed);
+        return;
+      }
+      // The preview stays until the upload is gone: hiding it first would
+      // leave an invisible upload holding a slot if the discard failed.
+      void (async () => {
+        try {
+          await discard.mutateAsync({ id });
+        } catch {
+          setNotice("Scout could not remove that image. Try again.");
+          return;
+        }
+        setNotice(null);
+        drop(removed);
+      })();
+    },
+    [discard, drop],
+  );
+
+  /**
+   * Drop the images a sent question took, by id. Images attached since — in
+   * another conversation while this one was starting — stay.
+   */
+  const release = useCallback((ids: readonly string[]) => {
+    const sent = new Set(ids);
     for (const image of imagesRef.current)
-      URL.revokeObjectURL(image.previewUrl);
-    setImages([]);
+      if (image.id !== null && sent.has(image.id))
+        URL.revokeObjectURL(image.previewUrl);
+    setImages((current) =>
+      current.filter((image) => image.id === null || !sent.has(image.id)),
+    );
     setNotice(null);
   }, []);
+
+  const readyIds = images.flatMap((image) =>
+    image.status === "ready" && image.id !== null ? [image.id] : [],
+  );
+  const heldKey = readyIds.join(",");
+  const { mutate: renewHold } = hold;
+  // Renew well inside the hold; a closed tab stops renewing and its uploads
+  // become reclaimable once the hold lapses.
+  useEffect(() => {
+    if (heldKey === "") return;
+    const ids = heldKey.split(",");
+    const timer = setInterval(() => {
+      renewHold({ ids });
+    }, EXPLORE_ATTACHMENT_HOLD_MS / 3);
+    return () => {
+      clearInterval(timer);
+    };
+  }, [heldKey, renewHold]);
 
   return {
     images,
     notice,
     add,
     remove,
-    clear,
+    release,
     uploading: images.some((image) => image.status === "uploading"),
-    readyIds: images.flatMap((image) =>
-      image.status === "ready" && image.id !== null ? [image.id] : [],
-    ),
+    failed: images.some((image) => image.status === "failed"),
+    readyIds,
   };
+}
+
+function failedMessage(error: string | null | undefined): string | null {
+  return error === null || error === undefined
+    ? null
+    : `${error} Remove the image to send.`;
 }
 
 export function ComposerImageStrip(props: {
@@ -137,7 +211,9 @@ export function ComposerImageStrip(props: {
   const { images, notice, onRemove } = props;
   if (notice === null && images.length === 0) return null;
   const message =
-    notice ?? images.find((image) => image.error !== null)?.error ?? null;
+    notice ??
+    failedMessage(images.find((image) => image.error !== null)?.error) ??
+    null;
   return (
     <div className="flex flex-col gap-1.5 pt-1.5 pr-1.5">
       {images.length > 0 && (

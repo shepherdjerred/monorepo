@@ -59,8 +59,13 @@ vi.doMock("#src/storage/s3-client.ts", () => ({
 }));
 const harness = await createOfflineTrpcHarness("explore-attachments");
 const db = harness.prisma;
-const { claimExploreAttachments, loadQuestionImages, storeExploreAttachment } =
-  await import("#src/explore/attachments/storage.ts");
+const {
+  claimExploreAttachments,
+  discardExploreAttachment,
+  holdExploreAttachments,
+  loadQuestionImages,
+  storeExploreAttachment,
+} = await import("#src/explore/attachments/storage.ts");
 const { collectUnsentExploreAttachments } =
   await import("#src/explore/attachments/cleanup.ts");
 const { handleExploreAttachment } =
@@ -129,6 +134,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   await db.supportJob.deleteMany();
   await db.exploreAttachment.deleteMany();
+  await db.exploreAttachmentUpload.deleteMany();
   await db.exploreConversation.deleteMany();
   objects.clear();
 });
@@ -217,17 +223,123 @@ describe("Explore image attachments", () => {
   test("uploads nobody sent are collected after a day", async () => {
     const stale = await upload();
     const fresh = await upload();
+    const held = await upload();
+    const dayAgo = new Date(Date.now() - 25 * 60 * 60_000);
     await db.exploreAttachment.update({
       where: { id: stale.id },
-      data: { createdAt: new Date(Date.now() - 25 * 60 * 60_000) },
+      data: { createdAt: dayAgo, heldUntil: dayAgo },
+    });
+    // Old, but a composer still holds it.
+    await db.exploreAttachment.update({
+      where: { id: held.id },
+      data: { createdAt: dayAgo },
     });
     expect(await collectUnsentExploreAttachments(db)).toBe(1);
     const remaining = await db.exploreAttachment.findMany();
-    expect(remaining.map((row) => row.id)).toEqual([fresh.id]);
+    expect(remaining.map((row) => row.id).toSorted()).toEqual(
+      [fresh.id, held.id].toSorted(),
+    );
     expect(
       await db.supportJob.findUnique({
         where: { id: `delete:explore:${stale.id}` },
       }),
     ).not.toBeNull();
+  });
+
+  test("removing an unsent image frees its slot and queues its object", async () => {
+    for (let index = 0; index < 8; index++) await upload();
+    const [first] = await db.exploreAttachment.findMany({ take: 1 });
+    if (first === undefined) throw new Error("Expected an upload");
+    expect(await discardExploreAttachment(db, OWNER, first.id)).toBe(true);
+    await expect(upload()).resolves.toMatchObject({ mediaType: "image/png" });
+    expect(
+      await db.supportJob.findUnique({
+        where: { id: `delete:explore:${first.id}` },
+      }),
+    ).not.toBeNull();
+  });
+
+  test("uploads whose hold lapsed stop holding slots", async () => {
+    for (let index = 0; index < 8; index++) await upload();
+    await db.exploreAttachment.updateMany({
+      data: { heldUntil: new Date(Date.now() - 60_000) },
+    });
+    await expect(upload()).resolves.toMatchObject({ mediaType: "image/png" });
+    expect(
+      await db.exploreAttachment.count({ where: { questionId: null } }),
+    ).toBe(1);
+  });
+
+  test("uploads a composer still holds, in any tab, are not reclaimed", async () => {
+    const shown = [];
+    for (let index = 0; index < 8; index++) shown.push(await upload());
+    await db.exploreAttachment.updateMany({
+      data: { heldUntil: new Date(Date.now() - 60_000) },
+    });
+    // Another tab renews what it shows; this tab's upload must not take it.
+    await holdExploreAttachments(
+      db,
+      OWNER,
+      shown.map((attachment) => attachment.id),
+    );
+    await expect(upload()).rejects.toThrow(/Send or remove/);
+    expect(
+      await db.exploreAttachment.count({ where: { questionId: null } }),
+    ).toBe(8);
+  });
+
+  test("a stranger cannot discard an upload, nor anyone a sent one", async () => {
+    const attachment = await upload();
+    expect(await discardExploreAttachment(db, STRANGER, attachment.id)).toBe(
+      false,
+    );
+    const { questionId } = await question();
+    await claimExploreAttachments(db, {
+      ids: [attachment.id],
+      ownerId: OWNER,
+      questionId,
+    });
+    expect(await discardExploreAttachment(db, OWNER, attachment.id)).toBe(
+      false,
+    );
+  });
+
+  test("deleting conversations does not reset the hourly upload limit", async () => {
+    await db.exploreAttachmentUpload.createMany({
+      data: Array.from({ length: 40 }, () => ({ ownerId: OWNER })),
+    });
+    await expect(upload()).rejects.toThrow(/this hour/);
+  });
+
+  test("a question keeps its images in the order they were attached", async () => {
+    const first = await upload();
+    const second = await upload();
+    // Stored in the opposite order to the question's.
+    await db.exploreAttachment.update({
+      where: { id: second.id },
+      data: { createdAt: new Date(Date.now() - 60_000) },
+    });
+    const { questionId } = await question();
+    await claimExploreAttachments(db, {
+      ids: [first.id, second.id],
+      ownerId: OWNER,
+      questionId,
+    });
+    const rows = await db.exploreAttachment.findMany({
+      where: { questionId },
+      orderBy: { position: "asc" },
+    });
+    expect(rows.map((row) => row.id)).toEqual([first.id, second.id]);
+  });
+
+  test("a failed object write keeps the object queued for deletion", async () => {
+    storage.mockImplementationOnce(() =>
+      Promise.reject(new Error("lost reply")),
+    );
+    await expect(upload()).rejects.toThrow("lost reply");
+    expect(await db.exploreAttachment.count()).toBe(0);
+    expect(
+      await db.supportJob.count({ where: { kind: "DELETE_OBJECT" } }),
+    ).toBe(1);
   });
 });

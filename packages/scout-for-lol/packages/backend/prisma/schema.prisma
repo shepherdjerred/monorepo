@@ -905,14 +905,30 @@ model ExploreAttachment {
   id         String          @id @default(uuid())
   ownerId    String
   questionId String?
+  /// Order within the question, as the asker attached them.
+  position   Int?
   objectKey  String          @unique
   mediaType  String
   bytes      Int
   sha256     String
   createdAt  DateTime        @default(now())
+  /// While unsent, the upload is not reclaimed before this: the composer
+  /// showing it renews the hold, so only a composer that is gone lets it lapse.
+  heldUntil  DateTime
   question   ExploreMessage? @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@index([questionId])
+  @@index([ownerId, createdAt])
+}
+
+/// One row per Explore image upload, kept when the image itself is deleted,
+/// so the hourly upload limit cannot be reset by deleting conversations.
+/// Rows older than a day are pruned by the unsent-upload sweep.
+model ExploreAttachmentUpload {
+  id        String   @id @default(uuid())
+  ownerId   String
+  createdAt DateTime @default(now())
+
   @@index([ownerId, createdAt])
 }
 

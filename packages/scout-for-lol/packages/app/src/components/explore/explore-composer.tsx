@@ -50,7 +50,11 @@ export function ExploreComposer(props: {
   /** Question handed back by a failed turn, adopted into an empty box. */
   restoredDraft: string | null;
   /** The question, and the ids of the images uploaded with it. */
-  onAsk: (question: string, attachmentIds: readonly string[]) => void;
+  /** Resolves true once the question was accepted. */
+  onAsk: (
+    question: string,
+    attachmentIds: readonly string[],
+  ) => Promise<boolean>;
   onStop: () => void;
 }) {
   const { active, disabled = false, restoredDraft, onAsk, onStop } = props;
@@ -64,12 +68,16 @@ export function ExploreComposer(props: {
     validationLogic: submitThenChangeValidation,
     validators: { onDynamic: ExploreQuestionFormSchema },
     onSubmit: ({ value }) => {
-      if (active || disabled || images.uploading) return;
+      if (active || disabled || images.uploading || images.failed) return;
       const parsed = ExploreQuestionFormSchema.parse(value);
       const attachmentIds = images.readyIds;
       form.reset({ question: "" });
-      images.clear();
-      onAsk(parsed.question, attachmentIds);
+      // The images stay until the question is accepted: a refused start
+      // (rate limit, busy conversation, outage) keeps them for the retry.
+      void (async () => {
+        if (await onAsk(parsed.question, attachmentIds))
+          images.release(attachmentIds);
+      })();
     },
     onSubmitInvalid: () => {
       focusFirstInvalid(formElement.current);
@@ -432,7 +440,10 @@ export function ExploreComposer(props: {
                 size="icon-sm"
                 className="size-8 !rounded-full bg-scout-primary text-scout-brand-ink transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-30"
                 disabled={
-                  disabled || images.uploading || question.trim().length === 0
+                  disabled ||
+                  images.uploading ||
+                  images.failed ||
+                  question.trim().length === 0
                 }
                 aria-label="Send question"
                 title="Send"

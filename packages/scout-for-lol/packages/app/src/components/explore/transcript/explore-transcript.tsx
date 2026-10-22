@@ -378,7 +378,9 @@ const UserTurn = memo(function UserTurnView(props: {
           message={message}
           onSelectVersion={actions.onSelectVersion}
         />
-        {actions.onEdit !== undefined && (
+        {/* An edited question cannot carry its images yet, so a question
+            with images is re-asked rather than edited. */}
+        {actions.onEdit !== undefined && message.attachments.length === 0 && (
           <span className="opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
             <IconButton
               label="Edit this question"

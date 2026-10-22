@@ -135,7 +135,7 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
     async (conversationId: string): Promise<ExploreTranscript | undefined> => {
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: trpc.explore.get.queryKey({ conversationId, version: 3 }),
+          queryKey: trpc.explore.get.queryKey({ conversationId, version: 4 }),
         }),
         queryClient.invalidateQueries({
           queryKey: trpc.explore.list.queryKey(),

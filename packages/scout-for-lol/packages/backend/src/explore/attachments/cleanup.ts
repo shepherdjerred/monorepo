@@ -45,20 +45,26 @@ export async function collectUnsentExploreAttachments(
   db: ExtendedPrismaClient,
   now: Date = new Date(),
 ): Promise<number> {
-  const stale = await db.exploreAttachment.findMany({
-    where: {
+  const cutoff = new Date(now.getTime() - UNSENT_TTL_MS);
+  return await db.$transaction(async (tx) => {
+    // Locked before anything is queued: a question claiming one of these
+    // waits, then finds it gone and asks for the image again, instead of the
+    // sweep deleting an image a question has just taken.
+    const stale = await tx.$queryRaw<{ id: string }[]>`
+      SELECT id FROM "ExploreAttachment"
+      WHERE "questionId" IS NULL AND "createdAt" < ${cutoff}
+        AND "heldUntil" < ${now}
+      ORDER BY "createdAt"
+      LIMIT ${SWEEP_BATCH}
+      FOR UPDATE SKIP LOCKED`;
+    // Upload ledger rows only matter for the hourly limit.
+    await tx.exploreAttachmentUpload.deleteMany({
+      where: { createdAt: { lt: cutoff } },
+    });
+    if (stale.length === 0) return 0;
+    return await queueExploreAttachmentDeletion(tx, {
+      id: { in: stale.map((row) => row.id) },
       questionId: null,
-      createdAt: { lt: new Date(now.getTime() - UNSENT_TTL_MS) },
-    },
-    select: { id: true },
-    take: SWEEP_BATCH,
+    });
   });
-  if (stale.length === 0) return 0;
-  return await db.$transaction(
-    async (tx) =>
-      await queueExploreAttachmentDeletion(tx, {
-        id: { in: stale.map((row) => row.id) },
-        questionId: null,
-      }),
-  );
 }

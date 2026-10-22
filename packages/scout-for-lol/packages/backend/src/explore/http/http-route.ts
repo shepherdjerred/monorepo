@@ -199,7 +199,13 @@ async function handleSharedTranscript(
   const compatibleShared = {
     ...shared,
     messages: shared.messages.map((message) => {
-      const { guildIds: _guildIds, ...rest } = message;
+      // Shared transcripts never carry images (they are served only to their
+      // owner), so the key is dropped for the same pre-deploy-bundle reason.
+      const {
+        guildIds: _guildIds,
+        attachments: _attachments,
+        ...rest
+      } = message;
       if (url.searchParams.get("cards") === "3") return rest;
       const {
         generation: _generation,
