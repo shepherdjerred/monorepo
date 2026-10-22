@@ -11,7 +11,8 @@
     "./artifact-contract": "./src/shared/artifact-contract.ts",
     "./operation-id": "./src/shared/operation-id.ts",
     "./oci-registry": "./src/infrastructure/artifact-stores/oci-registry.ts",
-    "./testing": "./src/testing/index.ts"
+    "./testing": "./src/testing/index.ts",
+    "./model-fixtures": "./src/testing/model-fixtures.ts"
   },
   "imports": {
     "#generated/*": "./generated/*",

@@ -4,6 +4,7 @@ import { queries } from "#client/queries.ts";
 import { PageHeader } from "#client/components/page-header.tsx";
 import { DeploymentTable } from "#client/components/deployment-table.tsx";
 import { BuildCatalog } from "#client/artifacts.tsx";
+import { ApprovalQueue } from "#client/model/approval-queue.tsx";
 import { ActivityList } from "./activity-list.tsx";
 import {
   ActivitySearchSchema,
@@ -133,12 +134,9 @@ function ApprovalsPage() {
     <>
       <PageHeader
         title="Approvals"
-        description="Review the exact release before it reaches production."
+        description="Review the exact selection before it reaches production."
       />
-      <DeploymentTable
-        deployments={data}
-        empty="Nothing is waiting for approval."
-      />
+      <ApprovalQueue items={data} />
     </>
   );
 }

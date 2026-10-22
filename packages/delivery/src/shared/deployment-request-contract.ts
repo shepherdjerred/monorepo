@@ -53,6 +53,27 @@ export const DeploymentKindV2Schema = z.enum([
 ]);
 export type DeploymentKindV2 = z.infer<typeof DeploymentKindV2Schema>;
 
+/**
+ * The kind that realises a set revision under a recipe kind (section 5): a
+ * channel recipe is published, an operator-run recipe is run by an attested
+ * operator tool, and every other recipe is deployed.
+ */
+export function deploymentKindForRecipe(
+  recipeKind: string,
+): Extract<DeploymentKindV2, "deploy" | "channel-publish" | "operator-run"> {
+  switch (recipeKind) {
+    case "channel": {
+      return "channel-publish";
+    }
+    case "operator-run": {
+      return "operator-run";
+    }
+    default: {
+      return "deploy";
+    }
+  }
+}
+
 const RevisionIdSchema = z
   .string()
   .regex(/^[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*\/[1-9]\d*$/u);

@@ -11,6 +11,7 @@ import { ReleaseForm } from "#client/release-form.tsx";
 import { PlatformReleaseForm } from "#client/platform-release-form.tsx";
 import { WorkerPoolPanel } from "#client/worker-pool.tsx";
 import { ForumBaselinePanel } from "#client/forum-baseline.tsx";
+import { EnvironmentModel } from "#client/model/environment-model.tsx";
 import { canDeploy } from "#client/presentation.ts";
 import { EnvironmentSearchSchema } from "./search-schemas.ts";
 import { Route as rootRoute } from "./root.tsx";
@@ -69,6 +70,12 @@ function EnvironmentPage() {
         />
         <RuntimePanel environmentId={environment.id} />
       </div>
+      <EnvironmentModel
+        restoreHold={detail.restoreHold}
+        environmentId={environment.id}
+        permitted={permitted}
+        onDeployment={open}
+      />
       {environment.activeDeploymentId !== null && (
         <p className="notice">
           Active deployment{" "}

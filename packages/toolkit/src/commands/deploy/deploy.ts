@@ -6,6 +6,12 @@ import { runPlatformCommand, validatePlatformCommand } from "./platform.ts";
 import { runTrmnlCommand, validateTrmnlCommand } from "./trmnl.ts";
 import { runCatalogCommand, validateCatalogCommand } from "./catalog.ts";
 import {
+  MODEL_COMMANDS,
+  runModelCommand,
+  validateModelCommand,
+} from "./model.ts";
+import type { ModelOptions } from "./model-io.ts";
+import {
   runContentRecovery,
   validateContentRecovery,
 } from "./content-recovery.ts";
@@ -14,7 +20,6 @@ import {
   IdentifierSchema,
   PipelineDefinitionSchema,
   RegisterEnvironmentSchema,
-  RecoverDeploymentSchema,
 } from "@shepherdjerred/delivery/contract";
 
 export const DEPLOY_HELP = `toolkit deploy <COMMAND> [OPTIONS]
@@ -49,15 +54,26 @@ platform recover <DEPLOYMENT_ID>       Request bounded infrastructure quarantine
 platform recovery <INTENT_ID>          Inspect frozen recovery, native jobs and saved plan
 platform recovery-approve <INTENT_ID>  Human decision for exact reviewed recovery plan
 diff <FROM|none> <TO>                  Compare component artifacts
-start <ENVIRONMENT> <VERSION>          Request an exact release
-promote <SOURCE_ENV> <DEST_ENV>        Promote source's accepted release
-rollback <ENVIRONMENT> <DEPLOYMENT>    Restore a previously accepted selection
+start <ENVIRONMENT> <VERSION>          Request a set revision as the recipe realises it (deploy, channel-publish, operator-run)
+promote <SOURCE_ENV> <DEST_ENV>        Promote the source's accepted selection
+candidates <ENVIRONMENT>               List accepted selections and why any is excluded
+rollback <ENVIRONMENT> <DEPLOYMENT_ID> Restore the selection that deployment froze
+rebind <ENVIRONMENT> --recipe <ID> --configuration <ID>  Keep the accepted set revision, change either revision
+monitor <ENVIRONMENT>                  Inspect the accepted deployment's monitor
+retire <SERVICE> --reason <TEXT> --machine  Retire a service and its environments
+catalog reconcile --file <PATH> --machine  Make the record agree with a catalog document
+attest <DEPLOYMENT_ID> --stage <NAME> --evidence <PATH> --machine  Record operator-attested stage evidence
+snapshot --output <PATH>               Fetch the cold-start snapshot from R2; works while Delivery is down
+snapshot reconcile --machine           Compare record, snapshot and live target; hold mismatches
+snapshot accept <ENVIRONMENT> --machine  Accept the live state of a held environment with evidence
+render-application <ENVIRONMENT> --snapshot <PATH> --file <PATH>  Print the cold-start Application for kubectl
 status [DEPLOYMENT_ID]                 Inspect one deployment or all environments
 wait <DEPLOYMENT_ID>                   Foreground wait for completion
-approve|reject <DEPLOYMENT_ID>         Human decision; --reason required
+approve|reject <DEPLOYMENT_ID>         Human decision; --reason required, --override for an override approval
 cancel <DEPLOYMENT_ID>                 Request cancellation at a safe boundary
 retry <DEPLOYMENT_ID>                  Create a new attempt
-recover <DEPLOYMENT_ID>                Open the recovery intent and settle an ordinary Argo operation; specialized targets use their own recovery
+recover <DEPLOYMENT_ID> --expected-generation <N> --reason <TEXT> [--step <S>] [--operation-id <ID>] --machine  Open a recovery intent; --operation-id settles an ordinary Argo operation by readback
+recovery <INTENT_ID>                   Inspect a recovery intent and its evidence
 
 Options:
   --json                              Structured output
@@ -66,12 +82,22 @@ Options:
   --request-id <ID>                    Idempotency key for deployment or recovery requests
   --expected-generation <N>            Require an exact environment generation
   --expected-worker-generation <N>     Require an exact worker generation for retirement
-  --reason <TEXT>                      Approval, rejection, or recovery reason
-  --operation-id <UUID>                Exact recorded Argo operation for recovery
+  --reason <TEXT>                      Approval, rejection, recovery, or restore-hold reason
+  --override                           start: ask for an override approval of a non-eligible deploy;
+                                       approve/reject: decide that override approval
+  --step <NAME>                        Sub-step a recovery intent names
+  --recipe <ID>                        Recipe revision a rebind moves to
+  --configuration <ID>                 Configuration revision a rebind moves to
+  --stage <NAME>                       Operator-run stage an attestation settles
+  --evidence <PATH|TEXT>               attest: JSON array of evidence; snapshot accept: what was inspected
+  --output <PATH>                      Where snapshot writes the fetched cold-start snapshot
+  --snapshot <PATH>                    Cold-start snapshot render-application reads
+  --file <PATH>                        Catalog document for catalog reconcile and render-application
   --timeout <SECONDS>                  Wait deadline (default 900)
   --interval <SECONDS>                 Poll interval (default 5)
 
-Exit: 0 = command succeeded; 1 = error/failed/canceled; 2 = wait deadline reached.
+Exit: 0 = command succeeded; 1 = error/failed/canceled, a refused catalog entry,
+or a held environment after restore; 2 = wait deadline reached.
 Production approvals require trusted human identity; --machine cannot approve.
 `;
 
@@ -92,6 +118,13 @@ const specializedCommands: Record<
     runCatalogCommand(client, "artifact", positionals, options),
   qualify: (client, positionals, options) =>
     runCatalogCommand(client, "qualify", positionals, options),
+  ...Object.fromEntries(
+    MODEL_COMMANDS.map((command) => [
+      command,
+      (client: DeliveryClient, positionals: string[], options: ModelOptions) =>
+        runModelCommand(client, command, positionals, options),
+    ]),
+  ),
 };
 const COMMAND_ARITY: Record<string, number | readonly number[]> = {
   whoami: 0,
@@ -100,6 +133,15 @@ const COMMAND_ARITY: Record<string, number | readonly number[]> = {
   start: 2,
   promote: 2,
   rollback: 2,
+  candidates: 1,
+  rebind: 1,
+  monitor: 1,
+  retire: 1,
+  catalog: 1,
+  attest: 1,
+  snapshot: [0, 1, 2],
+  "render-application": 1,
+  recovery: 1,
   status: [0, 1],
   wait: 1,
   approve: 1,
@@ -139,7 +181,6 @@ export function validateDeployCommand(
     );
   }
   if (["approve", "reject"].includes(command)) validateApproval(options);
-  if (command === "recover") validateRecovery(options);
   if (options["expected-generation"] !== undefined)
     generation(options["expected-generation"]);
   if (options.timeout !== undefined) seconds(options.timeout);
@@ -154,18 +195,7 @@ export function validateDeployCommand(
     validateContentRecovery("sites", positionals, options);
   if (command === "trmnl") validateTrmnlCommand(positionals, options);
   if (command === "platform") validatePlatformCommand(positionals, options);
-}
-
-function validateRecovery(options: DeployOptions) {
-  if (!options.machine)
-    throw new Error("Recovery requires an admin --machine credential");
-  if (options["operation-id"] === undefined)
-    throw new Error("--operation-id is required");
-  if (options.reason === undefined) throw new Error("--reason is required");
-  RecoverDeploymentSchema.parse({
-    operationId: options["operation-id"],
-    reason: options.reason,
-  });
+  validateModelCommand(command, positionals, options);
 }
 
 function validateRegistration(
@@ -230,7 +260,7 @@ export async function runDeployCommand(
   client: DeliveryClient,
   command: string,
   positionals: string[],
-  options: DeployOptions & { requestNotice?: (id: string) => void },
+  options: ModelOptions,
 ): Promise<{ result: unknown; exitCode: number }> {
   validateDeployCommand(command, positionals, options);
   const specialized = specializedCommands[command];
@@ -259,85 +289,22 @@ export async function runDeployCommand(
     options["expected-generation"] === undefined
       ? current
       : generation(options["expected-generation"]);
-  async function environment(id: string) {
-    const overview = await client.overview();
-    const value = overview.environments.find(
-      (candidate) => candidate.id === id,
-    );
-    if (value === undefined) throw new Error(`Unknown environment: ${id}`);
-    return value;
-  }
   let result: unknown;
   switch (command) {
     case "pipeline":
     case "environment":
       return registerCommand(client, command, positionals, options);
-    case "start": {
-      const destination = await environment(required(target));
-      result = await client.createDeployment({
-        requestId: requestId(),
-        environmentId: destination.id,
-        versionSetRevisionId: required(positionals[1]),
-        expectedGeneration: expectedGeneration(destination.generation),
-        kind: "deploy",
-      });
-      break;
-    }
-    case "rollback": {
-      // A rollback names the deployment whose selection it restores (L1).
-      const destination = await environment(required(target));
-      result = await client.createDeployment({
-        requestId: requestId(),
-        environmentId: destination.id,
-        selectionDeploymentId: required(positionals[1]),
-        expectedGeneration: expectedGeneration(destination.generation),
-        kind: "rollback",
-      });
-      break;
-    }
-    case "promote": {
-      const source = await environment(required(target));
-      const destination = await environment(required(positionals[1]));
-      if (source.acceptedDeploymentId === null)
-        throw new Error(`No accepted release in ${source.id}`);
-      // A promotion takes the source's accepted selection (M2).
-      result = await client.createDeployment({
-        requestId: requestId(),
-        environmentId: destination.id,
-        sourceEnvironmentId: source.id,
-        expectedGeneration: expectedGeneration(destination.generation),
-        kind: "promote",
-      });
-      break;
-    }
     case "approve":
     case "reject":
       result = await client.approve(required(target), {
         decision: command,
         reason: required(options.reason).trim(),
+        ...(options.override ? { override: true } : {}),
       });
       break;
     case "cancel":
       result = await client.cancel(required(target));
       break;
-    case "recover": {
-      const input = RecoverDeploymentSchema.parse({
-        operationId: options["operation-id"],
-        reason: options.reason,
-      });
-      // Recovery opens the deployment's intent; readback settles it (4.15).
-      // Only an Argo intent settles here, so the server opens nothing for a
-      // deployment whose recovery has its own command.
-      const detail = await client.deployment(required(target));
-      const intent = await client.createRecoveryIntent(detail.deployment.id, {
-        requestId: requestId(),
-        reason: input.reason,
-        expectedGeneration: expectedGeneration(detail.environment.generation),
-        expectedKind: "argo",
-      });
-      result = await client.settleRecoveryIntent(intent.id, input);
-      break;
-    }
     case "retry": {
       const detail = await client.deployment(required(target));
       result = await client.retry(detail.deployment.id, {

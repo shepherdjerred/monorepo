@@ -18,16 +18,16 @@ function ServiceLayout() {
       <PageHeader
         eyebrow={<Link to="/pipelines">Pipelines</Link>}
         title={data.service.title}
-        description={`Pipeline for ${data.service.id}: source to runtime.`}
+        description={`Promotion for ${data.service.id}: source to runtime.`}
         actions={<ToolLinks links={data.service.links} />}
       />
-      <nav aria-label="Pipeline views" className="tabs">
+      <nav aria-label="Service views" className="tabs">
         <Link
           to="/pipelines/$serviceId"
           params={{ serviceId }}
           activeOptions={{ exact: true }}
         >
-          Pipeline
+          Promotion
         </Link>
         <Link to="/pipelines/$serviceId/executions" params={{ serviceId }}>
           Executions
@@ -61,13 +61,16 @@ function PipelinePage() {
   return (
     <section aria-labelledby="pipeline-heading">
       <h2 id="pipeline-heading" className="visually-hidden">
-        Pipeline
+        Promotion
       </h2>
       <p className="muted">
         Each stage shows the newest run that reached it. Stages can show
         different revisions while a change moves through.
       </p>
-      <PipelineGraph label={`${data.service.title} pipeline`} stages={stages} />
+      <PipelineGraph
+        label={`${data.service.title} promotion`}
+        stages={stages}
+      />
     </section>
   );
 }

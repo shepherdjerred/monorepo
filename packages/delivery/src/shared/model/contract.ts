@@ -141,6 +141,8 @@ export const ColdStartSnapshotSchema = coldStart.ColdStartSnapshotSchema;
 export type SnapshotArtifact = coldStart.SnapshotArtifact;
 export type SnapshotEnvironment = coldStart.SnapshotEnvironment;
 export type ColdStartSnapshot = coldStart.ColdStartSnapshot;
+export const SettleRestoreHoldSchema = coldStart.SettleRestoreHoldSchema;
+export type SettleRestoreHold = coldStart.SettleRestoreHold;
 
 export const RecipeKindSchema = routes.RecipeKindSchema;
 export const EnvironmentSelectionSchema = routes.EnvironmentSelectionSchema;
@@ -237,6 +239,9 @@ export type RecoveryIntentKind = recovery.RecoveryIntentKind;
 export type RecoveryIntentV2 = recovery.RecoveryIntentV2;
 
 export const DeploymentKindV2Schema = deploymentRequests.DeploymentKindV2Schema;
+export function deploymentKindForRecipe(recipeKind: string) {
+  return deploymentRequests.deploymentKindForRecipe(recipeKind);
+}
 export const CreateDeploymentV2Schema =
   deploymentRequests.CreateDeploymentV2Schema;
 export type DeploymentKindV2 = deploymentRequests.DeploymentKindV2;

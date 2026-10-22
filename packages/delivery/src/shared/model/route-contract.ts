@@ -14,6 +14,7 @@ import {
 } from "#shared/recovery-intent.ts";
 import { DeploymentDetailSchema, DeploymentSchema } from "#shared/contract.ts";
 import { ApprovalV2Schema } from "./approval-contract.ts";
+import { RestoreHoldSchema } from "./cold-start-contract.ts";
 import { MonitorStateSchema } from "./monitor-contract.ts";
 import type { RecipeKind } from "./recipe-contract.ts";
 import { SelectionSchema } from "./selection-contract.ts";
@@ -162,6 +163,41 @@ export type CatalogReconcileResult = z.infer<
   typeof CatalogReconcileResultSchema
 >;
 
+const IdListSchema = z.array(z.string().min(1));
+/**
+ * What one catalog reconcile changed, by id: the record `catalog.reconciled`
+ * audits, which `GET /activity` returns as the entry's metadata.
+ */
+export const CatalogReconcileRecordSchema = z.strictObject({
+  catalogRevision: z.string().regex(/^sha256:[a-f0-9]{64}$/u),
+  services: z.strictObject({
+    created: IdListSchema,
+    lineageChanged: IdListSchema,
+    retired: IdListSchema,
+  }),
+  environments: z.strictObject({
+    created: IdListSchema,
+    renamed: z.array(
+      z.strictObject({ from: z.string().min(1), to: z.string().min(1) }),
+    ),
+    rebound: IdListSchema,
+    retired: IdListSchema,
+    /** Section 7: environments whose accepted selection moved onto catalog identities. */
+    carried: IdListSchema,
+  }),
+  recipes: z.strictObject({ created: IdListSchema }),
+  configurations: z.strictObject({ created: IdListSchema }),
+  edges: CountSchema,
+  references: CountSchema,
+  unchanged: CountSchema,
+  refused: z.array(
+    z.strictObject({ id: z.string().min(1), reason: ReasonSchema }),
+  ),
+});
+export type CatalogReconcileRecord = z.infer<
+  typeof CatalogReconcileRecordSchema
+>;
+
 /** `GET /catalog`: the catalog revision deployments currently freeze. */
 export const CatalogStateSchema = z
   .strictObject({
@@ -190,6 +226,12 @@ export const ServiceLifecycleViewSchema = z.looseObject({
   lifecycle: LifecycleSchema,
 });
 export type ServiceLifecycleView = z.infer<typeof ServiceLifecycleViewSchema>;
+
+/** `POST /environments/:id/restore-hold/accept` (admin): the hold the operator's evidence cleared. */
+export const RestoreHoldSettledSchema = z.strictObject({
+  environmentId: IdentifierSchema,
+  cleared: RestoreHoldSchema,
+});
 
 /**
  * `POST /reconcile-after-restore` (admin, section 6 cold start). The

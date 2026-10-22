@@ -1,4 +1,5 @@
 import { DeploymentSchema } from "#shared/contract.ts";
+import { RestoreHoldSchema } from "#shared/model/cold-start-contract.ts";
 import type {
   ActivityQuery,
   BuildListQuery,
@@ -92,7 +93,7 @@ export async function environmentDetail(
   environmentId: string,
 ): Promise<EnvironmentDetail> {
   const env = await readEnvironment(database, environmentId);
-  const [pipeline, sourceEnvironment, versionRows, deployments] =
+  const [pipeline, sourceEnvironment, versionRows, deployments, hold] =
     await Promise.all([
       database.pipeline.findUnique({ where: { id: env.pipelineRevisionId } }),
       env.promotionSourceEnvironmentId === null
@@ -108,6 +109,10 @@ export async function environmentDetail(
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         take: 20,
       }),
+      database.environment.findUniqueOrThrow({
+        where: { id: environmentId },
+        select: { restoreHold: true },
+      }),
     ]);
   return {
     environment: env,
@@ -116,6 +121,10 @@ export async function environmentDetail(
       wire(required(pipeline, "Pipeline")),
     ),
     sourceEnvironment,
+    restoreHold:
+      hold.restoreHold === null
+        ? null
+        : RestoreHoldSchema.parse(hold.restoreHold),
     versionSets: await Promise.all(
       versionRows.map((row) => version(database, row.id)),
     ),

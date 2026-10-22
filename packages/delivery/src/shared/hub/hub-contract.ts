@@ -13,6 +13,7 @@ import {
   StageSchema,
   VersionSetRevisionSchema,
 } from "#shared/contract.ts";
+import { RestoreHoldSchema } from "#shared/model/cold-start-contract.ts";
 
 const TimestampSchema = z.iso.datetime();
 
@@ -193,6 +194,8 @@ export const EnvironmentDetailSchema = z.object({
   service: ServiceSummarySchema,
   pipeline: PipelineRevisionSchema,
   sourceEnvironment: EnvironmentSchema.nullable(),
+  /** Set by reconcile-after-restore on a mismatch; holds automatic deployments (section 6). */
+  restoreHold: RestoreHoldSchema.nullable(),
   versionSets: z.array(VersionSetRevisionSchema),
   deployments: z.array(DeploymentSchema),
   links: z.array(LinkSchema),

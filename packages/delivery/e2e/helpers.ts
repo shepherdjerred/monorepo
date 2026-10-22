@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page } from "@playwright/test";
 import { DeploymentPageSchema } from "#shared/hub/hub-contract.ts";
 
@@ -57,4 +58,23 @@ export async function api<T>(
   expect(response.status()).toBe(200);
   const body: unknown = await response.json();
   return schema.parse(body);
+}
+
+/** Open a page once it has loaded and require no WCAG 2.2 AA violation. */
+export async function expectAccessible(page: Page, path: string) {
+  await page.goto(path);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(
+    page.locator("[role=status]", { hasText: "Loading" }),
+  ).toHaveCount(0);
+  const results = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+    .analyze();
+  expect(
+    results.violations.map((violation) => ({
+      path,
+      id: violation.id,
+      nodes: violation.nodes.map((node) => node.target.join(" ")),
+    })),
+  ).toEqual([]);
 }

@@ -11,6 +11,7 @@ export function ConfirmButton({
   confirmLabel,
   danger = false,
   disabled = false,
+  describedBy,
   onConfirm,
 }: {
   label: string;
@@ -19,6 +20,8 @@ export function ConfirmButton({
   confirmLabel: string;
   danger?: boolean;
   disabled?: boolean;
+  /** The id of text that tells this button apart from others with its label. */
+  describedBy?: string;
   onConfirm: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -29,6 +32,7 @@ export function ConfirmButton({
         type="button"
         className={danger ? "secondary-button danger" : "secondary-button"}
         disabled={disabled}
+        aria-describedby={describedBy}
         onClick={() => {
           dialog.current?.showModal();
         }}

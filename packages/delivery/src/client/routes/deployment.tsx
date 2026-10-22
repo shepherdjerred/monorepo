@@ -21,6 +21,7 @@ import { ConfirmButton } from "#client/components/confirm-dialog.tsx";
 import { ErrorNotice } from "#client/components/notices.tsx";
 import { ApprovalForm } from "#client/forms/approval-form.tsx";
 import { DeploymentRecord, sourceLabel } from "#client/deployment-detail.tsx";
+import { DeploymentModel } from "#client/model/deployment-model.tsx";
 import type { RecoveryDecision } from "#client/platform-recovery.tsx";
 import { canApprove, canDeploy, isTerminal } from "#client/presentation.ts";
 import { Route as rootRoute } from "./root.tsx";
@@ -125,10 +126,12 @@ function DeploymentPage() {
         (canApprove(principal) ? (
           <ApprovalForm
             key={deployment.id}
+            override={detail.approval?.override === true}
             onDecision={async (decision) => {
-              // The route answers with the decided approval; the page reads
-              // the deployment's new state again.
-              await delivery.approve(deployment.id, decision);
+              await delivery.approve(deployment.id, {
+                ...decision,
+                override: detail.approval?.override === true,
+              });
               await queryClient.invalidateQueries();
             }}
           />
@@ -178,6 +181,7 @@ function DeploymentPage() {
           )}
         </div>
       )}
+      <DeploymentModel detail={detail} />
       {principal !== undefined && (
         <DeploymentRecord
           detail={detail}

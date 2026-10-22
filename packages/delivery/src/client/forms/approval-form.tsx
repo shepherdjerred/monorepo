@@ -9,7 +9,7 @@ const DecisionSchema = z.object({
 });
 export type Decision = z.infer<typeof DecisionSchema>;
 
-function Buttons() {
+function Buttons({ override }: { override: boolean }) {
   const { pending } = useFormStatus();
   return (
     <div className="button-row">
@@ -20,7 +20,7 @@ function Buttons() {
         className="primary-button"
         disabled={pending}
       >
-        Approve release
+        {override ? "Approve override" : "Approve release"}
       </button>
       <button
         type="submit"
@@ -41,8 +41,11 @@ function Buttons() {
  * button names the decision, and the server's answer appears in place.
  */
 export function ApprovalForm({
+  override = false,
   onDecision,
 }: {
+  /** The frozen set revision is not eligible; the decision is recorded as an override (H4). */
+  override?: boolean;
   onDecision: (decision: Decision) => Promise<void>;
 }) {
   const [state, submit] = useActionState(
@@ -69,6 +72,12 @@ export function ApprovalForm({
         Approval applies to this exact release, configuration, pipeline, and
         frozen worker pool or saved platform plan when present.
       </p>
+      {override && (
+        <p className="notice">
+          This deploy asked for an override: its set revision is not eligible
+          for an ordinary deploy, so approving it is recorded as an override.
+        </p>
+      )}
       <label>
         Reason
         <textarea
@@ -84,7 +93,7 @@ export function ApprovalForm({
           {state.error}
         </p>
       )}
-      <Buttons />
+      <Buttons override={override} />
     </form>
   );
 }

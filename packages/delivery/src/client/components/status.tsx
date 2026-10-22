@@ -8,6 +8,13 @@ const GLYPHS: Record<string, string> = {
   awaiting_approval: "⏸",
   canceled: "⊘",
   not_started: "–",
+  watching: "◔",
+  settled: "✓",
+  alarmed: "!",
+  unmonitored: "–",
+  granted: "✓",
+  rejected: "✕",
+  expired: "◌",
 };
 
 export function statusLabel(value: string) {

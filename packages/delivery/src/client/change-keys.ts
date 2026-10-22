@@ -18,10 +18,19 @@ const CATALOG: QueryKey[] = [
   ["overview"],
   ["versions"],
 ];
-const INTENT: QueryKey[] = [["deployment"], ["environment"], ["overview"]];
+const INTENT: QueryKey[] = [
+  ["deployment"],
+  ["environment"],
+  ["overview"],
+  ["recovery-intent"],
+];
 
 const BY_DOMAIN: Record<ChangeDomain, (change: ChangeEvent) => QueryKey[]> = {
-  deployment: (change) => [["deployment", change.entityId], ...RELEASE],
+  deployment: (change) => [
+    ["deployment", change.entityId],
+    ["recovery-intent"],
+    ...RELEASE,
+  ],
   build: () => CATALOG,
   versionSet: () => CATALOG,
   artifact: () => CATALOG,
