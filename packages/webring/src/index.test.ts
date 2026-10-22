@@ -31,6 +31,16 @@ const server = Bun.serve({
         { headers: { "Content-Type": "application/rss+xml" } },
       );
     }
+    if (url.pathname === "/emoji.xml") {
+      return new Response(
+        `<rss version="2.0"><channel><title>Emoji</title>
+          <item><title>Emoji</title><link>${url.origin}/posts/latest/</link>
+          <pubDate>Fri, 02 Oct 2026 00:00:00 GMT</pubDate>
+          <description>${"a".repeat(9)}😀🇯🇵 tail</description>
+          </item></channel></rss>`,
+        { headers: { "Content-Type": "application/rss+xml" } },
+      );
+    }
     if (
       url.pathname === "/asset.png" ||
       url.pathname === "/posts/latest/details/" ||
@@ -106,6 +116,25 @@ test("preview links resolve against the article and remain sanitized", async () 
     expect(response.status).toBe(200);
   }
 });
+
+test.each([
+  { truncate: 10, expected: `${"a".repeat(9)}...` },
+  { truncate: 11, expected: `${"a".repeat(9)}😀...` },
+  { truncate: 13, expected: `${"a".repeat(9)}😀...` },
+  { truncate: 15, expected: `${"a".repeat(9)}😀🇯🇵...` },
+])(
+  "preview truncation at $truncate units keeps emoji whole",
+  async ({ truncate, expected }) => {
+    const result = await run({
+      sources: [{ title: "Emoji", url: createUrl("emoji.xml") }],
+      number: 1,
+      truncate,
+    });
+    const preview = result[0]?.preview;
+    expect(preview).toBe(expected);
+    expect(preview?.isWellFormed()).toBe(true);
+  },
+);
 
 test("it should fetch several RSS feeds", async () => {
   const config: Configuration = {
