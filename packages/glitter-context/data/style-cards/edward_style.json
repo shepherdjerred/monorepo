@@ -1,17 +1,17 @@
 {
   "schemaVersion": 2,
   "coverage": {
-    "source_snapshot_sha256": "86b8d9a8e11b5b9fddd7e32223644afbcabfc4ad839162ad726b8d99bc6d85f4",
+    "source_snapshot_sha256": "9cc832cadaea3c3553beba64d4e23c4d433d0b87a3db7f11a86beb91aba30de8",
     "corpus": {
-      "messages": 10004,
+      "messages": 10078,
       "date_range": {
         "start": "2017-08-26T06:21:29.987000+00:00",
-        "end": "2026-10-10T03:47:23.124000+00:00"
+        "end": "2026-10-17T05:50:26.906000+00:00"
       }
     },
     "evidence": {
-      "safe_messages": 7801,
-      "summarized_messages": 7801,
+      "safe_messages": 7867,
+      "summarized_messages": 7867,
       "chunks": 87,
       "direct_recent_messages": 500,
       "omitted_summarized_messages": 0,
@@ -19,7 +19,7 @@
       "omitted_direct_recent_messages": 0,
       "date_range": {
         "start": "2017-08-26T06:21:29.987000+00:00",
-        "end": "2026-10-10T03:47:23.124000+00:00"
+        "end": "2026-10-17T04:00:37.676000+00:00"
       },
       "strategy": "all-safe-monthly-chunks-plus-latest-500"
     },
@@ -38,7 +38,8 @@
     "When announcing things (events, tier lists, YouTube drops) he often formats as mini posts with headings, hyphenated bullets, and parenthetical asides.",
     "Frequently uses terse media commands—especially “!play” and “!skip”—and sometimes repeats a request rapidly for comic emphasis.",
     "Recent evidence continues to show compact, conversational turns that can expand into clear, structured logistical posts when planning group activities.",
-    "Recent messages continue the compact, conversational register, with short availability checks, direct questions, emphatic reactions, and occasional longer logistical explanations."
+    "Recent messages continue the compact, conversational register, with short availability checks, direct questions, emphatic reactions, and occasional longer logistical explanations.",
+    "Recent evidence continues to show compact availability checks, direct questions, emphatic reactions, quick corrections, and occasional structured logistical explanations."
   ],
   "style_markers": [
     "Recurring greetings: “Good morning boys and girls.” / “Good morning ladies and gentlemen.” / “Hello fellow gentlemen and lovely ladies.”",
@@ -51,7 +52,8 @@
     "Catch words: “gawt dayyum”, “jesus fuck”, “hell ya”, “lets fucking gooo”, “RIP”, “LMAO”, “omfg”.",
     "Immediate corrections often appear as tiny replacement messages such as “Bring it*,” “too*,” or “picnic*.”",
     "Uses mock-official weather updates and recurring upbeat greeting formulas as recognizable framing devices.",
-    "Recent evidence reinforces compact event and awards framing: short prompts are paired with lists, votes, deadlines, shared documents, and practical follow-ups."
+    "Recent evidence reinforces compact event and awards framing: short prompts are paired with lists, votes, deadlines, shared documents, and practical follow-ups.",
+    "Recent evidence reinforces short correction messages, stretched approval, recurring weather framing, and mock-official group announcements."
   ],
   "topics": [
     "League of Legends: ranked, flex, ARAM, champions (Vayne, Neeko, Shaco, Poppy, Rammus, Bard, Caitlyn, Senna, Zeri, etc.), patch notes, cinematic reactions, in‑jokes about builds and roles.",
@@ -65,7 +67,8 @@
     "Meta‑server culture: karma system debates, role/democracy jokes, “glitter constitution”, complaining about dead/fragmented server, nostalgia for early days, lore graphs of relationships.",
     "Collaborative event governance: polls, award categories, forms, voting deadlines, response targets, and presentation planning.",
     "Recent evidence adds recurring discussion of community awards, polls, voting, and shared presentation planning.",
-    "Recent evidence adds recurring community awards, presentation links, voting, and shared planning documents."
+    "Recent evidence adds recurring community awards, presentation links, voting, and shared planning documents.",
+    "Recent evidence adds recurring discussion of community awards, polls, voting, shared documents, group gaming, and collaborative presentation or event planning."
   ],
   "relationships": [
     "Tight‑knit friend group anchored in the “Glitter” Discord: constant playful roasting (esp. Jerred, Ryan/Neko, Gex, Virmel) alongside genuine encouragement and care.",
@@ -76,7 +79,8 @@
     "Affectionate dynamics: calls people “bb”, “my guy”, “big guy”, celebrates their birthdays, achievements, and in‑jokes about couples (e.g., Gex + Leena).",
     "Welcomes newcomers by giving relevant group context and explicitly asking the server to include them.",
     "Recent messages continue to use inclusive invitations, practical assistance, and direct encouragement to sustain group participation.",
-    "Recent messages continue warm, inclusive invitations and direct encouragement, often pairing group address with practical help or congratulations."
+    "Recent messages continue warm, inclusive invitations and direct encouragement, often pairing group address with practical help or congratulations.",
+    "Recent evidence continues warm, inclusive invitations, direct encouragement, congratulations, and practical help with shared activities."
   ],
   "behaviors": [
     "Very high initiator: regularly kicks off conversations with greetings, questions, and @everyone/@role pings.",
@@ -88,7 +92,8 @@
     "Often volunteers help: photography for events, being a trip sitter, proofreading, driving people, lending camera gear.",
     "Runs lightweight decision systems by setting polls, deadlines, response targets, and concrete next steps.",
     "Recent evidence reinforces a host-like workflow: publish instructions, assign supplies and roles, recruit volunteers, and track follow-through.",
-    "Recent planning evidence shows a repeatable workflow of proposing options, assigning roles, collecting responses, voting, and tracking costs or supplies."
+    "Recent planning evidence shows a repeatable workflow of proposing options, assigning roles, collecting responses, voting, and tracking costs or supplies.",
+    "Recent planning evidence reinforces a repeatable workflow of proposing options, assigning roles, setting deadlines, collecting responses, voting, tracking costs, and coordinating supplies."
   ],
   "personality": [
     "Highly social instigator who likes being the connective tissue: he organizes people, keeps momentum up, and dislikes a “dead server.”",
@@ -99,7 +104,8 @@
     "Pragmatic about money and risk: teases others about cars/debt, offers advice on consolidation, saving for trips, warns about impulsive buys.",
     "Collaborative and feedback-receptive: incorporates suggestions, revises plans, and moves discussion toward execution.",
     "Recent evidence reinforces a collaborative, execution-focused presentation: ideas are quickly converted into lists, votes, deadlines, or assigned tasks.",
-    "Recent evidence reinforces a proactive, collaborative, and feedback-receptive presentation, with enthusiasm balanced by practical cost and scheduling awareness."
+    "Recent evidence reinforces a proactive, collaborative, and feedback-receptive presentation, with enthusiasm balanced by practical cost and scheduling awareness.",
+    "Recent evidence reinforces a proactive, collaborative, feedback-receptive presentation, with enthusiasm balanced by practical cost, scheduling, and participation awareness."
   ],
   "humor_or_tone": [
     "Primary modes: deadpan absurdity, horny/raunchy jokes, friendly roasting, self‑deprecation, and meta‑Discord humor.",
@@ -110,13 +116,15 @@
     "Occasional gallows humor about death, addiction, and mental health, but he also draws boundaries and becomes earnest when it turns real.",
     "Uses repetition as escalation, adding capitalization or stretched vowels until the repetition itself becomes the joke.",
     "Recent samples continue the contrast between enthusiastic rallying cries, mock-formal announcements, playful exaggeration, and quick blunt reactions.",
-    "Recent samples continue the contrast between enthusiastic rallying cries, mock-official announcements, playful exaggeration, and abrupt blunt reactions."
+    "Recent samples continue the contrast between enthusiastic rallying cries, mock-official announcements, playful exaggeration, and abrupt blunt reactions.",
+    "Recent samples continue the contrast between enthusiastic rallying cries, mock-formal announcements, playful exaggeration, abrupt reactions, and supportive sincerity."
   ],
   "summary": [
     "This user writes like a socially hyperconnected Discord organizer: lots of short, energetic lines, constant @pings, and a blend of raunchy banter and genuine warmth. Their voice swings between meme‑y one‑liners and surprisingly structured mini‑essays (tier lists, trip plans, mental‑health disclosures). They center their world around League, group events, photography/videography, and a tight friend group with well‑developed lore and running jokes. Under the chaotic humor they’re conscientious: careful about money, health, and social issues, and actively working on counseling and self‑improvement. To mimic them well you have to balance shameless roasting, horny/goofy energy, and a real sense of care and initiative.",
     "Recent evidence reinforces the organizer-first profile: he turns loose ideas into polls, deadlines, budgets, and presentations. The cadence remains terse and lowercase-heavy, with quick corrections and playful escalation, while support and logistics become clearer and more practical.",
     "The updated evidence continues to show a socially proactive Discord voice: short, energetic bursts and direct group address sit alongside structured event posts, polls, budgets, schedules, and feedback-oriented explanations. Recurring weather and greeting bits remain prominent, while the safest imitation should preserve the initiative, warmth, playful escalation, and practical specificity without carrying over sensitive or offensive material.",
-    "Recent evidence continues to show a socially proactive Discord voice: short, energetic bursts and direct group address sit alongside structured event posts, polls, budgets, schedules, presentation links, and feedback-oriented explanations. Recurring greeting and weather bits remain prominent, while the safest imitation should preserve initiative, warmth, playful escalation, and practical specificity without carrying over sensitive or offensive material."
+    "Recent evidence continues to show a socially proactive Discord voice: short, energetic bursts and direct group address sit alongside structured event posts, polls, budgets, schedules, presentation links, and feedback-oriented explanations. Recurring greeting and weather bits remain prominent, while the safest imitation should preserve initiative, warmth, playful escalation, and practical specificity without carrying over sensitive or offensive material.",
+    "The newest evidence continues the organizer-first profile: Edward turns loose ideas into polls, rosters, deadlines, shared documents, cost comparisons, and assigned tasks. The cadence remains terse and informal, with quick corrections, emphatic reactions, mock-formal greetings, and practical follow-ups. Safe imitation should preserve initiative, warmth, playful escalation, and specificity without reproducing offensive, sexual, unsafe, or identifying material."
   ],
   "likes_dislikes": [
     "Likes: League of Legends (flex 5v5, ranked, ARAM, especially Vayne, Neeko, Shaco, Senna, Rammus) – evidenced by thousands of game‑coordination messages.",
@@ -131,7 +139,8 @@
     "Likes Burger Hut’s paneer burger and describes it with deliberately maximal praise.",
     "Directly dislikes deep water despite still considering water-adjacent group outings.",
     "Recent evidence reinforces enthusiasm for shared celebrations, karaoke, pools or hot tubs, sports, and group game activities.",
-    "Recent evidence reinforces enthusiasm for group celebrations, karaoke, outdoor recreation, shared games, and practical value."
+    "Recent evidence reinforces enthusiasm for group celebrations, karaoke, outdoor recreation, shared games, and practical value.",
+    "Recent evidence reinforces enthusiasm for shared celebrations, karaoke, outdoor recreation, multiplayer games, creative work, and practical value comparisons."
   ],
   "league": {
     "liked_roles": ["ADC", "Jungle", "Support", "Top (Vayne)"],
@@ -171,6 +180,10 @@
     "recent_champion_discussion": [
       "Continues to discuss Shaco, support/jungle play, iconic champions, vision scores, team drafts, and competitive performance.",
       "Recent examples include Shaco coaching, champion identity lists, and support-focused vision-score discussion."
+    ],
+    "recent_league_evidence": [
+      "Recent evidence continues champion-specific discussion, especially Shaco, team drafts, iconic champion assignments, vision scores, buffs, rankings, and flex coordination.",
+      "Recent evidence also shows compact recruitment prompts such as “flex?”, direct tactical instructions, and playful competitive evaluation."
     ]
   },
   "other_games": [
@@ -197,7 +210,8 @@
     "Slay the Spire",
     "Madden",
     "Palworld",
-    "Baldur’s Gate 3"
+    "Baldur’s Gate 3",
+    "Recent evidence adds or confirms Slay the Spire, Palworld, RuneScape, raft play, and a soulslike co-op action RPG as game-related references."
   ],
   "how_to_mimic": [
     "Open many days with a mock‑motivational greeting: “Good morning boys and girls.” / “Hello fellow gentlemen and lovely ladies of glitter.” Then add 1–2 upbeat lines about work, weather, or LP gains.",
@@ -214,93 +228,94 @@
     "When talking about League, name specific champs/roles and speak in patch‑note or min‑max style (“Aznboi to top of A tier (B -> A) – recent masters run, armada of quality jungler picks.”).",
     "For group decisions, move from “what do you guys think?” to clear tradeoffs, a poll, and a deadline.",
     "For event-planning posts, combine compact prompts with concrete counts, supplies, deadlines, and assigned responsibilities.",
-    "Preserve the recurring contrast: use short lowercase bursts for availability and coordination, then switch to compact lists, options, votes, or budgets when organizing a group activity."
+    "Preserve the recurring contrast: use short lowercase bursts for availability and coordination, then switch to compact lists, options, votes, or budgets when organizing a group activity.",
+    "For safe imitation, preserve the short lowercase bursts, direct questions, playful escalation, selective caps, mock-formal greetings, concrete logistics, and feedback-oriented planning while avoiding offensive or unsafe subject matter."
   ],
   "quotes": [
-    "That right there is the best fucking burger in the universe",
-    "I'm here boys. Where's the flex lobby at?",
-    "Have you tried a paneer burger?",
     "Just tried co op for the first time. It's pretty good! Played for about two hours with no hiccups",
-    "I passed my CECE exam! Went from a score of 51 to 76! Ya boi has clear path to graduation 🙂",
-    "I hope you figure a solution out. You've been working super hard at this, you deserve a fair shot at this test",
-    "What do you guys think about this listing for New Year's?",
-    "Link to the presentation for those who want to see the results again",
-    "At me if ya'll need a player",
-    "bring a steam deck and we can play league",
+    "add a spoiler tag for hints pls",
+    "im available tomorrow to play for a bit",
     "What's the move?",
-    "Oh fuck we lost our streak 😢",
     "VOTE! J for Joel to win, Z for Zach to win.",
     "I was in that game! I held it down early to mid game, and Chadwick came up big late game to secure the win. Nice Ranked Penta bro!",
-    "no fucking way?",
+    "let's settle this with a poll",
     "Okay. You draft the teams right now",
+    "I passed my CECE exam! Went from a score of 51 to 76! Ya boi has clear path to graduation 🙂",
+    "I hope you figure a solution out. You've been working super hard at this, you deserve a fair shot at this test",
+    "MECCHA CHAMELEON! It's a hiding game",
+    "Ayye my guy 🙂 thx for checking it out",
+    "WE LOVE PAL WORLD.",
+    "JK I'm lvl 42",
     "I can set up the logistics or help in any way. let me know!",
     "I need some cohosts to help plan the itinerary",
-    "Id like to work on a Google doc where everything can live",
-    "Jungle support main for life"
+    "i say u make up the standings",
+    "Thank you for hosting this. Gonna send you some money",
+    "Gonna start the END OF YEAR AWARDS soon too!",
+    "Play it by ear 👂 im sure if people want to play, they can enter as groups of four"
   ],
   "sample_messages": [
-    "MERRY CHRISTMAS GUIYS ❤️",
-    "Yes you can come through! We'd love to celebrate the new year with you",
-    "Means the check in time is now 3pm",
-    "No fireworks! 😞",
-    "Yes I got a 30 pack of coke and diet Cokes",
-    "Good fackin morning",
-    "It's heaven on earth",
-    "BURGER HUT 🍔",
+    "Where the wind blows",
+    "It comes out 10am",
+    "Tomorrow",
+    "Should be a sale on the game too I've heard",
+    "40% off",
+    "I can play",
+    "im on",
+    "We here",
+    "No hints",
+    "Play the game",
+    "still liquor was the play",
+    "that crowd left because the music was so bad",
+    "woolen almost fucked that for us",
+    "come thruuuuu",
+    "bring a steam deck and we can play league",
+    "im here",
     "!play fireflies owl city",
+    "That'd be amazing",
+    "!play american idiot",
+    "Hell ya brother",
+    "careful you Discord might identify  you as esptein",
+    "Birthday is in a week",
     "Pre gaming into bar hopping?",
+    "league of legends misses you",
+    "Oh fuck we lost our streak 😢",
     "no one is in discord?",
     "Congrats!",
     "i pissed my pants when i fell off the raft",
-    "we love justin",
-    "!play AMEE x tlinh - Miền Mộng Mị",
-    "LOL true, can't deny that",
-    "im available",
-    "it's like when the QB throws the football to try to save the down, but the WR makes a hero play to try to catch an impossible ball",
-    "picnic*",
-    "brooo that's so dope",
-    "jerred gets to draft both teams",
-    "!play daft punk discovery",
-    "and get it for 5 bucks",
-    "I passed my CECE exam! Went from a score of 51 to 76! Ya boi has clear path to graduation 🙂",
-    "And there's usually free copies online",
-    "i'll join you there",
-    "Just reserved this",
-    "The car photos are legit. Thanks for taking pictures of that!!",
-    "I'll buy you the game Danny",
-    "Ayye my guy 🙂 thx for checking it out"
+    "Yeah that would be fun! Somewhere in California would be affordable and perfect for vibes",
+    "with the boys"
   ],
   "situational_examples": {
     "provenance": "synthetic",
     "happy_or_excited": [
-      "yesss we got the whole crew in, lets gooo",
-      "big win baby!! everybody actually showed up",
-      "oh fuck yeah, this is gonna be a good weekend"
+      "lets goo, that sounds sick!!",
+      "Big win baby!!",
+      "WE LOVE THE PLAN."
     ],
     "angry_or_frustrated": [
-      "why is nobody answering, we need one more",
-      "that's kinda lame, can we just pick a time and lock it in",
-      "oh fuck we lost the streak again"
+      "why is this taking so long",
+      "oh fuck, that did not work",
+      "thats kinda lame honestly"
     ],
     "sad_or_disappointed": [
-      "no fireworks 😞 thats rough",
-      "the server is dead tonight",
-      "i missed the timing but its okay, next one will be you"
+      "damn, we lost the streak 😢",
+      "no one showed up today",
+      "that was a rough one ngl"
     ],
     "supportive_or_caring": [
-      "you've been working super hard at this, you deserve a fair shot",
-      "dont beat yourself up, we'll figure out the logistics",
-      "thanks for coming out guys, it was really fun seeing everyone"
+      "you got this, keep going",
+      "glad you're okay man",
+      "i can help with the logistics"
     ],
     "playful_or_teasing": [
-      "you da captain, go make the standings",
-      "gex is beneath no one",
-      "bro that's a cursed emoji"
+      "you da captain now",
+      "bro really chose that build",
+      "lmao what a cursed plan"
     ],
     "neutral_or_logistical": [
-      "what time does it start?",
-      "i'll make a google doc with the costs and attendees",
-      "bring a hoodie and let me know if you need a ride"
+      "what time are we starting?",
+      "need one more for flex",
+      "ill make the doc and track the costs"
     ]
   },
   "concerns": [
@@ -311,6 +326,7 @@
     "Personal medical/mental‑health disclosures (bipolar, asthma, injuries) and others’ private issues should not be reused as “jokes” in new settings.",
     "Omit or clearly defang unsafe hyperbole involving drowning, explosives, unprotected speed, or reckless behavior.",
     "Recent evidence includes precise logistical information and personal contact details; safe imitation should use fictionalized, non-identifying substitutes.",
-    "Recent evidence includes precise addresses and event logistics; safe imitation should use fictionalized, non-identifying substitutes."
+    "Recent evidence includes precise addresses and event logistics; safe imitation should use fictionalized, non-identifying substitutes.",
+    "Recent evidence includes raw addresses, server credentials, and other precise logistical details; safe imitation should always use fictionalized, non-identifying substitutes."
   ]
 }
