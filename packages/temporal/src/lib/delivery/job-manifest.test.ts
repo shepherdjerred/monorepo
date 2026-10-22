@@ -204,30 +204,6 @@ describe("bounded revision-pinned Delivery Jobs", () => {
       );
     }
   });
-  it("runs a test suite as a tokenless worker-namespace Job with no grants", () => {
-    const job = deliveryJobManifest({
-      ...request,
-      recipe: "test",
-      stageKey: "test-e2e",
-      input: { suite: "test:e2e", workspace: "packages/delivery" },
-    });
-    expect(job.metadata?.namespace).toBe("delivery-worker-jobs");
-    expect(job.metadata?.labels).toMatchObject({
-      app: "delivery-stage",
-      "kueue.x-k8s.io/queue-name": "delivery",
-    });
-    const spec = job.spec!.template.spec!;
-    expect(spec.nodeSelector).toEqual({ "kubernetes.io/hostname": "liskov" });
-    expect(spec.automountServiceAccountToken).toBe(false);
-    expect(
-      spec.containers[0]?.env?.filter((entry) => entry.valueFrom !== undefined),
-    ).toEqual([]);
-    expect(
-      spec.containers[0]?.env?.some(
-        (entry) => entry.name === "DELIVERY_API_URL",
-      ),
-    ).toBe(false);
-  });
   it.each(["control-plane"] as const)(
     "keeps %s in an independent tokenless platform Job with only its fixed transport grants",
     (recipe) => {
@@ -355,14 +331,16 @@ describe("liskov OS-disk Job bootstrap", () => {
       lines.indexOf("export MISE_DATA_DIR=/workspace/mise"),
     ).toBeGreaterThan(lines.indexOf("cp -Rs /opt/mise/. /workspace/mise/"));
   });
-  it("adopts a Job created with the previous reviewed bootstrap and nothing else", () => {
-    // The exact bootstrap that created Jobs before linked toolchains; a
-    // changed digest means a retained Job could no longer be adopted.
+  it("adopts a Job created with a previous reviewed bootstrap and nothing else", () => {
+    // The exact bootstraps that created Jobs before: linked toolchains with
+    // no test or stack-archive step, then the copied toolchain. A changed
+    // digest means a retained Job could no longer be adopted.
     expect(
       PREVIOUS_DELIVERY_JOB_BOOTSTRAPS.map((script) =>
         createHash("sha256").update(script).digest("hex"),
       ),
     ).toEqual([
+      "011b625607e3c62d719e77b388dd7f80414dac3f609f317c8c7285738b9ff9a2",
       "a5c909be28ebe8674710740bf59914338db047cb7831571023c3be7ddb9c7c15",
     ]);
     for (const recipe of [
@@ -376,13 +354,23 @@ describe("liskov OS-disk Job bootstrap", () => {
         "-c",
         DELIVERY_JOB_BOOTSTRAP,
       ]);
+      for (const previous of PREVIOUS_DELIVERY_JOB_BOOTSTRAPS) {
+        const adopted = structuredClone(expected);
+        adopted.spec!.template.spec!.containers[0]!.command = [
+          "/bin/bash",
+          "-c",
+          previous,
+        ];
+        expect(() =>
+          assertMatchingDeliveryJob(adopted, expected),
+        ).not.toThrow();
+      }
       const legacy = structuredClone(expected);
       legacy.spec!.template.spec!.containers[0]!.command = [
         "/bin/bash",
         "-c",
         PREVIOUS_DELIVERY_JOB_BOOTSTRAPS[0]!,
       ];
-      expect(() => assertMatchingDeliveryJob(legacy, expected)).not.toThrow();
       const legacyChanged = structuredClone(legacy);
       legacyChanged.spec!.template.spec!.containers[0]!.env!.push({
         name: "UNREVIEWED",
@@ -401,6 +389,33 @@ describe("liskov OS-disk Job bootstrap", () => {
         "frozen request",
       );
     }
+  });
+});
+
+describe("Delivery test-suite Jobs (V5)", () => {
+  it("runs a test suite as a tokenless worker-namespace Job with no grants", () => {
+    const job = deliveryJobManifest({
+      ...request,
+      recipe: "test",
+      stageKey: "test-e2e",
+      input: { suite: "test:e2e", workspace: "packages/delivery" },
+    });
+    expect(job.metadata?.namespace).toBe("delivery-worker-jobs");
+    expect(job.metadata?.labels).toMatchObject({
+      app: "delivery-stage",
+      "kueue.x-k8s.io/queue-name": "delivery",
+    });
+    const spec = job.spec!.template.spec!;
+    expect(spec.nodeSelector).toEqual({ "kubernetes.io/hostname": "liskov" });
+    expect(spec.automountServiceAccountToken).toBe(false);
+    expect(
+      spec.containers[0]?.env?.filter((entry) => entry.valueFrom !== undefined),
+    ).toEqual([]);
+    expect(
+      spec.containers[0]?.env?.some(
+        (entry) => entry.name === "DELIVERY_API_URL",
+      ),
+    ).toBe(false);
   });
 });
 
