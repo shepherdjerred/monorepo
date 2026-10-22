@@ -359,8 +359,6 @@ WHERE e."activeDeploymentId" IS NOT NULL
 UNION ALL
 SELECT 'platform-lock', p.id, d.id, d.status, d."recoveryRequired",
        p.id = 'shared-resources'
-         AND EXISTS (SELECT 1 FROM "Environment" e
-                     WHERE e.id = d."environmentId" AND e."activeDeploymentId" = d.id)
 FROM "PlatformLock" p
 JOIN "Deployment" d ON d.id = p."deploymentId"
 UNION ALL
@@ -404,11 +402,11 @@ Only a `failed` or `canceled` finish can require recovery
 An active pointer is `consistent` when it names a Deployment of its own
 environment that is either `running` without `recoveryRequired`, or `failed`
 or `canceled` with it. That Deployment must also hold any platform lock it
-needs. A platform lock is `consistent` when its ID is `shared-resources` and
-its owner is the active Deployment of its own environment.
-A running or quarantined Deployment that is not its environment's active one
-appears as `unheld` and is never consistent. Each consistent row is running or
-quarantined work that the backup captured.
+needs. A platform lock is `consistent` when its ID is `shared-resources`. The
+v1 lock check below validates its holder. A running or quarantined Deployment
+that is not its environment's active one appears as `unheld` and is never
+consistent. Each consistent row is running, quarantined or barrier-holding
+work that the backup captured.
 Reconcile every row with Temporal and native state before resuming
 submissions.
 
@@ -420,9 +418,13 @@ rows.
   an active Deployment without the lock on its own target, or a target lock
   whose owner is not active. The claim derives the target from the pipeline:
   `static-site:<bucket>`, `tofu:<stack>`, or otherwise the environment's
-  application. It also shows a platform lock whose owner neither needs it nor
-  is a [content recovery](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/content-recovery/checkpoints.ts)
-  holding its producer barrier.
+  application. It also shows a platform lock without a valid holder. A valid
+  holder is either a platform or control-plane operation that is its
+  environment's active Deployment, or a
+  [content recovery](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/content-recovery/checkpoints.ts)
+  whose producer barrier is still held. Content recovery
+  [keeps the lock](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/recovery-settlement.ts)
+  after it settles and clears the active pointer, until its producer restarts.
 - The specialized-pointer check reads `acceptedPlatformDeploymentId`,
   `acceptedControlPlaneDeploymentId` and `acceptedForumBaselineIntentId`. Each
   must name a succeeded record of its own environment, of the kind that
@@ -456,16 +458,25 @@ WHERE NOT EXISTS (
   SELECT 1 FROM "Environment" e WHERE e."activeDeploymentId" = a."deploymentId"
 )
 UNION ALL
-SELECT 'platform lock without eligible owner', p.id, p."deploymentId"
+SELECT 'platform lock without valid holder', p.id, p."deploymentId"
 FROM "PlatformLock" p
 JOIN "Deployment" d ON d.id = p."deploymentId"
-WHERE NOT (d.kind = 'upgrade-control-plane'
-    OR (d."platformSnapshot" IS NOT NULL AND d.kind <> 'tofu-plan'))
-  AND NOT EXISTS (
-    SELECT 1 FROM "ContentRecoveryIntent" i
-    WHERE i."deploymentId" = d.id
-      AND i."dispatchBarrier" IS NOT NULL AND i."barrierRestoredAt" IS NULL
+WHERE NOT (
+  p.id = 'shared-resources'
+  AND (
+    ((d.kind = 'upgrade-control-plane'
+        OR (d."platformSnapshot" IS NOT NULL AND d.kind <> 'tofu-plan'))
+      AND EXISTS (
+        SELECT 1 FROM "Environment" e
+        WHERE e.id = d."environmentId" AND e."activeDeploymentId" = d.id
+      ))
+    OR EXISTS (
+      SELECT 1 FROM "ContentRecoveryIntent" i
+      WHERE i."deploymentId" = d.id
+        AND i."dispatchBarrier" IS NOT NULL AND i."barrierRestoredAt" IS NULL
+    )
   )
+)
 ORDER BY 1, 2;
 SELECT 'platform' AS pointer, e.id AS environment,
        e."acceptedPlatformDeploymentId" AS record
