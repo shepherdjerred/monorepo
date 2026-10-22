@@ -285,3 +285,18 @@ else if (args[0] === 's3') await copyFile(process.env.FIXTURE_OBJECT, args[3]);
     expect(calls[0]?.args).toContain("*");
   },
 );
+
+test("a delegated bucket activates through its catalog environment or its v1 predecessor", () => {
+  expect(() =>
+    assertStaticSiteDeliveryOwner("sjer-red", "sjer-red/prod"),
+  ).not.toThrow();
+  expect(() =>
+    assertStaticSiteDeliveryOwner("sjer-red", "static-sites/sjer-red"),
+  ).not.toThrow();
+  expect(() =>
+    assertStaticSiteDeliveryOwner("sjer-red", "resume/prod"),
+  ).toThrow("not delegated");
+  expect(() =>
+    assertStaticSiteDeliveryOwner("not-a-bucket", "not-a-bucket/prod"),
+  ).toThrow("not delegated");
+});
