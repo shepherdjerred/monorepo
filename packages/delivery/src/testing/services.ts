@@ -38,3 +38,20 @@ export async function registerTestService(database: Database, id: string) {
     update: row,
   });
 }
+
+/**
+ * Declares, as the catalog document would, that a service acquires these
+ * components (section 4.5), so the acquisition endpoint admits them.
+ */
+export async function declareAcquisitions(
+  database: Database,
+  id: string,
+  components: readonly string[],
+) {
+  await database.service.update({
+    where: { id },
+    data: {
+      components: components.map((name) => ({ name, producer: "acquisition" })),
+    },
+  });
+}

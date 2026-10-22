@@ -712,7 +712,11 @@ HTTP reader. The API's observer token is not mounted into migration or Tailscale
 containers, and its identity cannot read Secrets or create Pods.
 
 Independent upstream acquisition is restricted to version-catalog entries that
-declare `component: true` (`packages/version-catalog/src/catalog.json`). A chart
+declare `component: true` (`packages/version-catalog/src/catalog.json`), under
+the component name the catalog document uses (`catalogComponentName`: a chart
+by its name, an image by its repository basename), for a service the catalog
+document declares as acquiring that component. An alias entry is pulled from
+and verified at its `packageName` repository. A chart
 entry is verified by bounded reads of the upstream index and archive against
 the index checksum; an image entry is verified by resolving its tag to the
 manifest digest through the registry API and comparing it with the pinned
@@ -720,8 +724,9 @@ digest. The artifact URI is the upstream location; nothing new is mirrored. The
 Minecraft chart stays mirrored into ChartMuseum because the registered
 `minecraft-tsmc` pipeline pulls it from there, and the server verifies mirror
 bytes against the upstream checksum as well. Existing mirrored rows are never
-rewritten. An immutable origin key makes concurrent acquisitions reuse one
-original artifact/build/source; an unrelated acquiring CI failure does not
+rewritten. An immutable origin key per acquiring service makes concurrent acquisitions
+by that service reuse one original artifact/build/source, while each service
+the catalog names acquires its own; an unrelated acquiring CI failure does not
 invalidate those independently verified bytes. `findQualifiedArtifact` returns
 exact original metadata or a useful 404; omitting `version` matches bytes by
 digest alone, which is how producers retain an unchanged archive.

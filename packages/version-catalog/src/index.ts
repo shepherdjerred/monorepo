@@ -76,6 +76,36 @@ export function componentEntries(
   return catalog.entries.filter((entry) => entry.component === true);
 }
 
+/**
+ * The Delivery catalog document's name for a component entry: a chart by
+ * its name, an image by its repository basename. Producers and Delivery's
+ * acquisition endpoint both derive the name here.
+ */
+export function catalogComponentName(entry: VersionCatalogEntry): string {
+  switch (entry.artifactType) {
+    case "helm-chart":
+      return `chart:${entry.name}`;
+    case "image":
+      return `image:${entry.name.slice(entry.name.lastIndexOf("/") + 1)}`;
+    case "package":
+    case "source":
+      throw new Error(
+        `Component ${entry.name} is a ${entry.artifactType}, which Delivery cannot acquire`,
+      );
+  }
+}
+
+/**
+ * The repository an entry is pulled from and verified at. An alias entry
+ * (`itzg/minecraft-server-java8`) names its real repository in
+ * `management.packageName`; its component keeps the alias.
+ */
+export function upstreamName(entry: VersionCatalogEntry): string {
+  return entry.management.managed && entry.management.packageName !== undefined
+    ? entry.management.packageName
+    : entry.name;
+}
+
 export const VersionCatalogSchema = z
   .object({
     $schema: z.string().min(1),

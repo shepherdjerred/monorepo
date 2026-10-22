@@ -3,11 +3,13 @@ import { composeVerifiedBuild } from "#infrastructure/composition/verified-build
 import { z } from "zod";
 import rawCatalog from "@shepherdjerred/version-catalog/catalog.json" with { type: "json" };
 import {
+  catalogComponentName,
   componentEntries,
   parseVersionCatalog,
+  upstreamName,
 } from "@shepherdjerred/version-catalog";
 import type { VersionCatalogEntry } from "@shepherdjerred/version-catalog";
-import type { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
+import { CatalogComponentSchema } from "@shepherdjerred/ops-model/catalog-document-shape.ts";
 import {
   AcquireUpstreamArtifactSchema,
   ArtifactAcquisitionSchema,
@@ -93,26 +95,69 @@ function refuse(reason: string): never {
   throw new DeliveryError("INVALID", reason);
 }
 
+/**
+ * The catalog document decides who acquires what: the requesting service
+ * must declare the component with producer `acquisition` (section 4.5).
+ */
+function requireAcquiring(
+  input: Input,
+  service: { components: unknown } | null,
+): void {
+  const declared =
+    service === null
+      ? []
+      : z.array(CatalogComponentSchema).parse(service.components);
+  if (
+    !declared.some(
+      (component) =>
+        component.name === input.artifact.component &&
+        component.producer === "acquisition",
+    )
+  )
+    refuse(
+      `Service ${input.serviceId} does not acquire ${input.artifact.component} in the catalog document`,
+    );
+}
+
+/**
+ * The one version-catalog component entry the catalog document's component
+ * name denotes: a chart by its name, an image by its repository basename.
+ */
+function catalogEntry(
+  input: Input,
+  components: readonly VersionCatalogEntry[],
+): VersionCatalogEntry {
+  const artifactType = input.artifact.kind === "chart" ? "helm-chart" : "image";
+  const matches = components.filter(
+    (candidate) =>
+      candidate.artifactType === artifactType &&
+      catalogComponentName(candidate) === input.artifact.component,
+  );
+  const [entry] = matches;
+  if (entry === undefined || matches.length !== 1)
+    refuse(
+      "Independent acquisition is restricted to exactly one version catalog component entry",
+    );
+  return entry;
+}
+
 /** Map the intent onto exactly one catalog component entry; nothing is read before this passes. */
 function reviewed(
   input: Input,
   components: readonly VersionCatalogEntry[],
-  services: ServiceIndex,
 ): Reviewed {
-  const { artifact, serviceId } = input;
+  const { artifact } = input;
   const origin = artifact.origin;
   if (origin.kind !== "upstream")
     refuse("Upstream acquisition requires explicit original origin");
-  const artifactType = artifact.kind === "chart" ? "helm-chart" : "image";
-  const entry = components.find(
-    (candidate) =>
-      candidate.name === origin.name && candidate.artifactType === artifactType,
-  );
-  if (entry === undefined)
-    refuse(
-      "Independent acquisition is restricted to the version catalog's component entries",
-    );
+  if (artifact.kind !== "chart" && artifact.kind !== "image")
+    refuse("Upstream acquisition covers charts and images only");
+  const entry = catalogEntry(input, components);
+  // Each acquiring service owns its own artifact of an origin: the catalog
+  // document may name several (section 4.5), and concurrent acquisitions by
+  // one service converge on one row.
   const originKey = fingerprint({
+    serviceId: input.serviceId,
     kind: origin.kind,
     repository: origin.repository,
     name: origin.name,
@@ -120,29 +165,24 @@ function reviewed(
   });
   if (artifact.kind === "chart") {
     const repository = `${registryUrl(entry).replace(/\/+$/, "")}/`;
-    const owner = services.byChart(entry.name);
-    if (
-      origin.repository !== repository ||
-      artifact.component !== `chart:${entry.name}` ||
-      (owner !== undefined && owner.id !== serviceId)
-    )
+    if (origin.repository !== repository || origin.name !== entry.name)
       refuse(
-        "Chart acquisition must match the catalog component's repository, name and owning service",
+        "Chart acquisition must match the catalog component's repository and name",
       );
     if (new URL(artifact.uri).protocol !== "https:")
       refuse("Chart archive location must be an https URL");
     return { kind: "chart", originKey, name: entry.name, repository };
   }
-  if (artifact.kind !== "image")
-    refuse("Upstream acquisition covers charts and images only");
-  const registry = registryLocation(registryUrl(entry), entry.name);
+  // An alias entry is pulled from, and verified at, its real repository.
+  const name = upstreamName(entry);
+  const registry = registryLocation(registryUrl(entry), name);
   if (
     origin.repository !== registryUrl(entry) ||
-    artifact.component !== `image:${entry.name}` ||
+    origin.name !== name ||
     artifact.uri !== registry.uri
   )
     refuse(
-      "Image acquisition must match the catalog component's registry, name and image URI",
+      "Image acquisition must match the catalog component's registry, repository and image URI",
     );
   return { kind: "image", originKey, registry, tag: origin.version };
 }
@@ -296,11 +336,11 @@ export async function acquireUpstreamArtifact(
   requireScope(actor, "publish");
   const transport = options.transport ?? fetch;
   const input = AcquireUpstreamArtifactSchema.parse(rawInput);
-  const plan = reviewed(
+  requireAcquiring(
     input,
-    options.components ?? catalogComponents,
-    this.catalog,
+    await this.database.service.findUnique({ where: { id: input.serviceId } }),
   );
+  const plan = reviewed(input, options.components ?? catalogComponents);
   const { originKey } = plan;
   const buildId = await this.database.$transaction(async (tx) => {
     const prior = await request(tx, actor, {

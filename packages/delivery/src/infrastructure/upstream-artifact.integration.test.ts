@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
-import { expect, test } from "vitest";
+import { beforeEach, expect, test } from "vitest";
 import { VersionCatalogEntrySchema } from "@shepherdjerred/version-catalog";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
+import { declareAcquisitions } from "#testing/services.ts";
 import { testExecutor, testPublisher } from "#testing/seed.ts";
 import { AcquireUpstreamArtifactSchema } from "#shared/contract.ts";
 import { createApp } from "#server/app.ts";
@@ -9,6 +10,15 @@ import { createDeliveryClient } from "#shared/client.ts";
 import { catalogComponents } from "./upstream-artifact.ts";
 
 const context = useDeliveryFixture();
+// The catalog document names who acquires each component (section 4.5).
+beforeEach(async () => {
+  const db = context.cluster.database;
+  await declareAcquisitions(db, "minecraft", ["chart:minecraft"]);
+  await declareAcquisitions(db, "arcade", [
+    "image:upstream-image",
+    "image:minecraft-server-java8",
+  ]);
+});
 const bytes = new TextEncoder().encode("independent upstream archive fixture");
 const digest = `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
 const manifest = new TextEncoder().encode(
@@ -52,6 +62,21 @@ const components = [
       versioning: "docker",
     },
     value: `1.2.3@${manifestDigest}`,
+    component: true,
+  }),
+  // An alias whose image lives at its packageName repository.
+  VersionCatalogEntrySchema.parse({
+    name: "itzg/minecraft-server-java8",
+    category: "upstream",
+    artifactType: "image",
+    management: {
+      managed: true,
+      datasource: "docker",
+      registryUrl: "https://docker.io",
+      versioning: "docker",
+      packageName: "itzg/minecraft-server",
+    },
+    value: `java8@${manifestDigest}`,
     component: true,
   }),
 ];
@@ -125,7 +150,12 @@ function transport(url: string | URL) {
   );
 }
 /** Docker Hub shape: anonymous manifest reads are challenged, then served with a content digest. */
-function registry(served: Uint8Array<ArrayBuffer> = manifest) {
+function registry(
+  served: Uint8Array<ArrayBuffer> = manifest,
+  repository = "library/upstream-image",
+  tag = "1.2.3",
+) {
+  const manifestUrl = `https://registry-1.docker.io/v2/${repository}/manifests/${tag}`;
   const requests: { url: string; authorization: string | null }[] = [];
   const serve = async (url: string | URL, init?: RequestInit) => {
     const headers = new Headers(init?.headers);
@@ -133,13 +163,12 @@ function registry(served: Uint8Array<ArrayBuffer> = manifest) {
     requests.push({ url: href, authorization: headers.get("authorization") });
     if (href.startsWith("https://auth.docker.io/token?"))
       return Response.json({ token: "anonymous-pull" });
-    if (href !== MANIFEST_URL) throw new Error(`Unexpected request ${href}`);
+    if (href !== manifestUrl) throw new Error(`Unexpected request ${href}`);
     if (headers.get("authorization") !== "Bearer anonymous-pull")
       return new Response(null, {
         status: 401,
         headers: {
-          "WWW-Authenticate":
-            'Bearer realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:library/upstream-image:pull"',
+          "WWW-Authenticate": `Bearer realm="https://auth.docker.io/token",service="registry.docker.io",scope="repository:${repository}:pull"`,
         },
       });
     return new Response(served, {
@@ -665,4 +694,102 @@ test("existing mirror-URI rows without a pipeline stay findable for any configur
   expect(await context.delivery.findQualifiedArtifact(imageQuery, 2)).toEqual(
     foreign.artifact,
   );
+});
+
+test("an aliased image is acquired under the catalog document's basename component from its packageName repository", async () => {
+  const origin = {
+    kind: "upstream" as const,
+    repository: "https://docker.io",
+    name: "itzg/minecraft-server",
+    version: "java8",
+    checksum: manifestDigest,
+  };
+  const alias = AcquireUpstreamArtifactSchema.parse({
+    ...imageInput,
+    requestId: "upstream/java8",
+    artifact: {
+      ...imageInput.artifact,
+      id: "upstream/minecraft-server-java8/java8",
+      component: "image:minecraft-server-java8",
+      uri: "docker.io/itzg/minecraft-server",
+      version: "java8",
+      origin,
+    },
+  });
+  const { transport: aliasRegistry } = registry(
+    manifest,
+    "itzg/minecraft-server",
+    "java8",
+  );
+  const acquired = await context.delivery.acquireUpstreamArtifact(
+    alias,
+    testPublisher,
+    { transport: aliasRegistry, components },
+  );
+  expect(acquired.artifact).toMatchObject({
+    component: "image:minecraft-server-java8",
+    uri: "docker.io/itzg/minecraft-server",
+    origin,
+  });
+  // The alias name is not a repository, and its full name is not the component.
+  for (const [requestId, artifact] of [
+    [
+      "refused/alias-origin",
+      {
+        ...alias.artifact,
+        uri: "docker.io/itzg/minecraft-server-java8",
+        origin: { ...origin, name: "itzg/minecraft-server-java8" },
+      },
+    ],
+    [
+      "refused/alias-component",
+      { ...alias.artifact, component: "image:itzg/minecraft-server-java8" },
+    ],
+  ] as const)
+    await expect(
+      context.delivery.acquireUpstreamArtifact(
+        { ...alias, requestId, artifact },
+        testPublisher,
+        { transport: aliasRegistry, components },
+      ),
+    ).rejects.toMatchObject({ code: "INVALID" });
+});
+
+test("only the services the catalog document names as acquiring a component acquire it, each with its own artifact", async () => {
+  const undeclared = {
+    ...imageInput,
+    requestId: "refused/undeclared",
+    serviceId: "minecraft",
+  };
+  await expect(
+    context.delivery.acquireUpstreamArtifact(undeclared, testPublisher, {
+      transport: registry().transport,
+      components,
+    }),
+  ).rejects.toThrow(/does not acquire image:upstream-image/u);
+  await declareAcquisitions(context.cluster.database, "minecraft", [
+    "chart:minecraft",
+    "image:upstream-image",
+  ]);
+  const first = await context.delivery.acquireUpstreamArtifact(
+    imageInput,
+    testPublisher,
+    { transport: registry().transport, components },
+  );
+  const second = await context.delivery.acquireUpstreamArtifact(
+    {
+      ...imageInput,
+      requestId: "upstream/second-owner",
+      serviceId: "minecraft",
+      artifact: { ...imageInput.artifact, id: "upstream/minecraft/image" },
+    },
+    testPublisher,
+    { transport: registry().transport, components },
+  );
+  expect(second.status).toBe("verified");
+  expect(second.buildId).not.toBe(first.buildId);
+  expect([first.artifact.serviceId, second.artifact.serviceId]).toEqual([
+    "arcade",
+    "minecraft",
+  ]);
 });

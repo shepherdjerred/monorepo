@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { beforeEach, expect, test } from "vitest";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
+import { declareAcquisitions } from "#testing/services.ts";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
 import {
   PipelineDefinitionSchema,
@@ -29,6 +30,9 @@ let deploymentId: string;
 let operationId: string;
 let generation: number;
 beforeEach(async () => {
+  await declareAcquisitions(context.cluster.database, "minecraft", [
+    "chart:minecraft",
+  ]);
   const definition = PipelineDefinitionSchema.parse(
     await Bun.file(new URL("pipeline.json", directory)).json(),
   );
