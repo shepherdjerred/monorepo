@@ -43,6 +43,10 @@ public final class ObjectivePolicy {
     if (situation.snapshot().aliveEnemiesOf(situation.self().team()).isEmpty())
       diversion = Optional.empty();
     if (!retaining && !dangerous) diversion = detour(situation, context);
+    // A detour whose approach just failed to route would be forced again every think.
+    diversion =
+        diversion.filter(
+            target -> !previous.excludes(Planner.approach(context.nav(), target), situation.now()));
     var memory = previous.objective(Optional.of(bomb.id()), diversion.map(BombView::id), safeSince);
     if (dangerous)
       return new Directive(

@@ -168,4 +168,20 @@ final class ObjectivePolicyTest {
     assertThat(memory.excludes(nuke.pos(), 199)).isTrue();
     assertThat(memory.excludes(nuke.pos(), 200)).isFalse();
   }
+
+  @Test
+  void aDetourWhoseApproachJustFailedToRouteIsNotForcedAgain() {
+    var self = combatant(1, RED, AT);
+    var enemy = combatant(2, BLUE, AT.plus(20, 0, 0));
+    var target =
+        new BombView(
+            new BombId(1), new BombOwner.Team(BLUE), AT.plus(5, 0.5, 0), new BombState.Idle());
+    var frame = situation(100, List.of(self, enemy), List.of(own(800), target));
+    assertThat(ObjectivePolicy.direct(TacticalMemory.EMPTY, frame, CONTEXT).forced())
+        .contains(Option.ARM);
+    var blocked = TacticalMemory.EMPTY.blocked(Planner.approach(CONTEXT.nav(), target), 95);
+    var result = ObjectivePolicy.direct(blocked, frame, CONTEXT);
+    assertThat(result.forced()).contains(Option.DEFUSE);
+    assertThat(result.memory().detour()).isEmpty();
+  }
 }

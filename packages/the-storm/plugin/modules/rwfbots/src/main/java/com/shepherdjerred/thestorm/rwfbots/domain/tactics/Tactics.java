@@ -80,6 +80,7 @@ public final class Tactics {
     KitTactics.lean(context.kit(), scores);
     var eliminating = situation.pendingElimination();
     objectiveScores(scores, situation, context);
+    if (armBlocked(state, situation, context)) scores.put(Option.ARM, 0.0);
     var objective = ObjectivePolicy.direct(state.memory(), situation, context);
     var current = currentPlan(state, situation, context);
     current
@@ -144,6 +145,18 @@ public final class Tactics {
   }
 
   /**
+   * Whether the bomb an ARM plan would go for has an approach the bot just failed to route to: the
+   * bot picked ARM again every few seconds, failed the same route and stepped about in recovery for
+   * over two minutes (hemispheres). It does something else until the block expires.
+   */
+  private static boolean armBlocked(
+      TacticsState state, Situation situation, TacticsContext context) {
+    return Planner.armApproach(situation, context)
+        .filter(point -> state.memory().excludes(point, situation.now()))
+        .isPresent();
+  }
+
+  /**
    * Whether the plan under way earns {@link #COMMIT_BONUS}: not a recovery step, not an idle hold,
    * and not a fight or hunt that fell back to holding because it has no one to chase. Sticking with
    * standing still would only make a bot that drifted into it stand longer.
@@ -172,6 +185,7 @@ public final class Tactics {
         .filter(plan -> alive(plan, situation))
         .filter(plan -> Planner.coverFitsSlot(plan, situation, context))
         .filter(plan -> !situation.pendingElimination() || !offensive(plan.option()))
+        .filter(plan -> plan.option() != Option.ARM || !armBlocked(state, situation, context))
         .filter(
             plan ->
                 plan.current()

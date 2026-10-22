@@ -135,6 +135,14 @@ public final class Planner {
 
   private Planner() {}
 
+  /** Where an ARM plan would route to now: its target bomb's approach, if it has one. */
+  static Optional<Vec3> armApproach(Situation situation, TacticsContext context) {
+    return situation
+        .plantTarget()
+        .or(situation::nearestArmableBomb)
+        .map(bomb -> approach(context.nav(), bomb));
+  }
+
   static Plan detourPlan(Situation situation, TacticsContext context, BombId bomb) {
     return bombPlan(Option.ARM, situation, context, situation.snapshot().bomb(bomb).orElseThrow());
   }
@@ -758,7 +766,7 @@ public final class Planner {
     return ownBomb.get().plus(direction.scale(radius)).withY(self.pos().y());
   }
 
-  private static Vec3 approach(NavArtifact nav, BombView bomb) {
+  static Vec3 approach(NavArtifact nav, BombView bomb) {
     var node =
         nav.bombApproach(com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos.of(bomb.pos()));
     return node.isPresent() ? nav.graph().feet(node.getAsInt()) : bomb.pos();
