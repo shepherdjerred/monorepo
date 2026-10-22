@@ -13,6 +13,10 @@ import {
   RETAINED_RESOURCE_SYNC_OPTIONS,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/argocd-sync-options.ts";
 import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
+import { applyApplicationReleasePolicy } from "@shepherdjerred/homelab/cdk8s/src/application-release-policy.ts";
+import { createDeliveryDataApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/delivery-data.ts";
+import { createTemporalDataApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/temporal-data.ts";
+import { ROOT_CHART } from "@shepherdjerred/homelab/cdk8s/src/resources/cluster-baseline/charts.ts";
 import {
   POSTGRES_WAL_ARCHIVE,
   postgresWalArchiving,
@@ -276,4 +280,43 @@ describe("WAL-G archiving", () => {
       "s3://homelab/postgres-wal/temporal-postgresql",
     );
   });
+});
+
+describe("Operator-run data-layer Applications", () => {
+  // Restoring a database deletes its `postgresql` object. An automated sync
+  // would recreate an empty cluster that archives into the backups' WAL-G
+  // prefix, so only the guarded release syncs these Applications.
+  test.each([false, true])(
+    "never sync automatically (transition rendering %s)",
+    (transition) => {
+      const app = new App({
+        outdir: `.test-synth-data-apps-${String(transition)}`,
+      });
+      const chart = new Chart(app, ROOT_CHART, {
+        namespace: "argocd",
+        disableResourceNameHashes: true,
+      });
+      createDeliveryDataApp(chart);
+      createTemporalDataApp(chart);
+      applyApplicationReleasePolicy(app, transition);
+      const applications = z
+        .array(
+          z.looseObject({
+            kind: z.literal("Application"),
+            metadata: z.looseObject({ name: z.string() }),
+            spec: z.looseObject({
+              syncPolicy: z.looseObject({}).optional(),
+            }),
+          }),
+        )
+        .parse(chart.toJson());
+      expect(
+        applications.map((application) => application.metadata.name),
+      ).toEqual(["delivery-data", "temporal-data"]);
+      for (const application of applications)
+        expect(application.spec.syncPolicy ?? {}).not.toHaveProperty(
+          "automated",
+        );
+    },
+  );
 });

@@ -109,12 +109,18 @@ describe("transition rendering", () => {
     }
   });
 
-  test("renders the operator-run data-layer Applications in the cluster project", () => {
+  test("renders the operator-run data-layer Applications in the cluster project, without automated sync", () => {
     for (const name of ["delivery-data", "temporal-data"]) {
       const application = z
-        .object({ spec: z.object({ project: z.string() }) })
+        .object({
+          spec: z.looseObject({
+            project: z.string(),
+            syncPolicy: z.looseObject({}).optional(),
+          }),
+        })
         .parse(find(ROOT_CHART, "Application", name));
       expect(application.spec.project).toBe(ARGOCD_PROJECTS.cluster);
+      expect(application.spec.syncPolicy ?? {}).not.toHaveProperty("automated");
     }
   });
 
