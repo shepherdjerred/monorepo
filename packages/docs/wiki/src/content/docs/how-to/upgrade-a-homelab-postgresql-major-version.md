@@ -52,7 +52,8 @@ restore namespace's protections, are defined there.
 
 Save this Restore as `restore.yaml` and replace its placeholders.
 `SOURCE_NAMESPACE` is the database's namespace. `RECOVERY_NAMESPACE` is the
-classified restore namespace.
+classified restore namespace. Keep `RESTORE_NAME` within 63 characters, because
+Velero shortens longer names in the label checked below.
 
 ```yaml
 apiVersion: velero.io/v1
@@ -72,14 +73,33 @@ spec:
   restorePVs: true
 ```
 
-Validate it on the server, create it, and wait for phase `Completed` with no
-errors:
+The restore namespace must not already hold `pgdata-CLUSTER-0`. Velero skips
+an existing claim and still reports `Completed`, so the checks below would read
+the older copy. This command must report `NotFound`:
+
+```bash
+kubectl -n RECOVERY_NAMESPACE get pvc pgdata-CLUSTER-0
+```
+
+To retire an earlier copy, delete its claim. Then destroy its `Released` volume
+with [Reclaim a released volume](/how-to/reclaim-a-released-volume/).
+
+Validate the Restore on the server, create it, and wait for phase `Completed`
+with no errors:
 
 ```bash
 kubectl apply --dry-run=server -f restore.yaml
 kubectl create -f restore.yaml
 kubectl -n velero get restore RESTORE_NAME \
   -o jsonpath='{.status.phase} errors={.status.errors} warnings={.status.warnings}{"\n"}'
+```
+
+Confirm that this Restore created the claim. The command must print
+`RESTORE_NAME`:
+
+```bash
+kubectl -n RECOVERY_NAMESPACE get pvc pgdata-CLUSTER-0 \
+  -o jsonpath='{.metadata.labels.velero\.io/restore-name}{"\n"}'
 ```
 
 Confirm that the restored PV and its volume handle both differ from
@@ -398,7 +418,8 @@ kubectl -n RECOVERY_NAMESPACE logs -f postgresql-verify
 ```
 
 The log must show `Database cluster state: shut down` and `Bad checksums: 0`.
-Delete the Pod afterwards. Keep the restored PVC and PV.
+Delete the Pod afterwards. Keep the restored PVC and PV until a later restore
+retires them.
 
 ### Check upgrade compatibility
 
