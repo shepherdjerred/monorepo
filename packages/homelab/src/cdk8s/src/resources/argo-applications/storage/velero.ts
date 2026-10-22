@@ -56,6 +56,27 @@ export function createVeleroApp(chart: Chart) {
 
   // Create all backup schedules from configuration
   for (const scheduleConfig of VELERO_SCHEDULES) {
+    // The paused legacy schedule has no remaining backups. It is still
+    // rendered, but without prune protection, so the release after its
+    // removal from source prunes it through release-root.
+    new Schedule(chart, scheduleConfig.id, {
+      metadata: {
+        name: scheduleConfig.legacyName,
+        namespace: "velero",
+        annotations: backupMonitoringAnnotations(scheduleConfig.monitoring),
+      },
+      spec: {
+        paused: true,
+        schedule: scheduleConfig.cronSchedule,
+        template: {
+          snapshotVolumes: true,
+          labelSelector: { matchLabels: { "velero.io/backup": "enabled" } },
+          storageLocation: "default",
+          ttl: scheduleConfig.ttl,
+          volumeSnapshotLocations: ["zfspv-incr"],
+        },
+      },
+    });
     new Schedule(chart, `${scheduleConfig.id}-v2`, {
       metadata: {
         name: scheduleConfig.name,

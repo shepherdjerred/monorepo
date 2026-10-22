@@ -29,6 +29,8 @@ export type VeleroScheduleConfig = {
   backupType: string;
   /** Human-readable description */
   description: string;
+  /** Immutable migration: keep the old schedule paused and location readable. */
+  legacyName: string;
   snapshotLocation: string;
   incrementalCount: number;
 };
@@ -51,6 +53,7 @@ const VELERO_SCHEDULE_CONFIGS: VeleroScheduleConfig[] = [
   {
     id: "velero-backup-6hourly",
     name: "6hourly-backup-v2",
+    legacyName: "6hourly-backup",
     snapshotLocation: "zfspv-6hourly-v2",
     incrementalCount: 11,
     cronSchedule: "15 */6 * * *",
@@ -61,6 +64,7 @@ const VELERO_SCHEDULE_CONFIGS: VeleroScheduleConfig[] = [
   {
     id: "velero-backup-daily",
     name: "daily-backup-v2",
+    legacyName: "daily-backup",
     snapshotLocation: "zfspv-daily-v2",
     incrementalCount: 6,
     cronSchedule: "30 2 * * *", // Daily at 2:30 AM
@@ -71,6 +75,7 @@ const VELERO_SCHEDULE_CONFIGS: VeleroScheduleConfig[] = [
   {
     id: "velero-backup-weekly",
     name: "weekly-backup-v2",
+    legacyName: "weekly-backup",
     snapshotLocation: "zfspv-weekly-v2",
     incrementalCount: 3,
     cronSchedule: "45 3 * * 1",
@@ -81,6 +86,7 @@ const VELERO_SCHEDULE_CONFIGS: VeleroScheduleConfig[] = [
   {
     id: "velero-backup-monthly",
     name: "monthly-backup-v2",
+    legacyName: "monthly-backup",
     snapshotLocation: "zfspv-monthly-v2",
     incrementalCount: 2,
     cronSchedule: "0 5 1 * *", // 1st of month at 5 AM
