@@ -288,8 +288,17 @@ describe("independent Argo recovery", () => {
       },
     });
     const evidence = await inspect(detail, recovery);
-    await delivery.releaseLock(
+    const intent = await delivery.requestRecoveryIntent(
       detail.deployment.id,
+      {
+        requestId: "readback-recovery",
+        reason: recovery.reason,
+        expectedGeneration: detail.environment.generation,
+      },
+      testOperator,
+    );
+    await delivery.settleArgoIntent(
+      intent.id,
       recovery.reason,
       testOperator,
       evidence,

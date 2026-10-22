@@ -46,8 +46,7 @@ export function recoveryKindOf(
 
 /**
  * An ordinary Application deployment's intent: settled later by the
- * independent Application readback (`release-lock`), which closes this
- * pending intent instead of opening another.
+ * independent Application readback (`POST /recovery-intents/:id/settle`).
  */
 async function argoIntent(
   this: Delivery,

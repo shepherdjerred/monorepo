@@ -144,10 +144,13 @@ export function createApp(options: Options) {
         requireScope(principal, "read");
     } else if (!(await options.config.writesEnabled())) {
       const resultOnly =
-        /\/deployments\/[^/]+\/(?:cancel|finish|release-lock|orphan|lease|handoff|successor|monitor\/observations|cold-start|drift|attestations)$/.test(
+        /\/deployments\/[^/]+\/(?:cancel|finish|orphan|lease|handoff|successor|monitor\/observations|cold-start|drift|attestations)$/.test(
           c.req.path,
         ) ||
         /^\/api\/v1\/dispatch\/[^/]+\/submitted$/.test(c.req.path) ||
+        // Recovery opens and settles while writes are paused (I4).
+        /^\/api\/v1\/deployments\/[^/]+\/recovery-intents$/.test(c.req.path) ||
+        /^\/api\/v1\/recovery-intents\/[^/]+\/settle$/.test(c.req.path) ||
         /\/worker-recovery(?:\/|$)/.test(c.req.path) ||
         /\/minecraft-recovery(?:\/|$)/.test(c.req.path) ||
         (/\/content-recovery(?:\/|$)/.test(c.req.path) &&

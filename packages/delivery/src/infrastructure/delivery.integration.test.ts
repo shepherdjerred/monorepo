@@ -239,8 +239,19 @@ describe("PostgreSQL delivery invariants 1.2", () => {
         testOperator,
       ),
     ).rejects.toMatchObject({ code: "CONFLICT" });
-    await context.delivery.releaseLock(
+    // Only a recovery intent, settled by independent readback, releases it.
+    const failed = await context.delivery.detail(deployment.id);
+    const intent = await context.delivery.requestRecoveryIntent(
       deployment.id,
+      {
+        requestId: "lock-recovery",
+        reason: "Inspect the lost operation before releasing its lock",
+        expectedGeneration: failed.environment.generation,
+      },
+      testOperator,
+    );
+    await context.delivery.settleArgoIntent(
+      intent.id,
       "Inspected Argo history and confirmed no operation remains active",
       testOperator,
       [
@@ -253,6 +264,20 @@ describe("PostgreSQL delivery invariants 1.2", () => {
       ],
     );
     expect(await context.cluster.database.targetLock.count()).toBe(0);
+    await expect(
+      context.delivery.settleArgoIntent(
+        intent.id,
+        "Settled twice",
+        testOperator,
+        [
+          {
+            kind: "reconciliation",
+            operationId: "recorded-external-operation",
+            summary: "A second readback of the settled operation",
+          },
+        ],
+      ),
+    ).rejects.toThrow(/already settled/u);
     const retry = await context.delivery.createDeployment(
       { ...context.input("retry"), expectedGeneration: 0 },
       testOperator,

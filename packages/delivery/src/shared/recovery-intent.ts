@@ -32,7 +32,7 @@ export type RecoveryIntentKind = z.infer<typeof RecoveryIntentKindSchema>;
  * The unified recovery intent (model 4.15): one operator-authorised
  * inspection of a `recovery-required` deployment, identified by deployment
  * plus sequence and settled by an independent reader. The kinds map onto
- * the five specialised v1 tables and the `release-lock` route.
+ * the five specialised v1 tables and generic Argo settlement.
  */
 export const RecoveryIntentV2Schema = z
   .strictObject({

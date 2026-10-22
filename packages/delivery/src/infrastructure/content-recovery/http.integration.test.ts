@@ -100,7 +100,7 @@ test("actual HTTP accepts non-UUID admin recovery identity while paused and refu
   expect(intent.id).toBe(request.requestId);
   const before = await scope.delivery.detail(fixture.failed.id);
   const refused = await post(
-    `deployments/${fixture.failed.id}/release-lock`,
+    `recovery-intents/${encodeURIComponent(intent.id)}/settle`,
     admin,
     {
       operationId: crypto.randomUUID(),

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { afterAll, beforeAll, expect, test, vi } from "vitest";
 import {
   createTestDatabase,
@@ -403,14 +404,31 @@ test("real Arcade definition accepts, rolls back exact frozen inputs, and recove
   ).rejects.toMatchObject({ status: 409 });
   const reason =
     "Local pilot independently inspected the exact settled Argo operation";
+  // Recovery opens an intent; independent readback settles it (4.15).
+  const opened = await fetch(
+    new URL(`/api/v1/deployments/${interrupted.id}/recovery-intents`, api.url),
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${adminToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        requestId: "pilot/recover",
+        reason,
+        expectedGeneration: orphan.environment.generation,
+      }),
+    },
+  );
+  const intent = z.object({ id: z.string() }).parse(await opened.json());
   await expect(
-    client().recover(interrupted.id, {
+    client().settleRecoveryIntent(intent.id, {
       operationId: pending.externalId,
       reason,
     }),
   ).rejects.toMatchObject({ status: 409 });
   const settled = observe(frozenInterrupted, "Succeeded");
-  await client().recover(interrupted.id, {
+  await client().settleRecoveryIntent(intent.id, {
     operationId: settled.externalId,
     reason,
   });

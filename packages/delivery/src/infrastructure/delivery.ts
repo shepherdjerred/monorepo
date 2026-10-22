@@ -34,7 +34,7 @@ import {
   handOff,
   renewLease,
 } from "#infrastructure/execution/ownership.ts";
-import { releaseLock } from "#infrastructure/execution/lock-release.ts";
+import { settleArgoIntent } from "#infrastructure/execution/argo-settlement.ts";
 import { reconcileCatalog } from "#infrastructure/catalog/reconcile.ts";
 import { retireService } from "#infrastructure/catalog/state.ts";
 import {
@@ -206,7 +206,7 @@ export class Delivery {
   claimHandoff = claimHandoff;
   stage = stage;
   finish = finish;
-  releaseLock = releaseLock;
+  settleArgoIntent = settleArgoIntent;
   pending = pending;
   monitor = monitor;
   orphan = orphan;
