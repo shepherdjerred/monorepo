@@ -589,4 +589,47 @@ final class StuckSpotsTest {
     assertThat(RecoverySteps.stranded(stuck, context(nav))).isTrue();
     assertThat(RecoverySteps.trapped(stuck, context(nav))).isFalse();
   }
+
+  /** A floored pit under a low ceiling beside a plateau a block up, with a spawn on the plateau. */
+  private record LowPit()
+      implements com.shepherdjerred.thestorm.rwfbots.domain.map.BlockClassification {
+    @Override
+    public com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds bounds() {
+      return new com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds(
+          new BlockPos(0, 0, 0), 9, 8, 9);
+    }
+
+    @Override
+    public com.shepherdjerred.thestorm.rwfbots.domain.map.BlockShape shape(int x, int y, int z) {
+      var pit = x <= 4;
+      var solid = y == 0 || (!pit && y == 1) || (pit && y == 3);
+      return solid
+          ? com.shepherdjerred.thestorm.rwfbots.domain.map.BlockShape.FULL
+          : com.shepherdjerred.thestorm.rwfbots.domain.map.BlockShape.PASSABLE;
+    }
+
+    @Override
+    public boolean blocksSight(int x, int y, int z) {
+      return shape(x, y, z).blocksMovement();
+    }
+  }
+
+  @Test
+  void aBotUnderALowCeilingIsNotSentToJumpForABankItCannotJumpTo() {
+    // Review finding: a jump bank a block up with a ceiling two cells above the feet was offered
+    // as the escape, and the movement gate refused it on every replan.
+    var nav =
+        com.shepherdjerred.thestorm.rwfbots.domain.map.MapBaker.bake(
+            "low-pit",
+            new LowPit(),
+            new com.shepherdjerred.thestorm.rwfbots.domain.map.NavSites(
+                List.of(
+                    new com.shepherdjerred.thestorm.rwfbots.domain.map.NavSites.Site(
+                        "red", Optional.of("red"), new BlockPos(7, 2, 7))),
+                List.of()));
+    var stuck = situation(nav, landed(new Vec3(4.5, 1, 4.5)), Optional.empty(), 100);
+    assertThat(RecoverySteps.stranded(stuck, context(nav))).as("no way up the step").isTrue();
+    assertThat(RecoverySteps.escape(stuck, context(nav))).isEmpty();
+    assertThat(RecoverySteps.trapped(stuck, context(nav))).isTrue();
+  }
 }

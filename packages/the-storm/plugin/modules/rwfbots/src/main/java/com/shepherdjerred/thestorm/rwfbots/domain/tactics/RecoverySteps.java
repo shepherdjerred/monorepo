@@ -101,21 +101,29 @@ final class RecoverySteps {
    * floating-isles offered a bank past a solid corner, refused every time it was tried.
    */
   private static Optional<Waypoint> bankBeside(NavArtifact nav, int node, List<Integer> spawns) {
-    var graph = nav.graph();
-    var feet = graph.feet(node);
-    var from = graph.cell(node);
-    for (var cell : beside(from)) {
-      var bank = graph.nodeAt(cell);
-      var dry = !graph.water().contains(from);
-      if (bank.isEmpty() || bank.getAsInt() == node || (dry && !cornersClear(nav, from, cell)))
-        continue;
-      var rise = graph.feet(bank.getAsInt()).y() - feet.y();
-      if (rise <= BANK_RISE + 1e-6 && reachesAny(graph, bank.getAsInt(), spawns)) {
-        return Optional.of(
-            new Waypoint(graph.feet(bank.getAsInt()), dry && rise > STEP ? Hop.JUMP : Hop.WALK));
-      }
+    for (var cell : beside(nav.graph().cell(node))) {
+      var bank = bankAt(nav, node, cell, spawns);
+      if (bank.isPresent()) return bank;
     }
     return Optional.empty();
+  }
+
+  /** The waypoint onto the node at {@code cell} from {@code node}, when it is a usable bank. */
+  private static Optional<Waypoint> bankAt(
+      NavArtifact nav, int node, BlockPos cell, List<Integer> spawns) {
+    var graph = nav.graph();
+    var from = graph.cell(node);
+    var bank = graph.nodeAt(cell);
+    var dry = !graph.water().contains(from);
+    if (bank.isEmpty() || bank.getAsInt() == node || (dry && !cornersClear(nav, from, cell)))
+      return Optional.empty();
+    var rise = graph.feet(bank.getAsInt()).y() - graph.feet(node).y();
+    var jump = dry && rise > STEP;
+    // A jump needs headroom above the take-off, as the graph's own upward steps do.
+    if ((jump && nav.grid().blocksMovement(from.offset(0, 2, 0)))
+        || rise > BANK_RISE + 1e-6
+        || !reachesAny(graph, bank.getAsInt(), spawns)) return Optional.empty();
+    return Optional.of(new Waypoint(graph.feet(bank.getAsInt()), jump ? Hop.JUMP : Hop.WALK));
   }
 
   /** The cells around {@code cell} and the layer above them, level ones first. */
