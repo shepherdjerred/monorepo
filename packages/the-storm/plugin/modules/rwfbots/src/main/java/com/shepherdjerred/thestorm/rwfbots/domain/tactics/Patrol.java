@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,7 +54,34 @@ final class Patrol {
     var bot = situation.self().id().value();
     var dwell = MIN_DWELL + Math.round((MAX_DWELL - MIN_DWELL) * context.style().patience());
     var visit = (situation.now() + 37L * bot) / dwell;
-    return Optional.of(graph.feet(posts.get(index(bot, visit, posts.size()))));
+    var around = aroundHold(graph, posts, home.getAsInt(), hold);
+    if (around.size() < 2)
+      return Optional.of(graph.feet(posts.get(index(bot, visit, posts.size()))));
+    return Optional.of(graph.feet(around.get(across(bot, visit, around.size()))));
+  }
+
+  /** The posts other than the hold's own node, in order of their bearing from the hold. */
+  private static List<Integer> aroundHold(
+      NavGraph graph, List<Integer> posts, int home, Vec3 hold) {
+    return posts.stream()
+        .filter(node -> node != home)
+        .sorted(
+            Comparator.comparingDouble(
+                node -> {
+                  var offset = graph.feet(node).minus(hold);
+                  return StrictMath.atan2(offset.z(), offset.x());
+                }))
+        .toList();
+  }
+
+  /**
+   * The post of {@code visit} among {@code size} posts in bearing order: each visit goes to about
+   * the opposite side of the hold from the last, drifting one post every second visit so every post
+   * is used. A hashed pick could land a step from the last post, which reads as standing still.
+   */
+  private static int across(int bot, long visit, int size) {
+    var start = Math.floorMod(mix(bot, 0), size);
+    return (int) Math.floorMod(start + visit * (size / 2) + visit / 2, (long) size);
   }
 
   /** The post of {@code visit}: a hashed pick that never repeats the previous visit's post. */

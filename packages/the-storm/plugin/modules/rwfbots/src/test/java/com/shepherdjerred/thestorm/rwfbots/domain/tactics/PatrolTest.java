@@ -132,7 +132,7 @@ final class PatrolTest {
         moves++;
         assertThat(post.orElseThrow().horizontalDistance(previous.orElseThrow()))
             .as("distance between consecutive posts")
-            .isGreaterThanOrEqualTo(1.0);
+            .isGreaterThanOrEqualTo(2.0);
       }
       previous = post;
     }
