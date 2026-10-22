@@ -304,25 +304,28 @@ WHERE e."acceptedVersionSetRevisionId" IS NOT NULL
 ORDER BY 1;
 \echo == held work: active pointers and platform locks
 SELECT 'active' AS holder, e.id AS scope, d.id AS deployment, d.status,
-       d."finishedAt" IS NOT NULL AS finished, d."recoveryRequired",
-       d."environmentId" = e.id AS same_environment
+       d."recoveryRequired",
+       d."environmentId" = e.id
+         AND ((d.status = 'running' AND d."finishedAt" IS NULL)
+           OR (d."finishedAt" IS NOT NULL AND d."recoveryRequired")) AS consistent
 FROM "Environment" e
 LEFT JOIN "Deployment" d ON d.id = e."activeDeploymentId"
 WHERE e."activeDeploymentId" IS NOT NULL
 UNION ALL
-SELECT 'platform-lock', p.id, d.id, d.status,
-       d."finishedAt" IS NOT NULL, d."recoveryRequired", NULL
+SELECT 'platform-lock', p.id, d.id, d.status, d."recoveryRequired",
+       (d.status = 'running' AND d."finishedAt" IS NULL)
+         OR (d."finishedAt" IS NOT NULL AND d."recoveryRequired")
 FROM "PlatformLock" p
 JOIN "Deployment" d ON d.id = p."deploymentId"
 ORDER BY 1, 2;
 ```
 
-| Check            | Pass on the copy                                                                                                |
-| ---------------- | --------------------------------------------------------------------------------------------------------------- |
-| Migrations       | The same migrations as production, each finished and none rolled back.                                          |
-| Latest writes    | Each timestamp matches production's. A newer production timestamp must postdate the backup.                     |
-| Accepted pointer | No rows. Every accepted set revision has a succeeded Deployment in its environment.                             |
-| Held work        | Every row names a Deployment, and `same_environment` is never `f`. A `finished` row has `recoveryRequired` `t`. |
+| Check            | Pass on the copy                                                                            |
+| ---------------- | ------------------------------------------------------------------------------------------- |
+| Migrations       | The same migrations as production, each finished and none rolled back.                      |
+| Latest writes    | Each timestamp matches production's. A newer production timestamp must postdate the backup. |
+| Accepted pointer | No rows. Every accepted set revision has a succeeded Deployment in its environment.         |
+| Held work        | `consistent` is `t` on every row.                                                           |
 
 The accepted-pointer check ignores `adopt-worker` and `repair-trmnl`
 Deployments. Neither
@@ -331,24 +334,26 @@ nor a
 [TRMNL repair](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/README.md)
 moves an accepted pointer.
 
-A Deployment holds its locks and its environment's active pointer while it
-runs. After it finishes, it keeps them only when `recoveryRequired` holds the
-work in quarantine
-([release logic](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/delivery-execution.ts)).
-Each held-work row is therefore in-flight or quarantined work that the backup
-captured. Reconcile every row with Temporal and native state before resuming
-submissions.
+A Deployment takes its locks and its environment's active pointer in the same
+transaction that sets it `running`. After it finishes, it keeps them only when
+`recoveryRequired` holds the work in quarantine
+([claim and release logic](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/delivery-execution.ts)).
+A row is `consistent` only in one of those two states, and only when an active
+pointer names a Deployment of its own environment. Each consistent row is
+running or quarantined work that the backup captured. Reconcile every row with
+Temporal and native state before resuming submissions.
 
 The next two checks name v1-only schema: the `ApplicationLock` table, and the
 `configurationRevision` and `configuration` columns on `Environment` and
 `Deployment`. Delivery's v2 schema replaces them with `TargetLock` and a
 `Configuration` table, so these queries fail there. Run them only against a v1
-catalog. Each application lock follows the held-work rule. The label query must
+catalog. Every application lock must be `consistent`. The label query must
 return no rows, meaning each configuration label carries one content.
 
 ```sql
-SELECT a.application, d.id AS deployment, d.status,
-       d."finishedAt" IS NOT NULL AS finished, d."recoveryRequired"
+SELECT a.application, d.id AS deployment, d.status, d."recoveryRequired",
+       (d.status = 'running' AND d."finishedAt" IS NULL)
+         OR (d."finishedAt" IS NOT NULL AND d."recoveryRequired") AS consistent
 FROM "ApplicationLock" a
 JOIN "Deployment" d ON d.id = a."deploymentId"
 ORDER BY 1;
