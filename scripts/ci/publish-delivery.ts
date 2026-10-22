@@ -46,6 +46,10 @@ import {
   TOFU_ARCHIVE_HANDOFF,
 } from "../lib/ci/delivery-tofu-publication.ts";
 import { readRequiredHandoff } from "../lib/ci/ci-handoff.ts";
+import {
+  NPM_PACKAGE_HANDOFF,
+  parseNpmPackagePublications,
+} from "../lib/artifacts/npm-package-archive.ts";
 
 const DigestSchema = z.string().regex(/^sha256:[a-f\d]{64}$/u);
 const DigestsSchema = z.record(
@@ -63,6 +67,8 @@ type PublicationInput = {
   charts: unknown;
   retainedCharts?: unknown;
   siteArtifacts?: unknown;
+  /** The npm channel packages' frozen tarballs; v2 catalog only. */
+  packageArtifacts?: unknown;
   sourceRevision: string;
   ciUrl: string;
   pipelineNumber: number;
@@ -242,9 +248,10 @@ async function addChartPublications(
 
 /**
  * Bytes that already exist as a qualified archive with the same dependencies
- * are retained by reference and never registered again (B2).
+ * are retained by reference and never registered again (B2): a site
+ * archive, or an npm channel package's tarball.
  */
-async function addSitePublication(
+async function addArchivePublication(
   ledger: PublicationLedger,
   site: z.output<typeof SitePublicationSchema>,
   owners: PublicationOwners,
@@ -252,15 +259,15 @@ async function addSitePublication(
 ) {
   if (!owners.owns(site.serviceId))
     throw new Error(
-      `Static artifact references an unknown service ${site.serviceId}`,
+      `Archive artifact references an unknown service ${site.serviceId}`,
     );
   if (site.artifact.kind !== "archive")
     throw new Error(
-      "Static publication requires an immutable archive artifact",
+      "Archive publication requires an immutable archive artifact",
     );
   if (site.artifact.origin.kind !== "first-party")
     throw new Error(
-      "Static publication requires a first-party archive artifact",
+      "Archive publication requires a first-party archive artifact",
     );
   const query: FindQualifiedArtifact = {
     serviceId: site.serviceId,
@@ -295,7 +302,12 @@ export async function buildPublications(
   for (const site of z
     .array(SitePublicationSchema.strict())
     .parse(input.siteArtifacts ?? []))
-    await addSitePublication(ledger, site, owners, dependencies);
+    await addArchivePublication(ledger, site, owners, dependencies);
+  // npm channel tarballs, under the v2 catalog only (X12).
+  for (const pkg of input.packageArtifacts === undefined
+    ? []
+    : parseNpmPackagePublications(input.packageArtifacts, input))
+    await addArchivePublication(ledger, pkg, owners, dependencies);
   for (const artifact of z
     .array(ArtifactVersionSchema)
     .parse(input.retainedArtifacts ?? []))
@@ -320,6 +332,13 @@ export function parsePublicationOptions(args: string[]) {
     staticArchives: values["static-archives"],
     catalogV2: values["catalog-v2"],
   };
+}
+
+async function packageArchiveHandoff(): Promise<unknown> {
+  const raw: unknown = JSON.parse(
+    await readRequiredHandoff(NPM_PACKAGE_HANDOFF),
+  );
+  return raw;
 }
 
 async function tofuArchiveHandoff(): Promise<unknown> {
@@ -364,6 +383,9 @@ async function main() {
   const publications = await buildPublications(
     {
       ...handoffs,
+      ...(options.catalogV2
+        ? { packageArtifacts: await packageArchiveHandoff() }
+        : {}),
       owners,
       retainedArtifacts: [...handoffs.retainedArtifacts, ...components],
       sourceRevision,

@@ -37,7 +37,7 @@ export function deliveryPublicationSteps(
         "images",
         "helm-push",
         "trmnl-plugin-archives",
-        ...(catalogV2 ? ["tofu-archives"] : []),
+        ...(catalogV2 ? ["tofu-archives", "npm-package-archives"] : []),
         ...(staticArchives ? ["sites", "scout-site-archives"] : []),
       ],
       defaultBranchOnly: true,

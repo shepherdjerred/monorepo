@@ -10,11 +10,13 @@ export async function publishImmutableArchive(input: {
   digest: string;
 }): Promise<void> {
   const target = /^s3:\/\/delivery-artifacts\/(.+)$/u.exec(input.uri);
-  if (target?.[1] === undefined || !/^sha256:[a-f0-9]{64}$/u.test(input.digest))
+  const key = target?.[1];
+  if (key === undefined || !/^sha256:[a-f0-9]{64}$/u.test(input.digest))
     throw new Error("Invalid immutable archive target");
   if (
-    !target[1].endsWith(`/${input.digest.slice(7)}.json`) &&
-    !target[1].endsWith(`/${input.digest.slice(7)}.tar`)
+    ![".json", ".tar", ".tgz"].some((extension) =>
+      key.endsWith(`/${input.digest.slice(7)}${extension}`),
+    )
   )
     throw new Error("Archive key must contain its exact content digest");
   const options = {
@@ -35,7 +37,7 @@ export async function publishImmutableArchive(input: {
       "--bucket",
       "delivery-artifacts",
       "--key",
-      target[1],
+      key,
       "--body",
       input.file,
       "--if-none-match",

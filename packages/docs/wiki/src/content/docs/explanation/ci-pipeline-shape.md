@@ -206,6 +206,12 @@ remain unchanged.
   archive (`tofu-archives`) that Delivery plans and applies from; the stack
   manifest declares the repository files a stack reads outside its directory,
   and the homelab lint fails on an undeclared read.
+- **npm channel packages** (webring) are frozen as tarballs on every main
+  build under the v2 catalog (`npm-package-archives`). A published version
+  keeps the bytes npm serves; an unpublished version is the package's
+  reproducible `bun pm pack`. The `webring/latest` channel deployment
+  publishes and moves `latest`, so the package publish lane no longer
+  publishes webring. release-please still proposes the version bumps.
 - **Scout** has three deliberate promotion phases: archive and deploy beta, mint
   the immutable tag, then reconcile the production `versions.ts` pin. They are
   three stages of one release, not three independent Scout test suites.
