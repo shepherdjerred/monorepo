@@ -425,13 +425,22 @@ rows.
   whose producer barrier is still held. Content recovery
   [keeps the lock](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/recovery-settlement.ts)
   after it settles and clears the active pointer, until its producer restarts.
+  A held barrier is valid in only two states. A `pending` intent's owner is
+  still active, `failed` or `canceled`, and requires recovery. A `succeeded`
+  intent's owner is `failed` or `canceled` and no longer requires recovery. Its
+  environment has no active Deployment and is one generation past the intent's
+  expected generation, which is what
+  [restoration](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/content-recovery/restoration.ts)
+  requires.
 - The specialized-pointer check reads `acceptedPlatformDeploymentId`,
   `acceptedControlPlaneDeploymentId` and `acceptedForumBaselineIntentId`. Each
   must name a succeeded record of its own environment, of the kind that
   `acceptedPointers` or forum baseline settlement would accept. A platform
   pointer's Deployment carries a platform snapshot of its own kind, and a
   control-plane pointer's carries a control-plane snapshot, because the
-  consumers parse exactly those.
+  consumers parse exactly those. An accepted forum baseline carries its proof.
+  These checks confirm that each snapshot or proof is present. Delivery's own
+  schemas validate the contents when they are read.
 - The label check reads `configurationRevision` and `configuration` on
   `Environment` and `Deployment`. It shows a label that carries two contents.
 
@@ -472,8 +481,15 @@ WHERE NOT (
       ))
     OR EXISTS (
       SELECT 1 FROM "ContentRecoveryIntent" i
+      JOIN "Environment" e ON e.id = d."environmentId"
       WHERE i."deploymentId" = d.id
         AND i."dispatchBarrier" IS NOT NULL AND i."barrierRestoredAt" IS NULL
+        AND d.status IN ('failed', 'canceled')
+        AND ((i.status = 'pending' AND d."recoveryRequired"
+              AND e."activeDeploymentId" = d.id)
+          OR (i.status = 'succeeded' AND NOT d."recoveryRequired"
+              AND e."activeDeploymentId" IS NULL
+              AND e.generation = i."expectedEnvironmentGeneration" + 1))
     )
   )
 )
@@ -506,6 +522,7 @@ WHERE e."acceptedForumBaselineIntentId" IS NOT NULL
     SELECT 1 FROM "ForumBaselineIntent" f
     WHERE f.id = e."acceptedForumBaselineIntentId" AND f."environmentId" = e.id
       AND f.status = 'succeeded' AND f."finishedAt" IS NOT NULL
+      AND f.proof IS NOT NULL
   )
 ORDER BY 1, 2;
 SELECT label, count(DISTINCT content) AS contents
