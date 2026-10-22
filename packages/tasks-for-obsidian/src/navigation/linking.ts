@@ -47,8 +47,6 @@ const screens: PathConfigMap<RootStackParamList> = {
   QuickAdd: "quick-add",
   Search: "search",
   Settings: "settings",
-  Pomodoro: "pomodoro",
-  TimeReport: "time-report",
 };
 
 export const linking: LinkingOptions<RootStackParamList> = {

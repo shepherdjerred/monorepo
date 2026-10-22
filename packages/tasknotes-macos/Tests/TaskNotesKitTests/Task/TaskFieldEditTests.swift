@@ -16,11 +16,11 @@ struct TaskFieldEditTests {
     /// Every edit touches exactly one field.
     ///
     /// The load-bearing test in this file. A staged form would have to spell all
-    /// thirteen fields on every save, and one `clear` where an `unchanged`
+    /// all fields on every save, and one `clear` where an `unchanged`
     /// belonged deletes a key the user never opened; per-field commit removes
     /// the possibility, and this is the assertion that says so for every case
     /// the enum has.
-    @Test("an edit changes one field and leaves the other twelve alone", arguments: everyEdit)
+    @Test("an edit changes one field and leaves every other field alone", arguments: everyEdit)
     func touchesOneField(sample: EditSample) {
         #expect(changedFields(of: sample.edit.payload) == [sample.field])
     }
@@ -44,14 +44,12 @@ struct TaskFieldEditTests {
         #expect(TaskFieldEdit.scheduled(nil).payload.scheduled == .clear)
         #expect(TaskFieldEdit.recurrence(nil).payload.recurrence == .clear)
         #expect(TaskFieldEdit.details(nil).payload.details == .clear)
-        #expect(TaskFieldEdit.timeEstimate(nil).payload.timeEstimate == .clear)
         #expect(TaskFieldEdit.recurrenceAnchor(nil).payload.recurrenceAnchor == .clear)
     }
 
     @Test("setting a date sends the value")
     func settingDateSendsValue() {
         #expect(TaskFieldEdit.due("2026-07-22").payload.due == .set(value: "2026-07-22"))
-        #expect(TaskFieldEdit.timeEstimate(90).payload.timeEstimate == .set(value: 90))
         #expect(
             TaskFieldEdit.recurrenceAnchor(.completion).payload.recurrenceAnchor
                 == .set(value: .completion)
@@ -168,8 +166,6 @@ private let everyEdit: [EditSample] = [
     EditSample(edit: .recurrence(nil), field: "recurrence"),
     EditSample(edit: .recurrenceAnchor(.completion), field: "recurrenceAnchor"),
     EditSample(edit: .recurrenceAnchor(nil), field: "recurrenceAnchor"),
-    EditSample(edit: .timeEstimate(90), field: "timeEstimate"),
-    EditSample(edit: .timeEstimate(nil), field: "timeEstimate"),
     EditSample(edit: .details("body"), field: "details"),
     EditSample(edit: .details(nil), field: "details"),
 ]
@@ -213,7 +209,6 @@ private func clearableFields(of request: UpdateTaskRequest) -> [String] {
     if request.scheduled != .unchanged { changed.append("scheduled") }
     if request.recurrence != .unchanged { changed.append("recurrence") }
     if request.recurrenceAnchor != .unchanged { changed.append("recurrenceAnchor") }
-    if request.timeEstimate != .unchanged { changed.append("timeEstimate") }
     if request.details != .unchanged { changed.append("details") }
     return changed
 }

@@ -1,0 +1,12 @@
+{
+  "Apache-2.0": {
+    "source": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+    "file": "Apache-2.0.txt",
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+  },
+  "MPL-2.0": {
+    "source": "https://www.mozilla.org/media/MPL/2.0/index.txt",
+    "file": "MPL-2.0.txt",
+    "sha256": "3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04"
+  }
+}

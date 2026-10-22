@@ -5,13 +5,15 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:presentation="using:TaskNotes.Windows.Presentation"
     mc:Ignorable="d">
     <StackPanel Spacing="12">
         <TextBox
             x:Name="InputTextBox"
             AutomationProperties.AutomationId="TaskNotes.QuickAdd.Input"
             AutomationProperties.Name="Quick Add task description"
-            PlaceholderText="Describe the task naturally"
+            KeyDown="Input_KeyDown"
+            PlaceholderText="Add a task… dates, #tags and @contexts"
             Text="{x:Bind ViewModel.Input, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
             TextChanged="Input_TextChanged" />
         <TextBlock
@@ -20,5 +22,105 @@
             AutomationProperties.Name="Quick Add parsed fields"
             Text="{x:Bind ViewModel.PreviewDescription, Mode=OneWay}"
             TextWrapping="Wrap" />
+        <Button
+            HorizontalAlignment="Left"
+            Click="Discard_Click"
+            Content="Discard draft" />
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{x:Bind ViewModel.CaptureChips, Mode=OneWay}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="presentation:CaptureChip">
+                        <Border
+                            Margin="0,0,6,0"
+                            Padding="8,4"
+                            Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                            CornerRadius="{StaticResource FacetChipRadius}">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    FontSize="{StaticResource FacetCaptionSize}"
+                                    Text="{x:Bind Label}" />
+                                <Button
+                                    Padding="4,0"
+                                    AutomationProperties.Name="Remove parsed field"
+                                    Click="RemoveChip_Click"
+                                    Content="×"
+                                    Tag="{x:Bind}" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+        <Expander
+            HorizontalAlignment="Stretch"
+            HorizontalContentAlignment="Stretch"
+            Header="Details">
+            <StackPanel Spacing="12">
+                <TextBox
+                    MinHeight="80"
+                    MaxHeight="160"
+                    AcceptsReturn="True"
+                    Header="Notes"
+                    Text="{x:Bind ViewModel.Body, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    TextWrapping="Wrap" />
+                <Button
+                    HorizontalAlignment="Left"
+                    Click="ClearBody_Click"
+                    Content="Clear notes" />
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <CalendarDatePicker
+                        Date="{x:Bind ViewModel.Scheduled, Mode=TwoWay}"
+                        DateChanged="DetailsDate_Changed"
+                        Header="Planned" />
+                    <CalendarDatePicker
+                        Grid.Column="1"
+                        Date="{x:Bind ViewModel.Due, Mode=TwoWay}"
+                        DateChanged="DetailsDate_Changed"
+                        Header="Due" />
+                </Grid>
+                <ComboBox
+                    HorizontalAlignment="Stretch"
+                    DisplayMemberPath="Label"
+                    Header="Priority"
+                    ItemsSource="{x:Bind ViewModel.PriorityChoices, Mode=OneWay}"
+                    SelectedItem="{x:Bind ViewModel.Priority, Mode=TwoWay}"
+                    SelectionChanged="DetailsPriority_Changed" />
+                <TextBlock Text="Add a whole project, context or tag. Punctuation is kept; parsed chips above can be removed." TextWrapping="Wrap" />
+                <AutoSuggestBox
+                    x:Name="ProjectsInput"
+                    Header="Project"
+                    ItemsSource="{x:Bind ViewModel.ProjectChoices, Mode=OneWay}"
+                    PlaceholderText="Choose or enter a project"
+                    QuerySubmitted="Token_QuerySubmitted"
+                    Tag="projects"
+                    Text="{x:Bind ViewModel.ProjectEntry, Mode=TwoWay}" />
+                <AutoSuggestBox
+                    x:Name="ContextsInput"
+                    Header="Context"
+                    ItemsSource="{x:Bind ViewModel.ContextChoices, Mode=OneWay}"
+                    PlaceholderText="Choose or enter a context"
+                    QuerySubmitted="Token_QuerySubmitted"
+                    Tag="contexts"
+                    Text="{x:Bind ViewModel.ContextEntry, Mode=TwoWay}" />
+                <AutoSuggestBox
+                    x:Name="TagsInput"
+                    Header="Tag"
+                    ItemsSource="{x:Bind ViewModel.TagChoices, Mode=OneWay}"
+                    PlaceholderText="Choose or enter a tag"
+                    QuerySubmitted="Token_QuerySubmitted"
+                    Tag="tags"
+                    Text="{x:Bind ViewModel.TagEntry, Mode=TwoWay}" />
+            </StackPanel>
+        </Expander>
     </StackPanel>
 </UserControl>

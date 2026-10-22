@@ -3,11 +3,8 @@ import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
-import {
-  conformanceMetadata,
-  executeConformanceOperation,
-  resolveModelConfig,
-} from "tasknotes-types/v2";
+import { executeConformanceOperation } from "@tasknotes/model-reference";
+import { conformanceMetadata, resolveModelConfig } from "tasknotes-types/v2";
 
 import { TaskRepository } from "../engine/task-repository.ts";
 

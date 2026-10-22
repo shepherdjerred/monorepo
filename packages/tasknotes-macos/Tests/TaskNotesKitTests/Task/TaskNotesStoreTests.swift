@@ -62,7 +62,7 @@ struct TaskNotesStoreTests {
 
         // Exactly what `TaskListView.schedule` does with a choice the core
         // refuses: no dispatch happens, and the banner is the only report.
-        store.report(.Validation(message: "not a date this app can resolve"))
+        store.report(.Validation(detail: "not a date this app can resolve"))
         #expect(store.lastStoreError != nil)
 
         // The corrected action. Offline is deliberate — the queue accepts work

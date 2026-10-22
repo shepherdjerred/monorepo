@@ -1,0 +1,444 @@
+[
+  {
+    "id": "conformance.0001",
+    "section": "§7.10",
+    "profile": "core-lite",
+    "operation": "meta.claim",
+    "assertion": "envelope_equals",
+    "input": {},
+    "expect": {
+      "ok": true,
+      "result": {
+        "implementation": {
+          "$regex": "^\\S+$"
+        },
+        "version": {
+          "$regex": "^\\S+$"
+        },
+        "spec_version": {
+          "$regex": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?$"
+        },
+        "validation_modes": {
+          "$contains": [
+            "strict"
+          ]
+        },
+        "profiles": {
+          "$contains": []
+        },
+        "capabilities": {
+          "$contains": []
+        }
+      }
+    }
+  },
+  {
+    "id": "conformance.0002",
+    "section": "§7.11",
+    "profile": "core-lite",
+    "operation": "meta.has_capability",
+    "assertion": "envelope_equals",
+    "input": {
+      "capability": "dependencies"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": {
+          "$oneOf": [
+            true,
+            false
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "conformance.0003",
+    "section": "§7.11",
+    "profile": "core-lite",
+    "operation": "meta.has_capability",
+    "assertion": "envelope_equals",
+    "input": {
+      "capability": "reminders"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": {
+          "$oneOf": [
+            true,
+            false
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "conformance.0004",
+    "section": "§7.11",
+    "profile": "core-lite",
+    "operation": "meta.has_capability",
+    "assertion": "envelope_equals",
+    "input": {
+      "capability": "links"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": {
+          "$oneOf": [
+            true,
+            false
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "conformance.0005",
+    "section": "§7.11",
+    "profile": "core-lite",
+    "operation": "meta.has_capability",
+    "assertion": "envelope_equals",
+    "input": {
+      "capability": "rename"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": {
+          "$oneOf": [
+            true,
+            false
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "conformance.0006",
+    "section": "§7.11",
+    "profile": "core-lite",
+    "operation": "meta.has_capability",
+    "assertion": "envelope_equals",
+    "input": {
+      "capability": "archive"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": {
+          "$oneOf": [
+            true,
+            false
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "conformance.0007",
+    "section": "§7.11",
+    "profile": "core-lite",
+    "operation": "meta.has_capability",
+    "assertion": "envelope_equals",
+    "input": {
+      "capability": "batch"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": {
+          "$oneOf": [
+            true,
+            false
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "conformance.0008",
+    "section": "§7.11",
+    "profile": "core-lite",
+    "operation": "meta.has_capability",
+    "assertion": "envelope_equals",
+    "input": {
+      "capability": "concurrency"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": {
+          "$oneOf": [
+            true,
+            false
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "conformance.0009",
+    "section": "§7.11",
+    "profile": "core-lite",
+    "operation": "meta.has_capability",
+    "assertion": "envelope_equals",
+    "input": {
+      "capability": "dry-run"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": {
+          "$oneOf": [
+            true,
+            false
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "conformance.0010",
+    "section": "§7.11",
+    "profile": "core-lite",
+    "operation": "meta.has_capability",
+    "assertion": "envelope_equals",
+    "input": {
+      "capability": "time-tracking"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": {
+          "$oneOf": [
+            true,
+            false
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "conformance.0011",
+    "section": "§7.11",
+    "profile": "core-lite",
+    "operation": "meta.has_capability",
+    "assertion": "envelope_equals",
+    "input": {
+      "capability": "migration"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": {
+          "$oneOf": [
+            true,
+            false
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "conformance.0012",
+    "section": "§7.11",
+    "profile": "core-lite",
+    "operation": "meta.has_capability",
+    "assertion": "envelope_equals",
+    "input": {
+      "capability": "templating"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": {
+          "$oneOf": [
+            true,
+            false
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "conformance.0013",
+    "section": "§7.10",
+    "profile": "core-lite",
+    "operation": "meta.has_profile",
+    "assertion": "envelope_equals",
+    "input": {
+      "profile": "core-lite"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": {
+          "$oneOf": [
+            true,
+            false
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "conformance.0014",
+    "section": "§7.10",
+    "profile": "core-lite",
+    "operation": "meta.has_profile",
+    "assertion": "envelope_equals",
+    "input": {
+      "profile": "recurrence"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": {
+          "$oneOf": [
+            true,
+            false
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "conformance.0015",
+    "section": "§7.10",
+    "profile": "core-lite",
+    "operation": "meta.has_profile",
+    "assertion": "envelope_equals",
+    "input": {
+      "profile": "extended"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": {
+          "$oneOf": [
+            true,
+            false
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "conformance.0016",
+    "section": "§7.10",
+    "profile": "core-lite",
+    "operation": "meta.has_profile",
+    "assertion": "envelope_equals",
+    "input": {
+      "profile": "templating"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": {
+          "$oneOf": [
+            true,
+            false
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "conformance.0017",
+    "section": "§7.10",
+    "profile": "core-lite",
+    "operation": "meta.has_profile",
+    "assertion": "envelope_equals",
+    "input": {
+      "profile": "materialized-occurrences"
+    },
+    "expect": {
+      "ok": true,
+      "result": {
+        "value": {
+          "$oneOf": [
+            true,
+            false
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "conformance.0018",
+    "section": "§7.3.5",
+    "profile": "extended",
+    "operation": "meta.claim",
+    "assertion": "envelope_equals",
+    "input": {},
+    "expect": {
+      "ok": true,
+      "result": {
+        "profiles": {
+          "$contains": [
+            "extended"
+          ]
+        },
+        "capabilities": {
+          "$contains": [
+            "dependencies",
+            "reminders",
+            "links",
+            "time-tracking"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "conformance.0019",
+    "section": "§7.3.3",
+    "profile": "templating",
+    "operation": "meta.claim",
+    "assertion": "envelope_equals",
+    "input": {},
+    "expect": {
+      "ok": true,
+      "result": {
+        "profiles": {
+          "$contains": [
+            "templating"
+          ]
+        },
+        "capabilities": {
+          "$contains": [
+            "templating"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "conformance.0020",
+    "section": "§7.3.4",
+    "profile": "materialized-occurrences",
+    "operation": "meta.claim",
+    "assertion": "envelope_equals",
+    "input": {},
+    "expect": {
+      "ok": true,
+      "result": {
+        "profiles": {
+          "$contains": [
+            "materialized-occurrences",
+            "recurrence"
+          ]
+        },
+        "capabilities": {
+          "$contains": [
+            "materialized-occurrences"
+          ]
+        }
+      }
+    }
+  }
+]

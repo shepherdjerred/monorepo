@@ -2,7 +2,7 @@ public import TaskNotesUniFFI
 
 /// Turning what somebody typed into a field change, or into nothing.
 ///
-/// The inspector's free-text fields — title, the time estimate, and the
+/// The inspector's free-text fields — title and the
 /// markdown body — hold a local buffer while they are being edited and commit
 /// on Return or on losing focus. Two questions have to be answered at that
 /// moment, and both of them are correctness rather than polish:
@@ -37,7 +37,7 @@ public enum TaskTextEdit {
         let trimmed = raw.trimmingWhitespace()
         guard !trimmed.isEmpty else {
             return .failure(
-                .Validation(message: "A task needs a title. This one is still “\(task.title)”.")
+                .Validation(detail: "A task needs a title. This one is still “\(task.title)”.")
             )
         }
         guard trimmed != task.title.trimmingWhitespace() else { return .success(nil) }
@@ -65,50 +65,5 @@ public enum TaskTextEdit {
         }
         guard raw != stored else { return nil }
         return .details(raw)
-    }
-
-    /// A change to the time estimate, or the reason the text is not a duration.
-    ///
-    /// **Empty clears.** An estimate is genuinely optional and "I no longer know
-    /// how long this takes" is a thing a user says, so an emptied field deletes
-    /// the frontmatter key rather than storing a zero.
-    ///
-    /// A non-empty value must be whole minutes and nothing else.
-    /// `UInt32.init(_: String)` is exactly that test — it rejects `-5`, `2.5`,
-    /// `90m` and `1 000` — and rejecting is the point: quietly reading `90m` as
-    /// `90` would teach the user a syntax that does not exist and would read
-    /// `1h` as nothing at all.
-    ///
-    /// `0` is accepted and stored rather than treated as a clear. It is a
-    /// strange estimate, but it is what was typed, and silently converting one
-    /// user instruction into a different one is the failure mode this whole file
-    /// is arranged against.
-    public static func estimating(
-        _ raw: String,
-        of task: CoreTask
-    ) -> Result<TaskFieldEdit?, CoreError> {
-        let trimmed = raw.trimmingWhitespace()
-        guard !trimmed.isEmpty else {
-            guard task.timeEstimate != nil else { return .success(nil) }
-            return .success(.timeEstimate(nil))
-        }
-        guard let minutes = UInt32(trimmed) else {
-            return .failure(
-                .Validation(
-                    message: "“\(trimmed)” is not a number of minutes. Enter whole minutes, "
-                        + "such as 90."
-                )
-            )
-        }
-        guard minutes != task.timeEstimate else { return .success(nil) }
-        return .success(.timeEstimate(minutes))
-    }
-
-    /// The text a time-estimate field opens with.
-    ///
-    /// Empty for an absent estimate, so the placeholder shows rather than a `0`
-    /// the user would have to delete before typing.
-    public static func estimateText(of task: CoreTask) -> String {
-        task.timeEstimate.map { "\($0)" } ?? ""
     }
 }

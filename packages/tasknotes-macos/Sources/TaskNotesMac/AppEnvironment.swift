@@ -77,13 +77,6 @@ public final class AppEnvironment {
     /// capability to the lifetime of a window the user is allowed to close.
     let quickAdd: QuickAddPanelController
 
-    /// The one pomodoro interval the app is running, if any.
-    ///
-    /// Here rather than in the timer window for the same shape of reason: a
-    /// window is a *view* of a running interval, and closing it is not a way of
-    /// saying stop.
-    let pomodoro: PomodoroTimer
-
     private let defaults: UserDefaults
 
     /// Where the bearer token is kept. Injected so a test never touches the
@@ -118,7 +111,6 @@ public final class AppEnvironment {
         let container = TaskNotesStore.containerDefault(folder: storageFolder)
         self.store = container
         self.quickAdd = QuickAddPanelController(store: container)
-        self.pomodoro = PomodoroTimer()
         self.savedViews = SavedViewStore(defaults: defaults)
         self.defaults = defaults
         self.tokenStore = resolvedTokenStore
@@ -143,7 +135,6 @@ public final class AppEnvironment {
     ) {
         self.store = store
         self.quickAdd = QuickAddPanelController(store: store)
-        self.pomodoro = PomodoroTimer()
         self.savedViews = SavedViewStore(defaults: defaults)
         self.defaults = defaults
         self.tokenStore = tokenStore

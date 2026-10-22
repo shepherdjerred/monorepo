@@ -24,17 +24,121 @@
     <PublishTrimmed>false</PublishTrimmed>
     <NeedsTaskNotesNative>true</NeedsTaskNotesNative>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <DefineConstants Condition="'$(Configuration)' == 'E2E'"
       >$(DefineConstants);TASKNOTES_E2E</DefineConstants>
   </PropertyGroup>
+  <Target Name="IncludeFacetBackgroundHost" BeforeTargets="PrepareForBuild">
+    <ItemGroup>
+      <FacetBackgroundHostCandidate Include="@(WindowsAppSdkComponentPackages->'%(Identity)runtimes/win-x64/native/Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll')" />
+      <FacetBackgroundHost
+        Include="@(FacetBackgroundHostCandidate)"
+        Condition="Exists('%(FacetBackgroundHostCandidate.Identity)')"
+      />
+      <Content
+        Include="@(FacetBackgroundHost)"
+        Link="Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll"
+        CopyToOutputDirectory="PreserveNewest"
+        CopyToPublishDirectory="PreserveNewest"
+      />
+    </ItemGroup>
+    <Error
+      Condition="'@(FacetBackgroundHost->Count())' != '1'"
+      Text="The pinned Windows App SDK background activation host is missing or ambiguous."
+    />
+  </Target>
+  <Target
+    Name="SelectFacetStoreManifest"
+    BeforeTargets="PrepareForBuild"
+    Condition="'$(FacetStoreManifest)' != ''"
+  >
+    <Error
+      Condition="'$(Configuration)' != 'Release'"
+      Text="Microsoft Store packages require the Release configuration."
+    />
+    <Error
+      Condition="'$(AppxPackageSigningEnabled)' != 'false'"
+      Text="Microsoft Store packages use Store signing, not the development certificate."
+    />
+    <Error
+      Condition="!Exists('$(FacetStoreManifest)')"
+      Text="The registered Microsoft Store manifest is missing."
+    />
+    <ItemGroup>
+      <AppxManifest Remove="@(AppxManifest)" />
+      <AppxManifest Include="$(FacetStoreManifest)" />
+    </ItemGroup>
+  </Target>
   <ItemGroup>
+    <Content
+      Include="../../../tasknotes-fixtures/presentation/audio/*.wav"
+      Link="Assets/Feedback/%(Filename)%(Extension)"
+      CopyToOutputDirectory="PreserveNewest"
+      CopyToPublishDirectory="PreserveNewest"
+    />
     <ProjectReference Include="../TaskNotes.Windows.Host/TaskNotes.Windows.Host.csproj" />
     <ProjectReference Include="../TaskNotes.Windows.Presentation/TaskNotes.Windows.Presentation.csproj" />
   </ItemGroup>
+  <Target Name="GenerateFacetNotices" BeforeTargets="PrepareForBuild">
+    <CallTarget
+      Targets="VerifyPreparedFacetNotices"
+      Condition="'$(FacetPreparedNotices)' == 'true'"
+    />
+    <Exec
+      Condition="'$(FacetPreparedNotices)' != 'true'"
+      Command="bun &quot;$(MSBuildThisFileDirectory)../../scripts/prepare-notices.ts&quot; &quot;$(ProjectAssetsFile)&quot;"
+      WorkingDirectory="$(MSBuildThisFileDirectory)..\.."
+    />
+  </Target>
+  <Import
+    Project="../../generated/notices/prepared-notices.props"
+    Condition="'$(FacetPreparedNotices)' == 'true' and Exists('../../generated/notices/prepared-notices.props')"
+  />
+  <Target Name="VerifyPreparedFacetNotices">
+    <Error
+      Condition="'$(FacetPreparedNotices)' != 'true' or '$(FacetPreparedNoticeVersion)' != '1' or '@(FacetNoticeInput)' == '' or '@(FacetNoticeOutput->Count())' != '5'"
+      Text="Generate current Facet notices and their complete source/output hash manifest before cross packaging."
+    />
+    <GetFileHash
+      Files="@(FacetNoticeInput);@(FacetNoticeOutput)"
+      Algorithm="SHA256"
+      MetadataName="ActualHash"
+    >
+      <Output TaskParameter="Items" ItemName="FacetCheckedNotice" />
+    </GetFileHash>
+    <Error
+      Condition="'%(FacetCheckedNotice.ActualHash)' != '%(FacetCheckedNotice.ExpectedHash)'"
+      Text="Prepared Facet notice source/output is missing or stale: %(FacetCheckedNotice.Identity)"
+    />
+  </Target>
   <ItemGroup Condition="'$(Configuration)' == 'E2E'">
     <AppxManifest Include="Package.E2E.appxmanifest" />
   </ItemGroup>
   <ItemGroup>
+    <Content
+      Include="../../generated/notices/ThirdPartyNotices.txt"
+      Link="Licenses\RustThirdPartyNotices.txt"
+      CopyToOutputDirectory="PreserveNewest"
+      CopyToPublishDirectory="PreserveNewest"
+    />
+    <Content
+      Include="../../generated/notices/native-license-inventory.json"
+      Link="Licenses\native-license-inventory.json"
+      CopyToOutputDirectory="PreserveNewest"
+      CopyToPublishDirectory="PreserveNewest"
+    />
+    <Content
+      Include="../../generated/notices/NuGetThirdPartyNotices.txt"
+      Link="Licenses\NuGetThirdPartyNotices.txt"
+      CopyToOutputDirectory="PreserveNewest"
+      CopyToPublishDirectory="PreserveNewest"
+    />
+    <Content
+      Include="../../generated/notices/nuget-license-inventory.json"
+      Link="Licenses\nuget-license-inventory.json"
+      CopyToOutputDirectory="PreserveNewest"
+      CopyToPublishDirectory="PreserveNewest"
+    />
     <PackageReference Include="Microsoft.Extensions.Hosting" />
     <PackageReference Include="Microsoft.VisualStudio.Threading" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
@@ -42,6 +146,12 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" />
   </ItemGroup>
   <ItemGroup>
+    <Content
+      Include="../../../../LICENSE"
+      Link="Licenses\GPL-3.0.txt"
+      CopyToOutputDirectory="PreserveNewest"
+      CopyToPublishDirectory="PreserveNewest"
+    />
     <Content Include="Assets\AppIcon.ico" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />

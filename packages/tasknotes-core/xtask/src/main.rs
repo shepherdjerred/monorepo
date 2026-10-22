@@ -15,6 +15,7 @@
 //! entry point that drives it.
 
 mod csharp;
+mod kotlin;
 mod process;
 mod swift;
 
@@ -27,7 +28,7 @@ USAGE:
     cargo xtask <COMMAND> [OPTIONS]
 
 COMMANDS:
-    generate-bindings   Regenerate the committed Swift and C# bindings
+    generate-bindings   Regenerate the committed Swift, C#, and Kotlin bindings
     check-bindings      Regenerate them, then fail if a committed copy moved
     build-xcframework   Build the Apple static libraries and package them
     check-xcframework   Fail if the built XCFramework predates the bindings
@@ -71,12 +72,14 @@ fn dispatch(arguments: &[String]) -> Result<String, String> {
         Command::GenerateBindings { profile } => {
             let swift = swift::generate_bindings(&profile)?;
             let csharp = csharp::generate_bindings(&profile)?;
-            Ok(format!("{swift}{csharp}"))
+            let kotlin = kotlin::generate_bindings(&profile)?;
+            Ok(format!("{swift}{csharp}{kotlin}"))
         }
         Command::CheckBindings { profile } => {
             let swift = swift::check_bindings(&profile)?;
             let csharp = csharp::check_bindings(&profile)?;
-            Ok(format!("{swift}{csharp}"))
+            let kotlin = kotlin::check_bindings(&profile)?;
+            Ok(format!("{swift}{csharp}{kotlin}"))
         }
         Command::BuildXcframework { profile, platforms } => {
             swift::build_xcframework(&profile, &platforms)

@@ -42,7 +42,6 @@ public enum QuickAdd {
                 tags: parsed.tags,
                 recurrence: parsed.recurrence,
                 recurrenceAnchor: nil,
-                timeEstimate: nil,
                 extraFields: nil
             )
         )

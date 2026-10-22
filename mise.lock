@@ -32,6 +32,11 @@ checksum = "sha256:41e0425378fcb4fb5766340b97435e20fe47bbff2d7bf644ec2d51f7662b7
 url = "https://github.com/temporalio/cli/releases/download/v1.9.1/temporal_cli_1.9.1_darwin_arm64.tar.gz"
 url_api = "https://api.github.com/repos/temporalio/cli/releases/assets/564294914"
 
+[[tools."aqua:yonaskolb/XcodeGen"]]
+version = "2.46.0"
+backend = "aqua:yonaskolb/XcodeGen"
+specifiers = ["2.46.0"]
+
 [[tools.argocd]]
 version = "3.5.4"
 backend = "aqua:argoproj/argo-cd"

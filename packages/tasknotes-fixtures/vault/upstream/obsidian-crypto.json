@@ -1,0 +1,129 @@
+{
+  "referenceUrl": "https://raw.githubusercontent.com/obsidianmd/obsidian-headless/0d0ec4364bfde6c715c539cf3555ff8272bb7a58/cli.js",
+  "sourceSha256": "c6307dc72c00bcf6f22093fb3e0eb91fdc417fc9dd05884ff2c36e5a19cd0196",
+  "inputs": {
+    "password": "Å synthetic fixture １２３",
+    "salt": "ｖault-test-salt",
+    "paths": [
+      "",
+      "Tasks/Write plan.md",
+      ".obsidian/plugins/tasknotes/data.json",
+      "Tasks/日本語 📝.md"
+    ],
+    "plaintext": [0, 1, 2, 127, 128, 255, 10, 65],
+    "nonce": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+  },
+  "vectors": {
+    "derivedBytes": [
+      39, 160, 210, 169, 174, 197, 70, 103, 126, 42, 51, 23, 187, 185, 193, 236,
+      32, 124, 185, 73, 201, 195, 220, 6, 100, 217, 94, 106, 125, 97, 133, 162
+    ],
+    "cases": [
+      {
+        "version": 0,
+        "keyHashBytes": [
+          204, 84, 164, 139, 255, 245, 237, 203, 101, 10, 162, 141, 21, 74, 110,
+          27, 3, 21, 147, 179, 137, 118, 143, 176, 17, 235, 222, 153, 235, 224,
+          32, 130
+        ],
+        "strings": [
+          {
+            "plaintext": "",
+            "ciphertext": "e3b0c44298fc1c149afbf4c88c4f92af94ed5ed3f1b3e44bbf76b6d4"
+          },
+          {
+            "plaintext": "Tasks/Write plan.md",
+            "ciphertext": "48efa30789ef9063388811b95ec569729dedca58bd80df5741247c2c1b713be5b0be0306f7182e8f45df562b9a421d"
+          },
+          {
+            "plaintext": ".obsidian/plugins/tasknotes/data.json",
+            "ciphertext": "573011af48ab510a6163497fa591fd9be002353b9767518dbca1523d993e3894a19a8604b17455830a6cd665ae75601ad4f846c2c12bf39ec6362370412618ad5b"
+          },
+          {
+            "plaintext": "Tasks/日本語 📝.md",
+            "ciphertext": "1e356c741ce04fbdd39a6cec686396f05f1e4fe3aca36130b5b1e7ec00ed1ad16db73245ca9080712b7c3cf29ef2525e6b5189"
+          }
+        ],
+        "content": [
+          0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 214, 173, 158, 199, 186, 239,
+          113, 230, 142, 202, 97, 21, 52, 73, 202, 133, 78, 107, 203, 87, 51,
+          200, 30, 22
+        ],
+        "emptyContent": [
+          0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 128, 224, 243, 19, 82, 245, 10,
+          233, 139, 98, 88, 235, 125, 215, 74, 127
+        ]
+      },
+      {
+        "version": 2,
+        "keyHashBytes": [
+          75, 171, 222, 72, 167, 114, 117, 54, 162, 240, 205, 58, 190, 38, 185,
+          115, 30, 150, 41, 245, 90, 109, 96, 205, 45, 126, 176, 230, 175, 171,
+          56, 100
+        ],
+        "strings": [
+          {
+            "plaintext": "",
+            "ciphertext": "e0081a661ac37284e091cc2dde354dff"
+          },
+          {
+            "plaintext": "Tasks/Write plan.md",
+            "ciphertext": "aa3be50d43f9ce56c7533af48380e5f181625c3051f4b2a484f84e1b7f01c6f2b5b8b4"
+          },
+          {
+            "plaintext": ".obsidian/plugins/tasknotes/data.json",
+            "ciphertext": "a3cd512654ecaa6af1cf3887c53309ecc8fabe44eb667a1c4603be16102a8109a31b49402d8df613fbdac46cb2024631d41d7a8da6"
+          },
+          {
+            "plaintext": "Tasks/日本語 📝.md",
+            "ciphertext": "b45c6f3023dae873d400667b137fa74cc1c5f68329e562f47cce6da3bbc2eaad2399abbcdcd80d"
+          }
+        ],
+        "content": [
+          0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 167, 121, 141, 72, 29, 160, 166,
+          252, 196, 143, 227, 63, 43, 208, 33, 16, 254, 235, 39, 229, 224, 83,
+          103, 136
+        ],
+        "emptyContent": [
+          0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 136, 70, 67, 126, 169, 67, 71,
+          212, 100, 242, 61, 41, 111, 193, 134, 246
+        ]
+      },
+      {
+        "version": 3,
+        "keyHashBytes": [
+          75, 171, 222, 72, 167, 114, 117, 54, 162, 240, 205, 58, 190, 38, 185,
+          115, 30, 150, 41, 245, 90, 109, 96, 205, 45, 126, 176, 230, 175, 171,
+          56, 100
+        ],
+        "strings": [
+          {
+            "plaintext": "",
+            "ciphertext": "e0081a661ac37284e091cc2dde354dff"
+          },
+          {
+            "plaintext": "Tasks/Write plan.md",
+            "ciphertext": "aa3be50d43f9ce56c7533af48380e5f181625c3051f4b2a484f84e1b7f01c6f2b5b8b4"
+          },
+          {
+            "plaintext": ".obsidian/plugins/tasknotes/data.json",
+            "ciphertext": "a3cd512654ecaa6af1cf3887c53309ecc8fabe44eb667a1c4603be16102a8109a31b49402d8df613fbdac46cb2024631d41d7a8da6"
+          },
+          {
+            "plaintext": "Tasks/日本語 📝.md",
+            "ciphertext": "b45c6f3023dae873d400667b137fa74cc1c5f68329e562f47cce6da3bbc2eaad2399abbcdcd80d"
+          }
+        ],
+        "content": [
+          0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 167, 121, 141, 72, 29, 160, 166,
+          252, 196, 143, 227, 63, 43, 208, 33, 16, 254, 235, 39, 229, 224, 83,
+          103, 136
+        ],
+        "emptyContent": [
+          0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 136, 70, 67, 126, 169, 67, 71,
+          212, 100, 242, 61, 41, 111, 193, 134, 246
+        ]
+      }
+    ]
+  }
+}
