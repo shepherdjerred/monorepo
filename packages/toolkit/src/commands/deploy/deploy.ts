@@ -57,7 +57,7 @@ wait <DEPLOYMENT_ID>                   Foreground wait for completion
 approve|reject <DEPLOYMENT_ID>         Human decision; --reason required
 cancel <DEPLOYMENT_ID>                 Request cancellation at a safe boundary
 retry <DEPLOYMENT_ID>                  Create a new attempt
-recover <DEPLOYMENT_ID>                Inspect an ordinary Argo operation; specialized targets use their own recovery
+recover <DEPLOYMENT_ID>                Open the recovery intent and settle an ordinary Argo operation; specialized targets use their own recovery
 
 Options:
   --json                              Structured output
@@ -320,15 +320,21 @@ export async function runDeployCommand(
     case "cancel":
       result = await client.cancel(required(target));
       break;
-    case "recover":
-      result = await client.recover(
-        required(target),
-        RecoverDeploymentSchema.parse({
-          operationId: options["operation-id"],
-          reason: options.reason,
-        }),
-      );
+    case "recover": {
+      const input = RecoverDeploymentSchema.parse({
+        operationId: options["operation-id"],
+        reason: options.reason,
+      });
+      // Recovery opens the deployment's intent; readback settles it (4.15).
+      const detail = await client.deployment(required(target));
+      const intent = await client.createRecoveryIntent(detail.deployment.id, {
+        requestId: requestId(),
+        reason: input.reason,
+        expectedGeneration: expectedGeneration(detail.environment.generation),
+      });
+      result = await client.settleRecoveryIntent(intent.id, input);
       break;
+    }
     case "retry": {
       const detail = await client.deployment(required(target));
       result = await client.retry(detail.deployment.id, {
