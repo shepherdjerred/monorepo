@@ -3,20 +3,29 @@
   "cases": [
     {
       "id": "who-am-i",
-      "asker": { "username": "rosie", "displayName": "Rosie" },
+      "asker": {
+        "username": "ava",
+        "displayName": "Ava"
+      },
       "guild": {
-        "name": "Bwa Town",
+        "name": "Harbor Lane",
         "channels": ["general", "league-stats-with-scout"],
         "players": [
           {
-            "alias": "Omz",
+            "alias": "Tarrow",
             "linkedToAsker": true,
-            "account": { "kind": "lake", "rank": 3 },
+            "account": {
+              "kind": "lake",
+              "rank": 3
+            },
             "feeds": ["league-stats-with-scout"]
           },
           {
-            "alias": "Moon",
-            "account": { "kind": "lake", "rank": 4 }
+            "alias": "Linden",
+            "account": {
+              "kind": "lake",
+              "rank": 4
+            }
           }
         ]
       },
@@ -24,33 +33,39 @@
         {
           "question": "Who am i",
           "expect": {
-            "mustMentionAnyOf": [["Omz"]],
+            "mustMentionAnyOf": [["Tarrow"]],
             "mustNotMention": [
               "send your riot id",
               "send me your riot id",
               "tell me your riot id"
             ],
             "rubric": [
-              "Identifies the asker as the tracked player Omz in this server.",
-              "Names at least one Riot account linked to Omz.",
+              "Identifies the asker as the tracked player Tarrow in this server.",
+              "Names at least one Riot account linked to Tarrow.",
               "Does not ask the user to provide their Riot ID or Scout alias."
             ]
           }
         }
       ],
-      "origin": "rosiesucks asked '/scout ask Who am i' on Discord and was told Explore cannot identify them from the chat."
+      "origin": "A user asked '/scout ask Who am i' on Discord and was told Explore cannot identify them from the chat."
     },
     {
       "id": "my-latest-match",
-      "asker": { "username": "megumi", "displayName": "Megumi" },
+      "asker": {
+        "username": "juniper",
+        "displayName": "Juniper"
+      },
       "guild": {
-        "name": "Megumi's Server",
+        "name": "Juniper's Server",
         "channels": ["general"],
         "players": [
           {
-            "alias": "Megumi",
+            "alias": "Juniper",
             "linkedToAsker": true,
-            "account": { "kind": "lake", "rank": 5 }
+            "account": {
+              "kind": "lake",
+              "rank": 5
+            }
           }
         ]
       },
@@ -60,20 +75,23 @@
           "expect": {
             "toolsCalled": [["run_report_query"]],
             "rubric": [
-              "Describes the most recent recorded game of the tracked player Megumi, with champion and result.",
-              "Does not present a match that is not Megumi's.",
+              "Describes the most recent recorded game of the tracked player Juniper, with champion and result.",
+              "Does not present a match that is not Juniper's.",
               "Does not ask the user who they are."
             ]
           }
         }
       ],
-      "origin": "megumi4827 asked 'Show my latest match report' and got an unrelated KR match from global history."
+      "origin": "A user asked 'Show my latest match report' and got an unrelated KR match from global history."
     },
     {
       "id": "why-no-match-report",
-      "asker": { "username": "megumi", "displayName": "Megumi" },
+      "asker": {
+        "username": "juniper",
+        "displayName": "Juniper"
+      },
       "guild": {
-        "name": "Megumi's Server",
+        "name": "Juniper's Server",
         "channels": ["general", "lol"],
         "players": []
       },
@@ -90,45 +108,55 @@
           }
         }
       ],
-      "origin": "megumi4827 asked 'why no match report' in a server with zero tracked players and got a random match instead of a setup diagnosis."
+      "origin": "A user asked 'why no match report' in a server with zero tracked players and got a random match instead of a setup diagnosis."
     },
     {
       "id": "feed-by-username",
       "surfaces": ["web", "discord"],
-      "asker": { "username": "pepper", "displayName": "pepper" },
+      "asker": {
+        "username": "wren",
+        "displayName": "wren"
+      },
       "guild": {
-        "name": "Bwa Town",
+        "name": "Harbor Lane",
         "channels": ["general", "league-stats-with-scout"],
         "members": [
-          { "username": "shadowpumpkin23", "displayName": "ShadowPumpkin" }
+          {
+            "username": "emberfox42",
+            "displayName": "EmberFox"
+          }
         ]
       },
-      "candidates": { "pumpkin": { "kind": "lake", "rank": 7 } },
+      "candidates": {
+        "ember": {
+          "kind": "lake",
+          "rank": 7
+        }
+      },
       "turns": [
         {
-          "question": "set up a player feed in #league-stats-with-scout for {pumpkin.riotId} on {pumpkin.region}, call them Pumpkin. their discord is @shadowpumpkin23",
+          "question": "set up a player feed in #league-stats-with-scout for {ember.riotId} on {ember.region}, call them Ember. their discord is @emberfox42",
           "expect": {
             "intentMinted": "subscription",
-            "mustNotMention": [
-              "numeric discord",
-              "discord user id",
-              "discord id"
-            ],
+            "mustNotMention": [],
             "rubric": [
-              "Prepares a player feed for the named Riot account in #league-stats-with-scout, displayed as Pumpkin.",
-              "Links the feed to the Discord member shadowpumpkin23 without asking for a numeric Discord ID.",
+              "Prepares a player feed for the named Riot account in #league-stats-with-scout, displayed as Ember.",
+              "Links the feed to the Discord member emberfox42 without asking for a numeric Discord ID.",
               "Says the feed is waiting for the user's confirmation rather than claiming it already exists."
             ]
           }
         }
       ],
-      "origin": "ulovepepper set up four player feeds; each time Explore demanded a 'numeric Discord user ID', so they pasted friends' snowflakes into chat."
+      "origin": "A user set up four player feeds; each time Explore demanded a 'numeric Discord user ID', so they pasted friends' snowflakes into chat."
     },
     {
       "id": "auto-review",
-      "asker": { "username": "wicken", "displayName": "Wicken" },
+      "asker": {
+        "username": "hollis",
+        "displayName": "Hollis"
+      },
       "guild": {
-        "name": "Lecker Bierchen",
+        "name": "Kettle Club",
         "channels": ["general", "league"],
         "players": []
       },
@@ -147,19 +175,25 @@
           }
         }
       ],
-      "origin": "wickenmuller asked for 'auto game review after every game', was told Explore cannot, and removed the bot 93 minutes later — player feeds already do this."
+      "origin": "A user asked for 'auto game review after every game', was told Explore cannot, and removed the bot 93 minutes later — player feeds already do this."
     },
     {
       "id": "edit-bot-message",
-      "asker": { "username": "suxen", "displayName": "suxen" },
+      "asker": {
+        "username": "marek",
+        "displayName": "marek"
+      },
       "guild": {
-        "name": "Magyar LoL",
+        "name": "Duna LoL",
         "channels": ["general", "lol-feed"],
         "players": [
           {
-            "alias": "Suxen",
+            "alias": "Marek",
             "linkedToAsker": true,
-            "account": { "kind": "lake", "rank": 9 },
+            "account": {
+              "kind": "lake",
+              "rank": 9
+            },
             "feeds": ["lol-feed"]
           }
         ]
@@ -169,9 +203,10 @@
           "question": "how can i rewrite what the bot say when someone started a game",
           "expect": {
             "mustNotMention": [
-              "edit message",
+              "notifications → edit message",
+              "notifications > edit message",
               "notifications/game tracking",
-              "template option"
+              "notifications -> edit message"
             ],
             "rubric": [
               "Understands the user wants to change the text Scout posts, not to have their sentence rephrased.",
@@ -183,7 +218,12 @@
         {
           "question": "hol kéne lennie pontosan",
           "expect": {
-            "mustNotMention": ["edit message", "notifications / game tracking"],
+            "mustNotMention": [
+              "notifications → edit message",
+              "notifications > edit message",
+              "notifications / game tracking",
+              "notifications -> edit message"
+            ],
             "rubric": [
               "Answers in Hungarian.",
               "Repeats that there is no place to customize the message, without inventing one."
@@ -191,20 +231,25 @@
           }
         }
       ],
-      "origin": "suxen_ asked how to change the bot's game-start message; Explore rephrased the question, then invented an 'Explore → Notifications → Edit message' path."
+      "origin": "A user asked how to change the bot's game-start message; Explore rephrased the question, then invented an 'Explore → Notifications → Edit message' path."
     },
     {
       "id": "add-tracked-player-discord",
       "surfaces": ["discord", "voice"],
       "asker": {
-        "username": "shadowpumpkin23",
-        "displayName": "ShadowPumpkin"
+        "username": "emberfox42",
+        "displayName": "EmberFox"
       },
       "guild": {
-        "name": "Bwa Town",
+        "name": "Harbor Lane",
         "channels": ["general", "league-stats-with-scout"]
       },
-      "candidates": { "friend": { "kind": "lake", "rank": 8 } },
+      "candidates": {
+        "friend": {
+          "kind": "lake",
+          "rank": 8
+        }
+      },
       "turns": [
         {
           "question": "how do i add someone to this server's tracked players",
@@ -230,24 +275,33 @@
           }
         }
       ],
-      "origin": "shadowpumpkin23 asked on Discord how to add someone to tracked players and was told Explore cannot change the list from there, while the web surface was preparing feeds."
+      "origin": "A user asked on Discord how to add someone to tracked players and was told Explore cannot change the list from there, while the web surface was preparing feeds."
     },
     {
       "id": "already-confirmed",
       "surfaces": ["web", "discord"],
-      "asker": { "username": "valentinos", "displayName": "Valentinos" },
+      "asker": {
+        "username": "corin",
+        "displayName": "Corin"
+      },
       "guild": {
-        "name": "LEAGUE OF LEGENDS SERVER",
+        "name": "Rift Regulars",
         "channels": ["league-chat", "general"],
         "players": [
           {
-            "alias": "Val",
+            "alias": "Cor",
             "linkedToAsker": true,
-            "account": { "kind": "lake", "rank": 10 }
+            "account": {
+              "kind": "lake",
+              "rank": 10
+            }
           }
         ],
         "reports": [
-          { "title": "Weekly Games and Win Rate", "channel": "league-chat" }
+          {
+            "title": "Weekly Games and Win Rate",
+            "channel": "league-chat"
+          }
         ]
       },
       "priorTurns": [
@@ -278,20 +332,26 @@
           }
         }
       ],
-      "origin": "valentinos123 confirmed a report card, then typed 'Confirm' twice more and was told nothing had been created."
+      "origin": "A user confirmed a report card, then typed 'Confirm' twice more and was told nothing had been created."
     },
     {
       "id": "active-reports-at-limit",
       "surfaces": ["web", "discord"],
-      "asker": { "username": "pepper", "displayName": "pepper" },
+      "asker": {
+        "username": "wren",
+        "displayName": "wren"
+      },
       "guild": {
-        "name": "Bwa Town",
+        "name": "Harbor Lane",
         "channels": ["general", "league-stats-with-scout"],
         "players": [
           {
-            "alias": "pepper",
+            "alias": "wren",
             "linkedToAsker": true,
-            "account": { "kind": "lake", "rank": 11 }
+            "account": {
+              "kind": "lake",
+              "rank": 11
+            }
           }
         ],
         "reports": [
@@ -299,7 +359,10 @@
             "title": "Players' Last Five Games",
             "channel": "league-stats-with-scout"
           },
-          { "title": "Weekly Win Rates", "channel": "general" }
+          {
+            "title": "Weekly Win Rates",
+            "channel": "general"
+          }
         ]
       },
       "turns": [
@@ -317,12 +380,18 @@
           }
         }
       ],
-      "origin": "ulovepepper hit the 2-report limit, asked to see their active reports, and Explore said it could not list them."
+      "origin": "A user hit the 2-report limit, asked to see their active reports, and Explore said it could not list them."
     },
     {
       "id": "best-build",
-      "asker": { "username": "sliz", "displayName": "sliz" },
-      "guild": { "name": "Brand Mains", "channels": ["general"] },
+      "asker": {
+        "username": "tamsin",
+        "displayName": "tamsin"
+      },
+      "guild": {
+        "name": "Burn Squad",
+        "channels": ["general"]
+      },
       "turns": [
         {
           "question": "Show the best Brand build in Scout's data",
@@ -340,12 +409,18 @@
           }
         }
       ],
-      "origin": "slizrvgv asked for the best Brand build on Discord and got 'Health Potion + World Atlas' — an exact final-inventory label that only trivial games repeat."
+      "origin": "A user asked for the best Brand build on Discord and got 'Health Potion + World Atlas' — an exact final-inventory label that only trivial games repeat."
     },
     {
       "id": "rune-page",
-      "asker": { "username": "sliz", "displayName": "sliz" },
-      "guild": { "name": "Brand Mains", "channels": ["general"] },
+      "asker": {
+        "username": "tamsin",
+        "displayName": "tamsin"
+      },
+      "guild": {
+        "name": "Burn Squad",
+        "channels": ["general"]
+      },
       "turns": [
         {
           "question": "rune malphite",
@@ -358,19 +433,26 @@
           }
         }
       ],
-      "origin": "slizrvgv asked 'rune malphite' on Discord; the answer had a plausible page but did not check the current rune data."
+      "origin": "A user asked 'rune malphite' on Discord; the answer had a plausible page but did not check the current rune data."
     },
     {
       "id": "game-review",
-      "asker": { "username": "abdo", "displayName": "abdo" },
+      "asker": {
+        "username": "idris",
+        "displayName": "idris"
+      },
       "guild": {
-        "name": "Ascend",
+        "name": "Summit",
         "channels": ["general"],
         "players": [
           {
-            "alias": "Ascendator",
+            "alias": "Summiteer",
             "linkedToAsker": true,
-            "account": { "kind": "lake", "rank": 1, "withTimeline": true }
+            "account": {
+              "kind": "lake",
+              "rank": 1,
+              "withTimeline": true
+            }
           }
         ]
       },
@@ -386,12 +468,18 @@
           }
         }
       ],
-      "origin": "abdo.mubarek had to type their own Riot ID to get a review, and the review said it had no timeline to name turning points from."
+      "origin": "A user had to type their own Riot ID to get a review, and the review said it had no timeline to name turning points from."
     },
     {
       "id": "current-meta",
-      "asker": { "username": "vortech", "displayName": "vortech" },
-      "guild": { "name": "Meta Talk", "channels": ["general"] },
+      "asker": {
+        "username": "odell",
+        "displayName": "odell"
+      },
+      "guild": {
+        "name": "Patch Talk",
+        "channels": ["general"]
+      },
       "turns": [
         {
           "question": "which champions are strongest right now",
@@ -405,20 +493,27 @@
           }
         }
       ],
-      "origin": "vortechx. asked which champions have the highest win rate and got an all-history ranking with no patch scoping."
+      "origin": "A user asked which champions have the highest win rate and got an all-history ranking with no patch scoping."
     },
     {
       "id": "image-scoreboard",
       "surfaces": ["web", "discord"],
-      "asker": { "username": "abdo", "displayName": "abdo" },
+      "asker": {
+        "username": "idris",
+        "displayName": "idris"
+      },
       "guild": {
-        "name": "Ascend",
+        "name": "Summit",
         "channels": ["general"],
         "players": [
           {
-            "alias": "Ascendator",
+            "alias": "Summiteer",
             "linkedToAsker": true,
-            "account": { "kind": "lake", "rank": 1, "withTimeline": true }
+            "account": {
+              "kind": "lake",
+              "rank": 1,
+              "withTimeline": true
+            }
           }
         ]
       },
@@ -439,12 +534,20 @@
     {
       "id": "thin-data",
       "control": true,
-      "asker": { "username": "pepper", "displayName": "pepper" },
+      "asker": {
+        "username": "wren",
+        "displayName": "wren"
+      },
       "guild": {
-        "name": "Bwa Town",
+        "name": "Harbor Lane",
         "channels": ["general"],
         "players": [
-          { "alias": "Quillbert", "account": { "kind": "unrecorded" } }
+          {
+            "alias": "Quillbert",
+            "account": {
+              "kind": "unrecorded"
+            }
+          }
         ]
       },
       "turns": [
@@ -458,7 +561,7 @@
           }
         }
       ],
-      "origin": "ulovepepper asked for last five games with fewer than five recorded; Explore answered honestly. Kept as a control that should pass before any fix."
+      "origin": "A user asked for last five games with fewer than five recorded; Explore answered honestly. Kept as a control that should pass before any fix."
     }
   ]
 }

@@ -60,6 +60,12 @@ export type ScenarioWorld = {
     readonly feedChannelIds: readonly DiscordChannelId[];
   }[];
   readonly candidates: Readonly<Record<string, ScenarioAccount>>;
+  /** Scheduled reports the server already has. */
+  readonly reports: ExploreScenarioCase["guild"]["reports"];
+  /** Confirmation cards earlier turns showed, with what became of them. */
+  readonly priorIntents: readonly NonNullable<
+    ExploreScenarioCase["priorTurns"][number]["intent"]
+  >[];
 };
 
 const SURFACE_INDEX: Readonly<Record<ExploreScenarioSurface, number>> = {
@@ -178,6 +184,10 @@ export function buildScenarioWorld(input: {
       };
     }),
     candidates: input.candidates,
+    reports: entry.guild.reports,
+    priorIntents: entry.priorTurns.flatMap((turn) =>
+      turn.intent === undefined ? [] : [turn.intent],
+    ),
   };
 }
 
@@ -192,7 +202,7 @@ export function scenarioChannelId(
   return channel.id;
 }
 
-/** `{pumpkin.riotId}` and `{pumpkin.region}` with the resolved values. */
+/** `{ember.riotId}` and `{ember.region}` with the resolved values. */
 export function renderScenarioQuestion(
   question: string,
   world: ScenarioWorld,

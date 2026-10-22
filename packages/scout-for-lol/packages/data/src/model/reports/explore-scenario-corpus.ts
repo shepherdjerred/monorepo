@@ -124,7 +124,7 @@ export const ExploreScenarioPriorTurnSchema = z
   })
   .strict();
 
-/** `{pumpkin.riotId}` or `{pumpkin.region}`: a candidate account, resolved at run time. */
+/** `{ember.riotId}` or `{ember.region}`: a candidate account, resolved at run time. */
 export const SCENARIO_PLACEHOLDER = /\{([a-z][a-z0-9]*)\.(riotId|region)\}/g;
 
 /** Each inner group is an OR; the groups together are an AND. */

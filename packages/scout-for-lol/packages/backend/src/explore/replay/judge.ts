@@ -286,7 +286,7 @@ export type JudgeCaseInput = {
 
 /** Tools that answer from their own data rather than through ScoutQL. */
 const CAPABILITY_TOOL_PATTERN =
-  /^(?:run_report_query|get_bucks|query_bucks|list_dares|inspect_dare|query_mvp|list_challenge|list_my_challenge|preview_challenge|challenge_leaderboard|get_clash|get_hall|list_competitions|get_competition|resolve_player|inspect_player_coverage|materialize_query_dataset|materialize_raw_documents|analyze_javascript|select_dataset_values|summarize_match_timeline)/;
+  /^(?:prepare_|lookup_|run_report_query|get_bucks|query_bucks|list_dares|inspect_dare|query_mvp|list_challenge|list_my_challenge|preview_challenge|challenge_leaderboard|get_clash|get_hall|list_competitions|get_competition|resolve_player|inspect_player_coverage|materialize_query_dataset|materialize_raw_documents|analyze_javascript|select_dataset_values|summarize_match_timeline)/;
 
 /**
  * How much of one tool result the judge is shown.

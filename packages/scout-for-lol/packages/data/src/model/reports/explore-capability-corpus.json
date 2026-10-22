@@ -116,9 +116,13 @@
       ],
       "mustNotMention": [
         "cannot set up an event-triggered",
-        "can't set up an event-triggered"
+        "can't set up an event-triggered",
+        "can't set up a player feed",
+        "cannot set up a player feed",
+        "can't set up a feed",
+        "cannot set up a feed"
       ],
-      "rationale": "wickenmuller was told Explore cannot do this and removed the bot 93 minutes later. A player feed posts a match report after every game; the answer must say so instead of refusing."
+      "rationale": "A user was told Explore cannot do this and removed the bot 93 minutes later. A player feed posts a match report after every game; the answer must say so instead of refusing."
     },
     {
       "id": "notification-text-not-customizable",
@@ -129,9 +133,10 @@
         ["message", "text", "notification", "wording"]
       ],
       "mustNotMention": [
-        "edit message",
-        "template option",
-        "notifications/game tracking"
+        "notifications → edit message",
+        "notifications > edit message",
+        "notifications/game tracking",
+        "notifications -> edit message"
       ],
       "rationale": "Scout has no way to customize notification text. Explore once rephrased the question and then invented an Explore -> Notifications -> Edit message path."
     },

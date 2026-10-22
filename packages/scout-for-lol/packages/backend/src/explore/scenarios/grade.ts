@@ -160,9 +160,41 @@ function phraseChecks(
   return checks;
 }
 
+/** "You don't need a numeric ID" names one without asking for it. */
+const NEGATED =
+  /\b(?:do not|don't|does not|doesn't|no need|not need|never|without)\b/i;
+
+/**
+ * The first sentence that asks for a numeric id, if any.
+ *
+ * The negation must sit at the request itself — in the matched phrase or just
+ * before it — so "you don't need a username, but send their Discord user ID"
+ * still counts. Normalized first: the model writes curly apostrophes.
+ */
+function idRequest(text: string): string | null {
+  return (
+    text.split(/(?<=[.!?])\s+|\n+/).find((sentence) => requestsId(sentence)) ??
+    null
+  );
+}
+
+/** Whether any match in the sentence lacks a negation just before it. */
+function requestsId(sentence: string): boolean {
+  for (let from = 0; from < sentence.length; from += 1) {
+    const match = NUMERIC_ID_REQUEST.exec(sentence.slice(from));
+    if (match === null) return false;
+    const at = from + match.index;
+    const before = sentence.slice(Math.max(0, at - 25), at);
+    const phrase = sentence.slice(at, at + match[0].length);
+    if (!NEGATED.test(normalizeEvalText(`${before}${phrase}`))) return true;
+    from = at;
+  }
+  return false;
+}
+
 /** Product rules every turn obeys, whatever its case expects. */
 function productRuleChecks(evidence: ScenarioTurnEvidence): ScenarioCheck[] {
-  const askedForId = NUMERIC_ID_REQUEST.exec(rawTextOf(evidence));
+  const askedForId = idRequest(rawTextOf(evidence));
   const actionChips = (evidence.answer?.followUps ?? []).filter((chip) =>
     ACTION_CHIP.test(chip),
   );
@@ -173,7 +205,7 @@ function productRuleChecks(evidence: ScenarioTurnEvidence): ScenarioCheck[] {
       detail:
         askedForId === null
           ? "Did not ask for a numeric id."
-          : `Asked for an id: "${askedForId[0]}".`,
+          : `Asked for an id: "${askedForId}".`,
     },
     {
       name: "follow-ups-are-questions",

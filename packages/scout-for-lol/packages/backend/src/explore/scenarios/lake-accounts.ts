@@ -70,16 +70,23 @@ export async function resolveScenarioAccount(input: {
     ...(selector.champion === undefined
       ? []
       : [`champion_name = ${quoteLiteral(selector.champion)}`]),
+  ];
+  // A review case asks about the account's latest game, so that game — not
+  // merely some older one — must be the one with a timeline.
+  const conditions = [
+    ...(input.exclude.size === 0
+      ? []
+      : [
+          `puuid not in (${[...input.exclude].map((puuid) => quoteLiteral(puuid)).join(", ")})`,
+        ]),
     ...(selector.withTimeline
       ? [
-          `match_id in (select match_id from read_parquet(${coverage}, hive_partitioning = true))`,
+          `latest_match in (select match_id from read_parquet(${coverage}, hive_partitioning = true))`,
         ]
       : []),
   ];
   const excluded =
-    input.exclude.size === 0
-      ? ""
-      : `where puuid not in (${[...input.exclude].map((puuid) => quoteLiteral(puuid)).join(", ")})`;
+    conditions.length === 0 ? "" : `where ${conditions.join(" and ")}`;
 
   const sql = `
     with games as (
@@ -88,6 +95,7 @@ export async function resolveScenarioAccount(input: {
         arg_max(riot_id_game_name, game_end_at) as game_name,
         arg_max(riot_id_tagline, game_end_at) as tag_line,
         arg_max(platform_id, game_end_at) as platform_id,
+        arg_max(match_id, game_end_at) as latest_match,
         count(*) as games
       from read_parquet(${matches}, hive_partitioning = true)
       where ${filters.join(" and ")}

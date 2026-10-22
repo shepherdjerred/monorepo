@@ -8,13 +8,13 @@ import type { ScenarioWorld } from "#src/explore/scenarios/world.ts";
  *
  * The replay judge asks general questions of any answer — grounded, honest
  * about coverage. A scenario knows exactly what a good answer must do here:
- * "names Omz as the asker", "does not invent a settings page". The judge is
+ * "names Tarrow as the asker", "does not invent a settings page". The judge is
  * asked about those criteria one by one and returns a closed verdict for
  * each; whether the turn passes is decided here, in code, not by the model.
  *
  * The judge sees the seeded world — who is asking, what the server holds —
  * because most criteria are claims about it. Without it, "identifies the
- * asker as Omz" cannot be checked at all.
+ * asker as Tarrow" cannot be checked at all.
  */
 
 export const ScenarioJudgementSchema = z
@@ -64,6 +64,8 @@ export function scenarioJudgeSystemPrompt(): string {
     "For each criterion, answer `met` only if the answer clearly satisfies it. Partial, implied or hedged satisfaction is `not_met`.",
     "Judge only the criteria. Do not reward style, length or politeness, and do not penalise anything a criterion does not mention.",
     "A criterion about facts (a name, a game, a count) is met only if the fact is correct for the seeded world and the tool results.",
+    "On a voice turn the user hears the spoken answer and can open the saved one. The direct answer, and anything the user must do or be warned about, must be spoken; supporting detail such as per-item counts may be only in the saved answer.",
+    "A proposal the answer describes is judged by what the prepare tool actually returned — the account, member, channel and alias on the card — not by the answer's description of it.",
     "Return one verdict per criterion, using its index, with a one-sentence reason.",
   ].join("\n");
 }
@@ -101,6 +103,28 @@ function worldSummary(world: ScenarioWorld): string {
         .join(", ") || "none"
     }`,
     `Tracked players: ${players}`,
+    `Scheduled reports: ${
+      world.reports
+        .map(
+          (report) =>
+            `"${report.title}" in #${report.channel} (${report.enabled ? "enabled" : "disabled"}${report.ownedByAsker ? ", owned by the asker" : ""})`,
+        )
+        .join("; ") || "none"
+    }`,
+    `Earlier confirmation cards: ${
+      world.priorIntents
+        .map(
+          (intent) =>
+            `report "${intent.reportTitle}" in #${intent.channel} — ${
+              intent.state === "consumed"
+                ? "confirmed; the report exists"
+                : intent.state === "expired"
+                  ? "expired unconfirmed; nothing was created"
+                  : "still pending"
+            }`,
+        )
+        .join("; ") || "none"
+    }`,
   ].join("\n");
 }
 
@@ -113,6 +137,8 @@ export function scenarioJudgeUserPrompt(input: {
   }[];
   readonly question: string;
   readonly answer: string | null;
+  /** What a voice user heard; absent on other surfaces. */
+  readonly spokenAnswer?: string | null | undefined;
   readonly followUps: readonly string[];
   readonly trace: Parameters<typeof judgeEvidenceFromTrace>[0];
   readonly payloads: Parameters<typeof judgeEvidenceFromTrace>[1];
@@ -134,6 +160,9 @@ export function scenarioJudgeUserPrompt(input: {
     "## This turn",
     `User: ${input.question}`,
     `Explore: ${input.answer ?? "(no answer — the turn failed)"}`,
+    ...(input.spokenAnswer === undefined || input.spokenAnswer === null
+      ? []
+      : [`Spoken to the user (voice): ${input.spokenAnswer}`]),
     input.followUps.length === 0
       ? "Suggested follow-ups: none"
       : `Suggested follow-ups: ${input.followUps.map((chip) => JSON.stringify(chip)).join(", ")}`,

@@ -20,7 +20,8 @@
 
 import path from "node:path";
 import { homedir } from "node:os";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, open, readFile, rm, writeFile } from "node:fs/promises";
+import { z } from "zod";
 import { parseScenarioArgs, SCENARIO_USAGE } from "./scenario-args.ts";
 
 /** Dropped and re-created from the migrated test template on every run. */
@@ -29,6 +30,50 @@ const SCENARIO_DATABASE = "scout_scenarios";
 function fail(message: string): never {
   process.stderr.write(`${message}\n`);
   process.exit(1);
+}
+
+/**
+ * One scenario eval at a time per machine.
+ *
+ * Every run replaces the same fixture database and lake clone, so a second
+ * run would drop the first one's database mid-turn and lose its paid results.
+ * A lock left by a run that died is taken over.
+ */
+async function holdRunLock(root: string): Promise<string> {
+  await mkdir(root, { recursive: true });
+  const lockPath = path.join(root, "run.lock");
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    if (await takeLock(lockPath)) return lockPath;
+    const holder = Number.parseInt(await readFile(lockPath, "utf8"), 10);
+    if (processAlive(holder))
+      fail(`Another scenario eval is running (pid ${holder.toString()}).`);
+    await rm(lockPath, { force: true });
+  }
+  fail("Could not take the scenario eval lock.");
+}
+
+/** Creates the lock file; false when it already exists. */
+async function takeLock(lockPath: string): Promise<boolean> {
+  try {
+    const handle = await open(lockPath, "wx");
+    await handle.writeFile(process.pid.toString());
+    await handle.close();
+    return true;
+  } catch (error) {
+    if (z.object({ code: z.literal("EEXIST") }).safeParse(error).success)
+      return false;
+    throw error;
+  }
+}
+
+function processAlive(pid: number): boolean {
+  if (!Number.isInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function stateRoot(): string {
@@ -121,6 +166,7 @@ async function main(): Promise<void> {
   Bun.env["AWS_EC2_METADATA_DISABLED"] = "true";
 
   const root = stateRoot();
+  const lockPath = await holdRunLock(root);
   const lake = await cloneLake(
     options.sourceLake,
     path.join(root, "report-lake"),
@@ -147,14 +193,20 @@ async function main(): Promise<void> {
   );
 
   const { runScenarios } = await import("./scenario-run.ts");
-  const outcome = await runScenarios({
-    options,
-    plan,
-    corpus,
-    lake,
-    bundleRoot: path.join(root, "runs"),
-  });
-  if (!outcome.passed) process.exitCode = 1;
+  try {
+    const outcome = await runScenarios({
+      options,
+      plan,
+      corpus,
+      lake,
+      bundleRoot: path.join(root, "runs"),
+    });
+    if (!outcome.passed) process.exitCode = 1;
+  } finally {
+    // A run that dies before here leaves the lock; the next run sees its pid
+    // is gone and takes it over.
+    await rm(lockPath, { force: true });
+  }
 }
 
 await main().catch((error: unknown) => {

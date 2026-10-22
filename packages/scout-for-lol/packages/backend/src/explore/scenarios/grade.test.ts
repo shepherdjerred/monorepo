@@ -83,12 +83,12 @@ describe("mintedIntentKinds", () => {
 describe("scenarioTurnChecks", () => {
   test("a turn with no answer fails 'answered' and every mention", () => {
     const checks = scenarioTurnChecks({
-      expect: { ...EXPECT, mustMentionAnyOf: [["Omz"]] },
+      expect: { ...EXPECT, mustMentionAnyOf: [["Tarrow"]] },
       evidence: evidence({ answer: null }),
       hasImage: false,
     });
     expect(check(checks, "answered").passed).toBe(false);
-    expect(check(checks, "mentions:Omz").passed).toBe(false);
+    expect(check(checks, "mentions:Tarrow").passed).toBe(false);
   });
 
   test("tool groups pass when any member ran successfully", () => {
@@ -171,6 +171,7 @@ describe("scenarioTurnChecks", () => {
     "Please send your numeric Discord user ID so I can prepare the confirmation.",
     "I need your Discord user ID to prepare the player feed.",
     "Send me their snowflake ID.",
+    "You don't need a username, but send me their Discord user ID now.",
   ])("flags a request for a raw id: %s", (answer) => {
     const checks = scenarioTurnChecks({
       expect: EXPECT,
@@ -180,13 +181,25 @@ describe("scenarioTurnChecks", () => {
     expect(check(checks, "no-numeric-id-request").passed).toBe(false);
   });
 
+  test.each([
+    "You do not need a numeric Discord ID; a username works.",
+    "No need to find their Discord user ID — I matched the username.",
+    "You don’t need to send your Discord user ID.",
+  ])("saying an id is unnecessary is not a request: %s", (answer) => {
+    const checks = scenarioTurnChecks({
+      expect: EXPECT,
+      evidence: evidence({ answer: { answer, followUps: [] } }),
+      hasImage: false,
+    });
+    expect(check(checks, "no-numeric-id-request").passed).toBe(true);
+  });
+
   test("mentioning a linked Discord account is not a request for an id", () => {
     const checks = scenarioTurnChecks({
       expect: EXPECT,
       evidence: evidence({
         answer: {
-          answer:
-            "The feed will be linked to shadowpumpkin23's Discord account.",
+          answer: "The feed will be linked to emberfox42's Discord account.",
           followUps: [],
         },
       }),

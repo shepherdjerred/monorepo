@@ -18,16 +18,16 @@ const WORLD: ScenarioWorld = {
   caseId: "who-am-i",
   surface: "discord",
   guildId: DiscordGuildIdSchema.parse("900000000000000000"),
-  guildName: "Bwa Town",
-  asker: { id: ASKER, username: "rosie", displayName: "Rosie" },
-  members: [{ id: ASKER, username: "rosie", displayName: "Rosie" }],
+  guildName: "Harbor Lane",
+  asker: { id: ASKER, username: "ava", displayName: "Ava" },
+  members: [{ id: ASKER, username: "ava", displayName: "Ava" }],
   channels: [{ id: CHANNEL, name: "league-stats-with-scout" }],
   players: [
     {
-      alias: "Omz",
+      alias: "Tarrow",
       account: {
         puuid: LeaguePuuidSchema.parse("5ce4a710-0000-4000-8000-000000000002"),
-        gameName: "Omz",
+        gameName: "Tarrow",
         tagLine: "NA1",
         region: "AMERICA_NORTH",
         games: 12,
@@ -37,6 +37,22 @@ const WORLD: ScenarioWorld = {
     },
   ],
   candidates: {},
+  reports: [
+    {
+      title: "Weekly KDA",
+      channel: "league-stats-with-scout",
+      enabled: true,
+      ownedByAsker: true,
+    },
+  ],
+  priorIntents: [
+    {
+      kind: "report",
+      reportTitle: "Weekly KDA",
+      channel: "league-stats-with-scout",
+      state: "consumed",
+    },
+  ],
 };
 
 describe("rubricResults", () => {
@@ -67,17 +83,37 @@ describe("scenarioJudgeUserPrompt", () => {
       surface: "discord",
       conversation: [],
       question: "Who am i",
-      answer: "You're Omz.",
+      answer: "You're Tarrow.",
       followUps: [],
       trace: [],
       payloads: [],
-      rubric: ["Identifies the asker as Omz."],
+      rubric: ["Identifies the asker as Tarrow."],
     });
-    expect(prompt).toContain("Asker: Rosie (@rosie)");
+    expect(prompt).toContain("Asker: Ava (@ava)");
     expect(prompt).toContain(
-      "Omz (Riot ID Omz#NA1, 12 recorded games, linked to the asker, feed in #league-stats-with-scout)",
+      "Tarrow (Riot ID Tarrow#NA1, 12 recorded games, linked to the asker, feed in #league-stats-with-scout)",
     );
-    expect(prompt).toContain("0. Identifies the asker as Omz.");
+    expect(prompt).toContain("0. Identifies the asker as Tarrow.");
+    expect(prompt).toContain(
+      'Scheduled reports: "Weekly KDA" in #league-stats-with-scout (enabled, owned by the asker)',
+    );
+    expect(prompt).toContain("confirmed; the report exists");
+  });
+
+  test("shows a voice turn's spoken answer", () => {
+    const prompt = scenarioJudgeUserPrompt({
+      world: WORLD,
+      surface: "voice",
+      conversation: [],
+      question: "Who am i",
+      answer: "You're Tarrow, linked to Tarrow#NA1.",
+      spokenAnswer: "You're Tarrow.",
+      followUps: [],
+      trace: [],
+      payloads: [],
+      rubric: ["Answers."],
+    });
+    expect(prompt).toContain("Spoken to the user (voice): You're Tarrow.");
   });
 
   test("says so when the turn produced no answer", () => {

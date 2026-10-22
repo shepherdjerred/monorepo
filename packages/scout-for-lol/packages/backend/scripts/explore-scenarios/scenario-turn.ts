@@ -164,28 +164,41 @@ export async function gradeTurn(input: {
     },
     hasImage: turn.image !== undefined,
   });
-  const rubric =
-    input.runtime === null
-      ? null
-      : await judgeTurn({
-          runtime: input.runtime,
+  // A judge failure is the judge's, not Explore's: the answer, trace and
+  // checks are kept, and every criterion reads as unmet with the reason.
+  let rubric: readonly ScenarioRubricResult[] | null = null;
+  if (input.runtime !== null) {
+    try {
+      rubric = await judgeTurn({
+        runtime: input.runtime,
+        rubric: turn.expect.rubric,
+        prompt: scenarioJudgeUserPrompt({
+          world: input.world,
+          surface: input.surface,
+          conversation: input.transcript,
+          question: input.question,
+          answer: answer?.answer ?? null,
+          spokenAnswer:
+            input.surface === "voice" ? (answer?.spokenAnswer ?? null) : null,
+          followUps: answer?.followUps ?? [],
+          trace: observation.trace,
+          payloads: observation.payloads.map((payload) => ({
+            toolCallId: payload.toolCallId,
+            direction: payload.direction,
+            value: payload.value,
+          })),
           rubric: turn.expect.rubric,
-          prompt: scenarioJudgeUserPrompt({
-            world: input.world,
-            surface: input.surface,
-            conversation: input.transcript,
-            question: input.question,
-            answer: answer?.answer ?? null,
-            followUps: answer?.followUps ?? [],
-            trace: observation.trace,
-            payloads: observation.payloads.map((payload) => ({
-              toolCallId: payload.toolCallId,
-              direction: payload.direction,
-              value: payload.value,
-            })),
-            rubric: turn.expect.rubric,
-          }),
-        });
+        }),
+      });
+    } catch (error) {
+      const reason = `The judge failed: ${error instanceof Error ? error.message : String(error)}`;
+      rubric = turn.expect.rubric.map((criterion) => ({
+        criterion,
+        met: false,
+        reason,
+      }));
+    }
+  }
   const verdicts = rubric?.map((result) => result.met) ?? null;
   return {
     summary: {

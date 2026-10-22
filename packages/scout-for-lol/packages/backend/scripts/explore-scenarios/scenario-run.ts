@@ -114,57 +114,82 @@ async function runOne(input: {
   const evidence: unknown[] = [];
 
   for (const [index, turn] of run.entry.turns.entries()) {
-    const question = renderScenarioQuestion(turn.question, world);
-    const observation = await runReplayCase(
-      {
-        caseId: `${run.entry.id}/${run.surface}/${index.toString()}`,
-        kind: "conversation",
-        conversationId: conversation.id,
+    try {
+      const question = renderScenarioQuestion(turn.question, world);
+      const observation = await runReplayCase(
+        {
+          caseId: `${run.entry.id}/${run.surface}/${index.toString()}`,
+          kind: "conversation",
+          conversationId: conversation.id,
+          question,
+          history,
+          requesterId: world.asker.id,
+          guildIds: [world.guildId],
+          surface: run.surface,
+          originChannelId:
+            run.surface === "web" ? null : (world.channels[0]?.id ?? null),
+        },
+        {
+          executeAgent: streamExploreAgent,
+          resolveCapabilities: resolveReplayCapabilities,
+          now: () => Date.now(),
+          timeoutMs: TURN_TIMEOUT_MS,
+          newRunId: () => globalThis.crypto.randomUUID(),
+        },
+      );
+
+      const graded =
+        turn.expect === undefined
+          ? null
+          : await gradeTurn({
+              turn: { ...turn, expect: turn.expect },
+              index,
+              question,
+              observation,
+              world,
+              surface: run.surface,
+              transcript,
+              runtime: input.runtime,
+            });
+      if (graded === null) {
+        evidence.push({ index, question, observation });
+      } else {
+        turns.push(graded.summary);
+        evidence.push(graded.evidence);
+      }
+
+      transcript.push({
         question,
-        history,
-        requesterId: world.asker.id,
-        guildIds: [world.guildId],
-        surface: run.surface,
-        originChannelId:
-          run.surface === "web" ? null : (world.channels[0]?.id ?? null),
-      },
-      {
-        executeAgent: streamExploreAgent,
-        resolveCapabilities: resolveReplayCapabilities,
-        now: () => Date.now(),
-        timeoutMs: TURN_TIMEOUT_MS,
-        newRunId: () => globalThis.crypto.randomUUID(),
-      },
-    );
-
-    const graded =
-      turn.expect === undefined
-        ? null
-        : await gradeTurn({
-            turn: { ...turn, expect: turn.expect },
-            index,
-            question,
-            observation,
-            world,
-            surface: run.surface,
-            transcript,
-            runtime: input.runtime,
-          });
-    if (graded === null) {
-      evidence.push({ index, question, observation });
-    } else {
-      turns.push(graded.summary);
-      evidence.push(graded.evidence);
+        answer: observation.answer?.answer ?? "(This answer failed.)",
+      });
+      history = [
+        ...history,
+        ...historyFrom(
+          question,
+          observation,
+          world,
+          history.at(-1)?.id ?? null,
+        ),
+      ];
+    } catch (error) {
+      // A throw after paid turns keeps what they produced: the turns already
+      // graded stay in the summary and the bundle, and this turn is recorded
+      // as failed with its error, so a broken run never scores as a short
+      // clean one.
+      const message = error instanceof Error ? error.message : String(error);
+      turns.push({
+        index,
+        status: "error",
+        checks: [],
+        rubric:
+          turn.expect === undefined || input.runtime === null
+            ? null
+            : turn.expect.rubric.map(() => false),
+        passed: false,
+      });
+      evidence.push({ index, question: turn.question, error: message });
+      break;
     }
-
-    transcript.push({
-      question,
-      answer: observation.answer?.answer ?? "(This answer failed.)",
-    });
-    history = [
-      ...history,
-      ...historyFrom(question, observation, world, history.at(-1)?.id ?? null),
-    ];
   }
 
   const summary: ScenarioRunSummary = {
@@ -307,13 +332,29 @@ export async function runScenarios(
         next += 1;
         const entry = worlds[index];
         if (entry === undefined) return;
-        const summary = await runOne({
-          run: entry.run,
-          world: entry.world,
-          priorHistory: entry.history,
-          runtime,
-          bundleDir,
-        });
+        let summary: ScenarioRunSummary;
+        try {
+          summary = await runOne({
+            run: entry.run,
+            world: entry.world,
+            priorHistory: entry.history,
+            runtime,
+            bundleDir,
+          });
+        } catch (error) {
+          // One broken run is a failed run, not a lost eval: the other
+          // workers keep the fixture Discord reader and the database.
+          process.stderr.write(
+            `ERROR ${entry.run.entry.id} [${entry.run.surface}]: ${error instanceof Error ? error.message : String(error)}\n`,
+          );
+          summary = {
+            caseId: entry.run.entry.id,
+            surface: entry.run.surface,
+            control: entry.run.entry.control,
+            passed: false,
+            turns: [],
+          };
+        }
         summaries[index] = summary;
         process.stderr.write(
           `${summary.passed ? "PASS" : "FAIL"} ${summary.caseId} [${summary.surface}]\n`,

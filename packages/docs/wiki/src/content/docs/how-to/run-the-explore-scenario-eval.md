@@ -15,6 +15,10 @@ It then runs on every surface the case lists. Deterministic checks and a
 `gpt-5.6-terra` rubric judge decide each turn. A full run is about 40 live
 conversations and a few dollars.
 
+The runner lives in `packages/scout-for-lol/packages/backend/scripts/explore-scenarios/`.
+Fixture seeding, the deterministic checks and the judge prompt live in
+`packages/scout-for-lol/packages/backend/src/explore/scenarios/`.
+
 ## 1. Pull a lake
 
 The fixtures point at real accounts in a pulled report-lake build.
@@ -39,6 +43,7 @@ cd packages/scout-for-lol
 ```
 
 The eval sets `ENVIRONMENT`, `DATABASE_URL` and `REPORT_LAKE_DIR` itself and refuses to start if they are already set.
+Only one run can hold the fixture database at a time; a second run refuses to start.
 Set `SCOUT_PG_PORT` when the shared dev Postgres runs on a non-default port.
 
 | Option                         | Use it to                                      |
@@ -49,6 +54,11 @@ Set `SCOUT_PG_PORT` when the shared dev Postgres runs on a non-default port.
 | `--write`                      | Update the committed summary report            |
 | `--source-lake <dir>`          | Copy a lake other than the pulled prod dataset |
 | `--model <id>`                 | Run a model other than prod's                  |
+
+:::tip[Run only what a change touches]
+While iterating, pass `--only` with the cases a change affects, and skip
+`--write`. Run the whole suite once, on the final commit, for the PR.
+:::
 
 ## 3. Read the result
 
