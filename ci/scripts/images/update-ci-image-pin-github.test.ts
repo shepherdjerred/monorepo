@@ -41,7 +41,7 @@ function readyPromotion(autoMerge: boolean): void {
 }
 test("ready promotion PRs with auto-merge are neither pushed nor retired", async () => {
   readyPromotion(true);
-  await openOrUpdatePullRequest(options);
+  expect(await openOrUpdatePullRequest(options)).toBeUndefined();
   await retireStalePromotion(options);
   const commands = execute.mock.calls.map((call) => call[0]);
   expect(commands).toHaveLength(4);
@@ -94,7 +94,7 @@ test("new promotion PRs are ready with squash auto-merge", async () => {
       stdout: outputs.shift() ?? "unexpected",
     }),
   );
-  await openOrUpdatePullRequest(options);
+  expect(await openOrUpdatePullRequest(options)).toBe(options.state);
   const commands = execute.mock.calls.map((call) => call[0]);
   expect(commands.find((command) => command.includes("create"))).not.toContain(
     "--draft",

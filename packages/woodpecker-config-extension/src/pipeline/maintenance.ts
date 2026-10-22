@@ -102,6 +102,24 @@ export async function eligibleMaintenanceSteps(
   return requestedMaintenanceSteps(images, kind, pipeline);
 }
 
+/** The manual refresh only rebuilds and pins; it registers no Delivery build, so it holds no publisher identity. */
+function withoutDeliveryPublication(step: CiStep): CiStep {
+  const { environment, secrets, ...rest } = step;
+  const kept = Object.fromEntries(
+    Object.entries(environment ?? {}).filter(
+      ([name]) => name !== "DELIVERY_URL",
+    ),
+  );
+  const grants = (secrets ?? []).filter(
+    (grant) => grant.secret !== "ci-delivery-credentials",
+  );
+  return {
+    ...rest,
+    ...(Object.keys(kept).length === 0 ? {} : { environment: kept }),
+    ...(grants.length === 0 ? {} : { secrets: grants }),
+  };
+}
+
 export function maintenanceSteps(
   images: CiImages,
   kind: MaintenanceKind,
@@ -115,7 +133,12 @@ export function maintenanceSteps(
   );
   if (release === undefined || refreshes.length !== 2)
     throw new Error("Maintenance lane contract changed");
-  const template = kind === "release-notes" ? release : refreshes[0];
+  const template =
+    kind === "release-notes"
+      ? release
+      : refreshes[0] === undefined
+        ? undefined
+        : withoutDeliveryPublication(refreshes[0]);
   if (template === undefined) throw new Error("Missing maintenance template");
   return [
     {

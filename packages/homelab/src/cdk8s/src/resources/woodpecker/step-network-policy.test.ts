@@ -147,6 +147,8 @@ describe("CI step pod network boundary", () => {
   it("pairs exact real generator archive/publication Pod labels with both sides of Delivery HTTP access", async () => {
     const consumers = await emittedApiConsumers();
     expect(consumers.map((consumer) => consumer.key).toSorted()).toEqual([
+      "ci-base-refresh",
+      "ci-playwright-refresh",
       "delivery-publish",
       "helm-push",
       "images",

@@ -5,6 +5,32 @@ import {
   resolveAppShellMode,
   shouldRenderGlobalFooter,
 } from "#src/lib/routes/app-navigation.ts";
+import { buildInfo, deployedIdentity } from "#src/lib/build-info.ts";
+
+describe("RootLayout footer release line", () => {
+  test("omits the line until the backend version has loaded", () => {
+    expect(deployedIdentity(undefined)).toBeUndefined();
+  });
+
+  test("names the deployed backend's version and commit", () => {
+    expect(
+      deployedIdentity({
+        version: "2.0.0-6017",
+        gitSha: "24e5a5ebe4302e6dc99efc1c3706e7541d9b33dc",
+        contractHash: "cafebabe",
+        canViewContractMismatch: false,
+      }),
+    ).toEqual({
+      release: "2.0.0-6017",
+      commit: "24e5a5ebe4302e6dc99efc1c3706e7541d9b33dc",
+    });
+  });
+
+  test("the bundle carries no baked version or commit to fall back on", () => {
+    expect(buildInfo).not.toHaveProperty("version");
+    expect(buildInfo).not.toHaveProperty("gitSha");
+  });
+});
 
 describe("RootLayout shell selection", () => {
   test("uses the workspace shell for signed-in product routes", () => {

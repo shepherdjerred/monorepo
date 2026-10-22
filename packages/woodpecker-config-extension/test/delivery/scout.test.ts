@@ -30,7 +30,7 @@ bun() {
     scripts/ci/homelab-release-admission.ts) printf admitted ;;
     scripts/ci/read-ci-handoff.ts)
       case "$1" in
-        image-digests|version-catalog) printf '{}' ;;
+        version-catalog) printf '{}' ;;
         delivery-image-digests)
           if [[ "$FRESH_IMAGE" == true ]]; then printf '{"shepherdjerred/scout-for-lol":"%s"}' "$IMAGE_B"; else printf '{}'; fi ;;
         *) return 1 ;;

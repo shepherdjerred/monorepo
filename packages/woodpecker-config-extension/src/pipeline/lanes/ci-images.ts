@@ -23,11 +23,14 @@ const GITHUB_APP: readonly SecretGrant[] = [
 ];
 
 /**
- * Rebuild a family of toolchain images and pin each result.
+ * Rebuild a family of toolchain images, pin each result and register each
+ * promoted result as a Delivery build of the `ci` service.
  *
- * The build and the pin are one step on purpose: an image pushed but never
- * pinned is invisible to every later build, and a pin written for an image
- * that failed to push would break every lane at once.
+ * The build, the pin and the registration are one step on purpose: an image
+ * pushed but never pinned is invisible to every later build, and a pin written
+ * for an image that failed to push would break every lane at once. The
+ * registration needs the installed root-scripts closure (the Delivery client),
+ * which the build and pin scripts do not.
  *
  * `lane` names the changed-path selector that decides whether anything needs
  * rebuilding; `names` are the images built from it, in order.
@@ -42,13 +45,19 @@ function refreshStep(
     key: `${lane}-refresh`,
     label: `refresh ${lane} image${names.length > 1 ? "s" : ""}`,
     image: images.base,
+    environment: {
+      DELIVERY_URL: "http://delivery.delivery.svc.cluster.local:7353",
+    },
     commands: [
       `if ! bun --no-install ci/scripts/selectors/ci-changed.ts ${lane}; then exit 0; fi`,
       "MISE_TOOLCHAIN_SCOPE=automation . ci/scripts/toolchain.sh",
+      "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
+      // The publisher login also reads the private image back for registration.
       DOCKERHUB_PUBLISH_LOGIN,
       ...names.flatMap((name) => [
         `bun --no-install ci/scripts/images/build-ci-image.ts --image ${name} --candidate-out ${name}-candidate.json`,
-        `bun --no-install ci/scripts/images/update-ci-image-pin.ts --candidate ${name}-candidate.json`,
+        `bun --no-install ci/scripts/images/update-ci-image-pin.ts --candidate ${name}-candidate.json --outcome-out ${name}-promotion.json`,
+        `bun --no-install ci/scripts/images/register-ci-image-build.ts --candidate ${name}-candidate.json --promotion ${name}-promotion.json`,
       ]),
     ],
     dependsOn: ["verify"],
@@ -56,7 +65,16 @@ function refreshStep(
     resources: IMAGE_ORCHESTRATION_TIER,
     defaultBranchOnly: true,
     concurrency: { limit: 1, group: `${lane}-refresh` },
-    secrets: [GITHUB_DOWNLOAD, ...DOCKERHUB_PUBLISH, ...GITHUB_APP],
+    secrets: [
+      GITHUB_DOWNLOAD,
+      ...DOCKERHUB_PUBLISH,
+      ...GITHUB_APP,
+      grant(
+        "ci-delivery-credentials",
+        "DELIVERY_PUBLISHER_TOKEN",
+        "DELIVERY_API_TOKEN",
+      ),
+    ],
   };
 }
 

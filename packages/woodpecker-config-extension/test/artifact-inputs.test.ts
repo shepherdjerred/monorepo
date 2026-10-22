@@ -75,16 +75,15 @@ describe("artifact producers and consumers line up", () => {
 /**
  * Handoffs published from inside a script rather than by a lane command.
  *
- * bake-images.ts writes these three itself, so they are invisible to a scan
- * of the lane commands. Declaring them keeps the upstream-dependency check
+ * bake-images.ts writes these itself, so they are invisible to a scan of the
+ * lane commands. Declaring them keeps the upstream-dependency check
  * meaningful and records the coupling: if that script stops publishing one,
  * this list is where the consumers are named.
  */
 const SCRIPT_PUBLISHED_HANDOFFS: Readonly<Record<string, string>> = {
-  "image-digests": "images",
   "delivery-image-digests": "images",
+  "delivery-retained-image-artifacts": "images",
   "version-catalog": "images",
-  "pin-candidates": "images",
 };
 
 /** Same invariant for the JSON handoff store. */

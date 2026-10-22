@@ -19,7 +19,8 @@ import { initAnalytics, track } from "#src/lib/analytics.ts";
 import "#src/styles/global.css";
 
 // VITE_SENTRY_RELEASE is the content-addressed site archive
-// (`scout-site@sha256:…`). Human-facing 2.0.0-<build> is VITE_APP_VERSION.
+// (`scout-site@sha256:…`). The human-facing 2.0.0-<build> and commit come
+// from the deployed backend's GET /api/version, never from the bytes.
 // Guard the untyped env access so `release` stays `string | undefined`.
 const sentryRelease =
   typeof import.meta.env.VITE_SENTRY_RELEASE === "string"

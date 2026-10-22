@@ -2,23 +2,35 @@
 /**
  * Validate, content-plan, package, and publish repository Helm charts.
  *
- * A build version is publication identity, not a reason to publish. The
- * comparison base is ChartMuseum's newest published 2.0.0-N chart, regardless
- * of whether the producing CI build later passed, failed, or was
- * canceled. Changed leaves are published before the coordinating apps chart.
+ * A build version is publication identity, not a reason to publish. With the
+ * Delivery catalog, the comparison base is the owner's latest qualified chart
+ * and an unchanged chart is retained by reference; ChartMuseum supplies only
+ * the version list (staleness) and this same producer's archive on a retry.
+ * Changed leaves are published before the coordinating apps chart.
  */
 
 import { mkdtemp, rm } from "node:fs/promises";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
+import { createDeliveryClient } from "@shepherdjerred/delivery/client";
 import { workerPoolTemplate } from "#cdk8s/scripts/delivery/worker-pool-template.ts";
 import {
-  deliveryPlanningBase,
+  CHARTMUSEUM_API,
+  chartMuseumInventory,
+  fetchPublishedArchive,
+  planningBases,
+  plannedFingerprint,
   retainCurrentProducerArchives,
+  retainDeliveryChartBases,
+  retainedChartRevisions,
+  stagedChartFingerprint,
   validateChartProducerVersion,
   chartValidationValues,
   bindGeneratedDependencies,
+  type ChartMuseumRelease,
+  type ChartPlanningBase,
+  type ChartPlanningClient,
 } from "./helm-delivery-publication.ts";
 import { chartPublicationImages } from "@shepherdjerred/root-scripts/lib/image-pin-catalog.ts";
 import { requireEnv as requireEnvironment } from "@shepherdjerred/root-scripts/lib/run.ts";
@@ -30,20 +42,20 @@ import {
   assertReleaseNotStale,
   activeArgoRepositoryChartNames,
   discoverChartInputs,
-  fingerprintChart,
-  latestPublishedVersion,
   planCharts,
   plannedChartRevision,
   releasePrunesChart,
-  verifyArchiveDigest,
   type ChartInput,
-  type PublishedChart,
+  type HelmReleasePlan,
 } from "./helm-release-core.ts";
 
-const CHARTMUSEUM_ORIGIN = "https://chartmuseum.sjer.red";
-const CHARTMUSEUM_API = `${CHARTMUSEUM_ORIGIN}/api/charts`;
 const HELM_DIRECTORY = "src/cdk8s/helm";
 const SYNTH_DIRECTORY = "src/cdk8s/dist";
+
+type StagedChart = {
+  readonly archive: string;
+  readonly contentFingerprint: string;
+};
 
 function homelabRoot(): string {
   return new URL("../..", import.meta.url).pathname;
@@ -65,77 +77,6 @@ export async function runCommand(
       `Command failed (${exitCode.toString()}): ${command.join(" ")}`,
     );
   }
-}
-
-async function fetchPublishedChart(
-  input: ChartInput,
-  temporaryDirectory: string,
-): Promise<PublishedChart | undefined> {
-  const response = await fetch(
-    `${CHARTMUSEUM_API}/${encodeURIComponent(input.name)}`,
-  );
-  if (response.status === 404) {
-    return undefined;
-  }
-  if (!response.ok) {
-    throw new Error(
-      `ChartMuseum inventory failed for ${input.name}: HTTP ${response.status.toString()}`,
-    );
-  }
-  const latest = latestPublishedVersion(await response.json());
-  if (latest === undefined) {
-    return undefined;
-  }
-
-  const archiveResponse = await fetch(new URL(latest.url, CHARTMUSEUM_ORIGIN));
-  if (!archiveResponse.ok) {
-    throw new Error(
-      `ChartMuseum download failed for ${input.name}@${latest.version}: HTTP ${archiveResponse.status.toString()}`,
-    );
-  }
-  const archiveBytes = await archiveResponse.arrayBuffer();
-  verifyArchiveDigest(input.name, latest.version, latest.digest, archiveBytes);
-  const archive = path.join(
-    temporaryDirectory,
-    `${input.name}-${latest.version}.tgz`,
-  );
-  await Bun.write(archive, archiveBytes);
-  const extracted = path.join(
-    temporaryDirectory,
-    `${input.name}-${latest.version}`,
-  );
-  await runCommand(["mkdir", "-p", extracted]);
-  await runCommand(["tar", "-xzf", archive, "-C", extracted]);
-  const chartDirectory = path.join(extracted, input.name);
-  const actualFingerprint = await fingerprintChart(
-    chartDirectory,
-    path.join(chartDirectory, "templates", `${input.name}.k8s.yaml`),
-  );
-  return {
-    version: latest.version,
-    fingerprint: actualFingerprint,
-    digest: `sha256:${latest.digest}`,
-  };
-}
-
-async function fetchLatestPublishedRevision(
-  chartName: string,
-): Promise<string> {
-  const response = await fetch(
-    `${CHARTMUSEUM_API}/${encodeURIComponent(chartName)}`,
-  );
-  if (!response.ok) {
-    throw new Error(
-      `ChartMuseum inventory failed for ${chartName}: HTTP ${response.status.toString()}`,
-    );
-  }
-  const latest = latestPublishedVersion(await response.json());
-  if (latest === undefined) {
-    throw new Error(
-      `ChartMuseum has no published build revision for ${chartName}`,
-    );
-  }
-  return latest.version;
 }
 
 export async function stageChart(
@@ -256,27 +197,40 @@ function parseOptions(): {
   };
 }
 
-async function publishedInventory(
+function planningClient(): ChartPlanningClient {
+  return createDeliveryClient({
+    baseUrl: requireEnvironment("DELIVERY_URL"),
+    headers: {
+      Authorization: `Bearer ${requireEnvironment("DELIVERY_API_TOKEN")}`,
+    },
+  });
+}
+
+function releasePlanningBases(
   inputs: readonly ChartInput[],
-  dryRun: boolean,
-  temporaryDirectory: string,
-): Promise<Map<string, PublishedChart>> {
-  const published = new Map<string, PublishedChart>();
-  if (dryRun) {
-    return published;
-  }
-  const bases = await Promise.all(
-    inputs.map(async (input) => ({
-      name: input.name,
-      published: await fetchPublishedChart(input, temporaryDirectory),
-    })),
-  );
-  for (const base of bases) {
-    if (base.published !== undefined) {
-      published.set(base.name, base.published);
-    }
-  }
-  return published;
+  options: {
+    readonly version: string;
+    readonly dryRun: boolean;
+    readonly deliveryCatalog: boolean;
+    readonly inventory: ReadonlyMap<string, ChartMuseumRelease>;
+    readonly temporaryDirectory: string;
+  },
+): Promise<ReadonlyMap<string, ChartPlanningBase>> {
+  const { dryRun, deliveryCatalog } = options;
+  return planningBases(inputs, {
+    version: options.version,
+    dryRun,
+    deliveryCatalog,
+    inventory: options.inventory,
+    archive: (name) => {
+      const release = options.inventory.get(name);
+      if (release === undefined) {
+        throw new Error(`ChartMuseum has no published archive for ${name}`);
+      }
+      return fetchPublishedArchive(name, release, options.temporaryDirectory);
+    },
+    ...(dryRun || !deliveryCatalog ? {} : { client: planningClient() }),
+  });
 }
 
 type RevisionInventoryOptions = {
@@ -286,7 +240,7 @@ type RevisionInventoryOptions = {
 
 function exactRevisionInventory(
   inputs: readonly ChartInput[],
-  plan: ReturnType<typeof planCharts>,
+  plan: HelmReleasePlan,
   version: string,
   options: RevisionInventoryOptions,
 ): Record<string, string> {
@@ -316,10 +270,68 @@ function exactRevisionInventory(
   return revisions;
 }
 
+async function stagePlannedCharts(
+  names: readonly string[],
+  options: {
+    readonly scoped: readonly ChartInput[];
+    readonly plan: HelmReleasePlan;
+    readonly version: string;
+    readonly temporaryDirectory: string;
+  },
+): Promise<Map<string, StagedChart>> {
+  const { scoped, plan, version, temporaryDirectory } = options;
+  const staged = new Map<string, StagedChart>();
+  for (const name of names) {
+    const input = scoped.find((candidate) => candidate.name === name);
+    if (input === undefined) {
+      throw new Error(`Release plan referenced unknown chart: ${name}`);
+    }
+    const archive = await stageChart(input, version, temporaryDirectory);
+    const contentFingerprint = await stagedChartFingerprint(
+      name,
+      temporaryDirectory,
+    );
+    // The published fingerprint must be the key the planner compared, or
+    // the next release can never retain these bytes.
+    if (contentFingerprint !== plannedFingerprint(plan, name)) {
+      throw new Error(
+        `Staged chart ${name} differs from the content the release plan compared`,
+      );
+    }
+    staged.set(name, { archive, contentFingerprint });
+  }
+  return staged;
+}
+
+async function publishPlannedCharts(
+  plan: HelmReleasePlan,
+  staged: ReadonlyMap<string, StagedChart>,
+  publication: ChartPublication,
+  version: string,
+): Promise<void> {
+  const username = requireEnvironment("CHARTMUSEUM_USERNAME");
+  const password = requireEnvironment("CHARTMUSEUM_PASSWORD");
+  for (const name of plan.publishOrder) {
+    const chart = staged.get(name);
+    if (chart === undefined) {
+      throw new Error(`No staged archive for ${name}`);
+    }
+    await pushChart(name, chart.archive, username, password);
+    publication.charts.push({
+      name,
+      revision: version,
+      digest: `sha256:${createHash("sha256")
+        .update(new Uint8Array(await Bun.file(chart.archive).arrayBuffer()))
+        .digest("hex")}`,
+      contentFingerprint: chart.contentFingerprint,
+    });
+  }
+}
+
 async function writeReleaseArtifacts(
   version: string,
   buildNumber: string,
-  plan: ReturnType<typeof planCharts>,
+  plan: HelmReleasePlan,
   revisions: Readonly<Record<string, string>>,
 ): Promise<void> {
   await Bun.write(
@@ -361,22 +373,10 @@ async function publicationImages(dryRun: boolean) {
   return images;
 }
 
-async function main(): Promise<void> {
-  const { buildNumber, dryRun, requested, deliveryCatalog } = parseOptions();
-  const publication = dryRun
-    ? undefined
-    : ChartPublicationSchema.parse({
-        schema: "delivery-chart-publications/v1",
-        sourceRevision: requireEnvironment("CI_COMMIT_SHA"),
-        pipelineNumber: Number(requireEnvironment("CI_PIPELINE_NUMBER")),
-        repositoryId: Number(requireEnvironment("CI_REPO_ID")),
-        charts: [],
-      });
-  const version = `2.0.0-${buildNumber}`;
-  validateChartProducerVersion(publication, buildNumber);
-  const root = homelabRoot();
-  const imageInputs = await publicationImages(dryRun);
-  delete Bun.env["HOMELAB_CHART_REVISIONS_JSON"];
+async function synthesizeCharts(
+  root: string,
+  imageInputs: Readonly<Record<string, string>> | undefined,
+): Promise<ChartInput[]> {
   await runCommand(["bun", "--no-install", "run", "build"], {
     cwd: path.join(root, "src/cdk8s"),
   });
@@ -384,10 +384,30 @@ async function main(): Promise<void> {
     path.join(root, SYNTH_DIRECTORY),
     imageInputs,
   );
-  const inputs = await discoverChartInputs(
+  return discoverChartInputs(
     path.join(root, HELM_DIRECTORY),
     path.join(root, SYNTH_DIRECTORY),
   );
+}
+
+async function main(): Promise<void> {
+  const { buildNumber, dryRun, requested, deliveryCatalog } = parseOptions();
+  const publication = dryRun
+    ? undefined
+    : ChartPublicationSchema.parse({
+        schema: "delivery-chart-publications/v2",
+        sourceRevision: requireEnvironment("CI_COMMIT_SHA"),
+        pipelineNumber: Number(requireEnvironment("CI_PIPELINE_NUMBER")),
+        repositoryId: Number(requireEnvironment("CI_REPO_ID")),
+        charts: [],
+        retained: [],
+      });
+  const version = `2.0.0-${buildNumber}`;
+  validateChartProducerVersion(publication, buildNumber);
+  const root = homelabRoot();
+  const imageInputs = await publicationImages(dryRun);
+  delete Bun.env["HOMELAB_CHART_REVISIONS_JSON"];
+  const inputs = await synthesizeCharts(root, imageInputs);
   for (const chart of requested) {
     if (!inputs.some((input) => input.name === chart)) {
       throw new Error(`Unknown chart: ${chart}`);
@@ -397,17 +417,15 @@ async function main(): Promise<void> {
     path.join(tmpdir(), "homelab-helm-release-"),
   );
   try {
-    const published = await publishedInventory(
-      inputs,
-      dryRun,
-      temporaryDirectory,
-    );
-    assertReleaseNotStale(Number.parseInt(buildNumber, 10), published);
-    const planningBase = deliveryPlanningBase(
-      published,
+    const inventory = await chartMuseumInventory(inputs, dryRun);
+    assertReleaseNotStale(Number.parseInt(buildNumber, 10), inventory);
+    const planningBase = await releasePlanningBases(inputs, {
       version,
+      dryRun,
       deliveryCatalog,
-    );
+      inventory,
+      temporaryDirectory,
+    });
     const candidatePlan = planCharts(inputs, planningBase);
     const appsInput = inputs.find((input) => input.name === "apps");
     if (appsInput === undefined) {
@@ -416,92 +434,50 @@ async function main(): Promise<void> {
     const activeRepositoryCharts = activeArgoRepositoryChartNames(
       await Bun.file(appsInput.manifestPath).text(),
     );
-    const localChartNames = new Set(inputs.map((input) => input.name));
-    const retainedCharts = [...activeRepositoryCharts].filter(
-      (chart) => !localChartNames.has(chart),
-    );
-    const retainedRevisions = new Map(
-      await Promise.all(
-        retainedCharts.map(
-          async (chart) =>
-            [chart, await fetchLatestPublishedRevision(chart)] as const,
-        ),
-      ),
-    );
     const revisions = exactRevisionInventory(inputs, candidatePlan, version, {
       activeRepositoryCharts,
-      retainedRevisions,
+      retainedRevisions: await retainedChartRevisions(
+        activeRepositoryCharts,
+        inputs,
+      ),
     });
     Bun.env["HOMELAB_CHART_REVISIONS_JSON"] = JSON.stringify(revisions);
-    await runCommand(["bun", "--no-install", "run", "build"], {
-      cwd: path.join(root, "src/cdk8s"),
-    });
-    await bindGeneratedDependencies(
-      path.join(root, SYNTH_DIRECTORY),
-      imageInputs,
-    );
-    const releaseInputs = await discoverChartInputs(
-      path.join(root, HELM_DIRECTORY),
-      path.join(root, SYNTH_DIRECTORY),
-    );
+    const releaseInputs = await synthesizeCharts(root, imageInputs);
     const scoped =
       requested.size === 0
         ? releaseInputs
         : releaseInputs.filter((input) => requested.has(input.name));
     const plan = planCharts(releaseInputs, planningBase);
-    retainCurrentProducerArchives(publication, published, plan, version);
-    await writeReleaseArtifacts(version, buildNumber, plan, revisions);
-    const plannedNames = dryRun
-      ? scoped.map((input) => input.name)
-      : plan.publishOrder;
-    const staged = new Map<string, string>();
-    for (const name of plannedNames) {
-      const input = scoped.find((candidate) => candidate.name === name);
-      if (input === undefined) {
-        throw new Error(`Release plan referenced unknown chart: ${name}`);
-      }
-      staged.set(name, await stageChart(input, version, temporaryDirectory));
+    retainCurrentProducerArchives(publication, planningBase, plan, version);
+    if (deliveryCatalog) {
+      retainDeliveryChartBases(publication, planningBase, plan, version);
     }
+    await writeReleaseArtifacts(version, buildNumber, plan, revisions);
+    const staged = await stagePlannedCharts(
+      dryRun ? scoped.map((input) => input.name) : plan.publishOrder,
+      { scoped, plan, version, temporaryDirectory },
+    );
     if (dryRun) {
       console.log(`DRYRUN: validated ${staged.size.toString()} chart(s)`);
       return;
     }
+    if (publication === undefined) {
+      throw new Error(
+        "Actual chart publication requires its original CI identity",
+      );
+    }
     if (plan.publishOrder.length === 0) {
-      await writePublication(publication);
       console.log("No chart content changed; publishing zero charts");
-      return;
+    } else {
+      await publishPlannedCharts(plan, staged, publication, version);
     }
-    const username = requireEnvironment("CHARTMUSEUM_USERNAME");
-    const password = requireEnvironment("CHARTMUSEUM_PASSWORD");
-    for (const name of plan.publishOrder) {
-      const archive = staged.get(name);
-      if (archive === undefined) {
-        throw new Error(`No staged archive for ${name}`);
-      }
-      await pushChart(name, archive, username, password);
-      publication?.charts.push({
-        name,
-        revision: version,
-        digest: `sha256:${createHash("sha256")
-          .update(new Uint8Array(await Bun.file(archive).arrayBuffer()))
-          .digest("hex")}`,
-      });
-    }
-    await writePublication(publication);
+    await Bun.write(
+      path.join(process.cwd(), "delivery-chart-publications.json"),
+      JSON.stringify(ChartPublicationSchema.parse(publication)) + "\n",
+    );
   } finally {
     await rm(temporaryDirectory, { recursive: true, force: true });
   }
-}
-
-async function writePublication(publication: ChartPublication | undefined) {
-  if (publication === undefined)
-    throw new Error(
-      "Actual chart publication requires its original CI identity",
-    );
-  await Bun.write(
-    path.join(process.cwd(), "delivery-chart-publications.json"),
-    JSON.stringify(ChartPublicationSchema.parse(publication)) + "\n",
-  );
 }
 
 if (import.meta.main) await main();

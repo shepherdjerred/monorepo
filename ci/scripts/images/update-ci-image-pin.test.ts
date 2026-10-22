@@ -4,6 +4,11 @@ import path from "node:path";
 import { describe, expect, test } from "vitest";
 import { asRecord, toStringRecord } from "../../../scripts/lib/json.ts";
 import {
+  carriedPromotionOutcome,
+  parseCiImagePromotionOutcome,
+  promotionOutcome,
+} from "./ci-image-promotion-outcome.ts";
+import {
   checkedOutSourceCommand,
   ciImagePromotionFiles,
   classifyCiImageRuntimePromotion,
@@ -657,5 +662,100 @@ describe("pending first pin", () => {
         pendingReader({}),
       ),
     ).resolves.toBe(false);
+  });
+});
+
+describe("promotion outcome", () => {
+  const candidate = parseCiImageCandidate({
+    schema: "ci-image-candidate/v1",
+    image: "ci-base",
+    buildNumber: 7,
+    sourceCommit: "a".repeat(40),
+    sourceFingerprint: `sha256:${"b".repeat(64)}`,
+    digest: `sha256:${"c".repeat(64)}`,
+  });
+
+  test("round-trips the decision recorded for one candidate", () => {
+    const outcome = promotionOutcome(candidate, false, "dry run");
+    expect(parseCiImagePromotionOutcome(structuredClone(outcome))).toEqual({
+      schema: "ci-image-promotion-outcome/v1",
+      image: "ci-base",
+      digest: candidate.digest,
+      promoted: false,
+      reason: "dry run",
+    });
+  });
+
+  test.each([
+    [{ extra: true }, "unknown or missing fields"],
+    [{ promoted: "yes" }, "promoted must be a boolean"],
+    [{ reason: "" }, "reason must be a non-empty string"],
+    [{ image: "unknown-image" }, "unknown-image"],
+    [{ digest: "sha256:short" }, "canonical sha256 digest"],
+    [{ schema: "ci-image-promotion-outcome/v0" }, "unsupported schema"],
+  ])("refuses a malformed outcome %#", (change, reason) => {
+    expect(() =>
+      parseCiImagePromotionOutcome({
+        ...promotionOutcome(candidate, true, "promoted"),
+        ...change,
+      }),
+    ).toThrow(reason);
+  });
+
+  test("a promotion carrying another pending pin or deferred late does not promote this candidate", () => {
+    const carried = stateFromCandidate(candidate);
+    expect(carriedPromotionOutcome(candidate, carried).promoted).toBe(true);
+    expect(carriedPromotionOutcome(candidate, undefined)).toEqual(
+      promotionOutcome(
+        candidate,
+        false,
+        "a ready promotion is already pending",
+      ),
+    );
+    expect(
+      carriedPromotionOutcome(candidate, {
+        ...carried,
+        buildNumber: 8,
+        digest: `sha256:${"d".repeat(64)}`,
+      }),
+    ).toEqual(
+      promotionOutcome(candidate, false, "a newer pending promotion is kept"),
+    );
+  });
+
+  test("the pin step writes its outcome for the registration step", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "ci-image-outcome-"));
+    try {
+      const candidatePath = path.join(directory, "candidate.json");
+      const outcomePath = path.join(directory, "promotion.json");
+      await Bun.write(candidatePath, JSON.stringify(candidate));
+      const child = Bun.spawn(
+        [
+          "bun",
+          "--no-install",
+          "ci/scripts/images/update-ci-image-pin.ts",
+          "--candidate",
+          candidatePath,
+          "--outcome-out",
+          outcomePath,
+          "--dry-run",
+        ],
+        {
+          cwd: new URL("../../..", import.meta.url).pathname,
+          stdout: "pipe",
+          stderr: "pipe",
+        },
+      );
+      const [stderr, exit] = await Promise.all([
+        new Response(child.stderr).text(),
+        child.exited,
+      ]);
+      expect(exit, stderr).toBe(0);
+      expect(
+        parseCiImagePromotionOutcome(await Bun.file(outcomePath).json()),
+      ).toEqual(promotionOutcome(candidate, false, "dry run"));
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
   });
 });

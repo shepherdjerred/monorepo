@@ -489,7 +489,7 @@ export function plannedChartRevision(
 
 export function assertReleaseNotStale(
   buildNumber: number,
-  published: ReadonlyMap<string, PublishedChart>,
+  published: ReadonlyMap<string, { readonly version: string }>,
 ): void {
   for (const [chart, release] of published) {
     const match = BUILD_VERSION_RE.exec(release.version);

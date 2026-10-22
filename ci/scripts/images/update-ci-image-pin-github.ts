@@ -59,16 +59,21 @@ export async function deferReadyPromotion(
   return deferReadyMaintenancePr(pr);
 }
 
+/**
+ * Push `state` to the promotion branch and keep its pull request on
+ * auto-merge. Returns the state the branch now carries, or undefined when a
+ * promotion that became ready meanwhile deferred the write.
+ */
 export async function openOrUpdatePullRequest(options: {
   readonly cloneDir: string;
   readonly definition: CiImageDefinition;
   readonly state: CiImagePinState;
   readonly env: Record<string, string>;
   readonly expectedRemoteSha: string | undefined;
-}): Promise<void> {
+}): Promise<CiImagePinState | undefined> {
   const { cloneDir, definition, state, env, expectedRemoteSha = "" } = options;
   const currentPr = await readMaintenancePr(definition.branch, env);
-  if (await deferReadyPromotion(currentPr, env)) return;
+  if (await deferReadyPromotion(currentPr, env)) return undefined;
   assertDraftUnchanged(currentPr, expectedRemoteSha || undefined);
   await run(
     [
@@ -150,6 +155,7 @@ export async function openOrUpdatePullRequest(options: {
   // checks still gate the merge; a red promotion stays open and defers later
   // candidates until it is fixed or closed.
   await enableAutoMerge(prNumber, env);
+  return state;
 }
 
 /**

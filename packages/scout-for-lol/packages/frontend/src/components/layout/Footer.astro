@@ -1,6 +1,8 @@
 ---
 import { GlobalFooter } from "@scout-for-lol/design-system/layout";
-import { PUBLIC_APP_VERSION, PUBLIC_GIT_SHA } from "astro:env/client";
+// No release line: the marketing site bakes no build number or commit, so an
+// unchanged rebuild reproduces the same archive and Delivery retains it. The
+// app footer names the deployed backend instead.
 ---
 
-<GlobalFooter release={PUBLIC_APP_VERSION} commit={PUBLIC_GIT_SHA} />
+<GlobalFooter />

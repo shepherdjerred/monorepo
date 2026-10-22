@@ -32,6 +32,7 @@ import {
 } from "../migration-core.ts";
 import { imageIdentity } from "../../../scripts/lib/image-pin-catalog.ts";
 import { ArtifactVersionSchema } from "../../../packages/delivery/src/shared/artifact-contract.ts";
+import type { ArtifactVersion } from "../../../packages/delivery/src/shared/contract.ts";
 function commandResult(
   exitCode = 0,
   stdout = "",
@@ -252,9 +253,7 @@ test("runs the default application candidate smoke check", async () => {
       verifyRegistryAccess: () => Promise.resolve(),
       verifySourceLabel: () => Promise.resolve(),
       getRuntimeFingerprint: async () => "new",
-      writeMetadata: () => Promise.resolve(),
       writeDeliveryMetadata: () => Promise.resolve(),
-      writeCandidates: () => Promise.resolve(),
       writeText: () => Promise.resolve(),
     },
   );
@@ -772,10 +771,9 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
   const commands: string[][] = [];
   const events: string[] = [];
   const manifestReferences: string[] = [];
-  const metadata: Readonly<Record<string, string>>[] = [];
-  const candidateMetadata: {
+  const deliveryWrites: {
     digests: Readonly<Record<string, string>>;
-    buildNumber: string;
+    retained: readonly ArtifactVersion[];
   }[] = [];
   const catalog = qualifiedInventory([
     {
@@ -840,12 +838,8 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
       smokeCandidate: async (target, candidate) => {
         events.push(`smoke:${target}:${candidate}`);
       },
-      writeMetadata: async (value) => {
-        metadata.push(value);
-      },
-      writeDeliveryMetadata: () => Promise.resolve(),
-      writeCandidates: async (digests, buildNumber) => {
-        candidateMetadata.push({ digests, buildNumber });
+      writeDeliveryMetadata: async (digests, retained) => {
+        deliveryWrites.push({ digests, retained });
       },
       writeText: async (path, contents) => {
         writes.push({ path, contents });
@@ -915,22 +909,19 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
       `fingerprint:docker.io/shepherdjerred/starlight-karma-bot@${digest}`,
     ),
   );
-  expect(metadata).toEqual([
-    {
-      "shepherdjerred/birmel": digest,
-      "shepherdjerred/starlight-karma-bot": digest,
-    },
-  ]);
-  expect(candidateMetadata).toEqual([
+  // A content-unchanged candidate is never handed to Delivery as a new
+  // artifact; its qualified original is retained instead. Every target was
+  // built, so the retained list holds only that original.
+  expect(deliveryWrites).toEqual([
     {
       digests: {
         "shepherdjerred/birmel": digest,
-        "shepherdjerred/scout-for-lol": digest,
         "shepherdjerred/starlight-karma-bot": digest,
       },
-      buildNumber: "42",
+      retained: [catalog.get("scout-for-lol")],
     },
   ]);
+  expect(deliveryWrites[0]?.retained[0]?.digest).toBe(pinned);
   expect(JSON.parse(writes[0]?.contents ?? "")).toEqual([
     { image: "birmel", outcome: "bumped" },
     { image: "scout-for-lol", outcome: "content-unchanged" },
@@ -1012,12 +1003,8 @@ test("keeps upstream provenance for infrastructure images", async () => {
         sourceChecks.push(image);
       },
       getRuntimeFingerprint: async () => "same",
-      writeMetadata: async () => {
-        events.push("metadata");
-      },
-      writeDeliveryMetadata: () => Promise.resolve(),
-      writeCandidates: async () => {
-        events.push("candidates");
+      writeDeliveryMetadata: async () => {
+        events.push("delivery");
       },
       writeText: async () => {
         events.push("outcomes");
@@ -1025,7 +1012,75 @@ test("keeps upstream provenance for infrastructure images", async () => {
     },
   );
   expect(sourceChecks).toEqual([]);
-  expect(events).toEqual(["public", "metadata", "candidates", "outcomes"]);
+  expect(events).toEqual(["public", "delivery", "outcomes"]);
+});
+
+test("retains every qualified original when no selected candidate changed content", async () => {
+  const digest = `sha256:${"b".repeat(64)}`;
+  const pinned = `sha256:${"a".repeat(64)}`;
+  const catalog = qualifiedInventory([
+    { name: "shepherdjerred/birmel", value: `2.0.0-1@${pinned}` },
+    { name: "shepherdjerred/scout-for-lol", value: `2.0.0-2@${pinned}` },
+    { name: "shepherdjerred/starlight-karma-bot", value: `2.0.0-3@${pinned}` },
+  ]);
+  const deliveryWrites: {
+    digests: Readonly<Record<string, string>>;
+    retained: readonly ArtifactVersion[];
+  }[] = [];
+  const tagged: string[][] = [];
+  const outcomes: { path: string; contents: string }[] = [];
+
+  await pushImages(
+    {
+      targets: ["scout-for-lol", "starlight-karma-bot"],
+      commit: "commit",
+      buildNumber: "42",
+      contractHash: "contract",
+    },
+    {
+      executor: async (command) => {
+        if (command.includes("imagetools")) tagged.push([...command]);
+        return commandResult();
+      },
+      environment: {},
+      readQualifiedImages: async () => catalog,
+      getManifestDigest: async () => digest,
+      verifyRegistryAccess: () => Promise.resolve(),
+      verifySourceLabel: () => Promise.resolve(),
+      smokeCandidate: () => Promise.resolve(),
+      getRuntimeFingerprint: async () => "same",
+      writeDeliveryMetadata: async (digests, retained) => {
+        deliveryWrites.push({ digests, retained });
+      },
+      writeText: async (path, contents) => {
+        outcomes.push({ path, contents });
+      },
+    },
+  );
+
+  // Nothing new for Delivery: unbuilt originals come first, then the
+  // content-unchanged originals in target order.
+  expect(deliveryWrites).toEqual([
+    {
+      digests: {},
+      retained: [
+        catalog.get("birmel"),
+        catalog.get("scout-for-lol"),
+        catalog.get("starlight-karma-bot"),
+      ],
+    },
+  ]);
+  expect(deliveryWrites[0]?.retained.map((entry) => entry.id)).toEqual([
+    "original/birmel",
+    "original/scout-for-lol",
+    "original/starlight-karma-bot",
+  ]);
+  // The Starlight version tag only ever names a freshly published candidate.
+  expect(tagged).toEqual([]);
+  expect(JSON.parse(outcomes[0]?.contents ?? "")).toEqual([
+    { image: "scout-for-lol", outcome: "content-unchanged" },
+    { image: "starlight-karma-bot", outcome: "content-unchanged" },
+  ]);
 });
 
 test("writes a deterministic full-build fallback report", async () => {

@@ -9,6 +9,7 @@
     "#tofu/*": "./src/tofu/*"
   },
   "dependencies": {
+    "@shepherdjerred/delivery": "workspace:*",
     "@shepherdjerred/toolkit": "workspace:*",
     "@shepherdjerred/version-catalog": "workspace:*",
     "@shepherdjerred/ops-model": "workspace:*",

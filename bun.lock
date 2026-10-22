@@ -1012,6 +1012,7 @@
     "packages/homelab": {
       "name": "homelab",
       "dependencies": {
+        "@shepherdjerred/delivery": "workspace:*",
         "@shepherdjerred/ops-model": "workspace:*",
         "@shepherdjerred/root-scripts": "workspace:*",
         "@shepherdjerred/toolkit": "workspace:*",

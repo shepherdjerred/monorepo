@@ -78,24 +78,31 @@ export async function readPublicationHandoffs(
       .array(ChartInventorySchema.element)
       .parse(rootInventory);
     const index = new ServiceIndex(SERVICE_CATALOG);
-    if (
-      chartPublication.charts.some((fresh) => {
-        const expected = inventory.find((chart) => chart.name === fresh.name);
-        return expected === undefined
-          ? !Object.hasOwn(
-              SERVICE_CATALOG.deliveryDelegations ?? {},
-              fresh.name,
-            ) &&
-              index.byChart(fresh.name)?.rootReleaseExclusions?.[fresh.name] !==
-                "inactive"
-          : expected.revision !== fresh.revision;
-      })
-    )
+    // Every pushed or retained chart must be the revision the coordinated
+    // release pins, unless the chart is delegated or explicitly inactive.
+    // The inventory may pin charts this producer neither pushed nor retained.
+    const uncoordinated = (chart: { name: string; revision: string }) => {
+      const expected = inventory.find((entry) => entry.name === chart.name);
+      return expected === undefined
+        ? !Object.hasOwn(
+            SERVICE_CATALOG.deliveryDelegations ?? {},
+            chart.name,
+          ) &&
+            index.byChart(chart.name)?.rootReleaseExclusions?.[chart.name] !==
+              "inactive"
+        : expected.revision !== chart.revision;
+    };
+    if (chartPublication.charts.some((chart) => uncoordinated(chart)))
       throw new Error(
         "Fresh chart publication does not match the coordinated release inventory",
       );
+    if (chartPublication.retained.some((chart) => uncoordinated(chart)))
+      throw new Error(
+        "Retained chart publication does not match the coordinated release inventory",
+      );
   }
   const charts = chartPublication?.charts;
+  const retainedCharts = chartPublication?.retained;
   const trmnl = z
     .array(TrmnlPublicationSchema)
     .max(1)
@@ -105,6 +112,7 @@ export async function readPublicationHandoffs(
       digests,
       retainedArtifacts,
       charts,
+      retainedCharts,
       chartPublication,
       rootInventory,
       siteArtifacts: trmnl,
@@ -137,6 +145,7 @@ export async function readPublicationHandoffs(
     digests,
     retainedArtifacts,
     charts,
+    retainedCharts,
     chartPublication,
     rootInventory,
     siteArtifacts: [...siteArtifacts, ...trmnl],

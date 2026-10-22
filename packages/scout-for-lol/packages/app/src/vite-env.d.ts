@@ -7,10 +7,9 @@
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- interface required for vite/client ImportMetaEnv declaration merging
 interface ImportMetaEnv {
   // All injected at site-release build time (scripts/release/scout-site-release.ts);
-  // absent in local dev, so every key is optional.
+  // absent in local dev, so every key is optional. No build number or commit
+  // is baked in: the deployed backend reports both through GET /api/version.
   readonly VITE_SENTRY_RELEASE?: string;
-  readonly VITE_APP_VERSION?: string;
-  readonly VITE_GIT_SHA?: string;
   readonly VITE_CONTRACT_HASH?: string;
   readonly VITE_DISCORD_CLIENT_ID?: string;
   // PostHog project/site configuration; absent locally so initialization

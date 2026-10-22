@@ -48,7 +48,6 @@ if (fresh || changed.exitCode === 0) {
   );
   const archive = await buildTrmnlPluginArchive(
     "packages/trmnl-dashboard/trmnl",
-    requireEnv("CI_COMMIT_SHA"),
   );
   const scratch = await mkdtemp(path.join(tmpdir(), "trmnl-archive-"));
   try {

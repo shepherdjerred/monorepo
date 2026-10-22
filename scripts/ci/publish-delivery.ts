@@ -1,39 +1,44 @@
 #!/usr/bin/env bun
 import { createHash } from "node:crypto";
-import { parseArgs } from "node:util";
+import { isDeepStrictEqual, parseArgs } from "node:util";
 import { z } from "zod";
-import { createDeliveryClient } from "@shepherdjerred/delivery/client";
 import {
+  createDeliveryClient,
+  DeliveryClientError,
+} from "@shepherdjerred/delivery/client";
+import { ArtifactVersionSchema } from "@shepherdjerred/delivery/contract";
+import type {
+  ArtifactVersion,
+  FindQualifiedArtifact,
+  PublishBuild,
   PublishBuildSchema,
-  ArtifactInputSchema,
-  ArtifactVersionSchema,
 } from "@shepherdjerred/delivery/contract";
-import type { PublishBuild } from "@shepherdjerred/delivery/contract";
 import {
   SERVICE_CATALOG,
   ServiceIndex,
 } from "@shepherdjerred/ops-model/catalog.ts";
 import type { Catalog, Service } from "@shepherdjerred/ops-model/catalog.ts";
-import { ChartPublicationSchema } from "@shepherdjerred/ops-model/chart-publication.ts";
+import {
+  ChartPublicationSchema,
+  PublishedChartReceiptSchema,
+  RetainedChartReceiptSchema,
+} from "@shepherdjerred/ops-model/chart-publication.ts";
 import { firstPartyImageRepository } from "@shepherdjerred/version-catalog/image-registry";
 import {
   readPublicationHandoffs,
   SitePublicationSchema,
-  ChartInventorySchema,
 } from "../lib/ci/delivery-publication-handoffs.ts";
 import { requireEnv, run } from "../lib/run.ts";
 import rawCatalog from "@shepherdjerred/version-catalog/catalog.json";
-import {
-  parseVersionCatalog,
-  versionCatalogMap,
-} from "@shepherdjerred/version-catalog";
-import { minecraftChartForPublication } from "../lib/ci/delivery-upstream-artifacts.ts";
+import { parseVersionCatalog } from "@shepherdjerred/version-catalog";
+import { componentArtifactsForPublication } from "../lib/ci/delivery-upstream-artifacts.ts";
 import { attachForumPublication } from "../lib/ci/delivery-forum-publication.ts";
 import { imageRuntimeDigests } from "../lib/ci/image-runtime-digests.ts";
 import {
   attachPlatformPublication,
   platformSourceFiles,
 } from "../lib/ci/delivery-platform-publication.ts";
+import { PublicationLedger } from "../lib/ci/delivery-publication-ledger.ts";
 
 const DigestSchema = z.string().regex(/^sha256:[a-f\d]{64}$/u);
 const DigestsSchema = z.record(
@@ -49,6 +54,7 @@ type Fetch = (
 type PublicationInput = {
   digests: unknown;
   charts: unknown;
+  retainedCharts?: unknown;
   siteArtifacts?: unknown;
   sourceRevision: string;
   ciUrl: string;
@@ -65,6 +71,10 @@ type PublicationDependencies = {
     name: string,
     version: string,
   ) => Promise<Pick<Artifact, "uri" | "digest">>;
+  /** The qualified artifact with these exact bytes, or undefined when none exists (404). */
+  findQualifiedArchive?: (
+    query: FindQualifiedArtifact,
+  ) => Promise<ArtifactVersion | undefined>;
 };
 
 function imageService(name: string, catalog: Catalog): Service {
@@ -73,6 +83,13 @@ function imageService(name: string, catalog: Catalog): Service {
     throw new Error(
       `Image shepherdjerred/${name} requires a service catalog owner`,
     );
+  return owner;
+}
+
+function chartService(name: string, catalog: Catalog): Service {
+  const owner = new ServiceIndex(catalog).byChart(name);
+  if (owner === undefined)
+    throw new Error(`Chart ${name} requires a service catalog owner`);
   return owner;
 }
 
@@ -127,42 +144,6 @@ export async function downloadChartArtifact(
   return { uri: uri.href, digest: `sha256:${digest}` };
 }
 
-function retainedArtifactReferences(
-  raw: unknown,
-  publications: Map<string, Artifact[]>,
-  catalog: Catalog,
-) {
-  const retained = new Map<string, z.output<typeof ArtifactVersionSchema>[]>();
-  for (const artifact of z.array(ArtifactVersionSchema).parse(raw ?? [])) {
-    if (!catalog.services.some((service) => service.id === artifact.serviceId))
-      throw new Error("Retained artifact requires a canonical service owner");
-    if (
-      (publications.get(artifact.serviceId) ?? []).some(
-        (entry) => entry.component === artifact.component,
-      )
-    )
-      throw new Error(
-        "A publication cannot replace and retain the same component",
-      );
-    const references = retained.get(artifact.serviceId) ?? [];
-    if (
-      references.some(
-        (entry) =>
-          entry.component === artifact.component && entry.id !== artifact.id,
-      )
-    )
-      throw new Error(
-        "A publication cannot retain conflicting artifacts for one component",
-      );
-    if (!references.some((entry) => entry.id === artifact.id))
-      references.push(artifact);
-    retained.set(artifact.serviceId, references);
-    if (!publications.has(artifact.serviceId))
-      publications.set(artifact.serviceId, []);
-  }
-  return retained;
-}
-
 function verifyChartProducer(input: PublicationInput) {
   if (input.chartPublication !== undefined) {
     const receipt = ChartPublicationSchema.parse(input.chartPublication);
@@ -177,32 +158,29 @@ function verifyChartProducer(input: PublicationInput) {
   }
 }
 
-export async function buildPublications(
+/** A retained archive must be the qualified artifact the lookup asked for, never a near match. */
+function verifyQualifiedArchive(
+  query: FindQualifiedArtifact,
+  original: ArtifactVersion,
+) {
+  if (
+    original.serviceId !== query.serviceId ||
+    original.component !== query.component ||
+    original.kind !== "archive" ||
+    original.digest !== query.digest ||
+    original.origin.kind !== "first-party"
+  )
+    throw new Error(
+      `Qualified archive differs from its lookup for ${query.component}`,
+    );
+}
+
+async function addImagePublications(
+  ledger: PublicationLedger,
   input: PublicationInput,
+  catalog: Catalog,
   dependencies: PublicationDependencies,
-): Promise<PublishBuild[]> {
-  const catalog = input.catalog ?? SERVICE_CATALOG;
-  verifyChartProducer(input);
-  const publications = new Map<string, Artifact[]>();
-  function add(
-    serviceId: string,
-    rawArtifact: z.input<typeof ArtifactInputSchema>,
-  ) {
-    const artifact = ArtifactInputSchema.parse(rawArtifact);
-    const entries = publications.get(serviceId) ?? [];
-    if (entries.some((entry) => entry.component === artifact.component)) {
-      const existing = entries.find(
-        (entry) => entry.component === artifact.component,
-      );
-      if (existing?.digest !== artifact.digest)
-        throw new Error(
-          `One CI pipeline published conflicting versions of ${artifact.component}`,
-        );
-      return;
-    }
-    entries.push(artifact);
-    publications.set(serviceId, entries);
-  }
+) {
   for (const [key, digest] of Object.entries(
     DigestsSchema.parse(input.digests),
   )) {
@@ -212,7 +190,7 @@ export async function buildPublications(
     const service = imageService(name, catalog);
     const uri = firstPartyImageRepository(name);
     const raw = await dependencies.inspectImage(`${uri}@${digest}`);
-    add(service.id, {
+    ledger.add(service.id, {
       id: `ci/${String(input.repositoryId)}/${String(input.pipelineNumber)}/image/${name}`,
       component: `image:${name}`,
       kind: "image",
@@ -223,62 +201,113 @@ export async function buildPublications(
       version: `2.0.0-${String(1_000_000 + input.pipelineNumber)}`,
     });
   }
+}
+
+async function addChartPublications(
+  ledger: PublicationLedger,
+  input: PublicationInput,
+  catalog: Catalog,
+  dependencies: PublicationDependencies,
+) {
   const charts =
-    input.charts === undefined ? [] : ChartInventorySchema.parse(input.charts);
+    input.charts === undefined
+      ? []
+      : z.array(PublishedChartReceiptSchema).parse(input.charts);
   for (const chart of charts) {
-    const owner = new ServiceIndex(catalog).byChart(chart.name);
-    if (owner === undefined)
-      throw new Error(`Chart ${chart.name} requires a service catalog owner`);
+    const owner = chartService(chart.name, catalog);
     const artifact = await dependencies.chartArtifact(
       chart.name,
       chart.revision,
     );
-    if (chart.digest !== undefined && chart.digest !== artifact.digest)
+    if (chart.digest !== artifact.digest)
       throw new Error(
         "Published chart digest differs from its original producer receipt",
       );
-    add(owner.id, {
+    ledger.add(owner.id, {
       id: `ci/${String(input.repositoryId)}/${String(input.pipelineNumber)}/chart/${chart.name}`,
       component: `chart:${chart.name}`,
       kind: "chart",
       version: chart.revision,
       runtimeDigests: [],
       requires: {},
+      contentFingerprint: chart.contentFingerprint,
       ...artifact,
     });
   }
-  const sites = z
-    .array(SitePublicationSchema.strict())
-    .parse(input.siteArtifacts ?? []);
-  for (const site of sites) {
-    if (!catalog.services.some((service) => service.id === site.serviceId))
-      throw new Error(
-        `Static artifact references an unknown service ${site.serviceId}`,
-      );
-    if (site.artifact.kind !== "archive")
-      throw new Error(
-        "Static publication requires an immutable archive artifact",
-      );
-    add(site.serviceId, site.artifact);
+  // Unchanged charts reference the qualified artifact the producer planned against.
+  for (const chart of z
+    .array(RetainedChartReceiptSchema)
+    .parse(input.retainedCharts ?? []))
+    ledger.retain(chartService(chart.name, catalog).id, {
+      id: chart.artifactId,
+      component: `chart:${chart.name}`,
+    });
+}
+
+/**
+ * Bytes that already exist as a qualified archive with the same dependencies
+ * are retained by reference and never registered again (B2).
+ */
+async function addSitePublication(
+  ledger: PublicationLedger,
+  site: z.output<typeof SitePublicationSchema>,
+  catalog: Catalog,
+  dependencies: PublicationDependencies,
+) {
+  if (!catalog.services.some((service) => service.id === site.serviceId))
+    throw new Error(
+      `Static artifact references an unknown service ${site.serviceId}`,
+    );
+  if (site.artifact.kind !== "archive")
+    throw new Error(
+      "Static publication requires an immutable archive artifact",
+    );
+  if (site.artifact.origin.kind !== "first-party")
+    throw new Error(
+      "Static publication requires a first-party archive artifact",
+    );
+  const query: FindQualifiedArtifact = {
+    serviceId: site.serviceId,
+    component: site.artifact.component,
+    kind: "archive",
+    digest: site.artifact.digest,
+    originKind: "first-party",
+  };
+  const original = await dependencies.findQualifiedArchive?.(query);
+  if (original !== undefined) {
+    verifyQualifiedArchive(query, original);
+    if (isDeepStrictEqual(original.requires, site.artifact.requires)) {
+      ledger.retain(site.serviceId, {
+        id: original.id,
+        component: original.component,
+      });
+      return;
+    }
   }
-  const retained = retainedArtifactReferences(
-    input.retainedArtifacts,
-    publications,
-    catalog,
-  );
-  return [...publications].map(([serviceId, artifacts]) =>
-    PublishBuildSchema.parse({
-      requestId: `ci/${String(input.repositoryId)}/${String(input.pipelineNumber)}/${serviceId}`,
-      serviceId,
-      sourceRevision: input.sourceRevision,
-      ciUrl: input.ciUrl,
-      verifiedAt: input.capturedAt,
-      artifacts,
-      retainedArtifactIds: (retained.get(serviceId) ?? []).map(
-        (entry) => entry.id,
-      ),
-    }),
-  );
+  ledger.add(site.serviceId, site.artifact);
+}
+
+export async function buildPublications(
+  input: PublicationInput,
+  dependencies: PublicationDependencies,
+): Promise<PublishBuild[]> {
+  const catalog = input.catalog ?? SERVICE_CATALOG;
+  verifyChartProducer(input);
+  const ledger = new PublicationLedger(catalog);
+  await addImagePublications(ledger, input, catalog, dependencies);
+  await addChartPublications(ledger, input, catalog, dependencies);
+  for (const site of z
+    .array(SitePublicationSchema.strict())
+    .parse(input.siteArtifacts ?? []))
+    await addSitePublication(ledger, site, catalog, dependencies);
+  for (const artifact of z
+    .array(ArtifactVersionSchema)
+    .parse(input.retainedArtifacts ?? []))
+    ledger.retain(artifact.serviceId, {
+      id: artifact.id,
+      component: artifact.component,
+    });
+  return ledger.builds(input);
 }
 
 export function parsePublicationOptions(args: string[]) {
@@ -309,12 +338,9 @@ async function main() {
     headers: { Authorization: `Bearer ${requireEnv("DELIVERY_API_TOKEN")}` },
   });
   const handoffs = await readPublicationHandoffs(options.staticArchives);
-  const upstreamVersion = z
-    .string()
-    .parse(versionCatalogMap(parseVersionCatalog(rawCatalog))["minecraft"]);
-  const acquired = await minecraftChartForPublication(
+  const components = await componentArtifactsForPublication(
     client,
-    upstreamVersion,
+    parseVersionCatalog(rawCatalog),
     { repositoryId, pipelineNumber, sourceRevision },
     {
       credentials: () => ({
@@ -326,7 +352,7 @@ async function main() {
   const publications = await buildPublications(
     {
       ...handoffs,
-      retainedArtifacts: [...handoffs.retainedArtifacts, acquired],
+      retainedArtifacts: [...handoffs.retainedArtifacts, ...components],
       sourceRevision,
       ciUrl: requireEnv("CI_PIPELINE_URL"),
       pipelineNumber,
@@ -349,6 +375,15 @@ async function main() {
         downloadChartArtifact(name, version, {
           origin: "https://chartmuseum.tailnet-1a49.ts.net",
         }),
+      findQualifiedArchive: async (query) => {
+        try {
+          return await client.findQualifiedArtifact(query);
+        } catch (error) {
+          if (error instanceof DeliveryClientError && error.status === 404)
+            return;
+          throw error;
+        }
+      },
     },
   );
   const forumPublications = await attachForumPublication(
@@ -364,6 +399,7 @@ async function main() {
       ciUrl: requireEnv("CI_PIPELINE_URL"),
       capturedAt: new Date().toISOString(),
       rootInventory: handoffs.rootInventory,
+      retainedCharts: handoffs.retainedCharts,
       files: await platformSourceFiles(
         sourceRevision,
         Bun.env["CI_CHANGED_BASE"],

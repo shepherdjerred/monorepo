@@ -13,10 +13,13 @@ import {
   validateTrmnlPluginSettings,
 } from "@shepherdjerred/ops-model/trmnl/plugin-policy.ts";
 
-export async function buildTrmnlPluginArchive(
-  root: string,
-  sourceRevision: string,
-) {
+/**
+ * Package the reviewed plugin sources as a v2 bundle. The bundle carries no
+ * source revision: its bytes depend only on content, so an unchanged rebuild
+ * on a later commit reproduces the same digest and Delivery retains the
+ * existing archive instead of registering a duplicate.
+ */
+export async function buildTrmnlPluginArchive(root: string) {
   const plugins = await Promise.all(
     TRMNL_PLUGIN_POLICY.plugins.map(async (target) => {
       const entries = await Promise.all(
@@ -37,8 +40,7 @@ export async function buildTrmnlPluginArchive(
     }),
   );
   const bundle = {
-    schema: "delivery-trmnl-plugins/v1" as const,
-    sourceRevision,
+    schema: "delivery-trmnl-plugins/v2" as const,
     plugins,
   };
   validateTrmnlPluginSettings(bundle, parseYaml);
