@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { listCompletionMarkers } from "@shepherdjerred/seaweedfs-backup/manifest";
-import { restoreSnapshot } from "@shepherdjerred/seaweedfs-backup/restore";
+import {
+  restoreSnapshot,
+  type RestoredObject,
+} from "@shepherdjerred/seaweedfs-backup/restore";
 import { BackupPolicySchema } from "@shepherdjerred/seaweedfs-backup/schemas";
 import { runBackup } from "@shepherdjerred/seaweedfs-backup/snapshot";
 import { verifySnapshot } from "@shepherdjerred/seaweedfs-backup/verify";
@@ -37,6 +40,13 @@ function stores(): {
   source.createBucket("source");
   backup.createBucket("backup");
   return { source, backup };
+}
+
+/** A rebuilt SeaweedFS whose production bucket exists but holds nothing. */
+function freshSeaweedfs(): InMemoryObjectStore {
+  const fresh = new InMemoryObjectStore();
+  fresh.createBucket("source");
+  return fresh;
 }
 
 class DelayedHeadStore extends InMemoryObjectStore {
@@ -532,6 +542,290 @@ describe("incremental backup and restore", () => {
         policy: POLICY,
       }),
     ).rejects.toThrow("must be empty");
+  });
+});
+
+const COLD_START_POLICY = BackupPolicySchema.parse({
+  ...POLICY,
+  buckets: [
+    ...POLICY.buckets,
+    {
+      name: "other-production",
+      mode: "protected",
+      cadences: ["daily"],
+      excludeSuffixes: [],
+      reason: "fixture",
+    },
+  ],
+});
+
+async function backedUp(): Promise<{
+  backup: InMemoryObjectStore;
+  snapshotId: string;
+}> {
+  const { source, backup } = stores();
+  source.seed("source", "state.json", "important");
+  source.seedWithHeaders({
+    bucket: "source",
+    key: "nested/release.tgz",
+    value: "archive",
+    headers: { contentType: "application/gzip", metadata: { build: "7" } },
+  });
+  const snapshot = await runBackup({
+    source,
+    destination: backup,
+    backupBucket: "backup",
+    policy: POLICY,
+    cadence: "daily",
+  });
+  return { backup, snapshotId: snapshot.marker.snapshotId };
+}
+
+/** What `backedUp` seeds, so a test can rewrite a key with the same bytes. */
+const ORIGINAL_VALUES: Record<string, string> = {
+  "state.json": "important",
+  "nested/release.tgz": "archive",
+};
+
+function coldStartRestore(
+  backup: InMemoryObjectStore,
+  destinationStore: InMemoryObjectStore,
+  snapshotId: string,
+) {
+  return restoreSnapshot({
+    backupStore: backup,
+    destinationStore,
+    backupBucket: "backup",
+    destinationBucket: "source",
+    sourceBucket: "source",
+    snapshotId,
+    policy: COLD_START_POLICY,
+    coldStart: true,
+  });
+}
+
+describe("cold-start restore", () => {
+  test("refuses a production bucket without the flag and writes nothing", async () => {
+    const { backup, snapshotId } = await backedUp();
+    const fresh = freshSeaweedfs();
+    await expect(
+      restoreSnapshot({
+        backupStore: backup,
+        destinationStore: fresh,
+        backupBucket: "backup",
+        destinationBucket: "source",
+        sourceBucket: "source",
+        snapshotId,
+        policy: COLD_START_POLICY,
+      }),
+    ).rejects.toThrow(/production bucket: source.*--cold-start/u);
+    expect(await fresh.listObjects("source")).toEqual([]);
+  });
+
+  test("refuses a non-empty production bucket with the flag and leaves it untouched", async () => {
+    const { backup, snapshotId } = await backedUp();
+    const populated = freshSeaweedfs();
+    populated.seed("source", "state.json", "live data");
+    const restored: string[] = [];
+    await expect(
+      restoreSnapshot({
+        backupStore: backup,
+        destinationStore: populated,
+        backupBucket: "backup",
+        destinationBucket: "source",
+        sourceBucket: "source",
+        snapshotId,
+        policy: COLD_START_POLICY,
+        coldStart: true,
+        onObjectRestored: (object) => {
+          restored.push(object.key);
+        },
+      }),
+    ).rejects.toThrow(
+      /must be empty: cold start found 1 existing object\(s\) in source \(first: state\.json\)/u,
+    );
+    expect(restored).toEqual([]);
+    const survivor = await populated.getObject("source", "state.json");
+    expect(survivor.size).toBe("live data".length);
+  });
+
+  test("restores into an empty production bucket and records every object", async () => {
+    const { backup, snapshotId } = await backedUp();
+    const fresh = freshSeaweedfs();
+    const restored: RestoredObject[] = [];
+    await expect(
+      restoreSnapshot({
+        backupStore: backup,
+        destinationStore: fresh,
+        backupBucket: "backup",
+        destinationBucket: "source",
+        sourceBucket: "source",
+        snapshotId,
+        policy: COLD_START_POLICY,
+        coldStart: true,
+        onObjectRestored: (object) => {
+          restored.push(object);
+        },
+      }),
+    ).resolves.toEqual({ restoredObjects: 2, restoredBytes: 16 });
+    expect(restored.map(({ key, size }) => ({ key, size }))).toEqual([
+      { key: "nested/release.tgz", size: 7 },
+      { key: "state.json", size: 9 },
+    ]);
+    expect(restored.every(({ sha256 }) => /^[0-9a-f]{64}$/u.test(sha256))).toBe(
+      true,
+    );
+    const archive = await fresh.getObject("source", "nested/release.tgz");
+    expect(archive.headers).toEqual({
+      contentType: "application/gzip",
+      metadata: { build: "7" },
+    });
+  });
+
+  test("keeps every other guard in cold-start mode", async () => {
+    const { backup, snapshotId } = await backedUp();
+    const base = {
+      backupStore: backup,
+      destinationStore: freshSeaweedfs(),
+      backupBucket: "backup",
+      sourceBucket: "source",
+      snapshotId,
+      policy: COLD_START_POLICY,
+      coldStart: true,
+    };
+    await expect(
+      restoreSnapshot({ ...base, destinationBucket: "other-production" }),
+    ).rejects.toThrow("must return a production bucket to itself");
+    await expect(
+      restoreSnapshot({ ...base, destinationBucket: "backup" }),
+    ).rejects.toThrow("production bucket");
+  });
+});
+
+describe("cold-start restore races", () => {
+  test("never overwrites an object that appears after the emptiness check", async () => {
+    const { backup, snapshotId } = await backedUp();
+    class RacedStore extends InMemoryObjectStore {
+      public override listObjects() {
+        return Promise.resolve([]);
+      }
+    }
+    const raced = new RacedStore();
+    raced.createBucket("source");
+    raced.seed("source", "nested/release.tgz", "late arrival");
+    await expect(coldStartRestore(backup, raced, snapshotId)).rejects.toThrow(
+      "refused to overwrite source/nested/release.tgz",
+    );
+    const survivor = await raced.getObject("source", "nested/release.tgz");
+    expect(survivor.size).toBe("late arrival".length);
+  });
+
+  test("fails a cold start when another writer adds an object during the restore", async () => {
+    const { backup, snapshotId } = await backedUp();
+    class InterlopedStore extends InMemoryObjectStore {
+      public override async putObject(
+        ...input: Parameters<InMemoryObjectStore["putObject"]>
+      ) {
+        await super.putObject(...input);
+        this.seed(
+          input[0].bucket,
+          "unrelated/live-data",
+          "written by a workload",
+        );
+      }
+    }
+    const store = new InterlopedStore();
+    store.createBucket("source");
+    await expect(coldStartRestore(backup, store, snapshotId)).rejects.toThrow(
+      "that are not in snapshot " + snapshotId,
+    );
+  });
+
+  /** Tampers with the first restored key once the second object has landed. */
+  class TamperingStore extends InMemoryObjectStore {
+    private readonly landed: string[] = [];
+
+    public constructor(
+      private readonly tamper: (
+        store: InMemoryObjectStore,
+        bucket: string,
+        key: string,
+      ) => void,
+    ) {
+      super();
+    }
+
+    public override async putObject(
+      ...input: Parameters<InMemoryObjectStore["putObject"]>
+    ) {
+      await super.putObject(...input);
+      this.landed.push(input[0].key);
+      const [first] = this.landed;
+      if (first === undefined) return;
+      if (this.landed.length === 2) {
+        this.tamper(this, input[0].bucket, first);
+      }
+    }
+  }
+
+  test.each([
+    [
+      "deletes",
+      (store: InMemoryObjectStore, bucket: string, key: string) =>
+        store.deleteObject(bucket, key),
+    ],
+    [
+      "overwrites",
+      (store: InMemoryObjectStore, bucket: string, key: string) => {
+        store.seed(bucket, key, "replaced by a workload");
+      },
+    ],
+    [
+      "rewrites with identical bytes but new headers",
+      (store: InMemoryObjectStore, bucket: string, key: string) => {
+        store.seedWithHeaders(
+          {
+            bucket,
+            key,
+            value: ORIGINAL_VALUES[key] ?? "",
+            headers: { contentType: "text/rewritten", metadata: {} },
+          },
+          new Date(Date.now() + 60_000),
+        );
+      },
+    ],
+  ])(
+    "fails a cold start when another writer %s a verified object",
+    async (_name, tamper) => {
+      const { backup, snapshotId } = await backedUp();
+      const store = new TamperingStore(tamper);
+      store.createBucket("source");
+      await expect(coldStartRestore(backup, store, snapshotId)).rejects.toThrow(
+        "removed or rewritten after verification",
+      );
+    },
+  );
+
+  test("never overwrites an object created between the check and the write", async () => {
+    const { backup, snapshotId } = await backedUp();
+    class WriteRacedStore extends InMemoryObjectStore {
+      public override async headObject(
+        ...input: Parameters<InMemoryObjectStore["headObject"]>
+      ) {
+        const present = await super.headObject(...input);
+        if (present === undefined) {
+          this.seed(input[0], input[1], "created by another workload");
+        }
+        return present;
+      }
+    }
+    const raced = new WriteRacedStore();
+    raced.createBucket("source");
+    await expect(coldStartRestore(backup, raced, snapshotId)).rejects.toThrow(
+      "refused to overwrite source/nested/release.tgz",
+    );
+    const survivor = await raced.getObject("source", "nested/release.tgz");
+    expect(survivor.size).toBe("created by another workload".length);
   });
 });
 
