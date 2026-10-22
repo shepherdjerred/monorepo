@@ -24,7 +24,17 @@ Delivery re-applies each Application's full body and self-heals drift. Turn
 `delivery-writes-enabled` off in the `delivery` namespace of the `prod` Flipt
 environment, as in
 [Check the Flipt flag inventory](/how-to/check-flipt-flag-inventory/). Delivery
-then admits no new deployment, and running operations can still finish.
+then admits no new deployment, but a running deployment can still finish and
+re-apply the Application you are about to change.
+
+Wait until the environment that deploys that Application has drained. Its
+environment id is the Application's `delivery.shepherdjerred.com/environment`
+annotation. This must print `null` before you continue:
+
+```bash
+curl -s https://delivery.tailnet-1a49.ts.net/api/v1/environments/<environment-id> \
+  | jq '.environment.activeDeploymentId'
+```
 
 Then stop ArgoCD from reverting its own settings:
 
@@ -49,9 +59,12 @@ through the ArgoCD UI, the `argocd` CLI, or the operator-run bootstrap tools.
 Skip this step while the ArgoCD API answers: writes made through it pass the
 source policy. If the API is down and an Application's source must change,
 first stop the `cluster-admission` Application's automated sync. Otherwise it
-recreates the binding on its next reconciliation:
+recreates the binding on its next reconciliation. Save its current policy so
+step 4 can restore it:
 
 ```bash
+kubectl -n argocd get application cluster-admission \
+  -o jsonpath='{.spec.syncPolicy.automated}' > cluster-admission-automated.json
 kubectl -n argocd patch application cluster-admission --type merge \
   -p '{"spec":{"syncPolicy":{"automated":null}}}'
 ```
@@ -64,9 +77,21 @@ kubectl delete validatingadmissionpolicybinding argocd-application-source.sjer.r
 
 ## 4. Return to read-only
 
-1. Re-sync `cluster-admission` so the binding is back:
-   `kubectl get validatingadmissionpolicybinding argocd-application-source.sjer.red`
+1. If you ran step 3, restore `cluster-admission`'s saved automated policy.
+   Nothing else restores it, because it is operator-created, not one of
+   Delivery's Applications:
+
+   ```bash
+   kubectl -n argocd patch application cluster-admission --type merge \
+     -p "{\"spec\":{\"syncPolicy\":{\"automated\":$(cat cluster-admission-automated.json)}}}"
+   ```
+
+   An empty file means it had no automated policy; skip the patch.
+   `kubectl -n argocd get application cluster-admission -o jsonpath='{.spec.syncPolicy.automated}'`
+   prints the saved policy. Then re-sync `cluster-admission` so the binding is
+   back: `kubectl get validatingadmissionpolicybinding argocd-application-source.sjer.red`
    finds it.
+
 2. Re-sync the `argocd` Application from its accepted source. Confirm
    `kubectl -n argocd get configmap argocd-cm -o jsonpath='{.data.admin\.enabled}'`
    prints `false`.
