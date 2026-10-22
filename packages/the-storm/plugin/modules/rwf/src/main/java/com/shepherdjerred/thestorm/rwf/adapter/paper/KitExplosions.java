@@ -175,7 +175,7 @@ final class KitExplosions {
   }
 
   /** Throws {@code victim} away from the blast, harder the nearer and more exposed they are. */
-  private static void push(Location center, Player victim, double scale) {
+  private void push(Location center, Player victim, double scale) {
     var push =
         Places.at(victim)
             .toVector()
@@ -183,7 +183,7 @@ final class KitExplosions {
             .subtract(center.toVector());
     if (push.lengthSquared() > 0) {
       // Red Warfare's explosion knockback set the victim's velocity (UtilEnt.velocity).
-      victim.setVelocity(push.normalize().multiply(scale));
+      victim.setVelocity(KnockbackShare.landing(runner, victim, push.normalize().multiply(scale)));
     }
   }
 

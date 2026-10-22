@@ -97,6 +97,32 @@ final class RwfKitsBatchATest {
   }
 
   @Test
+  void aJuggernautBotsOwnSteeringIsNotCutButAHitStillPushesItAFifthLess() {
+    // fairylands: every Juggernaut bot's jump peaked at 0.875 blocks, so it hopped in place at
+    // every one-block step, because each tick's steering velocity was cut like a push.
+    var trooper = on("trooper", "trooper");
+    var trooperPush = pushedBy(trooper);
+    trooper.close();
+    var jugger = on("trooper", "juggernaut");
+    var steering = new PlayerVelocityEvent(jugger.enemy, new Vector(0.1, 0.42, 0));
+    jugger.harness.server.getPluginManager().callEvent(steering);
+    assertThat(steering.getVelocity()).isEqualTo(new Vector(0.1, 0.42, 0));
+    var juggerPush = pushedBy(jugger);
+    assertThat(juggerPush.length()).isCloseTo(trooperPush.length() * 0.8, within(1e-9));
+  }
+
+  private static Vector pushedBy(KitFight fight) {
+    fight.enemy.setVelocity(new Vector());
+    fight.aliceHits();
+    return fight.enemy.getVelocity();
+  }
+
+  private KitFight on(String kit, String botKit) {
+    fight = KitFight.on(directory, kit, botKit);
+    return fight;
+  }
+
+  @Test
   void aJuggernautTakesSixtyPercentOfATroopersHit() {
     var fight = on("juggernaut");
 
