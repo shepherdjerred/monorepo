@@ -12,7 +12,7 @@ import {
   type CatalogCore,
   catalogOwnsService,
 } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
-import { STATIC_SITE_DESTINATIONS } from "@shepherdjerred/ops-model/static-release-targets.ts";
+import { V1_STATIC_SITE_DESTINATIONS } from "@shepherdjerred/ops-model/static-release-targets.ts";
 
 const SITE_COMPONENT = /^site:(?<bucket>[a-z0-9][a-z0-9.-]{1,61}[a-z0-9])$/u;
 
@@ -35,9 +35,12 @@ export function staticSiteServiceId(bucket: string): string {
   return bucket;
 }
 
-/** The reviewed activation environment of a bucket; an unknown bucket has no release path. */
+/**
+ * The v1 environment the root release activates a bucket through; an unknown
+ * bucket has no release path. The root release is v1's, so it names v1 ids.
+ */
 export function staticSiteEnvironment(bucket: string): string {
-  const environmentId = STATIC_SITE_DESTINATIONS[bucket];
+  const environmentId = V1_STATIC_SITE_DESTINATIONS[bucket];
   if (environmentId === undefined)
     throw new Error(
       "Independent static publication requires its reviewed bucket owner",
@@ -53,7 +56,7 @@ export function staticSiteEnvironment(bucket: string): string {
 export function independentStaticSites(
   catalog: CatalogCore = CATALOG_CORE,
 ): readonly { bucket: string; serviceId: string; environmentId: string }[] {
-  return Object.entries(STATIC_SITE_DESTINATIONS)
+  return Object.entries(V1_STATIC_SITE_DESTINATIONS)
     .map(([bucket, environmentId]) => ({
       bucket,
       serviceId: staticSiteServiceId(bucket),
