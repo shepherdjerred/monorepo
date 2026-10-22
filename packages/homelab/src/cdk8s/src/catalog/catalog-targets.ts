@@ -50,7 +50,7 @@ export const PLATFORM_LOCK_ENVIRONMENTS: ReadonlySet<string> = new Set([
 
 function scoutMonitor(
   environment: "beta" | "prod",
-  thresholds: { matches: number; interactions: number },
+  matchesThreshold: number,
   policy: Monitor["policy"],
 ): Monitor {
   return {
@@ -59,16 +59,15 @@ function scoutMonitor(
       matchers: { alertname: "~Scout.*", environment },
       severities: ["warning", "critical"],
     },
+    // Discord commands are too rare to settle on: beta saw none in seven
+    // days and prod about seven a day, so a command threshold would hold
+    // every promotion. Applied match receipts run at roughly 140 a day on
+    // beta and 5,300 a day on prod.
     evidence: [
       {
         key: "matches-processed",
         query: `sum(increase(scout_durable_receipts_recorded_total{environment="${environment}",git_sha="$gitSha",outcome="applied"}[$window]))`,
-        threshold: thresholds.matches,
-      },
-      {
-        key: "discord-interactions",
-        query: `sum(increase(discord_commands_total{environment="${environment}",git_sha="$gitSha"}[$window]))`,
-        threshold: thresholds.interactions,
+        threshold: matchesThreshold,
       },
     ],
     policy,
@@ -80,16 +79,8 @@ function scoutMonitor(
  * alarm; prod rolls back automatically.
  */
 export const ENVIRONMENT_MONITORS: Readonly<Record<string, Monitor>> = {
-  "scout-for-lol/beta": scoutMonitor(
-    "beta",
-    { matches: 5, interactions: 3 },
-    "hold",
-  ),
-  "scout-for-lol/prod": scoutMonitor(
-    "prod",
-    { matches: 50, interactions: 20 },
-    "automatic",
-  ),
+  "scout-for-lol/beta": scoutMonitor("beta", 5, "hold"),
+  "scout-for-lol/prod": scoutMonitor("prod", 50, "automatic"),
 };
 
 /**

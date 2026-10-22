@@ -91,11 +91,6 @@
             "key": "matches-processed",
             "query": "sum(increase(scout_durable_receipts_recorded_total{environment=\"beta\",git_sha=\"$gitSha\",outcome=\"applied\"}[$window]))",
             "threshold": 5
-          },
-          {
-            "key": "discord-interactions",
-            "query": "sum(increase(discord_commands_total{environment=\"beta\",git_sha=\"$gitSha\"}[$window]))",
-            "threshold": 3
           }
         ],
         "policy": "hold"
