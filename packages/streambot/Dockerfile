@@ -45,19 +45,29 @@ RUN set -e; \
     fi; \
     rm -rf /var/lib/apt/lists/*
 
-# ── deps: full install (dev deps) — feeds the dist builds below ─────────────
-# `--frozen-lockfile` requires every workspace member's package.json present,
-# so the globs enumerate every member (top-level, nested packages/*/packages/*,
-# homelab/src/*, the desktop src-tauri crate, and the `scripts` dir).
-FROM base-build AS deps
+# ── manifests: only the install closure's workspace manifests ───────────────
+# Every manifest reaches this cheap stage; installs copy only its output, so an
+# edit to a package outside the closure keeps their cache keys and layers.
+FROM base AS manifests
 COPY --parents \
-  package.json bun.lock bunfig.toml patches/ scripts/package.json \
-  packages/discord-video-stream/prebuilds-patched/ \
+  package.json scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
-  ./
+  /workspace/
+COPY --parents \
+  ci/scripts/images/workspace-manifests.ts \
+  ci/scripts/selectors/select-image-targets-workspaces.ts \
+  ci/scripts/selectors/select-image-targets-lockfile.ts \
+  /tools/
+RUN bun /tools/ci/scripts/images/workspace-manifests.ts /workspace /closure \
+  '@shepherdjerred/streambot'
+
+# ── deps: full install (dev deps) — feeds the dist builds below ─────────────
+FROM base-build AS deps
+COPY --parents bun.lock bunfig.toml patches/ packages/discord-video-stream/prebuilds-patched/ ./
+COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/streambot'
 
 # ── build: the two dist-resolving fork deps ─────────────────────────────────
@@ -82,15 +92,13 @@ RUN cd packages/discord-stream-lifecycle && bun run build \
 # Inherits base-build: the native trustedDependencies postinstalls run here
 # too and need the same toolchain.
 FROM base-build AS prod-deps
-COPY --parents \
-  package.json bun.lock bunfig.toml patches/ scripts/package.json \
-  packages/discord-video-stream/prebuilds-patched/ \
-  packages/*/package.json packages/*/packages/*/package.json \
-  packages/docs/wiki/package.json \
-  packages/homelab/src/cdk8s/package.json \
-  packages/homelab/src/helm-types/package.json \
-  ./
+COPY --parents bun.lock bunfig.toml patches/ packages/discord-video-stream/prebuilds-patched/ ./
+COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/streambot'
+# Bun can skip the .bin links between dependency-cycle members on a cold
+# install; complete them so the production tree reproduces.
+COPY ci/scripts/images/complete-bin-links.ts /tools/
+RUN bun /tools/complete-bin-links.ts node_modules/.bun
 
 # ── voice-models: pinned, checksum-verified local wake + VAD assets ─────────
 # Models are fetched only while building the immutable image. Runtime startup
@@ -145,7 +153,7 @@ RUN set -e; \
     if [ "$(dpkg --print-architecture)" = "amd64" ]; then \
       apt-get install -y -qq --no-install-recommends intel-media-va-driver-non-free; \
     fi; \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* /var/log/apt/* /var/log/dpkg.log /var/log/alternatives.log /var/cache/ldconfig/aux-cache
 
 # yt-dlp standalone binary from the release CDN (rate-limit-proof, SHA-verified),
 # installed at the config-default path /usr/local/bin/yt-dlp. Per-arch asset,
@@ -173,11 +181,12 @@ RUN set -e; \
 RUN printf '%s\n' '--extractor-args "youtube:player_client=android,ios,web"' \
       > /etc/yt-dlp.conf
 
-# Production node_modules + workspace manifests. The isolated-linker tree uses
-# relative symlinks (store at node_modules/.bun), so copying the whole install
-# root between same-rooted stages is safe. Kept BEFORE the source COPY so a
-# source edit doesn't re-push this layer.
-COPY --from=prod-deps /app/ /app/
+# Production node_modules + closure manifests. The isolated-linker tree uses
+# relative symlinks (store at node_modules/.bun), so copying the install root
+# between same-rooted stages is safe. The root install inputs stay behind: they
+# change with unrelated packages and nothing reads them at runtime. Kept BEFORE
+# the source COPY so a source edit doesn't re-push this layer.
+COPY --from=prod-deps --exclude=package.json --exclude=bun.lock --exclude=bunfig.toml --exclude=patches /app/ /app/
 
 # Scoped source closure + the built dists from the build stage. The canonical
 # evaluation corpus is intentionally excluded from production layers.

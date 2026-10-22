@@ -12,18 +12,29 @@
 FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
 
-# ── deps: full install (dev deps) — feeds the artifact builds below ─────────
-# `--frozen-lockfile` requires every workspace member's package.json present,
-# so the globs enumerate every member (top-level, nested packages/*/packages/*,
-# homelab/src/*, and the `scripts` dir).
-FROM base AS deps
+# ── manifests: only the install closure's workspace manifests ───────────────
+# Every manifest reaches this cheap stage; installs copy only its output, so an
+# edit to a package outside the closure keeps their cache keys and layers.
+FROM base AS manifests
 COPY --parents \
-  package.json bun.lock bunfig.toml patches/ scripts/package.json \
+  package.json scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
-  ./
+  /workspace/
+COPY --parents \
+  ci/scripts/images/workspace-manifests.ts \
+  ci/scripts/selectors/select-image-targets-workspaces.ts \
+  ci/scripts/selectors/select-image-targets-lockfile.ts \
+  /tools/
+RUN bun /tools/ci/scripts/images/workspace-manifests.ts /workspace /closure \
+  '@scout-for-lol/backend'
+
+# ── deps: full install (dev deps) — feeds the artifact builds below ─────────
+FROM base AS deps
+COPY --parents bun.lock bunfig.toml patches/ ./
+COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --filter '@scout-for-lol/backend'
 
 # ── build: gitignored artifacts (llm-models dist + Prisma client) ───────────
@@ -52,14 +63,13 @@ RUN cd packages/scout-for-lol/packages/backend && bun x --trust prisma generate
 
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
 FROM base AS prod-deps
-COPY --parents \
-  package.json bun.lock bunfig.toml patches/ scripts/package.json \
-  packages/*/package.json packages/*/packages/*/package.json \
-  packages/docs/wiki/package.json \
-  packages/homelab/src/cdk8s/package.json \
-  packages/homelab/src/helm-types/package.json \
-  ./
+COPY --parents bun.lock bunfig.toml patches/ ./
+COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --production --filter '@scout-for-lol/backend'
+# Bun can skip the .bin links between dependency-cycle members on a cold
+# install; complete them so the production tree reproduces.
+COPY ci/scripts/images/complete-bin-links.ts /tools/
+RUN bun /tools/complete-bin-links.ts node_modules/.bun
 
 # ── voice-models: pinned, checksum-verified local wake + VAD assets ─────────
 # Fetched only while building the immutable image; runtime startup validates
@@ -120,7 +130,7 @@ FROM base AS runtime
 # The isolated-linker tree uses relative symlinks (store at node_modules/.bun),
 # so copying the whole install root between same-rooted stages is safe. Kept
 # BEFORE the source COPY so a source edit doesn't re-push this layer.
-COPY --from=prod-deps /app/ /app/
+COPY --from=prod-deps --exclude=package.json --exclude=bun.lock --exclude=bunfig.toml --exclude=patches /app/ /app/
 # Scoped source closure. Report Satori imports resolve through the shared
 # design-system package, which also owns the exact font and rank-crest bytes.
 # `@shepherdjerred/config`, `@shepherdjerred/feature-flags`, and
@@ -159,7 +169,9 @@ COPY --parents \
 # Running generate here (as root, schema present from the source COPY above)
 # fetches them at build time; uid 1000 then only reads them at runtime.
 # Mirrors the discord-plays-mario-kart runtime fix (2.0.0-6322 crash-loop).
-RUN cd packages/scout-for-lol/packages/backend && bun x --trust prisma generate
+# Prisma's CLI records per-run state under $HOME; keep it out of the layer.
+RUN cd packages/scout-for-lol/packages/backend && CHECKPOINT_DISABLE=1 bun x --trust prisma generate \
+ && rm -rf "$HOME/.cache/checkpoint-nodejs" "$HOME/.config/prisma-nodejs"
 # Built artifacts from the build stage.
 COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/dist
 COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist

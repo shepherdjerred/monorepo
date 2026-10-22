@@ -2,6 +2,7 @@ import express, { type Express } from "express";
 import cors from "cors";
 import type { Registry } from "prom-client";
 import type { Logger } from "#src/logger.ts";
+import { IMAGE_FILE_OPTIONS } from "#src/webserver/image-file-options.ts";
 
 export type CreateExpressAppOptions = {
   isCorsEnabled: boolean;
@@ -48,7 +49,7 @@ export function createExpressApp({
 
   logger.info(`serving static web assets from ${webAssetsPath}`);
 
-  app.use(express.static(webAssetsPath));
+  app.use(express.static(webAssetsPath, IMAGE_FILE_OPTIONS));
 
   return app;
 }

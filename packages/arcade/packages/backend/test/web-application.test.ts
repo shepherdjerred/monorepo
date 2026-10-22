@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { io, type Socket } from "socket.io-client";
@@ -119,6 +119,7 @@ async function harness(moderator = async (_guild: string) => false) {
   return {
     ...application,
     base,
+    webAssets: root,
     connect,
     input,
     clearInput,
@@ -183,6 +184,35 @@ describe("Arcade public pages and controller authority", () => {
       .toEqual(["2:emerald"]);
     h.publish("1", "mk64");
     expect(rooms).toEqual(["2:emerald"]);
+  });
+
+  it("never derives page validators from image file mtimes", async () => {
+    // Image layers clamp every mtime to one epoch, so a size+mtime validator
+    // would let a browser keep a changed same-size page after a release.
+    const h = await harness();
+    const index = path.join(h.webAssets, "index.html");
+    const epoch = new Date("2026-01-01T00:00:00Z");
+    await mkdir(path.join(h.webAssets, "assets"));
+    await writeFile(path.join(h.webAssets, "assets", "app.js"), "export {};");
+    async function page(route: string, html: string) {
+      await writeFile(index, html);
+      await utimes(index, epoch, epoch);
+      const response = await fetch(h.base + route);
+      expect(response.status).toBe(200);
+      expect(response.headers.get("last-modified")).toBeNull();
+      expect(await response.text()).toBe(html);
+      return response.headers.get("etag");
+    }
+    for (const route of ["/", "/index.html"])
+      expect(await page(route, "<p>release 1</p>")).toBeNull();
+    const assets = await fetch(h.base + "/assets/app.js");
+    expect(assets.headers.get("etag")).toBeNull();
+    expect(assets.headers.get("last-modified")).toBeNull();
+    await assets.arrayBuffer();
+    const before = await page("/games/mk64", "<p>release 1</p>");
+    const after = await page("/games/mk64", "<p>release 2</p>");
+    expect(before).not.toBeNull();
+    expect(after).not.toBe(before);
   });
 
   it("requires the owning tab and current voice membership for input", async () => {

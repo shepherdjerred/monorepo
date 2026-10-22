@@ -2,14 +2,28 @@
 FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
 
-FROM base AS deps
+# ── manifests: only the install closure's workspace manifests ───────────────
+# Every manifest reaches this cheap stage; installs copy only its output, so an
+# edit to a package outside the closure keeps their cache keys and layers.
+FROM base AS manifests
 COPY --parents \
-  package.json bun.lock bunfig.toml patches/ scripts/package.json \
+  package.json scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
-  ./
+  /workspace/
+COPY --parents \
+  ci/scripts/images/workspace-manifests.ts \
+  ci/scripts/selectors/select-image-targets-workspaces.ts \
+  ci/scripts/selectors/select-image-targets-lockfile.ts \
+  /tools/
+RUN bun /tools/ci/scripts/images/workspace-manifests.ts /workspace /closure \
+  '@shepherdjerred/alert-dashboard'
+
+FROM base AS deps
+COPY --parents bun.lock bunfig.toml patches/ ./
+COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/alert-dashboard'
 
 FROM deps AS build
@@ -30,17 +44,16 @@ COPY --parents \
 RUN cd packages/alert-dashboard && bun run build
 
 FROM base AS prod-deps
-COPY --parents \
-  package.json bun.lock bunfig.toml patches/ scripts/package.json \
-  packages/*/package.json packages/*/packages/*/package.json \
-  packages/docs/wiki/package.json \
-  packages/homelab/src/cdk8s/package.json \
-  packages/homelab/src/helm-types/package.json \
-  ./
+COPY --parents bun.lock bunfig.toml patches/ ./
+COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/alert-dashboard'
+# Bun can skip the .bin links between dependency-cycle members on a cold
+# install; complete them so the production tree reproduces.
+COPY ci/scripts/images/complete-bin-links.ts /tools/
+RUN bun /tools/complete-bin-links.ts node_modules/.bun
 
 FROM base AS runtime
-COPY --from=prod-deps /app/ /app/
+COPY --from=prod-deps --exclude=package.json --exclude=bun.lock --exclude=bunfig.toml --exclude=patches /app/ /app/
 # Preserve the production install's isolated-linker symlinks. The development
 # install can use different peer-context hashes, so copying its node_modules
 # over this tree would point at packages that do not exist in prod-deps.
@@ -59,7 +72,9 @@ COPY --parents \
 # download engines on first use. Runtime executes as uid 1000 over root-owned
 # node_modules, which correctly prevents that startup write. Generating once as
 # root here keeps `prisma migrate deploy` read-only at runtime.
-RUN cd packages/alert-dashboard && bunx --no-install --trust prisma generate
+# Prisma's CLI records per-run state under $HOME; keep it out of the layer.
+RUN cd packages/alert-dashboard && CHECKPOINT_DISABLE=1 bunx --no-install --trust prisma generate \
+ && rm -rf "$HOME/.cache/checkpoint-nodejs" "$HOME/.config/prisma-nodejs"
 WORKDIR /app/packages/alert-dashboard
 ENV NODE_ENV=production HOME=/tmp
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"

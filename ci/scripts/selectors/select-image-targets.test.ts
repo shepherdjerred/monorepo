@@ -218,6 +218,8 @@ describe("selectImageTargets", () => {
       "ci/scripts/images/application-image-runtime.ts",
       "ci/scripts/images/smoke-app-configs.ts",
       "ci/scripts/images/smoke-app-in-image.ts",
+      "ci/scripts/images/complete-bin-links.ts",
+      "ci/scripts/images/workspace-manifests.ts",
       ".dockerignore",
       "bunfig.toml",
       "tsconfig.base.json",

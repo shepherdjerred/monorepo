@@ -2,8 +2,28 @@
 FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
 
+# ── manifests: only the install closure's workspace manifests ───────────────
+# Every manifest reaches this cheap stage; installs copy only its output, so an
+# edit to a package outside the closure keeps their cache keys and layers.
+FROM base AS manifests
+COPY --parents \
+  package.json scripts/package.json \
+  packages/*/package.json packages/*/packages/*/package.json \
+  packages/docs/wiki/package.json \
+  packages/homelab/src/cdk8s/package.json \
+  packages/homelab/src/helm-types/package.json \
+  /workspace/
+COPY --parents \
+  ci/scripts/images/workspace-manifests.ts \
+  ci/scripts/selectors/select-image-targets-workspaces.ts \
+  ci/scripts/selectors/select-image-targets-lockfile.ts \
+  /tools/
+RUN bun /tools/ci/scripts/images/workspace-manifests.ts /workspace /closure \
+  '@shepherdjerred/tracker'
+
 FROM base AS deps
-COPY --parents package.json bun.lock bunfig.toml patches/ scripts/package.json packages/*/package.json packages/*/packages/*/package.json packages/docs/wiki/package.json packages/homelab/src/cdk8s/package.json packages/homelab/src/helm-types/package.json ./
+COPY --parents bun.lock bunfig.toml patches/ ./
+COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/tracker'
 
 FROM deps AS build
@@ -11,14 +31,21 @@ COPY --parents tsconfig.base.json packages/tracker packages/config packages/feat
 RUN cd packages/tracker && bun run generate && bun run build
 
 FROM base AS prod-deps
-COPY --parents package.json bun.lock bunfig.toml patches/ scripts/package.json packages/*/package.json packages/*/packages/*/package.json packages/docs/wiki/package.json packages/homelab/src/cdk8s/package.json packages/homelab/src/helm-types/package.json ./
+COPY --parents bun.lock bunfig.toml patches/ ./
+COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/tracker'
+# Bun can skip the .bin links between dependency-cycle members on a cold
+# install; complete them so the production tree reproduces.
+COPY ci/scripts/images/complete-bin-links.ts /tools/
+RUN bun /tools/complete-bin-links.ts node_modules/.bun
 
 FROM base AS runtime
-COPY --from=prod-deps /app/ /app/
+COPY --from=prod-deps --exclude=package.json --exclude=bun.lock --exclude=bunfig.toml --exclude=patches /app/ /app/
 COPY --from=build --exclude=node_modules /app/packages/tracker /app/packages/tracker
 COPY --parents packages/config packages/feature-flags packages/bugsink-config ./
-RUN cd packages/tracker && bunx --no-install --trust prisma generate
+# Prisma's CLI records per-run state under $HOME; keep it out of the layer.
+RUN cd packages/tracker && CHECKPOINT_DISABLE=1 bunx --no-install --trust prisma generate \
+ && rm -rf "$HOME/.cache/checkpoint-nodejs" "$HOME/.config/prisma-nodejs"
 WORKDIR /app/packages/tracker
 ENV NODE_ENV=production HOME=/tmp
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"

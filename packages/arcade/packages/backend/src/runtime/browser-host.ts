@@ -1,5 +1,5 @@
 import path from "node:path";
-import { stat, mkdir } from "node:fs/promises";
+import { stat, mkdir, readFile } from "node:fs/promises";
 import express from "express";
 import { createServer } from "node:http";
 import { WebSocketServer, WebSocket, type RawData } from "ws";
@@ -68,8 +68,13 @@ export class BrowserHost {
       });
       next();
     });
-    this.app.get("/arcade-runtime.js", (_request, response) => {
-      response.sendFile(path.resolve(this.options.browserScript));
+    this.app.get("/arcade-runtime.js", async (_request, response) => {
+      // An image file: res.send derives its ETag from the bytes, because the
+      // persistent profile would otherwise revalidate a clamped mtime (see
+      // IMAGE_FILE_OPTIONS in discord-plays-core) and keep a stale runtime.
+      response
+        .type("js")
+        .send(await readFile(path.resolve(this.options.browserScript)));
     });
     if (this.options.config.gameId === "melee") this.meleeRoutes(root);
     else this.app.use(express.static(root, { fallthrough: false }));

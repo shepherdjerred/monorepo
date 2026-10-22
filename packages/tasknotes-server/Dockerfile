@@ -11,32 +11,47 @@
 FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
 
-# ── prod-deps: production-only node_modules, cached on manifests ────────────
-# Copying just the workspace package.json files (plus the lockfile, bunfig, and
-# patches) means this filtered install only invalidates when a
-# manifest/lockfile/patch changes — not on every source edit. The
-# tasknotes-server filter includes tasknotes-types through its workspace
-# dependency closure. `--frozen-lockfile` requires every workspace member's
-# package.json present, so the globs below enumerate every member (top-level,
-# nested `packages/*/packages/*`, homelab/src/*, the desktop src-tauri crate,
-# and the `scripts` dir). The root .dockerignore keeps node_modules/dist/.git
-# out of context.
-FROM base AS prod-deps
+# ── manifests: only the install closure's workspace manifests ───────────────
+# Every manifest reaches this cheap stage; installs copy only its output, so an
+# edit to a package outside the closure keeps their cache keys and layers.
+FROM base AS manifests
 COPY --parents \
-  package.json bun.lock bunfig.toml patches/ scripts/package.json \
+  package.json scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
-  ./
+  /workspace/
+COPY --parents \
+  ci/scripts/images/workspace-manifests.ts \
+  ci/scripts/selectors/select-image-targets-workspaces.ts \
+  ci/scripts/selectors/select-image-targets-lockfile.ts \
+  /tools/
+RUN bun /tools/ci/scripts/images/workspace-manifests.ts /workspace /closure \
+  'tasknotes-server'
+
+# ── prod-deps: production-only node_modules, cached on manifests ────────────
+# Copying just the closure's package.json files (plus the lockfile, bunfig, and
+# patches) means this filtered install only invalidates when a closure
+# manifest/lockfile/patch changes — not on every source edit. The
+# tasknotes-server filter includes tasknotes-types through its workspace
+# dependency closure. The root .dockerignore keeps node_modules/dist/.git out
+# of context.
+FROM base AS prod-deps
+COPY --parents bun.lock bunfig.toml patches/ ./
+COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --production --filter 'tasknotes-server'
+# Bun can skip the .bin links between dependency-cycle members on a cold
+# install; complete them so the production tree reproduces.
+COPY ci/scripts/images/complete-bin-links.ts /tools/
+RUN bun /tools/complete-bin-links.ts node_modules/.bun
 
 # ── runtime: COPY-only — no install, no build tooling, no network ───────────
 FROM base AS runtime
 # The isolated-linker tree uses relative symlinks (store at node_modules/.bun),
 # so copying the whole install root between same-rooted stages is safe. Kept
 # BEFORE the source COPY so a source edit doesn't re-push this layer.
-COPY --from=prod-deps /app/ /app/
+COPY --from=prod-deps --exclude=package.json --exclude=bun.lock --exclude=bunfig.toml --exclude=patches /app/ /app/
 # Scoped source closure: this package, its workspace deps, and the root
 # tsconfig the package tsconfig extends.
 COPY --parents \
