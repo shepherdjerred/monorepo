@@ -7,23 +7,25 @@ import {
 } from "#infrastructure/delivery-data.ts";
 import { fingerprint, wire } from "#infrastructure/delivery-records.ts";
 import { DeliveryError } from "#domain/error.ts";
-import { LegacyPipelineRevisionSchema } from "#shared/contract.ts";
+import { PipelineRevisionSchema } from "#shared/contract.ts";
+import { forumReleaseOf, workerRolloutOf } from "#shared/model/recipe-view.ts";
 import { freezeForumBaseline } from "#infrastructure/forum/freezer.ts";
 import { acceptedForumBaseline } from "#infrastructure/forum/baseline-context.ts";
 import { readWorkerVersions } from "#infrastructure/worker-pool/pool.ts";
 import { activeEnvironmentIds } from "#infrastructure/delivery-selection.ts";
 import {
-  reviewedOwnershipDefinitions,
-  requireReviewedOwnershipDefinition,
+  reconciledCatalog,
+  requireCatalogOwnershipDefinition,
+  type ReconciledCatalog,
 } from "./definitions.ts";
 
 async function target(
   tx: Transaction,
   environmentId: string,
-  definitions: Awaited<ReturnType<typeof reviewedOwnershipDefinitions>>,
+  catalog: ReconciledCatalog,
 ) {
   const env = await environment(tx, environmentId);
-  const pipeline = LegacyPipelineRevisionSchema.parse(
+  const pipeline = PipelineRevisionSchema.parse(
     wire(
       await tx.pipeline.findUniqueOrThrow({
         where: { id: env.pipelineRevisionId },
@@ -36,8 +38,8 @@ async function target(
     fingerprint: string;
   } | null = null;
   const definition = pipeline.definition;
-  requireReviewedOwnershipDefinition(definitions, env, pipeline);
-  if (definition.kind === "argocd" && definition.workerRollout !== undefined) {
+  await requireCatalogOwnershipDefinition(tx, catalog, env, pipeline);
+  if (workerRolloutOf(definition) !== undefined) {
     const versions = await readWorkerVersions(tx, env.id);
     const introducing = await tx.deployment.findMany({
       where: {
@@ -73,8 +75,7 @@ async function target(
       };
   }
   if (
-    definition.kind === "argocd" &&
-    definition.forumRelease !== undefined &&
+    forumReleaseOf(definition) !== undefined &&
     env.acceptedVersionSetRevisionId === null &&
     (await acceptedForumBaseline(tx, env.id)) !== null
   ) {
@@ -117,9 +118,9 @@ export async function ownershipHandoverContext(
       "PAUSED",
       "Ownership handover requires an API image with genuine baked source identity",
     );
-  const definitions = await reviewedOwnershipDefinitions();
   return delivery.database.$transaction(
     async (tx) => {
+      const catalog = await reconciledCatalog(tx);
       const active = {
         status: { in: ["queued", "awaiting_approval", "running"] },
       };
@@ -166,7 +167,7 @@ export async function ownershipHandoverContext(
           pendingObservations,
         },
         targets: await Promise.all(
-          rows.map((row) => target(tx, row.id, definitions)),
+          rows.map((row) => target(tx, row.id, catalog)),
         ),
       };
     },

@@ -353,9 +353,11 @@ admin credential is used only for the preownership account prerequisite, never
 as a runtime or ownership-handover fallback.
 
 `toolkit deploy handover-context --machine` is an admin-only read of the API's
-baked source identity, exact reviewed registrations, fresh write-admission state,
-the environments whose catalog lifecycle is `active` and so admit deployments,
-and uncapped PostgreSQL ownership/request/recovery counts. The bounded
+baked source identity, each environment's binding in the catalog as last
+reconciled into PostgreSQL, fresh write-admission state, the environments whose
+catalog lifecycle is `active` and so admit deployments, and uncapped PostgreSQL
+ownership/request/recovery counts. It refuses before any catalog reconciliation
+and after a definition was registered outside the catalog since then. The bounded
 `packages/homelab/scripts/ci/delivery-handover.ts` operator command consumes that
 state and the exact reviewed source proof, independently checks the paused
 Woodpecker webhook and drained native pipelines, then transfers only the

@@ -85,7 +85,9 @@ function requireForward(entity: string, from: string, to: Lifecycle) {
 }
 
 /** The Application an environment's recipe names first; T6 is checked by the catalog. */
-function primaryApplication(definition: RecipeDefinition): string | null {
+export function primaryApplication(
+  definition: RecipeDefinition,
+): string | null {
   switch (definition.kind) {
     case "kubernetes-application":
       return definition.application.name;

@@ -1,26 +1,30 @@
 import { expect, test } from "vitest";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { createTestApp } from "#testing/http-app.ts";
-import { testExecutor, testOperator } from "#testing/seed.ts";
+import { testOperator } from "#testing/seed.ts";
 import {
   OwnershipHandoverContextSchema,
   PipelineDefinitionSchema,
   RegisterEnvironmentSchema,
   type Principal,
 } from "#shared/contract.ts";
-import { fingerprint } from "#infrastructure/delivery-records.ts";
+import { fingerprint, wire } from "#infrastructure/delivery-records.ts";
+import { environment } from "#infrastructure/delivery-data.ts";
+import { PipelineRevisionSchema } from "#shared/contract.ts";
+import { catalogDocument } from "#testing/catalog-fixture.ts";
 import {
-  reviewedOwnershipDefinitions,
-  requireReviewedOwnershipDefinition,
+  reconciledCatalog,
+  requireCatalogOwnershipDefinition,
 } from "./definitions.ts";
 
+const arcadePipeline = PipelineDefinitionSchema.parse(
+  await Bun.file(
+    new URL("../../../registrations/arcade.pipeline.json", import.meta.url),
+  ).json(),
+);
 const context = useDeliveryFixture({
   registration: {
-    pipeline: PipelineDefinitionSchema.parse(
-      await Bun.file(
-        new URL("../../../registrations/arcade.pipeline.json", import.meta.url),
-      ).json(),
-    ),
+    pipeline: arcadePipeline,
     environment: RegisterEnvironmentSchema.parse(
       await Bun.file(
         new URL(
@@ -43,6 +47,14 @@ const adminCredential: { token: string; principal: Principal } = {
     scopes: ["read", "admin"],
   },
 };
+/** Handover reads the catalog as reconciled into PostgreSQL (4.1, C1). */
+async function reconcile() {
+  return context.delivery.reconcileCatalog(
+    await catalogDocument(),
+    testOperator,
+    { renames: {}, retired: [] },
+  );
+}
 function app(writes = false, sourceRevision = source) {
   return createTestApp(
     context.delivery,
@@ -65,7 +77,8 @@ function app(writes = false, sourceRevision = source) {
   );
 }
 
-test("admin context binds actual API source, registered generation/pipeline and catalog without inventing ordinary acceptance", async () => {
+test("admin context binds actual API source and the reconciled catalog's bindings without inventing ordinary acceptance", async () => {
+  await reconcile();
   const response = await app().request("/api/v1/ownership-handover-context", {
     headers: admin,
   });
@@ -75,7 +88,12 @@ test("admin context binds actual API source, registered generation/pipeline and 
     sourceRevision: source,
     catalogFingerprint: `sha256:${fingerprint(context.delivery.catalog.catalog)}`,
     writesEnabled: false,
-    admittingEnvironments: [context.fixture.environment.id],
+    admittingEnvironments: [
+      "arcade/beta",
+      "arcade/prod",
+      "delivery/prod",
+      "sjer-red/prod",
+    ],
     counts: {
       applicationLocks: 0,
       platformLocks: 0,
@@ -85,15 +103,27 @@ test("admin context binds actual API source, registered generation/pipeline and 
       pendingObservations: 0,
     },
   });
-  expect(observed.targets).toEqual([
-    expect.objectContaining({
-      environmentId: context.fixture.environment.id,
-      generation: context.fixture.environment.generation,
-      pipelineRevisionId: "arcade/2",
-      acceptedVersionSetRevisionId: null,
-      baseline: null,
-    }),
+  expect(
+    observed.targets.map((target) => [
+      target.environmentId,
+      target.application,
+      target.pipelineRevisionId,
+      target.pipeline.kind,
+    ]),
+  ).toEqual([
+    ["arcade/beta", "arcade-beta", "arcade-beta/1", "kubernetes-application"],
+    ["arcade/prod", "arcade", "arcade/3", "kubernetes-application"],
+    ["delivery/prod", "delivery", "delivery/3", "kubernetes-application"],
   ]);
+  const reconciled =
+    await context.cluster.database.environment.findUniqueOrThrow({
+      where: { id: "arcade/prod" },
+    });
+  expect(observed.targets[1]).toMatchObject({
+    generation: reconciled.generation,
+    acceptedVersionSetRevisionId: null,
+    baseline: null,
+  });
   expect(await context.cluster.database.deployment.count()).toBe(0);
   const currentEnvironment =
     await context.cluster.database.environment.findUniqueOrThrow({
@@ -103,8 +133,10 @@ test("admin context binds actual API source, registered generation/pipeline and 
 });
 
 test("the handover context admits by catalog lifecycle: a retired environment admits nothing", async () => {
+  await reconcile();
+  // The static site has no Application, so it is admitted but never a target.
   await context.cluster.database.environment.update({
-    where: { id: context.fixture.environment.id },
+    where: { id: "sjer-red/prod" },
     data: { lifecycle: "retired" },
   });
   const response = await app().request("/api/v1/ownership-handover-context", {
@@ -112,13 +144,15 @@ test("the handover context admits by catalog lifecycle: a retired environment ad
   });
   expect(response.status).toBe(200);
   const observed = OwnershipHandoverContextSchema.parse(await response.json());
-  expect(observed.admittingEnvironments).toEqual([]);
-  expect(observed.targets.map((row) => row.environmentId)).toEqual([
-    context.fixture.environment.id,
+  expect(observed.admittingEnvironments).toEqual([
+    "arcade/beta",
+    "arcade/prod",
+    "delivery/prod",
   ]);
 });
 
 test("the handover read is admin-only and an API without real baked source cannot authorize it", async () => {
+  await reconcile();
   const denied = await app().request("/api/v1/ownership-handover-context", {
     headers: { authorization: "Bearer test-handover-readonly-credential-0000" },
   });
@@ -164,7 +198,23 @@ test("quarantine and ownership counts come from all PG rows, independently of th
   });
   const overview = await context.delivery.overview();
   expect(overview.deployments).toHaveLength(100);
-  await context.delivery.claim(deployment.id, testExecutor);
+  await reconcile();
+  // Ownership as admission records it: the running row, its environment's
+  // owner and the held Application lock (D7).
+  const db = context.cluster.database;
+  await db.$transaction([
+    db.deployment.update({
+      where: { id: deployment.id },
+      data: { status: "running" },
+    }),
+    db.environment.update({
+      where: { id: raw.environmentId },
+      data: { activeDeploymentId: deployment.id },
+    }),
+    db.targetLock.create({
+      data: { instance: "application:arcade", deploymentId: deployment.id },
+    }),
+  ]);
   const response = await app().request("/api/v1/ownership-handover-context", {
     headers: admin,
   });
@@ -174,14 +224,17 @@ test("quarantine and ownership counts come from all PG rows, independently of th
     applicationLocks: 1,
     activeEnvironments: 1,
   });
-  expect(observed.targets[0]?.generation).toBe(
-    context.fixture.environment.generation,
-  );
+  const reconciled = await db.environment.findUniqueOrThrow({
+    where: { id: raw.environmentId },
+  });
+  expect(
+    observed.targets.find(
+      (target) => target.environmentId === raw.environmentId,
+    )?.generation,
+  ).toBe(reconciled.generation);
 });
 
-test("the retired root has no reviewed definition and cannot be registered (X6)", async () => {
-  const definitions = await reviewedOwnershipDefinitions();
-  expect(definitions.has("gitops/root")).toBe(false);
+test("the retired root cannot be registered (X6)", async () => {
   await context.delivery.registerPipeline(
     "platform/root/1",
     {
@@ -207,35 +260,83 @@ test("the retired root has no reviewed definition and cannot be registered (X6)"
   ).rejects.toThrow(/root release is retired/u);
 });
 
-test("handover rejects a different runner or application identity", async () => {
-  const definitions = await reviewedOwnershipDefinitions();
-  const reviewed = definitions.get("arcade/prod");
-  if (reviewed === undefined)
-    throw new Error("Canonical Arcade registration missing");
-  const requested = await context.delivery.createDeployment(
-    context.input("handover/1"),
+async function handoverStatus() {
+  const response = await app().request("/api/v1/ownership-handover-context", {
+    headers: admin,
+  });
+  return response.status;
+}
+
+test("handover reads only the reconciled catalog and refuses definitions registered outside it", async () => {
+  // The v1 registration the fixture made is not a reviewed definition.
+  expect(await handoverStatus()).toBe(503);
+  await reconcile();
+  expect(await handoverStatus()).toBe(200);
+  await context.delivery.registerPipeline(
+    "arcade/unreviewed",
+    PipelineDefinitionSchema.parse({
+      ...arcadePipeline,
+      namespace: "unreviewed",
+    }),
     testOperator,
   );
-  const env = await context.delivery.detail(requested.id);
-  expect(() =>
-    requireReviewedOwnershipDefinition(definitions, env.environment, {
-      ...env.pipeline,
-      definition: PipelineDefinitionSchema.parse({
-        ...reviewed.pipeline,
-        namespace: "unreviewed",
+  expect(await handoverStatus()).toBe(409);
+  await reconcile();
+  expect(await handoverStatus()).toBe(200);
+});
+
+test("handover rejects a service, application or recipe identity the catalog does not bind", async () => {
+  await reconcile();
+  await context.cluster.database.$transaction(async (tx) => {
+    const catalog = await reconciledCatalog(tx);
+    const env = await environment(tx, "arcade/prod");
+    const pipeline = PipelineRevisionSchema.parse(
+      wire(
+        await tx.pipeline.findUniqueOrThrow({
+          where: { id: env.pipelineRevisionId },
+        }),
+      ),
+    );
+    await expect(
+      requireCatalogOwnershipDefinition(tx, catalog, env, pipeline),
+    ).resolves.toBeUndefined();
+    const refused = "exact environment binding of the reconciled catalog";
+    await expect(
+      requireCatalogOwnershipDefinition(
+        tx,
+        catalog,
+        { ...env, application: "unreviewed-root" },
+        pipeline,
+      ),
+    ).rejects.toThrow(refused);
+    await expect(
+      requireCatalogOwnershipDefinition(
+        tx,
+        catalog,
+        { ...env, serviceId: "delivery" },
+        pipeline,
+      ),
+    ).rejects.toThrow(refused);
+    // A v1 pipeline is never a catalog recipe revision.
+    await expect(
+      requireCatalogOwnershipDefinition(tx, catalog, env, {
+        ...pipeline,
+        definition: arcadePipeline,
       }),
-    }),
-  ).toThrow("exact code-reviewed registered pipeline");
-  expect(() =>
-    requireReviewedOwnershipDefinition(
-      definitions,
-      { ...env.environment, application: "unreviewed-root" },
-      env.pipeline,
-    ),
-  ).toThrow("exact code-reviewed registered pipeline");
+    ).rejects.toThrow(refused);
+    await expect(
+      requireCatalogOwnershipDefinition(
+        tx,
+        { revision: "sha256:stale" },
+        env,
+        pipeline,
+      ),
+    ).rejects.toThrow(refused);
+  });
 });
 
 test("fresh admission changes during the same PG observation fail closed", async () => {
+  await reconcile();
   let calls = 0;
   const changing = createTestApp(
     context.delivery,

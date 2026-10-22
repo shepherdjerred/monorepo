@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { PipelineDefinitionSchema } from "./pipeline-contract.ts";
+import { RecipeDefinitionSchema } from "./model/recipe-contract.ts";
 
 const Fingerprint = z.string().regex(/^sha256:[a-f0-9]{64}$/u);
 export const OwnershipHandoverTargetSchema = z.strictObject({
@@ -8,7 +9,8 @@ export const OwnershipHandoverTargetSchema = z.strictObject({
   application: z.string().min(1),
   generation: z.number().int().nonnegative(),
   pipelineRevisionId: z.string().min(1),
-  pipeline: PipelineDefinitionSchema,
+  /** The immutable recipe revision the reconciled catalog binds. */
+  pipeline: z.union([PipelineDefinitionSchema, RecipeDefinitionSchema]),
   configurationRevision: z.string().min(1),
   configuration: z.record(z.string(), z.string()),
   acceptedVersionSetRevisionId: z.string().nullable(),
