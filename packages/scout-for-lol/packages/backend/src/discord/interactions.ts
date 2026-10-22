@@ -401,8 +401,11 @@ async function routeScoutCreate(
     discordComponentsTotal.inc({ namespace: "scout", status: "error" });
     if (interaction.deferred) {
       await interaction.editReply({
+        // The failure may have come after the creation committed (Discord
+        // rejecting the reply), so this never claims nothing was created.
+        // Pressing again is safe: a confirmed card replays its result.
         content:
-          "Scout could not confirm that. Nothing was created; try the button again.",
+          "Something went wrong confirming that. Press the button again to see whether it was created.",
         allowedMentions: { parse: [] },
       });
     }

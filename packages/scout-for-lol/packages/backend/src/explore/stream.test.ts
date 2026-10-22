@@ -322,38 +322,7 @@ describe("explore raw tool payload inspection", () => {
   });
 
   test("enforces the aggregate raw inspection limit across a turn", async () => {
-    const chunks = Array.from({ length: 5 }, (_, index) => {
-      const toolCallId = `call-${index.toString()}`;
-      const input = { queryText: "FROM matches SELECT games" };
-      return [
-        {
-          type: "tool-call",
-          toolCallId,
-          toolName: "validate_report_query",
-          input,
-        },
-        {
-          type: "tool-result",
-          toolCallId,
-          toolName: "validate_report_query",
-          input,
-          output: {
-            ok: false,
-            message: "Invalid query.",
-            diagnostics: [
-              {
-                code: "parse-error",
-                severity: "error",
-                message: "x".repeat(60_000),
-                span: { start: 0, end: 1 },
-                fixes: [],
-              },
-            ],
-            formattedQueryText: null,
-          },
-        },
-      ];
-    }).flat();
+    const chunks = oversizedValidateResults();
     const { events } = await collect(chunks);
     const results = events.filter((event) => event.type === "tool_result");
 
@@ -729,3 +698,88 @@ describe("explore answer cap", () => {
     expect(text.isWellFormed()).toBe(true);
   });
 });
+
+describe("explore trace budget", () => {
+  test("keeps a prepared confirmation after the turn budget is spent", async () => {
+    const filler = oversizedValidateResults();
+    const prepareInput = {
+      guildId: "100000000000000001",
+      channelId: "200000000000000001",
+      title: "Weekly games",
+      description: null,
+      queryText:
+        "SELECT player, COUNT(*) AS games FROM match_participants GROUP BY player RENDER table",
+      cronExpression: "0 12 * * 0",
+      scheduleTimezone: "UTC",
+      isEnabled: true,
+    };
+    const prepared = {
+      kind: "creation_confirmation_required",
+      message: "Nothing has been created yet.",
+      intent: {
+        intentId: "00000000-0000-4000-8000-000000000001",
+        kind: "report",
+        guildId: "100000000000000001",
+        expiresAt: "2026-10-22T12:10:00.000Z",
+        summary: 'Report "Weekly games"',
+      },
+    };
+    const { events } = await collect([
+      ...filler,
+      {
+        type: "tool-call",
+        toolCallId: "call-prepare",
+        toolName: "prepare_report_creation",
+        input: prepareInput,
+      },
+      {
+        type: "tool-result",
+        toolCallId: "call-prepare",
+        toolName: "prepare_report_creation",
+        input: prepareInput,
+        output: prepared,
+      },
+    ]);
+    const results = events.filter((event) => event.type === "tool_result");
+    expect(results.at(-1)?.rawOutput).toMatchObject({
+      kind: "value",
+      value: prepared,
+    });
+  });
+});
+
+/** Five validation results, each near the payload cap: enough to spend the turn budget. */
+function oversizedValidateResults() {
+  return Array.from({ length: 5 }, (_, index) => {
+    const toolCallId = `call-${index.toString()}`;
+    const input = { queryText: "FROM matches SELECT games" };
+    return [
+      {
+        type: "tool-call",
+        toolCallId,
+        toolName: "validate_report_query",
+        input,
+      },
+      {
+        type: "tool-result",
+        toolCallId,
+        toolName: "validate_report_query",
+        input,
+        output: {
+          ok: false,
+          message: "Invalid query.",
+          diagnostics: [
+            {
+              code: "parse-error",
+              severity: "error",
+              message: "x".repeat(60_000),
+              span: { start: 0, end: 1 },
+              fixes: [],
+            },
+          ],
+          formattedQueryText: null,
+        },
+      },
+    ];
+  }).flat();
+}

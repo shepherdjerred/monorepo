@@ -76,14 +76,16 @@ function buttonLabel(text: string): string {
  * Pressing it runs the shared confirm path, which re-authorizes the clicker
  * and claims the intent once; a second press replays the first result.
  */
-export function exploreCreationConfirmRow(
+export function exploreCreationConfirmRows(
   answer: ExploreMessage,
-): ActionRowBuilder<ButtonBuilder> | null {
-  const intents = preparedIntents(answer.trace).slice(0, MAX_ROW_BUTTONS);
-  return intents.length === 0
-    ? null
-    : new ActionRowBuilder<ButtonBuilder>().addComponents(
-        intents.map((intent) =>
+): ActionRowBuilder<ButtonBuilder>[] {
+  // Every prepared card gets a button: a dropped one would expire unseen.
+  const intents = preparedIntents(answer.trace);
+  const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+  for (let start = 0; start < intents.length; start += MAX_ROW_BUTTONS) {
+    rows.push(
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        intents.slice(start, start + MAX_ROW_BUTTONS).map((intent) =>
           new ButtonBuilder()
             .setCustomId(
               formatScoutCreateCustomId({ intentId: intent.intentId }),
@@ -91,8 +93,14 @@ export function exploreCreationConfirmRow(
             .setLabel(buttonLabel(`Confirm: ${intent.summary}`))
             .setStyle(ButtonStyle.Success),
         ),
-      );
+      ),
+    );
+  }
+  return rows;
 }
+
+/** Discord's limit on component rows in one message. */
+export const MAX_MESSAGE_ROWS = 5;
 
 /**
  * The answer's follow-up suggestions, as buttons that ask them next.

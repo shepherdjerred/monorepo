@@ -12,6 +12,7 @@ import { loadExploreTranscript } from "#src/explore/store.ts";
 import { parseScoutPublishCustomId } from "#src/discord/scout/custom-id.ts";
 import {
   exploreActionRow,
+  exploreCreationConfirmRows,
   exploreFollowUpRow,
   NO_GENERATED_MENTIONS,
   publicExploreChunks,
@@ -123,8 +124,11 @@ export async function handleScoutPublishButton(
       conversationId: parsed.conversationId,
       answer,
     });
+    // The first Confirm row sat on this reply too; posting must not take it.
+    const [confirmations] = exploreCreationConfirmRows(answer);
     await interaction.editReply({
       components: [
+        ...(confirmations === undefined ? [] : [confirmations]),
         exploreActionRow({
           conversationId: parsed.conversationId,
           assistantMessageId: parsed.assistantMessageId,

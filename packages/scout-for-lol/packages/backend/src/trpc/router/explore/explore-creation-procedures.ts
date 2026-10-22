@@ -24,6 +24,7 @@ import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import {
   confirmCreation,
   loadCreationIntent,
+  requireCreationEnabled,
   type CreationConfirmer,
 } from "#src/explore/creation/confirm.ts";
 import type { User } from "#generated/prisma/client/index.js";
@@ -66,6 +67,11 @@ const creationIntentStatus = protectedProcedure
       input.intentId,
     );
     const { intent } = loaded;
+    // A consumed card reports what happened even after creation is switched
+    // off, as confirmCreation and history replay do; the flag gates only
+    // cards that could still be confirmed.
+    if (intent.consumedAt === null)
+      await requireCreationEnabled(loaded.guildId);
     return {
       state:
         intent.consumedAt === null

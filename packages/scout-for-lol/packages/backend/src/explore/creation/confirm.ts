@@ -132,16 +132,6 @@ export async function loadCreationIntent(
     userId,
   });
   const guildId = DiscordGuildIdSchema.parse(intent.serverId);
-
-  if (
-    !(await isPolicyEnabled("explore_creation_enabled", { server: guildId }))
-  ) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Creating things from Explore is not enabled for this server.",
-    });
-  }
-
   const payload = asCreationPayload(readConfirmationIntentPayload(intent));
   if (payload === null) {
     // A dare intent has its own confirm path with its own rules; it must not
@@ -160,6 +150,17 @@ export async function loadCreationIntent(
     );
   }
   return { intent, payload, guildId, userId };
+}
+
+/** Explore creation is an operator switch, read now rather than when prepared. */
+export async function requireCreationEnabled(
+  guildId: DiscordGuildId,
+): Promise<void> {
+  if (!(await isPolicyEnabled("explore_creation_enabled", { server: guildId })))
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Creating things from Explore is not enabled for this server.",
+    });
 }
 
 /**
@@ -277,6 +278,19 @@ export async function confirmCreation(input: {
 }): Promise<CreationIntentOutcome | ClaimRefusal> {
   const { confirmer } = input;
   const loaded = await loadCreationIntent(confirmer, input.intentId);
+  // A confirmed card replays what it did before any check that only matters
+  // for a new creation: a channel deleted, a permission revoked or the
+  // feature switched off since must not turn "it was created" into a refusal.
+  if (loaded.intent.consumedAt !== null) {
+    return {
+      kind: "already_consumed",
+      result:
+        loaded.intent.resultJson === null
+          ? null
+          : JSON.parse(loaded.intent.resultJson),
+    };
+  }
+  await requireCreationEnabled(loaded.guildId);
   const permissions = await authorizeCreation(confirmer, loaded);
   // An operator control, so it is read now rather than frozen when the intent
   // was prepared.

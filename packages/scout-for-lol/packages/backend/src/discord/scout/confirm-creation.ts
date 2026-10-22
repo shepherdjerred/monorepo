@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { z } from "zod";
+import type { z } from "zod";
 import { MessageFlags, type InteractionEditReplyOptions } from "discord.js";
 import {
   DiscordAccountIdSchema,
@@ -11,6 +11,7 @@ import { getGuildPageUrl } from "#src/discord/commands/links.ts";
 import { parseScoutCreateCustomId } from "#src/discord/scout/custom-id.ts";
 import { NO_GENERATED_MENTIONS } from "#src/discord/scout/messages.ts";
 import { confirmCreation } from "#src/explore/creation/confirm.ts";
+import { CreationStoredOutcomeSchema } from "#src/explore/creation/intent-replay.ts";
 import type { CreationIntentOutcome } from "#src/lib/confirmation-intent/creation.ts";
 import type { ClaimRefusal } from "#src/lib/confirmation-intent/claim.ts";
 import { resolveGuildPermissionsForMember } from "#src/trpc/guild-permission.ts";
@@ -36,29 +37,6 @@ export type ScoutCreateButtonInteraction = {
   ) => Promise<unknown>;
 };
 
-/** What a first confirmation stored on the intent, read back for a second press. */
-const StoredOutcomeSchema = z.union([
-  z.strictObject({
-    kind: z.literal("created"),
-    entity: z.enum(["report", "subscription", "competition"]),
-    entityId: z.number().int(),
-    guildId: DiscordGuildIdSchema,
-  }),
-  z.strictObject({
-    kind: z.enum([
-      "limit_reached",
-      "invalid_query",
-      "invalid_configuration",
-      "rate_limited",
-      "missing_permission",
-      "account_already_subscribed",
-      "subscription_already_exists",
-      "riot_id_not_found",
-    ]),
-    message: z.string(),
-  }),
-]);
-
 const PAGE_FOR_ENTITY = {
   report: "reports",
   subscription: "subscriptions",
@@ -81,7 +59,7 @@ export function creationOutcomeMessage(
       // Written by this same path; a row that does not parse is a broken
       // writer, so it fails loudly rather than reading as "already used".
       return creationOutcomeMessage(
-        StoredOutcomeSchema.parse(outcome.result),
+        CreationStoredOutcomeSchema.parse(outcome.result),
         guildId,
       );
     }

@@ -11,6 +11,7 @@ import { subscribeDurableExploreRun } from "#src/explore/runs/durable-runs.ts";
 import { loadExploreRunResult } from "#src/explore/store.ts";
 import {
   offerVoiceConfirmations,
+  UNDELIVERED_CONFIRMATION_NOTE,
   type DeliverVoiceConfirmations,
 } from "#src/voice-assistant/confirmations.ts";
 
@@ -70,7 +71,7 @@ async function completedVoiceExplore(input: {
     }
     // A spoken answer has nowhere to show a confirmation card, so the speaker
     // gets its Confirm button by DM.
-    await offerVoiceConfirmations({
+    const delivery = await offerVoiceConfirmations({
       deliver: input.deliverConfirmations,
       userId: input.userId,
       answer: result.answer,
@@ -79,7 +80,10 @@ async function completedVoiceExplore(input: {
     return {
       outcome,
       answer: result.answer,
-      spokenContent: result.spokenContent,
+      spokenContent:
+        delivery === "not_sent"
+          ? `${result.spokenContent} ${UNDELIVERED_CONFIRMATION_NOTE}`
+          : result.spokenContent,
     };
   } finally {
     exploreRunManager.settleDurablePlaceholder(input.runId, outcome);

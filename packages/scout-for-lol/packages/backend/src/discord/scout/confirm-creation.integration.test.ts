@@ -137,6 +137,15 @@ describe("the Discord Confirm button", () => {
     expect(pressed.replies.at(-1)?.content).toContain("not yours");
   });
 
+  test("a confirmed card still says so after the feature is switched off", async () => {
+    const intentId = await mintReport();
+    await handleScoutCreateButton(click(intentId, OWNER, GUILD).interaction);
+    resetFlagOverrides("explore_creation_enabled");
+    const again = click(intentId, OWNER, GUILD);
+    await handleScoutCreateButton(again.interaction);
+    expect(again.replies.at(-1)?.content).toContain("your report is created");
+  });
+
   test("a second press replays the first answer and creates nothing more", async () => {
     const intentId = await mintReport();
     await handleScoutCreateButton(click(intentId, OWNER, GUILD).interaction);

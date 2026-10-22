@@ -8,6 +8,7 @@ import {
 import {
   creationIntentReplayContext,
   loadCreationIntentStates,
+  preparedIntents,
 } from "#src/explore/creation/intent-replay.ts";
 import { buildMessages } from "#src/explore/agent.ts";
 import { createConfirmationIntent } from "#src/lib/confirmation-intent/create.ts";
@@ -122,7 +123,10 @@ describe("confirmation cards in replayed history", () => {
     const context = creationIntentReplayContext(trace, states);
 
     expect(context).toContain('Report "Weekly" — CONFIRMED');
-    expect(context).toContain("the report now exists (id 17)");
+    expect(context).toContain("it created the report (id 17)");
+    expect(context).toContain(
+      "read the server's setup before saying it is active now",
+    );
     expect(context).toContain('Report "Daily" — expired unconfirmed');
     expect(context).toContain('Report "Monthly" — still waiting');
     expect(context).toContain(
@@ -151,6 +155,22 @@ describe("confirmation cards in replayed history", () => {
     );
     expect(messages[0]?.content).toContain("CONFIRMED");
     expect(messages.at(-1)).toEqual({ role: "user", content: "Confirm" });
+  });
+
+  test("an outcome the confirm path never writes fails loudly", async () => {
+    const entry = await mint("Broken", "refused");
+    const [prepared] = preparedIntents([entry]);
+    if (prepared === undefined) throw new Error("Expected a prepared card");
+    const id = prepared.intentId;
+    await prisma.confirmationIntent.update({
+      where: { id },
+      data: {
+        resultJson: JSON.stringify({ kind: "new_outcome", message: "?" }),
+      },
+    });
+    await expect(
+      loadCreationIntentStates(prisma, [assistantTurn([entry])], NOW),
+    ).rejects.toThrow();
   });
 
   test("a turn with no cards replays nothing extra", () => {

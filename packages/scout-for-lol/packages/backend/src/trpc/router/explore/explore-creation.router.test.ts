@@ -685,4 +685,15 @@ describe("explore.creationIntentStatus", () => {
       caller().explore.creationIntentStatus({ intentId }),
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
+
+  test("still reports a consumed card after the flag is switched off", async () => {
+    await grant({ resource: "reports", action: "create" });
+    const intentId = await mintIntent(reportPayload());
+    await caller().explore.confirmCreationIntent({ intentId });
+    resetFlagOverrides("explore_creation_enabled");
+
+    const status = await caller().explore.creationIntentStatus({ intentId });
+    expect(status.state).toBe("consumed");
+    expect(status.result).toMatchObject({ kind: "created" });
+  });
 });

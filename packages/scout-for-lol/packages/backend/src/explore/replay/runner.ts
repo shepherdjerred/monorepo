@@ -197,13 +197,15 @@ export async function runReplayCase(
 
   // Recorded before the call so a turn that throws still shows what it was
   // asked. A failed case with no visible prompt is the least useful row in a
-  // bundle.
-  const modelMessages = buildMessages(
-    params,
-    await loadCreationIntentStates(prisma, params.history, new Date()),
-  );
+  // bundle. The card states are read inside the try: a failed read is that
+  // case's error, not the end of the sweep.
+  let modelMessages = buildMessages(params);
 
   try {
+    modelMessages = buildMessages(
+      params,
+      await loadCreationIntentStates(prisma, params.history, new Date()),
+    );
     const result = await dependencies.executeAgent(params);
     return {
       caseId: input.caseId,

@@ -1,5 +1,9 @@
 import { z } from "zod";
-import type { ExploreMessage, ExploreTraceEntry } from "@scout-for-lol/data";
+import {
+  DiscordGuildIdSchema,
+  type ExploreMessage,
+  type ExploreTraceEntry,
+} from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { CreationPrepareResultSchema } from "#src/explore/creation/schemas.ts";
 
@@ -25,15 +29,33 @@ export type CreationIntentState =
     }
   | { readonly state: "refused"; readonly at: Date; readonly reason: string };
 
-const CreatedOutcomeSchema = z.looseObject({
-  kind: z.literal("created"),
-  entity: z.string(),
-  entityId: z.number().int(),
-});
-const RefusedOutcomeSchema = z.looseObject({
-  kind: z.string(),
-  message: z.string(),
-});
+/**
+ * What a confirmation stores when it is consumed: the created entity, or the
+ * refusal it met. Closed on every discriminant — an outcome the confirm path
+ * never writes is a broken producer, not a refusal to report.
+ */
+export const CreationStoredOutcomeSchema = z.union([
+  z.strictObject({
+    kind: z.literal("created"),
+    entity: z.enum(["report", "subscription", "competition"]),
+    entityId: z.number().int(),
+    guildId: DiscordGuildIdSchema,
+  }),
+  z.strictObject({
+    kind: z.enum([
+      "limit_reached",
+      "invalid_query",
+      "invalid_configuration",
+      "rate_limited",
+      "missing_permission",
+      "account_already_subscribed",
+      "subscription_already_exists",
+      "riot_id_not_found",
+    ]),
+    message: z.string(),
+  }),
+]);
+
 const PreparedOutputSchema = z.looseObject({
   kind: z.literal("value"),
   value: CreationPrepareResultSchema,
@@ -77,28 +99,21 @@ export async function loadCreationIntentStates(
             : { state: "pending", expiresAt: row.expiresAt },
         ];
       }
-      const result: unknown =
-        row.resultJson === null ? null : JSON.parse(row.resultJson);
-      const created = CreatedOutcomeSchema.safeParse(result);
-      if (created.success) {
-        return [
-          row.id,
-          {
-            state: "confirmed",
-            at: row.consumedAt,
-            entity: created.data.entity,
-            entityId: created.data.entityId,
-          },
-        ];
-      }
-      const refused = RefusedOutcomeSchema.safeParse(result);
+      // Every consumed row is written by the confirm path in one of these
+      // shapes; anything else throws rather than reading as a refusal.
+      const outcome = CreationStoredOutcomeSchema.parse(
+        row.resultJson === null ? null : JSON.parse(row.resultJson),
+      );
       return [
         row.id,
-        {
-          state: "refused",
-          at: row.consumedAt,
-          reason: refused.success ? refused.data.message : "no reason recorded",
-        },
+        outcome.kind === "created"
+          ? {
+              state: "confirmed",
+              at: row.consumedAt,
+              entity: outcome.entity,
+              entityId: outcome.entityId,
+            }
+          : { state: "refused", at: row.consumedAt, reason: outcome.message },
       ];
     }),
   );
@@ -114,7 +129,7 @@ function describeState(state: CreationIntentState | undefined): string {
       return "expired unconfirmed, so it was never created; it must be prepared again";
     }
     case "confirmed": {
-      return `CONFIRMED at ${state.at.toISOString()}: the ${state.entity} now exists (id ${state.entityId.toString()}). It is active; never say it was not created or ask for confirmation again`;
+      return `CONFIRMED at ${state.at.toISOString()}: it created the ${state.entity} (id ${state.entityId.toString()}). Never say it was not created or ask for this card to be confirmed again. That is a past event: it may since have been edited or removed, so read the server's setup before saying it is active now`;
     }
     case "refused": {
       return `confirmation was refused at ${state.at.toISOString()}: ${state.reason}`;
