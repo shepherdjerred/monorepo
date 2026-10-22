@@ -403,23 +403,16 @@ changes PostgreSQL selection nor releases a lock. The root release and guarded
 sync commands remain independent infrastructure recovery tools after CI stops
 deploying workloads.
 
-For damaged or missing data, first follow the existing independent Velero/Spilo
-restore procedure in the PostgreSQL operator how-to. The protected source is
-`delivery/pgdata-delivery-postgresql-0`; the inert, restricted destination is
-`delivery-catalog-recovery/pgdata-delivery-postgresql-0`. Restore only the reviewed
-PV/PVC backup and its complete snapshot chain into that destination, never
-application controllers, Secrets or service accounts. The destination has no
-network access or application writer and is excluded from new backups. Inspect
-the exact reviewed Restore and its independent volume before starting a
-tokenless local-socket-only PostgreSQL verification Pod:
-
-```bash
-kubectl --context admin@torvalds apply --dry-run=server -f APPROVED_DELIVERY_CATALOG_RESTORE.yaml
-kubectl --context admin@torvalds create -f APPROVED_DELIVERY_CATALOG_RESTORE.yaml
-kubectl --context admin@torvalds -n velero get restore EXACT_RESTORE_NAME -o yaml
-kubectl --context admin@torvalds -n delivery-catalog-recovery get persistentvolumeclaim pgdata-delivery-postgresql-0 -o yaml
-kubectl --context admin@torvalds -n delivery get persistentvolumeclaim pgdata-delivery-postgresql-0 -o yaml
-```
+For damaged or missing data, first restore and verify an independent copy with
+the [independent restore procedure](../docs/wiki/src/content/docs/how-to/upgrade-a-homelab-postgresql-major-version.md#2-verify-an-independent-offsite-restore)
+in the PostgreSQL operator how-to. It holds the Restore template, the tokenless
+local-socket-only verification Pod and Delivery's integrity checks. The
+protected source is `delivery/pgdata-delivery-postgresql-0`; the inert,
+restricted destination is `delivery-catalog-recovery/pgdata-delivery-postgresql-0`.
+Restore only the reviewed PV/PVC backup and its complete snapshot chain into
+that destination, never application controllers, Secrets or service accounts.
+The destination has no network access or application writer and is excluded
+from new backups.
 
 Require completed snapshots, distinct PV/CSI handles, matching server major
 version, successful crash recovery/checksums and catalog/audit/lock/outbox

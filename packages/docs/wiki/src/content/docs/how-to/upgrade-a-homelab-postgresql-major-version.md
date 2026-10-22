@@ -44,25 +44,79 @@ and deploy its admission rules through the repository release workflow first.
 The disposable copy is excluded from new backups; the source remains included.
 Do not disable admission to make a restore pass.
 
-Confirm that the restored PV has a different volume handle from production.
-Start only PostgreSQL on the copy, with no TCP listener and read-only
-transactions. Verify recovery, extensions, and application-table counts without
-printing row contents. Stop the copy and validate its enabled page checksums.
+[Delivery's catalog recovery](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/README.md#delivery-execution)
+uses this step without the upgrade. Its source namespace is `delivery`, its
+cluster is `delivery-postgresql`, and its restore namespace is
+[`delivery-catalog-recovery`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/delivery/catalog-recovery.ts).
 
-Run [`pg_upgrade --check`](https://www.postgresql.org/docs/18/pgupgrade.html)
-with both server toolchains and a separately initialized target directory.
-Use the same Spilo image as the intended live upgrade. Fix any extension or
-compatibility error before proceeding.
+### Restore the volume
 
-Initialize the target with the restored cluster's locale and checksum setting.
-Pass production's `shared_preload_libraries` through `--new-options` when
-checking the target. Extensions such as `pg_stat_kcache` require loading at
-startup. Keep the temporary server's TCP listener disabled.
+Save this Restore as `restore.yaml` and replace its placeholders.
+`SOURCE_NAMESPACE` is the database's namespace. `RECOVERY_NAMESPACE` is the
+classified restore namespace.
+
+```yaml
+apiVersion: velero.io/v1
+kind: Restore
+metadata:
+  name: RESTORE_NAME
+  namespace: velero
+spec:
+  backupName: BACKUP_NAME
+  includedNamespaces:
+    - SOURCE_NAMESPACE
+  includedResources:
+    - persistentvolumeclaims
+    - persistentvolumes
+  namespaceMapping:
+    SOURCE_NAMESPACE: RECOVERY_NAMESPACE
+  restorePVs: true
+```
+
+Validate it on the server, create it, and wait for phase `Completed` with no
+errors:
+
+```bash
+kubectl apply --dry-run=server -f restore.yaml
+kubectl create -f restore.yaml
+kubectl -n velero get restore RESTORE_NAME \
+  -o jsonpath='{.status.phase} errors={.status.errors} warnings={.status.warnings}{"\n"}'
+```
+
+Confirm that the restored PV and its volume handle both differ from
+production's. `CLUSTER` is the operator cluster name, such as
+`delivery-postgresql`.
+
+```bash
+for ns in SOURCE_NAMESPACE RECOVERY_NAMESPACE; do
+  pv="$(kubectl -n "$ns" get pvc "pgdata-CLUSTER-0" -o jsonpath='{.spec.volumeName}')"
+  kubectl get pv "$pv" -o jsonpath='{.metadata.name} {.spec.csi.volumeHandle}{"\n"}'
+done
+```
+
+Confirm that every stream in the volume's snapshot chain is `Done`.
+`SOURCE_PV` is production's PV name from the previous output. Each ZFSBackup
+is named `<source PV>.<backup name>`, and `PREVIOUS` names the snapshot it
+builds on. The Velero server log shows each stream the Restore received.
+
+```bash
+kubectl -n openebs get zfsbackups.zfs.openebs.io \
+  -o custom-columns='NAME:.metadata.name,PREVIOUS:.spec.prevSnapName,STATUS:.status' \
+  | grep SOURCE_PV
+kubectl -n velero logs deployment/velero | grep RESTORE_NAME
+```
 
 :::caution[Check the entire snapshot chain]
 An incremental snapshot needs its full base. A restore that receives only a
 volume, or reports `PartiallyFailed`, does not prove database recovery. Keep the
 independent full backup and verified restore available throughout the upgrade.
+:::
+
+:::note[The Velero CLI writes to the cluster]
+`velero backup describe --details`, `velero restore describe --details`, and
+`velero backup logs` or `velero restore logs` each create a DownloadRequest in
+namespace `velero`. A plain `describe` can create one too. To inspect without
+writing, read the Restore, the ZFSBackups, and the server log as above.
 :::
 
 A failed or partial restore stays on the Ops maintenance list until you
@@ -74,6 +128,233 @@ as information only while the named Restore exists in the same namespace, is
 `Completed`, is newer, and has the same `spec.backupName`. Otherwise it stays a
 warning that names the unmet condition. Setting either annotation without the
 other fails the storage collection.
+
+### Start PostgreSQL on the copy
+
+Read production's image and preload list. The copy must run the same Spilo
+image.
+
+```bash
+kubectl -n SOURCE_NAMESPACE get pod CLUSTER-0 \
+  -o jsonpath='{.spec.containers[?(@.name=="postgres")].image}{"\n"}'
+kubectl exec -n SOURCE_NAMESPACE CLUSTER-0 -c postgres -- \
+  su postgres -c 'psql -XAt -c "SHOW shared_preload_libraries"'
+```
+
+Set `SPILO_IMAGE` to that image. Set `PRELOAD_LIBRARIES` to that list without
+`bg_mon` and `pg_cron`. Create this Pod in the restore namespace:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: postgresql-verify
+  namespace: RECOVERY_NAMESPACE
+spec:
+  automountServiceAccountToken: false
+  enableServiceLinks: false
+  restartPolicy: Never
+  terminationGracePeriodSeconds: 120
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 101
+    runAsGroup: 103
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: postgres
+      image: SPILO_IMAGE
+      command: ["/bin/bash", "-c"]
+      args:
+        - |
+          set -euo pipefail
+          D=/home/postgres/pgdata/pgroot/data
+          BIN="/usr/lib/postgresql/$(cat "$D/PG_VERSION")/bin"
+          control() { "$BIN/pg_controldata" -D "$D" | grep -E "^(Database cluster state|Database system identifier|Data page checksum version)"; }
+          echo "== controldata before start"; control
+          stop() { "$BIN/pg_ctl" -D "$D" -m fast -w -t 300 stop || true; exit 143; }
+          trap stop TERM INT
+          "$BIN/pg_ctl" -D "$D" -w -t 900 start -o "-c listen_addresses='' -c unix_socket_directories=/tmp -c ssl=off -c archive_mode=off -c default_transaction_read_only=on -c logging_collector=off -c log_destination=stderr -c shared_preload_libraries=PRELOAD_LIBRARIES"
+          while [ ! -f /tmp/stop ]; do sleep 2 & wait $!; done
+          trap - TERM INT
+          "$BIN/pg_ctl" -D "$D" -m fast -w -t 300 stop
+          echo "== controldata after clean stop"; control
+          echo "== pg_checksums"; "$BIN/pg_checksums" --check -D "$D"
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
+      resources:
+        requests:
+          cpu: 100m
+          memory: 512Mi
+        limits:
+          memory: 1Gi
+      volumeMounts:
+        - name: pgdata
+          mountPath: /home/postgres/pgdata
+  volumes:
+    - name: pgdata
+      persistentVolumeClaim:
+        claimName: pgdata-CLUSTER-0
+```
+
+The Pod runs `pg_ctl` directly instead of Spilo's entrypoint, so Patroni never
+starts. Each setting has one job:
+
+| Setting                                                | Why                                                                                                                                                                                                 |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `runAsUser: 101`, `runAsGroup: 103`                    | Spilo's [`postgres` user](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/postgres/temporal-db.ts) owns PGDATA. Restricted Pod Security rejects root. |
+| No `fsGroup`                                           | Kubernetes would add group permissions to PGDATA recursively. PostgreSQL refuses a group-writable data directory.                                                                                   |
+| `RuntimeDefault` seccomp, all capabilities dropped     | The restore namespace enforces the `restricted` Pod Security level.                                                                                                                                 |
+| No service-account token or Service links              | The copy gets no Kubernetes credential and no Service addresses.                                                                                                                                    |
+| `restartPolicy: Never`                                 | A failed start stays visible instead of retrying recovery on the copy.                                                                                                                              |
+| `listen_addresses=''`                                  | The server opens no TCP port. Only `kubectl exec` reaches it.                                                                                                                                       |
+| `unix_socket_directories=/tmp`                         | Spilo's entrypoint prepares the configured socket directory, and this Pod skips the entrypoint.                                                                                                     |
+| `ssl=off`                                              | The restored configuration names certificates that Spilo's entrypoint generates. They do not exist here.                                                                                            |
+| `archive_mode=off`                                     | The copy must never ship WAL to production's archive.                                                                                                                                               |
+| `default_transaction_read_only=on`                     | Checks cannot write to the copy by accident.                                                                                                                                                        |
+| `logging_collector=off`, `log_destination=stderr`      | Recovery and shutdown appear in `kubectl logs`.                                                                                                                                                     |
+| Preload list without `bg_mon` and `pg_cron`            | `bg_mon` opens an HTTP listener, and `pg_cron` runs scheduled jobs.                                                                                                                                 |
+| Wait for `/tmp/stop`, then stop and run `pg_checksums` | `pg_checksums` needs a cleanly stopped cluster in the same container.                                                                                                                               |
+
+Follow the log until it prints `server started`. Expect `pg_ctl` to warn that
+another server might be running, because the snapshot holds production's
+`postmaster.pid`. Crash recovery must end with `database system is ready to
+accept connections`.
+
+```bash
+kubectl -n RECOVERY_NAMESPACE logs -f postgresql-verify
+```
+
+### Check the copy
+
+Save these checks as `restore-checks.sql`. They read catalog views and row
+counts, never row contents.
+
+```sql
+\pset footer off
+\echo == server
+SELECT current_setting('server_version') AS server_version,
+       (SELECT system_identifier FROM pg_control_system()) AS system_identifier,
+       current_setting('data_checksums') AS checksums,
+       pg_is_in_recovery() AS in_recovery,
+       current_setting('transaction_read_only') AS read_only,
+       current_setting('listen_addresses') = '' AS no_tcp;
+\echo == catalog
+SELECT (SELECT count(*) FROM pg_class) AS relations,
+       (SELECT count(*) FROM pg_index WHERE NOT indisvalid) AS invalid_indexes;
+\echo == row counts
+SELECT table_name,
+       (xpath('/row/c/text()', query_to_xml(
+         format('SELECT count(*) AS c FROM %I.%I', table_schema, table_name),
+         false, true, '')))[1]::text::bigint AS row_count
+FROM information_schema.tables
+WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+ORDER BY 1;
+```
+
+Run them on the copy. `DATABASE` is the application database, such as
+`delivery_db`. Run the same file against production through a
+[read-only session](/how-to/connect-to-a-homelab-database/#read-only-session).
+
+```bash
+kubectl exec -i -n RECOVERY_NAMESPACE postgresql-verify -c postgres -- \
+  psql -X -h /tmp -U postgres -d DATABASE -v ON_ERROR_STOP=1 -f - \
+  < restore-checks.sql
+```
+
+| Check      | Pass on the copy                                                                                                       |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Server     | Production's major version and system identifier. `checksums` `on`, `in_recovery` `f`, `read_only` `on`, `no_tcp` `t`. |
+| Catalog    | `invalid_indexes` is `0`.                                                                                              |
+| Row counts | Every production table is present. A count differs only where production wrote after the backup.                       |
+
+For Delivery's catalog, also save these checks as `delivery-checks.sql`. Run
+them the same way against `delivery_db`.
+
+```sql
+\pset footer off
+\echo == migrations
+SELECT migration_name,
+       finished_at IS NOT NULL AS finished,
+       rolled_back_at IS NOT NULL AS rolled_back
+FROM _prisma_migrations
+ORDER BY started_at;
+\echo == latest writes
+SELECT (SELECT max("occurredAt") FROM "Audit") AS audit,
+       (SELECT max("createdAt") FROM "Deployment") AS deployment,
+       (SELECT max("createdAt") FROM "Outbox") AS outbox,
+       (SELECT max("createdAt") FROM "Build") AS build,
+       (SELECT max("createdAt") FROM "Artifact") AS artifact;
+\echo == accepted set revisions without a succeeded deployment
+SELECT e.id, e."acceptedVersionSetRevisionId"
+FROM "Environment" e
+WHERE e."acceptedVersionSetRevisionId" IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM "Deployment" d
+    WHERE d."environmentId" = e.id
+      AND d."versionSetRevisionId" = e."acceptedVersionSetRevisionId"
+      AND d.status = 'succeeded'
+      AND d.kind NOT IN ('adopt-worker', 'repair-trmnl')
+  )
+ORDER BY 1;
+```
+
+| Check            | Pass on the copy                                                                    |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| Migrations       | The same migrations as production, each finished and none rolled back.              |
+| Latest writes    | Each timestamp matches production's, unless production wrote after the backup.      |
+| Accepted pointer | No rows. Every accepted set revision has a succeeded Deployment in its environment. |
+
+The accepted-pointer check ignores `adopt-worker` and `repair-trmnl`
+Deployments. Neither
+[worker adoption](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/README.md#delivery-execution)
+nor a
+[TRMNL repair](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/README.md)
+moves an accepted pointer.
+
+The next check names v1-only columns: `configurationRevision` and
+`configuration` on `Environment` and `Deployment`. Delivery's v2 schema
+replaces them with a `Configuration` table, so the query fails there. Run it
+only against a v1 catalog. It must return no rows, meaning each configuration
+label carries one content.
+
+```sql
+SELECT label, count(DISTINCT content) AS contents
+FROM (
+  SELECT "configurationRevision" AS label, configuration AS content FROM "Environment"
+  UNION ALL
+  SELECT "configurationRevision", configuration FROM "Deployment"
+) labels
+GROUP BY label
+HAVING count(DISTINCT content) > 1
+ORDER BY 1;
+```
+
+### Stop the copy and check its pages
+
+Signal the clean stop, then follow the log to the checksum result:
+
+```bash
+kubectl exec -n RECOVERY_NAMESPACE postgresql-verify -c postgres -- touch /tmp/stop
+kubectl -n RECOVERY_NAMESPACE logs -f postgresql-verify
+```
+
+The log must show `Database cluster state: shut down` and `Bad checksums: 0`.
+Delete the Pod afterwards. Keep the restored PVC and PV.
+
+### Check upgrade compatibility
+
+Run [`pg_upgrade --check`](https://www.postgresql.org/docs/18/pgupgrade.html)
+with both server toolchains and a separately initialized target directory.
+Use the same Spilo image as the intended live upgrade. Fix any extension or
+compatibility error before proceeding.
+
+Initialize the target with the restored cluster's locale and checksum setting.
+Pass production's `shared_preload_libraries` through `--new-options` when
+checking the target. Extensions such as `pg_stat_kcache` require loading at
+startup. Keep the temporary server's TCP listener disabled.
 
 ## 3. Control when the major upgrade starts
 
