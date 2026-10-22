@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwfbots.domain.tactics;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
@@ -24,6 +25,12 @@ final class RecoverySteps {
 
   /** The most a bank may rise above the water a swimmer climbs out of, in blocks. */
   static final double BANK_RISE = 1.0;
+
+  /** How recently a hurt body was hurt, in ticks, for it to keep stepping rather than hold. */
+  private static final long HURTING = 20;
+
+  /** The highest rise a walking body steps up without jumping, in blocks. */
+  private static final double STEP = 0.6;
 
   private RecoverySteps() {}
 
@@ -68,18 +75,19 @@ final class RecoverySteps {
         || spawns.isEmpty()
         || graph.climbable(start.getAsInt())
         || reachesAny(graph, start.getAsInt(), spawns)) return Optional.empty();
-    return toBank(graph, start.getAsInt(), spawns);
+    return toBank(context.nav(), start.getAsInt(), spawns);
   }
 
   /** Breadth first from {@code start} to the first node with a climbable bank beside it. */
-  private static Optional<List<Waypoint>> toBank(NavGraph graph, int start, List<Integer> spawns) {
+  private static Optional<List<Waypoint>> toBank(NavArtifact nav, int start, List<Integer> spawns) {
+    var graph = nav.graph();
     var via = new HashMap<Integer, Integer>();
     via.put(start, -1);
     var queue = new ArrayDeque<Integer>();
     queue.add(start);
     while (!queue.isEmpty() && via.size() <= ESCAPE_SEARCH) {
       var node = queue.remove();
-      var bank = bankBeside(graph, node, spawns);
+      var bank = bankBeside(nav, node, spawns);
       if (bank.isPresent()) return Optional.of(path(graph, via, node, bank.orElseThrow()));
       for (var edge = graph.edgeStart(node); edge < graph.edgeEnd(node); edge++) {
         if (via.putIfAbsent(graph.edgeTarget(edge), edge) == null)
@@ -90,18 +98,35 @@ final class RecoverySteps {
   }
 
   /**
-   * The feet of a node beside {@code node}, at most {@link #BANK_RISE} up, that reaches a spawn.
+   * The waypoint onto a node beside {@code node}, at most {@link #BANK_RISE} up, that reaches a
+   * spawn: a jump where a dry body must rise more than a step, which a walk cannot climb. A dry
+   * body crossing diagonally needs both corners clear where it crosses, as the movement gate does;
+   * floating-isles offered a bank past a solid corner, refused every time it was tried.
    */
-  private static Optional<Vec3> bankBeside(NavGraph graph, int node, List<Integer> spawns) {
-    var feet = graph.feet(node);
-    for (var cell : beside(graph.cell(node))) {
-      var bank = graph.nodeAt(cell);
-      if (bank.isEmpty() || bank.getAsInt() == node) continue;
-      var rise = graph.feet(bank.getAsInt()).y() - feet.y();
-      if (rise <= BANK_RISE + 1e-6 && reachesAny(graph, bank.getAsInt(), spawns))
-        return Optional.of(graph.feet(bank.getAsInt()));
+  private static Optional<Waypoint> bankBeside(NavArtifact nav, int node, List<Integer> spawns) {
+    for (var cell : beside(nav.graph().cell(node))) {
+      var bank = bankAt(nav, node, cell, spawns);
+      if (bank.isPresent()) return bank;
     }
     return Optional.empty();
+  }
+
+  /** The waypoint onto the node at {@code cell} from {@code node}, when it is a usable bank. */
+  private static Optional<Waypoint> bankAt(
+      NavArtifact nav, int node, BlockPos cell, List<Integer> spawns) {
+    var graph = nav.graph();
+    var from = graph.cell(node);
+    var bank = graph.nodeAt(cell);
+    var dry = !graph.water().contains(from);
+    if (bank.isEmpty() || bank.getAsInt() == node || (dry && !cornersClear(nav, from, cell)))
+      return Optional.empty();
+    var rise = graph.feet(bank.getAsInt()).y() - graph.feet(node).y();
+    var jump = dry && rise > STEP;
+    // A jump needs headroom above the take-off, as the graph's own upward steps do.
+    if ((jump && nav.grid().blocksMovement(from.offset(0, 2, 0)))
+        || rise > BANK_RISE + 1e-6
+        || !reachesAny(graph, bank.getAsInt(), spawns)) return Optional.empty();
+    return Optional.of(new Waypoint(graph.feet(bank.getAsInt()), jump ? Hop.JUMP : Hop.WALK));
   }
 
   /** The cells around {@code cell} and the layer above them, level ones first. */
@@ -115,15 +140,42 @@ final class RecoverySteps {
     return cells;
   }
 
+  /** Whether neither corner of a diagonal crossing onto {@code to} blocks a body at its height. */
+  private static boolean cornersClear(NavArtifact nav, BlockPos from, BlockPos to) {
+    var dx = to.x() - from.x();
+    var dz = to.z() - from.z();
+    if (dx == 0 || dz == 0) return true;
+    for (var y = to.y(); y <= to.y() + 1; y++) {
+      if (nav.grid().blocksMovement(new BlockPos(from.x() + dx, y, from.z()))
+          || nav.grid().blocksMovement(new BlockPos(from.x(), y, from.z() + dz))) return false;
+    }
+    return true;
+  }
+
+  /**
+   * Whether the bot is stranded on dry ground with no way out: holding is all that is left. A
+   * swimmer is never told to hold, as it would sink and drown, nor a body still being hurt, which
+   * may stand in the fire beside its pocket and steps off it instead.
+   */
+  static boolean trapped(Situation situation, TacticsContext context) {
+    var graph = context.nav().graph();
+    var self = situation.self();
+    var hurting = self.lastHurtTick() >= 0 && situation.now() - self.lastHurtTick() <= HURTING;
+    return !hurting
+        && stranded(situation, context)
+        && !graph.water().contains(BlockPos.of(self.pos()))
+        && escape(situation, context).isEmpty();
+  }
+
   /** The waypoints from the search's start to {@code end}, then onto {@code bank}. */
   private static List<Waypoint> path(
-      NavGraph graph, Map<Integer, Integer> via, int end, Vec3 bank) {
+      NavGraph graph, Map<Integer, Integer> via, int end, Waypoint bank) {
     var waypoints = new ArrayList<Waypoint>();
     for (var edge = via.getOrDefault(end, -1);
         edge >= 0;
         edge = via.getOrDefault(graph.edgeSource(edge), -1)) waypoints.add(graph.waypoint(edge));
     Collections.reverse(waypoints);
-    waypoints.add(new Waypoint(bank, Hop.WALK));
+    waypoints.add(bank);
     return waypoints;
   }
 

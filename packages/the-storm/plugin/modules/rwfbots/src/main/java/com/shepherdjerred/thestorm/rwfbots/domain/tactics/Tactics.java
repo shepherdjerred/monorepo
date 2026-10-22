@@ -276,7 +276,12 @@ public final class Tactics {
           failure,
           DecisionTrace.Recovery.ESCAPE);
     }
-    var plan = Planner.recovery(situation, context);
+    // Trapped on dry ground, stepping about only bobbed a bot between two nodes until it stepped
+    // into the fire beside them (floating-isles); holding at least keeps it fighting.
+    var plan =
+        RecoverySteps.trapped(situation, context)
+            ? Planner.letGo(situation, context)
+            : Planner.recovery(situation, context);
     var decision = Planner.decide(plan, situation, context, planning.lifeEpoch());
     if (plan.current() instanceof PlanStep.Hold)
       return new Routed(plan, decision, memory, failure, DecisionTrace.Recovery.HOLD);
