@@ -113,18 +113,18 @@ it("retires per-app tailnet state while protecting the Delivery catalog", () => 
   ).toBe("enabled");
 });
 
-it("classifies 61 included and 52 excluded PVCs without duplicates including independent Storm recovery storage", () => {
+it("classifies 61 included and 45 excluded PVCs without duplicates after retiring the PG18 restore copies", () => {
   const keys = PVC_BACKUP_POLICY.map((entry) =>
     pvcBackupPolicyKey(entry.namespace, entry.name),
   );
-  expect(keys).toHaveLength(113);
-  expect(new Set(keys).size).toBe(113);
+  expect(keys).toHaveLength(106);
+  expect(new Set(keys).size).toBe(106);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
   ).toHaveLength(61);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
-  ).toHaveLength(52);
+  ).toHaveLength(45);
   expect(
     getPvcBackupPolicy("minecraft-tsmc-restore", "datadir-minecraft-tsmc-0")
       .backup,
@@ -362,7 +362,7 @@ describe("PostgreSQL restore backup policy", () => {
     ).toBe("disabled");
   });
 
-  it("excludes isolated PostgreSQL restore copies while retaining every source backup", () => {
+  it("retains every PostgreSQL source backup after retiring the PG18 restore copies", () => {
     const clusters = [
       ["scout-beta", "scout-beta", "scout-beta"],
       ["phoenix", "phoenix", "phoenix"],
@@ -375,17 +375,9 @@ describe("PostgreSQL restore backup policy", () => {
     for (const [rehearsal, sourceNamespace, cluster] of clusters) {
       const name = `pgdata-${cluster}-postgresql-0`;
       expect(getPvcBackupPolicy(sourceNamespace, name).backup).toBe("enabled");
-      expect(
-        getPvcBackupLabels(
-          getPvcBackupPolicy(`pg18-rehearsal-${rehearsal}`, name),
-        ),
-      ).toEqual({
-        "velero.io/backup": "disabled",
-        "velero.io/exclude-from-backup": "true",
-      });
-      expect(() => getPvcBackupPolicy("unclassified-restore", name)).toThrow(
-        "missing from the explicit backup policy",
-      );
+      expect(() =>
+        getPvcBackupPolicy(`pg18-rehearsal-${rehearsal}`, name),
+      ).toThrow("missing from the explicit backup policy");
     }
   });
 });

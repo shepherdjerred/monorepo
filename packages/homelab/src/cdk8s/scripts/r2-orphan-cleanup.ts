@@ -1,3 +1,6 @@
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { z } from "zod";
 import {
   assertManifestRevalidated,
@@ -10,7 +13,7 @@ import {
 } from "./r2-orphan-cleanup-core.ts";
 import { listR2Objects, r2Configuration } from "./r2-prefix-inventory.ts";
 import { inspectR2ZfsChains } from "./r2-zfs-chains.ts";
-import { verifyConditionalDelete } from "./r2/conditional-delete.ts";
+import { verifyConditionalHead } from "./r2/conditional-head.ts";
 
 const KubectlBackupListSchema = z.object({
   items: z.array(z.object({ metadata: z.object({ name: z.string().min(1) }) })),
@@ -282,15 +285,14 @@ async function removePrefix(
     if (head.ETag !== object.etag || head.ContentLength !== object.size)
       throw new Error(`Object changed before deletion: ${object.key}`);
     // Exact reviewed keys only. Never let recursive prefix deletion consume a
-    // newly uploaded object that was absent from the approved inventory.
-    await run(
-      ["aws", "s3api", "delete-object", ...target, "--if-match", object.etag],
-      env,
-    );
+    // newly uploaded object that was absent from the approved inventory. R2
+    // ignores If-Match on DELETE, so the conditional HEAD above is the check;
+    // these are immutable objects of backups that no longer exist.
+    await run(["aws", "s3api", "delete-object", ...target], env);
   }
 }
 
-async function verifyR2DeletePrecondition(): Promise<void> {
+async function verifyR2HeadPrecondition(): Promise<void> {
   const config = r2Configuration();
   const env = {
     AWS_ACCESS_KEY_ID: config.accessKeyId,
@@ -304,43 +306,57 @@ async function verifyR2DeletePrecondition(): Promise<void> {
     "--region",
     "auto",
   ];
-  await verifyConditionalDelete({
-    create: async (key) =>
-      z
-        .object({ ETag: z.string().min(1) })
-        .parse(
-          JSON.parse(
-            await run(
-              [
-                "aws",
-                "s3api",
-                "put-object",
-                ...target,
-                "--key",
-                key,
-                "--body",
-                "/dev/null",
-              ],
-              env,
+  // AWS CLI v2 accepts only a regular file as a blob body, not /dev/null.
+  const probeDirectory = await mkdtemp(path.join(tmpdir(), "r2-probe-"));
+  const emptyBody = path.join(probeDirectory, "empty");
+  await writeFile(emptyBody, "");
+  try {
+    await verifyConditionalHead({
+      create: async (key) =>
+        z
+          .object({ ETag: z.string().min(1) })
+          .parse(
+            JSON.parse(
+              await run(
+                [
+                  "aws",
+                  "s3api",
+                  "put-object",
+                  ...target,
+                  "--key",
+                  key,
+                  "--body",
+                  emptyBody,
+                ],
+                env,
+              ),
             ),
-          ),
-        ).ETag,
-    remove: async (key, etag) => {
-      await run(
-        [
-          "aws",
-          "s3api",
-          "delete-object",
-          ...target,
-          "--key",
-          key,
-          "--if-match",
-          etag,
-        ],
-        env,
-      );
-    },
-  });
+          ).ETag,
+      head: async (key, etag) => {
+        await run(
+          [
+            "aws",
+            "s3api",
+            "head-object",
+            ...target,
+            "--key",
+            key,
+            "--if-match",
+            etag,
+          ],
+          env,
+        );
+      },
+      remove: async (key) => {
+        await run(
+          ["aws", "s3api", "delete-object", ...target, "--key", key],
+          env,
+        );
+      },
+    });
+  } finally {
+    await rm(probeDirectory, { recursive: true, force: true });
+  }
 }
 
 async function inspect(options: Options): Promise<void> {
@@ -396,7 +412,7 @@ async function applyCleanup(options: Options): Promise<void> {
     }
   }
 
-  await verifyR2DeletePrecondition();
+  await verifyR2HeadPrecondition();
   let expected = approved;
   for (const candidate of approved.candidates) {
     const latest = await observe(

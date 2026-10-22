@@ -56,15 +56,14 @@ export function createVeleroApp(chart: Chart) {
 
   // Create all backup schedules from configuration
   for (const scheduleConfig of VELERO_SCHEDULES) {
-    // Preserve historical schedule identities while stopping new broken chains.
+    // The paused legacy schedule has no remaining backups. It is still
+    // rendered, but without prune protection, so the release after its
+    // removal from source prunes it through release-root.
     new Schedule(chart, scheduleConfig.id, {
       metadata: {
         name: scheduleConfig.legacyName,
         namespace: "velero",
-        annotations: {
-          "argocd.argoproj.io/sync-options": "Prune=false",
-          ...backupMonitoringAnnotations(scheduleConfig.monitoring),
-        },
+        annotations: backupMonitoringAnnotations(scheduleConfig.monitoring),
       },
       spec: {
         paused: true,
