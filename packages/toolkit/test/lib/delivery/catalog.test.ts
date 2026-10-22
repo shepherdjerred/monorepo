@@ -16,6 +16,10 @@ test("exact qualification resolves only execute capability and cannot accept cal
     "DELIVERY_EXECUTOR_TOKEN",
   );
   expect(deployMachineCredential("artifact", [])).toBe("DELIVERY_API_TOKEN");
+  // Attestations use the distinct operator identity, never the executor's.
+  expect(deployMachineCredential("attest", ["deployment/1"])).toBe(
+    "DELIVERY_ATTEST_TOKEN",
+  );
   expect(() =>
     validateDeployCommand("qualify", ["build/1"], parseDeployArgs([]).values),
   ).toThrow("scoped --machine");

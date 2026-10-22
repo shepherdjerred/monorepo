@@ -73,6 +73,10 @@ homelab 1Password vault. A `[credentials].DELIVERY_API_TOKEN` locator can select
 different provisioned credential. The token must have the necessary server-side
 scopes. Machine tokens cannot approve production releases, including admin tokens.
 There is no token command-line option and credentials are never printed.
+`deploy attest --machine` resolves `DELIVERY_ATTEST_TOKEN` instead: the Delivery
+service item's `DELIVERY_ATTEST_TOKEN` field, an operator identity with the
+`attest` scope that the executor never holds. Delivery refuses attestations
+from executor credentials.
 
 Platform recovery keeps the original failed result and held ownership while a
 bounded independent runner inspects the native targets. A partial OpenTofu

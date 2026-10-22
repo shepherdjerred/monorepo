@@ -15,8 +15,11 @@ export function deployMachineCredential(
 ):
   | "DELIVERY_PUBLISHER_TOKEN"
   | "DELIVERY_API_TOKEN"
-  | "DELIVERY_EXECUTOR_TOKEN" {
+  | "DELIVERY_EXECUTOR_TOKEN"
+  | "DELIVERY_ATTEST_TOKEN" {
   if (command === "qualify") return "DELIVERY_EXECUTOR_TOKEN";
+  // Attestation is an operator identity the executor never holds (X13).
+  if (command === "attest") return "DELIVERY_ATTEST_TOKEN";
   return command === "forum" && positionals[0] === "publish"
     ? "DELIVERY_PUBLISHER_TOKEN"
     : "DELIVERY_API_TOKEN";

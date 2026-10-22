@@ -295,6 +295,10 @@ describe("credential resolver backends", () => {
     expect(CREDENTIAL_REGISTRY["DELIVERY_EXECUTOR_TOKEN"]?.source).not.toEqual(
       CREDENTIAL_REGISTRY["DELIVERY_API_TOKEN"]?.source,
     );
+    expect(CREDENTIAL_REGISTRY["DELIVERY_ATTEST_TOKEN"]?.source).toEqual({
+      kind: "op",
+      ref: `${vaultRef}/${itemId}/DELIVERY_ATTEST_TOKEN`,
+    });
     expect(CREDENTIAL_REGISTRY["DELIVERY_API_TOKEN"]).toEqual({
       description:
         "Delivery machine API token (cannot approve production releases)",
