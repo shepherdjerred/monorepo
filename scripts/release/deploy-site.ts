@@ -11,6 +11,7 @@ if (selection !== null) {
       bucket: selection.bucket,
       source: selection.source,
       metadataDirectory: `${selection.root}/.delivery-artifacts`,
+      registry: args.includes("--catalog-v2") ? "v2" : "v1",
     });
   console.log(`Published ${selection.bucket}; activation belongs to Delivery`);
 }

@@ -79,5 +79,25 @@ test("before the window's catalog flip, main builds no archives and publication 
       )
       .map((step) => step.key)
       .sort(),
-  ).toEqual(["helm-push", "images", "sites"]);
+  ).toEqual(["helm-push", "images", "scout-site-archives", "sites"]);
+});
+
+function siteProducerCommands(catalogV2: boolean): string[] {
+  return testPipelineSteps(catalogV2)
+    .flatMap((step) => step.commands)
+    .filter((command) =>
+      /deploy-site\.ts|publish-scout-site-archives\.ts/u.test(command),
+    );
+}
+
+test("the catalog flag names every site archive's component in both site producers", () => {
+  const on = siteProducerCommands(true);
+  const off = siteProducerCommands(false);
+  expect(on.length).toBeGreaterThan(1);
+  expect(on.length).toBe(off.length);
+  for (const command of on) expect(command).toContain("--catalog-v2");
+  for (const command of off) expect(command).not.toContain("--catalog-v2");
+  expect(on).toContain(
+    "bun --no-install scripts/release/publish-scout-site-archives.ts --catalog-v2 .delivery-artifacts/scout-release/state.json",
+  );
 });

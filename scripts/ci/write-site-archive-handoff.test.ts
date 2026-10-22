@@ -8,7 +8,7 @@ const digest = `sha256:${"a".repeat(64)}`;
 function siteArchive(bucket: string, overrides: Record<string, unknown> = {}) {
   return {
     id: `ci/1/42/site/${bucket}`,
-    component: `site:${bucket}`,
+    component: `archive:${bucket}`,
     kind: "archive",
     uri: `s3://delivery-artifacts/sites/${bucket}/${"a".repeat(64)}.tar`,
     digest,
@@ -24,6 +24,10 @@ const scout = [
     }),
   },
 ];
+/** What a producer writes while the catalog flag is off. */
+function v1SiteArchive(bucket: string) {
+  return siteArchive(bucket, { component: `site:${bucket}` });
+}
 const catalog = publicationOwners("v2");
 /** The catalog document as it would read without the sjer.red site service. */
 const withoutSjerRed = publicationOwners("v2", {
@@ -36,16 +40,22 @@ const withoutSjerRed = publicationOwners("v2", {
 });
 
 describe("v1 static site handoff, before the window's catalog flip", () => {
-  test("registers every independent archive under static-sites, as v1 does", () => {
+  test("registers every independent archive under static-sites with its v1 site component", () => {
+    const v1Scout = {
+      serviceId: "scout-for-lol",
+      artifact: v1SiteArchive("scout-frontend"),
+    };
     const publications = siteArchivePublications(
-      [...scout, { ...scout[0], serviceId: "static-sites" }],
-      [siteArchive("sjer-red"), siteArchive("not-in-the-catalog")],
+      [v1Scout, { ...v1Scout, serviceId: "static-sites" }],
+      [v1SiteArchive("sjer-red"), v1SiteArchive("not-in-the-catalog")],
     );
-    expect(publications.map((entry) => entry.serviceId)).toEqual([
-      "scout-for-lol",
-      "static-sites",
-      "static-sites",
-      "static-sites",
+    expect(
+      publications.map((entry) => [entry.serviceId, entry.artifact.component]),
+    ).toEqual([
+      ["scout-for-lol", "site:scout-frontend"],
+      ["static-sites", "site:scout-frontend"],
+      ["static-sites", "site:sjer-red"],
+      ["static-sites", "site:not-in-the-catalog"],
     ]);
   });
 });
@@ -60,9 +70,9 @@ describe("static site handoff ownership", () => {
     expect(
       publications.map((entry) => [entry.serviceId, entry.artifact.component]),
     ).toEqual([
-      ["scout-for-lol", "site:scout-frontend"],
-      ["sjer-red", "site:sjer-red"],
-      ["resume", "site:resume"],
+      ["scout-for-lol", "archive:scout-frontend"],
+      ["sjer-red", "archive:sjer-red"],
+      ["resume", "archive:resume"],
     ]);
     expect(publications[0]?.artifact.requires).toEqual({
       "image:scout-for-lol": digest,
@@ -80,6 +90,17 @@ describe("static site handoff ownership", () => {
         catalog,
       ),
     ).toThrow("requires a site archive");
+    // A producer still naming v1 components cannot compose a v2 set.
+    expect(() =>
+      siteArchivePublications(scout, [v1SiteArchive("sjer-red")], catalog),
+    ).toThrow("requires a site archive, not site:sjer-red");
+    expect(() =>
+      siteArchivePublications(
+        [{ ...scout[0], artifact: v1SiteArchive("scout-frontend") }],
+        [],
+        catalog,
+      ),
+    ).toThrow("Scout's site handoff requires a site archive");
     expect(() =>
       siteArchivePublications(
         [{ ...scout[0], serviceId: "scout-frontend" }],
@@ -122,9 +143,9 @@ describe("static site handoff ownership", () => {
         build.artifacts.map((artifact) => artifact.component),
       ]),
     ).toEqual([
-      ["scout-for-lol", ["site:scout-frontend"]],
-      ["sjer-red", ["site:sjer-red"]],
-      ["resume", ["site:resume"]],
+      ["scout-for-lol", ["archive:scout-frontend"]],
+      ["sjer-red", ["archive:sjer-red"]],
+      ["resume", ["archive:resume"]],
     ]);
     await expect(
       buildPublications(

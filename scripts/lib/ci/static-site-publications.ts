@@ -1,18 +1,27 @@
 /**
- * What makes a Delivery artifact a static-site publication.
+ * What makes a Delivery artifact a v2 static-site publication.
  *
- * A site is recognised by its artifact alone: an immutable archive whose
- * component is `site:<bucket>`. Under the v2 catalog each independently
- * released site is its own Delivery service, named after its bucket.
+ * Under the v2 catalog a site archive is an immutable archive whose component
+ * is `archive:<bucket>` and whose URI is that bucket's content-addressed
+ * object, and each independently released site is its own Delivery service,
+ * named after its bucket. v1's `site:<bucket>` archives are not v2 sites.
  */
+import { staticArchiveUri } from "../static-site-publication.ts";
 
-const SITE_COMPONENT = /^site:(?<bucket>[a-z0-9][a-z0-9.-]{1,61}[a-z0-9])$/u;
+const SITE_COMPONENT = /^archive:(?<bucket>[a-z0-9][a-z0-9.-]{1,61}[a-z0-9])$/u;
 
 export function isStaticSiteArtifact(artifact: {
   kind: string;
   component: string;
+  uri: string;
+  digest: string;
 }): boolean {
-  return artifact.kind === "archive" && SITE_COMPONENT.test(artifact.component);
+  const bucket = SITE_COMPONENT.exec(artifact.component)?.groups?.["bucket"];
+  return (
+    artifact.kind === "archive" &&
+    bucket !== undefined &&
+    artifact.uri === staticArchiveUri(bucket, artifact.digest)
+  );
 }
 
 export function staticSiteBucket(component: string): string {

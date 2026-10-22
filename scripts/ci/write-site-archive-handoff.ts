@@ -2,10 +2,13 @@
 /**
  * Combine every static producer's receipts into the `site-artifacts` handoff.
  *
- * Each independent site registers under its own Delivery service, derived
- * from the archive's `site:<bucket>` component and checked against the
- * catalog document here so a bucket without an owner fails in the producing
- * step. Scout's receipts keep their combined-deployment owner.
+ * Until the window's catalog flip every independent `site:<bucket>` archive
+ * registers under v1's shared static-sites service. Under the v2 catalog each
+ * independent site registers under its own Delivery service, derived from the
+ * archive's `archive:<bucket>` component and checked against the catalog
+ * document here, so a bucket without an owner or a producer still naming v1
+ * components fails in the producing step. Scout's receipts keep their
+ * combined-deployment owner.
  */
 import { ArtifactInputSchema } from "@shepherdjerred/delivery/contract";
 import {
@@ -63,6 +66,11 @@ export function siteArchivePublications(
   const publications: SiteArchivePublication[] = z
     .array(ScoutPublicationSchema)
     .parse(scout);
+  for (const { artifact } of publications)
+    if (!isStaticSiteArtifact(artifact))
+      throw new Error(
+        `Scout's site handoff requires a site archive, not ${artifact.component}`,
+      );
   for (const raw of archives) {
     const artifact = ArtifactInputSchema.parse(raw);
     if (!isStaticSiteArtifact(artifact))

@@ -89,7 +89,8 @@ const PREBUILT_SITES = [
 ] as const;
 
 function siteCommands(catalogV2: boolean): string[] {
-  const archiveFlag = " --archive";
+  // The catalog flag also names each archive's component (window step 8).
+  const archiveFlag = catalogV2 ? " --archive --catalog-v2" : " --archive";
   const lines: string[] = [
     ". ci/scripts/toolchain.sh",
     // Prebuilt-only deploys still call ci-artifact from the root scripts.
