@@ -153,7 +153,9 @@ function imageIdentity(
   return {
     component: `image:${entry.name}`,
     kind: "image",
-    name: entry.name,
+    // An aliased entry (`itzg/minecraft-server-java8`) keeps its catalog name
+    // as its component but is pulled from, and verified at, its repository.
+    name: entry.management.packageName ?? entry.name,
     version: pinned[1],
     repository: entry.management.registryUrl,
     digest: pinned[2],

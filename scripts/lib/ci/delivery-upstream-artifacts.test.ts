@@ -532,6 +532,37 @@ test("v2 registers one acquisition under every catalog service that acquires the
   ).rejects.toThrow("has no acquiring catalog service");
 });
 
+test("v2 acquires an aliased image from its repository under the alias's component", async () => {
+  const java8 = parseVersionCatalog(rawVersionCatalog).entries.find(
+    (entry) => entry.name === "itzg/minecraft-server-java8",
+  );
+  if (java8 === undefined) throw new Error("Java 8 Minecraft image missing");
+  const requests: AcquireUpstreamArtifact[] = [];
+  const selected = await componentArtifactsForPublication(
+    {
+      latestQualifiedArtifact: async () => {
+        throw new DeliveryClientError(404, "NOT_FOUND", "No original");
+      },
+      acquireUpstreamArtifact: async (input) => {
+        requests.push(input);
+        return verified(input);
+      },
+    },
+    catalog(java8),
+    producer,
+    { credentials, registry: "v2" },
+  );
+  expect(selected.length).toBeGreaterThan(0);
+  for (const request of requests) {
+    expect(request.artifact.component).toBe("image:minecraft-server-java8");
+    expect(request.artifact.uri).toBe("docker.io/itzg/minecraft-server");
+    expect(request.artifact.origin).toMatchObject({
+      repository: "https://docker.io",
+      name: "itzg/minecraft-server",
+    });
+  }
+});
+
 test("the version catalog's components are exactly the charts and images catalog services acquire", () => {
   const components = componentEntries(
     parseVersionCatalog(rawVersionCatalog),
