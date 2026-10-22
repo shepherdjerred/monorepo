@@ -12,6 +12,7 @@ import {
   type Transaction,
 } from "./delivery-data.ts";
 import { replicationPending } from "./artifact-stores/replication.ts";
+import type { Database } from "./database.ts";
 
 type BuildRow = Prisma.BuildGetPayload<object>;
 
@@ -44,15 +45,14 @@ function platformReferenceIds(build: BuildRow) {
 }
 
 /**
- * A build verifies only after every earlier pipeline's build whose artifact
- * it retains by reference has (B2). A pending one defers this build; a failed
- * one fails it, naming the artifact, so the next pipeline rebuilds instead of
- * retaining it. Builds of this same pipeline share its CI verdict and are not
- * awaited, and a later or foreign pending build is refused, so a build never
- * waits on itself or on a later build.
+ * Artifacts a build references without producing them: its retained
+ * selections, and a platform source's root charts and site archives.
  */
-async function requireQualifiedReferences(tx: Transaction, build: BuildRow) {
-  const references = await tx.artifact.findMany({
+export async function referencedArtifacts(
+  tx: Transaction | Database,
+  build: BuildRow,
+) {
+  return tx.artifact.findMany({
     where: {
       buildId: { not: build.id },
       OR: [
@@ -63,25 +63,29 @@ async function requireQualifiedReferences(tx: Transaction, build: BuildRow) {
     include: { build: true },
     orderBy: { id: "asc" },
   });
+}
+
+/**
+ * A build verifies only after every earlier pipeline's build whose artifact
+ * it retains by reference has (B2). A pending one defers this build; any
+ * failed reference fails it, naming the artifact, so the next pipeline
+ * rebuilds instead of retaining it. Pending builds of this same pipeline share
+ * its CI verdict and are not awaited, and a later or foreign pending build is
+ * refused, so a build never waits on itself or on a later build.
+ */
+async function requireQualifiedReferences(tx: Transaction, build: BuildRow) {
   let awaiting = false;
-  for (const { id: artifactId, component, build: source } of references) {
-    const series =
-      source.sourceKind === "ci" &&
-      source.repositoryId === build.repositoryId &&
-      source.pipelineNumber !== null &&
-      build.pipelineNumber !== null;
-    if (
-      source.status === "verified" ||
-      (series && source.pipelineNumber === build.pipelineNumber)
-    )
-      continue;
+  for (const reference of await referencedArtifacts(tx, build)) {
+    const { id: artifactId, component, build: source } = reference;
+    if (source.status === "verified") continue;
     if (source.status === "failed")
       throw new DeliveryError(
         "INVALID",
         `Retained artifact ${artifactId} (${component}) belongs to build ${source.id}, which failed qualification`,
       );
     if (
-      !series ||
+      source.sourceKind !== "ci" ||
+      source.repositoryId !== build.repositoryId ||
       source.pipelineNumber === null ||
       build.pipelineNumber === null ||
       source.pipelineNumber > build.pipelineNumber
@@ -90,7 +94,7 @@ async function requireQualifiedReferences(tx: Transaction, build: BuildRow) {
         "INVALID",
         `Retained artifact ${artifactId} (${component}) belongs to pending build ${source.id}, which is not an earlier build of this pipeline series`,
       );
-    awaiting = true;
+    if (source.pipelineNumber < build.pipelineNumber) awaiting = true;
   }
   if (awaiting) throw new AwaitingRetainedBuild();
 }

@@ -23,6 +23,9 @@ import {
   artifactView,
   qualifiedBuildWhere,
 } from "./delivery-data.ts";
+import { referencedArtifacts } from "./delivery-qualification.ts";
+
+const RETAINABLE_PAGE = 20;
 
 /** The live automatic set (R4): the newest set a verified CI build of this repository composed. */
 async function liveAutomaticSet(
@@ -105,29 +108,42 @@ export async function latestRetainableArtifact(
     input.serviceId,
     repositoryId,
   );
-  const newer = await this.database.buildArtifactSelection.findFirst({
-    where: {
-      component: input.component,
-      artifact: { kind: input.kind },
-      build: {
-        serviceId: input.serviceId,
-        repositoryId,
-        sourceKind: "ci",
-        status: { in: ["pending", "verified"] },
-        pipelineNumber: {
-          gt: live?.pipelineNumber ?? 0,
-          lt: input.beforePipeline,
-        },
-        selections: { none: { artifact: { build: { status: "failed" } } } },
+  const where = {
+    component: input.component,
+    artifact: { kind: input.kind },
+    build: {
+      serviceId: input.serviceId,
+      repositoryId,
+      sourceKind: "ci",
+      status: { in: ["pending", "verified"] },
+      pipelineNumber: {
+        gt: live?.pipelineNumber ?? 0,
+        lt: input.beforePipeline,
       },
     },
-    orderBy: [
-      { build: { pipelineNumber: "desc" } },
-      { build: { registrationSequence: "desc" } },
-    ],
-    include: { artifact: { include: { build: true } } },
-  });
-  if (newer !== null) return artifactView(newer.artifact);
+  };
+  for (let skip = 0; ; skip += RETAINABLE_PAGE) {
+    const page = await this.database.buildArtifactSelection.findMany({
+      where,
+      orderBy: [
+        { build: { pipelineNumber: "desc" } },
+        { build: { registrationSequence: "desc" } },
+      ],
+      include: { artifact: { include: { build: true } }, build: true },
+      skip,
+      take: RETAINABLE_PAGE,
+    });
+    for (const candidate of page) {
+      // The qualifier fails a build with any failed reference, so it is no base.
+      const references = await referencedArtifacts(
+        this.database,
+        candidate.build,
+      );
+      if (references.every((reference) => reference.build.status !== "failed"))
+        return artifactView(candidate.artifact);
+    }
+    if (page.length < RETAINABLE_PAGE) break;
+  }
   const row = required(
     live === null
       ? null

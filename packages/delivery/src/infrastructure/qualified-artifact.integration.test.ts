@@ -601,3 +601,33 @@ test("a platform source awaits an earlier pipeline's pending root original but n
     status: "pending",
   });
 });
+
+test("a failed root reference fails a platform source and removes it as a retainable base", async () => {
+  const apps = {
+    serviceId: "gitops",
+    component: "chart:apps",
+    kind: "chart" as const,
+  };
+  const root = await publication(1);
+  const source = await platformSource(2, root.artifactId);
+  const before = await client().latestRetainableArtifact({
+    ...apps,
+    beforePipeline: 3,
+  });
+  expect(before.id).toBe("apps/2");
+  await harness.delivery.qualify(root.buildId, "failed", testExecutor);
+  // The pending source is doomed, so the next pipeline rebuilds its chart.
+  await expect(
+    client().latestRetainableArtifact({ ...apps, beforePipeline: 3 }),
+  ).rejects.toMatchObject({ status: 404, code: "NOT_FOUND" });
+  // A failed sibling of the same pipeline fails the source too.
+  const sibling = await publication(3, "failed");
+  const concurrent = await platformSource(3, sibling.artifactId);
+  for (const build of [source, concurrent])
+    expect(
+      await harness.delivery.qualify(build.buildId, "verified", testExecutor),
+    ).toEqual({ status: "failed" });
+  expect(await buildRow(concurrent.buildId)).toMatchObject({
+    qualificationReason: `Retained artifact ${sibling.artifactId} (${query.component}) belongs to build ${sibling.buildId}, which failed qualification`,
+  });
+});

@@ -189,6 +189,10 @@ component's original build must be verified in that repository. It returns the
 original artifact and source identity. Manual compositions and late outputs that
 never entered an automatic set do not affect this read-only producer lookup;
 a missing component in the newest set returns 404 without searching older sets.
+Artifact requirements bind dependent components to exact digests; an incompatible
+combination fails release qualification with a visible reason. Automatic selection
+coalesces only queued, unapproved automatic requests. Cancellation or rejection
+suppresses that revision until a new eligible revision or explicit operator request.
 
 Producers compare against the latest-retainable lookup instead, so a pipeline
 that starts before the previous one qualifies still retains that pipeline's
@@ -198,16 +202,12 @@ than the live automatic set and older than the producer's `beforePipeline`, or
 else the live set's entry. Failed builds, builds that reference a failed build,
 and builds the live set supersedes (R4) are never a base. Registration accepts
 a retained original whose build is still pending only from an earlier main
-pipeline of the same repository. Qualification then keeps the retaining build
-pending until that build verifies, and fails it, naming the retained artifact,
-if that build fails; the next pipeline rebuilds. A platform source's root chart
-and site references from an earlier pipeline gate it the same way. Builds of one
-pipeline share its CI verdict and never wait on each other, so no build waits on
-itself or on a later build.
-Artifact requirements bind dependent components to exact digests; an incompatible
-combination fails release qualification with a visible reason. Automatic selection
-coalesces only queued, unapproved automatic requests. Cancellation or rejection
-suppresses that revision until a new eligible revision or explicit operator request.
+pipeline of the same repository. Qualification keeps the retaining build
+pending until that build verifies. A failed reference fails the retaining
+build with a reason naming the artifact, and the next pipeline rebuilds. A
+platform source's root chart and site references gate it the same way. Pending
+builds of one pipeline share its CI verdict and are not awaited, so no build
+waits on itself or on a later build.
 
 The image producer writes `delivery-image-digests` for every candidate it
 built, pushed, verified and found changed by runtime fingerprint, and
