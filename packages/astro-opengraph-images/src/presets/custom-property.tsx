@@ -11,14 +11,16 @@ export function customProperty(input: RenderFunctionInput): React.ReactNode {
   const body = input.document.querySelector("body")?.textContent ?? "";
   // truncate the body to 50 visible characters, add ellipsis if truncated.
   // Grapheme segmentation keeps emoji, flags, and combining marks whole.
-  const segments = Array.from(
-    graphemes.segment(body),
-    ({ segment }) => segment,
-  );
-  const bodyTruncated =
-    segments.length > MAX_BODY_GRAPHEMES
-      ? `${segments.slice(0, MAX_BODY_GRAPHEMES).join("")}...`
-      : body;
+  // Stop at the first grapheme past the limit instead of segmenting the page.
+  let bodyTruncated = body;
+  let count = 0;
+  for (const { index } of graphemes.segment(body)) {
+    if (count === MAX_BODY_GRAPHEMES) {
+      bodyTruncated = `${body.slice(0, index)}...`;
+      break;
+    }
+    count++;
+  }
 
   return simpleBlog({ ...input, description: bodyTruncated });
 }
