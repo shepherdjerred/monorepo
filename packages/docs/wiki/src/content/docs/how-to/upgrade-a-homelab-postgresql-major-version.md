@@ -332,7 +332,8 @@ SELECT 'active' AS holder, e.id AS scope, d.id AS deployment, d.status,
                AND NOT d."recoveryRequired")
            OR (d.status IN ('failed', 'canceled') AND d."finishedAt" IS NOT NULL
                AND d."recoveryRequired"))
-         AND (EXISTS (SELECT 1 FROM "PlatformLock" p WHERE p."deploymentId" = d.id)
+         AND (EXISTS (SELECT 1 FROM "PlatformLock" p
+                      WHERE p.id = 'shared-resources' AND p."deploymentId" = d.id)
            OR NOT (d.kind = 'upgrade-control-plane'
              OR (d."platformSnapshot" IS NOT NULL AND d.kind <> 'tofu-plan')))
          AS consistent
@@ -341,7 +342,8 @@ LEFT JOIN "Deployment" d ON d.id = e."activeDeploymentId"
 WHERE e."activeDeploymentId" IS NOT NULL
 UNION ALL
 SELECT 'platform-lock', p.id, d.id, d.status, d."recoveryRequired",
-       EXISTS (SELECT 1 FROM "Environment" e WHERE e."activeDeploymentId" = d.id)
+       p.id = 'shared-resources'
+         AND EXISTS (SELECT 1 FROM "Environment" e WHERE e."activeDeploymentId" = d.id)
 FROM "PlatformLock" p
 JOIN "Deployment" d ON d.id = p."deploymentId"
 UNION ALL
@@ -376,15 +378,17 @@ A Deployment takes its target lock and its environment's active pointer in the
 same transaction that sets it `running`. A platform operation other than
 `tofu-plan`, or a control-plane upgrade, also takes the shared
 [platform lock](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/platform/lifecycle.ts)
-then. After it finishes, it keeps
-them only when `recoveryRequired` holds the work in quarantine
+then. That lock's ID is always `shared-resources`. After it finishes, a
+Deployment keeps its locks only when `recoveryRequired` holds the work in
+quarantine
 ([claim and release logic](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/delivery-execution.ts)).
 Only a `failed` or `canceled` finish can require recovery
 ([finish validation](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/infrastructure/delivery-records.ts)).
 An active pointer is `consistent` when it names a Deployment of its own
 environment that is either `running` without `recoveryRequired`, or `failed`
 or `canceled` with it. That Deployment must also hold any platform lock it
-needs. A platform lock is `consistent` when its owner is an active Deployment.
+needs. A platform lock is `consistent` when its ID is `shared-resources` and
+its owner is an active Deployment.
 A running or quarantined Deployment that is not its environment's active one
 appears as `unheld` and is never consistent. Each consistent row is running or
 quarantined work that the backup captured.
@@ -395,17 +399,27 @@ The next two checks name v1-only schema: the `ApplicationLock` table, and the
 `configurationRevision` and `configuration` columns on `Environment` and
 `Deployment`. Delivery's v2 schema replaces them with `TargetLock` and a
 `Configuration` table, so these queries fail there. Run them only against a v1
-catalog. Both must return no rows. The first shows an active Deployment without
-its target lock, or a target lock whose owner is not active. The second shows
-a configuration label that carries two contents.
+catalog. Both must return no rows. The first shows an active Deployment
+without the lock on its own target, or a target lock whose owner is not active.
+The claim derives the target from the pipeline: `static-site:<bucket>`,
+`tofu:<stack>`, or otherwise the environment's application. The second shows a
+configuration label that carries two contents.
 
 ```sql
 SELECT 'active without target lock' AS problem, e.id AS scope,
        e."activeDeploymentId" AS deployment
 FROM "Environment" e
+LEFT JOIN "Deployment" d ON d.id = e."activeDeploymentId"
+LEFT JOIN "Pipeline" pl ON pl.id = d."pipelineRevisionId"
 WHERE e."activeDeploymentId" IS NOT NULL
   AND NOT EXISTS (
-    SELECT 1 FROM "ApplicationLock" a WHERE a."deploymentId" = e."activeDeploymentId"
+    SELECT 1 FROM "ApplicationLock" a
+    WHERE a."deploymentId" = e."activeDeploymentId"
+      AND a.application = CASE pl.definition->>'kind'
+        WHEN 'static-site' THEN 'static-site:' || (pl.definition->>'bucket')
+        WHEN 'tofu' THEN 'tofu:' || (pl.definition->>'stack')
+        ELSE e.application
+      END
   )
 UNION ALL
 SELECT 'target lock without active owner', a.application, a."deploymentId"
