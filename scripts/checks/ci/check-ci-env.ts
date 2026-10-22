@@ -35,6 +35,7 @@ import {
   GeneratedStepsSchema,
   type PipelineStep,
 } from "../../lib/ci/ci-env-generated.ts";
+import { CHECKED_STEP_GRAPHS } from "../../lib/ci/generated-steps.ts";
 import {
   declaredSecretItems,
   parseVaultSnapshot,
@@ -447,16 +448,6 @@ function secretFields(
     isBlank: (name: string) => blanks.has(hash(name)),
   };
 }
-
-/**
- * Every pipeline graph the generator can emit, as `dump-steps.ts` arguments.
- * The v2 catalog flag adds producer steps (OpenTofu and npm archives) that
- * must sit inside the same grant contract before the window turns it on.
- */
-export const CHECKED_STEP_GRAPHS: readonly (readonly string[])[] = [
-  [],
-  ["--delivery-catalog-v2"],
-];
 
 /**
  * Ask the generator for the full step model of one graph.

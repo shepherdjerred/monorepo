@@ -1,13 +1,13 @@
 import { describe, expect, test } from "vitest";
 
 import {
-  CHECKED_STEP_GRAPHS,
   collectErrors,
   generatedStepsJson,
   type RequiredEnv,
   type SecretFields,
 } from "./check-ci-env.ts";
 import { GeneratedStepsSchema } from "../../lib/ci/ci-env-generated.ts";
+import { CHECKED_STEP_GRAPHS } from "../../lib/ci/generated-steps.ts";
 import {
   assignedEnvNames,
   commandScopes,

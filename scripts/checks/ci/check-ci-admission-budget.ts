@@ -17,7 +17,10 @@
 
 import path from "node:path";
 import { z } from "zod";
-import { readGeneratedStepJson } from "../../lib/ci/generated-steps.ts";
+import {
+  CHECKED_STEP_GRAPHS,
+  readGeneratedStepJson,
+} from "../../lib/ci/generated-steps.ts";
 import {
   type AdmissionBudgetSchema,
   PooledAdmissionBudgetSchema,
@@ -279,16 +282,28 @@ async function main(): Promise<void> {
   const budget = PooledAdmissionBudgetSchema.parse(
     await Bun.file(BUDGET_PATH).json(),
   );
-  const steps = z
-    .array(StepSchema)
-    .parse(await readGeneratedStepJson(REPO_ROOT, { includeCanaries: true }));
-  const violations = pooledAdmissionBudgetViolations(steps, budget);
+  // Each graph is admitted on its own; the flag-on producers must fit before
+  // the window turns them on.
+  let checked = 0;
+  const violations: string[] = [];
+  for (const graph of CHECKED_STEP_GRAPHS) {
+    const steps = z.array(StepSchema).parse(
+      await readGeneratedStepJson(REPO_ROOT, {
+        includeCanaries: true,
+        graph,
+      }),
+    );
+    checked += steps.length;
+    const label = graph.length === 0 ? "default graph" : graph.join(" ");
+    for (const violation of pooledAdmissionBudgetViolations(steps, budget))
+      violations.push(`${label}: ${violation}`);
+  }
   for (const violation of violations) {
     console.error(`CI admission budget: ${violation}`);
   }
   if (violations.length > 0) process.exit(1);
   console.log(
-    `CI admission budget holds for ${steps.length.toString()} generated steps`,
+    `CI admission budget holds for ${checked.toString()} generated steps across ${CHECKED_STEP_GRAPHS.length.toString()} pipeline graphs`,
   );
 }
 

@@ -10,7 +10,10 @@ import {
 } from "./check-ci-admission-budget.ts";
 import { PooledAdmissionBudgetSchema as PooledBudgetSchema } from "../../lib/ci/admission-budget.ts";
 import rawBudget from "../../../packages/homelab/src/cdk8s/src/misc/ci-admission-budget.json" with { type: "json" };
-import { readGeneratedStepJson } from "../../lib/ci/generated-steps.ts";
+import {
+  CHECKED_STEP_GRAPHS,
+  readGeneratedStepJson,
+} from "../../lib/ci/generated-steps.ts";
 import { z } from "zod";
 
 test("the admission graph includes bounded RAM scratch alongside ordinary workflows", async () => {
@@ -40,6 +43,32 @@ test("the admission graph includes bounded RAM scratch alongside ordinary workfl
     ),
   ).toEqual([]);
 });
+
+test("every pipeline graph, the flag-on producers included, fits the admission budget", async () => {
+  expect(CHECKED_STEP_GRAPHS).toContainEqual(["--delivery-catalog-v2"]);
+  for (const graph of CHECKED_STEP_GRAPHS) {
+    const generated = z
+      .array(StepSchema)
+      .parse(
+        await readGeneratedStepJson(
+          new URL("../../../", import.meta.url).pathname,
+          { includeCanaries: true, graph },
+        ),
+      );
+    const keys = new Set(generated.map((entry) => entry.key));
+    const flagOn = graph.includes("--delivery-catalog-v2");
+    for (const producer of ["tofu-archives", "npm-package-archives"])
+      expect(keys.has(producer), `${producer} in ${graph.join(" ")}`).toBe(
+        flagOn,
+      );
+    expect(
+      pooledAdmissionBudgetViolations(
+        generated,
+        PooledBudgetSchema.parse(rawBudget),
+      ),
+    ).toEqual([]);
+  }
+}, 60_000);
 
 const BUDGET: AdmissionBudget = {
   maxWorkflows: 4,
