@@ -69,6 +69,15 @@ function "imagetags" {
   result = equal(PUSH_IMAGES, "true") ? ["${REGISTRY}/${name}:candidate-${GIT_SHA}"] : ["${name}:dev"]
 }
 
+# Application pushes rewrite layer timestamps to SOURCE_DATE_EPOCH, so a
+# rebuild from byte-identical inputs reproduces the same layer diff_ids and
+# bake-images.ts classifies it content-unchanged instead of publishing a
+# duplicate. Smoke solves and local builds keep the default exporter.
+function "appoutput" {
+  params = []
+  result = equal(PUSH_IMAGES, "true") ? ["type=image,push=true,rewrite-timestamp=true"] : []
+}
+
 group "default" {
   targets = ["app", "infra"]
 }
@@ -101,7 +110,13 @@ target "_app" {
   args = {
     VERSION = VERSION
     GIT_SHA = GIT_SHA
+    # Fixed reproducibility epoch (2026-01-01T00:00:00Z). It sets the image
+    # and history `created` times, and the push output clamps every newer file
+    # mtime in this build's layers to it. A constant, never the commit time:
+    # a per-commit epoch would itself change every rebuilt layer.
+    SOURCE_DATE_EPOCH = "1767225600"
   }
+  output = appoutput()
 }
 
 target "birmel" {

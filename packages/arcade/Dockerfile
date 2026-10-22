@@ -6,14 +6,28 @@ ARG DOLPHIN_CONTEXT=arcade-dolphin
 FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
 
-FROM base AS deps
+# ── manifests: only the install closure's workspace manifests ───────────────
+# Every manifest reaches this cheap stage; installs copy only its output, so an
+# edit to a package outside the closure keeps their cache keys and layers.
+FROM base AS manifests
 COPY --parents \
-  package.json bun.lock bunfig.toml patches/ scripts/package.json \
-  packages/discord-video-stream/prebuilds-patched/ \
+  package.json scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
   packages/homelab/src/cdk8s/package.json \
-  packages/homelab/src/helm-types/package.json ./
+  packages/homelab/src/helm-types/package.json \
+  /workspace/
+COPY --parents \
+  ci/scripts/images/workspace-manifests.ts \
+  ci/scripts/selectors/select-image-targets-workspaces.ts \
+  ci/scripts/selectors/select-image-targets-lockfile.ts \
+  /tools/
+RUN bun /tools/ci/scripts/images/workspace-manifests.ts /workspace /closure \
+  '@arcade/*' '@arcade/backend'
+
+FROM base AS deps
+COPY --parents bun.lock bunfig.toml patches/ packages/discord-video-stream/prebuilds-patched/ ./
+COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --filter '@arcade/*'
 
 FROM deps AS build
@@ -36,14 +50,13 @@ RUN cd packages/eslint-config && bun run build
 RUN cd packages/arcade/packages/frontend && bun run build
 
 FROM base AS prod-deps
-COPY --parents \
-  package.json bun.lock bunfig.toml patches/ scripts/package.json \
-  packages/discord-video-stream/prebuilds-patched/ \
-  packages/*/package.json packages/*/packages/*/package.json \
-  packages/docs/wiki/package.json \
-  packages/homelab/src/cdk8s/package.json \
-  packages/homelab/src/helm-types/package.json ./
+COPY --parents bun.lock bunfig.toml patches/ packages/discord-video-stream/prebuilds-patched/ ./
+COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --production --filter '@arcade/backend'
+# Bun can skip the .bin links between dependency-cycle members on a cold
+# install; complete them so the production tree reproduces.
+COPY ci/scripts/images/complete-bin-links.ts /tools/
+RUN bun /tools/complete-bin-links.ts node_modules/.bun
 
 FROM ${SPAGHETTI_CONTEXT} AS native-spaghetti
 FROM ${DOLPHIN_CONTEXT} AS native-dolphin
@@ -60,8 +73,8 @@ RUN sed -i 's/^Components: main.*/Components: main contrib non-free non-free-fir
     libgl1 libegl1 libegl-mesa0 libgl1-mesa-dri libgbm1 \
     libudev1 libevdev2 libusb-1.0-0 libhidapi-hidraw0 libhidapi-libusb0 \
     libcurl4t64 liblzma5 libbz2-1.0 libzstd1 liblzo2-2 libpng16-16t64 \
-  && rm -rf /var/lib/apt/lists/*
-COPY --from=prod-deps /app/ /app/
+  && rm -rf /var/lib/apt/lists/* /var/log/apt/* /var/log/dpkg.log /var/log/alternatives.log /var/cache/ldconfig/aux-cache
+COPY --from=prod-deps --exclude=package.json --exclude=bun.lock --exclude=bunfig.toml --exclude=patches /app/ /app/
 COPY --parents tsconfig.base.json \
   packages/arcade/config.example.toml packages/arcade/packages/backend \
   packages/arcade/packages/common packages/config packages/feature-flags \
@@ -75,7 +88,9 @@ COPY --parents tsconfig.base.json \
   packages/discord-stream-lifecycle packages/discord-video-stream \
   packages/llm-models packages/llm-observability packages/s3-signed-request \
   packages/bugsink-config packages/text ./
-RUN cd packages/discord-plays-mario-kart/packages/backend && bunx --trust prisma generate
+# Prisma's CLI records per-run state under $HOME; keep it out of the layer.
+RUN cd packages/discord-plays-mario-kart/packages/backend && CHECKPOINT_DISABLE=1 bunx --trust prisma generate \
+ && rm -rf "$HOME/.cache/checkpoint-nodejs" "$HOME/.config/prisma-nodejs"
 COPY --from=build /app/packages/discord-stream-lifecycle/dist packages/discord-stream-lifecycle/dist
 COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
 COPY --from=build /app/packages/discord-plays-mario-kart/packages/common/dist packages/discord-plays-mario-kart/packages/common/dist

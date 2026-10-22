@@ -1,8 +1,34 @@
 # syntax=docker/dockerfile:1-labs@sha256:ad43eec41369d9ef94412c0d1eb3203d12218d01da225afc92a3aeba3a0e7796
-FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS bun
+FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
-COPY --parents package.json bun.lock bunfig.toml patches/ scripts/package.json packages/*/package.json packages/*/packages/*/package.json packages/docs/wiki/package.json packages/homelab/src/cdk8s/package.json packages/homelab/src/helm-types/package.json ./
+
+# ── manifests: only the install closure's workspace manifests ───────────────
+# Every manifest reaches this cheap stage; installs copy only its output, so an
+# edit to a package outside the closure keeps their cache keys and layers.
+FROM base AS manifests
+COPY --parents \
+  package.json scripts/package.json \
+  packages/*/package.json packages/*/packages/*/package.json \
+  packages/docs/wiki/package.json \
+  packages/homelab/src/cdk8s/package.json \
+  packages/homelab/src/helm-types/package.json \
+  /workspace/
+COPY --parents \
+  ci/scripts/images/workspace-manifests.ts \
+  ci/scripts/selectors/select-image-targets-workspaces.ts \
+  ci/scripts/selectors/select-image-targets-lockfile.ts \
+  /tools/
+RUN bun /tools/ci/scripts/images/workspace-manifests.ts /workspace /closure \
+  '@shepherdjerred/storm-forum'
+
+FROM base AS bun
+COPY --parents bun.lock bunfig.toml patches/ ./
+COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/storm-forum'
+# Bun can skip the .bin links between dependency-cycle members on a cold
+# install; complete them so the production tree reproduces.
+COPY ci/scripts/images/complete-bin-links.ts /tools/
+RUN bun /tools/complete-bin-links.ts node_modules/.bun
 COPY packages/storm-theme /app/packages/storm-theme
 COPY packages/the-storm/public-status.json /app/packages/the-storm/public-status.json
 RUN bun /app/packages/storm-theme/scripts/generate.ts --check && bun build /app/packages/storm-theme/src/browser.ts --target browser --minify --outdir /app/packages/storm-theme/dist
@@ -13,7 +39,7 @@ FROM php:8.5.12-fpm-bookworm@sha256:740a5adab5af19504d8aa0754e903e20b40b0153cfd4
 RUN apt-get update && apt-get install -y --no-install-recommends libfreetype6-dev libjpeg62-turbo-dev libpng-dev libzip-dev libicu-dev unzip mariadb-client ca-certificates \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j2 gd mysqli zip intl exif \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/* /var/log/apt/* /var/log/dpkg.log /var/log/alternatives.log /var/cache/ldconfig/aux-cache \
     && mkdir -p /app/forum /var/lib/storm-forum /tmp/storm-forum \
     && chown -R 1000:1000 /app /var/lib/storm-forum /tmp/storm-forum
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
@@ -28,10 +54,13 @@ RUN ln -s /app/packages/storm-forum/node_modules /opt/storm-forum/node_modules \
 RUN bun build /opt/storm-forum/browser/minecraft.ts --target browser --minify --outfile /opt/storm-forum/dist/minecraft.js
 COPY packages/storm-forum/runtime/php.ini /usr/local/etc/php/conf.d/storm.ini
 COPY packages/storm-forum/runtime/fpm.conf /usr/local/etc/php-fpm.conf
+# Build identity rides in ENV like every application image, where the release
+# fingerprint excludes it; a label carrying it would make every rebuild of
+# unchanged content look like a new artifact.
 ARG VERSION=dev
 ARG GIT_SHA=unknown
+ENV VERSION=${VERSION} GIT_SHA=${GIT_SHA}
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo" \
-      org.opencontainers.image.version=$VERSION org.opencontainers.image.revision=$GIT_SHA \
       red.sjer.delivery.forum-recovery="storm-forum-recovery/v1"
 WORKDIR /opt/storm-forum
 USER 1000:1000

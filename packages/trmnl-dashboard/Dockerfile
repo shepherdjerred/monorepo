@@ -11,33 +11,43 @@
 FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
 
-# ── prod-deps: production-only node_modules, cached on manifests ────────────
-# The trmnl-dashboard filter includes config, feature-flags, home-assistant, and
-# ops-model through its workspace dependency closure. `--frozen-lockfile` requires every workspace member's
-# package.json present, so the globs enumerate every member (top-level, nested
-# packages/*/packages/*, homelab/src/*, the desktop src-tauri crate, and the
-# `scripts` dir).
-FROM base AS prod-deps
+# ── manifests: only the install closure's workspace manifests ───────────────
+# Every manifest reaches this cheap stage; installs copy only its output, so an
+# edit to a package outside the closure keeps their cache keys and layers.
+FROM base AS manifests
 COPY --parents \
-  package.json bun.lock bunfig.toml patches/ scripts/package.json \
+  package.json scripts/package.json \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
   packages/homelab/src/cdk8s/package.json \
   packages/homelab/src/helm-types/package.json \
-  ./
+  /workspace/
+COPY --parents \
+  ci/scripts/images/workspace-manifests.ts \
+  ci/scripts/selectors/select-image-targets-workspaces.ts \
+  ci/scripts/selectors/select-image-targets-lockfile.ts \
+  /tools/
+RUN bun /tools/ci/scripts/images/workspace-manifests.ts /workspace /closure \
+  '@shepherdjerred/trmnl-dashboard' '@shepherdjerred/home-assistant'
+
+# ── prod-deps: production-only node_modules, cached on manifests ────────────
+# The trmnl-dashboard filter includes config, feature-flags, home-assistant, and
+# ops-model through its workspace dependency closure.
+FROM base AS prod-deps
+COPY --parents bun.lock bunfig.toml patches/ ./
+COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/trmnl-dashboard'
+# Bun can skip the .bin links between dependency-cycle members on a cold
+# install; complete them so the production tree reproduces.
+COPY ci/scripts/images/complete-bin-links.ts /tools/
+RUN bun /tools/complete-bin-links.ts node_modules/.bun
 
 # ── build: Home Assistant's gitignored dist artifact ────────────────────────
 # The workspace package uses a dist-based export. Build it from a full install
 # and copy only the resulting artifact into the production runtime below.
 FROM base AS deps
-COPY --parents \
-  package.json bun.lock bunfig.toml patches/ scripts/package.json \
-  packages/*/package.json packages/*/packages/*/package.json \
-  packages/docs/wiki/package.json \
-  packages/homelab/src/cdk8s/package.json \
-  packages/homelab/src/helm-types/package.json \
-  ./
+COPY --parents bun.lock bunfig.toml patches/ ./
+COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/home-assistant'
 
 FROM deps AS build
@@ -52,7 +62,7 @@ FROM base AS runtime
 # The isolated-linker tree uses relative symlinks (store at node_modules/.bun),
 # so copying the whole install root between same-rooted stages is safe. Kept
 # BEFORE the source COPY so a source edit doesn't re-push this layer.
-COPY --from=prod-deps /app/ /app/
+COPY --from=prod-deps --exclude=package.json --exclude=bun.lock --exclude=bunfig.toml --exclude=patches /app/ /app/
 # Scoped source closure: this package, its workspace dep, and the root
 # tsconfig for uniformity with the other app images.
 COPY --parents \

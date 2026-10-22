@@ -20,8 +20,28 @@ RUN bun -e '\
     await (await import("node:fs/promises")).chmod("/usr/local/bin/kubectl", 0o755); \
     ' && kubectl version --client
 
+# ── manifests: only the install closure's workspace manifests ───────────────
+# Every manifest reaches this cheap stage; installs copy only its output, so an
+# edit to a package outside the closure keeps their cache keys and layers.
+FROM base AS manifests
+COPY --parents \
+  package.json scripts/package.json \
+  packages/*/package.json packages/*/packages/*/package.json \
+  packages/docs/wiki/package.json \
+  packages/homelab/src/cdk8s/package.json \
+  packages/homelab/src/helm-types/package.json \
+  /workspace/
+COPY --parents \
+  ci/scripts/images/workspace-manifests.ts \
+  ci/scripts/selectors/select-image-targets-workspaces.ts \
+  ci/scripts/selectors/select-image-targets-lockfile.ts \
+  /tools/
+RUN bun /tools/ci/scripts/images/workspace-manifests.ts /workspace /closure \
+  '@shepherdjerred/delivery'
+
 FROM base AS deps
-COPY --parents package.json bun.lock bunfig.toml patches/ scripts/package.json packages/*/package.json packages/*/packages/*/package.json packages/docs/wiki/package.json packages/homelab/src/cdk8s/package.json packages/homelab/src/helm-types/package.json ./
+COPY --parents bun.lock bunfig.toml patches/ ./
+COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/delivery'
 
 FROM deps AS build
@@ -29,15 +49,22 @@ COPY --parents tsconfig.base.json packages/delivery packages/config packages/fea
 RUN cd packages/delivery && bun run generate && bun run build
 
 FROM base AS prod-deps
-COPY --parents package.json bun.lock bunfig.toml patches/ scripts/package.json packages/*/package.json packages/*/packages/*/package.json packages/docs/wiki/package.json packages/homelab/src/cdk8s/package.json packages/homelab/src/helm-types/package.json ./
+COPY --parents bun.lock bunfig.toml patches/ ./
+COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/delivery'
+# Bun can skip the .bin links between dependency-cycle members on a cold
+# install; complete them so the production tree reproduces.
+COPY ci/scripts/images/complete-bin-links.ts /tools/
+RUN bun /tools/complete-bin-links.ts node_modules/.bun
 
 FROM base AS runtime
 COPY --from=native-tools /usr/local/bin/kubectl /usr/local/bin/kubectl
-COPY --from=prod-deps /app/ /app/
+COPY --from=prod-deps --exclude=package.json --exclude=bun.lock --exclude=bunfig.toml --exclude=patches /app/ /app/
 COPY --from=build --exclude=node_modules /app/packages/delivery /app/packages/delivery
 COPY --parents packages/config packages/feature-flags packages/ops-model packages/ops-clients packages/version-catalog ./
-RUN cd packages/delivery && bunx --no-install --trust prisma generate
+# Prisma's CLI records per-run state under $HOME; keep it out of the layer.
+RUN cd packages/delivery && CHECKPOINT_DISABLE=1 bunx --no-install --trust prisma generate \
+ && rm -rf "$HOME/.cache/checkpoint-nodejs" "$HOME/.config/prisma-nodejs"
 WORKDIR /app/packages/delivery
 ARG VERSION=dev
 ARG GIT_SHA=unknown

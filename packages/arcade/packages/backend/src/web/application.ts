@@ -1,4 +1,5 @@
 import path from "node:path";
+import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import express, {
   type Express,
@@ -27,6 +28,7 @@ import {
 import type { DiscordAuth } from "@shepherdjerred/discord-plays-core/auth/discord-oauth.ts";
 import type { DiscordUser } from "@shepherdjerred/discord-plays-core/auth/protocol.ts";
 import type { Logger } from "@shepherdjerred/discord-plays-core/logger.ts";
+import { IMAGE_FILE_OPTIONS } from "@shepherdjerred/discord-plays-core/webserver/image-file-options.ts";
 import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client";
 import type { UserbotProvider } from "@shepherdjerred/discord-stream-lifecycle/pool/userbot-pool";
 import { SessionManager } from "#src/session/manager.ts";
@@ -419,11 +421,14 @@ export function createApplication(options: {
   }
 
   function mountPages(): void {
-    app.use(express.static(options.webAssets));
+    app.use(express.static(options.webAssets, IMAGE_FILE_OPTIONS));
     app.get(
       ["/", "/games/:game", "/servers/:guild/games/:game"],
-      (_request, response) => {
-        response.sendFile(path.resolve(options.webAssets, "index.html"));
+      async (_request, response) => {
+        // res.send derives the ETag from the page bytes (see IMAGE_FILE_OPTIONS).
+        response
+          .type("html")
+          .send(await readFile(path.resolve(options.webAssets, "index.html")));
       },
     );
     app.use(
