@@ -1,10 +1,11 @@
 import { z } from "zod";
 import { DeliveryError } from "#domain/error.ts";
 import { PipelineRevisionSchema, type Principal } from "#shared/contract.ts";
-import { kubernetesRecipes } from "#shared/model/recipe-view.ts";
+import type { StoredRecipeDefinition } from "#shared/model/record-contract.ts";
+import { applicationOf, kubernetesRecipes } from "#shared/model/recipe-view.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
-import { id } from "#infrastructure/delivery-data.ts";
+import { id, type Transaction } from "#infrastructure/delivery-data.ts";
 import { audit, lock, wire } from "#infrastructure/delivery-records.ts";
 
 export const PendingRemovalSchema = z.strictObject({
@@ -23,6 +24,38 @@ export const TargetRemovedSchema = z.strictObject({
   applications: z.array(z.string().min(1)).min(1),
 });
 export type TargetRemoved = z.infer<typeof TargetRemovedSchema>;
+
+/**
+ * The Application a recipe deploys with no lifecycle policy: a carried v1
+ * `argocd` or a `control-plane` recipe (section 7). Removal deletes an
+ * Application only by its recipe's policy (4.10), so such an environment is
+ * not removed until a rebind freezes a recipe that declares one.
+ */
+function applicationWithoutLifecycle(definition: StoredRecipeDefinition) {
+  return kubernetesRecipes(definition).length === 0
+    ? (applicationOf(definition)?.name ?? null)
+    : null;
+}
+
+/** The Application the accepted deployment's recipe deploys with no lifecycle policy. */
+export async function acceptedApplicationWithoutLifecycle(
+  tx: Transaction,
+  acceptedDeploymentId: string | null,
+) {
+  if (acceptedDeploymentId === null) return null;
+  const accepted = await tx.deployment.findUniqueOrThrow({
+    where: { id: acceptedDeploymentId },
+    select: { pipelineRevisionId: true },
+  });
+  const recipe = PipelineRevisionSchema.parse(
+    wire(
+      await tx.pipeline.findUniqueOrThrow({
+        where: { id: accepted.pipelineRevisionId },
+      }),
+    ),
+  );
+  return applicationWithoutLifecycle(recipe.definition);
+}
 
 /**
  * Removed environments whose Applications the executor still has to delete
@@ -52,6 +85,12 @@ export async function pendingRemovals(this: Delivery) {
         }),
       ),
     );
+    // The catalog refuses this removal, so reaching it breaks the record.
+    const unmanaged = applicationWithoutLifecycle(recipe.definition);
+    if (unmanaged !== null)
+      throw new Error(
+        `Removed environment ${env.id} deploys Application ${unmanaged} with no lifecycle policy`,
+      );
     const applications = kubernetesRecipes(recipe.definition).map(
       (kubernetes) => ({
         name: kubernetes.application.name,

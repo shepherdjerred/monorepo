@@ -132,7 +132,10 @@ keeps only history. Transitions are forward only.
   (A5).
 - S3. `retire` and `remove` are refused while any deployment of the service
   is `owned` or `recovery-required`. `remove` records a `target-destroyed`
-  evidence entry that releases any remaining lock with that reason.
+  evidence entry that releases any remaining lock with that reason. Removing
+  an environment is also refused while its accepted recipe deploys an
+  Application with no lifecycle policy, such as a carried v1 recipe
+  (section 7), until a rebind accepts one that declares it.
 - S4. A retired service's environments keep their accepted selection and
   retained hosts. No deployment of any kind is admitted.
 

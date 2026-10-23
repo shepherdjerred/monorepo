@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { serviceLineage } from "#shared/model/catalog-contract.ts";
 import { catalogDocument } from "#testing/catalog-fixture.ts";
+import { arcadePipeline } from "#testing/model-fixture.ts";
 import { useCatalogCluster } from "#testing/catalog-cluster.ts";
 import { testOperator, testPublisher } from "#testing/seed.ts";
 import {
@@ -451,6 +452,104 @@ describe("catalog reconcile of lifecycles while deployments are owned (S3)", () 
       "active",
       "arcade/beta:active",
       "arcade/prod:active",
+    ]);
+  });
+});
+
+function arcadeProdRemoved(document: Document) {
+  return {
+    ...document,
+    environments: document.environments.map((environment) =>
+      environment.id === "arcade/prod"
+        ? { ...environment, lifecycle: "removed" as const }
+        : environment,
+    ),
+  };
+}
+/** Accepts a deployment of arcade/prod that froze the given recipe. */
+async function acceptArcadeProd(id: string, pipelineRevisionId: string) {
+  const db = context.cluster.database;
+  await db.versionSet.upsert({
+    where: { id: "arcade-set" },
+    create: {
+      id: "arcade-set",
+      serviceId: "arcade",
+      revision: 1,
+      lineage: "0".repeat(64),
+    },
+    update: {},
+  });
+  await db.deployment.create({
+    data: {
+      id,
+      requestId: `arcade/${id}`,
+      environmentId: "arcade/prod",
+      serviceId: "arcade",
+      versionSetRevisionId: "arcade-set",
+      pipelineRevisionId,
+      configurationId: "arcade/1",
+      catalogRevision: "test",
+      expectedGeneration: 0,
+      kind: "deploy",
+      status: "succeeded",
+      requestedBy: testPublisher.id,
+      finishedAt: new Date(),
+      monitorState: "unmonitored",
+    },
+  });
+  await db.environment.update({
+    where: { id: "arcade/prod" },
+    data: {
+      acceptedDeploymentId: id,
+      acceptedVersionSetRevisionId: "arcade-set",
+    },
+  });
+}
+
+describe("catalog reconcile of a removal (4.10, section 7)", () => {
+  test("a carried v1 Application has no lifecycle policy, so removal waits for a rebind", async () => {
+    const document = await catalogDocument();
+    await context.delivery.reconcileCatalog(
+      document,
+      testOperator,
+      NO_MIGRATION,
+    );
+    await context.cluster.database.pipeline.create({
+      data: { id: "arcade/v1", definition: arcadePipeline },
+    });
+    await acceptArcadeProd("arcade-carry", "arcade/v1");
+    const refused = await context.delivery.reconcileCatalog(
+      arcadeProdRemoved(document),
+      testOperator,
+      NO_MIGRATION,
+    );
+    expect(refused.refused).toEqual([
+      {
+        id: "arcade/prod",
+        reason: expect.stringMatching(
+          /accepted recipe deploys Application arcade with no lifecycle policy; rebind/u,
+        ),
+      },
+    ]);
+    expect(await lifecycles()).toEqual([
+      "active",
+      "arcade/beta:active",
+      "arcade/prod:active",
+    ]);
+    expect(await context.delivery.pendingRemovals()).toEqual([]);
+    // A rebind accepts the catalog recipe, which declares the lifecycle.
+    await acceptArcadeProd("arcade-rebind", "arcade/3");
+    const removed = await context.delivery.reconcileCatalog(
+      arcadeProdRemoved(document),
+      testOperator,
+      NO_MIGRATION,
+    );
+    expect(removed.refused).toEqual([]);
+    expect(await context.delivery.pendingRemovals()).toEqual([
+      {
+        environmentId: "arcade/prod",
+        applications: [{ name: "arcade", lifecycle: "retain" }],
+      },
     ]);
   });
 });

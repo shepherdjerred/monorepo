@@ -51,3 +51,14 @@ test("an active environment keeps its target state", async () => {
     context.delivery.recordTargetRemoved("arcade/prod", removed, testExecutor),
   ).rejects.toThrow(/Only a removed environment/u);
 });
+
+test("a removed environment whose v1 recipe declares no lifecycle policy fails loudly", async () => {
+  // The catalog refuses this removal; only a broken record reaches it.
+  await context.cluster.database.environment.update({
+    where: { id: "arcade/prod" },
+    data: { lifecycle: "removed" },
+  });
+  await expect(context.delivery.pendingRemovals()).rejects.toThrow(
+    /deploys Application arcade with no lifecycle policy/u,
+  );
+});

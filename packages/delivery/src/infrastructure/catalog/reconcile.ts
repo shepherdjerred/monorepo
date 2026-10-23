@@ -25,6 +25,7 @@ import { id, type Transaction } from "#infrastructure/delivery-data.ts";
 import { audit, fingerprint, lock } from "#infrastructure/delivery-records.ts";
 import { carrySelections } from "./carry.ts";
 import {
+  environmentLifecycle,
   environmentOwned,
   refuseLifecycle,
   requireUnowned,
@@ -344,18 +345,12 @@ async function upsertEnvironments(
       existing.lifecycle,
       environment.lifecycle,
     );
-    let lifecycle = environment.lifecycle;
-    if (
-      existing.lifecycle !== environment.lifecycle &&
-      (await environmentOwned(tx, existing))
-    ) {
-      refuseLifecycle(result, {
-        id: environment.id,
-        from: existing.lifecycle,
-        to: environment.lifecycle,
-      });
-      lifecycle = LifecycleSchema.parse(existing.lifecycle);
-    }
+    const lifecycle = await environmentLifecycle(
+      tx,
+      existing,
+      environment.lifecycle,
+      result,
+    );
     if (
       existing.pipelineRevisionId !== declared.pipelineRevisionId ||
       existing.declaredConfigurationId !== declared.declaredConfigurationId
