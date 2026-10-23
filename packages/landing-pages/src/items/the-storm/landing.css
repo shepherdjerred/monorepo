@@ -223,6 +223,15 @@ code {
   color: var(--ink-soft);
   font-size: 1rem;
 }
+.note + .note {
+  margin-top: 0.5rem;
+}
+.note a,
+.steps a {
+  color: var(--ink);
+  font-weight: 600;
+  text-underline-offset: 0.15em;
+}
 
 .copy {
   flex: none;

@@ -34,7 +34,11 @@ The Storm item adds:
 - An address card with a Java/Bedrock toggle and one copy button for the
   selected edition. Phones and tablets open on Bedrock. Java shows its pinned
   version (26.2); Bedrock says "latest version", because its support follows
-  the live Geyser build.
+  the live Geyser build. Console players are sent to the docs'
+  BedrockConnect steps (`docs.ts-mc.net/join/#playing-on-a-console`).
+- Addresses come from `packages/storm-forum/config/forum.json`. The build fails
+  if the Java version stops matching the server image or the Discord invite
+  stops matching the docs config.
 - PostHog events `storm_server_address_copied` and `storm_edition_selected`
   (`edition`), plus `storm_discord_clicked` and `storm_docs_clicked`
   (`placement`).
@@ -45,11 +49,12 @@ The Storm item adds:
   `storm_discord_clicked`.
 
 Ad destination URLs use
-`https://pages.sjer.red/the-storm/?utm_source=pinterest&utm_medium=paid&utm_campaign=the-storm&utm_content=<ad-slug>`.
+`https://pages.sjer.red/the-storm/?utm_source=pinterest&utm_medium=paid&utm_campaign=the-storm&utm_content=<two-digit-pin-number>`.
 
 ## The Storm item
 
-The design follows the friendly Pinterest set: Outfit and Lora italic, cream,
+Copy stays casual and lowercase, like the ads; visitors arrive from Pinterest,
+not from the docs. The design follows the friendly Pinterest set: Outfit and Lora italic, cream,
 lilac and sage grounds, and rounded paper frames. The screenshots are owned
 January 2015 Storm originals from the same archive as the ads (the windmill
 from `@shepherdjerred/storm-theme` brand assets, plus the clock tower and town

@@ -228,6 +228,7 @@ resource "terraform_data" "static_site_asset_lifecycle" {
     aws_s3_bucket.cook,
     aws_s3_bucket.cross_compilers,
     aws_s3_bucket.stocks_sjer_red,
+    aws_s3_bucket.landing_pages,
     aws_s3_bucket.wiki_sjer_red,
     aws_s3_bucket.better_skill_capped,
     aws_s3_bucket.ts_mc,
