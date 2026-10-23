@@ -1,6 +1,9 @@
 import { expect, test } from "vitest";
-import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
-import { testExecutor, testOperator } from "#testing/seed.ts";
+import {
+  claimedSelfHostedDeployment,
+  useDeliveryFixture,
+} from "#testing/delivery-fixture.ts";
+import { testExecutor } from "#testing/seed.ts";
 
 const context = useDeliveryFixture();
 
@@ -12,26 +15,10 @@ const failed = {
 };
 
 test("only the owning executor finishes, and a handoff waits for its successor (D7, D8)", async () => {
-  const db = context.cluster.database;
-  const env = await db.environment.findUniqueOrThrow({
-    where: { id: context.fixture.environment.id },
-  });
-  await db.service.update({
-    where: { id: env.serviceId },
-    data: { selfHosted: true },
-  });
-  const deployment = await context.delivery.createDeployment(
-    {
-      requestId: "finish-ownership",
-      environmentId: env.id,
-      versionSetRevisionId: context.fixture.versionSet.id,
-      expectedGeneration: env.generation,
-      kind: "deploy",
-    },
-    testOperator,
+  const { deployment, owner } = await claimedSelfHostedDeployment(
+    context,
+    "finish-ownership",
   );
-  const owner = { workflowId: "delivery/owner", workflowRunId: "run-1" };
-  await context.delivery.claim(deployment.id, testExecutor, undefined, owner);
   const finish = (executor?: typeof owner) =>
     context.delivery.finish(
       deployment.id,
