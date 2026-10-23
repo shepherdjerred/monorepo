@@ -55,8 +55,8 @@ function retainedDeletionValidation(transition: boolean) {
 }
 
 /**
- * The only Kubernetes identities that may write a managed Application's
- * source. ArgoCD's API server performs every ArgoCD account's writes, so
+ * The only Kubernetes identities that may write the source of an Application
+ * in the ArgoCD namespace. ArgoCD's API server performs every ArgoCD account's writes, so
  * ArgoCD RBAC decides which account (Delivery's, after the window) may reach
  * it; the application controller applies the root's child manifests until the
  * root is orphaned. Every other identity, including a cluster administrator
@@ -88,14 +88,12 @@ function createApplicationSourcePolicy(chart: Chart): void {
     ),
     spec: {
       failurePolicy: "Fail",
+      // Every Application in the ArgoCD namespace, with no object selector:
+      // the root carries no managed label, and a label is mutable, so a
+      // selector could be escaped by first removing it.
       matchConstraints: {
         matchPolicy: "Equivalent",
         namespaceSelector: {},
-        // Matches when either the old or the new object carries the label, so
-        // removing it cannot escape the policy.
-        objectSelector: {
-          matchLabels: { [MANAGED_APPLICATION_LABEL]: "true" },
-        },
         resourceRules: [
           { ...APPLICATION_RULES[0], operations: ["CREATE", "UPDATE"] },
         ],
@@ -114,7 +112,7 @@ function createApplicationSourcePolicy(chart: Chart): void {
         {
           expression: `[${APPLICATION_SOURCE_WRITERS.map((writer) => `'${writer}'`).join(", ")}].exists(writer, writer == request.userInfo.username)`,
           message:
-            "only Delivery, through ArgoCD, writes a managed Application's source",
+            "only Delivery, through ArgoCD, writes an Application's source",
           reason: "Forbidden",
         },
       ],

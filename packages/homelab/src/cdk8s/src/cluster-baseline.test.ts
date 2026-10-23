@@ -57,6 +57,7 @@ const admissionPolicies: readonly [
   ["woodpecker-workspace-seeds.sjer.red", "Mutating"],
   ["woodpecker-ci-pod-guard.sjer.red", "Validating"],
   ["woodpecker-ram-scratch.sjer.red", "Mutating"],
+  ["woodpecker-ram-scratch-playwright-e2e.sjer.red", "Mutating"],
   ["woodpecker-ram-scratch-guard.sjer.red", "Validating"],
   ...sourceWriterPolicy,
 ];
