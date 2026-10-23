@@ -209,6 +209,8 @@ async function successorDispatchCase(input: Fixture) {
       message: "Fixture releases the dispatch barrier",
       recoveryRequired: false,
       evidence: [],
+      // Only the owning successor reports the result (D7).
+      executor: { workflowId: successor, workflowRunId: "successor-run" },
     },
     testExecutor,
   );
