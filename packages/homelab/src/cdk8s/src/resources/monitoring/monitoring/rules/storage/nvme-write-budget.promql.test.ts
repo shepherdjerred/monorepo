@@ -1,7 +1,8 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { expect, test } from "vitest";
+import { test } from "vitest";
+import { expectPromtoolRulesPass } from "./promtool-test.ts";
 import {
   CI_WORKSPACE_PHYSICAL_BYTES_PER_PVC_24H,
   getNvmeRuleGroups,
@@ -219,16 +220,7 @@ test("NVMe write budget follows observed or rated wear and pages over-budget dri
         ],
       }),
     );
-    const process = Bun.spawn(["promtool", "test", "rules", testFile], {
-      stdout: "pipe",
-      stderr: "pipe",
-    });
-    const [stdout, stderr, exitCode] = await Promise.all([
-      new Response(process.stdout).text(),
-      new Response(process.stderr).text(),
-      process.exited,
-    ]);
-    expect(exitCode, stdout + stderr).toBe(0);
+    await expectPromtoolRulesPass(testFile);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

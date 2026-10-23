@@ -1,7 +1,8 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { expect, test } from "vitest";
+import { test } from "vitest";
+import { expectPromtoolRulesPass } from "./promtool-test.ts";
 import { getR2StorageRuleGroups } from "./r2-storage.ts";
 
 const sample = (value: number, labels = "{}") => [{ labels, value }];
@@ -128,16 +129,7 @@ test("R2 audit alerts evaluate persisted age and the newest owner's inventory", 
         })),
       }),
     );
-    const process = Bun.spawn(["promtool", "test", "rules", filename], {
-      stdout: "pipe",
-      stderr: "pipe",
-    });
-    const [stdout, stderr, exitCode] = await Promise.all([
-      new Response(process.stdout).text(),
-      new Response(process.stderr).text(),
-      process.exited,
-    ]);
-    expect(exitCode, stdout + stderr).toBe(0);
+    await expectPromtoolRulesPass(filename);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

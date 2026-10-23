@@ -84,6 +84,27 @@ function eventWhere(input: EventListInput): Prisma.AlertEventWhereInput {
   return { AND: predicates };
 }
 
+/** Fetches one extra row so a full page can tell whether another follows. */
+function pageWindow(input: { limit: number; cursor?: string | undefined }): {
+  take: number;
+  cursor?: { id: string };
+  skip?: number;
+} {
+  return {
+    take: input.limit + 1,
+    ...(input.cursor === undefined
+      ? {}
+      : { cursor: { id: input.cursor }, skip: 1 }),
+  };
+}
+
+function nextCursor(
+  rows: readonly { id: string }[],
+  limit: number,
+): string | null {
+  return rows.length > limit ? (rows[limit - 1]?.id ?? null) : null;
+}
+
 export class PrismaReadRepository {
   readonly #prisma: PrismaClient;
 
@@ -106,17 +127,14 @@ export class PrismaReadRepository {
       this.#prisma.alertOccurrence.findMany({
         where: alertWhere(input),
         orderBy: [{ openedAtNs: "desc" }, { id: "desc" }],
-        take: input.limit + 1,
-        ...(input.cursor === undefined
-          ? {}
-          : { cursor: { id: input.cursor }, skip: 1 }),
+        ...pageWindow(input),
       }),
       this.#latestSnapshotCompletedAtNs(),
     ]);
     const page = rows.slice(0, input.limit);
     return AlertListResponseSchema.parse({
       items: page.map((row) => toAlertView(row, latestSnapshotNs)),
-      nextCursor: rows.length > input.limit ? (page.at(-1)?.id ?? null) : null,
+      nextCursor: nextCursor(rows, input.limit),
     });
   }
 
@@ -131,10 +149,7 @@ export class PrismaReadRepository {
       this.#prisma.webhookDelivery.findMany({
         where: { occurrenceLinks: { some: { occurrenceId: input.id } } },
         orderBy: [{ receivedAtNs: "desc" }, { id: "desc" }],
-        take: input.limit + 1,
-        ...(input.cursor === undefined
-          ? {}
-          : { cursor: { id: input.cursor }, skip: 1 }),
+        ...pageWindow(input),
       }),
       this.#latestSnapshotCompletedAtNs(),
     ]);
@@ -155,10 +170,7 @@ export class PrismaReadRepository {
         rawPayloadRetained: delivery.rawPayload !== null,
         rawExpiresAt: epochNanosecondsToInstantText(delivery.rawExpiresAtNs),
       })),
-      deliveriesNextCursor:
-        deliveries.length > input.limit
-          ? (deliveryPage.at(-1)?.id ?? null)
-          : null,
+      deliveriesNextCursor: nextCursor(deliveries, input.limit),
     });
   }
 
@@ -168,10 +180,7 @@ export class PrismaReadRepository {
         where: eventWhere(input),
         include: { occurrence: true },
         orderBy: [{ occurredAtNs: "desc" }, { id: "desc" }],
-        take: input.limit + 1,
-        ...(input.cursor === undefined
-          ? {}
-          : { cursor: { id: input.cursor }, skip: 1 }),
+        ...pageWindow(input),
       }),
       this.#latestSnapshotCompletedAtNs(),
     ]);
@@ -181,7 +190,7 @@ export class PrismaReadRepository {
         ...toEventView(row),
         alert: toAlertView(row.occurrence, latestSnapshotNs),
       })),
-      nextCursor: rows.length > input.limit ? (page.at(-1)?.id ?? null) : null,
+      nextCursor: nextCursor(rows, input.limit),
     });
   }
 
