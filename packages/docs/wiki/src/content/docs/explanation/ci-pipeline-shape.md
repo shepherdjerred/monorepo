@@ -254,9 +254,17 @@ stay registered but out of the enabled set until their apps are installed and
 observed reviewing: an enabled-but-silent provider holds every PR at the
 deadline instead of passing it. Codex names the
 head in its latest PR review, and a clean Codex review is represented by its
-👍 reaction; each provider's completion signal is documented in
-`packages/code-review`. The gate is
+receipt comment or its 👍 reaction; each provider's completion signal is
+documented in `packages/code-review`. The gate is
 [`wait-for-review.ts`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/review/wait-for-review.ts).
+
+Only the first round of review is a full quality gate. Once a provider has
+finished reviewing an earlier commit of the pull request, later heads never
+wait on it, and only an unresolved P0 still blocks. Waiting on every
+re-review cost hours on stacked pull requests, mostly for later-round P2s and
+for re-reviews the gate failed to recognise; the first round is where review
+pays for itself. The rule lives in `judgedSnapshot` in
+[`gate.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/code-review/src/gate.ts).
 
 Binding to the head commit is the whole point. A review comment from an earlier
 push is evidence about code that is no longer proposed, and accepting it would

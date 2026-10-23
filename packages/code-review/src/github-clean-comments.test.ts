@@ -6,6 +6,7 @@ import {
   coderabbitProvider,
   parseCoderabbitCleanHead,
 } from "./providers/coderabbit.ts";
+import { codexProvider, parseCodexReceiptHead } from "./providers/codex.ts";
 
 const head = "6cbcd33966e8a5b5522a22f41b86304109be9901";
 const older = "5e7bda1a448ff462650fa16965f249cf15237c0d";
@@ -109,7 +110,8 @@ test("completion lookup scans later comment pages", async () => {
     ),
   );
   await expect(fetchCleanCompletionComment(input)).resolves.toEqual({
-    reviewedAt: completed,
+    atHead: { reviewedAt: completed },
+    earlierHead: false,
   });
   expect(requests).toBe(2);
 });
@@ -129,9 +131,8 @@ test.each([
   ],
 ])("rejects %s", async (_description, candidate, headPushedAt) => {
   mockComments([candidate]);
-  await expect(
-    fetchCleanCompletionComment({ ...input, headPushedAt }),
-  ).resolves.toBeNull();
+  const result = await fetchCleanCompletionComment({ ...input, headPushedAt });
+  expect(result.atHead).toBeNull();
 });
 
 test.each([
@@ -169,7 +170,8 @@ test("latest coverage cannot be masked by an older clean comment", async () => {
       body: body.replace('"reviewed"', '"pending"'),
     },
   ]);
-  await expect(fetchCleanCompletionComment(input)).resolves.toBeNull();
+  const result = await fetchCleanCompletionComment(input);
+  expect(result.atHead).toBeNull();
 });
 
 test("formal review at head still wins over missing comment completion", async () => {
@@ -208,3 +210,51 @@ test.each([null, "bad"])(
     );
   },
 );
+
+// Shape of the Codex receipt observed on PR #4014.
+function codexReceipt(
+  sha: string,
+  wording = "Didn't find any major issues. Nice work!",
+) {
+  return `<!-- codex-review-receipt:v1 -->\n\nCodex Review: ${wording}\n\n**Reviewed commit:** \`${sha}\`\n\n<details> <summary>About Codex in GitHub</summary></details>`;
+}
+
+function codexComment(sha: string, updatedAt = completed) {
+  return {
+    body: codexReceipt(sha),
+    updated_at: updatedAt,
+    user: { login: "chatgpt-codex-connector[bot]" },
+  };
+}
+
+test("a Codex receipt is read only when it reports a clean review", () => {
+  expect(parseCodexReceiptHead(codexReceipt("6cbcd33966"))).toBe("6cbcd33966");
+  expect(
+    parseCodexReceiptHead(
+      codexReceipt("6cbcd33966", "Here are some suggestions."),
+    ),
+  ).toBeNull();
+  expect(
+    parseCodexReceiptHead(
+      codexReceipt("6cbcd33966").replace("codex-review-receipt:v1", ""),
+    ),
+  ).toBeNull();
+});
+
+test("a clean Codex receipt naming the head by abbreviation completes the review", async () => {
+  mockComments([codexComment(head.slice(0, 10))]);
+  await expect(
+    resolveReviewState({ ...input, provider: codexProvider }),
+  ).resolves.toMatchObject({
+    state: "reviewed",
+    completionSignal: "issue-comment",
+    priorRound: false,
+  });
+});
+
+test("a receipt for an earlier commit marks a prior round, not this head", async () => {
+  mockComments([codexComment(older.slice(0, 10), "2026-10-01T06:00:00Z")]);
+  await expect(
+    resolveReviewState({ ...input, provider: codexProvider }),
+  ).resolves.toMatchObject({ state: "reviewing", priorRound: true });
+});

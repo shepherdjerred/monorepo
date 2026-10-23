@@ -203,6 +203,7 @@ function concludeTick(
             threads: observation.threads,
             skipReason: observation.state.skipReason,
             blockedReason: observation.state.blockedReason,
+            priorRound: observation.state.priorRound ?? false,
           },
         ],
   );
@@ -396,6 +397,7 @@ export async function verifyPassBeforeAccepting(input: {
       threads: [...threads],
       skipReason: fresh.skipReason,
       blockedReason: fresh.blockedReason,
+      priorRound: fresh.priorRound ?? false,
     });
   }
   const decision = evaluateMultiGate({

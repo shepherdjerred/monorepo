@@ -234,11 +234,17 @@ export async function fetchLatestProviderReview(input: {
   number: number;
   token: string;
   provider: ReviewProvider;
-}): Promise<{ commitId: string | null; submittedAt: string | null } | null> {
+}): Promise<{
+  commitId: string | null;
+  submittedAt: string | null;
+  /** Every commit a non-dismissed review by the provider was submitted on. */
+  reviewedCommits: readonly string[];
+} | null> {
   let url: string | null =
     `${GITHUB_API_URL}/repos/${input.repo}/pulls/${String(input.number)}/reviews?per_page=100`;
   let latest: { commitId: string | null; submittedAt: string | null } | null =
     null;
+  const reviewedCommits = new Set<string>();
   let latestScore = Number.NEGATIVE_INFINITY;
   while (url !== null) {
     const { payload, linkNext } = await getJsonWithLink(url, input.token);
@@ -254,6 +260,8 @@ export async function fetchLatestProviderReview(input: {
       // Fall through to an older non-dismissed review, or none.
       if (stringField(item, "state") === "DISMISSED") continue;
       const submittedAt = stringField(item, "submitted_at");
+      const commitId = stringField(item, "commit_id");
+      if (commitId !== null) reviewedCommits.add(commitId);
       const score = Date.parse(submittedAt ?? "");
       const normalized = Number.isFinite(score)
         ? score
@@ -268,7 +276,9 @@ export async function fetchLatestProviderReview(input: {
     }
     url = linkNext;
   }
-  return latest;
+  return latest === null
+    ? null
+    : { ...latest, reviewedCommits: [...reviewedCommits] };
 }
 
 /**
@@ -351,6 +361,13 @@ export type ReviewStateResult = {
    * provider's remediation instead of polling to its deadline.
    */
   blockedReason: string | null;
+  /**
+   * The provider already finished a review of an earlier commit of this pull
+   * request. After that first round the gate blocks only on P0 findings and
+   * never waits on this provider again (see `evaluateMultiGate`). Resolved for
+   * `review-at-head` providers; absent means no earlier round is known.
+   */
+  priorRound?: boolean;
 };
 
 /**
@@ -482,6 +499,21 @@ async function resolveReviewAtHeadState(input: {
     token,
     provider,
   });
+  const reviewedEarlierCommit =
+    review?.reviewedCommits.some((commit) => commit !== head) ?? false;
+  const completion = provider.completion;
+  // Providers without a clean signal always post a review object, so a missing
+  // review means "not reviewed yet" — skip the reaction lookup entirely rather
+  // than letting another reviewer's 👍 satisfy this provider's gate.
+  const cleanComment = await fetchCleanCompletionComment({
+    repo,
+    number: prNumber,
+    token,
+    provider,
+    head,
+    headPushedAt,
+  });
+  const priorRound = reviewedEarlierCommit || cleanComment.earlierHead;
   if (review !== null && review.commitId === head) {
     return {
       state: "reviewed",
@@ -491,48 +523,42 @@ async function resolveReviewAtHeadState(input: {
       staleReaction: false,
       skipReason: null,
       blockedReason: null,
+      priorRound,
     };
   }
-  // Providers without a clean signal always post a review object, so a missing
-  // review means "not reviewed yet" — skip the reaction lookup entirely rather
-  // than letting another reviewer's 👍 satisfy this provider's gate.
-  const completion = provider.completion;
-  const cleanComment = await fetchCleanCompletionComment({
-    repo,
-    number: prNumber,
-    token,
-    provider,
-    head,
-    headPushedAt,
-  });
-  if (cleanComment !== null) {
+  if (cleanComment.atHead !== null) {
     return {
       state: "reviewed",
       completionSignal: "issue-comment",
       reviewedCommit: head,
-      reviewedAt: cleanComment.reviewedAt,
+      reviewedAt: cleanComment.atHead.reviewedAt,
       staleReaction: false,
       skipReason: null,
       blockedReason: null,
+      priorRound,
     };
   }
-  const thumbsUp =
+  const acceptsThumbsUp =
     completion.kind === "review-at-head" &&
-    completion.cleanSignal === "thumbsup-reaction"
-      ? await fetchProviderThumbsUp({
-          repo,
-          number: prNumber,
-          token,
-          provider,
-        })
-      : null;
+    (completion.cleanSignal === "thumbsup-reaction" ||
+      (typeof completion.cleanSignal === "object" &&
+        completion.cleanSignal.alsoThumbsUpReaction === true));
+  const thumbsUp = acceptsThumbsUp
+    ? await fetchProviderThumbsUp({
+        repo,
+        number: prNumber,
+        token,
+        provider,
+      })
+    : null;
   // A 👍 reaction carries no commit SHA, so it only counts as "reviewed clean
   // at head" when it can be independently tied to the current head: the
   // reaction must have been created at/after the head was pushed. A reaction
   // that predates the head push (a leftover 👍 from an earlier commit) — or any
   // reaction when the push time is unknown — leaves the gate `reviewing` so a
   // new head cannot pass before the provider re-reviews it. Such a reaction is
-  // still reported via `staleReaction` for telemetry.
+  // still reported via `staleReaction` for telemetry, and it is evidence of an
+  // earlier clean round.
   if (
     thumbsUp !== null &&
     reactionBoundToHead(thumbsUp.createdAt, headPushedAt)
@@ -545,8 +571,10 @@ async function resolveReviewAtHeadState(input: {
       staleReaction: false,
       skipReason: null,
       blockedReason: null,
+      priorRound,
     };
   }
+  const earlierRound = priorRound || thumbsUp !== null;
   // No review at head and no bound clean signal. Before reporting `reviewing`,
   // check whether the provider said it cannot review at all (quota exhaustion)
   // — a block fails fast with its remediation instead of polling to the
@@ -559,24 +587,14 @@ async function resolveReviewAtHeadState(input: {
     provider,
     headPushedAt,
   });
-  if (blockedReason !== null) {
-    return {
-      state: "errored",
-      completionSignal: "none",
-      reviewedCommit: review?.commitId ?? null,
-      reviewedAt: review?.submittedAt ?? null,
-      staleReaction: thumbsUp !== null,
-      skipReason: null,
-      blockedReason,
-    };
-  }
   return {
-    state: "reviewing",
+    state: blockedReason === null ? "reviewing" : "errored",
     completionSignal: "none",
     reviewedCommit: review?.commitId ?? null,
     reviewedAt: review?.submittedAt ?? null,
     staleReaction: thumbsUp !== null,
     skipReason: null,
-    blockedReason: null,
+    blockedReason,
+    priorRound: earlierRound,
   };
 }

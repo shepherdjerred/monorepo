@@ -236,6 +236,7 @@ describe("fetchLatestProviderReview", () => {
     await expect(fetchLatestProviderReview(input)).resolves.toEqual({
       commitId: "abc123",
       submittedAt: "2026-09-27T05:00:00Z",
+      reviewedCommits: ["abc123"],
     });
   });
 
