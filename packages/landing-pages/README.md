@@ -32,9 +32,9 @@ The root lists the items and is not indexed. `404.astro` covers unknown paths.
 The Storm item adds:
 
 - An address card with a Java/Bedrock toggle and one copy button for the
-  selected edition. Phones and tablets open on Bedrock. Java shows its pinned
-  version (26.2); Bedrock says "latest version", because its support follows
-  the live Geyser build.
+  selected edition. Phones and tablets open on Bedrock. Java shows "26.3 & older" (the server runs 26.2;
+  ViaVersion and ViaBackwards admit newer and older clients); Bedrock says
+  "latest version", because its support follows the live Geyser build.
 - Join steps and a console section (`#consoles`) live on the page itself, so
   visitors from an ad don't have to leave for the docs. Consoles have no Add
   Server button, so the section walks through BedrockConnect's DNS method.
