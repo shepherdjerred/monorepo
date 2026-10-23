@@ -58,16 +58,41 @@ export async function startMonitor(
     : { monitorState: "watching", monitorSettledAt: null };
 }
 
+/**
+ * Least recently observed first, a never-observed deployment before any
+ * observed one, ties in acceptance order. The executor observes a bounded
+ * number per tick, so this order rotates through every watching
+ * deployment instead of starving those behind the first (W1).
+ */
+export function observationTurns<
+  T extends { monitorObservations: readonly { observedAt: Date }[] },
+>(rows: readonly T[]): T[] {
+  const last = (row: T) => row.monitorObservations[0]?.observedAt.getTime();
+  return rows.toSorted((left, right) => {
+    const [a, b] = [last(left), last(right)];
+    if (a === b) return 0;
+    if (a === undefined) return -1;
+    return b === undefined ? 1 : a - b;
+  });
+}
+
 /** Every accepted deployment still watching, with what the executor needs to render its queries. */
 export async function watchingMonitors(
   this: Delivery,
 ): Promise<WatchingMonitor[]> {
   const rows = await this.database.deployment.findMany({
     where: { monitorState: "watching", acceptedBy: { some: {} } },
+    include: {
+      monitorObservations: {
+        orderBy: { sequence: "desc" },
+        take: 1,
+        select: { observedAt: true },
+      },
+    },
     orderBy: { finishedAt: "asc" },
   });
   const watching: WatchingMonitor[] = [];
-  for (const row of rows) {
+  for (const row of observationTurns(rows)) {
     const monitor = required(
       await recipeMonitor(this.database, row.pipelineRevisionId),
       "Declared monitor",
