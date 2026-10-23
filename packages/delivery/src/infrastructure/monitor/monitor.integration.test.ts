@@ -6,6 +6,7 @@ import {
 } from "#shared/model/monitor-contract.ts";
 import { deliveryMetrics } from "#server/metrics.ts";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
+import { createTestApp } from "#testing/http-app.ts";
 import {
   arcadePipeline,
   arcadeRegistration,
@@ -345,6 +346,78 @@ describe("monitor (4.19)", () => {
     expect(await context.delivery.monitorStatus("arcade/prod")).toMatchObject({
       state: "alarmed",
     });
+  });
+});
+
+describe("an alarm while writes are paused (W2)", () => {
+  beforeEach(async () => {
+    await context.cluster.database.deployment.deleteMany({});
+  });
+
+  test("an alarm while writes are paused is restored by the first reconcile after they resume (W2)", async () => {
+    await declareMonitoredRecipe("automatic");
+    const baseline = await deployAndAccept(context.fixture.versionSet.id);
+    await context.delivery.observeMonitor(
+      baseline.id,
+      observation({ requests: 500 }),
+      testExecutor,
+    );
+    const newer = await deployAndAccept(await publish(2));
+    let writes = false;
+    const token = "disposable-monitor-executor-credential";
+    const app = createTestApp(context.delivery, {
+      machineCredentials: [{ token, principal: testExecutor }],
+      writesEnabled: () => Promise.resolve(writes),
+      enabledEnvironments: () => Promise.resolve(["arcade/prod"]),
+    });
+    const post = (path: string, body: unknown) =>
+      app.request(path, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+    const rollbacks = () =>
+      context.cluster.database.deployment.findMany({
+        where: { environmentId: "arcade/prod", kind: "rollback" },
+      });
+    // The observation is a result, so the paused API records the alarm,
+    // but the route requests no rollback while writes are paused.
+    const observed = await post(
+      `/api/v1/deployments/${encodeURIComponent(newer.id)}/monitor/observations`,
+      observation({ requests: 500, critical: true }),
+    );
+    expect(observed.status).toBe(200);
+    const alarmed = await context.cluster.database.deployment.findUniqueOrThrow(
+      {
+        where: { id: newer.id },
+      },
+    );
+    expect(alarmed.monitorState).toBe("alarmed");
+    // The dispatch tick's reconcile is refused while paused.
+    const paused = await post("/api/v1/reconcile", {});
+    expect(paused.ok).toBe(false);
+    expect(await rollbacks()).toEqual([]);
+    // The alarmed acceptance is the durable obligation: the first reconcile
+    // after writes resume requests its rollback, and later ones add none.
+    writes = true;
+    const resumed = await post("/api/v1/reconcile", {});
+    expect(resumed.status).toBe(200);
+    const [rollback, ...others] = await rollbacks();
+    expect(others).toEqual([]);
+    expect(rollback).toMatchObject({
+      status: "queued",
+      restoredDeploymentId: baseline.id,
+    });
+    expect(
+      z.object({ deployments: z.array(z.string()) }).parse(await resumed.json())
+        .deployments,
+    ).toContain(rollback?.id);
+    const again = await post("/api/v1/reconcile", {});
+    expect(again.status).toBe(200);
+    expect(await rollbacks()).toHaveLength(1);
   });
 });
 
