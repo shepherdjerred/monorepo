@@ -5,6 +5,7 @@ import {
 } from "@shepherdjerred/delivery/contract";
 import {
   AttestationRequestSchema,
+  PLAN_APPROVAL_STAGE_KEY,
   RecoveryIntentRequestSchema,
   deploymentKindForRecipe,
 } from "@shepherdjerred/delivery/model-contract";
@@ -319,6 +320,25 @@ async function administer(
 }
 
 /**
+ * The plan a decision names: the deployment's own saved plan, or, once a
+ * decision settled the approve step, the digest that decision bound. A
+ * rejection deletes the saved plan, so a retry after a lost response reads
+ * the settled digest and the server answers the identical repeat (4.13).
+ */
+function decidedPlanDigest(
+  detail: Awaited<ReturnType<DeliveryClient["deployment"]>>,
+  deploymentId: string,
+) {
+  if (detail.savedPlan !== null) return detail.savedPlan.planDigest;
+  const settled = detail.stages.find(
+    (stage) => stage.key === PLAN_APPROVAL_STAGE_KEY,
+  );
+  if (settled === undefined)
+    throw new Error(`${deploymentId} has no saved plan to decide`);
+  return settled.operationId;
+}
+
+/**
  * Decide the exact saved plan a model `tofu` recipe's approve step waits on
  * (section 5, 4.13): the digest comes from the deployment's own saved plan,
  * so a decision never names a plan the deployment did not produce. A
@@ -330,12 +350,12 @@ async function decidePlan(
   options: ModelOptions,
   decision: "approved" | "rejected",
 ): ModelResult {
-  const { savedPlan } = await client.deployment(deploymentId);
-  if (savedPlan === null)
-    throw new Error(`${deploymentId} has no saved plan to decide`);
   const result = await client.approvePlan(deploymentId, {
     decision,
-    planDigest: savedPlan.planDigest,
+    planDigest: decidedPlanDigest(
+      await client.deployment(deploymentId),
+      deploymentId,
+    ),
     reason: required(options.reason).trim(),
   });
   return { result, exitCode: 0 };

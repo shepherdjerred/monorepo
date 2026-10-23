@@ -509,6 +509,42 @@ describe("plan approval", () => {
     });
   });
 
+  test("a repeated reject-plan after a lost response names the digest the decision bound", async () => {
+    const [planned] = fixtures.planWaiting.stages;
+    if (planned === undefined) throw new Error("The fixture has a plan stage");
+    // The rejection committed: the saved plan is gone and the approve step settled.
+    const rejected = {
+      ...fixtures.planWaiting,
+      savedPlan: null,
+      stages: [
+        ...fixtures.planWaiting.stages,
+        {
+          ...planned,
+          id: "stage-approve-plan",
+          key: "approve/plan",
+          status: "failed",
+          operationId: fixtures.savedPlan.planDigest,
+          message: "Rejected by operator",
+        },
+      ],
+    };
+    const { client, sent } = delivery({
+      "GET /deployments/tofu-cloudflare-prod-7": rejected,
+      "POST /deployments/tofu-cloudflare-prod-7/plan-approval":
+        fixtures.attestedStage,
+    });
+    await run(client, "reject-plan", [
+      "tofu-cloudflare-prod-7",
+      "--reason",
+      "Deletes the apex record",
+    ]);
+    expect(sent.at(-1)?.body).toEqual({
+      decision: "rejected",
+      planDigest: fixtures.savedPlan.planDigest,
+      reason: "Deletes the apex record",
+    });
+  });
+
   test("approve-plan refuses a deployment with no saved plan before sending", async () => {
     const { client, sent } = delivery({
       "GET /deployments/scout-prod-43": fixtures.deploymentDetails[0],

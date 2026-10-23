@@ -229,7 +229,10 @@ inspected operation. `recovery` reads an intent and its inspection evidence.
 `approve-plan` and `reject-plan` record the one decision on the exact saved
 plan a model `tofu` recipe's approve step waits on: each reads the digest from
 the deployment's saved plan and requires a human identity. A rejection
-discards the plan and ends the deployment failed without applying. `attest`
+discards the plan and ends the deployment failed without applying. Once a
+decision settled the approve step, a repeated command names the digest that
+decision bound, so retrying after a lost response returns the same settled
+decision instead of failing for want of a saved plan. `attest`
 records operator-attested evidence for one stage of an `operator-run`
 deployment; the evidence file is a JSON array of evidence entries, and the
 command uses the attestor credential `DELIVERY_ATTEST_TOKEN`, which the
