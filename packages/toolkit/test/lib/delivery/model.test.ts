@@ -140,6 +140,12 @@ describe("model verbs refuse incomplete requests before credentials", () => {
     ],
     ["snapshot", [], [], "--output"],
     ["snapshot", ["reconcile"], [], "--machine"],
+    [
+      "snapshot",
+      ["reconcile", fixtures.PROD],
+      ["--machine"],
+      "takes no operand",
+    ],
     ["snapshot", ["restore"], [], "deploy snapshot reconcile"],
     ["render-application", ["delivery/prod"], [], "--snapshot"],
     ["recover", ["scout-prod-37"], ["--machine"], "--expected-generation"],

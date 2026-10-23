@@ -55,6 +55,11 @@ export function validateSnapshotCommand(
     throw new Error(
       "Use deploy snapshot --output <FILE>, deploy snapshot reconcile, or deploy snapshot accept <ENVIRONMENT>",
     );
+  // Reconcile is global; an operand would read as a target it ignores.
+  if (positionals.length !== 1)
+    throw new Error(
+      "deploy snapshot reconcile takes no operand; it reconciles every environment",
+    );
   requireMachine(options, "Reconcile after restore");
 }
 
