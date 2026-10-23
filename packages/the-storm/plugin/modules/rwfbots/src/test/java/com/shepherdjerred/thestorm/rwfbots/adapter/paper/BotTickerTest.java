@@ -10,11 +10,20 @@ import com.shepherdjerred.thestorm.rwfbots.domain.Fixtures;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.LeverCurves;
 import com.shepherdjerred.thestorm.rwfbots.domain.director.Rating;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.BlockPos;
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.GridBounds;
+import com.shepherdjerred.thestorm.rwfbots.domain.map.SyntheticMap;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
+import com.shepherdjerred.thestorm.rwfbots.domain.perception.Percept;
+import com.shepherdjerred.thestorm.rwfbots.domain.perception.PerceptionState;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ActiveJump;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Loadout;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Reflex;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexContext;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexInput;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexState;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Decision;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
@@ -23,11 +32,13 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.MatchPhase;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.PoisonView;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Stance;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.SplittableRandom;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -93,7 +104,8 @@ final class BotTickerTest {
             "test",
             List.of(),
             List.of());
-    return new ReflexInput(self, snapshot, Decision.idle(self.id(), 20, 0), Optional.empty(), 0);
+    return new ReflexInput(
+        self, snapshot, Decision.idle(self.id(), 20, 0), Optional.empty(), 0, List.of());
   }
 
   private static final class TypingActivity implements BodyActivity {
@@ -126,7 +138,8 @@ final class BotTickerTest {
             List.of(),
             List.of());
     var input =
-        new ReflexInput(self, snapshot, Decision.idle(self.id(), 19, 0), Optional.of(oldEnemy), 0);
+        new ReflexInput(
+            self, snapshot, Decision.idle(self.id(), 19, 0), Optional.of(oldEnemy), 0, List.of());
     var bounds = new GridBounds(new BlockPos(0, 0, 0), 10, 5, 10);
     var empty = new BitSet();
     assertThat(BotTicker.freshTarget(input, new VoxelGrid(bounds, empty, empty, empty)).target())
@@ -135,5 +148,74 @@ final class BotTickerTest {
     for (var y = 0; y < 5; y++) wall.set(bounds.index(1, y, 4));
     assertThat(BotTicker.freshTarget(input, new VoxelGrid(bounds, empty, wall, empty)).target())
         .isEmpty();
+  }
+
+  @Test
+  void aReadyBowIsLoweredForAnotherPerceivedEnemyWhenTheNearestOneDucksBehindCover() {
+    // Review finding: the input kept only the nearest perceived enemy, so once freshTarget found
+    // that one behind cover nothing was left to lower the bow for another perceived enemy already
+    // inside MELEE_ALERT.
+    var nav = SyntheticMap.bake();
+    var archerAt = new Vec3(5.5, 1, 5.5);
+    var self = combatant(1, RED, archerAt);
+    var far = combatant(2, BLUE, archerAt.plus(20, 0, 0));
+    var ducked = combatant(3, BLUE, archerAt.plus(0, 0, 2));
+    var near = combatant(4, BLUE, archerAt.plus(Reflex.MELEE_ALERT - 1, 0, 0));
+    var world = List.of(self, far, ducked, near);
+    var decision =
+        new Decision(
+            self.id(),
+            Option.ENGAGE,
+            Optional.of(far.id()),
+            List.of(),
+            Stance.AGGRESSIVE,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            "engage:fight-peek",
+            1,
+            0,
+            Optional.empty());
+    var bounds = nav.grid().bounds();
+    var sight = (BitSet) nav.grid().sight().clone();
+    for (var y = bounds.origin().y(); y < bounds.origin().y() + bounds.sizeY(); y++) {
+      sight.set(bounds.index(5, y, 6));
+    }
+    var grid = new VoxelGrid(bounds, nav.grid().movement(), sight, nav.grid().projectile());
+    var archer = new ReflexContext(grid, Fixtures.levers(1), Loadout.standard(Kit.LONGBOW));
+    var state = ReflexState.initial(Facing.SOUTH);
+    for (var tick = 1; tick <= 5; tick++) {
+      var snapshot = snapshot(tick, world);
+      var aiming =
+          ReflexInput.of(
+              self, snapshot, decision, new Percept(PerceptionState.EMPTY, List.of(far), tick));
+      state = Reflex.tick(state, aiming, archer, new SplittableRandom(tick)).state();
+    }
+    assertThat(state.isDrawing()).isTrue();
+    var both = new Percept(PerceptionState.EMPTY, List.of(ducked, near), 6);
+    var pressed =
+        BotTicker.freshTarget(ReflexInput.of(self, snapshot(6, world), decision, both), grid);
+    assertThat(pressed.target()).isEmpty();
+    assertThat(pressed.perceived()).containsExactly(near);
+    assertThat(Reflex.tick(state, pressed, archer, new SplittableRandom(6)).commands())
+        .contains(new BodyCommand.CancelUse());
+    var alone = new Percept(PerceptionState.EMPTY, List.of(ducked), 6);
+    var hidden =
+        BotTicker.freshTarget(ReflexInput.of(self, snapshot(6, world), decision, alone), grid);
+    assertThat(hidden.perceived()).isEmpty();
+    assertThat(Reflex.tick(state, hidden, archer, new SplittableRandom(6)).commands())
+        .doesNotContain(new BodyCommand.CancelUse());
+  }
+
+  private static WorldSnapshot snapshot(long tick, List<CombatantView> world) {
+    return new WorldSnapshot(
+        tick,
+        MatchPhase.LIVE,
+        world,
+        List.of(),
+        PoisonView.NONE,
+        "synthetic",
+        List.of(),
+        List.of());
   }
 }

@@ -317,7 +317,8 @@ final class DuelFixtures implements BasicCommand, CombatHarness.Controller, List
                 || opponent.equals("historical")
             ? authored.gapplesLeft()
             : 0;
-    return new ReflexInput(self, authored.snapshot(), decision, target, gapples);
+    return new ReflexInput(
+        self, authored.snapshot(), decision, target, gapples, authored.perceived());
   }
 
   private Decision pursuit(ReflexInput input, NavArtifact nav) {

@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Loadout;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.MotionRecovery;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexState;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SplittableRandom;
@@ -24,7 +25,8 @@ public final class BotBody {
 
   private final UUID uuid;
   private final Director.Drafted drafted;
-  private final Loadout loadout;
+  private Loadout loadout;
+  private Kit kit;
   private @Nullable BotProfile profile;
   private ReflexState reflex = ReflexState.initial(Facing.SOUTH);
   private MotionRecovery.State motion = MotionRecovery.State.INITIAL;
@@ -57,7 +59,8 @@ public final class BotBody {
   BotBody(UUID uuid, Director.Drafted drafted) {
     this.uuid = uuid;
     this.drafted = drafted;
-    this.loadout = Loadouts.rwf(drafted.kit());
+    this.kit = drafted.kit();
+    this.loadout = Loadouts.rwf(kit);
   }
 
   public UUID uuid() {
@@ -76,7 +79,22 @@ public final class BotBody {
     return drafted.personality().name();
   }
 
+  /** The loadout of the kit the bot last played, for the slots it may hold. */
   public Loadout loadout() {
+    return loadout;
+  }
+
+  /**
+   * The loadout of {@code current}, the kit the bot plays now. A bot changes kits after the draft:
+   * it tries kits in the lobby, a restricted pool falls back to the default and an admin can force
+   * one, and a loadout fixed at the draft left such a bot never drawing the bow it carried (12 of
+   * 16 bots forced onto crossbows fired nothing in eight minutes).
+   */
+  public Loadout loadout(Kit current) {
+    if (current != kit) {
+      kit = current;
+      loadout = Loadouts.rwf(current);
+    }
     return loadout;
   }
 

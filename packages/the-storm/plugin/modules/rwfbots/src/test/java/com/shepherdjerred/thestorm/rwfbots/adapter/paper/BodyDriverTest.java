@@ -371,7 +371,8 @@ final class BodyDriverTest {
             snapshot,
             com.shepherdjerred.thestorm.rwfbots.domain.world.Decision.idle(self.id(), 2, 0),
             Optional.empty(),
-            0);
+            0,
+            List.of());
     assertThat(BotTicker.communicationPaused(bot, input, activity)).isFalse();
     apply(
         2,
@@ -413,5 +414,15 @@ final class BodyDriverTest {
     assertThat(actions.calls()).containsExactly("weapon CANCEL", "streak");
     bot.newLife(com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing.SOUTH);
     assertThat(bot.shieldUntil()).isZero();
+  }
+
+  @Test
+  void aBotsLoadoutFollowsTheKitItNowPlays() {
+    // A bot drafted as a longbow but switched to a trooper in the lobby kept the longbow's
+    // loadout, and one switched onto a crossbow never drew it.
+    assertThat(bot.loadout(Kit.LONGBOW).hasBow()).isTrue();
+    assertThat(bot.loadout(Kit.TROOPER).hasBow()).isFalse();
+    assertThat(bot.loadout().hasBow()).as("the slots it may hold follow too").isFalse();
+    assertThat(bot.loadout(Kit.LONGBOW).hasBow()).isTrue();
   }
 }

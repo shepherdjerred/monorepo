@@ -296,7 +296,8 @@ public final class BotTicker {
         new ReflexContext(
             match.nav().grid(),
             profile.levers(),
-            PaperLoadouts.available(bot.loadout(), roster.bodies().entity(bot.uuid())),
+            PaperLoadouts.available(
+                bot.loadout(self.orElseThrow().kit()), roster.bodies().entity(bot.uuid())),
             roster.harness().controlled(match.matchId())
                 ? ReflexContext.Habits.NONE
                 : ReflexContext.Habits.of(profile.archetype(), profile.quirks()));
@@ -369,40 +370,55 @@ public final class BotTicker {
     return activity.typing(bot.uuid());
   }
 
-  /** Refreshes a previously visible target only while the current sight line remains clear. */
+  /**
+   * Refreshes a previously visible target, and every perceived enemy, only while the current sight
+   * line remains clear. The perceived enemies are re-ordered nearest first by where they stand now.
+   */
   static ReflexInput freshTarget(ReflexInput input, VoxelGrid grid) {
-    var target =
-        input
-            .target()
-            .map(CombatantView::id)
-            .flatMap(input.snapshot()::combatant)
-            .filter(CombatantView::alive)
-            .filter(
-                enemy ->
-                    !enemy.invisible()
-                        || enemy.armorValue() > 0
-                        || enemy.pos().distance(input.self().pos())
-                            <= Perception.INVISIBLE_NOTICE_RANGE
-                        || (enemy.lastHurtTick() >= 0
-                            && input.snapshot().tick() - enemy.lastHurtTick()
-                                <= Perception.HIT_FLASH_TICKS))
-            .filter(enemy -> Perception.hasLineOfSight(grid, input.self().eye(), enemy));
+    var self = input.self().pos();
     return new ReflexInput(
-        input.self(), input.snapshot(), input.decision(), target, input.gapplesLeft());
+        input.self(),
+        input.snapshot(),
+        input.decision(),
+        input.target().flatMap(seen -> fresh(seen, input, grid)),
+        input.gapplesLeft(),
+        input.perceived().stream()
+            .flatMap(seen -> fresh(seen, input, grid).stream())
+            .sorted(java.util.Comparator.comparingDouble(enemy -> enemy.pos().distance(self)))
+            .toList());
+  }
+
+  private static Optional<CombatantView> fresh(
+      CombatantView seen, ReflexInput input, VoxelGrid grid) {
+    return input
+        .snapshot()
+        .combatant(seen.id())
+        .filter(CombatantView::alive)
+        .filter(
+            enemy ->
+                !enemy.invisible()
+                    || enemy.armorValue() > 0
+                    || enemy.pos().distance(input.self().pos()) <= Perception.INVISIBLE_NOTICE_RANGE
+                    || (enemy.lastHurtTick() >= 0
+                        && input.snapshot().tick() - enemy.lastHurtTick()
+                            <= Perception.HIT_FLASH_TICKS))
+        .filter(enemy -> Perception.hasLineOfSight(grid, input.self().eye(), enemy));
   }
 
   private static ReflexInput obscureTarget(
       ReflexInput input,
       List<com.shepherdjerred.thestorm.rwfbots.domain.perception.SightCloud> clouds) {
-    var target =
-        input
-            .target()
-            .filter(
-                enemy ->
-                    com.shepherdjerred.thestorm.rwfbots.domain.perception.SightCloud.clear(
-                        clouds, input.self().eye(), enemy.eye()));
+    java.util.function.Predicate<CombatantView> clear =
+        enemy ->
+            com.shepherdjerred.thestorm.rwfbots.domain.perception.SightCloud.clear(
+                clouds, input.self().eye(), enemy.eye());
     return new ReflexInput(
-        input.self(), input.snapshot(), input.decision(), target, input.gapplesLeft());
+        input.self(),
+        input.snapshot(),
+        input.decision(),
+        input.target().filter(clear),
+        input.gapplesLeft(),
+        input.perceived().stream().filter(clear).toList());
   }
 
   /**

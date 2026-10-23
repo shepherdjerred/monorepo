@@ -74,7 +74,8 @@ final class KitPlayTest {
             base.snapshot(),
             decision(self, List.of(new Waypoint(HERE.plus(3, 2, 0), Hop.JUMP))),
             Optional.empty(),
-            0);
+            0,
+            List.of());
     assertThat(KitPlay.choose(item, climb, 0, Optional.of(NAV.grid())))
         .get()
         .extracting(BodyCommand.UseKit::at)
@@ -146,7 +147,7 @@ final class KitPlayTest {
             "synthetic",
             List.of(),
             List.of());
-    return new ReflexInput(self, world, decision(self, List.of()), target, 0);
+    return new ReflexInput(self, world, decision(self, List.of()), target, 0, List.of());
   }
 
   private static Optional<BodyCommand.UseKit> first(Kit kit, ReflexInput input, int waypoint) {
@@ -223,7 +224,8 @@ final class KitPlayTest {
             input(self, Optional.empty(), List.of()).snapshot(),
             decision(self, List.of(new Waypoint(HERE.plus(9, 0, 0), Hop.WALK))),
             Optional.empty(),
-            0);
+            0,
+            List.of());
 
     assertThat(first(Kit.DEMOLITIONS, input(self, Optional.empty(), List.of()), 0)).isPresent();
     assertThat(first(Kit.DEMOLITIONS, input(self, Optional.of(enemy), List.of()), 0)).isEmpty();
@@ -250,7 +252,8 @@ final class KitPlayTest {
             input(self, Optional.empty(), List.of()).snapshot(),
             decision(self, List.of(new Waypoint(far, Hop.WALK))),
             Optional.empty(),
-            0);
+            0,
+            List.of());
 
     assertThat(first(Kit.GRAPPLER, input, 0))
         .contains(new BodyCommand.UseKit(2, Optional.empty(), Optional.of(far)));
@@ -325,7 +328,8 @@ final class KitPlayTest {
             "synthetic",
             List.of(),
             List.of());
-    var waiting = new ReflexInput(dwarf, world, decision(dwarf, List.of()), Optional.empty(), 0);
+    var waiting =
+        new ReflexInput(dwarf, world, decision(dwarf, List.of()), Optional.empty(), 0, List.of());
     var commands =
         Reflex.tick(
                 ReflexState.initial(dwarf.facing()), waiting, dwarfContext, new SplittableRandom(1))
@@ -346,7 +350,8 @@ final class KitPlayTest {
             List.of(),
             List.of());
     var charging =
-        new ReflexInput(inertia, fight, decision(inertia, List.of()), Optional.of(enemy), 0);
+        new ReflexInput(
+            inertia, fight, decision(inertia, List.of()), Optional.of(enemy), 0, List.of());
     var moves =
         Reflex.tick(
                 ReflexState.initial(inertia.facing()),
@@ -384,7 +389,8 @@ final class KitPlayTest {
               "synthetic",
               List.of(),
               List.of());
-      var input = new ReflexInput(self, world, decision(self, List.of()), Optional.empty(), 0);
+      var input =
+          new ReflexInput(self, world, decision(self, List.of()), Optional.empty(), 0, List.of());
       var step = Reflex.tick(state, input, context, new SplittableRandom(tick));
       state = step.state();
       uses += (int) step.commands().stream().filter(BodyCommand.UseKit.class::isInstance).count();
