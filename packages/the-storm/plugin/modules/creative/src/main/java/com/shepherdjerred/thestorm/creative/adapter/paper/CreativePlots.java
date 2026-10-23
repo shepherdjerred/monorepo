@@ -306,7 +306,7 @@ public final class CreativePlots {
             view.name(),
             view.description(),
             Set.of()),
-        "You claimed " + id.text() + ".");
+        new Notice("You claimed " + id.text() + ".", true));
   }
 
   private void changeTrust(Player player, @Nullable Player target, boolean add) {
@@ -477,12 +477,19 @@ public final class CreativePlots {
     }
   }
 
-  /** One optimistic claim write and the chat line to send when it lands. */
+  /** Chat for a saved claim, and whether that save should then take the player home. */
+  private record Notice(String ok, boolean teleportHome) {}
+
+  /** One optimistic claim write and what to tell the player when it lands. */
   private record PendingSave(
-      Player player, StoredClaim claim, Optional<StoredClaim> previous, String ok) {}
+      Player player, StoredClaim claim, Optional<StoredClaim> previous, Notice notice) {}
 
   private void persist(Player player, StoredClaim claim, String ok) {
-    var pending = new PendingSave(player, claim, book.row(claim.id()), ok);
+    persist(player, claim, new Notice(ok, false));
+  }
+
+  private void persist(Player player, StoredClaim claim, Notice notice) {
+    var pending = new PendingSave(player, claim, book.row(claim.id()), notice);
     book.put(claim);
     redraw.run();
     var saved =
@@ -505,8 +512,12 @@ public final class CreativePlots {
       }
       return;
     }
-    if (pending.player().isOnline()) {
-      success(pending.player(), pending.ok());
+    if (!pending.player().isOnline()) {
+      return;
+    }
+    success(pending.player(), pending.notice().ok());
+    if (pending.notice().teleportHome()) {
+      teleport(pending.player(), pending.claim().id());
     }
   }
 
@@ -618,10 +629,8 @@ public final class CreativePlots {
   }
 
   private void teleport(Player player, PlotId id) {
-    var bounds = grid.bounds(id);
-    var x = Math.floorDiv(bounds.minX() + bounds.maxX(), 2) + 0.5;
-    var z = Math.floorDiv(bounds.minZ() + bounds.maxZ(), 2) + 0.5;
-    var moved = player.teleport(new Location(world, x, PlotGrid.SPAWN_Y, z));
+    var home = grid.home(id);
+    var moved = player.teleport(new Location(world, home.x(), home.y(), home.z()));
     if (moved) {
       success(player, "Teleported to " + id.text() + ".");
     } else {

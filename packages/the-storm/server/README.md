@@ -117,17 +117,19 @@ before TheStorm and cannot obtain its generator then. TheStorm opens existing
 legacy or native creative terrain with its plot generator before enabling the
 module. Missing terrain, linked files, truncated region files, or two conflicting
 terrain stores stop startup; production never creates an empty replacement.
-Players enter with `/creative` and leave with
-`/creative leave`; the visit stores their survival body and gives them an empty
-creative one. Recovered plots are the `plots` list in `creative.yml` (a blank
-owner is staff-held); the plugin reads that list and never writes it. A recovered
-owner can change that plot. Roads, staff-held plots, and every other plot stay
-closed, including a piston, fluid, or explosion that would cross an edge.
-`thestorm.creative.bypass` builds anywhere. Command blocks, structure blocks,
-jigsaws, and command minecarts cannot be placed. Players claim an empty cell
-with `/creative claim` or `/creative auto` (two new claims; catalog plots do
-not count; staff with `thestorm.creative.bypass` or `thestorm.creative.admin`
-are exempt). `/creative name`, `/creative desc`, and `/creative trust` persist
+Players enter with `/creative`, arriving at the glowstone crossing, and leave
+with `/creative leave`; the visit stores their survival body and gives them an
+empty creative one. Recovered plots are the `plots` list in `creative.yml` (a
+blank owner is staff-held); the plugin reads that list and never writes it. A
+recovered owner can change that plot. Roads, staff-held plots, and every other
+plot stay closed, including a piston, fluid, or explosion that would cross an
+edge. `thestorm.creative.bypass` builds anywhere. Command blocks, structure
+blocks, jigsaws, and command minecarts cannot be placed. Players claim an empty
+cell with `/creative claim` or `/creative auto` (two new claims; catalog plots
+do not count; staff with `thestorm.creative.bypass` or
+`thestorm.creative.admin` are exempt). A claim that saves takes the player to
+the center of that plot. `/creative home` returns them to a plot they can
+already build on. `/creative name`, `/creative desc`, and `/creative trust` persist
 in the claim store. The plugin never writes `creative.yml`. `/creative download`
 saves one `x_z.schem` under the plugin data folder `creative-schematics` for
 someone to fetch outside the world; it is not mailed. `/creative admin assign`,
