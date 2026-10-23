@@ -13,7 +13,7 @@ import {
   type Transaction,
 } from "#infrastructure/delivery-data.ts";
 import { required, wire } from "#infrastructure/delivery-records.ts";
-import { ACCEPTING_KINDS, requireRollbackCandidate } from "./candidates.ts";
+import { requireRollbackCandidate } from "./candidates.ts";
 import { declaredComponents } from "#infrastructure/composition/automatic.ts";
 
 /** The frozen inputs a request selects (model 4.9). */
@@ -78,20 +78,70 @@ async function eligibility(
   if (missing.length > 0)
     reasons.push(`set revision lacks ${missing.join(", ")} (K1)`);
   if (env.promotionSourceEnvironmentId !== null) {
-    const acceptedThere = await tx.deployment.count({
-      where: {
-        environmentId: env.promotionSourceEnvironmentId,
-        versionSetRevisionId: selected.id,
-        status: "succeeded",
-        kind: { in: ACCEPTING_KINDS },
-      },
-    });
-    if (acceptedThere === 0)
-      reasons.push(
-        `set revision was never accepted in ${env.promotionSourceEnvironmentId}`,
-      );
+    // Only the source's current, settled acceptance is eligible, never one
+    // it has since replaced or one whose monitor alarmed (4.12, W3).
+    const refused = await sourceRefusal(
+      tx,
+      env.promotionSourceEnvironmentId,
+      env.serviceId,
+      selected.id,
+    );
+    if (refused !== null) reasons.push(refused);
   }
   return reasons;
+}
+
+/**
+ * A promotion source's current acceptance: the set revision it accepted, in
+ * the form this service selects it (section 7), and whether its monitor has
+ * settled (M2, W3). Null when the source has accepted nothing.
+ */
+async function sourceAcceptance(
+  tx: Transaction,
+  sourceId: string,
+  serviceId: string,
+) {
+  const accepted = await acceptedDeployment(
+    tx,
+    await environment(tx, sourceId),
+  );
+  if (accepted === null) return null;
+  return {
+    versionSetId: await carriedSetId(
+      tx,
+      accepted.versionSetRevisionId,
+      serviceId,
+    ),
+    monitorState: accepted.monitorState,
+    settled:
+      accepted.monitorState === "settled" ||
+      accepted.monitorState === "unmonitored",
+  };
+}
+
+function unsettled(
+  sourceId: string,
+  accepted: { monitorState: string | null },
+) {
+  return `${sourceId}'s accepted selection is ${accepted.monitorState ?? "unobserved"}, not settled (W3)`;
+}
+
+/**
+ * Why a set revision is not the promotion source's current, settled
+ * acceptance, or null when it is. Deploy eligibility and promote share this
+ * one test (4.12, M2, W3).
+ */
+async function sourceRefusal(
+  tx: Transaction,
+  sourceId: string,
+  serviceId: string,
+  versionSetId: string,
+) {
+  const accepted = await sourceAcceptance(tx, sourceId, serviceId);
+  if (accepted === null) return `${sourceId} has no accepted selection`;
+  if (accepted.versionSetId !== versionSetId)
+    return `set revision is not ${sourceId}'s accepted selection`;
+  return accepted.settled ? null : unsettled(sourceId, accepted);
 }
 
 /** The source's accepted selection must be settled before it promotes (M2, W3). */
@@ -105,22 +155,15 @@ async function promotionSource(
       "INVALID",
       `Promotion into ${env.id} takes the accepted selection of ${env.promotionSourceEnvironmentId ?? "no source"}`,
     );
-  const source = await environment(tx, sourceId);
-  const accepted = await acceptedDeployment(tx, source);
+  const accepted = await sourceAcceptance(tx, sourceId, env.serviceId);
   if (accepted === null)
     throw new DeliveryError(
       "CONFLICT",
       `${sourceId} has no accepted selection to promote`,
     );
-  if (
-    accepted.monitorState !== "settled" &&
-    accepted.monitorState !== "unmonitored"
-  )
-    throw new DeliveryError(
-      "CONFLICT",
-      `${sourceId}'s accepted selection is ${accepted.monitorState ?? "unobserved"}, not settled (W3)`,
-    );
-  return accepted.versionSetRevisionId;
+  if (!accepted.settled)
+    throw new DeliveryError("CONFLICT", unsettled(sourceId, accepted));
+  return accepted.versionSetId;
 }
 
 async function rebindSelection(

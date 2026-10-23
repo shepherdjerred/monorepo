@@ -46,6 +46,96 @@ async function acceptedBaseline() {
   return deployment;
 }
 
+/** A canary environment that takes arcade/prod's accepted selection (E6). */
+async function canary() {
+  await context.cluster.database.environment.create({
+    data: {
+      id: "arcade/canary",
+      serviceId: "arcade",
+      name: "canary",
+      pipelineRevisionId: "arcade/1",
+      declaredConfigurationId: "config/1",
+      promotionSourceEnvironmentId: context.fixture.environment.id,
+    },
+  });
+}
+
+/** A second set revision of arcade holding the fixture's artifacts. */
+async function secondSet() {
+  const db = context.cluster.database;
+  const first = await db.versionSet.findUniqueOrThrow({
+    where: { id: context.fixture.versionSet.id },
+    include: { entries: true },
+  });
+  return db.versionSet.create({
+    data: {
+      id: "arcade/set-2",
+      serviceId: "arcade",
+      revision: first.revision + 1,
+      lineage: first.lineage,
+      entries: {
+        create: first.entries.map(({ component, artifactId }) => ({
+          component,
+          artifactId,
+        })),
+      },
+    },
+  });
+}
+
+/** Accepts a set revision in arcade/prod with the given monitor state. */
+async function acceptInSource(
+  versionSetId: string,
+  monitorState: "settled" | "watching" | "alarmed",
+) {
+  const env = await environmentRow();
+  const deployment = await context.delivery.createDeployment(
+    {
+      requestId: crypto.randomUUID(),
+      environmentId: env.id,
+      versionSetRevisionId: versionSetId,
+      expectedGeneration: env.generation,
+      kind: "deploy",
+    },
+    testOperator,
+  );
+  await accept(deployment.id, versionSetId);
+  await setMonitor(deployment.id, monitorState);
+  return deployment;
+}
+
+async function setMonitor(
+  deploymentId: string,
+  monitorState: "settled" | "watching" | "alarmed",
+) {
+  await context.cluster.database.deployment.update({
+    where: { id: deploymentId },
+    data: {
+      monitorState,
+      monitorSettledAt: monitorState === "settled" ? new Date() : null,
+    },
+  });
+}
+
+/** A deploy into the canary, optionally asking for an override (H4). */
+async function deployToCanary(
+  versionSetId: string,
+  requestId: string,
+  override = false,
+) {
+  return context.delivery.createDeployment(
+    {
+      requestId,
+      environmentId: "arcade/canary",
+      versionSetRevisionId: versionSetId,
+      expectedGeneration: 0,
+      kind: "deploy",
+      ...(override ? { override: true } : {}),
+    },
+    testOperator,
+  );
+}
+
 async function declareConfiguration(
   id: string,
   content: Record<string, string>,
@@ -273,6 +363,33 @@ describe("selections (4.9, 4.12)", () => {
       ),
     ).rejects.toThrow(
       /excluded: would lower forwardOnly \/helm\/valuesObject\/db\/major from 17 to 16/u,
+    );
+  });
+});
+
+describe("eligibility through a promotion source (4.12, M2, W3)", () => {
+  test("a deploy is eligible only for its source's current, settled acceptance", async () => {
+    const first = context.fixture.versionSet.id;
+    const baseline = await acceptedBaseline();
+    await setMonitor(baseline.id, "settled");
+    await canary();
+    const current = await deployToCanary(first, "current");
+    expect(current).toMatchObject({ kind: "deploy", status: "queued" });
+    await context.delivery.cancel(current.id, testOperator);
+    // The source replaces its acceptance: the set it held is no longer
+    // eligible, however often it once succeeded there.
+    const second = await secondSet();
+    const replacement = await acceptInSource(second.id, "settled");
+    await expect(deployToCanary(first, "replaced")).rejects.toThrow(
+      /set revision is not arcade\/prod's accepted selection; a deploy may ask for an override approval/u,
+    );
+    const overridden = await deployToCanary(first, "replaced-override", true);
+    expect(overridden.status).toBe("awaiting_approval");
+    await context.delivery.cancel(overridden.id, testOperator);
+    // An alarmed acceptance is not settled, so it is not eligible either.
+    await setMonitor(replacement.id, "alarmed");
+    await expect(deployToCanary(second.id, "alarmed")).rejects.toThrow(
+      /arcade\/prod's accepted selection is alarmed, not settled \(W3\)/u,
     );
   });
 });
