@@ -7,8 +7,8 @@ import { performanceSteps } from "#src/pipeline/performance.ts";
 import { cacheSourceSteps } from "#src/pipeline/source-cache.ts";
 import { DISABLED_PERFORMANCE } from "#src/performance-config.ts";
 import { emitWorkflow } from "#src/pipeline/emit.ts";
-import { RAM_SCRATCH } from "#src/pipeline/ram-scratch.ts";
-import { TURBO_VERIFY_TIER } from "#src/pipeline/tiers.ts";
+import { RAM_SCRATCH, ramScratchProfile } from "#src/pipeline/ram-scratch.ts";
+import { BROWSER_TIER, TURBO_VERIFY_TIER } from "#src/pipeline/tiers.ts";
 import { PipelineSchema } from "#src/schemas.ts";
 import fixture from "./fixtures/woodpecker-v3.18.1-config-request.json" with { type: "json" };
 import { TEST_IMAGES, TEST_IDENTITY, testPipelineSteps } from "./identity.ts";
@@ -24,7 +24,7 @@ const enabled = {
 };
 const helper = `docker.io/shepherdjerred/woodpecker-config-extension@sha256:${"a".repeat(64)}`;
 const gib = (value: string) => Number(value.replace(/Gi$/u, ""));
-test("RAM scratch is exclusive to the owner manual verify canary execution pod", () => {
+test("RAM scratch benchmarks stay exclusive to owner manual verify canaries", () => {
   const pipeline = PipelineSchema.parse({
     ...fixture.pipeline,
     event: "manual",
@@ -123,11 +123,6 @@ test("RAM scratch is exclusive to the owner manual verify canary execution pod",
   expect(
     emitted.steps[0]?.backend_options.kubernetes.resources.limits["memory"],
   ).toBe("36Gi");
-  expect(
-    performanceSteps(testPipelineSteps(), enabled, false, false).every(
-      (step) => step.ramScratch === undefined,
-    ),
-  ).toBe(true);
   const scratch = RAM_SCRATCH.volumes.reduce(
     (sum, volume) => sum + gib(volume.size),
     0,
@@ -139,6 +134,76 @@ test("RAM scratch is exclusive to the owner manual verify canary execution pod",
   expect(
     gib(candidate.resources.memoryLimit) - gib(TURBO_VERIFY_TIER.memoryLimit),
   ).toBe(scratch);
+});
+test("ordinary verify and browser execution pods carry their own scratch profile only when enabled", () => {
+  const steps = testPipelineSteps();
+  const scratched = performanceSteps(steps, enabled, true, false);
+  expect(
+    scratched
+      .filter((step) => step.ramScratch === true)
+      .map((step) => step.key),
+  ).toEqual(["verify", "playwright-e2e"]);
+  for (const step of scratched.filter((candidate) => candidate.ramScratch)) {
+    const profile = ramScratchProfile(step.key);
+    if (profile === undefined) throw new Error("Missing scratch profile");
+    expect(step.resources).toEqual(profile.resources);
+    const tier = step.key === "verify" ? TURBO_VERIFY_TIER : BROWSER_TIER;
+    // The profile reserves exactly its tmpfs allowance above the lane's tier.
+    const tmpfs = profile.volumes.reduce(
+      (sum, volume) => sum + gib(volume.size),
+      0,
+    );
+    expect(gib(profile.resources.memoryRequest) - gib(tier.memoryRequest)).toBe(
+      tmpfs,
+    );
+    expect(gib(profile.resources.memoryLimit) - gib(tier.memoryLimit)).toBe(
+      tmpfs,
+    );
+    expect(profile.resources.cpuRequest).toBe(tier.cpuRequest);
+    const labels = z
+      .object({
+        steps: z.array(
+          z.object({
+            backend_options: z.object({
+              kubernetes: z.object({
+                labels: z.record(z.string(), z.string()),
+              }),
+            }),
+          }),
+        ),
+        clone: z
+          .array(
+            z.object({
+              backend_options: z.object({
+                kubernetes: z.object({
+                  labels: z.record(z.string(), z.string()),
+                }),
+              }),
+            }),
+          )
+          .optional(),
+      })
+      .parse(
+        parse(emitWorkflow(step, { ...TEST_IDENTITY, event: "pull_request" })),
+      );
+    expect(
+      labels.steps[0]?.backend_options.kubernetes.labels[profile.label],
+    ).toBe(profile.profile);
+    for (const clone of labels.clone ?? [])
+      expect(
+        clone.backend_options.kubernetes.labels[profile.label],
+      ).toBeUndefined();
+  }
+  expect(
+    performanceSteps(steps, { ...enabled, scratch: false }, true, false).some(
+      (step) => step.ramScratch === true,
+    ),
+  ).toBe(false);
+  expect(
+    performanceSteps(steps, enabled, true, true).some(
+      (step) => step.ramScratch === true,
+    ),
+  ).toBe(false);
 });
 test("performance options never grant caches to credentialless work", () => {
   const steps = testPipelineSteps();

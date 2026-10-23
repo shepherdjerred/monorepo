@@ -213,8 +213,9 @@ describe("PVC backup policy", () => {
 
     expect(pvcCount).toBeGreaterThan(0);
     expect(operatorManagedPvcCount).toBeGreaterThan(0);
-    expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(5);
-    expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(5);
+    // Includes one CI RAM scratch mutation per lane profile (verify, browser).
+    expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(6);
+    expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(6);
     // Includes PVC backup, ArgoCD, CI pod, restoration update/scale/delete and
     // Service write/delete paths, mc-harness sandbox pod guards, bounded CI RAM
     // scratch, the eleven active TSMC controller guards and the read-only Forum

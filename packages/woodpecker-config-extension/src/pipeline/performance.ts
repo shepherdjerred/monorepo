@@ -1,5 +1,6 @@
 import type { CiStep } from "./model.ts";
 import type { PerformanceOptions } from "#src/performance-config.ts";
+import { ramScratchProfile } from "./ram-scratch.ts";
 
 export const WORKSPACE_SEEDS = {
   claim: "woodpecker-workspace-seeds",
@@ -41,8 +42,13 @@ export function performanceSteps(
       step.sourceCache !== undefined;
     const gradle =
       options.gradle && step.key === "verify" && step.sourceCache !== undefined;
+    // Each scratch profile reserves its tmpfs above the lane's own tier.
+    const scratch = options.scratch ? ramScratchProfile(step.key) : undefined;
     return {
       ...step,
+      ...(scratch === undefined
+        ? {}
+        : { ramScratch: true, resources: scratch.resources }),
       environment: environment(step, options, main),
       ...(options.formatting && step.key === "verify"
         ? {

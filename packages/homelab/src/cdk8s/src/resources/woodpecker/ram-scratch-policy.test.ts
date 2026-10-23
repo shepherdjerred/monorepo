@@ -2,7 +2,7 @@ import { App, Chart } from "cdk8s";
 import { expect, test } from "vitest";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
-import { RAM_SCRATCH } from "@shepherdjerred/woodpecker-config-extension/src/pipeline/ram-scratch.ts";
+import { RAM_SCRATCH_PROFILES } from "@shepherdjerred/woodpecker-config-extension/src/pipeline/ram-scratch.ts";
 import { createRamScratchPolicy } from "./ram-scratch-policy.ts";
 
 const Manifest = z.object({
@@ -21,7 +21,8 @@ test("RAM scratch policies preserve namespace isolation and fail closed before w
   const manifests = parseAllDocuments(app.synthYaml()).map((doc) =>
     Manifest.parse(doc.toJS()),
   );
-  expect(manifests).toHaveLength(4);
+  // One mutation and binding per lane profile, plus the shared guard pair.
+  expect(manifests).toHaveLength(6);
   for (const manifest of manifests) {
     expect(manifest.metadata.namespace).toBeUndefined();
     expect(manifest.metadata.annotations["argocd.argoproj.io/sync-wave"]).toBe(
@@ -39,24 +40,42 @@ test("RAM scratch policies preserve namespace isolation and fail closed before w
       });
     }
   }
-  const mutator = manifests.find(
+  const mutators = manifests.filter(
     (manifest) => manifest.kind === "MutatingAdmissionPolicy",
   );
   const validator = manifests.find(
     (manifest) => manifest.kind === "ValidatingAdmissionPolicy",
   );
-  expect(mutator?.spec).toMatchObject({ reinvocationPolicy: "IfNeeded" });
-  const expressions = JSON.stringify({
-    mutator: mutator?.spec,
-    validator: validator?.spec,
-  });
-  for (const volume of RAM_SCRATCH.volumes) {
-    expect(expressions).toContain(volume.name);
-    expect(expressions).toContain(volume.path);
-    expect(expressions).toContain(volume.size);
+  expect(mutators.map((mutator) => mutator.metadata.name)).toEqual([
+    "woodpecker-ram-scratch.sjer.red",
+    "woodpecker-ram-scratch-playwright-e2e.sjer.red",
+  ]);
+  const validation = JSON.stringify(validator?.spec);
+  for (const profile of Object.values(RAM_SCRATCH_PROFILES)) {
+    const mutator = mutators.find((candidate) =>
+      JSON.stringify(candidate.spec).includes(`== '${profile.profile}'`),
+    );
+    expect(mutator?.spec).toMatchObject({ reinvocationPolicy: "IfNeeded" });
+    const mutation = JSON.stringify(mutator?.spec);
+    // Each lane's mutation matches only its own step key and mounts only its volumes.
+    expect(mutation).toContain(
+      `object.metadata.labels['ci.sjer.red/step-key'] == '${profile.stepKey}'`,
+    );
+    for (const volume of profile.volumes) {
+      expect(mutation).toContain(`sizeLimit: '${volume.size}'`);
+      expect(mutation).toContain(volume.path);
+      expect(validation).toContain(volume.name);
+    }
+    expect(validation).toContain(
+      `compareTo(quantity('${profile.resources.memoryRequest}'))`,
+    );
+    expect(validation).toContain(
+      `compareTo(quantity('${profile.resources.memoryLimit}'))`,
+    );
   }
-  expect(expressions).toContain("compareTo(quantity('30Gi'))");
-  expect(expressions).toContain("compareTo(quantity('36Gi'))");
-  expect(expressions).toContain("startsWith('ci-canary/')");
-  expect(expressions).toContain("object.spec.containers.size() == 1");
+  expect(JSON.stringify(mutators[1]?.spec)).not.toContain("ci-ram-gradle");
+  // Ordinary branches and events qualify; only the lane and container shape are fixed.
+  expect(validation).not.toContain("ci-canary/");
+  expect(validation).not.toContain("ci.sjer.red/event");
+  expect(validation).toContain("object.spec.containers.size() == 1");
 });

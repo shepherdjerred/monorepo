@@ -14,7 +14,7 @@ import type {
   ResourceTier,
 } from "#src/pipeline/model.ts";
 import { WORKSPACE_SEEDS } from "#src/pipeline/performance.ts";
-import { RAM_SCRATCH } from "./ram-scratch.ts";
+import { ramScratchProfile } from "./ram-scratch.ts";
 
 /**
  * Node the CI step pods run on, and the taint they must tolerate to get there.
@@ -204,6 +204,14 @@ function resources(tier: ResourceTier): Record<string, unknown> {
   };
 }
 
+/** Admission mounts tmpfs only for a known lane profile; any other key is a bug. */
+function scratchLabel(stepKey: string): Record<string, string> {
+  const profile = ramScratchProfile(stepKey);
+  if (profile === undefined)
+    throw new Error(`No RAM scratch profile for step ${stepKey}`);
+  return { [profile.label]: profile.profile };
+}
+
 /**
  * Pod shape shared by a clone, step and its services.
  *
@@ -226,7 +234,7 @@ function podOptions(
     labels: {
       [POD_STEP_KEY_LABEL]: step.key,
       [POD_COMMIT_LABEL]: identity.commit,
-      ...(ramScratch ? { [RAM_SCRATCH.label]: RAM_SCRATCH.profile } : {}),
+      ...(ramScratch ? scratchLabel(step.key) : {}),
     },
     annotations: {
       [POD_BRANCH_ANNOTATION]: identity.branch,
