@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.world;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
+import com.shepherdjerred.thestorm.world.adapter.bluemap.BlueMapBorders;
 import com.shepherdjerred.thestorm.world.adapter.db.JooqDailyLedger;
 import com.shepherdjerred.thestorm.world.adapter.paper.AmbientBarks;
 import com.shepherdjerred.thestorm.world.adapter.paper.CrierCommands;
@@ -14,6 +15,7 @@ import com.shepherdjerred.thestorm.world.adapter.remote.FliptMerchantGate;
 import com.shepherdjerred.thestorm.world.app.CrierGate;
 import com.shepherdjerred.thestorm.world.app.MerchantGate;
 import com.shepherdjerred.thestorm.world.app.WildWorlds;
+import com.shepherdjerred.thestorm.world.domain.BorderOutline;
 import com.shepherdjerred.thestorm.world.domain.WorldConfig;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.net.URI;
@@ -28,6 +30,7 @@ public final class WorldModule implements StormModule {
 
   private @Nullable FliptCrierGate gate;
   private @Nullable FliptMerchantGate merchantGate;
+  private @Nullable BlueMapBorders borders;
 
   @Override
   public String id() {
@@ -47,6 +50,14 @@ public final class WorldModule implements StormModule {
                     .getPluginManager()
                     .registerEvents(circles, context.plugin()));
     context.services().provide(WildWorlds.class, worlds);
+    if (context.plugin().getServer().getPluginManager().getPlugin("BlueMap") != null) {
+      var map =
+          new BlueMapBorders(
+              context.plugin().getServer(),
+              config.borders().stream().map(BorderOutline::of).toList());
+      map.start(context.scheduler());
+      borders = map;
+    }
     var base = System.getenv("FLIPT_URL");
     var environment = System.getenv("FLIPT_ENVIRONMENT");
     CrierGate rollout;
@@ -122,6 +133,10 @@ public final class WorldModule implements StormModule {
 
   @Override
   public void disable() {
+    if (borders != null) {
+      borders.stop();
+      borders = null;
+    }
     if (gate != null) {
       gate.close();
       gate = null;
