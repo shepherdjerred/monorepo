@@ -1,4 +1,4 @@
-import { Context } from "@temporalio/activity";
+import { effectContext } from "#lib/delivery/model/effect-signal.ts";
 import type {
   DeploymentDetail,
   EvidenceInput,
@@ -40,7 +40,7 @@ export async function runArchiveStep(
   key: string,
 ): Promise<void> {
   await withBackupActivityHeartbeat(
-    Context.current(),
+    effectContext(),
     async ({ signal }) =>
       await applyPluginArchive(
         current,

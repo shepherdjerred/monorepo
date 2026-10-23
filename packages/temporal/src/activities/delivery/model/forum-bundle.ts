@@ -1,4 +1,4 @@
-import { Context } from "@temporalio/activity";
+import { effectContext } from "#lib/delivery/model/effect-signal.ts";
 import { z } from "zod";
 import type {
   DeploymentDetail,
@@ -67,7 +67,7 @@ export type ForumBundleEffects = {
   heartbeat: (details: unknown) => void;
 };
 function liveEffects(): ForumBundleEffects {
-  const context = Context.current();
+  const context = effectContext();
   return {
     read: async (name) =>
       await getArgoApplication(name, { signal: context.cancellationSignal }),

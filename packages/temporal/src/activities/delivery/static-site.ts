@@ -1,4 +1,3 @@
-import { Context } from "@temporalio/activity";
 import { mkdtemp, mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -28,6 +27,7 @@ import {
 } from "./static-site-effects.ts";
 import type { StaticActivationReceipt } from "./static-site-effects.ts";
 import { withBackupActivityHeartbeat } from "#activities/homelab/seaweedfs-backup-heartbeat.ts";
+import { effectContext } from "#lib/delivery/model/effect-signal.ts";
 import { verifyPublicStaticEntrypoint } from "./static-site-public.ts";
 import {
   staticSiteSelection as selection,
@@ -187,7 +187,9 @@ export const LIVE_STATIC_SITE_IO: StaticSiteIo = {
 export async function withStaticActivityRuntime<T>(
   operation: (runtime: StaticSiteRuntime) => Promise<T>,
 ): Promise<T> {
-  const context = Context.current();
+  // A model step's bucket sync, receipt and purge stop once its lease is
+  // lost (D7); native repair holds no lease and keeps the cancellation.
+  const context = effectContext();
   return withBackupActivityHeartbeat(
     context,
     ({ signal }) =>

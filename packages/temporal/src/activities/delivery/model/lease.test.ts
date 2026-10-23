@@ -1,7 +1,11 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { ApplicationFailure } from "@temporalio/common";
 import type * as Activity from "@temporalio/activity";
-import { effectSignal } from "#lib/delivery/model/effect-signal.ts";
+import {
+  effectSignal,
+  withLeaseLoss,
+} from "#lib/delivery/model/effect-signal.ts";
+import { withStaticActivityRuntime } from "#activities/delivery/static-site.ts";
 import { withLeaseRenewal } from "./lease.ts";
 
 vi.mock("@temporalio/activity", async (importOriginal) => ({
@@ -179,5 +183,25 @@ describe("withLeaseRenewal", () => {
     await vi.advanceTimersByTimeAsync(1);
     await settled;
     expect(lost).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("the static-site runtime of a model step", () => {
+  test("its bucket sync, receipt and purge stop once the step's lease is lost (D7)", async () => {
+    const lost = new AbortController();
+    const seen: boolean[] = [];
+    await expect(
+      withLeaseLoss(
+        lost.signal,
+        async () =>
+          await withStaticActivityRuntime(({ signal }) => {
+            seen.push(signal.aborted);
+            lost.abort(new Error("lease lost"));
+            seen.push(signal.aborted);
+            return Promise.resolve();
+          }),
+      ),
+    ).rejects.toThrow("lease lost");
+    expect(seen).toEqual([false, true]);
   });
 });
