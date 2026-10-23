@@ -59,6 +59,16 @@ export const sitePaths = {
     "packages/stocks-sjer-red",
     ...deployScripts,
   ],
+  "site-landing-pages": [
+    ...workspacePaths,
+    "packages/landing-pages",
+    // The Storm page reads or checks these at build time.
+    "packages/storm-forum/config/forum.json",
+    "packages/the-storm/server/Dockerfile",
+    "packages/ts-mc-docs/astro.config.ts",
+    "packages/ts-mc-docs/src/content/docs/join.md",
+    ...deployScripts,
+  ],
   "site-cross-compilers": [
     ...workspacePaths,
     "packages/cross-compilers-site",

@@ -315,6 +315,10 @@
       "entry": ["src/**/*.test.ts", "scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
+    "packages/landing-pages": {
+      "entry": ["src/**/*.astro"],
+      "project": ["src/**/*.{ts,astro,css}", "*.ts"]
+    },
     "packages/stocks-sjer-red": {
       "entry": ["src/**/*.astro"],
       "project": ["src/**/*.{ts,astro,css}", "*.ts"]

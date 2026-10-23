@@ -8,8 +8,8 @@
 ^https?://[^/]*\.ts\.net
 # Internal-only *.sjer.red services (auth-walled ingress endpoints, not public
 # pages). Public sites — sjer.red, public.sjer.red, resume.sjer.red,
-# webring.sjer.red, stocks.sjer.red, cook.sjer.red, scout-for-lol.com — are
-# deliberately NOT excluded and are checked every run.
+# webring.sjer.red, stocks.sjer.red, cook.sjer.red, pages.sjer.red,
+# scout-for-lol.com — are deliberately NOT excluded and are checked every run.
 ^https?://temporal-sleep\.sjer\.red
 ^https?://temporal-agent-tasks\.sjer\.red
 ^https?://pr-bot\.sjer\.red

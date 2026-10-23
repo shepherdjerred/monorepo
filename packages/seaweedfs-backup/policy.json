@@ -152,6 +152,13 @@
       "reason": "Rebuildable static site"
     },
     {
+      "name": "landing-pages",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable static site"
+    },
+    {
       "name": "stocks-sjer-red",
       "mode": "excluded",
       "cadences": [],
