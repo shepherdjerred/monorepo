@@ -13,7 +13,7 @@ Use the [command and permission contract](https://github.com/shepherdjerred/mono
 
 3. Rehearse jail release and timed expiry across reconnects. Confirm the return location, retained communication and blocked travel. Set runtime destinations only while standing at safe locations. Restart and confirm the destinations survive without changing owned YAML.
 
-4. Schedule a maintenance window for the routing cutover. Stop admitting new connections and drain active sessions before changing protocol expectations. Release the Storm and Shuxin Paper backends, Geyser settings, RLCraft header adapter, network policies and mc-router configuration as one coordinated change through GitOps. Follow [the root release workflow](/how-to/cut-a-homelab-release/) for reconciliation.
+4. Schedule a maintenance window for the routing cutover. Stop admitting new connections and drain active sessions before changing protocol expectations. Merge the Storm and Shuxin Paper backends, Geyser settings, RLCraft header adapter, network policies and mc-router configuration as one source change. Then deploy each affected environment through Delivery within the window, following [Cut a homelab release](/how-to/cut-a-homelab-release/#deploy-a-set-revision).
 
 5. Confirm ArgoCD reconciles the intended revisions and every awake backend becomes healthy. Exercise Java hostname routing and wake-on-join for each backend. Confirm RLCraft accepts ordinary Forge traffic through its header adapter. Route public TCP and Bedrock UDP to nodes with local service endpoints after enabling source preservation.
 

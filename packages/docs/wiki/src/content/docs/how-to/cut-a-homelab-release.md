@@ -1,333 +1,172 @@
 ---
 title: Cut a homelab release
-description: How a repository-backed homelab release is published and reconciled, and what to do when a stage fails.
+description: Deploy, promote, rebind and roll back a Delivery environment, decide approvals and OpenTofu plans, publish to a channel, register catalog changes, attest operator-run deployments, and recover a held deployment.
 sidebar:
   order: 8
 ---
 
-Woodpecker verifies source and publishes immutable images, charts and archives.
-Delivery records desired and accepted version sets in PostgreSQL and runs the
-reviewed deployment pipeline through Temporal. ArgoCD reconciles the frozen
-selection. Git contains definitions and policy, with no selected deployment
-versions or release commit-back queue.
+Use these procedures to change what a homelab environment runs. Every step is a
+`toolkit deploy` command against the Delivery API.
 
-## Bootstrap Delivery in one maintenance window
+The [Delivery model reference](/reference/delivery-model/) lists each command's
+route, scope and credential, and the kinds and states it reports. The
+[toolkit deploy command](packages/toolkit/src/commands/deploy/deploy.ts) prints
+the same list with `toolkit deploy --help`.
 
-Use this procedure only before live Delivery ownership exists. Keep release
-mutations paused until the complete catalog and native baselines are ready.
-The descriptor in `packages/homelab/scripts/ci/bootstrap-selection.ts`
-allows only Woodpecker, Delivery API and Delivery control-plane charts.
-Operator-published API/generator images and derived root archives remain
-ineligible for ordinary release selection. The control plane instead uses
-original CI-qualified artifacts already recorded in PostgreSQL.
+:::note
+Commands without `--machine` use your Tailscale identity. `--machine` uses a
+brokered machine credential. Machine credentials never approve a deployment or
+decide a plan.
+:::
 
-1. Obtain green **whole-pipeline CI and required review for the exact PR head**.
-   Inspect `toolkit pr health PR` and the native pipeline. Do not substitute an
-   image-only workflow, another commit's checks, or a failed producer.
-   Before merging, disable the repository's Woodpecker webhook and stop any
-   already queued or running old main pipelines. Read back both changes.
+## Deploy a set revision
 
-   ```bash
-   gh api repos/shepherdjerred/monorepo/hooks --jq '.[] | {id, active, url: (.config.url | split("?")[0])}'
-   gh api repos/shepherdjerred/monorepo/hooks/WOODPECKER_HOOK_ID --method PATCH -F active=false --silent
-   gh api repos/shepherdjerred/monorepo/hooks/WOODPECKER_HOOK_ID --jq '{id, active}'
-   toolkit woodpecker pipeline ls shepherdjerred/monorepo
-   toolkit woodpecker pipeline stop shepherdjerred/monorepo PIPELINE_NUMBER
-   ```
+An automatic environment without a promotion source receives each new set
+revision by itself ([section 6](packages/delivery/docs/model.md#6-flows)). Use
+this procedure to choose one explicitly.
 
-   Select the inspected Woodpecker webhook ID, not an unrelated integration.
-   Disable any other source of old main releases during the window. Merge only
-   after the real required checks and review pass. Retain the reviewed head SHA.
-   For a squash merge, `source-proof` requires its complete Git tree to equal
-   the PR's associated merge commit tree. That merge must remain on main.
-   Different trees require a source update and renewed CI/review.
-
-2. Replace the generator **before** changing credential locator source. From a
-   clean checkout of the reviewed PR head proven integrated into main, use the image-producing
-   commands and workload descriptor below, with `targets: ["woodpecker"]`.
-   Publish the fixed bootstrap images directly; no main pipeline is needed.
-   Run only this first subset:
+1. List the service's set revisions and pick one:
 
    ```bash
-   toolkit ci source-proof PR --source REVIEWED_HEAD_SHA --json
-   bun packages/homelab/scripts/ci/bootstrap-woodpecker.ts /private/woodpecker-bootstrap.json --output /private/woodpecker-preview --dry-run
-   bun packages/homelab/scripts/ci/bootstrap-woodpecker.ts /private/woodpecker-bootstrap.json --output /private/woodpecker-apply
+   toolkit deploy versions SERVICE --json
    ```
 
-   Pause root automation with the inspected `apps --sync-policy none` command
-   below before running this helper. No Delivery Application or registered
-   catalog is needed. Verify the generator's actual image digest and baked SHA,
-   then re-enable the inspected webhook:
+   A set revision is eligible when it is in the current lineage, every build is
+   verified, every prerequisite edge holds and, with a promotion source, it is
+   accepted there ([eligibility](packages/delivery/docs/model.md#412-deployment)).
+
+2. Request the deployment. It keeps the environment's accepted recipe and
+   configuration. For a channel or operator-run recipe, `start` requests that
+   kind instead:
 
    ```bash
-   gh api repos/shepherdjerred/monorepo/hooks/WOODPECKER_HOOK_ID --method PATCH -F active=true --silent
-   gh api repos/shepherdjerred/monorepo/hooks/WOODPECKER_HOOK_ID --jq '{id, active}'
+   toolkit deploy start ENVIRONMENT SET_REVISION --json
    ```
 
-   Run a fresh PR and inspect its generated graph: verification, builds and
-   immutable publication only. Keep the old hosted release authority stopped.
-   The generated graph must contain no legacy deployment adapters. Before the new CI
-   artifact credentials take over, verify their exact storage IAM grants and
-   readback through the existing operator storage procedure.
+   Delivery refuses a non-eligible set revision and names each reason. To
+   deploy it anyway, add `--override`. The deployment then waits for an
+   override approval ([H4](packages/delivery/docs/model.md#413-approval)).
 
-3. Use a clean checkout of the next reviewed PR head proven integrated into main and provision the declared
-   prerequisites through their operator OpenTofu wrappers. Apply the tailnet
-   policy so the existing Kubernetes operator can assign `tag:delivery` to
-   Delivery's Ingress proxy. Keep its admin-only access rules. Delivery uses
-   the existing operator identity; no additional Tailscale token or OAuth
-   client is needed. Register actual output item IDs in reviewed source,
-   never placeholder IDs or copied administrator credentials.
-
-   Before the first image publication, verify the existing separate Docker Hub
-   publisher and runtime-reader credentials and their handoffs. Reconcile
-   repositories and declared visibility through the operator-only `dockerhub`
-   stack. Adopt existing repositories through reviewed imports rather than
-   deleting and recreating them. Follow `packages/homelab/src/tofu/dockerhub/README.md`
-   for its management credential and encrypted-state prerequisites. Token
-   provisioning, when needed, remains in the separate operator-only
-   `dockerhub-tokens` stack; account authentication stays outside CI.
+3. If the environment's approval policy is `required`, or you asked for an
+   override, decide it from a human session. Add `--override` to decide an
+   override:
 
    ```bash
-   toolkit ci source-proof PR --source REVIEWED_HEAD_SHA --json
-   bun packages/homelab/scripts/tofu/tofu-stack.ts tailscale plan
-   bun packages/homelab/scripts/tofu/tofu-stack.ts tailscale apply
+   toolkit deploy approve DEPLOYMENT_ID --reason "Reviewed the frozen selection"
    ```
 
-   Any source change needs its own exact CI/review proof before bootstrap.
-   Use the existing credential broker and service-account wrapper; never put
-   credential values in descriptors, shell arguments or receipts.
+   A deployment has one approval. `toolkit deploy reject` with a reason
+   decides it the other way. An OpenTofu stack takes its decision on the
+   saved plan instead; see
+   [Approve or reject an OpenTofu plan](#approve-or-reject-an-opentofu-plan).
 
-4. Pause root and Argo's own automatic reconciliation before the account
-   prerequisite. Inspect their exact native identities first.
+4. Wait for acceptance. Exit code 1 means failed or canceled; 2 means the
+   deadline passed:
 
    ```bash
-   toolkit argocd app get apps -o json
-   toolkit argocd app get argocd -o json
-   toolkit argocd app set apps --sync-policy none
-   toolkit argocd app set argocd --sync-policy none
+   toolkit deploy wait DEPLOYMENT_ID --timeout 3600 --json
    ```
 
-   The bootstrap classifier permits only these maintenance pauses and the exact
-   reviewed Delivery account change. Unrelated Application or shared-resource
-   drift fails closed. The live default RBAC role must already be empty.
-
-5. Create an external account request containing `schema`, `sourceRevision`,
-   `pullRequest` and a fresh `requestId` UUID:
-
-   ```json
-   {
-     "schema": "delivery-argocd-account-bootstrap/v1",
-     "sourceRevision": "REVIEWED_40_CHARACTER_HEAD_SHA",
-     "pullRequest": 123,
-     "requestId": "FRESH_REQUEST_UUID"
-   }
-   ```
-
-   Run through the existing service-account wrapper with **distinct** operator
-   and root credentials. The helper independently reads their native usernames:
-   `ARGOCD_TOKEN` must be the existing operator `admin`; `ROOT_ARGOCD_TOKEN`
-   must be legacy `woodpecker` or dedicated `delivery-platform`. The operator
-   performs only preownership inspection and child/account CAS. The guarded root
-   subprocess receives only the root token, never the operator credential.
-   These references contain no credential values:
+5. Watch the monitor until it reports `settled` or `unmonitored`:
 
    ```bash
-   ARGOCD_TOKEN='op://v64ocnykdqju4ui6j6pua56xw4/yikdwue26c7gdbk5ftbvaclkli/ARGOCD_AUTH_TOKEN' ROOT_ARGOCD_TOKEN='op://v64ocnykdqju4ui6j6pua56xw4/ga3ma76q6vw2bxeyvkqj4xaucy/ARGOCD_AUTH_TOKEN' scripts/onepassword/with-service-account.sh op run -- env -u OP_SERVICE_ACCOUNT_TOKEN bun packages/homelab/scripts/ci/bootstrap-argocd-accounts.ts /private/account-request.json --output /private/account-preview --dry-run
+   toolkit deploy monitor ENVIRONMENT --json
    ```
 
-   Use this same credential separation for the workload bootstrap. Output
-   directories must be new, private and outside the checkout.
+   If it reports `alarmed`, follow
+   [Respond to an alarmed monitor](#respond-to-an-alarmed-monitor).
+
+## Promote from beta or a qualification environment
+
+1. Confirm the source environment's monitor is `settled` or `unmonitored`.
+   Promotion refuses any other source
+   ([W3](packages/delivery/docs/model.md#419-monitor)):
 
    ```bash
-   bun packages/homelab/scripts/ci/bootstrap-argocd-accounts.ts /private/account-request.json --output /private/account-preview --dry-run
-   bun packages/homelab/scripts/ci/bootstrap-argocd-accounts.ts /private/account-request.json --output /private/account-apply
-   bun packages/homelab/scripts/tofu/tofu-stack.ts argocd plan
-   bun packages/homelab/scripts/tofu/tofu-stack.ts argocd apply
+   toolkit deploy monitor SOURCE_ENVIRONMENT --json
    ```
 
-   The helper preserves the running Argo repository, chart and revision. It
-   changes only the three reviewed account definitions and their principal
-   rows, then records the owned finished sync UUID. OpenTofu issues the scoped
-   tokens afterwards. Register those output IDs in reviewed source before
-   building the control plane. That OpenTofu step retires the old Woodpecker
-   token/item. For subsequent API/control-plane bootstrap, resolve
-   `ROOT_ARGOCD_TOKEN` from the newly issued `delivery-platform` item; retain
-   the separate operator reference for preownership CAS. No administrator-token
-   fallback exists for guarded root operations.
-   For API bootstrap, also inject `ARGOCD_WORKLOAD_TOKEN` from the issued
-   `delivery` application-account item. The helper independently verifies that
-   principal and uses it for needed workload child reconciliation; the platform
-   account retains root and control-plane operations. A root account cannot
-   substitute for the application credential, or an administrator for either.
+   For `minecraft/sandbox`, acceptance itself requires the qualification
+   suites' `test` evidence
+   ([V5](packages/delivery/docs/model.md#414-acceptance)).
 
-6. Build the two operator bootstrap images directly from the proven source.
-   PR pipelines do not publish them, and old main automation is stopped.
-   Use the existing Docker credential store and a fresh `2.0.0-N` version
-   whose tags do not already exist. Set `SOURCE_SHA`, `BOOTSTRAP_VERSION` and
-   `BOOTSTRAP_DIR` to the inspected source, chosen version and private directory.
+2. Promote the source's accepted set revision:
 
    ```bash
-   GIT_SHA="$SOURCE_SHA" VERSION="$BOOTSTRAP_VERSION" docker buildx bake woodpecker-config-extension delivery --set '*.platform=linux/amd64' --set '*.target=smoke' --set '*.output=type=cacheonly'
-   GIT_SHA="$SOURCE_SHA" VERSION="$BOOTSTRAP_VERSION" docker buildx bake woodpecker-config-extension delivery --set '*.platform=linux/amd64' --set "woodpecker-config-extension.tags=docker.io/shepherdjerred/woodpecker-config-extension:$BOOTSTRAP_VERSION" --set "delivery.tags=docker.io/shepherdjerred/delivery:$BOOTSTRAP_VERSION" --metadata-file "$BOOTSTRAP_DIR/images.json" --push
+   toolkit deploy promote SOURCE_ENVIRONMENT DESTINATION_ENVIRONMENT --json
    ```
 
-   Retain native build metadata and registry manifest digests. The descriptor's
-   source SHA and version must match each image's baked `GIT_SHA` and `VERSION`.
-   These are truthful operator bootstrap publications, not CI-qualified builds.
-   Do not invoke CI handoff writers or invent a pipeline number for them.
+3. Approve if required, then wait and watch the monitor as in
+   [Deploy a set revision](#deploy-a-set-revision).
 
-7. Create an external workload descriptor. Replace the illustrative strings
-   with actual source, immutable digests, version and a fresh UUID:
+## Approve or reject an OpenTofu plan
 
-   ```json
-   {
-     "schema": "delivery-bootstrap/v1",
-     "sourceRevision": "REVIEWED_40_CHARACTER_HEAD_SHA",
-     "pullRequest": 123,
-     "revision": "2.0.0-UNUSED_CHART_NUMBER",
-     "requestId": "FRESH_REQUEST_UUID",
-     "targets": ["woodpecker", "delivery"],
-     "images": {
-       "woodpecker": {
-         "repository": "docker.io/shepherdjerred/woodpecker-config-extension",
-         "digest": "sha256:ACTUAL_MANIFEST_DIGEST",
-         "version": "2.0.0-IMAGE_NUMBER",
-         "sourceRevision": "REVIEWED_40_CHARACTER_HEAD_SHA"
-       },
-       "delivery": {
-         "repository": "docker.io/shepherdjerred/delivery",
-         "digest": "sha256:ACTUAL_MANIFEST_DIGEST",
-         "version": "2.0.0-IMAGE_NUMBER",
-         "sourceRevision": "REVIEWED_40_CHARACTER_HEAD_SHA"
-       }
-     }
-   }
-   ```
+A `tofu` recipe with an approve step takes its one approval there, on the
+saved plan ([H6](packages/delivery/docs/model.md#413-approval)). Its selection
+is never approved on its own.
 
-   Resolve the separate operator/root tokens and ChartMuseum publication credentials through their
-   existing wrapper. Run a preview, inspect its immutable archive inventory,
-   then execute with a different new output directory:
+1. Wait until the deployment's approve step is waiting, then read the saved
+   plan's digest, expiry, state serial and change summary:
 
    ```bash
-   bun packages/homelab/scripts/ci/bootstrap-woodpecker.ts /private/bootstrap.json --output /private/bootstrap-preview --dry-run
-   bun packages/homelab/scripts/ci/bootstrap-woodpecker.ts /private/bootstrap.json --output /private/bootstrap-api
+   toolkit deploy status DEPLOYMENT_ID --json
    ```
 
-   The helper derives an immutable root archive from the captured native root.
-   It preserves every unrelated child source, lifecycle and shared resource,
-   including Forum's existing chart without the new seven selected parameters.
-   It publishes only the selected fixed children and this derived root, then
-   uses the normal exact-revision `release-root` lifecycle.
+   The hub's deployment page shows the same plan beside its selection.
 
-8. Verify API readiness, PostgreSQL migrations and private authentication. Do
-   **not register catalog environments yet**. Keep dispatch paused and temporarily
-   enable API catalog writes for publication and qualification. With no registered
-   environment, those records cannot dispatch a release. Let the publication-only main
-   pipeline publish and register the genuine Temporal image and separate
-   control-plane chart. Wait for its whole native pipeline to succeed, then
-   qualify those actual build records through the API's independent CI verifier:
+2. Approve that exact plan from a human session:
 
    ```bash
-   toolkit deploy qualify IMAGE_BUILD_ID --machine --json
-   toolkit deploy qualify CHART_BUILD_ID --machine --json
+   toolkit deploy approve-plan DEPLOYMENT_ID --reason "Reviewed the saved plan's changes"
    ```
 
-   This uses the execute credential and exact native main-push CI evidence;
-   it needs no running Temporal worker or dispatch Schedule. A failed producer
-   cannot be qualified. Keep each artifact's original producing source/build,
-   even when it differs from the reviewed bootstrap procedure source.
+   The command reads the digest from the deployment's own saved plan. The apply
+   step then consumes that plan once.
 
-   Create exact qualified-artifact queries containing
-   `{serviceId, component, kind, digest, version, originKind: "first-party"}`.
-   The image role is `temporal` / `image:temporal-worker` / `image`; the chart
-   role is `delivery-control-plane` / `chart:delivery-control-plane` / `chart`.
-   Resolve their original records through the authenticated catalog:
+3. To refuse it instead, reject the plan:
 
    ```bash
-   toolkit deploy artifact --file /private/cp-image-query.json --machine --json > /private/cp-image.json
-   toolkit deploy artifact --file /private/cp-chart-query.json --machine --json > /private/cp-chart.json
+   toolkit deploy reject-plan DEPLOYMENT_ID --reason "Why the saved plan must not apply"
    ```
 
-   Use a second descriptor targeting only `delivery-control-plane`, with a new
-   **root archive** revision/request UUID and canonical `deliveryUrl`. Add
-   `controlPlane: {image: ORIGINAL_IMAGE_RECORD, chart: ORIGINAL_CHART_RECORD}`
-   from these results. The helper independently rechecks qualification and
-   original identities, archive bytes and image provenance. Every image platform
-   must declare the `delivery-control-plane/v2` capability, which includes the
-   dedicated Delivery Workflow poller; an older Activity-only image is refused.
-   It selects the
-   original CP chart URI/version/digest and image; it never repackages the CP
-   child chart into the operator root revision. Preserve both original IDs in
-   the receipt for the first managed upgrade's `previousImageArtifactId` and
-   `priorChartArtifactId` inputs. The initial managed-upgrade contract expects
-   this installer's explicit image Helm selection; the independent Job verifies
-   that exact native shape before effects.
-   Subsequent upgrades derive their prior selection from immutable acceptance.
-   No accepted deployment is invented for bootstrap.
+   Delivery discards the plan. The deployment ends failed without applying and
+   releases its locks.
 
-   The existing API must independently report an empty environment catalog;
-   inspection failure or any registered environment blocks bootstrap. Artifact
-   and build registration/qualification are permitted before this transfer.
-   Restore the global write pause before the control-plane bootstrap.
+An override of a non-eligible OpenTofu deployment is decided first, with
+`toolkit deploy approve --override`, before the plan runs. The approval expires
+if the plan expires or the binding generation moves before you decide.
 
-   Install the source-declared dispatch Schedule on the dedicated queue, paused
-   from its first creation. Use the supported Temporal CLI, not the old central
-   worker's Schedule inventory:
+## Publish to a channel
+
+A `channel` environment, such as an npm dist-tag, publishes a version to an
+audience ([X12](packages/delivery/docs/model.md#9-decisions)).
+
+1. Request the release. `start` sends a `channel-publish` deployment for a
+   channel recipe:
 
    ```bash
-   toolkit temporal --namespace prod schedule create --schedule-id delivery-dispatch --type deliveryDispatchWorkflow --task-queue delivery-workflows --interval 1m --overlap-policy Skip --execution-timeout 5m --catchup-window 5m --paused --notes 'Awaiting Delivery ownership transfer'
-   toolkit temporal --namespace prod schedule describe --schedule-id delivery-dispatch
+   toolkit deploy start CHANNEL_ENVIRONMENT SET_REVISION --json
    ```
 
-   If the Schedule already exists, inspect its exact type, dedicated queue and
-   paused state before continuing; do not create a second Schedule or trigger
-   it. Start the required baseline Workflows explicitly as shown below while
-   this Schedule remains paused. The three steady control-plane
-   roles request 300m CPU and 768 MiB; their combined limits are 3 CPU and 3 GiB.
+2. Wait for acceptance as in [Deploy a set revision](#deploy-a-set-revision).
+   The deployment publishes the version if the store lacks it, moves the
+   channel's pointer, and reads back the registry's bytes and pointer
+   ([section 5](packages/delivery/docs/model.md#5-target-kinds)).
 
-9. With API and control-plane hosts ready, seed genuine qualified publication
-   provenance and inspect actual current runtime. Establish worker host-only
-   adoption and Forum's read-only native baseline before new releases. Bootstrap
-   receipts do not create accepted VersionSets or eligible artifacts.
-   Keep the dispatch Schedule paused while seeding. Run only required read-only
-   baseline Workflows explicitly, and wait for their native evidence:
+A published version is never removed. Rolling a channel back
+[from its candidates](#roll-back-an-environment) moves only the pointer. A
+`forwardOnly` channel lists no eligible candidate. Delivery has an adapter for
+npm only; a channel on another store fails without an effect.
 
-   ```bash
-   toolkit deploy workers baseline --file /private/worker-baseline.json --machine --json
-   toolkit deploy forum baseline --file /private/forum-baseline.json --machine --json
-   ```
+## Register a catalog change
 
-   These commands record pending intents; a paused Schedule does not dispatch
-   them. Inspect each returned intent and start only its exact recorded
-   Workflow ID, with the corresponding actual deployment/intent ID:
+Use this after merging a change to services, environments, edges, recipes or
+configurations.
+
+1. From the repository root at the merged commit, post the catalog document:
 
    ```bash
-   toolkit temporal --namespace prod workflow start --workflow-id ACTUAL_WORKER_BASELINE_WORKFLOW_ID --type deliveryDeploymentWorkflow --task-queue delivery-workflows --input '{"deploymentId":"ACTUAL_WORKER_BASELINE_DEPLOYMENT_ID"}'
-   toolkit temporal --namespace prod workflow start --workflow-id ACTUAL_FORUM_BASELINE_WORKFLOW_ID --type deliveryForumBaselineWorkflow --task-queue delivery-workflows --input '{"intentId":"ACTUAL_FORUM_BASELINE_INTENT_ID"}'
-   ```
-
-   Read back each run before retrying; never invent a replacement Workflow ID.
-   Wait for native baseline settlement before handover. For subsequent
-   control-plane upgrades, pause dispatch and drain all other pending releases,
-   baselines and recoveries first. The upgrade's native Job stops the journaled
-   ordinary Activity host, proves the dedicated queue contains only its exact
-   own run, and replays its unchanged history against the qualified candidate
-   source before selection. The selected chart must restore every host to its
-   declared replica count. A failed preselection restores only the same prior
-   UID/template; crash recovery uses the same durable journal.
-   Because dispatch remains paused, start that upgrade's returned stable
-   Workflow ID explicitly as well:
-
-   ```bash
-   toolkit temporal --namespace prod workflow start --workflow-id delivery/ACTUAL_CONTROL_PLANE_DEPLOYMENT_ID --type deliveryDeploymentWorkflow --task-queue delivery-workflows --input '{"deploymentId":"ACTUAL_CONTROL_PLANE_DEPLOYMENT_ID"}'
-   ```
-
-   Pause global Delivery writes after those requests settle. Disable the exact
-   Woodpecker webhook again and stop queued/running native pipelines for the
-   brief ownership transfer. Inspect the authenticated, source-bound context:
-
-   ```bash
-   toolkit deploy handover-context --machine --json
+   toolkit deploy catalog reconcile --file CATALOG_DOCUMENT_JSON --machine --json
    ```
 
    Prepare an external `delivery-ownership-handover/v1` descriptor with the
@@ -343,104 +182,116 @@ original CI-qualified artifacts already recorded in PostgreSQL.
    stopped and complete it before transferring ownership or enabling dispatch;
    do not select a rolling subset.
 
-   ```bash
-   bun packages/homelab/scripts/ci/delivery-handover.ts /private/handover.json --output /private/handover-preview --dry-run
-   bun packages/homelab/scripts/ci/delivery-handover.ts /private/handover.json --output /private/handover-apply
-   ```
+2. Read `created`, `unchanged` and `refused`. Each refused id names its
+   reason, and the command exits 1. An edited recipe or configuration revision
+   is always refused, because revisions are immutable
+   ([P1](packages/delivery/docs/model.md#47-recipe)). Add a new revision id
+   instead.
 
-   The handover uses issued, source-registered workload/platform accounts,
-   independently checks their actual identities and permissions, and preserves
-   each complete native source while adding PG ownership and disabling autosync.
-   Fresh paused admission, zero pending requests/locks and stable baselines are
-   required before every UID/resource-version CAS. It never records acceptance.
-   Retain its private receipt if interrupted; leave both mutation systems paused
-   while inspecting exact native metadata and the recorded intent.
+3. When `created.carriedSelections` is not zero, read the reconcile on the
+   hub's activity page. Each carried environment kept its accepted bytes under
+   the catalog's component names and owners
+   ([section 7](packages/delivery/docs/model.md#7-fit-to-the-inventory)).
 
-   Transfer all ready authority together, enable the declarative dispatch
-   Schedule, and verify the first actual releases. Re-enable the inspected
-   publication-only webhook after handover.
-   Remove old deployment credentials; keep Woodpecker
-   limited to verification and immutable artifact production.
+Registration changes nothing that runs
+([C3](packages/delivery/docs/model.md#41-catalog)). A new automatic environment
+with no promotion source receives the live set on the next dispatch
+([E0](packages/delivery/docs/model.md#410-environment)).
 
-If interrupted, retain the private descriptor, receipt, archives and
-`expected.json`. Inspect the recorded UID/source and owned operation before
-continuing. After `root-release-intent`, resume **the same** existing root
-request using its recorded revision and expected inventory:
+## Change a recipe or configuration
 
-```bash
-bun packages/homelab/scripts/argocd/argocd.ts release-root apps /private/bootstrap-api/expected.json --revision RECORDED_REVISION --request-id RECORDED_REQUEST_UUID
-```
+A recipe or configuration change is its own deployment, called a rebind. It
+keeps the accepted set revision.
 
-Do not rerun the whole bootstrap with a new identity, overwrite an immutable
-archive, or treat a missing response as failure-before-effect. Before root
-submission, inspect exact publication and source-freeze receipts and resolve
-the recorded step under the same maintenance ownership. After real PG/native
-ownership exists, use independent Delivery recovery instead of bootstrap.
-
-## Inspect and request a release
-
-1. Inspect the environment in Delivery and list its qualified versions:
+1. Merge the catalog change that adds the new recipe or configuration
+   revision and binds the environment to it.
+2. [Register the catalog change](#register-a-catalog-change). The
+   environment's declared binding now names the new revision.
+3. Request the rebind. Name only the revision that changes; Delivery refuses a
+   revision the catalog does not declare for the environment:
 
    ```bash
-   toolkit deploy versions SERVICE --json
+   toolkit deploy rebind ENVIRONMENT --recipe RECIPE_REVISION --configuration CONFIGURATION_REVISION --json
    ```
 
-   Inspect desired, observed and accepted versions separately. A pending or
-   rejected build is not an eligible release. Automatic environments queue the
-   latest qualified candidate; Scout and Starlight production require human
-   approval of the exact frozen request.
+4. Approve if required, then wait and watch the monitor as in
+   [Deploy a set revision](#deploy-a-set-revision).
 
-2. Request an explicit version set when an operator selection is needed:
+## Roll back an environment
+
+1. List the rollback candidates:
 
    ```bash
-   toolkit deploy start ENVIRONMENT VERSION_SET --json
-   toolkit deploy wait DEPLOYMENT_ID --timeout 86400 --json
+   toolkit deploy candidates ENVIRONMENT --json
    ```
 
-   The UI shows each stage, blocker and evidence. A successful build does not
-   prove reconciliation or runtime acceptance. Retry retains the selected
-   artifacts; rollback selects a previously accepted set. Forum and Minecraft
-   require their preservation and restoration procedures rather than a blind
-   image reversal.
+   Each candidate is a previously accepted deployment, newest first. The
+   accepted one is listed too, so it can be re-asserted. Excluded candidates
+   state why ([D9](packages/delivery/docs/model.md#412-deployment)).
 
-3. For a failed operation, inspect its recorded effects before retrying:
+2. Request the rollback by the candidate's deployment id. It restores that
+   deployment's set revision, recipe and configuration together:
+
+   ```bash
+   toolkit deploy rollback ENVIRONMENT DEPLOYMENT_ID --json
+   ```
+
+   The command refuses an unknown or excluded candidate with the server's
+   reason before it sends anything.
+
+3. Approve if required, then wait and watch the monitor as in
+   [Deploy a set revision](#deploy-a-set-revision).
+
+:::caution
+An excluded candidate cannot be forced. A candidate that would lower a
+`forwardOnly` key or cross a `pointOfNoReturn` step needs a roll-forward: a new
+set revision or a rebind.
+:::
+
+## Respond to an alarmed monitor
+
+1. Read the monitor's alarms and evidence counts:
+
+   ```bash
+   toolkit deploy monitor ENVIRONMENT --json
+   ```
+
+   Alarms marked pre-existing became active before the deployment's claim.
+   They do not count against it
+   ([W2](packages/delivery/docs/model.md#419-monitor)).
+
+2. Find the automatic rollback, if the monitor's policy is `automatic`:
+
+   ```bash
+   toolkit deploy status --json
+   ```
+
+   The environment shows a queued rollback to its last settled or unmonitored
+   selection, carrying that selection's approval as a `restoration` approval
+   ([H5](packages/delivery/docs/model.md#413-approval)). Wait for it with
+   `toolkit deploy wait`. With no permitted candidate, or one that was never
+   approved where approval is required, the environment is held with the
+   reason instead.
+
+3. Under `hold` policy, or for a held environment,
+   [roll back from the candidates](#roll-back-an-environment) or deploy a fixed
+   set revision.
+
+The alarmed set revision is skipped by automatic selection until a newer
+eligible one exists ([D3](packages/delivery/docs/model.md#412-deployment)). An
+explicit `toolkit deploy start` of it is still accepted.
+
+## Recover a deployment that requires recovery
+
+A deployment ends `recovery-required` after an ambiguous effect, an expired
+lease, or an unsettled sub-step. It keeps its locks until a recovery intent
+succeeds ([4.15](packages/delivery/docs/model.md#415-recovery-intent)).
+
+1. Read the deployment's environment generation, its recipe and the sub-step
+   it names:
 
    ```bash
    toolkit deploy status DEPLOYMENT_ID --json
-   ```
-
-   A retained lock protects ambiguous external writes. Stop the old executor
-   and use the corresponding independent recovery procedure. Do not remove a
-   database lock or replace a foreign active Argo operation.
-
-## If an image did not rebuild
-
-The image workflow compares source against the most recent complete publication
-whose source is an ancestor of the current build. It retains unchanged image
-identities from the durable publication inventory. Neither deployment success
-nor a Git commit-back branch controls artifact reuse.
-
-Inspect the image workflow's comparison base, changed paths, target reasons and
-push outcomes. Missing publication evidence rebuilds the required image closure;
-corrupt or conflicting evidence fails the producer. Bootstrap a new service by
-publishing and qualifying its actual image before requesting its deployment.
-
-## Recover a Delivery operation
-
-Use this procedure for a failed or canceled delegated application deployment
-whose Delivery details show `recoveryRequired`. It also covers a stopped worker
-that recorded intent before selecting the chart or submitting an Argo operation.
-For a site, Scout frontend, or forum release, use
-[content recovery](#recover-a-site-or-forum-release) instead. Specialized worker
-recovery retains its separate native proof. The generic helper refuses these targets.
-
-1. Pause Delivery mutations. Confirm the old Workflow is closed and its mutation
-   executor is stopped through the repository-owned worker deployment path.
-   A closed Workflow alone does not prove an Activity process has stopped.
-2. Inspect the retained target and recorded reconciliation request:
-
-   ```bash
-   toolkit deploy status DEPLOYMENT_ID --machine --json
    ```
 
    Keep its `environment.generation` as `GENERATION` for step 6. The
@@ -452,152 +303,221 @@ recovery retains its separate native proof. The generic helper refuses these tar
 3. Export the frozen artifact and configuration selection for review:
 
    ```bash
-   bun packages/temporal/scripts/recovery/delivery.ts export DEPLOYMENT_ID --file /tmp/delivery-recovery.json
+   toolkit deploy recover DEPLOYMENT_ID --expected-generation GENERATION --reason "Inspect the target and settle ownership" --machine
    ```
 
-   The helper requires the failed or canceled deployment to retain its original
-   environment lock. It verifies the recorded stage request and rejects credential
-   parameter keys. Inspect the application, chart digest, image digests, request
-   ID, and non-secret configuration in this file.
+   The command prints the request ID it used; keep it. Delivery picks the
+   intent's kind from the deployment. A deployment has at most one pending
+   intent. This works while writes are paused and while the executor is
+   unavailable.
 
-4. Settle that exact selection while Delivery retains ownership:
+3. Settle the intent by its kind:
+
+   | Kind                              | Settlement                                                                                                                         |
+   | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+   | `argo`                            | Steps 4 and 5 below                                                                                                                |
+   | `worker`, `platform`, `minecraft` | The dispatcher's recovery Workflow, or its operator entrypoint ([Temporal README](packages/temporal/README.md#delivery-execution)) |
+   | `content`                         | The foreground content recovery command with dispatch paused ([Temporal README](packages/temporal/README.md#delivery-execution))   |
+
+4. For an `argo` intent, read the finished operation's UUID from the
+   Application the deployment synced. The read goes through the Kubernetes API,
+   so it works while ArgoCD's API is down:
 
    ```bash
-   bun packages/temporal/scripts/recovery/delivery.ts settle DEPLOYMENT_ID --file /tmp/delivery-recovery.json
+   kubectl --context admin@torvalds -n argocd get applications.argoproj.io APPLICATION -o json | jq -er '.status.operationState.operation.info[] | select(.name == "ci.sjer.red/operation-id") | .value'
    ```
 
-   The helper rereads Delivery before using the credential broker. It invokes
-   `sync-managed` with an explicit `--delivery-selection` file, exact revision,
-   and recorded request ID. The command verifies the chart digest, root field
-   preservation, delegation, inactive operations, and resource-version tests
-   before selecting the source. Existing apply-safety and operation-ownership
-   checks still govern the bounded sync. There is no pruning or acceptance write.
+   If the Application shows a running operation or none for this deployment,
+   keep the lock and inspect it. Settlement refuses either.
 
-5. Read the finished operation UUID from the application named in the export:
+5. Settle the `argo` intent with that operation. The same request ID names
+   the intent from step 2. Delivery's own reader checks the recorded request,
+   the ownership annotation, the finished operation and every Job:
 
    ```bash
-   toolkit argocd app get APPLICATION -o json | jq -er '.status.operationState.operation.info[] | select(.name == "ci.sjer.red/operation-id") | .value'
+   toolkit deploy recover DEPLOYMENT_ID --expected-generation GENERATION --request-id REQUEST_ID --operation-id ARGO_OPERATION_UUID --reason "Inspected the exact finished operation" --machine
    ```
 
-6. Release ownership through independent observation:
+6. Follow the intent until it reports `succeeded` or `failed`:
 
    ```bash
-   toolkit deploy recover DEPLOYMENT_ID --expected-generation GENERATION --operation-id ARGO_OPERATION_UUID --reason "Inspected and settled the exact frozen release with the prior executor stopped" --machine
+   toolkit deploy recovery INTENT_ID --json
    ```
 
-   This remains available while writes are paused and Temporal is unavailable.
-   The API requires the matching finished request, operation UUID, environment
-   delegation, and settled Jobs. Recovery clears ownership; it does not mark the
-   failed deployment accepted. Request a new deployment to perform acceptance.
+7. On `succeeded`, request a new deployment to reach acceptance. Settlement
+   releases the locks but keeps the original failed result and the accepted
+   selection.
+8. On `failed`, read the recorded inspection evidence. Correct the target, then
+   create a new intent.
 
-If any check fails, retain the lock and inspect that exact external operation.
-Do not delete database locks or replace a foreign active operation.
+:::danger
+Never delete a lock row or replace a foreign ArgoCD operation to release a
+deployment. Only an intent settled by the independent reader may release it.
+:::
 
-## Recover a site or forum release
+## Run an operator-run deployment
 
-Use a separate recovery intent when a failed or canceled site, Scout frontend,
-or forum release retains its lock. Recovery settles native effects without
-accepting the failed deployment or changing its accepted release.
+Operator-run environments cover work Delivery cannot execute from inside the
+cluster: cluster admission, the Delivery and Temporal data layers,
+operator-only OpenTofu stacks, node upgrades and bootstrap
+([section 5](packages/delivery/docs/model.md#5-target-kinds)).
 
-1. Pause the Delivery dispatcher Schedule and drain other running releases and
-   recovery operations. Inspect the held deployment:
+1. Request the deployment. `start` sends an `operator-run` deployment for an
+   operator-run recipe. Delivery records intent and then waits for evidence on
+   each stage:
 
    ```bash
-   toolkit deploy status DEPLOYMENT_ID --machine --json
+   toolkit deploy start ENVIRONMENT SET_REVISION --json
    ```
 
-   Keep its exact environment generation, selected artifacts, pipeline and
-   recorded operations. Leave the ordinary Activity host at one replica: the
-   maintenance command journals its exact identity before stopping it. A closed
-   Workflow alone does not prove its executor stopped.
-
-2. Request inspection with the admin credential and that exact generation:
+2. List the stages awaiting attestation:
 
    ```bash
-   toolkit deploy sites recover DEPLOYMENT_ID --machine --expected-generation GENERATION --reason "Inspect and settle the exact frozen site release under retained ownership"
+   toolkit deploy status DEPLOYMENT_ID --json
    ```
 
-   For a forum release, replace `sites` with `forum`. Retain the returned intent
-   ID and request ID. The caller supplies no native proof or replacement artifacts.
+3. Perform the first stage's procedure by hand. For a node, follow the
+   [Talos upgrade](packages/homelab/README.md#upgrade-talos) or
+   [Kubernetes upgrade](packages/homelab/README.md#upgrade-kubernetes) steps.
+4. Write the evidence as a JSON array of `attestation` entries. Each entry has
+   a `summary` and may add a `url` to the log or receipt
+   ([evidence contract](packages/delivery/src/shared/evidence-contract.ts)):
 
-3. Inspect the intent and its native receipts:
+   ```json
+   [
+     {
+       "kind": "attestation",
+       "summary": "talosctl upgrade completed; node Ready on the target installer"
+     }
+   ]
+   ```
+
+5. Attest the stage. With `--machine`, `attest` uses the attestor credential
+   `DELIVERY_ATTEST_TOKEN`, a distinct identity with the `attest` scope that
+   the executor never holds
+   ([X13](packages/delivery/docs/model.md#9-decisions)):
 
    ```bash
-   toolkit deploy sites recovery INTENT_ID --machine --json
+   toolkit deploy attest DEPLOYMENT_ID --stage STAGE --evidence /private/evidence.json --machine
    ```
 
-   Use `forum recovery` for the forum. The UI shows the same frozen operation,
-   native Job identities and refusal reasons. Repair uses the frozen archive or
-   forum release inputs. It cannot reverse a database upgrade or remove another
-   execution's maintenance lock.
+   Delivery refuses an attestation from any credential with the `execute`
+   scope, or from an identity that claimed or renewed the deployment.
 
-4. Run the one-shot maintenance command with the existing operator context:
+6. Repeat steps 3 to 5 for each remaining stage, then wait for acceptance with
+   `toolkit deploy wait`.
+
+## Retire a service
+
+1. Confirm that no deployment of the service is owned or `recovery-required`.
+   Retirement refuses otherwise
+   ([S3](packages/delivery/docs/model.md#42-service)):
 
    ```bash
-   bun packages/temporal/scripts/rollout/content-delivery-recovery.ts --intent INTENT_ID --action inspect --context admin@torvalds --url https://delivery.tailnet-1a49.ts.net
+   toolkit deploy status --json
    ```
 
-   `inspect` settles only an already verified desired release. If repair is
-   needed, review the refusal and rerun with `--action repair`. Repair uses the
-   frozen archive or same forum candidate; it retains the original backup.
-   The command stops the journaled Activity host, checks the original executor
-   and native Jobs, verifies the result, then restores that exact host. It does
-   not create an automatic recovery Workflow or controller.
-
-   If an interrupted forum `install`, `addons`, `seed`, `history` or `accounts`
-   step cannot be retried safely, retain the reported step and journal SHA-256.
-   Keep maintenance active. Check the terminal original Pod's UID, image and
-   owning Job UID against the frozen receipt before copying it for native repair.
-   Preserve its original image, environment, PVCs and init containers. For
-   example, after reviewing the native history checkpoints:
+2. Retire it:
 
    ```bash
-   kubectl --context admin@torvalds -n FORUM_NAMESPACE debug ORIGINAL_POD --copy-to=MANUAL_REPAIR_POD --container=release --keep-init-containers=true --keep-labels=true --profile=restricted --share-processes=false -- php /opt/storm-forum/runtime/command.php storm:history --migrate
+   toolkit deploy retire SERVICE --reason "Replaced by Arcade" --machine
    ```
 
-   Use the corresponding native command for reviewed seed or account repair.
-   Diagnose installation and add-on state with XenForo's native recovery tools;
-   do not blindly rerun a migration or delete a pending merge marker.
-   Wait for the exact manual Pod to terminate and retain its result. Read its
-   current UID and resource version, then remove only that Pod:
+A retired service keeps each environment's accepted selection and retained
+hosts. It admits no further deployment
+([S4](packages/delivery/docs/model.md#42-service)).
+
+## If a merge deployed nothing
+
+Check each cause in order with `toolkit deploy versions SERVICE --json` and
+`toolkit deploy status --json`.
+
+| Symptom                                         | Cause                                                                                                                        |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| No new set revision; build `pending` or failed  | Only verified builds compose ([B1](packages/delivery/docs/model.md#44-build))                                                |
+| Build stays `pending` after its pipeline passed | It retains an artifact of an earlier pipeline's build that is still pending ([B2](packages/delivery/docs/model.md#44-build)) |
+| Build failed naming a retained artifact         | The earlier build it retained from failed; the next pipeline rebuilds ([B2](packages/delivery/docs/model.md#44-build))       |
+| No new set revision; build verified             | Every digest matched the base, so nothing changed ([R2](packages/delivery/docs/model.md#46-set-revision))                    |
+| New set revision is not the live set            | Its order key is below the live set's ([R4](packages/delivery/docs/model.md#46-set-revision))                                |
+| No deployment queued                            | A failed deployment blocks automatic successors ([D2](packages/delivery/docs/model.md#412-deployment))                       |
+| No deployment queued after a cancel or alarm    | That set revision is suppressed ([D3](packages/delivery/docs/model.md#412-deployment))                                       |
+| No deployment queued after a restore            | The environment is held until its live state is accepted ([section 6](packages/delivery/docs/model.md#6-flows))              |
+| Deployment queued but not admitted              | A prerequisite edge is unmet ([Z1](packages/delivery/docs/model.md#418-prerequisite-edge))                                   |
+| Nothing queued in prod                          | Prod has a promotion source; promote from it ([M2](packages/delivery/docs/model.md#416-promotion-tree))                      |
+
+## If a static-site deploy gets AccessDenied
+
+The site activator writes each site bucket with the `delivery-static-activator`
+SeaweedFS identity. Its allowed buckets are the `siteBuckets` list in the
+[storage policy](packages/homelab/src/delivery-storage-policy.json).
+
+1. Confirm the failing bucket is in `siteBuckets`. Add it there in source if it
+   is missing.
+2. In the SeaweedFS identities config in the `seaweedfs-s3-credentials`
+   1Password item, give `delivery-static-activator` the `Read`, `Write`, `List`
+   and `Tagging` actions on that bucket. Change no credential or other grant.
+3. Wait for the 1Password operator to update the `seaweedfs-s3-credentials`
+   Secret in the `seaweedfs` namespace. Then
+   [reload the gateway's identities with SIGHUP](https://github.com/seaweedfs/seaweedfs/blob/4.47/weed/s3api/s3api_server.go#L441):
 
    ```bash
-   kubectl --context admin@torvalds -n FORUM_NAMESPACE get pod MANUAL_REPAIR_POD -o jsonpath='{.metadata.uid}{" "}{.metadata.resourceVersion}{" "}{.status.phase}{"\n"}'
-   kubectl --context admin@torvalds delete --raw /api/v1/namespaces/FORUM_NAMESPACE/pods/MANUAL_REPAIR_POD -f - <<'JSON'
-   {"apiVersion":"v1","kind":"DeleteOptions","preconditions":{"uid":"MANUAL_POD_UID","resourceVersion":"MANUAL_POD_RESOURCE_VERSION"},"propagationPolicy":"Foreground"}
-   JSON
+   kubectl exec -n seaweedfs deployment/seaweedfs-s3 -- \
+     sh -c 'test "$(cat /proc/1/comm)" = weed && kill -HUP 1'
    ```
 
-   Require its deletion before acknowledging the same interrupted step and
-   exact journal hash:
+4. Probe with the activator's credential using `aws s3api list-objects-v2`. It
+   must succeed for the new bucket and return `AccessDenied` for
+   `homelab-tofu-state`.
+5. Retry the failed deployment:
 
    ```bash
-   bun packages/temporal/scripts/rollout/content-delivery-recovery.ts --intent INTENT_ID --action repair --acknowledge-step STEP --expected-journal-sha256 JOURNAL_SHA256 --context admin@torvalds --url https://delivery.tailnet-1a49.ts.net
+   toolkit deploy retry DEPLOYMENT_ID --json
    ```
 
-   Fixed read-only native checks must prove completion before that one
-   checkpoint is appended. A failed check keeps the owner, backup and journal.
+## Bootstrap a configuration-extension graph change
 
-5. Confirm independent settlement succeeded and the original failed result and
-   accepted pointers remain unchanged. A failed or refused recovery retains
-   ownership; inspect its exact reason before requesting another attempt.
+The deployed Woodpecker configuration extension selects the workflows for its
+own pull request. Changes under `packages/woodpecker-config-extension` are
+[inputs to every workflow](packages/woodpecker-config-extension/src/pipeline/inputs.ts).
+If a graph change retires a failing lane, the old extension still selects that
+lane for the replacement PR, and the ordinary merge gate cannot pass. The
+[`images` lane](packages/woodpecker-config-extension/src/pipeline/lanes/artifacts.ts)
+runs only on `main`, so nothing can publish the new extension before merge.
+The
+[PR-only administrator bypass](packages/homelab/src/tofu/github/rulesets.tf)
+is the narrow landing path.
 
-   If `dispatchBarrier` is present, also require `barrierRestoredAt` before
-   resuming dispatch. A terminal recovery status alone does not prove that its
-   journaled producer host has been restored.
+Use this path only when the new graph removes or replaces the blocking
+workflow:
 
-   If interrupted, rerun the same command and intent. Do not create a new
-   journal or manually scale the producer to bypass its identity checks.
+1. Get explicit repository-owner authorization for an admin merge exception.
+2. Keep the graph change in its Git-Spice PR. Run the extension's focused
+   build, typecheck, tests and lint locally.
+3. Wait for the exact PR head's automated review, `verify`, and every
+   unaffected required check. Confirm from the logs that each failure belongs
+   only to a lane the new graph removes or replaces.
+4. Have the repository owner merge that PR with the forge's admin
+   branch-protection override. Never mark the retired lane successful or edit
+   its required-check result.
+5. Follow the resulting `main` pipeline through `images`. Then wait for
+   Delivery to accept the `woodpecker/prod` deployment of the new
+   `image:woodpecker-config-extension` artifact:
 
-Do not use generic `deploy recover` or delete PostgreSQL locks for these targets.
+   ```bash
+   toolkit deploy status --json
+   toolkit deploy wait DEPLOYMENT_ID --json
+   ```
 
-## Where it lives
+6. Retry the affected PR and confirm the replacement graph is selected.
 
-The reviewed execution contracts are documented in `packages/delivery/README.md`
-and the
-[Temporal worker](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/README.md).
+Never patch the live Deployment to break this cycle. The exception lands
+reviewed source; Delivery's deployment and acceptance still provide the
+release evidence.
 
 ## Related
 
-- [Why the release pipeline is shaped this way](/explanation/homelab/release-safety/)
+- [Why releases are shaped this way](/explanation/homelab/release-safety/)
+- [Restore the Delivery record](/how-to/restore-the-delivery-record/)
+- [Delivery model reference](/reference/delivery-model/)
+- [How the Delivery hub follows a change](/explanation/homelab/delivery-hub/)
 - [Roll out a Temporal Worker Deployment](/how-to/roll-out-a-temporal-worker-deployment/)
