@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { RecipeDefinitionSchema } from "./recipe-contract.ts";
 import { specializedStageKey } from "./recipe-view.ts";
+import { ONE_SITE_STEP } from "./step-order.ts";
 import { applicationRecipe } from "#testing/catalog-fixture.ts";
 
 /** An Application recipe whose third step is `extra`, if given. */
@@ -65,5 +66,38 @@ describe("specializedStageKey (T3)", () => {
     expect(() => specializedStageKey(compound, "archive")).toThrow(
       /has no archive step/u,
     );
+  });
+});
+
+/** The contract's refusal messages for a recipe definition. */
+function refusal(definition: unknown) {
+  return RecipeDefinitionSchema.safeParse(definition).error?.issues.map(
+    (issue) => issue.message,
+  );
+}
+
+describe("one site activation per release", () => {
+  test("an Application recipe holds at most one static-site step", () => {
+    expect(refusal(applicationRecipe("scout", [siteStep, siteStep]))).toContain(
+      ONE_SITE_STEP,
+    );
+  });
+
+  test("a compound recipe holds at most one static-site step across its Applications", () => {
+    expect(
+      refusal({
+        kind: "compound",
+        subRecipes: [
+          {
+            instance: "application:scout",
+            definition: application("scout", siteStep),
+          },
+          {
+            instance: "application:scout-preview",
+            definition: application("scout-preview", siteStep),
+          },
+        ],
+      }),
+    ).toContain(ONE_SITE_STEP);
   });
 });

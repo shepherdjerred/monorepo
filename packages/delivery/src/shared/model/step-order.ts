@@ -21,3 +21,17 @@ export function misplacedUpgrades(
       : [],
   );
 }
+
+/**
+ * Settlement and recovery read one site activation per release
+ * (`siteReleaseOf`, `specializedStageKey`), while the executor runs every
+ * static-site step it is given. A recipe therefore holds at most one
+ * static-site step across its Applications, compound sub-recipes included.
+ */
+export const ONE_SITE_STEP =
+  "A recipe activates at most one static-site step across its Applications; settlement proves exactly one site activation per release";
+
+/** Whether these Application steps hold more than one static-site step. */
+export function extraSiteSteps(steps: readonly { kind: string }[]) {
+  return steps.filter((step) => step.kind === "static-site").length > 1;
+}
