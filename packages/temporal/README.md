@@ -148,6 +148,19 @@ It cannot create resources, execute commands in Pods, read Secrets or use cluste
 permissions. Its projected token lets the independent native verifier repeat
 terminal-executor observations immediately before a recovery mutation.
 
+Every stage Job prepares its workspace in an emptyDir on liskov's OS disk, so
+the bootstrap writes as little as it can. It links the CI image's mise
+toolchain instead of copying it, and copies only mise's per-tool metadata, so a
+missing tool version still installs beside the image's. Image provenance
+installs only the Temporal workspace's production dependencies. A worker
+candidate at the executor's own revision reuses the prepared checkout. Any other
+candidate is a detached worktree with a blobless fetch into the executor's
+object store, sharing the Job's Bun cache. Candidate `mise exec` never
+auto-installs tools that the unprivileged Job cannot read from the image, such
+as Rust. Adoption and recovery accept only the current bootstrap and the exact
+earlier ones listed in `PREVIOUS_DELIVERY_JOB_BOOTSTRAPS`. Every other pod field
+is still compared.
+
 Platform releases freeze qualified source builds and the complete original
 chart inventory. Root mutations reuse `release-root`; central must first be
 delegated so root cannot change its protected control-plane templates.

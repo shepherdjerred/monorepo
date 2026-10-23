@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { V1Job } from "@kubernetes/client-node";
+import type { V1Job, V1PodSpec } from "@kubernetes/client-node";
 import { z } from "zod";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
 import { deliveryTofuGrants } from "homelab/src/delivery-platform-grants.ts";
@@ -10,6 +10,7 @@ import {
 } from "homelab/src/delivery-stage-admission.ts";
 import {
   DELIVERY_JOB_BOOTSTRAP,
+  PREVIOUS_DELIVERY_JOB_BOOTSTRAPS,
   DeliveryJobRequestSchema,
   deliveryJobNamespace,
   type DeliveryJobRequest,
@@ -284,7 +285,7 @@ export function assertMatchingDeliveryJob(
   actual: V1Job,
   expected: V1Job,
 ): void {
-  const a = actual.spec?.template.spec;
+  const a = withCurrentBootstrap(actual.spec?.template.spec);
   const e = expected.spec?.template.spec;
   if (
     !jobIdentityMatches(actual, expected) ||
@@ -294,6 +295,28 @@ export function assertMatchingDeliveryJob(
     throw new Error(
       "Existing delivery Job does not match its frozen request and execution policy",
     );
+}
+
+/**
+ * A Job created by an earlier release keeps that release's reviewed bootstrap.
+ * Treat exactly those retained commands as the current one so adoption and
+ * recovery still compare every other execution input; any other command fails.
+ */
+function withCurrentBootstrap(pod: V1PodSpec | undefined) {
+  const command =
+    pod?.containers.length === 1 ? pod.containers[0]?.command : undefined;
+  if (
+    pod === undefined ||
+    command?.length !== 3 ||
+    command[0] !== "/bin/bash" ||
+    command[1] !== "-c" ||
+    !PREVIOUS_DELIVERY_JOB_BOOTSTRAPS.includes(command[2] ?? "")
+  )
+    return pod;
+  const adopted = structuredClone(pod);
+  for (const container of adopted.containers)
+    container.command = ["/bin/bash", "-c", DELIVERY_JOB_BOOTSTRAP];
+  return adopted;
 }
 
 function jobIdentityMatches(actual: V1Job, expected: V1Job): boolean {

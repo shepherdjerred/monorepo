@@ -40,8 +40,55 @@ export type DeliveryJobReceipt = z.infer<typeof DeliveryJobReceiptSchema>;
 
 export const DELIVERY_JOB_RESULT_PREFIX = "DELIVERY_JOB_RESULT_V1=";
 
-/** Input is validated by the selected source-owned handler, never executed as shell. */
-export const DELIVERY_JOB_BOOTSTRAP = `set -euo pipefail
+/**
+ * Input is validated by the selected source-owned handler, never executed as shell.
+ *
+ * The workspace is an emptyDir on liskov's OS disk, so every byte written here
+ * wears that drive. The image toolchain is linked, not copied: version
+ * directories hold symlinks into the read-only image, while mise's per-tool
+ * metadata and alias links are real copies, so mise still sees every image
+ * tool as installed and adds only a version the image lacks. Image provenance
+ * runs only its read-only inspection path, so it installs the Temporal
+ * workspace's runtime closure instead of every workspace's packages.
+ */
+export const DELIVERY_JOB_BOOTSTRAP = String.raw`set -euo pipefail
+unset OP_SERVICE_ACCOUNT_TOKEN
+mkdir -p /workspace/source /workspace/home /workspace/tmp /workspace/bin /workspace/mise
+cp -Rs /opt/mise/. /workspace/mise/
+(cd /opt/mise && find installs -mindepth 1 -maxdepth 2 ! -type d -exec cp -PT --remove-destination {} /workspace/mise/{} \;)
+export MISE_DATA_DIR=/workspace/mise
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+git init -q /workspace/source
+git -C /workspace/source fetch --quiet --depth=1 https://github.com/shepherdjerred/monorepo.git "$DELIVERY_SOURCE_REVISION"
+git -C /workspace/source checkout --quiet --detach FETCH_HEAD
+test "$(git -C /workspace/source rev-parse HEAD)" = "$DELIVERY_SOURCE_REVISION"
+cd /workspace/source
+mise trust .mise.toml
+MISE_LOCKED=1 mise install --yes bun node gh jq helm argocd awscli opentofu aqua:temporalio/cli github:theseus-rs/postgresql-binaries
+tool_paths=$(mise bin-paths bun node gh jq helm argocd awscli opentofu aqua:temporalio/cli github:theseus-rs/postgresql-binaries)
+test -n "$tool_paths"
+export PATH="$(echo "$tool_paths" | paste -sd:):$PATH"
+if [ "$(jq -er '.recipe' <<< "$DELIVERY_JOB_REQUEST")" = worker-images ]; then
+  bun install --frozen-lockfile --production --filter=@shepherdjerred/temporal
+else
+  bun install --frozen-lockfile
+  bunx turbo run generate --filter=@shepherdjerred/temporal^...
+  bun run --cwd packages/llm-models build:runtime
+  bun build packages/toolkit/src/index.ts --compile --external ffmpeg-static --outfile=/workspace/bin/toolkit
+  export PATH="/workspace/bin:$PATH"
+fi
+cd packages/temporal
+bun scripts/jobs/run-delivery-job.ts
+`;
+
+/**
+ * Bootstraps of earlier releases, accepted only when adopting or recovering a
+ * Job one of them created; a new Job always runs DELIVERY_JOB_BOOTSTRAP.
+ * Remove an entry once no retained Job or recovery receipt can still name it.
+ */
+export const PREVIOUS_DELIVERY_JOB_BOOTSTRAPS: readonly string[] = [
+  // Copied the whole image toolchain and installed every workspace for image provenance.
+  `set -euo pipefail
 unset OP_SERVICE_ACCOUNT_TOKEN
 mkdir -p /workspace/source /workspace/home /workspace/tmp /workspace/bin /workspace/mise
 cp -R /opt/mise/. /workspace/mise/
@@ -66,4 +113,5 @@ if [ "$(jq -er '.recipe' <<< "$DELIVERY_JOB_REQUEST")" != worker-images ]; then
 fi
 cd packages/temporal
 bun scripts/jobs/run-delivery-job.ts
-`;
+`,
+];
