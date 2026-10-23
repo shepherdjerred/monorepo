@@ -22,10 +22,10 @@ enum Pace {
    */
   MOVING,
   /**
-   * Walking an objective (arming, retaking, hunting, helping arm): a bow takes an enemy inside the
-   * middle of its band. With only the near edge, archers on these routes passed up enemies in plain
-   * sight for minutes; the opening's walk to the slots keeps {@link #MOVING}, as stopping to shoot
-   * there held whole teams back.
+   * Walking to retake or hunt: a bow takes an enemy inside the middle of its band. With only the
+   * near edge, archers on these routes passed up enemies in plain sight for minutes. The opening's
+   * walk to the slots and the walks to arm or help arm keep {@link #MOVING}, as stopping to shoot
+   * there held whole teams back: a rushing ranged roster has to reach the bomb.
    */
   TASKED,
   /** Running for cover or away: drawing slows the bot to a walk, and getting there comes first. */
@@ -42,14 +42,13 @@ enum Pace {
     };
   }
 
-  /** {@link #route} for a step of {@code option}: walking an objective is {@link #TASKED}. */
+  /**
+   * {@link #route} for a step of {@code option}: walking to retake or hunt is {@link #TASKED};
+   * arming and helping arm stay {@link #MOVING}.
+   */
   static Pace route(Stance stance, boolean bounding, Option option) {
     var pace = route(stance, bounding);
-    var objective =
-        option == Option.ARM
-            || option == Option.RETAKE
-            || option == Option.HUNT
-            || option == Option.HELP_ARM;
+    var objective = option == Option.RETAKE || option == Option.HUNT;
     return pace == MOVING && objective ? TASKED : pace;
   }
 

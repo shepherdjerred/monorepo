@@ -328,7 +328,8 @@ final class KitPlayTest {
             "synthetic",
             List.of(),
             List.of());
-    var waiting = new ReflexInput(dwarf, world, decision(dwarf, List.of()), Optional.empty(), 0, List.of());
+    var waiting =
+        new ReflexInput(dwarf, world, decision(dwarf, List.of()), Optional.empty(), 0, List.of());
     var commands =
         Reflex.tick(
                 ReflexState.initial(dwarf.facing()), waiting, dwarfContext, new SplittableRandom(1))

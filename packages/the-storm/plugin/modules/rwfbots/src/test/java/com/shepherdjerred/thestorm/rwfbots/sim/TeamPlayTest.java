@@ -132,7 +132,8 @@ final class TeamPlayTest {
   // teammates along the led arrow path and re-settling their aim when the target changes.
   // Holders watch visible enemies at any range and guards meet attackers on their way in, at most
   // two per attacker on opposite sides of its bearing.
-  private static final String PINNED_YARD_HASH = "a6b70ddbe2a512d0";
+  // Archers retaking or hunting take a target out to the middle of their band.
+  private static final String PINNED_YARD_HASH = "4fcb3fe0d0948a1d";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {

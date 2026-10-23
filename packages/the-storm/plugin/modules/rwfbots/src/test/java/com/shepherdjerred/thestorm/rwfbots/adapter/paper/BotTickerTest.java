@@ -104,7 +104,8 @@ final class BotTickerTest {
             "test",
             List.of(),
             List.of());
-    return new ReflexInput(self, snapshot, Decision.idle(self.id(), 20, 0), Optional.empty(), 0, List.of());
+    return new ReflexInput(
+        self, snapshot, Decision.idle(self.id(), 20, 0), Optional.empty(), 0, List.of());
   }
 
   private static final class TypingActivity implements BodyActivity {
@@ -208,6 +209,13 @@ final class BotTickerTest {
 
   private static WorldSnapshot snapshot(long tick, List<CombatantView> world) {
     return new WorldSnapshot(
-        tick, MatchPhase.LIVE, world, List.of(), PoisonView.NONE, "synthetic", List.of());
+        tick,
+        MatchPhase.LIVE,
+        world,
+        List.of(),
+        PoisonView.NONE,
+        "synthetic",
+        List.of(),
+        List.of());
   }
 }

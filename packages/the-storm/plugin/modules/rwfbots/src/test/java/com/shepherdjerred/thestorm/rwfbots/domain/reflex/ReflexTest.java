@@ -1198,7 +1198,12 @@ final class ReflexTest {
     for (var tick = 1; tick <= 20; tick++) {
       var input =
           new ReflexInput(
-              self, world(tick, List.of(self, enemy), List.of()), decision, Optional.empty(), 0);
+              self,
+              world(tick, List.of(self, enemy), List.of()),
+              decision,
+              Optional.empty(),
+              0,
+              List.of());
       state = Reflex.tick(state, input, context(levers(0.5)), new SplittableRandom(tick)).state();
     }
     assertThat(Math.abs(state.aim().look().yawDelta(toward))).isLessThan(5);

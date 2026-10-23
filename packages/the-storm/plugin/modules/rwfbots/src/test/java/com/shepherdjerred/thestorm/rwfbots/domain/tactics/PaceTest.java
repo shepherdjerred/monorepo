@@ -14,13 +14,19 @@ import org.junit.jupiter.api.Test;
 /** Which walks let a bow shoot out to the middle of its band. */
 final class PaceTest {
   @Test
-  void anObjectiveWalkIsTaskedButTheWalkToASlotStaysAtTheNearEdge() {
-    // Archers arming or retaking with enemies in plain sight shot only inside the near edge of
-    // their band, failing the archery report card's shots per minute.
-    for (var option : new Option[] {Option.ARM, Option.RETAKE, Option.HUNT, Option.HELP_ARM}) {
+  void aRetakeOrHuntWalkIsTaskedButTheWalksToASlotOrTheBombStayAtTheNearEdge() {
+    // Archers retaking with enemies in plain sight shot only inside the near edge of their band,
+    // failing the archery report card's shots per minute.
+    for (var option : new Option[] {Option.RETAKE, Option.HUNT}) {
       assertThat(Pace.route(Stance.CAUTIOUS, false, option))
           .as("%s", option)
           .isEqualTo(Pace.TASKED);
+    }
+    // Stopping to shoot on the way to the bomb held a rushing ranged roster back in the opening.
+    for (var option : new Option[] {Option.ARM, Option.HELP_ARM}) {
+      assertThat(Pace.route(Stance.CAUTIOUS, false, option))
+          .as("%s", option)
+          .isEqualTo(Pace.MOVING);
     }
     assertThat(Pace.route(Stance.AGGRESSIVE, false, Option.TAKE_SLOT)).isEqualTo(Pace.MOVING);
     assertThat(Pace.route(Stance.CAUTIOUS, true, Option.ARM)).as("a bound").isEqualTo(Pace.DASHING);
