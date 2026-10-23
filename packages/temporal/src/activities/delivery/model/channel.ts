@@ -195,7 +195,10 @@ async function publishStep(
   let dist = intent ? await poll(effects, served) : await served();
   const published = dist === null;
   if (dist === null) {
-    if (!intent) await effects.record(current, key, "running", { operationId });
+    // Every attempt, resumed ones included, records the same intent before
+    // publishing: the server accepts it only from the executor that owns the
+    // deployment under a live lease (D7), which a read cannot prove.
+    await effects.record(current, key, "running", { operationId });
     const bytes = await effects.artifact(artifact);
     if (sha256(bytes) !== artifact.digest)
       throw new Error("Stored package bytes differ from the artifact digest");
@@ -236,9 +239,16 @@ async function pointerStep(
     throw new Error(
       `${recipe.name}@${artifact.version} is not published; the publish step settles first`,
     );
+  // Every attempt, resumed ones included, records the same intent before its
+  // first registry write, as the publish step does (D7).
+  let intended = false;
+  const intend = async () => {
+    if (intended) return;
+    await effects.record(current, key, "running", { operationId });
+    intended = true;
+  };
   if (before?.["dist-tags"][recipe.pointer] !== artifact.version) {
-    if (stageOf(current, key) === undefined)
-      await effects.record(current, key, "running", { operationId });
+    await intend();
     await effects.registry.setTag(
       recipe.name,
       recipe.pointer,
@@ -255,8 +265,10 @@ async function pointerStep(
     },
     `${recipe.pointer} on ${artifact.version}`,
   );
-  if (after["dist-tags"][NPM_STAGING_TAG] !== undefined)
+  if (after["dist-tags"][NPM_STAGING_TAG] !== undefined) {
+    await intend();
     await effects.registry.removeTag(recipe.name, NPM_STAGING_TAG);
+  }
   await effects.record(current, key, "succeeded", {
     operationId,
     evidence: channelEvidence(

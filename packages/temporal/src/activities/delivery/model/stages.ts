@@ -54,7 +54,10 @@ export function executorIdentity() {
 
 /**
  * Re-reads the deployment before each external effect: it must still be
- * running, owned by its environment and not canceled.
+ * running, owned by its environment and not canceled. A read proves neither
+ * a live lease nor the executor's identity; the step's own stage write, which
+ * the server accepts only from the owning executor under a live lease, does
+ * (D7).
  */
 export async function requireOwned(id: string): Promise<DeploymentDetail> {
   const current = await deploymentDetail(id);

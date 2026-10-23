@@ -6,9 +6,15 @@ import type {
 } from "#shared/delivery-job.ts";
 
 const requests: { path: string; body: unknown }[] = [];
+const server = vi.hoisted(() => ({ lapsed: false }));
 vi.mock("#lib/delivery/client.ts", () => ({
   deliveryRequest: vi.fn(
     async (path: string, _schema: unknown, body?: unknown) => {
+      // The server refuses any stage write once the lease has lapsed (D7).
+      if (server.lapsed)
+        throw new Error(
+          "The deployment's lease lapsed; it is no longer provably owned and ends in recovery (D7)",
+        );
       requests.push({ path, body });
       return {};
     },
@@ -29,10 +35,35 @@ async function runDeliveryTestStage(
 
 afterEach(() => {
   requests.splice(0);
+  server.lapsed = false;
+});
+
+const REQUEST = {
+  stageKey: "test-e2e",
+  suite: "test:e2e",
+  workspace: "packages/delivery",
+  sourceRevision: "b".repeat(40),
+  runnerImage: `docker.io/shepherdjerred/ci-base@sha256:${"a".repeat(64)}`,
+};
+/** A running stage write under the executor's identity (D7). */
+const running = (message: string) => ({
+  path: "deployments/deployment%2Ftest/stages",
+  body: {
+    key: "test-e2e",
+    status: "running",
+    operationId: expect.stringMatching(/^delivery-[a-f0-9]{40}$/u),
+    message,
+    evidence: [],
+    // The executor names itself on every stage write (D7).
+    executor: {
+      workflowId: expect.any(String),
+      workflowRunId: expect.any(String),
+    },
+  },
 });
 
 describe("runDeliveryTestStage", () => {
-  it("records the stage running on the Job receipt and returns test evidence", async () => {
+  it("records the stage running before the Job and on its receipt, and returns test evidence", async () => {
     const receipt = {
       namespace: "delivery-worker-jobs" as const,
       name: "delivery-abc",
@@ -68,31 +99,12 @@ describe("runDeliveryTestStage", () => {
     );
     const outcome = await runDeliveryTestStage(
       "deployment/test",
-      {
-        stageKey: "test-e2e",
-        suite: "test:e2e",
-        workspace: "packages/delivery",
-        sourceRevision: "b".repeat(40),
-        runnerImage: `docker.io/shepherdjerred/ci-base@sha256:${"a".repeat(64)}`,
-      },
+      REQUEST,
       runJob,
     );
     expect(requests).toEqual([
-      {
-        path: "deployments/deployment%2Ftest/stages",
-        body: {
-          key: "test-e2e",
-          status: "running",
-          operationId: expect.stringMatching(/^delivery-[a-f0-9]{40}$/u),
-          message: JSON.stringify(receipt),
-          evidence: [],
-          // The executor names itself on every stage write (D7).
-          executor: {
-            workflowId: expect.any(String),
-            workflowRunId: expect.any(String),
-          },
-        },
-      },
+      running("Waiting for an identity-bound revision-pinned Job"),
+      running(JSON.stringify(receipt)),
     ]);
     expect(outcome.result).toEqual(result);
     expect(outcome.evidence).toEqual({
@@ -115,17 +127,15 @@ describe("runDeliveryTestStage", () => {
       truncated: false,
     }));
     await expect(
-      runDeliveryTestStage(
-        "deployment/test",
-        {
-          stageKey: "test-e2e",
-          suite: "test:e2e",
-          workspace: "packages/delivery",
-          sourceRevision: "b".repeat(40),
-          runnerImage: `docker.io/shepherdjerred/ci-base@sha256:${"a".repeat(64)}`,
-        },
-        runJob,
-      ),
+      runDeliveryTestStage("deployment/test", REQUEST, runJob),
     ).rejects.toThrow("no persisted native receipt");
+  });
+  it("is refused at its intent before any Job when the lease lapsed (D7)", async () => {
+    server.lapsed = true;
+    const runJob = vi.fn(async (): Promise<unknown> => ({}));
+    await expect(
+      runDeliveryTestStage("deployment/test", REQUEST, runJob),
+    ).rejects.toThrow(/lease lapsed/u);
+    expect(runJob).not.toHaveBeenCalled();
   });
 });

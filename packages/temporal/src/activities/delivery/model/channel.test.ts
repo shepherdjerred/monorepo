@@ -170,6 +170,86 @@ describe("npm channel (section 5, X12)", () => {
     expect(run.calls).toEqual(["record step-publish succeeded"]);
   });
 
+  test("a resumed publish whose version never landed re-records its intent before publishing (D7)", async () => {
+    const run = registry({}, {});
+    await runChannelStep(
+      webring([{ key: "step-publish", status: "running" }]),
+      channel,
+      PUBLISH,
+      run.effects,
+    );
+    expect(run.calls.filter((call) => call !== "wait")).toEqual([
+      "record step-publish running",
+      "artifact",
+      `publish ${NPM_STAGING_TAG}`,
+      "record step-publish succeeded",
+    ]);
+  });
+
+  test("a resumed pointer re-records its intent once before moving the pointer and dropping the staging tag (D7)", async () => {
+    const run = registry(
+      { "1.12.0": BYTES },
+      { latest: "1.11.0", [NPM_STAGING_TAG]: "1.12.0" },
+    );
+    await runChannelStep(
+      webring([{ key: "step-pointer", status: "running" }]),
+      channel,
+      POINTER,
+      run.effects,
+    );
+    expect(run.calls).toEqual([
+      "record step-pointer running",
+      "tag latest 1.12.0",
+      `untag ${NPM_STAGING_TAG}`,
+      "record step-pointer succeeded",
+    ]);
+  });
+
+  test.each([
+    {
+      name: "publish never landed",
+      step: PUBLISH,
+      published: {},
+      tags: {},
+    },
+    {
+      name: "pointer not yet moved",
+      step: POINTER,
+      published: { "1.12.0": BYTES },
+      tags: { latest: "1.11.0", [NPM_STAGING_TAG]: "1.12.0" },
+    },
+    {
+      name: "pointer moved with the staging tag left",
+      step: POINTER,
+      published: { "1.12.0": BYTES },
+      tags: { latest: "1.12.0", [NPM_STAGING_TAG]: "1.12.0" },
+    },
+  ])(
+    "a resumed step whose lease lapsed is refused at its intent before any registry write: $name (D7)",
+    async ({ step, published, tags }) => {
+      const run = registry({ ...published }, { ...tags });
+      const before = { ...run.tags };
+      await expect(
+        runChannelStep(
+          webring([{ key: step.key, status: "running" }]),
+          channel,
+          step,
+          {
+            ...run.effects,
+            // The server refuses any stage write once the lease has lapsed.
+            record: async () => {
+              throw new Error(
+                "The deployment's lease lapsed; it is no longer provably owned and ends in recovery (D7)",
+              );
+            },
+          },
+        ),
+      ).rejects.toThrow(/lease lapsed/u);
+      expect(run.calls.filter((call) => call !== "wait")).toEqual([]);
+      expect(run.tags).toEqual(before);
+    },
+  );
+
   test("a version the registry serves with other bytes is refused, never replaced", async () => {
     const run = registry({ "1.12.0": OTHER }, { latest: "1.12.0" });
     await expect(

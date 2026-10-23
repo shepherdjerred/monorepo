@@ -20,7 +20,7 @@ import { applicationProgress } from "#lib/delivery/model/application-proof.ts";
 import type { KubernetesApplicationRecipe } from "#lib/delivery/model/recipe.ts";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
 import { runGuardedArgoCommand } from "#activities/delivery/argocd.ts";
-import { recordStage, requireOwned, stageOf } from "./stages.ts";
+import { recordStage, requireOwned } from "./stages.ts";
 import { workerRolloutPreflight } from "./worker-rollout.ts";
 import { minecraftSyncFence } from "./minecraft-upgrade.ts";
 
@@ -191,8 +191,10 @@ export async function sync(
       `Application ${rendered.name} is missing; the apply-safety step writes it first`,
     );
   const before = applicationProgress(raw, rendered, requestId);
-  if (stageOf(current, key) === undefined)
-    await recordStage(current, key, "running", { operationId: requestId });
+  // Every attempt, resumed ones included, records the same intent before any
+  // Argo effect: the server accepts it only from the executor that owns the
+  // deployment under a live lease (D7), which a read cannot prove.
+  await recordStage(current, key, "running", { operationId: requestId });
   // A preserved world switches images only with fresh preservation proof.
   if (!before.requested) minecraftSyncFence(current, recipe);
   if (!before.requested)

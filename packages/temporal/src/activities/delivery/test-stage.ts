@@ -31,7 +31,8 @@ export type TestStageRequest = {
 /**
  * Runs the named suite as a Kueue Job on the CI node at the frozen source
  * revision and returns its bounded JSON result as `test` evidence (V5). The
- * stage is recorded `running` with the Job identity before the Job can finish.
+ * stage is recorded `running` before the Job exists, and again with the Job
+ * identity before the Job can finish.
  */
 export async function runDeliveryTestStage(
   deploymentId: string,
@@ -55,18 +56,28 @@ export async function runDeliveryTestStage(
     input,
   };
   const operationId = z.string().parse(deliveryJobManifest(job).metadata?.name);
-  const base = `deployments/${encodeURIComponent(deploymentId)}`;
+  const running = async (message: string) => {
+    await deliveryRequest(
+      `deployments/${encodeURIComponent(deploymentId)}/stages`,
+      z.unknown(),
+      {
+        key: request.stageKey,
+        status: "running",
+        operationId,
+        message,
+        evidence: [],
+        executor: executorIdentity(),
+      },
+    );
+  };
+  // Every attempt, resumed ones included, records the intent before the Job
+  // can be created: the server accepts it only from the executor that owns
+  // the deployment under a live lease (D7), which a read cannot prove.
+  await running("Waiting for an identity-bound revision-pinned Job");
   let receipt: DeliveryJobReceipt | undefined;
   const raw = await runJob(job, async (native) => {
     receipt = native;
-    await deliveryRequest(`${base}/stages`, z.unknown(), {
-      key: request.stageKey,
-      status: "running",
-      operationId,
-      message: JSON.stringify(native),
-      evidence: [],
-      executor: executorIdentity(),
-    });
+    await running(JSON.stringify(native));
   });
   if (receipt === undefined)
     throw new Error("Test stage Job has no persisted native receipt");
