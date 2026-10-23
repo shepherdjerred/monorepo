@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { getNvmeRuleGroups } from "./nvme.ts";
+import {
+  getNvmeRuleGroups,
+  NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY,
+  NVME_DRIVE_WRITTEN_BYTES_24H,
+  NVME_DRIVE_WRITTEN_BYTES_PER_DAY_7D,
+} from "./nvme.ts";
 import { getSmartctlRuleGroups } from "./smartctl.ts";
 
 function alertExpressions(
@@ -13,9 +18,21 @@ function alertExpressions(
   );
 }
 
+// A raw node-exporter nvme_* family, not a recorded `nvme_drive:` series.
+const RAW_NVME_METRIC = /(?<![\w:])nvme_[a-z_]+(?![\w:])/g;
+
+function readsRawNvmeMetric(expression: string): boolean {
+  return [...expression.matchAll(RAW_NVME_METRIC)].some(
+    ([metric]) => metric !== "nvme_device_info",
+  );
+}
+
 describe("stable storage-device identity joins", () => {
   it("keys NVMe identity by device and scrape instance", () => {
-    const rules = alertExpressions(getNvmeRuleGroups());
+    const rules = getNvmeRuleGroups()
+      .flatMap((group) => group.rules ?? [])
+      .map((rule) => String(rule.expr.value))
+      .filter((expression) => readsRawNvmeMetric(expression));
     expect(rules.length).toBeGreaterThan(0);
     for (const expression of rules) {
       expect(expression).toContain("on(device, instance)");
@@ -26,31 +43,52 @@ describe("stable storage-device identity joins", () => {
     }
   });
 
-  it("keys NVMe wear-velocity ranges by serial, not device", () => {
-    const rules = getNvmeRuleGroups().flatMap((group) => group.rules ?? []);
-    const velocityAlerts = [
-      "NvmeWriteRateAboveEndurance",
-      "NvmeWearOutProjectedWithinYear",
-      "NvmeWearOutProjectedWithinSixMonths",
-    ];
-    for (const alert of velocityAlerts) {
-      const rule = rules.find((candidate) => candidate.alert === alert);
-      expect(rule, alert).toBeDefined();
-      const expression = String(rule?.expr.value);
-      expect(expression).toContain("max by (instance, serial, model)");
-      expect(expression).toMatch(/\)\[\d+d:1h\]/);
+  it("keeps every NVMe alert on a serial-identified series", () => {
+    const alerts = alertExpressions(getNvmeRuleGroups());
+    expect(alerts.length).toBeGreaterThan(0);
+    for (const expression of alerts) {
+      // Either joins identity itself or reads only recorded drive series,
+      // whose recording rules carry the join (checked above).
+      expect(
+        expression.includes("group_left(serial, model) nvme_device_info") ||
+          !readsRawNvmeMetric(expression),
+        expression,
+      ).toBe(true);
     }
   });
 
-  it("normalizes NVMe write rate by drive capacity", () => {
-    const rule = getNvmeRuleGroups()
-      .flatMap((group) => group.rules ?? [])
-      .find((candidate) => candidate.alert === "NvmeWriteRateAboveEndurance");
-    const expression = String(rule?.expr.value);
-    expect(expression).toContain("nvme_data_units_written_total");
-    expect(expression).toContain("* 512000 / 7 /");
-    expect(expression).toContain("nvme_physical_size_bytes");
-    expect(expression).toMatch(/> 0\.5$/);
+  it("keys NVMe wear-velocity ranges by serial, not device", () => {
+    const rules = getNvmeRuleGroups().flatMap((group) => group.rules ?? []);
+    const velocityRules = [
+      NVME_DRIVE_WRITTEN_BYTES_24H,
+      NVME_DRIVE_WRITTEN_BYTES_PER_DAY_7D,
+      "NvmeWearOutProjectedWithinYear",
+      "NvmeWearOutProjectedWithinSixMonths",
+    ];
+    for (const name of velocityRules) {
+      const rule = rules.find(
+        (candidate) => candidate.alert === name || candidate.record === name,
+      );
+      expect(rule, name).toBeDefined();
+      const expression = String(rule?.expr.value);
+      expect(expression).toContain("max by (node, instance, serial, model)");
+      expect(expression).toMatch(/\)\[\d+[dh]:\d+[mh]\]/);
+    }
+  });
+
+  it("replaces the flat drive-writes-per-day limit with a per-drive budget", () => {
+    const rules = getNvmeRuleGroups().flatMap((group) => group.rules ?? []);
+    expect(
+      rules.find((rule) => rule.alert === "NvmeWriteRateAboveEndurance"),
+    ).toBeUndefined();
+    const budget = rules.find(
+      (rule) => rule.alert === "NvmeWriteBudgetExceeded",
+    );
+    expect(String(budget?.expr.value)).toBe(
+      `${NVME_DRIVE_WRITTEN_BYTES_24H} > on(node, instance, serial, model) ${NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY}`,
+    );
+    // No drive filter: OS disks are budgeted like pool disks.
+    expect(String(budget?.expr.value)).not.toContain("serial=");
   });
 
   it("keys SMART identity by disk and scrape instance", () => {

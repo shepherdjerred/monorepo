@@ -318,6 +318,18 @@ kubectl exec pod/shell -n maintenance -- \
   /dev/sdg
 ```
 
+3. Storage classes on these pools (`src/cdk8s/src/misc/storage/storage-classes.ts`):
+
+- `ZfsNvmeVolume` claims use `zfs-ssd-lz4`. Claims provisioned before lz4
+  became the default stay on `zfs-ssd`, because a PVC's class is immutable;
+  `zfs-nvme-uncompressed-claims.ts` lists them and must not grow.
+- `scripts/zfs-nvme-lz4.ts` moves those older datasets to lz4 in place through
+  their `ZFSVolume` resources. It is a dry run unless given `--apply`. See
+  [Enable lz4 on existing NVMe volumes](../docs/wiki/src/content/docs/how-to/enable-lz4-on-nvme-volumes.md).
+- If a pool drive is replaced, update its serial in `NVME_POOL_DRIVES`
+  (`src/cdk8s/src/resources/monitoring/monitoring/rules/storage/nvme.ts`), which
+  maps pools to drives for the write-budget and amplification recordings.
+
 ## Upgrade
 
 ### Upgrade Talos

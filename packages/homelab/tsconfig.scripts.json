@@ -55,6 +55,8 @@
     "scripts/scripts-typecheck.test.ts",
     "scripts/velero-backups.ts",
     "scripts/velero-backups.test.ts",
+    "scripts/zfs-nvme-lz4.ts",
+    "scripts/zfs-nvme-lz4.test.ts",
     "scripts/platform-desired-state.ts",
     "scripts/tofu/tofu-stack-manifest.ts",
     "scripts/tofu/tofu-stack.ts",

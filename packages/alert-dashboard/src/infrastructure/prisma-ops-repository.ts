@@ -49,6 +49,22 @@ type ChangeRow = {
   url: string | null;
 };
 
+type ChangeFields = Pick<
+  ChangeRow,
+  "kind" | "service" | "title" | "occurredAtNs" | "severity" | "url"
+>;
+
+function sameChangeFields(stored: ChangeFields, next: ChangeFields): boolean {
+  return (
+    stored.kind === next.kind &&
+    stored.service === next.service &&
+    stored.title === next.title &&
+    stored.occurredAtNs === next.occurredAtNs &&
+    stored.severity === next.severity &&
+    stored.url === next.url
+  );
+}
+
 function toStoredSnapshot(row: SnapshotRow): StoredOpsSnapshot {
   return {
     id: row.id,
@@ -115,22 +131,27 @@ export class PrismaOpsRepository implements OpsRepository {
             severity: change.severity,
             url: change.url ?? null,
           };
-          await transaction.changeEvent.upsert({
-            where: {
-              source_externalId: {
-                source: change.source,
-                externalId: change.externalId,
-              },
-            },
-            create: {
-              id: crypto.randomUUID(),
+          const where = {
+            source_externalId: {
               source: change.source,
               externalId: change.externalId,
-              receivedAtNs: input.receivedAtNs,
-              ...fields,
             },
-            update: fields,
-          });
+          };
+          // Each ops snapshot repeats its recent changes; only a new or
+          // edited change is written.
+          const stored = await transaction.changeEvent.findUnique({ where });
+          if (stored === null)
+            await transaction.changeEvent.create({
+              data: {
+                id: crypto.randomUUID(),
+                source: change.source,
+                externalId: change.externalId,
+                receivedAtNs: input.receivedAtNs,
+                ...fields,
+              },
+            });
+          else if (!sameChangeFields(stored, fields))
+            await transaction.changeEvent.update({ where, data: fields });
         }
         const rows = await transaction.opsSnapshot.findMany({
           select: { id: true, generatedAtNs: true },

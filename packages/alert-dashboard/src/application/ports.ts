@@ -51,6 +51,18 @@ export type ReconcileSnapshotResult = {
   resolved: number;
 };
 
+export type RetentionInput = {
+  /** Webhook deliveries whose raw retention expired by now are deleted. */
+  nowNs: bigint;
+  /** Snapshot runs completed before this instant are deleted. */
+  snapshotRunCutoffNs: bigint;
+};
+
+export type RetentionResult = {
+  webhookDeliveries: number;
+  snapshotRuns: number;
+};
+
 export type PendingEmail = {
   id: string;
   messageId: string;
@@ -104,7 +116,7 @@ export type AlertLedgerRepository = {
   ) => Promise<readonly ClaimedPendingEmail[]>;
   markEmailSent: (input: EmailSendSuccessInput) => Promise<void>;
   markEmailFailed: (input: EmailSendFailureInput) => Promise<void>;
-  purgeExpiredRawPayloads: (nowNs: bigint) => Promise<number>;
+  purgeExpiredRecords: (input: RetentionInput) => Promise<RetentionResult>;
   disconnect: () => Promise<void>;
 };
 

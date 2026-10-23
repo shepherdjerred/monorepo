@@ -39,7 +39,7 @@ describe("webhook evidence", () => {
       claimPendingEmails: unexpected,
       markEmailSent: unexpected,
       markEmailFailed: unexpected,
-      purgeExpiredRawPayloads: unexpected,
+      purgeExpiredRecords: unexpected,
       disconnect: unexpected,
     };
     const alertmanager: AlertmanagerPort = { activeAlerts: unexpected };

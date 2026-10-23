@@ -4,15 +4,20 @@ import {
 } from "#generated/prisma/client/index.js";
 import {
   eventId,
-  normalizeGeneratorUrl,
   occurrenceId,
   severityFromLabels,
-  summaryFromMetadata,
   type AlertOccurrenceRecord,
 } from "#domain/alert";
 import { parseOccurrence } from "#infrastructure/prisma-mappers";
-import { findWebhookOccurrence } from "#infrastructure/prisma-occurrence";
-import { replaceOccurrenceLabels } from "#infrastructure/prisma-labels";
+import {
+  findWebhookOccurrence,
+  observedChanges,
+  observedFields,
+} from "#infrastructure/prisma-occurrence";
+import {
+  createOccurrenceLabels,
+  syncOccurrenceLabels,
+} from "#infrastructure/prisma-labels";
 import type { AlertmanagerWebhook } from "#shared/schema";
 import { instantTextToEpochNanoseconds } from "#shared/time";
 
@@ -61,16 +66,10 @@ async function createOccurrence(input: {
       lifecycleState: alert.status === "resolved" ? "resolved" : "open",
       suppressionState: "none",
       resolutionSource: alert.status === "resolved" ? "webhook" : null,
-      alertname: alert.labels["alertname"] ?? "UnnamedAlert",
-      namespace: alert.labels["namespace"] ?? null,
-      severity: severityFromLabels(alert.labels),
-      summary: summaryFromMetadata(alert.labels, alert.annotations),
-      generatorUrl: normalizeGeneratorUrl(alert.generatorURL),
-      labels: alert.labels,
-      annotations: alert.annotations,
+      ...observedFields(alert),
     },
   });
-  await replaceOccurrenceLabels(transaction, id, alert.labels);
+  await createOccurrenceLabels(transaction, id, alert.labels);
   await transaction.alertEvent.create({
     data: {
       id: eventId(id, "opened", startedAtNs),
@@ -152,19 +151,17 @@ async function updateOccurrence(
     existing.firstNotifiedAtNs === null;
   const shouldResolve =
     alertResolvedAtNs !== null && existing.lifecycleState !== "resolved";
+  const changes = observedChanges(existing, alert);
+  // The row is always written: lastSeenAtNs is how reconciliation recognizes a
+  // webhook observation newer than the snapshot it is applying. Only changed
+  // metadata is included, and indexed labels are rewritten only on change.
   const occurrence = await transaction.alertOccurrence.update({
     where: { id: existing.id },
     data: {
       lastSeenAtNs: receivedAtNs,
       missingSinceNs: null,
       absentSnapshots: 0,
-      alertname: alert.labels["alertname"] ?? "UnnamedAlert",
-      namespace: alert.labels["namespace"] ?? null,
-      severity: severityFromLabels(alert.labels),
-      summary: summaryFromMetadata(alert.labels, alert.annotations),
-      generatorUrl: normalizeGeneratorUrl(alert.generatorURL),
-      labels: alert.labels,
-      annotations: alert.annotations,
+      ...changes.data,
       ...(shouldNotify ? { firstNotifiedAtNs: receivedAtNs } : {}),
       ...(shouldReopen
         ? {
@@ -183,7 +180,8 @@ async function updateOccurrence(
       ...reconciledResolutionPromotion(existing, alertResolvedAtNs),
     },
   });
-  await replaceOccurrenceLabels(transaction, existing.id, alert.labels);
+  if (changes.labelsChanged)
+    await syncOccurrenceLabels(transaction, existing.id, alert.labels);
   if (shouldResolve)
     await transaction.alertEvent.create({
       data: {

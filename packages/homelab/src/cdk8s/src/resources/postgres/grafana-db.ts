@@ -4,6 +4,7 @@ import {
   PostgresqlSpecPostgresqlVersion,
   PostgresqlSpecUsers,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/acid.zalan.do";
+import { ZFS_WAL_PARAMETERS } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/zfs-wal-parameters.ts";
 
 export function createGrafanaPostgreSQLDatabase(chart: Chart) {
   // The postgres-operator will automatically generate passwords and store them
@@ -43,7 +44,8 @@ export function createGrafanaPostgreSQLDatabase(chart: Chart) {
           effective_io_concurrency: "200",
           work_mem: "4MB",
           min_wal_size: "1GB",
-          max_wal_size: "4GB",
+          // Shared ZFS WAL settings; see zfs-wal-parameters.ts.
+          ...ZFS_WAL_PARAMETERS,
           log_statement: "none", // Reduce logging for performance
           log_min_duration_statement: "1000", // Log only slow queries
           // Keep pg_hba auth and generated role password hashes aligned.

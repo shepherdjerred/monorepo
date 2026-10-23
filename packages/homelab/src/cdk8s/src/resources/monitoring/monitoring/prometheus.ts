@@ -129,7 +129,8 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
   });
 
-  // NVMe-specific wear, spare, media-error, and sustained-write-rate alerts.
+  // NVMe-specific wear, spare, media-error, and per-drive write-budget alerts,
+  // plus the drive, pool, and amplification write recordings behind them.
   // Complements smartctl-rules: those use smartmon_* metrics (SATA-style) which
   // don't expose SSD wear reliably on Samsung 990 PRO; nvme_* metrics from the
   // node-exporter nvme collector do.

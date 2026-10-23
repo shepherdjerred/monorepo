@@ -20,7 +20,7 @@ export function readinessOnlyLedger(): AlertLedgerRepository {
     claimPendingEmails: unexpected,
     markEmailSent: unexpected,
     markEmailFailed: unexpected,
-    purgeExpiredRawPayloads: unexpected,
+    purgeExpiredRecords: unexpected,
     disconnect: unexpected,
   };
 }
