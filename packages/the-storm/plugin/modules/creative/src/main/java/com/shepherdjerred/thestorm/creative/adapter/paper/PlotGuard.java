@@ -1,10 +1,12 @@
 package com.shepherdjerred.thestorm.creative.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.text.HouseStyle;
+import com.shepherdjerred.thestorm.creative.domain.CreativePermissions;
 import com.shepherdjerred.thestorm.creative.domain.PlotAccess;
 import com.shepherdjerred.thestorm.creative.domain.PlotGrid;
 import com.shepherdjerred.thestorm.creative.domain.PlotId;
 import com.shepherdjerred.thestorm.creative.domain.PlotMembership;
+import com.shepherdjerred.thestorm.creative.domain.PlotRole;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -45,16 +47,18 @@ import org.bukkit.event.player.PlayerBucketEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.util.BoundingBox;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Plot protection for the creative world. Players change a column only when they own it, are
- * trusted there, or hold {@link #BYPASS}. A piston, fluid, or explosion that leaves its plot is
- * cancelled whole. Command blocks, structure blocks, jigsaws, and command minecarts cannot be
- * placed.
+ * Plot protection for the creative world. Players change a column only when they own it, are a
+ * member, are trusted there, or hold {@link #BYPASS}. A denied player cannot enter that plot or be
+ * teleported into it. A piston, fluid, or explosion that leaves its plot is cancelled whole.
+ * Command blocks, structure blocks, jigsaws, and command minecarts cannot be placed.
  */
 public final class PlotGuard implements Listener {
 
@@ -65,6 +69,7 @@ public final class PlotGuard implements Listener {
   private static final Component BANNED =
       Component.text("That block cannot be placed in creative.");
   private static final Component FULL = Component.text("This plot cannot hold another entity.");
+  private static final Component CLOSED_PLOT = Component.text("You cannot enter that plot.");
 
   private final String worldName;
   private final PlotGrid grid;
@@ -76,6 +81,36 @@ public final class PlotGuard implements Listener {
     this.grid = grid;
     this.membership = membership;
     this.entityCap = entityCap;
+  }
+
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  void move(PlayerMoveEvent event) {
+    var to = event.getTo();
+    if (to == null || !in(to.getWorld())) {
+      return;
+    }
+    var from = event.getFrom();
+    if (from.getBlockX() == to.getBlockX() && from.getBlockZ() == to.getBlockZ()) {
+      return;
+    }
+    var player = event.getPlayer();
+    if (mayEnter(player, to)) {
+      return;
+    }
+    if (mayEnter(player, from)) {
+      event.setCancelled(true);
+      return;
+    }
+    event.setTo(spawn(to.getWorld()));
+  }
+
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  void teleport(PlayerTeleportEvent event) {
+    var to = event.getTo();
+    if (to == null || !in(to.getWorld()) || mayEnter(event.getPlayer(), to)) {
+      return;
+    }
+    deny(event, event.getPlayer(), CLOSED_PLOT);
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -400,6 +435,19 @@ public final class PlotGuard implements Listener {
       }
     }
     return present;
+  }
+
+  private boolean mayEnter(Player player, Location at) {
+    var plot = grid.plotAt(at.getBlockX(), at.getBlockZ());
+    if (plot.isEmpty()) {
+      return true;
+    }
+    var staff = player.hasPermission(BYPASS) || player.hasPermission(CreativePermissions.ADMIN);
+    return PlotRole.mayEnter(staff, membership.access(plot.orElseThrow()), player.getUniqueId());
+  }
+
+  private static Location spawn(World world) {
+    return new Location(world, PlotGrid.SPAWN_X + 0.5, PlotGrid.SPAWN_Y, PlotGrid.SPAWN_Z + 0.5);
   }
 
   private boolean allowed(Player player, int x, int z) {

@@ -41,7 +41,7 @@ public final class PlotAccess {
     if (owner.isEmpty()) {
       return false;
     }
-    return owner.orElseThrow().equals(who) || membership.trusted(id).contains(who);
+    return owner.orElseThrow().equals(who) || PlotRole.builds(membership.access(id), who);
   }
 
   /**

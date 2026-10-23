@@ -129,8 +129,12 @@ cell with `/creative claim` or `/creative auto` (two new claims; catalog plots
 do not count; staff with `thestorm.creative.bypass` or
 `thestorm.creative.admin` are exempt). A claim that saves takes the player to
 the center of that plot. `/creative home` returns them to a plot they can
-already build on. `/creative name`, `/creative desc`, and `/creative trust` persist
-in the claim store. The plugin never writes `creative.yml`. `/creative download`
+already build on. `/creative name`, `/creative desc`, `/creative member`, `/creative trust`,
+and `/creative deny` persist in the claim store. A member or trusted player
+can build. A trusted player can add or remove members. A denied player cannot
+enter that plot or be teleported into it. `/creative tp <id>` visits a plot
+the player is not denied on. `/creative home` still returns to a plot they can
+build on. The plugin never writes `creative.yml`. `/creative download`
 saves one `x_z.schem` under the plugin data folder `creative-schematics` for
 someone to fetch outside the world; it is not mailed. `/creative admin assign`,
 `unclaim`, and `scan` require `thestorm.creative.admin`. Scan reports claim

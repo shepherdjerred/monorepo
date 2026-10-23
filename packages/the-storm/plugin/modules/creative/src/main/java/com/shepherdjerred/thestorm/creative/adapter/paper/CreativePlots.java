@@ -26,12 +26,13 @@ import com.shepherdjerred.thestorm.creative.domain.DownloadNames;
 import com.shepherdjerred.thestorm.creative.domain.EditDecision;
 import com.shepherdjerred.thestorm.creative.domain.PlotGrid;
 import com.shepherdjerred.thestorm.creative.domain.PlotId;
+import com.shepherdjerred.thestorm.creative.domain.PlotRole;
 import com.shepherdjerred.thestorm.creative.domain.PlotView;
 import com.shepherdjerred.thestorm.creative.domain.StoredClaim;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
@@ -86,8 +87,13 @@ public final class CreativePlots {
         literal("home")
             .executes(this::homeHere)
             .then(argument("plot", greedyString()).executes(this::homePlot)));
+    root.then(literal("tp").then(argument("plot", greedyString()).executes(this::visit)));
+    root.then(literal("member").then(argument("player", word()).executes(this::member)));
+    root.then(literal("unmember").then(argument("player", word()).executes(this::unmember)));
     root.then(literal("trust").then(argument("player", word()).executes(this::trust)));
     root.then(literal("untrust").then(argument("player", word()).executes(this::untrust)));
+    root.then(literal("deny").then(argument("player", word()).executes(this::deny)));
+    root.then(literal("undeny").then(argument("player", word()).executes(this::undeny)));
     root.then(literal("info").executes(this::info));
     root.then(literal("list").executes(this::list));
     root.then(literal("name").then(argument("name", greedyString()).executes(this::name)));
@@ -168,18 +174,48 @@ public final class CreativePlots {
     return Command.SINGLE_SUCCESS;
   }
 
-  private int trust(CommandContext<CommandSourceStack> context) {
+  private int visit(CommandContext<CommandSourceStack> context) {
     var player = player(context);
-    if (ready(player)) {
-      changeTrust(player, online(player, getString(context, "player")), true);
+    if (!ready(player)) {
+      return Command.SINGLE_SUCCESS;
+    }
+    var id = plotId(player, getString(context, "plot").strip());
+    if (id.isPresent() && mayEnter(player, book.view(id.orElseThrow()))) {
+      teleport(player, id.orElseThrow());
+    } else if (id.isPresent()) {
+      error(player, "You cannot visit that plot.");
     }
     return Command.SINGLE_SUCCESS;
   }
 
+  private int member(CommandContext<CommandSourceStack> context) {
+    return grant(context, PlotRole.MEMBER, true);
+  }
+
+  private int unmember(CommandContext<CommandSourceStack> context) {
+    return grant(context, PlotRole.MEMBER, false);
+  }
+
+  private int trust(CommandContext<CommandSourceStack> context) {
+    return grant(context, PlotRole.TRUSTED, true);
+  }
+
   private int untrust(CommandContext<CommandSourceStack> context) {
+    return grant(context, PlotRole.TRUSTED, false);
+  }
+
+  private int deny(CommandContext<CommandSourceStack> context) {
+    return grant(context, PlotRole.DENIED, true);
+  }
+
+  private int undeny(CommandContext<CommandSourceStack> context) {
+    return grant(context, PlotRole.DENIED, false);
+  }
+
+  private int grant(CommandContext<CommandSourceStack> context, PlotRole role, boolean add) {
     var player = player(context);
     if (ready(player)) {
-      changeTrust(player, online(player, getString(context, "player")), false);
+      changeRole(player, online(player, getString(context, "player")), role, add);
     }
     return Command.SINGLE_SUCCESS;
   }
@@ -305,34 +341,104 @@ public final class CreativePlots {
             true,
             view.name(),
             view.description(),
-            Set.of()),
+            Map.of()),
         new Notice("You claimed " + id.text() + ".", true));
   }
 
-  private void changeTrust(Player player, @Nullable Player target, boolean add) {
+  private void changeRole(Player actor, @Nullable Player target, PlotRole role, boolean add) {
     if (target == null) {
       return;
     }
-    var row = owned(player);
-    if (row.isEmpty()) {
-      error(player, "You do not own the plot you are standing on.");
+    var at = standing(actor);
+    if (at.isEmpty()) {
+      error(actor, "Stand on a plot to change who can use it.");
       return;
     }
-    if (target.getUniqueId().equals(player.getUniqueId())) {
-      error(player, "You already own that plot.");
+    var id = at.orElseThrow();
+    var view = book.view(id);
+    if (view.owner().isEmpty()) {
+      error(actor, "That plot has no owner.");
       return;
     }
-    var members = new LinkedHashSet<>(row.orElseThrow().trusted());
-    var changed = add ? members.add(target.getUniqueId()) : members.remove(target.getUniqueId());
-    if (!changed) {
-      error(player, add ? "That player is already trusted." : "That player is not trusted.");
+    if (!mayGrant(actor, view, role)) {
+      error(actor, "You cannot change that role.");
       return;
     }
-    var verb = add ? "Trusted " : "Untrusted ";
-    persist(
-        player,
-        row.orElseThrow().withTrusted(members),
-        verb + target.getName() + " on " + row.orElseThrow().id().text() + ".");
+    if (target.getUniqueId().equals(view.owner().orElseThrow())) {
+      error(actor, "That player owns the plot.");
+      return;
+    }
+    if (target.getUniqueId().equals(actor.getUniqueId())) {
+      error(actor, "You cannot change your own role.");
+      return;
+    }
+    var row = claimHere(id, view);
+    var members = new LinkedHashMap<>(row.access());
+    var current = members.get(target.getUniqueId());
+    if (add) {
+      if (current == role) {
+        error(actor, "That player is already " + roleName(role) + ".");
+        return;
+      }
+      if (!owner(actor, view) && current != null) {
+        error(actor, "Only the owner can change that role.");
+        return;
+      }
+      members.put(target.getUniqueId(), role);
+    } else if (current != role) {
+      error(actor, "That player is not " + roleName(role) + ".");
+      return;
+    } else {
+      members.remove(target.getUniqueId());
+    }
+    persist(actor, row.withAccess(members), roleMessage(add, role, target.getName(), id));
+  }
+
+  private static boolean owner(Player actor, PlotView view) {
+    return view.owner().isPresent() && view.owner().orElseThrow().equals(actor.getUniqueId());
+  }
+
+  /** The owner manages every role. A trusted player may add or remove members only. */
+  private static boolean mayGrant(Player actor, PlotView view, PlotRole role) {
+    if (owner(actor, view)) {
+      return true;
+    }
+    return view.access().get(actor.getUniqueId()) == PlotRole.TRUSTED && role == PlotRole.MEMBER;
+  }
+
+  private static String roleName(PlotRole role) {
+    return switch (role) {
+      case MEMBER -> "a member";
+      case TRUSTED -> "trusted";
+      case DENIED -> "denied";
+    };
+  }
+
+  private static String roleMessage(boolean add, PlotRole role, String name, PlotId id) {
+    var plot = id.text();
+    if (!add) {
+      return switch (role) {
+        case MEMBER -> "Removed member " + name + " from " + plot + ".";
+        case TRUSTED -> "Removed trust for " + name + " on " + plot + ".";
+        case DENIED -> "Allowed " + name + " onto " + plot + ".";
+      };
+    }
+    return switch (role) {
+      case MEMBER -> "Added " + name + " as a member of " + plot + ".";
+      case TRUSTED -> "Trusted " + name + " on " + plot + ".";
+      case DENIED -> "Denied " + name + " on " + plot + ".";
+    };
+  }
+
+  /** The stored row, or a new one that keeps the catalog owner when the plot was only restored. */
+  private StoredClaim claimHere(PlotId id, PlotView view) {
+    var existing = book.row(id);
+    if (existing.isPresent() && !existing.orElseThrow().released()) {
+      return existing.orElseThrow();
+    }
+    var owner = view.countsTowardCap() ? view.owner() : Optional.<UUID>empty();
+    return new StoredClaim(
+        id, owner, false, view.countsTowardCap(), view.name(), view.description(), view.access());
   }
 
   private void rename(Player player, String text, boolean name) {
@@ -428,7 +534,7 @@ public final class CreativePlots {
             false,
             view.name(),
             view.description(),
-            view.trusted()),
+            view.access()),
         "Assigned " + id.text() + " to " + target.getName() + ".");
   }
 
@@ -442,7 +548,7 @@ public final class CreativePlots {
     if (book.catalog().get(id).isPresent()) {
       persist(
           actor,
-          new StoredClaim(id, Optional.empty(), true, false, "", "", Set.of()),
+          new StoredClaim(id, Optional.empty(), true, false, "", "", Map.of()),
           "Released " + id.text() + ".");
       return;
     }
@@ -552,7 +658,7 @@ public final class CreativePlots {
             view.countsTowardCap(),
             view.name(),
             view.description(),
-            view.trusted()));
+            view.access()));
   }
 
   private boolean ready(Player player) {
@@ -575,7 +681,11 @@ public final class CreativePlots {
     if (staff(player) && view.marked()) {
       return true;
     }
-    return EditDecision.mayEdit(player.getUniqueId(), view.owner(), view.trusted());
+    return EditDecision.mayEdit(player.getUniqueId(), view.owner(), view.access());
+  }
+
+  private boolean mayEnter(Player player, PlotView view) {
+    return PlotRole.mayEnter(staff(player), view.access(), player.getUniqueId());
   }
 
   private boolean canCopy(Player player, PlotView view) {
@@ -585,7 +695,7 @@ public final class CreativePlots {
     if (staff(player)) {
       return true;
     }
-    return EditDecision.mayEdit(player.getUniqueId(), view.owner(), view.trusted());
+    return EditDecision.mayEdit(player.getUniqueId(), view.owner(), view.access());
   }
 
   private boolean free(PlotId id) {
@@ -644,7 +754,7 @@ public final class CreativePlots {
   }
 
   private static PlotView road() {
-    return new PlotView(new PlotId(0, 0), Optional.empty(), "", "", Set.of(), false, false);
+    return new PlotView(new PlotId(0, 0), Optional.empty(), "", "", Map.of(), false, false);
   }
 
   private static String describe(PlotView view) {

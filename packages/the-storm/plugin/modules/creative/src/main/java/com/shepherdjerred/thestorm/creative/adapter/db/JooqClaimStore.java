@@ -7,13 +7,14 @@ import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.creative.adapter.db.generated.tables.records.CreativeClaimsRecord;
 import com.shepherdjerred.thestorm.creative.app.ClaimStore;
 import com.shepherdjerred.thestorm.creative.domain.PlotId;
+import com.shepherdjerred.thestorm.creative.domain.PlotRole;
 import com.shepherdjerred.thestorm.creative.domain.StoredClaim;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.jooq.DSLContext;
@@ -54,16 +55,18 @@ public final class JooqClaimStore implements ClaimStore {
   }
 
   private static List<StoredClaim> readAll(DSLContext dsl) {
-    var trusted = new HashMap<PlotId, Set<UUID>>();
+    var access = new HashMap<PlotId, Map<UUID, PlotRole>>();
     for (var row : dsl.selectFrom(CREATIVE_TRUST).fetch()) {
       var id = plotId(row.getPlotX(), row.getPlotZ());
-      var members = trusted.computeIfAbsent(id, ignored -> new LinkedHashSet<>());
-      members.add(UUID.fromString(column(row.getMember(), "member")));
+      var members = access.computeIfAbsent(id, ignored -> new LinkedHashMap<>());
+      members.put(
+          UUID.fromString(column(row.getMember(), "member")),
+          PlotRole.parse(column(row.getRole(), "role")));
     }
     var claims = new ArrayList<StoredClaim>();
     for (var row : dsl.selectFrom(CREATIVE_CLAIMS).fetch()) {
       var id = plotId(row.getPlotX(), row.getPlotZ());
-      claims.add(toClaim(row, trusted.getOrDefault(id, Set.of())));
+      claims.add(toClaim(row, access.getOrDefault(id, Map.of())));
     }
     return List.copyOf(claims);
   }
@@ -82,16 +85,17 @@ public final class JooqClaimStore implements ClaimStore {
         .set(CREATIVE_CLAIMS.NAME, claim.name())
         .set(CREATIVE_CLAIMS.DESCRIPTION, claim.description())
         .execute();
-    for (var member : claim.trusted()) {
+    for (var member : claim.access().entrySet()) {
       dsl.insertInto(CREATIVE_TRUST)
           .set(CREATIVE_TRUST.PLOT_X, claim.id().x())
           .set(CREATIVE_TRUST.PLOT_Z, claim.id().z())
-          .set(CREATIVE_TRUST.MEMBER, member.toString())
+          .set(CREATIVE_TRUST.MEMBER, member.getKey().toString())
+          .set(CREATIVE_TRUST.ROLE, member.getValue().stored())
           .execute();
     }
   }
 
-  private static StoredClaim toClaim(CreativeClaimsRecord row, Set<UUID> trusted) {
+  private static StoredClaim toClaim(CreativeClaimsRecord row, Map<UUID, PlotRole> access) {
     var ownerText = row.getOwner();
     var owner =
         ownerText == null ? Optional.<UUID>empty() : Optional.of(UUID.fromString(ownerText));
@@ -102,7 +106,7 @@ public final class JooqClaimStore implements ClaimStore {
         column(row.getCountsTowardCap(), "counts_toward_cap"),
         column(row.getName(), "name"),
         column(row.getDescription(), "description"),
-        trusted);
+        access);
   }
 
   private static PlotId plotId(Integer x, Integer z) {
