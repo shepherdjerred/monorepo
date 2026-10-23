@@ -9,14 +9,19 @@ import { CI_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.t
 // Note: K8s storage class names don't match hardware (legacy naming)
 // - "zfs-ssd" is backed by NVMe SSDs
 // - "zfs-hdd" is backed by SATA SSDs
+//
+// "zfs-ssd" provisions uncompressed datasets. It remains for claims that
+// already use it (a PVC's class is immutable; see
+// zfs-nvme-uncompressed-claims.ts) and for charts that name it directly.
 export const NVME_STORAGE_CLASS = "zfs-ssd";
 export const SATA_STORAGE_CLASS = "zfs-hdd";
-// NVMe pool with lz4 compression ON. A StorageClass's `parameters` are
-// immutable, so compression is chosen per-class at provision time and cannot be
-// toggled on the existing `zfs-ssd` class in place. This variant exists for
-// rebuildable, compressible CI caches (e.g. the buildkitd build cache) where
-// lz4 both cuts NVMe wear and — critically — relocates the CI write storm off
-// the Talos xfs `/var` system partition onto the ZFS NVMe pool.
+// NVMe pool with lz4 compression ON, and the default for new ZfsNvmeVolume
+// claims. A StorageClass's `parameters` are immutable, so compression is
+// chosen per class at provision time and cannot be toggled on `zfs-ssd` in
+// place. lz4 aborts early on incompressible data, so it costs little CPU and
+// cuts the bytes written to the NVMe pool, whose write budget is the
+// constraint. Existing `zfs-ssd` datasets move to lz4 through their ZFSVolume
+// resources instead (packages/homelab/scripts/zfs-nvme-lz4.ts).
 export const NVME_STORAGE_CLASS_LZ4 = "zfs-ssd-lz4";
 
 /**
