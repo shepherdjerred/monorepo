@@ -32,6 +32,8 @@ type Planned =
   | { component: string; source: OldEntry; owner: Owner };
 
 const RequiresSchema = z.record(z.string(), z.string());
+/** The catalog revision the model v2 migration gave every v1 deployment. */
+const V1_BACKFILL = "v1-backfill";
 /** Deployments of retired v1 platform kinds froze no selection to carry. */
 const UNSELECTED_KINDS = new Set([
   "root-release",
@@ -334,7 +336,7 @@ async function acceptCarried(
 }
 
 /**
- * Section 7: every accepted selection the catalog migration carried keeps
+ * Section 7: every v1 accepted selection the catalog migration carried keeps
  * its bytes but takes the component names and owners the catalog declares,
  * recorded as the first set revision of its service's lineage and accepted
  * through a `carry` deployment. Idempotent; an ambiguous mapping refuses
@@ -360,7 +362,15 @@ export async function carrySelections(
     const accepted = await tx.deployment.findUniqueOrThrow({
       where: { id: env.acceptedDeploymentId ?? "" },
     });
-    if (service === undefined || UNSELECTED_KINDS.has(accepted.kind)) continue;
+    // Only a v1 acceptance is carried: its bytes settled under v1, so the
+    // carry may record them unmonitored. A v2 acceptance keeps its monitor
+    // state; a later component move starts a new lineage instead (C4, R0).
+    if (
+      service === undefined ||
+      accepted.catalogRevision !== V1_BACKFILL ||
+      UNSELECTED_KINDS.has(accepted.kind)
+    )
+      continue;
     const old = await tx.versionSet.findUniqueOrThrow({
       where: { id: accepted.versionSetRevisionId },
       include: {

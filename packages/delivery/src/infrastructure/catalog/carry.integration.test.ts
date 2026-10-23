@@ -262,6 +262,41 @@ test("a static site's accepted archive is carried across the rename as the first
   ).toBe(1);
 });
 
+test.each(["watching", "alarmed"] as const)(
+  "a v2 acceptance still %s is never carried, so its monitor keeps it (section 7, 4.19)",
+  async (monitorState) => {
+    await seedV1Site();
+    // The accepted deployment is a v2 acceptance, not the v1 backfill.
+    await context.cluster.database.deployment.update({
+      where: { id: "static-sites/sjer-red/accepted" },
+      data: { catalogRevision: "earlier-catalog", monitorState },
+    });
+    const result = await context.delivery.reconcileCatalog(
+      await catalogDocument(),
+      testOperator,
+      V1_CATALOG_MIGRATION,
+    );
+    expect(result.environments.carried).toEqual([]);
+    expect(
+      await context.cluster.database.environment.findUniqueOrThrow({
+        where: { id: "sjer-red/prod" },
+        include: { acceptedDeployment: true },
+      }),
+    ).toMatchObject({
+      acceptedVersionSetRevisionId: "static-sites/v1-set",
+      acceptedDeployment: {
+        id: "static-sites/sjer-red/accepted",
+        monitorState,
+      },
+    });
+    expect(
+      await context.cluster.database.deployment.count({
+        where: { kind: "carry" },
+      }),
+    ).toBe(0);
+  },
+);
+
 /** gitops-legacy/arcade: Arcade's chart and image under a v1 group's ownership. */
 const MOVED: CatalogMigration = {
   renames: { "gitops-legacy/arcade": "arcade/prod" },
