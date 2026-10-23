@@ -100,7 +100,8 @@ final class SummonTacticsTest {
               PoisonView.NONE,
               NAV.mapId(),
               List.of(),
-              List.of(), summons);
+              List.of(),
+              summons);
       var percept =
           new Percept(
               new PerceptionState(Memory.EMPTY, Suspicion.NONE, -1, grudge),

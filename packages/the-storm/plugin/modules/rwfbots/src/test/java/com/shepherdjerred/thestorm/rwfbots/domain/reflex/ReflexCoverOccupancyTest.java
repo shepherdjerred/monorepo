@@ -91,7 +91,8 @@ final class ReflexCoverOccupancyTest {
             PoisonView.NONE,
             "cover-occupancy",
             List.of(),
-            List.of(), List.of());
+            List.of(),
+            List.of());
     return Reflex.tick(
         ReflexState.initial(scene.self().facing()),
         new ReflexInput(scene.self(), world, decision, scene.target(), 0, List.of()),

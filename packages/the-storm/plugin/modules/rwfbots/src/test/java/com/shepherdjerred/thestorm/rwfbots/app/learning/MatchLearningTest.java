@@ -142,7 +142,8 @@ final class MatchLearningTest {
             PoisonView.NONE,
             "test",
             List.of(),
-            List.of(), List.of());
+            List.of(),
+            List.of());
     var input =
         new ReflexInput(
             self, snapshot, Decision.idle(self.id(), tick, 1), Optional.of(target), 3, List.of());
@@ -298,7 +299,8 @@ final class MatchLearningTest {
             before.poison(),
             before.mapId(),
             before.stimuli(),
-            List.of(), List.of());
+            List.of(),
+            List.of());
     var input =
         new ReflexInput(
             self,

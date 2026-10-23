@@ -41,7 +41,15 @@ final class SummonSightTest {
       List<CombatantView> views, List<SummonView> summons, List<Stimulus> sounds) {
     var world =
         new WorldSnapshot(
-            10, MatchPhase.LIVE, views, List.of(), PoisonView.NONE, "synthetic", sounds, List.of(), summons);
+            10,
+            MatchPhase.LIVE,
+            views,
+            List.of(),
+            PoisonView.NONE,
+            "synthetic",
+            sounds,
+            List.of(),
+            summons);
     return perception.perceive(PerceptionState.EMPTY, SELF, world, new SplittableRandom(1));
   }
 

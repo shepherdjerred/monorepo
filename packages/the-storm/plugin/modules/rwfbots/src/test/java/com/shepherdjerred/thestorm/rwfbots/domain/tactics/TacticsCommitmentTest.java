@@ -111,7 +111,8 @@ final class TacticsCommitmentTest {
             PoisonView.NONE,
             "synthetic",
             List.of(),
-            List.of(), List.of());
+            List.of(),
+            List.of());
     return new Situation(
         self, snapshot, new Percept(PerceptionState.EMPTY, List.of(enemy), 100), board, role);
   }
@@ -291,7 +292,8 @@ final class TacticsCommitmentTest {
             PoisonView.NONE,
             NAV.mapId(),
             List.of(),
-            List.of(), List.of()),
+            List.of(),
+            List.of()),
         new Percept(
             new PerceptionState(memory, PerceptionState.EMPTY.suspicion()),
             base.percept().visible(),
@@ -481,7 +483,8 @@ final class TacticsCommitmentTest {
             PoisonView.NONE,
             NAV.mapId(),
             List.of(),
-            List.of(), List.of());
+            List.of(),
+            List.of());
     return new Situation(
         self,
         snapshot,
@@ -504,7 +507,8 @@ final class TacticsCommitmentTest {
             PoisonView.NONE,
             NAV.mapId(),
             List.of(),
-            List.of(), List.of());
+            List.of(),
+            List.of());
     return Tactics.think(
         new TacticsState(Optional.of(plan), 90, 0, 0, RewindClock.UNSTARTED, memory),
         new Situation(
@@ -591,7 +595,8 @@ final class TacticsCommitmentTest {
             original.poison(),
             original.mapId(),
             original.stimuli(),
-            List.of(), List.of());
+            List.of(),
+            List.of());
     var occupied =
         new Situation(
             situation.self(), snapshot, situation.percept(), situation.board(), situation.role());

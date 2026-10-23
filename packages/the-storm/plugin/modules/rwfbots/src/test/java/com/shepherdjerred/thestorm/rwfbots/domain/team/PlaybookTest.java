@@ -89,7 +89,8 @@ final class PlaybookTest {
         PoisonView.NONE,
         NAV.mapId(),
         List.of(),
-        List.of(), List.of());
+        List.of(),
+        List.of());
   }
 
   private static Map<CombatantId, SlotFit.Member> members(List<CombatantView> bots) {

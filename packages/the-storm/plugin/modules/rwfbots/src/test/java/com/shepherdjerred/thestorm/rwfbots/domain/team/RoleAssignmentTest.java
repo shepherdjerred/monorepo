@@ -75,7 +75,8 @@ final class RoleAssignmentTest {
             PoisonView.NONE,
             nav.mapId(),
             List.of(),
-            List.of(), List.of());
+            List.of(),
+            List.of());
     var previous =
         new TeamPlan(
             Optional.of(Strategy.RUSH),

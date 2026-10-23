@@ -124,7 +124,8 @@ final class AggroTest {
               PoisonView.NONE,
               NAV.mapId(),
               List.of(),
-              List.of(), List.of());
+              List.of(),
+              List.of());
       var percept =
           new Percept(
               new PerceptionState(new Memory(memory), Suspicion.NONE, -1, grudge), seen, now);
@@ -320,7 +321,8 @@ final class AggroTest {
               PoisonView.NONE,
               NAV.mapId(),
               List.of(),
-              List.of(), List.of());
+              List.of(),
+              List.of());
       var situation = new Situation(self, snapshot, base.percept(), base.board(), Role.RETAKE);
       var thought = think(situation, Kit.TROOPER);
       if (distance > ObjectivePolicy.IMMEDIATE_MELEE) {

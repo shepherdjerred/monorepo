@@ -253,7 +253,8 @@ final class SimWorld {
         poison,
         nav.mapId(),
         stimuli,
-        List.of(), List.of());
+        List.of(),
+        List.of());
   }
 
   private void teams(WorldSnapshot snapshot) {

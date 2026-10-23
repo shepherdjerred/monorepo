@@ -66,7 +66,8 @@ final class ResupplyTest {
             PoisonView.NONE,
             NAV.mapId(),
             List.of(),
-            arrows, List.of());
+            arrows,
+            List.of());
     return new Situation(
         self,
         snapshot,

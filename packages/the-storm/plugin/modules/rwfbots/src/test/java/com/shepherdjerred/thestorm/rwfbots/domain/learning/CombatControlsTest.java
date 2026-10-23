@@ -336,7 +336,8 @@ final class CombatControlsTest {
             PoisonView.NONE,
             "test",
             List.of(),
-            List.of(), List.of());
+            List.of(),
+            List.of());
     return new ReflexInput(
         self, snapshot, Decision.idle(self.id(), 100, 1), Optional.of(target), 3, List.of());
   }

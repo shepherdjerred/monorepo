@@ -214,7 +214,8 @@ final class ReflexJumpCommitmentTest {
             PoisonView.NONE,
             "first-contact-test",
             List.of(),
-            List.of(), List.of());
+            List.of(),
+            List.of());
     for (var target : List.of(Optional.<CombatantView>empty(), Optional.of(enemy))) {
       var step =
           Reflex.tick(
@@ -314,7 +315,8 @@ final class ReflexJumpCommitmentTest {
             PoisonView.NONE,
             "jump-test",
             List.of(),
-            List.of(), List.of());
+            List.of(),
+            List.of());
     return Reflex.tick(
         ReflexState.initial(self.facing()).withActiveJump(Optional.of(active)),
         new ReflexInput(self, world, decision, Optional.empty(), 0, List.of()),

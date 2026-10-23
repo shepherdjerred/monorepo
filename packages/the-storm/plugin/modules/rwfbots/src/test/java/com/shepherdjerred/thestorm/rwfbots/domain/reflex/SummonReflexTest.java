@@ -103,7 +103,8 @@ final class SummonReflexTest {
             PoisonView.NONE,
             NAV.mapId(),
             List.of(),
-            List.of(), List.of(summon));
+            List.of(),
+            List.of(summon));
     var input = ReflexInput.of(self, snapshot, decision, percept(Optional.empty(), summon));
     return Reflex.tick(
         ReflexState.initial(self.facing()),
