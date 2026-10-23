@@ -117,6 +117,20 @@ const STEP_REQUIREMENT_EXCEPTIONS: readonly {
   reason: string;
 }[] = [
   {
+    step: "delivery-publish",
+    script: "scripts/ci/publish-delivery.ts",
+    names: [
+      "DELIVERY_ARCHIVE_PUBLISHER_ACCESS_KEY_ID",
+      "DELIVERY_ARCHIVE_PUBLISHER_SECRET_ACCESS_KEY",
+    ],
+    reason:
+      "Only a GitHub source acquisition stores an archive, and only the " +
+      "catalog flag's --catalog-v2 acquires one: without it v1 acquires " +
+      "just the Minecraft chart. With the flag on, the step receives the " +
+      "archive keys (deliveryPublicationSteps) and tofu-archives.test.ts " +
+      "pins them.",
+  },
+  {
     step: "pr-dryrun",
     script: "packages/homelab/scripts/tofu/tofu-stack.ts",
     names: ["POSTHOG_CLI_API_KEY", "POSTHOG_TOFU_STATE_PASSPHRASE"],
