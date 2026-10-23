@@ -1,6 +1,4 @@
-import { PrismaLibSql } from "@prisma/adapter-libsql";
-
-import { Prisma, PrismaClient } from "#generated/prisma/client/index.js";
+import type { Prisma, PrismaClient } from "#generated/prisma/client/index.js";
 import type {
   AlertLedgerRepository,
   ClaimedPendingEmail,
@@ -11,23 +9,18 @@ import type {
   PendingEmail,
   ReconcileSnapshotInput,
   ReconcileSnapshotResult,
+  RetentionInput,
+  RetentionResult,
 } from "#application/ports";
 import {
-  eventId,
-  normalizeGeneratorUrl,
-  occurrenceId,
   openingEmail,
   truncationEmail,
-  severityFromLabels,
-  snapshotStartNs,
-  summaryFromMetadata,
-  suppressionFromSnapshot,
   type AlertOccurrenceRecord,
 } from "#domain/alert";
 import { PrismaReadRepository } from "#infrastructure/prisma-read-repository";
 import { AsyncMutex } from "#infrastructure/async-mutex";
-import { replaceOccurrenceLabels } from "#infrastructure/prisma-labels";
-import { findObservedOccurrence } from "#infrastructure/prisma-occurrence";
+import { createPrismaClient } from "#infrastructure/prisma-client";
+import { reconcileSnapshotRows } from "#infrastructure/prisma-reconcile";
 import { ingestWebhookAlert } from "#infrastructure/prisma-webhook-ingest";
 import {
   claimPendingEmailRows,
@@ -55,17 +48,11 @@ import {
 
 const RECONCILIATION_TRANSACTION_MAX_WAIT_MS = 15_000;
 const RECONCILIATION_TRANSACTION_TIMEOUT_MS = 60_000;
-
-export async function createPrismaClient(
-  databaseUrl: string,
-): Promise<PrismaClient> {
-  const adapter = new PrismaLibSql({ url: databaseUrl, intMode: "bigint" });
-  const prisma = new PrismaClient({ adapter });
-  await prisma.$executeRawUnsafe("PRAGMA foreign_keys = ON");
-  await prisma.$executeRawUnsafe("PRAGMA busy_timeout = 5000");
-  await prisma.$executeRawUnsafe("PRAGMA journal_mode = WAL");
-  return prisma;
-}
+/**
+ * Rows deleted per retention transaction. Small batches keep each write-lock
+ * hold short, so a large first prune never stalls reconciliation.
+ */
+const RETENTION_BATCH_SIZE = 1000;
 
 export async function createPrismaRepository(
   databaseUrl: string,
@@ -166,201 +153,7 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
   ): Promise<ReconcileSnapshotResult> {
     return this.#writeMutex.runExclusive(() =>
       this.#prisma.$transaction(
-        async (transaction) => {
-          const activeIds = new Set<string>();
-          let opened = 0;
-          let resolved = 0;
-          for (const alert of input.alerts) {
-            const startedAtNs = snapshotStartNs(alert);
-            const id = occurrenceId(alert.fingerprint, startedAtNs);
-            const suppressionState = suppressionFromSnapshot(alert);
-            const existing = await findObservedOccurrence(
-              transaction,
-              alert.fingerprint,
-              startedAtNs,
-            );
-            if (existing === null) {
-              activeIds.add(id);
-              await transaction.alertOccurrence.create({
-                data: {
-                  id,
-                  source: "alertmanager",
-                  fingerprint: alert.fingerprint,
-                  startedAtNs,
-                  openedAtNs: startedAtNs,
-                  lastSeenAtNs: input.completedAtNs,
-                  lifecycleState: "open",
-                  suppressionState,
-                  alertname: alert.labels["alertname"] ?? "UnnamedAlert",
-                  namespace: alert.labels["namespace"] ?? null,
-                  severity: severityFromLabels(alert.labels),
-                  summary: summaryFromMetadata(alert.labels, alert.annotations),
-                  generatorUrl: normalizeGeneratorUrl(alert.generatorURL),
-                  labels: alert.labels,
-                  annotations: alert.annotations,
-                },
-              });
-              await replaceOccurrenceLabels(transaction, id, alert.labels);
-              await transaction.alertEvent.create({
-                data: {
-                  id: eventId(id, "opened", startedAtNs),
-                  occurrenceId: id,
-                  type: "opened",
-                  occurredAtNs: startedAtNs,
-                  source: "snapshot",
-                },
-              });
-              opened += 1;
-              continue;
-            }
-            activeIds.add(existing.id);
-            const suppressionChanged =
-              existing.suppressionState !== suppressionState;
-            const shouldReopen =
-              existing.lifecycleState === "resolved" &&
-              existing.resolutionSource === "reconciled";
-            await transaction.alertOccurrence.update({
-              where: { id: existing.id },
-              data: {
-                lastSeenAtNs: input.completedAtNs,
-                missingSinceNs: null,
-                absentSnapshots: 0,
-                suppressionState,
-                alertname: alert.labels["alertname"] ?? "UnnamedAlert",
-                namespace: alert.labels["namespace"] ?? null,
-                severity: severityFromLabels(alert.labels),
-                summary: summaryFromMetadata(alert.labels, alert.annotations),
-                generatorUrl: normalizeGeneratorUrl(alert.generatorURL),
-                labels: alert.labels,
-                annotations: alert.annotations,
-                ...(shouldReopen
-                  ? {
-                      lifecycleState: "open",
-                      resolvedAtNs: null,
-                      resolutionSource: null,
-                    }
-                  : {}),
-              },
-            });
-            await replaceOccurrenceLabels(
-              transaction,
-              existing.id,
-              alert.labels,
-            );
-            if (shouldReopen) {
-              await transaction.alertEvent.create({
-                data: {
-                  id: eventId(
-                    existing.id,
-                    "reopened_reconciled",
-                    input.completedAtNs,
-                  ),
-                  occurrenceId: existing.id,
-                  type: "opened",
-                  occurredAtNs: input.completedAtNs,
-                  source: "reconciliation",
-                  detail: { previousResolutionSource: "reconciled" },
-                },
-              });
-              opened += 1;
-            }
-            if (suppressionChanged) {
-              await transaction.alertEvent.create({
-                data: {
-                  id: eventId(
-                    existing.id,
-                    `suppression_changed_${suppressionState}`,
-                    input.completedAtNs,
-                  ),
-                  occurrenceId: existing.id,
-                  type: "suppression_changed",
-                  occurredAtNs: input.completedAtNs,
-                  source: "snapshot",
-                  detail: {
-                    from: existing.suppressionState,
-                    to: suppressionState,
-                  },
-                },
-              });
-            }
-          }
-
-          const openOccurrences = await transaction.alertOccurrence.findMany({
-            where: {
-              lifecycleState: "open",
-              lastSeenAtNs: { lte: input.startedAtNs },
-            },
-          });
-          for (const occurrence of openOccurrences) {
-            if (activeIds.has(occurrence.id)) continue;
-            const missingSinceNs =
-              occurrence.missingSinceNs ?? input.completedAtNs;
-            const absentSnapshots = occurrence.absentSnapshots + 1;
-            const pastGrace =
-              input.completedAtNs - missingSinceNs >= input.missingGraceNs;
-            if (pastGrace && absentSnapshots >= 2) {
-              await transaction.alertOccurrence.update({
-                where: { id: occurrence.id },
-                data: {
-                  lifecycleState: "resolved",
-                  resolvedAtNs: input.completedAtNs,
-                  resolutionSource: "reconciled",
-                  missingSinceNs,
-                  absentSnapshots,
-                },
-              });
-              await transaction.alertEvent.create({
-                data: {
-                  id: eventId(
-                    occurrence.id,
-                    "resolved_reconciled",
-                    input.completedAtNs,
-                  ),
-                  occurrenceId: occurrence.id,
-                  type: "resolved",
-                  occurredAtNs: input.completedAtNs,
-                  source: "reconciliation",
-                  detail: { absentSnapshots },
-                },
-              });
-              resolved += 1;
-            } else {
-              await transaction.alertOccurrence.update({
-                where: { id: occurrence.id },
-                data: { missingSinceNs, absentSnapshots },
-              });
-              if (occurrence.missingSinceNs === null) {
-                await transaction.alertEvent.create({
-                  data: {
-                    id: eventId(
-                      occurrence.id,
-                      "reconciliation_discrepancy",
-                      input.completedAtNs,
-                    ),
-                    occurrenceId: occurrence.id,
-                    type: "reconciliation_discrepancy",
-                    occurredAtNs: input.completedAtNs,
-                    source: "reconciliation",
-                    detail: { absentSnapshots },
-                  },
-                });
-              }
-            }
-          }
-
-          await transaction.snapshotRun.create({
-            data: {
-              id: SnapshotRunIdSchema.parse(crypto.randomUUID()),
-              startedAtNs: input.startedAtNs,
-              completedAtNs: input.completedAtNs,
-              status: "success",
-              activeCount: input.alerts.length,
-              openedCount: opened,
-              resolvedCount: resolved,
-            },
-          });
-          return { active: input.alerts.length, opened, resolved };
-        },
+        (transaction) => reconcileSnapshotRows(transaction, input),
         {
           maxWait: RECONCILIATION_TRANSACTION_MAX_WAIT_MS,
           timeout: RECONCILIATION_TRANSACTION_TIMEOUT_MS,
@@ -477,17 +270,80 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
     );
   }
 
-  async purgeExpiredRawPayloads(nowNs: bigint): Promise<number> {
-    const result = await this.#writeMutex.runExclusive(() =>
-      this.#prisma.webhookDelivery.updateMany({
-        where: {
-          rawPayload: { not: Prisma.DbNull },
-          rawExpiresAtNs: { lte: nowNs },
-        },
-        data: { rawPayload: Prisma.DbNull },
+  async purgeExpiredRecords(input: RetentionInput): Promise<RetentionResult> {
+    return {
+      webhookDeliveries: await this.#deleteInBatches((transaction) =>
+        this.#deleteExpiredDeliveries(transaction, input.nowNs),
+      ),
+      snapshotRuns: await this.#deleteInBatches((transaction) =>
+        this.#deleteExpiredSnapshotRuns(transaction, input.snapshotRunCutoffNs),
+      ),
+    };
+  }
+
+  async #deleteInBatches(
+    deleteBatch: (transaction: Prisma.TransactionClient) => Promise<number>,
+  ): Promise<number> {
+    let total = 0;
+    for (;;) {
+      const deleted = await this.#writeMutex.runExclusive(() =>
+        this.#prisma.$transaction(deleteBatch),
+      );
+      total += deleted;
+      if (deleted < RETENTION_BATCH_SIZE) return total;
+    }
+  }
+
+  /**
+   * Expired deliveries go entirely, not just their raw payload. Their
+   * occurrence links cascade through the foreign key.
+   */
+  async #deleteExpiredDeliveries(
+    transaction: Prisma.TransactionClient,
+    nowNs: bigint,
+  ): Promise<number> {
+    const rows = await transaction.webhookDelivery.findMany({
+      where: { rawExpiresAtNs: { lte: nowNs } },
+      select: { id: true },
+      take: RETENTION_BATCH_SIZE,
+    });
+    if (rows.length === 0) return 0;
+    const deleted = await transaction.webhookDelivery.deleteMany({
+      where: { id: { in: rows.map((row) => row.id) } },
+    });
+    return deleted.count;
+  }
+
+  /**
+   * Snapshot runs are only read for the latest run and the latest successful
+   * run, which are always kept so status and liveness survive any outage.
+   */
+  async #deleteExpiredSnapshotRuns(
+    transaction: Prisma.TransactionClient,
+    cutoffNs: bigint,
+  ): Promise<number> {
+    const latest = await Promise.all([
+      transaction.snapshotRun.findFirst({
+        orderBy: { completedAtNs: "desc" },
+        select: { id: true },
       }),
-    );
-    return result.count;
+      transaction.snapshotRun.findFirst({
+        where: { status: "success" },
+        orderBy: { completedAtNs: "desc" },
+        select: { id: true },
+      }),
+    ]);
+    const keep = latest.flatMap((row) => (row === null ? [] : [row.id]));
+    const rows = await transaction.snapshotRun.findMany({
+      where: { completedAtNs: { lt: cutoffNs }, id: { notIn: keep } },
+      select: { id: true },
+      take: RETENTION_BATCH_SIZE,
+    });
+    if (rows.length === 0) return 0;
+    const deleted = await transaction.snapshotRun.deleteMany({
+      where: { id: { in: rows.map((row) => row.id) } },
+    });
+    return deleted.count;
   }
 
   async disconnect(): Promise<void> {

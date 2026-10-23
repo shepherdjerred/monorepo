@@ -188,8 +188,9 @@ async function drainEmail(): Promise<void> {
 }
 
 async function purge(): Promise<void> {
-  const purged = await service.purgeExpiredRawPayloads();
-  if (purged > 0) changes.publish("retention");
+  const purged = await service.purgeExpiredRecords();
+  if (purged.webhookDeliveries > 0 || purged.snapshotRuns > 0)
+    changes.publish("retention");
 }
 
 const runReconciliationWorker = serializedWorker(async () => {

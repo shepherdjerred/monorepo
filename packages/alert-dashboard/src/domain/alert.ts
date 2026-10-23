@@ -175,3 +175,62 @@ function escapeHtml(value: string): string {
 export function snapshotStartNs(alert: AlertmanagerSnapshotAlert): bigint {
   return instantTextToEpochNanoseconds(alert.startsAt);
 }
+
+type LivenessFields = Pick<
+  AlertOccurrenceRecord,
+  "lifecycleState" | "missingSinceNs" | "lastSeenAtNs"
+>;
+
+/**
+ * Reconciliation does not rewrite an unchanged open occurrence on every
+ * snapshot. An open occurrence with no recorded absence was present in the
+ * latest successful snapshot (or observed by a webhook after it), so it was
+ * last seen at whichever is later: its stored observation or that snapshot.
+ * Resolved and missing occurrences keep the stored instant, which the
+ * reconciler materializes when it first records an absence.
+ */
+export function observedLastSeenAtNs(
+  occurrence: LivenessFields,
+  latestSnapshotCompletedAtNs: bigint | null,
+): bigint {
+  if (
+    latestSnapshotCompletedAtNs === null ||
+    occurrence.lifecycleState !== "open" ||
+    occurrence.missingSinceNs !== null
+  )
+    return occurrence.lastSeenAtNs;
+  return occurrence.lastSeenAtNs > latestSnapshotCompletedAtNs
+    ? occurrence.lastSeenAtNs
+    : latestSnapshotCompletedAtNs;
+}
+
+export function sameStringMap(
+  left: Readonly<Record<string, string>>,
+  right: Readonly<Record<string, string>>,
+): boolean {
+  const leftKeys = Object.keys(left);
+  return (
+    leftKeys.length === Object.keys(right).length &&
+    leftKeys.every(
+      (key) => Object.hasOwn(right, key) && left[key] === right[key],
+    )
+  );
+}
+
+export type LabelChanges = {
+  removed: string[];
+  upserted: [key: string, value: string][];
+};
+
+/** The minimal row changes that turn the `previous` label set into `next`. */
+export function labelChanges(
+  previous: Readonly<Record<string, string>>,
+  next: Readonly<Record<string, string>>,
+): LabelChanges {
+  return {
+    removed: Object.keys(previous).filter((key) => !Object.hasOwn(next, key)),
+    upserted: Object.entries(next).filter(
+      ([key, value]) => previous[key] !== value,
+    ),
+  };
+}

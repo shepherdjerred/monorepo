@@ -18,6 +18,7 @@ import {
   webhook,
 } from "./sqlite-fixture.ts";
 import { registerOpsRepositoryCases } from "./ops-repository-cases.ts";
+import { registerWriteEfficiencyCases } from "./write-efficiency-cases.ts";
 import {
   keepsStaleResolutionOnPriorOccurrence,
   matchesRefreshedResolution,
@@ -48,6 +49,7 @@ beforeEach(resetDatabase);
 afterAll(disconnectDatabase);
 
 registerOpsRepositoryCases();
+registerWriteEfficiencyCases();
 
 describe("SQLite email cancellation", () => {
   it("dry-runs and audits cancellation of only pending incident email", async () => {
@@ -605,10 +607,11 @@ describe("SQLite queries and outbox", () => {
       InstantTextSchema.parse("2026-08-08T19:00:01Z"),
     );
     expect(
-      await repository.purgeExpiredRawPayloads(
-        nanoseconds("2026-08-08T21:00:00Z"),
-      ),
-    ).toBe(2);
+      await repository.purgeExpiredRecords({
+        nowNs: nanoseconds("2026-08-08T21:00:00Z"),
+        snapshotRunCutoffNs: nanoseconds("2026-08-08T21:00:00Z"),
+      }),
+    ).toEqual({ webhookDeliveries: 2, snapshotRuns: 0 });
     await expectNormalizedIndexes();
   });
   it("reports the latest successful reconciliation separately from later failures", async () => {

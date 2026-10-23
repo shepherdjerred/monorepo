@@ -11,7 +11,7 @@ import { InstantTextSchema, instantTextToEpochNanoseconds } from "#shared/time";
 
 const DatabaseUrlSchema = z.url().startsWith("file:");
 export const IndexRowSchema = z.array(z.object({ indexname: z.string() }));
-const databaseUrl = DatabaseUrlSchema.parse(Bun.env["DATABASE_URL"]);
+export const databaseUrl = DatabaseUrlSchema.parse(Bun.env["DATABASE_URL"]);
 export const prisma = new PrismaClient({
   adapter: new PrismaLibSql({ url: databaseUrl, intMode: "bigint" }),
 });

@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   AlertEventRecordSchema,
   AlertOccurrenceRecordSchema,
+  observedLastSeenAtNs,
   type AlertOccurrenceRecord,
 } from "#domain/alert";
 import { AlertEventIdSchema } from "#shared/schema";
@@ -37,7 +38,14 @@ export function parseOccurrence(row: OccurrenceRow): AlertOccurrenceRecord {
   return AlertOccurrenceRecordSchema.parse(row);
 }
 
-export function toAlertView(row: OccurrenceRow) {
+/**
+ * `latestSnapshotCompletedAtNs` is the latest successful reconciliation, which
+ * stands in for the last-seen instant of every occurrence it observed.
+ */
+export function toAlertView(
+  row: OccurrenceRow,
+  latestSnapshotCompletedAtNs: bigint | null,
+) {
   const alert = parseOccurrence(row);
   return {
     id: alert.id,
@@ -54,7 +62,9 @@ export function toAlertView(row: OccurrenceRow) {
       alert.resolvedAtNs === null
         ? null
         : epochNanosecondsToInstantText(alert.resolvedAtNs),
-    lastSeenAt: epochNanosecondsToInstantText(alert.lastSeenAtNs),
+    lastSeenAt: epochNanosecondsToInstantText(
+      observedLastSeenAtNs(alert, latestSnapshotCompletedAtNs),
+    ),
     generatorUrl: alert.generatorUrl,
     labels: alert.labels,
     annotations: alert.annotations,

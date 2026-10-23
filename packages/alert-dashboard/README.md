@@ -112,6 +112,24 @@ kept, plus the earliest sample in each UTC hour for
 `alert_dashboard_ops_digest_total{kind,result}`, and the shared
 `feature_flag_*` series.
 
+The ledger writes only what changed. Reconciliation runs every 15 seconds,
+but an occurrence present in consecutive snapshots with the same labels,
+annotations, and suppression is not rewritten; label rows are diffed rather
+than replaced. Its `lastSeenAt` is derived at read time from the latest
+successful `SnapshotRun`, and frozen into the row when reconciliation first
+records it missing. An unchanged snapshot writes only its `SnapshotRun` row.
+
+An hourly retention pass deletes webhook deliveries (with their occurrence
+links) once their 90-day raw-payload retention expires, and snapshot runs
+older than 24 hours, always keeping the latest run and latest successful run.
+It deletes in batches of 1,000 so it never holds the write lock for long.
+SQLite reuses the freed pages; it does not run `VACUUM`.
+
+Every libSQL connection gets `foreign_keys = ON`, `synchronous = NORMAL` (WAL),
+and a 5-second busy timeout. libSQL opens a new connection for each
+transaction, so `PrismaLibSqlWithConnectionPragmas` (`prisma-client.ts`) sets
+them on each connection rather than once at startup.
+
 Webhook deliveries retain Alertmanager's `truncatedAlerts` count in their API
 evidence. Opening email lists at most 25 accepted occurrences and states both
 the remaining accepted count and any upstream Alertmanager truncation; every

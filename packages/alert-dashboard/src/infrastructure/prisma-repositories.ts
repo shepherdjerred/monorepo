@@ -1,9 +1,7 @@
 import { AsyncMutex } from "#infrastructure/async-mutex";
+import { createPrismaClient } from "#infrastructure/prisma-client";
 import { PrismaOpsRepository } from "#infrastructure/prisma-ops-repository";
-import {
-  createPrismaClient,
-  PrismaAlertLedgerRepository,
-} from "#infrastructure/prisma-repository";
+import { PrismaAlertLedgerRepository } from "#infrastructure/prisma-repository";
 
 /** Both repositories over one SQLite client and one write lock. */
 export async function createPrismaRepositories(databaseUrl: string): Promise<{

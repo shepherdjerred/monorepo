@@ -91,24 +91,37 @@ export class PrismaReadRepository {
     this.#prisma = prisma;
   }
 
-  async listAlerts(input: AlertListInput): Promise<AlertListResponse> {
-    const rows = await this.#prisma.alertOccurrence.findMany({
-      where: alertWhere(input),
-      orderBy: [{ openedAtNs: "desc" }, { id: "desc" }],
-      take: input.limit + 1,
-      ...(input.cursor === undefined
-        ? {}
-        : { cursor: { id: input.cursor }, skip: 1 }),
+  /** Completion of the latest successful snapshot run; see `toAlertView`. */
+  async #latestSnapshotCompletedAtNs(): Promise<bigint | null> {
+    const run = await this.#prisma.snapshotRun.findFirst({
+      where: { status: "success" },
+      orderBy: { completedAtNs: "desc" },
+      select: { completedAtNs: true },
     });
+    return run?.completedAtNs ?? null;
+  }
+
+  async listAlerts(input: AlertListInput): Promise<AlertListResponse> {
+    const [rows, latestSnapshotNs] = await Promise.all([
+      this.#prisma.alertOccurrence.findMany({
+        where: alertWhere(input),
+        orderBy: [{ openedAtNs: "desc" }, { id: "desc" }],
+        take: input.limit + 1,
+        ...(input.cursor === undefined
+          ? {}
+          : { cursor: { id: input.cursor }, skip: 1 }),
+      }),
+      this.#latestSnapshotCompletedAtNs(),
+    ]);
     const page = rows.slice(0, input.limit);
     return AlertListResponseSchema.parse({
-      items: page.map((row) => toAlertView(row)),
+      items: page.map((row) => toAlertView(row, latestSnapshotNs)),
       nextCursor: rows.length > input.limit ? (page.at(-1)?.id ?? null) : null,
     });
   }
 
   async getAlert(input: AlertDetailInput): Promise<AlertDetail | null> {
-    const [row, deliveries] = await Promise.all([
+    const [row, deliveries, latestSnapshotNs] = await Promise.all([
       this.#prisma.alertOccurrence.findUnique({
         where: { id: input.id },
         include: {
@@ -123,11 +136,12 @@ export class PrismaReadRepository {
           ? {}
           : { cursor: { id: input.cursor }, skip: 1 }),
       }),
+      this.#latestSnapshotCompletedAtNs(),
     ]);
     if (row === null) return null;
     const deliveryPage = deliveries.slice(0, input.limit);
     return AlertDetailSchema.parse({
-      ...toAlertView(row),
+      ...toAlertView(row, latestSnapshotNs),
       events: row.events.map((event) => toEventView(event)),
       deliveries: deliveryPage.map((delivery) => ({
         id: delivery.id,
@@ -149,20 +163,23 @@ export class PrismaReadRepository {
   }
 
   async listEvents(input: EventListInput): Promise<EventListResponse> {
-    const rows = await this.#prisma.alertEvent.findMany({
-      where: eventWhere(input),
-      include: { occurrence: true },
-      orderBy: [{ occurredAtNs: "desc" }, { id: "desc" }],
-      take: input.limit + 1,
-      ...(input.cursor === undefined
-        ? {}
-        : { cursor: { id: input.cursor }, skip: 1 }),
-    });
+    const [rows, latestSnapshotNs] = await Promise.all([
+      this.#prisma.alertEvent.findMany({
+        where: eventWhere(input),
+        include: { occurrence: true },
+        orderBy: [{ occurredAtNs: "desc" }, { id: "desc" }],
+        take: input.limit + 1,
+        ...(input.cursor === undefined
+          ? {}
+          : { cursor: { id: input.cursor }, skip: 1 }),
+      }),
+      this.#latestSnapshotCompletedAtNs(),
+    ]);
     const page = rows.slice(0, input.limit);
     return EventListResponseSchema.parse({
       items: page.map((row) => ({
         ...toEventView(row),
-        alert: toAlertView(row.occurrence),
+        alert: toAlertView(row.occurrence, latestSnapshotNs),
       })),
       nextCursor: rows.length > input.limit ? (page.at(-1)?.id ?? null) : null,
     });

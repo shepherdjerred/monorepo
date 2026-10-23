@@ -6,6 +6,7 @@ import type {
   AlertmanagerPort,
   PostalPort,
   PreviewPort,
+  RetentionResult,
 } from "#application/ports";
 import {
   AlertListInputSchema,
@@ -29,6 +30,11 @@ import { addDuration, type Clock } from "#shared/time";
 
 const SNAPSHOT_MISSING_GRACE_NS = 300_000_000_000n;
 const RAW_RETENTION = Temporal.Duration.from({ hours: 90 * 24 });
+/**
+ * Snapshot runs back system status and alert liveness, which read only the
+ * latest runs; a day of history is enough to inspect recent reconciliation.
+ */
+const SNAPSHOT_RUN_RETENTION = Temporal.Duration.from({ hours: 24 });
 const OUTBOX_MAX_BACKOFF_SECONDS = 3600;
 const JsonTextSchema = z.string().transform((text, context) => {
   try {
@@ -197,10 +203,13 @@ export class AlertService {
     return messages.length;
   }
 
-  purgeExpiredRawPayloads(): Promise<number> {
-    return this.#repository.purgeExpiredRawPayloads(
-      this.#clock.now().epochNanoseconds,
-    );
+  purgeExpiredRecords(): Promise<RetentionResult> {
+    const now = this.#clock.now();
+    return this.#repository.purgeExpiredRecords({
+      nowNs: now.epochNanoseconds,
+      snapshotRunCutoffNs: now.subtract(SNAPSHOT_RUN_RETENTION)
+        .epochNanoseconds,
+    });
   }
 
   disconnect(): Promise<void> {

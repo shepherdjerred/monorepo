@@ -1,8 +1,11 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  labelChanges,
+  observedLastSeenAtNs,
   occurrenceId,
   normalizeGeneratorUrl,
+  sameStringMap,
   openingEmail,
   severityFromLabels,
   suppressionFromSnapshot,
@@ -150,5 +153,57 @@ describe("alert domain", () => {
       }),
     ).toThrow();
     expect(() => normalizeGeneratorUrl("not a URL")).toThrow();
+  });
+
+  test("derives last-seen from the latest snapshot only for present open alerts", () => {
+    expect(observedLastSeenAtNs(occurrence({ lastSeenAtNs: 10n }), 30n)).toBe(
+      30n,
+    );
+    // A webhook observation newer than the snapshot wins.
+    expect(observedLastSeenAtNs(occurrence({ lastSeenAtNs: 40n }), 30n)).toBe(
+      40n,
+    );
+    expect(observedLastSeenAtNs(occurrence({ lastSeenAtNs: 10n }), null)).toBe(
+      10n,
+    );
+    expect(
+      observedLastSeenAtNs(
+        occurrence({ lastSeenAtNs: 10n, missingSinceNs: 20n }),
+        30n,
+      ),
+    ).toBe(10n);
+    expect(
+      observedLastSeenAtNs(
+        occurrence({
+          lastSeenAtNs: 10n,
+          lifecycleState: "resolved",
+          resolvedAtNs: 20n,
+          resolutionSource: "webhook",
+        }),
+        30n,
+      ),
+    ).toBe(10n);
+  });
+
+  test("diffs label sets into minimal row changes", () => {
+    expect(
+      labelChanges(
+        { alertname: "DiskFull", pod: "old", severity: "warning" },
+        { alertname: "DiskFull", pod: "new", node: "torvalds" },
+      ),
+    ).toEqual({
+      removed: ["severity"],
+      upserted: [
+        ["pod", "new"],
+        ["node", "torvalds"],
+      ],
+    });
+    expect(labelChanges({ a: "1" }, { a: "1" })).toEqual({
+      removed: [],
+      upserted: [],
+    });
+    expect(sameStringMap({ a: "1", b: "2" }, { b: "2", a: "1" })).toBe(true);
+    expect(sameStringMap({ a: "1" }, { a: "1", b: "2" })).toBe(false);
+    expect(sameStringMap({ a: "1", c: "2" }, { a: "1", b: "2" })).toBe(false);
   });
 });
