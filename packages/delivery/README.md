@@ -481,11 +481,16 @@ not an orphan. The successor verifies acceptance and finishes; if it cannot,
 the deployment ends recovery-required with its locks and barrier held.
 
 Settlement readers never use the ArgoCD server or an executor credential. The
-API container projects a short-lived token of its own ServiceAccount per reader,
-and each reader's Role grants only what it reads. A missing projection pauses
-settlement and keeps ownership.
+API container projects a short-lived token of its own ServiceAccount,
+`delivery-forum-observer`, into one directory per reader, and each reader's Role
+grants only what it reads. Kubernetes projects only the pod's own account, so
+every reader token carries that account's whole authority: these read-only
+Roles, the operator-ingress observer and, with the Forum capability, the Forum
+exec that admission fences to one readonly command. The directories separate
+use, not authority, and a homelab test pins the account's complete grant set. A
+missing projection pauses settlement and keeps ownership.
 
-| Reader identity                    | Grant                                                                                                   |
+| Reader Role                        | Grant                                                                                                   |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | `delivery-application-reader`      | get, list, watch Applications in `argocd`                                                               |
 | `delivery-worker-recovery-reader`  | get, list, watch Pods and Deployments in `temporal`, `scout-beta` and `scout-prod`                      |

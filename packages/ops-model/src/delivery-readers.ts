@@ -7,6 +7,9 @@ import { forumNativeObservation } from "./forum/native-observation.ts";
  * and never through the ArgoCD server. The Delivery API pod runs as one
  * ServiceAccount and projects a short-lived token of it into one directory
  * per reader; each reader's Role grants exactly the resources it reads.
+ * Kubernetes projects only the pod's own account, so every reader token
+ * carries all of the account's grants: the directories separate use, not
+ * authority, and homelab pins the account's complete grant set in a test.
  * Homelab declares these grants and projections; Delivery and the Minecraft
  * controller read only through them. This is identity policy, never
  * selected release state.

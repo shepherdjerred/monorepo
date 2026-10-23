@@ -3,11 +3,13 @@ import { beforeEach, expect, test } from "vitest";
 import { z } from "zod";
 import { createDeliveryChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/delivery.ts";
 import { resetProbeRegistry } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
+import { DELIVERY_TAILSCALE_INGRESS as ingress } from "@shepherdjerred/ops-model/delivery-ingress.ts";
 import {
   DELIVERY_API_SERVICE_ACCOUNT as api,
   DELIVERY_KUBERNETES_READERS,
   DELIVERY_MINECRAFT_REPORT_READER as report,
 } from "@shepherdjerred/ops-model/delivery-readers.ts";
+import stages from "@shepherdjerred/homelab/cdk8s/src/resources/storm-forum/releases.json" with { type: "json" };
 import { createDeliveryMinecraftController } from "./minecraft-controller.ts";
 
 beforeEach(resetProbeRegistry);
@@ -106,6 +108,88 @@ test("every settlement reader is a read-only Role on exactly its resources, boun
   expect(
     of(rendered, "ClusterRoleBinding", "delivery-application-reader"),
   ).toEqual([]);
+});
+
+/** `namespace/Role` for every binding in `rendered` whose subject is the API account. */
+function apiGrants(rendered: unknown[]) {
+  return rendered
+    .flatMap((raw) => {
+      const kind = Named.parse(raw).kind;
+      if (kind !== "RoleBinding" && kind !== "ClusterRoleBinding") return [];
+      const binding = Binding.parse(raw);
+      const scope =
+        kind === "ClusterRoleBinding"
+          ? "cluster"
+          : (binding.metadata.namespace ?? "");
+      return binding.subjects.some(
+        (subject) =>
+          subject.kind === "ServiceAccount" &&
+          subject.name === api.name &&
+          subject.namespace === api.namespace,
+      )
+        ? [`${scope}/${binding.roleRef.name}`]
+        : [];
+    })
+    .toSorted();
+}
+
+/** `namespace/Role:verb resource` for every non-read verb among `grants`' Roles. */
+function nonReadVerbs(rendered: unknown[], grants: readonly string[]) {
+  return rendered
+    .flatMap((raw) => {
+      const named = Named.parse(raw);
+      const grant = `${named.metadata.namespace ?? ""}/${named.metadata.name}`;
+      return named.kind === "Role" && grants.includes(grant)
+        ? Role.parse(raw).rules.flatMap((rule) =>
+            rule.verbs
+              .filter((verb) => !["get", "list", "watch"].includes(verb))
+              .flatMap((verb) =>
+                rule.resources.map(
+                  (resource) => `${grant}:${verb} ${resource}`,
+                ),
+              ),
+          )
+        : [];
+    })
+    .toSorted();
+}
+
+function pairs(name: string, namespaces: readonly string[]) {
+  return namespaces.map((namespace) => `${namespace}/${name}`);
+}
+
+test("every reader token is the API account, so its whole authority is pinned: read-only Roles plus the fenced Forum exec", () => {
+  // Kubernetes projects only the pod's own ServiceAccount, so every reader
+  // token carries this union; a grant added to the account must be added
+  // here deliberately. Production activates the optional Forum observer.
+  const rendered = createDeliveryChart(new App(), {
+    image: `docker.io/shepherdjerred/delivery@sha256:${"a".repeat(64)}`,
+    serviceItemId: "service-item",
+    forumReaderItemId: "forum-reader-item",
+    forumObserverItemId: "forum-observer-item",
+  }).toJson();
+  const forum = pairs(
+    "delivery-forum-observer",
+    stages.releases.map((stage) =>
+      stage.stage === "prod" ? "storm-forum" : "storm-forum-beta",
+    ),
+  );
+  const grants = apiGrants(rendered);
+  expect(grants).toEqual(
+    [
+      ...pairs("delivery-ingress-observer", [
+        ingress.namespace,
+        ingress.proxyNamespace,
+      ]),
+      ...forum,
+      ...readers.flatMap((reader) => pairs(reader.name, reader.namespaces)),
+    ].toSorted(),
+  );
+  // The only non-read grant is the Forum's CONNECT, which the
+  // delivery-forum-observer admission policy fences to one readonly command.
+  expect(nonReadVerbs(rendered, grants)).toEqual(
+    forum.map((grant) => `${grant}:create pods/exec`).toSorted(),
+  );
 });
 
 test("only the API container projects one short-lived token per reader, the report token bound to the controller audience", () => {

@@ -30,7 +30,10 @@ function projection(name: string, directory: string, sources: unknown[]) {
  * Delivery's independent settlement readers (model D5, I2, section 8). Each
  * reader's Role grants get, list and watch on exactly what it reads, bound to
  * the API's ServiceAccount; the API container alone receives a short-lived
- * token per reader. Neither the ArgoCD server nor any executor credential is
+ * token per reader. Kubernetes projects only the pod's own account, so every
+ * reader token carries the account's whole authority; the directories
+ * separate use, not authority, and recovery-readers.test.ts pins that
+ * complete grant set. Neither the ArgoCD server nor any executor credential is
  * involved. The Minecraft report token is bound to the controller's audience,
  * whose namespace grants it (see minecraft-controller-permissions.ts).
  */
