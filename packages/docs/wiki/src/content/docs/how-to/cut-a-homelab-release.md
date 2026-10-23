@@ -300,7 +300,7 @@ succeeds ([4.15](packages/delivery/docs/model.md#415-recovery-intent)).
    [refuses the recovery](https://github.com/shepherdjerred/monorepo/blob/main/packages/toolkit/README.md#delivery)
    once the environment generation changes.
 
-3. Export the frozen artifact and configuration selection for review:
+2. Export the frozen artifact and configuration selection for review:
 
    ```bash
    toolkit deploy recover DEPLOYMENT_ID --expected-generation GENERATION --reason "Inspect the target and settle ownership" --machine
