@@ -5,6 +5,15 @@ export type DeliveryClientError = InstanceType<
   typeof errors.DeliveryClientError
 >;
 import { createRequester, query, type RequestOptions } from "./http-request.ts";
+
+/**
+ * A validated GET/POST requester whose response schema the caller supplies.
+ * For consumers that read a server one contract behind and validate only the
+ * fields they use, through the same authenticated transport.
+ */
+export function createNarrowReader(options: RequestOptions) {
+  return createRequester(options);
+}
 import {
   ArtifactVersionSchema,
   LatestQualifiedArtifactQuerySchema,

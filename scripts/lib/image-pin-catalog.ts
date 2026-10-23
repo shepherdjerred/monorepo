@@ -57,6 +57,56 @@ export function qualifiedImage(
   return artifact;
 }
 
+/**
+ * What chart publication reads of the live Delivery server's overview and
+ * accepted version: only the fields it uses, each strictly. The server that
+ * answers may run one contract behind this client (the cutover publishes the
+ * charts that deploy the next Delivery), so the whole-document schemas, which
+ * require fields only the next server returns, must not parse these reads.
+ */
+const AcceptedEnvironmentsSchema = z.object({
+  environments: z.array(
+    z.object({
+      id: z.string().min(1),
+      acceptedVersionSetRevisionId: z.string().min(1).nullable(),
+    }),
+  ),
+});
+const AcceptedVersionSchema = z.object({
+  serviceId: z.string().min(1),
+  components: z.record(z.string(), z.unknown()),
+});
+const AcceptedImageSchema = z.object({
+  serviceId: z.string().min(1),
+  component: z.string().min(1),
+  kind: z.string().min(1),
+  uri: z.string().min(1),
+  digest: z.string().regex(/^sha256:[a-f0-9]{64}$/u),
+  origin: z.object({ kind: z.string().min(1) }),
+});
+
+/** The digest of an environment's accepted first-party image, checked against the image's canonical identity. */
+function acceptedImageDigest(
+  name: string,
+  raw: unknown,
+  owners: PublicationOwners,
+): string {
+  const identity = imageIdentity(name, owners);
+  const image = AcceptedImageSchema.parse(raw);
+  if (
+    image.serviceId !== identity.serviceId ||
+    image.component !== identity.component ||
+    image.uri !== identity.uri ||
+    image.kind !== identity.kind ||
+    image.origin.kind !== "first-party"
+  ) {
+    throw new Error(
+      `Accepted image ${name} differs from its canonical owner/component/repository`,
+    );
+  }
+  return image.digest;
+}
+
 export function unbuiltImageOriginals(
   inventory: QualifiedImageInventory,
   built: readonly string[],
@@ -71,27 +121,27 @@ export function unbuiltImageOriginals(
 export async function chartPublicationImages(
   read = readRequiredHandoff,
   injectedClient?: Pick<DeliveryClient, "latestQualifiedArtifact"> & {
-    overview: () => Promise<{
-      environments: {
-        id: string;
-        acceptedVersionSetRevisionId: string | null;
-      }[];
-    }>;
-    version: (id: string) => Promise<{
-      serviceId: string;
-      components: Record<string, ArtifactVersion>;
-    }>;
+    overview: () => Promise<z.infer<typeof AcceptedEnvironmentsSchema>>;
+    version: (id: string) => Promise<z.infer<typeof AcceptedVersionSchema>>;
   },
   owners: PublicationOwners = publicationOwners("v1"),
 ) {
   let client = injectedClient;
   if (client === undefined) {
-    const { createDeliveryClient } =
+    const { createDeliveryClient, createNarrowReader } =
       await import("@shepherdjerred/delivery/client");
-    client = createDeliveryClient({
+    const options = {
       baseUrl: requireEnv("DELIVERY_URL"),
       headers: { Authorization: `Bearer ${requireEnv("DELIVERY_API_TOKEN")}` },
-    });
+    };
+    const delivery = createDeliveryClient(options);
+    const request = createNarrowReader(options);
+    client = {
+      latestQualifiedArtifact: delivery.latestQualifiedArtifact,
+      overview: () => request("/overview", AcceptedEnvironmentsSchema),
+      version: (id) =>
+        request(`/versions/${encodeURIComponent(id)}`, AcceptedVersionSchema),
+    };
   }
   const [rawFresh, rawRetained] = await Promise.all([
     read("delivery-image-digests"),
@@ -143,14 +193,14 @@ export async function chartPublicationImages(
     const accepted = await client.version(
       environment.acceptedVersionSetRevisionId,
     );
-    const original = qualifiedImage(
+    const digest = acceptedImageDigest(
       "the-storm-server",
       accepted.components["image:the-storm-server"],
       owners,
     );
     if (accepted.serviceId !== owners.image("the-storm-server"))
       throw new Error("Accepted Minecraft release owner differs");
-    images["shepherdjerred/the-storm-server/accepted"] = original.digest;
+    images["shepherdjerred/the-storm-server/accepted"] = digest;
   }
   return images;
 }
