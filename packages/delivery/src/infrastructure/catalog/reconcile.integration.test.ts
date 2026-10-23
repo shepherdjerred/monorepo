@@ -433,6 +433,54 @@ describe("catalog reconcile of lifecycles while deployments are owned (S3)", () 
     ]);
   });
 
+  test("a running deployment holds its service's self-hosted flag until it settles (D8)", async () => {
+    const document = await catalogDocument();
+    await context.delivery.reconcileCatalog(
+      document,
+      testOperator,
+      NO_MIGRATION,
+    );
+    const selfHosted = async () => {
+      const service = await context.cluster.database.service.findUniqueOrThrow({
+        where: { id: "arcade" },
+      });
+      return service.selfHosted;
+    };
+    expect(await selfHosted()).toBe(false);
+    const flipped = {
+      ...document,
+      services: document.services.map((service) =>
+        service.id === "arcade" ? { ...service, selfHosted: true } : service,
+      ),
+    };
+    await ownedDeployment("running");
+    const refused = await context.delivery.reconcileCatalog(
+      flipped,
+      testOperator,
+      NO_MIGRATION,
+    );
+    expect(refused.refused).toEqual([
+      {
+        id: "arcade",
+        reason: expect.stringMatching(
+          /selfHosted from false to true is refused while a deployment is owned/u,
+        ),
+      },
+    ]);
+    expect(await selfHosted()).toBe(false);
+    await context.cluster.database.deployment.update({
+      where: { id: "arcade-owned" },
+      data: { status: "succeeded", finishedAt: new Date() },
+    });
+    const settled = await context.delivery.reconcileCatalog(
+      flipped,
+      testOperator,
+      NO_MIGRATION,
+    );
+    expect(settled.refused).toEqual([]);
+    expect(await selfHosted()).toBe(true);
+  });
+
   test("a recovery-required deployment refuses its environment's retirement", async () => {
     const document = await catalogDocument();
     await context.delivery.reconcileCatalog(

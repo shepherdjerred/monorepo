@@ -33,6 +33,7 @@ import {
   refuseLifecycle,
   requireUnowned,
   serviceOwned,
+  serviceSelfHosted,
 } from "./ownership.ts";
 import { emptyResult, type Result } from "./result.ts";
 
@@ -183,9 +184,15 @@ async function reconcileServices(
       });
       result.services.lineageChanged.push(service.id);
     }
+    const selfHosted = await serviceSelfHosted(
+      tx,
+      existing,
+      service.selfHosted,
+      result,
+    );
     await tx.service.update({
       where: { id: service.id },
-      data: { ...data, lifecycle },
+      data: { ...data, lifecycle, selfHosted },
     });
   }
 }
