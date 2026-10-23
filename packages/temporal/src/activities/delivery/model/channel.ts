@@ -1,4 +1,5 @@
-import { ApplicationFailure, Context } from "@temporalio/activity";
+import { ApplicationFailure } from "@temporalio/activity";
+import { effectSignal } from "#lib/delivery/model/effect-signal.ts";
 import { createHash } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -33,7 +34,7 @@ export type ChannelEffects = {
 };
 
 function signal() {
-  return Context.current().cancellationSignal;
+  return effectSignal();
 }
 
 /** The frozen tarball from the Delivery artifact store, with the reader the site step uses. */

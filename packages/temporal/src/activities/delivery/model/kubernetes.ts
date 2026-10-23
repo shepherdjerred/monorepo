@@ -1,4 +1,5 @@
 import { Context } from "@temporalio/activity";
+import { effectSignal } from "#lib/delivery/model/effect-signal.ts";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import type {
@@ -29,7 +30,7 @@ const READBACK_ATTEMPTS = 120;
 const READBACK_INTERVAL_MS = 5000;
 
 function signal() {
-  return Context.current().cancellationSignal;
+  return effectSignal();
 }
 
 /**

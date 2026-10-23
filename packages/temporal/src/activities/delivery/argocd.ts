@@ -1,6 +1,7 @@
 import { Context } from "@temporalio/activity";
 import { z } from "zod";
 import { argoApplicationRequest } from "#lib/delivery/argo-client.ts";
+import { effectSignal } from "#lib/delivery/model/effect-signal.ts";
 import { verifyArgoRelease as verifyOwnedArgoRelease } from "#lib/delivery/argocd-proof.ts";
 import { observePendingArgoRelease } from "#lib/delivery/argocd-proof.ts";
 import { forumSyncPrunes } from "#lib/delivery/forum-prune.ts";
@@ -14,11 +15,7 @@ export async function argoRequest(
   path: string,
   body?: unknown,
 ): Promise<unknown> {
-  return await argoApplicationRequest(
-    path,
-    body,
-    Context.current().cancellationSignal,
-  );
+  return await argoApplicationRequest(path, body, effectSignal());
 }
 
 /** The retired root Application is never consulted; Delivery owns each Application body. */
@@ -55,13 +52,15 @@ export async function syncArgoRelease(
 
 /**
  * Runs one subcommand of the guarded Argo CLI bundled into the worker image,
- * heartbeating with `details` and killing it on cancellation.
+ * heartbeating with `details` and killing it on cancellation or when a model
+ * step loses its lease.
  */
 export async function runGuardedArgoCommand(
   args: string[],
   details: { operationId: string; application: string },
 ) {
   const context = Context.current();
+  const signal = effectSignal();
   const bundled = new URL("../../../dist/delivery-argocd.js", import.meta.url)
     .pathname;
   const command =
@@ -87,19 +86,19 @@ export async function runGuardedArgoCommand(
   const cancel = () => {
     process.kill("SIGKILL");
   };
-  context.cancellationSignal.addEventListener("abort", cancel, { once: true });
+  signal.addEventListener("abort", cancel, { once: true });
   const heartbeat = setInterval(() => {
     context.heartbeat(details);
   }, 10_000);
   try {
-    if (context.cancellationSignal.aborted) cancel();
+    if (signal.aborted) cancel();
     if ((await process.exited) !== 0)
       throw new Error(
         `Guarded Argo ${args[0] ?? "command"} failed; inspect the recorded request before retrying`,
       );
   } finally {
     clearInterval(heartbeat);
-    context.cancellationSignal.removeEventListener("abort", cancel);
+    signal.removeEventListener("abort", cancel);
   }
 }
 

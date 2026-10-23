@@ -5,6 +5,7 @@ import {
   type V1Job,
 } from "@kubernetes/client-node";
 import { Context } from "@temporalio/activity";
+import { effectSignal } from "#lib/delivery/model/effect-signal.ts";
 import { z } from "zod";
 import {
   deliveryJobManifest,
@@ -144,7 +145,8 @@ function activityRuntime(): DeliveryJobRuntime {
     heartbeat: (receipt) => {
       context.heartbeat(receipt);
     },
-    cancellationSignal: context.cancellationSignal,
+    // A model step's Job wait also stops once its lease is lost (D7).
+    cancellationSignal: effectSignal(),
   };
 }
 export async function runDeliveryJob(

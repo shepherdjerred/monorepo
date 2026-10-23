@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { Context } from "@temporalio/activity";
 import { ApplicationFailure } from "@temporalio/common";
 import {
   DeploymentDetailSchema,
@@ -8,6 +7,7 @@ import {
 } from "@shepherdjerred/delivery/contract";
 import { minecraftUpgradeOf } from "@shepherdjerred/delivery/model-contract";
 import { deliveryRequest } from "#lib/delivery/client.ts";
+import { effectContext } from "#lib/delivery/model/effect-signal.ts";
 import { withBackupActivityHeartbeat } from "#activities/homelab/seaweedfs-backup-heartbeat.ts";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
 import {
@@ -131,7 +131,7 @@ export async function preserveDeliveryMinecraft(
   });
   const witness = { recorded: false };
   const result = await withBackupActivityHeartbeat(
-    Context.current(),
+    effectContext(),
     async ({ signal }) =>
       effects.preserve(
         detail,
