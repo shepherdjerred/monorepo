@@ -717,8 +717,8 @@ served, workflows completed, probe cycles, matches processed), rollback
 policy (`automatic` or `hold`).
 
 **States, per environment.** `watching` from acceptance until the threshold
-is met or an alarm fires; `settled` when the threshold is met with no alarm;
-`alarmed` when an alarm fired while watching.
+is met or a counted alarm (W2) fires; `settled` when the threshold is met with
+no counted alarm; `alarmed` when a counted alarm fired while watching.
 
 **Invariants.**
 
@@ -740,8 +740,11 @@ is met or an alarm fires; `settled` when the threshold is met with no alarm;
   the recipe declares an active probe or synthetic transaction and counts
   its successful cycles. There is no elapsed-time threshold.
 - W5. The monitor reads the same alarms an operator would be paged on. It
-  does not define alarms of its own. Until the monitor reads Alertmanager, a
-  silenced alert still counts as an alarm.
+  does not define alarms of its own. Only alarms in its alarm set that
+  became active at or after the deployment's claim count (W2); alarms
+  already active before the claim are recorded as pre-existing evidence.
+  Until the monitor reads Alertmanager, a silenced alert that otherwise
+  counts still counts as an alarm.
 
 ## 5. Target kinds
 

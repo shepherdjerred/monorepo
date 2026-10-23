@@ -33,6 +33,6 @@ changes rebuild the site. The page serves the font from its own origin.
 The deploy catalog builds this package and syncs `dist/` to the
 `statically-typed` SeaweedFS bucket with `no-cache` headers. OpenTofu owns the
 bucket and apex DNS record; the shared static-site chart owns Caddy routing,
-the Cloudflare Tunnel binding, and availability probes. The `ci-sites`
-identity needs scoped bucket access as described in the repository's
-static-site release procedure.
+the Cloudflare Tunnel binding, and availability probes. The
+`delivery-static-activator` identity needs scoped bucket access, as described in
+the [static-site AccessDenied procedure](../docs/wiki/src/content/docs/how-to/cut-a-homelab-release.md#if-a-static-site-deploy-gets-accessdenied).

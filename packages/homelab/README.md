@@ -148,8 +148,8 @@ explains CI change selection:
 Delivery's private browser endpoint uses the existing Tailscale Kubernetes
 operator and an Ingress tagged `tag:delivery`. Its policy allows admins only.
 No application-side Tailscale credential or additional OAuth client is required.
-The [bootstrap procedure](../docs/wiki/src/content/docs/how-to/cut-a-homelab-release.md)
-orders the existing tailnet policy, Argo accounts and immutable source selection.
+The [cold-start procedure](../docs/wiki/src/content/docs/how-to/restore-the-delivery-record.md)
+walks the bootstrap chain from Delivery's cold-start snapshot.
 
 Never apply manifests directly with `kubectl apply` — all changes go through
 ArgoCD, which reverts direct mutations.

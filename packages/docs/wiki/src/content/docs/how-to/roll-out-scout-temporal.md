@@ -87,10 +87,11 @@ Activity Worker is not polling its declared queue; stop the rollout.
    `ScoutTemporalWorkerMissing` requires fresh evidence from each declared
    owner. `ScoutTemporalWorkflowRoutingUnknown` means the beta routing lookup
    is unavailable; a healthy candidate alone cannot establish current routing.
-4. For rollback, release the previous accepted image that retains these split
-   roles. Keep the stage claim shared and the existing sync order. Use
-   `release-root` for the exact chart revision; do not return to combined
-   hosted ownership or scale workloads manually.
+4. For rollback, choose the previous accepted selection that retains these
+   split roles from the environment's
+   [rollback candidates](/how-to/cut-a-homelab-release/#roll-back-an-environment).
+   Keep the stage claim shared. Do not return to combined hosted ownership or
+   scale workloads manually.
 
 The [hosted chart](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/cdk8s-charts/scout.ts)
 and [worker ownership rules](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/scout-temporal-rules.ts)
@@ -279,12 +280,14 @@ pollers, Schedules, representative effects, and alert history in production.
 
 ## Roll back a candidate
 
-If replay, canaries, alerts or runtime evidence fail, inspect the deployment
-and request an exact previously accepted version set:
+If replay, canaries, alerts or runtime evidence fail, inspect the deployment,
+list the environment's rollback candidates, and roll back to the deployment
+whose selection you want restored:
 
 ```bash
 toolkit deploy status DEPLOYMENT_ID --json
-toolkit deploy rollback scout-for-lol/beta ACCEPTED_VERSION_SET --json
+toolkit deploy candidates scout-for-lol/beta
+toolkit deploy rollback scout-for-lol/beta ACCEPTED_DEPLOYMENT_ID --json
 ```
 
 Use `scout-for-lol/prod` for production. Delivery preserves hosts serving pinned

@@ -264,14 +264,18 @@ automatic deployments on each mismatch, and the command exits 1 while any
 environment is held. `snapshot accept` settles one hold by accepting
 the live state with a reason and the evidence inspected.
 
-Bootstrap uses reviewed JSON files and an admin machine credential:
+`catalog reconcile` is how definitions reach Delivery. Two older verbs register
+one pipeline revision or environment outside the catalog, with an admin
+machine credential:
 
 ```bash
 toolkit deploy pipeline register <PIPELINE_REVISION_ID> --file <DEFINITION_JSON> --machine
 toolkit deploy environment register --file <ENVIRONMENT_JSON> --machine
 ```
 
-Pipeline and environment files conform to the shared Delivery contracts.
+Their files conform to the shared Delivery contracts. After either one,
+`handover-context` refuses until the next catalog reconcile, because the
+record no longer matches the reconciled catalog.
 
 ## Tracker
 

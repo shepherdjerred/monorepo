@@ -394,8 +394,9 @@ check can see it, so the boundary is proved by probe — each identity must be
 evidence for any change to it. A positive probe alone cannot tell a scoped
 identity from an admin one.
 
-The site catalog and the `ci-sites` identity must name the same buckets; an
-omitted bucket blocks deployment with `AccessDenied`. See
+The storage policy's `siteBuckets` and the `delivery-static-activator`
+identity must name the same buckets; an omitted bucket blocks deployment with
+`AccessDenied`. See
 [the release guide's site-permission procedure](/how-to/cut-a-homelab-release/#if-a-static-site-deploy-gets-accessdenied)
 when adding a bucket.
 

@@ -1,12 +1,14 @@
 # Delivery
 
-Delivery records immutable application artifacts and version sets in PostgreSQL,
-selects exact environment versions, and exposes deployment operations through
-one authenticated API used by its React UI, toolkit, and Temporal workers.
-Woodpecker verifies and publishes artifacts; Temporal executes deployments;
-ArgoCD reconciles delegated Kubernetes applications. Git holds source,
-infrastructure, and pipeline definitions. Delivery does not commit deployment
-state back to Git.
+Delivery is the system of record for what has been built, what is selected to
+run, where it runs, and what proved it ([model](docs/model.md)). It records
+builds, artifacts and set revisions in PostgreSQL, admits deployments of
+selections, and exposes one authenticated API used by its React UI, toolkit,
+and Temporal workers. Woodpecker builds; Temporal executes deployments; target
+adapters apply them. ArgoCD is the adapter for Kubernetes, and Delivery creates
+every Application from its recipe body
+([section 8](docs/model.md#8-position-on-argocd)). Git holds source and the
+catalog. Delivery does not commit deployment state back to Git.
 
 ## Contributor commands
 
@@ -94,10 +96,11 @@ injected transport and credentials. Responses are validated before consumption.
 
 `@shepherdjerred/delivery/model-contract` (`src/shared/model/`) carries the
 schemas for the Delivery model specification (`docs/model.md`). The record,
-the routes, the executor, the hub and the toolkit read them. The hub and
-toolkit call the model routes through `createDeliveryClient`, whose model
-methods (`src/shared/model/routes-client.ts`) validate each request body
-before sending and each response before use.
+the routes, the executor, the hub and the toolkit read them; `contract` keeps
+the shared build, artifact and evidence schemas. The hub and toolkit call the
+model routes through `createDeliveryClient`, whose model methods
+(`src/shared/model/routes-client.ts`) validate each request body before
+sending and each response before use.
 
 - Catalog (4.1): `CatalogDocumentSchema` types every recipe body of the
   ops-model document and checks that a recipe binds only components of its own
@@ -160,40 +163,51 @@ before sending and each response before use.
   `retire-host`, `channel-publish` and `operator-run`, plus the `override`
   marker; `ApprovalStatusSchema` and `ApprovalV2Schema` with `override`.
 - Recovery (4.15): `RecoveryIntentV2Schema`, one intent shape keyed by
-  deployment and sequence with a `kind` for each v1 recovery path.
-- Evidence: `EvidenceInputSchema` in `contract` accepts the `monitor`,
-  `alarm`, `test`, `drift` and `attestation` kinds beside the v1 kinds.
+  deployment and sequence, with a `kind` inferred from the deployment.
+- Evidence: `EvidenceInputSchema` in `contract`, including the `monitor`,
+  `alarm`, `test`, `drift` and `attestation` kinds the model adds.
 
-The API is rooted at `/api/v1`:
+The API is rooted at `/api/v1`. The
+[Delivery model reference](../docs/wiki/src/content/docs/reference/delivery-model.md#routes)
+gives each model route's scope and toolkit command.
 
-| Operation                                                       | Route                                                                         |
-| --------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| Authenticated principal                                         | `GET /identity`                                                               |
-| Environments, recent executions, eligible artifacts             | `GET /overview`                                                               |
-| Immutable version set revisions                                 | `GET /versions`, `GET /versions/:id`                                          |
-| Latest qualified component artifact                             | `GET /artifacts/latest-qualified?serviceId=…&component=…&kind=…`              |
-| Producer comparison base, pending or qualified                  | `GET /artifacts/latest-retainable?…&kind=…&beforePipeline=…`                  |
-| Register pending CI publication                                 | `POST /builds`                                                                |
-| Compose exact component versions                                | `POST /versions`                                                              |
-| Register immutable pipeline revision                            | `POST /pipelines`                                                             |
-| Register environment/configuration                              | `POST /environments`                                                          |
-| Request deployment, promotion, or rollback                      | `POST /deployments`                                                           |
-| Execution, stages, approval, evidence                           | `GET /deployments/:id`                                                        |
-| Human production approval                                       | `POST /deployments/:id/approval`                                              |
-| Human approval or rejection of a tofu recipe's exact saved plan | `POST /deployments/:id/plan-approval`                                         |
-| Cancel or retry                                                 | `POST /deployments/:id/cancel`, `POST /deployments/:id/retry`                 |
-| Open a recovery intent; settle an ambiguous Argo operation      | `POST /deployments/:id/recovery-intents`, `POST /recovery-intents/:id/settle` |
-| Request native site/Forum recovery under the retained lock      | `POST /deployments/:id/content-recovery`                                      |
-| Inspect frozen content recovery and native receipts             | `GET /content-recovery/:id`                                                   |
-| Hub, service pipeline and paginated executions                  | `GET /hub`, `GET /services/:id/pipeline`, `…/executions`                      |
-| One change, traced from build or version set                    | `GET /builds/:id`, `GET /versions/:id/trace`                                  |
-| Paginated deployments, builds and audit activity                | `GET /deployments`, `GET /builds`, `GET /activity`                            |
-| Environment detail and approval queue                           | `GET /environments/:id`, `GET /approvals`                                     |
-| Woodpecker, GitHub and ArgoCD enrichment                        | `GET /builds/:id/ci`, `…/source`, `GET /environments/:id/runtime`             |
-| Committed change stream                                         | `GET /events`                                                                 |
+| Operation                                                       | Route                                                                 |
+| --------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Authenticated principal                                         | `GET /identity`                                                       |
+| Environments, recent executions, eligible artifacts             | `GET /overview`                                                       |
+| Immutable set revisions                                         | `GET /versions`, `GET /versions/:id`                                  |
+| Latest qualified component artifact                             | `GET /artifacts/latest-qualified?serviceId=…&component=…&kind=…`      |
+| Producer comparison base, pending or qualified                  | `GET /artifacts/latest-retainable?…&kind=…&beforePipeline=…`          |
+| Register pending CI publication                                 | `POST /builds`                                                        |
+| Compose a manual set revision                                   | `POST /versions`                                                      |
+| Reconcile or read the catalog                                   | `POST /catalog/reconcile`, `GET /catalog`                             |
+| Register a definition outside the catalog                       | `POST /pipelines`, `POST /environments`                               |
+| Request a deployment of any kind                                | `POST /deployments`                                                   |
+| Execution, stages, approval, evidence, saved plan               | `GET /deployments/:id`                                                |
+| Human approval, or an override decision                         | `POST /deployments/:id/approval`                                      |
+| Human approval or rejection of a tofu recipe's exact saved plan | `POST /deployments/:id/plan-approval`                                 |
+| Cancel or retry                                                 | `POST /deployments/:id/cancel`, `POST /deployments/:id/retry`         |
+| Accepted selection and declared binding                         | `GET /environments/:id/selection`                                     |
+| Rollback candidates with exclusion reasons                      | `GET /environments/:id/rollback-candidates`                           |
+| Monitor state of the accepted deployment                        | `GET /environments/:id/monitor`                                       |
+| Open or inspect a recovery intent                               | `POST /deployments/:id/recovery-intents`, `GET /recovery-intents/:id` |
+| Settle an `argo` recovery intent by readback                    | `POST /recovery-intents/:id/settle`                                   |
+| Request native site/Forum recovery under the retained lock      | `POST /deployments/:id/content-recovery`                              |
+| Inspect frozen content recovery and native receipts             | `GET /content-recovery/:id`                                           |
+| Attest an operator-run stage                                    | `POST /deployments/:id/attestations`                                  |
+| Retire a service                                                | `POST /services/:id/retire`                                           |
+| Compare record, supplied cold-start snapshot and live targets   | `POST /reconcile-after-restore`                                       |
+| Accept the live state of a restore-held environment             | `POST /environments/:id/restore-hold/accept`                          |
+| Hub, service pipeline and paginated executions                  | `GET /hub`, `GET /services/:id/pipeline`, `…/executions`              |
+| One change, traced from build or set revision                   | `GET /builds/:id`, `GET /versions/:id/trace`                          |
+| Paginated deployments, builds and audit activity                | `GET /deployments`, `GET /builds`, `GET /activity`                    |
+| Environment detail and approval queue                           | `GET /environments/:id`, `GET /approvals`                             |
+| Woodpecker, GitHub and ArgoCD enrichment                        | `GET /builds/:id/ci`, `…/source`, `GET /environments/:id/runtime`     |
+| Committed change stream                                         | `GET /events`                                                         |
 
 Execute-scoped workers use `/qualification/pending`, `/builds/:id/qualify`,
 `/replication/pending`, `/artifacts/replication`, `/reconcile`, `/dispatch/pending`, `/dispatch/monitor`, `/dispatch/:id/submitted`,
+`/monitors/watching`, `/deployments/:id/monitor/observations`,
 and deployment `claim`, `stages`, `finish`, and `orphan` operations. Workflow IDs come from the shared
 `deliveryWorkflowId` helper.
 
@@ -205,26 +219,25 @@ evidence identities. Frozen Minecraft upgrade pipelines also append preservation
 proofs under their numbered preservation stage, retaining the initial native
 controller receipt when the independent backup and gameplay proofs arrive.
 
-The TSMC pipeline declares `minecraftUpgrade.releaseMode` in its immutable
-registration. `retained-volume-restart` uses an ordinary graceful StatefulSet
+The TSMC recipe's `minecraft-upgrade` step declares its `releaseMode`. `retained-volume-restart` uses an ordinary graceful StatefulSet
 restart on the retained world PVC and requires the usual exact source, image,
 reconciliation and runtime acceptance. It does not manufacture preservation
 evidence or couple every release to a cloud backup and restored candidate.
 `verified-restore` and existing revisions with no mode retain the independent
 backup/restore gate. Unknown modes fail validation. Neither mode permits an
 image-only rollback of the persistent world.
-Routine-mode reconciliation failures use the ordinary independent Argo recovery
-inspector, which requires the same recorded request, native operation identity
-and settled external work before releasing ownership. Legacy preservation
-recovery still requires its private controller journal.
+Routine-mode reconciliation failures use an ordinary `argo` recovery intent,
+which requires the same recorded request, native operation identity and
+settled external work before releasing ownership. Preservation-mode recovery
+uses a `minecraft` intent and its private controller journal.
 
 CI registration is pending until the backend verifies the exact Woodpecker
 main-push pipeline reached success. Artifact selection cannot consume pending
-or failed publications. Qualification and initial version set composition commit
+or failed publications. Qualification and initial set revision composition commit
 atomically; pipeline order prevents a late older build from becoming the newest
 automatic selection. New sets retain unchanged components from their base.
 The latest-qualified-artifact lookup reads the matching component and kind from
-the newest coherent automatic version set, ordered by its qualifying CI pipeline
+the newest coherent automatic set revision, ordered by its qualifying CI pipeline
 number in the configured repository. Both the set's qualifying build and the
 component's original build must be verified in that repository. It returns the
 original artifact and source identity. Manual compositions and late outputs that
@@ -232,8 +245,9 @@ never entered an automatic set do not affect this read-only producer lookup;
 a missing component in the newest set returns 404 without searching older sets.
 Artifact requirements bind dependent components to exact digests; an incompatible
 combination fails release qualification with a visible reason. Automatic selection
-coalesces only queued, unapproved automatic requests. Cancellation or rejection
-suppresses that revision until a new eligible revision or explicit operator request.
+coalesces only queued, unapproved automatic requests. Cancellation, rejection or
+a monitor alarm suppresses that revision until a new eligible revision or explicit
+operator request.
 
 Producers compare against the latest-retainable lookup instead, so a pipeline
 that starts before the previous one qualifies still retains that pipeline's
@@ -311,56 +325,11 @@ verified dependencies. No selected release version is recorded in that map.
 Scout's backend and frontend share one environment, version set, deployment,
 target lock and acceptance result for each stage. Its `scoutSite` policy binds
 the frontend archive to the exact backend image digest. The executor first
-verifies the backend's reconciled runtime and worker rollout, then activates
-and verifies that archive. The release is accepted only after both succeed.
-Production approval covers this complete frozen selection once; the frontend
-cannot accept independently or bypass the backend's compatibility checks.
-Frontend-only builds retain the original qualified backend artifact. A failed
-site activation leaves the combined release unaccepted and subject to the
-same recovery ownership as its backend mutation.
-
-Scout beta and production each use one combined backend and frontend release.
-The pipeline's frozen `scoutSite` policy selects its matching archive flavor,
-which must require the selected backend image digest. The backend Application
-lock and production approval cover both artifacts: execution verifies the backend
-runtime, activates and verifies the exact frontend archive, then records one
-accepted release. A separate Scout static environment cannot activate the site.
-Host-only worker adoption and worker retirement do not publish frontend bytes.
-
-Arcade provides the small initial acceptance example:
-
-The [pipeline definition](registrations/arcade.pipeline.json) binds the published
-`chart:arcade` chart and `image:arcade` image to Arcade's `delivery.image` Helm
-parameter. Pipeline revision `arcade/2` probes Arcade's canonical public health
-endpoint. The [environment definition](registrations/arcade.environment.json)
-declares automatic selection; its catalog lifecycle, the write flag, reviewed
-Argo ownership transfer, and paused dispatch Schedule still gate activation.
-Neither file selects an artifact or records deployment state.
-
-Delivery API pipeline revision `delivery/2` verifies `/healthz` through its
-in-cluster Service, which is reachable by the owning activity role. Register the
-new immutable pipeline revision and its environment binding; preserve `delivery/1`
-and the existing configuration revision for historical requests.
-
-After reviewing the existing inventory, run these explicit registrations from
-the repository root with the brokered admin credential:
-
-```sh
-toolkit deploy inventory --machine
-toolkit deploy pipeline register arcade/2 --file packages/delivery/registrations/arcade.pipeline.json --machine
-toolkit deploy environment register --file packages/delivery/registrations/arcade.environment.json --machine
-```
-
-The environment command writes configuration. Use it for initial registration
-or an explicitly reviewed configuration change; do not rerun it to reset live
-settings after a rollback. Pipeline revisions are immutable. A new pipeline
-definition requires a new revision ID and a reviewed environment update.
-
-An eligible Arcade version set must contain both components from qualified CI
-publications. An unverified import or an image-only first publication cannot
-provide the deployment chart. Before enabling automatic selection, verify the
-delegated Application, exact chart bytes, running image digests, public health,
-and the Arcade user flow.
+verifies the backend's runtime and worker rollout, then activates and verifies
+that archive. Approval covers the complete frozen selection once, and a failed
+site activation leaves the release unaccepted under the backend's recovery
+ownership. Frontend-only builds retain the original qualified backend
+artifact.
 
 ## Authentication and configuration
 
@@ -376,30 +345,19 @@ who reads `latest.json` and that copy with their own credential
 (`restoreRequest` in the model contract). The API checks the fingerprint and
 the key before comparing.
 
-ArgoCD declares three separate API accounts: `delivery` may select and sync the
-reviewed workload Applications; `delivery-observer` can only read their state;
-`delivery-platform` owns the guarded root release and isolated control-plane
-Application. Root child synchronization is limited to the reviewed root-owned
-inventory. These accounts receive no default role, wildcard targets, resource
-editing, logs, or exec permission. The former Woodpecker account is disabled.
-Apply the reviewed account registration before issuing credentials through the
-operator-owned `packages/homelab/src/tofu/argocd` stack. Its
-`delivery_platform_onepassword_item_id` output supplies the typed
-`platformArgocdItemId` activation field, paired with the platform registry item.
-The isolated Jobs use the fixed `delivery-platform-argocd` Secret; the broad
-legacy root token is not a substitute. Declaring this source does not issue a
-token or transfer live ownership.
+Recovery never reads ArgoCD through its server or with the executor's
+credential. The API's independent reader runs as the
+`delivery/delivery-application-reader` ServiceAccount and reads
+`applications.argoproj.io` through the Kubernetes API with a projected token
+([section 8](docs/model.md#8-position-on-argocd)). Recovery therefore works
+while ArgoCD is down or upgrading.
 
-The operator-owned ArgoCD plan also retires only the former
-`argocd_account_token.woodpecker` and
-`onepassword_item.argocd_woodpecker_token` resources; their obsolete rename
-blocks and output are removed. Inspect those destruction targets before apply.
-Complete the first Woodpecker-only bootstrap using the existing legacy root
-credential, register the scoped accounts, then issue their tokens and revoke
-that retired token/item. Subsequent API/control-plane bootstrap root operations
-use the newly issued `delivery-platform` credential. The separate operator
-admin credential is used only for the preownership account prerequisite, never
-as a runtime or ownership-handover fallback.
+Delivery's ArgoCD account creates, updates, deletes and syncs the Applications
+its recipes name. The operator-run data layers, `delivery-data` and
+`temporal-data`, stay outside that grant. Human ArgoCD accounts are read-only
+on Applications; sync is an operation only Delivery performs. The break-glass
+path is
+[Regain write access to ArgoCD](../docs/wiki/src/content/docs/how-to/regain-write-access-to-argocd.md).
 
 `toolkit deploy handover-context --machine` is an admin-only read of the API's
 baked source identity, each environment's binding in the catalog as last
@@ -408,25 +366,16 @@ reconciled into PostgreSQL together with that reconciled `catalogRevision`
 names), fresh write-admission state, the environments whose
 catalog lifecycle is `active` and so admit deployments, and uncapped PostgreSQL
 ownership/request/recovery counts. It refuses before any catalog reconciliation
-and after a definition was registered outside the catalog since then. The bounded
-`packages/homelab/scripts/ci/delivery-handover.ts` operator command consumes that
-state and the exact reviewed source proof, independently checks the paused
-Woodpecker webhook and drained native pipelines, then transfers only the
-registered Applications' ownership annotation and disables their auto-sync.
-Each UID/resource-version CAS preserves the complete native source, parameters,
-destination and unrelated metadata; external private receipts record intent and
-readback. Worker/Forum targets require their genuine independent original
-baselines. Ordinary targets acquire no fabricated accepted version set.
-
-The command resolves newly issued `delivery` and `delivery-platform` credentials
-from their reviewed activation item references and verifies their native
-identities/capabilities before effects. It never falls back to an operator admin
-token. Keep root sync, dispatch and write admission paused throughout this
-maintenance window: PostgreSQL and ArgoCD do not share an atomic transaction.
-After native authority transfer, the first release establishes real acceptance.
-The first controller intent names the qualified original bootstrap image/chart;
-its native prior selection necessarily contains the explicit image parameter,
-without implying any earlier PostgreSQL acceptance.
+and after a definition was registered outside the catalog since then. The
+bounded `packages/homelab/scripts/ci/delivery-handover.ts` operator command
+consumes that state and the exact reviewed source proof, independently checks
+the paused Woodpecker webhook and drained native pipelines, then transfers only
+the registered Applications' ownership annotation and disables their
+auto-sync. Each UID/resource-version CAS preserves the complete native source,
+parameters, destination and unrelated metadata; external private receipts
+record intent and readback. It resolves the `delivery` and `delivery-platform`
+credentials from their reviewed activation item references and never falls
+back to an operator admin token.
 
 Static producers require their dedicated
 `DELIVERY_ARCHIVE_PUBLISHER_ACCESS_KEY_ID` and
@@ -437,14 +386,12 @@ The executor uses distinct `DELIVERY_SITE_ACTIVATOR_ACCESS_KEY_ID` and
 mutate the reviewed website bucket allowlist. S3 write permission includes
 deletion; immutable archive checks do not imply an append-only storage policy.
 The allowlist lives in the homelab's `delivery-storage-policy.json` and is
-checked against every static registration.
+checked against every `static-site` recipe.
 
 Cache invalidation uses a dedicated Cloudflare user token with Cache Purge
-permission on the registrations' exact zones. The existing encrypted
+permission on the recipes' exact zones. The existing encrypted
 `cloudflare-tokens` OpenTofu stack owns issuance and its 1Password handoff.
-Static executor bootstrap requires both storage and cache credentials;
-publication and site ownership stay disabled until their actual permissions
-and archive readback have been verified.
+The static-site executor holds both the storage and the cache credential.
 
 Human requests require an allowlisted Tailscale login from the existing
 operator's fixed `delivery/delivery-operator-ingress`. The pinned operator strips
@@ -475,54 +422,80 @@ from `woodpecker`, `github` and `argocd`. The GitHub token is registered as the
 monorepo's contents and pull requests. Proxy trust is verified native ownership,
 not a feature flag.
 Pausing writes stops admission of new effects while allowing cancellation and
-recording results of already owned operations. Scout and Starlight production
-require human approval bound to the frozen version set, configuration, and
-pipeline revision.
+recording results of already owned operations. Environments whose approval
+policy is `required` need a human approval bound to the frozen selection.
 
 ## Execution and recovery
 
 Deployment requests, audit events, and outbox submissions commit together.
 Idempotency keys bind the request to its authenticated actor and exact inputs.
-Claiming work checks the environment generation and acquires a durable target
-lock. Different targets execute independently.
+Claiming work checks the environment's binding generation, records a lease and
+acquires a durable lock on every target instance the recipe acts on, in
+canonical order, plus at most one named shared lock. Different targets execute
+independently. A global executor bound, held as typed configuration, limits
+simultaneously owned deployments ([D10](docs/model.md#412-deployment)).
 
-Rollback restores the selected accepted deployment's exact pipeline and
-configuration as well as its artifacts. Admission still checks the current
-environment generation. Promotion retries retain their original source
-environment and recheck that it still accepts the selected revision.
+Admission evaluates every prerequisite edge of the environment, freezes each
+prerequisite's accepted selection into the deployment, and rechecks on retry
+([Z1](docs/model.md#418-prerequisite-edge)). Edges are the only declared
+ordering between environments ([Z3](docs/model.md#418-prerequisite-edge)).
 
-Desired, observed, and accepted environment states are separate. Success requires
-the exact selected revision plus reconciliation and acceptance evidence.
-Failed deployments block automatic successors. An ambiguous external mutation
-finishes with `recoveryRequired` and retains its target lock. An administrator
-opens a recovery intent through `POST /deployments/:id/recovery-intents`, then
-settles an `argo` intent with the exact external operation UUID and reason
-through `POST /recovery-intents/:id/settle`; no route releases a lock without an
-intent. The API independently reads the Application
-object, verifies the recorded request, environment delegation, finished operation,
-and settled Jobs, and retains that evidence before releasing ownership. This
-inspection works while Temporal or ArgoCD's API is unavailable. Canceling running
-work is a request to stop at a safe boundary, not an assertion that side effects
-were undone.
+Rollback restores the named accepted deployment's set revision, recipe and
+configuration. `GET /environments/:id/rollback-candidates` lists every
+previously accepted selection, newest first and the accepted one included,
+with the reason any is excluded: a lowered `forwardOnly` key, a crossed
+`pointOfNoReturn` step, or a `forwardOnly` channel
+([D9](docs/model.md#412-deployment)). Admission refuses an excluded candidate
+with that reason. Promotion requires the source's accepted deployment to be
+`settled` or `unmonitored`, and retries recheck it
+([M2](docs/model.md#416-promotion-tree)).
 
-Operator-run stages are attested through `POST /deployments/:id/attestations`
-by a distinct operator identity (X13): a machine credential with the `attest`
-scope. The API refuses an attestation from any `execute` credential or from an
-identity that has claimed, renewed or handed off the deployment, and it refuses
-to start with a machine credential holding both `attest` and `execute`. The
-attestor's token is the Delivery service item's `DELIVERY_ATTEST_TOKEN` field,
-and its principal (`delivery-operator-attestor`, scopes `read` and `attest`) is
-an entry of `DELIVERY_MACHINE_CREDENTIALS`.
+A deployment has one approval decision, made by a human and bound to its
+frozen selection ([4.13](docs/model.md#413-approval)). A request in an
+environment whose policy is `required` waits in `awaiting_approval`; the
+approval expires if the binding generation moves first. A non-eligible
+`deploy` needs an approval marked `override` (H4), decided with
+`approve --override`. A `tofu` recipe with an approve step takes its one
+decision at that step on the saved plan, through
+`POST /deployments/:id/plan-approval` with the plan digest (H6). A rejection
+discards the plan, and the approve step ends the deployment failed and releases
+its locks. An override of such a deployment is cleared at selection, before the
+plan runs. A monitor's automatic rollback carries a `restoration` approval
+instead (H5).
 
-A deployment is never owned by a different executor identity (D7). A
-self-hosted service's deployment holds the global dispatch barrier (D8); after
-applying, its executor calls `POST /deployments/:id/handoff`, leaving it owned
-with a handoff marker and a frozen lease. Its one successor Workflow,
-`delivery/<id>/successor`, claims the marker through
-`POST /deployments/:id/successor` before continuing. No other identity, ordinary
-claim or lease renewal takes the marker, and the outgoing Workflow's close is
-not an orphan. The successor verifies acceptance and finishes; if it cannot,
-the deployment ends recovery-required with its locks and barrier held.
+Desired, observed, and accepted pointers are separate. Success requires the
+exact selected revision plus reconciliation and acceptance evidence. Failed
+deployments block automatic successors. Canceling running work is a request to
+stop at a safe boundary, not an assertion that side effects were undone.
+
+An ambiguous effect, an expired lease or an unsettled sub-step ends the
+deployment `recovery-required`, keeping its result and its locks
+([4.15](docs/model.md#415-recovery-intent)). An administrator creates a
+recovery intent with `POST /deployments/:id/recovery-intents`, supplying a
+request ID, reason, expected generation and, for a compound recipe, the
+sub-step. A deployment has at most one pending intent. Its `kind` follows the
+deployment: `argo`, `worker`, `platform`, `content` or `minecraft`; a
+`forum-baseline` intent comes from the Forum baseline inspection instead.
+
+An `argo` intent settles through `POST /recovery-intents/:id/settle` (admin)
+with the exact finished Argo operation UUID. The API reads the Application
+object through its own reader and verifies the recorded request, the
+environment ownership annotation, the finished operation and settled Jobs. It
+rechecks the intent's binding generation and refuses an intent already
+settled. Every other kind is refused there and settled by its own reader.
+Settlement records what it found and releases ownership without accepting the
+failed deployment or moving the accepted selection. Intent creation and
+settlement work while writes are paused and while Temporal or ArgoCD's API is
+unavailable; no route releases a lock without an intent.
+
+`toolkit deploy recover <DEPLOYMENT_ID> --expected-generation <N> --reason
+<EXPLANATION> --machine` opens the intent; with `--operation-id
+<ARGO_OPERATION_UUID>` it then settles an `argo` intent by that readback.
+`toolkit deploy recovery <INTENT_ID>` inspects an intent and its evidence. The
+operator procedure is in
+[Cut a homelab release](../docs/wiki/src/content/docs/how-to/cut-a-homelab-release.md#recover-a-deployment-that-requires-recovery).
+An active operation, mismatched identity, missing read credential or unsettled
+Job keeps ownership locked. Do not remove database locks to bypass that check.
 
 Settlement readers never use the ArgoCD server or an executor credential. The
 API container projects a short-lived token of its own ServiceAccount,
@@ -541,31 +514,11 @@ missing projection pauses settlement and keeps ownership.
 | `delivery-forum-baseline-reader`   | get, list, watch Pods, claims, Deployments, ReplicaSets and Jobs in the Forum namespaces                |
 | `delivery-minecraft-report-reader` | a `delivery-tsmc-controller`-audience token; the controller reviews it and allows only its report `get` |
 
-Use `toolkit deploy recover <DEPLOYMENT_ID> --expected-generation <N>
---operation-id <ARGO_OPERATION_UUID> --reason <EXPLANATION> --machine` after
-inspecting the recorded operation directly; it opens the recovery intent and
-settles it by readback.
-An active operation, mismatched identity, missing read credential, or specialized
-target keeps ownership locked. If no matching finished operation exists, use the
-[guarded Delivery recovery procedure](../docs/wiki/src/content/docs/how-to/cut-a-homelab-release.md#recover-a-delivery-operation).
-Its brokered export/settle helper rereads the held deployment, applies its frozen
-selection through explicit `sync-managed --delivery-selection`, and retains the
-actual finished operation requirement for independent unlock. It handles failures
-before and after source selection. Stop the prior mutation executor before
-settling; a closed Workflow alone does not prove its Activity process stopped.
-Do not remove database locks to bypass that check.
-
-Static sites, combined Scout frontends and Forum use separate content recovery
-intents. `toolkit deploy sites recover` or `forum recover` requires an admin
-credential, exact environment generation and reason. The matching `recovery`
-command and UI show immutable history, native receipts and refusal messages.
-Native inspection and bounded repair retain the frozen artifacts and original
-backup. Independent settlement releases quarantine through a generation CAS;
-the original failed result and accepted pointers remain unchanged. A failed
-inspection keeps ownership. A journaled producer host awaiting restoration
-continues to block dispatch even after settlement succeeds. Generic Argo unlock
-cannot bypass these checks or authorize a database rollback. Follow the
-[content recovery procedure](../docs/wiki/src/content/docs/how-to/cut-a-homelab-release.md#recover-a-site-or-forum-release).
+`content` intents cover static sites, Scout frontends and Forum. Native
+inspection and bounded repair retain the frozen artifacts and the original
+backup. A failed inspection keeps ownership. A journaled producer host awaiting
+restoration continues to block dispatch even after settlement succeeds. A
+recovery intent never authorises a database rollback.
 
 A model `tofu` recipe has no Application, so its recovery intent is a platform
 recovery. The recovery Job runs with the runner its admission froze, from the
@@ -576,108 +529,96 @@ recovery plan is approved by the stack's policy and applied. The saved plan's
 state lineage bounds both.
 
 Ordinary worker rollout admission requires a verified retained-host baseline.
-Fixed-profile pipelines support independent host-only baseline verification.
-The reviewed source catalog transfers release ownership only after hosting,
-routing proofs, and recovery are verified. Forum
-upgrade admission requires a verified accepted baseline and its frozen prior
-configuration.
-After an owned Forum sync succeeds, verification waits at most five minutes for
-genuine Synced and Healthy status while rechecking the exact release and active
-claim. Pending status never accepts a release or repeats its migration.
+Fixed-profile recipes support independent host-only baseline verification.
+Forum upgrade admission requires a verified accepted baseline and its frozen
+prior configuration. After an owned Forum sync succeeds, verification waits at
+most five minutes for genuine Synced and Healthy status while rechecking the
+exact release and active claim. Pending status never accepts a release or
+repeats its migration.
 
-## Root and OpenTofu releases
+An `operator-run` deployment records intent for each stage and then waits.
+The operator performs the stage and posts attested evidence with
+`POST /deployments/:id/attestations` (`toolkit deploy attest`); the stage
+settles only on that evidence ([section 5](docs/model.md#5-target-kinds)).
+The attestor is a distinct operator identity (X13): a machine credential with
+the `attest` scope. The API refuses an attestation from any `execute`
+credential or from an identity that has claimed, renewed or handed off the
+deployment, and it refuses to start with a machine credential holding both
+`attest` and `execute`. The attestor's token is the Delivery service item's
+`DELIVERY_ATTEST_TOKEN` field, and its principal (`delivery-operator-attestor`,
+scopes `read` and `attest`) is an entry of `DELIVERY_MACHINE_CREDENTIALS`.
 
-A genuine qualified `gitops` CI build can carry `platformChanges`: the complete
-root chart-to-original-artifact map, affected managed OpenTofu stacks, and exact
-independent site archive prerequisites. Chart receipts identify bytes actually
-packaged and pushed by that CI producer. Catalog-enabled Helm publication really
-repackages older unchanged charts; only a retry of that same producer can reuse
-its verified existing archive. An infrastructure-only source build retains an
-original qualified `chart:apps` reference without claiming it produced those bytes.
+A deployment of a self-hosted service (`delivery`, `delivery-control-plane`,
+`temporal`, `argocd`) first acquires the global dispatch barrier: new claims
+stop and queues drain before the effect ([D8](docs/model.md#412-deployment)).
+A deployment is never owned by a different executor identity (D7). After
+applying, its executor calls `POST /deployments/:id/handoff`, leaving it owned
+with a handoff marker and a frozen lease. Its one successor Workflow,
+`delivery/<id>/successor`, claims the marker through
+`POST /deployments/:id/successor` before continuing. No other identity,
+ordinary claim or lease renewal takes the marker, and the outgoing Workflow's
+close is not an orphan. The successor verifies acceptance and finishes; if it
+cannot, the deployment ends recovery-required with its locks and barrier held.
 
-The reviewed ops-model platform policy preserves the existing automatic stacks
-and credential stacks that require reviewed plans. Operator-only and
-preparation-only stacks retain their independent workflows. Publication expands
-dependency closure: SeaweedFS, Tailscale, and Arr precede root; Cloudflare follows
-root and the exact affected static archives. Platform selection waits for each
-frozen prerequisite rather than resolving newer inputs while executing.
+## Monitors
 
-`POST /api/v1/platform/deployments` creates separate `root-release`, `tofu-plan`,
-and `tofu-apply` deployments. They share durable outbox, immutable evidence, and
-ownership with ordinary deployments, plus one persistent platform lock for shared
-resources. Read-only planning releases that lock at completion. Root and apply
-effects require reviewed source `platformDeliveryDelegated`; its default false
-keeps the legacy writer authoritative. Root additionally requires central worker
-delegation so it cannot restart the protected executor through the Temporal chart.
+A recipe's oracle may declare a monitor: one image component, alarm matchers
+that include an `environment` label, evidence queries with thresholds, and an
+`automatic` or `hold` policy ([4.19](docs/model.md#419-monitor)). Queries may
+use only `$window`, `$version` and `$gitSha`.
 
-Each apply freezes one successful unexpired plan. Plans bind the original source,
-stack, native Job UID/specification, state lineage/serial, and plaintext digest.
-AES-256-GCM envelopes use a dedicated key and authenticated receipt metadata;
-plaintext is bounded to 8 MiB and plan lifetime to 24 hours. The API stores only
-the encrypted plan and consumes it once. Reviewed credential stacks require a
-human decision on that exact apply; automatic stacks do not gain an extra manual
-approval. The apply recipe rechecks native state before consuming the saved plan.
+Acceptance starts the monitor: `watching` when the frozen recipe declares one,
+otherwise `unmonitored`. The dispatch workflow lists `GET /monitors/watching`,
+queries Prometheus for firing alerts and each evidence query, and posts the
+result to `POST /deployments/:id/monitor/observations`. The API classifies the
+observation in one transaction. Only an alarm in the monitor's set that became
+active at or after the deployment's claim counts; an alarm already active is
+recorded as pre-existing `alarm` evidence ([W2](docs/model.md#419-monitor)).
 
-Execute-only `POST /api/v1/platform/plans` records the result. Execute-only
-`GET /api/v1/platform/plans/:planDeploymentId` supplies the encrypted bytes to the
-fixed apply Job; reader and UI responses expose only metadata. The Job receives
-a dedicated execute-only item, and provider children receive no Delivery API or
-1Password credential. Platform recipes run on a separate Activity queue and
-service account from ordinary release execution. Ambiguous native results retain
-ownership. Successful root/apply completion advances only
-`acceptedPlatformDeploymentId`, preserving ordinary application acceptance.
+Every threshold met with no counted alarm settles the monitor and records
+`monitor` evidence. A counted alarm records `alarm` evidence and suppresses the
+alarmed set revision for automatic selection. Under `automatic` policy it also
+queues a rollback to the latest earlier settled or unmonitored selection that
+is an eligible rollback candidate. It carries that selection's approval as a
+`restoration` approval ([H5](docs/model.md#413-approval)). With no such
+candidate, or one never approved where policy requires approval, the
+environment is held with the reason. Under `hold` policy the environment waits
+for an operator. `promote` requires the source's accepted deployment to be
+`settled` or `unmonitored` ([W3](docs/model.md#419-monitor)).
 
-Root charts retain their original canonical service owner, digest and source;
-cross-service references do not create new component aliases. Before source
-transfer, read-only plans use the legacy owner's dependency ordering. After
-transfer, admission checks frozen prerequisites against current accepted platform
-and site state. A canceled or failed automatic release is not recreated for the
-same source, and an apply never replans after human approval.
+## OpenTofu stacks
 
-Use the platform destination form or
-`toolkit deploy platform request --file <reviewed-intent.json> --machine`.
-Requests require a request ID, environment ID and expected environment generation.
-Root and plan requests select the original source build; apply selects the exact
-successful plan deployment ID. Inspect and approve the resulting frozen deployment
-through ordinary status and human approval commands.
+Each stack is a service, `tofu-<stack>`, with one component,
+`archive:tofu-<stack>`. CI freezes the stack directory, lock file and local
+modules into that archive; `desired-state.json` is configuration, with
+`forwardOnly` keys where a value must never decrease
+([X8](docs/model.md#9-decisions)). A `tofu` deployment runs plan, approval
+where the environment's policy requires one, and apply as steps of one
+deployment under the stack lock and the `platform` shared lock
+([T1](docs/model.md#411-target)). Operator-only stacks are `operator-run`
+environments.
 
-Independent static sites wait for genuine root acceptance before activation.
-Root snapshots retain each selected original archive ID. A newer accepted root
-may explicitly retain an archive from an older source; source SHA equality is
-not required. A site-only change uses the current accepted infrastructure.
-Explicit rollback retains the archive's earlier genuine site/root acceptance
-history. Root, Cloudflare application, and site effects serialize through their
-existing ownership records. Combined Scout releases retain their own backend-first
-boundary and do not participate in this independent-site prerequisite.
+Each apply freezes one successful unexpired plan. Plans bind the selected
+archive digest, stack, native Job UID/specification, state lineage/serial,
+and plaintext digest. AES-256-GCM envelopes use a dedicated key and
+authenticated receipt metadata; plaintext is bounded to 8 MiB and plan lifetime
+to 24 hours. The API stores only the encrypted plan and consumes it once.
+Reviewed-plan stacks require a human decision on that exact apply; automatic
+stacks do not gain an extra manual approval. The apply step rechecks native
+state before consuming the saved plan. Execute-only plan endpoints supply the
+encrypted bytes to the fixed apply Job; reader and UI responses expose only
+metadata. Provider children receive no Delivery API or 1Password credential.
 
-`PlatformRecoveryIntent` preserves a failed root, OpenTofu, or control-plane
-result while independently settling its quarantine. An administrator creates an
-intent for the exact held environment generation. Read-only inspection must prove
-the original Workflow closed, every original and historical recovery Job settled,
-and an exact frozen desired or genuinely accepted prior target. Missing Job
-receipts or deleted resources alone never prove that an external write did not
-occur. Completion within sixty seconds uses the original snapshot and ownership
-CAS; it releases locks without advancing any acceptance pointer.
-
-A first Discord apply without an accepted prior may instead settle the
-`original` target. Inspection authenticates its original approved saved plan,
-compares all six managed before values and all six computed application
-baselines with fresh provider reads, and requires the same state lineage with a
-nondecreasing serial that stays stable during inspection. A serial increase is
-recorded; this proves the original target, not unchanged state history or a
-successful apply. The same Workflow, terminal Job, freshness and ownership CAS
-checks still apply, and no acceptance pointer advances.
-
-Partial OpenTofu recovery produces a new immutable encrypted plan on that same
-intent. Its receipt names the recovery intent, original source/stack, state,
-digest, expiration, and native Job identity. Only execute-scoped plan endpoints
-expose encrypted bytes. Existing reviewed-plan policies require a human decision
-on the exact public plan fingerprint; routine stacks retain automatic policy.
-The apply child checkpoints its native UID and passes fresh admission before
-consuming those saved bytes. A pause prevents that new effect while retaining
-read-only inspection and evidence recording. The brokered one-shot recovery
-runner supports an unavailable Delivery Workflow worker; it uses the same intent
-and API rather than deleting a lock directly.
+A `platform` recovery intent preserves a failed plan or apply while
+independently settling its quarantine. Read-only inspection must prove the
+original Workflow closed, every original and recovery Job settled, and an
+exact frozen desired or genuinely accepted prior target. Missing Job receipts
+or deleted resources alone never prove that an external write did not occur.
+A first apply without an accepted prior may instead settle the `original`
+target: inspection authenticates its approved saved plan against fresh
+provider reads and a stable state lineage and serial. Partial recovery produces
+a new immutable encrypted plan on the same intent, subject to the stack's
+approval policy.
 
 ## Retained Workflow workers
 
@@ -691,54 +632,25 @@ credentials. Worker records and artifacts are retained when their desired replic
 count becomes zero.
 
 Delivery's executor, platform worker, TSMC controller, and their capabilities
-belong to a separate `delivery-control-plane` chart/Application and catalog
-service. Its environment is `delivery-control-plane/prod`. The image remains an
-original qualified `image:temporal-worker` artifact owned by its producer;
-the control-plane snapshot explicitly references it without creating an alias.
-Ordinary Temporal version sets contain only application/worker components.
-Rolling an application back therefore cannot reconstruct older executor commands,
-probes, credentials, or Pod templates. A separate admin operation upgrades the
-control plane under global execution quiescence and its own Application ownership.
-The shared Git bootstrap image pin remains legacy-owned until both image consumers
-transfer; selected control-plane versions and acceptance remain in PostgreSQL.
-
-`toolkit deploy platform control-plane --file <reviewed-intent.json> --machine`
-selects original image/chart artifact IDs for this fixed environment. Initial
-adoption also names original prior image/chart IDs, which the native Job observes
-independently. Later requests freeze the successful acceptance or independently
-recovered exact source. A chart-only upgrade can reuse an unchanged original
-Temporal image. Controller replacement waits for existing work to drain and
-blocks new claims globally; an ambiguous result retains that barrier until the
-independent recovery procedure proves settlement.
+belong to the separate `delivery-control-plane` service and Application, with
+the environment `delivery-control-plane/prod`. Its image is an original
+qualified `image:temporal-worker` artifact owned by its producer and bound by
+reference ([A5](docs/model.md#45-artifact)). Ordinary Temporal set revisions
+contain only application and worker components. Rolling an application back
+therefore cannot reconstruct older executor commands, probes, credentials, or
+Pod templates. The control plane is a self-hosted service, so each of its
+deployments runs under the global dispatch barrier described in
+[Execution and recovery](#execution-and-recovery).
 
 `GET /api/v1/environments/:id/workers` exposes the generation and retained pool
 to authenticated readers. Admin-only `POST /api/v1/workers` adopts a qualified
 original artifact selected by a verified accepted deployment or independently
 verified host-only baseline. Adoption uses the
 expected environment generation and is rejected while deployment inputs are
-pending or owned. An observation import cannot establish that baseline.
-
-Initial migration uses an admin-only `adopt-worker` deployment intent through
-`POST /api/v1/deployments`, with the current qualified full-app version set and
-`workerBaseline: { artifactIds, candidateArtifactId }`. The artifact IDs reference
-every observed original worker host; the candidate identifies existing
-Temporal current routing. Legacy Activities and Workflows may use different
-revisions, so the routed candidate may differ from the full-app image. The
-executor independently verifies unchanged Argo source/health, actual host and
-runtime image identities, baked source revisions, and every served route twice.
-An original image publication whose full CI is pending or failed can be retained
-only through this native host observation, with its original build/source and
-runtime digests unchanged. Its image, source and deterministic baseline stages
-must succeed before materialization. Later reads require that exact successful
-adoption lineage; the image remains ineligible for new release selection or
-version-set composition until it independently qualifies. The captured native
-chart may predate the qualified version set used to anchor the request.
-This host-only history never advances desired, observed, or accepted application
-revisions or configuration and cannot serve as a full-app rollback target.
-The first subsequent complete rollout establishes application acceptance.
+pending or owned.
 
 A deployment freezes its complete worker pool with its selected candidate,
-pipeline, and configuration. Approval and duplicate request handling use that
+recipe, and configuration. Approval and duplicate request handling use that
 same snapshot. Rollback restores the accepted candidate artifact and host
 specification, recording the accepted deployment it restores. It also retains
 newer live hosts; a historical zero never stops a currently live host. This
@@ -746,7 +658,7 @@ restores the exact target while safely retaining additional worker versions.
 
 Deploy-scoped `POST /api/v1/workers/:id/retire` accepts only a request ID and the
 expected environment/worker generations. It creates a normal identity-bound
-`retire-worker` deployment with one frozen zero-replica host and the accepted
+`retire-host` deployment with one frozen zero-replica host and the accepted
 routing candidate unchanged. Scout production retirement requires human approval.
 The intent changes no worker replica state and accepts no caller-supplied proof.
 
@@ -768,21 +680,22 @@ commits desired replicas zero; ambiguous failure retains ownership and the live
 pool record. Historical artifacts remain available for a later approved rollback
 that rehosts their exact original image. Deletion is a separate guarded prune.
 
-Worker recovery uses a separate admin-authorized `WorkerRecoveryIntent`, created
-by `POST /api/v1/deployments/:id/worker-recovery` with an exact environment
+Worker recovery uses a `worker` recovery intent, created through the shared
+[recovery route](#execution-and-recovery) or
+`POST /api/v1/deployments/:id/worker-recovery` with an exact environment
 generation, request ID and inspection reason. The intent binds the frozen
 deployment and current pool fingerprints. A scoped executor checks settled Argo
 and Job identities, original hosts, and stable routing in every served
 namespace. It reads the Application and the pool namespace's Deployments and
 worker Pods only through `GET /api/v1/worker-recovery/:id/observation`, which
 the API answers with its own readers, never the executor's ArgoCD token.
-Completion accepts observations no older than sixty seconds
-and rechecks the environment generation, both fingerprints and held Application
-lock in one transaction. It records the evidence and releases quarantine while
-preserving the original failed or canceled result, accepted release and worker
-replicas. Generic Argo recovery cannot bypass this worker-specific proof.
-The dedicated Workflow and the independent operator entrypoint use the same
-read-only verifier; a healthy Delivery Workflow worker is not required for the
+Completion accepts observations no older than sixty seconds and rechecks the
+environment generation, both fingerprints and held Application lock in one
+transaction. It records the evidence and releases quarantine while preserving
+the original failed or canceled result, accepted release and worker replicas.
+Generic Argo recovery cannot bypass this worker-specific proof. The dedicated
+Workflow and the independent operator entrypoint use the same read-only
+verifier; a healthy Delivery Workflow worker is not required for the
 intent/completion API. Failed inspection retains quarantine. `toolkit deploy
 workers recover` creates an intent; `workers recovery` inspects its state.
 
@@ -918,8 +831,22 @@ operation enums; artifact IDs, actors and request IDs are not metric labels.
 The activated homelab service includes a matching ServiceMonitor and alerts
 for unavailability, delayed dispatch and required independent recovery.
 
-PostgreSQL is the permanent catalog and audit source; Temporal owns durable
-execution. Restore PostgreSQL from its declared homelab backups and inspect
-outbox/workflow/Argo operation identities before resuming submissions. Recovery
-of this control plane must remain possible through the repository's independent
-infrastructure tooling.
+PostgreSQL is the permanent record and audit source; Temporal owns durable
+execution. On each acceptance of a bootstrap-chain environment, the backup
+worker writes the cold-start snapshot of every environment's accepted selection
+to `s3://homelab/delivery-cold-start/latest.json`, with an immutable copy at
+`delivery-cold-start/<timestamp>-<catalogRevision>.json` and the writer's
+fingerprint as object metadata ([X7](docs/model.md#9-decisions)). The snapshot
+sets observed selections only. During a cold start,
+`toolkit deploy render-application` renders an environment's Application from
+the snapshot and the catalog document. After a restore, the operator reads both
+copies with their own R2 credential and supplies them to
+`POST /api/v1/reconcile-after-restore`, which compares the record, the snapshot
+and each live target. Each mismatch holds automatic deployment until an
+operator accepts the live state through
+`POST /api/v1/environments/:id/restore-hold/accept` or a deployment is accepted
+there. The procedure is
+[Restore the Delivery record](../docs/wiki/src/content/docs/how-to/restore-the-delivery-record.md).
+Changes to the Delivery and Temporal PostgreSQL clusters are `operator-run`
+deployments of `delivery-data` and `temporal-data`, never part of an image or
+chart deployment.

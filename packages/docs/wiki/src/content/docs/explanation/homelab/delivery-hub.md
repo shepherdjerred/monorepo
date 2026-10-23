@@ -23,7 +23,8 @@ The hub follows those identities forward instead of inventing a new one. A
 build, its version set, and the deployments of that version set form one
 [execution](https://github.com/shepherdjerred/monorepo/blob/6a9c4be858a1f28db96cd1aa9e608af85c4273fb/packages/delivery/src/infrastructure/hub/executions.ts).
 A hand-composed version set is its own execution, with no source or build stage.
-Root and OpenTofu releases join through their source build.
+OpenTofu stacks and static sites are services like any other, so their
+releases join through their own builds.
 
 The [service
 pipeline](https://github.com/shepherdjerred/monorepo/blob/6a9c4be858a1f28db96cd1aa9e608af85c4273fb/packages/delivery/src/infrastructure/hub/pipeline.ts)

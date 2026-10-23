@@ -1,321 +1,315 @@
 ---
 title: Why releases are shaped this way
-description: The ordering constraints and the prune-classification rule that keep a partially published release from reaching the cluster.
+description: Why a homelab release is a recorded selection that an environment accepts on evidence, watched by a monitor, ordered by declared edges, and applied through ArgoCD without Git choosing what runs.
 sidebar:
   order: 2
 ---
 
-Build qualification, release selection, and reconciliation have separate owners.
+A release is a selection that one environment accepts on recorded evidence, so
+every running thing has one owner, one history and one way back.
 
-Woodpecker builds and qualifies immutable artifacts. Delivery keeps selected
-versions and release history in PostgreSQL. Temporal executes frozen deployment
-requests, and ArgoCD reconciles Kubernetes resources. Git retains reviewed
-registrations and pipeline definitions, with no selected deployment versions.
-
-The root path below shows the guarded reconciliation protocol. Delivery
-invokes it after artifact qualification; it preserves exact revision,
-lifecycle, operation ownership, and prune checks.
+Git defines what may run. Delivery records what was built, what was selected,
+where it runs and what proved it. Target adapters apply the selection and
+report back. The [Delivery model](packages/delivery/docs/model.md) defines every
+term on this page; the [Delivery model reference](/reference/delivery-model/)
+lists the kinds, roles and routes.
 
 ```mermaid
-sequenceDiagram
-  accTitle: Homelab release sequence
-  accDescr: CI publishes immutable artifacts. Delivery qualifies and selects their exact versions, then executes guarded root reconciliation with owned operations and safe pruning.
-  participant CI
-  participant CM as ChartMuseum
-  participant D as Delivery and Temporal
-  participant Root as apps Application
-  participant Child as child Applications
-
-  CI->>CM: publish 2.0.0-build charts
-  CI->>D: register original artifact provenance
-  D->>D: qualify complete producing pipeline and freeze selection
-  D->>Root: suspend current repository auto-sync
-  D->>Root: stage child specs and prerequisites, still suspended
-  D->>Child: read-only apply-safety preflight
-  D->>Child: reconcile root-owned children in wave order
-  D->>Root: restore exact revision with verified pruning
-  D->>Root: retain identity through apply and termination
-  D->>Child: require exact runtime acceptance
+flowchart TD
+  accTitle: Path of a homelab release
+  accDescr: Git holds the catalog and CI produces verified builds. Delivery composes a set revision, freezes a selection in a deployment, and admits it against edges, approval and the binding generation. A target adapter applies it. Acceptance moves the pointer, then a monitor either settles the selection or alarms and rolls back.
+  Catalog["Catalog in Git"] --> Selection
+  Build["Verified CI build"] --> SetRevision["Set revision"]
+  SetRevision --> Selection["Selection"]
+  Selection --> Deployment["Deployment"]
+  Deployment --> Adapter["Target adapter"]
+  Adapter --> Acceptance["Acceptance"]
+  Acceptance --> Monitor["Monitor"]
+  Monitor -->|settled| Promotion["Eligible to promote"]
+  Monitor -->|alarmed| Rollback["Rollback to last settled"]
 ```
 
-## Why application releases delegate selection
+## Why Git holds definitions and nothing that runs
 
-Delivery-owned applications keep their exact desired versions and deployment
-history in PostgreSQL. Git retains infrastructure, application registration,
-deployment templates, and reviewed pipeline definitions. This separates a
-successful build from a selected release and from an accepted running release.
+Git holds the catalog: services, components, environments, recipes,
+configurations and prerequisite edges. It holds no digest, chart revision or
+set revision that names what an environment runs
+([C2](packages/delivery/docs/model.md#41-catalog)).
 
-The [application release policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/application-release-policy.ts)
-marks explicitly delegated applications. The root owns their registration and
-lifecycle; Delivery owns the selected chart revision and complete release
-parameter list. Static chart values remain under infrastructure ownership.
-Root synchronization preserves those delegated fields during application, as
-well as ignoring them during comparison. A comparison ignore alone would allow
-the next root sync to overwrite PostgreSQL's selection.
+A version written into Git is a second source of truth. The homelab used to
+keep one: pinned image values, chart revisions injected at publication, and an
+app-of-apps that synced whatever the repository said. Any of those could
+disagree with what had actually been accepted. Delivery's record is now the
+only answer to "what runs here" ([section 3](packages/delivery/docs/model.md#3-ownership-boundary)).
 
-The [root release command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts)
-leaves delegated children out of its release reconciliation and acceptance
-checks. It also avoids local manifest overrides for those children, which could
-reintroduce an older selection. Each application therefore has one release
-owner, while root pruning and infrastructure changes retain their existing
-safety checks.
+Registering a definition changes nothing that runs
+([C3](packages/delivery/docs/model.md#41-catalog)). A merged recipe is a
+candidate until a deployment selects it. That keeps review of a definition
+separate from the decision to release it.
 
-Delivery's executor records external intent before changing ArgoCD. An
-interrupted or ambiguous operation keeps its environment locked for recovery.
-Application acceptance includes exact operation identity, deployment history,
-running image digests, and runtime checks. A green comparison alone cannot
-accept a release.
+One catalog replaces the five files that once described the same services
+from different angles ([X9](packages/delivery/docs/model.md#9-decisions)). Its
+[shape](packages/ops-model/src/catalog-document-shape.ts) is language-neutral,
+and Delivery types each recipe body against its
+[recipe contract](packages/delivery/src/shared/model/recipe-contract.ts).
 
-Static sites publish standard tar archives with SHA-256 digests. Scout's beta
-and production frontend flavors are built separately in the same version set,
-each bound to its exact backend image. Selecting a flavor activates those
-published bytes without rebuilding them. Bucket delegation is explicit; an
-unregistered or mismatched owner blocks the adapter. Publication alone cannot
-activate a site. Acceptance reads back every selected S3
-object, compares public entrypoint bytes with the selected archive, and checks
-an identity-bound release marker before recording success. A successful HTTP
-status or cache purge acknowledgement alone cannot accept stale frontend HTML.
+Renaming a component or moving it to another owner is a catalog edit, not a
+rebuild. Reconcile carries each accepted selection onto the new identity with
+the same bytes and records the artifact each one stands for
+([section 7](packages/delivery/docs/model.md#7-fit-to-the-inventory)). The
+carry refuses the whole reconcile when a mapping is ambiguous, because a guess there would
+rewrite what an environment is recorded as running.
 
-Browser identity comes from the existing Tailscale Kubernetes operator's proxy.
-For each human request, Delivery verifies the fixed Ingress, its operator-owned
-StatefulSet and ready proxy Pod addresses twice. Only the actual socket peer
-matching that current identity may supply user headers. The authorized login
-must also match Delivery's operator allowlist; browser writes require the same
-origin. Missing, changing or unavailable proxy metadata fails closed.
-Machine requests use separate bearer credentials. These checks do not rely on
-NetworkPolicy enforcement, additional OAuth clients or an application sidecar.
+## Why a release is a selection, not a version
 
-## Why production recipes remain distinct
+A selection is three coordinates: a set revision, a recipe revision and a
+configuration revision ([4.9](packages/delivery/docs/model.md#49-selection)).
+Approval, acceptance and rollback all act on that triple.
 
-One deployment record can coordinate several effects without pretending they
-have the same acceptance criteria. The
-[execution contract](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/README.md)
-keeps those checks in fixed recipes rather than arbitrary user-authored commands.
+The reason is rollback. Restoring only the image of a past release can pair
+it with today's chart parameters or sync options. That combination never ran
+and was never proven. Restoring the whole selection replays exactly what was
+accepted ([P2](packages/delivery/docs/model.md#47-recipe)).
 
-Scout's selected backend, Workflow workers, and matching frontend archive form
-one release. The production decision approves that complete selection. A host
-baseline or drained-worker retirement cannot accept the application release.
+The same rule makes a configuration change a release of its own. Changing a
+recipe or configuration without new artifacts is a `rebind` deployment, with
+its own approval where policy requires one
+([L2](packages/delivery/docs/model.md#49-selection)). Nothing reaches a running
+system by editing a file and waiting for a sync.
 
-Worker versions remain independently addressable after promotion. PostgreSQL
-retains each original artifact, baked source identity, host, and replica intent.
-An older pinned execution can therefore finish on its original worker. The
-execution control plane has its own chart and Application. Its original image
-advances separately from application workers. An application rollback therefore
-cannot restore older executor settings or interrupt its own release.
+"Version" is deliberately not a noun in the model
+([X2](packages/delivery/docs/model.md#9-decisions)). Bytes are identified by
+digest. A build whose digests match the previous set revision composes nothing
+([R2](packages/delivery/docs/model.md#46-set-revision)), so an unchanged merge
+queues no deployment.
 
-Minecraft accepts a candidate only after backup preservation, isolated restored
-world validation, and production runtime checks. The controller records durable
-intent outside the release Workflow. Forum releases retain their licensed
-bundle identity, maintenance boundary, backup, and migration checks. These
-stateful recipes cannot use an ordinary image rollback as a recovery procedure.
+The same comparison runs against builds that are still pending. A producer
+retains an unchanged artifact from the newest pending or verified build rather
+than republishing it, so two quick merges do not rebuild the same image. The
+retaining build then verifies only after the build it borrowed from, and fails
+if that one fails ([B2](packages/delivery/docs/model.md#44-build)). An
+artifact never qualifies on the strength of a build that did not.
 
-Root releases retain the exact chart inventory and call the guarded
-`release-root` procedure. OpenTofu applies consume a single-use encrypted plan
-bound to the source, stack, native Job, and state identity. Existing automatic
-stacks remain automatic; reviewed credential stacks require their exact saved
-plan's human decision. Root and state changes share a PostgreSQL ownership lock
-and explicit prerequisites, so a newer build cannot silently replace the
-selected inputs midway through execution.
+## Why an approval binds what will change
 
-Writer ownership transfers in one coordinated cutover. Existing CI deployment
-work stops before Delivery imports observed state and receives release authority.
-An imported observation never fabricates a qualified artifact or accepted release.
-This boundary prevents two deployment systems from independently choosing the
-same application's desired state. CI retains immutable package publication and
-repository automation; it holds no application deployment or provider credentials.
+An approval is one decision per deployment, bound to its frozen selection
+([4.13](packages/delivery/docs/model.md#413-approval)). If the binding
+generation moves before the decision, the approval expires. A person approves
+exactly what will run, not whatever is current when the executor gets there.
 
-TRMNL plugin templates are immutable artifacts bound to the selected backend
-image. Delivery publishes the frozen plugin archive and independently reads back
-all three plugin targets. Partial publication keeps the environment locked until
-an identity-bound repair or recovery proves the external state.
+OpenTofu takes that one step further. A stack's selection says which archive
+and desired state to use, but not what the provider will change. So a `tofu`
+recipe with an approve step takes its approval on the saved plan, bound to the
+plan digest and the state serial it was computed against
+([H6](packages/delivery/docs/model.md#413-approval)). Rejecting the plan
+discards it and fails the deployment; nothing applies a plan nobody approved.
 
-## Why `release-root` stages and restores the root
+Two approvals are deliberately different. An `override` approval is required
+to deploy a set revision that is not eligible, so skipping a gate is a
+recorded human act ([H4](packages/delivery/docs/model.md#413-approval)). A
+`restoration` approval lets a monitor's automatic rollback restore a selection
+that was already approved, without waking anyone
+([H5](packages/delivery/docs/model.md#413-approval)).
 
-The second suspended root apply is the part people delete when simplifying, and
-it is the part that matters.
+## Why acceptance, not health, moves the pointer
 
-The public pipeline surface is nevertheless one command. `release-root` owns
-the entire identity-bound sequence in one process, so there is no handoff gap
-between staging, reconciliation, final pruning, and scoped health. The bounded
-operations underneath it remain separate because they prove different things.
+Each environment keeps three pointers: desired, observed and accepted
+([E3](packages/delivery/docs/model.md#410-environment)). Only acceptance moves
+the accepted pointer, and only an accepted selection can be rolled back to.
 
-New child-level safety settings have to exist _before_ those children sync.
-But enabling floating auto-sync before every chart is published would let a
-child pick up a partially published release.
+A green sync is not acceptance ([V4](packages/delivery/docs/model.md#414-acceptance)).
+ArgoCD can report Synced and Healthy while a probe fails, a worker still
+serves old code, or a site serves stale HTML. The recipe's oracle names what
+must be proven: probes, readbacks, drainage proofs, admission canaries or
+data-preservation checks. Every proof is appended as evidence and never edited
+([V3](packages/delivery/docs/model.md#414-acceptance)).
 
-The staged root release applies unchanged resources with exact-revision,
-source-selective syncs. Child Applications are the only resources changed:
-local manifest overrides keep their auto-sync disabled regardless of whether
-their source is internal or external. Child settings and root-owned
-prerequisites such as admission policies therefore land before reconciliation
-without starting an automatic child operation. Keeping unchanged resources on
-the source path is significant: Argo applies the chart-owned object itself,
-rather than treating a local manifest as an alternate desired tree whose result
-may be reported as applied without updating a cluster-scoped prerequisite. The
-[manifest-override batcher](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd-manifest-overrides.ts)
-splits only the rewritten Application requests at 750 kB. ArgoCD v3.4.5's
-[operation-state constructor](https://github.com/argoproj/argo-cd/blob/564b94973b284b8de98da7cee6eeade2cb941e46/controller/sync.go#L76-L81)
-copies the original request into status. In this cluster, a request near the
-observed 2 MiB controller message ceiling can therefore be accepted but never
-acquire visible operation state, matching
-[upstream reports of oversized operation-state patches](https://github.com/argoproj/argo-cd/issues/14224#issuecomment-1636337124).
-The batcher also keeps each request within one numeric Argo sync wave and sends
-waves in ascending order. Argo applies all targets in a wave before waiting for
-their health; separating waves prevents a degraded child Application in an
-earlier wave from leaving root-owned prerequisites in a later wave unapplied.
-Once every selected resource in a staged wave is applied, the release command
-terminates that exact operation instead of waiting for aggregate health. A
-failed resource with an actual Argo hook type still blocks termination; health
-for ordinary child Applications remains the final scoped release gate's job.
-Argo omits `operation.sync.revision` from manifest-override operations, so the
-release command also persists the exact revision in the operation info list
-beside its request and operation UUIDs. Either representation can prove the
-revision, but disagreement between them is a hard identity failure.
+An ambiguous effect keeps the environment locked
+([D5](packages/delivery/docs/model.md#412-deployment)). A lost executor, an
+expired lease, or a sub-step with intent but no result all end in
+`recovery-required`. Only a recovery intent, settled by a reader with a
+credential the executor does not hold, releases the lock
+([4.15](packages/delivery/docs/model.md#415-recovery-intent)). A missing record
+is never treated as proof that nothing happened. Settlement releases ownership
+but never accepts the failed deployment.
 
-The waves are an architecture contract, not incident-specific ordering.
-Admission policy objects land first, followed by the 1Password controller and
-items, infrastructure providers, certificate resources, the root Application,
-Kueue, dependent configuration, CI, and leaf workloads. This also makes
-an ordinary manual global sync safe: all members of a wave apply before ArgoCD
-waits on health, and no prerequisite is hidden behind a leaf workload.
+## Why a monitor watches after acceptance
 
-Disabling every child creates a second ordering obligation: the release must
-explicitly reconcile external children as well as charts published by this
-repository. The release renders the exact root revision again, orders its
-Application manifests by numeric sync wave, and combines two revision sources.
-Repository charts use the immutable revision inventory produced by the publish
-step; external charts and Git sources use their complete root-manifest source,
-including Helm values. The staging parser preserves that nested source object;
-dropping fields there can rewrite every external Application to chart defaults.
-This lets a controller upgrade such as cert-manager finish before a later
-repository workload depends on it. It also fences the inventories in both
-directions so a published child cannot disappear from the root and a
-repository child cannot silently fall back to its semver range.
+Acceptance proves the release started correctly. It cannot prove the release
+then served traffic correctly. A monitor covers that gap
+([4.19](packages/delivery/docs/model.md#419-monitor)).
 
-ArgoCD's comparison status is not deployment proof during this transition. A
-staged Application can report `Synced` at its new comparison revision while
-its latest deployment history still names the old source. For an external
-child, the complete history entry source must match the complete rendered root
-source before reconciliation skips it. A Git tag may resolve to a commit SHA,
-so comparing only the history revision to the root's tag would create a
-permanent mismatch; comparing only the source target would miss changed Helm
-values at the same chart version.
+A monitor reads the alarms an operator would be paged on and counts evidence,
+such as Scout's processed matches. It settles when every count reaches its
+threshold with no counted alarm. There is no elapsed-time threshold
+([W4](packages/delivery/docs/model.md#419-monitor)). A bake period would
+delay a healthy release and still pass a release that saw no traffic.
 
-Once that exact source has been deployed, ordinary same-source drift remains
-the external Application's responsibility after auto-sync is restored. A child
-that declares pruning must also report `Synced` before reconciliation skips it:
-retired chart resources otherwise remain and block the final root operation.
-Prometheus declares pruning so replacing the renderer's generated Secret with
-the shared 1Password Secret retires the unused chart-owned Secret. This does not
-broaden the release-scoped health gate. Repository-published children keep the
-stricter boundary: sync status, exact resolved revision, latest deployment
-history, and terminal operation state must agree. This prevents the brief
-post-stage comparison window from skipping a changed external prerequisite.
+Only an alarm that became active at or after the deployment's claim counts
+against it ([W2](packages/delivery/docs/model.md#419-monitor)). An alarm that
+was already firing is recorded as pre-existing evidence. It neither rolls back
+nor blocks settlement, because the new selection did not cause it.
 
-Certificate waves still use resource health as their ordering barrier. The
-[cert-manager Certificate condition contract](https://github.com/cert-manager/cert-manager/blob/b8f325e36f49626ba72d7efbe138c01a5e661d96/pkg/apis/certmanager/v1/types_certificate.go#L717-L777)
-allows separate `Ready` and `Issuing` conditions. A new Certificate briefly
-reports `Ready=False` with reason `DoesNotExist` while it creates the referenced
-Secret. The
-[ArgoCD health customization](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/platform/argocd.ts)
-classifies only that normal issuance transition as `Progressing`, so the wave
-waits instead of terminating. It checks the separate Issuing condition before
-exempting a missing Secret because cert-manager
-[records a failed request as `Issuing=False`](https://github.com/cert-manager/cert-manager/blob/b8f325e36f49626ba72d7efbe138c01a5e661d96/pkg/controller/certificates/issuing/issuing_controller.go#L408-L430)
-while the missing-Secret Ready condition can remain unchanged. A different
-false Ready reason or failed issuance stays `Degraded`. The
-[guarded Argo command's bounded sync timeout](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts)
-still fails a Certificate that never becomes ready. Ignoring Certificate health
-would let later CA and workload waves race a missing trust Secret, so the
-release does not use that shortcut.
+A counted alarm while watching suppresses that set revision for automatic
+selection.
+Under `automatic` policy it also queues a rollback to the last settled
+selection ([W2](packages/delivery/docs/model.md#419-monitor)). That rollback
+carries a `restoration` approval recorded from the selection it restores, so
+a required-approval environment can recover without waking anyone
+([H5](packages/delivery/docs/model.md#413-approval)). Under `hold` policy the
+environment waits for an operator instead.
 
-Both request shapes remain isolated by numeric sync wave and exact resource
-identity. After explicit child reconciliation completes, the
-[root finalizer](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts)
-reapplies the exact desired tree in isolated wave batches. This restores every
-child auto-sync policy without letting an unhealthy earlier wave hide a later
-one. Unchanged resources again use the exact source, while the self-managed root
-Application alone uses a local override to stay suspended so it cannot launch
-an unowned full-source operation between batches. Only then does the owned
-full-source operation restore the root policy and perform verified pruning.
-That final operation must report the root Application and every prune candidate
-captured before it began; other desired-resource coverage comes from the
-completed batches. A resumed exact prune does not classify new candidates from
-the post-prune tree, because successful candidates are absent by design.
-`finalize-async-sync` for `apps` uses that same prune-result boundary: it
-terminates only a marked full-source prune, requires the root Application in
-the applied result, and reads the prune-candidate inventory persisted on that
-operation instead of reclassifying the post-prune tree.
-Aggregate child health remains deferred to the scoped release gate.
+Promotion reads the monitor too. A set revision promotes out of an environment
+only once its selection there has settled
+([W3](packages/delivery/docs/model.md#419-monitor)). Scout is the first
+consumer: beta uses `hold`, and prod uses `automatic` and promotes only from a
+settled beta ([section 6](packages/delivery/docs/model.md#6-flows)). The
+monitor's shape is in the
+[monitor contract](packages/delivery/src/shared/model/monitor-contract.ts).
 
-This split proof is deliberate. The root chart contains its own Application,
-and ordinary child Applications can be degraded. Argo waits for their health
-before exposing later waves, even after the current wave and all prunes apply.
-Weakening generic sync completeness would risk skipping a genuinely unapplied
-later wave. Proving each desired wave first keeps that safety boundary intact.
+## Why edges replace sync waves
 
-Application health is evaluated by an ArgoCD Lua customization exercised with
-ArgoCD's own executable health-test command. Active operations and unresolved
-terminal failures remain `Progressing` or `Degraded`, while a current
-`Synced`/`Healthy` state wins over stale failed operation history. Only the
-recursive `apps` Application carries `IgnoreHealthCheck=true`; child
-Application health remains an ordering and acceptance signal.
+The root Application ordered everything by sync-wave numbers. A wave says
+"before" without saying why, and it couples every child to one sync. One
+unhealthy child held every later wave.
 
-`IgnoreHealthCheck=true` only removes a resource from an Application's aggregate
-health. ArgoCD's sync engine still gates each wave on the health it computes for
-every resource in that wave, so the root chart's own `apps` Application reads
-`Progressing` for as long as its operation runs and the final full-source
-operation can never reach `Succeeded` by itself. That is why it is terminated
-once applied, and why the self-reference stays in the structural wave rather
-than after the children it manages: the operation has to prove the root apply
-and its prune candidates without waiting on later-wave child health, which the
-completed batches already cover.
+A prerequisite edge states one real contract: this environment deploys only
+after that one has accepted a qualifying selection
+([4.18](packages/delivery/docs/model.md#418-prerequisite-edge)). Admission
+evaluates edges and freezes each prerequisite's accepted selection into the
+deployment ([Z1](packages/delivery/docs/model.md#418-prerequisite-edge)).
+Composition ignores them, so ordering never couples one service's digests to
+another's.
 
-Termination of that self-wait is re-requested rather than requested once.
-ArgoCD terminates an operation by writing `Terminating` into
-`status.operationState`, and the application controller rewrites that whole
-object — phase included — whenever it persists operation progress, so a request
-can be accepted and then silently discarded. The release command repeats the
-request on every poll that still observes a `Running` operation. A discarded
-termination costs more than one build: it leaves the root Application
-permanently busy, and every later build fails its first root sync with `another
-operation is already in progress`.
+Edges are reserved for cluster plumbing. An application that must tolerate an
+old producer or a new consumer gets a compatibility test, not an edge
+([Z3](packages/delivery/docs/model.md#418-prerequisite-edge)). Without a
+declared edge, one service's release never waits on another
+([G3](packages/delivery/docs/model.md#2-guarantees)).
 
-## Why manual global sync preserves child options
+## Why stateful rollbacks are restricted
 
-ArgoCD records a manual sync request in an Application's
-`operation.sync.syncOptions`. A broad request can otherwise omit an option that
-the child declares in `spec.syncPolicy.syncOptions`, turning a routine global
-sync into behavior different from the checked-in Application contract.
+Some changes cannot be undone by redeploying old bytes. A PostgreSQL major
+upgrade, a XenForo migration or a world conversion moves data forward.
 
-A Kubernetes mutating admission policy selects managed child Applications and
-merges the declared options into the requested operation. Options are compared
-by the key before `=`, and the declared value wins. The recursive root is
-excluded to avoid mutating its self-operation. This is why starting a normal
-global sync is supported; the safety setting belongs to the Application, not
-to operator memory.
+The record encodes that instead of relying on memory. A configuration key can
+be `forwardOnly`, and a recipe sub-step can be a `pointOfNoReturn`. Rollback
+candidates that would cross either are excluded, each with its reason
+([D9](packages/delivery/docs/model.md#412-deployment)). The operator rolls
+forward instead of reading recipe JSON during an incident.
 
-A separate validating policy protects deletion. `apps` and `argocd` are
-retained, while another managed child can be deleted only when it carries both
-the cascade lifecycle annotation and Argo resources finalizer. The script still
-renders the exact desired revision to classify prune candidates; admission is
-an independent last line of defense, not a replacement for that proof.
+## Why qualification lives in an environment
+
+Minecraft's extended suites are too heavy for every CI run, so the repository
+keeps them out of CI. They used to be a committer's note. A qualification
+environment, `minecraft/sandbox`, makes them the oracle that gates promotion to
+`minecraft/tsmc` ([X16](packages/delivery/docs/model.md#9-decisions)).
+
+Its tests run as deployment stages on the CI worker node and record their
+results as evidence ([V5](packages/delivery/docs/model.md#414-acceptance)).
+Minecraft is the only consumer, by repository policy
+([E7](packages/delivery/docs/model.md#410-environment)).
+
+## Why some deployments are run by an operator
+
+Some effects cannot run from inside the cluster that Delivery lives in.
+Bootstrap must happen before Delivery exists. A Talos upgrade reboots the only
+production node ([X13](packages/delivery/docs/model.md#9-decisions)). A bad
+admission policy would block the executor that rolls it back
+([X14](packages/delivery/docs/model.md#9-decisions)).
+
+The data layers of Delivery and Temporal are separate services for the same
+reason. An ordinary image or chart deployment can never alter the database
+cluster that records it ([section 6](packages/delivery/docs/model.md#6-flows)).
+
+These are `operator-run` deployments. Delivery records intent before the
+effect, and the operator attaches attested evidence before acceptance
+([section 5](packages/delivery/docs/model.md#5-target-kinds)). The work is
+manual, but it still leaves a deployment, an acceptance and a history
+([G4](packages/delivery/docs/model.md#2-guarantees)).
+
+The attestation comes from its own identity, with an `attest` scope the
+executor never holds. Delivery refuses an attestation from any `execute`
+credential, or from the identity that claimed or renewed the deployment
+([X13](packages/delivery/docs/model.md#9-decisions)).
+An executor that could attest its own stages would be vouching for itself.
+
+## Why a self-hosted upgrade hands off
+
+Delivery, its control plane, Temporal and ArgoCD run the deployments that
+replace them. An executor that upgrades itself cannot also prove the result,
+because the upgrade stops it partway.
+
+A deployment of one of these services first takes a global dispatch barrier:
+new claims stop and queues drain
+([D8](packages/delivery/docs/model.md#412-deployment)). The outgoing executor
+applies the change and leaves the deployment owned, with a handoff marker and
+a lease that cannot expire. One successor Workflow claims that marker, reads
+the frozen record and verifies acceptance. No ordinary claim or lease renewal
+can take the marker, so a deployment never changes executor any other way
+([D7](packages/delivery/docs/model.md#412-deployment)). If the successor
+cannot finish, the deployment ends `recovery-required` with the barrier still
+held. An upgrade that may have broken the executor stops the system rather
+than letting it guess.
+
+## Why public releases are channel deployments
+
+Uploading to a private store is part of a build, because only Delivery reads
+it. Publishing to npm, a public image tag or a plugin listing has an audience,
+so it is a deployment to a `channel`
+([X12](packages/delivery/docs/model.md#9-decisions)).
+
+A published version is permanent. What rolls back is the channel's pointer: a
+dist-tag, a latest release or a feed. A store without a mutable pointer is a
+`forwardOnly` channel, and rollback offers nothing there
+([section 5](packages/delivery/docs/model.md#5-target-kinds)).
+
+## Why ArgoCD stays, and where it stops
+
+GitOps and ArgoCD are separable. The model replaces Git as the source of
+desired state and keeps ArgoCD as the reconciler
+([section 8](packages/delivery/docs/model.md#8-position-on-argocd)).
+
+ArgoCD keeps what is expensive to rebuild: sync operation identity, health
+assessment for operator resources, resource tracking and pruning. Every
+recovery path depends on that operation identity.
+
+What leaves is everything that let Git choose what runs: the root
+Application's authority over its children, floating chart sources, delegation
+annotations and their ignore rules
+([X6](packages/delivery/docs/model.md#9-decisions)). Delivery creates, updates
+and deletes every Application from its recipe's full body. The operator-run
+data layers are the exception, so an ordinary deployment can never rewrite the
+database that records it.
+
+Three conditions keep that safe:
+
+- Human ArgoCD accounts are read-only on Applications; only Delivery syncs.
+  The [break-glass](/how-to/regain-write-access-to-argocd/) is a
+  procedure, not a standing grant.
+- Delivery's recovery reader reads Application objects through the Kubernetes
+  API, so recovery works while ArgoCD is down or upgrading.
+- After acceptance, self-heal runs on the frozen exact source with pruning
+  disabled, so drift is reverted and recorded without a floating source
+  ([T4](packages/delivery/docs/model.md#411-target)).
+
+The decision is revisited if ArgoCD's health model stops covering a workload,
+or if bootstrapping ArgoCD limits cold start. Either change replaces one
+adapter and no primitive.
 
 ## Why apply safety is a preflight
 
-Immutable selector, service, volume-claim-template, and PVC field changes, plus
-mutually exclusive probe-handler swaps, are discoverable from ArgoCD's live and
-target resource states before a child sync starts. `release-root` hard-refreshes
-comparison and performs that read-only analysis. ArgoCD reports managed
-resources against the Application's configured source, so when a sync requests a
-different revision the preflight renders that exact revision and compares the
-live state against it instead. Probe handlers are correlated by container name,
-because Kubernetes merges container lists by name and a reordered or inserted
-container changes no handler. Any finding fails the release
-before submitting the child operation, so the operator sees the exact resource
-and field instead of a partially applied sync. The preflight does not invent a
-fallback or silently replace resources; remediation remains an explicit source
-or operator decision.
+Every `kubernetes-application` recipe runs an `apply-safety` step before its
+single `sync` step; the
+[recipe contract](packages/delivery/src/shared/model/recipe-contract.ts)
+refuses any other order.
+
+Immutable selector, Service, volume-claim-template and PVC changes, and
+probe-handler swaps, are visible from live and target state before a sync
+starts. The [preflight](packages/homelab/scripts/argocd/argocd-apply-safety.ts)
+reports the exact resource and field. A partially applied sync would report
+only a failed operation. The preflight never replaces a resource on its own;
+remediation stays a source or operator decision.
 
 Some changes pass the API server and still destroy data. The preflight refuses
 a Zalando PostgreSQL cluster change that switches its major version or volume
@@ -333,176 +327,29 @@ database or claim loses exactly what those checks protect. Either option by
 itself remains insufficient. This exception is deliberately resource-scoped;
 Application-wide replacement does not bypass the check.
 
-Every desired automated policy includes an explicit `enabled` boolean. The
-[release policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/application-release-policy.ts)
-stages repository charts with `enabled: false`. An empty object also means
-enabled to Argo, but restoring that staged object to `{}` can produce an
-`automated: null` patch that the Application CRD rejects. The
-[artifact-level chart test](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/helm-template.test.ts)
-checks every synthesized Application so the release restores a concrete object.
+## Why the cold-start snapshot never sets acceptance
 
-## Why immutable chart revisions
+Delivery cannot run the steps that must exist before it runs. It can still be
+the record of them. Delivery writes a cold-start snapshot to off-cluster
+storage, and an operator replays the bootstrap chain from it
+([section 6](packages/delivery/docs/model.md#6-flows)).
 
-Charts are published once, under an exact revision, and synced by that revision
-rather than a floating tag.
+The snapshot sets observed selections only
+([X7](packages/delivery/docs/model.md#9-decisions)). A snapshot that set
+acceptance would be a second source of truth. After Delivery returns, it
+compares record, snapshot and live target for every environment. Each mismatch
+holds automatic deployments until an operator accepts the live state with
+evidence or a deployment is accepted there.
 
-A floating tag means "whatever is newest when the sync happens", which makes a
-release non-reproducible and makes a partially published set indistinguishable
-from a complete one.
-
-## Why snapshot consumers precede Temporal
-
-The [ops dashboard](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/observability/alert-dashboard.ts)
-and [TRMNL](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/apps/trmnl-dashboard.ts)
-reconcile before Temporal so their validators accept new snapshot source values
-before the producer emits them. A rebuilt consumer also accepts snapshots from
-the previous producer, preserving collection during the transition.
-
-The final root application release policy assigns these consumers to wave -1
-and Temporal to wave 0. That policy is authoritative over annotations in
-individual constructors. Ordering verification applies the policy before
-synthesizing the root chart, matching the manifests the release planner uses.
-
-Workflow promotion alone cannot protect that boundary. The
-[publish Activity](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/ops/ops-publish.ts)
-reports sources absent from an older Workflow as unknown using its own current
-contract. Updating the infra worker can therefore introduce a source before the
-Workflow deployment changes. Consumer readiness depends on local service
-initialization, allowing that order without a Temporal bootstrap dependency.
-
-## Why a Synced-and-Healthy child still gets retried
-
-Repository-child reconciliation retries a failed operation recorded against
-the current chart revision even when ArgoCD already reports Synced and Healthy.
-External-child reconciliation runs when the complete rendered root source is
-absent from the latest deployment history.
-
-That reads like a bug and is not. A child-level safety setting can make the same
-immutable chart revision safe to retry after a previous apply failed. Without
-the retry, the failed operation would stay recorded and the child would sit in a
-state nobody clears.
-
-## The prune rule, and why it distrusts ArgoCD
-
-This is the most dangerous part of the pipeline, because the failure mode is
-deleting a retained application.
-
-Root pruning does **not** trust ArgoCD's cached `OutOfSync` or
-`requiresPruning` flags. The selective manifest-override sync temporarily marks
-unselected retained children as requiring prune, so those flags describe the
-override rather than the published tree.
-
-Instead the release script renders the exact `apps` revision and treats only
-live child Applications **absent from that rendered set** as prune candidates.
-Each candidate must additionally carry the
-`ci.sjer.red/application-lifecycle: cascade` annotation and the Argo resources
-finalizer.
-
-This is the same principle the repo applies elsewhere: do not validate a
-replacement against the unreliable signal it replaces. The desired state is the
-rendered revision, not ArgoCD's opinion about it.
-
-## Why the final root sync ends after apply
-
-The root app also tracks child Applications that may be deferred or
-independently unhealthy. Waiting synchronously on the root would mean waiting on
-every one of them, and a single permanently unhealthy child would hold the
-release open forever.
-
-So Delivery's [root release Job](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/scripts/jobs/root-release.ts)
-separates root application from release-scoped health. One
-[atomic Argo command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts)
-retains the frozen Delivery request identity while ArgoCD applies the root
-revision. It sends every desired wave as bounded exact-source selections plus
-local overrides only where policy is deliberately rewritten. It compares each
-batch's reported group, kind, and name identities with its exact selection and
-terminates that batch only after all selected resources apply. During
-finalization, the self-managed root is the deliberate override: keeping its
-auto-sync disabled prevents an unowned operation between batches. Only after
-all desired batches complete does the finalizer start a full-source prune. That
-operation must report the restored root and carries the independently validated
-candidates into its completion boundary, requiring each candidate to appear as
-`Pruned` before termination.
-The generic atomic sync path remains stricter: without prior desired-batch
-proof, it still requires every rendered desired identity in the same result.
-
-The identity boundary matters because ArgoCD publishes operation state
-asynchronously. A second process can read before the accepted operation appears.
-Keeping submission and finalization together lets the command poll through that
-gap and distinguish stale state from its own operation.
-
-A retry of the same frozen request reuses its identity. The
-[operation identity implementation](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts)
-adopts only the same request ID and revision. It refuses any unrelated active
-operation. For the root workflow, the active resource selection must also equal
-one exact desired batch or the unselected final prune. Each owned operation
-also persists a `stage`, `batch`, `prune`, or `child` phase marker, so a staging
-batch and a restoration batch over the same resources stay distinguishable, and
-a child reconciliation cannot adopt a selective operation. An
-unselected operation is
-adoptable as the final prune only when that marker says `prune` and Argo's prune
-flag is true, so an older full-source operation cannot borrow prior-batch proof.
-A generated per-operation UUID binds the top-level live operation to its
-completed status. This lets a retry accept a stable, fully applied result while
-rejecting stale status from an earlier POST with the same request identity.
-Recovery is the same `release-root` command with the same request id, not a
-second public finalizer command. It recognizes only operations whose request
-identity, exact revision, selected resources, phase marker, and prune mode fit
-the expected step. An unrelated operation remains a hard failure.
-
-After termination, the top-level live operation is authoritative. Its absence
-means the health wait is gone even if `status.operationState` still says
-`Running` or `Terminating`; a different operation UUID in live or completed
-state still proves replacement and fails the release. Natural success uses the
-[same boundary](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts):
-a `Succeeded` status does not finish the command until the live operation
-clears.
-
-Without this atomic boundary, a root operation stuck in `Running` blocks the
-next ordered release indefinitely. Treating missing operation state as success
-is therefore unsafe even when every manifest was applied.
-
-## Why image selection looks complicated
-
-Publication and workload pulls use separate identities. First-party images
-use Docker Hub with separate management, publishing, runtime-reader, and Renovate
-identities. OpenTofu owns visibility and scopes. The
-[registry catalog](https://github.com/shepherdjerred/monorepo/blob/main/packages/version-catalog/src/image-registry.json)
-is the visibility authority; compiler distribution is the public exception.
-
-The [publication flow](https://github.com/shepherdjerred/monorepo/tree/main/ci/scripts/images)
-checks anonymous access at each pushed digest. Exposed private images and
-inaccessible public compilers fail the release. Source-label and exact-image
-smoke checks remain required before recording immutable publications. Kubernetes pulls
-use only the reader identity. Separate encrypted OpenTofu states keep token
-management outside CI. Recovery lives in
-[Cut a homelab release](/how-to/cut-a-homelab-release/#recover-a-delivery-operation).
-
-Forum backup metadata retains its GHCR runtime identity string. Its digest
-identifies the copied image, while Kubernetes pulls from Docker Hub. This keeps
-existing snapshots compatible with retained binaries' strict restore checks.
-The [forum release chart](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/storm-forum/index.ts)
-keeps transport references and backup identities separate.
-
-Application image comparison uses a successful producing pipeline whose image
-and chart publication workflows both completed. A green pipeline with skipped
-producers cannot supply the baseline. The image job validates that pipeline's
-commit against a bounded window of history. Missing ancestry causes a full build.
-
-Producer handoffs retain unchanged image inputs with their original digests and
-source identities. They never turn a retained deployment into a fresh build.
-Delivery independently qualifies the complete producing pipeline before those
-artifacts become eligible for selection. A successful build can therefore remain
-undeployed, and deploying an older retained version does not change build metadata.
-
-The language-neutral version catalog holds upstream and toolchain dependencies.
-Its parser and CDK8s projection validate those contracts. First-party charts
-require frozen Delivery parameters; root-owned dependencies are bound to original
-published artifacts in immutable chart bytes. Selected application
-versions, worker routing, rollback history, and approvals belong to PostgreSQL.
-Image publication performs no deployment commit-back and maintains no Git queue.
+The operator reads the snapshot, not Delivery. The API holds no credential to
+the off-cluster bucket, which also holds the cluster's backups. It checks that
+the snapshot it is handed carries the writer's fingerprint and names its own
+immutable copy.
 
 ## Related
 
-- [Cut a homelab release](/how-to/cut-a-homelab-release/) — reading a live release
+- [Cut a homelab release](/how-to/cut-a-homelab-release/)
+- [Restore the Delivery record](/how-to/restore-the-delivery-record/)
+- [Delivery model reference](/reference/delivery-model/)
+- [How the Delivery hub follows a change](/explanation/homelab/delivery-hub/)
 - [About the homelab](/explanation/homelab/overview/)
