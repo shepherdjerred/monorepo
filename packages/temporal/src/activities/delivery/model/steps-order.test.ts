@@ -192,7 +192,15 @@ describe.each(dependents)(
       ).rejects.toMatchObject(misordered);
       expect(state.ran).toEqual([]);
     });
+  },
+);
 
+// A plugin archive step's release deploys no other Application (the recipe
+// contract's ARCHIVE_ALONE), so only the site and forum steps share a
+// compound with another Application's sync.
+describe.each(dependents.filter(({ kind }) => kind !== "archive"))(
+  "a compound's $kind step order (T3)",
+  ({ kind, step }) => {
     test("a compound sub-recipe's step waits for that sub-recipe's own sync", async () => {
       await expect(
         runSettled(behindAnotherSync(application(step, 2)), kind),

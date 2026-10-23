@@ -39,12 +39,32 @@ describe("specializedStageKey (T3)", () => {
   });
 
   test("a compound recipe's step settles under its sub-recipe's prefixed key", () => {
-    const compound = RecipeDefinitionSchema.parse({
+    const sites = RecipeDefinitionSchema.parse({
       kind: "compound",
       subRecipes: [
         {
           instance: "application:scout",
           definition: application("scout", siteStep),
+        },
+        { instance: "application:one", definition: application("one") },
+      ],
+    });
+    // An archive step's release deploys no other Application, so its
+    // compound's other members are not Applications.
+    const plugins = RecipeDefinitionSchema.parse({
+      kind: "compound",
+      subRecipes: [
+        {
+          instance: "bucket:trmnl-docs",
+          definition: {
+            kind: "static-site",
+            archiveComponent: "archive:trmnl-docs",
+            bucket: "trmnl-docs",
+            verification: {
+              url: "https://trmnl.sjer.red/",
+              expectedStatus: 200,
+            },
+          },
         },
         {
           instance: "application:trmnl",
@@ -53,10 +73,10 @@ describe("specializedStageKey (T3)", () => {
       ],
     });
     // The executor's keys: `sub<position>-<step key>` (lib/delivery/model/recipe.ts).
-    expect(specializedStageKey(compound, "static-site")).toBe(
+    expect(specializedStageKey(sites, "static-site")).toBe(
       "sub1-step-static-site",
     );
-    expect(specializedStageKey(compound, "archive")).toBe("sub2-step-archive");
+    expect(specializedStageKey(plugins, "archive")).toBe("sub2-step-archive");
   });
 
   test("a compound recipe without the step names none", () => {

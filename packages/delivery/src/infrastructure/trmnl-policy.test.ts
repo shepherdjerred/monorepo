@@ -1,16 +1,17 @@
 import { describe, expect, test } from "vitest";
 import { VersionSetRevisionSchema } from "#shared/contract.ts";
 import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
+import { ARCHIVE_ALONE } from "#shared/model/step-order.ts";
 import { applicationRecipe } from "#testing/catalog-fixture.ts";
 import { validateTrmnlSelection } from "./trmnl-policy.ts";
 
+const archiveStep = {
+  kind: "archive",
+  archiveComponent: "archive:trmnl-plugins",
+};
+
 function application(name: string, archive: boolean) {
-  return applicationRecipe(
-    name,
-    archive
-      ? [{ kind: "archive", archiveComponent: "archive:trmnl-plugins" }]
-      : [],
-  );
+  return applicationRecipe(name, archive ? [archiveStep] : []);
 }
 
 /** The dashboard's selection with its first-party plugin archive. */
@@ -44,8 +45,16 @@ describe("TRMNL plugin selection (T3)", () => {
       kind: "compound",
       subRecipes: [
         {
-          instance: "application:scout",
-          definition: application("scout", false),
+          instance: "bucket:trmnl-docs",
+          definition: {
+            kind: "static-site",
+            archiveComponent: "archive:trmnl-docs",
+            bucket: "trmnl-docs",
+            verification: {
+              url: "https://trmnl.sjer.red/",
+              expectedStatus: 200,
+            },
+          },
         },
         {
           instance: "application:trmnl-dashboard",
@@ -65,21 +74,30 @@ describe("TRMNL plugin selection (T3)", () => {
 
   test("a second archive step after the dashboard's is refused", () => {
     // The dashboard's step is first, so a first-occurrence check would admit it.
-    const compound = RecipeDefinitionSchema.parse({
+    const twice = RecipeDefinitionSchema.parse(
+      applicationRecipe("trmnl-dashboard", [archiveStep, archiveStep]),
+    );
+    expect(() => validateTrmnlSelection(twice, selected)).toThrow(
+      /exactly one archive step/u,
+    );
+  });
+
+  test("an archive step's release deploys no other Application, which its recovery could not read back", () => {
+    const shared = RecipeDefinitionSchema.safeParse({
       kind: "compound",
       subRecipes: [
+        {
+          instance: "application:scout",
+          definition: application("scout", false),
+        },
         {
           instance: "application:trmnl-dashboard",
           definition: application("trmnl-dashboard", true),
         },
-        {
-          instance: "application:scout",
-          definition: application("scout", true),
-        },
       ],
     });
-    expect(() => validateTrmnlSelection(compound, selected)).toThrow(
-      /exactly one archive step/u,
-    );
+    expect(shared.error?.issues.map((issue) => issue.message)).toEqual([
+      ARCHIVE_ALONE,
+    ]);
   });
 });

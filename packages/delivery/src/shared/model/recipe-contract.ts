@@ -11,7 +11,11 @@ import { IdentifierSchema } from "#shared/artifact-contract.ts";
 import { MonitorSchema } from "./monitor-contract.ts";
 import { StaticSitePolicySchema } from "#shared/static-site-contract.ts";
 import { WorkerPoolTargetSchema } from "#shared/worker-contract.ts";
-import { misplacedUpgrades, contentStepRefusals } from "./step-order.ts";
+import {
+  contentStepRefusals,
+  misplacedUpgrades,
+  sharedArchiveRelease,
+} from "./step-order.ts";
 import { OperatorHostTargetSchema } from "./operator-run-contract.ts";
 
 /**
@@ -494,9 +498,13 @@ export const CompoundRecipeSchema = z
     "A Tofu stack is its own recipe; a compound recipe holds no tofu sub-recipe",
   )
   .superRefine((recipe, context) => {
-    for (const message of contentStepRefusals(
-      recipe.subRecipes.flatMap((sub) => applicationSteps(sub.definition)),
-    ))
+    const applications = recipe.subRecipes
+      .map((sub) => applicationSteps(sub.definition))
+      .filter((steps) => steps.length > 0);
+    for (const message of [
+      ...contentStepRefusals(applications.flat()),
+      ...sharedArchiveRelease(applications),
+    ])
       context.addIssue({ code: "custom", message });
   });
 
