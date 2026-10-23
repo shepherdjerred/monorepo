@@ -16,6 +16,7 @@ import {
   monitorEvidence,
   rebindChanges,
   retryable,
+  specializedRecoveryShown,
 } from "./view.ts";
 
 // The hub client resolves its API origin from the page; static rendering has none.
@@ -270,6 +271,34 @@ describe("deployment model", () => {
     expect(html).toContain("/recovery-intents/scout-prod-37/recovery/1");
     expect(html).toContain("Intent 2");
     expect(html).toContain("pending");
+  });
+
+  test("a model Tofu deployment's platform intent stays listed, since no specialized panel shows it", () => {
+    const quarantined = fixtures.deploymentDetails.find(
+      (detail) => detail.recoveryIntents.length > 0,
+    );
+    if (quarantined === undefined) throw new Error("fixture detail");
+    const platform = {
+      ...fixtures.recoveryIntents.pending,
+      id: "scout-prod-37/recovery/3",
+      kind: "platform" as const,
+      sequence: 3,
+    };
+    // A model Tofu recipe records no legacy platform or control-plane snapshot.
+    const detail = {
+      ...quarantined,
+      deployment: {
+        ...quarantined.deployment,
+        recoveryRequired: true,
+        platformSnapshot: null,
+        controlPlaneSnapshot: null,
+      },
+      recoveryIntents: [platform],
+    };
+    expect(specializedRecoveryShown(detail, "platform")).toBe(false);
+    const html = render(<DeploymentModel detail={detail} />);
+    expect(html).toContain("/recovery-intents/scout-prod-37/recovery/3");
+    expect(html).not.toContain("No inspection has been requested");
   });
 });
 

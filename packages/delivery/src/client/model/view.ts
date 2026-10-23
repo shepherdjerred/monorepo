@@ -8,10 +8,51 @@ import {
   type Selection,
 } from "#shared/model/contract.ts";
 import { RETRYABLE_DEPLOYMENT_KINDS } from "#shared/deployment-request-contract.ts";
+import type { RecoveryIntentKind } from "#shared/recovery-intent.ts";
 
 const RETRYABLE_KINDS: ReadonlySet<string> = new Set(
   RETRYABLE_DEPLOYMENT_KINDS,
 );
+
+/**
+ * Whether the deployment page's own panel shows this kind of recovery: the
+ * guards of `PlatformRecovery`, `MinecraftRecovery` and `ContentRecovery`.
+ * Every other intent, a model recipe's included, stays in the generic list.
+ */
+export function specializedRecoveryShown(
+  detail: Pick<DeploymentDetailV2, "deployment" | "pipeline">,
+  kind: RecoveryIntentKind,
+): boolean {
+  const definition = detail.pipeline.definition;
+  switch (kind) {
+    case "platform": {
+      return (
+        detail.deployment.platformSnapshot !== null ||
+        detail.deployment.controlPlaneSnapshot !== null
+      );
+    }
+    case "minecraft": {
+      return (
+        definition.kind === "argocd" &&
+        definition.minecraftUpgrade !== undefined &&
+        definition.minecraftUpgrade.releaseMode !== "retained-volume-restart"
+      );
+    }
+    case "content": {
+      return (
+        definition.kind === "static-site" ||
+        (definition.kind === "argocd" &&
+          (definition.forumRelease !== undefined ||
+            definition.scoutSite !== undefined))
+      );
+    }
+    case "argo":
+    case "worker":
+    case "forum-baseline": {
+      return false;
+    }
+  }
+}
 
 /** Whether the hub offers a retry: a failed or canceled deployment of a kind the API retries. */
 export function retryable(deployment: { kind: string; status: string }) {

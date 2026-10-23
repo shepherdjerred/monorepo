@@ -8,6 +8,7 @@ import type {
 import { queries } from "#client/queries.ts";
 import { Status } from "#client/components/status.tsx";
 import { RelativeTime } from "#client/components/time.tsx";
+import { specializedRecoveryShown } from "./view.ts";
 import {
   DeploymentLink,
   QueryPanel,
@@ -126,13 +127,6 @@ function ApprovalRecord({ approval }: { approval: ApprovalV2 }) {
   );
 }
 
-/** Kinds whose own panel on the deployment page shows the intent with its native evidence. */
-const SPECIALIZED_RECOVERY = new Set<RecoveryIntentV2["kind"]>([
-  "minecraft",
-  "platform",
-  "content",
-]);
-
 function RecoveryIntents({
   intents,
   recoveryRequired,
@@ -185,13 +179,25 @@ export function DeploymentModel({ detail }: { detail: DeploymentDetailV2 }) {
       )}
       <RecoveryIntents
         intents={detail.recoveryIntents.filter(
-          (intent) => !SPECIALIZED_RECOVERY.has(intent.kind),
+          // A specialized panel shows its intent with native evidence; a
+          // shape it does not render, such as a model Tofu recipe's platform
+          // recovery, stays listed here.
+          (intent) => !specializedRecoveryShown(detail, intent.kind),
         )}
         recoveryRequired={
           detail.deployment.recoveryRequired &&
-          detail.minecraftRecoveries.length === 0 &&
-          detail.platformRecoveries.length === 0 &&
-          detail.contentRecoveries.length === 0
+          !(
+            specializedRecoveryShown(detail, "minecraft") &&
+            detail.minecraftRecoveries.length > 0
+          ) &&
+          !(
+            specializedRecoveryShown(detail, "platform") &&
+            detail.platformRecoveries.length > 0
+          ) &&
+          !(
+            specializedRecoveryShown(detail, "content") &&
+            detail.contentRecoveries.length > 0
+          )
         }
       />
     </>
