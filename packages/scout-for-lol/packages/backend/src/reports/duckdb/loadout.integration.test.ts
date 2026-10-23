@@ -138,12 +138,71 @@ describe("loadout columns", () => {
     });
   });
 
+  test("a build is named by its completed items only", async () => {
+    const result = await byLabel({
+      outputs: [COUNT_OUTPUT],
+      where: eq("win", true),
+      groupings: [{ kind: "column", column: "core_items", name: "core_items" }],
+    });
+    // G1's Long Sword is a component, so the build is its one legendary. G3
+    // held nothing; G4's unknown id might be the legendary itself.
+    expect(result).toEqual({ "Infinity Edge": [1], unknown: [2] });
+  });
+
   test("a raw id filters like any column", async () => {
     const { rows } = await query({
       outputs: [COUNT_OUTPUT],
       where: eq("perk0", 8112),
     });
     expect(rows.map((row) => number_(row["expr_0"]))).toEqual([1]);
+  });
+});
+
+describe("core items and boots in a real inventory", () => {
+  // The prod "best Brand build" grouped the whole final inventory, so a short
+  // game's Health Potion and support item won. A build is its completed items.
+  let mixed: LakeFiles;
+
+  beforeAll(async () => {
+    mixed = await writeTempTestLake("scoutql-core-items-", {
+      serverId: SERVER_ID,
+      matchFacts: [
+        // Sorcerer's Shoes, Rylai's, Health Potion, Doran's Shield.
+        game(0, { win: true, items: [3020, 3116, 2003, 1054] }),
+        // A remake's inventory: a potion and World Atlas.
+        game(1, { win: true, items: [2003, 3865] }),
+      ],
+    });
+  });
+
+  test("core_items keeps the legendary and drops starters, potions and boots", async () => {
+    const { rows, compiled } = await query(
+      {
+        outputs: [COUNT_OUTPUT],
+        groupings: [
+          { kind: "column", column: "core_items", name: "core_items" },
+        ],
+      },
+      mixed,
+    );
+    expect(
+      Object.fromEntries(
+        rows.map((row) => [String(row[compiled.columns.label]), 1]),
+      ),
+    ).toEqual({ "Rylai's Crystal Scepter": 1, unknown: 1 });
+  });
+
+  test("boots names the completed boots", async () => {
+    const { rows, compiled } = await query(
+      {
+        outputs: [COUNT_OUTPUT],
+        groupings: [{ kind: "column", column: "boots", name: "boots" }],
+      },
+      mixed,
+    );
+    expect(
+      rows.map((row) => String(row[compiled.columns.label])).toSorted(),
+    ).toEqual(["Sorcerer's Shoes", "unknown"]);
   });
 });
 

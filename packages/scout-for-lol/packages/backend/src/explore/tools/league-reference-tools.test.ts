@@ -19,6 +19,14 @@ describe("League reference tools", () => {
     expect(result).toContain("Tree: Domination");
   });
 
+  test("lists a whole rune tree by slot for building a page", () => {
+    const result = lookupRuneText({ rune: "sorcery" });
+    expect(result).toContain("Rune tree: Sorcery");
+    expect(result).toMatch(/Keystones: .*Arcane Comet/);
+    expect(result).toMatch(/Slot 1: .*Manaflow Band/);
+    expect(result).toMatch(/Slot 3: /);
+  });
+
   test("returns summoner spell modes and cooldown", () => {
     const result = lookupSummonerSpellText({ spell: "Flash" });
     expect(result).toContain("Summoner spell: Flash");

@@ -25,7 +25,7 @@ tripwires:
 
 Use `match_participants` for a player's match-level loadout. Its physical columns include `item0` through `item6`, `summoner1_id`, `summoner2_id`, `perk_primary_style`, `perk_sub_style`, `perk0` through `perk5`, and the three `stat_perk_*` shards. Named columns include `items`, `summoner1`, `summoner2`, `spells`, `keystone`, `primary_tree`, and `secondary_tree`.
 
-Use item slots to inspect what one player finished with. `items` is the combined final inventory label. The spell and rune name columns describe that participant's one spell pair and rune page. A single participant's loadout is not a `player_groups` fact.
+Use item slots to inspect what one player finished with. `items` is the combined final inventory label, starters and potions included; `core_items` names the same inventory by its completed items only, and `boots` its completed boots. To recommend a build across games, load the builds skill. The spell and rune name columns describe that participant's one spell pair and rune page. A single participant's loadout is not a `player_groups` fact.
 
 ScoutQL can group `keystone` and `spells` from `match_participants`, and `item_id` from `timeline_events`. For purchase frequency, filter `timeline_events` with `event_type = 'ITEM_PURCHASED'` and group by `item_id`; state that the result covers only matches whose timelines Scout has. It cannot unpivot the six final-inventory slots into one row per item or aggregate an ordered build path across every match. Do not answer final-inventory frequency or ordered-path questions from those unavailable shapes. Offer a supported purchase-event comparison, a single-value comparison, or a specific game's loadout instead.
 

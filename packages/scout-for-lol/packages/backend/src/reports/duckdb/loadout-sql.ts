@@ -29,6 +29,17 @@ const ITEM_JOINS: NameJoin[] = [0, 1, 2, 3, 4, 5].map((slot) => ({
   idColumn: `item${slot.toString()}`,
 }));
 
+const CORE_ITEM_JOINS: NameJoin[] = [0, 1, 2, 3, 4, 5].map((slot) => ({
+  alias: `lc${slot.toString()}`,
+  kind: "core_item",
+  idColumn: `item${slot.toString()}`,
+}));
+const BOOTS_JOINS: NameJoin[] = [0, 1, 2, 3, 4, 5].map((slot) => ({
+  alias: `lb${slot.toString()}`,
+  kind: "boots_item",
+  idColumn: `item${slot.toString()}`,
+}));
+
 const SPELL1: NameJoin = {
   alias: "ls1",
   kind: "spell",
@@ -53,6 +64,27 @@ function sortedNames(joins: NameJoin[]): string {
   return `CASE WHEN ${unknownPopulatedIds} THEN NULL ELSE array_to_string(list_sort([${names}]), ' + ') END`;
 }
 
+/** Any populated slot whose id the bundled data does not know. */
+function unknownItem(joins: NameJoin[]): string {
+  return joins
+    .map(
+      (join) =>
+        `(m.${join.idColumn} IS NOT NULL AND m.${join.idColumn} <> 0 AND ${join.alias}.name IS NULL)`,
+    )
+    .join(" OR ");
+}
+
+/**
+ * The names a tier join found, in name order, or NULL when there are none.
+ *
+ * Unknown ids still make the whole value NULL, as `items` does: an item newer
+ * than the bundled data might be the very legendary the build is named by.
+ */
+function tierNames(tierJoins: NameJoin[]): string {
+  const names = tierJoins.map((join) => `${join.alias}.name`).join(", ");
+  return `CASE WHEN ${unknownItem(ITEM_JOINS)} THEN NULL ELSE NULLIF(array_to_string(list_sort(list_filter([${names}], x -> x IS NOT NULL)), ' + '), '') END`;
+}
+
 const NAME_COLUMNS: Record<string, { joins: NameJoin[]; sql: string }> = {
   keystone: {
     joins: [{ alias: "lk", kind: "rune", idColumn: "perk0" }],
@@ -72,6 +104,14 @@ const NAME_COLUMNS: Record<string, { joins: NameJoin[]; sql: string }> = {
   summoner2: { joins: [SPELL2], sql: "ls2.name" },
   spells: { joins: SPELL_JOINS, sql: sortedNames(SPELL_JOINS) },
   items: { joins: ITEM_JOINS, sql: sortedNames(ITEM_JOINS) },
+  core_items: {
+    joins: [...ITEM_JOINS, ...CORE_ITEM_JOINS],
+    sql: tierNames(CORE_ITEM_JOINS),
+  },
+  boots: {
+    joins: [...ITEM_JOINS, ...BOOTS_JOINS],
+    sql: tierNames(BOOTS_JOINS),
+  },
 };
 
 /** The name columns, each with the loadout ids it is looked up from. */

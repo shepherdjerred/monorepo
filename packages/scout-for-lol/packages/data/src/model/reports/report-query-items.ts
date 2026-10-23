@@ -34,11 +34,31 @@ const LEGENDARY_GOLD = 2000;
 /** Starters (Doran's, support and jungle starters) are cheap and build from nothing. */
 const STARTER_GOLD = 500;
 
+function isBootsTagged(id: string): boolean {
+  return items.data[id]?.tags.includes("Boots") === true;
+}
+
+/**
+ * Completed boots, told apart from the 300-gold Boots they build from.
+ *
+ * Data Dragon tags both "Boots". Basic Boots builds from nothing; every
+ * finished pair builds from it. An upgrade built from finished boots (Gunmetal
+ * Greaves, from Berserker's) is boots too, even where the catalog drops the
+ * tag.
+ */
+function bootsTier(item: ItemData): ItemTier | null {
+  const buildsFromBoots = (item.from ?? []).some((id) => isBootsTagged(id));
+  if (item.tags.includes("Boots"))
+    return buildsFromBoots || (item.from ?? []).length > 0 ? "boots" : "basic";
+  return buildsFromBoots ? "boots" : null;
+}
+
 function tierOf(item: ItemData): ItemTier {
   const tags = new Set(item.tags);
   if (tags.has("Trinket")) return "trinket";
   if (tags.has("Consumable")) return "consumable";
-  if (tags.has("Boots")) return "boots";
+  const boots = bootsTier(item);
+  if (boots !== null) return boots;
   const builds = (item.into ?? []).length > 0;
   const buildsFrom = (item.from ?? []).length > 0;
   if (!builds && (buildsFrom || item.gold.total >= LEGENDARY_GOLD)) {

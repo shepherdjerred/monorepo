@@ -11,7 +11,14 @@ import { reportItemCatalog } from "#src/model/reports/report-query-items.ts";
  * which groups as 'unknown', never a guess.
  */
 
-export type LoadoutNameKind = "rune" | "rune_tree" | "spell" | "item";
+export type LoadoutNameKind =
+  | "rune"
+  | "rune_tree"
+  | "spell"
+  | "item"
+  /** Completed items only — what `core_items` names a build by. */
+  | "core_item"
+  | "boots_item";
 
 export type LoadoutName = {
   kind: LoadoutNameKind;
@@ -54,5 +61,21 @@ export function reportLoadoutNames(): LoadoutName[] {
     name: item.name,
     assetKey: rawId,
   }));
-  return [...trees, ...perks, ...spells, ...items];
+  // The same items again under the tiers a build is named by, so `core_items`
+  // and `boots` can drop starters, consumables and components with a join
+  // rather than by guessing from a name.
+  const tiered = reportItemCatalog().flatMap(
+    ({ rawId, item }): LoadoutName[] =>
+      item.tier === "legendary" || item.tier === "boots"
+        ? [
+            {
+              kind: item.tier === "legendary" ? "core_item" : "boots_item",
+              id: rawId,
+              name: item.name,
+              assetKey: rawId,
+            },
+          ]
+        : [],
+  );
+  return [...trees, ...perks, ...spells, ...items, ...tiered];
 }

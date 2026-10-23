@@ -5,18 +5,18 @@
   "model": "gpt-5.6-luna",
   "judgeModel": "gpt-5.6-terra",
   "lakeBuildId": "1792633804115-0017-scenarios",
-  "generatedAt": "2026-10-22T04:21:34.081Z",
+  "generatedAt": "2026-10-22T04:47:25.128Z",
   "passed": false,
   "summary": {
     "runs": 40,
-    "passedRuns": 31,
+    "passedRuns": 35,
     "failedControls": [],
     "checks": {
       "passed": 215,
       "total": 218
     },
     "rubric": {
-      "met": 102,
+      "met": 110,
       "total": 116
     }
   },
@@ -373,7 +373,7 @@
       "caseId": "feed-by-username",
       "surface": "web",
       "control": false,
-      "passed": true,
+      "passed": false,
       "turns": [
         {
           "index": 0,
@@ -385,7 +385,7 @@
             },
             {
               "name": "intent:subscription",
-              "passed": true
+              "passed": false
             },
             {
               "name": "avoids:numeric discord",
@@ -409,7 +409,7 @@
             }
           ],
           "rubric": [true, true, true],
-          "passed": true
+          "passed": false
         }
       ]
     },
@@ -761,7 +761,7 @@
       "caseId": "add-tracked-player-discord",
       "surface": "discord",
       "control": false,
-      "passed": true,
+      "passed": false,
       "turns": [
         {
           "index": 0,
@@ -788,8 +788,8 @@
               "passed": true
             }
           ],
-          "rubric": [true, true],
-          "passed": true
+          "rubric": [false, true],
+          "passed": false
         },
         {
           "index": 1,
@@ -1033,7 +1033,7 @@
       "caseId": "best-build",
       "surface": "web",
       "control": false,
-      "passed": false,
+      "passed": true,
       "turns": [
         {
           "index": 0,
@@ -1064,8 +1064,8 @@
               "passed": true
             }
           ],
-          "rubric": [false, false, false],
-          "passed": false
+          "rubric": [true, true, true],
+          "passed": true
         }
       ]
     },
@@ -1073,7 +1073,7 @@
       "caseId": "best-build",
       "surface": "discord",
       "control": false,
-      "passed": false,
+      "passed": true,
       "turns": [
         {
           "index": 0,
@@ -1104,8 +1104,8 @@
               "passed": true
             }
           ],
-          "rubric": [true, false, false],
-          "passed": false
+          "rubric": [true, true, true],
+          "passed": true
         }
       ]
     },
@@ -1113,7 +1113,7 @@
       "caseId": "best-build",
       "surface": "voice",
       "control": false,
-      "passed": false,
+      "passed": true,
       "turns": [
         {
           "index": 0,
@@ -1144,8 +1144,8 @@
               "passed": true
             }
           ],
-          "rubric": [true, false, true],
-          "passed": false
+          "rubric": [true, true, true],
+          "passed": true
         }
       ]
     },
@@ -1153,7 +1153,7 @@
       "caseId": "rune-page",
       "surface": "web",
       "control": false,
-      "passed": true,
+      "passed": false,
       "turns": [
         {
           "index": 0,
@@ -1176,8 +1176,8 @@
               "passed": true
             }
           ],
-          "rubric": [true, true],
-          "passed": true
+          "rubric": [false, true],
+          "passed": false
         }
       ]
     },
@@ -1277,15 +1277,15 @@
       "caseId": "game-review",
       "surface": "discord",
       "control": false,
-      "passed": false,
+      "passed": true,
       "turns": [
         {
           "index": 0,
-          "status": "error",
+          "status": "ok",
           "checks": [
             {
               "name": "answered",
-              "passed": false
+              "passed": true
             },
             {
               "name": "no-numeric-id-request",
@@ -1296,8 +1296,8 @@
               "passed": true
             }
           ],
-          "rubric": [false, false, false],
-          "passed": false
+          "rubric": [true, true, true],
+          "passed": true
         }
       ]
     },
@@ -1333,7 +1333,7 @@
       "caseId": "current-meta",
       "surface": "web",
       "control": false,
-      "passed": false,
+      "passed": true,
       "turns": [
         {
           "index": 0,
@@ -1356,8 +1356,8 @@
               "passed": true
             }
           ],
-          "rubric": [false, true, true],
-          "passed": false
+          "rubric": [true, true, true],
+          "passed": true
         }
       ]
     },
@@ -1365,7 +1365,7 @@
       "caseId": "current-meta",
       "surface": "discord",
       "control": false,
-      "passed": false,
+      "passed": true,
       "turns": [
         {
           "index": 0,
@@ -1388,8 +1388,8 @@
               "passed": true
             }
           ],
-          "rubric": [false, true, true],
-          "passed": false
+          "rubric": [true, true, true],
+          "passed": true
         }
       ]
     },
@@ -1397,7 +1397,7 @@
       "caseId": "current-meta",
       "surface": "voice",
       "control": false,
-      "passed": false,
+      "passed": true,
       "turns": [
         {
           "index": 0,
@@ -1420,8 +1420,8 @@
               "passed": true
             }
           ],
-          "rubric": [false, true, true],
-          "passed": false
+          "rubric": [true, true, true],
+          "passed": true
         }
       ]
     },
@@ -1452,7 +1452,7 @@
               "passed": false
             }
           ],
-          "rubric": [false, true],
+          "rubric": [false, false],
           "passed": false
         }
       ]
@@ -1484,7 +1484,7 @@
               "passed": false
             }
           ],
-          "rubric": [false, true],
+          "rubric": [false, false],
           "passed": false
         }
       ]

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { RawMatchSchema, RawTimelineSchema } from "@scout-for-lol/data";
-import { summarizeRecordedMatch } from "./match-review.ts";
+import { recordedMatchRoster, summarizeRecordedMatch } from "./match-review.ts";
 
 async function fixture() {
   const match = RawMatchSchema.parse(
@@ -219,4 +219,24 @@ test("large identity labels shrink event pages without losing events", async () 
     offset = page.selectedEvents.nextOffset;
   }
   expect(collected).toHaveLength(25);
+});
+
+test("the roster names every participant to choose from", async () => {
+  const { match, target, data } = await fixture();
+  const result = recordedMatchRoster(data, match.metadata.matchId);
+  if (!result.ok) throw new Error(result.message);
+  expect(result.participants).toHaveLength(match.info.participants.length);
+  expect(result.participants).toContainEqual(
+    expect.objectContaining({
+      participantId: target.participantId,
+      champion: "Ezreal",
+    }),
+  );
+});
+
+test("the roster says when Scout has no stored match", async () => {
+  const { match } = await fixture();
+  expect(
+    recordedMatchRoster({ documents: [] }, match.metadata.matchId),
+  ).toMatchObject({ ok: false });
 });

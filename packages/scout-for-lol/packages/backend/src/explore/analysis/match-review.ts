@@ -194,6 +194,27 @@ function timelineCoverage(
   };
 }
 
+/** Who played a stored game, to choose the participant to review. */
+export function recordedMatchRoster(data: unknown, matchId: RiotMatchId) {
+  const rawMatch = DocumentsSchema.parse(data).documents.find(
+    (d) => d.matchId === matchId && d.kind === "match",
+  );
+  if (rawMatch === undefined)
+    return {
+      ok: false as const,
+      message: "Scout has no stored match document for this game.",
+    };
+  const match = RawMatchSchema.parse(rawMatch.document);
+  if (match.metadata.matchId !== matchId)
+    throw new Error("Raw match identity differs from the selected game.");
+  return {
+    ok: true as const,
+    participants: roster(match),
+    message:
+      "Call review_match again with the reviewed player's participantId and offset 0.",
+  };
+}
+
 /** Deterministic facts for a selected game; never infers gameplay causes. */
 export function summarizeRecordedMatch(
   data: unknown,
