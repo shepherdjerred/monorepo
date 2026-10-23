@@ -38,6 +38,7 @@ import {
   requireDispatchBarrier,
 } from "#infrastructure/execution/admission.ts";
 import { requireNoContentBarrier } from "#infrastructure/content-recovery/ownership.ts";
+import { staleSource } from "#infrastructure/selection/selection.ts";
 import {
   expireApproval,
   leaseExpiry,
@@ -71,15 +72,18 @@ type ClaimInput = {
   concurrency: number;
 };
 
-/** A request whose binding generation moved fails before any effect (E2, H2). */
-async function rejectStale(tx: Transaction, input: ClaimInput) {
+/**
+ * A request whose binding generation moved, or whose promotion source no
+ * longer holds its set, fails before any effect (E2, H2, M2).
+ */
+async function rejectStale(
+  tx: Transaction,
+  input: ClaimInput,
+  message = "Deployment inputs are stale; request a new deployment",
+) {
   await tx.deployment.update({
     where: { id: input.deploymentId },
-    data: {
-      status: "failed",
-      message: "Deployment inputs are stale; request a new deployment",
-      finishedAt: new Date(),
-    },
+    data: { status: "failed", message, finishedAt: new Date() },
   });
   await expireApproval(tx, input.deploymentId);
   await tx.outbox.deleteMany({ where: { deploymentId: input.deploymentId } });
@@ -88,7 +92,7 @@ async function rejectStale(tx: Transaction, input: ClaimInput) {
     entityId: input.deploymentId,
     requestId: id(),
   });
-  return { status: "rejected" } as const;
+  return { status: "rejected", message } as const;
 }
 
 /** Every instance lock the deployment needs must be free or already its own (T1). */
@@ -147,6 +151,10 @@ async function admitQueued(
   await lock(tx, `environment:${row.environmentId}`);
   const env = await environment(tx, row.environmentId);
   if (env.generation !== row.expectedGeneration) return rejectStale(tx, input);
+  // A promote or an eligible deploy still takes its source's current,
+  // settled acceptance when it is admitted, not only when requested (M2).
+  const stale = await staleSource(tx, row, env);
+  if (stale !== null) return rejectStale(tx, input, stale);
   if (env.activeDeploymentId !== null)
     throw new DeliveryError("BUSY", "Environment has an active deployment");
   const running = await tx.deployment.count({
@@ -298,9 +306,6 @@ export async function claim(
     admitClaim.call(this, tx, input),
   );
   if (admission.status === "rejected")
-    throw new DeliveryError(
-      "CONFLICT",
-      "Deployment inputs are stale; request a new deployment",
-    );
+    throw new DeliveryError("CONFLICT", admission.message);
   return this.detail(deploymentId);
 }

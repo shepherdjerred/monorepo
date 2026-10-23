@@ -86,7 +86,7 @@ async function eligibility(
       env.serviceId,
       selected.id,
     );
-    if (refused !== null) reasons.push(refused);
+    if (refused !== null) reasons.push(refused.reason);
   }
   return reasons;
 }
@@ -128,20 +128,87 @@ function unsettled(
 
 /**
  * Why a set revision is not the promotion source's current, settled
- * acceptance, or null when it is. Deploy eligibility and promote share this
- * one test (4.12, M2, W3).
+ * acceptance, or null when it is; `waiting` when only that acceptance's
+ * monitor has yet to settle. Deploy eligibility, promote and admission share
+ * this one test (4.12, M2, W3).
  */
 async function sourceRefusal(
   tx: Transaction,
   sourceId: string,
   serviceId: string,
   versionSetId: string,
-) {
+): Promise<{ reason: string; waiting: boolean } | null> {
   const accepted = await sourceAcceptance(tx, sourceId, serviceId);
-  if (accepted === null) return `${sourceId} has no accepted selection`;
+  if (accepted === null)
+    return { reason: `${sourceId} has no accepted selection`, waiting: false };
   if (accepted.versionSetId !== versionSetId)
-    return `set revision is not ${sourceId}'s accepted selection`;
-  return accepted.settled ? null : unsettled(sourceId, accepted);
+    return {
+      reason: `set revision is not ${sourceId}'s accepted selection`,
+      waiting: false,
+    };
+  if (accepted.settled) return null;
+  return {
+    reason: unsettled(sourceId, accepted),
+    waiting: accepted.monitorState !== "alarmed",
+  };
+}
+
+/** The kinds whose plain request is gated by eligibility (4.12, H4). */
+const ELIGIBILITY_GATED = new Set([
+  "deploy",
+  "channel-publish",
+  "operator-run",
+]);
+
+/**
+ * A promote always takes its source's acceptance; a plain deploy-like
+ * request was admitted through eligibility, while an approved override
+ * already decided on an ineligible set (H4) and is not rechecked.
+ */
+async function sourceGated(tx: Transaction, row: { id: string; kind: string }) {
+  if (row.kind === "promote") return true;
+  if (!ELIGIBILITY_GATED.has(row.kind)) return false;
+  const approval = await tx.approval.findUnique({
+    where: { deploymentId: row.id },
+    select: { override: true },
+  });
+  return approval?.override !== true;
+}
+
+/**
+ * M2 at admission: a queued promote, or a deploy eligible only through its
+ * promotion source, still takes that source's current, settled acceptance.
+ * While that acceptance's monitor has yet to settle the deployment stays
+ * queued (Z1); a source that replaced the set, accepted nothing or alarmed
+ * made the frozen inputs stale, and the reason is returned.
+ */
+export async function staleSource(
+  tx: Transaction,
+  row: {
+    id: string;
+    kind: string;
+    versionSetRevisionId: string;
+    sourceEnvironmentId: string | null;
+  },
+  env: Environment,
+) {
+  const sourceId = env.promotionSourceEnvironmentId;
+  if (row.kind === "promote" && row.sourceEnvironmentId !== sourceId)
+    return `${env.id} no longer promotes from ${row.sourceEnvironmentId ?? "no source"}; request a new deployment (M2)`;
+  if (sourceId === null || !(await sourceGated(tx, row))) return null;
+  const refused = await sourceRefusal(
+    tx,
+    sourceId,
+    env.serviceId,
+    row.versionSetRevisionId,
+  );
+  if (refused === null) return null;
+  if (refused.waiting)
+    throw new DeliveryError(
+      "BUSY",
+      `${refused.reason}; the deployment stays queued (M2)`,
+    );
+  return `Deployment inputs are stale: ${refused.reason}; request a new deployment (M2)`;
 }
 
 /** The source's accepted selection must be settled before it promotes (M2, W3). */

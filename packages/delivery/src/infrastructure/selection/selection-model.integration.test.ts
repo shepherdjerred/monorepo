@@ -392,7 +392,72 @@ describe("eligibility through a promotion source (4.12, M2, W3)", () => {
       /arcade\/prod's accepted selection is alarmed, not settled \(W3\)/u,
     );
   });
+
+  test("admission rechecks a queued promote or deploy against its source's current acceptance (M2)", async () => {
+    const first = context.fixture.versionSet.id;
+    const baseline = await acceptedBaseline();
+    await setMonitor(baseline.id, "settled");
+    await canary();
+    const promoted = await context.delivery.createDeployment(
+      {
+        requestId: "queued-promotion",
+        environmentId: "arcade/canary",
+        expectedGeneration: 0,
+        kind: "promote",
+        sourceEnvironmentId: context.fixture.environment.id,
+      },
+      testOperator,
+    );
+    // The source accepts another set while the promotion waits.
+    const second = await secondSet();
+    const replacement = await acceptInSource(second.id, "settled");
+    const stale =
+      /Deployment inputs are stale: set revision is not arcade\/prod's accepted selection; request a new deployment \(M2\)/u;
+    await expect(
+      context.delivery.claim(promoted.id, testExecutor),
+    ).rejects.toThrow(stale);
+    expect(await deploymentRow(promoted.id)).toMatchObject({
+      status: "failed",
+      message: expect.stringMatching(stale),
+    });
+    // An eligible deploy waits while its source's acceptance is watching,
+    // and is stale once that acceptance alarms.
+    const deployed = await deployToCanary(second.id, "queued-deploy");
+    await setMonitor(replacement.id, "watching");
+    await expect(
+      context.delivery.claim(deployed.id, testExecutor),
+    ).rejects.toThrow(
+      /is watching, not settled \(W3\); the deployment stays queued \(M2\)/u,
+    );
+    expect(await deploymentRow(deployed.id)).toMatchObject({
+      status: "queued",
+    });
+    await setMonitor(replacement.id, "alarmed");
+    await expect(
+      context.delivery.claim(deployed.id, testExecutor),
+    ).rejects.toThrow(/stale: arcade\/prod's accepted selection is alarmed/u);
+    expect(await deploymentRow(deployed.id)).toMatchObject({
+      status: "failed",
+    });
+    // An approved override was decided on an ineligible set (H4); admission
+    // does not recheck its source.
+    const overridden = await deployToCanary(first, "queued-override", true);
+    await context.delivery.approve(
+      overridden.id,
+      { decision: "approve", reason: "ship the old set", override: true },
+      testOperator,
+    );
+    expect(
+      await context.delivery.claim(overridden.id, testExecutor),
+    ).toMatchObject({ deployment: { status: "running" } });
+  });
 });
+
+async function deploymentRow(id: string) {
+  return context.cluster.database.deployment.findUniqueOrThrow({
+    where: { id },
+  });
+}
 
 describe("admission (Z1, D8)", () => {
   test("a deploy waits for its prerequisite edge and freezes the accepted selection it found", async () => {
