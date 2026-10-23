@@ -2,18 +2,23 @@
 /**
  * Combine every static producer's receipts into the `site-artifacts` handoff.
  *
- * Each independent site registers under its own Delivery service, derived
- * from the archive's `site:<bucket>` component and checked against the
- * service catalog here so a bucket without an owner fails in the producing
- * step. Scout's receipts keep their combined-deployment owner.
+ * Until the window's catalog flip every independent `site:<bucket>` archive
+ * registers under v1's shared static-sites service. Under the v2 catalog each
+ * independent site registers under its own Delivery service, derived from the
+ * archive's `archive:<bucket>` component and checked against the catalog
+ * document here, so a bucket without an owner or a producer still naming v1
+ * components fails in the producing step. Scout's receipts keep their
+ * combined-deployment owner.
  */
 import { ArtifactInputSchema } from "@shepherdjerred/delivery/contract";
-import { SERVICE_CATALOG } from "@shepherdjerred/ops-model/catalog.ts";
-import type { Catalog } from "@shepherdjerred/ops-model/catalog.ts";
+import {
+  publicationOwners,
+  type PublicationOwners,
+} from "@shepherdjerred/ops-model/delivery-catalog/publication-owners.ts";
+import { parseArgs } from "node:util";
 import { z } from "zod";
 import { readRequiredHandoff, writeJsonHandoff } from "../lib/ci/ci-handoff.ts";
 import {
-  catalogOwnsService,
   isStaticSiteArtifact,
   staticSiteBucket,
   staticSiteServiceId,
@@ -27,6 +32,13 @@ const ScoutPublicationSchema = z
     artifact: ArtifactInputSchema,
   })
   .strict();
+/** v1 accepted Scout receipts under either owner (WP4 deletes it). */
+const V1ScoutPublicationSchema = z
+  .object({
+    serviceId: z.enum(["static-sites", "scout-for-lol"]),
+    artifact: ArtifactInputSchema,
+  })
+  .strict();
 
 export type SiteArchivePublication = {
   serviceId: string;
@@ -36,11 +48,29 @@ export type SiteArchivePublication = {
 export function siteArchivePublications(
   scout: unknown,
   archives: readonly unknown[],
-  catalog: Catalog = SERVICE_CATALOG,
+  owners: PublicationOwners = publicationOwners("v1"),
 ): SiteArchivePublication[] {
+  if (owners.registry === "v1") {
+    // Until the window's catalog flip, every independent site registers under
+    // v1's shared static-sites service.
+    const publications: SiteArchivePublication[] = z
+      .array(V1ScoutPublicationSchema)
+      .parse(scout);
+    for (const raw of archives)
+      publications.push({
+        serviceId: "static-sites",
+        artifact: ArtifactInputSchema.parse(raw),
+      });
+    return publications;
+  }
   const publications: SiteArchivePublication[] = z
     .array(ScoutPublicationSchema)
     .parse(scout);
+  for (const { artifact } of publications)
+    if (!isStaticSiteArtifact(artifact))
+      throw new Error(
+        `Scout's site handoff requires a site archive, not ${artifact.component}`,
+      );
   for (const raw of archives) {
     const artifact = ArtifactInputSchema.parse(raw);
     if (!isStaticSiteArtifact(artifact))
@@ -48,7 +78,7 @@ export function siteArchivePublications(
         `Static site handoff requires a site archive, not ${artifact.component}`,
       );
     const serviceId = staticSiteServiceId(staticSiteBucket(artifact.component));
-    if (!catalogOwnsService(catalog, serviceId))
+    if (!owners.owns(serviceId))
       throw new Error(
         `Static site ${artifact.component} requires a service catalog owner ${serviceId}`,
       );
@@ -58,6 +88,13 @@ export function siteArchivePublications(
 }
 
 async function main(): Promise<void> {
+  const { values } = parseArgs({
+    args: Bun.argv.slice(2),
+    strict: true,
+    allowPositionals: false,
+    options: { "catalog-v2": { type: "boolean", default: false } },
+  });
+  const owners = publicationOwners(values["catalog-v2"] ? "v2" : "v1");
   const rawScout: unknown = JSON.parse(
     await readRequiredHandoff("scout-site-artifacts"),
   );
@@ -74,7 +111,7 @@ async function main(): Promise<void> {
     );
   await writeJsonHandoff(
     "site-artifacts",
-    siteArchivePublications(rawScout, archives),
+    siteArchivePublications(rawScout, archives, owners),
   );
 }
 

@@ -1,0 +1,13 @@
+{
+  "id": "cook/prod/1",
+  "definition": {
+    "archiveComponent": "archive:cook",
+    "bucket": "cook",
+    "immutablePrefixes": ["_astro/"],
+    "extraExcludes": [],
+    "entrypoints": ["index.html"],
+    "verification": { "url": "https://cook.sjer.red/", "expectedStatus": 200 },
+    "cloudflareZoneId": "879487f81194d63121d0b8dddd16f08f",
+    "kind": "static-site"
+  }
+}

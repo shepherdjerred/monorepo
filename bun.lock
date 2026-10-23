@@ -1080,6 +1080,7 @@
         "zod": "^4.4.3",
       },
       "devDependencies": {
+        "@shepherdjerred/delivery": "workspace:*",
         "@shepherdjerred/eslint-config": "workspace:*",
         "@temporalio/testing": "1.24.0",
         "@types/bun": "1.4.2",

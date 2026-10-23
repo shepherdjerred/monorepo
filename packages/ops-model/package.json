@@ -31,6 +31,7 @@
     "./services.json": "./services.json",
     "./platform-policy.json": "./platform-policy.json",
     "./catalog-document.schema.json": "./catalog-document.schema.json",
+    "./catalog-document.json": "./catalog-document.json",
     "./*": "./src/*"
   }
 }

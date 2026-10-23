@@ -21,7 +21,8 @@ import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/
 
 const NAMESPACE = "minecraft-shuxin";
 
-export function createMinecraftShuxinApp(chart: Chart) {
+/** Objects the root renders beside the Application; the `minecraft-shuxin-companion` companion chart renders the same objects under transition rendering. */
+export function createMinecraftShuxinResources(chart: Chart): void {
   createMinecraftProxyTrust(chart, NAMESPACE, 25_565);
   // Create ConfigMaps externally (not in Helm values) to avoid Application size limits
   createMinecraftConfigMaps(chart, "shuxin", NAMESPACE);
@@ -48,6 +49,10 @@ export function createMinecraftShuxinApp(chart: Chart) {
     // Hibernates at 0 replicas (see above).
     disableProbe: true,
   });
+}
+
+export function createMinecraftShuxinApp(chart: Chart) {
+  createMinecraftShuxinResources(chart);
 
   const minecraftValues: HelmValuesForChart<"minecraft"> = {
     replicaCount: 0,

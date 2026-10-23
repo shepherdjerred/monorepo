@@ -1,0 +1,12 @@
+{
+  "id": "cluster-nodes/torvalds/1",
+  "definition": {
+    "kind": "operator-run",
+    "wrapped": {
+      "kind": "host",
+      "instance": "host:torvalds",
+      "components": ["image:installer-torvalds", "image:kubelet"]
+    },
+    "stages": ["talos-upgrade", "kubernetes-upgrade"]
+  }
+}

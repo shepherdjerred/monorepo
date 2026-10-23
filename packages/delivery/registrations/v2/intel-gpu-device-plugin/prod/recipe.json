@@ -1,0 +1,46 @@
+{
+  "id": "intel-gpu-device-plugin/prod/1",
+  "definition": {
+    "kind": "kubernetes-application",
+    "application": {
+      "name": "intel-gpu-device-plugin",
+      "metadata": {
+        "labels": { "ci.sjer.red/managed-application": "true" },
+        "annotations": {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+          "ci.sjer.red/application-lifecycle": "retain"
+        },
+        "finalizers": []
+      },
+      "project": "cluster",
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "intel-device-plugin-operator"
+      },
+      "source": {
+        "repoURL": "https://intel.github.io/helm-charts/",
+        "chart": "intel-device-plugins-gpu"
+      },
+      "syncOptions": [],
+      "ignoreDifferences": [],
+      "revisionHistoryLimit": 5,
+      "lifecycle": "retain"
+    },
+    "chartComponent": "chart:intel-device-plugins-gpu",
+    "artifactParameters": {},
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "apply-safety",
+        "instance": "application:intel-gpu-device-plugin",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "sync",
+        "instance": "application:intel-gpu-device-plugin",
+        "pointOfNoReturn": false
+      }
+    ],
+    "oracle": { "probes": [], "tests": [] }
+  }
+}

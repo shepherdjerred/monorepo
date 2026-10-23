@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { chartName, setChartVersion } from "#scripts/migration-core.ts";
 import { workerPoolTemplate } from "#cdk8s/scripts/delivery/worker-pool-template.ts";
+import { dormantCharts } from "#cdk8s/src/resources/companions/dormant.ts";
 import { chartValidationValues } from "./helm-delivery-publication.ts";
 
 if (import.meta.main) {
@@ -14,6 +15,7 @@ if (import.meta.main) {
     absolute: true,
   })) {
     const name = chartName(chartPath.replace(/\/Chart\.yaml$/, ""));
+    if (dormantCharts().has(name)) continue;
     const temporaryDirectory = await mkdtemp(path.join(tmpdir(), "helm-lint-"));
     try {
       const chartDirectory = path.join(temporaryDirectory, name);

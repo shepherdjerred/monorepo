@@ -1,0 +1,16 @@
+{
+  "id": "stocks-sjer-red/prod/1",
+  "definition": {
+    "archiveComponent": "archive:stocks-sjer-red",
+    "bucket": "stocks-sjer-red",
+    "immutablePrefixes": ["_astro/"],
+    "extraExcludes": [],
+    "entrypoints": ["index.html"],
+    "verification": {
+      "url": "https://stocks.sjer.red/",
+      "expectedStatus": 200
+    },
+    "cloudflareZoneId": "879487f81194d63121d0b8dddd16f08f",
+    "kind": "static-site"
+  }
+}

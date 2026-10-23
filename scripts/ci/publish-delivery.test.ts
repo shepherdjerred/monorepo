@@ -12,6 +12,7 @@ import {
   parsePublicationOptions,
 } from "./publish-delivery.ts";
 import { readPublicationHandoffs as readProducerHandoffs } from "../lib/ci/delivery-publication-handoffs.ts";
+import { publicationOwners } from "@shepherdjerred/ops-model/delivery-catalog/publication-owners.ts";
 import { imageRuntimeDigests } from "../lib/ci/image-runtime-digests.ts";
 
 const absentChartHandoffs = new Map<string, string>();
@@ -67,10 +68,17 @@ const noChartReads = {
 
 describe("explicit static archive publication", () => {
   test("strict options default to catalog-only and reject unknown inputs", () => {
-    expect(parsePublicationOptions([])).toEqual({ staticArchives: false });
+    expect(parsePublicationOptions([])).toEqual({
+      staticArchives: false,
+      catalogV2: false,
+    });
     expect(parsePublicationOptions(["--static-archives"])).toEqual({
       staticArchives: true,
+      catalogV2: false,
     });
+    expect(
+      parsePublicationOptions(["--static-archives", "--catalog-v2"]),
+    ).toEqual({ staticArchives: true, catalogV2: true });
     expect(() => parsePublicationOptions(["--archives"])).toThrow();
     expect(() => parsePublicationOptions(["unexpected"])).toThrow();
   });
@@ -312,8 +320,11 @@ test("the full catalog publication preserves the smaller coordinated root invent
   // Actual full publication includes delegated and inactive charts, not root selections.
   // The baseline and data-layer charts publish but stay out of the root
   // inventory: no root Application renders a baseline chart, and the two
-  // data layers join together once transition rendering renders theirs.
-  expect(charts).toHaveLength(48);
+  // data layers join together once transition rendering renders theirs. The
+  // 14 upstream-chart companions and the three following charts (Velero's
+  // Schedules, Kueue's queues and ArgoCD's tunnel) are owned now and publish
+  // once transition rendering synthesizes them; none joins the root inventory.
+  expect(charts).toHaveLength(65);
   const dataLayers = rootInventory.filter(({ name }) =>
     ["delivery-data", "temporal-data"].includes(name),
   ).length;
@@ -793,5 +804,54 @@ describe("immutable CI artifact publication", () => {
             : new Response("changed bytes"),
       }),
     ).rejects.toThrow("checksum mismatch");
+  });
+});
+
+function publishedChart(name: string) {
+  return {
+    name,
+    revision: "2.0.0-42",
+    digest: childDigest,
+    contentFingerprint: fingerprint,
+  };
+}
+
+async function buildOwners(registry: "v1" | "v2") {
+  const builds = await buildPublications(
+    {
+      ...ci,
+      digests: { "shepherdjerred/woodpecker-config-extension": indexDigest },
+      charts: [publishedChart("woodpecker"), publishedChart("apps")],
+      owners: publicationOwners(registry),
+    },
+    {
+      inspectImage: async () => index,
+      chartArtifact: async (name) => ({
+        uri: `https://chartmuseum.tailnet-1a49.ts.net/charts/${name}-2.0.0-42.tgz`,
+        digest: childDigest,
+      }),
+    },
+  );
+  return Object.fromEntries(
+    builds.flatMap((build) =>
+      build.artifacts.map((artifact) => [artifact.component, build.serviceId]),
+    ),
+  );
+}
+
+describe("build owners before and after the window's catalog flip", () => {
+  test("v1 keeps the services.json groups and registers the root chart", async () => {
+    expect(await buildOwners("v1")).toEqual({
+      "image:woodpecker-config-extension": "ci",
+      "chart:woodpecker": "ci",
+      "chart:apps": "gitops",
+    });
+  });
+
+  test("v2 registers under the catalog's first-party owners and drops apps", async () => {
+    expect(await buildOwners("v2")).toEqual({
+      "image:woodpecker-config-extension": "woodpecker",
+      "chart:woodpecker": "woodpecker",
+    });
   });
 });

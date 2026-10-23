@@ -1,6 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { parseArgs } from "node:util";
 import { ArtifactInputSchema } from "@shepherdjerred/delivery/contract";
 import { z } from "zod";
 import { parseScoutReleaseState } from "../lib/scout/scout-release-state.ts";
@@ -14,8 +15,14 @@ import { readRequiredHandoff, writeJsonHandoff } from "../lib/ci/ci-handoff.ts";
 import { scoutArchiveRequirements } from "../lib/scout/scout-delivery-backend.ts";
 import { requireEnv } from "../lib/run.ts";
 
-const file = Bun.argv[2];
-if (file === undefined || Bun.argv.length !== 3)
+const { values, positionals } = parseArgs({
+  args: Bun.argv.slice(2),
+  strict: true,
+  allowPositionals: true,
+  options: { "catalog-v2": { type: "boolean", default: false } },
+});
+const [file] = positionals;
+if (file === undefined || positionals.length !== 1)
   throw new Error("Explicit Scout release state file required");
 const state = parseScoutReleaseState(await Bun.file(file).text());
 const requires = scoutArchiveRequirements(
@@ -54,6 +61,7 @@ try {
       bucket,
       source,
       metadataDirectory: scratch,
+      registry: values["catalog-v2"] ? "v2" : "v1",
       requires,
     });
     const raw: unknown = await Bun.file(

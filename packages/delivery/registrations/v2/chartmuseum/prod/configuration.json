@@ -1,0 +1,7 @@
+{
+  "id": "chartmuseum/prod/1",
+  "content": {
+    "helm.valuesObject": "{\"env\":{\"existingSecret\":\"chartmuseum-basic-auth\",\"existingSecretMappings\":{\"BASIC_AUTH_PASS\":\"password\",\"BASIC_AUTH_USER\":\"username\"},\"open\":{\"AUTH_ANONYMOUS_GET\":true,\"DISABLE_API\":false}},\"persistence\":{\"enabled\":true,\"size\":\"8Gi\",\"storageClass\":\"zfs-hdd\"}}"
+  },
+  "forwardOnly": []
+}

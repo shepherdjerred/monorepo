@@ -186,14 +186,21 @@ export function createMonitoringAuthGatewayConfigs(chart: Chart) {
   return { prometheusConfig, alertmanagerConfig };
 }
 
-export function createMonitoringAuthGateways(chart: Chart) {
-  const auth = new OnePasswordItem(chart, "monitoring-api-auth-onepassword", {
+/** The credentials both authenticated gateway sidecars read. */
+export function createMonitoringApiAuth(chart: Chart): OnePasswordItem {
+  return new OnePasswordItem(chart, "monitoring-api-auth-onepassword", {
     spec: { itemPath: vaultItemPath("gnx5xq5rrsdlncvajjc4i577gm") },
     metadata: {
       name: "prometheus-monitoring-api-auth",
       namespace: "prometheus",
     },
   });
+}
+
+export function createMonitoringAuthGateways(
+  chart: Chart,
+  auth: OnePasswordItem = createMonitoringApiAuth(chart),
+) {
   const { prometheusConfig, alertmanagerConfig } =
     createMonitoringAuthGatewayConfigs(chart);
 

@@ -112,6 +112,11 @@ export function verifyCommands(options: {
 
 export type PipelineInputs = {
   readonly deliveryPublication?: boolean;
+  /**
+   * Register under the Delivery v2 catalog's owners: Tofu archives, per-site
+   * services and upstream acquisition. Off reproduces v1 (WP4 deletes it).
+   */
+  readonly deliveryCatalogV2?: boolean;
   readonly images: CiImages;
   /** Image of the deployed policy service, supplied by trusted bootstrap. */
   readonly trustedGateImage?: string | undefined;
@@ -133,6 +138,7 @@ export type PipelineInputs = {
 
 export function buildPipelineSteps({
   deliveryPublication = false,
+  deliveryCatalogV2 = false,
   images,
   trustedGateImage,
   changedBase = "",
@@ -179,13 +185,18 @@ export function buildPipelineSteps({
     ...resumeSteps(images),
     ...trmnlSteps(images),
     ...tofuValidationSteps(images),
-    ...tofuArchiveSteps(images),
+    ...(deliveryCatalogV2 ? tofuArchiveSteps(images) : []),
     ...playwrightSteps(images, changedBase),
-    ...artifactPublicationSteps(images, sharedEnvironment),
-    ...deliveryPublicationSteps(images, deliveryPublication, true),
+    ...artifactPublicationSteps(images, sharedEnvironment, deliveryCatalogV2),
+    ...deliveryPublicationSteps(
+      images,
+      deliveryPublication,
+      true,
+      deliveryCatalogV2,
+    ),
     ...ciImageSteps(images),
-    ...scoutSteps(images),
-    ...siteSteps(images),
+    ...scoutSteps(images, deliveryCatalogV2),
+    ...siteSteps(images, deliveryCatalogV2),
     // Native lanes are paused until the Mac agent runs in the GUI audit
     // session. The lane definitions stay in macos.ts for restoration.
     ...observabilityE2eSteps(images),

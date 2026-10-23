@@ -13,7 +13,10 @@ import { initFeatureFlags } from "@shepherdjerred/feature-flags";
 import { sourceCacheConfig } from "#src/checkout/config.ts";
 import { maintenanceConfig } from "#src/maintenance-config.ts";
 import { performanceConfig } from "#src/performance-config.ts";
-import { deliveryPublicationEnabled } from "#src/delivery-config.ts";
+import {
+  deliveryCatalogV2Enabled,
+  deliveryPublicationEnabled,
+} from "#src/delivery-config.ts";
 import { requireGateImage } from "#src/gate-image.ts";
 
 function requireEnv(name: string): string {
@@ -56,6 +59,7 @@ await initFeatureFlags({
 });
 const app = createApp({
   deliveryPublicationEnabled,
+  deliveryCatalogV2Enabled,
   performanceOptions: performanceConfig,
   maintenanceEnabled: async (manual) => {
     const result = await maintenanceConfig(manual);

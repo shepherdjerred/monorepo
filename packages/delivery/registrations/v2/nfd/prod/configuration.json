@@ -1,0 +1,7 @@
+{
+  "id": "nfd/prod/1",
+  "content": {
+    "helm.valuesObject": "{\"worker\":{\"tolerations\":[{\"effect\":\"NoSchedule\",\"key\":\"ci\",\"operator\":\"Equal\",\"value\":\"only\"}]}}"
+  },
+  "forwardOnly": []
+}

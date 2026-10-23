@@ -1,5 +1,5 @@
 import { TofuStackSchema } from "@shepherdjerred/ops-model/platform-policy.ts";
-import { STATIC_SITE_DESTINATIONS } from "@shepherdjerred/ops-model/static-release-targets.ts";
+import { V1_STATIC_SITE_DESTINATIONS } from "@shepherdjerred/ops-model/static-release-targets.ts";
 import type { CatalogService } from "@shepherdjerred/ops-model/catalog-document-shape.ts";
 
 /**
@@ -16,7 +16,7 @@ export const V1_ENVIRONMENT_RENAMES: Readonly<Record<string, string>> = {
   "static-sites/proxy": "static-site-proxy/prod",
   "self-hosted-apps/redlib": "redlib/prod",
   ...Object.fromEntries(
-    Object.entries(STATIC_SITE_DESTINATIONS)
+    Object.entries(V1_STATIC_SITE_DESTINATIONS)
       .filter(([, environment]) => environment.startsWith("static-sites/"))
       .map(([bucket, environment]) => [environment, `${bucket}/prod`]),
   ),
@@ -46,7 +46,7 @@ export function catalogEnvironmentOf(v1EnvironmentId: string): string {
  */
 export const V1_COMPONENT_RENAMES: Readonly<Record<string, string>> =
   Object.fromEntries(
-    Object.keys(STATIC_SITE_DESTINATIONS).map((bucket) => [
+    Object.keys(V1_STATIC_SITE_DESTINATIONS).map((bucket) => [
       `site:${bucket}`,
       `archive:${bucket}`,
     ]),

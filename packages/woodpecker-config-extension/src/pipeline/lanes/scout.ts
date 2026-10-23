@@ -25,7 +25,7 @@ const SCOUT_WORKSPACE_FILTERS = [
 ].join(" ");
 
 /** CI publishes both immutable frontend flavors against one exact backend; Delivery owns activation and approval. */
-export function scoutSteps(images: CiImages): CiStep[] {
+export function scoutSteps(images: CiImages, catalogV2 = false): CiStep[] {
   return [
     {
       key: "scout-site-archives",
@@ -46,7 +46,7 @@ export function scoutSteps(images: CiImages): CiStep[] {
         DOCKERHUB_READ_LOGIN,
         'scout_delivery_backend="$(bun --no-install scripts/release/resolve-scout-delivery-backend.ts)"',
         'bun --no-install scripts/release/scout-site-release.ts prepare-state --delivery-archive --build-number "$CI_RELEASE_NUMBER" --backend-digest "$scout_delivery_backend" --output .delivery-artifacts/scout-release/state.json',
-        "bun --no-install scripts/release/publish-scout-site-archives.ts .delivery-artifacts/scout-release/state.json",
+        `bun --no-install scripts/release/publish-scout-site-archives.ts${catalogV2 ? " --catalog-v2" : ""} .delivery-artifacts/scout-release/state.json`,
       ],
       environment: {
         DELIVERY_URL: "http://delivery.delivery.svc.cluster.local:7353",

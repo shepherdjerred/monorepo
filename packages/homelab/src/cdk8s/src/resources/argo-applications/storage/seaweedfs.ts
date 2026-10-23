@@ -50,9 +50,8 @@ export function createSeaweedfsNamespace(chart: Chart): void {
   });
 }
 
-export function createSeaweedfsApp(chart: Chart) {
-  createSeaweedfsNamespace(chart);
-
+/** Objects the root renders beside the Application; the `seaweedfs-companion` companion chart renders the same objects under transition rendering. */
+export function createSeaweedfsResources(chart: Chart): void {
   // Adopt and expand the existing claims before changing immutable Helm claim
   // templates. Preserve their names and bindings; the root release owns quota
   // changes, while SeaweedFS continues mounting the same datasets.
@@ -236,6 +235,12 @@ export function createSeaweedfsApp(chart: Chart) {
     hosts: ["seaweedfs-filer"],
     probePath: "/health",
   });
+}
+
+export function createSeaweedfsApp(chart: Chart) {
+  createSeaweedfsNamespace(chart);
+
+  createSeaweedfsResources(chart);
 
   const seaweedfsValues: HelmValuesForChart<"seaweedfs"> = {
     global: {

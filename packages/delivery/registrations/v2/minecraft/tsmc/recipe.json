@@ -1,0 +1,165 @@
+{
+  "id": "minecraft-tsmc/3",
+  "definition": {
+    "kind": "compound",
+    "subRecipes": [
+      {
+        "instance": "application:minecraft-tsmc-companion",
+        "pointOfNoReturn": false,
+        "definition": {
+          "kind": "kubernetes-application",
+          "application": {
+            "name": "minecraft-tsmc-companion",
+            "metadata": {
+              "labels": { "ci.sjer.red/managed-application": "true" },
+              "annotations": {
+                "argocd.argoproj.io/sync-options": "Prune=false",
+                "ci.sjer.red/application-lifecycle": "retain"
+              },
+              "finalizers": []
+            },
+            "project": "workloads",
+            "destination": {
+              "server": "https://kubernetes.default.svc",
+              "namespace": "minecraft-tsmc"
+            },
+            "source": {
+              "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+              "chart": "minecraft-tsmc-companion"
+            },
+            "syncOptions": [
+              "CreateNamespace=true",
+              "ServerSideApply=true",
+              "RespectIgnoreDifferences=true"
+            ],
+            "ignoreDifferences": [
+              {
+                "group": "networking.cfargotunnel.com",
+                "kind": "TunnelBinding",
+                "jqPathExpressions": [
+                  ".subjects[].kind",
+                  ".subjects[].spec.http2Origin",
+                  ".subjects[].spec.noTlsVerify",
+                  ".subjects[].spec.proxyAddress",
+                  ".subjects[].spec.proxyPort",
+                  ".subjects[].spec.proxyType",
+                  ".tunnelRef.disableDNSUpdates"
+                ]
+              }
+            ],
+            "revisionHistoryLimit": 5,
+            "lifecycle": "retain"
+          },
+          "chartComponent": "chart:minecraft-tsmc-companion",
+          "artifactParameters": {},
+          "runner": { "service": "ci", "component": "image:ci-base" },
+          "steps": [
+            {
+              "kind": "apply-safety",
+              "instance": "application:minecraft-tsmc-companion",
+              "pointOfNoReturn": false
+            },
+            {
+              "kind": "sync",
+              "instance": "application:minecraft-tsmc-companion",
+              "pointOfNoReturn": false
+            }
+          ],
+          "oracle": { "probes": [], "tests": [] }
+        }
+      },
+      {
+        "instance": "application:minecraft-tsmc",
+        "pointOfNoReturn": false,
+        "definition": {
+          "kind": "kubernetes-application",
+          "application": {
+            "name": "minecraft-tsmc",
+            "metadata": {
+              "labels": { "ci.sjer.red/managed-application": "true" },
+              "annotations": {
+                "argocd.argoproj.io/sync-options": "Prune=false",
+                "ci.sjer.red/application-lifecycle": "retain"
+              },
+              "finalizers": []
+            },
+            "project": "workloads",
+            "destination": {
+              "server": "https://kubernetes.default.svc",
+              "namespace": "minecraft-tsmc"
+            },
+            "source": {
+              "repoURL": "https://chartmuseum.sjer.red",
+              "chart": "minecraft"
+            },
+            "syncOptions": [
+              "CreateNamespace=true",
+              "ServerSideApply=true",
+              "RespectIgnoreDifferences=true",
+              "ApplyOutOfSyncOnly=true"
+            ],
+            "ignoreDifferences": [
+              {
+                "group": "apps",
+                "kind": "StatefulSet",
+                "jsonPointers": [
+                  "/metadata/annotations/sjer.red~1world-restore-lease",
+                  "/metadata/annotations/sjer.red~1world-restore-phase",
+                  "/metadata/annotations/sjer.red~1world-restore-image",
+                  "/spec/podManagementPolicy",
+                  "/spec/revisionHistoryLimit",
+                  "/spec/persistentVolumeClaimRetentionPolicy",
+                  "/spec/volumeClaimTemplates"
+                ]
+              },
+              {
+                "kind": "Service",
+                "jsonPointers": [
+                  "/metadata/annotations/mc-router.itzg.me~1autoScaleUp",
+                  "/metadata/annotations/sjer.red~1world-restore-lease",
+                  "/spec/selector/sjer.red~1world-restore-access",
+                  "/spec/clusterIP",
+                  "/spec/clusterIPs",
+                  "/spec/ipFamilies",
+                  "/spec/ipFamilyPolicy",
+                  "/spec/internalTrafficPolicy",
+                  "/spec/sessionAffinity"
+                ]
+              }
+            ],
+            "revisionHistoryLimit": 2,
+            "lifecycle": "retain"
+          },
+          "chartComponent": "chart:minecraft",
+          "artifactParameters": {
+            "image.tag": {
+              "component": "image:the-storm-server",
+              "format": "tag-digest"
+            }
+          },
+          "runner": { "service": "ci", "component": "image:ci-base" },
+          "steps": [
+            {
+              "kind": "apply-safety",
+              "instance": "application:minecraft-tsmc",
+              "pointOfNoReturn": false
+            },
+            {
+              "kind": "sync",
+              "instance": "application:minecraft-tsmc",
+              "pointOfNoReturn": false
+            },
+            {
+              "kind": "minecraft-upgrade",
+              "instance": "application:minecraft-tsmc",
+              "pointOfNoReturn": true,
+              "imageComponent": "image:the-storm-server",
+              "releaseMode": "retained-volume-restart"
+            }
+          ],
+          "oracle": { "probes": [], "tests": [] }
+        }
+      }
+    ]
+  }
+}

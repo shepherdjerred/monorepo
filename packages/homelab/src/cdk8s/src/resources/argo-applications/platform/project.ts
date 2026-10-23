@@ -6,6 +6,7 @@ import {
 import {
   ARGOCD_PROJECTS,
   IN_CLUSTER_SERVER,
+  type ClusterResource,
   childSourceRepositories,
   renderedClusterResources,
   rootSourceRepositories,
@@ -46,10 +47,14 @@ function createLegacyProject(chart: Chart) {
  * root app-of-apps needs: repository charts and the cluster-scoped kinds this
  * chart itself renders. Children are split by whether their chart may create
  * cluster-scoped resources; a `workloads` chart owns only its Namespace.
+ *
+ * The argocd service's companion chart renders the same three projects, so
+ * they outlive the root; it passes the root chart's cluster resources.
  */
 export function createProject(
   chart: Chart,
   transition: boolean = transitionRendering(),
+  rootClusterResources?: readonly ClusterResource[],
 ) {
   if (!transition) {
     createLegacyProject(chart);
@@ -61,7 +66,9 @@ export function createProject(
       description: "Root app-of-apps only",
       sourceRepos: rootSourceRepositories(),
       destinations: inCluster,
-      clusterResourceWhitelist: renderedClusterResources(chart),
+      clusterResourceWhitelist: [
+        ...(rootClusterResources ?? renderedClusterResources(chart)),
+      ],
     },
   });
   new AppProject(chart, "cluster-project", {

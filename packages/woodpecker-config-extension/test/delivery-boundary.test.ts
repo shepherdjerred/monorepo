@@ -75,9 +75,16 @@ test("static, Scout and OpenTofu producers always publish immutable archives, in
     images: TEST_IMAGES,
     changedBase: "base",
   });
+  // OpenTofu archives exist only once the window flips the catalog flag.
+  const catalogV2 = buildPipelineSteps({
+    images: TEST_IMAGES,
+    changedBase: "base",
+    deliveryCatalogV2: true,
+  });
   expect(graph.some((step) => step.key === "delivery-publish")).toBe(false);
+  expect(graph.some((step) => step.key === "tofu-archives")).toBe(false);
   for (const key of ["sites", "scout-site-archives", "tofu-archives"]) {
-    const producer = graph.find((step) => step.key === key);
+    const producer = catalogV2.find((step) => step.key === key);
     expect(producer?.defaultBranchOnly).toBe(true);
     expect(
       producer?.secrets
@@ -141,9 +148,9 @@ test("artifact publication preserves build gates and has no deployment-acceptanc
       "sites",
       "scout-site-archives",
       "trmnl-plugin-archives",
-      "tofu-archives",
     ]),
   );
+  expect(publication?.dependsOn).not.toContain("tofu-archives");
   expect(publication?.commands).toContain(
     "bun --no-install scripts/ci/publish-delivery.ts --static-archives",
   );

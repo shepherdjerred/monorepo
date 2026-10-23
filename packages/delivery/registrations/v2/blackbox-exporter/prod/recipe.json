@@ -1,0 +1,47 @@
+{
+  "id": "blackbox-exporter/prod/1",
+  "definition": {
+    "kind": "kubernetes-application",
+    "application": {
+      "name": "blackbox-exporter",
+      "metadata": {
+        "labels": { "ci.sjer.red/managed-application": "true" },
+        "annotations": {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+          "ci.sjer.red/application-lifecycle": "retain"
+        },
+        "finalizers": []
+      },
+      "project": "workloads",
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "prometheus"
+      },
+      "source": {
+        "repoURL": "https://prometheus-community.github.io/helm-charts",
+        "chart": "prometheus-blackbox-exporter",
+        "helm": { "releaseName": "prometheus-prometheus-blackbox-exporter" }
+      },
+      "syncOptions": ["CreateNamespace=true"],
+      "ignoreDifferences": [],
+      "revisionHistoryLimit": 5,
+      "lifecycle": "retain"
+    },
+    "chartComponent": "chart:prometheus-blackbox-exporter",
+    "artifactParameters": {},
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "apply-safety",
+        "instance": "application:blackbox-exporter",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "sync",
+        "instance": "application:blackbox-exporter",
+        "pointOfNoReturn": false
+      }
+    ],
+    "oracle": { "probes": [], "tests": [] }
+  }
+}

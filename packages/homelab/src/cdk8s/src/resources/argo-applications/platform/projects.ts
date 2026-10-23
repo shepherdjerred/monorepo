@@ -7,6 +7,8 @@ import {
 } from "homelab/src/delivery-target-policy.ts";
 import { versionCatalog } from "homelab/src/cdk8s/src/versions.ts";
 import { transitionRendering } from "homelab/src/cdk8s/src/release-configuration.ts";
+import { BASELINE_CHART_APPLICATIONS } from "homelab/src/cdk8s/src/resources/cluster-baseline/charts.ts";
+import { COMPANION_CHARTS } from "homelab/src/cdk8s/src/resources/companions/names.ts";
 
 /**
  * The three ArgoCD AppProjects. `default` is reserved for the root
@@ -68,6 +70,8 @@ const CLUSTER_SCOPED_APPLICATIONS: ReadonlySet<string> = new Set([
   "cluster-observability",
   "delivery-data",
   "temporal-data",
+  // Kueue's flavors, cluster queues and workload priority classes.
+  "kueue-queues",
 ]);
 
 const REGISTERED_APPLICATIONS: ReadonlySet<string> = new Set([
@@ -76,17 +80,28 @@ const REGISTERED_APPLICATIONS: ReadonlySet<string> = new Set([
   ...Object.keys(ORDINARY_DELIVERY_ENVIRONMENTS),
   ...Object.keys(SPECIALIZED_DELIVERY_ENVIRONMENTS),
   ...SERVICE_CATALOG.services.flatMap((service) => service.argoApps),
+  // Created by Delivery from catalog recipes at the window; the root never renders them.
+  ...BASELINE_CHART_APPLICATIONS,
+  ...COMPANION_CHARTS,
 ]);
 
 /**
  * The reviewed project of a registered Application; unregistered names fail.
  * Until transition rendering is on, every Application stays in `default`.
  */
+/**
+ * The Application that renders the AppProjects themselves. It cannot sit in a
+ * project it creates, so it uses `default`, which ArgoCD recreates on its own
+ * when missing, and a cold recovery can restore every other project from it.
+ */
+const PROJECT_OWNER_APPLICATION = "argocd-companion";
+
 export function applicationProject(
   name: string,
   transition: boolean = transitionRendering(),
 ): ArgoCdProject {
-  if (name === "apps") return ARGOCD_PROJECTS.root;
+  if (name === "apps" || name === PROJECT_OWNER_APPLICATION)
+    return ARGOCD_PROJECTS.root;
   if (!REGISTERED_APPLICATIONS.has(name))
     throw new Error(
       `Application ${name} has no reviewed ArgoCD project; register it in the service catalog first`,

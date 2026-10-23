@@ -1,0 +1,16 @@
+{
+  "id": "resume/prod/1",
+  "definition": {
+    "archiveComponent": "archive:resume",
+    "bucket": "resume",
+    "immutablePrefixes": [],
+    "extraExcludes": [],
+    "entrypoints": ["index.html"],
+    "verification": {
+      "url": "https://resume.sjer.red/",
+      "expectedStatus": 200
+    },
+    "cloudflareZoneId": "879487f81194d63121d0b8dddd16f08f",
+    "kind": "static-site"
+  }
+}

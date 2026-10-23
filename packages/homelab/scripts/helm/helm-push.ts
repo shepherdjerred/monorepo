@@ -28,6 +28,7 @@ import {
   validateChartProducerVersion,
   chartValidationValues,
   bindGeneratedDependencies,
+  chartImageInputs,
   type ChartMuseumRelease,
   type ChartPlanningBase,
   type ChartPlanningClient,
@@ -41,15 +42,15 @@ import {
 import {
   assertReleaseNotStale,
   activeArgoRepositoryChartNames,
-  discoverChartInputs,
   planCharts,
   plannedChartRevision,
   releasePrunesChart,
   type ChartInput,
   type HelmReleasePlan,
 } from "./helm-release-core.ts";
+import { repositoryChartInputs } from "./repository-chart-inputs.ts";
+import { publicationOwners } from "@shepherdjerred/ops-model/delivery-catalog/publication-owners.ts";
 
-const HELM_DIRECTORY = "src/cdk8s/helm";
 const SYNTH_DIRECTORY = "src/cdk8s/dist";
 
 type StagedChart = {
@@ -174,6 +175,7 @@ function parseOptions(): {
   readonly buildNumber: string;
   readonly dryRun: boolean;
   readonly deliveryCatalog: boolean;
+  readonly catalogV2: boolean;
   readonly requested: ReadonlySet<string>;
 } {
   const args = Bun.argv.slice(2);
@@ -194,6 +196,7 @@ function parseOptions(): {
     dryRun,
     requested,
     deliveryCatalog: args.includes("--delivery-catalog"),
+    catalogV2: args.includes("--catalog-v2"),
   };
 }
 
@@ -212,6 +215,7 @@ function releasePlanningBases(
     readonly version: string;
     readonly dryRun: boolean;
     readonly deliveryCatalog: boolean;
+    readonly catalogV2: boolean;
     readonly inventory: ReadonlyMap<string, ChartMuseumRelease>;
     readonly temporaryDirectory: string;
     readonly pipelineNumber: number | undefined;
@@ -222,6 +226,7 @@ function releasePlanningBases(
     version: options.version,
     dryRun,
     deliveryCatalog,
+    owners: publicationOwners(options.catalogV2 ? "v2" : "v1"),
     inventory: options.inventory,
     ...(pipelineNumber === undefined ? {} : { pipelineNumber }),
     archive: (name) => {
@@ -368,10 +373,12 @@ async function writeReleaseArtifacts(
   );
 }
 
-async function publicationImages(dryRun: boolean) {
-  if (dryRun) return;
-  const images = await chartPublicationImages();
-  Bun.env["HOMELAB_IMAGE_DIGESTS_JSON"] = JSON.stringify(images);
+async function publicationImages(dryRun: boolean, catalogV2: boolean) {
+  const images = await chartImageInputs({ dryRun, catalogV2 }, () =>
+    chartPublicationImages(undefined, undefined, publicationOwners("v1")),
+  );
+  if (images === undefined) delete Bun.env["HOMELAB_IMAGE_DIGESTS_JSON"];
+  else Bun.env["HOMELAB_IMAGE_DIGESTS_JSON"] = JSON.stringify(images);
   return images;
 }
 
@@ -386,14 +393,12 @@ async function synthesizeCharts(
     path.join(root, SYNTH_DIRECTORY),
     imageInputs,
   );
-  return discoverChartInputs(
-    path.join(root, HELM_DIRECTORY),
-    path.join(root, SYNTH_DIRECTORY),
-  );
+  return repositoryChartInputs(root);
 }
 
 async function main(): Promise<void> {
-  const { buildNumber, dryRun, requested, deliveryCatalog } = parseOptions();
+  const { buildNumber, dryRun, requested, deliveryCatalog, catalogV2 } =
+    parseOptions();
   const publication = dryRun
     ? undefined
     : ChartPublicationSchema.parse({
@@ -407,7 +412,7 @@ async function main(): Promise<void> {
   const version = `2.0.0-${buildNumber}`;
   validateChartProducerVersion(publication, buildNumber);
   const root = homelabRoot();
-  const imageInputs = await publicationImages(dryRun);
+  const imageInputs = await publicationImages(dryRun, catalogV2);
   delete Bun.env["HOMELAB_CHART_REVISIONS_JSON"];
   const inputs = await synthesizeCharts(root, imageInputs);
   for (const chart of requested) {
@@ -425,6 +430,7 @@ async function main(): Promise<void> {
       version,
       dryRun,
       deliveryCatalog,
+      catalogV2,
       inventory,
       temporaryDirectory,
       pipelineNumber: publication?.pipelineNumber,

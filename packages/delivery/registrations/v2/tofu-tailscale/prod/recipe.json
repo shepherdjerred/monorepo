@@ -1,0 +1,22 @@
+{
+  "id": "tofu-tailscale/prod/1",
+  "definition": {
+    "kind": "tofu",
+    "stack": "tailscale",
+    "archiveComponent": "archive:tofu-tailscale",
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "plan",
+        "instance": "stack:tailscale",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "apply",
+        "instance": "stack:tailscale",
+        "pointOfNoReturn": false
+      }
+    ],
+    "sharedLock": "platform"
+  }
+}

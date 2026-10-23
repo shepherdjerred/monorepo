@@ -19,6 +19,7 @@ import {
   deliveryKnownApplications,
   deliveryManagedApplications,
   deliveryRootApplications,
+  OPERATOR_RUN_APPLICATIONS,
 } from "./delivery-rbac.ts";
 import { ARGOCD_PROJECTS, applicationProject } from "./projects.ts";
 
@@ -71,6 +72,7 @@ beforeAll(async () => {
     "delivery",
     "delivery-observer",
     "delivery-platform",
+    "operator-run",
   ]) {
     expect(cm[`accounts.${account}`]).toBe("apiKey");
     expect(cm[`accounts.${account}.enabled`]).toBe(true);
@@ -331,6 +333,27 @@ const permissions: PolicyCase[] = [
     false,
   ),
   ...unregisteredCases("delivery-observer", ["get"]),
+  // The operator tool's account applies and syncs exactly the operator-run
+  // Applications, after the window only.
+  ...onCases(
+    "operator-run",
+    [...OPERATOR_RUN_APPLICATIONS],
+    ["get", "update", "sync"],
+    true,
+  ),
+  ...onCases(
+    "operator-run",
+    [...OPERATOR_RUN_APPLICATIONS],
+    ["create", "delete", "override"],
+    false,
+  ),
+  ...onCases(
+    "operator-run",
+    ["argocd", "arcade", "cluster-platform"],
+    ["get", "update", "sync"],
+    false,
+  ),
+  ...offCases("operator-run", ["arcade", "argocd"], ["get", "sync"], false),
   ...platformCases("on"),
   // Window step 3b: before the window, release-root may already read every
   // child and sync each root-owned one in its transition project, so the
@@ -458,3 +481,42 @@ test.each(
     ).toBe(true);
   },
 );
+
+test("under transition rendering Delivery creates the baseline and companion Applications, and only reads the operator-run ones", () => {
+  const rows = deliveryArgoPolicy(true).split("\n");
+  const actions = (application: string) =>
+    rows
+      .filter(
+        (row) =>
+          row.startsWith("p, delivery, ") &&
+          row.endsWith(`/${application}, allow`),
+      )
+      .map((row) => row.split(", ")[3])
+      .toSorted((left = "", right = "") => left.localeCompare(right));
+  const full = ["create", "delete", "get", "sync", "update"];
+  for (const application of [
+    "cluster-platform",
+    "cluster-observability",
+    "argocd-companion",
+    "velero-companion",
+    "velero-schedules",
+  ])
+    expect(actions(application), application).toEqual(full);
+  for (const application of [
+    "cluster-admission",
+    "delivery-data",
+    "temporal-data",
+  ])
+    expect(actions(application), application).toEqual(["get"]);
+  // Off, only release-root's window rows (step 3b) name a catalog-only
+  // Application; Delivery's own account has none.
+  expect(
+    deliveryArgoPolicy(false)
+      .split("\n")
+      .filter(
+        (row) =>
+          row.includes("/cluster-platform,") &&
+          !row.startsWith("p, delivery-platform, "),
+      ),
+  ).toEqual([]);
+});

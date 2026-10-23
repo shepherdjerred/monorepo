@@ -1,0 +1,27 @@
+{
+  "id": "tofu-anthropic/prod/1",
+  "definition": {
+    "kind": "tofu",
+    "stack": "anthropic",
+    "archiveComponent": "archive:tofu-anthropic",
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "plan",
+        "instance": "stack:anthropic",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "approve",
+        "instance": "stack:anthropic",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "apply",
+        "instance": "stack:anthropic",
+        "pointOfNoReturn": false
+      }
+    ],
+    "sharedLock": "platform"
+  }
+}

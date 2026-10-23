@@ -84,7 +84,8 @@
         "registryUrl": "https://1password.github.io/connect-helm-charts/",
         "versioning": "semver"
       },
-      "value": "2.4.2"
+      "value": "2.4.2",
+      "component": true
     },
     {
       "name": "argo-cd",
@@ -96,7 +97,8 @@
         "registryUrl": "https://argoproj.github.io/argo-helm",
         "versioning": "semver"
       },
-      "value": "10.10.2"
+      "value": "10.10.2",
+      "component": true
     },
     {
       "name": "cert-manager",
@@ -108,7 +110,8 @@
         "registryUrl": "https://charts.jetstack.io",
         "versioning": "semver-coerced"
       },
-      "value": "v1.21.2"
+      "value": "v1.21.2",
+      "component": true
     },
     {
       "name": "intel-device-plugins-operator",
@@ -120,7 +123,21 @@
         "registryUrl": "https://intel.github.io/helm-charts/",
         "versioning": "semver"
       },
-      "value": "0.37.1"
+      "value": "0.37.1",
+      "component": true
+    },
+    {
+      "name": "intel-device-plugins-gpu",
+      "category": "upstream",
+      "artifactType": "helm-chart",
+      "management": {
+        "managed": true,
+        "datasource": "helm",
+        "registryUrl": "https://intel.github.io/helm-charts/",
+        "versioning": "semver"
+      },
+      "value": "0.37.1",
+      "component": true
     },
     {
       "name": "node-feature-discovery",
@@ -132,7 +149,8 @@
         "registryUrl": "https://kubernetes-sigs.github.io/node-feature-discovery/charts",
         "versioning": "semver"
       },
-      "value": "0.19.0"
+      "value": "0.19.0",
+      "component": true
     },
     {
       "name": "kube-prometheus-stack",
@@ -144,7 +162,8 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "92.2.0"
+      "value": "92.2.0",
+      "component": true
     },
     {
       "name": "prometheus-adapter",
@@ -156,7 +175,8 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "5.3.0"
+      "value": "5.3.0",
+      "component": true
     },
     {
       "name": "prometheus-blackbox-exporter",
@@ -168,7 +188,8 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "11.20.0"
+      "value": "11.20.0",
+      "component": true
     },
     {
       "name": "tailscale-operator",
@@ -180,7 +201,8 @@
         "registryUrl": "https://pkgs.tailscale.com/helmcharts",
         "versioning": "semver"
       },
-      "value": "1.102.4"
+      "value": "1.102.4",
+      "component": true
     },
     {
       "name": "adyanth/cloudflare-operator",
@@ -209,7 +231,8 @@
         "image crashes every server at startup (\"Minecraft 26.1 and newer requires",
         "running the server with Java 25 or above\"). Keep this Java major in sync",
         "with the paper pin."
-      ]
+      ],
+      "component": true
     },
     {
       "name": "itzg/minecraft-server-java8",
@@ -226,7 +249,8 @@
       "notes": [
         "Java 8 variant for the Forge 1.12.2 RLCraft server; keep separate from",
         "the Java 25 Paper image used by the other Minecraft servers."
-      ]
+      ],
+      "component": true
     },
     {
       "name": "plexinc/pms-docker",
@@ -568,7 +592,8 @@
         "registryUrl": "https://chartmuseum.github.io/charts",
         "versioning": "semver"
       },
-      "value": "3.10.4"
+      "value": "3.10.4",
+      "component": true
     },
     {
       "name": "minecraft",
@@ -593,7 +618,8 @@
         "registryUrl": "https://itzg.github.io/minecraft-server-charts",
         "versioning": "semver"
       },
-      "value": "1.5.0"
+      "value": "1.5.0",
+      "component": true
     },
     {
       "name": "itzg/mc-router",
@@ -605,7 +631,8 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.47.2@sha256:64ae69eaa7a6800a79bbf962f027f4020878efa25183359115bc7f6ee569c36e"
+      "value": "1.47.2@sha256:64ae69eaa7a6800a79bbf962f027f4020878efa25183359115bc7f6ee569c36e",
+      "component": true
     },
     {
       "name": "haproxy",
@@ -617,7 +644,8 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "3.4.6-alpine@sha256:7af8255207ee9964ccb4eec8ce4b7a40b777769665e3ae83897fb01b24d8a43a"
+      "value": "3.4.6-alpine@sha256:7af8255207ee9964ccb4eec8ce4b7a40b777769665e3ae83897fb01b24d8a43a",
+      "component": true
     },
     {
       "name": "jorenn92/maintainerr",
@@ -641,7 +669,8 @@
         "registryUrl": "https://grafana.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "7.3.0"
+      "value": "7.3.0",
+      "component": true
     },
     {
       "name": "promtail",
@@ -653,7 +682,8 @@
         "registryUrl": "https://grafana.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "6.17.1"
+      "value": "6.17.1",
+      "component": true
     },
     {
       "name": "tempo",
@@ -665,7 +695,8 @@
         "registryUrl": "https://grafana.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "1.24.4"
+      "value": "1.24.4",
+      "component": true
     },
     {
       "name": "pyroscope",
@@ -677,7 +708,8 @@
         "registryUrl": "https://grafana.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "2.4.0"
+      "value": "2.4.0",
+      "component": true
     },
     {
       "name": "alloy",
@@ -689,7 +721,8 @@
         "registryUrl": "https://grafana.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "1.13.1"
+      "value": "1.13.1",
+      "component": true
     },
     {
       "name": "grafana/grafana-image-renderer",
@@ -701,7 +734,8 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v5.12.6@sha256:4b3d29a66c1dd11d513f8378907953b3c2c0c0535cbf5cf8fe83f7f398ae8b4c"
+      "value": "v5.12.6@sha256:4b3d29a66c1dd11d513f8378907953b3c2c0c0535cbf5cf8fe83f7f398ae8b4c",
+      "component": true
     },
     {
       "name": "openebs",
@@ -713,7 +747,8 @@
         "registryUrl": "https://openebs.github.io/openebs",
         "versioning": "semver"
       },
-      "value": "4.6.2"
+      "value": "4.6.2",
+      "component": true
     },
     {
       "name": "freshrss/freshrss",
@@ -897,7 +932,8 @@
         "versioning": "semver",
         "packageName": "kueue/charts/kueue"
       },
-      "value": "0.20.1@sha256:909f655fee23166bfe112b2e0fd18193d10e463e1f7287ff99c285060da87981"
+      "value": "0.20.1@sha256:909f655fee23166bfe112b2e0fd18193d10e463e1f7287ff99c285060da87981",
+      "component": true
     },
     {
       "name": "tonistiigi/binfmt",
@@ -954,7 +990,8 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.33.4@sha256:ed0b31a0508da84ee655c5c6e01bd3897fc56ad6cf69debb27fa1893a06d2246"
+      "value": "1.33.4@sha256:ed0b31a0508da84ee655c5c6e01bd3897fc56ad6cf69debb27fa1893a06d2246",
+      "component": true
     },
     {
       "name": "velero",
@@ -966,7 +1003,8 @@
         "registryUrl": "https://vmware-tanzu.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "12.2.1"
+      "value": "12.2.1",
+      "component": true
     },
     {
       "name": "velero/velero-plugin-for-aws",
@@ -988,7 +1026,8 @@
         "R2 upload/read-back/delete probe with this repository's storage-location settings.",
         "Verify the released plugin's R2 upload path before future version bumps. A successful",
         "object probe does not prove a complete Velero backup or restore."
-      ]
+      ],
+      "component": true
     },
     {
       "name": "openebs/velero-plugin",
@@ -1095,6 +1134,47 @@
       "value": "1.14.2"
     },
     {
+      "name": "siderolabs/installer-liskov",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://factory.talos.dev",
+        "versioning": "semver",
+        "packageName": "metal-installer-secureboot/d953d04c966642907c1061252288cdc30189c2973f083de93355faac1e9d54cb"
+      },
+      "value": "v1.14.2@sha256:92ab950ac3166567f3600cc2f56ac3b758c2649c4d8a8100248c7e31ad000bb2",
+      "component": true
+    },
+    {
+      "name": "siderolabs/installer-torvalds",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://factory.talos.dev",
+        "versioning": "semver",
+        "packageName": "metal-installer-secureboot/4560d31e3c529f9808e0898c2804d25be14201992fe2792abd4a09618e0d39a9"
+      },
+      "value": "v1.14.2@sha256:eb2e89ba92c85b594a23cd3239d4a1878077e0375d29af2790b0bb982b644e14",
+      "component": true
+    },
+    {
+      "name": "siderolabs/kubelet",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "semver"
+      },
+      "value": "v1.37.1@sha256:3777bdaaa352e1f425dff9d8868a970923c66d0629bad16f935c41018a83d9d8",
+      "component": true
+    },
+    {
       "name": "postgres-operator",
       "category": "upstream",
       "artifactType": "helm-chart",
@@ -1104,7 +1184,8 @@
         "registryUrl": "https://opensource.zalando.com/postgres-operator/charts/postgres-operator",
         "versioning": "semver"
       },
-      "value": "2.0.3"
+      "value": "2.0.3",
+      "component": true
     },
     {
       "name": "cooperspencer/gickup",
@@ -1176,7 +1257,8 @@
         "registryUrl": "https://seaweedfs.github.io/seaweedfs/helm",
         "versioning": "semver"
       },
-      "value": "4.48.0"
+      "value": "4.48.0",
+      "component": true
     },
     {
       "name": "mariadb",
@@ -1272,7 +1354,8 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:fd7dc98638c8e305f4dc34e979f1c0fdfdcaeb0fbf8fcff77ae834b6da3d7e6e"
+      "value": "latest@sha256:fd7dc98638c8e305f4dc34e979f1c0fdfdcaeb0fbf8fcff77ae834b6da3d7e6e",
+      "component": true
     },
     {
       "name": "mikefarah/yq",
@@ -1289,7 +1372,8 @@
         "Alpine-based image bundling yq + busybox coreutils (sh/find/cmp/diff/cp);",
         "used by the Minecraft config-drift init container for semantic YAML/JSON",
         "comparison (see misc/minecraft-drift-check.ts)."
-      ]
+      ],
+      "component": true
     },
     {
       "name": "library/alpine",

@@ -1,0 +1,26 @@
+{
+  "id": "tofu-asuswrt/prod/1",
+  "definition": {
+    "kind": "operator-run",
+    "wrapped": {
+      "kind": "tofu",
+      "stack": "asuswrt",
+      "archiveComponent": "archive:tofu-asuswrt",
+      "runner": { "service": "ci", "component": "image:ci-base" },
+      "steps": [
+        {
+          "kind": "plan",
+          "instance": "stack:asuswrt",
+          "pointOfNoReturn": false
+        },
+        {
+          "kind": "apply",
+          "instance": "stack:asuswrt",
+          "pointOfNoReturn": false
+        }
+      ],
+      "sharedLock": "platform"
+    },
+    "stages": ["plan", "apply"]
+  }
+}

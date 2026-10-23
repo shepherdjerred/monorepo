@@ -47,6 +47,7 @@
     "scripts/helm/helm-release-core.ts",
     "scripts/helm/helm-release-core.test.ts",
     "scripts/helm/helm-push.ts",
+    "scripts/helm/repository-chart-inputs.ts",
     "scripts/helm/lint-helm.ts",
     "scripts/helm/lint-helm.test.ts",
     "scripts/tofu/lint-tofu.ts",

@@ -1,0 +1,7 @@
+{
+  "id": "openebs/prod/1",
+  "content": {
+    "helm.valuesObject": "{\"alloy\":{\"enabled\":false},\"engines\":{\"local\":{\"lvm\":{\"enabled\":false}},\"replicated\":{\"mayastor\":{\"enabled\":false}}},\"loki\":{\"enabled\":false},\"zfs-localpv\":{\"imagePullSecrets\":[{\"name\":\"dockerhub-pull-openebs\"}],\"zfsController\":{\"resources\":{\"requests\":{\"cpu\":\"25m\",\"memory\":\"128Mi\"}}},\"zfsNode\":{\"encrKeysDir\":\"/var\",\"resources\":{\"requests\":{\"cpu\":\"50m\",\"memory\":\"128Mi\"}},\"tolerations\":[{\"effect\":\"NoSchedule\",\"key\":\"ci\",\"operator\":\"Equal\",\"value\":\"only\"}]},\"zfsPlugin\":{\"image\":{\"registry\":\"\",\"repository\":\"docker.io/shepherdjerred/zfs-driver\"}}}}"
+  },
+  "forwardOnly": []
+}

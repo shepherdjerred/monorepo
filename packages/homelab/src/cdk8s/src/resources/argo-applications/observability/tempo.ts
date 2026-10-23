@@ -11,20 +11,21 @@ import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/
 
 const MAX_TRACE_BYTES = 50_000_000;
 
+/** Objects the root renders beside the Application; the `tempo-companion` companion chart renders the same objects under transition rendering. */
+export function createTempoResources(chart: Chart): OnePasswordItem {
+  return new OnePasswordItem(chart, "tempo-monitoring-auth-onepassword", {
+    metadata: { name: "tempo-monitoring-api-auth", namespace: "tempo" },
+    spec: { itemPath: vaultItemPath("gnx5xq5rrsdlncvajjc4i577gm") },
+  });
+}
+
 /**
  * Creates Grafana Tempo for distributed tracing.
  * Receives traces over the OTLP protocol.
  * Deployed in SingleBinary mode suitable for homelab scale.
  */
 export function createTempoApp(chart: Chart) {
-  const monitoringAuth = new OnePasswordItem(
-    chart,
-    "tempo-monitoring-auth-onepassword",
-    {
-      metadata: { name: "tempo-monitoring-api-auth", namespace: "tempo" },
-      spec: { itemPath: vaultItemPath("gnx5xq5rrsdlncvajjc4i577gm") },
-    },
-  );
+  const monitoringAuth = createTempoResources(chart);
 
   // Tempo values - SingleBinary mode with OTLP receiver enabled
   const tempoValues: HelmValuesForChart<"tempo"> = {

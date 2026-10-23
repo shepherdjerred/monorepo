@@ -1,0 +1,132 @@
+{
+  "id": "tempo/prod/1",
+  "definition": {
+    "kind": "compound",
+    "subRecipes": [
+      {
+        "instance": "application:tempo-companion",
+        "pointOfNoReturn": false,
+        "definition": {
+          "kind": "kubernetes-application",
+          "application": {
+            "name": "tempo-companion",
+            "metadata": {
+              "labels": { "ci.sjer.red/managed-application": "true" },
+              "annotations": {
+                "argocd.argoproj.io/sync-options": "Prune=false",
+                "ci.sjer.red/application-lifecycle": "retain"
+              },
+              "finalizers": []
+            },
+            "project": "workloads",
+            "destination": {
+              "server": "https://kubernetes.default.svc",
+              "namespace": "tempo"
+            },
+            "source": {
+              "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+              "chart": "tempo-companion"
+            },
+            "syncOptions": [
+              "CreateNamespace=true",
+              "ServerSideApply=true",
+              "RespectIgnoreDifferences=true"
+            ],
+            "ignoreDifferences": [
+              {
+                "group": "networking.cfargotunnel.com",
+                "kind": "TunnelBinding",
+                "jqPathExpressions": [
+                  ".subjects[].kind",
+                  ".subjects[].spec.http2Origin",
+                  ".subjects[].spec.noTlsVerify",
+                  ".subjects[].spec.proxyAddress",
+                  ".subjects[].spec.proxyPort",
+                  ".subjects[].spec.proxyType",
+                  ".tunnelRef.disableDNSUpdates"
+                ]
+              }
+            ],
+            "revisionHistoryLimit": 5,
+            "lifecycle": "retain"
+          },
+          "chartComponent": "chart:tempo-companion",
+          "artifactParameters": {},
+          "runner": { "service": "ci", "component": "image:ci-base" },
+          "steps": [
+            {
+              "kind": "apply-safety",
+              "instance": "application:tempo-companion",
+              "pointOfNoReturn": false
+            },
+            {
+              "kind": "sync",
+              "instance": "application:tempo-companion",
+              "pointOfNoReturn": false
+            }
+          ],
+          "oracle": { "probes": [], "tests": [] }
+        }
+      },
+      {
+        "instance": "application:tempo",
+        "pointOfNoReturn": false,
+        "definition": {
+          "kind": "kubernetes-application",
+          "application": {
+            "name": "tempo",
+            "metadata": {
+              "labels": { "ci.sjer.red/managed-application": "true" },
+              "annotations": {
+                "argocd.argoproj.io/sync-options": "Prune=false",
+                "ci.sjer.red/application-lifecycle": "retain"
+              },
+              "finalizers": []
+            },
+            "project": "workloads",
+            "destination": {
+              "server": "https://kubernetes.default.svc",
+              "namespace": "tempo"
+            },
+            "source": {
+              "repoURL": "https://grafana.github.io/helm-charts",
+              "chart": "tempo"
+            },
+            "syncOptions": [
+              "CreateNamespace=true",
+              "ServerSideApply=true",
+              "RespectIgnoreDifferences=true"
+            ],
+            "ignoreDifferences": [
+              {
+                "group": "apps",
+                "kind": "StatefulSet",
+                "name": "tempo",
+                "namespace": "tempo",
+                "jsonPointers": ["/spec/volumeClaimTemplates"]
+              }
+            ],
+            "revisionHistoryLimit": 5,
+            "lifecycle": "retain"
+          },
+          "chartComponent": "chart:tempo",
+          "artifactParameters": {},
+          "runner": { "service": "ci", "component": "image:ci-base" },
+          "steps": [
+            {
+              "kind": "apply-safety",
+              "instance": "application:tempo",
+              "pointOfNoReturn": false
+            },
+            {
+              "kind": "sync",
+              "instance": "application:tempo",
+              "pointOfNoReturn": false
+            }
+          ],
+          "oracle": { "probes": [], "tests": [] }
+        }
+      }
+    ]
+  }
+}

@@ -1,14 +1,14 @@
 import { describe, expect, test } from "vitest";
-import { SERVICE_CATALOG } from "@shepherdjerred/ops-model/catalog.ts";
+import { CATALOG_CORE } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
+import { publicationOwners } from "@shepherdjerred/ops-model/delivery-catalog/publication-owners.ts";
 import { buildPublications } from "./publish-delivery.ts";
 import { siteArchivePublications } from "./write-site-archive-handoff.ts";
-import { staticSiteCatalog } from "../lib/ci/testing/service-catalog.ts";
 
 const digest = `sha256:${"a".repeat(64)}`;
 function siteArchive(bucket: string, overrides: Record<string, unknown> = {}) {
   return {
     id: `ci/1/42/site/${bucket}`,
-    component: `site:${bucket}`,
+    component: `archive:${bucket}`,
     kind: "archive",
     uri: `s3://delivery-artifacts/sites/${bucket}/${"a".repeat(64)}.tar`,
     digest,
@@ -24,7 +24,41 @@ const scout = [
     }),
   },
 ];
-const catalog = staticSiteCatalog();
+/** What a producer writes while the catalog flag is off. */
+function v1SiteArchive(bucket: string) {
+  return siteArchive(bucket, { component: `site:${bucket}` });
+}
+const catalog = publicationOwners("v2");
+/** The catalog document as it would read without the sjer.red site service. */
+const withoutSjerRed = publicationOwners("v2", {
+  core: {
+    ...CATALOG_CORE,
+    services: CATALOG_CORE.services.filter(
+      (service) => service.id !== "sjer-red",
+    ),
+  },
+});
+
+describe("v1 static site handoff, before the window's catalog flip", () => {
+  test("registers every independent archive under static-sites with its v1 site component", () => {
+    const v1Scout = {
+      serviceId: "scout-for-lol",
+      artifact: v1SiteArchive("scout-frontend"),
+    };
+    const publications = siteArchivePublications(
+      [v1Scout, { ...v1Scout, serviceId: "static-sites" }],
+      [v1SiteArchive("sjer-red"), v1SiteArchive("not-in-the-catalog")],
+    );
+    expect(
+      publications.map((entry) => [entry.serviceId, entry.artifact.component]),
+    ).toEqual([
+      ["scout-for-lol", "site:scout-frontend"],
+      ["static-sites", "site:scout-frontend"],
+      ["static-sites", "site:sjer-red"],
+      ["static-sites", "site:not-in-the-catalog"],
+    ]);
+  });
+});
 
 describe("static site handoff ownership", () => {
   test("stamps each independent archive with its own bucket-named service and keeps Scout's owner", () => {
@@ -36,9 +70,9 @@ describe("static site handoff ownership", () => {
     expect(
       publications.map((entry) => [entry.serviceId, entry.artifact.component]),
     ).toEqual([
-      ["scout-for-lol", "site:scout-frontend"],
-      ["sjer-red", "site:sjer-red"],
-      ["resume", "site:resume"],
+      ["scout-for-lol", "archive:scout-frontend"],
+      ["sjer-red", "archive:sjer-red"],
+      ["resume", "archive:resume"],
     ]);
     expect(publications[0]?.artifact.requires).toEqual({
       "image:scout-for-lol": digest,
@@ -47,11 +81,7 @@ describe("static site handoff ownership", () => {
 
   test("a bucket without a catalog service, a non-site archive, or a foreign Scout owner fails in the producing step", () => {
     expect(() =>
-      siteArchivePublications(
-        scout,
-        [siteArchive("sjer-red")],
-        SERVICE_CATALOG,
-      ),
+      siteArchivePublications(scout, [siteArchive("sjer-red")], withoutSjerRed),
     ).toThrow("requires a service catalog owner sjer-red");
     expect(() =>
       siteArchivePublications(
@@ -60,6 +90,17 @@ describe("static site handoff ownership", () => {
         catalog,
       ),
     ).toThrow("requires a site archive");
+    // A producer still naming v1 components cannot compose a v2 set.
+    expect(() =>
+      siteArchivePublications(scout, [v1SiteArchive("sjer-red")], catalog),
+    ).toThrow("requires a site archive, not site:sjer-red");
+    expect(() =>
+      siteArchivePublications(
+        [{ ...scout[0], artifact: v1SiteArchive("scout-frontend") }],
+        [],
+        catalog,
+      ),
+    ).toThrow("Scout's site handoff requires a site archive");
     expect(() =>
       siteArchivePublications(
         [{ ...scout[0], serviceId: "scout-frontend" }],
@@ -85,7 +126,7 @@ describe("static site handoff ownership", () => {
         pipelineNumber: 42,
         repositoryId: 1,
         capturedAt: "2026-10-17T10:00:00.000Z",
-        catalog,
+        owners: catalog,
       },
       {
         inspectImage: () => {
@@ -102,9 +143,9 @@ describe("static site handoff ownership", () => {
         build.artifacts.map((artifact) => artifact.component),
       ]),
     ).toEqual([
-      ["scout-for-lol", ["site:scout-frontend"]],
-      ["sjer-red", ["site:sjer-red"]],
-      ["resume", ["site:resume"]],
+      ["scout-for-lol", ["archive:scout-frontend"]],
+      ["sjer-red", ["archive:sjer-red"]],
+      ["resume", ["archive:resume"]],
     ]);
     await expect(
       buildPublications(
@@ -117,7 +158,7 @@ describe("static site handoff ownership", () => {
           pipelineNumber: 42,
           repositoryId: 1,
           capturedAt: "2026-10-17T10:00:00.000Z",
-          catalog: SERVICE_CATALOG,
+          owners: withoutSjerRed,
         },
         {
           inspectImage: () => {

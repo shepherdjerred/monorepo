@@ -3,13 +3,11 @@ import path from "node:path";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { run } from "@shepherdjerred/root-scripts/lib/run.ts";
-import {
-  discoverChartInputs,
-  releasePrunesChart,
-} from "#scripts/helm/helm-release-core.ts";
+import { releasePrunesChart } from "#scripts/helm/helm-release-core.ts";
 import { stageChart } from "#scripts/helm/helm-push.ts";
 import { bindChartImageDependencies } from "#scripts/helm/helm-delivery-publication.ts";
 import { publicationImageDigests } from "#cdk8s/src/release-configuration.ts";
+import { repositoryChartInputs } from "#scripts/helm/repository-chart-inputs.ts";
 import { bootstrapArgo } from "./bootstrap-native.ts";
 import {
   bootstrapRootManifest,
@@ -201,10 +199,7 @@ export async function prepareBootstrapArchives(
       "CHARTMUSEUM_USERNAME",
     ],
   });
-  const inputs = await discoverChartInputs(
-    path.join(homelab, "src/cdk8s/helm"),
-    path.join(homelab, "src/cdk8s/dist"),
-  );
+  const inputs = await repositoryChartInputs(homelab);
   const archives = [];
   let rootManifest = "";
   for (const name of bootstrapArchiveNames(descriptor)) {

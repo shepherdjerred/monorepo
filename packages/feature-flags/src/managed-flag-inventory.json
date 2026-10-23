@@ -101,6 +101,33 @@
       "thresholdRollouts": []
     },
     {
+      "key": "woodpecker-delivery-catalog-v2-enabled",
+      "owner": "woodpecker",
+      "namespace": "woodpecker",
+      "source": "code",
+      "purpose": "Register builds under the Delivery v2 catalog document's owners (per-site and tofu-<stack> services, upstream acquisition for every catalog component, no v1 root release); flips with publication at the cutover window.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "woodpecker-delivery-beta",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "stage",
+              "operator": "eq",
+              "value": "beta"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "delivery-writes-enabled",
       "owner": "delivery",
       "namespace": "delivery",

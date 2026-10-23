@@ -25,6 +25,10 @@ import {
   unbuiltImageOriginals,
   type QualifiedImageInventory,
 } from "../../../scripts/lib/image-pin-catalog.ts";
+import {
+  publicationOwners,
+  type PublicationOwners,
+} from "../../../packages/ops-model/src/delivery-catalog/publication-owners.ts";
 import type { ArtifactVersion } from "../../../packages/delivery/src/shared/contract.ts";
 import { APPLICATION_IMAGE_TARGETS } from "./image-targets.ts";
 import {
@@ -253,6 +257,8 @@ export async function pushImages(
     readonly executor?: CommandExecutor;
     readonly environment?: Readonly<Record<string, string | undefined>>;
     readonly readRetainableImages?: () => Promise<QualifiedImageInventory>;
+    /** The registry that owns each image; v1 until the window's catalog flip. */
+    readonly owners?: PublicationOwners;
     readonly getManifestDigest?: (image: string) => Promise<string>;
     readonly verifyRegistryAccess?: RegistryAccessVerifier;
     readonly verifySourceLabel?: (image: string) => Promise<void>;
@@ -274,8 +280,9 @@ export async function pushImages(
   const { targets, commit, buildNumber, contractHash } = options;
   const executor = dependencies.executor ?? execute;
   const environment = dependencies.environment ?? Bun.env;
-  const { readRetainableImages: readOriginals = readRetainableImages } =
-    dependencies;
+  const readOriginals =
+    dependencies.readRetainableImages ??
+    (() => readRetainableImages(undefined, undefined, dependencies.owners));
   const getManifestDigest = dependencies.getManifestDigest ?? manifestDigest;
   const verifyRegistryAccess =
     dependencies.verifyRegistryAccess ?? ensureDockerHubAccess;
@@ -303,7 +310,7 @@ export async function pushImages(
   const writeText = dependencies.writeText ?? Bun.write;
   const originals = await readOriginals();
   const targetsWithPins = targets.map((name) => {
-    imageIdentity(name);
+    imageIdentity(name, dependencies.owners);
     return { name, original: originals.get(name) };
   });
   const caddyfileArguments = caddyfileEntitlementArguments(
@@ -386,7 +393,10 @@ async function main(): Promise<void> {
     rm(pushOutcomes, { force: true }),
   ]);
 
-  const originals = options.push ? await readRetainableImages() : undefined;
+  const owners = publicationOwners(options.catalogV2 ? "v2" : "v1");
+  const originals = options.push
+    ? await readRetainableImages(undefined, undefined, owners)
+    : undefined;
   const selection = await selectedTargets(options, commit, execute);
   const bakeTargets = expandTargets(
     originals === undefined
@@ -422,6 +432,7 @@ async function main(): Promise<void> {
         contractHash,
       },
       {
+        owners,
         ...(originals === undefined
           ? {}
           : { readRetainableImages: () => Promise.resolve(originals) }),

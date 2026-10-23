@@ -1,0 +1,13 @@
+{
+  "id": "ts-mc-docs/prod/1",
+  "definition": {
+    "archiveComponent": "archive:ts-mc-docs",
+    "bucket": "ts-mc-docs",
+    "immutablePrefixes": ["_astro/"],
+    "extraExcludes": ["world-archive/*"],
+    "entrypoints": ["index.html"],
+    "verification": { "url": "https://docs.ts-mc.net/", "expectedStatus": 200 },
+    "cloudflareZoneId": "efb999158b3977e07b26f6a74809c80a",
+    "kind": "static-site"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "id": "tasknotes-server/prod/2",
+  "definition": {
+    "kind": "kubernetes-application",
+    "application": {
+      "name": "tasknotes",
+      "metadata": {
+        "labels": { "ci.sjer.red/managed-application": "true" },
+        "annotations": {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+          "ci.sjer.red/application-lifecycle": "retain"
+        },
+        "finalizers": []
+      },
+      "project": "workloads",
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "tasknotes"
+      },
+      "source": {
+        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "chart": "tasknotes"
+      },
+      "syncOptions": ["CreateNamespace=true"],
+      "ignoreDifferences": [],
+      "revisionHistoryLimit": 5,
+      "lifecycle": "retain"
+    },
+    "chartComponent": "chart:tasknotes",
+    "artifactParameters": {
+      "delivery.images.tasknotes-server": {
+        "component": "image:tasknotes-server",
+        "format": "reference"
+      },
+      "delivery.images.obsidian-headless": {
+        "component": "image:obsidian-headless",
+        "format": "reference"
+      }
+    },
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "apply-safety",
+        "instance": "application:tasknotes",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "sync",
+        "instance": "application:tasknotes",
+        "pointOfNoReturn": false
+      }
+    ],
+    "oracle": {
+      "probes": [
+        {
+          "url": "https://tasknotes.tailnet-1a49.ts.net/api/health",
+          "expectedStatus": 200
+        }
+      ],
+      "tests": []
+    }
+  }
+}

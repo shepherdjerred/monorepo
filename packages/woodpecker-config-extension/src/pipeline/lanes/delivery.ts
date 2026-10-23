@@ -16,6 +16,7 @@ export function deliveryPublicationSteps(
   images: CiImages,
   enabled: boolean,
   staticArchives = false,
+  catalogV2 = false,
 ): CiStep[] {
   if (!enabled) return [];
   return [
@@ -26,7 +27,7 @@ export function deliveryPublicationSteps(
       commands: [
         "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
         DOCKERHUB_READ_LOGIN,
-        `bun --no-install scripts/ci/publish-delivery.ts${staticArchives ? " --static-archives" : ""}`,
+        `bun --no-install scripts/ci/publish-delivery.ts${staticArchives ? " --static-archives" : ""}${catalogV2 ? " --catalog-v2" : ""}`,
       ],
       environment: {
         DELIVERY_URL: "http://delivery.delivery.svc.cluster.local:7353",
@@ -36,7 +37,7 @@ export function deliveryPublicationSteps(
         "images",
         "helm-push",
         "trmnl-plugin-archives",
-        "tofu-archives",
+        ...(catalogV2 ? ["tofu-archives"] : []),
         ...(staticArchives ? ["sites", "scout-site-archives"] : []),
       ],
       defaultBranchOnly: true,

@@ -13,7 +13,6 @@ import {
 import {
   BASELINE_CHART_APPLICATIONS,
   CLUSTER_ADMISSION_CHART,
-  CLUSTER_PLATFORM_CHART,
   ROOT_CHART,
 } from "./resources/cluster-baseline/charts.ts";
 import { APPLICATION_SOURCE_POLICY } from "./resources/argocd-application-admission.ts";
@@ -31,6 +30,15 @@ import { MC_SANDBOX_STORM_IMAGE_PARAMETERS } from "./resources/mc-sandbox/image-
 import { MC_SANDBOX_POD_GUARD_POLICY } from "./resources/mc-sandbox/pod-guard.ts";
 import { CI_CLUSTER_QUEUE } from "./resources/kueue-config.ts";
 import { KUEUE_MANAGED_NAMESPACE_LABEL } from "./resources/woodpecker/ci-namespace.ts";
+import { CATALOG_CORE } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
+import { catalogEnvironmentOf } from "@shepherdjerred/ops-model/delivery-catalog/migration.ts";
+import { RecipeDefinitionSchema } from "@shepherdjerred/delivery/model-contract";
+import { recipeApplications } from "./catalog/catalog-applications.ts";
+import {
+  DELIVERY_ACTIVE_DELEGATIONS,
+  DELIVERY_ENVIRONMENT_ANNOTATION,
+  TRANSITION_ROOT_IGNORE_EXPRESSIONS,
+} from "homelab/src/delivery-ownership.ts";
 
 /**
  * The cutover window turns transition rendering on with a one-line change.
@@ -207,7 +215,8 @@ describe("transition rendering", () => {
     expect(
       find("mc-sandbox", "ResourceQuota", "mc-sandbox-quota").spec,
     ).toEqual({ hard: MC_SANDBOX_QUALIFICATION_QUOTA });
-    for (const id of [ROOT_CHART, CLUSTER_PLATFORM_CHART])
+    // Kueue's queues deploy with Kueue from the cutover.
+    for (const id of [ROOT_CHART, "kueue-queues"])
       expect(
         JSON.stringify(find(id, "ClusterQueue", CI_CLUSTER_QUEUE).spec),
       ).toContain('"mc-sandbox"');
@@ -318,5 +327,66 @@ describe("transition rendering: Delivery's Application reader", () => {
     });
     expect(names("delivery", "Secret")).not.toContain(`${reader.name}-token`);
     expect(names("delivery", "ServiceAccount")).not.toContain(reader.name);
+  });
+});
+
+describe("transition rendering: v2 environment ownership", () => {
+  const REGISTRATIONS = new URL(
+    "../../../../delivery/registrations/v2/",
+    import.meta.url,
+  );
+
+  test("every catalog Application environment's root child carries its environment", async () => {
+    const children = new Map(
+      chartObjects(ROOT_CHART)
+        .filter((manifest) => manifest.kind === "Application")
+        .map((manifest) => [manifest.metadata.name, manifest]),
+    );
+    let stamped = 0;
+    for (const environment of CATALOG_CORE.environments) {
+      const recipe = z
+        .object({ definition: RecipeDefinitionSchema })
+        .parse(
+          await Bun.file(
+            new URL(`${environment.id}/recipe.json`, REGISTRATIONS),
+          ).json(),
+        );
+      for (const name of recipeApplications(recipe.definition)) {
+        // Companion Applications are Delivery's; the root never renders them.
+        const child = children.get(name);
+        if (child === undefined) continue;
+        const annotation =
+          child.metadata.annotations?.[DELIVERY_ENVIRONMENT_ANNOTATION];
+        expect(annotation, name).toBeDefined();
+        // v1's two renamed delegations keep their v1 id until the window's
+        // migration carries them to the catalog environment.
+        expect(catalogEnvironmentOf(annotation ?? ""), name).toBe(
+          environment.id,
+        );
+        if (DELIVERY_ACTIVE_DELEGATIONS[name] === undefined)
+          expect(annotation, name).toBe(environment.id);
+        stamped += 1;
+      }
+    }
+    expect(stamped).toBeGreaterThan(60);
+  });
+
+  test("the root preserves only v1's delegated fields", () => {
+    const root = z
+      .object({
+        spec: z.looseObject({
+          ignoreDifferences: z.array(
+            z.looseObject({
+              kind: z.string(),
+              jqPathExpressions: z.array(z.string()).optional(),
+            }),
+          ),
+        }),
+      })
+      .parse(find(ROOT_CHART, "Application", "apps"));
+    expect(
+      root.spec.ignoreDifferences.find((rule) => rule.kind === "Application")
+        ?.jqPathExpressions,
+    ).toEqual(TRANSITION_ROOT_IGNORE_EXPRESSIONS);
   });
 });

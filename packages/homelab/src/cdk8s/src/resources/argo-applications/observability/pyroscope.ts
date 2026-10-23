@@ -30,8 +30,8 @@ export function createPyroscopeNamespace(chart: Chart): void {
   });
 }
 
-export function createPyroscopeApp(chart: Chart) {
-  createPyroscopeNamespace(chart);
+/** Objects the root renders beside the Application; the `pyroscope-companion` companion chart renders the same objects under transition rendering. */
+export function createPyroscopeResources(chart: Chart): void {
   // Expand the existing claim without replacing the immutable StatefulSet
   // template. At ~0.94 GB/day, its 32 GiB quota projected full in 17 days.
   new KubePersistentVolumeClaim(chart, "pyroscope-existing-claim-capacity", {
@@ -53,6 +53,11 @@ export function createPyroscopeApp(chart: Chart) {
       resources: { requests: { storage: Quantity.fromString("128Gi") } },
     },
   });
+}
+
+export function createPyroscopeApp(chart: Chart) {
+  createPyroscopeNamespace(chart);
+  createPyroscopeResources(chart);
   const pyroscopeValues: HelmValuesForChart<"pyroscope"> = {
     pyroscope: {
       // Default chart mode is the all-in-one "pyroscope" target — keep a single

@@ -33,11 +33,17 @@ test("the archive producer freezes every stack on every main push with no plan, 
 });
 
 test("registration waits for the archive producer and pull requests never reach it", () => {
-  const publication = deliveryPublicationSteps(TEST_IMAGES, true, true).find(
-    (step) => step.key === "delivery-publish",
-  );
+  const publication = deliveryPublicationSteps(
+    TEST_IMAGES,
+    true,
+    true,
+    true,
+  ).find((step) => step.key === "delivery-publish");
   expect(publication?.dependsOn).toContain("tofu-archives");
-  const steps = testPipelineSteps();
+  expect(publication?.commands).toContain(
+    "bun --no-install scripts/ci/publish-delivery.ts --static-archives --catalog-v2",
+  );
+  const steps = testPipelineSteps(true);
   const main = selectSteps(steps, {
     event: "push",
     branch: "main",
@@ -52,4 +58,62 @@ test("registration waits for the archive producer and pull requests never reach 
     changedFiles: [],
   }).map((step) => step.key);
   expect(pullRequest).not.toContain("tofu-archives");
+});
+
+test("before the window's catalog flip, main builds no archives and publication registers v1 owners", () => {
+  const publication = deliveryPublicationSteps(TEST_IMAGES, true, true).find(
+    (step) => step.key === "delivery-publish",
+  );
+  expect(publication?.dependsOn).not.toContain("tofu-archives");
+  expect(publication?.commands).toContain(
+    "bun --no-install scripts/ci/publish-delivery.ts --static-archives",
+  );
+  const steps = testPipelineSteps(false);
+  expect(steps.map((step) => step.key)).not.toContain("tofu-archives");
+  const commands = steps.flatMap((step) => step.commands).join("\n");
+  expect(commands).not.toContain("--catalog-v2");
+  expect(
+    testPipelineSteps(true)
+      .filter((step) =>
+        step.commands.some((command) => command.includes("--catalog-v2")),
+      )
+      .map((step) => step.key)
+      .sort(),
+  ).toEqual(["helm-push", "images", "scout-site-archives", "sites"]);
+});
+
+function siteProducerCommands(catalogV2: boolean): string[] {
+  return testPipelineSteps(catalogV2)
+    .flatMap((step) => step.commands)
+    .filter((command) =>
+      /deploy-site\.ts|publish-scout-site-archives\.ts/u.test(command),
+    );
+}
+
+test("the catalog flag names every site archive's component in both site producers", () => {
+  const on = siteProducerCommands(true);
+  const off = siteProducerCommands(false);
+  expect(on.length).toBeGreaterThan(1);
+  expect(on.length).toBe(off.length);
+  for (const command of on) expect(command).toContain("--catalog-v2");
+  for (const command of off) expect(command).not.toContain("--catalog-v2");
+  expect(on).toContain(
+    "bun --no-install scripts/release/publish-scout-site-archives.ts --catalog-v2 .delivery-artifacts/scout-release/state.json",
+  );
+});
+
+function helmPushCommands(catalogV2: boolean): string {
+  return (
+    testPipelineSteps(catalogV2)
+      .find((step) => step.key === "helm-push")
+      ?.commands.join("\n") ?? ""
+  );
+}
+
+test("under the catalog flag every main pipeline plans charts, so the companions publish at the flip", () => {
+  expect(helmPushCommands(false)).toContain("charts_requested");
+  expect(helmPushCommands(true)).not.toContain("charts_requested");
+  expect(helmPushCommands(true)).toContain(
+    'helm-push.ts "$CI_RELEASE_NUMBER" --delivery-catalog --catalog-v2',
+  );
 });

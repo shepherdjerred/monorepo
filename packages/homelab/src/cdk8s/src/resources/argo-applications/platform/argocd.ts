@@ -156,7 +156,8 @@ if healthStatus ~= nil then
 end
 return hs`;
 
-export function createArgoCdApp(chart: Chart) {
+/** Objects the root renders beside the Application; the `argocd-companion` companion chart renders the same objects under transition rendering. */
+export function createArgoCdResources(chart: Chart): void {
   createIngress(chart, "argocd-ingress", {
     namespace: "argocd",
     service: "argocd-server",
@@ -167,7 +168,15 @@ export function createArgoCdApp(chart: Chart) {
     // comment below) — the blackbox probe needs the same TLS-skip treatment.
     probeModule: "https_2xx_insecure",
   });
+}
 
+/**
+ * ArgoCD's public tunnel. A TunnelBinding is cloudflare-operator's custom
+ * resource and ArgoCD precedes every other Application environment, so from
+ * the cutover the cloudflare-operator environment deploys it after the
+ * operator; the root keeps rendering it right after ArgoCD's other objects.
+ */
+export function createArgoCdTunnel(chart: Chart): void {
   // argocd-server defaults to HTTPS-only on its single pod port (8080 with TLS
   // auto-detection). The Service exposes port 80 → 8080 which returns 307
   // redirect-to-HTTPS for plain HTTP — and cloudflared's default origin is
@@ -197,6 +206,11 @@ export function createArgoCdApp(chart: Chart) {
     // TLS-skip module.
     probeModule: "https_2xx_insecure",
   });
+}
+
+export function createArgoCdApp(chart: Chart) {
+  createArgoCdResources(chart);
+  createArgoCdTunnel(chart);
 
   const argoCdValues: HelmValuesForChart<"argo-cd"> = {
     global: {

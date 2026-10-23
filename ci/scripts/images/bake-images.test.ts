@@ -264,6 +264,12 @@ test("only accepts documented flags", () => {
   expect(parseBakeArguments(["--affected"])).toEqual({
     affected: true,
     push: false,
+    catalogV2: false,
+  });
+  expect(parseBakeArguments(["--push", "--catalog-v2"])).toEqual({
+    affected: false,
+    push: true,
+    catalogV2: true,
   });
   expect(() => parseBakeArguments(["--unknown"])).toThrow("Unknown");
   expect(knownImageTargets).toContain("scout-for-lol");

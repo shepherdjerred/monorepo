@@ -18,6 +18,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { workerPoolTemplate } from "./delivery/worker-pool-template.ts";
+import { dormantCharts } from "@shepherdjerred/homelab/cdk8s/src/resources/companions/dormant.ts";
 
 const HELM_DIR = path.join(import.meta.dir, "../helm");
 const DIST_DIR = path.join(import.meta.dir, "../dist");
@@ -42,6 +43,7 @@ const chartNames: string[] = [];
 for await (const entry of glob.scan(HELM_DIR)) {
   const name = path.dirname(entry);
   if (chartFilter !== null && name !== chartFilter) continue;
+  if (dormantCharts().has(name)) continue;
   chartNames.push(name);
 }
 chartNames.sort();

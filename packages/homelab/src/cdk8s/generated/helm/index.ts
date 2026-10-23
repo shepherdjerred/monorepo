@@ -4,6 +4,7 @@ export * from "./connect.types.ts";
 export * from "./argo-cd.types.ts";
 export * from "./cert-manager.types.ts";
 export * from "./intel-device-plugins-operator.types.ts";
+export * from "./intel-device-plugins-gpu.types.ts";
 export * from "./node-feature-discovery.types.ts";
 export * from "./kube-prometheus-stack.types.ts";
 export * from "./prometheus-adapter.types.ts";

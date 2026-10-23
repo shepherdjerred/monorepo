@@ -1,0 +1,57 @@
+{
+  "id": "arcade/3",
+  "definition": {
+    "kind": "kubernetes-application",
+    "application": {
+      "name": "arcade",
+      "metadata": {
+        "labels": { "ci.sjer.red/managed-application": "true" },
+        "annotations": {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+          "ci.sjer.red/application-lifecycle": "retain"
+        },
+        "finalizers": []
+      },
+      "project": "workloads",
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "arcade"
+      },
+      "source": {
+        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "chart": "arcade"
+      },
+      "syncOptions": ["CreateNamespace=true"],
+      "ignoreDifferences": [],
+      "revisionHistoryLimit": 5,
+      "lifecycle": "retain"
+    },
+    "chartComponent": "chart:arcade",
+    "artifactParameters": {
+      "delivery.image": { "component": "image:arcade", "format": "reference" },
+      "delivery.dependencies.caddy-s3proxy": {
+        "component": "image:caddy-s3proxy",
+        "format": "reference"
+      }
+    },
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "apply-safety",
+        "instance": "application:arcade",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "sync",
+        "instance": "application:arcade",
+        "pointOfNoReturn": false
+      }
+    ],
+    "oracle": {
+      "probes": [
+        { "url": "https://arcade.sjer.red/health", "expectedStatus": 200 }
+      ],
+      "tests": []
+    }
+  }
+}

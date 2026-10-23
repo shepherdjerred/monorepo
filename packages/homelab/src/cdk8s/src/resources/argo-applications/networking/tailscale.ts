@@ -38,9 +38,8 @@ export function createTailscaleProxyClasses(chart: Chart): void {
   }
 }
 
-export function createTailscaleApp(chart: Chart) {
-  createTailscaleProxyClasses(chart);
-
+/** Objects the root renders beside the Application; the `tailscale-companion` companion chart renders the same objects under transition rendering. */
+export function createTailscaleResources(chart: Chart): void {
   new OnePasswordItem(chart, "tailscale-operator-oauth-onepassword", {
     spec: {
       itemPath:
@@ -51,6 +50,11 @@ export function createTailscaleApp(chart: Chart) {
       namespace: "tailscale",
     },
   });
+}
+
+export function createTailscaleApp(chart: Chart) {
+  createTailscaleProxyClasses(chart);
+  createTailscaleResources(chart);
 
   const tailscaleValues: HelmValuesForChart<"tailscale-operator"> = {
     operatorConfig: {

@@ -1,0 +1,56 @@
+{
+  "id": "streambot/prod/2",
+  "definition": {
+    "kind": "kubernetes-application",
+    "application": {
+      "name": "media",
+      "metadata": {
+        "labels": { "ci.sjer.red/managed-application": "true" },
+        "annotations": {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+          "ci.sjer.red/application-lifecycle": "retain"
+        },
+        "finalizers": []
+      },
+      "project": "workloads",
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "media"
+      },
+      "source": {
+        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "chart": "media"
+      },
+      "syncOptions": ["ServerSideApply=true"],
+      "ignoreDifferences": [],
+      "revisionHistoryLimit": 5,
+      "lifecycle": "retain"
+    },
+    "chartComponent": "chart:media",
+    "artifactParameters": {
+      "delivery.images.streambot": {
+        "component": "image:streambot",
+        "format": "reference"
+      }
+    },
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "apply-safety",
+        "instance": "application:media",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "sync",
+        "instance": "application:media",
+        "pointOfNoReturn": false
+      }
+    ],
+    "oracle": {
+      "probes": [
+        { "url": "https://streambot.sjer.red/readyz", "expectedStatus": 200 }
+      ],
+      "tests": []
+    }
+  }
+}

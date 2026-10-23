@@ -308,6 +308,7 @@ export async function prepareStaticSite(
 ): Promise<{ bucket: string; source: string; root: string } | null> {
   const allowed = new Set([
     "--archive",
+    "--catalog-v2",
     "--dry-run",
     "--prebuilt",
     "--list",

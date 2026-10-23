@@ -1,0 +1,6 @@
+apiVersion: v2
+name: velero-schedules
+description: Velero Schedules the velero Application renders into the root chart, deployed after Velero by its service from the v2 cutover
+type: application
+version: "$version"
+appVersion: "$appVersion"

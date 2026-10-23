@@ -2,25 +2,22 @@ import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
-import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import {
   CI_NODE_TOLERATION,
   PROD_NODE_INTERNAL_IP,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
-import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
   CI_IO_OBSERVABILITY_VALUES,
   createGrafanaValues,
   type PrometheusValuesWithBlackbox,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/grafana-values.ts";
+import { createPrometheusResources } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/prometheus-resources.ts";
 import { createPrometheusExporters } from "@shepherdjerred/homelab/cdk8s/src/resources/cluster-baseline/observability.ts";
 import { BLACKBOX_MODULES } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/blackbox-modules.ts";
 import {
   ALERTMANAGER_POSTAL_SMTP_CA_SECRET,
   ALERTMANAGER_POSTAL_SMTP_TLS,
-  createAlertmanagerPostalSmtpCa,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/mail/postal-smtp.ts";
 import {
   ALERTMANAGER_GATEWAY_PORT,
@@ -28,25 +25,6 @@ import {
   PROMETHEUS_GATEWAY_PORT,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
 import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
-
-function createPrometheusIngresses(chart: Chart): void {
-  createIngress(chart, "alertmanager-ingress", {
-    namespace: "prometheus",
-    service: "prometheus-kube-prometheus-alertmanager",
-    port: 9093,
-    hosts: ["alertmanager"],
-    proxyClass: "medium",
-    probePath: "/-/healthy",
-  });
-
-  createIngress(chart, "prometheus-ingress", {
-    namespace: "prometheus",
-    service: "prometheus-kube-prometheus-prometheus",
-    port: 9090,
-    hosts: ["prometheus"],
-    probePath: "/-/healthy",
-  });
-}
 
 const ALERT_DASHBOARD_SERVICE_URL =
   "http://alert-dashboard-alert-dashboard-service.alert-dashboard.svc.cluster.local:7341";
@@ -110,18 +88,6 @@ function alertmanagerReceivers(alertDashboardSecretName: string) {
   ];
 }
 
-function createAlertmanagerPostalSmtpSecret(chart: Chart): OnePasswordItem {
-  return new OnePasswordItem(chart, "alertmanager-postal-smtp-onepassword", {
-    spec: {
-      itemPath: vaultItemPath("cb2p2ogrqzdzz4it43jq3wyrei"),
-    },
-    metadata: {
-      name: "alertmanager-postal-smtp",
-      namespace: "prometheus",
-    },
-  });
-}
-
 export async function createPrometheusApp(chart: Chart) {
   const removedAgentTaskAggregateRoute = {
     receiver: "null",
@@ -131,45 +97,16 @@ export async function createPrometheusApp(chart: Chart) {
     matchers: ['alertname =~ "TemporalAgentTask(TimingOut|TimeoutScanFailed)"'],
     group_by: ["alertname"],
   };
-  createPrometheusIngresses(chart);
-
-  createIngress(chart, "grafana-ingress", {
-    namespace: "prometheus",
-    service: "prometheus-grafana",
-    port: 80,
-    hosts: ["grafana"],
-  });
-
-  const alertDashboardSecrets = new OnePasswordItem(
+  const {
+    alertDashboardSecrets,
+    alertmanagerPostalSmtp,
+    prometheusSecrets,
+    monitoringApiAuth,
+  } = createPrometheusResources(chart);
+  const monitoringAuthGateways = createMonitoringAuthGateways(
     chart,
-    "alert-dashboard-secrets-onepassword",
-    {
-      spec: { itemPath: vaultItemPath("alert-dashboard") },
-      metadata: {
-        name: "alert-dashboard-secrets",
-        namespace: "prometheus",
-      },
-    },
+    monitoringApiAuth,
   );
-
-  const alertmanagerPostalSmtp = createAlertmanagerPostalSmtpSecret(chart);
-  createAlertmanagerPostalSmtpCa(chart);
-
-  const prometheusSecrets = new OnePasswordItem(
-    chart,
-    "grafana-secret-onepassword",
-    {
-      spec: {
-        itemPath: vaultItemPath("42fn7x3zaemfenz35en27thw5u"),
-      },
-      metadata: {
-        name: "prometheus-secrets",
-        namespace: "prometheus",
-      },
-    },
-  );
-
-  const monitoringAuthGateways = createMonitoringAuthGateways(chart);
 
   await createPrometheusExporters(chart);
 

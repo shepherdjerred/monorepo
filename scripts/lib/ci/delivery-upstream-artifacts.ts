@@ -9,7 +9,15 @@ import {
   ServiceIndex,
 } from "@shepherdjerred/ops-model/catalog.ts";
 import {
+  CATALOG_CORE,
+  type CatalogCore,
+} from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
+import type { OwnerRegistry } from "@shepherdjerred/ops-model/delivery-catalog/publication-owners.ts";
+import {
+  catalogComponentName,
   componentEntries,
+  ociChart,
+  upstreamName,
   type VersionCatalog,
   type VersionCatalogEntry,
 } from "@shepherdjerred/version-catalog";
@@ -33,6 +41,13 @@ export type UpstreamProducer = {
   sourceRevision: string;
 };
 export type ComponentArtifactOptions = {
+  /**
+   * v1 registers each component under its services.json owner; v2 under every
+   * catalog service that acquires it. v1 until the window's catalog flip.
+   */
+  registry?: OwnerRegistry;
+  /** The catalog document v2 reads acquiring services from. */
+  core?: CatalogCore;
   credentials: () => { username: string; password: string };
   mirror?: typeof acquireUpstreamChart;
   transport?: ChartTransport;
@@ -54,20 +69,112 @@ type UpstreamClient = Pick<
   "latestQualifiedArtifact" | "acquireUpstreamArtifact"
 >;
 
-function chartIntent(entry: VersionCatalogEntry): UpstreamIntent {
-  const owner = new ServiceIndex(SERVICE_CATALOG).byChart(entry.name);
-  if (owner === undefined)
-    throw new Error(`Chart ${entry.name} requires a service catalog owner`);
+/**
+ * The version-catalog entries v1 acquires: only the Minecraft chart. Every
+ * other `component: true` entry is acquired from the window's catalog flip
+ * on; WP4 deletes this with the v1 path.
+ */
+const V1_ACQUIRED_ENTRIES: ReadonlySet<string> = new Set([
+  "helm-chart:minecraft",
+]);
+
+/** The catalog as v1 acquires it: the other component entries stay unacquired. */
+export function v1AcquisitionCatalog(catalog: VersionCatalog): VersionCatalog {
+  return {
+    ...catalog,
+    entries: catalog.entries.map((entry) =>
+      entry.component === true &&
+      !V1_ACQUIRED_ENTRIES.has(`${entry.artifactType}:${entry.name}`)
+        ? { ...entry, component: false }
+        : entry,
+    ),
+  };
+}
+
+/** One intent per catalog service that acquires the entry's component. */
+function catalogIntents(
+  entry: VersionCatalogEntry,
+  core: CatalogCore,
+): UpstreamIntent[] {
+  const component = catalogComponentName(entry);
+  const owners = core.services.filter((service) =>
+    service.components.some(
+      (candidate) =>
+        candidate.name === component && candidate.producer === "acquisition",
+    ),
+  );
+  if (owners.length === 0)
+    throw new Error(`Component ${component} has no acquiring catalog service`);
+  const identity =
+    entry.artifactType === "helm-chart"
+      ? chartIdentity(entry)
+      : imageIdentity(entry);
+  return owners.map((owner) => ({
+    ...identity,
+    component,
+    serviceId: owner.id,
+  }));
+}
+
+function chartIdentity(
+  entry: VersionCatalogEntry,
+): Omit<UpstreamIntent, "serviceId"> {
   if (!entry.management.managed || entry.management.registryUrl === undefined)
     throw new Error(`Component chart ${entry.name} has no registryUrl`);
+  // An OCI chart is pinned and verified by its manifest digest, like an
+  // image, at `upstreamName` in its registry; it has no Helm index.
+  if (ociChart(entry))
+    return {
+      ...registryIdentity(entry),
+      component: `chart:${entry.name}`,
+      kind: "chart",
+    };
   return {
-    serviceId: owner.id,
     component: `chart:${entry.name}`,
     kind: "chart",
     name: entry.name,
     version: entry.value,
     repository: helmRepositoryUrl(entry.management.registryUrl),
   };
+}
+
+/**
+ * Where a registry-hosted entry (an image or an OCI chart) is pulled from and
+ * verified at: `upstreamName` in its registry, pinned `tag@sha256:digest`. An
+ * aliased entry (`itzg/minecraft-server-java8`) keeps its catalog name as its
+ * component.
+ */
+function registryIdentity(
+  entry: VersionCatalogEntry,
+): Omit<UpstreamIntent, "serviceId" | "component" | "kind"> {
+  if (!entry.management.managed || entry.management.registryUrl === undefined)
+    throw new Error(`Component ${entry.name} has no registryUrl`);
+  const pinned = /^([^@\s]+)@(sha256:[a-f0-9]{64})$/u.exec(entry.value);
+  if (pinned?.[1] === undefined || pinned[2] === undefined)
+    throw new Error(`Component ${entry.name} must pin tag@sha256:digest`);
+  return {
+    name: upstreamName(entry),
+    version: pinned[1],
+    repository: entry.management.registryUrl,
+    digest: pinned[2],
+  };
+}
+
+function imageIdentity(
+  entry: VersionCatalogEntry,
+): Omit<UpstreamIntent, "serviceId"> {
+  return {
+    ...registryIdentity(entry),
+    component: `image:${entry.name}`,
+    kind: "image",
+  };
+}
+
+function chartIntent(entry: VersionCatalogEntry): UpstreamIntent {
+  const owner = new ServiceIndex(SERVICE_CATALOG).byChart(entry.name);
+  if (owner === undefined)
+    throw new Error(`Chart ${entry.name} requires a service catalog owner`);
+  return { ...chartIdentity(entry), serviceId: owner.id };
 }
 
 function imageIntent(
@@ -79,20 +186,7 @@ function imageIntent(
     throw new Error(
       `Upstream image ${entry.name} has no Delivery owner; declare it in imageOwners`,
     );
-  if (!entry.management.managed || entry.management.registryUrl === undefined)
-    throw new Error(`Component image ${entry.name} has no registryUrl`);
-  const pinned = /^([^@\s]+)@(sha256:[a-f0-9]{64})$/u.exec(entry.value);
-  if (pinned?.[1] === undefined || pinned[2] === undefined)
-    throw new Error(`Component image ${entry.name} must pin tag@sha256:digest`);
-  return {
-    serviceId,
-    component: `image:${entry.name}`,
-    kind: "image",
-    name: entry.name,
-    version: pinned[1],
-    repository: entry.management.registryUrl,
-    digest: pinned[2],
-  };
+  return { ...imageIdentity(entry), serviceId };
 }
 
 function componentIntent(
@@ -151,7 +245,9 @@ async function acquiredArtifact(
   intent: UpstreamIntent,
   options: ComponentArtifactOptions,
 ): Promise<AcquireUpstreamArtifact["artifact"]> {
-  if (intent.kind === "chart") {
+  // A Helm-index chart learns its digest from the index; a registry-hosted
+  // entry (an image or an OCI chart) is already pinned.
+  if (intent.kind === "chart" && intent.digest === undefined) {
     const upstream = await (options.mirror ?? acquireUpstreamChart)(
       {
         name: intent.name,
@@ -179,11 +275,13 @@ async function acquiredArtifact(
   if (intent.digest === undefined)
     throw new Error(`Upstream image ${intent.name} has no pinned digest`);
   // The registry resolves the tag server-side; no bytes are needed here.
+  // Helm pulls an OCI chart by the `oci://` scheme.
+  const location = `${new URL(intent.repository).host}/${intent.name}`;
   return {
     id: `upstream/${intent.name}/${intent.version}/${intent.digest.slice(7)}`,
     component: intent.component,
-    kind: "image",
-    uri: `${new URL(intent.repository).host}/${intent.name}`,
+    kind: intent.kind,
+    uri: intent.kind === "chart" ? `oci://${location}` : location,
     digest: intent.digest,
     version: intent.version,
     origin: {
@@ -207,29 +305,64 @@ export async function componentArtifactsForPublication(
   producer: UpstreamProducer,
   options: ComponentArtifactOptions,
 ): Promise<ArtifactVersion[]> {
+  const v2 = options.registry === "v2";
   const artifacts: ArtifactVersion[] = [];
   for (const entry of componentEntries(catalog)) {
-    const intent = componentIntent(entry, options);
-    const original = await retained(client, intent);
-    if (original !== undefined) {
-      artifacts.push(original);
-      continue;
-    }
-    const result = await client.acquireUpstreamArtifact({
-      requestId: `ci/${String(producer.repositoryId)}/${String(producer.pipelineNumber)}/acquire/${intent.name}/${intent.version}`,
-      serviceId: intent.serviceId,
-      sourceRevision: producer.sourceRevision,
-      pipeline: {
-        repositoryId: producer.repositoryId,
-        pipelineNumber: producer.pipelineNumber,
-      },
-      artifact: await acquiredArtifact(intent, options),
-    });
-    if (result.status !== "verified")
-      throw new Error(
-        `Upstream ${intent.component} acquisition is ${result.status}; no eligible CI reference was published`,
+    // The bytes are acquired once per entry; v2 registers them under every
+    // acquiring service, each with its own artifact and request identity.
+    let acquired: AcquireUpstreamArtifact["artifact"] | undefined;
+    for (const intent of v2
+      ? catalogIntents(entry, options.core ?? CATALOG_CORE)
+      : [componentIntent(entry, options)]) {
+      const original = await retained(client, intent);
+      if (original !== undefined) {
+        artifacts.push(original);
+        continue;
+      }
+      acquired ??= await acquiredArtifact(intent, options);
+      artifacts.push(
+        await registerAcquisition(client, producer, { intent, acquired, v2 }),
       );
-    artifacts.push(result.artifact);
+    }
   }
   return artifacts;
+}
+
+async function registerAcquisition(
+  client: UpstreamClient,
+  producer: UpstreamProducer,
+  {
+    intent,
+    acquired,
+    v2,
+  }: {
+    intent: UpstreamIntent;
+    acquired: AcquireUpstreamArtifact["artifact"];
+    v2: boolean;
+  },
+): Promise<ArtifactVersion> {
+  const pipeline = `ci/${String(producer.repositoryId)}/${String(producer.pipelineNumber)}`;
+  const result = await client.acquireUpstreamArtifact({
+    requestId: v2
+      ? `${pipeline}/acquire/${intent.serviceId}/${intent.name}/${intent.version}`
+      : `${pipeline}/acquire/${intent.name}/${intent.version}`,
+    serviceId: intent.serviceId,
+    sourceRevision: producer.sourceRevision,
+    pipeline: {
+      repositoryId: producer.repositoryId,
+      pipelineNumber: producer.pipelineNumber,
+    },
+    artifact: v2
+      ? {
+          ...acquired,
+          id: `upstream/${intent.serviceId}/${acquired.id.slice("upstream/".length)}`,
+          component: intent.component,
+        }
+      : acquired,
+  });
+  if (result.status !== "verified")
+    throw new Error(
+      `Upstream ${intent.component} acquisition is ${result.status}; no eligible CI reference was published`,
+    );
+  return result.artifact;
 }

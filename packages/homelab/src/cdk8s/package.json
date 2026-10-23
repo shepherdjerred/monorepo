@@ -21,6 +21,7 @@
     "update-imports": "bun run scripts/update-imports.ts",
     "generate": "bun run generate-version-catalog-types",
     "generate-version-catalog-types": "bun run scripts/generate-version-map-schema.ts",
+    "generate:catalog": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run src/catalog/catalog-inventory.test.ts --update",
     "generate-helm-types": "bun --no-install run --cwd ../helm-types build && bun --no-install run scripts/generate-helm-types.ts",
     "format:generated-helm": "prettier --no-config",
     "up": "bun run build && bun run scripts/helm-render.ts --apply",
@@ -56,6 +57,7 @@
     "@grafana/grafana-foundation-sdk": "11.6.0-cogv0.0.x.1769699379"
   },
   "devDependencies": {
+    "@shepherdjerred/delivery": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@temporalio/testing": "1.24.0",
     "@types/bun": "1.4.2",

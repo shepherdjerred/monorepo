@@ -30,6 +30,36 @@ before the S3 lookup, so deep links return HTTP 200. Paths ending in a file
 extension keep their original lookup and return HTTP 404 when the asset is
 missing. The S3 error page remains available for that 404 response.
 
+## Catalog recipes and companion charts
+
+The Delivery catalog (`packages/ops-model/catalog-document.json`) names each
+environment's recipe and configuration revision; the revisions themselves live
+in `packages/delivery/registrations/v2/<service>/<environment>/`. They are
+serialised from the Application constructors in `src/catalog/`, rendered with
+transition rendering on, which is the state the cutover's final root release
+applies: the whole Application body, the image parameters a chart's templates
+or an upstream chart's values pin, and the upstream values as configuration.
+`src/catalog/catalog-targets.ts` holds what the constructors cannot say: the
+Application per environment, operator-run stages, the `platform` lock, Scout's
+monitors and the Minecraft sandbox's test suites.
+
+```bash
+bun run generate:catalog   # rewrite every revision file from the constructors
+```
+
+`catalog-inventory.test.ts` fails when a committed file and its constructor
+disagree, and when the catalog's prerequisite edges differ from the ones the
+rendered charts imply (`src/catalog/catalog-edges.ts`). A regenerated file
+that changed needs a new revision id in the catalog: Delivery refuses to
+change a registered revision.
+
+Fourteen upstream-chart constructors also render Ingresses, TunnelBindings,
+OnePasswordItems, claims and Velero Schedules into the root chart. Under
+transition rendering each gets a `<application>-companion` chart
+(`src/resources/companions/`) that renders the same objects with the root's
+names and waves, so its Application adopts them unchanged once the root is
+orphaned; `companions.test.ts` proves the bytes match.
+
 ## Helm value types
 
 The committed types in `generated/helm/` are the source of truth — CI does not regenerate them. When changing a chart in `../../../version-catalog/src/catalog.json`, regenerate and commit:

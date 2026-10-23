@@ -1,0 +1,22 @@
+{
+  "id": "tofu-seaweedfs/prod/1",
+  "definition": {
+    "kind": "tofu",
+    "stack": "seaweedfs",
+    "archiveComponent": "archive:tofu-seaweedfs",
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "plan",
+        "instance": "stack:seaweedfs",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "apply",
+        "instance": "stack:seaweedfs",
+        "pointOfNoReturn": false
+      }
+    ],
+    "sharedLock": "platform"
+  }
+}

@@ -8,6 +8,7 @@ import {
 } from "./scout-alert-constants.ts";
 import { getScoutDurableRuleGroup } from "./scout-durable-rules.ts";
 import { getScoutTemporalRuleGroup } from "./scout-temporal-rules.ts";
+import { getScoutMonitorDrillRuleGroups } from "./scout-monitor-drill.ts";
 
 /**
  * tRPC result codes that are ordinary traffic on a public web surface rather
@@ -29,6 +30,7 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
     getScoutTemporalRuleGroup(),
     getScoutDurableRuleGroup(),
+    ...getScoutMonitorDrillRuleGroups(),
     {
       name: "scout-riot-api",
       rules: [

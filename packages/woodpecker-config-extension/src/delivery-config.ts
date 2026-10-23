@@ -13,6 +13,20 @@ export async function deliveryPublicationEnabled(
   ).value("enabled");
 }
 
+/**
+ * Producers register under the Delivery v2 catalog's owners only after the
+ * cutover window flips this with publication (window step 8). WP4 deletes it.
+ */
+export async function deliveryCatalogV2Enabled(
+  branch: string,
+): Promise<boolean> {
+  return deliveryFlagConfig(
+    branch,
+    "woodpecker-delivery-catalog-v2-enabled",
+    "prod",
+  ).value("enabled");
+}
+
 function deliveryFlagConfig(
   branch: string,
   flag: WoodpeckerBooleanFlagKey,

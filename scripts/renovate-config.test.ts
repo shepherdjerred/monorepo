@@ -224,10 +224,14 @@ test("groups Talos, Kubernetes, and installer updates into one PR", async () => 
     description:
       "Bundle Talos, Kubernetes, and the node installer because they are validated and rolled out together",
     groupName: "Talos and Kubernetes",
+    // The version catalog's cluster-nodes components move with them.
     matchPackageNames: [
       "siderolabs/talos",
       "ghcr.io/siderolabs/installer",
       "kubernetes/kubernetes",
+      "siderolabs/installer-liskov",
+      "siderolabs/installer-torvalds",
+      "siderolabs/kubelet",
     ],
     minimumReleaseAge: "0 days",
   });

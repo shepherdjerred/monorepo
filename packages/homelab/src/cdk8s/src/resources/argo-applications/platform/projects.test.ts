@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, test, vi } from "vitest";
 import type * as ReleaseConfiguration from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import { App } from "cdk8s";
 import { z } from "zod";
@@ -10,6 +10,7 @@ import {
   REPOSITORY_CHART_URLS,
 } from "@shepherdjerred/homelab/cdk8s/src/application-release-policy.ts";
 import { deliveryKnownApplications } from "./delivery-rbac.ts";
+import { COMPANION_CHARTS } from "@shepherdjerred/homelab/cdk8s/src/resources/companions/names.ts";
 import {
   ARGOCD_PROJECTS,
   CLOUDFLARE_OPERATOR_REPOSITORY,
@@ -154,6 +155,23 @@ describe("ArgoCD project assignment", () => {
     }
   });
 
+  it("puts every companion chart that renders a cluster-scoped kind in the cluster project", () => {
+    const offenders: string[] = [];
+    for (const name of COMPANION_CHARTS) {
+      const chart = charts.get(name);
+      if (chart === undefined) throw new Error(`${name} is not synthesized`);
+      const kinds = clusterScopedKinds(chart).filter(
+        (kind) => kind !== "/Namespace",
+      );
+      if (
+        kinds.length > 0 &&
+        applicationProject(name, true) !== ARGOCD_PROJECTS.cluster
+      )
+        offenders.push(`${name}: ${kinds.join(", ")}`);
+    }
+    expect(offenders).toEqual([]);
+  });
+
   it("keeps cluster-scoped first-party charts out of the workloads project", () => {
     const offenders: string[] = [];
     for (const { metadata, spec } of applications) {
@@ -279,4 +297,13 @@ describe("ArgoCD AppProjects", () => {
       earliestOther,
     );
   });
+});
+
+test("the Application that renders the AppProjects lives in default, which ArgoCD recreates on its own", () => {
+  expect(applicationProject("argocd-companion", true)).toBe(
+    ARGOCD_PROJECTS.root,
+  );
+  expect(applicationProject("velero-companion", true)).not.toBe(
+    ARGOCD_PROJECTS.root,
+  );
 });

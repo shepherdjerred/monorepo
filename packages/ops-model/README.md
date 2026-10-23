@@ -17,6 +17,7 @@ stores it. The web UI, the TRMNL screen, the email digest, and
 | `metric-ids.ts`                                                                     | Headline metric ids that producers emit and renderers read.                                                                                                |
 | `catalog.ts` + `services.json`                                                      | The service catalog. It joins namespaces, ArgoCD apps, Bugsink projects, analytics sites, Grafana dashboards, and deploy variants under one service id.    |
 | `catalog-document-shape.ts`, `catalog-document.ts` + `catalog-document.schema.json` | The Delivery model's catalog document: services with typed components, environments, candidate recipe and configuration revisions, and prerequisite edges. |
+| `delivery-catalog/` + `catalog-document.json`                                       | The catalog itself: the reviewed core, the loader that adds each environment's revision files, the derived ops view and the v1 environment renames.        |
 
 `services.json` is language-neutral and validated by `services.schema.json`
 and `CatalogSchema`. A name may belong to only one service. The homelab
@@ -34,6 +35,25 @@ consumer Application transfers. The Delivery execution control plane owns its
 separate chart/Application while its runtime image remains a Temporal output.
 `static-release-targets.ts` gives CI and homelab registration the same reviewed
 bucket-to-environment ownership, with no selected archive versions.
+
+The catalog lives in `catalog-document.json`: 35 groups (today's ops
+services), about a hundred services (one per release unit: each static site,
+each OpenTofu stack as `tofu-<stack>`, each upstream chart, the three cluster
+baseline services and the two data layers), their environments, and the
+prerequisite edges. Each environment's current recipe and configuration
+revision is a file under `packages/delivery/registrations/v2/`, generated from
+the homelab Application constructors (`bun run generate:catalog` in
+`packages/homelab/src/cdk8s`); `loadCatalogDocument()` assembles and validates
+the complete document. Nothing deployed reads it before the cutover window.
+`delivery-catalog/sources.test.ts` pins it to the files it was built from: the derived
+ops view equals `services.json`, so the ops consumers render the same bytes
+when they move to it; every v1 registration has its successor environment
+(`delivery-catalog/migration.ts` lists the renames); every OpenTofu stack's mode and
+prerequisites, every bucket destination and the forum's XenForo version agree;
+and every environment the prod flag override admits exists. CI registers site
+archives and Tofu archives under the document's services
+(`catalogOwnsService`); `firstPartyOwner` resolves the service a first-party
+component's build belongs to.
 
 `catalog-document.schema.json` is the language-neutral structure of the one
 catalog the Delivery model (section 4.1) replaces these files with: services

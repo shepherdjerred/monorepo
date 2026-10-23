@@ -191,6 +191,28 @@ describe("discoverChartInputs", () => {
     }
   });
 
+  test("skips a dormant chart's shell only while it is dormant", async () => {
+    const directory = await fixture();
+    try {
+      await rm(path.join(directory, "dist/worker.k8s.yaml"));
+      const inputs = await discoverChartInputs(
+        path.join(directory, "helm"),
+        path.join(directory, "dist"),
+        new Set(["worker"]),
+      );
+      expect(inputs.map((input) => input.name)).toEqual(["apps"]);
+      await expect(
+        discoverChartInputs(
+          path.join(directory, "helm"),
+          path.join(directory, "dist"),
+          new Set(),
+        ),
+      ).rejects.toThrow("Charts missing synthesized manifests: worker");
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   test("requires a manifest for every chart", async () => {
     const directory = await fixture();
     try {

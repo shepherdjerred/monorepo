@@ -1,0 +1,14 @@
+{
+  "id": "tofu-posthog/prod/1",
+  "definition": {
+    "kind": "tofu",
+    "stack": "posthog",
+    "archiveComponent": "archive:tofu-posthog",
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      { "kind": "plan", "instance": "stack:posthog", "pointOfNoReturn": false },
+      { "kind": "apply", "instance": "stack:posthog", "pointOfNoReturn": false }
+    ],
+    "sharedLock": "platform"
+  }
+}

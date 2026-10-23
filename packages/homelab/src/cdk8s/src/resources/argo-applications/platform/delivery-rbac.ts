@@ -6,6 +6,17 @@ import {
 } from "homelab/src/delivery-target-policy.ts";
 import { applicationProject } from "./projects.ts";
 import { transitionRendering } from "homelab/src/cdk8s/src/release-configuration.ts";
+import { BASELINE_CHART_APPLICATIONS } from "homelab/src/cdk8s/src/resources/cluster-baseline/charts.ts";
+import { COMPANION_CHARTS } from "homelab/src/cdk8s/src/resources/companions/names.ts";
+
+/**
+ * The operator tool's account for operator-run Applications (X13). Delivery's
+ * executor only reads them and human logins are read-only after the
+ * lock-down, so this account performs their effects: OpenTofu issues its
+ * token into an item only operators read, and nothing in the cluster mounts
+ * it. It holds no grant before the window.
+ */
+export const OPERATOR_RUN_ACCOUNT = "operator-run";
 
 export const DELIVERY_ARGO_ACCOUNTS = {
   "accounts.delivery": "apiKey",
@@ -14,6 +25,8 @@ export const DELIVERY_ARGO_ACCOUNTS = {
   "accounts.delivery-observer.enabled": true,
   "accounts.delivery-platform": "apiKey",
   "accounts.delivery-platform.enabled": true,
+  [`accounts.${OPERATOR_RUN_ACCOUNT}`]: "apiKey",
+  [`accounts.${OPERATOR_RUN_ACCOUNT}.enabled`]: true,
 } as const;
 export const DELIVERY_ARGO_SERVER_SETTINGS = {
   "server.rbac.disableApplicationFineGrainedRBACInheritance": true,
@@ -42,12 +55,27 @@ const CATALOG_APPLICATIONS = [
     ...SERVICE_CATALOG.services.flatMap((service) => service.argoApps),
   ]),
 ].sort();
+/**
+ * Applications only the v2 catalog creates: the cluster baseline charts and
+ * the companion charts, which Delivery creates from recipes at the window.
+ */
+const CATALOG_ONLY_APPLICATIONS = [
+  ...BASELINE_CHART_APPLICATIONS,
+  ...COMPANION_CHARTS,
+];
+/** Operator-run Applications Delivery only reads: the data layers and cluster admission. */
+export const OPERATOR_RUN_APPLICATIONS: ReadonlySet<string> = new Set([
+  ...OPERATOR_RUN_DATA_APPLICATIONS,
+  "cluster-admission",
+]);
 /** Every Application the rendered root and Delivery know, by switch state. */
 export function deliveryKnownApplications(
   transition: boolean = transitionRendering(),
 ): string[] {
   return transition
-    ? CATALOG_APPLICATIONS
+    ? [
+        ...new Set([...CATALOG_APPLICATIONS, ...CATALOG_ONLY_APPLICATIONS]),
+      ].sort()
     : CATALOG_APPLICATIONS.filter(
         (name) => !OPERATOR_RUN_DATA_APPLICATIONS.has(name),
       );
@@ -59,6 +87,7 @@ export function deliveryRootApplications(
   return deliveryKnownApplications(transition).filter(
     (name) =>
       name !== "apps" &&
+      !CATALOG_ONLY_APPLICATIONS.includes(name) &&
       applicationReleasePolicy(name).owner === "release-root",
   );
 }
@@ -75,8 +104,7 @@ export function deliveryManagedApplications(
 ): string[] {
   return deliveryKnownApplications(transition).filter(
     (name) =>
-      !RETAINED_APPLICATIONS.has(name) &&
-      !OPERATOR_RUN_DATA_APPLICATIONS.has(name),
+      !RETAINED_APPLICATIONS.has(name) && !OPERATOR_RUN_APPLICATIONS.has(name),
   );
 }
 
@@ -134,7 +162,7 @@ export function deliveryArgoPolicy(
     // layers.
     grant(
       "delivery",
-      [...RETAINED_APPLICATIONS, ...OPERATOR_RUN_DATA_APPLICATIONS],
+      [...RETAINED_APPLICATIONS, ...OPERATOR_RUN_APPLICATIONS],
       ["get"],
     );
     grant("delivery", deliveryManagedApplications(transition), [
@@ -145,6 +173,14 @@ export function deliveryArgoPolicy(
       "sync",
     ]);
     grant("delivery-observer", known, ["get"]);
+    // The operator tool applies and syncs operator-run Applications, never
+    // deletes them, under the deployments Delivery records and the operator
+    // attests.
+    grant(
+      OPERATOR_RUN_ACCOUNT,
+      [...OPERATOR_RUN_APPLICATIONS],
+      ["get", "update", "sync"],
+    );
   } else {
     grant("delivery", ["apps"], ["get"]);
     grant("delivery", DELIVERY_WORKLOAD_APPLICATIONS, [

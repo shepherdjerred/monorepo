@@ -30,6 +30,7 @@ function chartPublicationRequested(): string[] {
 export function artifactPublicationSteps(
   images: CiImages,
   environment: Readonly<Record<string, string>>,
+  catalogV2 = false,
 ): CiStep[] {
   return [
     {
@@ -45,7 +46,7 @@ export function artifactPublicationSteps(
         "MISE_TOOLCHAIN_SCOPE=automation . ci/scripts/toolchain.sh",
         DOCKERHUB_PUBLISH_LOGIN,
         "bun --no-install scripts/ci/read-ci-handoff.ts caddyfile | jq -r . > /tmp/caddyfile.generated",
-        `${smokeVariable}=${smokePath} bun --no-install ci/scripts/images/bake-images.ts --push`,
+        `${smokeVariable}=${smokePath} bun --no-install ci/scripts/images/bake-images.ts --push${catalogV2 ? " --catalog-v2" : ""}`,
       ],
       dependsOn: ["verify"],
       timeoutMinutes: 60,
@@ -73,9 +74,12 @@ export function artifactPublicationSteps(
       },
       commands: [
         "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter homelab --filter '@homelab/cdk8s' --production",
-        ...chartPublicationRequested(),
+        // Under the v2 catalog every main pipeline plans charts against their
+        // catalog owners' builds: a chart with none yet (each companion right
+        // after the flip) publishes, and an unchanged one retains its base.
+        ...(catalogV2 ? [] : chartPublicationRequested()),
         "MISE_TOOLCHAIN_SCOPE=deployment . ci/scripts/toolchain.sh",
-        'bun --no-install packages/homelab/scripts/helm/helm-push.ts "$CI_RELEASE_NUMBER" --delivery-catalog',
+        `bun --no-install packages/homelab/scripts/helm/helm-push.ts "$CI_RELEASE_NUMBER" --delivery-catalog${catalogV2 ? " --catalog-v2" : ""}`,
         "bun --no-install scripts/ci/write-ci-handoff.ts argocd-release-expected < argocd-release-expected.json",
         "bun --no-install scripts/ci/write-ci-handoff.ts helm-release-plan < helm-release-plan.json",
         "bun --no-install scripts/ci/write-ci-handoff.ts delivery-chart-publications < delivery-chart-publications.json",

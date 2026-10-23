@@ -1,7 +1,23 @@
 import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
-import { DELIVERY_ROOT_IGNORE_EXPRESSIONS } from "homelab/src/delivery-ownership.ts";
+import { deliveryRootIgnoreExpressions } from "homelab/src/delivery-ownership.ts";
+import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+
+/** Fields the Cloudflare operator defaults on every TunnelBinding after apply. */
+export const TUNNEL_BINDING_IGNORE_DIFFERENCES = {
+  group: "networking.cfargotunnel.com",
+  kind: "TunnelBinding",
+  jqPathExpressions: [
+    ".subjects[].kind",
+    ".subjects[].spec.http2Origin",
+    ".subjects[].spec.noTlsVerify",
+    ".subjects[].spec.proxyAddress",
+    ".subjects[].spec.proxyPort",
+    ".subjects[].spec.proxyType",
+    ".tunnelRef.disableDNSUpdates",
+  ],
+};
 
 export function createAppsApp(chart: Chart) {
   return new Application(chart, "apps-app", {
@@ -28,21 +44,11 @@ export function createAppsApp(chart: Chart) {
         {
           group: "argoproj.io",
           kind: "Application",
-          jqPathExpressions: DELIVERY_ROOT_IGNORE_EXPRESSIONS,
+          jqPathExpressions: deliveryRootIgnoreExpressions(
+            transitionRendering(),
+          ),
         },
-        {
-          group: "networking.cfargotunnel.com",
-          kind: "TunnelBinding",
-          jqPathExpressions: [
-            ".subjects[].kind",
-            ".subjects[].spec.http2Origin",
-            ".subjects[].spec.noTlsVerify",
-            ".subjects[].spec.proxyAddress",
-            ".subjects[].spec.proxyPort",
-            ".subjects[].spec.proxyType",
-            ".tunnelRef.disableDNSUpdates",
-          ],
-        },
+        TUNNEL_BINDING_IGNORE_DIFFERENCES,
       ],
       syncPolicy: {
         automated: { enabled: true },

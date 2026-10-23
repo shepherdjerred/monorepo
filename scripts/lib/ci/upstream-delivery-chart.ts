@@ -5,7 +5,9 @@ import { z } from "zod";
 
 const MIRROR = "https://chartmuseum.sjer.red";
 const MAX_BYTES = 16 * 1024 * 1024;
-const VERSION = z.string().regex(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u);
+// Helm indexes spell some chart versions with a leading `v` (cert-manager's
+// `v1.21.2`); the catalog pins the exact string the index carries.
+const VERSION = z.string().regex(/^v?\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u);
 const CHART_NAME = z.string().regex(/^[a-z0-9][a-z0-9.-]*$/u);
 const EntrySchema = z.object({
   name: z.string(),

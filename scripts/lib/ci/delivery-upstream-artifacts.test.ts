@@ -5,12 +5,17 @@ import { DeliveryClientError } from "@shepherdjerred/delivery/client";
 import type { AcquireUpstreamArtifact } from "@shepherdjerred/delivery/contract";
 import { ArtifactVersionSchema } from "@shepherdjerred/delivery/contract";
 import {
+  catalogComponentName,
+  componentEntries,
   parseVersionCatalog,
   type VersionCatalogEntry,
 } from "@shepherdjerred/version-catalog";
+import rawVersionCatalog from "@shepherdjerred/version-catalog/catalog.json";
+import { CATALOG_CORE } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import {
   componentArtifactsForPublication,
   MIRRORED_CHARTS,
+  v1AcquisitionCatalog,
 } from "./delivery-upstream-artifacts.ts";
 
 const repository = "https://itzg.github.io/minecraft-server-charts/";
@@ -86,7 +91,7 @@ const minecraftImage: VersionCatalogEntry = {
   component: true,
 };
 const nonComponent: VersionCatalogEntry = {
-  name: "kueue",
+  name: "cert-manager",
   category: "upstream",
   artifactType: "helm-chart",
   management: { managed: false },
@@ -458,3 +463,160 @@ test.each([
     ).rejects.toThrow("reviewed original upstream identity");
   },
 );
+
+const busybox: VersionCatalogEntry = {
+  name: "library/busybox",
+  category: "upstream",
+  artifactType: "image",
+  management: {
+    managed: true,
+    datasource: "docker",
+    registryUrl: "https://docker.io",
+    versioning: "docker",
+  },
+  value: `1.37.0@${imageDigest}`,
+  component: true,
+};
+
+test("v1 acquires only the Minecraft chart until the window's catalog flip", () => {
+  expect(
+    componentEntries(
+      v1AcquisitionCatalog(catalog(minecraftChart, minecraftImage, busybox)),
+    ).map((entry) => entry.name),
+  ).toEqual(["minecraft"]);
+});
+
+test("v2 acquires an OCI chart from its registry by digest, with no Helm index or mirror", async () => {
+  const kueue = parseVersionCatalog(rawVersionCatalog).entries.find(
+    (entry) => entry.name === "kueue",
+  );
+  if (kueue === undefined) throw new Error("Kueue chart entry missing");
+  const requests: AcquireUpstreamArtifact[] = [];
+  const selected = await componentArtifactsForPublication(
+    {
+      latestQualifiedArtifact: async () => {
+        throw new DeliveryClientError(404, "NOT_FOUND", "No original");
+      },
+      acquireUpstreamArtifact: async (input) => {
+        requests.push(input);
+        return verified(input);
+      },
+    },
+    catalog(kueue),
+    producer,
+    {
+      credentials: unexpected,
+      mirror: unexpected,
+      transport: unexpected,
+      registry: "v2",
+    },
+  );
+  const [pinnedVersion = "", digest = ""] = kueue.value.split("@");
+  expect(selected.map((artifact) => artifact.serviceId)).toEqual(["kueue"]);
+  expect(requests.map((request) => request.artifact)).toEqual([
+    expect.objectContaining({
+      component: "chart:kueue",
+      kind: "chart",
+      uri: "oci://registry.k8s.io/kueue/charts/kueue",
+      digest,
+      version: pinnedVersion,
+      origin: {
+        kind: "upstream",
+        repository: "https://registry.k8s.io",
+        name: "kueue/charts/kueue",
+        version: pinnedVersion,
+        checksum: digest,
+      },
+    }),
+  ]);
+});
+
+test("v2 registers one acquisition under every catalog service that acquires the component", async () => {
+  const requests: AcquireUpstreamArtifact[] = [];
+  const selected = await componentArtifactsForPublication(
+    {
+      latestQualifiedArtifact: async () => {
+        throw new DeliveryClientError(404, "NOT_FOUND", "No original");
+      },
+      acquireUpstreamArtifact: async (input) => {
+        requests.push(input);
+        return verified(input);
+      },
+    },
+    catalog(busybox),
+    producer,
+    { credentials, registry: "v2" },
+  );
+  expect(
+    selected.map((artifact) => [artifact.serviceId, artifact.component]),
+  ).toEqual([
+    ["minecraft-shuxin", "image:busybox"],
+    ["minecraft-sjerred", "image:busybox"],
+  ]);
+  expect(requests.map((request) => request.requestId)).toEqual([
+    "ci/1/42/acquire/minecraft-shuxin/library/busybox/1.37.0",
+    "ci/1/42/acquire/minecraft-sjerred/library/busybox/1.37.0",
+  ]);
+  expect(new Set(requests.map((request) => request.artifact.id)).size).toBe(2);
+  await expect(
+    componentArtifactsForPublication(
+      {
+        latestQualifiedArtifact: unexpected,
+        acquireUpstreamArtifact: unexpected,
+      },
+      catalog({ ...busybox, name: "library/not-in-the-catalog" }),
+      producer,
+      { credentials, registry: "v2" },
+    ),
+  ).rejects.toThrow("has no acquiring catalog service");
+});
+
+test("v2 acquires an aliased image from its repository under the alias's component", async () => {
+  const java8 = parseVersionCatalog(rawVersionCatalog).entries.find(
+    (entry) => entry.name === "itzg/minecraft-server-java8",
+  );
+  if (java8 === undefined) throw new Error("Java 8 Minecraft image missing");
+  const requests: AcquireUpstreamArtifact[] = [];
+  const selected = await componentArtifactsForPublication(
+    {
+      latestQualifiedArtifact: async () => {
+        throw new DeliveryClientError(404, "NOT_FOUND", "No original");
+      },
+      acquireUpstreamArtifact: async (input) => {
+        requests.push(input);
+        return verified(input);
+      },
+    },
+    catalog(java8),
+    producer,
+    { credentials, registry: "v2" },
+  );
+  expect(selected.length).toBeGreaterThan(0);
+  for (const request of requests) {
+    expect(request.artifact.component).toBe("image:minecraft-server-java8");
+    expect(request.artifact.uri).toBe("docker.io/itzg/minecraft-server");
+    expect(request.artifact.origin).toMatchObject({
+      repository: "https://docker.io",
+      name: "itzg/minecraft-server",
+    });
+  }
+});
+
+test("the version catalog's components are exactly the charts and images catalog services acquire", () => {
+  const components = componentEntries(
+    parseVersionCatalog(rawVersionCatalog),
+  ).map((entry) => catalogComponentName(entry));
+  expect(new Set(components).size).toBe(components.length);
+  const acquired = new Set(
+    CATALOG_CORE.services.flatMap((service) =>
+      service.components
+        .filter(
+          (component) =>
+            component.producer === "acquisition" &&
+            /^(?:chart|image):/u.test(component.name),
+        )
+        .map((component) => component.name),
+    ),
+  );
+  expect([...components].sort()).toEqual([...acquired].sort());
+});

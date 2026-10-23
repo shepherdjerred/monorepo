@@ -1,0 +1,7 @@
+{
+  "id": "1password/prod/1",
+  "content": {
+    "helm.valuesObject": "{\"connect\":{\"api\":{\"resources\":{\"requests\":{\"cpu\":\"25m\",\"memory\":\"64Mi\"}}},\"credentialsKey\":\"1password-credentials.json\",\"credentialsName\":\"op-credentials\",\"sync\":{\"resources\":{\"requests\":{\"cpu\":\"25m\",\"memory\":\"64Mi\"}}}},\"operator\":{\"autoRestart\":true,\"create\":true,\"pollingInterval\":60,\"token\":{\"key\":\"TOKEN\",\"name\":\"onepassword-token\"}}}"
+  },
+  "forwardOnly": []
+}

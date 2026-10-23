@@ -12,7 +12,10 @@ vi.mock("@shepherdjerred/feature-flags/config-source.ts", () => ({
 }));
 import { sourceCacheConfig } from "#src/checkout/config.ts";
 import { maintenanceConfig } from "#src/maintenance-config.ts";
-import { deliveryPublicationEnabled } from "#src/delivery-config.ts";
+import {
+  deliveryCatalogV2Enabled,
+  deliveryPublicationEnabled,
+} from "#src/delivery-config.ts";
 import {
   performanceConfig,
   DISABLED_PERFORMANCE,
@@ -36,6 +39,22 @@ test("Delivery publication requires a fresh explicit boolean authorization", asy
   await expect(deliveryPublicationEnabled("main")).rejects.toThrow();
   flag.mockRejectedValue(new Error("Unavailable"));
   expect(await deliveryPublicationEnabled("main")).toBe(false);
+});
+
+test("the Delivery v2 catalog flip requires a fresh explicit boolean and defaults off", async () => {
+  flag.mockResolvedValue(undefined);
+  expect(await deliveryCatalogV2Enabled("main")).toBe(false);
+  flag.mockResolvedValue({ value: true });
+  expect(await deliveryCatalogV2Enabled("main")).toBe(true);
+  expect(factory).toHaveBeenLastCalledWith(
+    expect.objectContaining({ requireFreshSnapshot: true }),
+  );
+  flag.mockResolvedValue({ value: false });
+  expect(await deliveryCatalogV2Enabled("main")).toBe(false);
+  flag.mockResolvedValue({ value: "true" });
+  await expect(deliveryCatalogV2Enabled("main")).rejects.toThrow();
+  flag.mockRejectedValue(new Error("Unavailable"));
+  expect(await deliveryCatalogV2Enabled("main")).toBe(false);
 });
 
 test("performance flags preserve explicit false, reject invalid values and default off on absence or outage", async () => {

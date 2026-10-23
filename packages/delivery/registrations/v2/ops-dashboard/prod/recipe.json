@@ -1,0 +1,59 @@
+{
+  "id": "ops-dashboard/prod/2",
+  "definition": {
+    "kind": "kubernetes-application",
+    "application": {
+      "name": "alert-dashboard",
+      "metadata": {
+        "labels": { "ci.sjer.red/managed-application": "true" },
+        "annotations": {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+          "ci.sjer.red/application-lifecycle": "retain"
+        },
+        "finalizers": []
+      },
+      "project": "workloads",
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "alert-dashboard"
+      },
+      "source": {
+        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "chart": "alert-dashboard"
+      },
+      "syncOptions": ["CreateNamespace=true"],
+      "ignoreDifferences": [],
+      "revisionHistoryLimit": 5,
+      "lifecycle": "retain"
+    },
+    "chartComponent": "chart:alert-dashboard",
+    "artifactParameters": {
+      "delivery.images.alert-dashboard": {
+        "component": "image:alert-dashboard",
+        "format": "reference"
+      }
+    },
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "apply-safety",
+        "instance": "application:alert-dashboard",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "sync",
+        "instance": "application:alert-dashboard",
+        "pointOfNoReturn": false
+      }
+    ],
+    "oracle": {
+      "probes": [
+        {
+          "url": "https://alerts.tailnet-1a49.ts.net/healthz",
+          "expectedStatus": 200
+        }
+      ],
+      "tests": []
+    }
+  }
+}

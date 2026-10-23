@@ -1,0 +1,67 @@
+{
+  "id": "minecraft/sandbox/1",
+  "definition": {
+    "kind": "kubernetes-application",
+    "application": {
+      "name": "mc-sandbox",
+      "metadata": {
+        "labels": { "ci.sjer.red/managed-application": "true" },
+        "annotations": {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+          "ci.sjer.red/application-lifecycle": "retain"
+        },
+        "finalizers": []
+      },
+      "project": "cluster",
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "mc-sandbox"
+      },
+      "source": {
+        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "chart": "mc-sandbox"
+      },
+      "syncOptions": ["CreateNamespace=true"],
+      "ignoreDifferences": [],
+      "revisionHistoryLimit": 5,
+      "lifecycle": "retain"
+    },
+    "chartComponent": "chart:mc-sandbox",
+    "artifactParameters": {
+      "delivery.images.the-storm-server-candidate": {
+        "component": "image:the-storm-server",
+        "format": "reference"
+      },
+      "delivery.images.the-storm-server-accepted": {
+        "component": "image:the-storm-server-accepted",
+        "format": "reference"
+      }
+    },
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "apply-safety",
+        "instance": "application:mc-sandbox",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "sync",
+        "instance": "application:mc-sandbox",
+        "pointOfNoReturn": false
+      }
+    ],
+    "oracle": {
+      "probes": [],
+      "tests": [
+        {
+          "suite": "test:e2e",
+          "resultPath": "packages/the-storm/test-results/test-e2e.json"
+        },
+        {
+          "suite": "test:full",
+          "resultPath": "packages/the-storm/test-results/test-full.json"
+        }
+      ]
+    }
+  }
+}

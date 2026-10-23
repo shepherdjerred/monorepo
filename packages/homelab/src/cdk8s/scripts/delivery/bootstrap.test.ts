@@ -20,6 +20,7 @@ import {
 import { bootstrapOperationReceipt } from "homelab/scripts/ci/bootstrap-native.ts";
 import { bootstrapCredentials } from "homelab/scripts/ci/bootstrap-auth.ts";
 import { setupCharts } from "@shepherdjerred/homelab/cdk8s/src/setup-charts.ts";
+import { dormantCharts } from "@shepherdjerred/homelab/cdk8s/src/resources/companions/dormant.ts";
 import {
   discoverChartInputs,
   fingerprintChart,
@@ -75,6 +76,20 @@ function nativeBootstrapApplication(raw: unknown, revision = "2.0.0-600") {
   });
 }
 
+/** Synthesize every chart into `directory` and discover them as publication does. */
+async function synthesizedChartInputs(directory: string) {
+  const output = path.join(directory, "dist");
+  const app = new App({ outdir: output });
+  await setupCharts(app);
+  app.synth();
+  const inputs = await discoverChartInputs(
+    new URL("../../helm", import.meta.url).pathname,
+    output,
+    dormantCharts(),
+  );
+  return { app, inputs };
+}
+
 test("actual BOTH bootstrap stages and Helm renders reviewed images while retaining original dependencies and unrelated sources", async () => {
   const directory = await mkdtemp(
     path.join(os.tmpdir(), "delivery-bootstrap-both-"),
@@ -103,14 +118,7 @@ test("actual BOTH bootstrap stages and Helm renders reviewed images while retain
     },
   });
   try {
-    const output = path.join(directory, "dist");
-    const app = new App({ outdir: output });
-    await setupCharts(app);
-    app.synth();
-    const inputs = await discoverChartInputs(
-      new URL("../../helm", import.meta.url).pathname,
-      output,
-    );
+    const { inputs } = await synthesizedChartInputs(directory);
     const manifests = new Map(
       await Promise.all(
         inputs.map(
@@ -274,14 +282,7 @@ test("normal all-chart publication discovers and packages the actual control-pla
     path.join(os.tmpdir(), "delivery-chart-publication-"),
   );
   try {
-    const output = path.join(directory, "dist");
-    const app = new App({ outdir: output });
-    await setupCharts(app);
-    app.synth();
-    const inputs = await discoverChartInputs(
-      new URL("../../helm", import.meta.url).pathname,
-      output,
-    );
+    const { app, inputs } = await synthesizedChartInputs(directory);
     const controller = inputs.find(
       (input) => input.name === "delivery-control-plane",
     );

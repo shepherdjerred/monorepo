@@ -183,7 +183,10 @@
         "paper",
         "siderolabs/talos",
         "ghcr.io/siderolabs/installer",
-        "kubernetes/kubernetes"
+        "kubernetes/kubernetes",
+        "siderolabs/installer-liskov",
+        "siderolabs/installer-torvalds",
+        "siderolabs/kubelet"
       ],
       "automerge": false,
       "minimumReleaseAge": "0 days",
@@ -195,7 +198,10 @@
       "matchPackageNames": [
         "siderolabs/talos",
         "ghcr.io/siderolabs/installer",
-        "kubernetes/kubernetes"
+        "kubernetes/kubernetes",
+        "siderolabs/installer-liskov",
+        "siderolabs/installer-torvalds",
+        "siderolabs/kubelet"
       ],
       "minimumReleaseAge": "0 days"
     },

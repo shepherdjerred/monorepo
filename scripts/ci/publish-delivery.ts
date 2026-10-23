@@ -14,10 +14,9 @@ import type {
   PublishBuildSchema,
 } from "@shepherdjerred/delivery/contract";
 import {
-  SERVICE_CATALOG,
-  ServiceIndex,
-} from "@shepherdjerred/ops-model/catalog.ts";
-import type { Catalog, Service } from "@shepherdjerred/ops-model/catalog.ts";
+  publicationOwners,
+  type PublicationOwners,
+} from "@shepherdjerred/ops-model/delivery-catalog/publication-owners.ts";
 import {
   ChartPublicationSchema,
   PublishedChartReceiptSchema,
@@ -31,7 +30,10 @@ import {
 import { requireEnv, run } from "../lib/run.ts";
 import rawCatalog from "@shepherdjerred/version-catalog/catalog.json";
 import { parseVersionCatalog } from "@shepherdjerred/version-catalog";
-import { componentArtifactsForPublication } from "../lib/ci/delivery-upstream-artifacts.ts";
+import {
+  componentArtifactsForPublication,
+  v1AcquisitionCatalog,
+} from "../lib/ci/delivery-upstream-artifacts.ts";
 import { attachForumPublication } from "../lib/ci/delivery-forum-publication.ts";
 import { imageRuntimeDigests } from "../lib/ci/image-runtime-digests.ts";
 import {
@@ -43,7 +45,6 @@ import {
   attachTofuArchivePublications,
   TOFU_ARCHIVE_HANDOFF,
 } from "../lib/ci/delivery-tofu-publication.ts";
-import { staticSiteServiceId } from "../lib/ci/static-site-publications.ts";
 import { readRequiredHandoff } from "../lib/ci/ci-handoff.ts";
 
 const DigestSchema = z.string().regex(/^sha256:[a-f\d]{64}$/u);
@@ -67,7 +68,8 @@ type PublicationInput = {
   pipelineNumber: number;
   repositoryId: number;
   capturedAt: string;
-  catalog?: Catalog;
+  /** The registry that names each build's owner; v1 until the window's catalog flip. */
+  owners?: PublicationOwners;
   chartPublication?: unknown;
   retainedArtifacts?: unknown;
 };
@@ -82,22 +84,6 @@ type PublicationDependencies = {
     query: FindQualifiedArtifact,
   ) => Promise<ArtifactVersion | undefined>;
 };
-
-function imageService(name: string, catalog: Catalog): Service {
-  const owner = new ServiceIndex(catalog).byImage(name);
-  if (owner === undefined)
-    throw new Error(
-      `Image shepherdjerred/${name} requires a service catalog owner`,
-    );
-  return owner;
-}
-
-function chartService(name: string, catalog: Catalog): Service {
-  const owner = new ServiceIndex(catalog).byChart(name);
-  if (owner === undefined)
-    throw new Error(`Chart ${name} requires a service catalog owner`);
-  return owner;
-}
 
 export async function downloadChartArtifact(
   name: string,
@@ -184,7 +170,7 @@ function verifyQualifiedArchive(
 async function addImagePublications(
   ledger: PublicationLedger,
   input: PublicationInput,
-  catalog: Catalog,
+  owners: PublicationOwners,
   dependencies: PublicationDependencies,
 ) {
   for (const [key, digest] of Object.entries(
@@ -193,10 +179,10 @@ async function addImagePublications(
     const name = key.split("/")[1];
     if (name === undefined)
       throw new Error(`Image pin key is malformed: ${key}`);
-    const service = imageService(name, catalog);
+    const owner = owners.image(name);
     const uri = firstPartyImageRepository(name);
     const raw = await dependencies.inspectImage(`${uri}@${digest}`);
-    ledger.add(service.id, {
+    ledger.add(owner, {
       id: `ci/${String(input.repositoryId)}/${String(input.pipelineNumber)}/image/${name}`,
       component: `image:${name}`,
       kind: "image",
@@ -212,7 +198,7 @@ async function addImagePublications(
 async function addChartPublications(
   ledger: PublicationLedger,
   input: PublicationInput,
-  catalog: Catalog,
+  owners: PublicationOwners,
   dependencies: PublicationDependencies,
 ) {
   const charts =
@@ -220,7 +206,8 @@ async function addChartPublications(
       ? []
       : z.array(PublishedChartReceiptSchema).parse(input.charts);
   for (const chart of charts) {
-    const owner = chartService(chart.name, catalog);
+    const owner = owners.chart(chart.name);
+    if (owner === undefined) continue;
     const artifact = await dependencies.chartArtifact(
       chart.name,
       chart.revision,
@@ -229,7 +216,7 @@ async function addChartPublications(
       throw new Error(
         "Published chart digest differs from its original producer receipt",
       );
-    ledger.add(owner.id, {
+    ledger.add(owner, {
       id: `ci/${String(input.repositoryId)}/${String(input.pipelineNumber)}/chart/${chart.name}`,
       component: `chart:${chart.name}`,
       kind: "chart",
@@ -243,11 +230,14 @@ async function addChartPublications(
   // Unchanged charts reference the qualified artifact the producer planned against.
   for (const chart of z
     .array(RetainedChartReceiptSchema)
-    .parse(input.retainedCharts ?? []))
-    ledger.retain(chartService(chart.name, catalog).id, {
+    .parse(input.retainedCharts ?? [])) {
+    const owner = owners.chart(chart.name);
+    if (owner === undefined) continue;
+    ledger.retain(owner, {
       id: chart.artifactId,
       component: `chart:${chart.name}`,
     });
+  }
 }
 
 /**
@@ -257,10 +247,10 @@ async function addChartPublications(
 async function addSitePublication(
   ledger: PublicationLedger,
   site: z.output<typeof SitePublicationSchema>,
-  catalog: Catalog,
+  owners: PublicationOwners,
   dependencies: PublicationDependencies,
 ) {
-  if (!catalog.services.some((service) => service.id === site.serviceId))
+  if (!owners.owns(site.serviceId))
     throw new Error(
       `Static artifact references an unknown service ${site.serviceId}`,
     );
@@ -297,15 +287,15 @@ export async function buildPublications(
   input: PublicationInput,
   dependencies: PublicationDependencies,
 ): Promise<PublishBuild[]> {
-  const catalog = input.catalog ?? SERVICE_CATALOG;
+  const owners = input.owners ?? publicationOwners("v1");
   verifyChartProducer(input);
-  const ledger = new PublicationLedger(catalog);
-  await addImagePublications(ledger, input, catalog, dependencies);
-  await addChartPublications(ledger, input, catalog, dependencies);
+  const ledger = new PublicationLedger((serviceId) => owners.owns(serviceId));
+  await addImagePublications(ledger, input, owners, dependencies);
+  await addChartPublications(ledger, input, owners, dependencies);
   for (const site of z
     .array(SitePublicationSchema.strict())
     .parse(input.siteArtifacts ?? []))
-    await addSitePublication(ledger, site, catalog, dependencies);
+    await addSitePublication(ledger, site, owners, dependencies);
   for (const artifact of z
     .array(ArtifactVersionSchema)
     .parse(input.retainedArtifacts ?? []))
@@ -321,9 +311,22 @@ export function parsePublicationOptions(args: string[]) {
     args,
     strict: true,
     allowPositionals: false,
-    options: { "static-archives": { type: "boolean", default: false } },
+    options: {
+      "static-archives": { type: "boolean", default: false },
+      "catalog-v2": { type: "boolean", default: false },
+    },
   });
-  return { staticArchives: values["static-archives"] };
+  return {
+    staticArchives: values["static-archives"],
+    catalogV2: values["catalog-v2"],
+  };
+}
+
+async function tofuArchiveHandoff(): Promise<unknown> {
+  const raw: unknown = JSON.parse(
+    await readRequiredHandoff(TOFU_ARCHIVE_HANDOFF),
+  );
+  return raw;
 }
 
 async function main() {
@@ -343,12 +346,15 @@ async function main() {
     baseUrl: requireEnv("DELIVERY_URL"),
     headers: { Authorization: `Bearer ${requireEnv("DELIVERY_API_TOKEN")}` },
   });
+  const owners = publicationOwners(options.catalogV2 ? "v2" : "v1");
   const handoffs = await readPublicationHandoffs(options.staticArchives);
+  const versionCatalog = parseVersionCatalog(rawCatalog);
   const components = await componentArtifactsForPublication(
     client,
-    parseVersionCatalog(rawCatalog),
+    options.catalogV2 ? versionCatalog : v1AcquisitionCatalog(versionCatalog),
     { repositoryId, pipelineNumber, sourceRevision },
     {
+      registry: owners.registry,
       credentials: () => ({
         username: requireEnv("CHARTMUSEUM_USERNAME"),
         password: requireEnv("CHARTMUSEUM_PASSWORD"),
@@ -358,6 +364,7 @@ async function main() {
   const publications = await buildPublications(
     {
       ...handoffs,
+      owners,
       retainedArtifacts: [...handoffs.retainedArtifacts, ...components],
       sourceRevision,
       ciUrl: requireEnv("CI_PIPELINE_URL"),
@@ -396,53 +403,51 @@ async function main() {
     publications,
     (query) => client.qualifiedForumBundle(query),
   );
-  const platformPublications = await attachPlatformPublication(
-    forumPublications,
-    {
-      sourceRevision,
-      pipelineNumber,
-      repositoryId,
-      ciUrl: requireEnv("CI_PIPELINE_URL"),
-      capturedAt: new Date().toISOString(),
-      rootInventory: handoffs.rootInventory,
-      retainedCharts: handoffs.retainedCharts,
-      files: await platformSourceFiles(
-        sourceRevision,
-        Bun.env["CI_CHANGED_BASE"],
-      ),
-    },
-    async () => {
-      const artifact = await client.latestQualifiedArtifact({
-        serviceId: "gitops",
-        component: "chart:apps",
-        kind: "chart",
-      });
-      return artifact.id;
-    },
-    options.staticArchives
-      ? (bucket) =>
-          client.latestQualifiedArtifact({
-            serviceId: staticSiteServiceId(bucket),
-            component: `site:${bucket}`,
-            kind: "archive",
-          })
-      : undefined,
-  );
-  const rawTofuArchives: unknown = JSON.parse(
-    await readRequiredHandoff(TOFU_ARCHIVE_HANDOFF),
-  );
-  const tofuPublications = attachTofuArchivePublications(
-    platformPublications,
-    rawTofuArchives,
-    {
-      sourceRevision,
-      pipelineNumber,
-      repositoryId,
-      ciUrl: requireEnv("CI_PIPELINE_URL"),
-      capturedAt: new Date().toISOString(),
-    },
-  );
-  for (const publication of tofuPublications) {
+  const identity = {
+    sourceRevision,
+    pipelineNumber,
+    repositoryId,
+    ciUrl: requireEnv("CI_PIPELINE_URL"),
+    capturedAt: new Date().toISOString(),
+  };
+  // v2 registers every OpenTofu stack's frozen archive under its tofu-<stack>
+  // service. v1 releases the root and its stacks through the platform
+  // publication, as before the window's catalog flip.
+  const registered = options.catalogV2
+    ? attachTofuArchivePublications(
+        forumPublications,
+        await tofuArchiveHandoff(),
+        identity,
+      )
+    : await attachPlatformPublication(
+        forumPublications,
+        {
+          ...identity,
+          rootInventory: handoffs.rootInventory,
+          retainedCharts: handoffs.retainedCharts,
+          files: await platformSourceFiles(
+            sourceRevision,
+            Bun.env["CI_CHANGED_BASE"],
+          ),
+        },
+        async () => {
+          const artifact = await client.latestQualifiedArtifact({
+            serviceId: "gitops",
+            component: "chart:apps",
+            kind: "chart",
+          });
+          return artifact.id;
+        },
+        options.staticArchives
+          ? (bucket) =>
+              client.latestQualifiedArtifact({
+                serviceId: "static-sites",
+                component: `site:${bucket}`,
+                kind: "archive",
+              })
+          : undefined,
+      );
+  for (const publication of registered) {
     const result = await client.publish(publication);
     console.log(
       `Registered pending Delivery build ${result.buildId} for ${publication.serviceId}`,

@@ -190,7 +190,7 @@ toolkit deploy rollback <ENVIRONMENT_ID> <DEPLOYMENT_ID>
 toolkit deploy rebind <ENVIRONMENT_ID> --recipe <RECIPE_REVISION> --configuration <CONFIGURATION_REVISION>
 toolkit deploy monitor <ENVIRONMENT_ID>
 toolkit deploy retire <SERVICE_ID> --reason "Replaced by Arcade" --machine
-toolkit deploy catalog reconcile --file <CATALOG_DOCUMENT_JSON> --machine
+toolkit deploy catalog reconcile [--file <CATALOG_DOCUMENT_JSON>] --machine
 toolkit deploy attest <DEPLOYMENT_ID> --stage <STAGE> --evidence <EVIDENCE_JSON> --machine
 toolkit deploy approve-plan <DEPLOYMENT_ID> --reason "Reviewed the saved plan's changes"
 toolkit deploy reject-plan <DEPLOYMENT_ID> --reason "Why the saved plan must not apply"
@@ -223,8 +223,12 @@ latest observation with its firing alarms.
 
 `retire`, `catalog reconcile`, `recover`, `snapshot reconcile` and
 `snapshot accept` require the admin credential. `catalog reconcile` reads the
-catalog document `--file` names, validates it against the catalog contract
-before sending, and exits 1 when the server refuses any entry. `recover` creates the one recovery intent of a
+catalog document `--file` names, or without `--file` builds the committed one
+of the monorepo checkout it runs in with `loadCatalogDocument()` from
+`@shepherdjerred/ops-model/delivery-catalog/files.ts`, reading the core and
+revision files from that checkout. It validates the document
+against the catalog contract, prints its catalog revision before sending, and
+exits 1 when the server refuses any entry. `recover` creates the one recovery intent of a
 `recovery-required` deployment, bound to the expected binding generation and,
 for a compound target, the named sub-step. With `--operation-id`, it then
 settles an ordinary Argo intent by independent readback of that exact

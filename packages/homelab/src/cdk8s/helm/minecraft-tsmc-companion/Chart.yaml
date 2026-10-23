@@ -1,0 +1,6 @@
+apiVersion: v2
+name: minecraft-tsmc-companion
+description: Objects the minecraft-tsmc Application renders into the root chart, owned by its service from the v2 cutover
+type: application
+version: "$version"
+appVersion: "$appVersion"

@@ -244,7 +244,8 @@ export function createLokiAlertRules(chart: Chart): ConfigMap {
   });
 }
 
-export function createLokiApp(chart: Chart) {
+/** Objects the root renders beside the Application; the `loki-companion` companion chart renders the same objects under transition rendering. */
+export function createLokiResources(chart: Chart): void {
   createIngress(chart, "loki-ingress", {
     namespace: "loki",
     service: "loki",
@@ -254,6 +255,10 @@ export function createLokiApp(chart: Chart) {
     // Loki returns 404 at "/"; its readiness endpoint is /ready.
     probePath: "/ready",
   });
+}
+
+export function createLokiApp(chart: Chart) {
+  createLokiResources(chart);
 
   const rulesConfigMap = createLokiAlertRules(chart);
 

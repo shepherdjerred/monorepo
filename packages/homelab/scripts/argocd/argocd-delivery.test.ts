@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -11,6 +11,7 @@ import {
 import {
   DELIVERY_ENVIRONMENT_ANNOTATION,
   DELIVERY_ROOT_IGNORE_EXPRESSIONS,
+  TRANSITION_ROOT_IGNORE_EXPRESSIONS,
   deliveryEnvironment,
 } from "#delivery-ownership";
 
@@ -332,4 +333,61 @@ describe("Delivery Application ownership", () => {
       }),
     ).toThrow("preserve");
   });
+});
+
+function stamped(name: string, environment: string) {
+  return {
+    kind: "Application",
+    metadata: {
+      name,
+      annotations: { "delivery.shepherdjerred.com/environment": environment },
+    },
+  };
+}
+
+test("tells a v1 delegation from the catalog environment transition rendering stamps", () => {
+  expect(deliveryEnvironment(stamped("arcade", "arcade/prod"))).toBe(
+    "arcade/prod",
+  );
+  expect(
+    deliveryEnvironment(stamped("woodpecker", "woodpecker/prod")),
+  ).toBeUndefined();
+  expect(deliveryEnvironment(stamped("argocd", "argocd/prod"))).toBeUndefined();
+  expect(
+    deliveryEnvironment(stamped("redlib", "self-hosted-apps/redlib")),
+  ).toBe("self-hosted-apps/redlib");
+  expect(() => deliveryEnvironment(stamped("woodpecker", "ci/prod"))).toThrow(
+    "absent from the reviewed Application registration",
+  );
+  expect(() => deliveryEnvironment(stamped("apps", "apps/prod"))).toThrow(
+    "non-root",
+  );
+});
+
+function rootPreserving(expressions: readonly string[]) {
+  return {
+    spec: {
+      syncPolicy: { syncOptions: ["RespectIgnoreDifferences=true"] },
+      ignoreDifferences: [
+        {
+          group: "argoproj.io",
+          kind: "Application",
+          jqPathExpressions: [...expressions],
+        },
+      ],
+    },
+  };
+}
+
+test("the root may preserve v1's fields in either rendering state's form", () => {
+  expect(() =>
+    assertDeliveryRootPreservesSelection(
+      rootPreserving(TRANSITION_ROOT_IGNORE_EXPRESSIONS),
+    ),
+  ).not.toThrow();
+  expect(() =>
+    assertDeliveryRootPreservesSelection(
+      rootPreserving(TRANSITION_ROOT_IGNORE_EXPRESSIONS.slice(1)),
+    ),
+  ).toThrow("preserve");
 });

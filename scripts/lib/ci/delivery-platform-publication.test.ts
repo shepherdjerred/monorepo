@@ -7,15 +7,12 @@ import {
   SERVICE_CATALOG,
   ServiceIndex,
 } from "@shepherdjerred/ops-model/catalog.ts";
+import { V1_STATIC_SITE_DESTINATIONS } from "@shepherdjerred/ops-model/static-release-targets.ts";
 import {
   attachPlatformPublication,
   changedPlatformStacks,
   platformDependencyClosure,
 } from "./delivery-platform-publication.ts";
-import {
-  INDEPENDENT_SITE_BUCKETS,
-  staticSiteCatalog,
-} from "./testing/service-catalog.ts";
 
 const files: string[] = [];
 const metadata = {
@@ -28,7 +25,6 @@ const metadata = {
   rootInventory: undefined,
 };
 const anchor = async () => "original-qualified-apps";
-const siteCatalog = staticSiteCatalog();
 const chartInputs = new ServiceIndex().rootReleaseCharts();
 function fullRootPublication() {
   const builds = new Map<string, ReturnType<typeof PublishBuildSchema.parse>>();
@@ -266,7 +262,7 @@ test("site prerequisites exclude Scout's combined deployment and keep the exact 
     });
   const result = await attachPlatformPublication(
     [
-      build("sjer-red", "sjer-red"),
+      build("static-sites", "sjer-red"),
       build("scout-for-lol", "scout-frontend-beta"),
     ],
     metadata,
@@ -286,13 +282,13 @@ test("a newer root freezes unchanged original site archives so an older queued s
   const lookups: string[] = [];
   const result = await attachPlatformPublication(
     builds,
-    { ...metadata, rootInventory: inventory, catalog: siteCatalog },
+    { ...metadata, rootInventory: inventory },
     anchor,
     async (bucket) => {
       lookups.push(bucket);
       return ArtifactVersionSchema.parse({
         id: `original/${bucket}`,
-        serviceId: bucket,
+        serviceId: "static-sites",
         buildId: "original-older-ci",
         sourceRevision: "b".repeat(40),
         createdAt: metadata.capturedAt,
@@ -316,7 +312,7 @@ test("a newer root freezes unchanged original site archives so an older queued s
   await expect(
     attachPlatformPublication(
       builds,
-      { ...metadata, rootInventory: inventory, catalog: siteCatalog },
+      { ...metadata, rootInventory: inventory },
       anchor,
       async (bucket) =>
         ArtifactVersionSchema.parse({
@@ -337,28 +333,29 @@ test("a newer root freezes unchanged original site archives so an older queued s
 
 test("a first full root publication needs no retained sites when every active site archive is fresh", async () => {
   const { builds, inventory } = fullRootPublication();
-  const sitePublications = INDEPENDENT_SITE_BUCKETS.map((bucket) =>
-    PublishBuildSchema.parse({
-      requestId: `ci/1/42/${bucket}`,
-      serviceId: bucket,
-      sourceRevision: metadata.sourceRevision,
-      ciUrl: metadata.ciUrl,
-      verifiedAt: metadata.capturedAt,
-      artifacts: [
-        {
-          id: `ci/1/42/site/${bucket}`,
-          component: `site:${bucket}`,
-          kind: "archive",
-          uri: `s3://delivery-artifacts/sites/${bucket}/${"c".repeat(64)}.tar`,
-          digest: `sha256:${"c".repeat(64)}`,
-          version: "build-42",
-        },
-      ],
-    }),
-  );
+  const artifacts = Object.entries(V1_STATIC_SITE_DESTINATIONS)
+    .filter(([, environment]) => environment.startsWith("static-sites/"))
+    .map(([bucket]) => ({
+      id: `ci/1/42/site/${bucket}`,
+      component: `site:${bucket}`,
+      kind: "archive",
+      uri: `s3://delivery-artifacts/sites/${bucket}/${"c".repeat(64)}.tar`,
+      digest: `sha256:${"c".repeat(64)}`,
+      version: "build-42",
+    }));
   const result = await attachPlatformPublication(
-    [...builds, ...sitePublications],
-    { ...metadata, rootInventory: inventory, catalog: siteCatalog },
+    [
+      ...builds,
+      PublishBuildSchema.parse({
+        requestId: "ci/1/42/static-sites",
+        serviceId: "static-sites",
+        sourceRevision: metadata.sourceRevision,
+        ciUrl: metadata.ciUrl,
+        verifiedAt: metadata.capturedAt,
+        artifacts,
+      }),
+    ],
+    { ...metadata, rootInventory: inventory },
     anchor,
     async () => {
       throw new Error(

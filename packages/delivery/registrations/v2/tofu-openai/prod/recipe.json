@@ -1,0 +1,19 @@
+{
+  "id": "tofu-openai/prod/1",
+  "definition": {
+    "kind": "tofu",
+    "stack": "openai",
+    "archiveComponent": "archive:tofu-openai",
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      { "kind": "plan", "instance": "stack:openai", "pointOfNoReturn": false },
+      {
+        "kind": "approve",
+        "instance": "stack:openai",
+        "pointOfNoReturn": false
+      },
+      { "kind": "apply", "instance": "stack:openai", "pointOfNoReturn": false }
+    ],
+    "sharedLock": "platform"
+  }
+}
