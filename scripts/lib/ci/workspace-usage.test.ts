@@ -71,7 +71,7 @@ test("a category that misses the shared deadline reports no bytes instead of a p
   const started = Date.now();
   const usage = await collectWorkspaceUsage(root, {
     deadlineMs: 200,
-    du: ["sleep", "30"],
+    du: { argv: ["sleep", "30"], unit: 1 },
   });
   expect(Date.now() - started).toBeLessThan(10_000);
   expect(bytes(usage, "git")).toBeNull();
