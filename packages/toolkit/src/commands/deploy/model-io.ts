@@ -2,6 +2,7 @@ import {
   CatalogDocumentSchema,
   type StoredSnapshotObject,
 } from "@shepherdjerred/delivery/model-contract";
+import { loadCatalogDocument } from "@shepherdjerred/ops-model/delivery-catalog/files.ts";
 import { required, type DeployOptions } from "./common.ts";
 
 /**
@@ -16,6 +17,8 @@ export type ObjectReader = (location: {
 
 export type ModelOptions = DeployOptions & {
   requestNotice?: (id: string) => void;
+  /** Announces the catalog revision a reconcile sends. */
+  catalogNotice?: (revision: string) => void;
   readObject?: ObjectReader;
 };
 export type ModelResult = Promise<{ result: unknown; exitCode: number }>;
@@ -42,4 +45,15 @@ export async function readJson(path: string): Promise<unknown> {
 /** The catalog document named by `--file`, checked against the catalog contract. */
 export async function catalogDocument(options: DeployOptions) {
   return CatalogDocumentSchema.parse(await readJson(required(options.file)));
+}
+
+/**
+ * The document a reconcile sends: the one `--file` names, or else the
+ * committed catalog (`loadCatalogDocument()`, the reviewed core plus every
+ * environment's revision files).
+ */
+export async function reconcileDocument(options: DeployOptions) {
+  return options.file === undefined
+    ? CatalogDocumentSchema.parse(await loadCatalogDocument())
+    : catalogDocument(options);
 }

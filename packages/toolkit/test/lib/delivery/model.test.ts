@@ -13,9 +13,11 @@ import { deployMachineCredential } from "#commands/deploy/forum.ts";
 import type { ObjectReader } from "#commands/deploy/model-io.ts";
 import {
   COLD_START_SNAPSHOT,
+  CatalogDocumentSchema,
   catalogRevision,
   coldStartArchiveKey,
 } from "@shepherdjerred/delivery/model-contract";
+import { loadCatalogDocument } from "@shepherdjerred/ops-model/delivery-catalog/files.ts";
 
 const snapshotWriterFingerprint = `sha256:${"c".repeat(64)}`;
 /** `latest.json` and its immutable copy, as the writer left them in R2. */
@@ -105,7 +107,6 @@ describe("model verbs refuse incomplete requests before credentials", () => {
     ["retire", ["webring-legacy"], ["--reason", "Replaced"], "--machine"],
     ["retire", ["webring-legacy"], ["--machine"], "--reason"],
     ["catalog", ["apply"], ["--machine"], "deploy catalog reconcile"],
-    ["catalog", ["reconcile"], ["--machine"], "--file"],
     ["catalog", ["reconcile"], ["--file", "catalog.json"], "--machine"],
     ["promote", [fixtures.BETA, fixtures.PROD], ["--override"], "--override"],
     [
@@ -295,6 +296,25 @@ describe("admin and operator verbs", () => {
     });
     const refusal = await run(refused.client, "catalog", args);
     expect(refusal.exitCode).toBe(1);
+  });
+
+  test("catalog reconcile without --file sends the committed catalog and announces its revision", async () => {
+    const committed = CatalogDocumentSchema.parse(await loadCatalogDocument());
+    const { client, sent } = delivery({
+      "POST /catalog/reconcile": fixtures.catalog.reconcile,
+    });
+    const notices: string[] = [];
+    const { values, positionals } = parseDeployArgs(["reconcile", "--machine"]);
+    const result = await runDeployCommand(client, "catalog", positionals, {
+      ...values,
+      catalogNotice: (revision) => notices.push(revision),
+    });
+    expect(result.exitCode).toBe(0);
+    expect(notices).toEqual([await catalogRevision(committed)]);
+    expect(sent.map((request) => request.path)).toEqual(["/catalog/reconcile"]);
+    expect(
+      await catalogRevision(CatalogDocumentSchema.parse(sent[0]?.body)),
+    ).toBe(notices[0]);
   });
 
   test("attest sends the stage and every evidence entry of the file", async () => {

@@ -40,6 +40,9 @@ export async function handleDeployCommand(
       requestNotice: (id) => {
         console.error(`Delivery request ID: ${id}`);
       },
+      catalogNotice: (revision) => {
+        console.error(`Catalog revision: ${revision}`);
+      },
     },
   );
   console.log(JSON.stringify(result, null, values.json ? undefined : 2));

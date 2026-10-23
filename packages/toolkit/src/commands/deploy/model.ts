@@ -7,6 +7,7 @@ import {
   AttestationRequestSchema,
   PLAN_APPROVAL_STAGE_KEY,
   RecoveryIntentRequestSchema,
+  catalogRevision,
 } from "@shepherdjerred/delivery/model-contract";
 import type { DeliveryClient } from "@shepherdjerred/delivery/client";
 import { generation, required, type DeployOptions } from "./common.ts";
@@ -17,8 +18,8 @@ import {
   validateSnapshotCommand,
 } from "./cold-start.ts";
 import {
-  catalogDocument,
   readJson,
+  reconcileDocument,
   requestId,
   requireMachine,
   type ModelOptions,
@@ -80,8 +81,7 @@ function validateAdmin(
     }
     case "catalog": {
       if (positionals[0] !== "reconcile")
-        throw new Error("Use deploy catalog reconcile --file <PATH>");
-      if (options.file === undefined) throw new Error("--file is required");
+        throw new Error("Use deploy catalog reconcile [--file <PATH>]");
       requireMachine(options, "Catalog reconcile");
       return;
     }
@@ -280,9 +280,9 @@ async function administer(
       return { result, exitCode: 0 };
     }
     case "catalog": {
-      const result = await client.reconcileCatalog(
-        await catalogDocument(options),
-      );
+      const document = await reconcileDocument(options);
+      options.catalogNotice?.(await catalogRevision(document));
+      const result = await client.reconcileCatalog(document);
       return { result, exitCode: result.refused.length === 0 ? 0 : 1 };
     }
     case "recover": {

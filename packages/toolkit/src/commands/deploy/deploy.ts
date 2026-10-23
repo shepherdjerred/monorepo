@@ -61,7 +61,7 @@ rollback <ENVIRONMENT> <DEPLOYMENT_ID> Restore the selection that deployment fro
 rebind <ENVIRONMENT> --recipe <ID> --configuration <ID>  Keep the accepted set revision, change either revision
 monitor <ENVIRONMENT>                  Inspect the accepted deployment's monitor
 retire <SERVICE> --reason <TEXT> --machine  Retire a service and its environments
-catalog reconcile --file <PATH> --machine  Make the record agree with a catalog document
+catalog reconcile [--file <PATH>] --machine  Make the record agree with a catalog document (default: the committed catalog)
 attest <DEPLOYMENT_ID> --stage <NAME> --evidence <PATH> --machine  Record operator-attested stage evidence
 snapshot --output <PATH>               Fetch the cold-start snapshot from R2; works while Delivery is down
 snapshot reconcile --machine           Compare record, snapshot and live target; hold mismatches
@@ -95,7 +95,8 @@ Options:
   --evidence <PATH|TEXT>               attest: JSON array of evidence; snapshot accept: what was inspected
   --output <PATH>                      Where snapshot writes the fetched cold-start snapshot
   --snapshot <PATH>                    Cold-start snapshot render-application reads
-  --file <PATH>                        Catalog document for catalog reconcile and render-application
+  --file <PATH>                        Catalog document for render-application, and for catalog reconcile
+                                       instead of the committed catalog
   --timeout <SECONDS>                  Wait deadline (default 900)
   --interval <SECONDS>                 Poll interval (default 5)
 
