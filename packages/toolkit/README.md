@@ -248,7 +248,10 @@ credentials, validates it and writes it to the file. `render-application`
 prints the ArgoCD Application for one environment from its recipe in the
 catalog document `--file` names and the snapshot's accepted selection, with the
 one sync a cold start needs, ready for `kubectl apply`; it uses Delivery's one
-Application renderer. `snapshot reconcile` runs reconcile-after-restore once
+Application renderer. The catalog document must be the revision the snapshot
+records (`catalogRevision`), so the selection's recipe and configuration ids
+resolve to the contents that were accepted; any other revision is refused
+before rendering. `snapshot reconcile` runs reconcile-after-restore once
 Delivery is back: it reads `latest.json` and its immutable copy with the `r2`
 profile, requires them identical with the writer's fingerprint, and sends
 that snapshot, because Delivery holds no R2 credential. Delivery compares the

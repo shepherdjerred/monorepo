@@ -13,6 +13,7 @@ import { deployMachineCredential } from "#commands/deploy/forum.ts";
 import type { ObjectReader } from "#commands/deploy/model-io.ts";
 import {
   COLD_START_SNAPSHOT,
+  catalogRevision,
   coldStartArchiveKey,
 } from "@shepherdjerred/delivery/model-contract";
 
@@ -659,8 +660,16 @@ describe("cold start", () => {
   test("render-application prints the snapshot's selection as an Application", async () => {
     const snapshot = path.join(directory, "snapshot.json");
     const catalog = path.join(directory, "catalog.json");
-    await Bun.write(snapshot, JSON.stringify(fixtures.coldStartSnapshot));
-    await Bun.write(catalog, JSON.stringify(await fixtures.catalogDocument()));
+    const document = await fixtures.catalogDocument();
+    // The snapshot names the catalog revision it was written under.
+    await Bun.write(
+      snapshot,
+      JSON.stringify({
+        ...fixtures.coldStartSnapshot,
+        catalogRevision: await catalogRevision(document),
+      }),
+    );
+    await Bun.write(catalog, JSON.stringify(document));
     const { client, sent } = delivery({});
     const args = ["--snapshot", snapshot, "--file", catalog];
     const rendered = await run(client, "render-application", [
@@ -686,5 +695,41 @@ describe("cold start", () => {
     await expect(
       run(client, "render-application", ["arcade/prod", ...args]),
     ).rejects.toThrow("no accepted selection for arcade/prod");
+  });
+
+  test("render-application refuses a catalog document of another revision", async () => {
+    const snapshot = path.join(directory, "other-snapshot.json");
+    const catalog = path.join(directory, "other-catalog.json");
+    const document = await fixtures.catalogDocument();
+    await Bun.write(
+      snapshot,
+      JSON.stringify({
+        ...fixtures.coldStartSnapshot,
+        catalogRevision: await catalogRevision(document),
+      }),
+    );
+    // The same revision ids, with one configuration's contents changed.
+    await Bun.write(
+      catalog,
+      JSON.stringify({
+        ...document,
+        configurations: document.configurations.map((entry, index) =>
+          index === 0
+            ? { ...entry, content: { ...entry.content, changed: "yes" } }
+            : entry,
+        ),
+      }),
+    );
+    const { client, sent } = delivery({});
+    await expect(
+      run(client, "render-application", [
+        "delivery/prod",
+        "--snapshot",
+        snapshot,
+        "--file",
+        catalog,
+      ]),
+    ).rejects.toThrow(/but the snapshot was written under/u);
+    expect(sent).toEqual([]);
   });
 });

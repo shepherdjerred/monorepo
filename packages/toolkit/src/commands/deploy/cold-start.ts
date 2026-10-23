@@ -2,6 +2,7 @@ import {
   COLD_START_SNAPSHOT,
   SettleRestoreHoldSchema,
   ColdStartSnapshotSchema,
+  catalogRevision,
   renderApplication,
   restoreRequest,
 } from "@shepherdjerred/delivery/model-contract";
@@ -124,7 +125,9 @@ export function validateRenderCommand(options: ModelOptions) {
 /**
  * The Application for one environment from its recipe in the catalog
  * document and the snapshot's accepted selection, with the one sync a cold
- * start needs. Apply it with kubectl; Delivery takes it over afterwards.
+ * start needs. The document must be the catalog revision the snapshot was
+ * written under, so the revision ids resolve to the contents that were
+ * accepted. Apply it with kubectl; Delivery takes it over afterwards.
  */
 export async function runRenderCommand(
   environmentId: string,
@@ -142,6 +145,11 @@ export async function runRenderCommand(
       `The snapshot records no accepted selection for ${environmentId}`,
     );
   const document = await catalogDocument(options);
+  const revision = await catalogRevision(document);
+  if (revision !== snapshot.catalogRevision)
+    throw new Error(
+      `The catalog document is revision ${revision}, but the snapshot was written under ${snapshot.catalogRevision}; render from that catalog revision's document`,
+    );
   const { recipeRevisionId, configurationRevisionId } = entry.selection;
   const recipe = document.recipes.find(
     (value) => value.id === recipeRevisionId,
