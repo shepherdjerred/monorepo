@@ -897,14 +897,12 @@ public final class Planner {
             .or(() -> plan.upcoming(PlanStep.Defuse.class).map(PlanStep.Defuse::bomb));
     var alongLane = plan.option() == Option.TAKE_SLOT || plan.option() == Option.ARM;
     return switch (plan.current()) {
-      case PlanStep.Route(var goal, var stance, var _) ->
+      case PlanStep.Route(var goal, var stance, var bounding) ->
           decision(
               situation,
               new Parts(
                   plan.option(),
-                  stance == Stance.STEALTH
-                      ? Optional.empty()
-                      : holdTarget(situation, context, true),
+                  Pace.route(stance, bounding).target(situation, context),
                   pathTo(situation, context, goal, new Way(stance, alongLane)),
                   stance,
                   nextBomb,
@@ -921,7 +919,7 @@ public final class Planner {
             situation,
             new Parts(
                 plan.option(),
-                holdTarget(situation, context, !(route instanceof RouteResult.Arrived)),
+                Pace.hold(hold, route).target(situation, context),
                 route,
                 hold.stance(),
                 Optional.empty(),
@@ -935,7 +933,7 @@ public final class Planner {
               situation,
               new Parts(
                   plan.option(),
-                  holdTarget(situation, context, !inCover(self.pos(), pos)),
+                  Pace.cover(inCover(self.pos(), pos)).target(situation, context),
                   inCover(self.pos(), pos)
                       ? new RouteResult.Arrived()
                       : pathTo(situation, context, pos, new Way(Stance.AGGRESSIVE, false)),
@@ -950,7 +948,7 @@ public final class Planner {
               situation,
               new Parts(
                   plan.option(),
-                  holdTarget(situation, context, true),
+                  Pace.DASHING.target(situation, context),
                   reached(self.pos(), cover)
                       ? new RouteResult.Arrived()
                       : pathTo(situation, context, cover, new Way(Stance.CAUTIOUS, false)),
@@ -987,22 +985,6 @@ public final class Planner {
                   label),
               lifeEpoch);
     };
-  }
-
-  /**
-   * Who to aim at while walking or holding: holding still, a bow takes any visible enemy inside its
-   * band; on the move, or with a sword, only one close enough to swing at, so holding a slot never
-   * turns into a charge and a bound is not frozen by a long shot.
-   */
-  static Optional<CombatantId> holdTarget(
-      Situation situation, TacticsContext context, boolean moving) {
-    var keep = context.keep();
-    var reach = keep.ranged() && !moving ? keep.max() : CLOSE_FIGHT;
-    return situation
-        .percept()
-        .nearestVisible()
-        .filter(view -> view.pos().distance(situation.self().pos()) <= reach)
-        .map(CombatantView::id);
   }
 
   /** The variable parts of a decision. */
@@ -1060,7 +1042,7 @@ public final class Planner {
     var enemy = known.orElseThrow();
     if (!enemy.visible() && context.keep().ranged()) {
       // An archer does not run at an enemy it cannot see: it takes up its band and waits.
-      var archer = new Archer(situation, context, enemy.pos(), label);
+      var archer = new Archer(situation, context, enemy.pos(), Optional.empty(), label);
       var wait =
           new Engagement(
               Optional.empty(),
@@ -1094,7 +1076,7 @@ public final class Planner {
     if (!context.keep().ranged()) {
       return fightDecision(scene, plan, shoot);
     }
-    var archer = new Archer(situation, context, enemy.pos(), label);
+    var archer = new Archer(situation, context, enemy.pos(), Optional.of(target), label);
     return fightDecision(
         scene,
         plan,
@@ -1132,9 +1114,16 @@ public final class Planner {
   /**
    * How an archer moves before it shoots: walks in when the enemy is beyond its band, backs off
    * when inside it, takes the edge of cover, or steps away from a teammate on its spot. Empty means
-   * stand and shoot.
+   * stand and shoot. {@code shoot} is the enemy while it is in sight: the archer draws on it as it
+   * moves inside its band rather than only once it has stopped, which left production archers
+   * re-drawing every re-plan.
    */
-  private record Archer(Situation situation, TacticsContext context, Vec3 enemy, String label) {
+  private record Archer(
+      Situation situation,
+      TacticsContext context,
+      Vec3 enemy,
+      Optional<CombatantId> shoot,
+      String label) {
 
     Vec3 self() {
       return situation.self().pos();
@@ -1149,9 +1138,10 @@ public final class Planner {
       return away.isZero() ? new Vec3(1, 0, 0) : away.normalized();
     }
 
+    /** Moves while shooting; backing off ({@link Stance#EVASIVE}) only gets away. */
     Engagement move(Vec3 to, Stance stance, String suffix) {
       return new Engagement(
-          Optional.empty(),
+          stance == Stance.EVASIVE ? Optional.empty() : shoot,
           pathTo(situation, context, to, new Way(stance, false)),
           stance,
           Optional.of(enemy),
@@ -1167,7 +1157,14 @@ public final class Planner {
           approachCover(situation, context, enemy)
               .map(CoverSpot::pos)
               .orElseGet(() -> enemy.plus(outward().scale(keep.max() - 2)));
-      return Optional.of(move(closer, Stance.AGGRESSIVE, "-close"));
+      // Beyond the band the bot's aim is not good enough to shoot: it runs in without drawing.
+      return Optional.of(
+          new Engagement(
+              Optional.empty(),
+              pathTo(situation, context, closer, new Way(Stance.AGGRESSIVE, false)),
+              Stance.AGGRESSIVE,
+              Optional.of(enemy),
+              label + "-close"));
     }
 
     Optional<Engagement> back() {
@@ -1203,7 +1200,7 @@ public final class Planner {
           .map(
               goal ->
                   new Engagement(
-                      Optional.empty(),
+                      shoot,
                       pathTo(situation, context, goal, new Way(Stance.AGGRESSIVE, true)),
                       Stance.AGGRESSIVE,
                       Optional.of(enemy),
@@ -1364,7 +1361,7 @@ public final class Planner {
         situation,
         new Parts(
             plan.option(),
-            holdTarget(situation, context, route instanceof RouteResult.Path),
+            Pace.of(route).target(situation, context),
             route,
             Stance.CAUTIOUS,
             Optional.of(bomb),

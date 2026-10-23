@@ -38,6 +38,19 @@ public final class Reflex {
   /** Bows are used on targets further than this. */
   public static final double BOW_MIN_RANGE = 6.0;
 
+  /**
+   * A bow already drawn stays up until the target is this close, so a target hovering at the
+   * minimum range does not flip the bot between drawing and swinging.
+   */
+  public static final double BOW_KEEP_RANGE = 4.5;
+
+  /**
+   * How long a drawn bow stays up, aimed where its target was, after the target leaves sight.
+   * Archers used to cancel the draw the tick a target ducked behind cover or a re-plan dropped it
+   * (292 of 381 production draws ended that way), so a peeking enemy was never shot.
+   */
+  public static final int HOLD_READY_TICKS = 40;
+
   /** Preferred strafing distance band. */
   public static final double SPACING_NEAR = 2.6;
 
@@ -77,7 +90,6 @@ public final class Reflex {
   static final double CROWDED = 0.3;
 
   private static final double BOW_AIM_TOLERANCE = 5.0;
-  private static final int MAX_BOW_HOLD_TICKS = 32;
   private static final double CLICK_GAP_LOG_MEAN = 0.1;
   private static final double CLICK_GAP_LOG_SIGMA = 0.25;
   private static final double FUSE_SLIP_SCALE = 6;
@@ -212,6 +224,8 @@ public final class Reflex {
         melee(target.get());
       } else if (target.isPresent()) {
         retreat(target.orElseThrow());
+      } else if (ReadyDraw.holds(state, input, context.loadout())) {
+        ready();
       } else {
         stopShooting();
         walk(Optional.empty());
@@ -330,6 +344,7 @@ public final class Reflex {
 
     private void eat(Optional<CombatantView> target) {
       if (!state.isEating()) {
+        stopShooting();
         commands.add(new BodyCommand.SelectSlot(context.loadout().gappleSlot()));
         commands.add(new BodyCommand.StartUse());
         state = state.withEating(now, true);
@@ -360,7 +375,8 @@ public final class Reflex {
     }
 
     private boolean wantsBow(CombatantView target) {
-      return context.loadout().hasBow() && target.pos().distance(self.pos()) > BOW_MIN_RANGE;
+      return context.loadout().hasBow()
+          && target.pos().distance(self.pos()) > ReadyDraw.minimumRange(state);
     }
 
     private void bow(CombatantView target) {
@@ -369,15 +385,17 @@ public final class Reflex {
       var flight = BowSolver.flightTicks(distance, speed);
       var lead = target.vel().scale(flight * levers().predictionQuality());
       var aimPoint = target.pos().plus(lead).plus(0, 1.3, 0);
-      var pitch = BowSolver.solve(self.eye(), aimPoint, speed);
-      if (pitch.isEmpty()) {
+      var solved = bowFacing(aimPoint);
+      if (solved.isEmpty()) {
         stopShooting();
         walk(Optional.empty());
         return;
       }
-      var yaw = Facing.looking(self.eye(), aimPoint).yaw();
-      var desired = new Facing(yaw, pitch.getAsDouble());
+      var desired = solved.orElseThrow();
       state = state.withAim(AimController.aim(state.aim(), desired, levers(), random));
+      state =
+          state.withBowSight(
+              Optional.of(ReadyDraw.sighted(state.bowSight(), target.id(), aimPoint, now)));
       var aim = state.aim();
       if (state.waypointIndex() < input.decision().waypoints().size()) {
         walk(Optional.of(false));
@@ -393,13 +411,36 @@ public final class Reflex {
         state = state.withDrawStart(now);
         return;
       }
+      release(aimPoint, desired);
+    }
+
+    /** Looses a full draw that is steady and whose led arrow path clears every teammate. */
+    private void release(Vec3 aimPoint, Facing desired) {
       var drawn = now - state.drawStart() >= context.loadout().ranged().chargeTicks();
       var aligned = state.aim().look().differenceTo(desired) <= BOW_AIM_TOLERANCE;
-      var heldLongEnough = now - state.drawStart() >= MAX_BOW_HOLD_TICKS;
-      if (drawn && (aligned || heldLongEnough)) {
+      if (drawn
+          && ReadyDraw.steady(state, now, aligned)
+          && !ReadyDraw.allyInLine(input.snapshot(), self, aimPoint)) {
         commands.add(new BodyCommand.ReleaseUse());
         state = state.withDrawStart(-1);
       }
+    }
+
+    private Optional<Facing> bowFacing(Vec3 point) {
+      return BowSolver.facing(self.eye(), point, context.loadout().ranged().projectileSpeed());
+    }
+
+    /**
+     * Keeps the drawn bow aimed where the target left sight, the corner it will most likely step
+     * back out from, while the bot keeps to its path. With no target it never looses an arrow.
+     */
+    private void ready() {
+      var point = state.bowSight().orElseThrow().point();
+      var desired = bowFacing(point).orElseGet(() -> Facing.looking(self.eye(), point));
+      state = state.withAim(AimController.aim(state.aim(), desired, levers(), random));
+      var aim = state.aim();
+      walk(Optional.of(false));
+      state = state.withAim(aim);
     }
 
     /**
@@ -682,7 +723,11 @@ public final class Reflex {
       }
       state = state.withActiveJump(step.state());
       commands.add(new BodyCommand.Sneak(false));
-      if (self.usingItem()) commands.add(new BodyCommand.CancelUse());
+      if (self.usingItem()) {
+        commands.add(new BodyCommand.CancelUse());
+        // A draw lowered for the leap is over: it must not be held ready or released later.
+        state = state.withDrawStart(-1);
+      }
       commands.add(
           step.failed()
               ? new BodyCommand.Stop()

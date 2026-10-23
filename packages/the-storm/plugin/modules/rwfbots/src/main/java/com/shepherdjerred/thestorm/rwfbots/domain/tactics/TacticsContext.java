@@ -80,7 +80,7 @@ public record TacticsContext(
   }
 
   public ArchetypeBias.Range keep() {
-    return ArchetypeBias.keep(kit, archetype);
+    return ArchetypeBias.keep(kit, archetype, levers);
   }
 
   /** How long the bot stands at the start of its first life: 0, or 2 to 5 s when late. */
