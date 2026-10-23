@@ -69,7 +69,7 @@ test("the API context lists only delegated leaf targets now that the root releas
     catalogFingerprint: bootstrapFingerprint(SERVICE_CATALOG),
     observedAt: new Date().toISOString(),
     writesEnabled: false,
-    enabledEnvironments: [],
+    admittingEnvironments: [],
     counts: {
       applicationLocks: 0,
       platformLocks: 0,

@@ -289,7 +289,7 @@ The [pipeline definition](registrations/arcade.pipeline.json) binds the publishe
 `chart:arcade` chart and `image:arcade` image to Arcade's `delivery.image` Helm
 parameter. Pipeline revision `arcade/2` probes Arcade's canonical public health
 endpoint. The [environment definition](registrations/arcade.environment.json)
-declares automatic selection; the enabled-environment and write flags, reviewed
+declares automatic selection; its catalog lifecycle, the write flag, reviewed
 Argo ownership transfer, and paused dispatch Schedule still gate activation.
 Neither file selects an artifact or records deployment state.
 
@@ -354,6 +354,7 @@ as a runtime or ownership-handover fallback.
 
 `toolkit deploy handover-context --machine` is an admin-only read of the API's
 baked source identity, exact reviewed registrations, fresh write-admission state,
+the environments whose catalog lifecycle is `active` and so admit deployments,
 and uncapped PostgreSQL ownership/request/recovery counts. The bounded
 `packages/homelab/scripts/ci/delivery-handover.ts` operator command consumes that
 state and the exact reviewed source proof, independently checks the paused
@@ -411,8 +412,9 @@ does not read Kubernetes or inherit proxy identity. Credential values are never
 returned by the identity endpoint. Health checks also require no Kubernetes access.
 
 Typed configuration resolves fresh flag snapshots for `delivery-writes-enabled`,
-`delivery-enabled-environments`, `delivery-operator-logins` and
-`delivery-enrichment-sources`. Defaults deny writes, authorize no human logins
+`delivery-operator-logins` and `delivery-enrichment-sources`. Admission and the
+ownership handover read the catalog lifecycle, never
+`delivery-enabled-environments`; that flag is v1's enable list. Defaults deny writes, authorize no human logins
 and query no external integration. The enrichment flag is a JSON list drawn
 from `woodpecker`, `github` and `argocd`. The GitHub token is registered as the
 `githubReader` 1Password item in the homelab Delivery activation, with a

@@ -26,7 +26,8 @@ export const OwnershipHandoverContextSchema = z.strictObject({
   catalogFingerprint: Fingerprint,
   observedAt: z.iso.datetime(),
   writesEnabled: z.boolean(),
-  enabledEnvironments: z.array(z.string()),
+  /** Environments the catalog keeps `active`, the only ones that admit deployments (4.10). */
+  admittingEnvironments: z.array(z.string()),
   counts: z.strictObject({
     applicationLocks: z.number().int().nonnegative(),
     platformLocks: z.number().int().nonnegative(),

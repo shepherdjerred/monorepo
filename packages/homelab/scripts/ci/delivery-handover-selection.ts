@@ -46,7 +46,7 @@ export const HandoverContextSchema = z
     catalogFingerprint: z.string(),
     observedAt: z.iso.datetime(),
     writesEnabled: z.literal(false),
-    enabledEnvironments: z.array(z.string()),
+    admittingEnvironments: z.array(z.string()),
     counts: z
       .record(z.string(), z.number().int().nonnegative())
       .refine(

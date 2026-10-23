@@ -55,7 +55,11 @@ function app(writes = false, sourceRevision = source) {
         },
       ],
       writesEnabled: () => Promise.resolve(writes),
-      enabledEnvironments: () => Promise.resolve([]),
+      // v2 ownership admits by catalog lifecycle and never reads this flag.
+      enabledEnvironments: () =>
+        Promise.reject(
+          new Error("ownership read delivery-enabled-environments"),
+        ),
     },
     sourceRevision,
   );
@@ -71,7 +75,7 @@ test("admin context binds actual API source, registered generation/pipeline and 
     sourceRevision: source,
     catalogFingerprint: `sha256:${fingerprint(context.delivery.catalog.catalog)}`,
     writesEnabled: false,
-    enabledEnvironments: [],
+    admittingEnvironments: [context.fixture.environment.id],
     counts: {
       applicationLocks: 0,
       platformLocks: 0,
@@ -96,6 +100,22 @@ test("admin context binds actual API source, registered generation/pipeline and 
       where: { id: context.fixture.environment.id },
     });
   expect(currentEnvironment.acceptedVersionSetRevisionId).toBeNull();
+});
+
+test("the handover context admits by catalog lifecycle: a retired environment admits nothing", async () => {
+  await context.cluster.database.environment.update({
+    where: { id: context.fixture.environment.id },
+    data: { lifecycle: "retired" },
+  });
+  const response = await app().request("/api/v1/ownership-handover-context", {
+    headers: admin,
+  });
+  expect(response.status).toBe(200);
+  const observed = OwnershipHandoverContextSchema.parse(await response.json());
+  expect(observed.admittingEnvironments).toEqual([]);
+  expect(observed.targets.map((row) => row.environmentId)).toEqual([
+    context.fixture.environment.id,
+  ]);
 });
 
 test("the handover read is admin-only and an API without real baked source cannot authorize it", async () => {

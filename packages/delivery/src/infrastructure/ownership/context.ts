@@ -11,6 +11,7 @@ import { LegacyPipelineRevisionSchema } from "#shared/contract.ts";
 import { freezeForumBaseline } from "#infrastructure/forum/freezer.ts";
 import { acceptedForumBaseline } from "#infrastructure/forum/baseline-context.ts";
 import { readWorkerVersions } from "#infrastructure/worker-pool/pool.ts";
+import { activeEnvironmentIds } from "#infrastructure/delivery-selection.ts";
 import {
   reviewedOwnershipDefinitions,
   requireReviewedOwnershipDefinition,
@@ -129,6 +130,7 @@ export async function ownershipHandoverContext(
         pendingDeployments,
         recoveryRequired,
         pendingObservations,
+        admittingEnvironments,
         rows,
       ] = await Promise.all([
         tx.targetLock.count(),
@@ -137,6 +139,8 @@ export async function ownershipHandoverContext(
         tx.deployment.count({ where: active }),
         tx.deployment.count({ where: { recoveryRequired: true } }),
         pendingDeliveryObservations(tx),
+        // v2 admits by catalog lifecycle, never an enable-list flag (4.10).
+        activeEnvironmentIds(tx),
         tx.environment.findMany({
           where: { application: { not: null } },
           orderBy: { id: "asc" },
@@ -152,6 +156,7 @@ export async function ownershipHandoverContext(
         sourceRevision,
         catalogFingerprint: `sha256:${fingerprint(delivery.catalog.catalog)}`,
         observedAt: new Date().toISOString(),
+        admittingEnvironments,
         counts: {
           applicationLocks,
           platformLocks,

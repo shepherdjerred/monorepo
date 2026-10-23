@@ -3,7 +3,12 @@ import { PipelineRevisionSchema, type Principal } from "#shared/contract.ts";
 import type { StoredRecipeDefinition } from "#shared/model/record-contract.ts";
 import { lock, required, audit, wire } from "./delivery-records.ts";
 import type { Delivery } from "./delivery.ts";
-import { id, environment, automaticTarget } from "./delivery-data.ts";
+import {
+  id,
+  environment,
+  automaticTarget,
+  type Transaction,
+} from "./delivery-data.ts";
 import { reconcilePlatform } from "./platform/selection.ts";
 import { legacyPipelineOf } from "./execution/legacy-recipe.ts";
 
@@ -125,7 +130,9 @@ async function restoreAlarmed(
  * by an enable-list flag (4.10). A retired or removed environment admits
  * nothing.
  */
-export async function activeEnvironmentIds(database: Delivery["database"]) {
+export async function activeEnvironmentIds(
+  database: Transaction | Delivery["database"],
+) {
   const rows = await database.environment.findMany({
     where: { lifecycle: "active" },
     select: { id: true },
