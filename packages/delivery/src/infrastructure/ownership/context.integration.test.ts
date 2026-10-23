@@ -336,6 +336,40 @@ test("a re-registration outside the catalog is refused by its binding, whatever 
   expect(await handoverStatus()).toBe(409);
 });
 
+test("an active environment the newest catalog omits is not handed over under it (C1)", async () => {
+  await reconcile();
+  expect(await handoverStatus()).toBe(200);
+  const document = await catalogDocument();
+  // A catalog that omits delivery/prod without retiring it: reconcile refuses
+  // the omission and leaves it active, while delivery moves to the new revision.
+  const omitted = await context.delivery.reconcileCatalog(
+    {
+      ...document,
+      environments: document.environments.filter(
+        (env) => env.id !== "delivery/prod",
+      ),
+      edges: document.edges.filter(
+        (edge) => edge.prerequisite !== "delivery/prod",
+      ),
+    },
+    testOperator,
+    { renames: {}, retired: [] },
+  );
+  expect(omitted.refused.map((entry) => entry.id)).toContain("delivery/prod");
+  const db = context.cluster.database;
+  const [service, kept] = await Promise.all([
+    db.service.findUniqueOrThrow({ where: { id: "delivery" } }),
+    db.environment.findUniqueOrThrow({ where: { id: "delivery/prod" } }),
+  ]);
+  expect(kept.lifecycle).toBe("active");
+  expect(service.catalogRevision).toBe(omitted.catalogRevision);
+  expect(kept.catalogRevision).not.toBe(omitted.catalogRevision);
+  // Its old binding belongs to no reviewed catalog, so handover refuses.
+  expect(await handoverStatus()).toBe(409);
+  await reconcile();
+  expect(await handoverStatus()).toBe(200);
+});
+
 test("handover rejects a service, application or recipe identity the catalog does not bind", async () => {
   await reconcile();
   await context.cluster.database.$transaction(async (tx) => {

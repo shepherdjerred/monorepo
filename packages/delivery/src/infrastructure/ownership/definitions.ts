@@ -48,8 +48,10 @@ export async function reconciledCatalog(
 
 /**
  * An environment hands over only with the exact binding the reconciled
- * catalog declares: an active service of that revision, its canonical
- * service id, and the Application its immutable recipe revision names.
+ * catalog declares: an active service and environment both declared by
+ * that revision (an environment the catalog omits keeps an older one), its
+ * canonical service id, and the Application its immutable recipe revision
+ * names.
  */
 export async function requireCatalogOwnershipDefinition(
   tx: Transaction,
@@ -57,14 +59,21 @@ export async function requireCatalogOwnershipDefinition(
   environment: Environment,
   pipeline: PipelineRevision,
 ) {
-  const service = await tx.service.findUnique({
-    where: { id: environment.serviceId },
-    select: { lifecycle: true, catalogRevision: true },
-  });
+  const [service, declared] = await Promise.all([
+    tx.service.findUnique({
+      where: { id: environment.serviceId },
+      select: { lifecycle: true, catalogRevision: true },
+    }),
+    tx.environment.findUnique({
+      where: { id: environment.id },
+      select: { catalogRevision: true },
+    }),
+  ]);
   const recipe = RecipeDefinitionSchema.safeParse(pipeline.definition);
   if (
     service?.lifecycle !== "active" ||
     service.catalogRevision !== catalog.revision ||
+    declared?.catalogRevision !== catalog.revision ||
     environment.lifecycle !== "active" ||
     environment.serviceId !== environmentService(environment.id) ||
     !recipe.success ||

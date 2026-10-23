@@ -36,6 +36,7 @@ import {
   serviceSelfHosted,
 } from "./ownership.ts";
 import { emptyResult, type Result } from "./result.ts";
+import { renameEnvironments } from "./rename.ts";
 
 /** The v1 environments the cutover carries onto catalog ids or retires (section 7). */
 export type CatalogMigration = {
@@ -267,40 +268,6 @@ async function reconcileRevisions(
   }
 }
 
-/** A renamed environment keeps its history and accepted selection (section 7). */
-async function renameEnvironments(
-  tx: Transaction,
-  renames: Readonly<Record<string, string>>,
-  result: Result,
-) {
-  for (const [from, to] of Object.entries(renames)) {
-    const [source, target] = await Promise.all([
-      tx.environment.findUnique({ where: { id: from } }),
-      tx.environment.findUnique({ where: { id: to } }),
-    ]);
-    if (source === null) continue;
-    if (target !== null)
-      throw new DeliveryError(
-        "CONFLICT",
-        `Cannot rename ${from} onto existing environment ${to}`,
-      );
-    if (source.activeDeploymentId !== null)
-      throw new DeliveryError(
-        "CONFLICT",
-        `Environment ${from} is owned by a deployment and cannot be renamed`,
-      );
-    await tx.environment.update({
-      where: { id: from },
-      data: {
-        id: to,
-        serviceId: environmentService(to),
-        name: to.slice(to.indexOf("/") + 1),
-      },
-    });
-    result.environments.renamed.push({ from, to });
-  }
-}
-
 async function retireEnvironment(
   tx: Transaction,
   environmentId: string,
@@ -348,6 +315,8 @@ async function upsertEnvironments(
       durableParentId: environment.durableParent ?? null,
       application: primaryApplication(definition),
     };
+    // C1: an environment the catalog omits keeps an older revision.
+    const declaredBy = { catalogRevision: result.catalogRevision };
     const existing = await tx.environment.findUnique({
       where: { id: environment.id },
     });
@@ -359,6 +328,7 @@ async function upsertEnvironments(
           name: environment.id.slice(environment.id.indexOf("/") + 1),
           lifecycle: environment.lifecycle,
           ...declared,
+          ...declaredBy,
         },
       });
       result.environments.created.push(environment.id);
@@ -399,7 +369,7 @@ async function upsertEnvironments(
     // deployment moves the accepted selection (C3).
     await tx.environment.update({
       where: { id: environment.id },
-      data: { ...declared, lifecycle },
+      data: { ...declared, ...declaredBy, lifecycle },
     });
     if (lifecycle !== "active" && existing.lifecycle === "active")
       result.environments.retired.push(environment.id);
