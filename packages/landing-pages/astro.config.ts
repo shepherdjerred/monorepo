@@ -2,8 +2,8 @@ import { readFileSync } from "node:fs";
 import { defineConfig } from "astro/config";
 import { server } from "./src/items/the-storm/server.ts";
 
-// The Storm page repeats two facts that live in other packages without a
-// shared data file. Fail the build when either source moves on without it.
+// The Storm page repeats facts that live in other packages without a shared
+// data file. Fail the build when a source moves on without the page.
 function requireInSource(path: string, needle: string, what: string) {
   const source = readFileSync(new URL(path, import.meta.url), "utf8");
   if (!source.includes(needle))
@@ -19,6 +19,17 @@ requireInSource(
   `href: "${server.discord}"`,
   "The Storm Discord invite",
 );
+
+for (const dns of [
+  server.bedrockConnect.switchXboxDns,
+  server.bedrockConnect.playStationDns,
+]) {
+  requireInSource(
+    "../ts-mc-docs/src/content/docs/join.md",
+    dns,
+    "BedrockConnect DNS",
+  );
+}
 
 export default defineConfig({
   devToolbar: { enabled: false },

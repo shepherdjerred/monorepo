@@ -87,11 +87,7 @@ const widths = [480, 800, 1200, 1600];
           </p>
           <p class="note">
             on Switch, Xbox or PlayStation? there’s one extra step.{" "}
-            <a
-              href={server.consoleGuide}
-              data-track="docs"
-              data-placement="console-card"
-            >
+            <a href="#consoles" data-track="console" data-placement="card">
               here’s how
             </a>
             .
@@ -110,8 +106,8 @@ const widths = [480, 800, 1200, 1600];
         </a>
         <a
           class="button"
-          href={server.joinGuide}
-          data-track="docs"
+          href="#join"
+          data-track="section"
           data-placement="hero"
         >
           how to join
@@ -162,7 +158,7 @@ const widths = [480, 800, 1200, 1600];
       </ul>
     </section>
 
-    <section class="tone-sage join">
+    <section class="tone-sage join" id="join">
       <div class="section-copy">
         <h2>
           got a build <em>in mind?</em>
@@ -189,11 +185,7 @@ const widths = [480, 800, 1200, 1600];
           <span class="label">Switch, Xbox or PlayStation</span>
           <p>
             consoles need one quick extra step to add a server.{" "}
-            <a
-              href={server.consoleGuide}
-              data-track="docs"
-              data-placement="console-steps"
-            >
+            <a href="#consoles" data-track="console" data-placement="steps">
               we’ll walk you through it
             </a>
             .
@@ -224,6 +216,90 @@ const widths = [480, 800, 1200, 1600];
         >
           full join guide
         </a>
+      </div>
+    </section>
+
+    <section class="tone-peach consoles" id="consoles">
+      <div class="section-copy">
+        <p class="chip">switch · xbox · playstation</p>
+        <h2>
+          on a console? <em>no problem.</em>
+        </h2>
+        <p class="lede">
+          consoles don’t have an Add Server button, so we take a quick detour
+          through BedrockConnect, a free server list made by the community.
+        </p>
+      </div>
+      <ol class="steps">
+        <li>
+          <span class="label">step 1</span>
+          <p>
+            <strong>change your DNS.</strong> in your console’s internet
+            settings, set DNS to manual and enter:
+          </p>
+          <dl class="dns">
+            <div>
+              <dt>Switch or Xbox</dt>
+              <dd>
+                <span>primary</span>
+                <strong>{server.bedrockConnect.switchXboxDns}</strong>
+              </dd>
+              <dd>
+                <span>secondary</span>
+                <strong>{server.bedrockConnect.secondaryDns}</strong>
+              </dd>
+            </div>
+            <div>
+              <dt>PlayStation</dt>
+              <dd>
+                <span>primary</span>
+                <strong>{server.bedrockConnect.playStationDns}</strong>
+              </dd>
+              <dd>
+                <span>secondary</span>
+                <strong>{server.bedrockConnect.secondaryDns}</strong>
+              </dd>
+            </div>
+          </dl>
+        </li>
+        <li>
+          <span class="label">step 2</span>
+          <p>
+            <strong>open a featured server.</strong> in Minecraft, go to Servers
+            and join The Hive or Lifeboat. a server list pops up instead.
+          </p>
+        </li>
+        <li>
+          <span class="label">step 3</span>
+          <p>
+            <strong>add the storm.</strong> pick Connect to a Server, enter{" "}
+            <strong>{server.bedrock.address}</strong> and port{" "}
+            <strong>{server.bedrock.port}</strong>, and turn on Add to server
+            list so it’s saved for next time.
+          </p>
+        </li>
+      </ol>
+      <div class="aside">
+        <p>
+          that’s it, see you at the windmill! to undo it later, set your DNS
+          back to automatic.
+        </p>
+        <p>
+          stuck? a friend on a phone or PC can join first, and you can hop in
+          from your Friends tab. or ask in the{" "}
+          <a
+            href={server.discord}
+            data-track="discord"
+            data-placement="consoles"
+          >
+            discord
+          </a>
+          .
+        </p>
+        <p class="credit">
+          <a href={server.bedrockConnect.url}>BedrockConnect</a> is run by its
+          own volunteers, not by The Storm.
+        </p>
       </div>
     </section>
   </main>

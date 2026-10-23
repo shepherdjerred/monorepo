@@ -8,6 +8,8 @@
   --lilac-chip: #e3deee;
   --sage: #e9f0e4;
   --sage-chip: #d9e5d2;
+  --peach: #f8ece2;
+  --peach-chip: #efdcce;
   --paper: #fffefa;
   --rule: #dbdec8;
   --ink: #3a4b3d;
@@ -62,6 +64,10 @@ section > * {
 .tone-sage {
   background: var(--sage);
   --chip: var(--sage-chip);
+}
+.tone-peach {
+  background: var(--peach);
+  --chip: var(--peach-chip);
 }
 
 /* Type */
@@ -292,12 +298,14 @@ footer a:focus-visible {
 /* Java + Bedrock */
 
 .together,
-.join {
+.join,
+.consoles {
   display: grid;
   gap: clamp(1.5rem, 4vw, 2.25rem);
 }
 .together > *,
-.join > * {
+.join > *,
+.consoles > * {
   width: 100%;
 }
 .pair {
@@ -347,6 +355,54 @@ footer a:focus-visible {
   color: var(--ink-soft);
 }
 
+/* Consoles */
+
+html {
+  scroll-behavior: smooth;
+}
+.join,
+.consoles {
+  scroll-margin-top: 1rem;
+}
+.dns {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+}
+.dns div {
+  padding: 0.6rem 0.9rem;
+  border-radius: 16px;
+  background: var(--chip);
+}
+.dns dt {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+.dns dd {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  margin: 0;
+  font-size: 1.15rem;
+}
+.dns dd span {
+  min-width: 5.5rem;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+.aside p {
+  margin: 0 0 0.75rem;
+}
+.aside a {
+  color: var(--ink);
+  font-weight: 600;
+  text-underline-offset: 0.15em;
+}
+.aside .credit {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
 /* Footer */
 
 footer {
@@ -389,7 +445,8 @@ footer a {
     min-height: 34rem;
   }
   .together,
-  .join {
+  .join,
+  .consoles {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
     column-gap: 3.5rem;
     align-items: start;
@@ -397,7 +454,8 @@ footer a {
   .together .pair {
     grid-row: span 2;
   }
-  .join .steps {
+  .join .steps,
+  .consoles .steps {
     grid-row: span 2;
   }
   .address {
@@ -406,6 +464,9 @@ footer a {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   .copy {
     transition: none;
   }

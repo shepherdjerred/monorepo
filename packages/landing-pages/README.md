@@ -34,14 +34,17 @@ The Storm item adds:
 - An address card with a Java/Bedrock toggle and one copy button for the
   selected edition. Phones and tablets open on Bedrock. Java shows its pinned
   version (26.2); Bedrock says "latest version", because its support follows
-  the live Geyser build. Console players are sent to the docs'
-  BedrockConnect steps (`docs.ts-mc.net/join/#playing-on-a-console`).
+  the live Geyser build.
+- Join steps and a console section (`#consoles`) live on the page itself, so
+  visitors from an ad don't have to leave for the docs. Consoles have no Add
+  Server button, so the section walks through BedrockConnect's DNS method.
 - Addresses come from `packages/storm-forum/config/forum.json`. The build fails
-  if the Java version stops matching the server image or the Discord invite
-  stops matching the docs config.
+  if the Java version stops matching the server image, the Discord invite stops
+  matching the docs config, or the BedrockConnect DNS addresses stop matching
+  the docs join page.
 - PostHog events `storm_server_address_copied` and `storm_edition_selected`
-  (`edition`), plus `storm_discord_clicked` and `storm_docs_clicked`
-  (`placement`).
+  (`edition`), plus `storm_discord_clicked`, `storm_docs_clicked`,
+  `storm_join_steps_clicked` and `storm_console_steps_clicked` (`placement`).
 - `public/the-storm/pinterest.js`, which loads Scout's shared advertiser tag
   `2612722784413`, the same one used by the forum portal. It skips visitors
   with Do Not Track or Global Privacy Control set. It sends `pagevisit`, one

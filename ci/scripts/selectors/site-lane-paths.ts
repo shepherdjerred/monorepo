@@ -66,6 +66,7 @@ export const sitePaths = {
     "packages/storm-forum/config/forum.json",
     "packages/the-storm/server/Dockerfile",
     "packages/ts-mc-docs/astro.config.ts",
+    "packages/ts-mc-docs/src/content/docs/join.md",
     ...deployScripts,
   ],
   "site-cross-compilers": [

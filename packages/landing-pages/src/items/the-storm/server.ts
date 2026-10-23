@@ -15,7 +15,14 @@ export const server = {
   },
   discord: "https://discord.gg/TvTCcWnYUT",
   joinGuide: "https://docs.ts-mc.net/join/",
-  consoleGuide: "https://docs.ts-mc.net/join/#playing-on-a-console",
+  // Consoles have no Add Server button; BedrockConnect's DNS method stands in.
+  // The docs join page lists the same addresses, and the build checks they match.
+  bedrockConnect: {
+    url: "https://github.com/Pugmatt/BedrockConnect",
+    switchXboxDns: "104.238.130.180",
+    playStationDns: "45.55.68.52",
+    secondaryDns: "8.8.8.8",
+  },
   docs: "https://docs.ts-mc.net/",
   forum: "https://ts-mc.net/",
   map: "https://bluemap.ts-mc.net/",
