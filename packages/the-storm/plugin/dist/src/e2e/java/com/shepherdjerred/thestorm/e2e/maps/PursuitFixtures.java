@@ -145,7 +145,8 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
             new SnapshotCapture.Sources(
                 new com.shepherdjerred.thestorm.rwfbots.adapter.paper.StimulusCollector(
                     new com.shepherdjerred.thestorm.rwf.app.BattleSoundLog(time), time),
-                java.util.List::of),
+                java.util.List::of,
+                player -> false),
             new SnapshotCapture.Capabilities(id -> Optional.empty(), time));
   }
 
@@ -268,7 +269,9 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
         player.isHandRaised(),
         false,
         -1,
-        capture.captureTraversal(player, "trooper", ticks));
+        capture.captureTraversal(player, "trooper", ticks),
+        false,
+        false);
   }
 
   private void advance(CombatantView self) {
@@ -390,7 +393,9 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
         false,
         false,
         -1,
-        com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState.UNMODIFIED);
+        com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState.UNMODIFIED,
+        false,
+        false);
   }
 
   private void finish(boolean passed) {

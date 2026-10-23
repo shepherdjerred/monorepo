@@ -114,7 +114,9 @@ final class SimBody {
         usingItem,
         invisible,
         lastHurt,
-        capabilities());
+        capabilities(),
+        sneaking,
+        kit.isInvisibleKit());
   }
 
   private TraversalState capabilities() {

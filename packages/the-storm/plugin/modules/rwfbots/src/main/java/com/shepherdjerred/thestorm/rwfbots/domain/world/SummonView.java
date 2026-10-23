@@ -79,6 +79,8 @@ public record SummonView(
         false,
         false,
         -1,
-        TraversalState.UNMODIFIED);
+        TraversalState.UNMODIFIED,
+        false,
+        false);
   }
 }

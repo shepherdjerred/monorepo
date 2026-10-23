@@ -132,7 +132,8 @@ final class TeamPlayTest {
   // teammates along the led arrow path and re-settling their aim when the target changes.
   // A hit places its attacker in the victim's memory and draws the victim's aggro (aggro=1).
   // Traces carry the distance to a hostile golem in sight (golemDist).
-  private static final String PINNED_YARD_HASH = "17d14f48f878d11e";
+  // Standing enemies' name tags place them through walls; crouchers are seen only half as far.
+  private static final String PINNED_YARD_HASH = "88883bcdf55ee0ca";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {

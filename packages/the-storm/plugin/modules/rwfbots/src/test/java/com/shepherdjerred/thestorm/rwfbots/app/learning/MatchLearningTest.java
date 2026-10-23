@@ -130,7 +130,9 @@ final class MatchLearningTest {
             healing,
             false,
             -1,
-            com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState.UNMODIFIED);
+            com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState.UNMODIFIED,
+            false,
+            false);
     var target = combatant(2, BLUE, new Vec3(7, 1, 5));
     var snapshot =
         new WorldSnapshot(

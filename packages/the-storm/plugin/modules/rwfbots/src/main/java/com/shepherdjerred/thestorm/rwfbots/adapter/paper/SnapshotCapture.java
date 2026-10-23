@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.adapter.paper;
 
 import com.shepherdjerred.thestorm.rwf.app.MatchSummons;
+import com.shepherdjerred.thestorm.rwf.app.NameTags;
 import com.shepherdjerred.thestorm.rwf.app.view.MatchState;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombOwner;
@@ -31,11 +32,11 @@ import org.bukkit.entity.Player;
 /**
  * Builds the bots' {@link WorldSnapshot} each tick from rwf's read model and the live entities:
  * position, velocity (from the position a tick ago), look, health, absorption, armor, held slot,
- * sprinting, on ground, using an item, invisible and when they were last hurt (a drop in health
- * plus absorption), with the bombs, the poison, the killstreak summons in the field and the tick's
- * stimuli, a summon's blow named as the summon's own. A combatant whose entity is absent this tick
- * (a bot between bodies while its skin applies, a human not online) is left out of the snapshot
- * rather than guessed at. Main thread only.
+ * sprinting, sneaking, whether enemies see their name tag, on ground, using an item, invisible and
+ * when they were last hurt (a drop in health plus absorption), with the bombs, the poison, the
+ * killstreak summons in the field and the tick's stimuli, a summon's blow named as the summon's
+ * own. A combatant whose entity is absent this tick (a bot between bodies while its skin applies, a
+ * human not online) is left out of the snapshot rather than guessed at. Main thread only.
  */
 public final class SnapshotCapture {
 
@@ -54,6 +55,7 @@ public final class SnapshotCapture {
   private final TraversalCapture traversal;
   private final Capabilities capabilities;
   private final MatchSummons summons;
+  private final NameTags nameTags;
   private final Map<UUID, SoundMotion> soundMotion = new HashMap<>();
   private boolean emitMotion = true;
   private long soundBaseline;
@@ -68,7 +70,7 @@ public final class SnapshotCapture {
         new SnapshotCapture(
             ids,
             entities,
-            new Sources(new StimulusCollector(stimuli.sounds(), stimuli.time()), summons),
+            new Sources(new StimulusCollector(stimuli.sounds(), stimuli.time()), summons, nameTags),
             capabilities);
     capture.emitMotion = false;
     capture.soundBaseline = soundBaseline;
@@ -87,8 +89,9 @@ public final class SnapshotCapture {
    *
    * @param stimuli where the tick's raw events wait
    * @param summons the match's killstreak creatures
+   * @param nameTags whose name tags the enemy cannot see
    */
-  public record Sources(StimulusCollector stimuli, MatchSummons summons) {}
+  public record Sources(StimulusCollector stimuli, MatchSummons summons, NameTags nameTags) {}
 
   /**
    * @param ids the match's id mapping
@@ -103,6 +106,7 @@ public final class SnapshotCapture {
       Capabilities capabilities) {
     this.ids = ids;
     this.summons = sources.summons();
+    this.nameTags = sources.nameTags();
     this.entities = entities;
     this.stimuli = sources.stimuli();
     this.traversal = new TraversalCapture(capabilities.noFallUntil(), capabilities.time());
@@ -200,7 +204,9 @@ public final class SnapshotCapture {
         entity.isHandRaised(),
         hiddenHands(entity),
         hurtTick,
-        traversal);
+        traversal,
+        entity.isSneaking(),
+        nameTags.hiddenFromEnemies(fighter.uuid()));
   }
 
   /**

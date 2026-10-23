@@ -10,6 +10,7 @@ import com.shepherdjerred.thestorm.rwf.domain.lobby.LobbyStatus;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchSnapshot;
 import io.papermc.paper.scoreboard.numbers.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -265,6 +266,21 @@ final class Scoreboards {
       entry(Objects.requireNonNull(boards.get(viewer)), seat, team);
       entry(Objects.requireNonNull(medics.get(viewer)), seat, team);
     }
+  }
+
+  /**
+   * Whether enemies of {@code player} see no name tag over them: on every enemy board they sit on
+   * their team's hidden team (an invisible kit, or a disguise wearing another's name).
+   */
+  boolean hiddenFromEnemies(UUID player) {
+    var seat = seats.get(player);
+    if (seat == null) {
+      return false;
+    }
+    var hidden = hiddenName(seat.team());
+    return Arrays.stream(TeamColor.values())
+        .filter(viewer -> viewer != seat.team())
+        .allMatch(viewer -> teamFor(seat, viewer).equals(hidden));
   }
 
   /** The team {@code seat} sits on in {@code viewer}'s board. */

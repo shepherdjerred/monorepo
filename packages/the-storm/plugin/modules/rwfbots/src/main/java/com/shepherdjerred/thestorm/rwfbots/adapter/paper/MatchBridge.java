@@ -72,7 +72,8 @@ public final class MatchBridge implements Consumer<MatchNotification> {
       LobbyTicker lobby,
       com.shepherdjerred.thestorm.rwfbots.app.learning.MatchLearning learning,
       com.shepherdjerred.thestorm.rwf.app.MatchView view,
-      com.shepherdjerred.thestorm.rwf.app.MatchSummons summons) {}
+      com.shepherdjerred.thestorm.rwf.app.MatchSummons summons,
+      com.shepherdjerred.thestorm.rwf.app.NameTags nameTags) {}
 
   public MatchBridge(Parts parts) {
     this.parts = parts;
@@ -290,7 +291,7 @@ public final class MatchBridge implements Consumer<MatchNotification> {
         new SnapshotCapture(
             ids,
             parts.roster()::anyEntity,
-            new SnapshotCapture.Sources(parts.stimuli(), parts.summons()),
+            new SnapshotCapture.Sources(parts.stimuli(), parts.summons(), parts.nameTags()),
             new SnapshotCapture.Capabilities(parts.view()::noFallUntil, parts.time()));
     parts
         .roster()
