@@ -40,5 +40,7 @@ export async function failDeliveryHandoff(id: string): Promise<void> {
       "Successor executor could not verify the handed-off self-hosted deployment; settle it through a recovery intent",
     recoveryRequired: true,
     evidence: [],
+    // The successor owns the deployment now; only its identity reports (D7).
+    executor: executorIdentity(),
   });
 }

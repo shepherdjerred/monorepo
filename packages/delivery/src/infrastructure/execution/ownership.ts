@@ -266,6 +266,31 @@ export async function handOff(
   actor: Principal,
 ) {
   return this.database.$transaction(async (tx) => {
+    await lock(tx, `deployment:${deploymentId}`);
+    // A repeated handoff from the outgoing executor answers from the durable
+    // handoff record, even after the successor claimed the deployment or it
+    // settled, so a retry after a lost response never fails it (D8).
+    const recorded = await tx.audit.findFirst({
+      where: {
+        action: "deployment.handed_off",
+        entityId: deploymentId,
+        metadata: {
+          equals: {
+            workflowId: executor.workflowId,
+            workflowRunId: executor.workflowRunId,
+          },
+        },
+      },
+    });
+    if (recorded !== null)
+      return DeploymentSchema.parse(
+        wire(
+          required(
+            await tx.deployment.findUnique({ where: { id: deploymentId } }),
+            "Deployment",
+          ),
+        ),
+      );
     const row = await runningDeployment(
       tx,
       deploymentId,

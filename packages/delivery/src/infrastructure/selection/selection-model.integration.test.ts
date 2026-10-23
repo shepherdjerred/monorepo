@@ -700,6 +700,24 @@ describe("self-hosted handoff (D7, D8)", () => {
         where: { action: "deployment.handoff_claimed", entityId: id },
       }),
     ).toBe(1);
+    // A retried handoff whose first response was lost answers from the
+    // durable handoff record after the successor claimed, changing nothing.
+    expect(
+      await context.delivery.handOff(id, outgoing, testExecutor),
+    ).toMatchObject({ ...successor, handoffAt: null });
+    expect(
+      await context.cluster.database.audit.count({
+        where: { action: "deployment.handed_off", entityId: id },
+      }),
+    ).toBe(1);
+    // Any other identity still cannot hand it off.
+    await expect(
+      context.delivery.handOff(
+        id,
+        { ...outgoing, workflowRunId: "run-9" },
+        testExecutor,
+      ),
+    ).rejects.toThrow(/never re-owned/u);
   });
 
   test("the successor claim route stays open while writes are paused", async () => {
