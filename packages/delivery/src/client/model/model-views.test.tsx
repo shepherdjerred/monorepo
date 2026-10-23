@@ -71,10 +71,34 @@ describe("model view helpers", () => {
         ],
       },
     };
-    expect(firingAlarms(status).map((alarm) => alarm.alertname)).toEqual([
+    expect(
+      firingAlarms(status).counted.map((alarm) => alarm.alertname),
+    ).toEqual(["ScoutDurableReceiptsStalled"]);
+    expect(firingAlarms(info)).toEqual({ counted: [], preExisting: [] });
+  });
+
+  test("an alarm already firing before the claim is shown apart and not counted", () => {
+    const status = fixtures.monitors.prod;
+    const latest = status.latestObservation;
+    if (latest === null || status.claimedAt === null)
+      throw new Error("fixture has a claimed observation");
+    const before = new Date(
+      Date.parse(status.claimedAt) - 60_000,
+    ).toISOString();
+    const old = {
+      alertname: "ScoutOldOutage",
+      severity: "critical" as const,
+      labels: {},
+      activeAt: before,
+    };
+    const split = firingAlarms({
+      ...status,
+      latestObservation: { ...latest, alarms: [...latest.alarms, old] },
+    });
+    expect(split.counted.map((alarm) => alarm.alertname)).toEqual([
       "ScoutDurableReceiptsStalled",
     ]);
-    expect(firingAlarms(info)).toEqual([]);
+    expect(split.preExisting).toEqual([old]);
   });
 
   test("a rebind changes only the coordinates the declared binding moved", () => {

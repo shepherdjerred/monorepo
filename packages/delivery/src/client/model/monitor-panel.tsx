@@ -52,10 +52,9 @@ function EvidenceTable({ rows }: { rows: EvidenceRow[] }) {
   );
 }
 
-function Alarms({ status }: { status: MonitorStatus }) {
-  const alarms = firingAlarms(status);
-  if (alarms.length === 0)
-    return <p className="empty">No counted alarm is firing.</p>;
+type FiringAlarm = ReturnType<typeof firingAlarms>["counted"][number];
+
+function AlarmList({ alarms }: { alarms: FiringAlarm[] }) {
   return (
     <ul className="alarms">
       {alarms.map((alarm) => (
@@ -72,6 +71,28 @@ function Alarms({ status }: { status: MonitorStatus }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+function Alarms({ status }: { status: MonitorStatus }) {
+  const { counted, preExisting } = firingAlarms(status);
+  return (
+    <>
+      {counted.length === 0 ? (
+        <p className="empty">No counted alarm is firing.</p>
+      ) : (
+        <AlarmList alarms={counted} />
+      )}
+      {preExisting.length > 0 && (
+        <>
+          <p>
+            Already firing before this deployment was claimed, so not counted
+            against it:
+          </p>
+          <AlarmList alarms={preExisting} />
+        </>
+      )}
+    </>
   );
 }
 

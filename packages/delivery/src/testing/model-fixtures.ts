@@ -107,6 +107,7 @@ const scoutMonitor = (environmentName: string, thresholds: [number, number]) =>
 export const monitors = {
   prod: MonitorStatusSchema.parse({
     deploymentId: "scout-prod-42",
+    claimedAt: at(50),
     state: "alarmed",
     policy: "automatic",
     settledAt: null,
@@ -134,6 +135,7 @@ export const monitors = {
   }),
   beta: MonitorStatusSchema.parse({
     deploymentId: "scout-beta-17",
+    claimedAt: at(50),
     state: "watching",
     policy: "hold",
     settledAt: null,
@@ -154,6 +156,7 @@ export const monitors = {
   }),
   unmonitored: MonitorStatusSchema.parse({
     deploymentId: "arcade-prod-9",
+    claimedAt: at(20),
     state: "unmonitored",
     policy: null,
     settledAt: at(30),

@@ -76,13 +76,31 @@ export function monitorEvidence(status: MonitorStatus): EvidenceRow[] {
   });
 }
 
-/** Firing alarms of the latest observation that the monitor counts (W2). */
+/**
+ * Firing alarms of the latest observation in the declared severities, split
+ * as the server counts them (W2): an alarm active at or after the
+ * deployment's claim counts; one already firing before it does not.
+ */
 export function firingAlarms(status: MonitorStatus) {
-  if (status.monitor === null || status.latestObservation === null) return [];
+  if (
+    status.monitor === null ||
+    status.latestObservation === null ||
+    status.claimedAt === null
+  )
+    return { counted: [], preExisting: [] };
   const severities = new Set<string>(status.monitor.alarms.severities);
-  return status.latestObservation.alarms.filter((alarm) =>
+  const claimedAt = Date.parse(status.claimedAt);
+  const declared = status.latestObservation.alarms.filter((alarm) =>
     severities.has(alarm.severity),
   );
+  return {
+    counted: declared.filter(
+      (alarm) => Date.parse(alarm.activeAt) >= claimedAt,
+    ),
+    preExisting: declared.filter(
+      (alarm) => Date.parse(alarm.activeAt) < claimedAt,
+    ),
+  };
 }
 
 export function monitorPolicyLabel(policy: MonitorStatus["policy"]) {
