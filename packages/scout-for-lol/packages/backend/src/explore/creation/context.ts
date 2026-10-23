@@ -27,6 +27,7 @@ import {
 import { createConfirmationIntent } from "#src/lib/confirmation-intent/create.ts";
 import { DiscordUpstreamError } from "#src/lib/discord-rest.ts";
 import type { PostableChannel } from "#src/lib/discord/postable-channels.ts";
+import type { SearchedMember } from "#src/lib/discord/search-members.ts";
 import type { resolveSubscriptionPuuid } from "#src/lib/subscription/add.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
 import { graphemePrefix } from "@shepherdjerred/text";
@@ -46,6 +47,16 @@ export type CreationToolContext = {
   /** Memoized for the turn; see the module docblock. */
   access: () => Promise<CreationAccess>;
   listChannels: (guildId: DiscordGuildId) => Promise<PostableChannel[]>;
+  /** Members whose username or nickname starts with `query`; throws on an outage. */
+  findMembers: (
+    guildId: DiscordGuildId,
+    query: string,
+  ) => Promise<readonly SearchedMember[]>;
+  /** Whether `userId` is a member of the guild; throws on an outage. */
+  isMember: (
+    guildId: DiscordGuildId,
+    userId: DiscordAccountId,
+  ) => Promise<boolean>;
   resolvePuuid: typeof resolveSubscriptionPuuid;
   now: () => Date;
   /**

@@ -32,6 +32,28 @@ const logger = createLogger("subscription-add");
  * calls don't belong in a DB transaction. Callers run
  * backfillLastMatchTime as a best-effort step AFTER this resolves.
  */
+/**
+ * Serialize every writer that decides who a server's player is.
+ *
+ * Whether an alias is new, and whether a member is already linked, are read
+ * and then acted on; without a lock, a dashboard add and an Explore
+ * confirmation can both see an alias free and one silently join the other's
+ * player. Every subscription writer takes these, alias before member, so two
+ * writers never wait on each other in opposite order. They are transaction
+ * locks and reentrant, so a caller that checked under them first may call
+ * {@link addSubscription} in the same transaction.
+ */
+export async function lockPlayerIdentity(
+  db: Db,
+  guildId: string,
+  alias: string,
+  discordUserId: string | null,
+): Promise<void> {
+  await db.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`player-alias:${guildId}:${alias}`}))`;
+  if (discordUserId !== null)
+    await db.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`player-member:${guildId}:${discordUserId}`}))`;
+}
+
 async function commitSubscription(params: {
   input: AddSubscriptionInput;
   puuid: LeaguePuuid;
@@ -51,6 +73,7 @@ async function commitSubscription(params: {
   } = input;
   const now = new Date();
 
+  await lockPlayerIdentity(db, guildId, alias, discordUserId);
   const existingPlayer = await db.player.findUnique({
     where: { serverId_alias: { serverId: guildId, alias } },
   });

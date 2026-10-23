@@ -143,13 +143,58 @@ export const PrepareReportToolInputSchema = z.strictObject({
  * subscription notifies on everything, exactly as the add form's default does,
  * and filters are set afterwards in the dashboard.
  */
+/**
+ * Who a tracked player is on Discord, in the words a person uses.
+ *
+ * Never a bare snowflake: a schema field typed as a 17–20 digit string is what
+ * made the model ask people for their "numeric Discord user ID" in prod. Scout
+ * resolves a username itself, and the asker needs no lookup at all.
+ */
+export const DiscordMemberReferenceSchema = z.union([
+  z
+    .strictObject({ asker: z.literal(true) })
+    .describe(
+      "Only when the player being tracked IS the person asking ('track me'). Never for anyone else.",
+    ),
+  z
+    .strictObject({
+      username: z
+        .string()
+        .trim()
+        .min(1)
+        .max(100)
+        .describe("Their Discord username or server nickname, without the @."),
+    })
+    .describe("Another member, named the way the user named them."),
+  z
+    .strictObject({
+      id: DiscordAccountIdSchema.describe(
+        "A Discord user id the user already gave. Never ask for one.",
+      ),
+    })
+    .describe("A member by id, only when the user supplied it unprompted."),
+]);
+export type DiscordMemberReference = z.infer<
+  typeof DiscordMemberReferenceSchema
+>;
+
 export const PrepareSubscriptionToolInputSchema = z.strictObject({
   guildId: DiscordGuildIdSchema,
   channelId: DiscordChannelIdSchema,
   region: RegionSchema,
   riotId: RiotIdPartsSchema,
   alias: PlayerAliasSchema,
-  discordUserId: DiscordAccountIdSchema.optional(),
+  discordMember: DiscordMemberReferenceSchema.nullable()
+    .optional()
+    .describe(
+      "null unless the user said who this player is on Discord. Links the tracked player to that member so match posts can mention them. Never invent one, never guess from the Riot ID, and never ask for it.",
+    ),
+  joinExistingPlayer: z
+    .boolean()
+    .default(false)
+    .describe(
+      "true only when the user said this account belongs to a player the server already tracks under this alias (a second account). Otherwise a taken alias is refused, so two people are never merged under one name.",
+    ),
 });
 
 const CompetitionDatesToolInputSchema = z.discriminatedUnion("type", [

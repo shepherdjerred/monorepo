@@ -12,6 +12,7 @@
  * no limit is raised to make room for them.
  */
 
+import { MEMBER_SEARCH_LIMIT } from "#src/explore/creation/prepare-subscription.ts";
 import { tool } from "ai";
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -43,6 +44,8 @@ import {
   type PostableChannel,
 } from "#src/lib/discord/postable-channels.ts";
 import { resolveSubscriptionPuuid } from "#src/lib/subscription/add.ts";
+import { searchGuildMembers } from "#src/lib/discord/search-members.ts";
+import { botRest } from "#src/lib/discord/bot-rest.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
 
 type CreationToolDependencies = {
@@ -52,6 +55,8 @@ type CreationToolDependencies = {
     requesterId: DiscordAccountId;
   }) => Promise<CreationAccess>;
   listChannels: (guildId: DiscordGuildId) => Promise<PostableChannel[]>;
+  findMembers: CreationToolContext["findMembers"];
+  isMember: CreationToolContext["isMember"];
   resolvePuuid: typeof resolveSubscriptionPuuid;
   now: () => Date;
   newIdempotencyKey: () => string;
@@ -61,6 +66,10 @@ const defaultDependencies: CreationToolDependencies = {
   db: prisma,
   resolveAccess: (input) => resolveCreationAccess(input),
   listChannels: listPostableChannels,
+  findMembers: (guildId, query) =>
+    searchGuildMembers({ guildId, query, limit: MEMBER_SEARCH_LIMIT }),
+  isMember: async (guildId, userId) =>
+    (await botRest().guildMember(guildId, userId)) !== null,
   resolvePuuid: resolveSubscriptionPuuid,
   now: () => new Date(),
   // Fresh per call, matching both existing dare mint sites: creating two
@@ -111,6 +120,8 @@ export function createCreationToolExecutors(input: {
       return accessPromise;
     },
     listChannels: resolved.listChannels,
+    findMembers: resolved.findMembers,
+    isMember: resolved.isMember,
     resolvePuuid: resolved.resolvePuuid,
     now: resolved.now,
     newIdempotencyKey: resolved.newIdempotencyKey,

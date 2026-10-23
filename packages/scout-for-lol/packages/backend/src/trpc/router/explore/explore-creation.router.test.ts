@@ -19,6 +19,7 @@ import {
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags";
 import { resetConfigurationForTests } from "#src/configuration.ts";
+import { addSubscription } from "#src/lib/subscription/add.ts";
 import {
   addFlagOverride,
   resetFlagOverrides,
@@ -290,6 +291,132 @@ describe("explore.confirmCreationIntent — subscriptions", () => {
     expect(JSON.parse(audit?.payload ?? "{}")).toMatchObject({
       via: "explore",
     });
+  });
+
+  test("refuses when the alias was claimed after the card was prepared", async () => {
+    await grant({ resource: "subscriptions", action: "create" });
+    const intentId = await mintIntent(
+      ConfirmationIntentPayloadSchema.parse({
+        ...subscriptionPayload(),
+        joinExistingPlayer: false,
+      }),
+    );
+    await db.player.create({
+      data: {
+        alias: "Prepared",
+        serverId: GUILD,
+        creatorDiscordId: ACTOR,
+        createdTime: new Date(),
+        updatedTime: new Date(),
+      },
+    });
+
+    const result = await caller().explore.confirmCreationIntent({ intentId });
+
+    expect(result).toMatchObject({ kind: "invalid_configuration" });
+    expect(await db.account.count({ where: { serverId: GUILD } })).toBe(0);
+  });
+
+  test("two cards naming one member for different aliases create one player", async () => {
+    await grant({ resource: "subscriptions", action: "create" });
+    const first = await mintIntent(
+      ConfirmationIntentPayloadSchema.parse({
+        ...subscriptionPayload("member-first"),
+        alias: "First",
+        discordUserId: ACTOR,
+      }),
+    );
+    const second = await mintIntent(
+      ConfirmationIntentPayloadSchema.parse({
+        ...subscriptionPayload("member-second"),
+        alias: "Second",
+        discordUserId: ACTOR,
+      }),
+    );
+
+    const results = await Promise.all([
+      caller().explore.confirmCreationIntent({ intentId: first }),
+      caller().explore.confirmCreationIntent({ intentId: second }),
+    ]);
+
+    expect(results.map((result) => result.kind).toSorted()).toEqual([
+      "created",
+      "invalid_configuration",
+    ]);
+    expect(
+      await db.player.count({ where: { serverId: GUILD, discordId: ACTOR } }),
+    ).toBe(1);
+  });
+
+  test("a dashboard add racing a confirmation never merges into its player", async () => {
+    await grant({ resource: "subscriptions", action: "create" });
+    const intentId = await mintIntent(
+      ConfirmationIntentPayloadSchema.parse({
+        ...subscriptionPayload("race-confirm"),
+        alias: "Fresh",
+        joinExistingPlayer: false,
+      }),
+    );
+
+    const [confirmed] = await Promise.all([
+      caller().explore.confirmCreationIntent({ intentId }),
+      db.$transaction(
+        async (tx) =>
+          await addSubscription(
+            {
+              guildId: GUILD,
+              channelId: CHANNEL,
+              region: "AMERICA_NORTH",
+              riotId: { game_name: "Dashboard", tag_line: "NA1" },
+              alias: "Fresh",
+              creatorDiscordId: STRANGER,
+              filters: null,
+            },
+            testPuuid("race-dashboard"),
+            tx,
+            true,
+          ),
+      ),
+    ]);
+
+    // Either the confirmation made the player, or it saw the dashboard's
+    // and refused; never "created" onto someone else's player.
+    const player = await db.player.findUniqueOrThrow({
+      where: { serverId_alias: { serverId: GUILD, alias: "Fresh" } },
+    });
+    expect(confirmed.kind === "created" ? player.creatorDiscordId : ACTOR).toBe(
+      ACTOR,
+    );
+  });
+
+  test("refuses a join when the player's Discord link changed", async () => {
+    await grant({ resource: "subscriptions", action: "create" });
+    await db.player.create({
+      data: {
+        alias: "Prepared",
+        discordId: ACTOR,
+        serverId: GUILD,
+        creatorDiscordId: ACTOR,
+        createdTime: new Date(),
+        updatedTime: new Date(),
+      },
+    });
+    const intentId = await mintIntent(
+      ConfirmationIntentPayloadSchema.parse({
+        ...subscriptionPayload(),
+        joinExistingPlayer: true,
+        discordUserId: ACTOR,
+      }),
+    );
+    await db.player.updateMany({
+      where: { serverId: GUILD, alias: "Prepared" },
+      data: { discordId: null },
+    });
+
+    const result = await caller().explore.confirmCreationIntent({ intentId });
+
+    expect(result).toMatchObject({ kind: "invalid_configuration" });
+    expect(await db.account.count({ where: { serverId: GUILD } })).toBe(0);
   });
 
   test("reports an already-tracked account instead of creating a duplicate", async () => {
