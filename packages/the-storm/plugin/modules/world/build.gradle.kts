@@ -13,3 +13,5 @@ val verifyManagedCrierFlag =
   }
 
 tasks.named("compileJava") { dependsOn(verifyManagedCrierFlag) }
+
+dependencies { compileOnly(libs.bluemap.api) }

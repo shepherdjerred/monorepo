@@ -600,7 +600,9 @@ the Multiverse worlds `frontier` (normal), `map2` (the restored Main Map 2),
 not expose reliable preset metadata for an existing world, so preset acceptance
 remains an operator check. Multiverse remains a required startup dependency. Borders are declared in the same typed file: a
 `square` border is the native border, and a `circle` keeps the native square at
-the same diameter while the world module stops players at the disc. The first
+the same diameter while the world module stops players at the disc. When BlueMap
+is installed, the world module draws each border as a toggleable "World border"
+marker on every map of that world, redrawn whenever BlueMap starts. The first
 listed world, `frontier`, is the default random-teleport landing; `/worlds` and
 the main-spawn hub (`travel.yml`) reach every survival world.
 
