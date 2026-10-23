@@ -16,6 +16,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.perception.Percept;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Perception;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.PerceptionState;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ActiveJump;
+import com.shepherdjerred.thestorm.rwfbots.domain.reflex.DoorShut;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.Reflex;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexContext;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexInput;
@@ -334,6 +335,20 @@ public final class BotTicker {
         bot,
         commands,
         new BodyDriver.Navigation(match.ids(), tick, Optional.of(match.nav().graph().bounds())));
+    driver.shutDoorBehind(bot, escape(input, percept, bot));
+  }
+
+  /** What a body breaking contact weighs before pulling a door shut behind itself. */
+  private static DoorShut.Escape escape(ReflexInput input, Percept percept, BotBody bot) {
+    var self = input.self();
+    return new DoorShut.Escape(
+        self,
+        input.decision(),
+        bot.reflex().waypointIndex(),
+        percept.visible(),
+        input.snapshot().alive(self.team()).stream()
+            .filter(ally -> !ally.id().equals(self.id()))
+            .toList());
   }
 
   private boolean communicating(BotBody bot, ReflexInput input, MatchSession match) {

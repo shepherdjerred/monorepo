@@ -1868,6 +1868,19 @@ as the margin an urgent option needs. `rwfbots.yml` allows every
 kit, and the match narrows the draft to the first four kits unless the full
 list is on for someone present (`MatchView.kitsOnOffer`).
 
+Bots use the map as players do. A body opens a wooden door in its way and,
+while breaking contact (retreating, falling back to heal, backing off), pulls
+shut the one it has just come through when an enemy follows and no teammate
+does (`DoorShut`); both clicks go through the ordinary interaction event, so a
+rule can deny them and `DoorVisibility` updates the bots' sight of the door.
+Iron doors, trapdoors and fence gates are left alone. Ranged bots value height
+(`HighGround`): cover is scored one block nearer for each block it stands
+above the enemy it hides from, up to four, while that enemy is within the
+bot's band and a step from the cover has a line to it; and an archer chased by
+a sword runs up a nearby ladder or ledge the sword must climb after it and,
+once above it, shoots instead of backing off. Swords take the nearest cover
+and retreat on the flat.
+
 Crossbows, tridents, spears and maces use native item completion, including
 finite ammunition, Multishot/Piercing, Loyalty return, tipped effects and mace
 smash callbacks. The adapter rewrites native damage once through RWF's damage

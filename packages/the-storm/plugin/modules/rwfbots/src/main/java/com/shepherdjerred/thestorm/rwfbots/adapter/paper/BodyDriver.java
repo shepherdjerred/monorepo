@@ -118,6 +118,22 @@ public final class BodyDriver {
     }
   }
 
+  /**
+   * A body breaking contact pulls shut the wooden door it has just come through while an enemy
+   * follows it ({@link com.shepherdjerred.thestorm.rwfbots.domain.reflex.DoorShut}). Returns
+   * whether it shut one.
+   */
+  public boolean shutDoorBehind(
+      BotBody bot, com.shepherdjerred.thestorm.rwfbots.domain.reflex.DoorShut.Escape escape) {
+    if (chat.filter(talk -> talk.typing(bot.uuid())).isPresent() || casting.stationary(bot.uuid()))
+      return false;
+    return bodies
+        .entity(bot.uuid())
+        .filter(player -> !player.isDead())
+        .map(player -> WoodenDoors.shutBehind(player, escape))
+        .orElse(false);
+  }
+
   private boolean applyCommand(
       BotBody bot, BodyCommand command, Frame frame, boolean steeringAccepted) {
     if (command instanceof BodyCommand.MoveToward movement) return move(bot, movement, frame);

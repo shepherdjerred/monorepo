@@ -25,6 +25,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stance;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
@@ -656,13 +657,41 @@ public final class Planner {
     return coverWhere(situation, context, search, feet -> true);
   }
 
+  /**
+   * The cover from {@code search} that passes {@code wanted}: the nearest for a sword; for a ranged
+   * bot the nearest after each block it would stand above the threat counts as {@link
+   * RangedPosition#HEIGHT_WORTH} blocks closer ({@link HighGround#advantage}), so it takes a
+   * balcony or a wall top over level cover just as near.
+   */
   private static Optional<CoverSpot> coverWhere(
       Situation situation, TacticsContext context, CoverSearch search, Predicate<Vec3> wanted) {
     var near = search.near();
     var threat = search.threat();
-    var radius = search.radius();
     var nav = context.nav();
+    var taken = takenCover(situation, context);
+    Optional<CoverSpot> best = Optional.empty();
+    var bestScore = Double.POSITIVE_INFINITY;
+    for (var point : nav.cover().protectingFrom(nav.graph(), near, threat, search.radius())) {
+      var feet = nav.graph().feet(point.node());
+      if (!coverFree(situation, context, point.node(), threat)
+          || taken.stream().anyMatch(other -> other.horizontalDistance(feet) < COVER_ROOM)
+          || !wanted.test(feet)) {
+        continue;
+      }
+      if (!context.keep().ranged()) return Optional.of(new CoverSpot(point.node(), feet));
+      var score = feet.distance(near) - HighGround.advantage(context, point.node(), threat);
+      if (score < bestScore) {
+        best = Optional.of(new CoverSpot(point.node(), feet));
+        bestScore = score;
+      }
+    }
+    return best;
+  }
+
+  /** Where teammates stand and the cover they have claimed: cover there is theirs. */
+  private static List<Vec3> takenCover(Situation situation, TacticsContext context) {
     var self = situation.self().id();
+    var graph = context.nav().graph();
     var taken = new ArrayList<Vec3>();
     for (var ally : situation.livingAllies()) {
       taken.add(ally.pos());
@@ -673,22 +702,22 @@ public final class Planner {
         .forEach(
             (bot, node) -> {
               if (!bot.equals(self)) {
-                taken.add(nav.graph().feet(node));
+                taken.add(graph.feet(node));
               }
             });
-    for (var point : nav.cover().protectingFrom(nav.graph(), near, threat, radius)) {
-      var feet = nav.graph().feet(point.node());
-      if (situation.board().isCoverClaimed(point.node(), self)
-          || !RecoverySteps.usable(situation, context, point.node())
-          || poisonDanger(situation, feet, POISON_MARGIN)
-          || feet.horizontalDistance(threat) <= TOO_CLOSE_COVER
-          || taken.stream().anyMatch(other -> other.horizontalDistance(feet) < COVER_ROOM)
-          || !wanted.test(feet)) {
-        continue;
-      }
-      return Optional.of(new CoverSpot(point.node(), feet));
-    }
-    return Optional.empty();
+    return taken;
+  }
+
+  /**
+   * Whether the cover at {@code node} is unclaimed, reachable, clear of poison and of the threat.
+   */
+  private static boolean coverFree(
+      Situation situation, TacticsContext context, int node, Vec3 threat) {
+    var feet = context.nav().graph().feet(node);
+    return !situation.board().isCoverClaimed(node, situation.self().id())
+        && RecoverySteps.usable(situation, context, node)
+        && !poisonDanger(situation, feet, POISON_MARGIN)
+        && feet.horizontalDistance(threat) > TOO_CLOSE_COVER;
   }
 
   /** The next cover towards {@code goal}: around a point one bound ahead, and closer than now. */
@@ -731,8 +760,14 @@ public final class Planner {
 
   // ---- safety ----------------------------------------------------------------------------------
 
-  /** Cover that hides from the nearest enemy, else the own spawn, else where the bot stands. */
+  /**
+   * For a ranged bot chased by a sword, high ground the sword must climb to ({@link
+   * HighGround#refuge}); otherwise cover that hides from the nearest enemy, else the own spawn,
+   * else where the bot stands.
+   */
   private static CoverSpot safeSpot(Situation situation, TacticsContext context) {
+    var refuge = HighGround.refuge(situation, context);
+    if (refuge.isPresent()) return refuge.orElseThrow();
     var self = situation.self();
     var threat = situation.nearestEnemy().map(Situation.KnownEnemy::pos);
     if (threat.isPresent()) {
@@ -1205,12 +1240,22 @@ public final class Planner {
               label + "-close"));
     }
 
+    /**
+     * Backs off an enemy inside the band: up a ladder or ledge when a sword chases it, to cover
+     * further away otherwise; an archer already above a sword that must climb to it holds and
+     * shoots.
+     */
     Optional<Engagement> back() {
       var keep = context.keep();
       var distance = distance();
-      if (distance >= keep.min() || distance <= Reflex.BOW_MIN_RANGE) {
+      if (distance >= keep.min()
+          || distance <= Reflex.BOW_MIN_RANGE
+          || HighGround.holds(situation, context)) {
         return Optional.empty();
       }
+      var refuge = HighGround.refuge(situation, context);
+      if (refuge.isPresent())
+        return Optional.of(move(refuge.orElseThrow().pos(), Stance.EVASIVE, "-climb"));
       var back = self().plus(outward().scale(keep.min() - distance + 3));
       var cover =
           coverWhere(
