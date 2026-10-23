@@ -213,7 +213,8 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v0.13.1"
+      "value": "v0.13.1",
+      "component": true
     },
     {
       "name": "itzg/minecraft-server",

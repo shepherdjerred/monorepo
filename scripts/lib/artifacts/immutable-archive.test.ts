@@ -3,6 +3,7 @@ import { chmod, mkdtemp, rm } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { immutableArchiveKey } from "./immutable-archive.ts";
 
 test.each([false, true])(
   "lost upload response still requires exact immutable readback (corrupt=%s)",
@@ -61,3 +62,27 @@ test.each([false, true])(
     }
   },
 );
+
+test("an archive key ends in its exact content digest, including a Git source's commit tarball", () => {
+  const hex = "a".repeat(64);
+  const digest = `sha256:${hex}`;
+  for (const suffix of [".json", ".tar", ".tgz", ".tar.gz"])
+    expect(
+      immutableArchiveKey(
+        `s3://delivery-artifacts/sources/adyanth/cloudflare-operator/${hex}${suffix}`,
+        digest,
+      ),
+    ).toBe(`sources/adyanth/cloudflare-operator/${hex}${suffix}`);
+  expect(() =>
+    immutableArchiveKey(
+      `s3://delivery-artifacts/sources/x/${"b".repeat(64)}.tar.gz`,
+      digest,
+    ),
+  ).toThrow("exact content digest");
+  expect(() =>
+    immutableArchiveKey(`s3://other-bucket/sources/x/${hex}.tar.gz`, digest),
+  ).toThrow("Invalid immutable archive target");
+  expect(() =>
+    immutableArchiveKey(`s3://delivery-artifacts/sources/x/${hex}.zip`, digest),
+  ).toThrow("exact content digest");
+});
