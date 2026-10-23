@@ -53,9 +53,6 @@ export const WOODPECKER_SERVER_ITEM_ID = "covttsojandjk7fx62a3dbk7em";
  * fields in the owning GitHub item and this copy together; TOFU_GITHUB_TOKEN
  * remains only in the original item used by platform provider Jobs.
  */
-/** CI's npm publish item (field NPM_TOKEN); Delivery's npm channels publish with it too. */
-export const CI_NPM_CREDENTIALS_ITEM = "4fmd5otmvwcpsrxjaptrloppvu";
-
 const CI_CREDENTIAL_ITEMS = [
   {
     secretName: "ci-delivery-archive-credentials",
@@ -83,7 +80,7 @@ const CI_CREDENTIAL_ITEMS = [
     secretName: "ci-turbo-cache-credentials",
     itemId: "mzvcz4pqqbda75ufu7l5myd4ey",
   },
-  { secretName: "ci-npm-credentials", itemId: CI_NPM_CREDENTIALS_ITEM },
+  { secretName: "ci-npm-credentials", itemId: "4fmd5otmvwcpsrxjaptrloppvu" },
   {
     secretName: "ci-release-openai-credentials",
     itemId: "2r6nqphyvaegtnbjgcg4avff3m",
@@ -93,6 +90,24 @@ const CI_CREDENTIAL_ITEMS = [
     itemId: "cnutkdwa7uka5hk3wx5gimyfom",
   },
 ] as const;
+
+/**
+ * CI's npm publish item (field NPM_TOKEN); Delivery's npm channels publish
+ * with it too. Read from the boundary list, where `check-ci-env` requires a
+ * literal item id, so both consumers move together.
+ */
+export const CI_NPM_CREDENTIALS_ITEM = ciCredentialItem("ci-npm-credentials");
+
+function ciCredentialItem(
+  secretName: (typeof CI_CREDENTIAL_ITEMS)[number]["secretName"],
+): string {
+  const item = CI_CREDENTIAL_ITEMS.find(
+    (entry) => entry.secretName === secretName,
+  );
+  if (item === undefined)
+    throw new Error(`CI credential boundary declares no ${secretName}`);
+  return item.itemId;
+}
 
 export function createWoodpeckerCredentialBoundaries(chart: Chart): void {
   new OnePasswordItem(chart, "woodpecker-server-credentials", {
