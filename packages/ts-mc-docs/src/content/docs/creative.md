@@ -5,15 +5,15 @@ description: Enter the creative plot world, claim a cell, name it, trust a build
 
 This page describes the creative plot commands. It is not a statement that creative is on the live server.
 
-Run `/creative` to enter. You switch to creative mode with an empty inventory. Your survival items, experience, and effects stay stored until you leave. Run `/creative leave` to restore that survival body. Creative items, experience, and effects are discarded when you leave. `/plot` remains the survival shop-rental command.
+Run `/creative` to enter. You arrive at the glowstone crossing and switch to creative mode with an empty inventory. Your survival items, experience, and effects stay stored until you leave. Run `/creative leave` to restore that survival body. Creative items, experience, and effects are discarded when you leave. `/plot` remains the survival shop-rental command.
 
 Leaves do not decay there, fire does not spread, and crops, vines, and snow do not grow on their own. Place the block you want.
 
 ## Claim a cell
 
-Stand on an empty cell inside the world border and run `/creative claim`. You can hold two new claims. Plots already listed in the recovered catalog do not count toward that cap. Staff are exempt from the cap.
+Stand on an empty cell inside the world border and run `/creative claim`. When the claim is saved, you arrive at the center of that plot. You can hold two new claims. Plots already listed in the recovered catalog do not count toward that cap. Staff are exempt from the cap.
 
-`/creative auto` claims the nearest free cell that sits fully inside the border. A road, a staff-held plot, and a plot someone else owns cannot be claimed.
+`/creative auto` claims the nearest free cell that sits fully inside the border and takes you to its center. A road, a staff-held plot, and a plot someone else owns cannot be claimed.
 
 ## Name, trust, and visit
 
@@ -22,7 +22,7 @@ Stand on a plot you own:
 1. `/creative name <name>` sets a name of up to 32 characters.
 2. `/creative desc <description>` sets a description of up to 140 characters.
 3. `/creative trust <player>` lets that online player build. `/creative untrust <player>` removes them.
-4. `/creative home` returns you to a plot you can visit. `/creative home 2;1` goes to that plot when you own it or are trusted there.
+4. `/creative home` returns you to a plot you can already build on. `/creative home 2;1` goes to that plot when you own it or are trusted there.
 5. `/creative info` and `/creative list` show the plot you are on and the plots you can visit.
 
 ## Download one plot
