@@ -258,6 +258,37 @@ final class PlannerSupportTest {
     assertThat(decision.planLabel()).endsWith("-support");
     assertThat(decision.waypoints()).isNotEmpty();
     assertThat(decision.waypoints().getLast().pos()).isEqualTo(new Vec3(22.5, 1, 25.5));
+    // It draws on the enemy it can see while it walks, rather than only once it stops.
+    assertThat(decision.target()).contains(new CombatantId(2));
+  }
+
+  private static TacticsContext archer(TacticsContext sword) {
+    return new TacticsContext(
+        NAV,
+        sword.levers(),
+        sword.style(),
+        Kit.LONGBOW,
+        sword.archetype(),
+        sword.quirks(),
+        sword.seed(),
+        null);
+  }
+
+  @Test
+  void aBowTakesItsWholeBandHoldingButOnlyItsNearEdgeOnTheMoveAndNothingOnADash() {
+    // 18 blocks: inside the longbow's band, beyond its near edge.
+    var far = openBound(30.5, 10);
+    var archer = archer(far.context());
+    assertThat(archer.keep().min()).isLessThan(18);
+    assertThat(archer.keep().max()).isGreaterThan(18);
+    assertThat(Pace.STILL.target(far.situation(), archer)).contains(new CombatantId(2));
+    assertThat(Pace.MOVING.target(far.situation(), archer)).isEmpty();
+    // 12 blocks: inside the near edge, so it draws as it walks, but not while dashing for cover.
+    var near = openBound(24.5, 10);
+    assertThat(Pace.MOVING.target(near.situation(), archer)).contains(new CombatantId(2));
+    assertThat(Pace.DASHING.target(near.situation(), archer)).isEmpty();
+    // A sword only answers an enemy it can swing at.
+    assertThat(Pace.STILL.target(near.situation(), near.context())).isEmpty();
   }
 
   @Test

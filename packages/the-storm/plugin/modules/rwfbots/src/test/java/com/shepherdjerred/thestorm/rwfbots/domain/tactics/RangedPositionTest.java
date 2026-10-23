@@ -1,7 +1,10 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.tactics;
 
+import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.levers;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import org.junit.jupiter.api.Test;
 
 final class RangedPositionTest {
@@ -18,6 +21,16 @@ final class RangedPositionTest {
     var trapped = cost(3, 5, 0, 24);
     assertThat(wall).isLessThan(level);
     assertThat(trapped).isGreaterThan(level);
+  }
+
+  @Test
+  void aSharpArchersBandDoesNotPullItInFromALongFiringPosition() {
+    var sharp = ArchetypeBias.keep(Kit.LONGBOW, Archetype.TACTICIAN, levers(1));
+    var weak = ArchetypeBias.keep(Kit.LONGBOW, Archetype.TACTICIAN, levers(0));
+    var near = new RangedPosition.Candidate(3, 0, 2, 24);
+    var far = new RangedPosition.Candidate(3, 0, 2, 45);
+    assertThat(RangedPosition.cost(far, sharp)).isEqualTo(RangedPosition.cost(near, sharp));
+    assertThat(RangedPosition.cost(far, weak)).isGreaterThan(RangedPosition.cost(near, weak));
   }
 
   @Test

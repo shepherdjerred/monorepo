@@ -44,6 +44,22 @@ final class BowSolverTest {
   }
 
   @Test
+  void reachesTheLongestBandAnArcherEngagesAt() {
+    var from = new Vec3(0, 1.62, 0);
+    for (var range : new double[] {40, 48, 55}) {
+      for (var rise : new double[] {-4, 0, 4}) {
+        var target = new Vec3(range * 0.8, 1.62 + rise, range * 0.6);
+        var pitch = BowSolver.solve(from, target, BowSolver.FULL_DRAW_SPEED);
+        assertThat(pitch).as("range %s rise %s", range, rise).isPresent();
+        var facing = new Facing(Facing.looking(from, target).yaw(), pitch.getAsDouble());
+        assertThat(closestPass(from, facing, target))
+            .as("range %s rise %s", range, rise)
+            .isLessThan(0.35);
+      }
+    }
+  }
+
+  @Test
   void aimsAboveTheTargetToAllowForGravity() {
     var from = new Vec3(0, 1.62, 0);
     var target = new Vec3(0, 1.62, 30);

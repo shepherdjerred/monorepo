@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.tactics;
 
+import static com.shepherdjerred.thestorm.rwfbots.domain.Fixtures.levers;
 import static java.util.Comparator.comparingDouble;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -16,8 +17,16 @@ final class UtilitiesTest {
   private static final Style STYLE = new Style(0.5, 0.5, 0.5, 0.5);
 
   private static Utilities.Temper temper(Role role, Archetype archetype, Kit kit) {
+    return temper(role, archetype, kit, levers(0.5));
+  }
+
+  private static Utilities.Temper temper(
+      Role role,
+      Archetype archetype,
+      Kit kit,
+      com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Levers levers) {
     return new Utilities.Temper(
-        STYLE, 0.5, role, ArchetypeBias.of(archetype), ArchetypeBias.keep(kit, archetype));
+        STYLE, 0.5, role, ArchetypeBias.of(archetype), ArchetypeBias.keep(kit, archetype, levers));
   }
 
   private static final Utilities.Temper PLANTER =
@@ -164,6 +173,39 @@ final class UtilitiesTest {
     var acrossTheMap = new F().enemyAt(46);
     acrossTheMap.slotDistance = 10;
     assertThat(best(Utilities.score(acrossTheMap.build(), temper))).isEqualTo(Option.TAKE_SLOT);
+  }
+
+  @Test
+  void aSharpArcherTakesLongShotsFromItsSlotButAWeakOneDoesNot() {
+    var far = new F().enemyAt(45);
+    far.slotDistance = 2;
+    var sharp = temper(Role.ROTATE, Archetype.SNIPER, Kit.LONGBOW, levers(1));
+    var weak = temper(Role.ROTATE, Archetype.SNIPER, Kit.LONGBOW, levers(0));
+    assertThat(best(Utilities.score(far.build(), sharp))).isEqualTo(Option.ENGAGE);
+    assertThat(best(Utilities.score(far.build(), weak))).isNotEqualTo(Option.ENGAGE);
+    var near = new F().enemyAt(20);
+    near.slotDistance = 2;
+    assertThat(best(Utilities.score(near.build(), weak))).isEqualTo(Option.ENGAGE);
+  }
+
+  @Test
+  void aBowBandReachesFurtherWithSharperAimWithinItsLimits() {
+    var weakest = ArchetypeBias.keep(Kit.SHORTBOW, Archetype.TACTICIAN, levers(0));
+    var middling = ArchetypeBias.keep(Kit.SHORTBOW, Archetype.TACTICIAN, levers(0.5));
+    var sharpest = ArchetypeBias.keep(Kit.SHORTBOW, Archetype.TACTICIAN, levers(1));
+    assertThat(weakest.max()).isEqualTo(ArchetypeBias.SHORT_MIN + ArchetypeBias.BAND_DEPTH);
+    assertThat(middling.max()).isBetween(weakest.max(), sharpest.max());
+    assertThat(sharpest.max()).isEqualTo(ArchetypeBias.BAND_CEILING);
+    assertThat(ArchetypeBias.keep(Kit.LONGBOW, Archetype.TACTICIAN, levers(0.5)).max())
+        .isGreaterThan(middling.max());
+    // A bot never engages past what it can notice.
+    var shortSighted =
+        levers(1)
+            .with(com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Lever.AWARENESS_RADIUS, 30);
+    assertThat(ArchetypeBias.keep(Kit.SHORTBOW, Archetype.TACTICIAN, shortSighted).max())
+        .isEqualTo(30);
+    assertThat(ArchetypeBias.keep(Kit.TROOPER, Archetype.TACTICIAN, levers(1)))
+        .isEqualTo(ArchetypeBias.Range.MELEE);
   }
 
   @Test

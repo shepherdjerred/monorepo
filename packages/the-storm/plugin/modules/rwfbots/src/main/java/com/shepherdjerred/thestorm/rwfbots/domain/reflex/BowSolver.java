@@ -1,6 +1,8 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.reflex;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import java.util.Optional;
 import java.util.OptionalDouble;
 
 /**
@@ -66,6 +68,16 @@ public final class BowSolver {
       }
     }
     return OptionalDouble.of(-(lo + hi) / 2);
+  }
+
+  /**
+   * The facing (yaw towards it, solved pitch) that lands an arrow from {@code from} on {@code
+   * target}, or empty when it is out of range.
+   */
+  public static Optional<Facing> facing(Vec3 from, Vec3 target, double speed) {
+    var pitch = solve(from, target, speed);
+    if (pitch.isEmpty()) return Optional.empty();
+    return Optional.of(new Facing(Facing.looking(from, target).yaw(), pitch.getAsDouble()));
   }
 
   /**

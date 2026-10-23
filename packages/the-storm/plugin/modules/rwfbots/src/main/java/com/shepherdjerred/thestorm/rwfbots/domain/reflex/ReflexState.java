@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.reflex;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing;
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import java.util.Optional;
 
 /**
@@ -20,6 +21,9 @@ import java.util.Optional;
  * @param lastJumpTick when the bot last jumped
  * @param abilityUsedFor the decision tick whose ability has already been triggered, or -1
  * @param nextKitUse the earliest tick a kit item may be used again
+ * @param activeJump the jump being prepared or flown, if any
+ * @param bowSight where the drawn bow last had a target, so a draw survives the target ducking out
+ *     of sight
  */
 public record ReflexState(
     AimState aim,
@@ -36,7 +40,8 @@ public record ReflexState(
     long lastJumpTick,
     long abilityUsedFor,
     long nextKitUse,
-    Optional<ActiveJump> activeJump) {
+    Optional<ActiveJump> activeJump,
+    Optional<ReflexState.BowSight> bowSight) {
 
   public ReflexState {
     if (strafeDir != 1 && strafeDir != -1) {
@@ -50,7 +55,22 @@ public record ReflexState(
   /** A fresh life looking along {@code look}. */
   public static ReflexState initial(Facing look) {
     return new ReflexState(
-        AimState.looking(look), 0, -1, 1, 0, -1, -1, false, 0, 0, -1, -1, -1, 0, Optional.empty());
+        AimState.looking(look),
+        0,
+        -1,
+        1,
+        0,
+        -1,
+        -1,
+        false,
+        0,
+        0,
+        -1,
+        -1,
+        -1,
+        0,
+        Optional.empty(),
+        Optional.empty());
   }
 
   public boolean isDrawing() {
@@ -77,7 +97,8 @@ public record ReflexState(
         lastJumpTick,
         abilityUsedFor,
         nextKitUse,
-        activeJump);
+        activeJump,
+        bowSight);
   }
 
   public ReflexState withClick(double newNextClickAt, long newWTapUntil) {
@@ -96,7 +117,8 @@ public record ReflexState(
         lastJumpTick,
         abilityUsedFor,
         nextKitUse,
-        activeJump);
+        activeJump,
+        bowSight);
   }
 
   public ReflexState withStrafe(int newDir, long newFlip) {
@@ -115,7 +137,8 @@ public record ReflexState(
         lastJumpTick,
         abilityUsedFor,
         nextKitUse,
-        activeJump);
+        activeJump,
+        bowSight);
   }
 
   public ReflexState withDrawStart(long tick) {
@@ -134,7 +157,8 @@ public record ReflexState(
         lastJumpTick,
         abilityUsedFor,
         nextKitUse,
-        activeJump);
+        activeJump,
+        bowSight);
   }
 
   public ReflexState withEating(long since, boolean nowHealing) {
@@ -153,7 +177,8 @@ public record ReflexState(
         lastJumpTick,
         abilityUsedFor,
         nextKitUse,
-        activeJump);
+        activeJump,
+        bowSight);
   }
 
   public ReflexState withNextFuseClick(long tick) {
@@ -172,7 +197,8 @@ public record ReflexState(
         lastJumpTick,
         abilityUsedFor,
         nextKitUse,
-        activeJump);
+        activeJump,
+        bowSight);
   }
 
   public ReflexState withPath(int index, long forDecisionTick) {
@@ -191,7 +217,8 @@ public record ReflexState(
         lastJumpTick,
         abilityUsedFor,
         nextKitUse,
-        activeJump);
+        activeJump,
+        bowSight);
   }
 
   public ReflexState withLastJump(long tick) {
@@ -210,7 +237,8 @@ public record ReflexState(
         tick,
         abilityUsedFor,
         nextKitUse,
-        activeJump);
+        activeJump,
+        bowSight);
   }
 
   public ReflexState withAbilityUsedFor(long tick) {
@@ -229,7 +257,8 @@ public record ReflexState(
         lastJumpTick,
         tick,
         nextKitUse,
-        activeJump);
+        activeJump,
+        bowSight);
   }
 
   public ReflexState withNextKitUse(long tick) {
@@ -248,7 +277,8 @@ public record ReflexState(
         lastJumpTick,
         abilityUsedFor,
         tick,
-        activeJump);
+        activeJump,
+        bowSight);
   }
 
   public ReflexState withActiveJump(Optional<ActiveJump> jump) {
@@ -267,6 +297,36 @@ public record ReflexState(
         lastJumpTick,
         abilityUsedFor,
         nextKitUse,
-        jump);
+        jump,
+        bowSight);
   }
+
+  public ReflexState withBowSight(Optional<BowSight> sight) {
+    return new ReflexState(
+        aim,
+        nextClickAt,
+        wTapUntil,
+        strafeDir,
+        nextStrafeFlip,
+        drawStart,
+        eatingSince,
+        healing,
+        nextFuseClick,
+        waypointIndex,
+        decisionTick,
+        lastJumpTick,
+        abilityUsedFor,
+        nextKitUse,
+        activeJump,
+        sight);
+  }
+
+  /**
+   * The last time a drawn bow had a target.
+   *
+   * @param point the aim point then, lead included
+   * @param seen the last tick the target was in sight
+   * @param since the first tick of that unbroken sighting
+   */
+  public record BowSight(Vec3 point, long seen, long since) {}
 }
