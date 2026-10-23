@@ -15,6 +15,7 @@ import com.shepherdjerred.thestorm.rwf.domain.geometry.Vec3;
 import com.shepherdjerred.thestorm.rwf.domain.match.Combatant;
 import com.shepherdjerred.thestorm.rwf.domain.match.MatchEvent;
 import java.util.Optional;
+import java.util.UUID;
 import org.bukkit.Material;
 import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.Arrow;
@@ -194,6 +195,49 @@ final class PaperCombatantActions implements CombatantActions {
     // The server's damage event fires with the attacker as damager, and the combat listener
     // replaces the amount with the rules' own, exactly as for a human's swing.
     targetEntity.damage(damage, attackerEntity);
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<ActionRefusal> strikeSummon(CombatantId attacker, UUID summon) {
+    return fighter(attacker)
+        .fold(
+            attackerEntity -> {
+              var entity = attackerEntity.getWorld().getEntity(summon);
+              var creature = runner.powers().streaks().summons().of(entity);
+              if (entity == null || creature.isEmpty()) {
+                return Optional.of(ActionRefusal.UNKNOWN_SUMMON);
+              }
+              return strike(attacker, attackerEntity, creature.orElseThrow());
+            },
+            Optional::of);
+  }
+
+  /** A swing at a summon, checked as a human's would be; the summons' listener applies it. */
+  private Optional<ActionRefusal> strike(
+      CombatantId attacker, Player attackerEntity, Summons.Summon summon) {
+    var mob = summon.mob();
+    if (runner.member(attacker).flatMap(a -> a.team()).filter(summon.team()::equals).isPresent()) {
+      return Optional.of(ActionRefusal.SAME_TEAM);
+    }
+    var eye = attackerEntity.getEyeLocation();
+    PlayerAttributes.addAttackSpeed(attackerEntity);
+    var profile =
+        WeaponProfile.of(
+            KitFactory.spec(attackerEntity.getInventory().getItemInMainHand(), Optional.empty()));
+    var contact =
+        mob.getBoundingBox().rayTrace(eye.toVector(), eye.getDirection(), profile.maxReach());
+    if (contact == null || contact.getHitPosition().distance(eye.toVector()) < profile.minReach()) {
+      return Optional.of(ActionRefusal.OUT_OF_REACH);
+    }
+    if (!hooks.lineOfSight().test(attackerEntity, mob)) {
+      return Optional.of(ActionRefusal.NO_LINE_OF_SIGHT);
+    }
+    intent(attacker, "attack", "summon");
+    attackerEntity.swingMainHand();
+    // The damage event fires with the attacker as damager; the killstreak listener cancels it and
+    // applies the summons' own rules, exactly as for a human's swing at the creature.
+    mob.damage(1, attackerEntity);
     return Optional.empty();
   }
 

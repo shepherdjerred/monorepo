@@ -96,9 +96,12 @@ final class Killstreaks {
             new Napalm.Parts(parts.keys(), parts.explosions(), blocks, parts.tracker()));
   }
 
-  /** The server operations the rewards need; given once, as the module starts. */
-  void hooks(ServerHooks hooks) {
-    summons.hooks(hooks);
+  /**
+   * The server operations the rewards need and the battlefield the summons' blows sound on; given
+   * once, as the module starts.
+   */
+  void hooks(ServerHooks hooks, com.shepherdjerred.thestorm.rwf.app.BattleSounds battlefield) {
+    summons.hooks(hooks, battlefield);
   }
 
   Summons summons() {

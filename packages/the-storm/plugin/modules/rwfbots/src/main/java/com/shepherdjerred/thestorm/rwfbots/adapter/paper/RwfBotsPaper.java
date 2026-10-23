@@ -179,7 +179,8 @@ public final class RwfBotsPaper {
                 module.logger(),
                 lobby,
                 app.learning(),
-                view));
+                view,
+                services.require(com.shepherdjerred.thestorm.rwf.app.MatchSummons.class)));
     var driver =
         new BodyDriver(
             new BodyDriver.Parts(

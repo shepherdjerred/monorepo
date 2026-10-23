@@ -43,7 +43,14 @@ final class ReflexTest {
 
   private static WorldSnapshot world(long tick, List<CombatantView> views, List<BombView> bombs) {
     return new WorldSnapshot(
-        tick, MatchPhase.LIVE, views, bombs, PoisonView.NONE, "synthetic", List.of());
+        tick,
+        MatchPhase.LIVE,
+        views,
+        bombs,
+        PoisonView.NONE,
+        "synthetic",
+        List.of(),
+        java.util.List.of());
   }
 
   private static Decision fight(CombatantView self, CombatantView target, long tick) {

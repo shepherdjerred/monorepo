@@ -218,6 +218,12 @@ final class ViewsTest {
           }
 
           @Override
+          public Optional<ActionRefusal> strikeSummon(CombatantId attacker, UUID summon) {
+            seen.add(attacker);
+            return Optional.empty();
+          }
+
+          @Override
           public Optional<ActionRefusal> shootBow(CombatantId id, Vec3 direction, double force) {
             seen.add(id);
             return direction.equals(new Vec3(0, 1, 0))

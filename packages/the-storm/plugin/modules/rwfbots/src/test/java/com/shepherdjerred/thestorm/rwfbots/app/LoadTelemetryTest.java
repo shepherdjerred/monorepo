@@ -42,7 +42,8 @@ final class LoadTelemetryTest {
         List.of(),
         PoisonView.NONE,
         "test-map",
-        List.of());
+        List.of(),
+        java.util.List.of());
   }
 
   @Test

@@ -8,8 +8,10 @@ import com.shepherdjerred.thestorm.rwfbots.domain.map.VoxelGrid;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stimulus;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.SummonView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.random.RandomGenerator;
 
@@ -21,7 +23,8 @@ import java.util.random.RandomGenerator;
  * source with an error that grows with distance. A hit on the bot itself tells it who struck and
  * roughly from where: a melee attacker exactly, a shooter with an error that grows with range. That
  * places the attacker in memory and starts a {@link Grudge}; where it goes afterwards the bot
- * learns only by seeing or hearing it.
+ * learns only by seeing or hearing it. Hostile killstreak creatures are seen by the same sight
+ * rules; a creature's blow starts a grudge against the creature, never its owner.
  */
 public final class Perception {
 
@@ -104,7 +107,35 @@ public final class Perception {
         snapshot.stimuli().isEmpty()
             ? state.heardThrough()
             : Math.max(state.heardThrough(), snapshot.stimuli().getLast().sequence());
-    return new Percept(new PerceptionState(memory, suspicion, heardThrough, grudge), visible, now);
+    return new Percept(
+        new PerceptionState(memory, suspicion, heardThrough, grudge),
+        visible,
+        now,
+        summonsSeen(self, snapshot));
+  }
+
+  /** The hostile summons {@code self} sees, nearest first, by the same sight rules as players. */
+  private List<SummonView> summonsSeen(CombatantView self, WorldSnapshot snapshot) {
+    return snapshot.summons().stream()
+        .filter(summon -> summon.hostileTo(self.team()))
+        .filter(summon -> seesSummon(self, summon))
+        .sorted(comparingDouble(summon -> summon.pos().distanceSquared(self.pos())))
+        .toList();
+  }
+
+  private boolean seesSummon(CombatantView self, SummonView summon) {
+    var distance = self.pos().distance(summon.pos());
+    if (distance > context.levers().awarenessRadius()) {
+      return false;
+    }
+    var toSummon = summon.centre().minus(self.eye());
+    if (distance > POINT_BLANK
+        && !toSummon.isZero()
+        && self.facing().direction().angleTo(toSummon) > HALF_FOV) {
+      return false;
+    }
+    return clearRay(context, self.eye(), summon.centre())
+        || clearRay(context, self.eye(), summon.pos().plus(0, FEET_HEIGHT, 0));
   }
 
   /** Whether {@code other} is, as far as {@code self} can tell, an enemy. */
@@ -227,14 +258,46 @@ public final class Perception {
       if (attacker.isPresent()) {
         result = attribute(result, frame, new Blow(stimulus.tick(), attacker.get()), random);
       }
+      var summon = summonOf(stimulus, frame);
+      if (summon.isPresent()) {
+        result = bitten(result, frame, stimulus.tick(), summon.get());
+      }
     }
     return result;
   }
 
+  /** The hostile summon that struck the bot in {@code stimulus}, if it is a summon's hit on it. */
+  private static Optional<SummonView> summonOf(Stimulus stimulus, Frame frame) {
+    var self = frame.self();
+    if (stimulus.kind() != Stimulus.Kind.HIT
+        || stimulus.sequence() <= frame.heardThrough()
+        || !stimulus.victim().map(self.id()::equals).orElse(false)) {
+      return Optional.empty();
+    }
+    return stimulus
+        .source()
+        .flatMap(frame.snapshot()::summon)
+        .filter(summon -> summon.hostileTo(self.team()));
+  }
+
   /**
-   * The enemy who struck the bot in {@code stimulus}, if it is a hit on the bot. Only a player's
-   * own blow or arrow names an attacker: the collector credits no hit to the owner of the summon
-   * that landed it, so a golem's blow never sends the bot after its owner.
+   * A summon's blow: the grudge names the creature, never its owner, and memory, which tracks
+   * players, learns nothing. The creature stands next to the bot, where it can see it.
+   */
+  private static Felt bitten(Felt before, Frame frame, long tick, SummonView summon) {
+    var at = frame.self().pos();
+    var grudge =
+        before
+            .grudge()
+            .map(held -> held.hitBy(summon.id(), tick, at))
+            .orElseGet(() -> new Grudge(summon.id(), tick, at));
+    return new Felt(before.memory(), Optional.of(grudge));
+  }
+
+  /**
+   * The enemy player who struck the bot in {@code stimulus}, if it is a player's hit on the bot. A
+   * summon's blow names the summon, never its owner, so a golem's blow never sends the bot after
+   * the player who called it.
    */
   private static Optional<CombatantView> attackerOf(Stimulus stimulus, Frame frame) {
     var self = frame.self();

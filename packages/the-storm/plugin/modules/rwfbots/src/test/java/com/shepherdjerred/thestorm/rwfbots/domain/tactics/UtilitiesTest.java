@@ -50,6 +50,7 @@ final class UtilitiesTest {
     boolean freeTarget = true;
     boolean rewindReady;
     Optional<Aggro.Pull> aggro = Optional.empty();
+    double golemDistance = Double.POSITIVE_INFINITY;
 
     F enemyAt(double distance) {
       enemyDistance = distance;
@@ -80,7 +81,8 @@ final class UtilitiesTest {
           plantSlot,
           freeTarget,
           rewindReady,
-          aggro);
+          aggro,
+          golemDistance);
     }
   }
 

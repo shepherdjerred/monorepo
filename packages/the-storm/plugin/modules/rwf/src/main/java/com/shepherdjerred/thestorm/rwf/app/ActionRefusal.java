@@ -34,6 +34,8 @@ public enum ActionRefusal {
   NO_FUSE,
   /** The target is further away than a player could reach. */
   OUT_OF_REACH,
+  /** There is no such killstreak summon, or it has gone. */
+  UNKNOWN_SUMMON,
   /** A block is between the attacker and the target. */
   NO_LINE_OF_SIGHT,
   /** The target is on the attacker's own team. */

@@ -51,7 +51,10 @@ public final class ObjectivePolicy {
     if (dangerous)
       return new Directive(
           memory,
-          Optional.of(situation.self().effectiveHealth() <= 4 ? Option.RETREAT : Option.ENGAGE));
+          Optional.of(
+              situation.self().effectiveHealth() <= 4 || golemUpon(situation)
+                  ? Option.RETREAT
+                  : Option.ENGAGE));
     if (situation.now() - safeSince < TacticalMemory.RESUME_TICKS)
       return new Directive(memory, Optional.of(Option.HOLD_ANGLE));
     return new Directive(memory, Optional.of(diversion.isPresent() ? Option.ARM : Option.DEFUSE));
@@ -96,7 +99,22 @@ public final class ObjectivePolicy {
     return melee || lethal || grid.blocksMovement(BlockPos.of(self.pos()));
   }
 
+  /** Whether a hostile golem stands within melee range: no fuse is worth its blows. */
+  private static boolean golemUpon(Situation situation) {
+    return situation
+        .nearestGolem()
+        .filter(golem -> golem.pos().distance(situation.self().pos()) <= IMMEDIATE_MELEE)
+        .isPresent();
+  }
+
+  /** Whether a hostile summon stands within melee range of the bot. */
+  private static boolean summonUpon(Situation situation) {
+    return situation.percept().summons().stream()
+        .anyMatch(summon -> summon.pos().distance(situation.self().pos()) <= IMMEDIATE_MELEE);
+  }
+
   static boolean threatened(Situation situation, TacticsContext context) {
+    if (summonUpon(situation)) return true;
     var enemy = situation.percept().nearestVisible();
     var clutch = situation.litOwnBomb().map(bomb -> workTicks(bomb) <= 20).orElse(false);
     var self = situation.self();

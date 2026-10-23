@@ -52,6 +52,11 @@ public final class FakeBotActions implements BotActions {
   }
 
   @Override
+  public Optional<ActionRefusal> strikeSummon(UUID attacker, UUID summon) {
+    return record("strike " + summon);
+  }
+
+  @Override
   public Optional<ActionRefusal> shootBow(UUID bot, Point direction, double force) {
     return record(
         String.format(

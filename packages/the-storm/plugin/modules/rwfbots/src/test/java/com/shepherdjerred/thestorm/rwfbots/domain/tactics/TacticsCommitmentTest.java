@@ -104,7 +104,14 @@ final class TacticsCommitmentTest {
     }
     var snapshot =
         new WorldSnapshot(
-            100, MatchPhase.LIVE, bodies, List.of(), PoisonView.NONE, "synthetic", List.of());
+            100,
+            MatchPhase.LIVE,
+            bodies,
+            List.of(),
+            PoisonView.NONE,
+            "synthetic",
+            List.of(),
+            java.util.List.of());
     return new Situation(
         self, snapshot, new Percept(PerceptionState.EMPTY, List.of(enemy), 100), board, role);
   }
@@ -277,7 +284,14 @@ final class TacticsCommitmentTest {
     return new Situation(
         base.self(),
         new WorldSnapshot(
-            100, MatchPhase.LIVE, bodies, List.of(), PoisonView.NONE, NAV.mapId(), List.of()),
+            100,
+            MatchPhase.LIVE,
+            bodies,
+            List.of(),
+            PoisonView.NONE,
+            NAV.mapId(),
+            List.of(),
+            java.util.List.of()),
         new Percept(
             new PerceptionState(memory, PerceptionState.EMPTY.suspicion()),
             base.percept().visible(),
@@ -466,7 +480,8 @@ final class TacticsCommitmentTest {
             List.of(bomb),
             PoisonView.NONE,
             NAV.mapId(),
-            List.of());
+            List.of(),
+            java.util.List.of());
     return new Situation(
         self,
         snapshot,
@@ -488,7 +503,8 @@ final class TacticsCommitmentTest {
             List.of(bomb),
             PoisonView.NONE,
             NAV.mapId(),
-            List.of());
+            List.of(),
+            java.util.List.of());
     return Tactics.think(
         new TacticsState(Optional.of(plan), 90, 0, 0, RewindClock.UNSTARTED, memory),
         new Situation(
@@ -574,7 +590,8 @@ final class TacticsCommitmentTest {
             original.bombs(),
             original.poison(),
             original.mapId(),
-            original.stimuli());
+            original.stimuli(),
+            java.util.List.of());
     var occupied =
         new Situation(
             situation.self(), snapshot, situation.percept(), situation.board(), situation.role());

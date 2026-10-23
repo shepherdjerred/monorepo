@@ -735,7 +735,7 @@ public final class Planner {
   /** Cover that hides from the nearest enemy, else the own spawn, else where the bot stands. */
   private static CoverSpot safeSpot(Situation situation, TacticsContext context) {
     var self = situation.self();
-    var threat = situation.nearestEnemy().map(Situation.KnownEnemy::pos);
+    var threat = situation.nearestThreat();
     if (threat.isPresent()) {
       var away = self.pos().distance(threat.get()) - 1;
       var cover =
@@ -832,8 +832,8 @@ public final class Planner {
       case PlanStep.Flee(var goal, var _) ->
           reached(self.pos(), goal)
               || situation
-                  .nearestEnemy()
-                  .map(enemy -> enemy.pos().distance(self.pos()) > FLEE_RANGE)
+                  .nearestThreat()
+                  .map(threat -> threat.distance(self.pos()) > FLEE_RANGE)
                   .orElse(true);
       case PlanStep.Ability _ -> situation.now() > startedTick;
     };

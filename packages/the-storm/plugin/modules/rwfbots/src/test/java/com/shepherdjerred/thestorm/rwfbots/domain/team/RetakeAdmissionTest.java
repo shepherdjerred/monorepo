@@ -97,7 +97,8 @@ final class RetakeAdmissionTest {
                 new BombState.Armed(200))),
         PoisonView.NONE,
         nav.mapId(),
-        List.of());
+        List.of(),
+        java.util.List.of());
   }
 
   private static Blackboard board(NavArtifact nav, List<CombatantView> bots) {

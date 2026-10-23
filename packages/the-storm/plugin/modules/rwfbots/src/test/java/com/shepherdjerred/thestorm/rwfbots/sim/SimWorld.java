@@ -252,7 +252,8 @@ final class SimWorld {
         bombs.values().stream().map(SimBomb::view).toList(),
         poison,
         nav.mapId(),
-        stimuli);
+        stimuli,
+        java.util.List.of());
   }
 
   private void teams(WorldSnapshot snapshot) {

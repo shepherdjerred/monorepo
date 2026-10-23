@@ -117,7 +117,14 @@ final class AggroTest {
       }
       var snapshot =
           new WorldSnapshot(
-              now, MatchPhase.LIVE, bodies, List.of(), PoisonView.NONE, NAV.mapId(), List.of());
+              now,
+              MatchPhase.LIVE,
+              bodies,
+              List.of(),
+              PoisonView.NONE,
+              NAV.mapId(),
+              List.of(),
+              java.util.List.of());
       var percept =
           new Percept(
               new PerceptionState(new Memory(memory), Suspicion.NONE, -1, grudge), seen, now);
@@ -312,7 +319,8 @@ final class AggroTest {
               List.of(bomb),
               PoisonView.NONE,
               NAV.mapId(),
-              List.of());
+              List.of(),
+              java.util.List.of());
       var situation = new Situation(self, snapshot, base.percept(), base.board(), Role.RETAKE);
       var thought = think(situation, Kit.TROOPER);
       if (distance > ObjectivePolicy.IMMEDIATE_MELEE) {

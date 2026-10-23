@@ -14,6 +14,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.BombState;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.SummonView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -89,6 +90,24 @@ public record Situation(
 
   private boolean isAlive(CombatantId id) {
     return snapshot.combatant(id).map(CombatantView::alive).orElse(false);
+  }
+
+  /** The nearest hostile iron golem in sight. */
+  public Optional<SummonView> nearestGolem() {
+    return percept.summons().stream()
+        .filter(summon -> summon.kind() == SummonView.Kind.GOLEM)
+        .findFirst();
+  }
+
+  /** What to run from: the nearer of the nearest known enemy and a hostile golem in sight. */
+  public Optional<Vec3> nearestThreat() {
+    var enemy = nearestEnemy().map(KnownEnemy::pos);
+    var golem = nearestGolem().map(SummonView::pos);
+    if (enemy.isEmpty() || golem.isEmpty()) {
+      return enemy.or(() -> golem);
+    }
+    var mine = self.pos();
+    return golem.get().distance(mine) < enemy.get().distance(mine) ? golem : enemy;
   }
 
   public Optional<KnownEnemy> nearestEnemy() {

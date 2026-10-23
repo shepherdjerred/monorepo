@@ -59,7 +59,8 @@ final class WaterPerceptionTest {
             List.of(),
             PoisonView.NONE,
             "deep-water",
-            List.of());
+            List.of(),
+            java.util.List.of());
     assertThat(regions.canSee(0, 1)).isFalse();
     var empty = new BitSet();
     var open = new VoxelGrid(BOUNDS, empty, empty, empty);

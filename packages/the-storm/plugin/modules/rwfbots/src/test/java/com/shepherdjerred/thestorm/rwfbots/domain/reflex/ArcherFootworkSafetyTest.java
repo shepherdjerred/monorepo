@@ -52,7 +52,8 @@ final class ArcherFootworkSafetyTest {
             List.of(),
             PoisonView.NONE,
             "ledge",
-            List.of());
+            List.of(),
+            java.util.List.of());
     var decision =
         new Decision(
             self.id(),

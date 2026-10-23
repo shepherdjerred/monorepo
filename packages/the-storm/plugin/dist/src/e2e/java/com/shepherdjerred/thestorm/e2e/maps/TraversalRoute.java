@@ -64,7 +64,8 @@ final class TraversalRoute {
       new SnapshotCapture(
           new IdMap(),
           id -> Optional.empty(),
-          new StimulusCollector(new BattleSoundLog(TIME), TIME),
+          new SnapshotCapture.Sources(
+              new StimulusCollector(new BattleSoundLog(TIME), TIME), java.util.List::of),
           new SnapshotCapture.Capabilities(id -> Optional.empty(), TIME));
   private Optional<TraversalState> capturedTraversal = Optional.empty();
   private ReflexState reflex = ReflexState.initial(new Facing(-90, 0));
@@ -108,7 +109,8 @@ final class TraversalRoute {
             List.of(),
             PoisonView.NONE,
             context.nav().mapId(),
-            List.of());
+            List.of(),
+            java.util.List.of());
     var percept = new Percept(new PerceptionState(Memory.EMPTY, Suspicion.NONE), List.of(), tick);
     var situation =
         new Situation(self, snapshot, percept, Blackboard.open(TEAM, Strategy.HUNT), Role.HUNT);

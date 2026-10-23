@@ -172,7 +172,8 @@ final class ThinkLoopTest {
                 new BombState.Idle())),
         PoisonView.NONE,
         NAV.mapId(),
-        List.of());
+        List.of(),
+        java.util.List.of());
   }
 
   private static void register(ThinkLoop loop) {
@@ -379,7 +380,8 @@ final class ThinkLoopTest {
               original.bombs(),
               PoisonView.NONE,
               NAV.mapId(),
-              List.of());
+              List.of(),
+              java.util.List.of());
       serial.publish(snapshot);
       parallel.publish(snapshot);
       while (!pool.queued.isEmpty()) pool.queued.removeLast().run();
@@ -598,7 +600,8 @@ final class ThinkLoopTest {
               original.bombs(),
               original.poison(),
               original.mapId(),
-              original.stimuli()));
+              original.stimuli(),
+              java.util.List.of()));
       assertThat(loop.board().perceived()).isEqualTo(32);
       assertThat(loop.board().perceptions()).hasSize(256);
       if (tick >= 8) {

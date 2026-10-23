@@ -14,6 +14,7 @@ import java.util.Optional;
  * @param poison the late-match poison
  * @param mapId the map being played, matching the baked {@code NavArtifact}
  * @param stimuli the sounds and hit effects of this tick
+ * @param summons the killstreak creatures alive
  */
 public record WorldSnapshot(
     long tick,
@@ -22,7 +23,8 @@ public record WorldSnapshot(
     List<BombView> bombs,
     PoisonView poison,
     String mapId,
-    List<Stimulus> stimuli) {
+    List<Stimulus> stimuli,
+    List<SummonView> summons) {
 
   public WorldSnapshot {
     if (tick < 0) {
@@ -34,6 +36,7 @@ public record WorldSnapshot(
     combatants = combatants instanceof CombatantList ? combatants : new CombatantList(combatants);
     bombs = List.copyOf(bombs);
     stimuli = List.copyOf(stimuli);
+    summons = List.copyOf(summons);
     for (var index = 1; index < stimuli.size(); index++) {
       if (stimuli.get(index).sequence() < stimuli.get(index - 1).sequence())
         throw new IllegalArgumentException("sound history must be ordered by sequence");
@@ -54,6 +57,11 @@ public record WorldSnapshot(
   public CombatantView require(CombatantId id) {
     return combatant(id)
         .orElseThrow(() -> new IllegalArgumentException(id + " is not in the snapshot"));
+  }
+
+  /** The summon {@code id}, if one is in the field. */
+  public Optional<SummonView> summon(CombatantId id) {
+    return summons.stream().filter(view -> view.id().equals(id)).findFirst();
   }
 
   public Optional<BombView> bomb(BombId id) {

@@ -140,7 +140,8 @@ final class MatchLearningTest {
             List.of(),
             PoisonView.NONE,
             "test",
-            List.of());
+            List.of(),
+            java.util.List.of());
     var input =
         new ReflexInput(self, snapshot, Decision.idle(self.id(), tick, 1), Optional.of(target), 3);
     var authored =
@@ -294,7 +295,8 @@ final class MatchLearningTest {
             before.bombs(),
             before.poison(),
             before.mapId(),
-            before.stimuli());
+            before.stimuli(),
+            java.util.List.of());
     var input =
         new ReflexInput(
             self, snapshot, original.decision(), Optional.of(target), original.gapplesLeft());

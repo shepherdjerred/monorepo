@@ -131,7 +131,8 @@ final class TeamPlayTest {
   // Archers hold a draw ready through brief sight loss and take skill-scaled long shots, clearing
   // teammates along the led arrow path and re-settling their aim when the target changes.
   // A hit places its attacker in the victim's memory and draws the victim's aggro (aggro=1).
-  private static final String PINNED_YARD_HASH = "2a5bf43516ebb006";
+  // Traces carry the distance to a hostile golem in sight (golemDist).
+  private static final String PINNED_YARD_HASH = "17d14f48f878d11e";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {
