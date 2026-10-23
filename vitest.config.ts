@@ -231,6 +231,8 @@ export default {
             // and on the registry that names each build's owner.
             "../packages/ops-model/src/catalog.test.ts",
             "../packages/ops-model/src/delivery-catalog/publication-owners.test.ts",
+            // ...and on the catalog document's shape, which the registry reads.
+            "../packages/ops-model/src/catalog-document.test.ts",
           ],
         }
       : {}),
