@@ -163,6 +163,14 @@ export function retryRequest(detail: DeploymentDetail) {
   const deployment = detail.deployment;
   switch (deployment.kind) {
     case "deploy":
+      return {
+        environmentId,
+        kind: deployment.kind,
+        versionSetRevisionId: detail.versionSet.id,
+        // H4: a deploy that asked for an override asks again under the fresh
+        // selection, which refuses it if the set revision became eligible.
+        override: detail.approval?.override === true,
+      };
     case "channel-publish":
     case "operator-run":
       return {

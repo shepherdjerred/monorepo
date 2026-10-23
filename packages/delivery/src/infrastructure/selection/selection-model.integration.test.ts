@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
+import { createTestApp } from "#testing/http-app.ts";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
 import { rollbackCandidates } from "./candidates.ts";
 
@@ -96,7 +97,7 @@ describe("selections (4.9, 4.12)", () => {
     });
   });
 
-  test("a non-eligible deploy needs an approval marked override (H4)", async () => {
+  test("a non-eligible deploy needs an approval marked override, and its retry asks for one again (H4)", async () => {
     await context.cluster.database.service.update({
       where: { id: "arcade" },
       data: { lineage: "f".repeat(64) },
@@ -140,6 +141,40 @@ describe("selections (4.9, 4.12)", () => {
       testOperator,
     );
     expect(approved.status).toBe("queued");
+    // Retrying the canceled override deploy asks for a fresh override
+    // approval, because its set revision is still not eligible.
+    await context.delivery.cancel(overridden.id, testOperator);
+    const canceled = await environmentRow();
+    const app = createTestApp(context.delivery, {
+      machineCredentials: [],
+      writesEnabled: () => Promise.resolve(true),
+      enabledEnvironments: () => Promise.resolve([env.id]),
+    });
+    const response = await app.request(
+      `/api/v1/deployments/${overridden.id}/retry`,
+      {
+        method: "POST",
+        headers: {
+          "Tailscale-User-Login": testOperator.id,
+          Origin: "http://delivery.test",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          requestId: "override-retry",
+          expectedGeneration: canceled.generation,
+        }),
+      },
+    );
+    expect(response.status).toBe(201);
+    const retry = await context.cluster.database.deployment.findUniqueOrThrow({
+      where: { requestId: "override-retry" },
+      include: { approval: true },
+    });
+    expect(retry).toMatchObject({
+      kind: "deploy",
+      status: "awaiting_approval",
+      approval: { status: "pending", override: true },
+    });
   });
 
   test("promotion takes the source's accepted selection only once it settles (W3)", async () => {
