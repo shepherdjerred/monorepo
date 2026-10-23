@@ -766,6 +766,13 @@ rather than an Application or stack: the node's lock instance and the image
 components the upgrade moves (the Talos installer and the kubelet), acquired
 from the version catalog.
 
+An `operator-run` deployment's effects use an operator identity distinct
+from the executor's. The executor only reads an operator-run target; the
+operator tool applies and syncs it with its own credential, which nothing in
+the cluster holds (for an ArgoCD Application, the `operator-run` account).
+Its evidence is attested with the attestor credential, which the executor
+never holds.
+
 ## 6. Flows
 
 **First-party change.** A main-branch merge runs CI. CI registers pending

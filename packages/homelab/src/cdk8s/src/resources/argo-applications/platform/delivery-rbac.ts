@@ -14,7 +14,8 @@ import { COMPANION_CHARTS } from "homelab/src/cdk8s/src/resources/companions/nam
  * executor only reads them and human logins are read-only after the
  * lock-down, so this account performs their effects: OpenTofu issues its
  * token into an item only operators read, and nothing in the cluster mounts
- * it. It holds no grant before the window.
+ * it. The account exists only under transition rendering, so the window
+ * issues its token once ArgoCD runs the transition configuration.
  */
 export const OPERATOR_RUN_ACCOUNT = "operator-run";
 
@@ -25,9 +26,20 @@ export const DELIVERY_ARGO_ACCOUNTS = {
   "accounts.delivery-observer.enabled": true,
   "accounts.delivery-platform": "apiKey",
   "accounts.delivery-platform.enabled": true,
+} as const;
+const OPERATOR_RUN_ARGO_ACCOUNT = {
   [`accounts.${OPERATOR_RUN_ACCOUNT}`]: "apiKey",
   [`accounts.${OPERATOR_RUN_ACCOUNT}.enabled`]: true,
 } as const;
+
+/** ArgoCD's Delivery accounts; the operator tool's account only under transition rendering. */
+export function deliveryArgoAccounts(
+  transition: boolean = transitionRendering(),
+): Record<string, string | boolean> {
+  return transition
+    ? { ...DELIVERY_ARGO_ACCOUNTS, ...OPERATOR_RUN_ARGO_ACCOUNT }
+    : { ...DELIVERY_ARGO_ACCOUNTS };
+}
 export const DELIVERY_ARGO_SERVER_SETTINGS = {
   "server.rbac.disableApplicationFineGrainedRBACInheritance": true,
 } as const;
