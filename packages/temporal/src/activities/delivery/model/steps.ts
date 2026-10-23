@@ -25,6 +25,7 @@ import { awaitAttestations } from "./operator-run.ts";
 import { runWorkerRolloutStep } from "./worker-rollout.ts";
 import { runMinecraftUpgradeStep } from "./minecraft-upgrade.ts";
 import { runChannelStep } from "./channel.ts";
+import { stepLease, withLeaseRenewal } from "./lease.ts";
 import type { ColdStartWrite } from "#lib/delivery/model/oracle-inputs.ts";
 import {
   deploymentDetail,
@@ -99,19 +100,29 @@ async function runKubernetesStep(
 
 /**
  * Runs one frozen step by key; a settled step is a no-op so a resumed run
- * never repeats it. `waiting` asks the Workflow to run it again later.
+ * never repeats it. `waiting` asks the Workflow to run it again later. The
+ * lease is renewed for as long as the step runs.
  */
 export async function runDeliveryModelStep(
   id: string,
   key: string,
 ): Promise<{ waiting: boolean }> {
   const current = await requireOwned(id);
-  if (
-    current.stages.some(
-      (stage) => stage.key === key && stage.status === "succeeded",
-    )
-  )
-    return { waiting: false };
+  const settled = current.stages.some(
+    (stage) => stage.key === key && stage.status === "succeeded",
+  );
+  return settled
+    ? { waiting: false }
+    : await withLeaseRenewal(
+        stepLease(current),
+        async () => await runOwnedStep(current, key),
+      );
+}
+
+async function runOwnedStep(
+  current: Awaited<ReturnType<typeof requireOwned>>,
+  key: string,
+): Promise<{ waiting: boolean }> {
   const recipe = requireModelRecipe(current);
   const steps = modelSteps(recipe);
   const step = requireStep(steps, key);

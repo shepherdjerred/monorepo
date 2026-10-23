@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { MockActivityEnvironment } from "@temporalio/testing";
 import { TofuPlanReceiptSchema } from "@shepherdjerred/delivery/contract";
 import {
   DeliveryJobReceiptSchema,
@@ -26,7 +27,16 @@ vi.mock("#lib/delivery/client.ts", () => ({
   ),
 }));
 
-const { runDeliveryModelPlatformStep } = await import("./model-tofu.ts");
+const platformStep = await import("./model-tofu.ts");
+/** The step runs as an Activity, whose context names the owning executor. */
+async function runDeliveryModelPlatformStep(
+  ...args: Parameters<typeof platformStep.runDeliveryModelPlatformStep>
+) {
+  return await new MockActivityEnvironment().run(
+    platformStep.runDeliveryModelPlatformStep,
+    ...args,
+  );
+}
 
 const archive = artifact({
   id: "archive/tofu-cloudflare",

@@ -34,6 +34,10 @@ import {
   requireOwned,
   stageOf,
 } from "#activities/delivery/model/stages.ts";
+import {
+  stepLease,
+  withLeaseRenewal,
+} from "#activities/delivery/model/lease.ts";
 
 type Step = { current: DeploymentDetail; recipe: TofuRecipe; key: string };
 
@@ -229,14 +233,17 @@ export async function runDeliveryModelPlatformStep(
   if (recipe.kind !== "tofu" || step.adapter !== "tofu")
     throw new Error(`Step ${key} is not a Tofu step of a tofu recipe`);
   const frozen = { current, recipe, key };
-  switch (step.kind) {
-    case "plan":
-      await plan(frozen, runJob);
-      return { waiting: false };
-    case "approve":
-      return await approve(frozen);
-    case "apply":
-      await apply(frozen, runJob);
-      return { waiting: false };
-  }
+  // A Tofu Job can outlast the lease; it is renewed while the step runs.
+  return await withLeaseRenewal(stepLease(current), async () => {
+    switch (step.kind) {
+      case "plan":
+        await plan(frozen, runJob);
+        return { waiting: false };
+      case "approve":
+        return await approve(frozen);
+      case "apply":
+        await apply(frozen, runJob);
+        return { waiting: false };
+    }
+  });
 }
