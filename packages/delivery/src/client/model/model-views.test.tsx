@@ -312,6 +312,27 @@ describe("approval queue", () => {
     expect(expired).toContain("scout-prod-36");
     expect(expired).toContain("binding generation");
   });
+
+  test("a saved plan waiting on its decision waits in the queue and counts in the badge", () => {
+    const [first] = fixtures.approvalQueue;
+    if (first === undefined) throw new Error("fixture has a queue item");
+    const planned = {
+      ...first,
+      id: "tofu-cloudflare-prod-3",
+      environmentId: "tofu-cloudflare/prod",
+      status: "running" as const,
+      approval: null,
+      awaitingPlanDecision: true,
+    };
+    expect(awaitsDecision(planned)).toBe(true);
+    expect(awaitsDecision({ ...planned, awaitingPlanDecision: false })).toBe(
+      false,
+    );
+    const html = markup(<ApprovalQueue items={[planned]} />);
+    const waiting = html.slice(0, html.indexOf("</section>"));
+    expect(waiting).toContain("tofu-cloudflare/prod");
+    expect(waiting).toContain("Saved plan awaits decision");
+  });
 });
 
 /** The plan approval control for one detail and principal, as static markup. */

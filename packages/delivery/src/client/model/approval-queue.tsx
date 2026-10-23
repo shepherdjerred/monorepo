@@ -11,6 +11,9 @@ function ApprovalState({ item }: { item: ApprovalQueueItem }) {
       {item.approval?.override === true && (
         <span className="badge badge-override">Override</span>
       )}
+      {item.awaitingPlanDecision && (
+        <span className="badge">Saved plan awaits decision</span>
+      )}
     </span>
   );
 }

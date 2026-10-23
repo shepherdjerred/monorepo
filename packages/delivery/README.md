@@ -65,7 +65,7 @@ TanStack Router definitions in `src/client/router.tsx`:
 | `/deployments/:id`             | Steps, selection, approval, a tofu plan waiting for approval |
 | `/environments/:id`            | Restore hold, selection, monitor, rollback candidates, form  |
 | `/recovery-intents/:id`        | One unified recovery intent and its inspection evidence      |
-| `/deployments`, `/approvals`   | Deployment history; waiting and recently decided approvals   |
+| `/deployments`, `/approvals`   | Deployment history; pending approvals and plans, recent ones |
 | `/artifacts`, `/activity`      | Build qualification; the audit trail with catalog reconciles |
 
 Filters and pages are search parameters. Forms are native `<form>` elements

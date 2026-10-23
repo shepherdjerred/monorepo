@@ -278,13 +278,17 @@ test("a quarantined deployment links its recovery intent", async ({ page }) => {
   await expectNoHorizontalOverflow(page);
 });
 
-test("approvals show the waiting override and recently decided approvals", async ({
+test("approvals show the waiting override, the waiting saved plan and recently decided approvals", async ({
   page,
 }) => {
   await page.goto("/approvals");
   const waiting = page.getByRole("region", { name: "Waiting for a decision" });
-  await expect(waiting.getByRole("row")).toHaveCount(2);
+  // The header, the override, and the Cloudflare stack waiting at its approve step.
+  await expect(waiting.getByRole("row")).toHaveCount(3);
   await expect(waiting.getByText("Override", { exact: true })).toBeVisible();
+  await expect(
+    waiting.getByText("Saved plan awaits decision", { exact: true }),
+  ).toBeVisible();
   await expect(
     page
       .getByRole("region", { name: "Recently decided" })
@@ -292,7 +296,7 @@ test("approvals show the waiting override and recently decided approvals", async
   ).toHaveCount(4);
   await expect(
     page.getByRole("navigation", { name: "Main" }).getByRole("link", {
-      name: /^Approvals\s*, 1 waiting$/u,
+      name: /^Approvals\s*, 2 waiting$/u,
     }),
   ).toBeVisible();
   await expectNoHorizontalOverflow(page);

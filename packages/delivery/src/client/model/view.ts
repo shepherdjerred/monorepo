@@ -176,8 +176,9 @@ export function rebindChanges(view: EnvironmentSelection) {
   return Object.keys(changes).length === 0 ? null : changes;
 }
 
-/** An approval queue item still waits for a human decision. */
+/** An approval queue item still waits for a human decision, of a release or of a saved plan. */
 export function awaitsDecision(item: ApprovalQueueItem) {
+  if (item.awaitingPlanDecision) return true;
   return item.approval === null
     ? item.status === "awaiting_approval"
     : item.approval.status === "pending";

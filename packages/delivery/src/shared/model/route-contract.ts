@@ -113,6 +113,11 @@ export type DeploymentDetailV2 = z.infer<typeof DeploymentDetailV2Schema>;
  */
 export const ApprovalQueueItemSchema = DeploymentV2Schema.extend({
   approval: ApprovalV2Schema.nullable().default(null),
+  /**
+   * A running tofu deployment's approve step waits on a human decision of
+   * its saved plan (H6); no approval row exists until that decision.
+   */
+  awaitingPlanDecision: z.boolean().default(false),
 });
 export type ApprovalQueueItem = z.infer<typeof ApprovalQueueItemSchema>;
 
