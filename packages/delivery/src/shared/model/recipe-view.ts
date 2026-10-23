@@ -2,6 +2,7 @@ import type { StaticSitePolicy } from "#shared/static-site-contract.ts";
 import type { WorkerPoolTarget } from "#shared/worker-contract.ts";
 import type { StoredRecipeDefinition } from "./record-contract.ts";
 import type { Monitor } from "./monitor-contract.ts";
+import { stepStageKey, subRecipeStageKey } from "./stage-keys.ts";
 import {
   type ApplicationBody,
   type ArtifactParameter,
@@ -218,6 +219,28 @@ export function forumReleaseOf(
         bundleComponent: forum.bundleComponent,
       }
     : undefined;
+}
+
+/**
+ * The stage at which a forum release writes its candidate source: a v1
+ * pipeline's `reconcile`, or the apply-safety step of the Application that
+ * holds the forum-bundle step, prefixed by its sub-recipe's position inside
+ * a compound recipe (T3).
+ */
+export function forumSourceStageKey(definition: Stored): string {
+  if (definition.kind === "argocd") return "reconcile";
+  const holdsForum = (candidate: Stored) =>
+    kubernetesRecipes(candidate).some((recipe) =>
+      recipe.steps.some((step) => step.kind === "forum-bundle"),
+    );
+  const applySafety = stepStageKey("step", "apply-safety");
+  if (definition.kind === "compound") {
+    const index = definition.subRecipes.findIndex((sub) =>
+      holdsForum(sub.definition),
+    );
+    if (index !== -1) return subRecipeStageKey(index, applySafety);
+  } else if (holdsForum(definition)) return applySafety;
+  throw new Error("The frozen recipe releases no forum bundle");
 }
 
 /** The preserved Minecraft world upgrade (v1 `minecraftUpgrade`). */
