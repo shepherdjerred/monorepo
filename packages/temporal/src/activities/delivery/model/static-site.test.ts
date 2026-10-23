@@ -14,7 +14,9 @@ import {
 } from "./static-site.ts";
 
 const KEY = "step-static-site";
-const OWNERS = { "wiki-sjer-red": "wiki-sjer-red/prod" };
+/** Reviewed ownership names the v1 environment; the catalog calls it `wiki-sjer-red/prod`. */
+const OWNERS = { "wiki-sjer-red": "static-sites/wiki-sjer-red" };
+const ENVIRONMENT = "wiki-sjer-red/prod";
 const HTML = "<html>exact selected release</html>";
 
 let directory: string;
@@ -101,7 +103,7 @@ async function fixture(stages: { key: string; status: "running" }[] = []) {
     uri: `s3://delivery-artifacts/sites/wiki-sjer-red/${digest.slice(7)}.tar`,
     digest,
   };
-  const current = detail(
+  const fixed = detail(
     {
       kind: "static-site",
       archiveComponent: "archive:wiki-sjer-red",
@@ -112,6 +114,12 @@ async function fixture(stages: { key: string; status: "running" }[] = []) {
     archive,
     stages,
   );
+  // The site's own catalog environment, which reviewed ownership delegates.
+  const current = {
+    ...fixed,
+    deployment: { ...fixed.deployment, environmentId: ENVIRONMENT },
+    environment: { ...fixed.environment, id: ENVIRONMENT },
+  };
   const recipe = requireModelRecipe(current);
   const [step] = modelSteps(recipe);
   if (step?.adapter !== "static-site")
@@ -226,6 +234,19 @@ describe("static-site step", () => {
     expect(recorded.map((entry) => `${entry.key} ${entry.status}`)).toEqual([
       `${KEY} running`,
     ]);
+  });
+
+  test("a bucket reviewed infrastructure delegates to another environment is refused before any read", async () => {
+    const { current, step } = await fixture();
+    await expect(
+      runStaticSiteStep(current, step.policy, KEY, {
+        ...effects(),
+        owners: { "wiki-sjer-red": "static-sites/sjer-red" },
+      }),
+    ).rejects.toThrow(
+      "Static bucket wiki-sjer-red is delegated to sjer-red/prod, not wiki-sjer-red/prod",
+    );
+    expect(events).toEqual([]);
   });
 
   test("a bucket reviewed infrastructure does not delegate is refused before any read", async () => {
