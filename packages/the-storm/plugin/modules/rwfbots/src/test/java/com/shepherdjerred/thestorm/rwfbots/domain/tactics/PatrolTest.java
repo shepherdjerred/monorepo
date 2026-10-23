@@ -58,6 +58,10 @@ final class PatrolTest {
 
   private static Situation situation(
       long tick, List<CombatantView> visible, TacticsContext context) {
+    return situation(tick, new Percept(PerceptionState.EMPTY, visible, tick), context);
+  }
+
+  private static Situation situation(long tick, Percept percept, TacticsContext context) {
     var self = combatant(1, RED, SLOT);
     var slot =
         new Slot(
@@ -94,8 +98,7 @@ final class PatrolTest {
             PoisonView.NONE,
             context.nav().mapId(),
             List.of());
-    return new Situation(
-        self, snapshot, new Percept(PerceptionState.EMPTY, visible, tick), board, Role.DEFEND);
+    return new Situation(self, snapshot, percept, board, Role.DEFEND);
   }
 
   private static Plan hold() {
@@ -192,6 +195,39 @@ final class PatrolTest {
       var decision = Planner.decide(hold(), situation(tick, List.of(enemy)), CONTEXT, 0);
       assertThat(decision.waypoints()).isEmpty();
     }
+  }
+
+  @Test
+  void aSlotHolderWatchesAVisibleEnemyBeyondContactRangeInsteadOfItsSlotAngle() {
+    // Measured: holders with an enemy in sight at 24-64 blocks stared at their slot angle.
+    var far = combatant(2, BLUE, SLOT.plus(0, 0, 35));
+    assertThat(far.pos().distance(SLOT)).isGreaterThan(Planner.CONTACT_RANGE);
+    var decision = Planner.decide(hold(), situation(100, List.of(far)), CONTEXT, 0);
+    assertThat(decision.watch()).contains(far.pos());
+    assertThat(decision.waypoints()).isEmpty();
+    var quiet = Planner.decide(hold(), situation(100, List.of()), CONTEXT, 0);
+    assertThat(quiet.watch()).contains(SLOT.plus(10, 0, 0));
+  }
+
+  @Test
+  void aHolderKeepsWatchingWhereAnEnemyLeftSightBeforeItPatrolsAgain() {
+    var gone = SLOT.plus(0, 0, 30);
+    var memory =
+        com.shepherdjerred.thestorm.rwfbots.domain.perception.Memory.EMPTY.remember(
+            new com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId(2),
+            new com.shepherdjerred.thestorm.rwfbots.domain.perception.Sighting(
+                gone, Vec3.ZERO, 100, 1, true));
+    var state =
+        new PerceptionState(
+            memory, com.shepherdjerred.thestorm.rwfbots.domain.perception.Suspicion.NONE);
+    var lingering = 100 + Lookout.LINGER_TICKS;
+    var watching = situation(lingering, new Percept(state, List.of(), lingering), CONTEXT);
+    assertThat(Patrol.post(watching, CONTEXT, SLOT, Patrol.SLOT_RADIUS)).isEmpty();
+    assertThat(Planner.decide(hold(), watching, CONTEXT, 0).watch()).contains(gone);
+    var later = lingering + 1;
+    var resumed = situation(later, new Percept(state, List.of(), later), CONTEXT);
+    assertThat(Patrol.post(resumed, CONTEXT, SLOT, Patrol.SLOT_RADIUS)).isPresent();
+    assertThat(Planner.decide(hold(), resumed, CONTEXT, 0).watch()).contains(SLOT.plus(10, 0, 0));
   }
 
   @Test

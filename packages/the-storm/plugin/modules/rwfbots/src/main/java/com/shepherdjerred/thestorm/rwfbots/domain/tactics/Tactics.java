@@ -423,10 +423,17 @@ public final class Tactics {
     for (var waypoint : decision.waypoints()) {
       graph.nearestNode(waypoint.pos()).ifPresent(path::add);
     }
+    // A guard meeting an enemy on its way to the bomb counts as one of its chasers, so no more
+    // than two guards answer one enemy.
     var chasing =
         plan.current() instanceof PlanStep.Fight(var target)
             ? Optional.of(target)
-            : Optional.<CombatantId>empty();
+            : Optional.<CombatantId>empty()
+                .or(
+                    () ->
+                        plan.option() == Option.RETAKE
+                            ? BombGuard.approach(situation).map(BombGuard.Approach::enemy)
+                            : Optional.empty());
     var cover = plan.current().coverNode().or(() -> Planner.peekClaim(plan, situation, context));
     return new TeamNote(cover, chasing, path);
   }

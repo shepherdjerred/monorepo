@@ -131,7 +131,7 @@ public final class Planner {
   static final double TOO_CLOSE_COVER = 4;
 
   private static final String REWIND = "rewind";
-  private static final int SNAP = 3;
+  static final int SNAP = 3;
 
   private Planner() {}
 
@@ -294,16 +294,23 @@ public final class Planner {
     if (bomb.isEmpty()) {
       return holdHere(Option.RETAKE, situation, context);
     }
+    var self = situation.self().pos();
     var threat =
         situation
             .nearestEnemy()
             .filter(
                 enemy ->
-                    enemy.pos().distance(bomb.orElseThrow().pos()) <= Features.BOMB_THREAT_RANGE);
+                    enemy.pos().distance(bomb.orElseThrow().pos()) <= Features.BOMB_THREAT_RANGE
+                        || enemy.pos().distance(self) <= Utilities.MELEE_ENGAGE);
     if (threat.isPresent() && !context.keep().ranged()) {
       return Plan.of(Option.RETAKE, situation.now(), new PlanStep.Fight(threat.orElseThrow().id()));
     }
-    var at = retakePoint(situation, context, bomb.get());
+    // An enemy still on its way: meet it on the ring on its side of the bomb and watch it come.
+    var at =
+        BombGuard.approach(situation)
+            .filter(approach -> threat.isEmpty())
+            .map(approach -> BombGuard.post(situation, context.nav().graph(), approach))
+            .orElseGet(() -> retakePoint(situation, context, bomb.orElseThrow()));
     var watch =
         situation.nearestEnemy().map(Situation.KnownEnemy::pos).orElseGet(() -> at.plus(1, 0, 0));
     return Plan.of(
@@ -923,7 +930,7 @@ public final class Planner {
                 route,
                 hold.stance(),
                 Optional.empty(),
-                Optional.of(hold.watch()),
+                Optional.of(Lookout.watch(situation, hold.watch())),
                 Optional.empty(),
                 label),
             lifeEpoch);
@@ -939,7 +946,7 @@ public final class Planner {
                       : pathTo(situation, context, pos, new Way(Stance.AGGRESSIVE, false)),
                   inCover(self.pos(), pos) ? Stance.CAUTIOUS : Stance.AGGRESSIVE,
                   Optional.empty(),
-                  Optional.of(watch),
+                  Optional.of(Lookout.watch(situation, watch)),
                   Optional.empty(),
                   label),
               lifeEpoch);

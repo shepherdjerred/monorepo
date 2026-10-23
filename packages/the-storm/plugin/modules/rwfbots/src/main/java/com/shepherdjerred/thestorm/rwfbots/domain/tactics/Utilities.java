@@ -30,6 +30,13 @@ public final class Utilities {
   /** Only a bot this close to an armable bomb, with nobody near, arms without the plant slot. */
   static final double ARM_NEAR = 8;
 
+  /**
+   * What answering an enemy on its way to the own bomb is worth to a guard: enough to pull it off a
+   * committed hold of its slot (at most 0.69 plus {@link Tactics#COMMIT_BONUS}) once in a few
+   * thinks, short of the 0.9 of an enemy already at the bomb.
+   */
+  static final double GUARD_RESPONSE = 0.75;
+
   /** Besides the anchors, only bots this close to the own bomb answer a threat to it. */
   static final double RETAKE_RANGE = 16;
 
@@ -102,7 +109,9 @@ public final class Utilities {
     scores.put(Option.DEFUSE, f.ownBombLit() ? 1.0 : 0);
     var defender = t.role() == Role.DEFEND || t.role() == Role.RETAKE;
     var retake = defender ? 0.9 : f.ownBombDistance() < RETAKE_RANGE ? 0.5 : 0;
-    scores.put(Option.RETAKE, f.enemyNearOwnBomb() && !f.ownBombLit() ? retake : 0);
+    var threat = f.enemyNearOwnBomb() ? retake : 0;
+    var guard = f.enemyApproachingOwnBomb() ? GUARD_RESPONSE : 0;
+    scores.put(Option.RETAKE, f.ownBombLit() ? 0 : Math.max(threat, guard));
     scores.put(Option.ESCAPE_POISON, f.inOwnBombPoisonZone() ? 1.2 : 0);
   }
 
@@ -143,7 +152,10 @@ public final class Utilities {
   }
 
   private static double hunt(Features f, Temper t) {
-    if (f.knownEnemies() == 0 || f.visibleEnemies() > 0) {
+    // A hunter keeps hunting an enemy it can see but not yet reach: zeroing hunt on sight sent
+    // hunters back to their slot the moment they found someone.
+    var stalking = t.role() == Role.HUNT && f.nearestEnemyDistance() > MELEE_ENGAGE;
+    if (f.knownEnemies() == 0 || (f.visibleEnemies() > 0 && !stalking)) {
       return 0;
     }
     var enemyClose = Curves.near(f.nearestEnemyDistance(), 12) * f.nearestEnemyConfidence();

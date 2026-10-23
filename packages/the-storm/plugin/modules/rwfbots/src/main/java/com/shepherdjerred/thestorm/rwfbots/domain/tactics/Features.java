@@ -24,6 +24,8 @@ import java.util.Optional;
  * @param enemyBombDistance distance to the nearest armable bomb, or infinity
  * @param allyArming whether a teammate is arming right now
  * @param enemyNearOwnBomb whether a known enemy is within reach of an own bomb
+ * @param enemyApproachingOwnBomb whether the bot guards its bombs and itself saw or heard an enemy
+ *     on its way to one ({@link BombGuard})
  * @param poisonActive whether poison has started
  * @param poisonIntensity how hard it hits
  * @param inOwnBombPoisonZone whether the bot stands in the extra-damage radius of its own bomb
@@ -47,6 +49,7 @@ public record Features(
     double enemyBombDistance,
     boolean allyArming,
     boolean enemyNearOwnBomb,
+    boolean enemyApproachingOwnBomb,
     boolean poisonActive,
     double poisonIntensity,
     boolean inOwnBombPoisonZone,
@@ -106,6 +109,7 @@ public record Features(
             .orElse(Double.POSITIVE_INFINITY),
         situation.bombBeingArmedByUs().filter(bomb -> wantsHelp(bomb, self)).isPresent(),
         threatened,
+        BombGuard.approach(situation).isPresent(),
         poison.active(),
         poison.intensity(),
         poison.active() && ownBombDistance <= poison.bombRadius(),
@@ -149,6 +153,7 @@ public record Features(
         new DecisionTrace.Feature("enemyBombDist", quantize(enemyBombDistance)),
         new DecisionTrace.Feature("allyArming", allyArming ? 1 : 0),
         new DecisionTrace.Feature("bombThreat", enemyNearOwnBomb ? 1 : 0),
+        new DecisionTrace.Feature("bombApproach", enemyApproachingOwnBomb ? 1 : 0),
         new DecisionTrace.Feature("poison", poisonActive ? 1 : 0),
         new DecisionTrace.Feature("poisonZone", inOwnBombPoisonZone ? 1 : 0),
         new DecisionTrace.Feature("slotDist", quantize(slotDistance)),
