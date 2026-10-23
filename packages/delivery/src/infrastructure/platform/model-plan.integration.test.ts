@@ -23,7 +23,7 @@ async function runningStackDeployment() {
   return requested;
 }
 
-test("a model tofu deployment records the plan its plan step produced, then takes a human approval of it", async () => {
+test("a model tofu deployment records the plan its plan step produced, then takes a human approval of it without renewing the executor's lease", async () => {
   const { deployment, buildId } = await runningStackDeployment();
   const plan = savedStackPlan(deployment.id, buildId);
   await expect(
@@ -44,6 +44,12 @@ test("a model tofu deployment records the plan its plan step produced, then take
       testOperator,
     ),
   ).rejects.toThrow(/exact unexpired saved plan/u);
+  // The executor's lease nears its end; the human decision does not renew it (D7).
+  const leaseExpiresAt = new Date(Date.now() + 30_000);
+  await context.cluster.database.deployment.update({
+    where: { id: deployment.id },
+    data: { leaseExpiresAt },
+  });
   await context.delivery.approveTofuPlan(
     deployment.id,
     {
@@ -53,6 +59,12 @@ test("a model tofu deployment records the plan its plan step produced, then take
     },
     testOperator,
   );
+  expect(
+    await context.cluster.database.deployment.findUniqueOrThrow({
+      where: { id: deployment.id },
+      select: { leaseExpiresAt: true },
+    }),
+  ).toEqual({ leaseExpiresAt });
   const detail = await context.delivery.detail(deployment.id);
   expect(detail.stages).toContainEqual(
     expect.objectContaining({

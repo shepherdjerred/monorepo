@@ -182,7 +182,6 @@ export async function approveTofuPlan(
 ) {
   requireScope(actor, "approve");
   const input = ApproveTofuPlanSchema.parse(raw);
-  const leaseSeconds = await this.policy.leaseSeconds();
   return this.database.$transaction(async (tx) => {
     await lock(tx, `deployment:${deploymentId}`);
     const row = required(
@@ -235,7 +234,9 @@ export async function approveTofuPlan(
           },
         ],
       },
-      { actor, leaseSeconds },
+      // A human decision proves nothing about the executor's liveness, so it
+      // never renews the executor's lease (D7).
+      { actor, leaseSeconds: null },
     );
     if (rejected) await tx.platformPlan.delete({ where: { deploymentId } });
     await audit(tx, actor, {
