@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { SERVICE_CATALOG } from "@shepherdjerred/ops-model/catalog.ts";
 import { setupCharts } from "@shepherdjerred/homelab/cdk8s/src/setup-charts.ts";
+import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
+import { catalogApplicationEnvironment } from "@shepherdjerred/ops-model/delivery-catalog/applications.ts";
 import { staticSites } from "@shepherdjerred/homelab/cdk8s/src/resources/s3-static-sites/sites.ts";
 import {
   applicationReleasePolicy,
@@ -55,11 +57,19 @@ test("every rendered Application and every catalog application has a reviewed re
     .filter((result) => result.success)
     .map((result) => result.data);
   expect(rendered.length).toBeGreaterThan(0);
+  // A v1 delegation keeps its v1 environment; under transition rendering every
+  // other root child carries its catalog environment for the first v2 deployment.
   for (const application of rendered) {
-    expect(applicationReleasePolicy(application.metadata.name)).toBeDefined();
+    const name = application.metadata.name;
+    expect(applicationReleasePolicy(name)).toBeDefined();
     expect(
       application.metadata.annotations?.[DELIVERY_ENVIRONMENT_ANNOTATION],
-    ).toBe(DELIVERY_ACTIVE_DELEGATIONS[application.metadata.name]);
+    ).toBe(
+      DELIVERY_ACTIVE_DELEGATIONS[name] ??
+        (transitionRendering()
+          ? catalogApplicationEnvironment(name)
+          : undefined),
+    );
   }
   for (const service of SERVICE_CATALOG.services)
     for (const name of service.argoApps)

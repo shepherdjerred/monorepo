@@ -9,6 +9,7 @@ import {
   BASELINE_CHART_APPLICATIONS,
   ROOT_CHART,
 } from "./resources/cluster-baseline/charts.ts";
+import { COMPANION_CHARTS } from "./resources/companions/names.ts";
 
 /**
  * Helm Compatibility Tests
@@ -91,8 +92,9 @@ function withoutRetention(resource: unknown): unknown {
 }
 
 /**
- * The two duplications the Delivery v2 cutover declares: a cluster baseline
- * chart mirroring the root's own object (`cluster-baseline.test.ts`), and,
+ * The duplications the Delivery v2 cutover declares: a cluster baseline or
+ * companion chart mirroring the root's own object (`cluster-baseline.test.ts`,
+ * `resources/companions/names.ts`), and,
  * until transition rendering moves them, a data-layer chart rendering the
  * application chart's database objects plus retention. Each pair must be the
  * same object; anything else is an accidental duplicate.
@@ -106,7 +108,9 @@ function isDeclaredMirror(
   const charts = new Set([first.chart, second.chart]);
   if (
     charts.has(ROOT_CHART) &&
-    [...BASELINE_CHART_APPLICATIONS].some((chart) => charts.has(chart))
+    [...BASELINE_CHART_APPLICATIONS, ...COMPANION_CHARTS].some((chart) =>
+      charts.has(chart),
+    )
   )
     return Bun.deepEquals(first.resource, second.resource, true);
   const data = [first, second].find(
