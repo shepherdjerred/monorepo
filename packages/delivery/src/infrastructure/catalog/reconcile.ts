@@ -27,6 +27,8 @@ import { carrySelections } from "./carry.ts";
 import {
   environmentLifecycle,
   environmentOwned,
+  holdUnrebindable,
+  holdUnrebindableService,
   refuseLifecycle,
   requireUnowned,
   serviceOwned,
@@ -156,7 +158,11 @@ async function reconcileServices(
         to: service.lifecycle,
       });
       lifecycle = LifecycleSchema.parse(existing.lifecycle);
-    }
+    } else if (
+      existing.lifecycle !== service.lifecycle &&
+      (await holdUnrebindableService(tx, result, service.id, service.lifecycle))
+    )
+      lifecycle = LifecycleSchema.parse(existing.lifecycle);
     if (existing.lineage !== lineage) {
       // A component-list change starts a new lineage and moves every
       // environment's binding generation (C4, E1, S1).
@@ -291,6 +297,7 @@ async function retireEnvironment(
     refuseLifecycle(result, { id: row.id, from: "active", to: "retired" });
     return;
   }
+  if (await holdUnrebindable(tx, result, row, "retired")) return;
   await tx.environment.update({
     where: { id: environmentId },
     // Retiring moves the binding generation (E1).

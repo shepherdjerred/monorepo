@@ -456,12 +456,12 @@ describe("catalog reconcile of lifecycles while deployments are owned (S3)", () 
   });
 });
 
-function arcadeProdRemoved(document: Document) {
+function arcadeProdMoved(document: Document, lifecycle: "retired" | "removed") {
   return {
     ...document,
     environments: document.environments.map((environment) =>
       environment.id === "arcade/prod"
-        ? { ...environment, lifecycle: "removed" as const }
+        ? { ...environment, lifecycle }
         : environment,
     ),
   };
@@ -519,7 +519,7 @@ describe("catalog reconcile of a removal (4.10, section 7)", () => {
     });
     await acceptArcadeProd("arcade-carry", "arcade/v1");
     const refused = await context.delivery.reconcileCatalog(
-      arcadeProdRemoved(document),
+      arcadeProdMoved(document, "removed"),
       testOperator,
       NO_MIGRATION,
     );
@@ -540,7 +540,7 @@ describe("catalog reconcile of a removal (4.10, section 7)", () => {
     // A rebind accepts the catalog recipe, which declares the lifecycle.
     await acceptArcadeProd("arcade-rebind", "arcade/3");
     const removed = await context.delivery.reconcileCatalog(
-      arcadeProdRemoved(document),
+      arcadeProdMoved(document, "removed"),
       testOperator,
       NO_MIGRATION,
     );
@@ -550,6 +550,79 @@ describe("catalog reconcile of a removal (4.10, section 7)", () => {
         environmentId: "arcade/prod",
         applications: [{ name: "arcade", lifecycle: "retain" }],
       },
+    ]);
+  });
+});
+
+/** arcade/prod accepts a carried v1 recipe, whose Application declares no lifecycle. */
+async function carriedArcadeProd() {
+  const document = await catalogDocument();
+  await context.delivery.reconcileCatalog(document, testOperator, NO_MIGRATION);
+  await context.cluster.database.pipeline.create({
+    data: { id: "arcade/v1", definition: arcadePipeline },
+  });
+  await acceptArcadeProd("arcade-carry", "arcade/v1");
+  return document;
+}
+describe("catalog reconcile of a carried Application's retirement (4.10, section 7)", () => {
+  const unrebindable =
+    /arcade\/prod's accepted recipe deploys Application arcade with no lifecycle policy; rebind it/u;
+
+  test("retiring the environment waits for a rebind, which a retired environment could not take", async () => {
+    const document = await carriedArcadeProd();
+    const refused = await context.delivery.reconcileCatalog(
+      arcadeProdMoved(document, "retired"),
+      testOperator,
+      NO_MIGRATION,
+    );
+    expect(refused.refused).toEqual([
+      { id: "arcade/prod", reason: expect.stringMatching(unrebindable) },
+    ]);
+    expect(refused.environments.retired).toEqual([]);
+    expect(await lifecycles()).toEqual([
+      "active",
+      "arcade/beta:active",
+      "arcade/prod:active",
+    ]);
+    // A rebind accepts the catalog recipe, which declares the lifecycle.
+    await acceptArcadeProd("arcade-rebind", "arcade/3");
+    const retired = await context.delivery.reconcileCatalog(
+      arcadeProdMoved(document, "retired"),
+      testOperator,
+      NO_MIGRATION,
+    );
+    expect(retired.refused).toEqual([]);
+    expect(retired.environments.retired).toEqual(["arcade/prod"]);
+  });
+
+  test("retiring the service waits too, because a retired service admits no rebind", async () => {
+    const document = await carriedArcadeProd();
+    const refused = await context.delivery.reconcileCatalog(
+      arcadeRetired(document, "service"),
+      testOperator,
+      NO_MIGRATION,
+    );
+    expect(refused.refused).toEqual([
+      { id: "arcade", reason: expect.stringMatching(unrebindable) },
+      { id: "arcade/prod", reason: expect.stringMatching(unrebindable) },
+    ]);
+    // arcade/beta accepts nothing, so it retires; the service and prod wait.
+    expect(await lifecycles()).toEqual([
+      "active",
+      "arcade/beta:retired",
+      "arcade/prod:active",
+    ]);
+    await acceptArcadeProd("arcade-rebind", "arcade/3");
+    const retired = await context.delivery.reconcileCatalog(
+      arcadeRetired(document, "service"),
+      testOperator,
+      NO_MIGRATION,
+    );
+    expect(retired.refused).toEqual([]);
+    expect(await lifecycles()).toEqual([
+      "retired",
+      "arcade/beta:retired",
+      "arcade/prod:retired",
     ]);
   });
 });

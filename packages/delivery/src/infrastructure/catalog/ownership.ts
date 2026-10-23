@@ -50,8 +50,79 @@ export function refuseLifecycle(
 }
 
 /**
+ * Only an active environment of an active service admits a deployment, the
+ * rebind included. An accepted recipe that deploys an Application with no
+ * lifecycle policy (a carried v1 recipe) therefore holds its environment, and
+ * its service, active until a rebind accepts a recipe that declares one;
+ * otherwise its Application could never be removed (4.10, section 7).
+ */
+function refuseUnrebindable(
+  result: Result,
+  entity: {
+    id: string;
+    to: string;
+    environmentId: string;
+    application: string;
+  },
+) {
+  result.refused.push({
+    id: entity.id,
+    reason: `Moving to ${entity.to} is refused while ${entity.environmentId}'s accepted recipe deploys Application ${entity.application} with no lifecycle policy; rebind it to a recipe that declares one first, because only an active environment admits the rebind (4.10, section 7)`,
+  });
+}
+
+/** Refuses leaving `active` while the environment's accepted Application has no lifecycle policy. */
+export async function holdUnrebindable(
+  tx: Transaction,
+  result: Result,
+  environment: { id: string; acceptedDeploymentId: string | null },
+  to: string,
+) {
+  const application = await acceptedApplicationWithoutLifecycle(
+    tx,
+    environment.acceptedDeploymentId,
+  );
+  if (application === null) return false;
+  refuseUnrebindable(result, {
+    id: environment.id,
+    to,
+    environmentId: environment.id,
+    application,
+  });
+  return true;
+}
+
+/** Refuses retiring or removing a service while an active environment of it could no longer be rebound. */
+export async function holdUnrebindableService(
+  tx: Transaction,
+  result: Result,
+  serviceId: string,
+  to: string,
+) {
+  for (const environment of await tx.environment.findMany({
+    where: { serviceId, lifecycle: "active" },
+    select: { id: true, acceptedDeploymentId: true },
+    orderBy: { id: "asc" },
+  })) {
+    const application = await acceptedApplicationWithoutLifecycle(
+      tx,
+      environment.acceptedDeploymentId,
+    );
+    if (application === null) continue;
+    refuseUnrebindable(result, {
+      id: serviceId,
+      to,
+      environmentId: environment.id,
+      application,
+    });
+    return true;
+  }
+  return false;
+}
+
+/**
  * The lifecycle an environment moves to: the declared one, unless S3 holds
- * it while a deployment is owned, or its removal waits for an accepted
+ * it while a deployment is owned, or leaving `active` waits for an accepted
  * recipe that declares its Application's lifecycle policy (4.10, section 7).
  */
 export async function environmentLifecycle(
@@ -74,17 +145,8 @@ export async function environmentLifecycle(
     });
     return LifecycleSchema.parse(existing.lifecycle);
   }
-  const unmanaged =
-    declared === "removed"
-      ? await acceptedApplicationWithoutLifecycle(
-          tx,
-          existing.acceptedDeploymentId,
-        )
-      : null;
-  if (unmanaged === null) return declared;
-  result.refused.push({
-    id: existing.id,
-    reason: `Removal is refused while the accepted recipe deploys Application ${unmanaged} with no lifecycle policy; rebind it to a recipe that declares one (4.10, section 7)`,
-  });
-  return LifecycleSchema.parse(existing.lifecycle);
+  const held =
+    declared !== "active" &&
+    (await holdUnrebindable(tx, result, existing, declared));
+  return held ? LifecycleSchema.parse(existing.lifecycle) : declared;
 }
