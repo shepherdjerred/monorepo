@@ -137,7 +137,7 @@ export async function applySafety(
   await workerRolloutPreflight(current);
   // A forum's first upgrade re-observes its original baseline before the
   // candidate source replaces the one that baseline fingerprinted.
-  await forumBaselineFence(current);
+  await forumBaselineFence(current, recipe);
   await recordStage(current, key, "running", { operationId });
   const written = await writeBody(rendered);
   await runGuardedArgoCommand(

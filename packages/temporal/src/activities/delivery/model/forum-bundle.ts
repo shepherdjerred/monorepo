@@ -89,8 +89,16 @@ function liveEffects(): ForumBundleEffects {
  * baseline fingerprinted (as v1 checked before selecting the release).
  * Later upgrades migrate from the accepted selection and have no baseline.
  */
-export async function forumBaselineFence(current: DeploymentDetail) {
-  if (current.deployment.forumBaselineSnapshot === null) return;
+export async function forumBaselineFence(
+  current: DeploymentDetail,
+  recipe: KubernetesApplicationRecipe,
+) {
+  // Only the forum's own Application replaces the baselined source.
+  if (
+    forumReleaseOf(recipe) === undefined ||
+    current.deployment.forumBaselineSnapshot === null
+  )
+    return;
   await deliveryRequest(
     `${deploymentPath(current.deployment.id)}/forum-baseline-check`,
     z.object({ verified: z.literal(true) }),
