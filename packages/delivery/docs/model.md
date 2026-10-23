@@ -213,8 +213,10 @@ attestation; then `verified` or `failed`.
   source. Acquisitions execute inside the main-branch pipeline and carry its
   order key.
 - B4. Every build carries an order key: repository plus pipeline number for
-  `ci` and `acquisition`, registration sequence for `attested`. Order keys
-  are total within a service.
+  `ci` and `acquisition`, then the build's registration sequence within that
+  pipeline, so several acquisitions and the grouped CI publication of one
+  pipeline never share a key; registration sequence for `attested`. Order
+  keys are total within a service.
 - B5. One pipeline run may register builds for several services.
 - B6. Storing an artifact's bytes in the service's artifact store (a private
   image repository, ChartMuseum, the Delivery artifact bucket) is part of

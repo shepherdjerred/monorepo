@@ -39,9 +39,22 @@ async function supersededInPipeline(tx: Transaction, build: BuildRow) {
 }
 
 /**
+ * One pipeline registers several builds for a service: each acquisition and
+ * the grouped CI publication after them. Keying all of them on the pipeline
+ * alone would give their sets equal order keys and an ambiguous live set, so
+ * the registration sequence orders them within the pipeline (B4, R4).
+ */
+function pipelineKey(build: BuildRow, pipelineNumber: number) {
+  if (build.registrationSequence === null)
+    throw new Error(`Build ${build.id} is missing its registration sequence`);
+  return { major: pipelineNumber, minor: build.registrationSequence };
+}
+
+/**
  * The automatic set a verified build composes (R0, R2, B4). CI and
- * acquisition builds key on their pipeline number; an attested build keys
- * after the newest set of its service, ordered by registration. A
+ * acquisition builds key on their pipeline number, then their registration
+ * within it; an attested build keys after the newest set of its service,
+ * ordered by registration. A
  * licensed-bundle build is the v1 form of attestation and composes nothing;
  * an acquisition outside CI has no order key and is selected explicitly.
  */
@@ -56,7 +69,7 @@ export async function composeVerifiedBuild(tx: Transaction, build: BuildRow) {
       return composeAutomatic(tx, {
         serviceId: build.serviceId,
         outputs: await ciOutputs(tx, build),
-        orderKey: { major: build.pipelineNumber, minor: 0 },
+        orderKey: pipelineKey(build, build.pipelineNumber),
         qualifiedBuildId: build.id,
       });
     }
@@ -66,7 +79,7 @@ export async function composeVerifiedBuild(tx: Transaction, build: BuildRow) {
       return composeAutomatic(tx, {
         serviceId: build.serviceId,
         outputs: await registeredOutputs(tx, build),
-        orderKey: { major: build.pipelineNumber, minor: 0 },
+        orderKey: pipelineKey(build, build.pipelineNumber),
         qualifiedBuildId: build.id,
       });
     }
