@@ -42,7 +42,8 @@ const CONTRACTIONS: readonly (readonly [RegExp, string])[] = [
   [/\bhaven't\b/g, "have not"],
 ];
 
-function normalize(text: string): string {
+/** Exported so the scenario eval's phrase checks normalize exactly as these do. */
+export function normalizeEvalText(text: string): string {
   // Curly apostrophes are what the model actually emits in "can't", and a
   // straight-quote corpus would silently never match them.
   const plain = text.toLowerCase().replaceAll("’", "'").replaceAll("—", "-");
@@ -61,9 +62,9 @@ function normalize(text: string): string {
  * is the one thing neither may be wrong about.
  */
 export function looksLikeExploreRefusal(answer: string): boolean {
-  const normalized = normalize(answer);
+  const normalized = normalizeEvalText(answer);
   return EXPLORE_REFUSAL_PHRASES.some((phrase) =>
-    normalized.includes(normalize(phrase)),
+    normalized.includes(normalizeEvalText(phrase)),
   );
 }
 
@@ -79,11 +80,11 @@ export function capabilityAnswerIssues(input: {
   answer: string;
   entry: ExploreCapabilityCase;
 }): readonly string[] {
-  const answer = normalize(input.answer);
+  const answer = normalizeEvalText(input.answer);
   const issues: string[] = [];
   for (const rawGroup of input.entry.mustMentionAnyOf) {
     const group = expandGroup(rawGroup);
-    if (!group.some((phrase) => answer.includes(normalize(phrase)))) {
+    if (!group.some((phrase) => answer.includes(normalizeEvalText(phrase)))) {
       issues.push(
         `Said none of: ${(rawGroup.includes(EXPLORE_REFUSAL_TOKEN) ? [...rawGroup.filter((phrase) => phrase !== EXPLORE_REFUSAL_TOKEN), "any refusal wording"] : rawGroup).join(" / ")}`,
       );
@@ -94,7 +95,7 @@ export function capabilityAnswerIssues(input: {
     ...EXPLORE_OFF_PLATFORM_PHRASES,
   ];
   for (const phrase of forbidden) {
-    if (answer.includes(normalize(phrase))) {
+    if (answer.includes(normalizeEvalText(phrase))) {
       issues.push(`Sent the user off Scout, or denied the feature: ${phrase}`);
     }
   }

@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "cases": [
     {
       "id": "competition-most-kills",
@@ -99,6 +99,62 @@
       ],
       "mustNotMention": [],
       "rationale": "Explore answers questions about match data, not about Scout's own delivery. A question it cannot answer from the corpus belongs in support, not in a guess."
+    },
+    {
+      "id": "auto-review-is-a-player-feed",
+      "question": "auto game review after every game",
+      "creationEnabled": true,
+      "mustMentionAnyOf": [
+        ["feed", "subscription", "subscribe"],
+        [
+          "after every game",
+          "after each game",
+          "every game",
+          "each game",
+          "after a game"
+        ]
+      ],
+      "mustNotMention": [
+        "cannot set up an event-triggered",
+        "can't set up an event-triggered",
+        "can't set up a player feed",
+        "cannot set up a player feed",
+        "can't set up a feed",
+        "cannot set up a feed"
+      ],
+      "rationale": "A user was told Explore cannot do this and removed the bot 93 minutes later. A player feed posts a match report after every game; the answer must say so instead of refusing."
+    },
+    {
+      "id": "notification-text-not-customizable",
+      "question": "how can i rewrite what the bot say when someone started a game",
+      "creationEnabled": true,
+      "mustMentionAnyOf": [
+        ["@refusal"],
+        ["message", "text", "notification", "wording"]
+      ],
+      "mustNotMention": [
+        "notifications → edit message",
+        "notifications > edit message",
+        "notifications/game tracking",
+        "notifications -> edit message"
+      ],
+      "rationale": "Scout has no way to customize notification text. Explore once rephrased the question and then invented an Explore -> Notifications -> Edit message path."
+    },
+    {
+      "id": "one-off-post-not-supported",
+      "question": "post this in server channel",
+      "creationEnabled": true,
+      "mustMentionAnyOf": [["@refusal"], ["report", "schedule", "scheduled"]],
+      "mustNotMention": ["posted it", "i have posted", "i posted"],
+      "rationale": "Explore cannot make a one-off post; the closest real feature is a scheduled report. The answer must say both and never claim it posted."
+    },
+    {
+      "id": "reports-live-on-the-reports-page",
+      "question": "where can i see and turn off my reports?",
+      "creationEnabled": true,
+      "mustMentionAnyOf": [["reports page", "reports tab", "/reports"]],
+      "mustNotMention": ["Explore page"],
+      "rationale": "A user at their report limit was told to open Explore to see their reports. Reports are listed and disabled on the Reports page."
     }
   ]
 }

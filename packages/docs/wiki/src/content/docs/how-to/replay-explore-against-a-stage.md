@@ -109,3 +109,5 @@ once you have chosen; the committed file carries identifiers only.
 
 - [Scout Explore replay reference](/reference/scout-explore-replay/)
 - [Pull a Scout database into local dev](/how-to/pull-a-scout-database-into-local-dev/)
+- [Run the Explore scenario eval](/how-to/run-the-explore-scenario-eval/) —
+  seeded use cases, including states a replay cannot stage

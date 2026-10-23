@@ -1,7 +1,7 @@
 {
   "version": 2,
   "stage": "prod",
-  "capturedAt": "2026-09-21T04:19:56.909Z",
+  "capturedAt": "2026-10-22T02:55:33.017Z",
   "conversations": [
     {
       "conversationId": "507d822f-8f23-4e8f-bcca-0cd5284f5428",
@@ -247,6 +247,296 @@
         }
       ],
       "note": "1 turn(s), question"
+    },
+    {
+      "conversationId": "ef16b6ab-5aa3-465c-a697-359df731a19c",
+      "leafId": "7230cc94-0eae-4258-9b0a-ea00973fb8d9",
+      "kind": "question",
+      "surface": "web",
+      "guildSource": "run-payload",
+      "turns": [
+        {
+          "index": 0,
+          "questionMessageId": "b3211bf4-24fa-4b41-8466-f921818f9046",
+          "answerMessageId": "4524e694-28f9-4ba1-803f-9623d67208fd"
+        },
+        {
+          "index": 1,
+          "questionMessageId": "c636a7d8-4cb9-4e47-a298-520f6fbda79d",
+          "answerMessageId": "94e2e929-1c54-45f7-969d-c6d5c1c61e8e"
+        },
+        {
+          "index": 2,
+          "questionMessageId": "71b946d7-48c6-4f6e-a9ca-498cd18dd06e",
+          "answerMessageId": "a69717cf-b923-4780-8119-b1ad9f6a4f67"
+        },
+        {
+          "index": 3,
+          "questionMessageId": "556538bd-1976-44a6-b3a8-52fe96c41c9c",
+          "answerMessageId": "b7f2d1bb-dc6f-48d8-84c4-ee4015b17c6e"
+        },
+        {
+          "index": 4,
+          "questionMessageId": "2bb8e117-cb15-4b94-99d1-9b52287df158",
+          "answerMessageId": "8e6e3bd1-aa68-4911-9910-4ed3f958afbf"
+        },
+        {
+          "index": 5,
+          "questionMessageId": "a73ac44b-0b5e-4bff-a056-2aece9ad4eba",
+          "answerMessageId": "9b3911fa-9bad-4d0e-957e-5a505f68c057"
+        },
+        {
+          "index": 6,
+          "questionMessageId": "10da71d3-0b89-49f9-919a-c1420d8db102",
+          "answerMessageId": "d6188156-469b-4879-8927-1118a7ee0e86"
+        },
+        {
+          "index": 7,
+          "questionMessageId": "95273f9c-d94e-4121-a880-dbf4c743826e",
+          "answerMessageId": "469c75ca-7c5d-48c3-b121-2fc31245cd6b"
+        },
+        {
+          "index": 8,
+          "questionMessageId": "0bd3b5b4-7f45-4f01-b57f-ace43e520fc9",
+          "answerMessageId": "2b31c511-1caa-4561-8767-1e55bbc8ec7f"
+        },
+        {
+          "index": 9,
+          "questionMessageId": "6be3524a-efc2-4050-9b2e-5e52043f82db",
+          "answerMessageId": "1c338708-ab26-43a7-8d7a-d5f6a420b0e9"
+        },
+        {
+          "index": 10,
+          "questionMessageId": "2b50cd4e-76bd-40df-80f5-12219ad99255",
+          "answerMessageId": "d1a33a16-2160-4509-b048-667f518ed5bd"
+        },
+        {
+          "index": 11,
+          "questionMessageId": "4ad5d326-6b48-43c7-807a-86f17c788d57",
+          "answerMessageId": "7230cc94-0eae-4258-9b0a-ea00973fb8d9"
+        }
+      ],
+      "note": "Player-feed setup that demanded numeric Discord IDs; identity and setup regression."
+    },
+    {
+      "conversationId": "c1f05893-ee69-4bc1-9c02-02c8ddb8f4eb",
+      "leafId": "ff81bb53-3d8e-4ec9-9f2c-3f7e39d881aa",
+      "kind": "question",
+      "surface": "web",
+      "guildSource": "run-payload",
+      "turns": [
+        {
+          "index": 0,
+          "questionMessageId": "c7e3cc4e-e4d7-4659-acab-d9600c313fc9",
+          "answerMessageId": "b0266370-7d4f-472d-825c-093f9f8c8f84"
+        },
+        {
+          "index": 1,
+          "questionMessageId": "61eb20be-8b7a-48b7-8745-16bfa96356dd",
+          "answerMessageId": "b4282212-4e2d-4ab9-bb99-aa89273ac23b"
+        },
+        {
+          "index": 2,
+          "questionMessageId": "565692ec-40a0-4310-b725-8e7de292ba76",
+          "answerMessageId": "2035c047-8f83-4dc4-b200-04753de006dd"
+        },
+        {
+          "index": 3,
+          "questionMessageId": "f4731065-56c2-4ed2-9f65-70c766cc6658",
+          "answerMessageId": "d37a578b-3314-4865-b443-1a73aa59b44e"
+        },
+        {
+          "index": 4,
+          "questionMessageId": "daa0a2c1-50a1-49a1-a692-c421930b8097",
+          "answerMessageId": "4773bcf7-0439-42f8-92de-f9f67e0153cd"
+        },
+        {
+          "index": 5,
+          "questionMessageId": "12b1472b-25af-43ba-9041-a835271dea12",
+          "answerMessageId": "ff81bb53-3d8e-4ec9-9f2c-3f7e39d881aa"
+        }
+      ],
+      "note": "Weekly report setup; after confirming, the user typed Confirm and was told nothing was created; confirmation-visibility regression."
+    },
+    {
+      "conversationId": "094a890f-1025-4f99-99b0-7376af79c56c",
+      "leafId": "ddf23993-e3c6-43bd-a410-0f73af26d2ec",
+      "kind": "question",
+      "surface": "web",
+      "guildSource": "run-payload",
+      "turns": [
+        {
+          "index": 0,
+          "questionMessageId": "4441ae9f-e656-4dd5-bfba-794a8d343371",
+          "answerMessageId": "87e29832-ac23-4379-9418-f71f4b645cb4"
+        },
+        {
+          "index": 1,
+          "questionMessageId": "ae76a5ae-54dc-4200-a677-563989c70031",
+          "answerMessageId": "c29b0e15-5417-430a-bb64-3e8c3c29b2e6"
+        },
+        {
+          "index": 2,
+          "questionMessageId": "de671f15-f8bb-48d9-a7b8-3aaf3b94c794",
+          "answerMessageId": "7189182f-e8ca-444d-b5cc-e684e76d5819"
+        },
+        {
+          "index": 3,
+          "questionMessageId": "2b184af7-88e9-4e8e-a912-c8d4ccf36870",
+          "answerMessageId": "ddf23993-e3c6-43bd-a410-0f73af26d2ec"
+        }
+      ],
+      "note": "Report limit reached and active reports could not be listed."
+    },
+    {
+      "conversationId": "c04e3b2a-6673-4ca4-a99c-27fe343710c0",
+      "leafId": "1d72d23f-529d-4ed5-82d5-a9326f8e6931",
+      "kind": "question",
+      "surface": "web",
+      "guildSource": "run-payload",
+      "turns": [
+        {
+          "index": 0,
+          "questionMessageId": "fd54884b-06a7-4075-87af-7ece345f1e3c",
+          "answerMessageId": "e4a80f5d-22b6-4cfb-a9bc-b31d7d62682e"
+        },
+        {
+          "index": 1,
+          "questionMessageId": "70edb7b2-f2cb-4855-8087-99cbd6b719eb",
+          "answerMessageId": "2d661540-2ad1-4db0-ba10-61d4175d2542"
+        },
+        {
+          "index": 2,
+          "questionMessageId": "05940e00-19ea-450f-a69b-b7ada451206e",
+          "answerMessageId": "f72c44f9-f107-48b4-8107-7062ff28d249"
+        },
+        {
+          "index": 3,
+          "questionMessageId": "752ee4ba-fe66-47be-b80d-4b0b0d073c8e",
+          "answerMessageId": "a33e35ec-b417-4f3b-81a0-fbeaecb7ffae"
+        }
+      ],
+      "note": "Last five games with thin data, then a one-off post request."
+    },
+    {
+      "conversationId": "aaf30a35-b4db-490a-83a7-304886bec34e",
+      "leafId": "6d402ceb-5f9d-46fe-bb5d-1fc34c81a528",
+      "kind": "question",
+      "surface": "web",
+      "guildSource": "run-payload",
+      "turns": [
+        {
+          "index": 0,
+          "questionMessageId": "3cf1d53d-4c81-4efa-8375-10102340478b",
+          "answerMessageId": "98bb5d2f-f3f0-4474-95de-87fa14694220"
+        },
+        {
+          "index": 1,
+          "questionMessageId": "28f78538-8b91-4d22-b25f-b06341091b5b",
+          "answerMessageId": "daf98b52-1722-42b9-90f1-31b7a8d2d400"
+        },
+        {
+          "index": 2,
+          "questionMessageId": "73c33c8b-e052-41ea-8b57-3da58e6880b0",
+          "answerMessageId": "6d402ceb-5f9d-46fe-bb5d-1fc34c81a528"
+        }
+      ],
+      "note": "Asked to change notification text; Explore rephrased the question then invented a settings path; capability-awareness regression."
+    },
+    {
+      "conversationId": "233de7dd-e37c-4da9-87e6-aea2b44b2f2b",
+      "leafId": "54dc6116-01d5-4b5e-ab38-87e5306749c6",
+      "kind": "question",
+      "surface": "web",
+      "guildSource": "run-payload",
+      "turns": [
+        {
+          "index": 0,
+          "questionMessageId": "b13903f6-2d84-408b-8a72-625eb4c5bdb3",
+          "answerMessageId": "6cb48a11-3715-4db9-b2b6-7a7549623562"
+        },
+        {
+          "index": 1,
+          "questionMessageId": "64b185b7-2063-40d9-804c-7d1e734c22a8",
+          "answerMessageId": "ef3f0003-60fd-4f61-bf2f-ea1e2e34ea47"
+        },
+        {
+          "index": 2,
+          "questionMessageId": "4fa8368a-9cfd-4e95-b9e3-166dd7fe851d",
+          "answerMessageId": "54dc6116-01d5-4b5e-ab38-87e5306749c6"
+        }
+      ],
+      "note": "Asked for an automatic review after every game and was refused; player feeds already do this. The user removed the bot afterwards."
+    },
+    {
+      "conversationId": "e557a57c-bd61-407b-9927-d97678b1a465",
+      "leafId": "23ac8ff5-d286-4db6-8273-f81c1a439ca1",
+      "kind": "question",
+      "surface": "web",
+      "guildSource": "run-payload",
+      "turns": [
+        {
+          "index": 0,
+          "questionMessageId": "e7a4811d-fdac-4e56-bb4a-41befa2ad256",
+          "answerMessageId": "d73fdadd-0fcd-401d-9e17-06bfeaef6a46"
+        },
+        {
+          "index": 1,
+          "questionMessageId": "da4d50b6-386c-401b-8099-f17de67035dd",
+          "answerMessageId": "23ac8ff5-d286-4db6-8273-f81c1a439ca1"
+        }
+      ],
+      "note": "Server with no tracked players asks why no match report; setup-diagnosis regression."
+    },
+    {
+      "conversationId": "6393bc9a-86fc-46d5-9886-1d7f1f9129de",
+      "leafId": "4c5c33dc-d75a-46bb-9ebe-382bd05f705d",
+      "kind": "question",
+      "surface": "web",
+      "guildSource": "run-payload",
+      "turns": [
+        {
+          "index": 0,
+          "questionMessageId": "0eef2c7a-e830-4eb9-a8f0-d709d1a48438",
+          "answerMessageId": "7a872b2b-7ce1-43d2-aa9e-e42f2d2cfb51"
+        },
+        {
+          "index": 1,
+          "questionMessageId": "07d64131-12a8-435f-b1d8-cedaf9fc8ac8",
+          "answerMessageId": "4c5c33dc-d75a-46bb-9ebe-382bd05f705d"
+        }
+      ],
+      "note": "Game review request that needed the asker to name themselves; identity regression."
+    },
+    {
+      "conversationId": "5aed698d-6a0f-46ca-8674-2ad8b3d7576a",
+      "leafId": "03656fbc-851f-42db-9ccb-319643d96635",
+      "kind": "question",
+      "surface": "web",
+      "guildSource": "run-payload",
+      "turns": [
+        {
+          "index": 0,
+          "questionMessageId": "fd264d20-a425-435b-b6b6-2bc0273899a3",
+          "answerMessageId": "03656fbc-851f-42db-9ccb-319643d96635"
+        }
+      ],
+      "note": "Win-rate ranking over all history with no patch scoping; meta regression."
+    },
+    {
+      "conversationId": "533666da-e32f-48db-92f7-f0d0ec618e7a",
+      "leafId": "ac004f26-b5de-4286-a710-cdb35b7d151a",
+      "kind": "question",
+      "surface": "web",
+      "guildSource": "run-payload",
+      "turns": [
+        {
+          "index": 0,
+          "questionMessageId": "a426a70a-75ee-4e41-8787-300d77e3ab9c",
+          "answerMessageId": "ac004f26-b5de-4286-a710-cdb35b7d151a"
+        }
+      ],
+      "note": "General champion advice answered without lookup tools."
     }
   ]
 }

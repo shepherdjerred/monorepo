@@ -1,0 +1,1577 @@
+{
+  "version": 1,
+  "corpusVersion": 1,
+  "corpusSha256": "497e0e3910e699c90572c07a3273a65a2d144c24634e9091918bb95a4c95437e",
+  "model": "gpt-5.6-luna",
+  "judgeModel": "gpt-5.6-terra",
+  "lakeBuildId": "1792633804115-0017-scenarios",
+  "generatedAt": "2026-10-22T03:04:01.093Z",
+  "passed": false,
+  "summary": {
+    "runs": 40,
+    "passedRuns": 9,
+    "failedControls": [],
+    "checks": {
+      "passed": 193,
+      "total": 218
+    },
+    "rubric": {
+      "met": 46,
+      "total": 116
+    }
+  },
+  "runs": [
+    {
+      "caseId": "who-am-i",
+      "surface": "web",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "mentions:Tarrow",
+              "passed": false
+            },
+            {
+              "name": "avoids:send your riot id",
+              "passed": true
+            },
+            {
+              "name": "avoids:send me your riot id",
+              "passed": true
+            },
+            {
+              "name": "avoids:tell me your riot id",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, false, false],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "who-am-i",
+      "surface": "discord",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "mentions:Tarrow",
+              "passed": false
+            },
+            {
+              "name": "avoids:send your riot id",
+              "passed": true
+            },
+            {
+              "name": "avoids:send me your riot id",
+              "passed": true
+            },
+            {
+              "name": "avoids:tell me your riot id",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, false, false],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "who-am-i",
+      "surface": "voice",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "mentions:Tarrow",
+              "passed": false
+            },
+            {
+              "name": "avoids:send your riot id",
+              "passed": true
+            },
+            {
+              "name": "avoids:send me your riot id",
+              "passed": true
+            },
+            {
+              "name": "avoids:tell me your riot id",
+              "passed": false
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, false, false],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "my-latest-match",
+      "surface": "web",
+      "control": false,
+      "passed": true,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "tool:run_report_query",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true, true],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "caseId": "my-latest-match",
+      "surface": "discord",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "tool:run_report_query",
+              "passed": false
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, true, true],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "my-latest-match",
+      "surface": "voice",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "tool:run_report_query",
+              "passed": false
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, true, true],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "why-no-match-report",
+      "surface": "web",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "avoids:KR_",
+              "passed": true
+            },
+            {
+              "name": "avoids:EUW1_",
+              "passed": true
+            },
+            {
+              "name": "avoids:NA1_",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, false, true],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "why-no-match-report",
+      "surface": "discord",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "avoids:KR_",
+              "passed": true
+            },
+            {
+              "name": "avoids:EUW1_",
+              "passed": true
+            },
+            {
+              "name": "avoids:NA1_",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, false, true],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "why-no-match-report",
+      "surface": "voice",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "avoids:KR_",
+              "passed": true
+            },
+            {
+              "name": "avoids:EUW1_",
+              "passed": true
+            },
+            {
+              "name": "avoids:NA1_",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, false, true],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "feed-by-username",
+      "surface": "web",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "intent:subscription",
+              "passed": false
+            },
+            {
+              "name": "avoids:numeric discord",
+              "passed": false
+            },
+            {
+              "name": "avoids:discord user id",
+              "passed": false
+            },
+            {
+              "name": "avoids:discord id",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": false
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, false, false],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "feed-by-username",
+      "surface": "discord",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "intent:subscription",
+              "passed": false
+            },
+            {
+              "name": "avoids:numeric discord",
+              "passed": true
+            },
+            {
+              "name": "avoids:discord user id",
+              "passed": true
+            },
+            {
+              "name": "avoids:discord id",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, false, false],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "auto-review",
+      "surface": "web",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "mentions:feed|match report|after every game|after each game",
+              "passed": false
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, false, false],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "auto-review",
+      "surface": "discord",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "mentions:feed|match report|after every game|after each game",
+              "passed": false
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, false, true],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "auto-review",
+      "surface": "voice",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "mentions:feed|match report|after every game|after each game",
+              "passed": false
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, false, true],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "edit-bot-message",
+      "surface": "web",
+      "control": false,
+      "passed": true,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "avoids:edit message",
+              "passed": true
+            },
+            {
+              "name": "avoids:notifications/game tracking",
+              "passed": true
+            },
+            {
+              "name": "avoids:template option",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true, true],
+          "passed": true
+        },
+        {
+          "index": 1,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "avoids:edit message",
+              "passed": true
+            },
+            {
+              "name": "avoids:notifications / game tracking",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "caseId": "edit-bot-message",
+      "surface": "discord",
+      "control": false,
+      "passed": true,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "avoids:edit message",
+              "passed": true
+            },
+            {
+              "name": "avoids:notifications/game tracking",
+              "passed": true
+            },
+            {
+              "name": "avoids:template option",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true, true],
+          "passed": true
+        },
+        {
+          "index": 1,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "avoids:edit message",
+              "passed": true
+            },
+            {
+              "name": "avoids:notifications / game tracking",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "caseId": "edit-bot-message",
+      "surface": "voice",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "avoids:edit message",
+              "passed": true
+            },
+            {
+              "name": "avoids:notifications/game tracking",
+              "passed": true
+            },
+            {
+              "name": "avoids:template option",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, false, false],
+          "passed": false
+        },
+        {
+          "index": 1,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "avoids:edit message",
+              "passed": true
+            },
+            {
+              "name": "avoids:notifications / game tracking",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, false],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "add-tracked-player-discord",
+      "surface": "discord",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "avoids:cannot change the tracked-player list",
+              "passed": true
+            },
+            {
+              "name": "avoids:can't change the tracked-player list",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, false],
+          "passed": false
+        },
+        {
+          "index": 1,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "intent:subscription",
+              "passed": false
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, true],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "add-tracked-player-discord",
+      "surface": "voice",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "avoids:cannot change the tracked-player list",
+              "passed": true
+            },
+            {
+              "name": "avoids:can't change the tracked-player list",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, true],
+          "passed": false
+        },
+        {
+          "index": 1,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "intent:subscription",
+              "passed": false
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, false],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "already-confirmed",
+      "surface": "web",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "avoids:nothing has been created",
+              "passed": false
+            },
+            {
+              "name": "avoids:nothing is created",
+              "passed": true
+            },
+            {
+              "name": "avoids:has not been created",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, false],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "already-confirmed",
+      "surface": "discord",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "avoids:nothing has been created",
+              "passed": true
+            },
+            {
+              "name": "avoids:nothing is created",
+              "passed": true
+            },
+            {
+              "name": "avoids:has not been created",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, false],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "active-reports-at-limit",
+      "surface": "web",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "mentions:Players' Last Five Games|Players’ Last Five Games",
+              "passed": false
+            },
+            {
+              "name": "mentions:Weekly Win Rates",
+              "passed": false
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, false],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "active-reports-at-limit",
+      "surface": "discord",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "mentions:Players' Last Five Games|Players’ Last Five Games",
+              "passed": false
+            },
+            {
+              "name": "mentions:Weekly Win Rates",
+              "passed": false
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, false],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "best-build",
+      "surface": "web",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "tool:run_report_query",
+              "passed": true
+            },
+            {
+              "name": "avoids:Health Potion + World Atlas",
+              "passed": true
+            },
+            {
+              "name": "avoids:World Atlas + Health Potion",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, false, false],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "best-build",
+      "surface": "discord",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "tool:run_report_query",
+              "passed": true
+            },
+            {
+              "name": "avoids:Health Potion + World Atlas",
+              "passed": true
+            },
+            {
+              "name": "avoids:World Atlas + Health Potion",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, false, true],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "best-build",
+      "surface": "voice",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "tool:run_report_query",
+              "passed": true
+            },
+            {
+              "name": "avoids:Health Potion + World Atlas",
+              "passed": true
+            },
+            {
+              "name": "avoids:World Atlas + Health Potion",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, false, true],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "rune-page",
+      "surface": "web",
+      "control": false,
+      "passed": true,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "tool:lookup_rune|lookup_champion",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "caseId": "rune-page",
+      "surface": "discord",
+      "control": false,
+      "passed": true,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "tool:lookup_rune|lookup_champion",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "caseId": "rune-page",
+      "surface": "voice",
+      "control": false,
+      "passed": true,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "tool:lookup_rune|lookup_champion",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "caseId": "game-review",
+      "surface": "web",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "error",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": false
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, false, false],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "game-review",
+      "surface": "discord",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, false, false],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "game-review",
+      "surface": "voice",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "error",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": false
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, false, false],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "current-meta",
+      "surface": "web",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "tool:run_report_query",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, true, false],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "current-meta",
+      "surface": "discord",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "tool:run_report_query",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, true, false],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "current-meta",
+      "surface": "voice",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "tool:run_report_query",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [false, true, true],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "image-scoreboard",
+      "surface": "web",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            },
+            {
+              "name": "image-delivered",
+              "passed": false
+            }
+          ],
+          "rubric": [false, false],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "image-scoreboard",
+      "surface": "discord",
+      "control": false,
+      "passed": false,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            },
+            {
+              "name": "image-delivered",
+              "passed": false
+            }
+          ],
+          "rubric": [false, false],
+          "passed": false
+        }
+      ]
+    },
+    {
+      "caseId": "thin-data",
+      "surface": "web",
+      "control": true,
+      "passed": true,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "caseId": "thin-data",
+      "surface": "discord",
+      "control": true,
+      "passed": true,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "caseId": "thin-data",
+      "surface": "voice",
+      "control": true,
+      "passed": true,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true],
+          "passed": true
+        }
+      ]
+    }
+  ]
+}
