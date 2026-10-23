@@ -3189,7 +3189,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/1",
-      "configurationRevisionId": "argocd/prod/1"
+      "configurationRevisionId": "argocd/prod/2"
     },
     {
       "id": "chartmuseum/prod",

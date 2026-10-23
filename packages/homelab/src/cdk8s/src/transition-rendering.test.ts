@@ -17,6 +17,7 @@ import {
 } from "./resources/cluster-baseline/charts.ts";
 import { APPLICATION_SOURCE_POLICY } from "./resources/argocd-application-admission.ts";
 import { deliveryArgoPolicy } from "./resources/argo-applications/platform/delivery-rbac.ts";
+import { humanArgoCdPolicyRows } from "./resources/argo-applications/platform/argocd-human-access.ts";
 import { ARGOCD_PROJECTS } from "./resources/argo-applications/platform/projects.ts";
 import {
   DELIVERY_API_SERVICE_ACCOUNT,
@@ -197,7 +198,11 @@ describe("transition rendering", () => {
     );
     expect(
       JSON.stringify(find(ROOT_CHART, "Application", "argocd").spec),
-    ).toContain(JSON.stringify(deliveryArgoPolicy(true)));
+    ).toContain(
+      JSON.stringify(
+        [deliveryArgoPolicy(true), ...humanArgoCdPolicyRows()].join("\n"),
+      ),
+    );
   });
 
   test("queues mc-sandbox through the CI node's ClusterQueue with its qualification quota", () => {
