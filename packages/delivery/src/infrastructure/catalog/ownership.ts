@@ -2,7 +2,10 @@ import { DeliveryError } from "#domain/error.ts";
 import type { z } from "zod";
 import { LifecycleSchema } from "@shepherdjerred/ops-model/catalog-document-shape.ts";
 import type { Transaction } from "#infrastructure/delivery-data.ts";
-import { acceptedApplicationWithoutLifecycle } from "#infrastructure/execution/removal.ts";
+import {
+  acceptedApplicationWithoutLifecycle,
+  unremovableTarget,
+} from "#infrastructure/execution/removal.ts";
 import type { Result } from "./result.ts";
 
 const OWNED = { OR: [{ status: "running" }, { recoveryRequired: true }] };
@@ -120,18 +123,60 @@ export async function holdUnrebindableService(
   return false;
 }
 
+type Removable = {
+  id: string;
+  acceptedDeploymentId: string | null;
+  pipelineRevisionId: string;
+};
+
+/**
+ * `removed` records that the environment's target state was destroyed
+ * (4.10), which only the Kubernetes removal adapter can do. A target with
+ * no adapter would stay live with its removal never recorded, so the move
+ * is refused; such an environment retires instead.
+ */
+async function holdUnremovable(
+  tx: Transaction,
+  result: Result,
+  environment: Removable,
+  refusedId: string,
+) {
+  const kind = await unremovableTarget(tx, environment);
+  if (kind === null) return false;
+  result.refused.push({
+    id: refusedId,
+    reason: `Moving to removed is refused while ${environment.id} deploys a ${kind} target, which removal cannot destroy; retire it instead (4.10)`,
+  });
+  return true;
+}
+
+/** Refuses removing a service while an environment of it deploys a target removal cannot destroy. */
+export async function holdUnremovableService(
+  tx: Transaction,
+  result: Result,
+  serviceId: string,
+) {
+  for (const environment of await tx.environment.findMany({
+    where: { serviceId, lifecycle: { not: "removed" } },
+    select: { id: true, acceptedDeploymentId: true, pipelineRevisionId: true },
+    orderBy: { id: "asc" },
+  }))
+    if (await holdUnremovable(tx, result, environment, serviceId)) return true;
+  return false;
+}
+
 /**
  * The lifecycle an environment moves to: the declared one, unless S3 holds
- * it while a deployment is owned, or leaving `active` waits for an accepted
- * recipe that declares its Application's lifecycle policy (4.10, section 7).
+ * it while a deployment is owned, leaving `active` waits for an accepted
+ * recipe that declares its Application's lifecycle policy (4.10, section
+ * 7), or `removed` meets a target removal cannot destroy. The environment's
+ * `pipelineRevisionId` is the recipe this reconcile declares.
  */
 export async function environmentLifecycle(
   tx: Transaction,
-  existing: {
-    id: string;
+  existing: Removable & {
     lifecycle: string;
     activeDeploymentId: string | null;
-    acceptedDeploymentId: string | null;
   },
   declared: z.infer<typeof LifecycleSchema>,
   result: Result,
@@ -146,7 +191,9 @@ export async function environmentLifecycle(
     return LifecycleSchema.parse(existing.lifecycle);
   }
   const held =
-    declared !== "active" &&
-    (await holdUnrebindable(tx, result, existing, declared));
+    (declared !== "active" &&
+      (await holdUnrebindable(tx, result, existing, declared))) ||
+    (declared === "removed" &&
+      (await holdUnremovable(tx, result, existing, existing.id)));
   return held ? LifecycleSchema.parse(existing.lifecycle) : declared;
 }

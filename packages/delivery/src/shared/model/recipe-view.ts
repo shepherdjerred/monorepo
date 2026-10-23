@@ -88,6 +88,39 @@ export function kubernetesRecipes(definition: Stored): KubernetesRecipe[] {
 }
 
 /**
+ * The first target a recipe deploys that removal cannot destroy (4.10), or
+ * null. Only a kubernetes-application has a removal adapter, which deletes
+ * the Application by its lifecycle policy; a bucket, a stack, a channel's
+ * pointer, an operator-run host or a v1 manual or root target would stay
+ * live, and its removal could never be recorded. A v1 Application without a
+ * lifecycle policy waits for its rebind instead.
+ */
+export function targetWithoutRemoval(definition: Stored): string | null {
+  switch (definition.kind) {
+    case "kubernetes-application":
+    case "argocd":
+    case "control-plane":
+      return null;
+    case "operator-run":
+      return definition.wrapped.kind === "kubernetes-application"
+        ? null
+        : `operator-run ${definition.wrapped.kind}`;
+    case "compound":
+      return (
+        definition.subRecipes
+          .map((sub) => targetWithoutRemoval(sub.definition))
+          .find((kind) => kind !== null) ?? null
+      );
+    case "root-release":
+    case "static-site":
+    case "tofu":
+    case "manual":
+    case "channel":
+      return definition.kind;
+  }
+}
+
+/**
  * The Applications ArgoCD may self-heal on the accepted exact source after
  * acceptance (T4). The adapter decides, never the recipe: a
  * kubernetes-application recipe, or each kubernetes-application sub-recipe
