@@ -467,4 +467,51 @@ describe("self-heal drift (T4)", () => {
     ).rejects.toThrow(/accepted deployment only/u);
     expect(newer.id).not.toBe(accepted.id);
   });
+
+  test("each Application of an accepted compound recipe self-heals and is watched (T4)", async () => {
+    await declareMonitoredRecipe("hold");
+    const accepted = await deployAndAccept(context.fixture.versionSet.id);
+    const application = recipeFromPipeline(pipeline);
+    if (application.kind !== "kubernetes-application")
+      throw new Error("arcade converts to a Kubernetes application recipe");
+    const worker = {
+      ...application,
+      application: { ...application.application, name: "arcade-worker" },
+      steps: application.steps.map((step) => ({
+        ...step,
+        instance: "application:arcade-worker",
+      })),
+    };
+    await context.cluster.database.pipeline.update({
+      where: { id: accepted.pipelineRevisionId },
+      data: {
+        definition: {
+          kind: "compound",
+          subRecipes: [
+            { instance: "application:arcade", definition: application },
+            { instance: "application:arcade-worker", definition: worker },
+          ],
+        },
+      },
+    });
+    const watched = await context.delivery.selfHealing();
+    expect(
+      watched.map((entry) => [entry.deploymentId, entry.application]),
+    ).toEqual([
+      [accepted.id, "arcade"],
+      [accepted.id, "arcade-worker"],
+    ]);
+    expect(await context.delivery.detail(accepted.id)).toMatchObject({
+      selfHeals: true,
+    });
+    // A self-hosted service's compound targets never self-heal either.
+    await context.cluster.database.service.update({
+      where: { id: "arcade" },
+      data: { selfHosted: true },
+    });
+    expect(await context.delivery.selfHealing()).toEqual([]);
+    expect(await context.delivery.detail(accepted.id)).toMatchObject({
+      selfHeals: false,
+    });
+  });
 });

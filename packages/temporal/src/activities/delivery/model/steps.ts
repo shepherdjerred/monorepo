@@ -168,6 +168,31 @@ export async function acceptDeliveryModel(
 }
 
 /**
+ * The Application recipes self-heal turns on after acceptance: the recipe's
+ * own, or each kubernetes-application sub-recipe of a compound recipe,
+ * rendered exactly as its sync step rendered it (T4).
+ */
+function selfHealingRecipes(
+  recipe: RecipeDefinition,
+): KubernetesApplicationRecipe[] {
+  switch (recipe.kind) {
+    case "kubernetes-application":
+      return [recipe];
+    case "compound":
+      return recipe.subRecipes.flatMap((sub) =>
+        sub.definition.kind === "kubernetes-application"
+          ? [sub.definition]
+          : [],
+      );
+    case "static-site":
+    case "tofu":
+    case "channel":
+    case "operator-run":
+      return [];
+  }
+}
+
+/**
  * After acceptance: self-heal on the accepted exact source (T4), and the
  * cold-start snapshot to write off-cluster when the chain moved (X7).
  */
@@ -180,9 +205,8 @@ export async function settleDeliveryModel(
     current.environment.acceptedDeploymentId !== id
   )
     return null;
-  const recipe = requireModelRecipe(current);
-  if (recipe.kind === "kubernetes-application")
-    await enableSelfHeal(current, recipe);
+  for (const application of selfHealingRecipes(requireModelRecipe(current)))
+    await enableSelfHeal(current, application);
   const requirement = await deliveryRequest(
     `${deploymentPath(id)}/cold-start`,
     ColdStartRequirementSchema,

@@ -88,18 +88,36 @@ export function kubernetesRecipes(definition: Stored): KubernetesRecipe[] {
 }
 
 /**
- * The Application ArgoCD may self-heal on the accepted exact source after
- * acceptance (T4). The adapter decides, never the recipe: only a
- * kubernetes-application recipe of a service that is not self-hosted. A
- * data-layer recipe is operator-run and never self-heals.
+ * The Applications ArgoCD may self-heal on the accepted exact source after
+ * acceptance (T4). The adapter decides, never the recipe: a
+ * kubernetes-application recipe, or each kubernetes-application sub-recipe
+ * of a compound one, of a service that is not self-hosted. A data-layer
+ * recipe is operator-run and never self-heals.
  */
-export function selfHealingApplication(
+export function selfHealingApplications(
   definition: Stored,
   service: { selfHosted: boolean },
-): ApplicationBody | null {
-  return definition.kind === "kubernetes-application" && !service.selfHosted
-    ? definition.application
-    : null;
+): ApplicationBody[] {
+  if (service.selfHosted) return [];
+  switch (definition.kind) {
+    case "kubernetes-application":
+      return [definition.application];
+    case "compound":
+      return definition.subRecipes.flatMap((sub) =>
+        sub.definition.kind === "kubernetes-application"
+          ? [sub.definition.application]
+          : [],
+      );
+    case "argocd":
+    case "control-plane":
+    case "root-release":
+    case "static-site":
+    case "tofu":
+    case "manual":
+    case "channel":
+    case "operator-run":
+      return [];
+  }
 }
 
 /**

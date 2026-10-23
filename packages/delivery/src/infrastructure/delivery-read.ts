@@ -15,7 +15,7 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import type { Database } from "./database.ts";
 import { wire, required } from "./delivery-records.ts";
 import { approvalView } from "./selection/views.ts";
-import { selfHealingApplication } from "#shared/model/recipe-view.ts";
+import { selfHealingApplications } from "#shared/model/recipe-view.ts";
 import type { Delivery } from "./delivery.ts";
 import { readRecoveredForumRuntime } from "./forum/recovered-runtime.ts";
 import { minecraftIntentView } from "./minecraft-recovery/requests.ts";
@@ -220,7 +220,7 @@ export async function detail(this: Delivery, deploymentId: string) {
       })),
       approval: approvalView(row.approval),
       stages: row.stages,
-      selfHeals: selfHealingApplication(recipe.definition, service) !== null,
+      selfHeals: selfHealingApplications(recipe.definition, service).length > 0,
       minecraftRecoveries: intents("minecraft").map((intent) =>
         minecraftIntentView(intent),
       ),

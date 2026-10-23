@@ -5,7 +5,7 @@ import {
   SelfHealingSchema,
   type DriftObservation,
 } from "#shared/model/monitor-contract.ts";
-import { selfHealingApplication } from "#shared/model/recipe-view.ts";
+import { selfHealingApplications } from "#shared/model/recipe-view.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { evidence } from "#infrastructure/delivery-data.ts";
@@ -28,17 +28,20 @@ export async function selfHealing(this: Delivery) {
         }),
       ),
     );
-    const application = selfHealingApplication(recipe.definition, env.service);
-    if (application !== null)
+    const acceptedAt = required(
+      accepted.finishedAt,
+      "Acceptance time",
+    ).toISOString();
+    for (const application of selfHealingApplications(
+      recipe.definition,
+      env.service,
+    ))
       watched.push(
         SelfHealingSchema.parse({
           deploymentId: accepted.id,
           environmentId: env.id,
           application: application.name,
-          acceptedAt: required(
-            accepted.finishedAt,
-            "Acceptance time",
-          ).toISOString(),
+          acceptedAt,
         }),
       );
   }
