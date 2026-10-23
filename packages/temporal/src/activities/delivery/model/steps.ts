@@ -144,6 +144,9 @@ async function runOwnedStep(
     case "kubernetes":
       return await runKubernetesStep(current, kubernetes(owner), steps, step);
     case "static-site":
+      // A compound recipe's site sub-recipe never runs ahead of its earlier
+      // members, as an Application's site step does not (T3).
+      requireSettledBefore(steps, current.stages, key);
       await runStaticSiteStep(current, step.policy, key);
       return { waiting: false };
     case "test":
