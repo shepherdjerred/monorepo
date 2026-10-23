@@ -12,7 +12,12 @@ export type ReconciledCatalog = { revision: string };
  * Handover's reviewed definitions are the catalog as last reconciled into
  * PostgreSQL, never a selected release state. It refuses before any
  * reconciliation, and after a definition was registered outside the
- * catalog since then.
+ * catalog since then. That time check is an early, coarse refusal: audit
+ * times are transaction start times, so a registration that commits after
+ * a reconcile it began before can read as older. The guarantee is
+ * `requireCatalogOwnershipDefinition`: registration binds only v1
+ * pipelines, and a target is handed over only through a catalog recipe
+ * revision naming its own Application.
  */
 export async function reconciledCatalog(
   tx: Transaction,

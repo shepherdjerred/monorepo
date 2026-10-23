@@ -304,6 +304,38 @@ test("handover reads only the reconciled catalog and refuses definitions registe
   expect(await handoverStatus()).toBe(200);
 });
 
+test("a re-registration outside the catalog is refused by its binding, whatever its recorded time", async () => {
+  await reconcile();
+  expect(await handoverStatus()).toBe(200);
+  const db = context.cluster.database;
+  // Registration can bind only a v1 pipeline over the reconciled recipe.
+  await context.delivery.registerEnvironment(
+    {
+      id: "arcade/prod",
+      serviceId: "arcade",
+      name: "prod",
+      application: "arcade",
+      pipelineRevisionId: "arcade/2",
+      configurationRevision: "arcade/unreviewed",
+      configuration: {},
+      automatic: false,
+    },
+    testOperator,
+  );
+  // A registration whose transaction began before the reconcile but
+  // committed after it records the earlier time, so the time check misses it.
+  const reconciled = await db.audit.findFirstOrThrow({
+    where: { action: "catalog.reconciled" },
+    orderBy: { occurredAt: "desc" },
+  });
+  await db.audit.updateMany({
+    where: { action: "environment.registered", entityId: "arcade/prod" },
+    data: { occurredAt: new Date(reconciled.occurredAt.getTime() - 1000) },
+  });
+  // The target's binding is no catalog recipe, so the handover still refuses.
+  expect(await handoverStatus()).toBe(409);
+});
+
 test("handover rejects a service, application or recipe identity the catalog does not bind", async () => {
   await reconcile();
   await context.cluster.database.$transaction(async (tx) => {
