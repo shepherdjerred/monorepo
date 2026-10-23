@@ -19,12 +19,34 @@ fi
 
 LOCK_MODE=${BUN_INSTALL_LOCK_MODE:?BUN_INSTALL_LOCK_MODE must be shared or local}
 CI_INSTALL_STARTED=$SECONDS
+INSTALL_XDG_CACHE_HOME=
 report_install() {
   local status=$?
+  if [[ -n $INSTALL_XDG_CACHE_HOME ]]; then
+    rm -rf -- "${INSTALL_XDG_CACHE_HOME:?}"
+  fi
   printf 'CI_INSTALL_DIAGNOSTIC {"schemaVersion":1,"elapsedSeconds":%d,"exitCode":%d}\n' "$((SECONDS - CI_INSTALL_STARTED))" "$status"
   exit "$status"
 }
 trap report_install EXIT
+
+# ffmpeg-static's postinstall downloads its ~30 MB binary through a file cache
+# at $XDG_CACHE_HOME/ffmpeg-static-nodejs, keyed by request URL. GitHub
+# redirects every download to a freshly signed release-assets URL, so no later
+# install can hit an entry; on the shared CI tool cache they filled its 10Gi
+# quota in about a day and a half and failed every step with EDQUOT (AI-277).
+# Each install gets a private XDG cache that is removed on exit. Bun falls back
+# to $XDG_CACHE_HOME/.bun/install/cache when neither BUN_INSTALL_CACHE_DIR nor
+# BUN_INSTALL is set, so that location is pinned before XDG_CACHE_HOME moves.
+INSTALL_XDG_CACHE_HOME=$(mktemp -d)
+bun_install() {
+  local -a install_env=(XDG_CACHE_HOME="$INSTALL_XDG_CACHE_HOME")
+  if [[ -z ${BUN_INSTALL_CACHE_DIR:-} && -z ${BUN_INSTALL:-} && -n ${XDG_CACHE_HOME:-} ]]; then
+    install_env+=(BUN_INSTALL_CACHE_DIR="$XDG_CACHE_HOME/.bun/install/cache")
+  fi
+  env "${install_env[@]}" bun install "$@"
+}
+
 case "${CI_BUN_INSTALL_BACKEND:-}" in
   '') ;;
   copyfile) set -- "$@" --backend=copyfile ;;
@@ -48,7 +70,7 @@ case "$LOCK_MODE" in
     (
       flock --shared 9
       mkdir -p "$TMP_DIR"
-      BUN_TMPDIR="$TMP_DIR" bun install "$@"
+      BUN_TMPDIR="$TMP_DIR" bun_install "$@"
     ) 9>"$CACHE_LOCK_FILE"
     ;;
   local)
@@ -56,7 +78,7 @@ case "$LOCK_MODE" in
       echo "error: local Bun installs must not inherit BUN_CACHE_LOCK_FILE" >&2
       exit 1
     fi
-    bun install "$@"
+    bun_install "$@"
     ;;
   *)
     echo "error: BUN_INSTALL_LOCK_MODE must be shared or local, got $LOCK_MODE" >&2

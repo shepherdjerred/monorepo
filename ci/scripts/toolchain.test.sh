@@ -256,6 +256,8 @@ cat >"$TEST_ROOT/bin/bun" <<'EOF'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >>"$BUN_GC_TEST_LOG"
 printf '%s\n' "${BUN_TMPDIR:-}" >"$BUN_GC_TEST_LOG.tmpdir"
+printf '%s\n' "${XDG_CACHE_HOME:-}" >"$BUN_GC_TEST_LOG.xdg"
+printf '%s\n' "${BUN_INSTALL_CACHE_DIR:-}" >"$BUN_GC_TEST_LOG.cachedir"
 EOF
 cat >"$TEST_ROOT/bin/flock" <<'EOF'
 #!/usr/bin/env bash
@@ -305,6 +307,7 @@ BUN_CACHE_LOCK_FILE="$TEST_ROOT/control/.gc.lock" \
   BUN_INSTALL_CACHE_DIR="$TEST_ROOT/cache/data" \
   BUN_INSTALL_LOCK_MODE=shared \
   BUN_GC_TEST_LOG="$TEST_ROOT/bun.log" \
+  XDG_CACHE_HOME="$TEST_ROOT/outer-xdg" \
   PATH="$TEST_ROOT/bin:$PATH" \
   "$BUN_INSTALL_WRAPPER" --frozen-lockfile --filter example
 if [[ $(<"$TEST_ROOT/bun.log") != "install --frozen-lockfile --filter example" ]]; then
@@ -313,6 +316,17 @@ if [[ $(<"$TEST_ROOT/bun.log") != "install --frozen-lockfile --filter example" ]
 fi
 if [[ $(<"$TEST_ROOT/bun.log.tmpdir") != "$TEST_ROOT/cache/tmp" || ! -d "$TEST_ROOT/cache/tmp" ]]; then
   echo "shared Bun installs must extract on the cache volume, beside the data directory" >&2
+  exit 1
+fi
+# ffmpeg-static's download cache lives under XDG_CACHE_HOME and never hits
+# (AI-277): each install writes it to a private directory removed afterwards.
+INSTALL_XDG=$(<"$TEST_ROOT/bun.log.xdg")
+if [[ -z $INSTALL_XDG || $INSTALL_XDG == "$TEST_ROOT/outer-xdg" || -e $INSTALL_XDG ]]; then
+  echo "Bun installs must use a private XDG cache directory that is removed afterwards" >&2
+  exit 1
+fi
+if [[ $(<"$TEST_ROOT/bun.log.cachedir") != "$TEST_ROOT/cache/data" ]]; then
+  echo "moving XDG_CACHE_HOME must not move the shared Bun cache" >&2
   exit 1
 fi
 
@@ -327,6 +341,30 @@ if [[ $(<"$TEST_ROOT/bun.log") != "install --frozen-lockfile --filter native-exa
 fi
 if [[ -n $(<"$TEST_ROOT/bun.log.tmpdir") ]]; then
   echo "local Bun installs must keep Bun's default temporary directory" >&2
+  exit 1
+fi
+
+# Bun's default cache follows XDG_CACHE_HOME when neither BUN_INSTALL nor
+# BUN_INSTALL_CACHE_DIR is set, so isolating the install's XDG cache must pin it.
+env -u BUN_INSTALL -u BUN_INSTALL_CACHE_DIR \
+  BUN_INSTALL_LOCK_MODE=local \
+  BUN_GC_TEST_LOG="$TEST_ROOT/bun.log" \
+  XDG_CACHE_HOME="$TEST_ROOT/outer-xdg" \
+  PATH="$TEST_ROOT/bin:$PATH" \
+  "$BUN_INSTALL_WRAPPER" --frozen-lockfile
+if [[ $(<"$TEST_ROOT/bun.log.cachedir") != "$TEST_ROOT/outer-xdg/.bun/install/cache" ]]; then
+  echo "local Bun installs must keep Bun's XDG-derived cache when isolating XDG_CACHE_HOME" >&2
+  exit 1
+fi
+env -u BUN_INSTALL_CACHE_DIR \
+  BUN_INSTALL="$TEST_ROOT/bun-home" \
+  BUN_INSTALL_LOCK_MODE=local \
+  BUN_GC_TEST_LOG="$TEST_ROOT/bun.log" \
+  XDG_CACHE_HOME="$TEST_ROOT/outer-xdg" \
+  PATH="$TEST_ROOT/bin:$PATH" \
+  "$BUN_INSTALL_WRAPPER" --frozen-lockfile
+if [[ -n $(<"$TEST_ROOT/bun.log.cachedir") ]]; then
+  echo "Bun installs rooted at BUN_INSTALL must not pin a cache directory" >&2
   exit 1
 fi
 
