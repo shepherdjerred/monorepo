@@ -68,11 +68,14 @@ const widths = [480, 800, 1200, 1600];
           </button>
         </div>
         <div class="edition" data-edition-panel="java">
-          <span class="label">Java Edition {server.java.version}</span>
+          <span class="label">Java Edition {server.java.versions}</span>
           <span class="address">{server.java.address}</span>
           <p class="note">
             playing on a computer? go to Multiplayer → Add Server and paste it
             in.
+          </p>
+          <p class="note">
+            runs best on {server.java.bestOn}, but older versions can join too.
           </p>
         </div>
         <div class="edition" data-edition-panel="bedrock" hidden>
@@ -167,7 +170,7 @@ const widths = [480, 800, 1200, 1600];
       </div>
       <ol class="steps">
         <li>
-          <span class="label">Java {server.java.version}</span>
+          <span class="label">Java {server.java.versions}</span>
           <p>
             Multiplayer → Add Server, then enter{" "}
             <strong>{server.java.address}</strong>.

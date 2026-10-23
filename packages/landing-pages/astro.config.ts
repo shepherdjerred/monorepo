@@ -11,7 +11,7 @@ function requireInSource(path: string, needle: string, what: string) {
 }
 requireInSource(
   "../the-storm/server/Dockerfile",
-  `VERSION=${server.java.version} `,
+  `VERSION=${server.java.serverVersion} `,
   "The Storm Java version",
 );
 requireInSource(

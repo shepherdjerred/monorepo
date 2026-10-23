@@ -7,7 +7,7 @@ Join The Storm from Minecraft Java or Bedrock Edition. A forum account is not re
 
 ## Java Edition
 
-1. Open Minecraft **Java Edition 26.2** with your Microsoft account.
+1. Open Minecraft **Java Edition** with your Microsoft account. The server runs **26.2**, and **26.3** and older versions can join too.
 2. Choose **Multiplayer**, then **Add Server**.
 3. Name the server **The Storm** and enter **`ts-mc.net`** as the address.
 4. Save it, select The Storm, and choose **Join Server**.
@@ -45,7 +45,7 @@ If the server list doesn't pop up, the BedrockConnect page lists other addresses
 - Check [the homepage](https://ts-mc.net/) for Java and Bedrock status separately. During maintenance, wait for your edition to become available.
 - On Bedrock, check that the address is `mc.ts-mc.net` and the separate port is `30004`.
 - On a console, double-check the DNS addresses above and join a featured server again.
-- On Java, try the manual address above and verify that your game is version 26.2.
+- On Java, try the manual address above. If an older version has trouble, try 26.2 or 26.3.
 - If the problem continues, ask in [Discord](/discord/) and include your edition, game version, and error message.
 
 ## Once you arrive
