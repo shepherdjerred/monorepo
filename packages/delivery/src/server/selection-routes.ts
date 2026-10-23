@@ -36,8 +36,9 @@ function registerMonitorRoutes(
       MonitorObservationInputSchema.parse(await c.req.json()),
       c.get("principal"),
     );
-    // An automatic rollback is a new request: it waits for writes, and the
-    // reconcile loop requests it if this one cannot (W2).
+    // An automatic rollback is a new request: it waits for writes. The
+    // alarmed acceptance itself is the obligation, so the dispatch tick's
+    // reconcile (`restoreAlarmed`) requests it once writes resume (W2).
     if (
       policy === "automatic" &&
       observation.outcome === "alarmed" &&

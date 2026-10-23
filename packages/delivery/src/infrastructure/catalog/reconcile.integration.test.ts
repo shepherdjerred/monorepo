@@ -552,6 +552,54 @@ describe("catalog reconcile of a removal (4.10, section 7)", () => {
       },
     ]);
   });
+
+  test("a static site has no removal adapter, so it and its service retire instead", async () => {
+    const document = await catalogDocument();
+    await context.delivery.reconcileCatalog(
+      document,
+      testOperator,
+      NO_MIGRATION,
+    );
+    const site = (lifecycle: "retired" | "removed") => ({
+      ...document,
+      services: document.services.map((service) =>
+        service.id === "sjer-red" ? { ...service, lifecycle } : service,
+      ),
+      environments: document.environments.map((environment) =>
+        environment.id === "sjer-red/prod"
+          ? { ...environment, lifecycle }
+          : environment,
+      ),
+    });
+    const siteLifecycles = async () => {
+      const db = context.cluster.database;
+      const [service, environment] = await Promise.all([
+        db.service.findUniqueOrThrow({ where: { id: "sjer-red" } }),
+        db.environment.findUniqueOrThrow({ where: { id: "sjer-red/prod" } }),
+      ]);
+      return [service.lifecycle, environment.lifecycle];
+    };
+    const unremovable =
+      /sjer-red\/prod deploys a static-site target, which removal cannot destroy; retire it instead/u;
+    const refused = await context.delivery.reconcileCatalog(
+      site("removed"),
+      testOperator,
+      NO_MIGRATION,
+    );
+    expect(refused.refused).toEqual([
+      { id: "sjer-red", reason: expect.stringMatching(unremovable) },
+      { id: "sjer-red/prod", reason: expect.stringMatching(unremovable) },
+    ]);
+    expect(await siteLifecycles()).toEqual(["active", "active"]);
+    expect(await context.delivery.pendingRemovals()).toEqual([]);
+    const retired = await context.delivery.reconcileCatalog(
+      site("retired"),
+      testOperator,
+      NO_MIGRATION,
+    );
+    expect(retired.refused).toEqual([]);
+    expect(await siteLifecycles()).toEqual(["retired", "retired"]);
+  });
 });
 
 /** arcade/prod accepts a carried v1 recipe, whose Application declares no lifecycle. */

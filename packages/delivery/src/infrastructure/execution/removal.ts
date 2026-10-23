@@ -2,7 +2,11 @@ import { z } from "zod";
 import { DeliveryError } from "#domain/error.ts";
 import { PipelineRevisionSchema, type Principal } from "#shared/contract.ts";
 import type { StoredRecipeDefinition } from "#shared/model/record-contract.ts";
-import { applicationOf, kubernetesRecipes } from "#shared/model/recipe-view.ts";
+import {
+  applicationOf,
+  kubernetesRecipes,
+  targetWithoutRemoval,
+} from "#shared/model/recipe-view.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { id, type Transaction } from "#infrastructure/delivery-data.ts";
@@ -37,6 +41,42 @@ function applicationWithoutLifecycle(definition: StoredRecipeDefinition) {
     : null;
 }
 
+type Reader = Transaction | Delivery["database"];
+
+async function recipeDefinition(database: Reader, pipelineRevisionId: string) {
+  return PipelineRevisionSchema.parse(
+    wire(
+      await database.pipeline.findUniqueOrThrow({
+        where: { id: pipelineRevisionId },
+      }),
+    ),
+  ).definition;
+}
+
+/**
+ * The recipe a removal acts on (4.10): the accepted deployment's, else the
+ * declared one for an environment that accepted nothing.
+ */
+async function removalRecipe(
+  database: Reader,
+  environment: {
+    acceptedDeploymentId: string | null;
+    pipelineRevisionId: string;
+  },
+) {
+  const accepted =
+    environment.acceptedDeploymentId === null
+      ? null
+      : await database.deployment.findUniqueOrThrow({
+          where: { id: environment.acceptedDeploymentId },
+          select: { pipelineRevisionId: true },
+        });
+  return await recipeDefinition(
+    database,
+    accepted?.pipelineRevisionId ?? environment.pipelineRevisionId,
+  );
+}
+
 /** The Application the accepted deployment's recipe deploys with no lifecycle policy. */
 export async function acceptedApplicationWithoutLifecycle(
   tx: Transaction,
@@ -47,14 +87,20 @@ export async function acceptedApplicationWithoutLifecycle(
     where: { id: acceptedDeploymentId },
     select: { pipelineRevisionId: true },
   });
-  const recipe = PipelineRevisionSchema.parse(
-    wire(
-      await tx.pipeline.findUniqueOrThrow({
-        where: { id: accepted.pipelineRevisionId },
-      }),
-    ),
+  return applicationWithoutLifecycle(
+    await recipeDefinition(tx, accepted.pipelineRevisionId),
   );
-  return applicationWithoutLifecycle(recipe.definition);
+}
+
+/** The target removal would leave live in this environment, or null (4.10). */
+export async function unremovableTarget(
+  tx: Transaction,
+  environment: {
+    acceptedDeploymentId: string | null;
+    pipelineRevisionId: string;
+  },
+) {
+  return targetWithoutRemoval(await removalRecipe(tx, environment));
 }
 
 /**
@@ -69,38 +115,29 @@ export async function pendingRemovals(this: Delivery) {
       targetRemovedAt: null,
       activeDeploymentId: null,
     },
-    include: { acceptedDeployment: true },
     orderBy: { id: "asc" },
   });
   const removals = [];
   for (const env of environments) {
-    const recipe = PipelineRevisionSchema.parse(
-      wire(
-        await this.database.pipeline.findUniqueOrThrow({
-          where: {
-            id:
-              env.acceptedDeployment?.pipelineRevisionId ??
-              env.pipelineRevisionId,
-          },
-        }),
-      ),
-    );
-    // The catalog refuses this removal, so reaching it breaks the record.
-    const unmanaged = applicationWithoutLifecycle(recipe.definition);
+    const definition = await removalRecipe(this.database, env);
+    // The catalog refuses both removals, so reaching one breaks the record.
+    const unmanaged = applicationWithoutLifecycle(definition);
     if (unmanaged !== null)
       throw new Error(
         `Removed environment ${env.id} deploys Application ${unmanaged} with no lifecycle policy`,
       );
-    const applications = kubernetesRecipes(recipe.definition).map(
-      (kubernetes) => ({
-        name: kubernetes.application.name,
-        lifecycle: kubernetes.application.lifecycle,
-      }),
-    );
-    if (applications.length > 0)
-      removals.push(
-        PendingRemovalSchema.parse({ environmentId: env.id, applications }),
+    const unremovable = targetWithoutRemoval(definition);
+    if (unremovable !== null)
+      throw new Error(
+        `Removed environment ${env.id} deploys a ${unremovable} target that removal cannot destroy`,
       );
+    const applications = kubernetesRecipes(definition).map((kubernetes) => ({
+      name: kubernetes.application.name,
+      lifecycle: kubernetes.application.lifecycle,
+    }));
+    removals.push(
+      PendingRemovalSchema.parse({ environmentId: env.id, applications }),
+    );
   }
   return removals;
 }

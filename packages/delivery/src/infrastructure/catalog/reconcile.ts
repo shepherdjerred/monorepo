@@ -29,6 +29,7 @@ import {
   environmentOwned,
   holdUnrebindable,
   holdUnrebindableService,
+  holdUnremovableService,
   refuseLifecycle,
   requireUnowned,
   serviceOwned,
@@ -160,7 +161,14 @@ async function reconcileServices(
       lifecycle = LifecycleSchema.parse(existing.lifecycle);
     } else if (
       existing.lifecycle !== service.lifecycle &&
-      (await holdUnrebindableService(tx, result, service.id, service.lifecycle))
+      ((await holdUnrebindableService(
+        tx,
+        result,
+        service.id,
+        service.lifecycle,
+      )) ||
+        (service.lifecycle === "removed" &&
+          (await holdUnremovableService(tx, result, service.id))))
     )
       lifecycle = LifecycleSchema.parse(existing.lifecycle);
     if (existing.lineage !== lineage) {
@@ -354,7 +362,7 @@ async function upsertEnvironments(
     );
     const lifecycle = await environmentLifecycle(
       tx,
-      existing,
+      { ...existing, pipelineRevisionId: declared.pipelineRevisionId },
       environment.lifecycle,
       result,
     );

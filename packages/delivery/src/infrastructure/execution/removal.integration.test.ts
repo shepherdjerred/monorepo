@@ -62,3 +62,33 @@ test("a removed environment whose v1 recipe declares no lifecycle policy fails l
     /deploys Application arcade with no lifecycle policy/u,
   );
 });
+
+test("a removed environment whose target has no removal adapter fails loudly", async () => {
+  // The catalog refuses this removal too; silently skipping it would leave
+  // the bucket live with its removal never recorded (4.10).
+  await context.cluster.database.pipeline.create({
+    data: {
+      id: "arcade/site",
+      definition: {
+        kind: "static-site",
+        bucket: "arcade",
+        archiveComponent: "site:arcade",
+        immutablePrefixes: [],
+        extraExcludes: [],
+        entrypoints: ["index.html"],
+        verification: { url: "https://arcade.sjer.red", expectedStatus: 200 },
+      },
+    },
+  });
+  await context.cluster.database.environment.update({
+    where: { id: "arcade/prod" },
+    data: {
+      pipelineRevisionId: "arcade/site",
+      acceptedDeploymentId: null,
+      lifecycle: "removed",
+    },
+  });
+  await expect(context.delivery.pendingRemovals()).rejects.toThrow(
+    /deploys a static-site target that removal cannot destroy/u,
+  );
+});

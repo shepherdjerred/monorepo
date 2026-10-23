@@ -17,6 +17,7 @@ import {
   recipeInstances,
   recipeRunners,
 } from "./recipe-bindings.ts";
+import { targetWithoutRemoval } from "./recipe-view.ts";
 
 const runnerImage =
   "docker.io/shepherdjerred/ci-base@sha256:01851075993f5ebf500a8ea6abe1f3ebfb074a906412a63a3df4905e06ebdd50";
@@ -712,4 +713,61 @@ test("a Tofu stack is its own recipe, never a compound sub-recipe (D6, H6)", () 
   expect(parsed.error?.issues.map((issue) => issue.message)).toContain(
     "A Tofu stack is its own recipe; a compound recipe holds no tofu sub-recipe",
   );
+});
+
+test("only a Kubernetes Application has a removal adapter (4.10)", () => {
+  const kubernetes = KubernetesApplicationRecipeSchema.parse(application());
+  const channel = ChannelRecipeSchema.parse({
+    kind: "channel",
+    store: "npm",
+    name: "@shepherdjerred/webring",
+    pointer: "latest",
+    forwardOnly: false,
+    artifactComponent: "archive:webring-package",
+  });
+  const site = recipeFromPipeline(
+    PipelineDefinitionSchema.parse({
+      kind: "static-site",
+      bucket: "sjer-red",
+      archiveComponent: "site:sjer-red",
+      immutablePrefixes: [],
+      extraExcludes: [],
+      entrypoints: ["index.html"],
+      verification: { url: "https://sjer.red", expectedStatus: 200 },
+    }),
+  );
+  const host = OperatorRunRecipeSchema.parse({
+    kind: "operator-run",
+    wrapped: {
+      kind: "host",
+      instance: "host:liskov",
+      components: ["image:installer"],
+    },
+    stages: ["talos-upgrade"],
+  });
+  const wrappedApplication = OperatorRunRecipeSchema.parse({
+    kind: "operator-run",
+    wrapped: application(),
+    stages: ["apply-safety", "sync"],
+  });
+  const withChannel = CompoundRecipeSchema.parse({
+    kind: "compound",
+    subRecipes: [
+      { instance: "application:arcade", definition: application() },
+      {
+        instance: "channel:npm/@shepherdjerred/webring",
+        pointOfNoReturn: true,
+        definition: channel,
+      },
+    ],
+  });
+  expect(targetWithoutRemoval(kubernetes)).toBeNull();
+  expect(targetWithoutRemoval(wrappedApplication)).toBeNull();
+  expect(targetWithoutRemoval(site)).toBe("static-site");
+  expect(targetWithoutRemoval(tofu("github"))).toBe("tofu");
+  expect(targetWithoutRemoval(tofu("argocd"))).toBe("operator-run tofu");
+  expect(targetWithoutRemoval(channel)).toBe("channel");
+  expect(targetWithoutRemoval(host)).toBe("operator-run host");
+  // A compound is removable only when every sub-recipe is.
+  expect(targetWithoutRemoval(withChannel)).toBe("channel");
 });
