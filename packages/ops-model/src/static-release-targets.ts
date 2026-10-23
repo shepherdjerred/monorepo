@@ -14,5 +14,6 @@ export const STATIC_SITE_DESTINATIONS: Readonly<Record<string, string>> = {
   cook: "static-sites/cook",
   "cross-compilers": "static-sites/cross-compilers",
   "stocks-sjer-red": "static-sites/stocks-sjer-red",
+  "landing-pages": "static-sites/landing-pages",
   "wiki-sjer-red": "static-sites/wiki-sjer-red",
 };

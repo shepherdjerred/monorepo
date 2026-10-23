@@ -1,0 +1,379 @@
+/* Matches the friendly Pinterest set: Outfit + Lora italic, paper frames, and
+   the ads' cream / lilac / sage grounds. The ads are light-only, so is this. */
+:root {
+  color-scheme: light;
+  --cream: #f6f2df;
+  --cream-chip: #e6ead4;
+  --lilac: #f0edf6;
+  --lilac-chip: #e3deee;
+  --sage: #e9f0e4;
+  --sage-chip: #d9e5d2;
+  --paper: #fffefa;
+  --rule: #dbdec8;
+  --ink: #3a4b3d;
+  --ink-soft: #5d6b5f;
+  --plum: #4a4059;
+  --sans: "Outfit Variable", system-ui, sans-serif;
+  --serif: "Lora Variable", Georgia, serif;
+  --gutter: clamp(1rem, 5vw, 3rem);
+  --radius: 28px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1.125rem;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+section,
+footer {
+  padding: clamp(2.5rem, 8vw, 5rem) var(--gutter);
+}
+
+section > * {
+  max-width: 72rem;
+  margin-inline: auto;
+}
+
+.tone-cream {
+  background: var(--cream);
+  --chip: var(--cream-chip);
+}
+.tone-lilac {
+  background: var(--lilac);
+  --chip: var(--lilac-chip);
+  color: var(--plum);
+}
+.tone-sage {
+  background: var(--sage);
+  --chip: var(--sage-chip);
+}
+
+/* Type */
+
+h1,
+h2 {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+  text-wrap: balance;
+}
+h1 {
+  font-size: clamp(3.25rem, 13vw, 6.5rem);
+}
+h2 {
+  font-size: clamp(2.6rem, 10vw, 4.75rem);
+}
+h1 em,
+h2 em {
+  display: block;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+.lede {
+  margin: 1rem 0 0;
+  font-size: clamp(1.25rem, 4.5vw, 1.6rem);
+  line-height: 1.3;
+}
+
+.chip {
+  display: inline-block;
+  margin: 0 0 1.5rem;
+  padding: 0.45rem 1.4rem;
+  border-radius: 999px;
+  background: var(--chip);
+  font-size: 1.05rem;
+}
+
+.label {
+  display: block;
+  font-size: 1.1rem;
+}
+
+code {
+  font-family: var(--sans);
+  font-weight: 600;
+  padding: 0.05em 0.35em;
+  border-radius: 0.4em;
+  background: var(--chip);
+}
+
+/* Paper frames around screenshots */
+
+.frame {
+  margin: 0;
+  padding: clamp(10px, 2vw, 16px);
+  border-radius: calc(var(--radius) + 8px);
+  background: var(--paper);
+  box-shadow: 0 1px 0 rgb(58 75 61 / 0.08);
+}
+.frame picture,
+.frame img {
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* Hero */
+
+.hero {
+  display: grid;
+  gap: clamp(1.5rem, 4vw, 2.25rem);
+  grid-template-areas: "copy" "photo" "connect" "ctas";
+}
+.hero > * {
+  width: 100%;
+}
+.hero-copy {
+  grid-area: copy;
+}
+.hero-photo {
+  grid-area: photo;
+  aspect-ratio: 2 / 1.08;
+}
+.connect {
+  grid-area: connect;
+}
+.hero .ctas {
+  grid-area: ctas;
+}
+
+/* Address card */
+
+.connect {
+  padding: clamp(1.25rem, 4vw, 2rem);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.edition + .edition {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1.5px solid var(--rule);
+}
+.edition-head,
+.port-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.address {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: clamp(2rem, 12vw, 4rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  white-space: nowrap;
+  user-select: all;
+}
+.port {
+  font-size: clamp(1.5rem, 6vw, 2rem);
+}
+.port strong {
+  font-weight: 600;
+  user-select: all;
+}
+.note {
+  margin: 1.25rem 0 0;
+  color: var(--ink-soft);
+  font-size: 1rem;
+}
+
+.copy {
+  flex: none;
+  min-width: 5.5rem;
+  padding: 0.55rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--cream-chip);
+  color: var(--ink);
+  font: 600 1rem var(--sans);
+  cursor: pointer;
+  transition: background-color 120ms;
+}
+.copy:hover {
+  background: var(--rule);
+}
+.copy[data-state="copied"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+.copy:focus-visible,
+.button:focus-visible,
+footer a:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* Buttons */
+
+.ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.button {
+  display: inline-flex;
+  flex: 1 1 12rem;
+  justify-content: center;
+  padding: 1rem 1.6rem;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 1.15rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.button:hover {
+  background: var(--paper);
+}
+.button.primary {
+  background: var(--ink);
+  color: var(--paper);
+}
+.button.primary:hover {
+  background: #2c3a2f;
+}
+
+/* Java + Bedrock */
+
+.together,
+.join {
+  display: grid;
+  gap: clamp(1.5rem, 4vw, 2.25rem);
+}
+.together > *,
+.join > * {
+  width: 100%;
+}
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(0.75rem, 2vw, 1rem);
+}
+.pair .frame {
+  aspect-ratio: 3 / 3.4;
+}
+.points {
+  display: grid;
+  gap: 1rem;
+  margin-block: 0;
+  padding: 0;
+  list-style: none;
+}
+.points li {
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.points strong {
+  display: block;
+  font-size: 1.35rem;
+}
+
+/* How to join */
+
+.steps {
+  display: grid;
+  gap: 1rem;
+  margin-block: 0;
+  padding: 0;
+  list-style: none;
+}
+.steps li {
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.steps p {
+  margin: 0.25rem 0 0;
+  font-size: 1.2rem;
+}
+.steps .label {
+  color: var(--ink-soft);
+}
+
+/* Footer */
+
+footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1.5px solid var(--rule);
+}
+.wordmark {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+footer a {
+  color: inherit;
+}
+
+@media (min-width: 960px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    grid-template-areas:
+      "copy photo"
+      "connect photo"
+      "ctas photo";
+    grid-template-rows: auto auto 1fr;
+    column-gap: 3.5rem;
+    align-items: start;
+  }
+  .hero-photo {
+    aspect-ratio: auto;
+    height: 100%;
+    min-height: 34rem;
+  }
+  .together,
+  .join {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+    column-gap: 3.5rem;
+    align-items: start;
+  }
+  .together .pair {
+    grid-row: span 2;
+  }
+  .join .steps {
+    grid-row: span 2;
+  }
+  .address {
+    font-size: 3.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copy {
+    transition: none;
+  }
+}

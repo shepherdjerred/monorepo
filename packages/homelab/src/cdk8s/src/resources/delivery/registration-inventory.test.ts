@@ -132,7 +132,7 @@ test("every served static bucket has one pipeline or an explicit independent wri
   }
   const registered = pipelines.map((pipeline) => pipeline.bucket).sort();
   expect(registered).toEqual([...storagePolicy.siteBuckets].sort());
-  expect(pipelines).toHaveLength(15);
+  expect(pipelines).toHaveLength(16);
   for (const stage of ["beta", "prod"]) {
     const environment = z
       .object({ id: z.string() })

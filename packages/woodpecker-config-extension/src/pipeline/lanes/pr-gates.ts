@@ -20,6 +20,7 @@ const DRY_RUN_SITES = [
   "webring",
   "cooklang-rich-preview",
   "stocks-sjer-red",
+  "landing-pages",
   "cross-compilers-site",
   "wiki",
   "better-skill-capped",

@@ -157,7 +157,7 @@ describe("immutable static archives", () => {
 
 describe("one static-site writer", () => {
   test("all reviewed archive and Scout buckets exclude the legacy writer by default", () => {
-    expect(Object.keys(STATIC_SITE_DELIVERY_OWNERS)).toHaveLength(15);
+    expect(Object.keys(STATIC_SITE_DELIVERY_OWNERS)).toHaveLength(16);
     for (const [bucket, environment] of Object.entries(
       STATIC_SITE_DELIVERY_OWNERS,
     )) {

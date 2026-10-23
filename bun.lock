@@ -1142,6 +1142,22 @@
         "vitest": "5.0.3",
       },
     },
+    "packages/landing-pages": {
+      "name": "@shepherdjerred/landing-pages",
+      "version": "1.0.0",
+      "dependencies": {
+        "@astrojs/check": "^0.9.10",
+        "@fontsource-variable/lora": "^5.3.0",
+        "@fontsource-variable/outfit": "^5.3.0",
+        "astro": "^7.3.3",
+        "sharp": "^0.35.0",
+      },
+      "devDependencies": {
+        "@types/bun": "1.4.2",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "typescript": "^6.0.3",
+      },
+    },
     "packages/leetcode": {
       "name": "@shepherdjerred/leetcode",
       "version": "0.1.0",
@@ -3534,6 +3550,8 @@
 
     "@fontsource-variable/lora": ["@fontsource-variable/lora@5.3.0", "", {}, "sha512-2ph8KiZ8Bn141hWuC3ErtpJ+Ui8p2MJQn8TJNRSRmLmnCIOCtHfiBM9R7WLRPeUG/q6hXyHOxWQ8DvRSX+ixvQ=="],
 
+    "@fontsource-variable/outfit": ["@fontsource-variable/outfit@5.3.0", "", {}, "sha512-fPb5XnYK0k7SbR++HEmm4+ZqDszmLKQ+sPRUr8oQ/KNC0vy6r6hazJFe8iYozv4cqlHbvJ/JECkJWrfDodUMVQ=="],
+
     "@fontsource/nunito": ["@fontsource/nunito@5.3.0", "", {}, "sha512-vw9TaTQJ/zpEpKrsODuPmOvaVjXgdda6B+xXA4YqjrdeJ62MLgVoDerdRXFQHyBnSCt2yQ2nHKCHPP/Pv7Xq4Q=="],
 
     "@fontsource/pixelify-sans": ["@fontsource/pixelify-sans@5.3.0", "", {}, "sha512-4RCe9nXbi7wUu5+H0FNX1sgPZ2kJ1MmY1uTkEfvQIzzqhoS8zGKJaJfdK8oreE0OU+5gM+NdurFi3H3FJRBvyw=="],
@@ -4567,6 +4585,8 @@
     "@shepherdjerred/home-assistant": ["@shepherdjerred/home-assistant@workspace:packages/home-assistant"],
 
     "@shepherdjerred/justin-principal-engineer": ["@shepherdjerred/justin-principal-engineer@workspace:packages/justin-principal-engineer"],
+
+    "@shepherdjerred/landing-pages": ["@shepherdjerred/landing-pages@workspace:packages/landing-pages"],
 
     "@shepherdjerred/leetcode": ["@shepherdjerred/leetcode@workspace:packages/leetcode"],
 

@@ -339,6 +339,7 @@ packages/architecture:build
 packages/cooklang-rich-preview:test
 packages/cross-compilers-site:test
 packages/stocks-sjer-red:test
+packages/landing-pages:test
 packages/discord-video-stream:lint
 packages/discord-plays-mario-kart/packages/common:test
 packages/discord-plays-pokemon/packages/common:test

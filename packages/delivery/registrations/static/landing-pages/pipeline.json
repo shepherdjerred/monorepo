@@ -1,0 +1,13 @@
+{
+  "kind": "static-site",
+  "archiveComponent": "site:landing-pages",
+  "bucket": "landing-pages",
+  "cloudflareZoneId": "879487f81194d63121d0b8dddd16f08f",
+  "immutablePrefixes": ["_astro/"],
+  "extraExcludes": [],
+  "entrypoints": ["index.html"],
+  "verification": {
+    "url": "https://pages.sjer.red/",
+    "expectedStatus": 200
+  }
+}
