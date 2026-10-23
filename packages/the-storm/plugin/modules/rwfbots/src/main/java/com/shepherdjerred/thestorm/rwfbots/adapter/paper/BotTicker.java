@@ -296,7 +296,8 @@ public final class BotTicker {
         new ReflexContext(
             match.nav().grid(),
             profile.levers(),
-            PaperLoadouts.available(bot.loadout(), roster.bodies().entity(bot.uuid())),
+            PaperLoadouts.available(
+                bot.loadout(self.orElseThrow().kit()), roster.bodies().entity(bot.uuid())),
             roster.harness().controlled(match.matchId())
                 ? ReflexContext.Habits.NONE
                 : ReflexContext.Habits.of(profile.archetype(), profile.quirks()));
