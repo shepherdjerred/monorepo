@@ -22,11 +22,13 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.BombOwner;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombState;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.MatchPhase;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.PoisonView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -50,20 +52,36 @@ final class BombGuardTest {
 
   /** A red guard 11 blocks east of its bomb, with an enemy {@code distance} further east. */
   private static Situation situation(Role role, double distance, Vec3 vel, Blackboard board) {
-    var self = combatant(1, RED, BOMB.plus(11, -0.5, 0));
-    var enemy = combatant(2, BLUE, BOMB.plus(distance, -0.5, 0)).withVel(vel);
+    return guard(1, role, board, approaching(distance, vel));
+  }
+
+  /** The enemy {@code distance} east of the bomb, moving at {@code vel}. */
+  private static CombatantView approaching(double distance, Vec3 vel) {
+    return combatant(ENEMY.value(), BLUE, BOMB.plus(distance, -0.5, 0)).withVel(vel);
+  }
+
+  /** Red guard {@code id}, 11 blocks east of its bomb, seeing {@code enemies}. */
+  private static Situation guard(int id, Role role, Blackboard board, CombatantView... enemies) {
+    var self = combatant(id, RED, BOMB.plus(11, -0.5, 0));
     var bomb = new BombView(new BombId(0), new BombOwner.Team(RED), BOMB, new BombState.Idle());
+    var views = new ArrayList<CombatantView>();
+    views.add(self);
+    views.addAll(List.of(enemies));
     var snapshot =
         new WorldSnapshot(
-            50,
-            MatchPhase.LIVE,
-            List.of(self, enemy),
-            List.of(bomb),
-            PoisonView.NONE,
-            NAV.mapId(),
-            List.of());
+            50, MatchPhase.LIVE, views, List.of(bomb), PoisonView.NONE, NAV.mapId(), List.of());
     return new Situation(
-        self, snapshot, new Percept(PerceptionState.EMPTY, List.of(enemy), 50), board, role);
+        self, snapshot, new Percept(PerceptionState.EMPTY, List.of(enemies), 50), board, role);
+  }
+
+  /** {@code board} once guard {@code situation} has committed {@code plan}. */
+  private static Blackboard commit(Blackboard board, Situation situation, Plan plan) {
+    var decision = Planner.decide(plan, situation, CONTEXT, 0);
+    return board.note(situation.self().id(), Tactics.note(plan, decision, situation, CONTEXT));
+  }
+
+  private static Vec3 post(Plan plan) {
+    return ((PlanStep.Hold) plan.steps().getLast()).pos();
   }
 
   private static Situation situation(Role role, double distance, Vec3 vel) {
@@ -131,5 +149,65 @@ final class BombGuardTest {
     assertThat(plan.current()).isEqualTo(new PlanStep.Fight(ENEMY));
     var close = Planner.expand(Option.RETAKE, situation(Role.DEFEND, 16, TOWARDS), CONTEXT);
     assertThat(close.current()).isEqualTo(new PlanStep.Fight(ENEMY));
+  }
+
+  @Test
+  void threeGuardsDecidingInOneCycleLeaveTheThirdOut() {
+    // Every guard plans against the board as it stood at the start of the cycle.
+    var start = Blackboard.open(RED, Strategy.TURTLE);
+    var ids = List.of(1, 3, 5);
+    var proposals = new ArrayList<Plan>();
+    for (var id : ids) {
+      var plan =
+          Planner.expand(
+              Option.RETAKE, guard(id, Role.DEFEND, start, approaching(24, TOWARDS)), CONTEXT);
+      assertThat(plan.answer()).map(Plan.Answer::enemy).contains(ENEMY);
+      proposals.add(plan);
+    }
+    // They commit one after another; a proposal the board has moved past is re-planned.
+    var board = start;
+    var posts = new ArrayList<Vec3>();
+    for (var i = 0; i < ids.size(); i++) {
+      var id = ids.get(i);
+      var now = guard(id, Role.DEFEND, board, approaching(24, TOWARDS));
+      var plan = proposals.get(i);
+      if (!BombGuard.admitted(plan, now.self().id(), board, now.now())) {
+        plan = Planner.expand(Option.RETAKE, now, CONTEXT);
+      }
+      assertThat(BombGuard.admitted(plan, now.self().id(), board, now.now())).isTrue();
+      if (plan.answer().isPresent()) posts.add(post(plan));
+      board = commit(board, now, plan);
+    }
+    assertThat(board.chasers(ENEMY, new CombatantId(99))).isEqualTo(Situation.MAX_CHASERS);
+    assertThat(posts).hasSize(2);
+    assertThat(posts.getFirst().distance(posts.getLast())).isGreaterThan(1);
+  }
+
+  @Test
+  void twoGuardsWithEvenIdsTakeOppositeSidesOfTheEnemysBearing() {
+    var board = Blackboard.open(RED, Strategy.TURTLE);
+    var first = guard(4, Role.DEFEND, board, approaching(24, TOWARDS));
+    var firstPlan = Planner.expand(Option.RETAKE, first, CONTEXT);
+    board = commit(board, first, firstPlan);
+    var second = guard(6, Role.DEFEND, board, approaching(24, TOWARDS));
+    var secondPlan = Planner.expand(Option.RETAKE, second, CONTEXT);
+    assertThat(firstPlan.answer()).contains(new Plan.Answer(ENEMY, 0));
+    assertThat(secondPlan.answer()).contains(new Plan.Answer(ENEMY, 1));
+    assertThat(post(firstPlan).distance(post(secondPlan))).isGreaterThan(1);
+    assertThat(post(firstPlan).x()).isGreaterThan(BOMB.x());
+    assertThat(post(secondPlan).x()).isGreaterThan(BOMB.x());
+  }
+
+  @Test
+  void aGuardsNoteNamesTheEnemyItsPlanMeetsEvenWhenAnotherIsNowNearer() {
+    var board = Blackboard.open(RED, Strategy.TURTLE);
+    var plan =
+        Planner.expand(
+            Option.RETAKE, guard(1, Role.DEFEND, board, approaching(24, TOWARDS)), CONTEXT);
+    var other = combatant(7, BLUE, BOMB.plus(-18, -0.5, 0)).withVel(TOWARDS.scale(-1));
+    var later = guard(1, Role.DEFEND, board, approaching(24, TOWARDS), other);
+    assertThat(BombGuard.approach(later).orElseThrow().enemy()).isEqualTo(other.id());
+    var note = Tactics.note(plan, Planner.decide(plan, later, CONTEXT, 0), later, CONTEXT);
+    assertThat(note.chasing()).contains(ENEMY);
   }
 }

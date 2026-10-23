@@ -1034,7 +1034,16 @@ public final class ThinkLoop {
       }
     }
 
+    /**
+     * Whether a proposal made against an older board clashes with what teammates committed since:
+     * it takes cover a teammate now holds, or it answers an enemy now answered too often, or from a
+     * side of the ring another guard now takes.
+     */
     private boolean conflicting(Cycle cycle, Proposal proposal, Blackboard board) {
+      return !Tactics.admitted(proposal.thought(), board) || coverTaken(cycle, proposal, board);
+    }
+
+    private boolean coverTaken(Cycle cycle, Proposal proposal, Blackboard board) {
       var cover = proposal.thought().note().cover();
       if (cover.isEmpty()) return false;
       var graph = cycle.current().nav().graph();
@@ -1055,7 +1064,7 @@ public final class ThinkLoop {
               ? propose(cycle, new TacticsWork(mind, team.board), workspaces.getFirst())
               : original;
       if (conflicting(cycle, proposal, team.board)) {
-        throw new IllegalStateException("Conflicting cover proposal for " + id);
+        throw new IllegalStateException("Conflicting tactics proposal for " + id);
       }
       var thought = proposal.thought();
       mind.tacticsState = thought.state();

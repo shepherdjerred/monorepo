@@ -6,6 +6,7 @@ import static java.util.Comparator.comparingDouble;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavGraph;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Sighting;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.Blackboard;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.SlotKind;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
@@ -36,8 +37,17 @@ final class BombGuard {
 
   private BombGuard() {}
 
-  /** An enemy approaching {@code bomb}, where the guard last knew it to be. */
-  record Approach(CombatantId enemy, Vec3 pos, BombView bomb) {}
+  /**
+   * An enemy approaching {@code bomb}, where the guard last knew it to be, and how many teammates
+   * already answer it.
+   */
+  record Approach(CombatantId enemy, Vec3 pos, BombView bomb, int rank) {
+
+    /** What a plan meeting this approach records. */
+    Plan.Answer answer() {
+      return new Plan.Answer(enemy, rank);
+    }
+  }
 
   /** A known enemy's position and motion. */
   private record Track(CombatantId id, Vec3 pos, Vec3 vel) {}
@@ -58,12 +68,12 @@ final class BombGuard {
     if (!guards(situation)) return Optional.empty();
     var approaches = new ArrayList<Approach>();
     for (var track : tracks(situation)) {
-      if (situation.board().chasers(track.id(), situation.self().id()) >= Situation.MAX_CHASERS)
-        continue;
+      var rank = situation.board().chasers(track.id(), situation.self().id());
+      if (rank >= Situation.MAX_CHASERS) continue;
       situation.ownBombs().stream()
           .filter(bomb -> closing(track, bomb))
           .min(comparingDouble(bomb -> bomb.pos().distance(track.pos())))
-          .ifPresent(bomb -> approaches.add(new Approach(track.id(), track.pos(), bomb)));
+          .ifPresent(bomb -> approaches.add(new Approach(track.id(), track.pos(), bomb, rank)));
     }
     return approaches.stream()
         .min(
@@ -107,16 +117,44 @@ final class BombGuard {
   }
 
   /**
-   * Where a guard answering {@code approach} stands: the point of the retake ring round the bomb on
-   * the enemy's side, the two responders a little either side of the enemy's bearing. The ring lies
-   * well inside an anchor's post, so the answer never takes a guard further from the bomb.
+   * Whether a guard plan still fits {@code board} at commit: its enemy has fewer than {@link
+   * Situation#MAX_CHASERS} other answers, and a plan made this think ({@code thinkTick}) was made
+   * against as many answers as the board now holds, so its side of the ring is still its own.
+   * Guards deciding in one cycle all plan against the same board, so without this check several
+   * could answer one enemy, or two could take the same side.
    */
-  static Vec3 post(Situation situation, NavGraph graph, Approach approach) {
+  static boolean admitted(Plan plan, CombatantId self, Blackboard board, long thinkTick) {
+    if (plan.answer().isEmpty()) return true;
+    var answer = plan.answer().orElseThrow();
+    var chasers = board.chasers(answer.enemy(), self);
+    var fresh = plan.startedTick() == thinkTick;
+    return chasers < Situation.MAX_CHASERS && (!fresh || chasers == answer.rank());
+  }
+
+  /**
+   * Whether a guard plan under way may continue: its enemy is not already answered by {@link
+   * Situation#MAX_CHASERS} teammates, so a re-plan never keeps an over-answered plan.
+   */
+  static boolean stillAnswering(Plan plan, Situation situation) {
+    return plan.answer()
+        .filter(
+            answer ->
+                situation.board().chasers(answer.enemy(), situation.self().id())
+                    >= Situation.MAX_CHASERS)
+        .isEmpty();
+  }
+
+  /**
+   * Where a guard answering {@code approach} stands: the point of the retake ring round the bomb on
+   * the enemy's side, the first responder a little to one side of the enemy's bearing and the
+   * second a little to the other. The ring lies well inside an anchor's post, so the answer never
+   * takes a guard further from the bomb.
+   */
+  static Vec3 post(NavGraph graph, Approach approach) {
     var centre = approach.bomb().pos().plus(0, -0.5, 0);
     var bearing = approach.pos().minus(centre).horizontal();
     var angle =
-        StrictMath.atan2(bearing.z(), bearing.x())
-            + (situation.self().id().value() % 2 == 0 ? SPREAD : -SPREAD);
+        StrictMath.atan2(bearing.z(), bearing.x()) + (approach.rank() == 0 ? SPREAD : -SPREAD);
     var point =
         centre.plus(
             new Vec3(StrictMath.cos(angle), 0, StrictMath.sin(angle)).scale(Planner.RETAKE_RING));

@@ -130,8 +130,9 @@ final class TeamPlayTest {
   // Holders patrol between posts about their hold instead of standing still.
   // Archers hold a draw ready through brief sight loss and take skill-scaled long shots, clearing
   // teammates along the led arrow path and re-settling their aim when the target changes.
-  // Holders watch visible enemies at any range and guards meet attackers on their way in.
-  private static final String PINNED_YARD_HASH = "d8afed8b3efda653";
+  // Holders watch visible enemies at any range and guards meet attackers on their way in, at most
+  // two per attacker on opposite sides of its bearing.
+  private static final String PINNED_YARD_HASH = "52b08674dfcf8519";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {
