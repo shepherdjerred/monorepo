@@ -454,9 +454,13 @@ COPY --parents \
   packages/the-storm/server/*.py \
   packages/the-storm/server/restoration-guards.json \
   packages/delivery/src/shared \
+  packages/delivery/src/domain/error.ts \
+  packages/delivery/src/infrastructure/artifact-stores/oci-registry.ts \
   scripts/lib \
   packages/homelab/scripts/argocd/argocd-delivery.ts \
   packages/homelab/scripts/argocd/argocd-apply-safety.ts \
+  packages/homelab/scripts/argocd/argocd-destructive-changes.ts \
+  packages/homelab/scripts/argocd/argocd-json-path.ts \
   packages/homelab/scripts/argocd/argocd-auto-sync-policy.ts \
   packages/homelab/scripts/argocd/argocd-child-sync-timeout.ts \
   packages/homelab/scripts/argocd/argocd-delivery-recovery.ts \
