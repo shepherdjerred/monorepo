@@ -21,11 +21,14 @@ import {
 import { applicationProgress } from "#lib/delivery/model/application-proof.ts";
 import type { KubernetesApplicationRecipe } from "#lib/delivery/model/recipe.ts";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
-import { runGuardedArgoCommand } from "#activities/delivery/argocd.ts";
+import {
+  argoRequest,
+  runGuardedArgoCommand,
+} from "#activities/delivery/argocd.ts";
 import { recordStage, requireOwned } from "./stages.ts";
 import { workerRolloutPreflight } from "./worker-rollout.ts";
 import { minecraftSyncFence } from "./minecraft-upgrade.ts";
-import { forumBaselineFence } from "./forum-bundle.ts";
+import { forumBaselineFence, forumSyncPrune } from "./forum-bundle.ts";
 
 const READBACK_ATTEMPTS = 120;
 const READBACK_INTERVAL_MS = 5000;
@@ -209,6 +212,8 @@ export async function sync(
   if (!before.requested) {
     // A preserved world switches images only with fresh preservation proof.
     minecraftSyncFence(current, recipe);
+    // A forum release replaces the prior release's terminal migration Job.
+    const prune = await forumSyncPrune(current, recipe, argoRequest);
     await runGuardedArgoCommand(
       [
         "sync-managed",
@@ -217,6 +222,7 @@ export async function sync(
         rendered.revision,
         "--request-id",
         requestId,
+        ...(prune ? ["--prune"] : []),
         "--timeout",
         "1200",
       ],

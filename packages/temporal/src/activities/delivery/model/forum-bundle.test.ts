@@ -20,7 +20,13 @@ import {
   forumDetail,
   forumRecipe,
 } from "#lib/delivery/model/forum-testing.ts";
-import { runForumBundleStep, type ForumBundleEffects } from "./forum-bundle.ts";
+import { deliverySelectionPatch } from "homelab/scripts/argocd/argocd-delivery.ts";
+import { canonicalJson } from "homelab/scripts/canonical-json.ts";
+import {
+  forumPruneSelection,
+  runForumBundleStep,
+  type ForumBundleEffects,
+} from "./forum-bundle.ts";
 
 const KEY = "step-forum-bundle";
 const JOB = `storm-forum-release-${forumReleaseId("deployment/1")}`;
@@ -331,5 +337,40 @@ describe("forum release inputs in a compound recipe", () => {
         name.startsWith("delivery."),
       ),
     ).toEqual(["delivery.image"]);
+  });
+});
+
+describe("forum sync pruning", () => {
+  test("the prune guard's selection reproduces the written Application's exact source", () => {
+    const { current, recipe } = forumDetail();
+    const rendered = renderApplication(current, recipe);
+    const selection = forumPruneSelection(current, recipe);
+    expect(selection).toMatchObject({
+      application: "storm-forum",
+      chart: "storm-forum",
+      namespace: "storm-forum",
+      revision: "1.0.1",
+    });
+    expect(selection?.parameters["delivery.releaseId"]).toBe(
+      forumReleaseId("deployment/1"),
+    );
+    // `forumSyncPrunes` refuses unless this patch leaves the source unchanged.
+    const live = {
+      ...rendered.body,
+      metadata: { ...rendered.body.metadata, resourceVersion: "7" },
+    };
+    if (selection === null) throw new Error("The forum recipe prunes");
+    const patch = deliverySelectionPatch(live, selection);
+    expect(canonicalJson(patch[2]?.value)).toBe(canonicalJson(rendered.source));
+  });
+
+  test("an Application without a forum-bundle step never prunes", () => {
+    const { current, recipe } = forumDetail();
+    expect(
+      forumPruneSelection(current, {
+        ...recipe,
+        steps: recipe.steps.filter((step) => step.kind !== "forum-bundle"),
+      }),
+    ).toBeNull();
   });
 });

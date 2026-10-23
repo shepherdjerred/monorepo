@@ -72,6 +72,21 @@ function forumInputs(
 }
 
 /**
+ * The configuration an Application renders with: the frozen configuration
+ * revision, plus the parameters its own steps derive from the deployment.
+ */
+export function renderConfiguration(
+  detail: DeploymentDetail,
+  recipe: KubernetesApplicationRecipe,
+): Record<string, string> {
+  return {
+    ...detail.configuration.content,
+    ...runtimeParameters(detail, recipe),
+    ...forumInputs(detail, recipe),
+  };
+}
+
+/**
  * The Application a deployment writes, from the one shared renderer the
  * cold-start tool also uses, over the deployment's frozen selection.
  */
@@ -83,11 +98,7 @@ export function renderApplication(
   const body = renderShared({
     recipe,
     environmentId: detail.deployment.environmentId,
-    configuration: {
-      ...detail.configuration.content,
-      ...runtimeParameters(detail, recipe),
-      ...forumInputs(detail, recipe),
-    },
+    configuration: renderConfiguration(detail, recipe),
     artifacts: selectionArtifacts(detail),
   });
   const sourceArtifact = components[recipe.chartComponent];

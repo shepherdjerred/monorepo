@@ -11,7 +11,7 @@ import type * as Stages from "./stages.ts";
 const calls = vi.hoisted(() => {
   const events: string[] = [];
   const reads: unknown[] = [];
-  return { events, reads };
+  return { events, reads, prune: false };
 });
 vi.mock("@temporalio/activity", async (importOriginal) => ({
   ...(await importOriginal<typeof Activity>()),
@@ -47,6 +47,7 @@ vi.mock("#lib/delivery/argo-client.ts", async (importOriginal) => ({
 }));
 vi.mock("#activities/delivery/argocd.ts", async (importOriginal) => ({
   ...(await importOriginal<typeof Argocd>()),
+  argoRequest: () => Promise.resolve(null),
   runGuardedArgoCommand: (args: string[]) => {
     calls.events.push(args.join(" "));
     return Promise.resolve();
@@ -65,6 +66,7 @@ vi.mock("./forum-bundle.ts", () => ({
     calls.events.push("baseline-check");
     return Promise.resolve();
   },
+  forumSyncPrune: () => Promise.resolve(calls.prune),
 }));
 
 const { applySafety, sync } = await import("./kubernetes.ts");
@@ -115,6 +117,7 @@ function application(synced: boolean) {
 afterEach(() => {
   calls.events = [];
   calls.reads = [];
+  calls.prune = false;
 });
 
 describe("Kubernetes steps of a forum release", () => {
@@ -130,18 +133,29 @@ describe("Kubernetes steps of a forum release", () => {
     ]);
   });
 
-  test("the sync applies the written source without re-checking the baseline", async () => {
-    const { current, recipe } = fixture();
-    calls.reads = [application(false), application(true)];
-    await sync(current, recipe, "step-sync");
-    expect(calls.events).toContain(
-      [
-        "sync-managed storm-forum --revision 1.0.1 --request-id",
-        deliveryOperationId(current.deployment.id),
-        "--timeout 1200",
-      ].join(" "),
-    );
-    // The baseline was re-observed before the source changed, not here.
-    expect(calls.events).not.toContain("baseline-check");
-  });
+  test.each([
+    [true, ["--prune"]],
+    [false, []],
+  ])(
+    "the sync prunes the prior release Job only when the guard allows it (%s)",
+    async (prune, flags) => {
+      const { current, recipe } = fixture();
+      calls.prune = prune;
+      calls.reads = [application(false), application(true)];
+      await sync(current, recipe, "step-sync");
+      const command = calls.events.find((event) =>
+        event.startsWith("sync-managed"),
+      );
+      expect(command).toBe(
+        [
+          "sync-managed storm-forum --revision 1.0.1 --request-id",
+          deliveryOperationId(current.deployment.id),
+          ...flags,
+          "--timeout 1200",
+        ].join(" "),
+      );
+      // The baseline was re-observed before the source changed, not here.
+      expect(calls.events).not.toContain("baseline-check");
+    },
+  );
 });
