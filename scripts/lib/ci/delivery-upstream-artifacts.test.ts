@@ -5,6 +5,7 @@ import { DeliveryClientError } from "@shepherdjerred/delivery/client";
 import type { AcquireUpstreamArtifact } from "@shepherdjerred/delivery/contract";
 import { ArtifactVersionSchema } from "@shepherdjerred/delivery/contract";
 import {
+  catalogComponentName,
   componentEntries,
   parseVersionCatalog,
   type VersionCatalogEntry,
@@ -12,7 +13,6 @@ import {
 import rawVersionCatalog from "@shepherdjerred/version-catalog/catalog.json";
 import { CATALOG_CORE } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import {
-  catalogComponentName,
   componentArtifactsForPublication,
   MIRRORED_CHARTS,
   v1AcquisitionCatalog,
@@ -91,7 +91,7 @@ const minecraftImage: VersionCatalogEntry = {
   component: true,
 };
 const nonComponent: VersionCatalogEntry = {
-  name: "kueue",
+  name: "cert-manager",
   category: "upstream",
   artifactType: "helm-chart",
   management: { managed: false },
@@ -486,10 +486,49 @@ test("v1 acquires only the Minecraft chart until the window's catalog flip", () 
   ).toEqual(["minecraft"]);
 });
 
-test("a catalog component is a chart by name and an image by repository basename", () => {
-  expect(catalogComponentName(minecraftChart)).toBe("chart:minecraft");
-  expect(catalogComponentName(busybox)).toBe("image:busybox");
-  expect(catalogComponentName(nonComponent)).toBe("chart:kueue");
+test("v2 acquires an OCI chart from its registry by digest, with no Helm index or mirror", async () => {
+  const kueue = parseVersionCatalog(rawVersionCatalog).entries.find(
+    (entry) => entry.name === "kueue",
+  );
+  if (kueue === undefined) throw new Error("Kueue chart entry missing");
+  const requests: AcquireUpstreamArtifact[] = [];
+  const selected = await componentArtifactsForPublication(
+    {
+      latestQualifiedArtifact: async () => {
+        throw new DeliveryClientError(404, "NOT_FOUND", "No original");
+      },
+      acquireUpstreamArtifact: async (input) => {
+        requests.push(input);
+        return verified(input);
+      },
+    },
+    catalog(kueue),
+    producer,
+    {
+      credentials: unexpected,
+      mirror: unexpected,
+      transport: unexpected,
+      registry: "v2",
+    },
+  );
+  const [pinnedVersion = "", digest = ""] = kueue.value.split("@");
+  expect(selected.map((artifact) => artifact.serviceId)).toEqual(["kueue"]);
+  expect(requests.map((request) => request.artifact)).toEqual([
+    expect.objectContaining({
+      component: "chart:kueue",
+      kind: "chart",
+      uri: "oci://registry.k8s.io/kueue/charts/kueue",
+      digest,
+      version: pinnedVersion,
+      origin: {
+        kind: "upstream",
+        repository: "https://registry.k8s.io",
+        name: "kueue/charts/kueue",
+        version: pinnedVersion,
+        checksum: digest,
+      },
+    }),
+  ]);
 });
 
 test("v2 registers one acquisition under every catalog service that acquires the component", async () => {
@@ -579,10 +618,5 @@ test("the version catalog's components are exactly the charts and images catalog
         .map((component) => component.name),
     ),
   );
-  // An OCI chart has no acquisition path yet; it joins with the scheme-less
-  // OCI source in the restack onto the Delivery v2 contracts.
-  const awaitingOciAcquisition = new Set(["chart:kueue"]);
-  expect([...components].sort()).toEqual(
-    [...acquired].filter((name) => !awaitingOciAcquisition.has(name)).sort(),
-  );
+  expect([...components].sort()).toEqual([...acquired].sort());
 });

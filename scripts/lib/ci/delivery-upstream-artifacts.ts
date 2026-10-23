@@ -14,7 +14,10 @@ import {
 } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import type { OwnerRegistry } from "@shepherdjerred/ops-model/delivery-catalog/publication-owners.ts";
 import {
+  catalogComponentName,
   componentEntries,
+  ociChart,
+  upstreamName,
   type VersionCatalog,
   type VersionCatalogEntry,
 } from "@shepherdjerred/version-catalog";
@@ -88,21 +91,6 @@ export function v1AcquisitionCatalog(catalog: VersionCatalog): VersionCatalog {
   };
 }
 
-/** The catalog component an entry is: a chart by name, an image by repository basename. */
-export function catalogComponentName(entry: VersionCatalogEntry): string {
-  switch (entry.artifactType) {
-    case "helm-chart":
-      return `chart:${entry.name}`;
-    case "image":
-      return `image:${entry.name.slice(entry.name.lastIndexOf("/") + 1)}`;
-    case "package":
-    case "source":
-      throw new Error(
-        `Component ${entry.name} is a ${entry.artifactType}, which Delivery cannot acquire`,
-      );
-  }
-}
-
 /** One intent per catalog service that acquires the entry's component. */
 function catalogIntents(
   entry: VersionCatalogEntry,
@@ -133,6 +121,14 @@ function chartIdentity(
 ): Omit<UpstreamIntent, "serviceId"> {
   if (!entry.management.managed || entry.management.registryUrl === undefined)
     throw new Error(`Component chart ${entry.name} has no registryUrl`);
+  // An OCI chart is pinned and verified by its manifest digest, like an
+  // image, at `upstreamName` in its registry; it has no Helm index.
+  if (ociChart(entry))
+    return {
+      ...registryIdentity(entry),
+      component: `chart:${entry.name}`,
+      kind: "chart",
+    };
   return {
     component: `chart:${entry.name}`,
     kind: "chart",
@@ -142,23 +138,35 @@ function chartIdentity(
   };
 }
 
-function imageIdentity(
+/**
+ * Where a registry-hosted entry (an image or an OCI chart) is pulled from and
+ * verified at: `upstreamName` in its registry, pinned `tag@sha256:digest`. An
+ * aliased entry (`itzg/minecraft-server-java8`) keeps its catalog name as its
+ * component.
+ */
+function registryIdentity(
   entry: VersionCatalogEntry,
-): Omit<UpstreamIntent, "serviceId"> {
+): Omit<UpstreamIntent, "serviceId" | "component" | "kind"> {
   if (!entry.management.managed || entry.management.registryUrl === undefined)
-    throw new Error(`Component image ${entry.name} has no registryUrl`);
+    throw new Error(`Component ${entry.name} has no registryUrl`);
   const pinned = /^([^@\s]+)@(sha256:[a-f0-9]{64})$/u.exec(entry.value);
   if (pinned?.[1] === undefined || pinned[2] === undefined)
-    throw new Error(`Component image ${entry.name} must pin tag@sha256:digest`);
+    throw new Error(`Component ${entry.name} must pin tag@sha256:digest`);
   return {
-    component: `image:${entry.name}`,
-    kind: "image",
-    // An aliased entry (`itzg/minecraft-server-java8`) keeps its catalog name
-    // as its component but is pulled from, and verified at, its repository.
-    name: entry.management.packageName ?? entry.name,
+    name: upstreamName(entry),
     version: pinned[1],
     repository: entry.management.registryUrl,
     digest: pinned[2],
+  };
+}
+
+function imageIdentity(
+  entry: VersionCatalogEntry,
+): Omit<UpstreamIntent, "serviceId"> {
+  return {
+    ...registryIdentity(entry),
+    component: `image:${entry.name}`,
+    kind: "image",
   };
 }
 
@@ -237,7 +245,9 @@ async function acquiredArtifact(
   intent: UpstreamIntent,
   options: ComponentArtifactOptions,
 ): Promise<AcquireUpstreamArtifact["artifact"]> {
-  if (intent.kind === "chart") {
+  // A Helm-index chart learns its digest from the index; a registry-hosted
+  // entry (an image or an OCI chart) is already pinned.
+  if (intent.kind === "chart" && intent.digest === undefined) {
     const upstream = await (options.mirror ?? acquireUpstreamChart)(
       {
         name: intent.name,
@@ -265,11 +275,13 @@ async function acquiredArtifact(
   if (intent.digest === undefined)
     throw new Error(`Upstream image ${intent.name} has no pinned digest`);
   // The registry resolves the tag server-side; no bytes are needed here.
+  // Helm pulls an OCI chart by the `oci://` scheme.
+  const location = `${new URL(intent.repository).host}/${intent.name}`;
   return {
     id: `upstream/${intent.name}/${intent.version}/${intent.digest.slice(7)}`,
     component: intent.component,
-    kind: "image",
-    uri: `${new URL(intent.repository).host}/${intent.name}`,
+    kind: intent.kind,
+    uri: intent.kind === "chart" ? `oci://${location}` : location,
     digest: intent.digest,
     version: intent.version,
     origin: {
