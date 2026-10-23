@@ -281,7 +281,8 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
         view(2, BLUE, new Pose(new Vec3(308.5, 100, 308.5), Vec3.ZERO, new Facing(90, 0), true));
     var visible = artifact.grid().canSee(self.eye(), enemy.eye());
     if (visible)
-      memory = memory.remember(enemy.id(), new Sighting(enemy.pos(), enemy.vel(), ticks, 1, true, true));
+      memory =
+          memory.remember(enemy.id(), new Sighting(enemy.pos(), enemy.vel(), ticks, 1, true, true));
     var percept =
         new Percept(
             new PerceptionState(memory, Suspicion.NONE),
