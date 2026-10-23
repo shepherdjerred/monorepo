@@ -303,6 +303,7 @@ export async function monitorStatus(this: Delivery, environmentId: string) {
   if (env.acceptedDeploymentId === null)
     return MonitorStatusSchema.parse({
       deploymentId: null,
+      claimedAt: null,
       state: "unmonitored",
       policy: null,
       settledAt: null,
@@ -326,6 +327,8 @@ export async function monitorStatus(this: Delivery, environmentId: string) {
   ]);
   return MonitorStatusSchema.parse({
     deploymentId: row.id,
+    // The instant `partitionAlarms` counts alarms from (W2).
+    claimedAt: required(row.startedAt, "Claim time").toISOString(),
     state: row.monitorState ?? "unmonitored",
     policy: monitor?.policy ?? null,
     settledAt: row.monitorSettledAt?.toISOString() ?? null,

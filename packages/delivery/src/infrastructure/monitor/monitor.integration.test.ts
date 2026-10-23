@@ -197,8 +197,13 @@ describe("monitor (4.19)", () => {
     ).toMatchObject({
       observation: { id: `${accepted.id}/monitor/2`, outcome: "settled" },
     });
+    const claimed = await context.cluster.database.deployment.findUniqueOrThrow(
+      { where: { id: accepted.id } },
+    );
     expect(await context.delivery.monitorStatus("arcade/prod")).toMatchObject({
       deploymentId: accepted.id,
+      // The hub separates pre-existing alarms by the same claim instant (W2).
+      claimedAt: claimed.startedAt?.toISOString(),
       state: "settled",
       policy: "automatic",
       observations: 2,

@@ -26,6 +26,12 @@ const scoutProd = {
   policy: "automatic",
 };
 
+/** An accepted deployment and its claim, the instant alarms count from (W2). */
+const ACCEPTED = {
+  deploymentId: "dep-1",
+  claimedAt: "2026-10-20T11:00:00.000Z",
+};
+
 describe("MonitorSchema", () => {
   test("parses the Scout prod monitor with default severities", () => {
     const monitor = MonitorSchema.parse(scoutProd);
@@ -169,7 +175,7 @@ describe("observations", () => {
       }).success,
     ).toBe(false);
     const status = {
-      deploymentId: "dep-1",
+      ...ACCEPTED,
       state: "settled",
       policy: "automatic",
       settledAt: base.observedAt,
@@ -205,6 +211,7 @@ describe("observations", () => {
     expect(
       MonitorStatusSchema.safeParse({
         deploymentId: null,
+        claimedAt: null,
         state: "unmonitored",
         policy: null,
         settledAt: null,
@@ -251,7 +258,7 @@ describe("observations", () => {
     ],
   ])("refuses %s", (_name, fields) => {
     const status = {
-      deploymentId: "dep-1",
+      ...ACCEPTED,
       state: "settled",
       policy: "automatic",
       settledAt: "2026-10-20T12:00:00.000Z",
@@ -268,7 +275,7 @@ describe("observations", () => {
   test("accepts an unmonitored selection that settled on acceptance", () => {
     expect(
       MonitorStatusSchema.safeParse({
-        deploymentId: "dep-1",
+        ...ACCEPTED,
         state: "unmonitored",
         policy: null,
         settledAt: "2026-10-20T12:00:00.000Z",
@@ -279,4 +286,24 @@ describe("observations", () => {
       }).success,
     ).toBe(true);
   });
+});
+
+test("a monitor status carries the claim time exactly for an accepted deployment", () => {
+  const accepted = {
+    ...ACCEPTED,
+    state: "unmonitored",
+    policy: null,
+    settledAt: null,
+    alarmedAt: null,
+    observations: 0,
+    monitor: null,
+    latestObservation: null,
+  };
+  expect(MonitorStatusSchema.safeParse(accepted).success).toBe(true);
+  expect(
+    MonitorStatusSchema.safeParse({ ...accepted, claimedAt: null }).success,
+  ).toBe(false);
+  expect(
+    MonitorStatusSchema.safeParse({ ...accepted, deploymentId: null }).success,
+  ).toBe(false);
 });

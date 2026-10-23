@@ -177,11 +177,14 @@ const monitorStateTimestamps: Record<
  * `GET /environments/:id/monitor`: the monitor of the accepted deployment.
  * `monitor` is the declaration its frozen recipe carries, so each evidence
  * value can be read against its threshold; `latestObservation` is the newest
- * observation the executor recorded, with its firing alarms.
+ * observation the executor recorded, with its firing alarms. `claimedAt` is
+ * the deployment's claim: alarms active before it are pre-existing (W2),
+ * recorded as evidence but never counted against this deployment.
  */
 export const MonitorStatusSchema = z
   .strictObject({
     deploymentId: IdentifierSchema.nullable(),
+    claimedAt: z.iso.datetime().nullable(),
     state: MonitorStateSchema,
     policy: MonitorPolicySchema.nullable(),
     settledAt: z.iso.datetime().nullable(),
@@ -199,6 +202,9 @@ export const MonitorStatusSchema = z
     }
     if (status.monitor !== null && status.monitor.policy !== status.policy) {
       refuse("The rollback policy is the declared monitor's policy");
+    }
+    if ((status.deploymentId === null) !== (status.claimedAt === null)) {
+      refuse("A claim time belongs exactly to an accepted deployment");
     }
     if ((status.latestObservation === null) !== (status.observations === 0)) {
       refuse("The latest observation is present exactly when one was recorded");
