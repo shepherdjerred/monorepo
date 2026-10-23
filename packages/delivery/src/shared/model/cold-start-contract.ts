@@ -21,7 +21,11 @@ export const COLD_START_SNAPSHOT = {
   key: "delivery-cold-start/latest.json",
 } as const;
 
-/** The immutable copy each write also leaves beside `latest.json`. */
+/**
+ * The immutable copy each write also leaves beside `latest.json`. Delivery
+ * gives every snapshot its own microsecond write time, so no two snapshots
+ * share a key, and the writer never overwrites one with other bytes.
+ */
 export function coldStartArchiveKey(snapshot: {
   writtenAt: string;
   catalogRevision: string;

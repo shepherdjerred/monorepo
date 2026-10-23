@@ -212,6 +212,25 @@ describe("cold start (section 6)", () => {
     expect(backups).toHaveLength(1);
   });
 
+  test("snapshots built at once take distinct, ordered microsecond write times (X7)", async () => {
+    await chainFixture();
+    await reconciled();
+    const accepted = await acceptProd("op-concurrent");
+    const requirements = await Promise.all(
+      Array.from({ length: 6 }, async () =>
+        context.delivery.coldStartRequirement(accepted.id),
+      ),
+    );
+    const writtenAt = requirements.map((requirement) => {
+      if (!requirement.required) throw new Error("Expected a snapshot");
+      return requirement.snapshot.writtenAt;
+    });
+    for (const at of writtenAt)
+      expect(at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/u);
+    // Built one at a time under one lock, no two share a write time.
+    expect(new Set(writtenAt).size).toBe(writtenAt.length);
+  });
+
   test("a restore holds each mismatched environment until an operator or an acceptance settles it", async () => {
     await chainFixture();
     await reconciled();

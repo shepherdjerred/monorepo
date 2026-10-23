@@ -1,3 +1,4 @@
+import { ApplicationFailure } from "@temporalio/common";
 import {
   createS3ObjectStore,
   type ObjectStore,
@@ -18,16 +19,30 @@ const ColdStartCredentialSchema = z.object({
   CLOUDFLARE_R2_SECRET_ACCESS_KEY: z.string().min(1),
 });
 
-/** When the current `latest.json` was written, or null before the first snapshot. */
-async function latestWrittenAt(store: ObjectStore): Promise<number | null> {
-  const { bucket, key } = COLD_START_SNAPSHOT;
+/** The snapshot stored at `key` as written, or null when there is none. */
+async function storedText(
+  store: ObjectStore,
+  key: string,
+): Promise<string | null> {
+  const { bucket } = COLD_START_SNAPSHOT;
   if ((await store.headObject(bucket, key)) === undefined) return null;
   const object = await store.getObject(bucket, key);
   const chunks: Buffer[] = [];
   for await (const chunk of object.body)
     chunks.push(Buffer.from(z.instanceof(Uint8Array).parse(chunk)));
-  const text = Buffer.concat(chunks).toString("utf8");
-  return Date.parse(ColdStartSnapshotSchema.parse(JSON.parse(text)).writtenAt);
+  return Buffer.concat(chunks).toString("utf8");
+}
+
+/**
+ * A snapshot's write time in microseconds since the epoch. Delivery takes
+ * `writtenAt` from its database clock to the microsecond while it builds
+ * snapshots one at a time, so this orders snapshots as their records were
+ * read; a millisecond-only time compares as its first microsecond.
+ */
+function writtenAtOrder(writtenAt: string): bigint {
+  const fraction = /\.(\d+)Z$/u.exec(writtenAt)?.[1] ?? "";
+  const micros = fraction.padEnd(6, "0").slice(3, 6);
+  return BigInt(Date.parse(writtenAt)) * 1000n + BigInt(micros);
 }
 
 /**
@@ -35,16 +50,37 @@ async function latestWrittenAt(store: ObjectStore): Promise<number | null> {
  * snapshot is at least as new as the one it holds. A retried older Activity
  * therefore never moves the pointer back past a newer acceptance; the
  * backup worker runs one task at a time, so the read and write do not race.
+ * Two different snapshots never share a write time, so one that would
+ * share the pointer's, or find other bytes in its immutable copy, is refused
+ * before anything is written.
  */
 export async function writeColdStartObjects(
   store: ObjectStore,
   input: ColdStartWrite,
 ) {
-  const bytes = new TextEncoder().encode(JSON.stringify(input.snapshot));
+  const text = JSON.stringify(input.snapshot);
+  const bytes = new TextEncoder().encode(text);
   const archive = coldStartArchiveKey(input.snapshot);
-  const current = await latestWrittenAt(store);
-  const advance =
-    current === null || current <= Date.parse(input.snapshot.writtenAt);
+  const archived = await storedText(store, archive);
+  if (archived !== null && archived !== text)
+    throw ApplicationFailure.nonRetryable(
+      `The immutable cold-start copy ${archive} already holds a different snapshot; it is never overwritten`,
+      "DeliveryColdStartOrder",
+    );
+  const current = await storedText(store, COLD_START_SNAPSHOT.key);
+  const order = writtenAtOrder(input.snapshot.writtenAt);
+  const currentOrder =
+    current === null
+      ? null
+      : writtenAtOrder(
+          ColdStartSnapshotSchema.parse(JSON.parse(current)).writtenAt,
+        );
+  if (currentOrder === order && current !== text)
+    throw ApplicationFailure.nonRetryable(
+      `latest.json already holds a different snapshot written at ${input.snapshot.writtenAt}; snapshots are ordered by write time, so this one is refused`,
+      "DeliveryColdStartOrder",
+    );
+  const advance = currentOrder === null || currentOrder <= order;
   for (const key of advance ? [archive, COLD_START_SNAPSHOT.key] : [archive])
     await store.putObject({
       bucket: COLD_START_SNAPSHOT.bucket,

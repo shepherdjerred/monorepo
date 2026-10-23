@@ -21,7 +21,11 @@ import { applicationsOf } from "#shared/model/recipe-view.ts";
 import { stepStageKey } from "#shared/model/stage-keys.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
-import { evidence, id } from "#infrastructure/delivery-data.ts";
+import {
+  evidence,
+  id,
+  type Transaction,
+} from "#infrastructure/delivery-data.ts";
 import {
   audit,
   fingerprint,
@@ -50,11 +54,28 @@ export async function coldStartRequirement(
   if (env.acceptedDeploymentId !== row.id) return { required: false as const };
   const chain = await bootstrapChain(this.database);
   if (!chain.includes(env.id)) return { required: false as const };
-  const { snapshot, fingerprint: digest } = await coldStartSnapshot(
-    this.database,
-    new Date(),
+  const { snapshot, fingerprint: digest } = await this.database.$transaction(
+    async (tx) => {
+      await lock(tx, "cold-start:snapshot");
+      return coldStartSnapshot(tx, await snapshotClock(tx));
+    },
   );
   return { required: true as const, fingerprint: digest, snapshot };
+}
+
+/**
+ * The database clock to the microsecond. Snapshots are built one at a time
+ * under `cold-start:snapshot`, each reading this clock and then the record,
+ * so a later snapshot carries a later `writtenAt` and read a record at least
+ * as new. The writer orders snapshots by it (X7).
+ */
+async function snapshotClock(tx: Transaction): Promise<string> {
+  const rows = await tx.$queryRaw<
+    { at: string }[]
+  >`SELECT to_char(clock_timestamp() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS at`;
+  const [row] = rows;
+  if (row === undefined) throw new Error("The database clock returned no row");
+  return row.at;
 }
 
 /** The executor wrote the snapshot off-cluster; the receipt is the acceptance's backup evidence. */

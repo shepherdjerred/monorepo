@@ -450,7 +450,7 @@ test("the view, admission, the cold-start snapshot and rollback name the carried
       versionSetRevisionId: carried.id,
     }),
   ]);
-  const { snapshot } = await coldStartSnapshot(db, new Date());
+  const { snapshot } = await coldStartSnapshot(db, new Date().toISOString());
   expect(
     snapshot.environments.find((row) => row.environmentId === "arcade/prod"),
   ).toMatchObject({
@@ -489,7 +489,7 @@ test("after a restore, the v1 sync of a carried selection still matches the reco
     testOperator,
     MOVED,
   );
-  const { snapshot } = await coldStartSnapshot(db, new Date());
+  const { snapshot } = await coldStartSnapshot(db, new Date().toISOString());
   const result = await context.delivery.reconcileAfterRestore(
     { requestId: "restore-carried" },
     { ...testOperator, scopes: [...testOperator.scopes, "admin" as const] },

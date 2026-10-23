@@ -111,7 +111,7 @@ async function snapshotEnvironment(
  */
 export async function coldStartSnapshot(
   db: Reader,
-  writtenAt: Date,
+  writtenAt: string,
 ): Promise<{ snapshot: ColdStartSnapshot; fingerprint: string }> {
   const catalog = await reconciledCatalog(db);
   if (catalog === null)
@@ -130,7 +130,7 @@ export async function coldStartSnapshot(
         await snapshotEnvironment(db, env.id, env.acceptedDeploymentId),
       );
   const snapshot = ColdStartSnapshotSchema.parse({
-    writtenAt: writtenAt.toISOString(),
+    writtenAt,
     catalogRevision: catalog.catalogRevision,
     environments: rows,
   });
