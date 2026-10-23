@@ -5,7 +5,10 @@ import { z } from "zod";
 /**
  * Where a finished CI workspace's bytes went, so the next SSD-write lever is
  * chosen from evidence rather than guessed. Each category is one `du`
- * invocation, which counts a hard-linked file once. Every category shares one
+ * invocation of apparent (logical) size, which counts a hard-linked file once.
+ * Allocated size is not used: liskov's ZFS allocates a write only when its
+ * transaction group commits, so a just-finished workspace would read as
+ * nearly empty. Every category shares one
  * deadline so a huge or slow tree cannot stretch the step, and a category that
  * misses it reports null bytes rather than a partial total.
  */
@@ -44,6 +47,11 @@ export const WorkspaceUsageSchema = z.object({
 export type WorkspaceUsage = z.infer<typeof WorkspaceUsageSchema>;
 
 const DEADLINE_MS = 60_000;
+/** GNU du in CI images reports bytes; BSD du on macOS only reports KiB. */
+const APPARENT_DU =
+  process.platform === "linux"
+    ? { argv: ["du", "-sxc", "--apparent-size", "-B1", "--"], unit: 1 }
+    : { argv: ["du", "-sxcAk", "--"], unit: 1024 };
 
 async function existingPaths(root: string, patterns: readonly string[]) {
   const found: string[] = [];
@@ -72,10 +80,10 @@ async function existingPaths(root: string, patterns: readonly string[]) {
 async function measure(
   paths: readonly string[],
   signal: AbortSignal,
-  du: readonly string[],
+  du: { argv: readonly string[]; unit: number },
 ): Promise<number | null> {
   if (paths.length === 0) return 0;
-  const child = Bun.spawn([...du, ...paths], {
+  const child = Bun.spawn([...du.argv, ...paths], {
     stdin: "ignore",
     stdout: "pipe",
     stderr: "ignore",
@@ -90,16 +98,19 @@ async function measure(
   const total = /^(\d+)\s+total$/mu.exec(
     output.trim().split("\n").at(-1) ?? "",
   );
-  return total?.[1] === undefined ? null : Number(total[1]) * 1024;
+  return total?.[1] === undefined ? null : Number(total[1]) * du.unit;
 }
 
 export async function collectWorkspaceUsage(
   root: string,
-  options: { deadlineMs?: number; du?: readonly string[] } = {},
+  options: {
+    deadlineMs?: number;
+    du?: { argv: readonly string[]; unit: number };
+  } = {},
 ): Promise<WorkspaceUsage> {
   const startedAt = Date.now();
   const signal = AbortSignal.timeout(options.deadlineMs ?? DEADLINE_MS);
-  const du = options.du ?? ["du", "-skxc", "--"];
+  const du = options.du ?? APPARENT_DU;
   const filesystem = await statfs(root);
   const categories = await Promise.all(
     WORKSPACE_USAGE_CATEGORIES.map(async ({ name, patterns }) => {
