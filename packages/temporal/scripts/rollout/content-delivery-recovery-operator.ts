@@ -6,6 +6,7 @@ import {
   ContentRecoveryContextSchema,
   type ContentRecoveryContext,
 } from "@shepherdjerred/delivery/contract";
+import { stepRecipeOf } from "@shepherdjerred/delivery/model-contract";
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import { argoApplicationRequest } from "#lib/delivery/argo-client.ts";
 import { deliverySelection } from "#lib/delivery/selection.ts";
@@ -34,9 +35,12 @@ import {
   proveContentNativeJobs,
 } from "#lib/delivery/content-recovery/native-proof.ts";
 import {
+  forumRecoveryRelease,
   originalForumRecoveryJob,
   runForumRecoveryChild,
 } from "#lib/delivery/content-recovery/forum-jobs.ts";
+import { renderApplication } from "#lib/delivery/model/application.ts";
+import { requireRenderedSource } from "#lib/delivery/model/application-proof.ts";
 import { contentOwnership } from "#lib/delivery/content-recovery/ownership.ts";
 import {
   contentOuterEffects,
@@ -47,6 +51,65 @@ import {
   ContentOperatorError,
   type ContentAction,
 } from "#lib/delivery/content-recovery/request.ts";
+
+/** The Forum's candidate web Deployment runs the frozen image (4.15). */
+async function forumWebReady(
+  context: ContentRecoveryContext,
+  application: string,
+  revision: string,
+) {
+  const pods = await workerApplicationResources(
+    application,
+    "Pod",
+    argoApplicationRequest,
+  );
+  const web = pods.filter(
+    (value) =>
+      z
+        .object({
+          metadata: z.object({
+            labels: z.record(z.string(), z.string()).default({}),
+          }),
+        })
+        .parse(value).metadata.labels["component"] === "web",
+  );
+  const image =
+    context.deployment.versionSet.components[
+      forumRecoveryRelease(context.deployment).imageComponent
+    ];
+  if (image?.kind !== "image")
+    throw new Error("Forum candidate image is missing");
+  try {
+    await verifyDeliveryPods(web, [image]);
+  } catch {
+    throw new ContentOperatorError(
+      `Forum database is repaired but its exact candidate web Deployment is not ready. With the same frozen source still selected, run toolkit argocd app sync ${application} --revision ${revision} --resource apps:Deployment:storm-forum-web (no prune), then rerun this SAME recovery intent.`,
+    );
+  }
+}
+
+/**
+ * A model release's content step ran only after its own Application's sync
+ * settled. Forum recovery re-proves that Application still carries exactly
+ * its rendered source with no operation in flight, and that the candidate
+ * web Deployment runs the frozen image; a site step's bucket is its own
+ * target.
+ */
+async function modelBackend(
+  context: ContentRecoveryContext,
+  forumWeb: boolean,
+) {
+  if (context.intent.targetKind !== "forum") return;
+  const detail = context.deployment;
+  const recipe = stepRecipeOf(detail.pipeline.definition, "forum-bundle");
+  if (recipe === null)
+    throw new Error("Forum recovery lacks its fixed native target");
+  const rendered = renderApplication(detail, recipe);
+  const native = await argoApplicationRequest(rendered.name);
+  requireRenderedSource(native, rendered);
+  z.object({ operation: z.null().optional() }).parse(native);
+  if (forumWeb) await forumWebReady(context, rendered.name, rendered.revision);
+}
 
 /** Foreground operator capability only; never registered on a worker or Workflow. */
 export async function recoverContentWithOperator(
@@ -112,7 +175,10 @@ export async function recoverContentWithOperator(
   const backend = async (context: ContentRecoveryContext, forumWeb = true) => {
     const detail = context.deployment,
       policy = detail.pipeline.definition;
-    if (policy.kind !== "argocd") return;
+    if (policy.kind !== "argocd") {
+      await modelBackend(context, forumWeb);
+      return;
+    }
     const selected = deliverySelection(detail);
     const native = await argoApplicationRequest(policy.application);
     requireExactControlPlaneSource(native, selected.selection);
@@ -147,34 +213,12 @@ export async function recoverContentWithOperator(
         pool,
       );
       await worker.pollers(pool);
-    } else if (forumWeb && policy.forumRelease !== undefined) {
-      const pods = await workerApplicationResources(
+    } else if (forumWeb && policy.forumRelease !== undefined)
+      await forumWebReady(
+        context,
         policy.application,
-        "Pod",
-        argoApplicationRequest,
+        selected.selection.revision,
       );
-      const web = pods.filter(
-        (value) =>
-          z
-            .object({
-              metadata: z.object({
-                labels: z.record(z.string(), z.string()).default({}),
-              }),
-            })
-            .parse(value).metadata.labels["component"] === "web",
-      );
-      const image =
-        detail.versionSet.components[policy.forumRelease.imageComponent];
-      if (image?.kind !== "image")
-        throw new Error("Forum candidate image is missing");
-      try {
-        await verifyDeliveryPods(web, [image]);
-      } catch {
-        throw new ContentOperatorError(
-          `Forum database is repaired but its exact candidate web Deployment is not ready. With the same frozen source still selected, run toolkit argocd app sync ${policy.application} --revision ${selected.selection.revision} --resource apps:Deployment:storm-forum-web (no prune), then rerun this SAME recovery intent.`,
-        );
-      }
-    }
   };
   const forum = async (
     context: ContentRecoveryContext,

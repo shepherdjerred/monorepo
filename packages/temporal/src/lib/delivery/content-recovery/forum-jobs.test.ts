@@ -21,6 +21,11 @@ import {
   originalForumRecoveryJob,
   runForumRecoveryChild,
 } from "./forum-jobs.ts";
+import {
+  forumDeployment,
+  forumRecipe,
+} from "#lib/delivery/model/forum-testing.ts";
+import { artifact } from "#lib/delivery/model/testing.ts";
 
 function localKubernetes(server: string) {
   const config = new KubeConfig();
@@ -618,3 +623,122 @@ test("explicit operator acknowledgement is bound into the exact child fingerprin
   ])
     expect(() => parseForumRecoveryAction(invalid)).toThrow();
 });
+
+/** A compound whose forum Application is second, after an unrelated one. */
+const forumCompound = {
+  kind: "compound",
+  subRecipes: [
+    {
+      instance: "application:storm-forum-search",
+      definition: {
+        ...forumRecipe,
+        application: {
+          ...forumRecipe.application,
+          name: "storm-forum-search",
+          destination: {
+            ...forumRecipe.application.destination,
+            namespace: "storm-forum-search",
+          },
+        },
+        steps: forumRecipe.steps
+          .filter((step) => step.kind !== "forum-bundle")
+          .map((step) => ({
+            ...step,
+            instance: "application:storm-forum-search",
+          })),
+      },
+    },
+    { instance: "application:storm-forum", definition: forumRecipe },
+  ],
+};
+
+test.each([
+  ["an Application recipe", forumRecipe],
+  ["a compound's second Application", forumCompound],
+])(
+  "original Forum recovery of a model release renders the release Job from %s's own chart",
+  async (_shape, definition) => {
+    const { job } = original();
+    const bytes = new TextEncoder().encode("immutable model chart fixture");
+    const server = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      fetch(request) {
+        return new URL(request.url).pathname.startsWith("/charts/")
+          ? new Response(bytes)
+          : Response.json(job);
+      },
+    });
+    try {
+      const chart = {
+        ...artifact({
+          id: "chart/forum",
+          component: "chart:storm-forum",
+          kind: "chart",
+          uri: `${server.url.origin}/charts/storm-forum-1.0.1.tgz`,
+          version: "1.0.1",
+          character: "b",
+        }),
+        digest: `sha256:${createHash("sha256").update(bytes).digest("hex")}`,
+      };
+      const deployment = forumDeployment(definition, [], chart);
+      job.metadata.name = `storm-forum-release-${createHash("sha256").update(deployment.deployment.id).digest("hex").slice(0, 32)}`;
+      const context = ContentRecoveryContextSchema.parse({
+        intent: {
+          id: "forum/model-recovery",
+          deploymentId: deployment.deployment.id,
+          requestedBy: "operator",
+          reason: "Inspect the model Forum release's original native Job",
+          expectedEnvironmentGeneration: 1,
+          snapshotFingerprint: "a".repeat(64),
+          status: "pending",
+          message: null,
+          createdAt: deployment.deployment.createdAt,
+          finishedAt: null,
+          targetKind: "forum",
+        },
+        deployment,
+        priorDeployment: null,
+        expectedSettlements: { desired: "a".repeat(64) },
+        recoveryHistory: [],
+      });
+      const helm: string[][] = [];
+      const result = await originalForumRecoveryJob(
+        context,
+        localKubernetes(server.url.origin),
+        async (args) => {
+          if (args[0] === "helm") helm.push([...args]);
+          return {
+            stdout:
+              args[0] === "docker"
+                ? JSON.stringify({
+                    os: "linux",
+                    architecture: "amd64",
+                    config: {
+                      Env: [`GIT_SHA=${"a".repeat(40)}`],
+                      Labels: {
+                        [FORUM_RECOVERY_IMAGE_LABEL]: FORUM_RECOVERY_IMAGE_ABI,
+                      },
+                    },
+                  })
+                : JSON.stringify(job),
+            stderr: "",
+            exitCode: 0,
+          };
+        },
+      );
+      expect(result.receipt).toMatchObject({
+        namespace: "storm-forum",
+        name: job.metadata.name,
+        uid: job.metadata.uid,
+      });
+      // The forum Application's own chart, in its own namespace.
+      expect(helm).toHaveLength(1);
+      expect(helm[0]?.slice(0, 2)).toEqual(["helm", "template"]);
+      expect(helm[0]?.[2]).toBe("storm-forum");
+      expect(helm[0]?.slice(4, 6)).toEqual(["--namespace", "storm-forum"]);
+    } finally {
+      await server.stop(true);
+    }
+  },
+);

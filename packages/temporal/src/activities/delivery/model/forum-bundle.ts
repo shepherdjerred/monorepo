@@ -5,20 +5,14 @@ import type {
   EvidenceInput,
 } from "@shepherdjerred/delivery/contract";
 import { deliveryOperationId } from "@shepherdjerred/delivery/operation-id";
-import {
-  forumReleaseOf,
-  helmSource,
-  helmValues,
-} from "@shepherdjerred/delivery/model-contract";
-import type { DeliverySelection } from "homelab/scripts/argocd/argocd-delivery.ts";
+import { forumReleaseOf } from "@shepherdjerred/delivery/model-contract";
 import { getArgoApplication } from "#lib/delivery/argo-client.ts";
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import { forumReleaseId, forumReleaseParameters } from "#lib/delivery/forum.ts";
 import { forumSyncPrunes } from "#lib/delivery/forum-prune.ts";
 import {
+  forumSelection,
   renderApplication,
-  renderConfiguration,
-  selectionArtifacts,
 } from "#lib/delivery/model/application.ts";
 import { applicationProgress } from "#lib/delivery/model/application-proof.ts";
 import type { KubernetesApplicationRecipe } from "#lib/delivery/model/recipe.ts";
@@ -107,36 +101,6 @@ export async function forumBaselineFence(
 }
 
 /**
- * The v1 selection a forum Application rendered from its recipe is, so the
- * sync reuses `forumSyncPrunes` unchanged: the selection's patch over the
- * written Application reproduces its source exactly, Helm values
- * included. Null when the recipe has no forum-bundle step.
- */
-export function forumPruneSelection(
-  current: DeploymentDetail,
-  recipe: KubernetesApplicationRecipe,
-): DeliverySelection | null {
-  if (forumReleaseOf(recipe) === undefined) return null;
-  const rendered = renderApplication(current, recipe);
-  const source = helmSource(recipe.application.source);
-  if (source === null)
-    throw new Error("A forum release syncs a Helm chart source");
-  return {
-    application: rendered.name,
-    environmentId: rendered.environmentId,
-    repository: source.repoURL,
-    chart: source.chart,
-    revision: rendered.revision,
-    namespace: recipe.application.destination.namespace,
-    parameters: helmValues(
-      recipe,
-      renderConfiguration(current, recipe),
-      selectionArtifacts(current),
-    ).parameters,
-  };
-}
-
-/**
  * Whether the forum's sync prunes. Each release creates a Job named by its
  * deployment, so the prior release's Job leaves the new render. Pruning
  * removes only a prior terminal migration Job of this exact scope, after
@@ -148,7 +112,7 @@ export async function forumSyncPrune(
   recipe: KubernetesApplicationRecipe,
   read: (path: string) => Promise<unknown>,
 ): Promise<boolean> {
-  const selection = forumPruneSelection(current, recipe);
+  const selection = forumSelection(current, recipe);
   return selection === null ? false : await forumSyncPrunes(selection, read);
 }
 

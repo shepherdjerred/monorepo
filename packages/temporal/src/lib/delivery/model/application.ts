@@ -1,10 +1,14 @@
 import type { DeploymentDetail } from "@shepherdjerred/delivery/contract";
 import {
+  forumReleaseOf,
+  helmSource,
+  helmValues,
   renderApplication as renderShared,
   type RenderArtifact,
   renderArtifactParameter,
   type RenderedApplication as RenderedBody,
 } from "@shepherdjerred/delivery/model-contract";
+import type { DeliverySelection } from "homelab/scripts/argocd/argocd-delivery.ts";
 import { forumReleaseParameters } from "#lib/delivery/forum.ts";
 import type { KubernetesApplicationRecipe } from "./recipe.ts";
 import { workerPoolParameters } from "#lib/delivery/workers/worker-pool.ts";
@@ -135,4 +139,35 @@ export function selectionArtifacts(
       ],
     ),
   );
+}
+
+/**
+ * The v1 selection a forum Application rendered from its recipe is, so the
+ * sync reuses `forumSyncPrunes` and native Forum recovery renders the
+ * chart's release Job unchanged: the selection's patch over the written
+ * Application reproduces its source exactly, Helm values included. Null
+ * when the recipe has no forum-bundle step.
+ */
+export function forumSelection(
+  current: DeploymentDetail,
+  recipe: KubernetesApplicationRecipe,
+): DeliverySelection | null {
+  if (forumReleaseOf(recipe) === undefined) return null;
+  const rendered = renderApplication(current, recipe);
+  const source = helmSource(recipe.application.source);
+  if (source === null)
+    throw new Error("A forum release syncs a Helm chart source");
+  return {
+    application: rendered.name,
+    environmentId: rendered.environmentId,
+    repository: source.repoURL,
+    chart: source.chart,
+    revision: rendered.revision,
+    namespace: recipe.application.destination.namespace,
+    parameters: helmValues(
+      recipe,
+      renderConfiguration(current, recipe),
+      selectionArtifacts(current),
+    ).parameters,
+  };
 }

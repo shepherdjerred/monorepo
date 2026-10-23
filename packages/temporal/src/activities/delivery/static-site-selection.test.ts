@@ -4,6 +4,8 @@ import {
   PipelineDefinitionSchema,
   RegisterEnvironmentSchema,
 } from "@shepherdjerred/delivery/contract";
+import { recipeFromPipeline } from "@shepherdjerred/delivery/model-contract";
+import { catalogEnvironmentOf } from "@shepherdjerred/ops-model/delivery-catalog/migration.ts";
 import { staticSiteSelection } from "./static-site-selection.ts";
 import { STATIC_SITE_DESTINATIONS } from "@shepherdjerred/ops-model/static-release-targets.ts";
 
@@ -180,4 +182,37 @@ test("worker-only lifecycle operations and missing flavor artifacts cannot touch
       owners,
     ),
   ).toThrow("archive is missing");
+});
+
+test("native repair of a model release selects its site step's own bucket", async () => {
+  const { detail, owners } = await fixture("prod");
+  if (detail.pipeline.definition.kind !== "argocd")
+    throw new Error("Scout registers an Application pipeline");
+  // The catalog's Scout recipe carries the site as a static-site step (T3).
+  const recipe = recipeFromPipeline(detail.pipeline.definition);
+  const component = "archive:scout-frontend";
+  const model = {
+    ...detail,
+    pipeline: { definition: recipe },
+    environment: { id: catalogEnvironmentOf("scout-for-lol/prod") },
+    versionSet: {
+      ...detail.versionSet,
+      components: {
+        [component]: archiveArtifact(
+          component,
+          "scout-frontend",
+          "scout-for-lol",
+        ),
+      },
+    },
+  };
+  expect(staticSiteSelection(model, owners).receipt).toMatchObject({
+    deploymentId: "backend-release",
+    versionSetRevisionId: "shared-candidate",
+    bucket: "scout-frontend",
+  });
+  // The bucket is still delegated to exactly this environment.
+  expect(() =>
+    staticSiteSelection(model, { "scout-frontend": "scout-for-lol/beta" }),
+  ).toThrow("delegated");
 });

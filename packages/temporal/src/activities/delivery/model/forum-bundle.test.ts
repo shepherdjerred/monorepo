@@ -7,7 +7,10 @@ import {
 import { deliveryOperationId } from "@shepherdjerred/delivery/operation-id";
 import { DELIVERY_ENVIRONMENT_ANNOTATION } from "#lib/delivery/argo-client.ts";
 import { forumReleaseId, forumReleaseParameters } from "#lib/delivery/forum.ts";
-import { renderApplication } from "#lib/delivery/model/application.ts";
+import {
+  forumSelection,
+  renderApplication,
+} from "#lib/delivery/model/application.ts";
 import {
   modelSteps,
   requireModelRecipe,
@@ -22,11 +25,7 @@ import {
 } from "#lib/delivery/model/forum-testing.ts";
 import { deliverySelectionPatch } from "homelab/scripts/argocd/argocd-delivery.ts";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
-import {
-  forumPruneSelection,
-  runForumBundleStep,
-  type ForumBundleEffects,
-} from "./forum-bundle.ts";
+import { runForumBundleStep, type ForumBundleEffects } from "./forum-bundle.ts";
 
 const KEY = "step-forum-bundle";
 const JOB = `storm-forum-release-${forumReleaseId("deployment/1")}`;
@@ -357,7 +356,7 @@ describe("forum sync pruning", () => {
   test("the prune guard's selection reproduces the written Application's exact source", () => {
     const { current, recipe } = forumDetail();
     const rendered = renderApplication(current, recipe);
-    const selection = forumPruneSelection(current, recipe);
+    const selection = forumSelection(current, recipe);
     expect(selection).toMatchObject({
       application: "storm-forum",
       chart: "storm-forum",
@@ -380,7 +379,7 @@ describe("forum sync pruning", () => {
   test("an Application without a forum-bundle step never prunes", () => {
     const { current, recipe } = forumDetail();
     expect(
-      forumPruneSelection(current, {
+      forumSelection(current, {
         ...recipe,
         steps: recipe.steps.filter((step) => step.kind !== "forum-bundle"),
       }),

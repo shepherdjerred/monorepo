@@ -34,14 +34,29 @@ export const ONE_SITE_STEP =
 export const ONE_FORUM_BUNDLE =
   "A recipe migrates at most one Forum database: it holds at most one forum-bundle step across its Applications, because candidate validation and the baseline freeze read one Forum release per deployment";
 
+/**
+ * Content recovery repairs the one content target a failed release holds
+ * (4.15), resolved from its site step or else its forum-bundle step.
+ */
+export const ONE_CONTENT_TARGET =
+  "A recipe releases at most one recoverable content target: a static-site step or a forum-bundle step, not both, because content recovery repairs one target per failed release";
+
 const SINGLE_STEPS: Readonly<Record<string, string>> = {
   "static-site": ONE_SITE_STEP,
   "forum-bundle": ONE_FORUM_BUNDLE,
 };
 
-/** The refusal for each single-occurrence step kind these Application steps repeat. */
-export function repeatedSingleSteps(steps: readonly { kind: string }[]) {
-  return Object.entries(SINGLE_STEPS).flatMap(([kind, message]) =>
+/**
+ * The refusals for these Application steps' content steps: each kind at
+ * most once, and never both kinds in one release.
+ */
+export function contentStepRefusals(steps: readonly { kind: string }[]) {
+  const repeated = Object.entries(SINGLE_STEPS).flatMap(([kind, message]) =>
     steps.filter((step) => step.kind === kind).length > 1 ? [message] : [],
   );
+  return Object.keys(SINGLE_STEPS).every((kind) =>
+    steps.some((step) => step.kind === kind),
+  )
+    ? [...repeated, ONE_CONTENT_TARGET]
+    : repeated;
 }

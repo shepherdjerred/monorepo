@@ -6,6 +6,7 @@ import {
   assertStaticSiteDeliveryOwner,
   staticSiteDeliveryOwner,
 } from "homelab/src/static-site-delivery-ownership.ts";
+import { siteReleaseOf } from "@shepherdjerred/delivery/model-contract";
 import { catalogEnvironmentOf } from "@shepherdjerred/ops-model/delivery-catalog/migration.ts";
 import { staticArchivePath } from "@shepherdjerred/root-scripts/lib/static-site-archive.ts";
 import { validateStaticArchiveUri } from "@shepherdjerred/root-scripts/lib/static-site-publication.ts";
@@ -25,12 +26,19 @@ export function staticSiteSelection(
   owners?: Readonly<Record<string, string>>,
 ) {
   const definition = detail.pipeline.definition;
+  if (definition.kind !== "static-site" && definition.kind !== "argocd") {
+    // A model recipe's site step, which content recovery repairs natively.
+    const policy = siteReleaseOf(definition);
+    if (policy === undefined)
+      throw new Error("Expected a static-site release policy");
+    return modelStaticSiteSelection(detail, policy, owners);
+  }
   const pipeline =
     definition.kind === "static-site"
       ? definition
-      : definition.kind === "argocd" && definition.scoutSite !== undefined
-        ? { kind: "static-site" as const, ...definition.scoutSite }
-        : null;
+      : definition.scoutSite === undefined
+        ? null
+        : { kind: "static-site" as const, ...definition.scoutSite };
   if (pipeline === null)
     throw new Error("Expected a static-site release policy");
   assertStaticSiteDeliveryOwner(pipeline.bucket, detail.environment.id, owners);

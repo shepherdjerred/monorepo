@@ -1,7 +1,11 @@
 import { describe, expect, test } from "vitest";
 import { RecipeDefinitionSchema } from "./recipe-contract.ts";
 import { specializedStageKey } from "./recipe-view.ts";
-import { ONE_FORUM_BUNDLE, ONE_SITE_STEP } from "./step-order.ts";
+import {
+  ONE_CONTENT_TARGET,
+  ONE_FORUM_BUNDLE,
+  ONE_SITE_STEP,
+} from "./step-order.ts";
 import { applicationRecipe } from "#testing/catalog-fixture.ts";
 
 /** An Application recipe whose third step is `extra`, if given. */
@@ -153,5 +157,31 @@ describe("one Forum migration per release", () => {
         ],
       }),
     ).toEqual([ONE_FORUM_BUNDLE]);
+  });
+});
+
+describe("one recoverable content target per release (4.15)", () => {
+  test("an Application recipe does not hold both a site step and a forum-bundle step", () => {
+    expect(
+      refusal(forumApplication("storm-forum", [forumStep, siteStep])),
+    ).toEqual([ONE_CONTENT_TARGET]);
+  });
+
+  test("a compound recipe does not hold both across its Applications", () => {
+    expect(
+      refusal({
+        kind: "compound",
+        subRecipes: [
+          {
+            instance: "application:scout",
+            definition: application("scout", siteStep),
+          },
+          {
+            instance: "application:storm-forum",
+            definition: forumApplication("storm-forum", [forumStep]),
+          },
+        ],
+      }),
+    ).toEqual([ONE_CONTENT_TARGET]);
   });
 });

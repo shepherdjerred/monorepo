@@ -116,6 +116,12 @@ export function forumReleaseOf(
 ): ReturnType<typeof views.forumReleaseOf> {
   return views.forumReleaseOf(definition);
 }
+/** The site a stored recipe activates: v1 `scoutSite`, or a model static-site step. */
+export function siteReleaseOf(
+  definition: StoredRecipeDefinition,
+): ReturnType<typeof views.siteReleaseOf> {
+  return views.siteReleaseOf(definition);
+}
 
 export const AdmissionSnapshotSchema = admission.AdmissionSnapshotSchema;
 export type AdmissionSnapshot = admission.AdmissionSnapshot;
