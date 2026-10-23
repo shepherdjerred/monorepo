@@ -18,6 +18,13 @@ five-minute heartbeat deadline. This tolerates a brief restart of the single
 Temporal server while preserving the existing one-attempt mutation policy and
 all native completion and acceptance checks.
 
+Arcade's owned Argo sync may prune only its five retired Mario Kart/Pokebot
+hostname objects. The executor verifies their absence in the frozen chart,
+exact live UIDs and Argo tracking, and unchanged Application selection before
+using the guarded sync command. Any other obsolete resource, including a PVC,
+fails the release. Deploy this executor before selecting the hostname-removal
+chart; root reconciliation preserves delegated Arcade selection.
+
 The `delivery-dispatch` Schedule qualifies published builds against their exact
 terminal CI execution, reconciles automatic environment selections, and submits
 unacknowledged outbox rows. It starts paused until the service, executor
