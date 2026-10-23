@@ -1,9 +1,8 @@
 import { expect, test } from "vitest";
-import { recipeFromPipeline } from "#shared/model/recipe-adapter.ts";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { testExecutor } from "#testing/seed.ts";
 import {
-  arcadePipeline,
+  arcadeCompoundRecipe,
   arcadeRegistration,
   publishCiRunner,
   requestOnProd,
@@ -14,27 +13,10 @@ const context = useDeliveryFixture({ registration: arcadeRegistration });
 /** arcade/prod deploys two Applications as one compound recipe. */
 async function compoundDeployment() {
   await publishCiRunner(context.delivery);
-  const companion = recipeFromPipeline(arcadePipeline);
-  if (companion.kind !== "kubernetes-application")
-    throw new Error("arcade converts to a Kubernetes application recipe");
-  const server = {
-    ...companion,
-    application: { ...companion.application, name: "arcade-server" },
-    steps: companion.steps.map((step) => ({
-      ...step,
-      instance: "application:arcade-server",
-    })),
-  };
   await context.cluster.database.pipeline.create({
     data: {
       id: "arcade/5",
-      definition: {
-        kind: "compound",
-        subRecipes: [
-          { instance: "application:arcade", definition: companion },
-          { instance: "application:arcade-server", definition: server },
-        ],
-      },
+      definition: arcadeCompoundRecipe(),
     },
   });
   await context.cluster.database.environment.update({

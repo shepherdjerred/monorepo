@@ -238,30 +238,7 @@ describe("catalog reconcile of component lists", () => {
           : service,
       ),
     };
-    await context.cluster.database.versionSet.create({
-      data: {
-        id: "arcade-set",
-        serviceId: "arcade",
-        revision: 1,
-        lineage: "0".repeat(64),
-      },
-    });
-    await context.cluster.database.deployment.create({
-      data: {
-        id: "arcade-owned",
-        requestId: "arcade/owned",
-        environmentId: "arcade/beta",
-        serviceId: "arcade",
-        versionSetRevisionId: "arcade-set",
-        pipelineRevisionId: "arcade-beta/1",
-        configurationId: "arcade/1",
-        catalogRevision: "test",
-        expectedGeneration: 0,
-        kind: "deploy",
-        status: "running",
-        requestedBy: testPublisher.id,
-      },
-    });
+    await ownedDeployment("running");
     await expect(
       context.delivery.reconcileCatalog(widened, testOperator, NO_MIGRATION),
     ).rejects.toThrow(

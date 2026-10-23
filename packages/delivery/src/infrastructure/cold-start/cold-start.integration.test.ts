@@ -3,9 +3,8 @@ import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { testExecutor, testOperator } from "#testing/seed.ts";
 import type { ColdStartSnapshot } from "#shared/model/cold-start-contract.ts";
 import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
-import { recipeFromPipeline } from "#shared/model/recipe-adapter.ts";
 import {
-  arcadePipeline,
+  arcadeCompoundRecipe,
   arcadeRegistration,
   publishCiRunner,
   requestOnProd,
@@ -86,28 +85,11 @@ async function acceptProd(operationId: string) {
  */
 async function compoundAcceptance() {
   const accepted = await acceptProd("op-1");
-  const companion = recipeFromPipeline(arcadePipeline);
-  if (companion.kind !== "kubernetes-application")
-    throw new Error("arcade converts to a Kubernetes application recipe");
-  const server = {
-    ...companion,
-    application: { ...companion.application, name: "arcade-server" },
-    steps: companion.steps.map((step) => ({
-      ...step,
-      instance: "application:arcade-server",
-    })),
-  };
   const db = context.cluster.database;
   await db.pipeline.create({
     data: {
       id: "arcade/5",
-      definition: {
-        kind: "compound",
-        subRecipes: [
-          { instance: "application:arcade", definition: companion },
-          { instance: "application:arcade-server", definition: server },
-        ],
-      },
+      definition: arcadeCompoundRecipe(),
     },
   });
   await db.deployment.update({

@@ -1,4 +1,5 @@
 import { PipelineDefinitionSchema } from "#shared/pipeline-contract.ts";
+import { recipeFromPipeline } from "#shared/model/recipe-adapter.ts";
 import { RegisterEnvironmentSchema } from "#shared/contract.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import type { useDeliveryFixture } from "./delivery-fixture.ts";
@@ -10,6 +11,31 @@ export const arcadePipeline = PipelineDefinitionSchema.parse(
     new URL("../../registrations/arcade.pipeline.json", import.meta.url),
   ).json(),
 );
+/**
+ * arcade/prod as a compound recipe of two Applications: arcade's recipe and
+ * the same Application renamed `arcade-server`.
+ */
+export function arcadeCompoundRecipe() {
+  const companion = recipeFromPipeline(arcadePipeline);
+  if (companion.kind !== "kubernetes-application")
+    throw new Error("arcade converts to a Kubernetes application recipe");
+  const server = {
+    ...companion,
+    application: { ...companion.application, name: "arcade-server" },
+    steps: companion.steps.map((step) => ({
+      ...step,
+      instance: "application:arcade-server",
+    })),
+  };
+  return {
+    kind: "compound" as const,
+    subRecipes: [
+      { instance: "application:arcade", definition: companion },
+      { instance: "application:arcade-server", definition: server },
+    ],
+  };
+}
+
 export const arcadeRegistration = {
   pipeline: arcadePipeline,
   environment: RegisterEnvironmentSchema.parse(
