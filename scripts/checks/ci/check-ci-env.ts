@@ -35,6 +35,7 @@ import {
   GeneratedStepsSchema,
   type PipelineStep,
 } from "../../lib/ci/ci-env-generated.ts";
+import { CHECKED_STEP_GRAPHS } from "../../lib/ci/generated-steps.ts";
 import {
   declaredSecretItems,
   parseVaultSnapshot,
@@ -449,15 +450,17 @@ function secretFields(
 }
 
 /**
- * Ask the generator for the full step model.
+ * Ask the generator for the full step model of one graph.
  *
  * Run as a subprocess rather than imported so this check stays usable even if
  * the generator's dependencies are not installed in this package's closure.
  */
-async function generatedStepsJson(): Promise<string> {
+export async function generatedStepsJson(
+  args: readonly string[],
+): Promise<string> {
   const child = Bun.spawn(
-    ["bun", "packages/woodpecker-config-extension/src/dump-steps.ts"],
-    { stdout: "pipe", stderr: "inherit" },
+    ["bun", "packages/woodpecker-config-extension/src/dump-steps.ts", ...args],
+    { cwd: REPOSITORY_ROOT, stdout: "pipe", stderr: "inherit" },
   );
   const [text, exitCode] = await Promise.all([
     new Response(child.stdout).text(),
@@ -488,9 +491,11 @@ async function readCredentialInputs(): Promise<{
 
 async function main(): Promise<void> {
   const { snapshot, declarations } = await readCredentialInputs();
-  const generated = GeneratedStepsSchema.parse(
-    JSON.parse(await generatedStepsJson()),
-  );
+  const generated = [];
+  for (const args of CHECKED_STEP_GRAPHS)
+    generated.push(
+      ...GeneratedStepsSchema.parse(JSON.parse(await generatedStepsJson(args))),
+    );
   const errors = validateGrantCatalog({
     grants: generated.flatMap((step) => step.secrets ?? []),
     snapshot,
@@ -545,7 +550,7 @@ async function main(): Promise<void> {
     0,
   );
   console.log(
-    `check-ci-env: OK — ${String(grantStepCount)} steps, ${String(grantCount)} exact grants, and ${String(checked)} script invocations verified.`,
+    `check-ci-env: OK — ${String(grantStepCount)} steps, ${String(grantCount)} exact grants, and ${String(checked)} script invocations verified across ${String(CHECKED_STEP_GRAPHS.length)} pipeline graphs.`,
   );
 }
 

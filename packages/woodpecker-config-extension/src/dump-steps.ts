@@ -39,8 +39,11 @@ const PLACEHOLDER_IMAGES: CiImages = {
 };
 
 const gateImage = `docker.io/shepherdjerred/woodpecker-config-extension@${PLACEHOLDER_DIGEST}`;
+// `--delivery-catalog-v2` dumps the graph with the v2 catalog flag on, whose
+// producers exist only once the cutover window flips it.
 const steps = buildPipelineSteps({
   deliveryPublication: true,
+  deliveryCatalogV2: Bun.argv.includes("--delivery-catalog-v2"),
   images: PLACEHOLDER_IMAGES,
   trustedGateImage: gateImage,
   changedBase: "",

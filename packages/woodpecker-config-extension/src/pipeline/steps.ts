@@ -31,6 +31,7 @@ import {
   TURBO_CACHE_TOKEN,
   TURBO_REMOTE_CACHE_ENVIRONMENT,
 } from "#src/pipeline/turbo-cache.ts";
+import { npmPackageArchiveSteps } from "#src/pipeline/lanes/npm-packages.ts";
 
 /**
  * The CI graph, as data.
@@ -185,7 +186,9 @@ export function buildPipelineSteps({
     ...resumeSteps(images),
     ...trmnlSteps(images),
     ...tofuValidationSteps(images),
-    ...(deliveryCatalogV2 ? tofuArchiveSteps(images) : []),
+    ...(deliveryCatalogV2
+      ? [...tofuArchiveSteps(images), ...npmPackageArchiveSteps(images)]
+      : []),
     ...playwrightSteps(images, changedBase),
     ...artifactPublicationSteps(images, sharedEnvironment, deliveryCatalogV2),
     ...deliveryPublicationSteps(

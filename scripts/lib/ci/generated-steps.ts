@@ -4,6 +4,17 @@ import {
 } from "./ci-env-generated.ts";
 
 /**
+ * Every pipeline graph the generator can emit, as `dump-steps.ts` arguments.
+ * The v2 catalog flag adds producer steps (OpenTofu and npm archives) that
+ * must meet the same grant contract and admission budget before the window
+ * turns it on.
+ */
+export const CHECKED_STEP_GRAPHS: readonly (readonly string[])[] = [
+  [],
+  ["--delivery-catalog-v2"],
+];
+
+/**
  * Read the generated CI graph from outside the generator.
  *
  * The graph is generated rather than committed, so the only way to check a
@@ -23,13 +34,14 @@ export async function readGeneratedSteps(
  */
 export async function readGeneratedStepJson(
   repositoryRoot: string,
-  options: { includeCanaries?: boolean } = {},
+  options: { includeCanaries?: boolean; graph?: readonly string[] } = {},
 ): Promise<unknown> {
   const child = Bun.spawn(
     [
       "bun",
       "packages/woodpecker-config-extension/src/dump-steps.ts",
       ...(options.includeCanaries === true ? ["--include-canaries"] : []),
+      ...(options.graph ?? []),
     ],
     { cwd: repositoryRoot, stdout: "pipe", stderr: "pipe" },
   );

@@ -156,6 +156,68 @@ function siteCommands(catalogV2: boolean): string[] {
   return lines;
 }
 
+/**
+ * npm and Obsidian publishing for changed packages. Under the v2 catalog
+ * webring is a channel environment: its deployment publishes to npm, so CI
+ * no longer builds or publishes it (X12).
+ */
+function packagePublishCommands(catalogV2: boolean): string[] {
+  const npmPackages = [
+    {
+      filter: "astro-opengraph-images",
+      directory: "packages/astro-opengraph-images",
+    },
+    ...(catalogV2
+      ? []
+      : [{ filter: "webring", directory: "packages/webring" }]),
+    {
+      filter: "'@shepherdjerred/helm-types'",
+      directory: "packages/homelab/src/helm-types",
+    },
+  ];
+  return [
+    "npm_changed=true",
+    "cooklang_changed=true",
+    "if ! bun --no-install ci/scripts/selectors/ci-changed.ts npm; then npm_changed=false; fi",
+    "if ! bun --no-install ci/scripts/selectors/ci-changed.ts cooklang; then cooklang_changed=false; fi",
+    'if [ "$npm_changed" != "true" ] && [ "$cooklang_changed" != "true" ]; then exit 0; fi',
+    ". ci/scripts/toolchain.sh",
+    "filters=()",
+    'if [ "$npm_changed" = "true" ]; then',
+    `  filters+=(${[...npmPackages.map((pkg) => `--filter ${pkg.filter}`), "--filter '@shepherdjerred/home-assistant'"].join(" ")})`,
+    "fi",
+    'if [ "$cooklang_changed" = "true" ]; then filters+=(--filter cooklang-for-obsidian); fi',
+    'ci/scripts/bun-install.sh --frozen-lockfile "${filters[@]}"',
+    'if [ "$npm_changed" = "true" ]; then',
+    ...npmPackages.map(
+      (pkg) => `  bun --no-install run --cwd ${pkg.directory} publish:npm`,
+    ),
+    // Home Assistant cannot publish `latest` before its first release tag
+    // exists. Exit status 2 from ls-remote means "no matching ref", which
+    // is the expected pre-release state; anything else is a real failure
+    // and must not be mistaken for it.
+    "  home_assistant_release_state=published",
+    "  set +e",
+    "  git ls-remote --exit-code --refs origin 'refs/tags/home-assistant-v*'",
+    "  home_assistant_lookup_status=$?",
+    "  set -e",
+    '  if [ "$home_assistant_lookup_status" -eq 2 ]; then',
+    "    home_assistant_release_state=pending",
+    '    echo "Home Assistant has no release tag; deferring latest publish until its initial release is merged"',
+    '  elif [ "$home_assistant_lookup_status" -ne 0 ]; then',
+    '    echo "failed to inspect Home Assistant release tags (status $home_assistant_lookup_status)" >&2',
+    '    exit "$home_assistant_lookup_status"',
+    "  fi",
+    '  if [ "$home_assistant_release_state" = "published" ]; then',
+    "    bun --no-install run --cwd packages/home-assistant publish:npm",
+    "  fi",
+    "fi",
+    'if [ "$cooklang_changed" = "true" ]; then',
+    "  bun --no-install run --cwd packages/cooklang-for-obsidian publish:plugin",
+    "fi",
+  ];
+}
+
 export function siteSteps(images: CiImages, catalogV2 = false): CiStep[] {
   return [
     {
@@ -179,47 +241,7 @@ export function siteSteps(images: CiImages, catalogV2 = false): CiStep[] {
       key: "publish",
       label: "publish packages",
       image: images.base,
-      commands: [
-        "npm_changed=true",
-        "cooklang_changed=true",
-        "if ! bun --no-install ci/scripts/selectors/ci-changed.ts npm; then npm_changed=false; fi",
-        "if ! bun --no-install ci/scripts/selectors/ci-changed.ts cooklang; then cooklang_changed=false; fi",
-        'if [ "$npm_changed" != "true" ] && [ "$cooklang_changed" != "true" ]; then exit 0; fi',
-        ". ci/scripts/toolchain.sh",
-        "filters=()",
-        'if [ "$npm_changed" = "true" ]; then',
-        "  filters+=(--filter astro-opengraph-images --filter webring --filter '@shepherdjerred/helm-types' --filter '@shepherdjerred/home-assistant')",
-        "fi",
-        'if [ "$cooklang_changed" = "true" ]; then filters+=(--filter cooklang-for-obsidian); fi',
-        'ci/scripts/bun-install.sh --frozen-lockfile "${filters[@]}"',
-        'if [ "$npm_changed" = "true" ]; then',
-        "  bun --no-install run --cwd packages/astro-opengraph-images publish:npm",
-        "  bun --no-install run --cwd packages/webring publish:npm",
-        "  bun --no-install run --cwd packages/homelab/src/helm-types publish:npm",
-        // Home Assistant cannot publish `latest` before its first release tag
-        // exists. Exit status 2 from ls-remote means "no matching ref", which
-        // is the expected pre-release state; anything else is a real failure
-        // and must not be mistaken for it.
-        "  home_assistant_release_state=published",
-        "  set +e",
-        "  git ls-remote --exit-code --refs origin 'refs/tags/home-assistant-v*'",
-        "  home_assistant_lookup_status=$?",
-        "  set -e",
-        '  if [ "$home_assistant_lookup_status" -eq 2 ]; then',
-        "    home_assistant_release_state=pending",
-        '    echo "Home Assistant has no release tag; deferring latest publish until its initial release is merged"',
-        '  elif [ "$home_assistant_lookup_status" -ne 0 ]; then',
-        '    echo "failed to inspect Home Assistant release tags (status $home_assistant_lookup_status)" >&2',
-        '    exit "$home_assistant_lookup_status"',
-        "  fi",
-        '  if [ "$home_assistant_release_state" = "published" ]; then',
-        "    bun --no-install run --cwd packages/home-assistant publish:npm",
-        "  fi",
-        "fi",
-        'if [ "$cooklang_changed" = "true" ]; then',
-        "  bun --no-install run --cwd packages/cooklang-for-obsidian publish:plugin",
-        "fi",
-      ],
+      commands: packagePublishCommands(catalogV2),
       dependsOn: ["verify", "release-please"],
       timeoutMinutes: 60,
       resources: VERIFY_TIER,
