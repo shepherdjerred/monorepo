@@ -161,7 +161,7 @@ test("every served static bucket has one pipeline or an explicit independent wri
   ]);
   const registered = Object.keys(STATIC_BUCKET_RELEASE_POLICIES).sort();
   expect(registered).toEqual([...storagePolicy.siteBuckets].sort());
-  expect(registered).toHaveLength(15);
+  expect(registered).toHaveLength(16);
   for (const bucket of registered) {
     if (bucket.startsWith("scout-frontend")) continue;
     // The release policy names the catalog environment; the window migrates

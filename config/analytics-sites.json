@@ -75,6 +75,11 @@
       "sessionReplay": true
     },
     {
+      "key": "landing-pages",
+      "hostname": "pages.sjer.red",
+      "sessionReplay": true
+    },
+    {
       "key": "wiki",
       "hostname": "wiki.sjer.red",
       "sessionReplay": true

@@ -7,13 +7,14 @@ PostHog Cloud US provides analytics for `sjer.red`, `resume.sjer.red`,
 `webring.sjer.red`, `better-skill-capped.com`, `mariokart.sjer.red`,
 `pokebot.sjer.red`, `scout-for-lol.com`, `beta.scout-for-lol.com`,
 `docs.ts-mc.net`, `ppl.glitter-boys.com`, `cook.sjer.red`, `stocks.sjer.red`,
-and `wiki.sjer.red`.
+`wiki.sjer.red`, and `pages.sjer.red`.
 Scout's `/docs/` pages share the Scout host identity and tracker. PostHog is a
 managed external service: the cluster has no PostHog namespace, database,
 volume, DNS record, secret, or readiness dependency.
 
-The Cooklang preview, Stocks, Glitter Boys, human wiki, and Storm docs
-trackers are repo-owned static assets.
+The Cooklang preview, Stocks, Glitter Boys, human wiki, Storm docs, and
+landing-pages trackers are repo-owned static assets. Pages on `pages.sjer.red`
+share one site key and register a `page_key` per item.
 
 ## Project setup
 

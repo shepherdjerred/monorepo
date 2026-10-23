@@ -302,7 +302,7 @@ test("a newer root freezes unchanged original site archives so an older queued s
   );
   const sites = result.find((build) => build.serviceId === "gitops")
     ?.platformChanges?.sites;
-  expect(sites).toHaveLength(13);
+  expect(sites).toHaveLength(14);
   expect(sites).toContainEqual({
     environmentId: "static-sites/sjer-red",
     artifactId: "original/sjer-red",
@@ -365,7 +365,7 @@ test("a first full root publication needs no retained sites when every active si
   );
   const sites = result.find((build) => build.serviceId === "gitops")
     ?.platformChanges?.sites;
-  expect(sites).toHaveLength(13);
+  expect(sites).toHaveLength(14);
   expect(sites).toContainEqual({
     environmentId: "static-sites/glitter-boys",
     artifactId: "ci/1/42/site/glitter-boys",

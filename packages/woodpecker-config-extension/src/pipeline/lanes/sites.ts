@@ -34,6 +34,11 @@ const SOURCE_BUILT_SITES = [
   },
   { lane: "site-stocks", site: "stocks-sjer-red", filter: "stocks-sjer-red" },
   {
+    lane: "site-landing-pages",
+    site: "landing-pages",
+    filter: "'@shepherdjerred/landing-pages'",
+  },
+  {
     lane: "site-cross-compilers",
     site: "cross-compilers-site",
     filter: "'@shepherdjerred/cross-compilers-site'",

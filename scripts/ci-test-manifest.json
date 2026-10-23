@@ -1258,6 +1258,11 @@
       "reason": "JSON scenario corpus plus its JSON Schema; no code and no dependencies, so the Rust core can consume it without the React Native package. The corpus is executed by tasks-for-obsidian and, later, tasknotes-core."
     },
     {
+      "package": "@shepherdjerred/landing-pages",
+      "directory": "packages/landing-pages",
+      "reason": "Static Astro site; no test files exist."
+    },
+    {
       "package": "stocks-sjer-red",
       "directory": "packages/stocks-sjer-red",
       "reason": "Static Astro site; no test files exist."

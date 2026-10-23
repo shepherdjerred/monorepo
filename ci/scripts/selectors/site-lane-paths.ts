@@ -59,6 +59,11 @@ export const sitePaths = {
     "packages/stocks-sjer-red",
     ...deployScripts,
   ],
+  "site-landing-pages": [
+    ...workspacePaths,
+    "packages/landing-pages",
+    ...deployScripts,
+  ],
   "site-cross-compilers": [
     ...workspacePaths,
     "packages/cross-compilers-site",
