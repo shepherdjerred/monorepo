@@ -240,7 +240,9 @@ async function closedSuccessorCase(input: Fixture, claimed: boolean) {
   });
   expect(locks).toBeGreaterThan(0);
   temporal.start.mockClear();
-  describeSuccessor(successor, "TERMINATED");
+  // A claim refused with a non-retryable 4xx fails the successor before it
+  // holds the marker; a claimed successor is terminated before acceptance.
+  describeSuccessor(successor, claimed ? "TERMINATED" : "FAILED");
   try {
     expect(await dispatchPendingDeliveries()).toEqual({ submitted: 0 });
   } finally {
