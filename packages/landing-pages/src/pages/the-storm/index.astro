@@ -70,7 +70,10 @@ const widths = [480, 800, 1200, 1600];
         <div class="edition" data-edition-panel="java">
           <span class="label">Java Edition {server.java.version}</span>
           <span class="address">{server.java.address}</span>
-          <p class="note">On PC, Mac or Linux. Multiplayer → Add Server.</p>
+          <p class="note">
+            playing on a computer? go to Multiplayer → Add Server and paste it
+            in.
+          </p>
         </div>
         <div class="edition" data-edition-panel="bedrock" hidden>
           <span class="label">Bedrock Edition, {server.bedrock.version}</span>
@@ -79,8 +82,19 @@ const widths = [480, 800, 1200, 1600];
             Port: <strong>{server.bedrock.port}</strong>
           </span>
           <p class="note">
-            On phones, tablets, Windows and consoles that let you add a server.
-            Enter the address and port in separate fields.
+            on a phone, tablet or Windows? go to Play → Servers → Add Server and
+            pop in the address and port.
+          </p>
+          <p class="note">
+            on Switch, Xbox or PlayStation? there’s one extra step.{" "}
+            <a
+              href={server.consoleGuide}
+              data-track="docs"
+              data-placement="console-card"
+            >
+              here’s how
+            </a>
+            .
           </p>
         </div>
       </div>
@@ -169,6 +183,20 @@ const widths = [480, 800, 1200, 1600];
             Play → Servers → Add Server, then enter{" "}
             <strong>{server.bedrock.address}</strong> and port{" "}
             <strong>{server.bedrock.port}</strong>.
+          </p>
+        </li>
+        <li>
+          <span class="label">Switch, Xbox or PlayStation</span>
+          <p>
+            consoles need one quick extra step to add a server.{" "}
+            <a
+              href={server.consoleGuide}
+              data-track="docs"
+              data-placement="console-steps"
+            >
+              we’ll walk you through it
+            </a>
+            .
           </p>
         </li>
         <li>
