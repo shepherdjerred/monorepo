@@ -175,7 +175,7 @@ describe("ArgoCD Application admission policies", () => {
     ]);
   });
 
-  test("only ArgoCD's own identities write a managed Application's source", () => {
+  test("only ArgoCD's own identities write the source of any Application in the ArgoCD namespace", () => {
     const policy = synthesizePolicies(true).find(
       (manifest) =>
         manifest.kind === "ValidatingAdmissionPolicy" &&
@@ -184,12 +184,15 @@ describe("ArgoCD Application admission policies", () => {
     const spec = z
       .object({
         failurePolicy: z.literal("Fail"),
-        matchConstraints: z.object({
-          objectSelector: z.object({
-            matchLabels: z.record(z.string(), z.string()),
-          }),
-          resourceRules: z.array(z.object({ operations: z.array(z.string()) })),
-        }),
+        matchConstraints: z
+          .object({
+            matchPolicy: z.literal("Equivalent"),
+            namespaceSelector: z.object({}).strict(),
+            resourceRules: z.array(
+              z.object({ operations: z.array(z.string()) }),
+            ),
+          })
+          .strict(),
         matchConditions: z.array(
           z.object({ name: z.string(), expression: z.string() }),
         ),
@@ -198,9 +201,14 @@ describe("ArgoCD Application admission policies", () => {
         ),
       })
       .parse(policy?.spec);
-    expect(spec.matchConstraints.objectSelector.matchLabels).toEqual({
-      [MANAGED_APPLICATION_LABEL]: "true",
-    });
+    // No object selector and no label condition: the unlabelled root is
+    // guarded, and removing a label never takes an Application out of scope.
+    expect(spec.matchConditions.map(({ name }) => name)).toEqual([
+      "argocd-namespace",
+      "source-written",
+    ]);
+    for (const { expression } of spec.matchConditions)
+      expect(expression).not.toContain(MANAGED_APPLICATION_LABEL);
     expect(spec.matchConstraints.resourceRules[0]?.operations).toEqual([
       "CREATE",
       "UPDATE",
