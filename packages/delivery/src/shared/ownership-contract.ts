@@ -26,6 +26,8 @@ export const OwnershipHandoverContextSchema = z.strictObject({
   schema: z.literal("delivery-ownership-context/v1"),
   sourceRevision: z.string().regex(/^[a-f0-9]{40}$/u),
   catalogFingerprint: Fingerprint,
+  /** The catalog revision last reconciled into PostgreSQL, which every target's binding comes from (4.1). */
+  catalogRevision: Fingerprint,
   observedAt: z.iso.datetime(),
   writesEnabled: z.boolean(),
   /** Environments the catalog keeps `active`, the only ones that admit deployments (4.10). */

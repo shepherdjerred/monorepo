@@ -331,7 +331,9 @@ original CI-qualified artifacts already recorded in PostgreSQL.
    ```
 
    Prepare an external `delivery-ownership-handover/v1` descriptor with the
-   exact reviewed `sourceRevision`, `pullRequest`, fresh `requestId`, canonical
+   exact reviewed `sourceRevision`, the `catalogRevision` that
+   `toolkit deploy catalog reconcile` reported for the reviewed checkout's
+   catalog (never copied from the context), `pullRequest`, fresh `requestId`, canonical
    `deliveryUrl`, inspected `woodpeckerWebhookId`, and **every catalog target**:
    `targets: [{application, environmentId, expectedGeneration}]`. Copy actual
    generations from the context. Worker targets require their original retained

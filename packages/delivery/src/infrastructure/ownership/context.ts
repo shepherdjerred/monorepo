@@ -156,6 +156,9 @@ export async function ownershipHandoverContext(
         schema: "delivery-ownership-context/v1" as const,
         sourceRevision,
         catalogFingerprint: `sha256:${fingerprint(delivery.catalog.catalog)}`,
+        // The definitions below come from this reconciled revision, not from
+        // the image's catalog; the handover binds it to the reviewed one.
+        catalogRevision: catalog.revision,
         observedAt: new Date().toISOString(),
         admittingEnvironments,
         counts: {

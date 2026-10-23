@@ -14,6 +14,12 @@ import {
 export const HandoverDescriptorSchema = z.strictObject({
   schema: z.literal("delivery-ownership-handover/v1"),
   sourceRevision: z.string().regex(/^[a-f0-9]{40}$/u),
+  /**
+   * The revision `toolkit deploy catalog reconcile` reported for the reviewed
+   * checkout's catalog document. Targets are bound from the API's last
+   * reconciled catalog, so it must be exactly this one.
+   */
+  catalogRevision: z.string().regex(/^sha256:[a-f0-9]{64}$/u),
   pullRequest: z.number().int().positive(),
   requestId: z.uuid(),
   deliveryUrl: z.literal("https://delivery.tailnet-1a49.ts.net"),
@@ -44,6 +50,7 @@ export const HandoverContextSchema = z
     schema: z.literal("delivery-ownership-context/v1"),
     sourceRevision: z.string(),
     catalogFingerprint: z.string(),
+    catalogRevision: z.string(),
     observedAt: z.iso.datetime(),
     writesEnabled: z.literal(false),
     admittingEnvironments: z.array(z.string()),
@@ -137,6 +144,10 @@ export function handoverContext(
   )
     throw new Error(
       "API image source/catalog must equal the exact reviewed handover checkout",
+    );
+  if (context.catalogRevision !== descriptor.catalogRevision)
+    throw new Error(
+      "The API's last reconciled catalog must be the exact reviewed catalog revision; reconcile the reviewed catalog before handover",
     );
   if (
     Date.parse(context.observedAt) < Date.now() - 30_000 ||

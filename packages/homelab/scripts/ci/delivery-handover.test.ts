@@ -60,6 +60,7 @@ function fixture() {
   const descriptor = HandoverDescriptorSchema.parse({
     schema: "delivery-ownership-handover/v1",
     sourceRevision: "a".repeat(40),
+    catalogRevision: `sha256:${"c".repeat(64)}`,
     pullRequest: 99,
     requestId: "11111111-1111-4111-8111-111111111111",
     deliveryUrl: "https://delivery.tailnet-1a49.ts.net",
@@ -80,6 +81,7 @@ function fixture() {
     schema: "delivery-ownership-context/v1",
     sourceRevision: descriptor.sourceRevision,
     catalogFingerprint: bootstrapFingerprint(catalog),
+    catalogRevision: descriptor.catalogRevision,
     observedAt: new Date().toISOString(),
     writesEnabled: false,
     admittingEnvironments: [],
@@ -290,6 +292,25 @@ test("dry run is read-only and missing independent specialized baseline is not r
         current.effects.catalog,
       ),
     ).toThrow("baseline");
+});
+
+test("a handover refuses targets bound from any catalog revision but the reviewed one", () => {
+  const current = fixture();
+  // The API image already carries the reviewed catalog, but PostgreSQL still
+  // holds the previously reconciled revision's bindings.
+  expect(() =>
+    handoverContext(
+      { ...current.context, catalogRevision: `sha256:${"d".repeat(64)}` },
+      current.descriptor,
+      current.effects.catalog,
+    ),
+  ).toThrow("exact reviewed catalog revision");
+  expect(() =>
+    HandoverDescriptorSchema.parse({
+      ...current.descriptor,
+      catalogRevision: undefined,
+    }),
+  ).toThrow();
 });
 
 test("source mismatch, unexpected native owner and unexplained shared-resource root drift are never rewritten", () => {

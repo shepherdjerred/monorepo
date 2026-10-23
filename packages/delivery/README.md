@@ -359,7 +359,9 @@ as a runtime or ownership-handover fallback.
 
 `toolkit deploy handover-context --machine` is an admin-only read of the API's
 baked source identity, each environment's binding in the catalog as last
-reconciled into PostgreSQL, fresh write-admission state, the environments whose
+reconciled into PostgreSQL together with that reconciled `catalogRevision`
+(the handover refuses unless it is the reviewed revision its descriptor
+names), fresh write-admission state, the environments whose
 catalog lifecycle is `active` and so admit deployments, and uncapped PostgreSQL
 ownership/request/recovery counts. It refuses before any catalog reconciliation
 and after a definition was registered outside the catalog since then. The bounded

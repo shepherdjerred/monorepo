@@ -78,7 +78,7 @@ function app(writes = false, sourceRevision = source) {
 }
 
 test("admin context binds actual API source and the reconciled catalog's bindings without inventing ordinary acceptance", async () => {
-  await reconcile();
+  const record = await reconcile();
   const response = await app().request("/api/v1/ownership-handover-context", {
     headers: admin,
   });
@@ -87,6 +87,8 @@ test("admin context binds actual API source and the reconciled catalog's binding
   expect(observed).toMatchObject({
     sourceRevision: source,
     catalogFingerprint: `sha256:${fingerprint(context.delivery.catalog.catalog)}`,
+    // The targets' identity is the reconciled revision, not the image's catalog.
+    catalogRevision: record.catalogRevision,
     writesEnabled: false,
     admittingEnvironments: [
       "arcade/beta",
