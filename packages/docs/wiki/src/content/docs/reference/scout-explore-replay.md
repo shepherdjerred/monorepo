@@ -140,8 +140,10 @@ corpus ([`plan.ts`](https://github.com/shepherdjerred/monorepo/blob/main/package
 
 - On-demand Riot reads are never reproduced. The tool starts a Temporal
   workflow and would write new matches into the snapshot mid-run.
-- Creation resolves only to tier 1. Tier 2 needs a live Discord OAuth token,
-  and `dev:db-pull` redacts those at source.
+- Creation resolves only to tier 1. On web, tier 2 needs a live Discord OAuth
+  token, and `dev:db-pull` redacts those at source. On Discord and voice it
+  needs Scout's bot, and a replay answers every bot read as an outage, so no
+  case depends on a server's live membership or roles.
 - Only the published lake build is copied, never staging NDJSON, so a dataset
   excludes roughly the newest fifteen minutes of matches.
 - A bundle holds real conversation text and stays local; the committed corpus
@@ -158,12 +160,14 @@ corpus ([`plan.ts`](https://github.com/shepherdjerred/monorepo/blob/main/package
 - `explore:capture-guilds` reads static flag configuration unless
   `FEATURE_FLAGS_MODE=flipt` points it at the stage's provider. `flagSource`
   records which, because a static capture is not evidence of live targeting.
-- Every case runs on the `web` surface. Curation admits a turn only when its
-  own durable run records that surface. The conversation's `origin` cannot
-  prove it: the migration that added the column defaults every earlier row to
-  `legacy`, and a pre-migration Discord thread continued on the web later would
-  carry web runs for its newer turns only
+- A conversation case runs on the surface its turn was asked on, as recorded
+  by that turn's own durable run. The conversation's `origin` cannot prove it:
+  the migration that added the column defaults every earlier row to `legacy`,
+  and a Discord thread continued on the web later carries web runs for its
+  newer turns only
   ([`curate-corpus.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/scripts/explore-replay/curate-corpus.ts)).
+  Chip cases run on `web`. The manifest's `promptSha256` covers the prompt for
+  every surface.
 
 ## Related
 

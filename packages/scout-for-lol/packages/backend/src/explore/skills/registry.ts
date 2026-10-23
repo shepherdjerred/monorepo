@@ -75,7 +75,7 @@ export function enabledExploreSkills(
 ): readonly ExploreSkillFile[] {
   const surface = options.surface ?? "web";
   return EXPLORE_SKILLS.filter((skill) => {
-    if (!skill.surfaces.includes(surface)) {
+    if (skill.outputFor !== undefined && !skill.outputFor.includes(surface)) {
       return false;
     }
     switch (skill.capability) {

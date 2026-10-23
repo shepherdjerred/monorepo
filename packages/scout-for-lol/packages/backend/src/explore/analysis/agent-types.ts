@@ -36,9 +36,9 @@ export type ExploreAgentParams = {
   /** Discord-originated dare drafts keep the invoking channel as metadata. */
   originChannelId: DiscordChannelId | null;
   /**
-   * Which product surface this turn is answered on. Creation tools are
-   * web-only; see `explore/surface.ts` for why that is structural rather than
-   * a policy choice.
+   * Which product surface this turn is answered on. It changes delivery and
+   * how permissions are learned, never which tools exist; see
+   * `explore/surface.ts`.
    */
   surface: ExploreSurface;
   abortSignal: AbortSignal;

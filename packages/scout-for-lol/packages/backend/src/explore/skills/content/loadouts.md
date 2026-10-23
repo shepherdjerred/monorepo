@@ -4,7 +4,6 @@ description: >-
   Query item, spell, and rune loadout data, and attach a source-backed loadout
   card when one game's build helps explain an Explore answer.
 capability: always
-surfaces: [web, voice]
 tripwires:
   - >-
     Attach a loadout card only for an exact (match_id, puuid) pair returned as

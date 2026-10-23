@@ -5,7 +5,6 @@ description: >-
   contract draft with a historical preview. Load before calling any challenge
   tool.
 capability: challenges
-surfaces: [web, discord]
 tripwires:
   - >-
     Never publish a challenge from Explore; publication requires the user's

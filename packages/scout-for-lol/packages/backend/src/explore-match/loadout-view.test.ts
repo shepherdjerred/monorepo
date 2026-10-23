@@ -10,7 +10,6 @@ import {
   buildPathFromEvents,
   exploreLoadoutPairKey,
   hydrateExploreLoadoutCards,
-  loadoutPairsForSurface,
   loadoutPairsInPreview,
   skillOrderFromEvents,
 } from "#src/explore-match/loadout-view.ts";
@@ -105,12 +104,9 @@ describe("Explore loadout card eligibility", () => {
       renderKind: "TABLE",
     });
 
-    expect(
-      loadoutPairsForSurface("web", preview, "match_participants"),
-    ).toContain(JSON.stringify(["NA1_11", PUUID]));
-    expect(
-      loadoutPairsForSurface("discord", preview, "match_participants"),
-    ).toEqual(new Set());
+    expect(loadoutPairsInPreview(preview, "match_participants")).toContain(
+      JSON.stringify(["NA1_11", PUUID]),
+    );
   });
 
   test("accepts only exact match and PUUID pairs from participant rows", () => {

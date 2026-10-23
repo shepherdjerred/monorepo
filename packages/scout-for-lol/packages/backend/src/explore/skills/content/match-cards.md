@@ -5,7 +5,6 @@ description: >-
   makes it easier to understand. Load before setting matchCards to anything
   other than [].
 capability: always
-surfaces: [web, voice]
 tripwires:
   - >-
     A match card may name only a match_id listed as card-supported by your most

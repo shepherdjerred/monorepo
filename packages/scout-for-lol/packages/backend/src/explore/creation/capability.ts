@@ -5,15 +5,17 @@
  * most load-bearing decision in this feature:
  *
  * **Tier 1 (`resolveCreationCapability`)** runs at turn setup, on every turn.
- * It reads the surface and one feature flag per guild in scope. It performs no
- * Discord I/O and no database I/O, so an ordinary analytics question costs
- * nothing extra.
+ * It reads one feature flag per guild in scope. It performs no Discord I/O and
+ * no database I/O, so an ordinary analytics question costs nothing extra. Every
+ * surface gets the same answer: web, `/scout ask` and voice prepare the same
+ * creations, and only how the asker confirms differs.
  *
  * **Tier 2 (`resolveCreationAccess`)** runs inside the first creation tool call
  * and is memoized for the rest of the turn by the tool factory. It resolves the
- * asker's real permissions, which means a Discord OAuth round trip
- * (`getFreshUserAccessToken` inside `fetchUserGuildsForRequest`) plus a
- * `ServerPermission` read per guild. Doing that at setup would put an OAuth
+ * asker's real permissions: on the web through a Discord OAuth round trip
+ * (`getFreshUserAccessToken` inside `fetchUserGuildsForRequest`), on Discord
+ * and voice through Scout's bot (`resolveGuildPermissionsForMember`), because
+ * those askers have no OAuth token. Both add a `ServerPermission` read per guild. Doing that at setup would put an OAuth
  * refresh on the critical path of every Explore turn, and a refresh failure
  * would then degrade turns that never intended to create anything.
  *
@@ -38,22 +40,26 @@ import { installedGuildName } from "#src/lib/discord/installed-guilds.ts";
 import type { ExploreSurface } from "#src/explore/surface.ts";
 import type { PartialGuild } from "#src/lib/discord-rest.ts";
 import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
-import { resolveGuildPermissions } from "#src/trpc/guild-permission.ts";
+import {
+  resolveGuildPermissions,
+  resolveGuildPermissionsForMember,
+} from "#src/trpc/guild-permission.ts";
 
 /** Tier 1: the guilds in scope whose operator has switched creation on. */
 export type CreationCapability = {
   guildIds: readonly DiscordGuildId[];
+  /** Decides how tier 2 learns the asker's permissions, never whether it may. */
+  surface: ExploreSurface;
 };
 
 /**
- * Tier 1. Cheap by construction: a surface comparison and one flag evaluation
- * per guild, with no Discord or database access.
+ * Tier 1. Cheap by construction: one flag evaluation per guild, with no
+ * Discord or database access.
  */
 export async function resolveCreationCapability(input: {
   surface: ExploreSurface;
   guildIds: readonly DiscordGuildId[];
 }): Promise<CreationCapability | null> {
-  if (input.surface !== "web") return null;
   const enabled: DiscordGuildId[] = [];
   for (const raw of input.guildIds) {
     const guildId = DiscordGuildIdSchema.parse(raw);
@@ -63,7 +69,9 @@ export async function resolveCreationCapability(input: {
       enabled.push(guildId);
     }
   }
-  return enabled.length === 0 ? null : { guildIds: enabled };
+  return enabled.length === 0
+    ? null
+    : { guildIds: enabled, surface: input.surface };
 }
 
 /** One guild the asker may actually act in, with the permissions they hold. */
@@ -93,6 +101,10 @@ type CreationAccessDependencies = {
     user: User,
     guildId: DiscordGuildId,
   ) => Promise<PermissionSet>;
+  resolveMemberPermissions: (
+    discordId: DiscordAccountId,
+    guildId: DiscordGuildId,
+  ) => Promise<PermissionSet>;
   guildName: (guildId: DiscordGuildId) => Promise<string>;
 };
 
@@ -119,6 +131,7 @@ const defaultCreationAccessDependencies: CreationAccessDependencies = {
     prisma.user.findUniqueOrThrow({ where: { discordId } }),
   fetchUserGuilds: fetchUserGuildsForRequest,
   resolvePermissions: resolveGuildPermissions,
+  resolveMemberPermissions: resolveGuildPermissionsForMember,
   guildName: recordedGuildName,
 };
 
@@ -159,6 +172,35 @@ function verificationUnavailable(): CreationAccess {
  * Guilds the asker cannot act in are dropped from the result; only a failure to
  * reach Discord produces `verification_unavailable`.
  */
+/**
+ * How tier 2 learns the asker's permissions in one guild, by surface.
+ *
+ * The web probes the OAuth guild list once up front, so an outage is told
+ * apart from "no eligible guilds" before any guild is judged. Discord and voice
+ * have no OAuth token; the bot answers per guild, and its errors keep the same
+ * outage-versus-denial meaning.
+ */
+async function permissionSource(
+  input: { capability: CreationCapability; requesterId: DiscordAccountId },
+  dependencies: CreationAccessDependencies,
+): Promise<
+  | ((guildId: DiscordGuildId) => Promise<PermissionSet>)
+  | { readonly outage: true }
+> {
+  if (input.capability.surface !== "web") {
+    return (guildId) =>
+      dependencies.resolveMemberPermissions(input.requesterId, guildId);
+  }
+  const user = await dependencies.loadUser(input.requesterId);
+  try {
+    await dependencies.fetchUserGuilds(user);
+  } catch (error) {
+    if (isVerificationOutage(error)) return { outage: true };
+    throw error;
+  }
+  return (guildId) => dependencies.resolvePermissions(user, guildId);
+}
+
 export async function resolveCreationAccess(
   input: {
     capability: CreationCapability;
@@ -166,20 +208,13 @@ export async function resolveCreationAccess(
   },
   dependencies: CreationAccessDependencies = defaultCreationAccessDependencies,
 ): Promise<CreationAccess> {
-  const user = await dependencies.loadUser(input.requesterId);
-  try {
-    // Once, up front. An outage is only distinguishable from "no eligible
-    // guilds" while nothing has been attributed to a specific guild yet.
-    await dependencies.fetchUserGuilds(user);
-  } catch (error) {
-    if (isVerificationOutage(error)) return verificationUnavailable();
-    throw error;
-  }
+  const permissionsIn = await permissionSource(input, dependencies);
+  if (typeof permissionsIn !== "function") return verificationUnavailable();
 
   const guilds: CreationGuildAccess[] = [];
   for (const guildId of input.capability.guildIds) {
     try {
-      const permissions = await dependencies.resolvePermissions(user, guildId);
+      const permissions = await permissionsIn(guildId);
       guilds.push({
         guildId,
         name: await dependencies.guildName(guildId),

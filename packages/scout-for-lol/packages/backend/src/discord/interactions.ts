@@ -32,8 +32,13 @@ import {
 } from "#src/discord/scout/publish.ts";
 import {
   isScoutCustomId,
+  parseScoutFollowUpCustomId,
   parseScoutPublishCustomId,
 } from "#src/discord/scout/custom-id.ts";
+import {
+  executeScoutFollowUp,
+  type ScoutFollowUpInteraction,
+} from "#src/discord/commands/scout.ts";
 import {
   handleMvpVoteButton,
   type VoteButtonInteraction,
@@ -126,6 +131,7 @@ async function routeInteraction(interaction: Interaction): Promise<void> {
 export type RoutableButtonInteraction = BetButtonInteraction &
   BucksNavigationInteraction &
   ScoutPublishButtonInteraction &
+  ScoutFollowUpInteraction &
   DareButtonInteraction &
   VoteButtonInteraction & {
     deferUpdate: () => Promise<unknown>;
@@ -360,9 +366,31 @@ export async function routeModalSubmit(
   }
 }
 
+async function routeScoutFollowUp(
+  interaction: RoutableButtonInteraction,
+): Promise<void> {
+  try {
+    await executeScoutFollowUp(interaction);
+    discordComponentsTotal.inc({ namespace: "scout", status: "success" });
+  } catch (error) {
+    logger.error("❌ Error answering a Scout follow-up:", error);
+    discordComponentsTotal.inc({ namespace: "scout", status: "error" });
+    if (interaction.deferred) {
+      await interaction.editReply({
+        content: "Scout could not answer that follow-up. Try the button again.",
+        allowedMentions: { parse: [] },
+      });
+    }
+  }
+}
+
 async function routeScoutButton(
   interaction: RoutableButtonInteraction,
 ): Promise<void> {
+  if (parseScoutFollowUpCustomId(interaction.customId) !== undefined) {
+    await routeScoutFollowUp(interaction);
+    return;
+  }
   try {
     const malformed =
       parseScoutPublishCustomId(interaction.customId) === undefined;

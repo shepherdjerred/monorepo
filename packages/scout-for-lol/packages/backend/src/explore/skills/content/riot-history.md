@@ -4,7 +4,6 @@ description: >-
   Riot-backed coverage, rank, mastery, and on-demand acquisition of the newest
   100 ranked or normal games or selected match timelines.
 capability: riot-history
-surfaces: [web, discord, voice]
 tripwires:
   - On-demand history covers at most the newest 100 games of the requested type; state the actual count returned by Riot and by ScoutQL.
   - Timeline acquisition may use only IDs returned by the most recent ScoutQL query and at most 10 per call.

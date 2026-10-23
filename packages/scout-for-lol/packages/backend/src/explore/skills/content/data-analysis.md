@@ -2,10 +2,10 @@
 name: data-analysis
 description: Analyze complete query datasets and captured raw documents with JavaScript for joins, streaks, builds and nested timeline facts.
 capability: analysis
-surfaces: [web, discord, voice]
 tripwires:
   - A dataset preview is a sample; compute statistics over the named dataset, and report missing raw-document coverage.
 ---
+
 ## Data analysis
 
 Use these tools only when they are available in this turn.

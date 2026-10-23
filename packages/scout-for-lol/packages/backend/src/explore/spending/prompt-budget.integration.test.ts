@@ -75,7 +75,7 @@ async function fullPromptBound() {
       mvpVotesCapability: { serverId },
       daresEnabled: true,
       challengesEnabled: true,
-      creationCapability: { guildIds: [serverId] },
+      creationCapability: { guildIds: [serverId], surface: "web" },
       riotHistoryEnabled: true,
       clashEnabled: true,
       hallCapability: { guildIds: [serverId] },

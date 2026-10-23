@@ -53,7 +53,7 @@ function executors(overrides?: {
   listChannels?: (guildId: DiscordGuildId) => Promise<PostableChannel[]>;
 }) {
   return createCreationToolExecutors({
-    capability: { guildIds: [GUILD] },
+    capability: { guildIds: [GUILD], surface: "web" },
     requesterId: REQUESTER,
     track: passthroughTracker,
     dependencies: {
@@ -256,7 +256,7 @@ describe("prepare_subscription_creation", () => {
 
   test("an unknown Riot ID is refused with Riot's own reason", async () => {
     const tools = createCreationToolExecutors({
-      capability: { guildIds: [GUILD] },
+      capability: { guildIds: [GUILD], surface: "web" },
       requesterId: REQUESTER,
       track: passthroughTracker,
       dependencies: {

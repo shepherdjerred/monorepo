@@ -80,7 +80,7 @@ async function savedAnswer(answerText = "Ahri wins most often.") {
       matchCards: [],
       loadoutCards: [],
       caveats: ["Tracked matches only."],
-      followUps: [],
+      followUps: ["Which champion has the most games?"],
     },
     preview: null,
     visualization: scoutTestVisualization,
@@ -171,6 +171,10 @@ describe("Scout public publishing", () => {
     expect(publicJson).toContain("Win rates");
     expect(JSON.stringify(fake.edits)).toContain("Posted");
     expect(JSON.stringify(fake.edits)).toContain('"disabled":true');
+    // The private reply keeps its follow-up buttons after posting.
+    expect(JSON.stringify(fake.edits)).toContain(
+      "Which champion has the most games?",
+    );
   });
 
   test.each([

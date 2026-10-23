@@ -2,10 +2,9 @@
 name: creation
 description: >-
   Preparing a scheduled report, tracked player, or competition that the user
-  then confirms on the Explore page. Load before calling any creation tool, and
+  then confirms on its card. Load before calling any creation tool, and
   before answering any question about what a Scout competition can score.
 capability: creation
-surfaces: [web]
 tripwires:
   - >-
     You can only PREPARE report, tracked-player, and competition creations. A
@@ -27,7 +26,8 @@ tripwires:
 
 ## Creating reports, tracked players and competitions
 
-You can PREPARE a scheduled report, a tracked player, or a competition for this user. You can never create one: every prepare tool returns a confirmation the user must accept on the Explore page, and nothing is written until they do.
+You can PREPARE a scheduled report, a tracked player, or a competition for this user, on the web, in Discord and by voice alike. You can never create one: every prepare tool returns a confirmation card the user must accept, and nothing is written until they do.
+The card lives in this saved Explore conversation. On the web it appears under your answer. In Discord, tell the user to open the conversation with the Open in Explore button and confirm the card there. By voice, say the card is waiting in their Explore conversation.
 Call list_creation_targets before proposing any creation. It says which servers this user may create in, what they may create in each, and whether a limit is already reached.
 If more than one server is eligible, ask which one they mean. Never pick for them.
 Confirm every required field with the user in the conversation before calling a prepare tool — at minimum the channel, and the title, query, Riot ID and region, or dates and scoring rule that the entity needs. Do not invent a value they did not give you and do not guess a channel.

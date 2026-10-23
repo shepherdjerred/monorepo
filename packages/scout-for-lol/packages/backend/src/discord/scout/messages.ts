@@ -7,7 +7,10 @@ import {
 import type { ExploreMessage } from "@scout-for-lol/data";
 import { getExploreConversationUrl } from "#src/discord/commands/links.ts";
 import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
-import { formatScoutPublishCustomId } from "#src/discord/scout/custom-id.ts";
+import {
+  formatScoutFollowUpCustomId,
+  formatScoutPublishCustomId,
+} from "#src/discord/scout/custom-id.ts";
 
 export const NO_GENERATED_MENTIONS = { parse: [] } as const;
 
@@ -50,6 +53,40 @@ export function exploreActionRow(input: {
       .setStyle(ButtonStyle.Link)
       .setURL(getExploreConversationUrl(input.conversationId)),
     publish,
+  );
+}
+
+/** Discord's ceiling on a button label. */
+const MAX_BUTTON_LABEL = 80;
+
+/**
+ * The answer's follow-up suggestions, as buttons that ask them next.
+ *
+ * The same chips the web shows under an answer. Each one continues this
+ * conversation from this answer, so Discord keeps the thread the web keeps.
+ */
+export function exploreFollowUpRow(input: {
+  conversationId: string;
+  answer: ExploreMessage;
+}): ActionRowBuilder<ButtonBuilder> | null {
+  if (input.answer.followUps.length === 0) return null;
+  return new ActionRowBuilder<ButtonBuilder>().addComponents(
+    input.answer.followUps.slice(0, 3).map((followUp, index) =>
+      new ButtonBuilder()
+        .setCustomId(
+          formatScoutFollowUpCustomId({
+            conversationId: input.conversationId,
+            assistantMessageId: input.answer.id,
+            index,
+          }),
+        )
+        .setLabel(
+          followUp.length > MAX_BUTTON_LABEL
+            ? `${followUp.slice(0, MAX_BUTTON_LABEL - 1)}…`
+            : followUp,
+        )
+        .setStyle(ButtonStyle.Secondary),
+    ),
   );
 }
 

@@ -19,6 +19,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
   type ActionFor,
+  type DiscordAccountId,
   type DiscordGuildId,
   type PermissionDeniedCause,
   type PermissionSet,
@@ -34,6 +35,7 @@ import type { User } from "#generated/prisma/client/index.js";
 import { prisma } from "#src/database/index.ts";
 import { hasAdministrator } from "#src/lib/discord-rest.ts";
 import { isScoutInstalledInGuild } from "#src/lib/discord/installed-guilds.ts";
+import { botRest } from "#src/lib/discord/bot-rest.ts";
 import {
   callDiscordForRequest,
   fetchUserGuildsForRequest,
@@ -79,15 +81,70 @@ export async function resolveGuildPermissions(
       message: "Scout is not installed in that guild",
     });
   }
-  if (match.owner || hasAdministrator(match.permissions)) {
-    return rootPermissions();
-  }
+  return match.owner || hasAdministrator(match.permissions)
+    ? rootPermissions()
+    : await grantedPermissions(guildId, user.discordId);
+}
+
+/** The Player baseline plus a member's Scout-managed grants in one guild. */
+async function grantedPermissions(
+  guildId: DiscordGuildId,
+  discordId: DiscordAccountId,
+): Promise<PermissionSet> {
   const rows = await prisma.serverPermission.findMany({
-    where: { serverId: guildId, discordUserId: user.discordId },
+    where: { serverId: guildId, discordUserId: discordId },
     select: { permission: true },
   });
   const granted = rows.map((row) => parseStoredPermissionKey(row.permission));
   return createPermissionSet(memberPermissions(granted));
+}
+
+function scoutNotInstalled(): TRPCError {
+  return new TRPCError({
+    code: "NOT_FOUND",
+    message: "Scout is not installed in that guild",
+  });
+}
+
+/**
+ * {@link resolveGuildPermissions} for someone Scout knows only by Discord id.
+ *
+ * A `/scout ask` or voice turn has no web session, and the user row Discord
+ * upserts deliberately carries no OAuth token, so there is no guild list to
+ * ask. Scout's bot can answer the same three questions itself — is this
+ * person a member, do they own the guild, does any role they hold carry
+ * Administrator — and the grants come from the same table. Same decision,
+ * same errors: not a member is FORBIDDEN, Scout absent is NOT_FOUND, and an
+ * unreachable Discord is never a permission answer.
+ */
+export async function resolveGuildPermissionsForMember(
+  discordId: DiscordAccountId,
+  guildId: DiscordGuildId,
+): Promise<PermissionSet> {
+  const reader = botRest();
+  const guild = await callDiscordForRequest(() => reader.guild(guildId));
+  if (guild === null) throw scoutNotInstalled();
+  const member = await callDiscordForRequest(() =>
+    reader.guildMember(guildId, discordId),
+  );
+  if (member === null) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You are not a member of that guild",
+    });
+  }
+  if (guild.owner_id === discordId) return rootPermissions();
+  // Null here is Discord saying the guild is gone (Scout removed since the
+  // first read), never "no roles": that would read as a plain member.
+  const roles = await callDiscordForRequest(() => reader.guildRoles(guildId));
+  if (roles === null) throw scoutNotInstalled();
+  const held = new Set([guildId, ...member.roles]);
+  const administrator = roles.some(
+    (role) => held.has(role.id) && hasAdministrator(role.permissions),
+  );
+  return administrator
+    ? rootPermissions()
+    : await grantedPermissions(guildId, discordId);
 }
 
 async function requireGuildPermission<R extends Resource>(

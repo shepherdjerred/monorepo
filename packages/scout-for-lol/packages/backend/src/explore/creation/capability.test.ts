@@ -77,6 +77,10 @@ function countedAccess(
         counters.permission += 1;
         return await permissions(guildId);
       },
+      resolveMemberPermissions: async (_discordId, guildId) => {
+        counters.permission += 1;
+        return await permissions(guildId);
+      },
       guildName: (guildId) => Promise.resolve(`Guild ${guildId}`),
     });
 }
@@ -102,21 +106,21 @@ describe("resolveCreationCapability", () => {
         surface: "web",
         guildIds: [OTHER_GUILD, ENABLED_GUILD],
       }),
-    ).resolves.toEqual({ guildIds: [ENABLED_GUILD] });
+    ).resolves.toEqual({ guildIds: [ENABLED_GUILD], surface: "web" });
   });
 
-  test("Discord is never a creation surface, however the flag is set", async () => {
-    clearFlagOverrides("explore_creation_enabled");
-    addFlagOverride("explore_creation_enabled", true, {
-      server: ENABLED_GUILD,
-    });
-    await expect(
-      resolveCreationCapability({
-        surface: "discord",
-        guildIds: [ENABLED_GUILD],
-      }),
-    ).resolves.toBeNull();
-  });
+  test.each(["discord", "voice"] as const)(
+    "%s gets the same creation capability as the web",
+    async (surface) => {
+      clearFlagOverrides("explore_creation_enabled");
+      addFlagOverride("explore_creation_enabled", true, {
+        server: ENABLED_GUILD,
+      });
+      await expect(
+        resolveCreationCapability({ surface, guildIds: [ENABLED_GUILD] }),
+      ).resolves.toEqual({ guildIds: [ENABLED_GUILD], surface });
+    },
+  );
 });
 
 describe("creation tool registration", () => {
@@ -188,7 +192,7 @@ describe("creation tool registration", () => {
     // The executors behind the tool wrappers, so the assertion is about the
     // memoization rather than about the AI SDK's call plumbing.
     const executors = createCreationToolExecutors({
-      capability: { guildIds: [ENABLED_GUILD] },
+      capability: { guildIds: [ENABLED_GUILD], surface: "web" },
       requesterId: REQUESTER,
       track: passthroughTracker,
       dependencies: {
@@ -214,7 +218,43 @@ describe("creation tool registration", () => {
 describe("resolveCreationAccess", () => {
   const capability: CreationCapability = {
     guildIds: [ENABLED_GUILD, OTHER_GUILD],
+    surface: "web",
   };
+
+  test.each(["discord", "voice"] as const)(
+    "%s resolves permissions through the bot, with no OAuth probe",
+    async (surface) => {
+      const counters: AccessCounters = { oauth: 0, permission: 0 };
+      const access = await countedAccess(counters, (guildId) =>
+        guildId === ENABLED_GUILD
+          ? Promise.resolve(createPermissionSet([P("subscriptions", "create")]))
+          : Promise.reject(
+              new TRPCError({ code: "FORBIDDEN", message: "Not a member" }),
+            ),
+      )({ capability: { ...capability, surface }, requesterId: REQUESTER });
+
+      expect(counters).toEqual({ oauth: 0, permission: 2 });
+      expect(access.kind).toBe("resolved");
+      if (access.kind !== "resolved") return;
+      expect(access.guilds.map((guild) => guild.guildId)).toEqual([
+        ENABLED_GUILD,
+      ]);
+    },
+  );
+
+  test("a bot-side Discord outage on Discord is still not a denial", async () => {
+    const counters: AccessCounters = { oauth: 0, permission: 0 };
+    const access = await countedAccess(counters, () =>
+      Promise.reject(
+        new TRPCError({ code: "SERVICE_UNAVAILABLE", message: "Discord down" }),
+      ),
+    )({
+      capability: { ...capability, surface: "discord" },
+      requesterId: REQUESTER,
+    });
+
+    expect(access.kind).toBe("verification_unavailable");
+  });
 
   test("drops a guild the user has no permission in, keeps the rest", async () => {
     const counters: AccessCounters = { oauth: 0, permission: 0 };

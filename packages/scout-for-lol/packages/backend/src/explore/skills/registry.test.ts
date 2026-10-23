@@ -10,6 +10,12 @@ import {
 
 const WEB_CONTEXT: ExploreSkillContext = { bucks: null, surface: "web" };
 
+function skillsOn(surface: "web" | "discord" | "voice"): string[] {
+  return enabledExploreSkills({ bucks: null, surface }).map(
+    (candidate) => candidate.name,
+  );
+}
+
 function skill(name: string) {
   const found = EXPLORE_SKILLS.find((candidate) => candidate.name === name);
   if (found === undefined) {
@@ -54,17 +60,29 @@ describe("enabledExploreSkills", () => {
     expect(names).toContain("creation");
   });
 
-  test("discord never offers the web-only skills", () => {
-    const names = enabledExploreSkills({
-      bucks: null,
+  test("every surface offers the same capability skills", () => {
+    const options = {
+      bucks: { currentTime: "2026-08-29T00:00:00.000Z" },
+      mvpVotes: { currentTime: "2026-08-29T00:00:00.000Z" },
+      dares: true,
+      challenges: true,
+      clash: true,
       creation: true,
-      surface: "discord",
-    }).map((candidate) => candidate.name);
-    expect(names).not.toContain("match-cards");
-    expect(names).not.toContain("loadouts");
-    // Creation is web-only structurally; the skill file must agree.
-    expect(names).not.toContain("creation");
-    expect(names).toContain("visualization");
+    };
+    const names = (surface: "web" | "discord" | "voice") =>
+      enabledExploreSkills({ ...options, surface })
+        .map((candidate) => candidate.name)
+        .filter((name) => name !== "voice-response");
+    expect(names("discord")).toEqual(names("web"));
+    expect(names("voice")).toEqual(names("web"));
+    expect(names("discord")).toContain("creation");
+    expect(names("discord")).toContain("loadouts");
+  });
+
+  test("delivery skills reach only the surface they shape", () => {
+    expect(skillsOn("voice")).toContain("voice-response");
+    expect(skillsOn("web")).not.toContain("voice-response");
+    expect(skillsOn("discord")).not.toContain("voice-response");
   });
 });
 
@@ -93,7 +111,7 @@ describe("skill bodies", () => {
     expect(body).toContain("cannot unpivot the six final-inventory slots");
     expect(body).toContain("exact `(match_id, puuid)` pair");
     expect(body).toContain("acquire_match_timelines");
-    expect(skill("loadouts").surfaces).toEqual(["web", "voice"]);
+    expect(skill("loadouts").outputFor).toBeUndefined();
   });
 
   test("mvp-votes interpolates the turn timestamp and keeps the ScoutQL tripwire", () => {

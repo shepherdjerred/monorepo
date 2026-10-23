@@ -537,6 +537,96 @@
         }
       ],
       "note": "General champion advice answered without lookup tools."
+    },
+    {
+      "conversationId": "80ffa8ca-e855-421e-acc3-9984515f34b9",
+      "leafId": "7ba8722b-b0be-4e17-bc76-39ea27feb745",
+      "kind": "question",
+      "surface": "discord",
+      "guildSource": "run-payload",
+      "turns": [
+        {
+          "index": 0,
+          "questionMessageId": "b202cf3d-9199-4ba8-86f0-3b7135ac2f4b",
+          "answerMessageId": "7ba8722b-b0be-4e17-bc76-39ea27feb745"
+        }
+      ],
+      "note": "Discord: Malphite rune page; reference lookup."
+    },
+    {
+      "conversationId": "b6c8606c-b226-43d3-9c13-10c465e58c57",
+      "leafId": "4694e665-7f44-4330-9733-f1de8c0472d7",
+      "kind": "question",
+      "surface": "discord",
+      "guildSource": "run-payload",
+      "turns": [
+        {
+          "index": 0,
+          "questionMessageId": "0e53af3d-4e79-4626-b25b-e26384608420",
+          "answerMessageId": "4694e665-7f44-4330-9733-f1de8c0472d7"
+        }
+      ],
+      "note": "Discord: Brand rune page; reference lookup."
+    },
+    {
+      "conversationId": "3ef7d211-3d84-44f1-8ea2-27f9db865269",
+      "leafId": "254b102f-570d-4521-b8ea-4716fafaee8b",
+      "kind": "question",
+      "surface": "discord",
+      "guildSource": "run-payload",
+      "turns": [
+        {
+          "index": 0,
+          "questionMessageId": "7098e55f-2540-4d31-8912-566aa77b64fa",
+          "answerMessageId": "254b102f-570d-4521-b8ea-4716fafaee8b"
+        }
+      ],
+      "note": "Discord: add a tracked player; surface-parity regression."
+    },
+    {
+      "conversationId": "4f3af423-372d-44f9-99d8-466d84f285de",
+      "leafId": "870db9d4-feb6-4afb-bc9b-7211d5d2131f",
+      "kind": "question",
+      "surface": "discord",
+      "guildSource": "run-payload",
+      "turns": [
+        {
+          "index": 0,
+          "questionMessageId": "0f402447-33fa-4301-9cf4-8143e1fc33f9",
+          "answerMessageId": "870db9d4-feb6-4afb-bc9b-7211d5d2131f"
+        }
+      ],
+      "note": "Discord: how to add someone; was told Discord cannot change tracked players."
+    },
+    {
+      "conversationId": "1356cee8-58c0-469b-93a8-59ad66dcf574",
+      "leafId": "b892ccd7-b5d3-45c6-bab0-9ae086d7ddb5",
+      "kind": "question",
+      "surface": "discord",
+      "guildSource": "run-payload",
+      "turns": [
+        {
+          "index": 0,
+          "questionMessageId": "b3d518cf-884a-4e14-aff3-a2f50f8ab578",
+          "answerMessageId": "b892ccd7-b5d3-45c6-bab0-9ae086d7ddb5"
+        }
+      ],
+      "note": "Discord: who am I; identity regression."
+    },
+    {
+      "conversationId": "b72b2c41-21b2-4f45-a8a1-a1e1e7669b06",
+      "leafId": "f4012b66-095a-43d9-9518-dfd21c170eda",
+      "kind": "question",
+      "surface": "discord",
+      "guildSource": "run-payload",
+      "turns": [
+        {
+          "index": 0,
+          "questionMessageId": "6d708d50-9e15-41b4-8eb2-f2215a10b476",
+          "answerMessageId": "f4012b66-095a-43d9-9518-dfd21c170eda"
+        }
+      ],
+      "note": "Discord: a bare player name; lookup without follow-through."
     }
   ]
 }

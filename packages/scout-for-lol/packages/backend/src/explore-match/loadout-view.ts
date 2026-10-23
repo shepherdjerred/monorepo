@@ -16,7 +16,6 @@ import {
   type ReportAiPreviewSummary,
 } from "@scout-for-lol/data";
 import type { ScoutQlSource } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
-import type { ExploreSurface } from "#src/explore/surface.ts";
 import {
   fetchTimelineCoverage,
   fetchTimelineEventPage,
@@ -73,15 +72,6 @@ export function loadoutPairsInPreview(
 }
 
 /** Only web and voice turns can attach these cards to their answer. */
-export function loadoutPairsForSurface(
-  surface: ExploreSurface,
-  preview: ReportAiPreviewSummary | ReportAiModelPreviewSummary | null,
-  source: ScoutQlSource | null,
-): Set<string> {
-  return surface === "discord"
-    ? new Set()
-    : loadoutPairsInPreview(preview, source);
-}
 
 export function assertEligibleExploreLoadoutCardRequests(input: {
   requests: ExploreLoadoutCardRequest[];
