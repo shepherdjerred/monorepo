@@ -339,6 +339,15 @@ from `toolkit ci explain`; the retained interval begins after toolchain bootstra
 and includes dependency installation. Turbo intervals identify execution within
 that interval and can overlap.
 
+Records also carry `workspaceUsage`: the finished workspace's filesystem usage
+and the allocated bytes of fixed categories. The categories are `.git`, the
+root and package `node_modules`, package build outputs, the root `.turbo`, and
+`/woodpecker/tmp` and `/woodpecker/gradle`. Each category is one `du` walk that
+counts a hard-linked file once. All of them share a 60-second deadline, and a
+category that misses it reports `null`. The measurement is best effort: when it
+fails, the record omits it and the step result is unchanged. It is a final
+size, not a count of bytes written during the run.
+
 Publication uses a 20-second request deadline and bounded retry backoff.
 A publication or collection failure fails
 an otherwise successful command; an existing command failure keeps its original

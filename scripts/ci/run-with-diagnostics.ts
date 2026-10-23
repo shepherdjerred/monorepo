@@ -53,6 +53,20 @@ async function publish(report: TaskDiagnostics): Promise<void> {
   );
 }
 
+/** Best effort: a missing or slow measurement never changes the step result. */
+async function measureWorkspace(
+  root: string,
+): Promise<TaskDiagnostics["workspaceUsage"]> {
+  try {
+    const { collectWorkspaceUsage } =
+      await import("../lib/ci/workspace-usage.ts");
+    return await collectWorkspaceUsage(root);
+  } catch {
+    console.error("CI workspace usage measurement failed; omitted");
+    return undefined;
+  }
+}
+
 export async function retainDiagnostics(
   identity: Identity,
   before: ReadonlySet<string>,
@@ -134,8 +148,15 @@ async function retainFromArgs(args: string[]): Promise<number> {
       turbo: true,
       browserSelection: true,
       collectionFailed: true,
+      workspaceUsage: true,
     }).parse(identity);
-    return await retainDiagnostics(parsed, new Set(previous), process.cwd());
+    const root = process.cwd();
+    const workspaceUsage = await measureWorkspace(root);
+    return await retainDiagnostics(
+      workspaceUsage === undefined ? parsed : { ...parsed, workspaceUsage },
+      new Set(previous),
+      root,
+    );
   } catch {
     // Bootstrap or schema errors may include rejected values. Keep them out
     // of CI logs, just like collection and upload errors above.
