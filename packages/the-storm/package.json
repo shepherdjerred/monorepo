@@ -40,7 +40,8 @@
     "#learning-regression-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-regression-capture.json",
     "#learning-melee-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-melee-check.json",
     "#learning-simulation-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-simulation-check.json",
-    "#learning-promotion-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-actor-promotion.json"
+    "#learning-promotion-wire": "./plugin/modules/rwfbots/src/main/resources/rwf-actor-promotion.json",
+    "#ranged-kits-wire": "./plugin/modules/rwf/src/test/resources/rwf-ranged-kits.json"
   },
   "description": "Turbo shim over the Gradle build of The Storm's Paper plugin (plugin/) — scripts wrap Gradle so the workspace joins the task graph (caching + affected). Same pattern as the Go and Rust shims. tests/e2e is the TypeScript real-server harness.",
   "scripts": {
@@ -53,7 +54,7 @@
     "test:client": "mise exec -- gradle -p client test --console=plain && bun --no-install --bun vitest run tools/client --exclude '**/.cache/**' --config ../../vitest.config.ts",
     "test:client-native": "mise exec -- gradle -p client runClientGameTest --console=plain",
     "build": "bun run build:plugin && bun run build:client",
-    "test": "bun run test:server && mise exec -- gradle -p plugin test --console=plain && bun --no-install --bun vitest --config ../../vitest.config.ts run tests/rcon.test.ts tests/rwf-recording.test.ts tests/rwf-status.test.ts tests/server-files.test.ts tests/external-server.test.ts tools/sandbox-qualification tests/capacity/capacity-bars.test.ts scripts/bots/mineskin.test.ts && bun run test:client && bun run test:learning && bun run test:maps && bun run test:capacity-tools",
+    "test": "bun run test:server && mise exec -- gradle -p plugin test --console=plain && bun --no-install --bun vitest --config ../../vitest.config.ts run tests/rcon.test.ts tests/rwf-recording.test.ts tests/rwf-status.test.ts tests/server-files.test.ts tests/external-server.test.ts tools/sandbox-qualification tests/capacity/capacity-bars.test.ts scripts/bots/mineskin.test.ts scripts/bots/archery.test.ts && bun run test:client && bun run test:learning && bun run test:maps && bun run test:capacity-tools",
     "test:server": "bun run icon:check && python3 -m unittest discover -s server -p 'test_livemap.py' && python3 -m unittest discover -s server -p 'test_delivery*.py'",
     "test:smoke": "bun --no-install --bun vitest run --config vitest.e2e.config.ts tests/e2e/plugin.e2e.test.ts tests/e2e/server.e2e.test.ts",
     "test:e2e": "bun --no-install --bun vitest run --config vitest.e2e.config.ts",
@@ -91,6 +92,7 @@
     "bots:benchmark": "bun scripts/bots/benchmark.ts",
     "bots:match": "bun scripts/bots/match.ts",
     "bots:stuck": "bun scripts/bots/stuck.ts",
+    "bots:archery": "bun scripts/bots/archery.ts",
     "bots:ppo": "bun tools/learning/run.ts",
     "bots:pilot": "bun tools/learning/pilot.ts",
     "bots:evaluate": "bun tools/learning/evaluation.ts",

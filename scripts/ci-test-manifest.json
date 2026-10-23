@@ -1142,7 +1142,8 @@
             "tests/capacity/native-readiness.test.ts",
             "tools/capacity",
             "scripts/bots/mineskin.test.ts",
-            "scripts/bots/expanded-kit-weights.test.ts"
+            "scripts/bots/expanded-kit-weights.test.ts",
+            "scripts/bots/archery.test.ts"
           ]
         },
         {

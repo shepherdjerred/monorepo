@@ -93,6 +93,9 @@ try {
     if (matchId !== undefined && now.phase !== "Live") break;
     if (Date.now() > deadline) {
       console.warn(`stopping after ${args.minutes.toString()} minutes`);
+      // A recording is written only when its match ends, so a match still live at the deadline is
+      // stopped and given time to settle rather than lost with the server.
+      if (now.phase === "Live") await stopMatch(rcon);
       break;
     }
     await Bun.sleep(2000);
@@ -114,4 +117,19 @@ for (const [from, to] of [
   console.warn(
     `${to}: ${files.filter((file) => file.endsWith(".gz")).join(", ")}`,
   );
+}
+
+/** Stops the live match and waits until it has left the live phase, so its recording is written. */
+async function stopMatch(rcon: RconClient): Promise<void> {
+  console.warn(await rcon.command("rwf admin stop"));
+  const settled = Date.now() + 60_000;
+  for (
+    let now = await status(rcon);
+    now.phase === "Live";
+    now = await status(rcon)
+  ) {
+    if (Date.now() > settled)
+      throw new Error("the match never left the live phase");
+    await Bun.sleep(1000);
+  }
 }

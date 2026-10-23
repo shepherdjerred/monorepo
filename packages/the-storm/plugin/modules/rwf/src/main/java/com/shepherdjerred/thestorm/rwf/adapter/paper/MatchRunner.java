@@ -1336,6 +1336,8 @@ final class MatchRunner implements MatchView, MatchEvents {
     if (by.isPresent() && cause.has(AttackType.Flag.PROJECTILE)) {
       ledger.hit(by.orElseThrow());
     }
+    by.ifPresent(
+        striker -> parts.recordings().hit(striker, member.orElseThrow().id(), cause, damage));
     handle(
         new MatchEvent.Damaged(
             member.orElseThrow().id(),
