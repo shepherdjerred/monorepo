@@ -202,6 +202,46 @@ test("a rejection is the deployment's one decision: it discards the plan, and th
   ).toMatchObject({ activeDeploymentId: null, acceptedDeploymentId: null });
 });
 
+test("an executor cannot record the plan approval its approve step waits on", async () => {
+  const { deployment } = await runningStackDeployment();
+  const token = "test-plan-stage-executor-credential-0000";
+  const app = createTestApp(context.delivery, {
+    machineCredentials: [{ token, principal: testExecutor }],
+    writesEnabled: () => Promise.resolve(true),
+    enabledEnvironments: () => Promise.resolve(["tofu-cloudflare/prod"]),
+  });
+  const write = (key: string) =>
+    app.request(
+      `/api/v1/deployments/${encodeURIComponent(deployment.id)}/stages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          key,
+          status: "succeeded",
+          operationId: `sha256:${"7".repeat(64)}`,
+          message: "Approved by the executor",
+          evidence: [],
+        }),
+      },
+    );
+  const refused = await write("approve/plan");
+  expect(refused.status).toBe(403);
+  expect(
+    await context.cluster.database.stage.findUnique({
+      where: {
+        deploymentId_key: { deploymentId: deployment.id, key: "approve/plan" },
+      },
+    }),
+  ).toBeNull();
+  // Ordinary step stages still record through the same route.
+  const recorded = await write("step-apply-safety");
+  expect(recorded.status).toBe(200);
+});
+
 test("an application deployment takes no plan approval", async () => {
   const deployment = await requestOnProd(context, "deploy");
   await expect(

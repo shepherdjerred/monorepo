@@ -2,6 +2,7 @@ import { Prisma } from "#generated/prisma/client.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { DeploymentSchema, PipelineRevisionSchema } from "#shared/contract.ts";
 import { minecraftUpgradeOf } from "#shared/model/recipe-view.ts";
+import { PLAN_APPROVAL_STAGE_KEY } from "#shared/model/stage-keys.ts";
 import type {
   FinishDeployment,
   Principal,
@@ -38,12 +39,30 @@ import {
   type DeploymentRow,
 } from "#infrastructure/execution/ownership.ts";
 
+/**
+ * Stages only a decision records (4.13, H6): an approve step waits on the
+ * one human decision of the saved plan. The executor's stage writes refuse
+ * them, so an execute credential never records the success a gate trusts.
+ */
+const DECISION_STAGE_KEYS: ReadonlySet<string> = new Set([
+  PLAN_APPROVAL_STAGE_KEY,
+]);
+
+function refuseReservedStage(key: string) {
+  if (DECISION_STAGE_KEYS.has(key))
+    throw new DeliveryError(
+      "FORBIDDEN",
+      `Stage ${key} is recorded only by its decision, never by an executor`,
+    );
+}
+
 export async function stage(
   this: Delivery,
   deploymentId: string,
   input: StageInput,
   actor: Principal,
 ) {
+  refuseReservedStage(input.key);
   const leaseSeconds = await this.policy.leaseSeconds();
   return this.database.$transaction(async (tx) =>
     recordStageIn(tx, deploymentId, input, { actor, leaseSeconds }),
