@@ -1,9 +1,7 @@
 import { Prisma } from "#generated/prisma/client.ts";
 import { DeliveryError } from "#domain/error.ts";
-import {
-  DeploymentSchema,
-  LegacyPipelineRevisionSchema,
-} from "#shared/contract.ts";
+import { DeploymentSchema, PipelineRevisionSchema } from "#shared/contract.ts";
+import { minecraftUpgradeOf } from "#shared/model/recipe-view.ts";
 import type {
   FinishDeployment,
   Principal,
@@ -87,8 +85,13 @@ export async function recordStageIn(
   )
     throw new DeliveryError("CONFLICT", "Completed stage cannot be rewritten");
   const { evidence: items, ...data } = input;
-  const mc = /^minecraft-preservation-[1-9]\d*$/u.test(input.key)
-    ? LegacyPipelineRevisionSchema.parse(
+  // A preservation attempt's evidence is append-only for a Minecraft
+  // upgrade, whether a v1 pipeline or a model recipe's verified-restore
+  // step runs the preservation controller.
+  const append =
+    /^minecraft-preservation-[1-9]\d*$/u.test(input.key) &&
+    minecraftUpgradeOf(
+      PipelineRevisionSchema.parse(
         wire(
           required(
             await tx.pipeline.findUnique({
@@ -97,9 +100,8 @@ export async function recordStageIn(
             "Pipeline",
           ),
         ),
-      ).definition
-    : undefined;
-  const append = mc?.kind === "argocd" && mc.minecraftUpgrade !== undefined;
+      ).definition,
+    ) !== undefined;
   const updated = await tx.stage.upsert({
     where: { deploymentId_key: { deploymentId, key: input.key } },
     create: { id: id(), deploymentId, startedAt: new Date(), ...data },

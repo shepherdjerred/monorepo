@@ -2,6 +2,8 @@ import { expect, test } from "vitest";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { testOperator, testExecutor } from "#testing/seed.ts";
 import { PipelineDefinitionSchema } from "#shared/contract.ts";
+import { recipeFromPipeline } from "#shared/model/recipe-adapter.ts";
+import { minecraftUpgradeOf } from "#shared/model/recipe-view.ts";
 import { specializedOperationId } from "./specialized-success.ts";
 
 const context = useDeliveryFixture();
@@ -272,4 +274,65 @@ test("Minecraft finish requires backup evidence on the same completed preservati
   expect(
     await context.delivery.finish(selected.id, finish, testExecutor),
   ).toMatchObject({ status: "succeeded" });
+});
+
+test("a model recipe's verified-restore step records its preservation attempts append-only", async () => {
+  const selected = await context.delivery.createDeployment(
+    context.input(),
+    testOperator,
+  );
+  await context.delivery.claim(selected.id, testExecutor);
+  // The frozen recipe is a model kubernetes-application recipe whose
+  // minecraft-upgrade step runs the v1 preservation controller.
+  const recipe = recipeFromPipeline(policy);
+  expect(recipe.kind).toBe("kubernetes-application");
+  expect(minecraftUpgradeOf(recipe)).toMatchObject({
+    releaseMode: "verified-restore",
+  });
+  await context.cluster.database.pipeline.create({
+    data: { id: "minecraft/model-upgrade", definition: recipe },
+  });
+  await context.cluster.database.deployment.update({
+    where: { id: selected.id },
+    data: { pipelineRevisionId: "minecraft/model-upgrade" },
+  });
+  const operationId = specializedOperationId(
+    `${selected.id}:minecraft-preservation`,
+  );
+  const receipt = (character: string) => ({
+    kind: "backup" as const,
+    operationId,
+    summary: JSON.stringify({
+      producer: "storm-independent-restore",
+      receiptSha256: `sha256:${character.repeat(64)}`,
+    }),
+  });
+  await context.delivery.stage(
+    selected.id,
+    {
+      key: "minecraft-preservation-1",
+      status: "running",
+      operationId,
+      message: "Awaiting the exact preservation controller incarnation",
+      evidence: [receipt("a")],
+    },
+    testExecutor,
+  );
+  await context.delivery.stage(
+    selected.id,
+    {
+      key: "minecraft-preservation-1",
+      status: "succeeded",
+      operationId,
+      message: "Independent native preservation observed",
+      evidence: [receipt("b")],
+    },
+    testExecutor,
+  );
+  // Append-only: both receipts stay; a rewrite would have been refused.
+  expect(
+    await context.cluster.database.evidence.count({
+      where: { deploymentId: selected.id, kind: "backup" },
+    }),
+  ).toBe(2);
 });
