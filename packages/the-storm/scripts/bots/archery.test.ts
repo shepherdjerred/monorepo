@@ -15,8 +15,16 @@ const shots = (who: string, count: number, from: number) =>
     row("J", from + i * 10, who, "arrow", 0, 64, 0, 1, 0, 0),
   );
 
-/** Two minutes of a recorded match: three bot archers, a crossbow, a trooper and a human. */
-function recording(withHits: boolean): string[] {
+/**
+ * Two minutes of a recorded match: three bot archers, a crossbow, a trooper and
+ * a human. `capable` writes the start row declaring hit events, `withHits` the
+ * hit rows and `kills` the deaths credited to a killer.
+ */
+function recording({
+  capable = true,
+  withHits = capable,
+  kills = true,
+}: { capable?: boolean; withHits?: boolean; kills?: boolean } = {}): string[] {
   const hits = withHits
     ? [
         row("E", 300, "hit", "archer", "trooper;projectile;Projectile;4.50"),
@@ -35,14 +43,15 @@ function recording(withHits: boolean): string[] {
     row("R", "trooper", "BLUE", "trooper", "true"),
     row("R", "bolt", "BLUE", "arbalist", "true"),
     row("R", "human", "BLUE", "shortbow", "false"),
+    ...(capable ? [row("E", 0, "capabilities", "match", "hits")] : []),
     row("E", 0, "joined", "archer", "RED"),
     ...shots("archer", 10, 100),
     ...shots("sloth", 4, 100),
     ...shots("human", 30, 100),
     ...shots("bolt", 3, 100),
     ...hits,
-    row("E", 600, "died", "early", "trooper Melee"),
-    row("E", 700, "died", "trooper", "archer Projectile"),
+    row("E", 600, "died", "early", kills ? "trooper Melee" : "- Void"),
+    row("E", 700, "died", "trooper", kills ? "archer Projectile" : "- Void"),
     row("X", 2400, "RED", "LAST_TEAM_STANDING"),
   ];
 }
@@ -59,7 +68,7 @@ describe("archery report card", () => {
   });
 
   it("judges Infinity-bow bots on hits, shots per minute and accuracy", () => {
-    const match = readMatch(recording(true));
+    const match = readMatch(recording());
     const byName = new Map(cards(match).map((card) => [card.pseudonym, card]));
 
     expect(byName.get("archer")).toMatchObject({
@@ -95,7 +104,7 @@ describe("archery report card", () => {
   });
 
   it("sums a team's bots", () => {
-    const red = cards(readMatch(recording(true))).filter(
+    const red = cards(readMatch(recording())).filter(
       (card) => card.team === "RED",
     );
     expect(totals(red)).toMatchObject({
@@ -108,20 +117,51 @@ describe("archery report card", () => {
     });
   });
 
-  it("calls hits unknown, not zero, in a recording that predates hit events", () => {
-    const match = readMatch(recording(false));
-    expect(recordsHits(match)).toBe(false);
+  it.each([
+    ["with a credited kill", true],
+    ["without a credited kill", false],
+  ])(
+    "calls hits unknown, not zero, in a recording that predates hit events, %s",
+    (_, kills) => {
+      const match = readMatch(recording({ capable: false, kills }));
+      expect(recordsHits(match)).toBe(false);
+      const byName = new Map(
+        cards(match).map((card) => [card.pseudonym, card]),
+      );
+      expect(byName.get("archer")).toMatchObject({
+        hits: undefined,
+        accuracy: undefined,
+        verdict: "UNKNOWN",
+      });
+      // Too slow fails whatever the hits were.
+      expect(byName.get("sloth")).toMatchObject({
+        verdict: "FAIL",
+        failures: ["slow"],
+      });
+    },
+  );
+
+  it("judges a recording that declares hit events but landed none", () => {
+    const match = readMatch(
+      recording({ capable: true, withHits: false, kills: false }),
+    );
+    expect(recordsHits(match)).toBe(true);
     const byName = new Map(cards(match).map((card) => [card.pseudonym, card]));
     expect(byName.get("archer")).toMatchObject({
-      hits: undefined,
-      accuracy: undefined,
-      verdict: "UNKNOWN",
-    });
-    // Too slow fails whatever the hits were.
-    expect(byName.get("sloth")).toMatchObject({
+      hits: 0,
+      accuracy: 0,
       verdict: "FAIL",
-      failures: ["slow"],
+      failures: ["no-hit", "inaccurate"],
     });
+  });
+
+  it("rejects a malformed capability", () => {
+    expect(() =>
+      readMatch([
+        row("H", 4, "match-1", "frostline"),
+        row("E", 0, "capabilities", "match", "hits,"),
+      ]),
+    ).toThrow();
   });
 
   it("rejects a malformed hit row", () => {

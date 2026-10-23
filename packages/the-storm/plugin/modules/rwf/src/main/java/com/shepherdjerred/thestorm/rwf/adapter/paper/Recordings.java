@@ -120,6 +120,10 @@ final class Recordings {
                 match.seed(),
                 roster,
                 CombatRules.COMBAT_RULES_VERSION));
+    // Readers count hits only in a recording that says it writes them (see hit).
+    recording.event(
+        new RecordEvent(
+            0, RecordEvent.CAPABILITIES, RecordEvent.MATCH, RecordEvent.CAPABILITY_HITS));
   }
 
   private long tick() {

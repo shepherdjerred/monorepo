@@ -70,6 +70,16 @@ final class RecordingsHitTest {
   }
 
   @Test
+  void aStartedRecordingDeclaresThatItWritesHits() {
+    MockBukkit.mock();
+    var recordings = recordings(Optional.of(new Pseudonyms("salt")));
+    recordings.start(live(), Samples.twoTeams(), Samples.T0);
+
+    assertThat(events).containsExactly(new RecordEvent(0, "capabilities", "match", "hits"));
+    assertThat(RecordCodec.event(events.getFirst())).isEqualTo("E\t0\tcapabilities\tmatch\thits\n");
+  }
+
+  @Test
   void nothingIsWrittenWhileNoMatchIsRecorded() {
     MockBukkit.mock();
     var recordings = recordings(Optional.of(new Pseudonyms("salt")));

@@ -16,6 +16,20 @@ public record RecordEvent(long tick, String kind, String subject, String detail)
   /** The kind of the event a hit between members is recorded as; see {@link #hitDetail}. */
   public static final String HIT = "hit";
 
+  /**
+   * The kind of the event, at tick 0 with subject {@value #MATCH}, that names what a recording
+   * writes beyond its rows' schema; its detail is a comma-separated list such as {@value
+   * #CAPABILITY_HITS}. A reader treats a capability as absent unless this event names it, so a
+   * recording written before the capability existed is not mistaken for one that saw none.
+   */
+  public static final String CAPABILITIES = "capabilities";
+
+  /** The subject of a match-wide event such as {@value #CAPABILITIES}. */
+  public static final String MATCH = "match";
+
+  /** The capability of writing a {@value #HIT} event for every hit between members. */
+  public static final String CAPABILITY_HITS = "hits";
+
   public RecordEvent {
     if (tick < 0) {
       throw new IllegalArgumentException("tick must not be negative");

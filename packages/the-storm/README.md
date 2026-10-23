@@ -2011,7 +2011,10 @@ Every hit that lands between members with a known attacker is an `E` row of
 kind `hit`: the attacker as subject, and detail `victim;class;cause;damage`,
 class being `projectile` (arrows, crossbow bolts, tridents), `melee` or
 `other` by the attack type's flags. `J` rows come from bow and crossbow shots
-only, so a thrown trident's hits are recorded but not its throws.
+only, so a thrown trident's hits are recorded but not its throws. A recording
+that writes `hit` rows opens with `E 0 capabilities match hits` (a
+comma-separated list); readers treat hits as unknown in a recording without it,
+since an older recording with no `hit` row may still have seen hits.
 
 The dedicated Fabric preview client sends complete `N` controls at 20 Hz through
 `thestorm:rwf_input`. `/rwf recording` reports whether the Storm client is
@@ -3523,8 +3526,8 @@ judged: at least one arrow on an enemy, `MIN_SHOTS_PER_MINUTE` and
 `MIN_ACCURACY` in `scripts/bots/archery-report.ts`, which also records the
 evidence behind each bar. Limited-ammunition kits and humans are reported, not
 judged. The command exits 1 when a judged bot fails, so it can gate a bot
-experiment run with `bots:match`, and 2 when a recording predates hit rows and
-a bot's hits are unknown. Whether a kit's ammunition is unlimited comes from
+experiment run with `bots:match`, and 2 when a recording predates hit rows (it
+has no `capabilities` row naming `hits`) and a bot's hits are unknown. Whether a kit's ammunition is unlimited comes from
 the kit book: `RangedKitsTest` checks that
 `plugin/modules/rwf/src/test/resources/rwf-ranged-kits.json` matches it.
 Shots cover bow and crossbow arrows only; thrown tridents write no `J` row,

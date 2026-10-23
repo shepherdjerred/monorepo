@@ -10,8 +10,9 @@
  *
  * Coverage: J rows are written for bow and crossbow arrows (the server's
  * bow-shot event, and a bot's direct bow shot), not for thrown tridents, so a
- * trident kit's shots read 0 and its hits still count. Recordings written
- * before hit events existed carry no `hit` row; their hits are unknown, not 0.
+ * trident kit's shots read 0 and its hits still count. A recording that writes
+ * hit events says so at its start, `E 0 capabilities match hits`; in one
+ * without that row, written before hit events existed, hits are unknown, not 0.
  */
 import { z } from "zod";
 import rangedKitsWire from "#ranged-kits-wire";
@@ -95,8 +96,8 @@ export type Match = {
   hits: { tick: number; attacker: string; victim: string; type: string }[];
   /** The tick each member died, if they did. */
   deaths: Map<string, number>;
-  /** Whether a death was credited to a killer: a credited kill always leaves a hit row. */
-  creditedKills: number;
+  /** What the recording declares it writes (`E 0 capabilities match ...`), such as `hits`. */
+  capabilities: Set<string>;
   /** The last tick: the end row's, or the last row seen in an unterminated recording. */
   endTick: number;
   /** Whether the recording ended normally. */
@@ -137,6 +138,7 @@ const HitDetail = z.tuple([
   z.string().regex(/^-?\d+\.\d{2}$/u),
 ]);
 const EndRow = z.tuple([z.literal("X"), Tick]).rest(z.string());
+const Capability = z.string().regex(/^[a-z][a-z0-9-]*$/u);
 
 function readHeader(match: Match, fields: string[]) {
   const header = HeaderRow.parse(fields);
@@ -164,10 +166,12 @@ function readEvent(match: Match, fields: string[]) {
   if (kind === "hit") {
     const [victim, type] = HitDetail.parse(detail.split(";"));
     match.hits.push({ tick, attacker: subject, victim, type });
+  } else if (kind === "capabilities" && subject === "match") {
+    for (const capability of detail.split(",")) {
+      match.capabilities.add(Capability.parse(capability));
+    }
   } else if (kind === "died" && !match.deaths.has(subject)) {
     match.deaths.set(subject, tick);
-    // The detail is "<killer> <cause>", with "-" when nobody was credited.
-    if (!detail.startsWith("- ")) match.creditedKills++;
   }
 }
 
@@ -200,7 +204,7 @@ export function readMatch(lines: string[]): Match {
     shots: new Map(),
     hits: [],
     deaths: new Map(),
-    creditedKills: 0,
+    capabilities: new Set(),
     endTick: 0,
     ended: false,
   };
@@ -219,9 +223,12 @@ export function readMatch(lines: string[]): Match {
   return match;
 }
 
-/** Whether `match` records hits: it has a hit row, or nobody was credited with a kill. */
+/**
+ * Whether `match` records hits: only a recording that declares the `hits`
+ * capability does, so one without a hit row saw no hits rather than predating them.
+ */
 export function recordsHits(match: Match): boolean {
-  return match.hits.length > 0 || match.creditedKills === 0;
+  return match.capabilities.has("hits");
 }
 
 /** Why a judged archer failed the bar. */
