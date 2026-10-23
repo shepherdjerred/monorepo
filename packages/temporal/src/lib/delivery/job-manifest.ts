@@ -210,6 +210,8 @@ function jobGrants(input: DeliveryJobRequest): Grant[] {
               key: "ARGOCD_TOKEN",
             },
           ]),
+      // A model tofu recovery stages its frozen stack archive (X8).
+      ...(frozen.archive === undefined ? [] : ARCHIVE_READER_GRANTS),
     ];
   }
   if (

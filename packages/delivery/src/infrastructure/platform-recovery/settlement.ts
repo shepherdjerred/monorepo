@@ -3,10 +3,7 @@ import { DeliveryError } from "#domain/error.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { audit, fingerprint, lock } from "#infrastructure/delivery-records.ts";
-import {
-  PlatformReleaseSnapshotSchema,
-  type Principal,
-} from "#shared/contract.ts";
+import type { Principal } from "#shared/contract.ts";
 import {
   CompletePlatformRecoverySchema,
   FailPlatformRecoverySchema,
@@ -20,15 +17,24 @@ import { requireControlPlaneOwner } from "#infrastructure/control-plane/policy.t
 import { findIntent } from "#infrastructure/recovery-intents.ts";
 import {
   platformIntentView,
+  platformRecoveryKinds,
   platformSettlements,
   recordedPlatformJobs,
+  recoveryTofuSource,
 } from "./context.ts";
-import { RETIRED_ROOT } from "#infrastructure/platform/policy.ts";
 
+/**
+ * v1 platform kinds keep their reviewed ownership gates. A model tofu
+ * recipe (an ordinary `deploy`) is owned by the reconciled catalog that
+ * declared it, as its original apply was.
+ */
 function requireRecoveryEffectOwner(delivery: Delivery, kind: string) {
   if (kind === "upgrade-control-plane")
     requireControlPlaneOwner(delivery.catalog);
-  else if (delivery.catalog.catalog.platformDeliveryDelegated !== true)
+  else if (
+    platformRecoveryKinds.has(kind) &&
+    delivery.catalog.catalog.platformDeliveryDelegated !== true
+  )
     throw new DeliveryError(
       "INVALID",
       "Infrastructure effects remain with the reviewed legacy source owner",
@@ -119,12 +125,8 @@ export async function admitPlatformRecoveryApply(
         "CONFLICT",
         "Recovery native checkpoints changed after inspection",
       );
-    if (row.platformSnapshot !== null) {
-      const snapshot = PlatformReleaseSnapshotSchema.parse(
-        row.platformSnapshot,
-      );
-      if (snapshot.kind === "root-release")
-        throw new DeliveryError("INVALID", RETIRED_ROOT);
+    const source = await recoveryTofuSource(tx, row);
+    if (source !== null) {
       if (
         intent.planReceipt === null ||
         intent.planFingerprint !== input.planFingerprint ||
@@ -134,7 +136,7 @@ export async function admitPlatformRecoveryApply(
           "CONFLICT",
           "Recovery apply requires its exact unexpired saved plan",
         );
-      const mode = tofuStackPolicy(snapshot.stack).mode;
+      const mode = tofuStackPolicy(source.stack).mode;
       if (!["automatic", "reviewed-plan"].includes(mode))
         throw new DeliveryError(
           "INVALID",

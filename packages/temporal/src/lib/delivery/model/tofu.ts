@@ -3,7 +3,33 @@ import type {
   TofuPlanReceipt,
 } from "@shepherdjerred/delivery/contract";
 import { tofuModelJobInput } from "#lib/delivery/platform/tofu-input.ts";
+import type { DeliveryJobRequest } from "#shared/delivery-job.ts";
+import { frozenRunnerImage } from "./oracle-inputs.ts";
 import type { TofuRecipe } from "./recipe.ts";
+
+/**
+ * The exact native Job a model Tofu step runs. The step executor creates it
+ * and recovery reconstructs it from the same frozen deployment, so both
+ * name one Job.
+ */
+export function modelTofuJobRequest(
+  current: DeploymentDetail,
+  step: {
+    recipe: TofuRecipe;
+    key: string;
+    kind: "tofu-plan" | "tofu-apply";
+    jobInput: unknown;
+  },
+): DeliveryJobRequest {
+  return {
+    deploymentId: current.deployment.id,
+    stageKey: step.key,
+    recipe: step.kind,
+    runnerImage: frozenRunnerImage(current, step.recipe.runner),
+    sourceRevision: modelTofuSource(current, step.recipe).sourceRevision,
+    input: step.jobInput,
+  };
+}
 
 /** The stack archive the deployment's set revision selects, which every Tofu step runs from (X8). */
 export function modelTofuSource(

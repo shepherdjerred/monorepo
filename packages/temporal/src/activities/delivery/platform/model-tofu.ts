@@ -16,19 +16,16 @@ import {
   requireStep,
   type TofuRecipe,
 } from "#lib/delivery/model/recipe.ts";
-import { frozenRunnerImage } from "#lib/delivery/model/oracle-inputs.ts";
 import {
   modelApplyInput,
   modelPlanInput,
+  modelTofuJobRequest,
   modelTofuSource,
 } from "#lib/delivery/model/tofu.ts";
 import { platformNativeEvidence } from "#lib/delivery/platform/native-job.ts";
 import { TofuStateMarkerSchema } from "#lib/delivery/platform/tofu-input.ts";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
-import type {
-  DeliveryJobReceipt,
-  DeliveryJobRequest,
-} from "#shared/delivery-job.ts";
+import type { DeliveryJobReceipt } from "#shared/delivery-job.ts";
 import {
   recordStage,
   requireOwned,
@@ -47,15 +44,12 @@ async function runTofuJob(
   input: { recipe: "tofu-plan" | "tofu-apply"; jobInput: unknown },
   runJob: typeof runDeliveryJob,
 ) {
-  const source = modelTofuSource(step.current, step.recipe);
-  const request: DeliveryJobRequest = {
-    deploymentId: step.current.deployment.id,
-    stageKey: step.key,
-    recipe: input.recipe,
-    runnerImage: frozenRunnerImage(step.current, step.recipe.runner),
-    sourceRevision: source.sourceRevision,
-    input: input.jobInput,
-  };
+  const request = modelTofuJobRequest(step.current, {
+    recipe: step.recipe,
+    key: step.key,
+    kind: input.recipe,
+    jobInput: input.jobInput,
+  });
   const operationId = z
     .string()
     .parse(deliveryJobManifest(request).metadata?.name);

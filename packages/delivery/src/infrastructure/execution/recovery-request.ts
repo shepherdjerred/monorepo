@@ -18,6 +18,7 @@ import {
   required,
 } from "#infrastructure/delivery-records.ts";
 import { createIntent } from "#infrastructure/recovery-intents.ts";
+import { modelTofuTarget } from "#infrastructure/platform-recovery/context.ts";
 import { recoveryIntentView } from "#infrastructure/selection/views.ts";
 
 /** Which independent reader settles a quarantined deployment (4.15). */
@@ -31,6 +32,9 @@ export function recoveryKindOf(
   )
     return "platform";
   if (deployment.workerSnapshot !== null) return "worker";
+  // A model tofu recipe has no Application: its saved plan, native Jobs and
+  // state marker are inspected by platform recovery.
+  if (modelTofuTarget(detail) !== null) return "platform";
   const definition = detail.pipeline.definition;
   if (minecraftUpgradeOf(definition)?.releaseMode === "verified-restore")
     return "minecraft";

@@ -32,28 +32,14 @@ type PlanRow = {
 };
 
 /**
- * Who may produce a saved plan and from what source: a v1 tofu-plan
- * deployment from its frozen snapshot, or a model tofu recipe's plan step
- * from the stack archive its set revision selects (X8). `stack` is null
- * when the row produces no plan.
+ * A model tofu recipe's stack and the stack archive build its set revision
+ * froze, which every one of its Tofu steps runs from (X8); null for any
+ * other recipe.
  */
-async function planProducer(tx: Transaction, row: PlanRow) {
-  if (row.platformSnapshot !== null) {
-    const snapshot = PlatformReleaseSnapshotSchema.parse(row.platformSnapshot);
-    return snapshot.kind === "tofu-plan" && row.kind === "tofu-plan"
-      ? {
-          stack: snapshot.stack,
-          sourceBuildId: snapshot.source.id,
-          sourceRevision: snapshot.source.sourceRevision,
-          stageKey: "tofu-plan",
-        }
-      : {
-          stack: null,
-          sourceBuildId: null,
-          sourceRevision: null,
-          stageKey: "",
-        };
-  }
+export async function modelTofuSource(
+  tx: Transaction,
+  row: { pipelineRevisionId: string; versionSetRevisionId: string },
+) {
   const recipe = PipelineRevisionSchema.parse(
     wire(
       required(
@@ -62,13 +48,7 @@ async function planProducer(tx: Transaction, row: PlanRow) {
       ),
     ),
   ).definition;
-  if (recipe.kind !== "tofu" || !("archiveComponent" in recipe))
-    return {
-      stack: null,
-      sourceBuildId: null,
-      sourceRevision: null,
-      stageKey: "",
-    };
+  if (recipe.kind !== "tofu" || !("archiveComponent" in recipe)) return null;
   const entry = required(
     await tx.versionSetEntry.findUnique({
       where: {
@@ -85,8 +65,37 @@ async function planProducer(tx: Transaction, row: PlanRow) {
     stack: recipe.stack,
     sourceBuildId: archive.buildId,
     sourceRevision: archive.sourceRevision,
-    stageKey: stepStageKey("step", "plan"),
   };
+}
+
+/**
+ * Who may produce a saved plan and from what source: a v1 tofu-plan
+ * deployment from its frozen snapshot, or a model tofu recipe's plan step
+ * from the stack archive its set revision selects (X8). `stack` is null
+ * when the row produces no plan.
+ */
+async function planProducer(tx: Transaction, row: PlanRow) {
+  const none = {
+    stack: null,
+    sourceBuildId: null,
+    sourceRevision: null,
+    stageKey: "",
+  };
+  if (row.platformSnapshot !== null) {
+    const snapshot = PlatformReleaseSnapshotSchema.parse(row.platformSnapshot);
+    return snapshot.kind === "tofu-plan" && row.kind === "tofu-plan"
+      ? {
+          stack: snapshot.stack,
+          sourceBuildId: snapshot.source.id,
+          sourceRevision: snapshot.source.sourceRevision,
+          stageKey: "tofu-plan",
+        }
+      : none;
+  }
+  const model = await modelTofuSource(tx, row);
+  return model === null
+    ? none
+    : { ...model, stageKey: stepStageKey("step", "plan") };
 }
 
 /** H3: a rejected plan was discarded with its decision and is never saved again. */

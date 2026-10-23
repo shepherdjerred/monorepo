@@ -23,6 +23,8 @@ import {
   RETIRED_ROOT,
   nativeReceipt,
 } from "#infrastructure/platform/policy.ts";
+import { modelTofuSource } from "#infrastructure/platform/plans.ts";
+import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
 
 // Root releases are retired (X6); none can be quarantined after the cutover.
 export const platformRecoveryKinds = new Set([
@@ -30,6 +32,49 @@ export const platformRecoveryKinds = new Set([
   "tofu-apply",
   "upgrade-control-plane",
 ]);
+
+/**
+ * A model tofu deployment's stack and frozen stack archive build (X8), read
+ * from its detail; null for a v1 platform snapshot and any other recipe.
+ */
+export function modelTofuTarget(detail: DeploymentDetail) {
+  if (detail.deployment.platformSnapshot !== null) return null;
+  const recipe = RecipeDefinitionSchema.safeParse(detail.pipeline.definition);
+  if (recipe.data?.kind !== "tofu") return null;
+  const archive = required(
+    detail.versionSet.components[recipe.data.archiveComponent] ?? null,
+    "Frozen stack archive",
+  );
+  return {
+    stack: recipe.data.stack,
+    sourceBuildId: archive.buildId,
+    sourceRevision: archive.sourceRevision,
+  };
+}
+
+/**
+ * The OpenTofu stack and source a recovery plans and applies from: a v1
+ * snapshot's, or a model tofu recipe's frozen stack archive. Null for the
+ * control plane, which has no saved plan.
+ */
+export async function recoveryTofuSource(
+  tx: Transaction,
+  row: {
+    platformSnapshot: unknown;
+    pipelineRevisionId: string;
+    versionSetRevisionId: string;
+  },
+) {
+  if (row.platformSnapshot === null) return modelTofuSource(tx, row);
+  const snapshot = PlatformReleaseSnapshotSchema.parse(row.platformSnapshot);
+  if (snapshot.kind === "root-release")
+    throw new DeliveryError("INVALID", RETIRED_ROOT);
+  return {
+    stack: snapshot.stack,
+    sourceBuildId: snapshot.source.id,
+    sourceRevision: snapshot.source.sourceRevision,
+  };
+}
 
 /** The platform-kind view of a unified recovery intent row. */
 export function platformIntentView(row: RecoveryIntent) {
@@ -56,8 +101,13 @@ export async function heldPlatformRecovery(
     }),
     "Quarantined infrastructure deployment",
   );
+  // A model tofu recipe runs as an ordinary deployment with no v1 snapshot.
+  const model =
+    row.platformSnapshot === null && row.controlPlaneSnapshot === null
+      ? await modelTofuSource(tx, row)
+      : null;
   if (
-    !platformRecoveryKinds.has(row.kind) ||
+    (model === null && !platformRecoveryKinds.has(row.kind)) ||
     !["failed", "canceled"].includes(row.status) ||
     !row.recoveryRequired
   )
@@ -95,6 +145,9 @@ export async function heldPlatformRecovery(
       configurationId: row.configurationId,
       platformSnapshot: row.platformSnapshot,
       controlPlaneSnapshot: row.controlPlaneSnapshot,
+      ...(model === null
+        ? {}
+        : { versionSetRevisionId: row.versionSetRevisionId, source: model }),
       stages: row.stages.sort((a, b) => a.key.localeCompare(b.key)),
       target: target.instance,
       global: global?.id ?? null,
@@ -138,6 +191,12 @@ export function platformSettlements(
         chart: controller.priorChartArtifact,
       }),
     };
+  // A model tofu recovery converges forward: the stack equals its frozen
+  // archive with zero proposed changes, directly or after an exact recovery
+  // plan is approved by stack policy and applied.
+  const model = modelTofuTarget(detail);
+  if (model !== null)
+    return { desired: fingerprint({ kind: "tofu", ...model }) };
   const snapshot = PlatformReleaseSnapshotSchema.parse(
     detail.deployment.platformSnapshot,
   );

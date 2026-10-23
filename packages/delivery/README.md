@@ -473,6 +473,14 @@ continues to block dispatch even after settlement succeeds. Generic Argo unlock
 cannot bypass these checks or authorize a database rollback. Follow the
 [content recovery procedure](../docs/wiki/src/content/docs/how-to/cut-a-homelab-release.md#recover-a-site-or-forum-release).
 
+A model `tofu` recipe has no Application, so its recovery intent is a platform
+recovery. The recovery Job runs with the runner its admission froze, from the
+stack archive its selection froze (X8), and proves the plan Job and, once a
+plan was saved, the apply Job. Recovery converges forward only: the stack must
+equal that frozen source with zero proposed changes, directly or after an exact
+recovery plan is approved by the stack's policy and applied. The saved plan's
+state lineage bounds both.
+
 Ordinary worker rollout admission requires a verified retained-host baseline.
 Fixed-profile pipelines support independent host-only baseline verification.
 The reviewed source catalog transfers release ownership only after hosting,

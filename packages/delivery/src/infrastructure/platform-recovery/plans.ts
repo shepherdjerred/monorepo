@@ -3,10 +3,7 @@ import { DeliveryError } from "#domain/error.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { audit, fingerprint } from "#infrastructure/delivery-records.ts";
-import {
-  PlatformReleaseSnapshotSchema,
-  type Principal,
-} from "#shared/contract.ts";
+import type { Principal } from "#shared/contract.ts";
 import {
   PlatformRecoveryNativeReceiptSchema,
   RecordPlatformRecoveryPlanSchema,
@@ -21,7 +18,7 @@ import {
   updateIntentDetail,
 } from "#infrastructure/recovery-intents.ts";
 import { pendingRecovery } from "./ownership.ts";
-import { platformIntentView } from "./context.ts";
+import { platformIntentView, recoveryTofuSource } from "./context.ts";
 
 export async function recordPlatformRecoveryNative(
   this: Delivery,
@@ -83,19 +80,19 @@ export async function recordPlatformRecoveryPlan(
         );
       return input.receipt;
     }
-    const snapshot = PlatformReleaseSnapshotSchema.parse(row.platformSnapshot),
+    const source = await recoveryTofuSource(tx, row),
       receipt = input.receipt;
     const entries = intent.nativeReceipts;
-    if (snapshot.kind !== "tofu-apply" && snapshot.kind !== "tofu-plan")
+    if (source === null)
       throw new DeliveryError(
         "INVALID",
         "Only OpenTofu recovery has a saved plan",
       );
     if (
       receipt.recoveryIntentId !== id ||
-      receipt.sourceBuildId !== snapshot.source.id ||
-      receipt.sourceRevision !== snapshot.source.sourceRevision ||
-      receipt.stack !== snapshot.stack ||
+      receipt.sourceBuildId !== source.sourceBuildId ||
+      receipt.sourceRevision !== source.sourceRevision ||
+      receipt.stack !== source.stack ||
       !entries.some(
         (entry) =>
           entry.action === "plan" &&
@@ -149,10 +146,10 @@ export async function approvePlatformRecoveryPlan(
   const input = ApprovePlatformRecoveryPlanSchema.parse(raw);
   return this.database.$transaction(async (tx) => {
     const { intent, row } = await pendingRecovery(tx, id),
-      snapshot = PlatformReleaseSnapshotSchema.parse(row.platformSnapshot);
+      source = await recoveryTofuSource(tx, row);
     if (
-      snapshot.kind === "root-release" ||
-      tofuStackPolicy(snapshot.stack).mode !== "reviewed-plan"
+      source === null ||
+      tofuStackPolicy(source.stack).mode !== "reviewed-plan"
     )
       throw new DeliveryError(
         "INVALID",
