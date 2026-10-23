@@ -194,15 +194,17 @@ export type ServiceLifecycleView = z.infer<typeof ServiceLifecycleViewSchema>;
 /**
  * `POST /reconcile-after-restore` (admin, section 6 cold start). The
  * operator reads the snapshot from R2 with its own credential and supplies
- * it; the API holds no R2 credential and checks the snapshot's fingerprint
- * and immutable copy before comparing.
+ * it. The API holds no R2 credential: it checks that the snapshot carries its
+ * writer's fingerprint and that `archiveKey` is the copy's derived key, and
+ * never reads the copy. The operator's `restoreRequest` compares
+ * `latest.json` with its immutable copy before submitting.
  */
 export const ReconcileAfterRestoreRequestSchema = z.strictObject({
   requestId: IdentifierSchema,
   snapshot: ColdStartSnapshotSchema,
   /** The writer's fingerprint, stored as the object's `fingerprint` metadata. */
   fingerprint: z.string().regex(/^sha256:[a-f0-9]{64}$/u),
-  /** The immutable copy beside `latest.json` the operator compared it with. */
+  /** The immutable copy beside `latest.json` the operator compared it with; the API checks only that the key is the snapshot's own. */
   archiveKey: z.string().min(1).max(512),
 });
 
