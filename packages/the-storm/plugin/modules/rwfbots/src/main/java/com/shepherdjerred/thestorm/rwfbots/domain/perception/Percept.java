@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwfbots.domain.perception;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.SummonView;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,11 +12,24 @@ import java.util.Optional;
  * @param state the memory and suspicion to carry forward
  * @param visible enemies seen this tick, nearest first
  * @param tick the tick perceived
+ * @param summons hostile killstreak creatures seen this tick, nearest first
  */
-public record Percept(PerceptionState state, List<CombatantView> visible, long tick) {
+public record Percept(
+    PerceptionState state, List<CombatantView> visible, long tick, List<SummonView> summons) {
 
   public Percept {
     visible = List.copyOf(visible);
+    summons = List.copyOf(summons);
+  }
+
+  /** A percept with no summons in sight. */
+  public Percept(PerceptionState state, List<CombatantView> visible, long tick) {
+    this(state, visible, tick, List.of());
+  }
+
+  /** The hostile summon seen this tick with {@code id}, if any. */
+  public Optional<SummonView> summon(CombatantId id) {
+    return summons.stream().filter(view -> view.id().equals(id)).findFirst();
   }
 
   public Optional<CombatantView> nearestVisible() {

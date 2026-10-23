@@ -198,7 +198,16 @@ public final class BodyDriver {
       case BodyCommand.SelectSlot(var slot) -> bodies.selectSlot(id, emptyHandSlot(bot, slot));
       case BodyCommand.Swing _ -> bodies.swing(id);
       case BodyCommand.Attack(var target) ->
-          frame.ids().uuid(target).ifPresent(victim -> record(bot, actions.melee(id, victim)));
+          frame
+              .ids()
+              .uuid(target)
+              .ifPresent(
+                  victim ->
+                      record(
+                          bot,
+                          frame.ids().isSummon(target)
+                              ? actions.strikeSummon(id, victim)
+                              : actions.melee(id, victim)));
       case BodyCommand.StartUse _ -> startUse(bot, frame.tick());
       case BodyCommand.ReleaseUse _ -> releaseUse(bot, frame);
       case BodyCommand.CancelUse _ -> {

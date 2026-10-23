@@ -23,6 +23,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexInput;
 import com.shepherdjerred.thestorm.rwfbots.domain.reflex.StreakPlay;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BodyCommand;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.SummonView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -405,9 +406,11 @@ public final class BotTicker {
 
   private static Optional<CombatantView> fresh(
       CombatantView seen, ReflexInput input, VoxelGrid grid) {
+    // A killstreak creature is fought where it stands this tick, like a player.
     return input
         .snapshot()
         .combatant(seen.id())
+        .or(() -> input.snapshot().summon(seen.id()).map(SummonView::asTarget))
         .filter(CombatantView::alive)
         .filter(
             enemy ->

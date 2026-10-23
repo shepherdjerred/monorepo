@@ -98,7 +98,7 @@ final class PatrolTest {
             PoisonView.NONE,
             context.nav().mapId(),
             List.of(),
-            List.of());
+            List.of(), List.of());
     return new Situation(self, snapshot, percept, board, Role.DEFEND);
   }
 

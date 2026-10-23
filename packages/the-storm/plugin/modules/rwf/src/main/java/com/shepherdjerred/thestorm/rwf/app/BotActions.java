@@ -22,6 +22,9 @@ public interface BotActions {
 
   Optional<ActionRefusal> melee(UUID attacker, UUID target);
 
+  /** Swing at the enemy summon {@code summon}; see {@link CombatantActions#strikeSummon}. */
+  Optional<ActionRefusal> strikeSummon(UUID attacker, UUID summon);
+
   /**
    * Shoot a legacy Infinity bow for explicit simulator/control callers. Native body controllers use
    * {@link #useWeapon} so finite ammunition and projectile metadata remain authoritative.
@@ -84,6 +87,11 @@ public interface BotActions {
       @Override
       public Optional<ActionRefusal> melee(UUID attacker, UUID target) {
         return as(attacker, a -> as(target, t -> actions.melee(a, t)));
+      }
+
+      @Override
+      public Optional<ActionRefusal> strikeSummon(UUID attacker, UUID summon) {
+        return as(attacker, a -> actions.strikeSummon(a, summon));
       }
 
       @Override

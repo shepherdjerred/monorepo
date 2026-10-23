@@ -52,6 +52,15 @@ public final class Utilities {
    */
   static final double AVENGE = 1.1;
 
+  /** A hostile golem this close or closer sends the bot running at full weight. */
+  static final double GOLEM_RUN = 4;
+
+  /** A hostile golem further than this does not move the bot. */
+  static final double GOLEM_WARY = 9;
+
+  /** How much a bot wants to get away from a golem upon it: above holding, fighting or arming. */
+  static final double GOLEM_FLIGHT = 1.2;
+
   /** Below this health fraction a hit no longer draws the bot into a fight: survival decides. */
   static final double AVENGE_HEALTH = 0.5;
 
@@ -83,7 +92,9 @@ public final class Utilities {
     var threatened = Curves.near(f.nearestEnemyDistance(), 8) * f.nearestEnemyConfidence();
     var lowHealth = 1 - Curves.logistic(f.healthFrac(), 0.5, 10);
     scores.put(Option.ENGAGE, Math.max(engage(f, t, push, fightReady), avenge(f, t, fightReady)));
-    scores.put(Option.RETREAT, threatened * lowHealth * (1.1 - 0.5 * t.aggression()));
+    scores.put(
+        Option.RETREAT,
+        Math.max(threatened * lowHealth * (1.1 - 0.5 * t.aggression()), golemFlight(f)));
     var safeToEat = 1 - Curves.near(f.nearestEnemyDistance(), 6) * f.nearestEnemyConfidence();
     scores.put(Option.HEAL, f.hasGapples() ? lowHealth * safeToEat : 0);
     scores.put(Option.REWIND, f.hasRewind() && f.rewindReady() ? threatened * lowHealth * 1.2 : 0);
@@ -128,6 +139,16 @@ public final class Utilities {
     var inReach =
         t.keep().ranged() ? Curves.logistic(-pull.distance(), -(t.keep().max() + 4), 0.5) : 1;
     return AVENGE * fightReady * inReach * t.bias().engage();
+  }
+
+  /**
+   * How much the bot wants to get out of a hostile golem's way: nobody trades blows with 13 damage
+   * a hit, so a bot backs off from one closing in. An archer shoots it as it goes (the reflex
+   * layer's call).
+   */
+  static double golemFlight(Features f) {
+    var closeness = 1 - Curves.clamp01((f.golemDistance() - GOLEM_RUN) / (GOLEM_WARY - GOLEM_RUN));
+    return GOLEM_FLIGHT * closeness;
   }
 
   private static void objectives(Features f, Temper t, EnumMap<Option, Double> scores) {

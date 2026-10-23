@@ -142,8 +142,10 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
         new SnapshotCapture(
             new com.shepherdjerred.thestorm.rwfbots.adapter.paper.IdMap(),
             id -> Optional.empty(),
-            new com.shepherdjerred.thestorm.rwfbots.adapter.paper.StimulusCollector(
-                new com.shepherdjerred.thestorm.rwf.app.BattleSoundLog(time), time),
+            new SnapshotCapture.Sources(
+                new com.shepherdjerred.thestorm.rwfbots.adapter.paper.StimulusCollector(
+                    new com.shepherdjerred.thestorm.rwf.app.BattleSoundLog(time), time),
+                java.util.List::of),
             new SnapshotCapture.Capabilities(id -> Optional.empty(), time));
   }
 
@@ -290,6 +292,7 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
             List.of(),
             PoisonView.NONE,
             artifact.mapId(),
+            List.of(),
             List.of(),
             List.of());
     var situation =

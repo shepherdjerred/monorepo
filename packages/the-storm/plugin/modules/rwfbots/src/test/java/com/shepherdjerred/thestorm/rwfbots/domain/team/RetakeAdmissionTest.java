@@ -98,7 +98,7 @@ final class RetakeAdmissionTest {
         PoisonView.NONE,
         nav.mapId(),
         List.of(),
-        List.of());
+        List.of(), List.of());
   }
 
   private static Blackboard board(NavArtifact nav, List<CombatantView> bots) {

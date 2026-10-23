@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwfbots.adapter.paper;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.shepherdjerred.thestorm.rwf.app.MatchSummons;
 import com.shepherdjerred.thestorm.rwf.app.view.MatchState;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombOwner;
@@ -46,6 +47,7 @@ final class SnapshotCaptureTest {
   private StimulusCollector stimuli;
   private IdMap ids;
   private SnapshotCapture capture;
+  private List<MatchSummons.Creature> creatures = List.of();
 
   @BeforeEach
   void start() {
@@ -69,7 +71,7 @@ final class SnapshotCaptureTest {
         new SnapshotCapture(
             ids,
             uuid -> Optional.<Player>ofNullable(server.getPlayer(uuid)),
-            stimuli,
+            new SnapshotCapture.Sources(stimuli, () -> creatures),
             new SnapshotCapture.Capabilities(
                 uuid -> Optional.empty(), java.time.InstantSource.fixed(java.time.Instant.EPOCH)));
   }
@@ -291,6 +293,53 @@ final class SnapshotCaptureTest {
     alice.setNoDamageTicks(0);
     alice.simulateDamage(
         1, DamageSource.builder(type).withCausingEntity(causing).withDirectEntity(damager).build());
+  }
+
+  @Test
+  void summonsAreCapturedAndTheirBlowsNameThemNotTheirOwners() {
+    var wolf = UUID.fromString("00000000-0000-0000-0000-00000000a001");
+    creatures =
+        List.of(
+            new MatchSummons.Creature(
+                wolf,
+                MatchSummons.Kind.WOLF,
+                bob.getUniqueId(),
+                "blue",
+                new com.shepherdjerred.thestorm.rwf.app.view.Point(4.5, 1, 2.5),
+                new com.shepherdjerred.thestorm.rwf.app.view.Point(0.2, 0, 0),
+                14));
+    capture.capture(9, state(MatchState.Phase.LIVE, Optional.empty()));
+    stimuli
+        .sounds()
+        .emit(
+            new com.shepherdjerred.thestorm.rwf.app.BattleSounds.Sound(
+                world.getUID(),
+                wolf,
+                new com.shepherdjerred.thestorm.rwf.app.view.Point(2.5, 1, 2.5),
+                com.shepherdjerred.thestorm.rwf.app.BattleSounds.Kind.HURT,
+                32,
+                Optional.of(alice.getUniqueId())));
+
+    var snapshot = capture.capture(10, state(MatchState.Phase.LIVE, Optional.empty()));
+
+    var id = ids.combatant(wolf);
+    assertThat(snapshot.summons())
+        .containsExactly(
+            new com.shepherdjerred.thestorm.rwfbots.domain.world.SummonView(
+                id,
+                com.shepherdjerred.thestorm.rwfbots.domain.world.SummonView.Kind.WOLF,
+                IdMap.team("blue"),
+                new Vec3(4.5, 1, 2.5),
+                new Vec3(0.2, 0, 0),
+                14));
+    assertThat(snapshot.stimuli())
+        .filteredOn(stimulus -> stimulus.kind() == Stimulus.Kind.HIT)
+        .singleElement()
+        .satisfies(
+            hit -> {
+              assertThat(hit.source()).contains(id);
+              assertThat(hit.victim()).contains(ids.combatant(alice.getUniqueId()));
+            });
   }
 
   @Test

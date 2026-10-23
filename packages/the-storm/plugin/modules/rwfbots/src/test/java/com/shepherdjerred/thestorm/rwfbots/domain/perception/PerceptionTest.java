@@ -36,7 +36,7 @@ final class PerceptionTest {
 
   private static WorldSnapshot world(long tick, List<CombatantView> views, List<Stimulus> sounds) {
     return new WorldSnapshot(
-        tick, MatchPhase.LIVE, views, List.of(), PoisonView.NONE, "synthetic", sounds, List.of());
+        tick, MatchPhase.LIVE, views, List.of(), PoisonView.NONE, "synthetic", sounds, List.of(), List.of());
   }
 
   private Percept perceive(CombatantView self, WorldSnapshot snapshot) {
@@ -137,7 +137,7 @@ final class PerceptionTest {
             PoisonView.NONE,
             "synthetic",
             List.of(click),
-            List.of());
+            List.of(), List.of());
     assertThat(perceive(self, snapshot).state().suspicion().isRevealed(spy.id())).isTrue();
   }
 

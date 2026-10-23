@@ -264,6 +264,11 @@ public final class FakeMatch implements MatchView, MatchEvents, CombatantActions
   }
 
   @Override
+  public Optional<ActionRefusal> strikeSummon(CombatantId attacker, java.util.UUID summon) {
+    return record("strike", attacker, summon.toString());
+  }
+
+  @Override
   public Optional<ActionRefusal> shootBow(CombatantId id, Vec3 direction, double force) {
     return record("shoot", id, String.valueOf(force));
   }

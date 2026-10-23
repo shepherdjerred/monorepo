@@ -17,6 +17,7 @@ import java.util.Optional;
  * @param stimuli the sounds and hit effects of this tick
  * @param looseArrows arrows lying in the ground near a combatant whose shots spend arrows, which
  *     anyone walking over may pick up; capped by the capture, nearest such combatant first
+ * @param summons the killstreak creatures alive
  */
 public record WorldSnapshot(
     long tick,
@@ -26,7 +27,8 @@ public record WorldSnapshot(
     PoisonView poison,
     String mapId,
     List<Stimulus> stimuli,
-    List<Vec3> looseArrows) {
+    List<Vec3> looseArrows,
+    List<SummonView> summons) {
 
   public WorldSnapshot {
     if (tick < 0) {
@@ -39,6 +41,7 @@ public record WorldSnapshot(
     bombs = List.copyOf(bombs);
     stimuli = List.copyOf(stimuli);
     looseArrows = List.copyOf(looseArrows);
+    summons = List.copyOf(summons);
     for (var index = 1; index < stimuli.size(); index++) {
       if (stimuli.get(index).sequence() < stimuli.get(index - 1).sequence())
         throw new IllegalArgumentException("sound history must be ordered by sequence");
@@ -59,6 +62,11 @@ public record WorldSnapshot(
   public CombatantView require(CombatantId id) {
     return combatant(id)
         .orElseThrow(() -> new IllegalArgumentException(id + " is not in the snapshot"));
+  }
+
+  /** The summon {@code id}, if one is in the field. */
+  public Optional<SummonView> summon(CombatantId id) {
+    return summons.stream().filter(view -> view.id().equals(id)).findFirst();
   }
 
   public Optional<BombView> bomb(BombId id) {
