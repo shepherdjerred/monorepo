@@ -37,7 +37,18 @@ The API listens on port 7353 by default. `bun run dev` starts its watcher;
 `bun run dev:client` runs Vite on port 7354 and proxies API requests to the
 backend. The browser requires the same authenticated proxy as production.
 The Playwright harness supplies a separate real proxy and disposable database
-for local interaction tests.
+for local interaction tests: `e2e/server.ts` on port 17353 for the release
+specs, and `e2e/model-server.ts` on port 17355 for `model.spec.ts`. The model
+harness reconciles its own catalog and records Arcade's releases, a
+configuration rebind, monitor observations, a restore hold and a quarantined
+deploy through Delivery's own APIs (`e2e/model.ts`), plus a tofu stack waiting
+at its approve step and archives for an operator-run stack and a channel
+(`e2e/model-plan.ts`), so its pages read the real model routes. Setting
+`DELIVERY_HARNESS_MACHINE_CREDENTIALS` to a JSON array of disposable machine
+credentials lets a client drive the admin and execute routes; the proxy then
+passes their bearer tokens through. `src/testing/model-fixtures.ts` holds
+contract-validated route responses for unit tests of the hub views and the
+toolkit.
 
 ## Browser hub
 
@@ -45,16 +56,17 @@ The React client is the homelab's CI/CD hub. Every page has a URL, so links,
 history, new tabs and bookmarks behave like any website. Routes are code-based
 TanStack Router definitions in `src/client/router.tsx`:
 
-| URL                            | Page                                                        |
-| ------------------------------ | ----------------------------------------------------------- |
-| `/pipelines` (home)            | Every pipeline's newest execution, attention items, tools   |
-| `/pipelines/:id`               | Pipeline: source, build, test, version set, environments    |
-| `/pipelines/:id/executions`    | Every build or composed version set and where it deployed   |
-| `/builds/:id`, `/versions/:id` | One change end to end, with commit, CI run and artifacts    |
-| `/deployments/:id`             | Stages, evidence, approval, cancellation, retry, recoveries |
-| `/environments/:id`            | Release state, live ArgoCD runtime, release form, workers   |
-| `/deployments`, `/approvals`   | Deployment history and the approval queue                   |
-| `/artifacts`, `/activity`      | Build qualification and the audit trail                     |
+| URL                            | Page                                                         |
+| ------------------------------ | ------------------------------------------------------------ |
+| `/pipelines` (home)            | Every pipeline's newest execution, attention items, tools    |
+| `/pipelines/:id`               | Promotion: source, build, test, version set, environments    |
+| `/pipelines/:id/executions`    | Every build or composed version set and where it deployed    |
+| `/builds/:id`, `/versions/:id` | One change end to end, with commit, CI run and artifacts     |
+| `/deployments/:id`             | Steps, selection, approval, a tofu plan waiting for approval |
+| `/environments/:id`            | Restore hold, selection, monitor, rollback candidates, form  |
+| `/recovery-intents/:id`        | One unified recovery intent and its inspection evidence      |
+| `/deployments`, `/approvals`   | Deployment history; pending approvals and plans, recent ones |
+| `/artifacts`, `/activity`      | Build qualification; the audit trail with catalog reconciles |
 
 Filters and pages are search parameters. Forms are native `<form>` elements
 and confirmations are native `<dialog>` elements. The server returns
@@ -81,10 +93,11 @@ injected transport and credentials. Responses are validated before consumption.
 ### Contracts for the model
 
 `@shepherdjerred/delivery/model-contract` (`src/shared/model/`) carries the
-schemas for the Delivery model specification (`docs/model.md`). They are
-additive and unused by the running system until the cutover: the v1 routes,
-executor and hub keep reading `contract`, and no schema or migration change
-accompanies them.
+schemas for the Delivery model specification (`docs/model.md`). The record,
+the routes, the executor, the hub and the toolkit read them. The hub and
+toolkit call the model routes through `createDeliveryClient`, whose model
+methods (`src/shared/model/routes-client.ts`) validate each request body
+before sending and each response before use.
 
 - Catalog (4.1): `CatalogDocumentSchema` types every recipe body of the
   ops-model document and checks that a recipe binds only components of its own
@@ -119,6 +132,29 @@ accompanies them.
   `WatchingMonitorSchema`, `MonitorStatusSchema`, and the pure
   `renderMonitorQuery` and `monitorOutcome` helpers.
 - Selection (4.9, D9): `SelectionSchema` and `RollbackCandidatesSchema`.
+- Route views (`model/route-contract.ts`): the environment's accepted
+  selection beside its declared binding, `DeploymentV2Schema` with its frozen
+  selection, previous accepted and restored deployments, the approval queue
+  item, the recovery-intent and attestation requests, the catalog reconcile
+  result and state, the record each catalog reconcile audits, service
+  retirement, the restore-hold settlement, and the reconcile-after-restore
+  comparison. `MonitorStatusSchema` carries the declared monitor and the
+  latest observation so evidence reads against its threshold. The selection
+  view names the declared recipe's kind, and the hub's environment detail
+  names the release kind: that of the recipe a release freezes, the accepted
+  selection's until a rebind. An `operator-run` recipe is requested as one.
+  `releaseKindOf` reads the stored kind as admission does, so a v1 `manual`
+  pipeline is a `deploy` although the selection view normalises it to
+  `operator-run`.
+- Cold start (section 6, X7): `ColdStartSnapshotSchema` records each
+  environment's accepted selection with its set revision's artifacts, and
+  `COLD_START_SNAPSHOT` names the R2 endpoint and object the snapshot writer
+  puts and `toolkit deploy snapshot` reads. `renderApplication`
+  (`model/application-render.ts`) is the one rendering of a
+  `kubernetes-application` recipe into its ArgoCD Application for one
+  environment's selection; the executor writes it, and
+  `toolkit deploy render-application` prints it with the sync a cold start
+  needs.
 - Deployment and approval (4.12, 4.13): `CreateDeploymentV2Schema` with
   `deploy`, `promote`, `rollback` (naming `selectionDeploymentId`), `rebind`,
   `retire-host`, `channel-publish` and `operator-run`, plus the `override`
@@ -130,31 +166,31 @@ accompanies them.
 
 The API is rooted at `/api/v1`:
 
-| Operation                                                  | Route                                                                         |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| Authenticated principal                                    | `GET /identity`                                                               |
-| Environments, recent executions, eligible artifacts        | `GET /overview`                                                               |
-| Immutable version set revisions                            | `GET /versions`, `GET /versions/:id`                                          |
-| Latest qualified component artifact                        | `GET /artifacts/latest-qualified?serviceId=…&component=…&kind=…`              |
-| Producer comparison base, pending or qualified             | `GET /artifacts/latest-retainable?…&kind=…&beforePipeline=…`                  |
-| Register pending CI publication                            | `POST /builds`                                                                |
-| Compose exact component versions                           | `POST /versions`                                                              |
-| Register immutable pipeline revision                       | `POST /pipelines`                                                             |
-| Register environment/configuration                         | `POST /environments`                                                          |
-| Request deployment, promotion, or rollback                 | `POST /deployments`                                                           |
-| Execution, stages, approval, evidence                      | `GET /deployments/:id`                                                        |
-| Human production approval                                  | `POST /deployments/:id/approval`                                              |
-| Cancel or retry                                            | `POST /deployments/:id/cancel`, `POST /deployments/:id/retry`                 |
-| Open a recovery intent; settle an ambiguous Argo operation | `POST /deployments/:id/recovery-intents`, `POST /recovery-intents/:id/settle` |
-| Request native site/Forum recovery under the retained lock | `POST /deployments/:id/content-recovery`                                      |
-| Inspect frozen content recovery and native receipts        | `GET /content-recovery/:id`                                                   |
-| Retain unverified migration evidence                       | `GET /imports`, `POST /imports`                                               |
-| Hub, service pipeline and paginated executions             | `GET /hub`, `GET /services/:id/pipeline`, `…/executions`                      |
-| One change, traced from build or version set               | `GET /builds/:id`, `GET /versions/:id/trace`                                  |
-| Paginated deployments, builds and audit activity           | `GET /deployments`, `GET /builds`, `GET /activity`                            |
-| Environment detail and approval queue                      | `GET /environments/:id`, `GET /approvals`                                     |
-| Woodpecker, GitHub and ArgoCD enrichment                   | `GET /builds/:id/ci`, `…/source`, `GET /environments/:id/runtime`             |
-| Committed change stream                                    | `GET /events`                                                                 |
+| Operation                                                       | Route                                                                         |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Authenticated principal                                         | `GET /identity`                                                               |
+| Environments, recent executions, eligible artifacts             | `GET /overview`                                                               |
+| Immutable version set revisions                                 | `GET /versions`, `GET /versions/:id`                                          |
+| Latest qualified component artifact                             | `GET /artifacts/latest-qualified?serviceId=…&component=…&kind=…`              |
+| Producer comparison base, pending or qualified                  | `GET /artifacts/latest-retainable?…&kind=…&beforePipeline=…`                  |
+| Register pending CI publication                                 | `POST /builds`                                                                |
+| Compose exact component versions                                | `POST /versions`                                                              |
+| Register immutable pipeline revision                            | `POST /pipelines`                                                             |
+| Register environment/configuration                              | `POST /environments`                                                          |
+| Request deployment, promotion, or rollback                      | `POST /deployments`                                                           |
+| Execution, stages, approval, evidence                           | `GET /deployments/:id`                                                        |
+| Human production approval                                       | `POST /deployments/:id/approval`                                              |
+| Human approval or rejection of a tofu recipe's exact saved plan | `POST /deployments/:id/plan-approval`                                         |
+| Cancel or retry                                                 | `POST /deployments/:id/cancel`, `POST /deployments/:id/retry`                 |
+| Open a recovery intent; settle an ambiguous Argo operation      | `POST /deployments/:id/recovery-intents`, `POST /recovery-intents/:id/settle` |
+| Request native site/Forum recovery under the retained lock      | `POST /deployments/:id/content-recovery`                                      |
+| Inspect frozen content recovery and native receipts             | `GET /content-recovery/:id`                                                   |
+| Hub, service pipeline and paginated executions                  | `GET /hub`, `GET /services/:id/pipeline`, `…/executions`                      |
+| One change, traced from build or version set                    | `GET /builds/:id`, `GET /versions/:id/trace`                                  |
+| Paginated deployments, builds and audit activity                | `GET /deployments`, `GET /builds`, `GET /activity`                            |
+| Environment detail and approval queue                           | `GET /environments/:id`, `GET /approvals`                                     |
+| Woodpecker, GitHub and ArgoCD enrichment                        | `GET /builds/:id/ci`, `…/source`, `GET /environments/:id/runtime`             |
+| Committed change stream                                         | `GET /events`                                                                 |
 
 Execute-scoped workers use `/qualification/pending`, `/builds/:id/qualify`,
 `/replication/pending`, `/artifacts/replication`, `/reconcile`, `/dispatch/pending`, `/dispatch/monitor`, `/dispatch/:id/submitted`,
@@ -497,8 +533,10 @@ missing projection pauses settlement and keeps ownership.
 | `delivery-forum-baseline-reader`   | get, list, watch Pods, claims, Deployments, ReplicaSets and Jobs in the Forum namespaces                |
 | `delivery-minecraft-report-reader` | a `delivery-tsmc-controller`-audience token; the controller reviews it and allows only its report `get` |
 
-Use `toolkit deploy recover <DEPLOYMENT_ID> --operation-id <ARGO_OPERATION_UUID>
---reason <EXPLANATION> --machine` after inspecting the recorded operation directly.
+Use `toolkit deploy recover <DEPLOYMENT_ID> --expected-generation <N>
+--operation-id <ARGO_OPERATION_UUID> --reason <EXPLANATION> --machine` after
+inspecting the recorded operation directly; it opens the recovery intent and
+settles it by readback.
 An active operation, mismatched identity, missing read credential, or specialized
 target keeps ownership locked. If no matching finished operation exists, use the
 [guarded Delivery recovery procedure](../docs/wiki/src/content/docs/how-to/cut-a-homelab-release.md#recover-a-delivery-operation).

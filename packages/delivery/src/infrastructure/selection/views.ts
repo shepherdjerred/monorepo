@@ -1,12 +1,17 @@
 import type {
   Approval,
   Deployment,
+  Prisma,
   RecoveryIntent,
 } from "#generated/prisma/client.ts";
 import {
   PipelineRevisionSchema,
   type DeploymentDetail,
 } from "#shared/contract.ts";
+import {
+  PLAN_APPROVAL_STAGE_KEY,
+  stepStageKey,
+} from "#shared/model/stage-keys.ts";
 import { recipeKindOf } from "#shared/model/recipe-view.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { ApprovalV2Schema } from "#shared/model/approval-contract.ts";
@@ -117,6 +122,7 @@ export function detailView(
   row: Deployment & {
     approval: Approval | null;
     recoveryIntents: RecoveryIntent[];
+    preparedPlatformPlan: { receipt: unknown } | null;
   },
 ) {
   return DeploymentDetailV2Schema.parse({
@@ -126,15 +132,58 @@ export function detailView(
     recoveryIntents: row.recoveryIntents.map((intent) =>
       recoveryIntentView(intent),
     ),
+    savedPlan: row.preparedPlatformPlan?.receipt ?? null,
   });
 }
 
+/** The approve step's stage, which runs while a saved plan waits on its decision. */
+const APPROVE_STEP_KEY = stepStageKey("step", "approve");
+
+/**
+ * A running deployment whose approve step is running and whose saved plan
+ * has no decision yet (H6).
+ */
+const AWAITING_PLAN_DECISION = {
+  status: "running",
+  AND: [
+    { stages: { some: { key: APPROVE_STEP_KEY, status: "running" } } },
+    {
+      stages: {
+        none: {
+          key: PLAN_APPROVAL_STAGE_KEY,
+          status: { in: ["succeeded", "failed"] },
+        },
+      },
+    },
+  ],
+} satisfies Prisma.DeploymentWhereInput;
+
+function awaitingPlanDecision(
+  row: Deployment & { stages: { key: string; status: string }[] },
+) {
+  return (
+    row.status === "running" &&
+    row.stages.some(
+      (stage) => stage.key === APPROVE_STEP_KEY && stage.status === "running",
+    ) &&
+    !row.stages.some(
+      (stage) =>
+        stage.key === PLAN_APPROVAL_STAGE_KEY &&
+        (stage.status === "succeeded" || stage.status === "failed"),
+    )
+  );
+}
+
 export function approvalQueueItem(
-  row: Deployment & { approval: Approval | null },
+  row: Deployment & {
+    approval: Approval | null;
+    stages: { key: string; status: string }[];
+  },
 ) {
   return ApprovalQueueItemSchema.parse({
     ...deploymentView(row),
     approval: approvalView(row.approval),
+    awaitingPlanDecision: awaitingPlanDecision(row),
   });
 }
 
@@ -190,6 +239,7 @@ export async function deploymentDetailV2(
     include: {
       approval: true,
       recoveryIntents: { orderBy: { sequence: "asc" } },
+      preparedPlatformPlan: { select: { receipt: true } },
     },
   });
   return detailView(detail, row);
@@ -218,8 +268,9 @@ export async function approvalById(database: Database, deploymentId: string) {
 }
 
 /**
- * `GET /approvals`: deployments awaiting approval, then those whose approval
- * was decided or expired in the last day, each with its approval.
+ * `GET /approvals`: deployments awaiting approval or a saved-plan decision,
+ * then those whose approval was decided or expired in the last day, each
+ * with its approval.
  */
 export async function approvalQueue(database: Database) {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -227,18 +278,21 @@ export async function approvalQueue(database: Database) {
     where: {
       OR: [
         { status: "awaiting_approval" },
+        AWAITING_PLAN_DECISION,
         { approval: { is: { decidedAt: { gte: since } } } },
       ],
     },
-    include: { approval: true },
+    include: {
+      approval: true,
+      stages: { select: { key: true, status: true } },
+    },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: 200,
   });
-  return rows
-    .toSorted(
-      (left, right) =>
-        Number(right.status === "awaiting_approval") -
-        Number(left.status === "awaiting_approval"),
-    )
-    .map((row) => approvalQueueItem(row));
+  const items = rows.map((row) => approvalQueueItem(row));
+  const waiting = (item: (typeof items)[number]) =>
+    item.status === "awaiting_approval" || item.awaitingPlanDecision;
+  return items.toSorted(
+    (left, right) => Number(waiting(right)) - Number(waiting(left)),
+  );
 }

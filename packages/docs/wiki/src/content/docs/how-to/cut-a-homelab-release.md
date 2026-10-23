@@ -443,6 +443,12 @@ recovery retains its separate native proof. The generic helper refuses these tar
    toolkit deploy status DEPLOYMENT_ID --machine --json
    ```
 
+   Keep its `environment.generation` as `GENERATION` for step 6. The
+   [deployment detail contract](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/shared/contract.ts)
+   defines that field. The service
+   [refuses the recovery](https://github.com/shepherdjerred/monorepo/blob/main/packages/toolkit/README.md#delivery)
+   once the environment generation changes.
+
 3. Export the frozen artifact and configuration selection for review:
 
    ```bash
@@ -476,7 +482,7 @@ recovery retains its separate native proof. The generic helper refuses these tar
 6. Release ownership through independent observation:
 
    ```bash
-   toolkit deploy recover DEPLOYMENT_ID --operation-id ARGO_OPERATION_UUID --reason "Inspected and settled the exact frozen release with the prior executor stopped" --machine
+   toolkit deploy recover DEPLOYMENT_ID --expected-generation GENERATION --operation-id ARGO_OPERATION_UUID --reason "Inspected and settled the exact frozen release with the prior executor stopped" --machine
    ```
 
    This remains available while writes are paused and Temporal is unavailable.

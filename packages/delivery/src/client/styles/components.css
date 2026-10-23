@@ -12,15 +12,20 @@
   border: 1px solid transparent;
 }
 .status-succeeded,
-.status-verified {
+.status-verified,
+.status-settled,
+.status-granted {
   background: var(--succeeded-soft);
   color: var(--succeeded);
 }
-.status-failed {
+.status-failed,
+.status-alarmed,
+.status-rejected {
   background: var(--failed-soft);
   color: var(--failed);
 }
-.status-running {
+.status-running,
+.status-watching {
   background: var(--running-soft);
   color: var(--running);
 }
@@ -221,6 +226,12 @@ button:disabled {
 .activity-entity {
   overflow-wrap: anywhere;
 }
+.catalog-result {
+  grid-column: 1 / -1;
+}
+.catalog-result .facts {
+  margin: 0;
+}
 @media (width <= 720px) {
   .activity li {
     grid-template-columns: 1fr;
@@ -382,4 +393,87 @@ button:disabled {
 }
 .digest abbr {
   white-space: nowrap;
+}
+.badge-override {
+  background: var(--running-soft);
+  color: var(--running);
+}
+.badge-current {
+  background: var(--succeeded-soft);
+  color: var(--succeeded);
+  margin-inline-start: var(--space-2);
+}
+.panel h3 {
+  font-size: 0.9rem;
+  margin: var(--space-4) 0 var(--space-2);
+}
+.evidence-meter {
+  display: grid;
+  gap: var(--space-1);
+}
+.evidence-meter meter {
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+.alarms li,
+.candidates > li,
+.intents li {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border);
+}
+.alarms,
+.candidates,
+.intents {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.candidates > li {
+  display: grid;
+  gap: var(--space-2);
+}
+.candidates .facts {
+  margin: 0;
+}
+.candidate-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.candidate-excluded {
+  color: var(--text-muted);
+}
+.candidate-reason {
+  margin: 0;
+  font-size: 0.85rem;
+}
+.differs {
+  color: var(--waiting);
+  font-weight: 600;
+}
+.panel-attention {
+  border-color: var(--failed);
+}
+.panel-waiting {
+  border-color: var(--waiting);
+}
+/* A command to copy wraps at phone width instead of scrolling. */
+pre.command {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+label.checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 400;
+  margin-block: var(--space-3);
+}
+label.checkbox input {
+  min-height: 0;
+  inline-size: 18px;
+  block-size: 18px;
+  flex: none;
 }

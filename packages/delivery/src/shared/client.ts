@@ -1,7 +1,5 @@
 import { z } from "zod";
-import type { CreateDeploymentV2Schema } from "./deployment-request-contract.ts";
 import * as errors from "./client-error.ts";
-import { RecoveryIntentV2Schema } from "./recovery-intent.ts";
 export const DeliveryClientError = errors.DeliveryClientError;
 export type DeliveryClientError = InstanceType<
   typeof errors.DeliveryClientError
@@ -11,7 +9,6 @@ import {
   ArtifactVersionSchema,
   LatestQualifiedArtifactQuerySchema,
   LatestRetainableArtifactQuerySchema,
-  DeploymentDetailSchema,
   DeploymentSchema,
   EnvironmentSchema,
   OverviewSchema,
@@ -42,7 +39,6 @@ import {
   PendingReplicationSchema,
 } from "./contract.ts";
 import type {
-  CreateDeployment,
   PublishBuild,
   ComposeVersionSet,
   PipelineDefinition,
@@ -78,13 +74,15 @@ import type {
   ContentBarrierRestoration,
 } from "./contract.ts";
 import type { RecordArtifactReplication } from "./artifact-contract.ts";
-import { ApprovalV2Schema } from "./model/approval-contract.ts";
+import { modelRoutes } from "./model/routes-client.ts";
+import { DeploymentDetailV2Schema } from "./model/route-contract.ts";
 
 export function createDeliveryClient(options: RequestOptions) {
   const request = createRequester(options);
   const version = (id: string) =>
     request(`/versions/${encodeURIComponent(id)}`, VersionSetRevisionSchema);
   return {
+    ...modelRoutes(request),
     identity: () => request("/identity", PrincipalSchema),
     overview: () => request("/overview", OverviewSchema),
     latestQualifiedArtifact: (input: LatestQualifiedArtifactQuery) =>
@@ -106,7 +104,10 @@ export function createDeliveryClient(options: RequestOptions) {
       ),
     version,
     deployment: (id: string) =>
-      request(`/deployments/${encodeURIComponent(id)}`, DeploymentDetailSchema),
+      request(
+        `/deployments/${encodeURIComponent(id)}`,
+        DeploymentDetailV2Schema,
+      ),
     diff: async (fromId: string | null, toId: string) => {
       const [from, to] = await Promise.all([
         fromId === null ? null : version(fromId),
@@ -114,9 +115,6 @@ export function createDeliveryClient(options: RequestOptions) {
       ]);
       return diffVersionSets(from, to);
     },
-    createDeployment: (
-      input: CreateDeployment | z.input<typeof CreateDeploymentV2Schema>,
-    ) => request("/deployments", DeploymentSchema, input),
     createPlatformDeployment: (input: CreatePlatformDeployment) =>
       request("/platform/deployments", DeploymentSchema, input),
     requestPlatformRecovery: (id: string, input: RequestPlatformRecovery) =>
@@ -270,46 +268,11 @@ export function createDeliveryClient(options: RequestOptions) {
         `/platform/plans/${encodeURIComponent(id)}`,
         RecordTofuPlanSchema,
       ),
-    /** The decided approval record (4.13); the deployment is read apart. */
-    approve: (
-      id: string,
-      input: { decision: "approve" | "reject"; reason: string },
-    ) =>
-      request(
-        `/deployments/${encodeURIComponent(id)}/approval`,
-        ApprovalV2Schema,
-        input,
-      ),
     cancel: (id: string) =>
       request(
         `/deployments/${encodeURIComponent(id)}/cancel`,
         DeploymentSchema,
         {},
-      ),
-    /** Opens the deployment's recovery intent (4.15); its kind picks the reader. */
-    createRecoveryIntent: (
-      id: string,
-      input: {
-        requestId: string;
-        reason: string;
-        expectedGeneration: number;
-        expectedKind?: "argo";
-      },
-    ) =>
-      request(
-        `/deployments/${encodeURIComponent(id)}/recovery-intents`,
-        RecoveryIntentV2Schema,
-        input,
-      ),
-    /** Settles a pending `argo` recovery intent with independent readback. */
-    settleRecoveryIntent: (
-      intentId: string,
-      input: { operationId: string; reason: string },
-    ) =>
-      request(
-        `/recovery-intents/${encodeURIComponent(intentId)}/settle`,
-        DeploymentSchema,
-        input,
       ),
     retry: (
       id: string,

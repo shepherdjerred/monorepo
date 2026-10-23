@@ -45,7 +45,7 @@ export const ActivitySearchSchema = z.object({
 });
 
 export const EnvironmentSearchSchema = z.object({
-  release: lenient(z.enum(["deploy", "promote", "rollback"])),
+  release: lenient(z.enum(["deploy", "promote"])),
   version: lenient(Optional),
 });
 

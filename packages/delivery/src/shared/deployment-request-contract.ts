@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { IdentifierSchema } from "./artifact-contract.ts";
+import type { StoredRecipeDefinition } from "./model/record-contract.ts";
 
 export const CreateDeploymentSchema = z
   .object({
@@ -52,6 +53,49 @@ export const DeploymentKindV2Schema = z.enum([
   "operator-run",
 ]);
 export type DeploymentKindV2 = z.infer<typeof DeploymentKindV2Schema>;
+/**
+ * Kinds the API retries as a new deployment of the same frozen request
+ * (`retryRequest`). Specialized kinds need fresh exact inputs instead.
+ */
+export const RETRYABLE_DEPLOYMENT_KINDS = [
+  "deploy",
+  "promote",
+  "rollback",
+  "rebind",
+  "channel-publish",
+  "operator-run",
+] as const satisfies readonly DeploymentKindV2[];
+
+/**
+ * What realises a set revision under the stored recipe a release freezes
+ * (section 5), read from the stored kind exactly as the server's kind check
+ * reads it: a channel recipe is published, an operator-run recipe is run by
+ * an attested operator tool, and every other model recipe and v1 pipeline is
+ * deployed. A v1 manual pipeline is deployed too; `recipeKindOf` reads it as
+ * an operator-run recipe, which admission refuses for it.
+ */
+export function releaseKindOf(
+  recipeKind: StoredRecipeDefinition["kind"],
+): Extract<DeploymentKindV2, "deploy" | "channel-publish" | "operator-run"> {
+  switch (recipeKind) {
+    case "channel": {
+      return "channel-publish";
+    }
+    case "operator-run": {
+      return "operator-run";
+    }
+    case "manual":
+    case "kubernetes-application":
+    case "static-site":
+    case "tofu":
+    case "compound":
+    case "argocd":
+    case "control-plane":
+    case "root-release": {
+      return "deploy";
+    }
+  }
+}
 
 const RevisionIdSchema = z
   .string()

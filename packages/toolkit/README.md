@@ -38,7 +38,9 @@ toolkit deploy start <ENVIRONMENT_ID> <VERSION_SET_ID> --request-id <REQUEST_ID>
 toolkit deploy promote <SOURCE_ENVIRONMENT_ID> <DESTINATION_ENVIRONMENT_ID>
 toolkit deploy approve <DEPLOYMENT_ID> --reason "Reviewed release and checks"
 toolkit deploy wait <DEPLOYMENT_ID> --timeout 900 --json
-toolkit deploy rollback <ENVIRONMENT_ID> <VERSION_SET_ID>
+toolkit deploy candidates <ENVIRONMENT_ID> --json
+toolkit deploy rollback <ENVIRONMENT_ID> <DEPLOYMENT_ID>
+toolkit deploy monitor <ENVIRONMENT_ID> --json
 toolkit deploy workers list <ENVIRONMENT_ID> --json
 toolkit deploy workers baseline --file <REVIEWED_BASELINE_JSON> --machine
 toolkit deploy workers adopt --file <REVIEWED_ADOPTION_JSON> --machine
@@ -98,7 +100,8 @@ Mutations use the currently read environment generation unless
 service. Use `--request-id` to repeat a request after a lost response; generated
 request IDs are printed to stderr before submission. Cancellation waits for a
 safe boundary. Retry creates a new attempt and reevaluates required approval.
-Rollback selects an exact previous release and does not restore persistent data.
+Rollback names the deployment whose accepted selection it restores; it does not
+restore persistent data.
 
 `workers baseline` submits an admin-only `adopt-worker` intent containing an
 exact full-app version set, environment generation, request ID, and
@@ -172,20 +175,99 @@ success, 1 for a failed/canceled deployment, and 2 when its deadline expires.
 Other errors return 1. Timeout never reports a queued or approving deployment as
 failed. Run `toolkit deploy --help` for every operation.
 
+### Model verbs
+
+These verbs drive the Delivery model (`packages/delivery/docs/model.md`). A
+selection is one set revision, recipe revision and configuration revision;
+within an environment it is named by the deployment that froze it.
+
+```bash
+toolkit deploy start <ENVIRONMENT_ID> <SET_REVISION_ID> [--override]
+toolkit deploy approve <DEPLOYMENT_ID> --override --reason "Reviewed the ineligible set revision"
+toolkit deploy promote <SOURCE_ENVIRONMENT_ID> <DESTINATION_ENVIRONMENT_ID>
+toolkit deploy candidates <ENVIRONMENT_ID>
+toolkit deploy rollback <ENVIRONMENT_ID> <DEPLOYMENT_ID>
+toolkit deploy rebind <ENVIRONMENT_ID> --recipe <RECIPE_REVISION> --configuration <CONFIGURATION_REVISION>
+toolkit deploy monitor <ENVIRONMENT_ID>
+toolkit deploy retire <SERVICE_ID> --reason "Replaced by Arcade" --machine
+toolkit deploy catalog reconcile --file <CATALOG_DOCUMENT_JSON> --machine
+toolkit deploy attest <DEPLOYMENT_ID> --stage <STAGE> --evidence <EVIDENCE_JSON> --machine
+toolkit deploy approve-plan <DEPLOYMENT_ID> --reason "Reviewed the saved plan's changes"
+toolkit deploy reject-plan <DEPLOYMENT_ID> --reason "Why the saved plan must not apply"
+toolkit deploy recover <DEPLOYMENT_ID> --expected-generation <N> --reason "Inspect the target and settle ownership" [--step <STEP>] [--operation-id <ARGO_OPERATION_UUID>] --machine
+toolkit deploy recovery <INTENT_ID>
+toolkit deploy snapshot --output <FILE>
+toolkit deploy snapshot reconcile --machine
+toolkit deploy snapshot accept <ENVIRONMENT_ID> --reason "Why the live state is right" --evidence "What was inspected" --machine
+toolkit deploy render-application <ENVIRONMENT_ID> --snapshot <FILE> --file <CATALOG_DOCUMENT_JSON>
+```
+
+`start` requests an exact set revision the way the recipe the release
+freezes realises it: `deploy`, or `channel-publish` and `operator-run` for
+those recipe kinds. That is the accepted selection's recipe until a `rebind`,
+and the declared recipe only before the first acceptance. It takes that kind
+from the environment detail's `releaseKind`, which reads the stored kind as
+admission does, so a v1 `manual` pipeline is a `deploy` although the
+selection view names it `operator-run`. `--override` asks for the approval a non-eligible `deploy`
+needs, such as a set revision never accepted in the promotion source;
+`approve --override` and `reject --override` decide it. `promote` takes the source's accepted selection and names no set
+revision. `candidates` lists accepted selections, newest first, and states why
+each excluded one would lower a forward-only configuration key or cross a
+point-of-no-return step; the accepted one can be re-asserted. `rollback` reads that list and refuses an excluded or
+unknown deployment with the server's reason before it sends anything. `rebind`
+keeps the accepted set revision and moves to the named recipe or configuration
+revision; it names at least one. These requests read the environment's binding
+generation unless `--expected-generation` pins it. `monitor` prints the accepted
+deployment's monitor: state, policy, the declared evidence thresholds and the
+latest observation with its firing alarms.
+
+`retire`, `catalog reconcile`, `recover`, `snapshot reconcile` and
+`snapshot accept` require the admin credential. `catalog reconcile` reads the
+catalog document `--file` names, validates it against the catalog contract
+before sending, and exits 1 when the server refuses any entry. `recover` creates the one recovery intent of a
+`recovery-required` deployment, bound to the expected binding generation and,
+for a compound target, the named sub-step. With `--operation-id`, it then
+settles an ordinary Argo intent by independent readback of that exact
+inspected operation. `recovery` reads an intent and its inspection evidence.
+`approve-plan` and `reject-plan` record the one decision on the exact saved
+plan a model `tofu` recipe's approve step waits on: each reads the digest from
+the deployment's saved plan and requires a human identity. A rejection
+discards the plan and ends the deployment failed without applying. Once a
+decision settled the approve step, a repeated command names the digest that
+decision bound, so retrying after a lost response returns the same settled
+decision instead of failing for want of a saved plan. `attest`
+records operator-attested evidence for one stage of an `operator-run`
+deployment; the evidence file is a JSON array of evidence entries, and the
+command uses the attestor credential `DELIVERY_ATTEST_TOKEN`, which the
+executor never holds.
+
+The cold-start verbs work while Delivery is down. `snapshot --output` reads the
+newest cold-start snapshot from `s3://homelab/delivery-cold-start/latest.json`
+at the R2 endpoint the snapshot writer uses, with the `r2` AWS profile's
+credentials, validates it and writes it to the file. `render-application`
+prints the ArgoCD Application for one environment from its recipe in the
+catalog document `--file` names and the snapshot's accepted selection, with the
+one sync a cold start needs, ready for `kubectl apply`; it uses Delivery's one
+Application renderer. The catalog document must be the revision the snapshot
+records (`catalogRevision`), so the selection's recipe and configuration ids
+resolve to the contents that were accepted; any other revision is refused
+before rendering. `snapshot reconcile` runs reconcile-after-restore once
+Delivery is back: it reads `latest.json` and its immutable copy with the `r2`
+profile, requires them identical with the writer's fingerprint, and sends
+that snapshot, because Delivery holds no R2 credential. Delivery compares the
+record, the snapshot and the live target for every environment, holds
+automatic deployments on each mismatch, and the command exits 1 while any
+environment is held. `snapshot accept` settles one hold by accepting
+the live state with a reason and the evidence inspected.
+
 Bootstrap uses reviewed JSON files and an admin machine credential:
 
 ```bash
 toolkit deploy pipeline register <PIPELINE_REVISION_ID> --file <DEFINITION_JSON> --machine
 toolkit deploy environment register --file <ENVIRONMENT_JSON> --machine
-toolkit deploy import --file <SNAPSHOT_JSON> --machine
-toolkit deploy imports --json
 ```
 
-Pipeline and environment files conform to the shared Delivery contracts. Import
-files contain an explicit request ID, service ID, capture timestamp, source
-(`version-catalog`, `argocd`, or `runtime`), component references, and evidence.
-Imports remain unverified migration snapshots: they do not manufacture CI
-qualification, make artifacts eligible, or change desired environment state.
+Pipeline and environment files conform to the shared Delivery contracts.
 
 ## Tracker
 

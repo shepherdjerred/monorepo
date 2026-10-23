@@ -141,6 +141,8 @@ export const ColdStartSnapshotSchema = coldStart.ColdStartSnapshotSchema;
 export type SnapshotArtifact = coldStart.SnapshotArtifact;
 export type SnapshotEnvironment = coldStart.SnapshotEnvironment;
 export type ColdStartSnapshot = coldStart.ColdStartSnapshot;
+export const SettleRestoreHoldSchema = coldStart.SettleRestoreHoldSchema;
+export type SettleRestoreHold = coldStart.SettleRestoreHold;
 
 export const RecipeKindSchema = routes.RecipeKindSchema;
 export const EnvironmentSelectionSchema = routes.EnvironmentSelectionSchema;

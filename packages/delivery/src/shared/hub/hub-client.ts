@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DeploymentSchema } from "#shared/contract.ts";
+import { ApprovalQueueItemSchema } from "#shared/model/route-contract.ts";
 import {
   ActivityPageSchema,
   BuildPageSchema,
@@ -68,7 +68,7 @@ export function createHubClient(options: RequestOptions) {
       request(`/deployments${query(input)}`, DeploymentPageSchema),
     builds: (input: BuildListQuery) =>
       request(`/builds${query(input)}`, BuildPageSchema),
-    approvals: () => request("/approvals", z.array(DeploymentSchema)),
+    approvals: () => request("/approvals", z.array(ApprovalQueueItemSchema)),
     activity: (input: ActivityQuery) =>
       request(`/activity${query(input)}`, ActivityPageSchema),
   };

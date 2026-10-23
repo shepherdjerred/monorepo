@@ -20,6 +20,14 @@ export function parseDeployArgs(args: string[]) {
       timeout: { type: "string" },
       interval: { type: "string" },
       file: { type: "string" },
+      override: { type: "boolean", default: false },
+      recipe: { type: "string" },
+      configuration: { type: "string" },
+      stage: { type: "string" },
+      evidence: { type: "string" },
+      step: { type: "string" },
+      output: { type: "string" },
+      snapshot: { type: "string" },
     },
   });
 }

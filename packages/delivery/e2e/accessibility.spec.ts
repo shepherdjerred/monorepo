@@ -1,8 +1,7 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { z } from "zod";
 import { DeploymentSchema } from "#shared/contract.ts";
-import { api } from "./helpers.ts";
+import { api, expectAccessible } from "./helpers.ts";
 
 const PAGES = [
   "/pipelines",
@@ -27,23 +26,7 @@ for (const scheme of ["light", "dark"] as const) {
     const extra = approvals
       .slice(0, 1)
       .map((deployment) => `/deployments/${deployment.id}`);
-    for (const path of [...PAGES, ...extra]) {
-      await page.goto(path);
-      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-      await expect(
-        page.locator("[role=status]", { hasText: "Loading" }),
-      ).toHaveCount(0);
-      const results = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-        .analyze();
-      expect(
-        results.violations.map((violation) => ({
-          path,
-          id: violation.id,
-          nodes: violation.nodes.map((node) => node.target.join(" ")),
-        })),
-      ).toEqual([]);
-    }
+    for (const path of [...PAGES, ...extra]) await expectAccessible(page, path);
   });
 }
 

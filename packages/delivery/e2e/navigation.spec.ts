@@ -74,7 +74,7 @@ test("links keep history: back and forward restore each page", async ({
   await expect(page).toHaveURL(/\/pipelines\/arcade$/u);
   await expect(page.locator("#main-heading")).toBeFocused();
   await page
-    .getByRole("navigation", { name: "Pipeline views" })
+    .getByRole("navigation", { name: "Service views" })
     .getByRole("link", { name: "Executions" })
     .click();
   await expect(page).toHaveURL(/\/pipelines\/arcade\/executions$/u);
@@ -84,7 +84,7 @@ test("links keep history: back and forward restore each page", async ({
   await page.goBack();
   await expect(page).toHaveURL(/\/pipelines\/arcade$/u);
   await expect(
-    page.getByRole("region", { name: "Arcade pipeline" }),
+    page.getByRole("region", { name: "Arcade promotion" }),
   ).toBeVisible();
   await page.goBack();
   await expect(page).toHaveTitle("Pipelines · Delivery");

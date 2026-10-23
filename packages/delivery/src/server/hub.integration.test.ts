@@ -263,3 +263,79 @@ describe("hub change feed", () => {
     await reader.cancel();
   });
 });
+
+/** What a release of arcade/prod is realised by, as the hub reports it. */
+async function releaseKind() {
+  return EnvironmentDetailSchema.parse(
+    await body("/api/v1/environments/arcade%2Fprod"),
+  ).releaseKind;
+}
+
+describe("hub release kind", () => {
+  test("a release realises the accepted recipe until a rebind, the declared one before acceptance", async () => {
+    const db = delivery.database;
+    const original = await db.environment.findUniqueOrThrow({
+      where: { id: "arcade/prod" },
+    });
+    // A catalog change declares an operator-run recipe for the environment.
+    await db.pipeline.create({
+      data: {
+        id: "arcade/operated",
+        definition: {
+          kind: "operator-run",
+          wrapped: {
+            kind: "host",
+            instance: "host:arcade",
+            components: ["image:arcade"],
+          },
+          stages: ["upgrade"],
+        },
+      },
+    });
+    await db.pipeline.create({
+      data: {
+        id: "arcade/manual",
+        definition: { kind: "manual", reason: "v1 deploys" },
+      },
+    });
+    try {
+      // A v1 manual pipeline is deployed, as admission reads its stored
+      // kind, though the selection view normalises it to operator-run.
+      await db.environment.update({
+        where: { id: "arcade/prod" },
+        data: {
+          pipelineRevisionId: "arcade/manual",
+          acceptedDeploymentId: null,
+        },
+      });
+      expect(await releaseKind()).toBe("deploy");
+      await db.environment.update({
+        where: { id: "arcade/prod" },
+        data: {
+          pipelineRevisionId: "arcade/operated",
+          acceptedDeploymentId: null,
+        },
+      });
+      expect(await releaseKind()).toBe("operator-run");
+      // Once a deployment under the earlier recipe is accepted, a release
+      // freezes that recipe until a rebind, so it is still a deploy.
+      const accepted = await db.deployment.findFirstOrThrow({
+        where: { environmentId: "arcade/prod" },
+      });
+      expect(accepted.pipelineRevisionId).toBe(original.pipelineRevisionId);
+      await db.environment.update({
+        where: { id: "arcade/prod" },
+        data: { acceptedDeploymentId: accepted.id },
+      });
+      expect(await releaseKind()).toBe("deploy");
+    } finally {
+      await db.environment.update({
+        where: { id: "arcade/prod" },
+        data: {
+          pipelineRevisionId: original.pipelineRevisionId,
+          acceptedDeploymentId: original.acceptedDeploymentId,
+        },
+      });
+    }
+  });
+});

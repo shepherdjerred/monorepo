@@ -1,22 +1,8 @@
-/** What one reconcile did, entity by entity; the route reports the counts. */
-export type Result = {
-  catalogRevision: string;
-  services: { created: string[]; lineageChanged: string[]; retired: string[] };
-  environments: {
-    created: string[];
-    renamed: { from: string; to: string }[];
-    rebound: string[];
-    retired: string[];
-    /** Section 7: environments whose accepted selection moved onto catalog identities. */
-    carried: string[];
-  };
-  recipes: { created: string[] };
-  configurations: { created: string[] };
-  edges: number;
-  references: number;
-  unchanged: number;
-  refused: { id: string; reason: string }[];
-};
+import type { z } from "zod";
+import type { CatalogReconcileRecordSchema } from "#shared/model/route-contract.ts";
+
+/** What one reconcile did, entity by entity: the record `catalog.reconciled` audits; the route reports the counts. */
+export type Result = z.infer<typeof CatalogReconcileRecordSchema>;
 
 /**
  * The catalog revision a reconciled row records: this reconcile's, unless the

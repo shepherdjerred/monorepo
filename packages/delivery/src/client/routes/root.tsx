@@ -10,6 +10,7 @@ import { useFeedStatus, type ChangeFeed } from "#client/change-feed.ts";
 import { PageHeader } from "#client/components/page-header.tsx";
 import { errorMessage } from "#client/components/notices.tsx";
 import { DeliveryClientError } from "#shared/client.ts";
+import { awaitsDecision } from "#client/model/view.ts";
 
 export type RouterContext = { queryClient: QueryClient; feed: ChangeFeed };
 
@@ -38,7 +39,8 @@ function FeedIndicator({ feed }: { feed: ChangeFeed }) {
 
 function Navigation() {
   const approvals = useQuery(queries.approvals());
-  const count = approvals.data?.length ?? 0;
+  const count =
+    approvals.data?.filter((item) => awaitsDecision(item)).length ?? 0;
   return (
     <nav aria-label="Main">
       <ul>

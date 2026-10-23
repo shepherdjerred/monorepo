@@ -84,6 +84,26 @@ export const queries = {
       queryKey: ["environment", environmentId],
       queryFn: () => hub.environment(environmentId),
     }),
+  selection: (environmentId: string) =>
+    queryOptions({
+      queryKey: ["environment", environmentId, "selection"],
+      queryFn: () => delivery.selection(environmentId),
+    }),
+  monitor: (environmentId: string) =>
+    queryOptions({
+      queryKey: ["environment", environmentId, "monitor"],
+      queryFn: () => delivery.monitor(environmentId),
+    }),
+  rollbackCandidates: (environmentId: string) =>
+    queryOptions({
+      queryKey: ["environment", environmentId, "rollback-candidates"],
+      queryFn: () => delivery.rollbackCandidates(environmentId),
+    }),
+  recoveryIntent: (intentId: string) =>
+    queryOptions({
+      queryKey: ["recovery-intent", intentId],
+      queryFn: () => delivery.recoveryIntent(intentId),
+    }),
   overview: () =>
     queryOptions({
       queryKey: ["overview"],

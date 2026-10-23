@@ -5,6 +5,7 @@ import {
   DeploymentSchema,
   EnvironmentSchema,
 } from "@shepherdjerred/delivery/contract";
+import * as fixtures from "@shepherdjerred/delivery/model-fixtures";
 import { deliveryUrl } from "#lib/delivery/client.ts";
 import {
   runDeployCommand,
@@ -78,6 +79,34 @@ const detail = DeploymentDetailSchema.parse({
   evidence: [],
 });
 
+/** A client that records each request and answers from `respond`. */
+function recordingClient(respond: (url: string) => unknown) {
+  const requests: { url: string; body: unknown; headers: Headers }[] = [];
+  const client = createDeliveryClient({
+    baseUrl: "https://delivery.invalid",
+    fetch: async (input, init) => {
+      const url = input instanceof Request ? input.url : input.toString();
+      requests.push({
+        url,
+        body: typeof init?.body === "string" ? JSON.parse(init.body) : null,
+        headers: new Headers(init?.headers),
+      });
+      return Response.json(respond(url));
+    },
+  });
+  return { client, requests };
+}
+
+/** A thunk validating `deploy recover deployment:1` with these arguments. */
+function recover(args: string[]) {
+  return () =>
+    validateDeployCommand(
+      "recover",
+      ["deployment:1"],
+      parseDeployArgs(args).values,
+    );
+}
+
 describe("delivery CLI", () => {
   test("rejects credentials and insecure remote URLs", () => {
     expect(() => deliveryUrl("https://operator:secret@example.com")).toThrow(
@@ -107,28 +136,18 @@ describe("delivery CLI", () => {
     expect(() => parseDeployArgs(["--token", "secret"])).toThrow();
   });
   test("start forwards exact target, revision, generation and idempotency key", async () => {
-    const requests: { url: string; body: unknown; headers: Headers }[] = [];
-    const client = createDeliveryClient({
-      baseUrl: "https://delivery.invalid",
-      fetch: async (input, init) => {
-        const url = input instanceof Request ? input.url : input.toString();
-        requests.push({
-          url,
-          body: typeof init?.body === "string" ? JSON.parse(init.body) : null,
-          headers: new Headers(init?.headers),
-        });
-        return Response.json(
-          url.endsWith("overview")
-            ? {
-                environments: [environment],
-                deployments: [],
-                artifacts: [],
-                versionSets: [],
-              }
-            : deployment,
-        );
-      },
-    });
+    const { client, requests } = recordingClient((url) =>
+      url.endsWith("selection")
+        ? {
+            ...fixtures.selections.beta,
+            accepted: null,
+            acceptedDeploymentId: null,
+            bindingGeneration: 4,
+          }
+        : url.endsWith("/environments/arcade%2Fprod")
+          ? fixtures.environmentDetails.beta
+          : deployment,
+    );
     const { values, positionals } = parseDeployArgs([
       "arcade/prod",
       "arcade:1",
@@ -137,14 +156,14 @@ describe("delivery CLI", () => {
     ]);
     const result = await runDeployCommand(client, "start", positionals, values);
     expect(result.exitCode).toBe(0);
-    expect(requests[1]?.body).toEqual({
+    expect(requests[2]?.body).toEqual({
       requestId: "request:exact",
       environmentId: "arcade/prod",
       versionSetRevisionId: "arcade:1",
       expectedGeneration: 4,
       kind: "deploy",
     });
-    expect(requests[1]?.headers.has("Tailscale-User-Login")).toBe(false);
+    expect(requests[2]?.headers.has("Tailscale-User-Login")).toBe(false);
   });
   test("wait deadline preserves pending status and returns distinct exit code", async () => {
     const client = createDeliveryClient({
@@ -182,71 +201,49 @@ describe("delivery CLI", () => {
     });
     await expect(client.identity()).rejects.toThrow("Insufficient scope");
   });
-  test("recovery requires an explicit external operation identity before credential resolution", () => {
-    expect(() =>
-      validateDeployCommand(
-        "recover",
-        ["deployment:1"],
-        parseDeployArgs([]).values,
-      ),
-    ).toThrow("admin --machine");
-    expect(() =>
-      validateDeployCommand(
-        "recover",
-        ["deployment:1"],
-        parseDeployArgs(["--machine"]).values,
-      ),
-    ).toThrow("--operation-id");
-    expect(() =>
-      validateDeployCommand(
-        "recover",
-        ["deployment:1"],
-        parseDeployArgs([
-          "--machine",
-          "--operation-id",
-          "not-a-uuid",
-          "--reason",
-          "Inspected operation directly",
-        ]).values,
-      ),
+});
+
+describe("deploy recover (4.15)", () => {
+  test("a recovery intent names the generation and reason before credential resolution", () => {
+    expect(recover([])).toThrow("--machine");
+    expect(recover(["--machine"])).toThrow("--expected-generation");
+    expect(
+      recover([
+        "--machine",
+        "--expected-generation",
+        "11",
+        "--reason",
+        "short",
+      ]),
+    ).toThrow();
+    expect(
+      recover([
+        "--machine",
+        "--expected-generation",
+        "11",
+        "--reason",
+        "Inspected exact operation directly while Temporal was unavailable",
+        "--operation-id",
+        "not-a-uuid",
+      ]),
     ).toThrow();
   });
-  test("recovery opens the deployment's intent, then settles it with the exact inspected operation", async () => {
+  test("recover --operation-id opens the intent, then settles it with the exact inspected operation", async () => {
     const operationId = "22222222-2222-4222-8222-222222222222";
-    const requests: { url: string; body: unknown }[] = [];
-    const client = createDeliveryClient({
-      baseUrl: "https://delivery.invalid",
-      fetch: async (input, init) => {
-        const url = input instanceof Request ? input.url : input.toString();
-        const body: unknown =
-          typeof init?.body === "string" ? JSON.parse(init.body) : null;
-        requests.push({ url, body });
-        if (url.endsWith("/recovery-intents"))
-          return Response.json({
-            id: "argo/recovery",
-            kind: "argo",
-            deploymentId: deployment.id,
-            sequence: 1,
-            requestedBy: "admin",
-            reason:
-              "Inspected exact operation directly while Temporal was unavailable",
-            expectedGeneration: environment.generation,
-            fingerprint: `sha256:${"a".repeat(64)}`,
-            outcome: "pending",
-            createdAt,
-          });
-        return Response.json(url.endsWith("/settle") ? deployment : detail);
-      },
-    });
+    const { client, requests } = recordingClient((url) =>
+      url.endsWith("/settle") ? deployment : fixtures.recoveryIntents.pending,
+    );
     const { values, positionals } = parseDeployArgs([
       deployment.id,
       "--machine",
+      "--expected-generation",
+      "11",
       "--operation-id",
       operationId,
-      "--reason",
-      "Inspected exact operation directly while Temporal was unavailable",
       "--request-id",
       "recovery/1",
+      "--reason",
+      "Inspected exact operation directly while Temporal was unavailable",
     ]);
     const result = await runDeployCommand(
       client,
@@ -254,18 +251,54 @@ describe("delivery CLI", () => {
       positionals,
       values,
     );
-    expect(result.exitCode).toBe(0);
+    expect(result).toEqual({ result: deployment, exitCode: 0 });
     expect(requests.map((request) => request.url)).toEqual([
-      "https://delivery.invalid/api/v1/deployments/deployment%3A1",
-      "https://delivery.invalid/api/v1/deployments/deployment%3A1/recovery-intents",
-      "https://delivery.invalid/api/v1/recovery-intents/argo%2Frecovery/settle",
+      `https://delivery.invalid/api/v1/deployments/${encodeURIComponent(deployment.id)}/recovery-intents`,
+      `https://delivery.invalid/api/v1/recovery-intents/${encodeURIComponent(fixtures.recoveryIntents.pending.id)}/settle`,
     ]);
-    expect(requests[1]?.body).toEqual({
-      requestId: "recovery/1",
-      reason: values.reason,
-      expectedGeneration: environment.generation,
-      expectedKind: "argo",
+    // Settling reads back an Argo operation; any other kind opens nothing.
+    expect(requests[0]?.body).toMatchObject({ expectedKind: "argo" });
+    expect(requests[1]?.body).toEqual({ operationId, reason: values.reason });
+  });
+  test("recover creates one recovery intent for the named sub-step", async () => {
+    let payload: unknown;
+    const client = createDeliveryClient({
+      baseUrl: "https://delivery.invalid",
+      fetch: async (input, init) => {
+        expect(input instanceof Request ? input.url : input.toString()).toBe(
+          "https://delivery.invalid/api/v1/deployments/scout-prod-37/recovery-intents",
+        );
+        payload = typeof init?.body === "string" ? JSON.parse(init.body) : null;
+        return Response.json(fixtures.recoveryIntents.pending);
+      },
     });
-    expect(requests[2]?.body).toEqual({ operationId, reason: values.reason });
+    const { values, positionals } = parseDeployArgs([
+      "scout-prod-37",
+      "--machine",
+      "--expected-generation",
+      "11",
+      "--step",
+      "sync",
+      "--request-id",
+      "request/recovery",
+      "--reason",
+      "Re-read the sync operation now that ArgoCD finished operation 7",
+    ]);
+    const result = await runDeployCommand(
+      client,
+      "recover",
+      positionals,
+      values,
+    );
+    expect(result).toEqual({
+      result: fixtures.recoveryIntents.pending,
+      exitCode: 0,
+    });
+    expect(payload).toEqual({
+      requestId: "request/recovery",
+      reason: values.reason,
+      expectedGeneration: 11,
+      step: "sync",
+    });
   });
 });

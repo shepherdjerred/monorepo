@@ -144,7 +144,7 @@ export function DeploymentRecord({
       <FrozenForumBaseline detail={detail} />
       <div className="detail-grid">
         <section className="panel" aria-labelledby="progress-heading">
-          <h2 id="progress-heading">Pipeline progress</h2>
+          <h2 id="progress-heading">Steps</h2>
           <StageTimeline detail={detail} />
         </section>
         <section className="panel" aria-labelledby="evidence-heading">
@@ -169,26 +169,6 @@ export function DeploymentRecord({
         </details>
         <FrozenInputs detail={detail} />
       </section>
-      {detail.approval !== null && (
-        <section className="panel" aria-labelledby="approvals-heading">
-          <h2 id="approvals-heading">Approval</h2>
-          <p>
-            <strong>{detail.approval.status}</strong>
-            {detail.approval.override && " · override"}
-            {detail.approval.actor !== null &&
-              ` · ${detail.approval.actor}`} ·{" "}
-            <RelativeTime
-              value={detail.approval.decidedAt ?? detail.approval.createdAt}
-            />
-            {detail.approval.reason !== null && (
-              <>
-                <br />
-                {detail.approval.reason}
-              </>
-            )}
-          </p>
-        </section>
-      )}
     </>
   );
 }

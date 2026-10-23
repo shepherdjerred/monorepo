@@ -8,6 +8,7 @@ import { Route as buildRoute } from "./routes/build.tsx";
 import { Route as versionRoute } from "./routes/version.tsx";
 import { Route as deploymentRoute } from "./routes/deployment.tsx";
 import { Route as environmentRoute } from "./routes/environment.tsx";
+import { Route as recoveryIntentRoute } from "./routes/recovery-intent.tsx";
 import { listRoutes } from "./routes/lists.tsx";
 
 const routeTree = rootRoute.addChildren([
@@ -17,6 +18,7 @@ const routeTree = rootRoute.addChildren([
   versionRoute,
   deploymentRoute,
   environmentRoute,
+  recoveryIntentRoute,
   ...listRoutes,
 ]);
 

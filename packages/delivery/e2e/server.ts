@@ -1,8 +1,7 @@
 import { createTestDatabase } from "#testing/postgres.ts";
-import { seedDelivery, testOperator } from "#testing/seed.ts";
+import { seedDelivery } from "#testing/seed.ts";
 import { workerFixture } from "#testing/worker-fixture.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
-import { createApp } from "#server/app.ts";
 import { testPublisher } from "#testing/seed.ts";
 import { declareAcquisitions } from "#testing/services.ts";
 import { createHash } from "node:crypto";
@@ -12,14 +11,13 @@ import { seedContentRecovery } from "#testing/browser-content-recovery.ts";
 import { forumBundlePolicy } from "@shepherdjerred/ops-model/forum-bundle-policy.ts";
 import { platformFixture } from "#testing/platform-fixture.ts";
 import { seedPlatformBrowser } from "./platform.ts";
+import { serveHarness } from "./harness.ts";
 import {
   requestTestPlan,
   checkpointTestPlan,
   finishTestPlatform,
   testApply,
 } from "#testing/platform-execution.ts";
-import { createChangeListener } from "#infrastructure/change-feed/listener.ts";
-import { fixtureEnrichment } from "#testing/enrichment-fixture.ts";
 import { VersionCatalogEntrySchema } from "@shepherdjerred/version-catalog";
 
 // This executable is an isolated acceptance harness, never a production entrypoint.
@@ -102,7 +100,6 @@ async function startHarness() {
     },
   );
   await seedMinecraftRecovery(delivery, upstream.artifact.id);
-  const origin = "http://127.0.0.1:17353";
   const platform = await platformFixture(cluster.database);
   const plan = await requestTestPlan(
     platform.delivery,
@@ -117,84 +114,16 @@ async function startHarness() {
     platform.delivery,
     platform.sourceBuildId,
   );
-  const changeFeed = createChangeListener(cluster.url);
-  await changeFeed.start();
-  const app = createApp({
-    // Every row is persisted through genuine publication, intent and evidence APIs.
+  await serveHarness({
+    cluster,
     delivery: platform.delivery,
-    changeFeed,
-    enrichment: fixtureEnrichment(cluster.database),
-    ciOrigin: "https://woodpecker.sjer.red",
-    ciRepositoryId: 1,
-    qualifyBuild: () => Promise.resolve("verified"),
-    peerAddress: (request) => backend.requestIP(request)?.address ?? null,
-    config: {
-      publicOrigin: origin,
-      machineCredentials: [],
-      writesEnabled: () => Promise.resolve(true),
-      enabledEnvironments: () =>
-        Promise.resolve([
-          "arcade/prod",
-          scout.environmentId,
-          ...platform.environmentIds,
-        ]),
-      operatorLogins: () => Promise.resolve([testOperator.id]),
-      trustedProxyAddresses: () => Promise.resolve(["127.0.0.1"]),
-    },
+    port: 17_353,
+    enabledEnvironments: [
+      "arcade/prod",
+      scout.environmentId,
+      ...platform.environmentIds,
+    ],
   });
-  const backend = Bun.serve({
-    hostname: "127.0.0.1",
-    port: 0,
-    fetch: app.fetch,
-  });
-  let proxy: typeof backend;
-  try {
-    proxy = Bun.serve({
-      hostname: "127.0.0.1",
-      port: 17_353,
-      fetch: async (request) => {
-        const incoming = new URL(request.url);
-        const target = new URL(
-          `${incoming.pathname}${incoming.search}`,
-          backend.url,
-        );
-        const headers = new Headers(request.headers);
-        headers.delete("tailscale-user-login");
-        headers.delete("authorization");
-        headers.set("tailscale-user-login", testOperator.id);
-        return fetch(
-          new Request(target, {
-            method: request.method,
-            headers,
-            ...(["GET", "HEAD"].includes(request.method)
-              ? {}
-              : { body: await request.arrayBuffer() }),
-          }),
-          { redirect: "manual" },
-        );
-      },
-    });
-  } catch (error) {
-    await backend.stop(true);
-    throw error;
-  }
-  let closing = false;
-  async function close() {
-    if (closing) return;
-    closing = true;
-    await changeFeed.stop();
-    await cluster.close();
-    await proxy.stop(true);
-    await backend.stop(true);
-    process.exitCode = 0;
-  }
-  process.on("SIGTERM", () => {
-    void close();
-  });
-  process.on("SIGINT", () => {
-    void close();
-  });
-  console.warn(`Delivery isolated browser harness ready: ${origin}`);
 }
 try {
   await startHarness();

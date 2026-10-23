@@ -2,13 +2,14 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import type { CreateDeployment, Deployment } from "#shared/contract.ts";
+import type { Deployment } from "#shared/contract.ts";
+import type { CreateDeploymentV2Request } from "#shared/model/routes-client.ts";
 import type { EnvironmentDetail } from "#shared/hub/hub-contract.ts";
 import { delivery } from "./api.ts";
 import { ErrorNotice, errorMessage } from "#client/components/notices.tsx";
 
-type Kind = "deploy" | "promote" | "rollback";
-const KindSchema = z.enum(["deploy", "promote", "rollback"]);
+type Kind = "deploy" | "promote";
+const KindSchema = z.enum(["deploy", "promote"]);
 
 function SubmitButton({ disabled }: { disabled: boolean }) {
   const { pending } = useFormStatus();
@@ -57,6 +58,22 @@ function ComponentDiff({ from, to }: { from: string | null; to: string }) {
   );
 }
 
+/** What a request for a set revision does under the recipe the release freezes (section 5). */
+const REALISING = {
+  deploy: {
+    option: "Deploy a version",
+    note: null,
+  },
+  "channel-publish": {
+    option: "Publish a version to the channel",
+    note: "A channel recipe publishes the set revision; nothing is deployed to a cluster.",
+  },
+  "operator-run": {
+    option: "Run a version with the operator tool",
+    note: "An attested operator tool runs this recipe outside the cluster; Delivery records its intent and the stages the tool attests.",
+  },
+} as const;
+
 /** Request an exact release; the form is native and works with the keyboard. */
 export function ReleaseForm({
   detail,
@@ -72,6 +89,9 @@ export function ReleaseForm({
   onRequested: (deployment: Deployment) => Promise<void>;
 }) {
   const { environment, sourceEnvironment } = detail;
+  // The server freezes the accepted recipe until a rebind, so the declared
+  // recipe's kind would be refused after a catalog change (E0, L2).
+  const realising = detail.releaseKind;
   const promotable = sourceEnvironment?.acceptedVersionSetRevisionId ?? null;
   const [kind, setKind] = useState<Kind>(
     initialKind === "promote" && promotable === null
@@ -92,16 +112,28 @@ export function ReleaseForm({
             : null;
       if (version === null || version === "")
         return { error: "Choose a version set" };
-      const input: CreateDeployment = {
+      const request = {
         requestId: crypto.randomUUID(),
         environmentId: environment.id,
-        versionSetRevisionId: version,
         expectedGeneration: environment.generation,
-        kind: action,
-        ...(action === "promote" && sourceEnvironment !== null
-          ? { sourceEnvironmentId: sourceEnvironment.id }
-          : {}),
       };
+      // A promotion takes the source's accepted selection; it names no set revision (4.12).
+      const input: CreateDeploymentV2Request =
+        action === "promote" && sourceEnvironment !== null
+          ? {
+              ...request,
+              kind: "promote",
+              sourceEnvironmentId: sourceEnvironment.id,
+            }
+          : {
+              ...request,
+              kind: realising,
+              versionSetRevisionId: version,
+              // Only a plain deploy may ask for an override approval (H4).
+              ...(realising === "deploy" && form.get("override") === "on"
+                ? { override: true }
+                : {}),
+            };
       try {
         await onRequested(await delivery.createDeployment(input));
         return { error: null };
@@ -127,11 +159,10 @@ export function ReleaseForm({
                 setKind(KindSchema.parse(event.target.value));
               }}
             >
-              <option value="deploy">Deploy a version</option>
+              <option value="deploy">{REALISING[realising].option}</option>
               <option value="promote" disabled={promotable === null}>
                 Promote accepted release
               </option>
-              <option value="rollback">Rollback to a version</option>
             </select>
           </label>
           {kind === "promote" ? (
@@ -159,6 +190,16 @@ export function ReleaseForm({
             </label>
           )}
         </div>
+        {kind === "deploy" && REALISING[realising].note !== null && (
+          <p className="muted">{REALISING[realising].note}</p>
+        )}
+        {kind === "deploy" && realising === "deploy" && (
+          <label className="checkbox">
+            <input type="checkbox" name="override" />
+            Ask for an override approval: the set revision is not eligible for
+            an ordinary deploy
+          </label>
+        )}
         {selectedId !== "" && (
           <ComponentDiff
             from={environment.desiredVersionSetRevisionId}
@@ -174,9 +215,7 @@ export function ReleaseForm({
           <p>
             {environment.approvalPolicy === "required"
               ? "This request will wait for a human approval."
-              : "The pipeline will begin after its gates pass."}{" "}
-            {kind === "rollback" &&
-              "Data restoration remains a separate recovery operation."}
+              : "The pipeline will begin after its gates pass."}
           </p>
           <SubmitButton disabled={!permitted} />
         </div>

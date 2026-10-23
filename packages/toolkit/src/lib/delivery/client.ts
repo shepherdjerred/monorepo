@@ -1,4 +1,7 @@
-import { createDeliveryClient } from "@shepherdjerred/delivery/client";
+import {
+  createDeliveryClient,
+  type DeliveryClient,
+} from "@shepherdjerred/delivery/client";
 
 export function deliveryUrl(value: string): string {
   const url = new URL(value);
@@ -22,7 +25,7 @@ export function deliveryUrl(value: string): string {
   return url.toString().replace(/\/$/u, "");
 }
 
-export function deliveryClient(url: string, token?: string) {
+export function deliveryClient(url: string, token?: string): DeliveryClient {
   return createDeliveryClient({
     baseUrl: deliveryUrl(url),
     ...(token === undefined
