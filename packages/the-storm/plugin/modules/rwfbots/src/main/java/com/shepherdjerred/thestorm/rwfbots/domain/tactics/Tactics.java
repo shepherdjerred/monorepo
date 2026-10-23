@@ -198,12 +198,25 @@ public final class Tactics {
         .filter(plan -> !situation.pendingElimination() || !offensive(plan.option()))
         .filter(plan -> plan.option() != Option.ARM || !armBlocked(state, situation, context))
         .filter(plan -> BombGuard.stillAnswering(plan, situation))
+        .filter(plan -> !retargets(plan, situation, context))
         .filter(
             plan ->
                 plan.current()
                     .coverNode()
                     .map(node -> Planner.coverAvailable(situation, context, node))
                     .orElse(true));
+  }
+
+  /**
+   * Whether a fight under way should turn to the attacker that just hurt the bot: the plan fights
+   * someone else and {@link Planner#engageTarget} now names the attacker.
+   */
+  private static boolean retargets(Plan plan, Situation situation, TacticsContext context) {
+    if (plan.option() != Option.ENGAGE || !(plan.current() instanceof PlanStep.Fight(var target))) {
+      return false;
+    }
+    return Aggro.fightable(situation, context).isPresent()
+        && Planner.engageTarget(situation, context).filter(id -> !id.equals(target)).isPresent();
   }
 
   private static void objectiveScores(
@@ -381,6 +394,8 @@ public final class Tactics {
     var hurt =
         situation.self().lastHurtTick() >= 0
             && situation.now() - situation.self().lastHurtTick() <= 20;
+    // An attacker the bot sees, or that hit it from inside its leash, is not walked past.
+    var aggro = Aggro.pull(situation).filter(pull -> pull.visible() || pull.chase()).isPresent();
     var close =
         situation.knownEnemies().stream()
             .anyMatch(
@@ -389,6 +404,7 @@ public final class Tactics {
                         && enemy.pos().distance(situation.self().pos()) <= Planner.CLOSE_FIGHT);
     return detour
         && !hurt
+        && !aggro
         && !close
         && !situation.isLastAlive()
         && situation

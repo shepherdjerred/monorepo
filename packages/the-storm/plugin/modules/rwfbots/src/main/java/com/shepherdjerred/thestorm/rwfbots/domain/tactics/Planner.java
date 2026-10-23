@@ -207,9 +207,8 @@ public final class Planner {
               .orElseGet(() -> holdHere(option, situation, context));
       case RETAKE -> retake(situation, context);
       case ENGAGE ->
-          situation.chaseableEnemies().stream()
-              .findFirst()
-              .map(enemy -> Plan.of(option, now, new PlanStep.Fight(enemy.id())))
+          engageTarget(situation, context)
+              .map(enemy -> Plan.of(option, now, new PlanStep.Fight(enemy)))
               .orElseGet(() -> holdHere(option, situation, context));
       case RETREAT -> {
         var cover = safeSpot(situation, context);
@@ -260,6 +259,24 @@ public final class Planner {
               new PlanStep.Ability(REWIND),
               new PlanStep.Flee(safeSpot(situation, context).pos(), Optional.empty()));
     };
+  }
+
+  /**
+   * Whom an ENGAGE fights: the attacker that just hurt the bot ({@link Aggro}), unless the nearest
+   * chaseable enemy outranks it ({@link Aggro#outranks}); otherwise the nearest, least chased
+   * enemy.
+   */
+  static Optional<CombatantId> engageTarget(Situation situation, TacticsContext context) {
+    var nearest = situation.chaseableEnemies().stream().findFirst();
+    var avenged = Aggro.fightable(situation, context);
+    if (avenged.isEmpty()) {
+      return nearest.map(Situation.KnownEnemy::id);
+    }
+    var pull = avenged.orElseThrow();
+    var self = situation.self().pos();
+    var bystander =
+        nearest.filter(enemy -> Aggro.outranks(enemy.pos().distance(self), pull.distance()));
+    return bystander.map(Situation.KnownEnemy::id).or(() -> Optional.of(pull.attacker()));
   }
 
   private static Stance stanceFor(Situation situation, TacticsContext context) {
@@ -906,8 +923,9 @@ public final class Planner {
                 && Math.abs(self.y() - pos.y()) < 1.5);
     // A deliberate stand (a late start, a pending elimination, nothing in reach) stays put.
     var deliberate = plan.option() == Option.HOLD_ANGLE || plan.option() == Option.RECOVER;
+    // A bot that was just hit stands and faces its attacker instead of strolling its posts.
     var patrol =
-        patrolling && !deliberate && stance != Stance.STEALTH
+        patrolling && !deliberate && stance != Stance.STEALTH && Aggro.watch(situation).isEmpty()
             ? patrolRoute(situation, context, pos, radius)
             : Optional.<RouteResult>empty();
     if (patrol.isPresent()) return patrol.orElseThrow();
@@ -1079,7 +1097,8 @@ public final class Planner {
         parts.route().waypoints(),
         parts.stance(),
         parts.bomb(),
-        parts.watch(),
+        // A bot that was just hit holds facing its attacker, whatever it was watching.
+        parts.watch().map(watch -> Aggro.watch(situation).orElse(watch)),
         parts.ability(),
         parts.label(),
         situation.now(),

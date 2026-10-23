@@ -141,6 +141,11 @@ public final class StimulusCollector implements Listener {
     add(new Raw(kind, Places.at(player), player.getUniqueId(), Optional.empty()));
   }
 
+  /**
+   * The player whose own swing or arrow {@code damager} is. A summon's blow names nobody: rwf
+   * credits it to the summon's owner, but the owner may be anywhere, and a bot hit by a golem must
+   * not go after the player who called it.
+   */
   private static Optional<Player> responsible(Entity damager) {
     return switch (damager) {
       case Player player -> Optional.of(player);

@@ -10,6 +10,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stimulus;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.random.RandomGenerator;
 
 /**
@@ -17,7 +18,10 @@ import java.util.random.RandomGenerator;
  * radius and field of view, in a region that can see the bot's, and one of three rays (eye, chest,
  * feet) clear of sight-blocking cells. Invisible players show only through worn armor, a fresh hit,
  * or a chance roll point blank. Disguised players pass as allies until caught. Sounds place their
- * source with an error that grows with distance.
+ * source with an error that grows with distance. A hit on the bot itself tells it who struck and
+ * roughly from where: a melee attacker exactly, a shooter with an error that grows with range. That
+ * places the attacker in memory and starts a {@link Grudge}; where it goes afterwards the bot
+ * learns only by seeing or hearing it.
  */
 public final class Perception {
 
@@ -41,6 +45,15 @@ public final class Perception {
 
   /** Confidence given to a heard rather than seen position. */
   public static final double SOUND_CONFIDENCE = 0.6;
+
+  /** An attacker this close struck in melee and is placed exactly. */
+  public static final double MELEE_ATTRIBUTION = 4.5;
+
+  /** A ranged attacker is placed within this fraction of its range: three blocks at thirty. */
+  public static final double ATTRIBUTION_ERROR = 0.1;
+
+  /** Confidence given to the place a hit came from. */
+  public static final double ATTRIBUTION_CONFIDENCE = 0.9;
 
   /** How close a fuse click must be to one of our bombs to count as touching it. */
   private static final double BOMB_TOUCH_RANGE = 2.5;
@@ -81,14 +94,17 @@ public final class Perception {
         memory = memory.remember(other.id(), new Sighting(other.pos(), other.vel(), now, 1, true));
       }
     }
-    memory = hear(memory, new Frame(self, snapshot, suspicion, state.heardThrough()), random);
-    memory = memory.prune(now, TAU_TICKS);
+    var frame = new Frame(self, snapshot, suspicion, state.heardThrough());
+    memory = hear(memory, frame, random);
+    var felt = feel(new Felt(memory, state.grudge()), frame, random);
+    memory = felt.memory().prune(now, TAU_TICKS);
+    var grudge = felt.grudge().filter(held -> held.activeAt(now));
     visible.sort(comparingDouble(other -> other.pos().distanceSquared(self.pos())));
     var heardThrough =
         snapshot.stimuli().isEmpty()
             ? state.heardThrough()
             : Math.max(state.heardThrough(), snapshot.stimuli().getLast().sequence());
-    return new Percept(new PerceptionState(memory, suspicion, heardThrough), visible, now);
+    return new Percept(new PerceptionState(memory, suspicion, heardThrough, grudge), visible, now);
   }
 
   /** Whether {@code other} is, as far as {@code self} can tell, an enemy. */
@@ -198,6 +214,66 @@ public final class Perception {
               new Sighting(heard, Vec3.ZERO, stimulus.tick(), SOUND_CONFIDENCE, false));
     }
     return result;
+  }
+
+  /** What the bot feels: its memory and its grudge. */
+  private record Felt(Memory memory, Optional<Grudge> grudge) {}
+
+  /** Takes in the hits on the bot since it last perceived. */
+  private static Felt feel(Felt before, Frame frame, RandomGenerator random) {
+    var result = before;
+    for (var stimulus : frame.snapshot().stimuliAfter(frame.heardThrough())) {
+      var attacker = attackerOf(stimulus, frame);
+      if (attacker.isPresent()) {
+        result = attribute(result, frame, new Blow(stimulus.tick(), attacker.get()), random);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * The enemy who struck the bot in {@code stimulus}, if it is a hit on the bot. Only a player's
+   * own blow or arrow names an attacker: the collector credits no hit to the owner of the summon
+   * that landed it, so a golem's blow never sends the bot after its owner.
+   */
+  private static Optional<CombatantView> attackerOf(Stimulus stimulus, Frame frame) {
+    var self = frame.self();
+    if (stimulus.kind() != Stimulus.Kind.HIT
+        || stimulus.sequence() <= frame.heardThrough()
+        || !stimulus.victim().map(self.id()::equals).orElse(false)) {
+      return Optional.empty();
+    }
+    return stimulus
+        .source()
+        .flatMap(frame.snapshot()::combatant)
+        .filter(CombatantView::alive)
+        .filter(source -> !source.id().equals(self.id()))
+        .filter(source -> isEnemy(self, source, frame.suspicion()));
+  }
+
+  /** One hit on the bot: when it landed and who struck it. */
+  private record Blow(long tick, CombatantView attacker) {}
+
+  private static Felt attribute(Felt before, Frame frame, Blow blow, RandomGenerator random) {
+    var self = frame.self();
+    var attacker = blow.attacker();
+    var distance = self.pos().distance(attacker.pos());
+    var placed =
+        distance <= MELEE_ATTRIBUTION
+            ? attacker.pos()
+            : blur(attacker.pos(), distance * ATTRIBUTION_ERROR, random);
+    var memory =
+        before
+            .memory()
+            .remember(
+                attacker.id(),
+                new Sighting(placed, Vec3.ZERO, blow.tick(), ATTRIBUTION_CONFIDENCE, false));
+    var grudge =
+        before
+            .grudge()
+            .map(held -> held.hitBy(attacker.id(), blow.tick(), self.pos()))
+            .orElseGet(() -> new Grudge(attacker.id(), blow.tick(), self.pos()));
+    return new Felt(memory, Optional.of(grudge));
   }
 
   private static Vec3 blur(Vec3 pos, double error, RandomGenerator random) {
