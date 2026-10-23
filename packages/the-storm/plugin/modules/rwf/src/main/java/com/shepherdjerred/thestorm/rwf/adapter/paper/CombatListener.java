@@ -227,9 +227,8 @@ final class CombatListener implements Listener {
         hit(strike.type(), strike.attacker(), victim, strike.raw()))) {
       return;
     }
-    var before = victim.getHealth();
     runner.damaged(victim, Optional.of(strike.attacker().getUniqueId()), landed, strike.type());
-    victim.setHealth(Math.max(0, before - landed));
+    Harm.take(victim, landed);
     runner.kits().hit(strike.attacker(), victim, strike.type(), landed);
   }
 

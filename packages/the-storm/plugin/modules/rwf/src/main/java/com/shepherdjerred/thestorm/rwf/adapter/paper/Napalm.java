@@ -231,7 +231,7 @@ final class Napalm {
       return;
     }
     runner.damaged(victim, Optional.of(owner.uuid()), landed, KitAttacks.NAPALM);
-    victim.setHealth(Math.max(0, victim.getHealth() - landed));
+    Harm.take(victim, landed);
     runner.kits().hurt(victim, KitAttacks.NAPALM, landed);
   }
 

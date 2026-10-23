@@ -123,6 +123,20 @@ final class RwfKitsBatchATest {
   }
 
   @Test
+  void aGoldenApplesAbsorptionTakesAHitBeforeHealth() {
+    // tsmc: damage went straight past a golden apple's absorption hearts, as the rules set health.
+    var fight = on("trooper");
+    fight.alice.setAbsorptionAmount(4);
+
+    fight.enemyHits();
+
+    var taken = 24 - fight.alice.getHealth() - fight.alice.getAbsorptionAmount();
+    assertThat(taken).isPositive();
+    assertThat(fight.alice.getAbsorptionAmount()).isEqualTo(Math.max(0, 4 - taken));
+    assertThat(fight.alice.getHealth()).isEqualTo(20 - Math.max(0, taken - 4));
+  }
+
+  @Test
   void aJuggernautTakesSixtyPercentOfATroopersHit() {
     var fight = on("juggernaut");
 
