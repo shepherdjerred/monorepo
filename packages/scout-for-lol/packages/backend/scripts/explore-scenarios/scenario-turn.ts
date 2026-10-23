@@ -140,6 +140,8 @@ export async function gradeTurn(input: {
   readonly surface: ScenarioRunPlan["surface"];
   readonly transcript: readonly { question: string; answer: string }[];
   readonly runtime: ReturnType<typeof createLlmRuntime> | null;
+  /** Whether the turn's fixture image was attached; null without one. */
+  readonly imageDelivered: boolean | null;
 }): Promise<{
   readonly summary: ScenarioRunSummary["turns"][number];
   readonly evidence: unknown;
@@ -159,8 +161,7 @@ export async function gradeTurn(input: {
               followUps: answer.followUps,
             },
       trace: observation.trace,
-      // No surface can attach an image to a turn yet.
-      imageDelivered: turn.image === undefined ? null : false,
+      imageDelivered: input.imageDelivered,
     },
     hasImage: turn.image !== undefined,
   });

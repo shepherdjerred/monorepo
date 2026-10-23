@@ -102,7 +102,7 @@ describe("registered Discord commands", () => {
     ]);
   });
 
-  test("defines /scout ask with the Explore question bounds", () => {
+  test("defines /scout ask with the Explore question bounds and an optional image", () => {
     const scout = guildScopedCommandGroups
       .flatMap((group) => group.payload)
       .find((command) => command.name === "scout");
@@ -118,6 +118,12 @@ describe("registered Discord commands", () => {
                 required: true,
                 min_length: 1,
                 max_length: 2000,
+              }),
+              // Discord's attachment option type.
+              expect.objectContaining({
+                name: "image",
+                type: 11,
+                required: false,
               }),
             ],
           }),

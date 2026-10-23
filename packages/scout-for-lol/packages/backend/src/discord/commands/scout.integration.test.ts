@@ -24,6 +24,7 @@ import {
   type ScoutAskInteraction,
   type ScoutFollowUpInteraction,
 } from "#src/discord/commands/scout.ts";
+import type { ScoutAskImage } from "#src/discord/scout/ask-image.ts";
 import { resetExploreRateLimitStateForTests } from "#src/explore/rate-limit.ts";
 import { runPersistedExploreTurn } from "#src/explore/runs/run-turn.ts";
 import { ExploreRunRateLimitedError } from "#src/explore/runs/run-manager.ts";
@@ -68,6 +69,7 @@ afterAll(async () => {
 function fakeInteraction(input?: {
   guildId?: DiscordGuildId | null;
   question?: string;
+  image?: ScoutAskImage;
 }) {
   const replies: InteractionReplyOptions[] = [];
   const edits: InteractionEditReplyOptions[] = [];
@@ -79,6 +81,7 @@ function fakeInteraction(input?: {
     options: {
       getSubcommand: () => "ask",
       getString: () => input?.question ?? "Who wins most often?",
+      getAttachment: () => input?.image ?? null,
     },
     deferReply: () => {
       deferred++;
@@ -143,6 +146,27 @@ describe("/scout ask", () => {
       },
       { guildId: allowedGuild, question: " ".repeat(10) },
       { guildId: allowedGuild, question: "x".repeat(2001) },
+      // An attachment Scout will not read is refused before it is fetched.
+      {
+        guildId: allowedGuild,
+        question: "What went wrong?",
+        image: {
+          name: "notes.pdf",
+          url: "https://cdn.discordapp.com/attachments/1/2/notes.pdf",
+          contentType: "application/pdf",
+          size: 2048,
+        },
+      },
+      {
+        guildId: allowedGuild,
+        question: "What went wrong?",
+        image: {
+          name: "board.png",
+          url: "https://example.com/board.png",
+          contentType: "image/png",
+          size: 2048,
+        },
+      },
     ]) {
       const fake = fakeInteraction(input);
       await executeScout(fake.interaction, {

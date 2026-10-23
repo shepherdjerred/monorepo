@@ -15,6 +15,7 @@ import { Textarea } from "@scout-for-lol/design-system/components/textarea";
 import { Disclosure } from "#src/components/explore/explore-disclosure.tsx";
 import { ExploreIntentCards } from "#src/components/explore/intent/explore-intent-cards.tsx";
 import { ExploreToolTrace } from "#src/components/explore/explore-tool-trace.tsx";
+import { exploreAttachmentUrl } from "#src/lib/explore/explore-attachments.ts";
 import { ExploreVersionSwitcher } from "#src/components/explore/explore-version-switcher.tsx";
 import { MarkdownAnswer } from "#src/components/scoutql/markdown-answer.tsx";
 import { AssistantTurn } from "#src/components/explore/transcript/explore-assistant-turn.tsx";
@@ -348,6 +349,27 @@ const UserTurn = memo(function UserTurnView(props: {
     // reachable by keyboard. Previously the pencil sat permanently in its own
     // band of empty space under every question, reading as a stray element.
     <div className="group flex flex-col items-end gap-1">
+      {message.attachments.length > 0 && (
+        <ul className="flex flex-wrap justify-end gap-2" aria-label="Images">
+          {message.attachments.map((attachment, index) => (
+            <li key={attachment.id}>
+              <a
+                href={exploreAttachmentUrl(attachment)}
+                target="_blank"
+                rel="noreferrer"
+                className="block overflow-hidden rounded-xl border border-scout-border"
+              >
+                <img
+                  src={exploreAttachmentUrl(attachment)}
+                  alt={`Attachment ${String(index + 1)}`}
+                  loading="lazy"
+                  className="max-h-48 max-w-64 object-contain"
+                />
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
       <UserBubble content={message.content} />
       <div className="flex items-center gap-1">
         {/* Always visible: it is the only signal that other versions of this
@@ -356,7 +378,9 @@ const UserTurn = memo(function UserTurnView(props: {
           message={message}
           onSelectVersion={actions.onSelectVersion}
         />
-        {actions.onEdit !== undefined && (
+        {/* An edited question cannot carry its images yet, so a question
+            with images is re-asked rather than edited. */}
+        {actions.onEdit !== undefined && message.attachments.length === 0 && (
           <span className="opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
             <IconButton
               label="Edit this question"

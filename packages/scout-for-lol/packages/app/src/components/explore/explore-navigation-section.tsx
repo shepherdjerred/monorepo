@@ -74,7 +74,7 @@ export function ExploreNavigationSection(props: { activeId: string | null }) {
             queryClient.invalidateQueries({
               queryKey: trpc.explore.get.queryKey({
                 conversationId: conversation.id,
-                version: 3,
+                version: 4,
               }),
             }),
           ]);
@@ -96,7 +96,7 @@ export function ExploreNavigationSection(props: { activeId: string | null }) {
           queryClient.removeQueries({
             queryKey: trpc.explore.get.queryKey({
               conversationId: conversation.id,
-              version: 3,
+              version: 4,
             }),
           });
           void queryClient.invalidateQueries({

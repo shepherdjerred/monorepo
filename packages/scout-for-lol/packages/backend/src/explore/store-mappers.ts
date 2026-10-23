@@ -35,6 +35,7 @@ export type ConversationRow = {
 };
 
 export type MessageRow = {
+  attachments?: readonly { id: string; mediaType: string }[];
   inlineEntities?: string | null;
   generation?: string | null;
   id: string;
@@ -126,6 +127,7 @@ export function toMessage(
     guildIds:
       parseJsonColumn(row.guildIds, StringArraySchema, "guildIds") ?? [],
     trace: parseJsonColumn(row.trace, TraceArraySchema, "trace") ?? [],
+    attachments: row.attachments ?? [],
     createdAt: row.createdAt.toISOString(),
   });
 }

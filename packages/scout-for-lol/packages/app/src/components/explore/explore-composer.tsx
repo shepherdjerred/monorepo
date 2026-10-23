@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useSelector } from "@tanstack/react-form";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { ArrowUp, Square } from "lucide-react";
+import { ArrowUp, ImagePlus, Square } from "lucide-react";
 import type { ExploreMentionCandidate } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { ExploreMentionPicker } from "#src/components/explore/transcript/explore-mention-picker.tsx";
@@ -20,6 +20,14 @@ import {
   useScoutForm,
 } from "#src/components/semantic-form.tsx";
 import { ExploreQuestionFormSchema } from "#src/lib/form-schemas.ts";
+import {
+  ComposerImageStrip,
+  useComposerImages,
+} from "#src/components/explore/explore-composer-images.tsx";
+import {
+  EXPLORE_IMAGE_ACCEPT,
+  imageFiles,
+} from "#src/lib/explore/explore-attachments.ts";
 
 /**
  * Keep in step with the `max-h-[200px]` class below — Tailwind cannot
@@ -41,22 +49,35 @@ export function ExploreComposer(props: {
   disabled?: boolean;
   /** Question handed back by a failed turn, adopted into an empty box. */
   restoredDraft: string | null;
-  onAsk: (question: string) => void;
+  /** The question, and the ids of the images uploaded with it. */
+  /** Resolves true once the question was accepted. */
+  onAsk: (
+    question: string,
+    attachmentIds: readonly string[],
+  ) => Promise<boolean>;
   onStop: () => void;
 }) {
   const { active, disabled = false, restoredDraft, onAsk, onStop } = props;
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const formElement = useRef<HTMLFormElement>(null);
   const wasActiveRef = useRef(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const images = useComposerImages();
   const form = useScoutForm({
     defaultValues: { question: "" },
     validationLogic: submitThenChangeValidation,
     validators: { onDynamic: ExploreQuestionFormSchema },
     onSubmit: ({ value }) => {
-      if (active || disabled) return;
+      if (active || disabled || images.uploading || images.failed) return;
       const parsed = ExploreQuestionFormSchema.parse(value);
+      const attachmentIds = images.readyIds;
       form.reset({ question: "" });
-      onAsk(parsed.question);
+      // The images stay until the question is accepted: a refused start
+      // (rate limit, busy conversation, outage) keeps them for the retry.
+      void (async () => {
+        if (await onAsk(parsed.question, attachmentIds))
+          images.release(attachmentIds);
+      })();
     },
     onSubmitInvalid: () => {
       focusFirstInvalid(formElement.current);
@@ -246,6 +267,41 @@ export function ExploreComposer(props: {
     }
   }, [active]);
 
+  // Screenshots arrive by paste or drop as often as by the picker. Native
+  // listeners on the form: a paste lands in the textarea and bubbles here, and
+  // a drop anywhere on the composer counts.
+  const acceptingImages = !active && !disabled;
+  const addImages = images.add;
+  useEffect(() => {
+    const element = formElement.current;
+    if (element === null) return;
+    const onPaste = (event: ClipboardEvent): void => {
+      const pasted = imageFiles(event.clipboardData?.files ?? []);
+      if (!acceptingImages || pasted.length === 0) return;
+      event.preventDefault();
+      addImages(pasted);
+    };
+    const carriesFiles = (event: DragEvent): boolean =>
+      event.dataTransfer?.types.includes("Files") === true;
+    const onDragOver = (event: DragEvent): void => {
+      if (carriesFiles(event)) event.preventDefault();
+    };
+    const onDrop = (event: DragEvent): void => {
+      if (!carriesFiles(event)) return;
+      event.preventDefault();
+      if (acceptingImages)
+        addImages(imageFiles(event.dataTransfer?.files ?? []));
+    };
+    element.addEventListener("paste", onPaste);
+    element.addEventListener("dragover", onDragOver);
+    element.addEventListener("drop", onDrop);
+    return () => {
+      element.removeEventListener("paste", onPaste);
+      element.removeEventListener("dragover", onDragOver);
+      element.removeEventListener("drop", onDrop);
+    };
+  }, [acceptingImages, addImages]);
+
   // Adopt a restored draft only into an empty box — a user who already
   // started retyping is never clobbered.
   useEffect(() => {
@@ -261,21 +317,27 @@ export function ExploreComposer(props: {
     <form.AppForm>
       <form
         ref={formElement}
-        className="relative flex w-full items-end gap-2 rounded-2xl border border-scout-border bg-scout-surface p-1.5 pl-3.5 shadow-sm transition-all focus-within:border-scout-primary focus-within:ring-1 focus-within:ring-scout-primary"
+        className="relative flex w-full flex-col rounded-2xl border border-scout-border bg-scout-surface p-1.5 pl-3.5 shadow-sm transition-all focus-within:border-scout-primary focus-within:ring-1 focus-within:ring-scout-primary"
         aria-busy={active}
         onSubmit={(event) => {
           handleFormSubmit(event, () => form.handleSubmit());
         }}
       >
-        <ExploreMentionPicker
-          id={listId}
-          candidates={candidates}
-          activeIndex={activeIndex}
-          loading={playerSearch.isFetching}
-          optionId={optionId}
-          onSelect={choose}
+        <ComposerImageStrip
+          images={images.images}
+          notice={images.notice}
+          onRemove={images.remove}
         />
-        {/*
+        <div className="flex w-full items-end gap-2">
+          <ExploreMentionPicker
+            id={listId}
+            candidates={candidates}
+            activeIndex={activeIndex}
+            loading={playerSearch.isFetching}
+            optionId={optionId}
+            onSelect={choose}
+          />
+          {/*
           The combobox wrapper, rather than the textarea itself: ARIA allows
           `role="combobox"` on a single-line input, not on a textarea, and
           `aria-expanded` is not supported on the textarea's implicit `textbox`
@@ -284,77 +346,112 @@ export function ExploreComposer(props: {
           while the textarea keeps the two attributes a textbox does support,
           `aria-autocomplete` and `aria-activedescendant`.
         */}
-        <div
-          className="min-w-0 flex-1"
-          role="combobox"
-          aria-label="Question"
-          aria-expanded={open && candidates.length > 0}
-          aria-controls={listId}
-        >
-          <form.AppField name="question">
-            {(field) => (
-              <field.TextareaField
-                id="explore-question"
-                label={<span className="sr-only">Question</span>}
-                fieldClassName="min-w-0 py-1 !gap-0"
-                ref={textareaRef}
-                rows={1}
-                maxLength={2000}
-                className="max-h-[200px] !min-h-[24px] w-full !resize-none !border-0 !bg-transparent !p-0 text-sm sm:text-base leading-6 !shadow-none !outline-none focus:!border-0 focus:!outline-none focus:!ring-0 focus-visible:!ring-0"
-                onKeyDown={(event) => {
-                  // Committing an IME candidate fires Enter with isComposing
-                  // set; sending then would submit half-converted text.
-                  if (event.nativeEvent.isComposing) return;
-                  if (handlePickerKey(event)) return;
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    event.currentTarget.form?.requestSubmit();
-                  }
-                }}
-                onKeyUp={(event) => {
-                  syncCaret(event.currentTarget);
-                }}
-                onClick={(event) => {
-                  syncCaret(event.currentTarget);
-                }}
-                aria-autocomplete="list"
-                {...(open && candidates.length > 0
-                  ? { "aria-activedescendant": optionId(activeIndex) }
-                  : {})}
-                placeholder="Ask a question about match data…"
-                autoComplete="off"
-                disabled={active || disabled}
-                required
-              />
-            )}
-          </form.AppField>
-        </div>
+          <div
+            className="min-w-0 flex-1"
+            role="combobox"
+            aria-label="Question"
+            aria-expanded={open && candidates.length > 0}
+            aria-controls={listId}
+          >
+            <form.AppField name="question">
+              {(field) => (
+                <field.TextareaField
+                  id="explore-question"
+                  label={<span className="sr-only">Question</span>}
+                  fieldClassName="min-w-0 py-1 !gap-0"
+                  ref={textareaRef}
+                  rows={1}
+                  maxLength={2000}
+                  className="max-h-[200px] !min-h-[24px] w-full !resize-none !border-0 !bg-transparent !p-0 text-sm sm:text-base leading-6 !shadow-none !outline-none focus:!border-0 focus:!outline-none focus:!ring-0 focus-visible:!ring-0"
+                  onKeyDown={(event) => {
+                    // Committing an IME candidate fires Enter with isComposing
+                    // set; sending then would submit half-converted text.
+                    if (event.nativeEvent.isComposing) return;
+                    if (handlePickerKey(event)) return;
+                    if (event.key === "Enter" && !event.shiftKey) {
+                      event.preventDefault();
+                      event.currentTarget.form?.requestSubmit();
+                    }
+                  }}
+                  onKeyUp={(event) => {
+                    syncCaret(event.currentTarget);
+                  }}
+                  onClick={(event) => {
+                    syncCaret(event.currentTarget);
+                  }}
+                  aria-autocomplete="list"
+                  {...(open && candidates.length > 0
+                    ? { "aria-activedescendant": optionId(activeIndex) }
+                    : {})}
+                  placeholder="Ask a question about match data…"
+                  autoComplete="off"
+                  disabled={active || disabled}
+                  required
+                />
+              )}
+            </form.AppField>
+          </div>
 
-        <div className="shrink-0 pb-0.5">
-          {active ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              className="size-8 !rounded-full border-scout-border hover:bg-scout-hover"
-              title="Stop (Esc)"
-              aria-label="Stop (Esc)"
-              onClick={onStop}
-            >
-              <Square className="size-3.5 fill-current" />
-            </Button>
-          ) : (
-            <Button
-              type="submit"
-              size="icon-sm"
-              className="size-8 !rounded-full bg-scout-primary text-scout-brand-ink transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-30"
-              disabled={disabled || question.trim().length === 0}
-              aria-label="Send question"
-              title="Send"
-            >
-              <ArrowUp className="size-4" />
-            </Button>
-          )}
+          <div className="flex shrink-0 items-center gap-1 pb-0.5">
+            {!active && (
+              <>
+                <input
+                  ref={fileInput}
+                  type="file"
+                  accept={EXPLORE_IMAGE_ACCEPT}
+                  multiple
+                  className="sr-only"
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  onChange={(event) => {
+                    images.add([...(event.currentTarget.files ?? [])]);
+                    event.currentTarget.value = "";
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="size-8 !rounded-full text-scout-subtle hover:bg-scout-hover"
+                  aria-label="Attach an image"
+                  title="Attach an image (or paste one)"
+                  disabled={disabled}
+                  onClick={() => fileInput.current?.click()}
+                >
+                  <ImagePlus className="size-4" />
+                </Button>
+              </>
+            )}
+            {active ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                className="size-8 !rounded-full border-scout-border hover:bg-scout-hover"
+                title="Stop (Esc)"
+                aria-label="Stop (Esc)"
+                onClick={onStop}
+              >
+                <Square className="size-3.5 fill-current" />
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                size="icon-sm"
+                className="size-8 !rounded-full bg-scout-primary text-scout-brand-ink transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-30"
+                disabled={
+                  disabled ||
+                  images.uploading ||
+                  images.failed ||
+                  question.trim().length === 0
+                }
+                aria-label="Send question"
+                title="Send"
+              >
+                <ArrowUp className="size-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </form>
     </form.AppForm>

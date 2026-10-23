@@ -9,6 +9,11 @@ import type { LlmSubject } from "@shepherdjerred/llm-observability/subject";
 import type { ExploreSurface } from "#src/explore/surface.ts";
 import type { ToolPayloadCapture } from "#src/explore/inspection/tool-payloads.ts";
 
+export type ExploreQuestionImage = {
+  readonly mediaType: "image/png" | "image/jpeg" | "image/webp";
+  readonly bytes: Uint8Array;
+};
+
 export type ExploreAgentParams = {
   /** Replays retain complete evidence locally; hosted turns use the database sink. */
   captureToolPayload?: ToolPayloadCapture;
@@ -22,6 +27,11 @@ export type ExploreAgentParams = {
    */
   subject: LlmSubject;
   question: string;
+  /**
+   * Images attached to the current question, already read and verified.
+   * Earlier turns' images are not resent; history marks where they were.
+   */
+  images?: readonly ExploreQuestionImage[];
   /** Prior turns of this conversation, oldest first. */
   history: ExploreMessage[];
   /**

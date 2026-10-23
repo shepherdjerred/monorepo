@@ -1,5 +1,7 @@
-import { z } from "zod";
-import { createContext } from "#src/trpc/context.ts";
+import {
+  authorizePrivateImageRequest,
+  PRIVATE_IMAGE_HEADERS,
+} from "#src/http/private-image.ts";
 import { prisma } from "#src/database/index.ts";
 import { isScoutOperator } from "#src/operations/operator-allowlist.ts";
 import {
@@ -14,26 +16,22 @@ export async function handleSupportScreenshot(
   request: Request,
   url: URL,
 ): Promise<Response | null> {
-  const match = /^\/api\/support\/screenshots\/([^/]+)$/.exec(url.pathname);
-  if (match === null) return null;
-  const headers = {
-    "Cache-Control": "private, no-store",
-    "X-Content-Type-Options": "nosniff",
-  };
-  if (request.method !== "GET")
-    return new Response("Method not allowed", { status: 405, headers });
-  const ctx = await createContext(request);
-  if (ctx.user === null || ctx.webSession === null)
-    return new Response("Sign in required", { status: 401, headers });
-  const id = z.uuid().safeParse(match[1]);
-  if (!id.success) return new Response("Not found", { status: 404, headers });
+  const authorized = await authorizePrivateImageRequest(
+    request,
+    url,
+    /^\/api\/support\/screenshots\/([^/]+)$/,
+  );
+  if (authorized === null) return null;
+  if (authorized.kind === "response") return authorized.response;
+  const headers = PRIVATE_IMAGE_HEADERS;
+  const { user } = authorized;
   const file = await prisma.supportAttachment.findFirst({
     where: {
-      id: id.data,
+      id: authorized.id,
       status: "STORED",
-      ...(isScoutOperator(ctx.user.discordId)
+      ...(isScoutOperator(user.discordId)
         ? {}
-        : { conversation: { discordId: ctx.user.discordId } }),
+        : { conversation: { discordId: user.discordId } }),
     },
   });
   if (file === null) return new Response("Not found", { status: 404, headers });

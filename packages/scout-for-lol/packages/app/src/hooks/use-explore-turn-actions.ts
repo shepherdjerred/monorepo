@@ -20,7 +20,8 @@ export function useExploreTurnActions(params: {
   setRestoredDraft: (draft: string | null) => void;
   navigate: NavigateFunction;
 }): {
-  ask: (text: string) => void;
+  /** Resolves true once the turn has started, false when it was refused. */
+  ask: (text: string, attachmentIds?: readonly string[]) => Promise<boolean>;
   handleEdit: (message: ExploreMessage, edited: string) => void;
   handleRegenerate: (message: ExploreMessage) => void;
   handleRetry: (question: ExploreMessage) => void;
@@ -36,39 +37,42 @@ export function useExploreTurnActions(params: {
   } = params;
 
   const ask = useCallback(
-    (text: string) => {
+    async (
+      text: string,
+      attachmentIds: readonly string[] = [],
+    ): Promise<boolean> => {
       setRestoredDraft(null);
       const submittedLocationKey = locationKeyRef.current;
-      void (async () => {
-        const started = await runs.startTurn({
-          ...(model === undefined ? {} : { model }),
-          conversationId,
-          question: text,
-          attach: { kind: "leaf" },
-          displayQuestion: text,
-          leafIdAtStart: messages.at(-1)?.id ?? null,
+      const started = await runs.startTurn({
+        ...(model === undefined ? {} : { model }),
+        conversationId,
+        question: text,
+        attach: { kind: "leaf" },
+        attachmentIds,
+        displayQuestion: text,
+        leafIdAtStart: messages.at(-1)?.id ?? null,
+      });
+      if (started === null) {
+        setRestoredDraft(text);
+        return false;
+      }
+      track("explore_turn_started", {
+        kind: conversationId === null ? "new" : "follow_up",
+      });
+      if (
+        shouldOpenStartedExploreConversation({
+          submittedConversationId: conversationId,
+          submittedLocationKey,
+          currentLocationKey: locationKeyRef.current,
+        })
+      ) {
+        // Replace, not push: the transient blank `/explore` should not be
+        // a Back stop in the middle of a conversation.
+        void navigate(`/explore/${started.conversationId}`, {
+          replace: true,
         });
-        if (started === null) {
-          setRestoredDraft(text);
-        } else {
-          track("explore_turn_started", {
-            kind: conversationId === null ? "new" : "follow_up",
-          });
-          if (
-            shouldOpenStartedExploreConversation({
-              submittedConversationId: conversationId,
-              submittedLocationKey,
-              currentLocationKey: locationKeyRef.current,
-            })
-          ) {
-            // Replace, not push: the transient blank `/explore` should not be
-            // a Back stop in the middle of a conversation.
-            void navigate(`/explore/${started.conversationId}`, {
-              replace: true,
-            });
-          }
-        }
-      })();
+      }
+      return true;
     },
     [
       conversationId,

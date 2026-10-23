@@ -163,7 +163,9 @@ export function Explore() {
 
   const transcriptActions = useMemo<ExploreTranscriptActions>(
     () => ({
-      onFollowUp: ask,
+      onFollowUp: (question: string) => {
+        void ask(question);
+      },
       onEdit: handleEdit,
       onRegenerate: handleRegenerate,
       onRetry: handleRetry,
@@ -358,7 +360,14 @@ export function Explore() {
         messageCount: messages.length,
         pendingQuestion,
         pendingTurn,
-      }) && <ExploreSuggestionChips onSelect={ask} enabled={enabled} />}
+      }) && (
+        <ExploreSuggestionChips
+          onSelect={(question) => {
+            void ask(question);
+          }}
+          enabled={enabled}
+        />
+      )}
 
       <div className={layout.transcriptClass} style={layout.transcriptStyle}>
         <ExploreTranscript

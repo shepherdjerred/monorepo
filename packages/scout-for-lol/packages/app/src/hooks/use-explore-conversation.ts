@@ -32,7 +32,7 @@ export function useExploreConversation(conversationId: string | null) {
   const transcript = useQuery({
     ...trpc.explore.get.queryOptions({
       conversationId: conversationId ?? "",
-      version: 3,
+      version: 4,
     }),
     enabled: enabled && conversationId !== null,
     select: (data) => ExploreTranscriptSchema.parse(data),

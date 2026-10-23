@@ -1,3 +1,4 @@
+import type { ExploreQuestionImage } from "#src/explore/analysis/agent-types.ts";
 import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import {
@@ -59,6 +60,8 @@ export type ReplayCaseInput = {
   readonly guildIds: readonly DiscordGuildId[];
   readonly surface: ExploreSurface;
   readonly originChannelId: DiscordChannelId | null;
+  /** Images attached to this question; scenario fixtures only. */
+  readonly images?: readonly ExploreQuestionImage[];
 };
 
 export type ReplayObservation = {
@@ -109,6 +112,7 @@ function agentParams(
     conversationId: input.conversationId,
     subject: { kind: "discord_user", id: input.requesterId },
     question: input.question,
+    ...(input.images === undefined ? {} : { images: [...input.images] }),
     history: [...input.history],
     guildIds: [...input.guildIds],
     requesterId: input.requesterId,

@@ -19,6 +19,8 @@ export type StartExploreTurnInput = {
   attach: ExploreAttachPoint;
   displayQuestion: string | null;
   leafIdAtStart: string | null;
+  /** Images uploaded for a new question. */
+  attachmentIds?: readonly string[];
 };
 
 /** The explore-run operations a consumer of the context can perform. */

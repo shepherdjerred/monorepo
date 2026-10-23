@@ -135,7 +135,7 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
     async (conversationId: string): Promise<ExploreTranscript | undefined> => {
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: trpc.explore.get.queryKey({ conversationId, version: 3 }),
+          queryKey: trpc.explore.get.queryKey({ conversationId, version: 4 }),
         }),
         queryClient.invalidateQueries({
           queryKey: trpc.explore.list.queryKey(),
@@ -321,6 +321,10 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
             conversationId: input.conversationId,
             question: input.question,
             attach: input.attach,
+            ...(input.attachmentIds === undefined ||
+            input.attachmentIds.length === 0
+              ? {}
+              : { attachmentIds: [...input.attachmentIds] }),
           }),
         );
         const started = applyStreamEvent(initial, {

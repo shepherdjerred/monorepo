@@ -42,6 +42,7 @@ import {
 } from "#src/explore/store.ts";
 import { scoutExploreSharesTotal } from "#src/metrics/explore.ts";
 import { resolvePlayerIdentities } from "#src/reports/identity.ts";
+import { exploreAttachmentProcedures } from "#src/trpc/router/explore/explore-attachment-procedures.ts";
 import { exploreCreationProcedures } from "#src/trpc/router/explore/explore-creation-procedures.ts";
 import {
   confirmationNotFound,
@@ -244,6 +245,7 @@ export const exploreRouter = router({
 
   // Confirm entities prepared by the Explore agent.
   ...exploreCreationProcedures,
+  ...exploreAttachmentProcedures,
 
   confirmDareIntent: webMutationProcedure
     .input(z.strictObject({ intentId: z.uuid() }))
@@ -327,7 +329,11 @@ export const exploreRouter = router({
     }),
 
   get: exploreProcedure
-    .input(conversationInput.extend({ version: z.literal(3).optional() }))
+    .input(
+      conversationInput.extend({
+        version: z.union([z.literal(3), z.literal(4)]).optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       const userId = await requireExploreUser(ctx.user);
       const transcript = await loadExploreTranscript(
@@ -341,7 +347,16 @@ export const exploreRouter = router({
           message: "Conversation not found.",
         });
       }
-      if (input.version === 3) return transcript;
+      // v4 adds question images. A tab still on a v3 bundle parses messages
+      // strictly, so v3 gets the same transcript without the new key.
+      if (input.version === 4) return transcript;
+      if (input.version === 3)
+        return {
+          ...transcript,
+          messages: transcript.messages.map(
+            ({ attachments: _attachments, ...message }) => message,
+          ),
+        };
       const { preferredModel: _preferred, ...conversation } =
         transcript.conversation;
       return {
@@ -350,6 +365,7 @@ export const exploreRouter = router({
           ({
             generation: _generation,
             inlineEntities: _entities,
+            attachments: _attachments,
             ...message
           }) => message,
         ),

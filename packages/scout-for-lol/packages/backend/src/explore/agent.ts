@@ -1,5 +1,6 @@
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { generateText, Output, stepCountIs, ToolLoopAgent } from "ai";
+import { getModel } from "@shepherdjerred/llm-models";
 import { createToolPayloadCapture } from "#src/explore/inspection/tool-payloads.ts";
 import { withExploreSpend } from "#src/explore/spending/model.ts";
 import { hydrateInlineEntities } from "#src/explore/analysis/inline-entities.ts";
@@ -145,6 +146,8 @@ async function streamExploreAgentInternal(
     requesterId: params.requesterId,
     guildIds: params.guildIds,
   });
+
+  if ((params.images ?? []).length > 0) assertAcceptsImages(model);
 
   const agent = new ToolLoopAgent({
     id: "scout-explore-agent",
@@ -318,8 +321,51 @@ async function streamExploreAgentInternal(
   };
 }
 
+type ExploreUserContent =
+  | string
+  | (
+      | { type: "text"; text: string }
+      | { type: "image"; image: Uint8Array; mediaType: string }
+    )[];
+
+/**
+ * A question with images needs a model that reads them. The configured model
+ * not accepting images is a configuration fault, not something to answer
+ * around by silently dropping what the asker attached.
+ */
+function assertAcceptsImages(modelId: string): void {
+  const entry = getModel(modelId);
+  if (entry?.capabilities.inputModalities.includes("image") !== true)
+    throw new Error(`Explore model ${modelId} does not accept image input`);
+}
+
 export type ExploreModelMessage =
-  { role: "user"; content: string } | { role: "assistant"; content: string };
+  | { role: "user"; content: ExploreUserContent }
+  | { role: "assistant"; content: string };
+
+/** Where an earlier question's images were; only the current ones are sent. */
+function attachmentMarker(count: number): string {
+  return count === 0
+    ? ""
+    : `\n\n[The asker attached ${count.toString()} image(s) to this question. Only the current question's images are visible to you; describe earlier ones from your previous answer.]`;
+}
+
+function currentQuestion(params: ExploreAgentParams): ExploreModelMessage {
+  const images = params.images ?? [];
+  return images.length === 0
+    ? { role: "user", content: params.question }
+    : {
+        role: "user",
+        content: [
+          { type: "text", text: params.question },
+          ...images.map((image) => ({
+            type: "image" as const,
+            image: image.bytes,
+            mediaType: image.mediaType,
+          })),
+        ],
+      };
+}
 
 type MatchCardReplayContext = {
   size: string;
@@ -392,7 +438,10 @@ export function buildMessages(
   const recent = params.history.slice(-EXPLORE_MAX_HISTORY_TURNS * 2);
   const messages = recent.map((message): ExploreModelMessage => {
     if (message.role !== "assistant") {
-      return { role: "user", content: message.content };
+      return {
+        role: "user",
+        content: `${message.content}${attachmentMarker(message.attachments.length)}`,
+      };
     }
     const query =
       message.queryText === null
@@ -403,5 +452,5 @@ export function buildMessages(
       content: `${message.content}${query}${matchCardReplayContext(message.matchCards)}${loadoutCardReplayContext(message.loadoutCards)}${creationIntentReplayContext(message.trace, intentStates)}`,
     };
   });
-  return [...messages, { role: "user", content: params.question }];
+  return [...messages, currentQuestion(params)];
 }

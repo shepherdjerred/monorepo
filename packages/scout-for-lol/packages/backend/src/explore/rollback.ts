@@ -12,7 +12,7 @@ type RollbackInput = {
 
 type RollbackClient = Pick<
   ExtendedPrismaClient,
-  "exploreConversation" | "exploreMessage"
+  "exploreConversation" | "exploreMessage" | "exploreAttachment"
 >;
 
 export async function rollbackUnstartedExploreTurnInTransaction(
@@ -20,6 +20,14 @@ export async function rollbackUnstartedExploreTurnInTransaction(
   input: RollbackInput,
 ): Promise<void> {
   if (!input.createdQuestion) return;
+  // The question's images go back to being unsent uploads before the
+  // question is deleted: the asker can send them again, and the unsent sweep
+  // still finds them if they do not. A cascade would drop the rows and leave
+  // their objects untracked.
+  await prisma.exploreAttachment.updateMany({
+    where: { questionId: input.messageId },
+    data: { questionId: null, position: null },
+  });
   if (input.createdConversation) {
     await prisma.exploreConversation.deleteMany({
       where: { id: input.conversationId, userId: input.userId },

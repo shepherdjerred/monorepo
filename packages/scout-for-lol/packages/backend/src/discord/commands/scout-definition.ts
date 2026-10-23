@@ -34,6 +34,14 @@ function buildScoutCommand(features: ScoutGuildFeatures) {
             .setRequired(true)
             .setMinLength(1)
             .setMaxLength(EXPLORE_QUESTION_MAX_LENGTH),
+        )
+        .addAttachmentOption((option) =>
+          option
+            .setName("image")
+            .setDescription(
+              "A screenshot for Scout to read: a scoreboard, build or profile (PNG, JPEG or WebP)",
+            )
+            .setRequired(false),
         ),
     );
   }
