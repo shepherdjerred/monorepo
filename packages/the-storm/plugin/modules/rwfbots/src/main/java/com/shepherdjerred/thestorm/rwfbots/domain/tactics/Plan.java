@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.tactics;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.world.BombId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import java.util.List;
@@ -18,14 +19,15 @@ public record Plan(
     Option option, List<PlanStep> steps, int index, long startedTick, Optional<Answer> answer) {
 
   /**
-   * The enemy a guard's plan answers, and how many teammates already answered it when the plan was
-   * made: the first responder stands to one side of the enemy's bearing and the second to the
-   * other.
+   * The enemy a guard's plan answers, the bomb it was approaching, and how many teammates already
+   * answered it when the plan was made: the first responder stands to one side of the enemy's
+   * bearing and the second to the other.
    *
    * @param enemy the enemy met
+   * @param bomb the own bomb the enemy was approaching
    * @param rank how many teammates answered it before this guard
    */
-  public record Answer(CombatantId enemy, int rank) {}
+  public record Answer(CombatantId enemy, BombId bomb, int rank) {}
 
   public Plan {
     steps = List.copyOf(steps);

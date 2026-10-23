@@ -9,8 +9,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.SyntheticMap;
+import com.shepherdjerred.thestorm.rwfbots.domain.perception.Memory;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.Percept;
 import com.shepherdjerred.thestorm.rwfbots.domain.perception.PerceptionState;
+import com.shepherdjerred.thestorm.rwfbots.domain.perception.Sighting;
+import com.shepherdjerred.thestorm.rwfbots.domain.perception.Suspicion;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Style;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Blackboard;
@@ -32,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SplittableRandom;
 import org.junit.jupiter.api.Test;
 
 /** Guards answer an enemy on its way to their bomb, not only one already beside it. */
@@ -191,8 +195,8 @@ final class BombGuardTest {
     board = commit(board, first, firstPlan);
     var second = guard(6, Role.DEFEND, board, approaching(24, TOWARDS));
     var secondPlan = Planner.expand(Option.RETAKE, second, CONTEXT);
-    assertThat(firstPlan.answer()).contains(new Plan.Answer(ENEMY, 0));
-    assertThat(secondPlan.answer()).contains(new Plan.Answer(ENEMY, 1));
+    assertThat(firstPlan.answer()).contains(new Plan.Answer(ENEMY, new BombId(0), 0));
+    assertThat(secondPlan.answer()).contains(new Plan.Answer(ENEMY, new BombId(0), 1));
     assertThat(post(firstPlan).distance(post(secondPlan))).isGreaterThan(1);
     assertThat(post(firstPlan).x()).isGreaterThan(BOMB.x());
     assertThat(post(secondPlan).x()).isGreaterThan(BOMB.x());
@@ -209,5 +213,70 @@ final class BombGuardTest {
     assertThat(BombGuard.approach(later).orElseThrow().enemy()).isEqualTo(other.id());
     var note = Tactics.note(plan, Planner.decide(plan, later, CONTEXT, 0), later, CONTEXT);
     assertThat(note.chasing()).contains(ENEMY);
+  }
+
+  /** A guard's plan answering the enemy approaching from 24 blocks east, made a few ticks ago. */
+  private static Plan answering() {
+    var plan = Planner.expand(Option.RETAKE, situation(Role.DEFEND, 24, TOWARDS), CONTEXT);
+    assertThat(plan.answer()).map(Plan.Answer::enemy).contains(ENEMY);
+    return plan.since(45);
+  }
+
+  /** The guard thinking with {@code plan} still young and under way. */
+  private static Thought think(Plan plan, Situation situation) {
+    var state =
+        new TacticsState(Optional.of(plan), 45, 1, 0, RewindClock.UNSTARTED, TacticalMemory.EMPTY);
+    return Tactics.think(state, situation, CONTEXT, new SplittableRandom(1));
+  }
+
+  /** Red guard 1 that last heard the enemy 24 blocks east a second ago, and now sees no one. */
+  private static Situation heard(boolean alive) {
+    var self = combatant(1, RED, BOMB.plus(11, -0.5, 0));
+    var enemy = approaching(24, TOWARDS).withAlive(alive);
+    var bomb = new BombView(new BombId(0), new BombOwner.Team(RED), BOMB, new BombState.Idle());
+    var snapshot =
+        new WorldSnapshot(
+            50,
+            MatchPhase.LIVE,
+            List.of(self, enemy),
+            List.of(bomb),
+            PoisonView.NONE,
+            NAV.mapId(),
+            List.of());
+    var memory = Memory.EMPTY.remember(ENEMY, new Sighting(enemy.pos(), TOWARDS, 30, 1, false));
+    var perception = new PerceptionState(memory, Suspicion.NONE);
+    return new Situation(
+        self,
+        snapshot,
+        new Percept(perception, List.of(), 50),
+        Blackboard.open(RED, Strategy.TURTLE),
+        Role.DEFEND);
+  }
+
+  @Test
+  void aGuardPlanContinuesWhileItsEnemyStillApproaches() {
+    var plan = answering();
+    assertThat(BombGuard.stillAnswering(plan, situation(Role.DEFEND, 20, TOWARDS))).isTrue();
+    assertThat(BombGuard.stillAnswering(plan, heard(true))).isTrue();
+  }
+
+  @Test
+  void aGuardPlanEndsWhenItsEnemyTurnsAwayLeavesRangeOrDies() {
+    var plan = answering();
+    var away = situation(Role.DEFEND, 24, TOWARDS.scale(-1));
+    var gone = situation(Role.DEFEND, BombGuard.GUARD_RANGE + 2, TOWARDS);
+    var dead = heard(false);
+    var lost = guard(1, Role.DEFEND, Blackboard.open(RED, Strategy.TURTLE));
+    for (var now : List.of(away, gone, dead, lost)) {
+      assertThat(BombGuard.stillAnswering(plan, now)).isFalse();
+      // The young plan is not kept: the guard re-decides rather than holding the stale point.
+      assertThat(think(plan, now).state().plan().orElseThrow().answer()).isEmpty();
+    }
+  }
+
+  @Test
+  void aGuardPlanEndsWhenTheBotNoLongerGuards() {
+    assertThat(BombGuard.stillAnswering(answering(), situation(Role.ROTATE, 20, TOWARDS)))
+        .isFalse();
   }
 }

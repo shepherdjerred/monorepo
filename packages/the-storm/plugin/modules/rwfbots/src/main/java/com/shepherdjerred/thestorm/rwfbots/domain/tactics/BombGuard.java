@@ -45,7 +45,7 @@ final class BombGuard {
 
     /** What a plan meeting this approach records. */
     Plan.Answer answer() {
-      return new Plan.Answer(enemy, rank);
+      return new Plan.Answer(enemy, bomb.id(), rank);
     }
   }
 
@@ -132,16 +132,30 @@ final class BombGuard {
   }
 
   /**
-   * Whether a guard plan under way may continue: its enemy is not already answered by {@link
-   * Situation#MAX_CHASERS} teammates, so a re-plan never keeps an over-answered plan.
+   * Whether a guard plan under way may continue: the bot still guards, its enemy still approaches
+   * the bomb it was planned against by {@link #approach}'s rule (alive, seen or recently heard,
+   * within {@link #GUARD_RANGE} and not moving away), and fewer than {@link Situation#MAX_CHASERS}
+   * teammates already answer it. Once the enemy turns away, leaves range or dies, the plan's
+   * interception point is stale and the guard goes back to its post.
    */
   static boolean stillAnswering(Plan plan, Situation situation) {
     return plan.answer()
-        .filter(
+        .map(
             answer ->
-                situation.board().chasers(answer.enemy(), situation.self().id())
-                    >= Situation.MAX_CHASERS)
-        .isEmpty();
+                guards(situation)
+                    && approaching(answer, situation)
+                    && situation.board().chasers(answer.enemy(), situation.self().id())
+                        < Situation.MAX_CHASERS)
+        .orElse(true);
+  }
+
+  private static boolean approaching(Plan.Answer answer, Situation situation) {
+    var bomb =
+        situation.ownBombs().stream().filter(view -> view.id().equals(answer.bomb())).findFirst();
+    return bomb.isPresent()
+        && tracks(situation).stream()
+            .filter(track -> track.id().equals(answer.enemy()))
+            .anyMatch(track -> closing(track, bomb.orElseThrow()));
   }
 
   /**
