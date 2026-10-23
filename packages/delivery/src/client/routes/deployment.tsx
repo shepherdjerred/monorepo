@@ -23,6 +23,7 @@ import { ApprovalForm } from "#client/forms/approval-form.tsx";
 import { DeploymentRecord, sourceLabel } from "#client/deployment-detail.tsx";
 import { DeploymentModel } from "#client/model/deployment-model.tsx";
 import { PlanApproval } from "#client/model/plan-approval.tsx";
+import { retryable as offersRetry } from "#client/model/view.ts";
 import type { RecoveryDecision } from "#client/platform-recovery.tsx";
 import { canApprove, canDeploy, isTerminal } from "#client/presentation.ts";
 import { Route as rootRoute } from "./root.tsx";
@@ -89,9 +90,7 @@ function DeploymentPage() {
     (intent) =>
       intent.dispatchBarrier !== null && intent.barrierRestoredAt === null,
   );
-  const retryable =
-    ["deploy", "promote", "rollback"].includes(deployment.kind) &&
-    ["failed", "canceled"].includes(deployment.status);
+  const retryable = offersRetry(deployment);
   return (
     <>
       <PageHeader

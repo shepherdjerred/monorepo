@@ -15,6 +15,7 @@ import {
   firingAlarms,
   monitorEvidence,
   rebindChanges,
+  retryable,
 } from "./view.ts";
 
 // The hub client resolves its API origin from the page; static rendering has none.
@@ -88,6 +89,23 @@ describe("model view helpers", () => {
         acceptedDeploymentId: null,
       }),
     ).toBeNull();
+  });
+
+  test("offers a retry for every kind the API retries, once failed or canceled", () => {
+    for (const kind of [
+      "deploy",
+      "promote",
+      "rollback",
+      "rebind",
+      "channel-publish",
+      "operator-run",
+    ]) {
+      expect(retryable({ kind, status: "failed" })).toBe(true);
+      expect(retryable({ kind, status: "canceled" })).toBe(true);
+      expect(retryable({ kind, status: "succeeded" })).toBe(false);
+    }
+    for (const kind of ["retire-host", "adopt-worker", "tofu-apply"])
+      expect(retryable({ kind, status: "failed" })).toBe(false);
   });
 
   test("only pending approvals wait for a decision", () => {

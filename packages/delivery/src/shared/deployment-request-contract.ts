@@ -52,6 +52,18 @@ export const DeploymentKindV2Schema = z.enum([
   "operator-run",
 ]);
 export type DeploymentKindV2 = z.infer<typeof DeploymentKindV2Schema>;
+/**
+ * Kinds the API retries as a new deployment of the same frozen request
+ * (`retryRequest`). Specialized kinds need fresh exact inputs instead.
+ */
+export const RETRYABLE_DEPLOYMENT_KINDS = [
+  "deploy",
+  "promote",
+  "rollback",
+  "rebind",
+  "channel-publish",
+  "operator-run",
+] as const satisfies readonly DeploymentKindV2[];
 
 /**
  * The kind that realises a set revision under a recipe kind (section 5): a

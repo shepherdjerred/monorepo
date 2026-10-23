@@ -7,6 +7,19 @@ import {
   type MonitorStatus,
   type Selection,
 } from "#shared/model/contract.ts";
+import { RETRYABLE_DEPLOYMENT_KINDS } from "#shared/deployment-request-contract.ts";
+
+const RETRYABLE_KINDS: ReadonlySet<string> = new Set(
+  RETRYABLE_DEPLOYMENT_KINDS,
+);
+
+/** Whether the hub offers a retry: a failed or canceled deployment of a kind the API retries. */
+export function retryable(deployment: { kind: string; status: string }) {
+  return (
+    RETRYABLE_KINDS.has(deployment.kind) &&
+    (deployment.status === "failed" || deployment.status === "canceled")
+  );
+}
 
 /**
  * The saved plan a model `tofu` recipe's approve step is waiting on (section
