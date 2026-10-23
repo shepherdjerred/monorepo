@@ -94,6 +94,91 @@ test("production metadata readers use the existing authenticated client and its 
   }
 });
 
+test("chart publication reads only the overview and accepted-version fields it uses, so a Delivery server one contract behind answers", async () => {
+  vi.stubEnv("DELIVERY_URL", "https://delivery.example.invalid");
+  vi.stubEnv("DELIVERY_API_TOKEN", "synthetic-test-only");
+  const stormImage = imageIdentity("the-storm-server");
+  // The running server's shape: no declaredConfigurationId, lineage or orderKey,
+  // which the whole-document schemas require.
+  const acceptedImage = {
+    ...stormImage,
+    id: "ci/1/40/image/the-storm-server",
+    buildId: "ci/1/40/the-storm-server",
+    digest: pinnedDigest,
+    origin: { kind: "first-party" },
+  };
+  const serve = (version: unknown) => {
+    vi.stubGlobal("fetch", (input: string) => {
+      const url = new URL(input);
+      if (url.pathname === "/api/v1/overview")
+        return Promise.resolve(
+          Response.json({
+            environments: [
+              { id: "web/prod", acceptedVersionSetRevisionId: null },
+              { id: "minecraft/tsmc", acceptedVersionSetRevisionId: "rev-1" },
+            ],
+          }),
+        );
+      if (url.pathname === "/api/v1/versions/rev-1")
+        return Promise.resolve(Response.json(version));
+      throw new Error(`unexpected read ${url.pathname}`);
+    });
+  };
+  const read = (key: string) =>
+    Promise.resolve(
+      JSON.stringify(
+        key === "delivery-image-digests"
+          ? { "shepherdjerred/the-storm-server": pinnedDigest }
+          : [],
+      ),
+    );
+  try {
+    serve({
+      id: "rev-1",
+      revision: 1,
+      serviceId: stormImage.serviceId,
+      components: { "image:the-storm-server": acceptedImage },
+    });
+    expect(await chartPublicationImages(read)).toEqual({
+      "shepherdjerred/the-storm-server": pinnedDigest,
+      "shepherdjerred/the-storm-server/candidate": pinnedDigest,
+      "shepherdjerred/the-storm-server/accepted": pinnedDigest,
+    });
+    serve({
+      id: "rev-1",
+      revision: 1,
+      serviceId: stormImage.serviceId,
+      components: {
+        "image:the-storm-server": { ...acceptedImage, uri: "docker.io/other" },
+      },
+    });
+    await expect(chartPublicationImages(read)).rejects.toThrow(
+      "Accepted image the-storm-server differs from its canonical owner/component/repository",
+    );
+    serve({
+      id: "rev-1",
+      revision: 1,
+      serviceId: "someone-else",
+      components: { "image:the-storm-server": acceptedImage },
+    });
+    await expect(chartPublicationImages(read)).rejects.toThrow(
+      "Accepted Minecraft release owner differs",
+    );
+    serve({
+      id: "rev-1",
+      revision: 1,
+      serviceId: stormImage.serviceId,
+      components: {
+        "image:the-storm-server": { ...acceptedImage, digest: "sha256:short" },
+      },
+    });
+    await expect(chartPublicationImages(read)).rejects.toThrow();
+  } finally {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  }
+});
+
 test("a new sourceCI retains original image IDs without manufacturing new produced artifacts", async () => {
   const inventory = new Map(
     ["delivery", "tracker"].map((name) => [
