@@ -1,6 +1,6 @@
 import type { CiImages } from "#src/images.ts";
 import type { CiStep, SecretGrant } from "#src/pipeline/model.ts";
-import { MEDIUM_TIER } from "#src/pipeline/tiers.ts";
+import { LIGHT_TIER, MEDIUM_TIER } from "#src/pipeline/tiers.ts";
 import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
 
 export const TOFU_PLUGIN_CACHE = {
@@ -89,6 +89,34 @@ export function tofuValidationSteps(images: CiImages): CiStep[] {
       },
       secrets: [GITHUB_DOWNLOAD],
       volumes: [TOFU_PLUGIN_CACHE],
+    },
+  ];
+}
+
+/**
+ * Every stack's exact source, frozen as an immutable archive on every main
+ * run. Delivery selects a stack's archive by digest, so CI never guesses from
+ * changed paths, and the step holds only the archive-publisher and handoff
+ * identities: no provider or remote-state credential, no plan, no apply.
+ */
+export function tofuArchiveSteps(images: CiImages): CiStep[] {
+  return [
+    {
+      key: "tofu-archives",
+      label: "publish infrastructure archives",
+      image: images.base,
+      commands: [
+        "MISE_TOOLCHAIN_SCOPE=deployment . ci/scripts/toolchain.sh",
+        "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter homelab --production",
+        "bun --no-install scripts/ci/publish-tofu-archives.ts",
+        "bun --no-install scripts/ci/write-tofu-archive-handoff.ts",
+      ],
+      dependsOn: ["verify"],
+      timeoutMinutes: 15,
+      resources: LIGHT_TIER,
+      defaultBranchOnly: true,
+      concurrency: { limit: 1, group: "tofu-archives" },
+      secrets: [GITHUB_DOWNLOAD, ...DELIVERY_ARCHIVE_KEYS, ...HANDOFF_KEYS],
     },
   ];
 }

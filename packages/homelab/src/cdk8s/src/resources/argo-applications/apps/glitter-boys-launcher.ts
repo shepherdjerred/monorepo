@@ -4,6 +4,7 @@ import {
   launcherRelease,
   LauncherReleaseSchema,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/glitter-boys-launcher/release.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 export function createGlitterBoysLauncherApp(
   chart: Chart,
@@ -16,7 +17,7 @@ export function createGlitterBoysLauncherApp(
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("glitter-boys-launcher"),
       source: {
         repoUrl: "https://chartmuseum.tailnet-1a49.ts.net",
         targetRevision: "~2.0.0-0",

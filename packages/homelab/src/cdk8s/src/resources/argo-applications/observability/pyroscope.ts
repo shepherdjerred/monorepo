@@ -9,6 +9,7 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 /**
  * Grafana Pyroscope — continuous-profiling store. Profiles are pushed by the
@@ -20,13 +21,17 @@ import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/
  * API + ingest endpoint live at pyroscope.pyroscope.svc.cluster.local:4040 and
  * are wired into Grafana as a datasource (grafana-values.ts).
  */
-export function createPyroscopeApp(chart: Chart) {
+export function createPyroscopeNamespace(chart: Chart): void {
   new Namespace(chart, "pyroscope-namespace", {
     metadata: {
       name: "pyroscope",
       annotations: { "argocd.argoproj.io/sync-wave": "-2" },
     },
   });
+}
+
+export function createPyroscopeApp(chart: Chart) {
+  createPyroscopeNamespace(chart);
   // Expand the existing claim without replacing the immutable StatefulSet
   // template. At ~0.94 GB/day, its 32 GiB quota projected full in 17 days.
   new KubePersistentVolumeClaim(chart, "pyroscope-existing-claim-capacity", {
@@ -89,7 +94,7 @@ export function createPyroscopeApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("pyroscope"),
       source: {
         // https://github.com/grafana/pyroscope/tree/main/operations/pyroscope/helm/pyroscope
         repoUrl: "https://grafana.github.io/helm-charts",

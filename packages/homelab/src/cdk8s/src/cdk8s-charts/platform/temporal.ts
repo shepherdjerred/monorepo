@@ -1,15 +1,19 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
-import { Namespace } from "cdk8s-plus-31";
 import {
   IntOrString,
   KubeNetworkPolicy,
   type NetworkPolicyEgressRule,
   type NetworkPolicyIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { createTemporalPostgreSQLDatabase } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db.ts";
-import { createTemporalPostgreSQLCertificate } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
 import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
+import { createTemporalNamespace } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/namespace.ts";
+import {
+  createTemporalPostgreSQLDatabase,
+  createTemporalPostgreSQLNetworkPolicy,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db.ts";
+import { createTemporalPostgreSQLCertificate } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
+import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import { createTemporalDynamicConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/dynamic-config.ts";
 import { createTemporalServerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/server.ts";
 import { createTemporalUiDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/ui.ts";
@@ -17,7 +21,6 @@ import { createTemporalNamespaceInitJob } from "@shepherdjerred/homelab/cdk8s/sr
 import { createTemporalSchemaMigrationJob } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/schema-migration.ts";
 import { createTemporalWorkerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/worker.ts";
 import { createTemporalAgentWorkerNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/agent-worker-network-policy.ts";
-import { TEMPORAL_AGENT_POD_SECURITY_ENFORCEMENT } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/agent-worker.ts";
 import { createTemporalWorkerNetworkPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/worker-network-policies.ts";
 import { SCOUT_STAGES } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 import {
@@ -120,26 +123,14 @@ export function createTemporalChart(app: App) {
     disableResourceNameHashes: true,
   });
 
-  new Namespace(chart, "temporal-namespace", {
-    metadata: {
-      name: "temporal",
-      labels: {
-        // The report-only agent worker deliberately uses a short-lived
-        // NET_ADMIN init container for its uid-owned egress firewall and
-        // SETUID in the poller for the provider uid transition. PSA has no
-        // pod-scoped exception, so enforcement must permit those explicit
-        // capabilities at the namespace boundary while audit/warn retain the
-        // baseline signal for every workload.
-        "pod-security.kubernetes.io/enforce":
-          TEMPORAL_AGENT_POD_SECURITY_ENFORCEMENT,
-        "pod-security.kubernetes.io/audit": "baseline",
-        "pod-security.kubernetes.io/warn": "baseline",
-      },
-    },
-  });
-
-  createTemporalPostgreSQLCertificate(chart);
-  createTemporalPostgreSQLDatabase(chart);
+  // Under transition rendering the operator-run `temporal-data` chart owns the
+  // Namespace, the PostgreSQL TLS chain, the `temporal-postgresql` cluster and
+  // its ingress NetworkPolicy; everything below only connects to that database.
+  if (!transitionRendering()) {
+    createTemporalNamespace(chart, { retained: false });
+    createTemporalPostgreSQLCertificate(chart);
+    createTemporalPostgreSQLDatabase(chart);
+  }
   createTemporalSchemaMigrationJob(chart);
   const dynamicConfigMap = createTemporalDynamicConfig(chart);
   const externalAuthSecret = createTemporalExternalAuthSecret(chart);
@@ -426,50 +417,7 @@ export function createTemporalChart(app: App) {
     },
   });
 
-  // NetworkPolicy for PostgreSQL - only allow the server and schema hook.
-  //
-  // This must itself be a PreSync hook, staged ahead of the schema-migration
-  // Job's own PreSync wave (-1): PreSync hooks run in a phase that completes
-  // in full before ANY ordinary (non-hook) resource is applied, regardless of
-  // sync-wave. Left as a plain resource, ArgoCD would only add the
-  // temporal-schema-migration ingress rule below during the later Sync
-  // phase — after the schema-migration Job has already run (and had its
-  // PostgreSQL connection dropped by the netpol that predates this rule).
-  // No hook-delete-policy is set, so this persists as an ordinary tracked
-  // resource after creation and simply keeps being reconciled in PreSync on
-  // every subsequent sync.
-  new KubeNetworkPolicy(chart, "temporal-postgresql-netpol", {
-    metadata: {
-      name: "temporal-postgresql-netpol",
-      annotations: {
-        "argocd.argoproj.io/hook": "PreSync",
-        "argocd.argoproj.io/sync-wave": "-3",
-      },
-    },
-    spec: {
-      podSelector: {
-        matchLabels: postgresClusterPodLabels("temporal-postgresql"),
-      },
-      policyTypes: ["Ingress"],
-      ingress: [
-        {
-          from: [
-            {
-              podSelector: {
-                matchLabels: { app: "temporal-server" },
-              },
-            },
-            {
-              podSelector: {
-                matchLabels: { app: "temporal-schema-migration" },
-              },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(5432), protocol: "TCP" }],
-        },
-      ],
-    },
-  });
+  if (!transitionRendering()) createTemporalPostgreSQLNetworkPolicy(chart);
 
   new KubeNetworkPolicy(chart, "temporal-schema-migration-netpol", {
     metadata: {

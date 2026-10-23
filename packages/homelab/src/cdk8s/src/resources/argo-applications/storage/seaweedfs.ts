@@ -15,6 +15,7 @@ import { Namespace } from "cdk8s-plus-31";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 const FILER_UPSTREAM_PORT = 8888;
 const FILER_GATEWAY_PORT = 8889;
@@ -37,7 +38,7 @@ export const FILER_GATEWAY_CONFIG = `{
 }
 `;
 
-export function createSeaweedfsApp(chart: Chart) {
+export function createSeaweedfsNamespace(chart: Chart): void {
   new Namespace(chart, "seaweedfs-namespace", {
     metadata: {
       name: "seaweedfs",
@@ -47,6 +48,10 @@ export function createSeaweedfsApp(chart: Chart) {
       },
     },
   });
+}
+
+export function createSeaweedfsApp(chart: Chart) {
+  createSeaweedfsNamespace(chart);
 
   // Adopt and expand the existing claims before changing immutable Helm claim
   // templates. Preserve their names and bindings; the root release owns quota
@@ -414,7 +419,7 @@ export function createSeaweedfsApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("seaweedfs"),
       source: {
         repoUrl: "https://seaweedfs.github.io/seaweedfs/helm",
         chart: "seaweedfs",

@@ -17,6 +17,7 @@ import {
   getMinecraftPluginNames,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-config.ts";
 import { getMinecraftConfigDriftCheckInitContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-drift-check.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 const NAMESPACE = "minecraft-shuxin";
 
@@ -200,7 +201,7 @@ export function createMinecraftShuxinApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 2,
-      project: "default",
+      project: applicationProject("minecraft-shuxin"),
       source: {
         repoUrl: "https://itzg.github.io/minecraft-server-charts/",
         targetRevision: versions.minecraft,

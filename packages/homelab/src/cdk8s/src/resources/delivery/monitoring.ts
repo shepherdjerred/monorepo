@@ -4,12 +4,37 @@ import {
   PrometheusRuleSpecGroupsRulesExpr,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
+import { escapePrometheusTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
+import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 
 const expr = (expression: string) =>
   PrometheusRuleSpecGroupsRulesExpr.fromString(expression);
 
 /** Only rendered with an activated service, so absent bootstrap targets do not alert. */
-export function createDeliveryMonitoring(chart: Chart) {
+/**
+ * Delivery's post-acceptance monitor (model 4.19) raised an alarm: a firing
+ * alert matched the accepted deployment's monitor. Under the `automatic`
+ * policy Delivery has already queued a rollback; under `hold` it waits.
+ */
+const DELIVERY_MONITOR_ALARMED = {
+  alert: "DeliveryMonitorAlarmed",
+  expr: expr(
+    'max by (environment) (delivery_monitor_state{namespace="delivery",service="delivery",state="alarmed"}) > 0',
+  ),
+  for: "1m",
+  labels: { severity: "warning" },
+  annotations: {
+    summary: "A Delivery monitor saw its accepted deployment alarm",
+    message: escapePrometheusTemplate(
+      "Delivery's monitor for {{ $labels.environment }} recorded a firing alarm against the accepted deployment. Under the automatic policy a rollback to the last settled selection is queued; under hold, decide in the Delivery hub.",
+    ),
+  },
+};
+
+export function createDeliveryMonitoring(
+  chart: Chart,
+  transition: boolean = transitionRendering(),
+) {
   createServiceMonitor(chart, { name: "delivery", port: "http" });
   new PrometheusRule(chart, "delivery-alerts", {
     metadata: { labels: { release: "prometheus" } },
@@ -57,6 +82,7 @@ export function createDeliveryMonitoring(chart: Chart) {
                   "Delivery retained target ownership after an ambiguous external result. Inspect exact operation and Job identities; do not delete the database lock or assume the release was undone.",
               },
             },
+            ...(transition ? [DELIVERY_MONITOR_ALARMED] : []),
           ],
         },
       ],

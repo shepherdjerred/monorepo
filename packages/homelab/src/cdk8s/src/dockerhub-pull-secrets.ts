@@ -3,11 +3,31 @@ import { z } from "zod";
 import { imageRegistry } from "@shepherdjerred/version-catalog/image-registry";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "./misc/onepassword-vault.ts";
+import {
+  BASELINE_CHARTS,
+  CLUSTER_PLATFORM_CHART,
+  ROOT_CHART,
+} from "./resources/cluster-baseline/charts.ts";
 
 export function dockerHubPullSecretName(namespace: string): string {
   return `dockerhub-pull-${namespace}`;
 }
 const PULL_ITEM_ID = "ngzmppq52zm7sii6ato2mv3sbi";
+const PullSecretSchema = z.object({
+  metadata: z.object({ name: z.string().min(1), namespace: z.string().min(1) }),
+  type: z.literal("kubernetes.io/dockerconfigjson"),
+  spec: z.object({ itemPath: z.literal(vaultItemPath(PULL_ITEM_ID)) }),
+});
+
+function isPullSecret(resource: ApiObject, namespace?: string): boolean {
+  return (
+    resource.kind === "OnePasswordItem" &&
+    resource.metadata.name?.startsWith("dockerhub-pull-") === true &&
+    (namespace === undefined ||
+      (resource.metadata.name === dockerHubPullSecretName(namespace) &&
+        resource.metadata.namespace === namespace))
+  );
+}
 const privateImages = new Set(
   imageRegistry.images
     .filter((image) => image.visibility === "private")
@@ -18,24 +38,36 @@ const applicationDestination = z.object({
 });
 
 function existingPullSecret(app: App, namespace: string): boolean {
-  const matches = app.node
-    .findAll()
-    .filter(
-      (resource) =>
-        ApiObject.isApiObject(resource) &&
-        resource.kind === "OnePasswordItem" &&
-        resource.metadata.name === dockerHubPullSecretName(namespace) &&
-        resource.metadata.namespace === namespace,
-    );
+  const matches = app.node.findAll().filter(
+    (resource) =>
+      ApiObject.isApiObject(resource) &&
+      isPullSecret(resource, namespace) &&
+      // The cluster-platform copy restates the root's declaration.
+      Chart.of(resource).node.id !== CLUSTER_PLATFORM_CHART,
+  );
   const [existing] = matches;
   if (existing === undefined) return false;
   if (matches.length !== 1)
     throw new Error(`Duplicate registry reader in ${namespace}`);
-  z.object({
-    type: z.literal("kubernetes.io/dockerconfigjson"),
-    spec: z.object({ itemPath: z.literal(vaultItemPath(PULL_ITEM_ID)) }),
-  }).parse(ApiObject.of(existing).toJson());
+  PullSecretSchema.parse(ApiObject.of(existing).toJson());
   return true;
+}
+
+/**
+ * The cluster-platform baseline chart carries every reader the root chart
+ * declares, so the v2 cutover can hand the namespace credentials over without
+ * re-deriving which consumer first required them.
+ */
+function mirrorRootPullSecrets(app: App): void {
+  const root = app.node.tryFindChild(ROOT_CHART);
+  const mirror = app.node.tryFindChild(CLUSTER_PLATFORM_CHART);
+  if (root === undefined || !Chart.isChart(mirror)) return;
+  for (const resource of root.node.findAll()) {
+    if (!ApiObject.isApiObject(resource) || !isPullSecret(resource)) continue;
+    if (mirror.node.tryFindChild(resource.node.id) !== undefined) continue;
+    const { metadata, type, spec } = PullSecretSchema.parse(resource.toJson());
+    new OnePasswordItem(mirror, resource.node.id, { metadata, type, spec });
+  }
 }
 
 function containsPrivateImage(value: unknown): boolean {
@@ -58,6 +90,25 @@ function containsPrivateImage(value: unknown): boolean {
         );
 }
 
+/** The namespace whose reader a private-image consumer pulls with. */
+function consumerNamespace(construct: ApiObject, manifest: unknown): string {
+  const namespace =
+    construct.kind === "Application"
+      ? applicationDestination.parse(manifest).spec.destination.namespace
+      : (construct.metadata.namespace ?? Chart.of(construct).namespace);
+  if (namespace === undefined || namespace === "") {
+    throw new Error(
+      `Private image consumer ${construct.node.path} has no namespace`,
+    );
+  }
+  return namespace;
+}
+
+/** Baseline charts mirror root consumers; the root copy owns the reader. */
+function mirrorsRootConsumers(chart: Chart): boolean {
+  return chart.node.id !== ROOT_CHART && BASELINE_CHARTS.has(chart.node.id);
+}
+
 /** Prepare reader-only registry credentials before the image-reference cutover. */
 export function prepareDockerHubPullSecrets(app: App): void {
   const namespaces = new Map<string, Chart>();
@@ -67,16 +118,8 @@ export function prepareDockerHubPullSecrets(app: App): void {
     if (!containsPrivateImage(manifest) && !hasTemplatedPodImage(construct))
       continue;
     const chart = Chart.of(construct);
-    const namespace =
-      construct.kind === "Application"
-        ? applicationDestination.parse(manifest).spec.destination.namespace
-        : (construct.metadata.namespace ?? chart.namespace);
-    if (namespace === undefined || namespace === "") {
-      throw new Error(
-        `Private image consumer ${construct.node.path} has no namespace`,
-      );
-    }
-    namespaces.set(namespace, chart);
+    if (mirrorsRootConsumers(chart)) continue;
+    namespaces.set(consumerNamespace(construct, manifest), chart);
   }
   // Woodpecker owns its CI namespace credential declaration alongside grants.
   namespaces.delete("woodpecker-ci");
@@ -88,6 +131,7 @@ export function prepareDockerHubPullSecrets(app: App): void {
       spec: { itemPath: vaultItemPath(PULL_ITEM_ID) },
     });
   }
+  mirrorRootPullSecrets(app);
 }
 
 const podSpecPaths: Readonly<Record<string, readonly string[]>> = {

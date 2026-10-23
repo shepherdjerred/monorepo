@@ -8,9 +8,13 @@ import {
   MC_SANDBOX_MAX_DEADLINE_SECONDS,
   mcSandboxImageAllowlist,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/mc-sandbox/constants.ts";
-import { MC_SANDBOX_QUOTA } from "@shepherdjerred/homelab/cdk8s/src/resources/mc-sandbox/limits.ts";
+import {
+  MC_SANDBOX_QUALIFICATION_QUOTA,
+  MC_SANDBOX_QUOTA,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/mc-sandbox/limits.ts";
 import { MC_SANDBOX_POD_GUARD_POLICY } from "@shepherdjerred/homelab/cdk8s/src/resources/mc-sandbox/pod-guard.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 
 const ManifestSchema = z
   .object({
@@ -87,7 +91,9 @@ describe("mc-sandbox chart", () => {
       .object({ spec: z.object({ hard: z.record(z.string(), z.string()) }) })
       .loose()
       .parse(find("ResourceQuota", "mc-sandbox-quota", "mc-sandbox"));
-    expect(quota.spec.hard).toEqual(MC_SANDBOX_QUOTA);
+    expect(quota.spec.hard).toEqual(
+      transitionRendering() ? MC_SANDBOX_QUALIFICATION_QUOTA : MC_SANDBOX_QUOTA,
+    );
     for (const value of Object.values(quota.spec.hard)) {
       expect(value).not.toMatch(/000m$/);
     }

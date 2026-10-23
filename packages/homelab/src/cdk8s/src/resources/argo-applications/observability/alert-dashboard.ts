@@ -1,5 +1,6 @@
 import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 // Registered once the public image digest is pinned. Keep this application in
 // the activation branch so ArgoCD owns the complete service lifecycle.
@@ -10,7 +11,7 @@ export function createAlertDashboardApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("alert-dashboard"),
       source: {
         repoUrl: "https://chartmuseum.tailnet-1a49.ts.net",
         targetRevision: "~2.0.0-0",

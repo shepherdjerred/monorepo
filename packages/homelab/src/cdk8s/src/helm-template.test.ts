@@ -162,9 +162,15 @@ function stripDeliveryImageBindings(line: string, chart: string): string {
   }
   if (
     ORDINARY_DELIVERY_ENVIRONMENTS[chart] !== undefined ||
-    ["temporal", "scout-beta", "scout-prod", "delivery-control-plane"].includes(
-      chart,
-    )
+    [
+      "temporal",
+      "scout-beta",
+      "scout-prod",
+      "delivery-control-plane",
+      // Under transition rendering its pod guard reads the Storm images from
+      // the deployment's parameters.
+      "mc-sandbox",
+    ].includes(chart)
   )
     stripped = stripped.replaceAll(
       /\{\{ required `Delivery requires image:([a-z0-9-]+)` \(get \(get \(\.Values\.delivery \| default dict\) "images" \| default dict\) "\1"\) \}\}/gu,

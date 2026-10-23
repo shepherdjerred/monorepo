@@ -20,6 +20,7 @@ import {
   RESTORE_IMAGE_ANNOTATION,
   RESTORE_ACCESS_SELECTOR,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/minecraft-restoration-guard.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 const NAMESPACE = "minecraft-tsmc";
 const analytics = siteAnalyticsConfiguration("ts-mc");
@@ -294,7 +295,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 2,
-      project: "default",
+      project: applicationProject("minecraft-tsmc"),
       source: {
         repoUrl: minecraftChartRepository(),
         targetRevision: versions.minecraft,

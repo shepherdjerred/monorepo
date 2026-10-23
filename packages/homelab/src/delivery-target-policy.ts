@@ -49,6 +49,9 @@ const INFRASTRUCTURE_SERVICE_OWNERS = new Set([
   "home",
   "self-hosted-apps",
   "minecraft",
+  // Operator-run PostgreSQL data layers: never an automated Delivery target.
+  "delivery-data",
+  "temporal-data",
 ]);
 const RETIRED_APPLICATIONS = new Set(["pokemon", "mario-kart"]);
 

@@ -5,6 +5,7 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import inventory from "./releases.json";
 import { createStormForumChart } from "./index.ts";
 import { ForumStageSchema } from "./release-schema.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 const InventorySchema = z
   .object({
@@ -43,7 +44,7 @@ export function createStormForumApplications(chart: Chart): void {
     new Application(chart, `${name}-app`, {
       metadata: { name },
       spec: {
-        project: "default",
+        project: applicationProject(name),
         revisionHistoryLimit: 5,
         source: {
           repoUrl: "https://chartmuseum.tailnet-1a49.ts.net",

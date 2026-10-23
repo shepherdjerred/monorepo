@@ -41,7 +41,12 @@ export function createPrometheusMonitoring(chart: Chart) {
   const launcherReleaseGroups = getGlitterLauncherReleaseRuleGroups();
   if (launcherReleaseGroups.length > 0)
     new PrometheusRule(chart, "glitter-launcher-release-rules", {
-      metadata: { namespace: "prometheus", labels: { release: "prometheus" } },
+      // Named explicitly: a generated name would embed the rendering chart id.
+      metadata: {
+        name: "prometheus-glitter-launcher-release-rules",
+        namespace: "prometheus",
+        labels: { release: "prometheus" },
+      },
       spec: { groups: launcherReleaseGroups },
     });
 

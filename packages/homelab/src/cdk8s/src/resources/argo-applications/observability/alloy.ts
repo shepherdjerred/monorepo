@@ -3,6 +3,7 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import { Namespace } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 // Grafana Alloy River config: eBPF-sample every pod on the local node kernel-side
 // and push profiles to Pyroscope. No application instrumentation — works for the
@@ -64,11 +65,11 @@ pyroscope.write "default" {
  * boundary is the accepted trade-off for the profiling capability.
  * It only pushes profiles to the in-cluster Pyroscope; it has no ingress.
  */
-export function createAlloyApp(chart: Chart) {
-  // The DaemonSet is privileged (hostPID + privileged container), so the namespace
-  // must opt out of the cluster-default "baseline" Pod Security enforcement.
-  // CreateNamespace=true creates a bare namespace without these labels, which
-  // blocks every pod the daemonset-controller tries to create.
+// The DaemonSet is privileged (hostPID + privileged container), so the namespace
+// must opt out of the cluster-default "baseline" Pod Security enforcement.
+// CreateNamespace=true creates a bare namespace without these labels, which
+// blocks every pod the daemonset-controller tries to create.
+export function createAlloyNamespace(chart: Chart): void {
   new Namespace(chart, "alloy-namespace", {
     metadata: {
       name: "alloy",
@@ -79,6 +80,10 @@ export function createAlloyApp(chart: Chart) {
       },
     },
   });
+}
+
+export function createAlloyApp(chart: Chart) {
+  createAlloyNamespace(chart);
 
   const alloyValues: HelmValuesForChart<"alloy"> = {
     controller: {
@@ -143,7 +148,7 @@ export function createAlloyApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("alloy"),
       source: {
         // https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy
         repoUrl: "https://grafana.github.io/helm-charts",

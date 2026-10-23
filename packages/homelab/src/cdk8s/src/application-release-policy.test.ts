@@ -8,6 +8,7 @@ import {
   Issuer,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/cert-manager.io.ts";
 import {
+  ARGOCD_SYNC_OPTIONS_ANNOTATION,
   ARGOCD_SYNC_WAVE_ANNOTATION,
   APPLICATION_LIFECYCLE_ANNOTATION,
   APPLICATION_RESOURCES_FINALIZER,
@@ -38,9 +39,13 @@ const WaveAnnotationSchema = z.object({
   }),
 });
 
-function application(chart: Chart, name: string): Application {
+function application(
+  chart: Chart,
+  name: string,
+  annotations?: Record<string, string>,
+): Application {
   return new Application(chart, `${name}-construct`, {
-    metadata: { name },
+    metadata: { name, annotations },
     spec: {
       project: "default",
       source: {
@@ -115,7 +120,7 @@ describe("applyApplicationReleasePolicy", () => {
     const chart = new Chart(app, "apps");
     const worker = application(chart, "worker");
     const root = application(chart, "apps");
-    applyApplicationReleasePolicy(app);
+    applyApplicationReleasePolicy(app, false);
 
     const workerManifest = ManifestSchema.parse(worker.toJson());
     expect(
@@ -237,5 +242,110 @@ describe("applyApplicationReleasePolicy", () => {
         ARGOCD_SYNC_WAVE_ANNOTATION
       ],
     ).toBe("-2");
+  });
+});
+
+describe("transition rendering", () => {
+  test("retains root children with Prune=false and no finalizer", () => {
+    const app = new App();
+    const chart = new Chart(app, "apps");
+    const worker = application(chart, "worker");
+    const declared = application(chart, "declared", {
+      [ARGOCD_SYNC_OPTIONS_ANNOTATION]: "ServerSideApply=true",
+    });
+    const argocd = application(chart, "argocd");
+    const root = application(chart, "apps");
+    const nested = application(new Chart(app, "other"), "nested");
+    applyApplicationReleasePolicy(app, true);
+
+    for (const child of [worker, declared]) {
+      const manifest = ManifestSchema.parse(child.toJson());
+      expect(
+        manifest.metadata.annotations[APPLICATION_LIFECYCLE_ANNOTATION],
+      ).toBe("retain");
+      expect(manifest.metadata.finalizers).toBeUndefined();
+      expect(manifest.metadata.labels?.[MANAGED_APPLICATION_LABEL]).toBe(
+        "true",
+      );
+      expect(manifest.spec.syncPolicy?.automated).toEqual({
+        enabled: false,
+      });
+    }
+    expect(
+      ManifestSchema.parse(worker.toJson()).metadata.annotations[
+        ARGOCD_SYNC_OPTIONS_ANNOTATION
+      ],
+    ).toBe("Prune=false");
+    expect(
+      ManifestSchema.parse(declared.toJson()).metadata.annotations[
+        ARGOCD_SYNC_OPTIONS_ANNOTATION
+      ],
+    ).toBe("ServerSideApply=true,Prune=false");
+
+    // The retained root and ArgoCD Applications render exactly as before.
+    for (const retained of [argocd, root]) {
+      const manifest = ManifestSchema.parse(retained.toJson());
+      expect(
+        manifest.metadata.annotations[APPLICATION_LIFECYCLE_ANNOTATION],
+      ).toBe("retain");
+      expect(manifest.metadata.finalizers).toBeUndefined();
+      expect(manifest.metadata.annotations).not.toHaveProperty(
+        ARGOCD_SYNC_OPTIONS_ANNOTATION,
+      );
+    }
+
+    // Only the root's own children change; other charts keep cascading.
+    const nestedManifest = ManifestSchema.parse(nested.toJson());
+    expect(
+      nestedManifest.metadata.annotations[APPLICATION_LIFECYCLE_ANNOTATION],
+    ).toBe("cascade");
+    expect(nestedManifest.metadata.finalizers).toEqual([
+      APPLICATION_RESOURCES_FINALIZER,
+    ]);
+    expect(nestedManifest.metadata.annotations).not.toHaveProperty(
+      ARGOCD_SYNC_OPTIONS_ANNOTATION,
+    );
+  });
+
+  test("refuses a child that declares pruning", () => {
+    const app = new App();
+    const chart = new Chart(app, "apps");
+    application(chart, "worker", {
+      [ARGOCD_SYNC_OPTIONS_ANNOTATION]: "Prune=true",
+    });
+    expect(() => applyApplicationReleasePolicy(app, true)).toThrow(
+      /Prune=true, which conflicts with Prune=false/u,
+    );
+  });
+
+  test("is idempotent for already stamped children", () => {
+    const app = new App();
+    const chart = new Chart(app, "apps");
+    const worker = application(chart, "worker", {
+      [ARGOCD_SYNC_OPTIONS_ANNOTATION]: "Prune=false",
+    });
+    applyApplicationReleasePolicy(app, true);
+    expect(
+      ManifestSchema.parse(worker.toJson()).metadata.annotations[
+        ARGOCD_SYNC_OPTIONS_ANNOTATION
+      ],
+    ).toBe("Prune=false");
+  });
+
+  test("off keeps cascading finalizers on root children", () => {
+    const app = new App();
+    const chart = new Chart(app, "apps");
+    const worker = application(chart, "worker");
+    applyApplicationReleasePolicy(app, false);
+    const manifest = ManifestSchema.parse(worker.toJson());
+    expect(
+      manifest.metadata.annotations[APPLICATION_LIFECYCLE_ANNOTATION],
+    ).toBe("cascade");
+    expect(manifest.metadata.finalizers).toEqual([
+      APPLICATION_RESOURCES_FINALIZER,
+    ]);
+    expect(manifest.metadata.annotations).not.toHaveProperty(
+      ARGOCD_SYNC_OPTIONS_ANNOTATION,
+    );
   });
 });

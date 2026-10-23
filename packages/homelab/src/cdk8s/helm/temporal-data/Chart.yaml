@@ -1,0 +1,6 @@
+apiVersion: v2
+name: temporal-data
+description: Temporal namespace, PostgreSQL TLS chain and data layer
+type: application
+version: "$version"
+appVersion: "$appVersion"

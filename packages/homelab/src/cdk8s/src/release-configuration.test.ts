@@ -1,8 +1,28 @@
 import { describe, expect, test } from "vitest";
+import { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
 import {
   publicationImageDigests,
   releaseChartRevisions,
+  transitionRendering,
 } from "./release-configuration.ts";
+
+// The cutover work merges inert; the window turns transition rendering on with
+// a reviewed change to `transitionRendering()` (and this assertion) before the final v1
+// root release.
+test("transition rendering is off until the cutover window", () => {
+  expect(transitionRendering()).toBe(false);
+});
+
+// The root renders the data-layer Applications only under transition
+// rendering, so the catalog's root inventory must list their charts exactly
+// then: turning the switch on also removes their `inactive` exclusions.
+test("the catalog activates the data-layer charts with the switch", () => {
+  const active = new Set(
+    new ServiceIndex().rootReleaseCharts().map((chart) => chart.name),
+  );
+  for (const name of ["delivery-data", "temporal-data"])
+    expect(active.has(name), name).toBe(transitionRendering());
+});
 
 describe("publicationImageDigests", () => {
   test("preserves explicit publication identities without selecting a runtime", () => {

@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { destructiveChangeFindings } from "./argocd-destructive-changes.ts";
+import { JsonObjectSchema, valueAt } from "./argocd-json-path.ts";
 
 export const ManagedResourceSchema = z.object({
   group: z.string().optional(),
@@ -15,7 +17,6 @@ export const ManagedResourcesSchema = z.object({
 
 export type ManagedResource = z.infer<typeof ManagedResourceSchema>;
 
-const JsonObjectSchema = z.record(z.string(), z.unknown());
 const ResourceSyncOptionsSchema = z
   .object({
     metadata: z
@@ -52,21 +53,6 @@ export function parseObject(
       cause: error,
     });
   }
-}
-
-function valueAt(
-  object: Record<string, unknown>,
-  path: readonly string[],
-): unknown {
-  let current: unknown = object;
-  for (const segment of path) {
-    const parsed = JsonObjectSchema.safeParse(current);
-    if (!parsed.success) {
-      return undefined;
-    }
-    current = parsed.data[segment];
-  }
-  return current;
 }
 
 /**
@@ -602,6 +588,11 @@ export function analyzeApplySafety(
         );
       }
     }
+    // Replacement bypasses the update path, not the data: a recreated
+    // database or claim loses exactly what these checks protect.
+    findings.push(
+      ...destructiveChangeFindings(resource, identity(resource), live, target),
+    );
     findings.push(...imageDowngradeFindings(live, target, identity(resource)));
     if (forceReplace) {
       continue;

@@ -1,8 +1,9 @@
 import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { Namespace } from "cdk8s-plus-31";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
-export function createDdnsApp(chart: Chart) {
+export function createDdnsNamespace(chart: Chart): void {
   new Namespace(chart, `ddns-namespace`, {
     metadata: {
       name: `ddns`,
@@ -11,6 +12,10 @@ export function createDdnsApp(chart: Chart) {
       },
     },
   });
+}
+
+export function createDdnsApp(chart: Chart) {
+  createDdnsNamespace(chart);
 
   return new Application(chart, "ddns-app", {
     metadata: {
@@ -18,7 +23,7 @@ export function createDdnsApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("ddns"),
       source: {
         repoUrl: "https://chartmuseum.tailnet-1a49.ts.net",
         targetRevision: "~2.0.0-0",

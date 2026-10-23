@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { run } from "@shepherdjerred/root-scripts/lib/run.ts";
 import { DELIVERY_CREDENTIAL_ITEMS } from "#cdk8s/src/resources/delivery/activation.ts";
+import { applicationProject } from "#cdk8s/src/resources/argo-applications/platform/projects.ts";
 import { BootstrapApplicationSchema } from "./bootstrap-selection.ts";
 import type { HandoverDescriptor } from "./delivery-handover-selection.ts";
 
@@ -83,7 +84,7 @@ export function createHandoverArgo(
       .object({ value: z.enum(["yes", "no"]) })
       .parse(
         await request(
-          `account/can-i/applications/${encodeURIComponent(action)}/${encodeURIComponent(`default/${application}`)}`,
+          `account/can-i/applications/${encodeURIComponent(action)}/${encodeURIComponent(`${applicationProject(application)}/${application}`)}`,
           role,
         ),
       );

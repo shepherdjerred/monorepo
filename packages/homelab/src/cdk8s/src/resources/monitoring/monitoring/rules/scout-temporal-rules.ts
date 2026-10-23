@@ -1,6 +1,7 @@
 import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "./shared.ts";
+import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import {
   SCOUT_TEMPORAL_WORKER_MISSING,
   SCOUT_WORKFLOW_ROUTING_UNKNOWN,
@@ -9,7 +10,9 @@ import {
 // Extracted from scout.ts (which is at the max-lines limit) to keep the
 // "scout-temporal" rule group's definition alongside the rest of Scout's
 // alert rules without exceeding the file-length ESLint cap.
-export function getScoutTemporalRuleGroup(): PrometheusRuleSpecGroups {
+export function getScoutTemporalRuleGroup(
+  transition: boolean = transitionRendering(),
+): PrometheusRuleSpecGroups {
   return {
     name: "scout-temporal",
     rules: [
@@ -166,11 +169,17 @@ export function getScoutTemporalRuleGroup(): PrometheusRuleSpecGroups {
         annotations: {
           summary: "Scout salvaged an ambiguous provider attempt",
           message: escapePrometheusTemplate(
-            "Scout interrupted {{ $value }} {{ $labels.kind }} provider attempt(s) rather than risk duplicate model spend. Inspect persisted partial output and the original Worker interruption.",
+            transition
+              ? "Scout {{ $labels.environment }} interrupted {{ $value }} {{ $labels.kind }} provider attempt(s) rather than risk duplicate model spend. Inspect persisted partial output and the original Worker interruption."
+              : "Scout interrupted {{ $value }} {{ $labels.kind }} provider attempt(s) rather than risk duplicate model spend. Inspect persisted partial output and the original Worker interruption.",
           ),
         },
+        // Under transition rendering the alert keeps the environment label, so
+        // a Delivery monitor's `environment` matcher sees which Scout alarmed.
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          "sum by (kind) (increase(scout_temporal_interrupted_provider_attempts_total[30m])) > 0",
+          transition
+            ? "sum by (environment, kind) (increase(scout_temporal_interrupted_provider_attempts_total[30m])) > 0"
+            : "sum by (kind) (increase(scout_temporal_interrupted_provider_attempts_total[30m])) > 0",
         ),
         for: "1m",
         labels: { severity: "warning" },

@@ -4,6 +4,8 @@ import { z } from "zod";
 import { SERVICE_CATALOG } from "@shepherdjerred/ops-model/catalog.ts";
 import { setupCharts } from "./setup-charts.ts";
 import { imageRegistry } from "@shepherdjerred/version-catalog/image-registry";
+import { transitionRendering } from "./release-configuration.ts";
+import { OPERATOR_RUN_DATA_APPLICATIONS } from "./resources/argo-applications/platform/delivery-rbac.ts";
 
 const ApplicationSchema = z
   .object({
@@ -52,6 +54,11 @@ describe("ops service catalog drift", () => {
         (name) => service.rootReleaseExclusions?.[name] === "inactive",
       ),
     );
+    // The operator-run data layers render only under transition rendering.
+    const transitional: readonly string[] = transitionRendering()
+      ? []
+      : [...OPERATOR_RUN_DATA_APPLICATIONS];
+    expect(transitional.filter((name) => rendered.has(name))).toEqual([]);
     // Planned Applications stay catalog-owned while credential-gated bootstrap
     // omits their resources. Every absence must be explicitly classified.
     expect(
@@ -59,7 +66,11 @@ describe("ops service catalog drift", () => {
         (name) => !rendered.has(name) && !dormant.includes(name),
       ),
     ).toEqual([]);
-    expect(dormant.filter((name) => !rendered.has(name)).sort()).toEqual([]);
+    expect(
+      dormant
+        .filter((name) => !rendered.has(name) && !transitional.includes(name))
+        .sort(),
+    ).toEqual([]);
   });
 
   it("declares registered primary images without requiring Git deployment pins", () => {

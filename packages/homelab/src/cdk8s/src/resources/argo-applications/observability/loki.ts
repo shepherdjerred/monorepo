@@ -7,6 +7,7 @@ import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/stora
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { CI_NODE_TOLERATION } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { ConfigMap } from "cdk8s-plus-31";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 // Loki alerting rules for Kubernetes events
 // Note: Go template syntax escaped for Helm compatibility ({{ "{{" }} ... {{ "}}" }})
@@ -226,19 +227,9 @@ groups:
           description: "The profiler on {{ "{{" }} $labels.node_name {{ "}}" }} logged 'unwind info array full' and is skipping new executables. Capture diagnostics and recover only that node's profiler after verifying its peer. Map scale does not increase this table."
 `;
 
-export function createLokiApp(chart: Chart) {
-  createIngress(chart, "loki-ingress", {
-    namespace: "loki",
-    service: "loki",
-    port: 3100,
-    hosts: ["loki"],
-    proxyClass: "medium",
-    // Loki returns 404 at "/"; its readiness endpoint is /ready.
-    probePath: "/ready",
-  });
-
-  // Create ConfigMap for Loki alert rules
-  const rulesConfigMap = new ConfigMap(chart, "loki-alert-rules", {
+/** The ConfigMap Loki's ruler mounts for every repo-owned log alert. */
+export function createLokiAlertRules(chart: Chart): ConfigMap {
+  return new ConfigMap(chart, "loki-alert-rules", {
     metadata: {
       name: "loki-alert-rules",
       namespace: "loki",
@@ -251,6 +242,20 @@ export function createLokiApp(chart: Chart) {
       "alloy-rules.yaml": alloyAlertRules,
     },
   });
+}
+
+export function createLokiApp(chart: Chart) {
+  createIngress(chart, "loki-ingress", {
+    namespace: "loki",
+    service: "loki",
+    port: 3100,
+    hosts: ["loki"],
+    proxyClass: "medium",
+    // Loki returns 404 at "/"; its readiness endpoint is /ready.
+    probePath: "/ready",
+  });
+
+  const rulesConfigMap = createLokiAlertRules(chart);
 
   const lokiValues: HelmValuesForChart<"loki"> = {
     deploymentMode: "SingleBinary",
@@ -422,7 +427,7 @@ export function createLokiApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("loki"),
       source: {
         // https://github.com/grafana/loki/tree/main/production/helm/loki
         repoUrl: "https://grafana.github.io/helm-charts",

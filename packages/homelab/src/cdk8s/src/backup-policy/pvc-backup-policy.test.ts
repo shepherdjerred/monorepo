@@ -6,6 +6,8 @@ import { App, Chart, Size } from "cdk8s";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { setupCharts } from "@shepherdjerred/homelab/cdk8s/src/setup-charts.ts";
+import { CLUSTER_ADMISSION_CHART } from "@shepherdjerred/homelab/cdk8s/src/resources/cluster-baseline/charts.ts";
+import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { createStorageClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import {
@@ -161,8 +163,12 @@ describe("PVC backup policy", () => {
         if (!parsed.success) {
           continue;
         }
-        const currentCount = admissionKinds.get(parsed.data.kind) ?? 0;
-        admissionKinds.set(parsed.data.kind, currentCount + 1);
+        // `cluster-admission` mirrors the root's admission objects one for one
+        // (cluster-baseline.test.ts), so count each policy where the root has it.
+        if (filename !== `${CLUSTER_ADMISSION_CHART}.k8s.yaml`) {
+          const currentCount = admissionKinds.get(parsed.data.kind) ?? 0;
+          admissionKinds.set(parsed.data.kind, currentCount + 1);
+        }
         if (
           parsed.data.metadata.name === "delivery-tsmc-copy-reclaim.sjer.red"
         ) {
@@ -222,8 +228,12 @@ describe("PVC backup policy", () => {
     // observer CONNECT guard.
     expect(admissionKinds.get("copy:ValidatingAdmissionPolicy")).toBe(1);
     expect(admissionKinds.get("copy:ValidatingAdmissionPolicyBinding")).toBe(1);
-    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(22);
-    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(22);
+    // Transition rendering adds the Application source-writer policy.
+    const validating = transitionRendering() ? 23 : 22;
+    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(validating);
+    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(
+      validating,
+    );
   }, 20_000);
 
   it("syncs admission policy updates before PVC changes", () => {

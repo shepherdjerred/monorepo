@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cluster-observability
+description: Alert rules, exporters and dashboards mirrored from the root chart for the v2 cutover
+type: application
+version: "$version"
+appVersion: "$appVersion"

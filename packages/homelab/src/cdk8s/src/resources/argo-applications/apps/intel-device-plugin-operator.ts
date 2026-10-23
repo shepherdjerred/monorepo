@@ -2,8 +2,9 @@ import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { Namespace } from "cdk8s-plus-31";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
-export function createIntelDevicePluginOperatorApp(chart: Chart) {
+export function createIntelDevicePluginOperatorNamespace(chart: Chart): void {
   new Namespace(chart, "intel-plugin-namespcae", {
     metadata: {
       name: "intel-device-plugin-operator",
@@ -12,6 +13,10 @@ export function createIntelDevicePluginOperatorApp(chart: Chart) {
       },
     },
   });
+}
+
+export function createIntelDevicePluginOperatorApp(chart: Chart) {
+  createIntelDevicePluginOperatorNamespace(chart);
 
   new Application(chart, "intel-plugins-app", {
     metadata: {
@@ -19,7 +24,7 @@ export function createIntelDevicePluginOperatorApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("intel-device-plugin-operator"),
       source: {
         // https://github.com/intel/helm-charts/tree/main/charts/device-plugin-operator
         repoUrl: "https://intel.github.io/helm-charts/",

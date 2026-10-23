@@ -17,6 +17,7 @@ import {
 } from "@shepherdjerred/version-catalog/image-registry";
 import { parseAllDocuments, stringify } from "yaml";
 import { mkdir } from "node:fs/promises";
+import { MC_SANDBOX_STORM_IMAGE_PARAMETERS } from "#cdk8s/src/resources/mc-sandbox/image-parameters.ts";
 import path from "node:path";
 
 const BUILD_REVISION_RE = /^2\.0\.0-[1-9]\d*$/u;
@@ -99,9 +100,30 @@ function selectionValidationValues(name: string) {
   };
 }
 
+/**
+ * Under transition rendering the mc-sandbox pod guard names the Storm images
+ * Delivery stamps per deployment; with the switch off the chart ignores them.
+ */
+function sandboxValidationValues() {
+  const image = `docker.io/shepherdjerred/the-storm-server@sha256:${"f".repeat(64)}`;
+  return {
+    delivery: {
+      images: Object.fromEntries(
+        MC_SANDBOX_STORM_IMAGE_PARAMETERS.map((parameter) => [
+          parameter,
+          image,
+        ]),
+      ),
+    },
+  };
+}
+
 /** Synthetic producer validation only; no value here is packaged as a selection. */
 export function chartValidationValues(name: string) {
-  const selected = selectionValidationValues(name);
+  const selected =
+    name === "mc-sandbox"
+      ? sandboxValidationValues()
+      : selectionValidationValues(name);
   if (selected === undefined && new ServiceIndex().byChart(name) === undefined)
     return;
   return {

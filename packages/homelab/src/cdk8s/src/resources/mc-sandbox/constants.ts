@@ -1,5 +1,6 @@
 import { publicationImageDigests } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { MC_SANDBOX_STORM_IMAGE_PARAMETERS } from "@shepherdjerred/homelab/cdk8s/src/resources/mc-sandbox/image-parameters.ts";
 
 /**
  * Names shared by the mc-sandbox chart and the mc-harness Kubernetes
@@ -40,5 +41,24 @@ export function mcSandboxImageAllowlist(
         throw new Error("Frozen Minecraft image digest is invalid");
       return [`docker.io/shepherdjerred/the-storm-server@${digest}`];
     }),
+  ];
+}
+
+/**
+ * Under transition rendering the Storm images come from the deployment rather
+ * than the chart bytes: Delivery stamps the selected tsmc candidate and
+ * accepted image references as Helm parameters on each mc-sandbox
+ * deployment, so a new candidate never needs a new chart. Each is required;
+ * a deployment that names neither renders nothing.
+ */
+export function mcSandboxDeploymentImageAllowlist(): string[] {
+  const itzg = `itzg/minecraft-server:${versions["itzg/minecraft-server"]}`;
+  return [
+    itzg,
+    `docker.io/${itzg}`,
+    ...MC_SANDBOX_STORM_IMAGE_PARAMETERS.map(
+      (name) =>
+        `{{ required \`Delivery requires image:${name}\` (get (get (.Values.delivery | default dict) "images" | default dict) "${name}") }}`,
+    ),
   ];
 }

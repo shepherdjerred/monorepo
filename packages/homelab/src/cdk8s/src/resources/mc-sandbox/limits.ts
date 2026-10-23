@@ -4,7 +4,10 @@ import {
   KubeResourceQuota,
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { LocalQueueV1Beta2 } from "@shepherdjerred/homelab/cdk8s/generated/imports/kueue.x-k8s.io.ts";
 import { MC_SANDBOX_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/mc-sandbox/constants.ts";
+import { CI_CLUSTER_QUEUE } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
+import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 
 /**
  * Hard cap on everything the harness can run at once. Sandboxes run on the CI
@@ -25,7 +28,31 @@ export const MC_SANDBOX_QUOTA = {
   "limits.ephemeral-storage": "40Gi",
 } as const;
 
-export function createMcSandboxLimits(chart: Chart): void {
+/**
+ * Under transition rendering the namespace joins Kueue's `woodpecker`
+ * ClusterQueue, which bounds the CI node, and its own quota grows by one
+ * `test:e2e` qualification run (model E7 and V5) beside the interactive
+ * sandboxes above: the candidate server pod the harness creates
+ * (mc-harness `pod-manifest.ts`: Paper at 1 CPU, 3584Mi/4608Mi memory and
+ * 2Gi/8Gi ephemeral storage, plus its 50m staging container) and the suite's
+ * runner pod (2 CPU, 4Gi/6Gi memory, 4Gi/16Gi ephemeral storage), rounded up.
+ */
+export const MC_SANDBOX_QUALIFICATION_QUOTA = {
+  pods: "5",
+  "requests.cpu": "8",
+  "requests.memory": "18Gi",
+  "limits.memory": "26Gi",
+  "requests.ephemeral-storage": "28Gi",
+  "limits.ephemeral-storage": "66Gi",
+} as const;
+
+/** Kueue gives every pod in a managed namespace the LocalQueue named `default`. */
+export const MC_SANDBOX_LOCAL_QUEUE = "default";
+
+export function createMcSandboxLimits(
+  chart: Chart,
+  transition: boolean = transitionRendering(),
+): void {
   // Defaults for a container that declares nothing; the harness sizes its
   // Paper containers explicitly, within the per-container maximum.
   new KubeLimitRange(chart, "mc-sandbox-limit-range", {
@@ -60,11 +87,20 @@ export function createMcSandboxLimits(chart: Chart): void {
     metadata: { name: "mc-sandbox-quota", namespace: MC_SANDBOX_NAMESPACE },
     spec: {
       hard: Object.fromEntries(
-        Object.entries(MC_SANDBOX_QUOTA).map(([key, value]) => [
-          key,
-          Quantity.fromString(value),
-        ]),
+        Object.entries(
+          transition ? MC_SANDBOX_QUALIFICATION_QUOTA : MC_SANDBOX_QUOTA,
+        ).map(([key, value]) => [key, Quantity.fromString(value)]),
       ),
     },
   });
+
+  if (transition) {
+    new LocalQueueV1Beta2(chart, "mc-sandbox-local-queue", {
+      metadata: {
+        name: MC_SANDBOX_LOCAL_QUEUE,
+        namespace: MC_SANDBOX_NAMESPACE,
+      },
+      spec: { clusterQueue: CI_CLUSTER_QUEUE },
+    });
+  }
 }

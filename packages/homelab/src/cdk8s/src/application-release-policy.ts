@@ -1,7 +1,14 @@
 import { ApiObject, Chart, JsonPatch, type App } from "cdk8s";
 import { z } from "zod";
-import { releaseChartRevisions } from "./release-configuration.ts";
+import {
+  releaseChartRevisions,
+  transitionRendering,
+} from "./release-configuration.ts";
 import { BURST_SERVICE_PRIORITY } from "./misc/priority-classes.ts";
+import {
+  BASELINE_CHARTS,
+  ROOT_CHART,
+} from "./resources/cluster-baseline/charts.ts";
 import {
   deliveryEnvironment,
   DELIVERY_ACTIVE_DELEGATIONS,
@@ -14,10 +21,15 @@ export const APPLICATION_RESOURCES_FINALIZER =
 export const APPLICATION_LIFECYCLE_ANNOTATION =
   releaseContract.APPLICATION_LIFECYCLE_ANNOTATION;
 export const REPOSITORY_CHART_URLS = releaseContract.REPOSITORY_CHART_URLS;
+export const ORPHAN_ROOT_ANNOTATION = releaseContract.ORPHAN_ROOT_ANNOTATION;
 export const MANAGED_APPLICATION_LABEL = "ci.sjer.red/managed-application";
 export const ARGOCD_SYNC_WAVE_ANNOTATION = "argocd.argoproj.io/sync-wave";
+export const ARGOCD_SYNC_OPTIONS_ANNOTATION = "argocd.argoproj.io/sync-options";
 
 export const APPLICATION_SYNC_WAVES = {
+  // Under transition rendering, AppProjects must exist before any
+  // Application that names them syncs.
+  appProject: "-31",
   admissionPolicy: "-30",
   admissionBinding: "-29",
   onePassword: "-20",
@@ -124,6 +136,18 @@ function applicationSyncWave(name: string): string {
     : APPLICATION_SYNC_WAVES.leaf;
 }
 
+/** Under transition rendering AppProjects precede every Application naming them. */
+function baselineResourceSyncWave(
+  resource: ApiObject,
+  transition: boolean,
+): string {
+  const isAppProject =
+    resource.kind === "AppProject" && resource.apiGroup === "argoproj.io";
+  return transition && isAppProject
+    ? APPLICATION_SYNC_WAVES.appProject
+    : rootResourceSyncWave(resource);
+}
+
 function rootResourceSyncWave(resource: ApiObject): string {
   if (
     resource.kind === "PriorityClass" &&
@@ -165,6 +189,65 @@ function rootResourceSyncWave(resource: ApiObject): string {
     : APPLICATION_SYNC_WAVES.structural;
 }
 
+const MetadataAnnotationsSchema = z.object({
+  annotations: z.record(z.string(), z.string()).optional(),
+});
+
+/** Add one `key=value` sync option, keeping any the manifest already declares. */
+function mergeSyncOption(construct: ApiObject, option: string): void {
+  const declared =
+    MetadataAnnotationsSchema.parse(construct.metadata.toJson()).annotations?.[
+      ARGOCD_SYNC_OPTIONS_ANNOTATION
+    ] ?? "";
+  const options = declared
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry !== "");
+  const key = option.split("=")[0];
+  const conflict = options.find(
+    (entry) => entry !== option && entry.split("=")[0] === key,
+  );
+  if (conflict !== undefined) {
+    throw new Error(
+      `Application ${construct.node.path} declares sync option ${conflict}, which conflicts with ${option}`,
+    );
+  }
+  if (!options.includes(option)) options.push(option);
+  construct.metadata.addAnnotation(
+    ARGOCD_SYNC_OPTIONS_ANNOTATION,
+    options.join(","),
+  );
+}
+
+function applyLifecyclePolicy(
+  construct: ApiObject,
+  applicationName: string,
+  transitionalRootChild: boolean,
+): void {
+  if (RETAIN_APPLICATIONS.has(applicationName)) {
+    construct.metadata.addAnnotation(
+      APPLICATION_LIFECYCLE_ANNOTATION,
+      "retain",
+    );
+  } else if (transitionalRootChild) {
+    // Transition rendering hands the root's children to per-service
+    // Applications. A retained child without the resources finalizer
+    // survives the root being orphaned, and Prune=false keeps a narrowing
+    // root manifest from deleting it. `apps` and `argocd` keep their policy.
+    construct.metadata.addAnnotation(
+      APPLICATION_LIFECYCLE_ANNOTATION,
+      "retain",
+    );
+    mergeSyncOption(construct, "Prune=false");
+  } else {
+    construct.metadata.addAnnotation(
+      APPLICATION_LIFECYCLE_ANNOTATION,
+      "cascade",
+    );
+    construct.metadata.addFinalizers(APPLICATION_RESOURCES_FINALIZER);
+  }
+}
+
 function applyDeliveryOwnership(construct: ApiObject, applicationName: string) {
   const delegatedEnvironment = DELIVERY_ACTIVE_DELEGATIONS[applicationName];
   if (delegatedEnvironment !== undefined) {
@@ -180,15 +263,18 @@ function applyResourceReleasePolicy(
   construct: ApiObject,
   revisions: ReturnType<typeof releaseChartRevisions>,
   seenRepositoryCharts: Set<string>,
+  transition: boolean,
 ): void {
-  const isRootChartResource = Chart.of(construct).node.id === "apps";
+  const chartId = Chart.of(construct).node.id;
+  const isRootChartResource = chartId === ROOT_CHART;
   const isApplication =
     construct.kind === "Application" && construct.apiGroup === "argoproj.io";
   if (!isApplication) {
-    if (isRootChartResource) {
+    // Baseline charts mirror the root's cluster objects, waves included.
+    if (BASELINE_CHARTS.has(chartId)) {
       construct.metadata.addAnnotation(
         ARGOCD_SYNC_WAVE_ANNOTATION,
-        rootResourceSyncWave(construct),
+        baselineResourceSyncWave(construct, transition),
       );
     }
     return;
@@ -213,18 +299,11 @@ function applyResourceReleasePolicy(
   if (applicationName !== "apps") {
     construct.metadata.addLabel(MANAGED_APPLICATION_LABEL, "true");
   }
-  if (RETAIN_APPLICATIONS.has(applicationName)) {
-    construct.metadata.addAnnotation(
-      APPLICATION_LIFECYCLE_ANNOTATION,
-      "retain",
-    );
-  } else {
-    construct.metadata.addAnnotation(
-      APPLICATION_LIFECYCLE_ANNOTATION,
-      "cascade",
-    );
-    construct.metadata.addFinalizers(APPLICATION_RESOURCES_FINALIZER);
-  }
+  applyLifecyclePolicy(
+    construct,
+    applicationName,
+    transition && isRootChartResource,
+  );
 
   const chartName = manifest.spec.source.chart;
   const isRepositoryChart =
@@ -260,12 +339,20 @@ function applyResourceReleasePolicy(
   );
 }
 
-export function applyApplicationReleasePolicy(app: App): void {
+export function applyApplicationReleasePolicy(
+  app: App,
+  transition: boolean = transitionRendering(),
+): void {
   const revisions = releaseChartRevisions();
   const seenRepositoryCharts = new Set<string>();
   for (const construct of app.node.findAll()) {
     if (ApiObject.isApiObject(construct)) {
-      applyResourceReleasePolicy(construct, revisions, seenRepositoryCharts);
+      applyResourceReleasePolicy(
+        construct,
+        revisions,
+        seenRepositoryCharts,
+        transition,
+      );
     }
   }
   if (revisions !== undefined) {

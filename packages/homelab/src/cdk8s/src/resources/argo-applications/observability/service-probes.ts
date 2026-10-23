@@ -1,5 +1,6 @@
 import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 // Delivers the "service-probes" cdk8s chart (resources/monitoring/
 // service-probes-chart.ts): the blackbox Probe CRs auto-registered for every
@@ -14,7 +15,7 @@ export function createServiceProbesApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("service-probes"),
       source: {
         repoUrl: "https://chartmuseum.tailnet-1a49.ts.net",
         targetRevision: "~2.0.0-0",

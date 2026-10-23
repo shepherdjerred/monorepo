@@ -202,6 +202,10 @@ remain unchanged.
   mutations. The reviewed plan travels encrypted between planning and apply,
   so provider drift cannot silently change the approved operation. The
   [release guide](/how-to/cut-a-homelab-release/) gives the trigger procedure.
+  Every main build also publishes each stack's exact source as an immutable
+  archive (`tofu-archives`) that Delivery plans and applies from; the stack
+  manifest declares the repository files a stack reads outside its directory,
+  and the homelab lint fails on an undeclared read.
 - **Scout** has three deliberate promotion phases: archive and deploy beta, mint
   the immutable tag, then reconcile the production `versions.ts` pin. They are
   three stages of one release, not three independent Scout test suites.

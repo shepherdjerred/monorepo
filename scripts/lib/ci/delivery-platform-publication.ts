@@ -5,7 +5,6 @@ import {
 } from "@shepherdjerred/delivery/contract";
 import type { PublishBuild } from "@shepherdjerred/delivery/contract";
 import type { ArtifactVersionSchema } from "@shepherdjerred/delivery/contract";
-import { STATIC_SITE_DESTINATIONS } from "@shepherdjerred/ops-model/static-release-targets.ts";
 import {
   SERVICE_CATALOG,
   ServiceIndex,
@@ -23,6 +22,14 @@ import type {
 import { globalPaths } from "../../../ci/scripts/migration-core.ts";
 import { workspacePaths } from "../../../ci/scripts/selectors/site-lane-paths.ts";
 import { ensureAncestor } from "../../../ci/scripts/selectors/ensure-ancestor.ts";
+import { STACK_MANIFEST } from "../../../packages/homelab/scripts/tofu/tofu-stack-manifest.ts";
+import {
+  independentStaticSites,
+  isStaticSiteArtifact,
+  staticSiteBucket,
+  staticSiteEnvironment,
+  staticSiteServiceId,
+} from "./static-site-publications.ts";
 
 const managedStacks = TofuStackSchema.options.filter((stack) =>
   ["automatic", "reviewed-plan"].includes(TOFU_STACK_POLICIES[stack].mode),
@@ -52,8 +59,9 @@ export function changedPlatformStacks(
       (file) =>
         shared.some((path) => within(file, path)) ||
         within(file, `packages/homelab/src/tofu/${stack}`) ||
-        (stack === "cloudflare" &&
-          file === "packages/homelab/src/domain-registry.json") ||
+        STACK_MANIFEST[stack].externalFiles.some((input) =>
+          within(file, input),
+        ) ||
         (TOFU_STACK_POLICIES[stack].mode === "reviewed-plan" &&
           sensitiveShared.some((path) => within(file, path))),
     ),
@@ -139,7 +147,8 @@ export async function attachPlatformPublication(
     bucket: string,
   ) => Promise<z.infer<typeof ArtifactVersionSchema>>,
 ): Promise<PublishBuild[]> {
-  const catalog = new ServiceIndex(input.catalog ?? SERVICE_CATALOG);
+  const services = input.catalog ?? SERVICE_CATALOG;
+  const catalog = new ServiceIndex(services);
   const charts = publications.flatMap((build) =>
     build.artifacts.filter((artifact) => artifact.kind === "chart"),
   );
@@ -172,40 +181,32 @@ export async function attachPlatformPublication(
       rootArtifacts[expected.name] = artifactId;
     }
   }
-  const freshSites = publications
-    .filter((build) => build.serviceId === "static-sites")
-    .flatMap((build) =>
-      build.artifacts
-        .filter(
-          (artifact) =>
-            artifact.kind === "archive" &&
-            artifact.component.startsWith("site:"),
-        )
-        .map((artifact) => {
-          const environmentId =
-            STATIC_SITE_DESTINATIONS[artifact.component.slice("site:".length)];
-          if (environmentId?.startsWith("static-sites/") !== true)
-            throw new Error(
-              "Independent static publication requires its reviewed bucket owner",
-            );
-          return { environmentId, artifactId: artifact.id };
-        }),
-    );
+  // A site archive published under its own service releases independently;
+  // one published under another owner (Scout's frontends) rides that
+  // service's combined deployment and is no root prerequisite.
+  const freshSites = publications.flatMap((build) =>
+    build.artifacts.filter(isStaticSiteArtifact).flatMap((artifact) => {
+      const bucket = staticSiteBucket(artifact.component);
+      if (build.serviceId !== staticSiteServiceId(bucket)) return [];
+      return [
+        {
+          environmentId: staticSiteEnvironment(bucket),
+          artifactId: artifact.id,
+        },
+      ];
+    }),
+  );
   const selectedSites = new Map(
     freshSites.map((site) => [site.environmentId, site.artifactId]),
   );
   if (retainedSite !== undefined && closure.root) {
     const originals = await Promise.all(
-      Object.entries(STATIC_SITE_DESTINATIONS)
-        .filter(
-          ([, environment]) =>
-            environment.startsWith("static-sites/") &&
-            !selectedSites.has(environment),
-        )
-        .map(async ([bucket, environmentId]) => {
+      independentStaticSites(services)
+        .filter((site) => !selectedSites.has(site.environmentId))
+        .map(async ({ bucket, serviceId, environmentId }) => {
           const artifact = await retainedSite(bucket);
           if (
-            artifact.serviceId !== "static-sites" ||
+            artifact.serviceId !== serviceId ||
             artifact.component !== `site:${bucket}` ||
             artifact.kind !== "archive" ||
             artifact.origin.kind !== "first-party"

@@ -6,6 +6,7 @@ import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepasswor
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 // Phoenix ingests whole LLM traces per project; the project is selected by
 // the x-project-name header on the exporter, and projects are created
@@ -279,17 +280,21 @@ ${TAILNET_METRICS_CONFIG}
  * of widening the profiler's boundary. Both releases share the `versions.alloy`
  * chart pin and move together on chart bumps.
  */
-export function createAlloyGatewayApp(chart: Chart) {
-  // Explicit Namespace (root-chart sync wave 0) rather than relying only on
-  // CreateNamespace=true: the OnePasswordItem below applies at wave -19 —
-  // before any Application could create the namespace — so the namespace has
-  // to exist independently (it shipped one release ahead of the item).
-  // Default (baseline) Pod Security applies; nothing here is privileged.
+// Explicit Namespace (root-chart sync wave 0) rather than relying only on
+// CreateNamespace=true: the OnePasswordItem in the Application applies at
+// wave -19 — before any Application could create the namespace — so the
+// namespace has to exist independently (it shipped one release ahead of the
+// item). Default (baseline) Pod Security applies; nothing here is privileged.
+export function createAlloyGatewayNamespace(chart: Chart): void {
   new Namespace(chart, "alloy-gateway-namespace", {
     metadata: {
       name: "alloy-gateway",
     },
   });
+}
+
+export function createAlloyGatewayApp(chart: Chart) {
+  createAlloyGatewayNamespace(chart);
 
   // One Phoenix system API key, shared by every per-project exporter.
   new OnePasswordItem(chart, "alloy-gateway-phoenix-1p", {
@@ -427,7 +432,7 @@ export function createAlloyGatewayApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("alloy-gateway"),
       source: {
         // https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy
         repoUrl: "https://grafana.github.io/helm-charts",

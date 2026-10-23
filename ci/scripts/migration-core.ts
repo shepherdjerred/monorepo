@@ -146,6 +146,8 @@ export const globalPaths = [
   "scripts/lib/ci/delivery-platform-publication.ts",
   "scripts/lib/ci/delivery-forum-publication.ts",
   "scripts/lib/ci/delivery-publication-handoffs.ts",
+  "scripts/lib/ci/delivery-tofu-publication.ts",
+  "scripts/lib/ci/static-site-publications.ts",
 ] as const;
 
 export const lanePaths: Readonly<Record<string, readonly string[]>> = {

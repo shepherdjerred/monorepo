@@ -13,8 +13,10 @@ import {
   MC_HARNESS_MANAGED_BY,
   MC_SANDBOX_MAX_DEADLINE_SECONDS,
   MC_SANDBOX_NAMESPACE,
+  mcSandboxDeploymentImageAllowlist,
   mcSandboxImageAllowlist,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/mc-sandbox/constants.ts";
+import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 
 export const MC_SANDBOX_POD_GUARD_POLICY = "mc-sandbox-pod-guard.sjer.red";
 
@@ -49,8 +51,15 @@ const BOUNDED = `has(c.resources) && has(c.resources.requests) && has(c.resource
  * priority, bounded resources, pinned images only, and no PVCs (sandbox state
  * is disposable emptyDir).
  */
-export function createMcSandboxPodGuard(chart: Chart): void {
-  const images = celList(mcSandboxImageAllowlist());
+export function createMcSandboxPodGuard(
+  chart: Chart,
+  transition: boolean = transitionRendering(),
+): void {
+  const images = celList(
+    transition
+      ? mcSandboxDeploymentImageAllowlist()
+      : mcSandboxImageAllowlist(),
+  );
   new ApiObject(chart, "mc-sandbox-pod-guard-policy", {
     apiVersion: "admissionregistration.k8s.io/v1",
     kind: "ValidatingAdmissionPolicy",

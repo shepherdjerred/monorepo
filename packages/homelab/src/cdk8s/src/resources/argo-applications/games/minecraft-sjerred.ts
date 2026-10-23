@@ -24,6 +24,7 @@ import {
   getDynmapConfigMapManifest,
   getDynmapExtraVolumes,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/dynmap-config.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 const NAMESPACE = "minecraft-sjerred";
 const DISCORD_SECRET_NAME = "minecraft-sjerred-discord";
@@ -269,7 +270,7 @@ export function createMinecraftSjerredApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 2,
-      project: "default",
+      project: applicationProject("minecraft-sjerred"),
       source: {
         repoUrl: "https://itzg.github.io/minecraft-server-charts/",
         targetRevision: versions.minecraft,

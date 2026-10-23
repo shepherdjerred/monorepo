@@ -36,6 +36,15 @@
       "deploy": []
     },
     {
+      "id": "delivery-data",
+      "rootReleaseExclusions": { "delivery-data": "inactive" },
+      "title": "Delivery data layer",
+      "kind": "platform",
+      "package": "homelab",
+      "namespaces": [],
+      "argoApps": ["delivery-data"]
+    },
+    {
       "id": "arcade",
       "images": ["arcade"],
       "title": "Arcade",
@@ -305,6 +314,45 @@
           "argoApp": "temporal"
         }
       ]
+    },
+    {
+      "id": "cluster-admission",
+      "rootReleaseExclusions": { "cluster-admission": "inactive" },
+      "title": "Cluster admission policies",
+      "kind": "platform",
+      "package": "homelab",
+      "namespaces": [],
+      "argoApps": [],
+      "charts": ["cluster-admission"]
+    },
+    {
+      "id": "cluster-platform",
+      "rootReleaseExclusions": { "cluster-platform": "inactive" },
+      "title": "Cluster platform baseline",
+      "kind": "platform",
+      "package": "homelab",
+      "namespaces": [],
+      "argoApps": [],
+      "charts": ["cluster-platform"]
+    },
+    {
+      "id": "cluster-observability",
+      "rootReleaseExclusions": { "cluster-observability": "inactive" },
+      "title": "Cluster observability baseline",
+      "kind": "platform",
+      "package": "homelab",
+      "namespaces": [],
+      "argoApps": [],
+      "charts": ["cluster-observability"]
+    },
+    {
+      "id": "temporal-data",
+      "rootReleaseExclusions": { "temporal-data": "inactive" },
+      "title": "Temporal data layer",
+      "kind": "platform",
+      "package": "homelab",
+      "namespaces": [],
+      "argoApps": ["temporal-data"]
     },
     {
       "id": "delivery-control-plane",

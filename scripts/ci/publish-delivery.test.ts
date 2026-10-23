@@ -310,8 +310,15 @@ test("the full catalog publication preserves the smaller coordinated root invent
     optional: async () => JSON.stringify(rootInventory),
   });
   // Actual full publication includes delegated and inactive charts, not root selections.
-  expect(charts).toHaveLength(43);
-  expect(rootInventory).toHaveLength(23);
+  // The baseline and data-layer charts publish but stay out of the root
+  // inventory: no root Application renders a baseline chart, and the two
+  // data layers join together once transition rendering renders theirs.
+  expect(charts).toHaveLength(48);
+  const dataLayers = rootInventory.filter(({ name }) =>
+    ["delivery-data", "temporal-data"].includes(name),
+  ).length;
+  expect([0, 2]).toContain(dataLayers);
+  expect(rootInventory).toHaveLength(23 + dataLayers);
   expect(result.charts).toEqual(charts);
   expect(result.rootInventory).toEqual(rootInventory);
 });

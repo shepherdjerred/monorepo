@@ -324,7 +324,8 @@ describe("Stash ArgoCD application", () => {
       disableResourceNameHashes: true,
     });
     createStashApp(chart);
-    applyApplicationReleasePolicy(app);
+    // The v1 cascade policy; transition rendering retains every root child.
+    applyApplicationReleasePolicy(app, false);
 
     const application = z
       .object({

@@ -13,6 +13,7 @@ import { createArcadeChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-chart
 import { createDeliveryJobs } from "./jobs.ts";
 import { createDeliveryWorker } from "./worker.ts";
 import { createWoodpeckerStepNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/step-network-policy.ts";
+import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 
 beforeEach(resetProbeRegistry);
 const activation = {
@@ -433,10 +434,11 @@ describe("Delivery execution and service bootstrap", () => {
     const resources = Resources.parse(
       createDeliveryChart(new App(), activation).toJson(),
     );
+    // Under transition rendering `delivery-data` owns the cluster.
     const database = resources.find(
       (resource) => resource.kind === "postgresql",
     );
-    expect(database).toBeDefined();
+    expect(database !== undefined).toBe(!transitionRendering());
     const monitor = resources.find(
       (resource) => resource.kind === "ServiceMonitor",
     );

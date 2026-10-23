@@ -3,6 +3,7 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { CLOUDFLARE_TUNNEL_SECRET_NAME } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 // 1Password item path for Cloudflare API token
 const CLOUDFLARE_TUNNEL_1PASSWORD_ITEM_PATH =
@@ -30,7 +31,7 @@ export function createCloudflareOperatorApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("cloudflare-operator"),
       source: {
         // https://github.com/adyanth/cloudflare-operator
         repoUrl: "https://github.com/adyanth/cloudflare-operator.git",

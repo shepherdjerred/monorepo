@@ -4,12 +4,17 @@ import { KubeServiceAccount } from "@shepherdjerred/homelab/cdk8s/generated/impo
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { dockerHubPullSecretName } from "@shepherdjerred/homelab/cdk8s/src/dockerhub-pull-secrets.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import { KUEUE_MANAGED_NAMESPACE_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/ci-namespace.ts";
+import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import {
   MC_HARNESS_SERVICE_ACCOUNT,
   MC_SANDBOX_NAMESPACE,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/mc-sandbox/constants.ts";
 
-export function createMcSandboxNamespace(chart: Chart): void {
+export function createMcSandboxNamespace(
+  chart: Chart,
+  transition: boolean = transitionRendering(),
+): void {
   new Namespace(chart, "mc-sandbox-namespace", {
     metadata: {
       name: MC_SANDBOX_NAMESPACE,
@@ -19,6 +24,9 @@ export function createMcSandboxNamespace(chart: Chart): void {
         "pod-security.kubernetes.io/enforce": "restricted",
         "pod-security.kubernetes.io/audit": "restricted",
         "pod-security.kubernetes.io/warn": "restricted",
+        // Under transition rendering Kueue's pod integration admits every
+        // sandbox pod through the CI node's `woodpecker` ClusterQueue.
+        ...(transition ? { [KUEUE_MANAGED_NAMESPACE_LABEL]: "true" } : {}),
       },
     },
   });

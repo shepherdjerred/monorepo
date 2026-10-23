@@ -888,3 +888,272 @@ describe("ArgoCD internal image downgrades", () => {
     ).toEqual([]);
   });
 });
+
+// A Zalando cluster accepts every one of these changes at the API server and
+// then acts on it: a major-version upgrade, a volume resize or replacement,
+// a scale to zero, dropped TLS, or dropped roles and databases. Each is a
+// human-run procedure, so a release carrying one is refused.
+const clusterSpec = {
+  numberOfInstances: 1,
+  postgresql: { version: "18" },
+  volume: { size: "384Gi", storageClass: "zfs-ssd" },
+  tls: { secretName: "temporal-postgresql-tls" },
+  users: { temporal: ["createdb"] },
+  databases: { temporal: "temporal", temporal_visibility: "temporal" },
+};
+
+function cluster(
+  targetSpec: Record<string, unknown>,
+  options: { forceReplace?: boolean; group?: string; kind?: string } = {},
+) {
+  return {
+    group: options.group ?? "acid.zalan.do",
+    kind: options.kind ?? "postgresql",
+    namespace: "temporal",
+    name: "temporal-postgresql",
+    liveState: state({ spec: clusterSpec }),
+    targetState: state({
+      ...(options.forceReplace === true
+        ? {
+            metadata: {
+              annotations: {
+                "argocd.argoproj.io/sync-options": "Force=true,Replace=true",
+              },
+            },
+          }
+        : {}),
+      spec: targetSpec,
+    }),
+  };
+}
+
+const clusterIdentity = "acid.zalan.do/postgresql temporal/temporal-postgresql";
+
+function withVolumeSize(size: string) {
+  return cluster({ ...clusterSpec, volume: { ...clusterSpec.volume, size } });
+}
+
+describe("ArgoCD PostgreSQL cluster safety", () => {
+  test("refuses a major-version change in either direction", () => {
+    expect(
+      analyzeApplySafety([
+        cluster({ ...clusterSpec, postgresql: { version: "19" } }),
+        {
+          ...cluster({ ...clusterSpec, postgresql: { version: "17" } }),
+          name: "older",
+        },
+      ]),
+    ).toEqual([
+      `${clusterIdentity} changes /spec/postgresql/version from 18 to 19; major-version changes use the reviewed upgrade procedure`,
+      "acid.zalan.do/postgresql temporal/older changes /spec/postgresql/version from 18 to 17; major-version changes use the reviewed upgrade procedure",
+    ]);
+  });
+
+  test("refuses a volume shrink, comparing quantities as bytes", () => {
+    expect(
+      analyzeApplySafety([
+        withVolumeSize("32Gi"),
+        // 384 decimal gigabytes are fewer bytes than 384 gibibytes.
+        withVolumeSize("384G"),
+        withVolumeSize("393215Mi"),
+      ]),
+    ).toEqual([
+      `${clusterIdentity} shrinks /spec/volume/size from 384Gi to 32Gi`,
+      `${clusterIdentity} shrinks /spec/volume/size from 384Gi to 384G`,
+      `${clusterIdentity} shrinks /spec/volume/size from 384Gi to 393215Mi`,
+    ]);
+  });
+
+  test("allows an equal or larger volume in any unit", () => {
+    expect(
+      analyzeApplySafety([
+        withVolumeSize("384Gi"),
+        withVolumeSize("393216Mi"),
+        withVolumeSize("412316860416"),
+        withVolumeSize("0.375Ti"),
+        withVolumeSize("512Gi"),
+        withVolumeSize("1T"),
+        withVolumeSize("5e11"),
+      ]),
+    ).toEqual([]);
+  });
+
+  test("fails closed on a quantity it cannot read", () => {
+    expect(() =>
+      analyzeApplySafety([
+        cluster({
+          ...clusterSpec,
+          volume: { ...clusterSpec.volume, size: "lots" },
+        }),
+      ]),
+    ).toThrow(
+      `Could not read quantity "lots" at /spec/volume/size for ${clusterIdentity}`,
+    );
+  });
+
+  test("refuses scaling the cluster to zero instances", () => {
+    expect(
+      analyzeApplySafety([
+        cluster({ ...clusterSpec, numberOfInstances: 0 }),
+        { ...cluster({ ...clusterSpec, numberOfInstances: 2 }), name: "grown" },
+      ]),
+    ).toEqual([
+      `${clusterIdentity} scales /spec/numberOfInstances from 1 to 0`,
+    ]);
+  });
+
+  test("refuses changing or dropping the volume's storage class", () => {
+    expect(
+      analyzeApplySafety([
+        cluster({
+          ...clusterSpec,
+          volume: { ...clusterSpec.volume, storageClass: "zfs-hdd" },
+        }),
+        {
+          ...cluster({ ...clusterSpec, volume: { size: "384Gi" } }),
+          name: "dropped",
+        },
+      ]),
+    ).toEqual([
+      `${clusterIdentity} changes /spec/volume/storageClass from zfs-ssd to zfs-hdd`,
+      "acid.zalan.do/postgresql temporal/dropped changes /spec/volume/storageClass from zfs-ssd to (omitted)",
+    ]);
+  });
+
+  test("refuses removing TLS from a cluster that serves it", () => {
+    const { tls: _tls, ...withoutTls } = clusterSpec;
+    expect(
+      analyzeApplySafety([
+        cluster(withoutTls),
+        { ...cluster({ ...clusterSpec, tls: null }), name: "nulled" },
+        {
+          ...cluster({
+            ...clusterSpec,
+            tls: { secretName: "temporal-postgresql-tls-v2" },
+          }),
+          name: "rotated",
+        },
+      ]),
+    ).toEqual([
+      `${clusterIdentity} removes /spec/tls`,
+      "acid.zalan.do/postgresql temporal/nulled removes /spec/tls",
+    ]);
+  });
+
+  test("refuses dropping any role or database, and allows additions", () => {
+    expect(
+      analyzeApplySafety([
+        cluster({ ...clusterSpec, users: {} }),
+        {
+          ...cluster({ ...clusterSpec, databases: { temporal: "temporal" } }),
+          name: "fewer-databases",
+        },
+        {
+          ...cluster({
+            ...clusterSpec,
+            users: { ...clusterSpec.users, reporter: [] },
+            databases: { ...clusterSpec.databases, reports: "reporter" },
+          }),
+          name: "grown",
+        },
+      ]),
+    ).toEqual([
+      `${clusterIdentity} removes /spec/users temporal`,
+      "acid.zalan.do/postgresql temporal/fewer-databases removes /spec/databases temporal_visibility",
+    ]);
+  });
+
+  test("allows an unchanged cluster and a newly created one", () => {
+    expect(
+      analyzeApplySafety([
+        cluster(clusterSpec),
+        {
+          group: "acid.zalan.do",
+          kind: "postgresql",
+          namespace: "delivery",
+          name: "delivery-postgresql",
+          targetState: state({ spec: clusterSpec }),
+        },
+      ]),
+    ).toEqual([]);
+  });
+
+  test("still refuses under a resource-scoped force replace", () => {
+    // Replacement skips the update-path checks, but recreating the cluster
+    // loses exactly the data these checks protect.
+    expect(
+      analyzeApplySafety([
+        cluster(
+          { ...clusterSpec, postgresql: { version: "19" }, users: {} },
+          { forceReplace: true },
+        ),
+      ]),
+    ).toEqual([
+      `${clusterIdentity} changes /spec/postgresql/version from 18 to 19; major-version changes use the reviewed upgrade procedure`,
+      `${clusterIdentity} removes /spec/users temporal`,
+    ]);
+  });
+
+  test("checks only the Zalando group", () => {
+    expect(
+      analyzeApplySafety([
+        cluster(
+          { ...clusterSpec, postgresql: { version: "19" } },
+          { group: "example.com" },
+        ),
+      ]),
+    ).toEqual([]);
+  });
+});
+
+function claim(
+  liveStorage: string,
+  targetStorage: string,
+  name = "data",
+  forceReplace = false,
+) {
+  return {
+    kind: "PersistentVolumeClaim",
+    namespace: "media",
+    name,
+    liveState: state({
+      spec: { resources: { requests: { storage: liveStorage } } },
+    }),
+    targetState: state({
+      ...(forceReplace
+        ? {
+            metadata: {
+              annotations: {
+                "argocd.argoproj.io/sync-options": "Force=true,Replace=true",
+              },
+            },
+          }
+        : {}),
+      spec: { resources: { requests: { storage: targetStorage } } },
+    }),
+  };
+}
+
+describe("ArgoCD PersistentVolumeClaim storage safety", () => {
+  test("refuses shrinking a claim and allows growth or no change", () => {
+    expect(
+      analyzeApplySafety([
+        claim("100Gi", "50Gi"),
+        claim("1Ti", "1000Gi", "decimal-looking"),
+        claim("8Gi", "8589934592", "bytes"),
+        claim("8Gi", "16Gi", "grown"),
+      ]),
+    ).toEqual([
+      "/PersistentVolumeClaim media/data shrinks /spec/resources/requests/storage from 100Gi to 50Gi",
+      "/PersistentVolumeClaim media/decimal-looking shrinks /spec/resources/requests/storage from 1Ti to 1000Gi",
+    ]);
+  });
+
+  test("refuses a shrink that a force replace would apply", () => {
+    expect(
+      analyzeApplySafety([claim("100Gi", "50Gi", "replaced", true)]),
+    ).toEqual([
+      "/PersistentVolumeClaim media/replaced shrinks /spec/resources/requests/storage from 100Gi to 50Gi",
+    ]);
+  });
+});

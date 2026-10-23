@@ -3,6 +3,12 @@ import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import { App } from "cdk8s";
 import { setupCharts } from "./setup-charts.ts";
+import { ARGOCD_SYNC_OPTIONS_ANNOTATION } from "./application-release-policy.ts";
+import { transitionRendering } from "./release-configuration.ts";
+import {
+  BASELINE_CHART_APPLICATIONS,
+  ROOT_CHART,
+} from "./resources/cluster-baseline/charts.ts";
 
 /**
  * Helm Compatibility Tests
@@ -39,6 +45,85 @@ async function synthesizeApp(): Promise<string> {
   const app = new App({ outdir: ".test-synth" });
   await setupCharts(app);
   return app.synthYaml();
+}
+
+/** Every synthesized resource with the chart that renders it. */
+async function synthesizeChartResources(): Promise<
+  { chart: string; resource: unknown }[]
+> {
+  const app = new App({ outdir: ".test-synth" });
+  await setupCharts(app);
+  return app.charts.flatMap((chart) =>
+    z
+      .array(z.unknown())
+      .parse(chart.toJson())
+      .map((resource) => ({ chart: chart.node.id, resource })),
+  );
+}
+
+/** Data-layer charts and the application chart each takes its cluster from. */
+const DATA_LAYER_CHARTS: Readonly<Record<string, string>> = {
+  "delivery-data": "delivery",
+  "temporal-data": "temporal",
+};
+
+function withoutRetention(resource: unknown): unknown {
+  const parsed = z
+    .looseObject({
+      metadata: z.looseObject({
+        annotations: z.record(z.string(), z.string()).optional(),
+      }),
+    })
+    .parse(resource);
+  const annotations = Object.fromEntries(
+    Object.entries(parsed.metadata.annotations ?? {}).filter(
+      ([key]) => key !== ARGOCD_SYNC_OPTIONS_ANNOTATION,
+    ),
+  );
+  return {
+    ...parsed,
+    metadata: {
+      ...parsed.metadata,
+      annotations:
+        Object.keys(annotations).length === 0 ? undefined : annotations,
+    },
+  };
+}
+
+/**
+ * The two duplications the Delivery v2 cutover declares: a cluster baseline
+ * chart mirroring the root's own object (`cluster-baseline.test.ts`), and,
+ * until transition rendering moves them, a data-layer chart rendering the
+ * application chart's database objects plus retention. Each pair must be the
+ * same object; anything else is an accidental duplicate.
+ */
+function isDeclaredMirror(
+  occurrences: readonly { chart: string; resource: unknown }[],
+): boolean {
+  if (occurrences.length !== 2) return false;
+  const [first, second] = occurrences;
+  if (first === undefined || second === undefined) return false;
+  const charts = new Set([first.chart, second.chart]);
+  if (
+    charts.has(ROOT_CHART) &&
+    [...BASELINE_CHART_APPLICATIONS].some((chart) => charts.has(chart))
+  )
+    return Bun.deepEquals(first.resource, second.resource, true);
+  const data = [first, second].find(
+    (occurrence) => DATA_LAYER_CHARTS[occurrence.chart] !== undefined,
+  );
+  const application = [first, second].find((occurrence) => occurrence !== data);
+  return (
+    !transitionRendering() &&
+    data !== undefined &&
+    application !== undefined &&
+    DATA_LAYER_CHARTS[data.chart] === application.chart &&
+    Bun.deepEquals(
+      withoutRetention(data.resource),
+      withoutRetention(application.resource),
+      true,
+    )
+  );
 }
 
 /**
@@ -251,28 +336,27 @@ describe("Helm Compatibility - Templates and Structure", () => {
   // Template syntax validation moved to helm-template.test.ts (reads from dist/ without synthesis)
 
   describe("Resource Uniqueness", () => {
-    it("should not have duplicate resources (same kind/name/namespace)", () => {
-      const resourceMap = new Map<string, { file: string }[]>();
-      const violations: {
-        resource: string;
-        files: string[];
-      }[] = [];
-
-      for (const { file, resource } of allResources) {
-        const namespace = resource.metadata?.namespace ?? "default";
-        const name = resource.metadata?.name ?? "unnamed";
-        const key = `${resource.kind}/${namespace}/${name}`;
-
-        const existingResources = resourceMap.get(key) ?? [];
-        existingResources.push({ file });
-        resourceMap.set(key, existingResources);
+    it("should not have duplicate resources (same kind/name/namespace)", async () => {
+      const resourceMap = new Map<
+        string,
+        { chart: string; resource: unknown }[]
+      >();
+      for (const { chart, resource } of await synthesizeChartResources()) {
+        const parsed = K8sResourceSchema.parse(resource);
+        const namespace = parsed.metadata?.namespace ?? "default";
+        const name = parsed.metadata?.name ?? "unnamed";
+        const key = `${parsed.kind}/${namespace}/${name}`;
+        const existing = resourceMap.get(key) ?? [];
+        existing.push({ chart, resource });
+        resourceMap.set(key, existing);
       }
 
+      const violations: { resource: string; charts: string[] }[] = [];
       for (const [key, occurrences] of resourceMap.entries()) {
-        if (occurrences.length > 1) {
+        if (occurrences.length > 1 && !isDeclaredMirror(occurrences)) {
           violations.push({
             resource: key,
-            files: occurrences.map((o) => o.file),
+            charts: occurrences.map((o) => o.chart),
           });
         }
       }

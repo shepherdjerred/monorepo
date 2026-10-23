@@ -2,6 +2,7 @@ import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 export function createIntelGpuDevicePluginApp(chart: Chart) {
   const intelGpuValues: HelmValuesForChart<"intel-device-plugins-operator"> = {
     sharedDevNum: 10,
@@ -15,7 +16,7 @@ export function createIntelGpuDevicePluginApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("intel-gpu-device-plugin"),
       source: {
         // https://github.com/intel/helm-charts/tree/main/charts/gpu-device-plugin
         repoUrl: "https://intel.github.io/helm-charts/",

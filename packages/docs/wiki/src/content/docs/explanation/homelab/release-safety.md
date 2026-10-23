@@ -317,13 +317,21 @@ and field instead of a partially applied sync. The preflight does not invent a
 fallback or silently replace resources; remediation remains an explicit source
 or operator decision.
 
+Some changes pass the API server and still destroy data. The preflight refuses
+a Zalando PostgreSQL cluster change that switches its major version or volume
+storage class, shrinks its volume, scales it to zero, or drops its TLS, roles,
+or databases. It also refuses any claim whose storage request shrinks. Each is
+a human-run procedure, never a side effect of a release. The rules live in
+`packages/homelab/scripts/argocd/argocd-destructive-changes.ts`.
+
 A target resource may make that decision explicit with both `Force=true` and
 `Replace=true` in its `argocd.argoproj.io/sync-options` annotation. Argo deletes
 and recreates that one resource instead of patching it, so immutable-field and
 probe-handler update checks do not apply to it. The preflight still checks
-repository image downgrades, and either option by itself remains insufficient.
-This exception is deliberately resource-scoped; Application-wide replacement
-does not bypass the check.
+repository image downgrades and destructive data changes, because recreating a
+database or claim loses exactly what those checks protect. Either option by
+itself remains insufficient. This exception is deliberately resource-scoped;
+Application-wide replacement does not bypass the check.
 
 Every desired automated policy includes an explicit `enabled` boolean. The
 [release policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/application-release-policy.ts)

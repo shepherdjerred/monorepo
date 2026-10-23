@@ -3,17 +3,21 @@ import { Namespace } from "cdk8s-plus-31";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 // NodePort for mc-router to accept all Minecraft connections
 const MC_ROUTER_NODE_PORT = 30_000;
 
-export function createMcRouterApp(chart: Chart) {
-  // Create namespace
+export function createMcRouterNamespace(chart: Chart): void {
   new Namespace(chart, "mc-router-namespace", {
     metadata: {
       name: "mc-router",
     },
   });
+}
+
+export function createMcRouterApp(chart: Chart) {
+  createMcRouterNamespace(chart);
 
   const mcRouterValues: HelmValuesForChart<"mc-router"> = {
     image: { tag: versions["itzg/mc-router"], pullPolicy: "IfNotPresent" },
@@ -65,7 +69,7 @@ export function createMcRouterApp(chart: Chart) {
     },
     spec: {
       revisionHistoryLimit: 5,
-      project: "default",
+      project: applicationProject("mc-router"),
       source: {
         repoUrl: "https://itzg.github.io/minecraft-server-charts/",
         targetRevision: versions["mc-router"],

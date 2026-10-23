@@ -159,14 +159,8 @@ function gatewayContainer(props: GatewayContainerProps) {
   };
 }
 
-export function createMonitoringAuthGateways(chart: Chart) {
-  const auth = new OnePasswordItem(chart, "monitoring-api-auth-onepassword", {
-    spec: { itemPath: vaultItemPath("gnx5xq5rrsdlncvajjc4i577gm") },
-    metadata: {
-      name: "prometheus-monitoring-api-auth",
-      namespace: "prometheus",
-    },
-  });
+/** The Caddyfiles each authenticated gateway sidecar mounts. */
+export function createMonitoringAuthGatewayConfigs(chart: Chart) {
   const prometheusConfig = new ConfigMap(
     chart,
     "prometheus-auth-gateway-config",
@@ -189,6 +183,19 @@ export function createMonitoringAuthGateways(chart: Chart) {
       data: { Caddyfile: ALERTMANAGER_GATEWAY_CONFIG },
     },
   );
+  return { prometheusConfig, alertmanagerConfig };
+}
+
+export function createMonitoringAuthGateways(chart: Chart) {
+  const auth = new OnePasswordItem(chart, "monitoring-api-auth-onepassword", {
+    spec: { itemPath: vaultItemPath("gnx5xq5rrsdlncvajjc4i577gm") },
+    metadata: {
+      name: "prometheus-monitoring-api-auth",
+      namespace: "prometheus",
+    },
+  });
+  const { prometheusConfig, alertmanagerConfig } =
+    createMonitoringAuthGatewayConfigs(chart);
 
   const prometheusContainer = gatewayContainer({
     name: "authenticated-gateway",

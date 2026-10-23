@@ -8,6 +8,7 @@ import { createBugsinkChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-char
 import { createPhoenixChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/phoenix.ts";
 import { createPostalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/postal.ts";
 import { createTemporalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
+import { createTemporalDataChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal-data.ts";
 import { createWoodpeckerChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/woodpecker.ts";
 import { POSTGRES_CLUSTER_NAME_LABEL } from "./cluster-label.ts";
 
@@ -70,6 +71,7 @@ function selectors(policy: NetworkPolicy): Record<string, string>[] {
 describe("database NetworkPolicy selectors", () => {
   it.each([
     ["temporal", createTemporalChart, "temporal-postgresql"],
+    ["temporal-data", createTemporalDataChart, "temporal-postgresql"],
     ["bugsink", createBugsinkChart, "bugsink-postgresql"],
     ["phoenix", createPhoenixChart, "phoenix-postgresql"],
     ["woodpecker", createWoodpeckerChart, "woodpecker-postgresql"],
