@@ -293,7 +293,46 @@ export type ProviderGateSnapshot = {
   skipReason?: string | null;
   /** Provider-side block slug (e.g. "usage-limited"), or null. */
   blockedReason?: string | null;
+  /** The provider already finished a review of an earlier commit. */
+  priorRound?: boolean;
 };
+
+/** After a provider's first round, only an unresolved P0 blocks. */
+const AFTER_FIRST_ROUND: BlockingPolicy = {
+  alwaysBlockingPriority: 0,
+  maxBlockingPriority: 0,
+  lowSeverity: "always",
+};
+
+/**
+ * How a provider is judged on this head.
+ *
+ * The first round is the full quality pass. Once a provider has finished one,
+ * later heads never wait on it — a re-review that is slow, quota-blocked, or
+ * signalled in a way the gate misses must not hold a pull request — and only
+ * an unresolved P0 still blocks. P1 and lower findings from later rounds stay
+ * posted as advice.
+ */
+export function judgedSnapshot(
+  snapshot: ProviderGateSnapshot,
+  policy: BlockingPolicy,
+): {
+  reviewState: ReviewState;
+  policy: BlockingPolicy;
+  blockedReason: string | null;
+} {
+  if (snapshot.priorRound !== true)
+    return {
+      reviewState: snapshot.reviewState,
+      policy,
+      blockedReason: snapshot.blockedReason ?? null,
+    };
+  return {
+    reviewState: "reviewed",
+    policy: AFTER_FIRST_ROUND,
+    blockedReason: null,
+  };
+}
 
 /**
  * Unresolved P0 threads standing anywhere across the enabled providers.
@@ -344,18 +383,21 @@ export function evaluateMultiGate(input: {
   if (providers.length === 0) {
     throw new Error("evaluateMultiGate needs at least one provider snapshot");
   }
-  const evaluated = providers.map((snapshot) => ({
-    snapshot,
-    decision: evaluateGate({
-      head,
-      provider: snapshot.provider,
-      reviewState: snapshot.reviewState,
-      threads: snapshot.threads,
-      policy,
-      skipReason: snapshot.skipReason ?? null,
-      blockedReason: snapshot.blockedReason ?? null,
-    }),
-  }));
+  const evaluated = providers.map((snapshot) => {
+    const judged = judgedSnapshot(snapshot, policy);
+    return {
+      snapshot,
+      decision: evaluateGate({
+        head,
+        provider: snapshot.provider,
+        reviewState: judged.reviewState,
+        threads: snapshot.threads,
+        policy: judged.policy,
+        skipReason: snapshot.skipReason ?? null,
+        blockedReason: judged.blockedReason,
+      }),
+    };
+  });
 
   const vetoes = vetoThreads(providers);
   // A skip is not a review. A provider that declined the PR (Greptile's

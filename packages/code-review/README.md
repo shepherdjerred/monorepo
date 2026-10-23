@@ -22,8 +22,10 @@ A `ReviewProvider` (see `src/types.ts`) declares everything consumers need:
     reviewed commit (Greptile).
   - `review-at-head`: the provider posts a PR review whose
     `commit_id === head`; because a clean PR leaves no review artifact,
-    `cleanSignal: "thumbsup-reaction"` detects "reviewed, nothing to flag"
-    (Codex). `cleanSignal: "none"` declares the provider always posts a
+    `cleanSignal` says how "reviewed, nothing to flag" is detected. Codex
+    accepts either its receipt comment ("Didn't find any major issues", naming
+    the reviewed commit by a 10-character abbreviation) or a head-bound 👍
+    reaction; it often posts only one. `cleanSignal: "none"` declares the provider always posts a
     review object, so a missing review means "not reviewed yet". CodeRabbit
     also accepts its completed clean comment: trusted bot identity, a fresh
     timestamp, an explicit no-actionable-comments result, and final coverage

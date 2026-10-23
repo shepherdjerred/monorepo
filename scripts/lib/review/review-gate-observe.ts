@@ -11,6 +11,7 @@
 import {
   type BlockingPolicy,
   evaluateGate,
+  judgedSnapshot,
   type GateDecision,
   type PullRequestAuthor,
   type ReviewProvider,
@@ -157,14 +158,25 @@ export async function observeProviderOnce(input: {
     blockedReason: state.blockedReason,
   });
 
+  // The same per-round rule the combined decision applies.
+  const judged = judgedSnapshot(
+    {
+      provider,
+      reviewState: state.state,
+      threads: threadResult.threads,
+      blockedReason: state.blockedReason,
+      priorRound: state.priorRound ?? false,
+    },
+    policy,
+  );
   const decision = evaluateGate({
     head,
     provider,
-    reviewState: state.state,
+    reviewState: judged.reviewState,
     threads: threadResult.threads,
-    policy,
+    policy: judged.policy,
     skipReason: state.skipReason,
-    blockedReason: state.blockedReason,
+    blockedReason: judged.blockedReason,
   });
 
   return {

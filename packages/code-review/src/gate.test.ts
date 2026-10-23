@@ -833,3 +833,79 @@ describe("evaluateMultiGate — skipped providers", () => {
     ).toThrow(/at least one provider/);
   });
 });
+
+describe("after a provider's first round", () => {
+  const head = "abc123";
+
+  test("a pending re-review with an open P1 does not block", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({
+          provider: codexProvider,
+          reviewState: "reviewing",
+          priorRound: true,
+          threads: [thread({ priority: 1 })],
+        }),
+      ],
+    });
+    expect(d.state).toBe("passed");
+  });
+
+  test("an open P0 still fails", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({
+          provider: codexProvider,
+          reviewState: "reviewing",
+          priorRound: true,
+          threads: [thread({ priority: 0 })],
+        }),
+      ],
+    });
+    expect(d.state).toBe("failed");
+  });
+
+  test("a quota-blocked re-review does not block", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({
+          provider: codexProvider,
+          reviewState: "errored",
+          blockedReason: "usage-limited",
+          priorRound: true,
+        }),
+      ],
+    });
+    expect(d.state).toBe("passed");
+  });
+
+  test("the first round still waits and still blocks on P1", () => {
+    expect(
+      evaluateMultiGate({
+        head,
+        policy: policy(),
+        providers: [
+          snapshot({ provider: codexProvider, reviewState: "reviewing" }),
+        ],
+      }).state,
+    ).toBe("waiting");
+    expect(
+      evaluateMultiGate({
+        head,
+        policy: policy(),
+        providers: [
+          snapshot({
+            provider: codexProvider,
+            threads: [thread({ priority: 1 })],
+          }),
+        ],
+      }).state,
+    ).toBe("failed");
+  });
+});

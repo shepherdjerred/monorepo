@@ -143,7 +143,17 @@ export type CompletionStrategy =
         | "none"
         | {
             marker: string;
+            /**
+             * The reviewed commit the comment names — the full SHA or an
+             * abbreviation of at least seven characters — or null when the
+             * comment is not a completed, clean review.
+             */
             parseReviewedHead: (body: string) => string | null;
+            /**
+             * Also accept the provider's head-bound 👍 reaction, for a
+             * provider that signals a clean review either way (Codex).
+             */
+            alsoThumbsUpReaction?: boolean;
           };
     }
   | {

@@ -1,14 +1,33 @@
 import { parseCodexSeverity } from "../severity.ts";
 import type { ReviewProvider } from "../types.ts";
 
+const RECEIPT_MARKER = "<!-- codex-review-receipt:v1 -->";
+
+/**
+ * The commit a clean Codex review receipt names, or null.
+ *
+ * Codex answers a clean review with an issue comment — "Codex Review: Didn't
+ * find any major issues." and "**Reviewed commit:** `<sha>`" — and sometimes
+ * no 👍 at all, so a gate that only watched the reaction timed out on a PR
+ * Codex had already passed (#4014). Only the clean wording counts; the SHA is
+ * a 10-character abbreviation.
+ */
+export function parseCodexReceiptHead(body: string): string | null {
+  if (!body.includes(RECEIPT_MARKER)) return null;
+  if (!/Codex Review: Didn['’]t find any major issues/u.test(body)) return null;
+  const match = /\*\*Reviewed commit:\*\*\s*`([0-9a-f]{7,40})`/iu.exec(body);
+  return match?.[1]?.toLowerCase() ?? null;
+}
+
 /**
  * Codex (OpenAI's `chatgpt-codex-connector` GitHub app) — the active reviewer.
  *
  * Completion: Codex posts NO check-run and NO commit status. It submits a PR
  * *review* whose `commit_id` is the reviewed commit (body starts
  * `### 💡 Codex Review`), and it auto-re-reviews on push. On a clean PR it
- * leaves no review object — only a 👍 reaction — so `cleanSignal` tells the
- * gate to treat a 👍 from the connector as "reviewed, nothing to flag".
+ * leaves no review object — only a receipt comment naming the reviewed commit,
+ * usually with a 👍 reaction — so `cleanSignal` accepts either as "reviewed,
+ * nothing to flag".
  *
  * Severity: Codex flags P0..P2 via shields.io badges (`![P2 Badge](…)`); the
  * docs claim P0/P1-only but live PRs show P2, so we keep the full P0..P3 range.
@@ -30,7 +49,14 @@ export const codexProvider: ReviewProvider = {
   parseFindingTitle: null,
   findingKey: null,
   parseReviewBodyFindings: null,
-  completion: { kind: "review-at-head", cleanSignal: "thumbsup-reaction" },
+  completion: {
+    kind: "review-at-head",
+    cleanSignal: {
+      marker: RECEIPT_MARKER,
+      parseReviewedHead: parseCodexReceiptHead,
+      alsoThumbsUpReaction: true,
+    },
+  },
   detectSkip: null,
   // When the account's review quota is exhausted Codex answers with an issue
   // comment instead of a review, so without this the gate polls to its
