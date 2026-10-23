@@ -9,6 +9,7 @@ import {
   type VoiceAudioInput,
 } from "@shepherdjerred/voice-assistant";
 import type { AbilitySlot } from "@scout-for-lol/data";
+import type { DeliverVoiceConfirmations } from "#src/voice-assistant/confirmations.ts";
 import {
   VOICE_FRAGMENT_TAIL_MS,
   VOICE_MAX_UTTERANCE_MS,
@@ -82,6 +83,8 @@ export type ScoutVoiceSessionOptions = {
   readonly transcribe?: typeof transcribeVoiceQuestion;
   readonly synthesize?: typeof synthesizeVoiceAnswer;
   readonly startExplore?: typeof startVoiceExplore;
+  /** Send the speaker the Confirm buttons a spoken answer prepared. */
+  readonly deliverConfirmations?: DeliverVoiceConfirmations;
   readonly audioRequestTimeoutMs?: number;
   readonly now?: () => number;
   readonly setTimer?: (
@@ -377,6 +380,7 @@ export class ScoutVoiceSession {
         guildId: this.options.guildId,
         question: input.resolved.command,
         conversationId: this.conversations.get(input.turn.userId) ?? null,
+        deliverConfirmations: this.options.deliverConfirmations,
         username: profile.username,
         avatar: profile.avatar,
       });

@@ -121,6 +121,12 @@ export type OfflineTrpcHarness = {
     guildId: DiscordGuildId,
     discordIds: readonly DiscordAccountId[],
   ) => void;
+  /**
+   * Make Scout's bot report `guildId` as installed and owned by `ownerId`, for
+   * code that resolves permissions through the bot (`/scout ask`, voice and
+   * their confirm buttons) rather than through a web session.
+   */
+  setGuildOwner: (guildId: DiscordGuildId, ownerId: DiscordAccountId) => void;
 };
 
 // An array whose `.find()` always yields an admin guild, so the actor is
@@ -155,7 +161,8 @@ export async function createOfflineTrpcHarness(
   const state: {
     membership: MembershipConfig;
     guildMembers: Map<string, Set<string>>;
-  } = { membership: "root", guildMembers: new Map() };
+    guildOwners: Map<string, string>;
+  } = { membership: "root", guildMembers: new Map(), guildOwners: new Map() };
   const toPartialGuilds = (): PartialGuild[] =>
     state.membership === "root"
       ? rootMembership()
@@ -213,6 +220,14 @@ export async function createOfflineTrpcHarness(
   // hanging on the network.
   vi.doMock("#src/lib/discord/bot-rest.ts", () => ({
     botRest: () => ({
+      guild: (guildId: DiscordGuildId) => {
+        const owner = state.guildOwners.get(guildId);
+        return Promise.resolve(
+          owner === undefined
+            ? null
+            : { id: guildId, name: "test-guild", owner_id: owner },
+        );
+      },
       guildExists: (guildId: DiscordGuildId) =>
         Promise.resolve(
           state.membership === "root" || installedGuildIds().has(guildId),
@@ -306,6 +321,13 @@ export async function createOfflineTrpcHarness(
     state.guildMembers.set(guildId, new Set(discordIds));
   };
 
+  const setGuildOwner = (
+    guildId: DiscordGuildId,
+    ownerId: DiscordAccountId,
+  ) => {
+    state.guildOwners.set(guildId, ownerId);
+  };
+
   return {
     prisma,
     dbPath,
@@ -314,5 +336,6 @@ export async function createOfflineTrpcHarness(
     anonCaller,
     setMembership,
     setGuildMembers,
+    setGuildOwner,
   };
 }

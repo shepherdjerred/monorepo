@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   DiscordGuildIdSchema,
   type DiscordGuildId,
@@ -174,6 +175,49 @@ describe("Scout public publishing", () => {
     // The private reply keeps its follow-up buttons after posting.
     expect(JSON.stringify(fake.edits)).toContain(
       "Which champion has the most games?",
+    );
+  });
+
+  test("keeps the Confirm button on the private reply after posting", async () => {
+    const saved = await savedAnswer();
+    const row = await prisma.exploreMessage.findUniqueOrThrow({
+      where: { id: saved.assistantMessageId },
+    });
+    const trace = z.array(z.unknown()).parse(JSON.parse(row.trace ?? "[]"));
+    trace.push({
+      toolCallId: "call-prepare",
+      toolName: "prepare_report_creation",
+      message: "Prepared",
+      status: "succeeded",
+      durationMs: 1,
+      details: null,
+      rawInput: null,
+      rawOutput: {
+        kind: "value",
+        byteLength: 10,
+        value: {
+          kind: "creation_confirmation_required",
+          message: "Nothing has been created yet.",
+          intent: {
+            intentId: "00000000-0000-4000-8000-000000000091",
+            kind: "report",
+            guildId: "100000000000000091",
+            expiresAt: "2026-10-22T12:10:00.000Z",
+            summary: 'Report "Weekly"',
+          },
+        },
+      },
+    });
+    await prisma.exploreMessage.update({
+      where: { id: row.id },
+      data: { trace: JSON.stringify(trace) },
+    });
+    const fake = fakeInteraction({
+      customId: formatScoutPublishCustomId(saved),
+    });
+    await handleScoutPublishButton(fake.interaction, prisma);
+    expect(JSON.stringify(fake.edits)).toContain(
+      String.raw`Confirm: Report \"Weekly\"`,
     );
   });
 

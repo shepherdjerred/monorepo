@@ -124,3 +124,39 @@ export function parseScoutFollowUpCustomId(
   });
   return parsed.success ? parsed.data : undefined;
 }
+
+const ScoutCreateCustomIdSchema = z.strictObject({ intentId: z.uuid() });
+export type ScoutCreateCustomId = z.infer<typeof ScoutCreateCustomIdSchema>;
+
+/**
+ * `scout:1:create:<intentId>` — confirm a creation Explore prepared.
+ *
+ * Carries only the intent id: the confirm path reads the guild, the payload
+ * and the actor off the intent row and re-authorizes the clicker, so nothing
+ * in the id is trusted.
+ */
+export function formatScoutCreateCustomId(input: ScoutCreateCustomId): string {
+  const parsed = ScoutCreateCustomIdSchema.parse(input);
+  return [
+    SCOUT_COMPONENT_NAMESPACE,
+    SCOUT_COMPONENT_VERSION,
+    "create",
+    parsed.intentId,
+  ].join(":");
+}
+
+export function parseScoutCreateCustomId(
+  raw: string,
+): ScoutCreateCustomId | undefined {
+  const [namespace, version, action, intentId, ...rest] = raw.split(":");
+  if (
+    namespace !== SCOUT_COMPONENT_NAMESPACE ||
+    version !== SCOUT_COMPONENT_VERSION ||
+    action !== "create" ||
+    rest.length > 0
+  ) {
+    return undefined;
+  }
+  const parsed = ScoutCreateCustomIdSchema.safeParse({ intentId });
+  return parsed.success ? parsed.data : undefined;
+}

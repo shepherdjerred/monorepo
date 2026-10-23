@@ -9,6 +9,11 @@ import { prisma } from "#src/database/index.ts";
 import { exploreRunManager } from "#src/explore/runs/run-manager.ts";
 import { subscribeDurableExploreRun } from "#src/explore/runs/durable-runs.ts";
 import { loadExploreRunResult } from "#src/explore/store.ts";
+import {
+  offerVoiceConfirmations,
+  UNDELIVERED_CONFIRMATION_NOTE,
+  type DeliverVoiceConfirmations,
+} from "#src/voice-assistant/confirmations.ts";
 
 export type VoiceExploreCompletion =
   | { outcome: "succeeded"; answer: ExploreMessage; spokenContent: string }
@@ -51,6 +56,8 @@ async function completedVoiceExplore(input: {
   runId: string;
   conversationId: string;
   userId: DiscordAccountId;
+  guildId: DiscordGuildId;
+  deliverConfirmations: DeliverVoiceConfirmations | undefined;
 }): Promise<VoiceExploreCompletion> {
   const outcome = await waitForOutcome(input.runId, input.userId);
   try {
@@ -62,10 +69,21 @@ async function completedVoiceExplore(input: {
     if (result.spokenContent === null) {
       throw new Error("Succeeded Voice Explore run has no spoken answer");
     }
+    // A spoken answer has nowhere to show a confirmation card, so the speaker
+    // gets its Confirm button by DM.
+    const delivery = await offerVoiceConfirmations({
+      deliver: input.deliverConfirmations,
+      userId: input.userId,
+      answer: result.answer,
+      guildId: input.guildId,
+    });
     return {
       outcome,
       answer: result.answer,
-      spokenContent: result.spokenContent,
+      spokenContent:
+        delivery === "not_sent"
+          ? `${result.spokenContent} ${UNDELIVERED_CONFIRMATION_NOTE}`
+          : result.spokenContent,
     };
   } finally {
     exploreRunManager.settleDurablePlaceholder(input.runId, outcome);
@@ -79,6 +97,8 @@ export async function startVoiceExplore(input: {
   conversationId: string | null;
   username: string;
   avatar: string | null;
+  /** Sends the speaker any Confirm buttons the answer prepared. */
+  deliverConfirmations?: DeliverVoiceConfirmations | undefined;
 }): Promise<StartedVoiceExplore> {
   const userId = DiscordAccountIdSchema.parse(input.userId);
   await prisma.user.upsert({
@@ -109,6 +129,8 @@ export async function startVoiceExplore(input: {
       runId: run.runId,
       conversationId: run.conversationId,
       userId,
+      guildId: input.guildId,
+      deliverConfirmations: input.deliverConfirmations,
     }),
   };
 }

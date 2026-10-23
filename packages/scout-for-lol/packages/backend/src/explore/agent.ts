@@ -23,6 +23,12 @@ import { exploreModel, exploreAnalysisEnabled } from "#src/config/dynamic.ts";
 import { createExploreTools, type RunState } from "#src/explore/agent-tools.ts";
 import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
 import { resolveCreationCapability } from "#src/explore/creation/capability.ts";
+import { prisma } from "#src/database/index.ts";
+import {
+  creationIntentReplayContext,
+  loadCreationIntentStates,
+  type CreationIntentState,
+} from "#src/explore/creation/intent-replay.ts";
 import {
   exploreAskerSection,
   loadExploreAsker,
@@ -185,7 +191,10 @@ async function streamExploreAgentInternal(
   });
 
   const stream = await agent.stream({
-    messages: buildMessages(params),
+    messages: buildMessages(
+      params,
+      await loadCreationIntentStates(prisma, params.history, new Date()),
+    ),
     abortSignal: params.abortSignal,
   });
 
@@ -378,18 +387,21 @@ export function loadoutCardReplayContext(
  */
 export function buildMessages(
   params: ExploreAgentParams,
+  intentStates: ReadonlyMap<string, CreationIntentState> = new Map(),
 ): ExploreModelMessage[] {
   const recent = params.history.slice(-EXPLORE_MAX_HISTORY_TURNS * 2);
-  const messages = recent.map((message): ExploreModelMessage =>
-    message.role === "assistant"
-      ? {
-          role: "assistant",
-          content:
-            message.queryText === null
-              ? `${message.content}${matchCardReplayContext(message.matchCards)}${loadoutCardReplayContext(message.loadoutCards)}`
-              : `${message.content}\n\n[ScoutQL used]\n${message.queryText}${matchCardReplayContext(message.matchCards)}${loadoutCardReplayContext(message.loadoutCards)}`,
-        }
-      : { role: "user", content: message.content },
-  );
+  const messages = recent.map((message): ExploreModelMessage => {
+    if (message.role !== "assistant") {
+      return { role: "user", content: message.content };
+    }
+    const query =
+      message.queryText === null
+        ? ""
+        : `\n\n[ScoutQL used]\n${message.queryText}`;
+    return {
+      role: "assistant",
+      content: `${message.content}${query}${matchCardReplayContext(message.matchCards)}${loadoutCardReplayContext(message.loadoutCards)}${creationIntentReplayContext(message.trace, intentStates)}`,
+    };
+  });
   return [...messages, { role: "user", content: params.question }];
 }

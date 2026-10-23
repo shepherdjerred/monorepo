@@ -1,0 +1,347 @@
+/**
+ * Confirming an entity an Explore agent prepared — the one path every surface
+ * uses.
+ *
+ * The security model in one line: **the model never writes domain state.** It
+ * may mint an intent describing a report, subscription or competition; a human
+ * confirms it, and this path re-runs the whole authorization decision from
+ * scratch. Nothing the model produced is trusted — not the guild (read off the
+ * intent row), not the permissions (re-resolved now), not the channel
+ * (re-checked against the guild), and not the feature gate (re-read, so
+ * revoking it blocks intents that were already prepared).
+ *
+ * The web confirms through a CSRF-protected tRPC mutation with the person's
+ * OAuth session; Discord confirms through a button that only its clicker can
+ * press. They differ only in the {@link CreationConfirmer} they pass: where
+ * the actor's servers and permissions come from, and what request metadata the
+ * audit row carries. Claim, execution, audit and post-commit work are shared,
+ * so a confirmation means the same thing wherever it was clicked.
+ */
+
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+import {
+  DiscordGuildIdSchema,
+  P,
+  type ConfirmationIntentPayload,
+  type CreationIntentKind,
+  type CreationIntentPayload,
+  type DiscordAccountId,
+  type DiscordGuildId,
+  type Permission,
+  type PermissionDeniedCause,
+  type PermissionSet,
+} from "@scout-for-lol/data";
+import type { ConfirmationIntent } from "#generated/prisma/client/index.js";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
+import { prisma, type Db } from "#src/database/index.ts";
+import { captureFirstSubscriptionCreated } from "#src/analytics/guild-lifecycle.ts";
+import type { SubscriptionSurface } from "#src/analytics/product-analytics.ts";
+import { recordAudit } from "#src/lib/audit/index.ts";
+import {
+  claimAndExecute,
+  type ClaimRefusal,
+} from "#src/lib/confirmation-intent/claim.ts";
+import { InitialEntrantsValidationError } from "#src/database/competition/participants.ts";
+import { asCompetitionBadRequest } from "#src/trpc/router/competitions/competition-router-helpers.ts";
+import {
+  executeCreationIntent,
+  type CreationIntentOutcome,
+  type CreationPostCommit,
+} from "#src/lib/confirmation-intent/creation.ts";
+import { readConfirmationIntentPayload } from "#src/lib/confirmation-intent/payload.ts";
+import { recordCompetitionCreation } from "#src/lib/competitions/create.ts";
+import { runBackfillAfterCommit } from "#src/lib/subscription/add.ts";
+import { notifyReportScheduleReconciler } from "#src/reports/schedule/temporal-schedules.ts";
+import { assertChannelInGuild } from "#src/trpc/guild-guard.ts";
+import { requireActorIntent } from "#src/trpc/router/explore/explore-intent-access.ts";
+
+/** Who is confirming, and how this surface learns what they may do. */
+export type CreationConfirmer = {
+  readonly actorId: DiscordAccountId;
+  /** The servers whose intents this actor may see. */
+  readonly guildIds: readonly DiscordGuildId[];
+  /** The actor's permissions in one guild, resolved now. Throws as the resolvers do. */
+  readonly resolvePermissions: (
+    guildId: DiscordGuildId,
+  ) => Promise<PermissionSet>;
+  readonly ipAddress: string | null;
+  readonly userAgent: string | null;
+  readonly surface: SubscriptionSurface;
+};
+
+/** The permission each creation kind requires, in the guild on the intent. */
+export const CREATE_PERMISSION: Record<CreationIntentKind, Permission> = {
+  report: P("reports", "create"),
+  subscription: P("subscriptions", "create"),
+  competition: P("competitions", "create"),
+};
+
+export type LoadedCreationIntent = {
+  intent: ConfirmationIntent;
+  payload: CreationIntentPayload;
+  /** The guild on the intent row — authoritative for every later check. */
+  guildId: DiscordGuildId;
+  userId: DiscordAccountId;
+};
+
+/**
+ * Narrow a stored payload to a creation payload, or `null`.
+ *
+ * Switching on the discriminant rather than validating the string separately is
+ * what lets TypeScript narrow the union without an assertion.
+ */
+function asCreationPayload(
+  payload: ConfirmationIntentPayload,
+): CreationIntentPayload | null {
+  switch (payload.kind) {
+    case "report":
+    case "subscription":
+    case "competition": {
+      return payload;
+    }
+    case "dare_fund":
+    case "dare_accept":
+    case "dare_decline":
+    case "dare_contribute":
+    case "dare_cancel":
+    case "ops_reconcile_pipeline":
+    case "ops_retry_notification":
+    case "ops_suppress_stale_notification":
+    case "ops_resolve_unknown_delivery":
+    case "ops_resolve_report_delivery":
+    case "ops_repair_projection":
+    case "ops_release_recovery_policy": {
+      return null;
+    }
+  }
+}
+
+/**
+ * Prove the confirmer may see this intent at all, that the feature is still
+ * enabled for its guild, and that it really is a creation intent.
+ */
+export async function loadCreationIntent(
+  confirmer: Pick<CreationConfirmer, "actorId" | "guildIds">,
+  intentId: string,
+): Promise<LoadedCreationIntent> {
+  const userId = confirmer.actorId;
+  const intent = await requireActorIntent({
+    intentId,
+    guildIds: [...confirmer.guildIds],
+    userId,
+  });
+  const guildId = DiscordGuildIdSchema.parse(intent.serverId);
+  const payload = asCreationPayload(readConfirmationIntentPayload(intent));
+  if (payload === null) {
+    // A dare intent has its own confirm path with its own rules; it must not
+    // be executable through this one.
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "That confirmation does not create anything.",
+    });
+  }
+  if (payload.guildId !== guildId) {
+    // The mint path derives the column from the payload, so a disagreement is
+    // a broken writer rather than user input — fail loudly instead of picking
+    // a side.
+    throw new Error(
+      `Confirmation intent ${intent.id} stores guild ${intent.serverId} but its payload declares ${payload.guildId}.`,
+    );
+  }
+  return { intent, payload, guildId, userId };
+}
+
+/** Explore creation is an operator switch, read now rather than when prepared. */
+export async function requireCreationEnabled(
+  guildId: DiscordGuildId,
+): Promise<void> {
+  if (!(await isPolicyEnabled("explore_creation_enabled", { server: guildId })))
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Creating things from Explore is not enabled for this server.",
+    });
+}
+
+/**
+ * The authoritative RBAC decision, re-run now.
+ *
+ * The confirmer's resolver throws by itself for a non-member (FORBIDDEN), an
+ * uninstalled guild (NOT_FOUND), and a Discord outage (UNAUTHORIZED /
+ * SERVICE_UNAVAILABLE). Those propagate untouched: an outage is not a
+ * permission answer and must never be reported as one.
+ */
+async function authorizeCreation(
+  confirmer: CreationConfirmer,
+  loaded: LoadedCreationIntent,
+): Promise<PermissionSet> {
+  const permissions = await confirmer.resolvePermissions(loaded.guildId);
+  const required = CREATE_PERMISSION[loaded.payload.kind];
+  if (!permissions.canAny(required)) {
+    const cause: PermissionDeniedCause = { missingPermission: required };
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: `Missing permission ${required.resource}:${required.action}`,
+      cause,
+    });
+  }
+  // The competition sub-gates (competitions:invite / competitions:schedule) and
+  // the creation rate limit live inside `createCompetitionForActor`, which
+  // receives this same PermissionSet — re-checking them here would be a second
+  // copy of a reviewed policy.
+  await assertChannelInGuild({
+    guildId: loaded.guildId,
+    channelId: loaded.payload.channelId,
+  });
+  return permissions;
+}
+
+async function runPostCommit(params: {
+  surface: SubscriptionSurface;
+  postCommit: CreationPostCommit | null;
+  permissions: PermissionSet;
+  guildId: DiscordGuildId;
+  ownerId: DiscordAccountId;
+  initialHistoryImportEnabled: boolean;
+}): Promise<void> {
+  const { postCommit } = params;
+  if (postCommit === null) return;
+  if (postCommit.kind === "report") {
+    await notifyReportScheduleReconciler();
+    return;
+  }
+  if (postCommit.kind === "competition") {
+    recordCompetitionCreation({
+      permissions: params.permissions,
+      guildId: params.guildId,
+      ownerId: params.ownerId,
+    });
+    return;
+  }
+  if (postCommit.firstSubscription) {
+    await captureFirstSubscriptionCreated(params.guildId, params.surface);
+  }
+  if (!params.initialHistoryImportEnabled) {
+    void runBackfillAfterCommit({
+      alias: postCommit.alias,
+      puuid: postCommit.puuid,
+      region: postCommit.region,
+      discordUserId: postCommit.discordUserId,
+    });
+  }
+}
+
+/**
+ * Run the claim, turning a prepared payload's own invalidity into an answer.
+ *
+ * A competition intent carries model-authored dates and entrant ids, so a
+ * reversed range, or an entrant removed between preparing and confirming, is
+ * expected input at this boundary rather than a broken caller.
+ * `createCompetitionForActor` deliberately lets both throw so the transaction
+ * rolls back instead of committing a half-enrolled competition — and that
+ * rollback takes the claim with it, so without this the person would get a 500
+ * and the same 500 on every retry until the intent expired.
+ *
+ * Rolling the claim back is the right half of that behaviour and is kept: the
+ * intent is left to expire rather than burned by a failure, and the refusal
+ * carries the same message the web form would have given.
+ */
+async function claimCreation<Result>(
+  run: (tx: Db) => Promise<Result>,
+  input: { intentId: string; actorDiscordId: DiscordAccountId },
+): Promise<Result | ClaimRefusal> {
+  try {
+    return await claimAndExecute(
+      prisma,
+      {
+        intentId: input.intentId,
+        actorDiscordId: input.actorDiscordId,
+        now: new Date(),
+      },
+      run,
+    );
+  } catch (error) {
+    if (
+      error instanceof InitialEntrantsValidationError ||
+      error instanceof z.ZodError
+    ) {
+      asCompetitionBadRequest(error);
+    }
+    throw error;
+  }
+}
+
+/** Confirm one creation intent on behalf of `confirmer`. */
+export async function confirmCreation(input: {
+  readonly intentId: string;
+  readonly confirmer: CreationConfirmer;
+}): Promise<CreationIntentOutcome | ClaimRefusal> {
+  const { confirmer } = input;
+  const loaded = await loadCreationIntent(confirmer, input.intentId);
+  // A confirmed card replays what it did before any check that only matters
+  // for a new creation: a channel deleted, a permission revoked or the
+  // feature switched off since must not turn "it was created" into a refusal.
+  if (loaded.intent.consumedAt !== null) {
+    return {
+      kind: "already_consumed",
+      result:
+        loaded.intent.resultJson === null
+          ? null
+          : JSON.parse(loaded.intent.resultJson),
+    };
+  }
+  await requireCreationEnabled(loaded.guildId);
+  const permissions = await authorizeCreation(confirmer, loaded);
+  // An operator control, so it is read now rather than frozen when the intent
+  // was prepared.
+  const initialHistoryImportEnabled = await isPolicyEnabled(
+    "initial_match_history_import_enabled",
+    { server: loaded.guildId },
+  );
+
+  // Captured out of the transaction callback rather than returned, so the
+  // stored replay result stays the outcome the client sees and a replayed
+  // confirmation repeats no side effects.
+  const captured: { postCommit: CreationPostCommit | null } = {
+    postCommit: null,
+  };
+  const outcome = await claimCreation(
+    async (tx) => {
+      const executed = await executeCreationIntent(tx, {
+        payload: loaded.payload,
+        guildId: loaded.guildId,
+        actorDiscordId: loaded.userId,
+        permissions,
+        initialHistoryImportEnabled,
+      });
+      captured.postCommit = executed.postCommit;
+      if (executed.audit !== null) {
+        await recordAudit(
+          {
+            ...executed.audit,
+            actorDiscordId: confirmer.actorId,
+            serverId: loaded.guildId,
+            ipAddress: confirmer.ipAddress,
+            userAgent: confirmer.userAgent,
+          },
+          tx,
+        );
+      }
+      return executed.outcome;
+    },
+    {
+      intentId: loaded.intent.id,
+      actorDiscordId: loaded.userId,
+    },
+  );
+
+  await runPostCommit({
+    surface: confirmer.surface,
+    postCommit: captured.postCommit,
+    permissions,
+    guildId: loaded.guildId,
+    ownerId: loaded.userId,
+    initialHistoryImportEnabled,
+  });
+  return outcome;
+}

@@ -12,6 +12,7 @@ import { track } from "#src/lib/analytics.ts";
 import {
   confirmationCardState,
   creationCardHeading,
+  creationCardNote,
   creationConfirmedEvent,
   createdEntityLink,
   type CreationIntentCardData,
@@ -37,12 +38,9 @@ function CreatedEntityLink(props: { outcome: CreationConfirmationOutcome }) {
   if (props.outcome.status !== "confirmed") return null;
   const link = createdEntityLink(props.outcome.created);
   return (
-    <Link
-      to={link.href}
-      className="text-sm font-medium text-scout-primary underline"
-    >
-      {link.label}
-    </Link>
+    <Button asChild size="sm">
+      <Link to={link.href}>{link.label} →</Link>
+    </Button>
   );
 }
 
@@ -68,6 +66,7 @@ export function CreationConfirmationView(props: {
     confirming: props.confirming,
     expired: props.expired,
   });
+  const note = creationCardNote(state);
   return (
     <ExploreConfirmationCard
       state={state}
@@ -102,10 +101,7 @@ export function CreationConfirmationView(props: {
       }
     >
       <p className="whitespace-pre-wrap text-sm">{props.intent.summary}</p>
-      <p className="text-xs text-scout-subtle">
-        Nothing has been created yet. Scout checks your permissions again when
-        you confirm.
-      </p>
+      {note !== null && <p className="text-xs text-scout-subtle">{note}</p>}
     </ExploreConfirmationCard>
   );
 }
@@ -145,6 +141,9 @@ function createdListPathKey(
   }
 }
 
+/** How often a still-pending card checks whether it was confirmed elsewhere. */
+const PENDING_STATUS_POLL_MS = 15_000;
+
 export function ExploreCreationIntentCard(props: {
   intent: CreationIntentCardData;
 }) {
@@ -157,11 +156,17 @@ export function ExploreCreationIntentCard(props: {
   const mutation = useMutation(
     trpc.explore.confirmCreationIntent.mutationOptions(),
   );
-  const persisted = useQuery(
-    trpc.explore.creationIntentStatus.queryOptions({
+  const persisted = useQuery({
+    ...trpc.explore.creationIntentStatus.queryOptions({
       intentId: props.intent.intentId,
     }),
-  );
+    // A card can be confirmed somewhere else — the Discord button, a voice
+    // DM, another tab — so a pending one keeps asking, and every card asks
+    // again when the page regains focus.
+    refetchOnWindowFocus: true,
+    refetchInterval: (query) =>
+      query.state.data?.state === "pending" ? PENDING_STATUS_POLL_MS : false,
+  });
   const expiresInMs = new Date(props.intent.expiresAt).getTime() - nowMs;
   const displayedOutcome =
     outcome ?? replayedCreationOutcome(props.intent.kind, persisted.data);

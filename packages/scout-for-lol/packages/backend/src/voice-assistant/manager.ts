@@ -22,6 +22,7 @@ import {
 import { voiceOutputArbiter } from "#src/voice-assistant/output-arbiter.ts";
 import { VOICE_INACTIVITY_TIMEOUT_MS } from "#src/voice-assistant/constants.ts";
 import { captureVoiceQuestionAsked } from "#src/analytics/voice-question.ts";
+import { voiceConfirmationDelivery } from "#src/voice-assistant/confirmations.ts";
 import {
   scoutVoiceActiveSessions,
   scoutVoiceSessionsTotal,
@@ -146,6 +147,7 @@ function defaultDeps(): VoiceAssistantManagerDeps {
           const user = await discordClient.users.fetch(userId);
           return { username: user.username, avatar: user.avatar };
         },
+        deliverConfirmations: voiceConfirmationDelivery(input.guildId),
         onWakeAccepted: input.onWakeAccepted,
         onQuestionObserved: input.onQuestionObserved,
       }),

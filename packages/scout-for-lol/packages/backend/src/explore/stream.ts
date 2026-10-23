@@ -236,7 +236,11 @@ export async function emitExploreStreamChunk(
         message: toolResultMessage(chunk.toolName, inspection.succeeded),
         durationMs: finishToolDuration(chunk.toolCallId, state),
         details: inspection.details,
-        rawOutput: boundedRawValue(inspection.rawOutput, state),
+        rawOutput: boundedRawValue(
+          inspection.rawOutput,
+          state,
+          chunk.toolName.startsWith("prepare_"),
+        ),
       });
       // After the tool_result, so the step in the panel has already flipped to
       // its final status by the time the status line describes the outcome —
@@ -305,9 +309,18 @@ function finishToolDuration(
   return startedAt === undefined ? null : Math.max(0, state.now() - startedAt);
 }
 
+/**
+ * A tool payload as the trace keeps it, within the per-payload and per-turn
+ * byte budgets.
+ *
+ * `essential` payloads skip the turn budget (never the per-payload one): a
+ * prepared confirmation's output is what its Confirm button, its voice DM and
+ * later turns' card state are read from, so a long turn must not drop it.
+ */
 function boundedRawValue(
   value: JsonValue | null,
   state: ExploreStreamState,
+  essential = false,
 ): ExploreTraceRawValue | null {
   if (value === null) {
     return null;
@@ -316,7 +329,10 @@ function boundedRawValue(
   if (byteLength > EXPLORE_TRACE_PAYLOAD_MAX_BYTES) {
     return { kind: "omitted", reason: "payload_limit", byteLength };
   }
-  if (state.rawTraceBytes + byteLength > EXPLORE_TRACE_TOTAL_MAX_BYTES) {
+  if (
+    !essential &&
+    state.rawTraceBytes + byteLength > EXPLORE_TRACE_TOTAL_MAX_BYTES
+  ) {
     return { kind: "omitted", reason: "turn_limit", byteLength };
   }
   state.rawTraceBytes += byteLength;

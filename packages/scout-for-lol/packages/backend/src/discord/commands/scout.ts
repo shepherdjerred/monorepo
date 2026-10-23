@@ -26,6 +26,8 @@ import { rollbackUnstartedExploreTurn } from "#src/explore/rollback.ts";
 import {
   exploreActionRow,
   exploreAnswerChunks,
+  exploreCreationConfirmRows,
+  MAX_MESSAGE_ROWS,
   exploreFollowUpRow,
   NO_GENERATED_MENTIONS,
 } from "#src/discord/scout/messages.ts";
@@ -319,9 +321,12 @@ async function sendPrivateAnswer(
   }
   const visualization = exploreAnswerAttachments(answer);
   const followUps = exploreFollowUpRow({ conversationId, answer });
+  const [firstConfirmations, ...moreConfirmations] =
+    exploreCreationConfirmRows(answer);
   await interaction.editReply({
     content: first,
     components: [
+      ...(firstConfirmations === undefined ? [] : [firstConfirmations]),
       exploreActionRow({
         conversationId,
         assistantMessageId: answer.id,
@@ -335,6 +340,18 @@ async function sendPrivateAnswer(
   for (const content of chunks.slice(1)) {
     await interaction.followUp({
       content,
+      flags: MessageFlags.Ephemeral,
+      allowedMentions: NO_GENERATED_MENTIONS,
+    });
+  }
+  for (
+    let start = 0;
+    start < moreConfirmations.length;
+    start += MAX_MESSAGE_ROWS
+  ) {
+    await interaction.followUp({
+      content: "More confirmations from this answer:",
+      components: moreConfirmations.slice(start, start + MAX_MESSAGE_ROWS),
       flags: MessageFlags.Ephemeral,
       allowedMentions: NO_GENERATED_MENTIONS,
     });
