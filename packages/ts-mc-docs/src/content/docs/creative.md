@@ -7,6 +7,8 @@ This page describes the creative plot commands. It is not a statement that creat
 
 Run `/creative` to enter. You switch to creative mode with an empty inventory. Your survival items, experience, and effects stay stored until you leave. Run `/creative leave` to restore that survival body. Creative items, experience, and effects are discarded when you leave. `/plot` remains the survival shop-rental command.
 
+Leaves do not decay there, fire does not spread, and crops, vines, and snow do not grow on their own. Place the block you want.
+
 ## Claim a cell
 
 Stand on an empty cell inside the world border and run `/creative claim`. You can hold two new claims. Plots already listed in the recovered catalog do not count toward that cap. Staff are exempt from the cap.
