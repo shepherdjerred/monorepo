@@ -1,12 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { RecipeDefinitionSchema } from "@shepherdjerred/delivery/model-contract";
 import {
-  modelSteps,
-  oracleProbes,
-  resumeAt,
-  stepRecipe,
+  RecipeDefinitionSchema,
   subRecipeStageKey,
-} from "./recipe.ts";
+} from "@shepherdjerred/delivery/model-contract";
+import { modelSteps, oracleProbes, resumeAt, stepRecipe } from "./recipe.ts";
 import { recipe } from "./testing.ts";
 
 /** Two Applications under one deployment: a companion, then the server. */

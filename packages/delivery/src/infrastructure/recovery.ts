@@ -8,6 +8,9 @@ import {
   workerRolloutOf,
 } from "#shared/model/recipe-view.ts";
 import { z } from "zod";
+import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
+import { stepStageKey, subRecipeStageKey } from "#shared/model/stage-keys.ts";
+import type { StoredRecipeDefinition } from "#shared/model/record-contract.ts";
 import { DeliveryError } from "#domain/error.ts";
 import type { DeploymentDetail, EvidenceInput } from "#shared/contract.ts";
 import { RecoverDeploymentSchema } from "#shared/contract.ts";
@@ -87,6 +90,22 @@ function requireSettled(
 }
 
 /**
+ * The stage whose operation identity is the Application sync's request: a
+ * v1 pipeline's `reconcile`, or a model recipe's sync step, prefixed by its
+ * sub-recipe's position inside a compound recipe (T3).
+ */
+function syncStageKey(definition: StoredRecipeDefinition): string {
+  const model = RecipeDefinitionSchema.safeParse(definition);
+  if (!model.success) return "reconcile";
+  const sync = stepStageKey("step", "sync");
+  if (model.data.kind !== "compound") return sync;
+  const index = model.data.subRecipes.findIndex(
+    (sub) => sub.definition.kind === "kubernetes-application",
+  );
+  return subRecipeStageKey(index, sync);
+}
+
+/**
  * Independent of Temporal and of ArgoCD's API: inspect the recorded
  * operation on the Application object through the projected reader (D5).
  */
@@ -120,7 +139,8 @@ export function createRecoveryInspector(options: {
         "PAUSED",
         "TRMNL recovery requires independent exact plugin-bundle readback; native Argo settlement alone is insufficient",
       );
-    const recorded = detail.stages.find((entry) => entry.key === "reconcile");
+    const syncKey = syncStageKey(definition);
+    const recorded = detail.stages.find((entry) => entry.key === syncKey);
     if (recorded === undefined)
       throw new DeliveryError(
         "CONFLICT",

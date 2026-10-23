@@ -2,6 +2,7 @@ import type { DeploymentDetail } from "@shepherdjerred/delivery/contract";
 import {
   RecipeDefinitionSchema,
   stepStageKey,
+  subRecipeStageKey,
   type KubernetesStep,
   type RecipeDefinition,
 } from "@shepherdjerred/delivery/model-contract";
@@ -122,14 +123,6 @@ function recipeSteps(recipe: RecipeDefinition): ModelStep[] {
 }
 
 const SUB_RECIPE_KEY = /^sub(\d+)-/u;
-
-/** A compound sub-recipe's step key: unique across sub-recipes, still a Job stage key. */
-export function subRecipeStageKey(index: number, key: string): string {
-  const prefixed = `sub${String(index + 1)}-${key}`;
-  if (!/^[a-z0-9-]{1,64}$/u.test(prefixed))
-    throw new Error(`Sub-recipe step key ${prefixed} is not a stage key`);
-  return prefixed;
-}
 
 /**
  * The recipe that owns a frozen step: a compound recipe's sub-recipe for a

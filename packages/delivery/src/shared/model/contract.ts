@@ -70,6 +70,9 @@ export const PLAN_APPROVAL_STAGE_KEY = stageKeys.PLAN_APPROVAL_STAGE_KEY;
 export function stepStageKey(prefix: "step" | "test", name: string): string {
   return stageKeys.stepStageKey(prefix, name);
 }
+export function subRecipeStageKey(index: number, key: string): string {
+  return stageKeys.subRecipeStageKey(index, key);
+}
 export function attestationStageKey(stage: string): string {
   return stageKeys.attestationStageKey(stage);
 }

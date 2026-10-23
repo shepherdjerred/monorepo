@@ -12,6 +12,14 @@ export function stepStageKey(prefix: "step" | "test", name: string): string {
   return key;
 }
 
+/** A compound sub-recipe's step key: unique across sub-recipes, still a Job stage key (T3). */
+export function subRecipeStageKey(index: number, key: string): string {
+  const prefixed = `sub${String(index + 1)}-${key}`;
+  if (!/^[a-z0-9-]{1,64}$/u.test(prefixed))
+    throw new Error(`Sub-recipe step key ${prefixed} is not a stage key`);
+  return prefixed;
+}
+
 /** The stage a human approval of a model tofu deployment's saved plan settles. */
 export const PLAN_APPROVAL_STAGE_KEY = "approve/plan";
 

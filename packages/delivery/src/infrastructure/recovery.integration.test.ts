@@ -5,6 +5,9 @@ import { Delivery } from "./delivery.ts";
 import { createRecoveryInspector } from "./recovery.ts";
 import { createApplicationReader } from "./kubernetes/application-reader.ts";
 import type { DeploymentDetail } from "#shared/contract.ts";
+import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
+import { recipeFromPipeline } from "#shared/model/recipe-adapter.ts";
+import { arcadePipeline } from "#testing/model-fixture.ts";
 
 const requestId = "11111111-1111-4111-8111-111111111111";
 const externalOperationId = "22222222-2222-4222-8222-222222222222";
@@ -71,6 +74,48 @@ async function checkMinecraftRecovery(detail: DeploymentDetail) {
   await expect(inspect(selected, recovery)).rejects.toMatchObject({
     code: "INVALID",
   });
+}
+
+/** A model recipe's request is its sync step: `step-sync`, or `subN-step-sync` inside a compound recipe. */
+async function checkModelSyncStage(detail: DeploymentDetail) {
+  const application = recipeFromPipeline(arcadePipeline);
+  const compound = RecipeDefinitionSchema.parse({
+    kind: "compound",
+    subRecipes: [
+      {
+        instance: "channel:npm/@shepherdjerred/webring",
+        definition: {
+          kind: "channel",
+          store: "npm",
+          name: "@shepherdjerred/webring",
+          pointer: "latest",
+          forwardOnly: false,
+          artifactComponent: "archive:webring-package",
+        },
+      },
+      { instance: "application:arcade", definition: application },
+    ],
+  });
+  const reconcile = detail.stages.find((stage) => stage.key === "reconcile");
+  if (reconcile === undefined) throw new Error("Expected the v1 stage");
+  const inspect = createRecoveryInspector({
+    readApplication: async () => observation(),
+  });
+  for (const [definition, key] of [
+    [application, "step-sync"],
+    [compound, "sub2-step-sync"],
+  ] as const) {
+    const selected: DeploymentDetail = {
+      ...detail,
+      pipeline: { ...detail.pipeline, definition },
+      stages: [{ ...reconcile, key }],
+    };
+    expect(await inspect(selected, recovery)).toHaveLength(1);
+    // A model recipe never records the v1 stage name.
+    await expect(
+      inspect({ ...selected, stages: [reconcile] }, recovery),
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+  }
 }
 
 describe("independent Argo recovery", () => {
@@ -231,6 +276,9 @@ describe("independent Argo recovery", () => {
     await expect(inspect(detail, recovery)).rejects.toMatchObject({
       code: "CONFLICT",
     });
+  });
+  test("a model recipe's sync step, prefixed inside a compound recipe, names the recorded request (T3)", async () => {
+    await checkModelSyncStage(detail);
   });
   test("stores exact independent readback before releasing only the owned lock", async () => {
     const inspect = createRecoveryInspector({
