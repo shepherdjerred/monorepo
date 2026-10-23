@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
-import { testExecutor, testOperator } from "#testing/seed.ts";
+import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
 import { rollbackCandidates } from "./candidates.ts";
 
 const context = useDeliveryFixture();
@@ -385,6 +385,87 @@ describe("composition (R0, K1, R7)", () => {
         component: "image:arcade-mirror",
         artifactId: "arcade-image",
       }),
+    ]);
+  });
+
+  test("a service tracking two components recomposes once, so their requires hold together", async () => {
+    for (const component of ["server", "chart"])
+      await context.cluster.database.componentReference.create({
+        data: {
+          serviceId: "temporal",
+          component,
+          sourceServiceId: "arcade",
+          sourceComponent: component,
+          mode: "tracking",
+          sourceEnvironment: context.fixture.environment.id,
+        },
+      });
+    await acceptedBaseline();
+    // The next arcade build couples its image and chart by exact digest (A3).
+    const server = `sha256:${"d".repeat(64)}`;
+    const chart = `sha256:${"e".repeat(64)}`;
+    const build = await context.delivery.publish(
+      {
+        requestId: "coupled/2",
+        serviceId: "arcade",
+        sourceRevision: "c".repeat(40),
+        ciUrl: "https://woodpecker.sjer.red/repos/1/pipeline/2",
+        verifiedAt: new Date().toISOString(),
+        artifacts: [
+          {
+            id: "coupled-image",
+            component: "server",
+            kind: "image",
+            uri: "docker.io/shepherdjerred/arcade",
+            version: "2.0.0",
+            digest: server,
+            requires: { chart },
+          },
+          {
+            id: "coupled-chart",
+            component: "chart",
+            kind: "chart",
+            uri: "https://chartmuseum.tailnet-1a49.ts.net/charts/arcade-2.0.0.tgz",
+            version: "2.0.0",
+            digest: chart,
+            requires: { server },
+          },
+        ],
+      },
+      testPublisher,
+      { repositoryId: 1, pipelineNumber: 2 },
+    );
+    await context.delivery.qualify(build.buildId, "verified", testExecutor);
+    const coupled = await context.cluster.database.versionSet.findFirstOrThrow({
+      where: { qualifiedBuildId: build.buildId },
+    });
+    const env = await environmentRow();
+    const deployment = await context.delivery.createDeployment(
+      {
+        requestId: "coupled/deploy",
+        environmentId: env.id,
+        versionSetRevisionId: coupled.id,
+        expectedGeneration: env.generation,
+        kind: "deploy",
+      },
+      testOperator,
+    );
+    await accept(deployment.id, coupled.id);
+    const sets = await context.cluster.database.versionSet.findMany({
+      where: { serviceId: "temporal" },
+      include: { entries: true },
+      orderBy: { revision: "asc" },
+    });
+    // One set revision per acceptance, never a half-updated mix.
+    expect(sets).toHaveLength(2);
+    expect(sets[1]).toMatchObject({ triggerDeploymentId: deployment.id });
+    expect(
+      sets[1]?.entries
+        .map((entry) => [entry.component, entry.artifactId])
+        .toSorted(([left = ""], [right = ""]) => left.localeCompare(right)),
+    ).toEqual([
+      ["chart", "coupled-chart"],
+      ["server", "coupled-image"],
     ]);
   });
 

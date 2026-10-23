@@ -185,18 +185,18 @@ export async function composeAutomatic(
 }
 
 /**
- * R7: when an environment accepts a selection, every service tracking one
- * of its components from that environment recomposes in the same
- * transaction, ordered after its live set and before its next CI build.
+ * The accepted artifact of every component a service tracks from the
+ * accepting environment, grouped by the tracking service.
  */
-export async function recomposeTracking(
+async function trackedOutputs(
   tx: Transaction,
-  accepted: { id: string; environmentId: string; versionSetRevisionId: string },
+  accepted: { environmentId: string; versionSetRevisionId: string },
 ) {
   const references = await tx.componentReference.findMany({
     where: { mode: "tracking", sourceEnvironment: accepted.environmentId },
+    orderBy: [{ serviceId: "asc" }, { component: "asc" }],
   });
-  const composed: string[] = [];
+  const outputs = new Map<string, Record<string, string>>();
   for (const reference of references) {
     const entry = await tx.versionSetEntry.findUnique({
       where: {
@@ -207,15 +207,36 @@ export async function recomposeTracking(
       },
     });
     if (entry === null) continue;
-    const live = await liveSet(tx, reference.serviceId);
+    outputs.set(reference.serviceId, {
+      ...outputs.get(reference.serviceId),
+      [reference.component]: entry.artifactId,
+    });
+  }
+  return outputs;
+}
+
+/**
+ * R7: when an environment accepts a selection, every service tracking one
+ * of its components from that environment recomposes once in the same
+ * transaction, ordered after its live set and before its next CI build.
+ * All of a service's tracked components move together, so `requires`
+ * holds against the accepted selection, never a half-updated mix.
+ */
+export async function recomposeTracking(
+  tx: Transaction,
+  accepted: { id: string; environmentId: string; versionSetRevisionId: string },
+) {
+  const composed: string[] = [];
+  for (const [serviceId, outputs] of await trackedOutputs(tx, accepted)) {
+    const live = await liveSet(tx, serviceId);
     const [sequence] = z
       .tuple([z.object({ value: z.number().int().positive() })])
       .parse(
         await tx.$queryRaw`SELECT nextval('"Build_registrationSequence_seq"')::int AS value`,
       );
     const row = await composeAutomatic(tx, {
-      serviceId: reference.serviceId,
-      outputs: { [reference.component]: entry.artifactId },
+      serviceId,
+      outputs,
       // A service with no live set yet orders its first composition at zero.
       orderKey: { major: live?.orderMajor ?? 0, minor: sequence.value },
       triggerDeploymentId: accepted.id,
