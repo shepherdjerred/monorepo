@@ -1,9 +1,11 @@
-import { Context } from "@temporalio/activity";
+import { ApplicationFailure, Context } from "@temporalio/activity";
 import type {
   DeploymentDetail,
   EvidenceInput,
 } from "@shepherdjerred/delivery/contract";
+import { stepStageKey } from "@shepherdjerred/delivery/model-contract";
 import { deliveryOperationId } from "@shepherdjerred/delivery/operation-id";
+import type { ModelStep } from "#lib/delivery/model/recipe.ts";
 import type { createTrmnlPluginClient } from "@shepherdjerred/ops-clients/trmnl.ts";
 import {
   inspectTrmnlArchive,
@@ -31,6 +33,30 @@ function liveEffects(signal: AbortSignal): ArchiveStepEffects {
     owned: requireOwned,
     signal,
   };
+}
+
+/** A compound sub-recipe's key prefix (`sub<n>-`); a single recipe has none. */
+const SUB_RECIPE_PREFIX = /^sub\d+-/u;
+
+/**
+ * A plugin archive publishes settings its Application's backend serves, so
+ * it runs only after that Application's own sync (T3). The recipe contract
+ * orders apply-safety before sync but not an archive after it, so a recipe
+ * that orders the archive first is refused rather than publishing against an
+ * unsynced backend.
+ */
+export function requireSyncBeforeArchive(
+  steps: readonly ModelStep[],
+  key: string,
+) {
+  const prefix = SUB_RECIPE_PREFIX.exec(key)?.[0] ?? "";
+  const keys = steps.map((step) => step.key);
+  const sync = keys.indexOf(`${prefix}${stepStageKey("step", "sync")}`);
+  if (sync === -1 || sync > keys.indexOf(key))
+    throw ApplicationFailure.nonRetryable(
+      `Step ${key} would publish plugin settings before its Application synced; the recipe must order sync first`,
+      "DeliveryModelStepOrder",
+    );
 }
 
 /** The plugin archive step under an Activity's heartbeat and cancellation. */
