@@ -10,6 +10,14 @@ import org.bukkit.entity.LivingEntity;
 final class Harm {
   private Harm() {}
 
+  /**
+   * The part of {@code damage} that reaches {@code victim}'s health past its absorption, read
+   * before the hit lands: what the damage ledger, statistics and kill credit count.
+   */
+  static double toHealth(LivingEntity victim, double damage) {
+    return Math.max(0, damage - Math.max(0, victim.getAbsorptionAmount()));
+  }
+
   /** Takes {@code damage} from {@code victim}'s absorption, then its health. */
   static void take(LivingEntity victim, double damage) {
     var absorbed = Math.min(Math.max(0, victim.getAbsorptionAmount()), damage);

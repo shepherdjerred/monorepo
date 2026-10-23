@@ -230,7 +230,8 @@ final class Napalm {
     if (sacrifices.shieldFor(owner.uuid(), victim, hit)) {
       return;
     }
-    runner.damaged(victim, Optional.of(owner.uuid()), landed, KitAttacks.NAPALM);
+    runner.damaged(
+        victim, Optional.of(owner.uuid()), Harm.toHealth(victim, landed), KitAttacks.NAPALM);
     Harm.take(victim, landed);
     runner.kits().hurt(victim, KitAttacks.NAPALM, landed);
   }

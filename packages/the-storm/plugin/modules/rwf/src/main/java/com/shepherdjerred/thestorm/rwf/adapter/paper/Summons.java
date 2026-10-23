@@ -343,7 +343,7 @@ final class Summons {
     if (sacrifices.shieldFor(owner, player, hit)) {
       return true;
     }
-    runner.damaged(player, Optional.of(owner), landed, AttackType.MELEE);
+    runner.damaged(player, Optional.of(owner), Harm.toHealth(player, landed), AttackType.MELEE);
     Harm.take(player, landed);
     runner
         .memberOf(player.getUniqueId())
