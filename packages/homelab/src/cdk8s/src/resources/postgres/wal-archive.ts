@@ -55,13 +55,13 @@ export const POSTGRES_WAL_PREFIXES = {
 export type ArchivedPostgresCluster = keyof typeof POSTGRES_WAL_PREFIXES;
 
 /**
- * Off until the window's final root release has adopted both clusters into
- * their data-layer charts byte-identically (pod UID and StatefulSet
- * generation unchanged). Turning it on changes each cluster's pod
- * environment, so the operator restarts each cluster's pod once.
+ * On since the window's final root release adopted both clusters into their
+ * data-layer charts byte-identically (pod UID and StatefulSet generation
+ * unchanged). Turning it on changed each cluster's pod environment, so the
+ * operator restarts each cluster's pod once.
  */
 export function postgresWalArchiving(): boolean {
-  return false;
+  return true;
 }
 
 export function postgresWalArchivePrefix(

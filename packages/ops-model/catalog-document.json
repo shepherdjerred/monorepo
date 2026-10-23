@@ -3965,6 +3965,11 @@
     },
     {
       "dependent": "delivery-data/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "delivery-data/prod",
       "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
@@ -5156,6 +5161,11 @@
     {
       "dependent": "tempo/prod",
       "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "temporal-data/prod",
+      "prerequisite": "1password/prod",
       "rule": "any-accepted"
     },
     {
