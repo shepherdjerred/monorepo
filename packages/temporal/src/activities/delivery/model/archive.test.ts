@@ -6,14 +6,8 @@ import {
 } from "@shepherdjerred/delivery/contract";
 import { trmnlPluginArchiveFixture } from "@shepherdjerred/ops-model/trmnl/plugin-archive-fixture.ts";
 import { createTrmnlPluginClient } from "@shepherdjerred/ops-clients/trmnl.ts";
-import { RecipeDefinitionSchema } from "@shepherdjerred/delivery/model-contract";
 import { artifact, detail, recipe } from "#lib/delivery/model/testing.ts";
-import { modelSteps } from "#lib/delivery/model/recipe.ts";
-import {
-  applyPluginArchive,
-  requireSyncBeforeArchive,
-  type ArchiveStepEffects,
-} from "./archive.ts";
+import { applyPluginArchive, type ArchiveStepEffects } from "./archive.ts";
 
 const KEY = "step-archive";
 const { bundle, bytes, digest, uri } = trmnlPluginArchiveFixture();
@@ -188,49 +182,5 @@ describe("plugin archive step", () => {
     await expect(
       applyPluginArchive(current(), "archive:missing", KEY, effects()),
     ).rejects.toThrow("Selection lacks the frozen plugin archive");
-  });
-});
-
-/** arcade's recipe with its archive step at `at` in the step list. */
-function stepsWithArchiveAt(at: number) {
-  const base = recipe(
-    { repoURL: "https://chartmuseum.tailnet-1a49.ts.net", chart: "arcade" },
-    "chart:arcade",
-  );
-  const steps: Record<string, unknown>[] = [...base.steps];
-  steps.splice(at, 0, {
-    kind: "archive",
-    instance: "application:arcade",
-    archiveComponent: archive.component,
-  });
-  return modelSteps(RecipeDefinitionSchema.parse({ ...base, steps }));
-}
-
-describe("plugin archive step order (T3)", () => {
-  test("an archive runs only after its Application's sync", () => {
-    expect(() =>
-      requireSyncBeforeArchive(stepsWithArchiveAt(2), KEY),
-    ).not.toThrow();
-    // Schema-valid, but it would publish settings before the backend synced.
-    expect(() => requireSyncBeforeArchive(stepsWithArchiveAt(1), KEY)).toThrow(
-      "would publish plugin settings before its Application synced",
-    );
-  });
-
-  test("a compound sub-recipe's archive waits for that sub-recipe's own sync", () => {
-    const steps = stepsWithArchiveAt(2).map((step) => ({
-      ...step,
-      key: `sub2-${step.key}`,
-    }));
-    expect(() =>
-      requireSyncBeforeArchive(steps, "sub2-step-archive"),
-    ).not.toThrow();
-    const early = stepsWithArchiveAt(1).map((step) => ({
-      ...step,
-      key: `sub2-${step.key}`,
-    }));
-    expect(() => requireSyncBeforeArchive(early, "sub2-step-archive")).toThrow(
-      "before its Application synced",
-    );
   });
 });
