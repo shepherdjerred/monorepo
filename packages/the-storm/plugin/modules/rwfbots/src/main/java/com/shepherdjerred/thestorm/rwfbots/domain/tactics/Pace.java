@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwfbots.domain.tactics;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.RouteResult;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stance;
 import java.util.Optional;
 
@@ -20,6 +21,13 @@ enum Pace {
    * to sword reach whenever the step moved, so an archer walking its route never shot.
    */
   MOVING,
+  /**
+   * Walking an objective (arming, retaking, hunting, helping arm): a bow takes an enemy inside the
+   * middle of its band. With only the near edge, archers on these routes passed up enemies in plain
+   * sight for minutes; the opening's walk to the slots keeps {@link #MOVING}, as stopping to shoot
+   * there held whole teams back.
+   */
+  TASKED,
   /** Running for cover or away: drawing slows the bot to a walk, and getting there comes first. */
   DASHING,
   /** Sneaking as the last of its team: it takes on nobody. */
@@ -34,9 +42,25 @@ enum Pace {
     };
   }
 
+  /** {@link #route} for a step of {@code option}: walking an objective is {@link #TASKED}. */
+  static Pace route(Stance stance, boolean bounding, Option option) {
+    var pace = route(stance, bounding);
+    var objective =
+        option == Option.ARM
+            || option == Option.RETAKE
+            || option == Option.HUNT
+            || option == Option.HELP_ARM;
+    return pace == MOVING && objective ? TASKED : pace;
+  }
+
   /** The pace of a hold: still once there, walking back to it or about a patrol. */
   static Pace hold(PlanStep.Hold hold, RouteResult route) {
-    return hold.stance() == Stance.EVASIVE ? DASHING : of(route);
+    return switch (hold.stance()) {
+      case EVASIVE -> DASHING;
+      // A last survivor still sneaking to its hold must not give itself away with a shot.
+      case STEALTH -> route instanceof RouteResult.Arrived ? STILL : HIDING;
+      case AGGRESSIVE, CAUTIOUS -> of(route);
+    };
   }
 
   /** The pace of a cover step: running to it, still in it. */
@@ -57,6 +81,7 @@ enum Pace {
           case HIDING -> -1;
           case DASHING -> Planner.CLOSE_FIGHT;
           case MOVING -> keep.ranged() ? keep.min() : Planner.CLOSE_FIGHT;
+          case TASKED -> keep.ranged() ? (keep.min() + keep.max()) / 2 : Planner.CLOSE_FIGHT;
           case STILL -> keep.ranged() ? keep.max() : Planner.CLOSE_FIGHT;
         };
     return situation

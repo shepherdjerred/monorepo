@@ -925,7 +925,7 @@ public final class Planner {
               situation,
               new Parts(
                   plan.option(),
-                  Pace.route(stance, bounding).target(situation, context),
+                  Pace.route(stance, bounding, plan.option()).target(situation, context),
                   pathTo(situation, context, goal, new Way(stance, alongLane)),
                   stance,
                   nextBomb,

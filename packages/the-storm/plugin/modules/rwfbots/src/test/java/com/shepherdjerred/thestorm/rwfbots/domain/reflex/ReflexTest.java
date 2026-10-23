@@ -872,12 +872,15 @@ final class ReflexTest {
   }
 
   @Test
-  void aReadyBowIsLoweredWhenAnEnemyClosesToSwordRange() {
+  void aReadyBowIsNotLoweredForAnEnemyTheBotDoesNotPerceive() {
+    // Review finding: the ready draw scanned the whole world for nearby enemies, so a bot lowered
+    // its bow for a player hidden behind a wall or invisible. A perceived enemy that close is
+    // already its target, which lowers the bow through the ordinary fight (see the keep range).
     var drawn = drawing(shot(FAR_ENEMY, List.of()));
     var lurker = combatant(3, BLUE, ARCHER_AT.plus(0, 0, Reflex.MELEE_ALERT - 1));
-    var crowded = shot(FAR_ENEMY, List.of(), lurker).run(drawn.state(), 6, 6, false);
-    assertThat(crowded.commands()).contains(new BodyCommand.CancelUse());
-    assertThat(crowded.state().isDrawing()).isFalse();
+    var hidden = shot(FAR_ENEMY, List.of(), lurker).run(drawn.state(), 6, 6, false);
+    assertThat(hidden.commands()).doesNotContain(new BodyCommand.CancelUse());
+    assertThat(hidden.state().isDrawing()).isTrue();
   }
 
   @Test

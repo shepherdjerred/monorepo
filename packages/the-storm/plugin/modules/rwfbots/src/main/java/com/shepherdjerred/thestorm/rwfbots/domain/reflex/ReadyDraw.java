@@ -40,8 +40,10 @@ final class ReadyDraw {
 
   /**
    * Whether a drawn bow whose target has just left sight stays up: not while backing off or dashing
-   * along a path with nobody to fight (drawing slows the bot to a walk), not past {@link
-   * Reflex#HOLD_READY_TICKS}, and not with an enemy close enough to need the sword.
+   * along a path with nobody to fight (drawing slows the bot to a walk) and not past {@link
+   * Reflex#HOLD_READY_TICKS}. An enemy the bot perceives close enough to need the sword is already
+   * its target, which takes the bow out of ready; one it does not perceive must not lower the bow,
+   * or a bot would visibly react to a player hidden behind a wall or invisible.
    */
   static boolean holds(ReflexState state, ReflexInput input, Loadout loadout) {
     var now = input.snapshot().tick();
@@ -51,8 +53,7 @@ final class ReadyDraw {
         && input.decision().stance() != Stance.EVASIVE
         && !dashing(state, input)
         && sight.isPresent()
-        && now - sight.orElseThrow().seen() <= Reflex.HOLD_READY_TICKS
-        && !enemyWithin(input, Reflex.MELEE_ALERT);
+        && now - sight.orElseThrow().seen() <= Reflex.HOLD_READY_TICKS;
   }
 
   /** Running a path at a sprint with no fight in the decision: cover or a slot comes first. */
@@ -61,12 +62,6 @@ final class ReadyDraw {
     return state.waypointIndex() < decision.waypoints().size()
         && decision.stance() == Stance.AGGRESSIVE
         && decision.target().isEmpty();
-  }
-
-  private static boolean enemyWithin(ReflexInput input, double distance) {
-    var self = input.self();
-    return input.snapshot().aliveEnemiesOf(self.team()).stream()
-        .anyMatch(enemy -> enemy.pos().distance(self.pos()) <= distance);
   }
 
   /**
