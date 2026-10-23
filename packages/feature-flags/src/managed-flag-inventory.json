@@ -582,7 +582,7 @@
       "owner": "platform",
       "namespace": "woodpecker",
       "source": "woodpecker-performance",
-      "purpose": "Compare Bun copyfile installation against its default Linux backend.",
+      "purpose": "Materialize node_modules with Bun's copyfile backend so ZFS can clone blocks from the shared cache claim.",
       "type": "boolean",
       "default": false,
       "rollouts": [
@@ -3389,6 +3389,14 @@
         },
         {
           "key": "woodpecker-ram-scratch-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "woodpecker-bun-copyfile-enabled",
           "type": "boolean",
           "default": true,
           "rollouts": [],

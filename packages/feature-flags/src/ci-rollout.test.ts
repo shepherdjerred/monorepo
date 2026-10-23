@@ -59,6 +59,7 @@ test.each([
   ["woodpecker", "woodpecker-source-cache-enabled"],
   ["woodpecker", "woodpecker-maintenance-lanes-enabled"],
   ["woodpecker", "woodpecker-ram-scratch-enabled"],
+  ["woodpecker", "woodpecker-bun-copyfile-enabled"],
   ["temporal", "ci-maintenance-dispatch-enabled"],
 ] as const)(
   "production enables %s/%s with a complete override",

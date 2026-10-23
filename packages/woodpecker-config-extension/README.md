@@ -122,6 +122,12 @@ incremental source fetch, prepared workspaces, formatter results, Gradle
 dependency seeds, small-check grouping, and Bun's explicit copyfile backend.
 Credentialless automation receives none of these caches.
 
+The production inventory enables the copyfile backend. Every credentialed
+step's `bun-install.sh`, including grouped ordered containers, then passes
+`--backend=copyfile`. Bun materializes `node_modules` from the shared cache
+claim with `copy_file_range`, which liskov's ZFS pool can satisfy by cloning
+blocks across datasets instead of writing them again.
+
 Incremental source misses copy and verify recent immutable objects before
 advertising a temporary negotiation ref. Fetch still requests the exact SHA;
 the helper validates its commit and tree and removes the temporary ref.

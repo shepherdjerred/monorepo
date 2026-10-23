@@ -23,6 +23,8 @@ const enabled = {
   scratch: true,
 };
 const helper = `docker.io/shepherdjerred/woodpecker-config-extension@sha256:${"a".repeat(64)}`;
+const backend = (environment?: Readonly<Record<string, string>>) =>
+  environment?.["CI_BUN_INSTALL_BACKEND"];
 const gib = (value: string) => Number(value.replace(/Gi$/u, ""));
 test("RAM scratch benchmarks stay exclusive to owner manual verify canaries", () => {
   const pipeline = PipelineSchema.parse({
@@ -202,6 +204,30 @@ test("ordinary verify and browser execution pods carry their own scratch profile
   expect(
     performanceSteps(steps, enabled, true, true).some(
       (step) => step.ramScratch === true,
+    ),
+  ).toBe(false);
+});
+test("ordinary lanes and their ordered containers install with Bun copyfile only when enabled", () => {
+  const steps = groupSmallChecks(testPipelineSteps(), true);
+  const copied = performanceSteps(
+    steps,
+    { ...DISABLED_PERFORMANCE, copyfile: true },
+    true,
+    false,
+  );
+  for (const key of ["verify", "playwright-e2e"])
+    expect(backend(copied.find((step) => step.key === key)?.environment)).toBe(
+      "copyfile",
+    );
+  const ordered = copied.flatMap((step) => step.orderedSteps ?? []);
+  expect(ordered.length).toBeGreaterThan(0);
+  expect(
+    ordered.every((command) => backend(command.environment) === "copyfile"),
+  ).toBe(true);
+  const plain = performanceSteps(steps, DISABLED_PERFORMANCE, true, false);
+  expect(
+    [...plain, ...plain.flatMap((step) => step.orderedSteps ?? [])].some(
+      (step) => backend(step.environment) !== undefined,
     ),
   ).toBe(false);
 });
