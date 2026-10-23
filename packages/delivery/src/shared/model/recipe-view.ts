@@ -11,7 +11,6 @@ import {
   type RecipeDefinition,
   referenceParameters,
 } from "./recipe-contract.ts";
-import { stepStageKey } from "./stage-keys.ts";
 
 /**
  * Generation-agnostic views of a stored recipe. Pre-cutover rows hold v1
@@ -262,7 +261,10 @@ export function siteReleaseOf(
 /**
  * The stage that settles a site activation or plugin archive step, whose
  * operation identity is `<deployment>:<stage>`: v1's fixed key, or the
- * model step's own key (T3).
+ * model step's own key (T3). The executor runs a compound recipe's steps
+ * under keys prefixed by their sub-recipe's position (`sub2-step-archive`),
+ * so the key names the sub-recipe holding the step's first occurrence, as
+ * `siteReleaseOf` and `trmnlPluginsOf` read it.
  */
 export function specializedStageKey(
   definition: Stored,
@@ -270,7 +272,16 @@ export function specializedStageKey(
 ): string {
   if (definition.kind === "argocd")
     return step === "static-site" ? "scout-site" : "trmnl-plugins";
-  return stepStageKey("step", step);
+  const key = stepStageKey("step", step);
+  if (definition.kind !== "compound") return key;
+  const position = definition.subRecipes.findIndex((sub) =>
+    kubernetesRecipes(sub.definition).some((recipe) =>
+      recipe.steps.some((candidate) => candidate.kind === step),
+    ),
+  );
+  if (position === -1)
+    throw new Error(`The compound recipe has no ${step} step`);
+  return `sub${String(position + 1)}-${key}`;
 }
 
 /** The Forum image and licensed bundle a release migrates to (v1 `forumRelease`). */
