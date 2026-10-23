@@ -776,6 +776,21 @@ test("only the services the catalog document names as acquiring a component acqu
     testPublisher,
     { transport: registry().transport, components },
   );
+  // The first owner's artifact id is not reused for another service's original.
+  await expect(
+    context.delivery.acquireUpstreamArtifact(
+      {
+        ...imageInput,
+        requestId: "upstream/second-owner/same-id",
+        serviceId: "minecraft",
+      },
+      testPublisher,
+      { transport: registry().transport, components },
+    ),
+  ).rejects.toMatchObject({
+    code: "CONFLICT",
+    message: `Artifact ${imageInput.artifact.id} already identifies another original; minecraft must acquire under its own artifact id`,
+  });
   const second = await context.delivery.acquireUpstreamArtifact(
     {
       ...imageInput,

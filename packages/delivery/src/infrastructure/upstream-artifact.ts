@@ -422,6 +422,16 @@ export async function acquireUpstreamArtifact(
         "Immutable upstream origin already identifies different bytes or provenance",
       );
     if (owner === undefined) {
+      // Another service's original of this origin keeps its id; each
+      // acquiring service registers its own artifact id (4.5).
+      if (
+        (await tx.artifact.findUnique({ where: { id: input.artifact.id } })) !==
+        null
+      )
+        throw new DeliveryError(
+          "CONFLICT",
+          `Artifact ${input.artifact.id} already identifies another original; ${input.serviceId} must acquire under its own artifact id`,
+        );
       owner = id();
       await tx.build.create({
         data: {

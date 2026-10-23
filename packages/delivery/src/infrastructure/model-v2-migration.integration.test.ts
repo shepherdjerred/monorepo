@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test } from "vitest";
 import { createHash } from "node:crypto";
 import { createTestDatabase } from "#testing/postgres.ts";
+import { fingerprint } from "#infrastructure/delivery-records.ts";
 
 /** The last v1 migration: WP1 added retained, attested and replicated artifacts. */
 const LAST_V1 = "20261021000000_retained_attested_replicated_artifacts";
@@ -330,6 +331,55 @@ describe("model_v2 migration", () => {
     await expectArtifacts(db);
     await expectIntents(db);
     await expectTables(db);
+  }, 120_000);
+
+  test("moves upstream origin keys to the per-service form and leaves bundle keys alone", async () => {
+    const cluster = await v1Cluster();
+    await seedV1(cluster);
+    // v1 keyed an upstream origin without its acquiring service.
+    const v1Key = (origin: Record<string, string>) =>
+      fingerprint({
+        kind: origin["kind"],
+        repository: origin["repository"],
+        name: origin["name"],
+        version: origin["version"],
+      });
+    const upstream = await cluster.database.$queryRawUnsafe<
+      { id: string; origin: Record<string, string> }[]
+    >(
+      `SELECT "id", "origin" FROM "Artifact" WHERE "origin"->>'kind' = 'upstream' ORDER BY "id"`,
+    );
+    expect(upstream.map((row) => row.id)).toEqual([
+      "art-minecraft-chart",
+      "art-minecraft-server",
+    ]);
+    for (const row of upstream)
+      await cluster.database.$executeRawUnsafe(
+        `UPDATE "Artifact" SET "originKey" = '${v1Key(row.origin)}' WHERE "id" = '${row.id}'`,
+      );
+    const bundleKey = "f".repeat(64);
+    await cluster.database.$executeRawUnsafe(
+      `UPDATE "Artifact" SET "originKey" = '${bundleKey}' WHERE "id" = 'art-forum-bundle'`,
+    );
+    await cluster.migrate();
+    const migrated = await cluster.database.artifact.findMany({
+      where: { originKey: { not: null } },
+      orderBy: { id: "asc" },
+    });
+    // The key `acquireUpstreamArtifact` looks up for the same acquisition.
+    expect(migrated.map((row) => [row.id, row.originKey])).toEqual([
+      ["art-forum-bundle", bundleKey],
+      ...upstream.map((row) => [
+        row.id,
+        fingerprint({
+          serviceId: "minecraft",
+          kind: row.origin["kind"],
+          repository: row.origin["repository"],
+          name: row.origin["name"],
+          version: row.origin["version"],
+        }),
+      ]),
+    ]);
   }, 120_000);
 
   test("refuses an accepted set revision without a succeeded deployment", async () => {

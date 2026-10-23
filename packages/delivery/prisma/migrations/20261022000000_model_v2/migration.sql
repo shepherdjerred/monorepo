@@ -158,6 +158,21 @@ END;
 ALTER TABLE "Artifact" ALTER COLUMN "store" SET NOT NULL;
 ALTER TABLE "Artifact" ADD CONSTRAINT "Artifact_store_check" CHECK ("store" IN ('docker-hub', 'chartmuseum', 'delivery-artifacts', 'storm-forum-releases', 'upstream-chart-repository', 'upstream-image-registry'));
 
+-- 4.5 Each acquiring service owns its own artifact of an upstream origin, so
+-- the origin key gains the owning service. Existing upstream keys move to
+-- that form, exactly as `fingerprint` in delivery-records.ts canonicalises
+-- {kind, name, repository, serviceId, version}: keys sorted, JSON values.
+-- A replayed or repeated acquisition then finds its original row.
+UPDATE "Artifact" a SET "originKey" = encode(sha256(convert_to(
+  '{"kind":' || to_json(a."origin"->>'kind')::text
+  || ',"name":' || to_json(a."origin"->>'name')::text
+  || ',"repository":' || to_json(a."origin"->>'repository')::text
+  || ',"serviceId":' || to_json(b."serviceId")::text
+  || ',"version":' || to_json(a."origin"->>'version')::text
+  || '}', 'UTF8')), 'hex')
+FROM "Build" b
+WHERE b."id" = a."buildId" AND a."originKey" IS NOT NULL AND a."origin"->>'kind' = 'upstream';
+
 -- 4.6 Set revision lineage and order key. The key is the pair
 -- (orderMajor, orderMinor) compared lexicographically: ci and acquisition
 -- builds carry (pipelineNumber, 0); attested builds carry the highest major
