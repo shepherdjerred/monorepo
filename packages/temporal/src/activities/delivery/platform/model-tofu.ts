@@ -110,10 +110,37 @@ async function plan(step: Step, runJob: typeof runDeliveryJob) {
 }
 
 /**
+ * A saved plan nobody decided before it expired can never be applied, so the
+ * approve step settles failed instead of waiting while it holds the stack
+ * and platform locks. Delivery expires the undecided approval when the
+ * failed deployment finishes.
+ */
+async function requireUnexpiredPlan(step: Step, operationId: string) {
+  const stored = await deliveryRequest(
+    `platform/plans/${encodeURIComponent(step.current.deployment.id)}`,
+    RecordTofuPlanSchema,
+  );
+  if (Date.parse(stored.receipt.expiresAt) > Date.now()) return;
+  const reason = `Saved plan ${stored.receipt.planDigest} expired at ${stored.receipt.expiresAt} before a decision; nothing was applied`;
+  await recordStage(step.current, step.key, "failed", {
+    operationId,
+    message: reason,
+    evidence: [
+      {
+        kind: "preflight",
+        operationId: stored.receipt.planDigest,
+        summary: reason,
+      },
+    ],
+  });
+  throw ApplicationFailure.nonRetryable(reason, "DeliveryPlanExpired");
+}
+
+/**
  * The approve step waits for a human's one decision on the exact saved plan
- * (4.13). A rejection (H3) settles the step failed, so no stage stays
- * running and the failed deployment releases its locks; the plan was
- * discarded with the decision and is never applied.
+ * (4.13), but never past the plan's expiry. A rejection (H3) settles the
+ * step failed, so no stage stays running and the failed deployment releases
+ * its locks; the plan was discarded with the decision and is never applied.
  */
 async function approve(step: Step): Promise<{ waiting: boolean }> {
   const operationId = deliveryOperationId(step.current.deployment.id);
@@ -136,6 +163,7 @@ async function approve(step: Step): Promise<{ waiting: boolean }> {
     );
   }
   if (approval?.status !== "succeeded") {
+    await requireUnexpiredPlan(step, operationId);
     if (stageOf(step.current, step.key) === undefined)
       await recordStage(step.current, step.key, "running", { operationId });
     return { waiting: true };

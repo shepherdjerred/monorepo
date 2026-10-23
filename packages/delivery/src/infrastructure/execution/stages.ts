@@ -299,6 +299,13 @@ export async function finish(
     // Services tracking a component from this environment recompose in the
     // accepting transaction (R7).
     if (accepted && observesApplication(row)) await recomposeTracking(tx, row);
+    // A stopped deployment never takes its pending decision, such as a plan
+    // approval whose saved plan expired undecided: the approval expires.
+    if (input.status !== "succeeded")
+      await tx.approval.updateMany({
+        where: { deploymentId, status: "pending" },
+        data: { status: "expired", decidedAt: now },
+      });
     if (!input.recoveryRequired) {
       await tx.targetLock.deleteMany({ where: { deploymentId } });
       await tx.platformLock.deleteMany({ where: { deploymentId } });

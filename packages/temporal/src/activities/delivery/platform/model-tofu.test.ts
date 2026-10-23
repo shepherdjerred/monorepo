@@ -119,6 +119,7 @@ describe("model tofu steps (section 5, X8)", () => {
 
   it("waits for a human approval of the exact saved plan", async () => {
     current([{ key: "step-plan", status: "succeeded" }]);
+    api.responses.set(plansPath, saved);
     expect(
       await runDeliveryModelPlatformStep("deployment/1", "step-approve"),
     ).toEqual({ waiting: true });
@@ -133,6 +134,37 @@ describe("model tofu steps (section 5, X8)", () => {
     expect(stageWrites()).toEqual([
       expect.objectContaining({ key: "step-approve", status: "running" }),
       expect.objectContaining({ key: "step-approve", status: "succeeded" }),
+    ]);
+  });
+
+  it("stops waiting once the undecided saved plan expires: the approve step settles failed", async () => {
+    current([
+      { key: "step-plan", status: "succeeded" },
+      { key: "step-approve", status: "running" },
+    ]);
+    // Saved two hours ago, valid for one.
+    const hour = 60 * 60 * 1000;
+    api.responses.set(plansPath, {
+      ...saved,
+      receipt: {
+        ...saved.receipt,
+        createdAt: new Date(Date.now() - 2 * hour).toISOString(),
+        expiresAt: new Date(Date.now() - hour).toISOString(),
+      },
+    });
+    await expect(
+      runDeliveryModelPlatformStep("deployment/1", "step-approve"),
+    ).rejects.toMatchObject({
+      type: "DeliveryPlanExpired",
+      nonRetryable: true,
+    });
+    // No stage is left running, so the failed deployment releases its locks.
+    expect(stageWrites()).toEqual([
+      expect.objectContaining({
+        key: "step-approve",
+        status: "failed",
+        message: expect.stringContaining("expired"),
+      }),
     ]);
   });
 

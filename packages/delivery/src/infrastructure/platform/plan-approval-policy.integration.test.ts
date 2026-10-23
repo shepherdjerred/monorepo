@@ -170,3 +170,51 @@ test("a rejected override ends a non-eligible tofu deploy before any plan", asyn
     overrideDecision: null,
   });
 });
+
+test("a deploy whose saved plan expired undecided ends failed and expires its pending approval", async () => {
+  const { deployment, buildId } = await requestStackDeployment(context, {
+    approvalPolicy: "required",
+    override: true,
+  });
+  await context.delivery.approve(
+    deployment.id,
+    {
+      decision: "approve",
+      reason: "reviewed the old lineage",
+      override: true,
+    },
+    testOperator,
+  );
+  const plan = savedStackPlan(deployment.id, buildId);
+  await startStackPlan(context, deployment.id);
+  await context.delivery.recordTofuPlan(plan, testExecutor);
+  // The approve step stops waiting once the plan expired and ends the deploy.
+  await context.delivery.finish(
+    deployment.id,
+    {
+      status: "failed",
+      message: "Saved plan expired before a decision; nothing was applied",
+      evidence: [],
+      recoveryRequired: false,
+    },
+    testExecutor,
+  );
+  expect(await approvalById(db(), deployment.id)).toMatchObject({
+    status: "expired",
+    override: true,
+    actor: null,
+    overrideDecision: { actor: testOperator.id },
+  });
+  // The ended deploy takes no late decision.
+  await expect(
+    context.delivery.approveTofuPlan(
+      deployment.id,
+      {
+        decision: "rejected",
+        reason: "too late",
+        planDigest: plan.receipt.planDigest,
+      },
+      testOperator,
+    ),
+  ).rejects.toThrow(/already been decided/u);
+});
