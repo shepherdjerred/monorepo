@@ -27,6 +27,23 @@ final class ProviderParsingTests: XCTestCase {
     XCTAssertNil(snapshot.windows.first(where: { $0.id.contains("breakdown") }))
   }
 
+  func testClaudeWeeklyScopedSharesIsMetadataNotAWindow() throws {
+    // `weekly_scoped_shares` reports each scoped limit's share of the weekly allowance as an
+    // array keyed by `limit_index`, with no utilization or reset date of its own. Reading it as
+    // a window threw a type mismatch that failed the whole response as malformed, which took
+    // the Claude row stale on 2026-10-08 even though the credential and every real window
+    // still parsed. The per-model figures are already carried by `limits`.
+    let snapshot = try ClaudeCodeProvider.parse(
+      data: fixture("claude-weekly-scoped-shares"), now: now)
+
+    XCTAssertEqual(
+      snapshot.windows.map(\.id).sorted(),
+      ["five-hour", "provider-iguana-necktie", "weekly", "weekly-fable"])
+    XCTAssertNil(snapshot.windows.first(where: { $0.id.contains("shares") }))
+    XCTAssertEqual(
+      snapshot.windows.first(where: { $0.id == "weekly-fable" })?.usedPercent, 96)
+  }
+
   func testClaudeIgnoresUnrecognizedBreakdownMetadata() throws {
     XCTAssertThrowsError(
       try ClaudeCodeProvider.parse(
