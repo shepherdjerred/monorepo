@@ -7,6 +7,10 @@ import {
   type Principal,
   type WorkerRecoveryObservation,
 } from "#shared/contract.ts";
+import {
+  stepApplicationOf,
+  workerRolloutOf,
+} from "#shared/model/recipe-view.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
@@ -43,6 +47,10 @@ const namespaces: readonly string[] =
  * every Deployment and worker Pod in its pool's namespace, read fresh on each call
  * while the intent is pending. The executor relays these into its proof,
  * which the API settles under the same generation and fingerprint checks.
+ * The target comes from what the deployment froze, its recipe and worker
+ * pool, never the environment's current binding: a compound recipe need not
+ * list its worker Application first, and a rebind moves the binding while
+ * recovery still owns the frozen target.
  */
 export async function observeWorkerRecovery(
   delivery: Delivery,
@@ -64,13 +72,17 @@ export async function observeWorkerRecovery(
     );
   const detail = await delivery.detail(intent.deploymentId);
   // The frozen pool names its fixed host; rollouts and retirements alike.
-  const host = workerHostSpecification(
-    WorkerPoolSnapshotSchema.parse(detail.deployment.workerSnapshot).target,
-  );
-  if (detail.environment.application !== host.application)
+  const pool = WorkerPoolSnapshotSchema.parse(detail.deployment.workerSnapshot);
+  const host = workerHostSpecification(pool.target);
+  const definition = detail.pipeline.definition;
+  if (
+    pool.environmentId !== detail.deployment.environmentId ||
+    workerRolloutOf(definition)?.target !== pool.target ||
+    stepApplicationOf(definition, "worker-rollout")?.name !== host.application
+  )
     throw new DeliveryError(
       "INVALID",
-      "Worker recovery requires the pool's canonical host Application",
+      "Worker recovery requires the frozen recipe to roll its pool's canonical host Application",
     );
   const namespace = host.kubernetesNamespace;
   if (!namespaces.includes(namespace))

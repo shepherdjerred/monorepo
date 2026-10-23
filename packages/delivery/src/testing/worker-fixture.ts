@@ -1,4 +1,5 @@
 import type { Delivery } from "#infrastructure/delivery.ts";
+import type { Transaction } from "#infrastructure/delivery-data.ts";
 import { freezeWorkerSnapshot } from "#infrastructure/worker-pool/pool.ts";
 import {
   LegacyPipelineRevisionSchema,
@@ -182,24 +183,33 @@ export async function workerFixture(
         deploymentId: detail.deployment.id,
       });
       if (snapshot === null) throw new Error("Worker fixture snapshot missing");
-      // Only this disposable test fixture seeds the still-guarded reviewed definition.
-      await tx.pipeline.upsert({
-        where: { id: workerPipeline.id },
-        create: {
-          id: workerPipeline.id,
-          definition: workerPipeline.definition,
-        },
-        update: {},
-      });
       await tx.deployment.update({
         where: { id: detail.deployment.id },
-        data: {
-          workerSnapshot: snapshot,
-          pipelineRevisionId: workerPipeline.id,
-        },
+        data: { workerSnapshot: snapshot },
       });
+      await freezeRecipe(tx, detail.deployment.id);
     });
     return delivery.detail(release.deployment.id);
+  }
+  /**
+   * Points a deployment at the recipe it froze, the reviewed worker recipe
+   * unless given another. Only this disposable test fixture seeds the
+   * still-guarded reviewed definition.
+   */
+  async function freezeRecipe(
+    tx: Transaction,
+    deploymentId: string,
+    recipe: { id: string; definition: object } = workerPipeline,
+  ) {
+    await tx.pipeline.upsert({
+      where: { id: recipe.id },
+      create: { id: recipe.id, definition: recipe.definition },
+      update: {},
+    });
+    await tx.deployment.update({
+      where: { id: deploymentId },
+      data: { pipelineRevisionId: recipe.id },
+    });
   }
   async function acceptedPool() {
     const a = await acceptedRelease(1);
@@ -262,6 +272,13 @@ export async function workerFixture(
     requestedRelease,
     requestedBaseline,
     requestedFrozenRelease,
+    frozenRecipe: (
+      deploymentId: string,
+      recipe?: { id: string; definition: object },
+    ) =>
+      delivery.database.$transaction((tx) =>
+        freezeRecipe(tx, deploymentId, recipe),
+      ),
     acceptedPool,
     adopt,
     freeze,
