@@ -84,6 +84,7 @@ final class LocalBoundingTest {
             PoisonView.NONE,
             "test",
             List.of(),
+            List.of(),
             List.of());
     return new Situation(
         self,

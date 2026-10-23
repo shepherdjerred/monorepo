@@ -146,6 +146,7 @@ final class KitPlayTest {
             PoisonView.NONE,
             "synthetic",
             List.of(),
+            List.of(),
             List.of());
     return new ReflexInput(self, world, decision(self, List.of()), target, 0, List.of());
   }
@@ -327,6 +328,7 @@ final class KitPlayTest {
             PoisonView.NONE,
             "synthetic",
             List.of(),
+            List.of(),
             List.of());
     var waiting =
         new ReflexInput(dwarf, world, decision(dwarf, List.of()), Optional.empty(), 0, List.of());
@@ -347,6 +349,7 @@ final class KitPlayTest {
             List.of(),
             PoisonView.NONE,
             "synthetic",
+            List.of(),
             List.of(),
             List.of());
     var charging =
@@ -387,6 +390,7 @@ final class KitPlayTest {
               List.of(),
               PoisonView.NONE,
               "synthetic",
+              List.of(),
               List.of(),
               List.of());
       var input =

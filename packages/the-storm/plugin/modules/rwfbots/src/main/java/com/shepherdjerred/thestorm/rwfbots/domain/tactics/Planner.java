@@ -786,7 +786,7 @@ public final class Planner {
     var refuge = HighGround.refuge(situation, context);
     if (refuge.isPresent()) return refuge.orElseThrow();
     var self = situation.self();
-    var threat = situation.nearestEnemy().map(Situation.KnownEnemy::pos);
+    var threat = situation.nearestThreat();
     if (threat.isPresent()) {
       var away = self.pos().distance(threat.get()) - 1;
       var cover =
@@ -883,8 +883,8 @@ public final class Planner {
       case PlanStep.Flee(var goal, var _) ->
           reached(self.pos(), goal)
               || situation
-                  .nearestEnemy()
-                  .map(enemy -> enemy.pos().distance(self.pos()) > FLEE_RANGE)
+                  .nearestThreat()
+                  .map(threat -> threat.distance(self.pos()) > FLEE_RANGE)
                   .orElse(true);
       case PlanStep.Ability _ -> situation.now() > startedTick;
       case PlanStep.Pickup(var arrow, var cell) ->

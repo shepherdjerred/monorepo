@@ -55,6 +55,7 @@ final class RouteResultTest {
             PoisonView.NONE,
             nav.mapId(),
             List.of(),
+            List.of(),
             List.of());
     var situation =
         new Situation(

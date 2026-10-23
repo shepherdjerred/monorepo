@@ -238,6 +238,7 @@ public final class RwfBotsHarness implements AutoCloseable {
         com.shepherdjerred.thestorm.rwf.app.BattleSounds.class,
         new com.shepherdjerred.thestorm.rwf.app.BattleSoundLog(clock));
     services.provide(com.shepherdjerred.thestorm.rwf.app.TacticalCasting.class, id -> false);
+    services.provide(com.shepherdjerred.thestorm.rwf.app.MatchSummons.class, java.util.List::of);
     services.provide(
         com.shepherdjerred.thestorm.rwf.app.VisualOcclusion.class,
         new com.shepherdjerred.thestorm.rwf.app.SmokeFields());

@@ -6,6 +6,10 @@
 // packages/the-storm/NOTICE.
 package com.shepherdjerred.thestorm.rwf.adapter.paper;
 
+import com.shepherdjerred.thestorm.rwf.app.BattleSounds;
+import com.shepherdjerred.thestorm.rwf.app.MatchSummons;
+import com.shepherdjerred.thestorm.rwf.app.view.MatchState;
+import com.shepherdjerred.thestorm.rwf.app.view.Point;
 import com.shepherdjerred.thestorm.rwf.domain.ability.AbilityInput;
 import com.shepherdjerred.thestorm.rwf.domain.ability.KitCombat;
 import com.shepherdjerred.thestorm.rwf.domain.ability.KitState;
@@ -23,6 +27,7 @@ import com.shepherdjerred.thestorm.rwf.domain.killstreak.Delivery;
 import com.shepherdjerred.thestorm.rwf.domain.killstreak.GolemAi;
 import com.shepherdjerred.thestorm.rwf.domain.match.Combatant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,10 +56,14 @@ import org.jspecify.annotations.Nullable;
  * of their team (a hidden Ghost or Wraith only once it gives itself away), and come back to heel
  * each second; they go when their owner dies. The golem thinks with Red Warfare's goals ({@link
  * GolemGoals}). A summon's blow goes through the combat rules as a melee hit credited to its owner,
- * and a fighter's blow on an enemy summon goes through them too. Everything goes when the match
+ * and a fighter's blow on an enemy summon goes through them too. A blow on a player is heard on the
+ * battlefield as the summon's own, so the bots know what hit them. Everything goes when the match
  * resets. Main thread only.
  */
-final class Summons {
+final class Summons implements MatchSummons {
+
+  /** How far a summon's blow on a player is heard, as far as any other hit. */
+  static final double BLOW_HEARD = 32;
 
   /**
    * One summoned creature.
@@ -83,6 +92,7 @@ final class Summons {
   private final Sacrifices sacrifices;
   private final Map<UUID, Summon> summons = new HashMap<>();
   private @Nullable ServerHooks hooks;
+  private @Nullable BattleSounds sounds;
   private @Nullable GolemGoals golems;
 
   Summons(MatchRunner runner, PaperContext context, Keys keys, CombatTracker tracker) {
@@ -93,10 +103,22 @@ final class Summons {
     this.sacrifices = new Sacrifices(runner, context, tracker);
   }
 
-  /** The server operations the summons need; given once, as the module starts. */
-  void hooks(ServerHooks given) {
+  /**
+   * The server operations the summons need and the battlefield their blows sound on; given once, as
+   * the module starts.
+   */
+  void hooks(ServerHooks given, BattleSounds battlefield) {
     this.hooks = given;
+    this.sounds = battlefield;
     this.golems = new GolemGoals(this, context, given);
+  }
+
+  private BattleSounds sounds() {
+    var given = sounds;
+    if (given == null) {
+      throw new IllegalStateException("the summons were never given the battlefield");
+    }
+    return given;
   }
 
   ServerHooks hooks() {
@@ -120,6 +142,29 @@ final class Summons {
     return entity == null
         ? Optional.empty()
         : Optional.ofNullable(summons.get(entity.getUniqueId()));
+  }
+
+  @Override
+  public List<MatchSummons.Creature> creatures() {
+    return summons.values().stream()
+        .filter(summon -> summon.mob().isValid() && !summon.mob().isDead())
+        .sorted(Comparator.comparing(summon -> summon.mob().getUniqueId()))
+        .map(Summons::creature)
+        .toList();
+  }
+
+  private static MatchSummons.Creature creature(Summon summon) {
+    var mob = summon.mob();
+    var at = Places.at(mob);
+    var motion = mob.getVelocity();
+    return new MatchSummons.Creature(
+        mob.getUniqueId(),
+        summon.dog() ? MatchSummons.Kind.WOLF : MatchSummons.Kind.GOLEM,
+        summon.owner().uuid(),
+        MatchState.teamName(summon.team()),
+        new Point(at.getX(), at.getY(), at.getZ()),
+        new Point(motion.getX(), motion.getY(), motion.getZ()),
+        mob.getHealth());
   }
 
   /** Every summon alive, for tests. */
@@ -337,6 +382,16 @@ final class Summons {
     }
     var owner = summon.owner().uuid();
     tracker.hit(player, damage, Optional.of(owner), AttackType.MELEE);
+    var at = Places.at(player);
+    sounds()
+        .emit(
+            new BattleSounds.Sound(
+                player.getWorld().getUID(),
+                summon.mob().getUniqueId(),
+                new Point(at.getX(), at.getY(), at.getZ()),
+                BattleSounds.Kind.HURT,
+                BLOW_HEARD,
+                Optional.of(player.getUniqueId())));
     knockback(summon, player, random);
     hooks().hurt().accept(player);
     player.getWorld().playSound(Places.at(player), Sound.ENTITY_PLAYER_HURT, 1, 1);

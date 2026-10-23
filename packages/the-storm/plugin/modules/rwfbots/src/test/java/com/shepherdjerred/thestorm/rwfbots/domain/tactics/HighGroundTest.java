@@ -122,6 +122,7 @@ final class HighGroundTest {
             PoisonView.NONE,
             "high-ground",
             List.of(),
+            List.of(),
             List.of());
     return new Situation(
         self,

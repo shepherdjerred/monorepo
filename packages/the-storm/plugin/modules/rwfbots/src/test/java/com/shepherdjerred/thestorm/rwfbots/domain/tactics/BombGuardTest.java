@@ -80,6 +80,7 @@ final class BombGuardTest {
             PoisonView.NONE,
             NAV.mapId(),
             List.of(),
+            List.of(),
             List.of());
     return new Situation(
         self, snapshot, new Percept(PerceptionState.EMPTY, List.of(enemies), 50), board, role);
@@ -249,6 +250,7 @@ final class BombGuardTest {
             List.of(bomb),
             PoisonView.NONE,
             NAV.mapId(),
+            List.of(),
             List.of(),
             List.of());
     var memory = Memory.EMPTY.remember(ENEMY, new Sighting(enemy.pos(), TOWARDS, 30, 1, false));

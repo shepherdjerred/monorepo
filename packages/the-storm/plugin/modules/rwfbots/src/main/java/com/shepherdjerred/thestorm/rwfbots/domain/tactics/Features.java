@@ -36,6 +36,7 @@ import java.util.Optional;
  * @param freeTarget whether some known enemy is not already chased by enough teammates
  * @param rewindReady whether the Time Machine would work now and land away from the threat
  * @param aggro the enemy who just hurt the bot, while its grudge pulls ({@link Aggro})
+ * @param golemDistance distance to the nearest hostile iron golem in sight, or infinity
  */
 public record Features(
     double healthFrac,
@@ -60,7 +61,8 @@ public record Features(
     boolean plantSlot,
     boolean freeTarget,
     boolean rewindReady,
-    Optional<Aggro.Pull> aggro) {
+    Optional<Aggro.Pull> aggro,
+    double golemDistance) {
 
   /** How close a known enemy must be to an own bomb to count as threatening it. */
   public static final double BOMB_THREAT_RANGE = 12;
@@ -123,7 +125,11 @@ public record Features(
         situation.holdsPlantSlot() && situation.plantTarget().isPresent(),
         !situation.chaseableEnemies().isEmpty(),
         rewindReady,
-        Aggro.pull(situation));
+        Aggro.pull(situation),
+        situation
+            .nearestGolem()
+            .map(golem -> golem.pos().distance(self.pos()))
+            .orElse(Double.POSITIVE_INFINITY));
   }
 
   /** A fuse with this many teammates on it needs no more. */
@@ -162,7 +168,8 @@ public record Features(
         new DecisionTrace.Feature("slotDist", quantize(slotDistance)),
         new DecisionTrace.Feature("plantSlot", plantSlot ? 1 : 0),
         new DecisionTrace.Feature("freeTarget", freeTarget ? 1 : 0),
-        new DecisionTrace.Feature("aggro", aggro.isPresent() ? 1 : 0));
+        new DecisionTrace.Feature("aggro", aggro.isPresent() ? 1 : 0),
+        new DecisionTrace.Feature("golemDist", quantize(golemDistance)));
   }
 
   private static int quantize(double distance) {

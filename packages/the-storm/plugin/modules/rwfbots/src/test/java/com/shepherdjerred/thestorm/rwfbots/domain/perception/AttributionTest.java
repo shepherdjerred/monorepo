@@ -35,7 +35,15 @@ final class AttributionTest {
 
   private static WorldSnapshot world(long tick, List<CombatantView> views, List<Stimulus> sounds) {
     return new WorldSnapshot(
-        tick, MatchPhase.LIVE, views, List.of(), PoisonView.NONE, "synthetic", sounds, List.of());
+        tick,
+        MatchPhase.LIVE,
+        views,
+        List.of(),
+        PoisonView.NONE,
+        "synthetic",
+        sounds,
+        List.of(),
+        List.of());
   }
 
   private Percept hitBy(CombatantView attacker, long seed) {

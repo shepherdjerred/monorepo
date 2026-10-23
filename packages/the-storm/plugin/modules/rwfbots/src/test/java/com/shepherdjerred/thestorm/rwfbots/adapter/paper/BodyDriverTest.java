@@ -162,6 +162,16 @@ final class BodyDriverTest {
   }
 
   @Test
+  void anAttackOnAKillstreakCreatureGoesThroughTheSummonsRules() {
+    var wolf = UUID.randomUUID();
+    var target = ids.summon(wolf);
+
+    apply(1, new BodyCommand.Attack(target));
+
+    assertThat(actions.calls()).containsExactly("strike " + wolf);
+  }
+
+  @Test
   void aTacticalWindupHoldsLearnedMovementAndAttacksIncludingTheFrameThatStartsIt() {
     var casting = new java.util.concurrent.atomic.AtomicBoolean();
     driver =
@@ -363,6 +373,7 @@ final class BodyDriverTest {
             List.of(),
             com.shepherdjerred.thestorm.rwfbots.domain.world.PoisonView.NONE,
             "test",
+            List.of(),
             List.of(),
             List.of());
     var input =

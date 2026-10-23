@@ -177,7 +177,8 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
             new SnapshotCapture(
                 ids,
                 id -> Optional.ofNullable(plugin.getServer().getPlayer(id)),
-                new StimulusCollector(new BattleSoundLog(time), time),
+                new SnapshotCapture.Sources(
+                    new StimulusCollector(new BattleSoundLog(time), time), java.util.List::of),
                 new SnapshotCapture.Capabilities(port::noFallUntil, time)));
     setup(
         "kit-selection",

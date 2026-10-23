@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwfbots.adapter.paper;
 
+import com.shepherdjerred.thestorm.rwf.app.MatchSummons;
 import com.shepherdjerred.thestorm.rwf.app.view.MatchState;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.tactics.Resupply;
@@ -11,6 +12,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.MatchPhase;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.PoisonView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stimulus;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.SummonView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
 import java.util.ArrayList;
@@ -18,8 +20,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
@@ -30,9 +34,10 @@ import org.bukkit.entity.Player;
  * position, velocity (from the position a tick ago), look, health, absorption, armor, held slot,
  * sprinting, on ground, using an item, invisible and when they were last hurt (a drop in health
  * plus absorption) and the arrows left to a weapon that spends them ({@link Quivers}), with the
- * bombs, the poison, the tick's stimuli and the loose arrows a low quiver could pick up. A
- * combatant whose entity is absent this tick (a bot between bodies while its skin applies, a human
- * not online) is left out of the snapshot rather than guessed at. Main thread only.
+ * bombs, the poison, the killstreak summons in the field, the tick's stimuli (a summon's blow named
+ * as the summon's own) and the loose arrows a low quiver could pick up. A combatant whose entity is
+ * absent this tick (a bot between bodies while its skin applies, a human not online) is left out of
+ * the snapshot rather than guessed at. Main thread only.
  */
 public final class SnapshotCapture {
 
@@ -50,6 +55,7 @@ public final class SnapshotCapture {
   private final StimulusCollector stimuli;
   private final TraversalCapture traversal;
   private final Capabilities capabilities;
+  private final MatchSummons summons;
   private final Map<UUID, SoundMotion> soundMotion = new HashMap<>();
   private boolean emitMotion = true;
   private long soundBaseline;
@@ -62,7 +68,10 @@ public final class SnapshotCapture {
   SnapshotCapture independent() {
     var capture =
         new SnapshotCapture(
-            ids, entities, new StimulusCollector(stimuli.sounds(), stimuli.time()), capabilities);
+            ids,
+            entities,
+            new Sources(new StimulusCollector(stimuli.sounds(), stimuli.time()), summons),
+            capabilities);
     capture.emitMotion = false;
     capture.soundBaseline = soundBaseline;
     return capture;
@@ -76,22 +85,31 @@ public final class SnapshotCapture {
       Function<UUID, Optional<java.time.Instant>> noFallUntil, java.time.InstantSource time) {}
 
   /**
+   * What the match reports besides the combatants' entities.
+   *
+   * @param stimuli where the tick's raw events wait
+   * @param summons the match's killstreak creatures
+   */
+  public record Sources(StimulusCollector stimuli, MatchSummons summons) {}
+
+  /**
    * @param ids the match's id mapping
    * @param entities resolves a combatant's entity (bots through their bodies, humans by server)
-   * @param stimuli where the tick's raw events wait
+   * @param sources the tick's raw events and the summons in the field
    * @param capabilities the authoritative kit immunity source and match clock
    */
   public SnapshotCapture(
       IdMap ids,
       Function<UUID, Optional<Player>> entities,
-      StimulusCollector stimuli,
+      Sources sources,
       Capabilities capabilities) {
     this.ids = ids;
+    this.summons = sources.summons();
     this.entities = entities;
-    this.stimuli = stimuli;
+    this.stimuli = sources.stimuli();
     this.traversal = new TraversalCapture(capabilities.noFallUntil(), capabilities.time());
     this.capabilities = capabilities;
-    var existing = stimuli.sounds().since(0);
+    var existing = this.stimuli.sounds().since(0);
     soundBaseline = existing.isEmpty() ? 0 : existing.getLast().sequence();
   }
 
@@ -116,6 +134,12 @@ public final class SnapshotCapture {
     var bombs = state.bombs().stream().map(this::bomb).toList();
     var mapId =
         state.mapId().orElseThrow(() -> new IllegalStateException("a live match has a map"));
+    var creatures = summons.creatures();
+    var field = creatures.stream().map(this::summon).toList();
+    var sources =
+        creatures.stream()
+            .map(MatchSummons.Creature::entity)
+            .collect(Collectors.toUnmodifiableSet());
     return new WorldSnapshot(
         tick,
         phase(state.phase()),
@@ -123,8 +147,24 @@ public final class SnapshotCapture {
         bombs,
         poison(tick, state),
         mapId,
-        stimuli(tick, present),
-        Quivers.loose(low));
+        stimuli(tick, present, sources),
+        Quivers.loose(low),
+        field);
+  }
+
+  private SummonView summon(MatchSummons.Creature creature) {
+    var at = creature.position();
+    var motion = creature.velocity();
+    return new SummonView(
+        ids.summon(creature.entity()),
+        switch (creature.kind()) {
+          case GOLEM -> SummonView.Kind.GOLEM;
+          case WOLF -> SummonView.Kind.WOLF;
+        },
+        IdMap.team(creature.team()),
+        new Vec3(at.x(), at.y(), at.z()),
+        new Vec3(motion.x(), motion.y(), motion.z()),
+        creature.health());
   }
 
   /** Actual body capabilities, using the same authoritative immunity source and match clock. */
@@ -271,15 +311,14 @@ public final class SnapshotCapture {
         poisonStartedTick, (tick - poisonStartedTick) * POISON_RAMP_PER_TICK);
   }
 
-  private List<Stimulus> stimuli(long tick, Map<UUID, Player> present) {
+  private List<Stimulus> stimuli(long tick, Map<UUID, Player> present, Set<UUID> creatures) {
     if (emitMotion) motionSounds(tick, present);
     stimuli.drain();
     var result = new ArrayList<Stimulus>();
     var now = stimuli.time().instant();
     for (var cue : stimuli.sounds().since(soundBaseline)) {
       var sound = cue.sound();
-      var entity = present.get(sound.source());
-      if (entity == null || !entity.getWorld().getUID().equals(sound.world())) continue;
+      if (!heard(sound, present, creatures)) continue;
       var kind = soundKind(sound.kind());
       if (kind.isEmpty()) continue;
       var at = sound.position();
@@ -295,6 +334,17 @@ public final class SnapshotCapture {
               sound.radius()));
     }
     return result;
+  }
+
+  /** Whether {@code sound} comes from a combatant in its world or a summon in the field. */
+  private static boolean heard(
+      com.shepherdjerred.thestorm.rwf.app.BattleSounds.Sound sound,
+      Map<UUID, Player> present,
+      Set<UUID> creatures) {
+    var entity = present.get(sound.source());
+    return entity == null
+        ? creatures.contains(sound.source())
+        : entity.getWorld().getUID().equals(sound.world());
   }
 
   private void motionSounds(long tick, Map<UUID, Player> present) {

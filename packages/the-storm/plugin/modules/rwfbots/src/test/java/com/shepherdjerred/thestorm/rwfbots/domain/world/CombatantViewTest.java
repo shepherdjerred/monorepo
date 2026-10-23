@@ -36,6 +36,7 @@ final class CombatantViewTest {
                     PoisonView.NONE,
                     "m",
                     List.of(),
+                    List.of(),
                     List.of()))
         .isInstanceOf(IllegalArgumentException.class);
   }
@@ -47,7 +48,15 @@ final class CombatantViewTest {
     var incoming = new ArrayList<>(List.of(first, second));
     var original =
         new WorldSnapshot(
-            0, MatchPhase.LIVE, incoming, List.of(), PoisonView.NONE, "m", List.of(), List.of());
+            0,
+            MatchPhase.LIVE,
+            incoming,
+            List.of(),
+            PoisonView.NONE,
+            "m",
+            List.of(),
+            List.of(),
+            List.of());
     incoming.clear();
     assertThat(original.combatants()).containsExactly(first, second);
     assertThat(original.combatant(first.id())).contains(first);
@@ -64,6 +73,7 @@ final class CombatantViewTest {
             PoisonView.NONE,
             "m",
             List.of(),
+            List.of(),
             List.of());
     assertThat(next.combatant(first.id())).contains(changed);
     assertThat(original.require(first.id())).isEqualTo(first);
@@ -77,6 +87,7 @@ final class CombatantViewTest {
             List.of(),
             PoisonView.NONE,
             "m",
+            List.of(),
             List.of(),
             List.of());
     assertThat(original).isEqualTo(equal).hasSameHashCodeAs(equal);

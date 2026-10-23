@@ -103,6 +103,7 @@ final class BotTickerTest {
             PoisonView.NONE,
             "test",
             List.of(),
+            List.of(),
             List.of());
     return new ReflexInput(
         self, snapshot, Decision.idle(self.id(), 20, 0), Optional.empty(), 0, List.of());
@@ -135,6 +136,7 @@ final class BotTickerTest {
             List.of(),
             PoisonView.NONE,
             "test",
+            List.of(),
             List.of(),
             List.of());
     var input =
@@ -215,6 +217,7 @@ final class BotTickerTest {
         List.of(),
         PoisonView.NONE,
         "synthetic",
+        List.of(),
         List.of(),
         List.of());
   }

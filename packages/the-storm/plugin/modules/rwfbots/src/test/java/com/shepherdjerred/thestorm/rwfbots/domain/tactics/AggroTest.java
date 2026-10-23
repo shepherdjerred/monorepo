@@ -124,6 +124,7 @@ final class AggroTest {
               PoisonView.NONE,
               NAV.mapId(),
               List.of(),
+              List.of(),
               List.of());
       var percept =
           new Percept(
@@ -319,6 +320,7 @@ final class AggroTest {
               List.of(bomb),
               PoisonView.NONE,
               NAV.mapId(),
+              List.of(),
               List.of(),
               List.of());
       var situation = new Situation(self, snapshot, base.percept(), base.board(), Role.RETAKE);

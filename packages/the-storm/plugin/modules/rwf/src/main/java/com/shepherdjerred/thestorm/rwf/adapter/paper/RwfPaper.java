@@ -261,7 +261,12 @@ public final class RwfPaper {
                 app.kitGates().killstreaks(),
                 productEvents,
                 app.streaks()));
-    runner.powers().streaks().hooks(app.hooks());
+    runner.powers().streaks().hooks(app.hooks(), battleSounds);
+    module
+        .services()
+        .provide(
+            com.shepherdjerred.thestorm.rwf.app.MatchSummons.class,
+            runner.powers().streaks().summons());
     module
         .services()
         .provide(

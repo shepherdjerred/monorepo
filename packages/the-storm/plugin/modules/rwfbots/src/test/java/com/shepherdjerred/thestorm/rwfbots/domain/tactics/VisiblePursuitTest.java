@@ -193,6 +193,7 @@ final class VisiblePursuitTest {
         PoisonView.NONE,
         NAV.mapId(),
         List.of(),
+        List.of(),
         List.of());
   }
 }

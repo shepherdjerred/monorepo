@@ -162,6 +162,7 @@ final class CombatHarnessTest {
                 PoisonView.NONE,
                 "test",
                 List.of(),
+                List.of(),
                 List.of()),
             Decision.idle(self.id(), 11, 0),
             Optional.empty(),

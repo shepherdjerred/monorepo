@@ -89,6 +89,7 @@ final class PlaybookTest {
         PoisonView.NONE,
         NAV.mapId(),
         List.of(),
+        List.of(),
         List.of());
   }
 

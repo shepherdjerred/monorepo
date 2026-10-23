@@ -3060,6 +3060,21 @@ hit, and the pull lapses once the bot strays that far. Below half health, at a
 fuse it is arming, or under a defuse directive (unless the attacker is in melee
 range), survival and the objective decide as before. Traces carry `aggro=1`.
 
+Summons. rwf exports its killstreak creatures (`MatchSummons`: attack dogs and
+the iron golem, with team, position, motion and health), and the capture puts
+them in the snapshot. A summon's blow on a player is heard as the summon's own
+`HURT` cue, so its victim's grudge names the creature and never its owner.
+Bots see hostile summons by the same sight rules as players. Tactics scores
+`RETREAT` up as a hostile golem closes from nine blocks to four (trace
+`golemDist`), and fleeing runs from the nearer of the nearest enemy and the
+golem. With no player to fight, the reflex layer takes on a summon, the one
+that bit the bot first: a dog within the same reach as a player, a golem only
+with a bow between six and 16 blocks, or to keep it in view while fleeing it.
+Nobody trades sword blows with a golem. A defuser leaves the fuse only for a
+summon in melee range, retreating from a golem and fighting a dog. Swings at a
+summon go through `BotActions.strikeSummon`, which checks reach and sight like
+a human's swing and applies the summons' combat rules.
+
 The `Governor` watches the server's recent tick times (p95) and the bot
 sections' own time with hysteresis: level 1 halves the think rates and makes
 bots with no human within 48 blocks reflex every other tick; level 2 also

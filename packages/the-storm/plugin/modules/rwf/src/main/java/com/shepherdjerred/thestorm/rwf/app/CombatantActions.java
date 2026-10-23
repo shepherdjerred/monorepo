@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwf.app;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.geometry.Vec3;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * The only way a bot acts in a match. Every action is validated exactly as the same action by a
@@ -23,6 +24,13 @@ public interface CombatantActions {
 
   /** Swing the held weapon at {@code target}, who must be in reach, visible and on another team. */
   Optional<ActionRefusal> melee(CombatantId attacker, CombatantId target);
+
+  /**
+   * Swing the held weapon at the enemy killstreak summon {@code summon} (an attack dog or the iron
+   * golem), which must be in reach and visible. The blow goes through the summons' combat rules as
+   * a human's swing at it would.
+   */
+  Optional<ActionRefusal> strikeSummon(CombatantId attacker, UUID summon);
 
   /**
    * Shoot the held legacy Infinity bow for explicit simulator/control callers. Live body

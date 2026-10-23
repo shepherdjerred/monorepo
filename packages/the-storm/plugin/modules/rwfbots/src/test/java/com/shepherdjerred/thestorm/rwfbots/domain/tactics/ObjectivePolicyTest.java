@@ -59,6 +59,7 @@ final class ObjectivePolicyTest {
             PoisonView.NONE,
             "synthetic",
             List.of(),
+            List.of(),
             List.of());
     var visible = bodies.stream().filter(body -> !body.team().equals(self.team())).toList();
     return new Situation(

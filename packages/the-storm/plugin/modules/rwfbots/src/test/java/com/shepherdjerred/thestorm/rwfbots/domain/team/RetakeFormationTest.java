@@ -56,6 +56,7 @@ final class RetakeFormationTest {
             PoisonView.NONE,
             NAV.mapId(),
             List.of(),
+            List.of(),
             List.of());
     var members =
         bots.stream()

@@ -83,6 +83,7 @@ final class PoisonSafetyTest {
             active ? PoisonView.startedAt(0, 0.1) : PoisonView.NONE,
             NAV.mapId(),
             List.of(),
+            List.of(),
             List.of());
     return new Situation(
         self,

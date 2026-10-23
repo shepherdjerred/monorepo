@@ -60,6 +60,7 @@ final class WaterPerceptionTest {
             PoisonView.NONE,
             "deep-water",
             List.of(),
+            List.of(),
             List.of());
     assertThat(regions.canSee(0, 1)).isFalse();
     var empty = new BitSet();

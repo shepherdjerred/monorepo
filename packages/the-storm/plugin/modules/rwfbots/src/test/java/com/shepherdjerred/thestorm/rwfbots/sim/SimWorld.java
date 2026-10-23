@@ -253,6 +253,7 @@ final class SimWorld {
         poison,
         nav.mapId(),
         stimuli,
+        List.of(),
         List.of());
   }
 

@@ -173,6 +173,7 @@ final class ThinkLoopTest {
         PoisonView.NONE,
         NAV.mapId(),
         List.of(),
+        List.of(),
         List.of());
   }
 
@@ -380,6 +381,7 @@ final class ThinkLoopTest {
               original.bombs(),
               PoisonView.NONE,
               NAV.mapId(),
+              List.of(),
               List.of(),
               List.of());
       serial.publish(snapshot);
@@ -601,6 +603,7 @@ final class ThinkLoopTest {
               original.poison(),
               original.mapId(),
               original.stimuli(),
+              List.of(),
               List.of()));
       assertThat(loop.board().perceived()).isEqualTo(32);
       assertThat(loop.board().perceptions()).hasSize(256);

@@ -98,6 +98,7 @@ final class RetakeAdmissionTest {
         PoisonView.NONE,
         nav.mapId(),
         List.of(),
+        List.of(),
         List.of());
   }
 

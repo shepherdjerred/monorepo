@@ -149,6 +149,7 @@ final class ReflexWalkSafetyTest {
             PoisonView.NONE,
             "corridor",
             List.of(),
+            List.of(),
             List.of());
     return Reflex.tick(
         ReflexState.initial(fixture.self().facing()),
