@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { RecipeDefinitionSchema } from "./recipe-contract.ts";
-import { specializedStageKey } from "./recipe-view.ts";
+import { specializedStageKey, targetWithoutRemoval } from "./recipe-view.ts";
 import {
   ONE_CONTENT_TARGET,
   ONE_FORUM_BUNDLE,
@@ -204,4 +204,26 @@ describe("one recoverable content target per release (4.15)", () => {
       }),
     ).toEqual([ONE_CONTENT_TARGET]);
   });
+});
+
+test("an Application's site step keeps its bucket past removal, so removal waits for an adapter (4.10)", () => {
+  const withSite = RecipeDefinitionSchema.parse(application("wiki", siteStep));
+  expect(targetWithoutRemoval(withSite)).toBe("static-site step");
+  expect(
+    targetWithoutRemoval(
+      RecipeDefinitionSchema.parse({
+        kind: "compound",
+        subRecipes: [
+          { instance: "application:arcade", definition: application("arcade") },
+          {
+            instance: "application:wiki",
+            definition: application("wiki", siteStep),
+          },
+        ],
+      }),
+    ),
+  ).toBe("static-site step");
+  expect(
+    targetWithoutRemoval(RecipeDefinitionSchema.parse(application("arcade"))),
+  ).toBeNull();
 });

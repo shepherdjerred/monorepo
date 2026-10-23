@@ -88,6 +88,16 @@ export function kubernetesRecipes(definition: Stored): KubernetesRecipe[] {
 }
 
 /**
+ * An Application step whose target outlives the Application's removal: a
+ * site step's bucket stays live when the Application is deleted (4.10).
+ */
+function stepWithoutRemoval(steps: readonly { kind: string }[]) {
+  return steps.some((step) => step.kind === "static-site")
+    ? "static-site step"
+    : null;
+}
+
+/**
  * The first target a recipe deploys that removal cannot destroy (4.10), or
  * null. Only a kubernetes-application has a removal adapter, which deletes
  * the Application by its lifecycle policy; a bucket, a stack, a channel's
@@ -98,12 +108,13 @@ export function kubernetesRecipes(definition: Stored): KubernetesRecipe[] {
 export function targetWithoutRemoval(definition: Stored): string | null {
   switch (definition.kind) {
     case "kubernetes-application":
+      return stepWithoutRemoval(definition.steps);
     case "argocd":
     case "control-plane":
       return null;
     case "operator-run":
       return definition.wrapped.kind === "kubernetes-application"
-        ? null
+        ? stepWithoutRemoval(definition.wrapped.steps)
         : `operator-run ${definition.wrapped.kind}`;
     case "compound":
       return (
