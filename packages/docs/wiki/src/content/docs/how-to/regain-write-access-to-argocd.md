@@ -44,13 +44,17 @@ done
 ```
 
 Then stop ArgoCD from reverting its own settings. Save the `argocd`
-Application's current policy first so step 4 can restore it:
+Application's current policy first so step 4 can restore it. Each command runs
+only if the one before it succeeded, so a failed read changes nothing; fix the
+access problem and run the block again:
 
 ```bash
 kubectl -n argocd get application argocd -o json \
-  | jq -c '.spec.syncPolicy.automated // empty' > argocd-automated.json
-kubectl -n argocd patch application argocd --type merge \
-  -p '{"spec":{"syncPolicy":{"automated":null}}}'
+  > argocd-application.json \
+  && jq -c '.spec.syncPolicy.automated // empty' argocd-application.json \
+    > argocd-automated.json \
+  && kubectl -n argocd patch application argocd --type merge \
+    -p '{"spec":{"syncPolicy":{"automated":null}}}'
 ```
 
 ## 2. Re-enable the admin account
@@ -70,13 +74,16 @@ Skip this step while the ArgoCD API answers: writes made through it pass the
 source policy. If the API is down and an Application's source must change,
 first stop the `cluster-admission` Application's automated sync. Otherwise it
 recreates the binding on its next reconciliation. Save its current policy so
-step 4 can restore it:
+step 4 can restore it; as in step 1, a failed read stops the block before
+anything changes:
 
 ```bash
 kubectl -n argocd get application cluster-admission -o json \
-  | jq -c '.spec.syncPolicy.automated // empty' > cluster-admission-automated.json
-kubectl -n argocd patch application cluster-admission --type merge \
-  -p '{"spec":{"syncPolicy":{"automated":null}}}'
+  > cluster-admission-application.json \
+  && jq -c '.spec.syncPolicy.automated // empty' \
+    cluster-admission-application.json > cluster-admission-automated.json \
+  && kubectl -n argocd patch application cluster-admission --type merge \
+    -p '{"spec":{"syncPolicy":{"automated":null}}}'
 ```
 
 Then lift the policy binding:
