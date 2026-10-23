@@ -7,6 +7,8 @@ import clockTower from "../../items/the-storm/assets/clock-tower.jpg";
 import townHouse from "../../items/the-storm/assets/town-house.jpg";
 
 const formats = ["avif", "webp"];
+// On desktop the hero fills a tall column and crops the landscape shot, so it
+// needs a source about as wide as the viewport, not half of it.
 const widths = [480, 800, 1200, 1600];
 ---
 
@@ -32,62 +34,55 @@ const widths = [480, 800, 1200, 1600];
           src={windmill}
           formats={formats}
           widths={widths}
-          sizes="(min-width: 960px) 50vw, 100vw"
+          sizes="(min-width: 960px) 1600px, 100vw"
           alt="A tall timber windmill above a golden wheat field under a blue sky."
           loading="eager"
           fetchpriority="high"
         />
       </figure>
 
-      <div class="connect" aria-label="Server addresses">
-        <div class="edition">
-          <div class="edition-head">
-            <span class="label">Java</span>
+      <div class="connect" aria-label="Server address" data-edition="java">
+        <div class="connect-head">
+          <div
+            class="edition-toggle"
+            role="group"
+            aria-label="Minecraft edition"
+          >
             <button
               type="button"
-              class="copy"
-              data-copy={server.java.address}
-              data-edition="java"
-              data-field="address"
+              data-edition-choice="java"
+              aria-pressed="true"
             >
-              copy
+              Java
+            </button>
+            <button
+              type="button"
+              data-edition-choice="bedrock"
+              aria-pressed="false"
+            >
+              Bedrock
             </button>
           </div>
+          <button type="button" class="copy" data-copy-address>
+            copy
+          </button>
+        </div>
+        <div class="edition" data-edition-panel="java">
+          <span class="label">Java Edition {server.java.version}</span>
           <span class="address">{server.java.address}</span>
+          <p class="note">On PC, Mac or Linux. Multiplayer → Add Server.</p>
         </div>
-        <div class="edition">
-          <div class="edition-head">
-            <span class="label">Bedrock</span>
-            <button
-              type="button"
-              class="copy"
-              data-copy={server.bedrock.address}
-              data-edition="bedrock"
-              data-field="address"
-            >
-              copy
-            </button>
-          </div>
+        <div class="edition" data-edition-panel="bedrock" hidden>
+          <span class="label">Bedrock Edition, {server.bedrock.version}</span>
           <span class="address">{server.bedrock.address}</span>
-          <div class="port-row">
-            <span class="port">
-              Port: <strong>{server.bedrock.port}</strong>
-            </span>
-            <button
-              type="button"
-              class="copy"
-              data-copy={server.bedrock.port}
-              data-edition="bedrock"
-              data-field="port"
-            >
-              copy
-            </button>
-          </div>
+          <span class="port">
+            Port: <strong>{server.bedrock.port}</strong>
+          </span>
+          <p class="note">
+            On phones, tablets, Windows and consoles that let you add a server.
+            Enter the address and port in separate fields.
+          </p>
         </div>
-        <p class="note">
-          Java {server.java.version}. Bedrock works on any device that lets you
-          add a server.
-        </p>
       </div>
 
       <div class="ctas">
@@ -162,14 +157,14 @@ const widths = [480, 800, 1200, 1600];
       </div>
       <ol class="steps">
         <li>
-          <span class="label">Java</span>
+          <span class="label">Java {server.java.version}</span>
           <p>
             Multiplayer → Add Server, then enter{" "}
             <strong>{server.java.address}</strong>.
           </p>
         </li>
         <li>
-          <span class="label">Bedrock</span>
+          <span class="label">Bedrock, {server.bedrock.version}</span>
           <p>
             Play → Servers → Add Server, then enter{" "}
             <strong>{server.bedrock.address}</strong> and port{" "}

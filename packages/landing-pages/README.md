@@ -31,8 +31,13 @@ The root lists the items and is not indexed. `404.astro` covers unknown paths.
 
 The Storm item adds:
 
-- PostHog events `storm_server_address_copied` (`edition`, `field`),
-  `storm_discord_clicked` and `storm_docs_clicked` (`placement`).
+- An address card with a Java/Bedrock toggle and one copy button for the
+  selected edition. Phones and tablets open on Bedrock. Java shows its pinned
+  version (26.2); Bedrock says "latest version", because its support follows
+  the live Geyser build.
+- PostHog events `storm_server_address_copied` and `storm_edition_selected`
+  (`edition`), plus `storm_discord_clicked` and `storm_docs_clicked`
+  (`placement`).
 - `public/the-storm/pinterest.js`, which loads Scout's shared advertiser tag
   `2612722784413`, the same one used by the forum portal. It skips visitors
   with Do Not Track or Global Privacy Control set. It sends `pagevisit`, one
