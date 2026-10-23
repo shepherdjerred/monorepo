@@ -1,4 +1,8 @@
-import { applicationOf, forumReleaseOf } from "#shared/model/recipe-view.ts";
+import {
+  applicationOf,
+  forumReleaseOf,
+  stepApplicationOf,
+} from "#shared/model/recipe-view.ts";
 import type { Database } from "#infrastructure/database.ts";
 import {
   artifact,
@@ -75,11 +79,16 @@ export async function forumBaselineInputs(
     ),
   );
   const forum = forumReleaseOf(pipeline.definition);
-  const application = applicationOf(pipeline.definition)?.name;
+  // The baseline observes the Application that releases the forum bundle;
+  // inside a compound recipe it need not be the environment's primary one.
+  const application = stepApplicationOf(
+    pipeline.definition,
+    "forum-bundle",
+  )?.name;
   if (
     forum === undefined ||
     application === undefined ||
-    application !== env.application ||
+    applicationOf(pipeline.definition)?.name !== env.application ||
     !["storm-forum", "storm-forum-beta"].includes(application)
   )
     throw new DeliveryError(

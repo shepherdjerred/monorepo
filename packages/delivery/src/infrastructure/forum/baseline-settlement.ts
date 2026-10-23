@@ -1,4 +1,4 @@
-import { applicationOf } from "#shared/model/recipe-view.ts";
+import { stepApplicationOf } from "#shared/model/recipe-view.ts";
 import { ForumBaselineContextSchema } from "#shared/contract.ts";
 import type { Principal, ForumBaselineContext } from "#shared/contract.ts";
 import {
@@ -32,7 +32,8 @@ function validateProof(context: ForumBaselineContext, raw: ForumBaselineProof) {
     { image, bundle, intent, pipeline } = context;
   if (
     proof.environmentId !== intent.environmentId ||
-    proof.application.name !== applicationOf(pipeline.definition)?.name ||
+    proof.application.name !==
+      stepApplicationOf(pipeline.definition, "forum-bundle")?.name ||
     proof.imageArtifactId !== image.id ||
     proof.bundleArtifactId !== bundle.id ||
     proof.bundleDigest !== bundle.digest ||
