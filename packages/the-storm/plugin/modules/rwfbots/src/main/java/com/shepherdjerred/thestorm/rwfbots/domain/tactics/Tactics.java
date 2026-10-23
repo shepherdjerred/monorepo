@@ -3,10 +3,10 @@ package com.shepherdjerred.thestorm.rwfbots.domain.tactics;
 import com.shepherdjerred.thestorm.rwfbots.domain.difficulty.Lever;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.RouteResult;
 import com.shepherdjerred.thestorm.rwfbots.domain.record.DecisionTrace;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.Blackboard;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.SlotKind;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.TeamNote;
-import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Decision;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Hop;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
@@ -186,6 +186,7 @@ public final class Tactics {
         .filter(plan -> Planner.coverFitsSlot(plan, situation, context))
         .filter(plan -> !situation.pendingElimination() || !offensive(plan.option()))
         .filter(plan -> plan.option() != Option.ARM || !armBlocked(state, situation, context))
+        .filter(plan -> BombGuard.stillAnswering(plan, situation))
         .filter(
             plan ->
                 plan.current()
@@ -415,18 +416,35 @@ public final class Tactics {
         > situation.self().pos().distance(enemy) + REWIND_GAIN;
   }
 
+  /**
+   * Whether {@code thought} may be committed to {@code board}: a guard plan it carries still meets
+   * an enemy that fewer than {@link Situation#MAX_CHASERS} teammates answer, from the side of the
+   * ring it was planned for. A thought made against an older board that fails this is re-thought.
+   */
+  public static boolean admitted(Thought thought, Blackboard board) {
+    var state = thought.state();
+    return state
+        .plan()
+        .map(
+            plan ->
+                BombGuard.admitted(plan, thought.decision().bot(), board, state.lastThinkTick()))
+        .orElse(true);
+  }
+
   /** What the bot tells its team: the cover its step holds, who it fights, the path it walks. */
-  private static TeamNote note(
-      Plan plan, Decision decision, Situation situation, TacticsContext context) {
+  static TeamNote note(Plan plan, Decision decision, Situation situation, TacticsContext context) {
     var graph = context.nav().graph();
     var path = new HashSet<Integer>();
     for (var waypoint : decision.waypoints()) {
       graph.nearestNode(waypoint.pos()).ifPresent(path::add);
     }
+    // A guard meeting an enemy on its way to the bomb counts as one of its chasers, so no more
+    // than two guards answer one enemy. It names the enemy its plan was made for: a later sighting
+    // of another enemy does not change that while the plan still routes to the first.
     var chasing =
         plan.current() instanceof PlanStep.Fight(var target)
             ? Optional.of(target)
-            : Optional.<CombatantId>empty();
+            : plan.answer().map(Plan.Answer::enemy);
     var cover = plan.current().coverNode().or(() -> Planner.peekClaim(plan, situation, context));
     return new TeamNote(cover, chasing, path);
   }

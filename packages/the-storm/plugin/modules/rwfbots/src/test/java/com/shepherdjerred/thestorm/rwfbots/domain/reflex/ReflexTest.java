@@ -966,4 +966,34 @@ final class ReflexTest {
         shot.world().stream().map(view -> view.id().equals(enemy.id()) ? enemy : view).toList();
     return new Shot(shot.self(), enemy, shot.decision(), world);
   }
+
+  @Test
+  void aHolderTurnsToWatchAnEnemyFarBeyondContactRange() {
+    var self = combatant(1, RED, ARCHER_AT);
+    var enemy = combatant(2, BLUE, ARCHER_AT.plus(35, 0, 0));
+    var decision =
+        new Decision(
+            self.id(),
+            Option.HOLD_SLOT,
+            Optional.empty(),
+            List.of(),
+            Stance.CAUTIOUS,
+            Optional.empty(),
+            Optional.of(enemy.pos()),
+            Optional.empty(),
+            "hold_slot:hold",
+            1,
+            0,
+            Optional.empty());
+    var toward = Facing.looking(self.eye(), enemy.pos());
+    var state = ReflexState.initial(Facing.SOUTH);
+    assertThat(Math.abs(state.aim().look().yawDelta(toward))).isGreaterThan(45);
+    for (var tick = 1; tick <= 20; tick++) {
+      var input =
+          new ReflexInput(
+              self, world(tick, List.of(self, enemy), List.of()), decision, Optional.empty(), 0);
+      state = Reflex.tick(state, input, context(levers(0.5)), new SplittableRandom(tick)).state();
+    }
+    assertThat(Math.abs(state.aim().look().yawDelta(toward))).isLessThan(5);
+  }
 }

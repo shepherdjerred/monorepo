@@ -12,7 +12,8 @@ import java.util.Optional;
  * Holding is a patrol, not a statue: while a bot holds a slot, an angle or a retake point with no
  * enemy in sight, it moves between a few reachable posts around the spot, lingering at each for a
  * few seconds (longer the more patient it is), as a player holding an angle shifts and peeks. It
- * stands still to shoot a visible enemy and when sneaking as the last of its team.
+ * stands still while an enemy is in sight, and for a moment after one ducks out of it ({@link
+ * Lookout}), and when sneaking as the last of its team.
  */
 final class Patrol {
 
@@ -38,11 +39,14 @@ final class Patrol {
 
   /**
    * The post the bot holding {@code hold} should stand at now, or empty when it should stand still:
-   * an enemy is in sight, it is the last of its team, or no other reachable post is in range.
+   * an enemy is or was just in sight, it is the last of its team, or no other reachable post is in
+   * range.
    */
   static Optional<Vec3> post(
       Situation situation, TacticsContext context, Vec3 hold, double radius) {
-    if (situation.percept().nearestVisible().isPresent() || situation.isLastAlive()) {
+    if (situation.percept().nearestVisible().isPresent()
+        || Lookout.lingering(situation)
+        || situation.isLastAlive()) {
       return Optional.empty();
     }
     var graph = context.nav().graph();

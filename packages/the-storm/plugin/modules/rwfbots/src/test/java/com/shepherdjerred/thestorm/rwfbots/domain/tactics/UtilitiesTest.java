@@ -48,6 +48,8 @@ final class UtilitiesTest {
     boolean plantSlot;
     boolean freeTarget = true;
     boolean rewindReady;
+    boolean approaching;
+    boolean seen = true;
 
     F enemyAt(double distance) {
       enemyDistance = distance;
@@ -60,7 +62,7 @@ final class UtilitiesTest {
           health,
           enemyDistance,
           known ? 1 : 0,
-          known ? 1 : 0,
+          known && seen ? 1 : 0,
           known ? 1 : 0,
           allies,
           2,
@@ -69,6 +71,7 @@ final class UtilitiesTest {
           enemyBombDistance,
           allyArming,
           false,
+          approaching,
           poison,
           poisonIntensity,
           inPoison,
@@ -206,6 +209,35 @@ final class UtilitiesTest {
         .isEqualTo(30);
     assertThat(ArchetypeBias.keep(Kit.TROOPER, Archetype.TACTICIAN, levers(1)))
         .isEqualTo(ArchetypeBias.Range.MELEE);
+  }
+
+  @Test
+  void aGuardAnswersAnEnemyOnItsWayToTheBombOverHoldingItsSlot() {
+    var anchor = temper(Role.DEFEND, Archetype.ANCHOR, Kit.TROOPER);
+    var f = new F().enemyAt(16);
+    f.slotDistance = 1;
+    assertThat(Utilities.score(f.build(), anchor).get(Option.RETAKE)).isZero();
+    f.approaching = true;
+    var scores = Utilities.score(f.build(), anchor);
+    assertThat(scores.get(Option.RETAKE)).isEqualTo(Utilities.GUARD_RESPONSE);
+    assertThat(best(scores)).isEqualTo(Option.RETAKE);
+    // A lit bomb is the defuse's business.
+    f.ownBombLit = true;
+    assertThat(Utilities.score(f.build(), anchor).get(Option.RETAKE)).isZero();
+  }
+
+  @Test
+  void onlyAHunterKeepsHuntingAnEnemyItCanSeeButNotReach() {
+    var hunter = temper(Role.HUNT, Archetype.HUNTER, Kit.TROOPER);
+    var rotator = temper(Role.ROTATE, Archetype.HUNTER, Kit.TROOPER);
+    var far = new F().enemyAt(20);
+    assertThat(Utilities.score(far.build(), hunter).get(Option.HUNT)).isPositive();
+    assertThat(Utilities.score(far.build(), rotator).get(Option.HUNT)).isZero();
+    var close = new F().enemyAt(5);
+    assertThat(Utilities.score(close.build(), hunter).get(Option.HUNT)).isZero();
+    var heard = new F().enemyAt(20);
+    heard.seen = false;
+    assertThat(Utilities.score(heard.build(), rotator).get(Option.HUNT)).isPositive();
   }
 
   @Test
