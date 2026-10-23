@@ -3,8 +3,8 @@ package com.shepherdjerred.thestorm.creative.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ final class PlotMarkersTest {
   void claimedPlot() {
     var view =
         new PlotView(
-            new PlotId(2, 1), Optional.of(OWNER), "Harbor", "A dock", Set.of(), false, true);
+            new PlotId(2, 1), Optional.of(OWNER), "Harbor", "A dock", Map.of(), false, true);
 
     var markers = PlotMarkers.select("creative", "creative", List.of(view), GRID);
 
@@ -38,7 +38,7 @@ final class PlotMarkersTest {
   void staffHeldPlot() {
     var view =
         new PlotView(
-            new PlotId(0, 0), Optional.empty(), "Ruins", "Unclaimed build", Set.of(), true, false);
+            new PlotId(0, 0), Optional.empty(), "Ruins", "Unclaimed build", Map.of(), true, false);
 
     var markers = PlotMarkers.select("creative", "creative", List.of(view), GRID);
 
@@ -54,7 +54,7 @@ final class PlotMarkersTest {
   @Test
   @DisplayName("empty cell")
   void emptyCell() {
-    var empty = new PlotView(new PlotId(9, 9), Optional.empty(), "", "", Set.of(), false, false);
+    var empty = new PlotView(new PlotId(9, 9), Optional.empty(), "", "", Map.of(), false, false);
 
     assertThat(empty.marked()).isFalse();
     assertThat(PlotMarkers.select("creative", "creative", List.of(empty), GRID))
@@ -67,7 +67,7 @@ final class PlotMarkersTest {
   void selectionIsNotAppliedToASurvivalMap() {
     var view =
         new PlotView(
-            new PlotId(2, 1), Optional.of(OWNER), "Harbor", "A dock", Set.of(), false, true);
+            new PlotId(2, 1), Optional.of(OWNER), "Harbor", "A dock", Map.of(), false, true);
 
     assertThat(PlotMarkers.select("world", "creative", List.of(view), GRID))
         .as("selection is not applied to a survival map")

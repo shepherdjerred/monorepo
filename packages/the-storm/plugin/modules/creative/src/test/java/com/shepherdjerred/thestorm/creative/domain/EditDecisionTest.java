@@ -3,8 +3,8 @@ package com.shepherdjerred.thestorm.creative.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,14 +18,21 @@ final class EditDecisionTest {
   private final PlotBounds plot = PlotGrid.recovered().bounds(new PlotId(1, 1));
 
   @Test
-  void onlyTheOwnerAndTrustedMembersMayEdit() {
-    var trusted = Set.of(FRIEND);
+  void onlyTheOwnerMembersAndTrustedPlayersMayEdit() {
+    var trusted = Map.of(FRIEND, PlotRole.TRUSTED);
+    var member = Map.of(FRIEND, PlotRole.MEMBER);
+    var denied = Map.of(STRANGER, PlotRole.DENIED);
 
     assertThat(EditDecision.mayEdit(OWNER, Optional.of(OWNER), trusted)).isTrue();
     assertThat(EditDecision.mayEdit(FRIEND, Optional.of(OWNER), trusted)).isTrue();
+    assertThat(EditDecision.mayEdit(FRIEND, Optional.of(OWNER), member)).isTrue();
     assertThat(EditDecision.mayEdit(STRANGER, Optional.of(OWNER), trusted)).isFalse();
+    assertThat(EditDecision.mayEdit(STRANGER, Optional.of(OWNER), denied)).isFalse();
     assertThat(EditDecision.mayEdit(FRIEND, Optional.empty(), trusted)).isFalse();
-    assertThat(EditDecision.mayEdit(OWNER, Optional.empty(), Set.of())).isFalse();
+    assertThat(EditDecision.mayEdit(OWNER, Optional.empty(), Map.of())).isFalse();
+    assertThat(PlotRole.mayEnter(false, denied, STRANGER)).isFalse();
+    assertThat(PlotRole.mayEnter(false, denied, FRIEND)).isTrue();
+    assertThat(PlotRole.mayEnter(true, denied, STRANGER)).isTrue();
   }
 
   @Test

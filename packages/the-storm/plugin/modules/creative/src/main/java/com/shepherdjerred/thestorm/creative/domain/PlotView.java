@@ -1,7 +1,7 @@
 package com.shepherdjerred.thestorm.creative.domain;
 
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -13,12 +13,12 @@ public record PlotView(
     Optional<UUID> owner,
     String name,
     String description,
-    Set<UUID> trusted,
+    Map<UUID, PlotRole> access,
     boolean staffHeld,
     boolean countsTowardCap) {
 
   public PlotView {
-    trusted = Set.copyOf(trusted);
+    access = Map.copyOf(access);
   }
 
   /** A claimed or staff-held plot. Empty cells are neither. */
