@@ -3,7 +3,9 @@ import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { testExecutor, testOperator } from "#testing/seed.ts";
 import type { ColdStartSnapshot } from "#shared/model/cold-start-contract.ts";
 import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
+import { recipeFromPipeline } from "#shared/model/recipe-adapter.ts";
 import {
+  arcadePipeline,
   arcadeRegistration,
   publishCiRunner,
   requestOnProd,
@@ -76,6 +78,54 @@ async function acceptProd(operationId: string) {
     testExecutor,
   );
   return deployment;
+}
+
+/**
+ * arcade/prod's accepted deployment as a compound recipe of two
+ * Applications, each synced by its own sub-recipe stage (`subN-step-sync`).
+ */
+async function compoundAcceptance() {
+  const accepted = await acceptProd("op-1");
+  const companion = recipeFromPipeline(arcadePipeline);
+  if (companion.kind !== "kubernetes-application")
+    throw new Error("arcade converts to a Kubernetes application recipe");
+  const server = {
+    ...companion,
+    application: { ...companion.application, name: "arcade-server" },
+    steps: companion.steps.map((step) => ({
+      ...step,
+      instance: "application:arcade-server",
+    })),
+  };
+  const db = context.cluster.database;
+  await db.pipeline.create({
+    data: {
+      id: "arcade/5",
+      definition: {
+        kind: "compound",
+        subRecipes: [
+          { instance: "application:arcade", definition: companion },
+          { instance: "application:arcade-server", definition: server },
+        ],
+      },
+    },
+  });
+  await db.deployment.update({
+    where: { id: accepted.id },
+    data: { pipelineRevisionId: "arcade/5" },
+  });
+  for (const [index, operationId] of ["op-a", "op-b"].entries())
+    await db.stage.create({
+      data: {
+        id: `${accepted.id}/sub${String(index + 1)}`,
+        deploymentId: accepted.id,
+        key: `sub${String(index + 1)}-step-sync`,
+        status: "succeeded",
+        operationId,
+        message: "Exact sync completed",
+      },
+    });
+  return accepted;
 }
 
 async function prodHold() {
@@ -294,5 +344,71 @@ describe("cold start (section 6)", () => {
         },
       ),
     ).rejects.toThrow();
+  });
+});
+
+describe("cold start of compound recipes (section 6)", () => {
+  test("a compound recipe is checked through every Application it deploys", async () => {
+    await chainFixture();
+    await reconciled();
+    const accepted = await compoundAcceptance();
+    const requirement = await context.delivery.coldStartRequirement(
+      accepted.id,
+    );
+    if (!requirement.required) throw new Error("Expected a snapshot");
+    const restore = async (
+      requestId: string,
+      live: Record<string, string | null>,
+    ) => {
+      const result = await context.delivery.reconcileAfterRestore(
+        { requestId },
+        admin,
+        {
+          readSnapshot: async () => requirement.snapshot,
+          readApplication: async (name) => {
+            const request = live[name];
+            if (request === undefined)
+              throw new Error(`Unexpected Application ${name}`);
+            return request === null ? null : application(request);
+          },
+        },
+      );
+      return result.environments.find((env) => env.id === "arcade/prod");
+    };
+    const matching = await restore("restore-compound-1", {
+      arcade: "op-a",
+      "arcade-server": "op-b",
+    });
+    expect(matching).toMatchObject({ status: "match" });
+    expect(matching?.live).toEqual(matching?.record);
+    // A missing second Application holds the environment.
+    expect(
+      await restore("restore-compound-2", {
+        arcade: "op-a",
+        "arcade-server": null,
+      }),
+    ).toMatchObject({
+      status: "held",
+      reason: "The live target does not exist",
+    });
+    await context.delivery.settleRestoreHold(
+      "arcade/prod",
+      {
+        reason: "Recreated the server Application",
+        evidence: "argocd app get",
+      },
+      admin,
+    );
+    // So does a second Application another request synced last.
+    expect(
+      await restore("restore-compound-3", {
+        arcade: "op-a",
+        "arcade-server": "op-other",
+      }),
+    ).toMatchObject({
+      status: "held",
+      live: null,
+      reason: expect.stringMatching(/another selection/u),
+    });
   });
 });

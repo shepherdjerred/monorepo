@@ -18,6 +18,7 @@ import {
 } from "#shared/model/route-contract.ts";
 import type { Selection } from "#shared/model/selection-contract.ts";
 import { applicationsOf } from "#shared/model/recipe-view.ts";
+import { stepStageKey } from "#shared/model/stage-keys.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { evidence, id } from "#infrastructure/delivery-data.ts";
@@ -99,15 +100,45 @@ const ApplicationOperation = z.object({
     .optional(),
 });
 
-/** What the live target shows: a selection, absent, or not observable for its kind. */
+/**
+ * What the live target shows: the selection that last synced each of the
+ * recipe's Applications, one of them absent, or nothing observable for its
+ * kind (a recipe with no Application).
+ */
 type Live =
-  | { kind: "selection"; selection: Selection | null }
+  | { kind: "selection"; selections: (Selection | null)[] }
   | { kind: "missing" }
   | { kind: "not-observed" };
 
+/** A sync step's stage: v1's reconcile, or the sync of a recipe or of a compound sub-recipe (`subN-step-sync`). */
+const SYNC_STAGE = stepStageKey("step", "sync");
+const SYNCED_BY = {
+  OR: [
+    { key: { in: [...CONVERGING_STAGES] } },
+    { key: { endsWith: `-${SYNC_STAGE}` } },
+  ],
+};
+
+/** The selection of the deployment whose request last synced one Application. */
+async function syncedSelection(
+  this: Delivery,
+  raw: unknown,
+): Promise<Selection | null> {
+  const request = (
+    ApplicationOperation.parse(raw).status?.operationState?.operation.info ?? []
+  ).find((entry) => entry.name === "ci.sjer.red/request-id");
+  if (request === undefined) return null;
+  const stage = await this.database.stage.findFirst({
+    where: { operationId: request.value, ...SYNCED_BY },
+    include: { deployment: true },
+  });
+  return stage === null ? null : frozenSelection(stage.deployment);
+}
+
 /**
- * Live readback through the projected reader (D5): the selection of the
- * deployment whose request last synced the environment's one Application.
+ * Live readback through the projected reader (D5): for every Application
+ * the environment's recipe declares, compound members included, the
+ * selection of the deployment whose request last synced it.
  */
 async function observeLive(
   this: Delivery,
@@ -124,27 +155,27 @@ async function observeLive(
     ),
   );
   const applications = applicationsOf(recipe.definition);
-  const [application] = applications;
-  if (application === undefined || applications.length !== 1)
-    return { kind: "not-observed" };
-  const raw = await readApplication(application.name);
-  if (raw === null) return { kind: "missing" };
-  const request = (
-    ApplicationOperation.parse(raw).status?.operationState?.operation.info ?? []
-  ).find((entry) => entry.name === "ci.sjer.red/request-id");
-  if (request === undefined) return { kind: "selection", selection: null };
-  const stage = await this.database.stage.findFirst({
-    where: { operationId: request.value, key: { in: [...CONVERGING_STAGES] } },
-    include: { deployment: true },
-  });
-  return {
-    kind: "selection",
-    selection: stage === null ? null : frozenSelection(stage.deployment),
-  };
+  if (applications.length === 0) return { kind: "not-observed" };
+  const selections: (Selection | null)[] = [];
+  for (const application of applications) {
+    const raw = await readApplication(application.name);
+    if (raw === null) return { kind: "missing" };
+    selections.push(await syncedSelection.call(this, raw));
+  }
+  return { kind: "selection", selections };
 }
 
 function sameSelection(left: Selection | null, right: Selection | null) {
   return fingerprint(left) === fingerprint(right);
+}
+
+/** The live selection reported for an environment: one that differs from the record, else the agreed one. */
+function liveSelection(record: Selection | null, live: Live) {
+  if (live.kind !== "selection") return null;
+  const differing = live.selections.filter(
+    (selection) => !sameSelection(selection, record),
+  );
+  return (differing.length > 0 ? differing : live.selections)[0] ?? null;
 }
 
 function mismatch(
@@ -155,7 +186,8 @@ function mismatch(
   if (!sameSelection(record, snapshot))
     return "The record's accepted selection differs from the cold-start snapshot's";
   if (live.kind === "missing") return "The live target does not exist";
-  return live.kind === "selection" && !sameSelection(live.selection, record)
+  return live.kind === "selection" &&
+    live.selections.some((selection) => !sameSelection(selection, record))
     ? "The live target was last synced by another selection than the record accepts"
     : null;
 }
@@ -245,7 +277,7 @@ export async function reconcileAfterRestore(
       id: env.id,
       record,
       snapshot: snapshotSelection,
-      live: live.kind === "selection" ? live.selection : null,
+      live: liveSelection(record, live),
       ...(reason === null
         ? { status: "match" as const }
         : { status: "held" as const, reason }),
