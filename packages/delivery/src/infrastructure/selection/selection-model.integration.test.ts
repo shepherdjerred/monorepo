@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { createTestApp } from "#testing/http-app.ts";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
+import { lock } from "#infrastructure/delivery-records.ts";
 import { rollbackCandidates } from "./candidates.ts";
 
 const context = useDeliveryFixture();
@@ -450,6 +451,74 @@ describe("eligibility through a promotion source (4.12, M2, W3)", () => {
     expect(
       await context.delivery.claim(overridden.id, testExecutor),
     ).toMatchObject({ deployment: { status: "running" } });
+  });
+});
+
+/** Whether one connection is waiting on an advisory lock. */
+async function waitsOnAdvisoryLock() {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const rows = await context.cluster.database.$queryRaw<
+      { count: number }[]
+    >`SELECT count(*)::integer AS count FROM pg_stat_activity WHERE datname = current_database() AND wait_event = 'advisory'`;
+    if (rows[0]?.count === 1) return true;
+    await Bun.sleep(5);
+  }
+  return false;
+}
+
+describe("admission against a concurrent monitor write (M2, W1)", () => {
+  test("admission waits for the source monitor's lock and reads its state after it", async () => {
+    const baseline = await acceptedBaseline();
+    await setMonitor(baseline.id, "settled");
+    await canary();
+    const deployed = await deployToCanary(
+      context.fixture.versionSet.id,
+      "racing-deploy",
+    );
+    // A monitor write holds the source acceptance's lock, as an
+    // observation does, and changes its state before committing.
+    const held = Promise.withResolvers<undefined>(),
+      release = Promise.withResolvers<undefined>();
+    const monitor = context.cluster.database.$transaction(
+      async (tx) => {
+        await lock(tx, `deployment:${baseline.id}`);
+        await tx.deployment.update({
+          where: { id: baseline.id },
+          data: { monitorState: "alarmed", monitorSettledAt: null },
+        });
+        held.resolve(undefined);
+        await release.promise;
+      },
+      { timeout: 10_000 },
+    );
+    await held.promise;
+    const claimed = (async () => {
+      try {
+        return {
+          value: await context.delivery.claim(deployed.id, testExecutor),
+          error: null,
+        };
+      } catch (error: unknown) {
+        return { value: null, error };
+      }
+    })();
+    try {
+      expect(await waitsOnAdvisoryLock()).toBe(true);
+    } finally {
+      release.resolve(undefined);
+      await monitor;
+    }
+    expect(await claimed).toMatchObject({
+      value: null,
+      error: {
+        message: expect.stringMatching(
+          /stale: arcade\/prod's accepted selection is alarmed/u,
+        ),
+      },
+    });
+    expect(await deploymentRow(deployed.id)).toMatchObject({
+      status: "failed",
+    });
   });
 });
 

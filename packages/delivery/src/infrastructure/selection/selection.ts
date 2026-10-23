@@ -12,7 +12,7 @@ import {
   version,
   type Transaction,
 } from "#infrastructure/delivery-data.ts";
-import { required, wire } from "#infrastructure/delivery-records.ts";
+import { lock, required, wire } from "#infrastructure/delivery-records.ts";
 import { requireRollbackCandidate } from "./candidates.ts";
 import { declaredComponents } from "#infrastructure/composition/automatic.ts";
 
@@ -153,6 +153,31 @@ async function sourceRefusal(
   };
 }
 
+async function acceptedIdOf(tx: Transaction, environmentId: string) {
+  const row = await environment(tx, environmentId);
+  return row.acceptedDeploymentId;
+}
+
+/**
+ * Admission holds the source's accepted deployment under the lock a monitor
+ * observation takes (W1), so the acceptance and monitor state it reads next
+ * cannot change before admission commits. Admission already holds
+ * `delivery:claim`, which every acceptance change takes, and its own
+ * deployment and environment. The source's acceptance belongs to another
+ * environment, and every transaction that holds a deployment lock takes at
+ * most that deployment's own environment after it, so this wait closes no
+ * lock cycle.
+ */
+async function holdSourceAcceptance(tx: Transaction, sourceId: string) {
+  let held: string | null = null;
+  let accepted = await acceptedIdOf(tx, sourceId);
+  while (accepted !== null && accepted !== held) {
+    await lock(tx, `deployment:${accepted}`);
+    held = accepted;
+    accepted = await acceptedIdOf(tx, sourceId);
+  }
+}
+
 /** The kinds whose plain request is gated by eligibility (4.12, H4). */
 const ELIGIBILITY_GATED = new Set([
   "deploy",
@@ -196,6 +221,7 @@ export async function staleSource(
   if (row.kind === "promote" && row.sourceEnvironmentId !== sourceId)
     return `${env.id} no longer promotes from ${row.sourceEnvironmentId ?? "no source"}; request a new deployment (M2)`;
   if (sourceId === null || !(await sourceGated(tx, row))) return null;
+  await holdSourceAcceptance(tx, sourceId);
   const refused = await sourceRefusal(
     tx,
     sourceId,
