@@ -206,5 +206,10 @@ export function retryRequest(detail: DeploymentDetail) {
         "INVALID",
         "Request a new specialized deployment with exact fresh inputs",
       );
+    case "carry":
+      throw new DeliveryError(
+        "INVALID",
+        "A carried selection is recorded by the catalog reconcile, never requested",
+      );
   }
 }

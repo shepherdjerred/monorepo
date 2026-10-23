@@ -132,7 +132,17 @@ async function syncedSelection(
     where: { operationId: request.value, ...SYNCED_BY },
     include: { deployment: true },
   });
-  return stage === null ? null : frozenSelection(stage.deployment);
+  if (stage === null) return null;
+  // Section 7: a catalog carry re-identifies the selection that synced the
+  // target without syncing it again, so that sync stands for the carry.
+  const carry = await this.database.deployment.findFirst({
+    where: {
+      kind: "carry",
+      status: "succeeded",
+      previousAcceptedDeploymentId: stage.deployment.id,
+    },
+  });
+  return frozenSelection(carry ?? stage.deployment);
 }
 
 /**

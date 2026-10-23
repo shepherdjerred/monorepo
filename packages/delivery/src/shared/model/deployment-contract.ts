@@ -48,6 +48,8 @@ export const DeploymentSchema = z.object({
     "operator-run",
     "adopt-worker",
     "repair-trmnl",
+    // Section 7: the catalog reconcile's acceptance of a carried selection.
+    "carry",
     // Readable history only; no longer creatable.
     "upgrade-control-plane",
     "root-release",

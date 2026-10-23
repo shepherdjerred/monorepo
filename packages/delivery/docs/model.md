@@ -495,6 +495,10 @@ binds the authenticated actor and the exact inputs.
 - `rebind` keeps the accepted set revision and changes the recipe or
   configuration revision.
 - `retire-host` removes one retained host after drainage proof.
+- `carry` is recorded by the cutover's catalog reconcile, never requested: it
+  freezes an accepted selection carried onto the catalog's identities
+  (section 7), has no stages or effects, and is accepted in the same
+  transaction.
 
 **Eligibility.** A set revision is eligible for `deploy` when it is in the
 current lineage, every artifact's build is `verified`, A3 holds, every
@@ -905,8 +909,14 @@ accepted selection onto the catalog's identities: `site:<bucket>` becomes
 `archive:<bucket>`, and a chart or image moves to the service that now owns
 it. The carried artifacts keep their bytes, digest, URI and original build,
 record the v1 artifact they stand for, and form the first set revision of
-their service's lineage (R0). They stay qualified for retention and
-rollback because their original builds qualified.
+their service's lineage (R0). A `carry` deployment freezes that set
+revision with the v1 acceptance's recipe and configuration and becomes the
+environment's accepted selection (L1), so the selection view, promotion,
+admission, the cold-start snapshot and rollback all name the carried
+identities; the v1 deployment stays as it was. The v1 sync of the target
+stands for the carry in a reconcile-after-restore. The carried artifacts
+stay qualified for retention and rollback because their original builds
+qualified.
 
 ## 8. Position on ArgoCD
 

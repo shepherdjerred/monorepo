@@ -496,7 +496,7 @@ export async function reconcileCatalog(
       await reconcileRevisions(tx, document, result);
       await renameEnvironments(tx, migration.renames, result);
       await upsertEnvironments(tx, document, result);
-      await carrySelections(tx, document, result);
+      await carrySelections(tx, document, result, actor);
       await retireOmitted(tx, document, migration, result);
       await reconcileEdges(tx, document, result);
       await audit(tx, actor, {

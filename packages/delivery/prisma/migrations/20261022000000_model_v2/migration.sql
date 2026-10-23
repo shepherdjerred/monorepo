@@ -355,7 +355,7 @@ ALTER TABLE "Deployment" DROP COLUMN "previousAcceptedConfiguration";
 ALTER TABLE "VersionSet" ADD CONSTRAINT "VersionSet_triggerDeploymentId_fkey" FOREIGN KEY ("triggerDeploymentId") REFERENCES "Deployment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "Deployment" ADD CONSTRAINT "Deployment_previousAcceptedDeploymentId_fkey" FOREIGN KEY ("previousAcceptedDeploymentId") REFERENCES "Deployment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "Deployment" ADD CONSTRAINT "Deployment_restoredDeploymentId_fkey" FOREIGN KEY ("restoredDeploymentId") REFERENCES "Deployment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-ALTER TABLE "Deployment" ADD CONSTRAINT "Deployment_kind_check" CHECK ("kind" IN ('deploy', 'promote', 'rollback', 'rebind', 'retire-host', 'channel-publish', 'operator-run', 'adopt-worker', 'repair-trmnl', 'upgrade-control-plane', 'tofu-plan', 'tofu-apply', 'root-release'));
+ALTER TABLE "Deployment" ADD CONSTRAINT "Deployment_kind_check" CHECK ("kind" IN ('deploy', 'promote', 'rollback', 'rebind', 'retire-host', 'channel-publish', 'operator-run', 'adopt-worker', 'repair-trmnl', 'carry', 'upgrade-control-plane', 'tofu-plan', 'tofu-apply', 'root-release'));
 ALTER TABLE "Deployment" ADD CONSTRAINT "Deployment_monitorState_check" CHECK ("monitorState" IS NULL OR "monitorState" IN ('watching', 'settled', 'alarmed', 'unmonitored'));
 ALTER TABLE "Deployment" ADD CONSTRAINT "Deployment_rollback_restores_check" CHECK (("kind" = 'rollback') = ("restoredDeploymentId" IS NOT NULL) OR "catalogRevision" = 'v1-backfill');
 CREATE INDEX "Deployment_monitorState_idx" ON "Deployment"("monitorState");

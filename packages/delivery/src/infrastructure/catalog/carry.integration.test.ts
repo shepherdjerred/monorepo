@@ -1,5 +1,12 @@
 import { expect, test } from "vitest";
 import { liveSet } from "#infrastructure/composition/automatic.ts";
+import { coldStartSnapshot } from "#infrastructure/cold-start/snapshot.ts";
+import { wire } from "#infrastructure/delivery-records.ts";
+import { freezeAdmission } from "#infrastructure/execution/admission.ts";
+import { rollbackCandidates } from "#infrastructure/selection/candidates.ts";
+import { environmentSelection } from "#infrastructure/selection/views.ts";
+import { PipelineRevisionSchema } from "#shared/contract.ts";
+import { arcadePipeline } from "#testing/model-fixture.ts";
 import { catalogDocument } from "#testing/catalog-fixture.ts";
 import { useCatalogCluster } from "#testing/catalog-cluster.ts";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
@@ -25,12 +32,12 @@ type SeedArtifact = {
 async function seedV1Selection(seed: {
   serviceId: string;
   environmentId: string;
-  definition: { kind: "manual"; reason: string };
+  definition: { kind: "manual"; reason: string } | typeof arcadePipeline;
   artifacts: SeedArtifact[];
 }) {
   const db = context.cluster.database;
   await registerTestService(db, seed.serviceId);
-  const recipe = `${seed.environmentId}/v1`;
+  const recipe = `${seed.environmentId}/1`;
   await db.pipeline.create({
     data: {
       id: recipe,
@@ -200,15 +207,32 @@ test("a static site's accepted archive is carried across the rename as the first
     },
   });
   expect(carried.qualifiedBuildId).toBe(entry?.artifact.buildId);
-  expect(
-    await context.cluster.database.environment.findUniqueOrThrow({
-      where: { id: "sjer-red/prod" },
-    }),
-  ).toMatchObject({
-    acceptedDeploymentId: "static-sites/sjer-red/accepted",
+  // L1: a `carry` deployment freezes the carried selection and is accepted;
+  // the v1 deployment it carries stays as it was.
+  const env = await context.cluster.database.environment.findUniqueOrThrow({
+    where: { id: "sjer-red/prod" },
+    include: { acceptedDeployment: true },
+  });
+  expect(env).toMatchObject({
     acceptedVersionSetRevisionId: carried.id,
     observedVersionSetRevisionId: carried.id,
   });
+  expect(env.acceptedDeployment).toMatchObject({
+    kind: "carry",
+    status: "succeeded",
+    environmentId: "sjer-red/prod",
+    serviceId: "sjer-red",
+    versionSetRevisionId: carried.id,
+    pipelineRevisionId: "static-sites/sjer-red/1",
+    configurationId: "static-sites/sjer-red/1",
+    previousAcceptedDeploymentId: "static-sites/sjer-red/accepted",
+    monitorState: "unmonitored",
+  });
+  expect(
+    await context.cluster.database.deployment.findUniqueOrThrow({
+      where: { id: "static-sites/sjer-red/accepted" },
+    }),
+  ).toMatchObject({ versionSetRevisionId: "static-sites/v1-set" });
   // R0: the new lineage has a live set; the v1 history is unchanged.
   const live = await context.cluster.database.$transaction((tx) =>
     liveSet(tx, "sjer-red"),
@@ -231,6 +255,11 @@ test("a static site's accepted archive is carried across the rename as the first
       where: { serviceId: "sjer-red" },
     }),
   ).toBe(1);
+  expect(
+    await context.cluster.database.deployment.count({
+      where: { kind: "carry" },
+    }),
+  ).toBe(1);
 });
 
 /** gitops-legacy/arcade: Arcade's chart and image under a v1 group's ownership. */
@@ -238,11 +267,17 @@ const MOVED: CatalogMigration = {
   renames: { "gitops-legacy/arcade": "arcade/prod" },
   retired: [],
 };
-async function seedMovedArcade() {
+const V1_GROUP_RECIPE = { kind: "manual", reason: "v1 group deploys" } as const;
+async function seedMovedArcade(
+  environmentId = "gitops-legacy/arcade",
+  definition: Parameters<
+    typeof seedV1Selection
+  >[0]["definition"] = V1_GROUP_RECIPE,
+) {
   await seedV1Selection({
     serviceId: "gitops-legacy",
-    environmentId: "gitops-legacy/arcade",
-    definition: { kind: "manual", reason: "v1 group deploys" },
+    environmentId,
+    definition,
     artifacts: [
       {
         id: "gitops-legacy/chart-arcade",
@@ -333,6 +368,149 @@ test("a chart whose owner moved is carried to its catalog owner, and producers f
       where: { serviceId: "arcade" },
     }),
   ).toBe(1);
+});
+
+test("the view, admission, the cold-start snapshot and rollback name the carried selection", async () => {
+  await seedMovedArcade();
+  await context.delivery.reconcileCatalog(
+    await catalogDocument(),
+    testOperator,
+    MOVED,
+  );
+  const db = context.cluster.database;
+  const carried = await carriedSet("arcade");
+  const carry = await db.deployment.findFirstOrThrow({
+    where: { kind: "carry", environmentId: "arcade/prod" },
+  });
+  expect(await environmentSelection(db, "arcade/prod")).toMatchObject({
+    acceptedDeploymentId: carry.id,
+    accepted: { versionSetRevisionId: carried.id },
+  });
+  // Admission freezes a prerequisite's accepted selection (Z1).
+  await db.prerequisiteEdge.create({
+    data: {
+      dependentId: "arcade/beta",
+      prerequisiteId: "arcade/prod",
+      rule: "any-accepted",
+    },
+  });
+  const recipe = PipelineRevisionSchema.parse(
+    wire(
+      await db.pipeline.findUniqueOrThrow({
+        where: { id: "gitops-legacy/arcade/1" },
+      }),
+    ),
+  );
+  const admission = await db.$transaction((tx) =>
+    freezeAdmission(
+      tx,
+      { environmentId: "arcade/beta", versionSetRevisionId: carried.id },
+      recipe.definition,
+    ),
+  );
+  expect(admission.prerequisites).toEqual([
+    expect.objectContaining({
+      environmentId: "arcade/prod",
+      deploymentId: carry.id,
+      versionSetRevisionId: carried.id,
+    }),
+  ]);
+  const { snapshot } = await coldStartSnapshot(db, new Date());
+  expect(
+    snapshot.environments.find((row) => row.environmentId === "arcade/prod"),
+  ).toMatchObject({
+    deploymentId: carry.id,
+    selection: { versionSetRevisionId: carried.id },
+    artifacts: {
+      "chart:arcade": { digest: digest("c") },
+      "image:arcade": { digest: digest("d") },
+    },
+  });
+  // The carry is the accepted rollback source; the v1 acceptance stays one.
+  const candidates = await rollbackCandidates(db, "arcade/prod");
+  expect(candidates.map((row) => [row.deploymentId, row.eligible])).toEqual([
+    [carry.id, true],
+    ["gitops-legacy/arcade/accepted", true],
+  ]);
+  expect(candidates[0]?.selection.versionSetRevisionId).toBe(carried.id);
+});
+
+test("after a restore, the v1 sync of a carried selection still matches the record (section 6)", async () => {
+  // The v1 acceptance synced the arcade Application under its request.
+  await seedMovedArcade("gitops-legacy/arcade", arcadePipeline);
+  const db = context.cluster.database;
+  await db.stage.create({
+    data: {
+      id: "gitops-legacy/arcade/accepted/reconcile",
+      deploymentId: "gitops-legacy/arcade/accepted",
+      key: "reconcile",
+      status: "succeeded",
+      operationId: "v1-sync-request",
+      message: "Synced",
+    },
+  });
+  await context.delivery.reconcileCatalog(
+    await catalogDocument(),
+    testOperator,
+    MOVED,
+  );
+  const { snapshot } = await coldStartSnapshot(db, new Date());
+  const result = await context.delivery.reconcileAfterRestore(
+    { requestId: "restore-carried" },
+    { ...testOperator, scopes: [...testOperator.scopes, "admin" as const] },
+    {
+      readSnapshot: () => Promise.resolve(snapshot),
+      readApplication: (name) =>
+        Promise.resolve(
+          name === "arcade"
+            ? {
+                status: {
+                  operationState: {
+                    operation: {
+                      info: [
+                        {
+                          name: "ci.sjer.red/request-id",
+                          value: "v1-sync-request",
+                        },
+                      ],
+                    },
+                  },
+                },
+              }
+            : null,
+        ),
+    },
+  );
+  expect(
+    result.environments.find((env) => env.id === "arcade/prod"),
+  ).toMatchObject({ status: "match" });
+});
+
+test("a promotion from a carried source takes the carried set revision (W3)", async () => {
+  await seedMovedArcade("gitops-legacy/arcade-beta");
+  await context.delivery.reconcileCatalog(
+    await catalogDocument(),
+    testOperator,
+    { renames: { "gitops-legacy/arcade-beta": "arcade/beta" }, retired: [] },
+  );
+  const carried = await carriedSet("arcade");
+  const prod = await context.cluster.database.environment.findUniqueOrThrow({
+    where: { id: "arcade/prod" },
+  });
+  const promotion = await context.delivery.createDeployment(
+    {
+      requestId: "arcade/promote-carried",
+      environmentId: "arcade/prod",
+      expectedGeneration: prod.generation,
+      kind: "promote",
+      sourceEnvironmentId: "arcade/beta",
+    },
+    testOperator,
+  );
+  expect(promotion).toMatchObject({
+    kind: "promote",
+    versionSetRevisionId: carried.id,
+  });
 });
 
 test("a rebind right after reconcile moves the carried selection to the declared recipe", async () => {

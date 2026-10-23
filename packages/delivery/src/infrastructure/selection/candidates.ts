@@ -22,6 +22,8 @@ export const ACCEPTING_KINDS = [
   "retire-host",
   "channel-publish",
   "operator-run",
+  // Section 7: a carried selection is an accepted selection (L1, V2).
+  "carry",
   "upgrade-control-plane",
   "root-release",
   "tofu-apply",

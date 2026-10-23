@@ -11,12 +11,15 @@ import {
   type MigratedFrom,
 } from "#shared/artifact-contract.ts";
 import type { CatalogDocument } from "#shared/model/catalog-contract.ts";
+import type { Principal } from "#shared/contract.ts";
 import {
   artifact as qualifiedArtifact,
+  evidence,
   id,
   validateRequirements,
   type Transaction,
 } from "#infrastructure/delivery-data.ts";
+import { audit } from "#infrastructure/delivery-records.ts";
 
 type CatalogService = CatalogDocument["services"][number];
 type OldEntry = Prisma.VersionSetEntryGetPayload<{
@@ -244,17 +247,106 @@ async function pointAtCarried(
   });
 }
 
+type CarriedFrom = {
+  id: string;
+  versionSetRevisionId: string;
+  pipelineRevisionId: string;
+  configurationId: string;
+};
+type CarryContext = { catalogRevision: string; actor: Principal };
+
+/**
+ * Section 7, L1: a selection is identified by the deployment that froze it,
+ * so the carried set is accepted through a `carry` deployment. It freezes the
+ * carried set with the v1 acceptance's recipe and configuration, has no
+ * stages and no effects, and becomes the environment's accepted deployment;
+ * every reader of the accepted selection (its view, promotion, admission,
+ * the cold-start snapshot, rollback candidates) then names the carried set.
+ * The v1 deployment stays immutable history.
+ */
+async function acceptCarried(
+  tx: Transaction,
+  carry: {
+    env: { id: string; serviceId: string; generation: number };
+    accepted: CarriedFrom;
+    carriedId: string;
+  },
+  context: CarryContext,
+) {
+  const { env, accepted, carriedId } = carry;
+  const now = new Date();
+  const deployment = await tx.deployment.create({
+    data: {
+      id: id(),
+      requestId: `catalog-carry/${env.id}/${carriedId}`,
+      environmentId: env.id,
+      serviceId: env.serviceId,
+      versionSetRevisionId: carriedId,
+      pipelineRevisionId: accepted.pipelineRevisionId,
+      configurationId: accepted.configurationId,
+      catalogRevision: context.catalogRevision,
+      expectedGeneration: env.generation,
+      kind: "carry",
+      status: "succeeded",
+      requestedBy: context.actor.id,
+      message: `Carried the selection ${accepted.id} accepted onto the catalog's identities (section 7)`,
+      previousAcceptedDeploymentId: accepted.id,
+      previousAcceptedVersionSetRevisionId: accepted.versionSetRevisionId,
+      // The carried bytes are the ones the v1 acceptance settled.
+      monitorState: "unmonitored",
+      monitorSettledAt: now,
+      startedAt: now,
+      finishedAt: now,
+    },
+  });
+  await evidence(
+    tx,
+    deployment.id,
+    [
+      {
+        kind: "acceptance",
+        operationId: deployment.id,
+        summary: JSON.stringify({
+          adapter: "catalog-carry",
+          carriedFromDeploymentId: accepted.id,
+          carriedFromVersionSetRevisionId: accepted.versionSetRevisionId,
+          versionSetRevisionId: carriedId,
+        }),
+      },
+    ],
+    "finish",
+  );
+  // An acceptance moves the accepted pointer and the binding generation (V1).
+  await tx.environment.update({
+    where: { id: env.id },
+    data: {
+      acceptedDeploymentId: deployment.id,
+      generation: { increment: 1 },
+    },
+  });
+  await pointAtCarried(tx, env.id, accepted.versionSetRevisionId, carriedId);
+  await audit(tx, context.actor, {
+    action: "deployment.carried",
+    entityId: deployment.id,
+    requestId: deployment.requestId,
+    metadata: { environmentId: env.id, carriedFromDeploymentId: accepted.id },
+  });
+}
+
 /**
  * Section 7: every accepted selection the catalog migration carried keeps
  * its bytes but takes the component names and owners the catalog declares,
- * recorded as the first set revision of its service's lineage. Idempotent;
- * an ambiguous mapping refuses the whole reconcile.
+ * recorded as the first set revision of its service's lineage and accepted
+ * through a `carry` deployment. Idempotent; an ambiguous mapping refuses
+ * the whole reconcile.
  */
 export async function carrySelections(
   tx: Transaction,
   document: CatalogDocument,
-  result: { environments: { carried: string[] } },
+  result: { catalogRevision: string; environments: { carried: string[] } },
+  actor: Principal,
 ) {
+  const context = { catalogRevision: result.catalogRevision, actor };
   const services = new Map(
     document.services.map((service) => [service.id, service]),
   );
@@ -284,14 +376,15 @@ export async function carrySelections(
         },
       },
     });
-    if (existing !== null) {
-      await pointAtCarried(tx, env.id, old.id, existing.id);
-      continue;
+    // Another environment of this service may already carry the same set.
+    let carriedId = existing?.id;
+    if (carriedId === undefined) {
+      const planned = carryPlan(old, service, owners);
+      if (planned === null) continue;
+      const carried = await recordCarried(tx, env, old, planned);
+      carriedId = carried.id;
     }
-    const planned = carryPlan(old, service, owners);
-    if (planned === null) continue;
-    const carried = await recordCarried(tx, env, old, planned);
-    await pointAtCarried(tx, env.id, old.id, carried.id);
+    await acceptCarried(tx, { env, accepted, carriedId }, context);
     result.environments.carried.push(env.id);
   }
 }
