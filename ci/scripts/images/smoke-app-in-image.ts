@@ -320,7 +320,7 @@ const commands: Record<
       "cd /app/packages/temporal",
       "gh --version",
       `bun -e 'await import("@openai/codex-sdk");'`,
-      `bun -e 'const recipe = await import("./scripts/jobs/root-release.ts"); if (typeof recipe.run !== "function") throw new Error("Root release recipe runtime closure is incomplete");'`,
+      `bun -e 'const recipe = await import("./scripts/jobs/control-plane.ts"); if (typeof recipe.run !== "function") throw new Error("Control-plane recipe runtime closure is incomplete");'`,
       "kubectl version --client",
       "github-mcp-server --version",
       "talosctl version --client",
