@@ -93,7 +93,7 @@ final class BotTickerTest {
             "test",
             List.of(),
             List.of());
-    return new ReflexInput(self, snapshot, Decision.idle(self.id(), 20, 0), Optional.empty(), 0);
+    return new ReflexInput(self, snapshot, Decision.idle(self.id(), 20, 0), Optional.empty(), 0, Optional.empty());
   }
 
   private static final class TypingActivity implements BodyActivity {
@@ -126,7 +126,13 @@ final class BotTickerTest {
             List.of(),
             List.of());
     var input =
-        new ReflexInput(self, snapshot, Decision.idle(self.id(), 19, 0), Optional.of(oldEnemy), 0);
+        new ReflexInput(
+            self,
+            snapshot,
+            Decision.idle(self.id(), 19, 0),
+            Optional.of(oldEnemy),
+            0,
+            Optional.empty());
     var bounds = new GridBounds(new BlockPos(0, 0, 0), 10, 5, 10);
     var empty = new BitSet();
     assertThat(BotTicker.freshTarget(input, new VoxelGrid(bounds, empty, empty, empty)).target())

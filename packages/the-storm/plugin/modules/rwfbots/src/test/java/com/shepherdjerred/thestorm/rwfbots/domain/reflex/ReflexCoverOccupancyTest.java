@@ -94,7 +94,7 @@ final class ReflexCoverOccupancyTest {
             List.of());
     return Reflex.tick(
         ReflexState.initial(scene.self().facing()),
-        new ReflexInput(scene.self(), world, decision, scene.target(), 0),
+        new ReflexInput(scene.self(), world, decision, scene.target(), 0, Optional.empty()),
         CONTEXT,
         new SplittableRandom(4));
   }

@@ -56,7 +56,7 @@ final class CrouchControlTest {
             List.of());
     return Reflex.tick(
         state,
-        new ReflexInput(self, snapshot, decision, Optional.empty(), 3),
+        new ReflexInput(self, snapshot, decision, Optional.empty(), 3, Optional.empty()),
         new ReflexContext(
             NAV.grid(),
             levers(1),

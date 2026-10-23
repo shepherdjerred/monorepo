@@ -371,7 +371,8 @@ final class BodyDriverTest {
             snapshot,
             com.shepherdjerred.thestorm.rwfbots.domain.world.Decision.idle(self.id(), 2, 0),
             Optional.empty(),
-            0);
+            0,
+            Optional.empty());
     assertThat(BotTicker.communicationPaused(bot, input, activity)).isFalse();
     apply(
         2,

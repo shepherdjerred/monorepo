@@ -103,7 +103,8 @@ final class VisiblePursuitTest {
     var step =
         Reflex.tick(
             ReflexState.initial(self.facing()),
-            new ReflexInput(self, snapshot(self, enemy), route, Optional.of(enemy), 0),
+            new ReflexInput(
+                self, snapshot(self, enemy), route, Optional.of(enemy), 0, Optional.empty()),
             new ReflexContext(NAV.grid(), levers(1), Loadout.standard(Kit.TROOPER)),
             new SplittableRandom(196));
     var first = path.getFirst();
@@ -151,7 +152,8 @@ final class VisiblePursuitTest {
     var step =
         Reflex.tick(
             ReflexState.initial(look),
-            new ReflexInput(self, snapshot(self, enemy), route, Optional.of(enemy), 0),
+            new ReflexInput(
+                self, snapshot(self, enemy), route, Optional.of(enemy), 0, Optional.empty()),
             new ReflexContext(NAV.grid(), levers(1), Loadout.standard(Kit.TROOPER)),
             new SplittableRandom(196));
     assertThat(step.commands()).anyMatch(BodyCommand.Attack.class::isInstance);

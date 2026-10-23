@@ -14,13 +14,16 @@ import java.util.Optional;
  * @param decision the standing decision from the think step
  * @param target the enemy to fight right now, if one is visible
  * @param gapplesLeft golden apples in the inventory
+ * @param nearestSeen the nearest enemy the bot perceives this tick, target or not; never one it
+ *     cannot see, so nothing reacts to a player hidden behind a wall or invisible
  */
 public record ReflexInput(
     CombatantView self,
     WorldSnapshot snapshot,
     Decision decision,
     Optional<CombatantView> target,
-    int gapplesLeft) {
+    int gapplesLeft,
+    Optional<CombatantView> nearestSeen) {
 
   public ReflexInput {
     if (gapplesLeft < 0) {
@@ -35,7 +38,13 @@ public record ReflexInput(
    */
   public static ReflexInput of(
       CombatantView self, WorldSnapshot snapshot, Decision decision, Percept percept) {
-    return new ReflexInput(self, snapshot, decision, resolveTarget(self, decision, percept), 0);
+    return new ReflexInput(
+        self,
+        snapshot,
+        decision,
+        resolveTarget(self, decision, percept),
+        0,
+        percept.nearestVisible());
   }
 
   /** The enemy {@code self} should fight this tick, if any. */
@@ -61,6 +70,6 @@ public record ReflexInput(
   }
 
   public ReflexInput withGapples(int count) {
-    return new ReflexInput(self, snapshot, decision, target, count);
+    return new ReflexInput(self, snapshot, decision, target, count, nearestSeen);
   }
 }

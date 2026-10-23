@@ -130,7 +130,13 @@ final class RouteResultTest {
     var step =
         Reflex.tick(
             ReflexState.initial(self.facing()),
-            new ReflexInput(self, fixture.situation().snapshot(), decision, Optional.empty(), 0),
+            new ReflexInput(
+                self,
+                fixture.situation().snapshot(),
+                decision,
+                Optional.empty(),
+                0,
+                Optional.empty()),
             new ReflexContext(nav.grid(), levers(1), Loadout.standard(Kit.TROOPER)),
             new SplittableRandom(42));
     assertThat(step.commands()).containsExactly(new BodyCommand.Stop());
