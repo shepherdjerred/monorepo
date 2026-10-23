@@ -28,8 +28,14 @@
     },
     "chartComponent": "chart:tasknotes",
     "artifactParameters": {
-      "delivery.images.tasknotes-server": "image:tasknotes-server",
-      "delivery.images.obsidian-headless": "image:obsidian-headless"
+      "delivery.images.tasknotes-server": {
+        "component": "image:tasknotes-server",
+        "format": "reference"
+      },
+      "delivery.images.obsidian-headless": {
+        "component": "image:obsidian-headless",
+        "format": "reference"
+      }
     },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [

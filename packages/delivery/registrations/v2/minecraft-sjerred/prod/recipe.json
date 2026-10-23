@@ -127,10 +127,22 @@
           },
           "chartComponent": "chart:minecraft",
           "artifactParameters": {
-            "image.tag": "image:minecraft-server-java8",
-            "initContainers[0].image": "image:busybox",
-            "initContainers[1].image": "image:minecraft-server-java8",
-            "sidecarContainers[0].image": "image:haproxy"
+            "image.tag": {
+              "component": "image:minecraft-server-java8",
+              "format": "tag-digest"
+            },
+            "initContainers[0].image": {
+              "component": "image:busybox",
+              "format": "reference"
+            },
+            "initContainers[1].image": {
+              "component": "image:minecraft-server-java8",
+              "format": "reference"
+            },
+            "sidecarContainers[0].image": {
+              "component": "image:haproxy",
+              "format": "reference"
+            }
           },
           "runner": { "service": "ci", "component": "image:ci-base" },
           "steps": [

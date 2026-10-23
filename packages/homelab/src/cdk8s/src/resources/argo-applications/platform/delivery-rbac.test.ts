@@ -485,5 +485,15 @@ test("under transition rendering Delivery creates the baseline and companion App
     "temporal-data",
   ])
     expect(actions(application), application).toEqual(["get"]);
-  expect(deliveryArgoPolicy(false)).not.toContain("cluster-platform");
+  // Off, only release-root's window rows (step 3b) name a catalog-only
+  // Application; Delivery's own account has none.
+  expect(
+    deliveryArgoPolicy(false)
+      .split("\n")
+      .filter(
+        (row) =>
+          row.includes("/cluster-platform,") &&
+          !row.startsWith("p, delivery-platform, "),
+      ),
+  ).toEqual([]);
 });

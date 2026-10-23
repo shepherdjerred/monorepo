@@ -28,8 +28,14 @@
     },
     "chartComponent": "chart:mc-sandbox",
     "artifactParameters": {
-      "delivery.images.the-storm-server-candidate": "image:the-storm-server",
-      "delivery.images.the-storm-server-accepted": "image:the-storm-server"
+      "delivery.images.the-storm-server-candidate": {
+        "component": "image:the-storm-server",
+        "format": "reference"
+      },
+      "delivery.images.the-storm-server-accepted": {
+        "component": "image:the-storm-server-accepted",
+        "format": "reference"
+      }
     },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [

@@ -40,7 +40,7 @@
     },
     {
       "id": "discord-plays-pokemon",
-      "title": "Discord Plays Pokémon",
+      "title": "Discord Plays Pok\u00e9mon",
       "kind": "product",
       "package": "discord-plays-pokemon",
       "aliases": ["pokemon"]
@@ -431,7 +431,7 @@
     },
     {
       "id": "discord-plays-pokemon",
-      "title": "Discord Plays Pokémon",
+      "title": "Discord Plays Pok\u00e9mon",
       "package": "discord-plays-pokemon",
       "lifecycle": "retired",
       "selfHosted": false,
@@ -890,6 +890,16 @@
         {
           "name": "image:the-storm-server",
           "producer": "first-party"
+        },
+        {
+          "name": "image:the-storm-server-accepted",
+          "producer": "reference",
+          "source": {
+            "service": "minecraft",
+            "component": "image:the-storm-server",
+            "mode": "tracking",
+            "environment": "minecraft/tsmc"
+          }
         },
         {
           "name": "chart:minecraft",
@@ -1514,6 +1524,7 @@
           "producer": "first-party"
         }
       ],
+      "appProjects": ["cluster", "workloads"],
       "ops": {
         "kind": "platform",
         "namespaces": ["argocd"],
@@ -4213,6 +4224,11 @@
     {
       "dependent": "minecraft/sandbox",
       "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft/sandbox",
+      "prerequisite": "minecraft/tsmc",
       "rule": "any-accepted"
     },
     {

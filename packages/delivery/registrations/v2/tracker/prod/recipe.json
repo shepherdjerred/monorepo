@@ -27,7 +27,12 @@
       "lifecycle": "retain"
     },
     "chartComponent": "chart:tracker",
-    "artifactParameters": { "delivery.images.tracker": "image:tracker" },
+    "artifactParameters": {
+      "delivery.images.tracker": {
+        "component": "image:tracker",
+        "format": "reference"
+      }
+    },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [
       {

@@ -36,8 +36,14 @@
     },
     "chartComponent": "chart:temporal",
     "artifactParameters": {
-      "delivery.dependencies.caddy-s3proxy": "image:caddy-s3proxy",
-      "delivery.images.temporal-worker": "image:temporal-worker"
+      "delivery.dependencies.caddy-s3proxy": {
+        "component": "image:caddy-s3proxy",
+        "format": "reference"
+      },
+      "delivery.images.temporal-worker": {
+        "component": "image:temporal-worker",
+        "format": "reference"
+      }
     },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [

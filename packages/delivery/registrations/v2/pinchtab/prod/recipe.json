@@ -27,7 +27,12 @@
       "lifecycle": "retain"
     },
     "chartComponent": "chart:pinchtab",
-    "artifactParameters": { "delivery.dependencies.birmel": "image:birmel" },
+    "artifactParameters": {
+      "delivery.dependencies.birmel": {
+        "component": "image:birmel",
+        "format": "reference"
+      }
+    },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [
       {

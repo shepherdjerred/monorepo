@@ -28,7 +28,10 @@
     },
     "chartComponent": "chart:openebs",
     "artifactParameters": {
-      "zfs-localpv.zfsPlugin.image.tag": "image:zfs-driver"
+      "zfs-localpv.zfsPlugin.image.tag": {
+        "component": "image:zfs-driver",
+        "format": "selected-digest"
+      }
     },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [

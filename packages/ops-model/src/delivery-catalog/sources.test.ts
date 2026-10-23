@@ -220,7 +220,10 @@ describe("agreement with the v1 definition sources", () => {
     expect(configuration?.content["forum.xenforoVersion"]).toBe(
       forumBundlePolicy.xenforoVersion,
     );
-    expect(configuration?.forwardOnly).toEqual(["forum.xenforoVersion"]);
+    // A JSON pointer into the configuration's structured view (F3).
+    expect(configuration?.forwardOnly).toEqual([
+      "/helm/parameters/forum.xenforoVersion",
+    ]);
   });
 
   test("every environment the prod flag override admits is a catalog or v1 environment", async () => {
@@ -250,9 +253,11 @@ describe("agreement with the v1 definition sources", () => {
           .parse(JSON.parse(z.string().parse(override.default))),
       );
     expect(admitted.length).toBeGreaterThan(0);
+    // The v1 flag still admits the retired root until the window.
     const v1 = new Set([
       ...v1Environments.map((environment) => environment.id),
       ...Object.keys(V1_ENVIRONMENT_RENAMES),
+      ...V1_RETIRED_ENVIRONMENTS,
     ]);
     expect(
       admitted.filter((id) => !environments.has(id) && !v1.has(id)),

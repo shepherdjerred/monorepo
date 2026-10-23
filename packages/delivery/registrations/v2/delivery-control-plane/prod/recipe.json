@@ -28,7 +28,10 @@
     },
     "chartComponent": "chart:delivery-control-plane",
     "artifactParameters": {
-      "delivery.images.delivery-control-plane": "image:temporal-worker"
+      "delivery.images.delivery-control-plane": {
+        "component": "image:temporal-worker",
+        "format": "reference"
+      }
     },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [

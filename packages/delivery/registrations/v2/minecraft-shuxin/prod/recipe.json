@@ -127,9 +127,18 @@
           },
           "chartComponent": "chart:minecraft",
           "artifactParameters": {
-            "image.tag": "image:minecraft-server",
-            "initContainers[0].image": "image:yq",
-            "initContainers[1].image": "image:busybox"
+            "image.tag": {
+              "component": "image:minecraft-server",
+              "format": "tag-digest"
+            },
+            "initContainers[0].image": {
+              "component": "image:yq",
+              "format": "reference"
+            },
+            "initContainers[1].image": {
+              "component": "image:busybox",
+              "format": "reference"
+            }
           },
           "runner": { "service": "ci", "component": "image:ci-base" },
           "steps": [

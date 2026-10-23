@@ -28,7 +28,10 @@
     },
     "chartComponent": "chart:trmnl-dashboard",
     "artifactParameters": {
-      "delivery.images.trmnl-dashboard": "image:trmnl-dashboard"
+      "delivery.images.trmnl-dashboard": {
+        "component": "image:trmnl-dashboard",
+        "format": "reference"
+      }
     },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [

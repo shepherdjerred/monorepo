@@ -100,9 +100,18 @@
           },
           "chartComponent": "chart:velero",
           "artifactParameters": {
-            "initContainers[0].image": "image:velero-plugin-for-aws",
-            "initContainers[1].image": "image:velero-plugin",
-            "kubectl.image.tag": "image:kubectl"
+            "initContainers[0].image": {
+              "component": "image:velero-plugin-for-aws",
+              "format": "reference"
+            },
+            "initContainers[1].image": {
+              "component": "image:velero-plugin",
+              "format": "reference"
+            },
+            "kubectl.image.tag": {
+              "component": "image:kubectl",
+              "format": "tag-digest"
+            }
           },
           "runner": { "service": "ci", "component": "image:ci-base" },
           "steps": [

@@ -533,7 +533,12 @@ test("after the catalog flip, bases come from the v2 owner and apps has none", a
   });
   const { bases } = await plan({ client, owners: publicationOwners("v2") });
   expect(client.queries).toEqual([
-    { serviceId: "arcade", component: "chart:arcade", kind: "chart" },
+    {
+      serviceId: "arcade",
+      component: "chart:arcade",
+      kind: "chart",
+      beforePipeline: 42,
+    },
   ]);
   expect([...bases.keys()]).toEqual(["arcade"]);
 });

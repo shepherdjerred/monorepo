@@ -27,7 +27,9 @@
       "lifecycle": "retain"
     },
     "chartComponent": "chart:mc-router",
-    "artifactParameters": { "image.tag": "image:mc-router" },
+    "artifactParameters": {
+      "image.tag": { "component": "image:mc-router", "format": "tag-digest" }
+    },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [
       {

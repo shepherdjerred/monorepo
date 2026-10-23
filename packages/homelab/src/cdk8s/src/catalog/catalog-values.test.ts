@@ -61,7 +61,9 @@ test("with the catalog flag on, no chart carries a first-party image digest and 
     dependent.push(chart.node.id);
     const parameters = chartImageParameters(app, chart.node.id, "image:own");
     for (const name of dependencies)
-      expect(parameters[`delivery.dependencies.${name}`]).toMatch(/^image:/u);
+      expect(parameters[`delivery.dependencies.${name}`]?.component).toMatch(
+        /^image:/u,
+      );
   }
   expect(dependent.length).toBeGreaterThan(0);
 });

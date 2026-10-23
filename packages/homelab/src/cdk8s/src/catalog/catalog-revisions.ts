@@ -4,6 +4,7 @@ import {
   PipelineDefinitionSchema,
 } from "@shepherdjerred/delivery/contract";
 import {
+  type ArtifactParameter,
   type RecipeDefinition,
   RecipeDefinitionSchema,
   recipeFromPipeline,
@@ -35,6 +36,7 @@ import {
   applicationBody,
 } from "@shepherdjerred/homelab/cdk8s/src/catalog/catalog-applications.ts";
 import {
+  artifactParameter,
   chartImageParameters,
   splitUpstreamValues,
 } from "@shepherdjerred/homelab/cdk8s/src/catalog/catalog-values.ts";
@@ -69,7 +71,7 @@ export type V1Registration = {
 type ApplicationRecipeInput = {
   manifest: ApplicationManifest;
   pipeline: PipelineDefinition | undefined;
-  parameters: Record<string, string>;
+  parameters: Record<string, ArtifactParameter>;
 };
 
 /** `recipeFromPipeline` for the bound fields; the constructor for the body. */
@@ -83,7 +85,12 @@ function applicationRecipe(input: ApplicationRecipeInput): RecipeDefinition {
     chartComponent: `chart:${manifest.spec.source.chart}`,
     namespace: manifest.spec.destination.namespace,
     parameters: {},
-    artifactParameters: input.parameters,
+    artifactParameters: Object.fromEntries(
+      Object.entries(input.parameters).map(([path, { component }]) => [
+        path,
+        component,
+      ]),
+    ),
   };
   const base = recipeFromPipeline(pipeline);
   if (base.kind !== "kubernetes-application")
@@ -124,6 +131,14 @@ export type CatalogRevisionInputs = {
   registrations: readonly V1Registration[];
   /** Committed `desired-state.json` text per OpenTofu stack that has one. */
   desiredStates: Readonly<Record<string, string>>;
+  /**
+   * The committed recipe of each independent static site, by environment.
+   * Delivery v2 retired their v1 registrations (#4009), so the reviewed v2
+   * recipe is the source; the generator only checks it.
+   */
+  siteRecipes: Readonly<Record<string, unknown>>;
+  /** The CI runner image (`ci/ci-image/DIGEST`) a v1 Tofu pipeline names. */
+  runnerImage: string;
 };
 
 function v1Registration(
@@ -159,7 +174,10 @@ function applicationParameters(
   inputs: CatalogRevisionInputs,
   manifest: ApplicationManifest,
   serviceId: string,
-): { parameters: Record<string, string>; values: Record<string, unknown> } {
+): {
+  parameters: Record<string, ArtifactParameter>;
+  values: Record<string, unknown>;
+} {
   const values = manifest.spec.source.helm?.valuesObject;
   const repositoryChart = inputs.app.charts.some(
     (chart) => chart.node.id === manifest.spec.source.chart,
@@ -195,7 +213,9 @@ function configurationContent(
       throw new Error(
         "The forum configuration and the forum bundle policy name different XenForo versions",
       );
-    forwardOnly.push("forum.xenforoVersion");
+    // A JSON pointer into the configuration's structured view (F3), where
+    // every content key but `helm.valuesObject` is a Helm parameter.
+    forwardOnly.push("/helm/parameters/forum.xenforoVersion");
   }
   if (Object.keys(values).length > 0)
     content["helm.valuesObject"] = JSON.stringify(values);
@@ -229,11 +249,11 @@ function kubernetesRevisions(
       pipeline.artifactParameters,
     )) {
       const derived = parameters[parameter];
-      if (derived !== undefined && derived !== component)
+      if (derived !== undefined && derived.component !== component)
         throw new Error(
-          `${environmentId} v1 parameter ${parameter} binds ${component}; the chart binds ${derived}`,
+          `${environmentId} v1 parameter ${parameter} binds ${component}; the chart binds ${derived.component}`,
         );
-      parameters[parameter] = component;
+      parameters[parameter] ??= artifactParameter(parameter, component);
     }
   const main = withOracleAndLock(
     environmentId,
@@ -335,18 +355,20 @@ function staticSiteRevisions(
   inputs: CatalogRevisionInputs,
   environmentId: string,
 ): RecipeDefinition {
-  const registration = v1Registration(inputs, environmentId);
-  if (registration?.pipeline.kind !== "static-site")
-    throw new Error(`${environmentId} has no reviewed static-site pipeline`);
-  return recipeFromPipeline(registration.pipeline);
-}
-
-/** The v1 runner digest `recipeFromPipeline` replaces with the `ci` runner reference. */
-function v1RunnerImage(inputs: CatalogRevisionInputs): string {
-  for (const registration of inputs.registrations)
-    if (registration.pipeline.kind === "root-release")
-      return registration.pipeline.runnerImage;
-  throw new Error("No v1 platform registration carries the runner image");
+  const committed = inputs.siteRecipes[environmentId];
+  if (committed === undefined)
+    throw new Error(`${environmentId} has no reviewed static-site recipe`);
+  const definition = RecipeDefinitionSchema.parse(committed);
+  const serviceId = environmentService(environmentId);
+  if (
+    definition.kind !== "static-site" ||
+    definition.bucket !== serviceId ||
+    definition.archiveComponent !== `archive:${serviceId}`
+  )
+    throw new Error(
+      `${environmentId} must publish bucket ${serviceId} from archive:${serviceId}`,
+    );
+  return definition;
 }
 
 function tofuRevisions(
@@ -365,7 +387,8 @@ function tofuRevisions(
       PipelineDefinitionSchema.parse({
         kind: "tofu",
         stack,
-        runnerImage: v1RunnerImage(inputs),
+        // The recipe replaces it with the `ci` runner reference.
+        runnerImage: inputs.runnerImage,
       }),
     ),
     configuration: {

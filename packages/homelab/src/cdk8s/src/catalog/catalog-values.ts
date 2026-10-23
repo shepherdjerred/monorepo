@@ -1,5 +1,9 @@
 import type { App } from "cdk8s";
 import { z } from "zod";
+import type {
+  ArtifactParameter,
+  ArtifactParameterFormat,
+} from "@shepherdjerred/delivery/model-contract";
 import {
   ACQUIRED_IMAGE_PARAMETERS,
   IMAGE_PARAMETER_COMPONENTS,
@@ -24,29 +28,57 @@ const CHART_OWN_IMAGE =
 const ROOT_TEMPLATE_DEPENDENCY =
   /\(get \(get \(\.Values\.delivery \| default dict\) "dependencies" \| default dict\) "([a-z0-9.-]+)"\)/u;
 const PINNED_DIGEST = /sha256:[a-f0-9]{64}/u;
+/** The root's tag-only projection of a dependency digest (openebs's zfs-driver plugin). */
+const SELECTED_DIGEST_TEMPLATE = '{{ printf "selected@%s"';
+
+/**
+ * An artifact parameter in the shape its Helm path takes: a `selected@`
+ * template only the digest, a `.tag` path (whose chart prefixes its own
+ * repository) `<version>@<digest>`, and every other path a complete
+ * reference.
+ */
+export function artifactParameter(
+  path: string,
+  component: string,
+  value?: string,
+): ArtifactParameter {
+  const format: ArtifactParameterFormat =
+    value?.startsWith(SELECTED_DIGEST_TEMPLATE) === true
+      ? "selected-digest"
+      : path === "tag" || path.endsWith(".tag")
+        ? "tag-digest"
+        : "reference";
+  return { component, format };
+}
+
 /** The Delivery image parameters a first-party chart's templates require. */
 export function chartImageParameters(
   app: App,
   chartName: string,
   ownImage: string | undefined,
-): Record<string, string> {
+): Record<string, ArtifactParameter> {
   const chart = app.charts.find((candidate) => candidate.node.id === chartName);
   if (chart === undefined)
     throw new Error(`Repository chart ${chartName} is not synthesized`);
-  const parameters: Record<string, string> = {};
+  const parameters: Record<string, ArtifactParameter> = {};
   walkStrings(chart.toJson(), [], (text) => {
     for (const match of text.matchAll(CHART_IMAGE_REFERENCE)) {
       const [, kind = "", name = ""] = match;
       const parameter = `delivery.${kind}.${name}`;
-      parameters[parameter] =
-        IMAGE_PARAMETER_COMPONENTS[parameter] ?? `image:${name}`;
+      parameters[parameter] = artifactParameter(
+        parameter,
+        IMAGE_PARAMETER_COMPONENTS[parameter] ?? `image:${name}`,
+      );
     }
     if (CHART_OWN_IMAGE.test(text)) {
       if (ownImage === undefined)
         throw new Error(
           `Chart ${chartName} reads delivery.image without one first-party image`,
         );
-      parameters["delivery.image"] = ownImage;
+      parameters["delivery.image"] = artifactParameter(
+        "delivery.image",
+        ownImage,
+      );
     }
   });
   return parameters;
@@ -89,24 +121,28 @@ export function splitUpstreamValues(
   application: string,
   values: Record<string, unknown>,
 ): {
-  parameters: Record<string, string>;
+  parameters: Record<string, ArtifactParameter>;
   values: Record<string, unknown>;
 } {
   const acquired = ACQUIRED_IMAGE_PARAMETERS[application] ?? {};
-  const parameters: Record<string, string> = {};
+  const parameters: Record<string, ArtifactParameter> = {};
   const bound: (string | number)[][] = [];
   walkStrings(values, [], (text, path) => {
     const parameter = helmPath(path);
     const dependency = ROOT_TEMPLATE_DEPENDENCY.exec(text)?.[1];
     if (dependency !== undefined) {
-      parameters[parameter] = `image:${dependency}`;
+      parameters[parameter] = artifactParameter(
+        parameter,
+        `image:${dependency}`,
+        text,
+      );
       bound.push(path);
     } else if (
       rootRendered(text, `${application} value ${parameter}`) !== text
     ) {
       // An upstream-chart template the root render unescapes; not an image.
     } else if (acquired[parameter] !== undefined) {
-      parameters[parameter] = acquired[parameter];
+      parameters[parameter] = artifactParameter(parameter, acquired[parameter]);
       bound.push(path);
     } else if (PINNED_DIGEST.test(text))
       throw new Error(

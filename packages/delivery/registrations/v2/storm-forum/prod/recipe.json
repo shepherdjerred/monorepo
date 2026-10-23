@@ -34,7 +34,12 @@
       "lifecycle": "retain"
     },
     "chartComponent": "chart:storm-forum",
-    "artifactParameters": { "delivery.image": "image:storm-forum" },
+    "artifactParameters": {
+      "delivery.image": {
+        "component": "image:storm-forum",
+        "format": "reference"
+      }
+    },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [
       {

@@ -28,7 +28,10 @@
     },
     "chartComponent": "chart:starlight-karma-bot-prod",
     "artifactParameters": {
-      "delivery.images.starlight-karma-bot": "image:starlight-karma-bot"
+      "delivery.images.starlight-karma-bot": {
+        "component": "image:starlight-karma-bot",
+        "format": "reference"
+      }
     },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [

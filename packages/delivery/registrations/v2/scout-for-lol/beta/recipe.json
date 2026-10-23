@@ -28,7 +28,10 @@
     },
     "chartComponent": "chart:scout-beta",
     "artifactParameters": {
-      "delivery.images.scout-for-lol": "image:scout-for-lol"
+      "delivery.images.scout-for-lol": {
+        "component": "image:scout-for-lol",
+        "format": "reference"
+      }
     },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [

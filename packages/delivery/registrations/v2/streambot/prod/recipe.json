@@ -27,7 +27,12 @@
       "lifecycle": "retain"
     },
     "chartComponent": "chart:media",
-    "artifactParameters": { "delivery.images.streambot": "image:streambot" },
+    "artifactParameters": {
+      "delivery.images.streambot": {
+        "component": "image:streambot",
+        "format": "reference"
+      }
+    },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [
       {

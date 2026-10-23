@@ -27,7 +27,9 @@
       "lifecycle": "retain"
     },
     "chartComponent": "chart:delivery",
-    "artifactParameters": { "delivery.image": "image:delivery" },
+    "artifactParameters": {
+      "delivery.image": { "component": "image:delivery", "format": "reference" }
+    },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [
       {

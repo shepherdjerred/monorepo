@@ -108,12 +108,15 @@ export const ENVIRONMENT_TESTS: Readonly<
 /**
  * Chart parameters whose Delivery image is not the component the parameter
  * names. The control-plane chart runs the Temporal worker image, and the
- * sandbox pod guard admits the candidate and accepted Storm images.
+ * sandbox pod guard admits the candidate Storm image of the deployment's own
+ * selection and the image accepted in `minecraft/tsmc`, which the minecraft
+ * service's tracking reference component carries (A5, R7).
  */
 export const IMAGE_PARAMETER_COMPONENTS: Readonly<Record<string, string>> = {
   "delivery.images.delivery-control-plane": "image:temporal-worker",
   "delivery.images.the-storm-server-candidate": "image:the-storm-server",
-  "delivery.images.the-storm-server-accepted": "image:the-storm-server",
+  "delivery.images.the-storm-server-accepted":
+    "image:the-storm-server-accepted",
 };
 
 /**

@@ -1,5 +1,5 @@
 {
   "id": "storm-forum/2",
   "content": { "forum.xenforoVersion": "2.3.13" },
-  "forwardOnly": ["forum.xenforoVersion"]
+  "forwardOnly": ["/helm/parameters/forum.xenforoVersion"]
 }

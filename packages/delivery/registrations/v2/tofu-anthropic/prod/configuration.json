@@ -1,7 +1,7 @@
 {
   "id": "tofu-anthropic/prod/1",
   "content": {
-    "desired-state.json": "{\n  \"$schema\": \"../platform-desired-state.schema.json\",\n  \"platform\": \"anthropic\",\n  \"anthropic_workspaces\": {},\n  \"anthropic_api_keys\": {\n    \"openrouter\": {\n      \"api_key_id\": \"apikey_01VLCWhsRj3vKYjpJ7EEXJUp\",\n      \"name\": \"OpenRouter\",\n      \"status\": \"archived\"\n    },\n    \"macbook\": {\n      \"api_key_id\": \"apikey_01Km97w7NfrpW9skzN9dvo5V\",\n      \"name\": \"MacBook 1Password\",\n      \"status\": \"active\",\n      \"vault_item_id\": \"m2xw5xzzb7ftfg3pgudagdfvje\",\n      \"vault_field\": \"ANTHROPIC_API_KEY\"\n    }\n  },\n  \"anthropic_workspace_members\": {}\n}\n"
+    "desired-state.json": "{\n  \"$schema\": \"../platform-desired-state.schema.json\",\n  \"platform\": \"anthropic\",\n  \"anthropic_workspaces\": {},\n  \"anthropic_api_keys\": {\n    \"macbook\": {\n      \"api_key_id\": \"apikey_01Km97w7NfrpW9skzN9dvo5V\",\n      \"name\": \"MacBook 1Password\",\n      \"status\": \"active\",\n      \"vault_item_id\": \"m2xw5xzzb7ftfg3pgudagdfvje\",\n      \"vault_field\": \"ANTHROPIC_API_KEY\"\n    }\n  },\n  \"anthropic_workspace_members\": {}\n}\n"
   },
   "forwardOnly": []
 }

@@ -28,7 +28,10 @@
     },
     "chartComponent": "chart:alert-dashboard",
     "artifactParameters": {
-      "delivery.images.alert-dashboard": "image:alert-dashboard"
+      "delivery.images.alert-dashboard": {
+        "component": "image:alert-dashboard",
+        "format": "reference"
+      }
     },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [

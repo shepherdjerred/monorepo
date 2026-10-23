@@ -28,7 +28,10 @@
     },
     "chartComponent": "chart:storm-brain",
     "artifactParameters": {
-      "delivery.images.storm-brain": "image:storm-brain"
+      "delivery.images.storm-brain": {
+        "component": "image:storm-brain",
+        "format": "reference"
+      }
     },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [

@@ -28,7 +28,10 @@
     },
     "chartComponent": "chart:s3-static-sites",
     "artifactParameters": {
-      "delivery.images.caddy-s3proxy": "image:caddy-s3proxy"
+      "delivery.images.caddy-s3proxy": {
+        "component": "image:caddy-s3proxy",
+        "format": "reference"
+      }
     },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [

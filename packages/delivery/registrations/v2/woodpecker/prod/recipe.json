@@ -28,8 +28,14 @@
     },
     "chartComponent": "chart:woodpecker",
     "artifactParameters": {
-      "delivery.dependencies.woodpecker-config-extension": "image:woodpecker-config-extension",
-      "delivery.dependencies.temporal-worker": "image:temporal-worker"
+      "delivery.dependencies.woodpecker-config-extension": {
+        "component": "image:woodpecker-config-extension",
+        "format": "reference"
+      },
+      "delivery.dependencies.temporal-worker": {
+        "component": "image:temporal-worker",
+        "format": "reference"
+      }
     },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [

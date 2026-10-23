@@ -100,7 +100,10 @@
           },
           "chartComponent": "chart:seaweedfs",
           "artifactParameters": {
-            "filer.sidecars[0].image": "image:caddy-s3proxy"
+            "filer.sidecars[0].image": {
+              "component": "image:caddy-s3proxy",
+              "format": "reference"
+            }
           },
           "runner": { "service": "ci", "component": "image:ci-base" },
           "steps": [

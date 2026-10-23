@@ -116,9 +116,18 @@
           },
           "chartComponent": "chart:kube-prometheus-stack",
           "artifactParameters": {
-            "alertmanager.alertmanagerSpec.containers[0].image": "image:caddy-s3proxy",
-            "grafana.imageRenderer.image.tag": "image:grafana-image-renderer",
-            "prometheus.prometheusSpec.containers[1].image": "image:caddy-s3proxy"
+            "alertmanager.alertmanagerSpec.containers[0].image": {
+              "component": "image:caddy-s3proxy",
+              "format": "reference"
+            },
+            "grafana.imageRenderer.image.tag": {
+              "component": "image:grafana-image-renderer",
+              "format": "tag-digest"
+            },
+            "prometheus.prometheusSpec.containers[1].image": {
+              "component": "image:caddy-s3proxy",
+              "format": "reference"
+            }
           },
           "runner": { "service": "ci", "component": "image:ci-base" },
           "steps": [

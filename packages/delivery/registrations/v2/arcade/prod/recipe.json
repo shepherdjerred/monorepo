@@ -28,8 +28,11 @@
     },
     "chartComponent": "chart:arcade",
     "artifactParameters": {
-      "delivery.image": "image:arcade",
-      "delivery.dependencies.caddy-s3proxy": "image:caddy-s3proxy"
+      "delivery.image": { "component": "image:arcade", "format": "reference" },
+      "delivery.dependencies.caddy-s3proxy": {
+        "component": "image:caddy-s3proxy",
+        "format": "reference"
+      }
     },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [

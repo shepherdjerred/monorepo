@@ -27,7 +27,12 @@
       "lifecycle": "retain"
     },
     "chartComponent": "chart:redlib",
-    "artifactParameters": { "delivery.images.redlib": "image:redlib" },
+    "artifactParameters": {
+      "delivery.images.redlib": {
+        "component": "image:redlib",
+        "format": "reference"
+      }
+    },
     "runner": { "service": "ci", "component": "image:ci-base" },
     "steps": [
       {

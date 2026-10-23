@@ -20,6 +20,7 @@ import { STATIC_SITE_DELIVERY_OWNERS } from "homelab/src/static-site-delivery-ow
 import storagePolicy from "homelab/src/delivery-storage-policy.json";
 import { STATIC_ARCHIVE_BUCKET } from "@shepherdjerred/root-scripts/lib/static-site-publication.ts";
 import { V1_ENVIRONMENT_RENAMES } from "@shepherdjerred/ops-model/delivery-catalog/migration.ts";
+import { V1_STATIC_SITE_DESTINATIONS } from "@shepherdjerred/ops-model/static-release-targets.ts";
 
 const registrations = new URL(
   "../../../../../../delivery/registrations/",
@@ -153,10 +154,13 @@ test("every served static bucket has one pipeline or an explicit independent wri
   expect(registered).toHaveLength(15);
   for (const bucket of registered) {
     if (bucket.startsWith("scout-frontend")) continue;
-    const environmentId = STATIC_BUCKET_RELEASE_POLICIES[bucket] ?? "";
-    expect(V1_ENVIRONMENT_RENAMES[environmentId], bucket).toBe(
+    // The release policy names the catalog environment; the window migrates
+    // the bucket's v1 environment onto it.
+    expect(STATIC_BUCKET_RELEASE_POLICIES[bucket], bucket).toBe(
       `${bucket}/prod`,
     );
+    const v1 = V1_STATIC_SITE_DESTINATIONS[bucket] ?? "";
+    expect(V1_ENVIRONMENT_RENAMES[v1], bucket).toBe(`${bucket}/prod`);
   }
   for (const stage of ["beta", "prod"]) {
     const environment = z

@@ -103,8 +103,6 @@
                 "group": "apps",
                 "kind": "StatefulSet",
                 "jsonPointers": [
-                  "/metadata/annotations/sjer.red~1mining-reset-lock",
-                  "/metadata/annotations/sjer.red~1mining-reset-image",
                   "/metadata/annotations/sjer.red~1world-restore-lease",
                   "/metadata/annotations/sjer.red~1world-restore-phase",
                   "/metadata/annotations/sjer.red~1world-restore-image",
@@ -133,7 +131,12 @@
             "lifecycle": "retain"
           },
           "chartComponent": "chart:minecraft",
-          "artifactParameters": { "image.tag": "image:the-storm-server" },
+          "artifactParameters": {
+            "image.tag": {
+              "component": "image:the-storm-server",
+              "format": "tag-digest"
+            }
+          },
           "runner": { "service": "ci", "component": "image:ci-base" },
           "steps": [
             {

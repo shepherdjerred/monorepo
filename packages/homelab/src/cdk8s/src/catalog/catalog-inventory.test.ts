@@ -72,6 +72,30 @@ async function v1Registrations(): Promise<V1Registration[]> {
   );
 }
 
+/** Committed static-site recipes by environment; their v1 registrations are retired. */
+async function siteRecipes(): Promise<Record<string, unknown>> {
+  const root = fileURLToPath(new URL("v2/", REGISTRATIONS));
+  const files = await Array.fromAsync(
+    new Bun.Glob("*/*/recipe.json").scan({ cwd: root }),
+  );
+  const sites: Record<string, unknown> = {};
+  for (const file of files.toSorted()) {
+    const { definition } = z
+      .object({ definition: z.looseObject({ kind: z.string() }) })
+      .parse(await Bun.file(`${root}/${file}`).json());
+    if (definition.kind === "static-site")
+      sites[file.slice(0, file.lastIndexOf("/"))] = definition;
+  }
+  return sites;
+}
+
+async function runnerImage(): Promise<string> {
+  const digest = await Bun.file(
+    new URL("../../../../../../ci/ci-image/DIGEST", import.meta.url),
+  ).text();
+  return `docker.io/shepherdjerred/ci-base@${digest.trim()}`;
+}
+
 async function desiredStates(): Promise<Record<string, string>> {
   const root = fileURLToPath(TOFU_STACKS);
   const files = await Array.fromAsync(
@@ -141,6 +165,8 @@ beforeAll(async () => {
     applications,
     registrations: await v1Registrations(),
     desiredStates: await desiredStates(),
+    siteRecipes: await siteRecipes(),
+    runnerImage: await runnerImage(),
   });
   edges = derivedEdges({ core: CATALOG_CORE, app, applications, revisions });
 });
