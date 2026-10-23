@@ -77,6 +77,7 @@ import type {
   ContentBarrierRestoration,
 } from "./contract.ts";
 import type { RecordArtifactReplication } from "./artifact-contract.ts";
+import { ApprovalV2Schema } from "./model/approval-contract.ts";
 
 export function createDeliveryClient(options: RequestOptions) {
   const request = createRequester(options);
@@ -268,13 +269,14 @@ export function createDeliveryClient(options: RequestOptions) {
         `/platform/plans/${encodeURIComponent(id)}`,
         RecordTofuPlanSchema,
       ),
+    /** The decided approval record (4.13); the deployment is read apart. */
     approve: (
       id: string,
       input: { decision: "approve" | "reject"; reason: string },
     ) =>
       request(
         `/deployments/${encodeURIComponent(id)}/approval`,
-        DeploymentSchema,
+        ApprovalV2Schema,
         input,
       ),
     cancel: (id: string) =>

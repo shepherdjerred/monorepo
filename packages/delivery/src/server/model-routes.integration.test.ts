@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { z } from "zod";
-import { ApprovalV2Schema } from "#shared/model/approval-contract.ts";
+import { createDeliveryClient } from "#shared/client.ts";
 import type { ColdStartSnapshot } from "#shared/model/cold-start-contract.ts";
 import {
   MonitorStatusSchema,
@@ -175,9 +175,18 @@ describe("selections, deployments and monitors", () => {
     const path = `/deployments/${deployment.id}/approval`;
     const decision = { decision: "approve", reason: "reviewed the release" };
     expect(await status(path, "admin", decision)).toBe(403);
-    const approved = await call("POST", path, "human", decision);
-    expect(approved.status).toBe(200);
-    expect(ApprovalV2Schema.parse(approved.json)).toMatchObject({
+    // The shared client the hub and toolkit decide through parses the answer.
+    const client = createDeliveryClient({
+      baseUrl: "http://delivery.test",
+      headers: { "tailscale-user-login": OPERATOR },
+      fetch: async (input, init) => app.request(input, init),
+    });
+    expect(
+      await client.approve(deployment.id, {
+        decision: "approve",
+        reason: "reviewed the release",
+      }),
+    ).toMatchObject({
       deploymentId: deployment.id,
       status: "granted",
       actor: OPERATOR,
