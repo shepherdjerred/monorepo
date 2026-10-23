@@ -443,6 +443,12 @@ recovery retains its separate native proof. The generic helper refuses these tar
    toolkit deploy status DEPLOYMENT_ID --machine --json
    ```
 
+   Keep its `environment.generation` as `GENERATION` for step 6. The
+   [deployment detail contract](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/src/shared/contract.ts)
+   defines that field. The service
+   [refuses the recovery](https://github.com/shepherdjerred/monorepo/blob/main/packages/toolkit/README.md#delivery)
+   once the environment generation changes.
+
 3. Export the frozen artifact and configuration selection for review:
 
    ```bash
