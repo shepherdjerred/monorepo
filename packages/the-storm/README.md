@@ -2007,6 +2007,12 @@ count from the moment the match went live, at 50 ms each.
 | `X` | tick, winner or `-`, reason                                                                                                                                                                                                                                                                    | once, at the end                                                    |
 | `P` | pseudonym, credits                                                                                                                                                                                                                                                                             | once per paid human, after `X`                                      |
 
+Every hit that lands between members with a known attacker is an `E` row of
+kind `hit`: the attacker as subject, and detail `victim;class;cause;damage`,
+class being `projectile` (arrows, crossbow bolts, tridents), `melee` or
+`other` by the attack type's flags. `J` rows come from bow and crossbow shots
+only, so a thrown trident's hits are recorded but not its throws.
+
 The dedicated Fabric preview client sends complete `N` controls at 20 Hz through
 `thestorm:rwf_input`. `/rwf recording` reports whether the Storm client is
 sending manual controls and acknowledging combat observations. Chat and menus
@@ -3507,6 +3513,22 @@ showcase on that map in a disposable server and keeps its trace and recording;
 `bun run bots:stuck <trace.gz>` reports, per bot, time spent standing still
 while not holding on purpose, decisions without a path, option flip-flops,
 route failures and recoveries.
+
+`bun run bots:archery <recording.rwfrec.gz | directory>...` is the archers'
+report card. For everyone on a bow, crossbow or trident kit it prints minutes
+alive, shots (`J` rows), shots per minute alive, projectile hits on enemies
+(`E … hit` rows) and accuracy, with team, match and per-kit totals; `--json`
+prints the same as JSON. Bots on an Infinity bow alive at least a minute are
+judged: at least one arrow on an enemy, `MIN_SHOTS_PER_MINUTE` and
+`MIN_ACCURACY` in `scripts/bots/archery-report.ts`, which also records the
+evidence behind each bar. Limited-ammunition kits and humans are reported, not
+judged. The command exits 1 when a judged bot fails, so it can gate a bot
+experiment run with `bots:match`, and 2 when a recording predates hit rows and
+a bot's hits are unknown. Whether a kit's ammunition is unlimited comes from
+the kit book: `RangedKitsTest` checks that
+`plugin/modules/rwf/src/test/resources/rwf-ranged-kits.json` matches it.
+Shots cover bow and crossbow arrows only; thrown tridents write no `J` row,
+though their hits are recorded.
 
 ## Product metrics
 

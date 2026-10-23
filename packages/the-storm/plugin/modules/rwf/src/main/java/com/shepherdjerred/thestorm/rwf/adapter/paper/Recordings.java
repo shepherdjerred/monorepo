@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.rwf.app.MatchRecording;
 import com.shepherdjerred.thestorm.rwf.app.Pseudonyms;
 import com.shepherdjerred.thestorm.rwf.app.Recorder;
 import com.shepherdjerred.thestorm.rwf.app.RecordingSummary;
+import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
 import com.shepherdjerred.thestorm.rwf.domain.combat.CombatRules;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.CombatantId;
 import com.shepherdjerred.thestorm.rwf.domain.combatant.TeamColor;
@@ -133,6 +134,23 @@ final class Recordings {
     var current = recording;
     if (current != null && !subject.isEmpty()) {
       current.event(new RecordEvent(tick(), kind, subject, detail));
+    }
+  }
+
+  /**
+   * {@code attacker} landed {@code damage} on {@code victim} with {@code cause}: a {@code hit}
+   * event ({@link RecordEvent#hitDetail}). Every landed hit between members is kept, ranged or not,
+   * so a recording can tell an archer's arrows that connected from those that missed.
+   */
+  void hit(CombatantId attacker, CombatantId victim, AttackType cause, double damage) {
+    var current = recording;
+    if (current != null) {
+      current.event(
+          new RecordEvent(
+              tick(),
+              RecordEvent.HIT,
+              name(attacker),
+              RecordEvent.hitDetail(name(victim), cause, damage)));
     }
   }
 

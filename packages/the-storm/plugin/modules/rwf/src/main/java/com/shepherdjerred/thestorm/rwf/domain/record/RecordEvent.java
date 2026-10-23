@@ -1,5 +1,8 @@
 package com.shepherdjerred.thestorm.rwf.domain.record;
 
+import com.shepherdjerred.thestorm.rwf.domain.combat.AttackType;
+import java.util.Locale;
+
 /**
  * Something that happened, at tick resolution.
  *
@@ -10,6 +13,9 @@ package com.shepherdjerred.thestorm.rwf.domain.record;
  */
 public record RecordEvent(long tick, String kind, String subject, String detail) {
 
+  /** The kind of the event a hit between members is recorded as; see {@link #hitDetail}. */
+  public static final String HIT = "hit";
+
   public RecordEvent {
     if (tick < 0) {
       throw new IllegalArgumentException("tick must not be negative");
@@ -17,5 +23,28 @@ public record RecordEvent(long tick, String kind, String subject, String detail)
     if (kind.isBlank() || subject.isBlank()) {
       throw new IllegalArgumentException("kind and subject must not be blank");
     }
+  }
+
+  /**
+   * The detail of one member's damage landing on another member, recorded as an event of kind
+   * {@value #HIT} with the attacker's pseudonym as subject: {@code victim;class;cause;damage}. The
+   * class is {@code projectile} or {@code melee} by the cause's flags ({@code other} for neither),
+   * the cause is {@link AttackType#name()} and the damage is the health it took, to two decimals.
+   * Arrows, crossbow bolts and tridents are all {@code projectile}; readers counting ranged contact
+   * read the class.
+   */
+  public static String hitDetail(String victim, AttackType cause, double damage) {
+    if (victim.isBlank() || victim.contains(";")) {
+      throw new IllegalArgumentException("the hit victim must be a pseudonym: " + victim);
+    }
+    String type;
+    if (cause.has(AttackType.Flag.PROJECTILE)) {
+      type = "projectile";
+    } else if (cause.has(AttackType.Flag.MELEE)) {
+      type = "melee";
+    } else {
+      type = "other";
+    }
+    return String.join(";", victim, type, cause.name(), String.format(Locale.ROOT, "%.2f", damage));
   }
 }

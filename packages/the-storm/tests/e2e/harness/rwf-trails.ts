@@ -29,7 +29,7 @@ export type Trails = {
   roster: Map<string, { team: string; bot: boolean }>;
   /** Each combatant's living positions, oldest first. */
   paths: Map<string, TrailPoint[]>;
-  /** The first tick a sword blow landed or anyone died, if ever. */
+  /** The first tick a blow or arrow landed or anyone died, if ever. */
   firstContact: number | undefined;
   /** The last tick of the recording. */
   lastTick: number;
@@ -37,13 +37,14 @@ export type Trails = {
 
 /**
  * Intents and events that mean two teams have met: a sword blow that went
- * through the rules (`attack` is only written for landed swings) or a death.
- * A loosed arrow (`shoot`) is not contact: archers open fire from 30 blocks
- * and most arrows miss; the recording has no row for an arrow that hits
- * without killing.
+ * through the rules (`attack` is only written for landed swings), damage
+ * that landed between members (`hit`, written since schema 4 recordings
+ * gained it; older recordings have no row for an arrow that hits without
+ * killing) or a death. A loosed arrow (`shoot`) is not contact: archers open
+ * fire from 30 blocks and most arrows miss.
  */
 const CONTACT_INTENTS = new Set(["attack"]);
-const CONTACT_EVENTS = new Set(["died", "killed"]);
+const CONTACT_EVENTS = new Set(["died", "killed", "hit"]);
 
 function int(text: string | undefined, what: string): number {
   const value = Number(text);

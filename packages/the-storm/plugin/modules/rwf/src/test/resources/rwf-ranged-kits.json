@@ -1,0 +1,70 @@
+{
+  "kits": [
+    {
+      "id": "longbow",
+      "weapon": "bow",
+      "ammo": "infinite",
+      "arrows": 0
+    },
+    {
+      "id": "pyro",
+      "weapon": "bow",
+      "ammo": "infinite",
+      "arrows": 0
+    },
+    {
+      "id": "shortbow",
+      "weapon": "bow",
+      "ammo": "infinite",
+      "arrows": 0
+    },
+    {
+      "id": "wraith",
+      "weapon": "bow",
+      "ammo": "infinite",
+      "arrows": 0
+    },
+    {
+      "id": "tracker",
+      "weapon": "crossbow",
+      "ammo": "finite",
+      "arrows": 32
+    },
+    {
+      "id": "arbalist",
+      "weapon": "crossbow",
+      "ammo": "finite",
+      "arrows": 48
+    },
+    {
+      "id": "volley",
+      "weapon": "crossbow",
+      "ammo": "finite",
+      "arrows": 36
+    },
+    {
+      "id": "marksman",
+      "weapon": "bow",
+      "ammo": "infinite",
+      "arrows": 0
+    },
+    {
+      "id": "windrunner",
+      "weapon": "bow",
+      "ammo": "infinite",
+      "arrows": 0
+    },
+    {
+      "id": "harpooner",
+      "weapon": "trident",
+      "ammo": "returning",
+      "arrows": 0
+    },
+    {
+      "id": "fletcher",
+      "weapon": "bow",
+      "ammo": "finite",
+      "arrows": 32
+    }
+  ]
+}
