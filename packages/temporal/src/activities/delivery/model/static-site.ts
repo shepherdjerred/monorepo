@@ -12,17 +12,20 @@ import {
   type StaticSiteRuntime,
 } from "#activities/delivery/static-site.ts";
 import { modelStaticSiteSelection } from "#activities/delivery/static-site-selection.ts";
-import { recordStage, stageOf } from "./stages.ts";
+import { recordStage, requireOwned, stageOf } from "./stages.ts";
 
 export type StaticSiteStepEffects = {
   io: StaticSiteIo;
   record: typeof recordStage;
+  /** Proves the deployment still owns its environment before any bucket effect. */
+  owned: (id: string) => Promise<unknown>;
   run: <T>(operation: (runtime: StaticSiteRuntime) => Promise<T>) => Promise<T>;
   owners?: Readonly<Record<string, string>>;
 };
 const LIVE: StaticSiteStepEffects = {
   io: LIVE_STATIC_SITE_IO,
   record: recordStage,
+  owned: requireOwned,
   run: withStaticActivityRuntime,
 };
 
@@ -46,6 +49,9 @@ export async function runStaticSiteStep(
   const evidence = await effects.run(
     async (runtime) =>
       await activateStaticSelection(site, runtime, effects.io, async () => {
+        // Every attempt, resumed ones included, re-proves ownership after the
+        // archive download and before the bucket sync or cache purge.
+        await effects.owned(current.deployment.id);
         if (stageOf(current, key) !== undefined) return;
         await effects.record(current, key, "running", {
           operationId,

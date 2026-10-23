@@ -76,6 +76,10 @@ function effects(): StaticSiteStepEffects {
       recorded.push({ key, status, evidence: input.evidence ?? [] });
       await Promise.resolve();
     },
+    owned: async (id) => {
+      events.push(`owned ${id}`);
+      await Promise.resolve();
+    },
     run: async (operation) =>
       await operation({ signal: controller.signal, heartbeat: vi.fn() }),
   };
@@ -140,6 +144,7 @@ describe("static-site step", () => {
     await runStaticSiteStep(current, step.policy, KEY, effects());
     expect(events).toEqual([
       `download ${archive.uri}`,
+      `owned ${current.deployment.id}`,
       `${KEY} running`,
       "sync wiki-sjer-red",
       "receipt",
@@ -181,9 +186,25 @@ describe("static-site step", () => {
     );
     expect(events).toEqual([
       `download ${resumed.archive.uri}`,
+      `owned ${resumed.current.deployment.id}`,
       "purge",
       `${KEY} succeeded`,
     ]);
+  });
+
+  test("a resumed step that no longer owns its environment stops before any bucket effect", async () => {
+    const resumed = await fixture([{ key: KEY, status: "running" }]);
+    await expect(
+      runStaticSiteStep(resumed.current, resumed.step.policy, KEY, {
+        ...effects(),
+        owned: () =>
+          Promise.reject(
+            new Error("Deployment no longer owns its environment"),
+          ),
+      }),
+    ).rejects.toThrow(/no longer owns/u);
+    expect(events).toEqual([`download ${resumed.archive.uri}`]);
+    expect(bucket.size).toBe(0);
   });
 
   test("corrupt archive bytes stop before intent or any bucket effect", async () => {
