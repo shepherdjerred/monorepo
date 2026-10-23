@@ -202,9 +202,10 @@ toolkit deploy snapshot accept <ENVIRONMENT_ID> --reason "Why the live state is 
 toolkit deploy render-application <ENVIRONMENT_ID> --snapshot <FILE> --file <CATALOG_DOCUMENT_JSON>
 ```
 
-`start` requests an exact set revision the way the environment's declared
-recipe realises it: `deploy`, or `channel-publish` and `operator-run` for
-those recipe kinds. `--override` asks for the approval a non-eligible `deploy`
+`start` requests an exact set revision the way the recipe the release
+freezes realises it: `deploy`, or `channel-publish` and `operator-run` for
+those recipe kinds. That is the accepted selection's recipe until a `rebind`,
+and the declared recipe only before the first acceptance. `--override` asks for the approval a non-eligible `deploy`
 needs, such as a set revision never accepted in the promotion source;
 `approve --override` and `reject --override` decide it. `promote` takes the source's accepted selection and names no set
 revision. `candidates` lists accepted selections, newest first, and states why

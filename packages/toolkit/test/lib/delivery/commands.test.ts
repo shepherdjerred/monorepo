@@ -138,7 +138,12 @@ describe("delivery CLI", () => {
   test("start forwards exact target, revision, generation and idempotency key", async () => {
     const { client, requests } = recordingClient((url) =>
       url.endsWith("selection")
-        ? { ...fixtures.selections.beta, bindingGeneration: 4 }
+        ? {
+            ...fixtures.selections.beta,
+            accepted: null,
+            acceptedDeploymentId: null,
+            bindingGeneration: 4,
+          }
         : deployment,
     );
     const { values, positionals } = parseDeployArgs([

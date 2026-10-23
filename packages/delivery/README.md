@@ -139,9 +139,10 @@ before sending and each response before use.
   result and state, the record each catalog reconcile audits, service
   retirement, the restore-hold settlement, and the reconcile-after-restore
   comparison. `MonitorStatusSchema` carries the declared monitor and the
-  latest observation so evidence reads against its threshold; the selection
-  view names the declared recipe's kind so an `operator-run` recipe is
-  requested as one.
+  latest observation so evidence reads against its threshold. The selection
+  view names the declared recipe's kind, and the hub's environment detail
+  names the release kind: that of the recipe a release freezes, the accepted
+  selection's until a rebind. An `operator-run` recipe is requested as one.
 - Cold start (section 6, X7): `ColdStartSnapshotSchema` records each
   environment's accepted selection with its set revision's artifacts, and
   `COLD_START_SNAPSHOT` names the R2 endpoint and object the snapshot writer

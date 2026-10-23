@@ -155,9 +155,24 @@ function expectedGeneration(
 }
 
 /**
- * Realise a set revision the way the declared recipe asks: `deploy`, or
- * `channel-publish` and `operator-run` for those recipe kinds. `--override`
- * asks for the approval a non-eligible deploy needs (H4).
+ * The deployment kind a release takes: the server freezes the accepted
+ * selection's recipe until a rebind moves it to the declared one, and the
+ * declared recipe only before the first acceptance (E0, L2).
+ */
+async function releaseKind(
+  client: DeliveryClient,
+  view: Awaited<ReturnType<DeliveryClient["selection"]>>,
+) {
+  if (view.acceptedDeploymentId === null)
+    return deploymentKindForRecipe(view.declared.recipeKind);
+  const accepted = await client.deployment(view.acceptedDeploymentId);
+  return deploymentKindForRecipe(accepted.pipeline.definition.kind);
+}
+
+/**
+ * Realise a set revision the way the recipe the release freezes asks:
+ * `deploy`, or `channel-publish` and `operator-run` for those recipe kinds.
+ * `--override` asks for the approval a non-eligible deploy needs (H4).
  */
 async function start(
   client: DeliveryClient,
@@ -166,7 +181,7 @@ async function start(
   options: ModelOptions,
 ): ModelResult {
   const view = await client.selection(environmentId);
-  const kind = deploymentKindForRecipe(view.declared.recipeKind);
+  const kind = await releaseKind(client, view);
   if (kind !== "deploy" && options.override)
     throw new Error(
       `Only a deploy takes an override; ${environmentId} runs ${kind}`,

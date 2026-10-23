@@ -363,20 +363,22 @@ describe("admin and operator verbs", () => {
 });
 
 describe("start, promote and recovery reads", () => {
-  test("start runs an operator-run recipe as operator-run", async () => {
-    const operated = {
+  test("before the first acceptance, start realises the declared recipe kind", async () => {
+    const unaccepted = {
       ...fixtures.selections.prod,
-      declared: {
-        ...fixtures.selections.prod.declared,
-        recipeKind: "operator-run",
-      },
+      accepted: null,
+      acceptedDeploymentId: null,
+    };
+    const operated = {
+      ...unaccepted,
+      declared: { ...unaccepted.declared, recipeKind: "operator-run" },
     };
     const published = {
-      ...fixtures.selections.prod,
-      declared: { ...fixtures.selections.prod.declared, recipeKind: "channel" },
+      ...unaccepted,
+      declared: { ...unaccepted.declared, recipeKind: "channel" },
     };
     for (const [view, kind] of [
-      [fixtures.selections.prod, "deploy"],
+      [unaccepted, "deploy"],
       [operated, "operator-run"],
       [published, "channel-publish"],
     ] as const) {
@@ -398,6 +400,37 @@ describe("start, promote and recovery reads", () => {
         versionSetRevisionId: "scout-for-lol:r42",
       });
     }
+  });
+
+  test("start realises the accepted recipe until a rebind, not a newer declared kind", async () => {
+    // The catalog now declares an operator-run recipe, but the accepted
+    // selection's recipe (a deploy) is what the server freezes.
+    const redeclared = {
+      ...fixtures.selections.prod,
+      declared: {
+        ...fixtures.selections.prod.declared,
+        recipeKind: "operator-run",
+      },
+    };
+    const { client, sent } = delivery({
+      [`GET /environments/${prod}/selection`]: redeclared,
+      "GET /deployments/scout-prod-42": fixtures.deploymentDetail(
+        fixtures.deployments.alarmed42,
+      ),
+      "POST /deployments": fixtures.deployments.rollback43,
+    });
+    await run(client, "start", [
+      fixtures.PROD,
+      "scout-for-lol:r42",
+      "--request-id",
+      "request/start",
+    ]);
+    expect(sent.map((request) => `${request.method} ${request.path}`)).toEqual([
+      `GET /environments/${prod}/selection`,
+      "GET /deployments/scout-prod-42",
+      "POST /deployments",
+    ]);
+    expect(sent.at(-1)?.body).toMatchObject({ kind: "deploy" });
   });
 
   test("promote takes the source's accepted selection without naming a set revision", async () => {
@@ -491,6 +524,9 @@ describe("override approvals", () => {
   test("start --override asks for the approval a non-eligible deploy needs", async () => {
     const { client, sent } = delivery({
       [`GET /environments/${prod}/selection`]: fixtures.selections.prod,
+      "GET /deployments/scout-prod-42": fixtures.deploymentDetail(
+        fixtures.deployments.alarmed42,
+      ),
       "POST /deployments": fixtures.deployments.override45,
     });
     await run(client, "start", [
@@ -504,6 +540,8 @@ describe("override approvals", () => {
     const operated = delivery({
       [`GET /environments/${prod}/selection`]: {
         ...fixtures.selections.prod,
+        accepted: null,
+        acceptedDeploymentId: null,
         declared: {
           ...fixtures.selections.prod.declared,
           recipeKind: "operator-run",

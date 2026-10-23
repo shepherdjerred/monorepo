@@ -9,6 +9,7 @@ import { DeploymentModel } from "./deployment-model.tsx";
 import { EnvironmentModel } from "./environment-model.tsx";
 import { MonitorPanel } from "./monitor-panel.tsx";
 import { PlanApproval } from "./plan-approval.tsx";
+import { ReleaseForm } from "#client/release-form.tsx";
 import {
   awaitsDecision,
   firingAlarms,
@@ -294,5 +295,30 @@ describe("plan approval", () => {
     expect(plan(fixtures.deploymentDetails[0] ?? fixtures.planWaiting)).toBe(
       "",
     );
+  });
+});
+
+/** The release form for the beta environment under one release kind. */
+function releaseForm(releaseKind: "deploy" | "operator-run") {
+  return render(
+    <ReleaseForm
+      detail={{ ...fixtures.environmentDetails.beta, releaseKind }}
+      permitted
+      initialKind={undefined}
+      onRequested={() => Promise.resolve()}
+    />,
+  );
+}
+
+describe("release form", () => {
+  test("requests the kind of the recipe the release freezes, not the declared one", () => {
+    // The fixture's declared pipeline is a plain recipe; the server reports
+    // that the accepted recipe is operator-run until a rebind.
+    const operated = releaseForm("operator-run");
+    expect(operated).toContain("Run a version with the operator tool");
+    expect(operated).not.toContain("Ask for an override approval");
+    const deployed = releaseForm("deploy");
+    expect(deployed).toContain("Deploy a version");
+    expect(deployed).toContain("Ask for an override approval");
   });
 });

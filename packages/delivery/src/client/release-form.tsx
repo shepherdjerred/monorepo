@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import type { Deployment } from "#shared/contract.ts";
 import type { CreateDeploymentV2Request } from "#shared/model/routes-client.ts";
-import { deploymentKindForRecipe } from "#shared/model/contract.ts";
 import type { EnvironmentDetail } from "#shared/hub/hub-contract.ts";
 import { delivery } from "./api.ts";
 import { ErrorNotice, errorMessage } from "#client/components/notices.tsx";
@@ -59,7 +58,7 @@ function ComponentDiff({ from, to }: { from: string | null; to: string }) {
   );
 }
 
-/** What a request for a set revision does under the declared recipe kind (section 5). */
+/** What a request for a set revision does under the recipe the release freezes (section 5). */
 const REALISING = {
   deploy: {
     option: "Deploy a version",
@@ -90,7 +89,9 @@ export function ReleaseForm({
   onRequested: (deployment: Deployment) => Promise<void>;
 }) {
   const { environment, sourceEnvironment } = detail;
-  const realising = deploymentKindForRecipe(detail.pipeline.definition.kind);
+  // The server freezes the accepted recipe until a rebind, so the declared
+  // recipe's kind would be refused after a catalog change (E0, L2).
+  const realising = detail.releaseKind;
   const promotable = sourceEnvironment?.acceptedVersionSetRevisionId ?? null;
   const [kind, setKind] = useState<Kind>(
     initialKind === "promote" && promotable === null

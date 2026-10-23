@@ -14,6 +14,7 @@ import {
   VersionSetRevisionSchema,
 } from "#shared/contract.ts";
 import { RestoreHoldSchema } from "#shared/model/cold-start-contract.ts";
+import { DeploymentKindV2Schema } from "#shared/deployment-request-contract.ts";
 
 const TimestampSchema = z.iso.datetime();
 
@@ -196,6 +197,16 @@ export const EnvironmentDetailSchema = z.object({
   sourceEnvironment: EnvironmentSchema.nullable(),
   /** Set by reconcile-after-restore on a mismatch; holds automatic deployments (section 6). */
   restoreHold: RestoreHoldSchema.nullable(),
+  /**
+   * What a release of a set revision is realised by: the kind of the recipe
+   * the server freezes, the accepted selection's until a rebind and the
+   * declared one before the first acceptance (E0, L2).
+   */
+  releaseKind: DeploymentKindV2Schema.extract([
+    "deploy",
+    "channel-publish",
+    "operator-run",
+  ]),
   versionSets: z.array(VersionSetRevisionSchema),
   deployments: z.array(DeploymentSchema),
   links: z.array(LinkSchema),
