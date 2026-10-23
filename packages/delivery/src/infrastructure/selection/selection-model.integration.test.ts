@@ -808,6 +808,43 @@ describe("anonymous claims (D7)", () => {
   });
 });
 
+/** A verified temporal build of its own worker image, and the set it composed. */
+async function publishTemporal(number: number) {
+  const build = await context.delivery.publish(
+    {
+      requestId: `temporal/${String(number)}`,
+      serviceId: "temporal",
+      sourceRevision: String(number).repeat(40),
+      ciUrl: `https://woodpecker.sjer.red/repos/1/pipeline/${String(number)}`,
+      verifiedAt: new Date().toISOString(),
+      artifacts: [
+        {
+          id: `temporal-worker-${String(number)}`,
+          component: "worker",
+          kind: "image",
+          uri: "docker.io/shepherdjerred/temporal-worker",
+          version: `1.0.${String(number)}`,
+          digest: `sha256:${String(number).repeat(64)}`,
+        },
+      ],
+    },
+    testPublisher,
+    { repositoryId: 1, pipelineNumber: number },
+  );
+  await context.delivery.qualify(build.buildId, "verified", testExecutor);
+  return context.cluster.database.versionSet.findFirstOrThrow({
+    where: { qualifiedBuildId: build.buildId },
+    include: { entries: true },
+  });
+}
+
+/** The arcade artifact the set of temporal's next build mirrors. */
+async function mirror(number: number) {
+  const set = await publishTemporal(number);
+  return set.entries.find((entry) => entry.component === "image:arcade-mirror")
+    ?.artifactId;
+}
+
 describe("composition (R0, K1, R7)", () => {
   test("a tracking reference recomposes the referencing service when its source accepts", async () => {
     await context.cluster.database.componentReference.create({
@@ -920,6 +957,50 @@ describe("composition (R0, K1, R7)", () => {
       ["chart", "coupled-chart"],
       ["server", "coupled-image"],
     ]);
+  });
+
+  test("a pinned reference takes its source's newest live artifact when the referencing service composes (A5)", async () => {
+    await context.cluster.database.componentReference.create({
+      data: {
+        serviceId: "temporal",
+        component: "image:arcade-mirror",
+        sourceServiceId: "arcade",
+        sourceComponent: "server",
+        mode: "pinned",
+      },
+    });
+    expect(await mirror(3)).toBe("arcade-image");
+    // arcade publishes a new live set; a pinned reference triggers nothing.
+    const arcade = await context.delivery.publish(
+      {
+        requestId: "arcade/4",
+        serviceId: "arcade",
+        sourceRevision: "4".repeat(40),
+        ciUrl: "https://woodpecker.sjer.red/repos/1/pipeline/4",
+        verifiedAt: new Date().toISOString(),
+        artifacts: [
+          {
+            id: "arcade-image-4",
+            component: "server",
+            kind: "image",
+            uri: "docker.io/shepherdjerred/arcade",
+            version: "1.0.4",
+            digest: `sha256:${"4".repeat(64)}`,
+          },
+        ],
+      },
+      testPublisher,
+      { repositoryId: 1, pipelineNumber: 4 },
+    );
+    await context.delivery.qualify(arcade.buildId, "verified", testExecutor);
+    expect(
+      await context.cluster.database.versionSet.count({
+        where: { serviceId: "temporal" },
+      }),
+    ).toBe(1);
+    // temporal's next build carries the source's new artifact, not the one
+    // its live set carried.
+    expect(await mirror(5)).toBe("arcade-image-4");
   });
 
   test("a set revision is composed only once every declared component is filled", async () => {

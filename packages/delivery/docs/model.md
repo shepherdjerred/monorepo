@@ -260,12 +260,14 @@ multi-platform images), origin, `requires`, retention state.
 - A4. An artifact whose build is `pending` or `failed` is not selectable.
 - A5. A component may be filled by another service's artifact. This is a
   reference, not a copy or an alias: the artifact keeps its producing build
-  and service. A `pinned` reference changes only by catalog change or manual
-  set revision. A `tracking` reference names a source service, component,
-  and environment; the referencing service composes an automatic set
-  revision in the transaction that accepts a selection in that environment
-  whose referenced component changed. A tracking reference is a declared
-  edge under G3.
+  and service. A `pinned` reference takes its source service's live artifact
+  whenever the referencing service composes; the source publishing never
+  triggers a composition by itself. A `tracking` reference names a source
+  service, component, and environment; the referencing service composes an
+  automatic set revision in the transaction that accepts a selection in that
+  environment whose referenced component changed (R7), and every other
+  composition takes that environment's accepted artifact. A tracking
+  reference is a declared edge under G3.
 - A6. Every artifact referenced by a previously accepted selection is
   retained in a registered artifact store, addressable by digest, until
   every service referencing it is `removed`. Self-hosted stores satisfy this

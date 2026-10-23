@@ -89,7 +89,7 @@ function behindLive(live: LiveSet, key: OrderKey) {
   );
 }
 
-/** The outputs over the live set, within the declared list, references filled (A5). */
+/** The outputs over the live set, within the declared list, references resolved from their sources (A5). */
 async function gatherComponents(
   tx: Transaction,
   input: AutomaticComposition,
@@ -111,7 +111,12 @@ async function gatherComponents(
   for (const reference of await tx.componentReference.findMany({
     where: { serviceId: input.serviceId },
   })) {
-    if (components[reference.component] !== undefined) continue;
+    // The composition's own outputs stand (a tracking recomposition names
+    // the accepted artifact itself, R7).
+    if (input.outputs[reference.component] !== undefined) continue;
+    // A5: every composition takes the reference's current source artifact,
+    // so the live set's carried one never shadows a newer one. While the
+    // source has none, the carried artifact stays (R2).
     const artifactId = await referencedArtifact(tx, reference);
     if (artifactId !== null) components[reference.component] = artifactId;
   }
