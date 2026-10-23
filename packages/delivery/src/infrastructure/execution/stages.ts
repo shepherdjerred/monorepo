@@ -33,10 +33,11 @@ import { recomposeTracking } from "#infrastructure/composition/automatic.ts";
 import { startMonitor } from "#infrastructure/monitor/monitor.ts";
 import {
   advancesAcceptance,
+  type DeploymentRow,
   leaseExpiry,
   observesApplication,
+  requireLiveLease,
   runningDeployment,
-  type DeploymentRow,
 } from "#infrastructure/execution/ownership.ts";
 
 /**
@@ -234,6 +235,8 @@ export async function finish(
         throw new DeliveryError("CONFLICT", "Deployment result is immutable");
       return DeploymentSchema.parse(wire(row));
     }
+    // D7: a lapsed lease is no longer provably owned, so it reports nothing.
+    requireLiveLease(row);
     requireFinishable(row, input);
     const env = await environment(tx, row.environmentId);
     if (env.activeDeploymentId !== deploymentId)

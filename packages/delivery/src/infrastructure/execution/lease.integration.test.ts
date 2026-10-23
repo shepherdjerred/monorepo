@@ -4,7 +4,7 @@ import { testExecutor, testOperator } from "#testing/seed.ts";
 
 const context = useDeliveryFixture();
 
-test("a lapsed lease takes no stage, renewal or claim; the lease scan ends it in recovery (D7)", async () => {
+test("a lapsed lease takes no stage, renewal, finish or claim; the lease scan ends it in recovery (D7)", async () => {
   const env = await context.cluster.database.environment.findUniqueOrThrow({
     where: { id: context.fixture.environment.id },
   });
@@ -43,6 +43,18 @@ test("a lapsed lease takes no stage, renewal or claim; the lease scan ends it in
   ).rejects.toThrow(lapsed);
   await expect(
     context.delivery.claim(deployment.id, testExecutor, undefined, owner),
+  ).rejects.toThrow(lapsed);
+  await expect(
+    context.delivery.finish(
+      deployment.id,
+      {
+        status: "succeeded",
+        message: "Released",
+        recoveryRequired: false,
+        evidence: [],
+      },
+      testExecutor,
+    ),
   ).rejects.toThrow(lapsed);
   // An anonymous fence of the lapsed deployment is refused too.
   await expect(
