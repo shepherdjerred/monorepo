@@ -25,7 +25,7 @@ import { runGuardedArgoCommand } from "#activities/delivery/argocd.ts";
 import { recordStage, requireOwned } from "./stages.ts";
 import { workerRolloutPreflight } from "./worker-rollout.ts";
 import { minecraftSyncFence } from "./minecraft-upgrade.ts";
-import { forumSyncFence } from "./forum-bundle.ts";
+import { forumBaselineFence } from "./forum-bundle.ts";
 
 const READBACK_ATTEMPTS = 120;
 const READBACK_INTERVAL_MS = 5000;
@@ -132,6 +132,9 @@ export async function applySafety(
   const source = await verifySourceBytes(rendered, operationId);
   // A worker pool's images and routes are proved before its hosts change.
   await workerRolloutPreflight(current);
+  // A forum's first upgrade re-observes its original baseline before the
+  // candidate source replaces the one that baseline fingerprinted.
+  await forumBaselineFence(current);
   await recordStage(current, key, "running", { operationId });
   const written = await writeBody(rendered);
   await runGuardedArgoCommand(
@@ -206,8 +209,6 @@ export async function sync(
   if (!before.requested) {
     // A preserved world switches images only with fresh preservation proof.
     minecraftSyncFence(current, recipe);
-    // A forum's first migration re-observes its original baseline first.
-    await forumSyncFence(current);
     await runGuardedArgoCommand(
       [
         "sync-managed",

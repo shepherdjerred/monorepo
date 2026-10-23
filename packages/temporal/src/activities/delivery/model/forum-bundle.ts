@@ -74,10 +74,12 @@ function liveEffects(): ForumBundleEffects {
 
 /**
  * The first upgrade from an observed original baseline re-observes it
- * immediately before the sync that starts the migration; later upgrades
- * migrate from the accepted selection and have no baseline.
+ * immediately before the apply-safety step writes the candidate source,
+ * while the live Application still carries the original source the
+ * baseline fingerprinted (as v1 checked before selecting the release).
+ * Later upgrades migrate from the accepted selection and have no baseline.
  */
-export async function forumSyncFence(current: DeploymentDetail) {
+export async function forumBaselineFence(current: DeploymentDetail) {
   if (current.deployment.forumBaselineSnapshot === null) return;
   await deliveryRequest(
     `${deploymentPath(current.deployment.id)}/forum-baseline-check`,
