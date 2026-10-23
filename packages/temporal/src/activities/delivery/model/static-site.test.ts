@@ -181,7 +181,7 @@ describe("static-site step", () => {
     });
   });
 
-  test("a resumed step whose bucket already holds this deployment re-proves it without syncing or re-recording intent", async () => {
+  test("a resumed step whose bucket already holds this deployment re-records its intent and re-proves it without syncing", async () => {
     const first = await fixture();
     await runStaticSiteStep(first.current, first.step.policy, KEY, effects());
     events = [];
@@ -195,9 +195,35 @@ describe("static-site step", () => {
     expect(events).toEqual([
       `download ${resumed.archive.uri}`,
       `owned ${resumed.current.deployment.id}`,
+      `${KEY} running`,
       "purge",
       `${KEY} succeeded`,
     ]);
+  });
+
+  test("a resumed step whose lease lapsed is refused at its intent before any bucket, receipt or purge effect (D7)", async () => {
+    const resumed = await fixture([{ key: KEY, status: "running" }]);
+    const live = effects();
+    await expect(
+      runStaticSiteStep(resumed.current, resumed.step.policy, KEY, {
+        ...live,
+        // The server refuses any stage write once the lease has lapsed.
+        record: async (current, key, status, input) => {
+          if (status === "running")
+            throw new Error(
+              "The deployment's lease lapsed; it is no longer provably owned and ends in recovery (D7)",
+            );
+          await live.record(current, key, status, input);
+        },
+      }),
+    ).rejects.toThrow(/lease lapsed/u);
+    expect(events).toEqual([
+      `download ${resumed.archive.uri}`,
+      `owned ${resumed.current.deployment.id}`,
+    ]);
+    expect(bucket.size).toBe(0);
+    expect(receipt).toBeNull();
+    expect(recorded).toEqual([]);
   });
 
   test("a resumed step that no longer owns its environment stops before any bucket effect", async () => {

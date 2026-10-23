@@ -12,7 +12,7 @@ import {
   type StaticSiteRuntime,
 } from "#activities/delivery/static-site.ts";
 import { modelStaticSiteSelection } from "#activities/delivery/static-site-selection.ts";
-import { recordStage, requireOwned, stageOf } from "./stages.ts";
+import { recordStage, requireOwned } from "./stages.ts";
 
 export type StaticSiteStepEffects = {
   io: StaticSiteIo;
@@ -35,8 +35,9 @@ const LIVE: StaticSiteStepEffects = {
  * digest, synced to the recipe's bucket under an activation receipt naming
  * this deployment, the cache is purged, and bucket bytes, entrypoints and
  * the public receipt are read back against that digest. A resumed step
- * keeps its recorded intent; the receipt decides whether the bucket already
- * holds this deployment, so the sync never runs for a proven activation.
+ * re-records the same intent, which proves it still owns the deployment;
+ * the receipt decides whether the bucket already holds this deployment, so
+ * the sync never runs for a proven activation.
  */
 export async function runStaticSiteStep(
   current: DeploymentDetail,
@@ -50,9 +51,11 @@ export async function runStaticSiteStep(
     async (runtime) =>
       await activateStaticSelection(site, runtime, effects.io, async () => {
         // Every attempt, resumed ones included, re-proves ownership after the
-        // archive download and before the bucket sync or cache purge.
+        // archive download and immediately before the bucket sync, receipt
+        // write or cache purge. The server accepts the same running intent
+        // under the same operation identity only from the executor that owns
+        // the deployment under a live lease (D7), which a read cannot prove.
         await effects.owned(current.deployment.id);
-        if (stageOf(current, key) !== undefined) return;
         await effects.record(current, key, "running", {
           operationId,
           message: `Activating archive ${site.archive.digest} in bucket ${site.pipeline.bucket} under receipt ${current.deployment.id}`,

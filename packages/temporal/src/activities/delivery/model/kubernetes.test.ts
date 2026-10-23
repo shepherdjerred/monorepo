@@ -11,7 +11,7 @@ import type * as Stages from "./stages.ts";
 const calls = vi.hoisted(() => {
   const events: string[] = [];
   const reads: unknown[] = [];
-  return { events, reads, prune: false };
+  return { events, reads, prune: false, lapsed: false };
 });
 vi.mock("@temporalio/activity", async (importOriginal) => ({
   ...(await importOriginal<typeof Activity>()),
@@ -56,6 +56,13 @@ vi.mock("#activities/delivery/argocd.ts", async (importOriginal) => ({
 vi.mock("./stages.ts", async (importOriginal) => ({
   ...(await importOriginal<typeof Stages>()),
   recordStage: (_current: unknown, key: string, status: string) => {
+    // The server refuses any stage write once the lease has lapsed (D7).
+    if (calls.lapsed)
+      return Promise.reject(
+        new Error(
+          "The deployment's lease lapsed; it is no longer provably owned and ends in recovery (D7)",
+        ),
+      );
     calls.events.push(`${key} ${status}`);
     return Promise.resolve();
   },
@@ -118,6 +125,7 @@ afterEach(() => {
   calls.events = [];
   calls.reads = [];
   calls.prune = false;
+  calls.lapsed = false;
 });
 
 describe("Kubernetes steps of a forum release", () => {
@@ -173,4 +181,30 @@ describe("Kubernetes steps of a forum release", () => {
       expect(calls.events).not.toContain("baseline-check");
     },
   );
+
+  test("a resumed sync re-records its intent before the Argo sync (D7)", async () => {
+    const { current, recipe } = fixture([
+      { key: "step-sync", status: "running" },
+    ]);
+    calls.reads = [application(false), application(true)];
+    await sync(current, recipe, "step-sync");
+    const intent = calls.events.indexOf("step-sync running");
+    const effect = calls.events.findIndex((event) =>
+      event.startsWith("sync-managed"),
+    );
+    expect(intent).toBeGreaterThanOrEqual(0);
+    expect(intent).toBeLessThan(effect);
+  });
+
+  test("a resumed sync whose lease lapsed is refused at its intent before any Argo sync (D7)", async () => {
+    const { current, recipe } = fixture([
+      { key: "step-sync", status: "running" },
+    ]);
+    calls.reads = [application(false)];
+    calls.lapsed = true;
+    await expect(sync(current, recipe, "step-sync")).rejects.toThrow(
+      /lease lapsed/u,
+    );
+    expect(calls.events).toEqual(["read"]);
+  });
 });
