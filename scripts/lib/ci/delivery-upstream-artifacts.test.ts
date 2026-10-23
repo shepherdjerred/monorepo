@@ -2,8 +2,12 @@ import { createHash } from "node:crypto";
 import { packTar } from "modern-tar";
 import { expect, test } from "vitest";
 import { DeliveryClientError } from "@shepherdjerred/delivery/client";
+import { sourceArchiveUri } from "@shepherdjerred/delivery/artifact-contract";
 import type { AcquireUpstreamArtifact } from "@shepherdjerred/delivery/contract";
-import { ArtifactVersionSchema } from "@shepherdjerred/delivery/contract";
+import {
+  AcquireUpstreamArtifactSchema,
+  ArtifactVersionSchema,
+} from "@shepherdjerred/delivery/contract";
 import {
   catalogComponentName,
   componentEntries,
@@ -602,7 +606,7 @@ test("v2 acquires an aliased image from its repository under the alias's compone
   }
 });
 
-test("the version catalog's components are exactly the charts and images catalog services acquire", () => {
+test("the version catalog's components are exactly the charts, images and Git sources catalog services acquire", () => {
   const components = componentEntries(
     parseVersionCatalog(rawVersionCatalog),
   ).map((entry) => catalogComponentName(entry));
@@ -613,10 +617,188 @@ test("the version catalog's components are exactly the charts and images catalog
         .filter(
           (component) =>
             component.producer === "acquisition" &&
-            /^(?:chart|image):/u.test(component.name),
+            /^(?:chart|image|archive):/u.test(component.name) &&
+            // The forum bundle is acquired from its release by
+            // delivery-forum-publication.ts, not from the version catalog.
+            component.name !== "archive:forum-bundle",
         )
         .map((component) => component.name),
     ),
   );
   expect([...components].sort()).toEqual([...acquired].sort());
+});
+
+const cloudflareSource = parseVersionCatalog(rawVersionCatalog).entries.find(
+  (entry) => entry.name === "adyanth/cloudflare-operator",
+);
+const sourceCommit = "6".repeat(40);
+
+test("v2 acquires a GitHub source as the tarball of its tag's commit, stored by digest", async () => {
+  if (cloudflareSource === undefined)
+    throw new Error("cloudflare-operator source entry missing");
+  const tarball = new TextEncoder().encode("commit tarball bytes");
+  const digest = `sha256:${createHash("sha256").update(tarball).digest("hex")}`;
+  const reads: { url: string; authorization: string | null }[] = [];
+  const stored: { uri: string; digest: string; bytes: string }[] = [];
+  const requests: AcquireUpstreamArtifact[] = [];
+  const selected = await componentArtifactsForPublication(
+    {
+      latestQualifiedArtifact: async () => {
+        throw new DeliveryClientError(404, "NOT_FOUND", "No original");
+      },
+      acquireUpstreamArtifact: async (input) => {
+        requests.push(input);
+        return verified(input);
+      },
+    },
+    catalog(cloudflareSource),
+    producer,
+    {
+      credentials: unexpected,
+      mirror: unexpected,
+      transport: unexpected,
+      registry: "v2",
+      githubToken: () => "fixture-token",
+      sourceTransport: async (url, init) => {
+        reads.push({
+          url,
+          authorization: new Headers(init?.headers).get("authorization"),
+        });
+        return url.startsWith("https://api.github.com/")
+          ? new Response(`${sourceCommit}\n`)
+          : new Response(tarball);
+      },
+      publishArchive: async (input) => {
+        stored.push({
+          uri: input.uri,
+          digest: input.digest,
+          bytes: await Bun.file(input.file).text(),
+        });
+      },
+    },
+  );
+  // Only GitHub's API is read with the token; the tarball is public.
+  expect(reads).toEqual([
+    {
+      url: `https://api.github.com/repos/adyanth/cloudflare-operator/commits/${cloudflareSource.value}`,
+      authorization: "Bearer fixture-token",
+    },
+    {
+      url: `https://codeload.github.com/adyanth/cloudflare-operator/tar.gz/${sourceCommit}`,
+      authorization: null,
+    },
+  ]);
+  const uri = sourceArchiveUri("adyanth/cloudflare-operator", digest);
+  expect(stored).toEqual([{ uri, digest, bytes: "commit tarball bytes" }]);
+  expect(
+    selected.map((artifact) => [artifact.serviceId, artifact.component]),
+  ).toEqual([["cloudflare-operator", "archive:cloudflare-operator"]]);
+  expect(
+    requests.map(
+      (request) => AcquireUpstreamArtifactSchema.parse(request).artifact,
+    ),
+  ).toEqual([
+    expect.objectContaining({
+      component: "archive:cloudflare-operator",
+      kind: "archive",
+      uri,
+      digest,
+      version: sourceCommit,
+      origin: {
+        kind: "upstream",
+        repository: "https://github.com/adyanth/cloudflare-operator",
+        name: "adyanth/cloudflare-operator",
+        version: cloudflareSource.value,
+        commit: sourceCommit,
+        checksum: digest,
+      },
+    }),
+  ]);
+});
+
+function acquiredSourceVersion(originCommit: string) {
+  const digest = `sha256:${"7".repeat(64)}`;
+  return ArtifactVersionSchema.parse({
+    id: "upstream/cloudflare-operator/original",
+    serviceId: "cloudflare-operator",
+    component: "archive:cloudflare-operator",
+    kind: "archive",
+    buildId: "upstream/original-source-build",
+    version: sourceCommit,
+    sourceRevision: "a".repeat(40),
+    createdAt: "2026-10-17T10:00:00.000Z",
+    uri: sourceArchiveUri("adyanth/cloudflare-operator", digest),
+    digest,
+    origin: {
+      kind: "upstream",
+      repository: "https://github.com/adyanth/cloudflare-operator",
+      name: "adyanth/cloudflare-operator",
+      version: cloudflareSource?.value,
+      commit: originCommit,
+      checksum: digest,
+    },
+  });
+}
+
+test("an acquired source is reused while its tag is pinned and acquired again when the tag moves", async () => {
+  if (cloudflareSource === undefined)
+    throw new Error("cloudflare-operator source entry missing");
+  const archived = acquiredSourceVersion(sourceCommit);
+  await expect(
+    componentArtifactsForPublication(
+      {
+        latestQualifiedArtifact: async () => archived,
+        acquireUpstreamArtifact: unexpected,
+      },
+      catalog(cloudflareSource),
+      producer,
+      {
+        credentials: unexpected,
+        mirror: unexpected,
+        transport: unexpected,
+        sourceTransport: unexpected,
+        publishArchive: unexpected,
+        githubToken: unexpected,
+        registry: "v2",
+      },
+    ),
+  ).resolves.toEqual([archived]);
+  const reads: string[] = [];
+  const stored: string[] = [];
+  const requests: AcquireUpstreamArtifact[] = [];
+  await componentArtifactsForPublication(
+    {
+      latestQualifiedArtifact: async () => archived,
+      acquireUpstreamArtifact: async (input) => {
+        requests.push(input);
+        return verified(input);
+      },
+    },
+    catalog({ ...cloudflareSource, value: "v0.14.0" }),
+    producer,
+    {
+      credentials: unexpected,
+      registry: "v2",
+      sourceTransport: async (url) => {
+        reads.push(url);
+        return new Response(
+          url.startsWith("https://api.github.com/")
+            ? "9".repeat(40)
+            : "newer tarball",
+        );
+      },
+      publishArchive: async (input) => {
+        stored.push(input.uri);
+      },
+    },
+  );
+  expect(reads[0]).toBe(
+    "https://api.github.com/repos/adyanth/cloudflare-operator/commits/v0.14.0",
+  );
+  expect(requests.map((request) => request.artifact.origin)).toEqual([
+    expect.objectContaining({ version: "v0.14.0", commit: "9".repeat(40) }),
+  ]);
+  expect(stored).toEqual(requests.map((request) => request.artifact.uri));
+  // The contract binds a source artifact to the commit it stored.
+  expect(() => acquiredSourceVersion("8".repeat(40))).toThrow("source commit");
 });

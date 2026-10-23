@@ -2,6 +2,7 @@ import type { CiImages } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { LIGHT_TIER } from "#src/pipeline/tiers.ts";
 import {
+  DELIVERY_ARCHIVE_KEYS,
   GITHUB_DOWNLOAD,
   HANDOFF_KEYS,
   grant,
@@ -54,6 +55,9 @@ export function deliveryPublicationSteps(
           "DELIVERY_PUBLISHER_TOKEN",
           "DELIVERY_API_TOKEN",
         ),
+        // Under the catalog, GitHub source acquisitions store their commit
+        // tarballs in the immutable artifact bucket.
+        ...(catalogV2 ? DELIVERY_ARCHIVE_KEYS : []),
       ],
     },
   ];

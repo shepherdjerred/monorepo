@@ -43,6 +43,15 @@ test("registration waits for the archive producer and pull requests never reach 
   expect(publication?.commands).toContain(
     "bun --no-install scripts/ci/publish-delivery.ts --static-archives --catalog-v2",
   );
+  // GitHub source acquisitions store their commit tarballs in the archive bucket.
+  expect(
+    publication?.secrets
+      ?.filter((grant) => grant.secret === "ci-delivery-archive-credentials")
+      .map((grant) => grant.env),
+  ).toEqual([
+    "DELIVERY_ARCHIVE_PUBLISHER_ACCESS_KEY_ID",
+    "DELIVERY_ARCHIVE_PUBLISHER_SECRET_ACCESS_KEY",
+  ]);
   const steps = testPipelineSteps(true);
   const main = selectSteps(steps, {
     event: "push",
@@ -68,6 +77,11 @@ test("before the window's catalog flip, main builds no archives and publication 
   expect(publication?.commands).toContain(
     "bun --no-install scripts/ci/publish-delivery.ts --static-archives",
   );
+  expect(
+    publication?.secrets?.some(
+      (grant) => grant.secret === "ci-delivery-archive-credentials",
+    ),
+  ).toBe(false);
   const steps = testPipelineSteps(false);
   expect(steps.map((step) => step.key)).not.toContain("tofu-archives");
   const commands = steps.flatMap((step) => step.commands).join("\n");

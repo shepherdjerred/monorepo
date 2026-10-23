@@ -2,6 +2,26 @@ import { run, runAllowExit, requireEnv } from "../run.ts";
 import { SEAWEEDFS_AWS_ENV, SEAWEEDFS_ENDPOINT } from "../seaweedfs.ts";
 import { staticArchiveDigest } from "../static-site-archive.ts";
 
+const ARCHIVE_SUFFIXES = [".json", ".tar", ".tgz", ".tar.gz"] as const;
+
+/**
+ * The delivery-artifacts key of an immutable archive URI. The key ends in the
+ * archive's exact content digest: a plugin manifest, a site or Tofu tar, an
+ * npm package tarball, or a Git source's commit tarball.
+ */
+export function immutableArchiveKey(uri: string, digest: string): string {
+  const key = /^s3:\/\/delivery-artifacts\/(.+)$/u.exec(uri)?.[1];
+  if (key === undefined || !/^sha256:[a-f0-9]{64}$/u.test(digest))
+    throw new Error("Invalid immutable archive target");
+  if (
+    !ARCHIVE_SUFFIXES.some((suffix) =>
+      key.endsWith(`/${digest.slice(7)}${suffix}`),
+    )
+  )
+    throw new Error("Archive key must contain its exact content digest");
+  return key;
+}
+
 /** Conditional creation plus byte readback survives both retries and lost upload responses. */
 export async function publishImmutableArchive(input: {
   uri: string;
@@ -9,16 +29,7 @@ export async function publishImmutableArchive(input: {
   readback: string;
   digest: string;
 }): Promise<void> {
-  const target = /^s3:\/\/delivery-artifacts\/(.+)$/u.exec(input.uri);
-  const key = target?.[1];
-  if (key === undefined || !/^sha256:[a-f0-9]{64}$/u.test(input.digest))
-    throw new Error("Invalid immutable archive target");
-  if (
-    ![".json", ".tar", ".tgz"].some((extension) =>
-      key.endsWith(`/${input.digest.slice(7)}${extension}`),
-    )
-  )
-    throw new Error("Archive key must contain its exact content digest");
+  const key = immutableArchiveKey(input.uri, input.digest);
   const options = {
     env: {
       ...SEAWEEDFS_AWS_ENV,
