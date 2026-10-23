@@ -47,7 +47,11 @@ export const EnvironmentSelectionSchema = z
     acceptedDeploymentId: IdentifierSchema.nullable(),
     declared: z.strictObject({
       recipeRevisionId: RevisionIdSchema,
-      /** What a `deploy` of this environment becomes: `operator-run` recipes are operator-executed. */
+      /**
+       * The declared recipe's kind. A release freezes the accepted
+       * deployment's recipe until a rebind moves the binding, so this is
+       * what a release becomes only before the first acceptance.
+       */
       recipeKind: RecipeKindSchema,
       configurationRevisionId: RevisionIdSchema,
     }),
