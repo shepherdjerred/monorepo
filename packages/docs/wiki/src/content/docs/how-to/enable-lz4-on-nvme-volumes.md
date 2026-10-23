@@ -5,10 +5,11 @@ description: Turn on lz4 compression for the production NVMe pool's existing dat
 
 Patch each uncompressed `ZFSVolume` on torvalds' `zfspv-pool-nvme` pool to `compression: lz4` with the reviewed one-shot script, then read it back.
 
-New `ZfsNvmeVolume` claims already get lz4 from the `zfs-ssd-lz4` class.
+New [`ZfsNvmeVolume`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/misc/storage/zfs-nvme-volume.ts) claims already get lz4 from the `zfs-ssd-lz4` [class](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/misc/storage/storage-classes.ts).
 Claims provisioned earlier stay on `zfs-ssd` in Git, because a claim's class is immutable.
+[`zfs-nvme-uncompressed-claims.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/misc/storage/zfs-nvme-uncompressed-claims.ts) lists them.
 This guide moves their datasets to lz4 in place.
-Only data written afterwards is compressed.
+`ZFSVolume.spec.compression` is editable after creation and applies only to data written afterwards, per the [OpenEBS CRD](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/generated/imports/zfs.openebs.io.ts).
 
 ## 1. Deploy the release first
 
@@ -46,7 +47,7 @@ It exits non-zero unless both the `ZFSVolume` field and the live `zfs get compre
 
 :::caution
 Do not use `zfs set` directly.
-The ZFS LocalPV node agent re-applies the `ZFSVolume` properties when it restarts, so a hand-set dataset falls back to `off`.
+The ZFS LocalPV node agent [re-applies](https://github.com/openebs/zfs-localpv/blob/24bbd8942d5fba8897e83a2c69b532c0215157da/pkg/zfs/zfs_util.go#L696-L726) the `ZFSVolume` properties when it restarts, so a hand-set dataset falls back to `off`.
 :::
 
 A rerun is safe.

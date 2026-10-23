@@ -23,6 +23,7 @@
  *
  * How-to: packages/docs/wiki/src/content/docs/how-to/enable-lz4-on-nvme-volumes.md
  */
+import { $ } from "bun";
 import { z } from "zod";
 
 export const TARGET_NODE = "torvalds";
@@ -146,20 +147,13 @@ export function parseZfsGet(output: string): Map<string, string> {
 }
 
 async function kubectl(args: readonly string[]): Promise<string> {
-  const command = ["kubectl", ...args];
-  const child = Bun.spawn(command, {
-    stdin: "ignore",
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(child.stdout).text(),
-    new Response(child.stderr).text(),
-    child.exited,
-  ]);
-  if (exitCode !== 0) {
+  // Bun's shell escapes each array element as one argument.
+  const result = await $`kubectl ${[...args]} < /dev/null`.quiet().nothrow();
+  const stdout = result.stdout.toString();
+  if (result.exitCode !== 0) {
+    const detail = result.stderr.toString().trim() || stdout.trim();
     throw new Error(
-      `${command.join(" ")} exited ${String(exitCode)}: ${stderr.trim() || stdout.trim() || "(no output)"}`,
+      `kubectl ${args.join(" ")} exited ${String(result.exitCode)}: ${detail || "(no output)"}`,
     );
   }
   return stdout;
