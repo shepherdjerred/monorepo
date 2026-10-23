@@ -239,6 +239,7 @@ export const catalog = {
       recipes: 1,
       configurations: 1,
       edges: 0,
+      carriedSelections: 0,
     },
     unchanged: 40,
     refused: [],

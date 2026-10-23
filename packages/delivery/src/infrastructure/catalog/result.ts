@@ -1,7 +1,8 @@
-import type { CatalogReconcileRecord } from "#shared/model/route-contract.ts";
+import type { z } from "zod";
+import type { CatalogReconcileRecordSchema } from "#shared/model/route-contract.ts";
 
-/** What one reconcile did, entity by entity; the route reports the counts. */
-export type Result = CatalogReconcileRecord;
+/** What one reconcile did, entity by entity: the record `catalog.reconciled` audits; the route reports the counts. */
+export type Result = z.infer<typeof CatalogReconcileRecordSchema>;
 
 /**
  * The catalog revision a reconciled row records: this reconcile's, unless the

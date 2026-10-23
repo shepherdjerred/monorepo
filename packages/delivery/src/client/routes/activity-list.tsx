@@ -19,6 +19,7 @@ function CatalogReconcile({ result }: { result: CatalogReconcileRecord }) {
     ],
     ["Environments rebound", result.environments.rebound],
     ["Environments retired", result.environments.retired],
+    ["Selections carried", result.environments.carried],
     ["Recipe revisions created", result.recipes.created],
     ["Configuration revisions created", result.configurations.created],
     ["Refused", result.refused.map((entry) => `${entry.id}: ${entry.reason}`)],
