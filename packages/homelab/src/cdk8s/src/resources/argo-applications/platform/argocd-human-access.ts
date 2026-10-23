@@ -2,8 +2,8 @@
  * Human access to ArgoCD after the Delivery v2 cutover (model section 8):
  * people read Applications, and only Delivery's account changes or syncs them.
  *
- * Off until the window's lock-down step, which follows acceptance; the
- * operator-run bootstrap and account tools use the built-in `admin` account
+ * On since the window's lock-down step, which followed acceptance; the
+ * operator-run bootstrap and account tools used the built-in `admin` account
  * until then. On, `admin` is disabled and the human `operator` login holds
  * ArgoCD's built-in read-only role. ArgoCD reads that login's password only
  * from `argocd-secret`, so it is provisioned and verified there before this
@@ -11,7 +11,7 @@
  * the wiki how-to `/how-to/regain-write-access-to-argocd/`.
  */
 export function humanArgoCdReadOnly(): boolean {
-  return false;
+  return true;
 }
 
 /** The local login account people use once ArgoCD is read-only for them. */
