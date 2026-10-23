@@ -43,6 +43,9 @@ public sealed interface PlanStep {
   /** Trigger {@code name}. */
   record Ability(String name) implements PlanStep {}
 
+  /** Stand on {@code cell} until the arrow lying at {@code arrow} is picked up. */
+  record Pickup(Vec3 arrow, Vec3 cell) implements PlanStep {}
+
   /** The label shown in traces. */
   default String label() {
     return switch (this) {
@@ -55,6 +58,7 @@ public sealed interface PlanStep {
       case Heal _ -> "heal";
       case Flee _ -> "flee";
       case Ability _ -> "ability";
+      case Pickup _ -> "pickup";
     };
   }
 

@@ -48,7 +48,14 @@ final class RouteResultTest {
     var self = combatant(1, RED, START);
     var snapshot =
         new WorldSnapshot(
-            10, MatchPhase.LIVE, List.of(self), List.of(), PoisonView.NONE, nav.mapId(), List.of());
+            10,
+            MatchPhase.LIVE,
+            List.of(self),
+            List.of(),
+            PoisonView.NONE,
+            nav.mapId(),
+            List.of(),
+            List.of());
     var situation =
         new Situation(
             self,

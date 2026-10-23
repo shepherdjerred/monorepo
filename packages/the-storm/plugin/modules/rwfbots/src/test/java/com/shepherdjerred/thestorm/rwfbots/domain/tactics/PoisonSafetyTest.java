@@ -82,6 +82,7 @@ final class PoisonSafetyTest {
                 new BombView(new BombId(0), new BombOwner.Team(RED), BOMB, new BombState.Idle())),
             active ? PoisonView.startedAt(0, 0.1) : PoisonView.NONE,
             NAV.mapId(),
+            List.of(),
             List.of());
     return new Situation(
         self,

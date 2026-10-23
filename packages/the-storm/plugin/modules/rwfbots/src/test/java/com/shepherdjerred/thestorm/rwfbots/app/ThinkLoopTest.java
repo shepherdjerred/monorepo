@@ -172,6 +172,7 @@ final class ThinkLoopTest {
                 new BombState.Idle())),
         PoisonView.NONE,
         NAV.mapId(),
+        List.of(),
         List.of());
   }
 
@@ -379,6 +380,7 @@ final class ThinkLoopTest {
               original.bombs(),
               PoisonView.NONE,
               NAV.mapId(),
+              List.of(),
               List.of());
       serial.publish(snapshot);
       parallel.publish(snapshot);
@@ -598,7 +600,8 @@ final class ThinkLoopTest {
               original.bombs(),
               original.poison(),
               original.mapId(),
-              original.stimuli()));
+              original.stimuli(),
+              List.of()));
       assertThat(loop.board().perceived()).isEqualTo(32);
       assertThat(loop.board().perceptions()).hasSize(256);
       if (tick >= 8) {

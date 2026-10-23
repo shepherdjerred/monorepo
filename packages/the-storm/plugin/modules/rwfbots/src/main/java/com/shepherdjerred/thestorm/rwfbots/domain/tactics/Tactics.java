@@ -82,6 +82,8 @@ public final class Tactics {
     objectiveScores(scores, situation, context);
     if (armBlocked(state, situation, context)) scores.put(Option.ARM, 0.0);
     var objective = ObjectivePolicy.direct(state.memory(), situation, context);
+    var trip = Resupply.trip(situation, features, context, objective.memory());
+    trip.ifPresent(arrows -> scores.put(Option.RESUPPLY, arrows.worth()));
     var current = currentPlan(state, situation, context);
     current
         .filter(Tactics::earnsCommitment)
@@ -111,7 +113,7 @@ public final class Tactics {
                     refresh(existing)
                         ? Planner.expand(chosen, situation, context).since(existing.startedTick())
                         : existing)
-            .orElseGet(() -> Planner.expand(chosen, situation, context));
+            .orElseGet(() -> fresh(chosen, situation, context, trip));
     if (chosen == Option.ARM && objective.memory().detour().isPresent()) {
       plan = Planner.detourPlan(situation, context, objective.memory().detour().orElseThrow());
     }
@@ -142,6 +144,15 @@ public final class Tactics {
         decision,
         trace,
         note(plan, decision, situation, context).working(memory.defusing()));
+  }
+
+  /** A new plan for {@code chosen}; a resupply trip walks to the arrow it was scored for. */
+  private static Plan fresh(
+      Option chosen, Situation situation, TacticsContext context, Optional<Resupply.Trip> trip) {
+    if (chosen == Option.RESUPPLY && trip.isPresent()) {
+      return Resupply.plan(situation.now(), trip.orElseThrow().pickup());
+    }
+    return Planner.expand(chosen, situation, context);
   }
 
   /**

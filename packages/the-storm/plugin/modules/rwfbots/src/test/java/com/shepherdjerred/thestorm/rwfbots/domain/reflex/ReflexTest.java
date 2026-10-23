@@ -24,6 +24,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.MatchPhase;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.PoisonView;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Quiver;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stance;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Waypoint;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
@@ -43,7 +44,7 @@ final class ReflexTest {
 
   private static WorldSnapshot world(long tick, List<CombatantView> views, List<BombView> bombs) {
     return new WorldSnapshot(
-        tick, MatchPhase.LIVE, views, bombs, PoisonView.NONE, "synthetic", List.of());
+        tick, MatchPhase.LIVE, views, bombs, PoisonView.NONE, "synthetic", List.of(), List.of());
   }
 
   private static Decision fight(CombatantView self, CombatantView target, long tick) {
@@ -737,6 +738,13 @@ final class ReflexTest {
 
     /** Ticks {@code from} to {@code to}; the enemy is the reflex target only while {@code seen}. */
     Volley run(ReflexState start, long from, long to, boolean seen) {
+      return run(start, new Span(from, to), seen, ARCHER);
+    }
+
+    /** As {@link #run(ReflexState, long, long, boolean)}, for the archer {@code context}. */
+    Volley run(ReflexState start, Span span, boolean seen, ReflexContext context) {
+      var from = span.from();
+      var to = span.to();
       var state = start;
       var commands = new ArrayList<BodyCommand>();
       for (var tick = from; tick <= to; tick++) {
@@ -747,13 +755,16 @@ final class ReflexTest {
                 decision,
                 seen ? Optional.of(enemy) : Optional.empty(),
                 0);
-        var step = Reflex.tick(state, input, ARCHER, new SplittableRandom(tick));
+        var step = Reflex.tick(state, input, context, new SplittableRandom(tick));
         state = step.state();
         commands.addAll(step.commands());
       }
       return new Volley(state, commands);
     }
   }
+
+  /** The ticks a run covers, inclusive. */
+  private record Span(long from, long to) {}
 
   private static Shot shot(Vec3 enemyAt, List<Waypoint> path, CombatantView... others) {
     var self = combatant(1, RED, ARCHER_AT);
@@ -949,22 +960,108 @@ final class ReflexTest {
     assertThat(onLed.distance(onCurrent)).isGreaterThan(2 * ReadyDraw.ALLY_CLEARANCE);
 
     var blocked =
-        moving(vel, combatant(3, RED, onLed)).run(ReflexState.initial(Facing.SOUTH), 1, 60, true);
+        moving(shot(FAR_ENEMY, List.of(), combatant(3, RED, onLed)), vel)
+            .run(ReflexState.initial(Facing.SOUTH), 1, 60, true);
     assertThat(blocked.commands()).doesNotContain(new BodyCommand.ReleaseUse());
     assertThat(blocked.state().isDrawing()).isTrue();
     var clear =
-        moving(vel, combatant(3, RED, onCurrent))
+        moving(shot(FAR_ENEMY, List.of(), combatant(3, RED, onCurrent)), vel)
             .run(ReflexState.initial(Facing.SOUTH), 1, 60, true);
     assertThat(clear.commands()).contains(new BodyCommand.ReleaseUse());
   }
 
-  /** A shot at the far enemy running at {@code vel}, with {@code ally} on the field. */
-  private static Shot moving(Vec3 vel, CombatantView ally) {
-    var shot = shot(FAR_ENEMY, List.of(), ally);
+  // ---- finite arrows ----------------------------------------------------------------------------
+
+  private static final Quiver LOW = Quiver.of(ArrowEconomy.CONSERVE_BELOW - 1);
+
+  /** {@code shot}, by an archer carrying {@code quiver}. */
+  private static Shot carrying(Shot shot, Quiver quiver) {
+    var self = shot.self().withQuiver(quiver);
+    var world =
+        shot.world().stream().map(view -> view.id().equals(self.id()) ? self : view).toList();
+    return new Shot(self, shot.enemy(), shot.decision(), world);
+  }
+
+  /** {@code shot}, at a target moving at {@code vel}. */
+  private static Shot moving(Shot shot, Vec3 vel) {
     var enemy = shot.enemy().withVel(vel);
     var world =
         shot.world().stream().map(view -> view.id().equals(enemy.id()) ? enemy : view).toList();
     return new Shot(shot.self(), enemy, shot.decision(), world);
+  }
+
+  @Test
+  void aLowQuiverStillTakesASettledShotInsideItsSureRange() {
+    assertThat(FAR_ENEMY.distance(ARCHER_AT)).isLessThan(ArrowEconomy.sureRange(levers(1)));
+    var volley =
+        carrying(shot(FAR_ENEMY, List.of()), LOW)
+            .run(ReflexState.initial(Facing.SOUTH), 1, 40, true);
+    assertThat(volley.commands()).contains(new BodyCommand.ReleaseUse());
+  }
+
+  @Test
+  void aLowQuiverHoldsAShotBeyondItsSureRangeThatAFullerOneTakes() {
+    var wild = new ReflexContext(NAV.grid(), levers(0), Loadout.standard(Kit.LONGBOW));
+    assertThat(FAR_ENEMY.distance(ARCHER_AT)).isGreaterThan(ArrowEconomy.sureRange(levers(0)));
+    var span = new Span(1, 120);
+    var low =
+        carrying(shot(FAR_ENEMY, List.of()), LOW)
+            .run(ReflexState.initial(Facing.SOUTH), span, true, wild);
+    assertThat(low.commands())
+        .contains(new BodyCommand.StartUse())
+        .doesNotContain(new BodyCommand.ReleaseUse(), new BodyCommand.CancelUse());
+    var fuller =
+        carrying(shot(FAR_ENEMY, List.of()), Quiver.of(ArrowEconomy.CONSERVE_BELOW))
+            .run(ReflexState.initial(Facing.SOUTH), span, true, wild);
+    assertThat(fuller.commands()).contains(new BodyCommand.ReleaseUse());
+    var endless =
+        shot(FAR_ENEMY, List.of()).run(ReflexState.initial(Facing.SOUTH), span, true, wild);
+    assertThat(endless.commands()).contains(new BodyCommand.ReleaseUse());
+  }
+
+  @Test
+  void aLowQuiverWaitsOutAHardStrafeButNotForever() {
+    var across = new Vec3(0, 0, 0.28);
+    var strafing = moving(carrying(shot(FAR_ENEMY, List.of()), LOW), across);
+    var waiting =
+        strafing.run(ReflexState.initial(Facing.SOUTH), 1, ArrowEconomy.PATIENCE_TICKS, true);
+    assertThat(waiting.commands()).doesNotContain(new BodyCommand.ReleaseUse());
+    assertThat(waiting.state().isDrawing()).isTrue();
+    var patient =
+        strafing.run(
+            waiting.state(),
+            ArrowEconomy.PATIENCE_TICKS + 1,
+            ArrowEconomy.PATIENCE_TICKS + 10,
+            true);
+    assertThat(patient.commands()).contains(new BodyCommand.ReleaseUse());
+    var endless =
+        moving(shot(FAR_ENEMY, List.of()), across)
+            .run(ReflexState.initial(Facing.SOUTH), 1, ArrowEconomy.PATIENCE_TICKS, true);
+    assertThat(endless.commands()).contains(new BodyCommand.ReleaseUse());
+    var walking =
+        moving(carrying(shot(FAR_ENEMY, List.of()), LOW), new Vec3(0, 0, 0.2))
+            .run(ReflexState.initial(Facing.SOUTH), 1, ArrowEconomy.PATIENCE_TICKS, true);
+    assertThat(walking.commands()).contains(new BodyCommand.ReleaseUse());
+  }
+
+  @Test
+  void aLowQuiverTakesACloseEnemyWithTheSword() {
+    var close = ARCHER_AT.plus(ArrowEconomy.CONSERVE_MELEE - 1, 0, 0);
+    var low =
+        carrying(shot(close, List.of()), LOW).run(ReflexState.initial(Facing.SOUTH), 1, 1, true);
+    assertThat(low.commands()).doesNotContain(new BodyCommand.StartUse());
+    var full = shot(close, List.of()).run(ReflexState.initial(Facing.SOUTH), 1, 1, true);
+    assertThat(full.commands()).contains(new BodyCommand.StartUse());
+  }
+
+  @Test
+  void onlyARunningLowFiniteQuiverConservesAndSharperAimTrustsLongerShots() {
+    assertThat(ArrowEconomy.conserving(Quiver.ENDLESS)).isFalse();
+    assertThat(ArrowEconomy.conserving(Quiver.of(ArrowEconomy.CONSERVE_BELOW))).isFalse();
+    assertThat(ArrowEconomy.conserving(LOW)).isTrue();
+    assertThat(ArrowEconomy.sureRange(levers(1))).isGreaterThan(ArrowEconomy.sureRange(levers(0)));
+    assertThat(ArrowEconomy.sureRange(levers(0))).isGreaterThanOrEqualTo(ArrowEconomy.SURE_NEAR);
+    assertThat(ArrowEconomy.sureRange(levers(1))).isLessThanOrEqualTo(ArrowEconomy.SURE_FAR);
   }
 
   @Test

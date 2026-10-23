@@ -77,6 +77,7 @@ final class PlannerSupportTest {
             List.of(),
             PoisonView.NONE,
             NAV.mapId(),
+            List.of(),
             List.of());
     var situation =
         new Situation(
@@ -236,6 +237,7 @@ final class PlannerSupportTest {
             List.of(),
             PoisonView.NONE,
             NAV.mapId(),
+            List.of(),
             List.of());
     var situation = new Situation(self, snapshot, percept, board, Role.ROTATE);
     var context =

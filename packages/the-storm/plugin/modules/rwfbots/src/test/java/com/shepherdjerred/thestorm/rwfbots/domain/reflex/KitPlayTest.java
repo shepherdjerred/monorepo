@@ -110,7 +110,8 @@ final class KitPlayTest {
         false,
         false,
         -1,
-        view.traversal());
+        view.traversal(),
+        view.quiver());
   }
 
   private static Decision decision(CombatantView self, List<Waypoint> waypoints) {
@@ -137,7 +138,14 @@ final class KitPlayTest {
     target.ifPresent(views::add);
     var world =
         new WorldSnapshot(
-            1, MatchPhase.LIVE, views, List.of(), PoisonView.NONE, "synthetic", List.of());
+            1,
+            MatchPhase.LIVE,
+            views,
+            List.of(),
+            PoisonView.NONE,
+            "synthetic",
+            List.of(),
+            List.of());
     return new ReflexInput(self, world, decision(self, List.of()), target, 0);
   }
 
@@ -309,7 +317,14 @@ final class KitPlayTest {
     var dwarfContext = new ReflexContext(NAV.grid(), levers(1), Loadouts.rwf(Kit.DWARF));
     var world =
         new WorldSnapshot(
-            1, MatchPhase.LIVE, List.of(dwarf), List.of(), PoisonView.NONE, "synthetic", List.of());
+            1,
+            MatchPhase.LIVE,
+            List.of(dwarf),
+            List.of(),
+            PoisonView.NONE,
+            "synthetic",
+            List.of(),
+            List.of());
     var waiting = new ReflexInput(dwarf, world, decision(dwarf, List.of()), Optional.empty(), 0);
     var commands =
         Reflex.tick(
@@ -328,6 +343,7 @@ final class KitPlayTest {
             List.of(),
             PoisonView.NONE,
             "synthetic",
+            List.of(),
             List.of());
     var charging =
         new ReflexInput(inertia, fight, decision(inertia, List.of()), Optional.of(enemy), 0);
@@ -366,6 +382,7 @@ final class KitPlayTest {
               List.of(),
               PoisonView.NONE,
               "synthetic",
+              List.of(),
               List.of());
       var input = new ReflexInput(self, world, decision(self, List.of()), Optional.empty(), 0);
       var step = Reflex.tick(state, input, context, new SplittableRandom(tick));

@@ -28,6 +28,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
  *     still revealed by armour and hurt flashes in perception
  * @param lastHurtTick the tick of the last damage taken, or -1 if none
  * @param traversal actual movement restrictions and survival modifiers at capture time
+ * @param quiver the arrows its ranged weapon has left, when shots spend them
  */
 public record CombatantView(
     CombatantId id,
@@ -48,7 +49,8 @@ public record CombatantView(
     boolean usingItem,
     boolean invisible,
     long lastHurtTick,
-    TraversalState traversal) {
+    TraversalState traversal,
+    Quiver quiver) {
 
   /** How far above the feet a standing player's eyes are. */
   public static final double EYE_HEIGHT = 1.62;
@@ -58,6 +60,7 @@ public record CombatantView(
 
   public CombatantView {
     java.util.Objects.requireNonNull(traversal);
+    java.util.Objects.requireNonNull(quiver);
     if (!Double.isFinite(health) || !(health >= 0 && health <= traversal.maxHealth())) {
       throw new IllegalArgumentException("health must be 0..captured maximum: " + health);
     }
@@ -124,7 +127,8 @@ public record CombatantView(
         usingItem,
         invisible,
         lastHurtTick,
-        traversal);
+        traversal,
+        quiver);
   }
 
   public CombatantView withTraversal(TraversalState capabilities) {
@@ -147,7 +151,8 @@ public record CombatantView(
         usingItem,
         invisible,
         lastHurtTick,
-        capabilities);
+        capabilities,
+        quiver);
   }
 
   public CombatantView withVel(Vec3 newVel) {
@@ -170,7 +175,8 @@ public record CombatantView(
         usingItem,
         invisible,
         lastHurtTick,
-        traversal);
+        traversal,
+        quiver);
   }
 
   public CombatantView withFacing(Facing facing) {
@@ -193,7 +199,8 @@ public record CombatantView(
         usingItem,
         invisible,
         lastHurtTick,
-        traversal);
+        traversal,
+        quiver);
   }
 
   public CombatantView withHealth(double newHealth, double newAbsorption) {
@@ -216,7 +223,8 @@ public record CombatantView(
         usingItem,
         invisible,
         lastHurtTick,
-        traversal);
+        traversal,
+        quiver);
   }
 
   public CombatantView withAlive(boolean nowAlive) {
@@ -239,7 +247,8 @@ public record CombatantView(
         usingItem,
         invisible,
         lastHurtTick,
-        traversal);
+        traversal,
+        quiver);
   }
 
   public CombatantView withInvisible(boolean nowInvisible, double newArmor) {
@@ -262,7 +271,8 @@ public record CombatantView(
         usingItem,
         nowInvisible,
         lastHurtTick,
-        traversal);
+        traversal,
+        quiver);
   }
 
   public CombatantView withDisguised(boolean nowDisguised) {
@@ -285,7 +295,8 @@ public record CombatantView(
         usingItem,
         invisible,
         lastHurtTick,
-        traversal);
+        traversal,
+        quiver);
   }
 
   public CombatantView withLastHurtTick(long tick) {
@@ -308,7 +319,8 @@ public record CombatantView(
         usingItem,
         invisible,
         tick,
-        traversal);
+        traversal,
+        quiver);
   }
 
   public CombatantView withMotion(boolean nowSprinting, boolean nowOnGround) {
@@ -331,7 +343,8 @@ public record CombatantView(
         usingItem,
         invisible,
         lastHurtTick,
-        traversal);
+        traversal,
+        quiver);
   }
 
   public CombatantView withHands(int slot, boolean nowUsingItem) {
@@ -354,6 +367,31 @@ public record CombatantView(
         nowUsingItem,
         invisible,
         lastHurtTick,
-        traversal);
+        traversal,
+        quiver);
+  }
+
+  public CombatantView withQuiver(Quiver arrows) {
+    return new CombatantView(
+        id,
+        team,
+        disguised,
+        kit,
+        alive,
+        pos,
+        vel,
+        yaw,
+        pitch,
+        health,
+        absorption,
+        armorValue,
+        heldSlot,
+        sprinting,
+        onGround,
+        usingItem,
+        invisible,
+        lastHurtTick,
+        traversal,
+        arrows);
   }
 }

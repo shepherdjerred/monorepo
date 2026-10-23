@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwfbots.adapter.paper;
 
 import com.shepherdjerred.thestorm.rwf.app.view.MatchState;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.tactics.Resupply;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombOwner;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombState;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombView;
@@ -28,9 +29,10 @@ import org.bukkit.entity.Player;
  * Builds the bots' {@link WorldSnapshot} each tick from rwf's read model and the live entities:
  * position, velocity (from the position a tick ago), look, health, absorption, armor, held slot,
  * sprinting, on ground, using an item, invisible and when they were last hurt (a drop in health
- * plus absorption), with the bombs, the poison and the tick's stimuli. A combatant whose entity is
- * absent this tick (a bot between bodies while its skin applies, a human not online) is left out of
- * the snapshot rather than guessed at. Main thread only.
+ * plus absorption) and the arrows left to a weapon that spends them ({@link Quivers}), with the
+ * bombs, the poison, the tick's stimuli and the loose arrows a low quiver could pick up. A
+ * combatant whose entity is absent this tick (a bot between bodies while its skin applies, a human
+ * not online) is left out of the snapshot rather than guessed at. Main thread only.
  */
 public final class SnapshotCapture {
 
@@ -97,13 +99,18 @@ public final class SnapshotCapture {
   public WorldSnapshot capture(long tick, MatchState state) {
     var combatants = new ArrayList<CombatantView>();
     var present = new HashMap<UUID, Player>();
+    var low = new ArrayList<Player>();
     for (var fighter : state.combatants()) {
       var entity = entities.apply(fighter.uuid());
       if (entity.isEmpty()) {
         continue;
       }
       present.put(fighter.uuid(), entity.orElseThrow());
-      combatants.add(view(tick, fighter, entity.orElseThrow()));
+      var view = view(tick, fighter, entity.orElseThrow());
+      combatants.add(view);
+      if (view.alive() && Resupply.low(view.quiver())) {
+        low.add(entity.orElseThrow());
+      }
     }
     last.keySet().retainAll(present.keySet());
     var bombs = state.bombs().stream().map(this::bomb).toList();
@@ -116,7 +123,8 @@ public final class SnapshotCapture {
         bombs,
         poison(tick, state),
         mapId,
-        stimuli(tick, present));
+        stimuli(tick, present),
+        Quivers.loose(low));
   }
 
   /** Actual body capabilities, using the same authoritative immunity source and match clock. */
@@ -160,7 +168,8 @@ public final class SnapshotCapture {
         entity.isHandRaised(),
         hiddenHands(entity),
         hurtTick,
-        traversal);
+        traversal,
+        Quivers.of(entity));
   }
 
   /**

@@ -3429,7 +3429,15 @@ bots chase one enemy unless it is nearly dead; bows keep their kit's band
 (longbow and snipers 15 to 30 blocks), reach their assigned team position along
 its lane when that position fits the band, then shoot from the edge of cover; the
 Rewind kit uses its clock only when a model of rwf's Rewind ability says it
-is ready and lands away from the threat. Every path a bot walks pays a per-bot
+is ready and lands away from the threat. A kit whose shots spend arrows (a
+crossbow, or a bow without Infinity) reads its arrow count each tick. Below 10
+arrows it takes enemies within 8 blocks with its sword and looses only sure
+shots: inside the range where one aim-error deviation misses by a block (10 to
+30 blocks), on a target that is not sprint-strafing, or after three seconds in
+sight (`ArrowEconomy`). Below 24, with no enemy in sight within 20 blocks and no
+fuse, bomb or plant slot to see to, it walks onto the cell of a landed,
+pick-up-allowed arrow within 12 blocks so the server's touch picks it up
+(`Resupply`). Every path a bot walks pays a per-bot
 penalty per block of each primitive: seeded noise over patches of the map, a
 toll on teammates' current paths and one for leaving its lane. Long jumps pay
 for their full distance, so they cannot evade those costs by skipping intermediate

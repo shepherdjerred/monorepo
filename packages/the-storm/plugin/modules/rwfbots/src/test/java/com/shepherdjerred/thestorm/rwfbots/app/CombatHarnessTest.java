@@ -155,7 +155,14 @@ final class CombatHarnessTest {
         new ReflexInput(
             self,
             new WorldSnapshot(
-                11, MatchPhase.LIVE, List.of(self), List.of(), PoisonView.NONE, "test", List.of()),
+                11,
+                MatchPhase.LIVE,
+                List.of(self),
+                List.of(),
+                PoisonView.NONE,
+                "test",
+                List.of(),
+                List.of()),
             Decision.idle(self.id(), 11, 0),
             Optional.empty(),
             3);

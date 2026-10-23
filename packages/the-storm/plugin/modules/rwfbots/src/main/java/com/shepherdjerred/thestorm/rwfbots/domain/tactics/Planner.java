@@ -85,6 +85,9 @@ public final class Planner {
   /** An archer this close to a teammate steps aside before it shoots. */
   static final double ARCHER_ROOM = 2.5;
 
+  /** A bot this close to a cell's feet stands on it, as a waypoint counts as reached. */
+  static final double ON_CELL = 0.45;
+
   /** A bound ends this close to its cover point, inside the cover's block. */
   static final double COVER_REACHED = 0.5;
 
@@ -245,6 +248,10 @@ public final class Planner {
       case ESCAPE_POISON ->
           Plan.of(option, now, new PlanStep.Route(poisonExit(situation, context), Stance.CAUTIOUS));
       case RECOVER -> recovery(situation, context);
+      case RESUPPLY ->
+          Resupply.nearest(situation, context, TacticalMemory.EMPTY)
+              .map(pickup -> Resupply.plan(now, pickup))
+              .orElseGet(() -> holdHere(option, situation, context));
       case REWIND ->
           Plan.of(
               option,
@@ -828,12 +835,19 @@ public final class Planner {
                   .map(enemy -> enemy.pos().distance(self.pos()) > FLEE_RANGE)
                   .orElse(true);
       case PlanStep.Ability _ -> situation.now() > startedTick;
+      case PlanStep.Pickup(var arrow, var cell) ->
+          !Resupply.lying(situation, arrow) || onCell(self.pos(), cell);
     };
   }
 
   /** Whether a bot at {@code pos} stands in the cover at {@code cover}: in its block. */
   private static boolean inCover(Vec3 pos, Vec3 cover) {
     return pos.horizontalDistance(cover) <= COVER_REACHED && Math.abs(pos.y() - cover.y()) < 1.5;
+  }
+
+  /** Whether a bot at {@code pos} stands on the cell whose feet are {@code cell}. */
+  private static boolean onCell(Vec3 pos, Vec3 cell) {
+    return pos.horizontalDistance(cell) <= ON_CELL && Math.abs(pos.y() - cell.y()) < 1.5;
   }
 
   private static boolean reached(Vec3 pos, Vec3 goal) {
@@ -975,6 +989,21 @@ public final class Planner {
                   Optional.empty(),
                   pathTo(situation, context, goal, new Way(Stance.EVASIVE, false)),
                   Stance.EVASIVE,
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty(),
+                  label),
+              lifeEpoch);
+      case PlanStep.Pickup(var _, var cell) ->
+          decision(
+              situation,
+              new Parts(
+                  plan.option(),
+                  Pace.MOVING.target(situation, context),
+                  onCell(self.pos(), cell)
+                      ? new RouteResult.Arrived()
+                      : pathTo(situation, context, cell, new Way(Stance.CAUTIOUS, false)),
+                  Stance.CAUTIOUS,
                   Optional.empty(),
                   Optional.empty(),
                   Optional.empty(),

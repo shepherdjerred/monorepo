@@ -266,7 +266,8 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
         player.isHandRaised(),
         false,
         -1,
-        capture.captureTraversal(player, "trooper", ticks));
+        capture.captureTraversal(player, "trooper", ticks),
+        com.shepherdjerred.thestorm.rwfbots.domain.world.Quiver.ENDLESS);
   }
 
   private void advance(CombatantView self) {
@@ -289,6 +290,7 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
             List.of(),
             PoisonView.NONE,
             artifact.mapId(),
+            List.of(),
             List.of());
     var situation =
         new Situation(self, snapshot, percept, Blackboard.open(RED, Strategy.HUNT), Role.HUNT);
@@ -387,7 +389,8 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
         false,
         false,
         -1,
-        com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState.UNMODIFIED);
+        com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState.UNMODIFIED,
+        com.shepherdjerred.thestorm.rwfbots.domain.world.Quiver.ENDLESS);
   }
 
   private void finish(boolean passed) {

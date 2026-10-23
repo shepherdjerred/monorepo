@@ -114,7 +114,8 @@ final class SimBody {
         usingItem,
         invisible,
         lastHurt,
-        capabilities());
+        capabilities(),
+        com.shepherdjerred.thestorm.rwfbots.domain.world.Quiver.ENDLESS);
   }
 
   private TraversalState capabilities() {

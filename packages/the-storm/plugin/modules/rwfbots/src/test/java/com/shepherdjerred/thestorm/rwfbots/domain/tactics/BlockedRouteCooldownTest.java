@@ -80,6 +80,7 @@ final class BlockedRouteCooldownTest {
             bombs,
             PoisonView.NONE,
             CONTEXT.nav().mapId(),
+            List.of(),
             List.of());
     return new Situation(
         self, snapshot, new Percept(PerceptionState.EMPTY, List.of(), tick), board, Role.ROTATE);
@@ -150,7 +151,8 @@ final class BlockedRouteCooldownTest {
             snapshot.bombs(),
             PoisonView.startedAt(0, 0.1),
             snapshot.mapId(),
-            snapshot.stimuli());
+            snapshot.stimuli(),
+            List.of());
     var scene =
         new Situation(
             original.self(), poisoned, original.percept(), original.board(), original.role());
@@ -186,6 +188,7 @@ final class BlockedRouteCooldownTest {
               List.of(),
               PoisonView.NONE,
               CONTEXT.nav().mapId(),
+              List.of(),
               List.of());
       var scene =
           new Situation(

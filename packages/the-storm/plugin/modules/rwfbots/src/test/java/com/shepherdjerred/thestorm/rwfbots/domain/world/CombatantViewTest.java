@@ -29,7 +29,14 @@ final class CombatantViewTest {
     assertThatThrownBy(
             () ->
                 new WorldSnapshot(
-                    0, MatchPhase.LIVE, List.of(a, b), List.of(), PoisonView.NONE, "m", List.of()))
+                    0,
+                    MatchPhase.LIVE,
+                    List.of(a, b),
+                    List.of(),
+                    PoisonView.NONE,
+                    "m",
+                    List.of(),
+                    List.of()))
         .isInstanceOf(IllegalArgumentException.class);
   }
 
@@ -39,7 +46,8 @@ final class CombatantViewTest {
     var second = combatant(2, BLUE, Vec3.ZERO);
     var incoming = new ArrayList<>(List.of(first, second));
     var original =
-        new WorldSnapshot(0, MatchPhase.LIVE, incoming, List.of(), PoisonView.NONE, "m", List.of());
+        new WorldSnapshot(
+            0, MatchPhase.LIVE, incoming, List.of(), PoisonView.NONE, "m", List.of(), List.of());
     incoming.clear();
     assertThat(original.combatants()).containsExactly(first, second);
     assertThat(original.combatant(first.id())).contains(first);
@@ -49,14 +57,28 @@ final class CombatantViewTest {
     var changed = first.withHealth(1, 0);
     var next =
         new WorldSnapshot(
-            1, MatchPhase.LIVE, List.of(changed), List.of(), PoisonView.NONE, "m", List.of());
+            1,
+            MatchPhase.LIVE,
+            List.of(changed),
+            List.of(),
+            PoisonView.NONE,
+            "m",
+            List.of(),
+            List.of());
     assertThat(next.combatant(first.id())).contains(changed);
     assertThat(original.require(first.id())).isEqualTo(first);
     assertThatThrownBy(() -> next.require(second.id()))
         .isInstanceOf(IllegalArgumentException.class);
     var equal =
         new WorldSnapshot(
-            0, MatchPhase.LIVE, List.of(first, second), List.of(), PoisonView.NONE, "m", List.of());
+            0,
+            MatchPhase.LIVE,
+            List.of(first, second),
+            List.of(),
+            PoisonView.NONE,
+            "m",
+            List.of(),
+            List.of());
     assertThat(original).isEqualTo(equal).hasSameHashCodeAs(equal);
   }
 

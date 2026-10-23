@@ -130,7 +130,8 @@ final class MatchLearningTest {
             healing,
             false,
             -1,
-            com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState.UNMODIFIED);
+            com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState.UNMODIFIED,
+            com.shepherdjerred.thestorm.rwfbots.domain.world.Quiver.ENDLESS);
     var target = combatant(2, BLUE, new Vec3(7, 1, 5));
     var snapshot =
         new WorldSnapshot(
@@ -140,6 +141,7 @@ final class MatchLearningTest {
             List.of(),
             PoisonView.NONE,
             "test",
+            List.of(),
             List.of());
     var input =
         new ReflexInput(self, snapshot, Decision.idle(self.id(), tick, 1), Optional.of(target), 3);
@@ -294,7 +296,8 @@ final class MatchLearningTest {
             before.bombs(),
             before.poison(),
             before.mapId(),
-            before.stimuli());
+            before.stimuli(),
+            List.of());
     var input =
         new ReflexInput(
             self, snapshot, original.decision(), Optional.of(target), original.gapplesLeft());
