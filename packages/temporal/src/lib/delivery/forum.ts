@@ -5,8 +5,8 @@ import type {
   VersionSetRevision,
 } from "@shepherdjerred/delivery/contract";
 import {
-  applicationOf,
   forumReleaseOf,
+  stepApplicationOf,
 } from "@shepherdjerred/delivery/model-contract";
 
 function image(set: VersionSetRevision, component: string): string {
@@ -132,7 +132,9 @@ export function forumReleaseParameters(
 ): Record<string, string> {
   const forum = forumReleaseOf(definition);
   if (forum === undefined) return {};
-  const application = applicationOf(definition);
+  // The Application that owns the release: in a whole compound recipe it
+  // need not be the first one.
+  const application = stepApplicationOf(definition, "forum-bundle");
   if (detail.deployment.kind === "rollback")
     throw new Error(
       "Forum database upgrades require the independent restoration procedure; a blind image rollback is unsafe",

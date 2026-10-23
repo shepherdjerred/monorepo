@@ -6,7 +6,7 @@ import {
 } from "@shepherdjerred/delivery/contract";
 import { deliveryOperationId } from "@shepherdjerred/delivery/operation-id";
 import { DELIVERY_ENVIRONMENT_ANNOTATION } from "#lib/delivery/argo-client.ts";
-import { forumReleaseId } from "#lib/delivery/forum.ts";
+import { forumReleaseId, forumReleaseParameters } from "#lib/delivery/forum.ts";
 import { renderApplication } from "#lib/delivery/model/application.ts";
 import {
   modelSteps,
@@ -326,6 +326,19 @@ describe("forum release inputs in a compound recipe", () => {
       other: member("sub2-step-sync"),
     };
   }
+  test("a whole compound's release inputs come from the Application that owns the forum step", () => {
+    // The forum is not the first Application of this compound.
+    const current = forumDeployment({
+      kind: "compound",
+      subRecipes: [
+        { instance: "application:arcade", definition: companion },
+        { instance: "application:storm-forum", definition: forumRecipe },
+      ],
+    });
+    expect(forumReleaseParameters(current)["delivery.releaseId"]).toBe(
+      forumReleaseId(current.deployment.id),
+    );
+  });
   test("only the forum's own Application receives its release inputs", () => {
     const { deployment, forum, other } = compound();
     expect(names(renderApplication(deployment, forum).source)).toContain(
