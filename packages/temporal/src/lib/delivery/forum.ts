@@ -121,11 +121,15 @@ export function forumReleaseId(deploymentId: string): string {
 /**
  * Bind migration and pre-upgrade backup inputs to the frozen accepted
  * snapshot, for a v1 `forumRelease` block or a model `forum-bundle` step.
+ * `definition` is the recipe whose Application the inputs render into: a
+ * compound recipe's member, never the whole compound, so a member with no
+ * forum-bundle step receives none.
  */
 export function forumReleaseParameters(
   detail: ForumDetail,
+  definition: ForumDetail["pipeline"]["definition"] = detail.pipeline
+    .definition,
 ): Record<string, string> {
-  const definition = detail.pipeline.definition;
   const forum = forumReleaseOf(definition);
   if (forum === undefined) return {};
   const application = applicationOf(definition);

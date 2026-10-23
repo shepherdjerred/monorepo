@@ -132,7 +132,7 @@ export async function runForumBundleStep(
       `Recipe ${recipe.application.name} has no forum-bundle step`,
     );
   const bundle = current.versionSet.components[forum.bundleComponent];
-  const inputs = forumReleaseParameters(current);
+  const inputs = forumReleaseParameters(current, recipe);
   if (bundle?.digest !== `sha256:${inputs["delivery.bundleSha256"] ?? ""}`)
     throw new Error(
       "Forum release inputs differ from the frozen licensed bundle digest",

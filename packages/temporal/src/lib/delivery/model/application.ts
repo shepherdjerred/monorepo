@@ -42,14 +42,16 @@ function runtimeParameters(
 /**
  * A forum-bundle step's release inputs as Helm parameters: the chart's
  * release Job, named by this deployment, verifies and migrates the frozen
- * bundle. An input an artifact parameter already binds (the image) must
- * render identically and is left to that parameter.
+ * bundle. They come from the Application's own recipe, so a compound
+ * recipe's other members receive none. An input an artifact parameter
+ * already binds (the image) must render identically and is left to that
+ * parameter.
  */
 function forumInputs(
   detail: DeploymentDetail,
   recipe: KubernetesApplicationRecipe,
 ): Record<string, string> {
-  const inputs = forumReleaseParameters(detail);
+  const inputs = forumReleaseParameters(detail, recipe);
   for (const [path, parameter] of Object.entries(recipe.artifactParameters)) {
     const input = inputs[path];
     if (input === undefined) continue;

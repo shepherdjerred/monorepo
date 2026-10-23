@@ -11,6 +11,7 @@ import { renderApplication } from "#lib/delivery/model/application.ts";
 import {
   modelSteps,
   requireModelRecipe,
+  stepRecipe,
   type KubernetesApplicationRecipe,
 } from "#lib/delivery/model/recipe.ts";
 import { artifact, detail, digest } from "#lib/delivery/model/testing.ts";
@@ -91,9 +92,13 @@ const forumRecipe = {
   oracle: { probes: [], tests: [] },
 };
 
-function forumDetail(stages: { key: string; status: "running" }[] = []) {
-  const base = detail(forumRecipe, chart, stages);
-  const current = DeploymentDetailSchema.parse({
+/** A running storm-forum deployment of `definition`, upgrading 2.3.12 to 2.3.13. */
+function forumDeployment(
+  definition: unknown,
+  stages: { key: string; status: "running" }[] = [],
+) {
+  const base = detail(definition, chart, stages);
+  return DeploymentDetailSchema.parse({
     ...base,
     deployment: {
       ...base.deployment,
@@ -104,6 +109,7 @@ function forumDetail(stages: { key: string; status: "running" }[] = []) {
       ...base.versionSet,
       serviceId: "storm-forum",
       components: {
+        ...base.versionSet.components,
         "chart:storm-forum": chart,
         ...forumArtifacts("c", "2.3.13"),
       },
@@ -126,6 +132,10 @@ function forumDetail(stages: { key: string; status: "running" }[] = []) {
       content: { "forum.xenforoVersion": "2.3.12" },
     },
   });
+}
+
+function forumDetail(stages: { key: string; status: "running" }[] = []) {
+  const current = forumDeployment(forumRecipe, stages);
   const recipe = requireModelRecipe(current);
   if (recipe.kind !== "kubernetes-application")
     throw new Error("The forum recipe is a Kubernetes application");
@@ -347,5 +357,98 @@ describe("forum-bundle step", () => {
       ),
     ).rejects.toThrow(/independent restoration procedure/u);
     expect(events).toEqual([]);
+  });
+});
+
+/** The Helm parameter names a rendered source carries. */
+function names(source: unknown) {
+  return z
+    .object({
+      helm: z.object({
+        parameters: z.array(z.object({ name: z.string() }).loose()),
+      }),
+    })
+    .parse(source)
+    .helm.parameters.map((entry) => entry.name);
+}
+
+describe("forum release inputs in a compound recipe", () => {
+  /** The forum, then an Application that binds its own image at `delivery.image`. */
+  const companion = {
+    kind: "kubernetes-application",
+    application: {
+      name: "arcade",
+      project: "default",
+      destination: {
+        server: "https://kubernetes.default.svc",
+        namespace: "arcade",
+      },
+      source: {
+        repoURL: "https://chartmuseum.tailnet-1a49.ts.net",
+        chart: "arcade",
+      },
+      lifecycle: "retain",
+    },
+    chartComponent: "chart:arcade",
+    artifactParameters: {
+      "delivery.image": { component: "image:arcade", format: "reference" },
+    },
+    runner: { service: "ci", component: "image:ci-base" },
+    steps: [
+      { kind: "apply-safety", instance: "application:arcade" },
+      { kind: "sync", instance: "application:arcade" },
+    ],
+    oracle: { probes: [], tests: [] },
+  };
+  function compound() {
+    const current = forumDeployment({
+      kind: "compound",
+      subRecipes: [
+        { instance: "application:storm-forum", definition: forumRecipe },
+        { instance: "application:arcade", definition: companion },
+      ],
+    });
+    const arcadeChart = artifact({
+      id: "chart/arcade",
+      component: "chart:arcade",
+      kind: "chart",
+      uri: "https://chartmuseum.tailnet-1a49.ts.net/charts/arcade-1.0.1.tgz",
+      version: "1.0.1",
+      character: "d",
+    });
+    const deployment = DeploymentDetailSchema.parse({
+      ...current,
+      versionSet: {
+        ...current.versionSet,
+        components: {
+          ...current.versionSet.components,
+          "chart:arcade": arcadeChart,
+        },
+      },
+    });
+    const definition = requireModelRecipe(deployment);
+    const member = (key: string) => {
+      const owner = stepRecipe(definition, key);
+      if (owner.kind !== "kubernetes-application")
+        throw new Error(`${key} is not an Application step`);
+      return owner;
+    };
+    return {
+      deployment,
+      forum: member("sub1-step-sync"),
+      other: member("sub2-step-sync"),
+    };
+  }
+  test("only the forum's own Application receives its release inputs", () => {
+    const { deployment, forum, other } = compound();
+    expect(names(renderApplication(deployment, forum).source)).toContain(
+      "delivery.releaseId",
+    );
+    // The other member keeps its own image binding and takes no forum input.
+    expect(
+      names(renderApplication(deployment, other).source).filter((name) =>
+        name.startsWith("delivery."),
+      ),
+    ).toEqual(["delivery.image"]);
   });
 });
