@@ -495,7 +495,9 @@ CREATE TABLE "ComponentReference" (
   CONSTRAINT "ComponentReference_sourceServiceId_fkey" FOREIGN KEY ("sourceServiceId") REFERENCES "Service"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT "ComponentReference_mode_check" CHECK ("mode" IN ('pinned', 'tracking')),
   CONSTRAINT "ComponentReference_tracking_source_check" CHECK (("mode" = 'tracking') = ("sourceEnvironment" IS NOT NULL)),
-  CONSTRAINT "ComponentReference_distinct_check" CHECK ("serviceId" <> "sourceServiceId")
+  -- A5: a service may reference its own component only to track what
+  -- another of its environments accepted, as the catalog document allows.
+  CONSTRAINT "ComponentReference_distinct_check" CHECK ("serviceId" <> "sourceServiceId" OR "mode" = 'tracking')
 );
 CREATE INDEX "ComponentReference_sourceServiceId_sourceComponent_idx" ON "ComponentReference"("sourceServiceId", "sourceComponent");
 

@@ -288,6 +288,67 @@ describe("catalog reconcile of component lists", () => {
   });
 });
 
+describe("catalog reconcile of references (A5)", () => {
+  test("a service tracks its own component from another of its environments; a pinned self-reference stays refused", async () => {
+    const document = await catalogDocument();
+    const tracked: Document = {
+      ...document,
+      services: document.services.map((service) =>
+        service.id === "arcade"
+          ? {
+              ...service,
+              components: [
+                ...service.components,
+                {
+                  name: "image:arcade-accepted",
+                  producer: "reference",
+                  source: {
+                    service: "arcade",
+                    component: "image:arcade",
+                    mode: "tracking",
+                    environment: "arcade/prod",
+                  },
+                },
+              ],
+            }
+          : service,
+      ),
+    };
+    const result = await context.delivery.reconcileCatalog(
+      tracked,
+      testOperator,
+      NO_MIGRATION,
+    );
+    expect(result.refused).toEqual([]);
+    expect(
+      await context.cluster.database.componentReference.findMany({
+        where: { serviceId: "arcade" },
+      }),
+    ).toEqual([
+      {
+        serviceId: "arcade",
+        component: "image:arcade-accepted",
+        sourceServiceId: "arcade",
+        sourceComponent: "image:arcade",
+        mode: "tracking",
+        sourceEnvironment: "arcade/prod",
+      },
+    ]);
+    // The record keeps the catalog's rule: a pinned self-reference is refused.
+    await expect(
+      context.cluster.database.componentReference.create({
+        data: {
+          serviceId: "arcade",
+          component: "image:arcade-previous",
+          sourceServiceId: "arcade",
+          sourceComponent: "image:arcade",
+          mode: "pinned",
+        },
+      }),
+    ).rejects.toThrow(/ComponentReference_distinct_check/u);
+  });
+});
+
 describe("catalog reconcile of v1 environments", () => {
   test("a renamed environment keeps its accepted selection and history; omitted ones are refused", async () => {
     await seedV1Site();
