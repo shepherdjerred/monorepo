@@ -254,6 +254,8 @@ describe("deploy recover (4.15)", () => {
       `https://delivery.invalid/api/v1/deployments/${encodeURIComponent(deployment.id)}/recovery-intents`,
       `https://delivery.invalid/api/v1/recovery-intents/${encodeURIComponent(fixtures.recoveryIntents.pending.id)}/settle`,
     ]);
+    // Settling reads back an Argo operation; any other kind opens nothing.
+    expect(requests[0]?.body).toMatchObject({ expectedKind: "argo" });
     expect(requests[1]?.body).toEqual({ operationId, reason: values.reason });
   });
   test("recover creates one recovery intent for the named sub-step", async () => {

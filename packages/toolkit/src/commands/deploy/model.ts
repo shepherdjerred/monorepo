@@ -61,6 +61,9 @@ function recoveryRequest(options: DeployOptions, id: string) {
     reason: options.reason,
     expectedGeneration: generation(required(options["expected-generation"])),
     ...(options.step === undefined ? {} : { step: options.step }),
+    // Settling here reads back an Argo operation, so a deployment whose
+    // recovery has its own command opens nothing.
+    ...(options["operation-id"] === undefined ? {} : { expectedKind: "argo" }),
   });
 }
 
