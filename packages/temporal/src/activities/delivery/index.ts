@@ -54,8 +54,16 @@ import {
   observeDeliveryMonitors,
 } from "./model/monitor.ts";
 import { removeDeliveryTargets } from "./model/removal.ts";
+import {
+  claimDeliveryHandoff,
+  failDeliveryHandoff,
+  handOffDelivery,
+} from "./model/handoff.ts";
 
 export const deliveryActivities = {
+  handOffDelivery,
+  claimDeliveryHandoff,
+  failDeliveryHandoff,
   observeDeliveryMonitors,
   observeDeliveryDrift,
   removeDeliveryTargets,

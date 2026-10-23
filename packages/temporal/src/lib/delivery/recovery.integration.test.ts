@@ -199,6 +199,24 @@ async function setup() {
   );
 }
 
+/** One admin request; recovery opens an intent, then readback settles it (4.15). */
+async function adminPost(
+  app: {
+    request: (path: string, init: RequestInit) => Response | Promise<Response>;
+  },
+  route: string,
+  body: unknown,
+) {
+  return await app.request(`/api/v1/${route}`, {
+    method: "POST",
+    headers: {
+      authorization: "Bearer test-only-recovery-admin-credential",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+}
+
 describe("guarded recovery before and after Delivery source selection", () => {
   beforeAll(setup, 60_000);
   afterAll(async () => {
@@ -308,20 +326,25 @@ describe("guarded recovery before and after Delivery source selection", () => {
           trustedProxyAddresses: async () => [],
         },
       });
+      const failed = await store.detail(deployment.id);
+      const opened = await adminPost(
+        app,
+        `deployments/${encodeURIComponent(deployment.id)}/recovery-intents`,
+        {
+          requestId: `recovery-${point}`,
+          reason: "Inspect the exact frozen release while Temporal is stopped",
+          expectedGeneration: failed.environment.generation,
+        },
+      );
+      const intent = z.object({ id: z.string() }).parse(await opened.json());
       const unlock = async (operationId: string) =>
-        await app.request(
-          `/api/v1/deployments/${encodeURIComponent(deployment.id)}/release-lock`,
+        await adminPost(
+          app,
+          `recovery-intents/${encodeURIComponent(intent.id)}/settle`,
           {
-            method: "POST",
-            headers: {
-              authorization: "Bearer test-only-recovery-admin-credential",
-              "content-type": "application/json",
-            },
-            body: JSON.stringify({
-              operationId,
-              reason:
-                "Inspected and settled the exact frozen release while Temporal was stopped",
-            }),
+            operationId,
+            reason:
+              "Inspected and settled the exact frozen release while Temporal was stopped",
           },
         );
       const notSettled = await unlock("11111111-1111-4111-8111-111111111111");

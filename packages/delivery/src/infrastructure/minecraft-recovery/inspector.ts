@@ -1,4 +1,6 @@
 import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import { DELIVERY_MINECRAFT_REPORT_READER as reportReader } from "@shepherdjerred/ops-model/delivery-readers.ts";
 import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
 import { Buffer } from "node:buffer";
 import { z } from "zod";
@@ -79,22 +81,39 @@ function requireSameArgo(
     );
 }
 
-/** Independently reads the private controller journal and current Argo source. API callers supply no observations. */
+/**
+ * The projected `delivery-minecraft-report-reader` token, whose audience is
+ * the controller alone. Read on every call so rotation needs no restart.
+ */
+async function readReportToken(): Promise<string> {
+  try {
+    const token = await readFile(`${reportReader.directory}/token`, "utf8");
+    return token.trim();
+  } catch {
+    throw new DeliveryError(
+      "PAUSED",
+      `Independent Minecraft report readback is unavailable; the projected ${reportReader.name} identity is required`,
+    );
+  }
+}
+
+/**
+ * Independently reads the private controller journal and current Argo
+ * source. The report is requested with the API's own audience-bound reader
+ * identity, never the executor's credential (D5, I2). API callers supply no
+ * observations.
+ */
 export function createMinecraftRecoveryInspector(options: {
   controllerOrigin: string;
-  executorToken: string | undefined;
   readApplication: ApplicationReader;
+  readToken?: () => Promise<string>;
   fetch?: (
     input: string | URL | Request,
     init?: RequestInit,
   ) => Promise<Response>;
 }): InspectMinecraftRecovery {
   return async (intent, detail) => {
-    if (options.executorToken === undefined)
-      throw new DeliveryError(
-        "PAUSED",
-        "Independent Minecraft recovery read credentials are unavailable",
-      );
+    const token = await (options.readToken ?? readReportToken)();
     const controller = MinecraftControllerReceiptSchema.parse(
       intent.controllerReceipt,
     );
@@ -102,11 +121,11 @@ export function createMinecraftRecoveryInspector(options: {
       `${detail.deployment.id}:minecraft-preservation`,
     );
     const response = await (options.fetch ?? fetch)(
-      new URL(`/requests/${operationId}/report`, options.controllerOrigin),
+      new URL(`/recovery-reports/${operationId}`, options.controllerOrigin),
       {
         method: "POST",
         headers: {
-          authorization: `Bearer ${options.executorToken}`,
+          authorization: `Bearer ${token}`,
           "content-type": "application/json",
         },
         body: JSON.stringify({

@@ -11,23 +11,27 @@ import {
 import type { Delivery } from "#infrastructure/delivery.ts";
 import {
   terminal,
-  id,
   environment,
   evidence,
 } from "#infrastructure/delivery-data.ts";
-import { createIntent } from "#infrastructure/recovery-intents.ts";
+import { findIntent } from "#infrastructure/recovery-intents.ts";
 
-/** Independent Application readback settles an ambiguous ordinary release as an `argo` recovery intent. */
-export async function releaseLock(
+/**
+ * Settles a pending `argo` recovery intent with independent Application
+ * readback (4.15, I1, I2): the only way an ambiguous ordinary release
+ * gives up its locks. The intent comes first; settlement rechecks its
+ * binding generation and keeps the deployment's original result (I3).
+ */
+export async function settleArgoIntent(
   this: Delivery,
   ...args: [
-    deploymentId: string,
+    intentId: string,
     reason: string,
     actor: Principal,
     settledEvidence: EvidenceInput[],
   ]
 ) {
-  const [deploymentId, reason, actor, settledEvidence] = args;
+  const [intentId, reason, actor, settledEvidence] = args;
   if (
     !settledEvidence.some(
       (entry) =>
@@ -40,6 +44,13 @@ export async function releaseLock(
     );
   return this.database.$transaction(async (tx) => {
     await lock(tx, "delivery:claim");
+    const intent = await findIntent(tx, intentId, "argo");
+    if (intent.status !== "pending")
+      throw new DeliveryError(
+        "CONFLICT",
+        "The recovery intent is already settled",
+      );
+    const deploymentId = intent.deploymentId;
     await lock(tx, `deployment:${deploymentId}`);
     const row = required(
       await tx.deployment.findUnique({ where: { id: deploymentId } }),
@@ -51,26 +62,11 @@ export async function releaseLock(
         "Deployment does not require lock recovery",
       );
     const env = await environment(tx, row.environmentId);
-    // An admin may have opened the intent first (4.15); its readback settles it.
-    const pending = await tx.recoveryIntent.findFirst({
-      where: { deploymentId, kind: "argo", status: "pending" },
-      orderBy: { sequence: "desc" },
-    });
-    const intent =
-      pending ??
-      (await createIntent(tx, {
-        id: id(),
-        kind: "argo",
-        deploymentId,
-        requestedBy: actor.id,
-        reason,
-        expectedGeneration: env.generation,
-        snapshotFingerprint: fingerprint({
-          deploymentId,
-          resultFingerprint: row.resultFingerprint,
-          generation: env.generation,
-        }),
-      }));
+    if (env.generation !== intent.expectedGeneration)
+      throw new DeliveryError(
+        "CONFLICT",
+        "Environment binding generation changed since the recovery intent was opened",
+      );
     await evidence(
       tx,
       deploymentId,
@@ -97,7 +93,7 @@ export async function releaseLock(
       },
     });
     await audit(tx, actor, {
-      action: "deployment.lock_released",
+      action: "deployment.recovery_settled",
       entityId: deploymentId,
       requestId: intent.id,
     });

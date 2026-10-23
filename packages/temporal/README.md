@@ -32,6 +32,15 @@ credentials, and compatible Workflow workers are available. A lost start
 response is inspected by stable Workflow identity before acknowledging the row.
 Paused or occupied environments remain in a durable Workflow admission wait.
 
+A self-hosted service's model deployment hands off after its steps apply (D8):
+the executor marks it handed off and stops without accepting it. The next
+dispatch tick starts its one successor, `deliveryHandoffWorkflow` with ID
+`deliverySuccessorWorkflowId`, instead of treating the closed Workflow as an
+orphan. The successor claims the marker before anything else, then verifies
+acceptance and finishes. A refused claim changes nothing; an unverified
+successor finishes recovery-required with the locks and barrier held.
+Histories recorded before `delivery-self-hosted-handoff-v1` accept as before.
+
 `scripts/rollout/delivery-settlement-recovery.ts` provides independent result
 settlement when an unavailable executor cannot finish its recorded result.
 Its required arguments are `--deployment`, `--run`, `--activity`, `--url`, and
@@ -502,9 +511,17 @@ never advance application acceptance pointers. Worker recovery uses a separate
 immutable intent: the read-only verifier checks closed source execution, exact
 terminal native Jobs, stable routing, captured source identity and live hosts,
 then releases the held lock through a fresh generation CAS. The original failed
-result and pool remain unchanged. `scripts/rollout/worker-delivery-recovery.ts`
-runs the same verifier through brokered operator credentials when Activity
-workers are unavailable; it never resumes effects or accepts the failed release.
+result and pool remain unchanged. The verifier reads the Application, Deployments
+and Pods from the Delivery API's own readers, never the executor's ArgoCD token.
+A model worker deployment is classified by its frozen recipe: its step keys,
+`subN-` prefixed in a compound recipe, and the fixed sub-stages of the worker
+Jobs. A requested sync is proved against the recipe's chart selection, an
+unsynced apply-safety must leave the original hosts serving, and routing must
+follow the plan the worker preflight recorded. Any other stage, or an unsettled
+step of another sub-recipe, fails closed.
+`scripts/rollout/worker-delivery-recovery.ts` runs the same verifier through
+brokered operator credentials when Activity workers are unavailable; it never
+resumes effects or accepts the failed release.
 
 TSMC's explicit `retained-volume-restart` pipeline mode skips the preservation
 Activity and uses normal owned Argo reconciliation and exact Ready image checks

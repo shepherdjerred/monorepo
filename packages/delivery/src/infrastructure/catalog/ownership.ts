@@ -41,6 +41,30 @@ export async function requireUnowned(
     );
 }
 
+/**
+ * D8: whether a service is self-hosted decides its handoff and dispatch
+ * barrier, which admission and a running execution rely on, so the flag
+ * never changes under an owned or recovery-required deployment. The
+ * declared value waits; the rest of the document applies.
+ */
+export async function serviceSelfHosted(
+  tx: Transaction,
+  existing: { id: string; selfHosted: boolean },
+  declared: boolean,
+  result: Result,
+) {
+  if (
+    existing.selfHosted === declared ||
+    !(await serviceOwned(tx, existing.id))
+  )
+    return declared;
+  result.refused.push({
+    id: existing.id,
+    reason: `Changing selfHosted from ${String(existing.selfHosted)} to ${String(declared)} is refused while a deployment is owned or recovery-required (D8, S3)`,
+  });
+  return existing.selfHosted;
+}
+
 /** S3: a lifecycle change waits until nothing of the entity is owned; it is refused, not applied. */
 export function refuseLifecycle(
   result: Result,

@@ -7,23 +7,29 @@ import {
 } from "#infrastructure/delivery-data.ts";
 import { fingerprint, wire } from "#infrastructure/delivery-records.ts";
 import { DeliveryError } from "#domain/error.ts";
-import { LegacyPipelineRevisionSchema } from "#shared/contract.ts";
+import { PipelineRevisionSchema } from "#shared/contract.ts";
+import {
+  applicationsOf,
+  forumReleaseOf,
+  workerRolloutOf,
+} from "#shared/model/recipe-view.ts";
 import { freezeForumBaseline } from "#infrastructure/forum/freezer.ts";
 import { acceptedForumBaseline } from "#infrastructure/forum/baseline-context.ts";
 import { readWorkerVersions } from "#infrastructure/worker-pool/pool.ts";
 import { activeEnvironmentIds } from "#infrastructure/delivery-selection.ts";
 import {
-  reviewedOwnershipDefinitions,
-  requireReviewedOwnershipDefinition,
+  reconciledCatalog,
+  requireCatalogOwnershipDefinition,
+  type ReconciledCatalog,
 } from "./definitions.ts";
 
 async function target(
   tx: Transaction,
   environmentId: string,
-  definitions: Awaited<ReturnType<typeof reviewedOwnershipDefinitions>>,
+  catalog: ReconciledCatalog,
 ) {
   const env = await environment(tx, environmentId);
-  const pipeline = LegacyPipelineRevisionSchema.parse(
+  const pipeline = PipelineRevisionSchema.parse(
     wire(
       await tx.pipeline.findUniqueOrThrow({
         where: { id: env.pipelineRevisionId },
@@ -36,8 +42,8 @@ async function target(
     fingerprint: string;
   } | null = null;
   const definition = pipeline.definition;
-  requireReviewedOwnershipDefinition(definitions, env, pipeline);
-  if (definition.kind === "argocd" && definition.workerRollout !== undefined) {
+  await requireCatalogOwnershipDefinition(tx, catalog, env, pipeline);
+  if (workerRolloutOf(definition) !== undefined) {
     const versions = await readWorkerVersions(tx, env.id);
     const introducing = await tx.deployment.findMany({
       where: {
@@ -73,8 +79,7 @@ async function target(
       };
   }
   if (
-    definition.kind === "argocd" &&
-    definition.forumRelease !== undefined &&
+    forumReleaseOf(definition) !== undefined &&
     env.acceptedVersionSetRevisionId === null &&
     (await acceptedForumBaseline(tx, env.id)) !== null
   ) {
@@ -93,10 +98,9 @@ async function target(
       fingerprint: `sha256:${fingerprint(original)}`,
     };
   }
-  return {
+  const shared = {
     environmentId: env.id,
     serviceId: env.serviceId,
-    application: env.application,
     generation: env.generation,
     pipelineRevisionId: pipeline.id,
     pipeline: definition,
@@ -105,6 +109,12 @@ async function target(
     acceptedVersionSetRevisionId: env.acceptedVersionSetRevisionId,
     baseline,
   };
+  // Every Application the recipe deploys is a target, so a compound
+  // environment hands over each of them, not only its primary one.
+  return applicationsOf(definition).map((view) => ({
+    ...shared,
+    application: view.name,
+  }));
 }
 
 /** An uncapped, consistent PG read. External maintenance quiescence is still required; this is not a DB/native atomic transaction. */
@@ -117,9 +127,9 @@ export async function ownershipHandoverContext(
       "PAUSED",
       "Ownership handover requires an API image with genuine baked source identity",
     );
-  const definitions = await reviewedOwnershipDefinitions();
   return delivery.database.$transaction(
     async (tx) => {
+      const catalog = await reconciledCatalog(tx);
       const active = {
         status: { in: ["queued", "awaiting_approval", "running"] },
       };
@@ -141,20 +151,29 @@ export async function ownershipHandoverContext(
         pendingDeliveryObservations(tx),
         // v2 admits by catalog lifecycle, never an enable-list flag (4.10).
         activeEnvironmentIds(tx),
+        // Only an active environment's Application is handed over; a
+        // retired one keeps its history and admits nothing (4.10).
         tx.environment.findMany({
-          where: { application: { not: null } },
+          where: { application: { not: null }, lifecycle: "active" },
           orderBy: { id: "asc" },
         }),
       ]);
-      if (rows.length > 200)
+      const perEnvironment = await Promise.all(
+        rows.map((row) => target(tx, row.id, catalog)),
+      );
+      const targets = perEnvironment.flat();
+      if (targets.length > 200)
         throw new DeliveryError(
           "INVALID",
-          "Ownership handover exceeds the reviewed environment bound",
+          "Ownership handover exceeds the reviewed target bound",
         );
       return {
         schema: "delivery-ownership-context/v1" as const,
         sourceRevision,
         catalogFingerprint: `sha256:${fingerprint(delivery.catalog.catalog)}`,
+        // The definitions below come from this reconciled revision, not from
+        // the image's catalog; the handover binds it to the reviewed one.
+        catalogRevision: catalog.revision,
         observedAt: new Date().toISOString(),
         admittingEnvironments,
         counts: {
@@ -165,9 +184,7 @@ export async function ownershipHandoverContext(
           recoveryRequired,
           pendingObservations,
         },
-        targets: await Promise.all(
-          rows.map((row) => target(tx, row.id, definitions)),
-        ),
+        targets,
       };
     },
     { isolationLevel: "RepeatableRead" },

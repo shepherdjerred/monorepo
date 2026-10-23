@@ -9,6 +9,7 @@ import { deliveryRequest } from "#lib/delivery/client.ts";
 import { MinecraftControllerProcess } from "#lib/delivery/minecraft-controller-process.ts";
 import { createMinecraftControllerServer } from "#lib/delivery/minecraft-controller-server.ts";
 import { runMinecraftProducer } from "#lib/delivery/minecraft-controller-error.ts";
+import { kubernetesReportAuthorizer } from "#lib/delivery/minecraft-controller-report-auth.ts";
 
 const config = new KubeConfig();
 config.loadFromCluster();
@@ -26,6 +27,7 @@ const executor = new MinecraftControllerProcess({
 });
 const app = createMinecraftControllerServer({
   token: z.string().min(16).parse(Bun.env["DELIVERY_EXECUTOR_TOKEN"]),
+  authorizeReport: kubernetesReportAuthorizer(config),
   toolingRevision: z
     .string()
     .regex(/^[a-f0-9]{40}$/u)

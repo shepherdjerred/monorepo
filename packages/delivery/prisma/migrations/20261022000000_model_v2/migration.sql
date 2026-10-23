@@ -247,6 +247,8 @@ ALTER TABLE "Approval" ADD COLUMN "decidedAt" TIMESTAMP(3);
 ALTER TABLE "Environment" ADD COLUMN "restoreHold" JSONB;
 -- 4.10: a removed environment records when its target state was destroyed.
 ALTER TABLE "Environment" ADD COLUMN "targetRemovedAt" TIMESTAMP(3);
+-- C1: the catalog revision that last declared this environment; null until one does.
+ALTER TABLE "Environment" ADD COLUMN "catalogRevision" TEXT;
 -- H5: a monitor-created rollback carries the restored selection's approval.
 ALTER TABLE "Approval" ADD COLUMN "restorationOfDeploymentId" TEXT REFERENCES "Deployment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 UPDATE "Approval" a

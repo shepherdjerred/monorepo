@@ -7,9 +7,11 @@ import { HOMELAB_R2_ITEM_ID } from "@shepherdjerred/homelab/cdk8s/src/resources/
 /**
  * The homelab R2 bucket's credential (Velero's item) as environment.
  * Delivery's cold-start snapshot lives in that bucket under
- * `delivery-cold-start/` (model section 6): the backup worker
- * writes the snapshot and the Delivery API reads it for
- * reconcile-after-restore. `name` is the synced Secret's name.
+ * `delivery-cold-start/` (model section 6). Only the backup worker, which
+ * writes the snapshot, holds it; operators read the snapshot with their own
+ * credential for reconcile-after-restore and the API holds none. A dedicated
+ * write-only token for the writer is a WP4 follow-up. `name` is the synced
+ * Secret's name.
  */
 export function deliveryColdStartEnvironment(
   chart: Chart,

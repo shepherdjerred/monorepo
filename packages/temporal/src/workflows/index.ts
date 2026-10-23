@@ -460,3 +460,4 @@ export const deliveryForumBaselineWorkflow =
   delivery.deliveryForumBaselineWorkflow;
 export const deliveryPlatformRecoveryWorkflow =
   delivery.deliveryPlatformRecoveryWorkflow;
+export const deliveryHandoffWorkflow = delivery.deliveryHandoffWorkflow;

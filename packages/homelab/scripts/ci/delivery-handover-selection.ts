@@ -1,4 +1,10 @@
 import { z } from "zod";
+import {
+  RecipeDefinitionSchema,
+  applicationsOf,
+  forumReleaseOf,
+  workerRolloutOf,
+} from "@shepherdjerred/delivery/model-contract";
 import { SERVICE_CATALOG } from "@shepherdjerred/ops-model/catalog.ts";
 import {
   DELIVERY_DELEGATION_DEFINITIONS,
@@ -14,6 +20,12 @@ import {
 export const HandoverDescriptorSchema = z.strictObject({
   schema: z.literal("delivery-ownership-handover/v1"),
   sourceRevision: z.string().regex(/^[a-f0-9]{40}$/u),
+  /**
+   * The revision `toolkit deploy catalog reconcile` reported for the reviewed
+   * checkout's catalog document. Targets are bound from the API's last
+   * reconciled catalog, so it must be exactly this one.
+   */
+  catalogRevision: z.string().regex(/^sha256:[a-f0-9]{64}$/u),
   pullRequest: z.number().int().positive(),
   requestId: z.uuid(),
   deliveryUrl: z.literal("https://delivery.tailnet-1a49.ts.net"),
@@ -44,6 +56,7 @@ export const HandoverContextSchema = z
     schema: z.literal("delivery-ownership-context/v1"),
     sourceRevision: z.string(),
     catalogFingerprint: z.string(),
+    catalogRevision: z.string(),
     observedAt: z.iso.datetime(),
     writesEnabled: z.literal(false),
     admittingEnvironments: z.array(z.string()),
@@ -90,6 +103,8 @@ export const HandoverContextSchema = z
                 runnerImage: z.string().min(1),
               })
               .loose(),
+            // A target the reconciled catalog binds to a model recipe (4.7).
+            RecipeDefinitionSchema,
           ]),
           baseline: z
             .object({
@@ -104,19 +119,66 @@ export const HandoverContextSchema = z
   })
   .loose();
 
-function requireHandoverBaseline(
-  row: z.infer<typeof HandoverContextSchema>["targets"][number],
+type HandoverTarget = z.infer<typeof HandoverContextSchema>["targets"][number];
+
+/**
+ * The named Application a registered target releases, read the same way
+ * from a v1 pipeline and a model recipe, of which a compound deploys
+ * several; null when the pipeline deploys no such Application, as for the
+ * root release, which is no leaf handover target.
+ */
+function registeredApplication(
+  pipeline: HandoverTarget["pipeline"],
+  application: string,
 ) {
-  if (row.pipeline.kind === "root-release") return;
-  if (
-    row.pipeline.workerRollout !== undefined &&
-    row.baseline?.kind !== "worker"
-  )
+  switch (pipeline.kind) {
+    case "root-release":
+      return null;
+    case "argocd":
+    case "control-plane":
+      if (pipeline.application !== application) return null;
+      return {
+        name: pipeline.application,
+        namespace: pipeline.namespace,
+        repository: pipeline.chartRepository,
+        chart: pipeline.chartName,
+        path: null,
+        workerRollout: pipeline.workerRollout !== undefined,
+        forumRelease: pipeline.forumRelease !== undefined,
+      };
+    case "kubernetes-application":
+    case "compound":
+    case "operator-run":
+    case "static-site":
+    case "tofu":
+    case "channel": {
+      const view = applicationsOf(pipeline).find(
+        (candidate) => candidate.name === application,
+      );
+      return view === undefined
+        ? null
+        : {
+            name: view.name,
+            namespace: view.namespace,
+            repository: view.repository,
+            chart: view.chart,
+            path: view.path,
+            workerRollout: workerRolloutOf(pipeline) !== undefined,
+            forumRelease: forumReleaseOf(pipeline) !== undefined,
+          };
+    }
+  }
+}
+
+function requireHandoverBaseline(row: HandoverTarget) {
+  const registered = registeredApplication(row.pipeline, row.application);
+  if (registered === null) return;
+  if (registered.workerRollout && row.baseline?.kind !== "worker")
     throw new Error(
       "Worker handover requires its independently verified original host baseline",
     );
   if (
-    row.pipeline.forumRelease !== undefined &&
+    registered.forumRelease &&
     row.acceptedVersionSetRevisionId === null &&
     row.baseline?.kind !== "forum"
   )
@@ -137,6 +199,10 @@ export function handoverContext(
   )
     throw new Error(
       "API image source/catalog must equal the exact reviewed handover checkout",
+    );
+  if (context.catalogRevision !== descriptor.catalogRevision)
+    throw new Error(
+      "The API's last reconciled catalog must be the exact reviewed catalog revision; reconcile the reviewed catalog before handover",
     );
   if (
     Date.parse(context.observedAt) < Date.now() - 30_000 ||
@@ -161,8 +227,7 @@ export function handoverContext(
     if (
       registered.length !== 1 ||
       row?.generation !== target.expectedGeneration ||
-      row.pipeline.kind === "root-release" ||
-      row.pipeline.application !== target.application
+      registeredApplication(row.pipeline, target.application) === null
     )
       throw new Error(
         "Registered handover generation/pipeline differs from operator intent",
@@ -178,29 +243,38 @@ export function handoverContextFingerprint(raw: unknown) {
   return bootstrapFingerprint(identity);
 }
 
-export function handoverPatch(
-  raw: unknown,
-  registered: z.infer<typeof HandoverContextSchema>["targets"][number],
-) {
-  if (registered.pipeline.kind === "root-release")
+export function handoverPatch(raw: unknown, registered: HandoverTarget) {
+  const source = registeredApplication(
+    registered.pipeline,
+    registered.application,
+  );
+  if (source === null)
     throw new Error(
       "Root releases retain the guarded root workflow; they are not leaf handover targets",
     );
   const app = BootstrapApplicationSchema.parse(raw);
   const original = z
     .object({
-      source: z.object({ repoURL: z.string(), chart: z.string() }).loose(),
+      source: z
+        .object({
+          repoURL: z.string(),
+          chart: z.string().optional(),
+          path: z.string().optional(),
+        })
+        .loose(),
       sources: z.never().optional(),
       destination: z.object({ namespace: z.string() }),
       syncPolicy: z.record(z.string(), z.json()).optional(),
     })
     .parse(app.spec);
+  // A chart source names its chart; a Git source (model recipe) its path.
   if (
     app.metadata.name !== registered.application ||
-    original.source.repoURL !== registered.pipeline.chartRepository ||
-    original.source.chart !== registered.pipeline.chartName ||
-    (registered.pipeline.namespace !== undefined &&
-      original.destination.namespace !== registered.pipeline.namespace)
+    original.source.repoURL !== source.repository ||
+    (original.source.chart ?? null) !== source.chart ||
+    (source.path !== null && original.source.path !== source.path) ||
+    (source.namespace !== undefined &&
+      original.destination.namespace !== source.namespace)
   )
     throw new Error(
       "Native Application source/destination does not match its registered pipeline; handover never changes selected sources",

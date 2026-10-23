@@ -26,9 +26,9 @@ import { createDeliveryNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/r
 import { createDeliveryMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/monitoring.ts";
 import { deliveryForumEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/forum-bootstrap.ts";
 import { deliveryTrmnlEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/trmnl-bootstrap.ts";
-import { deliveryColdStartEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/cold-start-credential.ts";
 import { createDeliveryCatalogRecovery } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/catalog-recovery.ts";
 import { attachNativeForumReader } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/forum/native-reader.ts";
+import { attachDeliveryRecoveryReaders } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/recovery-readers.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createDeliveryIngressObserver } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/ingress.ts";
 import { DELIVERY_TAILSCALE_INGRESS } from "@shepherdjerred/ops-model/delivery-ingress.ts";
@@ -159,7 +159,6 @@ export function createDeliveryChart(
         ...dbEnv,
         ...deliveryForumEnvironment(chart, activation),
         ...deliveryTrmnlEnvironment(chart, activation),
-        ...deliveryColdStartEnvironment(chart, "delivery-cold-start"),
         HOST: EnvValue.fromValue("0.0.0.0"),
         PORT: EnvValue.fromValue("7353"),
         HOME: EnvValue.fromValue("/tmp"),
@@ -212,6 +211,7 @@ export function createDeliveryChart(
     }),
   );
   setRevisionHistoryLimit(deployment);
+  attachDeliveryRecoveryReaders(deployment);
   if (
     activation.forumReaderItemId !== undefined &&
     activation.forumObserverItemId !== undefined

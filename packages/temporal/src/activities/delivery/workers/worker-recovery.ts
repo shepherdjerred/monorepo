@@ -1,11 +1,13 @@
 import { Connection } from "@temporalio/client";
 import { KubeConfig } from "@kubernetes/client-node";
 import { z } from "zod";
-import { WorkerRecoveryContextSchema } from "@shepherdjerred/delivery/contract";
+import {
+  WorkerRecoveryContextSchema,
+  WorkerRecoveryObservationSchema,
+} from "@shepherdjerred/delivery/contract";
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import { proveSettledWorkerRecovery } from "#lib/delivery/workers/worker-recovery.ts";
 import { workerRecoveryEffects } from "#lib/delivery/workers/worker-recovery-effects.ts";
-import { argoRequest } from "#activities/delivery/argocd.ts";
 
 export async function inspectDeliveryWorkerRecovery(id: string): Promise<void> {
   const path = `worker-recovery/${encodeURIComponent(id)}`;
@@ -26,7 +28,12 @@ export async function inspectDeliveryWorkerRecovery(id: string): Promise<void> {
           workerRecoveryEffects({
             connection,
             kubernetes,
-            readArgo: argoRequest,
+            // The API reads the target with its own identity (D5, I2).
+            observe: async () =>
+              await deliveryRequest(
+                `${path}/observation`,
+                WorkerRecoveryObservationSchema,
+              ),
           }),
         ),
     );

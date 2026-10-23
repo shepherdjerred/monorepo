@@ -88,6 +88,14 @@ export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
       ref: `${HOMELAB_VAULT_REF}/${DELIVERY_SERVICE_ITEM_ID}/DELIVERY_EXECUTOR_TOKEN`,
     },
   },
+  DELIVERY_ATTEST_TOKEN: {
+    description:
+      "Delivery operator attestation token (attest scope only; never an executor credential)",
+    source: {
+      kind: "op",
+      ref: `${HOMELAB_VAULT_REF}/${DELIVERY_SERVICE_ITEM_ID}/DELIVERY_ATTEST_TOKEN`,
+    },
+  },
   DELIVERY_API_TOKEN: {
     description:
       "Delivery machine API token (cannot approve production releases)",

@@ -18,10 +18,17 @@ import {
   verifyWorkerPoolPods,
 } from "./worker-hosts.ts";
 import { workerSourceFingerprint } from "./worker-source.ts";
+import {
+  modelWorkerRecovery,
+  requirePlannedRecoveryRoutes,
+  requireUnsyncedModelSource,
+  type ModelWorkerRecovery,
+} from "./worker-recovery-model.ts";
 
 export type WorkerRecoveryEffects = {
   workflowClosed: (deploymentId: string) => Promise<string>;
-  readArgo: (path: string) => Promise<unknown>;
+  /** The Application object as the API's own reader observed it (D5, I2). */
+  readApplication: (path: string) => Promise<unknown>;
   resources: (
     application: string,
     kind: "Deployment" | "Pod",
@@ -53,8 +60,13 @@ function recoverySync(raw: unknown, operated: boolean) {
 function ownedRecoveryArgo(
   before: unknown,
   detail: WorkerRecoveryContext["deployment"],
+  model: ModelWorkerRecovery | null,
 ) {
-  const { selection, operationId } = deliverySelection(detail);
+  // A model deployment's sync carries its request id over the frozen recipe's selection.
+  const { selection, operationId } =
+    model === null
+      ? deliverySelection(detail)
+      : { selection: model.selection(), operationId: model.requestId };
   const request = z
     .object({
       status: z.object({
@@ -69,10 +81,14 @@ function ownedRecoveryArgo(
     .status.operationState.operation.info.find(
       (entry) => entry.name === "ci.sjer.red/request-id",
     )?.value;
-  const bootstrapId = deliveryOperationId(
-    `${detail.deployment.id}:worker-bootstrap`,
-  );
-  if (request !== operationId && request !== bootstrapId)
+  const bootstrapId =
+    model === null
+      ? deliveryOperationId(`${detail.deployment.id}:worker-bootstrap`)
+      : undefined;
+  if (
+    request === undefined ||
+    (request !== operationId && request !== bootstrapId)
+  )
     throw new Error(
       "Recovery Argo operation is not owned by this frozen deployment",
     );
@@ -115,6 +131,17 @@ async function requireUnappliedWorkerHosts(
     throw new Error(
       "Recovery prior source or ownership changed, or was never captured",
     );
+  await requireOriginalHosts(context, pool, effects, application);
+}
+
+/** No source sync reached the hosts: the original pool still serves, and the candidate nowhere. */
+async function requireOriginalHosts(
+  context: WorkerRecoveryContext,
+  pool: WorkerPoolSnapshot,
+  effects: WorkerRecoveryEffects,
+  application: string,
+) {
+  const detail = context.deployment;
   requireLegacyWorkerCoverage(
     await effects.resources(application, "Deployment"),
     pool,
@@ -227,7 +254,7 @@ async function recheckUnappliedBootstrap(
       JSON.stringify(observed.routes)
   )
     throw new Error("Unapplied bootstrap observations changed during proof");
-  const final = await effects.readArgo(
+  const final = await effects.readApplication(
     encodeURIComponent(
       deliverySelection(context.deployment).selection.application,
     ),
@@ -268,6 +295,55 @@ function requireStableRecoveryRoutes(
     );
 }
 
+/**
+ * Which ownership the recorded stages prove, after checking the hosts that
+ * classification implies: an owned sync, an unapplied or unsynced source,
+ * or a v1 bootstrap intent.
+ */
+async function classifyRecovery(
+  context: WorkerRecoveryContext,
+  pool: WorkerPoolSnapshot,
+  effects: WorkerRecoveryEffects,
+  target: { model: ModelWorkerRecovery | null; name: string; before: unknown },
+) {
+  const { model, name, before } = target;
+  const detail = context.deployment;
+  const unappliedBootstrap =
+    model === null && unappliedBootstrapIntent(detail, before);
+  const operated =
+    model?.synced ??
+    (!unappliedBootstrap &&
+      detail.stages.some((stage) =>
+        ["reconcile", "worker-host-bootstrap"].includes(stage.key),
+      ));
+  recoverySync(before, operated);
+  const owned = operated ? ownedRecoveryArgo(before, detail, model) : undefined;
+  let source: "prior" | "written" = "prior";
+  if (owned !== undefined) {
+    requireLegacyWorkerCoverage(
+      await effects.resources(name, "Deployment"),
+      pool,
+    );
+    verifyWorkerPoolPods(await effects.resources(name, "Pod"), pool);
+  } else if (model === null)
+    await requireUnappliedWorkerHosts(context, pool, effects, before);
+  else {
+    source = requireUnsyncedModelSource(before, detail, model);
+    await requireOriginalHosts(context, pool, effects, name);
+  }
+  return { unappliedBootstrap, operated, owned, source };
+}
+
+/** Stable routing to retained hosts, and to a model rollout's recorded plan. */
+function requireRecoveryRoutes(
+  pool: WorkerPoolSnapshot,
+  routes: CompleteWorkerRecovery["routes"],
+  plan: Parameters<typeof requirePlannedRecoveryRoutes>[0] | undefined,
+) {
+  requireStableRecoveryRoutes(pool, routes);
+  if (plan !== undefined) requirePlannedRecoveryRoutes(plan, routes);
+}
+
 /** Read-only proof, independent of Activity Context; operator and Workflow use exactly this verifier. */
 export async function proveSettledWorkerRecovery(
   context: WorkerRecoveryContext,
@@ -287,29 +363,15 @@ export async function proveSettledWorkerRecovery(
     );
   const workflowId = await effects.workflowClosed(detail.deployment.id);
   const jobs = await effects.terminalJobs(context);
-  const { selection } = deliverySelection(detail);
-  const application = encodeURIComponent(selection.application);
-  const before = await effects.readArgo(application);
-  const unappliedBootstrap = unappliedBootstrapIntent(detail, before);
-  const operated =
-    !unappliedBootstrap &&
-    detail.stages.some((stage) =>
-      ["reconcile", "worker-host-bootstrap"].includes(stage.key),
-    );
+  // A model deployment is classified by its frozen recipe, a v1 one by its pipeline.
+  const model = modelWorkerRecovery(detail);
+  const name =
+    model?.application ?? deliverySelection(detail).selection.application;
+  const application = encodeURIComponent(name);
+  const before = await effects.readApplication(application);
+  const { unappliedBootstrap, operated, owned, source } =
+    await classifyRecovery(context, pool, effects, { model, name, before });
   const beforeSync = recoverySync(before, operated);
-  const owned = operated ? ownedRecoveryArgo(before, detail) : undefined;
-  if (owned === undefined)
-    await requireUnappliedWorkerHosts(context, pool, effects, before);
-  else {
-    requireLegacyWorkerCoverage(
-      await effects.resources(selection.application, "Deployment"),
-      pool,
-    );
-    verifyWorkerPoolPods(
-      await effects.resources(selection.application, "Pod"),
-      pool,
-    );
-  }
   const observed =
     operated || pool.workerOperation === "baseline"
       ? pool
@@ -324,8 +386,8 @@ export async function proveSettledWorkerRecovery(
   const routes = await effects.routes(pool);
   if (JSON.stringify(routes) !== JSON.stringify(await effects.routes(pool)))
     throw new Error("Recovery routing changed during proof");
-  requireStableRecoveryRoutes(pool, routes);
-  const after = await effects.readArgo(application);
+  requireRecoveryRoutes(pool, routes, model?.plan);
+  const after = await effects.readApplication(application);
   const afterSync = recoverySync(after, operated);
   if (workerSourceFingerprint(before) !== workerSourceFingerprint(after))
     throw new Error("Application changed during recovery proof");
@@ -368,7 +430,7 @@ export async function proveSettledWorkerRecovery(
       {
         kind: "reconciliation",
         operationId: receipt,
-        summary: `Independently settled failed release; source Workflow ${workflowId} closed, Argo comparison ${beforeSync}/${afterSync}, no acceptance inferred`,
+        summary: `Independently settled failed release; source Workflow ${workflowId} closed, Argo comparison ${beforeSync}/${afterSync}, no acceptance inferred${source === "written" ? "; the unsynced candidate body stays for the next deployment to replace" : ""}`,
       },
       {
         kind: "runtime",

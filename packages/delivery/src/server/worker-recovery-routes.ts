@@ -7,10 +7,15 @@ import {
 } from "#shared/contract.ts";
 import type { Principal } from "#shared/contract.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
+import {
+  observeWorkerRecovery,
+  type WorkerRecoveryReaders,
+} from "#infrastructure/worker-pool/recovery-observation.ts";
 
 export function registerWorkerRecoveryRoutes(
   app: Hono<{ Variables: { principal: Principal; requestId: string } }>,
   delivery: Delivery,
+  readers?: WorkerRecoveryReaders,
 ) {
   app.post("/api/v1/deployments/:id/worker-recovery", async (c) =>
     c.json(
@@ -24,6 +29,16 @@ export function registerWorkerRecoveryRoutes(
   );
   app.get("/api/v1/worker-recovery/pending", async (c) =>
     c.json(await delivery.pendingWorkerRecovery(c.get("principal"))),
+  );
+  app.get("/api/v1/worker-recovery/:id/observation", async (c) =>
+    c.json(
+      await observeWorkerRecovery(
+        delivery,
+        c.req.param("id"),
+        c.get("principal"),
+        readers,
+      ),
+    ),
   );
   app.get("/api/v1/worker-recovery/:id", async (c) =>
     c.json(

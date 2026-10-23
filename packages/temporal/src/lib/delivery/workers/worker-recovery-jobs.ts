@@ -18,6 +18,7 @@ import {
   assertMatchingDeliveryJob,
   deliveryJobManifest,
 } from "#lib/delivery/job-manifest.ts";
+import { workerRunnerImage } from "./worker-plan.ts";
 
 export type RecoveryJobReader = {
   job: (name: string) => Promise<V1Job>;
@@ -148,9 +149,8 @@ export async function proveTerminalWorkerJobs(
   read: RecoveryJobReader,
 ): Promise<EvidenceInput[]> {
   const detail = context.deployment;
-  const pipeline = detail.pipeline.definition;
-  if (pipeline.kind !== "argocd" || pipeline.workerRollout === undefined)
-    throw new Error("Recovery lacks a reviewed worker recipe");
+  // The v1 pipeline's pinned runner, or the one admission froze for a model recipe.
+  const runnerImage = workerRunnerImage(detail);
   const evidence: EvidenceInput[] = [];
   for (const stage of detail.stages.filter((entry) =>
     /^worker-(?:image-provenance|preflight|start|advance-50|advance-100|promote|verify)$/u.test(
@@ -170,7 +170,7 @@ export async function proveTerminalWorkerJobs(
       actual,
       stage,
       detail.deployment.id,
-      pipeline.workerRollout.runnerImage,
+      runnerImage,
     );
     const recorded = detail.evidence.filter((entry) =>
       entry.summary.includes(`fingerprint ${fingerprint}`),

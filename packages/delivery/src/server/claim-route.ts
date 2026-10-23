@@ -57,6 +57,18 @@ export function registerClaimRoute(
       await delivery.handOff(c.req.param("id"), executor, c.get("principal")),
     );
   });
+  // The successor executor claims the handoff marker before continuing (D8).
+  app.post("/api/v1/deployments/:id/successor", async (c) => {
+    requireScope(c.get("principal"), "execute");
+    const executor = ExecutorIdentitySchema.parse(await c.req.json());
+    return c.json(
+      await delivery.claimHandoff(
+        c.req.param("id"),
+        executor,
+        c.get("principal"),
+      ),
+    );
+  });
   app.post("/api/v1/deployments/:id/attestations", async (c) =>
     c.json(
       await delivery.attestStage(

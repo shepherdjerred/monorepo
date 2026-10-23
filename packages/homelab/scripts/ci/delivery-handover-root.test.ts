@@ -67,6 +67,7 @@ test("the API context lists only delegated leaf targets now that the root releas
     schema: "delivery-ownership-context/v1",
     sourceRevision: "a".repeat(40),
     catalogFingerprint: bootstrapFingerprint(SERVICE_CATALOG),
+    catalogRevision: `sha256:${"c".repeat(64)}`,
     observedAt: new Date().toISOString(),
     writesEnabled: false,
     admittingEnvironments: [],
@@ -91,6 +92,7 @@ test("the API context lists only delegated leaf targets now that the root releas
   const descriptor = HandoverDescriptorSchema.parse({
     schema: "delivery-ownership-handover/v1",
     sourceRevision: raw.sourceRevision,
+    catalogRevision: raw.catalogRevision,
     pullRequest: 1,
     requestId: "11111111-1111-4111-8111-111111111111",
     deliveryUrl: "https://delivery.tailnet-1a49.ts.net",

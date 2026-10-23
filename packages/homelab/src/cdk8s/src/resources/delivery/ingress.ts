@@ -6,6 +6,7 @@ import {
   type PolicyRule,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { DELIVERY_TAILSCALE_INGRESS as ingress } from "@shepherdjerred/ops-model/delivery-ingress.ts";
+import { DELIVERY_API_SERVICE_ACCOUNT } from "@shepherdjerred/ops-model/delivery-readers.ts";
 
 /** Existing operator supplies identity; the API independently verifies the actual proxy peer. */
 export function createDeliveryIngressObserver(deployment: Deployment) {
@@ -13,7 +14,7 @@ export function createDeliveryIngressObserver(deployment: Deployment) {
   // Preserve the narrowly guarded optional Forum CONNECT actor. Without the
   // Forum capability this account only receives the read-only roles below.
   const account = new ServiceAccount(chart, "api-observer", {
-    metadata: { name: "delivery-forum-observer" },
+    metadata: { name: DELIVERY_API_SERVICE_ACCOUNT.name },
     automountToken: false,
   });
   for (const [namespace, rules] of [

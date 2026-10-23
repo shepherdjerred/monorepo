@@ -3,6 +3,8 @@ import { recipeFromPipeline } from "#shared/model/recipe-adapter.ts";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import type { Principal } from "#shared/contract.ts";
 import { testExecutor, testOperator } from "#testing/seed.ts";
+import { MachineCredentialSchema } from "#infrastructure/config.ts";
+import { createTestApp } from "#testing/http-app.ts";
 import {
   arcadePipeline,
   arcadeRegistration,
@@ -11,11 +13,11 @@ import {
 } from "#testing/model-fixture.ts";
 
 const context = useDeliveryFixture({ registration: arcadeRegistration });
-/** The operator tool's credential (X13): a machine credential with execute. */
+/** The operator tool's credential (X13): an attestor that never executes. */
 const operatorTool: Principal = {
   id: "operator-tool",
   kind: "machine",
-  scopes: ["read", "execute"],
+  scopes: ["read", "attest"],
 };
 const ran = [{ kind: "attestation" as const, summary: "ran" }];
 
@@ -53,14 +55,20 @@ test("an operator attests each declared stage of an operator-run deployment", as
       operatorTool,
     ),
   ).rejects.toThrow(/not one the recipe asks/u);
-  // A human session holds no execute scope; the tool uses its own credential.
-  await expect(
-    context.delivery.attestStage(
-      deployment.id,
-      { stage: "bootstrap", evidence: ran },
-      testOperator,
-    ),
-  ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  // Only the distinct attestor identity attests: never a human session, the
+  // executor, or a credential carrying execute alongside attest.
+  for (const actor of [
+    testOperator,
+    testExecutor,
+    { ...testExecutor, scopes: [...testExecutor.scopes, "attest" as const] },
+  ])
+    await expect(
+      context.delivery.attestStage(
+        deployment.id,
+        { stage: "bootstrap", evidence: ran },
+        actor,
+      ),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
   await expect(
     context.delivery.attestStage(
       deployment.id,
@@ -79,11 +87,19 @@ test("an operator attests each declared stage of an operator-run deployment", as
       },
     ],
   };
+  const leased = await context.cluster.database.deployment.findUniqueOrThrow({
+    where: { id: deployment.id },
+  });
   const stage = await context.delivery.attestStage(
     deployment.id,
     attestation,
     operatorTool,
   );
+  // An attestation proves nothing about the executor: its lease is unchanged.
+  const after = await context.cluster.database.deployment.findUniqueOrThrow({
+    where: { id: deployment.id },
+  });
+  expect(after.leaseExpiresAt).toEqual(leased.leaseExpiresAt);
   expect(stage).toMatchObject({
     key: "attest/bootstrap",
     status: "succeeded",
@@ -120,4 +136,89 @@ test("a deployment of another recipe kind takes no attestation", async () => {
       operatorTool,
     ),
   ).rejects.toThrow(/Only an operator-run deployment/u);
+});
+
+test("an identity that owns the deployment never attests it, under any credential", async () => {
+  const deployment = await operatorRunDeployment();
+  // The same principal once claimed it with an executor credential.
+  const owner: Principal = {
+    id: "operator-tool",
+    kind: "machine",
+    scopes: ["read", "execute"],
+  };
+  await context.delivery.renewLease(
+    deployment.id,
+    { workflowId: `delivery/${deployment.id}`, workflowRunId: "run-1" },
+    owner,
+  );
+  await expect(
+    context.delivery.attestStage(
+      deployment.id,
+      { stage: "bootstrap", evidence: ran },
+      operatorTool,
+    ),
+  ).rejects.toThrow(/owns this deployment never attests/u);
+});
+
+test("the executor's stage route never records an attestation stage", async () => {
+  const deployment = await operatorRunDeployment();
+  const token = "test-executor-stage-route-credential-00";
+  const app = createTestApp(context.delivery, {
+    machineCredentials: [{ token, principal: testExecutor }],
+    writesEnabled: () => Promise.resolve(true),
+    enabledEnvironments: () => Promise.resolve(["arcade/prod"]),
+  });
+  const write = (key: string) =>
+    app.request(`/api/v1/deployments/${deployment.id}/stages`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        key,
+        status: "succeeded",
+        operationId: "executor-self-attestation",
+        message: "The executor attests its own work",
+        evidence: ran,
+      }),
+    });
+  const refused = await write("attest/bootstrap");
+  expect(refused.status).toBe(403);
+  expect(await refused.json()).toMatchObject({
+    error: {
+      code: "FORBIDDEN",
+      message: "Only an operator attestation records an attestation stage",
+    },
+  });
+  const detail = await context.delivery.detail(deployment.id);
+  expect(detail.stages.map((stage) => stage.key)).not.toContain(
+    "attest/bootstrap",
+  );
+  // Ordinary executor stages still record through the same route.
+  const ordinary = await write("step-sync");
+  expect(ordinary.status).toBe(200);
+});
+
+test("the API refuses an attestation credential that also executes", () => {
+  expect(
+    MachineCredentialSchema.safeParse({
+      token: "t".repeat(32),
+      principal: {
+        id: "attestor",
+        kind: "machine",
+        scopes: ["read", "attest", "execute"],
+      },
+    }).success,
+  ).toBe(false);
+  expect(
+    MachineCredentialSchema.safeParse({
+      token: "t".repeat(32),
+      principal: {
+        id: "attestor",
+        kind: "machine",
+        scopes: ["read", "attest"],
+      },
+    }).success,
+  ).toBe(true);
 });

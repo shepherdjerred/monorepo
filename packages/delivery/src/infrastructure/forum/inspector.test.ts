@@ -8,7 +8,10 @@ import {
   bindCompoundForum,
   qualifyForumReleaseFixture,
 } from "./fixtures.ts";
-import { createForumBaselineInspector } from "./baseline-inspector.ts";
+import {
+  createForumBaselineInspector,
+  createForumBaselineReader,
+} from "./baseline-inspector.ts";
 import type { ForumBaselineContext } from "#shared/contract.ts";
 import { forumBundlePolicy } from "@shepherdjerred/ops-model/forum-bundle-policy.ts";
 
@@ -57,136 +60,55 @@ function nativeTransport(
       { name: "BUNDLE_SHA256", value: input.bundle.digest.slice(7) },
     ],
   });
-  return {
-    requests,
-    fetch: async (raw: string | URL | Request, init?: RequestInit) => {
-      const url = new URL(raw instanceof Request ? raw.url : raw),
-        kind = url.searchParams.get("kind") ?? "Application";
-      const name = url.searchParams.get("resourceName") ?? "";
-      requests.push(url.href);
-      if (url.port === "8082") {
-        expect(url.hostname).toBe("10.244.0.50");
-        expect(url.pathname).toBe("/_delivery/status");
-        expect(new Headers(init?.headers).get("authorization")).toBe(
-          "Bearer observer-test-capability",
-        );
-        return Response.json(baselineProof(input).runtime);
-      }
-      expect(new Headers(init?.headers).get("authorization")).toBe(
-        "Bearer argo-test-capability",
-      );
-      if (url.pathname.endsWith("/resource"))
-        expect(url.searchParams.get("group")).toBe(
-          ["Pod", "PersistentVolumeClaim"].includes(kind)
-            ? ""
-            : kind === "Job"
-              ? "batch"
-              : "apps",
-        );
-      if (url.pathname.endsWith("/resource-tree"))
-        return Response.json({
-          nodes: [
-            {
-              kind: "Namespace",
-              name: "storm-forum",
-              uid: "namespace-uid",
-            },
-            {
-              kind: "Pod",
-              name: "out-of-scope-pod",
-              uid: "out-of-scope-pod-uid",
-              parentRefs: [{ uid: "rs-uid" }],
-            },
-            {
-              kind: "ReplicaSet",
-              name: "storm-forum-web-rs",
-              namespace: "storm-forum",
-              uid: "rs-uid",
-              parentRefs: [{ uid: "deployment-uid" }],
-            },
-            {
-              kind: "Pod",
-              name: "storm-forum-web-abc",
-              namespace: "storm-forum",
-              uid: "pod-uid",
-              parentRefs: [{ uid: "rs-uid" }],
-            },
-          ],
-        });
-      const resources: Record<string, Record<string, unknown>> = {
-        Application: {
-          metadata: metadata("storm-forum", "app-uid"),
-          spec: {
-            source: {
-              repoURL: "https://chartmuseum.tailnet-1a49.ts.net",
-              chart: "storm-forum",
-              targetRevision: "1.0.0",
-            },
+  const resources: Record<string, Record<string, unknown>> = {
+    Application: {
+      metadata: metadata("storm-forum", "app-uid"),
+      spec: {
+        source: {
+          repoURL: "https://chartmuseum.tailnet-1a49.ts.net",
+          chart: "storm-forum",
+          targetRevision: "1.0.0",
+        },
+      },
+      status: {
+        sync: { status: "Synced" },
+        health: { status: "Healthy" },
+        operationState: { phase: "Succeeded" },
+        resources: [
+          {
+            kind: "Job",
+            name: "storm-forum-release-abcdef",
+            namespace: "storm-forum",
           },
-          status: {
-            sync: { status: "Synced" },
-            health: { status: "Healthy" },
-            operationState: { phase: "Succeeded" },
-            resources: [
+        ],
+      },
+    },
+    Deployment: {
+      spec: {
+        template: {
+          spec: {
+            volumes: [
               {
-                kind: "Job",
-                name: "storm-forum-release-abcdef",
-                namespace: "storm-forum",
+                name: "database",
+                persistentVolumeClaim: {
+                  claimName: "storm-forum-database",
+                },
               },
             ],
           },
         },
-        Deployment: {
-          metadata: metadata(name, "deployment-uid"),
+      },
+    },
+    PersistentVolumeClaim: {
+      spec: {},
+      status: { phase: "Bound" },
+    },
+    Job: {
+      metadata: metadata("storm-forum-release-abcdef", "job-uid"),
+      spec: {
+        template: {
           spec: {
-            template: {
-              spec: {
-                volumes: [
-                  {
-                    name: "database",
-                    persistentVolumeClaim: {
-                      claimName: "storm-forum-database",
-                    },
-                  },
-                ],
-              },
-            },
-          },
-        },
-        PersistentVolumeClaim: {
-          metadata: metadata(name, `${name}-uid`),
-          spec: { volumeName: `${name}-pv` },
-          status: { phase: "Bound" },
-        },
-        Job: {
-          metadata: metadata("storm-forum-release-abcdef", "job-uid"),
-          spec: {
-            template: {
-              spec: {
-                containers: [container("release")],
-                initContainers: [container("assemble")],
-                volumes: [
-                  {
-                    name: "files",
-                    persistentVolumeClaim: { claimName: "storm-forum-files" },
-                  },
-                ],
-              },
-            },
-          },
-          status: {
-            succeeded: 1,
-            completionTime: "2026-10-16T10:00:00Z",
-            conditions: [{ type: "Complete", status: "True" }],
-          },
-        },
-        Pod: {
-          metadata: {
-            ...metadata("storm-forum-web-abc", "pod-uid"),
-            ownerReferences: [{ kind: "ReplicaSet", uid: "rs-uid" }],
-          },
-          spec: {
-            containers: [container("php"), container("activities")],
+            containers: [container("release")],
             initContainers: [container("assemble")],
             volumes: [
               {
@@ -195,23 +117,117 @@ function nativeTransport(
               },
             ],
           },
-          status: {
-            phase: "Running",
-            podIP: "10.244.0.50",
-            conditions: [{ type: "Ready", status: "True" }],
-            containerStatuses: [
-              { name: "php", ready: true, imageID },
-              { name: "activities", ready: true, imageID },
-            ],
-          },
         },
-      };
-      const body = resources[kind];
-      if (body === undefined) throw new Error("Unexpected native request");
-      mutate?.(kind, body);
-      return Response.json(
-        kind === "Application" ? body : { manifest: JSON.stringify(body) },
+      },
+      status: {
+        succeeded: 1,
+        completionTime: "2026-10-16T10:00:00Z",
+        conditions: [{ type: "Complete", status: "True" }],
+      },
+    },
+    Pod: {
+      metadata: {
+        ...metadata("storm-forum-web-abc", "pod-uid"),
+        ownerReferences: [{ kind: "ReplicaSet", uid: "rs-uid" }],
+      },
+      spec: {
+        containers: [container("php"), container("activities")],
+        initContainers: [container("assemble")],
+        volumes: [
+          {
+            name: "files",
+            persistentVolumeClaim: { claimName: "storm-forum-files" },
+          },
+        ],
+      },
+      status: {
+        phase: "Running",
+        podIP: "10.244.0.50",
+        conditions: [{ type: "Ready", status: "True" }],
+        containerStatuses: [
+          { name: "php", ready: true, imageID },
+          { name: "activities", ready: true, imageID },
+        ],
+      },
+    },
+  };
+  const object = (kind: string, name: string) => {
+    const body = structuredClone(resources[kind]);
+    if (body === undefined) throw new Error("Unexpected native request");
+    if (kind === "Deployment")
+      body["metadata"] = metadata(name, "deployment-uid");
+    if (kind === "PersistentVolumeClaim") {
+      body["metadata"] = metadata(name, `${name}-uid`);
+      body["spec"] = { volumeName: `${name}-pv` };
+    }
+    mutate?.(kind, body);
+    return body;
+  };
+  // Owned objects the resource tree would show, plus a sibling workload's.
+  const lists: Record<string, unknown[]> = {
+    replicasets: [
+      {
+        metadata: {
+          ...metadata("storm-forum-database-rs", "database-rs-uid"),
+          ownerReferences: [{ kind: "Deployment", uid: "database-uid" }],
+        },
+      },
+      {
+        metadata: {
+          ...metadata("storm-forum-web-rs", "rs-uid"),
+          ownerReferences: [{ kind: "Deployment", uid: "deployment-uid" }],
+        },
+      },
+    ],
+    pods: [
+      {
+        metadata: {
+          ...metadata("storm-forum-database-xyz", "database-pod-uid"),
+          ownerReferences: [{ kind: "ReplicaSet", uid: "database-rs-uid" }],
+        },
+      },
+      { metadata: object("Pod", "storm-forum-web-abc")["metadata"] },
+    ],
+  };
+  const kinds: Record<string, string> = {
+    pods: "Pod",
+    persistentvolumeclaims: "PersistentVolumeClaim",
+    deployments: "Deployment",
+    jobs: "Job",
+  };
+  return {
+    requests,
+    readApplication: async (name: string) => {
+      requests.push(`application:${name}`);
+      return object("Application", name);
+    },
+    readKubernetes: async (path: string) => {
+      requests.push(path);
+      const match =
+        /^\/(?:api\/v1|apis\/apps\/v1|apis\/batch\/v1)\/namespaces\/storm-forum\/([a-z]+)(?:\/([a-z0-9-]+))?$/u.exec(
+          path,
+        );
+      const collection = match?.[1] ?? "";
+      const name = match?.[2];
+      if (name === undefined) {
+        const items = lists[collection];
+        if (items === undefined) throw new Error(`Unexpected list ${path}`);
+        return { items };
+      }
+      const kind = kinds[collection];
+      if (kind === undefined) throw new Error(`Unexpected read ${path}`);
+      return object(kind, name);
+    },
+    fetch: async (raw: string | URL | Request, init?: RequestInit) => {
+      const url = new URL(raw instanceof Request ? raw.url : raw);
+      requests.push(url.href);
+      expect(url.hostname).toBe("10.244.0.50");
+      expect(url.port).toBe("8082");
+      expect(url.pathname).toBe("/_delivery/status");
+      expect(new Headers(init?.headers).get("authorization")).toBe(
+        "Bearer observer-test-capability",
       );
+      return Response.json(baselineProof(input).runtime);
     },
   };
 }
@@ -228,8 +244,8 @@ test.each(["index", "child"])(
           : input.image.runtimeDigests[0],
       );
     const inspect = createForumBaselineInspector({
-      argoOrigin: "https://argo.test",
-      argoToken: "argo-test-capability",
+      readApplication: transport.readApplication,
+      readKubernetes: transport.readKubernetes,
       observationToken: "observer-test-capability",
       policyReader: () => Promise.resolve(forumBundlePolicy),
       fetch: transport.fetch,
@@ -240,7 +256,10 @@ test.each(["index", "child"])(
     expect(
       transport.requests.filter((url) => url.endsWith("/_delivery/status")),
     ).toHaveLength(2);
-    expect(transport.requests).toHaveLength(22);
+    // Two observations: Application, claims, database, Job, web workload,
+    // ReplicaSets, Pods, the Pod, its status and the claims again.
+    expect(transport.requests).toHaveLength(24);
+    expect(transport.requests.some((url) => url.includes("argo"))).toBe(false);
     const settled = await fixture.delivery.completeForumBaseline(
       input.intent.id,
       {
@@ -258,21 +277,24 @@ test("a compound recipe inspects the Application that releases its forum bundle"
   const input = await context(true),
     transport = nativeTransport(input);
   const inspect = createForumBaselineInspector({
-    argoOrigin: "https://argo.test",
-    argoToken: "argo-test-capability",
+    readApplication: transport.readApplication,
+    readKubernetes: transport.readKubernetes,
     observationToken: "observer-test-capability",
     policyReader: () => Promise.resolve(forumBundlePolicy),
     fetch: transport.fetch,
   });
   const proof = await inspect(input);
   expect(proof.application.name).toBe("storm-forum");
+  const applications = transport.requests.filter((request) =>
+    request.startsWith("application:"),
+  );
+  expect(applications.length).toBeGreaterThan(0);
+  expect(new Set(applications)).toEqual(new Set(["application:storm-forum"]));
   expect(
-    transport.requests.every(
-      (url) =>
-        url.includes("/api/v1/applications/storm-forum") ||
-        url.endsWith("/_delivery/status"),
+    transport.requests.some((request) =>
+      request.includes("storm-forum-search"),
     ),
-  ).toBe(true);
+  ).toBe(false);
 });
 
 test("unknown runtime digests cannot establish a Forum baseline", async () => {
@@ -280,8 +302,8 @@ test("unknown runtime digests cannot establish a Forum baseline", async () => {
     transport = nativeTransport(input, undefined, `sha256:${"f".repeat(64)}`);
   await expect(
     createForumBaselineInspector({
-      argoOrigin: "https://argo.test",
-      argoToken: "argo-test-capability",
+      readApplication: transport.readApplication,
+      readKubernetes: transport.readKubernetes,
       observationToken: "observer-test-capability",
       policyReader: () => Promise.resolve(forumBundlePolicy),
       fetch: transport.fetch,
@@ -303,8 +325,8 @@ test("rejects changed native source between observations and never falls back to
   });
   await expect(
     createForumBaselineInspector({
-      argoOrigin: "https://argo.test",
-      argoToken: "argo-test-capability",
+      readApplication: transport.readApplication,
+      readKubernetes: transport.readKubernetes,
       observationToken: "observer-test-capability",
       policyReader: () => Promise.resolve(forumBundlePolicy),
       fetch: transport.fetch,
@@ -312,8 +334,8 @@ test("rejects changed native source between observations and never falls back to
   ).rejects.toThrow(/changed/u);
   await expect(
     createForumBaselineInspector({
-      argoOrigin: "https://argo.test",
-      argoToken: "argo-test-capability",
+      readApplication: transport.readApplication,
+      readKubernetes: transport.readKubernetes,
       observationToken: undefined,
       policyReader: () => Promise.resolve(forumBundlePolicy),
       fetch: transport.fetch,
@@ -326,8 +348,8 @@ test("legacy adoption reads the exact original Pod twice without requiring the f
     transport = nativeTransport(input),
     calls: unknown[] = [];
   const proof = await createForumBaselineInspector({
-    argoOrigin: "https://argo.test",
-    argoToken: "argo-test-capability",
+    readApplication: transport.readApplication,
+    readKubernetes: transport.readKubernetes,
     observationToken: undefined,
     fetch: transport.fetch,
     originalPolicyReader: () =>
@@ -362,8 +384,8 @@ test("rejects a rebound original PVC during legacy native inspection", async () 
   });
   await expect(
     createForumBaselineInspector({
-      argoOrigin: "https://argo.test",
-      argoToken: "argo-test-capability",
+      readApplication: transport.readApplication,
+      readKubernetes: transport.readKubernetes,
       observationToken: undefined,
       fetch: transport.fetch,
       originalPolicyReader: () =>
@@ -380,8 +402,8 @@ test("legacy adoption establishes only a baseline and repeats the same native pr
   const input = await context(),
     transport = nativeTransport(input);
   const inspect = createForumBaselineInspector({
-    argoOrigin: "https://argo.test",
-    argoToken: "argo-test-capability",
+    readApplication: transport.readApplication,
+    readKubernetes: transport.readKubernetes,
     observationToken: undefined,
     fetch: transport.fetch,
     originalPolicyReader: () =>
@@ -430,6 +452,48 @@ test("legacy adoption establishes only a baseline and repeats the same native pr
     ),
   ).resolves.toEqual({ verified: true });
   expect(
-    transport.requests.filter((url) => url.includes("/resource-tree")),
+    transport.requests.filter((url) => url.endsWith("/storm-forum/pods")),
   ).toHaveLength(4);
+});
+
+test("settlement reads only through its projected readers and keeps ownership without them", async () => {
+  const input = await context(),
+    transport = nativeTransport(input);
+  await expect(
+    createForumBaselineInspector({
+      readApplication: transport.readApplication,
+      readKubernetes: createForumBaselineReader(() =>
+        Promise.reject(new Error("token file missing")),
+      ),
+      observationToken: "observer-test-capability",
+      policyReader: () => Promise.resolve(forumBundlePolicy),
+      fetch: transport.fetch,
+    })(input),
+  ).rejects.toMatchObject({
+    code: "PAUSED",
+    message: expect.stringContaining(
+      "the projected delivery-forum-baseline-reader identity is required",
+    ),
+  });
+  await expect(
+    createForumBaselineInspector({
+      readApplication: async () => null,
+      readKubernetes: transport.readKubernetes,
+      observationToken: "observer-test-capability",
+      policyReader: () => Promise.resolve(forumBundlePolicy),
+      fetch: transport.fetch,
+    })(input),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
+  await expect(
+    createForumBaselineInspector({
+      readApplication: transport.readApplication,
+      readKubernetes: async (path) =>
+        path.endsWith("/jobs/storm-forum-release-abcdef")
+          ? null
+          : await transport.readKubernetes(path),
+      observationToken: "observer-test-capability",
+      policyReader: () => Promise.resolve(forumBundlePolicy),
+      fetch: transport.fetch,
+    })(input),
+  ).rejects.toThrow(/does not exist; keep target ownership/u);
 });

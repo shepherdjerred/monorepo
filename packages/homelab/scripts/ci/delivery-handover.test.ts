@@ -1,5 +1,7 @@
 import { expect, test, vi } from "vitest";
+import { z } from "zod";
 import { SERVICE_CATALOG } from "@shepherdjerred/ops-model/catalog.ts";
+import type * as DeliveryOwnership from "#delivery-ownership";
 import {
   BootstrapApplicationSchema,
   bootstrapFingerprint,
@@ -18,6 +20,19 @@ import {
 } from "./delivery-handover-native.ts";
 import { createHandoverArgo } from "./delivery-handover-access.ts";
 import { applicationProject } from "#cdk8s/src/resources/argo-applications/platform/projects.ts";
+
+// No reviewed environment yet delegates two Applications; arcade/prod's
+// compound recipe below does (T6).
+vi.mock("#delivery-ownership", async (importOriginal) => {
+  const original = await importOriginal<typeof DeliveryOwnership>();
+  return {
+    ...original,
+    DELIVERY_DELEGATION_DEFINITIONS: {
+      ...original.DELIVERY_DELEGATION_DEFINITIONS,
+      "arcade-server": "arcade/prod",
+    },
+  };
+});
 
 function native(name = "arcade") {
   return BootstrapApplicationSchema.parse({
@@ -60,6 +75,7 @@ function fixture() {
   const descriptor = HandoverDescriptorSchema.parse({
     schema: "delivery-ownership-handover/v1",
     sourceRevision: "a".repeat(40),
+    catalogRevision: `sha256:${"c".repeat(64)}`,
     pullRequest: 99,
     requestId: "11111111-1111-4111-8111-111111111111",
     deliveryUrl: "https://delivery.tailnet-1a49.ts.net",
@@ -80,6 +96,7 @@ function fixture() {
     schema: "delivery-ownership-context/v1",
     sourceRevision: descriptor.sourceRevision,
     catalogFingerprint: bootstrapFingerprint(catalog),
+    catalogRevision: descriptor.catalogRevision,
     observedAt: new Date().toISOString(),
     writesEnabled: false,
     admittingEnvironments: [],
@@ -290,6 +307,216 @@ test("dry run is read-only and missing independent specialized baseline is not r
         current.effects.catalog,
       ),
     ).toThrow("baseline");
+});
+
+/** arcade/prod bound to a model recipe, as the reconciled catalog emits it (4.7). */
+function recipeTarget(extraStep?: Record<string, unknown>) {
+  const instance = "application:arcade";
+  return {
+    kind: "kubernetes-application",
+    application: {
+      name: "arcade",
+      project: "default",
+      destination: {
+        server: "https://kubernetes.default.svc",
+        namespace: "arcade",
+      },
+      source: {
+        repoURL: "https://chartmuseum.tailnet-1a49.ts.net",
+        chart: "arcade",
+      },
+      lifecycle: "retain",
+    },
+    chartComponent: "chart:arcade",
+    ...(extraStep === undefined
+      ? {}
+      : {
+          artifactParameters: {
+            "delivery.image": {
+              component: "image:arcade",
+              format: "reference",
+            },
+          },
+        }),
+    runner: { service: "ci", component: "image:ci-base" },
+    steps: [
+      { kind: "apply-safety", instance },
+      { kind: "sync", instance },
+      ...(extraStep === undefined ? [] : [extraStep]),
+    ],
+    oracle: {},
+  };
+}
+
+test("a target bound to a model recipe hands over through the recipe's own Application", () => {
+  const current = fixture();
+  const context = {
+    ...current.context,
+    targets: [{ ...current.context.targets[0]!, pipeline: recipeTarget() }],
+  };
+  const row = handoverContext(
+    context,
+    current.descriptor,
+    current.effects.catalog,
+  ).targets[0]!;
+  expect(
+    handoverPatch(current.app, row)
+      .patch.filter((operation) => operation.op !== "test")
+      .map((operation) => operation.path),
+  ).toEqual(["/metadata/annotations", "/spec/syncPolicy"]);
+  // The native source must still be the recipe's chart.
+  const moved = structuredClone(current.app);
+  moved.spec["source"] = {
+    repoURL: "https://charts.example.invalid",
+    chart: "arcade",
+  };
+  expect(() => handoverPatch(moved, row)).toThrow(
+    "does not match its registered pipeline",
+  );
+  // A recipe's worker rollout still requires its original host baseline.
+  const worker = {
+    ...current.context,
+    targets: [
+      {
+        ...current.context.targets[0]!,
+        pipeline: recipeTarget({
+          kind: "worker-rollout",
+          instance: "worker-pool:central",
+          target: "central",
+          imageComponent: "image:arcade",
+        }),
+      },
+    ],
+  };
+  expect(() =>
+    handoverContext(worker, current.descriptor, current.effects.catalog),
+  ).toThrow("independently verified original host baseline");
+});
+
+/** arcade/prod deploying a second Application through a compound recipe (T6). */
+function compoundTarget() {
+  const server = recipeTarget();
+  const instance = "application:arcade-server";
+  return {
+    kind: "compound",
+    subRecipes: [
+      { instance: "application:arcade", definition: recipeTarget() },
+      {
+        instance,
+        definition: {
+          ...server,
+          application: {
+            ...server.application,
+            name: "arcade-server",
+            destination: {
+              ...server.application.destination,
+              namespace: "arcade-server",
+            },
+            source: { ...server.application.source, chart: "arcade-server" },
+          },
+          chartComponent: "chart:arcade-server",
+          steps: server.steps.map((step) => ({ ...step, instance })),
+        },
+      },
+    ],
+  };
+}
+
+test("every Application of a compound recipe hands over as its own target", async () => {
+  const current = fixture();
+  const row = current.context.targets[0]!;
+  const pipeline = compoundTarget();
+  const catalog = {
+    ...current.effects.catalog,
+    deliveryDelegations: {
+      arcade: "arcade/prod",
+      "arcade-server": "arcade/prod",
+    },
+  };
+  const context = {
+    ...current.context,
+    catalogFingerprint: bootstrapFingerprint(catalog),
+    targets: [
+      { ...row, pipeline },
+      { ...row, application: "arcade-server", pipeline },
+    ],
+  };
+  const descriptor = HandoverDescriptorSchema.parse({
+    ...current.descriptor,
+    targets: [
+      ...current.descriptor.targets,
+      {
+        application: "arcade-server",
+        environmentId: "arcade/prod",
+        expectedGeneration: 0,
+      },
+    ],
+  });
+  const live = [native(), native("arcade-server")];
+  const result = await transferDeliveryOwnership(descriptor, {
+    ...current.effects,
+    catalog,
+    context: vi.fn(() => Promise.resolve(structuredClone(context))),
+    applications: vi.fn(() => Promise.resolve(structuredClone(live))),
+    patch: vi.fn((name: string, raw: unknown) => {
+      const index = live.findIndex((app) => app.metadata.name === name);
+      const [annotations, syncPolicy] = z
+        .array(z.object({ op: z.string(), value: z.unknown() }))
+        .parse(raw)
+        .filter((operation) => operation.op === "add")
+        .map((operation) => operation.value);
+      const app = live[index]!;
+      live[index] = BootstrapApplicationSchema.parse({
+        ...app,
+        metadata: { ...app.metadata, annotations },
+        spec: { ...app.spec, syncPolicy },
+      });
+      return Promise.resolve(structuredClone(live[index]));
+    }),
+  });
+  expect(result).toEqual({
+    effects: true,
+    transferred: ["arcade", "arcade-server"],
+  });
+  expect(
+    live.map(
+      (app) =>
+        app.metadata.annotations["delivery.shepherdjerred.com/environment"],
+    ),
+  ).toEqual(["arcade/prod", "arcade/prod"]);
+  // A row must name an Application its own recipe deploys.
+  expect(() =>
+    handoverContext(
+      {
+        ...context,
+        targets: [
+          { ...row, pipeline },
+          { ...row, application: "arcade-server", pipeline: recipeTarget() },
+        ],
+      },
+      descriptor,
+      catalog,
+    ),
+  ).toThrow("differs from operator intent");
+});
+
+test("a handover refuses targets bound from any catalog revision but the reviewed one", () => {
+  const current = fixture();
+  // The API image already carries the reviewed catalog, but PostgreSQL still
+  // holds the previously reconciled revision's bindings.
+  expect(() =>
+    handoverContext(
+      { ...current.context, catalogRevision: `sha256:${"d".repeat(64)}` },
+      current.descriptor,
+      current.effects.catalog,
+    ),
+  ).toThrow("exact reviewed catalog revision");
+  expect(() =>
+    HandoverDescriptorSchema.parse({
+      ...current.descriptor,
+      catalogRevision: undefined,
+    }),
+  ).toThrow();
 });
 
 test("source mismatch, unexpected native owner and unexplained shared-resource root drift are never rewritten", () => {

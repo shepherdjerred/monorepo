@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { CreateDeploymentV2Schema } from "./deployment-request-contract.ts";
 import * as errors from "./client-error.ts";
+import { RecoveryIntentV2Schema } from "./recovery-intent.ts";
 export const DeliveryClientError = errors.DeliveryClientError;
 export type DeliveryClientError = InstanceType<
   typeof errors.DeliveryClientError
@@ -285,9 +286,28 @@ export function createDeliveryClient(options: RequestOptions) {
         DeploymentSchema,
         {},
       ),
-    recover: (id: string, input: { operationId: string; reason: string }) =>
+    /** Opens the deployment's recovery intent (4.15); its kind picks the reader. */
+    createRecoveryIntent: (
+      id: string,
+      input: {
+        requestId: string;
+        reason: string;
+        expectedGeneration: number;
+        expectedKind?: "argo";
+      },
+    ) =>
       request(
-        `/deployments/${encodeURIComponent(id)}/release-lock`,
+        `/deployments/${encodeURIComponent(id)}/recovery-intents`,
+        RecoveryIntentV2Schema,
+        input,
+      ),
+    /** Settles a pending `argo` recovery intent with independent readback. */
+    settleRecoveryIntent: (
+      intentId: string,
+      input: { operationId: string; reason: string },
+    ) =>
+      request(
+        `/recovery-intents/${encodeURIComponent(intentId)}/settle`,
         DeploymentSchema,
         input,
       ),

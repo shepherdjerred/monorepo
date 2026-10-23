@@ -46,8 +46,7 @@ export function recoveryKindOf(
 
 /**
  * An ordinary Application deployment's intent: settled later by the
- * independent Application readback (`release-lock`), which closes this
- * pending intent instead of opening another.
+ * independent Application readback (`POST /recovery-intents/:id/settle`).
  */
 async function argoIntent(
   this: Delivery,
@@ -138,6 +137,11 @@ export async function requestRecoveryIntent(
   const input = RecoveryIntentRequestSchema.parse(raw);
   const detail = await this.detail(deploymentId);
   const kind = recoveryKindOf(detail);
+  if (input.expectedKind !== undefined && input.expectedKind !== kind)
+    throw new DeliveryError(
+      "INVALID",
+      `Deployment ${deploymentId} recovers through a ${kind} intent, not ${input.expectedKind}; no intent was opened`,
+    );
   if (kind !== "argo" && input.step !== undefined)
     throw new DeliveryError(
       "INVALID",

@@ -149,6 +149,9 @@ export const RequestWorkerRecoverySchema = recovery.RequestWorkerRecoverySchema;
 export const WorkerRecoveryIntentSchema = recovery.WorkerRecoveryIntentSchema;
 export const CompleteWorkerRecoverySchema =
   recovery.CompleteWorkerRecoverySchema;
+export const WorkerRecoveryObservationSchema =
+  recovery.WorkerRecoveryObservationSchema;
+export type WorkerRecoveryObservation = recovery.WorkerRecoveryObservation;
 export const FailWorkerRecoverySchema = recovery.FailWorkerRecoverySchema;
 export type RequestWorkerRecovery = recovery.RequestWorkerRecovery;
 export type WorkerRecoveryIntent = recovery.WorkerRecoveryIntent;
@@ -330,6 +333,8 @@ export const FinishDeploymentSchema = z
 export const DeploymentDetailSchema = z.object({
   forumRecoveredRuntime: ForumRecoveredRuntimeSchema.nullable().default(null),
   deployment: DeploymentSchema,
+  /** The service is self-hosted: its executor hands off after applying (D8). */
+  selfHosted: z.boolean().default(false),
   environment: EnvironmentSchema,
   versionSet: VersionSetRevisionSchema,
   previousAcceptedVersionSet: VersionSetRevisionSchema.nullable().default(null),
@@ -409,7 +414,16 @@ export const PrincipalSchema = z.object({
   id: z.string().min(1),
   kind: z.enum(["human", "machine"]),
   scopes: z.array(
-    z.enum(["read", "publish", "deploy", "approve", "execute", "admin"]),
+    z.enum([
+      "read",
+      "publish",
+      "deploy",
+      "approve",
+      "execute",
+      "admin",
+      // Operator-run stage attestations; never held with `execute` (X13).
+      "attest",
+    ]),
   ),
 });
 export type ArtifactVersion = z.infer<typeof ArtifactVersionSchema>;
@@ -434,6 +448,10 @@ export type StageInput = z.infer<typeof StageInputSchema>;
 export type FinishDeployment = z.infer<typeof FinishDeploymentSchema>;
 export function deliveryWorkflowId(deploymentId: string) {
   return `delivery/${deploymentId}`;
+}
+/** The one successor executor of a handed-off self-hosted deployment (D8). */
+export function deliverySuccessorWorkflowId(deploymentId: string) {
+  return `delivery/${deploymentId}/successor`;
 }
 export const WorkerRolloutPlanSchema = rollout.WorkerRolloutPlanSchema;
 export type WorkerRolloutPlan = z.infer<typeof WorkerRolloutPlanSchema>;

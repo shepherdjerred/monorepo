@@ -72,12 +72,18 @@ test("actual API chart delegates HTTPS and admin-only device tagging to the exis
   );
 });
 
+// Settlement readers are separate grants (recovery-readers.test.ts).
+const observer = (raw: unknown) =>
+  Named.parse(raw).metadata.name === "delivery-ingress-observer";
+
 test("actual observer bindings permit only fixed Ingress get and namespace-scoped proxy metadata reads", () => {
   const rendered = resources();
-  const roles = rendered.flatMap((raw) => {
-    const parsed = Role.safeParse(raw);
-    return parsed.success ? [parsed.data] : [];
-  });
+  const roles = rendered
+    .filter((raw) => observer(raw))
+    .flatMap((raw) => {
+      const parsed = Role.safeParse(raw);
+      return parsed.success ? [parsed.data] : [];
+    });
   expect(
     roles.map(({ metadata, rules }) => ({
       namespace: metadata.namespace,
@@ -104,7 +110,7 @@ test("actual observer bindings permit only fixed Ingress get and namespace-scope
     },
   ]);
   const bindings = rendered.filter(
-    (raw) => Named.parse(raw).kind === "RoleBinding",
+    (raw) => Named.parse(raw).kind === "RoleBinding" && observer(raw),
   );
   for (const namespace of ["delivery", "tailscale"]) {
     expect(bindings).toContainEqual(

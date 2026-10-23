@@ -372,8 +372,9 @@ async function ownedDeployment(status: "running" | "failed") {
     },
   });
 }
-async function lifecycles() {
-  const [service, environments] = await Promise.all([
+/** The arcade service row and its environment rows, by id. */
+async function arcadeRows() {
+  return Promise.all([
     context.cluster.database.service.findUniqueOrThrow({
       where: { id: "arcade" },
     }),
@@ -382,16 +383,29 @@ async function lifecycles() {
       orderBy: { id: "asc" },
     }),
   ]);
+}
+
+async function lifecycles() {
+  const [service, environments] = await arcadeRows();
   return [
     service.lifecycle,
     ...environments.map((row) => `${row.id}:${row.lifecycle}`),
   ];
 }
 
+/** The catalog revision arcade and each of its environments record. */
+async function revisions() {
+  const [service, environments] = await arcadeRows();
+  return Object.fromEntries([
+    ["arcade", service.catalogRevision],
+    ...environments.map((row) => [row.id, row.catalogRevision]),
+  ]);
+}
+
 describe("catalog reconcile of lifecycles while deployments are owned (S3)", () => {
-  test("a running deployment holds its environment and service active until it settles", async () => {
+  test("a running deployment holds its environment and service active, at their previous catalog revision, until it settles", async () => {
     const document = await catalogDocument();
-    await context.delivery.reconcileCatalog(
+    const first = await context.delivery.reconcileCatalog(
       document,
       testOperator,
       NO_MIGRATION,
@@ -416,6 +430,12 @@ describe("catalog reconcile of lifecycles while deployments are owned (S3)", () 
       "arcade/beta:active",
       "arcade/prod:retired",
     ]);
+    // A held row keeps the revision it last fully reflected (C1, S3, D8).
+    expect(await revisions()).toEqual({
+      arcade: first.catalogRevision,
+      "arcade/beta": first.catalogRevision,
+      "arcade/prod": refused.catalogRevision,
+    });
     await context.cluster.database.deployment.update({
       where: { id: "arcade-owned" },
       data: { status: "succeeded", finishedAt: new Date() },
@@ -431,6 +451,64 @@ describe("catalog reconcile of lifecycles while deployments are owned (S3)", () 
       "arcade/beta:retired",
       "arcade/prod:retired",
     ]);
+    expect(await revisions()).toEqual({
+      arcade: settled.catalogRevision,
+      "arcade/beta": settled.catalogRevision,
+      "arcade/prod": settled.catalogRevision,
+    });
+  });
+
+  test("a running deployment holds its service's self-hosted flag, at its previous catalog revision, until it settles (D8)", async () => {
+    const document = await catalogDocument();
+    const first = await context.delivery.reconcileCatalog(
+      document,
+      testOperator,
+      NO_MIGRATION,
+    );
+    const selfHosted = async () => {
+      const service = await context.cluster.database.service.findUniqueOrThrow({
+        where: { id: "arcade" },
+      });
+      return service.selfHosted;
+    };
+    expect(await selfHosted()).toBe(false);
+    const flipped = {
+      ...document,
+      services: document.services.map((service) =>
+        service.id === "arcade" ? { ...service, selfHosted: true } : service,
+      ),
+    };
+    await ownedDeployment("running");
+    const refused = await context.delivery.reconcileCatalog(
+      flipped,
+      testOperator,
+      NO_MIGRATION,
+    );
+    expect(refused.refused).toEqual([
+      {
+        id: "arcade",
+        reason: expect.stringMatching(
+          /selfHosted from false to true is refused while a deployment is owned/u,
+        ),
+      },
+    ]);
+    expect(await selfHosted()).toBe(false);
+    expect(refused.catalogRevision).not.toBe(first.catalogRevision);
+    expect(await revisions()).toMatchObject({ arcade: first.catalogRevision });
+    await context.cluster.database.deployment.update({
+      where: { id: "arcade-owned" },
+      data: { status: "succeeded", finishedAt: new Date() },
+    });
+    const settled = await context.delivery.reconcileCatalog(
+      flipped,
+      testOperator,
+      NO_MIGRATION,
+    );
+    expect(settled.refused).toEqual([]);
+    expect(await selfHosted()).toBe(true);
+    expect(await revisions()).toMatchObject({
+      arcade: settled.catalogRevision,
+    });
   });
 
   test("a recovery-required deployment refuses its environment's retirement", async () => {

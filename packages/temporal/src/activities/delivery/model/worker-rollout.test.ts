@@ -1,142 +1,24 @@
 import { describe, expect, test } from "vitest";
-import {
-  DeploymentDetailSchema,
-  type DeploymentDetail,
-  type WorkerRolloutPlan,
-} from "@shepherdjerred/delivery/contract";
+import type { DeploymentDetail } from "@shepherdjerred/delivery/contract";
 import { RecipeDefinitionSchema } from "@shepherdjerred/delivery/model-contract";
-import { workerPlanEvidence } from "#lib/delivery/workers/worker-plan.ts";
-import { centralRolloutPool } from "#lib/delivery/workers/worker-pool-fixture.ts";
 import { workerImageProofInput } from "#lib/delivery/workers/worker-image-proof.ts";
 import { renderApplication } from "#lib/delivery/model/application.ts";
+import { detail as arcadeDetail, recipe } from "#lib/delivery/model/testing.ts";
 import {
-  artifact,
-  detail as arcadeDetail,
-  recipe,
-} from "#lib/delivery/model/testing.ts";
+  PLAN,
+  STABLE,
+  chart,
+  definition,
+  planEvidence,
+  temporal,
+} from "#lib/delivery/workers/model-worker-fixture.ts";
 import {
   runWorkerRolloutStep,
   workerRolloutPreflight,
   type WorkerRolloutEffects,
 } from "./worker-rollout.ts";
 
-const CANDIDATE = "b".repeat(40);
-const STABLE = "a".repeat(40);
 const KEY = "step-worker-rollout";
-const chart = artifact({
-  id: "chart/temporal",
-  component: "chart:temporal",
-  kind: "chart",
-  uri: "https://chartmuseum.tailnet-1a49.ts.net/charts/temporal-1.0.0.tgz",
-  version: "1.0.0",
-  character: "c",
-});
-const definition = {
-  kind: "kubernetes-application",
-  application: {
-    name: "temporal",
-    project: "default",
-    destination: {
-      server: "https://kubernetes.default.svc",
-      namespace: "temporal",
-    },
-    source: {
-      repoURL: "https://chartmuseum.tailnet-1a49.ts.net",
-      chart: "temporal",
-    },
-    lifecycle: "retain",
-  },
-  chartComponent: "chart:temporal",
-  artifactParameters: {
-    "delivery.images.temporal-worker": {
-      component: "image:temporal-worker",
-      format: "reference",
-    },
-  },
-  runner: { service: "ci", component: "image:ci-base" },
-  steps: [
-    { kind: "apply-safety", instance: "application:temporal" },
-    { kind: "sync", instance: "application:temporal" },
-    {
-      kind: "worker-rollout",
-      instance: "worker-pool:central",
-      target: "central",
-      imageComponent: "image:temporal-worker",
-    },
-  ],
-  oracle: { probes: [], tests: [] },
-};
-
-/** temporal/prod rolling the candidate onto the central pool beside the stable host. */
-function temporal(
-  stages: { key: string; status: "running" | "succeeded" }[],
-  evidence: unknown[] = [],
-): DeploymentDetail {
-  const base = arcadeDetail(definition, chart, []);
-  return DeploymentDetailSchema.parse({
-    ...base,
-    deployment: {
-      ...base.deployment,
-      environmentId: "temporal/prod",
-      serviceId: "temporal",
-      workerSnapshot: {
-        ...centralRolloutPool({
-          stable: STABLE,
-          candidate: CANDIDATE,
-          candidateArtifactId: "image/temporal",
-        }),
-        workerOperation: "rollout",
-      },
-    },
-    environment: {
-      ...base.environment,
-      id: "temporal/prod",
-      serviceId: "temporal",
-      application: "temporal",
-    },
-    versionSet: {
-      ...base.versionSet,
-      serviceId: "temporal",
-      components: {
-        "chart:temporal": chart,
-        "image:temporal-worker": {
-          ...artifact({
-            id: "image/temporal",
-            component: "image:temporal-worker",
-            kind: "image",
-            uri: "docker.io/shepherdjerred/temporal-worker",
-            version: "build-1",
-            character: "b",
-          }),
-          sourceRevision: CANDIDATE,
-        },
-      },
-    },
-    configuration: { id: "config/1", content: {} },
-    stages: stages.map((stage) => ({
-      ...stage,
-      id: `stage/${stage.key}`,
-      deploymentId: "deployment/1",
-      operationId: `op-${stage.key}`,
-      message: "",
-      startedAt: base.deployment.createdAt,
-      updatedAt: base.deployment.createdAt,
-    })),
-    evidence,
-  });
-}
-
-const PLAN: WorkerRolloutPlan = {
-  target: "central",
-  namespace: "prod",
-  deploymentName: "central-workflows",
-  taskQueue: "monorepo-workflows",
-  candidateBuildId: CANDIDATE,
-  candidateImage: `docker.io/shepherdjerred/temporal-worker@sha256:${"b".repeat(64)}`,
-  expectedCurrentBuildId: STABLE,
-  routes: [],
-  deploymentId: "deployment/1",
-};
 
 /** The rollout step mid-flight: intent, a planned preflight, then `jobs` settled. */
 function rolling(jobs: string[]) {
@@ -151,16 +33,6 @@ function rolling(jobs: string[]) {
     ],
     [planEvidence()],
   );
-}
-
-function planEvidence() {
-  return {
-    ...workerPlanEvidence(PLAN, "op-worker-preflight"),
-    id: "deployment/1/stage/worker-preflight/0",
-    deploymentId: "deployment/1",
-    operationId: "op-worker-preflight",
-    createdAt: "2026-10-21T00:00:00.000Z",
-  };
 }
 
 /** Effects that journal every call; `states` are the successive reloads. */

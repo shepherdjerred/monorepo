@@ -4,7 +4,22 @@ import { freshWorkerProof, workerFixture } from "#testing/worker-fixture.ts";
 import { testExecutor, testOperator } from "#testing/seed.ts";
 import { createApp } from "./app.ts";
 import { createDeliveryClient } from "#shared/client.ts";
-import type { CompleteWorkerRecovery, Principal } from "#shared/contract.ts";
+import {
+  WorkerPoolTargetSchema,
+  WorkerRecoveryObservationSchema,
+  workerHostSpecification,
+  type CompleteWorkerRecovery,
+  type Principal,
+} from "#shared/contract.ts";
+import { DELIVERY_KUBERNETES_READERS } from "@shepherdjerred/ops-model/delivery-readers.ts";
+import {
+  createWorkerRecoveryReader,
+  type WorkerRecoveryReaders,
+} from "#infrastructure/worker-pool/recovery-observation.ts";
+import { createApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
+import { PipelineDefinitionSchema } from "#shared/pipeline-contract.ts";
+import { recipeFromPipeline } from "#shared/model/recipe-adapter.ts";
+import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
 
 const context = useDeliveryFixture();
 const admin: Principal = {
@@ -29,6 +44,8 @@ async function failedWorker() {
     },
     testOperator,
   );
+  // A retirement freezes the accepted release's reviewed worker recipe.
+  await workers.frozenRecipe(deployment.id);
   await context.delivery.claim(
     deployment.id,
     testExecutor,
@@ -64,9 +81,10 @@ async function failedWorker() {
   });
   return { workers, baseline, deployment, pool, before };
 }
-function api() {
+function api(readers?: WorkerRecoveryReaders) {
   const app = createApp({
     delivery: context.delivery,
+    ...(readers === undefined ? {} : { workerRecoveryReaders: readers }),
     ciOrigin: "https://woodpecker.sjer.red",
     ciRepositoryId: 1,
     peerAddress: () => null,
@@ -279,10 +297,173 @@ test("pool CAS and immutable recovery failures keep original quarantine intact",
       testExecutor,
     ),
   ).rejects.toMatchObject({ code: "CONFLICT" });
-  expect(await context.cluster.database.targetLock.count()).toBe(1);
+  // The worker recipe's claim holds its Application and its pool.
+  const held = await context.cluster.database.targetLock.findMany({
+    orderBy: { instance: "asc" },
+  });
+  expect(held.map((lock) => lock.instance)).toEqual([
+    "application:temporal",
+    "worker-pool:central",
+  ]);
   const quarantined =
     await context.cluster.database.deployment.findUniqueOrThrow({
       where: { id: deployment.id },
     });
   expect(quarantined.recoveryRequired).toBe(true);
+});
+
+test("the API observes a pending worker recovery with its own readers, never an executor credential", async () => {
+  const { deployment, pool } = await failedWorker();
+  const reads: string[] = [];
+  const readers: WorkerRecoveryReaders = {
+    readApplication: async (name) => {
+      reads.push(`application:${name}`);
+      return { metadata: { name } };
+    },
+    readKubernetes: async (path) => {
+      reads.push(path);
+      const collection = path.split("?")[0]?.split("/").at(-1);
+      return { items: [{ metadata: { name: collection } }] };
+    },
+  };
+  const { app, client, post } = api(readers);
+  const intent = await client.requestWorkerRecovery(deployment.id, {
+    requestId: "observed-recovery",
+    expectedEnvironmentGeneration: pool.generation,
+    reason: "Observe the retained worker hosts with the API's own identity",
+  });
+  const observe = (via = app, credential = "executor") =>
+    via.request(`/api/v1/worker-recovery/${intent.id}/observation`, {
+      headers: { Authorization: `Bearer recovery-fixture-${credential}` },
+    });
+  expect(await responseStatus(observe(app, "admin"))).toBe(403);
+  const response = await observe();
+  expect(response.status).toBe(200);
+  expect(WorkerRecoveryObservationSchema.parse(await response.json())).toEqual({
+    application: { metadata: { name: "temporal" } },
+    deployments: [{ metadata: { name: "deployments" } }],
+    pods: [{ metadata: { name: "pods" } }],
+  });
+  expect(reads).toEqual([
+    "application:temporal",
+    "/apis/apps/v1/namespaces/temporal/deployments",
+    "/api/v1/namespaces/temporal/pods?labelSelector=worker-family",
+  ]);
+  // No configured reader or projection pauses; nothing falls back.
+  expect(await responseStatus(observe(api().app))).toBe(503);
+  const unprojected = api({
+    readApplication: createApplicationReader(() =>
+      Promise.reject(new Error("token file missing")),
+    ),
+    readKubernetes: createWorkerRecoveryReader(() =>
+      Promise.reject(new Error("token file missing")),
+    ),
+  });
+  expect(await responseStatus(observe(unprojected.app))).toBe(503);
+  const absent = api({ ...readers, readApplication: async () => null });
+  expect(await responseStatus(observe(absent.app))).toBe(409);
+  expect(
+    await responseStatus(
+      post(`/worker-recovery/${intent.id}/fail`, {
+        message: "Operator stopped this inspection",
+      }),
+    ),
+  ).toBe(200);
+  expect(await responseStatus(observe())).toBe(409);
+});
+
+test("every worker host namespace has the declared recovery reader grant", () => {
+  const granted: readonly string[] =
+    DELIVERY_KUBERNETES_READERS.workerRecovery.namespaces;
+  expect(
+    WorkerPoolTargetSchema.options.map(
+      (target) => workerHostSpecification(target).kubernetesNamespace,
+    ),
+  ).toEqual(granted);
+});
+
+/**
+ * The fixture's worker recipe as a compound recipe whose first Application,
+ * `temporal-ui`, is the one catalog reconcile binds the environment to; the
+ * worker-rollout step runs in the Application named by `worker`.
+ */
+function compoundWorkerRecipe(
+  workers: Awaited<ReturnType<typeof failedWorker>>["workers"],
+  worker: "temporal" | "temporal-ui",
+) {
+  const temporal = recipeFromPipeline(
+    PipelineDefinitionSchema.parse(workers.workerPipeline.definition),
+  );
+  if (temporal.kind !== "kubernetes-application")
+    throw new Error("The worker recipe converts to a Kubernetes application");
+  const application = (name: string, rollout: boolean) => ({
+    ...temporal,
+    application: { ...temporal.application, name },
+    steps: temporal.steps
+      .filter((step) => rollout || step.kind !== "worker-rollout")
+      .map((step) =>
+        step.kind === "worker-rollout"
+          ? step
+          : { ...step, instance: `application:${name}` },
+      ),
+  });
+  return {
+    id: `central/compound-${worker}`,
+    definition: RecipeDefinitionSchema.parse({
+      kind: "compound",
+      subRecipes: [
+        {
+          instance: "application:temporal-ui",
+          definition: application("temporal-ui", worker === "temporal-ui"),
+        },
+        {
+          instance: "application:temporal",
+          definition: application("temporal", worker === "temporal"),
+        },
+      ],
+    }),
+  };
+}
+
+/** A pending recovery of a deployment that froze `recipe`, its environment bound to `temporal-ui`. */
+async function compoundRecovery(worker: "temporal" | "temporal-ui") {
+  const { workers, deployment, pool } = await failedWorker();
+  await workers.frozenRecipe(
+    deployment.id,
+    compoundWorkerRecipe(workers, worker),
+  );
+  await context.cluster.database.environment.update({
+    where: { id: pool.environmentId },
+    data: { application: "temporal-ui" },
+  });
+  const reads: string[] = [];
+  const { app, client } = api({
+    readApplication: async (name) => {
+      reads.push(`application:${name}`);
+      return { metadata: { name } };
+    },
+    readKubernetes: async () => ({ items: [] }),
+  });
+  const intent = await client.requestWorkerRecovery(deployment.id, {
+    requestId: `compound-recovery-${worker}`,
+    expectedEnvironmentGeneration: pool.generation,
+    reason: "Observe the compound recipe's worker Application",
+  });
+  const response = await app.request(
+    `/api/v1/worker-recovery/${intent.id}/observation`,
+    { headers: { Authorization: "Bearer recovery-fixture-executor" } },
+  );
+  return { response, reads };
+}
+
+test("a compound recipe's worker Application is observed although the environment binds its first Application (D5)", async () => {
+  const { response, reads } = await compoundRecovery("temporal");
+  expect(response.status).toBe(200);
+  expect(reads).toEqual(["application:temporal"]);
+});
+
+test("a frozen recipe that rolls the pool from another Application is refused before any read", async () => {
+  const { response, reads } = await compoundRecovery("temporal-ui");
+  expect(response.status).toBe(400);
+  expect(reads).toEqual([]);
 });

@@ -8,39 +8,37 @@ import {
 } from "#infrastructure/recovery.ts";
 import type { Principal } from "#shared/contract.ts";
 
+/**
+ * `POST /recovery-intents/:id/settle` (admin, 4.15): the independent
+ * Application reader settles a pending `argo` intent. Every other kind is
+ * settled by its own specialized reader; no route releases a lock directly.
+ */
 export function registerRecoveryRoute(
   app: Hono<{ Variables: { principal: Principal; requestId: string } }>,
   delivery: Delivery,
   inspect: ReturnType<typeof createRecoveryInspector> | undefined,
 ) {
-  app.post("/api/v1/deployments/:id/release-lock", async (c) => {
+  app.post("/api/v1/recovery-intents/:id/settle", async (c) => {
     requireScope(c.get("principal"), "admin");
     const input = RecoveryRequestSchema.parse(await c.req.json());
-    const detail = await delivery.detail(c.req.param("id"));
-    const policy = detail.pipeline.definition;
-    if (
-      policy.kind === "static-site" ||
-      (policy.kind === "argocd" &&
-        (policy.scoutSite !== undefined || policy.forumRelease !== undefined))
-    )
+    const intent = await delivery.recoveryIntent(c.req.param("id"));
+    if (intent.kind !== "argo")
       throw new DeliveryError(
         "INVALID",
-        "Static, Scout-site and Forum effects require independently verified content recovery; native Argo settlement alone cannot release ownership",
-      );
-    if (detail.deployment.workerSnapshot !== null)
-      throw new DeliveryError(
-        "INVALID",
-        "Retained workers require independently verified worker recovery intent and routing proof",
+        `A ${intent.kind} recovery intent is settled by its own independent reader`,
       );
     if (inspect === undefined)
       throw new DeliveryError(
         "PAUSED",
         "Independent recovery inspection is unavailable",
       );
-    const settled = await inspect(detail, input);
+    const settled = await inspect(
+      await delivery.detail(intent.deploymentId),
+      input,
+    );
     return c.json(
-      await delivery.releaseLock(
-        detail.deployment.id,
+      await delivery.settleArgoIntent(
+        intent.id,
         input.reason,
         c.get("principal"),
         settled,

@@ -18,6 +18,24 @@ export type Result = {
   refused: { id: string; reason: string }[];
 };
 
+/**
+ * The catalog revision a reconciled row records: this reconcile's, unless the
+ * reconcile refused one of the row's declared changes after `mark`. A held row
+ * keeps the revision it last fully reflected, so nothing bound to the
+ * reconciled catalog, an ownership handover included, accepts its held state
+ * as that catalog's (C1, S3, D8).
+ */
+export function declaredRevision<Previous extends string | null>(
+  result: Result,
+  id: string,
+  mark: number,
+  previous: Previous,
+): string | Previous {
+  return result.refused.slice(mark).some((entry) => entry.id === id)
+    ? previous
+    : result.catalogRevision;
+}
+
 export function emptyResult(revision: string): Result {
   return {
     catalogRevision: revision,

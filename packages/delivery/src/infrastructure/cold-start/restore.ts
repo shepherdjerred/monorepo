@@ -5,8 +5,8 @@ import type { Principal } from "#shared/contract.ts";
 import { PipelineRevisionSchema } from "#shared/contract.ts";
 import {
   ColdStartReceiptSchema,
-  ColdStartSnapshotSchema,
   RestoreHoldSchema,
+  coldStartArchiveKey,
   SettleRestoreHoldSchema,
   type ColdStartReceipt,
   type SettleRestoreHold,
@@ -33,6 +33,7 @@ import {
   wire,
 } from "#infrastructure/delivery-records.ts";
 import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
+import { snapshotFingerprint } from "./snapshot.ts";
 import {
   CONVERGING_STAGES,
   bootstrapChain,
@@ -224,7 +225,6 @@ function mismatch(
 }
 
 export type RestoreDependencies = {
-  readSnapshot: () => Promise<unknown>;
   readApplication?: ApplicationReader;
 };
 
@@ -268,10 +268,19 @@ export async function reconcileAfterRestore(
   dependencies: RestoreDependencies,
 ) {
   requireScope(actor, "admin");
+  // The operator supplies the snapshot; the API holds no R2 credential.
   const request = ReconcileAfterRestoreRequestSchema.parse(raw);
-  const snapshot = ColdStartSnapshotSchema.parse(
-    await dependencies.readSnapshot(),
-  );
+  const snapshot = request.snapshot;
+  if (snapshotFingerprint(snapshot) !== request.fingerprint)
+    throw new DeliveryError(
+      "INVALID",
+      "The cold-start snapshot does not carry its writer's fingerprint",
+    );
+  if (request.archiveKey !== coldStartArchiveKey(snapshot))
+    throw new DeliveryError(
+      "INVALID",
+      "The immutable copy key does not name this snapshot's write time and catalog revision",
+    );
   const fromSnapshot = new Map(
     snapshot.environments.map((env) => [env.environmentId, env.selection]),
   );

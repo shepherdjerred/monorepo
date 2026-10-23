@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { PipelineDefinitionSchema } from "./pipeline-contract.ts";
+import { RecipeDefinitionSchema } from "./model/recipe-contract.ts";
 
 const Fingerprint = z.string().regex(/^sha256:[a-f0-9]{64}$/u);
 export const OwnershipHandoverTargetSchema = z.strictObject({
@@ -8,7 +9,8 @@ export const OwnershipHandoverTargetSchema = z.strictObject({
   application: z.string().min(1),
   generation: z.number().int().nonnegative(),
   pipelineRevisionId: z.string().min(1),
-  pipeline: PipelineDefinitionSchema,
+  /** The immutable recipe revision the reconciled catalog binds. */
+  pipeline: z.union([PipelineDefinitionSchema, RecipeDefinitionSchema]),
   configurationRevision: z.string().min(1),
   configuration: z.record(z.string(), z.string()),
   acceptedVersionSetRevisionId: z.string().nullable(),
@@ -24,6 +26,8 @@ export const OwnershipHandoverContextSchema = z.strictObject({
   schema: z.literal("delivery-ownership-context/v1"),
   sourceRevision: z.string().regex(/^[a-f0-9]{40}$/u),
   catalogFingerprint: Fingerprint,
+  /** The catalog revision last reconciled into PostgreSQL, which every target's binding comes from (4.1). */
+  catalogRevision: Fingerprint,
   observedAt: z.iso.datetime(),
   writesEnabled: z.boolean(),
   /** Environments the catalog keeps `active`, the only ones that admit deployments (4.10). */

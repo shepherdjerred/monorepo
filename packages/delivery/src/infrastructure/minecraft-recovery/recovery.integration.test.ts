@@ -362,7 +362,7 @@ function transport(proof = nativeProof(), native = controller()) {
   let reads = 0;
   const inspect = createMinecraftRecoveryInspector({
     controllerOrigin: "http://controller.test",
-    executorToken: "local-executor-test",
+    readToken: async () => "audience-bound-report-reader",
     readApplication: async (name) => {
       reads++;
       expect(name).toBe("minecraft-tsmc");
@@ -370,8 +370,13 @@ function transport(proof = nativeProof(), native = controller()) {
     },
     fetch: async (url, init) => {
       reads++;
-      expect(url instanceof Request ? url.url : url.toString()).toContain(
-        "controller.test",
+      // The report is read with the API's own reader identity, never the
+      // executor credential (D5, I2).
+      expect(url instanceof Request ? url.url : url.toString()).toBe(
+        `http://controller.test/recovery-reports/${operationId}`,
+      );
+      expect(new Headers(init?.headers).get("authorization")).toBe(
+        "Bearer audience-bound-report-reader",
       );
       expect(init?.body).toContain('"recoveryId":"minecraft/recover"');
       const reportJson = JSON.stringify(proof.report);
@@ -473,6 +478,32 @@ test("missing receipt callback requires the original controller journal receipt 
       boundary.inspect,
     ),
   ).toMatchObject({ status: "succeeded" });
+});
+
+test("without the projected report reader identity settlement pauses and keeps the quarantine", async () => {
+  const intent = await quarantine();
+  await context.delivery.recordMinecraftRecoveryController(
+    intent.id,
+    controller(),
+    testExecutor,
+  );
+  await expect(
+    context.delivery.completeMinecraftRecovery(
+      intent.id,
+      completion(intent),
+      testExecutor,
+      createMinecraftRecoveryInspector({
+        controllerOrigin: "http://controller.test",
+        readApplication: () =>
+          Promise.reject(new Error("must not read without an identity")),
+        fetch: () =>
+          Promise.reject(new Error("must not call without an identity")),
+      }),
+    ),
+  ).rejects.toThrow(
+    "the projected delivery-minecraft-report-reader identity is required",
+  );
+  await retained();
 });
 
 test("changed source, stale native proof and controller replacement retain the quarantine", async () => {

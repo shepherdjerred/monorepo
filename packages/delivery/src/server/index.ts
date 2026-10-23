@@ -8,18 +8,21 @@ import { Delivery } from "#infrastructure/delivery.ts";
 import { createQualifier } from "#infrastructure/qualification.ts";
 import { createRecoveryInspector } from "#infrastructure/recovery.ts";
 import { createApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
-import { createColdStartReader } from "#infrastructure/cold-start/store.ts";
 import { createMinecraftRecoveryInspector } from "#infrastructure/minecraft-recovery/inspector.ts";
 import {
   createForumBundleReader,
   createForumBundleVerifier,
 } from "#infrastructure/forum/bundle-verifier.ts";
-import { createForumBaselineInspector } from "#infrastructure/forum/baseline-inspector.ts";
+import {
+  createForumBaselineInspector,
+  createForumBaselineReader,
+} from "#infrastructure/forum/baseline-inspector.ts";
 import { createApp } from "./app.ts";
 import { createTrmnlArchiveReader } from "@shepherdjerred/ops-clients/trmnl-archive.ts";
 import { createTrmnlPluginClient } from "@shepherdjerred/ops-clients/trmnl.ts";
 import { createTrmnlRecoveryInspector } from "#infrastructure/trmnl-recovery.ts";
 import { createTrustedProxyAddresses } from "#infrastructure/ingress/proxy.ts";
+import { createWorkerRecoveryReader } from "#infrastructure/worker-pool/recovery-observation.ts";
 import { createChangeListener } from "#infrastructure/change-feed/listener.ts";
 import { createEnrichment } from "#infrastructure/enrichment/enrichment.ts";
 
@@ -84,18 +87,18 @@ const readApplication = createApplicationReader();
 const app = createApp({
   delivery,
   readApplication,
-  readColdStartSnapshot: createColdStartReader({
-    accessKeyId: bootstrap.CLOUDFLARE_R2_ACCESS_KEY_ID,
-    secretAccessKey: bootstrap.CLOUDFLARE_R2_SECRET_ACCESS_KEY,
-  }),
+  workerRecoveryReaders: {
+    readApplication,
+    readKubernetes: createWorkerRecoveryReader(),
+  },
   changeFeed,
   enrichment,
   ...(forumBundleReader === undefined
     ? {}
     : { verifyForumBundle: createForumBundleVerifier(forumBundleReader) }),
   inspectForumBaseline: createForumBaselineInspector({
-    argoOrigin: bootstrap.ARGOCD_SERVER_URL,
-    argoToken: bootstrap.ARGOCD_RECOVERY_TOKEN,
+    readApplication,
+    readKubernetes: createForumBaselineReader(),
     observationToken: bootstrap.DELIVERY_FORUM_OBSERVATION_TOKEN,
   }),
   ciOrigin: bootstrap.WOODPECKER_URL,
@@ -112,9 +115,6 @@ const app = createApp({
   inspectMinecraftRecovery: createMinecraftRecoveryInspector({
     controllerOrigin:
       "http://delivery-tsmc-controller.delivery-tsmc-controller.svc.cluster.local:7356",
-    executorToken: bootstrap.DELIVERY_MACHINE_CREDENTIALS.find((credential) =>
-      credential.principal.scopes.includes("execute"),
-    )?.token,
     readApplication,
   }),
   config: {

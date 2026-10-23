@@ -225,6 +225,9 @@ test("HTTP requires native receipt persistence and fresh PG cancellation fence b
     toolingRevision: "f".repeat(40),
     load: async () => detail,
     admit: async () => detail,
+    authorizeReport: async () => {
+      throw new Error("No report reader in ordinary fixture");
+    },
     loadRecovery: async () => {
       throw new Error("No recovery intent in ordinary fixture");
     },
@@ -456,12 +459,17 @@ test("recovery accepts completed preservation or a missing callback only through
     finishedAt: null,
   });
   const effects: string[] = [];
+  const authorizations: string[] = [];
   const app = createMinecraftControllerServer({
     token: "local-controller-executor-token",
     toolingRevision: "f".repeat(40),
     load: async () => detail,
     admit: async () => {
       throw new Error("Recovery must never claim or select a source");
+    },
+    authorizeReport: async (token, id) => {
+      authorizations.push(id);
+      return token === "audience-bound-report-reader";
     },
     loadRecovery: async () => ({ intent, deployment: detail }),
     process: {
@@ -490,6 +498,21 @@ test("recovery accepts completed preservation or a missing callback only through
     });
     return response.status;
   };
+  // Settlement reads the report with the API's reader identity only (D5, I2).
+  const report = async (token?: string) => {
+    const response = await app.request(`/recovery-reports/${requestId}`, {
+      method: "POST",
+      headers: {
+        ...(token === undefined ? {} : { authorization: `Bearer ${token}` }),
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        deploymentId: detail.deployment.id,
+        recoveryId: intent.id,
+      }),
+    });
+    return response.status;
+  };
   expect(await call("recover", false)).toBe(500);
   expect(await call("verify")).toBe(500);
   expect(effects).toEqual([]);
@@ -501,7 +524,13 @@ test("recovery accepts completed preservation or a missing callback only through
   const prepared = effects.filter(
     (effect) => effect === "prepare-original",
   ).length;
-  expect(await call("report")).toBe(200);
+  expect(await report()).toBe(401);
+  expect(await report("local-controller-executor-token")).toBe(403);
+  expect(await call("report")).toBe(500);
+  expect(effects).not.toContain("report");
+  expect(await report("audience-bound-report-reader")).toBe(200);
+  expect(effects.filter((effect) => effect === "report")).toHaveLength(1);
+  expect(authorizations).toEqual([requestId, requestId]);
   expect(
     effects.filter((effect) => effect === "prepare-original"),
   ).toHaveLength(prepared);
@@ -519,5 +548,5 @@ test("recovery accepts completed preservation or a missing callback only through
   // An interrupted callback need not leave a running Stage, but the original journal is still mandatory in the real process.
   expect(await call("recover")).toBe(200);
   detail.environment.generation++;
-  expect(await call("report")).toBe(500);
+  expect(await report("audience-bound-report-reader")).toBe(500);
 });

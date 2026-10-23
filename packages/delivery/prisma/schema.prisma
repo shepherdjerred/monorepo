@@ -183,6 +183,8 @@ model Environment {
   restoreHold                        Json?
   /// 4.10: when the executor destroyed a removed environment's target state.
   targetRemovedAt                    DateTime?
+  /// C1: the catalog revision that last declared this environment; an omitted environment keeps an older one.
+  catalogRevision                    String?
   activeDeploymentId                 String?
   createdAt                          DateTime              @default(now())
   deployments                        Deployment[]

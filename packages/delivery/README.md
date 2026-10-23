@@ -130,31 +130,31 @@ accompanies them.
 
 The API is rooted at `/api/v1`:
 
-| Operation                                                     | Route                                                             |
-| ------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Authenticated principal                                       | `GET /identity`                                                   |
-| Environments, recent executions, eligible artifacts           | `GET /overview`                                                   |
-| Immutable version set revisions                               | `GET /versions`, `GET /versions/:id`                              |
-| Latest qualified component artifact                           | `GET /artifacts/latest-qualified?serviceId=…&component=…&kind=…`  |
-| Producer comparison base, pending or qualified                | `GET /artifacts/latest-retainable?…&kind=…&beforePipeline=…`      |
-| Register pending CI publication                               | `POST /builds`                                                    |
-| Compose exact component versions                              | `POST /versions`                                                  |
-| Register immutable pipeline revision                          | `POST /pipelines`                                                 |
-| Register environment/configuration                            | `POST /environments`                                              |
-| Request deployment, promotion, or rollback                    | `POST /deployments`                                               |
-| Execution, stages, approval, evidence                         | `GET /deployments/:id`                                            |
-| Human production approval                                     | `POST /deployments/:id/approval`                                  |
-| Cancel or retry                                               | `POST /deployments/:id/cancel`, `POST /deployments/:id/retry`     |
-| Independently inspect and recover an ambiguous Argo operation | `POST /deployments/:id/release-lock`                              |
-| Request native site/Forum recovery under the retained lock    | `POST /deployments/:id/content-recovery`                          |
-| Inspect frozen content recovery and native receipts           | `GET /content-recovery/:id`                                       |
-| Retain unverified migration evidence                          | `GET /imports`, `POST /imports`                                   |
-| Hub, service pipeline and paginated executions                | `GET /hub`, `GET /services/:id/pipeline`, `…/executions`          |
-| One change, traced from build or version set                  | `GET /builds/:id`, `GET /versions/:id/trace`                      |
-| Paginated deployments, builds and audit activity              | `GET /deployments`, `GET /builds`, `GET /activity`                |
-| Environment detail and approval queue                         | `GET /environments/:id`, `GET /approvals`                         |
-| Woodpecker, GitHub and ArgoCD enrichment                      | `GET /builds/:id/ci`, `…/source`, `GET /environments/:id/runtime` |
-| Committed change stream                                       | `GET /events`                                                     |
+| Operation                                                  | Route                                                                         |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Authenticated principal                                    | `GET /identity`                                                               |
+| Environments, recent executions, eligible artifacts        | `GET /overview`                                                               |
+| Immutable version set revisions                            | `GET /versions`, `GET /versions/:id`                                          |
+| Latest qualified component artifact                        | `GET /artifacts/latest-qualified?serviceId=…&component=…&kind=…`              |
+| Producer comparison base, pending or qualified             | `GET /artifacts/latest-retainable?…&kind=…&beforePipeline=…`                  |
+| Register pending CI publication                            | `POST /builds`                                                                |
+| Compose exact component versions                           | `POST /versions`                                                              |
+| Register immutable pipeline revision                       | `POST /pipelines`                                                             |
+| Register environment/configuration                         | `POST /environments`                                                          |
+| Request deployment, promotion, or rollback                 | `POST /deployments`                                                           |
+| Execution, stages, approval, evidence                      | `GET /deployments/:id`                                                        |
+| Human production approval                                  | `POST /deployments/:id/approval`                                              |
+| Cancel or retry                                            | `POST /deployments/:id/cancel`, `POST /deployments/:id/retry`                 |
+| Open a recovery intent; settle an ambiguous Argo operation | `POST /deployments/:id/recovery-intents`, `POST /recovery-intents/:id/settle` |
+| Request native site/Forum recovery under the retained lock | `POST /deployments/:id/content-recovery`                                      |
+| Inspect frozen content recovery and native receipts        | `GET /content-recovery/:id`                                                   |
+| Retain unverified migration evidence                       | `GET /imports`, `POST /imports`                                               |
+| Hub, service pipeline and paginated executions             | `GET /hub`, `GET /services/:id/pipeline`, `…/executions`                      |
+| One change, traced from build or version set               | `GET /builds/:id`, `GET /versions/:id/trace`                                  |
+| Paginated deployments, builds and audit activity           | `GET /deployments`, `GET /builds`, `GET /activity`                            |
+| Environment detail and approval queue                      | `GET /environments/:id`, `GET /approvals`                                     |
+| Woodpecker, GitHub and ArgoCD enrichment                   | `GET /builds/:id/ci`, `…/source`, `GET /environments/:id/runtime`             |
+| Committed change stream                                    | `GET /events`                                                                 |
 
 Execute-scoped workers use `/qualification/pending`, `/builds/:id/qualify`,
 `/replication/pending`, `/artifacts/replication`, `/reconcile`, `/dispatch/pending`, `/dispatch/monitor`, `/dispatch/:id/submitted`,
@@ -324,8 +324,13 @@ Environment variables are bootstrap and credentials: `DATABASE_URL`, `HOST`,
 `PORT`, `PUBLIC_ORIGIN`, `ENVIRONMENT`, `WOODPECKER_URL`, `WOODPECKER_REPO_ID`,
 `WOODPECKER_TOKEN`, `DELIVERY_MACHINE_CREDENTIALS`, `ARGOCD_SERVER_URL`,
 `ARGOCD_RECOVERY_TOKEN`, and the optional read-only `DELIVERY_GH_TOKEN`.
-The recovery credential is read-only and independent of Temporal's mutation
-credential; the hub's runtime panel reuses it.
+`ARGOCD_RECOVERY_TOKEN` is a read-only ArgoCD credential for the hub's runtime
+panel only; no settlement reader uses it. The API holds no R2 credential:
+`POST /api/v1/reconcile-after-restore` takes the cold-start snapshot, its
+writer's `fingerprint` metadata and its immutable copy's key from the operator,
+who reads `latest.json` and that copy with their own credential
+(`restoreRequest` in the model contract). The API checks the fingerprint and
+the key before comparing.
 
 ArgoCD declares three separate API accounts: `delivery` may select and sync the
 reviewed workload Applications; `delivery-observer` can only read their state;
@@ -353,9 +358,13 @@ admin credential is used only for the preownership account prerequisite, never
 as a runtime or ownership-handover fallback.
 
 `toolkit deploy handover-context --machine` is an admin-only read of the API's
-baked source identity, exact reviewed registrations, fresh write-admission state,
-the environments whose catalog lifecycle is `active` and so admit deployments,
-and uncapped PostgreSQL ownership/request/recovery counts. The bounded
+baked source identity, each environment's binding in the catalog as last
+reconciled into PostgreSQL together with that reconciled `catalogRevision`
+(the handover refuses unless it is the reviewed revision its descriptor
+names), fresh write-admission state, the environments whose
+catalog lifecycle is `active` and so admit deployments, and uncapped PostgreSQL
+ownership/request/recovery counts. It refuses before any catalog reconciliation
+and after a definition was registered outside the catalog since then. The bounded
 `packages/homelab/scripts/ci/delivery-handover.ts` operator command consumes that
 state and the exact reviewed source proof, independently checks the paused
 Woodpecker webhook and drained native pipelines, then transfers only the
@@ -442,12 +451,51 @@ Desired, observed, and accepted environment states are separate. Success require
 the exact selected revision plus reconciliation and acceptance evidence.
 Failed deployments block automatic successors. An ambiguous external mutation
 finishes with `recoveryRequired` and retains its target lock. An administrator
-supplies the exact external operation UUID and recovery reason through
-`POST /deployments/:id/release-lock`. The API independently reads ArgoCD, verifies
-the recorded request, environment delegation, finished operation, and settled
-Jobs, and retains that evidence before releasing ownership. This inspection
-works while Temporal is unavailable. Canceling running work is a
-request to stop at a safe boundary, not an assertion that side effects were undone.
+opens a recovery intent through `POST /deployments/:id/recovery-intents`, then
+settles an `argo` intent with the exact external operation UUID and reason
+through `POST /recovery-intents/:id/settle`; no route releases a lock without an
+intent. The API independently reads the Application
+object, verifies the recorded request, environment delegation, finished operation,
+and settled Jobs, and retains that evidence before releasing ownership. This
+inspection works while Temporal or ArgoCD's API is unavailable. Canceling running
+work is a request to stop at a safe boundary, not an assertion that side effects
+were undone.
+
+Operator-run stages are attested through `POST /deployments/:id/attestations`
+by a distinct operator identity (X13): a machine credential with the `attest`
+scope. The API refuses an attestation from any `execute` credential or from an
+identity that has claimed, renewed or handed off the deployment, and it refuses
+to start with a machine credential holding both `attest` and `execute`. The
+attestor's token is the Delivery service item's `DELIVERY_ATTEST_TOKEN` field,
+and its principal (`delivery-operator-attestor`, scopes `read` and `attest`) is
+an entry of `DELIVERY_MACHINE_CREDENTIALS`.
+
+A deployment is never owned by a different executor identity (D7). A
+self-hosted service's deployment holds the global dispatch barrier (D8); after
+applying, its executor calls `POST /deployments/:id/handoff`, leaving it owned
+with a handoff marker and a frozen lease. Its one successor Workflow,
+`delivery/<id>/successor`, claims the marker through
+`POST /deployments/:id/successor` before continuing. No other identity, ordinary
+claim or lease renewal takes the marker, and the outgoing Workflow's close is
+not an orphan. The successor verifies acceptance and finishes; if it cannot,
+the deployment ends recovery-required with its locks and barrier held.
+
+Settlement readers never use the ArgoCD server or an executor credential. The
+API container projects a short-lived token of its own ServiceAccount,
+`delivery-forum-observer`, into one directory per reader, and each reader's Role
+grants only what it reads. Kubernetes projects only the pod's own account, so
+every reader token carries that account's whole authority: these read-only
+Roles, the operator-ingress observer and, with the Forum capability, the Forum
+exec that admission fences to one readonly command. The directories separate
+use, not authority, and a homelab test pins the account's complete grant set. A
+missing projection pauses settlement and keeps ownership.
+
+| Reader Role                        | Grant                                                                                                   |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `delivery-application-reader`      | get, list, watch Applications in `argocd`                                                               |
+| `delivery-worker-recovery-reader`  | get, list, watch Pods and Deployments in `temporal`, `scout-beta` and `scout-prod`                      |
+| `delivery-forum-baseline-reader`   | get, list, watch Pods, claims, Deployments, ReplicaSets and Jobs in the Forum namespaces                |
+| `delivery-minecraft-report-reader` | a `delivery-tsmc-controller`-audience token; the controller reviews it and allows only its report `get` |
 
 Use `toolkit deploy recover <DEPLOYMENT_ID> --operation-id <ARGO_OPERATION_UUID>
 --reason <EXPLANATION> --machine` after inspecting the recorded operation directly.
@@ -677,9 +725,12 @@ that rehosts their exact original image. Deletion is a separate guarded prune.
 Worker recovery uses a separate admin-authorized `WorkerRecoveryIntent`, created
 by `POST /api/v1/deployments/:id/worker-recovery` with an exact environment
 generation, request ID and inspection reason. The intent binds the frozen
-deployment and current pool fingerprints. A scoped executor independently checks
-settled Argo and Job identities, original hosts, and stable routing in every
-served namespace. Completion accepts observations no older than sixty seconds
+deployment and current pool fingerprints. A scoped executor checks settled Argo
+and Job identities, original hosts, and stable routing in every served
+namespace. It reads the Application and the pool namespace's Deployments and
+worker Pods only through `GET /api/v1/worker-recovery/:id/observation`, which
+the API answers with its own readers, never the executor's ArgoCD token.
+Completion accepts observations no older than sixty seconds
 and rechecks the environment generation, both fingerprints and held Application
 lock in one transaction. It records the evidence and releases quarantine while
 preserving the original failed or canceled result, accepted release and worker

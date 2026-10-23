@@ -7,6 +7,7 @@ import {
 import { z } from "zod";
 import {
   DeploymentSchema,
+  deliverySuccessorWorkflowId,
   deliveryWorkflowId,
 } from "@shepherdjerred/delivery/contract";
 import { createTemporalClient } from "#client";
@@ -70,9 +71,57 @@ export async function qualifyDeliveryBuilds() {
     if (outcome.status === "rejected") throw outcome.reason;
 }
 
-async function repairSubmitted(
-  client: Awaited<ReturnType<typeof createTemporalClient>>,
-) {
+type TemporalClient = Awaited<ReturnType<typeof createTemporalClient>>;
+
+/** The Workflow type behind each executor identity a deployment may have. */
+function ownerWorkflowType(deploymentId: string, workflowId: string) {
+  return workflowId === deliverySuccessorWorkflowId(deploymentId)
+    ? "deliveryHandoffWorkflow"
+    : "deliveryDeploymentWorkflow";
+}
+
+/**
+ * D8: a handed-off self-hosted deployment gets exactly one successor
+ * executor, which claims the marker before it continues. A successor that
+ * already started keeps its own identity; no other Workflow is started.
+ */
+async function startSuccessor(client: TemporalClient, deploymentId: string) {
+  try {
+    await client.workflow.start("deliveryHandoffWorkflow", {
+      taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+      workflowId: deliverySuccessorWorkflowId(deploymentId),
+      workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
+      args: [{ deploymentId }],
+    });
+  } catch (error) {
+    if (!(error instanceof WorkflowExecutionAlreadyStartedError)) throw error;
+  }
+}
+
+/**
+ * D8: a handed-off deployment's successor is started once. A successor that
+ * closed before claiming its handoff is reported, so the deployment ends
+ * recovery-required with its ownership retained instead of being restarted
+ * against a rejected duplicate on every tick.
+ */
+async function repairHandoff(client: TemporalClient, deploymentId: string) {
+  const successor = deliverySuccessorWorkflowId(deploymentId);
+  let observed;
+  try {
+    observed = await client.workflow.getHandle(successor).describe();
+  } catch (error) {
+    if (!(error instanceof WorkflowNotFoundError)) throw error;
+    await startSuccessor(client, deploymentId);
+    return;
+  }
+  if (observed.type !== "deliveryHandoffWorkflow")
+    throw new Error(
+      "Delivery Workflow monitor found an unexpected successor Workflow type",
+    );
+  await reportClosed(deploymentId, successor, observed.status.name);
+}
+
+async function repairSubmitted(client: TemporalClient) {
   const monitor = await deliveryRequest(
     "dispatch/monitor",
     z.object({
@@ -82,22 +131,29 @@ async function repairSubmitted(
           status: z.string(),
           workflowId: z.string(),
           submitted: z.boolean(),
+          ownerWorkflowId: z.string().nullable(),
+          handoff: z.boolean(),
         }),
       ),
     }),
   );
   for (const deployment of monitor.deployments) {
+    // The outgoing executor closes by design after a handoff (D8).
+    if (deployment.handoff) {
+      await repairHandoff(client, deployment.id);
+      continue;
+    }
+    // A closed owner, original or successor, leaves the deployment orphaned.
+    const owner = deployment.ownerWorkflowId ?? deployment.workflowId;
     let observed;
     try {
-      observed = await client.workflow
-        .getHandle(deployment.workflowId)
-        .describe();
+      observed = await client.workflow.getHandle(owner).describe();
     } catch (error) {
       if (error instanceof WorkflowNotFoundError && !deployment.submitted)
         continue;
       throw error;
     }
-    if (observed.type !== "deliveryDeploymentWorkflow")
+    if (observed.type !== ownerWorkflowType(deployment.id, owner))
       throw new Error(
         "Delivery Workflow monitor found an unexpected Workflow type",
       );
@@ -107,11 +163,7 @@ async function repairSubmitted(
         z.unknown(),
         { workflowId: deployment.workflowId },
       );
-    await reportClosed(
-      deployment.id,
-      deployment.workflowId,
-      observed.status.name,
-    );
+    await reportClosed(deployment.id, owner, observed.status.name);
   }
 }
 

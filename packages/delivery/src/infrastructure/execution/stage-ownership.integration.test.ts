@@ -4,6 +4,7 @@ import {
   useDeliveryFixture,
 } from "#testing/delivery-fixture.ts";
 import { testExecutor } from "#testing/seed.ts";
+import { deliverySuccessorWorkflowId } from "#shared/contract.ts";
 
 const context = useDeliveryFixture();
 
@@ -67,13 +68,12 @@ test("only the owning executor writes stages; a native Job only checkpoints its 
   await expect(write("step-plan", "succeeded", owner)).rejects.toThrow(
     /successor executor claims it/u,
   );
-  const successor = { workflowId: "delivery/owner", workflowRunId: "run-2" };
-  await context.delivery.claim(
-    deployment.id,
-    testExecutor,
-    undefined,
-    successor,
-  );
+  // Only the successor Workflow takes a handoff, through its own claim (D8).
+  const successor = {
+    workflowId: deliverySuccessorWorkflowId(deployment.id),
+    workflowRunId: "successor-1",
+  };
+  await context.delivery.claimHandoff(deployment.id, successor, testExecutor);
   // The predecessor never writes after the takeover; the successor does.
   await expect(write("step-plan", "succeeded", owner)).rejects.toThrow(
     notOwner,
