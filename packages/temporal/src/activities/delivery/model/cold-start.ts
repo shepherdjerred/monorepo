@@ -1,6 +1,10 @@
-import { createS3ObjectStore } from "@shepherdjerred/seaweedfs-backup/store";
+import {
+  createS3ObjectStore,
+  type ObjectStore,
+} from "@shepherdjerred/seaweedfs-backup/store";
 import {
   COLD_START_SNAPSHOT,
+  ColdStartSnapshotSchema,
   coldStartArchiveKey,
 } from "@shepherdjerred/delivery/model-contract";
 import { z } from "zod";
@@ -13,6 +17,47 @@ const ColdStartCredentialSchema = z.object({
   CLOUDFLARE_R2_ACCESS_KEY_ID: z.string().min(1),
   CLOUDFLARE_R2_SECRET_ACCESS_KEY: z.string().min(1),
 });
+
+/** When the current `latest.json` was written, or null before the first snapshot. */
+async function latestWrittenAt(store: ObjectStore): Promise<number | null> {
+  const { bucket, key } = COLD_START_SNAPSHOT;
+  if ((await store.headObject(bucket, key)) === undefined) return null;
+  const object = await store.getObject(bucket, key);
+  const chunks: Buffer[] = [];
+  for await (const chunk of object.body)
+    chunks.push(Buffer.from(z.instanceof(Uint8Array).parse(chunk)));
+  const text = Buffer.concat(chunks).toString("utf8");
+  return Date.parse(ColdStartSnapshotSchema.parse(JSON.parse(text)).writtenAt);
+}
+
+/**
+ * Writes the immutable copy, then advances `latest.json` only when this
+ * snapshot is at least as new as the one it holds. A retried older Activity
+ * therefore never moves the pointer back past a newer acceptance; the
+ * backup worker runs one task at a time, so the read and write do not race.
+ */
+export async function writeColdStartObjects(
+  store: ObjectStore,
+  input: ColdStartWrite,
+) {
+  const bytes = new TextEncoder().encode(JSON.stringify(input.snapshot));
+  const archive = coldStartArchiveKey(input.snapshot);
+  const current = await latestWrittenAt(store);
+  const advance =
+    current === null || current <= Date.parse(input.snapshot.writtenAt);
+  for (const key of advance ? [archive, COLD_START_SNAPSHOT.key] : [archive])
+    await store.putObject({
+      bucket: COLD_START_SNAPSHOT.bucket,
+      key,
+      body: bytes,
+      contentLength: bytes.byteLength,
+      headers: {
+        contentType: "application/json",
+        metadata: { fingerprint: input.fingerprint },
+      },
+    });
+  return archive;
+}
 
 /**
  * Runs on the backup worker, which holds the off-cluster R2 credential: the
@@ -29,19 +74,7 @@ export const deliveryColdStartActivities = {
       secretAccessKey: credential.CLOUDFLARE_R2_SECRET_ACCESS_KEY,
       region: "auto",
     });
-    const bytes = new TextEncoder().encode(JSON.stringify(input.snapshot));
-    const archive = coldStartArchiveKey(input.snapshot);
-    for (const key of [archive, COLD_START_SNAPSHOT.key])
-      await store.putObject({
-        bucket: COLD_START_SNAPSHOT.bucket,
-        key,
-        body: bytes,
-        contentLength: bytes.byteLength,
-        headers: {
-          contentType: "application/json",
-          metadata: { fingerprint: input.fingerprint },
-        },
-      });
+    const archive = await writeColdStartObjects(store, input);
     return {
       fingerprint: input.fingerprint,
       uri: `s3://${COLD_START_SNAPSHOT.bucket}/${archive}`,
