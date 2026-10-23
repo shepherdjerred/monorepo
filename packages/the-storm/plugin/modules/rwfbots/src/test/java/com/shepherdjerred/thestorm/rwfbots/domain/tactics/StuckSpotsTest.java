@@ -123,6 +123,7 @@ final class StuckSpotsTest {
             List.of(),
             PoisonView.NONE,
             nav.mapId(),
+            List.of(),
             List.of());
     return new Situation(
         self, snapshot, new Percept(PerceptionState.EMPTY, List.of(), tick), board, Role.ROTATE);

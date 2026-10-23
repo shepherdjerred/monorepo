@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.world;
 
+import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,6 +15,8 @@ import java.util.Optional;
  * @param poison the late-match poison
  * @param mapId the map being played, matching the baked {@code NavArtifact}
  * @param stimuli the sounds and hit effects of this tick
+ * @param looseArrows arrows lying in the ground near a combatant whose shots spend arrows, which
+ *     anyone walking over may pick up; capped by the capture, nearest such combatant first
  */
 public record WorldSnapshot(
     long tick,
@@ -22,7 +25,8 @@ public record WorldSnapshot(
     List<BombView> bombs,
     PoisonView poison,
     String mapId,
-    List<Stimulus> stimuli) {
+    List<Stimulus> stimuli,
+    List<Vec3> looseArrows) {
 
   public WorldSnapshot {
     if (tick < 0) {
@@ -34,6 +38,7 @@ public record WorldSnapshot(
     combatants = combatants instanceof CombatantList ? combatants : new CombatantList(combatants);
     bombs = List.copyOf(bombs);
     stimuli = List.copyOf(stimuli);
+    looseArrows = List.copyOf(looseArrows);
     for (var index = 1; index < stimuli.size(); index++) {
       if (stimuli.get(index).sequence() < stimuli.get(index - 1).sequence())
         throw new IllegalArgumentException("sound history must be ordered by sequence");

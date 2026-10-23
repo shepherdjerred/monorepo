@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.world.BombOwner;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombState;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.MatchPhase;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.Quiver;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stimulus;
 import java.util.List;
 import java.util.Map;
@@ -137,6 +138,26 @@ final class SnapshotCaptureTest {
     var grounded = capture.capture(2, state(MatchState.Phase.LIVE, Optional.empty()));
     assertThat(grounded.require(ids.combatant(alice.getUniqueId())).traversal().fallDistance())
         .isZero();
+  }
+
+  @Test
+  void aLowFiniteQuiverAndTheLandedArrowsNearItReachTheSnapshot() {
+    alice.getInventory().setItem(1, new ItemStack(Material.CROSSBOW));
+    alice.getInventory().setItem(2, new ItemStack(Material.ARROW, 5));
+    LandedArrowMock.add(
+        server,
+        new Location(world, 4.5, 1, 2.5),
+        org.bukkit.entity.AbstractArrow.PickupStatus.ALLOWED,
+        true);
+
+    var low = capture.capture(1, state(MatchState.Phase.LIVE, Optional.empty(), "tracker"));
+    assertThat(low.require(ids.combatant(alice.getUniqueId())).quiver()).isEqualTo(Quiver.of(5));
+    assertThat(low.require(ids.combatant(bob.getUniqueId())).quiver()).isEqualTo(Quiver.ENDLESS);
+    assertThat(low.looseArrows()).containsExactly(new Vec3(4.5, 1, 2.5));
+
+    alice.getInventory().setItem(2, new ItemStack(Material.ARROW, 40));
+    var stocked = capture.capture(2, state(MatchState.Phase.LIVE, Optional.empty(), "tracker"));
+    assertThat(stocked.looseArrows()).as("nobody needs arrows").isEmpty();
   }
 
   @Test

@@ -55,6 +55,7 @@ final class RetakeFormationTest {
             List.of(bomb(armed)),
             PoisonView.NONE,
             NAV.mapId(),
+            List.of(),
             List.of());
     var members =
         bots.stream()

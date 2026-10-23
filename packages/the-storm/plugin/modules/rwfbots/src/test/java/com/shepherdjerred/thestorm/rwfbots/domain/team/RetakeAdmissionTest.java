@@ -97,6 +97,7 @@ final class RetakeAdmissionTest {
                 new BombState.Armed(200))),
         PoisonView.NONE,
         nav.mapId(),
+        List.of(),
         List.of());
   }
 

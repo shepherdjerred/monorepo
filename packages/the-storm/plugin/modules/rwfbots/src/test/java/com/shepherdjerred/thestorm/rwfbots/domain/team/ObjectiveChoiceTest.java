@@ -50,7 +50,14 @@ final class ObjectiveChoiceTest {
                 : NAV.sites().spawns().getFirst().cell().feet());
     var world =
         new WorldSnapshot(
-            40, MatchPhase.LIVE, List.of(bot), bombs(), PoisonView.NONE, nav.mapId(), List.of());
+            40,
+            MatchPhase.LIVE,
+            List.of(bot),
+            bombs(),
+            PoisonView.NONE,
+            nav.mapId(),
+            List.of(),
+            List.of());
     return new TeamBrain.TeamSituation(
         nav,
         world,

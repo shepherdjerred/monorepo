@@ -108,6 +108,7 @@ final class TraversalRoute {
             List.of(),
             PoisonView.NONE,
             context.nav().mapId(),
+            List.of(),
             List.of());
     var percept = new Percept(new PerceptionState(Memory.EMPTY, Suspicion.NONE), List.of(), tick);
     var situation =
@@ -171,6 +172,7 @@ final class TraversalRoute {
         player.isHandRaised(),
         false,
         -1,
-        capture.captureTraversal(player, "trooper", tick));
+        capture.captureTraversal(player, "trooper", tick),
+        com.shepherdjerred.thestorm.rwfbots.domain.world.Quiver.ENDLESS);
   }
 }

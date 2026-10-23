@@ -376,7 +376,7 @@ public final class Reflex {
 
     private boolean wantsBow(CombatantView target) {
       return context.loadout().hasBow()
-          && target.pos().distance(self.pos()) > ReadyDraw.minimumRange(state);
+          && target.pos().distance(self.pos()) > ArrowEconomy.minimumRange(state, self.quiver());
     }
 
     private void bow(CombatantView target) {
@@ -411,15 +411,18 @@ public final class Reflex {
         state = state.withDrawStart(now);
         return;
       }
-      release(aimPoint, desired);
+      release(target, aimPoint, desired);
     }
 
-    /** Looses a full draw that is steady and whose led arrow path clears every teammate. */
-    private void release(Vec3 aimPoint, Facing desired) {
+    /**
+     * Looses a full draw the arrow economy allows at {@code target} once its led arrow path to
+     * {@code aimPoint} clears every teammate.
+     */
+    private void release(CombatantView target, Vec3 aimPoint, Facing desired) {
       var drawn = now - state.drawStart() >= context.loadout().ranged().chargeTicks();
       var aligned = state.aim().look().differenceTo(desired) <= BOW_AIM_TOLERANCE;
       if (drawn
-          && ReadyDraw.steady(state, now, aligned)
+          && ArrowEconomy.looses(state, now, new ArrowEconomy.Shot(self, target, aligned), levers())
           && !ReadyDraw.allyInLine(input.snapshot(), self, aimPoint)) {
         commands.add(new BodyCommand.ReleaseUse());
         state = state.withDrawStart(-1);

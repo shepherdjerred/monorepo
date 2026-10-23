@@ -68,7 +68,14 @@ final class RoleAssignmentTest {
     }
     var snapshot =
         new WorldSnapshot(
-            sample, MatchPhase.LIVE, bots, List.of(), PoisonView.NONE, nav.mapId(), List.of());
+            sample,
+            MatchPhase.LIVE,
+            bots,
+            List.of(),
+            PoisonView.NONE,
+            nav.mapId(),
+            List.of(),
+            List.of());
     var previous =
         new TeamPlan(
             Optional.of(Strategy.RUSH),

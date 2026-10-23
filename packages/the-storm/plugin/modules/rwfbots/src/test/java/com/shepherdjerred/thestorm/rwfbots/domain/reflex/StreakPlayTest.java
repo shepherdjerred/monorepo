@@ -36,6 +36,7 @@ final class StreakPlayTest {
             List.of(),
             PoisonView.NONE,
             "synthetic",
+            List.of(),
             List.of());
     var decision =
         new Decision(

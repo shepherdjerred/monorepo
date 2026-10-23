@@ -73,7 +73,14 @@ final class BombGuardTest {
     views.addAll(List.of(enemies));
     var snapshot =
         new WorldSnapshot(
-            50, MatchPhase.LIVE, views, List.of(bomb), PoisonView.NONE, NAV.mapId(), List.of());
+            50,
+            MatchPhase.LIVE,
+            views,
+            List.of(bomb),
+            PoisonView.NONE,
+            NAV.mapId(),
+            List.of(),
+            List.of());
     return new Situation(
         self, snapshot, new Percept(PerceptionState.EMPTY, List.of(enemies), 50), board, role);
   }
@@ -242,6 +249,7 @@ final class BombGuardTest {
             List.of(bomb),
             PoisonView.NONE,
             NAV.mapId(),
+            List.of(),
             List.of());
     var memory = Memory.EMPTY.remember(ENEMY, new Sighting(enemy.pos(), TOWARDS, 30, 1, false));
     var perception = new PerceptionState(memory, Suspicion.NONE);

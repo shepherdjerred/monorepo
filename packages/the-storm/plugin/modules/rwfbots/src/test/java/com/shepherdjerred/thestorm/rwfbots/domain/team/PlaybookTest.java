@@ -82,7 +82,14 @@ final class PlaybookTest {
     var everyone = new ArrayList<>(bots);
     everyone.add(Fixtures.combatant(99, BLUE, NAV.sites().spawns().getLast().cell().feet()));
     return new WorldSnapshot(
-        tick, MatchPhase.LIVE, everyone, bombs(), PoisonView.NONE, NAV.mapId(), List.of());
+        tick,
+        MatchPhase.LIVE,
+        everyone,
+        bombs(),
+        PoisonView.NONE,
+        NAV.mapId(),
+        List.of(),
+        List.of());
   }
 
   private static Map<CombatantId, SlotFit.Member> members(List<CombatantView> bots) {

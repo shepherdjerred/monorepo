@@ -363,6 +363,7 @@ final class BodyDriverTest {
             List.of(),
             com.shepherdjerred.thestorm.rwfbots.domain.world.PoisonView.NONE,
             "test",
+            List.of(),
             List.of());
     var input =
         new com.shepherdjerred.thestorm.rwfbots.domain.reflex.ReflexInput(

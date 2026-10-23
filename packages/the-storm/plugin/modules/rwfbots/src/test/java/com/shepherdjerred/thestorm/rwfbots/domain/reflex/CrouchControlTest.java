@@ -52,6 +52,7 @@ final class CrouchControlTest {
             List.of(),
             PoisonView.NONE,
             NAV.mapId(),
+            List.of(),
             List.of());
     return Reflex.tick(
         state,
