@@ -166,6 +166,27 @@ describe("listPostableChannels", () => {
     expect(channels).toEqual([]);
   });
 
+  test("a channel without Attach Files is not postable when attachments are needed", async () => {
+    const options = {
+      rest: reader({
+        channels: [
+          channel({
+            id: "100000000000000001",
+            name: "no-images",
+            type: ChannelType.GuildText,
+          }),
+        ],
+        botRolePermissions: (
+          PermissionFlagsBits.ViewChannel | PermissionFlagsBits.SendMessages
+        ).toString(),
+      }),
+    };
+    expect(await listPostableChannels(GUILD_ID, options)).toHaveLength(1);
+    expect(
+      await listPostableChannels(GUILD_ID, options, { needsAttachments: true }),
+    ).toEqual([]);
+  });
+
   test("returns [] when Discord says Scout is not in the guild", async () => {
     const channels = await listPostableChannels(GUILD_ID, {
       rest: reader({ channels: null }),

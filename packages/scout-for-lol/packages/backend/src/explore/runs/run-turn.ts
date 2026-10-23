@@ -168,9 +168,9 @@ export async function runPersistedExploreTurn(
     /** The asker's servers; scopes `player('…')` alias resolution. */
     guildIds: DiscordGuildId[];
     /**
-     * Which surface is asking. Required rather than defaulted: it decides
-     * whether creation tools exist at all, and a silent default would make a
-     * forgotten call site quietly grant them.
+     * Which surface is asking. Required rather than defaulted: it decides how
+     * the answer is delivered and how the asker's permissions are learned, and
+     * a silent default would get both wrong for a forgotten call site.
      */
     surface: ExploreSurface;
     abortSignal?: AbortSignal;
@@ -321,34 +321,24 @@ export async function runPersistedExploreTurn(
       });
     }
 
-    let salvaged: ExploreMessage | null = null;
-    try {
-      salvaged = await persistPartialAnswer(dependencies.client, {
-        ...chosenModel(input.started.model),
-        guildIds: input.guildIds,
-        stopped: outcome === "stopped",
-        conversationId: input.started.conversationId,
-        parentMessageId: input.started.messageId,
-        expectedCurrentLeafId: input.started.expectedCurrentLeafId,
-        text: streamedAnswer,
-        trace,
-        existingMessageId: persistedMessage?.id ?? null,
-      });
-      if (salvaged === null && generatedTitleRollback !== null) {
-        await rollbackGeneratedTitle(dependencies.client, {
-          conversationId: input.started.conversationId,
-          ...generatedTitleRollback,
-        });
-      }
-    } catch (salvageError) {
-      logger.error(
-        "Failed to salvage a stopped explore turn",
-        errorMessage(salvageError),
-      );
-      Sentry.captureException(salvageError, {
-        tags: { source: "explore-salvage" },
-      });
-    }
+    // A failure after the complete answer was saved — the title update, the
+    // quota read, the final emit — still leaves a whole answer. Replacing it
+    // with the streamed prefix and an "interrupted" caveat is how a finished
+    // prod game review came to be labelled as cut off. Salvage is for answers
+    // that never finished.
+    const salvaged =
+      outcome === "failed" && persistedMessage !== null
+        ? persistedMessage
+        : await salvagePartialAnswer({
+            client: dependencies.client,
+            started: input.started,
+            guildIds: input.guildIds,
+            stopped: outcome === "stopped",
+            text: streamedAnswer,
+            trace,
+            existingMessageId: persistedMessage?.id ?? null,
+            generatedTitleRollback,
+          });
 
     finishTicket();
     const quota = await turnQuota(
@@ -385,6 +375,53 @@ export async function runPersistedExploreTurn(
     scoutExploreTurnDurationSeconds
       .labels(runStatus)
       .observe((dependencies.now() - startedAt) / 1000);
+  }
+}
+
+/**
+ * Save the useful prefix of an unfinished answer, rolling back a generated
+ * title when nothing was worth keeping. A salvage failure is logged and
+ * reported, never thrown: the turn has already failed, and the caller still
+ * owes the client a terminal event.
+ */
+async function salvagePartialAnswer(input: {
+  client: ExtendedPrismaClient;
+  started: StartedExploreTurn;
+  guildIds: readonly DiscordGuildId[];
+  stopped: boolean;
+  text: string;
+  trace: ExploreTraceEntry[];
+  existingMessageId: string | null;
+  generatedTitleRollback: GeneratedTitleRollback | null;
+}): Promise<ExploreMessage | null> {
+  try {
+    const salvaged = await persistPartialAnswer(input.client, {
+      ...chosenModel(input.started.model),
+      guildIds: input.guildIds,
+      stopped: input.stopped,
+      conversationId: input.started.conversationId,
+      parentMessageId: input.started.messageId,
+      expectedCurrentLeafId: input.started.expectedCurrentLeafId,
+      text: input.text,
+      trace: input.trace,
+      existingMessageId: input.existingMessageId,
+    });
+    if (salvaged === null && input.generatedTitleRollback !== null) {
+      await rollbackGeneratedTitle(input.client, {
+        conversationId: input.started.conversationId,
+        ...input.generatedTitleRollback,
+      });
+    }
+    return salvaged;
+  } catch (salvageError) {
+    logger.error(
+      "Failed to salvage a stopped explore turn",
+      errorMessage(salvageError),
+    );
+    Sentry.captureException(salvageError, {
+      tags: { source: "explore-salvage" },
+    });
+    return null;
   }
 }
 

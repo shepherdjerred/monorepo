@@ -314,6 +314,52 @@ describe("persisted Explore failure handling", () => {
     expect(getExploreQuotaStatus({ userId }).activeRun).toBe(false);
   });
 
+  test("a failure after the full answer is saved keeps the full answer", async () => {
+    const prepared = await preparedTurn();
+    let failedOnce = false;
+
+    const terminal = await runPersistedExploreTurn(
+      {
+        ...prepared,
+        identity: { userId },
+        guildIds: [],
+        surface: "web",
+        // The answer is already saved when the final event is emitted; a
+        // failure there must not relabel a finished answer as cut off.
+        emit: (event) => {
+          if (!failedOnce && event.type === "final") {
+            failedOnce = true;
+            return Promise.reject(new Error("client went away"));
+          }
+          return Promise.resolve();
+        },
+      },
+      {
+        client: prisma,
+        executeAgent: successfulAgent,
+        now: Date.now,
+        timeoutMs: 10_000,
+      },
+    );
+
+    expect(terminal.outcome).toBe("failed");
+    if (terminal.type !== "final") {
+      throw new Error("Expected the saved answer to be returned.");
+    }
+    expect(terminal.message.content).toBe("Ahri wins most often.");
+    expect(terminal.message.caveats).not.toContain(
+      "This answer was interrupted by an error before it finished.",
+    );
+    const transcript = await loadExploreTranscript(
+      prisma,
+      prepared.started.conversationId,
+      userId,
+    );
+    expect(transcript?.messages[1]?.caveats).not.toContain(
+      "This answer was interrupted by an error before it finished.",
+    );
+  });
+
   test("a zero-prose cancellation rolls back its generated title", async () => {
     const prepared = await preparedTurn();
     const caller = new AbortController();

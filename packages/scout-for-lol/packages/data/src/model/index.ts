@@ -75,4 +75,5 @@ export * from "./permissions/permission-set.ts";
 export * from "./permissions/roles.ts";
 export * from "./core/identifiers.ts";
 export * from "./core/routes.ts";
+export * from "./core/app-pages.ts";
 export * from "./riot/champion-registry.ts";

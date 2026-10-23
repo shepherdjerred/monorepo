@@ -4,6 +4,7 @@ import {
   redirect,
   type RouteObject,
 } from "react-router";
+import { SCOUT_GUILD_PAGES } from "@scout-for-lol/data";
 import { Login } from "#src/routes/login.tsx";
 import { GuildPicker } from "#src/routes/guild/guild-picker.tsx";
 import { ManageServers } from "#src/routes/manage-servers.tsx";
@@ -94,13 +95,13 @@ const guildChildren: RouteObject[] = [
     errorElement: <RouteErrorPanel />,
   },
   {
-    path: "subscriptions",
+    path: SCOUT_GUILD_PAGES.subscriptions,
     element: <GuildSubscriptions />,
     loader: subscriptionsLoader,
     errorElement: <RouteErrorPanel />,
   },
   {
-    path: "players",
+    path: SCOUT_GUILD_PAGES.players,
     element: <PlayerList />,
     loader: playersLoader,
     errorElement: <RouteErrorPanel />,
@@ -116,7 +117,7 @@ const guildChildren: RouteObject[] = [
     element: <Navigate to="../" replace relative="path" />,
   },
   {
-    path: "competitions",
+    path: SCOUT_GUILD_PAGES.competitions,
     element: <CompetitionList />,
     loader: competitionsLoader,
     errorElement: <RouteErrorPanel />,
@@ -150,7 +151,7 @@ const guildChildren: RouteObject[] = [
     errorElement: <RouteErrorPanel />,
   },
   {
-    path: "reports",
+    path: SCOUT_GUILD_PAGES.reports,
     element: <ReportList />,
     loader: reportsLoader,
     errorElement: <RouteErrorPanel />,
@@ -189,12 +190,12 @@ const guildChildren: RouteObject[] = [
     errorElement: <RouteErrorPanel />,
   },
   {
-    path: "customs",
+    path: SCOUT_GUILD_PAGES.customs,
     element: <CustomsHistory />,
     errorElement: <RouteErrorPanel />,
   },
   {
-    path: "hall-of-fame",
+    path: SCOUT_GUILD_PAGES.hallOfFame,
     element: (
       <GuildPermissionsGate
         permissions={GUILD_ACTION_ROUTE_PERMISSIONS.hallSettings}
@@ -205,13 +206,13 @@ const guildChildren: RouteObject[] = [
     errorElement: <RouteErrorPanel />,
   },
   {
-    path: "audit",
+    path: SCOUT_GUILD_PAGES.audit,
     element: <GuildAudit />,
     loader: auditLoader,
     errorElement: <RouteErrorPanel />,
   },
   {
-    path: "access",
+    path: SCOUT_GUILD_PAGES.access,
     element: <GuildAccess />,
     loader: accessLoader,
     errorElement: <RouteErrorPanel />,

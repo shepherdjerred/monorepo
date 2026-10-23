@@ -5,18 +5,18 @@
   "model": "gpt-5.6-luna",
   "judgeModel": "gpt-5.6-terra",
   "lakeBuildId": "1792633804115-0017-scenarios",
-  "generatedAt": "2026-10-22T03:51:52.223Z",
+  "generatedAt": "2026-10-22T04:03:15.850Z",
   "passed": false,
   "summary": {
     "runs": 40,
-    "passedRuns": 20,
+    "passedRuns": 28,
     "failedControls": [],
     "checks": {
-      "passed": 208,
+      "passed": 212,
       "total": 218
     },
     "rubric": {
-      "met": 82,
+      "met": 95,
       "total": 116
     }
   },
@@ -253,7 +253,7 @@
       "caseId": "why-no-match-report",
       "surface": "web",
       "control": false,
-      "passed": false,
+      "passed": true,
       "turns": [
         {
           "index": 0,
@@ -284,8 +284,8 @@
               "passed": true
             }
           ],
-          "rubric": [true, false, true],
-          "passed": false
+          "rubric": [true, true, true],
+          "passed": true
         }
       ]
     },
@@ -293,7 +293,7 @@
       "caseId": "why-no-match-report",
       "surface": "discord",
       "control": false,
-      "passed": false,
+      "passed": true,
       "turns": [
         {
           "index": 0,
@@ -324,8 +324,8 @@
               "passed": true
             }
           ],
-          "rubric": [false, true, true],
-          "passed": false
+          "rubric": [true, true, true],
+          "passed": true
         }
       ]
     },
@@ -333,7 +333,7 @@
       "caseId": "why-no-match-report",
       "surface": "voice",
       "control": false,
-      "passed": false,
+      "passed": true,
       "turns": [
         {
           "index": 0,
@@ -364,8 +364,8 @@
               "passed": true
             }
           ],
-          "rubric": [false, false, true],
-          "passed": false
+          "rubric": [true, true, true],
+          "passed": true
         }
       ]
     },
@@ -461,7 +461,7 @@
       "caseId": "auto-review",
       "surface": "web",
       "control": false,
-      "passed": false,
+      "passed": true,
       "turns": [
         {
           "index": 0,
@@ -484,14 +484,402 @@
               "passed": true
             }
           ],
-          "rubric": [false, false, false],
-          "passed": false
+          "rubric": [true, true, true],
+          "passed": true
         }
       ]
     },
     {
       "caseId": "auto-review",
       "surface": "discord",
+      "control": false,
+      "passed": true,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "mentions:feed|match report|after every game|after each game",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true, true],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "caseId": "auto-review",
+      "surface": "voice",
+      "control": false,
+      "passed": true,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "mentions:feed|match report|after every game|after each game",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true, true],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "caseId": "edit-bot-message",
+      "surface": "web",
+      "control": false,
+      "passed": true,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "avoids:edit message",
+              "passed": true
+            },
+            {
+              "name": "avoids:notifications/game tracking",
+              "passed": true
+            },
+            {
+              "name": "avoids:template option",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true, true],
+          "passed": true
+        },
+        {
+          "index": 1,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "avoids:edit message",
+              "passed": true
+            },
+            {
+              "name": "avoids:notifications / game tracking",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "caseId": "edit-bot-message",
+      "surface": "discord",
+      "control": false,
+      "passed": true,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "avoids:edit message",
+              "passed": true
+            },
+            {
+              "name": "avoids:notifications/game tracking",
+              "passed": true
+            },
+            {
+              "name": "avoids:template option",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true, true],
+          "passed": true
+        },
+        {
+          "index": 1,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "avoids:edit message",
+              "passed": true
+            },
+            {
+              "name": "avoids:notifications / game tracking",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "caseId": "edit-bot-message",
+      "surface": "voice",
+      "control": false,
+      "passed": true,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "avoids:edit message",
+              "passed": true
+            },
+            {
+              "name": "avoids:notifications/game tracking",
+              "passed": true
+            },
+            {
+              "name": "avoids:template option",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true, true],
+          "passed": true
+        },
+        {
+          "index": 1,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "avoids:edit message",
+              "passed": true
+            },
+            {
+              "name": "avoids:notifications / game tracking",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "caseId": "add-tracked-player-discord",
+      "surface": "discord",
+      "control": false,
+      "passed": true,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "avoids:cannot change the tracked-player list",
+              "passed": true
+            },
+            {
+              "name": "avoids:can't change the tracked-player list",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true],
+          "passed": true
+        },
+        {
+          "index": 1,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "intent:subscription",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "caseId": "add-tracked-player-discord",
+      "surface": "voice",
+      "control": false,
+      "passed": true,
+      "turns": [
+        {
+          "index": 0,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "avoids:cannot change the tracked-player list",
+              "passed": true
+            },
+            {
+              "name": "avoids:can't change the tracked-player list",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true],
+          "passed": true
+        },
+        {
+          "index": 1,
+          "status": "ok",
+          "checks": [
+            {
+              "name": "answered",
+              "passed": true
+            },
+            {
+              "name": "intent:subscription",
+              "passed": true
+            },
+            {
+              "name": "no-numeric-id-request",
+              "passed": true
+            },
+            {
+              "name": "follow-ups-are-questions",
+              "passed": true
+            }
+          ],
+          "rubric": [true, true],
+          "passed": true
+        }
+      ]
+    },
+    {
+      "caseId": "already-confirmed",
+      "surface": "web",
       "control": false,
       "passed": false,
       "turns": [
@@ -504,10 +892,18 @@
               "passed": true
             },
             {
-              "name": "mentions:feed|match report|after every game|after each game",
+              "name": "avoids:nothing has been created",
               "passed": false
             },
             {
+              "name": "avoids:nothing is created",
+              "passed": true
+            },
+            {
+              "name": "avoids:has not been created",
+              "passed": true
+            },
+            {
               "name": "no-numeric-id-request",
               "passed": true
             },
@@ -516,14 +912,14 @@
               "passed": true
             }
           ],
-          "rubric": [false, false, false],
+          "rubric": [false, false],
           "passed": false
         }
       ]
     },
     {
-      "caseId": "auto-review",
-      "surface": "voice",
+      "caseId": "already-confirmed",
+      "surface": "discord",
       "control": false,
       "passed": false,
       "turns": [
@@ -536,7 +932,15 @@
               "passed": true
             },
             {
-              "name": "mentions:feed|match report|after every game|after each game",
+              "name": "avoids:nothing has been created",
+              "passed": false
+            },
+            {
+              "name": "avoids:nothing is created",
+              "passed": true
+            },
+            {
+              "name": "avoids:has not been created",
               "passed": true
             },
             {
@@ -548,13 +952,13 @@
               "passed": true
             }
           ],
-          "rubric": [false, false, false],
+          "rubric": [false, false],
           "passed": false
         }
       ]
     },
     {
-      "caseId": "edit-bot-message",
+      "caseId": "active-reports-at-limit",
       "surface": "web",
       "control": false,
       "passed": true,
@@ -568,43 +972,11 @@
               "passed": true
             },
             {
-              "name": "avoids:edit message",
+              "name": "mentions:Players' Last Five Games|Players’ Last Five Games",
               "passed": true
             },
             {
-              "name": "avoids:notifications/game tracking",
-              "passed": true
-            },
-            {
-              "name": "avoids:template option",
-              "passed": true
-            },
-            {
-              "name": "no-numeric-id-request",
-              "passed": true
-            },
-            {
-              "name": "follow-ups-are-questions",
-              "passed": true
-            }
-          ],
-          "rubric": [true, true, true],
-          "passed": true
-        },
-        {
-          "index": 1,
-          "status": "ok",
-          "checks": [
-            {
-              "name": "answered",
-              "passed": true
-            },
-            {
-              "name": "avoids:edit message",
-              "passed": true
-            },
-            {
-              "name": "avoids:notifications / game tracking",
+              "name": "mentions:Weekly Win Rates",
               "passed": true
             },
             {
@@ -622,76 +994,8 @@
       ]
     },
     {
-      "caseId": "edit-bot-message",
+      "caseId": "active-reports-at-limit",
       "surface": "discord",
-      "control": false,
-      "passed": true,
-      "turns": [
-        {
-          "index": 0,
-          "status": "ok",
-          "checks": [
-            {
-              "name": "answered",
-              "passed": true
-            },
-            {
-              "name": "avoids:edit message",
-              "passed": true
-            },
-            {
-              "name": "avoids:notifications/game tracking",
-              "passed": true
-            },
-            {
-              "name": "avoids:template option",
-              "passed": true
-            },
-            {
-              "name": "no-numeric-id-request",
-              "passed": true
-            },
-            {
-              "name": "follow-ups-are-questions",
-              "passed": true
-            }
-          ],
-          "rubric": [true, true, true],
-          "passed": true
-        },
-        {
-          "index": 1,
-          "status": "ok",
-          "checks": [
-            {
-              "name": "answered",
-              "passed": true
-            },
-            {
-              "name": "avoids:edit message",
-              "passed": true
-            },
-            {
-              "name": "avoids:notifications / game tracking",
-              "passed": true
-            },
-            {
-              "name": "no-numeric-id-request",
-              "passed": true
-            },
-            {
-              "name": "follow-ups-are-questions",
-              "passed": true
-            }
-          ],
-          "rubric": [true, true],
-          "passed": true
-        }
-      ]
-    },
-    {
-      "caseId": "edit-bot-message",
-      "surface": "voice",
       "control": false,
       "passed": false,
       "turns": [
@@ -704,43 +1008,11 @@
               "passed": true
             },
             {
-              "name": "avoids:edit message",
+              "name": "mentions:Players' Last Five Games|Players’ Last Five Games",
               "passed": true
             },
             {
-              "name": "avoids:notifications/game tracking",
-              "passed": true
-            },
-            {
-              "name": "avoids:template option",
-              "passed": true
-            },
-            {
-              "name": "no-numeric-id-request",
-              "passed": true
-            },
-            {
-              "name": "follow-ups-are-questions",
-              "passed": true
-            }
-          ],
-          "rubric": [true, true, true],
-          "passed": true
-        },
-        {
-          "index": 1,
-          "status": "ok",
-          "checks": [
-            {
-              "name": "answered",
-              "passed": true
-            },
-            {
-              "name": "avoids:edit message",
-              "passed": true
-            },
-            {
-              "name": "avoids:notifications / game tracking",
+              "name": "mentions:Weekly Win Rates",
               "passed": true
             },
             {
@@ -758,278 +1030,6 @@
       ]
     },
     {
-      "caseId": "add-tracked-player-discord",
-      "surface": "discord",
-      "control": false,
-      "passed": true,
-      "turns": [
-        {
-          "index": 0,
-          "status": "ok",
-          "checks": [
-            {
-              "name": "answered",
-              "passed": true
-            },
-            {
-              "name": "avoids:cannot change the tracked-player list",
-              "passed": true
-            },
-            {
-              "name": "avoids:can't change the tracked-player list",
-              "passed": true
-            },
-            {
-              "name": "no-numeric-id-request",
-              "passed": true
-            },
-            {
-              "name": "follow-ups-are-questions",
-              "passed": true
-            }
-          ],
-          "rubric": [true, true],
-          "passed": true
-        },
-        {
-          "index": 1,
-          "status": "ok",
-          "checks": [
-            {
-              "name": "answered",
-              "passed": true
-            },
-            {
-              "name": "intent:subscription",
-              "passed": true
-            },
-            {
-              "name": "no-numeric-id-request",
-              "passed": true
-            },
-            {
-              "name": "follow-ups-are-questions",
-              "passed": true
-            }
-          ],
-          "rubric": [true, true],
-          "passed": true
-        }
-      ]
-    },
-    {
-      "caseId": "add-tracked-player-discord",
-      "surface": "voice",
-      "control": false,
-      "passed": false,
-      "turns": [
-        {
-          "index": 0,
-          "status": "ok",
-          "checks": [
-            {
-              "name": "answered",
-              "passed": true
-            },
-            {
-              "name": "avoids:cannot change the tracked-player list",
-              "passed": true
-            },
-            {
-              "name": "avoids:can't change the tracked-player list",
-              "passed": true
-            },
-            {
-              "name": "no-numeric-id-request",
-              "passed": true
-            },
-            {
-              "name": "follow-ups-are-questions",
-              "passed": true
-            }
-          ],
-          "rubric": [true, true],
-          "passed": true
-        },
-        {
-          "index": 1,
-          "status": "ok",
-          "checks": [
-            {
-              "name": "answered",
-              "passed": true
-            },
-            {
-              "name": "intent:subscription",
-              "passed": true
-            },
-            {
-              "name": "no-numeric-id-request",
-              "passed": true
-            },
-            {
-              "name": "follow-ups-are-questions",
-              "passed": false
-            }
-          ],
-          "rubric": [true, true],
-          "passed": false
-        }
-      ]
-    },
-    {
-      "caseId": "already-confirmed",
-      "surface": "web",
-      "control": false,
-      "passed": false,
-      "turns": [
-        {
-          "index": 0,
-          "status": "ok",
-          "checks": [
-            {
-              "name": "answered",
-              "passed": true
-            },
-            {
-              "name": "avoids:nothing has been created",
-              "passed": false
-            },
-            {
-              "name": "avoids:nothing is created",
-              "passed": true
-            },
-            {
-              "name": "avoids:has not been created",
-              "passed": true
-            },
-            {
-              "name": "no-numeric-id-request",
-              "passed": true
-            },
-            {
-              "name": "follow-ups-are-questions",
-              "passed": true
-            }
-          ],
-          "rubric": [false, false],
-          "passed": false
-        }
-      ]
-    },
-    {
-      "caseId": "already-confirmed",
-      "surface": "discord",
-      "control": false,
-      "passed": false,
-      "turns": [
-        {
-          "index": 0,
-          "status": "ok",
-          "checks": [
-            {
-              "name": "answered",
-              "passed": true
-            },
-            {
-              "name": "avoids:nothing has been created",
-              "passed": false
-            },
-            {
-              "name": "avoids:nothing is created",
-              "passed": true
-            },
-            {
-              "name": "avoids:has not been created",
-              "passed": true
-            },
-            {
-              "name": "no-numeric-id-request",
-              "passed": true
-            },
-            {
-              "name": "follow-ups-are-questions",
-              "passed": true
-            }
-          ],
-          "rubric": [false, false],
-          "passed": false
-        }
-      ]
-    },
-    {
-      "caseId": "active-reports-at-limit",
-      "surface": "web",
-      "control": false,
-      "passed": false,
-      "turns": [
-        {
-          "index": 0,
-          "status": "ok",
-          "checks": [
-            {
-              "name": "answered",
-              "passed": true
-            },
-            {
-              "name": "mentions:Players' Last Five Games|Players’ Last Five Games",
-              "passed": false
-            },
-            {
-              "name": "mentions:Weekly Win Rates",
-              "passed": false
-            },
-            {
-              "name": "no-numeric-id-request",
-              "passed": true
-            },
-            {
-              "name": "follow-ups-are-questions",
-              "passed": true
-            }
-          ],
-          "rubric": [false, false],
-          "passed": false
-        }
-      ]
-    },
-    {
-      "caseId": "active-reports-at-limit",
-      "surface": "discord",
-      "control": false,
-      "passed": false,
-      "turns": [
-        {
-          "index": 0,
-          "status": "ok",
-          "checks": [
-            {
-              "name": "answered",
-              "passed": true
-            },
-            {
-              "name": "mentions:Players' Last Five Games|Players’ Last Five Games",
-              "passed": false
-            },
-            {
-              "name": "mentions:Weekly Win Rates",
-              "passed": false
-            },
-            {
-              "name": "no-numeric-id-request",
-              "passed": true
-            },
-            {
-              "name": "follow-ups-are-questions",
-              "passed": true
-            }
-          ],
-          "rubric": [false, false],
-          "passed": false
-        }
-      ]
-    },
-    {
       "caseId": "best-build",
       "surface": "web",
       "control": false,
@@ -1064,7 +1064,7 @@
               "passed": true
             }
           ],
-          "rubric": [true, false, true],
+          "rubric": [false, false, false],
           "passed": false
         }
       ]
@@ -1089,7 +1089,7 @@
             },
             {
               "name": "avoids:Health Potion + World Atlas",
-              "passed": true
+              "passed": false
             },
             {
               "name": "avoids:World Atlas + Health Potion",
@@ -1104,7 +1104,7 @@
               "passed": true
             }
           ],
-          "rubric": [true, false, false],
+          "rubric": [false, false, false],
           "passed": false
         }
       ]
@@ -1305,15 +1305,15 @@
       "caseId": "game-review",
       "surface": "voice",
       "control": false,
-      "passed": true,
+      "passed": false,
       "turns": [
         {
           "index": 0,
-          "status": "ok",
+          "status": "error",
           "checks": [
             {
               "name": "answered",
-              "passed": true
+              "passed": false
             },
             {
               "name": "no-numeric-id-request",
@@ -1324,8 +1324,8 @@
               "passed": true
             }
           ],
-          "rubric": [true, true, true],
-          "passed": true
+          "rubric": [false, false, false],
+          "passed": false
         }
       ]
     },
@@ -1452,7 +1452,7 @@
               "passed": false
             }
           ],
-          "rubric": [false, false],
+          "rubric": [false, true],
           "passed": false
         }
       ]
@@ -1484,7 +1484,7 @@
               "passed": false
             }
           ],
-          "rubric": [false, false],
+          "rubric": [false, true],
           "passed": false
         }
       ]
