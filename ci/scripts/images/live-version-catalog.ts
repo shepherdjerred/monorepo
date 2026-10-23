@@ -17,6 +17,20 @@ type RetainableImageReader = (
   query: LatestRetainableArtifactQuery,
 ) => Promise<unknown>;
 
+/** This main pipeline's number, the order-key bound for Delivery bases (B4). */
+export function currentPipelineNumber(
+  environment: Readonly<Record<string, string | undefined>> = Bun.env,
+): number {
+  const raw = environment["CI_PIPELINE_NUMBER"];
+  if (
+    raw === undefined ||
+    !/^[1-9]\d*$/.test(raw) ||
+    !Number.isSafeInteger(Number(raw))
+  )
+    throw new Error("CI_PIPELINE_NUMBER must be a positive safe integer");
+  return Number(raw);
+}
+
 /**
  * Each image's comparison base: Delivery's newest pending or verified original
  * before this pipeline. A pipeline that starts before the previous one
@@ -24,8 +38,8 @@ type RetainableImageReader = (
  * Delivery verifies the retaining build only after the original's build.
  */
 export async function readRetainableImages(
-  beforePipeline: number,
   read?: RetainableImageReader,
+  beforePipeline = currentPipelineNumber(),
 ): Promise<QualifiedImageInventory> {
   let reader = read;
   if (reader === undefined) {
