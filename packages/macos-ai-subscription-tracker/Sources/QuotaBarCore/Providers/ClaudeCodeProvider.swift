@@ -163,7 +163,9 @@ private struct ClaudeUsageResponse: Decodable {
     // Every other top-level key is read as a usage window, so a new sibling object that is not
     // one must be listed here. `seven_day_breakdown` reports the weekly split per model as
     // `rows`, carrying neither a utilization nor a reset date, and the account surfaces the same
-    // per-model figures through `seven_day_<model>` and `limits`.
+    // per-model figures through `seven_day_<model>` and `limits`. `weekly_scoped_shares` is the
+    // same kind of sibling: an array of each scoped limit's share of the weekly allowance,
+    // keyed by `limit_index`, with the per-model figures again carried by `limits`.
     let metadataKeys = Set([
       "extra_usage",
       "limits",
@@ -171,6 +173,7 @@ private struct ClaudeUsageResponse: Decodable {
       "nimbus_quill",
       "seven_day_breakdown",
       "spend",
+      "weekly_scoped_shares",
     ])
     var windows: [String: ClaudeWindow] = [:]
     for key in container.allKeys {
