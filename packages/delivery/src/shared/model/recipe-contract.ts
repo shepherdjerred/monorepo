@@ -472,6 +472,13 @@ export const CompoundRecipeSchema = z
       new Set(recipe.subRecipes.map((sub) => sub.instance)).size ===
       recipe.subRecipes.length,
     "Each sub-recipe holds its own lock instance",
+  )
+  // A saved plan, its one plan-step approval (H6) and its apply bind one
+  // deployment of one stack (D6), so a Tofu stack is always its own recipe.
+  .refine(
+    (recipe) =>
+      recipe.subRecipes.every((sub) => sub.definition.kind !== "tofu"),
+    "A Tofu stack is its own recipe; a compound recipe holds no tofu sub-recipe",
   );
 
 export const RecipeDefinitionSchema = z.discriminatedUnion("kind", [

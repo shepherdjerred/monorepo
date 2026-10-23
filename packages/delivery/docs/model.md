@@ -457,7 +457,9 @@ a bucket, a stack, a channel).
   after. Resume starts at the first unsettled sub-step. A sub-step with
   recorded intent and unknown result moves the deployment to
   `recovery-required` naming that sub-step. A failed sub-step leaves the
-  whole deployment unaccepted.
+  whole deployment unaccepted. A Tofu stack is never a sub-step: its saved
+  plan, plan-step approval (H6) and apply bind one deployment of one stack
+  (D6).
 - T4. A target reads desired state only from the deployment holding its
   locks or, between deployments, from the environment's accepted selection,
   which it may re-assert as self-heal and must record as drift evidence

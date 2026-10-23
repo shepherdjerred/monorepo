@@ -699,3 +699,17 @@ describe("RecipeDefinitionSchema target kinds", () => {
     ).toBe(false);
   });
 });
+
+test("a Tofu stack is its own recipe, never a compound sub-recipe (D6, H6)", () => {
+  const parsed = CompoundRecipeSchema.safeParse({
+    kind: "compound",
+    subRecipes: [
+      { instance: "application:arcade", definition: application() },
+      { instance: "stack:github", definition: tofu("github") },
+    ],
+  });
+  expect(parsed.success).toBe(false);
+  expect(parsed.error?.issues.map((issue) => issue.message)).toContain(
+    "A Tofu stack is its own recipe; a compound recipe holds no tofu sub-recipe",
+  );
+});
