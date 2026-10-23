@@ -258,11 +258,6 @@
       "ops": {
         "kind": "platform",
         "argoApps": ["delivery-data"]
-      },
-      "legacy": {
-        "rootReleaseExclusions": {
-          "delivery-data": "inactive"
-        }
       }
     },
     {
@@ -1209,11 +1204,6 @@
       "ops": {
         "kind": "platform",
         "argoApps": ["temporal-data"]
-      },
-      "legacy": {
-        "rootReleaseExclusions": {
-          "temporal-data": "inactive"
-        }
       }
     },
     {
