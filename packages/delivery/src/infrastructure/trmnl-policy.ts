@@ -5,8 +5,8 @@ import type {
   VersionSetRevision,
 } from "#shared/contract.ts";
 import {
-  applicationOf,
   specializedStageKey,
+  stepApplicationOf,
   trmnlPluginsOf,
 } from "#shared/model/recipe-view.ts";
 import type { Transaction } from "./delivery-data.ts";
@@ -26,7 +26,8 @@ export function validateTrmnlSelection(
   if (plugins === undefined) return;
   const archive = selected.components[plugins.archiveComponent];
   if (
-    applicationOf(pipeline)?.name !== "trmnl-dashboard" ||
+    // The Application that owns the archive step, not a compound's first.
+    stepApplicationOf(pipeline, "archive")?.name !== "trmnl-dashboard" ||
     selected.serviceId !== "trmnl-dashboard" ||
     archive?.kind !== "archive" ||
     archive.serviceId !== "trmnl-dashboard" ||
