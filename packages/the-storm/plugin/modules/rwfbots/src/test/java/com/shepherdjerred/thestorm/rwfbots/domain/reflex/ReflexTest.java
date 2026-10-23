@@ -895,4 +895,75 @@ final class ReflexTest {
         shot(FAR_ENEMY, List.of(), aside).run(ReflexState.initial(Facing.SOUTH), 1, 60, true);
     assertThat(clear.commands()).contains(new BodyCommand.ReleaseUse());
   }
+
+  /** {@code shot} turned onto {@code next}, a further enemy, with everyone else still around. */
+  private static Shot retarget(Shot shot, CombatantView next) {
+    var decision =
+        new Decision(
+            shot.self().id(),
+            Option.ENGAGE,
+            Optional.of(next.id()),
+            List.of(),
+            Stance.AGGRESSIVE,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            "engage:fight-peek",
+            1,
+            0,
+            Optional.empty());
+    var world = new ArrayList<>(shot.world());
+    world.add(next);
+    return new Shot(shot.self(), next, decision, world);
+  }
+
+  @Test
+  void aHeldDrawThatSwitchesTargetWaitsForTheAimToSettleOnTheNewOne() {
+    // A teammate blocks the first target, so the draw is held past the forced-release window.
+    var inLine = combatant(3, RED, new Vec3(15.5, 1, 5.5));
+    var first = shot(FAR_ENEMY, List.of(), inLine);
+    var held = first.run(ReflexState.initial(Facing.SOUTH), 1, 40, true);
+    assertThat(held.commands()).doesNotContain(new BodyCommand.ReleaseUse());
+    assertThat(held.state().isDrawing()).isTrue();
+    // The planner switches to an enemy a quarter turn away with no unseen tick in between.
+    var second = retarget(first, combatant(4, BLUE, new Vec3(5.5, 1, 25.5)));
+    var switched = second.run(held.state(), 41, 41, true);
+    assertThat(switched.commands()).doesNotContain(new BodyCommand.ReleaseUse());
+    assertThat(switched.state().bowSight().orElseThrow().since()).isEqualTo(41);
+    var settled = second.run(switched.state(), 42, 41 + ReadyDraw.MAX_BOW_HOLD_TICKS, true);
+    assertThat(settled.commands()).contains(new BodyCommand.ReleaseUse());
+  }
+
+  @Test
+  void aTeammateOnTheLedArrowPathHoldsTheShotButOneOnlyOnTheCurrentRayDoesNot() {
+    var vel = new Vec3(0, 0, 0.45);
+    var speed = ARCHER.loadout().ranged().projectileSpeed();
+    var flight = BowSolver.flightTicks(FAR_ENEMY.horizontalDistance(ARCHER_AT), speed);
+    var lead = vel.scale(flight * ARCHER.levers().predictionQuality());
+    var eye = combatant(1, RED, ARCHER_AT).eye();
+    var led = FAR_ENEMY.plus(lead).plus(0, 1.3, 0);
+    var current = FAR_ENEMY.plus(0, 1.3, 0);
+    // Four fifths of the way out, where the lead has pulled the arrow well off the current ray.
+    var onLed = eye.plus(led.minus(eye).scale(0.8)).plus(0, -1.0, 0);
+    var onCurrent = eye.plus(current.minus(eye).scale(0.8)).plus(0, -1.0, 0);
+    assertThat(onLed.distance(onCurrent)).isGreaterThan(2 * ReadyDraw.ALLY_CLEARANCE);
+
+    var blocked =
+        moving(vel, combatant(3, RED, onLed)).run(ReflexState.initial(Facing.SOUTH), 1, 60, true);
+    assertThat(blocked.commands()).doesNotContain(new BodyCommand.ReleaseUse());
+    assertThat(blocked.state().isDrawing()).isTrue();
+    var clear =
+        moving(vel, combatant(3, RED, onCurrent))
+            .run(ReflexState.initial(Facing.SOUTH), 1, 60, true);
+    assertThat(clear.commands()).contains(new BodyCommand.ReleaseUse());
+  }
+
+  /** A shot at the far enemy running at {@code vel}, with {@code ally} on the field. */
+  private static Shot moving(Vec3 vel, CombatantView ally) {
+    var shot = shot(FAR_ENEMY, List.of(), ally);
+    var enemy = shot.enemy().withVel(vel);
+    var world =
+        shot.world().stream().map(view -> view.id().equals(enemy.id()) ? enemy : view).toList();
+    return new Shot(shot.self(), enemy, shot.decision(), world);
+  }
 }

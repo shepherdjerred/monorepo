@@ -393,7 +393,9 @@ public final class Reflex {
       }
       var desired = solved.orElseThrow();
       state = state.withAim(AimController.aim(state.aim(), desired, levers(), random));
-      state = state.withBowSight(Optional.of(ReadyDraw.sighted(state.bowSight(), aimPoint, now)));
+      state =
+          state.withBowSight(
+              Optional.of(ReadyDraw.sighted(state.bowSight(), target.id(), aimPoint, now)));
       var aim = state.aim();
       if (state.waypointIndex() < input.decision().waypoints().size()) {
         walk(Optional.of(false));
@@ -409,15 +411,16 @@ public final class Reflex {
         state = state.withDrawStart(now);
         return;
       }
-      release(target, desired);
+      release(aimPoint, desired);
     }
 
-    private void release(CombatantView target, Facing desired) {
+    /** Looses a full draw that is steady and whose led arrow path clears every teammate. */
+    private void release(Vec3 aimPoint, Facing desired) {
       var drawn = now - state.drawStart() >= context.loadout().ranged().chargeTicks();
       var aligned = state.aim().look().differenceTo(desired) <= BOW_AIM_TOLERANCE;
       if (drawn
           && ReadyDraw.steady(state, now, aligned)
-          && !ReadyDraw.allyInLine(input.snapshot(), self, target)) {
+          && !ReadyDraw.allyInLine(input.snapshot(), self, aimPoint)) {
         commands.add(new BodyCommand.ReleaseUse());
         state = state.withDrawStart(-1);
       }

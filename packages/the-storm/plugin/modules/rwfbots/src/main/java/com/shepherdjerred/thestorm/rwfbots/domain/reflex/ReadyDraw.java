@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.rwfbots.domain.reflex;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Stance;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
@@ -68,21 +69,28 @@ final class ReadyDraw {
         .anyMatch(enemy -> enemy.pos().distance(self.pos()) <= distance);
   }
 
-  /** The sighting at {@code now} of {@code point}, continuing an unbroken one from last tick. */
+  /**
+   * The sighting at {@code now} of {@code target} at {@code point}, continuing an unbroken one of
+   * the same target from last tick. A switch to another target restarts the clock, so the aim has
+   * {@link #MAX_BOW_HOLD_TICKS} to settle on the new one before a forced release.
+   */
   static ReflexState.BowSight sighted(
-      Optional<ReflexState.BowSight> previous, Vec3 point, long now) {
+      Optional<ReflexState.BowSight> previous, CombatantId target, Vec3 point, long now) {
     var since =
         previous
-            .filter(sight -> sight.seen() >= now - 1)
+            .filter(sight -> sight.seen() >= now - 1 && sight.target().equals(target))
             .map(ReflexState.BowSight::since)
             .orElse(now);
-    return new ReflexState.BowSight(point, now, since);
+    return new ReflexState.BowSight(target, point, now, since);
   }
 
-  /** Whether a teammate of {@code self} stands within its line of fire to {@code target}. */
-  static boolean allyInLine(WorldSnapshot snapshot, CombatantView self, CombatantView target) {
+  /**
+   * Whether a teammate of {@code self} stands within its line of fire to {@code aimPoint}, the led
+   * point the arrow is actually sent to rather than where the target stands now.
+   */
+  static boolean allyInLine(WorldSnapshot snapshot, CombatantView self, Vec3 aimPoint) {
     var eye = self.eye();
-    var line = target.pos().plus(0, 1.3, 0).minus(eye);
+    var line = aimPoint.minus(eye);
     var length = line.length();
     if (length < 1.0e-6) return false;
     var along = line.scale(1 / length);

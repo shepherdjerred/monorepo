@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.rwfbots.domain.reflex;
 
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Facing;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
+import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId;
 import java.util.Optional;
 
 /**
@@ -324,9 +325,10 @@ public record ReflexState(
   /**
    * The last time a drawn bow had a target.
    *
+   * @param target the combatant it was aimed at
    * @param point the aim point then, lead included
    * @param seen the last tick the target was in sight
    * @param since the first tick of that unbroken sighting
    */
-  public record BowSight(Vec3 point, long seen, long since) {}
+  public record BowSight(CombatantId target, Vec3 point, long seen, long since) {}
 }

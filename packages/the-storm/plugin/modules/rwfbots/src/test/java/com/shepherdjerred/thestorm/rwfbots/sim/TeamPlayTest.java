@@ -128,8 +128,9 @@ final class TeamPlayTest {
   // Failed routes recover as RECOVER steps with a re-entry walk; landed bodies route as grounded.
   // Bots route around teammates ranked ahead only; idle and recovery plans earn no commitment.
   // Holders patrol between posts about their hold instead of standing still.
-  // Archers hold a draw ready through brief sight loss and take skill-scaled long shots.
-  private static final String PINNED_YARD_HASH = "89a6ff9b613bd5f4";
+  // Archers hold a draw ready through brief sight loss and take skill-scaled long shots, clearing
+  // teammates along the led arrow path and re-settling their aim when the target changes.
+  private static final String PINNED_YARD_HASH = "a40b4acae62aa311";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {
