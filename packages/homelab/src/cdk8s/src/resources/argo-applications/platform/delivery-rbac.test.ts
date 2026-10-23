@@ -15,6 +15,7 @@ import {
 import {
   DELIVERY_WORKLOAD_APPLICATIONS,
   OPERATOR_RUN_DATA_APPLICATIONS,
+  deliveryArgoAccounts,
   deliveryArgoPolicy,
   deliveryKnownApplications,
   deliveryManagedApplications,
@@ -72,11 +73,22 @@ beforeAll(async () => {
     "delivery",
     "delivery-observer",
     "delivery-platform",
-    "operator-run",
   ]) {
     expect(cm[`accounts.${account}`]).toBe("apiKey");
     expect(cm[`accounts.${account}.enabled`]).toBe(true);
   }
+  // The rendered chart carries the committed switch state: the operator
+  // tool's account exists only under transition rendering.
+  expect(cm["accounts.operator-run"]).toBe(
+    transitionRendering() ? "apiKey" : undefined,
+  );
+  expect(deliveryArgoAccounts(false)).not.toHaveProperty(
+    "accounts.operator-run",
+  );
+  expect(deliveryArgoAccounts(true)).toMatchObject({
+    "accounts.operator-run": "apiKey",
+    "accounts.operator-run.enabled": true,
+  });
   expect(rbac["policy.default"]).toBe("");
   expect(rbac["policy.csv"]).not.toContain("*");
   // The rendered chart carries the committed switch state; both states are
@@ -354,6 +366,21 @@ const permissions: PolicyCase[] = [
     false,
   ),
   ...offCases("operator-run", ["arcade", "argocd"], ["get", "sync"], false),
+  // The operator tool's grant moves no effect onto Delivery's accounts:
+  // Delivery's executor only reads the operator-run Applications, and
+  // release-root keeps only its read and its sync of root-owned children.
+  ...onCases(
+    "delivery",
+    [...OPERATOR_RUN_APPLICATIONS],
+    ["update", "sync", "delete", "override"],
+    false,
+  ),
+  ...onCases(
+    "delivery-platform",
+    [...OPERATOR_RUN_APPLICATIONS],
+    ["update", "delete", "override"],
+    false,
+  ),
   ...platformCases("on"),
   // Window step 3b: before the window, release-root may already read every
   // child and sync each root-owned one in its transition project, so the

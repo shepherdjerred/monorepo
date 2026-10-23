@@ -1,7 +1,7 @@
 import type { Chart } from "cdk8s";
 import {
   deliveryArgoPolicy,
-  DELIVERY_ARGO_ACCOUNTS,
+  deliveryArgoAccounts,
   DELIVERY_ARGO_SERVER_SETTINGS,
 } from "./delivery-rbac.ts";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
@@ -345,7 +345,7 @@ export function createArgoCdApp(chart: Chart) {
         "statusbadge.enabled": true,
         "accounts.woodpecker": "apiKey",
         "accounts.woodpecker.enabled": false,
-        ...DELIVERY_ARGO_ACCOUNTS,
+        ...deliveryArgoAccounts(),
         ...humanArgoCdSettings(),
         // ArgoCD removed built-in Application CR health in 1.8. Restore the
         // documented app-of-apps check so the root app inherits child app and
