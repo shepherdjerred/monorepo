@@ -10,6 +10,7 @@ import {
   TEMPORAL_POSTGRES_TLS_PRIVATE_KEY_FILE,
   TEMPORAL_POSTGRES_TLS_SECRET,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
+import { ZFS_WAL_PARAMETERS } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/zfs-wal-parameters.ts";
 
 // The gid of the `postgres` user inside the Spilo image, confirmed against the
 // running container (`id postgres` -> uid=101(postgres) gid=103(postgres)).
@@ -87,7 +88,11 @@ export function createTemporalPostgreSQLDatabase(chart: Chart) {
           effective_io_concurrency: "200",
           work_mem: "4MB",
           min_wal_size: "512MB",
-          max_wal_size: "2GB",
+          // Shared ZFS WAL settings; see zfs-wal-parameters.ts. Temporal is
+          // the heaviest writer (~56 GB/day of logical writes), so it gets
+          // twice the shared cap to keep checkpoints on the 15-minute timeout.
+          ...ZFS_WAL_PARAMETERS,
+          max_wal_size: "8GB",
           log_statement: "none",
           log_min_duration_statement: "1000",
           // Keep pg_hba auth and generated role password hashes aligned.

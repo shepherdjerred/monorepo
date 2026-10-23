@@ -4,6 +4,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/acid.zalan.do.ts";
 import type { Chart } from "cdk8s";
 import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
+import { ZFS_WAL_PARAMETERS } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/zfs-wal-parameters.ts";
 
 /**
  * Per-stage Scout application database (the backend migrated off SQLite).
@@ -40,7 +41,8 @@ export function createScoutPostgreSQLDatabase(chart: Chart, stage: Stage) {
           effective_io_concurrency: "200",
           work_mem: "4MB",
           min_wal_size: "512MB",
-          max_wal_size: "2GB",
+          // Shared ZFS WAL settings; see zfs-wal-parameters.ts.
+          ...ZFS_WAL_PARAMETERS,
           log_statement: "none",
           log_min_duration_statement: "1000",
           password_encryption: "scram-sha-256",

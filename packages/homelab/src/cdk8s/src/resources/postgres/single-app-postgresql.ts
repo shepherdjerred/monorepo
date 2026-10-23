@@ -4,6 +4,7 @@ import {
   PostgresqlSpecPostgresqlVersion,
   type PostgresqlSpecUsers,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/acid.zalan.do";
+import { ZFS_WAL_PARAMETERS } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/zfs-wal-parameters.ts";
 
 type SingleAppPostgreSQLOptions = {
   /** Cluster `<app>-postgresql`, owner role `<app>`, database `<app>_db`. */
@@ -55,7 +56,8 @@ export function createSingleAppPostgreSQL(
           effective_io_concurrency: "200",
           work_mem: "4MB",
           min_wal_size: "128MB",
-          max_wal_size: "2GB",
+          // Shared ZFS WAL settings; see zfs-wal-parameters.ts.
+          ...ZFS_WAL_PARAMETERS,
           log_statement: "none",
           log_min_duration_statement: "1000",
           // Must match pg_hba auth method — prevents hash format mismatch after cluster restore
