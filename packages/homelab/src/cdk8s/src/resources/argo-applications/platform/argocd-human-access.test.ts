@@ -57,10 +57,15 @@ async function humanMay(action: string, object: string): Promise<boolean> {
 }
 
 describe("human ArgoCD access", () => {
-  test("changes nothing until the window's lock-down step", () => {
-    expect(humanArgoCdReadOnly()).toBe(false);
-    expect(humanArgoCdSettings()).toEqual({});
-    expect(humanArgoCdPolicyRows()).toEqual([]);
+  test("is on since the window's lock-down step", () => {
+    expect(humanArgoCdReadOnly()).toBe(true);
+    expect(humanArgoCdSettings()).toEqual(humanArgoCdSettings(true));
+    expect(humanArgoCdPolicyRows()).toEqual(humanArgoCdPolicyRows(true));
+  });
+
+  test("changes nothing while off", () => {
+    expect(humanArgoCdSettings(false)).toEqual({});
+    expect(humanArgoCdPolicyRows(false)).toEqual([]);
   });
 
   test("disables admin and gives people one read-only login", () => {
