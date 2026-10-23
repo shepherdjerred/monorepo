@@ -21,10 +21,14 @@ import {
 import { applicationProgress } from "#lib/delivery/model/application-proof.ts";
 import type { KubernetesApplicationRecipe } from "#lib/delivery/model/recipe.ts";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
-import { runGuardedArgoCommand } from "#activities/delivery/argocd.ts";
-import { recordStage, requireOwned } from "./stages.ts";
+import {
+  argoRequest,
+  runGuardedArgoCommand,
+} from "#activities/delivery/argocd.ts";
+import { recordStage, requireOwned, stageOf } from "./stages.ts";
 import { workerRolloutPreflight } from "./worker-rollout.ts";
 import { minecraftSyncFence } from "./minecraft-upgrade.ts";
+import { forumBaselineFence, forumSyncPrune } from "./forum-bundle.ts";
 
 const READBACK_ATTEMPTS = 120;
 const READBACK_INTERVAL_MS = 5000;
@@ -131,6 +135,12 @@ export async function applySafety(
   const source = await verifySourceBytes(rendered, operationId);
   // A worker pool's images and routes are proved before its hosts change.
   await workerRolloutPreflight(current);
+  // A forum's first upgrade re-observes its original baseline before the
+  // candidate source replaces the one that baseline fingerprinted. A resumed
+  // step already recorded that intent, and the server refuses the check once
+  // the stage exists, so only the first attempt runs it.
+  if (stageOf(current, key) === undefined)
+    await forumBaselineFence(current, recipe);
   await recordStage(current, key, "running", { operationId });
   const written = await writeBody(rendered);
   await runGuardedArgoCommand(
@@ -202,9 +212,11 @@ export async function sync(
   // Argo effect: the server accepts it only from the executor that owns the
   // deployment under a live lease (D7), which a read cannot prove.
   await recordStage(current, key, "running", { operationId: requestId });
-  // A preserved world switches images only with fresh preservation proof.
-  if (!before.requested) minecraftSyncFence(current, recipe);
-  if (!before.requested)
+  if (!before.requested) {
+    // A preserved world switches images only with fresh preservation proof.
+    minecraftSyncFence(current, recipe);
+    // A forum release replaces the prior release's terminal migration Job.
+    const prune = await forumSyncPrune(current, recipe, argoRequest);
     await runGuardedArgoCommand(
       [
         "sync-managed",
@@ -213,11 +225,13 @@ export async function sync(
         rendered.revision,
         "--request-id",
         requestId,
+        ...(prune ? ["--prune"] : []),
         "--timeout",
         "1200",
       ],
       { operationId: requestId, application: rendered.name },
     );
+  }
   const proof = await waitForReadback(
     rendered,
     requestId,

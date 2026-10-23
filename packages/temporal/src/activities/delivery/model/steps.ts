@@ -26,6 +26,10 @@ import { runWorkerRolloutStep } from "./worker-rollout.ts";
 import { runMinecraftUpgradeStep } from "./minecraft-upgrade.ts";
 import { runChannelStep } from "./channel.ts";
 import { stepLease, withLeaseRenewal } from "./lease.ts";
+import { runStaticSiteStep } from "./static-site.ts";
+import { runArchiveStep } from "./archive.ts";
+import { requireSyncedBefore } from "./step-order.ts";
+import { runForumBundleStep } from "./forum-bundle.ts";
 import type { ColdStartWrite } from "#lib/delivery/model/oracle-inputs.ts";
 import {
   deploymentDetail,
@@ -92,9 +96,20 @@ async function runKubernetesStep(
       requireSettledBefore(steps, current.stages, key);
       return await runMinecraftUpgradeStep(current, key);
     case "static-site":
+      requireSyncedBefore(steps, key, step.kind);
+      requireSettledBefore(steps, current.stages, key);
+      await runStaticSiteStep(current, step.policy, key);
+      return { waiting: false };
     case "archive":
+      requireSyncedBefore(steps, key, step.kind);
+      requireSettledBefore(steps, current.stages, key);
+      await runArchiveStep(current, step.archiveComponent, key);
+      return { waiting: false };
     case "forum-bundle":
-      return missingAdapter(step.kind);
+      requireSyncedBefore(steps, key, step.kind);
+      requireSettledBefore(steps, current.stages, key);
+      await runForumBundleStep(current, recipe, key);
+      return { waiting: false };
   }
 }
 
@@ -132,7 +147,11 @@ async function runOwnedStep(
     case "kubernetes":
       return await runKubernetesStep(current, kubernetes(owner), steps, step);
     case "static-site":
-      return missingAdapter(step.adapter);
+      // A compound recipe's site sub-recipe never runs ahead of its earlier
+      // members, as an Application's site step does not (T3).
+      requireSettledBefore(steps, current.stages, key);
+      await runStaticSiteStep(current, step.policy, key);
+      return { waiting: false };
     case "test":
       await runTestStep(current, kubernetes(owner), step);
       return { waiting: false };

@@ -9,6 +9,7 @@ import {
   modelRecipe,
   modelSteps,
   requireModelRecipe,
+  requireSettledBefore,
   resumeAt,
 } from "./recipe.ts";
 
@@ -70,7 +71,76 @@ describe("model recipes (T3)", () => {
       ),
     ).toBe(3);
   });
+
+  test("a step runs only after every earlier frozen step settled", () => {
+    const steps = modelSteps(requireModelRecipe(helm));
+    expect(() =>
+      requireSettledBefore(
+        steps,
+        [
+          { key: "step-apply-safety", status: "succeeded" },
+          { key: "step-sync", status: "running" },
+        ],
+        "test-e2e",
+      ),
+    ).toThrow(/after every earlier frozen step settled/u);
+    expect(() =>
+      requireSettledBefore(
+        steps,
+        [
+          { key: "step-apply-safety", status: "succeeded" },
+          { key: "step-sync", status: "succeeded" },
+        ],
+        "test-e2e",
+      ),
+    ).not.toThrow();
+    expect(() => requireSettledBefore(steps, [], "step-unknown")).toThrow(
+      /not part of the frozen recipe/u,
+    );
+  });
+
+  test("a site recipe naming a model archive runs on the step executor; a v1 `site:` pipeline does not", () => {
+    const site = {
+      kind: "static-site",
+      bucket: "sjer-red",
+      verification: { url: "https://sjer.red/", expectedStatus: 200 },
+    };
+    const model = detail(
+      { ...site, archiveComponent: "archive:sjer-red" },
+      siteArchive("archive:sjer-red"),
+    );
+    expect(modelSteps(requireModelRecipe(model))).toEqual([
+      {
+        key: "step-static-site",
+        adapter: "static-site",
+        policy: expect.objectContaining({
+          bucket: "sjer-red",
+          archiveComponent: "archive:sjer-red",
+          entrypoints: ["index.html"],
+        }),
+      },
+    ]);
+    expect(
+      modelRecipe(
+        detail(
+          { ...site, archiveComponent: "site:sjer-red" },
+          siteArchive("site:sjer-red"),
+        ),
+      ),
+    ).toBeNull();
+  });
 });
+
+function siteArchive(component: string) {
+  return artifact({
+    id: "archive/1",
+    component,
+    kind: "archive",
+    uri: `s3://delivery-artifacts/sites/sjer-red/${"c".repeat(64)}.tar`,
+    version: "1",
+    character: "c",
+  });
+}
 
 describe("Application rendering (T2, A5)", () => {
   test("a Helm source binds the chart version, the configuration's values object and parameters, and artifact parameters in their formats", () => {

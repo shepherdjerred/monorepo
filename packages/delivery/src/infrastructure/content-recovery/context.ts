@@ -6,7 +6,7 @@ import {
   wire,
 } from "#infrastructure/delivery-records.ts";
 import {
-  LegacyPipelineRevisionSchema,
+  PipelineRevisionSchema,
   type DeploymentDetail,
   type StoredRecipeDefinition,
   ContentRecoveryNativeReceiptSchema,
@@ -19,6 +19,11 @@ import {
   intentDetail,
   legacyIntentFields,
 } from "#infrastructure/recovery-intents.ts";
+import {
+  forumReleaseOf,
+  siteReleaseOf,
+  stepApplicationOf,
+} from "#shared/model/recipe-view.ts";
 
 /** The content-kind view of a unified recovery intent row. */
 export function contentIntentView(row: RecoveryIntent) {
@@ -39,7 +44,13 @@ export function contentIntentView(row: RecoveryIntent) {
   );
 }
 
-/** The frozen content target a recipe of either generation names, or null. */
+/**
+ * The native instance content recovery repairs, which the failed release
+ * holds as its target lock (4.15): a v1 site's bucket or v1 Application, or
+ * a model recipe's static-site step bucket or the Application that owns its
+ * forum-bundle step, inside a compound recipe too. Null when the recipe
+ * releases no content.
+ */
 function contentTarget(definition: StoredRecipeDefinition): string | null {
   switch (definition.kind) {
     case "static-site":
@@ -47,29 +58,27 @@ function contentTarget(definition: StoredRecipeDefinition): string | null {
     case "argocd":
       return `application:${definition.application}`;
     case "kubernetes-application":
-      return `application:${definition.application.name}`;
+    case "operator-run":
+    case "compound": {
+      const site = siteReleaseOf(definition);
+      if (site !== undefined) return `bucket:${site.bucket}`;
+      const forum = stepApplicationOf(definition, "forum-bundle");
+      return forum === null ? null : `application:${forum.name}`;
+    }
     case "control-plane":
     case "root-release":
     case "tofu":
     case "manual":
     case "channel":
-    case "operator-run":
-    case "compound":
       return null;
   }
 }
 
+/** The content a frozen release activates, in the order `contentTarget` resolves it. */
 export function contentRecoveryKind(pipeline: StoredRecipeDefinition) {
-  if (pipeline.kind === "static-site") return "static-site";
-  if (pipeline.kind === "argocd") {
-    if (pipeline.scoutSite !== undefined) return "static-site";
-    if (pipeline.forumRelease !== undefined) return "forum";
-  }
-  if (pipeline.kind === "kubernetes-application") {
-    const kinds = new Set(pipeline.steps.map((step) => step.kind));
-    if (kinds.has("static-site")) return "static-site";
-    if (kinds.has("forum-bundle")) return "forum";
-  }
+  if (pipeline.kind === "static-site" || siteReleaseOf(pipeline) !== undefined)
+    return "static-site";
+  if (forumReleaseOf(pipeline) !== undefined) return "forum";
   throw new DeliveryError(
     "INVALID",
     "Independent content recovery is limited to frozen static, Scout-site and Forum releases",
@@ -90,7 +99,9 @@ export async function heldContentRecovery(
     }),
     "Quarantined content deployment",
   );
-  const pipeline = LegacyPipelineRevisionSchema.parse(
+  // A frozen recipe of either generation: a model step's content is
+  // recovered from its own bucket or Forum Application (4.15).
+  const pipeline = PipelineRevisionSchema.parse(
     wire(
       required(
         await tx.pipeline.findUnique({
@@ -122,12 +133,7 @@ export async function heldContentRecovery(
   const locks = await tx.targetLock.findMany({
     where: { deploymentId: row.id },
   });
-  const target =
-    pipeline.definition.kind === "static-site"
-      ? `bucket:${pipeline.definition.bucket}`
-      : pipeline.definition.kind === "argocd"
-        ? `application:${pipeline.definition.application}`
-        : null;
+  const target = contentTarget(pipeline.definition);
   if (
     target === null ||
     !row.recoveryRequired ||

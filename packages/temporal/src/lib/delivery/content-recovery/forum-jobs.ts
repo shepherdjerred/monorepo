@@ -13,7 +13,12 @@ import {
   ContentRecoveryNativeReceiptSchema,
   type ContentRecoveryContext,
   type ContentRecoveryNativeReceipt,
+  type DeploymentDetail,
 } from "@shepherdjerred/delivery/contract";
+import {
+  forumReleaseOf,
+  stepRecipeOf,
+} from "@shepherdjerred/delivery/model-contract";
 import {
   FORUM_RECOVERY_ANNOTATIONS as annotations,
   FORUM_RECOVERY_IMAGE_ABI,
@@ -28,6 +33,7 @@ import {
   deliverySelection,
 } from "#lib/delivery/selection.ts";
 import { normalizePod } from "#lib/delivery/job-manifest.ts";
+import { forumSelection } from "#lib/delivery/model/application.ts";
 import { renderWorkerChart } from "#lib/delivery/workers/worker-control-plane.ts";
 import type { RolloutCommandRunner } from "#lib/worker-deployment-proofs.ts";
 import type { ContentAction } from "./request.ts";
@@ -110,6 +116,46 @@ export function forumImageProvesRelease(
   );
 }
 
+const NO_FORUM_TARGET = "Forum recovery lacks its fixed native target";
+const ForumNamespaceSchema = z.enum(["storm-forum", "storm-forum-beta"]);
+
+/** A model recipe's Forum chart: the Application that owns its forum-bundle step. */
+function modelForumChart(detail: DeploymentDetail) {
+  const recipe = stepRecipeOf(detail.pipeline.definition, "forum-bundle");
+  const selection = recipe === null ? null : forumSelection(detail, recipe);
+  const chart =
+    recipe === null
+      ? undefined
+      : detail.versionSet.components[recipe.chartComponent];
+  if (selection === null || chart?.kind !== "chart")
+    throw new Error(NO_FORUM_TARGET);
+  return { selection, chart };
+}
+
+/**
+ * The frozen Forum release native recovery repairs: the chart selection
+ * that renders its release Job, the chart artifact, its fixed namespace and
+ * runtime image. A v1 `forumRelease` pipeline, or the model Application
+ * that owns the forum-bundle step, a compound recipe's member included.
+ */
+export function forumRecoveryRelease(detail: DeploymentDetail) {
+  const definition = detail.pipeline.definition;
+  const forum = forumReleaseOf(definition);
+  if (forum === undefined) throw new Error(NO_FORUM_TARGET);
+  const { selection, chart } =
+    definition.kind === "argocd"
+      ? deliverySelection(detail)
+      : modelForumChart(detail);
+  const namespace = ForumNamespaceSchema.safeParse(selection.namespace);
+  if (!namespace.success) throw new Error(NO_FORUM_TARGET);
+  return {
+    selection,
+    chart,
+    namespace: namespace.data,
+    imageComponent: forum.imageComponent,
+  };
+}
+
 /** Original spec comes from hashed immutable chart bytes, never from caller input. */
 export async function originalForumRecoveryJob(
   context: ContentRecoveryContext,
@@ -117,15 +163,8 @@ export async function originalForumRecoveryJob(
   command: RolloutCommandRunner,
 ) {
   const detail = context.deployment;
-  const policy = detail.pipeline.definition;
-  if (
-    policy.kind !== "argocd" ||
-    policy.forumRelease === undefined ||
-    !["storm-forum", "storm-forum-beta"].includes(policy.namespace ?? "")
-  )
-    throw new Error("Forum recovery lacks its fixed native target");
-  const image =
-    detail.versionSet.components[policy.forumRelease.imageComponent];
+  const release = forumRecoveryRelease(detail);
+  const image = detail.versionSet.components[release.imageComponent];
   if (image?.kind !== "image")
     throw new Error("Forum original runtime is missing");
   const inspected = await command([
@@ -146,9 +185,8 @@ export async function originalForumRecoveryJob(
     throw new Error(
       "Original Forum image lacks its original source or native recovery ABI; legacy unjournaled migrations need reviewed native inspection",
     );
-  const selected = deliverySelection(detail);
   const documents = await renderWorkerChart(
-    { selection: selected.selection, chart: selected.chart },
+    { selection: release.selection, chart: release.chart },
     command,
   );
   const name = `storm-forum-release-${createHash("sha256").update(detail.deployment.id).digest("hex").slice(0, 32)}`;
@@ -163,9 +201,7 @@ export async function originalForumRecoveryJob(
     );
   if (raw === undefined)
     throw new Error("Frozen Forum chart lacks its exact original release Job");
-  const namespace = z
-    .enum(["storm-forum", "storm-forum-beta"])
-    .parse(policy.namespace);
+  const { namespace } = release;
   const original = await config
     .makeApiClient(BatchV1Api)
     .readNamespacedJob({ namespace, name });

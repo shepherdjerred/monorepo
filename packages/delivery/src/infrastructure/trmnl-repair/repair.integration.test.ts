@@ -1,12 +1,7 @@
 import { expect, test } from "vitest";
-import {
-  ServiceIndex,
-  SERVICE_CATALOG,
-} from "@shepherdjerred/ops-model/catalog.ts";
-import { Delivery } from "#infrastructure/delivery.ts";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
-import { replicateProducedArtifacts } from "#testing/replication.ts";
+import { requestTrmnlRelease, trmnlDelivery } from "#testing/trmnl-fixture.ts";
 import { deliveryWorkflowId, type TrmnlRepairClaim } from "#shared/contract.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
 import { createTestApp } from "#testing/http-app.ts";
@@ -14,97 +9,8 @@ import { DeploymentDetailSchema, DeploymentSchema } from "#shared/contract.ts";
 
 const context = useDeliveryFixture();
 async function quarantined() {
-  const delivery = new Delivery(
-    context.cluster.database,
-    1,
-    new ServiceIndex({
-      ...SERVICE_CATALOG,
-      deliveryDelegations: {
-        ...SERVICE_CATALOG.deliveryDelegations,
-        "trmnl-dashboard": "trmnl-dashboard/prod",
-      },
-    }),
-  );
-  const build = await delivery.publish(
-    {
-      requestId: "trmnl/build",
-      serviceId: "trmnl-dashboard",
-      sourceRevision: "e".repeat(40),
-      ciUrl: "https://woodpecker.sjer.red/repos/1/pipeline/90",
-      verifiedAt: new Date().toISOString(),
-      artifacts: [
-        {
-          id: "trmnl/image",
-          component: "image:trmnl-dashboard",
-          kind: "image",
-          uri: "docker.io/shepherdjerred/trmnl-dashboard",
-          digest: `sha256:${"a".repeat(64)}`,
-          version: "2.0.0-90",
-        },
-        {
-          id: "trmnl/chart",
-          component: "chart:trmnl-dashboard",
-          kind: "chart",
-          uri: "https://chartmuseum.tailnet-1a49.ts.net/charts/trmnl-dashboard-2.0.0-90.tgz",
-          digest: `sha256:${"b".repeat(64)}`,
-          version: "2.0.0-90",
-        },
-        {
-          id: "trmnl/plugins",
-          component: "archive:trmnl-plugins",
-          kind: "archive",
-          uri: `s3://delivery-artifacts/trmnl-plugins/${"c".repeat(64)}.json`,
-          digest: `sha256:${"c".repeat(64)}`,
-          version: "2.0.0-90",
-        },
-      ],
-    },
-    testPublisher,
-    { repositoryId: 1, pipelineNumber: 90 },
-  );
-  await replicateProducedArtifacts(delivery, build.buildId);
-  await delivery.qualify(build.buildId, "verified", testExecutor);
-  const [selected] = await delivery.versions("trmnl-dashboard");
-  if (selected === undefined)
-    throw new Error("Expected qualified TRMNL version");
-  await delivery.registerPipeline(
-    "trmnl/pipeline",
-    {
-      kind: "argocd",
-      application: "trmnl-dashboard",
-      namespace: "trmnl-dashboard",
-      chartName: "trmnl-dashboard",
-      chartRepository: "https://chartmuseum.tailnet-1a49.ts.net",
-      chartComponent: "chart:trmnl-dashboard",
-      parameters: {},
-      artifactParameters: { "delivery.image": "image:trmnl-dashboard" },
-      trmnlPlugins: { archiveComponent: "archive:trmnl-plugins" },
-    },
-    testOperator,
-  );
-  await delivery.registerEnvironment(
-    {
-      id: "trmnl-dashboard/prod",
-      serviceId: "trmnl-dashboard",
-      name: "prod",
-      application: "trmnl-dashboard",
-      pipelineRevisionId: "trmnl/pipeline",
-      configurationRevision: "trmnl/config",
-      configuration: {},
-      automatic: true,
-    },
-    testOperator,
-  );
-  const source = await delivery.createDeployment(
-    {
-      requestId: "trmnl/release",
-      environmentId: "trmnl-dashboard/prod",
-      versionSetRevisionId: selected.id,
-      expectedGeneration: 0,
-      kind: "deploy",
-    },
-    testOperator,
-  );
+  const delivery = trmnlDelivery(context.cluster.database);
+  const { source, selected } = await requestTrmnlRelease(delivery);
   await delivery.claim(source.id, testExecutor);
   await delivery.finish(
     source.id,

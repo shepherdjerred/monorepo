@@ -4,9 +4,14 @@ import type {
   StoredRecipeDefinition,
   VersionSetRevision,
 } from "#shared/contract.ts";
-import { applicationOf, trmnlPluginsOf } from "#shared/model/recipe-view.ts";
+import {
+  kubernetesRecipes,
+  specializedStageKey,
+  stepApplicationOf,
+  trmnlPluginsOf,
+} from "#shared/model/recipe-view.ts";
 import type { Transaction } from "./delivery-data.ts";
-import { version } from "./delivery-data.ts";
+import { recordedByStage, version } from "./delivery-data.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
 
 export function validateTrmnlSelection(
@@ -20,9 +25,21 @@ export function validateTrmnlSelection(
       "TRMNL dashboard releases must include their fixed plugin dependency stage",
     );
   if (plugins === undefined) return;
+  // The executor runs every archive step through the one TRMNL client, and
+  // settlement reads the first, so a second would overwrite the fixed
+  // plugin settings unchecked.
+  const archiveSteps = kubernetesRecipes(pipeline)
+    .flatMap((recipe) => recipe.steps)
+    .filter((step) => step.kind === "archive");
+  if (archiveSteps.length > 1)
+    throw new DeliveryError(
+      "INVALID",
+      "A release configures the fixed TRMNL plugins through exactly one archive step",
+    );
   const archive = selected.components[plugins.archiveComponent];
   if (
-    applicationOf(pipeline)?.name !== "trmnl-dashboard" ||
+    // The Application that owns the archive step, not a compound's first.
+    stepApplicationOf(pipeline, "archive")?.name !== "trmnl-dashboard" ||
     selected.serviceId !== "trmnl-dashboard" ||
     archive?.kind !== "archive" ||
     archive.serviceId !== "trmnl-dashboard" ||
@@ -56,11 +73,10 @@ export async function validateTrmnlSuccess(
   const selected = await version(tx, input.versionSetRevisionId);
   validateTrmnlSelection(pipeline, selected);
   const archive = selected.components[plugins.archiveComponent];
-  const expectedOperation = deliveryOperationId(`${input.id}:trmnl-plugins`);
+  const key = specializedStageKey(pipeline, "archive");
+  const expectedOperation = deliveryOperationId(`${input.id}:${key}`);
   const stage = await tx.stage.findUnique({
-    where: {
-      deploymentId_key: { deploymentId: input.id, key: "trmnl-plugins" },
-    },
+    where: { deploymentId_key: { deploymentId: input.id, key } },
   });
   const evidence = await tx.evidence.findMany({
     where: {
@@ -78,7 +94,7 @@ export async function validateTrmnlSuccess(
     }
     const result = AcceptanceSchema.safeParse(parsed);
     return (
-      item.id.startsWith(`${input.id}/stage/trmnl-plugins/`) &&
+      recordedByStage(item.id, input.id, key) &&
       result.success &&
       result.data.archiveArtifactId === archive?.id &&
       result.data.archiveDigest === archive.digest &&

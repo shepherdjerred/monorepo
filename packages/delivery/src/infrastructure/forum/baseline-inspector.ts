@@ -1,4 +1,7 @@
-import { applicationOf, forumReleaseOf } from "#shared/model/recipe-view.ts";
+import {
+  forumReleaseOf,
+  stepApplicationOf,
+} from "#shared/model/recipe-view.ts";
 import { z } from "zod";
 import { DeliveryError } from "#domain/error.ts";
 import { fingerprint } from "#infrastructure/delivery-records.ts";
@@ -82,7 +85,10 @@ async function observe(
   context: ForumBaselineContext,
   options: Options & { argoToken: string; legacy: boolean },
 ) {
-  const definition = applicationOf(context.pipeline.definition);
+  const definition = stepApplicationOf(
+    context.pipeline.definition,
+    "forum-bundle",
+  );
   if (
     definition === null ||
     forumReleaseOf(context.pipeline.definition) === undefined

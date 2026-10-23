@@ -52,16 +52,13 @@ function requestOf(info: z.infer<typeof InfoSchema>, name: string) {
 }
 
 /**
- * Readback of the owned Application (A2): it is Delivery's for this
- * environment, carries exactly the rendered source, and its last operation
- * is this deployment's request. Settled only when that operation succeeded
- * at the exact revision and the Application is Synced and Healthy.
+ * The owned Application (A2): Delivery's for this environment and carrying
+ * exactly the rendered source.
  */
-export function applicationProgress(
+export function requireRenderedSource(
   raw: unknown,
   desired: RenderedApplication,
-  requestId: string,
-): ApplicationProgress {
+) {
   const observed = ObservedSchema.parse(raw);
   if (
     observed.metadata.name !== desired.name ||
@@ -75,6 +72,21 @@ export function applicationProgress(
     throw new Error(
       `Application ${desired.name} source differs from the rendered exact source`,
     );
+  return observed;
+}
+
+/**
+ * Readback of the owned Application (A2): it is Delivery's for this
+ * environment, carries exactly the rendered source, and its last operation
+ * is this deployment's request. Settled only when that operation succeeded
+ * at the exact revision and the Application is Synced and Healthy.
+ */
+export function applicationProgress(
+  raw: unknown,
+  desired: RenderedApplication,
+  requestId: string,
+): ApplicationProgress {
+  const observed = requireRenderedSource(raw, desired);
   const state = observed.status.operationState;
   if (
     state === undefined ||

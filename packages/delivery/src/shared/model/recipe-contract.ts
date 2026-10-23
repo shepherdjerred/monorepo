@@ -11,7 +11,11 @@ import { IdentifierSchema } from "#shared/artifact-contract.ts";
 import { MonitorSchema } from "./monitor-contract.ts";
 import { StaticSitePolicySchema } from "#shared/static-site-contract.ts";
 import { WorkerPoolTargetSchema } from "#shared/worker-contract.ts";
-import { misplacedUpgrades } from "./step-order.ts";
+import {
+  contentStepRefusals,
+  misplacedUpgrades,
+  sharedArchiveRelease,
+} from "./step-order.ts";
 import { OperatorHostTargetSchema } from "./operator-run-contract.ts";
 
 /**
@@ -333,6 +337,8 @@ export const KubernetesApplicationRecipeSchema = z
     }
     for (const issue of misplacedUpgrades(recipe.steps))
       context.addIssue(issue);
+    for (const message of contentStepRefusals(recipe.steps))
+      context.addIssue({ code: "custom", path: ["steps"], message });
     // Steps and monitors act on this deployment's own selection only.
     const images = new Set(
       Object.values(recipe.artifactParameters).map((value) => value.component),
@@ -455,6 +461,17 @@ const nonCompoundRecipes = [
   ChannelRecipeSchema,
   OperatorRunRecipeSchema,
 ] as const;
+
+/** The steps of the Application a non-compound recipe deploys, if any. */
+function applicationSteps(
+  definition: z.infer<(typeof nonCompoundRecipes)[number]>,
+): readonly { kind: string }[] {
+  if (definition.kind === "kubernetes-application") return definition.steps;
+  const wrapped =
+    definition.kind === "operator-run" ? definition.wrapped : null;
+  return wrapped?.kind === "kubernetes-application" ? wrapped.steps : [];
+}
+
 export const CompoundRecipeSchema = z
   .strictObject({
     kind: z.literal("compound"),
@@ -479,7 +496,17 @@ export const CompoundRecipeSchema = z
     (recipe) =>
       recipe.subRecipes.every((sub) => sub.definition.kind !== "tofu"),
     "A Tofu stack is its own recipe; a compound recipe holds no tofu sub-recipe",
-  );
+  )
+  .superRefine((recipe, context) => {
+    const applications = recipe.subRecipes
+      .map((sub) => applicationSteps(sub.definition))
+      .filter((steps) => steps.length > 0);
+    for (const message of [
+      ...contentStepRefusals(applications.flat()),
+      ...sharedArchiveRelease(applications),
+    ])
+      context.addIssue({ code: "custom", message });
+  });
 
 export const RecipeDefinitionSchema = z.discriminatedUnion("kind", [
   ...nonCompoundRecipes,

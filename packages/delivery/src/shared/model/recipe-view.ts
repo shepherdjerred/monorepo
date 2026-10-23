@@ -88,6 +88,16 @@ export function kubernetesRecipes(definition: Stored): KubernetesRecipe[] {
 }
 
 /**
+ * An Application step whose target outlives the Application's removal: a
+ * site step's bucket stays live when the Application is deleted (4.10).
+ */
+function stepWithoutRemoval(steps: readonly { kind: string }[]) {
+  return steps.some((step) => step.kind === "static-site")
+    ? "static-site step"
+    : null;
+}
+
+/**
  * The first target a recipe deploys that removal cannot destroy (4.10), or
  * null. Only a kubernetes-application has a removal adapter, which deletes
  * the Application by its lifecycle policy; a bucket, a stack, a channel's
@@ -98,12 +108,13 @@ export function kubernetesRecipes(definition: Stored): KubernetesRecipe[] {
 export function targetWithoutRemoval(definition: Stored): string | null {
   switch (definition.kind) {
     case "kubernetes-application":
+      return stepWithoutRemoval(definition.steps);
     case "argocd":
     case "control-plane":
       return null;
     case "operator-run":
       return definition.wrapped.kind === "kubernetes-application"
-        ? null
+        ? stepWithoutRemoval(definition.wrapped.steps)
         : `operator-run ${definition.wrapped.kind}`;
     case "compound":
       return (
@@ -256,6 +267,32 @@ export function siteReleaseOf(
   if (definition.kind === "argocd") return definition.scoutSite;
   const site = firstStep(definition, "static-site");
   return site?.kind === "static-site" ? site.policy : undefined;
+}
+
+/**
+ * The stage that settles a site activation or plugin archive step, whose
+ * operation identity is `<deployment>:<stage>`: v1's fixed key, or the
+ * model step's own key (T3). The executor runs a compound recipe's steps
+ * under keys prefixed by their sub-recipe's position (`sub2-step-archive`),
+ * so the key names the sub-recipe holding the step's first occurrence, as
+ * `siteReleaseOf` and `trmnlPluginsOf` read it.
+ */
+export function specializedStageKey(
+  definition: Stored,
+  step: "static-site" | "archive",
+): string {
+  if (definition.kind === "argocd")
+    return step === "static-site" ? "scout-site" : "trmnl-plugins";
+  const key = stepStageKey("step", step);
+  if (definition.kind !== "compound") return key;
+  const position = definition.subRecipes.findIndex((sub) =>
+    kubernetesRecipes(sub.definition).some((recipe) =>
+      recipe.steps.some((candidate) => candidate.kind === step),
+    ),
+  );
+  if (position === -1)
+    throw new Error(`The compound recipe has no ${step} step`);
+  return `sub${String(position + 1)}-${key}`;
 }
 
 /** The Forum image and licensed bundle a release migrates to (v1 `forumRelease`). */

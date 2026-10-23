@@ -156,3 +156,39 @@ export async function catalogDocument() {
     ],
   };
 }
+
+/**
+ * A raw `kubernetes-application` recipe for `name`: apply-safety, then sync,
+ * then any extra steps, each acting through the Application unless it names
+ * its own instance.
+ */
+export function applicationRecipe(
+  name: string,
+  extra: readonly Record<string, unknown>[] = [],
+) {
+  const instance = `application:${name}`;
+  return {
+    kind: "kubernetes-application",
+    application: {
+      name,
+      project: "default",
+      destination: {
+        server: "https://kubernetes.default.svc",
+        namespace: name,
+      },
+      source: {
+        repoURL: "https://chartmuseum.tailnet-1a49.ts.net",
+        chart: name,
+      },
+      lifecycle: "retain",
+    },
+    chartComponent: `chart:${name}`,
+    runner: { service: "ci", component: "image:ci-base" },
+    steps: [
+      { kind: "apply-safety", instance },
+      { kind: "sync", instance },
+      ...extra.map((step) => ({ instance, ...step })),
+    ],
+    oracle: {},
+  };
+}

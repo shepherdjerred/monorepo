@@ -1,4 +1,7 @@
-import { applicationOf, forumReleaseOf } from "#shared/model/recipe-view.ts";
+import {
+  forumReleaseOf,
+  stepApplicationOf,
+} from "#shared/model/recipe-view.ts";
 import { bareFingerprint } from "#infrastructure/recovery-intents.ts";
 import { z } from "zod";
 import { DeliveryError } from "#domain/error.ts";
@@ -59,7 +62,7 @@ export async function freezeRecoveredForumRuntime(
     acceptedAt: Date | null;
   },
 ) {
-  const policy = applicationOf(input.pipeline.definition);
+  const policy = stepApplicationOf(input.pipeline.definition, "forum-bundle");
   if (
     policy === null ||
     forumReleaseOf(input.pipeline.definition) === undefined
@@ -114,7 +117,7 @@ export async function freezeRecoveredForumRuntime(
   const originalForum = forumReleaseOf(original.definition);
   if (
     originalForum === undefined ||
-    applicationOf(original.definition)?.name !== policy.name
+    stepApplicationOf(original.definition, "forum-bundle")?.name !== policy.name
   )
     throw new DeliveryError(
       "CONFLICT",

@@ -5,6 +5,7 @@ import { testOperator, testExecutor } from "#testing/seed.ts";
 import {
   seedForum,
   baselineProof,
+  bindCompoundForum,
   qualifyForumReleaseFixture,
 } from "./fixtures.ts";
 import { createForumBaselineInspector } from "./baseline-inspector.ts";
@@ -14,8 +15,9 @@ import { forumBundlePolicy } from "@shepherdjerred/ops-model/forum-bundle-policy
 const fixture = useDeliveryFixture({
   forumPolicyReader: () => Promise.resolve(forumBundlePolicy),
 });
-async function context() {
+async function context(compound = false) {
   await seedForum(fixture.delivery);
+  if (compound) await bindCompoundForum(fixture.delivery);
   const intent = await fixture.delivery.requestForumBaseline(
     {
       requestId: crypto.randomUUID(),
@@ -251,6 +253,27 @@ test.each(["index", "child"])(
     expect(settled.status).toBe("succeeded");
   },
 );
+
+test("a compound recipe inspects the Application that releases its forum bundle", async () => {
+  const input = await context(true),
+    transport = nativeTransport(input);
+  const inspect = createForumBaselineInspector({
+    argoOrigin: "https://argo.test",
+    argoToken: "argo-test-capability",
+    observationToken: "observer-test-capability",
+    policyReader: () => Promise.resolve(forumBundlePolicy),
+    fetch: transport.fetch,
+  });
+  const proof = await inspect(input);
+  expect(proof.application.name).toBe("storm-forum");
+  expect(
+    transport.requests.every(
+      (url) =>
+        url.includes("/api/v1/applications/storm-forum") ||
+        url.endsWith("/_delivery/status"),
+    ),
+  ).toBe(true);
+});
 
 test("unknown runtime digests cannot establish a Forum baseline", async () => {
   const input = await context(),

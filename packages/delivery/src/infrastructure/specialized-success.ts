@@ -1,13 +1,14 @@
 import {
   minecraftUpgradeOf,
   siteReleaseOf,
+  specializedStageKey,
 } from "#shared/model/recipe-view.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
 import { z } from "zod";
 import { DeliveryError } from "#domain/error.ts";
 import { PipelineRevisionSchema } from "#shared/contract.ts";
 import { required, wire } from "./delivery-records.ts";
-import { version, type Transaction } from "./delivery-data.ts";
+import { recordedByStage, version, type Transaction } from "./delivery-data.ts";
 import { validateTrmnlSuccess } from "./trmnl-policy.ts";
 
 /** Same deterministic identity used by the source-owned execution adapters. */
@@ -15,9 +16,10 @@ export function specializedOperationId(identity: string) {
   return deliveryOperationId(identity);
 }
 
-const ScoutAcceptanceSchema = z
+/** v1 tags Scout's combined frontend; a model static-site step tags its kind. */
+const SiteAcceptanceSchema = z
   .object({
-    adapter: z.literal("scout-site"),
+    adapter: z.enum(["scout-site", "static-site"]),
     archiveArtifactId: z.string(),
     archiveDigest: z.string(),
     versionSetRevisionId: z.string(),
@@ -76,20 +78,19 @@ export async function validateSpecializedSuccess(
   if (site !== undefined) {
     const selected = await version(tx, deployment.versionSetRevisionId);
     const archive = selected.components[site.archiveComponent];
-    const expectedOperation = specializedOperationId(
-      `${deployment.id}:scout-site`,
-    );
+    const key = specializedStageKey(pipeline, "static-site");
+    const expectedOperation = specializedOperationId(`${deployment.id}:${key}`);
     const completed = stages.some(
       (stage) =>
-        stage.key === "scout-site" &&
+        stage.key === key &&
         stage.status === "succeeded" &&
         stage.operationId === expectedOperation,
     );
     const accepted = evidence.some((entry) => {
-      const parsed = ScoutAcceptanceSchema.safeParse(summary(entry.summary));
+      const parsed = SiteAcceptanceSchema.safeParse(summary(entry.summary));
       return (
         entry.kind === "acceptance" &&
-        entry.id.startsWith(`${deployment.id}/stage/scout-site/`) &&
+        recordedByStage(entry.id, deployment.id, key) &&
         entry.operationId === expectedOperation &&
         parsed.success &&
         parsed.data.archiveArtifactId === archive?.id &&

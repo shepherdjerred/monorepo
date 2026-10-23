@@ -21,3 +21,61 @@ export function misplacedUpgrades(
       : [],
   );
 }
+
+/**
+ * Settlement, recovery and Forum candidate validation each read one
+ * occurrence of these steps per release (`siteReleaseOf`,
+ * `specializedStageKey`, `forumReleaseOf`, `stepApplicationOf`), while the
+ * executor runs every step it is given. A recipe therefore holds at most one
+ * of each across its Applications, compound sub-recipes included.
+ */
+export const ONE_SITE_STEP =
+  "A recipe activates at most one static-site step across its Applications; settlement proves exactly one site activation per release";
+export const ONE_FORUM_BUNDLE =
+  "A recipe migrates at most one Forum database: it holds at most one forum-bundle step across its Applications, because candidate validation and the baseline freeze read one Forum release per deployment";
+
+/**
+ * Content recovery repairs the one content target a failed release holds
+ * (4.15), resolved from its site step or else its forum-bundle step.
+ */
+export const ONE_CONTENT_TARGET =
+  "A recipe releases at most one recoverable content target: a static-site step or a forum-bundle step, not both, because content recovery repairs one target per failed release";
+
+const SINGLE_STEPS: Readonly<Record<string, string>> = {
+  "static-site": ONE_SITE_STEP,
+  "forum-bundle": ONE_FORUM_BUNDLE,
+};
+
+/**
+ * The refusals for these Application steps' content steps: each kind at
+ * most once, and never both kinds in one release.
+ */
+export function contentStepRefusals(steps: readonly { kind: string }[]) {
+  const repeated = Object.entries(SINGLE_STEPS).flatMap(([kind, message]) =>
+    steps.filter((step) => step.kind === kind).length > 1 ? [message] : [],
+  );
+  return Object.keys(SINGLE_STEPS).every((kind) =>
+    steps.some((step) => step.kind === kind),
+  )
+    ? [...repeated, ONE_CONTENT_TARGET]
+    : repeated;
+}
+
+/**
+ * Argo recovery settles a failed release by reading back exactly one
+ * Application, with a TRMNL release's plugin bundle
+ * (`createRecoveryInspector`), so an ambiguous plugin publication is
+ * recoverable only while it is its release's only Application.
+ */
+export const ARCHIVE_ALONE =
+  "A plugin archive step's release deploys no other Application: its recovery reads back exactly one Application together with its plugin bundle";
+
+/** The refusal when a compound's Applications, by their steps, share a release with an archive step. */
+export function sharedArchiveRelease(
+  applications: readonly (readonly { kind: string }[])[],
+) {
+  return applications.length > 1 &&
+    applications.some((steps) => steps.some((step) => step.kind === "archive"))
+    ? [ARCHIVE_ALONE]
+    : [];
+}

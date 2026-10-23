@@ -5,6 +5,8 @@ import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
 import { replicateProducedArtifacts } from "#testing/replication.ts";
 import { ForumBaselineProofSchema } from "#shared/forum-contract.ts";
 import type { ForumBaselineContext } from "#shared/contract.ts";
+import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
+import { registration } from "#testing/catalog-fixture.ts";
 
 export async function qualifyForumReleaseFixture(
   delivery: Delivery,
@@ -122,6 +124,38 @@ export async function seedForum(delivery: Delivery) {
     testOperator,
   );
   return { acquired, environment };
+}
+
+/**
+ * Rebinds the seeded forum environment to a compound recipe whose first
+ * Application is another one, storm-forum-search, so the forum Application
+ * is not the environment's primary one.
+ */
+export async function bindCompoundForum(delivery: Delivery) {
+  const [search, forum] = await Promise.all([
+    registration("arcade.pipeline.json", {
+      application: "storm-forum-search",
+      namespace: "storm-forum-search",
+    }),
+    registration("specialized/storm-forum/pipeline.json"),
+  ]);
+  const definition = RecipeDefinitionSchema.parse({
+    kind: "compound",
+    subRecipes: [
+      { instance: "application:storm-forum-search", definition: search },
+      { instance: "application:storm-forum", definition: forum },
+    ],
+  });
+  await delivery.database.pipeline.create({
+    data: { id: "storm-forum/compound", definition },
+  });
+  await delivery.database.environment.update({
+    where: { id: "storm-forum/prod" },
+    data: {
+      pipelineRevisionId: "storm-forum/compound",
+      application: "storm-forum-search",
+    },
+  });
 }
 
 export function baselineProof(context: ForumBaselineContext) {

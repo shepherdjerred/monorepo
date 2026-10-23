@@ -1,11 +1,6 @@
 import { expect, test, vi } from "vitest";
-import { createHash } from "node:crypto";
 import { zipSync } from "fflate";
-import {
-  TRMNL_PLUGIN_POLICY,
-  TrmnlPluginBundleSchema,
-  serializeTrmnlPluginBundle,
-} from "@shepherdjerred/ops-model/trmnl/plugin-policy.ts";
+import { trmnlPluginArchiveFixture } from "@shepherdjerred/ops-model/trmnl/plugin-archive-fixture.ts";
 import { createTrmnlPluginClient, trmnlPluginMatches } from "./trmnl.ts";
 import { readTrmnlArchive, inspectTrmnlArchive } from "./trmnl-archive.ts";
 
@@ -21,28 +16,9 @@ function encodeZip(files: Record<string, string>) {
 }
 const SOURCE_REVISION = "a".repeat(40);
 function fixture() {
-  const bundle = TrmnlPluginBundleSchema.parse({
-    schema: "delivery-trmnl-plugins/v1",
-    sourceRevision: SOURCE_REVISION,
-    plugins: TRMNL_PLUGIN_POLICY.plugins.map((target) => ({
-      ...target,
-      files: Object.fromEntries(
-        TRMNL_PLUGIN_POLICY.files.map((name) => [
-          name,
-          name === "settings.yml"
-            ? `id: ${String(target.id)}\nstrategy: polling\n`
-            : `selected ${target.slug}/${name}\n`,
-        ]),
-      ),
-    })),
-  });
-  const bytes = new TextEncoder().encode(serializeTrmnlPluginBundle(bundle));
-  const digest = `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
-  const artifact = {
-    uri: `s3://delivery-artifacts/trmnl-plugins/${digest.slice(7)}.json`,
-    digest,
-    sourceRevision: SOURCE_REVISION,
-  };
+  const { bundle, bytes, digest, uri } =
+    trmnlPluginArchiveFixture(SOURCE_REVISION);
+  const artifact = { uri, digest, sourceRevision: SOURCE_REVISION };
   return {
     bundle,
     bytes,
@@ -168,18 +144,8 @@ test("independent inspector binds exact content address and original source befo
   ).rejects.toThrow("frozen archive");
 });
 test("v2 archives bind their content digest alone; the descriptor's source revision is not compared", async () => {
-  const { bundle } = fixture();
-  const v2 = {
-    schema: "delivery-trmnl-plugins/v2" as const,
-    plugins: bundle.plugins,
-  };
-  const bytes = new TextEncoder().encode(serializeTrmnlPluginBundle(v2));
-  const digest = `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
-  const artifact = {
-    uri: `s3://delivery-artifacts/trmnl-plugins/${digest.slice(7)}.json`,
-    digest,
-    sourceRevision: "b".repeat(40),
-  };
+  const { bundle: v2, bytes, digest, uri } = trmnlPluginArchiveFixture();
+  const artifact = { uri, digest, sourceRevision: "b".repeat(40) };
   await expect(readTrmnlArchive(artifact, async () => bytes)).resolves.toEqual(
     v2,
   );

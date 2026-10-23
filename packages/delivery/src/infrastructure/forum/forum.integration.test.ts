@@ -6,6 +6,7 @@ import { DeliveryError } from "#domain/error.ts";
 import {
   seedForum,
   baselineProof,
+  bindCompoundForum,
   qualifyForumReleaseFixture,
 } from "./fixtures.ts";
 import { freezeForumBaseline } from "./freezer.ts";
@@ -197,6 +198,27 @@ test("a fresh native baseline accepts only original proof and never invents an a
   });
   expect(snapshot?.image.id).toBe("forum-image");
   expect(snapshot?.bundle.id).toBe("forum-bundle");
+});
+
+test("a compound recipe baselines the Application that releases its forum bundle, not its primary one", async () => {
+  const { delivery } = fixture;
+  await bindCompoundForum(delivery);
+  const context = await requested();
+  const result = await delivery.completeForumBaseline(
+    context.intent.id,
+    {
+      expectedEnvironmentGeneration: 0,
+      snapshotFingerprint: context.intent.snapshotFingerprint,
+    },
+    testExecutor,
+    async (observed) => baselineProof(observed),
+  );
+  expect(result.status).toBe("succeeded");
+  const baseline = await acceptedForumBaseline(
+    delivery.database,
+    "storm-forum/prod",
+  );
+  expect(baseline?.pipelineRevisionId).toBe("storm-forum/compound");
 });
 
 test("baseline is admin-only and rejects missing provenance, stale observations and environment races", async () => {
