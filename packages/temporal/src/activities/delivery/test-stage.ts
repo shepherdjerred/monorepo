@@ -11,6 +11,7 @@ import type {
   DeliveryJobReceipt,
   DeliveryJobRequest,
 } from "#shared/delivery-job.ts";
+import { executorIdentity } from "./model/stages.ts";
 
 /** Evidence shape accepted by the API's `test` evidence kind. */
 export type TestStageEvidence = {
@@ -64,6 +65,7 @@ export async function runDeliveryTestStage(
       operationId,
       message: JSON.stringify(native),
       evidence: [],
+      executor: executorIdentity(),
     });
   });
   if (receipt === undefined)

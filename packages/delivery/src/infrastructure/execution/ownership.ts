@@ -126,6 +126,52 @@ export function requireFinishingExecutor(
     );
 }
 
+/**
+ * Who may write a stage of a running deployment (D7, D8). While a handoff
+ * waits, no executor writes; the successor claims first. Before an identity
+ * owns the deployment, its writes are the owner's. Once one does, a write
+ * names that identity, or is a native Job's checkpoint: a running stage
+ * re-recorded as running under its own operation id, which the Job's
+ * spawning Activity already holds and which never renews the lease. Returns
+ * whether the write is the owner's or such a checkpoint.
+ */
+export function stageWriter(
+  row: {
+    workflowId: string | null;
+    workflowRunId: string | null;
+    handoffAt: Date | null;
+  },
+  executor: ExecutorIdentity | undefined,
+  write: {
+    existing: { status: string; operationId: string } | null;
+    status: string;
+    operationId: string;
+  },
+): "owner" | "checkpoint" {
+  if (row.handoffAt !== null)
+    throw new DeliveryError(
+      "CONFLICT",
+      "A handed-off deployment records stages only after its successor executor claims it (D8)",
+    );
+  if (row.workflowId === null) return "owner";
+  if (
+    executor?.workflowId === row.workflowId &&
+    executor.workflowRunId === row.workflowRunId
+  )
+    return "owner";
+  if (
+    executor === undefined &&
+    write.status === "running" &&
+    write.existing?.status === "running" &&
+    write.existing.operationId === write.operationId
+  )
+    return "checkpoint";
+  throw new DeliveryError(
+    "CONFLICT",
+    "Only the executor that owns the deployment records its stages (D7)",
+  );
+}
+
 /** A request whose frozen binding generation moved can no longer be approved (H2). */
 export async function expireApproval(tx: Transaction, deploymentId: string) {
   await tx.approval.updateMany({

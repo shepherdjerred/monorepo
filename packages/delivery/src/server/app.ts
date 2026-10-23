@@ -16,7 +16,7 @@ import {
   LatestQualifiedArtifactQuerySchema,
   LatestRetainableArtifactQuerySchema,
   PublishBuildSchema,
-  StageInputSchema,
+  StageRequestSchema,
 } from "#shared/contract.ts";
 import type { Principal, PublishBuild } from "#shared/contract.ts";
 import { CreateDeploymentV2Schema } from "#shared/deployment-request-contract.ts";
@@ -367,7 +367,7 @@ export function createApp(options: Options) {
   });
   app.post("/api/v1/deployments/:id/stages", async (c) => {
     requireScope(c.get("principal"), "execute");
-    const input = StageInputSchema.parse(await c.req.json());
+    const input = StageRequestSchema.parse(await c.req.json());
     if (input.status === "running") {
       const detail = await delivery.detail(c.req.param("id"));
       await enabled(detail.environment.id);

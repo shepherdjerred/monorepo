@@ -30,6 +30,7 @@ import {
   workerPlanEvidence,
   workerRunnerImage,
 } from "#lib/delivery/workers/worker-plan.ts";
+import { executorIdentity } from "#activities/delivery/model/stages.ts";
 
 async function workerJob(
   detail: DeploymentDetail,
@@ -66,6 +67,7 @@ async function workerJob(
     operationId,
     message: "Waiting for an identity-bound revision-pinned Job",
     evidence: [],
+    executor: executorIdentity(),
   });
   let native: DeliveryJobReceipt | undefined;
   const nativeEvidence: EvidenceInput[] = [];
@@ -82,6 +84,7 @@ async function workerJob(
       operationId,
       message: JSON.stringify(receipt),
       evidence: nativeEvidence,
+      executor: executorIdentity(),
     });
   });
   if (native === undefined)
@@ -144,6 +147,7 @@ export async function inspectDeliveryWorkerImages(id: string): Promise<void> {
           }),
         },
       ],
+      executor: executorIdentity(),
     },
   );
 }
@@ -170,6 +174,7 @@ export async function prepareDeliveryWorker(
         ...job.nativeEvidence,
         workerPlanEvidence(plan, job.operationId),
       ],
+      executor: executorIdentity(),
     },
   );
   return plan;
@@ -211,6 +216,7 @@ export async function stepDeliveryWorker(
       operationId: job.operationId,
       message: JSON.stringify(job.native),
       evidence: [...job.nativeEvidence, ...receipt.evidence],
+      executor: executorIdentity(),
     },
   );
 }

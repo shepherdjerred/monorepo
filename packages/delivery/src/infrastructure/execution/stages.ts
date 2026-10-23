@@ -7,6 +7,7 @@ import type {
   FinishDeployment,
   Principal,
   StageInput,
+  StageRequest,
 } from "#shared/contract.ts";
 import {
   fingerprint,
@@ -39,6 +40,7 @@ import {
   requireFinishingExecutor,
   requireLiveLease,
   runningDeployment,
+  stageWriter,
 } from "#infrastructure/execution/ownership.ts";
 
 /**
@@ -61,25 +63,42 @@ function refuseReservedStage(key: string) {
 export async function stage(
   this: Delivery,
   deploymentId: string,
-  input: StageInput,
+  request: StageRequest,
   actor: Principal,
 ) {
+  // The executor identity proves ownership; the stage is what is recorded.
+  const { executor, ...input } = request;
   refuseReservedStage(input.key);
   const leaseSeconds = await this.policy.leaseSeconds();
-  return this.database.$transaction(async (tx) =>
-    recordStageIn(tx, deploymentId, input, { actor, leaseSeconds }),
-  );
+  return this.database.$transaction(async (tx) => {
+    const row = await runningDeployment(
+      tx,
+      deploymentId,
+      "Deployment must own the target before recording stages",
+    );
+    const existing = await tx.stage.findUnique({
+      where: { deploymentId_key: { deploymentId, key: input.key } },
+    });
+    const writer = stageWriter(row, executor, { existing, ...input });
+    return recordStageIn(tx, deploymentId, input, {
+      actor,
+      leaseSeconds: writer === "owner" ? leaseSeconds : null,
+    });
+  });
 }
 
 /**
  * Records one stage of a running deployment inside the caller's
  * transaction, so a decision and the stage it settles commit together.
+ * `leaseSeconds` is null when the writer is not the owning executor: such a
+ * write proves nothing about the executor's liveness and never renews its
+ * lease (D7).
  */
 export async function recordStageIn(
   tx: Transaction,
   deploymentId: string,
   input: StageInput,
-  { actor, leaseSeconds }: { actor: Principal; leaseSeconds: number },
+  { actor, leaseSeconds }: { actor: Principal; leaseSeconds: number | null },
 ) {
   const row = await runningDeployment(
     tx,
@@ -137,11 +156,12 @@ export async function recordStageIn(
       ? { prefix: `stage/${input.key}`, appendOnly: true }
       : `stage/${input.key}`,
   );
-  // A recorded stage proves the executor is alive: it renews the lease.
-  await tx.deployment.update({
-    where: { id: deploymentId },
-    data: { leaseExpiresAt: leaseExpiry(leaseSeconds) },
-  });
+  // The owning executor's stage proves it is alive: it renews the lease.
+  if (leaseSeconds !== null)
+    await tx.deployment.update({
+      where: { id: deploymentId },
+      data: { leaseExpiresAt: leaseExpiry(leaseSeconds) },
+    });
   await audit(tx, actor, {
     action: "deployment.stage",
     entityId: deploymentId,

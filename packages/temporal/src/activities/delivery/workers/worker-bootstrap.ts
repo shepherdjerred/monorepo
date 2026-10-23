@@ -28,6 +28,7 @@ import {
   controlPlaneTemplates,
   ControlPlaneTemplatesSchema,
 } from "#lib/delivery/workers/worker-control-plane.ts";
+import { executorIdentity } from "#activities/delivery/model/stages.ts";
 
 export type WorkerBootstrapEffects = {
   inspect: (
@@ -149,6 +150,7 @@ export async function bootstrapDeliveryWorkerHosts(
     operationId,
     message: "Retain every legacy poller while starting exact retained hosts",
     evidence: [],
+    executor: executorIdentity(),
   });
   await effects.select(bootstrap);
   await effects.sync(bootstrap, operationId);
@@ -173,5 +175,6 @@ export async function bootstrapDeliveryWorkerHosts(
           "Legacy coverage and replacement Pod digests verified before legacy shutdown",
       },
     ],
+    executor: executorIdentity(),
   });
 }

@@ -25,6 +25,15 @@ async function finishAsExecutor(...args: Parameters<typeof finishDelivery>) {
   return await new MockActivityEnvironment().run(finishDelivery, ...args);
 }
 
+/** The platform step writes its stages as the executor's Activity (D7). */
+async function asExecutor(...args: Parameters<typeof executePlatformWithJob>) {
+  return await new MockActivityEnvironment().run<
+    Parameters<typeof executePlatformWithJob>,
+    Awaited<ReturnType<typeof executePlatformWithJob>>,
+    typeof executePlatformWithJob
+  >(executePlatformWithJob, ...args);
+}
+
 let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
 let fixture: Awaited<ReturnType<typeof platformFixture>>;
 let server: ReturnType<typeof Bun.serve>;
@@ -149,7 +158,7 @@ test("real PG+HTTP freezes qualified plan, persists native receipt before effect
     DeploymentDetailSchema,
     {},
   );
-  const evidence = await executePlatformWithJob(planned.id, nativeJob);
+  const evidence = await asExecutor(planned.id, nativeJob);
   await finishAsExecutor(planned.id, { status: "succeeded", evidence });
   const afterPlan = await fixture.delivery.detail(planned.id);
   expect(afterPlan.environment.acceptedDeploymentId).toBeNull();
@@ -167,7 +176,7 @@ test("real PG+HTTP freezes qualified plan, persists native receipt before effect
     DeploymentDetailSchema,
     {},
   );
-  const accepted = await executePlatformWithJob(apply.id, nativeJob);
+  const accepted = await asExecutor(apply.id, nativeJob);
   await finishAsExecutor(apply.id, { status: "succeeded", evidence: accepted });
   const done = await fixture.delivery.detail(apply.id);
   expect(done.environment.acceptedDeploymentId).toBe(apply.id);

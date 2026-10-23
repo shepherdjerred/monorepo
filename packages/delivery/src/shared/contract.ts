@@ -301,6 +301,15 @@ export const StageInputSchema = z
     evidence: z.array(EvidenceInputSchema).default([]),
   })
   .strict();
+/**
+ * An executor's stage write: the stage plus the writing Workflow execution,
+ * which must be the deployment's owner once one is recorded (D7). The
+ * identity proves ownership and is not part of the recorded stage.
+ */
+export const StageRequestSchema = StageInputSchema.extend({
+  executor: ExecutorIdentitySchema.optional(),
+}).strict();
+export type StageRequest = z.infer<typeof StageRequestSchema>;
 export const StageSchema = StageInputSchema.omit({ evidence: true }).extend({
   id: IdentifierSchema,
   deploymentId: IdentifierSchema,

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { MockActivityEnvironment } from "@temporalio/testing";
 import type {
   DeliveryJobReceipt,
   DeliveryJobRequest,
@@ -14,7 +15,17 @@ vi.mock("#lib/delivery/client.ts", () => ({
   ),
 }));
 
-const { runDeliveryTestStage } = await import("./test-stage.ts");
+const testStage = await import("./test-stage.ts");
+/** The stage runs as the Activity of its executor Workflow (D7). */
+async function runDeliveryTestStage(
+  ...args: Parameters<typeof testStage.runDeliveryTestStage>
+) {
+  return await new MockActivityEnvironment().run<
+    Parameters<typeof testStage.runDeliveryTestStage>,
+    Awaited<ReturnType<typeof testStage.runDeliveryTestStage>>,
+    typeof testStage.runDeliveryTestStage
+  >(testStage.runDeliveryTestStage, ...args);
+}
 
 afterEach(() => {
   requests.splice(0);
@@ -75,6 +86,11 @@ describe("runDeliveryTestStage", () => {
           operationId: expect.stringMatching(/^delivery-[a-f0-9]{40}$/u),
           message: JSON.stringify(receipt),
           evidence: [],
+          // The executor names itself on every stage write (D7).
+          executor: {
+            workflowId: expect.any(String),
+            workflowRunId: expect.any(String),
+          },
         },
       },
     ]);

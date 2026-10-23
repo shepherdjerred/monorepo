@@ -540,7 +540,9 @@ ownership flag on a terminal result, not a fifth state: the result is kept
   whose lease expires without renewal, or whose workflow is closed, becomes
   `recovery-required`. A deployment is never owned by a different executor
   identity, except the successor executor of a self-hosted handoff (D8); the
-  same workflow may resume after a transient failure.
+  same workflow may resume after a transient failure. Only the owning
+  executor records the deployment's executor stages and finishes it; a
+  native Job may re-record its own running stage, which renews nothing.
 - D8. A deployment of a `self-hosted` service acquires a global dispatch
   barrier before effects: no other deployment is claimed while the barrier
   is held, queues are drained first, and the deployment's evidence source is

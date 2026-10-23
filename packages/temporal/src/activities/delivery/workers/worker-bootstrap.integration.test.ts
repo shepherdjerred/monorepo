@@ -38,6 +38,15 @@ import { SettledArgoStatusSchema } from "#lib/delivery/argocd-proof.ts";
 import { retainedWorkerPod } from "./worker-fixtures.ts";
 
 /** `finishDelivery` reports as the Activity of its executor Workflow (D7). */
+/** The bootstrap writes its stages as the executor's Activity (D7). */
+async function bootstrapAsExecutor(
+  ...args: Parameters<typeof bootstrapDeliveryWorkerHosts>
+) {
+  return await new MockActivityEnvironment().run(
+    bootstrapDeliveryWorkerHosts,
+    ...args,
+  );
+}
 async function finishAsExecutor(...args: Parameters<typeof finishDelivery>) {
   return await new MockActivityEnvironment().run(finishDelivery, ...args);
 }
@@ -237,7 +246,7 @@ function boundary(
 
 test("genuine PostgreSQL pool bootstraps only exact retained images without a Git legacy selector", async () => {
   const external = boundary();
-  await bootstrapDeliveryWorkerHosts(detail, external.effects);
+  await bootstrapAsExecutor(detail, external.effects);
   expect(external.selections).toHaveLength(1);
   expect(external.selections[0]?.parameters).not.toHaveProperty(
     "delivery.legacyWorkers",
@@ -268,9 +277,9 @@ test("genuine PostgreSQL pool bootstraps only exact retained images without a Gi
 });
 test("an uncovered legacy build blocks before any Argo mutation or external-intent stage", async () => {
   const external = boundary({ uncovered: true });
-  await expect(
-    bootstrapDeliveryWorkerHosts(detail, external.effects),
-  ).rejects.toThrow("qualified retained-pool coverage");
+  await expect(bootstrapAsExecutor(detail, external.effects)).rejects.toThrow(
+    "qualified retained-pool coverage",
+  );
   expect(external.selections).toEqual([]);
   const stored = await store.detail(detail.deployment.id);
   expect(
@@ -279,9 +288,9 @@ test("an uncovered legacy build blocks before any Argo mutation or external-inte
 });
 test("missing replacement Pod proof leaves the bootstrap intent running and the PostgreSQL lock held", async () => {
   const external = boundary({ missingHost: true });
-  await expect(
-    bootstrapDeliveryWorkerHosts(detail, external.effects),
-  ).rejects.toThrow("ready Pod");
+  await expect(bootstrapAsExecutor(detail, external.effects)).rejects.toThrow(
+    "ready Pod",
+  );
   expect(external.selections).toHaveLength(1);
   expect(external.selections[0]?.parameters["delivery.workerPool"]).toBe(
     deliverySelection(detail).selection.parameters["delivery.workerPool"],

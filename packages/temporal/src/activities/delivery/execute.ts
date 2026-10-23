@@ -154,6 +154,8 @@ async function stage(
     operationId: receipt.operationId,
     message: `${key}: ${status}`,
     evidence: receipt.evidence ?? [],
+    // Only the executor that owns the deployment writes its stages (D7).
+    executor: executorIdentity(),
   });
 }
 

@@ -38,6 +38,8 @@ export async function recordStage(
       operationId: receipt.operationId,
       message: receipt.message ?? `${key}: ${status}`,
       evidence: receipt.evidence ?? [],
+      // Only the executor that owns the deployment writes its stages (D7).
+      executor: executorIdentity(),
     },
   );
 }

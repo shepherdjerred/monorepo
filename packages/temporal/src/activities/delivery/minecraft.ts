@@ -21,6 +21,7 @@ import {
   MinecraftControllerReceiptSchema,
   type MinecraftControllerReceipt,
 } from "#lib/delivery/minecraft-controller.ts";
+import { executorIdentity } from "./model/stages.ts";
 const DeferredSchema = z
   .object({
     status: z.literal("waiting"),
@@ -55,7 +56,7 @@ const external: MinecraftEffects = {
     await deliveryRequest(
       `deployments/${encodeURIComponent(id)}/stages`,
       z.unknown(),
-      input,
+      { ...input, executor: executorIdentity() },
     );
   },
 };

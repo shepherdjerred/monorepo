@@ -5,6 +5,7 @@ import {
   type Principal,
 } from "#shared/contract.ts";
 import { attestationStageKey } from "#shared/model/stage-keys.ts";
+import { recordStageIn } from "#infrastructure/execution/stages.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import {
@@ -59,16 +60,22 @@ export async function attestStage(
   const operationId =
     input.evidence.find((entry) => entry.operationId !== undefined)
       ?.operationId ?? `sha256:${fingerprint(input.evidence)}`;
-  const stage = await this.stage(
-    deploymentId,
-    {
-      key: attestationStageKey(input.stage),
-      status: "succeeded",
-      operationId,
-      message: `Attested by ${actor.id}`,
-      evidence: input.evidence,
-    },
-    actor,
+  // The executor's stage write admits only the owning executor, so the
+  // attestor records its stage directly. An attestation is no proof that the
+  // executor is alive, so it never renews the executor's lease (D7).
+  const stage = await this.database.$transaction(async (tx) =>
+    recordStageIn(
+      tx,
+      deploymentId,
+      {
+        key: attestationStageKey(input.stage),
+        status: "succeeded",
+        operationId,
+        message: `Attested by ${actor.id}`,
+        evidence: input.evidence,
+      },
+      { actor, leaseSeconds: null },
+    ),
   );
   return StageSchema.parse(stage);
 }

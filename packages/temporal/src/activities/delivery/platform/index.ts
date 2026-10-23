@@ -15,6 +15,7 @@ import { platformExecutionJob } from "#lib/delivery/platform/job-request.ts";
 import { TofuStateMarkerSchema } from "#lib/delivery/platform/tofu-input.ts";
 import { inspectDeliveryPlatformRecovery } from "./recovery.ts";
 import { runDeliveryModelPlatformStep } from "./model-tofu.ts";
+import { executorIdentity } from "#activities/delivery/model/stages.ts";
 
 /** All platform authority stays on its dedicated Activity queue and ServiceAccount. */
 export async function executePlatformWithJob(
@@ -48,6 +49,7 @@ export async function executePlatformWithJob(
       operationId,
       message,
       evidence,
+      executor: executorIdentity(),
     });
   await stage("running", "Waiting for exact qualified platform Job", []);
   let receipt: DeliveryJobReceipt | undefined;

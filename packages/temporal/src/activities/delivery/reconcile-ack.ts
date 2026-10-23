@@ -7,6 +7,7 @@ import {
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import { deliverySelection } from "#lib/delivery/selection.ts";
+import { executorIdentity } from "./model/stages.ts";
 
 type Effects = {
   read: () => Promise<ReturnType<typeof reconciliationAcknowledgementState>>;
@@ -123,7 +124,7 @@ function acknowledgementEffects(
       deliveryRequest(
         `deployments/${encodeURIComponent(expected.deployment.id)}/stages`,
         z.unknown(),
-        body,
+        { ...body, executor: executorIdentity() },
       ),
     wait: Bun.sleep,
     heartbeat: () => {

@@ -32,6 +32,17 @@ import { executeControlPlaneWithJob } from "./control-plane.ts";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
 import { admitPlatformNativeJob } from "#lib/delivery/platform/native-job.ts";
 
+/** The control-plane step writes its stages as the executor's Activity (D7). */
+async function asExecutor(
+  ...args: Parameters<typeof executeControlPlaneWithJob>
+) {
+  return await new MockActivityEnvironment().run<
+    Parameters<typeof executeControlPlaneWithJob>,
+    Awaited<ReturnType<typeof executeControlPlaneWithJob>>,
+    typeof executeControlPlaneWithJob
+  >(executeControlPlaneWithJob, ...args);
+}
+
 /** `finishDelivery` reports as the Activity of its executor Workflow (D7). */
 async function finishAsExecutor(...args: Parameters<typeof finishDelivery>) {
   return await new MockActivityEnvironment().run(finishDelivery, ...args);
@@ -230,7 +241,7 @@ test("real PG+HTTP control-plane intent resumes the same native Job across execu
       argoOperationId: crypto.randomUUID(),
     };
   };
-  await expect(executeControlPlaneWithJob(deployment.id, run)).rejects.toThrow(
+  await expect(asExecutor(deployment.id, run)).rejects.toThrow(
     "Executor replaced",
   );
   const checkpoint = await fixture.delivery.detail(deployment.id);
@@ -239,7 +250,7 @@ test("real PG+HTTP control-plane intent resumes the same native Job across execu
   expect(
     checkpoint.stages.find((stage) => stage.key === "control-plane")?.message,
   ).toBe(JSON.stringify(native));
-  const evidence = await executeControlPlaneWithJob(deployment.id, run);
+  const evidence = await asExecutor(deployment.id, run);
   expect(starts).toBe(1);
   await finishAsExecutor(deployment.id, { status: "succeeded", evidence });
   const accepted = await fixture.delivery.detail(deployment.id);

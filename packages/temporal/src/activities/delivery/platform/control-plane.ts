@@ -16,6 +16,7 @@ import {
   DeliveryJobReceiptSchema,
   type DeliveryJobReceipt,
 } from "#shared/delivery-job.ts";
+import { executorIdentity } from "#activities/delivery/model/stages.ts";
 
 export async function executeControlPlaneWithJob(
   id: string,
@@ -58,6 +59,7 @@ export async function executeControlPlaneWithJob(
       operationId: name,
       message,
       evidence,
+      executor: executorIdentity(),
     });
   if (existing === undefined)
     await checkpoint(
