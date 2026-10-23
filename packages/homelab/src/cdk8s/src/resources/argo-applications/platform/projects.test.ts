@@ -10,6 +10,7 @@ import {
   REPOSITORY_CHART_URLS,
 } from "@shepherdjerred/homelab/cdk8s/src/application-release-policy.ts";
 import { deliveryKnownApplications } from "./delivery-rbac.ts";
+import { COMPANION_CHARTS } from "@shepherdjerred/homelab/cdk8s/src/resources/companions/names.ts";
 import {
   ARGOCD_PROJECTS,
   CLOUDFLARE_OPERATOR_REPOSITORY,
@@ -152,6 +153,23 @@ describe("ArgoCD project assignment", () => {
         `${metadata.name} source ${spec.source.repoURL} in ${spec.project}`,
       ).toBe(true);
     }
+  });
+
+  it("puts every companion chart that renders a cluster-scoped kind in the cluster project", () => {
+    const offenders: string[] = [];
+    for (const name of COMPANION_CHARTS) {
+      const chart = charts.get(name);
+      if (chart === undefined) throw new Error(`${name} is not synthesized`);
+      const kinds = clusterScopedKinds(chart).filter(
+        (kind) => kind !== "/Namespace",
+      );
+      if (
+        kinds.length > 0 &&
+        applicationProject(name, true) !== ARGOCD_PROJECTS.cluster
+      )
+        offenders.push(`${name}: ${kinds.join(", ")}`);
+    }
+    expect(offenders).toEqual([]);
   });
 
   it("keeps cluster-scoped first-party charts out of the workloads project", () => {

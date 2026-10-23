@@ -47,18 +47,27 @@ const ApplicationManifestSchema = z.object({
   spec: z.object({
     project: z.string(),
     destination: z.object({ server: z.string(), namespace: z.string() }),
-    source: z.object({
-      repoURL: z.string(),
-      chart: z.string(),
-      targetRevision: z.string(),
-      helm: z
-        .object({
-          releaseName: z.string().optional(),
-          valuesObject: z.record(z.string(), z.unknown()).optional(),
-        })
-        .strict()
-        .optional(),
-    }),
+    // A Helm chart from an HTTPS or OCI repository, or a Git path
+    // (cloudflare-operator's Kustomize directory).
+    source: z.union([
+      z.object({
+        repoURL: z.string(),
+        chart: z.string(),
+        targetRevision: z.string(),
+        helm: z
+          .object({
+            releaseName: z.string().optional(),
+            valuesObject: z.record(z.string(), z.unknown()).optional(),
+          })
+          .strict()
+          .optional(),
+      }),
+      z.strictObject({
+        repoURL: z.string(),
+        path: z.string(),
+        targetRevision: z.string(),
+      }),
+    ]),
     syncPolicy: z
       .object({
         automated: z.unknown().optional(),
@@ -117,8 +126,7 @@ function applicationsOf(app: App): Map<string, ApplicationManifest> {
     for (const manifest of z.array(z.unknown()).parse(chart.toJson())) {
       if (ManifestKindSchema.parse(manifest).kind !== "Application") continue;
       const application = ApplicationManifestSchema.safeParse(manifest);
-      // The root Application and the Kustomize-sourced operator are not
-      // chart Applications; the catalog gives neither an environment.
+      // The root Application is no catalog Application.
       if (!application.success) continue;
       applications.set(application.data.metadata.name, application.data);
     }
@@ -158,19 +166,22 @@ function adoptingApplications(
   });
   for (const name of BASELINE_CHART_APPLICATIONS)
     createAdoptingApplication(chart, name, BASELINE_CHART_NAMESPACE);
-  for (const application of COMPANION_APPLICATIONS) {
+  const namespaceOf = (application: string) => {
     const namespace = destinations.get(application);
     if (namespace === undefined)
-      throw new Error(`Companion ${application} has no rendered Application`);
+      throw new Error(
+        `Companion of ${application} has no rendered Application`,
+      );
+    return namespace;
+  };
+  for (const application of COMPANION_APPLICATIONS)
     createAdoptingApplication(
       chart,
       companionChartName(application),
-      namespace,
+      namespaceOf(application),
     );
-    const following = FOLLOWING_COMPANIONS[application];
-    if (following !== undefined)
-      createAdoptingApplication(chart, following, namespace);
-  }
+  for (const [application, following] of Object.entries(FOLLOWING_COMPANIONS))
+    createAdoptingApplication(chart, following, namespaceOf(application));
   applyApplicationReleasePolicy(scratch, true);
   return applicationsOf(scratch);
 }
@@ -211,7 +222,9 @@ export function applicationBody(
   const lifecycle = z
     .enum(["retain", "cascade"])
     .parse(manifest.metadata.annotations?.[APPLICATION_LIFECYCLE_ANNOTATION]);
-  const releaseName = manifest.spec.source.helm?.releaseName;
+  const bodySource = manifest.spec.source;
+  const releaseName =
+    "chart" in bodySource ? bodySource.helm?.releaseName : undefined;
   return ApplicationBodySchema.parse({
     name: manifest.metadata.name,
     metadata: {
@@ -221,11 +234,16 @@ export function applicationBody(
     },
     project: manifest.spec.project,
     destination: manifest.spec.destination,
-    source: {
-      repoURL: manifest.spec.source.repoURL,
-      chart: manifest.spec.source.chart,
-      ...(releaseName === undefined ? {} : { helm: { releaseName } }),
-    },
+    // The revision is never a literal (C2): the chart or archive component
+    // binds it.
+    source:
+      "chart" in bodySource
+        ? {
+            repoURL: bodySource.repoURL,
+            chart: bodySource.chart,
+            ...(releaseName === undefined ? {} : { helm: { releaseName } }),
+          }
+        : { repoURL: bodySource.repoURL, path: bodySource.path },
     syncOptions: manifest.spec.syncPolicy?.syncOptions ?? [],
     // The schema rejects any ignore field it does not model.
     ignoreDifferences: manifest.spec.ignoreDifferences ?? [],
@@ -279,4 +297,16 @@ export function recipeApplications(definition: RecipeDefinition): string[] {
     case "channel":
       return [];
   }
+}
+
+/**
+ * The component whose artifact fixes an Application's source revision: its
+ * chart, or for a Git path an archive of the exact commit, named after the
+ * Application.
+ */
+export function sourceComponent(manifest: ApplicationManifest): string {
+  const { source } = manifest.spec;
+  return "chart" in source
+    ? `chart:${source.chart}`
+    : `archive:${manifest.metadata.name}`;
 }

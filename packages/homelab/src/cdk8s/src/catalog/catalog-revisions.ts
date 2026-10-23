@@ -32,6 +32,7 @@ import {
   PLATFORM_LOCK_ENVIRONMENTS,
 } from "@shepherdjerred/homelab/cdk8s/src/catalog/catalog-targets.ts";
 import {
+  sourceComponent,
   type ApplicationManifest,
   applicationBody,
 } from "@shepherdjerred/homelab/cdk8s/src/catalog/catalog-applications.ts";
@@ -74,15 +75,27 @@ type ApplicationRecipeInput = {
   parameters: Record<string, ArtifactParameter>;
 };
 
-/** `recipeFromPipeline` for the bound fields; the constructor for the body. */
+/**
+ * A v1 pipeline names only HTTPS chart repositories. An Application with no
+ * v1 registration whose source is an OCI repository or a Git path takes the
+ * adapter's step skeleton from this placeholder; its source and binding are
+ * the rendered Application's.
+ */
+const SKELETON_REPOSITORY = "https://skeleton.invalid/";
+
+/** `recipeFromPipeline` for the steps and the bound fields; the constructor for the body and its source. */
 function applicationRecipe(input: ApplicationRecipeInput): RecipeDefinition {
   const { manifest } = input;
+  const { source } = manifest.spec;
+  const chart = "chart" in source ? source.chart : manifest.metadata.name;
   const pipeline: PipelineDefinition = input.pipeline ?? {
     kind: "argocd",
     application: manifest.metadata.name,
-    chartRepository: manifest.spec.source.repoURL,
-    chartName: manifest.spec.source.chart,
-    chartComponent: `chart:${manifest.spec.source.chart}`,
+    chartRepository: source.repoURL.startsWith("https://")
+      ? source.repoURL
+      : SKELETON_REPOSITORY,
+    chartName: chart,
+    chartComponent: `chart:${chart}`,
     namespace: manifest.spec.destination.namespace,
     parameters: {},
     artifactParameters: Object.fromEntries(
@@ -100,6 +113,7 @@ function applicationRecipe(input: ApplicationRecipeInput): RecipeDefinition {
   return RecipeDefinitionSchema.parse({
     ...base,
     application: applicationBody(manifest),
+    chartComponent: sourceComponent(manifest),
     artifactParameters: input.parameters,
   });
 }
@@ -178,9 +192,12 @@ function applicationParameters(
   parameters: Record<string, ArtifactParameter>;
   values: Record<string, unknown>;
 } {
-  const values = manifest.spec.source.helm?.valuesObject;
+  const { source } = manifest.spec;
+  // A Git path takes no Helm values or parameters.
+  if (!("chart" in source)) return { parameters: {}, values: {} };
+  const values = source.helm?.valuesObject;
   const repositoryChart = inputs.app.charts.some(
-    (chart) => chart.node.id === manifest.spec.source.chart,
+    (chart) => chart.node.id === source.chart,
   );
   if (repositoryChart) {
     if (values !== undefined)
@@ -190,7 +207,7 @@ function applicationParameters(
     return {
       parameters: chartImageParameters(
         inputs.app,
-        manifest.spec.source.chart,
+        source.chart,
         firstPartyImage(inputs, serviceId),
       ),
       values: {},
@@ -276,23 +293,29 @@ function kubernetesRevisions(
       configuration,
     };
   }
-  if (companion === undefined) return { definition: main, configuration };
+  const following = FOLLOWING_COMPANIONS[name];
+  if (companion === undefined && following === undefined)
+    return { definition: main, configuration };
   return {
-    definition: compoundRecipe(inputs, companion, name, main),
+    definition: compoundRecipe(inputs, { companion, following, name }, main),
     configuration,
   };
 }
 
 /**
- * A companion's Application before its upstream Application and, for a
- * following companion whose objects need the upstream's CRDs, one after it.
+ * A leading companion's Application before its upstream Application and, for
+ * a following chart whose objects need the upstream's CRDs, one after it.
  */
 function compoundRecipe(
   inputs: CatalogRevisionInputs,
-  companion: CompanionApplication,
-  name: string,
+  sides: {
+    readonly companion: CompanionApplication | undefined;
+    readonly following: string | undefined;
+    readonly name: string;
+  },
   main: RecipeDefinition,
 ): RecipeDefinition {
+  const { companion, following, name } = sides;
   const sideRecipe = (application: string) => {
     const manifest = inputs.applications.get(application);
     if (manifest === undefined)
@@ -306,11 +329,12 @@ function compoundRecipe(
       }),
     };
   };
-  const following = FOLLOWING_COMPANIONS[companion];
   return RecipeDefinitionSchema.parse({
     kind: "compound",
     subRecipes: [
-      sideRecipe(companionChartName(companion)),
+      ...(companion === undefined
+        ? []
+        : [sideRecipe(companionChartName(companion))]),
       { instance: `application:${name}`, definition: main },
       ...(following === undefined ? [] : [sideRecipe(following)]),
     ],

@@ -118,14 +118,10 @@ const RenderedApplicationSchema = z.looseObject({
 
 /**
  * Rendered Applications no environment owns: the root, which the window
- * orphans; postal-mariadb, which rides inside chart:postal; and the two
- * operators the recipe contract cannot express yet (a Kustomize path and a
- * scheme-less OCI repository).
+ * orphans, and postal-mariadb, which rides inside chart:postal.
  */
 const UNOWNED_APPLICATIONS: ReadonlySet<string> = new Set([
   "apps",
-  "cloudflare-operator",
-  "kueue",
   "postal-mariadb",
 ]);
 

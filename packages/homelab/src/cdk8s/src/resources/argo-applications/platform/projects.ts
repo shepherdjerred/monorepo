@@ -70,6 +70,8 @@ const CLUSTER_SCOPED_APPLICATIONS: ReadonlySet<string> = new Set([
   "cluster-observability",
   "delivery-data",
   "temporal-data",
+  // Kueue's flavors, cluster queues and workload priority classes.
+  "kueue-queues",
 ]);
 
 const REGISTERED_APPLICATIONS: ReadonlySet<string> = new Set([

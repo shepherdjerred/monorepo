@@ -553,7 +553,11 @@
     },
     {
       "id": "ci",
-      "rootReleaseExclusions": { "kueue": "upstream" },
+      "rootReleaseExclusions": {
+        "kueue": "upstream",
+        "kueue-queues": "inactive"
+      },
+      "charts": ["kueue-queues"],
       "images": [
         "ci-base",
         "ci-playwright",
@@ -612,9 +616,14 @@
         "cloudflare-operator": "upstream",
         "cloudflare-operator-companion": "inactive",
         "tailscale": "upstream",
-        "tailscale-companion": "inactive"
+        "tailscale-companion": "inactive",
+        "argocd-tunnel": "inactive"
       },
-      "charts": ["tailscale-companion", "cloudflare-operator-companion"],
+      "charts": [
+        "tailscale-companion",
+        "cloudflare-operator-companion",
+        "argocd-tunnel"
+      ],
       "title": "Networking & edge",
       "kind": "platform",
       "namespaces": [

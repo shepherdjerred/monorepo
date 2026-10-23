@@ -40,7 +40,7 @@
     },
     {
       "id": "discord-plays-pokemon",
-      "title": "Discord Plays Pok\u00e9mon",
+      "title": "Discord Plays Pokémon",
       "kind": "product",
       "package": "discord-plays-pokemon",
       "aliases": ["pokemon"]
@@ -431,7 +431,7 @@
     },
     {
       "id": "discord-plays-pokemon",
-      "title": "Discord Plays Pok\u00e9mon",
+      "title": "Discord Plays Pokémon",
       "package": "discord-plays-pokemon",
       "lifecycle": "retired",
       "selfHosted": false,
@@ -2238,6 +2238,10 @@
         {
           "name": "chart:kueue",
           "producer": "acquisition"
+        },
+        {
+          "name": "chart:kueue-queues",
+          "producer": "first-party"
         }
       ],
       "ops": {
@@ -2247,8 +2251,10 @@
       },
       "legacy": {
         "rootReleaseExclusions": {
-          "kueue": "upstream"
-        }
+          "kueue": "upstream",
+          "kueue-queues": "inactive"
+        },
+        "charts": ["kueue-queues"]
       }
     },
     {
@@ -2500,7 +2506,15 @@
       "group": "networking",
       "components": [
         {
+          "name": "archive:cloudflare-operator",
+          "producer": "acquisition"
+        },
+        {
           "name": "chart:cloudflare-operator-companion",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:argocd-tunnel",
           "producer": "first-party"
         }
       ],
@@ -2512,9 +2526,10 @@
       "legacy": {
         "rootReleaseExclusions": {
           "cloudflare-operator": "upstream",
-          "cloudflare-operator-companion": "inactive"
+          "cloudflare-operator-companion": "inactive",
+          "argocd-tunnel": "inactive"
         },
-        "charts": ["cloudflare-operator-companion"]
+        "charts": ["cloudflare-operator-companion", "argocd-tunnel"]
       }
     },
     {
@@ -3446,12 +3461,28 @@
       "configurationRevisionId": "cloudflare-tunnel/prod/1"
     },
     {
+      "id": "cloudflare-operator/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "cloudflare-operator/prod/1",
+      "configurationRevisionId": "cloudflare-operator/prod/1"
+    },
+    {
       "id": "cert-manager/prod",
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "cert-manager/prod/1",
       "configurationRevisionId": "cert-manager/prod/1"
+    },
+    {
+      "id": "kueue/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "kueue/prod/1",
+      "configurationRevisionId": "kueue/prod/1"
     },
     {
       "id": "ddns/prod",
@@ -3558,6 +3589,11 @@
     },
     {
       "dependent": "arcade/prod",
+      "prerequisite": "cloudflare-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "arcade/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -3648,6 +3684,11 @@
     },
     {
       "dependent": "bugsink/prod",
+      "prerequisite": "cloudflare-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "bugsink/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -3708,6 +3749,11 @@
     },
     {
       "dependent": "chartmuseum/prod",
+      "prerequisite": "cloudflare-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "chartmuseum/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -3722,8 +3768,28 @@
       "rule": "any-accepted"
     },
     {
+      "dependent": "cloudflare-operator/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "cloudflare-operator/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "cloudflare-operator/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
       "dependent": "cloudflare-tunnel/prod",
       "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "cloudflare-tunnel/prod",
+      "prerequisite": "cloudflare-operator/prod",
       "rule": "any-accepted"
     },
     {
@@ -3824,6 +3890,11 @@
     {
       "dependent": "delivery-control-plane/prod",
       "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "delivery-control-plane/prod",
+      "prerequisite": "kueue/prod",
       "rule": "any-accepted"
     },
     {
@@ -3973,6 +4044,11 @@
     },
     {
       "dependent": "freshrss/prod",
+      "prerequisite": "cloudflare-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "freshrss/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -4088,6 +4164,11 @@
     },
     {
       "dependent": "home/prod",
+      "prerequisite": "cloudflare-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "home/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -4132,6 +4213,21 @@
       "rule": "any-accepted"
     },
     {
+      "dependent": "kueue/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "kueue/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "kueue/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
       "dependent": "loki/prod",
       "prerequisite": "argocd/prod",
       "rule": "any-accepted"
@@ -4168,6 +4264,11 @@
     },
     {
       "dependent": "minecraft-shuxin/prod",
+      "prerequisite": "cloudflare-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft-shuxin/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -4193,6 +4294,11 @@
     },
     {
       "dependent": "minecraft-sjerred/prod",
+      "prerequisite": "cloudflare-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft-sjerred/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -4223,7 +4329,7 @@
     },
     {
       "dependent": "minecraft/sandbox",
-      "prerequisite": "cluster-platform/prod",
+      "prerequisite": "kueue/prod",
       "rule": "any-accepted"
     },
     {
@@ -4239,6 +4345,11 @@
     {
       "dependent": "minecraft/tsmc",
       "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "minecraft/tsmc",
+      "prerequisite": "cloudflare-operator/prod",
       "rule": "any-accepted"
     },
     {
@@ -4508,6 +4619,11 @@
     },
     {
       "dependent": "relay/prod",
+      "prerequisite": "cloudflare-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "relay/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -4753,6 +4869,11 @@
     },
     {
       "dependent": "static-site-proxy/prod",
+      "prerequisite": "cloudflare-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "static-site-proxy/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -4823,6 +4944,11 @@
     },
     {
       "dependent": "storm-forum/prod",
+      "prerequisite": "cloudflare-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "storm-forum/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -4849,6 +4975,11 @@
     {
       "dependent": "streambot/prod",
       "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "streambot/prod",
+      "prerequisite": "cloudflare-operator/prod",
       "rule": "any-accepted"
     },
     {
@@ -5018,6 +5149,11 @@
     },
     {
       "dependent": "temporal/prod",
+      "prerequisite": "cloudflare-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "temporal/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -5058,11 +5194,6 @@
     },
     {
       "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
       "prerequisite": "better-skill-capped/prod",
       "rule": "any-accepted"
     },
@@ -5074,6 +5205,11 @@
     {
       "dependent": "tofu-cloudflare/prod",
       "prerequisite": "chartmuseum/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "cloudflare-operator/prod",
       "rule": "any-accepted"
     },
     {
@@ -5258,6 +5394,11 @@
     },
     {
       "dependent": "trmnl-dashboard/prod",
+      "prerequisite": "cloudflare-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "trmnl-dashboard/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
@@ -5333,12 +5474,22 @@
     },
     {
       "dependent": "woodpecker/prod",
+      "prerequisite": "cloudflare-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "woodpecker/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
     {
       "dependent": "woodpecker/prod",
       "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "woodpecker/prod",
+      "prerequisite": "kueue/prod",
       "rule": "any-accepted"
     },
     {

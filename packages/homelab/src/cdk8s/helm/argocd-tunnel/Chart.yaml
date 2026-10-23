@@ -1,0 +1,6 @@
+apiVersion: v2
+name: argocd-tunnel
+description: ArgoCD's TunnelBinding the argocd Application renders into the root chart, deployed after cloudflare-operator by its service from the v2 cutover
+type: application
+version: "$version"
+appVersion: "$appVersion"

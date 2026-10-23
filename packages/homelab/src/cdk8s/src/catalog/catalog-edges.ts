@@ -42,13 +42,6 @@ const CRD_PROVIDERS: Readonly<Record<string, string>> = {
   "velero.io": "velero/prod",
   "monitoring.coreos.com": "prometheus/prod",
   "argoproj.io": "argocd/prod",
-};
-/**
- * CRD providers the catalog cannot give an environment yet: the recipe
- * contract has no Kustomize-path source (cloudflare-operator) and no
- * scheme-less OCI repository (kueue). Their consumers' edges wait for that.
- */
-export const UNREPRESENTED_PROVIDERS: Readonly<Record<string, string>> = {
   "networking.cfargotunnel.com": "cloudflare-operator/prod",
   "kueue.x-k8s.io": "kueue/prod",
 };
@@ -63,10 +56,10 @@ const DECLARED_EDGES: readonly [dependent: string, prerequisite: string][] = [
   ["temporal/prod", "temporal-data/prod"],
   // The cluster CA issues the certificate Alertmanager requires for Postal SMTP.
   ["prometheus/prod", PLATFORM],
-  // CI and Delivery's stage Jobs run under the Kueue queues the baseline declares.
-  ["woodpecker/prod", PLATFORM],
-  ["delivery-control-plane/prod", PLATFORM],
-  ["minecraft/sandbox", PLATFORM],
+  // CI and Delivery's stage Jobs run under the queues Kueue's service declares.
+  ["woodpecker/prod", "kueue/prod"],
+  ["delivery-control-plane/prod", "kueue/prod"],
+  ["minecraft/sandbox", "kueue/prod"],
   // The GPU plugin's CR needs the operator's CRD and the node feature labels.
   ["intel-gpu-device-plugin/prod", "intel-device-plugin-operator/prod"],
   ["intel-gpu-device-plugin/prod", "nfd/prod"],

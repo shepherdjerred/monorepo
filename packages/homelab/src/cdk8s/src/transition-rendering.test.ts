@@ -13,7 +13,6 @@ import {
 import {
   BASELINE_CHART_APPLICATIONS,
   CLUSTER_ADMISSION_CHART,
-  CLUSTER_PLATFORM_CHART,
   ROOT_CHART,
 } from "./resources/cluster-baseline/charts.ts";
 import { APPLICATION_SOURCE_POLICY } from "./resources/argocd-application-admission.ts";
@@ -216,7 +215,8 @@ describe("transition rendering", () => {
     expect(
       find("mc-sandbox", "ResourceQuota", "mc-sandbox-quota").spec,
     ).toEqual({ hard: MC_SANDBOX_QUALIFICATION_QUOTA });
-    for (const id of [ROOT_CHART, CLUSTER_PLATFORM_CHART])
+    // Kueue's queues deploy with Kueue from the cutover.
+    for (const id of [ROOT_CHART, "kueue-queues"])
       expect(
         JSON.stringify(find(id, "ClusterQueue", CI_CLUSTER_QUEUE).spec),
       ).toContain('"mc-sandbox"');

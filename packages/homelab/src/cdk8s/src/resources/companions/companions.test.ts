@@ -78,16 +78,47 @@ describe("companion charts under transition rendering", () => {
     for (const application of COMPANION_APPLICATIONS) {
       const namespace = destinations.get(application);
       expect(namespace, application).toBeDefined();
-      const following = FOLLOWING_COMPANIONS[application];
-      for (const name of [
-        companionChartName(application),
-        ...(following === undefined ? [] : [following]),
-      ])
-        for (const manifest of chartObjects(name))
-          expect(manifest.metadata.namespace, identity(manifest)).toBe(
-            namespace,
-          );
+      for (const manifest of chartObjects(companionChartName(application)))
+        expect(manifest.metadata.namespace, identity(manifest)).toBe(namespace);
     }
+    for (const manifest of chartObjects("velero-schedules"))
+      expect(manifest.metadata.namespace, identity(manifest)).toBe(
+        destinations.get("velero"),
+      );
+  });
+
+  test("Kueue's flavors, priority classes and queues follow Kueue, out of cluster-platform", () => {
+    const kueueObjects = (id: string) =>
+      chartObjects(id).filter((manifest) =>
+        manifest.apiVersion.startsWith("kueue.x-k8s.io/"),
+      );
+    const queues = chartObjects(FOLLOWING_COMPANIONS["kueue"] ?? "");
+    expect(queues.map((manifest) => identity(manifest)).sort()).toEqual(
+      kueueObjects(ROOT_CHART)
+        .map((manifest) => identity(manifest))
+        .sort(),
+    );
+    expect(new Set(queues.map((manifest) => manifest.kind))).toEqual(
+      new Set([
+        "ResourceFlavor",
+        "WorkloadPriorityClass",
+        "ClusterQueue",
+        "LocalQueue",
+      ]),
+    );
+    expect(kueueObjects("cluster-platform")).toEqual([]);
+  });
+
+  test("ArgoCD's TunnelBinding follows cloudflare-operator, so ArgoCD needs no tunnel CRD", () => {
+    expect(FOLLOWING_COMPANIONS["cloudflare-operator"]).toBe("argocd-tunnel");
+    const tunnel = chartObjects("argocd-tunnel");
+    expect(tunnel.map((manifest) => manifest.kind)).toEqual(["TunnelBinding"]);
+    expect(tunnel[0]?.metadata.namespace).toBe("argocd");
+    expect(
+      chartObjects("argocd-companion").filter(
+        (manifest) => manifest.kind === "TunnelBinding",
+      ),
+    ).toEqual([]);
   });
 
   test("every root object other than Applications has a post-window owner", () => {

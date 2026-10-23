@@ -1,5 +1,9 @@
 import { Chart, type App } from "cdk8s";
-import { createArgoCdResources } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/argocd.ts";
+import {
+  createArgoCdResources,
+  createArgoCdTunnel,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/argocd.ts";
+import { createKueueConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
 import { createTailscaleResources } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/networking/tailscale.ts";
 import { createPrometheusResources } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/prometheus-resources.ts";
 import { createCloudflareOperatorResources } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/networking/cloudflare-operator.ts";
@@ -73,7 +77,13 @@ const COMPANION_RESOURCES: Readonly<
  */
 /** Objects a following companion renders, after its upstream Application. */
 const FOLLOWING_RESOURCES: Readonly<Record<string, (chart: Chart) => unknown>> =
-  { "velero-schedules": createVeleroSchedules };
+  {
+    "velero-schedules": createVeleroSchedules,
+    "kueue-queues": (chart) => {
+      createKueueConfig(chart, true);
+    },
+    "argocd-tunnel": createArgoCdTunnel,
+  };
 
 function companionChart(
   app: App,

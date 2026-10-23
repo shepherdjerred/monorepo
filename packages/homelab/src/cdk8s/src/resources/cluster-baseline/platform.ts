@@ -2,7 +2,6 @@ import type { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
 import { createStorageClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import { createPriorityClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
-import { createKueueConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
 import { createCpuPowerCap } from "@shepherdjerred/homelab/cdk8s/src/resources/cpu-power-cap.ts";
 import { createClusterCertificateAuthority } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/cert-manager.ts";
 import { createTailscaleProxyClasses } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/networking/tailscale.ts";
@@ -65,10 +64,11 @@ export function createCpuPowerCapGuard(chart: Chart): void {
 }
 
 /**
- * Cluster-scoped platform baseline: storage and priority classes, the Kueue
- * queues, the cluster CA, Tailscale proxy classes, every namespace the root
- * declares ahead of its Application, and the node power cap. The namespace
- * pull-secret mirrors are added by `prepareDockerHubPullSecrets`.
+ * Cluster-scoped platform baseline: storage and priority classes, the cluster
+ * CA, Tailscale proxy classes, every namespace the root declares ahead of its
+ * Application, and the node power cap. Kueue's queues deploy with Kueue
+ * (`kueue-queues`). The namespace pull-secret mirrors are added by
+ * `prepareDockerHubPullSecrets`.
  */
 export function createClusterPlatform(chart: Chart): void {
   createStorageClasses(chart);
@@ -85,7 +85,6 @@ export function createClusterPlatform(chart: Chart): void {
   createAlloyNamespace(chart);
   createAlloyGatewayNamespace(chart);
   createKueueNamespace(chart);
-  createKueueConfig(chart);
   createCpuPowerCapGuard(chart);
   createVeleroNamespaces(chart);
   createPostgresOperatorNamespace(chart);

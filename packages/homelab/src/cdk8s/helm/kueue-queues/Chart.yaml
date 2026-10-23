@@ -1,0 +1,6 @@
+apiVersion: v2
+name: kueue-queues
+description: Kueue's flavors, priority classes and queues the root renders, deployed after Kueue by its service from the v2 cutover
+type: application
+version: "$version"
+appVersion: "$appVersion"
