@@ -1,6 +1,16 @@
 import { describe, expect, test } from "vitest";
 import { ALL_DASHBOARDS } from "@shepherdjerred/homelab/cdk8s/src/resources/grafana/index.ts";
 import { SCOUT_GATEWAY_OWNER_ROLES } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/scout-alert-constants.ts";
+import {
+  CI_WORKSPACE_PHYSICAL_BYTES_PER_PVC_24H,
+  getNvmeRuleGroups,
+  NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY,
+  NVME_DRIVE_WRITTEN_BYTES_24H,
+  NVME_DRIVE_WRITTEN_BYTES_PER_DAY_7D,
+  ZFS_POOL_LOGICAL_WRITTEN_BYTES_24H,
+  ZFS_POOL_PHYSICAL_WRITTEN_BYTES_24H,
+  ZFS_POOL_WRITE_AMPLIFICATION_24H,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/storage/nvme.ts";
 
 // Derived from the shipped dashboard inventory instead of a hand-kept list. A
 // dashboard added to ALL_DASHBOARDS is covered by every check below without
@@ -58,6 +68,29 @@ describe("dashboard query health", () => {
     ]) {
       expect(dashboardJson).toContain(metric);
     }
+  });
+
+  test("NVMe write panels read the recorded write-budget series", () => {
+    const recorded = new Set(
+      getNvmeRuleGroups()
+        .flatMap((group) => group.rules ?? [])
+        .flatMap((rule) => (rule.record === undefined ? [] : [rule.record])),
+    );
+    for (const metric of [
+      NVME_DRIVE_WRITTEN_BYTES_24H,
+      NVME_DRIVE_WRITTEN_BYTES_PER_DAY_7D,
+      NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY,
+      ZFS_POOL_LOGICAL_WRITTEN_BYTES_24H,
+      ZFS_POOL_PHYSICAL_WRITTEN_BYTES_24H,
+      ZFS_POOL_WRITE_AMPLIFICATION_24H,
+      CI_WORKSPACE_PHYSICAL_BYTES_PER_PVC_24H,
+    ]) {
+      expect(recorded).toContain(metric);
+      expect(dashboardJson).toContain(metric);
+    }
+    expect(dashboardJson).toContain("node_zfs_zpool_dataset_nwritten");
+    // The flat 0.5 drive-writes-per-day limit is replaced by per-drive budgets.
+    expect(dashboardJson).not.toContain("NVMe Drive Writes per Day");
   });
 
   test("joins storage identity on both device path and scrape instance", () => {

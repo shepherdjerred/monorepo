@@ -1,6 +1,11 @@
 import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/shared.ts";
+import {
+  CI_NODE_HOSTNAME,
+  PROD_NODE_HOSTNAME,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
+import { CI_WORKSPACE_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 
 // nvme_* metrics are keyed by `device` (e.g. nvme0n1) — the kernel's NVMe
 // enumeration name, which is NOT stable across reboots or slot changes. The
@@ -17,20 +22,163 @@ function withNvmeIdentity(expr: string): string {
 // Rate and trend rules look back days, across reboots that can swap device
 // names. Aggregating the identity-joined series by serial before the range
 // subquery keeps one continuous series per physical drive; a device-keyed range
-// would splice two drives together after a swap.
+// would splice two drives together after a swap. `node` rides along so the
+// pool and per-node rules can join on it.
 function bySerial(metric: string): string {
-  return `max by (instance, serial, model) (${withNvmeIdentity(metric)})`;
+  return `max by (node, instance, serial, model) (${withNvmeIdentity(metric)})`;
 }
 
 // nvme_data_units_written_total counts units of 1000 512-byte sectors.
 const NVME_DATA_UNIT_BYTES = 512_000;
 
-// Consumer TLC drives in this cluster (Samsung 990 PRO) are rated for 600 TBW
-// per TB over a 5-year warranty, about 0.33 drive writes per day. Alert at 1.5x
-// that so normal production churn stays quiet.
-const DRIVE_WRITES_PER_DAY_LIMIT = 0.5;
+/**
+ * Each `zfspv-pool-nvme` pool is one whole NVMe drive (see the ZFS pool
+ * creation steps in packages/homelab/README.md). No exported metric links a
+ * pool to its vdev, so the pairing is declared here, and replacing a pool drive
+ * must update its serial. The other NVMe on each node is the Talos OS disk,
+ * selected by serial in src/talos/<node>/patches/image.yaml.
+ */
+export const NVME_POOL_DRIVES = [
+  {
+    node: PROD_NODE_HOSTNAME,
+    zpool: "zfspv-pool-nvme",
+    serial: "S7KGNU0X511734N",
+  },
+  {
+    node: CI_NODE_HOSTNAME,
+    zpool: "zfspv-pool-nvme",
+    serial: "S7L9NJ0L312632A",
+  },
+] as const;
 
-const driveWritesPerDay7d = `increase(${bySerial("nvme_data_units_written_total")}[7d:1h]) * ${String(NVME_DATA_UNIT_BYTES)} / 7 / ${bySerial("nvme_physical_size_bytes")}`;
+// Samsung 990 PRO endurance: 600 TBW per TB of capacity over the warranty.
+const RATED_WRITES_PER_CAPACITY = 600;
+// Every drive's write budget spends its remaining life over this many years.
+const WRITE_BUDGET_YEARS = 5;
+const DAYS_PER_YEAR = 365;
+
+// Recorded series. Drive series carry (node, instance, serial, model); pool
+// series carry (node, zpool). Bytes are decimal, so Grafana's `decbytes` unit
+// reads them directly as GB.
+export const NVME_DRIVE_WRITTEN_BYTES_24H =
+  "nvme_drive:physical_written_bytes:increase24h";
+export const NVME_DRIVE_WRITTEN_BYTES_PER_DAY_7D =
+  "nvme_drive:physical_written_bytes_per_day:avg7d";
+export const NVME_DRIVE_WEAR_PER_WRITTEN_BYTE =
+  "nvme_drive:wear_ratio_per_written_byte:conservative";
+export const NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY =
+  "nvme_drive:write_budget_bytes_per_day:5y";
+export const ZFS_POOL_LOGICAL_WRITTEN_BYTES_24H =
+  "zfs_pool:logical_written_bytes:increase24h";
+export const ZFS_POOL_PHYSICAL_WRITTEN_BYTES_24H =
+  "zfs_pool:physical_written_bytes:increase24h";
+export const ZFS_POOL_WRITE_AMPLIFICATION_24H =
+  "zfs_pool:write_amplification:ratio24h";
+export const CI_WORKSPACE_PHYSICAL_BYTES_PER_PVC_24H =
+  "ci_workspace:physical_written_bytes_per_pvc:ratio24h";
+
+const usedRatio = bySerial("nvme_percentage_used_ratio");
+const lifetimeWrittenBytes = `${bySerial("nvme_data_units_written_total")} * ${String(NVME_DATA_UNIT_BYTES)}`;
+const capacityBytes = bySerial("nvme_physical_size_bytes");
+
+// Wear per written byte, taking whichever of two estimates wears faster:
+//  - observed: SMART percentage_used over lifetime bytes written. This is the
+//    drive's real per-byte wear including its internal amplification (the
+//    torvalds pool drive, ashift=9, wears about twice as fast as rated).
+//  - rated: one full life per RATED_WRITES_PER_CAPACITY capacities written.
+// percentage_used moves in whole-percent steps, so a young drive's observed
+// figure is 0 or coarse. The rated floor keeps its budget finite and sane
+// instead of dividing by zero; clamp_min guards a zero byte count.
+const observedWearPerByte = `${usedRatio} / clamp_min(${lifetimeWrittenBytes}, 1)`;
+const ratedWearPerByte = `1 / (${String(RATED_WRITES_PER_CAPACITY)} * ${capacityBytes})`;
+
+// Each pool drive's physical writes, re-keyed by (node, zpool).
+const poolPhysicalWrites = NVME_POOL_DRIVES.map(
+  ({ node, zpool, serial }) =>
+    `max by (node, zpool) (label_replace(${NVME_DRIVE_WRITTEN_BYTES_24H}{node="${node}",serial="${serial}"}, "zpool", "${zpool}", "", ""))`,
+).join(" or ");
+
+function ciPoolDrive(): (typeof NVME_POOL_DRIVES)[number] {
+  const drive = NVME_POOL_DRIVES.find(
+    (candidate) => candidate.node === CI_NODE_HOSTNAME,
+  );
+  if (drive === undefined) {
+    throw new Error("The CI node's NVMe pool drive must be declared");
+  }
+  return drive;
+}
+
+/**
+ * Write-budget recording rules. Evaluated every 5 minutes: they summarize
+ * day-scale windows, so a faster cadence would only repeat the same subquery
+ * work.
+ */
+function getNvmeWriteBudgetRuleGroup(): PrometheusRuleSpecGroups {
+  const ciPool = ciPoolDrive();
+  return {
+    name: "nvme-write-budget.rules",
+    interval: "5m",
+    rules: [
+      // Physical bytes the host wrote to each drive: what wears the flash.
+      {
+        record: NVME_DRIVE_WRITTEN_BYTES_24H,
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          `increase(${bySerial("nvme_data_units_written_total")}[24h:5m]) * ${String(NVME_DATA_UNIT_BYTES)}`,
+        ),
+      },
+      {
+        record: NVME_DRIVE_WRITTEN_BYTES_PER_DAY_7D,
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          `increase(${bySerial("nvme_data_units_written_total")}[7d:1h]) * ${String(NVME_DATA_UNIT_BYTES)} / 7`,
+        ),
+      },
+      {
+        record: NVME_DRIVE_WEAR_PER_WRITTEN_BYTE,
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          `((${observedWearPerByte}) >= (${ratedWearPerByte})) or (${ratedWearPerByte})`,
+        ),
+      },
+      // Bytes per day that spend the remaining life over WRITE_BUDGET_YEARS:
+      // (1 - used) / (years * 365) / wear per byte.
+      {
+        record: NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY,
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          `clamp_min(1 - ${usedRatio}, 0) / ${String(WRITE_BUDGET_YEARS * DAYS_PER_YEAR)} / on(node, instance, serial, model) ${NVME_DRIVE_WEAR_PER_WRITTEN_BYTE}`,
+        ),
+      },
+      // Logical bytes applications wrote into each pool's datasets. A dataset
+      // destroyed inside the window loses its last unscraped writes, so this
+      // slightly understates churny pools such as the CI pool.
+      {
+        record: ZFS_POOL_LOGICAL_WRITTEN_BYTES_24H,
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          "sum by (node, zpool) (increase(node_zfs_zpool_dataset_nwritten[24h]))",
+        ),
+      },
+      {
+        record: ZFS_POOL_PHYSICAL_WRITTEN_BYTES_24H,
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(poolPhysicalWrites),
+      },
+      // Physical bytes reaching the flash per logical byte written: record
+      // size, metadata, ZIL, and copy-on-write overhead together.
+      {
+        record: ZFS_POOL_WRITE_AMPLIFICATION_24H,
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          `${ZFS_POOL_PHYSICAL_WRITTEN_BYTES_24H} / on(node, zpool) (${ZFS_POOL_LOGICAL_WRITTEN_BYTES_24H} > 0)`,
+        ),
+      },
+      // CI pool physical bytes per workspace claim that existed in the window.
+      // Counting by (namespace, claim) dedupes series a kube-state-metrics
+      // restart splits.
+      {
+        record: CI_WORKSPACE_PHYSICAL_BYTES_PER_PVC_24H,
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          `${ZFS_POOL_PHYSICAL_WRITTEN_BYTES_24H}{node="${ciPool.node}",zpool="${ciPool.zpool}"} / on() group_left() (count(count by (namespace, persistentvolumeclaim) (last_over_time(kube_persistentvolumeclaim_info{storageclass="${CI_WORKSPACE_STORAGE_CLASS}"}[24h]))) > 0)`,
+        ),
+      },
+    ],
+  };
+}
 
 // Days until SMART percentage_used reaches 1.0 at the last 14 days' wear rate.
 // percentage_used moves in whole-percent steps, so a shorter window is too
@@ -89,22 +237,27 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
         // Wear velocity. The absolute thresholds above fire only once half the
         // drive's rated life is gone; these fire on the trend, while there is
         // still time to cut writes or schedule a replacement.
+        //
+        // The write budget covers every NVMe, OS disks included, over a
+        // trailing 24h window: a new workload that lands on a node's OS disk
+        // crosses it the same day instead of surfacing in a wear review weeks
+        // later.
         {
-          alert: "NvmeWriteRateAboveEndurance",
+          alert: "NvmeWriteBudgetExceeded",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `(${driveWritesPerDay7d}) > ${String(DRIVE_WRITES_PER_DAY_LIMIT)}`,
+            `${NVME_DRIVE_WRITTEN_BYTES_24H} > on(node, instance, serial, model) ${NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY}`,
           ),
-          for: "6h",
+          for: "30m",
           labels: {
             severity: "warning",
             category: "hardware",
           },
           annotations: {
             summary: escapePrometheusTemplate(
-              "NVMe writes exceed rated endurance on {{ $labels.model }} (serial {{ $labels.serial }})",
+              "NVMe writes exceed the 5-year budget on {{ $labels.node }} {{ $labels.model }} (serial {{ $labels.serial }})",
             ),
             description: escapePrometheusTemplate(
-              "NVMe {{ $labels.model }} (serial {{ $labels.serial }}) averaged {{ $value | humanize }} drive writes per day over 7 days. Its rated endurance is about 0.33 per day; find and cut the write source.",
+              `NVMe {{ $labels.model }} (serial {{ $labels.serial }}) on {{ $labels.node }} took {{ $value | humanize }}B of physical writes in the last 24h, more than the daily budget that stretches its remaining life over ${String(WRITE_BUDGET_YEARS)} years (${NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY}). Find the writer in the top-datasets panel of the SMART Monitoring dashboard and cut it.`,
             ),
           },
         },
@@ -244,5 +397,6 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
         // including the CI node, because wear is what ends a drive.
       ],
     },
+    getNvmeWriteBudgetRuleGroup(),
   ];
 }

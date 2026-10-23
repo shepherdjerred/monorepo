@@ -3,8 +3,18 @@ import {
   createStatPanel,
   createTimeseriesPanel,
 } from "@shepherdjerred/homelab/cdk8s/grafana/shared/dashboard-panels.ts";
+import {
+  CI_WORKSPACE_PHYSICAL_BYTES_PER_PVC_24H,
+  NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY,
+  NVME_DRIVE_WRITTEN_BYTES_24H,
+  NVME_DRIVE_WRITTEN_BYTES_PER_DAY_7D,
+  ZFS_POOL_LOGICAL_WRITTEN_BYTES_24H,
+  ZFS_POOL_PHYSICAL_WRITTEN_BYTES_24H,
+  ZFS_POOL_WRITE_AMPLIFICATION_24H,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/storage/nvme.ts";
 
-const NVME_INFO = 'nvme_device_info{serial=~"$serial"}';
+const SERIAL_FILTER = 'serial=~"$serial"';
+const NVME_INFO = `nvme_device_info{${SERIAL_FILTER}}`;
 
 function withNvmeIdentity(metric: string): string {
   return `(${metric}) * on(device, instance) group_left(serial, model) ${NVME_INFO}`;
@@ -145,18 +155,18 @@ export function addNvmePanels(builder: dashboard.DashboardBuilder): void {
 
   builder.withPanel(
     createStatPanel({
-      title: "NVMe Drive Writes per Day (7d)",
+      title: "NVMe 5-Year Write Budget Used (24h)",
       description:
-        "Average full-drive writes per day over 7 days. Samsung 990 PRO endurance is about 0.33 per day (600 TBW per TB over 5 years).",
-      query: `increase(${bySerial("nvme_data_units_written_total")}[7d:1h]) * ${String(DATA_UNIT_BYTES)} / 7 / ${bySerial("nvme_physical_size_bytes")}`,
-      legend: "{{model}} · {{serial}}",
+        "Physical writes in the last 24h as a share of the daily budget that lasts each drive's remaining life 5 more years. The budget uses the faster of observed wear per byte and rated endurance (600 TBW per TB). Above 100% fires NvmeWriteBudgetExceeded.",
+      query: `${NVME_DRIVE_WRITTEN_BYTES_24H}{${SERIAL_FILTER}} / on(node, instance, serial, model) ${NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY}`,
+      legend: "{{node}} · {{serial}}",
       gridPos: { x: 8, y: 86, w: 8, h: 4 },
-      unit: "none",
+      unit: "percentunit",
       instant: true,
       thresholds: [
         { value: 0, color: "green" },
-        { value: 0.33, color: "orange" },
-        { value: 0.5, color: "red" },
+        { value: 0.8, color: "orange" },
+        { value: 1, color: "red" },
       ],
     }),
   );
@@ -176,6 +186,94 @@ export function addNvmePanels(builder: dashboard.DashboardBuilder): void {
         { value: 180, color: "orange" },
         { value: 365, color: "green" },
       ],
+    }),
+  );
+
+  addWriteBudgetPanels(builder);
+}
+
+// Per-dataset logical writes over 24h, labelled with the owning claim when the
+// dataset backs a bound PV (dataset `<pool>/<pv name>`). The PV's claimRef is
+// unique per volume; PVC info is not, since a restore claim can name the same
+// volume. Datasets without a bound PV keep only their dataset name.
+const datasetWrites24h =
+  'label_replace(sum by (node, dataset) (increase(node_zfs_zpool_dataset_nwritten[24h])), "persistentvolume", "$1", "dataset", "[^/]+/(.+)")';
+const datasetWritesWithClaim = `${datasetWrites24h} * on(persistentvolume) group_left(claim_namespace, name) max by (persistentvolume, claim_namespace, name) (kube_persistentvolume_claim_ref)`;
+
+function addWriteBudgetPanels(builder: dashboard.DashboardBuilder): void {
+  builder.withRow(
+    new dashboard.RowBuilder("NVMe Write Budget & ZFS Amplification"),
+  );
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "NVMe Physical Writes vs 5-Year Budget",
+      targets: [
+        {
+          query: `${NVME_DRIVE_WRITTEN_BYTES_24H}{${SERIAL_FILTER}}`,
+          legend: "{{node}} · {{serial}} last 24h",
+        },
+        {
+          query: `${NVME_DRIVE_WRITTEN_BYTES_PER_DAY_7D}{${SERIAL_FILTER}}`,
+          legend: "{{node}} · {{serial}} 7d avg/day",
+        },
+        {
+          query: `${NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY}{${SERIAL_FILTER}}`,
+          legend: "{{node}} · {{serial}} budget/day",
+        },
+      ],
+      gridPos: { x: 0, y: 91, w: 12, h: 8 },
+      unit: "decbytes",
+    }),
+  );
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "ZFS Pool Write Amplification (24h)",
+      targets: [
+        {
+          query: ZFS_POOL_WRITE_AMPLIFICATION_24H,
+          legend: "{{node}} · {{zpool}} physical ÷ logical",
+        },
+      ],
+      gridPos: { x: 12, y: 91, w: 12, h: 8 },
+      unit: "none",
+    }),
+  );
+
+  builder.withPanel(
+    createStatPanel({
+      title: "Top Datasets by Logical Writes (24h)",
+      description:
+        "The ten datasets applications wrote most into over the last 24h, named by their claim when they back a PVC. Physical writes are these times the pool's amplification.",
+      query: `topk(10, ${datasetWritesWithClaim} or (${datasetWrites24h} unless on(persistentvolume) kube_persistentvolume_claim_ref))`,
+      legend: "{{node}} · {{claim_namespace}}/{{name}} {{dataset}}",
+      gridPos: { x: 0, y: 99, w: 12, h: 8 },
+      unit: "decbytes",
+      instant: true,
+      thresholds: [{ value: 0, color: "blue" }],
+    }),
+  );
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "ZFS Pool Logical and Physical Writes (24h)",
+      targets: [
+        {
+          query: ZFS_POOL_LOGICAL_WRITTEN_BYTES_24H,
+          legend: "{{node}} · {{zpool}} logical",
+        },
+        {
+          query: ZFS_POOL_PHYSICAL_WRITTEN_BYTES_24H,
+          legend: "{{node}} · {{zpool}} physical",
+        },
+        {
+          query: CI_WORKSPACE_PHYSICAL_BYTES_PER_PVC_24H,
+          legend: "{{node}} · physical per CI workspace",
+        },
+      ],
+      gridPos: { x: 12, y: 99, w: 12, h: 8 },
+      unit: "decbytes",
     }),
   );
 }
