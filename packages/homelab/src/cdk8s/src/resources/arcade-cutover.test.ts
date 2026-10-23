@@ -153,7 +153,7 @@ describe("Arcade account handover", () => {
     ).toHaveLength(10);
   });
 
-  test("routes both public and tailnet traffic through the edge to Arcade", () => {
+  test("routes the canonical hostname through the edge without legacy aliases", () => {
     const manifests = resources();
     const edgeConfig = manifests.find(
       (resource) =>
@@ -163,66 +163,19 @@ describe("Arcade account handover", () => {
     expect(edgeConfig?.data?.["Caddyfile"]).toContain(
       "reverse_proxy arcade-arcade-ui.arcade.svc.cluster.local:8081",
     );
-    const ingress = manifests.find(
-      (resource) =>
-        resource.kind === "Ingress" &&
-        resource.metadata.namespace === "arcade" &&
-        resource.metadata.name.includes("mariokart"),
+    const edge = manifests.filter(
+      (resource) => resource.metadata.namespace === "arcade",
     );
-    expect(ingress?.spec).toMatchObject({
-      defaultBackend: {
-        service: {
-          name: "arcade-edge-bootstrap",
-          port: { number: 8082 },
-        },
-      },
-    });
-  });
-
-  test("keeps both Pokébot aliases on a redirect without legacy account credentials", () => {
-    const manifests = resources();
-    const redirect = manifests.find(
-      (resource) =>
-        resource.kind === "Deployment" &&
-        resource.metadata.name === "arcade-edge",
+    expect(edge.filter((resource) => resource.kind === "Ingress")).toEqual([]);
+    expect(
+      edge.some(
+        (resource) => resource.metadata.name === "arcade-legacy-redirects",
+      ),
+    ).toBe(false);
+    expect(edgeConfig?.data?.["Caddyfile"]).toContain(
+      "https://arcade.sjer.red",
     );
-    expect(redirect?.spec).toMatchObject({ replicas: 1 });
-    expect(JSON.stringify(redirect)).not.toContain("secretKeyRef");
-    const selector = z
-      .object({ matchLabels: z.record(z.string(), z.string()) })
-      .parse(redirect?.spec?.["selector"]);
-    const service = manifests.find(
-      (resource) =>
-        resource.kind === "Service" &&
-        resource.metadata.name === "arcade-legacy-redirects",
-    );
-    expect(service?.spec?.["selector"]).toEqual(selector.matchLabels);
-    expect(
-      manifests.find(
-        (resource) =>
-          resource.kind === "Ingress" &&
-          resource.metadata.namespace === "arcade" &&
-          resource.metadata.name.includes("pokebot"),
-      )?.spec,
-    ).toMatchObject({
-      defaultBackend: {
-        service: { name: service?.metadata.name, port: { number: 8081 } },
-      },
-    });
-    expect(
-      manifests.find(
-        (resource) =>
-          resource.kind === "TunnelBinding" &&
-          resource.metadata.namespace === "arcade" &&
-          resource.metadata.name.includes("pokebot"),
-      )?.subjects,
-    ).toEqual([expect.objectContaining({ name: service?.metadata.name })]);
-    expect(
-      manifests.find(
-        (resource) =>
-          resource.kind === "ConfigMap" &&
-          resource.metadata.name === "arcade-edge-config",
-      )?.data?.["Caddyfile"],
-    ).toContain("redir https://arcade.sjer.red 307");
+    expect(edgeConfig?.data?.["Caddyfile"]).not.toContain("mariokart.sjer.red");
+    expect(edgeConfig?.data?.["Caddyfile"]).not.toContain("pokebot.sjer.red");
   });
 });

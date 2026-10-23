@@ -17,13 +17,12 @@ import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zf
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { arcadeCaddyfile } from "./arcade-caddyfile.ts";
 import { caddyEdgeContainerDefaults } from "./caddy-edge-container.ts";
-import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 
 export const ARCADE_HTTP_NODE_PORT = 30_080;
 export const ARCADE_HTTPS_NODE_PORT = 30_443;
 
-/** Serve Arcade and legacy bookmarks from one namespace-owned edge. */
+/** Serve Arcade from its namespace-owned public edge. */
 export function createArcadeEdge(chart: Chart) {
   const defaults = caddyEdgeContainerDefaults();
   const caddyfile = arcadeCaddyfile(
@@ -54,7 +53,6 @@ export function createArcadeEdge(chart: Chart) {
         { name: "http", number: 8080 },
         { name: "https", number: 8443 },
         { name: "bootstrap", number: 8082 },
-        { name: "legacy", number: 8081 },
       ],
       resources: defaults.resources,
       securityContext: {
@@ -108,39 +106,12 @@ export function createArcadeEdge(chart: Chart) {
   ApiObject.of(direct).addJsonPatch(
     JsonPatch.add("/spec/externalTrafficPolicy", "Local"),
   );
-  const redirects = new Service(chart, "legacy-redirects", {
-    selector: deployment,
-    ports: [{ name: "http", port: 8081, targetPort: 8081 }],
-  });
-  new TailscaleIngress(chart, "mariokart-tailscale", {
-    service: bootstrap,
-    host: "mariokart",
-    probePath: "/healthz",
-  });
-  new TailscaleIngress(chart, "pokebot-tailscale", {
-    service: redirects,
-    host: "pokebot",
-    probePath: "/health",
-  });
-  createCloudflareTunnelBinding(chart, "mariokart-cf-tunnel", {
-    serviceName: bootstrap.name,
-    subdomain: "mariokart",
-    port: 8082,
-    // The canonical binding below probes this shared backend and public origin.
-    disableProbe: true,
-  });
-  // OpenTofu retains public DNS ownership; these bindings provide tunnel recovery.
+  // OpenTofu retains public DNS ownership; this binding provides tunnel recovery.
   createCloudflareTunnelBinding(chart, "arcade-cf-tunnel", {
     serviceName: bootstrap.name,
     subdomain: "arcade",
     port: 8082,
     probePath: "/healthz",
     publicProbePath: "/health",
-  });
-  createCloudflareTunnelBinding(chart, "pokebot-cf-tunnel", {
-    serviceName: redirects.name,
-    subdomain: "pokebot",
-    port: 8081,
-    probePath: "/health",
   });
 }

@@ -156,24 +156,6 @@ resource "cloudflare_dns_record" "sjer_red_cname_streambot" {
   proxied = true
 }
 
-resource "cloudflare_dns_record" "sjer_red_cname_pokebot" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "pokebot"
-  type    = "CNAME"
-  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
-  proxied = true
-}
-
-resource "cloudflare_dns_record" "sjer_red_cname_mariokart" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "mariokart"
-  type    = "CNAME"
-  content = "ipv4.ddns.sjer.red"
-  proxied = false
-}
-
 resource "cloudflare_dns_record" "sjer_red_cname_arcade" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
@@ -626,7 +608,7 @@ resource "cloudflare_dns_record" "sjer_red_acme_syncthing" {
   content = "FR8t1KHtHXWGKfERJqTZVcPitpVKmAKENo6auaz9OV0"
 }
 
-# WebSockets are on by default for every Cloudflare plan, but mariokart.sjer.red's
+# WebSockets are on by default for every Cloudflare plan, but arcade.sjer.red's
 # driver feed depends on them: it serves H.264 over a raw WebSocket with no
 # polling fallback, so a dashboard toggle here would silently break in-browser
 # video while the rest of the site kept working. Pinned so the dependency is

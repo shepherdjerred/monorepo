@@ -25,7 +25,7 @@ function resources() {
 test("only the direct edge service exposes public NodePorts", () => {
   const manifests = resources();
   const services = manifests.filter((resource) => resource.kind === "Service");
-  expect(services).toHaveLength(3);
+  expect(services).toHaveLength(2);
   expect(
     services
       .filter((service) => service.spec?.["type"] === "NodePort")

@@ -53,7 +53,7 @@ describe("Arcade direct ingress", () => {
     });
   });
 
-  test("retains all recovery routes without taking DNS ownership", () => {
+  test("publishes only the canonical recovery route without taking DNS ownership", () => {
     const synthesized = resources();
     const bootstrap = synthesized.find(
       (resource) =>
@@ -64,17 +64,13 @@ describe("Arcade direct ingress", () => {
     const bindings = synthesized.filter(
       (resource) => resource.kind === "TunnelBinding",
     );
-    expect(bindings).toHaveLength(3);
-    expect(bindings.flatMap((binding) => binding.subjects ?? [])).toEqual(
-      expect.arrayContaining([
-        {
-          name: bootstrap?.metadata.name,
-          spec: { fqdn: "mariokart.sjer.red" },
-        },
-        { name: bootstrap?.metadata.name, spec: { fqdn: "arcade.sjer.red" } },
-        { name: "arcade-legacy-redirects", spec: { fqdn: "pokebot.sjer.red" } },
-      ]),
-    );
+    expect(bindings).toHaveLength(1);
+    expect(bindings.flatMap((binding) => binding.subjects ?? [])).toEqual([
+      { name: bootstrap?.metadata.name, spec: { fqdn: "arcade.sjer.red" } },
+    ]);
+    expect(
+      synthesized.filter((resource) => resource.kind === "Ingress"),
+    ).toEqual([]);
     for (const binding of bindings) {
       expect(binding.tunnelRef?.disableDNSUpdates).toBe(true);
     }
