@@ -6,6 +6,7 @@ import type {
   EvidenceInput,
 } from "@shepherdjerred/delivery/contract";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
+import { verifyOciChart } from "./oci-chart.ts";
 import {
   createArgoApplication,
   getArgoApplication,
@@ -31,12 +32,17 @@ function signal() {
   return Context.current().cancellationSignal;
 }
 
-/** HTTPS chart bytes must match the artifact digest; other stores serve the recorded version. */
+/**
+ * HTTPS chart bytes must match the artifact digest, and an OCI chart's tag
+ * must still resolve to it; other stores serve the recorded version.
+ */
 async function verifySourceBytes(
   rendered: RenderedApplication,
   operationId: string,
 ): Promise<EvidenceInput> {
   const artifact = rendered.sourceArtifact;
+  if (artifact.uri.startsWith("oci://"))
+    return await verifyOciChart(artifact, operationId, signal());
   if (!artifact.uri.startsWith("https://"))
     return {
       kind: "preflight",

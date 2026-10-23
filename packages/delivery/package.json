@@ -10,6 +10,7 @@
     "./client-error": "./src/shared/client-error.ts",
     "./artifact-contract": "./src/shared/artifact-contract.ts",
     "./operation-id": "./src/shared/operation-id.ts",
+    "./oci-registry": "./src/infrastructure/artifact-stores/oci-registry.ts",
     "./testing": "./src/testing/index.ts"
   },
   "imports": {
