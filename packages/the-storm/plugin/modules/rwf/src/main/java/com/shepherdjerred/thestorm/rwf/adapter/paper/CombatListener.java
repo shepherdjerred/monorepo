@@ -169,7 +169,11 @@ final class CombatListener implements Listener {
     }
     PaperNativeDamage.apply(event, landed, victim.getAbsorptionAmount());
     tracker.hit(victim, damage, Optional.of(strike.attacker().getUniqueId()), strike.type());
-    runner.damaged(victim, Optional.of(strike.attacker().getUniqueId()), landed, strike.type());
+    runner.damaged(
+        victim,
+        Optional.of(strike.attacker().getUniqueId()),
+        Harm.toHealth(victim, landed),
+        strike.type());
     runner
         .kits()
         .hit(
@@ -227,9 +231,12 @@ final class CombatListener implements Listener {
         hit(strike.type(), strike.attacker(), victim, strike.raw()))) {
       return;
     }
-    var before = victim.getHealth();
-    runner.damaged(victim, Optional.of(strike.attacker().getUniqueId()), landed, strike.type());
-    victim.setHealth(Math.max(0, before - landed));
+    runner.damaged(
+        victim,
+        Optional.of(strike.attacker().getUniqueId()),
+        Harm.toHealth(victim, landed),
+        strike.type());
+    Harm.take(victim, landed);
     runner.kits().hit(strike.attacker(), victim, strike.type(), landed);
   }
 

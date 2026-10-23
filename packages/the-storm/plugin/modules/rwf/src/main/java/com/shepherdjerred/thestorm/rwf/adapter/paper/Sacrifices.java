@@ -148,7 +148,7 @@ final class Sacrifices {
             random);
     var dealt = PaperKitResistance.apply(sac, computed, attack);
     tracker.hit(sac, dealt, meant.credit(), attack);
-    sac.setHealth(Math.max(0, sac.getHealth() - dealt));
+    Harm.take(sac, dealt);
     attacker.ifPresent(a -> runner.kits().hit(a, sac, attack, dealt));
   }
 

@@ -177,7 +177,7 @@ final class KitWorld {
                       runner.match().random(runner.now()));
               var dealt = PaperKitResistance.apply(victim, computed, damage.cause());
               tracker.hit(victim, dealt, damage.by().map(CombatantId::uuid), damage.cause());
-              victim.setHealth(Math.max(0, victim.getHealth() - dealt));
+              Harm.take(victim, dealt);
             });
   }
 

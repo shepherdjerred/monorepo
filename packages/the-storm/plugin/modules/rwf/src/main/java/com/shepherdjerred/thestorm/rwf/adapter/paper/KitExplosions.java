@@ -159,9 +159,9 @@ final class KitExplosions {
     }
     var by = self ? Optional.<java.util.UUID>empty() : Optional.of(blast.owner().uuid());
     tracker.hit(victim, damage, by, cause);
-    runner.damaged(victim, by, damage, cause);
+    runner.damaged(victim, by, Harm.toHealth(victim, damage), cause);
     push(center, victim, (1 - distance / blast.power()) * exposure);
-    victim.setHealth(Math.max(0, victim.getHealth() - damage));
+    Harm.take(victim, damage);
     if (!self) {
       // The owner was the blast's damager, so their kit heard it as their own hit, with whatever
       // they held (a Venom's iron sword poisons a blast victim).

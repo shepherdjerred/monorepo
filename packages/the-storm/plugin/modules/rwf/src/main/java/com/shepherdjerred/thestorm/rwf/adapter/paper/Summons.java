@@ -316,7 +316,7 @@ final class Summons {
     tracker.hit(victim, raw, Optional.of(summon.owner().uuid()), AttackType.MELEE);
     knockback(summon, victim, random);
     flinch(victim, random);
-    victim.setHealth(Math.max(0, victim.getHealth() - landed));
+    Harm.take(victim, landed);
     return true;
   }
 
@@ -343,8 +343,8 @@ final class Summons {
     if (sacrifices.shieldFor(owner, player, hit)) {
       return true;
     }
-    runner.damaged(player, Optional.of(owner), landed, AttackType.MELEE);
-    player.setHealth(Math.max(0, player.getHealth() - landed));
+    runner.damaged(player, Optional.of(owner), Harm.toHealth(player, landed), AttackType.MELEE);
+    Harm.take(player, landed);
     runner
         .memberOf(player.getUniqueId())
         .ifPresent(
@@ -388,7 +388,7 @@ final class Summons {
       CombatListener.sprintReset(attacker);
     }
     flinch(victim, random);
-    victim.setHealth(Math.max(0, victim.getHealth() - landed));
+    Harm.take(victim, landed);
     return true;
   }
 
