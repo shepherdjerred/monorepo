@@ -1,7 +1,7 @@
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { freezeWorkerSnapshot } from "#infrastructure/worker-pool/pool.ts";
 import {
-  PipelineRevisionSchema,
+  LegacyPipelineRevisionSchema,
   workerHostSpecification,
 } from "#shared/contract.ts";
 import type { WorkerPoolTarget, WorkerVersion } from "#shared/contract.ts";
@@ -34,10 +34,12 @@ export async function workerFixture(
       configurationRevision: "worker-fixture/1",
       configuration: {},
       automatic: false,
+      // Scout production's approval policy is catalog data (4.10).
+      approvalPolicy: target === "scout-prod" ? "required" : "none",
     },
     testOperator,
   );
-  const workerPipeline = PipelineRevisionSchema.parse({
+  const workerPipeline = LegacyPipelineRevisionSchema.parse({
     id: `${target}/frozen-worker-fixture`,
     createdAt: new Date().toISOString(),
     definition: {
@@ -116,8 +118,7 @@ export async function workerFixture(
     if (deployment.status === "awaiting_approval")
       await delivery.approve(
         deployment.id,
-        "approve",
-        "Accepted persistence fixture",
+        { decision: "approve", reason: "Accepted persistence fixture" },
         testOperator,
       );
     await delivery.claim(deployment.id, testExecutor);

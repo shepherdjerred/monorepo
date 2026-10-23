@@ -75,6 +75,7 @@ export function createDeliveryWorker(
     argoItem.name,
   );
   const staticStorageEnvironment: Record<string, EnvValue> = {};
+  const channelEnvironment: Record<string, EnvValue> = {};
   const registryEnvironment: Record<string, EnvValue> = {};
   if (activation.workerRegistryItemId !== undefined) {
     const registryItem = new OnePasswordItem(
@@ -113,6 +114,20 @@ export function createDeliveryWorker(
         key,
       });
   }
+  if (activation.npmChannelItemId !== undefined) {
+    // npm channels publish and move dist-tags with their own token (X12).
+    const npmItem = new OnePasswordItem(chart, "delivery-npm-channel", {
+      spec: { itemPath: vaultItemPath(activation.npmChannelItemId) },
+    });
+    channelEnvironment["NPM_TOKEN"] = EnvValue.fromSecretValue({
+      secret: Secret.fromSecretName(
+        chart,
+        "delivery-npm-channel-secret",
+        npmItem.name,
+      ),
+      key: "NPM_TOKEN",
+    });
+  }
   if (activation.staticCacheItemId !== undefined) {
     const cacheItem = new OnePasswordItem(chart, "delivery-static-cache", {
       spec: { itemPath: vaultItemPath(activation.staticCacheItemId) },
@@ -150,6 +165,7 @@ export function createDeliveryWorker(
     envVariables: {
       ...deliveryTrmnlEnvironment(chart, activation),
       ...staticStorageEnvironment,
+      ...channelEnvironment,
       ...registryEnvironment,
       ...(activation.workerRegistryItemId === undefined
         ? {}

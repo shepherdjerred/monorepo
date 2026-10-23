@@ -98,13 +98,13 @@ test("concurrent fresh requests create only one recovery owner and never acquire
     requests.filter((result) => result.status === "fulfilled"),
   ).toHaveLength(1);
   expect(
-    await scope.cluster.database.contentRecoveryIntent.count({
-      where: { status: "pending" },
+    await scope.cluster.database.recoveryIntent.count({
+      where: { kind: "content", status: "pending" },
     }),
   ).toBe(1);
   expect(await scope.cluster.database.platformLock.count()).toBe(0);
   expect(
-    await scope.cluster.database.applicationLock.findUnique({
+    await scope.cluster.database.targetLock.findFirst({
       where: { deploymentId: fixture.failed.id },
     }),
   ).not.toBeNull();
@@ -147,7 +147,7 @@ test("direct static recovery rejects foreign native Jobs and journals an immutab
   ).rejects.toMatchObject({ code: "BUSY" });
   const globalOwner =
     await scope.cluster.database.platformLock.findUniqueOrThrow({
-      where: { id: "shared-resources" },
+      where: { id: "platform" },
     });
   expect(globalOwner.deploymentId).toBe(fixture.failed.id);
 });
@@ -190,10 +190,11 @@ test("settlement releases only exact target ownership, preserves failed result a
       original.environment.acceptedVersionSetRevisionId,
     observedVersionSetRevisionId:
       original.environment.observedVersionSetRevisionId,
-    generation: original.environment.generation + 1,
+    // Settlement releases ownership and never moves the generation (E1, I3).
+    generation: original.environment.generation,
   });
   expect(
-    await scope.cluster.database.applicationLock.findUnique({
+    await scope.cluster.database.targetLock.findFirst({
       where: { deploymentId: fixture.failed.id },
     }),
   ).toBeNull();
@@ -224,7 +225,7 @@ test("settlement releases only exact target ownership, preserves failed result a
       }),
     ),
   ).rejects.toMatchObject({ code: "BUSY" });
-  await scope.cluster.database.contentRecoveryIntent.update({
+  await scope.cluster.database.recoveryIntent.update({
     where: { id: fixture.intent.id },
     data: { status: "failed" },
   });
@@ -269,7 +270,7 @@ test("failed attempts retain the same retryable stopped-producer intent and quar
   expect(await scope.cluster.database.platformLock.count()).toBe(1);
 });
 
-test("fresh generation and exact restored UID/template/ready Pod proof releases the final global fence", async () => {
+test("the frozen generation and exact restored UID/template/ready Pod proof release the final global fence", async () => {
   const proof = await settlement();
   await scope.delivery.completeContentRecovery(
     fixture.intent.id,
@@ -280,7 +281,7 @@ test("fresh generation and exact restored UID/template/ready Pod proof releases 
     ...contentObservation(
       await scope.delivery.contentRecovery(fixture.intent.id, testExecutor),
     ),
-    expectedEnvironmentGeneration: proof.expectedEnvironmentGeneration + 1,
+    expectedEnvironmentGeneration: proof.expectedEnvironmentGeneration,
   };
   await scope.delivery.admitContentRecoveryRestore(
     fixture.intent.id,
@@ -302,7 +303,8 @@ test("fresh generation and exact restored UID/template/ready Pod proof releases 
       fixture.intent.id,
       {
         ...readback,
-        expectedEnvironmentGeneration: proof.expectedEnvironmentGeneration,
+        // Settlement moved no generation (E1); any other generation is stale.
+        expectedEnvironmentGeneration: proof.expectedEnvironmentGeneration + 1,
       },
       testExecutor,
     ),
@@ -359,7 +361,7 @@ test("stale, foreign, missing and mutated native observations retain all ownersh
   const detail = await scope.delivery.detail(fixture.failed.id);
   expect(detail.deployment.recoveryRequired).toBe(true);
   expect(
-    await scope.cluster.database.applicationLock.count({
+    await scope.cluster.database.targetLock.count({
       where: { deploymentId: fixture.failed.id },
     }),
   ).toBe(1);

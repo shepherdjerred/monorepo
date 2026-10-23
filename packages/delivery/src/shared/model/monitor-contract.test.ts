@@ -22,14 +22,14 @@ const scoutProd = {
         'sum(increase(scout_durable_receipts_recorded_total{environment="prod",git_sha="$gitSha",outcome="applied"}[$window]))',
       threshold: 50,
     },
-    {
-      key: "discord-interactions",
-      query:
-        'sum(increase(discord_commands_total{environment="prod",git_sha="$gitSha"}[$window]))',
-      threshold: 20,
-    },
   ],
   policy: "automatic",
+};
+
+/** An accepted deployment and its claim, the instant alarms count from (W2). */
+const ACCEPTED = {
+  deploymentId: "dep-1",
+  claimedAt: "2026-10-20T11:00:00.000Z",
 };
 
 describe("MonitorSchema", () => {
@@ -38,7 +38,6 @@ describe("MonitorSchema", () => {
     expect(monitor.alarms.severities).toEqual(["warning", "critical"]);
     expect(monitor.evidence.map((entry) => entry.key)).toEqual([
       "matches-processed",
-      "discord-interactions",
     ]);
   });
 
@@ -91,7 +90,7 @@ describe("observations", () => {
     observedAt: "2026-10-20T12:00:00.000Z",
     window: "17m",
     alarms: [],
-    evidence: { "matches-processed": 60, "discord-interactions": 25 },
+    evidence: { "matches-processed": 60 },
   };
 
   test("renders placeholders from the accepted artifact", () => {
@@ -109,25 +108,34 @@ describe("observations", () => {
     expect(
       monitorOutcome(monitor, {
         ...base,
-        evidence: { "matches-processed": 60, "discord-interactions": 3 },
+        evidence: { "matches-processed": 49 },
       }),
     ).toBe("watching");
+    expect(monitorOutcome(monitor, { ...base, evidence: {} })).toBe("watching");
     expect(
       monitorOutcome(monitor, {
         ...base,
-        evidence: { "matches-processed": 60 },
-      }),
-    ).toBe("watching");
-    expect(
-      monitorOutcome(monitor, {
-        ...base,
-        alarms: [{ alertname: "ScoutDown", severity: "critical", labels: {} }],
+        alarms: [
+          {
+            alertname: "ScoutDown",
+            severity: "critical",
+            labels: {},
+            activeAt: base.observedAt,
+          },
+        ],
       }),
     ).toBe("alarmed");
     expect(
       monitorOutcome(monitor, {
         ...base,
-        alarms: [{ alertname: "ScoutNoisy", severity: "info", labels: {} }],
+        alarms: [
+          {
+            alertname: "ScoutNoisy",
+            severity: "info",
+            labels: {},
+            activeAt: base.observedAt,
+          },
+        ],
       }),
     ).toBe("settled");
   });
@@ -167,14 +175,29 @@ describe("observations", () => {
       }).success,
     ).toBe(false);
     const status = {
-      deploymentId: "dep-1",
+      ...ACCEPTED,
       state: "settled",
       policy: "automatic",
       settledAt: base.observedAt,
       alarmedAt: null,
       observations: 3,
+      monitor: scoutProd,
+      latestObservation: observation,
     };
     expect(MonitorStatusSchema.safeParse(status).success).toBe(true);
+    expect(
+      MonitorStatusSchema.safeParse({ ...status, latestObservation: null })
+        .success,
+    ).toBe(false);
+    expect(
+      MonitorStatusSchema.safeParse({
+        ...status,
+        latestObservation: { ...observation, deploymentId: "dep-2" },
+      }).success,
+    ).toBe(false);
+    expect(
+      MonitorStatusSchema.safeParse({ ...status, policy: "hold" }).success,
+    ).toBe(false);
     expect(
       MonitorStatusSchema.safeParse({ ...status, settledAt: null }).success,
     ).toBe(false);
@@ -188,11 +211,14 @@ describe("observations", () => {
     expect(
       MonitorStatusSchema.safeParse({
         deploymentId: null,
+        claimedAt: null,
         state: "unmonitored",
         policy: null,
         settledAt: null,
         alarmedAt: null,
         observations: 0,
+        monitor: null,
+        latestObservation: null,
       }).success,
     ).toBe(true);
     expect(
@@ -232,12 +258,14 @@ describe("observations", () => {
     ],
   ])("refuses %s", (_name, fields) => {
     const status = {
-      deploymentId: "dep-1",
+      ...ACCEPTED,
       state: "settled",
       policy: "automatic",
       settledAt: "2026-10-20T12:00:00.000Z",
       alarmedAt: null,
-      observations: 3,
+      observations: 0,
+      monitor: scoutProd,
+      latestObservation: null,
     };
     expect(
       MonitorStatusSchema.safeParse({ ...status, ...fields }).success,
@@ -247,13 +275,35 @@ describe("observations", () => {
   test("accepts an unmonitored selection that settled on acceptance", () => {
     expect(
       MonitorStatusSchema.safeParse({
-        deploymentId: "dep-1",
+        ...ACCEPTED,
         state: "unmonitored",
         policy: null,
         settledAt: "2026-10-20T12:00:00.000Z",
         alarmedAt: null,
         observations: 0,
+        monitor: null,
+        latestObservation: null,
       }).success,
     ).toBe(true);
   });
+});
+
+test("a monitor status carries the claim time exactly for an accepted deployment", () => {
+  const accepted = {
+    ...ACCEPTED,
+    state: "unmonitored",
+    policy: null,
+    settledAt: null,
+    alarmedAt: null,
+    observations: 0,
+    monitor: null,
+    latestObservation: null,
+  };
+  expect(MonitorStatusSchema.safeParse(accepted).success).toBe(true);
+  expect(
+    MonitorStatusSchema.safeParse({ ...accepted, claimedAt: null }).success,
+  ).toBe(false);
+  expect(
+    MonitorStatusSchema.safeParse({ ...accepted, deploymentId: null }).success,
+  ).toBe(false);
 });

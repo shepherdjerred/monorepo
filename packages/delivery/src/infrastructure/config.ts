@@ -24,6 +24,9 @@ export const BootstrapSchema = z
     ARGOCD_SERVER_URL: z.url().default("https://argocd.sjer.red"),
     ARGOCD_RECOVERY_TOKEN: z.string().min(1).optional(),
     DELIVERY_GH_TOKEN: z.string().min(1).optional(),
+    /** The homelab R2 bucket's credential, for the cold-start snapshot (section 6). */
+    CLOUDFLARE_R2_ACCESS_KEY_ID: z.string().min(1).optional(),
+    CLOUDFLARE_R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
     DELIVERY_FORUM_S3_ACCESS_KEY_ID: z.string().min(1).optional(),
     DELIVERY_FORUM_S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
     DELIVERY_FORUM_OBSERVATION_TOKEN: z.string().min(1).optional(),
@@ -110,6 +113,20 @@ export function behaviorConfig(stage: string) {
         default: "[]",
         names: { flag: "delivery-enrichment-sources" },
       },
+      /** Simultaneously owned deployments across the executor (model D10). */
+      executorConcurrency: {
+        schema: z.number().int().min(1).max(64),
+        sources: ["flag", "default"],
+        default: 4,
+        names: { flag: "delivery-executor-concurrency" },
+      },
+      /** How long an owned deployment stays provably owned without renewal (model D7). */
+      leaseSeconds: {
+        schema: z.number().int().min(60).max(7200),
+        sources: ["flag", "default"],
+        default: 900,
+        names: { flag: "delivery-lease-seconds" },
+      },
     },
     sources: {
       flag: createFlagConfigSource({
@@ -121,6 +138,8 @@ export function behaviorConfig(stage: string) {
           enabledEnvironments: "string",
           operatorLogins: "string",
           enrichmentSources: "string",
+          executorConcurrency: "number",
+          leaseSeconds: "number",
         },
       }),
     },
@@ -137,6 +156,11 @@ export function behaviorConfig(stage: string) {
     },
   });
 }
+/** Operational bounds the record enforces at admission; typed configuration, never literals. */
+export type DeliveryPolicy = {
+  executorConcurrency: () => Promise<number>;
+  leaseSeconds: () => Promise<number>;
+};
 export type RuntimeConfig = {
   publicOrigin: string;
   machineCredentials: z.infer<typeof MachineCredentialSchema>[];

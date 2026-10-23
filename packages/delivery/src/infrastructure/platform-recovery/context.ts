@@ -4,21 +4,91 @@ import {
   TofuPlanReceiptSchema,
   type DeploymentDetail,
 } from "#shared/contract.ts";
-import type { PlatformSettlementFingerprintsSchema } from "#shared/platform-recovery-contract.ts";
+import {
+  PlatformRecoveryIntentSchema,
+  type PlatformSettlementFingerprintsSchema,
+} from "#shared/platform-recovery-contract.ts";
+import type { RecoveryIntent } from "#generated/prisma/client.ts";
 import {
   fingerprint,
   required,
   wire,
 } from "#infrastructure/delivery-records.ts";
 import type { Transaction } from "#infrastructure/delivery-data.ts";
-import { nativeReceipt } from "#infrastructure/platform/policy.ts";
+import {
+  intentDetail,
+  legacyIntentFields,
+} from "#infrastructure/recovery-intents.ts";
+import {
+  RETIRED_ROOT,
+  nativeReceipt,
+} from "#infrastructure/platform/policy.ts";
+import { modelTofuSource } from "#infrastructure/platform/plans.ts";
+import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
 
+// Root releases are retired (X6); none can be quarantined after the cutover.
 export const platformRecoveryKinds = new Set([
-  "root-release",
   "tofu-plan",
   "tofu-apply",
   "upgrade-control-plane",
 ]);
+
+/**
+ * A model tofu deployment's stack and frozen stack archive build (X8), read
+ * from its detail; null for a v1 platform snapshot and any other recipe.
+ */
+export function modelTofuTarget(detail: DeploymentDetail) {
+  if (detail.deployment.platformSnapshot !== null) return null;
+  const recipe = RecipeDefinitionSchema.safeParse(detail.pipeline.definition);
+  if (recipe.data?.kind !== "tofu") return null;
+  const archive = required(
+    detail.versionSet.components[recipe.data.archiveComponent] ?? null,
+    "Frozen stack archive",
+  );
+  return {
+    stack: recipe.data.stack,
+    sourceBuildId: archive.buildId,
+    sourceRevision: archive.sourceRevision,
+  };
+}
+
+/**
+ * The OpenTofu stack and source a recovery plans and applies from: a v1
+ * snapshot's, or a model tofu recipe's frozen stack archive. Null for the
+ * control plane, which has no saved plan.
+ */
+export async function recoveryTofuSource(
+  tx: Transaction,
+  row: {
+    platformSnapshot: unknown;
+    pipelineRevisionId: string;
+    versionSetRevisionId: string;
+  },
+) {
+  if (row.platformSnapshot === null) return modelTofuSource(tx, row);
+  const snapshot = PlatformReleaseSnapshotSchema.parse(row.platformSnapshot);
+  if (snapshot.kind === "root-release")
+    throw new DeliveryError("INVALID", RETIRED_ROOT);
+  return {
+    stack: snapshot.stack,
+    sourceBuildId: snapshot.source.id,
+    sourceRevision: snapshot.source.sourceRevision,
+  };
+}
+
+/** The platform-kind view of a unified recovery intent row. */
+export function platformIntentView(row: RecoveryIntent) {
+  const detail = intentDetail(row);
+  return PlatformRecoveryIntentSchema.parse(
+    wire({
+      ...legacyIntentFields(row),
+      nativeReceipts: detail["nativeReceipts"] ?? [],
+      planReceipt: detail["planReceipt"] ?? null,
+      planFingerprint: detail["planFingerprint"] ?? null,
+      planApproval: detail["planApproval"] ?? null,
+    }),
+  );
+}
 
 export async function heldPlatformRecovery(
   tx: Transaction,
@@ -31,8 +101,13 @@ export async function heldPlatformRecovery(
     }),
     "Quarantined infrastructure deployment",
   );
+  // A model tofu recipe runs as an ordinary deployment with no v1 snapshot.
+  const model =
+    row.platformSnapshot === null && row.controlPlaneSnapshot === null
+      ? await modelTofuSource(tx, row)
+      : null;
   if (
-    !platformRecoveryKinds.has(row.kind) ||
+    (model === null && !platformRecoveryKinds.has(row.kind)) ||
     !["failed", "canceled"].includes(row.status) ||
     !row.recoveryRequired
   )
@@ -43,8 +118,9 @@ export async function heldPlatformRecovery(
   const env = await tx.environment.findUniqueOrThrow({
     where: { id: row.environmentId },
   });
-  const target = await tx.applicationLock.findUnique({
+  const target = await tx.targetLock.findFirst({
     where: { deploymentId: row.id },
+    orderBy: { instance: "asc" },
   });
   const global = await tx.platformLock.findUnique({
     where: { deploymentId: row.id },
@@ -66,15 +142,16 @@ export async function heldPlatformRecovery(
       environmentId: env.id,
       generation: env.generation,
       pipelineRevisionId: row.pipelineRevisionId,
-      configurationRevision: row.configurationRevision,
-      configuration: row.configuration,
+      configurationId: row.configurationId,
       platformSnapshot: row.platformSnapshot,
       controlPlaneSnapshot: row.controlPlaneSnapshot,
+      ...(model === null
+        ? {}
+        : { versionSetRevisionId: row.versionSetRevisionId, source: model }),
       stages: row.stages.sort((a, b) => a.key.localeCompare(b.key)),
-      target: target.application,
+      target: target.instance,
       global: global?.id ?? null,
-      acceptedPlatformDeploymentId: env.acceptedPlatformDeploymentId,
-      acceptedControlPlaneDeploymentId: env.acceptedControlPlaneDeploymentId,
+      acceptedDeploymentId: env.acceptedDeploymentId,
     }),
   );
   return { row, env, target, global, snapshotFingerprint };
@@ -87,31 +164,13 @@ function targetFingerprint(detail: DeploymentDetail) {
       "INVALID",
       "Recovery target lacks its frozen infrastructure snapshot",
     );
-  return snapshot.kind === "root-release"
-    ? fingerprint({
-        kind: snapshot.kind,
-        source: snapshot.source,
-        charts: snapshot.charts,
-        siteArtifacts: snapshot.siteArtifacts,
-      })
-    : fingerprint({
-        kind: "tofu",
-        source: snapshot.source,
-        stack: snapshot.stack,
-      });
-}
-
-export function stoppedRootPriorMatches(
-  detail: DeploymentDetail,
-  prior: DeploymentDetail | null,
-) {
-  if (detail.deployment.platformSnapshot?.kind !== "root-release") return false;
-  return prior === null
-    ? detail.environment.acceptedPlatformDeploymentId === null
-    : prior.deployment.platformSnapshot?.kind === "root-release" &&
-        prior.deployment.status === "succeeded" &&
-        prior.deployment.id !== detail.deployment.id &&
-        prior.deployment.id === detail.environment.acceptedPlatformDeploymentId;
+  if (snapshot.kind === "root-release")
+    throw new DeliveryError("INVALID", RETIRED_ROOT);
+  return fingerprint({
+    kind: "tofu",
+    source: snapshot.source,
+    stack: snapshot.stack,
+  });
 }
 
 export function platformSettlements(
@@ -132,6 +191,12 @@ export function platformSettlements(
         chart: controller.priorChartArtifact,
       }),
     };
+  // A model tofu recovery converges forward: the stack equals its frozen
+  // archive with zero proposed changes, directly or after an exact recovery
+  // plan is approved by stack policy and applied.
+  const model = modelTofuTarget(detail);
+  if (model !== null)
+    return { desired: fingerprint({ kind: "tofu", ...model }) };
   const snapshot = PlatformReleaseSnapshotSchema.parse(
     detail.deployment.platformSnapshot,
   );
@@ -143,38 +208,15 @@ export function platformSettlements(
         stack: snapshot.stack,
       }),
     };
+  if (snapshot.kind === "root-release")
+    throw new DeliveryError("INVALID", RETIRED_ROOT);
   const matching = prior?.deployment.platformSnapshot;
   const hasPrior =
-    matching !== null &&
-    matching !== undefined &&
-    (snapshot.kind === "root-release"
-      ? matching.kind === "root-release"
-      : matching.kind === "tofu-apply" && matching.stack === snapshot.stack);
-  const stoppedRoot = stoppedRootPriorMatches(detail, prior);
+    matching?.kind === "tofu-apply" && matching.stack === snapshot.stack;
   return {
     desired: targetFingerprint(detail),
     ...(hasPrior && prior !== null ? { prior: targetFingerprint(prior) } : {}),
-    ...(stoppedRoot
-      ? {
-          stopped: fingerprint({
-            kind:
-              prior === null ? "stopped-first-root" : "stopped-root-attempt",
-            deploymentId: detail.deployment.id,
-            target: targetFingerprint(detail),
-            ...(prior === null
-              ? {}
-              : {
-                  prior: {
-                    deploymentId: prior.deployment.id,
-                    target: targetFingerprint(prior),
-                  },
-                }),
-          }),
-        }
-      : {}),
-    ...(prior === null &&
-    snapshot.kind === "tofu-apply" &&
-    snapshot.stack === "discord"
+    ...(prior === null && snapshot.stack === "discord"
       ? {
           original: fingerprint({
             kind: "tofu-original-target",

@@ -43,7 +43,13 @@ export const ComponentProducerSchema = z.enum([
   "reference",
 ]);
 export const ReferenceModeSchema = z.enum(["pinned", "tracking"]);
-/** Another service's component filled by reference (A5). */
+/**
+ * Another service's component filled by reference (A5). A `tracking`
+ * reference follows the acceptances of one source environment (R7); a
+ * producer with no environment of its own, such as an image only another
+ * service's chart consumes, is referenced `pinned` and moves by a manual
+ * set revision or a catalog change.
+ */
 export const ComponentSourceSchema = z
   .strictObject({
     service: ServiceIdSchema,
@@ -111,6 +117,11 @@ export const LegacyServiceSchema = z.strictObject({
     .optional(),
   bootstrapImages: z.array(z.string().min(1)).optional(),
 });
+/** An ArgoCD AppProject name. */
+export const AppProjectNameSchema = z
+  .string()
+  .regex(/^[a-z0-9]([-a-z0-9]*[a-z0-9])?$/u)
+  .max(253);
 export const CatalogServiceSchema = z.strictObject({
   id: ServiceIdSchema,
   title: z.string().min(1),
@@ -121,6 +132,12 @@ export const CatalogServiceSchema = z.strictObject({
   group: ServiceGroupSchema,
   /** Ordered; a change starts a new lineage (S1). */
   components: z.array(CatalogComponentSchema),
+  /**
+   * ArgoCD AppProjects this service's chart renders. Every Application a
+   * recipe declares names a project some service owns, so no project loses
+   * its owner when the root release is retired.
+   */
+  appProjects: z.array(AppProjectNameSchema).optional(),
   ops: OpsAttributesSchema.optional(),
   legacy: LegacyServiceSchema.optional(),
 });
@@ -174,12 +191,62 @@ export const CatalogRecipeSchema = z.strictObject({
 });
 
 export const ForwardOnlyValueSchema = z.string().regex(/^\d+(?:\.\d+)*$/u);
+
+/** The content key whose JSON value becomes the Application's `helm.valuesObject`. */
+export const HELM_VALUES_OBJECT_KEY = "helm.valuesObject";
+
+/**
+ * The structured view of a configuration revision's content (4.8): the
+ * `helm.valuesObject` key's JSON value at `/helm/valuesObject`, every other
+ * key a Helm parameter at `/helm/parameters/<key>`. Forward-only keys are
+ * JSON pointers into this view (F3).
+ */
+export function configurationDocument(
+  content: Readonly<Record<string, string>>,
+): { helm: { valuesObject?: unknown; parameters: Record<string, string> } } {
+  const parameters: Record<string, string> = {};
+  let valuesObject: unknown;
+  for (const [key, value] of Object.entries(content)) {
+    if (key === HELM_VALUES_OBJECT_KEY) valuesObject = JSON.parse(value);
+    else parameters[key] = value;
+  }
+  return {
+    helm:
+      valuesObject === undefined
+        ? { parameters }
+        : { valuesObject, parameters },
+  };
+}
+
+/** An RFC 6901 JSON pointer such as `/helm/valuesObject/minecraftServer/version`. */
+export const JsonPointerSchema = z.string().regex(/^(?:\/(?:[^~/]|~[01])*)+$/u);
+
+/**
+ * The scalar a forward-only JSON pointer names in the configuration's
+ * structured view (F3), as a string; undefined when nothing scalar is there.
+ */
+export function forwardOnlyValue(
+  content: Readonly<Record<string, string>>,
+  pointer: string,
+): string | undefined {
+  let cursor: unknown = configurationDocument(content);
+  for (const token of JsonPointerSchema.parse(pointer).slice(1).split("/")) {
+    const name = token.replaceAll("~1", "/").replaceAll("~0", "~");
+    if (typeof cursor !== "object" || cursor === null) return undefined;
+    cursor = Object.entries(cursor).find(([key]) => key === name)?.[1];
+  }
+  if (typeof cursor === "number") return String(cursor);
+  return typeof cursor === "string" ? cursor : undefined;
+}
 export const CatalogConfigurationSchema = z
   .strictObject({
     id: RevisionIdSchema,
     content: z.record(z.string().min(1), z.string()),
-    /** Keys a rollback may never lower (F3); each holds a dotted numeric version. */
-    forwardOnly: z.array(z.string().min(1)),
+    /**
+     * JSON pointers into the content's structured view a rollback may never
+     * lower (F3); each names a dotted numeric version.
+     */
+    forwardOnly: z.array(JsonPointerSchema),
   })
   .superRefine((configuration, context) => {
     if (
@@ -193,7 +260,7 @@ export const CatalogConfigurationSchema = z
       });
     }
     for (const key of configuration.forwardOnly) {
-      const value = configuration.content[key];
+      const value = forwardOnlyValue(configuration.content, key);
       if (value === undefined) {
         context.addIssue({
           code: "custom",

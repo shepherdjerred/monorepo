@@ -4,6 +4,7 @@ import {
   WorkerRecoveryIntentSchema,
 } from "#shared/contract.ts";
 import type { Principal, RequestWorkerRecovery } from "#shared/contract.ts";
+import type { RecoveryIntent } from "#generated/prisma/client.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
@@ -17,8 +18,24 @@ import {
   wire,
 } from "#infrastructure/delivery-records.ts";
 import type { Transaction } from "#infrastructure/delivery-data.ts";
+import {
+  createIntent,
+  findIntent,
+  intentDetail,
+  legacyIntentFields,
+} from "#infrastructure/recovery-intents.ts";
 import { readWorkerVersions } from "./pool.ts";
 import { requireNoContentBarrier } from "#infrastructure/content-recovery/ownership.ts";
+
+/** The worker-kind view of a unified recovery intent row. */
+export function workerIntentView(row: RecoveryIntent) {
+  return WorkerRecoveryIntentSchema.parse(
+    wire({
+      ...legacyIntentFields(row),
+      poolFingerprint: intentDetail(row)["poolFingerprint"],
+    }),
+  );
+}
 
 export async function recoveryOwnership(
   tx: Transaction,
@@ -52,9 +69,12 @@ export async function recoveryOwnership(
       "Worker recovery requires a frozen retained-host snapshot",
     );
   const snapshot = WorkerPoolSnapshotSchema.parse(deployment.workerSnapshot);
-  const held = await tx.applicationLock.findUnique({ where: { deploymentId } });
+  const locks = await tx.targetLock.findMany({ where: { deploymentId } });
   const application = snapshot.versions[0]?.host.application;
-  if (held?.application !== application)
+  if (
+    application === undefined ||
+    !locks.some((held) => held.instance === `application:${application}`)
+  )
     throw new DeliveryError(
       "CONFLICT",
       "Recovery no longer owns its fixed worker Application lock",
@@ -69,8 +89,7 @@ export async function recoveryOwnership(
     environmentId: deployment.environmentId,
     versionSetRevisionId: deployment.versionSetRevisionId,
     pipelineRevisionId: deployment.pipelineRevisionId,
-    configurationRevision: deployment.configurationRevision,
-    configuration: deployment.configuration,
+    configurationId: deployment.configurationId,
     workerSnapshot: snapshot,
   });
   return {
@@ -101,23 +120,14 @@ export async function requestWorkerRecovery(
       resultType: "worker-recovery",
     });
     if (prior !== null)
-      return WorkerRecoveryIntentSchema.parse(
-        wire(
-          required(
-            await tx.workerRecoveryIntent.findUnique({
-              where: { id: prior.resultId },
-            }),
-            "Worker recovery intent",
-          ),
-        ),
-      );
+      return workerIntentView(await findIntent(tx, prior.resultId, "worker"));
     const context = await recoveryOwnership(
       tx,
       deploymentId,
       input.expectedEnvironmentGeneration,
     );
     if (
-      (await tx.workerRecoveryIntent.findFirst({
+      (await tx.recoveryIntent.findFirst({
         where: { deploymentId, status: "pending" },
       })) !== null
     )
@@ -125,17 +135,16 @@ export async function requestWorkerRecovery(
         "CONFLICT",
         "Worker deployment already has a pending recovery inspection",
       );
-    const intent = await tx.workerRecoveryIntent.create({
-      data: {
-        id: input.requestId,
-        deploymentId,
-        requestedBy: actor.id,
-        reason: input.reason,
-        expectedEnvironmentGeneration: input.expectedEnvironmentGeneration,
-        snapshotFingerprint: context.snapshotFingerprint,
-        poolFingerprint: context.poolFingerprint,
-        workflowId: `delivery-worker-recovery/${input.requestId}`,
-      },
+    const intent = await createIntent(tx, {
+      id: input.requestId,
+      kind: "worker",
+      deploymentId,
+      requestedBy: actor.id,
+      reason: input.reason,
+      expectedGeneration: input.expectedEnvironmentGeneration,
+      snapshotFingerprint: context.snapshotFingerprint,
+      workflowId: `delivery-worker-recovery/${input.requestId}`,
+      detail: { poolFingerprint: context.poolFingerprint },
     });
     await remember(tx, actor, {
       requestId: input.requestId,
@@ -154,7 +163,7 @@ export async function requestWorkerRecovery(
         reason: input.reason,
       },
     });
-    return WorkerRecoveryIntentSchema.parse(wire(intent));
+    return workerIntentView(intent);
   });
 }
 
@@ -164,15 +173,8 @@ export async function workerRecovery(
   actor: Principal,
 ) {
   requireScope(actor, "read");
-  const intent = WorkerRecoveryIntentSchema.parse(
-    wire(
-      required(
-        await this.database.workerRecoveryIntent.findUnique({
-          where: { id: intentId },
-        }),
-        "Worker recovery intent",
-      ),
-    ),
+  const intent = workerIntentView(
+    await findIntent(this.database, intentId, "worker"),
   );
   const deployment = await this.detail(intent.deploymentId);
   const pool = await this.workers(deployment.environment.id, actor);
@@ -181,16 +183,12 @@ export async function workerRecovery(
 
 export async function pendingWorkerRecovery(this: Delivery, actor: Principal) {
   requireScope(actor, "execute");
-  const intents = await this.database.workerRecoveryIntent.findMany({
-    where: { status: "pending" },
+  const intents = await this.database.recoveryIntent.findMany({
+    where: { kind: "worker", status: "pending" },
     orderBy: { createdAt: "asc" },
     take: 100,
   });
-  return {
-    intents: intents.map((intent) =>
-      WorkerRecoveryIntentSchema.parse(wire(intent)),
-    ),
-  };
+  return { intents: intents.map((intent) => workerIntentView(intent)) };
 }
 
 export async function submittedWorkerRecovery(
@@ -199,18 +197,13 @@ export async function submittedWorkerRecovery(
 ) {
   const [intentId, workflowId, actor] = args;
   requireScope(actor, "execute");
-  const intent = required(
-    await this.database.workerRecoveryIntent.findUnique({
-      where: { id: intentId },
-    }),
-    "Worker recovery intent",
-  );
+  const intent = await findIntent(this.database, intentId, "worker");
   if (intent.workflowId !== workflowId)
     throw new DeliveryError(
       "CONFLICT",
       "Worker recovery Workflow identity differs from its intent",
     );
-  await this.database.workerRecoveryIntent.updateMany({
+  await this.database.recoveryIntent.updateMany({
     where: { id: intentId, status: "pending", submittedAt: null },
     data: { submittedAt: new Date() },
   });

@@ -18,7 +18,6 @@ export function registerOwnershipRoute(
   app.get("/api/v1/ownership-handover-context", async (c) => {
     requireScope(c.get("principal"), "admin");
     const writesEnabled = await options.config.writesEnabled();
-    const enabledEnvironments = await options.config.enabledEnvironments();
     const context = await ownershipHandoverContext(
       options.delivery,
       options.sourceRevision ?? Bun.env["GIT_SHA"] ?? "unknown",
@@ -32,7 +31,6 @@ export function registerOwnershipRoute(
       OwnershipHandoverContextSchema.parse({
         ...context,
         writesEnabled,
-        enabledEnvironments,
       }),
     );
   });

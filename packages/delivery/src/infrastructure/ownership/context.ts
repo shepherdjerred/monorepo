@@ -3,12 +3,15 @@ import {
   environment,
   pendingDeliveryObservations,
   type Transaction,
+  configurationContent,
 } from "#infrastructure/delivery-data.ts";
 import { fingerprint, wire } from "#infrastructure/delivery-records.ts";
 import { DeliveryError } from "#domain/error.ts";
-import { PipelineRevisionSchema } from "#shared/contract.ts";
+import { LegacyPipelineRevisionSchema } from "#shared/contract.ts";
 import { freezeForumBaseline } from "#infrastructure/forum/freezer.ts";
+import { acceptedForumBaseline } from "#infrastructure/forum/baseline-context.ts";
 import { readWorkerVersions } from "#infrastructure/worker-pool/pool.ts";
+import { activeEnvironmentIds } from "#infrastructure/delivery-selection.ts";
 import {
   reviewedOwnershipDefinitions,
   requireReviewedOwnershipDefinition,
@@ -20,7 +23,7 @@ async function target(
   definitions: Awaited<ReturnType<typeof reviewedOwnershipDefinitions>>,
 ) {
   const env = await environment(tx, environmentId);
-  const pipeline = PipelineRevisionSchema.parse(
+  const pipeline = LegacyPipelineRevisionSchema.parse(
     wire(
       await tx.pipeline.findUniqueOrThrow({
         where: { id: env.pipelineRevisionId },
@@ -73,7 +76,7 @@ async function target(
     definition.kind === "argocd" &&
     definition.forumRelease !== undefined &&
     env.acceptedVersionSetRevisionId === null &&
-    env.acceptedForumBaselineIntentId !== null
+    (await acceptedForumBaseline(tx, env.id)) !== null
   ) {
     const original = await freezeForumBaseline(tx, {
       environment: env,
@@ -97,8 +100,8 @@ async function target(
     generation: env.generation,
     pipelineRevisionId: pipeline.id,
     pipeline: definition,
-    configurationRevision: env.configurationRevision,
-    configuration: env.configuration,
+    configurationRevision: env.declaredConfigurationId,
+    configuration: await configurationContent(tx, env.declaredConfigurationId),
     acceptedVersionSetRevisionId: env.acceptedVersionSetRevisionId,
     baseline,
   };
@@ -127,14 +130,17 @@ export async function ownershipHandoverContext(
         pendingDeployments,
         recoveryRequired,
         pendingObservations,
+        admittingEnvironments,
         rows,
       ] = await Promise.all([
-        tx.applicationLock.count(),
+        tx.targetLock.count(),
         tx.platformLock.count(),
         tx.environment.count({ where: { activeDeploymentId: { not: null } } }),
         tx.deployment.count({ where: active }),
         tx.deployment.count({ where: { recoveryRequired: true } }),
         pendingDeliveryObservations(tx),
+        // v2 admits by catalog lifecycle, never an enable-list flag (4.10).
+        activeEnvironmentIds(tx),
         tx.environment.findMany({
           where: { application: { not: null } },
           orderBy: { id: "asc" },
@@ -150,6 +156,7 @@ export async function ownershipHandoverContext(
         sourceRevision,
         catalogFingerprint: `sha256:${fingerprint(delivery.catalog.catalog)}`,
         observedAt: new Date().toISOString(),
+        admittingEnvironments,
         counts: {
           applicationLocks,
           platformLocks,

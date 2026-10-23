@@ -109,7 +109,8 @@ describe("product", () => {
     );
     expect(result.signals.map((s) => [s.title, s.service])).toEqual([
       ["birmel/birmel (public) is down", "birmel"],
-      ["sjer.red is down", "static-sites"],
+      // Each site is its own service (X4); this catalog aliases no hostname.
+      ["sjer.red is down", undefined],
       ["s3-static-sites (/app/) is down", "static-sites"],
     ]);
     expect(result.metrics[0]).toMatchObject({ value: 3, severity: "error" });

@@ -39,7 +39,7 @@ test("actual HTTP accepts non-UUID admin recovery identity while paused and refu
     config: {
       publicOrigin: "http://delivery.test",
       writesEnabled: () => Promise.resolve(false),
-      enabledEnvironments: () => Promise.resolve(["static-sites/sjer-red"]),
+      enabledEnvironments: () => Promise.resolve(["sjer-red/prod"]),
       operatorLogins: () => Promise.resolve([]),
       trustedProxyAddresses: () =>
         Promise.reject(new Error("Bearer requests must not query Kubernetes")),
@@ -117,7 +117,7 @@ test("actual HTTP accepts non-UUID admin recovery identity while paused and refu
     recoveryRequired: true,
   });
   expect(
-    await scope.cluster.database.applicationLock.count({
+    await scope.cluster.database.targetLock.count({
       where: { deploymentId: fixture.failed.id },
     }),
   ).toBe(1);

@@ -27,7 +27,7 @@ export function staticSiteSelection(
     throw new Error("Expected a static-site release policy");
   if (
     detail.deployment.kind === "adopt-worker" ||
-    detail.deployment.kind === "retire-worker"
+    detail.deployment.kind === "retire-host"
   )
     throw new Error(
       "Worker lifecycle operations cannot activate frontend archives",

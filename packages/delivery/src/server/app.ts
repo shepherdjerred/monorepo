@@ -8,20 +8,34 @@ import { authenticate, requireScope } from "#infrastructure/auth.ts";
 import { RetrySchema } from "#infrastructure/delivery.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import type { RuntimeConfig } from "#infrastructure/config.ts";
+import { ApprovalV2InputSchema } from "#shared/model/approval-contract.ts";
 import {
-  ApprovalInputSchema,
   ComposeVersionSetSchema,
   CreateDeploymentSchema,
   FinishDeploymentSchema,
   LatestQualifiedArtifactQuerySchema,
+  LatestRetainableArtifactQuerySchema,
   PublishBuildSchema,
-  StageInputSchema,
-  ImportSnapshotSchema,
+  StageRequestSchema,
 } from "#shared/contract.ts";
 import type { Principal, PublishBuild } from "#shared/contract.ts";
+import { CreateDeploymentV2Schema } from "#shared/deployment-request-contract.ts";
 import { ciIdentity } from "#infrastructure/qualification.ts";
 import type { createRecoveryInspector } from "#infrastructure/recovery.ts";
 import { registerWorkerRoutes } from "./worker-routes.ts";
+import { registerSelectionRoutes } from "./selection-routes.ts";
+import { registerColdStartRoutes } from "./cold-start-routes.ts";
+import { retryRequest } from "#infrastructure/selection/request.ts";
+import {
+  approvalById,
+  deploymentDetailV2,
+  deploymentViewById,
+} from "#infrastructure/selection/views.ts";
+import {
+  activeEnvironmentIds,
+  requireAdmitting,
+} from "#infrastructure/delivery-selection.ts";
+import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
 import { registerPlatformRoutes } from "./platform-routes.ts";
 import { registerPlatformRecoveryRoutes } from "./platform-recovery-routes.ts";
 import { registerContentRecoveryRoutes } from "./content-recovery-routes.ts";
@@ -56,6 +70,10 @@ type Options = {
   ciOrigin: string;
   ciRepositoryId: number;
   inspectRecovery?: ReturnType<typeof createRecoveryInspector>;
+  /** Independent Application readback for reconcile-after-restore (D5). */
+  readApplication?: ApplicationReader;
+  /** The newest off-cluster cold-start snapshot (section 6). */
+  readColdStartSnapshot?: () => Promise<unknown>;
   inspectMinecraftRecovery?: InspectMinecraftRecovery;
   verifyForumBundle?: VerifyForumBundle;
   inspectForumBaseline?: InspectForumBaseline;
@@ -87,6 +105,7 @@ export function createApp(options: Options) {
         ),
       maxSize:
         c.req.path === "/api/v1/platform/plans" ||
+        c.req.path === "/api/v1/catalog/reconcile" ||
         /^\/api\/v1\/platform-recovery\/[^/]+\/plan$/.test(c.req.path)
           ? 16 * 1024 * 1024
           : 1024 * 1024,
@@ -123,7 +142,7 @@ export function createApp(options: Options) {
         requireScope(principal, "read");
     } else if (!(await options.config.writesEnabled())) {
       const resultOnly =
-        /\/deployments\/[^/]+\/(?:cancel|finish|release-lock|orphan)$/.test(
+        /\/deployments\/[^/]+\/(?:cancel|finish|release-lock|orphan|lease|handoff|monitor\/observations|cold-start|drift|attestations)$/.test(
           c.req.path,
         ) ||
         /^\/api\/v1\/dispatch\/[^/]+\/submitted$/.test(c.req.path) ||
@@ -136,7 +155,16 @@ export function createApp(options: Options) {
         /^\/api\/v1\/forum\/baselines\/[^/]+\/(?:submitted|complete|fail)$/.test(
           c.req.path,
         ) ||
-        /^\/api\/v1\/platform\/plans$/.test(c.req.path);
+        /^\/api\/v1\/platform\/plans$/.test(c.req.path) ||
+        // Registering definitions has no effect on a running system (C3);
+        // the cutover reconciles the catalog before writes resume.
+        c.req.path === "/api/v1/catalog/reconcile" ||
+        // A restore runs while writes are paused; it only sets or settles
+        // holds and never moves an accepted pointer (section 6).
+        c.req.path === "/api/v1/reconcile-after-restore" ||
+        /^\/api\/v1\/environments\/[^/]+\/(?:restore-hold\/accept|removed)$/.test(
+          c.req.path,
+        );
       const settlesStage = await settlesExistingStage(
         options.delivery,
         c.req.raw,
@@ -146,17 +174,13 @@ export function createApp(options: Options) {
     }
     await next();
   });
+  // v2 admits by catalog lifecycle; the enable-list flag is no longer read.
   async function enabled(environmentId: string) {
-    const environments = await options.config.enabledEnvironments();
-    if (!environments.includes(environmentId))
-      throw new DeliveryError(
-        "PAUSED",
-        "Delivery execution is disabled for this environment",
-      );
+    await requireAdmitting(options.delivery.database, environmentId);
   }
   const delivery = options.delivery;
   registerEventsRoute(app, options.changeFeed);
-  registerHubRoutes(app, delivery.database, options.config);
+  registerHubRoutes(app, delivery.database);
   if (options.enrichment !== undefined)
     registerIntegrationRoutes(app, options.enrichment);
   registerOwnershipRoute(app, options);
@@ -177,24 +201,19 @@ export function createApp(options: Options) {
       : { transport: options.upstreamFetch }),
   });
   app.get("/api/v1/identity", (c) => c.json(c.get("principal")));
-  app.get("/api/v1/imports", async (c) =>
-    c.json(await delivery.importedSnapshots()),
-  );
-  app.post("/api/v1/imports", async (c) => {
-    requireScope(c.get("principal"), "admin");
-    return c.json(
-      await delivery.importSnapshot(
-        ImportSnapshotSchema.parse(await c.req.json()),
-        c.get("principal"),
-      ),
-      201,
-    );
-  });
   app.get("/api/v1/overview", async (c) => c.json(await delivery.overview()));
   app.get("/api/v1/artifacts/latest-qualified", async (c) =>
     c.json(
       await delivery.latestQualifiedArtifact(
         LatestQualifiedArtifactQuerySchema.parse(c.req.query()),
+        options.ciRepositoryId,
+      ),
+    ),
+  );
+  app.get("/api/v1/artifacts/latest-retainable", async (c) =>
+    c.json(
+      await delivery.latestRetainableArtifact(
+        LatestRetainableArtifactQuerySchema.parse(c.req.query()),
         options.ciRepositoryId,
       ),
     ),
@@ -206,7 +225,7 @@ export function createApp(options: Options) {
     c.json(await delivery.version(c.req.param("id"))),
   );
   app.get("/api/v1/deployments/:id", async (c) =>
-    c.json(await delivery.detail(c.req.param("id"))),
+    c.json(await deploymentDetailV2(delivery, c.req.param("id"))),
   );
   app.post("/api/v1/builds", async (c) => {
     requireScope(c.get("principal"), "publish");
@@ -234,6 +253,15 @@ export function createApp(options: Options) {
   registerWorkerRoutes(app, { delivery, enabled });
   registerPlatformRoutes(app, { delivery, enabled });
   registerClaimRoute(app, delivery, enabled);
+  registerSelectionRoutes(app, delivery, options.config.writesEnabled);
+  registerColdStartRoutes(app, delivery, {
+    ...(options.readApplication === undefined
+      ? {}
+      : { readApplication: options.readApplication }),
+    ...(options.readColdStartSnapshot === undefined
+      ? {}
+      : { readColdStartSnapshot: options.readColdStartSnapshot }),
+  });
   registerTrmnlRepairRoute(app, delivery, enabled);
   registerControlPlaneRoutes(app, delivery, enabled);
   registerForumRoutes(app, delivery, {
@@ -249,24 +277,16 @@ export function createApp(options: Options) {
       c.req.json(),
     );
     await enabled(input.environmentId);
-    return c.json(
-      await delivery.createDeployment(input, c.get("principal")),
-      201,
-    );
+    const created = await delivery.createDeployment(input, c.get("principal"));
+    return c.json(await deploymentViewById(delivery.database, created.id), 201);
   });
   app.post("/api/v1/deployments/:id/approval", async (c) => {
     requireScope(c.get("principal"), "approve");
-    const input = ApprovalInputSchema.parse(await c.req.json());
+    const input = ApprovalV2InputSchema.parse(await c.req.json());
     const detail = await delivery.detail(c.req.param("id"));
     await enabled(detail.environment.id);
-    return c.json(
-      await delivery.approve(
-        detail.deployment.id,
-        input.decision,
-        input.reason,
-        c.get("principal"),
-      ),
-    );
+    await delivery.approve(detail.deployment.id, input, c.get("principal"));
+    return c.json(await approvalById(delivery.database, detail.deployment.id));
   });
   app.post("/api/v1/deployments/:id/cancel", async (c) => {
     requireScope(c.get("principal"), "deploy");
@@ -282,26 +302,9 @@ export function createApp(options: Options) {
         "CONFLICT",
         "Only failed or canceled deployments can be retried",
       );
-    if (
-      detail.deployment.kind !== "deploy" &&
-      detail.deployment.kind !== "promote" &&
-      detail.deployment.kind !== "rollback"
-    )
-      throw new DeliveryError(
-        "INVALID",
-        "Request a new specialized deployment with exact fresh inputs",
-      );
     return c.json(
       await delivery.createDeployment(
-        {
-          ...input,
-          environmentId: detail.environment.id,
-          versionSetRevisionId: detail.versionSet.id,
-          kind: detail.deployment.kind,
-          ...(detail.deployment.sourceEnvironmentId === null
-            ? {}
-            : { sourceEnvironmentId: detail.deployment.sourceEnvironmentId }),
-        },
+        { ...input, ...retryRequest(detail) },
         c.get("principal"),
       ),
       201,
@@ -311,7 +314,7 @@ export function createApp(options: Options) {
     requireScope(c.get("principal"), "execute");
     if (!(await options.config.writesEnabled()))
       return c.json({ deployments: [] });
-    const allowed = await options.config.enabledEnvironments();
+    const allowed = await activeEnvironmentIds(delivery.database);
     const pending = await delivery.pending();
     return c.json({
       deployments: pending.deployments.filter((entry) =>
@@ -347,7 +350,7 @@ export function createApp(options: Options) {
     requireScope(c.get("principal"), "execute");
     return c.json(
       await delivery.reconcile(
-        await options.config.enabledEnvironments(),
+        await activeEnvironmentIds(delivery.database),
         c.get("principal"),
       ),
     );
@@ -364,7 +367,7 @@ export function createApp(options: Options) {
   });
   app.post("/api/v1/deployments/:id/stages", async (c) => {
     requireScope(c.get("principal"), "execute");
-    const input = StageInputSchema.parse(await c.req.json());
+    const input = StageRequestSchema.parse(await c.req.json());
     if (input.status === "running") {
       const detail = await delivery.detail(c.req.param("id"));
       await enabled(detail.environment.id);
@@ -457,7 +460,15 @@ async function authorizedDeploymentInput(
   read: () => Promise<unknown>,
 ) {
   if (!principal.scopes.includes("admin")) requireScope(principal, "deploy");
-  const input = CreateDeploymentSchema.parse(await read());
-  requireScope(principal, input.kind === "adopt-worker" ? "admin" : "deploy");
-  return input;
+  const raw = await read();
+  // Host-only worker adoption keeps its v1 request; every other kind is a
+  // model request (4.12).
+  if (
+    z.object({ kind: z.string() }).loose().parse(raw).kind === "adopt-worker"
+  ) {
+    requireScope(principal, "admin");
+    return CreateDeploymentSchema.parse(raw);
+  }
+  requireScope(principal, "deploy");
+  return CreateDeploymentV2Schema.parse(raw);
 }

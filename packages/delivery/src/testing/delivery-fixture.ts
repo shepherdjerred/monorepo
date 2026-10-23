@@ -3,7 +3,12 @@ import type { CreateDeployment, PublishBuild } from "#shared/contract.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { createTestDatabase } from "./postgres.ts";
 import { resetDeliveryTables } from "./delivery-http-fixture.ts";
-import { seedDelivery, testExecutor, testPublisher } from "./seed.ts";
+import {
+  seedDelivery,
+  testExecutor,
+  testOperator,
+  testPublisher,
+} from "./seed.ts";
 import type { ForumPolicyReader } from "#infrastructure/forum/source-policy.ts";
 import type { TestRegistration } from "./seed.ts";
 import type { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
@@ -32,7 +37,7 @@ export function useDeliveryFixture(
     await cluster.close();
   });
   beforeEach(async () => {
-    await resetDeliveryTables(cluster.database);
+    await resetDeliveryTables(cluster.database, options.catalog);
     fixture = await seedDelivery(delivery, options.registration);
   });
   return {
@@ -87,4 +92,35 @@ export function testPublication(number: number): PublishBuild {
       },
     ],
   };
+}
+
+/**
+ * A deployment of the fixture environment, its service made self-hosted so
+ * it can be handed off, claimed by one executor identity (D7, D8).
+ */
+export async function claimedSelfHostedDeployment(
+  context: ReturnType<typeof useDeliveryFixture>,
+  requestId: string,
+) {
+  const db = context.cluster.database;
+  const env = await db.environment.findUniqueOrThrow({
+    where: { id: context.fixture.environment.id },
+  });
+  await db.service.update({
+    where: { id: env.serviceId },
+    data: { selfHosted: true },
+  });
+  const deployment = await context.delivery.createDeployment(
+    {
+      requestId,
+      environmentId: env.id,
+      versionSetRevisionId: context.fixture.versionSet.id,
+      expectedGeneration: env.generation,
+      kind: "deploy",
+    },
+    testOperator,
+  );
+  const owner = { workflowId: "delivery/owner", workflowRunId: "run-1" };
+  await context.delivery.claim(deployment.id, testExecutor, undefined, owner);
+  return { deployment, owner };
 }

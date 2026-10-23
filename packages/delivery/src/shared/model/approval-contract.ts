@@ -21,11 +21,26 @@ export const ApprovalV2InputSchema = z.strictObject({
   override: z.boolean().default(false),
 });
 export type ApprovalV2Input = z.infer<typeof ApprovalV2InputSchema>;
+/** The request shape before defaults: `override` may be omitted. */
+export type ApprovalV2Request = z.input<typeof ApprovalV2InputSchema>;
+
+/**
+ * H4 and D6: the override of a non-eligible selection on a deployment whose
+ * one approval is its plan decision. It is cleared before the plan runs, so
+ * it is recorded apart from that decision.
+ */
+export const OverrideDecisionSchema = z.strictObject({
+  actor: z.string().min(1),
+  reason: z.string().min(1).max(4000),
+  decidedAt: z.iso.datetime(),
+});
 
 /**
  * One row per deployment, created `pending` with the request and without an
  * approver (H1); a decision records the actor and reason; expiry records
- * when it lapsed whether or not a decision was taken.
+ * when it lapsed whether or not a decision was taken. A `tofu` recipe with
+ * an approve step takes it at the plan instead (D6); a pending override
+ * there is cleared first and stays pending until the plan is decided.
  */
 export const ApprovalV2Schema = z
   .strictObject({
@@ -34,6 +49,9 @@ export const ApprovalV2Schema = z
     actor: z.string().min(1).nullable(),
     status: ApprovalStatusSchema,
     override: z.boolean(),
+    overrideDecision: OverrideDecisionSchema.nullable().default(null),
+    /** H5: the approved, settled deployment a monitor-created rollback restores. */
+    restorationOfDeploymentId: IdentifierSchema.nullable().default(null),
     reason: z.string().min(1).max(4000).nullable(),
     createdAt: z.iso.datetime(),
     decidedAt: z.iso.datetime().nullable(),
@@ -52,6 +70,12 @@ export const ApprovalV2Schema = z
       context.addIssue({
         code: "custom",
         message: "A pending approval has no approver and no reason yet",
+      });
+    }
+    if (approval.overrideDecision !== null && !approval.override) {
+      context.addIssue({
+        code: "custom",
+        message: "Only an override approval records an override decision",
       });
     }
     if (

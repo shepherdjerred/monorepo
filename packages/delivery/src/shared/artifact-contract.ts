@@ -57,6 +57,11 @@ export const ArtifactOriginSchema = z.discriminatedUnion("kind", [
       name: IdentifierSchema,
       version: z.string().min(1).max(160),
       checksum: Digest,
+      /** A Git source's exact commit: the one its tag (`version`) named when acquired. */
+      commit: z
+        .string()
+        .regex(/^[a-f0-9]{40}$/)
+        .optional(),
     })
     .strict(),
   z
@@ -69,6 +74,31 @@ export const ArtifactOriginSchema = z.discriminatedUnion("kind", [
     .strict(),
 ]);
 export type ArtifactOrigin = z.infer<typeof ArtifactOriginSchema>;
+/**
+ * Where an acquired Git source's commit tarball lives: content-addressed in
+ * the Delivery artifact bucket, so its bytes never change under the digest.
+ */
+export function sourceArchiveUri(name: string, digest: string): string {
+  return `s3://delivery-artifacts/sources/${name}/${digest.slice("sha256:".length)}.tar.gz`;
+}
+type UpstreamOrigin = Extract<ArtifactOrigin, { kind: "upstream" }>;
+/**
+ * An upstream origin names the exact acquired bytes: a chart or image by
+ * its version and checksum, a Git source by its tag, the commit the tag
+ * named (the artifact's version) and the stored tarball's checksum.
+ */
+function upstreamIdentity(
+  artifact: { kind: string; version: string; digest: string; uri: string },
+  origin: UpstreamOrigin,
+) {
+  if (origin.checksum !== artifact.digest) return false;
+  return artifact.kind === "archive"
+    ? origin.commit === artifact.version &&
+        artifact.uri === sourceArchiveUri(origin.name, artifact.digest)
+    : (artifact.kind === "chart" || artifact.kind === "image") &&
+        origin.commit === undefined &&
+        origin.version === artifact.version;
+}
 /**
  * Off-cluster replica of bytes that live in a self-hosted store. Recorded by
  * the executor after it copies the object to R2 and reads the copy back; a
@@ -114,16 +144,11 @@ export const ArtifactInputSchema = z
   .strict()
   .superRefine((artifact, ctx) => {
     const origin = artifact.origin;
-    if (
-      origin.kind === "upstream" &&
-      ((artifact.kind !== "chart" && artifact.kind !== "image") ||
-        origin.version !== artifact.version ||
-        origin.checksum !== artifact.digest)
-    )
+    if (origin.kind === "upstream" && !upstreamIdentity(artifact, origin))
       ctx.addIssue({
         code: "custom",
         message:
-          "Upstream origin must identify the exact acquired chart or image version and bytes",
+          "Upstream origin must identify the exact acquired chart or image version, or source commit, and bytes",
       });
     if (artifact.contentFingerprint !== undefined && artifact.kind !== "chart")
       ctx.addIssue({
@@ -144,18 +169,33 @@ export const ArtifactInputSchema = z
           "Licensed bundle origin requires its private content-addressed archive",
       });
   });
+/**
+ * Section 7: the v1 artifact a carried artifact stands for. Its bytes,
+ * digest, URI and original build are that artifact's; only the component
+ * name and owning service follow the catalog.
+ */
+export const MigratedFromSchema = z.strictObject({
+  artifactId: IdentifierSchema,
+  serviceId: IdentifierSchema,
+  component: IdentifierSchema,
+  buildId: IdentifierSchema,
+});
+export type MigratedFrom = z.infer<typeof MigratedFromSchema>;
 export const ArtifactVersionSchema = ArtifactInputSchema.safeExtend({
   serviceId: IdentifierSchema,
   buildId: IdentifierSchema,
   sourceRevision: Source,
   createdAt: z.iso.datetime(),
   replication: ArtifactReplicationSchema.optional(),
+  migratedFrom: MigratedFromSchema.optional(),
 });
 export const BuildSourceKindSchema = z.enum([
   "ci",
   "upstream",
   "licensed-bundle",
   "attested",
+  /** Section 7: v1 artifacts carried onto the catalog's names and owners. */
+  "migrated",
 ]);
 export type BuildSourceKind = z.infer<typeof BuildSourceKindSchema>;
 /** How a build entered Delivery, as operators read it on a pipeline. */
@@ -172,6 +212,9 @@ export function buildSourceLabel(sourceKind: string): string {
     }
     case "attested": {
       return "Operator attestation";
+    }
+    case "migrated": {
+      return "Catalog migration";
     }
   }
 }
@@ -216,6 +259,30 @@ export const FindQualifiedArtifactSchema = z
   })
   .strict();
 export type FindQualifiedArtifact = z.infer<typeof FindQualifiedArtifactSchema>;
+const ComponentQuery = {
+  serviceId: IdentifierSchema,
+  component: IdentifierSchema,
+  kind: ArtifactInputSchema.shape.kind,
+};
+export const LatestQualifiedArtifactQuerySchema = z
+  .object(ComponentQuery)
+  .strict();
+export type LatestQualifiedArtifactQuery = z.infer<
+  typeof LatestQualifiedArtifactQuerySchema
+>;
+/**
+ * A producer's comparison base (B2): `beforePipeline` is the producer's own
+ * main pipeline, so the base never comes from it or a later pipeline (B4).
+ */
+export const LatestRetainableArtifactQuerySchema = z
+  .object({
+    ...ComponentQuery,
+    beforePipeline: z.coerce.number().int().positive().max(2_147_483_647),
+  })
+  .strict();
+export type LatestRetainableArtifactQuery = z.infer<
+  typeof LatestRetainableArtifactQuerySchema
+>;
 export const AcquireUpstreamArtifactSchema = z
   .object({
     requestId: IdentifierSchema,

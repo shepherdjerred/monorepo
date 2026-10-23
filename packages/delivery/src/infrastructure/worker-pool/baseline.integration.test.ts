@@ -41,7 +41,8 @@ async function prepare() {
     fixture.environmentId,
     testOperator,
   );
-  expect(env.generation).toBe(old.generation + 1);
+  // Registration has no effect on the binding generation (C3, E1).
+  expect(env.generation).toBe(old.generation);
   const input = CreateDeploymentSchema.parse({
     requestId: "host-only-baseline",
     environmentId: fixture.environmentId,
@@ -155,8 +156,7 @@ test("host-only baseline freezes original A hosts alongside app C provenance wit
     desiredVersionSetRevisionId: before.desiredVersionSetRevisionId,
     observedVersionSetRevisionId: before.observedVersionSetRevisionId,
     observedAt: before.observedAt,
-    configuration: before.configuration,
-    configurationRevision: before.configurationRevision,
+    declaredConfigurationId: before.declaredConfigurationId,
     pipelineRevisionId: before.pipelineRevisionId,
     automaticSuppressedThroughRevision:
       before.automaticSuppressedThroughRevision,
@@ -177,13 +177,13 @@ test("host-only baseline freezes original A hosts alongside app C provenance wit
       {
         requestId: "no-baseline-rollback",
         environmentId: fixture.environmentId,
-        versionSetRevisionId: c.version.id,
+        selectionDeploymentId: c.deployment.id,
         expectedGeneration: pool.generation,
         kind: "rollback",
       },
       testOperator,
     ),
-  ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  ).rejects.toMatchObject({ code: "INVALID" });
   const rollout = await context.delivery.createDeployment(
     {
       requestId: "verified-baseline-rollout",

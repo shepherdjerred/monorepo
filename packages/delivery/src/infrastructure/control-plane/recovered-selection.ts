@@ -12,8 +12,9 @@ export async function recoveredControllerSelection(
   tx: Transaction,
   acceptedAt: Date | null,
 ) {
-  const recovery = await tx.platformRecoveryIntent.findFirst({
+  const recovery = await tx.recoveryIntent.findFirst({
     where: {
+      kind: "platform",
       status: "succeeded",
       deployment: {
         environmentId: "delivery-control-plane/prod",

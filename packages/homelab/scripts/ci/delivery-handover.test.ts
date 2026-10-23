@@ -82,7 +82,7 @@ function fixture() {
     catalogFingerprint: bootstrapFingerprint(catalog),
     observedAt: new Date().toISOString(),
     writesEnabled: false,
-    enabledEnvironments: [],
+    admittingEnvironments: [],
     counts: {
       applicationLocks: 0,
       platformLocks: 0,

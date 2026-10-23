@@ -160,8 +160,7 @@ export function DeploymentRecord({
             {JSON.stringify(
               {
                 pipeline: detail.pipeline,
-                configurationRevision: deployment.configurationRevision,
-                configuration: deployment.configuration,
+                configuration: detail.configuration,
               },
               null,
               2,
@@ -170,17 +169,24 @@ export function DeploymentRecord({
         </details>
         <FrozenInputs detail={detail} />
       </section>
-      {detail.approvals.length > 0 && (
+      {detail.approval !== null && (
         <section className="panel" aria-labelledby="approvals-heading">
-          <h2 id="approvals-heading">Approval history</h2>
-          {detail.approvals.map((approval) => (
-            <p key={approval.id}>
-              <strong>{approval.decision}</strong> · {approval.actor} ·{" "}
-              <RelativeTime value={approval.createdAt} />
-              <br />
-              {approval.reason}
-            </p>
-          ))}
+          <h2 id="approvals-heading">Approval</h2>
+          <p>
+            <strong>{detail.approval.status}</strong>
+            {detail.approval.override && " · override"}
+            {detail.approval.actor !== null &&
+              ` · ${detail.approval.actor}`} ·{" "}
+            <RelativeTime
+              value={detail.approval.decidedAt ?? detail.approval.createdAt}
+            />
+            {detail.approval.reason !== null && (
+              <>
+                <br />
+                {detail.approval.reason}
+              </>
+            )}
+          </p>
         </section>
       )}
     </>

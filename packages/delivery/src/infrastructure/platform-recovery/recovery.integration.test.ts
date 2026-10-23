@@ -1,3 +1,4 @@
+import type { DeploymentDetail } from "#shared/contract.ts";
 import { beforeEach, expect, test } from "vitest";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { controlPlaneFixture } from "#testing/control-plane-fixture.ts";
@@ -13,9 +14,22 @@ import {
   testApply,
 } from "#testing/platform-execution.ts";
 import { platformSettlements } from "./context.ts";
-import { deliveryOperationId } from "#shared/operation-id.ts";
 
 const context = useDeliveryFixture();
+
+/** Settlement preserves the failed result and accepts nothing, releasing ownership (I3). */
+async function expectReleasedFailure(
+  delivery: { detail: (id: string) => Promise<DeploymentDetail> },
+  deploymentId: string,
+) {
+  const after = await delivery.detail(deploymentId);
+  expect(after.deployment.status).toBe("failed");
+  expect(after.deployment.recoveryRequired).toBe(false);
+  expect(after.environment.acceptedDeploymentId).toBeNull();
+  expect(after.environment.acceptedVersionSetRevisionId).toBeNull();
+  expect(await context.cluster.database.platformLock.count()).toBe(0);
+  return after;
+}
 let fixture: Awaited<ReturnType<typeof controlPlaneFixture>>;
 beforeEach(async () => {
   fixture = await controlPlaneFixture(context.cluster.database);
@@ -117,13 +131,8 @@ test("independent recovery preserves failed result and accepts the observed desi
       testExecutor,
     ),
   ).toEqual(recovered);
-  const after = await fixture.delivery.detail(deployment.id);
-  expect(after.deployment.status).toBe("failed");
-  expect(after.deployment.recoveryRequired).toBe(false);
-  expect(after.environment.acceptedControlPlaneDeploymentId).toBeNull();
-  expect(after.environment.acceptedVersionSetRevisionId).toBeNull();
-  expect(await context.cluster.database.platformLock.count()).toBe(0);
-  expect(await context.cluster.database.applicationLock.count()).toBe(0);
+  const after = await expectReleasedFailure(fixture.delivery, deployment.id);
+  expect(await context.cluster.database.targetLock.count()).toBe(0);
   const next = await fixture.delivery.requestControlPlaneUpgrade(
     fixture.environment.id,
     {
@@ -229,8 +238,7 @@ test("first Discord apply may settle its authenticated original target without a
   const apply = await testApply(delivery, plan);
   await delivery.approve(
     apply.id,
-    "approve",
-    "Reviewed exact original Discord plan",
+    { decision: "approve", reason: "Reviewed exact original Discord plan" },
     testOperator,
   );
   await delivery.claim(apply.id, testExecutor);
@@ -309,205 +317,5 @@ test("first Discord apply may settle its authenticated original target without a
     testExecutor,
   );
   expect(completed.status).toBe("succeeded");
-  const after = await delivery.detail(apply.id);
-  expect(after.deployment.status).toBe("failed");
-  expect(after.deployment.recoveryRequired).toBe(false);
-  expect(after.environment.acceptedPlatformDeploymentId).toBeNull();
-  expect(after.environment.acceptedVersionSetRevisionId).toBeNull();
-  expect(await context.cluster.database.platformLock.count()).toBe(0);
+  await expectReleasedFailure(delivery, apply.id);
 });
-
-test.each([false, true])(
-  "stopped root with prior=%s preserves failure and accepted history, releases exact ownership and admits a forward request",
-  async (hasPrior) => {
-    const platform = await platformFixture(
-      context.cluster.database,
-      true,
-      true,
-    );
-    const delivery = platform.delivery;
-    for (const stack of ["seaweedfs", "tailscale", "arr"]) {
-      const plan = await requestTestPlan(
-        delivery,
-        platform.sourceBuildId,
-        stack,
-      );
-      await finishTestPlatform(
-        delivery,
-        plan,
-        await checkpointTestPlan(delivery, plan),
-      );
-      const apply = await testApply(delivery, plan);
-      await delivery.claim(apply.id, testExecutor);
-      await finishTestPlatform(delivery, apply);
-    }
-    let priorId: string | null = null;
-    if (hasPrior) {
-      const prior = await delivery.createPlatformDeployment(
-        {
-          kind: "root-release",
-          requestId: "prior/root",
-          environmentId: "gitops/root",
-          expectedGeneration: 0,
-          sourceBuildId: platform.sourceBuildId,
-        },
-        testOperator,
-      );
-      await delivery.claim(prior.id, testExecutor);
-      await finishTestPlatform(delivery, prior);
-      priorId = prior.id;
-    }
-    const rootEnvironment =
-      await context.cluster.database.environment.findUniqueOrThrow({
-        where: { id: "gitops/root" },
-      });
-    const root = await delivery.createPlatformDeployment(
-      {
-        kind: "root-release",
-        requestId: "first/root",
-        environmentId: "gitops/root",
-        expectedGeneration: rootEnvironment.generation,
-        sourceBuildId: platform.sourceBuildId,
-      },
-      testOperator,
-    );
-    await delivery.claim(root.id, testExecutor);
-    const native = testNativeReceipt(root.id);
-    await delivery.stage(
-      root.id,
-      {
-        key: "root-release",
-        status: "running",
-        operationId: native.name,
-        message: JSON.stringify(native),
-        evidence: [],
-      },
-      testExecutor,
-    );
-    await delivery.finish(
-      root.id,
-      {
-        status: "failed",
-        message: "Partial root applied, child readiness failed",
-        recoveryRequired: true,
-        evidence: [],
-      },
-      testExecutor,
-    );
-    const failed = await delivery.detail(root.id);
-    const intent = await delivery.requestPlatformRecovery(
-      root.id,
-      {
-        requestId: "first/root/stopped",
-        expectedEnvironmentGeneration: failed.environment.generation,
-        reason:
-          "Inspect terminal first root and preserve its partial native inventory",
-      },
-      testOperator,
-    );
-    const current = await delivery.platformRecovery(intent.id, testOperator);
-    const fingerprint = current.expectedSettlements.stopped;
-    if (fingerprint === undefined)
-      throw new Error("Expected stopped first-root settlement");
-    expect(current.priorDeployment?.deployment.id ?? null).toBe(priorId);
-    if (hasPrior) expect(current.expectedSettlements.prior).toBeDefined();
-    else expect(current.expectedSettlements.prior).toBeUndefined();
-    expect(
-      platformSettlements(current.deployment, current.deployment).stopped,
-    ).toBeUndefined();
-    const input = CompletePlatformRecoverySchema.parse({
-      expectedEnvironmentGeneration:
-        current.intent.expectedEnvironmentGeneration,
-      snapshotFingerprint: current.intent.snapshotFingerprint,
-      observedAt: new Date().toISOString(),
-      sourceWorkflow: { workflowId: `delivery/${root.id}`, status: "FAILED" },
-      nativeJobs: [{ ...native, status: "Failed", podsAbsent: false }],
-      settlement: { state: "stopped", fingerprint },
-      proofSummary:
-        "Exact terminal original root and stable frozen child ownership; current partial state retained without root acceptance",
-      stoppedRoot: {
-        requestId: deliveryOperationId(`${root.id}:root-release`),
-        operationId: crypto.randomUUID(),
-        revision: "2.0.0-900",
-        applications: ["apps", "argocd"].map((name) => ({
-          name,
-          uid: crypto.randomUUID(),
-          sourceFingerprint: "a".repeat(64),
-          specFingerprint: "b".repeat(64),
-          lifecycleFingerprint: "c".repeat(64),
-          targetRevision: "~2.0.0-0",
-          syncStatus: "OutOfSync",
-          observedRevision: "2.0.0-901",
-          health: "Progressing",
-          operationPhase: "Failed",
-        })),
-      },
-    });
-    const report = input.stoppedRoot;
-    if (report === undefined) throw new Error("Expected stopped root report");
-    for (const bad of [
-      {
-        ...input,
-        settlement: { state: "stopped" as const, fingerprint: "0".repeat(64) },
-      },
-      { ...input, stoppedRoot: undefined },
-      {
-        ...input,
-        stoppedRoot: {
-          ...report,
-          applications: report.applications.filter(
-            ({ name }) => name === "apps",
-          ),
-        },
-      },
-      {
-        ...input,
-        stoppedRoot: { ...report, requestId: crypto.randomUUID() },
-      },
-      {
-        ...input,
-        nativeJobs: [
-          { ...native, status: "Deleted" as const, podsAbsent: true },
-        ],
-      },
-      {
-        ...input,
-        expectedEnvironmentGeneration: input.expectedEnvironmentGeneration + 1,
-      },
-    ])
-      await expect(
-        delivery.completePlatformRecovery(intent.id, bad, testExecutor),
-      ).rejects.toThrow();
-    await delivery.completePlatformRecovery(intent.id, input, testExecutor);
-    const after = await delivery.detail(root.id);
-    expect(after.deployment).toEqual({
-      ...current.deployment.deployment,
-      recoveryRequired: false,
-    });
-    expect(after.stages).toEqual(failed.stages);
-    expect(after.environment.acceptedPlatformDeploymentId).toBe(priorId);
-    if (priorId !== null) {
-      const priorAfter = await delivery.detail(priorId);
-      expect(priorAfter.deployment).toEqual(
-        current.priorDeployment?.deployment,
-      );
-    }
-    expect(after.environment.acceptedVersionSetRevisionId).toBeNull();
-    expect(after.environment.activeDeploymentId).toBeNull();
-    expect(await context.cluster.database.platformLock.count()).toBe(0);
-    expect(await context.cluster.database.applicationLock.count()).toBe(0);
-    const next = await delivery.createPlatformDeployment(
-      {
-        kind: "root-release",
-        requestId: "first/root/forward",
-        environmentId: "gitops/root",
-        expectedGeneration: after.environment.generation,
-        sourceBuildId: platform.sourceBuildId,
-      },
-      testOperator,
-    );
-    await delivery.claim(next.id, testExecutor);
-    const nextDetail = await delivery.detail(next.id);
-    expect(nextDetail.environment.activeDeploymentId).toBe(next.id);
-  },
-);

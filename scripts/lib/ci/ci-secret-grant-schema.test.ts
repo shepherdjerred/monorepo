@@ -35,6 +35,22 @@ describe("CI grant catalog", () => {
     );
   });
 
+  test("every Secret in the real cdk8s CI boundary names a literal item", async () => {
+    const source = await Bun.file(
+      new URL(
+        "../../../packages/homelab/src/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts",
+        import.meta.url,
+      ),
+    ).text();
+    const named = [...source.matchAll(/secretName:\s*"([^"]+)"/gu)].flatMap(
+      (match) => (match[1] === undefined ? [] : [match[1]]),
+    );
+    const declared = declaredSecretItems(source);
+    expect(named.filter((name) => !declared.has(name))).toEqual([]);
+    // Delivery's npm channels share CI's npm publish item.
+    expect(declared.has("ci-npm-credentials")).toBe(true);
+  });
+
   test("never borrows the next credential's item when a declaration is unresolved", () => {
     expect(
       declaredSecretItems(`[

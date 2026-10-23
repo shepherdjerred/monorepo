@@ -139,7 +139,7 @@ test("retirement holds ownership, refreshes proof on repeated claim, and commits
     expectedWorkerGeneration: workerA.generation,
   };
   const selected = await delivery.retireWorker(workerA.id, input, testOperator);
-  expect(selected.kind).toBe("retire-worker");
+  expect(selected.kind).toBe("retire-host");
   expect(selected.workerSnapshot?.candidateBuildId).toBe(workerB.buildId);
   expect(
     selected.workerSnapshot?.versions.find((row) => row.id === workerA.id)
@@ -177,7 +177,7 @@ test("retirement holds ownership, refreshes proof on repeated claim, and commits
     freshWorkerProof(workerA, workerB.buildId),
   );
   expect(
-    await cluster.database.applicationLock.count({
+    await cluster.database.targetLock.count({
       where: { deploymentId: selected.id },
     }),
   ).toBe(1);
@@ -203,7 +203,7 @@ test("retirement holds ownership, refreshes proof on repeated claim, and commits
   });
   expect(retired.retirementProof).toMatchObject({ deploymentId: selected.id });
   expect(await cluster.database.workerVersion.count()).toBe(2);
-  expect(await cluster.database.applicationLock.count()).toBe(0);
+  expect(await cluster.database.targetLock.count()).toBe(0);
 });
 
 test("rollback never replaces a currently live retained host with a historical zero", async () => {
@@ -279,7 +279,7 @@ test("failed ambiguous retirement retains hosts and the Application lock without
   expect(retained.replicas).toBe(1);
   expect(retained.generation).toBe(0);
   expect(
-    await cluster.database.applicationLock.count({
+    await cluster.database.targetLock.count({
       where: { deploymentId: selected.id },
     }),
   ).toBe(1);
@@ -326,7 +326,7 @@ test("retirement rejects incomplete, stale, routed, sticky-drained and reference
     });
   expect(
     await cluster.database.deployment.count({
-      where: { kind: "retire-worker" },
+      where: { kind: "retire-host" },
     }),
   ).toBe(1);
 });
@@ -410,7 +410,7 @@ test("inactive-unreferenced retirement preserves fresh accepted-pool ownership w
     proofs: proof.proofs,
   });
   expect(
-    await cluster.database.applicationLock.count({
+    await cluster.database.targetLock.count({
       where: { deploymentId: selected.id },
     }),
   ).toBe(1);
@@ -435,8 +435,7 @@ test("Scout production retirement requires exact human approval before fresh exe
   ).rejects.toMatchObject({ code: "CONFLICT" });
   await delivery.approve(
     selected.id,
-    "approve",
-    "Retire the exact proven old host",
+    { decision: "approve", reason: "Retire the exact proven old host" },
     testOperator,
   );
   await delivery.claim(

@@ -1,12 +1,13 @@
 import { z } from "zod";
-import { Context } from "@temporalio/activity";
 import { ApplicationFailure } from "@temporalio/common";
 import {
   DeploymentDetailSchema,
   type DeploymentDetail,
   type StageInput,
 } from "@shepherdjerred/delivery/contract";
+import { minecraftUpgradeOf } from "@shepherdjerred/delivery/model-contract";
 import { deliveryRequest } from "#lib/delivery/client.ts";
+import { effectContext } from "#lib/delivery/model/effect-signal.ts";
 import { withBackupActivityHeartbeat } from "#activities/homelab/seaweedfs-backup-heartbeat.ts";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
 import {
@@ -20,6 +21,7 @@ import {
   MinecraftControllerReceiptSchema,
   type MinecraftControllerReceipt,
 } from "#lib/delivery/minecraft-controller.ts";
+import { executorIdentity } from "./model/stages.ts";
 const DeferredSchema = z
   .object({
     status: z.literal("waiting"),
@@ -54,7 +56,7 @@ const external: MinecraftEffects = {
     await deliveryRequest(
       `deployments/${encodeURIComponent(id)}/stages`,
       z.unknown(),
-      input,
+      { ...input, executor: executorIdentity() },
     );
   },
 };
@@ -78,9 +80,8 @@ export async function prepareMinecraftDelivery(
 ) {
   requireActive(detail);
   if (
-    detail.pipeline.definition.kind === "argocd" &&
-    detail.pipeline.definition.minecraftUpgrade?.releaseMode ===
-      "retained-volume-restart"
+    minecraftUpgradeOf(detail.pipeline.definition)?.releaseMode ===
+    "retained-volume-restart"
   )
     return { status: "ready" } as const;
   const result = parseMinecraftEligibility(
@@ -130,7 +131,7 @@ export async function preserveDeliveryMinecraft(
   });
   const witness = { recorded: false };
   const result = await withBackupActivityHeartbeat(
-    Context.current(),
+    effectContext(),
     async ({ signal }) =>
       effects.preserve(
         detail,

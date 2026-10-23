@@ -1,18 +1,17 @@
 import { DeliveryError } from "#domain/error.ts";
 import {
+  LegacyPipelineRevisionSchema,
   PipelineRevisionSchema,
   PublishBuildSchema,
-  ImportSnapshotSchema,
-  ImportedSnapshotSchema,
+  RegisterEnvironmentSchema,
 } from "#shared/contract.ts";
 import type {
   ComposeVersionSet,
   PipelineDefinition,
   Principal,
   PublishBuild,
-  RegisterEnvironment,
+  RegisterEnvironmentInput,
   ArtifactVersion,
-  ImportSnapshot,
 } from "#shared/contract.ts";
 import {
   fingerprint,
@@ -44,77 +43,6 @@ import {
   validateScoutSiteEnvironment,
 } from "./scout-site-policy.ts";
 
-export async function importSnapshot(
-  this: Delivery,
-  rawInput: ImportSnapshot,
-  actor: Principal,
-) {
-  const input = ImportSnapshotSchema.parse(rawInput);
-  ensureService(input.serviceId);
-  return this.database.$transaction(async (tx) => {
-    const prior = await request(tx, actor, {
-      requestId: input.requestId,
-      input,
-      resultType: "import",
-    });
-    if (prior !== null) {
-      const stored = required(
-        await tx.importedSnapshot.findUnique({ where: { id: prior.resultId } }),
-        "Imported snapshot",
-      );
-      return ImportedSnapshotSchema.parse(
-        wire({
-          ...stored,
-          environmentId: stored.environmentId ?? undefined,
-          verified: false,
-        }),
-      );
-    }
-    const row = await tx.importedSnapshot.create({
-      data: {
-        id: id(),
-        ...input,
-        environmentId: input.environmentId ?? null,
-        capturedAt: new Date(input.capturedAt),
-      },
-    });
-    await remember(tx, actor, {
-      requestId: input.requestId,
-      input,
-      resultType: "import",
-      resultId: row.id,
-    });
-    await audit(tx, actor, {
-      action: "snapshot.imported",
-      entityId: row.id,
-      requestId: input.requestId,
-    });
-    return ImportedSnapshotSchema.parse(
-      wire({
-        ...row,
-        environmentId: row.environmentId ?? undefined,
-        verified: false,
-      }),
-    );
-  });
-}
-
-export async function importedSnapshots(this: Delivery) {
-  const rows = await this.database.importedSnapshot.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  });
-  return rows.map((row) =>
-    ImportedSnapshotSchema.parse(
-      wire({
-        ...row,
-        environmentId: row.environmentId ?? undefined,
-        verified: false,
-      }),
-    ),
-  );
-}
-
 export async function publish(
   this: Delivery,
   rawInput: PublishBuild,
@@ -125,7 +53,6 @@ export async function publish(
   // Qualification time is established by the server, so a callback's wall
   // clock does not change the identity of an otherwise identical publication.
   const requestInput = { ...input, verifiedAt: "pending" };
-  ensureService(input.serviceId);
   if (input.platformChanges !== undefined && input.serviceId !== "gitops")
     throw new DeliveryError(
       "INVALID",
@@ -141,7 +68,10 @@ export async function publish(
       "INVALID",
       "Build artifact IDs and components must be unique",
     );
+  // Every artifact names its registered store before any row exists (A6).
+  const artifacts = input.artifacts.map((entry) => artifactRow(entry));
   return this.database.$transaction(async (tx) => {
+    await ensureService(tx, input.serviceId);
     const previous = await request(tx, actor, {
       requestId: input.requestId,
       input: requestInput,
@@ -156,7 +86,7 @@ export async function publish(
         ],
       };
     const buildId = id();
-    const selections = await publicationSelections(tx, input, ci.repositoryId);
+    const selections = await publicationSelections(tx, input, ci);
     await tx.build.create({
       data: {
         id: buildId,
@@ -170,7 +100,7 @@ export async function publish(
           ? {}
           : { platformChanges: input.platformChanges }),
         artifacts: {
-          create: input.artifacts.map((entry) => artifactRow(entry)),
+          create: artifacts,
         },
       },
     });
@@ -201,8 +131,8 @@ export async function compose(
   input: ComposeVersionSet,
   actor: Principal,
 ) {
-  ensureService(input.serviceId);
   return this.database.$transaction(async (tx) => {
+    const service = await ensureService(tx, input.serviceId);
     const previous = await request(tx, actor, {
       requestId: input.requestId,
       input,
@@ -243,12 +173,15 @@ export async function compose(
       where: { serviceId: input.serviceId },
       orderBy: { revision: "desc" },
     });
+    // A manual set revision carries the current lineage and no order key:
+    // it never becomes the base of an automatic one (model R3).
     const row = await tx.versionSet.create({
       data: {
         id: id(),
         serviceId: input.serviceId,
         revision: (latest?.revision ?? 0) + 1,
         baseRevisionId: input.baseRevisionId ?? null,
+        lineage: service.lineage,
         entries: {
           create: Object.entries(components).map(([component, artifactId]) => ({
             component,
@@ -325,19 +258,40 @@ export async function registerPipeline(
   });
 }
 
+/** A configuration revision is immutable once registered (model F1). */
+export async function registerConfiguration(
+  tx: Parameters<typeof environment>[0],
+  input: { id: string; content: Record<string, string> },
+) {
+  const existing = await tx.configuration.findUnique({
+    where: { id: input.id },
+  });
+  if (existing === null)
+    return tx.configuration.create({
+      data: { id: input.id, content: input.content },
+    });
+  if (fingerprint(existing.content) !== fingerprint(input.content))
+    throw new DeliveryError(
+      "CONFLICT",
+      `Configuration revision ${input.id} already carries different content; register a new revision`,
+    );
+  return existing;
+}
+
 export async function registerEnvironment(
   this: Delivery,
-  input: RegisterEnvironment,
+  rawInput: RegisterEnvironmentInput,
   actor: Principal,
 ) {
-  ensureService(input.serviceId);
+  const input = RegisterEnvironmentSchema.parse(rawInput);
   return this.database.$transaction(async (tx) => {
+    await ensureService(tx, input.serviceId);
     await lock(tx, `environment:${input.id}`);
     const pipeline = required(
       await tx.pipeline.findUnique({ where: { id: input.pipelineRevisionId } }),
       "Pipeline",
     );
-    const parsed = PipelineRevisionSchema.parse(wire(pipeline));
+    const parsed = LegacyPipelineRevisionSchema.parse(wire(pipeline));
     if (
       input.application !== undefined &&
       index.byArgoApp(input.application)?.id !== input.serviceId
@@ -386,15 +340,27 @@ export async function registerEnvironment(
         existing.application !== (input.application ?? null))
     )
       throw new DeliveryError("CONFLICT", "Environment ownership is immutable");
+    const configuration = await registerConfiguration(tx, {
+      id: input.configurationRevision,
+      content: input.configuration,
+    });
+    const {
+      configurationRevision: _revision,
+      configuration: _content,
+      ...declared
+    } = input;
+    // Registration declares a binding; it never bumps the generation and
+    // has no effect on any running system (model C3, E1).
     const data = {
-      ...input,
+      ...declared,
       application: input.application ?? null,
       promotionSourceEnvironmentId: input.promotionSourceEnvironmentId ?? null,
+      declaredConfigurationId: configuration.id,
     };
     await tx.environment.upsert({
       where: { id: input.id },
       create: data,
-      update: { ...data, generation: { increment: 1 } },
+      update: data,
     });
     await audit(tx, actor, {
       action: "environment.registered",

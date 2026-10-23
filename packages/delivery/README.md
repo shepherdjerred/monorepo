@@ -101,7 +101,12 @@ accompanies them.
   `artifactParameters`, a `runner` component reference, ordered `steps` with
   `pointOfNoReturn`, optional `sharedLock`, and an `oracle` of probes, tests
   and monitor), `static-site`, `tofu` (plan, approve, apply steps under the
-  `platform` lock), `channel`, `operator-run` and `compound`.
+  `platform` lock), `channel`, `operator-run` and `compound`. An
+  `operator-run` recipe wraps a `kubernetes-application` or `tofu` recipe, or
+  stands on its own around a `host` target (`model/operator-run-contract.ts`):
+  a `host:<name>` lock instance and the image components a by-hand upgrade
+  moves, as for `cluster-nodes`. Its bindings (components, instances,
+  runners) are in `model/recipe-bindings.ts`.
   `recipeFromPipeline` (`model/recipe-adapter.ts`) maps a v1 `PipelineDefinition`
   onto a recipe: runner digests become the `ci` service's `image:ci-base`
   reference, `site:` archives become `archive:`, fixed v1 blocks become
@@ -131,6 +136,7 @@ The API is rooted at `/api/v1`:
 | Environments, recent executions, eligible artifacts           | `GET /overview`                                                   |
 | Immutable version set revisions                               | `GET /versions`, `GET /versions/:id`                              |
 | Latest qualified component artifact                           | `GET /artifacts/latest-qualified?serviceId=…&component=…&kind=…`  |
+| Producer comparison base, pending or qualified                | `GET /artifacts/latest-retainable?…&kind=…&beforePipeline=…`      |
 | Register pending CI publication                               | `POST /builds`                                                    |
 | Compose exact component versions                              | `POST /versions`                                                  |
 | Register immutable pipeline revision                          | `POST /pipelines`                                                 |
@@ -193,9 +199,28 @@ combination fails release qualification with a visible reason. Automatic selecti
 coalesces only queued, unapproved automatic requests. Cancellation or rejection
 suppresses that revision until a new eligible revision or explicit operator request.
 
+Producers compare against the latest-retainable lookup instead, so a pipeline
+that starts before the previous one qualifies still retains that pipeline's
+unchanged images and charts by reference (B2). It returns the component of the
+newest pending or verified CI build in the configured repository whose pipeline
+is above the order key of the current lineage's live set and below the
+producer's `beforePipeline`, or else the live set's entry. A set the catalog
+migration carried is a qualified base. Failed builds, builds that reach a
+failed build through their pending references, and builds the live set
+supersedes (R4) are never a base. Registration accepts a retained original
+whose build is still pending only from an earlier main pipeline of the same
+repository. Qualification keeps the retaining build pending until that build
+verifies. A failed reference fails the retaining build with a reason naming the
+artifact, and the next pipeline rebuilds. A platform source's root chart and
+site references gate it the same way, including producers registered before it
+in the same pipeline. Only a build that precedes the waiting build in the order
+key (pipeline, then registration sequence) is awaited; any other pending
+reference fails qualification, so no build waits on itself or on a later
+build.
+
 The image producer writes `delivery-image-digests` for every candidate it
 built, pushed, verified and found changed by runtime fingerprint, and
-`delivery-retained-image-artifacts` for every qualified original it kept:
+`delivery-retained-image-artifacts` for every retainable original it kept:
 images it did not build and candidates whose fingerprint equals the original.
 Delivery requires both handoffs; a retained original is referenced by its
 existing artifact id and never republished as a new build. The runtime
@@ -264,7 +289,7 @@ The [pipeline definition](registrations/arcade.pipeline.json) binds the publishe
 `chart:arcade` chart and `image:arcade` image to Arcade's `delivery.image` Helm
 parameter. Pipeline revision `arcade/2` probes Arcade's canonical public health
 endpoint. The [environment definition](registrations/arcade.environment.json)
-declares automatic selection; the enabled-environment and write flags, reviewed
+declares automatic selection; its catalog lifecycle, the write flag, reviewed
 Argo ownership transfer, and paused dispatch Schedule still gate activation.
 Neither file selects an artifact or records deployment state.
 
@@ -329,6 +354,7 @@ as a runtime or ownership-handover fallback.
 
 `toolkit deploy handover-context --machine` is an admin-only read of the API's
 baked source identity, exact reviewed registrations, fresh write-admission state,
+the environments whose catalog lifecycle is `active` and so admit deployments,
 and uncapped PostgreSQL ownership/request/recovery counts. The bounded
 `packages/homelab/scripts/ci/delivery-handover.ts` operator command consumes that
 state and the exact reviewed source proof, independently checks the paused
@@ -386,8 +412,9 @@ does not read Kubernetes or inherit proxy identity. Credential values are never
 returned by the identity endpoint. Health checks also require no Kubernetes access.
 
 Typed configuration resolves fresh flag snapshots for `delivery-writes-enabled`,
-`delivery-enabled-environments`, `delivery-operator-logins` and
-`delivery-enrichment-sources`. Defaults deny writes, authorize no human logins
+`delivery-operator-logins` and `delivery-enrichment-sources`. Admission and the
+ownership handover read the catalog lifecycle, never
+`delivery-enabled-environments`; that flag is v1's enable list. Defaults deny writes, authorize no human logins
 and query no external integration. The enrichment flag is a JSON list drawn
 from `woodpecker`, `github` and `argocd`. The GitHub token is registered as the
 `githubReader` 1Password item in the homelab Delivery activation, with a
@@ -445,6 +472,14 @@ inspection keeps ownership. A journaled producer host awaiting restoration
 continues to block dispatch even after settlement succeeds. Generic Argo unlock
 cannot bypass these checks or authorize a database rollback. Follow the
 [content recovery procedure](../docs/wiki/src/content/docs/how-to/cut-a-homelab-release.md#recover-a-site-or-forum-release).
+
+A model `tofu` recipe has no Application, so its recovery intent is a platform
+recovery. The recovery Job runs with the runner its admission froze, from the
+stack archive its selection froze (X8), and proves the plan Job and, once a
+plan was saved, the apply Job. Recovery converges forward only: the stack must
+equal that frozen source with zero proposed changes, directly or after an exact
+recovery plan is approved by the stack's policy and applied. The saved plan's
+state lineage bounds both.
 
 Ordinary worker rollout admission requires a verified retained-host baseline.
 Fixed-profile pipelines support independent host-only baseline verification.
@@ -712,16 +747,37 @@ HTTP reader. The API's observer token is not mounted into migration or Tailscale
 containers, and its identity cannot read Secrets or create Pods.
 
 Independent upstream acquisition is restricted to version-catalog entries that
-declare `component: true` (`packages/version-catalog/src/catalog.json`). A chart
+declare `component: true` (`packages/version-catalog/src/catalog.json`), under
+the component name the catalog document uses (`catalogComponentName`: a chart
+by its name, an image by its repository basename, a GitHub source as
+`archive:<repository>`), for a service the catalog
+document declares as acquiring that component. An alias entry is pulled from
+and verified at its `packageName` repository. A chart
 entry is verified by bounded reads of the upstream index and archive against
-the index checksum; an image entry is verified by resolving its tag to the
-manifest digest through the registry API and comparing it with the pinned
-digest. The artifact URI is the upstream location; nothing new is mirrored. The
+the index checksum; an image entry, or a chart served from an OCI registry
+(`datasource: docker`, such as Kueue's `oci://registry.k8s.io/kueue/charts/kueue`),
+is verified by resolving its tag to the manifest digest through the registry
+API and comparing it with the pinned digest, and an OCI chart's manifest must
+carry Helm's chart config. Manifests are read from the catalog registry;
+`registry.k8s.io` alone may redirect the read to its regional Artifact
+Registry backing. A GitHub source entry pinned by tag (such as
+`adyanth/cloudflare-operator`, which a Git-sourced Application syncs) is
+acquired as the tarball of the commit the tag names. The acquiring pipeline
+stores it content-addressed at
+`s3://delivery-artifacts/sources/<owner>/<repo>/<sha256>.tar.gz` and registers it with
+the commit as the artifact version and the tag in its origin. The server
+resolves the tag to its commit on GitHub, requires that commit, and requires
+the commit's tarball to hash to the digest. The build stays pending until the
+stored tarball's off-cluster replica is recorded (PC1), and a later acquisition
+of the same original verifies it. A recipe whose Application has a Git source
+binds that archive's version, an exact commit, as `targetRevision`, so ArgoCD
+syncs only that commit. For charts and images, the artifact URI is the upstream location; nothing new is mirrored. The
 Minecraft chart stays mirrored into ChartMuseum because the registered
 `minecraft-tsmc` pipeline pulls it from there, and the server verifies mirror
 bytes against the upstream checksum as well. Existing mirrored rows are never
-rewritten. An immutable origin key makes concurrent acquisitions reuse one
-original artifact/build/source; an unrelated acquiring CI failure does not
+rewritten. An immutable origin key per acquiring service makes concurrent acquisitions
+by that service reuse one original artifact/build/source, while each service
+the catalog names acquires its own; an unrelated acquiring CI failure does not
 invalidate those independently verified bytes. `findQualifiedArtifact` returns
 exact original metadata or a useful 404; omitting `version` matches bytes by
 digest alone, which is how producers retain an unchanged archive.

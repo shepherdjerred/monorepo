@@ -1,25 +1,23 @@
 import { Prisma } from "#generated/prisma/client.ts";
 import { DeliveryError } from "#domain/error.ts";
 import type { Transaction } from "#infrastructure/delivery-data.ts";
-import {
-  lock,
-  required,
-  fingerprint,
-  wire,
-} from "#infrastructure/delivery-records.ts";
-import {
+import { lock, fingerprint } from "#infrastructure/delivery-records.ts";
+import type {
   ContentRecoveryIntentSchema,
-  type ContentRecoveryOwnership,
+  ContentRecoveryOwnership,
 } from "#shared/contract.ts";
-import { heldContentRecovery } from "./context.ts";
+import {
+  bareFingerprint,
+  findIntent,
+  intentDetail,
+} from "#infrastructure/recovery-intents.ts";
+import { contentIntentView, heldContentRecovery } from "./context.ts";
 
+/** An intent that journaled the shared producer barrier holds it until native restoration (model D8). */
 export async function requireNoContentBarrier(tx: Transaction) {
   if (
-    (await tx.contentRecoveryIntent.count({
-      where: {
-        dispatchBarrier: { not: Prisma.DbNull },
-        barrierRestoredAt: null,
-      },
+    (await tx.recoveryIntent.count({
+      where: { barrier: { not: Prisma.DbNull }, barrierRestoredAt: null },
     })) !== 0
   )
     throw new DeliveryError(
@@ -31,27 +29,27 @@ export async function requireNoContentBarrier(tx: Transaction) {
 export async function pendingContentIntent(tx: Transaction, id: string) {
   await lock(tx, "delivery:claim");
   await lock(tx, `content-recovery:${id}`);
-  const raw = required(
-    await tx.contentRecoveryIntent.findUnique({ where: { id } }),
-    "Content recovery intent",
-  );
+  const raw = await findIntent(tx, id, "content");
   if (raw.status !== "pending")
     throw new DeliveryError("CONFLICT", "Content recovery intent is terminal");
-  const initial = required(
-    await tx.deployment.findUnique({ where: { id: raw.deploymentId } }),
-    "Content recovery source",
-  );
+  await lock(tx, `deployment:${raw.deploymentId}`);
+  const initial = await tx.deployment.findUniqueOrThrow({
+    where: { id: raw.deploymentId },
+  });
   await lock(tx, `environment:${initial.environmentId}`);
-  const held = await heldContentRecovery(tx, raw);
+  const held = await heldContentRecovery(tx, {
+    deploymentId: raw.deploymentId,
+    expectedEnvironmentGeneration: raw.expectedGeneration,
+  });
   if (
-    held.snapshotFingerprint !== raw.snapshotFingerprint ||
-    held.targetKind !== raw.targetKind
+    held.snapshotFingerprint !== bareFingerprint(raw.fingerprint) ||
+    held.targetKind !== intentDetail(raw)["targetKind"]
   )
     throw new DeliveryError(
       "CONFLICT",
       "Content recovery original selection or ownership changed",
     );
-  return { ...held, intent: ContentRecoveryIntentSchema.parse(wire(raw)) };
+  return { ...held, intent: contentIntentView(raw), stored: raw };
 }
 
 export function requireFreshContentObservation(observedAt: string) {

@@ -25,7 +25,7 @@ export function ForumBaselinePanel({
         read-only baseline preserves original provenance; deployment acceptance
         follows the actual upgrade.
       </p>
-      {environment.acceptedForumBaselineIntentId === null &&
+      {!history.some((intent) => intent.status === "succeeded") &&
         environment.acceptedVersionSetRevisionId === null && (
           <div className="notice">
             <p>

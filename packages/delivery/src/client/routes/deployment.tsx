@@ -126,9 +126,10 @@ function DeploymentPage() {
           <ApprovalForm
             key={deployment.id}
             onDecision={async (decision) => {
-              const result = await delivery.approve(deployment.id, decision);
-              await settled(result);
-              return result;
+              // The route answers with the decided approval; the page reads
+              // the deployment's new state again.
+              await delivery.approve(deployment.id, decision);
+              await queryClient.invalidateQueries();
             }}
           />
         ) : (

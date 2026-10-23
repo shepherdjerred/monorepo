@@ -1,8 +1,7 @@
-import { Prisma } from "#generated/prisma/client.ts";
 import { DeliveryError } from "#domain/error.ts";
 import {
   DeploymentSchema,
-  PipelineRevisionSchema,
+  LegacyPipelineRevisionSchema,
   RequestTrmnlRepairSchema,
   type Principal,
   type RequestTrmnlRepair,
@@ -45,7 +44,7 @@ export async function requestTrmnlRepair(
     );
     await lock(tx, `environment:${source.environmentId}`);
     const env = await environment(tx, source.environmentId);
-    const pipeline = PipelineRevisionSchema.parse(
+    const pipeline = LegacyPipelineRevisionSchema.parse(
       wire(
         required(
           await tx.pipeline.findUnique({
@@ -69,8 +68,8 @@ export async function requestTrmnlRepair(
         "INVALID",
         "Repair is limited to the fixed TRMNL dashboard plugin bundle",
       );
-    const held = await tx.applicationLock.findUnique({
-      where: { application: "trmnl-dashboard" },
+    const held = await tx.targetLock.findUnique({
+      where: { instance: "application:trmnl-dashboard" },
     });
     if (
       !["failed", "canceled"].includes(source.status) ||
@@ -105,11 +104,10 @@ export async function requestTrmnlRepair(
         versionSetRevisionId: source.versionSetRevisionId,
         previousAcceptedVersionSetRevisionId:
           source.previousAcceptedVersionSetRevisionId,
-        previousAcceptedConfiguration:
-          source.previousAcceptedConfiguration ?? Prisma.JsonNull,
+        previousAcceptedDeploymentId: source.previousAcceptedDeploymentId,
         pipelineRevisionId: source.pipelineRevisionId,
-        configurationRevision: source.configurationRevision,
-        configuration: DeploymentSchema.parse(wire(source)).configuration,
+        configurationId: source.configurationId,
+        catalogRevision: source.catalogRevision,
         expectedGeneration: env.generation,
         kind: "repair-trmnl",
         status: "queued",

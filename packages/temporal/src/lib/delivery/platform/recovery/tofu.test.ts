@@ -9,7 +9,7 @@ import {
 } from "@shepherdjerred/delivery/contract";
 import type { DeliveryTofuContext } from "homelab/scripts/tofu/delivery-stack.ts";
 import { decryptRecoveryPlan } from "#lib/delivery/platform/plan-crypto.ts";
-import { runTofuRecoveryInWorkspace } from "./tofu.ts";
+import { legacyTofuTarget, runTofuRecoveryInWorkspace } from "./tofu.ts";
 import { requireOriginalDiscordTarget } from "./tofu-original.ts";
 import { encryptDeliveryPlan } from "#lib/delivery/platform/plan-crypto.ts";
 import { createHash } from "node:crypto";
@@ -212,7 +212,7 @@ test("first Discord apply authenticates original saved bytes and settles only or
     },
   };
   const input = {
-    snapshot,
+    target: legacyTofuTarget(snapshot),
     intentId: "recovery/discord",
     native: receipt.nativeJob,
     fence: async () => {
@@ -347,7 +347,7 @@ test("partial OpenTofu target requires an encrypted intent-bound recovery plan; 
       throw new Error("Read-only planning cannot authorize apply");
     });
     const input = {
-      snapshot: parsed,
+      target: legacyTofuTarget(parsed),
       intentId: native.requestId,
       native,
       fence,

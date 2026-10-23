@@ -1,6 +1,9 @@
 import { z } from "zod";
+import { modelRecipe } from "#lib/delivery/model/recipe.ts";
+import { modelApplyInput } from "#lib/delivery/model/tofu.ts";
 import {
   DeploymentDetailSchema,
+  RecordTofuPlanSchema,
   type EvidenceInput,
   type DeploymentDetail,
 } from "@shepherdjerred/delivery/contract";
@@ -11,8 +14,8 @@ import {
   type DeliveryJobReceipt,
 } from "#shared/delivery-job.ts";
 import { deliveryRequest } from "#lib/delivery/client.ts";
-import { deliveryOperationId } from "#lib/delivery/selection.ts";
 import { controlPlaneJobInput } from "./control-plane.ts";
+import { tofuJobInputFor, tofuJobRequestInput } from "./tofu-input.ts";
 
 export function platformNativeEvidence(
   native: DeliveryJobReceipt,
@@ -26,10 +29,23 @@ export function platformNativeEvidence(
   ];
 }
 
-function frozenJobInput(
+async function frozenJobInput(
   current: DeploymentDetail,
   request: DeliveryJobRequest,
-): unknown {
+): Promise<unknown> {
+  const model = modelRecipe(current);
+  if (model !== null) {
+    // A model tofu apply runs the saved plan its own plan step recorded.
+    if (model.kind !== "tofu" || request.recipe !== "tofu-apply")
+      throw new Error(
+        "Native platform Job differs from its model recipe's apply step",
+      );
+    const stored = await deliveryRequest(
+      `platform/plans/${encodeURIComponent(current.deployment.id)}`,
+      RecordTofuPlanSchema,
+    );
+    return modelApplyInput(current, model, stored.receipt);
+  }
   if (request.recipe === "control-plane") {
     if (
       current.deployment.controlPlaneSnapshot?.source.sourceRevision !==
@@ -42,20 +58,14 @@ function frozenJobInput(
   }
   const snapshot = current.deployment.platformSnapshot;
   if (
-    snapshot === null ||
-    !["root-release", "tofu-apply"].includes(snapshot.kind) ||
+    snapshot?.kind !== "tofu-apply" ||
     snapshot.kind !== request.recipe ||
     snapshot.source.sourceRevision !== request.sourceRevision
   )
     throw new Error(
       "Native platform source differs from its frozen mutation intent",
     );
-  return snapshot.kind === "root-release"
-    ? {
-        requestId: deliveryOperationId(`${request.deploymentId}:root-release`),
-        charts: snapshot.charts,
-      }
-    : snapshot;
+  return tofuJobRequestInput(tofuJobInputFor(current, snapshot));
 }
 
 /** A Job may start before the create response reaches its Activity: checkpoint its own native identity first. */
@@ -71,7 +81,7 @@ export async function admitPlatformNativeJob(request: DeliveryJobRequest) {
   });
   const base = `deployments/${encodeURIComponent(request.deploymentId)}`;
   const current = await deliveryRequest(base, DeploymentDetailSchema);
-  const expected = frozenJobInput(current, request);
+  const expected = await frozenJobInput(current, request);
   const snapshot = current.deployment.platformSnapshot;
   const controller = current.deployment.controlPlaneSnapshot;
   const stage = current.stages.find((item) => item.key === request.stageKey);

@@ -1,7 +1,6 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { z } from "zod";
-import type { Deployment } from "#shared/contract.ts";
 import { errorMessage } from "#client/components/notices.tsx";
 
 const DecisionSchema = z.object({
@@ -44,7 +43,7 @@ function Buttons() {
 export function ApprovalForm({
   onDecision,
 }: {
-  onDecision: (decision: Decision) => Promise<Deployment>;
+  onDecision: (decision: Decision) => Promise<void>;
 }) {
   const [state, submit] = useActionState(
     async (_previous: { error: string | null }, form: FormData) => {

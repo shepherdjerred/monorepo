@@ -192,6 +192,43 @@ fixed traffic bake periods; original hosts remain until independent drainage
 proof permits retirement. A partial routing response is inspected before
 repeating the same step.
 
+A model recipe's `worker-rollout` step runs the same Jobs. Its apply-safety
+step first proves every retained image's Build ID and the served routes, and
+refuses a pool that still has legacy pollers. Only then does it write the
+Application, whose sync renders the retained-host pool. The step itself records
+its intent, proves every host, then records the preflight's routing plan as
+evidence before promoting and verifying. A resumed step routes by that recorded
+plan and reattaches to any Job whose stage is already recorded.
+
+A compound recipe, such as TSMC's companion and server, runs its sub-recipes'
+steps in recipe order under one deployment and one lease. Each step key is
+prefixed with its sub-recipe's position (`sub2-step-sync`). A model
+`minecraft-upgrade` step has two release modes:
+
+- `verified-restore` runs before the sync, through the v1 preservation
+  controller. While players defer preservation, the step waits. The sync then
+  requires the fresh preservation proof.
+- `retained-volume-restart` runs after the sync. It reads back that the server
+  runs exactly `repository:version@digest`.
+
+Rollbacks of TSMC stay refused.
+
+A `channel` recipe freezes two steps, and only the npm store has an adapter
+so far; any other store stops as a missing adapter. Both steps authenticate
+with `NPM_TOKEN` from the Delivery worker's npm channel item.
+
+- `step-publish` publishes the selected tarball under the `delivery-staged`
+  dist-tag, but only if the registry lacks that version. It reads the
+  tarball from the Delivery artifact store and verifies its digest first. It
+  then reads back until the registry serves bytes whose sha256 matches the
+  artifact.
+- `step-pointer` moves the channel's dist-tag, such as `latest`, reads back
+  that the tag resolves to the version, and drops the staging tag.
+
+The registry's integrity and shasum are recorded as evidence. A published
+version is never replaced: different bytes under the same version stop the
+deployment. A rollback finds its version present and only moves the pointer.
+
 Poller proofs make bounded exact-build instant readbacks when active polling
 briefly reaches zero; success requires a fresh positive result, and query or
 schema errors fail immediately. Minecraft preservation and recovery

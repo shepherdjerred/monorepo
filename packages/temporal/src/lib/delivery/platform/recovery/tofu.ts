@@ -8,7 +8,9 @@ import {
   RecordTofuPlanSchema,
   type PlatformRecoveryContext,
   type PlatformReleaseSnapshot,
+  type TofuPlanReceipt,
 } from "@shepherdjerred/delivery/contract";
+import { stepStageKey } from "@shepherdjerred/delivery/model-contract";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
 import {
   withDeliveryTofuStack,
@@ -26,14 +28,43 @@ import {
   readDiscordApplications,
 } from "./tofu-original.ts";
 import { deliveryRequest } from "#lib/delivery/client.ts";
+import { requireModelRecipe } from "#lib/delivery/model/recipe.ts";
+import { modelTofuSource } from "#lib/delivery/model/tofu.ts";
+import { tofuStackDirectory } from "#lib/delivery/platform/tofu-input.ts";
 import type { DeliveryJobReceipt } from "#shared/delivery-job.ts";
 import type { RecoveryAction } from "./request.ts";
 type Snapshot = Extract<
   PlatformReleaseSnapshot,
   { kind: "tofu-plan" | "tofu-apply" }
 >;
+/**
+ * The frozen OpenTofu source a recovery observes, plans and applies from: a
+ * v1 platform snapshot, or a model tofu recipe's stack archive (X8).
+ */
+export type TofuRecoveryTarget = {
+  /** `tofu-plan` was read-only; `tofu-apply` settles only at its desired source. */
+  kind: "tofu-plan" | "tofu-apply";
+  stack: string;
+  sourceBuildId: string;
+  sourceRevision: string;
+  /** The original saved plan, whose state lineage and serial bound recovery; null when none was saved. */
+  plan: TofuPlanReceipt | null;
+  /** v1 only: the frozen apply a Discord original-target baseline reads. */
+  legacy?: Extract<Snapshot, { kind: "tofu-apply" }>;
+};
+/** A v1 platform snapshot as a recovery target. */
+export function legacyTofuTarget(snapshot: Snapshot): TofuRecoveryTarget {
+  return {
+    kind: snapshot.kind,
+    stack: snapshot.stack,
+    sourceBuildId: snapshot.source.id,
+    sourceRevision: snapshot.source.sourceRevision,
+    plan: snapshot.kind === "tofu-apply" ? snapshot.plan : null,
+    ...(snapshot.kind === "tofu-apply" ? { legacy: snapshot } : {}),
+  };
+}
 type Inputs = {
-  snapshot: Snapshot;
+  target: TofuRecoveryTarget;
   intentId: string;
   native: DeliveryJobReceipt;
   fence: () => Promise<void>;
@@ -46,7 +77,7 @@ function targetChanged(
   return exitCode !== 0 || Object.values(changes).some((count) => count !== 0);
 }
 function originalTargetRequested(input: Inputs) {
-  return input.original === true && input.snapshot.stack === "discord";
+  return input.original === true && input.target.stack === "discord";
 }
 
 async function applySavedRecovery(
@@ -54,8 +85,8 @@ async function applySavedRecovery(
   input: Inputs,
   planPath: string,
 ) {
-  const { snapshot } = input;
-  if (snapshot.kind !== "tofu-apply")
+  const { target } = input;
+  if (target.kind !== "tofu-apply")
     throw new Error(
       "Read-only plan failures cannot authorize recovery mutations",
     );
@@ -66,9 +97,9 @@ async function applySavedRecovery(
   );
   if (
     stored.receipt.recoveryIntentId !== input.intentId ||
-    stored.receipt.sourceBuildId !== snapshot.source.id ||
-    stored.receipt.sourceRevision !== snapshot.source.sourceRevision ||
-    stored.receipt.stack !== snapshot.stack ||
+    stored.receipt.sourceBuildId !== target.sourceBuildId ||
+    stored.receipt.sourceRevision !== target.sourceRevision ||
+    stored.receipt.stack !== target.stack ||
     canonicalJson(stored.receipt.state) !== canonicalJson(before)
   )
     throw new Error(
@@ -98,8 +129,8 @@ async function saveRecoveryPlan(
   planPath: string,
   changes: ReturnType<typeof deliveryTofuChanges>,
 ) {
-  const snapshot = input.snapshot;
-  if (snapshot.kind !== "tofu-apply")
+  const { target } = input;
+  if (target.kind !== "tofu-apply")
     throw new Error(
       "Read-only plan failures cannot authorize recovery mutations",
     );
@@ -111,9 +142,9 @@ async function saveRecoveryPlan(
   const receipt = PlatformRecoveryPlanReceiptSchema.parse({
     schema: "delivery-tofu-recovery-plan/v1",
     recoveryIntentId: input.intentId,
-    sourceBuildId: snapshot.source.id,
-    sourceRevision: snapshot.source.sourceRevision,
-    stack: snapshot.stack,
+    sourceBuildId: target.sourceBuildId,
+    sourceRevision: target.sourceRevision,
+    stack: target.stack,
     createdAt: createdAt.toISOString(),
     expiresAt: new Date(createdAt.getTime() + 24 * 60 * 60_000).toISOString(),
     planDigest: `sha256:${createHash("sha256").update(bytes).digest("hex")}`,
@@ -166,6 +197,60 @@ async function inspectOriginalTarget(
   };
 }
 
+/**
+ * A model tofu deployment as a recovery target: its frozen stack archive,
+ * the plan its plan step saved (an apply exists only after one), and
+ * forward convergence to that source (`tofu-apply`).
+ */
+async function modelRecoveryTarget(
+  detail: PlatformRecoveryContext["deployment"],
+): Promise<TofuRecoveryTarget> {
+  const recipe = requireModelRecipe(detail);
+  if (recipe.kind !== "tofu")
+    throw new Error("Recovery has no frozen OpenTofu source");
+  const source = modelTofuSource(detail, recipe);
+  const planned = detail.stages.some(
+    (stage) =>
+      stage.key === stepStageKey("step", "plan") &&
+      stage.status === "succeeded",
+  );
+  const saved = planned
+    ? await deliveryRequest(
+        `platform/plans/${encodeURIComponent(detail.deployment.id)}`,
+        RecordTofuPlanSchema,
+      )
+    : null;
+  return {
+    kind: "tofu-apply",
+    stack: recipe.stack,
+    sourceBuildId: source.sourceBuildId,
+    sourceRevision: source.sourceRevision,
+    plan: saved?.receipt ?? null,
+  };
+}
+
+/**
+ * The frozen source a recovery runs from, and the extracted stack archive
+ * directory a model recipe's Job stages (X8); a v1 snapshot uses the
+ * checked-out source.
+ */
+async function recoverySource(context: PlatformRecoveryContext) {
+  const snapshot = context.deployment.deployment.platformSnapshot;
+  if (snapshot?.kind === "tofu-plan" || snapshot?.kind === "tofu-apply")
+    return { target: legacyTofuTarget(snapshot), directory: undefined };
+  if (snapshot !== null)
+    throw new Error("Recovery has no frozen OpenTofu source");
+  const recipe = requireModelRecipe(context.deployment);
+  if (recipe.kind !== "tofu")
+    throw new Error("Recovery has no frozen OpenTofu source");
+  return {
+    target: await modelRecoveryTarget(context.deployment),
+    directory: tofuStackDirectory({
+      archive: modelTofuSource(context.deployment, recipe).archive,
+    }),
+  };
+}
+
 /** All commands use the original frozen source and fixed stack; provider output and plan bytes remain private. */
 export async function runTofuRecovery(
   context: PlatformRecoveryContext,
@@ -173,15 +258,13 @@ export async function runTofuRecovery(
   native: DeliveryJobReceipt,
   fence: () => Promise<void>,
 ) {
-  const snapshot = context.deployment.deployment.platformSnapshot;
-  if (snapshot?.kind !== "tofu-plan" && snapshot?.kind !== "tofu-apply")
-    throw new Error("Recovery has no frozen OpenTofu source");
+  const { target, directory } = await recoverySource(context);
   return await withDeliveryTofuStack(
-    snapshot.stack,
+    target.stack,
     async (tofu) =>
       await runTofuRecoveryInWorkspace(
         {
-          snapshot,
+          target,
           intentId: context.intent.id,
           native,
           fence,
@@ -190,24 +273,35 @@ export async function runTofuRecovery(
         action,
         tofu,
       ),
+    undefined,
+    directory === undefined ? {} : { directory },
   );
 }
+/** An apply's recovery acts only on the state lineage its saved plan read, at or after that serial. */
+function requireSavedPlanLineage(
+  target: TofuRecoveryTarget,
+  before: Awaited<ReturnType<DeliveryTofuContext["state"]>>,
+) {
+  if (
+    target.kind === "tofu-apply" &&
+    target.plan !== null &&
+    (before.lineage !== target.plan.state.lineage ||
+      before.serial < target.plan.state.serial)
+  )
+    throw new Error(
+      "Recovery remote state differs from the original saved-plan lineage",
+    );
+}
+
 /** Injection boundary verifies actual plan bytes and provider commands without live providers. */
 export async function runTofuRecoveryInWorkspace(
   input: Inputs,
   action: RecoveryAction,
   tofu: DeliveryTofuContext,
 ) {
-  const { snapshot } = input;
+  const { target } = input;
   const before = await tofu.state();
-  if (
-    snapshot.kind === "tofu-apply" &&
-    (before.lineage !== snapshot.plan.state.lineage ||
-      before.serial < snapshot.plan.state.serial)
-  )
-    throw new Error(
-      "Recovery remote state differs from the original saved-plan lineage",
-    );
+  requireSavedPlanLineage(target, before);
   const planPath = path.join(tofu.workspace, "recovery.tfplan");
   if (action === "apply") {
     return await applySavedRecovery(tofu, input, planPath);
@@ -228,13 +322,13 @@ export async function runTofuRecoveryInWorkspace(
     throw new Error("Remote state changed during recovery observation");
   if (action === "inspect") {
     if (
-      snapshot.kind === "tofu-apply" &&
+      target.kind === "tofu-apply" &&
       targetChanged(planned.exitCode, changes)
     ) {
-      if (originalTargetRequested(input)) {
+      if (originalTargetRequested(input) && target.legacy !== undefined) {
         return await inspectOriginalTarget(
           tofu,
-          snapshot,
+          target.legacy,
           before,
           privateProviderJson(rendered.stdout),
         );
@@ -244,9 +338,9 @@ export async function runTofuRecoveryInWorkspace(
       );
     }
     return {
-      state: snapshot.kind === "tofu-plan" ? "readonly" : "desired",
+      state: target.kind === "tofu-plan" ? "readonly" : "desired",
       observedAt: new Date().toISOString(),
-      proofSummary: `Independent fixed-source OpenTofu ${snapshot.stack} observation; native lineage ${before.lineage}, serial ${String(before.serial)}, stable state and ${snapshot.kind === "tofu-plan" ? "original read-only recipe" : "zero proposed changes"} verified`,
+      proofSummary: `Independent fixed-source OpenTofu ${target.stack} observation; native lineage ${before.lineage}, serial ${String(before.serial)}, stable state and ${target.kind === "tofu-plan" ? "original read-only recipe" : "zero proposed changes"} verified`,
     };
   }
   return await saveRecoveryPlan(tofu, input, planPath, changes);

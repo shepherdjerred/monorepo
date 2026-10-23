@@ -3,7 +3,11 @@ import { createTestDatabase } from "#testing/postgres.ts";
 import { seedDelivery, testExecutor, testOperator } from "#testing/seed.ts";
 import { Delivery } from "./delivery.ts";
 import { createRecoveryInspector } from "./recovery.ts";
+import { createApplicationReader } from "./kubernetes/application-reader.ts";
 import type { DeploymentDetail } from "#shared/contract.ts";
+import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
+import { recipeFromPipeline } from "#shared/model/recipe-adapter.ts";
+import { arcadePipeline } from "#testing/model-fixture.ts";
 
 const requestId = "11111111-1111-4111-8111-111111111111";
 const externalOperationId = "22222222-2222-4222-8222-222222222222";
@@ -45,9 +49,7 @@ async function checkMinecraftRecovery(detail: DeploymentDetail) {
   current.metadata.annotations["delivery.shepherdjerred.com/environment"] =
     "minecraft/tsmc";
   const inspect = createRecoveryInspector({
-    origin: "https://argocd.sjer.red",
-    token: "test-read-only-token",
-    fetch: async () => Response.json(current),
+    readApplication: async () => current,
   });
   selected.pipeline.definition.minecraftUpgrade = {
     imageComponent: "image:the-storm-server",
@@ -72,6 +74,48 @@ async function checkMinecraftRecovery(detail: DeploymentDetail) {
   await expect(inspect(selected, recovery)).rejects.toMatchObject({
     code: "INVALID",
   });
+}
+
+/** A model recipe's request is its sync step: `step-sync`, or `subN-step-sync` inside a compound recipe. */
+async function checkModelSyncStage(detail: DeploymentDetail) {
+  const application = recipeFromPipeline(arcadePipeline);
+  const compound = RecipeDefinitionSchema.parse({
+    kind: "compound",
+    subRecipes: [
+      {
+        instance: "channel:npm/@shepherdjerred/webring",
+        definition: {
+          kind: "channel",
+          store: "npm",
+          name: "@shepherdjerred/webring",
+          pointer: "latest",
+          forwardOnly: false,
+          artifactComponent: "archive:webring-package",
+        },
+      },
+      { instance: "application:arcade", definition: application },
+    ],
+  });
+  const reconcile = detail.stages.find((stage) => stage.key === "reconcile");
+  if (reconcile === undefined) throw new Error("Expected the v1 stage");
+  const inspect = createRecoveryInspector({
+    readApplication: async () => observation(),
+  });
+  for (const [definition, key] of [
+    [application, "step-sync"],
+    [compound, "sub2-step-sync"],
+  ] as const) {
+    const selected: DeploymentDetail = {
+      ...detail,
+      pipeline: { ...detail.pipeline, definition },
+      stages: [{ ...reconcile, key }],
+    };
+    expect(await inspect(selected, recovery)).toHaveLength(1);
+    // A model recipe never records the v1 stage name.
+    await expect(
+      inspect({ ...selected, stages: [reconcile] }, recovery),
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+  }
 }
 
 describe("independent Argo recovery", () => {
@@ -119,14 +163,33 @@ describe("independent Argo recovery", () => {
   afterAll(async () => {
     await cluster.close();
   });
-  test("requires a configured read credential and never uses Temporal", async () => {
-    const inspect = createRecoveryInspector({
-      origin: "https://argocd.sjer.red",
-      token: undefined,
+  test("reads the Application through the projected reader and never uses Temporal", async () => {
+    const read = createApplicationReader(() =>
+      Promise.reject(new Error("token file missing")),
+    );
+    await expect(
+      createRecoveryInspector({ readApplication: read })(detail, recovery),
+    ).rejects.toMatchObject({ code: "PAUSED" });
+    await expect(
+      createRecoveryInspector({ readApplication: async () => null })(
+        detail,
+        recovery,
+      ),
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+    const paths: string[] = [];
+    const reader = createApplicationReader(async (path) => {
+      paths.push(path);
+      return observation();
     });
-    await expect(inspect(detail, recovery)).rejects.toMatchObject({
-      code: "PAUSED",
-    });
+    expect(
+      await createRecoveryInspector({ readApplication: reader })(
+        detail,
+        recovery,
+      ),
+    ).toHaveLength(1);
+    expect(paths).toEqual([
+      "/apis/argoproj.io/v1alpha1/namespaces/argocd/applications/arcade",
+    ]);
   });
   test("only explicit retained-volume Minecraft restarts use ordinary owned Argo recovery", async () => {
     await checkMinecraftRecovery(detail);
@@ -150,9 +213,7 @@ describe("independent Argo recovery", () => {
       },
     };
     const options = {
-      origin: "https://argocd.sjer.red",
-      token: "test-read-only-token",
-      fetch: () => Promise.resolve(Response.json(observation())),
+      readApplication: () => Promise.resolve(observation()),
     };
     await expect(
       createRecoveryInspector(options)(selected, recovery),
@@ -178,9 +239,7 @@ describe("independent Argo recovery", () => {
     "keeps ownership for %s operations",
     async (phase) => {
       const inspect = createRecoveryInspector({
-        origin: "https://argocd.sjer.red",
-        token: "test-read-only-token",
-        fetch: async () => Response.json(observation(phase)),
+        readApplication: async () => observation(phase),
       });
       await expect(inspect(detail, recovery)).rejects.toMatchObject({
         code: "CONFLICT",
@@ -189,9 +248,7 @@ describe("independent Argo recovery", () => {
   );
   test("rejects a different external operation or environment delegation", async () => {
     const inspect = createRecoveryInspector({
-      origin: "https://argocd.sjer.red",
-      token: "test-read-only-token",
-      fetch: async () => Response.json(observation()),
+      readApplication: async () => observation(),
     });
     await expect(
       inspect(detail, {
@@ -204,9 +261,7 @@ describe("independent Argo recovery", () => {
       "other/environment";
     await expect(
       createRecoveryInspector({
-        origin: "https://argocd.sjer.red",
-        token: "test-read-only-token",
-        fetch: async () => Response.json(other),
+        readApplication: async () => other,
       })(detail, recovery),
     ).rejects.toMatchObject({ code: "CONFLICT" });
   });
@@ -216,26 +271,20 @@ describe("independent Argo recovery", () => {
       { kind: "Job", health: { status: "Progressing" } },
     ];
     const inspect = createRecoveryInspector({
-      origin: "https://argocd.sjer.red",
-      token: "test-read-only-token",
-      fetch: async () => Response.json(current),
+      readApplication: async () => current,
     });
     await expect(inspect(detail, recovery)).rejects.toMatchObject({
       code: "CONFLICT",
     });
   });
+  test("a model recipe's sync step, prefixed inside a compound recipe, names the recorded request (T3)", async () => {
+    await checkModelSyncStage(detail);
+  });
   test("stores exact independent readback before releasing only the owned lock", async () => {
     const inspect = createRecoveryInspector({
-      origin: "https://argocd.sjer.red",
-      token: "test-read-only-token",
-      fetch: async (url, init) => {
-        expect(url instanceof Request ? url.url : String(url)).toBe(
-          "https://argocd.sjer.red/api/v1/applications/arcade",
-        );
-        expect(new Headers(init?.headers).get("Authorization")).toBe(
-          "Bearer test-read-only-token",
-        );
-        return Response.json(observation());
+      readApplication: async (name) => {
+        expect(name).toBe("arcade");
+        return observation();
       },
     });
     const evidence = await inspect(detail, recovery);

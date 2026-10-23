@@ -1,9 +1,0 @@
-{
-  "id": "static-sites/wiki-sjer-red",
-  "serviceId": "static-sites",
-  "name": "wiki-sjer-red",
-  "pipelineRevisionId": "static-sites/wiki-sjer-red/1",
-  "configurationRevision": "static-sites/wiki-sjer-red/1",
-  "configuration": {},
-  "automatic": true
-}

@@ -20,7 +20,7 @@ describe("PostgreSQL delivery invariants 3.1", () => {
     expect(stored.deployment.cancelRequested).toBe(true);
     if (stored.deployment.status === "canceled") {
       expect(stored.environment.activeDeploymentId).toBeNull();
-      expect(await context.cluster.database.applicationLock.count()).toBe(0);
+      expect(await context.cluster.database.targetLock.count()).toBe(0);
     } else {
       expect(stored.deployment.status).toBe("running");
       expect(stored.environment.activeDeploymentId).toBe(deployment.id);

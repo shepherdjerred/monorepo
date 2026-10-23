@@ -4,14 +4,19 @@ import { recipeFromPipeline } from "./recipe-adapter.ts";
 import {
   ChannelRecipeSchema,
   CompoundRecipeSchema,
+  helmSource,
   KubernetesApplicationRecipeSchema,
   OperatorRunRecipeSchema,
   RecipeDefinitionSchema,
+  renderArtifactParameter,
+  referenceParameters,
+  TofuRecipeSchema,
+} from "./recipe-contract.ts";
+import {
   recipeComponents,
   recipeInstances,
   recipeRunners,
-  TofuRecipeSchema,
-} from "./recipe-contract.ts";
+} from "./recipe-bindings.ts";
 
 const runnerImage =
   "docker.io/shepherdjerred/ci-base@sha256:01851075993f5ebf500a8ea6abe1f3ebfb074a906412a63a3df4905e06ebdd50";
@@ -48,26 +53,32 @@ async function registered(file: string) {
   return match.pipeline;
 }
 
+function applicationBody(): Record<string, unknown> {
+  return {
+    name: "arcade",
+    project: "default",
+    destination: {
+      server: "https://kubernetes.default.svc",
+      namespace: "arcade",
+    },
+    source: {
+      repoURL: "https://chartmuseum.tailnet-1a49.ts.net",
+      chart: "arcade",
+    },
+    lifecycle: "retain",
+  };
+}
+
 function application(
   overrides: Record<string, unknown> = {},
 ): Record<string, unknown> {
   return {
     kind: "kubernetes-application",
-    application: {
-      name: "arcade",
-      project: "default",
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: "arcade",
-      },
-      source: {
-        repoURL: "https://chartmuseum.tailnet-1a49.ts.net",
-        chart: "arcade",
-      },
-      lifecycle: "retain",
-    },
+    application: applicationBody(),
     chartComponent: "chart:arcade",
-    artifactParameters: { "delivery.image": "image:arcade" },
+    artifactParameters: {
+      "delivery.image": { component: "image:arcade", format: "reference" },
+    },
     runner: { service: "ci", component: "image:ci-base" },
     steps: [
       { kind: "apply-safety", instance: "application:arcade" },
@@ -99,9 +110,14 @@ function expectArgocdMapping(file: string, pipeline: ArgocdPipeline) {
     throw new Error(`${file} did not map to a kubernetes-application`);
   }
   expect(recipe.application.name, file).toBe(pipeline.application);
-  expect(recipe.application.source.chart, file).toBe(pipeline.chartName);
+  expect(recipe.application.source, file).toMatchObject({
+    chart: pipeline.chartName,
+  });
   expect(recipe.chartComponent, file).toBe(pipeline.chartComponent);
-  expect(recipe.artifactParameters, file).toEqual(pipeline.artifactParameters);
+  // v1 rendered every artifact parameter as a complete reference.
+  expect(recipe.artifactParameters, file).toEqual(
+    referenceParameters(pipeline.artifactParameters),
+  );
   expect(recipe.runner, file).toEqual({
     service: "ci",
     component: "image:ci-base",
@@ -164,7 +180,8 @@ function expectMapping(file: string, pipeline: Pipeline) {
 describe("recipeFromPipeline", () => {
   test("maps every reviewed registration onto a recipe with no digest literal", async () => {
     const definitions = await registrations();
-    expect(definitions.length).toBeGreaterThan(20);
+    // Shared-site and root registrations are retired (X4, X6).
+    expect(definitions).toHaveLength(19);
     for (const { file, pipeline } of definitions) {
       const recipe = recipeFromPipeline(pipeline);
       expect(RecipeDefinitionSchema.parse(recipe), file).toEqual(recipe);
@@ -246,6 +263,36 @@ describe("recipeFromPipeline", () => {
         },
       ],
     });
+  });
+
+  test("a verified-restore upgrade preserves before the sync; a restart reads back after it", async () => {
+    const tsmc = await registered("specialized/minecraft-tsmc/pipeline.json");
+    if (tsmc.kind !== "argocd" || tsmc.minecraftUpgrade === undefined)
+      throw new Error("TSMC registers a Minecraft upgrade");
+    const verified = recipeFromPipeline({
+      ...tsmc,
+      minecraftUpgrade: {
+        ...tsmc.minecraftUpgrade,
+        releaseMode: "verified-restore",
+      },
+    });
+    if (verified.kind !== "kubernetes-application")
+      throw new Error("TSMC maps onto an Application recipe");
+    expect(verified.steps.map((step) => step.kind)).toEqual([
+      "apply-safety",
+      "minecraft-upgrade",
+      "sync",
+    ]);
+    const misplaced = {
+      ...verified,
+      steps: [verified.steps[0], verified.steps[2], verified.steps[1]],
+    };
+    expect(RecipeDefinitionSchema.safeParse(misplaced).error?.issues).toEqual([
+      expect.objectContaining({
+        message:
+          "A verified-restore minecraft-upgrade runs before sync; a retained-volume restart runs after it",
+      }),
+    ]);
   });
 
   test("maps Tofu stacks by their reviewed policy mode", () => {
@@ -360,7 +407,68 @@ describe("RecipeDefinitionSchema", () => {
     [
       "a chart component that is not the source chart",
       { chartComponent: "chart:other" },
-      /must name the Application's source chart/u,
+      /A Helm source binds the chart component of its chart/u,
+    ],
+    [
+      "a Git source bound to a chart component",
+      {
+        application: {
+          ...applicationBody(),
+          source: {
+            repoURL: "https://github.com/adyanth/cloudflare-operator.git",
+            path: "config/default",
+          },
+        },
+        chartComponent: "chart:arcade",
+        artifactParameters: {},
+      },
+      /a Git source binds an archive of its revision/u,
+    ],
+    [
+      "Helm values on a Git source",
+      {
+        application: {
+          ...applicationBody(),
+          source: {
+            repoURL: "https://github.com/adyanth/cloudflare-operator.git",
+            path: "config/default",
+          },
+        },
+        chartComponent: "archive:cloudflare-operator",
+      },
+      /a Git source takes none/u,
+    ],
+    [
+      "a sync policy, which is the adapter's decision (T4)",
+      {
+        application: {
+          ...applicationBody(),
+          syncPolicy: { automated: { selfHeal: true, prune: false } },
+        },
+      },
+      /Unrecognized key/u,
+    ],
+    [
+      "an artifact parameter in an unnamed format",
+      {
+        artifactParameters: {
+          "delivery.image": { component: "image:arcade", format: "tag" },
+        },
+      },
+      /Invalid option/u,
+    ],
+    [
+      "an artifact parameter that names an environment",
+      {
+        artifactParameters: {
+          "delivery.image": {
+            component: "image:arcade",
+            format: "reference",
+            acceptedIn: "arcade/beta",
+          },
+        },
+      },
+      /Unrecognized key/u,
     ],
     [
       "a monitor over an unbound image",
@@ -406,7 +514,93 @@ describe("RecipeDefinitionSchema", () => {
       result.error?.issues.map((issue) => issue.message).join("\n"),
     ).toMatch(message);
   });
+});
 
+describe("RecipeDefinitionSchema source forms", () => {
+  test("accepts a scheme-less OCI chart repository and a Git path source", () => {
+    const oci = KubernetesApplicationRecipeSchema.parse(
+      application({
+        application: {
+          ...applicationBody(),
+          name: "kueue",
+          source: { repoURL: "registry.k8s.io/kueue/charts", chart: "kueue" },
+        },
+        chartComponent: "chart:kueue",
+        artifactParameters: {},
+        steps: [
+          { kind: "apply-safety", instance: "application:kueue" },
+          { kind: "sync", instance: "application:kueue" },
+        ],
+      }),
+    );
+    expect(oci.application.source).toEqual({
+      repoURL: "registry.k8s.io/kueue/charts",
+      chart: "kueue",
+    });
+    const git = KubernetesApplicationRecipeSchema.parse(
+      application({
+        application: {
+          ...applicationBody(),
+          source: {
+            repoURL: "https://github.com/adyanth/cloudflare-operator.git",
+            path: "config/default",
+          },
+        },
+        chartComponent: "archive:cloudflare-operator",
+        artifactParameters: {},
+      }),
+    );
+    expect(helmSource(git.application.source)).toBeNull();
+    const sandbox = KubernetesApplicationRecipeSchema.parse(
+      application({
+        artifactParameters: {
+          "delivery.images.candidate": {
+            component: "image:arcade",
+            format: "reference",
+          },
+          "delivery.images.accepted": {
+            component: "image:arcade-accepted",
+            format: "reference",
+          },
+        },
+      }),
+    );
+    expect(recipeComponents(sandbox)).toEqual([
+      "chart:arcade",
+      "image:arcade",
+      "image:arcade-accepted",
+    ]);
+    expect(
+      KubernetesApplicationRecipeSchema.safeParse(
+        application({
+          application: {
+            ...applicationBody(),
+            source: { repoURL: "http://charts.example.com", chart: "arcade" },
+          },
+        }),
+      ).success,
+    ).toBe(false);
+  });
+
+  test("renders an artifact parameter in each named format", () => {
+    const artifact = {
+      uri: "docker.io/shepherdjerred/zfs-driver",
+      version: "2.8.0",
+      digest: `sha256:${"a".repeat(64)}`,
+    };
+    expect(renderArtifactParameter("reference", artifact)).toBe(
+      `docker.io/shepherdjerred/zfs-driver@sha256:${"a".repeat(64)}`,
+    );
+    expect(renderArtifactParameter("tag-digest", artifact)).toBe(
+      `2.8.0@sha256:${"a".repeat(64)}`,
+    );
+    expect(renderArtifactParameter("selected-digest", artifact)).toBe(
+      `selected@sha256:${"a".repeat(64)}`,
+    );
+  });
+});
+
+describe("RecipeDefinitionSchema target kinds", () => {
   test("tofu plans before it applies on its own stack", () => {
     expect(tofuSteps(["plan", "apply"]).success).toBe(true);
     expect(tofuSteps(["plan", "approve", "apply"]).success).toBe(true);
@@ -447,6 +641,35 @@ describe("RecipeDefinitionSchema", () => {
         stages: ["sync", "sync"],
       }).success,
     ).toBe(false);
+    // On its own (X13): a host the operator upgrades by hand, no Application.
+    const host = OperatorRunRecipeSchema.parse({
+      kind: "operator-run",
+      wrapped: {
+        kind: "host",
+        instance: "host:liskov",
+        components: ["image:installer", "image:kubelet"],
+      },
+      stages: ["talos-upgrade", "kubernetes-upgrade"],
+    });
+    expect(recipeComponents(host)).toEqual([
+      "image:installer",
+      "image:kubelet",
+    ]);
+    expect(recipeInstances(host)).toEqual(["host:liskov"]);
+    expect(recipeRunners(host)).toEqual([]);
+    for (const wrapped of [
+      { kind: "host", instance: "application:liskov", components: ["image:a"] },
+      { kind: "host", instance: "host:liskov", components: [] },
+      { kind: "host", instance: "host:liskov", components: ["chart:a"] },
+      {
+        kind: "host",
+        instance: "host:liskov",
+        components: ["image:a", "image:a"],
+      },
+    ])
+      expect(
+        OperatorRunRecipeSchema.safeParse({ ...operatorRun, wrapped }).success,
+      ).toBe(false);
     const compound = {
       kind: "compound",
       subRecipes: [
@@ -475,4 +698,18 @@ describe("RecipeDefinitionSchema", () => {
       }).success,
     ).toBe(false);
   });
+});
+
+test("a Tofu stack is its own recipe, never a compound sub-recipe (D6, H6)", () => {
+  const parsed = CompoundRecipeSchema.safeParse({
+    kind: "compound",
+    subRecipes: [
+      { instance: "application:arcade", definition: application() },
+      { instance: "stack:github", definition: tofu("github") },
+    ],
+  });
+  expect(parsed.success).toBe(false);
+  expect(parsed.error?.issues.map((issue) => issue.message)).toContain(
+    "A Tofu stack is its own recipe; a compound recipe holds no tofu sub-recipe",
+  );
 });

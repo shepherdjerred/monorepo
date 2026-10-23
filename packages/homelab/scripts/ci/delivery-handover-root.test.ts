@@ -6,10 +6,9 @@ import {
   HandoverContextSchema,
   HandoverDescriptorSchema,
   handoverContext,
-  handoverPatch,
 } from "./delivery-handover-selection.ts";
 
-test("the API root context row coexists with nineteen delegated leaf targets without delegating root authority", async () => {
+test("the API context lists only delegated leaf targets now that the root release is retired", async () => {
   const directory = new URL(
     "../../../delivery/registrations/",
     import.meta.url,
@@ -70,7 +69,7 @@ test("the API root context row coexists with nineteen delegated leaf targets wit
     catalogFingerprint: bootstrapFingerprint(SERVICE_CATALOG),
     observedAt: new Date().toISOString(),
     writesEnabled: false,
-    enabledEnvironments: [],
+    admittingEnvironments: [],
     counts: {
       applicationLocks: 0,
       platformLocks: 0,
@@ -82,11 +81,13 @@ test("the API root context row coexists with nineteen delegated leaf targets wit
     targets: rows.filter(
       (row) =>
         typeof row.application === "string" &&
-        (row.application === "apps" ||
-          SERVICE_CATALOG.deliveryDelegations?.[row.application] ===
-            row.environmentId),
+        SERVICE_CATALOG.deliveryDelegations?.[row.application] ===
+          row.environmentId,
     ),
   };
+  // Shared-site and root registrations are retired (X4, X6); their
+  // successors come from the catalog document, not a handover.
+  const registered = new Set(raw.targets.map((row) => row.environmentId));
   const descriptor = HandoverDescriptorSchema.parse({
     schema: "delivery-ownership-handover/v1",
     sourceRevision: raw.sourceRevision,
@@ -94,22 +95,20 @@ test("the API root context row coexists with nineteen delegated leaf targets wit
     requestId: "11111111-1111-4111-8111-111111111111",
     deliveryUrl: "https://delivery.tailnet-1a49.ts.net",
     woodpeckerWebhookId: 7,
-    targets: Object.entries(SERVICE_CATALOG.deliveryDelegations ?? {}).map(
-      ([application, environmentId]) => ({
+    targets: Object.entries(SERVICE_CATALOG.deliveryDelegations ?? {})
+      .filter(([, environmentId]) => registered.has(environmentId))
+      .map(([application, environmentId]) => ({
         application,
         environmentId,
         expectedGeneration: 0,
-      }),
-    ),
+      })),
   });
-  expect(descriptor.targets).toHaveLength(19);
+  expect(descriptor.targets).toHaveLength(18);
   const observed = handoverContext(raw, descriptor);
-  expect(observed.targets).toHaveLength(20);
-  const root = observed.targets.find(
-    (row) => row.environmentId === "gitops/root",
-  );
-  if (root === undefined) throw new Error("Root context row missing");
-  expect(root.pipeline.kind).toBe("root-release");
+  expect(observed.targets).toHaveLength(18);
+  expect(
+    observed.targets.some((row) => row.environmentId === "gitops/root"),
+  ).toBe(false);
   expect(() =>
     handoverContext(raw, {
       ...descriptor,
@@ -122,11 +121,12 @@ test("the API root context row coexists with nineteen delegated leaf targets wit
       ],
     }),
   ).toThrow("exact reviewed source delegation");
-  expect(() => handoverPatch({}, root)).toThrow("not leaf handover targets");
+  const [leaf] = observed.targets;
+  if (leaf === undefined) throw new Error("Leaf context row missing");
   expect(() =>
     HandoverContextSchema.parse({
       ...raw,
-      targets: [{ ...root, pipeline: { kind: "unknown" } }],
+      targets: [{ ...leaf, pipeline: { kind: "unknown" } }],
     }),
   ).toThrow();
 });

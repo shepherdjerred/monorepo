@@ -281,7 +281,7 @@ describe("Delivery Application ownership", () => {
       }),
     ).toThrow("non-root");
   });
-  it("rejects destination changes and enabled automatic sync", () => {
+  it("rejects destination changes and switches self-healed automation off with the selection", () => {
     expect(() =>
       deliverySelectionPatch(application(), {
         ...selection,
@@ -289,15 +289,28 @@ describe("Delivery Application ownership", () => {
       }),
     ).toThrow("destination/source");
     const app = application();
-    expect(() =>
-      deliverySelectionPatch(
-        {
-          ...app,
-          spec: { ...app.spec, syncPolicy: { automated: { enabled: true } } },
-        },
-        selection,
-      ),
-    ).toThrow();
+    const healedPolicy = {
+      automated: { enabled: true, selfHeal: true, prune: false },
+      syncOptions: ["ServerSideApply=true"],
+    };
+    const healed = deliverySelectionPatch(
+      { ...app, spec: { ...app.spec, syncPolicy: healedPolicy } },
+      selection,
+    );
+    expect(healed[2]?.value).toMatchObject({ targetRevision: "2.0.0-123" });
+    expect(healed[3]).toEqual({
+      op: "add",
+      path: "/spec/syncPolicy/automated",
+      value: { enabled: false },
+    });
+    const { syncPolicy: _policy, ...bare } = app.spec;
+    expect(
+      deliverySelectionPatch({ ...app, spec: bare }, selection)[3],
+    ).toEqual({
+      op: "add",
+      path: "/spec/syncPolicy",
+      value: { automated: { enabled: false } },
+    });
   });
   it("requires ignored fields to be preserved during apply", () => {
     const root = {

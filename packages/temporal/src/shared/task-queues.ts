@@ -7,7 +7,7 @@ export const TASK_QUEUES = {
   DELIVERY_WORKFLOWS: "delivery-workflows",
   /** Delivery external effects, isolated from build and infrastructure workers. */
   DELIVERY: "delivery",
-  /** Provider and root-release effects with separate namespace/credential authority. */
+  /** Provider (OpenTofu) and control-plane effects with separate namespace/credential authority. */
   DELIVERY_PLATFORM: "delivery-platform",
   /** Latency-sensitive Home Assistant workflows and activities. */
   HOME: "home",

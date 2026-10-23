@@ -1,29 +1,28 @@
 import { z } from "zod";
 import { DeliveryError } from "#domain/error.ts";
 import type {
-  PipelineDefinition,
+  StoredRecipeDefinition,
   VersionSetRevision,
 } from "#shared/contract.ts";
+import { applicationOf, trmnlPluginsOf } from "#shared/model/recipe-view.ts";
 import type { Transaction } from "./delivery-data.ts";
 import { version } from "./delivery-data.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
 
 export function validateTrmnlSelection(
-  pipeline: PipelineDefinition,
+  pipeline: StoredRecipeDefinition,
   selected: VersionSetRevision,
 ) {
-  if (
-    selected.serviceId === "trmnl-dashboard" &&
-    (pipeline.kind !== "argocd" || pipeline.trmnlPlugins === undefined)
-  )
+  const plugins = trmnlPluginsOf(pipeline);
+  if (plugins === undefined && selected.serviceId === "trmnl-dashboard")
     throw new DeliveryError(
       "INVALID",
       "TRMNL dashboard releases must include their fixed plugin dependency stage",
     );
-  if (pipeline.kind !== "argocd" || pipeline.trmnlPlugins === undefined) return;
-  const archive = selected.components[pipeline.trmnlPlugins.archiveComponent];
+  if (plugins === undefined) return;
+  const archive = selected.components[plugins.archiveComponent];
   if (
-    pipeline.application !== "trmnl-dashboard" ||
+    applicationOf(pipeline)?.name !== "trmnl-dashboard" ||
     selected.serviceId !== "trmnl-dashboard" ||
     archive?.kind !== "archive" ||
     archive.serviceId !== "trmnl-dashboard" ||
@@ -48,14 +47,15 @@ export async function validateTrmnlSuccess(
   input: {
     id: string;
     versionSetRevisionId: string;
-    pipeline: PipelineDefinition;
+    pipeline: StoredRecipeDefinition;
   },
 ) {
   const { pipeline } = input;
-  if (pipeline.kind !== "argocd" || pipeline.trmnlPlugins === undefined) return;
+  const plugins = trmnlPluginsOf(pipeline);
+  if (plugins === undefined) return;
   const selected = await version(tx, input.versionSetRevisionId);
   validateTrmnlSelection(pipeline, selected);
-  const archive = selected.components[pipeline.trmnlPlugins.archiveComponent];
+  const archive = selected.components[plugins.archiveComponent];
   const expectedOperation = deliveryOperationId(`${input.id}:trmnl-plugins`);
   const stage = await tx.stage.findUnique({
     where: {

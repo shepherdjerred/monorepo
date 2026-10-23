@@ -1,7 +1,10 @@
 import { describe, expect, test } from "vitest";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import documentSchema from "@shepherdjerred/ops-model/catalog-document.schema.json" with { type: "json" };
-import { RevisionIdSchema } from "./catalog-document-shape.ts";
+import {
+  forwardOnlyValue,
+  RevisionIdSchema,
+} from "./catalog-document-shape.ts";
 import {
   CatalogDocumentSchema,
   parseCatalogDocument,
@@ -187,7 +190,7 @@ function fixture(): Json {
       {
         id: "scout-prod/1",
         content: { "postgres.major": "17", replicas: "2" },
-        forwardOnly: ["postgres.major"],
+        forwardOnly: ["/helm/parameters/postgres.major"],
       },
     ],
     edges: [
@@ -477,7 +480,7 @@ const invalidCases: InvalidCase[] = [
   {
     name: "forwardOnly key absent from the content",
     structural: false,
-    message: /forwardOnly key postgres\.major is absent/u,
+    message: /forwardOnly key \/helm\/parameters\/postgres\.major is absent/u,
     mutate: (document) => {
       const configurations = section(document, "configurations");
       configurations[4] = {
@@ -498,6 +501,60 @@ const invalidCases: InvalidCase[] = [
         content: { "postgres.major": "seventeen" },
       };
       return { ...document, configurations };
+    },
+  },
+  {
+    name: "forwardOnly path inside a structured value that holds no version",
+    structural: false,
+    message:
+      /forwardOnly key \/helm\/valuesObject\/minecraftServer\/version is absent/u,
+    mutate: (document) => {
+      const configurations = section(document, "configurations");
+      configurations[4] = {
+        ...configurations[4],
+        content: {
+          "helm.valuesObject": '{"minecraftServer":{"type":"PAPER"}}',
+        },
+        forwardOnly: ["/helm/valuesObject/minecraftServer/version"],
+      };
+      return { ...document, configurations };
+    },
+  },
+  {
+    name: "a pinned reference to the service's own component",
+    structural: false,
+    message:
+      /must name another catalog service, or track an environment of its own/u,
+    mutate: (document) => {
+      const services = section(document, "services");
+      services[0] = {
+        ...services[0],
+        components: [
+          { name: "image:delivery", producer: "first-party" },
+          { name: "chart:delivery", producer: "first-party" },
+          {
+            name: "image:delivery-previous",
+            producer: "reference",
+            source: {
+              service: "delivery",
+              component: "image:delivery",
+              mode: "pinned",
+            },
+          },
+        ],
+      };
+      return { ...document, services };
+    },
+  },
+  {
+    name: "an AppProject owned by two services",
+    structural: false,
+    message: /AppProject workloads is owned by both delivery and temporal/u,
+    mutate: (document) => {
+      const services = section(document, "services");
+      services[0] = { ...services[0], appProjects: ["workloads"] };
+      services[1] = { ...services[1], appProjects: ["workloads"] };
+      return { ...document, services };
     },
   },
   {
@@ -582,6 +639,39 @@ describe("catalog document", () => {
       expect(validateStructure(document)).toBe(!structural);
     },
   );
+
+  test("forwardOnly keys are JSON pointers into the configuration's structured view", () => {
+    const content = {
+      "postgres.major": "17",
+      "helm.valuesObject":
+        '{"minecraftServer":{"version":"26.2"},"replicas":3,"a/b":{"c~d":"1.0"}}',
+    };
+    expect(forwardOnlyValue(content, "/helm/parameters/postgres.major")).toBe(
+      "17",
+    );
+    expect(
+      forwardOnlyValue(content, "/helm/valuesObject/minecraftServer/version"),
+    ).toBe("26.2");
+    expect(forwardOnlyValue(content, "/helm/valuesObject/replicas")).toBe("3");
+    expect(forwardOnlyValue(content, "/helm/valuesObject/a~1b/c~0d")).toBe(
+      "1.0",
+    );
+    expect(
+      forwardOnlyValue(content, "/helm/valuesObject/minecraftServer/type"),
+    ).toBeUndefined();
+    expect(forwardOnlyValue(content, "/helm/valuesObject")).toBeUndefined();
+    expect(() => forwardOnlyValue(content, "postgres.major")).toThrow();
+    const document = fixture();
+    const configurations = section(document, "configurations");
+    configurations[4] = {
+      ...configurations[4],
+      content,
+      forwardOnly: ["/helm/valuesObject/minecraftServer/version"],
+    };
+    expect(
+      CatalogDocumentSchema.safeParse({ ...document, configurations }).success,
+    ).toBe(true);
+  });
 
   test("revision ids carry a numeric suffix", () => {
     for (const id of ["scout-prod/3", "static-sites/sjer-red/1"]) {

@@ -1,5 +1,10 @@
+import {
+  PLAN_APPROVAL_STAGE_KEY,
+  stepStageKey,
+} from "#shared/model/stage-keys.ts";
 import { DeliveryError } from "#domain/error.ts";
 import {
+  PipelineRevisionSchema,
   PlatformReleaseSnapshotSchema,
   RecordTofuPlanSchema,
   TofuPlanReceiptSchema,
@@ -12,9 +17,98 @@ import {
   lock,
   required,
   audit,
+  wire,
 } from "#infrastructure/delivery-records.ts";
+import { artifact, type Transaction } from "#infrastructure/delivery-data.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { nativeReceipt } from "./policy.ts";
+
+type PlanRow = {
+  id: string;
+  kind: string;
+  platformSnapshot: unknown;
+  pipelineRevisionId: string;
+  versionSetRevisionId: string;
+};
+
+/**
+ * A model tofu recipe's stack and the stack archive build its set revision
+ * froze, which every one of its Tofu steps runs from (X8); null for any
+ * other recipe.
+ */
+export async function modelTofuSource(
+  tx: Transaction,
+  row: { pipelineRevisionId: string; versionSetRevisionId: string },
+) {
+  const recipe = PipelineRevisionSchema.parse(
+    wire(
+      required(
+        await tx.pipeline.findUnique({ where: { id: row.pipelineRevisionId } }),
+        "Recipe",
+      ),
+    ),
+  ).definition;
+  if (recipe.kind !== "tofu" || !("archiveComponent" in recipe)) return null;
+  const entry = required(
+    await tx.versionSetEntry.findUnique({
+      where: {
+        revisionId_component: {
+          revisionId: row.versionSetRevisionId,
+          component: recipe.archiveComponent,
+        },
+      },
+    }),
+    "Frozen stack archive",
+  );
+  const archive = await artifact(tx, entry.artifactId);
+  return {
+    stack: recipe.stack,
+    sourceBuildId: archive.buildId,
+    sourceRevision: archive.sourceRevision,
+  };
+}
+
+/**
+ * Who may produce a saved plan and from what source: a v1 tofu-plan
+ * deployment from its frozen snapshot, or a model tofu recipe's plan step
+ * from the stack archive its set revision selects (X8). `stack` is null
+ * when the row produces no plan.
+ */
+async function planProducer(tx: Transaction, row: PlanRow) {
+  const none = {
+    stack: null,
+    sourceBuildId: null,
+    sourceRevision: null,
+    stageKey: "",
+  };
+  if (row.platformSnapshot !== null) {
+    const snapshot = PlatformReleaseSnapshotSchema.parse(row.platformSnapshot);
+    return snapshot.kind === "tofu-plan" && row.kind === "tofu-plan"
+      ? {
+          stack: snapshot.stack,
+          sourceBuildId: snapshot.source.id,
+          sourceRevision: snapshot.source.sourceRevision,
+          stageKey: "tofu-plan",
+        }
+      : none;
+  }
+  const model = await modelTofuSource(tx, row);
+  return model === null
+    ? none
+    : { ...model, stageKey: stepStageKey("step", "plan") };
+}
+
+/** H3: a rejected plan was discarded with its decision and is never saved again. */
+async function requireUnrejected(tx: Transaction, deploymentId: string) {
+  const decision = await tx.stage.findUnique({
+    where: { deploymentId_key: { deploymentId, key: PLAN_APPROVAL_STAGE_KEY } },
+  });
+  if (decision?.status === "failed")
+    throw new DeliveryError(
+      "CONFLICT",
+      "This deployment's saved plan was rejected and discarded",
+    );
+}
 
 export async function recordTofuPlan(
   this: Delivery,
@@ -37,6 +131,7 @@ export async function recordTofuPlan(
         );
       return TofuPlanReceiptSchema.parse(existing.receipt);
     }
+    await requireUnrejected(tx, receipt.deploymentId);
     const row = required(
       await tx.deployment.findUnique({
         where: { id: receipt.deploymentId },
@@ -44,19 +139,23 @@ export async function recordTofuPlan(
       }),
       "Plan deployment",
     );
-    const snapshot = PlatformReleaseSnapshotSchema.parse(row.platformSnapshot);
+    const producer = await planProducer(tx, row);
     const stage = await tx.stage.findUnique({
-      where: { deploymentId_key: { deploymentId: row.id, key: "tofu-plan" } },
+      where: {
+        deploymentId_key: { deploymentId: row.id, key: producer.stageKey },
+      },
     });
-    const held = await tx.applicationLock.findUnique({
-      where: { deploymentId: row.id },
-    });
+    const held =
+      producer.stack === null
+        ? null
+        : await tx.targetLock.findUnique({
+            where: { instance: `stack:${producer.stack}` },
+          });
     if (
-      row.kind !== "tofu-plan" ||
-      snapshot.kind !== "tofu-plan" ||
+      producer.stack === null ||
       row.status !== "running" ||
       row.environment.activeDeploymentId !== row.id ||
-      held?.application !== `tofu:${snapshot.stack}`
+      held?.deploymentId !== row.id
     )
       throw new DeliveryError(
         "CONFLICT",
@@ -64,9 +163,9 @@ export async function recordTofuPlan(
       );
     if (
       stage === null ||
-      snapshot.source.id !== receipt.sourceBuildId ||
-      snapshot.source.sourceRevision !== receipt.sourceRevision ||
-      snapshot.stack !== receipt.stack ||
+      producer.sourceBuildId !== receipt.sourceBuildId ||
+      producer.sourceRevision !== receipt.sourceRevision ||
+      producer.stack !== receipt.stack ||
       receipt.nativeJob.requestId !== row.id ||
       fingerprint(nativeReceipt(stage.message)) !==
         fingerprint(receipt.nativeJob)

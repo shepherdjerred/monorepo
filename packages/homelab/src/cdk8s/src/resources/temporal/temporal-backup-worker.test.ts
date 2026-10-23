@@ -6,6 +6,7 @@ import {
   synthesizeTemporalResources,
 } from "@shepherdjerred/homelab/cdk8s/src/temporal-test-resources.ts";
 import { ContainerEnvSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/container-env-schema.ts";
+import { HOMELAB_R2_ITEM_ID } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/storage/velero.ts";
 
 function resources() {
   return synthesizeTemporalResources(".test-synth-temporal-backup-worker");
@@ -174,7 +175,7 @@ describe("Temporal internal service boundary", () => {
 });
 
 describe("Temporal SeaweedFS backup boundary", () => {
-  test("uses one dedicated secret and no Kubernetes token", () => {
+  test("uses its dedicated secret, the homelab R2 credential for Delivery's cold start, and no Kubernetes token", () => {
     const synthesized = resources();
     const { pod, container } = findTemporalWorkerContainer(
       synthesized,
@@ -188,8 +189,10 @@ describe("Temporal SeaweedFS backup boundary", () => {
       name: "TEMPORAL_WORKER_ROLE",
       value: "backup",
     });
-    const backupCredentialVariables = container.env.filter((variable) =>
-      variable.name.includes("ACCESS_KEY"),
+    const backupCredentialVariables = container.env.filter(
+      (variable) =>
+        variable.name.includes("ACCESS_KEY") &&
+        !variable.name.startsWith("CLOUDFLARE_R2_"),
     );
     expect(backupCredentialVariables).toHaveLength(4);
     expect(
@@ -211,6 +214,26 @@ describe("Temporal SeaweedFS backup boundary", () => {
     expect(
       z.object({ itemPath: z.string() }).parse(item.spec).itemPath,
     ).toMatch(/\/items\/fkp3hqhl3wze3bxddhhaq3ykzq$/u);
+    // The cold-start snapshot is written to the homelab bucket (model section 6).
+    expect(
+      container.env
+        .filter((variable) => variable.name.startsWith("CLOUDFLARE_R2_"))
+        .map((variable) => [
+          variable.name,
+          variable.valueFrom?.secretKeyRef.name,
+        ]),
+    ).toEqual([
+      ["CLOUDFLARE_R2_ACCESS_KEY_ID", "temporal-delivery-cold-start"],
+      ["CLOUDFLARE_R2_SECRET_ACCESS_KEY", "temporal-delivery-cold-start"],
+    ]);
+    const coldStart = findTemporalResource(
+      synthesized,
+      "OnePasswordItem",
+      "temporal-delivery-cold-start",
+    );
+    expect(
+      z.object({ itemPath: z.string() }).parse(coldStart.spec).itemPath,
+    ).toMatch(new RegExp(`/items/${HOMELAB_R2_ITEM_ID}$`, "u"));
   });
 
   test("limits network access to metrics, DNS, Temporal, tracing, HTTPS, and SeaweedFS", () => {

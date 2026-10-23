@@ -128,7 +128,7 @@ test("Forum settlement covers more than forty historical native Jobs and only ex
     deploymentId: original.deployment.id,
     image: original.versionSet.components["image:storm-forum"],
     bundle: original.versionSet.components["archive:forum-bundle"],
-    xenforoVersion: original.deployment.configuration["forum.xenforoVersion"],
+    xenforoVersion: original.configuration.content["forum.xenforoVersion"],
   });
   expect(
     await scope.cluster.database.$transaction((tx) =>

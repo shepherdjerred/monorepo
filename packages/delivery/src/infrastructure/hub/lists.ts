@@ -41,14 +41,6 @@ export async function deploymentPage(
   };
 }
 
-export async function approvals(database: Database) {
-  const rows = await database.deployment.findMany({
-    where: { status: "awaiting_approval" },
-    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-  });
-  return rows.map((row) => DeploymentSchema.parse(wire(row)));
-}
-
 export async function buildPage(database: Database, query: BuildListQuery) {
   const rows = await database.build.findMany({
     where: {

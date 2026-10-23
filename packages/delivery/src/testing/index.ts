@@ -43,5 +43,21 @@ export const createApp = (options: Parameters<typeof app>[0]) => app(options);
 export const createRecoveryInspector = (
   options: Parameters<typeof recoveryInspector>[0],
 ) => recoveryInspector(options);
+/** Test-only: read Applications from a fake API that serves `/api/v1/applications/:name`. */
+export function fakeApplicationReader(origin: string, token: string) {
+  return async (name: string): Promise<unknown> => {
+    const response = await fetch(
+      new URL(`/api/v1/applications/${encodeURIComponent(name)}`, origin),
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    if (response.status === 404) return null;
+    if (!response.ok)
+      throw new Error(
+        `Fake Application read failed (${String(response.status)})`,
+      );
+    const body: unknown = await response.json();
+    return body;
+  };
+}
 export const replicateProducedArtifacts = (delivery: Store, buildId: string) =>
   replicate(delivery, buildId);

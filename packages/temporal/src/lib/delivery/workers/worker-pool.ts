@@ -4,22 +4,40 @@ import {
   type DeploymentDetail,
   type WorkerPoolSnapshot,
 } from "@shepherdjerred/delivery/contract";
+import {
+  stepApplicationOf,
+  workerRolloutOf,
+} from "@shepherdjerred/delivery/model-contract";
+
+/**
+ * The rollout a deployment froze, for a v1 `workerRollout` block or a model
+ * `worker-rollout` step, with the Application its hosts run in.
+ */
+export function workerRolloutTarget(
+  detail: Pick<DeploymentDetail, "pipeline">,
+) {
+  const definition = detail.pipeline.definition;
+  const rollout = workerRolloutOf(definition);
+  const application = stepApplicationOf(definition, "worker-rollout");
+  return rollout === undefined || application === null
+    ? undefined
+    : { ...rollout, application: application.name };
+}
 
 export function deliveryWorkerPool(detail: DeploymentDetail) {
-  const pipeline = detail.pipeline.definition;
-  if (pipeline.kind !== "argocd" || pipeline.workerRollout === undefined) {
+  const rollout = workerRolloutTarget(detail);
+  if (rollout === undefined) {
     if (detail.deployment.workerSnapshot !== null)
       throw new Error("Non-worker deployment contains a worker pool");
     return;
   }
   const pool = WorkerPoolSnapshotSchema.parse(detail.deployment.workerSnapshot);
-  const artifact =
-    detail.versionSet.components[pipeline.workerRollout.imageComponent];
-  const expectedHost = workerHostSpecification(pipeline.workerRollout.target);
+  const artifact = detail.versionSet.components[rollout.imageComponent];
+  const expectedHost = workerHostSpecification(rollout.target);
   if (
     pool.environmentId !== detail.deployment.environmentId ||
-    pool.target !== pipeline.workerRollout.target ||
-    expectedHost.application !== pipeline.application
+    pool.target !== rollout.target ||
+    expectedHost.application !== rollout.application
   )
     throw new Error("Worker pool belongs to another deployment target");
   if (

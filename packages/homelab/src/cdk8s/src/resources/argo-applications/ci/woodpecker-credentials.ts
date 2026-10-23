@@ -91,6 +91,24 @@ const CI_CREDENTIAL_ITEMS = [
   },
 ] as const;
 
+/**
+ * CI's npm publish item (field NPM_TOKEN); Delivery's npm channels publish
+ * with it too. Read from the boundary list, where `check-ci-env` requires a
+ * literal item id, so both consumers move together.
+ */
+export const CI_NPM_CREDENTIALS_ITEM = ciCredentialItem("ci-npm-credentials");
+
+function ciCredentialItem(
+  secretName: (typeof CI_CREDENTIAL_ITEMS)[number]["secretName"],
+): string {
+  const item = CI_CREDENTIAL_ITEMS.find(
+    (entry) => entry.secretName === secretName,
+  );
+  if (item === undefined)
+    throw new Error(`CI credential boundary declares no ${secretName}`);
+  return item.itemId;
+}
+
 export function createWoodpeckerCredentialBoundaries(chart: Chart): void {
   new OnePasswordItem(chart, "woodpecker-server-credentials", {
     spec: { itemPath: vaultItemPath(WOODPECKER_SERVER_ITEM_ID) },

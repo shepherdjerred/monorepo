@@ -24,6 +24,7 @@ import {
   verifyWorkerPoolPollers,
   workerApplicationResources,
 } from "#lib/delivery/workers/worker-hosts.ts";
+import { executorIdentity } from "#activities/delivery/model/stages.ts";
 
 export type WorkerBaselineEffects = {
   application: (name: string) => Promise<unknown>;
@@ -170,6 +171,7 @@ export async function acceptWorkerBaseline(
       message:
         "Independently observed original hosts; full-app release pointers remain unchanged",
       evidence,
+      executor: executorIdentity(),
     },
   );
   return evidence;

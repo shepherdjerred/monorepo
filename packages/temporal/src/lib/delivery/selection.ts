@@ -23,7 +23,7 @@ export function deliverySelection(detail: DeploymentDetail) {
     throw new Error("Pipeline Application differs from registered environment");
   const parameters = {
     ...pipeline.parameters,
-    ...detail.deployment.configuration,
+    ...detail.configuration.content,
   };
   for (const [parameter, component] of Object.entries(
     pipeline.artifactParameters,

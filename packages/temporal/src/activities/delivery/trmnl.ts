@@ -15,6 +15,7 @@ import { deliveryOperationId } from "#lib/delivery/selection.ts";
 import { withBackupActivityHeartbeat } from "#activities/homelab/seaweedfs-backup-heartbeat.ts";
 import { configureTrmnlPlugins } from "#lib/delivery/trmnl.ts";
 import { trmnlRepairClaim, verifyTrmnlRepairBackend } from "./trmnl-repair.ts";
+import { executorIdentity } from "./model/stages.ts";
 
 export async function applyDeliveryTrmnlPlugins(
   id: string,
@@ -100,6 +101,7 @@ export async function applyTrmnlWithClients(
           : deliveryOperationId(`${id}:${key}`),
       message: `Exact fixed TRMNL plugin archive ${archive.id}: ${status}`,
       evidence,
+      executor: executorIdentity(),
     });
   await stage("trmnl-plugins", "running");
   await configureTrmnlPlugins(bundle, {

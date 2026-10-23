@@ -12,6 +12,9 @@ import { VELERO_SCHEDULES } from "@shepherdjerred/homelab/cdk8s/src/resources/ve
 import { backupMonitoringAnnotations } from "@shepherdjerred/ops-model/backup-policy.ts";
 import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
+/** The homelab R2 bucket's credential item, shared with the WAL archive and Delivery's cold start. */
+export const HOMELAB_R2_ITEM_ID = "ypce2djferc6zf7bocxft36n6a";
+
 /** The Velero namespace plus the deny-all restore rehearsal namespaces. */
 export function createVeleroNamespaces(chart: Chart): void {
   for (const namespace of [
@@ -52,7 +55,7 @@ export function createVeleroApp(chart: Chart) {
     "velero-cloud-credentials-onepassword",
     {
       spec: {
-        itemPath: vaultItemPath("ypce2djferc6zf7bocxft36n6a"),
+        itemPath: vaultItemPath(HOMELAB_R2_ITEM_ID),
       },
       metadata: {
         name: "cloud-credentials",

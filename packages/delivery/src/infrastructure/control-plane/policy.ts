@@ -24,7 +24,10 @@ export function requireControlPlaneOwner(catalog: ServiceIndex) {
 }
 
 export function validateControlPlaneEnvironment(
-  input: RegisterEnvironment,
+  input: Pick<
+    RegisterEnvironment,
+    "id" | "serviceId" | "application" | "promotionSourceEnvironmentId"
+  >,
   pipeline: PipelineDefinition,
 ) {
   if (pipeline.kind !== "control-plane") return;

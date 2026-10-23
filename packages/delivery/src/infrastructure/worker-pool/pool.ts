@@ -1,3 +1,4 @@
+import { workerRolloutOf } from "#shared/model/recipe-view.ts";
 import {
   WorkerHostSpecificationSchema,
   WorkerPoolSnapshotSchema,
@@ -156,12 +157,8 @@ export async function freezeWorkerSnapshot(
   },
 ) {
   const { environment: env, pipeline } = input;
-  if (
-    pipeline.definition.kind !== "argocd" ||
-    pipeline.definition.workerRollout === undefined
-  )
-    return null;
-  const policy = pipeline.definition.workerRollout;
+  const policy = workerRolloutOf(pipeline.definition);
+  if (policy === undefined) return null;
   const selected = input.versionSet.components[policy.imageComponent];
   if (selected === undefined)
     throw new DeliveryError(

@@ -74,24 +74,6 @@ export async function platformFixture(
   );
   await delivery.qualify(published.buildId, "verified", testExecutor);
   const runnerImage = `docker.io/shepherdjerred/ci-base@sha256:${"f".repeat(64)}`;
-  await delivery.registerPipeline(
-    "platform/root/1",
-    { kind: "root-release", runnerImage },
-    testOperator,
-  );
-  const rootEnvironment = await delivery.registerEnvironment(
-    {
-      id: "gitops/root",
-      serviceId: "gitops",
-      name: "Root",
-      application: "apps",
-      pipelineRevisionId: "platform/root/1",
-      configurationRevision: "platform/1",
-      configuration: {},
-      automatic: false,
-    },
-    testOperator,
-  );
   const stacks = TofuStackSchema.options.filter((stack) =>
     [
       "seaweedfs",
@@ -128,14 +110,10 @@ export async function platformFixture(
   return {
     delivery,
     catalog,
-    rootEnvironment,
     rootArtifacts,
     sourceBuildId: published.buildId,
     sourceRevision,
     runnerImage,
-    environmentIds: [
-      rootEnvironment.id,
-      ...stacks.map((stack) => `gitops/tofu:${stack}`),
-    ],
+    environmentIds: stacks.map((stack) => `gitops/tofu:${stack}`),
   };
 }

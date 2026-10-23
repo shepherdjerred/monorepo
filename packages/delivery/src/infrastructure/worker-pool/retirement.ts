@@ -13,7 +13,12 @@ import type {
 import { DeliveryError } from "#domain/error.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
-import { id, type Transaction } from "#infrastructure/delivery-data.ts";
+import {
+  serviceCatalogRevision,
+  id,
+  requestApproval,
+  type Transaction,
+} from "#infrastructure/delivery-data.ts";
 import {
   audit,
   lock,
@@ -119,18 +124,19 @@ export async function retireWorker(
         serviceId: env.serviceId,
         versionSetRevisionId: accepted.versionSetRevisionId,
         pipelineRevisionId: accepted.pipelineRevisionId,
-        configurationRevision: accepted.configurationRevision,
-        configuration: DeploymentSchema.parse(wire(accepted)).configuration,
+        configurationId: accepted.configurationId,
+        catalogRevision: await serviceCatalogRevision(tx, env.serviceId),
         previousAcceptedVersionSetRevisionId: env.acceptedVersionSetRevisionId,
-        previousAcceptedConfiguration: DeploymentSchema.parse(wire(accepted))
-          .configuration,
+        previousAcceptedDeploymentId: env.acceptedDeploymentId,
         workerSnapshot: frozen,
         expectedGeneration: env.generation,
-        kind: "retire-worker",
-        status: env.approvalRequired ? "awaiting_approval" : "queued",
+        kind: "retire-host",
+        status:
+          env.approvalPolicy === "required" ? "awaiting_approval" : "queued",
         requestedBy: actor.id,
       },
     });
+    if (env.approvalPolicy === "required") await requestApproval(tx, row);
     await persistDeploymentRequest(tx, actor, {
       deployment: row,
       requestId: input.requestId,
@@ -168,19 +174,17 @@ export async function validateWorkerRetirementClaim(
   const owned = input.running
     ? env.activeDeploymentId === row.id
     : env.activeDeploymentId === null;
-  if (
-    !owned ||
-    env.generation !== row.expectedGeneration + (input.running ? 1 : 0)
-  )
+  // Only acceptance moves the generation (E1); ownership is checked directly.
+  if (!owned || env.generation !== row.expectedGeneration)
     throw new DeliveryError(
       "CONFLICT",
       "Worker retirement lost its environment generation or ownership",
     );
   if (input.running) {
-    const held = await tx.applicationLock.findUnique({
-      where: { deploymentId: row.id },
+    const held = await tx.targetLock.findUnique({
+      where: { instance: `application:${frozen.host.application}` },
     });
-    if (held?.application !== frozen.host.application)
+    if (held?.deploymentId !== row.id)
       throw new DeliveryError(
         "CONFLICT",
         "Worker retirement no longer owns its Application lock",
@@ -230,7 +234,7 @@ export async function acceptWorkerRetirement(
   tx: Transaction,
   deployment: { id: string; kind: string; workerSnapshot: unknown },
 ) {
-  if (deployment.kind !== "retire-worker") return;
+  if (deployment.kind !== "retire-host") return;
   const snapshot = WorkerPoolSnapshotSchema.parse(deployment.workerSnapshot);
   const worker = retiringWorker(snapshot);
   const changed = await tx.workerVersion.updateMany({

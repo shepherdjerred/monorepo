@@ -3,76 +3,85 @@ import { Prisma } from "#generated/prisma/client.ts";
 import { DeliveryError } from "#domain/error.ts";
 import {
   ArtifactVersionSchema,
+  ConfigurationRevisionSchema,
   EnvironmentSchema,
-  PipelineRevisionSchema,
   VersionSetRevisionSchema,
 } from "#shared/contract.ts";
-import type {
-  CreateDeployment,
-  EvidenceInput,
-  PipelineDefinition,
-  ArtifactVersion,
-  Environment,
-  VersionSetRevision,
-} from "#shared/contract.ts";
+import type { EvidenceInput, ArtifactVersion } from "#shared/contract.ts";
 import type { Database } from "./database.ts";
-import { fingerprint, wire, required } from "./delivery-records.ts";
+import {
+  ARTIFACT_STORES,
+  type ArtifactStore,
+  artifactStore,
+  fingerprint,
+  selectionFingerprint,
+  wire,
+  required,
+} from "./delivery-records.ts";
 
 export type Transaction = Prisma.TransactionClient;
+/** Ops-model titles and links; service existence and lifecycle live in the record. */
 export const index = new ServiceIndex();
 export const terminal = new Set(["succeeded", "failed", "canceled"]);
+const REGISTERED_STORES: ReadonlySet<string> = new Set(ARTIFACT_STORES);
 export const id = () => crypto.randomUUID();
 /** Strong uncapped identities cover executions which Temporal Visibility has not indexed yet. */
 export async function pendingDeliveryObservations(tx: Transaction) {
-  const active = { status: { in: ["pending", "running"] } };
   const counts = await Promise.all([
-    tx.workerRecoveryIntent.count({ where: active }),
-    tx.minecraftRecoveryIntent.count({ where: active }),
-    tx.platformRecoveryIntent.count({ where: active }),
-    tx.contentRecoveryIntent.count({
+    tx.recoveryIntent.count({ where: { status: "pending" } }),
+    tx.recoveryIntent.count({
       where: {
-        OR: [
-          { status: "pending" },
-          { dispatchBarrier: { not: Prisma.DbNull }, barrierRestoredAt: null },
-        ],
+        status: { not: "pending" },
+        barrier: { not: Prisma.DbNull },
+        barrierRestoredAt: null,
       },
     }),
-    tx.forumBaselineIntent.count({ where: active }),
+    tx.forumBaselineIntent.count({
+      where: { status: { in: ["pending", "running"] } },
+    }),
   ]);
   return counts.reduce((sum, count) => sum + count, 0);
 }
-export function ensureService(serviceId: string) {
-  if (index.byId(serviceId)?.id !== serviceId)
+/** A service exists iff the catalog registered it (C1); retired services admit nothing (S4). */
+export async function ensureService(
+  tx: Transaction | Database,
+  serviceId: string,
+) {
+  const service = await tx.service.findUnique({ where: { id: serviceId } });
+  if (service === null)
     throw new DeliveryError(
       "INVALID",
-      "A canonical service catalog identity is required",
+      "A catalog-registered service identity is required",
     );
+  if (service.lifecycle !== "active")
+    throw new DeliveryError(
+      "INVALID",
+      `Service ${serviceId} is ${service.lifecycle} and admits no builds or deployments`,
+    );
+  return service;
 }
-export function approvalRequired(
-  serviceId: string,
-  target: {
-    application: string | null;
-    name: string;
-    pipeline: PipelineDefinition;
-  },
-) {
-  const { application, name, pipeline } = target;
-  if (serviceId === "scout-for-lol" && pipeline.kind === "static-site")
-    return pipeline.bucket === "scout-frontend";
-  const production =
-    application?.endsWith("-prod") === true ||
-    ["prod", "production"].includes(name.toLowerCase());
-  return (
-    ["scout-for-lol", "starlight-karma-bot"].includes(serviceId) && production
-  );
-}
-/** Row input for a published artifact; an absent fingerprint stays an absent column. */
+/**
+ * Row input for a published artifact: its registered store (A6) is derived
+ * from its location and origin, and an absent fingerprint stays an absent
+ * column.
+ */
 export function artifactRow<
-  T extends { contentFingerprint?: string | undefined },
->(input: T): Omit<T, "contentFingerprint"> & { contentFingerprint?: string } {
+  T extends {
+    uri: string;
+    kind: string;
+    origin?: { kind: string } | undefined;
+    contentFingerprint?: string | undefined;
+  },
+>(
+  input: T,
+): Omit<T, "contentFingerprint"> & {
+  store: ArtifactStore;
+  contentFingerprint?: string;
+} {
   const { contentFingerprint, ...fields } = input;
   return {
     ...fields,
+    store: artifactStore(input),
     ...(contentFingerprint === undefined ? {} : { contentFingerprint }),
   };
 }
@@ -95,8 +104,9 @@ export function qualifiedBuildWhere(
         sourceKind: "upstream",
         OR: [{ repositoryId }, { repositoryId: null }],
       },
+      // A carried artifact qualified with its original build (section 7).
       {
-        sourceKind: { in: ["licensed-bundle", "attested"] },
+        sourceKind: { in: ["licensed-bundle", "attested", "migrated"] },
         repositoryId: null,
       },
     ],
@@ -115,6 +125,11 @@ export async function artifact(tx: Transaction | Database, artifactId: string) {
       "CONFLICT",
       "Artifact build has not passed CI qualification",
     );
+  if (!REGISTERED_STORES.has(row.store))
+    throw new DeliveryError(
+      "CONFLICT",
+      "Artifact store is not registered; the artifact is not selectable",
+    );
   return artifactView(row);
 }
 export function artifactView(
@@ -125,6 +140,8 @@ export function artifactView(
     originKey: _originKey,
     contentFingerprint,
     replication,
+    migratedFrom,
+    store: _store,
     ...fields
   } = row;
   // Null columns are omitted so a reader without the field keeps its shape.
@@ -133,10 +150,17 @@ export function artifactView(
       ...fields,
       ...(contentFingerprint === null ? {} : { contentFingerprint }),
       ...(replication === null ? {} : { replication }),
+      ...(migratedFrom === null ? {} : { migratedFrom }),
       serviceId: build.serviceId,
       sourceRevision: build.sourceRevision,
     }),
   );
+}
+/** Zero-padded `major.minor`, so string comparison is the model's order key comparison. */
+export function orderKey(major: number | null, minor: number | null) {
+  return major === null || minor === null
+    ? null
+    : `${String(major).padStart(10, "0")}.${String(minor).padStart(10, "0")}`;
 }
 export async function version(tx: Transaction | Database, revisionId: string) {
   const row = required(
@@ -149,7 +173,13 @@ export async function version(tx: Transaction | Database, revisionId: string) {
   const components: Record<string, ArtifactVersion> = {};
   for (const entry of row.entries)
     components[entry.component] = await artifact(tx, entry.artifactId);
-  return VersionSetRevisionSchema.parse(wire({ ...row, components }));
+  return VersionSetRevisionSchema.parse(
+    wire({
+      ...row,
+      orderKey: orderKey(row.orderMajor, row.orderMinor),
+      components,
+    }),
+  );
 }
 export async function environment(
   tx: Transaction | Database,
@@ -159,23 +189,36 @@ export async function environment(
     await tx.environment.findUnique({ where: { id: environmentId } }),
     "Environment",
   );
-  const pipeline = PipelineRevisionSchema.parse(
+  return EnvironmentSchema.parse(wire(row));
+}
+/** The catalog revision a new deployment of this service freezes (4.1). */
+export async function serviceCatalogRevision(
+  tx: Transaction | Database,
+  serviceId: string,
+) {
+  const service = await ensureService(tx, serviceId);
+  return service.catalogRevision;
+}
+/** The key-value content of a configuration revision. */
+export async function configurationContent(
+  tx: Transaction | Database,
+  configurationId: string,
+) {
+  const configuration = await configurationRevision(tx, configurationId);
+  return configuration.content;
+}
+/** An immutable configuration revision (model 4.8). */
+export async function configurationRevision(
+  tx: Transaction | Database,
+  configurationId: string,
+) {
+  return ConfigurationRevisionSchema.parse(
     wire(
       required(
-        await tx.pipeline.findUnique({ where: { id: row.pipelineRevisionId } }),
-        "Pipeline",
+        await tx.configuration.findUnique({ where: { id: configurationId } }),
+        "Configuration revision",
       ),
     ),
-  );
-  return EnvironmentSchema.parse(
-    wire({
-      ...row,
-      approvalRequired: approvalRequired(row.serviceId, {
-        application: row.application,
-        name: row.name,
-        pipeline: pipeline.definition,
-      }),
-    }),
   );
 }
 function storedEvidenceFingerprint(item: {
@@ -246,64 +289,28 @@ export async function evidence(
   }
 }
 
-export async function validateSelection(
-  tx: Transaction,
-  input: CreateDeployment,
-  env: Environment,
-  selected: VersionSetRevision,
-) {
-  if (input.kind === "promote") {
-    if (input.sourceEnvironmentId === undefined)
-      throw new DeliveryError(
-        "INVALID",
-        "Promotion requires a source environment",
-      );
-    const source = await environment(tx, input.sourceEnvironmentId);
-    if (
-      source.serviceId !== env.serviceId ||
-      source.acceptedVersionSetRevisionId !== selected.id ||
-      (env.promotionSourceEnvironmentId !== null &&
-        env.promotionSourceEnvironmentId !== source.id)
-    )
-      throw new DeliveryError(
-        "CONFLICT",
-        "Promotion requires the selected revision to be accepted in the configured source environment",
-      );
-  } else if (
-    env.promotionSourceEnvironmentId !== null &&
-    input.kind !== "rollback" &&
-    input.kind !== "adopt-worker"
-  )
-    throw new DeliveryError(
-      "INVALID",
-      "This environment requires promotion from its configured source",
-    );
-  if (input.kind === "rollback") {
-    const accepted = await tx.deployment.findFirst({
-      where: {
-        environmentId: env.id,
-        versionSetRevisionId: selected.id,
-        status: "succeeded",
-        kind: { notIn: ["adopt-worker", "repair-trmnl"] },
-      },
-    });
-    if (accepted === null)
-      throw new DeliveryError(
-        "INVALID",
-        "Rollback target has never passed acceptance in this environment",
-      );
-  }
-}
-
+/**
+ * The set revision an automatic environment should run: the live set of its
+ * service (R4: the automatic set revision of the current lineage with the
+ * highest order key), or what its promotion source accepted.
+ */
 export async function automaticTarget(
   database: Database,
   env: { serviceId: string; promotionSourceEnvironmentId: string | null },
 ) {
-  if (env.promotionSourceEnvironmentId === null)
-    return database.versionSet.findFirst({
-      where: { serviceId: env.serviceId, qualifiedBuildId: { not: null } },
-      orderBy: { revision: "desc" },
+  if (env.promotionSourceEnvironmentId === null) {
+    const service = await database.service.findUniqueOrThrow({
+      where: { id: env.serviceId },
     });
+    return database.versionSet.findFirst({
+      where: {
+        serviceId: env.serviceId,
+        lineage: service.lineage,
+        automatic: true,
+      },
+      orderBy: [{ orderMajor: "desc" }, { orderMinor: "desc" }],
+    });
+  }
   const source = await database.environment.findUnique({
     where: { id: env.promotionSourceEnvironmentId },
   });
@@ -326,4 +333,34 @@ export function validateRequirements(
         );
     }
   }
+}
+/**
+ * The approval row a deployment needs under its environment's policy:
+ * created `pending` with the request, bound to the frozen selection, and
+ * decided later by a distinct human act (model H1, D6).
+ */
+export async function requestApproval(
+  tx: Transaction,
+  deployment: {
+    id: string;
+    versionSetRevisionId: string;
+    pipelineRevisionId: string;
+    configurationId: string;
+  },
+  options?: { override: boolean },
+) {
+  await tx.approval.create({
+    data: {
+      id: id(),
+      deploymentId: deployment.id,
+      status: "pending",
+      // An override approval authorises a non-eligible deploy (H4).
+      override: options?.override ?? false,
+      boundFingerprint: selectionFingerprint(
+        deployment.versionSetRevisionId,
+        deployment.pipelineRevisionId,
+        deployment.configurationId,
+      ),
+    },
+  });
 }

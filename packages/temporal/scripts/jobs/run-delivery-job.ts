@@ -15,6 +15,7 @@ import {
 import { renderControlPlaneTemplates } from "#lib/delivery/workers/worker-control-plane.ts";
 import { withWorkerCandidateCheckout } from "#lib/delivery/workers/worker-candidate-checkout.ts";
 import { WorkerDeploymentRolloutTargetSchema } from "#lib/worker-deployment-target.ts";
+import { runTestStage } from "./test-stage.ts";
 
 const ConnectionSchema = z.object({
   address: z.literal(
@@ -147,9 +148,8 @@ async function main() {
       );
       break;
     }
-    case "root-release": {
-      const { run } = await import("./root-release.ts");
-      result = await run(request);
+    case "test": {
+      result = await runTestStage(request);
       break;
     }
     case "tofu-apply": {

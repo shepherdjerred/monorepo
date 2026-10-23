@@ -1,9 +1,0 @@
-{
-  "id": "static-sites/better-skill-capped",
-  "serviceId": "static-sites",
-  "name": "better-skill-capped",
-  "pipelineRevisionId": "static-sites/better-skill-capped/1",
-  "configurationRevision": "static-sites/better-skill-capped/1",
-  "configuration": {},
-  "automatic": true
-}

@@ -57,7 +57,7 @@ test("private saved plans bind exact native identity, immutable ciphertext and o
   await finishTestPlatform(fixture.delivery, plan, saved);
   const detail = await fixture.delivery.detail(plan.id);
   expect(JSON.stringify(detail)).not.toContain("ciphertext");
-  expect(detail.environment.acceptedPlatformDeploymentId).toBeNull();
+  expect(detail.environment.acceptedDeploymentId).toBeNull();
   expect(detail.environment.acceptedVersionSetRevisionId).toBeNull();
   expect(detail.environment.observedVersionSetRevisionId).toBeNull();
 });
@@ -82,14 +82,13 @@ test("routine apply is automatic, sensitive apply approves the exact public save
     if (stack === "openai")
       await fixture.delivery.approve(
         apply.id,
-        "approve",
-        "Reviewed exact plan digest and state",
+        { decision: "approve", reason: "Reviewed exact plan digest and state" },
         testOperator,
       );
     await fixture.delivery.claim(apply.id, testExecutor);
     await finishTestPlatform(fixture.delivery, apply);
     const detail = await fixture.delivery.detail(apply.id);
-    expect(detail.environment.acceptedPlatformDeploymentId).toBe(apply.id);
+    expect(detail.environment.acceptedDeploymentId).toBe(apply.id);
     expect(detail.environment.acceptedVersionSetRevisionId).toBeNull();
     expect(detail.environment.desiredVersionSetRevisionId).toBeNull();
     await expect(testApply(fixture.delivery, plan)).rejects.toThrow(
@@ -98,7 +97,7 @@ test("routine apply is automatic, sensitive apply approves the exact public save
   }
 });
 
-test("global root/apply lock serializes separate state stacks and retains ambiguous ownership", async () => {
+test("the shared platform lock serializes separate state stacks and retains ambiguous ownership", async () => {
   const applies = [];
   for (const stack of ["github", "posthog"]) {
     const plan = await requestTestPlan(
@@ -120,7 +119,7 @@ test("global root/apply lock serializes separate state stacks and retains ambigu
     attempts.filter((result) => result.status === "fulfilled"),
   ).toHaveLength(1);
   const owner = await context.cluster.database.platformLock.findUniqueOrThrow({
-    where: { id: "shared-resources" },
+    where: { id: "platform" },
   });
   const waiting = owner.deploymentId === first.id ? second : first;
   await fixture.delivery.finish(
@@ -139,7 +138,7 @@ test("global root/apply lock serializes separate state stacks and retains ambigu
   expect(await context.cluster.database.platformLock.count()).toBe(1);
 });
 
-test("source ownership denies root and apply while permitting readonly plans", async () => {
+test("source ownership denies apply while permitting readonly plans", async () => {
   const delivery = new Delivery(
     context.cluster.database,
     1,
@@ -148,18 +147,6 @@ test("source ownership denies root and apply while permitting readonly plans", a
       platformDeliveryDelegated: false,
     }),
   );
-  await expect(
-    delivery.createPlatformDeployment(
-      {
-        kind: "root-release",
-        requestId: "legacy/root",
-        environmentId: "gitops/root",
-        expectedGeneration: 0,
-        sourceBuildId: fixture.sourceBuildId,
-      },
-      testOperator,
-    ),
-  ).rejects.toThrow("legacy CI");
   const plan = await requestTestPlan(delivery, fixture.sourceBuildId, "arr");
   const saved = await checkpointTestPlan(delivery, plan);
   await finishTestPlatform(delivery, plan, saved);
@@ -175,7 +162,7 @@ test("same-stack exclusion and exact source prerequisites apply before native ef
   await expect(fixture.delivery.claim(plan.id, testExecutor)).rejects.toThrow(
     "seaweedfs",
   );
-  expect(await context.cluster.database.applicationLock.count()).toBe(0);
+  expect(await context.cluster.database.targetLock.count()).toBe(0);
   await expect(
     requestTestPlan(fixture.delivery, fixture.sourceBuildId, "tailscale"),
   ).rejects.toThrow("pending");
@@ -211,68 +198,4 @@ test("saved plan expiry is checked again immediately before apply effects", asyn
     "expired",
   );
   expect(await context.cluster.database.platformLock.count()).toBe(0);
-});
-
-test("root freezes the complete original chart map after same-source ordered prerequisites", async () => {
-  const input = {
-    kind: "root-release" as const,
-    requestId: "root/intent",
-    environmentId: "gitops/root",
-    expectedGeneration: 0,
-    sourceBuildId: fixture.sourceBuildId,
-  };
-  await expect(
-    fixture.delivery.createPlatformDeployment(
-      { ...input, rootArtifacts: { apps: "missing-original" } },
-      testOperator,
-    ),
-  ).rejects.toThrow("Artifact not found");
-  const root = await fixture.delivery.createPlatformDeployment(
-    input,
-    testOperator,
-  );
-  expect(
-    await fixture.delivery.createPlatformDeployment(input, testOperator),
-  ).toEqual(root);
-  await expect(fixture.delivery.claim(root.id, testExecutor)).rejects.toThrow(
-    "seaweedfs",
-  );
-  for (const stack of ["seaweedfs", "tailscale", "arr"]) {
-    const plan = await requestTestPlan(
-      fixture.delivery,
-      fixture.sourceBuildId,
-      stack,
-    );
-    const saved = await checkpointTestPlan(fixture.delivery, plan);
-    await finishTestPlatform(fixture.delivery, plan, saved);
-    const apply = await testApply(fixture.delivery, plan);
-    await fixture.delivery.claim(apply.id, testExecutor);
-    await finishTestPlatform(fixture.delivery, apply);
-  }
-  await fixture.delivery.claim(root.id, testExecutor);
-  await finishTestPlatform(fixture.delivery, root);
-  const detail = await fixture.delivery.detail(root.id);
-  expect(detail.deployment.platformSnapshot?.kind).toBe("root-release");
-  if (detail.deployment.platformSnapshot?.kind !== "root-release")
-    throw new Error("Expected root");
-  expect(
-    detail.deployment.platformSnapshot.charts.map(({ artifact }) => ({
-      id: artifact.id,
-      buildId: artifact.buildId,
-      sourceRevision: artifact.sourceRevision,
-    })),
-  ).toEqual([
-    {
-      id: fixture.rootArtifacts.apps,
-      buildId: fixture.sourceBuildId,
-      sourceRevision: fixture.sourceRevision,
-    },
-  ]);
-  expect(detail.environment.acceptedPlatformDeploymentId).toBe(root.id);
-  expect(detail.environment.acceptedVersionSetRevisionId).toBeNull();
-  expect(
-    await context.cluster.database.platformArtifactReference.count({
-      where: { deploymentId: root.id },
-    }),
-  ).toBe(1);
 });

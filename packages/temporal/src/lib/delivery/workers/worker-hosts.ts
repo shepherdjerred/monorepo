@@ -7,6 +7,7 @@ import type {
 import { deliveryWorkerPool } from "#lib/delivery/workers/worker-pool.ts";
 import { requireHealthyWorkflowPoller } from "#lib/worker-deployment-proofs.ts";
 import { DeliveryPodSchema as Pod } from "#lib/delivery/pod-schema.ts";
+import { PROMETHEUS_SERVICE_URL } from "#lib/delivery/model/monitor.ts";
 const Deployment = z.object({
   metadata: z.object({ name: z.string() }),
   spec: z.object({
@@ -286,9 +287,7 @@ export async function verifyWorkerPoolPollers(
           const expression = command[3];
           if (expression === undefined)
             throw new Error("Missing worker poller query");
-          const url = new URL(
-            "http://prometheus-kube-prometheus-prometheus.prometheus:9090/api/v1/query",
-          );
+          const url = new URL("/api/v1/query", PROMETHEUS_SERVICE_URL);
           url.searchParams.set("query", expression);
           const response = await fetch(url, {
             signal: AbortSignal.timeout(15_000),

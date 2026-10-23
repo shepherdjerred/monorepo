@@ -1,7 +1,20 @@
+import {
+  applicationOf,
+  applicationsOf,
+  forumReleaseOf,
+  minecraftUpgradeOf,
+  siteReleaseOf,
+  trmnlPluginsOf,
+  workerRolloutOf,
+} from "#shared/model/recipe-view.ts";
 import { z } from "zod";
+import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
+import { stepStageKey, subRecipeStageKey } from "#shared/model/stage-keys.ts";
+import type { StoredRecipeDefinition } from "#shared/model/record-contract.ts";
 import { DeliveryError } from "#domain/error.ts";
 import type { DeploymentDetail, EvidenceInput } from "#shared/contract.ts";
 import { RecoverDeploymentSchema } from "#shared/contract.ts";
+import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
 
 export const RecoveryRequestSchema = RecoverDeploymentSchema.clone();
 const ArgoRecoverySchema = z.object({
@@ -35,10 +48,7 @@ function requireSettled(
   requestId: string,
 ) {
   const operation = current.status.operationState;
-  const application =
-    detail.pipeline.definition.kind === "argocd"
-      ? detail.pipeline.definition.application
-      : null;
+  const application = applicationOf(detail.pipeline.definition)?.name ?? null;
   if (
     current.metadata.name !== application ||
     current.metadata.annotations["delivery.shepherdjerred.com/environment"] !==
@@ -79,72 +89,69 @@ function requireSettled(
   return operation.finishedAt;
 }
 
-/** Independent of Temporal: inspect the recorded operation directly through Argo. */
+/**
+ * The stage whose operation identity is the Application sync's request: a
+ * v1 pipeline's `reconcile`, or a model recipe's sync step, prefixed by its
+ * sub-recipe's position inside a compound recipe (T3).
+ */
+function syncStageKey(definition: StoredRecipeDefinition): string {
+  const model = RecipeDefinitionSchema.safeParse(definition);
+  if (!model.success) return "reconcile";
+  const sync = stepStageKey("step", "sync");
+  if (model.data.kind !== "compound") return sync;
+  const index = model.data.subRecipes.findIndex(
+    (sub) => sub.definition.kind === "kubernetes-application",
+  );
+  return subRecipeStageKey(index, sync);
+}
+
+/**
+ * Independent of Temporal and of ArgoCD's API: inspect the recorded
+ * operation on the Application object through the projected reader (D5).
+ */
 export function createRecoveryInspector(options: {
-  origin: string;
-  token: string | undefined;
+  readApplication: ApplicationReader;
   inspectTrmnl?: (detail: DeploymentDetail) => Promise<EvidenceInput[]>;
-  fetch?: (
-    input: string | URL | Request,
-    init?: RequestInit,
-  ) => Promise<Response>;
 }) {
   return async (
     detail: DeploymentDetail,
     input: z.infer<typeof RecoveryRequestSchema>,
   ): Promise<EvidenceInput[]> => {
+    const definition = detail.pipeline.definition;
+    const application = applicationOf(definition);
+    const upgrade = minecraftUpgradeOf(definition);
     if (
-      detail.pipeline.definition.kind !== "argocd" ||
-      detail.pipeline.definition.workerRollout !== undefined ||
-      detail.pipeline.definition.scoutSite !== undefined ||
-      detail.pipeline.definition.forumRelease !== undefined ||
-      (detail.pipeline.definition.minecraftUpgrade !== undefined &&
-        detail.pipeline.definition.minecraftUpgrade.releaseMode !==
-          "retained-volume-restart")
+      application === null ||
+      applicationsOf(definition).length !== 1 ||
+      workerRolloutOf(definition) !== undefined ||
+      siteReleaseOf(definition) !== undefined ||
+      forumReleaseOf(definition) !== undefined ||
+      (upgrade !== undefined &&
+        upgrade.releaseMode !== "retained-volume-restart")
     )
       throw new DeliveryError(
         "INVALID",
         "This target requires its specialized recovery procedure; retain ownership until its external work is settled",
       );
-    if (options.token === undefined)
-      throw new DeliveryError(
-        "PAUSED",
-        "Argo recovery read credential is not configured",
-      );
-    if (
-      detail.pipeline.definition.trmnlPlugins !== undefined &&
-      options.inspectTrmnl === undefined
-    )
+    const plugins = trmnlPluginsOf(definition);
+    if (plugins !== undefined && options.inspectTrmnl === undefined)
       throw new DeliveryError(
         "PAUSED",
         "TRMNL recovery requires independent exact plugin-bundle readback; native Argo settlement alone is insufficient",
       );
-    const recorded = detail.stages.find((entry) => entry.key === "reconcile");
+    const syncKey = syncStageKey(definition);
+    const recorded = detail.stages.find((entry) => entry.key === syncKey);
     if (recorded === undefined)
       throw new DeliveryError(
         "CONFLICT",
         "Deployment has no recorded reconciliation operation to inspect",
       );
-    const response = await (options.fetch ?? fetch)(
-      new URL(
-        `/api/v1/applications/${encodeURIComponent(detail.pipeline.definition.application)}`,
-        options.origin,
-      ),
-      {
-        headers: {
-          Authorization: `Bearer ${options.token}`,
-          Accept: "application/json",
-        },
-        signal: AbortSignal.timeout(30_000),
-        redirect: "error",
-      },
-    );
-    if (!response.ok)
+    const raw = await options.readApplication(application.name);
+    if (raw === null)
       throw new DeliveryError(
-        "PAUSED",
-        `Argo recovery inspection unavailable (${String(response.status)})`,
+        "CONFLICT",
+        `Application ${application.name} does not exist; keep target ownership`,
       );
-    const raw: unknown = await response.json();
     const current = ArgoRecoverySchema.parse(raw);
     const operation = current.status.operationState;
     const finishedAt = requireSettled(
@@ -154,15 +161,14 @@ export function createRecoveryInspector(options: {
       recorded.operationId,
     );
     const pluginEvidence =
-      detail.pipeline.definition.trmnlPlugins !== undefined &&
-      options.inspectTrmnl !== undefined
+      plugins !== undefined && options.inspectTrmnl !== undefined
         ? await options.inspectTrmnl(detail)
         : [];
     return [
       {
         kind: "reconciliation",
         operationId: input.operationId,
-        summary: `Independent Argo readback: ${current.metadata.name}, resourceVersion ${current.metadata.resourceVersion}, request ${recorded.operationId}, operation ${input.operationId}, phase ${operation.phase}, finished ${finishedAt}. ${input.reason}`,
+        summary: `Independent Application readback: ${current.metadata.name}, resourceVersion ${current.metadata.resourceVersion}, request ${recorded.operationId}, operation ${input.operationId}, phase ${operation.phase}, finished ${finishedAt}. ${input.reason}`,
       },
       ...pluginEvidence,
     ];

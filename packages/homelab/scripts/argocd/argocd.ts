@@ -3879,6 +3879,8 @@ function usage(): never {
       "[--request-id <uuid>] [--delivery-selection <recovery.json>] [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd/argocd.ts release-root apps <expected.json> " +
       "--revision <v> --request-id <uuid> [--timeout <s>] [--dry-run]\n" +
+      "  bun packages/homelab/scripts/argocd/argocd.ts assert-apply-safe <app> " +
+      "--revision <v> [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd/argocd.ts delete-application <app> " +
       "--project <project> [--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd/argocd.ts health-wait <app> " +
@@ -4024,6 +4026,19 @@ async function main(): Promise<void> {
         ...(revision === undefined ? {} : { revision }),
         ...(exactRequestId === undefined ? {} : { requestId: exactRequestId }),
       });
+      return;
+    }
+    case "assert-apply-safe": {
+      // The model's apply-safety step (T3): the same managed-resources
+      // analysis sync-managed runs, recorded as its own stage before sync.
+      const revision = flag(argv, "revision");
+      if (revision === undefined) {
+        console.error("--revision is required for assert-apply-safe.");
+        usage();
+      }
+      if (!dryRun) {
+        await assertApplySafe(app, requireEnv("ARGOCD_TOKEN"), revision);
+      }
       return;
     }
     case "delete-application": {

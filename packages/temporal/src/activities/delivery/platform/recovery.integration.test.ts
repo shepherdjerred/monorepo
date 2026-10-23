@@ -270,7 +270,7 @@ test("real PG+HTTP outage recovery rejects replaced/live native executors, then 
   expect(after.deployment.status).toBe("failed");
   expect(after.deployment.message).toBe(failed.deployment.message);
   expect(after.deployment.recoveryRequired).toBe(false);
-  expect(after.environment.acceptedControlPlaneDeploymentId).toBeNull();
+  expect(after.environment.acceptedDeploymentId).toBeNull();
   expect(after.environment.acceptedVersionSetRevisionId).toBeNull();
   expect(await cluster.database.platformLock.count()).toBe(0);
 }, 60_000);

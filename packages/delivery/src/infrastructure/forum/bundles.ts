@@ -1,4 +1,5 @@
 import type { Principal, ArtifactVersion } from "#shared/contract.ts";
+import { composeVerifiedBuild } from "#infrastructure/composition/verified-build.ts";
 import {
   ArtifactAcquisitionSchema,
   ArtifactOriginSchema,
@@ -229,6 +230,11 @@ export async function qualifyForumBundle(
       where: { id: buildId, status: "pending" },
       data: { status, qualificationReason: reason, verifiedAt: new Date() },
     });
+    if (status === "verified" && changed.count > 0)
+      await composeVerifiedBuild(
+        tx,
+        await tx.build.findUniqueOrThrow({ where: { id: buildId } }),
+      );
     if (changed.count > 0)
       await audit(tx, actor, {
         action: `forum.bundle_${status}`,

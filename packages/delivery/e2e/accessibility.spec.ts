@@ -9,7 +9,7 @@ const PAGES = [
   "/pipelines/scout-for-lol",
   "/pipelines/arcade/executions",
   "/environments/scout-for-lol/prod",
-  "/environments/gitops/root",
+  "/environments/gitops/tofu:openai",
   "/deployments",
   "/approvals",
   "/artifacts",

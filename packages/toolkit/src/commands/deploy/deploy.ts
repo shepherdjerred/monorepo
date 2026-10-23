@@ -12,7 +12,6 @@ import {
 import type { DeliveryClient } from "@shepherdjerred/delivery/client";
 import {
   IdentifierSchema,
-  ImportSnapshotSchema,
   PipelineDefinitionSchema,
   RegisterEnvironmentSchema,
   RecoverDeploymentSchema,
@@ -28,8 +27,6 @@ artifact --file <PATH> --machine       Resolve an exact original qualified artif
 qualify <BUILD_ID> --machine           Ask the independent verifier to check actual CI provenance
 pipeline register <ID> --file <PATH>   Register a reviewed pipeline definition
 environment register --file <PATH>     Register reviewed environment metadata
-import --file <PATH>                   Save an unverified migration snapshot
-imports                               List unverified migration snapshots
 workers list <ENVIRONMENT>             Inspect retained worker artifacts and hosts
 workers baseline --file <PATH> --machine  Request independent host-only baseline proof
 workers adopt --file <PATH> --machine  Adopt an original qualified worker artifact
@@ -54,7 +51,7 @@ platform recovery-approve <INTENT_ID>  Human decision for exact reviewed recover
 diff <FROM|none> <TO>                  Compare component artifacts
 start <ENVIRONMENT> <VERSION>          Request an exact release
 promote <SOURCE_ENV> <DEST_ENV>        Promote source's accepted release
-rollback <ENVIRONMENT> <VERSION>       Request a previous exact release
+rollback <ENVIRONMENT> <DEPLOYMENT>    Restore a previously accepted selection
 status [DEPLOYMENT_ID]                 Inspect one deployment or all environments
 wait <DEPLOYMENT_ID>                   Foreground wait for completion
 approve|reject <DEPLOYMENT_ID>         Human decision; --reason required
@@ -116,8 +113,6 @@ const COMMAND_ARITY: Record<string, number | readonly number[]> = {
   qualify: 1,
   pipeline: 2,
   environment: 1,
-  import: 0,
-  imports: 0,
   workers: [1, 2, 3],
   minecraft: 2,
   forum: [1, 2],
@@ -187,8 +182,6 @@ function validateRegistration(
         "Registration requires an admin machine credential; use --machine",
       );
   }
-  if (command === "import" && (options.file === undefined || !options.machine))
-    throw new Error("Import requires --file and an admin --machine credential");
 }
 
 function validateApproval(options: DeployOptions) {
@@ -252,7 +245,6 @@ export async function runDeployCommand(
       "diff",
       "status",
       "inventory",
-      "imports",
       "handover-context",
     ].includes(command)
   )
@@ -279,30 +271,40 @@ export async function runDeployCommand(
   switch (command) {
     case "pipeline":
     case "environment":
-    case "import":
       return registerCommand(client, command, positionals, options);
-    case "start":
-    case "rollback": {
+    case "start": {
       const destination = await environment(required(target));
       result = await client.createDeployment({
         requestId: requestId(),
         environmentId: destination.id,
         versionSetRevisionId: required(positionals[1]),
         expectedGeneration: expectedGeneration(destination.generation),
-        kind: command === "start" ? "deploy" : "rollback",
+        kind: "deploy",
+      });
+      break;
+    }
+    case "rollback": {
+      // A rollback names the deployment whose selection it restores (L1).
+      const destination = await environment(required(target));
+      result = await client.createDeployment({
+        requestId: requestId(),
+        environmentId: destination.id,
+        selectionDeploymentId: required(positionals[1]),
+        expectedGeneration: expectedGeneration(destination.generation),
+        kind: "rollback",
       });
       break;
     }
     case "promote": {
       const source = await environment(required(target));
       const destination = await environment(required(positionals[1]));
-      if (source.acceptedVersionSetRevisionId === null)
+      if (source.acceptedDeploymentId === null)
         throw new Error(`No accepted release in ${source.id}`);
+      // A promotion takes the source's accepted selection (M2).
       result = await client.createDeployment({
         requestId: requestId(),
         environmentId: destination.id,
         sourceEnvironmentId: source.id,
-        versionSetRevisionId: source.acceptedVersionSetRevisionId,
         expectedGeneration: expectedGeneration(destination.generation),
         kind: "promote",
       });
@@ -372,9 +374,6 @@ async function readCommand(
           ? await client.overview()
           : await client.deployment(target);
       break;
-    case "imports":
-      result = await client.imports();
-      break;
     case "inventory": {
       const overview = await client.overview();
       result = overview.environments;
@@ -391,21 +390,17 @@ async function readCommand(
 
 async function registerCommand(
   client: DeliveryClient,
-  command: "pipeline" | "environment" | "import",
+  command: "pipeline" | "environment",
   positionals: string[],
   options: DeployOptions,
 ) {
   const raw: unknown = await Bun.file(required(options.file)).json();
-  let result: unknown;
-  if (command === "pipeline")
-    result = await client.registerPipeline(
-      IdentifierSchema.parse(required(positionals[1])),
-      PipelineDefinitionSchema.parse(raw),
-    );
-  else if (command === "environment")
-    result = await client.registerEnvironment(
-      RegisterEnvironmentSchema.parse(raw),
-    );
-  else result = await client.importSnapshot(ImportSnapshotSchema.parse(raw));
+  const result: unknown =
+    command === "pipeline"
+      ? await client.registerPipeline(
+          IdentifierSchema.parse(required(positionals[1])),
+          PipelineDefinitionSchema.parse(raw),
+        )
+      : await client.registerEnvironment(RegisterEnvironmentSchema.parse(raw));
   return { result, exitCode: 0 };
 }

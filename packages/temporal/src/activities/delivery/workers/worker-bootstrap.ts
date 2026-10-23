@@ -28,6 +28,7 @@ import {
   controlPlaneTemplates,
   ControlPlaneTemplatesSchema,
 } from "#lib/delivery/workers/worker-control-plane.ts";
+import { executorIdentity } from "#activities/delivery/model/stages.ts";
 
 export type WorkerBootstrapEffects = {
   inspect: (
@@ -90,24 +91,28 @@ const external: WorkerBootstrapEffects = {
       operationId,
     );
   },
-  async routing(pool) {
-    const connection = await Connection.connect({
-      address:
-        "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
-      connectTimeout: "10 seconds",
-    });
-    try {
-      await connection.withDeadline(Date.now() + 30_000, async () => {
-        await requirePoolRoutingCoverage(
-          pool,
-          retirementEffects(connection).routing,
-        );
-      });
-    } finally {
-      await connection.close();
-    }
-  },
+  routing: requireLiveRoutingCoverage,
 };
+
+/** Every served namespace and queue routes to a host the frozen pool keeps. */
+export async function requireLiveRoutingCoverage(
+  pool: NonNullable<DeploymentDetail["deployment"]["workerSnapshot"]>,
+): Promise<void> {
+  const connection = await Connection.connect({
+    address: "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
+    connectTimeout: "10 seconds",
+  });
+  try {
+    await connection.withDeadline(Date.now() + 30_000, async () => {
+      await requirePoolRoutingCoverage(
+        pool,
+        retirementEffects(connection).routing,
+      );
+    });
+  } finally {
+    await connection.close();
+  }
+}
 
 /** Keep legacy pollers until exact replacement Pods and every served route are observed. */
 export async function bootstrapDeliveryWorkerHosts(
@@ -145,6 +150,7 @@ export async function bootstrapDeliveryWorkerHosts(
     operationId,
     message: "Retain every legacy poller while starting exact retained hosts",
     evidence: [],
+    executor: executorIdentity(),
   });
   await effects.select(bootstrap);
   await effects.sync(bootstrap, operationId);
@@ -169,5 +175,6 @@ export async function bootstrapDeliveryWorkerHosts(
           "Legacy coverage and replacement Pod digests verified before legacy shutdown",
       },
     ],
+    executor: executorIdentity(),
   });
 }

@@ -1,6 +1,10 @@
 import { createHash } from "node:crypto";
 import { describe, expect, test } from "vitest";
-import { registryLocation, resolveManifestDigest } from "./oci-registry.ts";
+import {
+  registryLocation,
+  resolveManifest,
+  resolveManifestDigest,
+} from "./oci-registry.ts";
 
 const manifest = new TextEncoder().encode(
   JSON.stringify({
@@ -206,5 +210,49 @@ describe("resolveManifestDigest", () => {
     await expect(
       resolveManifestDigest(location, "17.2", transport),
     ).rejects.toMatchObject({ code: "INVALID" });
+  });
+});
+
+/** registry.k8s.io answering every manifest read with a redirect to `target`. */
+function redirecting(target: string) {
+  const urls: string[] = [];
+  const transport = async (url: string | URL) => {
+    const href = url.toString();
+    urls.push(href);
+    if (href.startsWith("https://registry.k8s.io/"))
+      return new Response(null, {
+        status: 307,
+        headers: { Location: target },
+      });
+    return new Response(manifest, {
+      headers: { "Docker-Content-Digest": manifestDigest },
+    });
+  };
+  return { urls, transport };
+}
+
+describe("registry.k8s.io's backing registry", () => {
+  const k8s = registryLocation("https://registry.k8s.io", "kueue/charts/kueue");
+  const backing =
+    "https://us-west1-docker.pkg.dev/v2/k8s-artifacts-prod/images/kueue/charts/kueue/manifests/0.20.1";
+  test("follows the one reviewed redirect and hashes the manifest served there", async () => {
+    const { urls, transport } = redirecting(backing);
+    const resolved = await resolveManifest(k8s, "0.20.1", transport);
+    expect(resolved.digest).toBe(manifestDigest);
+    expect(new TextDecoder().decode(resolved.bytes)).toContain("schemaVersion");
+    expect(urls).toEqual([
+      "https://registry.k8s.io/v2/kueue/charts/kueue/manifests/0.20.1",
+      backing,
+    ]);
+  });
+
+  test("refuses a redirect anywhere else", async () => {
+    for (const target of [
+      "https://evil.example/v2/kueue/manifests/0.20.1",
+      "http://us-west1-docker.pkg.dev/v2/x/manifests/0.20.1",
+    ])
+      await expect(
+        resolveManifestDigest(k8s, "0.20.1", redirecting(target).transport),
+      ).rejects.toMatchObject({ code: "INVALID" });
   });
 });

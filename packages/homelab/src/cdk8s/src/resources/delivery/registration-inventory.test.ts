@@ -19,6 +19,7 @@ import {
 import { STATIC_SITE_DELIVERY_OWNERS } from "homelab/src/static-site-delivery-ownership.ts";
 import storagePolicy from "homelab/src/delivery-storage-policy.json";
 import { STATIC_ARCHIVE_BUCKET } from "@shepherdjerred/root-scripts/lib/static-site-publication.ts";
+import { V1_ENVIRONMENT_RENAMES } from "@shepherdjerred/ops-model/delivery-catalog/migration.ts";
 
 const registrations = new URL(
   "../../../../../../delivery/registrations/",
@@ -87,13 +88,23 @@ test("ordinary application registrations match their reviewed delegation definit
   for (const [name, environmentId] of Object.entries(
     ORDINARY_DELIVERY_ENVIRONMENTS,
   )) {
-    const file =
-      name === "arcade"
-        ? "arcade.environment.json"
-        : `ordinary/${name}/environment.json`;
+    const file = Bun.file(
+      new URL(
+        name === "arcade"
+          ? "arcade.environment.json"
+          : `ordinary/${name}/environment.json`,
+        registrations,
+      ),
+    );
+    if (!(await file.exists())) {
+      // A retired v1 registration (X4) is carried onto its catalog successor.
+      expect(V1_ENVIRONMENT_RENAMES[environmentId], name).toBeDefined();
+      expect(DELIVERY_DELEGATION_DEFINITIONS[name]).toBe(environmentId);
+      continue;
+    }
     const environment = z
       .object({ id: z.string(), application: z.string() })
-      .parse(await Bun.file(new URL(file, registrations)).json());
+      .parse(await file.json());
     expect(environment).toMatchObject({ id: environmentId, application: name });
     expect(DELIVERY_DELEGATION_DEFINITIONS[name]).toBe(environmentId);
     applications.push(environment.application);
@@ -130,9 +141,23 @@ test("every served static bucket has one pipeline or an explicit independent wri
         .parse(policy),
     );
   }
-  const registered = pipelines.map((pipeline) => pipeline.bucket).sort();
+  // Per-site registrations are retired (X4): each site is its own catalog
+  // service, carried from its v1 environment onto `<bucket>/prod`. Only
+  // Scout's site steps remain in v1 registrations.
+  expect(pipelines.map((pipeline) => pipeline.bucket).sort()).toEqual([
+    "scout-frontend",
+    "scout-frontend-beta",
+  ]);
+  const registered = Object.keys(STATIC_BUCKET_RELEASE_POLICIES).sort();
   expect(registered).toEqual([...storagePolicy.siteBuckets].sort());
-  expect(pipelines).toHaveLength(15);
+  expect(registered).toHaveLength(15);
+  for (const bucket of registered) {
+    if (bucket.startsWith("scout-frontend")) continue;
+    const environmentId = STATIC_BUCKET_RELEASE_POLICIES[bucket] ?? "";
+    expect(V1_ENVIRONMENT_RENAMES[environmentId], bucket).toBe(
+      `${bucket}/prod`,
+    );
+  }
   for (const stage of ["beta", "prod"]) {
     const environment = z
       .object({ id: z.string() })
@@ -149,9 +174,6 @@ test("every served static bucket has one pipeline or an explicit independent wri
       ).exists(),
     ).toBe(false);
   }
-  expect(registered).toEqual(
-    Object.keys(STATIC_BUCKET_RELEASE_POLICIES).sort(),
-  );
   expect(
     [...registered, ...Object.keys(INDEPENDENT_STATIC_BUCKET_OWNERS)].sort(),
   ).toEqual(staticSites.map((site) => site.bucket).sort());

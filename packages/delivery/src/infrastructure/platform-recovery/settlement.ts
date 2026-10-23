@@ -2,21 +2,11 @@ import { tofuStackPolicy } from "@shepherdjerred/ops-model/platform-policy.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
-import {
-  audit,
-  fingerprint,
-  lock,
-  required,
-  wire,
-} from "#infrastructure/delivery-records.ts";
-import {
-  PlatformReleaseSnapshotSchema,
-  type Principal,
-} from "#shared/contract.ts";
+import { audit, fingerprint, lock } from "#infrastructure/delivery-records.ts";
+import type { Principal } from "#shared/contract.ts";
 import {
   CompletePlatformRecoverySchema,
   FailPlatformRecoverySchema,
-  PlatformRecoveryIntentSchema,
   AdmitPlatformRecoveryApplySchema,
   type CompletePlatformRecovery,
   type AdmitPlatformRecoveryApply,
@@ -24,17 +14,27 @@ import {
 import { pendingRecovery } from "./ownership.ts";
 import { settleRecoveryTarget } from "#infrastructure/recovery-settlement.ts";
 import { requireControlPlaneOwner } from "#infrastructure/control-plane/policy.ts";
+import { findIntent } from "#infrastructure/recovery-intents.ts";
 import {
+  platformIntentView,
+  platformRecoveryKinds,
   platformSettlements,
   recordedPlatformJobs,
-  stoppedRootPriorMatches,
+  recoveryTofuSource,
 } from "./context.ts";
-import { deliveryOperationId } from "#shared/operation-id.ts";
 
+/**
+ * v1 platform kinds keep their reviewed ownership gates. A model tofu
+ * recipe (an ordinary `deploy`) is owned by the reconciled catalog that
+ * declared it, as its original apply was.
+ */
 function requireRecoveryEffectOwner(delivery: Delivery, kind: string) {
   if (kind === "upgrade-control-plane")
     requireControlPlaneOwner(delivery.catalog);
-  else if (delivery.catalog.catalog.platformDeliveryDelegated !== true)
+  else if (
+    platformRecoveryKinds.has(kind) &&
+    delivery.catalog.catalog.platformDeliveryDelegated !== true
+  )
     throw new DeliveryError(
       "INVALID",
       "Infrastructure effects remain with the reviewed legacy source owner",
@@ -69,15 +69,13 @@ async function freshOwnershipProof(
       "CONFLICT",
       "Recovery proof must complete within sixty seconds",
     );
-  const previous = await delivery.database.platformRecoveryIntent.findMany({
-    where: { deploymentId: context.intent.deploymentId },
+  const previous = await delivery.database.recoveryIntent.findMany({
+    where: { deploymentId: context.intent.deploymentId, kind: "platform" },
   });
   const jobs = [
     ...recordedPlatformJobs(context.deployment),
     ...previous.flatMap((row) =>
-      PlatformRecoveryIntentSchema.parse(wire(row)).nativeReceipts.map(
-        (entry) => entry.receipt,
-      ),
+      platformIntentView(row).nativeReceipts.map((entry) => entry.receipt),
     ),
   ];
   const currentApply = context.intent.nativeReceipts.find(
@@ -120,45 +118,39 @@ export async function admitPlatformRecoveryApply(
     const { intent, row } = await pendingRecovery(tx, id);
     requireRecoveryEffectOwner(this, row.kind);
     if (
-      fingerprint(
-        PlatformRecoveryIntentSchema.parse(wire(intent)).nativeReceipts,
-      ) !== fingerprint(context.intent.nativeReceipts)
+      fingerprint(intent.nativeReceipts) !==
+      fingerprint(context.intent.nativeReceipts)
     )
       throw new DeliveryError(
         "CONFLICT",
         "Recovery native checkpoints changed after inspection",
       );
-    if (row.platformSnapshot !== null) {
-      const snapshot = PlatformReleaseSnapshotSchema.parse(
-        row.platformSnapshot,
-      );
-      if (snapshot.kind !== "root-release") {
-        const parsed = PlatformRecoveryIntentSchema.parse(wire(intent));
-        if (
-          parsed.planReceipt === null ||
-          parsed.planFingerprint !== input.planFingerprint ||
-          Date.parse(parsed.planReceipt.expiresAt) <= Date.now()
-        )
-          throw new DeliveryError(
-            "CONFLICT",
-            "Recovery apply requires its exact unexpired saved plan",
-          );
-        const mode = tofuStackPolicy(snapshot.stack).mode;
-        if (!["automatic", "reviewed-plan"].includes(mode))
-          throw new DeliveryError(
-            "INVALID",
-            "This stack remains outside orchestrated recovery apply policy",
-          );
-        if (
-          mode === "reviewed-plan" &&
-          (parsed.planApproval?.decision !== "approved" ||
-            parsed.planApproval.planFingerprint !== parsed.planFingerprint)
-        )
-          throw new DeliveryError(
-            "FORBIDDEN",
-            "Recovery apply requires human approval of the exact saved plan",
-          );
-      }
+    const source = await recoveryTofuSource(tx, row);
+    if (source !== null) {
+      if (
+        intent.planReceipt === null ||
+        intent.planFingerprint !== input.planFingerprint ||
+        Date.parse(intent.planReceipt.expiresAt) <= Date.now()
+      )
+        throw new DeliveryError(
+          "CONFLICT",
+          "Recovery apply requires its exact unexpired saved plan",
+        );
+      const mode = tofuStackPolicy(source.stack).mode;
+      if (!["automatic", "reviewed-plan"].includes(mode))
+        throw new DeliveryError(
+          "INVALID",
+          "This stack remains outside orchestrated recovery apply policy",
+        );
+      if (
+        mode === "reviewed-plan" &&
+        (intent.planApproval?.decision !== "approved" ||
+          intent.planApproval.planFingerprint !== intent.planFingerprint)
+      )
+        throw new DeliveryError(
+          "FORBIDDEN",
+          "Recovery apply requires human approval of the exact saved plan",
+        );
     }
     await audit(tx, actor, {
       action: "platform.recovery_apply_admitted",
@@ -169,7 +161,7 @@ export async function admitPlatformRecoveryApply(
         planFingerprint: input.planFingerprint ?? null,
       },
     });
-    return PlatformRecoveryIntentSchema.parse(wire(intent));
+    return intent;
   });
 }
 
@@ -180,17 +172,14 @@ export async function completePlatformRecovery(
   const [id, raw, actor] = args;
   requireScope(actor, "execute");
   const input = CompletePlatformRecoverySchema.parse(raw);
-  const existing = required(
-    await this.database.platformRecoveryIntent.findUnique({ where: { id } }),
-    "Platform recovery intent",
-  );
+  const existing = await findIntent(this.database, id, "platform");
   if (existing.status !== "pending") {
     if (
       existing.status !== "succeeded" ||
       existing.resultFingerprint !== fingerprint(input)
     )
       throw new DeliveryError("CONFLICT", "Recovery result is immutable");
-    return PlatformRecoveryIntentSchema.parse(wire(existing));
+    return platformIntentView(existing);
   }
   const context = await freshOwnershipProof(this, input, id);
   const expected = platformSettlements(
@@ -202,49 +191,11 @@ export async function completePlatformRecovery(
       "CONFLICT",
       "Recovery target does not match an exact frozen allowed settlement",
     );
-  if (input.settlement.state === "stopped") {
-    const snapshot = context.deployment.deployment.platformSnapshot;
-    const report = input.stoppedRoot;
-    const recorded = recordedPlatformJobs(context.deployment);
-    if (
-      !stoppedRootPriorMatches(context.deployment, context.priorDeployment) ||
-      snapshot?.kind !== "root-release" ||
-      report?.requestId !==
-        deliveryOperationId(
-          `${context.deployment.deployment.id}:root-release`,
-        ) ||
-      report.revision !==
-        snapshot.charts.find(({ name }) => name === "apps")?.artifact.version ||
-      report.applications.filter(({ name }) => name === "apps").length !== 1 ||
-      snapshot.charts.some(
-        ({ name }) =>
-          !report.applications.some((application) => application.name === name),
-      ) ||
-      new Set(report.applications.map(({ name }) => name)).size !==
-        report.applications.length ||
-      recorded.length !== 1 ||
-      !input.nativeJobs.some(
-        (job) =>
-          job.uid === recorded[0]?.uid &&
-          ["Complete", "Failed"].includes(job.status),
-      )
-    )
-      throw new DeliveryError(
-        "CONFLICT",
-        "Stopped root recovery requires its unchanged accepted prior, complete partial-state report and terminal original native Job",
-      );
-  } else if (input.stoppedRoot !== undefined) {
-    throw new DeliveryError(
-      "CONFLICT",
-      "Stopped root evidence cannot describe a different settlement",
-    );
-  }
   return this.database.$transaction(async (tx) => {
     const { intent, row, env } = await pendingRecovery(tx, id);
     if (
-      fingerprint(
-        PlatformRecoveryIntentSchema.parse(wire(intent)).nativeReceipts,
-      ) !== fingerprint(context.intent.nativeReceipts)
+      fingerprint(intent.nativeReceipts) !==
+      fingerprint(context.intent.nativeReceipts)
     )
       throw new DeliveryError(
         "CONFLICT",
@@ -256,7 +207,7 @@ export async function completePlatformRecovery(
       expectedGeneration: env.generation,
       releaseGlobal: true,
     });
-    const result = await tx.platformRecoveryIntent.update({
+    const result = await tx.recoveryIntent.update({
       where: { id },
       data: {
         status: "succeeded",
@@ -271,7 +222,7 @@ export async function completePlatformRecovery(
       requestId: id,
       metadata: { proof: input },
     });
-    return PlatformRecoveryIntentSchema.parse(wire(result));
+    return platformIntentView(result);
   });
 }
 export async function failPlatformRecovery(
@@ -283,19 +234,16 @@ export async function failPlatformRecovery(
   const input = FailPlatformRecoverySchema.parse({ message });
   return this.database.$transaction(async (tx) => {
     await lock(tx, `platform-recovery:${id}`);
-    const row = required(
-      await tx.platformRecoveryIntent.findUnique({ where: { id } }),
-      "Platform recovery intent",
-    );
+    const row = await findIntent(tx, id, "platform");
     if (row.status !== "pending") {
       if (
         row.status !== "failed" ||
         row.resultFingerprint !== fingerprint(input)
       )
         throw new DeliveryError("CONFLICT", "Recovery result is immutable");
-      return PlatformRecoveryIntentSchema.parse(wire(row));
+      return platformIntentView(row);
     }
-    const result = await tx.platformRecoveryIntent.update({
+    const result = await tx.recoveryIntent.update({
       where: { id },
       data: {
         status: "failed",
@@ -310,6 +258,6 @@ export async function failPlatformRecovery(
       requestId: id,
       metadata: input,
     });
-    return PlatformRecoveryIntentSchema.parse(wire(result));
+    return platformIntentView(result);
   });
 }

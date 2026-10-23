@@ -214,14 +214,16 @@ function releasePlanningBases(
     readonly deliveryCatalog: boolean;
     readonly inventory: ReadonlyMap<string, ChartMuseumRelease>;
     readonly temporaryDirectory: string;
+    readonly pipelineNumber: number | undefined;
   },
 ): Promise<ReadonlyMap<string, ChartPlanningBase>> {
-  const { dryRun, deliveryCatalog } = options;
+  const { dryRun, deliveryCatalog, pipelineNumber } = options;
   return planningBases(inputs, {
     version: options.version,
     dryRun,
     deliveryCatalog,
     inventory: options.inventory,
+    ...(pipelineNumber === undefined ? {} : { pipelineNumber }),
     archive: (name) => {
       const release = options.inventory.get(name);
       if (release === undefined) {
@@ -425,6 +427,7 @@ async function main(): Promise<void> {
       deliveryCatalog,
       inventory,
       temporaryDirectory,
+      pipelineNumber: publication?.pipelineNumber,
     });
     const candidatePlan = planCharts(inputs, planningBase);
     const appsInput = inputs.find((input) => input.name === "apps");

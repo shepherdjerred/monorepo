@@ -4,6 +4,7 @@ import { workerFixture } from "#testing/worker-fixture.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { createApp } from "#server/app.ts";
 import { testPublisher } from "#testing/seed.ts";
+import { declareAcquisitions } from "#testing/services.ts";
 import { createHash } from "node:crypto";
 import { seedMinecraftRecovery } from "./minecraft.ts";
 import { seedBrowserForum } from "#testing/browser-forum.ts";
@@ -34,6 +35,8 @@ async function startHarness() {
   await scout.acceptedPool();
   const central = await workerFixture(delivery);
   await central.requestedBaseline();
+  // The catalog document names the Minecraft chart's acquiring service.
+  await declareAcquisitions(cluster.database, "minecraft", ["chart:minecraft"]);
   const chart = new TextEncoder().encode(
     "isolated browser upstream archive fixture",
   );
@@ -109,16 +112,6 @@ async function startHarness() {
   const saved = await checkpointTestPlan(platform.delivery, plan);
   await finishTestPlatform(platform.delivery, plan, saved);
   await testApply(platform.delivery, plan);
-  await platform.delivery.createPlatformDeployment(
-    {
-      kind: "root-release",
-      requestId: "browser/root",
-      environmentId: platform.rootEnvironment.id,
-      expectedGeneration: 0,
-      sourceBuildId: platform.sourceBuildId,
-    },
-    testOperator,
-  );
   await seedPlatformBrowser(
     cluster.database,
     platform.delivery,

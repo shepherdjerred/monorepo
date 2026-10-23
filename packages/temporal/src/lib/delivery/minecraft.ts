@@ -6,6 +6,10 @@ import type {
   DeploymentDetail,
   EvidenceInput,
 } from "@shepherdjerred/delivery/contract";
+import {
+  minecraftUpgradeOf,
+  stepRecipeOf,
+} from "@shepherdjerred/delivery/model-contract";
 
 type MinecraftDetail = Pick<
   DeploymentDetail,
@@ -73,16 +77,44 @@ export function parseMinecraftEligibility(
   return EligibilityFields.parse(EligibilityContract.parse(input));
 }
 
-function target(detail: MinecraftDetail) {
-  const pipeline = detail.pipeline.definition;
-  if (pipeline.kind !== "argocd" || pipeline.minecraftUpgrade === undefined)
+/**
+ * The TSMC server Application an upgrade acts through: the v1 pipeline, or
+ * the model sub-recipe carrying the `minecraft-upgrade` step, whose
+ * `image.tag` must render `version@digest` as the v1 binding did.
+ */
+function serverApplication(detail: MinecraftDetail) {
+  const definition = detail.pipeline.definition;
+  const upgrade = minecraftUpgradeOf(definition);
+  if (upgrade === undefined)
     throw new Error("Pipeline is not a specialized Minecraft upgrade");
+  if (definition.kind === "argocd")
+    return {
+      upgrade,
+      name: definition.application,
+      namespace: definition.namespace,
+      environmentApplication: detail.environment.application,
+      imageTag: definition.artifactParameters["image.tag"],
+    };
+  const recipe = stepRecipeOf(definition, "minecraft-upgrade");
+  const tag = recipe?.artifactParameters["image.tag"];
+  return {
+    upgrade,
+    name: recipe?.application.name,
+    namespace: recipe?.application.destination.namespace,
+    // A compound environment names its first Application; the server is a sub-recipe.
+    environmentApplication: recipe?.application.name,
+    imageTag: tag?.format === "tag-digest" ? tag.component : undefined,
+  };
+}
+
+function target(detail: MinecraftDetail) {
+  const server = serverApplication(detail);
   if (
     detail.deployment.serviceId !== "minecraft" ||
     detail.deployment.environmentId !== "minecraft/tsmc" ||
-    detail.environment.application !== "minecraft-tsmc" ||
-    pipeline.application !== "minecraft-tsmc" ||
-    pipeline.namespace !== "minecraft-tsmc"
+    server.environmentApplication !== "minecraft-tsmc" ||
+    server.name !== "minecraft-tsmc" ||
+    server.namespace !== "minecraft-tsmc"
   )
     throw new Error(
       "Minecraft upgrade is restricted to the reviewed TSMC target",
@@ -91,8 +123,8 @@ function target(detail: MinecraftDetail) {
     throw new Error(
       "TSMC cannot reverse an image against a possibly migrated world; use the independent restoration procedure",
     );
-  const component = pipeline.minecraftUpgrade.imageComponent;
-  if (pipeline.artifactParameters["image.tag"] !== component)
+  const component = server.upgrade.imageComponent;
+  if (server.imageTag !== component)
     throw new Error(
       "TSMC must observe its exact selected runtime image binding",
     );
@@ -103,7 +135,19 @@ function target(detail: MinecraftDetail) {
     !/^\w[\w.-]{0,127}$/u.test(artifact.version)
   )
     throw new Error("TSMC requires its canonical immutable image artifact");
-  return { artifact, upgrade: pipeline.minecraftUpgrade };
+  return { artifact, upgrade: server.upgrade };
+}
+
+/**
+ * The model server's repository parameter: its `image.tag` artifact
+ * parameter renders `version@digest`, and the chart joins the two.
+ */
+export function minecraftModelParameters(
+  detail: MinecraftDetail,
+): Record<string, string> {
+  if (detail.pipeline.definition.kind === "argocd") return {};
+  const { artifact } = target(detail);
+  return { "image.repository": artifact.uri };
 }
 
 /** Upstream minecraft concatenates repository + ':' + tag; never pass a full URI as tag. */

@@ -10,6 +10,7 @@ import type { PendingReplication } from "@shepherdjerred/delivery/artifact-contr
 import type { DeliveryActivities } from "#activities/delivery/index.ts";
 import type { PlatformDeliveryActivities } from "#activities/delivery/platform/index.ts";
 import type { DeliveryReplicationActivities } from "#activities/delivery/replication/copy.ts";
+import type { DeliveryColdStartActivities } from "#activities/delivery/model/cold-start.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const metadata = proxyActivities<DeliveryActivities>({
@@ -67,6 +68,23 @@ const controlPlane = proxyActivities<PlatformDeliveryActivities>({
     maximumInterval: "30 seconds",
   },
 });
+/** Off-cluster writes run on the backup worker, which holds the R2 credentials. */
+const backup = proxyActivities<DeliveryColdStartActivities>({
+  taskQueue: TASK_QUEUES.BACKUP,
+  scheduleToCloseTimeout: "10 minutes",
+  startToCloseTimeout: "2 minutes",
+  retry: { maximumAttempts: 5, initialInterval: "10 seconds" },
+});
+/**
+ * The cold-start snapshot of an acceptance retries until it lands: the
+ * deployment is already terminal, and nothing else revisits it to write the
+ * snapshot (X7). Each write is idempotent and never moves `latest.json` back.
+ */
+const coldStartBackup = proxyActivities<DeliveryColdStartActivities>({
+  taskQueue: TASK_QUEUES.BACKUP,
+  startToCloseTimeout: "2 minutes",
+  retry: { initialInterval: "10 seconds", maximumInterval: "10 minutes" },
+});
 const replication = proxyActivities<DeliveryReplicationActivities>({
   taskQueue: TASK_QUEUES.BACKUP,
   // The backup worker runs one Activity at a time and the dispatch Workflow
@@ -86,6 +104,25 @@ const replication = proxyActivities<DeliveryReplicationActivities>({
  * qualification and dispatch Activities.
  */
 export const DELIVERY_REPLICATION_PATCH = "delivery-dispatch-replication-v1";
+
+/**
+ * Deployments of model recipes run the step executor (T3). Histories recorded
+ * before it never reach this branch: their prepare result carries no `model`.
+ */
+export const DELIVERY_MODEL_EXECUTOR_PATCH = "delivery-model-executor-v1";
+
+/**
+ * Once per dispatch tick: monitors and self-heal drift are observed and
+ * removed environments' Applications are deleted (4.19, T4, 4.10). Ticks
+ * recorded before them replay without these Activities.
+ */
+export const DELIVERY_DISPATCH_MODEL_PATCH = "delivery-dispatch-model-v1";
+
+/**
+ * An acceptance's cold-start write retries until it lands (X7). Histories
+ * recorded before it keep their bounded five attempts.
+ */
+export const DELIVERY_COLD_START_RETRY_PATCH = "delivery-cold-start-retry-v1";
 
 /** Artifacts replicated per dispatch tick; the rest wait for the next one. */
 const REPLICATIONS_PER_DISPATCH = 10;
@@ -151,6 +188,22 @@ async function replicatePendingArtifacts(): Promise<unknown[]> {
   return failures;
 }
 
+type Ready = Extract<
+  Awaited<ReturnType<DeliveryActivities["prepareDelivery"]>>,
+  { status: "ready" }
+>;
+
+/** TRMNL repair, control-plane and platform releases run one Activity each. */
+async function specializedRelease(deploymentId: string, ready: Ready) {
+  if (ready.trmnlRepair)
+    return await mutation.applyDeliveryTrmnlPlugins(deploymentId);
+  if (ready.controlPlane)
+    return await controlPlane.executeDeliveryControlPlane(deploymentId);
+  return ready.platform
+    ? await platform.executeDeliveryPlatform(deploymentId)
+    : null;
+}
+
 export async function deliveryDeploymentWorkflow(input: {
   deploymentId: string;
 }): Promise<void> {
@@ -163,33 +216,18 @@ export async function deliveryDeploymentWorkflow(input: {
     }
     if (ready.status === "terminal") return;
     claimed = true;
-    if (ready.trmnlRepair) {
-      const evidence = await mutation.applyDeliveryTrmnlPlugins(
-        input.deploymentId,
-      );
-      await metadata.finishDelivery(input.deploymentId, {
-        status: "succeeded",
-        evidence,
-      });
+    if (ready.model && patched(DELIVERY_MODEL_EXECUTOR_PATCH)) {
+      await runModelRecipe(input.deploymentId);
+      // The result is recorded; nothing after acceptance may rewrite it.
+      claimed = false;
+      await settleModelAcceptance(input.deploymentId);
       return;
     }
-    if (ready.controlPlane) {
-      const evidence = await controlPlane.executeDeliveryControlPlane(
-        input.deploymentId,
-      );
+    const specialized = await specializedRelease(input.deploymentId, ready);
+    if (specialized !== null) {
       await metadata.finishDelivery(input.deploymentId, {
         status: "succeeded",
-        evidence,
-      });
-      return;
-    }
-    if (ready.platform) {
-      const evidence = await platform.executeDeliveryPlatform(
-        input.deploymentId,
-      );
-      await metadata.finishDelivery(input.deploymentId, {
-        status: "succeeded",
-        evidence,
+        evidence: specialized,
       });
       return;
     }
@@ -235,6 +273,60 @@ export async function deliveryDeploymentWorkflow(input: {
   }
 }
 
+/**
+ * The step iterator (T3): each frozen step from the first unsettled one,
+ * renewing the lease first; every step records its intent before its effect.
+ */
+async function runModelRecipe(deploymentId: string) {
+  const plan = await metadata.planDeliveryModel(deploymentId);
+  // Tofu steps hold platform authority and run on the platform queue.
+  const run = async (key: string) =>
+    plan.platform.includes(key)
+      ? await platform.runDeliveryModelPlatformStep(deploymentId, key)
+      : await jobs.runDeliveryModelStep(deploymentId, key);
+  for (const key of plan.keys.slice(plan.resumeAt)) {
+    await metadata.renewDeliveryLease(deploymentId);
+    let step = await run(key);
+    // Operator-run and approve steps wait for a person outside the executor.
+    while (step.waiting) {
+      await sleep("1 minute");
+      await metadata.renewDeliveryLease(deploymentId);
+      step = await run(key);
+    }
+  }
+  const evidence = await observation.acceptDeliveryModel(deploymentId);
+  await metadata.finishDelivery(deploymentId, {
+    status: "succeeded",
+    evidence,
+  });
+}
+
+/** After acceptance: self-heal on the accepted source and the cold-start snapshot (T4, X7). */
+async function settleModelAcceptance(deploymentId: string) {
+  const coldStart = await metadata.settleDeliveryModel(deploymentId);
+  if (coldStart === null) return;
+  const writer = patched(DELIVERY_COLD_START_RETRY_PATCH)
+    ? coldStartBackup
+    : backup;
+  await metadata.recordDeliveryColdStart(
+    deploymentId,
+    await writer.writeDeliveryColdStart(coldStart),
+  );
+}
+
+/** Every observation runs whatever dispatch did; failures surface after it. */
+async function observeAcceptedSelections(): Promise<unknown[]> {
+  const outcomes = await Promise.allSettled([
+    observation.observeDeliveryMonitors(),
+    observation.observeDeliveryDrift(),
+    observation.removeDeliveryTargets(),
+  ]);
+  const failures: unknown[] = [];
+  for (const outcome of outcomes)
+    if (outcome.status === "rejected") failures.push(outcome.reason);
+  return failures;
+}
+
 export async function deliveryDispatchWorkflow() {
   // Receipts land before qualification so a build verifies in the same tick;
   // dispatch still runs when replication fails and the failure surfaces last.
@@ -258,6 +350,9 @@ export async function deliveryDispatchWorkflow() {
     metadata.dispatchDeliveryForumBaselines(),
     metadata.dispatchDeliveryPlatformRecoveries(),
   ]);
+  const observationFailures = patched(DELIVERY_DISPATCH_MODEL_PATCH)
+    ? await observeAcceptedSelections()
+    : [];
   if (dispatched.status === "rejected") throw dispatched.reason;
   if (qualified.status === "rejected") throw qualified.reason;
   if (recovered.status === "rejected") throw recovered.reason;
@@ -266,6 +361,7 @@ export async function deliveryDispatchWorkflow() {
   if (forumBaseline.status === "rejected") throw forumBaseline.reason;
   if (platformRecovered.status === "rejected") throw platformRecovered.reason;
   if (replicationFailures.length > 0) throw replicationFailures[0];
+  if (observationFailures.length > 0) throw observationFailures[0];
   return dispatched.value;
 }
 

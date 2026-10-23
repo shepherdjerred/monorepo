@@ -42,7 +42,11 @@ export const MonitorSchema = z.strictObject({
   /** The image component whose accepted artifact renders `$version` and `$gitSha`. */
   component: ImageComponentNameSchema,
   alarms: z.strictObject({
-    /** Label matchers over the firing `ALERTS` series; `environment` scopes them to this environment (W5). */
+    /**
+     * Label matchers over the firing `ALERTS` series; `environment` scopes
+     * them to this environment (W5). A value starting with `~` is a
+     * regular-expression matcher (`=~`), any other value an exact one.
+     */
     matchers: z
       .record(LabelNameSchema, z.string().min(1))
       .refine(
@@ -86,8 +90,14 @@ export const FiringAlarmSchema = z.strictObject({
   alertname: z.string().min(1),
   severity: AlarmSeveritySchema,
   labels: z.record(LabelNameSchema, z.string()).default({}),
-  activeAt: z.iso.datetime().optional(),
+  /**
+   * When the alert became active (`ALERTS_FOR_STATE`). Only an alarm active
+   * at or after the deployment's claim counts against it; an older one is
+   * recorded as pre-existing and neither rolls back nor blocks settlement.
+   */
+  activeAt: z.iso.datetime({ offset: true }),
 });
+export type FiringAlarm = z.infer<typeof FiringAlarmSchema>;
 /** One executor observation of a watching deployment. */
 export const MonitorObservationInputSchema = z.strictObject({
   observedAt: z.iso.datetime(),
@@ -108,6 +118,24 @@ export const MonitorObservationSchema = MonitorObservationInputSchema.extend({
   createdAt: z.iso.datetime(),
 });
 export type MonitorObservation = z.infer<typeof MonitorObservationSchema>;
+
+/** An accepted Application whose exact source ArgoCD self-heals (T4). */
+export const SelfHealingSchema = z.strictObject({
+  deploymentId: IdentifierSchema,
+  environmentId: IdentifierSchema,
+  application: z.string().min(1),
+  acceptedAt: z.iso.datetime(),
+});
+/** A self-heal ArgoCD ran after acceptance: drift the accepted state reverted (T4). */
+export const DriftObservationSchema = z.strictObject({
+  observedAt: z.iso.datetime(),
+  application: z.string().min(1),
+  startedAt: z.iso.datetime({ offset: true }),
+  phase: z.string().min(1),
+  revision: z.string().min(1).nullable(),
+  resources: z.array(z.string().min(1)).max(200),
+});
+export type DriftObservation = z.infer<typeof DriftObservationSchema>;
 
 /** What the executor needs to observe one watching deployment. */
 export const WatchingMonitorSchema = z
@@ -145,16 +173,48 @@ const monitorStateTimestamps: Record<
   alarmed: { settledAt: false, alarmedAt: true },
 };
 
+/**
+ * `GET /environments/:id/monitor`: the monitor of the accepted deployment.
+ * `monitor` is the declaration its frozen recipe carries, so each evidence
+ * value can be read against its threshold; `latestObservation` is the newest
+ * observation the executor recorded, with its firing alarms. `claimedAt` is
+ * the deployment's claim: alarms active before it are pre-existing (W2),
+ * recorded as evidence but never counted against this deployment.
+ */
 export const MonitorStatusSchema = z
   .strictObject({
     deploymentId: IdentifierSchema.nullable(),
+    claimedAt: z.iso.datetime().nullable(),
     state: MonitorStateSchema,
     policy: MonitorPolicySchema.nullable(),
     settledAt: z.iso.datetime().nullable(),
     alarmedAt: z.iso.datetime().nullable(),
     observations: z.number().int().nonnegative(),
+    monitor: MonitorSchema.nullable(),
+    latestObservation: MonitorObservationSchema.nullable(),
   })
   .superRefine((status, context) => {
+    const refuse = (message: string) => {
+      context.addIssue({ code: "custom", message });
+    };
+    if ((status.monitor === null) !== (status.state === "unmonitored")) {
+      refuse("Only an unmonitored selection has no declared monitor");
+    }
+    if (status.monitor !== null && status.monitor.policy !== status.policy) {
+      refuse("The rollback policy is the declared monitor's policy");
+    }
+    if ((status.deploymentId === null) !== (status.claimedAt === null)) {
+      refuse("A claim time belongs exactly to an accepted deployment");
+    }
+    if ((status.latestObservation === null) !== (status.observations === 0)) {
+      refuse("The latest observation is present exactly when one was recorded");
+    }
+    if (
+      status.latestObservation !== null &&
+      status.latestObservation.deploymentId !== status.deploymentId
+    ) {
+      refuse("Observations belong to the accepted deployment they watch");
+    }
     const timestamps = monitorStateTimestamps[status.state];
     if (
       (status.settledAt !== null) !== timestamps.settledAt &&

@@ -40,10 +40,34 @@ import {
   failDeliveryPlatformRecovery,
   dispatchDeliveryPlatformRecoveries,
 } from "./platform/recovery.ts";
+import { runDeliveryTestStage } from "./test-stage.ts";
+import {
+  acceptDeliveryModel,
+  planDeliveryModel,
+  recordDeliveryColdStart,
+  renewDeliveryLease,
+  runDeliveryModelStep,
+  settleDeliveryModel,
+} from "./model/steps.ts";
+import {
+  observeDeliveryDrift,
+  observeDeliveryMonitors,
+} from "./model/monitor.ts";
+import { removeDeliveryTargets } from "./model/removal.ts";
 
 export const deliveryActivities = {
+  observeDeliveryMonitors,
+  observeDeliveryDrift,
+  removeDeliveryTargets,
+  planDeliveryModel,
+  renewDeliveryLease,
+  runDeliveryModelStep,
+  acceptDeliveryModel,
+  settleDeliveryModel,
+  recordDeliveryColdStart,
   listDeliveryReplications,
   recordDeliveryReplication,
+  runDeliveryTestStage,
   applyDeliveryTrmnlPlugins,
   failDeliveryPlatformRecovery,
   dispatchDeliveryPlatformRecoveries,

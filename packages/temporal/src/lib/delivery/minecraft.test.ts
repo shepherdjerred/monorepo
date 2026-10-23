@@ -26,6 +26,8 @@ function version(digit: string) {
     serviceId: "minecraft",
     revision: 1,
     baseRevisionId: null,
+    lineage: "0".repeat(64),
+    orderKey: "0000000001.0000000000",
     createdAt: timestamp,
     components: {
       "image:the-storm-server": {
@@ -243,12 +245,21 @@ test("source selection consumes Python's completed receipt while retaining fresh
       import.meta.url,
     ),
   ).json();
+  const {
+    configurationRevision,
+    configuration,
+    promotionSourceEnvironmentId: _source,
+    ...declared
+  } = RegisterEnvironmentSchema.parse(registration);
   const detail = DeploymentDetailSchema.parse({
     ...target,
     environment: {
-      ...RegisterEnvironmentSchema.parse(registration),
+      ...declared,
+      application: declared.application ?? null,
+      declaredConfigurationId: configurationRevision,
+      lifecycle: "active",
+      acceptedDeploymentId: null,
       generation: 1,
-      approvalRequired: false,
       promotionSourceEnvironmentId: null,
       desiredVersionSetRevisionId: target.versionSet.id,
       observedVersionSetRevisionId: null,
@@ -262,8 +273,8 @@ test("source selection consumes Python's completed receipt while retaining fresh
       requestId: "preservation/request",
       versionSetRevisionId: target.versionSet.id,
       pipelineRevisionId: target.pipeline.id,
-      configurationRevision: "minecraft-tsmc/1",
-      configuration: {},
+      configurationId: configurationRevision,
+      catalogRevision: "test-catalog",
       expectedGeneration: 0,
       status: "running",
       requestedBy: "publisher",
@@ -274,8 +285,8 @@ test("source selection consumes Python's completed receipt while retaining fresh
       startedAt: timestamp,
       finishedAt: null,
     },
+    configuration: { id: configurationRevision, content: configuration },
     evidence: [],
-    approvals: [],
     stages: [],
   });
   const operationId = deliveryOperationId(

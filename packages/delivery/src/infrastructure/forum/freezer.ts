@@ -1,3 +1,4 @@
+import { forumReleaseOf } from "#shared/model/recipe-view.ts";
 import type {
   Environment,
   PipelineRevision,
@@ -7,7 +8,8 @@ import { ForumBaselineSnapshotSchema } from "#shared/forum-contract.ts";
 import type { ForumBaselineSnapshot } from "#shared/forum-contract.ts";
 import type { Transaction } from "#infrastructure/delivery-data.ts";
 import { artifact } from "#infrastructure/delivery-data.ts";
-import { required, wire } from "#infrastructure/delivery-records.ts";
+import { wire } from "#infrastructure/delivery-records.ts";
+import { acceptedForumBaseline } from "./baseline-context.ts";
 import { DeliveryError } from "#domain/error.ts";
 
 export function validateForumCandidate(
@@ -15,10 +17,9 @@ export function validateForumCandidate(
   selected: VersionSetRevision,
   configuration: Record<string, string>,
 ) {
-  const definition = pipeline.definition;
-  if (definition.kind !== "argocd" || definition.forumRelease === undefined)
-    return;
-  const bundle = selected.components[definition.forumRelease.bundleComponent];
+  const forum = forumReleaseOf(pipeline.definition);
+  if (forum === undefined) return;
+  const bundle = selected.components[forum.bundleComponent];
   if (
     bundle?.origin.kind !== "licensed-bundle" ||
     bundle.serviceId !== "storm-forum" ||
@@ -69,11 +70,7 @@ export async function freezeForumBaseline(
   },
 ) {
   const { environment, pipeline } = input;
-  if (
-    pipeline.definition.kind !== "argocd" ||
-    pipeline.definition.forumRelease === undefined
-  )
-    return null;
+  if (forumReleaseOf(pipeline.definition) === undefined) return null;
   if (
     (await tx.forumBaselineIntent.findFirst({
       where: { environmentId: environment.id, status: "pending" },
@@ -88,23 +85,17 @@ export async function freezeForumBaseline(
     environment.acceptedVersionSetRevisionId !== null
   )
     return null;
-  if (environment.acceptedForumBaselineIntentId === null)
+  const baseline = await acceptedForumBaseline(tx, environment.id);
+  if (baseline === null)
     throw new DeliveryError(
       "CONFLICT",
       "Forum initial upgrade requires an independently observed original runtime baseline",
     );
-  const baseline = required(
-    await tx.forumBaselineIntent.findUnique({
-      where: { id: environment.acceptedForumBaselineIntentId },
-    }),
-    "Original forum baseline",
-  );
   if (
-    baseline.status !== "succeeded" ||
     baseline.environmentId !== environment.id ||
     baseline.pipelineRevisionId !== pipeline.id ||
-    baseline.configurationRevision !== environment.configurationRevision ||
-    baseline.expectedEnvironmentGeneration + 1 > environment.generation
+    baseline.configurationRevision !== environment.declaredConfigurationId ||
+    baseline.expectedEnvironmentGeneration !== environment.generation
   )
     throw new DeliveryError(
       "CONFLICT",

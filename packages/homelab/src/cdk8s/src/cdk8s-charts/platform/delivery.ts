@@ -26,6 +26,7 @@ import { createDeliveryNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/r
 import { createDeliveryMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/monitoring.ts";
 import { deliveryForumEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/forum-bootstrap.ts";
 import { deliveryTrmnlEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/trmnl-bootstrap.ts";
+import { deliveryColdStartEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/cold-start-credential.ts";
 import { createDeliveryCatalogRecovery } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/catalog-recovery.ts";
 import { attachNativeForumReader } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/forum/native-reader.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
@@ -158,6 +159,7 @@ export function createDeliveryChart(
         ...dbEnv,
         ...deliveryForumEnvironment(chart, activation),
         ...deliveryTrmnlEnvironment(chart, activation),
+        ...deliveryColdStartEnvironment(chart, "delivery-cold-start"),
         HOST: EnvValue.fromValue("0.0.0.0"),
         PORT: EnvValue.fromValue("7353"),
         HOME: EnvValue.fromValue("/tmp"),

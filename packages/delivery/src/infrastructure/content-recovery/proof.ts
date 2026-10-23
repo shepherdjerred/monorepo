@@ -11,22 +11,15 @@ export async function inspectContentProof(
   proof: ContentRecoveryOwnership,
   options: { activeRepairJobUIDs?: string[]; restoring?: boolean } = {},
 ) {
-  const { activeRepairJobUIDs = [], restoring = false } = options;
+  const { activeRepairJobUIDs = [] } = options;
   const context = await delivery.contentRecovery(id, {
     id: "internal-content-proof",
     kind: "machine",
     scopes: ["read"],
   });
-  requireContentQuiescence(
-    restoring
-      ? {
-          ...context.intent,
-          expectedEnvironmentGeneration:
-            context.intent.expectedEnvironmentGeneration + 1,
-        }
-      : context.intent,
-    proof,
-  );
+  // Settlement no longer moves the generation (E1): a restoring observation
+  // names the same generation the intent froze.
+  requireContentQuiescence(context.intent, proof);
   const current = context.intent.nativeReceipts.filter(
     (entry) =>
       entry.action === "repair" &&

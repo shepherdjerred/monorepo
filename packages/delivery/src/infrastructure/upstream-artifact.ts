@@ -1,12 +1,16 @@
 import { createHash } from "node:crypto";
+import { composeVerifiedBuild } from "#infrastructure/composition/verified-build.ts";
 import { z } from "zod";
 import rawCatalog from "@shepherdjerred/version-catalog/catalog.json" with { type: "json" };
 import {
+  catalogComponentName,
   componentEntries,
+  ociChart,
   parseVersionCatalog,
+  upstreamName,
 } from "@shepherdjerred/version-catalog";
 import type { VersionCatalogEntry } from "@shepherdjerred/version-catalog";
-import type { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
+import { CatalogComponentSchema } from "@shepherdjerred/ops-model/catalog-document-shape.ts";
 import {
   AcquireUpstreamArtifactSchema,
   ArtifactAcquisitionSchema,
@@ -39,9 +43,15 @@ import {
 import {
   boundedBody,
   registryLocation,
-  resolveManifestDigest,
+  resolveManifest,
 } from "./artifact-stores/oci-registry.ts";
 import type { RegistryLocation } from "./artifact-stores/oci-registry.ts";
+import { replicationPending } from "./artifact-stores/replication.ts";
+import {
+  sourceReview,
+  verifySource,
+  type SourceReview,
+} from "./upstream-source.ts";
 
 export type UpstreamFetch = (
   url: string | URL,
@@ -75,11 +85,15 @@ type Input = z.output<typeof AcquireUpstreamArtifactSchema>;
 type Reviewed =
   | { kind: "chart"; originKey: string; name: string; repository: string }
   | {
-      kind: "image";
+      /** An image, or a chart an OCI registry serves: verified by its manifest. */
+      kind: "image" | "oci-chart";
       originKey: string;
       registry: RegistryLocation;
       tag: string;
-    };
+    }
+  | SourceReview;
+type UpstreamOrigin = { repository: string; name: string; version: string };
+const HELM_CHART_CONFIG = "application/vnd.cncf.helm.config.v1+json";
 
 function registryUrl(entry: VersionCatalogEntry) {
   // Catalog validation guarantees this for component entries.
@@ -92,59 +106,119 @@ function refuse(reason: string): never {
   throw new DeliveryError("INVALID", reason);
 }
 
+/**
+ * The catalog document decides who acquires what: the requesting service
+ * must declare the component with producer `acquisition` (section 4.5).
+ */
+function requireAcquiring(
+  input: Input,
+  service: { components: unknown } | null,
+): void {
+  const declared =
+    service === null
+      ? []
+      : z.array(CatalogComponentSchema).parse(service.components);
+  if (
+    !declared.some(
+      (component) =>
+        component.name === input.artifact.component &&
+        component.producer === "acquisition",
+    )
+  )
+    refuse(
+      `Service ${input.serviceId} does not acquire ${input.artifact.component} in the catalog document`,
+    );
+}
+
+const CATALOG_TYPES = {
+  chart: "helm-chart",
+  image: "image",
+  archive: "source",
+} as const;
+
+/**
+ * The one version-catalog component entry the catalog document's component
+ * name denotes: a chart by its name, an image by its repository basename, a
+ * GitHub source by its repository name.
+ */
+function catalogEntry(
+  input: Input,
+  components: readonly VersionCatalogEntry[],
+): VersionCatalogEntry {
+  const artifactType = CATALOG_TYPES[input.artifact.kind];
+  const matches = components.filter(
+    (candidate) =>
+      candidate.artifactType === artifactType &&
+      catalogComponentName(candidate) === input.artifact.component,
+  );
+  const [entry] = matches;
+  if (entry === undefined || matches.length !== 1)
+    refuse(
+      "Independent acquisition is restricted to exactly one version catalog component entry",
+    );
+  return entry;
+}
+
 /** Map the intent onto exactly one catalog component entry; nothing is read before this passes. */
 function reviewed(
   input: Input,
   components: readonly VersionCatalogEntry[],
-  services: ServiceIndex,
 ): Reviewed {
-  const { artifact, serviceId } = input;
+  const { artifact } = input;
   const origin = artifact.origin;
   if (origin.kind !== "upstream")
     refuse("Upstream acquisition requires explicit original origin");
-  const artifactType = artifact.kind === "chart" ? "helm-chart" : "image";
-  const entry = components.find(
-    (candidate) =>
-      candidate.name === origin.name && candidate.artifactType === artifactType,
-  );
-  if (entry === undefined)
-    refuse(
-      "Independent acquisition is restricted to the version catalog's component entries",
-    );
-  ensureService(serviceId);
+  const entry = catalogEntry(input, components);
+  // Each acquiring service owns its own artifact of an origin: the catalog
+  // document may name several (section 4.5), and concurrent acquisitions by
+  // one service converge on one row.
   const originKey = fingerprint({
+    serviceId: input.serviceId,
     kind: origin.kind,
     repository: origin.repository,
     name: origin.name,
     version: origin.version,
   });
-  if (artifact.kind === "chart") {
-    const repository = `${registryUrl(entry).replace(/\/+$/, "")}/`;
-    const owner = services.byChart(entry.name);
-    if (
-      origin.repository !== repository ||
-      artifact.component !== `chart:${entry.name}` ||
-      (owner !== undefined && owner.id !== serviceId)
-    )
-      refuse(
-        "Chart acquisition must match the catalog component's repository, name and owning service",
-      );
-    if (new URL(artifact.uri).protocol !== "https:")
-      refuse("Chart archive location must be an https URL");
-    return { kind: "chart", originKey, name: entry.name, repository };
-  }
-  if (artifact.kind !== "image")
-    refuse("Upstream acquisition covers charts and images only");
-  const registry = registryLocation(registryUrl(entry), entry.name);
+  if (artifact.kind === "archive") return sourceReview(input, entry, originKey);
+  if (artifact.kind === "image" || ociChart(entry))
+    return registryReview(input, entry, { originKey, origin });
+  const repository = `${registryUrl(entry).replace(/\/+$/, "")}/`;
+  if (origin.repository !== repository || origin.name !== entry.name)
+    refuse(
+      "Chart acquisition must match the catalog component's repository and name",
+    );
+  if (new URL(artifact.uri).protocol !== "https:")
+    refuse("Chart archive location must be an https URL");
+  return { kind: "chart", originKey, name: entry.name, repository };
+}
+
+/**
+ * An image or OCI chart lives at its registry under `upstreamName`: an alias
+ * entry is pulled from, and verified at, its real repository. An OCI chart's
+ * URI names the registry with the `oci://` scheme Helm pulls it by.
+ */
+function registryReview(
+  input: Input,
+  entry: VersionCatalogEntry,
+  { originKey, origin }: { originKey: string; origin: UpstreamOrigin },
+): Reviewed {
+  const name = upstreamName(entry);
+  const registry = registryLocation(registryUrl(entry), name);
+  const chart = input.artifact.kind === "chart";
   if (
     origin.repository !== registryUrl(entry) ||
-    artifact.component !== `image:${entry.name}` ||
-    artifact.uri !== registry.uri
+    origin.name !== name ||
+    input.artifact.uri !== (chart ? `oci://${registry.uri}` : registry.uri)
   )
     refuse(
-      "Image acquisition must match the catalog component's registry, name and image URI",
+      "Registry acquisition must match the catalog component's registry, repository and URI",
     );
-  return { kind: "image", originKey, registry, tag: origin.version };
+  return {
+    kind: chart ? "oci-chart" : "image",
+    originKey,
+    registry,
+    tag: origin.version,
+  };
 }
 
 async function boundedRead(
@@ -241,12 +315,24 @@ async function verifyChart(
       );
 }
 
-async function verifyImage(
+function manifestJson(bytes: Uint8Array): unknown {
+  try {
+    return JSON.parse(new TextDecoder().decode(bytes));
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * The requested tag must resolve to the requested manifest digest; an OCI
+ * chart's manifest must also carry Helm's chart config.
+ */
+async function verifyManifest(
   input: Input,
-  plan: Extract<Reviewed, { kind: "image" }>,
+  plan: Extract<Reviewed, { kind: "image" | "oci-chart" }>,
   transport: UpstreamFetch,
 ) {
-  const digest = await resolveManifestDigest(
+  const { digest, bytes } = await resolveManifest(
     plan.registry,
     plan.tag,
     transport,
@@ -255,6 +341,13 @@ async function verifyImage(
     refuse(
       "Registry manifest for the requested tag differs from the requested digest",
     );
+  if (plan.kind === "oci-chart") {
+    const manifest = z
+      .object({ config: z.object({ mediaType: z.string() }) })
+      .safeParse(manifestJson(bytes));
+    if (manifest.data?.config.mediaType !== HELM_CHART_CONFIG)
+      refuse("Registry artifact for the chart version is not a Helm chart");
+  }
 }
 
 export async function findQualifiedArtifact(
@@ -296,11 +389,11 @@ export async function acquireUpstreamArtifact(
   requireScope(actor, "publish");
   const transport = options.transport ?? fetch;
   const input = AcquireUpstreamArtifactSchema.parse(rawInput);
-  const plan = reviewed(
+  requireAcquiring(
     input,
-    options.components ?? catalogComponents,
-    this.catalog,
+    await this.database.service.findUnique({ where: { id: input.serviceId } }),
   );
+  const plan = reviewed(input, options.components ?? catalogComponents);
   const { originKey } = plan;
   const buildId = await this.database.$transaction(async (tx) => {
     const prior = await request(tx, actor, {
@@ -309,6 +402,7 @@ export async function acquireUpstreamArtifact(
       resultType: "upstream-build",
     });
     if (prior !== null) return prior.resultId;
+    await ensureService(tx, input.serviceId);
     await lock(tx, `artifact-origin:${originKey}`);
     const original = await tx.artifact.findUnique({
       where: { originKey },
@@ -328,6 +422,16 @@ export async function acquireUpstreamArtifact(
         "Immutable upstream origin already identifies different bytes or provenance",
       );
     if (owner === undefined) {
+      // Another service's original of this origin keeps its id; each
+      // acquiring service registers its own artifact id (4.5).
+      if (
+        (await tx.artifact.findUnique({ where: { id: input.artifact.id } })) !==
+        null
+      )
+        throw new DeliveryError(
+          "CONFLICT",
+          `Artifact ${input.artifact.id} already identifies another original; ${input.serviceId} must acquire under its own artifact id`,
+        );
       owner = id();
       await tx.build.create({
         data: {
@@ -360,8 +464,12 @@ export async function acquireUpstreamArtifact(
   });
   if (build.status !== "verified") {
     if (plan.kind === "chart") await verifyChart(input, plan, transport);
-    else await verifyImage(input, plan, transport);
+    else if (plan.kind === "source") await verifySource(input, plan, transport);
+    else await verifyManifest(input, plan, transport);
     await this.database.$transaction(async (tx) => {
+      // PC1: bytes in a self-hosted store (a source tarball) verify only once
+      // their off-cluster replica is recorded; a later acquisition retries.
+      if (await replicationPending(tx, buildId)) return;
       const changed = await tx.build.updateMany({
         where: { id: buildId, status: { in: ["pending", "failed"] } },
         data: {
@@ -370,6 +478,11 @@ export async function acquireUpstreamArtifact(
           verifiedAt: new Date(),
         },
       });
+      if (changed.count > 0)
+        await composeVerifiedBuild(
+          tx,
+          await tx.build.findUniqueOrThrow({ where: { id: buildId } }),
+        );
       if (changed.count > 0)
         await audit(tx, actor, {
           action: "artifact.upstream_verified",

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  AppProjectNameSchema,
   ArchiveComponentNameSchema,
   ChartComponentNameSchema,
   ImageComponentNameSchema,
@@ -10,6 +11,8 @@ import { IdentifierSchema } from "#shared/artifact-contract.ts";
 import { MonitorSchema } from "./monitor-contract.ts";
 import { StaticSitePolicySchema } from "#shared/static-site-contract.ts";
 import { WorkerPoolTargetSchema } from "#shared/worker-contract.ts";
+import { misplacedUpgrades } from "./step-order.ts";
+import { OperatorHostTargetSchema } from "./operator-run-contract.ts";
 
 /**
  * Recipe (model 4.7): an immutable, target-typed description of how one
@@ -36,10 +39,43 @@ const KubernetesNameSchema = z
   .regex(/^[a-z0-9]([-a-z0-9]*[a-z0-9])?$/u)
   .max(253);
 const StringMapSchema = z.record(z.string().min(1), z.string());
+/** An OCI Helm repository named without a scheme, as ArgoCD accepts it (`registry.k8s.io/kueue/charts`). */
+export const OciRepositorySchema = z
+  .string()
+  .regex(/^[a-z0-9]([a-z0-9.-]*[a-z0-9])?(?::\d+)?(?:\/[a-z0-9._-]+)+$/u);
+const HttpsUrlSchema = z.url({ protocol: /^https$/u });
+/** A Helm chart from an HTTPS or OCI repository; the chart artifact binds its revision. */
+export const HelmSourceSchema = z.strictObject({
+  repoURL: z.union([HttpsUrlSchema, OciRepositorySchema]),
+  chart: IdentifierSchema,
+  helm: z
+    .strictObject({
+      releaseName: KubernetesNameSchema.optional(),
+      skipCrds: z.boolean().optional(),
+      valueFiles: z.array(z.string().min(1)).optional(),
+    })
+    .optional(),
+});
+export type HelmSource = z.infer<typeof HelmSourceSchema>;
 /**
- * The whole Application except the fields a deployment binds: the chart
- * `targetRevision` comes from the chart artifact and `helm.parameters` from
- * `artifactParameters` plus the configuration revision.
+ * A path in a Git repository (kustomize or plain manifests). Its revision is
+ * never a literal (C2): an acquired archive component's version, the exact
+ * commit, binds it.
+ */
+export const GitSourceSchema = z.strictObject({
+  repoURL: HttpsUrlSchema,
+  path: z.string().min(1),
+});
+export type GitSource = z.infer<typeof GitSourceSchema>;
+/** The Helm form of an Application source, or null for a Git source. */
+export function helmSource(source: HelmSource | GitSource): HelmSource | null {
+  const parsed = HelmSourceSchema.safeParse(source);
+  return parsed.success ? parsed.data : null;
+}
+/**
+ * The whole Application except the fields a deployment binds: the source
+ * revision comes from the chart (or Git revision) artifact and Helm values
+ * from `artifactParameters` plus the configuration revision.
  */
 export const ApplicationBodySchema = z.strictObject({
   name: KubernetesNameSchema,
@@ -50,22 +86,14 @@ export const ApplicationBodySchema = z.strictObject({
       finalizers: z.array(z.string().min(1)).default([]),
     })
     .default({ labels: {}, annotations: {}, finalizers: [] }),
-  project: z.string().min(1),
+  project: AppProjectNameSchema,
   destination: z.strictObject({
     server: z.url(),
     namespace: KubernetesNameSchema,
   }),
-  source: z.strictObject({
-    repoURL: z.url(),
-    chart: IdentifierSchema,
-    helm: z
-      .strictObject({
-        releaseName: KubernetesNameSchema.optional(),
-        skipCrds: z.boolean().optional(),
-        valueFiles: z.array(z.string().min(1)).optional(),
-      })
-      .optional(),
-  }),
+  source: z.union([HelmSourceSchema, GitSourceSchema]),
+  // No syncPolicy: whether ArgoCD self-heals the accepted exact source is the
+  // adapter's decision (T4), never the recipe's.
   syncOptions: z.array(z.string().min(1)).default([]),
   ignoreDifferences: z
     .array(
@@ -85,6 +113,64 @@ export const ApplicationBodySchema = z.strictObject({
   lifecycle: z.enum(["retain", "cascade"]),
 });
 export type ApplicationBody = z.infer<typeof ApplicationBodySchema>;
+
+/**
+ * The literal shape a Helm value receives from an image artifact. Closed: a
+ * new shape a chart needs gets its own named member.
+ * - `reference`: `<uri>@<digest>`, a complete image reference.
+ * - `tag-digest`: `<version>@<digest>`, for a `.tag` path whose chart
+ *   prefixes its own repository.
+ * - `selected-digest`: `selected@<digest>`, for a tag whose version string
+ *   carries no meaning (openebs's zfs-driver plugin).
+ */
+export const ArtifactParameterFormatSchema = z.enum([
+  "reference",
+  "tag-digest",
+  "selected-digest",
+]);
+export type ArtifactParameterFormat = z.infer<
+  typeof ArtifactParameterFormatSchema
+>;
+/**
+ * What fills one Helm value path: an image component of the deployment's
+ * own selection, rendered in a named format. Another environment's
+ * accepted artifact is bound by a tracking reference component of the
+ * service (A5), which composition fills and an acceptance there recomposes
+ * (R7); the parameter names that component like any other.
+ */
+export const ArtifactParameterSchema = z.strictObject({
+  component: ImageComponentNameSchema,
+  format: ArtifactParameterFormatSchema,
+});
+export type ArtifactParameter = z.infer<typeof ArtifactParameterSchema>;
+export function artifactParameterComponent(value: ArtifactParameter): string {
+  return value.component;
+}
+/** v1 pipelines rendered every artifact parameter as a complete reference. */
+export function referenceParameters(
+  parameters: Readonly<Record<string, string>>,
+): Record<string, ArtifactParameter> {
+  return Object.fromEntries(
+    Object.entries(parameters).map(([path, component]) => [
+      path,
+      { component, format: "reference" as const },
+    ]),
+  );
+}
+/** The value a Helm path receives from the artifact, in the parameter's format. */
+export function renderArtifactParameter(
+  format: ArtifactParameterFormat,
+  artifact: { uri: string; version: string; digest: string },
+): string {
+  switch (format) {
+    case "reference":
+      return `${artifact.uri}@${artifact.digest}`;
+    case "tag-digest":
+      return `${artifact.version}@${artifact.digest}`;
+    case "selected-digest":
+      return `selected@${artifact.digest}`;
+  }
+}
 
 const stepFields = {
   instance: TargetInstanceSchema,
@@ -168,7 +254,7 @@ function stepInstanceExpectation(
   }
 }
 
-function stepComponents(step: KubernetesStep): string[] {
+export function stepComponents(step: KubernetesStep): string[] {
   switch (step.kind) {
     case "worker-rollout":
     case "minecraft-upgrade":
@@ -189,10 +275,17 @@ export const KubernetesApplicationRecipeSchema = z
   .strictObject({
     kind: z.literal("kubernetes-application"),
     application: ApplicationBodySchema,
-    chartComponent: ChartComponentNameSchema,
-    /** Helm value path to the image component whose artifact fills it. */
+    /**
+     * The component whose artifact fixes the source revision: `chart:<chart>`
+     * for a Helm source, an archive of the exact commit for a Git source.
+     */
+    chartComponent: z.union([
+      ChartComponentNameSchema,
+      ArchiveComponentNameSchema,
+    ]),
+    /** Helm value path to what fills it; rendered by the path's form. */
     artifactParameters: z
-      .record(z.string().min(1), ImageComponentNameSchema)
+      .record(z.string().min(1), ArtifactParameterSchema)
       .default({}),
     runner: RunnerReferenceSchema,
     steps: z.array(KubernetesStepSchema).min(2),
@@ -201,11 +294,24 @@ export const KubernetesApplicationRecipeSchema = z
   })
   .superRefine((recipe, context) => {
     const application = `application:${recipe.application.name}`;
-    if (recipe.chartComponent !== `chart:${recipe.application.source.chart}`) {
+    const helm = helmSource(recipe.application.source);
+    if (
+      helm === null
+        ? !recipe.chartComponent.startsWith("archive:")
+        : recipe.chartComponent !== `chart:${helm.chart}`
+    ) {
       context.addIssue({
         code: "custom",
         path: ["chartComponent"],
-        message: "The chart component must name the Application's source chart",
+        message:
+          "A Helm source binds the chart component of its chart; a Git source binds an archive of its revision",
+      });
+    }
+    if (helm === null && Object.keys(recipe.artifactParameters).length > 0) {
+      context.addIssue({
+        code: "custom",
+        path: ["artifactParameters"],
+        message: "Artifact parameters are Helm values; a Git source takes none",
       });
     }
     const kinds = recipe.steps.map((step) => step.kind);
@@ -225,7 +331,12 @@ export const KubernetesApplicationRecipeSchema = z
           "A kubernetes-application recipe runs exactly one apply-safety preflight before exactly one sync",
       });
     }
-    const images = new Set(Object.values(recipe.artifactParameters));
+    for (const issue of misplacedUpgrades(recipe.steps))
+      context.addIssue(issue);
+    // Steps and monitors act on this deployment's own selection only.
+    const images = new Set(
+      Object.values(recipe.artifactParameters).map((value) => value.component),
+    );
     for (const [index, step] of recipe.steps.entries()) {
       const expected = stepInstanceExpectation(step, application);
       if (step.instance !== expected) {
@@ -323,9 +434,11 @@ export const ChannelRecipeSchema = z
 export const OperatorRunRecipeSchema = z
   .strictObject({
     kind: z.literal("operator-run"),
+    /** What the operator tool executes, or a host it changes by hand. */
     wrapped: z.discriminatedUnion("kind", [
       KubernetesApplicationRecipeSchema,
       TofuRecipeSchema,
+      OperatorHostTargetSchema,
     ]),
     /** The stages an operator attestation must cover before acceptance. */
     stages: z.array(IdentifierSchema).min(1),
@@ -359,6 +472,13 @@ export const CompoundRecipeSchema = z
       new Set(recipe.subRecipes.map((sub) => sub.instance)).size ===
       recipe.subRecipes.length,
     "Each sub-recipe holds its own lock instance",
+  )
+  // A saved plan, its one plan-step approval (H6) and its apply bind one
+  // deployment of one stack (D6), so a Tofu stack is always its own recipe.
+  .refine(
+    (recipe) =>
+      recipe.subRecipes.every((sub) => sub.definition.kind !== "tofu"),
+    "A Tofu stack is its own recipe; a compound recipe holds no tofu sub-recipe",
   );
 
 export const RecipeDefinitionSchema = z.discriminatedUnion("kind", [
@@ -367,77 +487,3 @@ export const RecipeDefinitionSchema = z.discriminatedUnion("kind", [
 ]);
 export type RecipeDefinition = z.infer<typeof RecipeDefinitionSchema>;
 export type RecipeKind = RecipeDefinition["kind"];
-
-/** Components a recipe binds, for P3 checks against the owning service. */
-export function recipeComponents(definition: RecipeDefinition): string[] {
-  switch (definition.kind) {
-    case "kubernetes-application":
-      return [
-        ...new Set([
-          definition.chartComponent,
-          ...Object.values(definition.artifactParameters),
-          ...definition.steps.flatMap((step) => stepComponents(step)),
-          ...(definition.oracle.monitor === undefined
-            ? []
-            : [definition.oracle.monitor.component]),
-        ]),
-      ];
-    case "static-site":
-    case "tofu":
-      return [definition.archiveComponent];
-    case "channel":
-      return [definition.artifactComponent];
-    case "operator-run":
-      return recipeComponents(definition.wrapped);
-    case "compound":
-      return [
-        ...new Set(
-          definition.subRecipes.flatMap((sub) =>
-            recipeComponents(sub.definition),
-          ),
-        ),
-      ];
-  }
-}
-
-/** Lock instances a recipe acts on (T1); each is named by exactly one environment (T6). */
-export function recipeInstances(definition: RecipeDefinition): string[] {
-  switch (definition.kind) {
-    case "kubernetes-application":
-      return [...new Set(definition.steps.map((step) => step.instance))];
-    case "static-site":
-      return [`bucket:${definition.bucket}`];
-    case "tofu":
-      return [`stack:${definition.stack}`];
-    case "channel":
-      return [`channel:${definition.store}/${definition.name}`];
-    case "operator-run":
-      return recipeInstances(definition.wrapped);
-    case "compound":
-      return [
-        ...new Set(
-          definition.subRecipes.flatMap((sub) =>
-            recipeInstances(sub.definition),
-          ),
-        ),
-      ];
-  }
-}
-
-/** Runner references a recipe binds (A5). */
-export function recipeRunners(definition: RecipeDefinition): RunnerReference[] {
-  switch (definition.kind) {
-    case "kubernetes-application":
-    case "tofu":
-      return [definition.runner];
-    case "static-site":
-    case "channel":
-      return [];
-    case "operator-run":
-      return recipeRunners(definition.wrapped);
-    case "compound":
-      return definition.subRecipes.flatMap((sub) =>
-        recipeRunners(sub.definition),
-      );
-  }
-}

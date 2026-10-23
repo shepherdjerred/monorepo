@@ -1,22 +1,20 @@
 import {
   CompleteWorkerRecoverySchema,
   FailWorkerRecoverySchema,
-  WorkerRecoveryIntentSchema,
   workerHostSpecification,
 } from "#shared/contract.ts";
 import type { CompleteWorkerRecovery, Principal } from "#shared/contract.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
-import {
-  audit,
-  fingerprint,
-  lock,
-  required,
-  wire,
-} from "#infrastructure/delivery-records.ts";
+import { audit, fingerprint, lock } from "#infrastructure/delivery-records.ts";
 import { evidence } from "#infrastructure/delivery-data.ts";
-import { recoveryOwnership } from "./recovery.ts";
+import {
+  bareFingerprint,
+  findIntent,
+  intentDetail,
+} from "#infrastructure/recovery-intents.ts";
+import { recoveryOwnership, workerIntentView } from "./recovery.ts";
 
 function routeKey(route: {
   namespace: string;
@@ -68,10 +66,7 @@ export async function completeWorkerRecovery(
   const input = CompleteWorkerRecoverySchema.parse(rawInput);
   return this.database.$transaction(async (tx) => {
     await lock(tx, `worker-recovery:${intentId}`);
-    const intent = required(
-      await tx.workerRecoveryIntent.findUnique({ where: { id: intentId } }),
-      "Worker recovery intent",
-    );
+    const intent = await findIntent(tx, intentId, "worker");
     const resultFingerprint = fingerprint(input);
     if (intent.status !== "pending") {
       if (
@@ -82,20 +77,21 @@ export async function completeWorkerRecovery(
           "CONFLICT",
           "Worker recovery result is immutable",
         );
-      return WorkerRecoveryIntentSchema.parse(wire(intent));
+      return workerIntentView(intent);
     }
+    const snapshotFingerprint = bareFingerprint(intent.fingerprint);
+    const poolFingerprint = intentDetail(intent)["poolFingerprint"];
     const context = await recoveryOwnership(
       tx,
       intent.deploymentId,
-      intent.expectedEnvironmentGeneration,
+      intent.expectedGeneration,
     );
     if (
-      input.expectedEnvironmentGeneration !==
-        intent.expectedEnvironmentGeneration ||
-      input.snapshotFingerprint !== intent.snapshotFingerprint ||
-      input.poolFingerprint !== intent.poolFingerprint ||
-      context.snapshotFingerprint !== intent.snapshotFingerprint ||
-      context.poolFingerprint !== intent.poolFingerprint
+      input.expectedEnvironmentGeneration !== intent.expectedGeneration ||
+      input.snapshotFingerprint !== snapshotFingerprint ||
+      input.poolFingerprint !== poolFingerprint ||
+      context.snapshotFingerprint !== snapshotFingerprint ||
+      context.poolFingerprint !== poolFingerprint
     )
       throw new DeliveryError(
         "CONFLICT",
@@ -108,7 +104,7 @@ export async function completeWorkerRecovery(
       input.evidence,
       `worker-recovery/${intentId}`,
     );
-    await tx.applicationLock.delete({
+    await tx.targetLock.deleteMany({
       where: { deploymentId: intent.deploymentId },
     });
     await tx.environment.update({
@@ -119,13 +115,14 @@ export async function completeWorkerRecovery(
       where: { id: intent.deploymentId },
       data: { recoveryRequired: false },
     });
-    const updated = await tx.workerRecoveryIntent.update({
+    const updated = await tx.recoveryIntent.update({
       where: { id: intentId },
       data: {
         status: "succeeded",
         message:
           "Independent read-only inspection verified settled worker operations and routing; original deployment remains failed or canceled",
         resultFingerprint,
+        evidence: input.evidence,
         finishedAt: new Date(),
       },
     });
@@ -135,12 +132,12 @@ export async function completeWorkerRecovery(
       requestId: intentId,
       metadata: {
         observedAt: input.observedAt,
-        snapshotFingerprint: intent.snapshotFingerprint,
-        poolFingerprint: intent.poolFingerprint,
+        snapshotFingerprint,
+        poolFingerprint: input.poolFingerprint,
         routes: input.routes,
       },
     });
-    return WorkerRecoveryIntentSchema.parse(wire(updated));
+    return workerIntentView(updated);
   });
 }
 
@@ -153,10 +150,7 @@ export async function failWorkerRecovery(
   const input = FailWorkerRecoverySchema.parse({ message });
   return this.database.$transaction(async (tx) => {
     await lock(tx, `worker-recovery:${intentId}`);
-    const intent = required(
-      await tx.workerRecoveryIntent.findUnique({ where: { id: intentId } }),
-      "Worker recovery intent",
-    );
+    const intent = await findIntent(tx, intentId, "worker");
     if (intent.status !== "pending") {
       if (
         intent.status !== "failed" ||
@@ -166,9 +160,9 @@ export async function failWorkerRecovery(
           "CONFLICT",
           "Worker recovery result is immutable",
         );
-      return WorkerRecoveryIntentSchema.parse(wire(intent));
+      return workerIntentView(intent);
     }
-    const updated = await tx.workerRecoveryIntent.update({
+    const updated = await tx.recoveryIntent.update({
       where: { id: intentId },
       data: {
         status: "failed",
@@ -183,6 +177,6 @@ export async function failWorkerRecovery(
       requestId: intentId,
       metadata: { message: input.message },
     });
-    return WorkerRecoveryIntentSchema.parse(wire(updated));
+    return workerIntentView(updated);
   });
 }

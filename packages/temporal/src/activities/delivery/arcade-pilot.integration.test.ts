@@ -3,6 +3,7 @@ import {
   createTestDatabase,
   createApp,
   createRecoveryInspector,
+  fakeApplicationReader,
   Delivery,
   testExecutor,
 } from "@shepherdjerred/delivery/testing";
@@ -72,8 +73,10 @@ function startApi() {
     ciRepositoryId: 1,
     qualifyBuild: async () => "verified",
     inspectRecovery: createRecoveryInspector({
-      origin: boundary.url.origin,
-      token: "local-read-only-observer",
+      readApplication: fakeApplicationReader(
+        boundary.url.origin,
+        "local-read-only-observer",
+      ),
     }),
     config: {
       publicOrigin: "http://localhost",
@@ -201,21 +204,32 @@ async function publish(number: number) {
   return selected;
 }
 
+/** Deploy a set revision, or roll back to the deployment that froze a selection (L1). */
 async function request(
   versionId: string,
   requestId: string,
-  kind: "deploy" | "rollback" = "deploy",
+  rollbackTo?: string,
 ) {
   const overview = await client().overview();
   const environment = overview.environments[0];
   if (environment === undefined) throw new Error("Pilot environment missing");
-  return await client().createDeployment({
-    requestId,
-    environmentId: registration.id,
-    versionSetRevisionId: versionId,
-    expectedGeneration: environment.generation,
-    kind,
-  });
+  return await client().createDeployment(
+    rollbackTo === undefined
+      ? {
+          requestId,
+          environmentId: registration.id,
+          versionSetRevisionId: versionId,
+          expectedGeneration: environment.generation,
+          kind: "deploy",
+        }
+      : {
+          requestId,
+          environmentId: registration.id,
+          selectionDeploymentId: rollbackTo,
+          expectedGeneration: environment.generation,
+          kind: "rollback",
+        },
+  );
 }
 
 function observe(
@@ -348,15 +362,15 @@ test("real Arcade definition accepts, rolls back exact frozen inputs, and recove
   const second = await publish(2);
   const newer = await request(second.id, "pilot/newer");
   await accept(newer.id, await claim(newer.id));
-  const rollback = await request(first.id, "pilot/rollback", "rollback");
+  const rollback = await request(first.id, "pilot/rollback", baseline.id);
   const frozenRollback = await claim(rollback.id);
   expect(frozenRollback.deployment.pipelineRevisionId).toBe(
     registration.pipelineRevisionId,
   );
-  expect(frozenRollback.deployment.configurationRevision).toBe(
+  expect(frozenRollback.deployment.configurationId).toBe(
     registration.configurationRevision,
   );
-  expect(frozenRollback.deployment.configuration).toEqual(
+  expect(frozenRollback.configuration.content).toEqual(
     registration.configuration,
   );
   const rolledBack = await accept(rollback.id, frozenRollback);
@@ -409,7 +423,7 @@ test("real Arcade definition accepts, rolls back exact frozen inputs, and recove
     recovered.evidence.some(
       (entry) =>
         entry.operationId === settled.externalId &&
-        entry.summary.includes("Independent Argo readback"),
+        entry.summary.includes("Independent Application readback"),
     ),
   ).toBe(true);
   const retried = await client().retry(interrupted.id, {

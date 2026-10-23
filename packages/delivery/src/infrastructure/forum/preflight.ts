@@ -9,6 +9,7 @@ import {
   required,
 } from "#infrastructure/delivery-records.ts";
 import { DeliveryError } from "#domain/error.ts";
+import { forumSourceStageKey } from "#shared/model/recipe-view.ts";
 import { forumBaseline } from "./baseline-requests.ts";
 import type { InspectForumBaseline } from "./baseline-settlement.ts";
 import { lockForumBaseline } from "./baseline-context.ts";
@@ -82,16 +83,21 @@ export async function verifyForumDeploymentBaseline(
         }),
         "Forum environment",
       ),
-      held = await tx.applicationLock.findUnique({ where: { deploymentId } });
+      held = await tx.targetLock.findFirst({ where: { deploymentId } });
     if (
       held === null ||
       deployment.status !== "running" ||
       deployment.cancelRequested ||
       environment.activeDeploymentId !== deploymentId ||
-      environment.generation !== deployment.expectedGeneration + 1 ||
+      environment.generation !== deployment.expectedGeneration ||
       fingerprint(deployment.forumBaselineSnapshot) !== fingerprint(snapshot) ||
+      // The candidate source is written at `reconcile` (v1) or at the
+      // forum Application's apply-safety step (model).
       (await tx.stage.findFirst({
-        where: { deploymentId, key: "reconcile" },
+        where: {
+          deploymentId,
+          key: forumSourceStageKey(detail.pipeline.definition),
+        },
       })) !== null
     )
       throw new DeliveryError(

@@ -33,6 +33,18 @@ const PipelineSchema = z.object({
   namespace: z.string(),
   artifactParameters: z.record(z.string(), z.string()),
 });
+/**
+ * The shared-site proxy's v1 registration is retired (X4); its catalog
+ * successor binds the same selected image, so the chart is checked here.
+ */
+const CATALOG_ONLY_BINDINGS: Readonly<Record<string, unknown>> = {
+  "s3-static-sites": {
+    namespace: "s3-static-sites",
+    artifactParameters: {
+      "delivery.images.caddy-s3proxy": "image:caddy-s3proxy",
+    },
+  },
+};
 const ManifestSchema = z.object({
   kind: z.string(),
   metadata: z.object({ name: z.string() }),
@@ -213,14 +225,16 @@ async function render(chart: Chart, values: readonly string[]) {
 test.each(Object.keys(ORDINARY_DELIVERY_ENVIRONMENTS))(
   "%s renders every reviewed selected image, including init containers and private readers",
   async (name) => {
-    const input: unknown = await Bun.file(
-      new URL(
-        name === "arcade"
-          ? "arcade.pipeline.json"
-          : `ordinary/${name}/pipeline.json`,
-        pipelines,
-      ),
-    ).json();
+    const input: unknown =
+      CATALOG_ONLY_BINDINGS[name] ??
+      (await Bun.file(
+        new URL(
+          name === "arcade"
+            ? "arcade.pipeline.json"
+            : `ordinary/${name}/pipeline.json`,
+          pipelines,
+        ),
+      ).json());
     const pipeline = PipelineSchema.parse(input);
     const bindings = Object.entries(pipeline.artifactParameters);
     const selected = new Map(

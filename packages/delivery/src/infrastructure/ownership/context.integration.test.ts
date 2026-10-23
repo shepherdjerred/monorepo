@@ -55,7 +55,11 @@ function app(writes = false, sourceRevision = source) {
         },
       ],
       writesEnabled: () => Promise.resolve(writes),
-      enabledEnvironments: () => Promise.resolve([]),
+      // v2 ownership admits by catalog lifecycle and never reads this flag.
+      enabledEnvironments: () =>
+        Promise.reject(
+          new Error("ownership read delivery-enabled-environments"),
+        ),
     },
     sourceRevision,
   );
@@ -71,7 +75,7 @@ test("admin context binds actual API source, registered generation/pipeline and 
     sourceRevision: source,
     catalogFingerprint: `sha256:${fingerprint(context.delivery.catalog.catalog)}`,
     writesEnabled: false,
-    enabledEnvironments: [],
+    admittingEnvironments: [context.fixture.environment.id],
     counts: {
       applicationLocks: 0,
       platformLocks: 0,
@@ -96,6 +100,22 @@ test("admin context binds actual API source, registered generation/pipeline and 
       where: { id: context.fixture.environment.id },
     });
   expect(currentEnvironment.acceptedVersionSetRevisionId).toBeNull();
+});
+
+test("the handover context admits by catalog lifecycle: a retired environment admits nothing", async () => {
+  await context.cluster.database.environment.update({
+    where: { id: context.fixture.environment.id },
+    data: { lifecycle: "retired" },
+  });
+  const response = await app().request("/api/v1/ownership-handover-context", {
+    headers: admin,
+  });
+  expect(response.status).toBe(200);
+  const observed = OwnershipHandoverContextSchema.parse(await response.json());
+  expect(observed.admittingEnvironments).toEqual([]);
+  expect(observed.targets.map((row) => row.environmentId)).toEqual([
+    context.fixture.environment.id,
+  ]);
 });
 
 test("the handover read is admin-only and an API without real baked source cannot authorize it", async () => {
@@ -126,12 +146,11 @@ test("quarantine and ownership counts come from all PG rows, independently of th
     where: { id: deployment.id },
   });
   const {
-    configuration: _configuration,
     workerSnapshot: _worker,
     platformSnapshot: _platform,
     controlPlaneSnapshot: _control,
     forumBaselineSnapshot: _forum,
-    previousAcceptedConfiguration: _previous,
+    admissionSnapshot: _admission,
     ...columns
   } = raw;
   await context.cluster.database.deployment.createMany({
@@ -139,7 +158,6 @@ test("quarantine and ownership counts come from all PG rows, independently of th
       ...columns,
       id: `terminal-${String(index)}`,
       requestId: `terminal/${String(index)}`,
-      configuration: {},
       status: "canceled",
       createdAt: new Date(Date.now() + index + 1000),
     })),
@@ -157,57 +175,62 @@ test("quarantine and ownership counts come from all PG rows, independently of th
     activeEnvironments: 1,
   });
   expect(observed.targets[0]?.generation).toBe(
-    context.fixture.environment.generation + 1,
+    context.fixture.environment.generation,
   );
 });
 
-test("root handover uses its canonical registration and rejects different runner or application identities", async () => {
+test("the retired root has no reviewed definition and cannot be registered (X6)", async () => {
   const definitions = await reviewedOwnershipDefinitions();
-  const root = definitions.get("gitops/root");
-  if (root === undefined)
-    throw new Error("Canonical root registration missing");
-  expect(root.environment).toMatchObject({
-    application: "apps",
-    pipelineRevisionId: "platform/root/1",
-  });
-  expect(root.pipeline.kind).toBe("root-release");
-  const pipeline = await context.delivery.registerPipeline(
-    root.environment.pipelineRevisionId,
-    root.pipeline,
+  expect(definitions.has("gitops/root")).toBe(false);
+  await context.delivery.registerPipeline(
+    "platform/root/1",
+    {
+      kind: "root-release",
+      runnerImage: `docker.io/shepherdjerred/ci-base@sha256:${"f".repeat(64)}`,
+    },
     testOperator,
   );
-  const environment = await context.delivery.registerEnvironment(
-    root.environment,
-    testOperator,
-  );
-  const response = await app().request("/api/v1/ownership-handover-context", {
-    headers: admin,
-  });
-  expect(response.status).toBe(200);
-  expect(
-    OwnershipHandoverContextSchema.parse(await response.json()).targets,
-  ).toContainEqual(
-    expect.objectContaining({
-      environmentId: "gitops/root",
-      application: "apps",
-      pipelineRevisionId: "platform/root/1",
-      pipeline: root.pipeline,
-    }),
-  );
-  expect(() =>
-    requireReviewedOwnershipDefinition(definitions, environment, {
-      ...pipeline,
-      definition: {
-        kind: "root-release",
-        runnerImage: `docker.io/shepherdjerred/ci-base@sha256:${"f".repeat(64)}`,
+  await expect(
+    context.delivery.registerEnvironment(
+      {
+        id: "gitops/root",
+        serviceId: "gitops",
+        name: "Root",
+        application: "apps",
+        pipelineRevisionId: "platform/root/1",
+        configurationRevision: "platform/1",
+        configuration: {},
+        automatic: false,
       },
+      testOperator,
+    ),
+  ).rejects.toThrow(/root release is retired/u);
+});
+
+test("handover rejects a different runner or application identity", async () => {
+  const definitions = await reviewedOwnershipDefinitions();
+  const reviewed = definitions.get("arcade/prod");
+  if (reviewed === undefined)
+    throw new Error("Canonical Arcade registration missing");
+  const requested = await context.delivery.createDeployment(
+    context.input("handover/1"),
+    testOperator,
+  );
+  const env = await context.delivery.detail(requested.id);
+  expect(() =>
+    requireReviewedOwnershipDefinition(definitions, env.environment, {
+      ...env.pipeline,
+      definition: PipelineDefinitionSchema.parse({
+        ...reviewed.pipeline,
+        namespace: "unreviewed",
+      }),
     }),
   ).toThrow("exact code-reviewed registered pipeline");
   expect(() =>
     requireReviewedOwnershipDefinition(
       definitions,
-      { ...environment, application: "unreviewed-root" },
-      pipeline,
+      { ...env.environment, application: "unreviewed-root" },
+      env.pipeline,
     ),
   ).toThrow("exact code-reviewed registered pipeline");
 });
@@ -228,5 +251,5 @@ test("fresh admission changes during the same PG observation fail closed", async
     { headers: admin },
   );
   expect(response.status).toBe(503);
-  expect(await context.cluster.database.applicationLock.count()).toBe(0);
+  expect(await context.cluster.database.targetLock.count()).toBe(0);
 });

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { CreateDeploymentV2Schema } from "./deployment-request-contract.ts";
 import * as errors from "./client-error.ts";
 export const DeliveryClientError = errors.DeliveryClientError;
 export type DeliveryClientError = InstanceType<
@@ -8,10 +9,10 @@ import { createRequester, query, type RequestOptions } from "./http-request.ts";
 import {
   ArtifactVersionSchema,
   LatestQualifiedArtifactQuerySchema,
+  LatestRetainableArtifactQuerySchema,
   DeploymentDetailSchema,
   DeploymentSchema,
   EnvironmentSchema,
-  ImportedSnapshotSchema,
   OverviewSchema,
   PipelineRevisionSchema,
   PrincipalSchema,
@@ -44,9 +45,9 @@ import type {
   PublishBuild,
   ComposeVersionSet,
   PipelineDefinition,
-  RegisterEnvironment,
+  RegisterEnvironmentInput,
   LatestQualifiedArtifactQuery,
-  ImportSnapshotSchema,
+  LatestRetainableArtifactQuery,
   RegisterWorkerVersion,
   RetireWorkerVersion,
   FindQualifiedArtifact,
@@ -76,6 +77,7 @@ import type {
   ContentBarrierRestoration,
 } from "./contract.ts";
 import type { RecordArtifactReplication } from "./artifact-contract.ts";
+import { ApprovalV2Schema } from "./model/approval-contract.ts";
 
 export function createDeliveryClient(options: RequestOptions) {
   const request = createRequester(options);
@@ -89,6 +91,13 @@ export function createDeliveryClient(options: RequestOptions) {
         `/artifacts/latest-qualified?${new URLSearchParams(LatestQualifiedArtifactQuerySchema.parse(input)).toString()}`,
         ArtifactVersionSchema,
       ),
+    latestRetainableArtifact: (input: LatestRetainableArtifactQuery) => {
+      const parsed = LatestRetainableArtifactQuerySchema.parse(input);
+      return request(
+        `/artifacts/latest-retainable${query({ ...parsed, beforePipeline: String(parsed.beforePipeline) })}`,
+        ArtifactVersionSchema,
+      );
+    },
     versions: (serviceId?: string) =>
       request(
         `/versions${serviceId === undefined ? "" : `?serviceId=${encodeURIComponent(serviceId)}`}`,
@@ -104,8 +113,9 @@ export function createDeliveryClient(options: RequestOptions) {
       ]);
       return diffVersionSets(from, to);
     },
-    createDeployment: (input: CreateDeployment) =>
-      request("/deployments", DeploymentSchema, input),
+    createDeployment: (
+      input: CreateDeployment | z.input<typeof CreateDeploymentV2Schema>,
+    ) => request("/deployments", DeploymentSchema, input),
     createPlatformDeployment: (input: CreatePlatformDeployment) =>
       request("/platform/deployments", DeploymentSchema, input),
     requestPlatformRecovery: (id: string, input: RequestPlatformRecovery) =>
@@ -259,13 +269,14 @@ export function createDeliveryClient(options: RequestOptions) {
         `/platform/plans/${encodeURIComponent(id)}`,
         RecordTofuPlanSchema,
       ),
+    /** The decided approval record (4.13); the deployment is read apart. */
     approve: (
       id: string,
       input: { decision: "approve" | "reject"; reason: string },
     ) =>
       request(
         `/deployments/${encodeURIComponent(id)}/approval`,
-        DeploymentSchema,
+        ApprovalV2Schema,
         input,
       ),
     cancel: (id: string) =>
@@ -397,7 +408,7 @@ export function createDeliveryClient(options: RequestOptions) {
       request("/versions", VersionSetRevisionSchema, input),
     registerPipeline: (id: string, definition: PipelineDefinition) =>
       request("/pipelines", PipelineRevisionSchema, { id, definition }),
-    registerEnvironment: (input: RegisterEnvironment) =>
+    registerEnvironment: (input: RegisterEnvironmentInput) =>
       request("/environments", EnvironmentSchema, input),
     workers: (environmentId: string) =>
       request(
@@ -412,7 +423,6 @@ export function createDeliveryClient(options: RequestOptions) {
         DeploymentSchema,
         input,
       ),
-    imports: () => request("/imports", z.array(ImportedSnapshotSchema)),
     ownershipHandoverContext: () =>
       request("/ownership-handover-context", OwnershipHandoverContextSchema),
     qualifyBuild: (id: string) =>
@@ -421,8 +431,6 @@ export function createDeliveryClient(options: RequestOptions) {
         z.object({ status: z.enum(["pending", "verified", "failed"]) }),
         {},
       ),
-    importSnapshot: (input: z.infer<typeof ImportSnapshotSchema>) =>
-      request("/imports", ImportedSnapshotSchema, input),
   };
 }
 export type DeliveryClient = ReturnType<typeof createDeliveryClient>;

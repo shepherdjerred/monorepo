@@ -27,8 +27,11 @@ test("prior settlement binds frozen configuration even when the same version was
     testExecutor,
   );
   expect(context.priorDeployment?.deployment.id).toBe(fixture.accepted.id);
-  expect(context.priorDeployment?.deployment.configuration).toEqual(
-    failed.deployment.previousAcceptedConfiguration,
+  expect(failed.deployment.previousAcceptedDeploymentId).toBe(
+    fixture.accepted.id,
+  );
+  expect(context.priorDeployment?.deployment.configurationId).toBe(
+    fixture.accepted.configurationId,
   );
 });
 

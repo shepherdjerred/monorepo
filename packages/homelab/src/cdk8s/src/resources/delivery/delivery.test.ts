@@ -14,6 +14,7 @@ import { createDeliveryJobs } from "./jobs.ts";
 import { createDeliveryWorker } from "./worker.ts";
 import { createWoodpeckerStepNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/step-network-policy.ts";
 import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
+import { CI_NPM_CREDENTIALS_ITEM } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
 
 beforeEach(resetProbeRegistry);
 const activation = {
@@ -289,6 +290,23 @@ describe("Delivery infrastructure", () => {
       ).toBe(false);
     }
   });
+  it("grants the npm channel token only once its item is issued", () => {
+    for (const issued of [false, true]) {
+      resetProbeRegistry();
+      const chart = new Chart(new App(), "worker");
+      createDeliveryWorker(
+        chart,
+        {
+          ...activation,
+          argocdItemId: "argo-item",
+          ...(issued ? { npmChannelItemId: "npm-item" } : {}),
+        },
+        "temporal-server",
+      );
+      const tokens = JSON.stringify(chart.toJson()).match(/"NPM_TOKEN"/gu);
+      expect(tokens?.length ?? 0).toBe(issued ? 2 : 0);
+    }
+  });
   it("confines Delivery API egress to publication, CI image registration, and the two archive producers", () => {
     const chart = new Chart(new App(), "ci-network");
     createWoodpeckerStepNetworkPolicy(chart);
@@ -425,6 +443,7 @@ describe("Delivery execution and service bootstrap", () => {
       forumObserverItemId: "es5ddbihz4qeylhjt2x2iemvzi",
       trmnlArchiveReaderItemId: "542onhpijguqgaukmyvbujbu74",
       trmnlKeyItemId: "p7th6tqeel7k2sm47mrrto7oca",
+      npmChannelItemId: CI_NPM_CREDENTIALS_ITEM,
     });
     expect(createDeliveryChart(new App(), undefined).toJson()).toMatchObject([
       { kind: "ConfigMap", data: { active: "false" } },

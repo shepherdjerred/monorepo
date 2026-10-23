@@ -22,6 +22,8 @@ function version(digit: string) {
     serviceId: "storm-forum",
     revision: 1,
     baseRevisionId: null,
+    lineage: "0".repeat(64),
+    orderKey: "0000000001.0000000000",
     createdAt,
     components: {
       image: {
@@ -67,8 +69,16 @@ function fixture() {
     deployment: {
       id: "deployment/1",
       serviceId: "storm-forum",
-      configuration: { "forum.xenforoVersion": "2.3.13" },
-      previousAcceptedConfiguration: { "forum.xenforoVersion": "2.3.12" },
+    },
+    configuration: {
+      id: "storm-forum/2",
+      content: { "forum.xenforoVersion": "2.3.13" },
+      forwardOnly: [],
+    },
+    previousAcceptedConfiguration: {
+      id: "storm-forum/1",
+      content: { "forum.xenforoVersion": "2.3.12" },
+      forwardOnly: [],
     },
     versionSet: version("b"),
     previousAcceptedVersionSet: version("a"),
@@ -161,9 +171,9 @@ describe("forum immutable release selection", () => {
     const result = forumReleaseParameters({
       ...detail,
       previousAcceptedVersionSet: null,
+      previousAcceptedConfiguration: null,
       deployment: {
         ...detail.deployment,
-        previousAcceptedConfiguration: null,
         forumBaselineSnapshot: baseline,
       },
     });
@@ -207,10 +217,7 @@ describe("forum immutable release selection", () => {
     expect(() =>
       forumReleaseParameters({
         ...detail,
-        deployment: {
-          ...detail.deployment,
-          previousAcceptedConfiguration: null,
-        },
+        previousAcceptedConfiguration: null,
       }),
     ).toThrow("accepted XenForo version");
     expect(() =>
@@ -222,7 +229,7 @@ describe("forum immutable release selection", () => {
     expect(() =>
       forumReleaseParameters({
         ...detail,
-        deployment: { ...detail.deployment, configuration: {} },
+        configuration: { ...detail.configuration, content: {} },
       }),
     ).toThrow("explicit selected XenForo");
   });

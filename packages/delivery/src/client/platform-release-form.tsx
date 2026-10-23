@@ -10,21 +10,36 @@ import type {
 import { ErrorNotice } from "#client/components/notices.tsx";
 import { TofuStackSchema } from "@shepherdjerred/ops-model/platform-policy.ts";
 
-export function PlatformReleaseForm({
-  environment,
-  overview,
-  principal,
-  onDeployment,
-}: {
+type Props = {
   environment: Environment;
   overview: Overview;
   principal: Principal;
   onDeployment: (id: string) => Promise<void>;
-}) {
-  const root = environment.id === "gitops/root";
-  const stack = root
-    ? null
-    : TofuStackSchema.parse(environment.id.slice("gitops/tofu:".length));
+};
+
+export function PlatformReleaseForm(props: Props) {
+  if (props.environment.id === "gitops/root")
+    return (
+      <section className="panel" aria-label="Platform release request">
+        <h2>Root release</h2>
+        <p className="notice">
+          The root release is retired. Each service&apos;s environment owns its
+          Applications, and ordering is a prerequisite edge.
+        </p>
+      </section>
+    );
+  return <TofuReleaseForm {...props} />;
+}
+
+function TofuReleaseForm({
+  environment,
+  overview,
+  principal,
+  onDeployment,
+}: Props) {
+  const stack = TofuStackSchema.parse(
+    environment.id.slice("gitops/tofu:".length),
+  );
   const [action, setAction] = useState<"tofu-plan" | "tofu-apply">("tofu-plan");
   const [selected, setSelected] = useState("");
   const queryClient = useQueryClient();
@@ -40,10 +55,7 @@ export function PlatformReleaseForm({
     (build) =>
       build.serviceId === "gitops" &&
       build.status === "verified" &&
-      (root
-        ? build.platformChanges?.root === true
-        : stack !== null &&
-          build.platformChanges?.tofuStacks.includes(stack) === true),
+      build.platformChanges?.tofuStacks.includes(stack) === true,
   );
   const plans = overview.deployments.filter(
     (deployment) =>
@@ -59,16 +71,14 @@ export function PlatformReleaseForm({
       expectedGeneration: environment.generation,
     };
     request.mutate(
-      root
-        ? { ...common, kind: "root-release", sourceBuildId: selected }
-        : action === "tofu-plan"
-          ? { ...common, kind: action, sourceBuildId: selected }
-          : { ...common, kind: action, planDeploymentId: selected },
+      action === "tofu-plan"
+        ? { ...common, kind: action, sourceBuildId: selected }
+        : { ...common, kind: action, planDeploymentId: selected },
     );
   }
   return (
     <section className="panel" aria-label="Platform release request">
-      <h2>{root ? "Root release" : <>OpenTofu · {stack}</>}</h2>
+      <h2>OpenTofu · {stack}</h2>
       <p>
         Request immutable source and original artifacts. Saved-plan application
         uses the existing native state lock, exact state identity and plan
@@ -76,27 +86,25 @@ export function PlatformReleaseForm({
       </p>
       {request.error !== null && <ErrorNotice error={request.error} />}
       <form onSubmit={submit}>
-        {!root && (
-          <label>
-            Operation
-            <select
-              value={action}
-              onChange={(event) => {
-                setAction(
-                  event.target.value === "tofu-apply"
-                    ? "tofu-apply"
-                    : "tofu-plan",
-                );
-                setSelected("");
-              }}
-            >
-              <option value="tofu-plan">Prepare read-only plan</option>
-              <option value="tofu-apply">Apply exact successful plan</option>
-            </select>
-          </label>
-        )}
         <label>
-          {!root && action === "tofu-apply"
+          Operation
+          <select
+            value={action}
+            onChange={(event) => {
+              setAction(
+                event.target.value === "tofu-apply"
+                  ? "tofu-apply"
+                  : "tofu-plan",
+              );
+              setSelected("");
+            }}
+          >
+            <option value="tofu-plan">Prepare read-only plan</option>
+            <option value="tofu-apply">Apply exact successful plan</option>
+          </select>
+        </label>
+        <label>
+          {action === "tofu-apply"
             ? "Successful plan deployment"
             : "Qualified source build"}
           <select
@@ -107,7 +115,7 @@ export function PlatformReleaseForm({
             }}
           >
             <option value="">Choose exact input</option>
-            {!root && action === "tofu-apply"
+            {action === "tofu-apply"
               ? plans.map((plan) => (
                   <option key={plan.id} value={plan.id}>
                     {plan.id}

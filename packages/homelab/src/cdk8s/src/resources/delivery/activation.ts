@@ -18,6 +18,12 @@ export const DELIVERY_CREDENTIAL_ITEMS: {
   trmnlKey: string | undefined;
   /** Read-only GitHub token (field DELIVERY_GH_TOKEN) for hub commit context. */
   githubReader: string | undefined;
+  /**
+   * npm token (field NPM_TOKEN) that npm channel deployments publish with
+   * (X12): CI's npm publish item (`CI_NPM_CREDENTIALS_ITEM`) until a
+   * package-scoped token replaces it.
+   */
+  npmChannel: string | undefined;
 } = {
   service: "ahbp4izt7fibvwdjwd4ffhiime",
   executor: "ahbp4izt7fibvwdjwd4ffhiime",
@@ -34,6 +40,7 @@ export const DELIVERY_CREDENTIAL_ITEMS: {
   trmnlArchiveReader: "542onhpijguqgaukmyvbujbu74",
   trmnlKey: "p7th6tqeel7k2sm47mrrto7oca",
   githubReader: undefined,
+  npmChannel: "4fmd5otmvwcpsrxjaptrloppvu",
 };
 
 export type DeliveryActivation = {
@@ -55,6 +62,7 @@ export type DeliveryExecutorActivation = DeliveryActivation & {
   minecraftRegistryItemId?: string;
   platformRegistryItemId?: string;
   platformArgocdItemId?: string;
+  npmChannelItemId?: string;
 };
 
 /** Publication alone cannot activate a service lacking its declared credentials. */
@@ -102,8 +110,8 @@ export function deliveryActivation(): DeliveryActivation | undefined {
       };
 }
 
-export function deliveryExecutorActivation():
-  DeliveryExecutorActivation | undefined {
+/** Capabilities whose credentials are issued only together. */
+function requirePairedCapabilities() {
   if (
     (DELIVERY_CREDENTIAL_ITEMS.platformRegistry === undefined) !==
     (DELIVERY_CREDENTIAL_ITEMS.platformArgocd === undefined)
@@ -118,6 +126,11 @@ export function deliveryExecutorActivation():
     throw new Error(
       "Static activation requires both storage and cache purge credentials",
     );
+}
+
+export function deliveryExecutorActivation():
+  DeliveryExecutorActivation | undefined {
+  requirePairedCapabilities();
   const service = deliveryActivation();
   const executorItemId = DELIVERY_CREDENTIAL_ITEMS.executor;
   const argocdItemId = DELIVERY_CREDENTIAL_ITEMS.argocd;
@@ -153,5 +166,8 @@ export function deliveryExecutorActivation():
         ...(DELIVERY_CREDENTIAL_ITEMS.staticCache === undefined
           ? {}
           : { staticCacheItemId: DELIVERY_CREDENTIAL_ITEMS.staticCache }),
+        ...(DELIVERY_CREDENTIAL_ITEMS.npmChannel === undefined
+          ? {}
+          : { npmChannelItemId: DELIVERY_CREDENTIAL_ITEMS.npmChannel }),
       };
 }

@@ -1,3 +1,4 @@
+import { applicationOf } from "#shared/model/recipe-view.ts";
 import { ForumBaselineContextSchema } from "#shared/contract.ts";
 import type { Principal, ForumBaselineContext } from "#shared/contract.ts";
 import {
@@ -30,9 +31,8 @@ function validateProof(context: ForumBaselineContext, raw: ForumBaselineProof) {
   const proof = ForumBaselineProofSchema.parse(raw),
     { image, bundle, intent, pipeline } = context;
   if (
-    pipeline.definition.kind !== "argocd" ||
     proof.environmentId !== intent.environmentId ||
-    proof.application.name !== pipeline.definition.application ||
+    proof.application.name !== applicationOf(pipeline.definition)?.name ||
     proof.imageArtifactId !== image.id ||
     proof.bundleArtifactId !== bundle.id ||
     proof.bundleDigest !== bundle.digest ||
@@ -121,13 +121,6 @@ export async function completeForumBaseline(
         finishedAt: new Date(),
         message:
           "Read-only original runtime, installed XenForo, bundle and completed release Job independently observed; no deployment accepted",
-      },
-    });
-    await tx.environment.update({
-      where: { id: intent.environmentId },
-      data: {
-        acceptedForumBaselineIntentId: intent.id,
-        generation: { increment: 1 },
       },
     });
     await audit(tx, actor, {

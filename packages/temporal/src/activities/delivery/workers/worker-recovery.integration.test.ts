@@ -371,7 +371,7 @@ test.each([
         },
       }),
     ).rejects.toThrow();
-    expect(await cluster.database.applicationLock.count()).toBe(1);
+    expect(await cluster.database.targetLock.count()).toBe(2);
   },
 );
 
@@ -395,7 +395,7 @@ test("unknown Job incarnation, live executor and candidate references retain the
       },
     }),
   ).rejects.toThrow("candidate pinned");
-  expect(await cluster.database.applicationLock.count()).toBe(1);
+  expect(await cluster.database.targetLock.count()).toBe(2);
 });
 
 function beforeJobCreation() {
@@ -459,7 +459,7 @@ test.each(["receipt", "pods", "effectful", "name", "evidence", "status"])(
         pods: () => Promise.resolve(ambiguity === "pods" ? [{}] : []),
       }),
     ).rejects.toMatchObject({ code: ambiguity === "status" ? 403 : 404 });
-    expect(await cluster.database.applicationLock.count()).toBe(1);
+    expect(await cluster.database.targetLock.count()).toBe(2);
   },
 );
 test("source ownership changes, beta routing changes and stale completion cannot unlock", async () => {
@@ -499,7 +499,7 @@ test("source ownership changes, beta routing changes and stale completion cannot
       }),
     }),
   ).rejects.toThrow("prior source");
-  expect(await cluster.database.applicationLock.count()).toBe(1);
+  expect(await cluster.database.targetLock.count()).toBe(2);
 });
 
 test("post-PATCH bootstrap recovery requires its exact finished native operation and every frozen host", async () => {

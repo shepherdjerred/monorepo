@@ -9,7 +9,6 @@ import {
   DeliverySelectionSchema,
   deliveryArgoParameters,
   deliverySelectionPatch,
-  assertDeliveryRootPreservesSelection,
   type DeliverySelection,
 } from "homelab/scripts/argocd/argocd-delivery.ts";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
@@ -39,7 +38,7 @@ export function controlPlaneJobInput(detail: DeploymentDetail) {
   return ControlPlaneJobInputSchema.parse({
     deploymentId: detail.deployment.id,
     snapshot: detail.deployment.controlPlaneSnapshot,
-    configuration: detail.deployment.configuration,
+    configuration: detail.configuration.content,
   });
 }
 export function controlPlaneSelections(
@@ -227,7 +226,6 @@ export async function runControlPlaneUpgrade(
   isolatedChart(beforeManifests);
   isolatedChart(afterManifests);
   await effects.fence(input);
-  assertDeliveryRootPreservesSelection(await effects.read("apps"));
   const beforeApplication = await effects.read("delivery-control-plane");
   const applicationUID =
     ApplicationIdentity.parse(beforeApplication).metadata.uid;

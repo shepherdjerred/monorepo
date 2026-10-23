@@ -6,12 +6,17 @@ import type { PlatformReleaseSnapshotSchema } from "#shared/contract.ts";
 import {
   CreatePlatformDeploymentSchema,
   DeploymentSchema,
-  PipelineRevisionSchema,
+  LegacyPipelineRevisionSchema,
   type CreatePlatformDeployment,
   type Principal,
 } from "#shared/contract.ts";
 import { requireScope } from "#infrastructure/auth.ts";
-import { id, type Transaction } from "#infrastructure/delivery-data.ts";
+import {
+  serviceCatalogRevision,
+  id,
+  requestApproval,
+  type Transaction,
+} from "#infrastructure/delivery-data.ts";
 import { audit, required, wire } from "#infrastructure/delivery-records.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import { freezePlatformSnapshot } from "./snapshot.ts";
@@ -21,21 +26,15 @@ async function anchor(
   tx: Transaction,
   snapshot: ReturnType<typeof PlatformReleaseSnapshotSchema.parse>,
 ) {
-  const selection =
-    snapshot.kind === "root-release"
-      ? null
-      : await tx.buildArtifactSelection.findUnique({
-          where: {
-            buildId_component: {
-              buildId: snapshot.source.id,
-              component: "chart:apps",
-            },
-          },
-        });
-  const root =
-    snapshot.kind === "root-release"
-      ? snapshot.charts.find((chart) => chart.name === "apps")?.artifact.id
-      : selection?.artifactId;
+  const selection = await tx.buildArtifactSelection.findUnique({
+    where: {
+      buildId_component: {
+        buildId: snapshot.source.id,
+        component: "chart:apps",
+      },
+    },
+  });
+  const root = selection?.artifactId;
   if (root === undefined)
     throw new DeliveryError(
       "INVALID",
@@ -91,7 +90,7 @@ export async function createPlatformDeployment(
         "CONFLICT",
         "Platform environment already has pending or active work",
       );
-    const pipeline = PipelineRevisionSchema.parse(
+    const pipeline = LegacyPipelineRevisionSchema.parse(
       wire(
         required(
           await tx.pipeline.findUnique({
@@ -129,8 +128,8 @@ export async function createPlatformDeployment(
         serviceId: "gitops",
         versionSetRevisionId: selected.id,
         pipelineRevisionId: pipeline.id,
-        configurationRevision: env.configurationRevision,
-        configuration: env.configuration,
+        configurationId: env.declaredConfigurationId,
+        catalogRevision: await serviceCatalogRevision(tx, env.serviceId),
         expectedGeneration: env.generation,
         kind: input.kind,
         automatic,
@@ -140,42 +139,7 @@ export async function createPlatformDeployment(
         platformSourceBuildId: snapshot.source.id,
       },
     });
-    const references = [
-      ...(snapshot.kind === "root-release"
-        ? snapshot.charts.map((chart) => ({
-            kind: "root-chart",
-            selector: chart.name,
-            artifactId: chart.artifact.id,
-          }))
-        : []),
-      ...(snapshot.kind === "root-release"
-        ? Object.entries(snapshot.siteArtifacts).map(
-            ([selector, artifactId]) => ({
-              kind: "site-prerequisite",
-              selector,
-              artifactId,
-            }),
-          )
-        : []),
-      ...snapshot.prerequisites.flatMap((item) =>
-        item.kind === "site"
-          ? [
-              {
-                kind: "site-prerequisite",
-                selector: item.environmentId,
-                artifactId: item.artifactId,
-              },
-            ]
-          : [],
-      ),
-    ];
-    if (references.length > 0)
-      await tx.platformArtifactReference.createMany({
-        data: references.map((reference) => ({
-          ...reference,
-          deploymentId: deployment.id,
-        })),
-      });
+    if (approval) await requestApproval(tx, deployment);
     await persistDeploymentRequest(tx, actor, {
       deployment: deployment,
       requestId: input.requestId,

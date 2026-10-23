@@ -28,9 +28,13 @@ import { verifyWorkerHosts } from "./workers/worker-hosts.ts";
 import { acceptWorkerBaseline } from "./workers/worker-baseline.ts";
 import { withBackupActivityHeartbeat } from "#activities/homelab/seaweedfs-backup-heartbeat.ts";
 import { workerSourceFingerprint } from "#lib/delivery/workers/worker-source.ts";
+import { workerRolloutTarget } from "#lib/delivery/workers/worker-pool.ts";
 import { prepareMinecraftDelivery } from "./minecraft.ts";
 import { requireMinecraftPreservation } from "#lib/delivery/minecraft-acceptance.ts";
 import { trmnlRepairClaim } from "./trmnl-repair.ts";
+import { executorIdentity } from "./model/stages.ts";
+import { modelRecipe } from "#lib/delivery/model/recipe.ts";
+import { minecraftUpgradeOf } from "@shepherdjerred/delivery/model-contract";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
 import {
   acknowledgeReconciledRelease,
@@ -47,11 +51,10 @@ async function capturePriorWorkerSource(current: DeploymentDetail) {
     current.stages.some((item) => item.key === "worker-prior-source")
   )
     return;
-  if (current.pipeline.definition.kind !== "argocd")
-    throw new Error("Worker snapshot lacks Argo definition");
-  const observed = await argoRequest(
-    encodeURIComponent(current.pipeline.definition.application),
-  );
+  const rollout = workerRolloutTarget(current);
+  if (rollout === undefined)
+    throw new Error("Worker snapshot lacks its worker Application");
+  const observed = await argoRequest(encodeURIComponent(rollout.application));
   const fingerprint = workerSourceFingerprint(observed);
   const revision = z
     .object({ metadata: z.object({ resourceVersion: z.string().min(1) }) })
@@ -69,8 +72,7 @@ async function capturePriorWorkerSource(current: DeploymentDetail) {
 }
 
 async function minecraftEligible(current: DeploymentDetail): Promise<boolean> {
-  const pipeline = current.pipeline.definition;
-  if (pipeline.kind !== "argocd" || pipeline.minecraftUpgrade === undefined)
+  if (minecraftUpgradeOf(current.pipeline.definition) === undefined)
     return true;
   const result = await prepareMinecraftDelivery(current);
   return result.status === "ready";
@@ -106,12 +108,13 @@ export async function prepareDelivery(id: string) {
   if (!(await minecraftEligible(current)))
     return { status: "waiting" } as const;
   try {
-    await deliveryRequest(
-      `${path(id)}/claim`,
-      DeploymentDetailSchema,
-      (await trmnlRepairClaim(current)) ??
-        (await workerRetirementClaim(current)),
-    );
+    // The executor names itself on claim so ownership is never transferred
+    // silently (D7); specialized proofs ride in the same body.
+    await deliveryRequest(`${path(id)}/claim`, DeploymentDetailSchema, {
+      ...((await trmnlRepairClaim(current)) ??
+        (await workerRetirementClaim(current))),
+      executor: executorIdentity(),
+    });
   } catch (error) {
     if (
       error instanceof ApplicationFailure &&
@@ -133,6 +136,8 @@ export async function prepareDelivery(id: string) {
   await capturePriorWorkerSource(current);
   return {
     status: "ready",
+    // A model recipe runs on the step executor (T3).
+    model: modelRecipe(current) !== null,
     ...adapterFlags(current),
   } as const;
 }
@@ -149,6 +154,8 @@ async function stage(
     operationId: receipt.operationId,
     message: `${key}: ${status}`,
     evidence: receipt.evidence ?? [],
+    // Only the executor that owns the deployment writes its stages (D7).
+    executor: executorIdentity(),
   });
 }
 
@@ -348,5 +355,7 @@ export async function finishDelivery(
     current.deployment.controlPlaneSnapshot === null
       ? { observedRevisionId: current.deployment.versionSetRevisionId }
       : {}),
+    // Only the executor that owns the deployment reports its result (D7).
+    executor: executorIdentity(),
   });
 }

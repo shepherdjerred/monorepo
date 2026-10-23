@@ -2,7 +2,7 @@ import { Prisma } from "#generated/prisma/client.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
-import { audit, fingerprint, wire } from "#infrastructure/delivery-records.ts";
+import { audit, fingerprint } from "#infrastructure/delivery-records.ts";
 import { pendingDeliveryObservations } from "#infrastructure/delivery-data.ts";
 import { holdPlatformLock } from "#infrastructure/platform/lifecycle.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
@@ -14,7 +14,9 @@ import {
   type DispatchBarrier,
   type Principal,
 } from "#shared/contract.ts";
+import { updateIntentDetail } from "#infrastructure/recovery-intents.ts";
 import { pendingContentIntent } from "./ownership.ts";
+import { contentIntentView } from "./context.ts";
 import { createHash } from "node:crypto";
 import { nativeReceipt } from "#infrastructure/platform/policy.ts";
 
@@ -74,9 +76,8 @@ export async function recordContentRecoveryNative(
         ? [...intent.nativeReceipts, input]
         : intent.nativeReceipts;
     ContentRecoveryIntentSchema.shape.nativeReceipts.parse(receipts);
-    const updated = await tx.contentRecoveryIntent.update({
-      where: { id },
-      data: { nativeReceipts: receipts },
+    const updated = await updateIntentDetail(tx, id, {
+      nativeReceipts: receipts,
     });
     await audit(tx, actor, {
       action: "content.recovery_native",
@@ -84,7 +85,7 @@ export async function recordContentRecoveryNative(
       requestId: input.receipt.requestId,
       metadata: input,
     });
-    return ContentRecoveryIntentSchema.parse(wire(updated));
+    return contentIntentView(updated);
   });
 }
 
@@ -106,10 +107,10 @@ export async function recordContentRecoveryBarrier(
         "CONFLICT",
         "Content producer barrier journal is immutable",
       );
-    const other = await tx.contentRecoveryIntent.count({
+    const other = await tx.recoveryIntent.count({
       where: {
         id: { not: id },
-        dispatchBarrier: { not: Prisma.DbNull },
+        barrier: { not: Prisma.DbNull },
         barrierRestoredAt: null,
       },
     });
@@ -126,9 +127,9 @@ export async function recordContentRecoveryBarrier(
         "Drain all other running releases and independent observations before stopping the shared content producer",
       );
     await holdPlatformLock(tx, row.id, false);
-    const updated = await tx.contentRecoveryIntent.update({
+    const updated = await tx.recoveryIntent.update({
       where: { id },
-      data: { dispatchBarrier: input },
+      data: { barrier: input },
     });
     await audit(tx, actor, {
       action: "content.recovery_barrier",
@@ -136,6 +137,6 @@ export async function recordContentRecoveryBarrier(
       requestId: id,
       metadata: { journal: input },
     });
-    return ContentRecoveryIntentSchema.parse(wire(updated));
+    return contentIntentView(updated);
   });
 }

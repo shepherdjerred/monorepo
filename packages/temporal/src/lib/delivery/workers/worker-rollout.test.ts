@@ -1,14 +1,12 @@
 import { describe, expect, test } from "vitest";
-import {
-  DeploymentDetailSchema,
-  workerHostSpecification,
-} from "@shepherdjerred/delivery/contract";
+import { DeploymentDetailSchema } from "@shepherdjerred/delivery/contract";
 import type { WorkerRolloutPlan } from "@shepherdjerred/delivery/contract";
 import {
   prepareDeliveryWorkerRollout,
   stepDeliveryWorkerRollout,
 } from "./worker-rollout.ts";
 import type { RolloutCommandRunner } from "#lib/worker-deployment-proofs.ts";
+import { centralRolloutPool } from "./worker-pool-fixture.ts";
 
 const CANDIDATE = "b".repeat(40);
 const STABLE = "a".repeat(40);
@@ -23,8 +21,8 @@ const detail = () =>
       serviceId: "temporal",
       versionSetRevisionId: "version/1",
       pipelineRevisionId: "pipeline/1",
-      configurationRevision: "config/1",
-      configuration: {},
+      configurationId: "config/1",
+      catalogRevision: "test-catalog",
       expectedGeneration: 0,
       kind: "deploy",
       status: "running",
@@ -35,28 +33,11 @@ const detail = () =>
       createdAt: timestamp,
       startedAt: timestamp,
       finishedAt: null,
-      workerSnapshot: {
-        schema: "delivery-worker-pool/v1",
-        environmentId: "temporal/prod",
-        environmentGeneration: 0,
-        target: "central",
-        candidateBuildId: CANDIDATE,
-        versions: [STABLE, CANDIDATE].map((buildId) => ({
-          id: `worker/${buildId}`,
-          environmentId: "temporal/prod",
-          buildId,
-          artifactId: buildId === CANDIDATE ? "image/1" : "image/stable",
-          artifactBuildId: `build/${buildId}`,
-          sourceRevision: buildId,
-          image: `docker.io/shepherdjerred/temporal-worker@sha256:${buildId.slice(0, 1).repeat(64)}`,
-          digest: `sha256:${buildId.slice(0, 1).repeat(64)}`,
-          introducedByDeploymentId: "deployment/0",
-          host: workerHostSpecification("central"),
-          replicas: 1,
-          generation: 0,
-          retiredAt: null,
-        })),
-      },
+      workerSnapshot: centralRolloutPool({
+        stable: STABLE,
+        candidate: CANDIDATE,
+        candidateArtifactId: "image/1",
+      }),
     },
     environment: {
       id: "temporal/prod",
@@ -64,12 +45,14 @@ const detail = () =>
       name: "prod",
       application: "temporal",
       pipelineRevisionId: "pipeline/1",
-      configurationRevision: "config/1",
-      configuration: {},
+      declaredConfigurationId: "config/1",
       automatic: true,
       promotionSourceEnvironmentId: null,
+      role: "durable",
+      lifecycle: "active",
+      approvalPolicy: "none",
+      acceptedDeploymentId: null,
       generation: 1,
-      approvalRequired: false,
       desiredVersionSetRevisionId: "version/1",
       observedVersionSetRevisionId: null,
       acceptedVersionSetRevisionId: null,
@@ -82,6 +65,8 @@ const detail = () =>
       serviceId: "temporal",
       revision: 1,
       baseRevisionId: null,
+      lineage: "0".repeat(64),
+      orderKey: "0000000001.0000000000",
       createdAt: timestamp,
       components: {
         worker: {
@@ -115,8 +100,8 @@ const detail = () =>
         },
       },
     },
+    configuration: { id: "config/1", content: {} },
     evidence: [],
-    approvals: [],
     stages: [],
   });
 type State = {

@@ -6,19 +6,69 @@ import {
   wire,
 } from "#infrastructure/delivery-records.ts";
 import {
-  PipelineRevisionSchema,
+  LegacyPipelineRevisionSchema,
   type DeploymentDetail,
-  type PipelineDefinition,
+  type StoredRecipeDefinition,
   ContentRecoveryNativeReceiptSchema,
+  ContentRecoveryIntentSchema,
 } from "#shared/contract.ts";
+import type { RecoveryIntent } from "#generated/prisma/client.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
 import { nativeReceipt } from "#infrastructure/platform/policy.ts";
+import {
+  intentDetail,
+  legacyIntentFields,
+} from "#infrastructure/recovery-intents.ts";
 
-export function contentRecoveryKind(pipeline: PipelineDefinition) {
+/** The content-kind view of a unified recovery intent row. */
+export function contentIntentView(row: RecoveryIntent) {
+  const detail = intentDetail(row);
+  const {
+    workflowId: _workflowId,
+    submittedAt: _submittedAt,
+    ...fields
+  } = legacyIntentFields(row);
+  return ContentRecoveryIntentSchema.parse(
+    wire({
+      ...fields,
+      targetKind: detail["targetKind"],
+      nativeReceipts: detail["nativeReceipts"] ?? [],
+      dispatchBarrier: row.barrier,
+      barrierRestoredAt: row.barrierRestoredAt,
+    }),
+  );
+}
+
+/** The frozen content target a recipe of either generation names, or null. */
+function contentTarget(definition: StoredRecipeDefinition): string | null {
+  switch (definition.kind) {
+    case "static-site":
+      return `bucket:${definition.bucket}`;
+    case "argocd":
+      return `application:${definition.application}`;
+    case "kubernetes-application":
+      return `application:${definition.application.name}`;
+    case "control-plane":
+    case "root-release":
+    case "tofu":
+    case "manual":
+    case "channel":
+    case "operator-run":
+    case "compound":
+      return null;
+  }
+}
+
+export function contentRecoveryKind(pipeline: StoredRecipeDefinition) {
   if (pipeline.kind === "static-site") return "static-site";
   if (pipeline.kind === "argocd") {
     if (pipeline.scoutSite !== undefined) return "static-site";
     if (pipeline.forumRelease !== undefined) return "forum";
+  }
+  if (pipeline.kind === "kubernetes-application") {
+    const kinds = new Set(pipeline.steps.map((step) => step.kind));
+    if (kinds.has("static-site")) return "static-site";
+    if (kinds.has("forum-bundle")) return "forum";
   }
   throw new DeliveryError(
     "INVALID",
@@ -40,7 +90,7 @@ export async function heldContentRecovery(
     }),
     "Quarantined content deployment",
   );
-  const pipeline = PipelineRevisionSchema.parse(
+  const pipeline = LegacyPipelineRevisionSchema.parse(
     wire(
       required(
         await tx.pipeline.findUnique({
@@ -69,26 +119,22 @@ export async function heldContentRecovery(
     await tx.environment.findUnique({ where: { id: row.environmentId } }),
     "Content environment",
   );
-  const target = await tx.applicationLock.findUnique({
+  const locks = await tx.targetLock.findMany({
     where: { deploymentId: row.id },
   });
-  if (target === null)
-    throw new DeliveryError(
-      "CONFLICT",
-      "Content recovery requires the retained native target lock",
-    );
-  const targetName =
+  const target =
     pipeline.definition.kind === "static-site"
-      ? `static-site:${pipeline.definition.bucket}`
+      ? `bucket:${pipeline.definition.bucket}`
       : pipeline.definition.kind === "argocd"
-        ? pipeline.definition.application
+        ? `application:${pipeline.definition.application}`
         : null;
   if (
-    !["failed", "canceled"].includes(row.status) ||
+    target === null ||
     !row.recoveryRequired ||
+    !["failed", "canceled"].includes(row.status) ||
     env.activeDeploymentId !== row.id ||
     env.generation !== input.expectedEnvironmentGeneration ||
-    target.application !== targetName
+    !locks.some((held) => held.instance === target)
   )
     throw new DeliveryError(
       "CONFLICT",
@@ -100,14 +146,13 @@ export async function heldContentRecovery(
       targetKind,
       environmentId: env.id,
       generation: env.generation,
-      target: target.application,
+      target,
       pipelineRevisionId: row.pipelineRevisionId,
       versionSetRevisionId: row.versionSetRevisionId,
-      configurationRevision: row.configurationRevision,
-      configuration: row.configuration,
+      configurationId: row.configurationId,
       previousAcceptedVersionSetRevisionId:
         row.previousAcceptedVersionSetRevisionId,
-      previousAcceptedConfiguration: row.previousAcceptedConfiguration,
+      previousAcceptedDeploymentId: row.previousAcceptedDeploymentId,
       forumBaselineSnapshot: row.forumBaselineSnapshot,
       acceptedVersionSetRevisionId: env.acceptedVersionSetRevisionId,
       stages: row.stages.sort((a, b) => a.key.localeCompare(b.key)),
@@ -136,7 +181,7 @@ export function contentSettlement(
     environment: { id: string };
     deployment: Pick<
       DeploymentDetail["deployment"],
-      "id" | "configuration" | "forumBaselineSnapshot"
+      "id" | "configurationId" | "forumBaselineSnapshot"
     >;
   },
 ) {
@@ -146,7 +191,7 @@ export function contentSettlement(
     environmentId: detail.environment.id,
     versionSet: detail.versionSet,
     pipeline: detail.pipeline,
-    configuration: detail.deployment.configuration,
+    configurationId: detail.deployment.configurationId,
     forumBaselineSnapshot: detail.deployment.forumBaselineSnapshot,
     forumRecoveredRuntime: detail.forumRecoveredRuntime,
   });
@@ -157,13 +202,11 @@ export function contentSettlements(
   prior: DeploymentDetail | null,
 ) {
   const current = detail.pipeline.definition;
-  const before = prior?.pipeline.definition;
+  const target = contentTarget(current);
   const sameTarget =
-    current.kind === "static-site"
-      ? before?.kind === "static-site" && current.bucket === before.bucket
-      : current.kind === "argocd" &&
-        before?.kind === "argocd" &&
-        current.application === before.application;
+    prior !== null &&
+    target !== null &&
+    contentTarget(prior.pipeline.definition) === target;
   const baseline = detail.deployment.forumBaselineSnapshot;
   return {
     desired: contentSettlement(detail),

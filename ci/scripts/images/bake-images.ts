@@ -36,7 +36,7 @@ import { productionBakeEnvironment } from "./production-bake-environment.ts";
 import { runMain } from "../../../scripts/lib/transient.ts";
 import {
   lastSuccessfulImageReleaseCommit,
-  readQualifiedImages,
+  readRetainableImages,
 } from "./live-version-catalog.ts";
 import { includeMissingQualifiedImages } from "../selectors/select-image-targets-pins.ts";
 import { TransientError } from "../../../scripts/lib/transient-error.ts";
@@ -252,7 +252,7 @@ export async function pushImages(
   dependencies: {
     readonly executor?: CommandExecutor;
     readonly environment?: Readonly<Record<string, string | undefined>>;
-    readonly readQualifiedImages?: () => Promise<QualifiedImageInventory>;
+    readonly readRetainableImages?: () => Promise<QualifiedImageInventory>;
     readonly getManifestDigest?: (image: string) => Promise<string>;
     readonly verifyRegistryAccess?: RegistryAccessVerifier;
     readonly verifySourceLabel?: (image: string) => Promise<void>;
@@ -274,7 +274,7 @@ export async function pushImages(
   const { targets, commit, buildNumber, contractHash } = options;
   const executor = dependencies.executor ?? execute;
   const environment = dependencies.environment ?? Bun.env;
-  const { readQualifiedImages: readOriginals = readQualifiedImages } =
+  const { readRetainableImages: readOriginals = readRetainableImages } =
     dependencies;
   const getManifestDigest = dependencies.getManifestDigest ?? manifestDigest;
   const verifyRegistryAccess =
@@ -363,7 +363,7 @@ export async function pushImages(
     outcomes.push({ image: name, outcome });
     if (original !== undefined && outcome === "content-unchanged") {
       // Same runtime bytes (VERSION/GIT_SHA excluded): Delivery keeps the
-      // qualified original instead of registering a duplicate artifact.
+      // original, pending or qualified, instead of registering a duplicate.
       retained.push(original);
       continue;
     }
@@ -386,7 +386,7 @@ async function main(): Promise<void> {
     rm(pushOutcomes, { force: true }),
   ]);
 
-  const originals = options.push ? await readQualifiedImages() : undefined;
+  const originals = options.push ? await readRetainableImages() : undefined;
   const selection = await selectedTargets(options, commit, execute);
   const bakeTargets = expandTargets(
     originals === undefined
@@ -424,7 +424,7 @@ async function main(): Promise<void> {
       {
         ...(originals === undefined
           ? {}
-          : { readQualifiedImages: () => Promise.resolve(originals) }),
+          : { readRetainableImages: () => Promise.resolve(originals) }),
       },
     );
   }

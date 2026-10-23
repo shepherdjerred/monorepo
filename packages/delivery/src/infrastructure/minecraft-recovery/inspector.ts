@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
 import { Buffer } from "node:buffer";
 import { z } from "zod";
 import { DeliveryError } from "#domain/error.ts";
@@ -82,15 +83,14 @@ function requireSameArgo(
 export function createMinecraftRecoveryInspector(options: {
   controllerOrigin: string;
   executorToken: string | undefined;
-  argoOrigin: string;
-  argoToken: string | undefined;
+  readApplication: ApplicationReader;
   fetch?: (
     input: string | URL | Request,
     init?: RequestInit,
   ) => Promise<Response>;
 }): InspectMinecraftRecovery {
   return async (intent, detail) => {
-    if (options.executorToken === undefined || options.argoToken === undefined)
+    if (options.executorToken === undefined)
       throw new DeliveryError(
         "PAUSED",
         "Independent Minecraft recovery read credentials are unavailable",
@@ -140,20 +140,7 @@ export function createMinecraftRecoveryInspector(options: {
         "CONFLICT",
         "Minecraft recovery report is stale or differs from the recorded native request",
       );
-    const argoResponse = await (options.fetch ?? fetch)(
-      new URL("/api/v1/applications/minecraft-tsmc", options.argoOrigin),
-      {
-        headers: { authorization: `Bearer ${options.argoToken}` },
-        redirect: "error",
-        signal: AbortSignal.timeout(30_000),
-      },
-    );
-    if (!argoResponse.ok)
-      throw new DeliveryError(
-        "PAUSED",
-        `Independent Minecraft Argo inspection unavailable (${String(argoResponse.status)})`,
-      );
-    const argo = Argo.parse(await argoResponse.json());
+    const argo = Argo.parse(await options.readApplication("minecraft-tsmc"));
     requireSameArgo(argo, report);
     return report;
   };

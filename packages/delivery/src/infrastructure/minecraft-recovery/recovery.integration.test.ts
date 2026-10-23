@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { beforeEach, expect, test } from "vitest";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
+import { declareAcquisitions } from "#testing/services.ts";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
 import {
   PipelineDefinitionSchema,
@@ -29,6 +30,9 @@ let deploymentId: string;
 let operationId: string;
 let generation: number;
 beforeEach(async () => {
+  await declareAcquisitions(context.cluster.database, "minecraft", [
+    "chart:minecraft",
+  ]);
   const definition = PipelineDefinitionSchema.parse(
     await Bun.file(new URL("pipeline.json", directory)).json(),
   );
@@ -359,25 +363,24 @@ function transport(proof = nativeProof(), native = controller()) {
   const inspect = createMinecraftRecoveryInspector({
     controllerOrigin: "http://controller.test",
     executorToken: "local-executor-test",
-    argoOrigin: "http://argo.test",
-    argoToken: "local-argo-read-test",
+    readApplication: async (name) => {
+      reads++;
+      expect(name).toBe("minecraft-tsmc");
+      return proof.argo;
+    },
     fetch: async (url, init) => {
       reads++;
-      if (
-        (url instanceof Request ? url.url : url.toString()).includes(
-          "controller.test",
-        )
-      ) {
-        expect(init?.body).toContain('"recoveryId":"minecraft/recover"');
-        const reportJson = JSON.stringify(proof.report);
-        return Response.json({
-          requestId: operationId,
-          controller: native,
-          reportJson,
-          reportSha256: `sha256:${createHash("sha256").update(reportJson).digest("hex")}`,
-        });
-      }
-      return Response.json(proof.argo);
+      expect(url instanceof Request ? url.url : url.toString()).toContain(
+        "controller.test",
+      );
+      expect(init?.body).toContain('"recoveryId":"minecraft/recover"');
+      const reportJson = JSON.stringify(proof.report);
+      return Response.json({
+        requestId: operationId,
+        controller: native,
+        reportJson,
+        reportSha256: `sha256:${createHash("sha256").update(reportJson).digest("hex")}`,
+      });
     },
   });
   return { inspect, reads: () => reads };
@@ -390,7 +393,7 @@ function completion(intent: { snapshotFingerprint: string }) {
 }
 async function retained() {
   expect(
-    await context.cluster.database.applicationLock.count({
+    await context.cluster.database.targetLock.count({
       where: { deploymentId },
     }),
   ).toBe(1);
@@ -421,7 +424,7 @@ test("completed preservation can independently recover the exact original withou
     ),
   ).toMatchObject({ status: "succeeded" });
   expect(boundary.reads()).toBe(2);
-  expect(await context.cluster.database.applicationLock.count()).toBe(0);
+  expect(await context.cluster.database.targetLock.count()).toBe(0);
   expect(
     await context.cluster.database.deployment.findUniqueOrThrow({
       where: { id: deploymentId },

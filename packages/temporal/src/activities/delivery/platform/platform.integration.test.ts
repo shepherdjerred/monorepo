@@ -1,4 +1,5 @@
 import { beforeAll, afterAll, expect, test, vi } from "vitest";
+import { MockActivityEnvironment } from "@temporalio/testing";
 import {
   createTestDatabase,
   platformFixture,
@@ -18,6 +19,20 @@ import { executePlatformWithJob } from "./index.ts";
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import { executionApiFixture } from "./execution-api-fixtures.ts";
 import { admitPlatformNativeJob } from "#lib/delivery/platform/native-job.ts";
+
+/** `finishDelivery` reports as the Activity of its executor Workflow (D7). */
+async function finishAsExecutor(...args: Parameters<typeof finishDelivery>) {
+  return await new MockActivityEnvironment().run(finishDelivery, ...args);
+}
+
+/** The platform step writes its stages as the executor's Activity (D7). */
+async function asExecutor(...args: Parameters<typeof executePlatformWithJob>) {
+  return await new MockActivityEnvironment().run<
+    Parameters<typeof executePlatformWithJob>,
+    Awaited<ReturnType<typeof executePlatformWithJob>>,
+    typeof executePlatformWithJob
+  >(executePlatformWithJob, ...args);
+}
 
 let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
 let fixture: Awaited<ReturnType<typeof platformFixture>>;
@@ -117,6 +132,16 @@ const nativeJob: typeof runDeliveryJob = async (request, onReceipt) => {
     planDigest: snapshot.plan.planDigest,
     state: { lineage: "original-state", serial: 5 },
     outcome: "applied-saved-plan",
+    // The apply reads back the state marker naming its deployment (T5).
+    marker: {
+      schema: "delivery-tofu-marker/v1",
+      deploymentId: request.deploymentId,
+      stack: snapshot.stack,
+      stateLineage: "original-state",
+      stateSerial: 5,
+      archiveDigest: null,
+      appliedAt: new Date().toISOString(),
+    },
   };
 };
 
@@ -133,10 +158,10 @@ test("real PG+HTTP freezes qualified plan, persists native receipt before effect
     DeploymentDetailSchema,
     {},
   );
-  const evidence = await executePlatformWithJob(planned.id, nativeJob);
-  await finishDelivery(planned.id, { status: "succeeded", evidence });
+  const evidence = await asExecutor(planned.id, nativeJob);
+  await finishAsExecutor(planned.id, { status: "succeeded", evidence });
   const afterPlan = await fixture.delivery.detail(planned.id);
-  expect(afterPlan.environment.acceptedPlatformDeploymentId).toBeNull();
+  expect(afterPlan.environment.acceptedDeploymentId).toBeNull();
   expect(JSON.stringify(afterPlan)).not.toContain("ciphertext");
   expect(afterPlan.environment.acceptedVersionSetRevisionId).toBeNull();
   const apply = await operator.createPlatformDeployment({
@@ -151,10 +176,10 @@ test("real PG+HTTP freezes qualified plan, persists native receipt before effect
     DeploymentDetailSchema,
     {},
   );
-  const accepted = await executePlatformWithJob(apply.id, nativeJob);
-  await finishDelivery(apply.id, { status: "succeeded", evidence: accepted });
+  const accepted = await asExecutor(apply.id, nativeJob);
+  await finishAsExecutor(apply.id, { status: "succeeded", evidence: accepted });
   const done = await fixture.delivery.detail(apply.id);
-  expect(done.environment.acceptedPlatformDeploymentId).toBe(apply.id);
+  expect(done.environment.acceptedDeploymentId).toBe(apply.id);
   expect(done.environment.acceptedVersionSetRevisionId).toBeNull();
   expect(done.deployment.platformSnapshot).toMatchObject({
     kind: "tofu-apply",

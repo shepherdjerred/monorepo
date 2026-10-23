@@ -1,4 +1,6 @@
 import type { Hono } from "hono";
+import { activeEnvironmentIds } from "#infrastructure/delivery-selection.ts";
+import { approvalQueue } from "#infrastructure/selection/views.ts";
 import {
   ActivityQuerySchema,
   BuildListQuerySchema,
@@ -7,7 +9,6 @@ import {
 } from "#shared/hub/hub-contract.ts";
 import type { Principal } from "#shared/contract.ts";
 import type { Database } from "#infrastructure/database.ts";
-import type { RuntimeConfig } from "#infrastructure/config.ts";
 import { hubOverview } from "#infrastructure/hub/overview.ts";
 import { servicePipeline } from "#infrastructure/hub/pipeline.ts";
 import {
@@ -17,7 +18,6 @@ import {
 } from "#infrastructure/hub/executions.ts";
 import {
   activityPage,
-  approvals,
   buildPage,
   deploymentPage,
   environmentDetail,
@@ -27,18 +27,14 @@ import type { Enrichment } from "#infrastructure/enrichment/enrichment.ts";
 type App = Hono<{ Variables: { principal: Principal; requestId: string } }>;
 
 /** Browser hub reads. Registered before the parameterized legacy routes. */
-export function registerHubRoutes(
-  app: App,
-  database: Database,
-  config: Pick<RuntimeConfig, "enabledEnvironments">,
-) {
+export function registerHubRoutes(app: App, database: Database) {
   app.get("/api/v1/hub", async (c) => c.json(await hubOverview(database)));
   app.get("/api/v1/services/:id/pipeline", async (c) =>
     c.json(
       await servicePipeline(
         database,
         c.req.param("id"),
-        await config.enabledEnvironments(),
+        await activeEnvironmentIds(database),
       ),
     ),
   );
@@ -70,7 +66,9 @@ export function registerHubRoutes(
       ),
     ),
   );
-  app.get("/api/v1/approvals", async (c) => c.json(await approvals(database)));
+  app.get("/api/v1/approvals", async (c) =>
+    c.json(await approvalQueue(database)),
+  );
   app.get("/api/v1/activity", async (c) =>
     c.json(
       await activityPage(database, ActivityQuerySchema.parse(c.req.query())),

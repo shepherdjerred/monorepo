@@ -40,7 +40,7 @@ describe("exact rollback and promotion retries", () => {
       {
         requestId: "restore-accepted-snapshot",
         environmentId: updated.id,
-        versionSetRevisionId: context.fixture.versionSet.id,
+        selectionDeploymentId: baseline.id,
         expectedGeneration: updated.generation,
         kind: "rollback",
       },
@@ -48,16 +48,19 @@ describe("exact rollback and promotion retries", () => {
     );
     expect(rollback).toMatchObject({
       pipelineRevisionId: "arcade/1",
-      configurationRevision: "config/1",
-      configuration: {},
+      configurationId: "config/1",
       expectedGeneration: updated.generation,
     });
     const claimed = await context.delivery.claim(rollback.id, testExecutor);
     expect(claimed.pipeline.id).toBe("arcade/1");
+    expect(claimed.configuration).toMatchObject({
+      id: "config/1",
+      content: {},
+    });
+    // Claim never rewrites the environment's declared binding (E1, C3).
     expect(claimed.environment).toMatchObject({
-      pipelineRevisionId: "arcade/1",
-      configurationRevision: "config/1",
-      configuration: {},
+      pipelineRevisionId: "arcade/2",
+      declaredConfigurationId: "config/2",
     });
     await accept(rollback.id, context.fixture.versionSet.id);
   });
@@ -94,7 +97,6 @@ describe("exact rollback and promotion retries", () => {
       {
         requestId: "failed-promotion",
         environmentId: target.id,
-        versionSetRevisionId: context.fixture.versionSet.id,
         expectedGeneration: target.generation,
         kind: "promote",
         sourceEnvironmentId: context.fixture.environment.id,
@@ -138,7 +140,8 @@ describe("exact rollback and promotion retries", () => {
         },
         body: JSON.stringify({
           requestId: "promotion-retry",
-          expectedGeneration: 1,
+          // A failed deployment moves no generation (E1).
+          expectedGeneration: 0,
         }),
       },
     );
@@ -177,21 +180,27 @@ async function publish(number: number) {
     { repositoryId: 1, pipelineNumber: number },
   );
 }
-async function select(
-  revision: string,
-  kind: "deploy" | "rollback" = "deploy",
-) {
+/** Deploy a set revision, or roll back to the deployment that froze a selection (L1). */
+async function select(revision: string, rollbackTo?: string) {
   const env = await context.cluster.database.environment.findUniqueOrThrow({
     where: { id: context.fixture.environment.id },
   });
   const selected = await context.delivery.createDeployment(
-    {
-      requestId: crypto.randomUUID(),
-      environmentId: env.id,
-      versionSetRevisionId: revision,
-      expectedGeneration: env.generation,
-      kind,
-    },
+    rollbackTo === undefined
+      ? {
+          requestId: crypto.randomUUID(),
+          environmentId: env.id,
+          versionSetRevisionId: revision,
+          expectedGeneration: env.generation,
+          kind: "deploy",
+        }
+      : {
+          requestId: crypto.randomUUID(),
+          environmentId: env.id,
+          selectionDeploymentId: rollbackTo,
+          expectedGeneration: env.generation,
+          kind: "rollback",
+        },
     testOperator,
   );
   await context.delivery.claim(selected.id, testExecutor);
@@ -233,7 +242,7 @@ describe("selection recovery and qualification fairness", () => {
       },
       testExecutor,
     );
-    const rollback = await select(context.fixture.versionSet.id, "rollback");
+    const rollback = await select(context.fixture.versionSet.id, baseline.id);
     await accept(rollback.id, context.fixture.versionSet.id);
     expect(
       await context.delivery.reconcile(

@@ -3,7 +3,10 @@ import { Worker } from "@temporalio/worker";
 import { describe, expect, it } from "vitest";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { ApplicationFailure } from "@temporalio/common";
-import { createDeliveryWorkers } from "#workflows/testing/delivery-workers.ts";
+import {
+  createDeliveryWorkers,
+  replayFixture,
+} from "#workflows/testing/delivery-workers.ts";
 
 async function execute(failApply: boolean, waits = 0) {
   const environment = await TestWorkflowEnvironment.createTimeSkipping();
@@ -75,6 +78,9 @@ function quietDispatchActivities() {
     qualifyDeliveryForumBundles: () => Promise.resolve(),
     dispatchDeliveryForumBaselines: () => Promise.resolve(),
     dispatchDeliveryPlatformRecoveries: () => Promise.resolve(),
+    observeDeliveryMonitors: () => ({ observed: 0 }),
+    observeDeliveryDrift: () => ({ recorded: 0 }),
+    removeDeliveryTargets: () => ({ removed: 0 }),
   };
 }
 
@@ -444,41 +450,20 @@ describe("Delivery replication", () => {
 describe("Delivery replication patch", () => {
   it("replays a dispatch tick recorded before replication existed", async () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
-    const connection = {
-      connection: environment.nativeConnection,
-      namespace: "default",
-    };
-    const before = await Worker.create({
-      ...connection,
-      taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
-      workflowsPath: new URL(
-        "replay-fixtures/delivery-dispatch-before-replication.ts",
-        import.meta.url,
-      ).pathname,
-    });
-    const activities = await Worker.create({
-      ...connection,
-      taskQueue: TASK_QUEUES.DELIVERY,
-      activities: {
-        qualifyDeliveryBuilds: () => Promise.resolve(),
-        dispatchPendingDeliveries: () => ({ submitted: 0 }),
-        ...quietDispatchActivities(),
-      },
-    });
     try {
-      const workflowId = `dispatch-before-replication-${crypto.randomUUID()}`;
-      await before.runUntil(
-        activities.runUntil(
-          environment.client.workflow.execute("deliveryDispatchWorkflow", {
-            workflowId,
-            taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
-          }),
+      await replayFixture(environment, {
+        fixture: new URL(
+          "replay-fixtures/delivery-dispatch-before-replication.ts",
+          import.meta.url,
         ),
-      );
-      await Worker.runReplayHistory(
-        { workflowsPath: new URL("delivery.ts", import.meta.url).pathname },
-        await environment.client.workflow.getHandle(workflowId).fetchHistory(),
-      );
+        workflowType: "deliveryDispatchWorkflow",
+        workflowId: `dispatch-before-replication-${crypto.randomUUID()}`,
+        activities: {
+          qualifyDeliveryBuilds: () => Promise.resolve(),
+          dispatchPendingDeliveries: () => ({ submitted: 0 }),
+          ...quietDispatchActivities(),
+        },
+      });
     } finally {
       await environment.teardown();
     }

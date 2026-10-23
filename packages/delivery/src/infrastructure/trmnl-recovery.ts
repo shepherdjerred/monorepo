@@ -5,6 +5,7 @@ import {
 import type { createTrmnlPluginClient } from "@shepherdjerred/ops-clients/trmnl.ts";
 import type { DeploymentDetail, EvidenceInput } from "#shared/contract.ts";
 import { DeliveryError } from "#domain/error.ts";
+import { trmnlPluginsOf } from "#shared/model/recipe-view.ts";
 import { validateTrmnlSelection } from "./trmnl-policy.ts";
 
 export function createTrmnlRecoveryInspector(options: {
@@ -13,14 +14,14 @@ export function createTrmnlRecoveryInspector(options: {
 }) {
   return async (detail: DeploymentDetail): Promise<EvidenceInput[]> => {
     const pipeline = detail.pipeline.definition;
-    if (pipeline.kind !== "argocd" || pipeline.trmnlPlugins === undefined)
+    const plugins = trmnlPluginsOf(pipeline);
+    if (plugins === undefined)
       throw new DeliveryError(
         "INVALID",
         "TRMNL readback requires the fixed dependency-configured pipeline",
       );
     validateTrmnlSelection(pipeline, detail.versionSet);
-    const archive =
-      detail.versionSet.components[pipeline.trmnlPlugins.archiveComponent];
+    const archive = detail.versionSet.components[plugins.archiveComponent];
     if (archive === undefined)
       throw new DeliveryError("INVALID", "Frozen TRMNL archive is missing");
     const receipt = await inspectTrmnlArchive(archive, options);

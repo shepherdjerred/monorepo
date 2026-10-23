@@ -141,7 +141,7 @@ describe("PostgreSQL delivery invariants 1.1", () => {
     expect(first.environment.desiredVersionSetRevisionId).toBe(
       context.fixture.versionSet.id,
     );
-    expect(await context.cluster.database.applicationLock.count()).toBe(1);
+    expect(await context.cluster.database.targetLock.count()).toBe(1);
     await expect(
       context.delivery.createDeployment(context.input("other"), testOperator),
     ).rejects.toMatchObject({ code: "CONFLICT" });
@@ -160,7 +160,7 @@ describe("PostgreSQL delivery invariants 1.2", () => {
     await expect(
       context.delivery.claim(deployment.id, testExecutor),
     ).rejects.toMatchObject({ code: "CONFLICT" });
-    expect(await context.cluster.database.applicationLock.count()).toBe(0);
+    expect(await context.cluster.database.targetLock.count()).toBe(0);
   });
   test("success requires exact reconciliation and acceptance evidence", async () => {
     const deployment = await context.delivery.createDeployment(
@@ -232,10 +232,10 @@ describe("PostgreSQL delivery invariants 1.2", () => {
       },
       testExecutor,
     );
-    expect(await context.cluster.database.applicationLock.count()).toBe(1);
+    expect(await context.cluster.database.targetLock.count()).toBe(1);
     await expect(
       context.delivery.createDeployment(
-        { ...context.input("retry"), expectedGeneration: 1 },
+        { ...context.input("retry"), expectedGeneration: 0 },
         testOperator,
       ),
     ).rejects.toMatchObject({ code: "CONFLICT" });
@@ -252,9 +252,9 @@ describe("PostgreSQL delivery invariants 1.2", () => {
         },
       ],
     );
-    expect(await context.cluster.database.applicationLock.count()).toBe(0);
+    expect(await context.cluster.database.targetLock.count()).toBe(0);
     const retry = await context.delivery.createDeployment(
-      { ...context.input("retry"), expectedGeneration: 1 },
+      { ...context.input("retry"), expectedGeneration: 0 },
       testOperator,
     );
     expect(retry.status).toBe("queued");

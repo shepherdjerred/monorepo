@@ -1,5 +1,5 @@
 import { DeliveryClientError } from "../../../packages/delivery/src/shared/client-error.ts";
-import type { LatestQualifiedArtifactQuery } from "../../../packages/delivery/src/shared/contract.ts";
+import type { LatestRetainableArtifactQuery } from "../../../packages/delivery/src/shared/contract.ts";
 import {
   CANONICAL_IMAGE_TARGETS,
   imageIdentity,
@@ -13,13 +13,33 @@ import type { BuildxCommandResult } from "./bake-retry.ts";
 type LiveCatalogExecutor = (
   command: readonly string[],
 ) => Promise<BuildxCommandResult>;
-type QualifiedImageReader = (
-  query: LatestQualifiedArtifactQuery,
+type RetainableImageReader = (
+  query: LatestRetainableArtifactQuery,
 ) => Promise<unknown>;
 
-/** API qualification already proves the entire original producer pipeline. */
-export async function readQualifiedImages(
-  read?: QualifiedImageReader,
+/** This main pipeline's number, the order-key bound for Delivery bases (B4). */
+export function currentPipelineNumber(
+  environment: Readonly<Record<string, string | undefined>> = Bun.env,
+): number {
+  const raw = environment["CI_PIPELINE_NUMBER"];
+  if (
+    raw === undefined ||
+    !/^[1-9]\d*$/.test(raw) ||
+    !Number.isSafeInteger(Number(raw))
+  )
+    throw new Error("CI_PIPELINE_NUMBER must be a positive safe integer");
+  return Number(raw);
+}
+
+/**
+ * Each image's comparison base: Delivery's newest pending or verified original
+ * before this pipeline. A pipeline that starts before the previous one
+ * qualifies still compares against, and retains, that pipeline's images (B2);
+ * Delivery verifies the retaining build only after the original's build.
+ */
+export async function readRetainableImages(
+  read?: RetainableImageReader,
+  beforePipeline = currentPipelineNumber(),
 ): Promise<QualifiedImageInventory> {
   let reader = read;
   if (reader === undefined) {
@@ -28,7 +48,7 @@ export async function readQualifiedImages(
     reader = createDeliveryClient({
       baseUrl: requireEnv("DELIVERY_URL"),
       headers: { Authorization: `Bearer ${requireEnv("DELIVERY_API_TOKEN")}` },
-    }).latestQualifiedArtifact;
+    }).latestRetainableArtifact;
   }
   const entries = await Promise.all(
     CANONICAL_IMAGE_TARGETS.map(async (name) => {
@@ -36,7 +56,10 @@ export async function readQualifiedImages(
       try {
         return [
           name,
-          qualifiedImage(name, await reader({ serviceId, component, kind })),
+          qualifiedImage(
+            name,
+            await reader({ serviceId, component, kind, beforePipeline }),
+          ),
         ] as const;
       } catch (error) {
         if (error instanceof DeliveryClientError && error.status === 404)

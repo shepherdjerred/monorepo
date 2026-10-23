@@ -6,14 +6,16 @@ import {
 } from "@shepherdjerred/delivery/contract";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
 import { deliveryRequest } from "#lib/delivery/client.ts";
-import { deliveryOperationId } from "#lib/delivery/selection.ts";
 import { runDeliveryJob } from "#lib/delivery/job.ts";
 import { deliveryJobManifest } from "#lib/delivery/job-manifest.ts";
 import type { DeliveryJobReceipt } from "#shared/delivery-job.ts";
 import { executeDeliveryControlPlane } from "./control-plane.ts";
 import { platformNativeEvidence } from "#lib/delivery/platform/native-job.ts";
 import { platformExecutionJob } from "#lib/delivery/platform/job-request.ts";
+import { TofuStateMarkerSchema } from "#lib/delivery/platform/tofu-input.ts";
 import { inspectDeliveryPlatformRecovery } from "./recovery.ts";
+import { runDeliveryModelPlatformStep } from "./model-tofu.ts";
+import { executorIdentity } from "#activities/delivery/model/stages.ts";
 
 /** All platform authority stays on its dedicated Activity queue and ServiceAccount. */
 export async function executePlatformWithJob(
@@ -26,13 +28,12 @@ export async function executePlatformWithJob(
   const pipeline = detail.pipeline.definition;
   if (
     snapshot === null ||
-    !["root-release", "tofu"].includes(pipeline.kind) ||
+    snapshot.kind === "root-release" ||
+    pipeline.kind !== "tofu" ||
     detail.deployment.cancelRequested ||
     detail.environment.activeDeploymentId !== id
   )
     throw new Error("Platform execution lacks its exact frozen active claim");
-  if (pipeline.kind !== "root-release" && pipeline.kind !== "tofu")
-    throw new Error("Missing reviewed platform recipe");
   const request = platformExecutionJob(detail);
   const operationId = z
     .string()
@@ -48,6 +49,7 @@ export async function executePlatformWithJob(
       operationId,
       message,
       evidence,
+      executor: executorIdentity(),
     });
   await stage("running", "Waiting for exact qualified platform Job", []);
   let receipt: DeliveryJobReceipt | undefined;
@@ -80,17 +82,23 @@ export async function executePlatformWithJob(
       stack: snapshot.stack,
       planDigest: plan.receipt.planDigest,
     });
-  } else if (snapshot.kind === "tofu-apply") {
-    z.object({
-      stack: z.literal(snapshot.stack),
-      planDeploymentId: z.literal(snapshot.planDeploymentId),
-      planDigest: z.literal(snapshot.plan.planDigest),
-      outcome: z.literal("applied-saved-plan"),
-      state: z.object({
-        lineage: z.literal(snapshot.plan.state.lineage),
-        serial: z.number().int().min(snapshot.plan.state.serial),
-      }),
-    })
+  } else {
+    const applied = z
+      .object({
+        stack: z.literal(snapshot.stack),
+        planDeploymentId: z.literal(snapshot.planDeploymentId),
+        planDigest: z.literal(snapshot.plan.planDigest),
+        outcome: z.literal("applied-saved-plan"),
+        state: z.object({
+          lineage: z.literal(snapshot.plan.state.lineage),
+          serial: z.number().int().min(snapshot.plan.state.serial),
+        }),
+        marker: TofuStateMarkerSchema.refine(
+          (marker) =>
+            marker.deploymentId === id && marker.stack === snapshot.stack,
+          "State marker names another deployment or stack",
+        ),
+      })
       .strict()
       .parse(result);
     summary = JSON.stringify({
@@ -99,24 +107,7 @@ export async function executePlatformWithJob(
       sourceBuildId: snapshot.source.id,
       stack: snapshot.stack,
       planDigest: snapshot.plan.planDigest,
-    });
-  } else {
-    const expected = {
-      requestId: deliveryOperationId(`${id}:root-release`),
-      charts: snapshot.charts.map(({ name, artifact }) => ({
-        name,
-        revision: artifact.version,
-      })),
-      outcome: "applied-verified",
-    };
-    if (canonicalJson(result) !== canonicalJson(expected))
-      throw new Error(
-        "Root release result differs from its frozen exact inventory",
-      );
-    summary = JSON.stringify({
-      adapter: "platform",
-      kind: snapshot.kind,
-      sourceBuildId: snapshot.source.id,
+      stateSerial: applied.marker.stateSerial,
     });
   }
   const evidence: EvidenceInput[] = [
@@ -138,6 +129,7 @@ export async function executeDeliveryPlatform(
   return await executePlatformWithJob(id, runDeliveryJob);
 }
 export const platformDeliveryActivities = {
+  runDeliveryModelPlatformStep,
   executeDeliveryPlatform,
   executeDeliveryControlPlane,
   inspectDeliveryPlatformRecovery,

@@ -15,7 +15,8 @@ test("quarantined Minecraft release shows independent recovery identity and keep
     main.getByRole("heading", { name: "Original server recovery" }),
   ).toBeVisible();
   await expect(main).toContainText("toolkit deploy minecraft recover");
-  await expect(main).toContainText("--expected-generation 1");
+  // The binding generation moves only on acceptance; this release never accepted.
+  await expect(main).toContainText("--expected-generation 0");
   await expect(main).toContainText("browser/minecraft/recovery");
   await expect(main.getByText("pending", { exact: true })).toBeVisible();
   await main.getByText("Frozen recovery identity", { exact: true }).click();

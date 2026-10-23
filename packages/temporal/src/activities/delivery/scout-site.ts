@@ -10,6 +10,7 @@ import {
   applyStaticSite,
   verifyStaticSite,
 } from "./static-site.ts";
+import { executorIdentity } from "./model/stages.ts";
 
 /** Frontend effects follow backend acceptance under the same frozen release lock. */
 export async function applyDeliveryScoutSite(
@@ -55,6 +56,7 @@ export async function applyDeliveryScoutSite(
       operationId,
       message: `Scout frontend ${status}`,
       evidence,
+      executor: executorIdentity(),
     });
   await stage("running", []);
   await applyStaticSite(detail);

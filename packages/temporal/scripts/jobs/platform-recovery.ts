@@ -21,9 +21,7 @@ import {
 } from "#lib/delivery/platform/recovery/native-proof.ts";
 import { recoveryJobReader } from "#lib/delivery/workers/worker-recovery-jobs.ts";
 import { runTofuRecovery } from "#lib/delivery/platform/recovery/tofu.ts";
-import { inspectRootRecovery } from "#lib/delivery/platform/recovery-root.ts";
 import { inspectControlPlaneRecovery } from "#lib/delivery/platform/recovery/target-argo.ts";
-import { platformExecutionJob } from "#lib/delivery/platform/job-request.ts";
 import {
   controlPlaneSelections,
   controlPlaneJobInput,
@@ -32,7 +30,6 @@ import {
 import { renderWorkerChart } from "#lib/delivery/workers/worker-control-plane.ts";
 import { workerApplicationResources } from "#lib/delivery/workers/worker-hosts.ts";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
-import { run as runRootRelease } from "./root-release.ts";
 import { controlPlaneCommand } from "./control-plane.ts";
 import {
   deliveryDispatchBarrierEffects,
@@ -110,54 +107,33 @@ export async function run(request: DeliveryJobRequest) {
     if (input.action === "plan")
       throw new Error("Only OpenTofu has a recovery saved-plan action");
     if (input.action === "apply") {
-      if (input.target === "root-release")
-        await runRootRelease(platformExecutionJob(context.deployment), fence);
-      else {
-        const selected = await controlPlaneRecoverySelection(
-          context,
-          native,
-          fence,
-        );
-        await fence();
-        await controlPlaneCommand([
-          "bun",
-          "--no-install",
-          path.resolve(
-            import.meta.dirname,
-            "../../../homelab/scripts/argocd/argocd.ts",
-          ),
-          "sync-managed",
-          "delivery-control-plane",
-          "--revision",
-          selected.selection.revision,
-          "--request-id",
-          deliveryOperationId(
-            `${context.deployment.deployment.id}:control-plane`,
-          ),
-          "--timeout",
-          "1200",
-        ]);
-      }
+      const selected = await controlPlaneRecoverySelection(
+        context,
+        native,
+        fence,
+      );
+      await fence();
+      await controlPlaneCommand([
+        "bun",
+        "--no-install",
+        path.resolve(
+          import.meta.dirname,
+          "../../../homelab/scripts/argocd/argocd.ts",
+        ),
+        "sync-managed",
+        "delivery-control-plane",
+        "--revision",
+        selected.selection.revision,
+        "--request-id",
+        deliveryOperationId(
+          `${context.deployment.deployment.id}:control-plane`,
+        ),
+        "--timeout",
+        "1200",
+      ]);
     }
     const render = async (selected: Parameters<typeof renderWorkerChart>[0]) =>
       await renderWorkerChart(selected, controlPlaneCommand);
-    if (input.target === "root-release")
-      return await inspectRootRecovery(context, {
-        read: argoApplicationRequest,
-        render: async (chart) =>
-          await render({
-            chart,
-            selection: {
-              application: "apps",
-              environmentId: context.deployment.environment.id,
-              repository: "https://chartmuseum.tailnet-1a49.ts.net",
-              chart: "apps",
-              revision: chart.version,
-              namespace: "argocd",
-              parameters: {},
-            },
-          }),
-      });
     return await inspectControlPlaneRecovery(context, {
       read: argoApplicationRequest,
       render,

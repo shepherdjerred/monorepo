@@ -1,10 +1,12 @@
 import { Client, type Connection } from "@temporalio/client";
 import { z } from "zod";
 import {
+  RecordTofuPlanSchema,
   deliveryWorkflowId,
   type CompletePlatformRecovery,
   type PlatformRecoveryContext,
 } from "@shepherdjerred/delivery/contract";
+import { stepStageKey } from "@shepherdjerred/delivery/model-contract";
 import type { V1Job } from "@kubernetes/client-node";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
 import {
@@ -18,6 +20,13 @@ import {
 } from "#lib/delivery/job-manifest.ts";
 import type { RecoveryJobReader } from "#lib/delivery/workers/worker-recovery-jobs.ts";
 import { platformExecutionJob } from "#lib/delivery/platform/job-request.ts";
+import { deliveryRequest } from "#lib/delivery/client.ts";
+import { modelRecipe } from "#lib/delivery/model/recipe.ts";
+import {
+  modelApplyInput,
+  modelPlanInput,
+  modelTofuJobRequest,
+} from "#lib/delivery/model/tofu.ts";
 import { recoveryExecutionJob } from "./request.ts";
 
 type NativeProof = Pick<
@@ -141,16 +150,55 @@ async function inspectJob(
   };
 }
 
-/** Reconstructs every execution-controlling spec. A closed Workflow or absent Job alone cannot settle a target. */
-export async function provePlatformNativeJobs(
-  context: PlatformRecoveryContext,
+/**
+ * The native Jobs the original deployment could have run: a v1 platform
+ * deployment's one Job, or a model tofu recipe's plan Job and, once its
+ * plan was saved, its apply Job.
+ */
+async function originalJobs(
+  detail: PlatformRecoveryContext["deployment"],
+): Promise<DeliveryJobRequest[]> {
+  const recipe = modelRecipe(detail);
+  if (recipe?.kind !== "tofu" || detail.deployment.platformSnapshot !== null)
+    return [platformExecutionJob(detail)];
+  const plan = stepStageKey("step", "plan");
+  const requests = [
+    modelTofuJobRequest(detail, {
+      recipe,
+      key: plan,
+      kind: "tofu-plan",
+      jobInput: modelPlanInput(detail, recipe),
+    }),
+  ];
+  // The apply step runs only after its plan step saved the plan it applies.
+  if (
+    detail.stages.some(
+      (stage) => stage.key === plan && stage.status === "succeeded",
+    )
+  ) {
+    const saved = await deliveryRequest(
+      `platform/plans/${encodeURIComponent(detail.deployment.id)}`,
+      RecordTofuPlanSchema,
+    );
+    requests.push(
+      modelTofuJobRequest(detail, {
+        recipe,
+        key: stepStageKey("step", "apply"),
+        kind: "tofu-apply",
+        jobInput: modelApplyInput(detail, recipe, saved.receipt),
+      }),
+    );
+  }
+  return requests;
+}
+
+/** One original Job, against the receipt its stage recorded. */
+async function inspectOriginal(
   read: RecoveryJobReader,
-  excludeUID?: string,
-): Promise<NativeProof["nativeJobs"]> {
-  const request = platformExecutionJob(context.deployment);
-  const stage = context.deployment.stages.find(
-    (entry) => entry.key === request.stageKey,
-  );
+  detail: PlatformRecoveryContext["deployment"],
+  request: DeliveryJobRequest,
+) {
+  const stage = detail.stages.find((entry) => entry.key === request.stageKey);
   const recorded =
     stage?.message.startsWith("{") === true
       ? DeliveryJobReceiptSchema.parse(JSON.parse(stage.message))
@@ -160,9 +208,20 @@ export async function provePlatformNativeJobs(
     stage.operationId !== deliveryJobManifest(request).metadata?.name
   )
     throw new Error("Platform stage does not match the frozen native Job name");
+  return await inspectJob(read, request, recorded);
+}
+
+/** Reconstructs every execution-controlling spec. A closed Workflow or absent Job alone cannot settle a target. */
+export async function provePlatformNativeJobs(
+  context: PlatformRecoveryContext,
+  read: RecoveryJobReader,
+  excludeUID?: string,
+): Promise<NativeProof["nativeJobs"]> {
   const result: NativeProof["nativeJobs"] = [];
-  const original = await inspectJob(read, request, recorded);
-  if (original !== undefined) result.push(original);
+  for (const request of await originalJobs(context.deployment)) {
+    const original = await inspectOriginal(read, context.deployment, request);
+    if (original !== undefined) result.push(original);
+  }
   for (const intent of [
     ...context.recoveryHistory.filter(
       (entry) => entry.id !== context.intent.id,

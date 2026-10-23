@@ -132,7 +132,11 @@ keeps only history. Transitions are forward only.
   (A5).
 - S3. `retire` and `remove` are refused while any deployment of the service
   is `owned` or `recovery-required`. `remove` records a `target-destroyed`
-  evidence entry that releases any remaining lock with that reason.
+  evidence entry that releases any remaining lock with that reason. Retiring
+  or removing an environment, or its service, is also refused while the
+  environment's accepted recipe deploys an Application with no lifecycle
+  policy, such as a carried v1 recipe (section 7), until a rebind accepts
+  one that declares it: only an active environment admits the rebind.
 - S4. A retired service's environments keep their accepted selection and
   retained hosts. No deployment of any kind is admitted.
 
@@ -199,7 +203,11 @@ attestation; then `verified` or `failed`.
   same component. It retains the existing artifact by reference. Chart bytes
   are compared with the version string excluded, and images by runtime
   fingerprint with build metadata (`VERSION`, `GIT_SHA`) excluded, so an
-  unchanged chart or image is retained rather than republished.
+  unchanged chart or image is retained rather than republished. A producer
+  compares against the newest pending or verified build of the current
+  lineage, so it may retain an artifact of a still-pending build that
+  precedes it in order key. The retaining build then verifies only after that
+  build does, and fails if that build fails (B1).
 - B3. An acquisition's source revision is the repository commit that
   performed and verified the acquisition, never the upstream project's
   source. Acquisitions execute inside the main-branch pipeline and carry its
@@ -231,7 +239,9 @@ multi-platform images), origin, `requires`, retention state.
 
 - `first-party`: built from this repository.
 - `upstream`: acquired. Records repository, name, version, and the upstream's
-  own checksum.
+  own checksum. A Git source records its tag and the exact commit the tag
+  named; its bytes are that commit's tarball, stored content-addressed in a
+  self-hosted store, and the commit is the artifact's version.
 - `licensed-bundle`: acquired under a licence that forbids redistribution in
   an image. Records manifest digest and producer source. Bytes are retained
   in private Delivery-owned storage.
@@ -451,7 +461,9 @@ a bucket, a stack, a channel).
   after. Resume starts at the first unsettled sub-step. A sub-step with
   recorded intent and unknown result moves the deployment to
   `recovery-required` naming that sub-step. A failed sub-step leaves the
-  whole deployment unaccepted.
+  whole deployment unaccepted. A Tofu stack is never a sub-step: its saved
+  plan, plan-step approval (H6) and apply bind one deployment of one stack
+  (D6).
 - T4. A target reads desired state only from the deployment holding its
   locks or, between deployments, from the environment's accepted selection,
   which it may re-assert as self-heal and must record as drift evidence
@@ -487,6 +499,10 @@ binds the authenticated actor and the exact inputs.
 - `rebind` keeps the accepted set revision and changes the recipe or
   configuration revision.
 - `retire-host` removes one retained host after drainage proof.
+- `carry` is recorded by the cutover's catalog reconcile, never requested: it
+  freezes an accepted selection carried onto the catalog's identities
+  (section 7), has no stages or effects, and is accepted in the same
+  transaction.
 
 **Eligibility.** A set revision is eligible for `deploy` when it is in the
 current lineage, every artifact's build is `verified`, A3 holds, every
@@ -528,7 +544,9 @@ ownership flag on a terminal result, not a fifth state: the result is kept
   whose lease expires without renewal, or whose workflow is closed, becomes
   `recovery-required`. A deployment is never owned by a different executor
   identity, except the successor executor of a self-hosted handoff (D8); the
-  same workflow may resume after a transient failure.
+  same workflow may resume after a transient failure. Only the owning
+  executor records the deployment's executor stages and finishes it; a
+  native Job may re-record its own running stage, which renews nothing.
 - D8. A deployment of a `self-hosted` service acquires a global dispatch
   barrier before effects: no other deployment is claimed while the barrier
   is held, queues are drained first, and the deployment's evidence source is
@@ -575,6 +593,11 @@ recorded.
   selection being restored, and it is valid only for a rollback to a
   selection that was itself approved and settled in that environment. It is
   the one exception to H1.
+- H6. A `tofu` recipe with an approve step takes its approval at that step,
+  on the saved plan (D6), and that decision satisfies the environment's
+  policy; its selection alone is never approved. An override (H4) of such
+  a deployment is cleared before the plan runs and recorded on the same
+  approval, apart from the plan decision.
 
 ### 4.14 Acceptance
 
@@ -704,6 +727,9 @@ is met or an alarm fires; `settled` when the threshold is met with no alarm;
   settled selection if D9 permits one. That rollback is authorised by a
   `restoration` approval (H5), not by a new decision. With no permitted
   candidate the environment is held (D2) for an operator with the reason.
+  An alarm counts only when it became active at or after the deployment's
+  claim; one already active before the claim is recorded as pre-existing
+  evidence and neither rolls back nor blocks settlement.
 - W3. `promote` out of an environment requires its current selection to be
   `settled`.
 - W4. Thresholds are evidence counts. Where a service has no traffic signal,
@@ -728,7 +754,10 @@ There is no `node` adapter. Talos and Kubernetes upgrades are `operator-run`
 deployments of the `cluster-nodes` service, one environment per node: the
 operator records intent, performs the procedure by hand, and attaches the
 upgrade log as attested evidence before acceptance (X13). Nothing executes
-the procedure from inside the cluster.
+the procedure from inside the cluster. Such a recipe wraps a `host` target
+rather than an Application or stack: the node's lock instance and the image
+components the upgrade moves (the Talos installer and the kubelet), acquired
+from the version catalog.
 
 ## 6. Flows
 
@@ -881,7 +910,19 @@ services render today (namespaces, volume claims, 1Password items,
 ingresses) move into a companion chart or a second Application source owned
 by the same service. Today redlib, the static proxy and ops-dashboard are
 environments of `self-hosted-apps`, `static-sites` and `ops-dashboard`; they
-become services at the cutover.
+become services at the cutover. The cutover's catalog reconcile carries each
+accepted selection onto the catalog's identities: `site:<bucket>` becomes
+`archive:<bucket>`, and a chart or image moves to the service that now owns
+it. The carried artifacts keep their bytes, digest, URI and original build,
+record the v1 artifact they stand for, and form the first set revision of
+their service's lineage (R0). A `carry` deployment freezes that set
+revision with the v1 acceptance's recipe and configuration and becomes the
+environment's accepted selection (L1), so the selection view, promotion,
+admission, the cold-start snapshot and rollback all name the carried
+identities; the v1 deployment stays as it was. The v1 sync of the target
+stands for the carry in a reconcile-after-restore. The carried artifacts
+stay qualified for retention and rollback because their original builds
+qualified.
 
 ## 8. Position on ArgoCD
 

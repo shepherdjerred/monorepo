@@ -3,8 +3,6 @@ import type { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
 import { index } from "./delivery-data.ts";
 import type { Database } from "./database.ts";
 import {
-  importSnapshot,
-  importedSnapshots,
   publish,
   compose,
   registerPipeline,
@@ -29,7 +27,35 @@ import {
   restoredContentRecovery,
 } from "./content-recovery/restoration.ts";
 import { failContentRecovery } from "./content-recovery/failure.ts";
-import { claim, stage, finish, releaseLock } from "./delivery-execution.ts";
+import { stage, finish } from "#infrastructure/execution/stages.ts";
+import { claim } from "#infrastructure/execution/claim.ts";
+import { handOff, renewLease } from "#infrastructure/execution/ownership.ts";
+import { releaseLock } from "#infrastructure/execution/lock-release.ts";
+import { reconcileCatalog } from "#infrastructure/catalog/reconcile.ts";
+import { retireService } from "#infrastructure/catalog/state.ts";
+import {
+  monitorStatus,
+  observeMonitor,
+  watchingMonitors,
+} from "#infrastructure/monitor/monitor.ts";
+import { requestMonitorRollback } from "#infrastructure/monitor/restoration.ts";
+import { recordDrift, selfHealing } from "#infrastructure/monitor/drift.ts";
+import { attestStage } from "#infrastructure/execution/attestation.ts";
+import {
+  recoveryIntent,
+  requestRecoveryIntent,
+} from "#infrastructure/execution/recovery-request.ts";
+import {
+  pendingRemovals,
+  recordTargetRemoved,
+} from "#infrastructure/execution/removal.ts";
+import {
+  coldStartRequirement,
+  reconcileAfterRestore,
+  recordColdStartReceipt,
+  settleRestoreHold,
+} from "#infrastructure/cold-start/restore.ts";
+import type { DeliveryPolicy } from "./config.ts";
 import { pending, monitor, orphan, submitted } from "./delivery-dispatch.ts";
 import {
   detail,
@@ -37,6 +63,7 @@ import {
   version,
   overview,
   latestQualifiedArtifact,
+  latestRetainableArtifact,
 } from "./delivery-read.ts";
 import {
   pendingQualification,
@@ -67,6 +94,7 @@ import {
 } from "./upstream-artifact.ts";
 import { createPlatformDeployment } from "./platform/requests.ts";
 import { recordTofuPlan, tofuPlan } from "./platform/plans.ts";
+import { approveTofuPlan } from "./platform/plan-decision.ts";
 import { requestControlPlaneUpgrade } from "./control-plane/requests.ts";
 import {
   publishForumBundle,
@@ -118,6 +146,12 @@ import {
   failMinecraftRecovery,
 } from "./minecraft-recovery/settlement.ts";
 
+/** Defaults match the typed configuration defaults; production injects fresh flag reads. */
+export const defaultDeliveryPolicy: DeliveryPolicy = {
+  executorConcurrency: () => Promise.resolve(4),
+  leaseSeconds: () => Promise.resolve(900),
+};
+
 /** PostgreSQL delivery operations, grouped by transactional responsibility. */
 export class Delivery {
   constructor(
@@ -126,12 +160,29 @@ export class Delivery {
     readonly catalog: ServiceIndex = index,
     readonly forumPolicyReader: ForumPolicyReader = createForumPolicyReader(),
   ) {}
-  importSnapshot = importSnapshot;
-  importedSnapshots = importedSnapshots;
+  /** Operational bounds read at admission; the server injects flag-backed reads. */
+  policy: DeliveryPolicy = defaultDeliveryPolicy;
   publish = publish;
   compose = compose;
   registerPipeline = registerPipeline;
   registerEnvironment = registerEnvironment;
+  reconcileCatalog = reconcileCatalog;
+  retireService = retireService;
+  watchingMonitors = watchingMonitors;
+  observeMonitor = observeMonitor;
+  monitorStatus = monitorStatus;
+  requestMonitorRollback = requestMonitorRollback;
+  selfHealing = selfHealing;
+  attestStage = attestStage;
+  requestRecoveryIntent = requestRecoveryIntent;
+  recoveryIntent = recoveryIntent;
+  pendingRemovals = pendingRemovals;
+  recordTargetRemoved = recordTargetRemoved;
+  recordDrift = recordDrift;
+  coldStartRequirement = coldStartRequirement;
+  recordColdStartReceipt = recordColdStartReceipt;
+  reconcileAfterRestore = reconcileAfterRestore;
+  settleRestoreHold = settleRestoreHold;
   createDeployment = createDeployment;
   requestTrmnlRepair = requestTrmnlRepair;
   requestContentRecovery = requestContentRecovery;
@@ -146,6 +197,8 @@ export class Delivery {
   approve = approve;
   cancel = cancel;
   claim = claim;
+  renewLease = renewLease;
+  handOff = handOff;
   stage = stage;
   finish = finish;
   releaseLock = releaseLock;
@@ -158,6 +211,7 @@ export class Delivery {
   version = version;
   overview = overview;
   latestQualifiedArtifact = latestQualifiedArtifact;
+  latestRetainableArtifact = latestRetainableArtifact;
   pendingQualification = pendingQualification;
   build = findBuild;
   markQualificationAttempt = markQualificationAttempt;
@@ -179,6 +233,7 @@ export class Delivery {
   createPlatformDeployment = createPlatformDeployment;
   recordTofuPlan = recordTofuPlan;
   tofuPlan = tofuPlan;
+  approveTofuPlan = approveTofuPlan;
   requestControlPlaneUpgrade = requestControlPlaneUpgrade;
   publishForumBundle = publishForumBundle;
   pendingForumBundles = pendingForumBundles;
