@@ -6,7 +6,8 @@
  * `R pseudonym team kit bot` for who played what, `J tick shooter kind ...`
  * for each arrow a bow or crossbow loosed, `E tick hit attacker
  * victim;class;cause;damage` for damage that landed between members,
- * `E tick died victim ...` for deaths and `X tick ...` for the end.
+ * `D tick victim ...` (and, in older recordings, `E tick died victim ...`) for
+ * deaths, including a member who left mid-match, and `X tick ...` for the end.
  *
  * Coverage: J rows are written for bow and crossbow arrows (the server's
  * bow-shot event, and a bot's direct bow shot), not for thrown tridents, so a
@@ -138,6 +139,7 @@ const HitDetail = z.tuple([
   z.string().regex(/^-?\d+\.\d{2}$/u),
 ]);
 const EndRow = z.tuple([z.literal("X"), Tick]).rest(z.string());
+const DeathRow = z.tuple([z.literal("D"), Tick, Pseudonym]).rest(z.string());
 const Capability = z.string().regex(/^[a-z][a-z0-9-]*$/u);
 
 function readHeader(match: Match, fields: string[]) {
@@ -175,6 +177,16 @@ function readEvent(match: Match, fields: string[]) {
   }
 }
 
+/**
+ * A death row: every death, including a member who left during the match,
+ * which writes no `E died` row.
+ */
+function readDeath(match: Match, fields: string[]) {
+  const [, tick, victim] = DeathRow.parse(fields);
+  match.endTick = Math.max(match.endTick, tick);
+  if (!match.deaths.has(victim)) match.deaths.set(victim, tick);
+}
+
 function readEnd(match: Match, fields: string[]) {
   const [, tick] = EndRow.parse(fields);
   match.endTick = Math.max(match.endTick, tick);
@@ -186,6 +198,7 @@ const READERS = new Map<string, (match: Match, fields: string[]) => void>([
   ["R", readMember],
   ["J", readShot],
   ["E", readEvent],
+  ["D", readDeath],
   ["X", readEnd],
 ]);
 

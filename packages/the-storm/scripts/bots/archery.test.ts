@@ -103,6 +103,25 @@ describe("archery report card", () => {
     expect(MIN_ACCURACY).toBeLessThanOrEqual(0.3);
   });
 
+  it("ends a life at a death row, as for a member who left mid-match", () => {
+    // Leaving writes a D row and no E died row; reading only E died kept a
+    // departed member alive until the end, understating shots per minute.
+    const departed = [
+      ...recording().slice(0, -1),
+      row("D", 1200, "sloth", "-", "departed"),
+      row("X", 2400, "RED", "LAST_TEAM_STANDING"),
+    ];
+    const sloth = cards(readMatch(departed)).find(
+      (card) => card.pseudonym === "sloth",
+    );
+    expect(sloth).toMatchObject({
+      secondsAlive: 60,
+      died: true,
+      shots: 4,
+      shotsPerMinute: 4,
+    });
+  });
+
   it("sums a team's bots", () => {
     const red = cards(readMatch(recording())).filter(
       (card) => card.team === "RED",
