@@ -11,11 +11,7 @@ import { IdentifierSchema } from "#shared/artifact-contract.ts";
 import { MonitorSchema } from "./monitor-contract.ts";
 import { StaticSitePolicySchema } from "#shared/static-site-contract.ts";
 import { WorkerPoolTargetSchema } from "#shared/worker-contract.ts";
-import {
-  extraSiteSteps,
-  misplacedUpgrades,
-  ONE_SITE_STEP,
-} from "./step-order.ts";
+import { misplacedUpgrades, repeatedSingleSteps } from "./step-order.ts";
 import { OperatorHostTargetSchema } from "./operator-run-contract.ts";
 
 /**
@@ -337,12 +333,8 @@ export const KubernetesApplicationRecipeSchema = z
     }
     for (const issue of misplacedUpgrades(recipe.steps))
       context.addIssue(issue);
-    if (extraSiteSteps(recipe.steps))
-      context.addIssue({
-        code: "custom",
-        path: ["steps"],
-        message: ONE_SITE_STEP,
-      });
+    for (const message of repeatedSingleSteps(recipe.steps))
+      context.addIssue({ code: "custom", path: ["steps"], message });
     // Steps and monitors act on this deployment's own selection only.
     const images = new Set(
       Object.values(recipe.artifactParameters).map((value) => value.component),
@@ -501,13 +493,12 @@ export const CompoundRecipeSchema = z
       recipe.subRecipes.every((sub) => sub.definition.kind !== "tofu"),
     "A Tofu stack is its own recipe; a compound recipe holds no tofu sub-recipe",
   )
-  .refine(
-    (recipe) =>
-      !extraSiteSteps(
-        recipe.subRecipes.flatMap((sub) => applicationSteps(sub.definition)),
-      ),
-    ONE_SITE_STEP,
-  );
+  .superRefine((recipe, context) => {
+    for (const message of repeatedSingleSteps(
+      recipe.subRecipes.flatMap((sub) => applicationSteps(sub.definition)),
+    ))
+      context.addIssue({ code: "custom", message });
+  });
 
 export const RecipeDefinitionSchema = z.discriminatedUnion("kind", [
   ...nonCompoundRecipes,

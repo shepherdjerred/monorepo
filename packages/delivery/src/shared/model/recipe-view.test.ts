@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { RecipeDefinitionSchema } from "./recipe-contract.ts";
 import { specializedStageKey } from "./recipe-view.ts";
-import { ONE_SITE_STEP } from "./step-order.ts";
+import { ONE_FORUM_BUNDLE, ONE_SITE_STEP } from "./step-order.ts";
 import { applicationRecipe } from "#testing/catalog-fixture.ts";
 
 /** An Application recipe whose third step is `extra`, if given. */
@@ -99,5 +99,59 @@ describe("one site activation per release", () => {
         ],
       }),
     ).toContain(ONE_SITE_STEP);
+  });
+});
+
+const forumStep = {
+  kind: "forum-bundle",
+  pointOfNoReturn: true,
+  imageComponent: "image:storm-forum",
+  bundleComponent: "archive:forum-bundle",
+};
+
+/** A Forum Application recipe whose steps after its sync are `extra`. */
+function forumApplication(
+  name: string,
+  extra: readonly Record<string, unknown>[],
+) {
+  return {
+    ...applicationRecipe(name, extra),
+    artifactParameters: {
+      "delivery.image": { component: "image:storm-forum", format: "reference" },
+    },
+  };
+}
+
+describe("one Forum migration per release", () => {
+  test("an Application recipe with one forum-bundle step is a valid Forum release", () => {
+    expect(
+      RecipeDefinitionSchema.safeParse(
+        forumApplication("storm-forum", [forumStep]),
+      ).success,
+    ).toBe(true);
+  });
+
+  test("an Application recipe holds at most one forum-bundle step", () => {
+    expect(
+      refusal(forumApplication("storm-forum", [forumStep, forumStep])),
+    ).toEqual([ONE_FORUM_BUNDLE]);
+  });
+
+  test("a compound recipe holds at most one forum-bundle step across its Applications", () => {
+    expect(
+      refusal({
+        kind: "compound",
+        subRecipes: [
+          {
+            instance: "application:storm-forum",
+            definition: forumApplication("storm-forum", [forumStep]),
+          },
+          {
+            instance: "application:storm-forum-staging",
+            definition: forumApplication("storm-forum-staging", [forumStep]),
+          },
+        ],
+      }),
+    ).toEqual([ONE_FORUM_BUNDLE]);
   });
 });

@@ -23,15 +23,25 @@ export function misplacedUpgrades(
 }
 
 /**
- * Settlement and recovery read one site activation per release
- * (`siteReleaseOf`, `specializedStageKey`), while the executor runs every
- * static-site step it is given. A recipe therefore holds at most one
- * static-site step across its Applications, compound sub-recipes included.
+ * Settlement, recovery and Forum candidate validation each read one
+ * occurrence of these steps per release (`siteReleaseOf`,
+ * `specializedStageKey`, `forumReleaseOf`, `stepApplicationOf`), while the
+ * executor runs every step it is given. A recipe therefore holds at most one
+ * of each across its Applications, compound sub-recipes included.
  */
 export const ONE_SITE_STEP =
   "A recipe activates at most one static-site step across its Applications; settlement proves exactly one site activation per release";
+export const ONE_FORUM_BUNDLE =
+  "A recipe migrates at most one Forum database: it holds at most one forum-bundle step across its Applications, because candidate validation and the baseline freeze read one Forum release per deployment";
 
-/** Whether these Application steps hold more than one static-site step. */
-export function extraSiteSteps(steps: readonly { kind: string }[]) {
-  return steps.filter((step) => step.kind === "static-site").length > 1;
+const SINGLE_STEPS: Readonly<Record<string, string>> = {
+  "static-site": ONE_SITE_STEP,
+  "forum-bundle": ONE_FORUM_BUNDLE,
+};
+
+/** The refusal for each single-occurrence step kind these Application steps repeat. */
+export function repeatedSingleSteps(steps: readonly { kind: string }[]) {
+  return Object.entries(SINGLE_STEPS).flatMap(([kind, message]) =>
+    steps.filter((step) => step.kind === kind).length > 1 ? [message] : [],
+  );
 }
