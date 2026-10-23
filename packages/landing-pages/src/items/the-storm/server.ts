@@ -1,7 +1,12 @@
 // Mirrors packages/storm-forum/config/forum.json and the docs join page.
 export const server = {
   java: { address: "ts-mc.net", version: "26.2" },
-  bedrock: { address: "mc.ts-mc.net", port: "30004" },
+  // Bedrock support follows the live Geyser build, so the page names no number.
+  bedrock: {
+    address: "mc.ts-mc.net",
+    port: "30004",
+    version: "latest version",
+  },
   discord: "https://discord.gg/TvTCcWnYUT",
   joinGuide: "https://docs.ts-mc.net/join/",
   docs: "https://docs.ts-mc.net/",
