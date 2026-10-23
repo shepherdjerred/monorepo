@@ -134,7 +134,7 @@ final class TeamPlayTest {
   // two per attacker on opposite sides of its bearing.
   // Archers retaking or hunting take a target out to the middle of their band.
   // A hit places its attacker in the victim's memory and draws the victim's aggro (aggro=1).
-  private static final String PINNED_YARD_HASH = "4fcb3fe0d0948a1d";
+  private static final String PINNED_YARD_HASH = "e0aad7106c0f071f";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {
