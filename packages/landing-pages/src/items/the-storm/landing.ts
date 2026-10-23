@@ -118,6 +118,10 @@ for (const link of document.querySelectorAll<HTMLAnchorElement>(
       document.dispatchEvent(new CustomEvent("storm:discord-clicked"));
     } else if (track === "docs") {
       window.posthog?.capture("storm_docs_clicked", { placement });
+    } else if (track === "console") {
+      window.posthog?.capture("storm_console_steps_clicked", { placement });
+    } else if (track === "section") {
+      window.posthog?.capture("storm_join_steps_clicked", { placement });
     } else {
       throw new Error(`Unknown tracked link: ${String(track)}`);
     }
