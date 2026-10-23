@@ -97,7 +97,9 @@ final class RwfKitsBatchCTest {
   void aSpyWearsTheViewersOwnColours() {
     var fight = on("spy");
 
-    assertThat(seen(fight.enemy, fight.alice)).isEqualTo(teamName(teamOf(fight.enemy)));
+    // The enemy's colour, on a team apart from the enemy's own so their blows still land.
+    assertThat(seen(fight.enemy, fight.alice)).isEqualTo(teamName(teamOf(fight.enemy), "_spy"));
+    assertThat(seen(fight.alice, fight.alice)).isEqualTo(teamName(teamOf(fight.alice)));
   }
 
   @Test
