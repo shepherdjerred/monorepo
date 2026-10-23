@@ -90,9 +90,13 @@ export async function orphan(
         "CONFLICT",
         "A closed Workflow that does not own this deployment cannot orphan it",
       );
-    const recoveryRequired = row.stages.some(
-      (entry) => entry.status === "running",
-    );
+    // A handed-off deployment's self-hosted change is applied, and only its
+    // successor's verified acceptance settles it. A successor that closed
+    // after claiming leaves it recovery-required with its locks and
+    // dispatch barrier held, as failDeliveryHandoff does (D5, D8).
+    const recoveryRequired =
+      input.workflowId === deliverySuccessorWorkflowId(deploymentId) ||
+      row.stages.some((entry) => entry.status === "running");
     const updated = await tx.deployment.update({
       where: { id: deploymentId },
       data: {

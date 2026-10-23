@@ -184,6 +184,121 @@ async function successorDispatchCase(input: {
   });
 }
 
+type Fixture = {
+  store: Delivery;
+  database: Awaited<ReturnType<typeof createTestDatabase>>["database"];
+  environmentId: string;
+  versionId: string;
+};
+
+/** A self-hosted deployment whose outgoing executor applied it and handed it off (D8). */
+async function handedOffDeployment(input: Fixture, requestId: string) {
+  const { store, database, environmentId, versionId } = input;
+  const env = await database.environment.findUniqueOrThrow({
+    where: { id: environmentId },
+  });
+  await database.service.update({
+    where: { id: env.serviceId },
+    data: { selfHosted: true },
+  });
+  for (const pending of await database.deployment.findMany({
+    where: { environmentId, status: { in: ["queued", "awaiting_approval"] } },
+  }))
+    await store.cancel(pending.id, testOperator);
+  const handed = await store.createDeployment(
+    {
+      requestId,
+      environmentId,
+      versionSetRevisionId: versionId,
+      expectedGeneration: env.generation,
+      kind: "deploy",
+    },
+    testOperator,
+  );
+  const outgoing = {
+    workflowId: deliveryWorkflowId(handed.id),
+    workflowRunId: "outgoing-run",
+  };
+  await store.claim(handed.id, testExecutor, undefined, outgoing);
+  await store.handOff(handed.id, outgoing, testExecutor);
+  return {
+    handed,
+    serviceId: env.serviceId,
+    successor: deliverySuccessorWorkflowId(handed.id),
+  };
+}
+
+/** Temporal's view of the successor: a handoff Workflow in a status. */
+function describeSuccessor(successor: string, status: string) {
+  temporal.describe.mockImplementation(async (workflowId) =>
+    workflowId === successor
+      ? { type: "deliveryHandoffWorkflow", status: { name: status } }
+      : { type: "deliveryDeploymentWorkflow", status: { name: "RUNNING" } },
+  );
+}
+
+function resetDescribe() {
+  temporal.describe.mockReset();
+  temporal.describe.mockImplementation(async () => ({
+    type: "deliveryDeploymentWorkflow",
+    status: { name: "RUNNING" },
+  }));
+}
+
+/**
+ * D8: a successor that closes after claiming its handoff leaves the applied
+ * self-hosted change unverified. The deployment ends recovery-required,
+ * keeping its target locks and its environment.
+ */
+async function closedSuccessorCase(input: Fixture) {
+  const { store, database } = input;
+  const { handed, serviceId, successor } = await handedOffDeployment(
+    input,
+    "successor-closed-after-claim",
+  );
+  await store.claimHandoff(
+    handed.id,
+    { workflowId: successor, workflowRunId: "successor-run" },
+    testExecutor,
+  );
+  const locks = await database.targetLock.count({
+    where: { deploymentId: handed.id },
+  });
+  expect(locks).toBeGreaterThan(0);
+  describeSuccessor(successor, "TERMINATED");
+  try {
+    expect(await dispatchPendingDeliveries()).toEqual({ submitted: 0 });
+  } finally {
+    resetDescribe();
+  }
+  const settled = await store.detail(handed.id);
+  expect(settled.deployment).toMatchObject({
+    status: "failed",
+    recoveryRequired: true,
+  });
+  expect(settled.environment.activeDeploymentId).toBe(handed.id);
+  expect(
+    await database.targetLock.count({ where: { deploymentId: handed.id } }),
+  ).toBe(locks);
+  // Fixture cleanup stands in for the recovery intent that would settle it.
+  await database.targetLock.deleteMany({ where: { deploymentId: handed.id } });
+  await database.platformLock.deleteMany({
+    where: { deploymentId: handed.id },
+  });
+  await database.deployment.update({
+    where: { id: handed.id },
+    data: { recoveryRequired: false },
+  });
+  await database.environment.update({
+    where: { id: settled.environment.id },
+    data: { activeDeploymentId: null },
+  });
+  await database.service.update({
+    where: { id: serviceId },
+    data: { selfHosted: false },
+  });
+}
+
 describe("Delivery outbox dispatch over real PostgreSQL and HTTP", () => {
   let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
   let server: ReturnType<typeof Bun.serve>;
@@ -321,6 +436,16 @@ describe("Delivery outbox dispatch over real PostgreSQL and HTTP", () => {
   it("starts the one successor of a handed-off self-hosted deployment instead of orphaning it (D8)", async () => {
     writesEnabled = false;
     await successorDispatchCase({
+      store,
+      database: cluster.database,
+      environmentId,
+      versionId,
+    });
+  }, 60_000);
+  // Before the worker recovery case, whose quarantine holds the dispatch barrier.
+  it("a successor that claims and closes before acceptance never releases ownership (D8)", async () => {
+    writesEnabled = false;
+    await closedSuccessorCase({
       store,
       database: cluster.database,
       environmentId,
