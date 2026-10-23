@@ -248,7 +248,11 @@ main > * {
   .masthead nav a,
   button,
   select,
-  input {
+  input,
+  details > summary {
     min-height: 44px;
+  }
+  details > summary {
+    padding-block: 10px;
   }
 }
