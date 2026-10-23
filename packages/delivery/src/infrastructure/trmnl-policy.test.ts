@@ -88,4 +88,24 @@ describe("TRMNL plugin selection (T3)", () => {
       /fixed dashboard/u,
     );
   });
+
+  test("a second archive step after the dashboard's is refused", () => {
+    // The dashboard's step is first, so a first-occurrence check would admit it.
+    const compound = RecipeDefinitionSchema.parse({
+      kind: "compound",
+      subRecipes: [
+        {
+          instance: "application:trmnl-dashboard",
+          definition: application("trmnl-dashboard", true),
+        },
+        {
+          instance: "application:scout",
+          definition: application("scout", true),
+        },
+      ],
+    });
+    expect(() => validateTrmnlSelection(compound, selected)).toThrow(
+      /exactly one archive step/u,
+    );
+  });
 });

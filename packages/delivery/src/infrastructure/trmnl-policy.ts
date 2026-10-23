@@ -5,6 +5,7 @@ import type {
   VersionSetRevision,
 } from "#shared/contract.ts";
 import {
+  kubernetesRecipes,
   specializedStageKey,
   stepApplicationOf,
   trmnlPluginsOf,
@@ -24,6 +25,17 @@ export function validateTrmnlSelection(
       "TRMNL dashboard releases must include their fixed plugin dependency stage",
     );
   if (plugins === undefined) return;
+  // The executor runs every archive step through the one TRMNL client, and
+  // settlement reads the first, so a second would overwrite the fixed
+  // plugin settings unchecked.
+  const archiveSteps = kubernetesRecipes(pipeline)
+    .flatMap((recipe) => recipe.steps)
+    .filter((step) => step.kind === "archive");
+  if (archiveSteps.length > 1)
+    throw new DeliveryError(
+      "INVALID",
+      "A release configures the fixed TRMNL plugins through exactly one archive step",
+    );
   const archive = selected.components[plugins.archiveComponent];
   if (
     // The Application that owns the archive step, not a compound's first.
