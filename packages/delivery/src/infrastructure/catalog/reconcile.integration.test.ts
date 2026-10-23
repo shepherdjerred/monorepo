@@ -349,6 +349,135 @@ describe("catalog reconcile of references (A5)", () => {
   });
 });
 
+/** Arcade's beta environment retired, or the whole service with both environments. */
+function arcadeRetired(document: Document, scope: "environment" | "service") {
+  return {
+    ...document,
+    services: document.services.map((service) =>
+      scope === "service" && service.id === "arcade"
+        ? { ...service, lifecycle: "retired" as const }
+        : service,
+    ),
+    environments: document.environments.map((environment) =>
+      environment.id === "arcade/beta" ||
+      (scope === "service" && environment.id === "arcade/prod")
+        ? { ...environment, lifecycle: "retired" as const }
+        : environment,
+    ),
+  };
+}
+async function ownedDeployment(status: "running" | "failed") {
+  await context.cluster.database.versionSet.create({
+    data: {
+      id: "arcade-set",
+      serviceId: "arcade",
+      revision: 1,
+      lineage: "0".repeat(64),
+    },
+  });
+  await context.cluster.database.deployment.create({
+    data: {
+      id: "arcade-owned",
+      requestId: "arcade/owned",
+      environmentId: "arcade/beta",
+      serviceId: "arcade",
+      versionSetRevisionId: "arcade-set",
+      pipelineRevisionId: "arcade-beta/1",
+      configurationId: "arcade/1",
+      catalogRevision: "test",
+      expectedGeneration: 0,
+      kind: "deploy",
+      status,
+      recoveryRequired: status === "failed",
+      requestedBy: testPublisher.id,
+      ...(status === "failed" ? { finishedAt: new Date() } : {}),
+    },
+  });
+}
+async function lifecycles() {
+  const [service, environments] = await Promise.all([
+    context.cluster.database.service.findUniqueOrThrow({
+      where: { id: "arcade" },
+    }),
+    context.cluster.database.environment.findMany({
+      where: { serviceId: "arcade" },
+      orderBy: { id: "asc" },
+    }),
+  ]);
+  return [
+    service.lifecycle,
+    ...environments.map((row) => `${row.id}:${row.lifecycle}`),
+  ];
+}
+
+describe("catalog reconcile of lifecycles while deployments are owned (S3)", () => {
+  test("a running deployment holds its environment and service active until it settles", async () => {
+    const document = await catalogDocument();
+    await context.delivery.reconcileCatalog(
+      document,
+      testOperator,
+      NO_MIGRATION,
+    );
+    await ownedDeployment("running");
+    const refused = await context.delivery.reconcileCatalog(
+      arcadeRetired(document, "service"),
+      testOperator,
+      NO_MIGRATION,
+    );
+    expect(refused.refused.map((entry) => entry.id).toSorted()).toEqual([
+      "arcade",
+      "arcade/beta",
+    ]);
+    expect(refused.refused[0]?.reason).toMatch(
+      /refused while a deployment is owned or recovery-required \(S3\)/u,
+    );
+    // The unowned environment retires; the owned one and its service stay.
+    expect(refused.environments.retired).toEqual(["arcade/prod"]);
+    expect(await lifecycles()).toEqual([
+      "active",
+      "arcade/beta:active",
+      "arcade/prod:retired",
+    ]);
+    await context.cluster.database.deployment.update({
+      where: { id: "arcade-owned" },
+      data: { status: "succeeded", finishedAt: new Date() },
+    });
+    const settled = await context.delivery.reconcileCatalog(
+      arcadeRetired(document, "service"),
+      testOperator,
+      NO_MIGRATION,
+    );
+    expect(settled.refused).toEqual([]);
+    expect(await lifecycles()).toEqual([
+      "retired",
+      "arcade/beta:retired",
+      "arcade/prod:retired",
+    ]);
+  });
+
+  test("a recovery-required deployment refuses its environment's retirement", async () => {
+    const document = await catalogDocument();
+    await context.delivery.reconcileCatalog(
+      document,
+      testOperator,
+      NO_MIGRATION,
+    );
+    await ownedDeployment("failed");
+    const result = await context.delivery.reconcileCatalog(
+      arcadeRetired(document, "environment"),
+      testOperator,
+      NO_MIGRATION,
+    );
+    expect(result.refused.map((entry) => entry.id)).toEqual(["arcade/beta"]);
+    expect(result.environments.retired).toEqual([]);
+    expect(await lifecycles()).toEqual([
+      "active",
+      "arcade/beta:active",
+      "arcade/prod:active",
+    ]);
+  });
+});
+
 describe("catalog reconcile of v1 environments", () => {
   test("a renamed environment keeps its accepted selection and history; omitted ones are refused", async () => {
     await seedV1Site();

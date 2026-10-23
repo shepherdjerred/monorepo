@@ -1,4 +1,7 @@
-import { environmentService } from "@shepherdjerred/ops-model/catalog-document-shape.ts";
+import {
+  environmentService,
+  LifecycleSchema,
+} from "@shepherdjerred/ops-model/catalog-document-shape.ts";
 import { DeliveryError } from "#domain/error.ts";
 import type { Principal } from "#shared/contract.ts";
 import {
@@ -21,6 +24,12 @@ import type { Delivery } from "#infrastructure/delivery.ts";
 import { id, type Transaction } from "#infrastructure/delivery-data.ts";
 import { audit, fingerprint, lock } from "#infrastructure/delivery-records.ts";
 import { carrySelections } from "./carry.ts";
+import {
+  environmentOwned,
+  refuseLifecycle,
+  requireUnowned,
+  serviceOwned,
+} from "./ownership.ts";
 import { emptyResult, type Result } from "./result.ts";
 
 /** The v1 environments the cutover carries onto catalog ids or retires (section 7). */
@@ -68,21 +77,6 @@ function requireForward(entity: string, from: string, to: Lifecycle) {
     throw new DeliveryError(
       "CONFLICT",
       `${entity} cannot move from ${from} back to ${to}`,
-    );
-}
-
-/** A service whose deployments are owned or quarantined admits no definition change (C4, S3). */
-async function requireUnowned(tx: Transaction, serviceId: string, why: string) {
-  const owned = await tx.deployment.count({
-    where: {
-      serviceId,
-      OR: [{ status: "running" }, { recoveryRequired: true }],
-    },
-  });
-  if (owned > 0)
-    throw new DeliveryError(
-      "CONFLICT",
-      `${why} is refused while a deployment of ${serviceId} is owned or recovery-required`,
     );
 }
 
@@ -150,6 +144,18 @@ async function reconcileServices(
       existing.lifecycle,
       service.lifecycle,
     );
+    let lifecycle = service.lifecycle;
+    if (
+      existing.lifecycle !== service.lifecycle &&
+      (await serviceOwned(tx, service.id))
+    ) {
+      refuseLifecycle(result, {
+        id: service.id,
+        from: existing.lifecycle,
+        to: service.lifecycle,
+      });
+      lifecycle = LifecycleSchema.parse(existing.lifecycle);
+    }
     if (existing.lineage !== lineage) {
       // A component-list change starts a new lineage and moves every
       // environment's binding generation (C4, E1, S1).
@@ -160,7 +166,10 @@ async function reconcileServices(
       });
       result.services.lineageChanged.push(service.id);
     }
-    await tx.service.update({ where: { id: service.id }, data });
+    await tx.service.update({
+      where: { id: service.id },
+      data: { ...data, lifecycle },
+    });
   }
 }
 
@@ -277,11 +286,10 @@ async function retireEnvironment(
     where: { id: environmentId },
   });
   if (row?.lifecycle !== "active") return;
-  if (row.activeDeploymentId !== null)
-    throw new DeliveryError(
-      "CONFLICT",
-      `Environment ${environmentId} is owned by a deployment and cannot retire (S3)`,
-    );
+  if (await environmentOwned(tx, row)) {
+    refuseLifecycle(result, { id: row.id, from: "active", to: "retired" });
+    return;
+  }
   await tx.environment.update({
     where: { id: environmentId },
     // Retiring moves the binding generation (E1).
@@ -336,13 +344,25 @@ async function upsertEnvironments(
       existing.lifecycle,
       environment.lifecycle,
     );
+    let lifecycle = environment.lifecycle;
+    if (
+      existing.lifecycle !== environment.lifecycle &&
+      (await environmentOwned(tx, existing))
+    ) {
+      refuseLifecycle(result, {
+        id: environment.id,
+        from: existing.lifecycle,
+        to: environment.lifecycle,
+      });
+      lifecycle = LifecycleSchema.parse(existing.lifecycle);
+    }
     if (
       existing.pipelineRevisionId !== declared.pipelineRevisionId ||
       existing.declaredConfigurationId !== declared.declaredConfigurationId
     )
       result.environments.rebound.push(environment.id);
     else if (
-      existing.lifecycle === environment.lifecycle &&
+      existing.lifecycle === lifecycle &&
       fingerprint(declared) ===
         fingerprint({
           pipelineRevisionId: existing.pipelineRevisionId,
@@ -360,9 +380,9 @@ async function upsertEnvironments(
     // deployment moves the accepted selection (C3).
     await tx.environment.update({
       where: { id: environment.id },
-      data: { ...declared, lifecycle: environment.lifecycle },
+      data: { ...declared, lifecycle },
     });
-    if (existing.lifecycle === "active" && environment.lifecycle !== "active")
+    if (lifecycle !== "active" && existing.lifecycle === "active")
       result.environments.retired.push(environment.id);
   }
 }
