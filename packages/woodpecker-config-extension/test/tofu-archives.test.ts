@@ -101,3 +101,19 @@ test("the catalog flag names every site archive's component in both site produce
     "bun --no-install scripts/release/publish-scout-site-archives.ts --catalog-v2 .delivery-artifacts/scout-release/state.json",
   );
 });
+
+function helmPushCommands(catalogV2: boolean): string {
+  return (
+    testPipelineSteps(catalogV2)
+      .find((step) => step.key === "helm-push")
+      ?.commands.join("\n") ?? ""
+  );
+}
+
+test("under the catalog flag every main pipeline plans charts, so the companions publish at the flip", () => {
+  expect(helmPushCommands(false)).toContain("charts_requested");
+  expect(helmPushCommands(true)).not.toContain("charts_requested");
+  expect(helmPushCommands(true)).toContain(
+    'helm-push.ts "$CI_RELEASE_NUMBER" --delivery-catalog --catalog-v2',
+  );
+});

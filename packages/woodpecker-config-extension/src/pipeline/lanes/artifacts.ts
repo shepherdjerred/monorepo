@@ -74,7 +74,10 @@ export function artifactPublicationSteps(
       },
       commands: [
         "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter homelab --filter '@homelab/cdk8s' --production",
-        ...chartPublicationRequested(),
+        // Under the v2 catalog every main pipeline plans charts against their
+        // catalog owners' builds: a chart with none yet (each companion right
+        // after the flip) publishes, and an unchanged one retains its base.
+        ...(catalogV2 ? [] : chartPublicationRequested()),
         "MISE_TOOLCHAIN_SCOPE=deployment . ci/scripts/toolchain.sh",
         `bun --no-install packages/homelab/scripts/helm/helm-push.ts "$CI_RELEASE_NUMBER" --delivery-catalog${catalogV2 ? " --catalog-v2" : ""}`,
         "bun --no-install scripts/ci/write-ci-handoff.ts argocd-release-expected < argocd-release-expected.json",
