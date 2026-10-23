@@ -17,7 +17,7 @@ import { recordStage, requireOwned } from "./stages.ts";
 export type StaticSiteStepEffects = {
   io: StaticSiteIo;
   record: typeof recordStage;
-  /** Proves the deployment still owns its environment before any bucket effect. */
+  /** Proves the deployment still owns its environment before each bucket effect. */
   owned: (id: string) => Promise<unknown>;
   run: <T>(operation: (runtime: StaticSiteRuntime) => Promise<T>) => Promise<T>;
   owners?: Readonly<Record<string, string>>;
@@ -34,10 +34,10 @@ const LIVE: StaticSiteStepEffects = {
  * recipe: the frozen archive is fetched from `delivery-artifacts` by its
  * digest, synced to the recipe's bucket under an activation receipt naming
  * this deployment, the cache is purged, and bucket bytes, entrypoints and
- * the public receipt are read back against that digest. A resumed step
- * re-records the same intent, which proves it still owns the deployment;
- * the receipt decides whether the bucket already holds this deployment, so
- * the sync never runs for a proven activation.
+ * the public receipt are read back against that digest. Every write
+ * re-records the same intent first, which proves the step still owns the
+ * deployment; the receipt decides whether the bucket already holds this
+ * deployment, so the sync never runs for a proven activation.
  */
 export async function runStaticSiteStep(
   current: DeploymentDetail,
@@ -50,11 +50,12 @@ export async function runStaticSiteStep(
   const evidence = await effects.run(
     async (runtime) =>
       await activateStaticSelection(site, runtime, effects.io, async () => {
-        // Every attempt, resumed ones included, re-proves ownership after the
-        // archive download and immediately before the bucket sync, receipt
-        // write or cache purge. The server accepts the same running intent
-        // under the same operation identity only from the executor that owns
-        // the deployment under a live lease (D7), which a read cannot prove.
+        // Every attempt, resumed ones included, re-proves ownership
+        // immediately before each bucket sync, receipt write and cache purge,
+        // so a write never rests on a proof taken before a long sync. The
+        // server accepts the same running intent under the same operation
+        // identity only from the executor that owns the deployment under a
+        // live lease (D7), which a read cannot prove.
         await effects.owned(current.deployment.id);
         await effects.record(current, key, "running", {
           operationId,

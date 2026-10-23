@@ -302,15 +302,25 @@ async function purge(
   }
 }
 
-/** Receipt-identified activation of an opened archive; a matching receipt only re-proves bytes and purges. */
+/**
+ * Receipt-identified activation of an opened archive; a matching receipt only
+ * re-proves bytes and purges. `fence` runs immediately before each production
+ * write (the bucket sync, the receipt write and the cache purge), so a write
+ * never relies on a proof taken before a long earlier one.
+ */
 async function activateOpened(
   site: StaticSiteSelection,
   opened: OpenedArchive,
   runtime: StaticSiteRuntime,
-  io: StaticSiteIo,
+  { io, fence }: { io: StaticSiteIo; fence: () => Promise<void> },
 ): Promise<void> {
   const { pipeline, receipt } = site;
   const { source, scratch, files, signal } = opened;
+  const fenced = async (write: () => Promise<void>) => {
+    await fence();
+    signal.throwIfAborted();
+    await write();
+  };
   const matchesArchive = async () =>
     (await io.firstMismatch({
       source,
@@ -322,15 +332,17 @@ async function activateOpened(
   await activateStaticArchive(receipt, {
     readReceipt: () => io.readReceipt(pipeline.bucket, signal),
     matchesArchive,
-    synchronize: async () => {
-      runtime.heartbeat({
-        deploymentId: receipt.deploymentId,
-        phase: "activate",
-      });
-      await io.synchronize({ source, site: pipeline, scratch, signal });
-    },
-    writeReceipt: (value) => io.writeReceipt(value, scratch, signal),
-    purge: () => purge(pipeline, files, signal, io),
+    synchronize: () =>
+      fenced(async () => {
+        runtime.heartbeat({
+          deploymentId: receipt.deploymentId,
+          phase: "activate",
+        });
+        await io.synchronize({ source, site: pipeline, scratch, signal });
+      }),
+    writeReceipt: (value) =>
+      fenced(() => io.writeReceipt(value, scratch, signal)),
+    purge: () => fenced(() => purge(pipeline, files, signal, io)),
   });
 }
 
@@ -411,7 +423,11 @@ export async function applyStaticSite(detail: StaticSiteDetail): Promise<void> {
   );
 }
 
-/** Native repair supplies its own cancellation and heartbeat; no Activity context is consulted. */
+/**
+ * Native repair supplies its own cancellation and heartbeat; no Activity
+ * context is consulted. It holds no executor lease, so its writes are fenced
+ * only by that cancellation, which every write checks.
+ */
 export async function applyStaticSiteDetail(
   detail: StaticSiteDetail,
   runtime: StaticSiteRuntime,
@@ -420,7 +436,11 @@ export async function applyStaticSiteDetail(
   const site = selection(detail);
   await withArchiveOperation(
     site,
-    (opened) => activateOpened(site, opened, runtime, LIVE_STATIC_SITE_IO),
+    (opened) =>
+      activateOpened(site, opened, runtime, {
+        io: LIVE_STATIC_SITE_IO,
+        fence: () => Promise.resolve(),
+      }),
     runtime,
     LIVE_STATIC_SITE_IO,
   );
@@ -451,9 +471,10 @@ export async function verifyStaticSiteDetail(
 
 /**
  * One archive download serves a whole model step: the bytes are validated,
- * `beforeEffect` records intent, the receipt-identified activation runs (or
- * only re-proves a bucket already holding this deployment), and the bucket
- * and public site are read back against the frozen archive digest.
+ * the receipt-identified activation runs (or only re-proves a bucket already
+ * holding this deployment) with `beforeEffect` proving ownership immediately
+ * before each of its writes, and the bucket and public site are read back
+ * against the frozen archive digest.
  */
 export async function activateStaticSelection(
   site: StaticSiteSelection,
@@ -464,9 +485,7 @@ export async function activateStaticSelection(
   return await withArchiveOperation(
     site,
     async (opened) => {
-      await beforeEffect();
-      opened.signal.throwIfAborted();
-      await activateOpened(site, opened, runtime, io);
+      await activateOpened(site, opened, runtime, { io, fence: beforeEffect });
       return await verifyOpened(site, opened, io);
     },
     runtime,

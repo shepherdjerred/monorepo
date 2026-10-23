@@ -147,15 +147,17 @@ describe("static-site step", () => {
     expect(step.policy.bucket).toBe("wiki-sjer-red");
   });
 
-  test("records intent before syncing the archive fetched by digest, then reads back bucket, entrypoints and receipt", async () => {
+  test("records intent before each write of the archive fetched by digest, then reads back bucket, entrypoints and receipt", async () => {
     const { current, step, archive } = await fixture();
     await runStaticSiteStep(current, step.policy, KEY, effects());
+    const intent = [`owned ${current.deployment.id}`, `${KEY} running`];
     expect(events).toEqual([
       `download ${archive.uri}`,
-      `owned ${current.deployment.id}`,
-      `${KEY} running`,
+      ...intent,
       "sync wiki-sjer-red",
+      ...intent,
       "receipt",
+      ...intent,
       "purge",
       `${KEY} succeeded`,
     ]);
@@ -200,6 +202,38 @@ describe("static-site step", () => {
       `${KEY} succeeded`,
     ]);
   });
+
+  test.each([
+    { lapsesAfter: 1, written: ["sync wiki-sjer-red"] },
+    { lapsesAfter: 2, written: ["sync wiki-sjer-red", "receipt"] },
+  ])(
+    "a lease lost during the activation stops every later write (D7): lapses after $lapsesAfter",
+    async ({ lapsesAfter, written }) => {
+      const { current, step } = await fixture();
+      const live = effects();
+      let proofs = 0;
+      await expect(
+        runStaticSiteStep(current, step.policy, KEY, {
+          ...live,
+          // The lease lapses while the earlier write runs; the server then
+          // refuses the next intent write.
+          record: async (snapshot, key, status, input) => {
+            if (status === "running" && ++proofs > lapsesAfter)
+              throw new Error(
+                "The deployment's lease lapsed; it is no longer provably owned and ends in recovery (D7)",
+              );
+            await live.record(snapshot, key, status, input);
+          },
+        }),
+      ).rejects.toThrow(/lease lapsed/u);
+      expect(
+        events.filter((event) => !/^(?:download|owned|step-)/u.test(event)),
+      ).toEqual(written);
+      expect(events).not.toContain("purge");
+      expect(receipt === null).toBe(lapsesAfter < 2);
+      expect(recorded.map((entry) => entry.status)).not.toContain("succeeded");
+    },
+  );
 
   test("a resumed step whose lease lapsed is refused at its intent before any bucket, receipt or purge effect (D7)", async () => {
     const resumed = await fixture([{ key: KEY, status: "running" }]);
@@ -257,9 +291,10 @@ describe("static-site step", () => {
     await expect(
       runStaticSiteStep(current, step.policy, KEY, effects()),
     ).rejects.toThrow("different activation receipt");
-    expect(recorded.map((entry) => `${entry.key} ${entry.status}`)).toEqual([
-      `${KEY} running`,
-    ]);
+    // One intent proof per write (sync, receipt, purge), and no settlement.
+    expect(recorded.map((entry) => `${entry.key} ${entry.status}`)).toEqual(
+      Array.from({ length: 3 }, () => `${KEY} running`),
+    );
   });
 
   test("a bucket reviewed infrastructure delegates to another environment is refused before any read", async () => {
