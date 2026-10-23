@@ -12,6 +12,7 @@ import { fingerprint, wire } from "#infrastructure/delivery-records.ts";
 import { environment } from "#infrastructure/delivery-data.ts";
 import { PipelineRevisionSchema } from "#shared/contract.ts";
 import { catalogDocument } from "#testing/catalog-fixture.ts";
+import { arcadeCompoundRecipe } from "#testing/model-fixture.ts";
 import {
   reconciledCatalog,
   requireCatalogOwnershipDefinition,
@@ -167,6 +168,43 @@ test("a retired environment's Application is not handed over and does not block 
   expect(observed.targets.map((target) => target.environmentId)).toEqual([
     "arcade/prod",
     "delivery/prod",
+  ]);
+});
+
+test("every Application of a compound environment is a handover target (T6)", async () => {
+  const document = await catalogDocument();
+  await context.delivery.reconcileCatalog(
+    {
+      ...document,
+      environments: document.environments.map((env) =>
+        env.id === "arcade/prod"
+          ? { ...env, recipeRevisionId: "arcade/4" }
+          : env,
+      ),
+      recipes: [
+        ...document.recipes,
+        { id: "arcade/4", definition: arcadeCompoundRecipe() },
+      ],
+    },
+    testOperator,
+    { renames: {}, retired: [] },
+  );
+  const response = await app().request("/api/v1/ownership-handover-context", {
+    headers: admin,
+  });
+  expect(response.status).toBe(200);
+  const observed = OwnershipHandoverContextSchema.parse(await response.json());
+  expect(
+    observed.targets.map((target) => [
+      target.environmentId,
+      target.application,
+      target.pipelineRevisionId,
+    ]),
+  ).toEqual([
+    ["arcade/beta", "arcade-beta", "arcade-beta/1"],
+    ["arcade/prod", "arcade", "arcade/4"],
+    ["arcade/prod", "arcade-server", "arcade/4"],
+    ["delivery/prod", "delivery", "delivery/3"],
   ]);
 });
 

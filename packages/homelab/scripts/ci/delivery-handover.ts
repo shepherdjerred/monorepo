@@ -63,7 +63,9 @@ export async function transferDeliveryOwnership(
   const rootIdentity = handoverApplicationIdentity(root);
   for (const target of descriptor.targets) {
     const registered = context.targets.find(
-      (row) => row.environmentId === target.environmentId,
+      (row) =>
+        row.environmentId === target.environmentId &&
+        row.application === target.application,
     );
     const original = applications.find(
       (app) => app.metadata.name === target.application,
@@ -112,7 +114,9 @@ export async function transferDeliveryOwnership(
         "Native Application inventory/source/lifecycle changed before ownership CAS",
       );
     const registered = context.targets.find(
-      (row) => row.environmentId === target.environmentId,
+      (row) =>
+        row.environmentId === target.environmentId &&
+        row.application === target.application,
     );
     const actual = current.find(
       (app) => app.metadata.name === target.application,

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import {
   RecipeDefinitionSchema,
-  applicationOf,
+  applicationsOf,
   forumReleaseOf,
   workerRolloutOf,
 } from "@shepherdjerred/delivery/model-contract";
@@ -122,16 +122,21 @@ export const HandoverContextSchema = z
 type HandoverTarget = z.infer<typeof HandoverContextSchema>["targets"][number];
 
 /**
- * The Application a registered target releases, read the same way from a
- * v1 pipeline and a model recipe; null for the root release, which is no
- * leaf handover target.
+ * The named Application a registered target releases, read the same way
+ * from a v1 pipeline and a model recipe, of which a compound deploys
+ * several; null when the pipeline deploys no such Application, as for the
+ * root release, which is no leaf handover target.
  */
-function registeredApplication(pipeline: HandoverTarget["pipeline"]) {
+function registeredApplication(
+  pipeline: HandoverTarget["pipeline"],
+  application: string,
+) {
   switch (pipeline.kind) {
     case "root-release":
       return null;
     case "argocd":
     case "control-plane":
+      if (pipeline.application !== application) return null;
       return {
         name: pipeline.application,
         namespace: pipeline.namespace,
@@ -147,8 +152,10 @@ function registeredApplication(pipeline: HandoverTarget["pipeline"]) {
     case "static-site":
     case "tofu":
     case "channel": {
-      const view = applicationOf(pipeline);
-      return view === null
+      const view = applicationsOf(pipeline).find(
+        (candidate) => candidate.name === application,
+      );
+      return view === undefined
         ? null
         : {
             name: view.name,
@@ -164,7 +171,7 @@ function registeredApplication(pipeline: HandoverTarget["pipeline"]) {
 }
 
 function requireHandoverBaseline(row: HandoverTarget) {
-  const registered = registeredApplication(row.pipeline);
+  const registered = registeredApplication(row.pipeline, row.application);
   if (registered === null) return;
   if (registered.workerRollout && row.baseline?.kind !== "worker")
     throw new Error(
@@ -220,7 +227,7 @@ export function handoverContext(
     if (
       registered.length !== 1 ||
       row?.generation !== target.expectedGeneration ||
-      registeredApplication(row.pipeline)?.name !== target.application
+      registeredApplication(row.pipeline, target.application) === null
     )
       throw new Error(
         "Registered handover generation/pipeline differs from operator intent",
@@ -237,7 +244,10 @@ export function handoverContextFingerprint(raw: unknown) {
 }
 
 export function handoverPatch(raw: unknown, registered: HandoverTarget) {
-  const source = registeredApplication(registered.pipeline);
+  const source = registeredApplication(
+    registered.pipeline,
+    registered.application,
+  );
   if (source === null)
     throw new Error(
       "Root releases retain the guarded root workflow; they are not leaf handover targets",

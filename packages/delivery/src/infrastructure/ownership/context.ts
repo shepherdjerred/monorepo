@@ -8,7 +8,11 @@ import {
 import { fingerprint, wire } from "#infrastructure/delivery-records.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { PipelineRevisionSchema } from "#shared/contract.ts";
-import { forumReleaseOf, workerRolloutOf } from "#shared/model/recipe-view.ts";
+import {
+  applicationsOf,
+  forumReleaseOf,
+  workerRolloutOf,
+} from "#shared/model/recipe-view.ts";
 import { freezeForumBaseline } from "#infrastructure/forum/freezer.ts";
 import { acceptedForumBaseline } from "#infrastructure/forum/baseline-context.ts";
 import { readWorkerVersions } from "#infrastructure/worker-pool/pool.ts";
@@ -94,10 +98,9 @@ async function target(
       fingerprint: `sha256:${fingerprint(original)}`,
     };
   }
-  return {
+  const shared = {
     environmentId: env.id,
     serviceId: env.serviceId,
-    application: env.application,
     generation: env.generation,
     pipelineRevisionId: pipeline.id,
     pipeline: definition,
@@ -106,6 +109,12 @@ async function target(
     acceptedVersionSetRevisionId: env.acceptedVersionSetRevisionId,
     baseline,
   };
+  // Every Application the recipe deploys is a target, so a compound
+  // environment hands over each of them, not only its primary one.
+  return applicationsOf(definition).map((view) => ({
+    ...shared,
+    application: view.name,
+  }));
 }
 
 /** An uncapped, consistent PG read. External maintenance quiescence is still required; this is not a DB/native atomic transaction. */
@@ -149,10 +158,14 @@ export async function ownershipHandoverContext(
           orderBy: { id: "asc" },
         }),
       ]);
-      if (rows.length > 200)
+      const perEnvironment = await Promise.all(
+        rows.map((row) => target(tx, row.id, catalog)),
+      );
+      const targets = perEnvironment.flat();
+      if (targets.length > 200)
         throw new DeliveryError(
           "INVALID",
-          "Ownership handover exceeds the reviewed environment bound",
+          "Ownership handover exceeds the reviewed target bound",
         );
       return {
         schema: "delivery-ownership-context/v1" as const,
@@ -171,9 +184,7 @@ export async function ownershipHandoverContext(
           recoveryRequired,
           pendingObservations,
         },
-        targets: await Promise.all(
-          rows.map((row) => target(tx, row.id, catalog)),
-        ),
+        targets,
       };
     },
     { isolationLevel: "RepeatableRead" },

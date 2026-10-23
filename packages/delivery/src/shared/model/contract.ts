@@ -106,10 +106,10 @@ export function renderApplication(
 }
 
 /** Generation-agnostic views of a stored recipe, for executors of either generation. */
-export function applicationOf(
+export function applicationsOf(
   definition: StoredRecipeDefinition,
-): ReturnType<typeof views.applicationOf> {
-  return views.applicationOf(definition);
+): ReturnType<typeof views.applicationsOf> {
+  return views.applicationsOf(definition);
 }
 export function forumReleaseOf(
   definition: StoredRecipeDefinition,

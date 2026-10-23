@@ -1,5 +1,7 @@
 import { expect, test, vi } from "vitest";
+import { z } from "zod";
 import { SERVICE_CATALOG } from "@shepherdjerred/ops-model/catalog.ts";
+import type * as DeliveryOwnership from "#delivery-ownership";
 import {
   BootstrapApplicationSchema,
   bootstrapFingerprint,
@@ -18,6 +20,19 @@ import {
 } from "./delivery-handover-native.ts";
 import { createHandoverArgo } from "./delivery-handover-access.ts";
 import { applicationProject } from "#cdk8s/src/resources/argo-applications/platform/projects.ts";
+
+// No reviewed environment yet delegates two Applications; arcade/prod's
+// compound recipe below does (T6).
+vi.mock("#delivery-ownership", async (importOriginal) => {
+  const original = await importOriginal<typeof DeliveryOwnership>();
+  return {
+    ...original,
+    DELIVERY_DELEGATION_DEFINITIONS: {
+      ...original.DELIVERY_DELEGATION_DEFINITIONS,
+      "arcade-server": "arcade/prod",
+    },
+  };
+});
 
 function native(name = "arcade") {
   return BootstrapApplicationSchema.parse({
@@ -376,6 +391,113 @@ test("a target bound to a model recipe hands over through the recipe's own Appli
   expect(() =>
     handoverContext(worker, current.descriptor, current.effects.catalog),
   ).toThrow("independently verified original host baseline");
+});
+
+/** arcade/prod deploying a second Application through a compound recipe (T6). */
+function compoundTarget() {
+  const server = recipeTarget();
+  const instance = "application:arcade-server";
+  return {
+    kind: "compound",
+    subRecipes: [
+      { instance: "application:arcade", definition: recipeTarget() },
+      {
+        instance,
+        definition: {
+          ...server,
+          application: {
+            ...server.application,
+            name: "arcade-server",
+            destination: {
+              ...server.application.destination,
+              namespace: "arcade-server",
+            },
+            source: { ...server.application.source, chart: "arcade-server" },
+          },
+          chartComponent: "chart:arcade-server",
+          steps: server.steps.map((step) => ({ ...step, instance })),
+        },
+      },
+    ],
+  };
+}
+
+test("every Application of a compound recipe hands over as its own target", async () => {
+  const current = fixture();
+  const row = current.context.targets[0]!;
+  const pipeline = compoundTarget();
+  const catalog = {
+    ...current.effects.catalog,
+    deliveryDelegations: {
+      arcade: "arcade/prod",
+      "arcade-server": "arcade/prod",
+    },
+  };
+  const context = {
+    ...current.context,
+    catalogFingerprint: bootstrapFingerprint(catalog),
+    targets: [
+      { ...row, pipeline },
+      { ...row, application: "arcade-server", pipeline },
+    ],
+  };
+  const descriptor = HandoverDescriptorSchema.parse({
+    ...current.descriptor,
+    targets: [
+      ...current.descriptor.targets,
+      {
+        application: "arcade-server",
+        environmentId: "arcade/prod",
+        expectedGeneration: 0,
+      },
+    ],
+  });
+  const live = [native(), native("arcade-server")];
+  const result = await transferDeliveryOwnership(descriptor, {
+    ...current.effects,
+    catalog,
+    context: vi.fn(() => Promise.resolve(structuredClone(context))),
+    applications: vi.fn(() => Promise.resolve(structuredClone(live))),
+    patch: vi.fn((name: string, raw: unknown) => {
+      const index = live.findIndex((app) => app.metadata.name === name);
+      const [annotations, syncPolicy] = z
+        .array(z.object({ op: z.string(), value: z.unknown() }))
+        .parse(raw)
+        .filter((operation) => operation.op === "add")
+        .map((operation) => operation.value);
+      const app = live[index]!;
+      live[index] = BootstrapApplicationSchema.parse({
+        ...app,
+        metadata: { ...app.metadata, annotations },
+        spec: { ...app.spec, syncPolicy },
+      });
+      return Promise.resolve(structuredClone(live[index]));
+    }),
+  });
+  expect(result).toEqual({
+    effects: true,
+    transferred: ["arcade", "arcade-server"],
+  });
+  expect(
+    live.map(
+      (app) =>
+        app.metadata.annotations["delivery.shepherdjerred.com/environment"],
+    ),
+  ).toEqual(["arcade/prod", "arcade/prod"]);
+  // A row must name an Application its own recipe deploys.
+  expect(() =>
+    handoverContext(
+      {
+        ...context,
+        targets: [
+          { ...row, pipeline },
+          { ...row, application: "arcade-server", pipeline: recipeTarget() },
+        ],
+      },
+      descriptor,
+      catalog,
+    ),
+  ).toThrow("differs from operator intent");
 });
 
 test("a handover refuses targets bound from any catalog revision but the reviewed one", () => {
