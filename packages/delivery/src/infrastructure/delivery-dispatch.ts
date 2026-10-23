@@ -77,25 +77,29 @@ export async function orphan(
         "CONFLICT",
         "Deployment has no submitted workflow to recover",
       );
-    // The outgoing executor closes by design after a handoff (D8).
-    if (row.handoffAt !== null)
+    const successor = deliverySuccessorWorkflowId(deploymentId);
+    // The outgoing executor closes by design after a handoff; the marker
+    // passes ownership to the one successor until it claims (D8).
+    if (row.handoffAt !== null && input.workflowId !== successor)
       throw new DeliveryError(
         "CONFLICT",
         "Deployment awaits its successor executor; its outgoing Workflow closing is expected",
       );
-    if (
-      (row.workflowId ?? deliveryWorkflowId(deploymentId)) !== input.workflowId
-    )
+    const owner =
+      row.handoffAt === null
+        ? (row.workflowId ?? deliveryWorkflowId(deploymentId))
+        : successor;
+    if (owner !== input.workflowId)
       throw new DeliveryError(
         "CONFLICT",
         "A closed Workflow that does not own this deployment cannot orphan it",
       );
     // A handed-off deployment's self-hosted change is applied, and only its
     // successor's verified acceptance settles it. A successor that closed
-    // after claiming leaves it recovery-required with its locks and
-    // dispatch barrier held, as failDeliveryHandoff does (D5, D8).
+    // before or after claiming leaves it recovery-required with its locks
+    // and dispatch barrier held, as failDeliveryHandoff does (D5, D8).
     const recoveryRequired =
-      input.workflowId === deliverySuccessorWorkflowId(deploymentId) ||
+      owner === successor ||
       row.stages.some((entry) => entry.status === "running");
     const updated = await tx.deployment.update({
       where: { id: deploymentId },

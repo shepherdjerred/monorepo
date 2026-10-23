@@ -98,6 +98,29 @@ async function startSuccessor(client: TemporalClient, deploymentId: string) {
   }
 }
 
+/**
+ * D8: a handed-off deployment's successor is started once. A successor that
+ * closed before claiming its handoff is reported, so the deployment ends
+ * recovery-required with its ownership retained instead of being restarted
+ * against a rejected duplicate on every tick.
+ */
+async function repairHandoff(client: TemporalClient, deploymentId: string) {
+  const successor = deliverySuccessorWorkflowId(deploymentId);
+  let observed;
+  try {
+    observed = await client.workflow.getHandle(successor).describe();
+  } catch (error) {
+    if (!(error instanceof WorkflowNotFoundError)) throw error;
+    await startSuccessor(client, deploymentId);
+    return;
+  }
+  if (observed.type !== "deliveryHandoffWorkflow")
+    throw new Error(
+      "Delivery Workflow monitor found an unexpected successor Workflow type",
+    );
+  await reportClosed(deploymentId, successor, observed.status.name);
+}
+
 async function repairSubmitted(client: TemporalClient) {
   const monitor = await deliveryRequest(
     "dispatch/monitor",
@@ -117,7 +140,7 @@ async function repairSubmitted(client: TemporalClient) {
   for (const deployment of monitor.deployments) {
     // The outgoing executor closes by design after a handoff (D8).
     if (deployment.handoff) {
-      await startSuccessor(client, deployment.id);
+      await repairHandoff(client, deployment.id);
       continue;
     }
     // A closed owner, original or successor, leaves the deployment orphaned.
