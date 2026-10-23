@@ -35,7 +35,7 @@ import {
   serviceOwned,
   serviceSelfHosted,
 } from "./ownership.ts";
-import { emptyResult, type Result } from "./result.ts";
+import { declaredRevision, emptyResult, type Result } from "./result.ts";
 import { renameEnvironments } from "./rename.ts";
 
 /** The v1 environments the cutover carries onto catalog ids or retires (section 7). */
@@ -136,6 +136,7 @@ async function reconcileServices(
       continue;
     }
     const { catalogRevision: _revision, ...declared } = data;
+    const mark = result.refused.length;
     if (
       fingerprint(declared) ===
       fingerprint({
@@ -193,7 +194,17 @@ async function reconcileServices(
     );
     await tx.service.update({
       where: { id: service.id },
-      data: { ...data, lifecycle, selfHosted },
+      data: {
+        ...data,
+        lifecycle,
+        selfHosted,
+        catalogRevision: declaredRevision(
+          result,
+          service.id,
+          mark,
+          existing.catalogRevision,
+        ),
+      },
     });
   }
 }
@@ -316,7 +327,6 @@ async function upsertEnvironments(
       application: primaryApplication(definition),
     };
     // C1: an environment the catalog omits keeps an older revision.
-    const declaredBy = { catalogRevision: result.catalogRevision };
     const existing = await tx.environment.findUnique({
       where: { id: environment.id },
     });
@@ -328,7 +338,7 @@ async function upsertEnvironments(
           name: environment.id.slice(environment.id.indexOf("/") + 1),
           lifecycle: environment.lifecycle,
           ...declared,
-          ...declaredBy,
+          catalogRevision: result.catalogRevision,
         },
       });
       result.environments.created.push(environment.id);
@@ -339,6 +349,7 @@ async function upsertEnvironments(
       existing.lifecycle,
       environment.lifecycle,
     );
+    const mark = result.refused.length;
     const lifecycle = await environmentLifecycle(
       tx,
       { ...existing, pipelineRevisionId: declared.pipelineRevisionId },
@@ -369,7 +380,16 @@ async function upsertEnvironments(
     // deployment moves the accepted selection (C3).
     await tx.environment.update({
       where: { id: environment.id },
-      data: { ...declared, ...declaredBy, lifecycle },
+      data: {
+        ...declared,
+        lifecycle,
+        catalogRevision: declaredRevision(
+          result,
+          environment.id,
+          mark,
+          existing.catalogRevision,
+        ),
+      },
     });
     if (lifecycle !== "active" && existing.lifecycle === "active")
       result.environments.retired.push(environment.id);
