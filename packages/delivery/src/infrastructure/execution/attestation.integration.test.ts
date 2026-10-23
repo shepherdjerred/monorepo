@@ -87,11 +87,19 @@ test("an operator attests each declared stage of an operator-run deployment", as
       },
     ],
   };
+  const leased = await context.cluster.database.deployment.findUniqueOrThrow({
+    where: { id: deployment.id },
+  });
   const stage = await context.delivery.attestStage(
     deployment.id,
     attestation,
     operatorTool,
   );
+  // An attestation proves nothing about the executor: its lease is unchanged.
+  const after = await context.cluster.database.deployment.findUniqueOrThrow({
+    where: { id: deployment.id },
+  });
+  expect(after.leaseExpiresAt).toEqual(leased.leaseExpiresAt);
   expect(stage).toMatchObject({
     key: "attest/bootstrap",
     status: "succeeded",

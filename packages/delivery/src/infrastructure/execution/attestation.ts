@@ -87,8 +87,9 @@ export async function attestStage(
   const operationId =
     input.evidence.find((entry) => entry.operationId !== undefined)
       ?.operationId ?? `sha256:${fingerprint(input.evidence)}`;
-  // The executor's stage write admits only the owning executor, so the
-  // attestor records its stage directly. An attestation is no proof that the
+  // The executor's stage write refuses attestation keys and admits only the
+  // owning executor, so the attestor records its stage directly. An
+  // attestation is no proof that the
   // executor is alive, so it never renews the executor's lease (D7).
   const stage = await this.database.$transaction(async (tx) =>
     recordStageIn(
