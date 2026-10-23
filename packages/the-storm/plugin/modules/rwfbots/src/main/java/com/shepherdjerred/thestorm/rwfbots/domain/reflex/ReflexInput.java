@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.perception.Percept;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantView;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Decision;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.WorldSnapshot;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -14,8 +15,8 @@ import java.util.Optional;
  * @param decision the standing decision from the think step
  * @param target the enemy to fight right now, if one is visible
  * @param gapplesLeft golden apples in the inventory
- * @param nearestSeen the nearest enemy the bot perceives this tick, target or not; never one it
- *     cannot see, so nothing reacts to a player hidden behind a wall or invisible
+ * @param perceived every enemy the bot perceives this tick, target or not, nearest first; never one
+ *     it cannot see, so nothing reacts to a player hidden behind a wall or invisible
  */
 public record ReflexInput(
     CombatantView self,
@@ -23,12 +24,13 @@ public record ReflexInput(
     Decision decision,
     Optional<CombatantView> target,
     int gapplesLeft,
-    Optional<CombatantView> nearestSeen) {
+    List<CombatantView> perceived) {
 
   public ReflexInput {
     if (gapplesLeft < 0) {
       throw new IllegalArgumentException("gapples must not be negative");
     }
+    perceived = List.copyOf(perceived);
   }
 
   /**
@@ -39,12 +41,7 @@ public record ReflexInput(
   public static ReflexInput of(
       CombatantView self, WorldSnapshot snapshot, Decision decision, Percept percept) {
     return new ReflexInput(
-        self,
-        snapshot,
-        decision,
-        resolveTarget(self, decision, percept),
-        0,
-        percept.nearestVisible());
+        self, snapshot, decision, resolveTarget(self, decision, percept), 0, percept.visible());
   }
 
   /** The enemy {@code self} should fight this tick, if any. */
@@ -70,6 +67,6 @@ public record ReflexInput(
   }
 
   public ReflexInput withGapples(int count) {
-    return new ReflexInput(self, snapshot, decision, target, count, nearestSeen);
+    return new ReflexInput(self, snapshot, decision, target, count, perceived);
   }
 }

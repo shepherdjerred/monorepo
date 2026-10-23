@@ -166,7 +166,7 @@ final class CombatHarnessTest {
             Decision.idle(self.id(), 11, 0),
             Optional.empty(),
             3,
-            Optional.empty());
+            List.of());
     assertThat(harness.input(first, input, SyntheticMap.bake())).isSameAs(input);
     assertThat(controller.inputCalls).isZero();
     var authored =

@@ -58,13 +58,11 @@ final class ReadyDraw {
         && now - sight.orElseThrow().seen() <= Reflex.HOLD_READY_TICKS;
   }
 
-  /** A perceived enemy close enough that the bow must give way to the sword. */
+  /** Any perceived enemy close enough that the bow must give way to the sword. */
   private static boolean pressed(ReflexInput input) {
     var self = input.self().pos();
-    return input
-        .nearestSeen()
-        .filter(enemy -> enemy.pos().distance(self) <= Reflex.MELEE_ALERT)
-        .isPresent();
+    return input.perceived().stream()
+        .anyMatch(enemy -> enemy.pos().distance(self) <= Reflex.MELEE_ALERT);
   }
 
   /** Running a path at a sprint with no fight in the decision: cover or a slot comes first. */

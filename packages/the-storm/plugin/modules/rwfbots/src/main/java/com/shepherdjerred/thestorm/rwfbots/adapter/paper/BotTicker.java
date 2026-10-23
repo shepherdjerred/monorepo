@@ -371,23 +371,28 @@ public final class BotTicker {
   }
 
   /**
-   * Refreshes a previously visible target, and the nearest perceived enemy, only while the current
-   * sight line remains clear.
+   * Refreshes a previously visible target, and every perceived enemy, only while the current sight
+   * line remains clear. The perceived enemies are re-ordered nearest first by where they stand now.
    */
   static ReflexInput freshTarget(ReflexInput input, VoxelGrid grid) {
+    var self = input.self().pos();
     return new ReflexInput(
         input.self(),
         input.snapshot(),
         input.decision(),
-        fresh(input.target(), input, grid),
+        input.target().flatMap(seen -> fresh(seen, input, grid)),
         input.gapplesLeft(),
-        fresh(input.nearestSeen(), input, grid));
+        input.perceived().stream()
+            .flatMap(seen -> fresh(seen, input, grid).stream())
+            .sorted(java.util.Comparator.comparingDouble(enemy -> enemy.pos().distance(self)))
+            .toList());
   }
 
   private static Optional<CombatantView> fresh(
-      Optional<CombatantView> seen, ReflexInput input, VoxelGrid grid) {
-    return seen.map(CombatantView::id)
-        .flatMap(input.snapshot()::combatant)
+      CombatantView seen, ReflexInput input, VoxelGrid grid) {
+    return input
+        .snapshot()
+        .combatant(seen.id())
         .filter(CombatantView::alive)
         .filter(
             enemy ->
@@ -413,7 +418,7 @@ public final class BotTicker {
         input.decision(),
         input.target().filter(clear),
         input.gapplesLeft(),
-        input.nearestSeen().filter(clear));
+        input.perceived().stream().filter(clear).toList());
   }
 
   /**
