@@ -5,15 +5,22 @@ description: Run an operator-run deployment of cluster-admission/prod, attest ea
 
 `cluster-admission/prod` renders the cluster's admission policies and
 bindings. A broken policy can refuse every Pod, volume claim or Application
-change in the cluster, so its environment is `operator-run`: Delivery records
+change in the cluster, so its environment is `operator-run`. Delivery records
 the deployment, the operator performs each stage from outside the cluster, and
 Delivery accepts the deployment only after the operator attests all three
-stages in order: `apply-safety`, `sync` and `admission-canary`.
+stages in order: `apply-safety`, `sync` and `admission-canary`. The stages are
+`OPERATOR_RUN_STAGES` in `packages/homelab/src/cdk8s/src/catalog/catalog-targets.ts`.
 
 Delivery's own ArgoCD account only reads `cluster-admission`, and people's
 ArgoCD logins are read-only after the lock-down. The operator tool's
-`operator-run` ArgoCD account applies and syncs it. Its token lives in the
-1Password item `delivery-argocd-operator-run-token`, which only operators read.
+`operator-run` ArgoCD account applies and syncs it; its grants are in
+[`delivery-rbac.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/platform/delivery-rbac.ts).
+OpenTofu issues its token into the 1Password item
+`delivery-argocd-operator-run-token`, which only operators read
+([`tofu/argocd/token.tf`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/tofu/argocd/token.tf)).
+The [source policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argocd-application-admission.ts)
+refuses Application source writes from anyone but ArgoCD itself, so every
+change below goes through the ArgoCD API.
 
 You need:
 
@@ -23,7 +30,8 @@ You need:
   run from the repository root.
 
 `toolkit deploy attest --machine` uses the attestor credential
-`DELIVERY_ATTEST_TOKEN`, which Delivery's executor never holds. Never print a
+`DELIVERY_ATTEST_TOKEN`, which Delivery's executor never holds
+(`packages/toolkit/src/commands/deploy/model.ts`). Never print a
 token; the commands below pass only 1Password references.
 
 ## 1. Start the deployment
@@ -51,8 +59,10 @@ it is empty.
 ## 2. Attest `apply-safety`
 
 Run the same managed-resources analysis a Delivery sync runs before it
-applies. It fails on an immutable-field change or a destructive change to a
-policy or binding:
+applies
+([`argocd.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts),
+`assert-apply-safe`). It fails on an immutable-field change or a destructive
+change to a policy or binding:
 
 ```bash
 ARGOCD_TOKEN="$OPERATOR_RUN_TOKEN" scripts/onepassword/with-service-account.sh \
@@ -97,9 +107,9 @@ toolkit deploy attest "$DEPLOYMENT_ID" --stage sync --evidence sync.json --machi
 
 ## 4. Attest `admission-canary`
 
-The canary proves that admission still works after the change (model T7). It
-uses server-side dry runs, so the API server runs every admission policy and
-nothing is created.
+The canary proves that admission still works after the change
+([model T7](https://github.com/shepherdjerred/monorepo/blob/main/packages/delivery/docs/model.md)). It uses server-side dry runs,
+so the API server runs every admission policy and nothing is created.
 
 A Pod is admitted. The command prints
 `pod/delivery-admission-canary created (server dry run)`:
@@ -110,8 +120,9 @@ kubectl --namespace default run delivery-admission-canary \
   --overrides='{"apiVersion":"v1","spec":{"securityContext":{"runAsNonRoot":true,"runAsUser":65535,"seccompProfile":{"type":"RuntimeDefault"}},"containers":[{"name":"delivery-admission-canary","image":"registry.k8s.io/pause:3.10","securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}}}]}}'
 ```
 
-A classified volume claim is admitted and labelled by the backup policy. A CI
-workspace claim is excluded from backup by its class, so the output shows
+A classified volume claim is admitted and labelled by the
+[backup policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/pvc-backup-admission.ts).
+A CI workspace claim is excluded from backup by its class, so the output shows
 `"velero.io/backup":"disabled"` and `"velero.io/exclude-from-backup":"true"`:
 
 ```bash
@@ -149,8 +160,9 @@ spec:
 EOF
 ```
 
-An Application sync-options update is admitted, and the mutating policy merges
-the Application's declared sync options into the requested sync. The output
+An Application sync-options update is admitted, and the
+[sync-options policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argocd-application-admission.ts)
+merges the Application's declared sync options into the requested sync. The output
 lists `Validate=false` followed by `cluster-platform`'s declared options
 (`CreateNamespace=true`, `ServerSideApply=true`,
 `RespectIgnoreDifferences=true`):
