@@ -280,7 +280,7 @@ function catalogClient(
   const queries: unknown[] = [];
   return {
     queries,
-    latestQualifiedArtifact: async (query) => {
+    latestRetainableArtifact: async (query) => {
       queries.push(query);
       const name = query.component.slice("chart:".length);
       const artifact = artifacts[name];
@@ -309,6 +309,7 @@ async function plan(options: Partial<Parameters<typeof planningBases>[1]>) {
     deliveryCatalog: true,
     inventory: older,
     archive: unexpected,
+    pipelineNumber: 42,
     ...options,
   });
   return { bases, plan: planCharts(inputs, bases) };
@@ -326,6 +327,7 @@ test("an unchanged chart is retained against Delivery's qualified artifact inste
       serviceId: new ServiceIndex().byChart(input.name)?.id,
       component: `chart:${input.name}`,
       kind: "chart",
+      beforePipeline: 42,
     })),
   );
   const publication = receipt();
@@ -342,6 +344,43 @@ test("an unchanged chart is retained against Delivery's qualified artifact inste
     })),
   );
   expect(ChartPublicationSchema.parse(publication)).toEqual(publication);
+});
+
+function pendingChart(name: string): ArtifactVersion {
+  return qualified(name, {
+    id: `ci/1/41/chart/${name}`,
+    buildId: `ci/1/41/${name}`,
+    version: "2.0.0-1000041",
+  });
+}
+
+test("back-to-back pipelines retain the previous pipeline's pending charts before they qualify", async () => {
+  // Pipeline 30 qualified older content; pipeline 41 published today's bytes
+  // and is still pending when pipeline 42's chart step plans its release.
+  const queries: unknown[] = [];
+  const client: ChartPlanningClient = {
+    latestRetainableArtifact: async (query) => {
+      queries.push(query);
+      const name = query.component.slice("chart:".length);
+      return query.beforePipeline > 41
+        ? pendingChart(name)
+        : qualified(name, { contentFingerprint: fingerprints.changed });
+    },
+  };
+  const { bases, plan: result } = await plan({ client });
+  expect(result.publishOrder).toEqual([]);
+  const publication = receipt();
+  retainDeliveryChartBases(publication, bases, result, version);
+  expect(publication.retained.map((entry) => entry.artifactId)).toEqual(
+    inputs.map((input) => `ci/1/41/chart/${input.name}`),
+  );
+  expect(publication.retained.map((entry) => entry.revision)).toEqual(
+    inputs.map(() => "2.0.0-1000041"),
+  );
+  // Comparing against the stale qualified chart republished identical bytes.
+  const stale = await plan({ client, pipelineNumber: 41 });
+  expect(stale.plan.publishOrder).toEqual(["arcade", "apps"]);
+  expect(queries).toHaveLength(inputs.length * 2);
 });
 
 test("changed content publishes the leaf and forces the coordinating apps chart", async () => {

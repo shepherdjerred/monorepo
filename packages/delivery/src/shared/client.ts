@@ -9,6 +9,7 @@ import { createRequester, query, type RequestOptions } from "./http-request.ts";
 import {
   ArtifactVersionSchema,
   LatestQualifiedArtifactQuerySchema,
+  LatestRetainableArtifactQuerySchema,
   DeploymentDetailSchema,
   DeploymentSchema,
   EnvironmentSchema,
@@ -46,6 +47,7 @@ import type {
   PipelineDefinition,
   RegisterEnvironmentInput,
   LatestQualifiedArtifactQuery,
+  LatestRetainableArtifactQuery,
   RegisterWorkerVersion,
   RetireWorkerVersion,
   FindQualifiedArtifact,
@@ -88,6 +90,13 @@ export function createDeliveryClient(options: RequestOptions) {
         `/artifacts/latest-qualified?${new URLSearchParams(LatestQualifiedArtifactQuerySchema.parse(input)).toString()}`,
         ArtifactVersionSchema,
       ),
+    latestRetainableArtifact: (input: LatestRetainableArtifactQuery) => {
+      const parsed = LatestRetainableArtifactQuerySchema.parse(input);
+      return request(
+        `/artifacts/latest-retainable${query({ ...parsed, beforePipeline: String(parsed.beforePipeline) })}`,
+        ArtifactVersionSchema,
+      );
+    },
     versions: (serviceId?: string) =>
       request(
         `/versions${serviceId === undefined ? "" : `?serviceId=${encodeURIComponent(serviceId)}`}`,

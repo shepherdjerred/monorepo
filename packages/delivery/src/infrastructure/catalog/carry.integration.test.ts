@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { liveSet } from "#infrastructure/composition/automatic.ts";
 import { catalogDocument } from "#testing/catalog-fixture.ts";
 import { useCatalogCluster } from "#testing/catalog-cluster.ts";
-import { testOperator, testPublisher } from "#testing/seed.ts";
+import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
 import { registerTestService } from "#testing/services.ts";
 import { V1_CATALOG_MIGRATION, type CatalogMigration } from "./reconcile.ts";
 
@@ -292,11 +292,21 @@ test("a chart whose owner moved is carried to its catalog owner, and producers f
     uri: "https://chartmuseum.sjer.red/charts/arcade-1.0.0.tgz",
     migratedFrom: { artifactId: "gitops-legacy/chart-arcade" },
   });
-  // A producer retains it instead of republishing identical bytes.
-  const image = await context.delivery.latestQualifiedArtifact(
-    { serviceId: "arcade", component: "image:arcade", kind: "image" },
-    1,
-  );
+  // A producer's comparison base is the carried artifact too, and it retains
+  // it instead of republishing identical bytes.
+  const base = (component: string, kind: "chart" | "image", before: number) =>
+    context.delivery.latestRetainableArtifact(
+      { serviceId: "arcade", component, kind, beforePipeline: before },
+      1,
+    );
+  await expect(base("chart:arcade", "chart", 42)).resolves.toMatchObject({
+    id: chart.id,
+  });
+  const image = await base("image:arcade", "image", 42);
+  expect(image).toMatchObject({
+    serviceId: "arcade",
+    migratedFrom: { artifactId: "gitops-legacy/image-arcade" },
+  });
   const retained = await context.delivery.publish(
     {
       requestId: "arcade/ci/42",
@@ -310,7 +320,19 @@ test("a chart whose owner moved is carried to its catalog owner, and producers f
     testPublisher,
     { repositoryId: 1, pipelineNumber: 42 },
   );
-  expect(retained.buildId).toBeDefined();
+  // While pipeline 42 is pending, pipeline 43 retains through it; carried
+  // originals are qualified, so 42 waits on nothing and composes nothing (R2).
+  await expect(base("image:arcade", "image", 43)).resolves.toMatchObject({
+    id: image.id,
+  });
+  expect(
+    await context.delivery.qualify(retained.buildId, "verified", testExecutor),
+  ).toEqual({ status: "verified" });
+  expect(
+    await context.cluster.database.versionSet.count({
+      where: { serviceId: "arcade" },
+    }),
+  ).toBe(1);
 });
 
 test("a rebind right after reconcile moves the carried selection to the declared recipe", async () => {

@@ -1,12 +1,50 @@
 import { DeliveryError } from "#domain/error.ts";
 import type { PublishBuild } from "#shared/contract.ts";
-import { artifact, type Transaction } from "./delivery-data.ts";
+import { artifactView, type Transaction } from "./delivery-data.ts";
+import { required } from "./delivery-records.ts";
+
+/**
+ * A retained original must be verified, or pending in an earlier main pipeline
+ * of this repository: qualification then waits for that build (B2), and an
+ * order key below this one means a build never waits on itself or a later one.
+ */
+async function retainedOriginal(
+  tx: Transaction,
+  artifactId: string,
+  ci: { repositoryId: number; pipelineNumber: number },
+) {
+  const row = required(
+    await tx.artifact.findUnique({
+      where: { id: artifactId },
+      include: { build: true },
+    }),
+    "Artifact",
+  );
+  const { build } = row;
+  if (build.status === "verified")
+    return { original: artifactView(row), build };
+  if (
+    build.status === "pending" &&
+    build.sourceKind === "ci" &&
+    build.repositoryId === ci.repositoryId &&
+    build.pipelineNumber !== null &&
+    build.pipelineNumber < ci.pipelineNumber
+  )
+    return { original: artifactView(row), build };
+  throw new DeliveryError(
+    "CONFLICT",
+    build.status === "pending"
+      ? `Retained artifact ${artifactId} is pending outside an earlier main pipeline of this repository`
+      : "Artifact build has not passed CI qualification",
+  );
+}
 
 export async function publicationSelections(
   tx: Transaction,
   input: PublishBuild,
-  repositoryId: number,
+  ci: { repositoryId: number; pipelineNumber: number },
 ) {
+  const { repositoryId } = ci;
   const selected = new Map<string, string>();
   for (const output of input.artifacts) {
     if (
@@ -20,10 +58,7 @@ export async function publicationSelections(
     selected.set(output.component, output.id);
   }
   for (const artifactId of input.retainedArtifactIds ?? []) {
-    const original = await artifact(tx, artifactId);
-    const build = await tx.build.findUniqueOrThrow({
-      where: { id: original.buildId },
-    });
+    const { original, build } = await retainedOriginal(tx, artifactId, ci);
     if (
       original.serviceId !== input.serviceId ||
       (build.sourceKind === "ci" && build.repositoryId !== repositoryId)

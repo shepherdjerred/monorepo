@@ -199,7 +199,11 @@ attestation; then `verified` or `failed`.
   same component. It retains the existing artifact by reference. Chart bytes
   are compared with the version string excluded, and images by runtime
   fingerprint with build metadata (`VERSION`, `GIT_SHA`) excluded, so an
-  unchanged chart or image is retained rather than republished.
+  unchanged chart or image is retained rather than republished. A producer
+  compares against the newest pending or verified build of the current
+  lineage, so it may retain an artifact of a still-pending build that
+  precedes it in order key. The retaining build then verifies only after that
+  build does, and fails if that build fails (B1).
 - B3. An acquisition's source revision is the repository commit that
   performed and verified the acquisition, never the upstream project's
   source. Acquisitions execute inside the main-branch pipeline and carry its

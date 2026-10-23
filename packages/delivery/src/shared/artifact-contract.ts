@@ -234,6 +234,30 @@ export const FindQualifiedArtifactSchema = z
   })
   .strict();
 export type FindQualifiedArtifact = z.infer<typeof FindQualifiedArtifactSchema>;
+const ComponentQuery = {
+  serviceId: IdentifierSchema,
+  component: IdentifierSchema,
+  kind: ArtifactInputSchema.shape.kind,
+};
+export const LatestQualifiedArtifactQuerySchema = z
+  .object(ComponentQuery)
+  .strict();
+export type LatestQualifiedArtifactQuery = z.infer<
+  typeof LatestQualifiedArtifactQuerySchema
+>;
+/**
+ * A producer's comparison base (B2): `beforePipeline` is the producer's own
+ * main pipeline, so the base never comes from it or a later pipeline (B4).
+ */
+export const LatestRetainableArtifactQuerySchema = z
+  .object({
+    ...ComponentQuery,
+    beforePipeline: z.coerce.number().int().positive().max(2_147_483_647),
+  })
+  .strict();
+export type LatestRetainableArtifactQuery = z.infer<
+  typeof LatestRetainableArtifactQuerySchema
+>;
 export const AcquireUpstreamArtifactSchema = z
   .object({
     requestId: IdentifierSchema,

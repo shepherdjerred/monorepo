@@ -14,6 +14,7 @@ import {
   CreateDeploymentSchema,
   FinishDeploymentSchema,
   LatestQualifiedArtifactQuerySchema,
+  LatestRetainableArtifactQuerySchema,
   PublishBuildSchema,
   StageInputSchema,
 } from "#shared/contract.ts";
@@ -205,6 +206,14 @@ export function createApp(options: Options) {
     c.json(
       await delivery.latestQualifiedArtifact(
         LatestQualifiedArtifactQuerySchema.parse(c.req.query()),
+        options.ciRepositoryId,
+      ),
+    ),
+  );
+  app.get("/api/v1/artifacts/latest-retainable", async (c) =>
+    c.json(
+      await delivery.latestRetainableArtifact(
+        LatestRetainableArtifactQuerySchema.parse(c.req.query()),
         options.ciRepositoryId,
       ),
     ),

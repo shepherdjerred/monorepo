@@ -136,6 +136,7 @@ The API is rooted at `/api/v1`:
 | Environments, recent executions, eligible artifacts           | `GET /overview`                                                   |
 | Immutable version set revisions                               | `GET /versions`, `GET /versions/:id`                              |
 | Latest qualified component artifact                           | `GET /artifacts/latest-qualified?serviceId=…&component=…&kind=…`  |
+| Producer comparison base, pending or qualified                | `GET /artifacts/latest-retainable?…&kind=…&beforePipeline=…`      |
 | Register pending CI publication                               | `POST /builds`                                                    |
 | Compose exact component versions                              | `POST /versions`                                                  |
 | Register immutable pipeline revision                          | `POST /pipelines`                                                 |
@@ -198,9 +199,28 @@ combination fails release qualification with a visible reason. Automatic selecti
 coalesces only queued, unapproved automatic requests. Cancellation or rejection
 suppresses that revision until a new eligible revision or explicit operator request.
 
+Producers compare against the latest-retainable lookup instead, so a pipeline
+that starts before the previous one qualifies still retains that pipeline's
+unchanged images and charts by reference (B2). It returns the component of the
+newest pending or verified CI build in the configured repository whose pipeline
+is above the order key of the current lineage's live set and below the
+producer's `beforePipeline`, or else the live set's entry. A set the catalog
+migration carried is a qualified base. Failed builds, builds that reach a
+failed build through their pending references, and builds the live set
+supersedes (R4) are never a base. Registration accepts a retained original
+whose build is still pending only from an earlier main pipeline of the same
+repository. Qualification keeps the retaining build pending until that build
+verifies. A failed reference fails the retaining build with a reason naming the
+artifact, and the next pipeline rebuilds. A platform source's root chart and
+site references gate it the same way, including producers registered before it
+in the same pipeline. Only a build that precedes the waiting build in the order
+key (pipeline, then registration sequence) is awaited; any other pending
+reference fails qualification, so no build waits on itself or on a later
+build.
+
 The image producer writes `delivery-image-digests` for every candidate it
 built, pushed, verified and found changed by runtime fingerprint, and
-`delivery-retained-image-artifacts` for every qualified original it kept:
+`delivery-retained-image-artifacts` for every retainable original it kept:
 images it did not build and candidates whose fingerprint equals the original.
 Delivery requires both handoffs; a retained original is referenced by its
 existing artifact id and never republished as a new build. The runtime

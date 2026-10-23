@@ -63,6 +63,7 @@ import {
   version,
   overview,
   latestQualifiedArtifact,
+  latestRetainableArtifact,
 } from "./delivery-read.ts";
 import {
   pendingQualification,
@@ -210,6 +211,7 @@ export class Delivery {
   version = version;
   overview = overview;
   latestQualifiedArtifact = latestQualifiedArtifact;
+  latestRetainableArtifact = latestRetainableArtifact;
   pendingQualification = pendingQualification;
   build = findBuild;
   markQualificationAttempt = markQualificationAttempt;

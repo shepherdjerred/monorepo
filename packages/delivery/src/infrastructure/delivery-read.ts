@@ -4,9 +4,15 @@ import {
   DeploymentSchema,
   BuildSummarySchema,
   LatestQualifiedArtifactQuerySchema,
+  LatestRetainableArtifactQuerySchema,
   ForumBaselineIntentSchema,
 } from "#shared/contract.ts";
-import type { LatestQualifiedArtifactQuery } from "#shared/contract.ts";
+import type {
+  LatestQualifiedArtifactQuery,
+  LatestRetainableArtifactQuery,
+} from "#shared/contract.ts";
+import type { Prisma } from "#generated/prisma/client.ts";
+import type { Database } from "./database.ts";
 import { wire, required } from "./delivery-records.ts";
 import { approvalView } from "./selection/views.ts";
 import { selfHealingApplication } from "#shared/model/recipe-view.ts";
@@ -23,6 +29,30 @@ import {
   qualifiedBuildWhere,
   configurationRevision,
 } from "./delivery-data.ts";
+import { liveSet } from "./composition/automatic.ts";
+import { doomed } from "./delivery-qualification.ts";
+
+const RETAINABLE_PAGE = 20;
+
+/** A set revision's entry for an exact component a qualified build of its service produced. */
+async function qualifiedEntry(
+  database: Database,
+  revisionId: string,
+  input: LatestQualifiedArtifactQuery,
+  repositoryId: number,
+) {
+  return database.versionSetEntry.findFirst({
+    where: {
+      revisionId,
+      component: input.component,
+      artifact: {
+        kind: input.kind,
+        build: qualifiedBuildWhere(input.serviceId, repositoryId),
+      },
+    },
+    include: { artifact: { include: { build: true } } },
+  });
+}
 
 /** Resolve an exact component from the newest coherent automatic version set. */
 export async function latestQualifiedArtifact(
@@ -58,18 +88,65 @@ export async function latestQualifiedArtifact(
     "Qualified automatic version set",
   );
   const row = required(
-    await this.database.versionSetEntry.findFirst({
-      where: {
-        revisionId: selected.id,
-        component: input.component,
-        artifact: {
-          kind: input.kind,
-          build: qualifiedBuildWhere(input.serviceId, repositoryId),
-        },
-      },
-      include: { artifact: { include: { build: true } } },
-    }),
+    await qualifiedEntry(this.database, selected.id, input, repositoryId),
     `Qualified ${input.kind} artifact ${input.serviceId}/${input.component}`,
+  );
+  return artifactView(row.artifact);
+}
+
+/**
+ * A producer's comparison base (B2): the component of the newest pending or
+ * verified CI build of this repository whose order key is above the live
+ * set's (R4) and below the producer's own pipeline, else the live set's
+ * entry. The live set is the current lineage's (R5), so a carried set
+ * (section 7) is a qualified base. A build that failed, or that reaches a
+ * failed build through its pending references, is never a base. Retaining a
+ * pending base defers the retaining build's qualification until it settles.
+ */
+export async function latestRetainableArtifact(
+  this: Delivery,
+  rawInput: LatestRetainableArtifactQuery,
+  repositoryId: number,
+) {
+  const input = LatestRetainableArtifactQuerySchema.parse(rawInput);
+  await ensureService(this.database, input.serviceId);
+  const live = await liveSet(this.database, input.serviceId);
+  const where = {
+    component: input.component,
+    artifact: { kind: input.kind },
+    build: {
+      serviceId: input.serviceId,
+      repositoryId,
+      sourceKind: "ci",
+      status: { in: ["pending", "verified"] },
+      pipelineNumber: {
+        gt: live?.orderMajor ?? 0,
+        lt: input.beforePipeline,
+      },
+    },
+  } satisfies Prisma.BuildArtifactSelectionWhereInput;
+  for (let skip = 0; ; skip += RETAINABLE_PAGE) {
+    const page = await this.database.buildArtifactSelection.findMany({
+      where,
+      orderBy: [
+        { build: { pipelineNumber: "desc" } },
+        { build: { registrationSequence: "desc" } },
+      ],
+      include: { artifact: { include: { build: true } }, build: true },
+      skip,
+      take: RETAINABLE_PAGE,
+    });
+    // The qualifier will fail a doomed build, so it is no base.
+    for (const candidate of page)
+      if (!(await doomed(this.database, candidate.build)))
+        return artifactView(candidate.artifact);
+    if (page.length < RETAINABLE_PAGE) break;
+  }
+  const row = required(
+    live === null
+      ? null
+      : await qualifiedEntry(this.database, live.id, input, repositoryId),
+    `Retainable ${input.kind} artifact ${input.serviceId}/${input.component}`,
   );
   return artifactView(row.artifact);
 }

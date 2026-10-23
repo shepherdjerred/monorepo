@@ -225,7 +225,7 @@ test("rejects an unknown canonical recipe before production effects", async () =
           return commandResult();
         },
         environment: {},
-        readQualifiedImages: async () => new Map(),
+        readRetainableImages: async () => new Map(),
       },
     ),
   ).rejects.toThrow("Unknown CI image recipe");
@@ -248,7 +248,7 @@ test("runs the default application candidate smoke check", async () => {
         return commandResult();
       },
       environment: {},
-      readQualifiedImages: async () => new Map(),
+      readRetainableImages: async () => new Map(),
       getManifestDigest: async () => digest,
       verifyRegistryAccess: () => Promise.resolve(),
       verifySourceLabel: () => Promise.resolve(),
@@ -813,7 +813,7 @@ test("smokes exact candidates, reuses identical runtime fingerprints, and tags S
     {
       executor,
       environment: {},
-      readQualifiedImages: async () => catalog,
+      readRetainableImages: async () => catalog,
       getManifestDigest: async (image) => {
         manifestReferences.push(image);
         events.push(`resolve:${image}`);
@@ -949,7 +949,7 @@ test("keeps an exact candidate fingerprint propagation miss transient", async ()
       {
         executor: async () => commandResult(),
         environment: {},
-        readQualifiedImages: async () =>
+        readRetainableImages: async () =>
           qualifiedInventory([
             {
               name: "shepherdjerred/birmel",
@@ -988,7 +988,7 @@ test("keeps upstream provenance for infrastructure images", async () => {
     {
       executor: async () => commandResult(),
       environment: {},
-      readQualifiedImages: async () =>
+      readRetainableImages: async () =>
         qualifiedInventory([
           {
             name: "shepherdjerred/redlib",
@@ -1043,7 +1043,7 @@ test("retains every qualified original when no selected candidate changed conten
         return commandResult();
       },
       environment: {},
-      readQualifiedImages: async () => catalog,
+      readRetainableImages: async () => catalog,
       getManifestDigest: async () => digest,
       verifyRegistryAccess: () => Promise.resolve(),
       verifySourceLabel: () => Promise.resolve(),

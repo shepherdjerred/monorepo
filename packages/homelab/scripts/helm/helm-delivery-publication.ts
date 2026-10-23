@@ -202,10 +202,10 @@ export async function bindGeneratedDependencies(
 
 export type ChartPlanningClient = Pick<
   DeliveryClient,
-  "latestQualifiedArtifact"
+  "latestRetainableArtifact"
 >;
 
-/** A verified published chart the planner compares against; Delivery bases name the artifact to retain. */
+/** A published chart the planner compares against; Delivery bases name the artifact to retain. */
 export type ChartPlanningBase = PublishedChart & {
   readonly digest: string;
   readonly artifactId?: string;
@@ -352,26 +352,32 @@ export type ChartPlanningOptions = {
   /** Download, verify and fingerprint ChartMuseum's newest archive of a chart. */
   readonly archive: (name: string) => Promise<ChartPlanningBase>;
   readonly client?: ChartPlanningClient;
+  /** This producer's main pipeline; Delivery bases come only from earlier ones. */
+  readonly pipelineNumber?: number;
 };
 
 /**
- * Delivery's latest qualified chart of the catalog owner. No qualified chart,
- * or one registered before content fingerprints existed, means no base: the
- * chart is published once and retained from then on.
+ * Delivery's newest pending or verified chart of the catalog owner from a
+ * pipeline before this one, so back-to-back pipelines retain the previous
+ * pipeline's unchanged chart before it qualifies. No such chart, or one
+ * registered before content fingerprints existed, means no base: the chart
+ * is published once and retained from then on.
  */
 export async function deliveryChartBase(
   client: ChartPlanningClient,
   name: string,
+  beforePipeline: number,
 ): Promise<ChartPlanningBase | undefined> {
   const owner = new ServiceIndex().byChart(name);
   if (owner === undefined)
     throw new Error(`Chart ${name} requires a service catalog owner`);
   let artifact: ArtifactVersion;
   try {
-    artifact = await client.latestQualifiedArtifact({
+    artifact = await client.latestRetainableArtifact({
       serviceId: owner.id,
       component: `chart:${name}`,
       kind: "chart",
+      beforePipeline,
     });
   } catch (error) {
     if (error instanceof DeliveryClientError && error.status === 404)
@@ -386,7 +392,7 @@ export async function deliveryChartBase(
     !BUILD_REVISION_RE.test(artifact.version)
   )
     throw new Error(
-      `Qualified chart ${name} differs from its canonical owner, component, or CI revision`,
+      `Delivery chart ${name} differs from its canonical owner, component, or CI revision`,
     );
   if (artifact.contentFingerprint === undefined) return undefined;
   return {
@@ -398,10 +404,11 @@ export async function deliveryChartBase(
 }
 
 /**
- * With the Delivery catalog, a chart's base is its owner's latest qualified
- * chart, so unchanged bytes are retained by reference instead of republished
- * under a new version. ChartMuseum's newer but unqualified archives are never
- * a base; only this same producer's own archive (a retry) is compared directly.
+ * With the Delivery catalog, a chart's base is its owner's newest pending or
+ * verified Delivery chart, so unchanged bytes are retained by reference
+ * instead of republished under a new version. ChartMuseum archives Delivery
+ * never registered are never a base; only this same producer's own archive (a
+ * retry) is compared directly.
  */
 export async function planningBases(
   inputs: readonly ChartInput[],
@@ -419,11 +426,17 @@ export async function planningBases(
         ] as const;
       if (latest?.version === options.version)
         return [input.name, await options.archive(input.name)] as const;
-      if (options.client === undefined)
-        throw new Error("Delivery catalog planning requires a Delivery client");
+      if (options.client === undefined || options.pipelineNumber === undefined)
+        throw new Error(
+          "Delivery catalog planning requires a Delivery client and this CI pipeline",
+        );
       return [
         input.name,
-        await deliveryChartBase(options.client, input.name),
+        await deliveryChartBase(
+          options.client,
+          input.name,
+          options.pipelineNumber,
+        ),
       ] as const;
     }),
   );
@@ -452,7 +465,7 @@ export function retainCurrentProducerArchives(
   }
 }
 
-/** An unchanged chart is retained by reference to the qualified Delivery artifact it was planned against. */
+/** An unchanged chart is retained by reference to the Delivery artifact it was planned against. */
 export function retainDeliveryChartBases(
   publication: ChartPublication | undefined,
   bases: ReadonlyMap<string, ChartPlanningBase>,
