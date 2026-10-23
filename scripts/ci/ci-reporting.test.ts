@@ -432,6 +432,7 @@ describe("CI reporting manifest", () => {
           "scripts/ci/delivery-handover.test.ts",
           "scripts/ci/delivery-handover-root.test.ts",
           "scripts/tofu/credential-handoff.test.ts",
+          "src/talos/catalog-pins.test.ts",
           "scripts/tofu/application-secrets.integration.test.ts",
         ],
       },
