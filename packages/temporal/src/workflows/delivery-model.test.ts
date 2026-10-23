@@ -187,7 +187,10 @@ describe("Delivery model step executor (T3)", () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
     try {
       await replayFixture(environment, {
-        fixture: "delivery-deployment-before-model.ts",
+        fixture: new URL(
+          "replay-fixtures/delivery-deployment-before-model.ts",
+          import.meta.url,
+        ),
         workflowType: "deliveryDeploymentWorkflow",
         workflowId: `deployment-before-model-${crypto.randomUUID()}`,
         args: [{ deploymentId: "deployment-1" }],
@@ -230,7 +233,10 @@ describe("Delivery model step executor (T3)", () => {
     };
     try {
       await replayFixture(environment, {
-        fixture: "delivery-dispatch-before-monitor.ts",
+        fixture: new URL(
+          "replay-fixtures/delivery-dispatch-before-monitor.ts",
+          import.meta.url,
+        ),
         workflowType: "deliveryDispatchWorkflow",
         workflowId: `dispatch-before-monitor-${crypto.randomUUID()}`,
         activities: tick,

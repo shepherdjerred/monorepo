@@ -20,4 +20,3 @@ export const OperatorHostTargetSchema = z
     (target) => new Set(target.components).size === target.components.length,
     "A host target binds each component once",
   );
-export type OperatorHostTarget = z.infer<typeof OperatorHostTargetSchema>;

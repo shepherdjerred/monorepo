@@ -256,19 +256,6 @@ export function trmnlPluginsOf(
     : undefined;
 }
 
-/** Probes the oracle requires after reconciliation (v1 `verification`). */
-export function probesOf(
-  definition: Stored,
-): { url: string; expectedStatus: number }[] {
-  if (definition.kind === "argocd")
-    return definition.verification === undefined
-      ? []
-      : [definition.verification];
-  return kubernetesRecipes(definition).flatMap(
-    (recipe) => recipe.oracle.probes,
-  );
-}
-
 /** Steps past which a rollback cannot reselect bytes (D9). */
 export function pointsOfNoReturn(definition: Stored): string[] {
   if (definition.kind === "argocd")
@@ -292,29 +279,6 @@ export function monitorOf(definition: Stored): Monitor | null {
   for (const recipe of kubernetesRecipes(definition))
     if (recipe.oracle.monitor !== undefined) return recipe.oracle.monitor;
   return null;
-}
-
-/** A v1 runner digest literal; model recipes bind runners by reference (C2). */
-export function legacyRunnerImage(definition: Stored): string | undefined {
-  switch (definition.kind) {
-    case "control-plane":
-    case "root-release":
-      return definition.runnerImage;
-    case "tofu":
-      return "runnerImage" in definition ? definition.runnerImage : undefined;
-    case "argocd":
-      return (
-        definition.workerRollout?.runnerImage ??
-        definition.minecraftUpgrade?.runnerImage
-      );
-    case "static-site":
-    case "manual":
-    case "kubernetes-application":
-    case "channel":
-    case "operator-run":
-    case "compound":
-      return undefined;
-  }
 }
 
 /**

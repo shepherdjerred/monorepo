@@ -452,7 +452,10 @@ describe("Delivery replication patch", () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
     try {
       await replayFixture(environment, {
-        fixture: "delivery-dispatch-before-replication.ts",
+        fixture: new URL(
+          "replay-fixtures/delivery-dispatch-before-replication.ts",
+          import.meta.url,
+        ),
         workflowType: "deliveryDispatchWorkflow",
         workflowId: `dispatch-before-replication-${crypto.randomUUID()}`,
         activities: {

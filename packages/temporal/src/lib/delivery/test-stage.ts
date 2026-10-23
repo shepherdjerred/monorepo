@@ -10,7 +10,6 @@ export const TestStageInputSchema = z
       .regex(/^packages\/[a-z0-9-]+(?:\/packages\/[a-z0-9-]+)?$/u),
   })
   .strict();
-export type TestStageInput = z.infer<typeof TestStageInputSchema>;
 
 export const TestStageResultSchema = z
   .object({

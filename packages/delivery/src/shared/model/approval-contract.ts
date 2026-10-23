@@ -34,7 +34,6 @@ export const OverrideDecisionSchema = z.strictObject({
   reason: z.string().min(1).max(4000),
   decidedAt: z.iso.datetime(),
 });
-export type OverrideDecision = z.infer<typeof OverrideDecisionSchema>;
 
 /**
  * One row per deployment, created `pending` with the request and without an

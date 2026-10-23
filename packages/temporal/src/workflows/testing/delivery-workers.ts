@@ -25,11 +25,13 @@ export async function createDeliveryWorkers(
 /**
  * Records a history on a frozen fixture Workflow, then replays it against
  * the production delivery Workflows: replay safety for a patched change.
+ * Callers pass the fixture as a literal `new URL(…, import.meta.url)` so the
+ * fixture module is a visible dependency of its replay test.
  */
 export async function replayFixture(
   environment: TestWorkflowEnvironment,
   input: {
-    fixture: string;
+    fixture: URL;
     workflowType: string;
     workflowId: string;
     activities: NonNullable<WorkerOptions["activities"]>;
@@ -43,10 +45,7 @@ export async function replayFixture(
   const before = await Worker.create({
     ...connection,
     taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
-    workflowsPath: new URL(
-      `../replay-fixtures/${input.fixture}`,
-      import.meta.url,
-    ).pathname,
+    workflowsPath: input.fixture.pathname,
   });
   const activities = await Worker.create({
     ...connection,
