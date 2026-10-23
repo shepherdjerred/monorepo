@@ -3046,6 +3046,20 @@ not spend swing cooldowns against intervening glass. Open, level approaches keep
 direct steering. This check does not replace the movement graph's traversal
 limits or establish that a straight approach has continuous floor support.
 
+Aggro. A hit tells its victim, and only its victim, who struck it: the
+capture's hit cue names the player whose own swing or arrow landed, never the
+owner of a summon. Perception places a melee attacker (within 4.5 blocks)
+exactly and a shooter within 10% of its range, remembers it at 0.9 confidence
+and starts a `Grudge`. Later positions come only from sight, sound and decay.
+For seven seconds after the latest hit (`Grudge.WINDOW_TICKS`), `Aggro` makes
+the attacker the threat the bot watches, the enemy it fights first unless
+another stands in melee range or more than eight blocks nearer, and a reason to
+leave a lane. A bow answers an attacker it can see inside its band; a sword
+closes only on one within 22 blocks (`Grudge.LEASH`) of where it was first
+hit, and the pull lapses once the bot strays that far. Below half health, at a
+fuse it is arming, or under a defuse directive (unless the attacker is in melee
+range), survival and the objective decide as before. Traces carry `aggro=1`.
+
 The `Governor` watches the server's recent tick times (p95) and the bot
 sections' own time with hysteresis: level 1 halves the think rates and makes
 bots with no human within 48 blocks reflex every other tick; level 2 also

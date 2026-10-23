@@ -46,6 +46,15 @@ public final class Utilities {
   /** Nobody known within this distance counts as safe to arm. */
   static final double ARM_SAFE = 12;
 
+  /**
+   * How much a bot wants to hit back at the enemy that just hurt it: above holding or taking a slot
+   * even with the commitment bonus, below defusing a lit fuse or escaping poison.
+   */
+  static final double AVENGE = 1.1;
+
+  /** Below this health fraction a hit no longer draws the bot into a fight: survival decides. */
+  static final double AVENGE_HEALTH = 0.5;
+
   private Utilities() {}
 
   /**
@@ -73,7 +82,7 @@ public final class Utilities {
     var fightReady = Curves.logistic(f.healthFrac(), 0.35, 8);
     var threatened = Curves.near(f.nearestEnemyDistance(), 8) * f.nearestEnemyConfidence();
     var lowHealth = 1 - Curves.logistic(f.healthFrac(), 0.5, 10);
-    scores.put(Option.ENGAGE, engage(f, t, push, fightReady));
+    scores.put(Option.ENGAGE, Math.max(engage(f, t, push, fightReady), avenge(f, t, fightReady)));
     scores.put(Option.RETREAT, threatened * lowHealth * (1.1 - 0.5 * t.aggression()));
     var safeToEat = 1 - Curves.near(f.nearestEnemyDistance(), 6) * f.nearestEnemyConfidence();
     scores.put(Option.HEAL, f.hasGapples() ? lowHealth * safeToEat : 0);
@@ -101,6 +110,24 @@ public final class Utilities {
     var crowded = f.freeTarget() ? 1 : Curves.near(distance, 4);
     var diving = t.bias().divesPastFights() && f.plantSlot() ? 0.4 : 1;
     return appetite * inReach * crowded * diving * t.bias().engage();
+  }
+
+  /**
+   * How much the bot wants to fight the enemy that just hurt it: an archer one it can see inside
+   * its band, wherever it stands; a sword one inside its leash. However many teammates already
+   * chase that enemy, the victim may answer it.
+   */
+  static double avenge(Features f, Temper t, double fightReady) {
+    if (f.aggro().isEmpty() || f.healthFrac() < AVENGE_HEALTH) {
+      return 0;
+    }
+    var pull = f.aggro().orElseThrow();
+    if (t.keep().ranged() ? !pull.visible() : !pull.chase()) {
+      return 0;
+    }
+    var inReach =
+        t.keep().ranged() ? Curves.logistic(-pull.distance(), -(t.keep().max() + 4), 0.5) : 1;
+    return AVENGE * fightReady * inReach * t.bias().engage();
   }
 
   private static void objectives(Features f, Temper t, EnumMap<Option, Double> scores) {

@@ -35,6 +35,7 @@ import java.util.Optional;
  * @param plantSlot whether the bot holds the slot that arms the objective
  * @param freeTarget whether some known enemy is not already chased by enough teammates
  * @param rewindReady whether the Time Machine would work now and land away from the threat
+ * @param aggro the enemy who just hurt the bot, while its grudge pulls ({@link Aggro})
  */
 public record Features(
     double healthFrac,
@@ -58,7 +59,8 @@ public record Features(
     double slotDistance,
     boolean plantSlot,
     boolean freeTarget,
-    boolean rewindReady) {
+    boolean rewindReady,
+    Optional<Aggro.Pull> aggro) {
 
   /** How close a known enemy must be to an own bomb to count as threatening it. */
   public static final double BOMB_THREAT_RANGE = 12;
@@ -120,7 +122,8 @@ public record Features(
             .orElse(Double.POSITIVE_INFINITY),
         situation.holdsPlantSlot() && situation.plantTarget().isPresent(),
         !situation.chaseableEnemies().isEmpty(),
-        rewindReady);
+        rewindReady,
+        Aggro.pull(situation));
   }
 
   /** A fuse with this many teammates on it needs no more. */
@@ -158,7 +161,8 @@ public record Features(
         new DecisionTrace.Feature("poisonZone", inOwnBombPoisonZone ? 1 : 0),
         new DecisionTrace.Feature("slotDist", quantize(slotDistance)),
         new DecisionTrace.Feature("plantSlot", plantSlot ? 1 : 0),
-        new DecisionTrace.Feature("freeTarget", freeTarget ? 1 : 0));
+        new DecisionTrace.Feature("freeTarget", freeTarget ? 1 : 0),
+        new DecisionTrace.Feature("aggro", aggro.isPresent() ? 1 : 0));
   }
 
   private static int quantize(double distance) {

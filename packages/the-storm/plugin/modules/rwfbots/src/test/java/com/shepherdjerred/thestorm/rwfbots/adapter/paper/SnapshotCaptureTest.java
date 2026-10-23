@@ -19,7 +19,12 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.WorldCreator;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.damage.DamageSource;
+import org.bukkit.damage.DamageType;
+import org.bukkit.entity.Arrow;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Wolf;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -253,6 +258,39 @@ final class SnapshotCaptureTest {
         .as("retained sounds survive snapshot coalescing without acquiring new sequence numbers")
         .extracting(Stimulus::sequence)
         .containsExactlyElementsOf(snapshot.stimuli().stream().map(Stimulus::sequence).toList());
+  }
+
+  @Test
+  void aHitNamesTheStrikerOrShooterButNeverTheOwnerOfASummon() {
+    server.getPluginManager().registerEvents(stimuli, MockBukkit.createMockPlugin("TheStorm"));
+    capture.capture(9, state(MatchState.Phase.LIVE, Optional.empty()));
+    hit(bob, DamageType.PLAYER_ATTACK, bob);
+    var arrow = world.spawn(bob.getLocation(), Arrow.class);
+    arrow.setShooter(bob);
+    hit(arrow, DamageType.ARROW, bob);
+    var wolf = world.spawn(bob.getLocation(), Wolf.class);
+    wolf.setOwner(bob);
+    hit(wolf, DamageType.MOB_ATTACK, wolf);
+
+    var hits =
+        capture.capture(10, state(MatchState.Phase.LIVE, Optional.empty())).stimuli().stream()
+            .filter(stimulus -> stimulus.kind() == Stimulus.Kind.HIT)
+            .toList();
+
+    assertThat(hits)
+        .as("the sword and the arrow name Bob; the wolf's bite names nobody")
+        .hasSize(2)
+        .allSatisfy(
+            hit -> {
+              assertThat(hit.source()).contains(ids.combatant(bob.getUniqueId()));
+              assertThat(hit.victim()).contains(ids.combatant(alice.getUniqueId()));
+            });
+  }
+
+  private void hit(Entity damager, DamageType type, Entity causing) {
+    alice.setNoDamageTicks(0);
+    alice.simulateDamage(
+        1, DamageSource.builder(type).withCausingEntity(causing).withDirectEntity(damager).build());
   }
 
   @Test

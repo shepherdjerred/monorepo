@@ -10,6 +10,7 @@ import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Kit;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.Option;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 final class UtilitiesTest {
@@ -50,6 +51,7 @@ final class UtilitiesTest {
     boolean rewindReady;
     boolean approaching;
     boolean seen = true;
+    Optional<Aggro.Pull> aggro = Optional.empty();
 
     F enemyAt(double distance) {
       enemyDistance = distance;
@@ -80,7 +82,8 @@ final class UtilitiesTest {
           slotDistance,
           plantSlot,
           freeTarget,
-          rewindReady);
+          rewindReady,
+          aggro);
     }
   }
 

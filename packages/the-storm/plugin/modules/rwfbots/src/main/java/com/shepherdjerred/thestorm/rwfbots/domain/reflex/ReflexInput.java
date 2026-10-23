@@ -35,8 +35,9 @@ public record ReflexInput(
 
   /**
    * The input for {@code self} given what it perceives, with {@code gapplesLeft} apples: the
-   * decided target when visible, otherwise only an enemy close enough to hit back at. Whether to
-   * fight anyone further away is the think step's call, so a bot holding its slot never charges.
+   * decided target when visible, otherwise only an enemy close enough to hit back at, the one that
+   * just hurt the bot first. Whether to fight anyone further away is the think step's call, so a
+   * bot holding its slot never charges.
    */
   public static ReflexInput of(
       CombatantView self, WorldSnapshot snapshot, Decision decision, Percept percept) {
@@ -63,6 +64,16 @@ public record ReflexInput(
           case AGGRESSIVE, CAUTIOUS -> Reflex.MELEE_ALERT;
           case STEALTH, EVASIVE -> Reflex.REACH;
         };
+    // Of the enemies in reach, the one that just hurt the bot comes first.
+    var attacker =
+        percept
+            .state()
+            .grudgeAt(percept.tick())
+            .flatMap(grudge -> percept.visible(grudge.attacker()))
+            .filter(enemy -> enemy.pos().distance(self.pos()) <= reach);
+    if (attacker.isPresent()) {
+      return attacker;
+    }
     return percept.nearestVisible().filter(enemy -> enemy.pos().distance(self.pos()) <= reach);
   }
 
