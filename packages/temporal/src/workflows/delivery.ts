@@ -75,6 +75,16 @@ const backup = proxyActivities<DeliveryColdStartActivities>({
   startToCloseTimeout: "2 minutes",
   retry: { maximumAttempts: 5, initialInterval: "10 seconds" },
 });
+/**
+ * The cold-start snapshot of an acceptance retries until it lands: the
+ * deployment is already terminal, and nothing else revisits it to write the
+ * snapshot (X7). Each write is idempotent and never moves `latest.json` back.
+ */
+const coldStartBackup = proxyActivities<DeliveryColdStartActivities>({
+  taskQueue: TASK_QUEUES.BACKUP,
+  startToCloseTimeout: "2 minutes",
+  retry: { initialInterval: "10 seconds", maximumInterval: "10 minutes" },
+});
 const replication = proxyActivities<DeliveryReplicationActivities>({
   taskQueue: TASK_QUEUES.BACKUP,
   // The backup worker runs one Activity at a time and the dispatch Workflow
@@ -107,6 +117,12 @@ export const DELIVERY_MODEL_EXECUTOR_PATCH = "delivery-model-executor-v1";
  * recorded before them replay without these Activities.
  */
 export const DELIVERY_DISPATCH_MODEL_PATCH = "delivery-dispatch-model-v1";
+
+/**
+ * An acceptance's cold-start write retries until it lands (X7). Histories
+ * recorded before it keep their bounded five attempts.
+ */
+export const DELIVERY_COLD_START_RETRY_PATCH = "delivery-cold-start-retry-v1";
 
 /** Artifacts replicated per dispatch tick; the rest wait for the next one. */
 const REPLICATIONS_PER_DISPATCH = 10;
@@ -288,11 +304,14 @@ async function runModelRecipe(deploymentId: string) {
 /** After acceptance: self-heal on the accepted source and the cold-start snapshot (T4, X7). */
 async function settleModelAcceptance(deploymentId: string) {
   const coldStart = await metadata.settleDeliveryModel(deploymentId);
-  if (coldStart !== null)
-    await metadata.recordDeliveryColdStart(
-      deploymentId,
-      await backup.writeDeliveryColdStart(coldStart),
-    );
+  if (coldStart === null) return;
+  const writer = patched(DELIVERY_COLD_START_RETRY_PATCH)
+    ? coldStartBackup
+    : backup;
+  await metadata.recordDeliveryColdStart(
+    deploymentId,
+    await writer.writeDeliveryColdStart(coldStart),
+  );
 }
 
 /** Every observation runs whatever dispatch did; failures surface after it. */

@@ -50,16 +50,24 @@ function modelActivities(calls: string[], failStep?: string) {
   };
 }
 
+/** The backup worker's cold-start write, failing its first `failures` attempts. */
 async function backupWorker(
   environment: TestWorkflowEnvironment,
   calls: string[],
+  failures = 0,
 ) {
+  let attempts = 0;
   return Worker.create({
     connection: environment.nativeConnection,
     namespace: "default",
     taskQueue: TASK_QUEUES.BACKUP,
     activities: {
       writeDeliveryColdStart: (input: typeof coldStart) => {
+        attempts += 1;
+        if (attempts <= failures) {
+          calls.push("write-failed");
+          throw new Error("R2 is unavailable");
+        }
         calls.push(`write:${input.fingerprint}`);
         return {
           fingerprint: input.fingerprint,
@@ -306,6 +314,73 @@ describe("Delivery model step executor (T3)", () => {
         "platform:step-approve",
         "finish:failed",
       ]);
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+});
+
+describe("Delivery model cold-start snapshot (X7)", () => {
+  it("keeps writing the snapshot past five failed attempts until it lands", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const calls: string[] = [];
+    const { workflows, activities } = await createDeliveryWorkers(
+      environment,
+      modelActivities(calls),
+    );
+    const backup = await backupWorker(environment, calls, 6);
+    try {
+      const workflowId = `model-cold-start-${crypto.randomUUID()}`;
+      await workflows.runUntil(
+        activities.runUntil(
+          backup.runUntil(
+            environment.client.workflow.execute("deliveryDeploymentWorkflow", {
+              workflowId,
+              taskQueue: TASK_QUEUES.DELIVERY_WORKFLOWS,
+              args: [{ deploymentId: "deployment-7" }],
+            }),
+          ),
+        ),
+      );
+      expect(calls.slice(calls.indexOf("settle"))).toEqual([
+        "settle",
+        ...Array.from({ length: 6 }, () => "write-failed"),
+        `write:${coldStart.fingerprint}`,
+        "record:s3://backup/delivery/cold-start/c.json",
+      ]);
+      await Worker.runReplayHistory(
+        { workflowsPath: new URL("delivery.ts", import.meta.url).pathname },
+        await environment.client.workflow.getHandle(workflowId).fetchHistory(),
+      );
+    } finally {
+      await environment.teardown();
+    }
+  }, 120_000);
+
+  it("replays a model deployment recorded while the write was bounded to five attempts", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const calls: string[] = [];
+    const backup = await backupWorker(environment, calls);
+    try {
+      await backup.runUntil(
+        replayFixture(environment, {
+          fixture: new URL(
+            "replay-fixtures/delivery-model-before-cold-start-retry.ts",
+            import.meta.url,
+          ),
+          workflowType: "deliveryDeploymentWorkflow",
+          workflowId: `model-before-cold-start-retry-${crypto.randomUUID()}`,
+          args: [{ deploymentId: "deployment-7" }],
+          activities: {
+            ...modelActivities(calls),
+            runDeliveryModelStep: (_id: string, key: string) => {
+              calls.push(key);
+              return { waiting: false };
+            },
+          },
+        }),
+      );
+      expect(calls).toContain(`write:${coldStart.fingerprint}`);
     } finally {
       await environment.teardown();
     }
