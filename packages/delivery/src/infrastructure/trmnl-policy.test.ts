@@ -1,42 +1,16 @@
 import { describe, expect, test } from "vitest";
 import { VersionSetRevisionSchema } from "#shared/contract.ts";
 import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
+import { applicationRecipe } from "#testing/catalog-fixture.ts";
 import { validateTrmnlSelection } from "./trmnl-policy.ts";
 
 function application(name: string, archive: boolean) {
-  const instance = `application:${name}`;
-  return {
-    kind: "kubernetes-application",
-    application: {
-      name,
-      project: "default",
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: name,
-      },
-      source: {
-        repoURL: "https://chartmuseum.tailnet-1a49.ts.net",
-        chart: name,
-      },
-      lifecycle: "retain",
-    },
-    chartComponent: `chart:${name}`,
-    runner: { service: "ci", component: "image:ci-base" },
-    steps: [
-      { kind: "apply-safety", instance },
-      { kind: "sync", instance },
-      ...(archive
-        ? [
-            {
-              kind: "archive",
-              instance,
-              archiveComponent: "archive:trmnl-plugins",
-            },
-          ]
-        : []),
-    ],
-    oracle: {},
-  };
+  return applicationRecipe(
+    name,
+    archive
+      ? [{ kind: "archive", archiveComponent: "archive:trmnl-plugins" }]
+      : [],
+  );
 }
 
 /** The dashboard's selection with its first-party plugin archive. */

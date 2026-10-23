@@ -1,34 +1,11 @@
 import { describe, expect, test } from "vitest";
 import { RecipeDefinitionSchema } from "./recipe-contract.ts";
 import { specializedStageKey } from "./recipe-view.ts";
+import { applicationRecipe } from "#testing/catalog-fixture.ts";
 
 /** An Application recipe whose third step is `extra`, if given. */
 function application(name: string, extra?: Record<string, unknown>) {
-  const instance = `application:${name}`;
-  return {
-    kind: "kubernetes-application",
-    application: {
-      name,
-      project: "default",
-      destination: {
-        server: "https://kubernetes.default.svc",
-        namespace: name,
-      },
-      source: {
-        repoURL: "https://chartmuseum.tailnet-1a49.ts.net",
-        chart: name,
-      },
-      lifecycle: "retain",
-    },
-    chartComponent: `chart:${name}`,
-    runner: { service: "ci", component: "image:ci-base" },
-    steps: [
-      { kind: "apply-safety", instance },
-      { kind: "sync", instance },
-      ...(extra === undefined ? [] : [{ instance, ...extra }]),
-    ],
-    oracle: {},
-  };
+  return applicationRecipe(name, extra === undefined ? [] : [extra]);
 }
 
 const archiveStep = {
