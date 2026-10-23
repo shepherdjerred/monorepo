@@ -3,6 +3,9 @@ import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-sou
 import { z } from "zod";
 import { PrincipalSchema } from "#shared/contract.ts";
 
+/** The only scopes an attestation credential holds besides `attest` (X13). */
+const ATTESTOR_SCOPES: ReadonlySet<string> = new Set(["read", "attest"]);
+
 export const MachineCredentialSchema = z
   .object({
     token: z.string().min(32),
@@ -11,11 +14,32 @@ export const MachineCredentialSchema = z
       "Machines cannot approve releases",
     ).refine(
       (value) =>
-        !(value.scopes.includes("attest") && value.scopes.includes("execute")),
-      "An attestation credential is a distinct operator identity; it never executes",
+        !value.scopes.includes("attest") ||
+        value.scopes.every((scope) => ATTESTOR_SCOPES.has(scope)),
+      "An attestation credential is a distinct operator identity; it only reads and attests",
     ),
   })
   .strict();
+
+/**
+ * The configured machine credentials. An attestor's identity holds exactly
+ * one credential, so no other entry can give the same principal execute,
+ * deploy or publish authority (X13).
+ */
+const MachineCredentialsSchema = z
+  .array(MachineCredentialSchema)
+  .superRefine((credentials, context) => {
+    for (const { principal } of credentials)
+      if (
+        principal.scopes.includes("attest") &&
+        credentials.filter((entry) => entry.principal.id === principal.id)
+          .length > 1
+      )
+        context.addIssue({
+          code: "custom",
+          message: `Attestor ${principal.id} holds more than one credential`,
+        });
+  });
 export const BootstrapSchema = z
   .object({
     DATABASE_URL: z.url(),
@@ -40,7 +64,7 @@ export const BootstrapSchema = z
       .transform((value, context) => {
         try {
           const raw: unknown = JSON.parse(value);
-          return z.array(MachineCredentialSchema).parse(raw);
+          return MachineCredentialsSchema.parse(raw);
         } catch {
           context.addIssue({
             code: "custom",
