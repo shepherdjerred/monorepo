@@ -8,7 +8,10 @@ import {
   unbuiltImageOriginals,
   chartPublicationImages,
 } from "../../../scripts/lib/image-pin-catalog.ts";
-import { readRetainableImages } from "./live-version-catalog.ts";
+import {
+  currentPipelineNumber,
+  readRetainableImages,
+} from "./live-version-catalog.ts";
 import { includeMissingQualifiedImages } from "../selectors/select-image-targets-pins.ts";
 import {
   ServiceIndex,
@@ -172,7 +175,7 @@ test("retainable inventory preserves each original artifact/build/source through
     CANONICAL_IMAGE_TARGETS.map((name) => [name, original(name)]),
   );
   const requested: string[] = [];
-  const actual = await readRetainableImages(43, async (query) => {
+  const actual = await readRetainableImages(async (query) => {
     const name = query.component.slice("image:".length);
     requested.push(name);
     expect(query).toEqual({
@@ -182,7 +185,7 @@ test("retainable inventory preserves each original artifact/build/source through
       beforePipeline: 43,
     });
     return originals.get(name);
-  });
+  }, 43);
   expect(requested).toEqual(CANONICAL_IMAGE_TARGETS);
   expect(actual).toEqual(originals);
   expect(unbuiltImageOriginals(actual, [])).toEqual([...originals.values()]);
@@ -195,7 +198,7 @@ test("retainable inventory preserves each original artifact/build/source through
 });
 
 test("only404 absence selects new builds, including the fixed infra recipe group", async () => {
-  const originals = await readRetainableImages(43, async (query) => {
+  const originals = await readRetainableImages(async (query) => {
     const name = query.component.slice("image:".length);
     if (name === "delivery" || name === "redlib")
       throw new DeliveryClientError(
@@ -204,7 +207,7 @@ test("only404 absence selects new builds, including the fixed infra recipe group
         "No original qualified artifact",
       );
     return original(name);
-  });
+  }, 43);
   expect(includeMissingQualifiedImages(["tracker"], originals)).toEqual([
     "delivery",
     "infra",
@@ -216,15 +219,15 @@ test.each([401, 403, 500])(
   "API status%s cannot become missing-original rebuild or Git/history fallback",
   async (status) => {
     await expect(
-      readRetainableImages(43, async () => {
+      readRetainableImages(async () => {
         throw new DeliveryClientError(status, "HTTP_ERROR", "refused");
-      }),
+      }, 43),
     ).rejects.toMatchObject({ status });
   },
 );
 
 test("malformed or foreign qualified identities are refused", async () => {
-  await expect(readRetainableImages(43, async () => ({}))).rejects.toThrow();
+  await expect(readRetainableImages(async () => ({}), 43)).rejects.toThrow();
   for (const mutation of [
     { serviceId: "arcade" },
     { component: "image:arcade" },
@@ -235,8 +238,16 @@ test("malformed or foreign qualified identities are refused", async () => {
     ).toThrow("canonical owner/component/repository");
   }
   await expect(
-    readRetainableImages(43, async () => {
+    readRetainableImages(async () => {
       throw new Error("network unavailable");
-    }),
+    }, 43),
   ).rejects.toThrow("network unavailable");
+});
+
+test("the base bound is this exact main pipeline number", () => {
+  expect(currentPipelineNumber({ CI_PIPELINE_NUMBER: "12158" })).toBe(12_158);
+  for (const raw of [undefined, "", "0", "012", "1.5", "9".repeat(17)])
+    expect(() => currentPipelineNumber({ CI_PIPELINE_NUMBER: raw })).toThrow(
+      "CI_PIPELINE_NUMBER must be a positive safe integer",
+    );
 });

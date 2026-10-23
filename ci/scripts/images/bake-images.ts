@@ -34,7 +34,6 @@ import {
 import type { PushOptions, PushOutcome } from "./bake-image-push-types.ts";
 import { productionBakeEnvironment } from "./production-bake-environment.ts";
 import { runMain } from "../../../scripts/lib/transient.ts";
-import { buildNumber as ciPipelineNumber } from "../../../scripts/lib/ci/ci-environment.ts";
 import {
   lastSuccessfulImageReleaseCommit,
   readRetainableImages,
@@ -275,9 +274,8 @@ export async function pushImages(
   const { targets, commit, buildNumber, contractHash } = options;
   const executor = dependencies.executor ?? execute;
   const environment = dependencies.environment ?? Bun.env;
-  const readOriginals =
-    dependencies.readRetainableImages ??
-    (() => readRetainableImages(ciPipelineNumber(environment)));
+  const { readRetainableImages: readOriginals = readRetainableImages } =
+    dependencies;
   const getManifestDigest = dependencies.getManifestDigest ?? manifestDigest;
   const verifyRegistryAccess =
     dependencies.verifyRegistryAccess ?? ensureDockerHubAccess;
@@ -388,9 +386,7 @@ async function main(): Promise<void> {
     rm(pushOutcomes, { force: true }),
   ]);
 
-  const originals = options.push
-    ? await readRetainableImages(ciPipelineNumber())
-    : undefined;
+  const originals = options.push ? await readRetainableImages() : undefined;
   const selection = await selectedTargets(options, commit, execute);
   const bakeTargets = expandTargets(
     originals === undefined

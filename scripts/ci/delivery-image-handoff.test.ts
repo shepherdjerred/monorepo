@@ -33,6 +33,7 @@ test("production metadata readers use the existing authenticated client and its 
   expect(FocusedClientError).toBe(DeliveryClientError);
   vi.stubEnv("DELIVERY_URL", "https://delivery.example.invalid");
   vi.stubEnv("DELIVERY_API_TOKEN", "synthetic-test-only");
+  vi.stubEnv("CI_PIPELINE_NUMBER", "43");
   const paths: string[] = [];
   const searches: (string | null)[] = [];
   vi.stubGlobal("fetch", (input: string, init: RequestInit) => {
@@ -64,7 +65,7 @@ test("production metadata readers use the existing authenticated client and its 
     );
   });
   try {
-    expect(await readRetainableImages(43)).toEqual(new Map());
+    expect(await readRetainableImages()).toEqual(new Map());
     expect(paths).toHaveLength(CANONICAL_IMAGE_TARGETS.length);
     expect(new Set(paths)).toEqual(
       new Set(["/api/v1/artifacts/latest-retainable"]),
@@ -318,7 +319,7 @@ test("back-to-back pipelines retain the previous pipeline's pending image instea
     return query.beforePipeline > 42 ? pending : arcadeOriginal;
   };
   const current = await publishCandidate({
-    readOriginals: () => readRetainableImages(43, delivery),
+    readOriginals: () => readRetainableImages(delivery, 43),
     fingerprint,
   });
   await current.operation;
@@ -326,7 +327,7 @@ test("back-to-back pipelines retain the previous pipeline's pending image instea
   expect(current.delivery).toEqual([{ digests: {}, retained: [pending] }]);
   // The qualified-only comparison this replaces republished the same bytes.
   const stale = await publishCandidate({
-    readOriginals: () => readRetainableImages(42, delivery),
+    readOriginals: () => readRetainableImages(delivery, 42),
     fingerprint,
   });
   await stale.operation;
