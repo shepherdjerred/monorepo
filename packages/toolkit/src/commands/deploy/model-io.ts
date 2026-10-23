@@ -2,7 +2,10 @@ import {
   CatalogDocumentSchema,
   type StoredSnapshotObject,
 } from "@shepherdjerred/delivery/model-contract";
+import { pathToFileURL } from "node:url";
+import { CatalogCoreSchema } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import { loadCatalogDocument } from "@shepherdjerred/ops-model/delivery-catalog/files.ts";
+import { repoRoot } from "#lib/deployed/git.ts";
 import { required, type DeployOptions } from "./common.ts";
 
 /**
@@ -48,12 +51,31 @@ export async function catalogDocument(options: DeployOptions) {
 }
 
 /**
- * The document a reconcile sends: the one `--file` names, or else the
- * committed catalog (`loadCatalogDocument()`, the reviewed core plus every
- * environment's revision files).
+ * The committed catalog of the monorepo checkout the toolkit runs in: its
+ * reviewed core and every environment's revision files, assembled by
+ * `loadCatalogDocument()`. A compiled toolkit carries neither, so both are
+ * read from the checkout.
  */
+async function committedCatalogDocument() {
+  const root = await repoRoot();
+  if (root === null)
+    throw new Error(
+      "deploy catalog reconcile without --file reads the committed catalog; run it inside the monorepo checkout",
+    );
+  const core = CatalogCoreSchema.parse(
+    await readJson(`${root}/packages/ops-model/catalog-document.json`),
+  );
+  return CatalogDocumentSchema.parse(
+    await loadCatalogDocument(
+      pathToFileURL(`${root}/packages/delivery/registrations/v2/`),
+      core,
+    ),
+  );
+}
+
+/** The document a reconcile sends: the one `--file` names, or else the committed catalog. */
 export async function reconcileDocument(options: DeployOptions) {
   return options.file === undefined
-    ? CatalogDocumentSchema.parse(await loadCatalogDocument())
+    ? committedCatalogDocument()
     : catalogDocument(options);
 }

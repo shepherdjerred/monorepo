@@ -224,8 +224,9 @@ latest observation with its firing alarms.
 `retire`, `catalog reconcile`, `recover`, `snapshot reconcile` and
 `snapshot accept` require the admin credential. `catalog reconcile` reads the
 catalog document `--file` names, or without `--file` builds the committed one
-with `loadCatalogDocument()` from
-`@shepherdjerred/ops-model/delivery-catalog/files.ts`. It validates the document
+of the monorepo checkout it runs in with `loadCatalogDocument()` from
+`@shepherdjerred/ops-model/delivery-catalog/files.ts`, reading the core and
+revision files from that checkout. It validates the document
 against the catalog contract, prints its catalog revision before sending, and
 exits 1 when the server refuses any entry. `recover` creates the one recovery intent of a
 `recovery-required` deployment, bound to the expected binding generation and,
