@@ -1134,6 +1134,47 @@
       "value": "1.14.2"
     },
     {
+      "name": "siderolabs/installer-liskov",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://factory.talos.dev",
+        "versioning": "semver",
+        "packageName": "metal-installer-secureboot/d953d04c966642907c1061252288cdc30189c2973f083de93355faac1e9d54cb"
+      },
+      "value": "v1.14.2@sha256:92ab950ac3166567f3600cc2f56ac3b758c2649c4d8a8100248c7e31ad000bb2",
+      "component": true
+    },
+    {
+      "name": "siderolabs/installer-torvalds",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://factory.talos.dev",
+        "versioning": "semver",
+        "packageName": "metal-installer-secureboot/4560d31e3c529f9808e0898c2804d25be14201992fe2792abd4a09618e0d39a9"
+      },
+      "value": "v1.14.2@sha256:eb2e89ba92c85b594a23cd3239d4a1878077e0375d29af2790b0bb982b644e14",
+      "component": true
+    },
+    {
+      "name": "siderolabs/kubelet",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://ghcr.io",
+        "versioning": "semver"
+      },
+      "value": "v1.37.1@sha256:3777bdaaa352e1f425dff9d8868a970923c66d0629bad16f935c41018a83d9d8",
+      "component": true
+    },
+    {
       "name": "postgres-operator",
       "category": "upstream",
       "artifactType": "helm-chart",

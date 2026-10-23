@@ -26,6 +26,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/resources/companions/names.ts";
 import {
   CHANNEL_RECIPES,
+  NODE_RECIPES,
   ENVIRONMENT_MONITORS,
   ENVIRONMENT_TESTS,
   OPERATOR_RUN_STAGES,
@@ -355,10 +356,10 @@ function environmentRevisions(
   definition: RecipeDefinition;
   configuration: ReturnType<typeof configurationContent>;
 } {
-  const channel = CHANNEL_RECIPES[environmentId];
-  if (channel !== undefined)
+  const fixed = CHANNEL_RECIPES[environmentId] ?? NODE_RECIPES[environmentId];
+  if (fixed !== undefined)
     return {
-      definition: RecipeDefinitionSchema.parse(channel),
+      definition: RecipeDefinitionSchema.parse(fixed),
       configuration: { content: {}, forwardOnly: [] },
     };
   const serviceId = environmentService(environmentId);

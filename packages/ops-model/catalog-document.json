@@ -1123,6 +1123,31 @@
       }
     },
     {
+      "id": "cluster-nodes",
+      "title": "Cluster nodes",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "cluster-platform",
+      "components": [
+        {
+          "name": "image:installer-liskov",
+          "producer": "acquisition"
+        },
+        {
+          "name": "image:installer-torvalds",
+          "producer": "acquisition"
+        },
+        {
+          "name": "image:kubelet",
+          "producer": "acquisition"
+        }
+      ],
+      "ops": {
+        "kind": "platform"
+      }
+    },
+    {
       "id": "cluster-platform",
       "title": "Cluster platform baseline",
       "package": "homelab",
@@ -3011,6 +3036,22 @@
       "automatic": false,
       "recipeRevisionId": "cluster-admission/prod/1",
       "configurationRevisionId": "cluster-admission/prod/1"
+    },
+    {
+      "id": "cluster-nodes/liskov",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": false,
+      "recipeRevisionId": "cluster-nodes/liskov/1",
+      "configurationRevisionId": "cluster-nodes/liskov/1"
+    },
+    {
+      "id": "cluster-nodes/torvalds",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": false,
+      "recipeRevisionId": "cluster-nodes/torvalds/1",
+      "configurationRevisionId": "cluster-nodes/torvalds/1"
     },
     {
       "id": "cluster-platform/prod",

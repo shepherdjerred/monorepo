@@ -1,0 +1,12 @@
+{
+  "id": "cluster-nodes/liskov/1",
+  "definition": {
+    "kind": "operator-run",
+    "wrapped": {
+      "kind": "host",
+      "instance": "host:liskov",
+      "components": ["image:installer-liskov", "image:kubelet"]
+    },
+    "stages": ["talos-upgrade", "kubernetes-upgrade"]
+  }
+}

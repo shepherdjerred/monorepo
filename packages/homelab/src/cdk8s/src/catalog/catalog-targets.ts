@@ -12,6 +12,29 @@ import type {
 } from "@shepherdjerred/delivery/model-contract";
 
 /**
+ * `cluster-nodes` (Delivery model X13): one operator-run environment per node.
+ * There is no node adapter; the operator upgrades the node by hand and
+ * attests each stage, and the recipe wraps the host with the images the
+ * upgrade moves: the node's Talos factory installer and the kubelet.
+ */
+export const NODE_RECIPES: Readonly<
+  Record<string, Extract<RecipeDefinition, { kind: "operator-run" }>>
+> = Object.fromEntries(
+  ["liskov", "torvalds"].map((node) => [
+    `cluster-nodes/${node}`,
+    {
+      kind: "operator-run",
+      wrapped: {
+        kind: "host",
+        instance: `host:${node}`,
+        components: [`image:installer-${node}`, "image:kubelet"],
+      },
+      stages: ["talos-upgrade", "kubernetes-upgrade"],
+    },
+  ]),
+);
+
+/**
  * Channel environments (Delivery model, section 5): a release to an audience
  * publishes the build's artifact to the store if absent, moves the pointer and
  * reads it back. webring/latest is the npm `latest` dist-tag of the webring
