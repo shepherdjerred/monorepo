@@ -292,7 +292,23 @@ describe("hub release kind", () => {
         },
       },
     });
+    await db.pipeline.create({
+      data: {
+        id: "arcade/manual",
+        definition: { kind: "manual", reason: "v1 deploys" },
+      },
+    });
     try {
+      // A v1 manual pipeline is deployed, as admission reads its stored
+      // kind, though the selection view normalises it to operator-run.
+      await db.environment.update({
+        where: { id: "arcade/prod" },
+        data: {
+          pipelineRevisionId: "arcade/manual",
+          acceptedDeploymentId: null,
+        },
+      });
+      expect(await releaseKind()).toBe("deploy");
       await db.environment.update({
         where: { id: "arcade/prod" },
         data: {

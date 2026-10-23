@@ -7,7 +7,6 @@ import {
   AttestationRequestSchema,
   PLAN_APPROVAL_STAGE_KEY,
   RecoveryIntentRequestSchema,
-  deploymentKindForRecipe,
 } from "@shepherdjerred/delivery/model-contract";
 import type { DeliveryClient } from "@shepherdjerred/delivery/client";
 import { generation, required, type DeployOptions } from "./common.ts";
@@ -159,21 +158,6 @@ function expectedGeneration(
 }
 
 /**
- * The deployment kind a release takes: the server freezes the accepted
- * selection's recipe until a rebind moves it to the declared one, and the
- * declared recipe only before the first acceptance (E0, L2).
- */
-async function releaseKind(
-  client: DeliveryClient,
-  view: Awaited<ReturnType<DeliveryClient["selection"]>>,
-) {
-  if (view.acceptedDeploymentId === null)
-    return deploymentKindForRecipe(view.declared.recipeKind);
-  const accepted = await client.deployment(view.acceptedDeploymentId);
-  return deploymentKindForRecipe(accepted.pipeline.definition.kind);
-}
-
-/**
  * Realise a set revision the way the recipe the release freezes asks:
  * `deploy`, or `channel-publish` and `operator-run` for those recipe kinds.
  * `--override` asks for the approval a non-eligible deploy needs (H4).
@@ -184,8 +168,13 @@ async function start(
   versionSetRevisionId: string,
   options: ModelOptions,
 ): ModelResult {
-  const view = await client.selection(environmentId);
-  const kind = await releaseKind(client, view);
+  // The server reports the kind of the recipe a release freezes, the accepted
+  // selection's until a rebind, read from the stored kind as admission reads
+  // it; the view's declared kind is normalised and may differ (E0, L2).
+  const [view, { releaseKind: kind }] = await Promise.all([
+    client.selection(environmentId),
+    client.environmentDetail(environmentId),
+  ]);
   if (kind !== "deploy" && options.override)
     throw new Error(
       `Only a deploy takes an override; ${environmentId} runs ${kind}`,

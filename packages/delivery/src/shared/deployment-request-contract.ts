@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { IdentifierSchema } from "./artifact-contract.ts";
+import type { StoredRecipeDefinition } from "./model/record-contract.ts";
 
 export const CreateDeploymentSchema = z
   .object({
@@ -66,12 +67,15 @@ export const RETRYABLE_DEPLOYMENT_KINDS = [
 ] as const satisfies readonly DeploymentKindV2[];
 
 /**
- * The kind that realises a set revision under a recipe kind (section 5): a
- * channel recipe is published, an operator-run recipe is run by an attested
- * operator tool, and every other recipe is deployed.
+ * What realises a set revision under the stored recipe a release freezes
+ * (section 5), read from the stored kind exactly as the server's kind check
+ * reads it: a channel recipe is published, an operator-run recipe is run by
+ * an attested operator tool, and every other model recipe and v1 pipeline is
+ * deployed. A v1 manual pipeline is deployed too; `recipeKindOf` reads it as
+ * an operator-run recipe, which admission refuses for it.
  */
-export function deploymentKindForRecipe(
-  recipeKind: string,
+export function releaseKindOf(
+  recipeKind: StoredRecipeDefinition["kind"],
 ): Extract<DeploymentKindV2, "deploy" | "channel-publish" | "operator-run"> {
   switch (recipeKind) {
     case "channel": {
@@ -80,7 +84,14 @@ export function deploymentKindForRecipe(
     case "operator-run": {
       return "operator-run";
     }
-    default: {
+    case "manual":
+    case "kubernetes-application":
+    case "static-site":
+    case "tofu":
+    case "compound":
+    case "argocd":
+    case "control-plane":
+    case "root-release": {
       return "deploy";
     }
   }

@@ -9,6 +9,7 @@ import {
   CreateDeploymentV2Schema,
 } from "#shared/deployment-request-contract.ts";
 import { RecoveryIntentV2Schema } from "#shared/recovery-intent.ts";
+import { EnvironmentDetailSchema } from "#shared/hub/hub-contract.ts";
 import type { createRequester } from "#shared/http-request.ts";
 import {
   ApprovalV2InputSchema,
@@ -97,6 +98,16 @@ export function modelRoutes(request: ReturnType<typeof createRequester>) {
     /** The accepted deployment's monitor (4.19). */
     monitor: (environmentId: string) =>
       request(environmentPath(environmentId, "monitor"), MonitorStatusSchema),
+    /**
+     * One environment with what a release needs, including `releaseKind`:
+     * what the server realises a set revision by under the recipe it
+     * freezes (E0, L2).
+     */
+    environmentDetail: (environmentId: string) =>
+      request(
+        `/environments/${segment(environmentId)}`,
+        EnvironmentDetailSchema,
+      ),
     /** Accepted selection beside the declared binding (4.9, 4.10). */
     selection: (environmentId: string) =>
       request(

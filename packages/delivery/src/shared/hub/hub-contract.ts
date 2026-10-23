@@ -200,7 +200,8 @@ export const EnvironmentDetailSchema = z.object({
   /**
    * What a release of a set revision is realised by: the kind of the recipe
    * the server freezes, the accepted selection's until a rebind and the
-   * declared one before the first acceptance (E0, L2).
+   * declared one before the first acceptance (E0, L2), read by
+   * `releaseKindOf` from the stored kind as admission reads it.
    */
   releaseKind: DeploymentKindV2Schema.extract([
     "deploy",

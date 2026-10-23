@@ -14,7 +14,7 @@ import {
 } from "#infrastructure/delivery-data.ts";
 import { argocdApplicationLink } from "@shepherdjerred/ops-model/tool-links.ts";
 import { PipelineRevisionSchema } from "#shared/contract.ts";
-import { deploymentKindForRecipe } from "#shared/deployment-request-contract.ts";
+import { releaseKindOf } from "#shared/deployment-request-contract.ts";
 import { required } from "#infrastructure/delivery-records.ts";
 import { decodeCursor, olderThan, page, PAGE_SIZE } from "./cursor.ts";
 import { activityEntry, buildView, serviceSummary } from "./views.ts";
@@ -155,7 +155,7 @@ export async function environmentDetail(
       hold.restoreHold === null
         ? null
         : RestoreHoldSchema.parse(hold.restoreHold),
-    releaseKind: deploymentKindForRecipe(
+    releaseKind: releaseKindOf(
       PipelineRevisionSchema.parse(
         wire(required(releasePipeline, "Release pipeline")),
       ).definition.kind,

@@ -239,9 +239,6 @@ export type RecoveryIntentKind = recovery.RecoveryIntentKind;
 export type RecoveryIntentV2 = recovery.RecoveryIntentV2;
 
 export const DeploymentKindV2Schema = deploymentRequests.DeploymentKindV2Schema;
-export function deploymentKindForRecipe(recipeKind: string) {
-  return deploymentRequests.deploymentKindForRecipe(recipeKind);
-}
 export const CreateDeploymentV2Schema =
   deploymentRequests.CreateDeploymentV2Schema;
 export type DeploymentKindV2 = deploymentRequests.DeploymentKindV2;

@@ -143,6 +143,9 @@ before sending and each response before use.
   view names the declared recipe's kind, and the hub's environment detail
   names the release kind: that of the recipe a release freezes, the accepted
   selection's until a rebind. An `operator-run` recipe is requested as one.
+  `releaseKindOf` reads the stored kind as admission does, so a v1 `manual`
+  pipeline is a `deploy` although the selection view normalises it to
+  `operator-run`.
 - Cold start (section 6, X7): `ColdStartSnapshotSchema` records each
   environment's accepted selection with its set revision's artifacts, and
   `COLD_START_SNAPSHOT` names the R2 endpoint and object the snapshot writer

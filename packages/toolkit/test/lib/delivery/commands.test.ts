@@ -144,7 +144,9 @@ describe("delivery CLI", () => {
             acceptedDeploymentId: null,
             bindingGeneration: 4,
           }
-        : deployment,
+        : url.endsWith("/environments/arcade%2Fprod")
+          ? fixtures.environmentDetails.beta
+          : deployment,
     );
     const { values, positionals } = parseDeployArgs([
       "arcade/prod",
@@ -154,14 +156,14 @@ describe("delivery CLI", () => {
     ]);
     const result = await runDeployCommand(client, "start", positionals, values);
     expect(result.exitCode).toBe(0);
-    expect(requests[1]?.body).toEqual({
+    expect(requests[2]?.body).toEqual({
       requestId: "request:exact",
       environmentId: "arcade/prod",
       versionSetRevisionId: "arcade:1",
       expectedGeneration: 4,
       kind: "deploy",
     });
-    expect(requests[1]?.headers.has("Tailscale-User-Login")).toBe(false);
+    expect(requests[2]?.headers.has("Tailscale-User-Login")).toBe(false);
   });
   test("wait deadline preserves pending status and returns distinct exit code", async () => {
     const client = createDeliveryClient({

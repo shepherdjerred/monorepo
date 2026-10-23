@@ -363,27 +363,14 @@ describe("admin and operator verbs", () => {
 });
 
 describe("start, promote and recovery reads", () => {
-  test("before the first acceptance, start realises the declared recipe kind", async () => {
-    const unaccepted = {
-      ...fixtures.selections.prod,
-      accepted: null,
-      acceptedDeploymentId: null,
-    };
-    const operated = {
-      ...unaccepted,
-      declared: { ...unaccepted.declared, recipeKind: "operator-run" },
-    };
-    const published = {
-      ...unaccepted,
-      declared: { ...unaccepted.declared, recipeKind: "channel" },
-    };
-    for (const [view, kind] of [
-      [unaccepted, "deploy"],
-      [operated, "operator-run"],
-      [published, "channel-publish"],
-    ] as const) {
+  test("start realises the kind the server reports for the recipe it freezes", async () => {
+    for (const kind of ["deploy", "operator-run", "channel-publish"] as const) {
       const { client, sent } = delivery({
-        [`GET /environments/${prod}/selection`]: view,
+        [`GET /environments/${prod}/selection`]: fixtures.selections.prod,
+        [`GET /environments/${prod}`]: {
+          ...fixtures.environmentDetails.prod,
+          releaseKind: kind,
+        },
         "POST /deployments": fixtures.deployments.rollback43,
       });
       await run(client, "start", [
@@ -402,21 +389,24 @@ describe("start, promote and recovery reads", () => {
     }
   });
 
-  test("start realises the accepted recipe until a rebind, not a newer declared kind", async () => {
-    // The catalog now declares an operator-run recipe, but the accepted
-    // selection's recipe (a deploy) is what the server freezes.
-    const redeclared = {
-      ...fixtures.selections.prod,
-      declared: {
-        ...fixtures.selections.prod.declared,
-        recipeKind: "operator-run",
-      },
-    };
+  test("before the first acceptance, a v1 manual pipeline is deployed, not run by its normalised kind", async () => {
+    // The view normalises a declared manual pipeline to an operator-run
+    // recipe; admission reads the stored kind and accepts only a deploy,
+    // which is what the server reports.
+    expect(fixtures.environmentDetails.prod.pipeline.definition.kind).toBe(
+      "manual",
+    );
     const { client, sent } = delivery({
-      [`GET /environments/${prod}/selection`]: redeclared,
-      "GET /deployments/scout-prod-42": fixtures.deploymentDetail(
-        fixtures.deployments.alarmed42,
-      ),
+      [`GET /environments/${prod}/selection`]: {
+        ...fixtures.selections.prod,
+        accepted: null,
+        acceptedDeploymentId: null,
+        declared: {
+          ...fixtures.selections.prod.declared,
+          recipeKind: "operator-run",
+        },
+      },
+      [`GET /environments/${prod}`]: fixtures.environmentDetails.prod,
       "POST /deployments": fixtures.deployments.rollback43,
     });
     await run(client, "start", [
@@ -424,11 +414,6 @@ describe("start, promote and recovery reads", () => {
       "scout-for-lol:r42",
       "--request-id",
       "request/start",
-    ]);
-    expect(sent.map((request) => `${request.method} ${request.path}`)).toEqual([
-      `GET /environments/${prod}/selection`,
-      "GET /deployments/scout-prod-42",
-      "POST /deployments",
     ]);
     expect(sent.at(-1)?.body).toMatchObject({ kind: "deploy" });
   });
@@ -560,9 +545,7 @@ describe("override approvals", () => {
   test("start --override asks for the approval a non-eligible deploy needs", async () => {
     const { client, sent } = delivery({
       [`GET /environments/${prod}/selection`]: fixtures.selections.prod,
-      "GET /deployments/scout-prod-42": fixtures.deploymentDetail(
-        fixtures.deployments.alarmed42,
-      ),
+      [`GET /environments/${prod}`]: fixtures.environmentDetails.prod,
       "POST /deployments": fixtures.deployments.override45,
     });
     await run(client, "start", [
@@ -574,14 +557,10 @@ describe("override approvals", () => {
     ]);
     expect(sent.at(-1)?.body).toMatchObject({ kind: "deploy", override: true });
     const operated = delivery({
-      [`GET /environments/${prod}/selection`]: {
-        ...fixtures.selections.prod,
-        accepted: null,
-        acceptedDeploymentId: null,
-        declared: {
-          ...fixtures.selections.prod.declared,
-          recipeKind: "operator-run",
-        },
+      [`GET /environments/${prod}/selection`]: fixtures.selections.prod,
+      [`GET /environments/${prod}`]: {
+        ...fixtures.environmentDetails.prod,
+        releaseKind: "operator-run",
       },
     });
     await expect(

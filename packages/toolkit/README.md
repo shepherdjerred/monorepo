@@ -205,7 +205,10 @@ toolkit deploy render-application <ENVIRONMENT_ID> --snapshot <FILE> --file <CAT
 `start` requests an exact set revision the way the recipe the release
 freezes realises it: `deploy`, or `channel-publish` and `operator-run` for
 those recipe kinds. That is the accepted selection's recipe until a `rebind`,
-and the declared recipe only before the first acceptance. `--override` asks for the approval a non-eligible `deploy`
+and the declared recipe only before the first acceptance. It takes that kind
+from the environment detail's `releaseKind`, which reads the stored kind as
+admission does, so a v1 `manual` pipeline is a `deploy` although the
+selection view names it `operator-run`. `--override` asks for the approval a non-eligible `deploy`
 needs, such as a set revision never accepted in the promotion source;
 `approve --override` and `reject --override` decide it. `promote` takes the source's accepted selection and names no set
 revision. `candidates` lists accepted selections, newest first, and states why
