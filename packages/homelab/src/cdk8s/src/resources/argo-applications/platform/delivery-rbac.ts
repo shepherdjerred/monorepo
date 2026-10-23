@@ -9,6 +9,15 @@ import { transitionRendering } from "homelab/src/cdk8s/src/release-configuration
 import { BASELINE_CHART_APPLICATIONS } from "homelab/src/cdk8s/src/resources/cluster-baseline/charts.ts";
 import { COMPANION_CHARTS } from "homelab/src/cdk8s/src/resources/companions/names.ts";
 
+/**
+ * The operator tool's account for operator-run Applications (X13). Delivery's
+ * executor only reads them and human logins are read-only after the
+ * lock-down, so this account performs their effects: OpenTofu issues its
+ * token into an item only operators read, and nothing in the cluster mounts
+ * it. It holds no grant before the window.
+ */
+export const OPERATOR_RUN_ACCOUNT = "operator-run";
+
 export const DELIVERY_ARGO_ACCOUNTS = {
   "accounts.delivery": "apiKey",
   "accounts.delivery.enabled": true,
@@ -16,6 +25,8 @@ export const DELIVERY_ARGO_ACCOUNTS = {
   "accounts.delivery-observer.enabled": true,
   "accounts.delivery-platform": "apiKey",
   "accounts.delivery-platform.enabled": true,
+  [`accounts.${OPERATOR_RUN_ACCOUNT}`]: "apiKey",
+  [`accounts.${OPERATOR_RUN_ACCOUNT}.enabled`]: true,
 } as const;
 export const DELIVERY_ARGO_SERVER_SETTINGS = {
   "server.rbac.disableApplicationFineGrainedRBACInheritance": true,
@@ -53,7 +64,7 @@ const CATALOG_ONLY_APPLICATIONS = [
   ...COMPANION_CHARTS,
 ];
 /** Operator-run Applications Delivery only reads: the data layers and cluster admission. */
-const OPERATOR_RUN_APPLICATIONS: ReadonlySet<string> = new Set([
+export const OPERATOR_RUN_APPLICATIONS: ReadonlySet<string> = new Set([
   ...OPERATOR_RUN_DATA_APPLICATIONS,
   "cluster-admission",
 ]);
@@ -162,6 +173,14 @@ export function deliveryArgoPolicy(
       "sync",
     ]);
     grant("delivery-observer", known, ["get"]);
+    // The operator tool applies and syncs operator-run Applications, never
+    // deletes them, under the deployments Delivery records and the operator
+    // attests.
+    grant(
+      OPERATOR_RUN_ACCOUNT,
+      [...OPERATOR_RUN_APPLICATIONS],
+      ["get", "update", "sync"],
+    );
   } else {
     grant("delivery", ["apps"], ["get"]);
     grant("delivery", DELIVERY_WORKLOAD_APPLICATIONS, [

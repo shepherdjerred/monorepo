@@ -19,6 +19,7 @@ import {
   deliveryKnownApplications,
   deliveryManagedApplications,
   deliveryRootApplications,
+  OPERATOR_RUN_APPLICATIONS,
 } from "./delivery-rbac.ts";
 import { ARGOCD_PROJECTS, applicationProject } from "./projects.ts";
 
@@ -71,6 +72,7 @@ beforeAll(async () => {
     "delivery",
     "delivery-observer",
     "delivery-platform",
+    "operator-run",
   ]) {
     expect(cm[`accounts.${account}`]).toBe("apiKey");
     expect(cm[`accounts.${account}.enabled`]).toBe(true);
@@ -331,6 +333,27 @@ const permissions: PolicyCase[] = [
     false,
   ),
   ...unregisteredCases("delivery-observer", ["get"]),
+  // The operator tool's account applies and syncs exactly the operator-run
+  // Applications, after the window only.
+  ...onCases(
+    "operator-run",
+    [...OPERATOR_RUN_APPLICATIONS],
+    ["get", "update", "sync"],
+    true,
+  ),
+  ...onCases(
+    "operator-run",
+    [...OPERATOR_RUN_APPLICATIONS],
+    ["create", "delete", "override"],
+    false,
+  ),
+  ...onCases(
+    "operator-run",
+    ["argocd", "arcade", "cluster-platform"],
+    ["get", "update", "sync"],
+    false,
+  ),
+  ...offCases("operator-run", ["arcade", "argocd"], ["get", "sync"], false),
   ...platformCases("on"),
   // Window step 3b: before the window, release-root may already read every
   // child and sync each root-owned one in its transition project, so the
