@@ -65,7 +65,9 @@ final class TraversalRoute {
           new IdMap(),
           id -> Optional.empty(),
           new SnapshotCapture.Sources(
-              new StimulusCollector(new BattleSoundLog(TIME), TIME), java.util.List::of),
+              new StimulusCollector(new BattleSoundLog(TIME), TIME),
+              java.util.List::of,
+              player -> false),
           new SnapshotCapture.Capabilities(id -> Optional.empty(), TIME));
   private Optional<TraversalState> capturedTraversal = Optional.empty();
   private ReflexState reflex = ReflexState.initial(new Facing(-90, 0));
@@ -175,6 +177,8 @@ final class TraversalRoute {
         false,
         -1,
         capture.captureTraversal(player, "trooper", tick),
-        com.shepherdjerred.thestorm.rwfbots.domain.world.Quiver.ENDLESS);
+        com.shepherdjerred.thestorm.rwfbots.domain.world.Quiver.ENDLESS,
+        false,
+        false);
   }
 }

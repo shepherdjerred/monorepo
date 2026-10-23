@@ -115,7 +115,9 @@ final class SimBody {
         invisible,
         lastHurt,
         capabilities(),
-        com.shepherdjerred.thestorm.rwfbots.domain.world.Quiver.ENDLESS);
+        com.shepherdjerred.thestorm.rwfbots.domain.world.Quiver.ENDLESS,
+        sneaking,
+        kit.isInvisibleKit());
   }
 
   private TraversalState capabilities() {

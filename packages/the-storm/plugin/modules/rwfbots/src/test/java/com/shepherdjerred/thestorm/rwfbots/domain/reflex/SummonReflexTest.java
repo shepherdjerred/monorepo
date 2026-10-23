@@ -89,7 +89,9 @@ final class SummonReflexTest {
             false,
             -1,
             base.traversal(),
-            base.quiver());
+            base.quiver(),
+            false,
+            false);
     return self.withFacing(Facing.looking(self.eye(), lookAt));
   }
 

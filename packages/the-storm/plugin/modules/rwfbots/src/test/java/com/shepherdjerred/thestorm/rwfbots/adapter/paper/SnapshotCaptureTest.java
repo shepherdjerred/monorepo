@@ -48,6 +48,7 @@ final class SnapshotCaptureTest {
   private IdMap ids;
   private SnapshotCapture capture;
   private List<MatchSummons.Creature> creatures = List.of();
+  private final java.util.Set<UUID> hidden = new java.util.HashSet<>();
 
   @BeforeEach
   void start() {
@@ -71,7 +72,7 @@ final class SnapshotCaptureTest {
         new SnapshotCapture(
             ids,
             uuid -> Optional.<Player>ofNullable(server.getPlayer(uuid)),
-            new SnapshotCapture.Sources(stimuli, () -> creatures),
+            new SnapshotCapture.Sources(stimuli, () -> creatures, hidden::contains),
             new SnapshotCapture.Capabilities(
                 uuid -> Optional.empty(), java.time.InstantSource.fixed(java.time.Instant.EPOCH)));
   }

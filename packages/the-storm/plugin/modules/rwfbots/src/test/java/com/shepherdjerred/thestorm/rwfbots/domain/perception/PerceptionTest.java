@@ -153,7 +153,8 @@ final class PerceptionTest {
   @Test
   void soundsPlaceEnemiesWithDistanceScaledError() {
     var self = viewer(5.5);
-    var shooter = combatant(2, BLUE, new Vec3(22.5, 1, 5.5));
+    // Crouched behind the wall, so only its sounds place it: no name tag shows through.
+    var shooter = combatant(2, BLUE, new Vec3(22.5, 1, 5.5)).withNameTag(true, false);
     var shot = Stimulus.by(Stimulus.Kind.BOW_SHOT, shooter.pos(), 10, shooter.id());
     var percept = perceive(self, world(10, List.of(self, shooter), List.of(shot)));
     assertThat(percept.sees(shooter.id())).isFalse();
@@ -180,7 +181,8 @@ final class PerceptionTest {
   @Test
   void retainedSoundsSurviveSkippedSnapshotsWithoutRefreshingAgeOrRerollingPosition() {
     var self = viewer(5.5);
-    var shooter = combatant(2, BLUE, new Vec3(22.5, 1, 5.5));
+    // Crouched behind the wall, so only its sounds place it: no name tag shows through.
+    var shooter = combatant(2, BLUE, new Vec3(22.5, 1, 5.5)).withNameTag(true, false);
     var sound =
         new Stimulus(
             Stimulus.Kind.LAND,
