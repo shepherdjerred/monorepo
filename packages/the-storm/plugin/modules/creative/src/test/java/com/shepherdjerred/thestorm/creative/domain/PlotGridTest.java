@@ -51,6 +51,18 @@ final class PlotGridTest {
   }
 
   @Test
+  void homeIsTheCenterColumnStandingOnTheSurface() {
+    var east = new PlotId(1, 1);
+    assertThat(grid.home(east)).isEqualTo(new PlotGrid.PlotHome(45.5, PlotGrid.SPAWN_Y, 45.5));
+    assertThat(grid.columnAt(45, 45)).isEqualTo(PlotColumn.FLOOR);
+
+    var origin = new PlotId(0, 0);
+    assertThat(grid.home(origin)).isEqualTo(new PlotGrid.PlotHome(-46.5, PlotGrid.SPAWN_Y, -46.5));
+    assertThat(grid.columnAt(-47, -47)).isEqualTo(PlotColumn.FLOOR);
+    assertThat(grid.home(origin).y()).isEqualTo(PlotGrid.SURFACE_Y + 1d);
+  }
+
+  @Test
   void theProceduralColumnIsBedrockFillAndAGrassFloor() {
     assertThat(grid.generated(0, 0, 0)).isEqualTo("minecraft:bedrock");
     assertThat(grid.generated(0, 4, 0)).isEqualTo("minecraft:quartz_block");

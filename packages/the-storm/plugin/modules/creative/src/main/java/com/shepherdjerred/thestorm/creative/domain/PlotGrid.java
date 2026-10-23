@@ -117,6 +117,23 @@ public final class PlotGrid {
         offsetZ + id.z() * size - halfRoad - 1);
   }
 
+  /**
+   * Where a player stands to be home on {@code id}: the center column, feet on the surface. This is
+   * one block above {@link #SURFACE_Y}, the same height as the glowstone crossing.
+   */
+  public PlotHome home(PlotId id) {
+    var bounds = bounds(id);
+    return new PlotHome(
+        center(bounds.minX(), bounds.maxX()), SPAWN_Y, center(bounds.minZ(), bounds.maxZ()));
+  }
+
+  /** Feet on the center of a plot. */
+  public record PlotHome(double x, double y, double z) {}
+
+  private static double center(int min, int max) {
+    return Math.floorDiv(min + max, 2) + 0.5;
+  }
+
   /** Road, wall or floor at {@code (x, z)}. */
   public PlotColumn columnAt(int x, int z) {
     int lx = local(x, offsetX);
