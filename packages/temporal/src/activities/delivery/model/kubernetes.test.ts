@@ -72,9 +72,9 @@ vi.mock("./forum-bundle.ts", () => ({
 const { applySafety, sync } = await import("./kubernetes.ts");
 
 /** The forum release, its chart in a store the sync reads by version. */
-function fixture() {
+function fixture(stages: { key: string; status: "running" }[] = []) {
   return forumDetail(
-    [],
+    stages,
     artifact({
       id: "chart/forum",
       component: "chart:storm-forum",
@@ -127,6 +127,21 @@ describe("Kubernetes steps of a forum release", () => {
     await applySafety(current, recipe, "step-apply-safety");
     expect(calls.events.slice(0, 4)).toEqual([
       "baseline-check",
+      "step-apply-safety running",
+      "read",
+      "write",
+    ]);
+  });
+
+  test("a resumed apply-safety keeps its recorded intent and skips the baseline check", async () => {
+    // The server refuses the check once the step's stage exists.
+    const { current, recipe } = fixture([
+      { key: "step-apply-safety", status: "running" },
+    ]);
+    calls.reads = [null];
+    await applySafety(current, recipe, "step-apply-safety");
+    expect(calls.events).not.toContain("baseline-check");
+    expect(calls.events.slice(0, 3)).toEqual([
       "step-apply-safety running",
       "read",
       "write",

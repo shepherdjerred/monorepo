@@ -25,7 +25,7 @@ import {
   argoRequest,
   runGuardedArgoCommand,
 } from "#activities/delivery/argocd.ts";
-import { recordStage, requireOwned } from "./stages.ts";
+import { recordStage, requireOwned, stageOf } from "./stages.ts";
 import { workerRolloutPreflight } from "./worker-rollout.ts";
 import { minecraftSyncFence } from "./minecraft-upgrade.ts";
 import { forumBaselineFence, forumSyncPrune } from "./forum-bundle.ts";
@@ -136,8 +136,11 @@ export async function applySafety(
   // A worker pool's images and routes are proved before its hosts change.
   await workerRolloutPreflight(current);
   // A forum's first upgrade re-observes its original baseline before the
-  // candidate source replaces the one that baseline fingerprinted.
-  await forumBaselineFence(current, recipe);
+  // candidate source replaces the one that baseline fingerprinted. A resumed
+  // step already recorded that intent, and the server refuses the check once
+  // the stage exists, so only the first attempt runs it.
+  if (stageOf(current, key) === undefined)
+    await forumBaselineFence(current, recipe);
   await recordStage(current, key, "running", { operationId });
   const written = await writeBody(rendered);
   await runGuardedArgoCommand(
