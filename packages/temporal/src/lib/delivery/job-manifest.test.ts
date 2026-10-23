@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
   assertMatchingDeliveryJob,
@@ -5,6 +6,7 @@ import {
 } from "./job-manifest.ts";
 import {
   DELIVERY_JOB_BOOTSTRAP,
+  PREVIOUS_DELIVERY_JOB_BOOTSTRAPS,
   type DeliveryJobRequest,
 } from "#shared/delivery-job.ts";
 import { DELIVERY_STAGE_REQUESTS } from "homelab/src/delivery-stage-admission.ts";
@@ -22,7 +24,7 @@ it.each(["worker-images", "worker-step"] as const)(
   "prepares only the dependencies needed by %s",
   (recipe) => {
     const preparation = DELIVERY_JOB_BOOTSTRAP.split(
-      "bun install --frozen-lockfile\n",
+      'export PATH="$(echo "$tool_paths" | paste -sd:):$PATH"\n',
     )[1]?.split("cd packages/temporal\n")[0];
     if (preparation === undefined) throw new Error("Missing Job preparation");
     const result = Bun.spawnSync(
@@ -46,8 +48,11 @@ ${preparation}`,
     expect(result.exitCode).toBe(0);
     expect(result.stdout.toString().trim().split("\n").filter(Boolean)).toEqual(
       recipe === "worker-images"
-        ? []
+        ? [
+            "bun:install --frozen-lockfile --production --filter=@shepherdjerred/temporal",
+          ]
         : [
+            "bun:install --frozen-lockfile",
             "bunx:turbo run generate --filter=@shepherdjerred/temporal^...",
             "bun:run --cwd packages/llm-models build:runtime",
             "bun:build packages/toolkit/src/index.ts --compile --external ffmpeg-static --outfile=/workspace/bin/toolkit",
@@ -301,6 +306,68 @@ describe("bounded revision-pinned Delivery Jobs", () => {
         key: "DELIVERY_EXECUTOR_TOKEN",
       },
     });
+  });
+});
+
+describe("liskov OS-disk Job bootstrap", () => {
+  it("links the image toolchain instead of copying it into the Job workspace", () => {
+    const lines = DELIVERY_JOB_BOOTSTRAP.split("\n");
+    expect(lines).not.toContain("cp -R /opt/mise/. /workspace/mise/");
+    expect(lines).toContain("cp -Rs /opt/mise/. /workspace/mise/");
+    // Only mise's per-tool metadata and alias links become real copies.
+    expect(lines).toContain(
+      String.raw`(cd /opt/mise && find installs -mindepth 1 -maxdepth 2 ! -type d -exec cp -PT --remove-destination {} /workspace/mise/{} \;)`,
+    );
+    expect(
+      lines.indexOf("export MISE_DATA_DIR=/workspace/mise"),
+    ).toBeGreaterThan(lines.indexOf("cp -Rs /opt/mise/. /workspace/mise/"));
+  });
+  it("adopts a Job created with the previous reviewed bootstrap and nothing else", () => {
+    // The exact bootstrap that created Jobs before linked toolchains; a
+    // changed digest means a retained Job could no longer be adopted.
+    expect(
+      PREVIOUS_DELIVERY_JOB_BOOTSTRAPS.map((script) =>
+        createHash("sha256").update(script).digest("hex"),
+      ),
+    ).toEqual([
+      "a5c909be28ebe8674710740bf59914338db047cb7831571023c3be7ddb9c7c15",
+    ]);
+    for (const recipe of [
+      "worker-images",
+      "worker-step",
+      "tofu-apply",
+    ] as const) {
+      const expected = deliveryJobManifest({ ...request, recipe });
+      expect(expected.spec?.template.spec?.containers[0]?.command).toEqual([
+        "/bin/bash",
+        "-c",
+        DELIVERY_JOB_BOOTSTRAP,
+      ]);
+      const legacy = structuredClone(expected);
+      legacy.spec!.template.spec!.containers[0]!.command = [
+        "/bin/bash",
+        "-c",
+        PREVIOUS_DELIVERY_JOB_BOOTSTRAPS[0]!,
+      ];
+      expect(() => assertMatchingDeliveryJob(legacy, expected)).not.toThrow();
+      const legacyChanged = structuredClone(legacy);
+      legacyChanged.spec!.template.spec!.containers[0]!.env!.push({
+        name: "UNREVIEWED",
+        value: "1",
+      });
+      expect(() => assertMatchingDeliveryJob(legacyChanged, expected)).toThrow(
+        "frozen request",
+      );
+      const edited = structuredClone(expected);
+      edited.spec!.template.spec!.containers[0]!.command = [
+        "/bin/bash",
+        "-c",
+        `${PREVIOUS_DELIVERY_JOB_BOOTSTRAPS[0]!}echo unreviewed\n`,
+      ];
+      expect(() => assertMatchingDeliveryJob(edited, expected)).toThrow(
+        "frozen request",
+      );
+    }
   });
 });
 

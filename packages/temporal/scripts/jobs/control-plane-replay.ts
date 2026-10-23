@@ -20,6 +20,9 @@ export async function replayControlPlaneCandidate(
     TMPDIR: Bun.env["TMPDIR"],
     MISE_DATA_DIR: Bun.env["MISE_DATA_DIR"],
     MISE_LOCKED: "1",
+    // As for worker candidates: bun and node are installed explicitly, so
+    // `mise exec` must not also install unreadable image tools such as Rust.
+    MISE_EXEC_AUTO_INSTALL: "false",
     TEMPORAL_ADDRESS: Bun.env["TEMPORAL_ADDRESS"],
     TEMPORAL_NAMESPACE: "prod",
   };

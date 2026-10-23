@@ -446,6 +446,10 @@ async function wrapperFixture(root: string) {
     new URL("task-diagnostics.ts", import.meta.url),
     path.join(library, "task-diagnostics.ts"),
   );
+  await cp(
+    new URL("workspace-usage.ts", import.meta.url),
+    path.join(library, "workspace-usage.ts"),
+  );
   // Fake only the object-store boundary; the wrapper and collector run as
   // real subprocesses from a checkout with no installed dependencies.
   await Bun.write(
@@ -500,6 +504,7 @@ test.each([0, 42])(
       exitCode,
       collectionFailed: false,
       turbo: [{ id: "run-one" }],
+      workspaceUsage: expect.objectContaining({ version: 1 }),
     });
     expect(JSON.stringify(report)).not.toContain("sentinel");
   },

@@ -79,6 +79,20 @@ async function main() {
     throw new Error(
       "Delivery Job checkout differs from qualified source revision",
     );
+  const toplevel = await command(["git", "rev-parse", "--show-toplevel"]);
+  // Worker candidates reuse or share this prepared checkout's objects and cache.
+  const candidateCheckout = (
+    snapshot: z.infer<typeof WorkerRolloutSnapshotSchema>,
+  ) => ({
+    sourceRevision: snapshot.deployment.workerSnapshot?.candidateBuildId,
+    target: WorkerDeploymentRolloutTargetSchema.parse(
+      snapshot.deployment.workerSnapshot?.target,
+    ),
+    executor: {
+      root: toplevel.stdout.trim(),
+      revision: request.sourceRevision,
+    },
+  });
   let result: unknown;
   switch (request.recipe) {
     case "worker-images": {
@@ -104,10 +118,7 @@ async function main() {
         .strict()
         .parse(request.input);
       result = await withWorkerCandidateCheckout(
-        input.detail.deployment.workerSnapshot?.candidateBuildId,
-        WorkerDeploymentRolloutTargetSchema.parse(
-          input.detail.deployment.workerSnapshot?.target,
-        ),
+        candidateCheckout(input.detail),
         (candidate) =>
           prepareDeliveryWorkerRollout(
             input.detail,
@@ -131,10 +142,7 @@ async function main() {
         .strict()
         .parse(request.input);
       result = await withWorkerCandidateCheckout(
-        input.detail.deployment.workerSnapshot?.candidateBuildId,
-        WorkerDeploymentRolloutTargetSchema.parse(
-          input.detail.deployment.workerSnapshot?.target,
-        ),
+        candidateCheckout(input.detail),
         (candidate) => stepDeliveryWorkerRollout(input, command, candidate),
       );
       break;

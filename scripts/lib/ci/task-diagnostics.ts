@@ -1,6 +1,7 @@
 import { readdir } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
+import { WorkspaceUsageSchema } from "./workspace-usage.ts";
 
 const Timestamp = z.number().int().nonnegative();
 const Name = z
@@ -138,6 +139,7 @@ export const TaskDiagnosticsSchema = z.object({
   exitCode: z.number().int(),
   collectionFailed: z.boolean(),
   benchmarkResources: BenchmarkResourcesSchema.optional(),
+  workspaceUsage: WorkspaceUsageSchema.optional(),
   turbo: z.array(TurboDiagnosticSchema),
   browserSelection: BrowserSelectionSchema.optional(),
 });

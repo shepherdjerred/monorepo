@@ -18,6 +18,8 @@ import { routeSteps } from "#src/pipeline/routing.ts";
 import { draftPreflightStep } from "#src/pipeline/draft.ts";
 import { benchmarkSteps } from "#src/pipeline/benchmark.ts";
 import { DISABLED_PERFORMANCE } from "#src/performance-config.ts";
+import { performanceSteps } from "#src/pipeline/performance.ts";
+import { ramScratchProfile } from "#src/pipeline/ram-scratch.ts";
 
 const PLACEHOLDER_DIGEST = `sha256:${"0".repeat(64)}`;
 
@@ -84,6 +86,23 @@ if (Bun.argv.includes("--include-canaries")) {
         draft: false,
         maintenance: true,
       },
+    ),
+    // Ordinary verify and browser lanes reserve their scratch profiles when
+    // the RAM scratch flag is on.
+    ...routeSteps(
+      performanceSteps(
+        steps.filter((step) => ramScratchProfile(step.key) !== undefined),
+        { ...DISABLED_PERFORMANCE, scratch: true },
+        false,
+        false,
+      ),
+      {
+        event: "pull_request",
+        branch: "main",
+        defaultBranch: "main",
+        draft: false,
+      },
+      gateImage,
     ),
   );
 }

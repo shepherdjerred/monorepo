@@ -67,6 +67,10 @@ export function workerCandidateEnvironment(namespace: string) {
     TMPDIR: Bun.env["TMPDIR"],
     MISE_DATA_DIR: Bun.env["MISE_DATA_DIR"],
     MISE_LOCKED: "1",
+    // The checkout installs its own bun and node first. Without this, the first
+    // `mise exec` also installs every other configured tool the unprivileged
+    // Job cannot read from the image, such as a 1.6 GB Rust toolchain.
+    MISE_EXEC_AUTO_INSTALL: "false",
     // Temporal's non-cgo Linux CLI needs an explicit identity for os/user.Current.
     USER: "delivery",
     TEMPORAL_ADDRESS:
@@ -88,26 +92,48 @@ async function candidateCommand(
   );
 }
 
-/** Mirrors the isolated control-plane replay checkout, never moving controller HEAD. */
+/** The Job's own prepared checkout, at the qualified executor revision. */
+export type ExecutorCheckout = { root: string; revision: string };
+
+const MONOREPO = "https://github.com/shepherdjerred/monorepo.git";
+
+/**
+ * Prepare the exact candidate source without moving controller HEAD.
+ *
+ * A candidate at the executor's revision reuses the checkout the bootstrap
+ * already installed and generated. Any other candidate becomes a detached
+ * worktree of the executor's object store: a blobless fetch adds only its
+ * commit and trees, and checkout downloads just the blobs the executor lacks.
+ * Its install shares the Job's Bun cache on the same filesystem, so packages
+ * the executor already extracted are linked rather than written again.
+ */
 export async function withWorkerCandidateCheckout<T>(
-  sourceRevision: unknown,
-  target: z.infer<typeof WorkerDeploymentRolloutTargetSchema>,
+  checkout: {
+    sourceRevision: unknown;
+    target: z.infer<typeof WorkerDeploymentRolloutTargetSchema>;
+    executor: ExecutorCheckout;
+  },
   use: (candidate: RolloutCommandRunner) => Promise<T>,
   effects: {
     execute?: CandidateCommand;
     replayArguments?: typeof workerReplayArguments;
   } = {},
 ): Promise<T> {
-  const source = WorkerBuildIdSchema.parse(sourceRevision);
+  const { target, executor } = checkout;
+  const source = WorkerBuildIdSchema.parse(checkout.sourceRevision);
+  WorkerBuildIdSchema.parse(executor.revision);
   const execute =
     effects.execute ??
     ((argv, cwd) =>
       candidateCommand(argv, cwd, workerReplayRoute(target).namespace));
   const replayArguments = effects.replayArguments ?? workerReplayArguments;
-  const directory = await mkdtemp(
-    path.join(tmpdir(), "delivery-worker-candidate-"),
-  );
+  const reuse = source === executor.revision;
+  const directory = reuse
+    ? executor.root
+    : await mkdtemp(path.join(tmpdir(), "delivery-worker-candidate-"));
   const run: RolloutCommandRunner = (argv) => execute(argv, directory);
+  const inExecutor: RolloutCommandRunner = (argv) =>
+    execute(argv, executor.root);
   const candidate: RolloutCommandRunner = async (argv) =>
     execute(
       argv[0] === "git"
@@ -123,31 +149,52 @@ export async function withWorkerCandidateCheckout<T>(
           ],
       path.join(directory, "packages/temporal"),
     );
+  let worktree = false;
   try {
-    await run(["git", "init", "--quiet"]);
-    await run([
-      "git",
-      "fetch",
-      "--quiet",
-      "--depth=1",
-      "https://github.com/shepherdjerred/monorepo.git",
-      source,
-    ]);
-    await run(["git", "checkout", "--quiet", "--detach", "FETCH_HEAD"]);
+    if (!reuse) {
+      for (const [key, value] of [
+        ["remote.origin.url", MONOREPO],
+        ["remote.origin.promisor", "true"],
+        ["remote.origin.partialclonefilter", "blob:none"],
+      ] as const)
+        await inExecutor(["git", "config", key, value]);
+      await inExecutor([
+        "git",
+        "fetch",
+        "--quiet",
+        "--no-tags",
+        "--depth=1",
+        "--filter=blob:none",
+        "origin",
+        source,
+      ]);
+      await inExecutor([
+        "git",
+        "worktree",
+        "add",
+        "--quiet",
+        "--detach",
+        directory,
+        source,
+      ]);
+      worktree = true;
+    }
     await requireReplayCheckout(source, run);
-    await run(["mise", "trust", ".mise.toml"]);
-    await run(["mise", "install", "--yes", "bun", "node"]);
-    await run(["mise", "exec", "--", "bun", "install", "--frozen-lockfile"]);
-    await run([
-      "mise",
-      "exec",
-      "--",
-      "bunx",
-      "turbo",
-      "run",
-      "generate",
-      "--filter=@shepherdjerred/temporal^...",
-    ]);
+    if (!reuse) {
+      await run(["mise", "trust", ".mise.toml"]);
+      await run(["mise", "install", "--yes", "bun", "node"]);
+      await run(["mise", "exec", "--", "bun", "install", "--frozen-lockfile"]);
+      await run([
+        "mise",
+        "exec",
+        "--",
+        "bunx",
+        "turbo",
+        "run",
+        "generate",
+        "--filter=@shepherdjerred/temporal^...",
+      ]);
+    }
     for (const packageName of [
       "home-assistant",
       "llm-models",
@@ -160,6 +207,10 @@ export async function withWorkerCandidateCheckout<T>(
     await requireReplayCheckout(source, candidate);
     return await use(candidate);
   } finally {
-    await rm(directory, { recursive: true, force: true });
+    if (!reuse) {
+      if (worktree)
+        await inExecutor(["git", "worktree", "remove", "--force", directory]);
+      await rm(directory, { recursive: true, force: true });
+    }
   }
 }

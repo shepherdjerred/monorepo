@@ -35,18 +35,23 @@ guarantee a dependency-closed set, which the emitter then relies on.
 
 ## Dependency caches
 
-Owner manual benchmarks on `ci-canary/` branches accept the `scratch` feature
-for the `verify` profile. Candidates require the typed
-`woodpecker-ram-scratch-enabled` flag; its production default is off.
-The shared profile in `src/pipeline/ram-scratch.ts` reserves the full bounded
-scratch allowance above the verify process budget. Homelab admission adds
-memory-backed volumes only to the marked execution pod, preserving clone,
-service, checkout, and report storage. Ordinary pipeline selection does not
-activate scratch, even when the flag evaluates true.
+When the typed `woodpecker-ram-scratch-enabled` flag is on, the ordinary
+`verify` and `playwright-e2e` execution pods carry their lane's profile from
+`src/pipeline/ram-scratch.ts`. Verify mounts an 8Gi tmpfs TMPDIR and a 4Gi
+private Gradle home; the browser lane mounts a 4Gi TMPDIR. Each profile
+reserves its whole tmpfs allowance above the lane's own tier: verify requests
+30Gi with a 36Gi limit, and browser requests 10Gi with a 16Gi limit.
+Kueue admits on those requests. The 70Gi compute quota therefore runs at most
+two scratch verify pods and one scratch browser pod at once, and the node
+cannot be oversubscribed. Homelab admission adds memory-backed volumes only to
+a profiled lane's single execution container, preserving clone, service,
+checkout, and report storage. The production inventory enables the flag, while
+the runtime fallback stays off. Owner manual benchmarks on `ci-canary/`
+branches still accept the `scratch` feature only for the `verify` profile.
 
-The admission graph includes this canary when inspected with
-`bun src/dump-steps.ts --include-canaries`; the root admission-budget check
-uses that graph to verify coexistence with ordinary workflows.
+The admission graph includes the canary and both scratch lanes when inspected
+with `bun src/dump-steps.ts --include-canaries`; the root admission-budget
+check uses that graph to verify coexistence with ordinary workflows.
 
 Source caching is controlled by the typed `woodpecker-source-cache-enabled`
 flag. The production inventory enables it; the runtime fallback remains off.
@@ -116,6 +121,12 @@ target `ci-canary/` branches as beta. Each optimization resolves separately:
 incremental source fetch, prepared workspaces, formatter results, Gradle
 dependency seeds, small-check grouping, and Bun's explicit copyfile backend.
 Credentialless automation receives none of these caches.
+
+The production inventory enables the copyfile backend. Every credentialed
+step's `bun-install.sh`, including grouped ordered containers, then passes
+`--backend=copyfile`. Bun materializes `node_modules` from the shared cache
+claim with `copy_file_range`, which liskov's ZFS pool can satisfy by cloning
+blocks across datasets instead of writing them again.
 
 Incremental source misses copy and verify recent immutable objects before
 advertising a temporary negotiation ref. Fetch still requests the exact SHA;
@@ -338,6 +349,15 @@ it as evidence for a running retry. Queue and pod startup times remain available
 from `toolkit ci explain`; the retained interval begins after toolchain bootstrap
 and includes dependency installation. Turbo intervals identify execution within
 that interval and can overlap.
+
+Records also carry `workspaceUsage`: the finished workspace's filesystem usage
+and the allocated bytes of fixed categories. The categories are `.git`, the
+root and package `node_modules`, package build outputs, the root `.turbo`, and
+`/woodpecker/tmp` and `/woodpecker/gradle`. Each category is one `du` walk that
+counts a hard-linked file once. All of them share a 60-second deadline, and a
+category that misses it reports `null`. The measurement is best effort: when it
+fails, the record omits it and the step result is unchanged. It is a final
+size, not a count of bytes written during the run.
 
 Publication uses a 20-second request deadline and bounded retry backoff.
 A publication or collection failure fails

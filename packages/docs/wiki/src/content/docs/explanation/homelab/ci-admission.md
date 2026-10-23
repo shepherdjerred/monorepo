@@ -157,15 +157,19 @@ limits. A regression in any layer becomes a failed step, not CI on torvalds.
 
 ## Why RAM scratch consumes admission capacity
 
-Temporary build files can use bounded RAM storage in an owner-requested verify
-canary. The checkout and reports remain on the workflow's persistent volume.
-Clone pods and service pods keep their existing storage.
+When its flag is on, the verify and browser lanes keep temporary files in
+bounded RAM storage. Verify also keeps its private Gradle home there. The
+checkout and reports remain on the workflow's persistent volume. Clone pods and
+service pods keep their existing storage.
 
 RAM storage competes with compilers and test processes for container memory.
-The canary adds its entire storage allowance to both the request and limit.
-Kueue therefore reserves that memory before execution starts.
-The [pod guard](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/woodpecker/ci-pod-guard.ts)
-also rejects marked pods outside the manual canary boundary.
+Each lane's profile adds its entire storage allowance to both the request and
+limit. Kueue therefore reserves that memory before execution starts. Two
+scratch verify pods and one scratch browser pod fill the compute memory quota,
+so other lanes wait instead of overcommitting the node.
+The [scratch admission policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/woodpecker/ram-scratch-policy.ts)
+rejects a marked pod unless it is the single execution container of the lane
+its profile names.
 
 This trades admission capacity for fewer scratch writes.
 It does not establish an SSD endurance improvement by itself.

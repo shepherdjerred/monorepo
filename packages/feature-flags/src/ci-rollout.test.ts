@@ -4,27 +4,24 @@ import {
   materializeManagedNamespaceEnvironment,
 } from "./managed-flag-inventory.ts";
 
-test.each(["beta", "prod"])(
-  "%s RAM scratch defaults off and targets canaries only",
-  (environment) => {
-    const flag = materializeManagedNamespaceEnvironment(
-      managedFlagInventory,
-      environment,
-      "woodpecker",
-    ).find((entry) => entry.key === "woodpecker-ram-scratch-enabled");
-    expect(flag).toMatchObject({
-      default: false,
-      rules: [],
-      thresholdRollouts: [],
-      rollouts: [
-        {
-          result: true,
-          constraints: [{ property: "stage", operator: "eq", value: "beta" }],
-        },
-      ],
-    });
-  },
-);
+test("beta RAM scratch defaults off and targets canaries only", () => {
+  const flag = materializeManagedNamespaceEnvironment(
+    managedFlagInventory,
+    "beta",
+    "woodpecker",
+  ).find((entry) => entry.key === "woodpecker-ram-scratch-enabled");
+  expect(flag).toMatchObject({
+    default: false,
+    rules: [],
+    thresholdRollouts: [],
+    rollouts: [
+      {
+        result: true,
+        constraints: [{ property: "stage", operator: "eq", value: "beta" }],
+      },
+    ],
+  });
+});
 
 test.each(["beta", "prod"])(
   "%s seed refresh remains restricted to beta targeting",
@@ -61,6 +58,8 @@ test.each(["beta", "prod"])(
 test.each([
   ["woodpecker", "woodpecker-source-cache-enabled"],
   ["woodpecker", "woodpecker-maintenance-lanes-enabled"],
+  ["woodpecker", "woodpecker-ram-scratch-enabled"],
+  ["woodpecker", "woodpecker-bun-copyfile-enabled"],
   ["temporal", "ci-maintenance-dispatch-enabled"],
 ] as const)(
   "production enables %s/%s with a complete override",

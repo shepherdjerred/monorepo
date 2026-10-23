@@ -1,5 +1,6 @@
 import type { CiStep } from "./model.ts";
 import type { PerformanceOptions } from "#src/performance-config.ts";
+import { ramScratchProfile } from "./ram-scratch.ts";
 
 export const WORKSPACE_SEEDS = {
   claim: "woodpecker-workspace-seeds",
@@ -14,14 +15,40 @@ const PROFILES: Readonly<Record<string, "verify" | "browser">> = {
   "playwright-e2e": "browser",
 };
 const FORMAT_CACHE_PATH = "/woodpecker/format-cache";
+/**
+ * Bun materializes node_modules from the shared cache claim with
+ * copy_file_range. Both claims sit in liskov's ZFS pool, where block cloning
+ * can share the blocks instead of writing a second copy.
+ */
+const COPYFILE = { CI_BUN_INSTALL_BACKEND: "copyfile" } as const;
 function environment(step: CiStep, options: PerformanceOptions, main: boolean) {
   return {
     ...step.environment,
     ...(options.formatting && step.key === "verify"
       ? { CI_FORMAT_CACHE_ROOT: `${FORMAT_CACHE_PATH}/${main ? "main" : "pr"}` }
       : {}),
-    ...(options.copyfile ? { CI_BUN_INSTALL_BACKEND: "copyfile" } : {}),
+    ...(options.copyfile ? COPYFILE : {}),
   };
+}
+
+/** Each scratch profile reserves its tmpfs above the lane's own tier. */
+function scratchFields(step: CiStep, options: PerformanceOptions) {
+  const scratch = options.scratch ? ramScratchProfile(step.key) : undefined;
+  return scratch === undefined
+    ? {}
+    : { ramScratch: true, resources: scratch.resources };
+}
+
+/** Ordered containers run their own installs from the same checkout. */
+function orderedFields(step: CiStep, options: PerformanceOptions) {
+  return options.copyfile && step.orderedSteps !== undefined
+    ? {
+        orderedSteps: step.orderedSteps.map((command) => ({
+          ...command,
+          environment: { ...command.environment, ...COPYFILE },
+        })),
+      }
+    : {};
 }
 
 export function performanceSteps(
@@ -43,7 +70,9 @@ export function performanceSteps(
       options.gradle && step.key === "verify" && step.sourceCache !== undefined;
     return {
       ...step,
+      ...scratchFields(step, options),
       environment: environment(step, options, main),
+      ...orderedFields(step, options),
       ...(options.formatting && step.key === "verify"
         ? {
             volumes: [
