@@ -3,6 +3,7 @@ import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import { createTestApp } from "#testing/http-app.ts";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
 import { lock } from "#infrastructure/delivery-records.ts";
+import { orderKey } from "#infrastructure/delivery-data.ts";
 import {
   deliverySuccessorWorkflowId,
   deliveryWorkflowId,
@@ -578,13 +579,19 @@ describe("admission (Z1, D8)", () => {
       },
     });
     const claimed = await context.delivery.claim(dependent.id, testExecutor);
+    // The fixture's CI build keys on its pipeline, then its registration (B4).
+    const accepted =
+      await context.cluster.database.versionSet.findUniqueOrThrow({
+        where: { id: context.fixture.versionSet.id },
+      });
+    expect(accepted.orderMajor).toBe(1);
     expect(claimed.deployment.admissionSnapshot?.prerequisites).toEqual([
       {
         environmentId: context.fixture.environment.id,
         rule: "same-or-later-order-key",
         deploymentId: baseline.id,
         versionSetRevisionId: context.fixture.versionSet.id,
-        orderKey: "0000000001.0000000000",
+        orderKey: orderKey(accepted.orderMajor, accepted.orderMinor),
       },
     ]);
   });
