@@ -10,8 +10,11 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
  * @param tick when
  * @param confidence how sure the bot was at that tick, 0..1
  * @param direct whether it was seen rather than heard or reported
+ * @param shareable whether the bot may tell its team: false for a position read only off a name tag
+ *     through a wall, which stays the bot's own
  */
-public record Sighting(Vec3 pos, Vec3 vel, long tick, double confidence, boolean direct) {
+public record Sighting(
+    Vec3 pos, Vec3 vel, long tick, double confidence, boolean direct, boolean shareable) {
 
   public Sighting {
     if (!(confidence >= 0 && confidence <= 1)) {

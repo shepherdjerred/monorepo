@@ -195,6 +195,9 @@ public final class RwfPaper {
     var snapshots =
         new Snapshots(context, app.snapshots(), module.services().require(SavedPlayerData.class));
     var boards = new Scoreboards(context.server());
+    module
+        .services()
+        .provide(com.shepherdjerred.thestorm.rwf.app.NameTags.class, boards::hiddenFromEnemies);
     var bombs = new BombMarkers(context, keys, app.hooks().displayStyle());
     var maps = new ArrayList<MapWorld>();
     for (var map : content.rotation()) {

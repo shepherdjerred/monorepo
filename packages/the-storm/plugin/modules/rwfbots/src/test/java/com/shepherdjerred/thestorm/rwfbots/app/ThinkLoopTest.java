@@ -12,11 +12,18 @@ import com.shepherdjerred.thestorm.rwfbots.domain.Fixtures;
 import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.NavArtifact;
 import com.shepherdjerred.thestorm.rwfbots.domain.map.SyntheticMap;
+import com.shepherdjerred.thestorm.rwfbots.domain.perception.Memory;
+import com.shepherdjerred.thestorm.rwfbots.domain.perception.Percept;
+import com.shepherdjerred.thestorm.rwfbots.domain.perception.Perception;
+import com.shepherdjerred.thestorm.rwfbots.domain.perception.PerceptionState;
+import com.shepherdjerred.thestorm.rwfbots.domain.perception.Sighting;
+import com.shepherdjerred.thestorm.rwfbots.domain.perception.Suspicion;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Archetype;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Quirk;
 import com.shepherdjerred.thestorm.rwfbots.domain.personality.Style;
 import com.shepherdjerred.thestorm.rwfbots.domain.record.DecisionTrace;
 import com.shepherdjerred.thestorm.rwfbots.domain.team.Role;
+import com.shepherdjerred.thestorm.rwfbots.domain.team.SharedSighting;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombId;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombOwner;
 import com.shepherdjerred.thestorm.rwfbots.domain.world.BombState;
@@ -175,6 +182,25 @@ final class ThinkLoopTest {
         List.of(),
         List.of(),
         List.of());
+  }
+
+  @Test
+  void aNameTagSightingStaysWithTheBotWhileHeardEnemiesReachTheTeam() {
+    var tag = new CombatantId(4);
+    var heard = new CombatantId(5);
+    var memory =
+        Memory.EMPTY
+            .remember(tag, new Sighting(new Vec3(10, 1, 10), Vec3.ZERO, 20, 0.95, false, false))
+            .remember(
+                heard,
+                new Sighting(
+                    new Vec3(20, 1, 20), Vec3.ZERO, 20, Perception.SOUND_CONFIDENCE, false, true));
+    var percept = new Percept(new PerceptionState(memory, Suspicion.NONE), List.of(), 21);
+
+    assertThat(ThinkLoop.reports(RED_1, percept, 21))
+        .extracting(SharedSighting::enemy)
+        .as("only the heard enemy is shared; the name tag is no callout, board entry or chat")
+        .containsExactly(heard);
   }
 
   private static void register(ThinkLoop loop) {

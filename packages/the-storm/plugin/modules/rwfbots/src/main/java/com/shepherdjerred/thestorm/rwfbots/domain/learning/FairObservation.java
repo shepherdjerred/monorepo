@@ -46,7 +46,7 @@ public final class FairObservation {
     kit.ifPresent(feature -> values.put(feature, 1.0));
     var visible = percept.nearestVisible();
     Optional<Sighting> target =
-        visible.map(enemy -> new Sighting(enemy.pos(), enemy.vel(), percept.tick(), 1, true));
+        visible.map(enemy -> new Sighting(enemy.pos(), enemy.vel(), percept.tick(), 1, true, true));
     if (target.isEmpty()) {
       target =
           percept.state().memory().sightings().values().stream()

@@ -97,7 +97,7 @@ final class AggroTest {
       bodies.addAll(remembered);
       var memory = new HashMap<CombatantId, Sighting>();
       for (var enemy : remembered) {
-        memory.put(enemy.id(), new Sighting(enemy.pos(), Vec3.ZERO, HIT, 0.9, false));
+        memory.put(enemy.id(), new Sighting(enemy.pos(), Vec3.ZERO, HIT, 0.9, false, true));
       }
       var board = Blackboard.open(RED, Strategy.RUSH);
       if (slot.isPresent()) {

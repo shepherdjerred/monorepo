@@ -153,7 +153,8 @@ final class PerceptionTest {
   @Test
   void soundsPlaceEnemiesWithDistanceScaledError() {
     var self = viewer(5.5);
-    var shooter = combatant(2, BLUE, new Vec3(22.5, 1, 5.5));
+    // Crouched behind the wall, so only its sounds place it: no name tag shows through.
+    var shooter = combatant(2, BLUE, new Vec3(22.5, 1, 5.5)).withNameTag(true, false);
     var shot = Stimulus.by(Stimulus.Kind.BOW_SHOT, shooter.pos(), 10, shooter.id());
     var percept = perceive(self, world(10, List.of(self, shooter), List.of(shot)));
     assertThat(percept.sees(shooter.id())).isFalse();
@@ -166,21 +167,22 @@ final class PerceptionTest {
 
   @Test
   void memoryDecaysExponentiallyAndIsPruned() {
-    var sighting = new Sighting(Vec3.ZERO, Vec3.ZERO, 100, 1, true);
+    var sighting = new Sighting(Vec3.ZERO, Vec3.ZERO, 100, 1, true, true);
     assertThat(sighting.confidenceAt(100, Perception.TAU_TICKS)).isEqualTo(1);
     assertThat(sighting.confidenceAt(300, Perception.TAU_TICKS))
         .isCloseTo(Math.exp(-1), within(1e-12));
     var memory = Memory.EMPTY.remember(new CombatantId(2), sighting);
     assertThat(memory.prune(300, Perception.TAU_TICKS).sightings()).hasSize(1);
     assertThat(memory.prune(100 + 800, Perception.TAU_TICKS).sightings()).isEmpty();
-    var older = new Sighting(new Vec3(1, 0, 0), Vec3.ZERO, 50, 1, true);
+    var older = new Sighting(new Vec3(1, 0, 0), Vec3.ZERO, 50, 1, true, true);
     assertThat(memory.remember(new CombatantId(2), older)).isSameAs(memory);
   }
 
   @Test
   void retainedSoundsSurviveSkippedSnapshotsWithoutRefreshingAgeOrRerollingPosition() {
     var self = viewer(5.5);
-    var shooter = combatant(2, BLUE, new Vec3(22.5, 1, 5.5));
+    // Crouched behind the wall, so only its sounds place it: no name tag shows through.
+    var shooter = combatant(2, BLUE, new Vec3(22.5, 1, 5.5)).withNameTag(true, false);
     var sound =
         new Stimulus(
             Stimulus.Kind.LAND,

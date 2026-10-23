@@ -29,6 +29,9 @@ import com.shepherdjerred.thestorm.rwfbots.domain.geom.Vec3;
  * @param lastHurtTick the tick of the last damage taken, or -1 if none
  * @param traversal actual movement restrictions and survival modifiers at capture time
  * @param quiver the arrows its ranged weapon has left, when shots spend them
+ * @param sneaking whether crouched: its name tag is dimmed and not drawn through blocks
+ * @param nameHidden whether enemies see no name tag over it (an invisible kit, or a disguise
+ *     wearing another's name)
  */
 public record CombatantView(
     CombatantId id,
@@ -50,7 +53,9 @@ public record CombatantView(
     boolean invisible,
     long lastHurtTick,
     TraversalState traversal,
-    Quiver quiver) {
+    Quiver quiver,
+    boolean sneaking,
+    boolean nameHidden) {
 
   /** How far above the feet a standing player's eyes are. */
   public static final double EYE_HEIGHT = 1.62;
@@ -128,7 +133,9 @@ public record CombatantView(
         invisible,
         lastHurtTick,
         traversal,
-        quiver);
+        quiver,
+        sneaking,
+        nameHidden);
   }
 
   public CombatantView withTraversal(TraversalState capabilities) {
@@ -152,7 +159,9 @@ public record CombatantView(
         invisible,
         lastHurtTick,
         capabilities,
-        quiver);
+        quiver,
+        sneaking,
+        nameHidden);
   }
 
   public CombatantView withVel(Vec3 newVel) {
@@ -176,7 +185,9 @@ public record CombatantView(
         invisible,
         lastHurtTick,
         traversal,
-        quiver);
+        quiver,
+        sneaking,
+        nameHidden);
   }
 
   public CombatantView withFacing(Facing facing) {
@@ -200,7 +211,9 @@ public record CombatantView(
         invisible,
         lastHurtTick,
         traversal,
-        quiver);
+        quiver,
+        sneaking,
+        nameHidden);
   }
 
   public CombatantView withHealth(double newHealth, double newAbsorption) {
@@ -224,7 +237,9 @@ public record CombatantView(
         invisible,
         lastHurtTick,
         traversal,
-        quiver);
+        quiver,
+        sneaking,
+        nameHidden);
   }
 
   public CombatantView withAlive(boolean nowAlive) {
@@ -248,7 +263,9 @@ public record CombatantView(
         invisible,
         lastHurtTick,
         traversal,
-        quiver);
+        quiver,
+        sneaking,
+        nameHidden);
   }
 
   public CombatantView withInvisible(boolean nowInvisible, double newArmor) {
@@ -272,7 +289,9 @@ public record CombatantView(
         nowInvisible,
         lastHurtTick,
         traversal,
-        quiver);
+        quiver,
+        sneaking,
+        nameHidden);
   }
 
   public CombatantView withDisguised(boolean nowDisguised) {
@@ -296,7 +315,9 @@ public record CombatantView(
         invisible,
         lastHurtTick,
         traversal,
-        quiver);
+        quiver,
+        sneaking,
+        nameHidden);
   }
 
   public CombatantView withLastHurtTick(long tick) {
@@ -320,7 +341,9 @@ public record CombatantView(
         invisible,
         tick,
         traversal,
-        quiver);
+        quiver,
+        sneaking,
+        nameHidden);
   }
 
   public CombatantView withMotion(boolean nowSprinting, boolean nowOnGround) {
@@ -344,7 +367,9 @@ public record CombatantView(
         invisible,
         lastHurtTick,
         traversal,
-        quiver);
+        quiver,
+        sneaking,
+        nameHidden);
   }
 
   public CombatantView withHands(int slot, boolean nowUsingItem) {
@@ -368,7 +393,9 @@ public record CombatantView(
         invisible,
         lastHurtTick,
         traversal,
-        quiver);
+        quiver,
+        sneaking,
+        nameHidden);
   }
 
   public CombatantView withQuiver(Quiver arrows) {
@@ -392,6 +419,35 @@ public record CombatantView(
         invisible,
         lastHurtTick,
         traversal,
-        arrows);
+        arrows,
+        sneaking,
+        nameHidden);
+  }
+
+  /** This combatant crouched or not, with its name tag hidden from enemies or not. */
+  public CombatantView withNameTag(boolean nowSneaking, boolean nowNameHidden) {
+    return new CombatantView(
+        id,
+        team,
+        disguised,
+        kit,
+        alive,
+        pos,
+        vel,
+        yaw,
+        pitch,
+        health,
+        absorption,
+        armorValue,
+        heldSlot,
+        sprinting,
+        onGround,
+        usingItem,
+        invisible,
+        lastHurtTick,
+        traversal,
+        quiver,
+        nowSneaking,
+        nowNameHidden);
   }
 }

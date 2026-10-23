@@ -145,7 +145,8 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
             new SnapshotCapture.Sources(
                 new com.shepherdjerred.thestorm.rwfbots.adapter.paper.StimulusCollector(
                     new com.shepherdjerred.thestorm.rwf.app.BattleSoundLog(time), time),
-                java.util.List::of),
+                java.util.List::of,
+                player -> false),
             new SnapshotCapture.Capabilities(id -> Optional.empty(), time));
   }
 
@@ -269,7 +270,9 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
         false,
         -1,
         capture.captureTraversal(player, "trooper", ticks),
-        com.shepherdjerred.thestorm.rwfbots.domain.world.Quiver.ENDLESS);
+        com.shepherdjerred.thestorm.rwfbots.domain.world.Quiver.ENDLESS,
+        false,
+        false);
   }
 
   private void advance(CombatantView self) {
@@ -278,7 +281,7 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
         view(2, BLUE, new Pose(new Vec3(308.5, 100, 308.5), Vec3.ZERO, new Facing(90, 0), true));
     var visible = artifact.grid().canSee(self.eye(), enemy.eye());
     if (visible)
-      memory = memory.remember(enemy.id(), new Sighting(enemy.pos(), enemy.vel(), ticks, 1, true));
+      memory = memory.remember(enemy.id(), new Sighting(enemy.pos(), enemy.vel(), ticks, 1, true, true));
     var percept =
         new Percept(
             new PerceptionState(memory, Suspicion.NONE),
@@ -393,7 +396,9 @@ public final class PursuitFixtures implements BasicCommand, AutoCloseable {
         false,
         -1,
         com.shepherdjerred.thestorm.rwfbots.domain.world.TraversalState.UNMODIFIED,
-        com.shepherdjerred.thestorm.rwfbots.domain.world.Quiver.ENDLESS);
+        com.shepherdjerred.thestorm.rwfbots.domain.world.Quiver.ENDLESS,
+        false,
+        false);
   }
 
   private void finish(boolean passed) {

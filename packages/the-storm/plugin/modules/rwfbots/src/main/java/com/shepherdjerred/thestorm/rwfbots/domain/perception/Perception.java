@@ -19,12 +19,17 @@ import java.util.random.RandomGenerator;
  * Turns a snapshot into what one bot can tell about it. Sight needs the target inside the awareness
  * radius and field of view, in a region that can see the bot's, and one of three rays (eye, chest,
  * feet) clear of sight-blocking cells. Invisible players show only through worn armor, a fresh hit,
- * or a chance roll point blank. Disguised players pass as allies until caught. Sounds place their
- * source with an error that grows with distance. A hit on the bot itself tells it who struck and
- * roughly from where: a melee attacker exactly, a shooter with an error that grows with range. That
- * places the attacker in memory and starts a {@link Grudge}; where it goes afterwards the bot
- * learns only by seeing or hearing it. Hostile killstreak creatures are seen by the same sight
- * rules; a creature's blow starts a grudge against the creature, never its owner.
+ * or a chance roll point blank. A crouched player is picked out only within half the awareness
+ * radius. A standing enemy's name tag shows through walls, as the client draws it: within {@link
+ * #NAME_TAG_RANGE} and the field of view it places the enemy exactly, though the bot cannot see,
+ * and so cannot shoot, it, and keeps that sighting to itself rather than telling its team. Hidden
+ * tags (invisible kits, worn disguises) and crouched players show nothing. Disguised players pass
+ * as allies until caught. Sounds place their source with an error that grows with distance. A hit
+ * on the bot itself tells it who struck and roughly from where: a melee attacker exactly, a shooter
+ * with an error that grows with range. That places the attacker in memory and starts a {@link
+ * Grudge}; where it goes afterwards the bot learns only by seeing or hearing it. Hostile killstreak
+ * creatures are seen by the same sight rules; a creature's blow starts a grudge against the
+ * creature, never its owner.
  */
 public final class Perception {
 
@@ -45,6 +50,24 @@ public final class Perception {
 
   /** Memory time constant, in ticks: confidence drops to 1/e after ten seconds. */
   public static final double TAU_TICKS = 200;
+
+  /**
+   * How far a bot reads a standing player's name tag through blocks. The client draws tags out to
+   * the server's player tracking range (48 blocks by default), but a tag that far off is a few
+   * pixels a player rarely picks out; bots read one within 32 blocks, so tags place nearby enemies
+   * without pulling whole teams toward distant ones.
+   */
+  public static final double NAME_TAG_RANGE = 32;
+
+  /** Confidence given to a position read off a name tag: exact, but the body is not in sight. */
+  public static final double NAME_TAG_CONFIDENCE = 0.95;
+
+  /**
+   * The fraction of the awareness radius within which a crouched player is seen at all. Crouching
+   * dims the name tag, hides it behind blocks and lowers the silhouette, so a sneaker is picked out
+   * only at half the usual distance; up close nothing changes.
+   */
+  public static final double SNEAK_SIGHT = 0.5;
 
   /** Confidence given to a heard rather than seen position. */
   public static final double SOUND_CONFIDENCE = 0.6;
@@ -94,7 +117,13 @@ public final class Perception {
       }
       if (canSee(self, other, now, random)) {
         visible.add(other);
-        memory = memory.remember(other.id(), new Sighting(other.pos(), other.vel(), now, 1, true));
+        memory =
+            memory.remember(other.id(), new Sighting(other.pos(), other.vel(), now, 1, true, true));
+      } else if (readsNameTag(self, other)) {
+        memory =
+            memory.remember(
+                other.id(),
+                new Sighting(other.pos(), other.vel(), now, NAME_TAG_CONFIDENCE, false, false));
       }
     }
     var frame = new Frame(self, snapshot, suspicion, state.heardThrough());
@@ -146,7 +175,8 @@ public final class Perception {
   private boolean canSee(
       CombatantView self, CombatantView other, long now, RandomGenerator random) {
     var distance = self.pos().distance(other.pos());
-    if (distance > context.levers().awarenessRadius()) {
+    var radius = context.levers().awarenessRadius() * (other.sneaking() ? SNEAK_SIGHT : 1);
+    if (distance > radius) {
       return false;
     }
     if (other.invisible() && !betraysInvisibility(other, distance, now, random)) {
@@ -159,6 +189,21 @@ public final class Perception {
       return false;
     }
     return hasLineOfSight(context, self.eye(), other);
+  }
+
+  /**
+   * Whether {@code self} reads {@code other}'s name tag through whatever stands between them: a
+   * standing enemy whose tag shows and reads as an enemy's, within {@link #NAME_TAG_RANGE} and the
+   * field of view.
+   */
+  private static boolean readsNameTag(CombatantView self, CombatantView other) {
+    return !other.sneaking()
+        && !other.nameHidden()
+        && !other.invisible()
+        // A disguised Spy's tag reads as one of ours, caught or not: it places no enemy.
+        && !other.appearsAlliedTo(self.team())
+        && self.pos().distance(other.pos()) <= NAME_TAG_RANGE
+        && inFieldOfView(self, other);
   }
 
   private static boolean betraysInvisibility(
@@ -242,7 +287,7 @@ public final class Perception {
       result =
           result.remember(
               source.get().id(),
-              new Sighting(heard, Vec3.ZERO, stimulus.tick(), SOUND_CONFIDENCE, false));
+              new Sighting(heard, Vec3.ZERO, stimulus.tick(), SOUND_CONFIDENCE, false, true));
     }
     return result;
   }
@@ -330,7 +375,7 @@ public final class Perception {
             .memory()
             .remember(
                 attacker.id(),
-                new Sighting(placed, Vec3.ZERO, blow.tick(), ATTRIBUTION_CONFIDENCE, false));
+                new Sighting(placed, Vec3.ZERO, blow.tick(), ATTRIBUTION_CONFIDENCE, false, true));
     var grudge =
         before
             .grudge()

@@ -135,7 +135,9 @@ final class TeamPlayTest {
   // Archers retaking or hunting take a target out to the middle of their band.
   // A hit places its attacker in the victim's memory and draws the victim's aggro (aggro=1).
   // Traces carry the distance to a hostile golem in sight (golemDist).
-  private static final String PINNED_YARD_HASH = "e5eb8af69120645d";
+  // Standing enemies' name tags place them through walls within 32 blocks, privately; crouchers are
+  // seen only half as far.
+  private static final String PINNED_YARD_HASH = "a2aecb6b447ff845";
 
   @Test
   void aTrainingYardMatchReplaysToItsPinnedHash() {

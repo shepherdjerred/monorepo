@@ -112,7 +112,9 @@ final class KitPlayTest {
         false,
         -1,
         view.traversal(),
-        view.quiver());
+        view.quiver(),
+        false,
+        false);
   }
 
   private static Decision decision(CombatantView self, List<Waypoint> waypoints) {
