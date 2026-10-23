@@ -9,6 +9,10 @@
  * and composition carries the sibling image forward from the base set, so no
  * retained ids are sent.
  *
+ * This is the v1 producer. With `woodpecker-delivery-catalog-v2-enabled` on,
+ * `register-ci-service-build.ts` registers the `ci` service from its pins
+ * instead and the refresh lane registers nothing.
+ *
  * Usage: register-ci-image-build.ts --candidate <candidate.json> --promotion <promotion.json>
  */
 import { createDeliveryClient } from "../../../packages/delivery/src/shared/client.ts";
@@ -18,9 +22,17 @@ import {
   ServiceIndex,
 } from "../../../packages/ops-model/src/catalog.ts";
 import { imageRuntimeDigests } from "../../../scripts/lib/ci/image-runtime-digests.ts";
-import { requireEnv, run } from "../../../scripts/lib/run.ts";
+import { requireEnv } from "../../../scripts/lib/run.ts";
 import { runMain } from "../../../scripts/lib/transient.ts";
 import { ciImageDefinition } from "./build-ci-image-core.ts";
+import {
+  ciBuildContextFromEnv,
+  inspectManifest,
+  pipelinePrefix,
+  type CiBuildContext,
+  type ManifestInspector,
+  type RegistrationClient,
+} from "./ci-build-context.ts";
 import { parseCiImagePromotionOutcome } from "./ci-image-promotion-outcome.ts";
 import {
   parseCiImageCandidate,
@@ -32,28 +44,6 @@ const CI_SERVICE_IMAGES: ReadonlySet<string> = new Set([
   "ci-base",
   "ci-playwright",
 ]);
-
-export type CiBuildContext = {
-  readonly repositoryId: number;
-  readonly pipelineNumber: number;
-  readonly releaseNumber: number;
-  readonly sourceRevision: string;
-  readonly ciUrl: string;
-  readonly verifiedAt: string;
-};
-export type RegistrationClient = {
-  publish: (
-    input: PublishBuild,
-  ) => Promise<{ buildId: string; artifacts: string[] }>;
-};
-export type ManifestInspector = (reference: string) => Promise<string>;
-
-function positiveInteger(name: string, raw: string): number {
-  const value = Number(raw);
-  if (!Number.isSafeInteger(value) || value <= 0)
-    throw new Error(`${name} must be a positive integer`);
-  return value;
-}
 
 /** The exact build the refresh lane just pushed, as Delivery's `ci` service build. */
 export function ciImageBuild(
@@ -80,7 +70,7 @@ export function ciImageBuild(
   const uri = `docker.io/shepherdjerred/${candidate.image}`;
   if (definition.repository !== uri)
     throw new Error(`${candidate.image} is not published at ${uri}`);
-  const prefix = `ci/${String(context.repositoryId)}/${String(context.pipelineNumber)}`;
+  const prefix = pipelinePrefix(context);
   return {
     requestId: `${prefix}/ci/${candidate.image}`,
     serviceId: owner.id,
@@ -140,14 +130,6 @@ export async function registerCiImageBuild(input: {
   return registered;
 }
 
-async function inspectManifest(reference: string): Promise<string> {
-  const result = await run(
-    ["docker", "buildx", "imagetools", "inspect", "--raw", reference],
-    { capture: true, echoCapturedStdout: false },
-  );
-  return result.stdout;
-}
-
 async function main(): Promise<void> {
   const usage =
     "Usage: register-ci-image-build.ts --candidate <candidate.json> --promotion <promotion.json>";
@@ -169,20 +151,7 @@ async function main(): Promise<void> {
   await registerCiImageBuild({
     candidatePath,
     promotionPath,
-    context: {
-      repositoryId: positiveInteger("CI_REPO_ID", requireEnv("CI_REPO_ID")),
-      pipelineNumber: positiveInteger(
-        "CI_PIPELINE_NUMBER",
-        requireEnv("CI_PIPELINE_NUMBER"),
-      ),
-      releaseNumber: positiveInteger(
-        "CI_RELEASE_NUMBER",
-        requireEnv("CI_RELEASE_NUMBER"),
-      ),
-      sourceRevision: requireEnv("CI_COMMIT_SHA"),
-      ciUrl: requireEnv("CI_PIPELINE_URL"),
-      verifiedAt: new Date().toISOString(),
-    },
+    context: ciBuildContextFromEnv(),
     client,
     inspect: inspectManifest,
   });

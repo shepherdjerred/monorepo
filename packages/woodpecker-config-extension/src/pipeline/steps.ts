@@ -194,7 +194,7 @@ export function buildPipelineSteps({
       true,
       deliveryCatalogV2,
     ),
-    ...ciImageSteps(images),
+    ...ciImageSteps(images, deliveryCatalogV2),
     ...scoutSteps(images, deliveryCatalogV2),
     ...siteSteps(images, deliveryCatalogV2),
     // Native lanes are paused until the Mac agent runs in the GUI audit

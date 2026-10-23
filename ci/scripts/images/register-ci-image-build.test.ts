@@ -5,10 +5,10 @@ import path from "node:path";
 import { afterEach, expect, test } from "vitest";
 import { PublishBuildSchema } from "../../../packages/delivery/src/shared/contract.ts";
 import type { PublishBuild } from "../../../packages/delivery/src/shared/contract.ts";
+import type { CiBuildContext } from "./ci-build-context.ts";
 import {
   ciImageBuild,
   registerCiImageBuild,
-  type CiBuildContext,
 } from "./register-ci-image-build.ts";
 import {
   promotionOutcome,

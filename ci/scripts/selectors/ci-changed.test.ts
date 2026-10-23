@@ -294,6 +294,7 @@ test("release lanes include their complete imported helper closure", () => {
     expect(lanePaths[lane]).toContain(
       "ci/scripts/images/register-ci-image-build.ts",
     );
+    expect(lanePaths[lane]).toContain("ci/scripts/images/ci-build-context.ts");
     expect(lanePaths[lane]).toContain(
       "scripts/lib/ci/image-runtime-digests.ts",
     );
