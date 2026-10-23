@@ -741,7 +741,8 @@ containers, and its identity cannot read Secrets or create Pods.
 Independent upstream acquisition is restricted to version-catalog entries that
 declare `component: true` (`packages/version-catalog/src/catalog.json`), under
 the component name the catalog document uses (`catalogComponentName`: a chart
-by its name, an image by its repository basename), for a service the catalog
+by its name, an image by its repository basename, a GitHub source as
+`archive:<repository>`), for a service the catalog
 document declares as acquiring that component. An alias entry is pulled from
 and verified at its `packageName` repository. A chart
 entry is verified by bounded reads of the upstream index and archive against
@@ -751,7 +752,18 @@ is verified by resolving its tag to the manifest digest through the registry
 API and comparing it with the pinned digest, and an OCI chart's manifest must
 carry Helm's chart config. Manifests are read from the catalog registry;
 `registry.k8s.io` alone may redirect the read to its regional Artifact
-Registry backing. The artifact URI is the upstream location; nothing new is mirrored. The
+Registry backing. A GitHub source entry pinned by tag (such as
+`adyanth/cloudflare-operator`, which a Git-sourced Application syncs) is
+acquired as the tarball of the commit the tag names. The acquiring pipeline
+stores it content-addressed at
+`s3://delivery-artifacts/sources/<owner>/<repo>/<sha256>.tar.gz` and registers it with
+the commit as the artifact version and the tag in its origin. The server
+resolves the tag to its commit on GitHub, requires that commit, and requires
+the commit's tarball to hash to the digest. The build stays pending until the
+stored tarball's off-cluster replica is recorded (PC1), and a later acquisition
+of the same original verifies it. A recipe whose Application has a Git source
+binds that archive's version, an exact commit, as `targetRevision`, so ArgoCD
+syncs only that commit. For charts and images, the artifact URI is the upstream location; nothing new is mirrored. The
 Minecraft chart stays mirrored into ChartMuseum because the registered
 `minecraft-tsmc` pipeline pulls it from there, and the server verifies mirror
 bytes against the upstream checksum as well. Existing mirrored rows are never

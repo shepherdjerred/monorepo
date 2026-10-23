@@ -65,6 +65,17 @@ const artifacts = {
   },
 };
 
+/** The cloudflare-operator source archive at one version. */
+function archive(version: string) {
+  return {
+    "archive:cloudflare-operator": {
+      uri: `s3://delivery-artifacts/sources/adyanth/cloudflare-operator/${"e".repeat(64)}.tar.gz`,
+      version,
+      digest: digest("e"),
+    },
+  };
+}
+
 describe("renderApplication (T2)", () => {
   test("renders the recipe body, values object, parameters in their formats and ownership", () => {
     const application = renderApplication({
@@ -174,6 +185,50 @@ describe("renderApplication (T2)", () => {
         artifacts: { "chart:openebs": artifacts["chart:openebs"] },
       }),
     ).toThrow(/no artifact for image:/u);
+  });
+
+  test("a Git source syncs exactly the commit its archive component acquired", () => {
+    const commit = "6f2804871a3cc86cef72bc7f4ace0dd0a2aabf3f";
+    const git = recipe({
+      application: {
+        name: "cloudflare-operator",
+        project: "cloudflare-operator",
+        destination: {
+          server: "https://kubernetes.default.svc",
+          namespace: "cloudflare-operator-system",
+        },
+        source: {
+          repoURL: "https://github.com/adyanth/cloudflare-operator.git",
+          path: "config/default",
+        },
+        lifecycle: "retain",
+      },
+      chartComponent: "archive:cloudflare-operator",
+      artifactParameters: {},
+      steps: [
+        { kind: "apply-safety", instance: "application:cloudflare-operator" },
+        { kind: "sync", instance: "application:cloudflare-operator" },
+      ],
+    });
+    const rendered = renderApplication({
+      recipe: git,
+      environmentId: "cloudflare-operator/prod",
+      configuration: {},
+      artifacts: archive(commit),
+    });
+    expect(rendered.spec.source).toEqual({
+      repoURL: "https://github.com/adyanth/cloudflare-operator.git",
+      path: "config/default",
+      targetRevision: commit,
+    });
+    expect(() =>
+      renderApplication({
+        recipe: git,
+        environmentId: "cloudflare-operator/prod",
+        configuration: {},
+        artifacts: archive("v0.13.1"),
+      }),
+    ).toThrow(/syncs an exact commit/u);
   });
 
   test("forces every parameter to a literal string", () => {

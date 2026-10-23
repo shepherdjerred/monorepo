@@ -62,6 +62,12 @@ function source(
   if (!("chart" in body)) {
     if (Object.keys(configuration).length > 0)
       throw new Error("A Git source takes no Helm configuration");
+    // ArgoCD syncs exactly the acquired commit, never a tag or branch that
+    // could move under the selection.
+    if (!/^[a-f0-9]{40}$/u.test(revision))
+      throw new Error(
+        `A Git source syncs an exact commit; ${recipe.chartComponent} has version ${revision}`,
+      );
     return { repoURL: body.repoURL, path: body.path, targetRevision: revision };
   }
   const values = helmValues(recipe, configuration, artifacts);

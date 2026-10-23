@@ -25,8 +25,9 @@ export const VersionCatalogEntrySchema = z
      * The pinned version is an independently selectable Delivery component:
      * every main pipeline acquires it as an upstream artifact verified against
      * the upstream's published checksum (chart index digest or image manifest
-     * digest). Omitted means false; the version rides inside a first-party
-     * chart instead.
+     * digest), or, for a GitHub source pinned by tag, as the tarball of the
+     * commit the tag names. Omitted means false; the version rides inside a
+     * first-party chart instead.
      */
     component: z.boolean().optional(),
     notes: z.array(z.string().min(1)).optional(),
@@ -53,18 +54,20 @@ export const VersionCatalogEntrySchema = z
     if (
       entry.component === true &&
       (entry.category !== "upstream" ||
-        (entry.artifactType !== "image" &&
-          entry.artifactType !== "helm-chart") ||
-        !entry.management.managed ||
-        entry.management.registryUrl === undefined ||
-        ((entry.artifactType === "image" || ociChart(entry)) &&
-          !/^[^@\s]+@sha256:[a-f0-9]{64}$/u.test(entry.value)))
+        (entry.artifactType === "source"
+          ? !githubSource(entry)
+          : (entry.artifactType !== "image" &&
+              entry.artifactType !== "helm-chart") ||
+            !entry.management.managed ||
+            entry.management.registryUrl === undefined ||
+            ((entry.artifactType === "image" || ociChart(entry)) &&
+              !/^[^@\s]+@sha256:[a-f0-9]{64}$/u.test(entry.value))))
     ) {
       context.addIssue({
         code: "custom",
         path: ["component"],
         message:
-          "component entries are managed upstream charts or digest-pinned images and OCI charts with a registryUrl",
+          "component entries are managed upstream charts or digest-pinned images and OCI charts with a registryUrl, or GitHub sources pinned by tag",
       });
     }
   });
@@ -78,21 +81,44 @@ export function componentEntries(
 
 /**
  * The Delivery catalog document's name for a component entry: a chart by
- * its name, an image by its repository basename. Producers and Delivery's
- * acquisition endpoint both derive the name here.
+ * its name, an image by its repository basename, and a GitHub source by its
+ * repository name as an archive of the tagged commit. Producers and
+ * Delivery's acquisition endpoint both derive the name here.
  */
 export function catalogComponentName(entry: VersionCatalogEntry): string {
+  const basename = entry.name.slice(entry.name.lastIndexOf("/") + 1);
   switch (entry.artifactType) {
     case "helm-chart":
       return `chart:${entry.name}`;
     case "image":
-      return `image:${entry.name.slice(entry.name.lastIndexOf("/") + 1)}`;
-    case "package":
+      return `image:${basename}`;
     case "source":
+      if (githubSource(entry)) return `archive:${basename}`;
       throw new Error(
-        `Component ${entry.name} is a ${entry.artifactType}, which Delivery cannot acquire`,
+        `Component ${entry.name} is not a GitHub source Delivery can acquire`,
+      );
+    case "package":
+      throw new Error(
+        `Component ${entry.name} is a package, which Delivery cannot acquire`,
       );
   }
+}
+
+const GITHUB_REPOSITORY = /^[A-Za-z0-9-]+\/[\w.-]+$/u;
+
+/**
+ * A source tracked by Renovate's GitHub datasources under `owner/repo` and
+ * pinned by tag. Delivery acquires it as the tarball of the commit the tag
+ * names, so a Git-sourced Application syncs exactly that commit.
+ */
+export function githubSource(entry: VersionCatalogEntry): boolean {
+  return (
+    entry.artifactType === "source" &&
+    entry.management.managed &&
+    (entry.management.datasource === "github-releases" ||
+      entry.management.datasource === "github-tags") &&
+    GITHUB_REPOSITORY.test(entry.name)
+  );
 }
 
 /**

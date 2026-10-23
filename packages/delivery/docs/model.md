@@ -235,7 +235,9 @@ multi-platform images), origin, `requires`, retention state.
 
 - `first-party`: built from this repository.
 - `upstream`: acquired. Records repository, name, version, and the upstream's
-  own checksum.
+  own checksum. A Git source records its tag and the exact commit the tag
+  named; its bytes are that commit's tarball, stored content-addressed in a
+  self-hosted store, and the commit is the artifact's version.
 - `licensed-bundle`: acquired under a licence that forbids redistribution in
   an image. Records manifest digest and producer source. Bytes are retained
   in private Delivery-owned storage.

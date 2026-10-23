@@ -57,6 +57,11 @@ export const ArtifactOriginSchema = z.discriminatedUnion("kind", [
       name: IdentifierSchema,
       version: z.string().min(1).max(160),
       checksum: Digest,
+      /** A Git source's exact commit: the one its tag (`version`) named when acquired. */
+      commit: z
+        .string()
+        .regex(/^[a-f0-9]{40}$/)
+        .optional(),
     })
     .strict(),
   z
@@ -69,6 +74,31 @@ export const ArtifactOriginSchema = z.discriminatedUnion("kind", [
     .strict(),
 ]);
 export type ArtifactOrigin = z.infer<typeof ArtifactOriginSchema>;
+/**
+ * Where an acquired Git source's commit tarball lives: content-addressed in
+ * the Delivery artifact bucket, so its bytes never change under the digest.
+ */
+export function sourceArchiveUri(name: string, digest: string): string {
+  return `s3://delivery-artifacts/sources/${name}/${digest.slice("sha256:".length)}.tar.gz`;
+}
+type UpstreamOrigin = Extract<ArtifactOrigin, { kind: "upstream" }>;
+/**
+ * An upstream origin names the exact acquired bytes: a chart or image by
+ * its version and checksum, a Git source by its tag, the commit the tag
+ * named (the artifact's version) and the stored tarball's checksum.
+ */
+function upstreamIdentity(
+  artifact: { kind: string; version: string; digest: string; uri: string },
+  origin: UpstreamOrigin,
+) {
+  if (origin.checksum !== artifact.digest) return false;
+  return artifact.kind === "archive"
+    ? origin.commit === artifact.version &&
+        artifact.uri === sourceArchiveUri(origin.name, artifact.digest)
+    : (artifact.kind === "chart" || artifact.kind === "image") &&
+        origin.commit === undefined &&
+        origin.version === artifact.version;
+}
 /**
  * Off-cluster replica of bytes that live in a self-hosted store. Recorded by
  * the executor after it copies the object to R2 and reads the copy back; a
@@ -114,16 +144,11 @@ export const ArtifactInputSchema = z
   .strict()
   .superRefine((artifact, ctx) => {
     const origin = artifact.origin;
-    if (
-      origin.kind === "upstream" &&
-      ((artifact.kind !== "chart" && artifact.kind !== "image") ||
-        origin.version !== artifact.version ||
-        origin.checksum !== artifact.digest)
-    )
+    if (origin.kind === "upstream" && !upstreamIdentity(artifact, origin))
       ctx.addIssue({
         code: "custom",
         message:
-          "Upstream origin must identify the exact acquired chart or image version and bytes",
+          "Upstream origin must identify the exact acquired chart or image version, or source commit, and bytes",
       });
     if (artifact.contentFingerprint !== undefined && artifact.kind !== "chart")
       ctx.addIssue({

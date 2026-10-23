@@ -6,6 +6,7 @@ import {
   VersionCatalogEntrySchema,
   catalogComponentName,
   componentEntries,
+  githubSource,
   ociChart,
   parseVersionCatalog,
   parseVersionCatalogText,
@@ -147,6 +148,37 @@ describe("Delivery component naming", () => {
       (entry) => catalogComponentName(entry),
     );
     expect(new Set(names).size).toBe(names.length);
+  });
+
+  test("a GitHub source is an archive of its tagged commit, named by its repository", () => {
+    const source = {
+      name: "adyanth/cloudflare-operator",
+      category: "upstream",
+      artifactType: "source",
+      management: {
+        managed: true,
+        datasource: "github-releases",
+        versioning: "semver",
+      },
+      value: "v0.13.1",
+      component: true,
+    };
+    const entry = VersionCatalogEntrySchema.parse(source);
+    expect(githubSource(entry)).toBe(true);
+    expect(catalogComponentName(entry)).toBe("archive:cloudflare-operator");
+    // A source Delivery cannot fetch from GitHub is no component.
+    expect(() =>
+      VersionCatalogEntrySchema.parse({
+        ...source,
+        management: { managed: false },
+      }),
+    ).toThrow("GitHub sources pinned by tag");
+    expect(() =>
+      VersionCatalogEntrySchema.parse({
+        ...source,
+        management: { ...source.management, datasource: "custom.papermc" },
+      }),
+    ).toThrow("GitHub sources pinned by tag");
   });
 
   test("an OCI chart is a digest-pinned chart named by its catalog name", () => {

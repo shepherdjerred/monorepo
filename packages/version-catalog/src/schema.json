@@ -50,7 +50,7 @@
           },
           "component": {
             "type": "boolean",
-            "description": "The pinned version is an independently selectable Delivery component: every main pipeline acquires it as an upstream artifact verified against the upstream's published checksum. Omitted means false; the version rides inside a first-party chart instead."
+            "description": "The pinned version is an independently selectable Delivery component: every main pipeline acquires it as an upstream artifact verified against the upstream's published checksum (a chart index digest or image manifest digest), or, for a GitHub source pinned by tag, as the tarball of the commit the tag names. Omitted means false; the version rides inside a first-party chart instead."
           },
           "notes": {
             "type": "array",

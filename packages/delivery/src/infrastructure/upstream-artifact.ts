@@ -46,6 +46,12 @@ import {
   resolveManifest,
 } from "./artifact-stores/oci-registry.ts";
 import type { RegistryLocation } from "./artifact-stores/oci-registry.ts";
+import { replicationPending } from "./artifact-stores/replication.ts";
+import {
+  sourceReview,
+  verifySource,
+  type SourceReview,
+} from "./upstream-source.ts";
 
 export type UpstreamFetch = (
   url: string | URL,
@@ -84,7 +90,8 @@ type Reviewed =
       originKey: string;
       registry: RegistryLocation;
       tag: string;
-    };
+    }
+  | SourceReview;
 type UpstreamOrigin = { repository: string; name: string; version: string };
 const HELM_CHART_CONFIG = "application/vnd.cncf.helm.config.v1+json";
 
@@ -123,15 +130,22 @@ function requireAcquiring(
     );
 }
 
+const CATALOG_TYPES = {
+  chart: "helm-chart",
+  image: "image",
+  archive: "source",
+} as const;
+
 /**
  * The one version-catalog component entry the catalog document's component
- * name denotes: a chart by its name, an image by its repository basename.
+ * name denotes: a chart by its name, an image by its repository basename, a
+ * GitHub source by its repository name.
  */
 function catalogEntry(
   input: Input,
   components: readonly VersionCatalogEntry[],
 ): VersionCatalogEntry {
-  const artifactType = input.artifact.kind === "chart" ? "helm-chart" : "image";
+  const artifactType = CATALOG_TYPES[input.artifact.kind];
   const matches = components.filter(
     (candidate) =>
       candidate.artifactType === artifactType &&
@@ -154,8 +168,6 @@ function reviewed(
   const origin = artifact.origin;
   if (origin.kind !== "upstream")
     refuse("Upstream acquisition requires explicit original origin");
-  if (artifact.kind !== "chart" && artifact.kind !== "image")
-    refuse("Upstream acquisition covers charts and images only");
   const entry = catalogEntry(input, components);
   // Each acquiring service owns its own artifact of an origin: the catalog
   // document may name several (section 4.5), and concurrent acquisitions by
@@ -167,6 +179,7 @@ function reviewed(
     name: origin.name,
     version: origin.version,
   });
+  if (artifact.kind === "archive") return sourceReview(input, entry, originKey);
   if (artifact.kind === "image" || ociChart(entry))
     return registryReview(input, entry, { originKey, origin });
   const repository = `${registryUrl(entry).replace(/\/+$/, "")}/`;
@@ -441,8 +454,12 @@ export async function acquireUpstreamArtifact(
   });
   if (build.status !== "verified") {
     if (plan.kind === "chart") await verifyChart(input, plan, transport);
+    else if (plan.kind === "source") await verifySource(input, plan, transport);
     else await verifyManifest(input, plan, transport);
     await this.database.$transaction(async (tx) => {
+      // PC1: bytes in a self-hosted store (a source tarball) verify only once
+      // their off-cluster replica is recorded; a later acquisition retries.
+      if (await replicationPending(tx, buildId)) return;
       const changed = await tx.build.updateMany({
         where: { id: buildId, status: { in: ["pending", "failed"] } },
         data: {
