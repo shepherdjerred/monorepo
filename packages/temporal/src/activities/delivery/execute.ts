@@ -353,5 +353,7 @@ export async function finishDelivery(
     current.deployment.controlPlaneSnapshot === null
       ? { observedRevisionId: current.deployment.versionSetRevisionId }
       : {}),
+    // Only the executor that owns the deployment reports its result (D7).
+    executor: executorIdentity(),
   });
 }

@@ -314,6 +314,8 @@ export const FinishDeploymentSchema = z
     observedRevisionId: IdentifierSchema.optional(),
     recoveryRequired: z.boolean().default(false),
     evidence: z.array(EvidenceInputSchema).default([]),
+    /** The finishing executor's Workflow execution; required once one owns the deployment (D7). */
+    executor: ExecutorIdentitySchema.optional(),
   })
   .strict();
 export const DeploymentDetailSchema = z.object({

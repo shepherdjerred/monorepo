@@ -96,6 +96,36 @@ export function requireSameExecutor(
   );
 }
 
+/**
+ * Only the executor that owns a deployment reports its result (D7). A
+ * handed-off deployment awaits its successor's claim (D8), and once an
+ * identity owns it, a finish naming none or another is refused, so a
+ * delayed predecessor on the shared execute credential cannot settle it.
+ */
+export function requireFinishingExecutor(
+  row: {
+    workflowId: string | null;
+    workflowRunId: string | null;
+    handoffAt: Date | null;
+  },
+  executor: ExecutorIdentity | undefined,
+) {
+  if (row.handoffAt !== null)
+    throw new DeliveryError(
+      "CONFLICT",
+      "A handed-off deployment finishes only after its successor executor claims it (D8)",
+    );
+  if (row.workflowId === null) return;
+  if (
+    executor?.workflowId !== row.workflowId ||
+    executor.workflowRunId !== row.workflowRunId
+  )
+    throw new DeliveryError(
+      "CONFLICT",
+      "Only the executor that owns the deployment reports its result (D7)",
+    );
+}
+
 /** A request whose frozen binding generation moved can no longer be approved (H2). */
 export async function expireApproval(tx: Transaction, deploymentId: string) {
   await tx.approval.updateMany({

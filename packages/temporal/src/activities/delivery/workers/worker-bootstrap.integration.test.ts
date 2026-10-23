@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from "vitest";
+import { MockActivityEnvironment } from "@temporalio/testing";
 import { z } from "zod";
 import {
   createApp,
@@ -35,6 +36,11 @@ import { finishDelivery } from "#activities/delivery/execute.ts";
 import { workerSourceFingerprint } from "#lib/delivery/workers/worker-source.ts";
 import { SettledArgoStatusSchema } from "#lib/delivery/argocd-proof.ts";
 import { retainedWorkerPod } from "./worker-fixtures.ts";
+
+/** `finishDelivery` reports as the Activity of its executor Workflow (D7). */
+async function finishAsExecutor(...args: Parameters<typeof finishDelivery>) {
+  return await new MockActivityEnvironment().run(finishDelivery, ...args);
+}
 
 let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
 let store: Delivery;
@@ -504,7 +510,7 @@ test("independent original-A hosts and captured older chart leave qualified app-
     },
     testExecutor,
   );
-  await finishDelivery(adoption.id, { status: "succeeded", evidence });
+  await finishAsExecutor(adoption.id, { status: "succeeded", evidence });
   const after = await cluster.database.environment.findUniqueOrThrow({
     where: { id: fixture.environmentId },
   });

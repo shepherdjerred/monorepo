@@ -36,6 +36,7 @@ import {
   type DeploymentRow,
   leaseExpiry,
   observesApplication,
+  requireFinishingExecutor,
   requireLiveLease,
   runningDeployment,
 } from "#infrastructure/execution/ownership.ts";
@@ -216,9 +217,11 @@ function requireFinishable(row: DeploymentRow, input: FinishDeployment) {
 export async function finish(
   this: Delivery,
   deploymentId: string,
-  input: FinishDeployment,
+  request: FinishDeployment,
   actor: Principal,
 ) {
+  // The executor identity proves ownership; the result is what is recorded.
+  const { executor, ...input } = request;
   return this.database.$transaction(async (tx) => {
     await lock(tx, "delivery:claim");
     await lock(tx, `deployment:${deploymentId}`);
@@ -237,6 +240,7 @@ export async function finish(
     }
     // D7: a lapsed lease is no longer provably owned, so it reports nothing.
     requireLiveLease(row);
+    requireFinishingExecutor(row, executor);
     requireFinishable(row, input);
     const env = await environment(tx, row.environmentId);
     if (env.activeDeploymentId !== deploymentId)

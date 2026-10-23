@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, expect, test, vi } from "vitest";
+import { MockActivityEnvironment } from "@temporalio/testing";
 import {
   controlPlaneFixture,
   createTestDatabase,
@@ -30,6 +31,11 @@ import { executionApiFixture } from "./execution-api-fixtures.ts";
 import { executeControlPlaneWithJob } from "./control-plane.ts";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
 import { admitPlatformNativeJob } from "#lib/delivery/platform/native-job.ts";
+
+/** `finishDelivery` reports as the Activity of its executor Workflow (D7). */
+async function finishAsExecutor(...args: Parameters<typeof finishDelivery>) {
+  return await new MockActivityEnvironment().run(finishDelivery, ...args);
+}
 
 let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
 let fixture: Awaited<ReturnType<typeof controlPlaneFixture>>;
@@ -235,7 +241,7 @@ test("real PG+HTTP control-plane intent resumes the same native Job across execu
   ).toBe(JSON.stringify(native));
   const evidence = await executeControlPlaneWithJob(deployment.id, run);
   expect(starts).toBe(1);
-  await finishDelivery(deployment.id, { status: "succeeded", evidence });
+  await finishAsExecutor(deployment.id, { status: "succeeded", evidence });
   const accepted = await fixture.delivery.detail(deployment.id);
   expect(accepted.environment.acceptedDeploymentId).toBe(deployment.id);
   expect(accepted.environment.acceptedVersionSetRevisionId).toBeNull();

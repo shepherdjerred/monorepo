@@ -1,4 +1,5 @@
 import { beforeAll, afterAll, expect, test, vi } from "vitest";
+import { MockActivityEnvironment } from "@temporalio/testing";
 import {
   createTestDatabase,
   platformFixture,
@@ -18,6 +19,11 @@ import { executePlatformWithJob } from "./index.ts";
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import { executionApiFixture } from "./execution-api-fixtures.ts";
 import { admitPlatformNativeJob } from "#lib/delivery/platform/native-job.ts";
+
+/** `finishDelivery` reports as the Activity of its executor Workflow (D7). */
+async function finishAsExecutor(...args: Parameters<typeof finishDelivery>) {
+  return await new MockActivityEnvironment().run(finishDelivery, ...args);
+}
 
 let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
 let fixture: Awaited<ReturnType<typeof platformFixture>>;
@@ -144,7 +150,7 @@ test("real PG+HTTP freezes qualified plan, persists native receipt before effect
     {},
   );
   const evidence = await executePlatformWithJob(planned.id, nativeJob);
-  await finishDelivery(planned.id, { status: "succeeded", evidence });
+  await finishAsExecutor(planned.id, { status: "succeeded", evidence });
   const afterPlan = await fixture.delivery.detail(planned.id);
   expect(afterPlan.environment.acceptedDeploymentId).toBeNull();
   expect(JSON.stringify(afterPlan)).not.toContain("ciphertext");
@@ -162,7 +168,7 @@ test("real PG+HTTP freezes qualified plan, persists native receipt before effect
     {},
   );
   const accepted = await executePlatformWithJob(apply.id, nativeJob);
-  await finishDelivery(apply.id, { status: "succeeded", evidence: accepted });
+  await finishAsExecutor(apply.id, { status: "succeeded", evidence: accepted });
   const done = await fixture.delivery.detail(apply.id);
   expect(done.environment.acceptedDeploymentId).toBe(apply.id);
   expect(done.environment.acceptedVersionSetRevisionId).toBeNull();
