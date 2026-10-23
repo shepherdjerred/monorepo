@@ -52,7 +52,8 @@ final class NameTagHoldTest {
             PoisonView.NONE,
             NAV.mapId(),
             List.of(),
-            List.of(), List.of());
+            List.of(),
+            List.of());
     var context =
         new TacticsContext(
             NAV,

@@ -226,7 +226,8 @@ final class PlannerSupportTest {
             10,
             Map.of());
     var board = Blackboard.open(RED, Strategy.SPLIT).withPlan(plan, 10);
-    var memory = Memory.EMPTY.remember(enemy.id(), new Sighting(ENEMY, Vec3.ZERO, 10, 1, true));
+    var memory =
+        Memory.EMPTY.remember(enemy.id(), new Sighting(ENEMY, Vec3.ZERO, 10, 1, true, true));
     var percept =
         new Percept(
             new PerceptionState(memory, Suspicion.NONE), visible ? List.of(enemy) : List.of(), 10);

@@ -45,7 +45,8 @@ final class NameTagSightTest {
             PoisonView.NONE,
             "synthetic",
             List.of(),
-            List.of(), List.of());
+            List.of(),
+            List.of());
     return perception.perceive(PerceptionState.EMPTY, self, world, new SplittableRandom(1));
   }
 
@@ -63,6 +64,7 @@ final class NameTagSightTest {
               assertThat(tag.pos()).isEqualTo(WALLED.pos());
               assertThat(tag.confidence()).isEqualTo(Perception.NAME_TAG_CONFIDENCE);
               assertThat(tag.direct()).isFalse();
+              assertThat(tag.shareable()).as("a tag read through a wall stays private").isFalse();
             });
   }
 
@@ -95,7 +97,8 @@ final class NameTagSightTest {
             PoisonView.NONE,
             "synthetic",
             List.of(),
-            List.of(), List.of());
+            List.of(),
+            List.of());
     var percept =
         new Perception(new SenseContext(NAV.grid(), NAV.graph(), NAV.regions(), levers(0.8)))
             .perceive(caught, SELF, world, new SplittableRandom(1));

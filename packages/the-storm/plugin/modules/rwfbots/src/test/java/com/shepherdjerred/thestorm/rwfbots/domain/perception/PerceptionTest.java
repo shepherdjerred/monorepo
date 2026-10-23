@@ -167,14 +167,14 @@ final class PerceptionTest {
 
   @Test
   void memoryDecaysExponentiallyAndIsPruned() {
-    var sighting = new Sighting(Vec3.ZERO, Vec3.ZERO, 100, 1, true);
+    var sighting = new Sighting(Vec3.ZERO, Vec3.ZERO, 100, 1, true, true);
     assertThat(sighting.confidenceAt(100, Perception.TAU_TICKS)).isEqualTo(1);
     assertThat(sighting.confidenceAt(300, Perception.TAU_TICKS))
         .isCloseTo(Math.exp(-1), within(1e-12));
     var memory = Memory.EMPTY.remember(new CombatantId(2), sighting);
     assertThat(memory.prune(300, Perception.TAU_TICKS).sightings()).hasSize(1);
     assertThat(memory.prune(100 + 800, Perception.TAU_TICKS).sightings()).isEmpty();
-    var older = new Sighting(new Vec3(1, 0, 0), Vec3.ZERO, 50, 1, true);
+    var older = new Sighting(new Vec3(1, 0, 0), Vec3.ZERO, 50, 1, true, true);
     assertThat(memory.remember(new CombatantId(2), older)).isSameAs(memory);
   }
 

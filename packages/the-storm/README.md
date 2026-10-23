@@ -3079,9 +3079,11 @@ Name tags. The capture records whether each combatant is sneaking and whether
 rwf's scoreboard hides its name tag from enemies (`NameTags`: invisible kits
 and worn disguises sit on the hidden team). As the client draws a standing
 player's tag through blocks, perception places a standing enemy with a shown tag
-exactly, at 0.95 confidence, within 48 blocks and the field of view, even
-behind walls. That sighting feeds watching, cover, team callouts and aggro but
-is never "visible": targeting and shooting still need a clear line. A sneaking
+exactly, at 0.95 confidence, within 32 blocks and the field of view, even
+behind walls. That sighting feeds the bot's own watching, cover, aggro and guard
+reactions but stays private: it is never shared as a team callout, board entry
+or chat report, and it is never "visible", so targeting and shooting still need
+a clear line. A sneaking
 enemy shows no tag and is seen at all only within half the awareness radius;
 closer than that, sight is unchanged. A Spy's tag reads as an ally until it is
 caught.

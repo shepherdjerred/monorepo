@@ -34,12 +34,12 @@ import org.bukkit.entity.Player;
  * Builds the bots' {@link WorldSnapshot} each tick from rwf's read model and the live entities:
  * position, velocity (from the position a tick ago), look, health, absorption, armor, held slot,
  * sprinting, sneaking, whether enemies see their name tag, on ground, using an item, invisible and
- * when they were last hurt (a drop in health plus absorption) and the arrows left to a weapon
- * that spends them ({@link Quivers}), with the bombs, the poison, the killstreak summons in the
- * field, the tick's stimuli (a summon's blow named as the summon's own) and the loose arrows a
- * low quiver could pick up. A combatant whose entity is absent this tick (a bot between bodies
- * while its skin applies, a human not online) is left out of the snapshot rather than guessed
- * at. Main thread only.
+ * when they were last hurt (a drop in health plus absorption) and the arrows left to a weapon that
+ * spends them ({@link Quivers}), with the bombs, the poison, the killstreak summons in the field,
+ * the tick's stimuli (a summon's blow named as the summon's own) and the loose arrows a low quiver
+ * could pick up. A combatant whose entity is absent this tick (a bot between bodies while its skin
+ * applies, a human not online) is left out of the snapshot rather than guessed at. Main thread
+ * only.
  */
 public final class SnapshotCapture {
 

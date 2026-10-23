@@ -63,7 +63,7 @@ final class FairObservationTest {
     var memory =
         Memory.EMPTY.remember(
             new com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId(2),
-            new Sighting(new Vec3(5.5, 1, 8.5), Vec3.ZERO, 10, 1, true));
+            new Sighting(new Vec3(5.5, 1, 8.5), Vec3.ZERO, 10, 1, true, true));
     var state = new PerceptionState(memory, PerceptionState.EMPTY.suspicion());
     var values =
         FairObservation.values(

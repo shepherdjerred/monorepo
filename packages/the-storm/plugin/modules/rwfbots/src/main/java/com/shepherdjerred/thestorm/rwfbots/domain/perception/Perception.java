@@ -22,13 +22,14 @@ import java.util.random.RandomGenerator;
  * or a chance roll point blank. A crouched player is picked out only within half the awareness
  * radius. A standing enemy's name tag shows through walls, as the client draws it: within {@link
  * #NAME_TAG_RANGE} and the field of view it places the enemy exactly, though the bot cannot see,
- * and so cannot shoot, it. Hidden tags (invisible kits, worn disguises) and crouched players show
- * nothing. Disguised players pass as allies until caught. Sounds place their source with an error
- * that grows with distance. A hit on the bot itself tells it who struck and roughly from where: a
- * melee attacker exactly, a shooter with an error that grows with range. That places the attacker
- * in memory and starts a {@link Grudge}; where it goes afterwards the bot learns only by seeing or
- * hearing it. Hostile killstreak creatures are seen by the same sight rules; a creature's blow
- * starts a grudge against the creature, never its owner.
+ * and so cannot shoot, it, and keeps that sighting to itself rather than telling its team. Hidden
+ * tags (invisible kits, worn disguises) and crouched players show nothing. Disguised players pass
+ * as allies until caught. Sounds place their source with an error that grows with distance. A hit
+ * on the bot itself tells it who struck and roughly from where: a melee attacker exactly, a shooter
+ * with an error that grows with range. That places the attacker in memory and starts a {@link
+ * Grudge}; where it goes afterwards the bot learns only by seeing or hearing it. Hostile killstreak
+ * creatures are seen by the same sight rules; a creature's blow starts a grudge against the
+ * creature, never its owner.
  */
 public final class Perception {
 
@@ -51,10 +52,12 @@ public final class Perception {
   public static final double TAU_TICKS = 200;
 
   /**
-   * How far a standing player's name tag is drawn through blocks: the client's name render
-   * distance, bounded by the server's player tracking range (48 blocks by default).
+   * How far a bot reads a standing player's name tag through blocks. The client draws tags out to
+   * the server's player tracking range (48 blocks by default), but a tag that far off is a few
+   * pixels a player rarely picks out; bots read one within 32 blocks, so tags place nearby enemies
+   * without pulling whole teams toward distant ones.
    */
-  public static final double NAME_TAG_RANGE = 48;
+  public static final double NAME_TAG_RANGE = 32;
 
   /** Confidence given to a position read off a name tag: exact, but the body is not in sight. */
   public static final double NAME_TAG_CONFIDENCE = 0.95;
@@ -114,12 +117,13 @@ public final class Perception {
       }
       if (canSee(self, other, now, random)) {
         visible.add(other);
-        memory = memory.remember(other.id(), new Sighting(other.pos(), other.vel(), now, 1, true));
+        memory =
+            memory.remember(other.id(), new Sighting(other.pos(), other.vel(), now, 1, true, true));
       } else if (readsNameTag(self, other)) {
         memory =
             memory.remember(
                 other.id(),
-                new Sighting(other.pos(), other.vel(), now, NAME_TAG_CONFIDENCE, false));
+                new Sighting(other.pos(), other.vel(), now, NAME_TAG_CONFIDENCE, false, false));
       }
     }
     var frame = new Frame(self, snapshot, suspicion, state.heardThrough());
@@ -283,7 +287,7 @@ public final class Perception {
       result =
           result.remember(
               source.get().id(),
-              new Sighting(heard, Vec3.ZERO, stimulus.tick(), SOUND_CONFIDENCE, false));
+              new Sighting(heard, Vec3.ZERO, stimulus.tick(), SOUND_CONFIDENCE, false, true));
     }
     return result;
   }
@@ -371,7 +375,7 @@ public final class Perception {
             .memory()
             .remember(
                 attacker.id(),
-                new Sighting(placed, Vec3.ZERO, blow.tick(), ATTRIBUTION_CONFIDENCE, false));
+                new Sighting(placed, Vec3.ZERO, blow.tick(), ATTRIBUTION_CONFIDENCE, false, true));
     var grudge =
         before
             .grudge()

@@ -753,32 +753,7 @@ public final class ThinkLoop {
     }
 
     private void share(Match current, Mind mind, Percept percept, WorldSnapshot snapshot) {
-      var reports = new ArrayList<SharedSighting>();
-      for (var seen : percept.visible()) {
-        reports.add(
-            new SharedSighting(
-                seen.id(),
-                seen.pos(),
-                seen.vel(),
-                snapshot.tick(),
-                snapshot.tick(),
-                mind.profile.id()));
-      }
-      percept.state().memory().sightings().entrySet().stream()
-          .filter(
-              entry ->
-                  !entry.getValue().direct() && snapshot.tick() - entry.getValue().tick() <= 30)
-          .sorted(Map.Entry.comparingByKey())
-          .forEach(
-              entry ->
-                  reports.add(
-                      new SharedSighting(
-                          entry.getKey(),
-                          entry.getValue().pos(),
-                          entry.getValue().vel(),
-                          entry.getValue().tick(),
-                          snapshot.tick(),
-                          mind.profile.id())));
+      var reports = reports(mind.profile.id(), percept, snapshot.tick());
       if (reports.isEmpty()) return;
       if (composedCommunication) {
         if (mind.lastReportTick == NEVER || snapshot.tick() - mind.lastReportTick >= 40) {
@@ -1134,5 +1109,35 @@ public final class ThinkLoop {
     mixed *= 0x7FB5D329728EA185L;
     mixed ^= mixed >>> 27;
     return mixed;
+  }
+
+  /**
+   * What {@code reporter} tells its team at {@code tick}: every enemy it sees, then each enemy it
+   * heard or was hit by in the last 30 ticks. A name tag read through a wall is the bot's own and
+   * never reaches the team, its board or chat.
+   */
+  static List<SharedSighting> reports(CombatantId reporter, Percept percept, long tick) {
+    var reports = new ArrayList<SharedSighting>();
+    for (var seen : percept.visible()) {
+      reports.add(new SharedSighting(seen.id(), seen.pos(), seen.vel(), tick, tick, reporter));
+    }
+    percept.state().memory().sightings().entrySet().stream()
+        .filter(
+            entry ->
+                !entry.getValue().direct()
+                    && entry.getValue().shareable()
+                    && tick - entry.getValue().tick() <= 30)
+        .sorted(Map.Entry.comparingByKey())
+        .forEach(
+            entry ->
+                reports.add(
+                    new SharedSighting(
+                        entry.getKey(),
+                        entry.getValue().pos(),
+                        entry.getValue().vel(),
+                        entry.getValue().tick(),
+                        tick,
+                        reporter)));
+    return reports;
   }
 }

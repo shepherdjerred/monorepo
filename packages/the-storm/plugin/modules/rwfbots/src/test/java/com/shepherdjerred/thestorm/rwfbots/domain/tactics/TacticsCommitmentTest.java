@@ -265,7 +265,9 @@ final class TacticsCommitmentTest {
         shared
             ? Memory.EMPTY
             : new Memory(
-                Map.of(hidden.id(), new Sighting(rememberedPosition, Vec3.ZERO, 76, 0.6, false)));
+                Map.of(
+                    hidden.id(),
+                    new Sighting(rememberedPosition, Vec3.ZERO, 76, 0.6, false, true)));
     var board = base.board();
     if (shared) {
       board =

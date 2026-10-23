@@ -253,7 +253,8 @@ final class BombGuardTest {
             List.of(),
             List.of(),
             List.of());
-    var memory = Memory.EMPTY.remember(ENEMY, new Sighting(enemy.pos(), TOWARDS, 30, 1, false));
+    var memory =
+        Memory.EMPTY.remember(ENEMY, new Sighting(enemy.pos(), TOWARDS, 30, 1, false, true));
     var perception = new PerceptionState(memory, Suspicion.NONE);
     return new Situation(
         self,

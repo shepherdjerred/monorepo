@@ -218,7 +218,7 @@ final class PatrolTest {
         com.shepherdjerred.thestorm.rwfbots.domain.perception.Memory.EMPTY.remember(
             new com.shepherdjerred.thestorm.rwfbots.domain.world.CombatantId(2),
             new com.shepherdjerred.thestorm.rwfbots.domain.perception.Sighting(
-                gone, Vec3.ZERO, 100, 1, true));
+                gone, Vec3.ZERO, 100, 1, true, true));
     var state =
         new PerceptionState(
             memory, com.shepherdjerred.thestorm.rwfbots.domain.perception.Suspicion.NONE);
