@@ -289,7 +289,12 @@ export function createDeliveryClient(options: RequestOptions) {
     /** Opens the deployment's recovery intent (4.15); its kind picks the reader. */
     createRecoveryIntent: (
       id: string,
-      input: { requestId: string; reason: string; expectedGeneration: number },
+      input: {
+        requestId: string;
+        reason: string;
+        expectedGeneration: number;
+        expectedKind?: "argo";
+      },
     ) =>
       request(
         `/deployments/${encodeURIComponent(id)}/recovery-intents`,

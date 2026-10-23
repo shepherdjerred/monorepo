@@ -326,11 +326,14 @@ export async function runDeployCommand(
         reason: options.reason,
       });
       // Recovery opens the deployment's intent; readback settles it (4.15).
+      // Only an Argo intent settles here, so the server opens nothing for a
+      // deployment whose recovery has its own command.
       const detail = await client.deployment(required(target));
       const intent = await client.createRecoveryIntent(detail.deployment.id, {
         requestId: requestId(),
         reason: input.reason,
         expectedGeneration: expectedGeneration(detail.environment.generation),
+        expectedKind: "argo",
       });
       result = await client.settleRecoveryIntent(intent.id, input);
       break;

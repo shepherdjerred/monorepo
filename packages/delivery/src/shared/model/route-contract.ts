@@ -8,7 +8,10 @@ import {
 } from "@shepherdjerred/ops-model/catalog-document-shape.ts";
 import { IdentifierSchema } from "#shared/artifact-contract.ts";
 import { EvidenceInputSchema } from "#shared/evidence-contract.ts";
-import { RecoveryIntentV2Schema } from "#shared/recovery-intent.ts";
+import {
+  RecoveryIntentKindSchema,
+  RecoveryIntentV2Schema,
+} from "#shared/recovery-intent.ts";
 import { DeploymentDetailSchema, DeploymentSchema } from "#shared/contract.ts";
 import { ApprovalV2Schema } from "./approval-contract.ts";
 import { MonitorStateSchema } from "./monitor-contract.ts";
@@ -109,6 +112,11 @@ export const RecoveryIntentRequestSchema = z.strictObject({
   expectedGeneration: z.number().int().nonnegative(),
   /** The sub-step a compound target's intent names (T3). */
   step: IdentifierSchema.optional(),
+  /**
+   * The kind the caller can settle. When the deployment's recovery is
+   * another kind, the request is refused and no intent is opened.
+   */
+  expectedKind: RecoveryIntentKindSchema.optional(),
 });
 export type RecoveryIntentRequest = z.infer<typeof RecoveryIntentRequestSchema>;
 

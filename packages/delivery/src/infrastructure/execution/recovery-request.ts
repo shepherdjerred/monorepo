@@ -137,6 +137,11 @@ export async function requestRecoveryIntent(
   const input = RecoveryIntentRequestSchema.parse(raw);
   const detail = await this.detail(deploymentId);
   const kind = recoveryKindOf(detail);
+  if (input.expectedKind !== undefined && input.expectedKind !== kind)
+    throw new DeliveryError(
+      "INVALID",
+      `Deployment ${deploymentId} recovers through a ${kind} intent, not ${input.expectedKind}; no intent was opened`,
+    );
   if (kind !== "argo" && input.step !== undefined)
     throw new DeliveryError(
       "INVALID",

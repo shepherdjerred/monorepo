@@ -264,6 +264,7 @@ describe("delivery CLI", () => {
       requestId: "recovery/1",
       reason: values.reason,
       expectedGeneration: environment.generation,
+      expectedKind: "argo",
     });
     expect(requests[2]?.body).toEqual({ operationId, reason: values.reason });
   });

@@ -64,6 +64,42 @@ function recoveryPlan(sourceBuildId: string) {
   };
 }
 
+test("an intent asked for as argo opens nothing for a platform recovery", async () => {
+  const { deployment } = await requestStackDeployment(context);
+  await startStackPlan(context, deployment.id);
+  await context.delivery.finish(
+    deployment.id,
+    {
+      status: "failed",
+      message: "Lost the plan Job's result",
+      recoveryRequired: true,
+      evidence: [],
+    },
+    testExecutor,
+  );
+  const detail = await context.delivery.detail(deployment.id);
+  await expect(
+    context.delivery.requestRecoveryIntent(
+      deployment.id,
+      {
+        requestId: "stack/recovery/argo",
+        reason: "Settle what looks like an ordinary Argo operation",
+        expectedGeneration: detail.environment.generation,
+        expectedKind: "argo",
+      },
+      testOperator,
+    ),
+  ).rejects.toMatchObject({
+    code: "INVALID",
+    message: expect.stringMatching(/platform intent, not argo/u),
+  });
+  expect(
+    await context.cluster.database.recoveryIntent.count({
+      where: { deploymentId: deployment.id },
+    }),
+  ).toBe(0);
+});
+
 test("a failed model tofu deployment settles through platform recovery at its frozen stack source", async () => {
   const { deployment, intent } = await quarantinedStack();
   // It has no Application, so platform recovery reads it, not Argo.
