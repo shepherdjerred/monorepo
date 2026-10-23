@@ -142,8 +142,10 @@ export async function ownershipHandoverContext(
         pendingDeliveryObservations(tx),
         // v2 admits by catalog lifecycle, never an enable-list flag (4.10).
         activeEnvironmentIds(tx),
+        // Only an active environment's Application is handed over; a
+        // retired one keeps its history and admits nothing (4.10).
         tx.environment.findMany({
-          where: { application: { not: null } },
+          where: { application: { not: null }, lifecycle: "active" },
           orderBy: { id: "asc" },
         }),
       ]);

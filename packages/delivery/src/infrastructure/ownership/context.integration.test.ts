@@ -153,6 +153,23 @@ test("the handover context admits by catalog lifecycle: a retired environment ad
   ]);
 });
 
+test("a retired environment's Application is not handed over and does not block the others", async () => {
+  await reconcile();
+  await context.cluster.database.environment.update({
+    where: { id: "arcade/beta" },
+    data: { lifecycle: "retired" },
+  });
+  const response = await app().request("/api/v1/ownership-handover-context", {
+    headers: admin,
+  });
+  expect(response.status).toBe(200);
+  const observed = OwnershipHandoverContextSchema.parse(await response.json());
+  expect(observed.targets.map((target) => target.environmentId)).toEqual([
+    "arcade/prod",
+    "delivery/prod",
+  ]);
+});
+
 test("the handover read is admin-only and an API without real baked source cannot authorize it", async () => {
   await reconcile();
   const denied = await app().request("/api/v1/ownership-handover-context", {
