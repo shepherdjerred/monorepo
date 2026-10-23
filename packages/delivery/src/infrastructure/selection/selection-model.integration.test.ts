@@ -355,6 +355,55 @@ describe("admission (Z1, D8)", () => {
   });
 });
 
+describe("anonymous claims (D7)", () => {
+  test("once an identity owns a deployment, a claim naming none is a fence that neither renews nor takes ownership", async () => {
+    await context.cluster.database.service.update({
+      where: { id: "arcade" },
+      data: { selfHosted: true },
+    });
+    const env = await environmentRow();
+    const deployment = await context.delivery.createDeployment(
+      {
+        requestId: "anonymous-fence",
+        environmentId: env.id,
+        versionSetRevisionId: context.fixture.versionSet.id,
+        expectedGeneration: env.generation,
+        kind: "deploy",
+      },
+      testOperator,
+    );
+    const owner = { workflowId: "delivery/owner", workflowRunId: "run-1" };
+    await context.delivery.claim(deployment.id, testExecutor, undefined, owner);
+    const lapsing = new Date(Date.now() + 5000);
+    await context.cluster.database.deployment.update({
+      where: { id: deployment.id },
+      data: { leaseExpiresAt: lapsing },
+    });
+    // The fence rechecks admission and returns the owned deployment unchanged.
+    const fenced = await context.delivery.claim(deployment.id, testExecutor);
+    expect(fenced.deployment).toMatchObject({
+      status: "running",
+      ...owner,
+      leaseExpiresAt: lapsing.toISOString(),
+    });
+    // A handed-off deployment passes only to a named successor.
+    await context.delivery.handOff(deployment.id, owner, testExecutor);
+    const anonymous = await context.delivery.claim(deployment.id, testExecutor);
+    expect(anonymous.deployment.handoffAt).not.toBeNull();
+    expect(anonymous.deployment.leaseExpiresAt).toBeNull();
+    // The recorded executor still renews its own lease.
+    const successor = { workflowId: "delivery/owner", workflowRunId: "run-2" };
+    const taken = await context.delivery.claim(
+      deployment.id,
+      testExecutor,
+      undefined,
+      successor,
+    );
+    expect(taken.deployment).toMatchObject({ ...successor, handoffAt: null });
+    expect(taken.deployment.leaseExpiresAt).not.toBeNull();
+  });
+});
+
 describe("composition (R0, K1, R7)", () => {
   test("a tracking reference recomposes the referencing service when its source accepts", async () => {
     await context.cluster.database.componentReference.create({

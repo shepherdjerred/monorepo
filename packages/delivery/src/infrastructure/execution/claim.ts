@@ -230,12 +230,19 @@ async function admitClaim(this: Delivery, tx: Transaction, input: ClaimInput) {
   await requireControlPlaneQuiescence(tx, row);
   await requireDispatchBarrier(tx, row, { id: row.environmentId });
   const successor = requireSameExecutor(row, input.executor);
+  // D7: once an executor identity owns the deployment, a claim that names
+  // none (a native Job's or an in-flight step's fence) only rechecks
+  // admission. Only the recorded executor renews the lease, and only a named
+  // successor takes a handoff, so an anonymous caller never extends or takes
+  // ownership.
+  const fence = input.executor === undefined && row.workflowId !== null;
   if (row.kind === "repair-trmnl") {
     await claimTrmnlRepair(tx, row, repairClaimProof(input.claimProof), actor);
-    await tx.deployment.update({
-      where: { id: deploymentId },
-      data: input.owned,
-    });
+    if (!fence)
+      await tx.deployment.update({
+        where: { id: deploymentId },
+        data: input.owned,
+      });
     return { status: "claimed" } as const;
   }
   if (row.status === "running") {
@@ -245,6 +252,7 @@ async function admitClaim(this: Delivery, tx: Transaction, input: ClaimInput) {
       retirementProof: retirementClaimProof(input.claimProof),
     });
     await recheckAdmission(tx, row);
+    if (fence) return { status: "claimed" } as const;
     await tx.deployment.update({
       where: { id: deploymentId },
       // A successor executor takes a handed-off self-hosted deployment (D8).
