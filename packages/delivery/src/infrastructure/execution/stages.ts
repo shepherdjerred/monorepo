@@ -2,7 +2,10 @@ import { Prisma } from "#generated/prisma/client.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { DeploymentSchema, PipelineRevisionSchema } from "#shared/contract.ts";
 import { minecraftUpgradeOf } from "#shared/model/recipe-view.ts";
-import { PLAN_APPROVAL_STAGE_KEY } from "#shared/model/stage-keys.ts";
+import {
+  PLAN_APPROVAL_STAGE_KEY,
+  attestationStageKey,
+} from "#shared/model/stage-keys.ts";
 import type {
   FinishDeployment,
   Principal,
@@ -52,11 +55,23 @@ const DECISION_STAGE_KEYS: ReadonlySet<string> = new Set([
   PLAN_APPROVAL_STAGE_KEY,
 ]);
 
+/**
+ * Stage keys only an operator attestation records (X13): `attestStage`, from
+ * the distinct attestor identity, settles them, so an executor cannot
+ * approve its own operator-run work.
+ */
+const ATTESTATION_STAGE_PREFIX = attestationStageKey("");
+
 function refuseReservedStage(key: string) {
   if (DECISION_STAGE_KEYS.has(key))
     throw new DeliveryError(
       "FORBIDDEN",
       `Stage ${key} is recorded only by its decision, never by an executor`,
+    );
+  if (key.startsWith(ATTESTATION_STAGE_PREFIX))
+    throw new DeliveryError(
+      "FORBIDDEN",
+      "Only an operator attestation records an attestation stage",
     );
 }
 

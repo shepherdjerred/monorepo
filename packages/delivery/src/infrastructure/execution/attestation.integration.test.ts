@@ -4,6 +4,7 @@ import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
 import type { Principal } from "#shared/contract.ts";
 import { testExecutor, testOperator } from "#testing/seed.ts";
 import { MachineCredentialSchema } from "#infrastructure/config.ts";
+import { createTestApp } from "#testing/http-app.ts";
 import {
   arcadePipeline,
   arcadeRegistration,
@@ -149,6 +150,46 @@ test("an identity that owns the deployment never attests it, under any credentia
       operatorTool,
     ),
   ).rejects.toThrow(/owns this deployment never attests/u);
+});
+
+test("the executor's stage route never records an attestation stage", async () => {
+  const deployment = await operatorRunDeployment();
+  const token = "test-executor-stage-route-credential-00";
+  const app = createTestApp(context.delivery, {
+    machineCredentials: [{ token, principal: testExecutor }],
+    writesEnabled: () => Promise.resolve(true),
+    enabledEnvironments: () => Promise.resolve(["arcade/prod"]),
+  });
+  const write = (key: string) =>
+    app.request(`/api/v1/deployments/${deployment.id}/stages`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        key,
+        status: "succeeded",
+        operationId: "executor-self-attestation",
+        message: "The executor attests its own work",
+        evidence: ran,
+      }),
+    });
+  const refused = await write("attest/bootstrap");
+  expect(refused.status).toBe(403);
+  expect(await refused.json()).toMatchObject({
+    error: {
+      code: "FORBIDDEN",
+      message: "Only an operator attestation records an attestation stage",
+    },
+  });
+  const detail = await context.delivery.detail(deployment.id);
+  expect(detail.stages.map((stage) => stage.key)).not.toContain(
+    "attest/bootstrap",
+  );
+  // Ordinary executor stages still record through the same route.
+  const ordinary = await write("step-sync");
+  expect(ordinary.status).toBe(200);
 });
 
 test("the API refuses an attestation credential that also executes", () => {
