@@ -294,6 +294,90 @@ test("dry run is read-only and missing independent specialized baseline is not r
     ).toThrow("baseline");
 });
 
+/** arcade/prod bound to a model recipe, as the reconciled catalog emits it (4.7). */
+function recipeTarget(extraStep?: Record<string, unknown>) {
+  const instance = "application:arcade";
+  return {
+    kind: "kubernetes-application",
+    application: {
+      name: "arcade",
+      project: "default",
+      destination: {
+        server: "https://kubernetes.default.svc",
+        namespace: "arcade",
+      },
+      source: {
+        repoURL: "https://chartmuseum.tailnet-1a49.ts.net",
+        chart: "arcade",
+      },
+      lifecycle: "retain",
+    },
+    chartComponent: "chart:arcade",
+    ...(extraStep === undefined
+      ? {}
+      : {
+          artifactParameters: {
+            "delivery.image": {
+              component: "image:arcade",
+              format: "reference",
+            },
+          },
+        }),
+    runner: { service: "ci", component: "image:ci-base" },
+    steps: [
+      { kind: "apply-safety", instance },
+      { kind: "sync", instance },
+      ...(extraStep === undefined ? [] : [extraStep]),
+    ],
+    oracle: {},
+  };
+}
+
+test("a target bound to a model recipe hands over through the recipe's own Application", () => {
+  const current = fixture();
+  const context = {
+    ...current.context,
+    targets: [{ ...current.context.targets[0]!, pipeline: recipeTarget() }],
+  };
+  const row = handoverContext(
+    context,
+    current.descriptor,
+    current.effects.catalog,
+  ).targets[0]!;
+  expect(
+    handoverPatch(current.app, row)
+      .patch.filter((operation) => operation.op !== "test")
+      .map((operation) => operation.path),
+  ).toEqual(["/metadata/annotations", "/spec/syncPolicy"]);
+  // The native source must still be the recipe's chart.
+  const moved = structuredClone(current.app);
+  moved.spec["source"] = {
+    repoURL: "https://charts.example.invalid",
+    chart: "arcade",
+  };
+  expect(() => handoverPatch(moved, row)).toThrow(
+    "does not match its registered pipeline",
+  );
+  // A recipe's worker rollout still requires its original host baseline.
+  const worker = {
+    ...current.context,
+    targets: [
+      {
+        ...current.context.targets[0]!,
+        pipeline: recipeTarget({
+          kind: "worker-rollout",
+          instance: "worker-pool:central",
+          target: "central",
+          imageComponent: "image:arcade",
+        }),
+      },
+    ],
+  };
+  expect(() =>
+    handoverContext(worker, current.descriptor, current.effects.catalog),
+  ).toThrow("independently verified original host baseline");
+});
+
 test("a handover refuses targets bound from any catalog revision but the reviewed one", () => {
   const current = fixture();
   // The API image already carries the reviewed catalog, but PostgreSQL still
