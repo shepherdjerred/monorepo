@@ -42,6 +42,7 @@ import {
   expireApproval,
   leaseExpiry,
   observesApplication,
+  requireLiveLease,
   requireSameExecutor,
   type DeploymentRow,
 } from "#infrastructure/execution/ownership.ts";
@@ -230,6 +231,8 @@ async function admitClaim(this: Delivery, tx: Transaction, input: ClaimInput) {
   await requireControlPlaneQuiescence(tx, row);
   await requireDispatchBarrier(tx, row, { id: row.environmentId });
   const successor = requireSameExecutor(row, input.executor);
+  // A lapsed lease is neither resumed nor fenced; the lease scan recovers it.
+  requireLiveLease(row);
   // D7: once an executor identity owns the deployment, a claim that names
   // none (a native Job's or an in-flight step's fence) only rechecks
   // admission. Only the recorded executor renews the lease, and only a named

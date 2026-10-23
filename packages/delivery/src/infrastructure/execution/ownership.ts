@@ -104,6 +104,26 @@ export async function expireApproval(tx: Transaction, deploymentId: string) {
   });
 }
 
+/**
+ * D7: a running deployment whose lease lapsed is no longer provably owned.
+ * No write may act on it or extend the lease; the lease scan ends it failed
+ * and recovery-required.
+ */
+export function requireLiveLease(row: {
+  status: string;
+  leaseExpiresAt: Date | null;
+}) {
+  if (
+    row.status === "running" &&
+    row.leaseExpiresAt !== null &&
+    row.leaseExpiresAt.getTime() <= Date.now()
+  )
+    throw new DeliveryError(
+      "CONFLICT",
+      "The deployment's lease lapsed; it is no longer provably owned and ends in recovery (D7)",
+    );
+}
+
 /** Locks and reads a deployment that must still be running for this write. */
 export async function runningDeployment(
   tx: Transaction,
@@ -116,6 +136,7 @@ export async function runningDeployment(
     "Deployment",
   );
   if (row.status !== "running") throw new DeliveryError("CONFLICT", refusal);
+  requireLiveLease(row);
   return row;
 }
 
