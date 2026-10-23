@@ -3,8 +3,8 @@ package com.shepherdjerred.thestorm.creative.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -24,8 +24,8 @@ final class PlotAccessTest {
         }
 
         @Override
-        public Set<UUID> trusted(PlotId id) {
-          return PLOT.equals(id) ? Set.of(FRIEND) : Set.of();
+        public Map<UUID, PlotRole> access(PlotId id) {
+          return PLOT.equals(id) ? Map.of(FRIEND, PlotRole.TRUSTED) : Map.of();
         }
       };
 
@@ -47,7 +47,7 @@ final class PlotAccessTest {
     var catalog = new CatalogMembership(PlotCatalog.of(List.of(recovered)));
 
     assertThat(catalog.owner(PLOT)).contains(OWNER);
-    assertThat(catalog.trusted(PLOT)).isEmpty();
+    assertThat(catalog.access(PLOT)).isEmpty();
     assertThat(catalog.owner(OTHER)).isEmpty();
     assertThat(PlotAccess.mayChange(false, Optional.of(OWNER), Optional.of(PLOT), catalog))
         .isTrue();

@@ -21,9 +21,12 @@ Stand on a plot you own:
 
 1. `/creative name <name>` sets a name of up to 32 characters.
 2. `/creative desc <description>` sets a description of up to 140 characters.
-3. `/creative trust <player>` lets that online player build. `/creative untrust <player>` removes them.
-4. `/creative home` returns you to a plot you can already build on. `/creative home 2;1` goes to that plot when you own it or are trusted there.
-5. `/creative info` and `/creative list` show the plot you are on and the plots you can visit.
+3. `/creative member <player>` lets that online player build. `/creative unmember <player>` removes them.
+4. `/creative trust <player>` lets that online player build and add or remove members. `/creative untrust <player>` removes them.
+5. `/creative deny <player>` stops that online player from entering the plot or being teleported into it. `/creative undeny <player>` allows them again. Only the owner can trust, deny, or change an existing role. A trusted player can add and remove members.
+6. `/creative home` returns you to a plot you can already build on. `/creative home 2;1` goes to that plot when you own it, are a member, or are trusted there.
+7. `/creative tp 2;1` visits that plot. A denied player cannot. Staff with `thestorm.creative.bypass` or `thestorm.creative.admin` still can.
+8. `/creative info` and `/creative list` show the plot you are on and the plots you can build on.
 
 ## Download one plot
 

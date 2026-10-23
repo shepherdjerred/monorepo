@@ -247,7 +247,7 @@ public final class CreativeEdits implements Listener {
       return false;
     }
     var view = book.view(standing.orElseThrow());
-    return EditDecision.mayEdit(player.getUniqueId(), view.owner(), view.trusted());
+    return EditDecision.mayEdit(player.getUniqueId(), view.owner(), view.access());
   }
 
   private boolean selectionLeaves(BukkitPlayer actor, Player player) {
