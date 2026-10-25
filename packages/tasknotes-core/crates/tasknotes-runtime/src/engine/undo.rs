@@ -19,14 +19,18 @@ impl Engine {
                      CASE WHEN json_valid(j.fingerprint) THEN json_extract(j.fingerprint,'$.command.kind')
                        WHEN substr(j.fingerprint,1,11)='resolution:' AND json_valid(substr(j.fingerprint,12)) THEN 'resolve_conflict'
                        ELSE '__invalid__' END AS kind,
-                     CASE WHEN json_valid(j.fingerprint) THEN json_extract(j.fingerprint,'$.at') ELSE NULL END AS at
+                     CASE WHEN json_valid(j.fingerprint) THEN json_extract(j.fingerprint,'$.at') ELSE NULL END AS at,
+                     CASE WHEN json_valid(j.fingerprint) THEN json_extract(j.fingerprint,'$.command.origin') ELSE NULL END AS origin
                    FROM journals j WHERE j.profile=?1 AND j.remote=0
                  )
                  SELECT j.id,j.at,j.kind FROM eligible j
                  WHERE j.receipt IS NOT NULL
                    AND json_extract(j.receipt,'$.applied')=1
                    AND j.kind NOT IN ('undo','pomodoro')
-                   AND EXISTS(SELECT 1 FROM journal_files f WHERE f.profile=j.profile AND f.id=j.id)
+                   AND NOT (j.kind='materialize_occurrence_window' AND COALESCE(j.origin,'user')='automatic_maintenance')
+                   AND NOT EXISTS(SELECT 1 FROM occurrence_successors s WHERE s.profile=j.profile AND s.id=j.id)
+                   AND (EXISTS(SELECT 1 FROM journal_files f WHERE f.profile=j.profile AND f.id=j.id)
+                     OR EXISTS(SELECT 1 FROM occurrence_progression_effects e WHERE e.profile=j.profile AND e.id=j.id))
                    AND NOT EXISTS(SELECT 1 FROM journals u WHERE u.profile=j.profile AND u.remote=0
                        AND json_extract(CASE WHEN json_valid(u.fingerprint) THEN u.fingerprint ELSE '{}' END,'$.command.kind')='undo'
                        AND json_extract(CASE WHEN json_valid(u.fingerprint) THEN u.fingerprint ELSE '{}' END,'$.command.receiptId')=j.id

@@ -25,6 +25,8 @@ mod bounded_memory;
 mod detection;
 #[path = "runtime_tests/downloads.rs"]
 mod downloads;
+#[path = "runtime_tests/occurrences/materialized_occurrences.rs"]
+mod materialized_occurrences;
 #[path = "runtime_tests/payload_close.rs"]
 mod payload_close;
 #[path = "runtime_tests/payload_migration.rs"]
@@ -219,10 +221,14 @@ struct State {
     files: BTreeMap<(String, String), Vec<u8>>,
     backups: BTreeMap<String, (String, DisplacedVersion)>,
     exchanges: u64,
+    stage_begin_paths: Vec<String>,
     reads: u64,
     crash_after_exchange: bool,
+    crash_at_exchange: Option<u64>,
+    fail_stage_path: Option<String>,
     racing_bytes: Option<Vec<u8>>,
     racing_before_compare: Option<Vec<u8>>,
+    racing_before_compare_path: Option<(String, Vec<u8>)>,
     fail_read: Option<String>,
     fail_acknowledgement: bool,
 }
@@ -459,6 +465,64 @@ impl VaultFiles for Memory {
         state.backups.remove(backup_id);
         Ok(())
     }
+}
+
+fn remove_occurrence_plans_for_historical_fixture(db: &rusqlite::Connection) -> Result<()> {
+    remove_occurrence_windows_for_historical_fixture(db)?;
+    for table in ["occurrence_successors", "occurrence_transitions"] {
+        let count: i64 = db.query_row(&format!("SELECT count(*) FROM {table}"), [], |row| {
+            row.get(0)
+        })?;
+        if count != 0 {
+            return Err(RuntimeError::Validation(
+                "historical fixture cannot discard occurrence transitions".into(),
+            ));
+        }
+        db.execute_batch(&format!("DROP TABLE {table};"))?;
+    }
+    let count: i64 = db.query_row("SELECT count(*) FROM occurrence_plans", [], |row| {
+        row.get(0)
+    })?;
+    if count != 0 {
+        return Err(RuntimeError::Validation(
+            "historical fixture cannot discard occurrence ownership".into(),
+        ));
+    }
+    db.execute_batch("DROP TABLE occurrence_plans;")?;
+    Ok(())
+}
+
+fn remove_occurrence_windows_for_historical_fixture(db: &rusqlite::Connection) -> Result<()> {
+    remove_deferred_progressions_for_historical_fixture(db)?;
+    let count: i64 = db.query_row("SELECT count(*) FROM occurrence_windows", [], |row| {
+        row.get(0)
+    })?;
+    if count != 0 {
+        return Err(RuntimeError::Validation(
+            "historical fixture cannot discard rolling window ownership".into(),
+        ));
+    }
+    db.execute_batch("DROP TABLE occurrence_windows;")?;
+    Ok(())
+}
+
+fn remove_deferred_progressions_for_historical_fixture(db: &rusqlite::Connection) -> Result<()> {
+    for table in [
+        "occurrence_progression_resolutions",
+        "occurrence_progression_effects",
+        "occurrence_deferred_progressions",
+    ] {
+        let count: i64 = db.query_row(&format!("SELECT count(*) FROM {table}"), [], |row| {
+            row.get(0)
+        })?;
+        if count != 0 {
+            return Err(RuntimeError::Validation(
+                "historical fixture cannot discard deferred progression ownership".into(),
+            ));
+        }
+        db.execute_batch(&format!("DROP TABLE {table};"))?;
+    }
+    Ok(())
 }
 
 fn profile(kind: ProfileKind) -> Profile {

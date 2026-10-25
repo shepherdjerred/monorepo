@@ -341,6 +341,7 @@ fn assert_historical_columns(db: &rusqlite::Connection, version: u32) -> Result<
 }
 
 fn remove_version_eleven_metadata(db: &rusqlite::Connection) -> Result<()> {
+    super::remove_occurrence_plans_for_historical_fixture(db)?;
     db.execute_batch("UPDATE journals SET receipt=json_remove(receipt,'$.diagnostics') WHERE receipt IS NOT NULL; UPDATE partial_batches SET receipt=json_remove(receipt,'$.diagnostics') WHERE receipt IS NOT NULL; UPDATE partial_items SET outcome=json_remove(outcome,'$.receipt.diagnostics') WHERE outcome IS NOT NULL; ALTER TABLE journals DROP COLUMN diagnostics; ALTER TABLE journals DROP COLUMN title_plans; DROP TABLE title_lineage;")?;
     // Restore the actual v9/v10 column order and retain immutable row identities.
     // This fixture conversion changes no payload BLOB or journal fingerprint.
@@ -431,7 +432,7 @@ fn migration_preserves_receipts_and_real_undo(version: u32) -> Result<()> {
     let engine = Engine::open(path_str, files.clone())?;
     assert_eq!(
         db.query_row("PRAGMA user_version", [], |row| row.get::<_, i64>(0))?,
-        12
+        16
     );
     assert_eq!(old_tables(&db)?, before);
     assert_migrated_receipt_metadata(&db, &engine, &partial)?;

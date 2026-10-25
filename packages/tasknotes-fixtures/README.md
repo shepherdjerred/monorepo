@@ -16,7 +16,18 @@ editing, completion and application relaunch. It is separate from the unchanged
 upstream conformance corpus and historical server-backed sync scenarios.
 
 The standalone engine contract is `schema/facet-engine.schema.json`, with shared
-positive/negative boundary cases in `vault/facet-contract.json`. Direct Sync
+positive/negative boundary cases in `vault/facet-contract.json`. Occurrence shape
+cases additionally live in `vault/facet-occurrence-contract.json`.
+That closed corpus declares every covered definition and unique case identity;
+validators execute every case and reject unknown sections or definitions. It
+covers generation requests, concrete and deferred outcomes, repair actions,
+rolling plans and cursor/page boundaries. Positive pages come from actual runtime
+outputs; explicit shape variants exercise the remaining closed state couplings.
+Ajv and native schema validators check these shapes. Rust separately exercises
+the actual request decoder and real-runtime producers; schema acceptance does not
+establish semantic cursor bindings or vault eligibility.
+
+Direct Sync
 checkpoint/metadata schemas are in `schema/obsidian-sync.schema.json`.
 The complete pinned TaskNotes specification corpus lives under `vault/upstream`,
 alongside its original manifest and per-file SHA-256 provenance. Importing and

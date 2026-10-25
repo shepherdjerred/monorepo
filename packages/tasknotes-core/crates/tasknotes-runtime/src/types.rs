@@ -711,6 +711,27 @@ impl ConflictRevisions {
     }
 }
 
+/// Operation-specific ownership of a materialized rolling window.
+/// Automatic windows remain durable but never replace the user's Undo target.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum OccurrenceWindowOrigin {
+    /// An explicit Generate window action.
+    User,
+    /// Silent application lifecycle maintenance.
+    AutomaticMaintenance,
+}
+
+fn deserialize_window_origin<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Option<OccurrenceWindowOrigin>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    // Absent uses serde's field default; present null must fail closed.
+    OccurrenceWindowOrigin::deserialize(deserializer).map(Some)
+}
+
 /// Resolution policy without binary file contents in JSON.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(
@@ -745,6 +766,46 @@ pub enum ResolutionChoice {
     deny_unknown_fields
 )]
 pub enum Command {
+    /// Repair one recorded deferred series progression using explicit current revisions.
+    RepairOccurrenceProgression {
+        /// Immutable failed progression identity exposed by the feature outcome.
+        progression_id: String,
+        /// Current parent revision; repair never silently reuses older inputs.
+        expected_parent_revision: String,
+        /// Current authoritative completed/skipped child revision.
+        expected_child_revision: String,
+    },
+    /// Materialize the parent's configured finite rolling window explicitly.
+    MaterializeOccurrenceWindow {
+        /// Current resolved recurring parent path.
+        parent_path: String,
+        /// Required immutable optimistic revision of the parent.
+        expected_parent_revision: String,
+        /// Canonical immutable civil day around which the window is generated.
+        reference_date: String,
+        /// Omitted means user. Preserve omission in old canonical fingerprints.
+        #[serde(
+            default,
+            skip_serializing_if = "Option::is_none",
+            deserialize_with = "deserialize_window_origin"
+        )]
+        origin: Option<OccurrenceWindowOrigin>,
+    },
+    /// Create or reuse the unique task note for one recurring parent and civil day.
+    MaterializeOccurrence {
+        /// Current resolved parent task path.
+        parent_path: String,
+        /// Required immutable parent revision read by the caller.
+        expected_parent_revision: String,
+        /// Canonical target civil day, including an explicitly selected historical day.
+        occurrence_date: String,
+        /// Optional fence for an already existing unique occurrence note.
+        expected_occurrence_revision: Option<String>,
+        /// Explicit per-occurrence fields; series and identity fields are reserved.
+        properties: Map<String, Value>,
+        /// Optional caller-owned occurrence body.
+        body: Option<String>,
+    },
     /// Explicitly normalize known aliases and datetime spelling.
     Normalize {
         /// Current logical task path.
@@ -936,6 +997,7 @@ impl Command {
             ));
         }
         self.validate_completion_target()?;
+        self.validate_materialization()?;
         match self {
             Self::SetOccurrenceSkipped {
                 occurrence_date: date,
@@ -991,6 +1053,9 @@ impl Command {
                                 | Self::BatchPartial { .. }
                                 | Self::Undo { .. }
                                 | Self::ResolveConflict { .. }
+                                | Self::MaterializeOccurrence { .. }
+                                | Self::MaterializeOccurrenceWindow { .. }
+                                | Self::RepairOccurrenceProgression { .. }
                         )
                     })
                 {
@@ -1010,6 +1075,79 @@ impl Command {
                 ));
             }
             _ => {}
+        }
+        Ok(())
+    }
+
+    fn validate_materialization(&self) -> crate::Result<()> {
+        if let Self::RepairOccurrenceProgression {
+            progression_id,
+            expected_parent_revision,
+            expected_child_revision,
+        } = self
+        {
+            if progression_id.trim().is_empty()
+                || progression_id.len() > 256
+                || progression_id.chars().any(char::is_control)
+            {
+                return Err(crate::RuntimeError::Validation(
+                    "invalid progression identity".into(),
+                ));
+            }
+            for revision in [expected_parent_revision, expected_child_revision] {
+                if revision.len() != 64
+                    || !revision
+                        .bytes()
+                        .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+                {
+                    return Err(crate::RuntimeError::Validation(
+                        "occurrence revisions must be lowercase SHA-256".into(),
+                    ));
+                }
+            }
+        }
+        if let Self::MaterializeOccurrenceWindow {
+            parent_path,
+            expected_parent_revision,
+            reference_date,
+            ..
+        } = self
+        {
+            tasknotes_vault::path::VaultPath::parse(parent_path)?;
+            tasknotes_vault::temporal::parse_day(reference_date)?;
+            if expected_parent_revision.len() != 64
+                || !expected_parent_revision
+                    .bytes()
+                    .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+            {
+                return Err(crate::RuntimeError::Validation(
+                    "occurrence revisions must be lowercase SHA-256".into(),
+                ));
+            }
+        }
+        if let Self::MaterializeOccurrence {
+            parent_path,
+            expected_parent_revision,
+            occurrence_date,
+            expected_occurrence_revision,
+            ..
+        } = self
+        {
+            tasknotes_vault::path::VaultPath::parse(parent_path)?;
+            tasknotes_vault::temporal::parse_day(occurrence_date)?;
+            for revision in
+                std::iter::once(expected_parent_revision).chain(expected_occurrence_revision.iter())
+            {
+                if revision.len() != 64
+                    || !revision
+                        .bytes()
+                        .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+                {
+                    return Err(crate::RuntimeError::Validation(
+                        "occurrence revisions must be lowercase SHA-256".into(),
+                    ));
+                }
+            }
         }
         Ok(())
     }

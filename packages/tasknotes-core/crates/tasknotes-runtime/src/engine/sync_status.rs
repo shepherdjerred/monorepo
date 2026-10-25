@@ -14,8 +14,9 @@ impl Engine {
                     (SELECT count(*) FROM checkpoint_pending WHERE profile=?1),
                     (SELECT count(*) FROM outbox WHERE profile=?1),
                     (SELECT count(*) FROM conflicts WHERE profile=?1),
-                    (SELECT count(*) FROM journals WHERE profile=?1 AND receipt IS NULL)
+                    (SELECT count(*) FROM journals j WHERE profile=?1 AND receipt IS NULL AND NOT EXISTS(SELECT 1 FROM occurrence_successors s WHERE s.profile=j.profile AND s.id=j.id))
                         +(SELECT count(*) FROM partial_batches WHERE profile=?1 AND receipt IS NULL)
+                        +(SELECT count(*) FROM occurrence_successors WHERE profile=?1 AND state='pending')
                  FROM profiles WHERE id=?1",
                 [&profile.id],
                 |row| {

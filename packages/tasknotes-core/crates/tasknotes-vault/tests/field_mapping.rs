@@ -96,8 +96,7 @@ fn upstream_field_mapping_corpus() -> Result<(), Box<dyn std::error::Error>> {
         }
         assert!(
             matches(&actual, expected),
-            "{}: expected {expected}, got {actual}",
-            id
+            "{id}: expected {expected}, got {actual}"
         );
     }
     assert_eq!(retired_cases, RETIRED_CASES);

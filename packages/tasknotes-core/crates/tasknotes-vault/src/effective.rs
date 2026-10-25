@@ -83,6 +83,11 @@ pub(crate) fn resolve(
             }
         }
     }
+    crate::occurrence_policy::validate_configuration(
+        effective
+            .get("occurrences")
+            .ok_or_else(|| invalid("occurrences policy is missing"))?,
+    )?;
     selected.mapping = effective_mapping(&effective)?;
     workflow(
         &mut selected,

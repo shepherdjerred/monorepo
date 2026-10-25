@@ -14,8 +14,58 @@ use tasknotes_vault::{
 };
 
 type TestResult = Result<(), Box<dyn std::error::Error>>;
+mod facet_contract;
 mod runtime_adapter;
 mod timing_contract;
+
+#[derive(Default)]
+struct ContractCoverage {
+    timing: BTreeSet<String>,
+    facet: BTreeSet<String>,
+    verified_timing: usize,
+    verified_facet: usize,
+}
+
+impl ContractCoverage {
+    fn verify(
+        &mut self,
+        id: &str,
+        operation: &str,
+        input: &Value,
+        result: &tasknotes_vault::Result<Value>,
+        context: &ExecutionContext,
+        failures: &mut Vec<String>,
+    ) -> TestResult {
+        if timing_contract::contains(id) {
+            assert!(
+                self.timing.insert(id.to_owned()),
+                "duplicate timing contract: {id}"
+            );
+            if let Err(error) = timing_contract::verify(id, operation, input, result, context) {
+                failures.push(format!("{id}: timing-withdrawal contract failed: {error}"));
+            } else {
+                self.verified_timing += 1;
+            }
+        }
+        if facet_contract::contains(id) {
+            facet_contract::consume(&mut self.facet, id)?;
+            if let Err(error) = facet_contract::verify(id, operation, input, result) {
+                failures.push(format!("{id}: explicit Facet contract failed: {error}"));
+            } else {
+                self.verified_facet += 1;
+            }
+        }
+        Ok(())
+    }
+
+    fn assert_complete(&self) -> TestResult {
+        if !self.timing.is_disjoint(&self.facet) {
+            return Err("timing and Facet contract scopes overlap".into());
+        }
+        timing_contract::assert_complete(&self.timing)?;
+        facet_contract::assert_complete(&self.facet)
+    }
+}
 
 #[test]
 fn full_pinned_spec_corpus() -> TestResult {
@@ -30,7 +80,7 @@ fn full_pinned_spec_corpus() -> TestResult {
     let mut results: BTreeMap<String, (usize, usize, String)> = BTreeMap::new();
     let mut total = 0;
     let mut executed = BTreeSet::new();
-    let mut consumed = BTreeSet::new();
+    let mut contracts = ContractCoverage::default();
     let mut raw_failures = Vec::new();
     let mut contract_failures = Vec::new();
     for file in files {
@@ -61,13 +111,14 @@ fn full_pinned_spec_corpus() -> TestResult {
                 "duplicate executed ID: {id}"
             );
             let result = execute_case(operation, input, &context);
-            if timing_contract::contains(id) {
-                assert!(
-                    consumed.insert(id.to_owned()),
-                    "duplicate timing contract: {id}"
-                );
-                timing_contract::verify(id, operation, input, &result, &context)?;
-            }
+            contracts.verify(
+                id,
+                operation,
+                input,
+                &result,
+                &context,
+                &mut contract_failures,
+            )?;
             let envelope = envelope(&result);
             let assertion = case
                 .get("assertion")
@@ -82,7 +133,7 @@ fn full_pinned_spec_corpus() -> TestResult {
                     case.get("expect").unwrap_or(&Value::Null)
                 );
                 raw_failures.push(id.to_owned());
-                if !timing_contract::contains(id) {
+                if !timing_contract::contains(id) && !facet_contract::contains(id) {
                     contract_failures.push(failure.clone());
                 }
                 if row.2.is_empty() {
@@ -97,15 +148,19 @@ fn full_pinned_spec_corpus() -> TestResult {
         total,
         "every original input must execute once"
     );
-    timing_contract::assert_complete(&consumed)?;
+    contracts.assert_complete()?;
     eprintln!(
         "Executed original inputs: {total}; unique executed IDs: {}",
         executed.len()
     );
-    let (passed, failures) = raw_report(&results, total, &raw_failures, consumed.len());
+    let (passed, failures) = raw_report(&results, total, &raw_failures, contracts.verified_timing);
+    eprintln!(
+        "Verified explicit Facet contracts: {}",
+        contracts.verified_facet
+    );
     assert!(
         contract_failures.is_empty(),
-        "Timing-withdrawal acceptance remains failing: {} unrelated mismatches\n{}\nRaw upstream matches: {passed}/{total}\n{failures}",
+        "Facet compatibility acceptance failed: {} unexplained mismatches\n{}\nRaw upstream matches: {passed}/{total}\n{failures}",
         contract_failures.len(),
         contract_failures.join("\n")
     );

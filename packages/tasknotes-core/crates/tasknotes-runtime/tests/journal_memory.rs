@@ -24,6 +24,32 @@ use tasknotes_runtime::{
 static GLOBAL: &StatsAlloc<System> = &INSTRUMENTED_SYSTEM;
 const SIZE: usize = 199 * 1024 * 1024;
 
+fn reconstruct_version_ten(
+    db: &rusqlite::Connection,
+) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    for table in [
+        "occurrence_progression_resolutions",
+        "occurrence_progression_effects",
+        "occurrence_deferred_progressions",
+        "occurrence_windows",
+        "occurrence_successors",
+        "occurrence_transitions",
+        "occurrence_plans",
+    ] {
+        assert_eq!(
+            db.query_row(&format!("SELECT count(*) FROM {table}"), [], |row| row
+                .get::<_, i64>(0))?,
+            0,
+            "genuine v10 cannot discard owned occurrence data"
+        );
+        db.execute_batch(&format!("DROP TABLE {table};"))?;
+    }
+    db.execute_batch(
+        "ALTER TABLE transfer_payload_state DROP COLUMN origin; ALTER TABLE journals DROP COLUMN diagnostics; ALTER TABLE journals DROP COLUMN title_plans; DROP TABLE title_lineage; CREATE TABLE device_state(profile TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,device TEXT NOT NULL,json TEXT NOT NULL,PRIMARY KEY(profile,device)); ALTER TABLE journals ADD COLUMN effect TEXT; PRAGMA user_version=10;",
+    )?;
+    Ok(())
+}
+
 fn host(error: impl std::fmt::Display) -> RuntimeError {
     RuntimeError::Host(error.to_string())
 }
@@ -435,13 +461,13 @@ fn real_199_mib_sqlite_migration_rename_replay_and_undo_stay_bounded()
     )?;
     // Genuine v10 representation: its exact BLOB row is untouched; only remove
     // the metadata-only v11 column and restore the historical schema version.
-    db.execute_batch(
-        "ALTER TABLE transfer_payload_state DROP COLUMN origin; ALTER TABLE journals DROP COLUMN diagnostics; ALTER TABLE journals DROP COLUMN title_plans; DROP TABLE title_lineage; CREATE TABLE device_state(profile TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,device TEXT NOT NULL,json TEXT NOT NULL,PRIMARY KEY(profile,device)); ALTER TABLE journals ADD COLUMN effect TEXT; PRAGMA user_version=10;",
-    )?;
-    let engine = measure("genuine_v10_to_v12", || Engine::open(path, disk.clone()))?;
+    reconstruct_version_ten(&db)?;
+    let engine = measure("genuine_v10_to_current", || {
+        Engine::open(path, disk.clone())
+    })?;
     assert_eq!(
         db.query_row("PRAGMA user_version", [], |row| row.get::<_, u32>(0))?,
-        12
+        16
     );
     assert_eq!(
         db.query_row(

@@ -220,7 +220,7 @@ Recurring board moves accept optional
 `occurrenceDate`, using the immutable mutation civil day when absent, and update
 the instance rather than converting completion into a parent status rewrite.
 
-`set_occurrence_skipped` accepts `path`, optional `expectedRevision`, a required
+For unmaterialized parent instances, `set_occurrence_skipped` accepts `path`, optional `expectedRevision`, a required
 canonical `occurrenceDate` (`YYYY-MM-DD`), and required Boolean `skipped`.
 Skipping removes that day from completed instances and adds it once to skipped
 instances. Unskipping only removes skip membership. Neither operation advances
@@ -229,6 +229,178 @@ Valid days outside the generated recurrence window are accepted. Exact no-ops
 preserve document bytes, content revision and `dateModified`; they still receive
 the ordinary durable mutation receipt. Changed operations use the existing
 journal, revision CAS, replay and Undo contract.
+
+`materialize_occurrence` accepts `parentPath`, required `expectedParentRevision`,
+canonical `occurrenceDate`, optional `expectedOccurrenceRevision`, per-occurrence
+`properties`, and optional `body`. It creates or reuses one uniquely resolved
+parent/date task and returns its authoritative `taskPath` in the durable receipt.
+Existing children remain byte-identical. Caller fields cannot replace occurrence
+identity or series policy. An occurrence template can supply child status and
+scheduled values; otherwise normal creation defaults and the target day apply.
+Inherited attachment references retain their original binary targets and order
+across folders; no binary content is copied. Parent reads are recorded separately
+from file writes (introduced in SQLite schema 13) and checked before publication, after file
+exchanges, and on recovery. These checks and per-file CAS provide recoverability,
+not a filesystem transaction against uncooperative external writers. This command
+is available directly and in partial batches; atomic batches reject it before
+effects. These APIs do not establish the materialized-occurrences profile or
+native acceptance.
+
+`materialize_occurrence_window` accepts `parentPath`, required
+`expectedParentRevision`, and canonical immutable `referenceDate`. It explicitly
+creates or reuses every generated civil day in the configured rolling window.
+The parent must use effective `rolling` mode. Its mapped horizon overrides win
+over `occurrences.past_horizon`/`future_horizon`; missing settings use `P0D` and
+`P14D`. Nonnegative ISO durations use the existing reminder arithmetic (years
+365 days, months 30 days); a partial day includes its outer civil day. Endpoints
+are inclusive. Invalid durations, overflow, more than 100,000 days between
+endpoints, more than 1,000 new children, or more than 1,000,000 walked periods and
+candidate instants (including eager timeset products and positional preparation)
+reject the entire action before file publication. Products use checked arithmetic
+and consume the budget before allocation, even with COUNT=1. Expansion
+does not truncate dates or reset COUNT at the window start; sub-daily candidates
+deduplicate to one child per civil day.
+
+Its optional operation-specific `origin` is `user` or `automatic_maintenance`.
+Omission retains user semantics and its original serialized request identity;
+present null, other values and origins on other command kinds fail decoding.
+Automatic windows use the same journals, provider fences, recovery and receipts,
+but are excluded from the core's user Undo selection. Explicit Generate window
+actions retain ordinary group Undo ownership of their newly created children.
+Hosts never filter or reorder the core's Undo result themselves.
+
+SQLite schema 15 records the complete window and parent/reused-child read fences.
+Captured creation output, filenames and timestamps survive interruption without
+replanning changed templates. Replay creates nothing twice. Group Undo removes
+only the action's new unmodified children; reused children and historical notes
+remain owned by their original actions. Read fences are checked before each file
+exchange and on recovery, alongside per-file CAS.
+
+Snapshots, filters, totals, groups and reminder plans share a canonical relation
+from cached task metadata and make no provider calls or writes. A materialized
+child suppresses its parent's virtual date even when the child's own dates put
+it outside the requested window. Child state and per-date overrides win over
+parent lists. Duplicate identities and unresolved parents produce visible
+problems. A historical child's own dates, state and reminders remain usable if
+the parent rule changes or disappears; duplicate children produce no ambiguous
+reminder deliveries. A uniquely created repair note suppresses an active creation
+problem while preserving the original failure history and separate Undo ownership.
+
+Hosts must expose an explicit series generation action and issue a separately
+owned idempotent rolling mutation on startup and after sync/refresh for configured
+rolling parents. Browsing and reminder reads never perform this maintenance.
+Host adoption and final artifact acceptance are separate integration work.
+
+Existing `set_completion`, `toggle_complete`, `set_status`, `edit_task`, and
+status-bearing `update` commands recognize materialized children. A parent
+instance command targets the unique existing child for the selected date.
+The child revision fences child edits; a parent-targeted command fences the
+parent, then captures and checks the authoritative child revision. Child
+`occurrenceDate` is a selection fence, including timezone-resolved explicit
+instants. `completedDate` uses the mutation's local completion day. Parent
+instance membership uses the child's identity day; completion-anchor progression
+preserves an explicitly selected instant separately from that day and the
+mutation clock. Date-only selections keep date-only anchor semantics.
+The child wins over contradictory parent instance membership for that day;
+other corrupt list entries remain errors. Parent editor fields/body stay on the
+parent, and child editor fields/body stay on the child. Filename title moves
+compose reference updates over the staged child transition without discarding
+completion. Original bytes, revisions and reference edits form one Undo unit.
+
+Child skip uses `status.default_skipped`, or the first `status.skipped_values`
+entry. Missing or inconsistent skipped/active workflow settings fail before
+publication. Uncomplete/unskip retain later notes and never rewind `DTSTART`.
+Atomic batches support transitions of pre-existing parents and children; they
+reject a newly created or newly relocated transition target before effects.
+The existing 1,000-command bound also bounds followup intents, with duplicate
+parent/date intents reused rather than truncated.
+
+SQLite schema 14 stores parent/child dependency fences and immutable successor
+plans separately. Fences are checked before each exchange and during recovery.
+For `on_completion`, the applicable completion/skip trigger captures next-note
+bytes, template output and configuration before primary publication. Its
+followup becomes runnable atomically with the primary receipt commit. A failed
+followup preserves successful completion; pending host failures can resume on
+refresh or replay without duplicate writes/uploads. Grouped Undo cancels
+unstarted followups and removes only its own unmodified created successors.
+Reused successors remain intact; foreign or newer edits block Undo.
+
+The read-only feature request `occurrence_successors` takes `mutationId` and
+returns the closed `occurrenceSuccessors` schema: at most 1,000 items with
+`successorId`, `parentPath`, `occurrenceDate`, `state`, and nullable typed
+`failure`. States are `staged`, `pending`, `applied`, `failed`, and `cancelled`.
+Failed creation reports actionable snapshot problems; callers can explicitly
+materialize the reported date with a new mutation after resolving the cause.
+Native hosts must adopt the shared request/response validation before exposing
+this feature; it adds no UniFFI record fields.
+
+Production today/upcoming expansion and recurrence progression share the rolling
+planner's one-million work budget, including eager timeset preparation. Ordinary
+queries return typed resource exhaustion without partial results or writes;
+ordinary non-child completion rejects exhaustion atomically. Legacy reference
+entrypoints retain their separate parity semantics.
+
+For materialized children, future-search exhaustion preserves the primary child
+completion or skip and parent instance membership. It leaves the parent's old
+scheduled/due values intact when date progression remains owed. SQLite schema 16
+stores a separate immutable deferred intent with the known child identity day,
+original selected instant and completion context, final post-primary revision
+fences and distinct parent/future debts. Immutable per-intent inputs are bound
+to their owning transition separately from the final grouped publication fences,
+so an atomic batch can retain several deferred children of the same parent.
+Activation occurs with the primary receipt commit. The successor item
+union distinguishes `materialize_occurrence` with a concrete date from
+`deferred_progression` with `occurrenceDate: null`; its
+`completedOccurrenceDate` identifies the child, and `childState` distinguishes
+completed/skipped. Deferred states are `staged`, `failed`, and `cancelled`.
+
+`repair_occurrence_progression` requires `progressionId`,
+`expectedParentRevision`, and `expectedChildRevision`. Current valid inputs must
+still identify the original authoritative child and terminal state. Repair does
+not complete the child again or use the repair clock as its anchor. An older
+completion-anchor debt conflicts before effects when a newer anchor would be
+rolled back. Parent date
+debt must be paid before optional creation can end with `policy_no_successor`;
+`exhausted` separately denotes rule exhaustion. Budget exhaustion remains a
+failure. A new repair owns its successors and a hashed resolution metadata effect
+with exact before/after CAS. Metadata-only repairs are undoable without fake file
+writes. Committed Undo restores the previous resolution and cancels its own
+unstarted followup; newer resolutions or modified owned children block Undo.
+The original failure and captured inputs remain immutable.
+
+Two cached feature queries support host maintenance and restart recovery:
+
+- `rolling_maintenance_plan` requires a canonical `referenceDate`; its targets
+  provide parent revisions and finite effective bounds using the same Rust
+  settings resolver as the mutation. `limit` (1–256, default 128) counts inspected
+  task/problem rows, including excluded parents. Discovery does not expand rules.
+- `occurrence_generation_failures` lists pending/failed concrete and unresolved
+  deferred work without requiring retained primary IDs. Its inspected-row limit
+  has the same range. Each item carries the original primary ID and either a
+  typed repair command with fresh cached revisions or an explicit unrepairable
+  identity/state reason. Supporting canonical relation discovery scans cached
+  role metadata across the profile; that catalog work is not bounded by page size.
+
+Both queries run within one SQLite read snapshot with no provider I/O, recovery,
+body reads or writes. Their closed keyset cursors bind the profile, last row,
+configuration and durable version; maintenance also binds the captured date.
+Continuation requires `expectedVersion`. Task/config changes and no-file
+generation-state, repair or Undo commits invalidate old pages.
+
+Host adoption requires closed neutral-schema validation at each language
+boundary, explicit series-generation/repair actions, and serialized durable
+maintenance mutations after configuration/index readiness and settled initial
+Sync. Hosts must use Rust discovery, coalesce their own refresh notifications,
+and avoid permanent parent/day success caching: edits or deleted children need
+fresh idempotent operations. Browsing and reminder planning never generate tasks.
+These private core capabilities require native integration and acceptance before
+any supported-profile or release-readiness claim.
+
+Strict final-document writes validate recognized recurrence strings, parameter
+ranges and anchors before provider effects. The permissive legacy recurrence
+reader remains separate. Historical invalid recurrence data must be explicitly
+repaired before strict edits can publish; ordinary edits never silently reinterpret
+such tasks as nonrecurring.
 
 Instance transition commands require valid day strings, disjoint lists, and
 deterministic duplicate rejection. Missing optional lists mean no recorded
@@ -268,8 +440,9 @@ Metadata reads work while a replica waits for configuration and never contact
 the provider. Optional capability claims currently cover durable partial batch,
 and concurrency fences. Profiles remain unclaimed while their
 runtime requirements are incomplete; pure fixture coverage does not grant a
-profile claim. The full pinned corpus remains a strict failing gate for those
-requirements and the recorded upstream link contradictions.
+profile claim. The full pinned corpus enforces the explicit Facet compatibility
+contract below while reporting raw upstream matches separately. Passing that
+contract does not grant an upstream profile or prove native acceptance.
 
 `featuresJson` request `{ "kind": "sync_status" }` returns a coherent, read-only
 snapshot for one registered profile: `schemaVersion`, `profileId`, `profileKind`,
@@ -510,11 +683,24 @@ and SHA-256 checked. The full corpus dispatches every original input once,
 including rejected requests, and reports raw upstream matches separately. Exactly
 43 named timing-withdrawal cases require independent typed rejection or opaque
 preservation contracts, with supported-operation controls and real-engine
-edit/Undo witnesses. Every other case still requires its unchanged upstream
-comparison; link, title-mirror, and unimplemented-profile differences remain hard
-failures. Unknown operations, changed contract operations, duplicate case IDs,
-and missing contract cases fail independently. This is not universal upstream
-parity or approval of additional differences.
+edit/Undo witnesses. Seven additional named inputs have the explicitly chosen
+Facet contracts in `crates/tasknotes-vault/tests/facet_contract`: ambiguous links reject instead of
+choosing a candidate; relative links normalize when they remain inside the
+vault; a lossless filename-title rename preserves metadata without adding a
+frontmatter title mirror; and conformance metadata stays conservative until
+runtime/profile prerequisites are proved. The rename policy still preserves a
+title value when a lossy or colliding filename cannot represent it. Timing
+features are never advertised.
+
+Each of those seven contracts binds its original case ID, operation and
+canonical input SHA-256. Their independent assertions run even if the raw
+upstream matcher happens to pass. Real-runtime witnesses exercise rename,
+replay, exact-byte Undo, partial batch outcomes and stale-revision conflicts.
+Unknown operations, changed inputs/operations, duplicate IDs, missing or
+unconsumed contracts, false readiness and every unexplained mismatch fail.
+Every other case retains its unchanged upstream comparison. The full gate
+reports raw upstream matches, verified timing withdrawals and verified Facet
+contracts separately; a passing Facet gate is not universal upstream parity.
 
 Field-mapping tests execute all 139 cases: 129 retain their
 upstream comparisons and 10 exercise explicit first-party contracts for withdrawn

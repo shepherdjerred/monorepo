@@ -32,6 +32,116 @@ fn a_window_cannot_be_inverted() {
 }
 
 #[test]
+fn bounded_expansion_rejects_incomplete_work_and_preserves_count_and_civil_deduplication() {
+    let counted = Recurrence::parse("DTSTART:20260101;FREQ=DAILY;INTERVAL=2;COUNT=3", None, None);
+    let requested = window(ymd(2026, 1, 4), ymd(2026, 1, 12));
+    assert_eq!(
+        counted
+            .bounded_occurrences(requested, 100)
+            .expect("finite expansion"),
+        vec![ymd(2026, 1, 5)]
+    );
+    assert!(counted.bounded_occurrences(requested, 2).is_err());
+    let subdaily = Recurrence::parse("DTSTART:20260105;FREQ=HOURLY;COUNT=48", None, None);
+    assert_eq!(
+        subdaily
+            .bounded_occurrences(window(ymd(2026, 1, 5), ymd(2026, 1, 7)), 1000)
+            .expect("deduplicated expansion"),
+        vec![ymd(2026, 1, 5), ymd(2026, 1, 6)]
+    );
+    assert!(parse("").bounded_occurrences(requested, 100).is_err());
+    assert!(
+        counted
+            .bounded_occurrences(window(ymd(9999, 1, 1), ymd(10000, 1, 1)), 100)
+            .is_err()
+    );
+}
+
+#[test]
+fn bounded_preparation_charges_cartesian_timesets_and_set_positions_before_count() {
+    let list = vec!["0"; 33].join(",");
+    let positions = vec!["1"; 33].join(",");
+    let requested = window(ymd(2026, 1, 5), ymd(2026, 1, 5));
+    for clause in [
+        "FREQ=DAILY;BYHOUR=0,0,0,0;BYMINUTE=0,0,0;BYSECOND=0,0,0".to_owned(),
+        "FREQ=HOURLY;BYMINUTE=0,0,0,0,0,0;BYSECOND=0,0,0,0,0,0".to_owned(),
+        format!("FREQ=MINUTELY;BYSECOND={list}"),
+        format!("FREQ=DAILY;BYSETPOS={positions}"),
+    ] {
+        let recurrence = parse(&format!("DTSTART:20260105;{clause};COUNT=1"));
+        assert_eq!(recurrence.occurrences(requested), vec![ymd(2026, 1, 5)]);
+        assert!(
+            recurrence.bounded_occurrences(requested, 32).is_err(),
+            "{clause}"
+        );
+        assert_eq!(
+            recurrence
+                .bounded_occurrences(requested, 100)
+                .expect("enough preparation budget"),
+            vec![ymd(2026, 1, 5)]
+        );
+    }
+}
+
+#[test]
+fn bounded_subdaily_rebuilding_charges_each_timeset_without_partial_results() {
+    let recurrence =
+        parse("DTSTART:20260105;FREQ=HOURLY;BYMINUTE=0,0,0;BYSECOND=0,0,0;BYSETPOS=1;COUNT=2");
+    let requested = window(ymd(2026, 1, 5), ymd(2026, 1, 5));
+    // Each period prepares nine times, walks once, prepares one day and one
+    // position, then accepts once: 13 units. COUNT observes both periods.
+    assert!(recurrence.bounded_occurrences(requested, 25).is_err());
+    assert_eq!(
+        recurrence
+            .bounded_occurrences(requested, 26)
+            .expect("complete bounded result"),
+        vec![ymd(2026, 1, 5)]
+    );
+}
+
+#[test]
+fn bounded_next_progression_preserves_reference_anchor_floor_order_and_exhaustion() {
+    let today = ymd(2026, 1, 8);
+    for rule in [
+        "DTSTART:20260105;FREQ=DAILY;COUNT=12",
+        "DTSTART:20260105;FREQ=DAILY;INTERVAL=2;UNTIL=20260119",
+        "DTSTART:20260105;FREQ=WEEKLY;BYDAY=MO,TH;COUNT=8",
+        "DTSTART:20260105;FREQ=MONTHLY;BYMONTHDAY=5,8;COUNT=6",
+        "DTSTART:20260108T120000;FREQ=HOURLY;COUNT=48",
+        "DTSTART:20260108;FREQ=DAILY;BYHOUR=12,0;COUNT=6",
+        "DTSTART:20260105;FREQ=DAILY;COUNT=1",
+    ] {
+        let recurrence = parse(rule);
+        for anchor in [RecurrenceAnchor::Scheduled, RecurrenceAnchor::Completion] {
+            let complete = [today, ymd(2026, 1, 9)];
+            let skipped = [ymd(2026, 1, 10)];
+            assert_eq!(
+                recurrence
+                    .bounded_next_uncompleted_occurrence(today, anchor, &complete, &skipped, 10000)
+                    .expect("bounded reference progression"),
+                recurrence.next_uncompleted_occurrence(today, anchor, &complete, &skipped),
+                "{rule}"
+            );
+        }
+    }
+    let list = ["0"; 4].join(",");
+    let recurrence = parse(&format!(
+        "DTSTART:20260108;FREQ=DAILY;COUNT=1;BYHOUR={list};BYMINUTE={list};BYSECOND={list}"
+    ));
+    assert!(
+        recurrence
+            .bounded_next_uncompleted_occurrence(today, RecurrenceAnchor::Scheduled, &[], &[], 32)
+            .is_err()
+    );
+    assert_eq!(
+        recurrence
+            .bounded_next_uncompleted_occurrence(today, RecurrenceAnchor::Scheduled, &[], &[], 100)
+            .expect("bounded positive"),
+        Some(today)
+    );
+}
+
+#[test]
 fn an_empty_rule_shows_the_task_on_every_date() {
     let recurrence = parse("");
     assert!(recurrence.occurs_on(ymd(2019, 1, 1)));

@@ -17,6 +17,9 @@ pub(crate) enum Request {
     SyncStatus {},
     Conformance {},
     UndoAvailable {},
+    OccurrenceSuccessors {
+        mutation_id: String,
+    },
     NormalizationPreview {
         path: String,
     },
@@ -36,6 +39,17 @@ pub(crate) enum Request {
         context: Option<CaptureContext>,
     },
     Discovery {},
+    RollingMaintenancePlan {
+        reference_date: String,
+        limit: Option<u32>,
+        after: Option<RollingCursor>,
+        expected_version: Option<u64>,
+    },
+    OccurrenceGenerationFailures {
+        limit: Option<u32>,
+        after: Option<GenerationCursor>,
+        expected_version: Option<u64>,
+    },
     ReminderPlan {
         at: String,
         timezone: String,
@@ -45,6 +59,23 @@ pub(crate) enum Request {
         after: Option<ReminderCursor>,
         expected_version: Option<u64>,
     },
+}
+
+#[derive(Debug, Clone, Deserialize, serde::Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct RollingCursor {
+    pub last_path: String,
+    pub reference_date: String,
+    pub version: u64,
+    pub binding: String,
+}
+
+#[derive(Debug, Clone, Deserialize, serde::Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct GenerationCursor {
+    pub last_id: String,
+    pub version: u64,
+    pub binding: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -69,12 +100,18 @@ pub(crate) fn parse_request(json: &str) -> Result<Request> {
     }
     if matches!(
         object.get("kind").and_then(Value::as_str),
-        Some("reminder_plan")
+        Some("reminder_plan" | "rolling_maintenance_plan" | "occurrence_generation_failures")
     ) {
         for key in ["limit", "expectedVersion"] {
             if let Some(value) = object.get_mut(key) {
                 tasknotes_vault::json_boundary::normalize_unsigned(value)?;
             }
+        }
+        if let Some(cursor_version) = object
+            .get_mut("after")
+            .and_then(|cursor| cursor.get_mut("version"))
+        {
+            tasknotes_vault::json_boundary::normalize_unsigned(cursor_version)?;
         }
     }
     Ok(serde_json::from_value(request)?)

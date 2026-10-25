@@ -14,6 +14,9 @@ pub mod types;
 
 use thiserror::Error;
 
+/// Production recurrence work is finite; reference/oracle entrypoints stay pure.
+pub(crate) const RECURRENCE_WORK_LIMIT: usize = 1_000_000;
+
 /// Expected runtime and external-boundary failures.
 #[derive(Debug, Error)]
 pub enum RuntimeError {

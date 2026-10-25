@@ -1033,7 +1033,7 @@ pub(crate) mod tests {
                 case["id"]
             );
         }
-        assert_eq!(cases.len(), 141);
+        assert_eq!(cases.len(), 149);
         let registered:Value=serde_json::from_str(&engine.register_profile(r#"{"schemaVersion":1.0,"id":"a","name":"Example","kind":"local_folder","approveStandard":true}"#)?)?;
         assert_eq!(registered["schemaVersion"], 1);
         let profiles: Value = serde_json::from_str(&engine.profiles_json()?)?;

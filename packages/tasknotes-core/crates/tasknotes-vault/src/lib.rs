@@ -18,6 +18,7 @@ pub mod links;
 pub mod mapping;
 pub mod migration;
 pub mod migration_policy;
+pub mod occurrence_policy;
 pub mod operations;
 pub mod path;
 mod plugin_boundary;

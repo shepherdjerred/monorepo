@@ -219,7 +219,9 @@ impl Engine {
                 applied: true,
                 cleanup_pending: false,
                 diagnostics: read_diagnostics(&tx, profile, id)?,
-                task_path: receipt_task_path(mutation.as_ref(), writes)?,
+                task_path: super::occurrences::task_path(&tx, profile, id)?
+                    .or(super::occurrence_transitions::task_path(&tx, profile, id)?)
+                    .or(receipt_task_path(mutation.as_ref(), writes)?),
                 paths: writes.iter().map(|write| write.path.clone()).collect(),
                 pending_count: count(&tx, "outbox", profile)?,
             };
@@ -232,6 +234,8 @@ impl Engine {
                 restore_resolution(&tx, profile, receipt_id)?;
             }
             apply_remote_receipt(&tx, profile, id)?;
+            super::successors::committed(&tx, profile, id, mutation.as_ref())?;
+            super::deferred_progressions::committed(&tx, profile, id, mutation.as_ref())?;
             tx.execute(
                 "UPDATE journals SET receipt=? WHERE profile=? AND id=?",
                 params![serde_json::to_string(&receipt)?, profile, id],
@@ -319,6 +323,8 @@ impl Engine {
                 "UPDATE journals SET receipt=? WHERE profile=? AND id=?",
                 params![serde_json::to_string(&receipt)?, profile, id],
             )?;
+            tx.execute("UPDATE occurrence_successors SET state='cancelled',failure=NULL WHERE profile=? AND primary_id=? AND state='staged'",params![profile,id])?;
+            tx.execute("UPDATE occurrence_deferred_progressions SET state='cancelled' WHERE profile=? AND primary_id=? AND state='staged'",params![profile,id])?;
             tx.execute(
                 "UPDATE profiles SET version=version+1 WHERE id=?",
                 [profile],
@@ -338,12 +344,54 @@ impl Engine {
         self.database(|db| read_diagnostics(db, profile, id))?;
         let writes = self.database(|db| read_files(db, profile, id))?;
         self.database(|db| super::title_lineage::read_changes(db, profile, id, &writes))?;
+        if let Err(error) = self.check_occurrence_transition_reads(profile, id) {
+            if matches!(error, RuntimeError::Conflict) {
+                let receipt = self.park_images(profile, id, &writes, config)?;
+                self.cleanup_images(profile, id, receipt)?;
+            }
+            return Err(error);
+        }
+        if let Err(error) = self.check_occurrence_reads(profile, id) {
+            if matches!(error, RuntimeError::Conflict) {
+                let receipt = self.park_images(profile, id, &writes, config)?;
+                self.cleanup_images(profile, id, receipt)?;
+            }
+            return Err(error);
+        }
         for write in &writes {
+            if let Err(error) = self.check_occurrence_reads(profile, id) {
+                if matches!(error, RuntimeError::Conflict) {
+                    let receipt = self.park_images(profile, id, &writes, config)?;
+                    self.cleanup_images(profile, id, receipt)?;
+                }
+                return Err(error);
+            }
+            if let Err(error) = self.check_occurrence_transition_reads(profile, id) {
+                if matches!(error, RuntimeError::Conflict) {
+                    let receipt = self.park_images(profile, id, &writes, config)?;
+                    self.cleanup_images(profile, id, receipt)?;
+                }
+                return Err(error);
+            }
             if !self.exchange_image(profile, id, write)? {
                 let receipt = self.park_images(profile, id, &writes, config)?;
                 self.cleanup_images(profile, id, receipt)?;
                 return Err(RuntimeError::Conflict);
             }
+        }
+        if let Err(error) = self.check_occurrence_reads(profile, id) {
+            if matches!(error, RuntimeError::Conflict) {
+                let receipt = self.park_images(profile, id, &writes, config)?;
+                self.cleanup_images(profile, id, receipt)?;
+            }
+            return Err(error);
+        }
+        if let Err(error) = self.check_occurrence_transition_reads(profile, id) {
+            if matches!(error, RuntimeError::Conflict) {
+                let receipt = self.park_images(profile, id, &writes, config)?;
+                self.cleanup_images(profile, id, receipt)?;
+            }
+            return Err(error);
         }
         let receipt = self.commit_images(profile, id, &writes, config, remote)?;
         self.cleanup_images(profile, id, receipt)

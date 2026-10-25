@@ -27,7 +27,19 @@ use crate::{
 mod callbacks;
 mod command_images;
 mod conformance;
+#[path = "engine/occurrences/deferred_progressions.rs"]
+mod deferred_progressions;
 mod downloads;
+#[path = "engine/occurrences/generation_failures.rs"]
+mod generation_failures;
+#[path = "engine/occurrences/occurrence_relations.rs"]
+pub(crate) mod occurrence_relations;
+#[path = "engine/occurrences/occurrence_transitions.rs"]
+mod occurrence_transitions;
+#[path = "engine/occurrences/occurrence_windows.rs"]
+mod occurrence_windows;
+#[path = "engine/occurrences/occurrences.rs"]
+mod occurrences;
 mod partial;
 mod payload_handles;
 mod payloads;
@@ -37,7 +49,11 @@ mod reminders;
 mod remote_images;
 mod resolution_images;
 mod retired_timing;
+#[path = "engine/occurrences/rolling_maintenance.rs"]
+mod rolling_maintenance;
 mod staged;
+#[path = "engine/occurrences/successors.rs"]
+mod successors;
 mod sync_status;
 mod title_lineage;
 mod undo;
@@ -47,6 +63,34 @@ pub use downloads::PreparedDownload;
 pub use uploads::UploadPreparationError;
 #[cfg(test)]
 mod ownership_tests;
+
+fn initialize_occurrence_storage(db: &mut Connection, version: u32) -> Result<()> {
+    if version < 13 {
+        let tx = db.transaction()?;
+        tx.execute_batch(SCHEMA_THIRTEEN)?;
+        tx.commit()?;
+    }
+    occurrences::validate_database(db)?;
+    if version < 14 {
+        let tx = db.transaction()?;
+        tx.execute_batch(SCHEMA_FOURTEEN)?;
+        tx.commit()?;
+    }
+    occurrence_transitions::validate_database(db)?;
+    successors::validate_database(db)?;
+    if version < 15 {
+        let tx = db.transaction()?;
+        tx.execute_batch(SCHEMA_FIFTEEN)?;
+        tx.commit()?;
+    }
+    occurrence_windows::validate_database(db)?;
+    if version < 16 {
+        let tx = db.transaction()?;
+        tx.execute_batch(SCHEMA_SIXTEEN)?;
+        tx.commit()?;
+    }
+    deferred_progressions::validate_database(db)
+}
 
 fn receipt_task_path(
     mutation: Option<&Mutation>,
@@ -225,6 +269,26 @@ UPDATE files SET task=json_remove(task,'$.hasActiveTimeSession','$.totalTrackedM
 UPDATE refresh_stage SET task=json_remove(task,'$.hasActiveTimeSession','$.totalTrackedMinutes') WHERE task IS NOT NULL;
 PRAGMA user_version=12;
 ";
+const SCHEMA_THIRTEEN: &str = "
+CREATE TABLE occurrence_plans(profile TEXT NOT NULL,id TEXT NOT NULL,json TEXT NOT NULL,PRIMARY KEY(profile,id),FOREIGN KEY(profile,id) REFERENCES journals(profile,id) ON DELETE CASCADE);
+PRAGMA user_version=13;
+";
+const SCHEMA_FOURTEEN: &str = "
+CREATE TABLE occurrence_transitions(profile TEXT NOT NULL,id TEXT NOT NULL,json TEXT NOT NULL,PRIMARY KEY(profile,id),FOREIGN KEY(profile,id) REFERENCES journals(profile,id) ON DELETE CASCADE);
+CREATE TABLE occurrence_successors(profile TEXT NOT NULL,id TEXT NOT NULL,primary_id TEXT NOT NULL,intent TEXT NOT NULL,configuration TEXT NOT NULL,state TEXT NOT NULL CHECK(state IN ('staged','pending','applied','failed','cancelled')),failure TEXT,PRIMARY KEY(profile,id),FOREIGN KEY(profile,primary_id) REFERENCES journals(profile,id) ON DELETE CASCADE);
+PRAGMA user_version=14;
+";
+
+const SCHEMA_FIFTEEN: &str = "
+CREATE TABLE occurrence_windows(profile TEXT NOT NULL,id TEXT NOT NULL,json TEXT NOT NULL,PRIMARY KEY(profile,id),FOREIGN KEY(profile,id) REFERENCES journals(profile,id) ON DELETE CASCADE);
+PRAGMA user_version=15;
+";
+const SCHEMA_SIXTEEN: &str = "
+CREATE TABLE occurrence_deferred_progressions(profile TEXT NOT NULL,id TEXT NOT NULL,primary_id TEXT NOT NULL,intent TEXT NOT NULL,configuration TEXT NOT NULL,state TEXT NOT NULL CHECK(state IN ('staged','failed','cancelled')),PRIMARY KEY(profile,id),FOREIGN KEY(profile,primary_id) REFERENCES journals(profile,id) ON DELETE CASCADE);
+CREATE TABLE occurrence_progression_effects(profile TEXT NOT NULL,id TEXT NOT NULL,json TEXT NOT NULL,sha256 TEXT NOT NULL,PRIMARY KEY(profile,id),FOREIGN KEY(profile,id) REFERENCES journals(profile,id) ON DELETE CASCADE);
+CREATE TABLE occurrence_progression_resolutions(profile TEXT NOT NULL,failure_id TEXT NOT NULL,json TEXT NOT NULL,sha256 TEXT NOT NULL,PRIMARY KEY(profile,failure_id),FOREIGN KEY(profile,failure_id) REFERENCES occurrence_deferred_progressions(profile,id) ON DELETE CASCADE);
+PRAGMA user_version=16;
+";
 const MIGRATE_IMAGE_ORIGIN_SQL: &str = "UPDATE transfer_payload_state SET origin=(SELECT image.origin FROM transfer_payloads AS image WHERE image.row_id=transfer_payload_state.row_id)";
 
 fn migrate_bounded_payloads(db: &mut Connection, version: u32) -> Result<()> {
@@ -368,7 +432,7 @@ impl Engine {
                 tx.execute_batch(SCHEMA_FOUR)?;
                 tx.commit()?;
             }
-            4..=12 => {}
+            4..=16 => {}
             _ => {
                 return Err(RuntimeError::Storage(
                     "unsupported database schema".to_owned(),
@@ -406,6 +470,7 @@ impl Engine {
             tx.execute_batch(SCHEMA_TWELVE)?;
             tx.commit()?;
         }
+        initialize_occurrence_storage(&mut db, version)?;
         let identity: String = db.query_row(
             "SELECT value FROM engine_metadata WHERE key='identity'",
             [],
@@ -624,22 +689,26 @@ impl Engine {
             let (version, configuration): (i64,Option<String>) = db.query_row("SELECT version,configuration FROM profiles WHERE id=?",[id],|r|Ok((r.get(0)?,r.get(1)?)))?;
             let version=u64::try_from(version).map_err(|_|RuntimeError::Storage("invalid durable state version".to_owned()))?;
             let configuration: Value = configuration.as_deref().map(serde_json::from_str).transpose()?.unwrap_or(Value::Null);
+            let occurrences=occurrence_relations::Index::read(db,id,&configuration)?;
             let mut statement = db.prepare("SELECT task FROM files WHERE profile=? AND task IS NOT NULL ORDER BY path")?;
             let encoded = statement.query_map([id],|r|r.get::<_,String>(0))?;
             let tasks=encoded.map(|json|serde_json::from_str::<TaskSnapshot>(&json?).map_err(RuntimeError::from));
-            let (selected,total_count,groups) = crate::query::apply(tasks,query,&configuration)?;
+            let (selected,total_count,groups) = crate::query::apply(tasks,query,&configuration,&occurrences)?;
             let relations=read_relations(db,id,&configuration)?;
             let pending_task_ids=read_pending_task_ids(db,id)?;
             let tasks=selected.into_iter().map(|selected| {
                 let json:String=db.query_row("SELECT task FROM files WHERE profile=? AND path=?",params![id,selected.path],|r|r.get(0))?;
                 let mut task:TaskSnapshot=serde_json::from_str(&json)?;
-                crate::projections::local(&mut task,query)?;
+                crate::projections::local(&mut task,query,&occurrences)?;
                 relations.apply(&mut task);
                 task.is_pending=pending_task_ids.binary_search(&task.path).is_ok();
                 Ok(task)
             }).collect::<Result<Vec<_>>>()?;
             let mut statement = db.prepare("SELECT path,problem FROM files WHERE profile=? AND problem IS NOT NULL ORDER BY path")?;
             let mut problems = statement.query_map([id], |r| Ok(FileProblem { path:r.get(0)?, message:r.get(1)? }))?.collect::<std::result::Result<Vec<_>,_>>()?;
+            problems.extend(successors::problems(db,id,&occurrences)?);
+            problems.extend(deferred_progressions::problems(db,id,&occurrences)?);
+            problems.extend(occurrences.problems);
             if configuration.is_null() {
                 problems.push(FileProblem { path:PORTABLE_CONFIGURATION_PATH.to_owned(), message:"Waiting for TaskNotes configuration; editing requires configuration or explicit approval of standard settings".to_owned() });
             }
@@ -743,10 +812,17 @@ impl Engine {
             &fingerprint,
             payload_revision.as_deref(),
         )? {
+            self.recover_successors(id)?;
             return Ok(receipt);
         }
         let config = self.configuration(&profile)?;
-        self.recover(id, Some(&config))?;
+        let undo_primary = if let crate::types::Command::Undo { receipt_id } = &mutation.command {
+            validate_identity(receipt_id)?;
+            Some(receipt_id.as_str())
+        } else {
+            None
+        };
+        self.recover_before_undo(id, Some(&config), undo_primary)?;
         // Recovery can finish this exact pending mutation. Return its durable
         // receipt before planning another exchange or inserting its identity.
         if let Some(receipt) = self.existing_receipt(
@@ -757,33 +833,61 @@ impl Engine {
         )? {
             return Ok(receipt);
         }
-        let mut diagnostics = Vec::new();
-        let mut title_changes = Vec::new();
-        let writes = match &mutation.command {
-            crate::types::Command::Undo { receipt_id } => self.plan_undo(id, receipt_id)?,
+        let mut plan = match &mutation.command {
+            crate::types::Command::Undo { receipt_id } => {
+                command_images::CommandImagePlan::ordinary(self.plan_undo(id, receipt_id)?)
+            }
             crate::types::Command::ResolveConflict {
                 conflict_id,
                 expected_revisions,
                 resolution,
-            } => self.plan_resolution_images(
+            } => command_images::CommandImagePlan::ordinary(self.plan_resolution_images(
                 id,
                 conflict_id,
                 Some(expected_revisions),
                 resolution,
                 payload,
-            )?,
-            _ => {
-                let plan = self.plan_command_images(id, &config, mutation)?;
-                diagnostics = plan.diagnostics;
-                title_changes = plan.title_changes;
-                plan.writes
-            }
+            )?),
+            _ => self.plan_command_images(id, &config, mutation)?,
         };
         if let crate::types::Command::Undo { receipt_id } = &mutation.command {
-            title_changes =
-                self.database(|db| title_lineage::undo_changes(db, id, receipt_id, &writes))?;
+            plan.progression_effects =
+                self.database(|db| deferred_progressions::undo_effects(db, id, receipt_id))?;
+            plan.title_changes = self.database(|db| {
+                let mut changes = title_lineage::undo_changes(db, id, receipt_id, &plan.writes)?;
+                for successor in successors::undo_journals(db, id, receipt_id)? {
+                    changes.extend(title_lineage::undo_changes(
+                        db,
+                        id,
+                        &successor,
+                        &plan.writes,
+                    )?);
+                }
+                Ok(changes)
+            })?;
         }
-        self.check_unresolved_writes(id, mutation, &writes)?;
+        self.check_unresolved_writes(id, mutation, &plan.writes)?;
+        self.store_command_plan(
+            id,
+            mutation,
+            &fingerprint,
+            payload_revision.as_deref(),
+            &plan,
+        )?;
+        let receipt =
+            self.finish_staged_journal(id, &mutation.mutation_id, Some(&config), false)?;
+        self.recover_successors(id)?;
+        Ok(receipt)
+    }
+
+    fn store_command_plan(
+        &self,
+        id: &str,
+        mutation: &Mutation,
+        fingerprint: &str,
+        payload_revision: Option<&str>,
+        plan: &command_images::CommandImagePlan,
+    ) -> Result<()> {
         self.database(|db| {
             let tx = db.transaction()?;
             tx.execute(
@@ -795,15 +899,25 @@ impl Engine {
                     "[]",
                     payload_revision,
                     match &mutation.command {crate::types::Command::ResolveConflict {conflict_id,..}=>Some(conflict_id.as_str()),_=>None},
-                    serde_json::to_string(&diagnostics)?,
-                    serde_json::to_string(&title_changes)?
+                    serde_json::to_string(&plan.diagnostics)?,
+                    serde_json::to_string(&plan.title_changes)?
                 ],
             )?;
-            staged::store_files(&tx, id, &mutation.mutation_id, &writes)?;
+            staged::store_files(&tx, id, &mutation.mutation_id, &plan.writes)?;
+            if let Some(reads) = &plan.occurrence_reads {
+                tx.execute("INSERT INTO occurrence_plans(profile,id,json) VALUES(?,?,?)", params![id,mutation.mutation_id,serde_json::to_string(reads)?])?;
+            }
+            if let Some(reads)=&plan.occurrence_window {
+                tx.execute("INSERT INTO occurrence_windows(profile,id,json) VALUES(?,?,?)",params![id,mutation.mutation_id,serde_json::to_string(reads)?])?;
+            }
+            if !plan.transitions.is_empty() {
+                tx.execute("INSERT INTO occurrence_transitions(profile,id,json) VALUES(?,?,?)",params![id,mutation.mutation_id,serde_json::to_string(&plan.transitions)?])?;
+            }
+            successors::store(&tx,id,&mutation.mutation_id,&plan.successors)?;
+            deferred_progressions::store(&tx,id,&mutation.mutation_id,&plan.progressions,&plan.progression_effects)?;
             tx.commit()?;
             Ok(())
-        })?;
-        self.finish_staged_journal(id, &mutation.mutation_id, Some(&config), false)
+        })
     }
 
     fn check_unresolved_writes(
@@ -859,7 +973,13 @@ impl Engine {
             return Err(RuntimeError::Conflict);
         }
         drop(writes);
-        let writes = self.database(|db| staged::read_files(db, id, receipt_id))?;
+        let writes = self.database(|db| {
+            let mut writes = staged::read_files(db, id, receipt_id)?;
+            for successor in successors::undo_journals(db, id, receipt_id)? {
+                writes.extend(staged::read_files(db, id, &successor)?);
+            }
+            Ok(writes)
+        })?;
         let mut restored = Vec::new();
         for write in writes.into_iter().rev() {
             let current = self.capture_file_image(id, &write.path)?;
@@ -888,9 +1008,31 @@ impl Engine {
         let profile = self.profile(id)?;
         let request = crate::features::parse_request(json)?;
         let value = match request {
+            crate::features::Request::OccurrenceGenerationFailures {
+                limit,
+                after,
+                expected_version,
+            } => {
+                self.occurrence_generation_failures(id, limit, after.as_ref(), expected_version)?
+            }
             crate::features::Request::SyncStatus {} => self.sync_status(&profile)?,
             crate::features::Request::Conformance {} => self.conformance(id)?,
             crate::features::Request::UndoAvailable {} => self.undo_available(id)?,
+            crate::features::Request::OccurrenceSuccessors { mutation_id } => {
+                self.successor_outcome(id, &mutation_id)?
+            }
+            crate::features::Request::RollingMaintenancePlan {
+                reference_date,
+                limit,
+                after,
+                expected_version,
+            } => self.rolling_maintenance_plan(
+                id,
+                &reference_date,
+                limit,
+                after.as_ref(),
+                expected_version,
+            )?,
             crate::features::Request::ReminderPlan {
                 at,
                 timezone,
@@ -1220,9 +1362,18 @@ impl Engine {
     }
 
     fn recover(&self, id: &str, config: Option<&TaskNotesConfiguration>) -> Result<()> {
+        self.recover_before_undo(id, config, None)
+    }
+
+    fn recover_before_undo(
+        &self,
+        id: &str,
+        config: Option<&TaskNotesConfiguration>,
+        undo_primary: Option<&str>,
+    ) -> Result<()> {
         let journals = self.database(|db| {
             let mut statement = db.prepare(
-                "SELECT id,remote FROM journals WHERE profile=? AND receipt IS NULL ORDER BY rowid",
+                "SELECT j.id,j.remote FROM journals j WHERE j.profile=? AND j.receipt IS NULL AND NOT EXISTS(SELECT 1 FROM occurrence_successors s WHERE s.profile=j.profile AND s.id=j.id) ORDER BY j.rowid",
             )?;
             Ok(statement
                 .query_map([id], |row| {
@@ -1237,6 +1388,7 @@ impl Engine {
                 return Err(error);
             }
         }
+        self.recover_successors_before_undo(id, undo_primary)?;
         self.recover_cleanup(id)?;
         // Original journal outcomes are replayed before unrelated recorded host
         // predecessors. Unrecorded/ambiguous native captures never imply success.
@@ -1744,6 +1896,7 @@ fn project_task(
     if !crate::commands::is_task(path, document.frontmatter(), document.body(), config)? {
         return Ok(None);
     }
+    crate::commands::occurrences::mapped_identity(config, &document)?;
     let status = properties
         .get("status")
         .and_then(Value::as_str)

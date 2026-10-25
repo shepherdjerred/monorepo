@@ -10,6 +10,17 @@ use tasknotes_core::{domain::RecurrenceAnchor, recurrence::Recurrence};
 /// # Errors
 /// Rejects missing seeds, invalid instance days, invalid anchors, and invalid rules.
 pub fn execute(operation: &str, input: &Value) -> Result<Value> {
+    execute_with_budget(operation, input, None)
+}
+
+/// Strict production progression with a complete bounded recurrence result.
+/// # Errors
+/// Rejects invalid inputs and resource exhaustion before returning any edits.
+pub fn execute_bounded(operation: &str, input: &Value, work_limit: usize) -> Result<Value> {
+    execute_with_budget(operation, input, Some(work_limit))
+}
+
+fn execute_with_budget(operation: &str, input: &Value, work_limit: Option<usize>) -> Result<Value> {
     let complete_operation = operation == "recurrence.complete";
     if !complete_operation && operation != "recurrence.recalculate" {
         return Err(invalid("unsupported_operation"));
@@ -22,7 +33,7 @@ pub fn execute(operation: &str, input: &Value) -> Result<Value> {
             "referenceDate"
         },
     ))?;
-    transition(input, complete_operation, target, None)
+    transition(input, complete_operation, target, None, work_limit)
 }
 
 /// Complete the resolved local occurrence using its original explicit instant.
@@ -30,7 +41,19 @@ pub fn execute(operation: &str, input: &Value) -> Result<Value> {
 /// # Errors
 /// Rejects invalid instance lists, recurrence anchors, rules, and missing seeds.
 pub fn complete_at(input: &Value, day: NaiveDate, instant: DateTime<Utc>) -> Result<Value> {
-    transition(input, true, day, Some(instant))
+    transition(input, true, day, Some(instant), None)
+}
+
+/// Bounded production completion preserving the caller's explicit instant.
+/// # Errors
+/// Rejects invalid inputs and exhausted recurrence preparation/expansion work.
+pub fn complete_at_bounded(
+    input: &Value,
+    day: NaiveDate,
+    instant: DateTime<Utc>,
+    work_limit: usize,
+) -> Result<Value> {
+    transition(input, true, day, Some(instant), Some(work_limit))
 }
 
 fn transition(
@@ -38,6 +61,7 @@ fn transition(
     complete_operation: bool,
     target: NaiveDate,
     instant: Option<DateTime<Utc>>,
+    work_limit: Option<usize>,
 ) -> Result<Value> {
     let anchor = match input
         .get("recurrenceAnchor")
@@ -82,7 +106,12 @@ fn transition(
     let reference = instant
         .filter(|_| complete_operation && anchor == RecurrenceAnchor::Completion)
         .map_or(target, |value| value.date_naive());
-    let next = recurrence.next_uncompleted_occurrence(reference, anchor, &complete, &skipped);
+    let next = match work_limit {
+        Some(limit) => recurrence
+            .bounded_next_uncompleted_occurrence(reference, anchor, &complete, &skipped, limit)
+            .map_err(|_| invalid("occurrence_expansion_resource_limit"))?,
+        None => recurrence.next_uncompleted_occurrence(reference, anchor, &complete, &skipped),
+    };
     let next_scheduled =
         next.map(|day| preserve_time(day, input.get("scheduled").and_then(Value::as_str)));
     let next_due = due(next, input)?;

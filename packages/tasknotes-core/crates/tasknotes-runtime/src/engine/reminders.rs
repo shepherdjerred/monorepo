@@ -158,6 +158,8 @@ impl Engine {
             let config:Value=serde_json::from_str(configuration.as_deref().ok_or_else(||RuntimeError::Configuration("reminder delivery waits for TaskNotes configuration".to_owned()))?)?;
             let policy=config.pointer("/effective/reminders").unwrap_or(&Value::Null);
             let mut page=Page{rows:Vec::new(),total:0,problems:Vec::new(),problem_count:0,bounds};
+            let occurrences=super::occurrence_relations::Index::read(db,id,&config)?;
+            for problem in &occurrences.problems {page.problem(&problem.path,None,&problem.message);}
             let mut statement=db.prepare("SELECT path,json_extract(task,'$.title'),json_extract(task,'$.revision'),json_extract(task,'$.completed'),task -> '$.properties.reminders',json_object('due',json(task -> '$.properties.due'),'scheduled',json(task -> '$.properties.scheduled'),'dateCreated',json(task -> '$.properties.dateCreated'),'recurrence',json(task -> '$.properties.recurrence'),'completeInstances',json(task -> '$.properties.completeInstances'),'skippedInstances',json(task -> '$.properties.skippedInstances'),'archiveTag',json(task -> '$.properties.archiveTag')) FROM files WHERE profile=? AND task IS NOT NULL ORDER BY path")?;
             let mut rows=statement.query([id])?;
             while let Some(row)=rows.next()? {
@@ -165,7 +167,7 @@ impl Engine {
                 let entries:Option<String>=row.get(4)?;
                 if let Some(entries)=entries {
                     let entries:Value=serde_json::from_str(&entries)?;
-                    task.apply(id,&entries,policy,request.timezone,&mut page)?;
+                    task.apply(id,&entries,policy,request.timezone,&mut page,&occurrences)?;
                 }
             }
             Ok(page.finish(id,version))
@@ -189,7 +191,11 @@ impl Task {
         policy: &Value,
         zone: &str,
         page: &mut Page,
+        occurrences: &super::occurrence_relations::Index,
     ) -> Result<()> {
+        if occurrences.blocks_reminders(&self.path) {
+            return Ok(());
+        }
         // Explicit null, like an absent optional reminder list, has no entries.
         if entries.is_null() {
             return Ok(());
@@ -210,7 +216,17 @@ impl Task {
         let zone = schedule::timezone(zone)?;
         for entry in entries {
             match schedule::project(entry, &self.properties, policy, zone, self.completed) {
-                Ok(Some(fire)) => {
+                Ok(Some(mut fire)) => {
+                    if fire
+                        .occurrence_date
+                        .as_deref()
+                        .is_some_and(|day| occurrences.covers(&self.path, day))
+                    {
+                        continue;
+                    }
+                    if let Some(day) = occurrences.child_day(&self.path) {
+                        fire.occurrence_date = Some(day.to_owned());
+                    }
                     let fire_at = fire.at.to_rfc3339_opts(SecondsFormat::AutoSi, true);
                     let identity = serde_json::to_vec(&(
                         profile,

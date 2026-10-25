@@ -164,6 +164,16 @@ fn validate_values(
     issues: &mut Vec<Value>,
     mapping: &FieldMapping,
 ) {
+    for role in crate::occurrence_policy::invalid_roles(normalized) {
+        issue(
+            issues,
+            "invalid_occurrence_policy",
+            "error",
+            role,
+            "occurrence policy must use a supported enum or finite nonnegative ISO duration",
+            mapping,
+        );
+    }
     for role in [
         "status",
         "due",

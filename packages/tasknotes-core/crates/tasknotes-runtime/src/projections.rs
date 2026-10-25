@@ -65,8 +65,16 @@ impl Relations {
     }
 }
 
-pub(crate) fn local(task: &mut TaskSnapshot, query: &Query) -> Result<()> {
-    task.occurrence_date = None;
+pub(crate) fn local(
+    task: &mut TaskSnapshot,
+    query: &Query,
+    occurrences: &crate::engine::occurrence_relations::Index,
+) -> Result<()> {
+    task.occurrence_date = task
+        .properties
+        .get("occurrenceDate")
+        .and_then(Value::as_str)
+        .map(str::to_owned);
     let text = task
         .properties
         .get("recurrence")
@@ -104,11 +112,19 @@ pub(crate) fn local(task: &mut TaskSnapshot, query: &Query) -> Result<()> {
         };
         if start <= end
             && let Some(occurrence) = recurrence
-                .occurrences(DateWindow::new(start, end).map_err(|_| {
-                    RuntimeError::Validation("invalid recurrence query range".to_owned())
-                })?)
+                .bounded_occurrences(
+                    DateWindow::new(start, end).map_err(|_| {
+                        RuntimeError::Validation("invalid recurrence query range".to_owned())
+                    })?,
+                    crate::RECURRENCE_WORK_LIMIT,
+                )
+                .map_err(|_| {
+                    RuntimeError::Validation("occurrence_expansion_resource_limit".into())
+                })?
                 .into_iter()
-                .find(|date| !skipped.contains(date))
+                .find(|date| {
+                    !skipped.contains(date) && !occurrences.covers(&task.path, &date.to_string())
+                })
         {
             task.occurrence_date = Some(occurrence.to_string());
             task.effective_date = task.occurrence_date.clone();

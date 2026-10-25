@@ -121,9 +121,12 @@ pub fn validate_schema(kind: &str, value: &Value) -> Result<()> {
             ("unresolved_target_severity", &["warning", "error"]),
         ],
         "links" => &[("unresolved_default_severity", &["warning", "error"])],
-        "reminders" | "status" => &[],
+        "reminders" | "status" | "occurrences" => &[],
         _ => return Err(invalid(&format!("config kind unsupported:{kind}"))),
     };
+    if kind == "occurrences" {
+        crate::occurrence_policy::validate_configuration(value)?;
+    }
     for (key, allowed) in enums {
         if let Some(v) = value.get(key)
             && !v.as_str().is_some_and(|s| allowed.contains(&s))
