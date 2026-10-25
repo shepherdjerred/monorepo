@@ -10,6 +10,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile
+      Include="../TaskNotes.Windows.E2E/OwnedOperationCleanup.cs"
+      Link="Adapters/OwnedOperationCleanup.cs"
+    />
+    <Compile
       Include="../../src/TaskNotes.Windows.App/Acceptance/StandaloneAcceptanceDescriptor.cs"
       Link="Adapters/StandaloneAcceptanceDescriptor.cs"
     />

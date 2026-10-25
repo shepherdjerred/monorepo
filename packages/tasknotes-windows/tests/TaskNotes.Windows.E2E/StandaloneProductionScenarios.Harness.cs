@@ -30,7 +30,10 @@ public sealed partial class StandaloneProductionScenarios
             descriptorPath,
             Required("FACET_ACCEPTANCE_LOCAL_STATE"),
             family,
-            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Acceptance", "contract.json"))
+            await File.ReadAllTextAsync(
+                Path.Combine(AppContext.BaseDirectory, "Acceptance", "contract.json"),
+                cancellation
+            )
         );
         string results = Path.Combine(descriptor.StateDirectory, "results");
         StandaloneAcceptanceDescriptor.RequireUnlinkedPath(results);
@@ -51,7 +54,10 @@ public sealed partial class StandaloneProductionScenarios
     )
     {
         var schema = new FacetSchema(
-            File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Acceptance", "contract.json"))
+            await File.ReadAllTextAsync(
+                Path.Combine(AppContext.BaseDirectory, "Acceptance", "contract.json"),
+                cancellation
+            )
         );
         string manifestJson = await File.ReadAllTextAsync(
             Path.Combine(AppContext.BaseDirectory, "Acceptance", "scenarios.json"),

@@ -13,8 +13,8 @@
         Padding="{StaticResource FacetInspectorPadding}"
         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
         CornerRadius="8">
-        <ScrollViewer>
-            <StackPanel x:Name="EditorFields" Spacing="12">
+        <ScrollViewer x:Name="EditorFields">
+            <StackPanel Spacing="12">
                 <TextBlock
                     x:Name="EmptyInspector"
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
@@ -106,7 +106,10 @@
                     PlaceholderText="YYYY-MM-DD"
                     Tag="due"
                     Text="{x:Bind ViewModel.Due, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                <Expander HorizontalAlignment="Stretch" Header="Repeat">
+                <Expander
+                    x:Name="RecurrenceControls"
+                    HorizontalAlignment="Stretch"
+                    Header="Repeat">
                     <StackPanel Spacing="8">
                         <ComboBox
                             x:Name="RecurrenceFrequency"

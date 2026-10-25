@@ -4,3 +4,4 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("TaskNotes.Windows.Tests")]
 [assembly: InternalsVisibleTo("TaskNotes.Windows.UnitTests")]
 [assembly: InternalsVisibleTo("TaskNotes.Windows.IntegrationTests")]
+[assembly: InternalsVisibleTo("TaskNotes.Windows.E2E")]

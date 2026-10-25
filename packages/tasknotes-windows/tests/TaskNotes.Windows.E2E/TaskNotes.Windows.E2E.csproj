@@ -15,6 +15,7 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
   <ItemGroup>
+    <Using Include="System.IO" />
     <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" />
   </ItemGroup>
   <ItemGroup>
