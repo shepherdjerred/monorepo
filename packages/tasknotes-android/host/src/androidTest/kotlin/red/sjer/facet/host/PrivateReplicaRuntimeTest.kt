@@ -9,7 +9,11 @@ import org.junit.Test
 
 /** Runs real SQLite, Rust callbacks, JNI atomic exchange and durable reopen. */
 class PrivateReplicaRuntimeTest {
-    @Test fun cancelledAbsentAutomaticEnvelopeWithChangedParentRetiresBeforeFreshGeneration() = runBlocking {
+    @Test fun cancelledAbsentAutomaticEnvelopeWithChangedParentRetiresBeforeFreshGeneration(): Unit = runBlocking {
+        obsoleteAutomaticAfterParentChange(deleted = false)
+        obsoleteAutomaticAfterParentChange(deleted = true)
+    }
+    private suspend fun obsoleteAutomaticAfterParentChange(deleted: Boolean) {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val profile = UUID.randomUUID().toString()
         val engine = FacetEngineRunner.open(context)
@@ -38,14 +42,19 @@ class PrivateReplicaRuntimeTest {
             val parent = engine.snapshot(profile, FacetEngineRunner.query()).tasks.single()
             val editId = UUID.randomUUID().toString()
             engine.execute(profile, buildJsonObject {
-                put("kind", "update"); put("path", parent.path); put("expectedRevision", parent.revision)
-                put("properties", buildJsonObject { put("title", "After parent edit") })
+                put("kind", if (deleted) "delete" else "update"); put("path", parent.path); put("expectedRevision", parent.revision)
+                if (!deleted) put("properties", buildJsonObject { put("title", "After parent edit"); put("priority", "high") })
             }, editId)
             engine.discardObservedMutation(editId)
             port.recoverAutomatic(profile)
             assertTrue(engine.pendingMutations(profile).isEmpty())
             val oldOutcome = engine.features(profile, buildJsonObject { put("kind", "mutation_receipt"); put("mutationId", obsoleteId) })
             assertEquals("absent", oldOutcome.getValue("state").jsonPrimitive.content)
+            if (deleted) {
+                assertTrue(port.windowPlan(profile, "2026-10-25").first.isEmpty())
+                assertTrue(engine.snapshot(profile, FacetEngineRunner.query()).tasks.isEmpty())
+                return
+            }
             val current = port.windowPlan(profile, "2026-10-25").first.single()
             assertNotEquals(original.expectedParentRevision, current.expectedParentRevision)
             port.automatic(profile, current.command(automatic = true))
@@ -53,7 +62,7 @@ class PrivateReplicaRuntimeTest {
             assertTrue(engine.snapshot(profile, FacetEngineRunner.query()).tasks.size > 1)
         } finally { engine.close() }
     }
-    @Test fun rollingGenerationRetainsAutomaticEnvelopeAndCoreUndoPolicyAcrossRestart() = runBlocking {
+    @Test fun rollingGenerationRetainsAutomaticEnvelopeAndCoreUndoPolicyAcrossRestart(): Unit = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val profile = UUID.randomUUID().toString()
         val createdId = UUID.randomUUID().toString()
@@ -123,11 +132,14 @@ class PrivateReplicaRuntimeTest {
         assertThrows(IllegalArgumentException::class.java) { files.list(UUID.randomUUID().toString()) }
         assertThrows(IllegalArgumentException::class.java) { files.read(UUID.randomUUID().toString(), "missing.md") }
     }
-    @Test fun captureEditAndReopenPreserveMarkdownAndUnknownFields() = runBlocking {
+    @Test fun captureEditAndReopenPreserveMarkdownAndUnknownFields(): Unit = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val id = UUID.randomUUID().toString()
         var engine = FacetEngineRunner.open(context)
         engine.registerReplica(id, "Native acceptance", approveStandard = true)
+        // This case intentionally asserts frontmatter title bytes. The default filename-title workflow is covered by Compose.
+        assertTrue(PrivateVaultFiles(context).exchange(id, ".obsidian/plugins/tasknotes/data.json", null,
+            """{"storeTitleInFilename":false,"taskFilenameFormat":"title","tasksFolder":"Tasks"}""".toByteArray()).applied)
         engine.refresh(id)
         engine.execute(id, buildJsonObject {
             put("kind", "create"); put("path", "Tasks/Native acceptance.md")

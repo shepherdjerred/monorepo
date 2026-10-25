@@ -39,7 +39,7 @@ internal class FacetAutomaticRecovery(private val schema: FacetSchema, private v
             when (proof.getValue("state").jsonPrimitive.content) {
                 "absent", "parked" -> {
                     // IO, provider, busy and storage failures remain uncertain even when a probe sees no journal.
-                    if (failure !is FacetEngineException.Conflict && failure !is FacetActionError) throw failure
+                    if (failure !is FacetEngineException.Conflict && failure !is FacetEngineException.NotFound && failure !is FacetActionError) throw failure
                     require(FacetRetainedActions.retirement(schema, action, proof) == FacetDraftRetirement.REJECTED)
                     try { boundary.retire(action) { ensureOccurrenceOwner(active) } }
                     catch (cancelled: CancellationException) { throw cancelled }
