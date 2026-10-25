@@ -78,6 +78,26 @@ class FacetAutomaticRecoveryTest {
             assertEquals(listOf("retry", "proof:$state", "retire", "proof:$state"), store.events)
         }
     }
+    @Test fun renamedOrRemovedParentRetiresOnlyAnAuthoritativelyAbsentOrParkedAutomaticEnvelope() = runBlocking {
+        for (state in listOf("absent", "parked")) journal { store, recovery ->
+            store.state = state; store.retryFailure = FacetEngineException.NotFound()
+            assertEquals(FacetAutomaticRecoveryOutcome.RETIRED, recovery.recover(store.action()) { true })
+            assertFalse(store.file.exists())
+        }
+        journal { store, recovery ->
+            store.state = "pending"; store.retryFailure = FacetEngineException.NotFound()
+            val before = store.file.readBytes()
+            try { recovery.recover(store.action()) { true }; fail("A missing parent does not retire pending effects") }
+            catch (_: FacetEngineException.NotFound) { }
+            assertArrayEquals(before, store.file.readBytes()); assertFalse("retire" in store.events)
+        }
+        journal { store, recovery ->
+            store.state = "applied"; store.retryFailure = FacetEngineException.NotFound()
+            assertEquals(FacetAutomaticRecoveryOutcome.OBSERVED, recovery.recover(store.action()) { true })
+            assertEquals(listOf("retry", "proof:applied", "observe"), store.events)
+            assertFalse("retire" in store.events)
+        }
+    }
     @Test fun pendingReceiptRetainsExactEnvelopeAndOriginalFailure() = runBlocking {
         journal { store, recovery ->
             store.state = "pending"

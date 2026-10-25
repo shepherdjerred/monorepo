@@ -165,6 +165,6 @@ private suspend fun <T> restartOnStale(read: suspend () -> T): T {
 /** Expected boundary failures retain queued generation; malformed internal contracts still fail loudly. */
 fun expectedOccurrenceFailure(failure: Exception): Boolean = failure is java.io.IOException || when (failure) {
     is FacetEngineException.Configuration, is FacetEngineException.Host, is FacetEngineException.Storage,
-    is FacetEngineException.Busy, is FacetEngineException.Conflict, is FacetActionError -> true
+    is FacetEngineException.Busy, is FacetEngineException.Conflict, is FacetEngineException.NotFound, is FacetActionError -> true
     else -> false
 }
