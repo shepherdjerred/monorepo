@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.spells.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.paper.Invulnerability;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -54,7 +55,7 @@ public final class Targets {
                 || entity.getScoreboardTags().contains("storm_scripted_npc")))) {
       return false;
     }
-    if (!living.isValid() || living.isDead() || living.isInvulnerable()) {
+    if (!living.isValid() || living.isDead() || Invulnerability.marked(living)) {
       return false;
     }
     if (living instanceof Player player

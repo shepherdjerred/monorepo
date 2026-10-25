@@ -67,7 +67,7 @@ final class FramePacing implements AutoCloseable {
           options.getEffectiveRenderDistance(),
           options.simulationDistance().get(),
           options.graphicsPreset().get().getSerializedName(),
-          window.isFullscreen(),
+          options.fullscreen().get(),
           options.fov().get());
     }
   }

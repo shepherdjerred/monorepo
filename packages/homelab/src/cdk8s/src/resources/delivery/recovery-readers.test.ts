@@ -1,4 +1,4 @@
-import { App, Chart } from "cdk8s";
+import { App } from "cdk8s";
 import { beforeEach, expect, test } from "vitest";
 import { z } from "zod";
 import { createDeliveryChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/delivery.ts";
@@ -7,10 +7,8 @@ import { DELIVERY_TAILSCALE_INGRESS as ingress } from "@shepherdjerred/ops-model
 import {
   DELIVERY_API_SERVICE_ACCOUNT as api,
   DELIVERY_KUBERNETES_READERS,
-  DELIVERY_MINECRAFT_REPORT_READER as report,
 } from "@shepherdjerred/ops-model/delivery-readers.ts";
 import stages from "@shepherdjerred/homelab/cdk8s/src/resources/storm-forum/releases.json" with { type: "json" };
-import { createDeliveryMinecraftController } from "./minecraft-controller.ts";
 
 beforeEach(resetProbeRegistry);
 const Named = z.looseObject({
@@ -192,7 +190,7 @@ test("every reader token is the API account, so its whole authority is pinned: r
   );
 });
 
-test("only the API container projects one short-lived token per reader, the report token bound to the controller audience", () => {
+test("only the API container projects one short-lived token per reader", () => {
   const rendered = apiChart();
   const deployment = Pod.parse(
     rendered.find((raw) => Named.parse(raw).kind === "Deployment"),
@@ -223,80 +221,12 @@ test("only the API container projects one short-lived token per reader, the repo
       },
     });
   }
-  expect(
-    deployment.volumes.find((volume) => volume.name === report.name),
-  ).toEqual({
-    name: report.name,
-    projected: {
-      defaultMode: 0o440,
-      sources: [
-        {
-          serviceAccountToken: {
-            path: "token",
-            audience: "delivery-tsmc-controller",
-            expirationSeconds: 600,
-          },
-        },
-      ],
-    },
-  });
-  expect(deployment.containers[0]?.volumeMounts).toContainEqual({
-    name: report.name,
-    mountPath: report.directory,
-    readOnly: true,
-  });
-  const names = new Set([...readers.map((reader) => reader.name), report.name]);
+  const names = new Set(readers.map((reader) => reader.name));
   for (const init of deployment.initContainers)
     expect(init.volumeMounts.some((mount) => names.has(mount.name))).toBe(
       false,
     );
-  expect(
-    new Set([...readers.map((reader) => reader.directory), report.directory])
-      .size,
-  ).toBe(readers.length + 1);
-});
-
-test("the Minecraft controller grants the API one report read and may only review tokens and access", () => {
-  const chart = new Chart(new App(), "minecraft-report-reader");
-  createDeliveryMinecraftController(chart, {
-    executorItemId: "executor-item",
-    registryItemId: "registry-item",
-    argocdItemId: "argo-item",
-  });
-  const rendered = chart.toJson();
-  expect(
-    of(rendered, "Role", report.name).map((raw) => Role.parse(raw)),
-  ).toEqual([
-    expect.objectContaining({
-      metadata: expect.objectContaining({ namespace: report.namespace }),
-      rules: [
-        {
-          apiGroups: ["delivery.shepherdjerred.com"],
-          resources: ["minecraftrecoveryreports"],
-          verbs: ["get"],
-        },
-      ],
-    }),
-  ]);
-  expect(
-    of(rendered, "RoleBinding", report.name).map((raw) => Binding.parse(raw)),
-  ).toEqual([
-    expect.objectContaining({
-      roleRef: expect.objectContaining({ kind: "Role", name: report.name }),
-      subjects: [{ kind: "ServiceAccount", ...api }],
-    }),
-  ]);
-  const controller = Role.parse(
-    of(rendered, "ClusterRole", "delivery-tsmc-controller")[0],
+  expect(new Set(readers.map((reader) => reader.directory)).size).toBe(
+    readers.length,
   );
-  expect(controller.rules).toContainEqual({
-    apiGroups: ["authentication.k8s.io"],
-    resources: ["tokenreviews"],
-    verbs: ["create"],
-  });
-  expect(controller.rules).toContainEqual({
-    apiGroups: ["authorization.k8s.io"],
-    resources: ["subjectaccessreviews"],
-    verbs: ["create"],
-  });
 });

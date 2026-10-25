@@ -2,7 +2,6 @@ import {
   applicationOf,
   applicationsOf,
   forumReleaseOf,
-  minecraftUpgradeOf,
   siteReleaseOf,
   trmnlPluginsOf,
   workerRolloutOf,
@@ -119,15 +118,12 @@ export function createRecoveryInspector(options: {
   ): Promise<EvidenceInput[]> => {
     const definition = detail.pipeline.definition;
     const application = applicationOf(definition);
-    const upgrade = minecraftUpgradeOf(definition);
     if (
       application === null ||
       applicationsOf(definition).length !== 1 ||
       workerRolloutOf(definition) !== undefined ||
       siteReleaseOf(definition) !== undefined ||
-      forumReleaseOf(definition) !== undefined ||
-      (upgrade !== undefined &&
-        upgrade.releaseMode !== "retained-volume-restart")
+      forumReleaseOf(definition) !== undefined
     )
       throw new DeliveryError(
         "INVALID",

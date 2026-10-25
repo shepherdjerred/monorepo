@@ -356,7 +356,6 @@ test("application rollbacks never render the separately owned control-plane role
     serviceItemId: "service-item",
     executorItemId: "executor-item",
     argocdItemId: "argo-item",
-    minecraftRegistryItemId: "ngzmppq52zm7sii6ato2mv3sbi",
     platformRegistryItemId: "ngzmppq52zm7sii6ato2mv3sbi",
     platformArgocdItemId: "issued-platform-item",
   });
@@ -389,7 +388,6 @@ test("application rollbacks never render the separately owned control-plane role
       !component ||
       ![
         "delivery-worker",
-        "delivery-tsmc-controller",
         "delivery-platform-worker",
         "delivery-workflows",
       ].includes(component)
@@ -425,7 +423,7 @@ test("application rollbacks never render the separately owned control-plane role
         }),
       })
       .parse(manifest).spec.template.spec;
-    if (component !== "delivery-tsmc-controller") {
+    if (component !== undefined) {
       for (const container of runtime.containers) {
         steadyCpu += Number(
           z
@@ -464,7 +462,6 @@ test("application rollbacks never render the separately owned control-plane role
   }
   expect([...observed].sort()).toEqual([
     "delivery-platform-worker",
-    "delivery-tsmc-controller",
     "delivery-worker",
     "delivery-workflows",
   ]);

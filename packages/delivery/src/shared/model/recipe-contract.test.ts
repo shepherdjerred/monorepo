@@ -266,7 +266,7 @@ describe("recipeFromPipeline", () => {
     });
   });
 
-  test("a verified-restore upgrade preserves before the sync; a restart reads back after it", async () => {
+  test("a minecraft upgrade reads the retained volume back after sync", async () => {
     const tsmc = await registered("specialized/minecraft-tsmc/pipeline.json");
     if (tsmc.kind !== "argocd" || tsmc.minecraftUpgrade === undefined)
       throw new Error("TSMC registers a Minecraft upgrade");
@@ -281,8 +281,8 @@ describe("recipeFromPipeline", () => {
       throw new Error("TSMC maps onto an Application recipe");
     expect(verified.steps.map((step) => step.kind)).toEqual([
       "apply-safety",
-      "minecraft-upgrade",
       "sync",
+      "minecraft-upgrade",
     ]);
     const misplaced = {
       ...verified,
@@ -291,7 +291,7 @@ describe("recipeFromPipeline", () => {
     expect(RecipeDefinitionSchema.safeParse(misplaced).error?.issues).toEqual([
       expect.objectContaining({
         message:
-          "A verified-restore minecraft-upgrade runs before sync; a retained-volume restart runs after it",
+          "A minecraft-upgrade runs after sync and reads back the retained volume",
       }),
     ]);
   });

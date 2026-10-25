@@ -1,15 +1,10 @@
 import {
-  LiveBackupResponseSchema,
   LiveJournalResponseSchema,
   LiveStatusResponseSchema,
   LiveUndoResponseSchema,
 } from "@shepherdjerred/mc-harness/protocol/live.ts";
 import { daemonRequest } from "#lib/mc/client.ts";
-import {
-  renderLiveBackup,
-  renderLiveJournal,
-  renderLiveStatus,
-} from "#lib/mc/live.ts";
+import { renderLiveJournal, renderLiveStatus } from "#lib/mc/live.ts";
 
 function print<T>(json: boolean, value: T, render: (value: T) => string): void {
   console.log(json ? JSON.stringify(value, null, 2) : render(value));
@@ -26,23 +21,6 @@ export async function mcLiveStatusCommand(json: boolean): Promise<void> {
   if (status.refusal !== null) {
     process.exitCode = 1;
   }
-}
-
-export async function mcLiveBackupCommand(options: {
-  reason: string;
-  wait: boolean;
-  json: boolean;
-}): Promise<void> {
-  const backup = await daemonRequest(
-    LiveBackupResponseSchema,
-    "POST",
-    "/live/backup",
-    {
-      reason: options.reason,
-      wait: options.wait,
-    },
-  );
-  print(options.json, backup, renderLiveBackup);
 }
 
 export async function mcLiveJournalCommand(options: {

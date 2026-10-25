@@ -47,8 +47,6 @@ toolkit deploy workers adopt --file <REVIEWED_ADOPTION_JSON> --machine
 toolkit deploy workers retire <ENVIRONMENT_ID> <WORKER_ID> --request-id <REQUEST_ID>
 toolkit deploy workers recover <DEPLOYMENT_ID> --machine --expected-generation <GENERATION> --reason "Inspect the exact quarantined operation independently"
 toolkit deploy workers recovery <INTENT_ID> --json
-toolkit deploy minecraft recover <DEPLOYMENT_ID> --machine --expected-generation <GENERATION> --reason "Inspect the original before selecting another candidate"
-toolkit deploy minecraft recovery <INTENT_ID> --json
 toolkit deploy forum publish --file <PRIVATE_BUNDLE_DESCRIPTOR> --machine
 toolkit deploy forum baseline --file <ORIGINAL_BASELINE_DESCRIPTOR> --machine
 toolkit deploy forum inspect <INTENT_ID> --json
@@ -131,14 +129,9 @@ preserving the original failed result; it does not accept a release or change
 worker replicas. The same verifier has an operator entrypoint for a Workflow-worker
 outage and uses a separate scoped executor credential, never the admin intent as proof.
 
-Minecraft recovery is admin-only and applies before candidate Argo source
-selection. Its controller reopens only the untouched original and removes only
-the exact request-owned validation copy. The API independently rereads original
-volume, Pod, routes and settled Argo bindings before releasing quarantine through
-an environment-generation CAS. Missing source journals, changed identities or
-post-selection operations retain the lock and require the independent restoration
-procedure. Recovery never accepts or retries the failed release. The UI shows
-recovery history; `minecraft recovery` returns the same frozen inputs and status.
+Minecraft releases restart the retained world volume. `toolkit deploy minecraft`
+is refused. Scheduled Velero backups are the only backup. An image rollback is
+that same restart and does not restore an older world.
 
 Forum publication uses the separately brokered `DELIVERY_PUBLISHER_TOKEN`;
 baseline requests use the admin credential. Publication registers immutable private
@@ -616,7 +609,7 @@ toolkit mc sandbox down --all
 toolkit mc daemon stop
 ```
 
-A sandbox is Paper 26.2 with WorldEdit and MCBridge in a local container, or
+A sandbox is Paper 26.3 with WorldEdit and MCBridge in a local container, or
 with `--provider kubernetes` (the default for the `storm-prod` and
 `storm-candidate` profiles) a pod in the cluster's `mc-sandbox` namespace
 reached through `kubectl port-forward`. Its

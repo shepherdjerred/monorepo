@@ -3,7 +3,7 @@
 MockBukkit covers sign creation gating, the right-click container lock,
 breaking, machine moves (hoppers, droppers, crafters) and copper golems, explosions, the sign editor, buying and selling
 at chest and admin shops, `?` shops with enchanted items, owner notices and
-`/shop`. These cases need a real Paper 26.2 server (and Geyser for Bedrock),
+`/shop`. These cases need a real Paper 26.3 server (and Geyser for Bedrock),
 because MockBukkit does not implement the API or gets it wrong.
 
 ## Chest shops

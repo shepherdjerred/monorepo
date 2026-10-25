@@ -6,23 +6,16 @@ import {
   openDeployment,
 } from "./helpers.ts";
 
-test("quarantined Minecraft release shows independent recovery identity and keeps retry blocked", async ({
+test("quarantined Minecraft release keeps retry blocked without a restore procedure", async ({
   page,
 }) => {
   await openDeployment(page, "minecraft/tsmc", { status: "failed" });
   const main = page.getByRole("main");
+  await expect(main).toContainText("Operator recovery is required");
   await expect(
     main.getByRole("heading", { name: "Original server recovery" }),
-  ).toBeVisible();
-  await expect(main).toContainText("toolkit deploy minecraft recover");
-  // The binding generation moves only on acceptance; this release never accepted.
-  await expect(main).toContainText("--expected-generation 0");
-  await expect(main).toContainText("browser/minecraft/recovery");
-  await expect(main.getByText("pending", { exact: true })).toBeVisible();
-  await main.getByText("Frozen recovery identity", { exact: true }).click();
-  await expect(main).toContainText(
-    "delivery-minecraft-recovery/browser/minecraft/recovery",
-  );
+  ).toHaveCount(0);
+  await expect(main).not.toContainText("toolkit deploy minecraft recover");
   await expect(
     main.getByRole("button", { name: "Retry as a new deployment" }),
   ).toBeDisabled();

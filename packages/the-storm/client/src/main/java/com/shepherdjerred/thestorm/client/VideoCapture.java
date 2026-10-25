@@ -121,8 +121,8 @@ final class VideoCapture implements AutoCloseable {
         && client.player.isSpectator()
         && client.gui.screen() == null
         && client.gui.overlay() == null
-        && !client.getWindow().isFullscreen()
-        && !client.getWindow().isMinimized()
+        && !client.options.fullscreen().get()
+        && !client.getWindow().isIconified()
         && client.getFps() >= FrameClock.FPS;
   }
 
@@ -132,7 +132,7 @@ final class VideoCapture implements AutoCloseable {
 
   CompletableFuture<Object> arm(Minecraft client, JsonNode args, boolean nativeDuel) {
     if (active()) throw new IllegalStateException("A rendered capture is already active");
-    if (client.getWindow().isFullscreen() || client.getWindow().isMinimized()) {
+    if (client.options.fullscreen().get() || client.getWindow().isIconified()) {
       throw new IllegalStateException("Recording requires a visible windowed preview");
     }
     if (client.gui.screen() != null || client.gui.overlay() != null) {

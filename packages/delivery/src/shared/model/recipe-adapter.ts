@@ -59,20 +59,12 @@ function kubernetesApplication(
     runner: CI_RUNNER,
     steps: [
       { kind: "apply-safety", instance },
-      // A verified-restore upgrade preserves the world before the sync.
-      ...steps.filter((step) => verifiedRestore(step)),
       { kind: "sync", instance },
-      ...steps.filter((step) => !verifiedRestore(step)),
+      ...steps,
     ],
     ...(body.sharedLock === undefined ? {} : { sharedLock: body.sharedLock }),
     oracle: { probes, tests: [] },
   });
-}
-
-function verifiedRestore(step: KubernetesStep): boolean {
-  return (
-    step.kind === "minecraft-upgrade" && step.releaseMode === "verified-restore"
-  );
 }
 
 function argocdSteps(
@@ -126,7 +118,7 @@ function argocdSteps(
       pointOfNoReturn: true,
       imageComponent: definition.minecraftUpgrade.imageComponent,
       releaseMode:
-        definition.minecraftUpgrade.releaseMode ?? "verified-restore",
+        definition.minecraftUpgrade.releaseMode ?? "retained-volume-restart",
     });
   }
   return steps;

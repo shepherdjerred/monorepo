@@ -66,7 +66,7 @@ final class BotTransferFixtures implements BasicCommand {
             .orElseThrow();
     var roster = storm.service(BotRoster.class);
     var before = roster.entity(id).orElseThrow();
-    if (before.isInvulnerable()) {
+    if (before.isMarkedInvulnerable()) {
       throw new IllegalStateException("live bot is invulnerable before transfer");
     }
     // Exercise state MockBukkit does not implement, including a nonzero hit window and item
@@ -105,7 +105,7 @@ final class BotTransferFixtures implements BasicCommand {
                                 waiting.getEntityId(),
                                 returned.getEntityId()),
                         "health", returned.getHealth(),
-                        "invulnerable", returned.isInvulnerable(),
+                        "invulnerable", returned.isMarkedInvulnerable(),
                         "equipmentPreserved", true,
                         "registered", true))));
   }
@@ -114,7 +114,7 @@ final class BotTransferFixtures implements BasicCommand {
     if (before.getEntityId() == after.getEntityId()
         || !before.getUniqueId().equals(after.getUniqueId())
         || !after.isValid()
-        || after.isInvulnerable()
+        || after.isMarkedInvulnerable()
         || !state.equals(State.capture(after))) {
       throw new IllegalStateException("body transfer changed identity, gear, vitals or flags");
     }

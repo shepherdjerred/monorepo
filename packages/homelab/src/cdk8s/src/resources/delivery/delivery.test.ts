@@ -437,7 +437,6 @@ describe("Delivery execution and service bootstrap", () => {
       staticStorageItemId: "l5c76kuxgqckt3xc7pmman6l4u",
       staticCacheItemId: "la7gkfl5eqtxiiv2hq3qujx2gi",
       workerRegistryItemId: "ngzmppq52zm7sii6ato2mv3sbi",
-      minecraftRegistryItemId: "ngzmppq52zm7sii6ato2mv3sbi",
       platformRegistryItemId: "ngzmppq52zm7sii6ato2mv3sbi",
       forumReaderItemId: "6x57e27b4jb7fxgyx2nmhhcldq",
       forumObserverItemId: "es5ddbihz4qeylhjt2x2iemvzi",

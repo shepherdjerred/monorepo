@@ -16,7 +16,7 @@ import { LIVE_TOKEN_ENV } from "#protocol/live.ts";
 import { SandboxProviders } from "#sandbox/backend.ts";
 import { SandboxStore } from "#sandbox/record.ts";
 import { LiveService } from "#src/live/service.ts";
-import { VELERO_NAMESPACE, liveKubeTarget } from "#src/live/status.ts";
+import { liveKubeTarget } from "#src/live/status.ts";
 import { liveGuardConfig, loadMcDaemonConfig } from "./config.ts";
 import { logLine, startDaemon } from "./serve.ts";
 
@@ -33,7 +33,6 @@ try {
   const context = await config.value("mcKubeContext");
   const live = new LiveService({
     kubectl: new Kubectl(liveKubeTarget(context)),
-    velero: new Kubectl(liveKubeTarget(context, VELERO_NAMESPACE)),
     // Supplied once at daemon start (`op read` through the service-account
     // wrapper); never logged or returned.
     token: () => Bun.env[LIVE_TOKEN_ENV],

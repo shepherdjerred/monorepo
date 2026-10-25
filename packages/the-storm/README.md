@@ -13,7 +13,7 @@ daily/weekly maintenance cadence.
 
 | Path                               | What it is                                                                                                             |
 | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `plugin/`                          | Gradle build (Java 25, Paper API 26.2)                                                                                 |
+| `plugin/`                          | Gradle build (Java 25, Paper API 26.3)                                                                                 |
 | `plugin/core/`                     | Shared runtime: module contract, strict config parsing, `Result`, SQLite storage, the scheduler port, house text style |
 | `plugin/modules/<name>/`           | One project per gameplay module (economy, towns, quests, ...)                                                          |
 | `plugin/dist/`                     | Assembles the shaded `TheStorm.jar` and the plugin entry point                                                         |
@@ -35,7 +35,7 @@ bunx turbo run build typecheck test lint --filter=@shepherdjerred/the-storm
 cd packages/the-storm/plugin
 mise exec -- gradle check                  # everything, including PMD and JaCoCo
 mise exec -- gradle spotlessApply          # format
-mise exec -- gradle :dist:runServer        # local Paper 26.2 with the plugin
+mise exec -- gradle :dist:runServer        # local Paper 26.3 with the plugin
 mise exec -- gradle bakeRwfMaps            # (re)bake rwf/maps/*/nav.rwfnav for the bots
 mise exec -- gradle verifyRwfMaps          # fail if a committed nav.rwfnav is stale (part of check)
 mise exec -- gradle resolveAndLockAll --write-locks   # after changing dependencies
@@ -470,7 +470,7 @@ startup, before `towns`, `world` and `qol` enable; it is never a Multiverse worl
 startup fails if anything loaded the world first. The terrain shape is Beta
 1.7.3 Skylands, ported from Spottedleaf's OldGenerator (MIT, see `NOTICE`) and
 matched block for block against the upstream classes in its tests. Everything
-else is vanilla 26.2: surface rules, carvers, ores, trees, vegetation,
+else is vanilla 26.3: surface rules, carvers, ores, trees, vegetation,
 structures and initial mobs run over the islands.
 
 `skylands.yml` fixes the seed, the world y of Beta's terrain floor
@@ -1895,7 +1895,7 @@ smash callbacks. The adapter rewrites native damage once through RWF's damage
 rules while retaining the server's successful-hit path. The match owns its
 hit window independently of vanilla `noDamageTicks`; legacy sword/axe timing
 and native modern-weapon cooldowns remain distinct. Native operation signatures
-are linked against pinned Paper 26.2 at startup and fail if that contract changes.
+are linked against pinned Paper 26.3 at startup and fail if that contract changes.
 
 RWF exports `BattleSounds`, `VisualOcclusion`, `TacticalReports` and
 `TacticalCasting` app ports to its bot adapter. Audible movement, landing,
@@ -2961,7 +2961,7 @@ cd packages/the-storm
 bun run rwf:watch --op <your-name>     # --port <n> to use another port
 ```
 
-Join `localhost` with a 26.2 client, then:
+Join `localhost` with a 26.3 client, then:
 
 1. `/rwf admin showcase 8` starts a bots-only match after a 15 s countdown.
 2. `/rwf spectate` puts you at the spectator point.

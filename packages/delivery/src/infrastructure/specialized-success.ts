@@ -1,5 +1,4 @@
 import {
-  minecraftUpgradeOf,
   siteReleaseOf,
   specializedStageKey,
 } from "#shared/model/recipe-view.ts";
@@ -26,16 +25,6 @@ const SiteAcceptanceSchema = z
     bucket: z.string(),
   })
   .strict();
-const BackupSchema = z.object({
-  producer: z.literal("storm-independent-restore"),
-  receiptSha256: z.string().regex(/^sha256:[a-f0-9]{64}$/u),
-  backupUid: z.string().min(1),
-  restoreUid: z.string().min(1),
-  source: z.object({ claimUid: z.string().min(1) }),
-  restored: z.object({ claimUid: z.string().min(1) }),
-  wholeVolumeProofSha256: z.string().regex(/^[a-f0-9]{64}$/u),
-  originalUntouchedProofSha256: z.string().regex(/^[a-f0-9]{64}$/u),
-});
 
 function summary(value: string): unknown {
   try {
@@ -67,73 +56,39 @@ export async function validateSpecializedSuccess(
   ).definition;
   await validateTrmnlSuccess(tx, { ...deployment, pipeline });
   const site = siteReleaseOf(pipeline);
-  const upgrade = minecraftUpgradeOf(pipeline);
-  if (site === undefined && upgrade === undefined) return;
+  if (site === undefined) return;
   const stages = await tx.stage.findMany({
     where: { deploymentId: deployment.id },
   });
   const evidence = await tx.evidence.findMany({
     where: { deploymentId: deployment.id },
   });
-  if (site !== undefined) {
-    const selected = await version(tx, deployment.versionSetRevisionId);
-    const archive = selected.components[site.archiveComponent];
-    const key = specializedStageKey(pipeline, "static-site");
-    const expectedOperation = specializedOperationId(`${deployment.id}:${key}`);
-    const completed = stages.some(
-      (stage) =>
-        stage.key === key &&
-        stage.status === "succeeded" &&
-        stage.operationId === expectedOperation,
+  const selected = await version(tx, deployment.versionSetRevisionId);
+  const archive = selected.components[site.archiveComponent];
+  const key = specializedStageKey(pipeline, "static-site");
+  const expectedOperation = specializedOperationId(`${deployment.id}:${key}`);
+  const completed = stages.some(
+    (stage) =>
+      stage.key === key &&
+      stage.status === "succeeded" &&
+      stage.operationId === expectedOperation,
+  );
+  const accepted = evidence.some((entry) => {
+    const parsed = SiteAcceptanceSchema.safeParse(summary(entry.summary));
+    return (
+      entry.kind === "acceptance" &&
+      recordedByStage(entry.id, deployment.id, key) &&
+      entry.operationId === expectedOperation &&
+      parsed.success &&
+      parsed.data.archiveArtifactId === archive?.id &&
+      parsed.data.archiveDigest === archive.digest &&
+      parsed.data.versionSetRevisionId === selected.id &&
+      parsed.data.bucket === site.bucket
     );
-    const accepted = evidence.some((entry) => {
-      const parsed = SiteAcceptanceSchema.safeParse(summary(entry.summary));
-      return (
-        entry.kind === "acceptance" &&
-        recordedByStage(entry.id, deployment.id, key) &&
-        entry.operationId === expectedOperation &&
-        parsed.success &&
-        parsed.data.archiveArtifactId === archive?.id &&
-        parsed.data.archiveDigest === archive.digest &&
-        parsed.data.versionSetRevisionId === selected.id &&
-        parsed.data.bucket === site.bucket
-      );
-    });
-    if (!completed || !accepted)
-      throw new DeliveryError(
-        "INVALID",
-        "Combined Scout success requires completed frontend activation and exact archive acceptance evidence under the backend release lock",
-      );
-  }
-  if (
-    upgrade !== undefined &&
-    upgrade.releaseMode !== "retained-volume-restart"
-  ) {
-    const expectedOperation = specializedOperationId(
-      `${deployment.id}:minecraft-preservation`,
+  });
+  if (!completed || !accepted)
+    throw new DeliveryError(
+      "INVALID",
+      "Combined Scout success requires completed frontend activation and exact archive acceptance evidence under the backend release lock",
     );
-    const completed = stages.filter(
-      (stage) =>
-        /^minecraft-preservation-\d+$/u.test(stage.key) &&
-        stage.status === "succeeded" &&
-        stage.operationId === expectedOperation,
-    );
-    const backedUp = evidence.some((entry) => {
-      const parsed = BackupSchema.safeParse(summary(entry.summary));
-      return (
-        entry.kind === "backup" &&
-        entry.operationId === expectedOperation &&
-        completed.some((stage) =>
-          entry.id.startsWith(`${deployment.id}/stage/${stage.key}/`),
-        ) &&
-        parsed.success &&
-        parsed.data.source.claimUid !== parsed.data.restored.claimUid
-      );
-    });
-    if (!backedUp || completed.length === 0)
-      throw new DeliveryError(
-        "INVALID",
-        "Minecraft success requires independently verified preservation evidence; player deferral is not a completed backup and restore proof",
-      );
-  }
 }

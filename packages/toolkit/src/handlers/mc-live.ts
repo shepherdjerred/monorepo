@@ -1,10 +1,10 @@
-// `toolkit mc live …`: read-only status, Velero backups, the journal and undo
-// for live minecraft-tsmc. Writes themselves use the target commands with
-// `--target live`; the daemon guards them.
+// `toolkit mc live …`: read-only status, the journal and undo for live
+// minecraft-tsmc. Writes themselves use the target commands with
+// `--target live`; the daemon guards them. Scheduled Velero backups are the
+// only backup.
 import type { ParseArgsOptionsConfig } from "node:util";
 import { LIVE_DAEMON_START_HINT } from "@shepherdjerred/mc-harness/protocol/live.ts";
 import {
-  mcLiveBackupCommand,
   mcLiveJournalCommand,
   mcLiveStatusCommand,
   mcLiveUndoCommand,
@@ -14,13 +14,13 @@ import { parseMcArgs } from "./mc-args.ts";
 
 export const LIVE_USAGE = `Live minecraft-tsmc (--target live; the daemon needs the bridge token):
   ${LIVE_DAEMON_START_HINT}
-  toolkit mc live status [--json]        Read-only cluster view; refuses when asleep or restoration-leased
-  toolkit mc live backup --reason <why> [--wait]   Velero backup of minecraft-tsmc (needed for tier-2 writes)
-  toolkit mc live journal [--since 1d]   Every live write, undo and backup
+  toolkit mc live status [--json]        Read-only cluster view; refuses when asleep or not ready
+  toolkit mc live backup                              refused; scheduled Velero backups are the only backup
+  toolkit mc live journal [--since 1d]   Every live write and undo
   toolkit mc live undo <journal-id> --reason <why> [--allow-players] [--allow-protected]   Restore the pre-write snapshot (LIFO)
 Live writes need --reason "<why>"; --allow-players when a human is near the box (never inside);
 --allow-protected for a box inside a protected region (mcLiveProtectedRegions, e.g. the zombies settlement);
---confirm-dangerous plus a backup from the last 24h for stop, kill, op/deop, co rollback, //regen, …;
+--confirm-dangerous for stop, kill, op/deop, co rollback, //regen, …;
 --affects x1,y1,z1:x2,y2,z2 for WorldEdit ops whose change is not bounded by --pos1/--pos2.`;
 
 const OPTIONS = {
@@ -46,12 +46,10 @@ export async function handleMcLive(args: string[]): Promise<void> {
       return;
     }
     case "backup": {
-      await mcLiveBackupCommand({
-        reason: requireString(values.reason, "--reason"),
-        wait: values.wait,
-        json: values.json,
-      });
-      return;
+      requireString(values.reason, "--reason");
+      throw new Error(
+        "Error: harness backups were removed. Scheduled Velero backups are the only backup.",
+      );
     }
     case "journal": {
       await mcLiveJournalCommand({

@@ -11,8 +11,6 @@ import {
   MC_SANDBOX_NAMESPACE,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/mc-sandbox/constants.ts";
 
-const VELERO_NAMESPACE = "velero";
-
 type Rule = {
   apiGroups: string[];
   resources: string[];
@@ -33,9 +31,8 @@ type Rule = {
  *   `kubectl cp`), stream logs, and port-forward to them.
  * - `minecraft-tsmc`: read the live server's state and port-forward or exec
  *   into its one pod. No patch, update, or delete on anything: the harness
- *   never changes replicas, annotations, or the StatefulSet (mc-router and
- *   world restoration own those).
- * - `velero`: take and inspect Backups before risky live writes.
+ *   never changes replicas, annotations, or the StatefulSet. Scheduled Velero
+ *   backups are the only backup; this account cannot create one.
  */
 export const MC_HARNESS_RULES: Record<string, readonly Rule[]> = {
   [MC_SANDBOX_NAMESPACE]: [
@@ -63,13 +60,6 @@ export const MC_HARNESS_RULES: Record<string, readonly Rule[]> = {
       resources: ["pods/portforward", "pods/exec"],
       verbs: ["create"],
       resourceNames: [MC_LIVE_POD],
-    },
-  ],
-  [VELERO_NAMESPACE]: [
-    {
-      apiGroups: ["velero.io"],
-      resources: ["backups"],
-      verbs: ["create", "get", "list"],
     },
   ],
 };

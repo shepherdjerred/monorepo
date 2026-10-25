@@ -7,7 +7,6 @@ import {
 import {
   DELIVERY_API_SERVICE_ACCOUNT as api,
   DELIVERY_KUBERNETES_READERS,
-  DELIVERY_MINECRAFT_REPORT_READER as report,
 } from "@shepherdjerred/ops-model/delivery-readers.ts";
 
 const TOKEN_SECONDS = 600;
@@ -34,8 +33,7 @@ function projection(name: string, directory: string, sources: unknown[]) {
  * reader token carries the account's whole authority; the directories
  * separate use, not authority, and recovery-readers.test.ts pins that
  * complete grant set. Neither the ArgoCD server nor any executor credential is
- * involved. The Minecraft report token is bound to the controller's audience,
- * whose namespace grants it (see minecraft-controller-permissions.ts).
+ * involved.
  */
 export function attachDeliveryRecoveryReaders(deployment: Deployment): void {
   const chart = Chart.of(deployment);
@@ -77,16 +75,5 @@ export function attachDeliveryRecoveryReaders(deployment: Deployment): void {
       ]),
     );
   }
-  patches.push(
-    ...projection(report.name, report.directory, [
-      {
-        serviceAccountToken: {
-          path: "token",
-          audience: report.audience,
-          expirationSeconds: TOKEN_SECONDS,
-        },
-      },
-    ]),
-  );
   ApiObject.of(deployment).addJsonPatch(...patches);
 }

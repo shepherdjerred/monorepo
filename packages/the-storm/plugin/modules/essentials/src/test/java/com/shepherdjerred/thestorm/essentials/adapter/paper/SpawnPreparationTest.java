@@ -11,6 +11,7 @@ import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
 import com.shepherdjerred.thestorm.essentials.domain.config.EssentialsConfig;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.time.InstantSource;
 import java.util.UUID;
@@ -121,7 +122,7 @@ final class SpawnPreparationTest {
         new AsyncPlayerPreLoginEvent(
             "Alice",
             address,
-            address,
+            new InetSocketAddress(address, 0),
             id,
             false,
             org.bukkit.Bukkit.createProfile(id, "Alice"),

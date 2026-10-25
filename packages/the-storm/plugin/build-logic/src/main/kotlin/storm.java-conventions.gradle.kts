@@ -54,7 +54,10 @@ sourceSets.configureEach {
 tasks.withType<JavaCompile>().configureEach {
   options.release = 25
   options.encoding = "UTF-8"
-  options.compilerArgs.addAll(listOf("-Xlint:all", "-Xlint:-processing", "-Werror", "-parameters"))
+  // JOML 1.10.9, pulled in by the Paper API, is a Java 1.2 class file that
+  // still carries type annotations. javac's classfile lint cannot be fixed here.
+  options.compilerArgs.addAll(
+      listOf("-Xlint:all", "-Xlint:-processing", "-Xlint:-classfile", "-Werror", "-parameters"))
   options.errorprone {
     disableWarningsInGeneratedCode = true
     excludedPaths = ".*/build/generated/.*"

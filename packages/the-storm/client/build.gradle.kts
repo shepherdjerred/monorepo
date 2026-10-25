@@ -19,13 +19,13 @@ plugins {
 version = "1.0.0"
 group = "com.shepherdjerred.thestorm"
 
-// Loom obtains these exact library pins from Minecraft 26.2. Upgrade the
+// Loom obtains these exact library pins from Minecraft 26.3. Upgrade the
 // affected pins in every Minecraft compile/runtime configuration, including
 // native transports. Remove the rules once Minecraft publishes patched pins;
 // later upstream versions remain untouched.
 configurations.configureEach {
   resolutionStrategy.eachDependency {
-    if (requested.group == "io.netty" && requested.version == "4.2.15.Final") {
+    if (requested.group == "io.netty" && requested.version == "4.2.16.Final") {
       useVersion(libs.versions.security.netty.get())
       because("Patched Netty compression, HTTP, and handler advisories")
     }

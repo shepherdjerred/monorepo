@@ -73,7 +73,7 @@ fixtures. Preserve character progression, saved inventories, and all plugin data
 ## Use an offline region merge
 
 If native WorldEdit cannot preserve the reviewed map, merge only its bounded cells while Paper is stopped.
-On Paper 26.2, named dimensions share the enclosing world save and its `session.lock`.
+On Paper 26.3, named dimensions share the enclosing world save and its `session.lock`.
 The pinned Paper [world creation and unloading implementation](https://github.com/PaperMC/Paper/blob/9240f58/paper-server/src/main/java/org/bukkit/craftbukkit/CraftServer.java) uses the server's shared storage.
 Unloading one arena world closes its chunk source without releasing that shared storage.
 Use the repository's [save-lock check](https://github.com/shepherdjerred/monorepo/blob/6a4c401a03c7e9ba9fdebf16ec16abe0972a895b/packages/the-storm/server/archive-progression.py) before an offline merge.

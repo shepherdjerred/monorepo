@@ -5,7 +5,6 @@ import com.shepherdjerred.thestorm.spells.domain.SpellKind;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.potion.PotionEffectTypeCategory;
 
 /** Cleanse (I, learned in a quest): clears the caster's harmful effects, fire and frost. */
 final class Cleanse implements Spell {
@@ -26,7 +25,7 @@ final class Cleanse implements Spell {
     var harmful =
         caster.getActivePotionEffects().stream()
             .map(PotionEffect::getType)
-            .filter(type -> type.getCategory() == PotionEffectTypeCategory.HARMFUL)
+            .filter(type -> type.getEffectCategory() == PotionEffectType.Category.HARMFUL)
             .toList();
     if (harmful.isEmpty() && caster.getFireTicks() <= 0 && caster.getFreezeTicks() <= 0) {
       return Result.err(CastProblem.noTarget("affliction"));

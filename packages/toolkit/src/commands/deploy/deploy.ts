@@ -38,8 +38,7 @@ workers adopt --file <PATH> --machine  Adopt an original qualified worker artifa
 workers retire <ENVIRONMENT> <ID>      Request guarded scale-to-zero retirement
 workers recover <DEPLOYMENT_ID>        Request independent read-only recovery inspection
 workers recovery <INTENT_ID>           Inspect recovery state and frozen inputs
-minecraft recover <DEPLOYMENT_ID>      Recover the untouched original before candidate source selection
-minecraft recovery <INTENT_ID>         Inspect independent recovery and retained ownership
+minecraft                               Retained-volume releases have no restore command
 forum publish --file <PATH> --machine Register private licensed bytes for independent qualification
 forum baseline --file <PATH> --machine Request read-only original runtime baseline
 forum inspect <INTENT_ID>              Inspect original provenance and native baseline proof

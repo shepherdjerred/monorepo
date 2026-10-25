@@ -1,7 +1,6 @@
 import type { ParseArgsOptionsConfig } from "node:util";
 import type { BlockPos } from "@shepherdjerred/mc-harness/protocol/bridge.ts";
 import type {
-  LiveBackupResponse,
   LiveJournalEntry,
   LiveStatusResponse,
   LiveWriteFlags,
@@ -59,7 +58,6 @@ export function renderLiveStatus(status: LiveStatusResponse): string {
     `minecraft-tsmc: ${status.refusal === null ? "usable" : "NOT USABLE"}`,
     `  replicas ${String(status.readyReplicas)}/${String(status.replicas)} ready, pod ${status.podPhase ?? "none"}${status.podReady ? " (ready)" : ""}`,
     `  image ${status.image ?? "unknown"}`,
-    `  world-restore lease: ${status.worldRestoreLease ?? "none"}`,
     `  bridge token: ${status.tokenConfigured ? "configured" : "missing"}; port-forward ${status.bridge.connected ? `127.0.0.1:${String(status.bridge.localPort)}` : "not connected"}`,
     ...(status.refusal === null ? [] : [`  refused: ${status.refusal}`]),
   ].join("\n");
@@ -101,10 +99,4 @@ export function renderLiveJournal(
   return entries.length === 0
     ? "No live journal entries."
     : entries.map((entry) => renderEntry(entry)).join("\n");
-}
-
-export function renderLiveBackup(backup: LiveBackupResponse): string {
-  return backup.completedAt === null
-    ? `started Velero backup ${backup.name} (${backup.phase}); journal ${backup.journalId}. Tier-2 writes accept it once it completes (pass --wait to block until then).`
-    : `Velero backup ${backup.name} completed at ${backup.completedAt}; journal ${backup.journalId}`;
 }

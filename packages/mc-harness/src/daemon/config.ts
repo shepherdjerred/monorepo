@@ -109,17 +109,11 @@ export const MC_DAEMON_CONFIG_DEFINITION = {
       "rustworks",
     ],
   },
-  /** Live block writes larger than this need a recent Velero backup. */
+  /** Live block writes larger than this are tier 2. */
   mcLiveMaxRegionVolume: {
     schema: z.coerce.number().int().positive(),
     sources: ["env", "file", "default"],
     default: 1_000_000,
-  },
-  /** How old (hours) the newest Velero backup may be for a tier-2 live write. */
-  mcLiveBackupMaxAgeHours: {
-    schema: z.coerce.number().positive(),
-    sources: ["env", "file", "default"],
-    default: 24,
   },
   /** Humans this close (blocks) to a live write's box need --allow-players. */
   mcLiveNearPlayerRadius: {
@@ -160,7 +154,6 @@ export async function liveGuardConfig(
     writes: await config.value("mcLiveWrites"),
     worlds: await config.value("mcLiveWorlds"),
     maxRegionVolume: await config.value("mcLiveMaxRegionVolume"),
-    backupMaxAgeHours: await config.value("mcLiveBackupMaxAgeHours"),
     nearPlayerRadius: await config.value("mcLiveNearPlayerRadius"),
     maxSnapshotVolume: BRIDGE_LIMITS.maxSnapshotVolume,
     protectedRegions: await config.value("mcLiveProtectedRegions"),

@@ -38,7 +38,7 @@ function stormSmokeStep(images: CiImages): CiStep {
   const dataDir = `${workspace}/data`;
   return {
     key: "paper-smoke-pr",
-    label: "Paper 26.2 + The Storm smoke",
+    label: "Paper 26.3 + The Storm smoke",
     image: images.base,
     commands: [
       ". ci/scripts/toolchain.sh",
@@ -79,8 +79,8 @@ function stormSmokeStep(images: CiImages): CiStep {
         environment: {
           EULA: "TRUE",
           TYPE: "PAPER",
-          VERSION: "26.2",
-          PAPER_BUILD: "129",
+          VERSION: "26.3",
+          PAPER_BUILD: "223",
           ONLINE_MODE: "FALSE",
           ENABLE_RCON: "true",
           RCON_PASSWORD,

@@ -1,7 +1,7 @@
 name: MCBridge
 version: "${version}"
 main: com.shepherdjerred.mcbridge.McBridgePlugin
-api-version: "26.2"
+api-version: "26.3"
 description: HTTP bridge for the mc-harness agent tooling
 authors: [ShepherdJerred]
 dependencies:

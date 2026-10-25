@@ -59,12 +59,8 @@ val archiveTest = tasks.register<Exec>("archiveTest") {
   workingDir(rootProject.file("../server"))
   commandLine(testPython + listOf("-m", "unittest", "-v", "test_archive_progression.py"))
 }
-val worldRestoreTest = tasks.register<Exec>("worldRestoreTest") {
-  workingDir(rootProject.file("../server"))
-  commandLine(testPython + listOf("-m", "unittest", "-v", "test_world_restore.py", "test_database_restore.py", "test_restoration_control.py", "test_restoration_stopped.py", "test_creative_install.py", "test_creative_activation.py", "test_restoration_json.py", "test_restoration_files.py", "test_restoration_activation.py", "test_restoration_install.py"))
-}
 tasks.test {
-  dependsOn(archiveTest, worldRestoreTest)
+  dependsOn(archiveTest)
   // ModulesTest checks the shipped module inventory against the registry.
   inputs
       .file(rootProject.file("../server/owned/plugins/TheStorm/config.yml"))
@@ -80,13 +76,13 @@ val prepareRunServerContent =
     }
 
 tasks.runServer {
-  minecraftVersion("26.2")
+  minecraftVersion("26.3")
   runDirectory = runServerDirectory
   dependsOn(prepareRunServerContent)
   downloadPlugins {
     url("https://cdn.modrinth.com/data/Vebnzrzj/versions/b0mk8uS6/LuckPerms-Bukkit-5.5.71.jar")
-    url("https://cdn.modrinth.com/data/1u6JkXh5/versions/F5ea2ov3/worldedit-bukkit-7.4.5.jar")
-    url("https://cdn.modrinth.com/data/Lu3KuzdV/versions/3sehX6Sg/CoreProtect-CE-24.1.jar")
+    url("https://cdn.modrinth.com/data/1u6JkXh5/versions/YFnqiUlL/worldedit-bukkit-7.4.6.jar")
+    url(rootProject.file("../server/vendor/CoreProtect-25.1.jar").toURI().toString())
   }
 }
 

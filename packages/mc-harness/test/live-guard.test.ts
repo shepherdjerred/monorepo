@@ -11,13 +11,6 @@ import {
   readLiveWriteFlags,
 } from "#protocol/live.ts";
 import {
-  backupState,
-  BackupListSchema,
-  harnessBackupManifest,
-  harnessBackupName,
-  latestUsableBackup,
-} from "#src/live/backup.ts";
-import {
   assessLiveWrite,
   authorizeLiveWrite,
   classifyCommand,
@@ -53,7 +46,6 @@ const config: LiveGuardConfig = {
   writes: true,
   worlds: ["world", "wilds", "peaks"],
   maxRegionVolume: 1000,
-  backupMaxAgeHours: 24,
   nearPlayerRadius: 32,
   maxSnapshotVolume: 100_000,
   protectedRegions: [{ name: "arena", box: arena }],
@@ -87,14 +79,6 @@ function setAirRow(max: number) {
         pos2: { x: max, y: 0, z: 0 },
       },
     ],
-  };
-}
-
-function backup(status: Record<string, unknown>) {
-  return {
-    metadata: { name: "b" },
-    spec: { includedNamespaces: ["minecraft-tsmc"], snapshotVolumes: true },
-    status,
   };
 }
 
@@ -276,7 +260,6 @@ describe("authorizeLiveWrite", () => {
   const base = {
     flags: { reason: "test" },
     players: [],
-    latestBackupAt: null,
     now,
     config,
   };
@@ -346,7 +329,7 @@ describe("authorizeLiveWrite", () => {
     ).toEqual(["Far"]);
   });
 
-  it("needs --confirm-dangerous and a fresh backup for dangerous commands", () => {
+  it("needs --confirm-dangerous for dangerous commands", () => {
     const danger = assessLiveWrite(
       { kind: "command", command: "kill @e" },
       config,
@@ -355,24 +338,8 @@ describe("authorizeLiveWrite", () => {
       /--confirm-dangerous/u,
     );
     const flags = { reason: "test", confirmDangerous: true };
-    expect(() =>
-      authorizeLiveWrite({ ...base, assessment: danger, flags }),
-    ).toThrow(/live backup/u);
-    expect(() =>
-      authorizeLiveWrite({
-        ...base,
-        assessment: danger,
-        flags,
-        latestBackupAt: new Date("2026-10-02T00:00:00Z"),
-      }),
-    ).toThrow(/live backup/u);
     expect(
-      authorizeLiveWrite({
-        ...base,
-        assessment: danger,
-        flags,
-        latestBackupAt: new Date("2026-10-04T18:00:00Z"),
-      }).reason,
+      authorizeLiveWrite({ ...base, assessment: danger, flags }).reason,
     ).toBe("test");
   });
 
@@ -497,7 +464,6 @@ describe("live status", () => {
       readyReplicas: 1,
       podPhase: "Running",
       podReady: true,
-      worldRestoreLease: null,
     });
     expect(status.image).toMatch(
       /^docker\.io\/shepherdjerred\/the-storm-server:/u,
@@ -516,7 +482,7 @@ describe("live status", () => {
     expect(liveRefusal(parseLiveStatus(sts, null))).toMatch(/not ready/u);
   });
 
-  it("refuses restoration leases even when the private acceptance pod is ready", async () => {
+  it("ignores a leftover restoration annotation when the server is ready", async () => {
     const sts = StatefulSetSchema.parse(await fixture("statefulset.json"));
     const held = {
       ...sts,
@@ -530,96 +496,7 @@ describe("live status", () => {
     };
     const status = parseLiveStatus(held, await fixture("pod.json"));
     expect(status.podReady).toBe(true);
-    expect(status.worldRestoreLease).toBe("restore-request");
-    expect(liveRefusal(status)).toMatch(/world restoration.*restore-request/u);
-  });
-});
-
-describe("velero backups", () => {
-  it("names and scopes harness backups to the tsmc PVC", () => {
-    expect(harnessBackupName(new Date("2026-10-04T18:15:30.123Z"))).toBe(
-      "mc-harness-20261004t181530z",
-    );
-    expect(JSON.parse(harnessBackupManifest("mc-harness-x"))).toEqual({
-      apiVersion: "velero.io/v1",
-      kind: "Backup",
-      metadata: {
-        name: "mc-harness-x",
-        namespace: "velero",
-        labels: { "sjer.red/mc-harness": "true" },
-      },
-      spec: {
-        includedNamespaces: ["minecraft-tsmc"],
-        labelSelector: { matchLabels: { "velero.io/backup": "enabled" } },
-        snapshotVolumes: true,
-        storageLocation: "default",
-        volumeSnapshotLocations: ["zfspv-incr"],
-        ttl: "720h",
-      },
-    });
-  });
-
-  it("accepts the recorded scheduled all-namespace backup as recent", async () => {
-    const list = BackupListSchema.parse(await fixture("backups.json"));
-    expect(latestUsableBackup(list)).toEqual({
-      name: "6hourly-backup-20261004181530",
-      completedAt: new Date("2026-10-04T18:25:39Z"),
-    });
-  });
-
-  it("judges completion strictly", () => {
-    expect(backupState(backup({ phase: "InProgress" })).state).toBe("pending");
-    expect(backupState(backup({ phase: "PartiallyFailed" })).state).toBe(
-      "failed",
-    );
-    expect(
-      backupState(
-        backup({
-          phase: "Completed",
-          errors: 1,
-          volumeSnapshotsAttempted: 1,
-          volumeSnapshotsCompleted: 1,
-        }),
-      ).state,
-    ).toBe("failed");
-    expect(
-      backupState(
-        backup({
-          phase: "Completed",
-          volumeSnapshotsAttempted: 2,
-          volumeSnapshotsCompleted: 1,
-        }),
-      ).state,
-    ).toBe("failed");
-    expect(
-      backupState(
-        backup({
-          phase: "Completed",
-          volumeSnapshotsAttempted: 1,
-          volumeSnapshotsCompleted: 1,
-          completionTimestamp: "2026-10-04T00:00:00Z",
-        }),
-      ),
-    ).toEqual({
-      state: "completed",
-      completedAt: new Date("2026-10-04T00:00:00Z"),
-    });
-    expect(
-      latestUsableBackup({
-        items: [
-          {
-            metadata: { name: "other" },
-            spec: { includedNamespaces: ["scout"], snapshotVolumes: true },
-            status: {
-              phase: "Completed",
-              volumeSnapshotsAttempted: 1,
-              volumeSnapshotsCompleted: 1,
-              completionTimestamp: "2026-10-04T00:00:00Z",
-            },
-          },
-        ],
-      }),
-    ).toBeNull();
+    expect(liveRefusal(status)).toBeNull();
   });
 });
 

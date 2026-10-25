@@ -1,4 +1,5 @@
 # Bundled from GrimAC 2.3.74-3a9cdf1; upstream GPLv3 attribution below.
+# Runtime pin is 2.3.75-d8b8ae4, which still reads config-version 11.
 # Correction rollout is controlled by TheStorm per-player permissions; flags are always archived.
 # GrimAC main configuration
 # Source code: https://github.com/MWHunter/Grim

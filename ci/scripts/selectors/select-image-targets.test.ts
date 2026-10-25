@@ -164,14 +164,16 @@ describe("selectImageTargets", () => {
 
   test("rebuilds Temporal for the Storm runtime inputs copied into its image", async () => {
     for (const path of [
-      "packages/the-storm/server/restoration_backup.py",
-      "packages/the-storm/server/delivery_validation.py",
-      "packages/the-storm/server/future-runtime-helper.py",
+      "packages/the-storm/server/archive-progression.py",
       "packages/the-storm/server/restoration-guards.json",
-      "packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json",
     ]) {
-      expect(await select([path])).toEqual(["infra", "temporal-worker"]);
+      expect(await select([path])).toEqual(["infra"]);
     }
+    expect(
+      await select([
+        "packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json",
+      ]),
+    ).toEqual(["infra", "temporal-worker"]);
     expect(
       await select(["packages/the-storm/maintenance-status.json"]),
     ).toContain("temporal-worker");

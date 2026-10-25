@@ -44,7 +44,6 @@ describe("live helpers", () => {
       podPhase: null,
       podReady: false,
       image: null,
-      worldRestoreLease: null,
       tokenConfigured: true,
       bridge: { connected: false, localPort: null },
       refusal: "minecraft-tsmc is asleep",

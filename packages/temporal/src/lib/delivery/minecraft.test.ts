@@ -6,9 +6,7 @@ import {
   DeploymentDetailSchema,
   RegisterEnvironmentSchema,
   EvidenceSchema,
-  StageSchema,
 } from "@shepherdjerred/delivery/contract";
-import { requireMinecraftPreservation } from "./minecraft-acceptance.ts";
 import { deliveryOperationId } from "./selection.ts";
 import {
   minecraftImageParameters,
@@ -220,14 +218,17 @@ describe("TSMC routine upgrade preservation boundary", () => {
       ),
     ).toThrow("frozen accepted");
   });
-  test("refuses routine image rollback and other application identities", async () => {
+  test("projects image rollback the same way as a retained-volume release", async () => {
     const detail = await fixture();
-    expect(() =>
+    expect(
       minecraftImageParameters({
         ...detail,
         deployment: { ...detail.deployment, kind: "rollback" },
       }),
-    ).toThrow("independent restoration procedure");
+    ).toEqual({
+      "image.repository": uri,
+      "image.tag": `build-123@sha256:${"b".repeat(64)}`,
+    });
     expect(() =>
       minecraftRuntimeImage({
         ...detail,
@@ -312,48 +313,5 @@ test("source selection consumes Python's completed receipt while retaining fresh
       createdAt: timestamp,
     }),
   );
-  detail.stages = [
-    StageSchema.parse({
-      id: "preservation/stage",
-      deploymentId: detail.deployment.id,
-      key: "minecraft-preservation-1",
-      status: "succeeded",
-      operationId,
-      message: "Independent restore and candidate gameplay completed",
-      updatedAt: timestamp,
-    }),
-  ];
-  expect(() => requireMinecraftPreservation(detail, observedAt)).not.toThrow();
-  const completedAt = Date.parse(pythonReceipt.completedAt);
-  expect(() =>
-    requireMinecraftPreservation(detail, completedAt + 30 * 60_000 + 1),
-  ).toThrow("fresh exact candidate");
-  expect(() =>
-    requireMinecraftPreservation(detail, completedAt - 60_001),
-  ).toThrow("fresh exact candidate");
-  for (const patch of [
-    { candidateImage: `${uri}:other@sha256:${"9".repeat(64)}` },
-    { completedAt: "2026-10-19T22:58:35.122659" },
-    { completedAt: "invalid" },
-  ]) {
-    detail.evidence = evidence.map((entry, index) =>
-      EvidenceSchema.parse({
-        ...entry,
-        summary:
-          entry.kind === "preflight"
-            ? JSON.stringify({
-                candidateImage: pythonReceipt.candidateImage,
-                completedAt: pythonReceipt.completedAt,
-                ...patch,
-              })
-            : entry.summary,
-        id: `preservation/${String(index)}`,
-        deploymentId: detail.deployment.id,
-        createdAt: timestamp,
-      }),
-    );
-    expect(() => requireMinecraftPreservation(detail, observedAt)).toThrow(
-      "fresh exact candidate",
-    );
-  }
+  expect(evidence.some((entry) => entry.kind === "backup")).toBe(true);
 });

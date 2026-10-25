@@ -9,13 +9,13 @@ for the MCBridge Paper plugin, and the session daemon that holds them.
 | --------------------------- | ----------------------------------------------------------------------------------------------- |
 | `src/protocol/`             | Zod-only contracts: the MCBridge wire API, daemon IPC, paths, protocol version                  |
 | `src/bridge/client.ts`      | `BridgeClient` — bearer-authenticated, every response validated against the contract            |
-| `src/pins.ts`               | Pinned itzg image, Paper 26.2 build and plugin jars (url + sha256, as server/plugins.json)      |
+| `src/pins.ts`               | Pinned itzg image, Paper 26.3 build and plugin jars (url + sha256, as server/plugins.json)      |
 | `src/providers/docker/`     | Docker CLI wrapper, reusable Paper-container helpers, and the Docker sandbox provider           |
 | `src/providers/kubernetes/` | Cluster sandbox provider: scoped kubectl, pod manifest, port-forward supervisor                 |
 | `src/sandbox/`              | Sandbox records (0600, hold secrets), profiles, staging, and the provider contract              |
 | `src/playtest/`             | Scenario API (`define.ts`), the per-run child process, expectations and run reports             |
 | `src/target.ts`             | `Target`: one server the harness acts on (bridge client + log tail)                             |
-| `src/live/`                 | Live tsmc: cluster status, port-forward, write guard, Velero backups, journal and undo          |
+| `src/live/`                 | Live tsmc: cluster status, port-forward, write guard, journal and undo                          |
 | `src/files/`                | Read-only `/data` access over `docker exec` / scoped `kubectl exec` (`toolkit mc files`)        |
 | `src/daemon/`               | Unix-socket daemon: idle TTL, JSONL logs, sandbox lifecycle, target, playtest and client routes |
 | `src/protocol/build.ts`     | Build workspace files, the op log and manifest schemas (shared with toolkit `--record`)         |
@@ -40,7 +40,7 @@ in YZX order.
 
 ## Sandboxes
 
-The `paper` profile boots the pinned image with Paper 26.2, WorldEdit, Citizens
+The `paper` profile boots the pinned image with Paper 26.3, WorldEdit, Citizens
 (test actors), and the repo-built `MCBridge.jar` (build it with
 `mise exec -- gradle -p packages/the-storm/plugin :bridge:assemble`). The pinned
 Paper jar and plugin jars are downloaded once on the host (sha256-verified)
@@ -140,7 +140,7 @@ private in-memory Citizens registry that keep their own chunk loaded and
 vanish when the bridge stops. They never join, so they are absent from
 `/v1/players` and fire no `PlayerJoinEvent`. Without Citizens the routes answer
 `unsupported` and `/v1/info` omits the `citizens` capability. Verified on
-Paper 26.2 with Citizens 2.0.44:
+Paper 26.3 with Citizens 2.0.44:
 
 | Action    | Mechanism                                                           | Observed                                                    |
 | --------- | ------------------------------------------------------------------- | ----------------------------------------------------------- |
@@ -161,7 +161,7 @@ or the-storm's E2E suite.
 ## Real client
 
 `toolkit mc client` runs the-storm's Fabric preview client
-(`packages/the-storm/client`, Minecraft 26.2) against a sandbox. The daemon
+(`packages/the-storm/client`, Minecraft 26.3) against a sandbox. The daemon
 owns each client: it spawns `mise exec -- gradle runClient` from the
 repository with a private bootstrap (control socket, artifacts dir, server
 address) and a throwaway game dir, waits until the player is in the world,
@@ -488,9 +488,8 @@ the sole owner of sandboxes and bridge tokens.
 `--target live` (never inferred) makes the daemon's `LiveService`
 (`src/live/`) the target. It reads cluster state as the
 `mc-sandbox:mc-harness` ServiceAccount (`kubectl --as`): the StatefulSet, pod
-`minecraft-tsmc-0`, and the `sjer.red/world-restore-lease` annotation. An
-asleep or leased server is a 409 refusal, including a ready restoration
-acceptance pod; the harness never scales, patches or annotates anything. When usable, it supervises a `kubectl port-forward` to the
+`minecraft-tsmc-0`. An asleep server is a 409 refusal. The harness never
+scales, patches or annotates anything. When usable, it supervises a `kubectl port-forward` to the
 pod's MCBridge port 25580. The bridge token comes only from the daemon's
 `MC_BRIDGE_TOKEN` environment (from the `storm-brain` 1Password item). Logs come
 from bridge `log` events, because the ServiceAccount has no `pods/log` there.
@@ -505,9 +504,8 @@ allow-players, allow-protected, confirm-dangerous, affects):
   write's box is snapshotted on the bridge before it runs, so
   `live undo` can restore it.
 - **Tier 2**: regions over `mcLiveMaxRegionVolume` and dangerous commands.
-  These also need a clean completed Velero backup covering `minecraft-tsmc`
-  newer than `mcLiveBackupMaxAgeHours`; dangerous commands also need
-  `--confirm-dangerous`.
+  Dangerous commands need `--confirm-dangerous`. Scheduled Velero backups
+  cover the volume; the harness does not take one.
 
 The guard refuses outright:
 
@@ -522,9 +520,9 @@ The guard refuses outright:
 
 Each attempt that passes the guard is appended to
 `~/.toolkit/mc/journal/live/<date>.jsonl` with its reason, tier, box, humans
-online, backup and snapshot id, whether or not it succeeds. `live undo` is
-last-in-first-out over overlapping boxes. `live backup` creates a Velero
-`Backup` that snapshots the `minecraft-tsmc` PVC.
+online and snapshot id, whether or not it succeeds. `live undo` is
+last-in-first-out over overlapping boxes. `live backup` is refused; the
+scheduled Velero job is the backup.
 
 Operator steps: the wiki how-to "Operate The Storm with the agent harness".
 
@@ -545,8 +543,8 @@ with `--gunzip` to decompress while saving.
 - Only `test`, `realpath`, `find` and `cat` run in the server, through
   `docker exec` or `kubectl exec` as the scoped mc-harness ServiceAccount
   (`pods/exec` on the sandbox pod or `minecraft-tsmc-0`, container
-  `minecraft-tsmc`). Live reads need a running pod but no bridge token; a
-  world-restoration lease blocks them.
+  `minecraft-tsmc`). Live reads need a running pod but no bridge token. An
+  asleep or unready server is refused.
 - The daemon writes the file itself (absolute `--out`, never overwritten
   without `--force`) and returns its size and sha256.
 

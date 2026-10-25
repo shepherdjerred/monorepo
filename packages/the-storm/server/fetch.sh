@@ -12,8 +12,12 @@ out=$2
 
 fetch() { # url sha256 dest
   mkdir -p "$(dirname "$3")"
-  curl --fail --silent --show-error --location --retry 5 --retry-all-errors \
-    --output "$3" "$1"
+  if [[ $1 == vendor/* ]]; then
+    cp "$(dirname "$manifest")/$1" "$3"
+  else
+    curl --fail --silent --show-error --location --retry 5 --retry-all-errors \
+      --output "$3" "$1"
+  fi
   echo "$2  $3" | sha256sum --check --strict -
 }
 

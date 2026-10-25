@@ -3,7 +3,7 @@ import { test } from "./fixtures.ts";
 import { serverLogs } from "#e2e/harness/external/files.ts";
 
 describe("The Storm plugin", () => {
-  test("enables on Paper 26.2 after LuckPerms with E2E modules on", async ({
+  test("enables on Paper 26.3 after LuckPerms with E2E modules on", async ({
     server,
   }) => {
     const logs = await serverLogs(server);

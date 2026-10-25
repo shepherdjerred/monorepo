@@ -37,6 +37,7 @@ RUN --mount=type=cache,id=the-storm-gradle,target=/home/gradle/.gradle/caches \
 # (minecraft-tsmc.test.ts enforces it; renovate.json groups both into one PR).
 FROM itzg/minecraft-server:2026.9.1-java25@sha256:e8640538dac5d54c2838d57fa9641e735ad0cf2b71fb0e8a68da3b542a315749 AS fetch
 COPY server/plugins.json server/fetch.sh /build/
+COPY server/vendor/ /build/vendor/
 RUN bash /build/fetch.sh /build/plugins.json /out
 COPY server/build-livemap.sh /build/
 COPY server/livemap/ /build/livemap/
@@ -80,9 +81,9 @@ COPY --chmod=0755 server/storm-entrypoint.sh /usr/local/bin/storm-entrypoint
 # SYNC_SKIP_NEWER_IN_DESTINATION=false: the image wins over a plugin's rewrite.
 # The towns module owns locks. Every stale top-level jar is retired.
 ENV TYPE=PAPER \
-  VERSION=26.2 \
+  VERSION=26.3 \
   CFG_PROXY_PROTOCOL=false \
-  PAPER_CUSTOM_JAR=/opt/paper/paper-26.2-129.jar \
+  PAPER_CUSTOM_JAR=/opt/paper/paper-26.3-223.jar \
   JVM_DD_OPTS=bundlerRepoDir:/opt/paper \
   JVM_OPTS=-Dpaper.maxChatCommandInputSize=4096 \
   PAPER_CONFIG_DEFAULTS_REPO=/opt/paper-defaults \

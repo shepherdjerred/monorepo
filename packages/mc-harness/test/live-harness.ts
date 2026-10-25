@@ -28,7 +28,6 @@ export const liveConfig: LiveGuardConfig = {
   writes: true,
   worlds: ["world", "wilds", "peaks"],
   maxRegionVolume: 1000,
-  backupMaxAgeHours: 24,
   nearPlayerRadius: 32,
   maxSnapshotVolume: 100_000,
   protectedRegions: [
@@ -91,7 +90,6 @@ export function liveContext(options: {
   const token = options.token ?? LIVE_TEST_TOKEN;
   const live = new LiveService({
     kubectl: new Kubectl(liveKubeTarget("ctx"), options.runner),
-    velero: new Kubectl(liveKubeTarget("ctx", "velero"), options.runner),
     token: () => token,
     config: () => Promise.resolve(options.config ?? liveConfig),
     journal: options.journal,

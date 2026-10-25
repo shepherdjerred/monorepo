@@ -344,14 +344,21 @@ export function minecraftUpgradeOf(definition: Stored):
       ? undefined
       : {
           imageComponent: upgrade.imageComponent,
-          releaseMode: upgrade.releaseMode ?? "verified-restore",
+          releaseMode:
+            upgrade.releaseMode === "verified-restore" ||
+            upgrade.releaseMode === undefined
+              ? "retained-volume-restart"
+              : upgrade.releaseMode,
         };
   }
   const upgrade = firstStep(definition, "minecraft-upgrade");
   return upgrade?.kind === "minecraft-upgrade"
     ? {
         imageComponent: upgrade.imageComponent,
-        releaseMode: upgrade.releaseMode,
+        releaseMode:
+          upgrade.releaseMode === "verified-restore"
+            ? "retained-volume-restart"
+            : upgrade.releaseMode,
       }
     : undefined;
 }

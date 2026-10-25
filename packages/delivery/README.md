@@ -215,21 +215,18 @@ The independent control-plane stage appends immutable evidence for native Job
 admission, its dispatch journal, replay, and final acceptance. Exact proof replays
 reuse existing records, including older indexed receipts. Stage operation identity
 and completed-stage immutability remain mandatory; other stages retain indexed
-evidence identities. Frozen Minecraft upgrade pipelines also append preservation
-proofs under their numbered preservation stage, retaining the initial native
-controller receipt when the independent backup and gameplay proofs arrive.
+evidence identities. A Minecraft release does not append a backup or restored
+copy. Scheduled Velero backups are the only backup.
 
-The TSMC recipe's `minecraft-upgrade` step declares its `releaseMode`. `retained-volume-restart` uses an ordinary graceful StatefulSet
-restart on the retained world PVC and requires the usual exact source, image,
-reconciliation and runtime acceptance. It does not manufacture preservation
-evidence or couple every release to a cloud backup and restored candidate.
-`verified-restore` and existing revisions with no mode retain the independent
-backup/restore gate. Unknown modes fail validation. Neither mode permits an
-image-only rollback of the persistent world.
-Routine-mode reconciliation failures use an ordinary `argo` recovery intent,
-which requires the same recorded request, native operation identity and
-settled external work before releasing ownership. Preservation-mode recovery
-uses a `minecraft` intent and its private controller journal.
+The TSMC recipe's `minecraft-upgrade` step declares its `releaseMode`. A release
+restarts the retained world PVC and requires the usual exact source, image,
+reconciliation and runtime acceptance. Scheduled Velero backups are the only
+backup. Omitted modes are `retained-volume-restart`. Historical rows may still
+say `verified-restore`; that value parses and takes the same retained-volume
+path. Unknown modes fail validation. An image rollback is the same restart and
+does not restore an older world. Reconciliation failures use an ordinary `argo`
+recovery intent, which requires the same recorded request, native operation
+identity and settled external work before releasing ownership.
 
 CI registration is pending until the backend verifies the exact Woodpecker
 main-push pipeline reached success. Artifact selection cannot consume pending

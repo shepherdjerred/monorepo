@@ -67,13 +67,9 @@ async function checkMinecraftRecovery(detail: DeploymentDetail) {
   current.status.operationState.phase = "Failed";
   selected.pipeline.definition.minecraftUpgrade.releaseMode =
     "verified-restore";
-  await expect(inspect(selected, recovery)).rejects.toMatchObject({
-    code: "INVALID",
-  });
+  expect(await inspect(selected, recovery)).toHaveLength(1);
   delete selected.pipeline.definition.minecraftUpgrade.releaseMode;
-  await expect(inspect(selected, recovery)).rejects.toMatchObject({
-    code: "INVALID",
-  });
+  expect(await inspect(selected, recovery)).toHaveLength(1);
 }
 
 /** A model recipe's request is its sync step: `step-sync`, or `subN-step-sync` inside a compound recipe. */

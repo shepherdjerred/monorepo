@@ -25,9 +25,8 @@ export async function seedMinecraftRecovery(
     throw new Error(
       "Minecraft recovery fixture requires its specialized policy",
     );
-  // This fixture exercises the legacy controller-journal recovery interface.
   registration.pipelineRevisionId = "minecraft-tsmc/1";
-  pipeline.minecraftUpgrade.releaseMode = "verified-restore";
+  pipeline.minecraftUpgrade.releaseMode = "retained-volume-restart";
   const build = await delivery.publish(
     {
       requestId: "browser/minecraft/ci",
@@ -73,7 +72,7 @@ export async function seedMinecraftRecovery(
     },
     testOperator,
   );
-  const claimed = await delivery.claim(selected.id, testExecutor);
+  await delivery.claim(selected.id, testExecutor);
   await delivery.stage(
     selected.id,
     {
@@ -95,15 +94,5 @@ export async function seedMinecraftRecovery(
       evidence: [],
     },
     testExecutor,
-  );
-  await delivery.requestMinecraftRecovery(
-    selected.id,
-    {
-      requestId: "browser/minecraft/recovery",
-      expectedEnvironmentGeneration: claimed.environment.generation,
-      reason:
-        "Inspect and recover the unchanged original before selecting the candidate",
-    },
-    testOperator,
   );
 }

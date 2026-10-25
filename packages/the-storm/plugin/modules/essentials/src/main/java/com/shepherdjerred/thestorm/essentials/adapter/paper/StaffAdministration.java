@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
 import static java.util.Objects.requireNonNull;
 
+import com.shepherdjerred.thestorm.core.paper.Invulnerability;
 import java.util.Locale;
 import net.kyori.adventure.text.Component;
 import org.bukkit.GameMode;
@@ -38,8 +39,8 @@ final class StaffAdministration {
         "god [player]",
         request -> {
           var player = target(request, 0);
-          player.setInvulnerable(!player.isInvulnerable());
-          request.say("Invulnerable: " + player.isInvulnerable());
+          player.setInvulnerable(!Invulnerability.marked(player));
+          request.say("Invulnerable: " + Invulnerability.marked(player));
         });
     tools.add(
         "heal [player]",

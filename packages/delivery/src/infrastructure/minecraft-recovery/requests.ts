@@ -2,7 +2,6 @@ import type { Principal } from "#shared/contract.ts";
 import {
   MinecraftControllerReceiptSchema,
   MinecraftRecoveryIntentSchema,
-  RequestMinecraftRecoverySchema,
 } from "#shared/minecraft-recovery-contract.ts";
 import type {
   RequestMinecraftRecovery,
@@ -16,13 +15,10 @@ import {
   audit,
   fingerprint,
   lock,
-  remember,
-  request,
   wire,
 } from "#infrastructure/delivery-records.ts";
 import {
   bareFingerprint,
-  createIntent,
   findIntent,
   intentDetail,
   legacyIntentFields,
@@ -40,73 +36,17 @@ export function minecraftIntentView(row: RecoveryIntent) {
   );
 }
 
-export async function requestMinecraftRecovery(
+export function requestMinecraftRecovery(
   this: Delivery,
-  ...args: [
-    deploymentId: string,
-    input: RequestMinecraftRecovery,
-    actor: Principal,
-  ]
-) {
-  const [deploymentId, rawInput, actor] = args;
+  _deploymentId: string,
+  _input: RequestMinecraftRecovery,
+  actor: Principal,
+): never {
   requireScope(actor, "admin");
-  const input = RequestMinecraftRecoverySchema.parse(rawInput);
-  const requestInput = { deploymentId, ...input };
-  return this.database.$transaction(async (tx) => {
-    const prior = await request(tx, actor, {
-      requestId: input.requestId,
-      input: requestInput,
-      resultType: "minecraft-recovery",
-    });
-    if (prior !== null)
-      return minecraftIntentView(
-        await findIntent(tx, prior.resultId, "minecraft"),
-      );
-    const context = await minecraftRecoveryOwnership(
-      tx,
-      deploymentId,
-      input.expectedEnvironmentGeneration,
-    );
-    if (
-      (await tx.recoveryIntent.findFirst({
-        where: { deploymentId, status: "pending" },
-      })) !== null
-    )
-      throw new DeliveryError(
-        "CONFLICT",
-        "Minecraft deployment already has a pending recovery intent",
-      );
-    await tx.deployment.update({
-      where: { id: deploymentId },
-      data: { cancelRequested: true },
-    });
-    const intent = await createIntent(tx, {
-      id: input.requestId,
-      kind: "minecraft",
-      deploymentId,
-      requestedBy: actor.id,
-      reason: input.reason,
-      expectedGeneration: input.expectedEnvironmentGeneration,
-      snapshotFingerprint: context.snapshotFingerprint,
-      workflowId: `delivery-minecraft-recovery/${input.requestId}`,
-    });
-    await remember(tx, actor, {
-      requestId: input.requestId,
-      input: requestInput,
-      resultType: "minecraft-recovery",
-      resultId: intent.id,
-    });
-    await audit(tx, actor, {
-      action: "minecraft.recovery_requested",
-      entityId: deploymentId,
-      requestId: input.requestId,
-      metadata: {
-        reason: input.reason,
-        snapshotFingerprint: context.snapshotFingerprint,
-      },
-    });
-    return minecraftIntentView(intent);
-  });
+  throw new DeliveryError(
+    "INVALID",
+    "Minecraft recovery was removed. Releases restart the retained volume. Scheduled Velero backups are the only backup.",
+  );
 }
 
 export async function minecraftRecovery(

@@ -93,7 +93,7 @@ export async function minecraftRecoveryOwnership(
   if (stages.some((stage) => stage.key === "reconcile"))
     throw new DeliveryError(
       "CONFLICT",
-      "Minecraft source selection was admitted; use the independent restoration procedure and retain ownership",
+      "Minecraft source selection was admitted. Recovery was removed and the retained volume was not restored.",
     );
   const operationId = deliveryOperationId(
     `${deploymentId}:minecraft-preservation`,

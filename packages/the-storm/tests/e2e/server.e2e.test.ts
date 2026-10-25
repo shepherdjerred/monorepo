@@ -24,8 +24,8 @@ function blockArgs(block: Vec3): string {
   return `${block.x.toString()} ${block.y.toString()} ${block.z.toString()}`;
 }
 
-describe("disposable Paper 26.2 server", () => {
-  test("runs Paper 26.2 behind ViaVersion and answers RCON", async ({
+describe("disposable Paper 26.3 server", () => {
+  test("runs Paper 26.3 behind ViaVersion and answers RCON", async ({
     rcon,
     server,
   }) => {

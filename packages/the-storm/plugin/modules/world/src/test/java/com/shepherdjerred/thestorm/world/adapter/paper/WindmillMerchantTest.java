@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.world.adapter.paper;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.shepherdjerred.thestorm.core.paper.Invulnerability;
 import com.shepherdjerred.thestorm.world.domain.MerchantAnchor;
 import com.shepherdjerred.thestorm.world.domain.MerchantConfig;
 import java.time.Instant;
@@ -71,7 +72,7 @@ final class WindmillMerchantTest {
 
     var trader = onlyTrader();
     assertThat(trader.getDespawnDelay()).isEqualTo(20 * 60 * 20);
-    assertThat(trader.isInvulnerable()).isTrue();
+    assertThat(Invulnerability.marked(trader)).isTrue();
     assertThat(trader.getRecipes()).hasSize(2);
     assertThat(trader.getRecipes())
         .allSatisfy(

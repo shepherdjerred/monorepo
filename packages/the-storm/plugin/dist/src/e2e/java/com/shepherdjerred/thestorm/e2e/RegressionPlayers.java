@@ -69,7 +69,7 @@ final class RegressionPlayers {
         subject,
         opponent.uuid(),
         human.getGameMode().name(),
-        human.isInvulnerable(),
+        human.isMarkedInvulnerable(),
         member.alive(),
         opponent.alive(),
         opponent.kit().orElseThrow(),

@@ -30,11 +30,9 @@ import { withBackupActivityHeartbeat } from "#activities/homelab/seaweedfs-backu
 import { workerSourceFingerprint } from "#lib/delivery/workers/worker-source.ts";
 import { workerRolloutTarget } from "#lib/delivery/workers/worker-pool.ts";
 import { prepareMinecraftDelivery } from "./minecraft.ts";
-import { requireMinecraftPreservation } from "#lib/delivery/minecraft-acceptance.ts";
 import { trmnlRepairClaim } from "./trmnl-repair.ts";
 import { executorIdentity } from "./model/stages.ts";
 import { modelRecipe } from "#lib/delivery/model/recipe.ts";
-import { minecraftUpgradeOf } from "@shepherdjerred/delivery/model-contract";
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
 import {
   acknowledgeReconciledRelease,
@@ -71,12 +69,6 @@ async function capturePriorWorkerSource(current: DeploymentDetail) {
   });
 }
 
-async function minecraftEligible(current: DeploymentDetail): Promise<boolean> {
-  if (minecraftUpgradeOf(current.pipeline.definition) === undefined)
-    return true;
-  const result = await prepareMinecraftDelivery(current);
-  return result.status === "ready";
-}
 function adapterFlags(current: DeploymentDetail) {
   const pipeline = current.pipeline.definition;
   return {
@@ -84,10 +76,7 @@ function adapterFlags(current: DeploymentDetail) {
     controlPlane: current.deployment.controlPlaneSnapshot !== null,
     platform: current.deployment.platformSnapshot !== null,
     workerHosts: current.deployment.workerSnapshot !== null,
-    minecraftUpgrade:
-      pipeline.kind === "argocd" &&
-      pipeline.minecraftUpgrade !== undefined &&
-      pipeline.minecraftUpgrade.releaseMode !== "retained-volume-restart",
+    minecraftUpgrade: false,
     scoutSite:
       pipeline.kind === "argocd" &&
       pipeline.scoutSite !== undefined &&
@@ -105,8 +94,7 @@ export async function prepareDelivery(id: string) {
   const current = await detail(id);
   if (["succeeded", "failed", "canceled"].includes(current.deployment.status))
     return { status: "terminal" } as const;
-  if (!(await minecraftEligible(current)))
-    return { status: "waiting" } as const;
+  prepareMinecraftDelivery(current);
   try {
     // The executor names itself on claim so ownership is never transferred
     // silently (D7); specialized proofs ride in the same body.
@@ -161,13 +149,6 @@ async function stage(
 
 export async function applyDelivery(id: string): Promise<void> {
   const current = await detail(id);
-  if (
-    current.pipeline.definition.kind === "argocd" &&
-    current.pipeline.definition.minecraftUpgrade !== undefined &&
-    current.pipeline.definition.minecraftUpgrade.releaseMode !==
-      "retained-volume-restart"
-  )
-    requireMinecraftPreservation(current);
   if (current.deployment.cancelRequested)
     throw new Error("Delivery cancellation requested before mutation");
   if (current.pipeline.definition.kind === "static-site") {
