@@ -62,6 +62,7 @@ export function ciImageDefinition(name: string): CiImageDefinition {
           "ci/ci-image/Dockerfile",
           "ci/scripts/swiftlint/pins.json",
           "ci/scripts/swiftlint/extract-source.py",
+          "ci/scripts/swiftlint/producer.py",
           "ci/scripts/swiftlint/runtime-libraries.txt",
           "ci/scripts/swiftlint/runtime.sh",
           "ci/scripts/swiftlint/verify-capabilities.sh",
