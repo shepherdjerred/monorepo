@@ -1,8 +1,10 @@
 package com.shepherdjerred.thestorm.creative.adapter.db;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
+import com.shepherdjerred.thestorm.creative.domain.PlotFlag;
 import com.shepherdjerred.thestorm.creative.domain.PlotId;
 import com.shepherdjerred.thestorm.creative.domain.PlotRole;
 import com.shepherdjerred.thestorm.creative.domain.PlotViews;
@@ -12,6 +14,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -35,9 +38,11 @@ final class JooqClaimStoreTest {
             true,
             "Harbor",
             "A dock",
-            Map.of(FRIEND, PlotRole.TRUSTED));
+            Map.of(FRIEND, PlotRole.TRUSTED),
+            Set.of());
     var released =
-        new StoredClaim(plot, Optional.empty(), true, false, "Harbor", "A dock", Map.of());
+        new StoredClaim(
+            plot, Optional.empty(), true, false, "Harbor", "A dock", Map.of(), Set.of());
     try (var database = StormDatabase.open(directory.resolve("creative.db"))) {
       database.migrate("creative", JooqClaimStoreTest.class.getClassLoader());
       var store = new JooqClaimStore(database);
@@ -82,7 +87,8 @@ final class JooqClaimStoreTest {
             false,
             "Ruins",
             "Staff build",
-            Map.of(FRIEND, PlotRole.MEMBER));
+            Map.of(FRIEND, PlotRole.MEMBER),
+            Set.of());
     try (var database = StormDatabase.open(directory.resolve("overlay.db"))) {
       database.migrate("creative", JooqClaimStoreTest.class.getClassLoader());
       var store = new JooqClaimStore(database);
@@ -95,7 +101,8 @@ final class JooqClaimStoreTest {
   @Test
   void aTrustRowWithoutARoleLoadsAsTrusted() throws Exception {
     var plot = new PlotId(4, 4);
-    var claimed = new StoredClaim(plot, Optional.of(OWNER), false, true, "Plot", "Open", Map.of());
+    var claimed =
+        new StoredClaim(plot, Optional.of(OWNER), false, true, "Plot", "Open", Map.of(), Set.of());
     try (var database = StormDatabase.open(directory.resolve("legacy-role.db"))) {
       database.migrate("creative", JooqClaimStoreTest.class.getClassLoader());
       var store = new JooqClaimStore(database);
@@ -113,6 +120,44 @@ final class JooqClaimStoreTest {
 
       assertThat(store.loadAll().join().getFirst().access())
           .containsEntry(FRIEND, PlotRole.TRUSTED);
+    }
+  }
+
+  @Test
+  void flagsRoundTripAndAnUnknownFlagFails() throws Exception {
+    var plot = new PlotId(5, 5);
+    var claimed =
+        new StoredClaim(
+            plot,
+            Optional.of(OWNER),
+            false,
+            true,
+            "Plot",
+            "Open",
+            Map.of(),
+            Set.of(PlotFlag.USE, PlotFlag.PVP));
+    try (var database = StormDatabase.open(directory.resolve("flags.db"))) {
+      database.migrate("creative", JooqClaimStoreTest.class.getClassLoader());
+      var store = new JooqClaimStore(database);
+      store.save(claimed).join();
+      assertThat(store.loadAll().join()).containsExactly(claimed);
+
+      store.save(claimed.withFlags(Set.of())).join();
+      assertThat(store.loadAll().join().getFirst().flags()).isEmpty();
+
+      database
+          .write(
+              dsl ->
+                  dsl.query(
+                          "INSERT INTO creative_flags (plot_x, plot_z, flag) VALUES (?, ?, ?)",
+                          plot.x(),
+                          plot.z(),
+                          "fly")
+                      .execute())
+          .join();
+      assertThatThrownBy(() -> store.loadAll().join())
+          .cause()
+          .hasMessageContaining("unknown creative flag: fly");
     }
   }
 }

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -26,6 +27,16 @@ final class PlotAccessTest {
         @Override
         public Map<UUID, PlotRole> access(PlotId id) {
           return PLOT.equals(id) ? Map.of(FRIEND, PlotRole.TRUSTED) : Map.of();
+        }
+
+        @Override
+        public Set<PlotFlag> flags(PlotId id) {
+          return Set.of();
+        }
+
+        @Override
+        public boolean marked(PlotId id) {
+          return owner(id).isPresent();
         }
       };
 

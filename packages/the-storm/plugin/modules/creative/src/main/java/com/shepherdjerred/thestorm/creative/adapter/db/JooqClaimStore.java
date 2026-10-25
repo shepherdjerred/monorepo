@@ -1,25 +1,29 @@
 package com.shepherdjerred.thestorm.creative.adapter.db;
 
 import static com.shepherdjerred.thestorm.creative.adapter.db.generated.Tables.CREATIVE_CLAIMS;
+import static com.shepherdjerred.thestorm.creative.adapter.db.generated.Tables.CREATIVE_FLAGS;
 import static com.shepherdjerred.thestorm.creative.adapter.db.generated.Tables.CREATIVE_TRUST;
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.creative.adapter.db.generated.tables.records.CreativeClaimsRecord;
 import com.shepherdjerred.thestorm.creative.app.ClaimStore;
+import com.shepherdjerred.thestorm.creative.domain.PlotFlag;
 import com.shepherdjerred.thestorm.creative.domain.PlotId;
 import com.shepherdjerred.thestorm.creative.domain.PlotRole;
 import com.shepherdjerred.thestorm.creative.domain.StoredClaim;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.jooq.DSLContext;
 
-/** {@link ClaimStore} over {@code creative_claims} and {@code creative_trust}. */
+/** {@link ClaimStore} over claims, roles, and visitor flags. */
 public final class JooqClaimStore implements ClaimStore {
 
   private final StormDatabase database;
@@ -63,10 +67,16 @@ public final class JooqClaimStore implements ClaimStore {
           UUID.fromString(column(row.getMember(), "member")),
           PlotRole.parse(column(row.getRole(), "role")));
     }
+    var flags = new HashMap<PlotId, Set<PlotFlag>>();
+    for (var row : dsl.selectFrom(CREATIVE_FLAGS).fetch()) {
+      var id = plotId(row.getPlotX(), row.getPlotZ());
+      var enabled = flags.computeIfAbsent(id, ignored -> new LinkedHashSet<>());
+      enabled.add(PlotFlag.require(column(row.getFlag(), "flag")));
+    }
     var claims = new ArrayList<StoredClaim>();
     for (var row : dsl.selectFrom(CREATIVE_CLAIMS).fetch()) {
       var id = plotId(row.getPlotX(), row.getPlotZ());
-      claims.add(toClaim(row, access.getOrDefault(id, Map.of())));
+      claims.add(toClaim(row, access.getOrDefault(id, Map.of()), flags.getOrDefault(id, Set.of())));
     }
     return List.copyOf(claims);
   }
@@ -93,9 +103,17 @@ public final class JooqClaimStore implements ClaimStore {
           .set(CREATIVE_TRUST.ROLE, member.getValue().stored())
           .execute();
     }
+    for (var flag : claim.flags()) {
+      dsl.insertInto(CREATIVE_FLAGS)
+          .set(CREATIVE_FLAGS.PLOT_X, claim.id().x())
+          .set(CREATIVE_FLAGS.PLOT_Z, claim.id().z())
+          .set(CREATIVE_FLAGS.FLAG, flag.stored())
+          .execute();
+    }
   }
 
-  private static StoredClaim toClaim(CreativeClaimsRecord row, Map<UUID, PlotRole> access) {
+  private static StoredClaim toClaim(
+      CreativeClaimsRecord row, Map<UUID, PlotRole> access, Set<PlotFlag> flags) {
     var ownerText = row.getOwner();
     var owner =
         ownerText == null ? Optional.<UUID>empty() : Optional.of(UUID.fromString(ownerText));
@@ -106,7 +124,8 @@ public final class JooqClaimStore implements ClaimStore {
         column(row.getCountsTowardCap(), "counts_toward_cap"),
         column(row.getName(), "name"),
         column(row.getDescription(), "description"),
-        access);
+        access,
+        flags);
   }
 
   private static PlotId plotId(Integer x, Integer z) {

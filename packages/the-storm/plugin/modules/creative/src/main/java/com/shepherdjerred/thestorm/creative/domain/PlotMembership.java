@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.creative.domain;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /** Who holds a plot. Empty owner means nobody may build there except staff. */
@@ -12,4 +13,10 @@ public interface PlotMembership {
 
   /** Members, trusted players, and denied players. The recovered signs recorded none. */
   Map<UUID, PlotRole> access(PlotId id);
+
+  /** Visitor flags that are on. Empty means every flag is off. */
+  Set<PlotFlag> flags(PlotId id);
+
+  /** A claimed or staff-held plot. An empty cell is not marked. */
+  boolean marked(PlotId id);
 }
