@@ -10,6 +10,7 @@ import com.shepherdjerred.thestorm.creative.app.ClaimStore;
 import com.shepherdjerred.thestorm.creative.domain.PlotFlag;
 import com.shepherdjerred.thestorm.creative.domain.PlotId;
 import com.shepherdjerred.thestorm.creative.domain.PlotRole;
+import com.shepherdjerred.thestorm.creative.domain.PlotSurface;
 import com.shepherdjerred.thestorm.creative.domain.StoredClaim;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -94,6 +95,9 @@ public final class JooqClaimStore implements ClaimStore {
         .set(CREATIVE_CLAIMS.COUNTS_TOWARD_CAP, claim.countsTowardCap())
         .set(CREATIVE_CLAIMS.NAME, claim.name())
         .set(CREATIVE_CLAIMS.DESCRIPTION, claim.description())
+        .set(CREATIVE_CLAIMS.FLOOR, claim.surface().floor().orElse(null))
+        .set(CREATIVE_CLAIMS.WALL, claim.surface().wall().orElse(null))
+        .set(CREATIVE_CLAIMS.BIOME, claim.surface().biome().orElse(null))
         .execute();
     for (var member : claim.access().entrySet()) {
       dsl.insertInto(CREATIVE_TRUST)
@@ -125,7 +129,18 @@ public final class JooqClaimStore implements ClaimStore {
         column(row.getName(), "name"),
         column(row.getDescription(), "description"),
         access,
-        flags);
+        flags,
+        surface(row));
+  }
+
+  private static PlotSurface surface(CreativeClaimsRecord row) {
+    var floor = row.getFloor();
+    var wall = row.getWall();
+    var biome = row.getBiome();
+    return new PlotSurface(
+        floor == null ? Optional.empty() : Optional.of(PlotSurface.requireFloor(floor)),
+        wall == null ? Optional.empty() : Optional.of(PlotSurface.requireWall(wall)),
+        biome == null ? Optional.empty() : Optional.of(PlotSurface.requireBiome(biome)));
   }
 
   private static PlotId plotId(Integer x, Integer z) {

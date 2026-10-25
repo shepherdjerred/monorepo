@@ -100,7 +100,15 @@ final class ClaimRulesTest {
             Optional.of(new RecoveredPlot("2;1", ACTOR.toString(), List.of())),
             Optional.of(
                 new StoredClaim(
-                    new PlotId(2, 1), Optional.empty(), true, false, "", "", Map.of(), Set.of())));
+                    new PlotId(2, 1),
+                    Optional.empty(),
+                    true,
+                    false,
+                    "",
+                    "",
+                    Map.of(),
+                    Set.of(),
+                    PlotSurface.DEFAULT)));
 
     assertThat(released.owner()).isEmpty();
     assertThat(ClaimRules.counted(ACTOR, List.of(playerClaim, assigned, released))).isEqualTo(1);
@@ -111,7 +119,8 @@ final class ClaimRulesTest {
   }
 
   private static PlotView view(PlotId id, Optional<UUID> owner, boolean staffHeld, boolean counts) {
-    return new PlotView(id, owner, "Harbor", "A dock", Map.of(), staffHeld, counts, Set.of());
+    return new PlotView(
+        id, owner, "Harbor", "A dock", Map.of(), staffHeld, counts, Set.of(), PlotSurface.DEFAULT);
   }
 
   private static ClaimRequest attempt(PlotView view, boolean staff, int counted, int cap) {

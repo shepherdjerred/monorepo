@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.creative.domain.PlotFlag;
 import com.shepherdjerred.thestorm.creative.domain.PlotId;
 import com.shepherdjerred.thestorm.creative.domain.PlotRole;
+import com.shepherdjerred.thestorm.creative.domain.PlotSurface;
 import com.shepherdjerred.thestorm.creative.domain.PlotViews;
 import com.shepherdjerred.thestorm.creative.domain.RecoveredPlot;
 import com.shepherdjerred.thestorm.creative.domain.StoredClaim;
@@ -39,10 +40,19 @@ final class JooqClaimStoreTest {
             "Harbor",
             "A dock",
             Map.of(FRIEND, PlotRole.TRUSTED),
-            Set.of());
+            Set.of(),
+            PlotSurface.DEFAULT);
     var released =
         new StoredClaim(
-            plot, Optional.empty(), true, false, "Harbor", "A dock", Map.of(), Set.of());
+            plot,
+            Optional.empty(),
+            true,
+            false,
+            "Harbor",
+            "A dock",
+            Map.of(),
+            Set.of(),
+            PlotSurface.DEFAULT);
     try (var database = StormDatabase.open(directory.resolve("creative.db"))) {
       database.migrate("creative", JooqClaimStoreTest.class.getClassLoader());
       var store = new JooqClaimStore(database);
@@ -88,7 +98,8 @@ final class JooqClaimStoreTest {
             "Ruins",
             "Staff build",
             Map.of(FRIEND, PlotRole.MEMBER),
-            Set.of());
+            Set.of(),
+            PlotSurface.DEFAULT);
     try (var database = StormDatabase.open(directory.resolve("overlay.db"))) {
       database.migrate("creative", JooqClaimStoreTest.class.getClassLoader());
       var store = new JooqClaimStore(database);
@@ -102,7 +113,16 @@ final class JooqClaimStoreTest {
   void aTrustRowWithoutARoleLoadsAsTrusted() throws Exception {
     var plot = new PlotId(4, 4);
     var claimed =
-        new StoredClaim(plot, Optional.of(OWNER), false, true, "Plot", "Open", Map.of(), Set.of());
+        new StoredClaim(
+            plot,
+            Optional.of(OWNER),
+            false,
+            true,
+            "Plot",
+            "Open",
+            Map.of(),
+            Set.of(),
+            PlotSurface.DEFAULT);
     try (var database = StormDatabase.open(directory.resolve("legacy-role.db"))) {
       database.migrate("creative", JooqClaimStoreTest.class.getClassLoader());
       var store = new JooqClaimStore(database);
@@ -135,7 +155,8 @@ final class JooqClaimStoreTest {
             "Plot",
             "Open",
             Map.of(),
-            Set.of(PlotFlag.USE, PlotFlag.PVP));
+            Set.of(PlotFlag.USE, PlotFlag.PVP),
+            PlotSurface.DEFAULT);
     try (var database = StormDatabase.open(directory.resolve("flags.db"))) {
       database.migrate("creative", JooqClaimStoreTest.class.getClassLoader());
       var store = new JooqClaimStore(database);
@@ -158,6 +179,48 @@ final class JooqClaimStoreTest {
       assertThatThrownBy(() -> store.loadAll().join())
           .cause()
           .hasMessageContaining("unknown creative flag: fly");
+    }
+  }
+
+  @Test
+  void surfaceRoundTripAndAnUnknownFloorFails() throws Exception {
+    var plot = new PlotId(6, 6);
+    var claimed =
+        new StoredClaim(
+            plot,
+            Optional.of(OWNER),
+            false,
+            true,
+            "Plot",
+            "Open",
+            Map.of(),
+            Set.of(),
+            new PlotSurface(
+                Optional.of("minecraft:sand"),
+                Optional.of("minecraft:quartz_block"),
+                Optional.of("minecraft:desert")));
+    try (var database = StormDatabase.open(directory.resolve("surface.db"))) {
+      database.migrate("creative", JooqClaimStoreTest.class.getClassLoader());
+      var store = new JooqClaimStore(database);
+      store.save(claimed).join();
+      assertThat(store.loadAll().join()).containsExactly(claimed);
+
+      store.save(claimed.withSurface(PlotSurface.DEFAULT)).join();
+      assertThat(store.loadAll().join().getFirst().surface()).isEqualTo(PlotSurface.DEFAULT);
+
+      database
+          .write(
+              dsl ->
+                  dsl.query(
+                          "UPDATE creative_claims SET floor = ? WHERE plot_x = ? AND plot_z = ?",
+                          "minecraft:tnt",
+                          plot.x(),
+                          plot.z())
+                      .execute())
+          .join();
+      assertThatThrownBy(() -> store.loadAll().join())
+          .cause()
+          .hasMessageContaining("unknown creative floor");
     }
   }
 }

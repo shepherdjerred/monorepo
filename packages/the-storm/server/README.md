@@ -133,10 +133,13 @@ do not count; staff with `thestorm.creative.bypass` or
 `thestorm.creative.admin` are exempt). A claim that saves takes the player to
 the center of that plot. `/creative home` returns them to a plot they can
 already build on. `/creative name`, `/creative desc`, `/creative member`, `/creative trust`,
-`/creative deny`, and `/creative flag` persist in the claim store. `/creative flag
+`/creative deny`, `/creative flag`, `/creative floor`, `/creative wall`, and
+`/creative biome` persist in the claim store. `/creative flag
 <name> on` or `off` sets `pvp`, `use`, `vehicle`, `mob-interact`, or `explosion`
 for visitors. They default off. Break and place follow the role. A flag does
-not change a world gamerule. A member or trusted player
+not change a world gamerule. A floor, wall, or biome choice is stored on the
+claim and does not rewrite the plot. Grass, stone, and plains stay the generator
+defaults. A member or trusted player
 can build. A trusted player can add or remove members. A denied player cannot
 enter that plot or be teleported into it. `/creative tp <id>` visits a plot
 the player is not denied on. `/creative home` still returns to a plot they can

@@ -28,7 +28,8 @@ final class PlotMarkersTest {
             Map.of(),
             false,
             true,
-            Set.of());
+            Set.of(),
+            PlotSurface.DEFAULT);
 
     var markers = PlotMarkers.select("creative", "creative", List.of(view), GRID);
 
@@ -53,7 +54,8 @@ final class PlotMarkersTest {
             Map.of(),
             true,
             false,
-            Set.of());
+            Set.of(),
+            PlotSurface.DEFAULT);
 
     var markers = PlotMarkers.select("creative", "creative", List.of(view), GRID);
 
@@ -70,7 +72,16 @@ final class PlotMarkersTest {
   @DisplayName("empty cell")
   void emptyCell() {
     var empty =
-        new PlotView(new PlotId(9, 9), Optional.empty(), "", "", Map.of(), false, false, Set.of());
+        new PlotView(
+            new PlotId(9, 9),
+            Optional.empty(),
+            "",
+            "",
+            Map.of(),
+            false,
+            false,
+            Set.of(),
+            PlotSurface.DEFAULT);
 
     assertThat(empty.marked()).isFalse();
     assertThat(PlotMarkers.select("creative", "creative", List.of(empty), GRID))
@@ -90,7 +101,8 @@ final class PlotMarkersTest {
             Map.of(),
             false,
             true,
-            Set.of());
+            Set.of(),
+            PlotSurface.DEFAULT);
 
     assertThat(PlotMarkers.select("world", "creative", List.of(view), GRID))
         .as("selection is not applied to a survival map")
