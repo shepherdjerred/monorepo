@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
 using TaskNotes.Windows.Host;
 using TaskNotes.Windows.Presentation;
@@ -227,6 +228,143 @@ namespace TaskNotes.Windows.Tests
             Assert.AreEqual("custom", unknown.RelatedToChoices[^1].Value);
         }
 
+        /// <summary>Actual saved conversions remove the previous kind's fields and preserve reminder identities and extensions.</summary>
+        [TestMethod]
+        [DataRow(true)]
+        [DataRow(false)]
+        public async Task ReminderKindConversionProducesOneCompleteKind(bool toAbsolute)
+        {
+            JsonElement properties = ReminderProperties(toAbsolute ? "relative" : "absolute");
+            TestTaskNotesStore store = new();
+            using var editor = new TaskEditorViewModel(store, new TestDispatcher());
+            editor.Load(CreateTask("task", "open") with { Properties = properties });
+            var row = editor.Reminders[0];
+            row.Type = toAbsolute ? "absolute" : "relative";
+            if (toAbsolute)
+                row.AbsoluteTime = "2026-10-05T10:00:00Z";
+            Assert.IsTrue(await editor.SaveAsync(TestContext.CancellationToken));
+            JsonElement reminders = store.LastEdit!.ChangedProperties!["reminders"];
+            Assert.AreEqual(3, reminders.GetArrayLength());
+            JsonElement converted = reminders[0];
+            Assert.AreEqual("original", converted.GetProperty("id").GetString());
+            Assert.AreEqual(row.Type, converted.GetProperty("type").GetString());
+            Assert.AreEqual("Preserve this", converted.GetProperty("description").GetString());
+            foreach (string key in new[] { "vendor", "extension" })
+                Assert.AreEqual(
+                    properties.GetProperty("reminders")[0].GetProperty(key).GetRawText(),
+                    converted.GetProperty(key).GetRawText()
+                );
+            for (int index = 1; index < 3; index++)
+                Assert.AreEqual(
+                    properties.GetProperty("reminders")[index].GetRawText(),
+                    reminders[index].GetRawText()
+                );
+            if (toAbsolute)
+            {
+                Assert.IsFalse(converted.TryGetProperty("relatedTo", out _));
+                Assert.IsFalse(converted.TryGetProperty("offset", out _));
+                Assert.AreEqual(
+                    row.AbsoluteTime,
+                    converted.GetProperty("absoluteTime").GetString()
+                );
+            }
+            else
+            {
+                Assert.IsFalse(converted.TryGetProperty("absoluteTime", out _));
+                Assert.AreEqual("due", converted.GetProperty("relatedTo").GetString());
+                Assert.AreEqual("-PT15M", converted.GetProperty("offset").GetString());
+            }
+        }
+
+        /// <summary>A cancelled kind change remains unchanged, and ordinary same-kind edits retain all other reminder data.</summary>
+        [TestMethod]
+        [DataRow("relative")]
+        [DataRow("absolute")]
+        public async Task SameReminderKindKeepsExistingSaveBehavior(string type)
+        {
+            JsonElement properties = ReminderProperties(type);
+            TestTaskNotesStore store = new();
+            using var editor = new TaskEditorViewModel(store, new TestDispatcher());
+            editor.Load(CreateTask("task", "open") with { Properties = properties });
+            var row = editor.Reminders[0];
+            row.Type = type == "absolute" ? "relative" : "absolute";
+            row.Type = type;
+            editor.Title = "Other field";
+            Assert.IsTrue(await editor.SaveAsync(TestContext.CancellationToken));
+            Assert.IsFalse(store.LastEdit!.ChangedProperties!.ContainsKey("reminders"));
+            string field = type == "absolute" ? "absoluteTime" : "offset";
+            string value = type == "absolute" ? "2026-10-05T10:00:00Z" : "-PT30M";
+            if (type == "absolute")
+                row.AbsoluteTime = value;
+            else
+                row.Offset = value;
+            Assert.IsTrue(await editor.SaveAsync(TestContext.CancellationToken));
+            JsonElement reminders = store.LastEdit.ChangedProperties!["reminders"];
+            JsonElement original = properties.GetProperty("reminders")[0];
+            foreach (var property in original.EnumerateObject())
+                Assert.AreEqual(
+                    property.Name == field
+                        ? JsonSerializer.Serialize(value)
+                        : property.Value.GetRawText(),
+                    reminders[0].GetProperty(property.Name).GetRawText()
+                );
+            Assert.AreEqual(
+                original.EnumerateObject().Count(),
+                reminders[0].EnumerateObject().Count()
+            );
+            Assert.AreEqual(
+                properties.GetProperty("reminders")[1].GetRawText(),
+                reminders[1].GetRawText()
+            );
+            Assert.AreEqual("42", reminders[2].GetRawText());
+        }
+
+        /// <summary>Raw-only rules survive ordinary editor saves after simple replacement is refused.</summary>
+        [TestMethod]
+        [DataRow("FREQ=MONTHLY;BYDAY=1MO")]
+        [DataRow("FREQ=DAILY;BYDAY=MO,WE")]
+        public async Task UnrepresentedRecurrenceRemainsExactDuringEditorSave(string raw)
+        {
+            TestTaskNotesStore store = new();
+            using var editor = new TaskEditorViewModel(store, new TestDispatcher());
+            editor.Load(CreateTask("task", "open", raw));
+            var projection = await CoreRecurrenceEditor.Shared.ProjectAsync(
+                raw,
+                null,
+                "2026-10-03T12:00:00Z",
+                "2026-10-03",
+                TestContext.CancellationToken
+            );
+            var draft = RecurrenceControlDraft.FromProjection(raw, projection);
+            _ = await Assert.ThrowsExactlyAsync<ArgumentException>(() =>
+                draft.ApplyAsync(
+                    CoreRecurrenceEditor.Shared,
+                    RecurrenceFrequency.Monthly,
+                    2,
+                    [],
+                    TestContext.CancellationToken
+                )
+            );
+            editor.Title = "Other field";
+            Assert.IsTrue(await editor.SaveAsync(TestContext.CancellationToken));
+            Assert.AreEqual(raw, editor.Recurrence);
+            Assert.AreEqual(raw, store.LastEdit!.Recurrence);
+            Assert.IsFalse(store.LastEdit.ChangedProperties!.ContainsKey("recurrence"));
+        }
+
+        private static JsonElement ReminderProperties(string type)
+        {
+            string fields =
+                type == "relative"
+                    ? "\"relatedTo\":\"due\",\"offset\":\"-PT15M\""
+                    : "\"absoluteTime\":\"2026-10-04T10:00:00Z\"";
+            return JsonSerializer.Deserialize<JsonElement>(
+                $$"""
+                {"reminders":[{"id":"original","type":"{{type}}",{{fields}},"description":"Preserve this","vendor":{"exact":9007199254740993},"extension":[true,null,{"x":1}]},{"id":"other","type":"absolute","absoluteTime":"2026-10-04T12:00:00Z","unknown":false},42]}
+                """
+            );
+        }
+
         /// <summary>Checks fixed, scoped, decoded, and rejected routes.</summary>
         [TestMethod]
         public void NavigationAndActivationRoutesAreStrictAndDecoded()
@@ -413,7 +551,7 @@ namespace TaskNotes.Windows.Tests
             Assert.IsNull(dispatcher.Pending);
         }
 
-        private static TaskItem CreateTask(string id, string status)
+        private static TaskItem CreateTask(string id, string status, string? recurrence = null)
         {
             return new TaskItem(
                 id,
@@ -425,7 +563,7 @@ namespace TaskNotes.Windows.Tests
                 "Normal",
                 null,
                 null,
-                null,
+                recurrence,
                 null,
                 [],
                 [],
@@ -433,7 +571,7 @@ namespace TaskNotes.Windows.Tests
                 false,
                 false,
                 status == "done",
-                false,
+                recurrence is not null,
                 false,
                 null,
                 string.Empty

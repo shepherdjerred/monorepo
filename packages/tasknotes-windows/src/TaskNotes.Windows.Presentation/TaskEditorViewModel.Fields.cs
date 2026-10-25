@@ -444,9 +444,10 @@ public sealed class ReminderEditorRow : ObservableObject
                 .EnumerateObject()
                 .ToDictionary(p => p.Name, p => p.Value.Clone(), StringComparer.Ordinal)
             : new Dictionary<string, JsonElement>(StringComparer.Ordinal);
-        void Put(string key, string value)
+        bool typeChanged = Type != _initial["type"];
+        void Put(string key, string value, bool requiredForConversion = false)
         {
-            if (_original is not null && _initial[key] == value)
+            if (!requiredForConversion && _original is not null && _initial[key] == value)
                 return;
             if (
                 !fields.TryGetValue(key, out var before)
@@ -459,11 +460,20 @@ public sealed class ReminderEditorRow : ObservableObject
         Put("type", Type);
         if (Type == "relative")
         {
-            Put("relatedTo", RelatedTo);
-            Put("offset", Offset);
+            if (typeChanged)
+                fields.Remove("absoluteTime");
+            Put("relatedTo", RelatedTo, typeChanged);
+            Put("offset", Offset, typeChanged);
         }
         else if (Type == "absolute")
-            Put("absoluteTime", AbsoluteTime);
+        {
+            if (typeChanged)
+            {
+                fields.Remove("relatedTo");
+                fields.Remove("offset");
+            }
+            Put("absoluteTime", AbsoluteTime, typeChanged);
+        }
         else
             throw new ArgumentException("Choose an absolute or relative reminder.");
         return JsonSerializer.SerializeToElement(fields);

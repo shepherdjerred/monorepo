@@ -43,11 +43,15 @@ private object NativeRecurrenceCore : FacetRecurrenceCore {
 /** These pure core calls run off Main and do not consult or mutate any selected vault. */
 class FacetRecurrenceEditor internal constructor(private val core: FacetRecurrenceCore) {
     suspend fun project(rule: String, scheduled: String?, created: String?, today: String): FacetRepeatProjection = withContext(Dispatchers.Default) {
-        val resolved = core.resolvedStart(rule, scheduled, created)
+        // Rust's empty-rule model has no DTSTART. Probe a fixed common rule so
+        // Rust still owns scheduled/dateCreated precedence for a new repeat.
+        val probe = if (rule.isEmpty()) "FREQ=DAILY" else rule
+        val resolved = core.resolvedStart(probe, scheduled, created)
         val start = resolved ?: today
-        // An unresolved existing anchor cannot be truthfully translated into common controls.
-        val parsed = if (rule.isEmpty()) core.parse("FREQ=DAILY", start)
-            else if (resolved != null) core.parse(rule, start) else null
+        val newWithoutAnchor = rule.isEmpty() && scheduled.isNullOrEmpty() && created.isNullOrEmpty()
+        // Only genuinely absent new-rule anchors may use today. Invalid
+        // provided anchors and unresolved existing rules stay authoritative raw.
+        val parsed = if (resolved != null || newWithoutAnchor) core.parse(probe, start) else null
         FacetRepeatProjection(start, parsed?.let(::fromCore))
     }
 

@@ -109,6 +109,21 @@ public struct FacetRecurrenceEdit: Sendable {
     public let start: String
     public let anchor: FacetRecurrenceAnchor
     public let writesScheduled: Bool
+    /// Decide the Scheduled field change off the UI actor, alongside rule construction.
+    public static func requiresScheduledWrite(
+        storedScheduled: String?, initialStart: String, selectedStart: String,
+        startWasResolved: Bool, replacingUnsupported: Bool
+    ) -> Bool {
+        if !startWasResolved || storedScheduled?.isEmpty != false || selectedStart != initialStart {
+            return true
+        }
+        // A replacement drops the old rule's inline DTSTART. Preserve its chosen
+        // anchor without overwriting an already matching Scheduled date-time.
+        return replacingUnsupported
+            && recurrenceResolvedStart(
+                text: "FREQ=DAILY", scheduled: storedScheduled, dateCreated: nil) != selectedStart
+    }
+
     public static func build(
         draft: FacetCommonRecurrenceDraft, start: String, anchor: FacetRecurrenceAnchor,
         writesScheduled: Bool
@@ -127,20 +142,30 @@ public struct FacetRecurrenceEdit: Sendable {
 
 public struct FacetRecurrenceProjection: Sendable {
     public let start: String
+    public let hasResolvedStart: Bool
     public let editableDraft: FacetCommonRecurrenceDraft?
     public let summary: String?
     public static func load(rule: String?, scheduled: String?, dateCreated: String?, today: String)
         -> Self
     {
+        let text = rule ?? ""
+        // An empty core recurrence has no anchor. The fixed probe asks Rust for
+        // the effective anchor of a newly selected repeat without persisting a rule.
+        let probe = text.isEmpty ? "FREQ=DAILY" : text
+        let planned = scheduled.flatMap { $0.isEmpty ? nil : $0 }
+        let created = dateCreated.flatMap { $0.isEmpty ? nil : $0 }
+        let coreStart = recurrenceResolvedStart(
+            text: probe, scheduled: planned, dateCreated: created)
+        let newWithoutAnchor = text.isEmpty && planned == nil && created == nil
         let resolvedStart =
-            rule.flatMap {
-                recurrenceResolvedStart(text: $0, scheduled: scheduled, dateCreated: dateCreated)
-            } ?? scheduled ?? today
+            coreStart
+            ?? (newWithoutAnchor
+                ? recurrenceResolvedStart(text: probe, scheduled: today, dateCreated: nil) : nil)
+        let editorStart = resolvedStart ?? today
         return Self(
-            start: resolvedStart,
-            editableDraft: rule.flatMap {
-                recurrenceParseCommon(text: $0, start: resolvedStart).map(
-                    FacetCommonRecurrenceDraft.init)
+            start: editorStart, hasResolvedStart: resolvedStart != nil,
+            editableDraft: resolvedStart.flatMap {
+                recurrenceParseCommon(text: probe, start: $0).map(FacetCommonRecurrenceDraft.init)
             },
             summary: rule.flatMap {
                 recurrenceSummary(text: $0, scheduled: scheduled, dateCreated: dateCreated)

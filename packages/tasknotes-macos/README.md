@@ -44,6 +44,11 @@ not connect the historical server-backed `TaskNotesStore` to the standalone app.
 Native form values for common recurrence patterns cross a portable Kit adapter,
 with rule parsing and construction performed by the existing Rust functions
 away from the UI actor.
+New repeat drafts resolve Scheduled and Created anchors through the same Rust
+boundary. Missing anchors may use the captured current day; unreadable provided
+anchors remain unresolved until an explicit valid start date is chosen.
+Explicit replacement of a raw rule preserves its selected effective start when
+the common rule drops an inline DTSTART, retaining a matching Scheduled time.
 
 Engine, account and selected-profile ownership is application-wide. The Mac
 application starts them even with no visible workspace; view tasks await that

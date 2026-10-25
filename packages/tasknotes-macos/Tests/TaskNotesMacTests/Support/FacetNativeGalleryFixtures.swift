@@ -301,7 +301,8 @@ struct FacetNativeGalleryScene: View {
                 existingRule: "FREQ=WEEKLY;BYDAY=MO,FR",
                 editableDraft: FacetCommonRecurrenceDraft(
                     interval: 1, pattern: .weekly(weekdays: [.monday, .friday]), ending: .never),
-                storedScheduled: "2026-10-09", start: "2026-10-09", anchor: .scheduled,
+                storedScheduled: "2026-10-09", start: "2026-10-09", startIsResolved: true,
+                anchor: .scheduled,
                 onApply: { _ in })
         case .relationships:
             if let task = fixture.store.snapshot?.tasks.first {

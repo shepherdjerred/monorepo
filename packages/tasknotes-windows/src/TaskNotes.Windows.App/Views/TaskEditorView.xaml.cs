@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using TaskNotes.Windows.Host;
 using TaskNotes.Windows.Presentation;
+using RepeatFrequency = TaskNotes.Windows.Host.RecurrenceFrequency;
 
 namespace TaskNotes.Windows.App.Views
 {
@@ -22,6 +23,10 @@ namespace TaskNotes.Windows.App.Views
         private Func<string, string, Task<bool>>? _confirm;
         private Action<string>? _showValidation;
         private bool _synchronizingControls;
+        private readonly IRecurrenceEditor _recurrenceEditor = CoreRecurrenceEditor.Shared;
+        private RecurrenceControlDraft? _recurrenceDraft;
+        private RecurrenceOwner? _recurrenceOwner;
+        private long _recurrenceRequest;
         internal event Action<bool>? GenerateOccurrencesRequested;
 
         private void GenerateOccurrence_Click(object sender, RoutedEventArgs args)
@@ -100,6 +105,9 @@ namespace TaskNotes.Windows.App.Views
 
         internal void Clear()
         {
+            _recurrenceRequest++;
+            _recurrenceDraft = null;
+            _recurrenceOwner = null;
             RequireViewModel().Clear();
             EditorFields.IsEnabled = false;
             EmptyInspector.Visibility = Visibility.Visible;
@@ -199,6 +207,12 @@ namespace TaskNotes.Windows.App.Views
                                 ?? viewModel.ValidationError
                                 ?? "This draft needs attention before it can be saved."
                         );
+                    if (
+                        field is "recurrence" or "scheduled" or "dateCreated"
+                        && ReferenceEquals(ViewModel, viewModel)
+                        && viewModel.IsLoaded
+                    )
+                        SynchronizeRecurrence();
                 }
             );
         }
@@ -353,78 +367,198 @@ namespace TaskNotes.Windows.App.Views
                 ? new DateTimeOffset(date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Local))
                 : null;
 
+        private sealed record RecurrenceOwner(
+            TaskEditorViewModel Model,
+            string? TaskId,
+            string? ProfileId,
+            string? Rule,
+            string? Scheduled,
+            string DateCreated
+        );
+
+        private RecurrenceOwner CaptureRecurrenceOwner()
+        {
+            var model = RequireViewModel();
+            return new(
+                model,
+                model.TaskId,
+                model.ProfileId,
+                model.Recurrence,
+                model.Scheduled,
+                model.DateCreated
+            );
+        }
+
+        private bool MatchesRecurrenceOwner(RecurrenceOwner owner) =>
+            ReferenceEquals(ViewModel, owner.Model)
+            && owner.Model.IsLoaded
+            && owner.Model.TaskId == owner.TaskId
+            && owner.Model.ProfileId == owner.ProfileId
+            && owner.Model.Recurrence == owner.Rule
+            && owner.Model.Scheduled == owner.Scheduled
+            && owner.Model.DateCreated == owner.DateCreated;
+
+        private void EnableRecurrenceControls(bool enabled)
+        {
+            RecurrenceFrequency.IsEnabled = enabled;
+            RecurrenceInterval.IsEnabled = enabled;
+            RecurrenceDays.IsEnabled = enabled;
+        }
+
         private void SynchronizeRecurrence()
         {
-            string raw = RequireViewModel().Recurrence ?? "";
-            string[] parts = raw.Split(';');
-            var pairs = parts
-                .Where(part => part.Contains('=', StringComparison.Ordinal))
-                .Select(part => part.Split('=', 2))
-                .ToArray();
-            bool supported =
-                raw.Length == 0
-                || (
-                    pairs.Length == parts.Length
-                    && pairs.Select(pair => pair[0]).Distinct(StringComparer.Ordinal).Count()
-                        == pairs.Length
-                    && pairs.All(pair => pair[0] is "FREQ" or "INTERVAL" or "BYDAY")
-                );
-            string? frequency = supported
-                ? pairs.FirstOrDefault(pair => pair[0] == "FREQ")?[1]
-                : null;
-            var choice =
-                raw.Length > 0 && frequency is null
-                    ? null
-                    : RecurrenceFrequency
-                        .Items.OfType<ComboBoxItem>()
-                        .SingleOrDefault(item => (string)item.Tag == (frequency ?? ""));
-            RecurrenceFrequency.SelectedItem = choice;
-            string? interval = pairs.FirstOrDefault(pair => pair[0] == "INTERVAL")?[1];
-            RecurrenceInterval.Value = int.TryParse(
-                interval,
-                System.Globalization.NumberStyles.None,
-                System.Globalization.CultureInfo.InvariantCulture,
-                out int parsed
-            )
-                ? parsed
-                : 1;
-            string[] days = (pairs.FirstOrDefault(pair => pair[0] == "BYDAY")?[1] ?? "").Split(',');
-            foreach (var day in RecurrenceDays.Children.OfType<CheckBox>())
-                day.IsChecked = days.Contains((string)day.Tag, StringComparer.Ordinal);
+            RecurrenceOwner owner = CaptureRecurrenceOwner();
+            long request = ++_recurrenceRequest;
+            _recurrenceDraft = null;
+            _recurrenceOwner = null;
+            EnableRecurrenceControls(false);
+            Run(
+                "project-recurrence-controls",
+                async () =>
+                {
+                    var projection = await _recurrenceEditor.ProjectAsync(
+                        owner.Rule ?? "",
+                        owner.Scheduled,
+                        owner.DateCreated,
+                        DateOnly
+                            .FromDateTime(DateTime.Now)
+                            .ToString(
+                                "yyyy-MM-dd",
+                                System.Globalization.CultureInfo.InvariantCulture
+                            )
+                    );
+                    if (request != _recurrenceRequest || !MatchesRecurrenceOwner(owner))
+                        return;
+                    var draft = RecurrenceControlDraft.FromProjection(owner.Rule, projection);
+                    _recurrenceDraft = draft;
+                    _recurrenceOwner = owner;
+                    _synchronizingControls = true;
+                    try
+                    {
+                        RecurrenceFrequency.SelectedItem = draft.CanEdit
+                            ? RecurrenceFrequency
+                                .Items.OfType<ComboBoxItem>()
+                                .Single(item => (string)item.Tag == FrequencyTag(draft.Frequency))
+                            : null;
+                        RecurrenceInterval.Value = draft.CanEdit ? draft.Interval : 1;
+                        foreach (var day in RecurrenceDays.Children.OfType<CheckBox>())
+                            day.IsChecked = draft.Days.Contains(WeekdayChoice((string)day.Tag));
+                        EnableRecurrenceControls(draft.CanEdit);
+                    }
+                    finally
+                    {
+                        _synchronizingControls = false;
+                    }
+                }
+            );
         }
+
+        private static string FrequencyTag(RepeatFrequency? frequency) =>
+            frequency switch
+            {
+                null => "",
+                RepeatFrequency.Daily => "DAILY",
+                RepeatFrequency.Weekly => "WEEKLY",
+                RepeatFrequency.Monthly => "MONTHLY",
+                RepeatFrequency.Yearly => "YEARLY",
+                _ => throw new ArgumentOutOfRangeException(nameof(frequency)),
+            };
+
+        private static RepeatFrequency? FrequencyChoice(string tag) =>
+            tag switch
+            {
+                "" => null,
+                "DAILY" => RepeatFrequency.Daily,
+                "WEEKLY" => RepeatFrequency.Weekly,
+                "MONTHLY" => RepeatFrequency.Monthly,
+                "YEARLY" => RepeatFrequency.Yearly,
+                _ => throw new ArgumentOutOfRangeException(nameof(tag)),
+            };
+
+        private static DayOfWeek WeekdayChoice(string tag) =>
+            tag switch
+            {
+                "MO" => DayOfWeek.Monday,
+                "TU" => DayOfWeek.Tuesday,
+                "WE" => DayOfWeek.Wednesday,
+                "TH" => DayOfWeek.Thursday,
+                "FR" => DayOfWeek.Friday,
+                "SA" => DayOfWeek.Saturday,
+                "SU" => DayOfWeek.Sunday,
+                _ => throw new ArgumentOutOfRangeException(nameof(tag)),
+            };
 
         private void RecurrenceApply_Click(object sender, RoutedEventArgs args)
         {
             _ = sender;
             _ = args;
-            if (RecurrenceFrequency.SelectedItem is not ComboBoxItem { Tag: string frequency })
+            if (
+                _recurrenceDraft is not { } draft
+                || _recurrenceOwner is not { } owner
+                || !MatchesRecurrenceOwner(owner)
+            )
+            {
+                SynchronizeRecurrence();
+                RequireValidation()("Repeat controls are refreshing; review them before applying.");
+                return;
+            }
+            if (!draft.CanEdit)
             {
                 RequireValidation()(
-                    "Choose a frequency to replace the existing recurrence; its exact raw value remains below."
+                    "Edit the full recurrence below, or clear it before choosing a new repeat schedule."
                 );
                 return;
             }
-            if (!double.IsFinite(RecurrenceInterval.Value) || RecurrenceInterval.Value < 1)
+            if (RecurrenceFrequency.SelectedItem is not ComboBoxItem { Tag: string tag })
             {
-                RequireValidation()("Choose an interval of at least one.");
+                RequireValidation()("Choose a frequency.");
                 return;
             }
-            int interval = checked((int)RecurrenceInterval.Value);
-            var days = RecurrenceDays
-                .Children.OfType<CheckBox>()
-                .Where(day => day.IsChecked == true)
-                .Select(day => (string)day.Tag)
-                .ToArray();
-            RequireViewModel().Recurrence =
-                frequency == ""
-                    ? null
-                    : $"FREQ={frequency};INTERVAL={interval}"
-                        + (
-                            frequency == "WEEKLY" && days.Length > 0
-                                ? ";BYDAY=" + string.Join(",", days)
-                                : ""
+            RepeatFrequency? frequency = FrequencyChoice(tag);
+            double interval = RecurrenceInterval.Value;
+            DayOfWeek[] days =
+                frequency == RepeatFrequency.Weekly
+                    ? RecurrenceDays
+                        .Children.OfType<CheckBox>()
+                        .Where(day => day.IsChecked == true)
+                        .Select(day => WeekdayChoice((string)day.Tag))
+                        .ToArray()
+                    : [];
+            long request = ++_recurrenceRequest;
+            EnableRecurrenceControls(false);
+            Run(
+                "apply-recurrence-controls",
+                async () =>
+                {
+                    try
+                    {
+                        string? rule = await draft.ApplyAsync(
+                            _recurrenceEditor,
+                            frequency,
+                            interval,
+                            days
                         );
-            CommitField("recurrence");
+                        if (request != _recurrenceRequest || !MatchesRecurrenceOwner(owner))
+                            return;
+                        owner.Model.Recurrence = rule;
+                        if (!await owner.Model.CommitFieldAsync("recurrence"))
+                            RequireValidation()(
+                                owner.Model.CommitError
+                                    ?? owner.Model.ValidationError
+                                    ?? "This draft needs attention before it can be saved."
+                            );
+                    }
+                    finally
+                    {
+                        if (
+                            request == _recurrenceRequest
+                            && ReferenceEquals(ViewModel, owner.Model)
+                            && owner.Model.IsLoaded
+                        )
+                            SynchronizeRecurrence();
+                    }
+                }
+            );
         }
 
         private void Save_Click(object sender, RoutedEventArgs eventArgs)
