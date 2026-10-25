@@ -26,6 +26,15 @@ class NativeFacetMutationPort(private val engine: FacetEngineRunner) : FacetMuta
 
 data class AppliedFacetAction(val profileId: String, val mutationId: String, val receipt: JsonObject, val maintenanceRequired: Boolean, val warningMessages: List<String>, val observationPending: Boolean = false)
 
+/** Publish the real retained-action inventory only while its lifecycle/account owner remains current. */
+internal suspend fun publishFacetSavedActions(owns: () -> Boolean, read: suspend () -> List<PendingFacetMutation>, publish: (List<PendingFacetMutation>) -> Unit): Boolean {
+    if (!owns()) return false
+    val actions = read()
+    if (!owns()) return false
+    publish(actions)
+    return true
+}
+
 /** Presentation never substitutes selection for a saved action's owning vault. */
 class FacetMutationController(private val port: FacetMutationPort, private val schema: FacetSchema) {
     suspend fun submit(profileId: String, command: JsonObject, mutationId: String, admitted: () -> Unit = {}, observed: suspend (JsonObject) -> Unit = {}): AppliedFacetAction =

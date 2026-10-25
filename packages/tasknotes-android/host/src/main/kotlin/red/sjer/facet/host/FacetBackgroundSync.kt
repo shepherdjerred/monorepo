@@ -186,18 +186,30 @@ class FacetSyncWorker(context: Context, parameters: WorkerParameters) : Coroutin
                 engine = opened
                 val signedIn = ObsidianAccountHost(applicationContext, opened)
                 account = signedIn
+                val maintenance = FacetOccurrenceMaintenance(opened.occurrences())
+                val eligible = opened.profiles().filter { it.kind == "local_folder" || syncAuthorized && signedIn.belongsToActiveAccount(it.id) }.map { it.id }.toSet()
+                for (profile in opened.profiles().filter { it.kind == "local_folder" }) {
+                    opened.refresh(profile.id)
+                    maintenance.request(profile.id)
+                }
                 for (profile in opened.profiles().filter { syncAuthorized && it.kind == "obsidian_sync" && signedIn.belongsToActiveAccount(it.id) }) {
                     currentCoroutineContext().ensureActive()
-                    ObsidianReplicaSession.open(opened, signedIn, profile.id, {}, {}, retain = { session ->
+                    maintenance.request(profile.id)
+                    ObsidianReplicaSession.open(opened, signedIn, profile.id, {}, {}, maintenanceChanged = { maintenance.request(profile.id) }, retain = { session ->
                         sessions.add(profile.id to session)
                         FacetBackgroundSync.retain(token, session)
                     })
                 }
-                while (!settled(opened, sessions)) { currentCoroutineContext().ensureActive(); delay(1000) }
+                while (true) {
+                    currentCoroutineContext().ensureActive()
+                    maintenance.drain(eligible)
+                    if (settled(opened, sessions) && !maintenance.hasPending(eligible)) break
+                    delay(1000)
+                }
                 if (FacetReminders.enabled(applicationContext)) {
                     val authorized = signedIn.eligibleReminderProfileIds()
-                    val eligible = opened.profiles().filter { it.kind == "local_folder" || it.id in authorized }.map { it.id }.toSet()
-                    FacetReminders.refresh(applicationContext, opened, eligible)
+                    val reminderEligible = opened.profiles().filter { it.kind == "local_folder" || it.id in authorized }.map { it.id }.toSet()
+                    FacetReminders.refresh(applicationContext, opened, reminderEligible)
                 }
                 Result.success()
             }

@@ -56,6 +56,7 @@ if ((await inputListing.exited) !== 0)
 inputPaths.push(
   "../tasknotes-core/bindings/kotlin/uniffi/TaskNotesCore/TaskNotesCore.kt",
   "../tasknotes-fixtures/vault/facet-contract.json",
+  "../tasknotes-fixtures/vault/facet-occurrence-contract.json",
   "../tasknotes-fixtures/vault/facet-raw-contract.json",
 );
 for await (const path of new Bun.Glob("../tasknotes-fixtures/schema/**").scan({

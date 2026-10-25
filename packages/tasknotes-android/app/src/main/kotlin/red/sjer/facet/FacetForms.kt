@@ -84,6 +84,10 @@ internal fun TaskEditor(profileId: String, task: VaultTask, model: FacetViewMode
                     }
                     if (draft != original) Text("Save your changes before changing completion.", Modifier.padding(horizontal = 16.dp, vertical = 8.dp), style = MaterialTheme.typography.bodySmall)
                     else if (basis.isRecurring && basis.occurrenceDate == null) Text("Choose a recurring occurrence in Today or Agenda.", Modifier.padding(horizontal = 16.dp, vertical = 8.dp), style = MaterialTheme.typography.bodySmall)
+                    if (model.generationWindows.any { it.parentPath == basis.path }) {
+                        TextButton(onClick = { model.generateWindow(profileId, basis) }, enabled = !blocked && draft == original) { Text("Generate window") }
+                        Text("Uses this repeating task's configured past and future horizons. Save any edits first.", Modifier.padding(horizontal = 16.dp, vertical = 8.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             }
             Text("Plan", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)

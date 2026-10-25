@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.*
+import red.sjer.facet.host.FacetGenerationAction
 
 @Composable
 internal fun FacetSettings(model: FacetViewModel) {
@@ -50,6 +51,22 @@ internal fun FacetSettings(model: FacetViewModel) {
             }
             "Vault health" -> {
                 Text("Vault health", style = MaterialTheme.typography.titleLarge)
+                model.generationStatus?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                if (model.generationAttention.isNotEmpty()) Text("Repeating task generation", style = MaterialTheme.typography.titleMedium)
+                model.generationAttention.forEach { attention ->
+                    Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = MaterialTheme.shapes.medium) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(attention.item.parentPath, style = MaterialTheme.typography.titleMedium)
+                            Text("Your original task change is saved. " + (attention.item.failure?.message ?: "Future occurrence generation is pending."))
+                            when (val action = attention.action) {
+                                is FacetGenerationAction.Repairable -> model.selected?.id?.let { profile ->
+                                    TextButton(onClick = { model.repairGeneration(profile, attention) }, enabled = !model.busy) { Text("Repair generation") }
+                                }
+                                is FacetGenerationAction.Unrepairable -> Text("Review the task before repair: " + action.reason.replace('_', ' '), color = MaterialTheme.colorScheme.error)
+                            }
+                        }
+                    }
+                }
                 model.snapshot?.let { snapshot ->
                     Text(snapshot.pendingCount.toString() + " pending uploads · " + snapshot.conflictCount + " conflicts")
                     if (snapshot.problems.isEmpty()) Text("No vault problems were reported.", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -69,7 +86,7 @@ internal fun FacetSettings(model: FacetViewModel) {
                 SettingsRow("Account and vaults", "Connect Sync or import a local vault copy", Icons.Default.Folder) { section = "Account and vaults" }
                 SettingsRow("Reminders", if (model.remindersEnabled) "Enabled on this device" else "Disabled on this device", Icons.Default.NotificationsNone) { section = "Reminders" }
                 SettingsRow("Saved actions", if (model.pendingActions.isEmpty()) "All actions settled" else model.pendingActions.size.toString() + " retained actions", Icons.Default.Restore) { section = "Saved actions" }
-                SettingsRow("Vault health", "Sync, preserved conflicts and configuration", Icons.Default.HealthAndSafety) { section = "Vault health" }
+                SettingsRow("Vault health", if (model.generationAttention.isNotEmpty()) model.generationAttention.size.toString() + " generation items need attention" else "Sync, preserved conflicts and configuration", Icons.Default.HealthAndSafety) { section = "Vault health" }
                 Spacer(Modifier.height(8.dp)); Text("Appearance", style = MaterialTheme.typography.titleMedium)
                 Text("Follows your Android light or dark theme, text size and reduced motion preferences. Controls keep native touch targets.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 model.feedbackPreferenceError?.let { message ->

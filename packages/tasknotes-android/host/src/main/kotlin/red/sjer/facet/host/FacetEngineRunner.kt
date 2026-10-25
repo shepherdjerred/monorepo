@@ -86,10 +86,11 @@ class FacetEngineRunner private constructor(context: Context) {
     }
 
     /** Replays the complete persisted envelope in its owning profile; never constructs a new timestamp. */
-    suspend fun retryMutation(mutationId: String): JsonObject = call {
+    suspend fun retryMutation(mutationId: String, admitted: () -> Unit = {}): JsonObject = call {
         val draft = requireNotNull(drafts.read(mutationId)) { "The saved action is unavailable." }
         FacetRetainedActions.validate(schema, draft.mutation)
         if (!draft.canResume) throw FacetActionError("This saved action uses a removed feature. Check its outcome and retire its private draft.")
+        admitted()
         applyMutation(draft.profileId, draft.mutation)
     }
 
@@ -151,14 +152,16 @@ class FacetEngineRunner private constructor(context: Context) {
     }
 
     /** Retire rejected drafts or acknowledge completed historical actions using the owning runtime receipt. */
-    suspend fun retireRejectedMutation(mutationId: String) = call {
+    suspend fun retireRejectedMutation(mutationId: String, admitted: () -> Unit = {}) = call {
         val draft = requireNotNull(drafts.read(mutationId))
         val request = buildJsonObject { put("schemaVersion", 1); put("kind", "mutation_receipt"); put("mutationId", mutationId) }
         schema.validate("featureRequest", request)
         val result = Json.parseToJsonElement(core.featuresJson(draft.profileId, request.toString())).jsonObject
         schema.validate("mutationReceipt", result)
         require(result.getValue("mutationId").jsonPrimitive.content == mutationId)
-        if (FacetRetainedActions.retirement(schema, draft, result) == FacetDraftRetirement.OBSERVED)
+        val retirement = FacetRetainedActions.retirement(schema, draft, result)
+        admitted()
+        if (retirement == FacetDraftRetirement.OBSERVED)
             drafts.recordObserved(mutationId, draft.profileId)
         drafts.discard(mutationId)
     }
@@ -195,12 +198,17 @@ class FacetEngineRunner private constructor(context: Context) {
             "undo_available" -> "undoAvailable"
             "conformance" -> "conformance"
             "reminder_plan" -> "reminderPlan"
+            "occurrence_successors" -> "occurrenceSuccessors"
+            "rolling_maintenance_plan" -> "rollingMaintenancePlan"
+            "occurrence_generation_failures" -> "generationFailuresPlan"
             else -> error("Unknown shared feature response.")
         }
         schema.validate(definition, result)
         FacetContract.validateVersion(result)
         result
     }
+
+    fun occurrences(): FacetOccurrencePort = NativeFacetOccurrencePort(this, schema)
 
     suspend fun approveStandard(profile: VaultProfile): VaultProfile = call {
         val json = buildJsonObject { put("schemaVersion", 1); put("id", profile.id); put("name", profile.name); put("kind", profile.kind); put("approveStandard", true) }

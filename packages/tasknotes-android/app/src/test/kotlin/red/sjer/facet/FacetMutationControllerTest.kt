@@ -20,6 +20,19 @@ private fun appliedReceipt(mutationId: String = "decision", applied: Boolean = t
 }
 
 class FacetMutationControllerTest {
+    @Test fun failedFutureGenerationRemainsSeparateFromAppliedPrimaryCompletion() = runTest {
+        val port = Port()
+        val generation = Json.parseToJsonElement("""{"schemaVersion":1,"mutationId":"decision","items":[{"kind":"materialize_occurrence","successorId":"future-child","parentPath":"Tasks/parent.md","occurrenceDate":"2026-10-25","state":"failed","failure":{"code":"host","message":"Future child could not be written"}}]}""").jsonObject
+        var attention = emptyList<red.sjer.facet.host.FacetGenerationItem>()
+        val result = controller(port).submit("original-vault", completion, "decision") {
+            attention = red.sjer.facet.host.FacetOccurrences.successors(schema, generation, "decision")
+        }
+        assertTrue(result.receipt.getValue("applied").jsonPrimitive.boolean)
+        assertEquals(red.sjer.facet.host.FacetGenerationState.FAILED, attention.single().state)
+        assertEquals("Tasks/parent.md", attention.single().parentPath)
+        assertEquals(listOf("execute:original-vault:decision", "discard:decision"), port.calls)
+        assertEquals(listOf("decision"), FacetUndoHistory().reconcile("decision", completion).receipts)
+    }
     private val schema = FacetSchema(requireNotNull(javaClass.classLoader?.getResourceAsStream("schema/facet-engine.schema.json")).bufferedReader().use { it.readText() })
     private fun controller(port: Port) = FacetMutationController(port, schema)
     @Test fun authoritativeOrdinaryUndoObservationDoesNotPopCompletionHistory() {

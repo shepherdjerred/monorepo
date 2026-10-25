@@ -8,12 +8,25 @@ val verifyNativeInputs = tasks.register<Exec>("verifyNativeInputs") {
     workingDir(layout.projectDirectory)
     commandLine(
         "bun", "--no-install", "--bun", "vitest", "--config", "../../vitest.config.ts",
-        "run", "./scripts/native-inputs.test.ts", "--reporter=default", "--reporter=junit",
+        "run", "./scripts/native-inputs.test.ts", "./scripts/native-artifacts.test.ts", "--reporter=default", "--reporter=junit",
         "--outputFile=" + layout.buildDirectory.file("test-results/native-inputs/TEST-native-inputs.xml").get().asFile.absolutePath,
     )
-    inputs.files("scripts/native-inputs.ts", "scripts/native-inputs.test.ts", "../../vitest.config.ts", "package.json", "../../bun.lock")
+    inputs.files("scripts/native-inputs.ts", "scripts/native-inputs.test.ts", "scripts/native-artifacts.ts", "scripts/native-artifacts.test.ts", "../../vitest.config.ts", "package.json", "../../bun.lock")
     outputs.file(layout.buildDirectory.file("test-results/native-inputs/TEST-native-inputs.xml"))
 }
 project(":host").tasks.matching { it.name == "testDebugUnitTest" }.configureEach {
     dependsOn(verifyNativeInputs)
+}
+
+val verifyNativeArtifacts = tasks.register<Exec>("verifyNativeArtifacts") {
+    workingDir(layout.projectDirectory)
+    commandLine("bun", "scripts/verify-native-artifacts.ts")
+    // A live read of the canonical inventory and both artifacts is mandatory on every native consumption.
+    doNotTrackState("Native source inventory and retained JNI evidence must be checked live, never cached.")
+}
+subprojects {
+    tasks.matching {
+        it.name.matches(Regex("merge.+(?:JniLibFolders|NativeLibs)")) ||
+            it.name.startsWith("install") || it.name.startsWith("connected")
+    }.configureEach { dependsOn(verifyNativeArtifacts) }
 }
