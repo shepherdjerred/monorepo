@@ -38,7 +38,7 @@ pub(super) fn plan(
     )
 }
 
-fn canonical_properties(
+pub(super) fn canonical_properties(
     context: &PlanContext,
     properties: &Map<String, Value>,
 ) -> Result<Map<String, Value>> {

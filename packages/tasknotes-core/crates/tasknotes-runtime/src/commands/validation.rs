@@ -6,6 +6,7 @@ use tasknotes_vault::{config::TaskNotesConfiguration, document::TaskDocument, pa
 
 pub(super) fn enforce(config: &TaskNotesConfiguration, path: &str, bytes: &[u8]) -> Result<()> {
     let document = TaskDocument::parse(VaultPath::parse(path)?, bytes)?;
+    super::occurrences::mapped_identity(config, &document)?;
     if !super::is_task(path, document.frontmatter(), document.body(), config)? {
         return Err(RuntimeError::Validation(
             "task mutation would stop matching configured task detection".to_owned(),
@@ -29,6 +30,9 @@ pub(super) fn enforce(config: &TaskNotesConfiguration, path: &str, bytes: &[u8])
         .and_then(|value| value.get("mode"))
         .and_then(Value::as_str)
         .is_none_or(|mode| mode == "strict");
+    if strict {
+        super::recurrence_writes::validate_mapped_strict(config, &document)?;
+    }
     if strict && report.get("hasErrors") == Some(&Value::Bool(true)) {
         return Err(RuntimeError::Validation(format!(
             "mapped document validation failed: {}",

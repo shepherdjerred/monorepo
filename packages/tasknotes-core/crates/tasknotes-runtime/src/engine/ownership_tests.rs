@@ -135,6 +135,23 @@ fn version_ten_origin_migration_preserves_binary_rows_and_transfer_prefixes() ->
     engine.close()?;
     drop(engine);
     let db = Connection::open(&path)?;
+    for table in [
+        "occurrence_progression_resolutions",
+        "occurrence_progression_effects",
+        "occurrence_deferred_progressions",
+        "occurrence_windows",
+        "occurrence_successors",
+        "occurrence_transitions",
+        "occurrence_plans",
+    ] {
+        assert_eq!(
+            db.query_row(&format!("SELECT count(*) FROM {table}"), [], |row| row
+                .get::<_, i64>(0))?,
+            0,
+            "genuine v10 cannot discard owned occurrence data"
+        );
+        db.execute_batch(&format!("DROP TABLE {table};"))?;
+    }
     // Genuine v10 has origin only on the immutable BLOB table. Materialize its
     // historical values, then remove the new metadata column for this fixture.
     db.execute_batch("UPDATE transfer_payloads SET origin=(SELECT origin FROM transfer_payload_state WHERE transfer_payload_state.row_id=transfer_payloads.row_id); ALTER TABLE transfer_payload_state DROP COLUMN origin; ALTER TABLE journals DROP COLUMN diagnostics; ALTER TABLE journals DROP COLUMN title_plans; DROP TABLE title_lineage; CREATE TABLE device_state(profile TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,device TEXT NOT NULL,json TEXT NOT NULL,PRIMARY KEY(profile,device)); ALTER TABLE journals ADD COLUMN effect TEXT; PRAGMA user_version=10;")?;
@@ -154,7 +171,7 @@ fn version_ten_origin_migration_preserves_binary_rows_and_transfer_prefixes() ->
     assert_eq!(before, after);
     assert_eq!(
         db.query_row("PRAGMA user_version", [], |row| row.get::<_, u32>(0))?,
-        12
+        16
     );
     assert_eq!(engine.payload_info("a", "in-progress")?.written, 3);
     assert_eq!(

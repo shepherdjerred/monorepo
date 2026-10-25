@@ -165,6 +165,7 @@ fn schema_eleven_timer_state_retires_without_stranding_staged_task_journals() ->
     let published = files.get("a", PATH)?;
     drop(engine);
     let db = rusqlite::Connection::open(&database)?;
+    super::remove_occurrence_plans_for_historical_fixture(&db)?;
     db.execute_batch("CREATE TABLE device_state(profile TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,device TEXT NOT NULL,json TEXT NOT NULL,PRIMARY KEY(profile,device)); ALTER TABLE journals ADD COLUMN effect TEXT; PRAGMA user_version=11;")?;
     db.execute("INSERT INTO device_state(profile,device,json) VALUES('a','phone','obsolete private state')", [])?;
     let historical = json!({"mutationId":"historical-write","at":changed.at,"executionContext":changed.execution_context,"command":{"kind":"start_time","path":PATH}}).to_string();
@@ -178,7 +179,7 @@ fn schema_eleven_timer_state_retires_without_stranding_staged_task_journals() ->
     let db = rusqlite::Connection::open(&database)?;
     assert_eq!(
         db.query_row("PRAGMA user_version", [], |r| r.get::<_, u32>(0))?,
-        12
+        16
     );
     assert_eq!(
         db.query_row(
@@ -328,6 +329,7 @@ fn install_legacy_partial(db: &rusqlite::Connection, staged: &Mutation) -> Resul
         json!({"kind":"stop_time","path":PATH}),
         json!({"kind":"update","path":PATH,"properties":{"vendor":"ordinary child"}}),
     ];
+    super::remove_occurrence_plans_for_historical_fixture(db)?;
     db.execute_batch("CREATE TABLE device_state(profile TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,device TEXT NOT NULL,json TEXT NOT NULL,PRIMARY KEY(profile,device)); ALTER TABLE journals ADD COLUMN effect TEXT; PRAGMA user_version=11;")?;
     let parent = json!({"mutationId":"legacy","at":staged.at,"command":{"kind":"batch_partial","commands":commands}}).to_string();
     db.execute(

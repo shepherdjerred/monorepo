@@ -3,6 +3,10 @@
 mod detection;
 mod edit;
 mod instances;
+pub(crate) mod occurrence_transitions;
+pub(crate) mod occurrence_windows;
+pub(crate) mod occurrences;
+mod planned_view;
 mod recurrence_writes;
 mod temporal_writes;
 mod validation;
@@ -35,6 +39,10 @@ pub(crate) fn is_task(
     )?)
 }
 
+pub(crate) fn validate_recurrence_properties(properties: &Map<String, Value>) -> Result<()> {
+    recurrence_writes::validate_strict(properties)
+}
+
 pub(crate) fn plan(
     files: &dyn VaultFiles,
     id: &str,
@@ -58,6 +66,9 @@ pub(crate) fn plan(
             Command::Batch { commands } => batch(files, id, config, mutation, commands),
             Command::Undo { .. }
             | Command::ResolveConflict { .. }
+            | Command::MaterializeOccurrence { .. }
+            | Command::MaterializeOccurrenceWindow { .. }
+            | Command::RepairOccurrenceProgression { .. }
             | Command::BatchPartial { .. } => Err(RuntimeError::Validation(
                 "operation requires the durable runtime coordinator".to_owned(),
             )),
@@ -433,6 +444,7 @@ struct PlanContext<'a> {
     config: &'a TaskNotesConfiguration,
     mutation: &'a Mutation,
     diagnostics: std::cell::RefCell<Vec<Diagnostic>>,
+    occurrence_day: Option<&'a str>,
 }
 
 impl<'a> PlanContext<'a> {
@@ -448,6 +460,7 @@ impl<'a> PlanContext<'a> {
             config,
             mutation,
             diagnostics: std::cell::RefCell::new(Vec::new()),
+            occurrence_day: None,
         }
     }
     fn notice(&self, code: DiagnosticCode) {
@@ -584,6 +597,7 @@ pub(crate) fn reference_changes(
             config,
             mutation,
             diagnostics: std::cell::RefCell::new(Vec::new()),
+            occurrence_day: None,
         },
         old_path,
         new_path,
@@ -715,10 +729,18 @@ fn create(
         .and_then(Value::as_str)
         .filter(|s| !s.trim().is_empty())
         .ok_or_else(|| RuntimeError::Validation("task title is required".to_owned()))?;
-    if let Some(status) = &config.default_status {
+    if let Some(status) = config
+        .default_status
+        .as_ref()
+        .filter(|_| context.occurrence_day.is_none())
+    {
         properties.entry("status").or_insert(json!(status));
     }
-    if let Some(priority) = &config.default_priority {
+    if let Some(priority) = config
+        .default_priority
+        .as_ref()
+        .filter(|_| context.occurrence_day.is_none())
+    {
         properties.entry("priority").or_insert(json!(priority));
     }
     properties.entry("dateCreated").or_insert(json!(timestamp));
@@ -726,6 +748,9 @@ fn create(
     let supplied_body = body.unwrap_or_default();
     let (prepared, body) = creation_template(context, &properties, supplied_body)?;
     properties = prepared;
+    if let Some(day) = context.occurrence_day {
+        properties.entry("scheduled").or_insert(json!(day));
+    }
     let prepared = creation_destination(context, path, &properties, supplied_body)?;
     let path = if path.is_some() {
         prepared.path
@@ -1135,15 +1160,21 @@ fn recurring_completion(
     );
     let input = Value::Object(input);
     let result = if !done && let Some(instant) = instant {
-        tasknotes_vault::progression::complete_at(&input, day, instant)?
+        tasknotes_vault::progression::complete_at_bounded(
+            &input,
+            day,
+            instant,
+            crate::RECURRENCE_WORK_LIMIT,
+        )?
     } else {
-        tasknotes_vault::progression::execute(
+        tasknotes_vault::progression::execute_bounded(
             if done {
                 "recurrence.recalculate"
             } else {
                 "recurrence.complete"
             },
             &input,
+            crate::RECURRENCE_WORK_LIMIT,
         )?
     };
     if !done {
@@ -1183,19 +1214,7 @@ fn completion_target(
 ) -> Result<(chrono::NaiveDate, Option<chrono::DateTime<chrono::Utc>>)> {
     use tasknotes_vault::temporal;
     if let Some(target) = explicit {
-        if target.len() == 10 {
-            return Ok((temporal::parse_day(target)?, None));
-        }
-        let instant = temporal::parse_instant(target)?;
-        let execution = context.mutation.execution_context.as_ref().ok_or_else(|| {
-            RuntimeError::Validation(
-                "explicit datetime occurrence requires execution context".into(),
-            )
-        })?;
-        return Ok((
-            temporal::day_in_timezone(target, &execution.timezone)?,
-            Some(instant),
-        ));
+        return explicit_completion_target(context.mutation, target);
     }
     let fallback = normalized
         .get("scheduled")
@@ -1211,6 +1230,24 @@ fn completion_target(
         temporal::parse_instant(fallback)?;
     }
     Ok((temporal::date_part(fallback)?, None))
+}
+
+fn explicit_completion_target(
+    mutation: &Mutation,
+    target: &str,
+) -> Result<(chrono::NaiveDate, Option<chrono::DateTime<chrono::Utc>>)> {
+    use tasknotes_vault::temporal;
+    if target.len() == 10 {
+        return Ok((temporal::parse_day(target)?, None));
+    }
+    let instant = temporal::parse_instant(target)?;
+    let execution = mutation.execution_context.as_ref().ok_or_else(|| {
+        RuntimeError::Validation("explicit datetime occurrence requires execution context".into())
+    })?;
+    Ok((
+        temporal::day_in_timezone(target, &execution.timezone)?,
+        Some(instant),
+    ))
 }
 
 fn update(

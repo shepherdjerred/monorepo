@@ -1,0 +1,2825 @@
+{
+  "schemaVersion": 1,
+  "definitions": [
+    "featureRequest",
+    "command",
+    "occurrenceSuccessors",
+    "rollingMaintenancePlan",
+    "generationFailuresPlan"
+  ],
+  "cases": [
+    {
+      "id": "actual-deferred_outcome_schema-0",
+      "definition": "occurrenceSuccessors",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "budgeted-completion",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:ced380c4cf01162433536c9453156f617b2e3ad745739650149bdffb98abdd3b",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "completed",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": true,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "actual-deferred_outcome_schema-1",
+      "definition": "occurrenceSuccessors",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "budgeted-completion",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:ced380c4cf01162433536c9453156f617b2e3ad745739650149bdffb98abdd3b",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "completed",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": true,
+            "state": "cancelled",
+            "failure": null,
+            "resolution": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "actual-deferred_outcome_schema-2",
+      "definition": "occurrenceSuccessors",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original-deferred",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:90a6560e397e47c6809a7327e4112b76e4ae23a575e47e5fcdd700b9b5a80fc0",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "completed",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": true,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": {
+              "repairId": "repair-future",
+              "kind": "materialized",
+              "futureDate": "2026-10-05",
+              "successorId": "occnext:c4925bafde930e51105af1f8b646102cba332cfe8cf5cb4d1a9b757a44d8e3e5",
+              "parentRevision": "0c537f755e06eb1d71049841565f1532b9feb775668718e554c86461556d26e2"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "actual-deferred_outcome_schema-3",
+      "definition": "occurrenceSuccessors",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "deferred-crash",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:371b7955bba61081a593407f7a0a258a7ab94cc0b4d22a075b43aad31dca4245",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "completed",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": true,
+            "state": "staged",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "actual-deferred_outcome_schema-4",
+      "definition": "occurrenceSuccessors",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "policy-origin",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:d91c6aed033ac805e2f65ae545f0c87b244d25082065cdff9e65640bb5246738",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "completed",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": true,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": {
+              "repairId": "paid-parent-debt",
+              "kind": "policy_no_successor",
+              "futureDate": null,
+              "successorId": null,
+              "parentRevision": "997d672e57eac03be49d264146d5d5c34d549b1e2d2599a28c3bb3918cc29bbf"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "actual-deferred_outcome_schema-5",
+      "definition": "occurrenceSuccessors",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "skip-debt",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:2ac1ed1f46e0f14f5bf1fb3e5e4813d224bdab445df79bd2c5a51245c2c592ed",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "skipped",
+            "occurrenceDate": null,
+            "parentProjectionOwed": false,
+            "successorDiscoveryOwed": true,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": {
+              "repairId": "waived-optional-future",
+              "kind": "policy_no_successor",
+              "futureDate": null,
+              "successorId": null,
+              "parentRevision": "5690a6c526782252a8dc5783454f8690f92537775a3fa47ca517b61af8587a09"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "actual-deferred_outcome_schema-6",
+      "definition": "occurrenceSuccessors",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "terminal-origin",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:9ba834dc52f39cc56ee2932088ec782b39de7234b01ec38fd85736306a4e4003",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "completed",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": false,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": {
+              "repairId": "terminal-repair",
+              "kind": "exhausted",
+              "futureDate": null,
+              "successorId": null,
+              "parentRevision": "bde54a9ee9c13d8f5e69994ef50bbb72fc7e4e5eceab3efa405cc6d558b44afd"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "actual-generation_failures_schema-0",
+      "definition": "generationFailuresPlan",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 9,
+        "inspectedCount": 1,
+        "items": [
+          {
+            "primaryMutationId": "concrete-pending",
+            "item": {
+              "kind": "materialize_occurrence",
+              "successorId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+              "parentPath": "Projects/P.md",
+              "occurrenceDate": "2026-10-05",
+              "state": "pending",
+              "failure": {
+                "code": "host",
+                "message": "Vault access failed: synthetic replacement preparation failure"
+              }
+            },
+            "action": {
+              "kind": "repairable",
+              "command": {
+                "kind": "materialize_occurrence",
+                "parentPath": "Projects/P.md",
+                "expectedParentRevision": "6447961bd8eeca994e4fc11e6d50e221500cab98c4bb2c0778636db5d425e2d4",
+                "occurrenceDate": "2026-10-05",
+                "expectedOccurrenceRevision": null,
+                "properties": {},
+                "body": null
+              }
+            }
+          }
+        ],
+        "nextCursor": {
+          "lastId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+          "version": 9,
+          "binding": "d99cc8073e878151948a8653a627b21109b8a4966f529e892f3889047cc25f00"
+        }
+      }
+    },
+    {
+      "id": "actual-generation_failures_schema-1",
+      "definition": "generationFailuresPlan",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 9,
+        "inspectedCount": 1,
+        "items": [
+          {
+            "primaryMutationId": "first-deferred",
+            "item": {
+              "kind": "deferred_progression",
+              "successorId": "occprogress:0aed2f6be93d948b3a0f1a438418e06fe1405f12a4681a52f48a235eed5ec89f",
+              "parentPath": "Projects/P.md",
+              "childPath": "Tasks/P 2026-10-04.md",
+              "completedOccurrenceDate": "2026-10-04",
+              "childState": "completed",
+              "occurrenceDate": null,
+              "parentProjectionOwed": true,
+              "successorDiscoveryOwed": true,
+              "state": "failed",
+              "failure": {
+                "code": "validation",
+                "message": "Invalid operation: occurrence_expansion_resource_limit"
+              },
+              "resolution": null
+            },
+            "action": {
+              "kind": "repairable",
+              "command": {
+                "kind": "repair_occurrence_progression",
+                "progressionId": "occprogress:0aed2f6be93d948b3a0f1a438418e06fe1405f12a4681a52f48a235eed5ec89f",
+                "expectedParentRevision": "6447961bd8eeca994e4fc11e6d50e221500cab98c4bb2c0778636db5d425e2d4",
+                "expectedChildRevision": "25a2cfaf3f0563d960437261a9f74470581ab35ec553087e7e5b6c2eb5be389d"
+              }
+            }
+          }
+        ],
+        "nextCursor": {
+          "lastId": "occprogress:0aed2f6be93d948b3a0f1a438418e06fe1405f12a4681a52f48a235eed5ec89f",
+          "version": 9,
+          "binding": "ca18be1253676c43a8031030753f77d77626d152dd1a5a1005bafef2609ba762"
+        }
+      }
+    },
+    {
+      "id": "actual-generation_failures_schema-2",
+      "definition": "generationFailuresPlan",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 9,
+        "inspectedCount": 1,
+        "items": [
+          {
+            "primaryMutationId": "second-deferred",
+            "item": {
+              "kind": "deferred_progression",
+              "successorId": "occprogress:238245549a498a3a2f9456623b6c71245953f8f2310423ec01156e51f82b9cd7",
+              "parentPath": "Projects/P.md",
+              "childPath": "Tasks/P 2026-10-04.md",
+              "completedOccurrenceDate": "2026-10-04",
+              "childState": "completed",
+              "occurrenceDate": null,
+              "parentProjectionOwed": true,
+              "successorDiscoveryOwed": true,
+              "state": "failed",
+              "failure": {
+                "code": "validation",
+                "message": "Invalid operation: occurrence_expansion_resource_limit"
+              },
+              "resolution": null
+            },
+            "action": {
+              "kind": "repairable",
+              "command": {
+                "kind": "repair_occurrence_progression",
+                "progressionId": "occprogress:238245549a498a3a2f9456623b6c71245953f8f2310423ec01156e51f82b9cd7",
+                "expectedParentRevision": "6447961bd8eeca994e4fc11e6d50e221500cab98c4bb2c0778636db5d425e2d4",
+                "expectedChildRevision": "25a2cfaf3f0563d960437261a9f74470581ab35ec553087e7e5b6c2eb5be389d"
+              }
+            }
+          }
+        ],
+        "nextCursor": null
+      }
+    },
+    {
+      "id": "actual-generation_failures_schema-3",
+      "definition": "generationFailuresPlan",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 5,
+        "inspectedCount": 1,
+        "items": [
+          {
+            "primaryMutationId": "identity-primary",
+            "item": {
+              "kind": "deferred_progression",
+              "successorId": "occprogress:002b63a4267eed2e2ed110f712ab523ffe6ee62b2b6a32649eacc29719303394",
+              "parentPath": "Projects/P.md",
+              "childPath": "Tasks/P 2026-10-04.md",
+              "completedOccurrenceDate": "2026-10-04",
+              "childState": "completed",
+              "occurrenceDate": null,
+              "parentProjectionOwed": true,
+              "successorDiscoveryOwed": true,
+              "state": "failed",
+              "failure": {
+                "code": "validation",
+                "message": "Invalid operation: occurrence_expansion_resource_limit"
+              },
+              "resolution": null
+            },
+            "action": {
+              "kind": "unrepairable",
+              "reason": "changed_or_ambiguous_identity"
+            }
+          }
+        ],
+        "nextCursor": null
+      }
+    },
+    {
+      "id": "actual-generation_failures_schema-4",
+      "definition": "generationFailuresPlan",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 5,
+        "inspectedCount": 1,
+        "items": [
+          {
+            "primaryMutationId": "identity-primary",
+            "item": {
+              "kind": "deferred_progression",
+              "successorId": "occprogress:002b63a4267eed2e2ed110f712ab523ffe6ee62b2b6a32649eacc29719303394",
+              "parentPath": "Projects/P.md",
+              "childPath": "Tasks/P 2026-10-04.md",
+              "completedOccurrenceDate": "2026-10-04",
+              "childState": "completed",
+              "occurrenceDate": null,
+              "parentProjectionOwed": true,
+              "successorDiscoveryOwed": true,
+              "state": "failed",
+              "failure": {
+                "code": "validation",
+                "message": "Invalid operation: occurrence_expansion_resource_limit"
+              },
+              "resolution": null
+            },
+            "action": {
+              "kind": "unrepairable",
+              "reason": "changed_or_ambiguous_identity"
+            }
+          }
+        ],
+        "nextCursor": null
+      }
+    },
+    {
+      "id": "actual-generation_failures_schema-5",
+      "definition": "generationFailuresPlan",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 4,
+        "inspectedCount": 1,
+        "items": [
+          {
+            "primaryMutationId": "discoverable-primary",
+            "item": {
+              "kind": "deferred_progression",
+              "successorId": "occprogress:29b37e36bc938ad452af418deda704503cc3ec94178f93142fd3b8d7d41bce0b",
+              "parentPath": "Projects/P.md",
+              "childPath": "Tasks/P 2026-10-04.md",
+              "completedOccurrenceDate": "2026-10-04",
+              "childState": "completed",
+              "occurrenceDate": null,
+              "parentProjectionOwed": true,
+              "successorDiscoveryOwed": true,
+              "state": "failed",
+              "failure": {
+                "code": "validation",
+                "message": "Invalid operation: occurrence_expansion_resource_limit"
+              },
+              "resolution": null
+            },
+            "action": {
+              "kind": "repairable",
+              "command": {
+                "kind": "repair_occurrence_progression",
+                "progressionId": "occprogress:29b37e36bc938ad452af418deda704503cc3ec94178f93142fd3b8d7d41bce0b",
+                "expectedParentRevision": "691cf7dd99bf115a6d4dc09a4432aaf1cab9f483de8b131c99c9cec0e3b3e7cc",
+                "expectedChildRevision": "25a2cfaf3f0563d960437261a9f74470581ab35ec553087e7e5b6c2eb5be389d"
+              }
+            }
+          }
+        ],
+        "nextCursor": null
+      }
+    },
+    {
+      "id": "actual-generation_failures_schema-6",
+      "definition": "generationFailuresPlan",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 6,
+        "inspectedCount": 1,
+        "items": [
+          {
+            "primaryMutationId": "identity-primary",
+            "item": {
+              "kind": "deferred_progression",
+              "successorId": "occprogress:002b63a4267eed2e2ed110f712ab523ffe6ee62b2b6a32649eacc29719303394",
+              "parentPath": "Projects/P.md",
+              "childPath": "Tasks/P 2026-10-04.md",
+              "completedOccurrenceDate": "2026-10-04",
+              "childState": "completed",
+              "occurrenceDate": null,
+              "parentProjectionOwed": true,
+              "successorDiscoveryOwed": true,
+              "state": "failed",
+              "failure": {
+                "code": "validation",
+                "message": "Invalid operation: occurrence_expansion_resource_limit"
+              },
+              "resolution": null
+            },
+            "action": {
+              "kind": "unrepairable",
+              "reason": "child_state_changed"
+            }
+          }
+        ],
+        "nextCursor": null
+      }
+    },
+    {
+      "id": "actual-generation_failures_schema-7",
+      "definition": "generationFailuresPlan",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 5,
+        "inspectedCount": 1,
+        "items": [
+          {
+            "primaryMutationId": "identity-primary",
+            "item": {
+              "kind": "deferred_progression",
+              "successorId": "occprogress:002b63a4267eed2e2ed110f712ab523ffe6ee62b2b6a32649eacc29719303394",
+              "parentPath": "Projects/P.md",
+              "childPath": "Tasks/P 2026-10-04.md",
+              "completedOccurrenceDate": "2026-10-04",
+              "childState": "completed",
+              "occurrenceDate": null,
+              "parentProjectionOwed": true,
+              "successorDiscoveryOwed": true,
+              "state": "failed",
+              "failure": {
+                "code": "validation",
+                "message": "Invalid operation: occurrence_expansion_resource_limit"
+              },
+              "resolution": null
+            },
+            "action": {
+              "kind": "unrepairable",
+              "reason": "invalid_current_parent"
+            }
+          }
+        ],
+        "nextCursor": null
+      }
+    },
+    {
+      "id": "actual-generation_failures_schema-8",
+      "definition": "generationFailuresPlan",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 5,
+        "inspectedCount": 1,
+        "items": [
+          {
+            "primaryMutationId": "identity-primary",
+            "item": {
+              "kind": "deferred_progression",
+              "successorId": "occprogress:002b63a4267eed2e2ed110f712ab523ffe6ee62b2b6a32649eacc29719303394",
+              "parentPath": "Projects/P.md",
+              "childPath": "Tasks/P 2026-10-04.md",
+              "completedOccurrenceDate": "2026-10-04",
+              "childState": "completed",
+              "occurrenceDate": null,
+              "parentProjectionOwed": true,
+              "successorDiscoveryOwed": true,
+              "state": "failed",
+              "failure": {
+                "code": "validation",
+                "message": "Invalid operation: occurrence_expansion_resource_limit"
+              },
+              "resolution": null
+            },
+            "action": {
+              "kind": "unrepairable",
+              "reason": "child_missing"
+            }
+          }
+        ],
+        "nextCursor": null
+      }
+    },
+    {
+      "id": "actual-generation_failures_schema-9",
+      "definition": "generationFailuresPlan",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 5,
+        "inspectedCount": 1,
+        "items": [
+          {
+            "primaryMutationId": "identity-primary",
+            "item": {
+              "kind": "deferred_progression",
+              "successorId": "occprogress:002b63a4267eed2e2ed110f712ab523ffe6ee62b2b6a32649eacc29719303394",
+              "parentPath": "Projects/P.md",
+              "childPath": "Tasks/P 2026-10-04.md",
+              "completedOccurrenceDate": "2026-10-04",
+              "childState": "completed",
+              "occurrenceDate": null,
+              "parentProjectionOwed": true,
+              "successorDiscoveryOwed": true,
+              "state": "failed",
+              "failure": {
+                "code": "validation",
+                "message": "Invalid operation: occurrence_expansion_resource_limit"
+              },
+              "resolution": null
+            },
+            "action": {
+              "kind": "unrepairable",
+              "reason": "parent_missing"
+            }
+          }
+        ],
+        "nextCursor": null
+      }
+    },
+    {
+      "id": "actual-rolling_maintenance_schema-0",
+      "definition": "rollingMaintenancePlan",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 4,
+        "referenceDate": "2026-10-04",
+        "inspectedCount": 1,
+        "targets": [],
+        "problems": [],
+        "nextCursor": {
+          "lastPath": "A/Manual.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "88d8d0b9f22b2c209e50a8385d850705d669e9ffd62e4d940fe82b4781e6168e"
+        }
+      }
+    },
+    {
+      "id": "actual-rolling_maintenance_schema-1",
+      "definition": "rollingMaintenancePlan",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 4,
+        "referenceDate": "2026-10-04",
+        "inspectedCount": 1,
+        "targets": [],
+        "problems": [],
+        "nextCursor": {
+          "lastPath": "B/Ordinary.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "a18d1854261382527247701f8417761a49877c786b2966ffee084dbcfb76586f"
+        }
+      }
+    },
+    {
+      "id": "actual-rolling_maintenance_schema-2",
+      "definition": "rollingMaintenancePlan",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 4,
+        "referenceDate": "2026-10-04",
+        "inspectedCount": 1,
+        "targets": [],
+        "problems": [
+          {
+            "taskPath": "C/Invalid.md",
+            "code": "invalid_recurrence_rule"
+          }
+        ],
+        "nextCursor": {
+          "lastPath": "C/Invalid.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "39a97a87f063fce1d0d8b9f5c1f1ecc728d657c60d891e1c502de8b75dd143c1"
+        }
+      }
+    },
+    {
+      "id": "actual-rolling_maintenance_schema-3",
+      "definition": "rollingMaintenancePlan",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 4,
+        "referenceDate": "2026-10-04",
+        "inspectedCount": 1,
+        "targets": [
+          {
+            "parentPath": "Projects/P.md",
+            "expectedParentRevision": "725749094081a0bcd761af56fa7cdcfc4df0d9a5c3fd77c9eeae421b8c044e37",
+            "referenceDate": "2026-10-04",
+            "start": "2026-10-03",
+            "end": "2026-10-06"
+          }
+        ],
+        "problems": [],
+        "nextCursor": {
+          "lastPath": "Projects/P.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "a327e32532b975c3b9c4850f4c2017b150f79ca781702954bcd0594eddf568eb"
+        }
+      }
+    },
+    {
+      "id": "actual-rolling_maintenance_schema-4",
+      "definition": "rollingMaintenancePlan",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 4,
+        "referenceDate": "2026-10-04",
+        "inspectedCount": 1,
+        "targets": [],
+        "problems": [],
+        "nextCursor": null
+      }
+    },
+    {
+      "id": "actual-generation_failures_request_schema-0",
+      "definition": "featureRequest",
+      "valid": true,
+      "value": {
+        "kind": "occurrence_generation_failures",
+        "limit": 1
+      }
+    },
+    {
+      "id": "actual-rolling_maintenance_request_schema-0",
+      "definition": "featureRequest",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "kind": "rolling_maintenance_plan",
+        "referenceDate": "2026-10-04",
+        "limit": 1,
+        "after": null,
+        "expectedVersion": null
+      }
+    },
+    {
+      "id": "actual-rolling_maintenance_request_schema-1",
+      "definition": "featureRequest",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "kind": "rolling_maintenance_plan",
+        "referenceDate": "2026-10-04",
+        "limit": 1,
+        "after": {
+          "lastPath": "A/Manual.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "88d8d0b9f22b2c209e50a8385d850705d669e9ffd62e4d940fe82b4781e6168e"
+        },
+        "expectedVersion": 4
+      }
+    },
+    {
+      "id": "actual-rolling_maintenance_request_schema-2",
+      "definition": "featureRequest",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "kind": "rolling_maintenance_plan",
+        "referenceDate": "2026-10-04",
+        "limit": 1,
+        "after": {
+          "lastPath": "B/Ordinary.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "a18d1854261382527247701f8417761a49877c786b2966ffee084dbcfb76586f"
+        },
+        "expectedVersion": 4
+      }
+    },
+    {
+      "id": "actual-rolling_maintenance_request_schema-3",
+      "definition": "featureRequest",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "kind": "rolling_maintenance_plan",
+        "referenceDate": "2026-10-04",
+        "limit": 1,
+        "after": {
+          "lastPath": "C/Invalid.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "39a97a87f063fce1d0d8b9f5c1f1ecc728d657c60d891e1c502de8b75dd143c1"
+        },
+        "expectedVersion": 4
+      }
+    },
+    {
+      "id": "actual-rolling_maintenance_request_schema-4",
+      "definition": "featureRequest",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "kind": "rolling_maintenance_plan",
+        "referenceDate": "2026-10-04",
+        "limit": 1,
+        "after": {
+          "lastPath": "Projects/P.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "a327e32532b975c3b9c4850f4c2017b150f79ca781702954bcd0594eddf568eb"
+        },
+        "expectedVersion": 4
+      }
+    },
+    {
+      "id": "actual-repair_command_schema-0",
+      "definition": "command",
+      "valid": true,
+      "value": {
+        "kind": "repair_occurrence_progression",
+        "progressionId": "occprogress:90a6560e397e47c6809a7327e4112b76e4ae23a575e47e5fcdd700b9b5a80fc0",
+        "expectedParentRevision": "b2ba3852193ca9da3cc254083b088afbb6a6b95409f78100974cce32eddbc429",
+        "expectedChildRevision": "25a2cfaf3f0563d960437261a9f74470581ab35ec553087e7e5b6c2eb5be389d"
+      }
+    },
+    {
+      "id": "concrete-staged-shape",
+      "definition": "occurrenceSuccessors",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "primary",
+        "items": [
+          {
+            "kind": "materialize_occurrence",
+            "successorId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+            "parentPath": "Projects/P.md",
+            "occurrenceDate": "2026-10-05",
+            "state": "staged",
+            "failure": {
+              "code": "host",
+              "message": "Vault access failed: synthetic replacement preparation failure"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "concrete-pending-shape",
+      "definition": "occurrenceSuccessors",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "primary",
+        "items": [
+          {
+            "kind": "materialize_occurrence",
+            "successorId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+            "parentPath": "Projects/P.md",
+            "occurrenceDate": "2026-10-05",
+            "state": "pending",
+            "failure": {
+              "code": "host",
+              "message": "Vault access failed: synthetic replacement preparation failure"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "concrete-applied-shape",
+      "definition": "occurrenceSuccessors",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "primary",
+        "items": [
+          {
+            "kind": "materialize_occurrence",
+            "successorId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+            "parentPath": "Projects/P.md",
+            "occurrenceDate": "2026-10-05",
+            "state": "applied",
+            "failure": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "concrete-failed-shape",
+      "definition": "occurrenceSuccessors",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "primary",
+        "items": [
+          {
+            "kind": "materialize_occurrence",
+            "successorId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+            "parentPath": "Projects/P.md",
+            "occurrenceDate": "2026-10-05",
+            "state": "failed",
+            "failure": {
+              "code": "host",
+              "message": "Vault access failed: synthetic replacement preparation failure"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "concrete-cancelled-shape",
+      "definition": "occurrenceSuccessors",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "primary",
+        "items": [
+          {
+            "kind": "materialize_occurrence",
+            "successorId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+            "parentPath": "Projects/P.md",
+            "occurrenceDate": "2026-10-05",
+            "state": "cancelled",
+            "failure": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "request-basic-34",
+      "definition": "featureRequest",
+      "valid": true,
+      "value": {
+        "kind": "occurrence_successors",
+        "mutationId": "primary"
+      }
+    },
+    {
+      "id": "request-basic-35",
+      "definition": "featureRequest",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "kind": "occurrence_successors",
+        "mutationId": "primary"
+      }
+    },
+    {
+      "id": "request-basic-36",
+      "definition": "featureRequest",
+      "valid": true,
+      "value": {
+        "kind": "occurrence_generation_failures"
+      }
+    },
+    {
+      "id": "failure-cursor-from-real-page",
+      "definition": "featureRequest",
+      "valid": true,
+      "value": {
+        "kind": "occurrence_generation_failures",
+        "after": {
+          "lastId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+          "version": 9,
+          "binding": "d99cc8073e878151948a8653a627b21109b8a4966f529e892f3889047cc25f00"
+        },
+        "expectedVersion": 9
+      }
+    },
+    {
+      "id": "successor-missing-id",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": {
+        "kind": "occurrence_successors"
+      }
+    },
+    {
+      "id": "successor-empty-id",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": {
+        "kind": "occurrence_successors",
+        "mutationId": ""
+      }
+    },
+    {
+      "id": "successor-unknown-field",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": {
+        "kind": "occurrence_successors",
+        "mutationId": "primary",
+        "extra": true
+      }
+    },
+    {
+      "id": "successor-unknown-kind",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": {
+        "kind": "generate_everything",
+        "mutationId": "primary"
+      }
+    },
+    {
+      "id": "successor-unknown-version",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": {
+        "kind": "occurrence_successors",
+        "mutationId": "primary",
+        "schemaVersion": 2
+      }
+    },
+    {
+      "id": "occurrenceSuccessors-unknown-field",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "budgeted-completion",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:ced380c4cf01162433536c9453156f617b2e3ad745739650149bdffb98abdd3b",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "completed",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": true,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": null
+          }
+        ],
+        "extra": true
+      }
+    },
+    {
+      "id": "occurrenceSuccessors-missing-version",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "mutationId": "budgeted-completion",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:ced380c4cf01162433536c9453156f617b2e3ad745739650149bdffb98abdd3b",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "completed",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": true,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "occurrenceSuccessors-unknown-version",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 2,
+        "mutationId": "budgeted-completion",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:ced380c4cf01162433536c9453156f617b2e3ad745739650149bdffb98abdd3b",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "completed",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": true,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "occurrenceSuccessors-missing-items",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "budgeted-completion"
+      }
+    },
+    {
+      "id": "generationFailuresPlan-unknown-field",
+      "definition": "generationFailuresPlan",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 9,
+        "inspectedCount": 1,
+        "items": [
+          {
+            "primaryMutationId": "concrete-pending",
+            "item": {
+              "kind": "materialize_occurrence",
+              "successorId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+              "parentPath": "Projects/P.md",
+              "occurrenceDate": "2026-10-05",
+              "state": "pending",
+              "failure": {
+                "code": "host",
+                "message": "Vault access failed: synthetic replacement preparation failure"
+              }
+            },
+            "action": {
+              "kind": "repairable",
+              "command": {
+                "kind": "materialize_occurrence",
+                "parentPath": "Projects/P.md",
+                "expectedParentRevision": "6447961bd8eeca994e4fc11e6d50e221500cab98c4bb2c0778636db5d425e2d4",
+                "occurrenceDate": "2026-10-05",
+                "expectedOccurrenceRevision": null,
+                "properties": {},
+                "body": null
+              }
+            }
+          }
+        ],
+        "nextCursor": {
+          "lastId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+          "version": 9,
+          "binding": "d99cc8073e878151948a8653a627b21109b8a4966f529e892f3889047cc25f00"
+        },
+        "extra": true
+      }
+    },
+    {
+      "id": "generationFailuresPlan-missing-version",
+      "definition": "generationFailuresPlan",
+      "valid": false,
+      "value": {
+        "profileId": "a",
+        "version": 9,
+        "inspectedCount": 1,
+        "items": [
+          {
+            "primaryMutationId": "concrete-pending",
+            "item": {
+              "kind": "materialize_occurrence",
+              "successorId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+              "parentPath": "Projects/P.md",
+              "occurrenceDate": "2026-10-05",
+              "state": "pending",
+              "failure": {
+                "code": "host",
+                "message": "Vault access failed: synthetic replacement preparation failure"
+              }
+            },
+            "action": {
+              "kind": "repairable",
+              "command": {
+                "kind": "materialize_occurrence",
+                "parentPath": "Projects/P.md",
+                "expectedParentRevision": "6447961bd8eeca994e4fc11e6d50e221500cab98c4bb2c0778636db5d425e2d4",
+                "occurrenceDate": "2026-10-05",
+                "expectedOccurrenceRevision": null,
+                "properties": {},
+                "body": null
+              }
+            }
+          }
+        ],
+        "nextCursor": {
+          "lastId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+          "version": 9,
+          "binding": "d99cc8073e878151948a8653a627b21109b8a4966f529e892f3889047cc25f00"
+        }
+      }
+    },
+    {
+      "id": "generationFailuresPlan-unknown-version",
+      "definition": "generationFailuresPlan",
+      "valid": false,
+      "value": {
+        "schemaVersion": 2,
+        "profileId": "a",
+        "version": 9,
+        "inspectedCount": 1,
+        "items": [
+          {
+            "primaryMutationId": "concrete-pending",
+            "item": {
+              "kind": "materialize_occurrence",
+              "successorId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+              "parentPath": "Projects/P.md",
+              "occurrenceDate": "2026-10-05",
+              "state": "pending",
+              "failure": {
+                "code": "host",
+                "message": "Vault access failed: synthetic replacement preparation failure"
+              }
+            },
+            "action": {
+              "kind": "repairable",
+              "command": {
+                "kind": "materialize_occurrence",
+                "parentPath": "Projects/P.md",
+                "expectedParentRevision": "6447961bd8eeca994e4fc11e6d50e221500cab98c4bb2c0778636db5d425e2d4",
+                "occurrenceDate": "2026-10-05",
+                "expectedOccurrenceRevision": null,
+                "properties": {},
+                "body": null
+              }
+            }
+          }
+        ],
+        "nextCursor": {
+          "lastId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+          "version": 9,
+          "binding": "d99cc8073e878151948a8653a627b21109b8a4966f529e892f3889047cc25f00"
+        }
+      }
+    },
+    {
+      "id": "generationFailuresPlan-missing-items",
+      "definition": "generationFailuresPlan",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 9,
+        "inspectedCount": 1,
+        "nextCursor": {
+          "lastId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+          "version": 9,
+          "binding": "d99cc8073e878151948a8653a627b21109b8a4966f529e892f3889047cc25f00"
+        }
+      }
+    },
+    {
+      "id": "rollingMaintenancePlan-unknown-field",
+      "definition": "rollingMaintenancePlan",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 4,
+        "referenceDate": "2026-10-04",
+        "inspectedCount": 1,
+        "targets": [],
+        "problems": [],
+        "nextCursor": {
+          "lastPath": "A/Manual.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "88d8d0b9f22b2c209e50a8385d850705d669e9ffd62e4d940fe82b4781e6168e"
+        },
+        "extra": true
+      }
+    },
+    {
+      "id": "rollingMaintenancePlan-missing-version",
+      "definition": "rollingMaintenancePlan",
+      "valid": false,
+      "value": {
+        "profileId": "a",
+        "version": 4,
+        "referenceDate": "2026-10-04",
+        "inspectedCount": 1,
+        "targets": [],
+        "problems": [],
+        "nextCursor": {
+          "lastPath": "A/Manual.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "88d8d0b9f22b2c209e50a8385d850705d669e9ffd62e4d940fe82b4781e6168e"
+        }
+      }
+    },
+    {
+      "id": "rollingMaintenancePlan-unknown-version",
+      "definition": "rollingMaintenancePlan",
+      "valid": false,
+      "value": {
+        "schemaVersion": 2,
+        "profileId": "a",
+        "version": 4,
+        "referenceDate": "2026-10-04",
+        "inspectedCount": 1,
+        "targets": [],
+        "problems": [],
+        "nextCursor": {
+          "lastPath": "A/Manual.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "88d8d0b9f22b2c209e50a8385d850705d669e9ffd62e4d940fe82b4781e6168e"
+        }
+      }
+    },
+    {
+      "id": "rollingMaintenancePlan-missing-items",
+      "definition": "rollingMaintenancePlan",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 4,
+        "referenceDate": "2026-10-04",
+        "inspectedCount": 1,
+        "problems": [],
+        "nextCursor": {
+          "lastPath": "A/Manual.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "88d8d0b9f22b2c209e50a8385d850705d669e9ffd62e4d940fe82b4781e6168e"
+        }
+      }
+    },
+    {
+      "id": "concrete-applied-retains-failure",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "primary",
+        "items": [
+          {
+            "kind": "materialize_occurrence",
+            "successorId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+            "parentPath": "Projects/P.md",
+            "occurrenceDate": "2026-10-05",
+            "state": "applied",
+            "failure": {
+              "code": "host",
+              "message": "Vault access failed: synthetic replacement preparation failure"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "concrete-cancelled-retains-failure",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "primary",
+        "items": [
+          {
+            "kind": "materialize_occurrence",
+            "successorId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+            "parentPath": "Projects/P.md",
+            "occurrenceDate": "2026-10-05",
+            "state": "cancelled",
+            "failure": {
+              "code": "host",
+              "message": "Vault access failed: synthetic replacement preparation failure"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "concrete-failed-missing-failure",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "primary",
+        "items": [
+          {
+            "kind": "materialize_occurrence",
+            "successorId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+            "parentPath": "Projects/P.md",
+            "occurrenceDate": "2026-10-05",
+            "state": "failed",
+            "failure": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "concrete-unknown-state",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "primary",
+        "items": [
+          {
+            "kind": "materialize_occurrence",
+            "successorId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+            "parentPath": "Projects/P.md",
+            "occurrenceDate": "2026-10-05",
+            "state": "complete",
+            "failure": {
+              "code": "host",
+              "message": "Vault access failed: synthetic replacement preparation failure"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "concrete-unknown-failure-code",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "primary",
+        "items": [
+          {
+            "kind": "materialize_occurrence",
+            "successorId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+            "parentPath": "Projects/P.md",
+            "occurrenceDate": "2026-10-05",
+            "state": "pending",
+            "failure": {
+              "code": "network_guess",
+              "message": "Vault access failed: synthetic replacement preparation failure"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "concrete-invalid-date",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "primary",
+        "items": [
+          {
+            "kind": "materialize_occurrence",
+            "successorId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+            "parentPath": "Projects/P.md",
+            "occurrenceDate": "2026-02-30",
+            "state": "pending",
+            "failure": {
+              "code": "host",
+              "message": "Vault access failed: synthetic replacement preparation failure"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "deferred-missing-resolution",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "budgeted-completion",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:ced380c4cf01162433536c9453156f617b2e3ad745739650149bdffb98abdd3b",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "completed",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": true,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "deferred-failed-null-failure",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "budgeted-completion",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:ced380c4cf01162433536c9453156f617b2e3ad745739650149bdffb98abdd3b",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "completed",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": true,
+            "state": "failed",
+            "failure": null,
+            "resolution": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "deferred-invalid-concrete-date",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "budgeted-completion",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:ced380c4cf01162433536c9453156f617b2e3ad745739650149bdffb98abdd3b",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "completed",
+            "occurrenceDate": "2026-10-05",
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": true,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "deferred-unknown-child-state",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "budgeted-completion",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:ced380c4cf01162433536c9453156f617b2e3ad745739650149bdffb98abdd3b",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "open",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": true,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "deferred-invalid-parent-owed-skip",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "budgeted-completion",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:ced380c4cf01162433536c9453156f617b2e3ad745739650149bdffb98abdd3b",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "skipped",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": true,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "deferred-invalid-id",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "budgeted-completion",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:invalid",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "completed",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": true,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "deferred-unknown-field",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "budgeted-completion",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:ced380c4cf01162433536c9453156f617b2e3ad745739650149bdffb98abdd3b",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "completed",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": true,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": null,
+            "extra": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "cancelled-retains-resolution",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "budgeted-completion",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:ced380c4cf01162433536c9453156f617b2e3ad745739650149bdffb98abdd3b",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "completed",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": true,
+            "state": "cancelled",
+            "failure": null,
+            "resolution": {
+              "repairId": "repair-future",
+              "kind": "materialized",
+              "futureDate": "2026-10-05",
+              "successorId": "occnext:c4925bafde930e51105af1f8b646102cba332cfe8cf5cb4d1a9b757a44d8e3e5",
+              "parentRevision": "0c537f755e06eb1d71049841565f1532b9feb775668718e554c86461556d26e2"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "resolution-materialized-coupling-69",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original-deferred",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:90a6560e397e47c6809a7327e4112b76e4ae23a575e47e5fcdd700b9b5a80fc0",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "completed",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": true,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": {
+              "repairId": "repair-future",
+              "kind": "materialized",
+              "futureDate": null,
+              "successorId": "occnext:c4925bafde930e51105af1f8b646102cba332cfe8cf5cb4d1a9b757a44d8e3e5",
+              "parentRevision": "0c537f755e06eb1d71049841565f1532b9feb775668718e554c86461556d26e2"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "resolution-materialized-unknown-70",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "original-deferred",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:90a6560e397e47c6809a7327e4112b76e4ae23a575e47e5fcdd700b9b5a80fc0",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "completed",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": true,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": {
+              "repairId": "repair-future",
+              "kind": "materialized",
+              "futureDate": "2026-10-05",
+              "successorId": "occnext:c4925bafde930e51105af1f8b646102cba332cfe8cf5cb4d1a9b757a44d8e3e5",
+              "parentRevision": "0c537f755e06eb1d71049841565f1532b9feb775668718e554c86461556d26e2",
+              "extra": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "resolution-policy_no_successor-coupling-71",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "policy-origin",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:d91c6aed033ac805e2f65ae545f0c87b244d25082065cdff9e65640bb5246738",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "completed",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": true,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": {
+              "repairId": "paid-parent-debt",
+              "kind": "policy_no_successor",
+              "futureDate": "2026-10-05",
+              "successorId": null,
+              "parentRevision": "997d672e57eac03be49d264146d5d5c34d549b1e2d2599a28c3bb3918cc29bbf"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "resolution-policy_no_successor-unknown-72",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "policy-origin",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:d91c6aed033ac805e2f65ae545f0c87b244d25082065cdff9e65640bb5246738",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "completed",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": true,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": {
+              "repairId": "paid-parent-debt",
+              "kind": "policy_no_successor",
+              "futureDate": null,
+              "successorId": null,
+              "parentRevision": "997d672e57eac03be49d264146d5d5c34d549b1e2d2599a28c3bb3918cc29bbf",
+              "extra": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "resolution-policy_no_successor-coupling-73",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "skip-debt",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:2ac1ed1f46e0f14f5bf1fb3e5e4813d224bdab445df79bd2c5a51245c2c592ed",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "skipped",
+            "occurrenceDate": null,
+            "parentProjectionOwed": false,
+            "successorDiscoveryOwed": true,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": {
+              "repairId": "waived-optional-future",
+              "kind": "policy_no_successor",
+              "futureDate": "2026-10-05",
+              "successorId": null,
+              "parentRevision": "5690a6c526782252a8dc5783454f8690f92537775a3fa47ca517b61af8587a09"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "resolution-policy_no_successor-unknown-74",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "skip-debt",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:2ac1ed1f46e0f14f5bf1fb3e5e4813d224bdab445df79bd2c5a51245c2c592ed",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "skipped",
+            "occurrenceDate": null,
+            "parentProjectionOwed": false,
+            "successorDiscoveryOwed": true,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": {
+              "repairId": "waived-optional-future",
+              "kind": "policy_no_successor",
+              "futureDate": null,
+              "successorId": null,
+              "parentRevision": "5690a6c526782252a8dc5783454f8690f92537775a3fa47ca517b61af8587a09",
+              "extra": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "resolution-exhausted-coupling-75",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "terminal-origin",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:9ba834dc52f39cc56ee2932088ec782b39de7234b01ec38fd85736306a4e4003",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "completed",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": false,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": {
+              "repairId": "terminal-repair",
+              "kind": "exhausted",
+              "futureDate": "2026-10-05",
+              "successorId": null,
+              "parentRevision": "bde54a9ee9c13d8f5e69994ef50bbb72fc7e4e5eceab3efa405cc6d558b44afd"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "resolution-exhausted-unknown-76",
+      "definition": "occurrenceSuccessors",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "mutationId": "terminal-origin",
+        "items": [
+          {
+            "kind": "deferred_progression",
+            "successorId": "occprogress:9ba834dc52f39cc56ee2932088ec782b39de7234b01ec38fd85736306a4e4003",
+            "parentPath": "Projects/P.md",
+            "childPath": "Tasks/P 2026-10-04.md",
+            "completedOccurrenceDate": "2026-10-04",
+            "childState": "completed",
+            "occurrenceDate": null,
+            "parentProjectionOwed": true,
+            "successorDiscoveryOwed": false,
+            "state": "failed",
+            "failure": {
+              "code": "validation",
+              "message": "Invalid operation: occurrence_expansion_resource_limit"
+            },
+            "resolution": {
+              "repairId": "terminal-repair",
+              "kind": "exhausted",
+              "futureDate": null,
+              "successorId": null,
+              "parentRevision": "bde54a9ee9c13d8f5e69994ef50bbb72fc7e4e5eceab3efa405cc6d558b44afd",
+              "extra": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "maintenance-page-limit",
+      "definition": "rollingMaintenancePlan",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 4,
+        "referenceDate": "2026-10-04",
+        "inspectedCount": 257,
+        "targets": [],
+        "problems": [],
+        "nextCursor": {
+          "lastPath": "A/Manual.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "88d8d0b9f22b2c209e50a8385d850705d669e9ffd62e4d940fe82b4781e6168e"
+        }
+      }
+    },
+    {
+      "id": "maintenance-cursor-missing-binding",
+      "definition": "rollingMaintenancePlan",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 4,
+        "referenceDate": "2026-10-04",
+        "inspectedCount": 1,
+        "targets": [],
+        "problems": [],
+        "nextCursor": {
+          "lastPath": "A/Manual.md",
+          "referenceDate": "2026-10-04",
+          "version": 4
+        }
+      }
+    },
+    {
+      "id": "maintenance-cursor-unknown",
+      "definition": "rollingMaintenancePlan",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 4,
+        "referenceDate": "2026-10-04",
+        "inspectedCount": 1,
+        "targets": [],
+        "problems": [],
+        "nextCursor": {
+          "lastPath": "A/Manual.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "88d8d0b9f22b2c209e50a8385d850705d669e9ffd62e4d940fe82b4781e6168e",
+          "extra": true
+        }
+      }
+    },
+    {
+      "id": "maintenance-target-missing-fence",
+      "definition": "rollingMaintenancePlan",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 4,
+        "referenceDate": "2026-10-04",
+        "inspectedCount": 1,
+        "targets": [
+          {
+            "parentPath": "Projects/P.md",
+            "referenceDate": "2026-10-04",
+            "start": "2026-10-03",
+            "end": "2026-10-06"
+          }
+        ],
+        "problems": [],
+        "nextCursor": {
+          "lastPath": "Projects/P.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "a327e32532b975c3b9c4850f4c2017b150f79ca781702954bcd0594eddf568eb"
+        }
+      }
+    },
+    {
+      "id": "maintenance-target-invalid-day",
+      "definition": "rollingMaintenancePlan",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 4,
+        "referenceDate": "2026-10-04",
+        "inspectedCount": 1,
+        "targets": [
+          {
+            "parentPath": "Projects/P.md",
+            "expectedParentRevision": "725749094081a0bcd761af56fa7cdcfc4df0d9a5c3fd77c9eeae421b8c044e37",
+            "referenceDate": "2026-02-30",
+            "start": "2026-10-03",
+            "end": "2026-10-06"
+          }
+        ],
+        "problems": [],
+        "nextCursor": {
+          "lastPath": "Projects/P.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "a327e32532b975c3b9c4850f4c2017b150f79ca781702954bcd0594eddf568eb"
+        }
+      }
+    },
+    {
+      "id": "maintenance-target-unknown-field",
+      "definition": "rollingMaintenancePlan",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 4,
+        "referenceDate": "2026-10-04",
+        "inspectedCount": 1,
+        "targets": [
+          {
+            "parentPath": "Projects/P.md",
+            "expectedParentRevision": "725749094081a0bcd761af56fa7cdcfc4df0d9a5c3fd77c9eeae421b8c044e37",
+            "referenceDate": "2026-10-04",
+            "start": "2026-10-03",
+            "end": "2026-10-06",
+            "extra": true
+          }
+        ],
+        "problems": [],
+        "nextCursor": {
+          "lastPath": "Projects/P.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "a327e32532b975c3b9c4850f4c2017b150f79ca781702954bcd0594eddf568eb"
+        }
+      }
+    },
+    {
+      "id": "maintenance-request-cursor-without-version",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "kind": "rolling_maintenance_plan",
+        "referenceDate": "2026-10-04",
+        "limit": 1,
+        "after": {
+          "lastPath": "A/Manual.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "88d8d0b9f22b2c209e50a8385d850705d669e9ffd62e4d940fe82b4781e6168e"
+        }
+      }
+    },
+    {
+      "id": "maintenance-request-cursor-null-version",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "kind": "rolling_maintenance_plan",
+        "referenceDate": "2026-10-04",
+        "limit": 1,
+        "after": {
+          "lastPath": "A/Manual.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "88d8d0b9f22b2c209e50a8385d850705d669e9ffd62e4d940fe82b4781e6168e"
+        },
+        "expectedVersion": null
+      }
+    },
+    {
+      "id": "maintenance-request-cursor-missing-binding",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "kind": "rolling_maintenance_plan",
+        "referenceDate": "2026-10-04",
+        "limit": 1,
+        "after": {
+          "lastPath": "A/Manual.md",
+          "referenceDate": "2026-10-04",
+          "version": 4
+        },
+        "expectedVersion": 4
+      }
+    },
+    {
+      "id": "maintenance-request-cursor-unknown-field",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "kind": "rolling_maintenance_plan",
+        "referenceDate": "2026-10-04",
+        "limit": 1,
+        "after": {
+          "lastPath": "A/Manual.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "88d8d0b9f22b2c209e50a8385d850705d669e9ffd62e4d940fe82b4781e6168e",
+          "extra": true
+        },
+        "expectedVersion": 4
+      }
+    },
+    {
+      "id": "maintenance-request-unknown-version",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": {
+        "schemaVersion": 2,
+        "kind": "rolling_maintenance_plan",
+        "referenceDate": "2026-10-04",
+        "limit": 1,
+        "after": {
+          "lastPath": "A/Manual.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "88d8d0b9f22b2c209e50a8385d850705d669e9ffd62e4d940fe82b4781e6168e"
+        },
+        "expectedVersion": 4
+      }
+    },
+    {
+      "id": "maintenance-request-invalid-limit",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "kind": "rolling_maintenance_plan",
+        "referenceDate": "2026-10-04",
+        "limit": 257,
+        "after": {
+          "lastPath": "A/Manual.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "88d8d0b9f22b2c209e50a8385d850705d669e9ffd62e4d940fe82b4781e6168e"
+        },
+        "expectedVersion": 4
+      }
+    },
+    {
+      "id": "maintenance-request-unknown-field",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "kind": "rolling_maintenance_plan",
+        "referenceDate": "2026-10-04",
+        "limit": 1,
+        "after": {
+          "lastPath": "A/Manual.md",
+          "referenceDate": "2026-10-04",
+          "version": 4,
+          "binding": "88d8d0b9f22b2c209e50a8385d850705d669e9ffd62e4d940fe82b4781e6168e"
+        },
+        "expectedVersion": 4,
+        "extra": true
+      }
+    },
+    {
+      "id": "failure-request-cursor-without-version",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": {
+        "kind": "occurrence_generation_failures",
+        "after": {
+          "lastId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+          "version": 9,
+          "binding": "d99cc8073e878151948a8653a627b21109b8a4966f529e892f3889047cc25f00"
+        }
+      }
+    },
+    {
+      "id": "failure-request-cursor-null-version",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": {
+        "kind": "occurrence_generation_failures",
+        "after": {
+          "lastId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+          "version": 9,
+          "binding": "d99cc8073e878151948a8653a627b21109b8a4966f529e892f3889047cc25f00"
+        },
+        "expectedVersion": null
+      }
+    },
+    {
+      "id": "failure-request-cursor-missing-binding",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": {
+        "kind": "occurrence_generation_failures",
+        "after": {
+          "lastId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+          "version": 9
+        },
+        "expectedVersion": 9
+      }
+    },
+    {
+      "id": "failure-request-cursor-unknown-field",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": {
+        "kind": "occurrence_generation_failures",
+        "after": {
+          "lastId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+          "version": 9,
+          "binding": "d99cc8073e878151948a8653a627b21109b8a4966f529e892f3889047cc25f00",
+          "extra": true
+        },
+        "expectedVersion": 9
+      }
+    },
+    {
+      "id": "failure-request-unknown-version",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": {
+        "kind": "occurrence_generation_failures",
+        "after": {
+          "lastId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+          "version": 9,
+          "binding": "d99cc8073e878151948a8653a627b21109b8a4966f529e892f3889047cc25f00"
+        },
+        "expectedVersion": 9,
+        "schemaVersion": 2
+      }
+    },
+    {
+      "id": "failure-request-invalid-limit",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": {
+        "kind": "occurrence_generation_failures",
+        "after": {
+          "lastId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+          "version": 9,
+          "binding": "d99cc8073e878151948a8653a627b21109b8a4966f529e892f3889047cc25f00"
+        },
+        "expectedVersion": 9,
+        "limit": 257
+      }
+    },
+    {
+      "id": "failure-request-unknown-field",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": {
+        "kind": "occurrence_generation_failures",
+        "after": {
+          "lastId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+          "version": 9,
+          "binding": "d99cc8073e878151948a8653a627b21109b8a4966f529e892f3889047cc25f00"
+        },
+        "expectedVersion": 9,
+        "extra": true
+      }
+    },
+    {
+      "id": "maintenance-request-missing-day",
+      "definition": "featureRequest",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "kind": "rolling_maintenance_plan",
+        "limit": 1,
+        "after": null,
+        "expectedVersion": null
+      }
+    },
+    {
+      "id": "repairable-missing-command",
+      "definition": "generationFailuresPlan",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 9,
+        "inspectedCount": 1,
+        "items": [
+          {
+            "primaryMutationId": "concrete-pending",
+            "item": {
+              "kind": "materialize_occurrence",
+              "successorId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+              "parentPath": "Projects/P.md",
+              "occurrenceDate": "2026-10-05",
+              "state": "pending",
+              "failure": {
+                "code": "host",
+                "message": "Vault access failed: synthetic replacement preparation failure"
+              }
+            },
+            "action": {
+              "kind": "repairable"
+            }
+          }
+        ],
+        "nextCursor": {
+          "lastId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+          "version": 9,
+          "binding": "d99cc8073e878151948a8653a627b21109b8a4966f529e892f3889047cc25f00"
+        }
+      }
+    },
+    {
+      "id": "repairable-unknown-action",
+      "definition": "generationFailuresPlan",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 9,
+        "inspectedCount": 1,
+        "items": [
+          {
+            "primaryMutationId": "concrete-pending",
+            "item": {
+              "kind": "materialize_occurrence",
+              "successorId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+              "parentPath": "Projects/P.md",
+              "occurrenceDate": "2026-10-05",
+              "state": "pending",
+              "failure": {
+                "code": "host",
+                "message": "Vault access failed: synthetic replacement preparation failure"
+              }
+            },
+            "action": {
+              "kind": "retry_anyway",
+              "command": {
+                "kind": "materialize_occurrence",
+                "parentPath": "Projects/P.md",
+                "expectedParentRevision": "6447961bd8eeca994e4fc11e6d50e221500cab98c4bb2c0778636db5d425e2d4",
+                "occurrenceDate": "2026-10-05",
+                "expectedOccurrenceRevision": null,
+                "properties": {},
+                "body": null
+              }
+            }
+          }
+        ],
+        "nextCursor": {
+          "lastId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+          "version": 9,
+          "binding": "d99cc8073e878151948a8653a627b21109b8a4966f529e892f3889047cc25f00"
+        }
+      }
+    },
+    {
+      "id": "repairable-unrelated-command",
+      "definition": "generationFailuresPlan",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 9,
+        "inspectedCount": 1,
+        "items": [
+          {
+            "primaryMutationId": "concrete-pending",
+            "item": {
+              "kind": "materialize_occurrence",
+              "successorId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+              "parentPath": "Projects/P.md",
+              "occurrenceDate": "2026-10-05",
+              "state": "pending",
+              "failure": {
+                "code": "host",
+                "message": "Vault access failed: synthetic replacement preparation failure"
+              }
+            },
+            "action": {
+              "kind": "repairable",
+              "command": {
+                "kind": "create",
+                "properties": {}
+              }
+            }
+          }
+        ],
+        "nextCursor": {
+          "lastId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+          "version": 9,
+          "binding": "d99cc8073e878151948a8653a627b21109b8a4966f529e892f3889047cc25f00"
+        }
+      }
+    },
+    {
+      "id": "unrepairable-unknown-reason",
+      "definition": "generationFailuresPlan",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 5,
+        "inspectedCount": 1,
+        "items": [
+          {
+            "primaryMutationId": "identity-primary",
+            "item": {
+              "kind": "deferred_progression",
+              "successorId": "occprogress:002b63a4267eed2e2ed110f712ab523ffe6ee62b2b6a32649eacc29719303394",
+              "parentPath": "Projects/P.md",
+              "childPath": "Tasks/P 2026-10-04.md",
+              "completedOccurrenceDate": "2026-10-04",
+              "childState": "completed",
+              "occurrenceDate": null,
+              "parentProjectionOwed": true,
+              "successorDiscoveryOwed": true,
+              "state": "failed",
+              "failure": {
+                "code": "validation",
+                "message": "Invalid operation: occurrence_expansion_resource_limit"
+              },
+              "resolution": null
+            },
+            "action": {
+              "kind": "unrepairable",
+              "reason": "network"
+            }
+          }
+        ],
+        "nextCursor": null
+      }
+    },
+    {
+      "id": "unrepairable-missing-reason",
+      "definition": "generationFailuresPlan",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 5,
+        "inspectedCount": 1,
+        "items": [
+          {
+            "primaryMutationId": "identity-primary",
+            "item": {
+              "kind": "deferred_progression",
+              "successorId": "occprogress:002b63a4267eed2e2ed110f712ab523ffe6ee62b2b6a32649eacc29719303394",
+              "parentPath": "Projects/P.md",
+              "childPath": "Tasks/P 2026-10-04.md",
+              "completedOccurrenceDate": "2026-10-04",
+              "childState": "completed",
+              "occurrenceDate": null,
+              "parentProjectionOwed": true,
+              "successorDiscoveryOwed": true,
+              "state": "failed",
+              "failure": {
+                "code": "validation",
+                "message": "Invalid operation: occurrence_expansion_resource_limit"
+              },
+              "resolution": null
+            },
+            "action": {
+              "kind": "unrepairable"
+            }
+          }
+        ],
+        "nextCursor": null
+      }
+    },
+    {
+      "id": "unrepairable-contains-command",
+      "definition": "generationFailuresPlan",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 5,
+        "inspectedCount": 1,
+        "items": [
+          {
+            "primaryMutationId": "identity-primary",
+            "item": {
+              "kind": "deferred_progression",
+              "successorId": "occprogress:002b63a4267eed2e2ed110f712ab523ffe6ee62b2b6a32649eacc29719303394",
+              "parentPath": "Projects/P.md",
+              "childPath": "Tasks/P 2026-10-04.md",
+              "completedOccurrenceDate": "2026-10-04",
+              "childState": "completed",
+              "occurrenceDate": null,
+              "parentProjectionOwed": true,
+              "successorDiscoveryOwed": true,
+              "state": "failed",
+              "failure": {
+                "code": "validation",
+                "message": "Invalid operation: occurrence_expansion_resource_limit"
+              },
+              "resolution": null
+            },
+            "action": {
+              "kind": "unrepairable",
+              "reason": "changed_or_ambiguous_identity",
+              "command": {
+                "kind": "materialize_occurrence",
+                "parentPath": "Projects/P.md",
+                "expectedParentRevision": "6447961bd8eeca994e4fc11e6d50e221500cab98c4bb2c0778636db5d425e2d4",
+                "occurrenceDate": "2026-10-05",
+                "expectedOccurrenceRevision": null,
+                "properties": {},
+                "body": null
+              }
+            }
+          }
+        ],
+        "nextCursor": null
+      }
+    },
+    {
+      "id": "failure-page-limit",
+      "definition": "generationFailuresPlan",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 9,
+        "inspectedCount": 257,
+        "items": [
+          {
+            "primaryMutationId": "concrete-pending",
+            "item": {
+              "kind": "materialize_occurrence",
+              "successorId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+              "parentPath": "Projects/P.md",
+              "occurrenceDate": "2026-10-05",
+              "state": "pending",
+              "failure": {
+                "code": "host",
+                "message": "Vault access failed: synthetic replacement preparation failure"
+              }
+            },
+            "action": {
+              "kind": "repairable",
+              "command": {
+                "kind": "materialize_occurrence",
+                "parentPath": "Projects/P.md",
+                "expectedParentRevision": "6447961bd8eeca994e4fc11e6d50e221500cab98c4bb2c0778636db5d425e2d4",
+                "occurrenceDate": "2026-10-05",
+                "expectedOccurrenceRevision": null,
+                "properties": {},
+                "body": null
+              }
+            }
+          }
+        ],
+        "nextCursor": {
+          "lastId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+          "version": 9,
+          "binding": "d99cc8073e878151948a8653a627b21109b8a4966f529e892f3889047cc25f00"
+        }
+      }
+    },
+    {
+      "id": "failure-cursor-negative-version",
+      "definition": "generationFailuresPlan",
+      "valid": false,
+      "value": {
+        "schemaVersion": 1,
+        "profileId": "a",
+        "version": 9,
+        "inspectedCount": 1,
+        "items": [
+          {
+            "primaryMutationId": "concrete-pending",
+            "item": {
+              "kind": "materialize_occurrence",
+              "successorId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+              "parentPath": "Projects/P.md",
+              "occurrenceDate": "2026-10-05",
+              "state": "pending",
+              "failure": {
+                "code": "host",
+                "message": "Vault access failed: synthetic replacement preparation failure"
+              }
+            },
+            "action": {
+              "kind": "repairable",
+              "command": {
+                "kind": "materialize_occurrence",
+                "parentPath": "Projects/P.md",
+                "expectedParentRevision": "6447961bd8eeca994e4fc11e6d50e221500cab98c4bb2c0778636db5d425e2d4",
+                "occurrenceDate": "2026-10-05",
+                "expectedOccurrenceRevision": null,
+                "properties": {},
+                "body": null
+              }
+            }
+          }
+        ],
+        "nextCursor": {
+          "lastId": "occnext:8588c1e9fe8ec719a7ac3325895d9f222e348d6f2952a7d069d471e52a16a68e",
+          "version": -1,
+          "binding": "d99cc8073e878151948a8653a627b21109b8a4966f529e892f3889047cc25f00"
+        }
+      }
+    },
+    {
+      "id": "repair-command-missing-child-fence",
+      "definition": "command",
+      "valid": false,
+      "value": {
+        "kind": "repair_occurrence_progression",
+        "progressionId": "occprogress:90a6560e397e47c6809a7327e4112b76e4ae23a575e47e5fcdd700b9b5a80fc0",
+        "expectedParentRevision": "b2ba3852193ca9da3cc254083b088afbb6a6b95409f78100974cce32eddbc429"
+      }
+    },
+    {
+      "id": "repair-command-invalid-parent-fence",
+      "definition": "command",
+      "valid": false,
+      "value": {
+        "kind": "repair_occurrence_progression",
+        "progressionId": "occprogress:90a6560e397e47c6809a7327e4112b76e4ae23a575e47e5fcdd700b9b5a80fc0",
+        "expectedParentRevision": "invalid",
+        "expectedChildRevision": "25a2cfaf3f0563d960437261a9f74470581ab35ec553087e7e5b6c2eb5be389d"
+      }
+    },
+    {
+      "id": "repair-command-forbids-origin",
+      "definition": "command",
+      "valid": false,
+      "value": {
+        "kind": "repair_occurrence_progression",
+        "progressionId": "occprogress:90a6560e397e47c6809a7327e4112b76e4ae23a575e47e5fcdd700b9b5a80fc0",
+        "expectedParentRevision": "b2ba3852193ca9da3cc254083b088afbb6a6b95409f78100974cce32eddbc429",
+        "expectedChildRevision": "25a2cfaf3f0563d960437261a9f74470581ab35ec553087e7e5b6c2eb5be389d",
+        "origin": "automatic_maintenance"
+      }
+    },
+    {
+      "id": "shape-window-origin-omitted",
+      "definition": "command",
+      "valid": true,
+      "value": {
+        "kind": "materialize_occurrence_window",
+        "parentPath": "Tasks/series.md",
+        "expectedParentRevision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "referenceDate": "2026-10-24"
+      }
+    },
+    {
+      "id": "shape-window-origin-user",
+      "definition": "command",
+      "valid": true,
+      "value": {
+        "kind": "materialize_occurrence_window",
+        "parentPath": "Tasks/series.md",
+        "expectedParentRevision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "referenceDate": "2026-10-24",
+        "origin": "user"
+      }
+    },
+    {
+      "id": "shape-window-origin-automatic",
+      "definition": "command",
+      "valid": true,
+      "value": {
+        "kind": "materialize_occurrence_window",
+        "parentPath": "Tasks/series.md",
+        "expectedParentRevision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "referenceDate": "2026-10-24",
+        "origin": "automatic_maintenance"
+      }
+    },
+    {
+      "id": "shape-window-origin-unknown",
+      "definition": "command",
+      "valid": false,
+      "value": {
+        "kind": "materialize_occurrence_window",
+        "parentPath": "Tasks/series.md",
+        "expectedParentRevision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "referenceDate": "2026-10-24",
+        "origin": "bypass_undo"
+      }
+    },
+    {
+      "id": "shape-window-origin-null",
+      "definition": "command",
+      "valid": false,
+      "value": {
+        "kind": "materialize_occurrence_window",
+        "parentPath": "Tasks/series.md",
+        "expectedParentRevision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "referenceDate": "2026-10-24",
+        "origin": null
+      }
+    },
+    {
+      "id": "shape-window-origin-boolean",
+      "definition": "command",
+      "valid": false,
+      "value": {
+        "kind": "materialize_occurrence_window",
+        "parentPath": "Tasks/series.md",
+        "expectedParentRevision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "referenceDate": "2026-10-24",
+        "origin": true
+      }
+    },
+    {
+      "id": "shape-window-origin-number",
+      "definition": "command",
+      "valid": false,
+      "value": {
+        "kind": "materialize_occurrence_window",
+        "parentPath": "Tasks/series.md",
+        "expectedParentRevision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "referenceDate": "2026-10-24",
+        "origin": 7
+      }
+    },
+    {
+      "id": "shape-window-origin-other-operation",
+      "definition": "command",
+      "valid": false,
+      "value": {
+        "kind": "create",
+        "properties": {
+          "title": "Task"
+        },
+        "origin": "automatic_maintenance"
+      }
+    }
+  ]
+}

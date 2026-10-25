@@ -125,6 +125,12 @@ impl Memory {
             .state
             .lock()
             .map_err(|_| RuntimeError::Host("test capability failed".to_owned()))?;
+        storage.stage_begin_paths.push(path.to_owned());
+        if storage.fail_stage_path.as_deref() == Some(path) {
+            return Err(RuntimeError::Host(
+                "synthetic replacement preparation failure".into(),
+            ));
+        }
         if let Some(stage) = storage.stages.get(operation) {
             if stage.profile != profile
                 || stage.expected.as_deref() != expected
@@ -253,6 +259,17 @@ impl Memory {
             })
             .transpose()?;
         let key = (profile.to_owned(), path.to_owned());
+        if storage
+            .racing_before_compare_path
+            .as_ref()
+            .is_some_and(|(target, _)| target == path)
+        {
+            let (_, bytes) = storage
+                .racing_before_compare_path
+                .take()
+                .ok_or_else(|| RuntimeError::Host("test race disappeared".into()))?;
+            storage.files.insert(key.clone(), bytes);
+        }
         if let Some(race) = storage.racing_before_compare.take() {
             storage.files.insert(key.clone(), race);
         }
@@ -302,8 +319,9 @@ impl Memory {
         storage
             .outcomes
             .insert(operation.to_owned(), outcome.clone());
-        if storage.crash_after_exchange {
+        if storage.crash_after_exchange || storage.crash_at_exchange == Some(storage.exchanges) {
             storage.crash_after_exchange = false;
+            storage.crash_at_exchange = None;
             return Err(RuntimeError::Host(
                 "interrupted after durable exchange".to_owned(),
             ));

@@ -1,6 +1,7 @@
 //! Storage corpus adapter using the shipped `SQLite` engine and injected disk effects.
 
 mod bounded;
+mod facet_witness;
 pub(super) mod timing_witness;
 
 use serde_json::{Map, Value, json};

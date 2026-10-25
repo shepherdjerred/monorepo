@@ -1367,8 +1367,225 @@
       ],
       "additionalProperties": false
     },
+    "occurrenceFailure": {
+      "type": ["object", "null"],
+      "properties": {
+        "code": { "enum": ["validation", "configuration", "conflict", "host", "host_contract", "storage", "not_found", "closed", "busy"] },
+        "message": { "type": "string", "minLength": 1 }
+      },
+      "required": ["code", "message"],
+      "additionalProperties": false
+    },
+    "concreteOccurrenceSuccessor": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "materialize_occurrence" },
+        "successorId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "parentPath": { "type": "string", "minLength": 1 },
+        "occurrenceDate": { "type": "string", "format": "date" },
+        "state": { "enum": ["staged", "pending", "applied", "failed", "cancelled"] },
+        "failure": { "$ref": "#/$defs/occurrenceFailure" }
+      },
+      "required": ["kind", "successorId", "parentPath", "occurrenceDate", "state", "failure"],
+      "oneOf": [
+        { "properties": { "state": { "enum": ["staged", "pending"] } } },
+        { "properties": { "state": { "const": "failed" }, "failure": { "type": "object" } } },
+        { "properties": { "state": { "enum": ["applied", "cancelled"] }, "failure": { "type": "null" } } }
+      ],
+      "additionalProperties": false
+    },
+    "progressionResolution": {
+      "type": "object",
+      "properties": {
+        "repairId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "kind": { "enum": ["materialized", "exhausted", "policy_no_successor"] },
+        "futureDate": { "type": ["string", "null"], "format": "date" },
+        "successorId": { "type": ["string", "null"], "minLength": 1, "maxLength": 256 },
+        "parentRevision": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      },
+      "required": ["repairId", "kind", "futureDate", "successorId", "parentRevision"],
+      "oneOf": [
+        { "properties": { "kind": { "const": "materialized" }, "futureDate": { "type": "string" }, "successorId": { "type": "string" } } },
+        { "properties": { "kind": { "enum": ["exhausted", "policy_no_successor"] }, "futureDate": { "type": "null" }, "successorId": { "type": "null" } } }
+      ],
+      "additionalProperties": false
+    },
+    "deferredOccurrenceProgression": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "deferred_progression" },
+        "successorId": { "type": "string", "pattern": "^occprogress:[0-9a-f]{64}$" },
+        "parentPath": { "type": "string", "minLength": 1 },
+        "childPath": { "type": "string", "minLength": 1 },
+        "completedOccurrenceDate": { "type": "string", "format": "date" },
+        "childState": { "enum": ["completed", "skipped"] },
+        "occurrenceDate": { "type": "null" },
+        "parentProjectionOwed": { "type": "boolean" },
+        "successorDiscoveryOwed": { "type": "boolean" },
+        "state": { "enum": ["staged", "failed", "cancelled"] },
+        "failure": { "$ref": "#/$defs/occurrenceFailure" },
+        "resolution": { "anyOf": [{ "$ref": "#/$defs/progressionResolution" }, { "type": "null" }] }
+      },
+      "required": ["kind", "successorId", "parentPath", "childPath", "completedOccurrenceDate", "childState", "occurrenceDate", "parentProjectionOwed", "successorDiscoveryOwed", "state", "failure", "resolution"],
+      "oneOf": [
+        { "properties": { "state": { "enum": ["staged", "failed"] }, "failure": { "type": "object" } } },
+        { "properties": { "state": { "const": "cancelled" }, "failure": { "type": "null" }, "resolution": { "type": "null" } } }
+      ],
+      "allOf": [
+        { "anyOf": [{ "properties": { "parentProjectionOwed": { "const": false } } }, { "properties": { "childState": { "const": "completed" } } }] },
+        { "anyOf": [{ "properties": { "parentProjectionOwed": { "const": true } } }, { "properties": { "successorDiscoveryOwed": { "const": true } } }] }
+      ],
+      "additionalProperties": false
+    },
+    "occurrenceGenerationItem": {
+      "oneOf": [{ "$ref": "#/$defs/concreteOccurrenceSuccessor" }, { "$ref": "#/$defs/deferredOccurrenceProgression" }]
+    },
+    "occurrenceSuccessors": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "mutationId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "items": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": { "$ref": "#/$defs/occurrenceGenerationItem" }
+        }
+      },
+      "required": ["schemaVersion", "mutationId", "items"],
+      "additionalProperties": false
+    },
+    "generationFailureCursor": {
+      "type": "object",
+      "properties": {
+        "lastId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "version": { "type": "integer", "minimum": 0, "maximum": 18446744073709551615 },
+        "binding": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      },
+      "required": ["lastId", "version", "binding"],
+      "additionalProperties": false
+    },
+    "generationFailuresRequest": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "occurrence_generation_failures" },
+        "limit": { "type": ["integer", "null"], "minimum": 1, "maximum": 256 },
+        "after": { "anyOf": [{ "$ref": "#/$defs/generationFailureCursor" }, { "type": "null" }] },
+        "expectedVersion": { "type": ["integer", "null"], "minimum": 0, "maximum": 18446744073709551615 }
+      },
+      "required": ["kind"],
+      "additionalProperties": false,
+      "allOf": [{ "anyOf": [
+        { "properties": { "after": { "type": "null" } } },
+        { "required": ["expectedVersion"], "properties": { "expectedVersion": { "type": "integer" } } }
+      ] }]
+    },
+    "generationFailuresPlan": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "profileId": { "type": "string", "minLength": 1 },
+        "version": { "type": "integer", "minimum": 0, "maximum": 18446744073709551615 },
+        "inspectedCount": { "type": "integer", "minimum": 0, "maximum": 256 },
+        "items": {
+          "type": "array", "maxItems": 256,
+          "items": {
+            "type": "object",
+            "properties": {
+              "primaryMutationId": { "type": "string", "minLength": 1, "maxLength": 256 },
+              "item": { "$ref": "#/$defs/occurrenceGenerationItem" },
+              "action": {
+                "oneOf": [
+                  { "type": "object", "properties": { "kind": { "const": "repairable" }, "command": { "oneOf": [{ "$ref": "#/$defs/repairOccurrenceProgressionCommand" }, { "$ref": "#/$defs/materializeOccurrenceCommand" }] } }, "required": ["kind", "command"], "additionalProperties": false },
+                  { "type": "object", "properties": { "kind": { "const": "unrepairable" }, "reason": { "enum": ["parent_missing", "invalid_current_parent", "child_missing", "changed_or_ambiguous_identity", "child_state_changed"] } }, "required": ["kind", "reason"], "additionalProperties": false }
+                ]
+              }
+            },
+            "required": ["primaryMutationId", "item", "action"],
+            "additionalProperties": false
+          }
+        },
+        "nextCursor": { "anyOf": [{ "$ref": "#/$defs/generationFailureCursor" }, { "type": "null" }] }
+      },
+      "required": ["schemaVersion", "profileId", "version", "inspectedCount", "items", "nextCursor"],
+      "additionalProperties": false
+    },
+    "rollingMaintenanceCursor": {
+      "type": "object",
+      "properties": {
+        "lastPath": { "type": "string", "minLength": 1 },
+        "referenceDate": { "type": "string", "format": "date", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+        "version": { "type": "integer", "minimum": 0, "maximum": 18446744073709551615 },
+        "binding": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      },
+      "required": ["lastPath", "referenceDate", "version", "binding"],
+      "additionalProperties": false
+    },
+    "rollingMaintenanceRequest": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "kind": { "const": "rolling_maintenance_plan" },
+        "referenceDate": { "type": "string", "format": "date", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+        "limit": { "type": ["integer", "null"], "minimum": 1, "maximum": 256 },
+        "after": { "anyOf": [{ "$ref": "#/$defs/rollingMaintenanceCursor" }, { "type": "null" }] },
+        "expectedVersion": { "type": ["integer", "null"], "minimum": 0, "maximum": 18446744073709551615 }
+      },
+      "required": ["kind", "referenceDate"],
+      "additionalProperties": false,
+      "allOf": [
+        { "anyOf": [
+          { "properties": { "after": { "type": "null" } } },
+          { "required": ["expectedVersion"], "properties": { "expectedVersion": { "type": "integer" } } }
+        ] }
+      ]
+    },
+    "rollingMaintenancePlan": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "profileId": { "type": "string", "minLength": 1 },
+        "version": { "type": "integer", "minimum": 0, "maximum": 18446744073709551615 },
+        "referenceDate": { "type": "string", "format": "date", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+        "inspectedCount": { "type": "integer", "minimum": 0, "maximum": 256 },
+        "targets": {
+          "type": "array", "maxItems": 256,
+          "items": {
+            "type": "object",
+            "properties": {
+              "parentPath": { "type": "string", "minLength": 1 },
+              "expectedParentRevision": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+              "referenceDate": { "type": "string", "format": "date", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+              "start": { "type": "string", "format": "date", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+              "end": { "type": "string", "format": "date", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" }
+            },
+            "required": ["parentPath", "expectedParentRevision", "referenceDate", "start", "end"],
+            "additionalProperties": false
+          }
+        },
+        "problems": {
+          "type": "array", "maxItems": 256,
+          "items": {
+            "type": "object",
+            "properties": {
+              "taskPath": { "type": "string", "minLength": 1 },
+              "code": { "enum": ["cached_task_problem", "invalid_occurrence_identity", "invalid_occurrence_policy", "invalid_recurrence_rule", "invalid_recurrence_anchor", "invalid_recurrence_start", "missing_recurrence_seed", "materialization_requires_valid_seeded_parent", "invalid_occurrence_horizon", "negative_occurrence_horizon", "occurrence_window_overflow", "occurrence_window_resource_limit"] }
+            },
+            "required": ["taskPath", "code"],
+            "additionalProperties": false
+          }
+        },
+        "nextCursor": { "anyOf": [{ "$ref": "#/$defs/rollingMaintenanceCursor" }, { "type": "null" }] }
+      },
+      "required": ["schemaVersion", "profileId", "version", "referenceDate", "inspectedCount", "targets", "problems", "nextCursor"],
+      "additionalProperties": false
+    },
     "featureRequest": {
       "oneOf": [
+        { "$ref": "#/$defs/generationFailuresRequest" },
+        {
+          "$ref": "#/$defs/rollingMaintenanceRequest"
+        },
         {
           "$ref": "#/$defs/reminderRequest"
         },
@@ -1382,7 +1599,8 @@
               "enum": [
                 "mutation_receipt",
                 "resolution_history",
-                "batch_outcome"
+                "batch_outcome",
+                "occurrence_successors"
               ]
             },
             "mutationId": {
@@ -1514,8 +1732,48 @@
         }
       ]
     },
+    "repairOccurrenceProgressionCommand": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "repair_occurrence_progression" },
+        "progressionId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "expectedParentRevision": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "expectedChildRevision": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      },
+      "required": ["kind", "progressionId", "expectedParentRevision", "expectedChildRevision"],
+      "additionalProperties": false
+    },
+    "materializeOccurrenceWindowCommand": {
+      "type": "object",
+      "properties": {
+        "kind": {"const":"materialize_occurrence_window"},
+        "origin": {"enum":["user","automatic_maintenance"]},
+        "parentPath": {"type":"string","minLength":1},
+        "expectedParentRevision": {"type":"string","pattern":"^[0-9a-f]{64}$"},
+        "referenceDate": {"type":"string","format":"date"}
+      },
+      "required":["kind","parentPath","expectedParentRevision","referenceDate"],
+      "additionalProperties":false
+    },
+    "materializeOccurrenceCommand": {
+      "type": "object",
+      "properties": {
+        "kind": {"const": "materialize_occurrence"},
+        "parentPath": {"type": "string", "minLength": 1},
+        "expectedParentRevision": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "occurrenceDate": {"type": "string", "format": "date"},
+        "expectedOccurrenceRevision": {"anyOf": [{"type":"string", "pattern":"^[0-9a-f]{64}$"},{"type":"null"}]},
+        "properties": {"type": "object"},
+        "body": {"anyOf": [{"type":"string"},{"type":"null"}]}
+      },
+      "required": ["kind","parentPath","expectedParentRevision","occurrenceDate","properties"],
+      "additionalProperties": false
+    },
     "command": {
       "oneOf": [
+        {"$ref":"#/$defs/repairOccurrenceProgressionCommand"},
+        {"$ref":"#/$defs/materializeOccurrenceWindowCommand"},
+        {"$ref":"#/$defs/materializeOccurrenceCommand"},
         {"$ref": "#/$defs/normalizationCommand"},
         {"$ref": "#/$defs/partialBatchCommand"},
         {"$ref":"#/$defs/referenceCommand"},

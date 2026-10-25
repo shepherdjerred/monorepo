@@ -15,6 +15,7 @@ pub(crate) fn apply(
     tasks: impl Iterator<Item = Result<TaskSnapshot>>,
     query: &Query,
     configuration: &Value,
+    occurrences: &crate::engine::occurrence_relations::Index,
 ) -> Result<(Vec<TaskSnapshot>, u64, Vec<TaskGroup>)> {
     let scope = query.scope.as_deref().unwrap_or("all");
     if ![
@@ -80,7 +81,10 @@ pub(crate) fn apply(
     let mut selected: Vec<TaskSnapshot> = Vec::new();
     for task in tasks {
         let mut task = task?;
-        crate::projections::local(&mut task, query)?;
+        crate::projections::local(&mut task, query, occurrences)?;
+        if occurrences.skips_scope(&task, scope) {
+            continue;
+        }
         if !matches(&task, query, scope, today, before, after, &text) {
             continue;
         }
@@ -92,19 +96,7 @@ pub(crate) fn apply(
         }
         // Body search uses the current row, but bodies and unrelated properties
         // never accumulate in sort candidates. The database reloads page rows.
-        task.body.clear();
-        task.body.shrink_to_fit();
-        task.properties.retain(|key, _| {
-            [
-                "due",
-                "scheduled",
-                "sortOrder",
-                "projects",
-                "contexts",
-                "tags",
-            ]
-            .contains(&key.as_str())
-        });
+        trim_candidate(&mut task);
         let position = selected
             .partition_point(|other| compare(other, &task, sort, direction, configuration).is_lt());
         if position < capacity {
@@ -117,6 +109,22 @@ pub(crate) fn apply(
     let tasks: Vec<_> = selected.into_iter().skip(offset).take(limit).collect();
     let groups = group(&tasks, query);
     Ok((tasks, total, groups))
+}
+
+fn trim_candidate(task: &mut TaskSnapshot) {
+    task.body.clear();
+    task.body.shrink_to_fit();
+    task.properties.retain(|key, _| {
+        [
+            "due",
+            "scheduled",
+            "sortOrder",
+            "projects",
+            "contexts",
+            "tags",
+        ]
+        .contains(&key.as_str())
+    });
 }
 
 fn matches(
@@ -211,16 +219,18 @@ fn scope_matches(
             }
         }
         "upcoming" => {
+            let dates = if task.is_recurring {
+                [
+                    None,
+                    None,
+                    task.occurrence_date.as_deref().and_then(date_part),
+                ]
+            } else {
+                [due, scheduled, None]
+            };
             (!task.completed || task.is_recurring)
                 && today.is_some_and(|today| {
-                    [
-                        due,
-                        scheduled,
-                        task.occurrence_date.as_deref().and_then(date_part),
-                    ]
-                    .into_iter()
-                    .flatten()
-                    .any(|date| {
+                    dates.into_iter().flatten().any(|date| {
                         date > today
                             && today
                                 .checked_add_days(Days::new(u64::from(
