@@ -64,6 +64,7 @@ public final class CreativePlots {
   private final SchematicFiles schematics;
   private final PlotGrid grid;
   private final CreativeSurfaceCommands choices;
+  private final CreativeMaintenanceCommands maintenance;
 
   /** What the plot commands need. Redraw runs on the main thread after a claim changes. */
   public record Parts(
@@ -85,6 +86,10 @@ public final class CreativePlots {
     this.schematics = parts.schematics();
     this.grid = config.grid();
     this.choices = new CreativeSurfaceCommands(this::ready, this::owned, this::persist);
+    this.maintenance =
+        new CreativeMaintenanceCommands(
+            new CreativeMaintenanceCommands.Hooks(
+                grid, world, this::ready, this::owned, this::persist, this::removeClaim));
   }
 
   public void attach(LiteralArgumentBuilder<CommandSourceStack> root) {
@@ -112,6 +117,12 @@ public final class CreativePlots {
     root.then(literal("floor").then(argument("name", word()).executes(choices::floor)));
     root.then(literal("wall").then(argument("name", word()).executes(choices::wall)));
     root.then(literal("biome").then(argument("name", word()).executes(choices::biome)));
+    root.then(
+        literal("clear")
+            .executes(maintenance::clearHint)
+            .then(literal("confirm").executes(maintenance::clear)));
+    root.then(literal("reset").executes(maintenance::reset));
+    root.then(literal("unclaim").executes(maintenance::unclaim));
     root.then(literal("download").executes(this::download));
     root.then(
         literal("admin")
@@ -622,30 +633,34 @@ public final class CreativePlots {
       error(actor, "That plot is not claimed.");
       return;
     }
-    var previous = book.row(id);
+    removeClaim(actor, id, "Released " + id.text() + ".");
+  }
+
+  private void removeClaim(Player actor, PlotId id, String ok) {
+    var removal = new Removal(actor, id, book.row(id), ok);
     book.remove(id);
     redraw.run();
     var saved =
         store
             .delete(id)
             .whenCompleteAsync(
-                (ignored, failure) -> deleted(actor, id, previous, failure),
-                context.scheduler().mainThread());
+                (ignored, failure) -> removed(removal, failure), context.scheduler().mainThread());
     var _ = saved;
   }
 
-  private void deleted(
-      Player actor, PlotId id, Optional<StoredClaim> previous, @Nullable Throwable failure) {
+  private record Removal(Player actor, PlotId id, Optional<StoredClaim> previous, String ok) {}
+
+  private void removed(Removal removal, @Nullable Throwable failure) {
     if (failure != null) {
-      restore(id, previous);
-      context.logger().error("Creative unclaim failed for {}", id.text(), failure);
-      if (actor.isOnline()) {
-        error(actor, "That could not be saved.");
+      restore(removal.id(), removal.previous());
+      context.logger().error("Creative unclaim failed for {}", removal.id().text(), failure);
+      if (removal.actor().isOnline()) {
+        error(removal.actor(), "That could not be saved.");
       }
       return;
     }
-    if (actor.isOnline()) {
-      success(actor, "Released " + id.text() + ".");
+    if (removal.actor().isOnline()) {
+      success(removal.actor(), removal.ok());
     }
   }
 

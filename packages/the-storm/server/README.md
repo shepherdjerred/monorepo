@@ -139,7 +139,12 @@ already build on. `/creative name`, `/creative desc`, `/creative member`, `/crea
 for visitors. They default off. Break and place follow the role. A flag does
 not change a world gamerule. A floor, wall, or biome choice is stored on the
 claim and does not rewrite the plot. Grass, stone, and plains stay the generator
-defaults. A member or trusted player
+defaults. `/creative clear confirm` restores that plot's footprint, including
+its wall, to the generator plus those choices, and does not change the road.
+`/creative reset` restores flags and those choices without changing blocks,
+members, the name, or the description. `/creative unclaim` deletes a plot the
+player claimed themselves once the footprint matches the generator again.
+Recovered plots stay on `/creative admin unclaim`. A member or trusted player
 can build. A trusted player can add or remove members. A denied player cannot
 enter that plot or be teleported into it. `/creative tp <id>` visits a plot
 the player is not denied on. `/creative home` still returns to a plot they can
