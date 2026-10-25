@@ -8,6 +8,8 @@ import com.shepherdjerred.thestorm.creative.domain.PlotId;
 import com.shepherdjerred.thestorm.creative.domain.PlotSurface;
 import com.shepherdjerred.thestorm.creative.domain.StoredClaim;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -34,13 +36,21 @@ final class CreativeMaintenanceCommands {
     void remove(Player player, PlotId id, String message);
   }
 
+  @FunctionalInterface
+  interface SaveAll {
+    void save(Player player, List<StoredClaim> claims, String message);
+  }
+
   record Hooks(
       PlotGrid grid,
       World world,
       Predicate<Player> ready,
       Function<Player, Optional<StoredClaim>> owned,
       Save save,
-      Removal remove) {}
+      Removal remove,
+      Predicate<PlotId> linked,
+      Function<PlotId, List<StoredClaim>> cluster,
+      SaveAll saveAll) {}
 
   private final Hooks hooks;
 
@@ -76,17 +86,43 @@ final class CreativeMaintenanceCommands {
     }
     var owned = row.orElseThrow();
     var claim = owned.claim();
-    if (claim.flags().isEmpty() && claim.surface().equals(PlotSurface.DEFAULT)) {
+    if (alreadyDefault(claim)) {
       error(owned.player(), claim.id().text() + " is already using the defaults.");
       return Command.SINGLE_SUCCESS;
     }
-    hooks
-        .save()
-        .persist(
-            owned.player(),
-            claim.withFlags(Set.of()).withSurface(PlotSurface.DEFAULT),
-            "Reset " + claim.id().text() + ".");
+    var message = "Reset " + claim.id().text() + ".";
+    if (!hooks.linked().test(claim.id())) {
+      hooks
+          .save()
+          .persist(
+              owned.player(), claim.withFlags(Set.of()).withSurface(PlotSurface.DEFAULT), message);
+      return Command.SINGLE_SUCCESS;
+    }
+    var rows = new ArrayList<StoredClaim>();
+    for (var member : hooks.cluster().apply(claim.id())) {
+      var next = member.withFlags(Set.of());
+      if (member.id().equals(claim.id())) {
+        next = next.withSurface(PlotSurface.DEFAULT);
+      }
+      rows.add(next);
+    }
+    hooks.saveAll().save(owned.player(), rows, message);
     return Command.SINGLE_SUCCESS;
+  }
+
+  private boolean alreadyDefault(StoredClaim claim) {
+    if (!claim.surface().equals(PlotSurface.DEFAULT)) {
+      return false;
+    }
+    if (!hooks.linked().test(claim.id())) {
+      return claim.flags().isEmpty();
+    }
+    for (var member : hooks.cluster().apply(claim.id())) {
+      if (!member.flags().isEmpty()) {
+        return false;
+      }
+    }
+    return true;
   }
 
   int unclaim(CommandContext<CommandSourceStack> context) {
@@ -98,6 +134,10 @@ final class CreativeMaintenanceCommands {
     var claim = owned.claim();
     if (!claim.countsTowardCap()) {
       error(owned.player(), "Only a plot you claimed yourself can be unclaimed.");
+      return Command.SINGLE_SUCCESS;
+    }
+    if (hooks.linked().test(claim.id())) {
+      error(owned.player(), "Unlink this plot before unclaiming it.");
       return Command.SINGLE_SUCCESS;
     }
     if (!PlotRestore.matchesTemplate(

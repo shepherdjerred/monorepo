@@ -12,7 +12,8 @@ import java.util.UUID;
  * player claimed themselves. Restored catalog plots and staff assigns do not. A player appears in
  * {@code access} at most once, as a member, trusted, or denied. {@code flags} lists the visitor
  * permissions that are on. An empty set leaves every flag off. {@code surface} stores a floor,
- * wall, and biome. An empty field keeps the generator default.
+ * wall, and biome. An empty field keeps the generator default. {@code cluster} is the anchor plot
+ * when this plot is merged, and empty when it stands alone.
  *
  * @param owner an override, when this row names someone
  * @param released an admin unclaim, which hides a catalog owner without editing the catalog
@@ -26,31 +27,47 @@ public record StoredClaim(
     String description,
     Map<UUID, PlotRole> access,
     Set<PlotFlag> flags,
-    PlotSurface surface) {
+    PlotSurface surface,
+    Optional<PlotId> cluster) {
 
   public StoredClaim {
     access = Map.copyOf(access);
     flags = Set.copyOf(flags);
     Objects.requireNonNull(surface);
+    Objects.requireNonNull(cluster);
   }
 
   public StoredClaim withAccess(Map<UUID, PlotRole> members) {
     return new StoredClaim(
-        id, owner, released, countsTowardCap, name, description, members, flags, surface);
+        id, owner, released, countsTowardCap, name, description, members, flags, surface, cluster);
   }
 
   public StoredClaim withText(String nextName, String nextDescription) {
     return new StoredClaim(
-        id, owner, released, countsTowardCap, nextName, nextDescription, access, flags, surface);
+        id,
+        owner,
+        released,
+        countsTowardCap,
+        nextName,
+        nextDescription,
+        access,
+        flags,
+        surface,
+        cluster);
   }
 
   public StoredClaim withFlags(Set<PlotFlag> next) {
     return new StoredClaim(
-        id, owner, released, countsTowardCap, name, description, access, next, surface);
+        id, owner, released, countsTowardCap, name, description, access, next, surface, cluster);
   }
 
   public StoredClaim withSurface(PlotSurface next) {
     return new StoredClaim(
-        id, owner, released, countsTowardCap, name, description, access, flags, next);
+        id, owner, released, countsTowardCap, name, description, access, flags, next, cluster);
+  }
+
+  public StoredClaim withCluster(Optional<PlotId> next) {
+    return new StoredClaim(
+        id, owner, released, countsTowardCap, name, description, access, flags, surface, next);
   }
 }

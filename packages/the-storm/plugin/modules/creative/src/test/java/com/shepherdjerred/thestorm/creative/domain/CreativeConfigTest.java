@@ -27,6 +27,8 @@ final class CreativeConfigTest {
       claimCap: 2
       entityCap: 200
       brushRadius: 8
+      commentLength: 140
+      commentCap: 20
       plots: []
       """;
 
@@ -44,6 +46,8 @@ final class CreativeConfigTest {
       claimCap: 2
       entityCap: 200
       brushRadius: 8
+      commentLength: 140
+      commentCap: 20
       plots:
         - id: "2;1"
           owner: "cb488c76-08ba-4755-b425-6613fde02f70"
@@ -68,6 +72,8 @@ final class CreativeConfigTest {
       claimCap: 2
       entityCap: 200
       brushRadius: 8
+      commentLength: 140
+      commentCap: 20
       plots:
         - id: "2;1"
           owner: ""
@@ -92,6 +98,8 @@ final class CreativeConfigTest {
     assertThat(config.borderCenterX()).isEqualTo(PlotGrid.SURVEYED_BORDER_CENTER_X);
     assertThat(config.borderCenterZ()).isEqualTo(PlotGrid.SURVEYED_BORDER_CENTER_Z);
     assertThat(config.claimCap()).isEqualTo(2);
+    assertThat(config.commentLength()).isEqualTo(140);
+    assertThat(config.commentCap()).isEqualTo(20);
     assertThat(config.grid().size()).isEqualTo(92);
     assertThat(config.plots()).hasSize(215);
     assertThat(config.plots().stream().filter(plot -> !plot.owner().isEmpty())).hasSize(196);
