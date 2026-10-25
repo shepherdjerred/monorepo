@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.creative.app;
 
 import com.shepherdjerred.thestorm.creative.domain.PlotCatalog;
+import com.shepherdjerred.thestorm.creative.domain.PlotFlag;
 import com.shepherdjerred.thestorm.creative.domain.PlotId;
 import com.shepherdjerred.thestorm.creative.domain.PlotMembership;
 import com.shepherdjerred.thestorm.creative.domain.PlotRole;
@@ -14,6 +15,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -112,5 +114,15 @@ public final class ClaimBook implements PlotMembership {
   @Override
   public Map<UUID, PlotRole> access(PlotId id) {
     return view(id).access();
+  }
+
+  @Override
+  public Set<PlotFlag> flags(PlotId id) {
+    return view(id).flags();
+  }
+
+  @Override
+  public boolean marked(PlotId id) {
+    return view(id).marked();
   }
 }

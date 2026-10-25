@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.creative.domain;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -18,5 +19,15 @@ public record CatalogMembership(PlotCatalog catalog) implements PlotMembership {
   @Override
   public Map<UUID, PlotRole> access(PlotId id) {
     return Map.of();
+  }
+
+  @Override
+  public Set<PlotFlag> flags(PlotId id) {
+    return Set.of();
+  }
+
+  @Override
+  public boolean marked(PlotId id) {
+    return catalog.get(id).isPresent();
   }
 }

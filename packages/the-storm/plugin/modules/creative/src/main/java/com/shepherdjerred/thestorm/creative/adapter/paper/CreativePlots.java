@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.creative.adapter.paper;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.getString;
 import static com.mojang.brigadier.arguments.StringArgumentType.greedyString;
+import static com.mojang.brigadier.arguments.StringArgumentType.string;
 import static com.mojang.brigadier.arguments.StringArgumentType.word;
 import static io.papermc.paper.command.brigadier.Commands.argument;
 import static io.papermc.paper.command.brigadier.Commands.literal;
@@ -24,6 +25,7 @@ import com.shepherdjerred.thestorm.creative.domain.CreativeConfig;
 import com.shepherdjerred.thestorm.creative.domain.CreativePermissions;
 import com.shepherdjerred.thestorm.creative.domain.DownloadNames;
 import com.shepherdjerred.thestorm.creative.domain.EditDecision;
+import com.shepherdjerred.thestorm.creative.domain.PlotFlag;
 import com.shepherdjerred.thestorm.creative.domain.PlotGrid;
 import com.shepherdjerred.thestorm.creative.domain.PlotId;
 import com.shepherdjerred.thestorm.creative.domain.PlotRole;
@@ -31,8 +33,10 @@ import com.shepherdjerred.thestorm.creative.domain.PlotView;
 import com.shepherdjerred.thestorm.creative.domain.StoredClaim;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
@@ -94,6 +98,9 @@ public final class CreativePlots {
     root.then(literal("untrust").then(argument("player", word()).executes(this::untrust)));
     root.then(literal("deny").then(argument("player", word()).executes(this::deny)));
     root.then(literal("undeny").then(argument("player", word()).executes(this::undeny)));
+    root.then(
+        literal("flag")
+            .then(argument("name", string()).then(argument("value", word()).executes(this::flag))));
     root.then(literal("info").executes(this::info));
     root.then(literal("list").executes(this::list));
     root.then(literal("name").then(argument("name", greedyString()).executes(this::name)));
@@ -210,6 +217,46 @@ public final class CreativePlots {
 
   private int undeny(CommandContext<CommandSourceStack> context) {
     return grant(context, PlotRole.DENIED, false);
+  }
+
+  private int flag(CommandContext<CommandSourceStack> context) {
+    var player = player(context);
+    if (!ready(player)) {
+      return Command.SINGLE_SUCCESS;
+    }
+    var value = getString(context, "value");
+    if (!value.equals("on") && !value.equals("off")) {
+      error(player, "Use on or off.");
+      return Command.SINGLE_SUCCESS;
+    }
+    var on = value.equals("on");
+    var parsed = PlotFlag.parse(getString(context, "name"));
+    if (parsed.isEmpty()) {
+      error(player, "Unknown flag. Use pvp, use, vehicle, mob-interact, or explosion.");
+      return Command.SINGLE_SUCCESS;
+    }
+    var flag = parsed.orElseThrow();
+    var row = owned(player);
+    if (row.isEmpty()) {
+      error(player, "You do not own the plot you are standing on.");
+      return Command.SINGLE_SUCCESS;
+    }
+    var current = row.orElseThrow();
+    if (current.flags().contains(flag) == on) {
+      error(player, flag.stored() + " is already " + (on ? "on" : "off") + ".");
+      return Command.SINGLE_SUCCESS;
+    }
+    var next = new LinkedHashSet<>(current.flags());
+    if (on) {
+      next.add(flag);
+    } else {
+      next.remove(flag);
+    }
+    persist(
+        player,
+        current.withFlags(next),
+        "Set " + flag.stored() + " " + (on ? "on" : "off") + " for " + current.id().text() + ".");
+    return Command.SINGLE_SUCCESS;
   }
 
   private int grant(CommandContext<CommandSourceStack> context, PlotRole role, boolean add) {
@@ -341,7 +388,8 @@ public final class CreativePlots {
             true,
             view.name(),
             view.description(),
-            Map.of()),
+            Map.of(),
+            Set.of()),
         new Notice("You claimed " + id.text() + ".", true));
   }
 
@@ -438,7 +486,14 @@ public final class CreativePlots {
     }
     var owner = view.countsTowardCap() ? view.owner() : Optional.<UUID>empty();
     return new StoredClaim(
-        id, owner, false, view.countsTowardCap(), view.name(), view.description(), view.access());
+        id,
+        owner,
+        false,
+        view.countsTowardCap(),
+        view.name(),
+        view.description(),
+        view.access(),
+        view.flags());
   }
 
   private void rename(Player player, String text, boolean name) {
@@ -534,7 +589,8 @@ public final class CreativePlots {
             false,
             view.name(),
             view.description(),
-            view.access()),
+            view.access(),
+            view.flags()),
         "Assigned " + id.text() + " to " + target.getName() + ".");
   }
 
@@ -548,7 +604,7 @@ public final class CreativePlots {
     if (book.catalog().get(id).isPresent()) {
       persist(
           actor,
-          new StoredClaim(id, Optional.empty(), true, false, "", "", Map.of()),
+          new StoredClaim(id, Optional.empty(), true, false, "", "", Map.of(), Set.of()),
           "Released " + id.text() + ".");
       return;
     }
@@ -658,7 +714,8 @@ public final class CreativePlots {
             view.countsTowardCap(),
             view.name(),
             view.description(),
-            view.access()));
+            view.access(),
+            view.flags()));
   }
 
   private boolean ready(Player player) {
@@ -754,7 +811,8 @@ public final class CreativePlots {
   }
 
   private static PlotView road() {
-    return new PlotView(new PlotId(0, 0), Optional.empty(), "", "", Map.of(), false, false);
+    return new PlotView(
+        new PlotId(0, 0), Optional.empty(), "", "", Map.of(), false, false, Set.of());
   }
 
   private static String describe(PlotView view) {

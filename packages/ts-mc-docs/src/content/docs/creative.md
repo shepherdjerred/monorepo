@@ -26,7 +26,8 @@ Stand on a plot you own:
 5. `/creative deny <player>` stops that online player from entering the plot or being teleported into it. `/creative undeny <player>` allows them again. Only the owner can trust, deny, or change an existing role. A trusted player can add and remove members.
 6. `/creative home` returns you to a plot you can already build on. `/creative home 2;1` goes to that plot when you own it, are a member, or are trusted there.
 7. `/creative tp 2;1` visits that plot. A denied player cannot. Staff with `thestorm.creative.bypass` or `thestorm.creative.admin` still can.
-8. `/creative info` and `/creative list` show the plot you are on and the plots you can build on.
+8. `/creative flag use on` lets a visitor use doors, buttons, and other blocks on that plot. `/creative flag use off` turns it off. The flags are `pvp`, `use`, `vehicle`, `mob-interact`, and `explosion`. They start off. Break and place stay with the owner, members, and trusted players. A flag does not change leaf decay, fire spread, or the other world rules.
+9. `/creative info` and `/creative list` show the plot you are on and the plots you can build on.
 
 ## Download one plot
 
@@ -36,4 +37,4 @@ Stand on a plot you own or are trusted on and run `/creative download`. The serv
 
 Claimed and staff-held plots are labelled on the map named creative. That map is on the same [LiveMap](https://bluemap.ts-mc.net/) site as survival: [creative](https://bluemap.ts-mc.net/#creative). Empty cells are not marked. Survival town markers stay on the survival map.
 
-WorldEdit in this world changes only the single plot you are standing in, and only when you own it or are trusted there. A road, or an edit that leaves the plot, is refused.
+WorldEdit in this world changes only the single plot you are standing in, and only when you own it, are a member, or are trusted there. A road, or an edit that leaves the plot, is refused.

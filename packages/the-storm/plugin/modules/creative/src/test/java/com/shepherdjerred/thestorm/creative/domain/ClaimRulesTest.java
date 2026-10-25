@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -99,7 +100,7 @@ final class ClaimRulesTest {
             Optional.of(new RecoveredPlot("2;1", ACTOR.toString(), List.of())),
             Optional.of(
                 new StoredClaim(
-                    new PlotId(2, 1), Optional.empty(), true, false, "", "", Map.of())));
+                    new PlotId(2, 1), Optional.empty(), true, false, "", "", Map.of(), Set.of())));
 
     assertThat(released.owner()).isEmpty();
     assertThat(ClaimRules.counted(ACTOR, List.of(playerClaim, assigned, released))).isEqualTo(1);
@@ -110,7 +111,7 @@ final class ClaimRulesTest {
   }
 
   private static PlotView view(PlotId id, Optional<UUID> owner, boolean staffHeld, boolean counts) {
-    return new PlotView(id, owner, "Harbor", "A dock", Map.of(), staffHeld, counts);
+    return new PlotView(id, owner, "Harbor", "A dock", Map.of(), staffHeld, counts, Set.of());
   }
 
   private static ClaimRequest attempt(PlotView view, boolean staff, int counted, int cap) {
