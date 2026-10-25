@@ -768,6 +768,36 @@
       "reason": "Isolated shell contract test for the native SDK bootstrap, including license input, exact package inventory and unsupported host rejection without network provisioning."
     },
     {
+      "source": "ci/scripts/swiftlint/bootstrap.sh",
+      "disposition": "retain",
+      "reason": "Repairs stale Linux CI images through the existing remote BuildKit producer before the root Bun install; preserves full SourceKit-capable SwiftLint validation."
+    },
+    {
+      "source": "ci/scripts/swiftlint/runtime.sh",
+      "disposition": "retain",
+      "reason": "Private native tool launcher scopes SourceKit and Swift shared-library discovery to its own runtime, without requiring Bun in the minimal export image."
+    },
+    {
+      "source": "ci/scripts/swiftlint/verify-capabilities.sh",
+      "disposition": "retain",
+      "reason": "Minimal Linux runtime image gate exercises the actual linter, every configured semantic custom rule and SourceKit-dependent statement check before Bun is installed."
+    },
+    {
+      "source": "ci/scripts/swiftlint/verify-capabilities.test.sh",
+      "disposition": "retain",
+      "reason": "Fast isolated boundary controls reject wrong versions, tool crashes, skipped rules and unknown-rule acceptance without building containers or launching apps."
+    },
+    {
+      "source": "ci/scripts/swiftlint/extract-source.test.sh",
+      "disposition": "retain",
+      "reason": "Exercises pinned upstream link preservation and rejects absolute/escaping/chained links, cycles, link ancestors, hardlinks and duplicate source entries before any extraction."
+    },
+    {
+      "source": "ci/scripts/swiftlint/install-runtime.test.sh",
+      "disposition": "retain",
+      "reason": "Exercises actual native-runtime archive confinement, identity, file hashes, licensing, ELF checks and existing-installation integrity with synthetic private archives and no network or native execution."
+    },
+    {
       "source": "packages/tasks-for-obsidian/ios/ci_scripts/mise-native.sh",
       "disposition": "retain",
       "reason": "Checksum-pinned native Apple tool bootstrap runs before Bun is available in fresh Xcode Cloud checkout; isolates pinned tools and verifies both macOS architectures."

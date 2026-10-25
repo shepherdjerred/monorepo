@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "version": "0.65.1",
+  "sourceRevision": "6aba03e3d8302b33f106e0f922210f35ca4b52cf",
+  "sourceArchive": "https://codeload.github.com/realm/SwiftLint/legacy.tar.gz/6aba03e3d8302b33f106e0f922210f35ca4b52cf",
+  "sourceArchiveSHA256": "1542223d8407c8fca1dc8b066c64391fa087654a5670e3ae0906083ddb04265d",
+  "builderImage": "docker.io/library/swift:6.3.2-jammy@sha256:5f846f008aa76859377d4e9dafe2826c74dde99421bbc60ae2b98d0f1daf72cf",
+  "runtimeLicenses": [
+    {
+      "name": "Swift-LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/swiftlang/swift/swift-6.3.2-RELEASE/LICENSE.txt",
+      "sha256": "770af8291f708538d8ff885a0bbc4e045cd700531741c4f99528d435c14d7f55"
+    },
+    {
+      "name": "LLVM-LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/swiftlang/llvm-project/swift-6.3.2-RELEASE/llvm/LICENSE.TXT",
+      "sha256": "8d85c1057d742e597985c7d4e6320b015a9139385cff4cbae06ffc0ebe89afee"
+    }
+  ]
+}

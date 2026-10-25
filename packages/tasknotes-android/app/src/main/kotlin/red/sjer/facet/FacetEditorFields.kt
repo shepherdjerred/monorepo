@@ -8,10 +8,16 @@ import androidx.compose.ui.unit.dp
 import java.util.UUID
 import kotlinx.serialization.json.*
 
-/** Only a changed control replaces its property; all unknown entry fields survive. */
+/** Type changes retire incompatible known fields; IDs and unknown entry fields survive. */
 internal fun editEntry(entries: JsonArray, index: Int, field: String, value: String?): JsonArray {
     val original = entries[index].jsonObject
-    val updated = JsonObject(original.toMutableMap().apply { put(field, value?.let(::JsonPrimitive) ?: JsonNull) })
+    val updated = JsonObject(original.toMutableMap().apply {
+        if (field == "type" && value != (original["type"] as? JsonPrimitive)?.contentOrNull) when (value) {
+            "absolute" -> { remove("relatedTo"); remove("offset") }
+            "relative" -> remove("absoluteTime")
+        }
+        put(field, value?.let(::JsonPrimitive) ?: JsonNull)
+    })
     return JsonArray(entries.mapIndexed { position, entry -> if (position == index) updated else entry })
 }
 

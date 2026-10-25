@@ -73,6 +73,13 @@ Vault health discovers retained failures after restart and offers the exact
 revision-fenced Repair generation command, or the core's reason repair is no
 longer safe. Neither discovery nor reminder queries repair notes.
 
+The Repeat form loads common patterns through Rust's lossless recurrence
+projection and builds edited rules off the UI thread. Interval edits preserve
+weekdays, calendar selectors and ending conditions. Rules outside that projection
+remain authoritative raw text until explicitly edited or replaced. Reminder type
+changes remove only the incompatible known fields of the previous type while
+preserving reminder IDs, descriptions and vendor metadata.
+
 Foreground lifecycle, imported-copy indexing, configuration consent and actual
 remote ingestion request serial, coalesced maintenance across every eligible
 profile, including offscreen vaults. WorkManager uses the same coordinator under

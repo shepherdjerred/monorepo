@@ -52,7 +52,6 @@ internal fun FacetSheet(title: String, dismiss: () -> Unit, action: String? = nu
         }
     }
 }
-
 @Composable
 internal fun FacetChoiceSheet(title: String, choices: List<WorkflowOption>, dismiss: () -> Unit, change: (String) -> Unit) {
     FacetSheet(title, dismiss) {
@@ -144,55 +143,6 @@ internal fun FacetTokenField(label: String, values: List<String>, suggestions: L
                 OutlinedTextField(input, { input = it }, label = { Text("Add a value") }, singleLine = true, modifier = Modifier.weight(1f))
                 IconButton(onClick = { chosen = (chosen + input.trim()).distinct(); input = "" }, enabled = input.isNotBlank()) { Icon(Icons.Default.Add, "Add value") }
             }
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-internal fun FacetRecurrenceField(value: String, enabled: Boolean, change: (String) -> Unit) {
-    var open by remember { mutableStateOf(false) }
-    val label = when (value) { "" -> "Does not repeat"; "FREQ=DAILY" -> "Daily"; "FREQ=WEEKLY" -> "Weekly"; "FREQ=MONTHLY" -> "Monthly"; "FREQ=YEARLY" -> "Yearly"; else -> "Custom repeat rule" }
-    FacetFieldRow("Repeat", label, Icons.Default.Repeat, enabled) { open = true }
-    if (open) {
-        var frequency by rememberSaveable { mutableStateOf("DAILY") }
-        var interval by rememberSaveable { mutableStateOf("1") }
-        var weekdays by remember { mutableStateOf<List<String>>(emptyList()) }
-        var end by rememberSaveable { mutableStateOf("") }
-        var advanced by rememberSaveable { mutableStateOf(false) }
-        var rule by rememberSaveable(value) { mutableStateOf(value) }
-        var changed by remember { mutableStateOf(false) }
-        val positive = interval.toIntOrNull()?.let { it > 0 } == true
-        FacetSheet("Repeat task", { open = false }, "Done", enabled = advanced || !changed || positive, save = {
-            if (advanced) change(rule)
-            else if (changed) change(buildList {
-                add("FREQ=$frequency"); if (interval != "1") add("INTERVAL=$interval")
-                if (frequency == "WEEKLY" && weekdays.isNotEmpty()) add("BYDAY=" + weekdays.joinToString(","))
-                if (end.isNotEmpty()) add("UNTIL=" + end.replace("-", ""))
-            }.joinToString(";"))
-            open = false
-        }) {
-            if (value.isNotEmpty()) Text("Current rule: $value", style = MaterialTheme.typography.bodyMedium)
-            Text("The vault engine validates the rule when you save the task.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("Advanced rule"); Switch(advanced, { advanced = it })
-            }
-            if (advanced) OutlinedTextField(rule, { rule = it }, label = { Text("Recurrence rule") }, modifier = Modifier.fillMaxWidth())
-            else {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("DAILY" to "Daily", "WEEKLY" to "Weekly", "MONTHLY" to "Monthly", "YEARLY" to "Yearly").forEach { (key, label) ->
-                        FilterChip(changed && frequency == key, { frequency = key; changed = true }, label = { Text(label) })
-                    }
-                }
-                OutlinedTextField(interval, { interval = it; changed = true }, label = { Text("Every · interval") }, singleLine = true, isError = !positive, modifier = Modifier.fillMaxWidth())
-                if (frequency == "WEEKLY") FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("MO" to "Mon", "TU" to "Tue", "WE" to "Wed", "TH" to "Thu", "FR" to "Fri", "SA" to "Sat", "SU" to "Sun").forEach { (key, label) ->
-                        FilterChip(key in weekdays, { weekdays = if (key in weekdays) weekdays - key else weekdays + key; changed = true }, label = { Text(label) })
-                    }
-                }
-                FacetDateField("Ends on", end) { end = it; changed = true }
-            }
-            TextButton(onClick = { change(""); open = false }) { Text("Does not repeat") }
         }
     }
 }

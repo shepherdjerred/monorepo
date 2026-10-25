@@ -84,6 +84,16 @@ if ! awk '
 fi
 bash "${SCRIPT_DIR}/android-sdk.test.sh"
 
+if ! rg -Fq 'bash ci/scripts/swiftlint/bootstrap.sh' "$TOOLCHAIN" ||
+  rg -Fq 'swiftlint-static' "$CI_IMAGE"; then
+  echo "CI must bootstrap capability-checked SwiftLint instead of a SourceKit-disabled binary" >&2
+  exit 1
+fi
+bash "${SCRIPT_DIR}/swiftlint/verify-capabilities.test.sh"
+bash "${SCRIPT_DIR}/swiftlint/install-runtime.test.sh"
+bash "${SCRIPT_DIR}/swiftlint/extract-source.test.sh"
+python3 "${SCRIPT_DIR}/swiftlint/validate-inputs.py" "${SCRIPT_DIR}/../.."
+
 if rg -q 'playwright install|bun x' "$CI_PLAYWRIGHT_IMAGE" ||
   ! rg -Fq 'Bun.file("/ms-playwright/.docker-info").json()' "$CI_PLAYWRIGHT_IMAGE" ||
   ! rg -Fq 'typeof info.driverVersion !== "string"' "$CI_PLAYWRIGHT_IMAGE" ||

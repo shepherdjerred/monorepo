@@ -42,17 +42,28 @@ test("uses the remote builder for production pushes", () => {
 });
 
 test("defines CI images independently", () => {
-  expect(ciImageDefinition("ci-base").sourceFiles).toEqual([
-    "ci/ci-image/Dockerfile",
-    ".mise.toml",
-    "mise.lock",
-  ]);
+  expect(ciImageDefinition("ci-base").sourceFiles).toContain(
+    "ci/scripts/swiftlint/pins.json",
+  );
   expect(ciImageDefinition("ci-playwright").sourceFiles).toEqual([
     "ci/ci-playwright/Dockerfile",
     ".mise.toml",
     "mise.lock",
   ]);
   expect(() => ciImageDefinition("unknown")).toThrow("Unknown CI image");
+});
+
+test("fingerprints every explicit source copied into the CI image", async () => {
+  const source = await Bun.file(
+    new URL("../../ci-image/Dockerfile", import.meta.url),
+  ).text();
+  const sources = new Set(ciImageDefinition("ci-base").sourceFiles);
+  for (const copy of source.matchAll(/^COPY (?!\s*--from=)(.+)$/gmu)) {
+    const arguments_ = copy[1]?.trim().split(/\s+/u);
+    if (arguments_ === undefined) throw new Error("Invalid Dockerfile COPY");
+    for (const input of arguments_.slice(0, -1))
+      expect(sources.has(input), `Missing image input: ${input}`).toBe(true);
+  }
 });
 
 test("CI base authenticates tool downloads through a scoped BuildKit secret", async () => {
@@ -114,11 +125,7 @@ test("fingerprints only the selected CI image source files", async () => {
       },
     ),
   ).toMatch(/^[\da-f]{64}$/);
-  expect(requested).toEqual([
-    "ci/ci-image/Dockerfile",
-    ".mise.toml",
-    "mise.lock",
-  ]);
+  expect(requested).toEqual(ciImageDefinition("ci-base").sourceFiles);
   await expect(
     ciImageSourceFingerprint(
       {

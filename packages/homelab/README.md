@@ -165,6 +165,12 @@ The local Helm render and lint commands use that same expansion. Keep
 PostgreSQL-selected worker pools and images in release parameters rather than
 writing them into native synth output or chart defaults.
 
+Chart staging keeps real Helm lint, template validation and packaging. Successful
+validation renders are captured privately and discarded; lint and package progress
+remain visible. Failure output is retained in a separate private temporary
+directory named by the error, with stdout capped at 16 MiB and diagnostics at
+64 KiB. These files stay outside chart archives and release staging cleanup.
+
 ## Installation
 
 ### Talos

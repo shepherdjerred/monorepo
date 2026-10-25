@@ -206,18 +206,9 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
     if ! ldconfig -p | grep -Fq 'libxml2.so.2'; then
       apt-get update -qq && apt-get install -y -qq --no-install-recommends libxml2
     fi
-    if ! command -v swiftlint >/dev/null; then
-      # Official linux artifact; same recipe as ci/ci-image/Dockerfile
-      # (which bakes it in) — keep the two in sync.
-      # renovate: datasource=github-releases depName=realm/SwiftLint
-      SWIFTLINT_VERSION="0.61.0"
-      curl -fsSL "https://github.com/realm/SwiftLint/releases/download/${SWIFTLINT_VERSION}/swiftlint_linux_amd64.zip" -o /tmp/swiftlint.zip
-      unzip -q -o /tmp/swiftlint.zip -d /usr/local/swiftlint
-      # The dynamic binary needs Swift runtime libs the zip doesn't carry
-      # (exec fails as 127); the -static build is self-contained.
-      ln -sf /usr/local/swiftlint/swiftlint-static /usr/local/bin/swiftlint
-      rm /tmp/swiftlint.zip
-    fi
+    # Verify capabilities even when the executable exists; stale static builds
+    # skip configured rules. The shared producer exports only a private runtime.
+    bash ci/scripts/swiftlint/bootstrap.sh
     ;;
   *)
     echo "Unknown MISE_TOOLCHAIN_SCOPE: ${MISE_TOOLCHAIN_SCOPE}" >&2
