@@ -12,6 +12,7 @@
     "@tsconfig/strictest": "^2.0.8",
     "@types/bun": "1.4.2",
     "@typescript/native": "npm:typescript@7.0.2",
+    "ajv": "^8.20.0",
     "eslint": "^10.7.0",
     "fast-xml-parser": "5.11.0",
     "jiti": "^2.7.0",
@@ -51,7 +52,7 @@
     "windows:run": "bun scripts/windows.ts run",
     "windows:parity-check": "bun scripts/parity-check.ts",
     "windows:e2e": "bun scripts/e2e.ts",
-    "windows:accessibility": "bun scripts/e2e.ts --scenario accessibility-keyboard --keep-artifacts",
+    "windows:accessibility": "bun scripts/e2e.ts --scenario accessibility-keyboard",
     "windows:visual-profile": "bun scripts/visual-profile.ts",
     "windows:visual-matrix": "bun scripts/visual-matrix.ts",
     "windows:verify": "bun scripts/windows.ts verify"

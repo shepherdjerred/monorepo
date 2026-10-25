@@ -278,6 +278,9 @@ extension FacetStore {
             await self?.openSyncSession(
                 profileID: profileID, generation: generation, isForeground: isForeground)
         }
+        if isForeground {
+            for profile in profiles { requestOccurrenceMaintenance(profileID: profile.id) }
+        }
     }
 
     internal func resumeSync(
@@ -321,6 +324,12 @@ extension FacetStore {
                     await self?.updateSyncState(
                         profileID: profileID, state: state, generation: generation)
                 },
+                remoteChanged: { [weak self] in
+                    guard let self,
+                        await self.ownsSyncCallback(profileID: profileID, generation: generation)
+                    else { return }
+                    await self.requestOccurrenceMaintenance(profileID: profileID)
+                },
                 retain: { [weak self] session in
                     await self?.retainSession(
                         session, profileID: profileID, generation: generation) ?? false
@@ -347,6 +356,7 @@ extension FacetStore {
     public func pauseSync() async {
         foreground = false
         backgroundLease = nil
+        occurrenceWorker?.cancel()
         await stopSessions()
     }
     internal func stopSessions() async {
@@ -392,14 +402,21 @@ extension FacetStore {
 
     internal func updateSyncState(profileID: String, state: FacetSyncStatus, generation: UInt64) {
         guard ownsSyncCallback(profileID: profileID, generation: generation) else { return }
+        let becameReady =
+            state.durable?.initialSyncComplete == true
+            && occurrenceReadySessions[profileID] != generation
         syncStatuses[profileID] = state
         syncStates[profileID] = state.message
+        if becameReady {
+            occurrenceReadySessions[profileID] = generation
+            requestOccurrenceMaintenance(profileID: profileID)
+        }
     }
 
     private func refreshSyncOwner(profileID: String, generation: UInt64) async {
         guard ownsSyncCallback(profileID: profileID, generation: generation),
             selectedProfileID == profileID
         else { return }
-        await refresh()
+        await refresh(schedulingOccurrences: false)
     }
 }

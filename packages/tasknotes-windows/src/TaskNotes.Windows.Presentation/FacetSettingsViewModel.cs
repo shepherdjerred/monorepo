@@ -32,6 +32,37 @@ public sealed class FacetSettingsViewModel : ObservableObject, IDisposable
     /// <summary>Saved immutable actions, including their original owning vault.</summary>
     public IReadOnlyList<FacetPendingAction> PendingActions => _store.State.FacetPendingActions;
 
+    /// <summary>Core-authored durable generation failures remain discoverable after primary journal cleanup.</summary>
+    public IReadOnlyList<FacetGenerationFailure> GenerationFailures =>
+        _store.State.FacetGenerationFailures;
+
+    /// <summary>Typed current-series discovery problems.</summary>
+    public IReadOnlyList<FacetOccurrenceProblem> OccurrenceProblems =>
+        _store.State.OccurrenceMaintenanceProblems;
+
+    /// <summary>Configuration or provider maintenance errors are separate from Sync connectivity.</summary>
+    public string? OccurrenceStatus => _store.State.OccurrenceMaintenanceStatus;
+
+    /// <summary>A new explicit repair re-reads current core revision fences for the exact original outcome.</summary>
+    public async Task RepairGenerationAsync(
+        FacetGenerationFailure failure,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var occurrences =
+            _store as IFacetOccurrenceStore
+            ?? throw new InvalidOperationException(
+                "Occurrence repair requires the standalone store."
+            );
+        await occurrences.RepairGenerationAsync(
+            failure.ProfileId,
+            failure.PrimaryMutationId,
+            failure.SuccessorId,
+            cancellationToken
+        );
+        await ReloadAsync(cancellationToken);
+    }
+
     /// <summary>Resume the retained action; no ID, timestamp or command is reconstructed.</summary>
     public async Task ResumeAsync(string id, CancellationToken cancellationToken = default)
     {
@@ -151,6 +182,9 @@ public sealed class FacetSettingsViewModel : ObservableObject, IDisposable
     {
         OnPropertyChanged(nameof(Profiles));
         OnPropertyChanged(nameof(PendingActions));
+        OnPropertyChanged(nameof(GenerationFailures));
+        OnPropertyChanged(nameof(OccurrenceProblems));
+        OnPropertyChanged(nameof(OccurrenceStatus));
         Conflicts = _profiles.SelectedProfileId is null
             ? []
             : await _profiles.ConflictsAsync(cancellationToken);
@@ -173,6 +207,9 @@ public sealed class FacetSettingsViewModel : ObservableObject, IDisposable
         {
             OnPropertyChanged(nameof(Profiles));
             OnPropertyChanged(nameof(PendingActions));
+            OnPropertyChanged(nameof(GenerationFailures));
+            OnPropertyChanged(nameof(OccurrenceProblems));
+            OnPropertyChanged(nameof(OccurrenceStatus));
             Status = _store.State.UserFacingError;
             Conflicts = _store.State.FacetConflicts;
         }

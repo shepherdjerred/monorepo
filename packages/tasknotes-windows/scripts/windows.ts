@@ -4,6 +4,7 @@ import { parseStoreIdentity, storeManifest } from "./store-identity.ts";
 import { createPackageVerifier } from "./package-verification.ts";
 import { XMLParser } from "fast-xml-parser";
 import { z } from "zod";
+import { StandaloneScenario } from "./standalone-contract.ts";
 const packageRoot = path.resolve(import.meta.dir, "..");
 const vswhere = path.join(
   Bun.env["ProgramFiles(x86)"] ?? String.raw`C:\Program Files (x86)`,
@@ -341,10 +342,7 @@ async function prepareE2E(): Promise<void> {
 }
 
 async function runE2EScenario(): Promise<void> {
-  const scenario = Bun.argv[3];
-  if (scenario === undefined || !/^[a-z0-9][a-z0-9-]*$/u.test(scenario)) {
-    throw new Error("A valid E2E scenario ID is required.");
-  }
+  const scenario = StandaloneScenario.parse(Bun.argv[3]);
   const artifactDirectory = Bun.env["TASKNOTES_E2E_ARTIFACTS"];
   if (artifactDirectory === undefined) {
     throw new Error("TASKNOTES_E2E_ARTIFACTS is required.");

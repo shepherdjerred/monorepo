@@ -236,6 +236,19 @@ Existing simulators and their accounts are not used. This suite exercises local
 vault operations; live Sync, account onboarding, reminders, interruption/recovery
 and other platforms require their own acceptance evidence.
 
+`bun scripts/occurrence-acceptance/run-ios.ts` creates a separate disposable
+simulator for the recurrence journey. Three ordered XCTest selectors drive the
+production Generate and Repair buttons, preserve a completed child when its
+future occurrence cannot find its template, verify exact parent/child bytes
+after repair Undo, and verify a second repair across cold relaunch. The harness
+restores only its synthetic template between stopped-app stages. It retains
+each selector's exact result, app-only screenshots, source fingerprints and
+Markdown in `.build/native-e2e/<run-id>/`. The ordinary two-case journey and its
+three-Markdown-file gate remain unchanged and required separately.
+Both local runners retain file-backed command logs and enforce deadlines on
+actual command exit, including XCTest startup and simulator cleanup. Output
+descriptors inherited by another process cannot extend the command's lifetime.
+
 Shared schema positive, negative,
 and raw numeric fixtures run at both Apple and Android boundaries. Retain
 matched XCFramework/source fingerprints and xcresult/rendered artifacts.

@@ -74,6 +74,7 @@ namespace TaskNotes.Windows.App
                 ConfirmAsync,
                 ShowValidationMessage
             );
+            TaskWorkspace.Editor.GenerateOccurrencesRequested += GenerateOccurrences;
             TaskWorkspace.RefreshRequested += Refresh_Click;
             TaskWorkspace.SearchChanged += SearchBox_TextChanged;
             TaskWorkspace.SearchSubmitted += SearchBox_QuerySubmitted;
@@ -118,6 +119,12 @@ namespace TaskNotes.Windows.App
             SettingsDestination.DiscardParkedRequested += DiscardParked_Click;
             SettingsDestination.ResumeActionRequested += ResumeAction_Click;
             SettingsDestination.RetireActionRequested += RetireAction_Click;
+            SettingsDestination.RepairGenerationRequested += failure =>
+                _uiOperations.Run(
+                    "repair-occurrence-generation",
+                    () =>
+                        RunUiOperationAsync(() => _settingsViewModel.RepairGenerationAsync(failure))
+                );
             SettingsDestination.ReviewConflictRequested += ReviewConflict_Click;
 #if TASKNOTES_E2E
             Title = "TaskNotes E2E";
@@ -133,6 +140,25 @@ namespace TaskNotes.Windows.App
 
         /// <summary>Gets the UI-facing serialized Rust engine store.</summary>
         public FacetTaskNotesStore Store { get; }
+
+#if TASKNOTES_E2E
+        private string? _acceptanceRunId;
+
+        internal void ConfigureStandaloneAcceptance(string runId)
+        {
+            if (_loaded || _acceptanceRunId is not null || !Guid.TryParseExact(runId, "D", out _))
+                throw new InvalidOperationException(
+                    "The standalone acceptance window owner is invalid."
+                );
+            _acceptanceRunId = runId;
+            Title = "Facet Acceptance " + runId;
+            AppTitleBar.Title = Title;
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(
+                RootGrid,
+                "Facet.Acceptance.Workspace." + runId
+            );
+        }
+#endif
 
         /// <summary>Gets the portable shell presentation model.</summary>
         public ShellViewModel ViewModel { get; }
@@ -333,7 +359,10 @@ namespace TaskNotes.Windows.App
                 )
             );
             SettingsDestination.Hotkey = shell.QuickAddHotkey;
-            InitializeGlobalHotkey(shell.QuickAddHotkey);
+#if TASKNOTES_E2E
+            if (_acceptanceRunId is null)
+#endif
+                InitializeGlobalHotkey(shell.QuickAddHotkey);
 
             bool initialized = await RunUiOperationAsync(() => Store.InitializeAsync(null, null));
             if (!initialized)
@@ -1031,7 +1060,7 @@ namespace TaskNotes.Windows.App
                     if (
                         await ConfirmAsync(
                             "Restore default saved views?",
-                            "This replaces portable saved-view documents in the selected vault."
+                            "This restores the default saved views in the selected vault. Your other saved views remain."
                         )
                     )
                     {

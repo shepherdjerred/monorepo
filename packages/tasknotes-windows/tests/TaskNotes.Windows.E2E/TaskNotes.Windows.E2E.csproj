@@ -5,6 +5,7 @@
     <AssemblyName>TaskNotes.Windows.E2E</AssemblyName>
     <RootNamespace>TaskNotes.Windows.E2E</RootNamespace>
     <IsPackable>false</IsPackable>
+    <NeedsTaskNotesNative>true</NeedsTaskNotesNative>
     <TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>
     <MSTestParallelizeScope>None</MSTestParallelizeScope>
     <UseWPF>true</UseWPF>
@@ -18,5 +19,19 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/TaskNotes.Windows.Host/TaskNotes.Windows.Host.csproj" />
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/Acceptance/StandaloneAcceptanceDescriptor.cs"
+      Link="Acceptance/StandaloneAcceptanceDescriptor.cs"
+    />
+    <Content
+      Include="../../e2e/standalone/contract.json"
+      Link="Acceptance/contract.json"
+      CopyToOutputDirectory="PreserveNewest"
+    />
+    <Content
+      Include="../../e2e/standalone/scenarios.json"
+      Link="Acceptance/scenarios.json"
+      CopyToOutputDirectory="PreserveNewest"
+    />
   </ItemGroup>
 </Project>

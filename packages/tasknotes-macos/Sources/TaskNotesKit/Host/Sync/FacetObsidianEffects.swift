@@ -114,6 +114,7 @@ extension FacetObsidianSession {
         case .ready:
             ready = true
             dirty = true
+            remoteDirty = true
             transportPhase = .connected
         case .connect, .sendText, .sendBinary, .close, .persistCheckpoint, .persistCheckpointDelta,
             .remoteChange, .downloadedPayload:

@@ -5,7 +5,9 @@ public import TaskNotesKit
 @MainActor
 @Observable
 public final class FacetStore {
-    public internal(set) var profiles: [FacetProfile] = []
+    public internal(set) var profiles: [FacetProfile] = [] {
+        didSet { revalidateOccurrenceProfileOwner() }
+    }
     public internal(set) var pendingImports: [FacetVaultImport] = []
     public internal(set) var selectedProfileID: String? {
         didSet {
@@ -67,6 +69,13 @@ public final class FacetStore {
     public internal(set) var syncStates: [String: String] = [:]
     public internal(set) var syncStatuses: [String: FacetSyncStatus] = [:]
     public internal(set) var needsStandardConsent = false
+    public internal(set) var occurrenceOverviews: [String: FacetOccurrenceOverview] = [:]
+    public internal(set) var occurrenceIssues: [String: String] = [:]
+    @ObservationIgnored internal var occurrenceQueue = FacetOccurrenceMaintenanceQueue()
+    @ObservationIgnored internal var occurrenceWorker: _Concurrency.Task<Void, Never>?
+    @ObservationIgnored internal var occurrenceAdmission:
+        (profileID: String, permit: FacetOccurrenceAdmission)?
+    @ObservationIgnored internal var occurrenceReadySessions: [String: UInt64] = [:]
     public internal(set) var capturePreview: FacetValue?
     public internal(set) var featureResult: FacetValue?
     public internal(set) var reminderStatus: String?
@@ -76,16 +85,19 @@ public final class FacetStore {
     @ObservationIgnored internal var engine: FacetEngine? {
         didSet {
             if engine !== oldValue {
+                occurrenceAdmission?.permit.cancel()
                 feedbackSessionID = UUID()
                 clearSavedNotice()
             }
         }
     }
-    @ObservationIgnored internal var account: FacetObsidianAccount?
+    @ObservationIgnored internal var account: FacetObsidianAccount? {
+        didSet { if account !== oldValue { occurrenceAdmission?.permit.cancel() } }
+    }
     @ObservationIgnored internal var importer: FacetVaultImporter?
     @ObservationIgnored internal var sessions: [String: FacetObsidianSession] = [:]
     @ObservationIgnored internal var syncGeneration: UInt64 = 0 {
-        didSet { if syncGeneration != oldValue { clearSavedNotice() } }
+        didSet { changedOccurrenceLifecycle(previous: oldValue) }
     }
     @ObservationIgnored internal var syncSessionGenerations: [String: UInt64] = [:]
     @ObservationIgnored internal var preferences: UserDefaults
@@ -100,23 +112,20 @@ public final class FacetStore {
         @ObservationIgnored internal var acceptanceVaultEngine: FacetEngine?
         @ObservationIgnored internal var acceptanceVaultTask: _Concurrency.Task<Void, any Error>?
     #endif
-    public var acceptanceDirectory: URL? {
-        #if DEBUG
-            acceptanceConfiguration?.stateDirectory
-        #else
-            nil
-        #endif
+    @ObservationIgnored internal var accountTransition = false {
+        didSet { if accountTransition { occurrenceAdmission?.permit.cancel() } }
     }
-    public var isAcceptanceLaunch: Bool {
-        Bundle.main.bundleIdentifier == "red.sjer.tasknotes.mac.acceptance"
-            || CommandLine.arguments.contains("--facet-acceptance-descriptor")
-            || CommandLine.arguments.contains("--facet-native-acceptance")
+    @ObservationIgnored internal var foreground = true {
+        didSet { if !foreground { occurrenceAdmission?.permit.cancel() } }
     }
-    @ObservationIgnored internal var accountTransition = false
-    @ObservationIgnored internal var foreground = true
-    @ObservationIgnored internal var backgroundLease: UUID?
+    @ObservationIgnored internal var backgroundLease: UUID? {
+        didSet {
+            if oldValue != nil, backgroundLease != oldValue { occurrenceAdmission?.permit.cancel() }
+        }
+    }
     @ObservationIgnored internal var removingProfileIDs: Set<String> = [] {
         didSet {
+            revalidateOccurrenceProfileOwner()
             if let selectedProfileID, removingProfileIDs.contains(selectedProfileID) {
                 clearSavedNotice()
             }
@@ -259,12 +268,9 @@ public final class FacetStore {
         /// Application-owned preparation survives cancelled window waiters and
         /// retains its result so restored windows cannot register or select again.
         public func prepareAcceptanceVault(_ directory: URL) async throws {
-            guard let root = acceptanceDirectory, let engine,
-                directory.isFileURL,
-                directory.standardizedFileURL == directory,
-                directory.resolvingSymlinksInPath() == directory,
-                directory == root.appendingPathComponent("Native acceptance")
+            guard let configuration = acceptanceConfiguration, let engine
             else { throw FacetAcceptanceError.invalidDescriptor }
+            try configuration.requireLocalVault(directory)
             if let task = acceptanceVaultTask {
                 guard acceptanceVaultDirectory == directory, acceptanceVaultEngine === engine else {
                     throw FacetAcceptanceError.invalidDescriptor
@@ -304,6 +310,19 @@ public final class FacetStore {
 #endif
 
 extension FacetStore {
+    public var acceptanceDirectory: URL? {
+        #if DEBUG
+            acceptanceConfiguration?.stateDirectory
+        #else
+            nil
+        #endif
+    }
+    public var isAcceptanceLaunch: Bool {
+        Bundle.main.bundleIdentifier == "red.sjer.tasknotes.mac.acceptance"
+            || CommandLine.arguments.contains("--facet-acceptance-descriptor")
+            || CommandLine.arguments.contains("--facet-native-acceptance")
+    }
+
     public var isIsolatedLaunch: Bool { Self.requiresIsolation }
     private static var requiresIsolation: Bool {
         Bundle.main.bundleIdentifier == "red.sjer.tasknotes.mac.acceptance"

@@ -103,6 +103,15 @@ namespace TaskNotes.Windows.App.Views
         internal event RoutedEventHandler? ReviewConflictRequested;
         internal event RoutedEventHandler? ResumeActionRequested;
         internal event RoutedEventHandler? RetireActionRequested;
+        internal event Action<Host.FacetGenerationFailure>? RepairGenerationRequested;
+
+        private void RepairGeneration_Click(object sender, RoutedEventArgs args)
+        {
+            _ = args;
+            if (sender is not FrameworkElement { DataContext: Host.FacetGenerationFailure failure })
+                throw new InvalidDataException("The generation repair lost its original outcome.");
+            RepairGenerationRequested?.Invoke(failure);
+        }
 
         internal string Email => EmailTextBox.Text;
         internal string Password => AccountPasswordBox.Password;

@@ -34,7 +34,7 @@ struct FacetApp: App {
                                             at: directory, withIntermediateDirectories: true)
                                         return directory
                                     }.value
-                                    await store.prepareAcceptanceVault(directory)
+                                    try await store.prepareAcceptanceVault(directory)
                                 } catch { assertionFailure("Native acceptance bootstrap failed.") }
                             }
                         }

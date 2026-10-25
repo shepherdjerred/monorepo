@@ -61,6 +61,7 @@ public sealed partial class FacetTaskNotesStore
     );
     private readonly Dictionary<string, JsonElement> _tasks = new(StringComparer.Ordinal);
     private readonly Dictionary<string, JsonElement> _views = new(StringComparer.Ordinal);
+    private string? _projectionProfile;
     private bool _disposed;
     private long _sessionGeneration;
     private readonly System.Collections.Concurrent.ConcurrentDictionary<
@@ -146,7 +147,7 @@ public sealed partial class FacetTaskNotesStore
         _time = time ?? TimeProvider.System;
         _allowSync = allowSync;
         _catalog = new FacetProfileCatalog(directory);
-        _journal = new FacetMutationJournal(directory);
+        _journal = new FacetMutationJournal(directory, _time);
         _engine = new FacetEngineService(
             Path.Combine(directory, "facet.sqlite"),
             _catalog.Profiles.Select(p => new FacetFolderCapability(
@@ -287,6 +288,9 @@ public sealed partial class FacetTaskNotesStore
                     }
                 }
                 await StartSessionsAsync(cancellationToken).ConfigureAwait(false);
+                foreach (var profile in Profiles)
+                    MarkOccurrenceMaintenance(profile.Id);
+                await MaintainOccurrencesAsync(cancellationToken).ConfigureAwait(false);
                 await PublishAsync().ConfigureAwait(false);
             },
             cancellationToken
@@ -321,6 +325,8 @@ public sealed partial class FacetTaskNotesStore
                 }
                 foreach (var session in _sessions.Values)
                     await session.WakeAsync(cancellationToken).ConfigureAwait(false);
+                MarkOccurrenceMaintenance(Selected);
+                await MaintainOccurrencesAsync(cancellationToken).ConfigureAwait(false);
                 await PublishAsync().ConfigureAwait(false);
             },
             cancellationToken
@@ -1478,6 +1484,16 @@ public sealed partial class FacetTaskNotesStore
                                 )
                                     return false;
                                 return _retainedSessions.TryAdd(profile.Id, candidate);
+                            },
+                            occurrenceInputsChanged: () =>
+                            {
+                                if (
+                                    _disposed
+                                    || generation != Volatile.Read(ref _sessionGeneration)
+                                )
+                                    return;
+                                MarkOccurrenceMaintenance(profile.Id);
+                                RequestUpdate();
                             }
                         )
                         .ConfigureAwait(false)
@@ -1651,9 +1667,28 @@ public sealed partial class FacetTaskNotesStore
                 _savedMaintenance = null;
             }
         );
-        string rawReceipt = await _engine
-            .ExecuteAsync(Selected, envelope.Document, cancellationToken)
-            .ConfigureAwait(false);
+        using var submittedEnvelope = JsonDocument.Parse(envelope.Document);
+        var submittedCommand = submittedEnvelope.RootElement.GetProperty("command");
+        var maintenanceOwner = Profiles.Single(profile => profile.Id == envelope.Profile);
+        long maintenanceLifecycle = Volatile.Read(ref _sessionGeneration);
+        long maintenanceAuthority = _account.AuthorizationEpoch;
+        string rawReceipt = IsAutomaticOccurrence(submittedCommand)
+            ? await _engine
+                .ExecuteOwnedMaintenanceAsync(
+                    Selected,
+                    envelope.Document,
+                    () =>
+                        OwnsOccurrenceOwner(
+                            maintenanceOwner,
+                            maintenanceLifecycle,
+                            maintenanceAuthority
+                        ),
+                    cancellationToken
+                )
+                .ConfigureAwait(false)
+            : await _engine
+                .ExecuteAsync(Selected, envelope.Document, cancellationToken)
+                .ConfigureAwait(false);
         // Validate the entire required receipt before reading codes or action outcome.
         var notice = FacetReceiptWarnings.Read(_receiptSchema, rawReceipt, owner);
         using var receipt = JsonDocument.Parse(rawReceipt);
@@ -1746,6 +1781,7 @@ public sealed partial class FacetTaskNotesStore
                 _savedMaintenance = "Saved. Local cleanup is still pending.";
         }
         PublishSavedNotice(owner);
+        MarkOccurrenceMaintenance(envelope.Profile);
         RequestUpdate(owner);
         return receipt.RootElement.Clone();
     }
@@ -1797,29 +1833,74 @@ public sealed partial class FacetTaskNotesStore
 
     private async Task PublishAsync(FacetNoticeOwner? observationOwner = null)
     {
+        if (_projectionProfile != SelectedProfileId)
+            InvalidateProjection();
+        IReadOnlyList<FacetGenerationFailure> generationFailures = [];
         try
         {
-            await PublishSnapshotAsync(observationOwner).ConfigureAwait(false);
+            if (SelectedProfileId is { } profile)
+                generationFailures = await ReadGenerationFailuresAsync(
+                        profile,
+                        CancellationToken.None
+                    )
+                    .ConfigureAwait(false);
+            await PublishSnapshotAsync(observationOwner, generationFailures).ConfigureAwait(false);
+        }
+        catch (Core.FacetEngineException.Validation error)
+            when (error.detail == "occurrence_expansion_resource_limit")
+        {
+            // A bounded query rejection is an expected user-data outcome, not a
+            // failed background pump or permission to fabricate a replacement projection.
+            // Durable generation outcomes stay available even before the first full query succeeds.
+            var connection = (Connected: false, Error: (string?)null);
+            lock (_connection)
+                connection = _connection.GetValueOrDefault(
+                    Selected,
+                    (
+                        Profiles.Single(profile => profile.Id == Selected).PrivateReplica
+                            ? false
+                            : true,
+                        null
+                    )
+                );
+            State = State with
+            {
+                FacetGenerationFailures = generationFailures,
+                FacetPendingActions = RetainedActions(),
+                UserFacingError =
+                    "A repeat rule is too complex to display. Simplify the series, then refresh. Completed tasks and saved generation outcomes remain retained.",
+                SyncState = connection.Connected
+                    ? TaskNotesSyncState.Connected
+                    : TaskNotesSyncState.CachedOffline,
+                CanUndoCompletion = _undoReceiptId is not null,
+                CompletionUndoDepth = _journal.UndoDepth(Selected),
+            };
+            Notify();
         }
         catch (Core.FacetEngineException.Configuration error)
         {
             // Configuration may be arriving through the initial remote download.
             // Do not approve defaults or stop its session merely to show a shell.
-            State = TaskNotesState.Unconfigured with
+            InvalidateProjection();
+            State = State with
             {
                 SyncState = TaskNotesSyncState.SynchronizationError,
                 UserFacingError = error.detail,
+                FacetGenerationFailures = generationFailures,
+                FacetPendingActions = RetainedActions(),
             };
             Notify();
         }
     }
 
-    private async Task PublishSnapshotAsync(FacetNoticeOwner? observationOwner)
+    private async Task PublishSnapshotAsync(
+        FacetNoticeOwner? observationOwner,
+        IReadOnlyList<FacetGenerationFailure> generationFailures
+    )
     {
         if (SelectedProfileId is null)
         {
-            _undoReceiptId = null;
-            State = TaskNotesState.Unconfigured;
+            InvalidateProjection();
             Notify();
             return;
         }
@@ -1835,8 +1916,7 @@ public sealed partial class FacetTaskNotesStore
         {
             if (all.Tasks.Count != 0 || all.Snapshot.GetProperty("totalCount").GetUInt64() != 0)
                 throw new InvalidDataException("An unconfigured vault cannot expose task rows.");
-            _tasks.Clear();
-            _views.Clear();
+            InvalidateProjection();
             State = TaskNotesState.Unconfigured with
             {
                 SyncState = TaskNotesSyncState.SynchronizationError,
@@ -1859,12 +1939,12 @@ public sealed partial class FacetTaskNotesStore
             Notify();
             return;
         }
-        _views.Clear();
+        Dictionary<string, JsonElement> views = new(StringComparer.Ordinal);
         foreach (var view in all.Snapshot.GetProperty("views").EnumerateArray())
-            _views.Add(view.GetProperty("id").GetString()!, view.Clone());
+            views.Add(view.GetProperty("id").GetString()!, view.Clone());
         if (
             State.Query.Kind == TaskListKind.SavedView
-            && (State.Query.Scope is null || !_views.ContainsKey(State.Query.Scope))
+            && (State.Query.Scope is null || !views.ContainsKey(State.Query.Scope))
         )
             State = State with { Query = new TaskListQuery(TaskListKind.Browse) };
         var visible = await ReadTasksAsync(State.Query).ConfigureAwait(false);
@@ -1881,9 +1961,6 @@ public sealed partial class FacetTaskNotesStore
             throw new InvalidOperationException(
                 "The vault changed while reading. Refresh to read one consistent snapshot."
             );
-        _tasks.Clear();
-        foreach (var task in all.Tasks)
-            _tasks.Add(task.GetProperty("id").GetString()!, task);
         var configuration = visible.Snapshot.GetProperty("configuration");
         var pending = new HashSet<string>(
             visible
@@ -1916,6 +1993,13 @@ public sealed partial class FacetTaskNotesStore
                 Selected,
                 (Profiles.Single(p => p.Id == Selected).PrivateReplica ? false : true, null)
             );
+        _tasks.Clear();
+        foreach (var task in all.Tasks)
+            _tasks.Add(task.GetProperty("id").GetString()!, task);
+        _views.Clear();
+        foreach (var (id, view) in views)
+            _views.Add(id, view);
+        _projectionProfile = Selected;
         _noticeAuthority.Observe(
             SelectedProfileId,
             currentNoticeOwner =>
@@ -1924,6 +2008,12 @@ public sealed partial class FacetTaskNotesStore
                 {
                     AllTasks = projectedAll,
                     FacetPendingActions = RetainedActions(),
+                    FacetGenerationFailures = generationFailures,
+                    OccurrenceMaintenanceStatus = _occurrenceMaintenanceErrors.GetValueOrDefault(
+                        Selected
+                    ),
+                    OccurrenceMaintenanceProblems =
+                        _occurrenceProblems.GetValueOrDefault(Selected) ?? [],
                     FacetConflicts = conflicts,
                     VisibleTasks = projectedVisible,
                     TodayTasks = today
@@ -2218,14 +2308,33 @@ public sealed partial class FacetTaskNotesStore
             .FirstOrDefault();
 
     private JsonElement RequireTask(string id) =>
-        _tasks.TryGetValue(id, out var task)
+        _projectionProfile is not null
+        && _projectionProfile == SelectedProfileId
+        && _tasks.TryGetValue(id, out var task)
             ? task
             : throw new ArgumentException("The task no longer exists.", nameof(id));
 
     private JsonElement RequireView(string id) =>
-        _views.TryGetValue(id, out var view)
+        _projectionProfile is not null
+        && _projectionProfile == SelectedProfileId
+        && _views.TryGetValue(id, out var view)
             ? view
             : throw new ArgumentException("The saved view no longer exists.", nameof(id));
+
+    private void InvalidateProjection()
+    {
+        _projectionProfile = null;
+        _tasks.Clear();
+        _views.Clear();
+        _undoReceiptId = null;
+        State = TaskNotesState.Unconfigured with
+        {
+            Query =
+                State.Query.Kind == TaskListKind.SavedView
+                    ? new TaskListQuery(TaskListKind.Browse)
+                    : State.Query,
+        };
+    }
 
     private static string PathOf(JsonElement task) => task.GetProperty("path").GetString()!;
 
@@ -2268,6 +2377,7 @@ public sealed partial class FacetTaskNotesStore
                 return;
             foreach (var session in _sessions.Values)
                 await session.WakeAsync(CancellationToken.None).ConfigureAwait(false);
+            await MaintainOccurrencesAsync(CancellationToken.None).ConfigureAwait(false);
             await PublishAsync(observationOwner).ConfigureAwait(false);
         }
         finally

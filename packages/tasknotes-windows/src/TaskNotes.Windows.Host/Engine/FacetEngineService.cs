@@ -180,6 +180,41 @@ public sealed class FacetEngineService : IAsyncDisposable
             cancellationToken
         );
 
+    /// <summary>Automatic writes recheck their captured owner and the core's readiness on the same native worker turn.</summary>
+    internal Task<string> ExecuteOwnedMaintenanceAsync(
+        string profileId,
+        string mutationJson,
+        Func<bool> owns,
+        CancellationToken cancellationToken
+    ) =>
+        _runner.RunAsync(
+            () =>
+            {
+                _schema.Validate(mutationJson, "mutation");
+                if (!owns())
+                    throw new OperationCanceledException(
+                        "The automatic occurrence generation owner changed."
+                    );
+                using var discovery = JsonDocument.Parse(
+                    Validated(
+                        Engine.FeaturesJson(profileId, "{\"kind\":\"discovery\"}"),
+                        "discovery"
+                    )
+                );
+                if (
+                    !discovery.RootElement.GetProperty("configurationAvailable").GetBoolean()
+                    || !discovery.RootElement.GetProperty("initialSyncComplete").GetBoolean()
+                )
+                    throw new FacetOccurrenceNotReadyException();
+                if (!owns())
+                    throw new OperationCanceledException(
+                        "The automatic occurrence generation owner changed."
+                    );
+                return Validated(Engine.Execute(profileId, mutationJson), "receipt");
+            },
+            cancellationToken
+        );
+
     /// <summary>Apply a versioned replacement decision with a separately owned binary payload.</summary>
     public Task<string> ExecutePayloadAsync(
         string profileId,
@@ -291,6 +326,10 @@ public sealed class FacetEngineService : IAsyncDisposable
                     "normalization_preview" => "normalizationPreview",
                     "conformance" => "conformance",
                     "reminder_plan" => "reminderPlan",
+                    "sync_status" => "syncStatus",
+                    "occurrence_successors" => "occurrenceSuccessors",
+                    "rolling_maintenance_plan" => "rollingMaintenancePlan",
+                    "occurrence_generation_failures" => "generationFailuresPlan",
                     _ => throw new InvalidDataException("Unknown Facet feature request."),
                 };
                 return Validated(Engine.FeaturesJson(profileId, requestJson), definition);

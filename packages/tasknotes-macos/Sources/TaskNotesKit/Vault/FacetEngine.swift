@@ -144,6 +144,9 @@ public actor FacetEngine {
             "conformance": "conformance",
             "reminder_plan": "reminderPlan",
             "sync_status": "syncStatus",
+            "occurrence_successors": "occurrenceSuccessors",
+            "rolling_maintenance_plan": "rollingMaintenancePlan",
+            "occurrence_generation_failures": "generationFailuresPlan",
         ]
         guard let kind = request.object?.fields["kind"]?.text, let definition = definitions[kind]
         else {

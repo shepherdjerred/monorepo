@@ -16,7 +16,26 @@ internal sealed class AppSettingsService : IFacetSecretStore, IShellPreferencesS
     private readonly ApplicationDataContainer _localSettings = ApplicationData
         .Current
         .LocalSettings;
+    private readonly string _credentialResource = CredentialResource;
     private readonly object _gate = new();
+
+    public AppSettingsService() { }
+
+#if TASKNOTES_E2E
+    internal AppSettingsService(string runId)
+    {
+        if (!Guid.TryParseExact(runId, "D", out Guid parsed) || parsed.ToString("D") != runId)
+            throw new ArgumentException(
+                "Invalid standalone acceptance settings owner.",
+                nameof(runId)
+            );
+        _localSettings = ApplicationData.Current.LocalSettings.CreateContainer(
+            "FacetAcceptance." + runId,
+            ApplicationDataCreateDisposition.Always
+        );
+        _credentialResource = CredentialResource + "." + runId;
+    }
+#endif
 
     public string? Read(string identity)
     {
@@ -25,7 +44,7 @@ internal sealed class AppSettingsService : IFacetSecretStore, IShellPreferencesS
             try
             {
                 PasswordCredential credential = new PasswordVault().Retrieve(
-                    CredentialResource,
+                    _credentialResource,
                     identity
                 );
                 credential.RetrievePassword();
@@ -45,7 +64,7 @@ internal sealed class AppSettingsService : IFacetSecretStore, IShellPreferencesS
         {
             PasswordVault vault = new();
             Remove(identity);
-            vault.Add(new PasswordCredential(CredentialResource, identity, value));
+            vault.Add(new PasswordCredential(_credentialResource, identity, value));
         }
     }
 
@@ -56,7 +75,7 @@ internal sealed class AppSettingsService : IFacetSecretStore, IShellPreferencesS
             PasswordVault vault = new();
             try
             {
-                vault.Remove(vault.Retrieve(CredentialResource, identity));
+                vault.Remove(vault.Retrieve(_credentialResource, identity));
             }
             catch (COMException exception) when (exception.HResult == unchecked((int)0x80070490))
             { }
@@ -82,7 +101,7 @@ internal sealed class AppSettingsService : IFacetSecretStore, IShellPreferencesS
         PasswordVault vault = new();
         try
         {
-            foreach (var credential in vault.FindAllByResource(CredentialResource))
+            foreach (var credential in vault.FindAllByResource(_credentialResource))
                 vault.Remove(credential);
         }
         catch (COMException exception) when (exception.HResult == unchecked((int)0x80070490)) { }

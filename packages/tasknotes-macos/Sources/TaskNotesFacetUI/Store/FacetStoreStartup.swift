@@ -91,6 +91,7 @@ extension FacetStore {
             let saved = preferences.string(forKey: "Facet.selectedProfile")
             selectedProfileID = profiles.first(where: { $0.id == saved })?.id ?? profiles.first?.id
             await refresh()
+            for profile in profiles { requestOccurrenceMaintenance(profileID: profile.id) }
             if foreground { await resumeSync() }
             #if os(macOS)
                 if let smoke = releaseSmokeConfiguration {

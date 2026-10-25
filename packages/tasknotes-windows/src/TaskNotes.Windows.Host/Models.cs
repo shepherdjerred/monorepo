@@ -152,6 +152,16 @@ namespace TaskNotes.Windows.Host
         /// <summary>Retained immutable actions requiring explicit owner-directed resumption.</summary>
         public IReadOnlyList<FacetPendingAction> FacetPendingActions { get; init; } = [];
 
+        /// <summary>Typed durable generation outcomes discovered independently of retained primary drafts.</summary>
+        public IReadOnlyList<FacetGenerationFailure> FacetGenerationFailures { get; init; } = [];
+
+        /// <summary>Maintenance errors are separate from account and network connection state.</summary>
+        public string? OccurrenceMaintenanceStatus { get; init; }
+
+        /// <summary>Typed core discovery problems, without parsing ordinary file-problem prose.</summary>
+        public IReadOnlyList<FacetOccurrenceProblem> OccurrenceMaintenanceProblems { get; init; } =
+        [];
+
         /// <summary>Gets the current UI synchronization state.</summary>
         public TaskNotesSyncState SyncState { get; init; }
 

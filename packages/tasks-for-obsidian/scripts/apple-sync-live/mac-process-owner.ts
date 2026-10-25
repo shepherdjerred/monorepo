@@ -16,8 +16,14 @@ import {
   MacProcessInspectionError,
 } from "./mac-process-inspection";
 
-const source = path.join(import.meta.dir, "mac-process-owner.swift");
-const schemaPath = path.join(import.meta.dir, "mac-process-owner.schema.json");
+const source = Bun.resolveSync(
+  "tasknotes-macos/scripts/apple-acceptance/mac-process-owner.swift",
+  import.meta.dir,
+);
+const schemaPath = Bun.resolveSync(
+  "tasknotes-macos/scripts/apple-acceptance/mac-process-owner.schema.json",
+  import.meta.dir,
+);
 const schemaBytes = await readFile(schemaPath);
 const schema = z
   .record(z.string(), z.unknown())

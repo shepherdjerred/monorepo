@@ -1297,7 +1297,7 @@ public sealed partial class FacetStoreTests
     }
 
     /// <summary>External Obsidian edits produce real conflict pages, lazy retained bytes and fenced native resolution.</summary>
-    [TestMethod]
+    [TestMethod, DoNotParallelize]
     public async Task RetainedConflictPagesAndLazyPayloadsReachTheProductionStore()
     {
         using Fixture fixture = new();

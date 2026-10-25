@@ -155,13 +155,10 @@
             else { throw CaptureError.descriptor }
             let package = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
                 .deletingLastPathComponent()
-            let build: URL
-            if app.launchArguments.contains("--facet-native-acceptance") {
-                build = package.appendingPathComponent(".build/acceptance-xcode")
-            } else {
-                build = package.deletingLastPathComponent().appendingPathComponent(
-                    "tasks-for-obsidian/.build/live-sync/\(runID.uuidString.lowercased())/macos")
-            }
+            let build = MacAcceptanceOwnership.buildDirectory(
+                package: package, runID: runID,
+                native: app.launchArguments.contains("--facet-native-acceptance"),
+                occurrence: environment["FACET_OCCURRENCE_DAY"] != nil)
             let executable = build.appendingPathComponent(
                 "Build/Products/Debug/FacetAcceptance.app/Contents/MacOS/FacetAcceptance")
             let applications = NSRunningApplication.runningApplications(

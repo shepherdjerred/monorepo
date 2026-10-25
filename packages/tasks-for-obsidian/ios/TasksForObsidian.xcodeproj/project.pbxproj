@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		04D62FFC4B2773544507D570 /* OccurrenceTaskTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38FB2A2990D633E3F148854F /* OccurrenceTaskTests.swift */; };
 		13A926586C9F704484833CBB /* LiveSyncConflictUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D8B28A9ABCCD24F85EA8D34 /* LiveSyncConflictUITests.swift */; };
 		15CCDA632D7D90E3CC9292AB /* AddTaskIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0551C3579148BC83303F1BF /* AddTaskIntent.swift */; };
 		1A0B5037D6A491F17C9C6CE8 /* FacetBackgroundTasks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E5FAAB06F3019475B51FBC /* FacetBackgroundTasks.swift */; };
@@ -26,6 +27,7 @@
 		7F4C39A329A5BFA7BB433978 /* LiveSyncVaultUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE970B6EE04B52AD7857868D /* LiveSyncVaultUITests.swift */; };
 		7FC704D0EB54DDB12208A276 /* QuickAddControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53407DF630BC00824148CE26 /* QuickAddControl.swift */; };
 		8115E6B624D505275BD876C6 /* TasksWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF24620168AF2CDDE7ACD24 /* TasksWidgetBundle.swift */; };
+		8A76FEF50FC5B281CED6C57D /* AcceptanceVaultPathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FFF6F07E3F17DFCB8E2415A /* AcceptanceVaultPathTests.swift */; };
 		90203752117D2A4D09AB1816 /* TaskShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 723F2DEE626C06A660A4022D /* TaskShortcutsProvider.swift */; };
 		96EBFAA80520FA6A14F9B2B8 /* FacetApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E2F39573B7D1B833BA08ACD /* FacetApp.swift */; };
 		A6F3F9F4DDCF4D154097C4A4 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9AA2B4C15E18713C3F2425A2 /* Images.xcassets */; };
@@ -87,6 +89,8 @@
 		198212E9090D23DE654809E2 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		1EE9D7CEE006787A1AE6023F /* FacetPresentationTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FacetPresentationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		32DC94CF5EEA15A26B6B524F /* TasksForObsidianUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TasksForObsidianUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		38FB2A2990D633E3F148854F /* OccurrenceTaskTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OccurrenceTaskTests.swift; sourceTree = "<group>"; };
+		3FFF6F07E3F17DFCB8E2415A /* AcceptanceVaultPathTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcceptanceVaultPathTests.swift; sourceTree = "<group>"; };
 		4C1FE2E1714BD10C069C8089 /* StandaloneTaskTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StandaloneTaskTests.swift; sourceTree = "<group>"; };
 		5235AB9742DC842D3303532D /* LiveSyncLifecycleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveSyncLifecycleUITests.swift; sourceTree = "<group>"; };
 		53407DF630BC00824148CE26 /* QuickAddControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddControl.swift; sourceTree = "<group>"; };
@@ -173,6 +177,7 @@
 		3025569A2F02805E1C62636A /* FacetPresentationTests */ = {
 			isa = PBXGroup;
 			children = (
+				3FFF6F07E3F17DFCB8E2415A /* AcceptanceVaultPathTests.swift */,
 				D86DDC74750E83E474D98304 /* NativeCheckpointTests.swift */,
 			);
 			path = FacetPresentationTests;
@@ -233,6 +238,7 @@
 		89466CA39BB94F6E5FC50406 /* FacetUITests */ = {
 			isa = PBXGroup;
 			children = (
+				38FB2A2990D633E3F148854F /* OccurrenceTaskTests.swift */,
 				4C1FE2E1714BD10C069C8089 /* StandaloneTaskTests.swift */,
 			);
 			path = FacetUITests;
@@ -456,6 +462,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8A76FEF50FC5B281CED6C57D /* AcceptanceVaultPathTests.swift in Sources */,
 				CA2C3018BB6189460AB63160 /* ComponentKeys.swift in Sources */,
 				B362A546A501D1EFBD21179F /* FacetAccountRenderFixture.swift in Sources */,
 				E69FC13BAD3F31D581B981EC /* FacetDelightGalleryFixtures.swift in Sources */,
@@ -472,6 +479,7 @@
 				13A926586C9F704484833CBB /* LiveSyncConflictUITests.swift in Sources */,
 				45E5C130E2BB9281D646FEC1 /* LiveSyncLifecycleUITests.swift in Sources */,
 				7F4C39A329A5BFA7BB433978 /* LiveSyncVaultUITests.swift in Sources */,
+				04D62FFC4B2773544507D570 /* OccurrenceTaskTests.swift in Sources */,
 				5E35F12DFBC5E4D7348AFDBD /* StandaloneTaskTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

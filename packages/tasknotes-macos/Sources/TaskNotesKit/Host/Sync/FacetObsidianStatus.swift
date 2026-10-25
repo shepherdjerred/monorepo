@@ -26,7 +26,7 @@ extension FacetObsidianSession {
         work.uploadAdmissions = uploadAdmissions.pendingCount
         work.queuedEvents = queue.count
         work.processing = processing || beganAt != activityRevision
-        work.dirty = dirty
+        work.dirty = dirty || remoteDirty
         let phase: FacetSyncTransportPhase
         if stopped || closed {
             if transportPhase == .failed {

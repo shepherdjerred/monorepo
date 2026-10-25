@@ -55,6 +55,9 @@ internal struct FacetNativeInspector: View {
                     await draft.setProperties(properties, store: store, window: window)
                 }
             }
+            FacetOccurrenceGenerationSection(
+                store: store, task: draft.task, profileID: draft.profileID,
+                disabled: draft.isDirty || draft.isSaving || fieldAdmissions > 0)
             Section("Organize") {
                 tokenField("Projects", key: "projects")
                 tokenField("Contexts", key: "contexts")
@@ -116,6 +119,12 @@ internal struct FacetNativeInspector: View {
         .formStyle(.grouped).foregroundStyle(.primary).disabled(
             draft.isSaving || fieldAdmissions > 0
         )
+        .task(
+            id: FacetOccurrenceTaskIdentity(
+                profileID: draft.profileID, path: draft.task.path, revision: draft.task.revision)
+        ) {
+            await store.loadOccurrenceOverview(profileID: draft.profileID)
+        }
         .overlay(alignment: .topTrailing) { if draft.isSaving { ProgressView().padding() } }
         .onChange(of: focus) { previous, _ in
             if previous == .title { commitTitle() }

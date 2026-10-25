@@ -4,9 +4,11 @@ import TaskNotesUniFFI
 extension FacetEngine {
     @discardableResult public func execute(
         profileID: String, command: FacetValue, mutationID: String = UUID().uuidString,
-        admission: FacetMutationAdmission? = nil
+        admission: FacetMutationAdmission? = nil,
+        occurrenceAdmission: FacetOccurrenceAdmission? = nil
     ) throws -> FacetMutationReceipt {
         try requireOpen()
+        try occurrenceAdmission?.requireAdmission()
         let mutation = try drafts.envelope(
             profileID: profileID, id: mutationID, command: command, at: Date.now.ISO8601Format(),
             executionContext: .object([
@@ -14,7 +16,8 @@ extension FacetEngine {
                 "timezone": .string(TimeZone.current.identifier),
             ]))
         admission?.record(mutationID)
-        return try applyMutation(profileID: profileID, mutation: mutation)
+        return try applyMutation(
+            profileID: profileID, mutation: mutation, occurrenceAdmission: occurrenceAdmission)
     }
 
     public func pendingMutations(profileID: String? = nil, afterID: String? = nil) throws
@@ -25,11 +28,16 @@ extension FacetEngine {
         return saved
     }
 
-    @discardableResult public func retryMutation(id: String) throws -> FacetMutationReceipt {
+    @discardableResult public func retryMutation(
+        id: String, occurrenceAdmission: FacetOccurrenceAdmission? = nil
+    ) throws -> FacetMutationReceipt {
+        try occurrenceAdmission?.requireAdmission()
         let saved = try drafts.read(id: id)
         try schema.validate(saved.mutation, definition: "retainedMutation")
         guard saved.canResume else { throw FacetDraftError.retiredFeature }
-        return try applyMutation(profileID: saved.profileID, mutation: saved.mutation)
+        return try applyMutation(
+            profileID: saved.profileID, mutation: saved.mutation,
+            occurrenceAdmission: occurrenceAdmission)
     }
 
     /// The runtime proves the saved outcome before an obsolete private draft is cleared.
@@ -130,7 +138,10 @@ extension FacetEngine {
         return try applyMutation(profileID: profileID, mutation: mutation)
     }
 
-    @discardableResult internal func applyMutation(profileID: String, mutation: FacetValue) throws
+    @discardableResult internal func applyMutation(
+        profileID: String, mutation: FacetValue,
+        occurrenceAdmission: FacetOccurrenceAdmission? = nil
+    ) throws
         -> FacetMutationReceipt
     {
         try requireOpen()
@@ -144,7 +155,9 @@ extension FacetEngine {
             let id = try draftsID(mutation)
             receipt = try applyPayloadMutation(profileID: profileID, mutation: mutation, id: id)
         } else {
-            receipt = try engine.execute(profileId: profileID, commandJson: encode(mutation))
+            let commandJSON = try encode(mutation)
+            try occurrenceAdmission?.requireAdmission()
+            receipt = try engine.execute(profileId: profileID, commandJson: commandJSON)
         }
         let value = try FacetMutationReceipt.read(
             json: receipt, expectedMutationID: draftsID(mutation), schema: schema)

@@ -22,6 +22,10 @@ namespace TaskNotes.Windows.App
         private FacetWriterLease? _writerLease;
         private bool _closing;
         private bool _writerClosed;
+        private readonly string _storeDirectory;
+#if TASKNOTES_E2E
+        private readonly Acceptance.StandaloneAcceptanceBootstrap? _acceptance;
+#endif
 
         /// <summary>Initializes application resources and the dependency composition root.</summary>
         public App()
@@ -29,6 +33,30 @@ namespace TaskNotes.Windows.App
             InitializeComponent();
             PresentationResources.Install(Resources);
             string localFolder = ApplicationData.Current.LocalFolder.Path;
+#if TASKNOTES_E2E
+            if (Program.AcceptanceDescriptorPath is { } descriptor)
+            {
+                if (
+                    global::Windows.ApplicationModel.Package.Current.Id.Name
+                    != "red.sjer.TaskNotes.E2E"
+                )
+                    throw new InvalidDataException(
+                        "Standalone acceptance requires the isolated package identity."
+                    );
+                _acceptance = new Acceptance.StandaloneAcceptanceBootstrap(
+                    descriptor,
+                    localFolder,
+                    global::Windows.ApplicationModel.Package.Current.Id.FamilyName,
+                    File.ReadAllText(
+                        Path.Combine(AppContext.BaseDirectory, "Acceptance", "contract.json")
+                    )
+                );
+            }
+            _storeDirectory =
+                _acceptance?.Descriptor.EngineDirectory ?? Path.Combine(localFolder, "Facet");
+#else
+            _storeDirectory = Path.Combine(localFolder, "Facet");
+#endif
             JsonLineLoggerProvider diagnostics = new(Path.Combine(localFolder, "Logs"));
             _host = new HostBuilder()
                 .UseDefaultServiceProvider(
@@ -46,7 +74,14 @@ namespace TaskNotes.Windows.App
                 })
                 .ConfigureServices(services =>
                 {
-                    services.AddSingleton(_ => new AppSettingsService());
+                    services.AddSingleton(_ =>
+#if TASKNOTES_E2E
+                        _acceptance is not null
+                            ? new AppSettingsService(_acceptance.Descriptor.RunId)
+                            :
+#endif
+                            new AppSettingsService()
+                    );
                     services.AddSingleton<IFacetSecretStore>(provider =>
                         provider.GetRequiredService<AppSettingsService>()
                     );
@@ -67,8 +102,13 @@ namespace TaskNotes.Windows.App
                         provider.GetRequiredService<ILogger<UiOperationQueue>>()
                     ));
                     services.AddSingleton(provider => new FacetTaskNotesStore(
-                        Path.Combine(localFolder, "Facet"),
-                        provider.GetRequiredService<IFacetSecretStore>()
+                        _storeDirectory,
+                        provider.GetRequiredService<IFacetSecretStore>(),
+#if TASKNOTES_E2E
+                        synchronize: _acceptance is null
+#else
+                        synchronize: true
+#endif
                     ));
                     services.AddSingleton<ITaskNotesStore>(provider =>
                         provider.GetRequiredService<FacetTaskNotesStore>()
@@ -120,14 +160,21 @@ namespace TaskNotes.Windows.App
             }
 
             instance.Activated += InstanceActivated;
-            FacetBackgroundRegistration.Stop();
+#if TASKNOTES_E2E
+            _acceptance?.Prepare();
+#endif
+#if TASKNOTES_E2E
+            if (_acceptance is null)
+#endif
+                FacetBackgroundRegistration.Stop();
             using CancellationTokenSource takeover = new(TimeSpan.FromSeconds(60));
-            _writerLease = await FacetWriterLease.AcquireAsync(
-                Path.Combine(ApplicationData.Current.LocalFolder.Path, "Facet"),
-                takeover.Token
-            );
+            _writerLease = await FacetWriterLease.AcquireAsync(_storeDirectory, takeover.Token);
             await _host.StartAsync();
             _window = _host.Services.GetRequiredService<MainWindow>();
+#if TASKNOTES_E2E
+            if (_acceptance is not null)
+                _window.ConfigureStandaloneAcceptance(_acceptance.Descriptor.RunId);
+#endif
             _window.AppWindow.Closing += (_, closing) =>
             {
                 if (_writerClosed)
@@ -147,10 +194,13 @@ namespace TaskNotes.Windows.App
                         }
                         _window.DisableInteractions();
                         await CloseWriterAsync();
-                        await FacetBackgroundRegistration.EnableAsync(
-                            _host.Services.GetRequiredService<AppSettingsService>(),
-                            _host.Services.GetRequiredService<FacetTaskNotesStore>().Profiles
-                        );
+#if TASKNOTES_E2E
+                        if (_acceptance is null)
+#endif
+                            await FacetBackgroundRegistration.EnableAsync(
+                                _host.Services.GetRequiredService<AppSettingsService>(),
+                                _host.Services.GetRequiredService<FacetTaskNotesStore>().Profiles
+                            );
                         _writerClosed = true;
                         _window.Close();
                     }

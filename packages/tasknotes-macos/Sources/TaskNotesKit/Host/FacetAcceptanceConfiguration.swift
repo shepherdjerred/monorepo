@@ -28,6 +28,30 @@
             try remoteVaultAccess.requireRemoteVault(id)
         }
 
+        /// The Mac runner seeds its run directory; the owned iOS simulator seeds
+        /// Documents so Xcode may reinstall the app without invalidating a path.
+        public var localVaultDirectory: URL {
+            get throws {
+                #if os(macOS)
+                    return stateDirectory.appendingPathComponent("Native acceptance")
+                #elseif targetEnvironment(simulator)
+                    return try FileManager.default.url(
+                        for: .documentDirectory, in: .userDomainMask,
+                        appropriateFor: nil, create: true
+                    ).appendingPathComponent("Native acceptance")
+                #else
+                    throw FacetAcceptanceError.wrongApplication
+                #endif
+            }
+        }
+
+        public func requireLocalVault(_ directory: URL) throws {
+            let expected = try localVaultDirectory
+            guard directory.isFileURL, directory.standardizedFileURL == directory,
+                directory.resolvingSymlinksInPath() == directory, directory == expected
+            else { throw FacetAcceptanceError.invalidDescriptor }
+        }
+
         public static func decode(
             _ bytes: Data, applicationSupport: URL, containerRelative: Bool = false
         ) throws
