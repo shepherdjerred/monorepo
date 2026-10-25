@@ -142,3 +142,44 @@ test("stopping an owned series skips or removes only its item and preserves unre
     store.close();
   }
 });
+
+test.each(["cancel", "complete"])(
+  "retains ownership when play-now prepends another item during voice join (%s)",
+  async (action) => {
+    const f = fixture(IDLE_VIEW);
+    const match = lolMatch();
+    const store = new LolPlaybackSchedules(
+      ":memory:",
+      { find: async () => match },
+      f.ports,
+    );
+    try {
+      const signal = AbortSignal.timeout(1000);
+      const schedule = await store.create(
+        lolSportsEvent(match),
+        target,
+        signal,
+      );
+      match.state = "inProgress";
+      await store.reconcile(signal);
+      const owned = item(schedule.id);
+      const other = item();
+      f.setView({ ...IDLE_VIEW, state: "joining", queue: [other, owned] });
+      expect(f.ports.slot(target).scheduleId).toBe(schedule.id);
+      if (action === "cancel")
+        store.cancel(schedule.id, target.guildId, target.userId);
+      else {
+        match.state = "completed";
+        await store.reconcile(signal);
+      }
+      expect(f.dispatch).toHaveBeenLastCalledWith({ type: "REMOVE", index: 1 });
+      expect(store.list(target.guildId, target.userId)[0]?.status).toBe(
+        action === "cancel" ? "cancelled" : "completed",
+      );
+      await store.reconcile(signal);
+      expect(f.dispatch).toHaveBeenCalledTimes(2);
+    } finally {
+      store.close();
+    }
+  },
+);

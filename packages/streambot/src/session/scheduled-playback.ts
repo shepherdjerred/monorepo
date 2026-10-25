@@ -30,7 +30,10 @@ export function scheduledPlaybackPorts(input: {
     authority: input.authority,
     slot: (target) => {
       const view = handle(target)?.view();
-      const source = view?.current?.source ?? view?.queue[0]?.source;
+      const source = [view?.current, ...(view?.queue ?? [])].find(
+        (item) =>
+          item?.source?.kind === "url" && item.source.scheduleId !== undefined,
+      )?.source;
       return {
         idle:
           view === undefined ||
