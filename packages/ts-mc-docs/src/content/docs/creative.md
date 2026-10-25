@@ -25,7 +25,8 @@ Stand on a plot you own:
 6. `/creative home` returns you to a plot you can already build on. `/creative home 2;1` goes to that plot when you own it, are a member, or are trusted there.
 7. `/creative tp 2;1` visits that plot. A denied player cannot. Staff with `thestorm.creative.bypass` or `thestorm.creative.admin` still can.
 8. `/creative flag use on` lets a visitor use doors, buttons, and other blocks on that plot. `/creative flag use off` turns it off. The flags are `pvp`, `use`, `vehicle`, `mob-interact`, and `explosion`. They start off. Break and place stay with the owner, members, and trusted players. A flag does not change leaf decay, fire spread, or the other world rules.
-9. `/creative info` and `/creative list` show the plot you are on and the plots you can build on.
+9. `/creative floor sand` stores a floor for the plot you own. `/creative wall quartz` and `/creative biome desert` store the wall and biome. The choice is remembered and does not change the blocks already on the plot. Grass, stone, and plains are the generator defaults.
+10. `/creative info` and `/creative list` show the plot you are on and the plots you can build on.
 
 ## Download one plot
 

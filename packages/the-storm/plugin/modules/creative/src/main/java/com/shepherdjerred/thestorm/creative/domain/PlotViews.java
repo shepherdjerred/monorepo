@@ -16,12 +16,21 @@ public final class PlotViews {
     var catalogOwner = catalog.flatMap(RecoveredPlot::ownerId);
     var staffHeld = catalog.isPresent() && catalog.orElseThrow().owner().isBlank();
     if (stored.isEmpty()) {
-      return new PlotView(id, catalogOwner, "", "", Map.of(), staffHeld, false, Set.of());
+      return new PlotView(
+          id, catalogOwner, "", "", Map.of(), staffHeld, false, Set.of(), PlotSurface.DEFAULT);
     }
     var row = stored.orElseThrow();
     if (row.released()) {
       return new PlotView(
-          id, Optional.empty(), row.name(), row.description(), Map.of(), false, false, Set.of());
+          id,
+          Optional.empty(),
+          row.name(),
+          row.description(),
+          Map.of(),
+          false,
+          false,
+          Set.of(),
+          PlotSurface.DEFAULT);
     }
     if (row.owner().isPresent()) {
       return new PlotView(
@@ -32,7 +41,8 @@ public final class PlotViews {
           row.access(),
           false,
           row.countsTowardCap(),
-          row.flags());
+          row.flags(),
+          row.surface());
     }
     return new PlotView(
         id,
@@ -42,6 +52,7 @@ public final class PlotViews {
         row.access(),
         staffHeld,
         false,
-        row.flags());
+        row.flags(),
+        row.surface());
   }
 }

@@ -29,6 +29,7 @@ import com.shepherdjerred.thestorm.creative.domain.PlotFlag;
 import com.shepherdjerred.thestorm.creative.domain.PlotGrid;
 import com.shepherdjerred.thestorm.creative.domain.PlotId;
 import com.shepherdjerred.thestorm.creative.domain.PlotRole;
+import com.shepherdjerred.thestorm.creative.domain.PlotSurface;
 import com.shepherdjerred.thestorm.creative.domain.PlotView;
 import com.shepherdjerred.thestorm.creative.domain.StoredClaim;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -62,6 +63,7 @@ public final class CreativePlots {
   private final Runnable redraw;
   private final SchematicFiles schematics;
   private final PlotGrid grid;
+  private final CreativeSurfaceCommands choices;
 
   /** What the plot commands need. Redraw runs on the main thread after a claim changes. */
   public record Parts(
@@ -82,6 +84,7 @@ public final class CreativePlots {
     this.redraw = parts.redraw();
     this.schematics = parts.schematics();
     this.grid = config.grid();
+    this.choices = new CreativeSurfaceCommands(this::ready, this::owned, this::persist);
   }
 
   public void attach(LiteralArgumentBuilder<CommandSourceStack> root) {
@@ -106,6 +109,9 @@ public final class CreativePlots {
     root.then(literal("name").then(argument("name", greedyString()).executes(this::name)));
     root.then(
         literal("desc").then(argument("description", greedyString()).executes(this::describe)));
+    root.then(literal("floor").then(argument("name", word()).executes(choices::floor)));
+    root.then(literal("wall").then(argument("name", word()).executes(choices::wall)));
+    root.then(literal("biome").then(argument("name", word()).executes(choices::biome)));
     root.then(literal("download").executes(this::download));
     root.then(
         literal("admin")
@@ -389,7 +395,8 @@ public final class CreativePlots {
             view.name(),
             view.description(),
             Map.of(),
-            Set.of()),
+            Set.of(),
+            PlotSurface.DEFAULT),
         new Notice("You claimed " + id.text() + ".", true));
   }
 
@@ -493,7 +500,8 @@ public final class CreativePlots {
         view.name(),
         view.description(),
         view.access(),
-        view.flags());
+        view.flags(),
+        view.surface());
   }
 
   private void rename(Player player, String text, boolean name) {
@@ -590,7 +598,8 @@ public final class CreativePlots {
             view.name(),
             view.description(),
             view.access(),
-            view.flags()),
+            view.flags(),
+            view.surface()),
         "Assigned " + id.text() + " to " + target.getName() + ".");
   }
 
@@ -604,7 +613,8 @@ public final class CreativePlots {
     if (book.catalog().get(id).isPresent()) {
       persist(
           actor,
-          new StoredClaim(id, Optional.empty(), true, false, "", "", Map.of(), Set.of()),
+          new StoredClaim(
+              id, Optional.empty(), true, false, "", "", Map.of(), Set.of(), PlotSurface.DEFAULT),
           "Released " + id.text() + ".");
       return;
     }
@@ -715,7 +725,8 @@ public final class CreativePlots {
             view.name(),
             view.description(),
             view.access(),
-            view.flags()));
+            view.flags(),
+            view.surface()));
   }
 
   private boolean ready(Player player) {
@@ -812,7 +823,15 @@ public final class CreativePlots {
 
   private static PlotView road() {
     return new PlotView(
-        new PlotId(0, 0), Optional.empty(), "", "", Map.of(), false, false, Set.of());
+        new PlotId(0, 0),
+        Optional.empty(),
+        "",
+        "",
+        Map.of(),
+        false,
+        false,
+        Set.of(),
+        PlotSurface.DEFAULT);
   }
 
   private static String describe(PlotView view) {
