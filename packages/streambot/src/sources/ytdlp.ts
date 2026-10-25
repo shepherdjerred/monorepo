@@ -292,6 +292,7 @@ export async function resolveWithYtdlp(
   config: Config,
   source: Source,
   signal: AbortSignal,
+  requireLive = false,
 ): Promise<ResolvedSource> {
   const maxHeight = config.stream.height;
   const firstKind: MediaKind = source.mode === "video" ? "video" : "music";
@@ -318,6 +319,8 @@ export async function resolveWithYtdlp(
   }
 
   let decision = classifyYtdlpInfo(info, source.mode, firstPass, source.spoken);
+  if (requireLive && info.is_live !== true)
+    throw new Error("The official broadcast is not live");
   let passes = 1;
   if (firstKind === "music" && decision.kind === "video") {
     info = await runInfoPass(

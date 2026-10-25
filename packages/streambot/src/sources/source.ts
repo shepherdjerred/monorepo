@@ -78,6 +78,7 @@ export const SourceSchema = z.discriminatedUnion("kind", [
     kind: z.literal("url"),
     url: z.url(),
     sportsEvent: SportsEventSchema.optional(),
+    scheduleId: z.uuid().optional(),
     subtitles: SubtitlePrefSchema.optional(),
     mode: MediaModeSchema.optional(),
     spoken: z.boolean().optional(),
@@ -92,6 +93,12 @@ export const SourceSchema = z.discriminatedUnion("kind", [
 ]);
 
 export type Source = z.infer<typeof SourceSchema>;
+
+/** History replays are new requests and cannot inherit ownership of a scheduled play. */
+export function historySource(source: Source): Source {
+  const clean = withSpoken(withMode(source, undefined), undefined);
+  return clean.kind === "url" ? { ...clean, scheduleId: undefined } : clean;
+}
 
 /** A short human label for a source, for queue/status embeds. */
 export function sourceLabel(source: Source): string {
@@ -123,7 +130,9 @@ export function sourceIdentity(source: Source): string {
     case "file":
       return `file:${source.path}`;
     case "url":
-      return `url:${source.url}`;
+      return source.sportsEvent?.provider === "lolesports"
+        ? source.sportsEvent.id
+        : `url:${source.url}`;
     case "search":
       return `search:${source.query}`;
   }

@@ -119,6 +119,7 @@ export function History(props: MediaListProps) {
           <option value="youtube">YouTube</option>
           <option value="streameast">StreamEast</option>
           <option value="tvsportslive">TVSportsLive</option>
+          <option value="lolesports">LoL Esports</option>
           <option value="url">Other links</option>
         </select>
         <button className="primary" disabled={loading}>

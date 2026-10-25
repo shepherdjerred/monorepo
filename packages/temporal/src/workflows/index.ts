@@ -461,3 +461,5 @@ export const deliveryForumBaselineWorkflow =
 export const deliveryPlatformRecoveryWorkflow =
   delivery.deliveryPlatformRecoveryWorkflow;
 export const deliveryHandoffWorkflow = delivery.deliveryHandoffWorkflow;
+import { reconcileStreambotPlaybackWorkflow as reconcileStreambot } from "./streambot/streambot.ts";
+export const reconcileStreambotPlaybackWorkflow = () => reconcileStreambot();

@@ -15,10 +15,12 @@ import type {
   SportsSearchResult,
 } from "@shepherdjerred/streambot/sports/types.ts";
 import type { SportsPageRenderer } from "@shepherdjerred/streambot/sports/pinchtab.ts";
+import type { LolEsportsClient } from "./lolesports.ts";
 
 const PROVIDER_ORDER: readonly SportsProvider[] = [
   "streameast",
   "tvsportslive",
+  "lolesports",
 ];
 
 const PROVIDERS = {
@@ -109,16 +111,36 @@ export function matchSportsEvents(
 }
 
 export class SportsService implements SportsCatalog {
-  constructor(private readonly browser: SportsPageRenderer) {}
+  constructor(
+    private readonly browser: SportsPageRenderer,
+    private readonly lol?: LolEsportsClient,
+  ) {}
+
+  async listSchedule(
+    signal: AbortSignal,
+    options: { league?: string; range?: "today" | "week"; timeZone?: string },
+  ) {
+    if (this.lol === undefined)
+      throw new PlaybackCommandBoundaryError(
+        "LoL Esports listings are unavailable.",
+      );
+    return await this.lol.list(signal, options);
+  }
 
   async listToday(
     signal: AbortSignal,
     provider: SportsProviderPreference = "auto",
   ): Promise<readonly SportsEvent[]> {
     throwIfSportsRequestAborted(signal);
-    const selected = provider === "auto" ? PROVIDER_ORDER : [provider];
+    const selected =
+      provider === "auto"
+        ? PROVIDER_ORDER.filter(
+            (p) => p !== "lolesports" || this.lol !== undefined,
+          )
+        : [provider];
     const results = await Promise.allSettled(
       selected.map(async (name) => {
+        if (name === "lolesports") return await this.listSchedule(signal, {});
         const current = PROVIDERS[name];
         return current.parse(await this.browser.html(current.url, signal));
       }),
@@ -151,7 +173,19 @@ export class SportsService implements SportsCatalog {
     provider: SportsProvider | "auto",
     signal: AbortSignal,
   ): Promise<SportsSearchResult> {
-    const events = await this.listToday(signal, provider);
-    return matchSportsEvents(query, events, provider);
+    const lolRequest =
+      provider === "lolesports" ||
+      (provider === "auto" &&
+        /\b(?:lck|worlds|msi|lec|lpl|lcs|first stand|league of legends)\b/i.test(
+          query,
+        ));
+    const events = lolRequest
+      ? await this.listSchedule(signal, { range: "week" })
+      : await this.listToday(signal, provider);
+    return matchSportsEvents(
+      query,
+      events,
+      lolRequest ? "lolesports" : provider,
+    );
   }
 }

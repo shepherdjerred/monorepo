@@ -19,11 +19,13 @@ import {
   billingActivities,
 } from "./activities/index.ts";
 import { TASK_QUEUES, type TaskQueue } from "./shared/task-queues.ts";
+import { reconcileStreambotPlayback } from "./activities/streambot.ts";
 import type { WorkerRole } from "./shared/infra/worker-role.ts";
 import { deliveryActivities } from "./activities/delivery/index.ts";
 import { platformDeliveryActivities } from "./activities/delivery/platform/index.ts";
 
 export type QueueWorkerRole =
+  | "streambot"
   | "agent"
   | "control"
   | "delivery"
@@ -60,6 +62,13 @@ export type QueueWorkerDefinition =
   ActivityWorkerDefinition | WorkflowWorkerDefinition;
 
 const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
+  {
+    kind: "activity",
+    role: "streambot",
+    taskQueue: TASK_QUEUES.STREAMBOT,
+    activities: { reconcileStreambotPlayback },
+    maxConcurrentActivityTaskExecutions: 1,
+  },
   {
     kind: "activity",
     role: "delivery-platform",

@@ -177,7 +177,11 @@ describe("sports picker playback", () => {
     const slash: ChatInputCommandInteraction = Object.assign(
       Object.create(ChatInputCommandInteraction.prototype),
       h.interaction,
-      { deferReply: vi.fn(), editReply },
+      {
+        deferReply: vi.fn(),
+        editReply,
+        options: { getSubcommand: () => "sports", getString: () => null },
+      },
     );
     await runSportsCommand(slash, h.deps);
     expect(h.listToday).toHaveBeenCalledOnce();

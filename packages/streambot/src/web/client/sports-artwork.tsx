@@ -36,8 +36,28 @@ export function SportsArtwork({
   artwork?: Matchup;
   className?: string;
 }) {
+  const [failedThumbnail, setFailedThumbnail] = useState<string | null>(null);
+  const thumbnail = artwork?.thumbnailUrl;
+  const showThumbnail =
+    thumbnail !== undefined && thumbnail !== failedThumbnail;
   return (
-    <div className={"sports-artwork " + className}>
+    <div
+      className={
+        "sports-artwork " + className + (showThumbnail ? " has-thumbnail" : "")
+      }
+    >
+      {showThumbnail && (
+        <img
+          className="broadcast-thumbnail"
+          src={thumbnail}
+          alt={`${artwork?.league?.name ?? "Live"} broadcast preview`}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => {
+            setFailedThumbnail(thumbnail);
+          }}
+        />
+      )}
       <div className="matchup-logos">
         {artwork !== undefined && artwork.teams.length > 0 ? (
           artwork.teams.map((team) => (

@@ -75,7 +75,10 @@ export type VoiceCommandPort = {
   readonly listChapters: () => string | Promise<string>;
   readonly getQueue: () => string | Promise<string>;
   readonly getNowPlaying: () => string | Promise<string>;
-  readonly listSports?: (signal: AbortSignal) => string | Promise<string>;
+  readonly listSports?: (
+    signal: AbortSignal,
+    options?: { league?: string; range?: "today" | "week"; query?: string },
+  ) => string | Promise<string>;
   /** Optional rollout gate for newly added assistant-v2 controls. */
   readonly isAssistantV2Enabled?: () => Promise<boolean>;
   /** Monotonic version incremented when the current turn asks for a numbered selection. */
@@ -154,7 +157,8 @@ export function bindPlaybackVoiceCommandPort(
     listChapters: () => service.listChapters(),
     getQueue: () => service.getQueue(),
     getNowPlaying: () => service.getNowPlaying(),
-    listSports: (signal) => service.listSports(userId, signal),
+    listSports: (signal, options) =>
+      service.listSports(userId, signal, options),
     isAssistantV2Enabled: () => service.isAssistantV2Enabled(userId),
     clarificationVersion: () => service.clarificationVersion(),
   };
@@ -471,7 +475,7 @@ export function createStreambotVoiceTools(
           tool({
             name: "list_sports",
             description:
-              "List live and later-today sports streams from the supported providers. This does not start playback.",
+              "List sports or official competitive LoL matches. For a team's next match use query with its name and range week. Optionally choose league lck, worlds, msi, first_stand, lpl, lec, or lcs. This does not start playback.",
             parameters: voiceToolSchemas.listSports,
             execute: (input) =>
               invoke(
@@ -479,8 +483,17 @@ export function createStreambotVoiceTools(
                 false,
                 input,
                 () =>
-                  commands.listSports?.(transactionSignal) ??
-                  "Sports listings are not available.",
+                  commands.listSports?.(transactionSignal, {
+                    ...(input.query === undefined
+                      ? {}
+                      : { query: input.query }),
+                    ...(input.league === undefined
+                      ? {}
+                      : { league: input.league }),
+                    ...(input.range === undefined
+                      ? {}
+                      : { range: input.range }),
+                  }) ?? "Sports listings are not available.",
               ),
           }),
         ]),

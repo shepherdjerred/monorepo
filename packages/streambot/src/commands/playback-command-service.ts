@@ -5,15 +5,14 @@ import {
   shameMessage,
 } from "@shepherdjerred/streambot/moderation/adult-block.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
-import { findBestMatch } from "@shepherdjerred/streambot/sources/library.ts";
 import type { MediaMode } from "@shepherdjerred/streambot/sources/media-kind.ts";
 import {
   normalizeVoicePlayQuery as normalizeQuery,
+  selectBasicMediaSource,
   type PlayInput,
   type SelectedMedia,
   type ResolvePlayableInput,
   type VoicePlaySource,
-  type VoicePlayPlacement,
 } from "./playback-input.ts";
 import {
   sourceLabel,
@@ -37,6 +36,7 @@ import type { PlaybackCommandResult } from "@shepherdjerred/streambot/commands/p
 import { sportsEventForSource } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
 import {
   assertSportsSubtitleOptions,
+  assertLolRequestEnabled,
   selectDirectRequestUrl,
   selectSportsForRequest,
   selectSportsSourceOverride,
@@ -52,20 +52,13 @@ import { searchMediaText } from "@shepherdjerred/streambot/discovery/search-medi
 import { playbackTransport } from "@shepherdjerred/streambot/types/playback-channel.ts";
 import { assertNumberedPlayback } from "@shepherdjerred/streambot/commands/numbered-playback.ts";
 import { requestedPlayMode } from "@shepherdjerred/streambot/commands/play-mode.ts";
-import { dispatchPlayRequest } from "./playback-request.ts";
+import { dispatchPlayRequest, playResult } from "./playback-request.ts";
 
 const RESOLVE_TIMEOUT_MS = 30_000;
 
 export function normalizeVoicePlayQuery(query: string): string {
   return normalizeQuery(query);
 }
-
-/**
- * Explicit music/video beats a spoken verb; `"auto"` is the slash default, so it defers.
- * Spoken listen/watch comes from the full utterance, not the title-only search query.
- * A spoken listen/watch verb wins over a conflicting model mode. A spoken model
- * `mode: video` is ignored unless the utterance asked to watch.
- */
 
 /** Permission-checked operations shared by slash commands and the voice agent. */
 export class PlaybackCommandService extends PlaybackControls {
@@ -139,7 +132,23 @@ export class PlaybackCommandService extends PlaybackControls {
       placement: input.placement,
     });
     const scope = this.scope(input.userId);
+    await assertLolRequestEnabled({
+      query,
+      source: input.sourceOverride,
+      provider: input.provider,
+      automatic: input.source === "auto",
+      scope,
+      gate: this.deps.featureGate?.lolEsports,
+    });
     const selected = await this.selectMedia(input, query, intent, scope);
+    await assertLolRequestEnabled({
+      query: "",
+      source: selected.source,
+      provider: undefined,
+      automatic: false,
+      scope,
+      gate: this.deps.featureGate?.lolEsports,
+    });
     if (this.deps.routePlayback === undefined)
       assertNumberedPlayback(
         this.deps.playbackChannel,
@@ -235,7 +244,7 @@ export class PlaybackCommandService extends PlaybackControls {
       sports: selected.sports,
       requestId,
     });
-    return this.playResult(input.placement, label);
+    return playResult(input.placement, label);
   }
 
   private normalizePlayQuery(input: PlayInput): string {
@@ -301,7 +310,14 @@ export class PlaybackCommandService extends PlaybackControls {
       scope === null ||
       this.deps.discovery === undefined
     ) {
-      return { source: this.selectSource(query, input.source), sports: false };
+      return {
+        source: selectBasicMediaSource(
+          query,
+          input.source,
+          this.deps.library(),
+        ),
+        sports: false,
+      };
     }
     const result = await this.deps.discovery.resolve(
       intent,
@@ -387,18 +403,6 @@ export class PlaybackCommandService extends PlaybackControls {
       : this.deps.discovery !== undefined;
   }
 
-  private playResult(
-    placement: VoicePlayPlacement,
-    label: string,
-  ): PlaybackCommandResult {
-    if (placement === "now") {
-      return { outcome: "playing-now", message: `Playing ${label} now.` };
-    }
-    return placement === "next"
-      ? { outcome: "queued-next", message: `Playing ${label} next.` }
-      : { outcome: "queued", message: `Queued ${label}.` };
-  }
-
   async previous(
     userId: UserId,
     signal?: AbortSignal,
@@ -477,32 +481,19 @@ export class PlaybackCommandService extends PlaybackControls {
     });
   }
 
-  async listSports(userId: UserId, signal: AbortSignal): Promise<string> {
+  async listSports(
+    userId: UserId,
+    signal: AbortSignal,
+    options: { league?: string; range?: "today" | "week"; query?: string } = {},
+  ): Promise<string> {
     return await sportsListingText({
       scope: this.scope(userId),
       catalog: this.deps.sports,
       enabled: this.deps.featureGate?.sportsStreaming,
+      lolEnabled: this.deps.featureGate?.lolEsports,
+      ...options,
       signal: this.boundedSignal(signal),
     });
-  }
-
-  private selectSource(query: string, requested: VoicePlaySource): Source {
-    if (requested !== "youtube" && requested !== "history") {
-      const match = findBestMatch(this.deps.library(), query);
-      if (match !== null)
-        return { kind: "file", path: match.path, title: match.title };
-      if (requested === "local") {
-        throw new PlaybackCommandBoundaryError(
-          `I couldn't find ${query} locally.`,
-        );
-      }
-    }
-    if (requested === "history") {
-      throw new PlaybackCommandBoundaryError(
-        `I couldn't find ${query} in your history.`,
-      );
-    }
-    return { kind: "search", query };
   }
 
   private scope(userId: UserId): DiscoveryScope | null {

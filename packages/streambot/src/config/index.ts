@@ -61,6 +61,13 @@ function strictBool(
  */
 export function loadConfig(env: EnvLookup = Bun.env): Config {
   const raw = {
+    scheduling:
+      str(env["STREAMBOT_SCHEDULER_TOKEN"]) === undefined
+        ? undefined
+        : {
+            token: str(env["STREAMBOT_SCHEDULER_TOKEN"]),
+            port: num(env["STREAMBOT_INTERNAL_PORT"]),
+          },
     plex:
       str(env["PLEX_BASE_URL"]) === undefined &&
       str(env["PLEX_TOKEN"]) === undefined

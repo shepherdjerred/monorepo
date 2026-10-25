@@ -229,6 +229,22 @@ export function sportsEventForSource(sourceUrl: string): SportsEvent | null {
   try {
     const url = new URL(sourceUrl);
     if (url.protocol !== "https:") return null;
+    if (
+      url.hostname === "lolesports.com" &&
+      /^\/en-US\/leagues\/(?:lck|worlds|msi|first_stand|lpl|lec|lcs)$/.test(
+        url.pathname,
+      ) &&
+      /^#\d+$/.test(url.hash)
+    ) {
+      return SportsEventSchema.parse({
+        id: `lolesports:${url.hash.slice(1)}`,
+        provider: "lolesports",
+        title: "LoL Esports",
+        status: "unknown",
+        startsAt: null,
+        pageUrl: sourceUrl,
+      });
+    }
     if (url.hostname === "v2.streameast.ga") {
       return SportsEventSchema.parse({
         id: `streameast:${url.pathname}`,

@@ -1,4 +1,5 @@
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
+import { z } from "zod";
 import {
   sourceLabel,
   type Source,
@@ -23,14 +24,27 @@ import {
 } from "@shepherdjerred/streambot/sources/probe.ts";
 import { setSourceInfo } from "@shepherdjerred/streambot/observability/metrics.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
-import type { SportsResolver } from "@shepherdjerred/streambot/sports/types.ts";
+import type {
+  SportsEvent,
+  SportsResolver,
+} from "@shepherdjerred/streambot/sports/types.ts";
 import { sportsEventForSource } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
+import {
+  lolBroadcasts,
+  type LolEsportsClient,
+} from "@shepherdjerred/streambot/sports/lolesports.ts";
+import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 
 const log = logger.child("resolve");
+const FatalResolutionErrorSchema = z.union([
+  z.object({ code: z.literal("ENOENT") }),
+  z.object({ cause: z.instanceof(z.ZodError) }),
+]);
 
 export type ResolveSourceOptions = {
   readonly preResolved?: ResolvedSource;
   readonly sportsResolver?: SportsResolver;
+  readonly lol?: LolEsportsClient;
 };
 
 type InitialResolution = {
@@ -262,6 +276,69 @@ function withSportsRenditions(
  * yt-dlp/subtitle work is skipped and that result is used directly — only the cheap local probe
  * still runs, so observability (source-info metric/log) stays consistent either way.
  */
+async function resolveLolSource(
+  config: Config,
+  event: SportsEvent,
+  signal: AbortSignal,
+  client: LolEsportsClient | undefined,
+): Promise<InitialResolution> {
+  if (client === undefined)
+    throw new Error("LoL Esports resolver is not configured");
+  const match = await client.find(event, signal);
+  if (match?.state !== "inProgress")
+    throw new PlaybackCommandBoundaryError(
+      "This LoL series is not live. Refresh its schedule.",
+    );
+  for (const url of lolBroadcasts(match)) {
+    signal.throwIfAborted();
+    try {
+      const candidate = await resolveWithYtdlp(
+        config,
+        { kind: "url", url, mode: "video" },
+        signal,
+        true,
+      );
+      const probed = await probeAndRecordSourceMetadata(
+        config,
+        {
+          input: candidate.ffmpegInput,
+          title: event.title,
+          headers: candidate.ffmpegInputHeaders,
+        },
+        signal,
+      );
+      assertSportsHasAudioAndVideo(probed);
+      const thumbnailUrl =
+        event.artwork?.thumbnailUrl ?? event.artwork?.league?.logoUrl;
+      return {
+        probed,
+        resolved: {
+          ...candidate,
+          title: event.title,
+          provenance: {
+            provider: "url",
+            canonicalUrl: event.pageUrl,
+            ...(thumbnailUrl === undefined ? {} : { thumbnailUrl }),
+          },
+        },
+      };
+    } catch (error) {
+      signal.throwIfAborted();
+      if (FatalResolutionErrorSchema.safeParse(error).success) throw error;
+    }
+  }
+  throw new PlaybackCommandBoundaryError(
+    "No official English broadcast with live audio and video could be started.",
+  );
+}
+
+function lolEventForSource(source: Source): SportsEvent | undefined {
+  if (source.kind !== "url") return undefined;
+  return source.sportsEvent?.provider === "lolesports"
+    ? source.sportsEvent
+    : undefined;
+}
+
 export async function resolveSource(
   config: Config,
   source: Source,
@@ -272,11 +349,21 @@ export async function resolveSource(
     throw new BlockedSourceError(sourceLabel(source));
   }
   let resolved: ResolvedSource;
+  const lolEvent = lolEventForSource(source);
   // `undefined` means "not probed yet"; `null` means "probed and it failed". Conflating the two
   // would re-probe a local file whose probe legitimately returned nothing.
   let probed: MediaInfo | null | undefined;
   if (options?.preResolved !== undefined) {
     resolved = options.preResolved;
+  } else if (lolEvent !== undefined) {
+    const initial = await resolveLolSource(
+      config,
+      lolEvent,
+      signal,
+      options?.lol,
+    );
+    resolved = initial.resolved;
+    probed = initial.probed;
   } else if (
     source.kind === "url" &&
     sportsEventForSource(source.url) !== null

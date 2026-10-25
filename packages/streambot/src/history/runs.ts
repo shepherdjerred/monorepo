@@ -70,7 +70,26 @@ export function migrateHistoryProviders(database: Database): void {
   const version = z
     .object({ user_version: z.number() })
     .parse(database.query("PRAGMA user_version").get()).user_version;
-  if (version === 2) return;
+  if (version === 3) return;
+  if (version === 2) {
+    database.run("PRAGMA foreign_keys = OFF");
+    try {
+      database.transaction(() => {
+        database.run(`CREATE TABLE media_items_next (
+          id TEXT PRIMARY KEY, provider TEXT NOT NULL CHECK(provider IN ('local','youtube','url','streameast','tvsportslive','lolesports')),
+          source_identity TEXT NOT NULL, source_json TEXT NOT NULL, title TEXT NOT NULL,
+          canonical_url TEXT, channel_name TEXT, thumbnail_url TEXT, duration_seconds REAL,
+          updated_at INTEGER NOT NULL, UNIQUE(provider, source_identity));
+          INSERT INTO media_items_next SELECT * FROM media_items;
+          DROP TABLE media_items; ALTER TABLE media_items_next RENAME TO media_items; PRAGMA user_version = 3;`);
+        if (database.query("PRAGMA foreign_key_check").all().length > 0)
+          throw new Error("LoL history migration violated a foreign key");
+      })();
+    } finally {
+      database.run("PRAGMA foreign_keys = ON");
+    }
+    return;
+  }
   if (version !== 0)
     throw new Error("Unsupported media history schema version");
   database.run("PRAGMA foreign_keys = OFF");
@@ -101,4 +120,5 @@ export function migrateHistoryProviders(database: Database): void {
   } finally {
     database.run("PRAGMA foreign_keys = ON");
   }
+  migrateHistoryProviders(database);
 }

@@ -20,6 +20,7 @@ const EXECUTION_DOMAINS_BY_TASK_QUEUE: Readonly<
   Record<TaskQueue, ExecutionDomain>
 > = {
   [TASK_QUEUES.WORKFLOWS]: "platform",
+  [TASK_QUEUES.STREAMBOT]: "platform",
   [TASK_QUEUES.DELIVERY]: "platform",
   [TASK_QUEUES.DELIVERY_PLATFORM]: "platform",
   [TASK_QUEUES.DELIVERY_WORKFLOWS]: "platform",

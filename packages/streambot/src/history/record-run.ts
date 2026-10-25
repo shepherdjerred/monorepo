@@ -1,10 +1,7 @@
 import type { Database } from "bun:sqlite";
 import { z } from "zod";
 import type { HistoryScope, RecordMedia } from "./types.ts";
-import {
-  withMode,
-  withSpoken,
-} from "@shepherdjerred/streambot/sources/source.ts";
+import { historySource } from "@shepherdjerred/streambot/sources/source.ts";
 export type PlaybackStart = {
   readonly requestId?: string;
   readonly scope: HistoryScope;
@@ -50,9 +47,7 @@ export function recordPlaybackRun(
       input.positionSeconds ?? 0,
       input.media.title,
       input.media.provider,
-      JSON.stringify(
-        withSpoken(withMode(input.media.source, undefined), undefined),
-      ),
+      JSON.stringify(historySource(input.media.source)),
       input.media.thumbnailUrl ?? null,
       input.media.durationSeconds ?? null,
     );

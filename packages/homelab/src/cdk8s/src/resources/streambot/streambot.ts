@@ -1,4 +1,5 @@
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { createStreambotScheduling } from "./scheduling.ts";
 import type { Chart } from "cdk8s";
 import { ApiObject, JsonPatch, Size } from "cdk8s";
 import {
@@ -333,6 +334,7 @@ export function createStreambotDeployment(
       publicOrigin: web.publicOrigin,
     });
 
+  createStreambotScheduling(chart, deployment, container);
   setRevisionHistoryLimit(deployment);
 
   // Request the Intel iGPU so ffmpeg can VAAPI hardware-encode. The intel-device-plugin mounts

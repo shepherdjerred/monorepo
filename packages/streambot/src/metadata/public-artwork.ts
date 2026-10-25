@@ -1,6 +1,8 @@
 import {
   isSportsArtworkUrl,
   SPORTS_ARTWORK_HOST,
+  LOL_ARTWORK_HOST,
+  isSportsThumbnailUrl,
 } from "@shepherdjerred/streambot/sports/artwork.ts";
 
 export const ARTWORK_HOSTS: readonly string[] = [
@@ -8,6 +10,8 @@ export const ARTWORK_HOSTS: readonly string[] = [
   "i.ytimg.com",
   "img.youtube.com",
   SPORTS_ARTWORK_HOST,
+  LOL_ARTWORK_HOST,
+  "static-cdn.jtvnw.net",
 ];
 
 /** Only public image CDNs supported by our metadata producers may reach the browser. */
@@ -20,7 +24,9 @@ export function isRemoteArtworkUrl(value: string): boolean {
       url.password === "" &&
       url.port === "" &&
       ARTWORK_HOSTS.includes(url.hostname) &&
-      (url.hostname !== SPORTS_ARTWORK_HOST || isSportsArtworkUrl(value))
+      (![SPORTS_ARTWORK_HOST, LOL_ARTWORK_HOST].includes(url.hostname) ||
+        isSportsArtworkUrl(value)) &&
+      (url.hostname !== "static-cdn.jtvnw.net" || isSportsThumbnailUrl(value))
     );
   } catch {
     return false;

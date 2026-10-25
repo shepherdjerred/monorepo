@@ -361,6 +361,34 @@ h3 {
   justify-content: center;
   gap: 4px;
 }
+.sports-artwork.has-thumbnail {
+  width: 112px;
+  overflow: hidden;
+}
+.broadcast-thumbnail {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.has-thumbnail .matchup-logos {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  padding: 3px;
+  border-radius: 4px;
+  background: var(--surface);
+}
+.has-thumbnail .matchup-logos img {
+  width: 20px;
+  height: 20px;
+}
+.has-thumbnail .league-mark {
+  padding: 2px;
+  border-radius: 3px;
+  background: var(--surface);
+}
 .matchup-logos img {
   width: 30px;
   height: 36px;
@@ -1114,6 +1142,27 @@ h3 {
   .search-form .primary {
     flex: 1;
     justify-content: center;
+  }
+  .lol-search {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .lol-search > label,
+  .lol-search > select:first-of-type,
+  .lol-search .lol-league-filter {
+    grid-column: 1 / -1;
+  }
+  .lol-search select {
+    width: 100%;
+    min-width: 0;
+  }
+  .schedulable-event {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+  }
+  .schedulable-event > .row-actions {
+    grid-column: 2;
+    justify-self: start;
   }
   .welcome {
     display: flex;

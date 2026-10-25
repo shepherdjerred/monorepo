@@ -48,6 +48,9 @@ import type { PlaybackCommandServiceDeps } from "@shepherdjerred/streambot/comma
 import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
 import type { SportsCatalog } from "@shepherdjerred/streambot/sports/types.ts";
 import { runSportsCommand } from "@shepherdjerred/streambot/discord/commands/sports-command.ts";
+import type { LolPlaybackSchedules } from "@shepherdjerred/streambot/sports/playback-schedules.ts";
+import type { ScheduleTarget } from "@shepherdjerred/streambot/sports/schedule-types.ts";
+import { scheduledAuthority } from "@shepherdjerred/streambot/discord/scheduled-authority.ts";
 import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 import type { PlaybackChannelNumber } from "@shepherdjerred/streambot/types/playback-channel.ts";
 import {
@@ -89,6 +92,8 @@ const STATELESS_SUBCOMMANDS = new Set([
 ]);
 
 export type CommandBotDeps = {
+  readonly userbotIds?: () => ReadonlySet<string>;
+  readonly getSchedules?: () => LolPlaybackSchedules | undefined;
   readonly config: Config;
   /** Lazily resolves the session manager (constructed after the bot to break the wiring cycle). */
   readonly getSessions: () => SessionManager;
@@ -114,6 +119,17 @@ export type CommandBotDeps = {
  * interaction to the right per-`(guild, voice channel)` session via the {@link SessionManager}.
  */
 export class CommandBot {
+  async scheduleAuthority(target: ScheduleTarget) {
+    return await scheduledAuthority({
+      client: this.client,
+      web: this.web,
+      target,
+      excluded: new Set([
+        ...this.deps.config.discord.peerUserbotIds,
+        ...(this.deps.userbotIds?.() ?? []),
+      ]),
+    });
+  }
   private readonly client: Client;
   private readonly deps: CommandBotDeps;
   /** Player-card Discord effects + the message → session routing table. Handed to SessionManager. */
@@ -466,7 +482,9 @@ export class CommandBot {
   ): Promise<void> {
     try {
       if (
-        interaction.options.getSubcommand() === "sports" &&
+        ["sports", "sports-schedules", "sports-cancel"].includes(
+          interaction.options.getSubcommand(),
+        ) &&
         interaction.inGuild()
       ) {
         await runSportsCommand(interaction, this.deps);

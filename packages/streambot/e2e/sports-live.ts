@@ -4,6 +4,11 @@ import { createPlaybackMachine } from "@shepherdjerred/streambot/machine/playbac
 import { resolveSource } from "@shepherdjerred/streambot/sources/resolve.ts";
 import { PinchtabSportsBrowser } from "@shepherdjerred/streambot/sports/pinchtab.ts";
 import { BrowserSportsResolver } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
+import {
+  LolEsportsClient,
+  LolLeagueSchema,
+} from "@shepherdjerred/streambot/sports/lolesports.ts";
+import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
 import {
   ChannelIdSchema,
@@ -16,13 +21,24 @@ import { z } from "zod";
 /** Manual live test: browser discovery → ffprobe → ffmpeg → Discord Go Live. */
 const environment = z
   .object({
-    E2E_SPORTS_URL: z.url(),
+    E2E_SPORTS_URL: z.url().optional(),
+    E2E_LOL_LEAGUE: LolLeagueSchema.optional(),
     E2E_GUILD_ID: z.string(),
     E2E_VIDEO_CHANNEL_ID: z.string(),
     USER_TOKENS: z.string().min(1),
-    PINCHTAB_TOKEN: z.string().min(1),
+    PINCHTAB_TOKEN: z.string().min(1).optional(),
     E2E_PINCHTAB_PROFILE: z.string().min(1).optional(),
     E2E_OBSERVE_SECONDS: z.coerce.number().int().min(10).max(600).default(10),
+  })
+  .superRefine((env, ctx) => {
+    if (
+      env.E2E_LOL_LEAGUE === undefined &&
+      (env.E2E_SPORTS_URL === undefined || env.PINCHTAB_TOKEN === undefined)
+    )
+      ctx.addIssue({
+        code: "custom",
+        message: "Provide E2E_LOL_LEAGUE, or E2E_SPORTS_URL and PINCHTAB_TOKEN",
+      });
   })
   .parse(Bun.env);
 
@@ -50,12 +66,13 @@ const browser = new PinchtabSportsBrowser({
     : { profileName: environment.E2E_PINCHTAB_PROFILE }),
 });
 const sportsResolver = new BrowserSportsResolver(browser);
+const lol = new LolEsportsClient();
 const streamer = new StreambotStreamer(userToken, config);
 const actor = createActor(
   createPlaybackMachine({
     joinVoice: streamer.joinVoice,
     resolveSource: (input, signal) =>
-      resolveSource(config, input.source, signal, { sportsResolver }),
+      resolveSource(config, input.source, signal, { sportsResolver, lol }),
     runStream: streamer.runStream,
     leaveVoice: streamer.leaveVoice,
   }),
@@ -104,8 +121,36 @@ async function observePlayback(): Promise<void> {
   console.info("sports e2e observation complete");
 }
 
+async function selectedLiveSource(): Promise<Source> {
+  if (environment.E2E_LOL_LEAGUE !== undefined) {
+    const events = await lol.list(AbortSignal.timeout(15_000), {
+      league: environment.E2E_LOL_LEAGUE,
+      range: "week",
+    });
+    const event = events.find((candidate) => candidate.status === "live");
+    if (event === undefined)
+      throw new Error(
+        "No live LoL series is available for the selected league",
+      );
+    return {
+      kind: "url",
+      url: event.pageUrl,
+      sportsEvent: event,
+      mode: "video",
+    };
+  }
+  if (environment.E2E_SPORTS_URL === undefined)
+    throw new Error("Sports e2e source is missing");
+  return {
+    kind: "url",
+    url: environment.E2E_SPORTS_URL,
+    subtitles: { enabled: false },
+  };
+}
+
 async function main(): Promise<void> {
   try {
+    const source = await selectedLiveSource();
     await streamer.login();
     if (!streamer.guildIds().includes(guildId)) {
       throw new Error("Streamer is not a member of the test guild");
@@ -113,11 +158,7 @@ async function main(): Promise<void> {
     actor.start();
     actor.send({
       type: "ADD",
-      source: {
-        kind: "url",
-        url: environment.E2E_SPORTS_URL,
-        subtitles: { enabled: false },
-      },
+      source,
       requesterId,
     });
     await waitForPlayback();

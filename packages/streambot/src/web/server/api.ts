@@ -1,4 +1,6 @@
 import { serveWebAsset } from "./assets.ts";
+import { webSchedules } from "./schedules.ts";
+import { browseSports } from "./sports-request.ts";
 import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 import { CommandSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { GuildIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
@@ -58,6 +60,13 @@ export function createWebHandler(deps: {
   ): Promise<Response> {
     limitRequests(session.key, url.pathname === "/api/artwork");
     if (request.method === "POST") auth.mutation(request, session);
+    if (
+      ["/api/sports/schedules", "/api/sports/schedules/cancel"].includes(
+        url.pathname,
+      ) &&
+      ["GET", "POST"].includes(request.method)
+    )
+      return await webSchedules(request, session, deps.playback);
     if (url.pathname === "/api/auth/logout" && request.method === "POST")
       return auth.logout(request);
     if (url.pathname === "/api/me" && request.method === "GET") {
@@ -110,19 +119,12 @@ export function createWebHandler(deps: {
         request.signal,
       );
     if (url.pathname === "/api/sports") {
-      if (!(await deps.playback.sportsEnabled(session, guildId)))
-        throw new WebError(
-          403,
-          "sports_disabled",
-          "Live sports are not enabled in this server.",
-        );
-      return Response.json(
-        await deps.playback.deps.catalog.sports.browse(
-          url.searchParams,
-          session.key + ":" + guildId,
-          AbortSignal.any([request.signal, AbortSignal.timeout(30_000)]),
-        ),
-      );
+      return await browseSports({
+        request,
+        session,
+        playback: deps.playback,
+        guildId,
+      });
     }
     if (url.pathname === "/api/library")
       return Response.json(

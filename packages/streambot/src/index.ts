@@ -50,6 +50,10 @@ import { WebCatalog } from "@shepherdjerred/streambot/web/server/catalog.ts";
 import { startWebServer } from "@shepherdjerred/streambot/web/server/start.ts";
 import { PinchtabSportsBrowser } from "@shepherdjerred/streambot/sports/pinchtab.ts";
 import { SportsService } from "@shepherdjerred/streambot/sports/sports-service.ts";
+import { LolEsportsClient } from "@shepherdjerred/streambot/sports/lolesports.ts";
+import { LolPlaybackSchedules } from "@shepherdjerred/streambot/sports/playback-schedules.ts";
+import { scheduledPlaybackPorts } from "@shepherdjerred/streambot/session/scheduled-playback.ts";
+import { startScheduleServer } from "@shepherdjerred/streambot/sports/schedule-server.ts";
 import { BrowserSportsResolver } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
 
 const LIBRARY_REFRESH_MS = 5 * 60 * 1000;
@@ -155,7 +159,9 @@ async function main(): Promise<void> {
       "http://pinchtab.pinchtab.svc.cluster.local:9867",
     token: config.pinchtab.token,
   });
-  const sports = new SportsService(sportsBrowser);
+  const lol = new LolEsportsClient();
+  const sports = new SportsService(sportsBrowser, lol);
+  let schedules: LolPlaybackSchedules | undefined;
   const sportsResolver = new BrowserSportsResolver(sportsBrowser);
 
   // Log every userbot in and snapshot guild membership before anything tries to acquire one.
@@ -166,6 +172,8 @@ async function main(): Promise<void> {
   // (which needs the bot's `announce`), breaking the wiring cycle.
   const refs: { sessions: SessionManager | null } = { sessions: null };
   const commandBot = new CommandBot({
+    getSchedules: () => schedules,
+    userbotIds: () => pool.userIds(),
     config,
     getSessions: () => {
       if (refs.sessions === null) {
@@ -177,7 +185,7 @@ async function main(): Promise<void> {
     expandPlaylist: (url, signal) => expandPlaylist(config, url, signal),
     listSources: (signal) => listExtractors(config, signal),
     resolvePlaySource: (source, signal) =>
-      resolveSource(config, source, signal, { sportsResolver }),
+      resolveSource(config, source, signal, { sportsResolver, lol }),
     discovery,
     sports,
     history,
@@ -192,12 +200,13 @@ async function main(): Promise<void> {
           ? {}
           : { preResolved: input.preResolved }),
         sportsResolver,
+        lol,
       }),
     announce: (channelId, message) => commandBot.announce(channelId, message),
     cards: commandBot.cards,
     library: () => library,
     resolvePlaySource: (source, signal) =>
-      resolveSource(config, source, signal, { sportsResolver }),
+      resolveSource(config, source, signal, { sportsResolver, lol }),
     voiceModels,
     voiceFeedbackClips,
     voiceCaptureManager,
@@ -211,6 +220,36 @@ async function main(): Promise<void> {
   await Promise.all([commandBot.login(), commandBot.ready]);
   // Resume after login so the back-online announcements can be posted (and the pool is up).
   await sessions.resumeAll();
+  if (config.scheduling !== undefined) {
+    schedules = new LolPlaybackSchedules(
+      path.join(config.state.dir, "streambot-schedules.sqlite"),
+      lol,
+      scheduledPlaybackPorts({
+        sessions,
+        resolve: (source, signal) =>
+          resolveSource(config, source, signal, { sportsResolver, lol }),
+        authority: (target) => commandBot.scheduleAuthority(target),
+        allowed: async (target) => {
+          const scope = {
+            guildId: target.guildId,
+            channelId: target.channelId,
+            userId: target.userId,
+          };
+          return (
+            (await mediaFeatureGate.sportsStreaming?.(scope)) === true &&
+            (await mediaFeatureGate.lolEsports?.(scope)) === true &&
+            (await mediaFeatureGate.lolAutoplay?.(scope)) === true &&
+            (await sessions.numbered.selected(scope)) !== undefined &&
+            target.slot <= sessions.numbered.maximum(target.guildId)
+          );
+        },
+      }),
+    );
+  }
+  const scheduleServer =
+    schedules === undefined || config.scheduling === undefined
+      ? undefined
+      : startScheduleServer(config.scheduling, schedules);
   const web =
     config.web === undefined
       ? undefined
@@ -220,6 +259,7 @@ async function main(): Promise<void> {
           applicationId: () => commandBot.web.webApplicationId(),
           plexPostersEnabled,
           playback: {
+            ...(schedules === undefined ? {} : { schedules }),
             sessions,
             bot: commandBot.web,
             featureGate: mediaFeatureGate,
@@ -243,7 +283,7 @@ async function main(): Promise<void> {
               sports,
               featureGate: mediaFeatureGate,
               resolvePlaySource: (source, signal) =>
-                resolveSource(config, source, signal, { sportsResolver }),
+                resolveSource(config, source, signal, { sportsResolver, lol }),
             },
           },
         });
@@ -258,6 +298,8 @@ async function main(): Promise<void> {
     logger.info("shutting down");
     clearInterval(refreshTimer);
     await web?.stop();
+    await scheduleServer?.stop(true);
+    schedules?.close();
     // Flush per-session resume state BEFORE stopping streams — getPosition() goes null once stopped.
     await sessions.destroyAll();
     await commandBot.destroy();

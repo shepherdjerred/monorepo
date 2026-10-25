@@ -22,10 +22,34 @@ export type SportsPlaybackSelection = {
 
 type PlaySource = "auto" | "history" | "local" | "youtube";
 
+export async function assertLolRequestEnabled(input: {
+  query: string;
+  source: Source | undefined;
+  provider: SportsProviderPreference | undefined;
+  automatic: boolean;
+  scope: DiscoveryScope | null;
+  gate: MediaFeatureGate["lolEsports"];
+}) {
+  const requested =
+    input.provider === "lolesports" ||
+    (input.source?.kind === "url" &&
+      input.source.sportsEvent?.provider === "lolesports") ||
+    (input.automatic &&
+      /\b(?:lck|worlds|msi|lec|lpl|lcs|first stand|league of legends)\b/i.test(
+        input.query,
+      ));
+  if (
+    requested &&
+    (input.scope === null || (await input.gate?.(input.scope)) !== true)
+  )
+    throw new PlaybackCommandBoundaryError("LoL Esports is not enabled here.");
+}
+
 function hasSportsCue(query: string, utterance = ""): boolean {
   return (
-    /\b(?:sports|nfl|nba|wnba|nhl|mlb)\b/i.test(`${query} ${utterance}`) ||
-    /\b[\w.-]+\s+(?:vs\.?|versus)\s+[\w.-]+\b/i.test(query)
+    /\b(?:sports|nfl|nba|wnba|nhl|mlb|lck|worlds|msi|lpl|lec|lcs|first stand|league of legends)\b/i.test(
+      `${query} ${utterance}`,
+    ) || /\b[\w.-]+\s+(?:vs\.?|versus)\s+[\w.-]+\b/i.test(query)
   );
 }
 
@@ -103,6 +127,20 @@ export async function selectSportsSourceOverride(input: {
     signal: AbortSignal,
   ) => Promise<ResolvedSource>;
 }): Promise<(SportsPlaybackSelection & { readonly sports: true }) | null> {
+  if (
+    input.source.kind === "url" &&
+    input.source.sportsEvent?.provider === "lolesports"
+  ) {
+    if (input.scope === null || (await input.enabled?.(input.scope)) !== true)
+      throw new PlaybackCommandBoundaryError(
+        "Sports streams are not enabled here.",
+      );
+    return {
+      source: input.source,
+      sports: true,
+      preResolved: await input.resolve(input.source, input.signal),
+    };
+  }
   if (
     input.source.kind !== "url" ||
     sportsEventForSource(input.source.url) === null

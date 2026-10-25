@@ -90,6 +90,12 @@ export const ConfigSchema = z.strictObject({
       token: z.string().min(1),
     })
     .optional(),
+  scheduling: z
+    .strictObject({
+      token: z.string().min(32),
+      port: z.number().int().min(1).max(65_535).default(8081),
+    })
+    .optional(),
   web: z
     .strictObject({
       publicOrigin: z.url().refine((value) => {

@@ -20,6 +20,7 @@ import { createTemporalUiDeployment } from "@shepherdjerred/homelab/cdk8s/src/re
 import { createTemporalNamespaceInitJob } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/namespace-init.ts";
 import { createTemporalSchemaMigrationJob } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/schema-migration.ts";
 import { createTemporalWorkerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/worker.ts";
+import { createStreambotWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/streambot-worker.ts";
 import { createTemporalAgentWorkerNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/agent-worker-network-policy.ts";
 import { createTemporalWorkerNetworkPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/worker-network-policies.ts";
 import { SCOUT_STAGES } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
@@ -148,6 +149,7 @@ export function createTemporalChart(app: App) {
     serverServiceName: server.service.name,
   });
   createTemporalAgentWorkerNetworkPolicy(chart);
+  createStreambotWorker(chart, server.service.name);
 
   // NetworkPolicy for Temporal Server
   new KubeNetworkPolicy(chart, "temporal-server-netpol", {

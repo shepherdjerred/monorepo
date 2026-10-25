@@ -69,6 +69,8 @@ const ENDPOINTS = new Set([
   "/api/player",
   "/api/artwork",
   "/api/sports",
+  "/api/sports/schedules",
+  "/api/sports/schedules/cancel",
   "/api/library",
   "/api/search",
   "/api/history",

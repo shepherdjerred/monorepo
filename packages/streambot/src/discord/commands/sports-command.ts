@@ -9,6 +9,8 @@ import type { PlaybackCommandServiceDeps } from "@shepherdjerred/streambot/comma
 import { sportsListingEvents } from "@shepherdjerred/streambot/sports/listing-text.ts";
 import type { SportsEvent } from "@shepherdjerred/streambot/sports/types.ts";
 import type { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
+import type { LolPlaybackSchedules } from "@shepherdjerred/streambot/sports/playback-schedules.ts";
+import { SportsProviderPreferenceSchema } from "@shepherdjerred/streambot/sports/types.ts";
 import {
   ChannelIdSchema,
   GuildIdSchema,
@@ -30,6 +32,7 @@ type SportsCommandDeps = Pick<
   | "featureGate"
   | "history"
 > & {
+  readonly getSchedules?: () => LolPlaybackSchedules | undefined;
   readonly getSessions: () => Pick<
     SessionManager,
     "ensureForPlay" | "releaseUnused"
@@ -142,6 +145,39 @@ export async function runSportsCommand(
   try {
     const guildId = GuildIdSchema.parse(interaction.guildId);
     const userId = UserIdSchema.parse(interaction.user.id);
+    const schedules = deps.getSchedules?.();
+    const subcommand = interaction.options.getSubcommand();
+    if (subcommand !== "sports") {
+      if (schedules === undefined)
+        throw new PlaybackCommandBoundaryError(
+          "Scheduled playback is unavailable.",
+        );
+      if (subcommand === "sports-cancel") {
+        schedules.cancel(
+          interaction.options.getString("id", true),
+          guildId,
+          userId,
+        );
+        await interaction.editReply("Scheduled playback cancelled.");
+      } else {
+        const rows = schedules.list(guildId, userId);
+        await interaction.editReply(
+          rows.length === 0
+            ? "You have no scheduled series."
+            : rows
+                .slice(-10)
+                .map(
+                  (s) =>
+                    `${s.title} · ${s.status} · <#${s.channelId}> video ${String(s.slot)}\nCancel ID: \`${s.id}\``,
+                )
+                .join("\n\n"),
+        );
+      }
+      return;
+    }
+    const provider = SportsProviderPreferenceSchema.parse(
+      interaction.options.getString("provider") ?? "auto",
+    );
     const events = await sportsListingEvents({
       scope: {
         guildId,
@@ -153,16 +189,58 @@ export async function runSportsCommand(
       },
       catalog: deps.sports,
       enabled: deps.featureGate?.sportsStreaming,
+      lolEnabled: deps.featureGate?.lolEsports,
+      provider,
+      league: interaction.options.getString("league") ?? "",
+      range:
+        interaction.options.getString("range") === "week" ? "week" : "today",
       signal: AbortSignal.timeout(15_000),
     });
-    await sendSportsMenu(interaction, events, async (picked, event) => {
-      try {
-        return await playSportsSelection(picked, event, deps);
-      } catch (error) {
-        if (error instanceof PlaybackCommandBoundaryError) return error.message;
-        throw error;
-      }
-    });
+    await sendSportsMenu(
+      interaction,
+      events,
+      async (picked, event) => {
+        try {
+          if (schedules !== undefined && event.status === "scheduled") {
+            const channelId = picked.guild?.voiceStates.cache.get(
+              picked.user.id,
+            )?.channelId;
+            if (channelId === undefined || channelId === null)
+              throw new PlaybackCommandBoundaryError(
+                "Join the voice channel where you want this series to play.",
+              );
+            const scope = { guildId, channelId, userId };
+            const voice = picked.guild?.channels.cache.get(channelId);
+            if (voice === undefined)
+              throw new PlaybackCommandBoundaryError(
+                "That voice channel is unavailable.",
+              );
+            const numbered = deps.getSessions().numbered;
+            const slot =
+              numbered?.selection.isManual(scope) === true
+                ? ((await numbered.selected(scope)) ?? 2)
+                : 2;
+            await schedules.create(
+              event,
+              {
+                ...scope,
+                channelName: voice.name,
+                statusChannelId: channelId,
+                slot,
+              },
+              AbortSignal.timeout(15_000),
+            );
+            return `Scheduled ${event.title} in <#${channelId}>, video channel ${String(slot)}. It will start with listeners present and the slot idle.`;
+          }
+          return await playSportsSelection(picked, event, deps);
+        } catch (error) {
+          if (error instanceof PlaybackCommandBoundaryError)
+            return error.message;
+          throw error;
+        }
+      },
+      schedules !== undefined,
+    );
   } catch (error) {
     if (!(error instanceof PlaybackCommandBoundaryError)) throw error;
     await interaction.editReply({

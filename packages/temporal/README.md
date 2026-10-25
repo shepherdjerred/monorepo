@@ -698,6 +698,16 @@ existing executions.
 | `glitter-context` | `glitter-context`                                                                      |                                  1 |
 | `maintenance`     | `maintenance`                                                                          |                                  1 |
 | `workflows`       | `monorepo-workflows`                                                                   |                               none |
+| `streambot`       | `streambot`                                                                            |                                  1 |
+
+The `streambot-lol-playback` Schedule reconciles explicitly selected LoL series
+through the isolated `streambot` Activity queue. The worker receives only its
+internal Streambot endpoint and dedicated scheduler credential. Streambot owns
+the durable schedules, Discord authorization, media resolution, and playback
+effects. The Schedule starts paused until both consumers are deployed and healthy;
+its next execution reconciles uncertain prior effects from persisted playback
+ownership rather than blindly repeating them. See the Streambot package README
+for browsing and cancellation commands.
 
 The production manifests land in layers. The gateway, Workflow worker, and
 domain Activity Workers deploy independently so each queue has its own

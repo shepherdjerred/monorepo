@@ -14,6 +14,8 @@ export type MediaFeatureGate = {
    */
   readonly musicOverVoice: (scope: DiscoveryScope) => Promise<boolean>;
   readonly sportsStreaming?: (scope: DiscoveryScope) => Promise<boolean>;
+  readonly lolEsports?: (scope: DiscoveryScope) => Promise<boolean>;
+  readonly lolAutoplay?: (scope: DiscoveryScope) => Promise<boolean>;
   readonly numberedChannels?: (scope: DiscoveryScope) => Promise<boolean>;
   readonly automaticChannelRouting?: (
     scope: DiscoveryScope,
@@ -33,6 +35,8 @@ async function enabled(
 }
 
 export const mediaFeatureGate: MediaFeatureGate = {
+  lolEsports: (scope) => enabled("streambot-lol-esports-enabled", scope),
+  lolAutoplay: (scope) => enabled("streambot-lol-autoplay-enabled", scope),
   automaticChannelRouting: (scope) =>
     enabled("streambot-automatic-channel-routing-enabled", scope),
   numberedChannels: async (scope) => {

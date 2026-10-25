@@ -1,8 +1,23 @@
-import type { PlaybackCommandServiceDeps } from "./playback-command-types.ts";
+import type {
+  PlaybackCommandServiceDeps,
+  PlaybackCommandResult,
+} from "./playback-command-types.ts";
+import type { VoicePlayPlacement } from "./playback-input.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
 import { isRemoteArtworkUrl } from "@shepherdjerred/streambot/metadata/public-artwork.ts";
+
+export function playResult(
+  placement: VoicePlayPlacement,
+  label: string,
+): PlaybackCommandResult {
+  if (placement === "now")
+    return { outcome: "playing-now", message: `Playing ${label} now.` };
+  return placement === "next"
+    ? { outcome: "queued-next", message: `Playing ${label} next.` }
+    : { outcome: "queued", message: `Queued ${label}.` };
+}
 
 export function dispatchPlayRequest(
   deps: PlaybackCommandServiceDeps,

@@ -4,11 +4,18 @@ import { SportsResultsSchema } from "@shepherdjerred/streambot/web/shared/contra
 import { api } from "./api.ts";
 import { MediaRow, type MediaListProps } from "./media-row.tsx";
 import { useRouteState } from "./route-state.ts";
+import { SportsSchedules, scheduleRequest } from "./sports-schedules.tsx";
 
 export function Sports(props: MediaListProps) {
   const route = useRouteState();
   const search = route.params.get("q") ?? "";
   const provider = route.params.get("provider") ?? "streameast";
+  const league = route.params.get("league") ?? "";
+  const range =
+    route.params.get("range") ?? (provider === "lolesports" ? "week" : "today");
+  const [message, setMessage] = useState("");
+  const [scheduling, setScheduling] = useState(false);
+  const [scheduleRefresh, setScheduleRefresh] = useState(0);
   const [query, setQuery] = useState(search);
   useEffect(() => {
     setQuery(search);
@@ -33,6 +40,9 @@ export function Sports(props: MediaListProps) {
               guildId: props.guildId,
               query: search,
               provider,
+              league,
+              range,
+              timeZone: new Intl.DateTimeFormat().resolvedOptions().timeZone,
             }).toString(),
           SportsResultsSchema,
           { signal: AbortSignal.any([controller.signal, deadline]) },
@@ -55,7 +65,37 @@ export function Sports(props: MediaListProps) {
     return () => {
       controller.abort();
     };
-  }, [props.guildId, props.sportsEnabled, search, provider, refresh]);
+  }, [
+    props.guildId,
+    props.sportsEnabled,
+    search,
+    provider,
+    league,
+    range,
+    refresh,
+  ]);
+
+  async function schedule(selectionId: string) {
+    setScheduling(true);
+    setError("");
+    setMessage("");
+    try {
+      const result = await scheduleRequest("/api/sports/schedules", {
+        guildId: props.guildId,
+        selectionId,
+      });
+      setMessage(result.message);
+      setScheduleRefresh((n) => n + 1);
+    } catch (error_) {
+      setError(
+        error_ instanceof Error
+          ? error_.message
+          : "Could not schedule playback.",
+      );
+    } finally {
+      setScheduling(false);
+    }
+  }
 
   if (!props.sportsEnabled)
     return (
@@ -68,7 +108,9 @@ export function Sports(props: MediaListProps) {
   return (
     <>
       <form
-        className="search-form"
+        className={
+          "search-form" + (provider === "lolesports" ? " lol-search" : "")
+        }
         onSubmit={(event) => {
           event.preventDefault();
           route.update({ q: query.trim() });
@@ -96,8 +138,40 @@ export function Sports(props: MediaListProps) {
         >
           <option value="streameast">StreamEast</option>
           <option value="tvsportslive">TVSportsLive</option>
+          <option value="lolesports">LoL Esports</option>
           <option value="auto">All sports providers</option>
         </select>
+        {provider === "lolesports" && (
+          <>
+            <select
+              aria-label="LoL competition"
+              className="lol-league-filter"
+              value={league}
+              onChange={(e) => {
+                route.update({ league: e.target.value });
+              }}
+            >
+              <option value="">All major competitions</option>
+              {["lck", "worlds", "msi", "first_stand", "lpl", "lec", "lcs"].map(
+                (value) => (
+                  <option key={value} value={value}>
+                    {value.toUpperCase().replaceAll("_", " ")}
+                  </option>
+                ),
+              )}
+            </select>
+            <select
+              aria-label="Schedule window"
+              value={range}
+              onChange={(e) => {
+                route.update({ range: e.target.value });
+              }}
+            >
+              <option value="today">Today</option>
+              <option value="week">Next seven days</option>
+            </select>
+          </>
+        )}
         <button className="primary" disabled={loading}>
           {loading ? "Finding games…" : "Search"}
         </button>
@@ -105,9 +179,9 @@ export function Sports(props: MediaListProps) {
       <div className="result-heading">
         <span>
           {loading
-            ? "Loading today’s events…"
+            ? "Loading events…"
             : String(events.length) +
-              (events.length === 1 ? " event today" : " events today")}
+              (events.length === 1 ? " event" : " events")}
         </span>
         <button
           disabled={loading}
@@ -127,11 +201,20 @@ export function Sports(props: MediaListProps) {
           {error}
         </p>
       )}
+      {message !== "" && <p role="status">{message}</p>}
       <div className="media-rows">
         {events.map((event) => (
           <MediaRow
             key={event.id}
             {...props}
+            busy={props.busy || scheduling}
+            {...(event.canSchedule === true
+              ? {
+                  onSchedule: () => {
+                    void schedule(event.id);
+                  },
+                }
+              : {})}
             title={event.title}
             detail={event.provider + " · " + eventTime(event)}
             selection={{ kind: "sports", id: event.id }}
@@ -150,6 +233,13 @@ export function Sports(props: MediaListProps) {
           />
         ))}
       </div>
+      {provider === "lolesports" && (
+        <SportsSchedules
+          guildId={props.guildId}
+          refresh={scheduleRefresh}
+          onMessage={setMessage}
+        />
+      )}
       {!loading && error === "" && events.length === 0 && (
         <div className="empty">
           <h3>No games found</h3>
@@ -164,6 +254,8 @@ function eventTime(event: z.infer<typeof SportsResultsSchema>[number]): string {
   if (event.startsAt === null)
     return event.status === "live" ? "Live now" : "Start time unavailable";
   return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,

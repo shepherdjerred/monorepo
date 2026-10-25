@@ -18,6 +18,7 @@ export const WorkerRoleSchema = z.enum([
   "repo",
   "reports",
   "scout",
+  "streambot",
   "workflows",
 ]);
 
