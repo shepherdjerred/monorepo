@@ -6,9 +6,16 @@ import type { WebDiscordContext } from "@shepherdjerred/streambot/discord/web-co
 import type { ChannelId } from "@shepherdjerred/streambot/types/ids.ts";
 import type { WebCatalog } from "./catalog.ts";
 import type { LolPlaybackSchedules } from "@shepherdjerred/streambot/sports/playback-schedules.ts";
+import type { MusicService } from "@shepherdjerred/streambot/music/service.ts";
 
 export type WebPlaybackDeps = {
   schedules?: LolPlaybackSchedules;
+  music?: MusicService;
+  expandPlaylist?: (
+    url: string,
+    signal: AbortSignal,
+    progress?: (count: number) => void,
+  ) => Promise<readonly { title: string; url: string }[]>;
   sessions: Pick<
     SessionManager,
     "getExisting" | "ensureForPlay" | "releaseUnused" | "revision"

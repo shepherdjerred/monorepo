@@ -96,19 +96,18 @@ describe("streambot dynamic config", () => {
         playerCardTickMs: config.playerCard.tickMs,
         playerCardRepostAfterMessages: config.playerCard.repostAfterMessages,
         idleTimeoutSeconds: config.idleTimeoutSeconds,
-        playlistLimit: config.playlistLimit,
       },
       config,
       startPolling: false,
       provider: new StaticProvider({
         "streambot-subtitle-languages": "en,es",
         "streambot-reconnect-delay-seconds": 7,
-        "streambot-playlist-limit": 12,
+        "streambot-idle-timeout-seconds": 12,
       }),
     });
     expect(config.subtitles.languages).toEqual(["en", "es"]);
     expect(config.reconnect.delaySeconds).toBe(7);
-    expect(config.playlistLimit).toBe(12);
+    expect(config.idleTimeoutSeconds).toBe(12);
   });
 
   test("keeps the seeded value when a flag has the wrong type", async () => {
@@ -125,12 +124,13 @@ describe("streambot dynamic config", () => {
         playerCardTickMs: config.playerCard.tickMs,
         playerCardRepostAfterMessages: config.playerCard.repostAfterMessages,
         idleTimeoutSeconds: config.idleTimeoutSeconds,
-        playlistLimit: config.playlistLimit,
       },
       config,
       startPolling: false,
-      provider: new StaticProvider({ "streambot-playlist-limit": "twelve" }),
+      provider: new StaticProvider({
+        "streambot-idle-timeout-seconds": "twelve",
+      }),
     });
-    expect(config.playlistLimit).toBe(100);
+    expect(config.idleTimeoutSeconds).toBe(300);
   });
 });

@@ -1,6 +1,8 @@
 import { useLocation, useSearchParams } from "react-router";
 
 export const PAGE_TITLES: Readonly<Record<string, string>> = {
+  "/music": "Music",
+  "/playlists": "Playlists",
   "/plex": "Plex",
   "/search": "Search & links",
   "/sports": "Live sports",

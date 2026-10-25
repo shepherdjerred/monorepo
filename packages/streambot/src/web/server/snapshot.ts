@@ -181,6 +181,7 @@ async function playerItem(
   );
   return {
     title: owner.deps.catalog.sports.title(item.source) ?? item.title,
+    music: item.source?.music !== undefined,
     requester: {
       id: item.requesterId,
       name: await owner.requesterName(session, guildId, item.requesterId),

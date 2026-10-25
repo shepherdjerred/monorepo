@@ -1214,3 +1214,146 @@ h3 {
   color: var(--accent);
   font-weight: 700;
 }
+.music-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+.music-card {
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 16px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.music-card h2 {
+  font-size: 1.25rem;
+  line-height: 1.25;
+  margin: 0.5rem 0;
+}
+.music-card > .media-artwork {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+}
+.album-heading {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+.album-heading h2 {
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  margin: 0.25rem 0;
+}
+.album-heading > .media-artwork,
+.playlist-cover {
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+  border-radius: 12px;
+}
+.playlist-cover {
+  display: grid;
+  place-items: center;
+  font-size: 3rem;
+  background: var(--tint);
+  color: var(--accent-strong);
+}
+.music-tracks {
+  list-style: none;
+  padding: 0;
+}
+.music-tracks > li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.music-tracks > li::before {
+  content: attr(value);
+  color: var(--muted);
+  width: 1.5rem;
+}
+.music-tracks > li > div:first-of-type {
+  flex: 1;
+  min-width: 120px;
+}
+.music-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.music-actions .text-button {
+  font-size: 0.8rem;
+}
+.match-picker {
+  flex-basis: 100%;
+  background: var(--tint);
+  padding: 1rem;
+  border-radius: 10px;
+}
+.match-picker > button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin: 0.5rem 0;
+}
+.match-picker small {
+  display: block;
+  color: var(--muted);
+}
+.playlist-add {
+  font-size: 0.85rem;
+}
+.playlist-add[open] {
+  flex-basis: 100%;
+  padding: 0.75rem;
+  background: var(--tint);
+  border-radius: 8px;
+}
+.playlist-add select {
+  max-width: 100%;
+}
+.playlist-editor,
+.playlist-scopes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+.playlist-editor form {
+  flex-basis: 100%;
+}
+.playlist-scopes [aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+.music-attribution {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-top: 2rem;
+}
+@media (max-width: 600px) {
+  .album-heading {
+    gap: 1rem;
+  }
+  .album-heading > .media-artwork,
+  .playlist-cover {
+    width: 80px;
+    height: 80px;
+  }
+  .music-tracks .music-actions {
+    flex-basis: 100%;
+    margin-left: 2.5rem;
+  }
+}

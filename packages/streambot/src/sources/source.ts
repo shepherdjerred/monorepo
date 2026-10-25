@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MusicTrackSchema } from "@shepherdjerred/streambot/music/contracts.ts";
 import { SportsEventSchema } from "@shepherdjerred/streambot/sports/types.ts";
 import {
   MediaModeSchema,
@@ -68,6 +69,7 @@ export type SubtitlePref = z.infer<typeof SubtitlePrefSchema>;
 export const SourceSchema = z.discriminatedUnion("kind", [
   z.strictObject({
     kind: z.literal("file"),
+    music: MusicTrackSchema.optional(),
     path: z.string().min(1),
     title: z.string().min(1),
     subtitles: SubtitlePrefSchema.optional(),
@@ -76,7 +78,9 @@ export const SourceSchema = z.discriminatedUnion("kind", [
   }),
   z.strictObject({
     kind: z.literal("url"),
+    music: MusicTrackSchema.optional(),
     url: z.url(),
+    title: z.string().min(1).optional(),
     sportsEvent: SportsEventSchema.optional(),
     scheduleId: z.uuid().optional(),
     subtitles: SubtitlePrefSchema.optional(),
@@ -85,6 +89,7 @@ export const SourceSchema = z.discriminatedUnion("kind", [
   }),
   z.strictObject({
     kind: z.literal("search"),
+    music: MusicTrackSchema.optional(),
     query: z.string().min(1),
     subtitles: SubtitlePrefSchema.optional(),
     mode: MediaModeSchema.optional(),
@@ -102,12 +107,14 @@ export function historySource(source: Source): Source {
 
 /** A short human label for a source, for queue/status embeds. */
 export function sourceLabel(source: Source): string {
+  if (source.music !== undefined)
+    return source.music.artists.join(", ") + " — " + source.music.title;
   switch (source.kind) {
     case "file": {
       return source.title;
     }
     case "url": {
-      return source.sportsEvent?.title ?? source.url;
+      return source.sportsEvent?.title ?? source.title ?? source.url;
     }
     case "search": {
       return source.query;
@@ -126,6 +133,8 @@ export function sourceLabel(source: Source): string {
  * for the same reason: music-vs-video is a setting on an item, not a different item.
  */
 export function sourceIdentity(source: Source): string {
+  if (source.music !== undefined)
+    return `music:${source.music.provider}:${source.music.id}`;
   switch (source.kind) {
     case "file":
       return `file:${source.path}`;

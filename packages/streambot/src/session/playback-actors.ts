@@ -1,4 +1,4 @@
-import type { PlaybackActors } from "@shepherdjerred/streambot/machine/playback-machine.ts";
+import type { PlaybackActors } from "@shepherdjerred/streambot/machine/playback-actors.ts";
 import type {
   ResolvedSource,
   ResolveSourceInput,

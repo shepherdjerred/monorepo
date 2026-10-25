@@ -49,7 +49,7 @@ export function dispatchPlayRequest(
     deps.assertCurrent?.();
     deps.dispatch({
       type,
-      source,
+      source: preResolved?.playbackSource ?? source,
       requesterId: userId,
       queuedAt: Date.now(),
       display: {

@@ -378,7 +378,7 @@ export function renderPlayerCard(input: PlayerCardInput): PlayerCardPayload {
                 ...row,
                 {
                   id: "web-remote",
-                  label: "Open web remote",
+                  label: "Open Streambot",
                   url: input.webUrl,
                   style: "secondary",
                   disabled: false,

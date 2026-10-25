@@ -1,3 +1,9 @@
+function contextualRemote(value: string, music: boolean): string {
+  const url = new URL(value);
+  url.pathname = music ? "/music" : "/plex";
+  return url.href;
+}
+
 /**
  * Lifecycle of one session's player card: when to post a fresh card, when to edit the existing one,
  * when to re-post it because chat has buried it, and how to leave it behind when the session ends.
@@ -420,7 +426,14 @@ export class PlayerCardManager {
       })();
     }
     return renderPlayerCard({
-      ...(this.webUrl === undefined ? {} : { webUrl: this.webUrl }),
+      ...(this.webUrl === undefined
+        ? {}
+        : {
+            webUrl: contextualRemote(
+              this.webUrl,
+              view.current?.mediaKind === "music",
+            ),
+          }),
       ...(this.owner.playbackChannel === undefined
         ? {}
         : { playbackChannel: this.owner.playbackChannel }),

@@ -74,6 +74,23 @@ Completion and cancellation act only on that owned item, preserving replacement 
 
 See [scheduled playback activation](/how-to/enable-streambot-lol-scheduling/) for the operator procedure.
 
+## Music separates catalog identity from playback
+
+MusicBrainz identifies artists, album editions, and recordings without requiring a listener's streaming-service account.
+The [Streambot service](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/index.ts) searches YouTube for playback sources.
+Matching uses artist, title, version, and duration to avoid silently substituting a different recording.
+The listener can correct a queued or saved song through the recording picker.
+Saved sources retain catalog identity alongside the selected video, so recovery can resolve a fresh audio URL.
+
+External playlist links express a request to play now.
+Their metadata loading is temporary; queue entries become ordinary playback requests.
+Explicitly saved playlists have a separate lifetime in the
+[history database](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/history/media-history.ts).
+Private ownership and server sharing keep personal collections separate from a room's active queue.
+Sharing grants playback and copying while keeping edits with the owner.
+The web API rechecks server membership and playlist access when a saved selection is used.
+Making a playlist private revokes its previously issued selection tokens.
+
 ## The edge serves the remote
 
 The frontend is built into the Streambot image.

@@ -163,7 +163,6 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
       repostAfterMessages: num(env["PLAYER_CARD_REPOST_AFTER_MESSAGES"]),
     },
     idleTimeoutSeconds: num(env["IDLE_TIMEOUT_SECONDS"]),
-    playlistLimit: num(env["PLAYLIST_LIMIT"]),
     ytDlpPath: env["YT_DLP_PATH"],
     ffmpegPath: env["FFMPEG_PATH"],
     ffprobePath: env["FFPROBE_PATH"],

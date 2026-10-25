@@ -1,3 +1,4 @@
+import type { CommandBotDeps } from "./command-bot-deps.ts";
 import {
   type ChatInputCommandInteraction,
   Client,
@@ -9,7 +10,6 @@ import {
   MessageFlags,
   type User,
 } from "discord.js";
-import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type { CommandHandler } from "@shepherdjerred/streambot/discord/commands/command-handler.ts";
 import { createCommandHandler } from "./create-command-handler.ts";
 import { adaptCardInteraction } from "@shepherdjerred/streambot/discord/interaction-adapters.ts";
@@ -22,10 +22,6 @@ import {
 } from "@shepherdjerred/streambot/discord/player-card/player-card-router.ts";
 import type { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
 import type { SessionHandle } from "@shepherdjerred/streambot/session/session-types.ts";
-import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
-import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
-import type { PlaylistItem } from "@shepherdjerred/streambot/sources/ytdlp.ts";
-import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
 import {
   ChannelIdSchema,
   GuildIdSchema,
@@ -42,13 +38,8 @@ import {
   registerGatewayHealthListeners,
   registerTopologyListeners,
 } from "@shepherdjerred/streambot/discord/client-events.ts";
-import type { DiscoveryService } from "@shepherdjerred/streambot/discovery/discovery-service.ts";
-import type { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
 import type { PlaybackCommandServiceDeps } from "@shepherdjerred/streambot/commands/playback-command-types.ts";
-import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
-import type { SportsCatalog } from "@shepherdjerred/streambot/sports/types.ts";
 import { runSportsCommand } from "@shepherdjerred/streambot/discord/commands/sports-command.ts";
-import type { LolPlaybackSchedules } from "@shepherdjerred/streambot/sports/playback-schedules.ts";
 import type { ScheduleTarget } from "@shepherdjerred/streambot/sports/schedule-types.ts";
 import { scheduledAuthority } from "@shepherdjerred/streambot/discord/scheduled-authority.ts";
 import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
@@ -59,6 +50,8 @@ import {
   labelPlaybackInteraction,
 } from "@shepherdjerred/streambot/discord/commands/numbered-command-routing.ts";
 import { WebDiscordContext } from "@shepherdjerred/streambot/discord/web-context.ts";
+import { handleMusicCommand } from "@shepherdjerred/streambot/discord/commands/music-command-handler.ts";
+import { musicErrorMessage } from "@shepherdjerred/streambot/discord/music-access.ts";
 
 const log = logger.child("command-bot");
 /** Subcommands that start (or join) a session in the issuer's current voice channel. */
@@ -85,34 +78,12 @@ const STATELESS_SUBCOMMANDS = new Set([
   "search",
   "sources",
   "help",
+  "web",
   "favorites",
   "favorite-remove",
   "saved-queues",
   "delete-queue",
 ]);
-
-export type CommandBotDeps = {
-  readonly userbotIds?: () => ReadonlySet<string>;
-  readonly getSchedules?: () => LolPlaybackSchedules | undefined;
-  readonly config: Config;
-  /** Lazily resolves the session manager (constructed after the bot to break the wiring cycle). */
-  readonly getSessions: () => SessionManager;
-  readonly library: () => readonly LibraryEntry[];
-  readonly expandPlaylist: (
-    url: string,
-    signal: AbortSignal,
-  ) => Promise<PlaylistItem[]>;
-  readonly listSources: (signal: AbortSignal) => Promise<readonly string[]>;
-  /** Synchronously pre-resolve a `/stream play` url/search source before acking (feature: fast error surfacing). */
-  readonly resolvePlaySource: (
-    source: Source,
-    signal: AbortSignal,
-  ) => Promise<ResolvedSource>;
-  readonly discovery?: DiscoveryService;
-  readonly history?: MediaHistoryStore;
-  readonly featureGate?: MediaFeatureGate;
-  readonly sports?: SportsCatalog;
-};
 
 /**
  * The discord.js (bot-token) command bot. Registers global slash commands and routes each
@@ -482,6 +453,12 @@ export class CommandBot {
   ): Promise<void> {
     try {
       if (
+        await handleMusicCommand(interaction, this.deps, () =>
+          this.issuerVoiceChannel(interaction),
+        )
+      )
+        return;
+      if (
         ["sports", "sports-schedules", "sports-cancel"].includes(
           interaction.options.getSubcommand(),
         ) &&
@@ -496,10 +473,7 @@ export class CommandBot {
         command: interaction.commandName,
         error: getErrorMessage(error),
       });
-      const message =
-        error instanceof PlaybackCommandBoundaryError
-          ? error.message
-          : "Something went wrong handling that command.";
+      const message = musicErrorMessage(error);
       // This ack is best-effort: `replied`/`deferred` only flip after a
       // *successful* ack, so when the original reply was delivered but its
       // REST call rejected, this branch double-acks (40060). safeHandle is

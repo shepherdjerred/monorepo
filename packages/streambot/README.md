@@ -123,6 +123,39 @@ invoked actors. `yt-dlp` and `ffmpeg` are system binaries baked into the
 Docker image. Prometheus metrics are served on `/metrics` (default port 9466);
 the headline signal is `streambot_ffmpeg_speed_ratio`.
 
+## Music discovery and playlists
+
+`/music search`, `/music artist`, and `/music album` browse the MusicBrainz
+catalog without consuming a streaming account. The Music page adds edition
+selection, album queues, and a YouTube recording picker. Confident matches use
+artist, title, version, and duration; uncertain recordings require a choice.
+Catalog metadata and selected YouTube links remain separate in saved sources,
+so queue recovery and replay retain the chosen recording.
+
+Public Spotify track, album, and playlist links work through `/stream play`
+and Search & links. Spotify supplies metadata; YouTube supplies playback.
+No provider account or credential is required. Public Spotify collections may
+expose only a partial list, currently up to 100 tracks; the completion message
+reports that limitation. YouTube playlists have no application track cap and
+enumerate metadata incrementally. Loading can be cancelled and is bound to the
+requester's voice channel, slot, and queue revision. External links create no
+saved import or synchronization state.
+
+The Playlists page creates private playlists, explicitly saves the current
+queue, edits ordered tracks, and shares one playlist with a Discord server.
+Members can view, play, and make private copies; only the owner can edit.
+Sharing requires Discord sign-in and current server membership. Private
+playlists never appear in the server list. Existing saved-queue commands use
+the same SQLite playlist store, including migrated queues, independently of
+history recording. `/music playlist` offers list, show, play, save, share, and
+private commands; `/music web` opens the browser.
+
+Catalog browsing, Spotify links, and saved playlists have separate default-off
+rollout gates in [the typed media gates](src/config/media-features.ts) and
+[managed inventory](../feature-flags/src/managed-flag-inventory.json).
+Apple Music, Deezer, Tidal, and recommendation autoplay have no integration.
+The existing idle disconnect and numbered playback transports still apply.
+
 ## Web development
 
 Run `bun run build` before starting a process with web credentials. The production
@@ -136,7 +169,9 @@ fixture is absent from the production image. Use it after `bun run build` to ins
 the library, queue, controls, subtitle picker, and system light/dark themes.
 
 The expanded browsing fixture is `bun run test/web/preview.ts` on port 5188 after
-`bun run build`; it includes simulated OAuth, sports artwork, history, and attribution.
+`bun run build`; it includes simulated OAuth, music browsing, private/server
+playlists, sports artwork, history, and attribution. An optional port argument
+(for example, `bun run test/web/preview.ts 5189`) isolates concurrent worktrees.
 
 | Bootstrap               | Purpose                                               |
 | ----------------------- | ----------------------------------------------------- |

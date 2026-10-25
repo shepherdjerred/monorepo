@@ -1,12 +1,10 @@
+import type { PlaybackActors } from "@shepherdjerred/streambot/machine/playback-actors.ts";
 import { afterEach, describe, expect, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { createActor, waitFor } from "xstate";
-import {
-  createPlaybackMachine,
-  type PlaybackActors,
-} from "@shepherdjerred/streambot/machine/playback-machine.ts";
+import { createPlaybackMachine } from "@shepherdjerred/streambot/machine/playback-machine.ts";
 import {
   buildResumeInput,
   buildSnapshot,

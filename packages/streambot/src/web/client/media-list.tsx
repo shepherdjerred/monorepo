@@ -11,6 +11,8 @@ import { api, elapsed } from "./api.ts";
 import { MediaRow, type MediaListProps, type Selection } from "./media-row.tsx";
 import { Sports } from "./sports.tsx";
 import { PosterCard } from "./poster-card.tsx";
+import { Music } from "./music.tsx";
+import { Playlists } from "./playlists.tsx";
 
 export function MediaList(props: MediaListProps) {
   const { pathname } = useLocation();
@@ -37,6 +39,8 @@ export function MediaList(props: MediaListProps) {
       </div>
       <nav className="tabs" aria-label="Media discovery">
         {[
+          ["/music", "Music"],
+          ["/playlists", "Playlists"],
           ["/plex", "Plex"],
           ["/search", "Search & links"],
           ["/sports", "Live sports"],
@@ -53,19 +57,7 @@ export function MediaList(props: MediaListProps) {
           </NavLink>
         ))}
       </nav>
-      {pathname === "/plex" ? (
-        <Library key={props.guildId} {...props} />
-      ) : pathname === "/search" ? (
-        <Search key={props.guildId} {...props} />
-      ) : pathname === "/sports" ? (
-        <Sports key={props.guildId} {...props} />
-      ) : pathname === "/history" ? (
-        <History key={props.guildId} {...props} />
-      ) : (
-        <p>
-          This page does not exist. <Link to="/plex">Browse Plex</Link>
-        </p>
-      )}
+      <DiscoveryPage key={props.guildId} {...props} pathname={pathname} />
     </section>
   );
 }
@@ -397,7 +389,7 @@ function Search(props: MediaListProps) {
           <input
             aria-label="Title or media URL"
             name="q"
-            placeholder="A song, a video, or a link…"
+            placeholder="A song, a video, or a Spotify / YouTube link…"
             required
             maxLength={300}
             value={query}
@@ -471,4 +463,27 @@ function Search(props: MediaListProps) {
       )}
     </>
   );
+}
+
+function DiscoveryPage(props: MediaListProps & { pathname: string }) {
+  switch (props.pathname) {
+    case "/music":
+      return <Music {...props} />;
+    case "/playlists":
+      return <Playlists {...props} />;
+    case "/plex":
+      return <Library {...props} />;
+    case "/search":
+      return <Search {...props} />;
+    case "/sports":
+      return <Sports {...props} />;
+    case "/history":
+      return <History {...props} />;
+    default:
+      return (
+        <p>
+          This page does not exist. <Link to="/plex">Browse Plex</Link>
+        </p>
+      );
+  }
 }

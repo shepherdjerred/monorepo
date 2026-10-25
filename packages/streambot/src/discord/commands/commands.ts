@@ -4,6 +4,7 @@ import {
   type SlashCommandSubcommandBuilder,
   type RESTPostAPIChatInputApplicationCommandsJSONBody,
 } from "discord.js";
+import { musicCommand } from "@shepherdjerred/streambot/discord/music-commands.ts";
 
 /**
  * Options `/stream play` and `/stream playnext` share.
@@ -307,6 +308,9 @@ export const commandDefinitions = [
           .setName("playback")
           .setDescription("Playback session controls")
           .addSubcommand((sub) =>
+            sub.setName("web").setDescription("Open the Streambot web remote"),
+          )
+          .addSubcommand((sub) =>
             sub
               .setName("join")
               .setDescription(
@@ -469,6 +473,7 @@ export const commandDefinitions = [
           sub.setName("status").setDescription("Show capture window status"),
         ),
     ),
+  musicCommand,
 ];
 
 export const commandJson: RESTPostAPIChatInputApplicationCommandsJSONBody[] =

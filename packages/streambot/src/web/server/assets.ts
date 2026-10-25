@@ -9,7 +9,15 @@ export async function serveWebAsset(
   const filePath = path.resolve(
     root,
     "." +
-      (["/", "/plex", "/search", "/sports", "/history"].includes(url.pathname)
+      ([
+        "/",
+        "/music",
+        "/playlists",
+        "/plex",
+        "/search",
+        "/sports",
+        "/history",
+      ].includes(url.pathname)
         ? "/index.html"
         : url.pathname),
   );

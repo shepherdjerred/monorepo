@@ -4,12 +4,15 @@ import { elapsed, type RemoteAction } from "./api.ts";
 import { Artwork } from "./artwork.tsx";
 import { SportsArtwork } from "./sports-artwork.tsx";
 import { Attribution } from "./attribution.tsx";
+import { QueueVideo } from "./queue-video.tsx";
 
 type PlayerProps = {
   snapshot: WebSnapshot;
   busy: boolean;
   send: (action: RemoteAction) => void;
   subtitles: () => void;
+  guildId?: string;
+  csrfToken?: string;
 };
 
 export function Player({ snapshot, busy, send, subtitles }: PlayerProps) {
@@ -229,7 +232,13 @@ function PlayerOptions({ snapshot, busy, send, subtitles }: PlayerProps) {
   );
 }
 
-export function Queue({ snapshot, busy, send }: PlayerProps) {
+export function Queue({
+  snapshot,
+  busy,
+  send,
+  guildId,
+  csrfToken,
+}: PlayerProps) {
   return (
     <aside className="queue panel">
       <div className="queue-heading">
@@ -294,6 +303,17 @@ export function Queue({ snapshot, busy, send }: PlayerProps) {
               <div>
                 <h3>{item.title}</h3>
                 <Attribution {...item} />
+                {item.music === true &&
+                  guildId !== undefined &&
+                  csrfToken !== undefined && (
+                    <QueueVideo
+                      snapshot={snapshot}
+                      guildId={guildId}
+                      csrfToken={csrfToken}
+                      position={index + 1}
+                      busy={busy}
+                    />
+                  )}
                 <div className="queue-item-actions">
                   <button
                     aria-label={"Move " + item.title + " up"}

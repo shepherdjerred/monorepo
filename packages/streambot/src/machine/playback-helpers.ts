@@ -286,7 +286,7 @@ export function resolveDoneUpdates(
     lastError: null,
     lastErrorKind: null,
     current: {
-      source: mustCurrent(context).source,
+      source: resolved.playbackSource ?? mustCurrent(context).source,
       requesterId: mustCurrent(context).requesterId,
       ...(mustCurrent(context).display === undefined
         ? {}

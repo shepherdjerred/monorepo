@@ -55,25 +55,29 @@ export function playerCommandRequest(
   snapshot: WebSnapshot,
   csrfToken: string,
 ): RequestInit {
+  return commandRequest(playerCommand(action, guildId, snapshot), csrfToken);
+}
+export function playerCommand(
+  action: RemoteAction,
+  guildId: string,
+  snapshot: WebSnapshot,
+): WebCommand {
   if (snapshot.channel === null)
     throw new Error("A player command requires a voice channel.");
-  return commandRequest(
-    {
-      ...action,
-      guildId,
-      channelId: snapshot.channel.id,
-      revision: snapshot.revision,
-      playbackChannel: snapshot.playbackChannel,
-      selectionVersion: snapshot.selectionVersion,
-      slotRevisions: Object.fromEntries(
-        snapshot.playbackChannels.map((slot) => [
-          String(slot.number),
-          slot.revision,
-        ]),
-      ),
-    },
-    csrfToken,
-  );
+  return {
+    ...action,
+    guildId,
+    channelId: snapshot.channel.id,
+    revision: snapshot.revision,
+    playbackChannel: snapshot.playbackChannel,
+    selectionVersion: snapshot.selectionVersion,
+    slotRevisions: Object.fromEntries(
+      snapshot.playbackChannels.map((slot) => [
+        String(slot.number),
+        slot.revision,
+      ]),
+    ),
+  };
 }
 export function elapsed(seconds: number | null): string {
   return seconds === null ? "—" : formatTimecode(seconds);

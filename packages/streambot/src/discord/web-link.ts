@@ -31,13 +31,39 @@ export async function playTip(
   },
   userId: string,
 ) {
-  return randomTip(
-    deps.playbackChannel,
-    await webRemoteUrl(
-      deps.config,
-      deps.guildId,
+  const url = await webPageUrl(
+    deps.config,
+    {
+      guildId: deps.guildId,
       userId,
-      deps.routePlayback === undefined ? deps.playbackChannel : undefined,
-    ),
+      playbackChannel:
+        deps.routePlayback === undefined ? deps.playbackChannel : undefined,
+    },
+    deps.playbackChannel === 1 ? "/music" : "/plex",
   );
+  return (
+    randomTip(deps.playbackChannel) +
+    (url === undefined ? "" : `\n\n[Open Streambot](${url})`)
+  );
+}
+
+export async function webPageUrl(
+  config: Pick<Config, "web">,
+  scope: {
+    guildId: string | undefined;
+    userId: string;
+    playbackChannel?: number | undefined;
+  },
+  page: "/plex" | "/music" | "/playlists",
+) {
+  const base = await webRemoteUrl(
+    config,
+    scope.guildId,
+    scope.userId,
+    scope.playbackChannel,
+  );
+  if (base === undefined) return;
+  const url = new URL(base);
+  url.pathname = page;
+  return url.href;
 }

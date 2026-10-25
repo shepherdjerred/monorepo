@@ -136,12 +136,6 @@ const DEFINITION = {
       env: "IDLE_TIMEOUT_SECONDS",
     },
   },
-  playlistLimit: {
-    schema: z.coerce.number().int().positive(),
-    sources: ["flag", "env", "default"],
-    default: 100,
-    names: { flag: "streambot-playlist-limit", env: "PLAYLIST_LIMIT" },
-  },
 } as const;
 
 const REFRESH_INTERVAL_MS = 60_000;
@@ -169,7 +163,6 @@ function buildSnapshot(
           playerCardTickMs: "number",
           playerCardRepostAfterMessages: "number",
           idleTimeoutSeconds: "number",
-          playlistLimit: "number",
         },
       }),
       env: createEnvSource(environment),
@@ -199,7 +192,6 @@ export type DynamicConfigSeed = {
   readonly playerCardTickMs?: number;
   readonly playerCardRepostAfterMessages?: number;
   readonly idleTimeoutSeconds?: number;
-  readonly playlistLimit?: number;
 };
 
 function applySnapshot(config: Config): void {
@@ -218,7 +210,6 @@ function applySnapshot(config: Config): void {
     "playerCardRepostAfterMessages",
   );
   config.idleTimeoutSeconds = snapshot.get("idleTimeoutSeconds");
-  config.playlistLimit = snapshot.get("playlistLimit");
 }
 
 async function refreshSnapshot(config: Config | undefined): Promise<void> {

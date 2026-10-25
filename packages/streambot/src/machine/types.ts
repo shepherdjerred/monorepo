@@ -80,6 +80,8 @@ export type ResolvedSubtitle = {
 export type ResolvedSource = {
   readonly title: string;
   readonly ffmpegInput: string;
+  /** Stable selected source for checkpoint/replay; never the signed ffmpeg input. */
+  readonly playbackSource?: Source;
   /**
    * Which transport carries this item: `music` audio-only over the voice connection, `video` over
    * Go Live. REQUIRED, not optional — an optional field would push a `?? "video"` default into the
@@ -213,6 +215,12 @@ export type AddEventPayload = {
 };
 
 export type PlaybackEvent =
+  | {
+      type: "ADD_BATCH";
+      items: readonly QueuedSource[];
+      placement: "queue" | "next" | "after-first";
+    }
+  | { type: "REPLACE_QUEUED"; index: number; source: Source }
   | ({ type: "ADD" } & AddEventPayload)
   | ({ type: "ADD_NEXT" } & AddEventPayload)
   | ({ type: "PLAY_NOW" } & AddEventPayload)

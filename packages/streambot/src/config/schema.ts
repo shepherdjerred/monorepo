@@ -271,7 +271,6 @@ export const ConfigSchema = z.strictObject({
   /** Leave the voice channel after this many idle seconds. */
   idleTimeoutSeconds: z.number().int().positive().default(300),
   /** Maximum number of items to enqueue when expanding a playlist URL. */
-  playlistLimit: z.number().int().positive().default(100),
   ytDlpPath: z.string().min(1).default("/usr/local/bin/yt-dlp"),
   ffmpegPath: z.string().min(1).default("ffmpeg"),
   /** ffprobe binary — chapter extraction, embedded subtitle detection, and source media probing. */

@@ -15,6 +15,7 @@ import {
   type RemoteAction,
 } from "./api.ts";
 import { selectedGuildId } from "./route-state.ts";
+import { QueueLoadSchema } from "@shepherdjerred/streambot/music/contracts.ts";
 
 export function useRemote() {
   const [me, setMe] = useState<z.infer<typeof MeSchema> | null>(null);
@@ -27,6 +28,10 @@ export function useRemote() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [loadId, setLoadId] = useState<string | null>(null);
+  const [queueLoad, setQueueLoad] = useState<z.infer<
+    typeof QueueLoadSchema
+  > | null>(null);
   const [tracks, setTracks] = useState<z.infer<
     typeof SubtitleMenuSchema
   > | null>(null);
@@ -35,6 +40,8 @@ export function useRemote() {
     pendingAction.current?.abort();
     pendingAction.current = null;
     setBusy(false);
+    setLoadId(null);
+    setQueueLoad(null);
     setParams((previous) => {
       const next = new URLSearchParams(previous);
       next.set("guild", id);
@@ -113,6 +120,50 @@ export function useRemote() {
     },
     [guildId, viewedChannel],
   );
+
+  useEffect(() => {
+    if (loadId === null || guildId === "") return;
+    const controller = new AbortController();
+    let polling = false;
+    const poll = async () => {
+      if (polling) return;
+      polling = true;
+      try {
+        const load = await api(
+          "/api/music/load?" +
+            new URLSearchParams({ guildId, id: loadId }).toString(),
+          QueueLoadSchema,
+          { signal: controller.signal },
+        );
+        if (controller.signal.aborted) return;
+        setQueueLoad(load);
+        if (load.state !== "loading") {
+          setLoadId(null);
+          setNotice(load.message);
+          await refresh(controller.signal);
+        }
+      } catch (error_) {
+        if (!controller.signal.aborted) {
+          setError(
+            error_ instanceof Error
+              ? error_.message
+              : "Playlist loading was interrupted.",
+          );
+          setLoadId(null);
+        }
+      } finally {
+        polling = false;
+      }
+    };
+    void poll();
+    const timer = setInterval(() => {
+      void poll();
+    }, 1000);
+    return () => {
+      controller.abort();
+      clearInterval(timer);
+    };
+  }, [loadId, guildId, refresh]);
 
   useEffect(() => {
     if (me === null || guildId === "") return;
@@ -205,6 +256,10 @@ export function useRemote() {
       });
       if (!actionIsCurrent(controller)) return;
       setNotice(result.message);
+      if (result.loadId !== undefined) {
+        setQueueLoad(null);
+        setLoadId(result.loadId);
+      }
       setTracks(null);
       await refreshAfterAction(action, controller.signal);
     } catch (error_) {
@@ -268,6 +323,26 @@ export function useRemote() {
       setError(error_ instanceof Error ? error_.message : "Sign out failed.");
     }
   }
+  async function cancelLoad(): Promise<void> {
+    if (me === null || loadId === null) return;
+    try {
+      const load = await api(
+        "/api/music/load?" +
+          new URLSearchParams({ guildId, id: loadId }).toString(),
+        QueueLoadSchema,
+        { method: "POST", headers: { "x-csrf-token": me.csrfToken } },
+      );
+      setQueueLoad(load);
+      setLoadId(null);
+      setNotice(load.message);
+    } catch (error_) {
+      setError(
+        error_ instanceof Error
+          ? error_.message
+          : "Could not cancel the request.",
+      );
+    }
+  }
 
   return {
     me,
@@ -278,6 +353,9 @@ export function useRemote() {
     error,
     notice,
     busy,
+    queueLoad,
+    loadingPlaylist: loadId !== null,
+    cancelLoad,
     tracks,
     setTracks,
     send,

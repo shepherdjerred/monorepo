@@ -2,12 +2,18 @@ import { serveWebAsset } from "./assets.ts";
 import { webSchedules } from "./schedules.ts";
 import { browseSports } from "./sports-request.ts";
 import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
-import { CommandSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
+import {
+  CommandSchema,
+  type WebCommand,
+} from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { GuildIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
 import { WebAuth, type WebBootstrap } from "./auth.ts";
 import type { WebSession, WebSessionStore } from "./session-store.ts";
 import type { WebPlayback } from "./playback.ts";
 import { WebActions } from "./actions.ts";
+import { WebMusic } from "./music.ts";
+import { MusicError } from "@shepherdjerred/streambot/music/errors.ts";
+import { MusicMatchError } from "@shepherdjerred/streambot/music/matching.ts";
 import { WebError, requestInput } from "./errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import { ARTWORK_HOSTS } from "@shepherdjerred/streambot/metadata/public-artwork.ts";
@@ -48,6 +54,7 @@ export function createWebHandler(deps: {
     ...(deps.fetch === undefined ? {} : { fetch: deps.fetch }),
   });
   const actions = new WebActions(deps.playback);
+  const music = new WebMusic(deps.playback);
   const requests = new Map<
     string,
     { count: number; artwork: number; resets: number }
@@ -58,7 +65,10 @@ export function createWebHandler(deps: {
     url: URL,
     session: WebSession,
   ): Promise<Response> {
-    limitRequests(session.key, url.pathname === "/api/artwork");
+    limitRequests(
+      session.key,
+      url.pathname === "/api/artwork" || url.pathname === "/api/music/artwork",
+    );
     if (request.method === "POST") auth.mutation(request, session);
     if (
       ["/api/sports/schedules", "/api/sports/schedules/cancel"].includes(
@@ -76,21 +86,34 @@ export function createWebHandler(deps: {
         csrfToken: auth.csrfToken(request, session),
       });
     }
+    const musicResponse = await music.handle(request, url, session);
+    if (musicResponse !== null) return musicResponse;
     if (
       request.method === "POST" &&
       ["/api/commands", "/api/subtitles"].includes(url.pathname)
     ) {
       const input = await readCommand(request);
-      if (url.pathname === "/api/subtitles")
-        return Response.json(
-          await actions.subtitles(session, input, request.signal),
-        );
-      const result = await actions.execute(session, input, request.signal);
-      return Response.json({ message: result.message });
+      return url.pathname === "/api/subtitles"
+        ? Response.json(await actions.subtitles(session, input, request.signal))
+        : await executeCommand(session, input, request.signal);
     }
     if (request.method !== "GET")
       throw new WebError(405, "method", "This method is not supported.");
     return await browseMedia(request, url, session);
+  }
+
+  async function executeCommand(
+    session: WebSession,
+    input: WebCommand,
+    signal: AbortSignal,
+  ) {
+    if (input.action === "play") {
+      const result = await music.execute(session, input, signal);
+      if (result !== null) return Response.json(result);
+    }
+    const result = await actions.execute(session, input, signal);
+    music.cancelRoom(session, input);
+    return Response.json({ message: result.message });
   }
 
   async function browseMedia(
@@ -225,12 +248,15 @@ export function createWebHandler(deps: {
     try {
       response = await route(request);
     } catch (error) {
-      if (error instanceof WebError)
+      if (error instanceof WebError || error instanceof MusicError)
         response = Response.json(
           { code: error.code, message: error.message },
           { status: error.status },
         );
-      else if (error instanceof PlaybackCommandBoundaryError)
+      else if (
+        error instanceof PlaybackCommandBoundaryError ||
+        error instanceof MusicMatchError
+      )
         response = Response.json(
           { code: "playback_denied", message: error.message },
           { status: 409 },

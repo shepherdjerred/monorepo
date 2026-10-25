@@ -2,6 +2,7 @@ import { Database } from "bun:sqlite";
 import { z } from "zod";
 import { browseRuns, migrateHistoryProviders } from "./runs.ts";
 import { HistoryProviderSchema } from "./provider.ts";
+import { PlaylistStore } from "@shepherdjerred/streambot/music/playlists.ts";
 import type { HistoryScope, RecordMedia } from "./types.ts";
 import type { MediaIntent } from "@shepherdjerred/streambot/discovery/media-intent.ts";
 import type { MediaCandidate } from "@shepherdjerred/streambot/discovery/candidate.ts";
@@ -31,6 +32,7 @@ export type QueueRequestStatus =
 /** Durable media request/history/favorites store. Raw audio and transcripts never enter this DB. */
 export class MediaHistoryStore {
   private readonly database: Database;
+  readonly playlists: PlaylistStore;
 
   constructor(filePath: string) {
     this.database = new Database(filePath, { create: true, strict: true });
@@ -38,6 +40,7 @@ export class MediaHistoryStore {
     this.database.run("PRAGMA foreign_keys = ON");
     this.migrate();
     migrateHistoryProviders(this.database);
+    this.playlists = new PlaylistStore(this.database);
   }
 
   close(): void {
@@ -241,61 +244,39 @@ export class MediaHistoryStore {
   }
 
   saveQueue(userId: string, name: string, items: readonly RecordMedia[]): void {
-    const queueId = crypto.randomUUID();
-    const transaction = this.database.transaction(() => {
-      this.database
-        .query(
-          `INSERT INTO saved_queues (id, user_id, name, created_at, updated_at)
-           VALUES (?1, ?2, ?3, ?4, ?4)
-           ON CONFLICT(user_id, name) DO UPDATE SET updated_at = excluded.updated_at`,
-        )
-        .run(queueId, userId, name, Date.now());
-      const stored = this.database
-        .query("SELECT id FROM saved_queues WHERE user_id = ?1 AND name = ?2")
-        .get(userId, name);
-      const id = z.object({ id: z.string() }).parse(stored).id;
-      this.database
-        .query("DELETE FROM saved_queue_items WHERE saved_queue_id = ?1")
-        .run(id);
-      items.forEach((item, index) => {
-        const mediaId = this.upsertMedia(item);
-        this.database
-          .query(
-            `INSERT INTO saved_queue_items (saved_queue_id, position, media_item_id)
-             VALUES (?1, ?2, ?3)`,
-          )
-          .run(id, index + 1, mediaId);
-      });
-    });
-    transaction();
+    this.playlists.saveLegacy(userId, name, items);
   }
 
   savedQueue(userId: string, name: string): MediaCandidate[] {
-    const rows = this.database
-      .query(
-        `SELECT m.*, 1 AS play_count
-           FROM saved_queues q
-           JOIN saved_queue_items i ON i.saved_queue_id = q.id
-           JOIN media_items m ON m.id = i.media_item_id
-          WHERE q.user_id = ?1 AND q.name = ?2 ORDER BY i.position ASC`,
-      )
-      .all(userId, name);
-    return rows.map((row, index) => this.rowToCandidate(row, index));
+    const viewer = { userId, guildId: "" };
+    const playlist = this.playlists
+      .list(viewer, "mine")
+      .find((item) => item.name === name);
+    return playlist === undefined
+      ? []
+      : this.playlists.read(playlist.id, viewer).items.map((item, index) => ({
+          token: item.id,
+          provider: "history",
+          title: item.title,
+          source: item.source,
+          score: 100 - index,
+          reason: "saved playlist",
+        }));
   }
 
   savedQueueNames(userId: string): string[] {
-    return this.database
-      .query(
-        "SELECT name FROM saved_queues WHERE user_id = ?1 ORDER BY updated_at DESC",
-      )
-      .all(userId)
-      .map((row) => z.object({ name: z.string() }).parse(row).name);
+    return this.playlists
+      .list({ userId, guildId: "" }, "mine")
+      .map((item) => item.name);
   }
 
   deleteSavedQueue(userId: string, name: string): void {
-    this.database
-      .query("DELETE FROM saved_queues WHERE user_id = ?1 AND name = ?2")
-      .run(userId, name);
+    const viewer = { userId, guildId: "" };
+    const playlist = this.playlists
+      .list(viewer, "mine")
+      .find((item) => item.name === name);
+    if (playlist !== undefined)
+      this.playlists.delete(playlist.id, viewer, playlist.revision);
   }
 
   private upsertMedia(media: RecordMedia): string {
