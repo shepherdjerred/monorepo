@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.creative.adapter.bluemap.BlueMapPlots;
 import com.shepherdjerred.thestorm.creative.adapter.db.JooqBodyStore;
 import com.shepherdjerred.thestorm.creative.adapter.db.JooqClaimStore;
+import com.shepherdjerred.thestorm.creative.adapter.db.JooqReviewStore;
 import com.shepherdjerred.thestorm.creative.adapter.export.SchematicFiles;
 import com.shepherdjerred.thestorm.creative.adapter.grim.CreativeAnticheat;
 import com.shepherdjerred.thestorm.creative.adapter.paper.CreativeAudit;
@@ -19,7 +20,10 @@ import com.shepherdjerred.thestorm.creative.adapter.paper.CreativeWorld;
 import com.shepherdjerred.thestorm.creative.adapter.paper.PlotGuard;
 import com.shepherdjerred.thestorm.creative.adapter.worldedit.CreativeEdits;
 import com.shepherdjerred.thestorm.creative.app.ClaimBook;
+import com.shepherdjerred.thestorm.creative.app.ReviewBook;
+import com.shepherdjerred.thestorm.creative.app.ReviewStore.Snapshot;
 import com.shepherdjerred.thestorm.creative.domain.CreativeConfig;
+import com.shepherdjerred.thestorm.creative.domain.PlotFootprint;
 import com.shepherdjerred.thestorm.creative.domain.PlotGrid;
 import com.shepherdjerred.thestorm.creative.domain.PlotMarkers;
 import com.shepherdjerred.thestorm.creative.domain.StoredClaim;
@@ -66,13 +70,13 @@ public final class CreativeModule implements StormModule {
     if (world == null) {
       throw new IllegalStateException("Creative world is not loaded: " + config.world());
     }
-    if (!(world.getGenerator() instanceof CreativeGenerator)) {
-      var generator = world.getGenerator();
+    if (!(world.getGenerator() instanceof CreativeGenerator generator)) {
+      var installed = world.getGenerator();
       throw new IllegalStateException(
           "Creative world "
               + config.world()
               + " is not using TheStorm's plot generator ("
-              + (generator == null ? "no generator" : generator.getClass().getName())
+              + (installed == null ? "no generator" : installed.getClass().getName())
               + ")");
     }
     CreativeAudit.require(context.plugin(), world);
@@ -90,6 +94,9 @@ public final class CreativeModule implements StormModule {
     var book = new ClaimBook(config.catalog());
     claims = book;
     var store = new JooqClaimStore(context.database());
+    var reviews = new ReviewBook();
+    var reviewStore = new JooqReviewStore(context.database());
+    PlotFootprint.States template = generator.template()::stateAt;
     context
         .plugin()
         .getServer()
@@ -118,7 +125,10 @@ public final class CreativeModule implements StormModule {
                     this::redraw,
                     new SchematicFiles(
                         context.database(),
-                        new File(context.plugin().getDataFolder(), "creative-schematics")))));
+                        new File(context.plugin().getDataFolder(), "creative-schematics")),
+                    template,
+                    reviews,
+                    reviewStore)));
     context
         .lifecycle()
         .registerEventHandler(
@@ -129,7 +139,14 @@ public final class CreativeModule implements StormModule {
             .loadAll()
             .whenCompleteAsync(
                 (rows, failure) -> loaded(rows, failure), context.scheduler().mainThread());
+    var reviewed =
+        reviewStore
+            .load()
+            .whenCompleteAsync(
+                (snapshot, failure) -> reviewed(reviews, snapshot, failure),
+                context.scheduler().mainThread());
     var _ = loaded;
+    var _ = reviewed;
     context
         .logger()
         .info(
@@ -149,6 +166,19 @@ public final class CreativeModule implements StormModule {
     }
     book.replace(rows);
     redraw();
+  }
+
+  private void reviewed(
+      ReviewBook reviews, @Nullable Snapshot snapshot, @Nullable Throwable failure) {
+    var log = logger;
+    if (log == null) {
+      return;
+    }
+    if (failure != null || snapshot == null) {
+      log.error("Creative ratings did not load", failure);
+      return;
+    }
+    reviews.replace(snapshot.ratings(), snapshot.comments());
   }
 
   private void redraw() {

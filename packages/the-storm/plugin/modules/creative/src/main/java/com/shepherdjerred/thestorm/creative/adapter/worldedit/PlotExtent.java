@@ -1,7 +1,8 @@
 package com.shepherdjerred.thestorm.creative.adapter.worldedit;
 
 import com.shepherdjerred.thestorm.creative.domain.PlotAccess;
-import com.shepherdjerred.thestorm.creative.domain.PlotBounds;
+import com.shepherdjerred.thestorm.creative.domain.PlotArea;
+import com.shepherdjerred.thestorm.creative.domain.PlotMerge;
 import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.entity.BaseEntity;
 import com.sk89q.worldedit.entity.Entity;
@@ -19,18 +20,25 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 /**
- * One plot column. A block, entity, or biome outside that column drops the whole edit, including
- * changes already accepted, and nothing is written to the inner extent. {@code commit} releases the
- * player's single in-flight edit after a successful inner commit.
+ * One editable area: a plot, or a merged cluster plus the roads between those plots. A block,
+ * entity, or biome outside that area drops the whole edit, including changes already accepted, and
+ * nothing is written to the inner extent. {@code commit} releases the player's single in-flight
+ * edit after a successful inner commit.
  */
 final class PlotExtent implements Extent {
 
-  /** The standing plot, or empty when the edit is refused, plus the world's block height. */
-  record Column(Optional<PlotBounds> bounds, int minY, int maxY) {}
+  /**
+   * The areas the actor may change, empty when the edit is refused, plus the world's block height.
+   */
+  record Column(List<PlotArea> areas, int minY, int maxY) {
+
+    Column {
+      areas = List.copyOf(areas);
+    }
+  }
 
   private final Extent inner;
   private final Column column;
@@ -172,11 +180,7 @@ final class PlotExtent implements Extent {
   }
 
   private void require(int x, int y, int z) throws WorldEditException {
-    var plot = column.bounds();
-    if (plot.isEmpty()
-        || y < column.minY()
-        || y > column.maxY()
-        || !plot.orElseThrow().contains(x, z)) {
+    if (y < column.minY() || y > column.maxY() || !PlotMerge.covers(column.areas(), x, z)) {
       drop();
       throw new RefusedEdit("That edit leaves the plot.");
     }

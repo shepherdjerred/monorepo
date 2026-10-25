@@ -108,7 +108,8 @@ final class ClaimRulesTest {
                     "",
                     Map.of(),
                     Set.of(),
-                    PlotSurface.DEFAULT)));
+                    PlotSurface.DEFAULT,
+                    Optional.empty())));
 
     assertThat(released.owner()).isEmpty();
     assertThat(ClaimRules.counted(ACTOR, List.of(playerClaim, assigned, released))).isEqualTo(1);

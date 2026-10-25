@@ -11,6 +11,10 @@ import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
 import com.shepherdjerred.thestorm.creative.adapter.export.SchematicFiles;
 import com.shepherdjerred.thestorm.creative.app.ClaimBook;
 import com.shepherdjerred.thestorm.creative.app.ClaimStore;
+import com.shepherdjerred.thestorm.creative.app.ReviewBook;
+import com.shepherdjerred.thestorm.creative.app.ReviewBook.Comment;
+import com.shepherdjerred.thestorm.creative.app.ReviewBook.Rating;
+import com.shepherdjerred.thestorm.creative.app.ReviewStore;
 import com.shepherdjerred.thestorm.creative.domain.CreativeConfig;
 import com.shepherdjerred.thestorm.creative.domain.PlotGrid;
 import com.shepherdjerred.thestorm.creative.domain.PlotId;
@@ -21,9 +25,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.InstantSource;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.random.RandomGenerator;
 import org.bukkit.entity.Player;
@@ -73,10 +80,14 @@ public class CreativeClaimCommandsPlugin extends JavaPlugin {
             2,
             200,
             8,
+            140,
+            20,
             List.of());
     var book = new ClaimBook(config.catalog());
     book.replace(List.of());
     claims = book;
+    var reviews = new ReviewBook();
+    reviews.replace(List.of(), List.of());
     var plots =
         new CreativePlots(
             new CreativePlots.Parts(
@@ -97,7 +108,10 @@ public class CreativeClaimCommandsPlugin extends JavaPlugin {
                 config,
                 world,
                 () -> {},
-                new SchematicFiles(database, new File(directory.toFile(), "creative-schematics"))));
+                new SchematicFiles(database, new File(directory.toFile(), "creative-schematics")),
+                config.grid()::generated,
+                reviews,
+                new MemoryReviews()));
     var root =
         Commands.literal("creative").requires(source -> source.getSender() instanceof Player);
     plots.attach(root);
@@ -126,16 +140,64 @@ public class CreativeClaimCommandsPlugin extends JavaPlugin {
 
     @Override
     public CompletableFuture<Void> save(StoredClaim claim) {
+      return saveAll(List.of(claim));
+    }
+
+    @Override
+    public CompletableFuture<Void> saveAll(List<StoredClaim> claims) {
       if (failSave) {
         return CompletableFuture.failedFuture(new IOException("creative claim save failed"));
       }
-      rows.put(claim.id(), claim);
+      for (var claim : claims) {
+        rows.put(claim.id(), claim);
+      }
       return CompletableFuture.completedFuture(null);
     }
 
     @Override
     public CompletableFuture<Void> delete(PlotId id) {
       rows.remove(id);
+      return CompletableFuture.completedFuture(null);
+    }
+  }
+
+  /** Ratings and comments kept in memory for command tests. */
+  private static final class MemoryReviews implements ReviewStore {
+
+    private final Map<PlotId, Map<UUID, Integer>> ratings = new HashMap<>();
+    private final List<Comment> comments = new ArrayList<>();
+
+    @Override
+    public CompletableFuture<Snapshot> load() {
+      var scores = new ArrayList<Rating>();
+      for (var plot : ratings.entrySet()) {
+        for (var score : plot.getValue().entrySet()) {
+          scores.add(new Rating(plot.getKey(), score.getKey(), score.getValue()));
+        }
+      }
+      return CompletableFuture.completedFuture(new Snapshot(scores, List.copyOf(comments)));
+    }
+
+    @Override
+    public CompletableFuture<Void> rate(
+        Optional<StoredClaim> ensure, PlotId plot, UUID player, int score) {
+      ratings.computeIfAbsent(plot, ignored -> new HashMap<>()).put(player, score);
+      return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    public CompletableFuture<Void> comment(Optional<StoredClaim> ensure, Comment comment) {
+      comments.add(comment);
+      return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    public CompletableFuture<Void> delete(PlotId plot, UUID player, int posted) {
+      comments.removeIf(
+          comment ->
+              comment.plot().equals(plot)
+                  && comment.player().equals(player)
+                  && comment.posted() == posted);
       return CompletableFuture.completedFuture(null);
     }
   }

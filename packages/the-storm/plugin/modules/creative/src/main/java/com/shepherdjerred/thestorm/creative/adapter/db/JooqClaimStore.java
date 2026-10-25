@@ -40,10 +40,17 @@ public final class JooqClaimStore implements ClaimStore {
 
   @Override
   public CompletableFuture<Void> save(StoredClaim claim) {
+    return saveAll(List.of(claim));
+  }
+
+  @Override
+  public CompletableFuture<Void> saveAll(List<StoredClaim> claims) {
     return done(
         database.write(
             dsl -> {
-              replace(dsl, claim);
+              for (var claim : claims) {
+                replace(dsl, claim);
+              }
               return true;
             }));
   }
@@ -82,22 +89,45 @@ public final class JooqClaimStore implements ClaimStore {
     return List.copyOf(claims);
   }
 
-  private static void replace(DSLContext dsl, StoredClaim claim) {
-    dsl.deleteFrom(CREATIVE_CLAIMS)
-        .where(CREATIVE_CLAIMS.PLOT_X.eq(claim.id().x()))
-        .and(CREATIVE_CLAIMS.PLOT_Z.eq(claim.id().z()))
+  static void replace(DSLContext dsl, StoredClaim claim) {
+    var updated =
+        dsl.update(CREATIVE_CLAIMS)
+            .set(CREATIVE_CLAIMS.OWNER, claim.owner().map(UUID::toString).orElse(null))
+            .set(CREATIVE_CLAIMS.RELEASED, claim.released())
+            .set(CREATIVE_CLAIMS.COUNTS_TOWARD_CAP, claim.countsTowardCap())
+            .set(CREATIVE_CLAIMS.NAME, claim.name())
+            .set(CREATIVE_CLAIMS.DESCRIPTION, claim.description())
+            .set(CREATIVE_CLAIMS.FLOOR, claim.surface().floor().orElse(null))
+            .set(CREATIVE_CLAIMS.WALL, claim.surface().wall().orElse(null))
+            .set(CREATIVE_CLAIMS.BIOME, claim.surface().biome().orElse(null))
+            .set(CREATIVE_CLAIMS.CLUSTER_X, claim.cluster().map(PlotId::x).orElse(null))
+            .set(CREATIVE_CLAIMS.CLUSTER_Z, claim.cluster().map(PlotId::z).orElse(null))
+            .where(CREATIVE_CLAIMS.PLOT_X.eq(claim.id().x()))
+            .and(CREATIVE_CLAIMS.PLOT_Z.eq(claim.id().z()))
+            .execute();
+    if (updated == 0) {
+      dsl.insertInto(CREATIVE_CLAIMS)
+          .set(CREATIVE_CLAIMS.PLOT_X, claim.id().x())
+          .set(CREATIVE_CLAIMS.PLOT_Z, claim.id().z())
+          .set(CREATIVE_CLAIMS.OWNER, claim.owner().map(UUID::toString).orElse(null))
+          .set(CREATIVE_CLAIMS.RELEASED, claim.released())
+          .set(CREATIVE_CLAIMS.COUNTS_TOWARD_CAP, claim.countsTowardCap())
+          .set(CREATIVE_CLAIMS.NAME, claim.name())
+          .set(CREATIVE_CLAIMS.DESCRIPTION, claim.description())
+          .set(CREATIVE_CLAIMS.FLOOR, claim.surface().floor().orElse(null))
+          .set(CREATIVE_CLAIMS.WALL, claim.surface().wall().orElse(null))
+          .set(CREATIVE_CLAIMS.BIOME, claim.surface().biome().orElse(null))
+          .set(CREATIVE_CLAIMS.CLUSTER_X, claim.cluster().map(PlotId::x).orElse(null))
+          .set(CREATIVE_CLAIMS.CLUSTER_Z, claim.cluster().map(PlotId::z).orElse(null))
+          .execute();
+    }
+    dsl.deleteFrom(CREATIVE_TRUST)
+        .where(CREATIVE_TRUST.PLOT_X.eq(claim.id().x()))
+        .and(CREATIVE_TRUST.PLOT_Z.eq(claim.id().z()))
         .execute();
-    dsl.insertInto(CREATIVE_CLAIMS)
-        .set(CREATIVE_CLAIMS.PLOT_X, claim.id().x())
-        .set(CREATIVE_CLAIMS.PLOT_Z, claim.id().z())
-        .set(CREATIVE_CLAIMS.OWNER, claim.owner().map(UUID::toString).orElse(null))
-        .set(CREATIVE_CLAIMS.RELEASED, claim.released())
-        .set(CREATIVE_CLAIMS.COUNTS_TOWARD_CAP, claim.countsTowardCap())
-        .set(CREATIVE_CLAIMS.NAME, claim.name())
-        .set(CREATIVE_CLAIMS.DESCRIPTION, claim.description())
-        .set(CREATIVE_CLAIMS.FLOOR, claim.surface().floor().orElse(null))
-        .set(CREATIVE_CLAIMS.WALL, claim.surface().wall().orElse(null))
-        .set(CREATIVE_CLAIMS.BIOME, claim.surface().biome().orElse(null))
+    dsl.deleteFrom(CREATIVE_FLAGS)
+        .where(CREATIVE_FLAGS.PLOT_X.eq(claim.id().x()))
+        .and(CREATIVE_FLAGS.PLOT_Z.eq(claim.id().z()))
         .execute();
     for (var member : claim.access().entrySet()) {
       dsl.insertInto(CREATIVE_TRUST)
@@ -130,7 +160,20 @@ public final class JooqClaimStore implements ClaimStore {
         column(row.getDescription(), "description"),
         access,
         flags,
-        surface(row));
+        surface(row),
+        cluster(row));
+  }
+
+  private static Optional<PlotId> cluster(CreativeClaimsRecord row) {
+    var x = row.getClusterX();
+    var z = row.getClusterZ();
+    if (x == null && z == null) {
+      return Optional.empty();
+    }
+    if (x == null || z == null) {
+      throw new IllegalStateException("creative claim cluster is incomplete");
+    }
+    return Optional.of(new PlotId(x, z));
   }
 
   private static PlotSurface surface(CreativeClaimsRecord row) {

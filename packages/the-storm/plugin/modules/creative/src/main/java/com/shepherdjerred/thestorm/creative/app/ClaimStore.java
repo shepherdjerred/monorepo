@@ -13,6 +13,9 @@ public interface ClaimStore {
   /** Replaces the row and its trust list. */
   CompletableFuture<Void> save(StoredClaim claim);
 
+  /** Replaces every row in one write. An empty list does nothing. */
+  CompletableFuture<Void> saveAll(List<StoredClaim> claims);
+
   /** Deletes a player claim that was never in the catalog. */
   CompletableFuture<Void> delete(PlotId id);
 }

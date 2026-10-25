@@ -26,6 +26,8 @@ borderSize: 8704
 claimCap: 2
 entityCap: 200
 brushRadius: 8
+commentLength: 140
+commentCap: 20
 plots:
   - id: "23;-25"
     owner: "9539add5-4359-4611-9984-2d23336359a3"

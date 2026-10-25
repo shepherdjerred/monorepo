@@ -17,6 +17,8 @@ import com.shepherdjerred.thestorm.creative.adapter.export.SchematicFiles;
 import com.shepherdjerred.thestorm.creative.adapter.worldedit.PlotSchematics;
 import com.shepherdjerred.thestorm.creative.app.ClaimBook;
 import com.shepherdjerred.thestorm.creative.app.ClaimStore;
+import com.shepherdjerred.thestorm.creative.app.ReviewBook;
+import com.shepherdjerred.thestorm.creative.app.ReviewStore;
 import com.shepherdjerred.thestorm.creative.domain.CatalogDrift;
 import com.shepherdjerred.thestorm.creative.domain.ClaimRefusal;
 import com.shepherdjerred.thestorm.creative.domain.ClaimRequest;
@@ -26,6 +28,7 @@ import com.shepherdjerred.thestorm.creative.domain.CreativePermissions;
 import com.shepherdjerred.thestorm.creative.domain.DownloadNames;
 import com.shepherdjerred.thestorm.creative.domain.EditDecision;
 import com.shepherdjerred.thestorm.creative.domain.PlotFlag;
+import com.shepherdjerred.thestorm.creative.domain.PlotFootprint;
 import com.shepherdjerred.thestorm.creative.domain.PlotGrid;
 import com.shepherdjerred.thestorm.creative.domain.PlotId;
 import com.shepherdjerred.thestorm.creative.domain.PlotRole;
@@ -33,8 +36,10 @@ import com.shepherdjerred.thestorm.creative.domain.PlotSurface;
 import com.shepherdjerred.thestorm.creative.domain.PlotView;
 import com.shepherdjerred.thestorm.creative.domain.StoredClaim;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -65,6 +70,9 @@ public final class CreativePlots {
   private final PlotGrid grid;
   private final CreativeSurfaceCommands choices;
   private final CreativeMaintenanceCommands maintenance;
+  private final CreativeMergeCommands merges;
+  private final CreativeSchematicCommands library;
+  private final CreativeReviewCommands reviews;
 
   /** What the plot commands need. Redraw runs on the main thread after a claim changes. */
   public record Parts(
@@ -74,7 +82,10 @@ public final class CreativePlots {
       CreativeConfig config,
       World world,
       Runnable redraw,
-      SchematicFiles schematics) {}
+      SchematicFiles schematics,
+      PlotFootprint.States template,
+      ReviewBook reviews,
+      ReviewStore reviewStore) {}
 
   public CreativePlots(Parts parts) {
     this.context = parts.context();
@@ -89,7 +100,44 @@ public final class CreativePlots {
     this.maintenance =
         new CreativeMaintenanceCommands(
             new CreativeMaintenanceCommands.Hooks(
-                grid, world, this::ready, this::owned, this::persist, this::removeClaim));
+                grid,
+                world,
+                this::ready,
+                this::owned,
+                this::persist,
+                this::removeClaim,
+                this::linked,
+                book::cluster,
+                this::persistAll));
+    this.merges =
+        new CreativeMergeCommands(
+            new CreativeMergeCommands.Hooks(
+                grid,
+                world,
+                parts.template(),
+                this::ready,
+                this::owned,
+                book::view,
+                this::claimRow,
+                book::merged,
+                book::cluster,
+                this::persistAll));
+    this.library =
+        new CreativeSchematicCommands(
+            new CreativeSchematicCommands.Hooks(
+                context, grid, world, schematics, this::ready, this::owned));
+    this.reviews =
+        new CreativeReviewCommands(
+            new CreativeReviewCommands.Hooks(
+                context,
+                config,
+                book,
+                parts.reviews(),
+                parts.reviewStore(),
+                this::ready,
+                this::standing,
+                book::view,
+                this::claimRow));
   }
 
   public void attach(LiteralArgumentBuilder<CommandSourceStack> root) {
@@ -123,6 +171,16 @@ public final class CreativePlots {
             .then(literal("confirm").executes(maintenance::clear)));
     root.then(literal("reset").executes(maintenance::reset));
     root.then(literal("unclaim").executes(maintenance::unclaim));
+    root.then(literal("merge").then(argument("plot", greedyString()).executes(merges::merge)));
+    root.then(literal("unlink").executes(merges::unlink));
+    root.then(literal("save").then(argument("name", word()).executes(library::save)));
+    root.then(literal("load").executes(library::load));
+    root.then(literal("paste").then(argument("name", word()).executes(library::paste)));
+    root.then(literal("rate").then(argument("score", word()).executes(reviews::rate)));
+    root.then(
+        literal("comment")
+            .then(literal("delete").executes(reviews::delete))
+            .then(argument("text", greedyString()).executes(reviews::comment)));
     root.then(literal("download").executes(this::download));
     root.then(
         literal("admin")
@@ -269,7 +327,7 @@ public final class CreativePlots {
     } else {
       next.remove(flag);
     }
-    persist(
+    persistShared(
         player,
         current.withFlags(next),
         "Set " + flag.stored() + " " + (on ? "on" : "off") + " for " + current.id().text() + ".");
@@ -294,7 +352,11 @@ public final class CreativePlots {
       error(player, "You are standing on a road.");
       return Command.SINGLE_SUCCESS;
     }
-    tell(player, describe(book.view(at.orElseThrow())));
+    var id = at.orElseThrow();
+    tell(player, describe(book.view(id)));
+    for (var line : reviews.lines(id)) {
+      tell(player, line);
+    }
     return Command.SINGLE_SUCCESS;
   }
 
@@ -407,7 +469,8 @@ public final class CreativePlots {
             view.description(),
             Map.of(),
             Set.of(),
-            PlotSurface.DEFAULT),
+            PlotSurface.DEFAULT,
+            Optional.empty()),
         new Notice("You claimed " + id.text() + ".", true));
   }
 
@@ -457,7 +520,7 @@ public final class CreativePlots {
     } else {
       members.remove(target.getUniqueId());
     }
-    persist(actor, row.withAccess(members), roleMessage(add, role, target.getName(), id));
+    persistShared(actor, row.withAccess(members), roleMessage(add, role, target.getName(), id));
   }
 
   private static boolean owner(Player actor, PlotView view) {
@@ -512,7 +575,16 @@ public final class CreativePlots {
         view.description(),
         view.access(),
         view.flags(),
-        view.surface());
+        view.surface(),
+        Optional.empty());
+  }
+
+  private StoredClaim claimRow(PlotId id) {
+    return claimHere(id, book.view(id));
+  }
+
+  private boolean linked(PlotId id) {
+    return book.merged(id).size() > 1;
   }
 
   private void rename(Player player, String text, boolean name) {
@@ -555,7 +627,8 @@ public final class CreativePlots {
     try {
       bytes =
           PlotSchematics.copy(
-              world, grid.bounds(id), world.getMinHeight(), world.getMaxHeight() - 1);
+              new PlotSchematics.Span(
+                  world, grid.bounds(id), world.getMinHeight(), world.getMaxHeight() - 1));
     } catch (RuntimeException failure) {
       context.logger().error("Creative download failed for {}", id.text(), failure);
       error(player, "That plot could not be copied.");
@@ -594,6 +667,10 @@ public final class CreativePlots {
       return;
     }
     var id = at.orElseThrow();
+    if (linked(id)) {
+      error(actor, "Unlink this plot before assigning it.");
+      return;
+    }
     if (!inside(id)) {
       error(actor, "That plot is outside the world border.");
       return;
@@ -610,7 +687,8 @@ public final class CreativePlots {
             view.description(),
             view.access(),
             view.flags(),
-            view.surface()),
+            view.surface(),
+            Optional.empty()),
         "Assigned " + id.text() + " to " + target.getName() + ".");
   }
 
@@ -621,11 +699,24 @@ public final class CreativePlots {
       return;
     }
     var id = at.orElseThrow();
+    if (linked(id)) {
+      error(actor, "Unlink this plot before unclaiming it.");
+      return;
+    }
     if (book.catalog().get(id).isPresent()) {
       persist(
           actor,
           new StoredClaim(
-              id, Optional.empty(), true, false, "", "", Map.of(), Set.of(), PlotSurface.DEFAULT),
+              id,
+              Optional.empty(),
+              true,
+              false,
+              "",
+              "",
+              Map.of(),
+              Set.of(),
+              PlotSurface.DEFAULT,
+              Optional.empty()),
           "Released " + id.text() + ".");
       return;
     }
@@ -667,9 +758,68 @@ public final class CreativePlots {
   /** Chat for a saved claim, and whether that save should then take the player home. */
   private record Notice(String ok, boolean teleportHome) {}
 
+  /** One optimistic write of several merged rows. */
+  private record SavedBatch(
+      Player player, List<StoredClaim> claims, List<Optional<StoredClaim>> previous, String ok) {}
+
   /** One optimistic claim write and what to tell the player when it lands. */
   private record PendingSave(
       Player player, StoredClaim claim, Optional<StoredClaim> previous, Notice notice) {}
+
+  private void persistShared(Player player, StoredClaim standing, String ok) {
+    var rows = book.cluster(standing.id());
+    if (rows.size() < 2) {
+      persist(player, standing, ok);
+      return;
+    }
+    var next = new ArrayList<StoredClaim>();
+    var seen = false;
+    for (var row : rows) {
+      if (row.id().equals(standing.id())) {
+        next.add(standing);
+        seen = true;
+      } else {
+        next.add(row.withAccess(standing.access()).withFlags(standing.flags()));
+      }
+    }
+    if (!seen) {
+      next.add(standing);
+    }
+    persistAll(player, next, ok);
+  }
+
+  private void persistAll(Player player, List<StoredClaim> claims, String ok) {
+    var previous = new ArrayList<Optional<StoredClaim>>();
+    for (var claim : claims) {
+      previous.add(book.row(claim.id()));
+      book.put(claim);
+    }
+    redraw.run();
+    var batch = new SavedBatch(player, List.copyOf(claims), List.copyOf(previous), ok);
+    var saved =
+        store
+            .saveAll(claims)
+            .whenCompleteAsync(
+                (ignored, failure) -> persistedAll(batch, failure),
+                context.scheduler().mainThread());
+    var _ = saved;
+  }
+
+  private void persistedAll(SavedBatch batch, @Nullable Throwable failure) {
+    if (failure != null) {
+      for (int i = 0; i < batch.claims().size(); i++) {
+        restore(batch.claims().get(i).id(), batch.previous().get(i));
+      }
+      context.logger().error("Creative claim save failed", failure);
+      if (batch.player().isOnline()) {
+        error(batch.player(), "That could not be saved.");
+      }
+      return;
+    }
+    if (batch.player().isOnline()) {
+      success(batch.player(), batch.ok());
+    }
+  }
 
   private void persist(Player player, StoredClaim claim, String ok) {
     persist(player, claim, new Notice(ok, false));
@@ -741,7 +891,8 @@ public final class CreativePlots {
             view.description(),
             view.access(),
             view.flags(),
-            view.surface()));
+            view.surface(),
+            Optional.empty()));
   }
 
   private boolean ready(Player player) {

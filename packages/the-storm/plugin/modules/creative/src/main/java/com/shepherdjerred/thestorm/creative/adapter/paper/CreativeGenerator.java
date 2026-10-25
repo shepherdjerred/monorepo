@@ -53,6 +53,11 @@ public final class CreativeGenerator extends ChunkGenerator {
     this.blocks = Map.copyOf(cached);
   }
 
+  /** The recovered square, including the decorated roads. */
+  public PlotTemplate template() {
+    return template;
+  }
+
   /** Generator for {@code grid}, using the template shipped in this jar. */
   public static CreativeGenerator open(PlotGrid grid) {
     try (var in = CreativeGenerator.class.getResourceAsStream(TEMPLATE)) {

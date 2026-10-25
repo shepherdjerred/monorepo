@@ -11,6 +11,7 @@ import com.shepherdjerred.thestorm.creative.domain.StoredClaim;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -104,6 +105,59 @@ public final class ClaimBook implements PlotMembership {
       views.add(view(id));
     }
     return List.copyOf(views);
+  }
+
+  /** Plots that share {@code id}'s anchor, including {@code id}. A lone plot is just itself. */
+  @Override
+  public List<PlotId> merged(PlotId id) {
+    var row = stored.get(id);
+    if (row == null || row.cluster().isEmpty()) {
+      return List.of(id);
+    }
+    var anchor = row.cluster().orElseThrow();
+    var members = new ArrayList<PlotId>();
+    for (var claim : stored.values()) {
+      if (anchor.equals(claim.cluster().orElse(null))) {
+        members.add(claim.id());
+      }
+    }
+    if (members.isEmpty()) {
+      return List.of(id);
+    }
+    return List.copyOf(members);
+  }
+
+  /** Stored rows in {@code id}'s merge, when they have been saved. */
+  public List<StoredClaim> cluster(PlotId id) {
+    var rows = new ArrayList<StoredClaim>();
+    for (var member : merged(id)) {
+      var row = stored.get(member);
+      if (row != null) {
+        rows.add(row);
+      }
+    }
+    return List.copyOf(rows);
+  }
+
+  /** Every anchor that has at least two plots. */
+  @Override
+  public List<List<PlotId>> clusters() {
+    var grouped = new LinkedHashMap<PlotId, List<PlotId>>();
+    for (var claim : stored.values()) {
+      if (claim.cluster().isEmpty()) {
+        continue;
+      }
+      grouped
+          .computeIfAbsent(claim.cluster().orElseThrow(), ignored -> new ArrayList<>())
+          .add(claim.id());
+    }
+    var result = new ArrayList<List<PlotId>>();
+    for (var members : grouped.values()) {
+      if (members.size() >= 2) {
+        result.add(List.copyOf(members));
+      }
+    }
+    return List.copyOf(result);
   }
 
   @Override

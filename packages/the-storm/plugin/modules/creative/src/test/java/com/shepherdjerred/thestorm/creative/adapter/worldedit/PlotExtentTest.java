@@ -3,8 +3,11 @@ package com.shepherdjerred.thestorm.creative.adapter.worldedit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.shepherdjerred.thestorm.creative.domain.PlotArea;
 import com.shepherdjerred.thestorm.creative.domain.PlotBounds;
+import com.shepherdjerred.thestorm.creative.domain.PlotGrid;
 import com.shepherdjerred.thestorm.creative.domain.PlotId;
+import com.shepherdjerred.thestorm.creative.domain.PlotMerge;
 import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.extent.NullExtent;
 import com.sk89q.worldedit.math.BlockVector3;
@@ -16,7 +19,6 @@ import com.sk89q.worldedit.world.block.BlockType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -86,8 +88,31 @@ final class PlotExtentTest {
     assertThat(inner.writes).containsExactly(inside);
   }
 
+  @Test
+  @DisplayName("a merged road stays inside the edit")
+  void aMergedRoadStaysInsideTheEdit() throws WorldEditException {
+    var grid = PlotGrid.recovered();
+    var east = new PlotId(1, 1);
+    var further = new PlotId(2, 1);
+    var inner = new RecordingExtent();
+    var extent =
+        new PlotExtent(
+            inner,
+            new PlotExtent.Column(PlotMerge.areas(grid, List.of(east, further)), -64, 319),
+            () -> {});
+    var road = BlockVector3.at(87, 64, 45);
+    var outside = BlockVector3.at(4, 64, 45);
+
+    extent.setBlock(road, STONE);
+    extent.commit();
+
+    assertThat(inner.writes).containsExactly(road);
+    assertThatThrownBy(() -> extent.setBlock(outside, STONE)).isInstanceOf(RefusedEdit.class);
+  }
+
   private PlotExtent extent(RecordingExtent inner) {
-    return new PlotExtent(inner, new PlotExtent.Column(Optional.of(plot), -64, 319), () -> {});
+    return new PlotExtent(
+        inner, new PlotExtent.Column(List.of(PlotArea.of(plot)), -64, 319), () -> {});
   }
 
   /** A block id only. WorldEdit's real states need a platform this test does not start. */
