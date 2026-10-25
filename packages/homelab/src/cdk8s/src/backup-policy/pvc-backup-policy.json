@@ -451,6 +451,12 @@
   },
   {
     "namespace": "minecraft-tsmc",
+    "name": "minecraft-tsmc-bluemap",
+    "backup": "disabled",
+    "reason": "Reproducible BlueMap renders migrated intact from the backed-up world volume"
+  },
+  {
+    "namespace": "minecraft-tsmc",
     "name": "datadir-minecraft-tsmc-0",
     "backup": "enabled",
     "reason": "Selected Minecraft world"

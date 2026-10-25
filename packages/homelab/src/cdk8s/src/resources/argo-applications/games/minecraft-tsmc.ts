@@ -15,6 +15,11 @@ import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
+import {
+  blueMapStorageInit,
+  blueMapStorageVolumes,
+  createBlueMapStorage,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/bluemap-storage.ts";
 
 const NAMESPACE = "minecraft-tsmc";
 const analytics = siteAnalyticsConfiguration("ts-mc");
@@ -58,6 +63,7 @@ export function minecraftChartRepository(
  */
 /** Objects the root renders beside the Application; the `minecraft-tsmc-companion` companion chart renders the same objects under transition rendering. */
 export function createMinecraftTsmcResources(chart: Chart): void {
+  createBlueMapStorage(chart);
   createMinecraftProxyTrust(chart, NAMESPACE, 25_565);
   createMinecraftPublicStatus(chart);
   // The Storm bridge credentials. Required fields (UPPERCASE_SNAKE labels, matching
@@ -127,7 +133,13 @@ export function createMinecraftTsmcApp(chart: Chart) {
     replicaCount: 1,
     // Maintenance owns deliberate stop/start; normal operation stays available.
     workloadAsStatefulSet: true,
-    extraPodSpec: { priorityClassName: BURST_SERVICE_PRIORITY },
+    extraPodSpec: {
+      priorityClassName: BURST_SERVICE_PRIORITY,
+      // The chart evaluates extraPodSpec values as template strings.
+      automountServiceAccountToken: "false",
+    },
+    initContainers: [blueMapStorageInit()],
+    extraVolumes: blueMapStorageVolumes(),
     strategyType: "RollingUpdate",
     // mc-router annotation for hostname-based routing (must be top-level)
     serviceAnnotations: {
