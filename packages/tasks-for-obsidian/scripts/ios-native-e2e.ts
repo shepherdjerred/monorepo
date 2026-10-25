@@ -1,6 +1,11 @@
 import { cp, mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
+import { boundedCommand } from "tasknotes-macos/scripts/apple-acceptance/bounded-command.ts";
+import {
+  sourceFingerprints as fingerprintSources,
+  requireStableSources as requireSharedStableSources,
+} from "tasknotes-macos/scripts/apple-acceptance/source-provenance.ts";
 
 const packageRoot = path.resolve(import.meta.dir, "..");
 const fixture = path.resolve(
@@ -20,20 +25,16 @@ async function command(
   capture = false,
   cwd = packageRoot,
 ): Promise<string> {
-  const child = Bun.spawn(argv, {
+  return boundedCommand(argv, {
     cwd,
-    env: { ...Bun.env, MISE_EXEC_AUTO_INSTALL: "false" },
-    stdout: capture ? "pipe" : "inherit",
-    stderr: "inherit",
+    capture,
+    logs: path.join(evidence, "commands"),
+    timeoutMS: argv.includes("build-for-testing")
+      ? 600_000
+      : argv.includes("test-without-building")
+        ? 180_000
+        : 120_000,
   });
-  const output = capture ? await new Response(child.stdout).text() : "";
-  const status = await child.exited;
-  if (status !== 0) {
-    throw new Error(
-      `${argv.slice(0, 2).join(" ")} exited with ${String(status)}`,
-    );
-  }
-  return output.trim();
 }
 
 export async function verifyVault(vault: string): Promise<void> {
@@ -122,53 +123,14 @@ export function requireStableSources(
   before: SourceFingerprints,
   after: SourceFingerprints,
 ): void {
-  if (JSON.stringify(before) !== JSON.stringify(after)) {
-    throw new Error(
-      "Apple/core/fixture inputs changed while building native E2E artifacts",
-    );
-  }
+  requireSharedStableSources(before, after);
 }
 
-async function sourceFingerprints(): Promise<SourceFingerprints> {
+export async function sourceFingerprints(): Promise<SourceFingerprints> {
   const workspace = path.resolve(packageRoot, "../..");
-  const output = await command(
-    [
-      "git",
-      "ls-files",
-      "-z",
-      "--cached",
-      "--others",
-      "--exclude-standard",
-      "--",
-      "packages/tasks-for-obsidian/ios",
-      "packages/tasks-for-obsidian/scripts",
-      "packages/tasknotes-macos",
-      "packages/tasknotes-core",
-      "packages/tasknotes-fixtures",
-      "bun.lock",
-      "package.json",
-      ".mise.toml",
-    ],
-    true,
-    workspace,
+  return fingerprintSources(workspace, (argv) =>
+    command(argv, true, workspace),
   );
-  const files = [...new Set(output.split("\0").filter(Boolean))].sort();
-  if (files.length === 0 || files.length > 20_000) {
-    throw new Error("Unexpected native source input inventory");
-  }
-  const fingerprints: SourceFingerprints = {};
-  for (const file of files) {
-    if (path.isAbsolute(file) || file.split("/").includes("..")) {
-      throw new Error("Native source input escaped the workspace");
-    }
-    const source = Bun.file(path.join(workspace, file));
-    fingerprints[file] = (await source.exists())
-      ? new Bun.CryptoHasher("sha256")
-          .update(await source.bytes())
-          .digest("hex")
-      : "deleted";
-  }
-  return fingerprints;
 }
 
 async function writeProvenance(
@@ -322,7 +284,24 @@ async function retainEvidence(device: string, seeded: boolean): Promise<void> {
     throw new AggregateError(failures, "Could not retain native E2E evidence");
 }
 
-async function main(): Promise<void> {
+export type IosNativeJourney = {
+  kind: string;
+  seed: (vault: string) => Promise<void>;
+  execute: (context: {
+    device: string;
+    testRun: string;
+    evidence: string;
+    resultBundle: string;
+    vault: () => Promise<string>;
+    command: typeof command;
+  }) => Promise<void>;
+  verify: (vault: string) => Promise<void>;
+};
+
+/** The default capture journey and dedicated recurrence journey own separate simulators/runs. */
+export async function runIosNativeJourney(
+  journey?: IosNativeJourney,
+): Promise<void> {
   if (process.platform !== "darwin")
     throw new Error("Native iOS E2E requires macOS and Xcode");
   if (Bun.argv.length !== 2)
@@ -367,16 +346,46 @@ async function main(): Promise<void> {
       "Build/Products/Debug-iphonesimulator/TasksForObsidian.app",
     );
     await command(["xcrun", "simctl", "install", device, app]);
-    await cp(fixture, await installedVault(device), {
-      recursive: true,
-      errorOnExist: true,
-      force: false,
-    });
+    const vault = await installedVault(device);
+    if (journey) await journey.seed(vault);
+    else
+      await cp(fixture, vault, {
+        recursive: true,
+        errorOnExist: true,
+        force: false,
+      });
     seeded = true;
     const testRun = await isolatedTestRun(device);
     await writeProvenance(device, app, fingerprints);
-    await runJourney(device, testRun);
-    await verifyVault(await installedVault(device));
+    await Bun.write(
+      path.join(evidence, "journey.json"),
+      JSON.stringify(
+        {
+          schemaVersion: 1,
+          runID,
+          device,
+          kind: journey?.kind ?? "native-local-ios",
+          status: "running",
+        },
+        null,
+        2,
+      ),
+    );
+    if (journey) {
+      await journey.execute({
+        device,
+        testRun,
+        evidence,
+        resultBundle,
+        vault: () => installedVault(device),
+        command,
+      });
+      await journey.verify(await installedVault(device));
+    } else {
+      await runJourney(device, testRun);
+      await verifyVault(await installedVault(device));
+    }
+    requireStableSources(fingerprints, await sourceFingerprints());
   } catch (error) {
     failures.push(error);
   }
@@ -395,6 +404,20 @@ async function main(): Promise<void> {
   } catch (error) {
     failures.push(error);
   }
+  await Bun.write(
+    path.join(evidence, "journey.json"),
+    JSON.stringify(
+      {
+        schemaVersion: 1,
+        runID,
+        device,
+        kind: journey?.kind ?? "native-local-ios",
+        status: failures.length === 0 ? "passed" : "failed",
+      },
+      null,
+      2,
+    ),
+  );
   if (failures.length > 0)
     throw new AggregateError(
       failures,
@@ -402,4 +425,4 @@ async function main(): Promise<void> {
     );
 }
 
-if (import.meta.main) await main();
+if (import.meta.main) await runIosNativeJourney();

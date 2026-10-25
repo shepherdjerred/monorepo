@@ -9,6 +9,9 @@ namespace TaskNotes.Windows.App;
 /// <summary>Dispatches packaged COM background activation before the WinUI application is constructed.</summary>
 internal static partial class Program
 {
+#if TASKNOTES_E2E
+    internal static string? AcceptanceDescriptorPath { get; private set; }
+#endif
     private static readonly ManualResetEventSlim BackgroundCompleted = new();
     private static readonly ManualResetEventSlim BackgroundStarted = new();
     private static readonly Guid UnknownId = new("00000000-0000-0000-C000-000000000046");
@@ -16,6 +19,21 @@ internal static partial class Program
     [STAThread]
     private static void Main(string[] args)
     {
+#if TASKNOTES_E2E
+        if (args.Contains("--facet-acceptance-descriptor", StringComparer.Ordinal))
+        {
+            if (args.Length != 2 || args[0] != "--facet-acceptance-descriptor")
+                throw new ArgumentException(
+                    "An acceptance launch requires exactly one descriptor path."
+                );
+            AcceptanceDescriptorPath = args[1];
+        }
+#else
+        if (args.Contains("--facet-acceptance-descriptor", StringComparer.Ordinal))
+            throw new ArgumentException(
+                "Acceptance descriptors are unavailable in this application build."
+            );
+#endif
         WinRT.ComWrappersSupport.InitializeComWrappers();
         if (args.Contains("-FacetBackgroundServer", StringComparer.Ordinal))
         {

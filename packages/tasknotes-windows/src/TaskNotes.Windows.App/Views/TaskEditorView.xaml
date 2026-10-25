@@ -189,6 +189,18 @@
                     PlaceholderText="RRULE or natural recurrence"
                     Tag="recurrence"
                     Text="{x:Bind ViewModel.Recurrence, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button
+                        AutomationProperties.AutomationId="Facet.Editor.GenerateOccurrence"
+                        Click="GenerateOccurrence_Click"
+                        Content="Generate occurrence…"
+                        IsEnabled="{x:Bind ViewModel.CanGenerateOccurrences, Mode=OneWay}" />
+                    <Button
+                        AutomationProperties.AutomationId="Facet.Editor.GenerateWindow"
+                        Click="GenerateWindow_Click"
+                        Content="Generate rolling window"
+                        IsEnabled="{x:Bind ViewModel.CanGenerateOccurrences, Mode=OneWay}" />
+                </StackPanel>
                 <ComboBox
                     AutomationProperties.AutomationId="TaskNotes.Editor.RecurrenceAnchor"
                     Header="Recurrence anchor"

@@ -110,7 +110,9 @@ describe("native preparation scope", () => {
   test("Mac preparation actually issues only shared and Mac build commands", async () => {
     const value = macManifest();
     value.clients = null;
-    const execute = vi.fn(async () => "");
+    const execute = vi.fn<
+      NonNullable<Parameters<typeof prepareNativeClients>[1]>
+    >(async () => "");
     const persist = vi.fn(() => Promise.resolve());
     const result = await prepareNativeClients(value, execute, persist);
     const commands = execute.mock.calls.map((args) => args[0]);
@@ -233,9 +235,10 @@ describe("native preparation scope", () => {
         { length: 2 * 1024 * 1024 + 1024 },
         (_, index) => index % 251,
       );
-      expect(
-        await readFile(path.join(directory, "Attachments/multi-piece.bin")),
-      ).toEqual(Buffer.from(binary));
+      const persistedBinary = await readFile(
+        path.join(directory, "Attachments/multi-piece.bin"),
+      );
+      expect(persistedBinary.equals(Buffer.from(binary))).toBe(true);
       await expect(
         verifyReplica(directory, result.reference),
       ).resolves.toBeUndefined();

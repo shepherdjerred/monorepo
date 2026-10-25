@@ -94,6 +94,10 @@ struct FacetTaskEditor: View {
                         rule: $extras.recurrence, scheduled: $scheduled,
                         anchor: $extras.recurrenceAnchor, dateCreated: extras.dateCreated)
                 }
+                FacetOccurrenceGenerationSection(
+                    store: store, task: task, profileID: profileID,
+                    disabled: hasChanges || submitted != nil || isSaving,
+                    applied: { dismiss() })
                 Section("Organize") {
                     tokens("Projects", key: "projects", value: $projects)
                     tokens("Contexts", key: "contexts", value: $contexts)
@@ -162,6 +166,12 @@ struct FacetTaskEditor: View {
             }
         }
         .interactiveDismissDisabled(hasChanges || isSaving || submitted != nil)
+        .task(
+            id: FacetOccurrenceTaskIdentity(
+                profileID: profileID, path: task.path, revision: task.revision)
+        ) {
+            await store.loadOccurrenceOverview(profileID: profileID)
+        }
         .sheet(isPresented: $showsRecovery) {
             if let admittedMutationID {
                 FacetRetainedDraftRecovery(

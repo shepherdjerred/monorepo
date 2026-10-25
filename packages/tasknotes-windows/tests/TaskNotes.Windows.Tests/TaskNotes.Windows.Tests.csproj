@@ -10,6 +10,18 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile
+      Include="../../src/TaskNotes.Windows.App/Acceptance/StandaloneAcceptanceDescriptor.cs"
+      Link="Adapters/StandaloneAcceptanceDescriptor.cs"
+    />
+    <Compile
+      Include="../../src/TaskNotes.Windows.App/Acceptance/StandaloneAcceptanceBootstrap.cs"
+      Link="Adapters/StandaloneAcceptanceBootstrap.cs"
+    />
+    <EmbeddedResource
+      Include="../../e2e/standalone/contract.json"
+      LogicalName="StandaloneAcceptanceSchema.json"
+    />
+    <Compile
       Include="../../src/TaskNotes.Windows.App/ShellPreferencesCodec.cs"
       Link="Adapters/ShellPreferencesCodec.cs"
     />
@@ -24,6 +36,10 @@
     <EmbeddedResource
       Include="../../../tasknotes-fixtures/vault/facet-contract.json"
       LogicalName="FacetContractCases.json"
+    />
+    <EmbeddedResource
+      Include="../../../tasknotes-fixtures/vault/facet-occurrence-contract.json"
+      LogicalName="FacetOccurrenceContractCases.json"
     />
     <EmbeddedResource
       Include="../../../tasknotes-fixtures/vault/facet-raw-contract.json"

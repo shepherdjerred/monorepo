@@ -64,11 +64,10 @@ extension FacetStore {
                     self.appliedFeedback = FacetAppliedFeedback(event: event)
                 }
             })
-        if !applied, admission?.mutationID != nil {
-            await refreshSavedActions(
-                ownsPresentation: { self.engine === engine },
-                load: { try await engine.pendingMutations() })
-        }
+        await settleOccurrenceAction(
+            applied: applied, admission: admission,
+            action: (profileID: profileID, mutationID: mutationID),
+            engine: engine, ownsPresentation: ownsIntent)
         return applied
     }
 

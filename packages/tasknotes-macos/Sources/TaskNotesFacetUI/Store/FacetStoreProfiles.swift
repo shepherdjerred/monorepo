@@ -49,6 +49,10 @@ extension FacetStore {
     }
 
     public func refresh() async {
+        await refresh(schedulingOccurrences: true)
+    }
+
+    internal func refresh(schedulingOccurrences: Bool) async {
         guard let engine, let profileID = selectedProfileID else { return }
         let logicalQuery = query()
         await refreshWithOperations(
@@ -66,6 +70,9 @@ extension FacetStore {
                 }, refresh: { _ = try await engine.refresh(profileID: profileID) },
                 snapshot: { try await engine.snapshot(profileID: profileID, query: logicalQuery) },
                 ownsEngine: { self.engine === engine }))
+        if schedulingOccurrences, self.engine === engine {
+            requestOccurrenceMaintenance(profileID: profileID)
+        }
     }
 
     public func reloadQuery() async {

@@ -7,6 +7,7 @@ extension FacetStore {
     /// and outbox receipts; a foreground resume supersedes the background lease.
     public func runBackgroundSync(budget: Duration = .seconds(20)) async -> Bool {
         guard !foreground, budget > .zero, budget <= .seconds(120) else { return false }
+        var requestedMaintenance = false
         let lease = UUID()
         backgroundLease = lease
         await start()
@@ -17,8 +18,15 @@ extension FacetStore {
             while backgroundLease == lease, ContinuousClock.now < deadline {
                 try _Concurrency.Task.checkCancellation()
                 if try await backgroundProfilesSettled() {
-                    completed = true
-                    break
+                    if !requestedMaintenance {
+                        for profile in profiles {
+                            requestOccurrenceMaintenance(profileID: profile.id)
+                        }
+                        requestedMaintenance = true
+                    } else if occurrenceQueue.isSettled {
+                        completed = true
+                        break
+                    }
                 }
                 try await _Concurrency.Task.sleep(for: .seconds(1))
             }
@@ -26,6 +34,7 @@ extension FacetStore {
         if backgroundLease == lease {
             if completed { await refreshReminders() }
             backgroundLease = nil
+            occurrenceWorker?.cancel()
             await stopSessions()
         }
         return completed && !_Concurrency.Task.isCancelled

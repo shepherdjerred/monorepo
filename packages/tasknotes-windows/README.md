@@ -149,14 +149,13 @@ bun run windows:mutation # explicit Stryker.NET and cargo-mutants deep gate
 bun run windows:package  # signed MSIX under AppPackages/
 bun run windows:cross-package # unsigned MSIX built on Linux
 bun run windows:run      # register debug identity and launch
-bun run windows:parity-check
-bun run windows:e2e
-bun run windows:e2e --scenario quick-add-create
-bun run windows:e2e --keep-artifacts
+bun run windows:parity-check # original assertion inventory, not runtime proof
+bun run windows:e2e      # standalone production-store local journey
+bun run windows:e2e --scenario standalone-production
 bun run windows:accessibility # packaged keyboard and UIA contract scenario
 bun run windows:visual-profile # requires TASKNOTES_VISUAL_PROFILE and matching OS state
 bun run windows:visual-matrix  # aggregates six fresh real-session profiles
-bun run windows:verify   # complete local release and packaged-E2E gate
+bun run windows:verify   # local checks, packaged local UIA, six real visual profiles
 ```
 
 `windows:run` is also the correct way to refresh an existing Developer Mode
@@ -288,6 +287,60 @@ existing profiles, preserving their replicas and pending changes. App-local
 files retain nonsecret profile capabilities, selection and immutable mutation
 envelopes. Shell preferences remain in local settings.
 
+The inspector offers explicit single-date generation and a configured rolling
+window as user actions with normal core Undo authority. Settings queries typed,
+paged generation outcomes after restart independently of primary draft cleanup.
+Pending, failed and unrepairable outcomes have separate presentation; Repair
+re-queries the current core-authored command and parent/child revision fences
+before admitting a new user decision. The original progression and older retry
+envelopes remain immutable.
+
+The local packaged acceptance journey uses an ordinary daily series and a
+descriptor-owned missing-template fault. Completion must remain saved while
+Settings reports a durable failed successor after a cold relaunch. Restoring
+the template alone must not retry it; the real Repair action creates the future
+occurrence, and Undo restores the exact complete vault while preserving the
+already completed child and progressed parent. Semantic assertions read exact
+typed properties through Rust's parser in a separate read-only index; opaque
+metadata, whole-vault Undo and original seed hashes retain independent byte
+checks. This source journey still requires interactive Windows execution.
+
+Automatic rolling generation runs through the same serialized production journal,
+with the core's `automatic_maintenance` origin and no user sound or Undo authority.
+It requires a writable private capability, valid indexed configuration, and the
+core's settled initial-Sync barrier for Windows' current Direct Sync profiles.
+Disabling network sessions does not manufacture readiness. Browsing and reminder
+projection never request generation. Initialization, explicit refresh, user
+mutations and settled remote-content changes coalesce by profile, captured local
+day and version-fenced pages. Dirty generations preserve requests arriving during
+a traversal or drain; upload acknowledgments do not start another generation loop.
+Lifecycle, secure account authority and exact profile ownership are rechecked
+after awaits and again with readiness on the native worker before an automatic
+write. A lost owner leaves already admitted envelopes intact.
+
+A parent rename or deletion between a complete plan and native dispatch is a
+typed rejection. Only an exact absent or parked receipt permits retiring that
+obsolete automatic envelope and bounded replanning; uncertain pending/applied
+decisions remain retained. An expected recurrence expansion-budget rejection
+keeps the last complete task projection and publishes durable generation
+outcomes and retained actions, so a correctable repeat rule cannot fault the
+background publication pump or hide Repair after restart.
+
+Completed task and saved-view projections belong to one explicit profile. A
+profile switch clears actionable rows, caches and vocabulary before loading
+the new vault; a rejected query can retain a prior complete list only for that
+same profile. Cache-based legacy actions require the selected projection owner,
+while rendered-row actions retain and verify their explicit original profile
+and reviewed revision. Generation outcomes, saved actions and actual core Undo
+remain available independently when the new vault has no complete task list.
+
+Recovery also reviews automatic envelopes whose parent was deleted or stopped
+being recurring. An obsolete decision is retired only after the exact core
+receipt reports it absent or parked, followed by a fresh bounded replan. Pending
+or applied outcomes retain their original identity for observation. Repeated
+concurrent changes stop at an actionable refresh message; they cannot create an
+unbounded maintenance loop or repeatedly submit the same stale fence.
+
 The composition root uses Microsoft.Extensions.Hosting and writes allow-listed
 JSONL diagnostics under app-local storage. Logs contain operation metadata,
 correlation IDs, durations, status codes, and exception types; tokens, headers,
@@ -352,19 +405,61 @@ release, then complete the product submission in Partner Center.
 
 ## Acceptance layers
 
-`@tasknotes/e2e` creates a fresh seeded Markdown vault, starts the real
-`tasknotes-server` on an ephemeral port, and fronts it with a deterministic
-offline/fail-next proxy. `windows:e2e` builds and registers the isolated
-`red.sjer.TaskNotes.E2E` package once, resets package data and Credential Locker
-state between serial scenarios, and drives the app with direct Windows UI
-Automation. Failed scenarios retain the redacted server/proxy logs, JUnit XML,
-UIA tree, screenshot, process inventory, and vault under `artifacts/e2e/`.
+`windows:e2e` builds and installs the dedicated `red.sjer.TaskNotes.E2E`
+package and drives the normal `FacetTaskNotesStore` and Rust engine through
+Windows UI Automation. Each invocation stages a fresh synthetic vault with real
+TaskNotes configuration and exact seed hashes under that package's
+`LocalState/StandaloneAcceptance/<run UUID>/`. A closed descriptor binds the
+run, package family, private profile and seed bytes. Its JSON Schema is shared
+by the actual TypeScript and C# validators. Initial bootstrap rejects links,
+undeclared files, changed hashes and foreign profiles; a bound durable receipt
+allows subsequent task edits to survive relaunch. It never grants an external
+folder write capability or supplies a fake account/remote. Local acceptance
+disables Sync; real remote behavior is a separate acceptance layer.
 
-That harness exercises the retained server implementation; its passing results
-do not prove the standalone account, replica or direct Sync composition.
-Standalone acceptance must exercise local Markdown mutation, immutable retry
-identity, cached restart, remote ingestion, conflicts and the equivalent UI
-assertions through the production host.
+The descriptor entrypoint and isolated settings/credential namespace exist only
+in the E2E build. Release rejects the descriptor argument and excludes its
+bootstrap sources. The runner refuses to adopt a running E2E package and never
+resets another run's package data, credentials or profile. UIA ownership binds
+the activation-returned PID, primary executable, actual package family, process
+creation lifetime, and exactly one run-specific workspace window. Restarts stop
+only that owned process. Global hotkey verification briefly creates one
+test-owned focus window and destroys that exact window on the same thread.
+
+The production journey covers local capture, validation and autosave, deletion,
+search/navigation, bulk operations, portable saved-view Markdown, routes,
+board mutations, shell persistence, accessibility, and hotkey collisions. A real
+Windows file-sharing denial exercises retained-action admission and retry.
+Relaunch preserves the original ID, timestamp, revision and command; a concurrent
+Markdown edit exercises rejected-action retirement without overwriting the other
+editor. Completion Undo checks the original file bytes, including grouped
+actions. Untouched Markdown, unknown historical metadata and a binary attachment
+have independent exact-byte assertions.
+
+Each native producer must emit precisely its assertion set from
+[`e2e/standalone/scenarios.json`](e2e/standalone/scenarios.json); missing,
+duplicate, foreign-run or wrong-scenario evidence fails. Results, JUnit, the
+synthetic vault and app-only PNGs remain in the fresh run's private directory,
+whose path the runner prints. Capture uses `PrintWindow` for the owned window,
+rejects visible password surfaces and blank output, and never screenshots the
+desktop. Each real scale/theme profile captures Browse, inspector, Quick Add
+and Board. Native execution is required to establish that these producers work;
+portable tests and source validation do not establish UIA acceptance.
+
+The old server scenario sources and runner are non-executable reference text
+under `e2e/reference`; their assertions remain in `e2e/scenarios.json` and
+`parity.json`. `windows:parity-check` preserves that original inventory.
+[`e2e/standalone/porting.json`](e2e/standalone/porting.json) maps every original
+assertion to its standalone producer, an explicit semantic replacement, or a
+named live acceptance requirement. No server-backed
+release composition or obsolete URL/token UI is reintroduced. Executable
+server host unit/integration contracts remain separate.
+
+Real account/MFA and vault discovery, Credential Locker separation,
+independent-client bidirectional Sync and offline replay, account reauthorization,
+and actual two-replica conflicts require the named live scenarios in that matrix.
+They need a synthetic authorized remote vault and an interactive Windows host;
+local acceptance makes no claim about them.
 
 The Windows UI lane requires unlocked interactive Windows 11 x64 workers. The
 inactive lane contract is checked in at `ci/windows-ci.pipeline.yml`; native

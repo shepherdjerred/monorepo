@@ -55,7 +55,12 @@ public sealed class FacetSchemaTests
     /// <summary>Runs every positive and negative shared boundary case.</summary>
     [TestMethod]
     public void SharedNeutralCorpusIsFullyValidated() =>
-        ValidateCorpus("FacetContractCases.json", "value", 35);
+        ValidateCorpus("FacetContractCases.json", "value", 149);
+
+    /// <summary>Runs all neutral occurrence feature, command, concrete/deferred, maintenance and repair boundaries.</summary>
+    [TestMethod]
+    public void SharedOccurrenceCorpusIsFullyValidated() =>
+        ValidateCorpus("FacetOccurrenceContractCases.json", "value", 117);
 
     /// <summary>Raw shared numeric literals retain exact values across the language boundary.</summary>
     [TestMethod]

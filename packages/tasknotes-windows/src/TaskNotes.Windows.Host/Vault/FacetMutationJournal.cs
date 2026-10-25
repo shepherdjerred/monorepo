@@ -10,9 +10,11 @@ internal sealed class FacetMutationJournal
 {
     private readonly string _path;
     private Journal _journal;
+    private readonly TimeProvider _time;
 
-    internal FacetMutationJournal(string directory)
+    internal FacetMutationJournal(string directory, TimeProvider? time = null)
     {
+        _time = time ?? TimeProvider.System;
         _path = Path.Combine(directory, "mutation-envelopes.json");
         _journal = File.Exists(_path)
             ? JsonSerializer.Deserialize<Journal>(File.ReadAllBytes(_path))
@@ -41,9 +43,9 @@ internal sealed class FacetMutationJournal
         string key = RequestIdentity(profile, requestKey ?? commandJson);
         if (_journal.Pending.TryGetValue(key, out var previous))
             return previous;
-        DateTimeOffset now = DateTimeOffset.UtcNow;
-        string zone = TimeZoneInfo.Local.Id;
-        if (OperatingSystem.IsWindows())
+        DateTimeOffset now = _time.GetUtcNow();
+        string zone = _time.LocalTimeZone.Id;
+        if (OperatingSystem.IsWindows() && !TimeZoneInfo.TryConvertIanaIdToWindowsId(zone, out _))
             zone = TimeZoneInfo.TryConvertWindowsIdToIanaId(zone, out string? iana)
                 ? iana
                 : throw new InvalidOperationException(
@@ -59,7 +61,7 @@ internal sealed class FacetMutationJournal
                 executionContext = new
                 {
                     today = TimeZoneInfo
-                        .ConvertTime(now, TimeZoneInfo.Local)
+                        .ConvertTime(now, _time.LocalTimeZone)
                         .ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                     timezone = zone,
                 },

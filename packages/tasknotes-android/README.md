@@ -169,6 +169,10 @@ ANDROID_HOME=/path/to/android/sdk ANDROID_SERIAL=emulator-5554 bun scripts/verif
 Repeat runtime acceptance on both4KiB and16KiB images. ELF/ZIP checks cover Rust,
 JNI and JNA for both ABIs. JVM/schema tests and emulator tests prove different
 layers. Screenshots/transcripts stay under ignored `artifacts/acceptance`.
+The verifier retains separate file-backed command output and enforces one
+eight-minute budget across the complete journey. Each command also has a bounded
+exit wait. Completion checks both wall and monotonic elapsed time, so suspension,
+late timer delivery or wall-clock rollback cannot turn an overdue exit into a pass.
 
 `android:package` produces an unsigned release AAB for review. The local export
 lane rebuilds that bundle through Gradle, validates it using the bundletool graph

@@ -24,6 +24,8 @@ internal sealed class FacetSyncSession : System.IAsyncDisposable
         StringComparer.Ordinal
     );
     private readonly Action<bool, string?> _changed;
+    private readonly Action? _occurrenceInputsChanged;
+    private bool _occurrenceInputsPending;
     private readonly JoinableTaskContext _context = new();
     private readonly List<JoinableTask> _readers = [];
     private IFacetSocket? _socket;
@@ -56,13 +58,15 @@ internal sealed class FacetSyncSession : System.IAsyncDisposable
         Action<bool, string?> changed,
         Func<IFacetSocket> socketFactory,
         Core.ObsidianTransportLimits limits,
-        Func<byte[]> uploadNonce
+        Func<byte[]> uploadNonce,
+        Action? occurrenceInputsChanged
     )
     {
         _engine = engine;
         _profile = profile;
         _session = session;
         _changed = changed;
+        _occurrenceInputsChanged = occurrenceInputsChanged;
         _socketFactory = socketFactory;
         _uploadNonce = uploadNonce;
         _binaryMaximum = checked((int)limits.BinaryMessageBytes);
@@ -77,7 +81,8 @@ internal sealed class FacetSyncSession : System.IAsyncDisposable
         CancellationToken cancellationToken,
         Func<IFacetSocket>? socketFactory = null,
         Func<FacetSyncSession, bool>? retain = null,
-        Func<byte[]>? uploadNonce = null
+        Func<byte[]>? uploadNonce = null,
+        Action? occurrenceInputsChanged = null
     )
     {
         ObsidianVaultChoice vault =
@@ -138,7 +143,8 @@ internal sealed class FacetSyncSession : System.IAsyncDisposable
                 changed,
                 socketFactory ?? (() => new FacetSocket()),
                 limits,
-                uploadNonce ?? (() => RandomNumberGenerator.GetBytes(12))
+                uploadNonce ?? (() => RandomNumberGenerator.GetBytes(12)),
+                occurrenceInputsChanged
             );
             try
             {
@@ -344,6 +350,11 @@ internal sealed class FacetSyncSession : System.IAsyncDisposable
                             cancellationToken
                         )
                         .ConfigureAwait(false);
+                    if (_ready && _occurrenceInputsPending)
+                    {
+                        _occurrenceInputsPending = false;
+                        _occurrenceInputsChanged?.Invoke();
+                    }
                     break;
                 case Core.ObsidianSessionEffect.RemoteChange change:
                     _schema.Validate(change.MetadataJson, "remoteFile");
@@ -359,6 +370,7 @@ internal sealed class FacetSyncSession : System.IAsyncDisposable
                                 .ConfigureAwait(false);
                         else if (metadata.GetProperty("folder").GetBoolean())
                         {
+                            _occurrenceInputsPending = true;
                             await _engine
                                 .Runner.RunAsync(
                                     () =>
@@ -424,6 +436,8 @@ internal sealed class FacetSyncSession : System.IAsyncDisposable
                             .RefreshAsync(_profile, cancellationToken)
                             .ConfigureAwait(false);
                         _changed(true, null);
+                        _occurrenceInputsPending = false;
+                        _occurrenceInputsChanged?.Invoke();
                     }
                     catch (Core.FacetEngineException.Configuration error)
                     {
@@ -482,6 +496,7 @@ internal sealed class FacetSyncSession : System.IAsyncDisposable
         var effects = await NativeAsync(() => _session.CompleteRemote(uid), cancellationToken)
             .ConfigureAwait(false);
         _remote.Remove(uid);
+        _occurrenceInputsPending = true;
         _changed(_ready, null);
         return effects;
     }

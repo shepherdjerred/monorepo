@@ -7,6 +7,17 @@ import Foundation
 enum MacAcceptanceOwnership {
     private enum OwnershipError: Error { case owner, descriptor }
 
+    static func buildDirectory(package: URL, runID: UUID, native: Bool, occurrence: Bool) -> URL {
+        if native {
+            return package.appendingPathComponent(
+                occurrence
+                    ? ".build/occurrence-acceptance/\(runID.uuidString.lowercased())/macos"
+                    : ".build/acceptance-xcode")
+        }
+        return package.deletingLastPathComponent().appendingPathComponent(
+            "tasks-for-obsidian/.build/live-sync/\(runID.uuidString.lowercased())/macos")
+    }
+
     static func stateDirectory(runID: UUID) throws -> URL {
         try currentUserHome()
             .appendingPathComponent("Library/Containers/red.sjer.tasknotes.mac.acceptance/Data")

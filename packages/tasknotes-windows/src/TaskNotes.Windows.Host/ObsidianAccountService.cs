@@ -226,6 +226,17 @@ public sealed class ObsidianAccountService : IAsyncDisposable
         }
     }
 
+    internal long AuthorizationEpoch => Volatile.Read(ref _epoch);
+
+    internal bool HasAuthorization(long epoch, string owner, string profileId, string vaultId)
+    {
+        lock (_credentialGate)
+            return epoch == Volatile.Read(ref _epoch)
+                && _secrets.Read(OwnerIdentity) == owner
+                && _secrets.Read(TokenIdentity) is not null
+                && _secrets.Read(KeyIdentity(owner, profileId, vaultId)) is not null;
+    }
+
     internal (string Token, byte[] Key) SessionCredentials(
         string owner,
         string profileId,

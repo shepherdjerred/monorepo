@@ -113,6 +113,14 @@
   </Target>
   <ItemGroup Condition="'$(Configuration)' == 'E2E'">
     <AppxManifest Include="Package.E2E.appxmanifest" />
+    <Content
+      Include="../../e2e/standalone/contract.json"
+      Link="Acceptance/contract.json"
+      CopyToOutputDirectory="PreserveNewest"
+    />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' != 'E2E'">
+    <Compile Remove="Acceptance/**/*.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content

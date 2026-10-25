@@ -105,6 +105,7 @@ extension FacetObsidianSession {
                 metadata.removeValue(forKey: pending.uid)
                 pendingDownloads.removeFirst()
                 dirty = true
+                remoteDirty = true
                 effects.append(contentsOf: completed)
             } catch FacetEngineError.Busy {
                 return effects

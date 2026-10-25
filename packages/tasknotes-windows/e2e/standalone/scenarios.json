@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "scenarios": {
+    "standalone-production": [
+      "standalone.production-local-vault",
+      "quick-add.preview",
+      "tasks.created-markdown",
+      "completion.plain-undo-exact-bytes",
+      "package.persisted-local-relaunch",
+      "recovery.immutable-admission-after-relaunch",
+      "markdown.opaque-metadata-preserved",
+      "markdown.untouched-and-binary-bytes-preserved",
+      "query.search",
+      "query.sort-group",
+      "navigation.fixed",
+      "editor.all-fields-markdown",
+      "occurrence.explicit-window-user-undo",
+      "completion.recurring-undo-exact-bytes",
+      "occurrence.failed-next-cold-repair-undo",
+      "editor.validation-retained-draft",
+      "tasks.deleted-markdown",
+      "bulk.complete-undo-exact-bytes",
+      "bulk.schedule-priority-delete",
+      "saved-view.query",
+      "saved-view.lifecycle-persistence",
+      "activation.fixed",
+      "activation.search",
+      "activation.entities",
+      "kanban.columns",
+      "kanban.move-persisted",
+      "kanban.retained-file-failure-visible",
+      "recovery.board-retry-preserves-action",
+      "recovery.rejected-action-visible",
+      "recovery.retire-rejected-action",
+      "accessibility.names-roles-values",
+      "keyboard.search-focus",
+      "accessibility.live-status",
+      "window.state-restored",
+      "hotkey.rebind-collision",
+      "hotkey.invoke-cancel"
+    ],
+    "accessibility-keyboard": [
+      "accessibility.names-roles-values",
+      "keyboard.search-focus",
+      "accessibility.live-status"
+    ],
+    "visual-modes": [
+      "visual.profile-match",
+      "visual.usable-bounds",
+      "visual.screenshot"
+    ]
+  }
+}

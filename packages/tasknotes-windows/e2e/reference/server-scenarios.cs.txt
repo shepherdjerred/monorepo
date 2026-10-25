@@ -1,3 +1,4 @@
+// Historical server test map: assertion-porting reference only, never discovered as native tests.
 namespace TaskNotes.Windows.E2E
 {
     /// <summary>Maps the machine-readable parity contract to serial packaged UI Automation scenarios.</summary>

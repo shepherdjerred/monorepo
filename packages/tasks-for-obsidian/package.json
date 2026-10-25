@@ -54,6 +54,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "tasknotes-macos": "workspace:*",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "@tasknotes/e2e": "workspace:*",

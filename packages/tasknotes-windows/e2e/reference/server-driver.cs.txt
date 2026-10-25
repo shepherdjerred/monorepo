@@ -1,3 +1,4 @@
+// Historical server assertions: reference only; the standalone app has no server producer.
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;

@@ -1,13 +1,17 @@
 import { resolve } from "node:path";
 import { mkdirSync } from "node:fs";
 import { nativeInputs } from "./native-inputs";
+import { AcceptanceDeadline, boundedCommand } from "./bounded-command.ts";
+
+const acceptance = new AcceptanceDeadline(480_000);
 
 const sdk = process.env["ANDROID_HOME"];
-const serial = process.env["ANDROID_SERIAL"];
-if (!sdk || !serial || !/^[\w.:-]+$/.test(serial))
+const configuredSerial = process.env["ANDROID_SERIAL"];
+if (!sdk || !configuredSerial || !/^[\w.:-]+$/.test(configuredSerial))
   throw new Error(
     "Set ANDROID_HOME and an explicit ANDROID_SERIAL for native acceptance.",
   );
+const serial = configuredSerial;
 const adb = resolve(
   sdk,
   "platform-tools/adb" + (process.platform === "win32" ? ".exe" : ""),
@@ -27,7 +31,7 @@ const apkPackages = [
     "red.sjer.facet.test",
   ],
 ] as const;
-const inputListing = Bun.spawn(
+const inputListing = await boundedCommand(
   [
     "rg",
     "--files",
@@ -44,15 +48,18 @@ const inputListing = Bun.spawn(
     "!artifacts/**",
     ".",
   ],
-  { cwd: packageRoot, stdout: "pipe", stderr: "inherit" },
+  {
+    cwd: packageRoot,
+    logs: resolve(artifacts, "commands"),
+    timeoutMS: Math.min(20_000, Math.ceil(acceptance.remainingMS())),
+  },
 );
-const inputPaths = (await new Response(inputListing.stdout).text())
+const inputPaths = inputListing.stdout
+  .toString("utf8")
   .trim()
   .split("\n")
   .filter(Boolean)
   .sort();
-if ((await inputListing.exited) !== 0)
-  throw new Error("Could not enumerate authored Android acceptance inputs.");
 inputPaths.push(
   "../tasknotes-core/bindings/kotlin/uniffi/TaskNotesCore/TaskNotesCore.kt",
   "../tasknotes-fixtures/vault/facet-contract.json",
@@ -100,18 +107,19 @@ if (
   );
 
 async function run(args: string[]): Promise<string> {
-  const process = Bun.spawn([adb, "-s", serial, ...args], {
+  acceptance.assertWithin();
+  const result = await boundedCommand([adb, "-s", serial, ...args], {
     cwd: packageRoot,
-    stdout: "pipe",
-    stderr: "pipe",
+    logs: resolve(artifacts, "commands"),
+    timeoutMS: Math.min(
+      args[0] === "shell" && args[1] === "am" && args[2] === "instrument"
+        ? 480_000
+        : 20_000,
+      Math.ceil(acceptance.remainingMS()),
+    ),
   });
-  const [stdout, stderr] = await Promise.all([
-    new Response(process.stdout).text(),
-    new Response(process.stderr).text(),
-  ]);
-  if ((await process.exited) !== 0)
-    throw new Error(`Android acceptance command failed: ${args[0]} ${stderr}`);
-  return stdout;
+  acceptance.assertWithin();
+  return result.stdout.toString("utf8");
 }
 
 const pageSize = (await run(["shell", "getconf", "PAGE_SIZE"])).trim();
@@ -158,16 +166,17 @@ await run([
   "/sdcard/facet-acceptance.xml",
   resolve(artifacts, "hierarchy.xml"),
 ]);
-const screenshot = Bun.spawn(
+acceptance.assertWithin();
+const screenshot = await boundedCommand(
   [adb, "-s", serial, "exec-out", "screencap", "-p"],
-  { stdout: "pipe", stderr: "inherit" },
+  {
+    cwd: packageRoot,
+    logs: resolve(artifacts, "commands"),
+    timeoutMS: Math.min(15_000, Math.ceil(acceptance.remainingMS())),
+  },
 );
-await Bun.write(
-  resolve(artifacts, "standalone.png"),
-  await new Response(screenshot.stdout).arrayBuffer(),
-);
-if ((await screenshot.exited) !== 0)
-  throw new Error("Native screenshot capture failed.");
+acceptance.assertWithin();
+await Bun.write(resolve(artifacts, "standalone.png"), screenshot.stdout);
 await Bun.write(
   resolve(artifacts, "device.json"),
   JSON.stringify({ serial, pageSize: Number(pageSize) }, null, 2),
@@ -181,6 +190,15 @@ if (
   throw new Error(
     "Native source or artifacts changed during runtime acceptance; rerun a coherent build.",
   );
+await Bun.write(
+  resolve(artifacts, "deadline.json"),
+  JSON.stringify(
+    { timeoutMS: acceptance.timeoutMS, ...acceptance.sample() },
+    null,
+    2,
+  ),
+);
+acceptance.assertWithin();
 await Bun.write(
   resolve(artifacts, "evidence.json"),
   JSON.stringify(
@@ -197,6 +215,7 @@ await Bun.write(
     2,
   ),
 );
+acceptance.assertWithin();
 console.log(
   `Native host and Compose acceptance passed on ${serial} (${pageSize}-byte pages). Screenshot: ${artifacts}/standalone.png`,
 );

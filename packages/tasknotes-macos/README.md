@@ -87,6 +87,29 @@ reads. Once a receipt reports an applied change, a failed revision read is retri
 as observation rather than executing the change again.
 
 An ordered action coordinator admits different-row actions without dropping taps.
+Materialized series use the core's versioned rolling plan and durable generation
+failure projections. The shared Apple inspector and task editor expose Generate
+window and Repair generation using the returned revision fences and repair
+commands; dirty editors disable these actions. A successful completion remains
+successful when a future occurrence fails, and the Series section rediscovers
+retained failures after restart.
+
+An application-owned occurrence worker coalesces requests across profiles after
+configuration and initial Sync readiness. Each pass captures one local day,
+finishes its consistent paged discovery before writing, and admits one immutable
+automatic window action at a time through the normal action coordinator. Saved
+envelopes recover before replacement actions. Core-defined automatic maintenance
+receipts retain durability without displacing user Undo. Remote ingestion and
+readiness request another pass, including offscreen profiles; own upload
+acknowledgments refresh presentation only. Requests received during a drain remain
+pending, so later edits and deleted children receive fresh discovery. Query and
+reminder reads never generate tasks, and automatic recovery emits no local cue.
+Each pass retains its account and lifecycle generation across discovery and queue
+waits. Ownership loss or cancellation blocks new admission, while already admitted
+receipts retain their exact durable recovery and observation identity.
+The engine rechecks the pass permit at actor admission and between retained
+recovery attempts, so a queued call cannot revive a revoked pass.
+
 Capture owns a local buffer, captured profile and clock, and an immutable submitted
 command and mutation identity. Pre-admission failures remain editable; uncertain
 durably admitted changes keep their exact recovery identity. Resume/Retire reads
@@ -293,6 +316,26 @@ require one final open task per selected workflow and byte-for-byte preservation
 of the original task, reference note and configuration. To diagnose one flow,
 use `bun run mac:acceptance:e2e --only-testing=testQuickAddRetainsHiddenDraftAndAddsAnother`;
 a narrowed run is recorded as such and does not establish the full suite.
+
+`bun scripts/occurrence-acceptance/run-macos.ts` runs a separate local recurrence
+journey in a fresh `Native acceptance` vault. It checks automatic rolling
+generation, the production Generate button preserving completion Undo when it has
+nothing to create, and a missing-template failure that preserves a completed
+child. With the owned app stopped, the harness restores only its synthetic
+template; the production Repair button must create one successor, Undo must
+restore the exact committed parent and child, and a second repair must survive
+cold relaunch. It retains source fingerprints, exact XCTest results, persisted
+Markdown and app-only captures in `.build/occurrence-acceptance/<UUID>`. It uses
+the same signing, capture and process ownership checks as ordinary acceptance.
+The four ordinary workflows and their fixture remain a separate required gate.
+The recurrence build lives under that run's UUID and XCTest launches its exact
+app URL. Each launch journals its PID, UID and start lifetime with the run,
+descriptor and executable; cold termination closes that identity before another
+launch. Cleanup may signal only the last retained running identity. A missing
+receipt, reused PID or replacement process fails closed and leaves the foreign
+process running. Commands retain file-backed logs, bound build/test startup and
+actual process exit, and give retained-owner cleanup a separate bounded budget.
+
 `TASKNOTES_UITEST_IDENTITY=<Apple Development SHA-1>` also signs this acceptance
 test runner without overriding app or package signing. Its separate runner
 identity may require an existing Accessibility grant; no gate assumes it.

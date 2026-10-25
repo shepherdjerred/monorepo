@@ -143,7 +143,10 @@
                 SelectionMode="None">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="host:SavedViewDefinition">
-                        <Grid Padding="0,8" ColumnSpacing="8">
+                        <Grid
+                            Padding="0,8"
+                            AutomationProperties.AutomationId="{x:Bind Id}"
+                            ColumnSpacing="8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -167,6 +170,41 @@
                                 Content="Delete"
                                 Tag="{x:Bind Id}" />
                         </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            <TextBlock
+                Margin="0,16,0,0"
+                Style="{StaticResource SubtitleTextBlockStyle}"
+                Text="Occurrence generation" />
+            <TextBlock
+                AutomationProperties.LiveSetting="Polite"
+                Text="{x:Bind ViewModel.OccurrenceStatus, Mode=OneWay}"
+                TextWrapping="Wrap" />
+            <ListView
+                AutomationProperties.AutomationId="Facet.Settings.GenerationFailures"
+                ItemsSource="{x:Bind ViewModel.GenerationFailures, Mode=OneWay}"
+                SelectionMode="None">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="host:FacetGenerationFailure">
+                        <StackPanel Padding="0,8" Spacing="6">
+                            <TextBlock FontWeight="SemiBold" Text="{x:Bind ParentPath}" />
+                            <TextBlock Text="{x:Bind Status}" TextWrapping="Wrap" />
+                            <Button
+                                Click="RepairGeneration_Click"
+                                Content="Repair generation"
+                                IsEnabled="{x:Bind CanRepair}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            <ListView ItemsSource="{x:Bind ViewModel.OccurrenceProblems, Mode=OneWay}" SelectionMode="None">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="host:FacetOccurrenceProblem">
+                        <StackPanel Padding="0,8" Spacing="6">
+                            <TextBlock Text="{x:Bind TaskPath}" />
+                            <TextBlock Text="{x:Bind Summary}" TextWrapping="Wrap" />
+                        </StackPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>

@@ -48,6 +48,7 @@ public actor FacetObsidianSession {
         @Sendable (URLSessionWebSocketTask, URLSessionWebSocketTask.Message) async throws -> Void
     internal let events = FacetSyncEventQueue<Event>(capacity: 8)
     private let changed: @Sendable () async -> Void
+    private let remoteChanged: @Sendable () async -> Void
     internal let status: @Sendable (FacetSyncStatus) async -> Void
     internal var transportPhase: FacetSyncTransportPhase = .connecting
     internal var processing = false
@@ -66,6 +67,7 @@ public actor FacetObsidianSession {
     internal var uploadAdmissions = FacetUploadAdmissions()
     internal var ready = false
     internal var dirty = false
+    internal var remoteDirty = false
     internal var stopped = false
     internal var closed = false
     internal var restartableTransportFailure = false
@@ -78,6 +80,7 @@ public actor FacetObsidianSession {
         engine: FacetEngine, account: FacetObsidianAccount, profileID: String,
         access: FacetSyncAccess, checkpoint: String, changed: @escaping @Sendable () async -> Void,
         status: @escaping @Sendable (FacetSyncStatus) async -> Void,
+        remoteChanged: @escaping @Sendable () async -> Void = {},
         sendMessage:
             @escaping @Sendable (
                 URLSessionWebSocketTask, URLSessionWebSocketTask.Message
@@ -88,6 +91,7 @@ public actor FacetObsidianSession {
         self.profileID = profileID
         self.access = access
         self.changed = changed
+        self.remoteChanged = remoteChanged
         self.status = status
         self.sendMessage = sendMessage
         limits = try obsidianTransportLimits()
@@ -103,13 +107,14 @@ public actor FacetObsidianSession {
         engine: FacetEngine, account: FacetObsidianAccount, profileID: String,
         changed: @escaping @Sendable () async -> Void,
         status: @escaping @Sendable (FacetSyncStatus) async -> Void,
+        remoteChanged: @escaping @Sendable () async -> Void = {},
         retain: @escaping @Sendable (FacetObsidianSession) async -> Bool = { _ in true }
     ) async throws -> FacetObsidianSession {
         let authorized = try await account.access(profileID: profileID)
         let checkpoint = try await engine.checkpoint(profileID: profileID)
         let host = try FacetObsidianSession(
             engine: engine, account: account, profileID: profileID, access: authorized,
-            checkpoint: checkpoint, changed: changed, status: status)
+            checkpoint: checkpoint, changed: changed, status: status, remoteChanged: remoteChanged)
         do {
             try await engine.bindOwnedSession(host.core, profileID: profileID)
             try _Concurrency.Task.checkCancellation()
@@ -190,10 +195,7 @@ extension FacetObsidianSession {
                     try await process(drainMetadataCompletions())
                     try await process(drainOwnedDownloads())
                 }
-                if case .tick = event, dirty {
-                    dirty = false
-                    await changed()
-                }
+                if case .tick = event { await publishChanges() }
                 if ready { try await uploadPendingOwned() }
                 processing = false
                 activityRevision += 1
@@ -206,6 +208,15 @@ extension FacetObsidianSession {
         activityRevision += 1
         await close()
         await publishStatusWithoutDurableRead()
+    }
+
+    internal func publishChanges() async {
+        let presentationChanged = dirty
+        let maintenanceChanged = remoteDirty
+        dirty = false
+        remoteDirty = false
+        if presentationChanged { await changed() }
+        if maintenanceChanged { await remoteChanged() }
     }
 
     private func effects(for event: Event, nowMs: UInt64) throws -> [ObsidianSessionEffect] {

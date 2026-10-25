@@ -22,8 +22,8 @@ func integer(_ value: Any?, maximum: UInt64, minimum: UInt64 = 0) throws -> UInt
     else { throw Rejection.input }
     return number.uint64Value
 }
-func identity(_ value: Any?) throws -> Identity {
-    guard let value = value as? [String: Any],
+func identity(_ input: Any?) throws -> Identity {
+    guard let value = input as? [String: Any],
         Set(value.keys) == ["uid", "ruid", "startSeconds", "startMicroseconds"]
     else { throw Rejection.input }
     return try Identity(
@@ -43,7 +43,8 @@ func inspect(_ pid: pid_t, executable: String) throws -> Identity {
     }
     guard info.pbi_uid == geteuid(), info.pbi_ruid == getuid() else { throw Rejection.uid }
     guard proc_pidpath(pid, &buffer, UInt32(buffer.count)) > 0,
-        String(cString: buffer) == executable
+        String(bytes: buffer.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, encoding: .utf8)
+            == executable
     else { throw Rejection.path }
     guard info.pbi_start_tvsec > 0, info.pbi_start_tvsec <= 9_007_199_254_740_991,
         info.pbi_start_tvusec < 1_000_000
@@ -64,9 +65,13 @@ func emit(
         "identity": identity?.packet as Any? ?? NSNull(),
         "reason": reason?.rawValue as Any? ?? NSNull(), "signalSubmitted": signalSubmitted,
     ]
-    if let data = try? JSONSerialization.data(withJSONObject: packet, options: [.sortedKeys]) {
+    do {
+        let data = try JSONSerialization.data(withJSONObject: packet, options: [.sortedKeys])
         FileHandle.standardOutput.write(data)
         FileHandle.standardOutput.write(Data([10]))
+    } catch {
+        FileHandle.standardError.write(Data("Process-owner response serialization failed.\n".utf8))
+        exit(4)
     }
 }
 do {

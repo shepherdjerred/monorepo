@@ -240,6 +240,9 @@ targets:
     platform: macOS
     sources:
       - path: UITests/StandaloneVaultUITests.swift
+      - path: UITests/OccurrenceVaultUITests.swift
+      - path: UITests/OccurrenceVaultContext.swift
+      - path: UITests/OccurrenceLaunchOwnership.swift
       - path: UITests/MacAcceptanceOwnership.swift
       - path: UITests/MacAcceptanceCapture.swift
       - path: UITests/MacAcceptanceWorkspace.swift
@@ -278,6 +281,9 @@ targets:
           # The dedicated acceptance identity runs this same required journey;
           # the local and CI launchers run both schemes.
           - StandaloneVaultUITests.swift
+          - OccurrenceVaultUITests.swift
+          - OccurrenceVaultContext.swift
+          - OccurrenceLaunchOwnership.swift
           - LiveSyncVaultUITests.swift
           - LiveSyncConflictUITests.swift
           - LiveSyncLifecycleUITests.swift

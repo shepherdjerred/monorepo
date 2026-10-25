@@ -119,10 +119,19 @@ export function assertExactLaunchSmokeResults(
   assertExactNativeResults(summary, report, [launchSmokeTest]);
 }
 
-function assertExactNativeResults(
+export function assertExactNativeResults(
   summary: unknown,
   report: unknown,
   selected: readonly string[],
+  identity:
+    | {
+        target: "TaskNotesAcceptanceUITests";
+        suite: "StandaloneVaultUITests" | "OccurrenceVaultUITests";
+      }
+    | { target: "TasksForObsidianUITests"; suite: "OccurrenceTaskTests" } = {
+    target: "TaskNotesAcceptanceUITests",
+    suite: "StandaloneVaultUITests",
+  },
 ): void {
   assert.ok(selected.length > 0, "At least one native case must execute");
   assert.equal(
@@ -157,7 +166,7 @@ function assertExactNativeResults(
     "Native test tree must contain the exact selected case count",
   );
   for (const test of selected) {
-    const identifier = `StandaloneVaultUITests/${test}()`;
+    const identifier = `${identity.suite}/${test}()`;
     const matches = cases.filter(
       (entry) => entry["nodeIdentifier"] === identifier,
     );
@@ -176,9 +185,7 @@ function assertExactNativeResults(
     const url = entry["nodeIdentifierURL"];
     assert.ok(
       typeof url === "string" &&
-        url.endsWith(
-          `/TaskNotesAcceptanceUITests/StandaloneVaultUITests/${test}`,
-        ),
+        url.endsWith(`/${identity.target}/${identity.suite}/${test}`),
       "Native result must belong to the exact acceptance target and selected method",
     );
   }

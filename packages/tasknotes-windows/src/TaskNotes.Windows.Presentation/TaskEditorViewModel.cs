@@ -123,6 +123,12 @@ namespace TaskNotes.Windows.Presentation
         /// <summary>Vault owner is retained with the draft, never inferred from current selection.</summary>
         public string? ProfileId => _original?.ProfileId;
 
+        /// <summary>The exact immutable rendered row fences explicit series generation.</summary>
+        public TaskItem? GenerationSource => _original;
+
+        /// <summary>Only recurring series expose explicit occurrence generation.</summary>
+        public bool CanGenerateOccurrences => _original?.IsRecurring == true;
+
         /// <summary>Gets or sets the title.</summary>
         public string Title
         {
@@ -277,6 +283,7 @@ namespace TaskNotes.Windows.Presentation
                 }
                 IsDirty = false;
                 OnPropertyChanged(nameof(IsLoaded));
+                OnPropertyChanged(nameof(CanGenerateOccurrences));
                 OnPropertyChanged(nameof(TaskId));
                 OnPropertyChanged(nameof(DependencyLabel));
                 NotifyWorkflowChoicesChanged();
@@ -581,6 +588,7 @@ namespace TaskNotes.Windows.Presentation
                 RecoveryActionId = null;
                 IsDirty = false;
                 OnPropertyChanged(nameof(IsLoaded));
+                OnPropertyChanged(nameof(CanGenerateOccurrences));
                 OnPropertyChanged(nameof(TaskId));
                 OnPropertyChanged(nameof(DependencyLabel));
                 NotifyWorkflowChoicesChanged();
