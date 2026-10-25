@@ -1,4 +1,7 @@
-import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
+import type {
+  DiscordChannelId,
+  DiscordGuildId,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
 import {
   ActionRowBuilder,
@@ -16,7 +19,9 @@ import {
 import type { NotificationIntent } from "@scout-for-lol/domain/notifications/intent.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { fetchChannelForDelivery } from "#src/discord/utils/channel.ts";
+import { isPermissionError } from "#src/discord/utils/permissions.ts";
 import { clashSurfaceEnabledForGuild } from "#src/league/clash/access.ts";
+import { subscribedGuildId } from "#src/temporal/notification/channel-guild.ts";
 import { selectTip } from "#src/tips/tip-selection.ts";
 import {
   claimTip,
@@ -152,6 +157,27 @@ export const NotificationMessageSnapshotSchema = z.strictObject({
     .default([]),
 });
 
+/**
+ * Guild for a prematch image. A channel Discord will not show us still has
+ * its guild on the subscription, and render must not die before delivery
+ * can tell that server's owner.
+ */
+async function guildForPrematchPresentation(
+  channelId: DiscordChannelId,
+  database: ExtendedPrismaClient,
+) {
+  try {
+    const channel = await fetchChannelForDelivery(channelId);
+    if (channel === null) return;
+    return DiscordGuildIdSchema.parse(
+      "guildId" in channel ? channel.guildId : undefined,
+    );
+  } catch (error) {
+    if (!isPermissionError(error)) throw error;
+    return await subscribedGuildId(channelId, database);
+  }
+}
+
 export async function prepareNotificationPresentation(
   record: MatchNotificationIntentRecord,
   database: ExtendedPrismaClient = prisma,
@@ -162,11 +188,11 @@ export async function prepareNotificationPresentation(
   });
   if (existing !== null) return existing;
   if (record.intent.target.kind !== "channel") return null;
-  const channel = await fetchChannelForDelivery(record.intent.target.channelId);
-  if (channel === null) return null;
-  const serverId = DiscordGuildIdSchema.parse(
-    "guildId" in channel ? channel.guildId : undefined,
+  const serverId = await guildForPrematchPresentation(
+    record.intent.target.channelId,
+    database,
   );
+  if (serverId === undefined) return null;
   return await database.notificationPresentation.upsert({
     where: { intentKey: record.intent.key },
     update: {},

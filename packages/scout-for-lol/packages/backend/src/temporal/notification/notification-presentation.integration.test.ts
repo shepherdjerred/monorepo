@@ -5,11 +5,16 @@ import { MatchNotificationIntentRecordSchema } from "#src/database/durable/inten
 import {
   freezeNotificationMessage,
   confirmNotificationTip,
+  prepareNotificationPresentation,
   settleNotificationTip,
   settleTerminalNotificationTips,
 } from "#src/temporal/notification/notification-presentation.ts";
 import { claimTip } from "#src/tips/tip-state.ts";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import {
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+} from "@scout-for-lol/domain/identity/discord.ts";
 import { NotificationIntentSchema } from "@scout-for-lol/domain/notifications/intent.ts";
 import {
   upsertIntent,
@@ -22,12 +27,19 @@ import {
 } from "#src/configuration/flags.ts";
 
 const { prisma } = createTestDatabase("notification-presentation");
+const channelFetch = vi.hoisted(() => ({ fetchChannelForDelivery: vi.fn() }));
 const selection = vi.hoisted(() => ({
   selectTip: vi.fn(async () => ({
     key: "scheduled-reports",
     flags: [],
     text: "Tip: schedule a report.",
   })),
+}));
+vi.mock("#src/discord/utils/channel.ts", () => ({
+  fetchChannelForDelivery: channelFetch.fetchChannelForDelivery,
+}));
+vi.mock("#src/league/clash/access.ts", () => ({
+  clashSurfaceEnabledForGuild: vi.fn(async () => false),
 }));
 vi.mock("#src/tips/tip-selection.ts", () => ({
   selectTip: selection.selectTip,
@@ -47,6 +59,7 @@ function record(
   kind: "prematch" | "postmatch",
   suffix = "1",
   delivered = false,
+  channelId = "100000000000000001",
 ) {
   return MatchNotificationIntentRecordSchema.parse({
     matchId: "NA1_9401",
@@ -54,7 +67,7 @@ function record(
       key: `${kind}-discord:NA1_9401:${suffix}`,
       kind,
       origin: { kind: "live" },
-      target: { kind: "channel", channelId: "100000000000000001" },
+      target: { kind: "channel", channelId },
       attemptCount: 1,
       state: delivered
         ? {
@@ -242,4 +255,96 @@ test("the terminal sweep repairs a tip claim after an expiry committed independe
   expect(await prisma.featureTipImpression.count()).toBe(0);
   await settleTerminalNotificationTips(prisma);
   expect(await prisma.featureTipImpression.count()).toBe(0);
+});
+
+const blockedChannel = DiscordChannelIdSchema.parse("100000000000000091");
+const absentChannel = DiscordChannelIdSchema.parse("100000000000000094");
+const blockedGuild = DiscordGuildIdSchema.parse("100000000000000092");
+const otherGuild = DiscordGuildIdSchema.parse("100000000000000093");
+const creator = DiscordAccountIdSchema.parse("200000000000000094");
+
+async function resetBlockedChannels(): Promise<void> {
+  await prisma.subscription.deleteMany({
+    where: { channelId: { in: [blockedChannel, absentChannel] } },
+  });
+  await prisma.player.deleteMany({
+    where: { serverId: { in: [blockedGuild, otherGuild] } },
+  });
+  await prisma.notificationPresentation.deleteMany({
+    where: { serverId: { in: [blockedGuild, otherGuild] } },
+  });
+}
+
+async function subscribe(
+  serverId: typeof blockedGuild,
+  channelId: typeof blockedChannel,
+): Promise<void> {
+  const player = await prisma.player.create({
+    data: {
+      alias: `notify-${serverId.slice(-2)}-${crypto.randomUUID().slice(0, 8)}`,
+      serverId,
+      creatorDiscordId: creator,
+      createdTime: new Date(),
+      updatedTime: new Date(),
+    },
+  });
+  await prisma.subscription.create({
+    data: {
+      playerId: player.id,
+      channelId,
+      serverId,
+      creatorDiscordId: creator,
+      createdTime: new Date(),
+      updatedTime: new Date(),
+    },
+  });
+}
+
+test("a channel Discord will not show still gets its subscribed guild's prematch presentation", async () => {
+  await resetBlockedChannels();
+  channelFetch.fetchChannelForDelivery.mockRejectedValue({
+    code: 50_001,
+    message: "Missing Access",
+  });
+  await subscribe(blockedGuild, blockedChannel);
+
+  const saved = await prepareNotificationPresentation(
+    record("prematch", "91", false, blockedChannel),
+    prisma,
+  );
+
+  expect(saved?.serverId).toBe(blockedGuild);
+  expect(saved?.guildPrematchArtifact).toBe(true);
+});
+
+test("Missing Access with no subscription leaves the prematch presentation unset", async () => {
+  await resetBlockedChannels();
+  channelFetch.fetchChannelForDelivery.mockRejectedValue({
+    code: 50_001,
+    message: "Missing Access",
+  });
+
+  await expect(
+    prepareNotificationPresentation(
+      record("prematch", "94", false, absentChannel),
+      prisma,
+    ),
+  ).resolves.toBeNull();
+});
+
+test("subscriptions for one channel in two guilds fail loudly", async () => {
+  await resetBlockedChannels();
+  channelFetch.fetchChannelForDelivery.mockRejectedValue({
+    code: 50_001,
+    message: "Missing Access",
+  });
+  await subscribe(blockedGuild, blockedChannel);
+  await subscribe(otherGuild, blockedChannel);
+
+  await expect(
+    prepareNotificationPresentation(
+      record("prematch", "95", false, blockedChannel),
+      prisma,
+    ),
+  ).rejects.toThrow("subscriptions in 2 guilds");
 });
