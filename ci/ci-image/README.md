@@ -22,10 +22,14 @@ The ordinary complete Mac and iOS lint commands remain separate required gates.
 `ci/scripts/toolchain.sh` calls the shared bootstrap on Linux. A matching
 version must pass the capability gate. Missing or older installations use the
 existing remote BuildKit endpoint to produce `swiftlint-export`, without
-publishing an image. The bootstrap sends only the eight explicit source files
+publishing an image. The bootstrap sends only the nine explicit source files
 listed in its script, validates the exported archive's checksum and closed
 file manifest, verifies upstream pins and capabilities, then selects a private
 runtime. It never uploads the whole development workspace or changes a Mac.
+
+The Dockerfile invokes `producer.py` for source preparation, compilation,
+license collection and export. These stages remain ordinary authored Python
+so the repository's pinned Dockerfile linter parses the complete recipe.
 
 Run the bootstrap inside the configured Linux CI container with:
 

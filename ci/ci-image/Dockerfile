@@ -14,42 +14,9 @@ ARG SWIFTLINT_BUILDER_IMAGE
 WORKDIR /swiftlint-source
 COPY ci/scripts/swiftlint/pins.json /swiftlint-input/pins.json
 COPY ci/scripts/swiftlint/extract-source.py /swiftlint-input/extract-source.py
-RUN python3 - <<'PY'
-import hashlib
-import json
-import os
-import pathlib
-import subprocess
-import urllib.request
-
-pins = json.loads(pathlib.Path('/swiftlint-input/pins.json').read_text())
-if pins['builderImage'] != os.environ['SWIFTLINT_BUILDER_IMAGE']:
-    raise SystemExit('SwiftLint builder does not match its reviewed pin')
-archive = pathlib.Path('/swiftlint-source.tar.gz')
-with urllib.request.urlopen(pins['sourceArchive'], timeout=60) as response:
-    archive.write_bytes(response.read())
-if hashlib.sha256(archive.read_bytes()).hexdigest() != pins['sourceArchiveSHA256']:
-    raise SystemExit('SwiftLint source archive checksum mismatch')
-subprocess.run(['python3', '/swiftlint-input/extract-source.py', str(archive), '/swiftlint-source'], check=True)
-archive.unlink()
-licenses = pathlib.Path('/swiftlint-input/licenses')
-licenses.mkdir()
-for license in pins['runtimeLicenses']:
-    with urllib.request.urlopen(license['url'], timeout=60) as response:
-        data = response.read()
-    if hashlib.sha256(data).hexdigest() != license['sha256']:
-        raise SystemExit('Swift toolchain license checksum mismatch')
-    (licenses / license['name']).write_bytes(data)
-PY
-RUN python3 - <<'PY'
-import os
-import resource
-import subprocess
-
-os.sched_setaffinity(0, set(sorted(os.sched_getaffinity(0))[:2]))
-resource.setrlimit(resource.RLIMIT_AS, (8 * 1024**3, 8 * 1024**3))
-subprocess.run(['swift', 'build', '--configuration', 'release', '--product', 'swiftlint', '--jobs', '2', '--disable-automatic-resolution'], check=True)
-PY
+COPY ci/scripts/swiftlint/producer.py /swiftlint-input/producer.py
+RUN python3 /swiftlint-input/producer.py prepare-source \
+    && python3 /swiftlint-input/producer.py compile-source
 COPY ci/scripts/swiftlint/runtime-libraries.txt /swiftlint-input/runtime-libraries.txt
 RUN set -eu; \
     mkdir -p /swiftlint-output/opt/swiftlint/bin /swiftlint-output/opt/swiftlint/lib /swiftlint-output/opt/swiftlint/licenses; \
@@ -59,20 +26,7 @@ RUN set -eu; \
     while IFS= read -r runtime_library; do \
       cp -L "$runtime_library" /swiftlint-output/opt/swiftlint/lib/; \
     done < /swiftlint-input/runtime-libraries.txt
-RUN python3 - <<'PY'
-import pathlib
-import shutil
-
-target = pathlib.Path('/swiftlint-output/opt/swiftlint/licenses')
-for root, namespace in [(pathlib.Path('/swiftlint-source/.build/checkouts'), 'swift-packages'), (pathlib.Path('/usr/share/doc'), 'builder-runtime')]:
-    for source in sorted(root.rglob('*')):
-        if source.is_file() and (source.name.lower().startswith(('license', 'notice', 'copying')) or source.name == 'copyright'):
-            destination = target / namespace / source.relative_to(root)
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(source, destination)
-if not (target / 'swift-packages').is_dir():
-    raise SystemExit('SwiftLint dependency license inventory is missing')
-PY
+RUN python3 /swiftlint-input/producer.py collect-licenses
 
 FROM debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587 AS swiftlint-runtime
 # hadolint ignore=DL3008
@@ -81,6 +35,7 @@ RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     zlib1g libtinfo6 libedit2 libsqlite3-0 libz3-4 python3 \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=swiftlint-builder /swiftlint-output/ /
+COPY ci/scripts/swiftlint/producer.py /swiftlint-input/producer.py
 COPY ci/scripts/swiftlint/runtime.sh /opt/swiftlint/swiftlint
 COPY ci/scripts/swiftlint/pins.json ci/scripts/swiftlint/verify-capabilities.sh /opt/swiftlint/contract/
 COPY packages/tasknotes-macos/.swiftlint.yml packages/tasknotes-macos/.swiftlint-appkit-baseline.json /opt/swiftlint/contract/
@@ -88,20 +43,7 @@ RUN chmod 755 /opt/swiftlint/swiftlint \
     && ln -s /opt/swiftlint/swiftlint /usr/local/bin/swiftlint \
     && version="$(python3 -c 'import json; print(json.load(open("/opt/swiftlint/contract/pins.json"))["version"])')" \
     && bash /opt/swiftlint/contract/verify-capabilities.sh /usr/local/bin/swiftlint /opt/swiftlint/contract/.swiftlint.yml "$version"
-RUN python3 - <<'PY'
-import hashlib
-import json
-import pathlib
-import subprocess
-
-root = pathlib.Path('/opt/swiftlint')
-files = sorted(path for path in root.rglob('*') if path.is_file())
-manifest = {str(path.relative_to('/')): hashlib.sha256(path.read_bytes()).hexdigest() for path in files}
-pathlib.Path('/runtime.manifest.json').write_text(json.dumps(manifest, sort_keys=True, indent=2) + '\n')
-subprocess.run(['tar', '--sort=name', '--mtime=@0', '--owner=0', '--group=0', '--numeric-owner', '-czf', '/runtime.tar.gz', '-C', '/', 'opt/swiftlint'], check=True)
-digest = hashlib.sha256(pathlib.Path('/runtime.tar.gz').read_bytes()).hexdigest()
-pathlib.Path('/runtime.tar.gz.sha256').write_text(digest + '  runtime.tar.gz\n')
-PY
+RUN python3 /swiftlint-input/producer.py export-runtime
 
 FROM scratch AS swiftlint-export
 COPY --from=swiftlint-runtime /runtime.tar.gz /runtime.tar.gz.sha256 /runtime.manifest.json /

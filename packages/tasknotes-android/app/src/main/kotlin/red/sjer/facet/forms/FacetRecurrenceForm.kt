@@ -26,6 +26,7 @@ internal data class FacetRecurrenceForm(
         is FacetRepeatPattern.Yearly -> "YEARLY"
         null -> null
     }
+    val selectedFrequency: String? get() = if (original.isEmpty() && !changed) null else frequency
     val valid: Boolean get() {
         if (advanced || !changed) return true
         val current = draft ?: return false
@@ -38,6 +39,15 @@ internal data class FacetRecurrenceForm(
     }
 
     fun withPattern(pattern: FacetRepeatPattern): FacetRecurrenceForm = copy(draft = checkNotNull(draft).copy(pattern = pattern), changed = true)
+    fun selectFrequency(pattern: FacetRepeatPattern): FacetRecurrenceForm =
+        if (original.isNotEmpty() && draft?.pattern == pattern) this else withPattern(pattern)
+
+    suspend fun changeToApply(build: suspend (FacetRepeatDraft, String) -> String): String? = when {
+        !changed -> null
+        advanced -> raw
+        else -> build(buildDraft(), start)
+    }
+
     fun withEnding(ending: FacetRepeatEnd): FacetRecurrenceForm = copy(
         draft = checkNotNull(draft).copy(ending = ending),
         endDate = (ending as? FacetRepeatEnd.OnDate)?.date.orEmpty(),

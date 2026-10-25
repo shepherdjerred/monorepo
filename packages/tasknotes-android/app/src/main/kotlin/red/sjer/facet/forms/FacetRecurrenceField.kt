@@ -47,7 +47,7 @@ internal fun FacetRecurrenceField(value: String, scheduled: String, created: Str
     val current = form
     FacetSheet("Repeat task", { if (!saving) open = false }, "Done", enabled = enabled && !saving && current?.valid == true, save = {
         if (current != null) action {
-            if (current.changed) change(if (current.advanced) current.raw else codec.build(current.buildDraft(), current.start))
+            current.changeToApply(codec::build)?.let(change)
             open = false
         }
     }) {
@@ -80,8 +80,11 @@ internal fun FacetRecurrenceField(value: String, scheduled: String, created: Str
         } else {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("DAILY" to "Daily", "WEEKLY" to "Weekly", "MONTHLY" to "Monthly", "YEARLY" to "Yearly").forEach { (frequency, text) ->
-                    FilterChip(current.frequency == frequency, {
-                        if (current.frequency != frequency) action { form = current.withPattern(codec.pattern(frequency, current.start)) }
+                    FilterChip(current.selectedFrequency == frequency, {
+                        action {
+                            val pattern = if (current.frequency == frequency) checkNotNull(current.draft).pattern else codec.pattern(frequency, current.start)
+                            form = current.selectFrequency(pattern)
+                        }
                     }, enabled = enabled && !saving, label = { Text(text) })
                 }
             }
