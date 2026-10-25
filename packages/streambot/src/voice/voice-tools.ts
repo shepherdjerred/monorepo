@@ -475,7 +475,7 @@ export function createStreambotVoiceTools(
           tool({
             name: "list_sports",
             description:
-              "List sports or official competitive LoL matches. For a team's next match use query with its name and range week. Optionally choose league lck, worlds, msi, first_stand, lpl, lec, or lcs. This does not start playback.",
+              "List today's sports or official competitive LoL matches. The week range is available only for LoL Esports; for a LoL team's next match use query with its name and range week. Optionally choose a LoL league. Use today for other sports. This does not start playback.",
             parameters: voiceToolSchemas.listSports,
             execute: (input) =>
               invoke(

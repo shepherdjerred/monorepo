@@ -15,7 +15,7 @@ import type {
   SportsSearchResult,
 } from "@shepherdjerred/streambot/sports/types.ts";
 import type { SportsPageRenderer } from "@shepherdjerred/streambot/sports/pinchtab.ts";
-import type { LolEsportsClient } from "./lolesports.ts";
+import { hasLolSportsCue, type LolEsportsClient } from "./lolesports.ts";
 
 const PROVIDER_ORDER: readonly SportsProvider[] = [
   "streameast",
@@ -175,10 +175,7 @@ export class SportsService implements SportsCatalog {
   ): Promise<SportsSearchResult> {
     const lolRequest =
       provider === "lolesports" ||
-      (provider === "auto" &&
-        /\b(?:lck|worlds|msi|lec|lpl|lcs|first stand|league of legends)\b/i.test(
-          query,
-        ));
+      (provider === "auto" && hasLolSportsCue(query));
     const events = lolRequest
       ? await this.listSchedule(signal, { range: "week" })
       : await this.listToday(signal, provider);

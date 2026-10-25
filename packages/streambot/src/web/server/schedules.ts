@@ -13,7 +13,15 @@ export async function webSchedules(
   const input =
     request.method === "GET"
       ? { guildId: url.searchParams.get("guildId") }
-      : await request.json();
+      : await request.json().catch((error: unknown) => {
+          if (error instanceof SyntaxError)
+            throw new WebError(
+              400,
+              "invalid_request",
+              "Check your input and try again.",
+            );
+          throw error;
+        });
   const guildId = requestInput(
     z.object({ guildId: GuildIdSchema }),
     input,

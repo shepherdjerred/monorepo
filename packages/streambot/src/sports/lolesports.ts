@@ -61,6 +61,11 @@ export const LolMatchSchema = z.object({
   streams: z.array(StreamSchema),
 });
 export type LolMatch = z.infer<typeof LolMatchSchema>;
+export function hasLolSportsCue(query: string): boolean {
+  return /\b(?:lck|worlds|msi|lec|lpl|lcs|first stand|league of legends)\b/i.test(
+    query,
+  );
+}
 const PageSchema = z.object({
   data: z.object({
     esports: z.object({

@@ -75,6 +75,10 @@ export class LolPlaybackSchedules {
     rawTarget: ScheduleTarget,
     signal: AbortSignal,
   ) {
+    if (rawTarget.slot === 1)
+      throw new PlaybackCommandBoundaryError(
+        "Scheduled sports need a video channel. Choose channel 2 or higher.",
+      );
     const target = ScheduleTargetSchema.parse(rawTarget);
     const authority = await this.ports.authority(target);
     if (!(await this.ports.allowed(target)) || !authority.allowed)
@@ -101,11 +105,17 @@ export class LolPlaybackSchedules {
       const previous = PlaybackScheduleSchema.parse(
         JSON.parse(z.object({ payload: z.string() }).parse(existing).payload),
       );
-      if (previous.target.userId !== target.userId)
-        throw new PlaybackCommandBoundaryError(
-          "This series is already scheduled in that video slot.",
-        );
-      return previous;
+      if (["pending", "starting", "playing"].includes(previous.status)) {
+        if (previous.target.userId !== target.userId)
+          throw new PlaybackCommandBoundaryError(
+            "This series is already scheduled in that video slot.",
+          );
+        return previous;
+      }
+      // Retain terminal history while freeing the active deduplication key.
+      this.db
+        .query("UPDATE lol_schedules SET identity=?2 WHERE id=?1")
+        .run(previous.id, `${identity}:terminal:${previous.id}`);
     }
     const schedule: PlaybackSchedule = {
       id: crypto.randomUUID(),

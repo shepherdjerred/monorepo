@@ -7,6 +7,7 @@ import type {
 } from "@shepherdjerred/streambot/sports/types.ts";
 import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
 import { sportsEventTimeLabel } from "@shepherdjerred/streambot/sports/parse-events.ts";
+import { hasLolSportsCue } from "./lolesports.ts";
 
 type SportsListingInput = {
   readonly scope: DiscoveryScope | null;
@@ -34,13 +35,14 @@ export async function sportsListingEvents(
     );
   }
   const lol = (await input.lolEnabled?.(input.scope)) === true;
+  const automatic = input.provider === undefined || input.provider === "auto";
   const provider =
-    input.provider ??
-    (input.query !== undefined ||
-    input.league !== undefined ||
-    input.range === "week"
+    automatic &&
+    (hasLolSportsCue(input.query ?? "") ||
+      (input.league !== undefined && input.league !== "") ||
+      input.range === "week")
       ? "lolesports"
-      : "auto");
+      : (input.provider ?? "auto");
   if (provider === "lolesports") {
     if (!lol || input.catalog.listSchedule === undefined)
       throw new PlaybackCommandBoundaryError(

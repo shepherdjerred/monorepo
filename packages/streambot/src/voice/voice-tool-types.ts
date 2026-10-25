@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LolLeagueSchema } from "@shepherdjerred/streambot/sports/lolesports.ts";
 
 const EmptyInputSchema = z.strictObject({});
 
@@ -55,7 +56,7 @@ export const voiceToolSchemas = {
   getNowPlaying: EmptyInputSchema,
   listSports: z.strictObject({
     query: z.string().trim().min(1).max(200).optional(),
-    league: z.string().optional(),
+    league: LolLeagueSchema.optional(),
     range: z.enum(["today", "week"]).optional(),
   }),
 } as const;

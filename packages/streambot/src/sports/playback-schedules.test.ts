@@ -9,6 +9,7 @@ import type { ScheduleTarget } from "./schedule-types.ts";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 const stores: LolPlaybackSchedules[] = [];
 afterEach(() => {
   for (const store of stores.splice(0)) store.close();
@@ -107,7 +108,41 @@ describe("one-time LoL automatic playback", () => {
     ).rejects.toThrow("already scheduled");
     await expect(
       f.store.create(first.event, { ...target, slot: 1 }, f.signal),
-    ).rejects.toThrow();
+    ).rejects.toThrow(PlaybackCommandBoundaryError);
+    await expect(
+      f.store.create(first.event, { ...target, slot: 1 }, f.signal),
+    ).rejects.toThrow("Choose channel 2 or higher");
+  });
+  it("lets an explicit new request replace a cancelled reservation while retaining history", async () => {
+    const f = fixture();
+    const first = await f.create();
+    f.store.cancel(first.id, "1", "3");
+    const second = await f.create();
+    expect(second.id).not.toBe(first.id);
+    expect(second.status).toBe("pending");
+    f.store.cancel(second.id, "1", "3");
+    const third = await f.store.create(
+      second.event,
+      { ...target, userId: "4" },
+      f.signal,
+    );
+    expect(third.id).not.toBe(second.id);
+    expect(third.status).toBe("pending");
+    expect(f.store.list("1", "3").map((s) => s.status)).toEqual([
+      "cancelled",
+      "cancelled",
+    ]);
+  });
+  it("allows explicit retry of a failed future reservation after flags are restored", async () => {
+    const f = fixture();
+    const first = await f.create();
+    f.ports.allowed = async () => false;
+    await f.store.reconcile(f.signal);
+    expect(f.store.list("1", "3")[0]?.status).toBe("failed");
+    f.ports.allowed = async () => true;
+    const second = await f.create();
+    expect(second.id).not.toBe(first.id);
+    expect(second.status).toBe("pending");
   });
   it("follows changed start times and waits for listeners and an idle slot", async () => {
     const f = fixture();

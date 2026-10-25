@@ -227,6 +227,7 @@ export function createTemporalChart(app: App) {
                       "reports-worker",
                       "infra-worker",
                       "repo-worker",
+                      "streambot-worker",
                       "scout-worker",
                       "glitter-corpus-worker",
                       "glitter-context-worker",

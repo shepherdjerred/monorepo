@@ -190,6 +190,9 @@ a team's next match, and `/stream playback sports provider:lolesports range:week
 opens the Discord picker. Official English YouTube broadcasts are preferred;
 Twitch is tried when YouTube cannot supply live audio and video. Riot event IDs
 keep different series distinct even when they share one broadcast channel.
+Choose LoL series through the sports catalog; pasted LoL match-page links point
+you back to the live listing. Seven-day schedules are available only for LoL;
+other sports providers list today's events.
 Match cards show official team and competition logos. Live cards also carry the
 official broadcast thumbnail; upcoming series use their team matchup artwork.
 Artwork persists with the event so queues and history keep the same match identity.
@@ -199,7 +202,9 @@ the requester's current voice channel and selected video slot (2 in automatic
 mode). The series starts only while live, with a human listener, valid channel
 permissions, an idle slot with an empty queue, and available bot capacity. It ends
 when Riot marks the series complete. Cancellation and manual stop prevent another
-automatic start; other queued media and video slots are preserved. Use the web's
+automatic start; other queued media and video slots are preserved.
+An explicit new scheduling request can reserve a previously cancelled or failed
+upcoming series again; its earlier schedule remains in history. Use the web's
 **Your scheduled series**, `/stream playback sports-schedules`, and
 `/stream playback sports-cancel id:...` to inspect or cancel your schedules.
 

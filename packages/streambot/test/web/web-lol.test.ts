@@ -72,6 +72,20 @@ test("web scheduling verifies identity, CSRF, voice membership and the selected 
     channelId: CHANNEL,
     status: "pending",
   });
+  for (const endpoint of [
+    "/api/sports/schedules",
+    "/api/sports/schedules/cancel",
+  ]) {
+    const malformed = await fixture.handler(
+      new Request(origin + endpoint, {
+        method: "POST",
+        headers,
+        body: "{",
+      }),
+    );
+    expect(malformed.status).toBe(400);
+    expect(await malformed.json()).toMatchObject({ code: "invalid_request" });
+  }
   expect(schedules.list(GUILD, "attacker")).toEqual([]);
   const list = await fixture.handler(
     new Request(`${origin}/api/sports/schedules?guildId=${GUILD}`, { headers }),

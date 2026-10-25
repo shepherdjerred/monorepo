@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import { z } from "zod";
 import {
   findTemporalResource,
   findTemporalWorkerContainer,
@@ -42,4 +43,35 @@ test("the LoL scheduler worker has one credential and only internal Streambot an
   expect(rendered).toContain('"port":7233');
   expect(rendered).toContain('"app":"streambot"');
   expect(rendered).not.toContain('"port":443');
+  const server = findTemporalResource(
+    resources,
+    "NetworkPolicy",
+    "temporal-server-netpol",
+  );
+  const serverSpec = z
+    .object({ ingress: z.array(z.unknown()) })
+    .parse(server.spec);
+  expect(serverSpec.ingress).toContainEqual(
+    expect.objectContaining({
+      ports: [{ port: 7233, protocol: "TCP" }],
+      from: expect.arrayContaining([
+        expect.objectContaining({
+          namespaceSelector: {
+            matchLabels: { "kubernetes.io/metadata.name": "temporal" },
+          },
+          podSelector: {
+            matchExpressions: [
+              {
+                key: "component",
+                operator: "In",
+                values: expect.arrayContaining([
+                  pod.metadata.labels["component"],
+                ]),
+              },
+            ],
+          },
+        }),
+      ]),
+    }),
+  );
 });

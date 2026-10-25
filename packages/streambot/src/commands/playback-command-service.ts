@@ -136,7 +136,6 @@ export class PlaybackCommandService extends PlaybackControls {
       query,
       source: input.sourceOverride,
       provider: input.provider,
-      automatic: input.source === "auto",
       scope,
       gate: this.deps.featureGate?.lolEsports,
     });
@@ -145,7 +144,6 @@ export class PlaybackCommandService extends PlaybackControls {
       query: "",
       source: selected.source,
       provider: undefined,
-      automatic: false,
       scope,
       gate: this.deps.featureGate?.lolEsports,
     });
@@ -296,6 +294,7 @@ export class PlaybackCommandService extends PlaybackControls {
       provider: input.provider,
       scope,
       enabled: this.deps.featureGate?.sportsStreaming,
+      lolEnabled: this.deps.featureGate?.lolEsports,
       signal,
       catalog: this.deps.sports,
       resolve: this.deps.resolvePlaySource,
