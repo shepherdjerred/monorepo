@@ -12,6 +12,7 @@ struct FacetRecurrenceEditorSheet: View {
     let existingRule: String?
     let storedScheduled: String?
     let initialStart: String
+    let initialStartIsResolved: Bool
     let onApply: (FacetRecurrenceEdit) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -42,12 +43,14 @@ struct FacetRecurrenceEditorSheet: View {
         editableDraft: FacetCommonRecurrenceDraft?,
         storedScheduled: String?,
         start: String,
+        startIsResolved: Bool,
         anchor: FacetRecurrenceAnchor,
         onApply: @escaping (FacetRecurrenceEdit) -> Void
     ) {
         self.existingRule = existingRule
         self.storedScheduled = storedScheduled
         initialStart = start
+        initialStartIsResolved = startIsResolved
         self.onApply = onApply
         unsupported = existingRule != nil && editableDraft == nil
         _isReplacingUnsupported = State(initialValue: existingRule == nil || editableDraft != nil)
@@ -61,7 +64,10 @@ struct FacetRecurrenceEditorSheet: View {
             )
         let pattern = FacetRecurrencePatternSeed(pattern: seedDraft.pattern, start: start)
         let parsedStartDate = FacetCivilDay.date(of: start)
-        let initialStartDate = parsedStartDate ?? Date(timeIntervalSince1970: 0)
+        let initialStartDate =
+            startIsResolved
+            ? (parsedStartDate ?? Date(timeIntervalSince1970: 0))
+            : Date(timeIntervalSince1970: 0)
         let end = FacetFacetRecurrenceEndingSeed(
             ending: seedDraft.ending, startDate: initialStartDate)
         _interval = State(initialValue: seedDraft.interval)
@@ -78,10 +84,11 @@ struct FacetRecurrenceEditorSheet: View {
         _ending = State(initialValue: end.ending)
         _endDate = State(initialValue: end.date)
         _occurrenceCount = State(initialValue: end.count)
-        _invalidInitialStart = State(initialValue: parsedStartDate == nil)
+        let invalidStart = !startIsResolved || parsedStartDate == nil
+        _invalidInitialStart = State(initialValue: invalidStart)
         _validationMessage = State(
-            initialValue: parsedStartDate == nil
-                ? "The stored Scheduled date is invalid. Choose a valid date before applying."
+            initialValue: invalidStart
+                ? "The stored recurrence start is invalid. Choose a valid date before applying."
                 : nil)
     }
 
@@ -143,7 +150,7 @@ extension FacetRecurrenceEditorSheet {
             DatePicker("Scheduled", selection: $startDate, displayedComponents: .date)
                 .onChange(of: startDate) { _, _ in
                     invalidInitialStart = false
-                    if validationMessage?.hasPrefix("The stored Scheduled date") == true {
+                    if validationMessage?.hasPrefix("The stored recurrence start") == true {
                         validationMessage = nil
                     }
                 }
@@ -318,17 +325,24 @@ extension FacetRecurrenceEditorSheet {
     fileprivate func apply() {
         guard !invalidInitialStart else {
             validationMessage =
-                "The stored Scheduled date is invalid. Choose a valid date before applying."
+                "The stored recurrence start is invalid. Choose a valid date before applying."
             return
         }
         let selectedStart = FacetCivilDay.iso(of: startDate)
         let submittedDraft = draft
         let submittedAnchor = anchor
-        let writesScheduled = storedScheduled == nil || selectedStart != initialStart
+        let originalScheduled = storedScheduled
+        let originalStart = initialStart
+        let startWasResolved = initialStartIsResolved
+        let replacingRule = unsupported && isReplacingUnsupported
         isApplying = true
         _Concurrency.Task {
             let result = await _Concurrency.Task.detached {
-                FacetRecurrenceEdit.build(
+                let writesScheduled = FacetRecurrenceEdit.requiresScheduledWrite(
+                    storedScheduled: originalScheduled, initialStart: originalStart,
+                    selectedStart: selectedStart, startWasResolved: startWasResolved,
+                    replacingUnsupported: replacingRule)
+                return FacetRecurrenceEdit.build(
                     draft: submittedDraft, start: selectedStart, anchor: submittedAnchor,
                     writesScheduled: writesScheduled)
             }.value

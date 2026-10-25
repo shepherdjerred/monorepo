@@ -238,6 +238,15 @@ submitting a replacement edit. Token suggestions and Quick Add chips use core
 projections. There is one main workspace window today; auxiliary capture windows
 own their drafts without redirecting the main query, selection, or inspector.
 
+Reminder kind changes remove only the previous kind's incompatible fields and
+write the new kind's required values, preserving reminder IDs and extensions.
+Simple repeat controls consume Rust projections and Rust-built rules, preserve
+unchanged rule text exactly, and retain existing calendar selectors and endings
+when changing an interval. Patterns the controls cannot express, including
+ordinal weekdays, and rules declined by the common projection remain in the full
+recurrence field; Apply requires editing that rule there or clearing it before
+choosing a new simple schedule.
+
 Row actions freeze their rendered vault, path, revision, and recurrence
 occurrence before entering the host queue. Bulk completion supports distinct
 notes; selecting multiple occurrences of one note requires completing those

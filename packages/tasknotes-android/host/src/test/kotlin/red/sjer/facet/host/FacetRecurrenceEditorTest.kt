@@ -11,6 +11,66 @@ import uniffi.TaskNotesCore.CoreException
 import uniffi.TaskNotesCore.MonthlyOrdinal
 
 class FacetRecurrenceEditorTest {
+    @Test fun newRuleAnchorProbesPreserveScheduledAndCreatedInputsForCalendarDefaults() = runBlocking {
+        data class AnchorCase(val scheduled: String?, val created: String?, val resolved: String, val weekday: CommonWeekday, val day: UByte)
+        val cases = listOf(
+            AnchorCase("2026-10-06T09:00:00-07:00", "2026-10-04T08:00:00Z", "2026-10-06", CommonWeekday.TUESDAY, 6u),
+            AnchorCase(null, "2026-10-07T23:30:00-07:00", "2026-10-07", CommonWeekday.WEDNESDAY, 7u),
+            AnchorCase("", "2026-10-07T23:30:00-07:00", "2026-10-07", CommonWeekday.WEDNESDAY, 7u),
+        )
+        for (case in cases) {
+            val core = RecordingCore(CommonRecurrenceDraft(1u, CommonRecurrencePattern.Daily, CommonRecurrenceEnd.Never), Thread.currentThread())
+            core.resolved = case.resolved
+            val editor = FacetRecurrenceEditor(core)
+            val projection = editor.project("", case.scheduled, case.created, "2026-10-05")
+            assertEquals(listOf("FREQ=DAILY", case.scheduled, case.created), core.startInputs)
+            assertEquals(case.resolved, projection.start)
+            assertEquals("FREQ=DAILY" to case.resolved, core.parseInput)
+            assertEquals(FacetRepeatPattern.Daily, checkNotNull(projection.draft).pattern)
+
+            core.parsed = CommonRecurrenceDraft(1u, CommonRecurrencePattern.Weekly(listOf(case.weekday)), CommonRecurrenceEnd.Never)
+            val expectedDay = if (case.weekday == CommonWeekday.TUESDAY) FacetRepeatWeekday.TUESDAY else FacetRepeatWeekday.WEDNESDAY
+            assertEquals(FacetRepeatPattern.Weekly(listOf(expectedDay)), editor.pattern("WEEKLY", projection.start))
+            assertEquals("FREQ=WEEKLY" to case.resolved, core.parseInput)
+            core.parsed = CommonRecurrenceDraft(1u, CommonRecurrencePattern.MonthlyDayOfMonth(case.day), CommonRecurrenceEnd.Never)
+            assertEquals(FacetRepeatPattern.MonthlyDay(case.day), editor.pattern("MONTHLY", projection.start))
+            assertEquals("FREQ=MONTHLY" to case.resolved, core.parseInput)
+            core.parsed = CommonRecurrenceDraft(1u, CommonRecurrencePattern.YearlyMonthDay(10u, case.day), CommonRecurrenceEnd.Never)
+            assertEquals(FacetRepeatPattern.Yearly(10u, case.day), editor.pattern("YEARLY", projection.start))
+            assertEquals("FREQ=YEARLY" to case.resolved, core.parseInput)
+            assertEquals(5, core.offCallerCalls)
+        }
+    }
+
+    @Test fun newRulesWithGenuinelyMissingAnchorsUseCallerTodayAfterTheDailyProbe() = runBlocking {
+        val cases = listOf(null to null, "" to "", null to "", "" to null)
+        for ((scheduled, created) in cases) {
+            val core = RecordingCore(CommonRecurrenceDraft(1u, CommonRecurrencePattern.Daily, CommonRecurrenceEnd.Never), Thread.currentThread())
+            core.resolved = null
+            val projection = FacetRecurrenceEditor(core).project("", scheduled, created, "2026-10-05")
+            assertEquals(listOf("FREQ=DAILY", scheduled, created), core.startInputs)
+            assertEquals("2026-10-05", projection.start)
+            assertEquals("FREQ=DAILY" to "2026-10-05", core.parseInput)
+            assertEquals(FacetRepeatPattern.Daily, checkNotNull(projection.draft).pattern)
+            assertEquals(2, core.offCallerCalls)
+        }
+    }
+
+    @Test fun unreadableProvidedAnchorsKeepNewRulesRawWithoutParsingTodayOrCreatedFallbacks() = runBlocking {
+        val cases = listOf("unreadable scheduled" to "2026-10-06", null to "unreadable created", "" to "unreadable created",
+            " " to "2026-10-06", "unreadable scheduled" to "")
+        for ((scheduled, created) in cases) {
+            val core = RecordingCore(CommonRecurrenceDraft(1u, CommonRecurrencePattern.Daily, CommonRecurrenceEnd.Never), Thread.currentThread())
+            core.resolved = null
+            val projection = FacetRecurrenceEditor(core).project("", scheduled, created, "2026-10-05")
+            assertEquals(listOf("FREQ=DAILY", scheduled, created), core.startInputs)
+            assertNull(projection.draft)
+            assertNull(core.parseInput)
+            assertNull(core.built)
+            assertEquals(1, core.offCallerCalls)
+        }
+    }
+
     @Test fun weeklyProjectionAndBuildKeepCoreOwnedDaysIntervalCountAndOriginalInputs() = runBlocking {
         val caller = Thread.currentThread()
         val original = CommonRecurrenceDraft(2u, CommonRecurrencePattern.Weekly(listOf(CommonWeekday.MONDAY, CommonWeekday.WEDNESDAY)), CommonRecurrenceEnd.AfterOccurrences(7u))
@@ -72,7 +132,7 @@ class FacetRecurrenceEditorTest {
         } catch (failure: FacetActionError) { assertEquals("weekly recurrence must select at least one weekday", failure.explanation) }
     }
 
-    private class RecordingCore(private val parsed: CommonRecurrenceDraft?, private val caller: Thread) : FacetRecurrenceCore {
+    private class RecordingCore(var parsed: CommonRecurrenceDraft?, private val caller: Thread) : FacetRecurrenceCore {
         var resolved: String? = "2026-10-05"
         var startInputs: List<String?>? = null
         var parseInput: Pair<String, String>? = null

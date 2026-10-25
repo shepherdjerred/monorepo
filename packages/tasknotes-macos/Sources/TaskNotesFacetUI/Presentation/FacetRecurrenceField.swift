@@ -51,7 +51,8 @@ internal struct FacetRecurrenceField: View {
                     existingRule: rule.isEmpty ? nil : rule,
                     editableDraft: projection.editableDraft,
                     storedScheduled: scheduled.isEmpty ? nil : scheduled,
-                    start: projection.start, anchor: parsedAnchor
+                    start: projection.start, startIsResolved: projection.hasResolvedStart,
+                    anchor: parsedAnchor
                 ) { edit in
                     rule = edit.rule
                     anchor = edit.anchor == .scheduled ? "scheduled" : "completion"

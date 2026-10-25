@@ -60,7 +60,8 @@ internal struct FacetInspectorRecurrence: View {
                 if let projection, let anchor {
                     FacetRecurrenceEditorSheet(
                         existingRule: rule, editableDraft: projection.editableDraft,
-                        storedScheduled: scheduled, start: projection.start, anchor: anchor
+                        storedScheduled: scheduled, start: projection.start,
+                        startIsResolved: projection.hasResolvedStart, anchor: anchor
                     ) { edit in
                         var properties: [String: FacetValue] = [
                             "recurrence": .string(edit.rule),
