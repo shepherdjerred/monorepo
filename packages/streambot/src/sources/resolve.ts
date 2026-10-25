@@ -148,16 +148,34 @@ async function probeAndRecordSourceMetadata(
     readonly title: string;
     readonly headers?: Readonly<Record<string, string>> | undefined;
     readonly inputOptions?: readonly string[] | undefined;
+    readonly audioInput?: string | undefined;
+    readonly audioInputHeaders?: Readonly<Record<string, string>> | undefined;
   },
   signal: AbortSignal,
 ): Promise<MediaInfo | null> {
-  const info = await probeMedia(config, target.input, signal, {
-    headers: target.headers,
-    inputOptions: target.inputOptions,
-  });
-  if (info === null) {
+  const [primary, audio] = await Promise.all([
+    probeMedia(config, target.input, signal, {
+      headers: target.headers,
+      inputOptions: target.inputOptions,
+    }),
+    target.audioInput === undefined
+      ? Promise.resolve(undefined)
+      : probeMedia(config, target.audioInput, signal, {
+          headers: target.audioInputHeaders,
+        }),
+  ]);
+  if (primary === null || audio === null) {
     return null;
   }
+  const info =
+    audio === undefined
+      ? primary
+      : {
+          ...primary,
+          audioCodec: audio.audioCodec,
+          audioChannels: audio.audioChannels,
+          audioStreamIndex: audio.audioStreamIndex ?? 0,
+        };
   const resolution = resolutionBucket(info.height);
   log.info("source probed", {
     title: target.title,
@@ -178,6 +196,26 @@ async function probeAndRecordSourceMetadata(
     resolution,
   });
   return info;
+}
+
+async function probePlaybackSource(
+  config: Config,
+  resolved: ResolvedSource,
+  signal: AbortSignal,
+  sportsSource: boolean,
+): Promise<MediaInfo | null> {
+  return await probeAndRecordSourceMetadata(
+    config,
+    {
+      input: resolved.ffmpegInput,
+      title: resolved.title,
+      headers: resolved.ffmpegInputHeaders,
+      inputOptions: resolved.ffmpegInputOptions,
+      audioInput: sportsSource ? resolved.audioInput : undefined,
+      audioInputHeaders: resolved.audioInputHeaders,
+    },
+    signal,
+  );
 }
 
 /**
@@ -298,14 +336,11 @@ async function resolveLolSource(
         signal,
         true,
       );
-      const probed = await probeAndRecordSourceMetadata(
+      const probed = await probePlaybackSource(
         config,
-        {
-          input: candidate.ffmpegInput,
-          title: event.title,
-          headers: candidate.ffmpegInputHeaders,
-        },
+        { ...candidate, title: event.title },
         signal,
+        true,
       );
       assertSportsHasAudioAndVideo(probed);
       const thumbnailUrl =
@@ -381,23 +416,14 @@ export async function resolveSource(
   }
   // For yt-dlp and pre-resolved sources the ffmpeg input only becomes final once a format has been
   // chosen, so the probe runs here — on the URL the streamer will open, not on some earlier
-  // candidate. (For the split-video case that is the video-only input; its audio companion is
-  // yt-dlp's own pairing and is not separately probed.)
-  const info =
-    probed === undefined
-      ? await probeAndRecordSourceMetadata(
-          config,
-          {
-            input: resolved.ffmpegInput,
-            title: resolved.title,
-            headers: resolved.ffmpegInputHeaders,
-            inputOptions: resolved.ffmpegInputOptions,
-          },
-          signal,
-        )
-      : probed;
+  // candidate. Sports also probe a split audio companion: ffmpeg maps that separate input,
+  // so both its audio and the primary input's video must be usable.
   const sportsSource =
     source.kind === "url" && sportsEventForSource(source.url) !== null;
+  const info =
+    probed === undefined
+      ? await probePlaybackSource(config, resolved, signal, sportsSource)
+      : probed;
   if (sportsSource) assertSportsHasAudioAndVideo(info);
   // Rule 1's authoritative moment, plus the probed HDR flag and duration. The yt-dlp audio-first
   // pass is deliberately blind to "the selected stream has no picture" (it is true of every item
