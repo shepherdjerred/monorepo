@@ -36,7 +36,7 @@ export function scheduledPlaybackPorts(input: {
           view === undefined ||
           (view.current === null &&
             view.queue.length === 0 &&
-            view.state === "idle"),
+            (view.state === "idle" || view.state === "waiting")),
         ...(source?.kind === "url" && source.scheduleId !== undefined
           ? { scheduleId: source.scheduleId }
           : {}),
