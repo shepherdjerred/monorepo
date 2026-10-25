@@ -41,6 +41,12 @@ class ObsidianAccountHost(context: Context, private val engine: FacetEngineRunne
     private var choices: List<ObsidianRemoteVault> = emptyList()
     @Volatile internal var generation = 0L; private set
 
+    /** Non-secret immutable ownership capture; safe to check from engine admission on Dispatchers.IO. */
+    fun captureOwnerFence(): () -> Boolean {
+        val captured = generation
+        return { generation == captured }
+    }
+
     fun close() {
         account.close()
         client.connectionPool.evictAll()

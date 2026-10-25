@@ -20,6 +20,9 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     var allSnapshot by mutableStateOf<VaultSnapshot?>(null); private set
     var remoteChoices by mutableStateOf<List<RemoteVaultChoice>>(emptyList()); private set
     var pendingActions by mutableStateOf<List<PendingFacetMutation>>(emptyList()); private set
+    var generationAttention by mutableStateOf<List<FacetGenerationAttention>>(emptyList()); private set
+    var generationStatus by mutableStateOf<String?>(null); private set
+    var generationWindows by mutableStateOf<List<FacetWindowTarget>>(emptyList()); private set
     var needsCode by mutableStateOf(false); private set
     var error by mutableStateOf<String?>(null); private set
     var savedNotice by mutableStateOf<FacetSavedNotice?>(null); private set
@@ -59,6 +62,11 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     private lateinit var engine: FacetEngineRunner
     private lateinit var account: ObsidianAccountHost
     private lateinit var mutations: FacetMutationController
+    private lateinit var occurrences: FacetOccurrencePort
+    private lateinit var occurrenceMaintenance: FacetOccurrenceMaintenance
+    private var occurrenceMaintenanceQueued = false
+    private var occurrenceRequestGeneration = 0L
+    private val occurrenceOwnership = FacetOccurrenceOwnership()
     private var generation = 0L
     private var foreground = false
     @Volatile private var cleared = false
@@ -151,6 +159,8 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
         account = withContext(Dispatchers.IO) { ObsidianAccountHost(application, engine).also { account = it } }
         val receiptSchema = FacetSchema(application.assets.open("facet-engine.schema.json").bufferedReader().use { it.readText() })
         mutations = FacetMutationController(NativeFacetMutationPort(engine), receiptSchema)
+        occurrences = engine.occurrences()
+        occurrenceMaintenance = FacetOccurrenceMaintenance(occurrences)
         profiles = engine.profiles()
         account.reconcileRemovedProfiles(profiles.map { it.id }.toSet())
         val selectedId = withContext(Dispatchers.IO) { preferences.getString("selectedProfile", null) }
@@ -158,6 +168,7 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
         restoreActions()
         if (foreground) startSessions()
         reload(refreshFiles = true)
+        indexMaintenanceProfiles()
     } }
 
     fun select(profile: VaultProfile) {
@@ -166,7 +177,7 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     }
     private fun resetSelection(profile: VaultProfile) {
         reserveNoticeRequest()
-        generation++; visibleQuery = null; selected = profile; snapshot = null; allSnapshot = null; syncState = ""; needsStandardConsent = false; completionPresentation = null
+        generation++; visibleQuery = null; selected = profile; snapshot = null; allSnapshot = null; syncState = ""; needsStandardConsent = false; completionPresentation = null; generationAttention = emptyList(); generationStatus = null; generationWindows = emptyList()
         query = FacetQuery(); savedQuery = null; conflicts = emptyList(); conflictCursor = null; conflictPreview = null
         capturePreview = null; capturePreviewOwner = null; capturePreviewInput = ""; previewGeneration++
     }
@@ -411,16 +422,18 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
         completionFailures = completionFailures - intent.key
         val owner = captureNoticeOwner(profileId, intent.mutationId)
         work(owner) {
+            var primaryApplied = false
             try {
                 check(completionAdmission.owns(intent)) { "This completion is no longer admitted." }
                 applied(intent.profileId, intent.command, intent.mutationId, owner, saved) { result ->
+                    primaryApplied = true
                     if (result.receipt.getValue("paths").jsonArray.isNotEmpty() && foreground && feedbackOwners[intent.mutationId] == sessionGeneration && selected?.id == intent.profileId)
                         completionPresentation = FacetCompletionPresentation(intent.profileId, intent.mutationId, task, !task.completed, sessionGeneration, owner.engineGeneration)
                 }
                 if (selected?.id == intent.profileId) reload()
                 restoreActions()
             } catch (failure: Exception) {
-                if (failure !is CancellationException) {
+                if (failure !is CancellationException && !primaryApplied) {
                     completionFailures = completionFailures + (intent.key to FacetEngineRunner.failureMessage(failure))
                     try { restoreActions() } catch (recoveryFailure: Exception) { failure.addSuppressed(recoveryFailure) }
                 }
@@ -432,6 +445,15 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     fun move(profileId: String, task: VaultTask, status: String) = command(profileId, buildJsonObject { put("kind", "set_status"); put("path", task.path); put("expectedRevision", task.revision); put("status", status); task.occurrenceDate?.let { put("occurrenceDate", it) } })
+    fun generateWindow(profileId: String, task: VaultTask) {
+        val day = LocalDate.now().toString()
+        command(profileId, FacetOccurrences.windowCommand(task.path, task.revision, day, automatic = false))
+    }
+    fun repairGeneration(profileId: String, attention: FacetGenerationAttention) {
+        val repair = attention.action as? FacetGenerationAction.Repairable ?: return
+        // Command/revisions are captured from the core discovery, then retained by the normal durable action path.
+        command(profileId, repair.command)
+    }
     internal fun viewIntent(existing: JsonObject? = null): FacetSavedViewIntent {
         val profile = requireNotNull(selected)
         val viewQuery = savedQuery ?: query.document().let { JsonObject(it - "offset" - "limit" - "today" - "at") }
@@ -526,6 +548,8 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
         receiptPresentation(result)
         val kind = feedbackKind(command)
         presentSaved(result, owner, saved, kind)
+        observeGeneration(profileId, mutationId, owner)
+        requestOccurrenceMaintenance(profileId)
     }
     private fun readUndo(profileId: String): FacetUndoHistory {
         val current = preferences.getString("undoHistory.$profileId", null)
@@ -552,10 +576,13 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
         return actions
     }
     private suspend fun restoreActions() {
-        pendingActions = readPendingActions()
+        refreshSavedActions()
+        selected?.id?.let { readGenerationAttention(it) }
         selected?.id?.let { loadUndoAuthority(it) }
         resolutionIds = selected?.id?.let { id -> withContext(Dispatchers.IO) { readUndo(id).resolutions } } ?: emptyList()
     }
+    private suspend fun refreshSavedActions(owns: () -> Boolean = { true }): Boolean =
+        publishFacetSavedActions(owns, { readPendingActions() }) { pendingActions = it }
     fun loadMore() = work {
         val profile = selected ?: return@work
         val previous = snapshot ?: return@work
@@ -569,21 +596,23 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
         check((previous.tasks.size + next.tasks.size).toULong() <= previous.totalCount) { "The engine returned too many task rows." }
         snapshot = next.copy(tasks = previous.tasks + next.tasks, groups = previous.groups + next.groups)
     }
-    private suspend fun reload(refreshFiles: Boolean = false) {
+    private suspend fun reload(refreshFiles: Boolean = false, owns: () -> Boolean = { true }) {
+        if (!owns()) return
         val profile = selected ?: return
         val request = ++generation
         val frozen = FacetPagedQuery.capture(profile.id, request, query, savedQuery)
         visibleQuery = null
         val cached = engine.cachedSnapshot(profile.id, frozen.page())
-        if (request != generation || selected?.id != profile.id) return
+        if (!owns() || request != generation || selected?.id != profile.id) return
         snapshot = cached
         visibleQuery = frozen
-        if (refreshFiles) engine.refresh(profile.id)
+        if (refreshFiles) { engine.refresh(profile.id); requestOccurrenceMaintenance(profile.id) }
         val result = engine.snapshot(profile.id, frozen.page())
-        if (request != generation || selected?.id != result.profileId) return
+        if (!owns() || request != generation || selected?.id != result.profileId) return
         snapshot = result
         if (result.configuration == null) {
             val discovery = engine.features(profile.id, buildJsonObject { put("kind", "discovery") })
+            if (!owns() || request != generation || selected?.id != profile.id) return
             needsStandardConsent = profile.kind != "obsidian_sync" || discovery.getValue("initialSyncComplete").jsonPrimitive.boolean
             allSnapshot = result; requestReminderRefresh(); return
         }
@@ -592,7 +621,7 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
         val vocabulary = FacetPagedQuery(profile.id, request, FacetQuery(scope = "all").document(today = frozen.query.getValue("today").jsonPrimitive.content, at = frozen.query.getValue("at").jsonPrimitive.content))
         do {
             page = engine.snapshot(profile.id, vocabulary.page(all.size, 1000))
-            if (request != generation || selected?.id != profile.id) return
+            if (!owns() || request != generation || selected?.id != profile.id) return
             if (page.version != result.version) throw FacetActionError("The vault changed while reading its task vocabulary. Refresh to continue.")
             if (total != null && total != page.totalCount) throw FacetActionError("The task vocabulary changed between pages. Refresh to continue.")
             total = page.totalCount
@@ -601,28 +630,30 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
             check(all.size.toULong() <= page.totalCount) { "The engine returned too many vault rows." }
         } while (all.size.toULong() < page.totalCount)
         allSnapshot = page.copy(tasks = all)
-        loadUndoAuthority(profile.id)
-        requestReminderRefresh()
+        loadUndoAuthority(profile.id, owns)
+        if (owns()) requestReminderRefresh()
     }
-    private suspend fun loadUndoAuthority(profileId: String) {
+    private suspend fun loadUndoAuthority(profileId: String, owns: () -> Boolean = { true }) {
         val available = engine.features(profileId, buildJsonObject { put("kind", "undo_available") })
-        if (selected?.id == profileId) {
+        if (owns() && selected?.id == profileId) {
             undoHead = available.getValue("receiptId").jsonPrimitive.contentOrNull
             undoDepth = if (available.getValue("canUndo").jsonPrimitive.boolean) 1 else 0
         }
     }
-    fun approveStandard() = ownerWork { profile -> engine.approveStandard(profile); profiles = engine.profiles(); if (selected?.id == profile.id) selected = profiles.single { it.id == profile.id }; engine.refresh(profile.id); if (selected?.id == profile.id) reload() }
+    fun approveStandard() = ownerWork { profile -> engine.approveStandard(profile); profiles = engine.profiles(); if (selected?.id == profile.id) selected = profiles.single { it.id == profile.id }; engine.refresh(profile.id); requestOccurrenceMaintenance(profile.id); if (selected?.id == profile.id) reload() }
     fun resumeSync() {
         if (cleared) return
+        occurrenceOwnership.revoke()
         val admission = reserveNoticeRequest()
         foregroundLease = FacetBackgroundSync.resumeForeground()
         foreground = true
         feedbackActive = true
         sessionGeneration++
-        if (::account.isInitialized) work(admission = admission) { startSessions(); requestReminderRefresh() }
+        if (::account.isInitialized) work(admission = admission) { startSessions(); indexMaintenanceProfiles(); requestReminderRefresh() }
     }
     fun pauseSync() {
         if (cleared) return
+        occurrenceOwnership.revoke()
         val admission = reserveNoticeRequest()
         val lease = foregroundLease
         foreground = false
@@ -636,6 +667,7 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     private fun fenceAccountSessions(preserveAccountResources: Boolean = false) {
+        occurrenceOwnership.revoke()
         reserveNoticeRequest()
         if (!preserveAccountResources) {
             FacetReminders.fence()
@@ -662,8 +694,20 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
             var opened = false
             try {
                 ObsidianReplicaSession.open(engine, account, profile.id,
-                    changed = { withContext(Dispatchers.Main) { if (foreground && ownerGeneration == sessionGeneration && selected?.id == profile.id) { reserveNoticeRequest(); reload() } } },
+                    changed = { withContext(Dispatchers.Main) {
+                        if (foreground && ownerGeneration == sessionGeneration && selected?.id == profile.id) {
+                            val lifecycleOwner = occurrenceOwnership.capture()
+                            val accountOwner = account.captureOwnerFence()
+                            val active = { lifecycleOwner() && accountOwner() }
+                            work {
+                                if (!active() || ownerGeneration != sessionGeneration || selected?.id != profile.id) return@work
+                                reload(owns = active)
+                                if (active()) readGenerationAttention(profile.id, active)
+                            }
+                        }
+                    } },
                     state = { status -> withContext(Dispatchers.Main) { if (foreground && ownerGeneration == sessionGeneration && selected?.id == profile.id) syncState = status } },
+                    maintenanceChanged = { withContext(Dispatchers.Main) { if (foreground && ownerGeneration == sessionGeneration) requestOccurrenceMaintenance(profile.id) } },
                     retain = { candidate ->
                         if (cleared || !foreground || ownerGeneration != sessionGeneration || sessions.containsKey(profile.id)) false
                         else { retained = candidate; sessions[profile.id] = candidate; true }
@@ -677,6 +721,91 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
                     retained.requestStop()
                 }
             }
+        }
+    }
+    private suspend fun maintenanceProfileIds(): Set<String> {
+        val authorized = account.authorizedProfileIds()
+        return profiles.filter { it.kind == "local_folder" || it.id in authorized }.map { it.id }.toSet()
+    }
+    private suspend fun indexMaintenanceProfiles() {
+        // Every private imported copy participates, including offscreen vaults. Sync owns its remote ingestion.
+        for (profile in profiles.filter { it.kind == "local_folder" }) engine.refresh(profile.id)
+        maintenanceProfileIds().forEach(::requestOccurrenceMaintenance)
+    }
+    private fun requestOccurrenceMaintenance(profileId: String) {
+        if (!::occurrenceMaintenance.isInitialized || cleared) return
+        occurrenceMaintenance.request(profileId)
+        occurrenceRequestGeneration++
+        scheduleOccurrenceMaintenance()
+    }
+    private fun scheduleOccurrenceMaintenance() {
+        if (occurrenceMaintenanceQueued || !foreground || cleared) return
+        occurrenceMaintenanceQueued = true
+        viewModelScope.launch {
+            var finished = false
+            var capturedRequests = occurrenceRequestGeneration
+            var publishOwned = occurrenceOwnership.capture()
+            try {
+                operations.withLock {
+                    if (!foreground || cleared) return@withLock
+                    val lifecycleOwner = occurrenceOwnership.capture()
+                    val accountOwner = account.captureOwnerFence()
+                    val active = { lifecycleOwner() && accountOwner() }
+                    publishOwned = active
+                    capturedRequests = occurrenceRequestGeneration
+                    val problems = occurrenceMaintenance.drain(maintenanceProfileIds(), active = active)
+                    if (!active()) return@withLock
+                    refreshSavedActions(active)
+                    if (!active()) return@withLock
+                    selected?.id?.let { readGenerationAttention(it, active) }
+                    if (!active()) return@withLock
+                    generationStatus = problems.takeIf { it.isNotEmpty() }?.let { "Some repeating tasks need attention in their recurrence settings." }
+                    reload(owns = active)
+                    if (!active()) return@withLock
+                    finished = true
+                }
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (failure: Exception) {
+                if (!expectedOccurrenceFailure(failure)) throw failure
+                if (publishOwned()) {
+                    generationStatus = "Generation is still pending. " + FacetEngineRunner.failureMessage(failure)
+                    try { operations.withLock { refreshSavedActions(publishOwned) } }
+                    catch (cancelled: CancellationException) { throw cancelled }
+                    catch (visibilityFailure: Exception) {
+                        if (!expectedOccurrenceFailure(visibilityFailure)) { visibilityFailure.addSuppressed(failure); throw visibilityFailure }
+                        failure.addSuppressed(visibilityFailure)
+                        if (publishOwned()) generationStatus = "Generation is still pending. Saved actions could not be refreshed; your original envelopes remain retained."
+                    }
+                }
+            } finally {
+                occurrenceMaintenanceQueued = false
+                // An external download or edit arriving during this pass retains its own dirty generation.
+                if ((finished || capturedRequests != occurrenceRequestGeneration) && foreground && !cleared && occurrenceMaintenance.hasPending(maintenanceProfileIds())) scheduleOccurrenceMaintenance()
+            }
+        }
+    }
+    private suspend fun readGenerationAttention(profileId: String, owns: () -> Boolean = occurrenceOwnership.capture()) {
+        val accountOwner = account.captureOwnerFence()
+        val selection = generation
+        fun current() = owns() && accountOwner() && selection == generation && selected?.id == profileId
+        val ready = occurrences.ready(profileId)
+        if (!current()) return
+        val attention = if (ready) occurrences.generationAttention(profileId) else emptyList()
+        if (!current()) return
+        val windows = if (ready) occurrences.windowPlan(profileId, LocalDate.now().toString()).first else emptyList()
+        if (current()) { generationAttention = attention; generationWindows = windows }
+    }
+    private suspend fun observeGeneration(profileId: String, mutationId: String, owner: FacetNoticeOwner) {
+        try {
+            val outcomes = occurrences.successors(profileId, mutationId)
+            if (outcomes.any { it.state == FacetGenerationState.FAILED || it.state == FacetGenerationState.PENDING || it.state == FacetGenerationState.STAGED }) {
+                if (ownsNotice(owner)) savedMaintenance = "Saved. Future occurrences need attention; review Repair generation in Settings."
+            }
+            readGenerationAttention(profileId)
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (failure: Exception) {
+            if (!expectedOccurrenceFailure(failure)) throw failure
+            if (ownsNotice(owner)) savedMaintenance = "Saved. Generation status could not be refreshed; its durable repair state remains available."
         }
     }
     private fun work(owner: FacetNoticeOwner? = null, admission: FacetNoticeAdmission? = owner?.let { FacetNoticeAdmission(it.requestGeneration, it.engineGeneration) }, block: suspend () -> Unit) {
@@ -713,6 +842,7 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     override fun onCleared() {
+        occurrenceOwnership.revoke()
         val lease = foregroundLease
         cleared = true; foreground = false; feedbackActive = false; generation++; sessionGeneration++
         completionAdmission.close(); admittedCompletions = emptySet()

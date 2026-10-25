@@ -25,6 +25,7 @@ class ObsidianReplicaSession private constructor(
     private val session: FfiObsidianSession,
     private val changed: suspend () -> Unit,
     private val state: suspend (String) -> Unit,
+    private val maintenanceChanged: suspend () -> Unit,
     private val accountGeneration: Long,
 ) {
     private sealed interface Event {
@@ -50,6 +51,7 @@ class ObsidianReplicaSession private constructor(
     private val stopped = AtomicBoolean(false)
     private var ready = false
     private var dirty = false
+    private var maintenanceDirty = false
     private lateinit var runner: Deferred<Unit>
 
     private fun now(): ULong = SystemClock.elapsedRealtime().toULong()
@@ -70,10 +72,11 @@ class ObsidianReplicaSession private constructor(
                         is Event.Lost -> if (event.epoch == epoch) { ready = false; clockInput { session.disconnected(it) } } else emptyList()
                         Event.Tick -> clockInput { session.tick(it) }
                         Event.Stop -> emptyList()
-                        is Event.Inspect -> { event.reply.complete(ready && !stopped.get() && metadata.isEmpty() && queued.isEmpty()); emptyList() }
+                        is Event.Inspect -> { event.reply.complete(ready && !stopped.get() && metadata.isEmpty() && queued.isEmpty() && !maintenanceDirty); emptyList() }
                     }
                     process(effects)
                     if (event == Event.Tick && dirty) { dirty = false; changed() }
+                    if (event == Event.Tick && maintenanceDirty) { maintenanceDirty = false; maintenanceChanged() }
                     if (ready) uploadPending()
                 }
             } catch (cancelled: CancellationException) {
@@ -118,7 +121,8 @@ class ObsidianReplicaSession private constructor(
         while (effects.isNotEmpty()) {
             if (stopped.get() || account.generation != accountGeneration) throw CancellationException("The Sync session stopped.")
             currentCoroutineContext().ensureActive()
-            when (val effect = effects.removeFirst()) {
+            val effect = effects.removeFirst()
+            when (effect) {
                 is ObsidianSessionEffect.Connect -> {
                     socket?.cancel(); epoch++
                     val generation = epoch
@@ -158,6 +162,7 @@ class ObsidianReplicaSession private constructor(
                         effects.addAll(busyRetry { session.completeRemote(uid) }); metadata.remove(uid)
                     } else if (file.getValue("folder").jsonPrimitive.boolean) {
                         engine.directory(profileId, file.getValue("path").jsonPrimitive.content, file.getValue("deleted").jsonPrimitive.boolean)
+                        maintenanceDirty = true
                         effects.addAll(busyRetry { session.completeRemote(uid) }); metadata.remove(uid)
                     } else { val queuedAt = now(); effects.addAll(busyRetry { session.queueDownload(uid, queuedAt) }) }
                 }
@@ -178,6 +183,7 @@ class ObsidianReplicaSession private constructor(
                 is ObsidianSessionEffect.Failed -> { effect.operationId?.let { queued.remove(it) }; state(effect.message) }
                 is ObsidianSessionEffect.Ready -> { ready = true; state("Downloading pending changes…"); dirty = true }
             }
+            if (effect.triggersOccurrenceMaintenance()) maintenanceDirty = true
         }
     }
 
@@ -221,8 +227,9 @@ class ObsidianReplicaSession private constructor(
 
     companion object {
         suspend fun open(engine: FacetEngineRunner, account: ObsidianAccountHost, profileId: String, changed: suspend () -> Unit, state: suspend (String) -> Unit,
+            maintenanceChanged: suspend () -> Unit = {},
             retain: (ObsidianReplicaSession) -> Boolean = { true }): ObsidianReplicaSession {
-            val candidate = withContext(Dispatchers.IO) { construct(engine, account, profileId, changed, state) }
+            val candidate = withContext(Dispatchers.IO) { construct(engine, account, profileId, changed, state, maintenanceChanged) }
             try {
                 currentCoroutineContext().ensureActive()
                 if (!retain(candidate)) throw CancellationException("The owning Sync session stopped.")
@@ -238,7 +245,7 @@ class ObsidianReplicaSession private constructor(
             }
         }
 
-        private suspend fun construct(engine: FacetEngineRunner, account: ObsidianAccountHost, profileId: String, changed: suspend () -> Unit, state: suspend (String) -> Unit): ObsidianReplicaSession {
+        private suspend fun construct(engine: FacetEngineRunner, account: ObsidianAccountHost, profileId: String, changed: suspend () -> Unit, state: suspend (String) -> Unit, maintenanceChanged: suspend () -> Unit): ObsidianReplicaSession {
             val owningGeneration = account.generation
             val metadata = account.sessionMetadata(profileId)
             val (token, key) = account.sessionSecrets(profileId)
@@ -261,8 +268,12 @@ class ObsidianReplicaSession private constructor(
                     }
                     throw failure
                 }
-                return ObsidianReplicaSession(engine, account, profileId, session, changed, state, owningGeneration)
+                return ObsidianReplicaSession(engine, account, profileId, session, changed, state, maintenanceChanged, owningGeneration)
             } finally { token.fill(0); key.fill(0) }
         }
     }
 }
+
+/** Only successfully processed typed core effects admit maintenance; upload acknowledgements do not. */
+internal fun ObsidianSessionEffect.triggersOccurrenceMaintenance(): Boolean =
+    this is ObsidianSessionEffect.DownloadedPayload || this is ObsidianSessionEffect.Ready

@@ -11,6 +11,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import red.sjer.facet.host.FacetEngineRunner
+import red.sjer.facet.host.FacetBackgroundSync
 
 class StandaloneCaptureTest {
     @get:Rule val compose = createEmptyComposeRule()
@@ -21,35 +22,47 @@ class StandaloneCaptureTest {
         val name = "Capture acceptance ${id.take(8)}"
         runBlocking {
             val engine = FacetEngineRunner.open(context)
-            engine.registerReplica(id, name, approveStandard = true)
-            engine.refresh(id)
-            engine.close()
+            try {
+                engine.registerReplica(id, name, approveStandard = true)
+                engine.refresh(id)
+            } finally { engine.close() }
         }
-        var activity = ActivityScenario.launch(MainActivity::class.java)
-        compose.waitUntil(15_000) { compose.onAllNodesWithText("Vaults").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("Vaults").performClick()
-        compose.onNode(hasText(name) and hasClickAction()).performClick()
-        compose.onNodeWithContentDescription("Add task").performClick()
-        compose.onNodeWithText("Title").performTextInput("Created on Android")
-        compose.onNodeWithText("Save").performClick()
-        compose.waitUntil(15_000) { compose.onAllNodesWithText("Created on Android").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("Created on Android").performClick()
-        compose.onNodeWithText("Title").performTextClearance()
-        compose.onNodeWithText("Title").performTextInput("Edited on Android")
-        compose.onNodeWithText("Save").performClick()
-        compose.waitUntil(15_000) { compose.onAllNodesWithText("Edited on Android").fetchSemanticsNodes().isNotEmpty() }
-        activity.close()
-        activity = ActivityScenario.launch(MainActivity::class.java)
-        compose.waitUntil(15_000) { compose.onAllNodesWithText("Vaults").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("Vaults").performClick()
-        compose.onNode(hasText(name) and hasClickAction()).performClick()
-        compose.waitUntil(15_000) { compose.onAllNodesWithText("Edited on Android").fetchSemanticsNodes().isNotEmpty() }
+        check(context.getSharedPreferences("facet.presentation", android.content.Context.MODE_PRIVATE).edit().putString("selectedProfile", id).commit())
+        var activity: ActivityScenario<MainActivity>? = null
+        try {
+            activity = ActivityScenario.launch(MainActivity::class.java)
+            waitForText(name)
+            compose.onNodeWithText("Inbox").performClick()
+            compose.waitUntil(15_000) { compose.onAllNodesWithContentDescription("Add task").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithContentDescription("Add task").performClick()
+            compose.onNodeWithText("What needs doing?").performTextInput("Created on Android")
+            compose.waitUntil(15_000) { compose.onAllNodes(hasText("Add") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithText("Add").performClick()
+            waitForText("Created on Android")
+            compose.onNodeWithText("Created on Android").performClick()
+            compose.onNode(hasSetTextAction() and hasText("Created on Android")).performTextClearance()
+            compose.onNodeWithText("Task title").performTextInput("Edited on Android")
+            compose.onNodeWithText("Save").performClick()
+            waitForText("Edited on Android")
+            activity.close(); activity = null
+            runBlocking { FacetBackgroundSync.awaitBackgroundDrain() }
+            activity = ActivityScenario.launch(MainActivity::class.java)
+            waitForText(name)
+            compose.onNodeWithText("Inbox").performClick()
+            waitForText("Edited on Android")
+        } finally {
+            activity?.close()
+            runBlocking { FacetBackgroundSync.awaitBackgroundDrain() }
+        }
+        // Inspect after the UI writer has drained, never through a competing open engine.
         runBlocking {
             val engine = FacetEngineRunner.open(context)
-            val task = engine.refresh(id).tasks.single()
-            assertTrue(task.title == "Edited on Android")
-            engine.close()
+            try { assertTrue(engine.refresh(id).tasks.single().title == "Edited on Android") }
+            finally { engine.close() }
         }
-        activity.close()
+    }
+    private fun waitForText(text: String) {
+        compose.waitUntil(15_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText(text).assertIsDisplayed()
     }
 }

@@ -65,6 +65,43 @@ receipt while rechecking the engine's current head before execution.
 
 Existing duration and time-entry metadata remains untouched in vault notes.
 
+Repeating tasks use Rust's materialized-occurrence contracts. Generate window
+captures the selected parent's revision and civil day as a user action; its
+configured horizons and eligibility come from the core's read-only discovery.
+Future generation has a separate typed outcome from the applied task change.
+Vault health discovers retained failures after restart and offers the exact
+revision-fenced Repair generation command, or the core's reason repair is no
+longer safe. Neither discovery nor reminder queries repair notes.
+
+Foreground lifecycle, imported-copy indexing, configuration consent and actual
+remote ingestion request serial, coalesced maintenance across every eligible
+profile, including offscreen vaults. WorkManager uses the same coordinator under
+the existing writer lease. Each pass captures one day and gathers all bounded,
+version-fenced discovery pages before writing; stale traversal restarts from
+the beginning. New dirty generations arriving during a pass stay queued. There
+is no permanent parent/day cache or inferred final-version watermark.
+Atomic lifecycle captures and the account's volatile generation fence queued
+admission, persisted envelopes, discovery and subsequent UI publication. A
+paused or replaced owner cannot become valid again when the app resumes.
+
+Automatic windows use the core's `automatic_maintenance` origin and immutable
+durable action envelopes, resume their original owner/revisions/day/clock after
+interruption, and stay silent. Rust excludes those receipts from user Undo;
+explicit Generate retains the normal user policy. Sync maintenance is admitted
+only after typed successful download/directory ingestion or initial Ready.
+Acknowledgements of the app's own uploads update presentation without starting
+another maintenance pass. Missing configuration waits for actual TaskNotes
+settings or explicit consent to standard defaults.
+
+If an automatic envelope becomes obsolete before effects, a deterministic
+conflict can retire it only after the core proves that exact action absent or
+parked. Retirement rereads that proof under the engine mutex, then fresh
+discovery captures a new revision and identity. Pending or uncertain actions
+retain their complete original envelopes; applied actions are observed before
+cleanup. A failed profile retains its dirty generation while later profiles
+continue, and failed maintenance refreshes Saved actions from the actual private
+inventory without publishing through a revoked owner.
+
 The host validates the complete raw mutation receipt before presenting template
 or filename notices alongside Saved. Each presentation belongs to its original
 vault, action, request and engine. Expected observation or cleanup I/O retains
@@ -110,6 +147,14 @@ without invalidating the foreground lifecycle lease.
 
 Run root setup first. SDK requirements: platform37, build-tools37.0.0,
 NDK28.2.13676358 and CMake3.31.6. Java/Gradle come from root mise; no wrapper.
+
+Direct Gradle/Android Studio native consumers also run the live
+`verifyNativeArtifacts` guard before merging JNI, packaging, installation or
+connected instrumentation. It compares retained stamps/manifests with the
+canonical full producer inventory and checks both ABI library identities.
+Missing or stale evidence fails with an instruction to run `android:native`;
+the guard never silently rebuilds. Kotlin compilation, JVM tests, instrumentation
+source compilation and lint stay independent of retained JNI artifacts.
 
 ```bash
 ANDROID_HOME=/path/to/android/sdk bun run android:build

@@ -9,6 +9,100 @@ import org.junit.Test
 
 /** Runs real SQLite, Rust callbacks, JNI atomic exchange and durable reopen. */
 class PrivateReplicaRuntimeTest {
+    @Test fun cancelledAbsentAutomaticEnvelopeWithChangedParentRetiresBeforeFreshGeneration() = runBlocking {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val profile = UUID.randomUUID().toString()
+        val engine = FacetEngineRunner.open(context)
+        try {
+            engine.registerReplica(profile, "Obsolete automatic acceptance", approveStandard = true)
+            engine.refresh(profile)
+            val createId = UUID.randomUUID().toString()
+            engine.execute(profile, buildJsonObject {
+                put("kind", "create"); put("path", "Tasks/Obsolete parent.md")
+                put("properties", buildJsonObject {
+                    put("title", "Before parent edit"); put("id", "series-$profile")
+                    put("recurrence", "DTSTART:20261024;FREQ=DAILY"); put("scheduled", "2026-10-24")
+                    put("recurrenceAnchor", "scheduled"); put("occurrenceMaterialization", "rolling")
+                    put("occurrenceNextTrigger", "completion"); put("occurrencePastHorizon", "P0D"); put("occurrenceFutureHorizon", "P1D")
+                })
+            }, createId)
+            engine.discardObservedMutation(createId)
+            val port = engine.occurrences()
+            val original = port.windowPlan(profile, "2026-10-24").first.single()
+            val obsoleteId = UUID.randomUUID().toString()
+            try {
+                engine.execute(profile, original.command(automatic = true), obsoleteId, admitted = { throw kotlinx.coroutines.CancellationException("Owner revoked after persistence") })
+                fail("The revoked admission must leave the runtime untouched")
+            } catch (_: kotlinx.coroutines.CancellationException) { }
+            assertEquals(obsoleteId, engine.pendingMutations(profile).single().mutationId)
+            val parent = engine.snapshot(profile, FacetEngineRunner.query()).tasks.single()
+            val editId = UUID.randomUUID().toString()
+            engine.execute(profile, buildJsonObject {
+                put("kind", "update"); put("path", parent.path); put("expectedRevision", parent.revision)
+                put("properties", buildJsonObject { put("title", "After parent edit") })
+            }, editId)
+            engine.discardObservedMutation(editId)
+            port.recoverAutomatic(profile)
+            assertTrue(engine.pendingMutations(profile).isEmpty())
+            val oldOutcome = engine.features(profile, buildJsonObject { put("kind", "mutation_receipt"); put("mutationId", obsoleteId) })
+            assertEquals("absent", oldOutcome.getValue("state").jsonPrimitive.content)
+            val current = port.windowPlan(profile, "2026-10-25").first.single()
+            assertNotEquals(original.expectedParentRevision, current.expectedParentRevision)
+            port.automatic(profile, current.command(automatic = true))
+            assertTrue(engine.pendingMutations(profile).isEmpty())
+            assertTrue(engine.snapshot(profile, FacetEngineRunner.query()).tasks.size > 1)
+        } finally { engine.close() }
+    }
+    @Test fun rollingGenerationRetainsAutomaticEnvelopeAndCoreUndoPolicyAcrossRestart() = runBlocking {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val profile = UUID.randomUUID().toString()
+        val createdId = UUID.randomUUID().toString()
+        val automaticId = UUID.randomUUID().toString()
+        lateinit var automaticReceipt: JsonObject
+        lateinit var command: JsonObject
+        var engine = FacetEngineRunner.open(context)
+        try {
+            engine.registerReplica(profile, "Occurrence runtime acceptance", approveStandard = true)
+            engine.refresh(profile)
+            engine.execute(profile, buildJsonObject {
+                put("kind", "create"); put("path", "Tasks/Occurrence parent.md")
+                put("properties", buildJsonObject {
+                    put("title", "Occurrence parent"); put("id", "series-$profile")
+                    put("recurrence", "DTSTART:20261024;FREQ=DAILY"); put("scheduled", "2026-10-24")
+                    put("recurrenceAnchor", "scheduled"); put("occurrenceMaterialization", "rolling")
+                    put("occurrenceNextTrigger", "completion"); put("occurrencePastHorizon", "P0D"); put("occurrenceFutureHorizon", "P2D")
+                    put("vendor", buildJsonObject { put("retained", true) })
+                }); put("body", "Parent Markdown remains intact\n")
+            }, createdId)
+            engine.discardObservedMutation(createdId)
+            val plan = engine.occurrences().windowPlan(profile, "2026-10-24")
+            assertTrue(plan.second.isEmpty())
+            command = plan.first.single().command(automatic = true)
+            automaticReceipt = engine.execute(profile, command, automaticId)
+            assertTrue(automaticReceipt.getValue("paths").jsonArray.isNotEmpty())
+            engine.occurrences().successors(profile, automaticId)
+            assertEquals(createdId, engine.features(profile, buildJsonObject { put("kind", "undo_available") }).getValue("receiptId").jsonPrimitive.content)
+        } finally { engine.close() }
+        engine = FacetEngineRunner.open(context)
+        try {
+            val retained = engine.pendingMutations(profile).single()
+            assertEquals(automaticId, retained.mutationId)
+            assertEquals(command, retained.mutation.getValue("command"))
+            assertEquals(automaticReceipt, engine.retryMutation(automaticId))
+            assertEquals(createdId, engine.features(profile, buildJsonObject { put("kind", "undo_available") }).getValue("receiptId").jsonPrimitive.content)
+            engine.discardObservedMutation(automaticId)
+            val next = engine.occurrences().windowPlan(profile, "2026-10-25").first.single()
+            val explicitId = UUID.randomUUID().toString()
+            val explicit = engine.execute(profile, next.command(automatic = false), explicitId)
+            assertTrue(explicit.getValue("paths").jsonArray.isNotEmpty())
+            assertEquals(explicitId, engine.features(profile, buildJsonObject { put("kind", "undo_available") }).getValue("receiptId").jsonPrimitive.content)
+            assertTrue(engine.occurrences().generationAttention(profile).isEmpty())
+            val parent = engine.snapshot(profile, FacetEngineRunner.query()).tasks.single { it.path == "Tasks/Occurrence parent.md" }
+            assertTrue(parent.properties.getValue("vendor").jsonObject.getValue("retained").jsonPrimitive.boolean)
+            assertTrue(parent.body.contains("Parent Markdown remains intact"))
+            engine.discardObservedMutation(explicitId)
+        } finally { engine.close() }
+    }
     @Test fun immutableActionEnvelopeSurvivesUncertainResponseAndRestart() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val directory = java.io.File(context.noBackupFilesDir, "draft-test-${UUID.randomUUID()}")

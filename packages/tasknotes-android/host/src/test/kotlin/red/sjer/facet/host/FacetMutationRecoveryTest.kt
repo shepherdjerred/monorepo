@@ -8,6 +8,30 @@ import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class FacetMutationRecoveryTest {
+    @Test fun automaticWindowAndExplicitRepairEnvelopesKeepCapturedRevisionDayAndClockAcrossRestart() {
+        val directory = Files.createTempDirectory("facet-occurrence-restart").toFile()
+        try {
+            val commands = listOf(
+                FacetWindowTarget("Tasks/parent.md", "a".repeat(64), "2026-10-24", "2026-10-20", "2026-11-20").command(automatic = true),
+                buildJsonObject { put("kind", "repair_occurrence_progression"); put("progressionId", "occprogress:" + "b".repeat(64)); put("expectedParentRevision", "c".repeat(64)); put("expectedChildRevision", "d".repeat(64)) },
+            )
+            for (command in commands) {
+                val id = UUID.randomUUID().toString()
+                val original = buildJsonObject {
+                    put("schemaVersion", 1); put("mutationId", id); put("at", "2026-10-24T23:59:59Z"); put("command", command)
+                    put("executionContext", buildJsonObject { put("today", "2026-10-24"); put("timezone", "UTC") })
+                }
+                directory.resolve("$id.json").writeText(buildJsonObject { put("profileId", "offscreen-owner"); put("mutation", original) }.toString())
+                val reopened = FacetMutationDrafts(directory)
+                val retained = requireNotNull(reopened.read(id))
+                assertEquals(true, retained.canResume)
+                assertEquals(original, reopened.envelope("offscreen-owner", id, command, "2026-10-25T12:00:00Z"))
+                val changed = JsonObject(command + ("expectedParentRevision" to JsonPrimitive("e".repeat(64))))
+                assertThrows(FacetActionError::class.java) { reopened.envelope("offscreen-owner", id, changed, "2026-10-25T12:00:00Z") }
+                assertEquals(original, FacetMutationDrafts(directory).read(id)?.mutation)
+            }
+        } finally { directory.deleteRecursively() }
+    }
     @Test fun noteScopedBatchJournalPreservesOriginalDistinctPathsRevisionAndOwnerAcrossRestart() {
         val directory = Files.createTempDirectory("facet-batch-owner").toFile()
         try {
