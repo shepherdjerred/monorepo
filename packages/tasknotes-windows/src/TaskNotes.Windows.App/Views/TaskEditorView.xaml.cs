@@ -398,12 +398,8 @@ namespace TaskNotes.Windows.App.Views
             && owner.Model.Scheduled == owner.Scheduled
             && owner.Model.DateCreated == owner.DateCreated;
 
-        private void EnableRecurrenceControls(bool enabled)
-        {
-            RecurrenceFrequency.IsEnabled = enabled;
-            RecurrenceInterval.IsEnabled = enabled;
-            RecurrenceDays.IsEnabled = enabled;
-        }
+        private void EnableRecurrenceControls(bool enabled) =>
+            RecurrenceControls.IsEnabled = enabled;
 
         private void SynchronizeRecurrence()
         {

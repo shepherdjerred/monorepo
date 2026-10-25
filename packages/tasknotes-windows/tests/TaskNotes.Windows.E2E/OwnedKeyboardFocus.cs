@@ -25,26 +25,28 @@ internal static partial class OwnedKeyboardFocus
             throw new InvalidOperationException(
                 "The test-owned keyboard focus window could not be created."
             );
-        try
-        {
-            _ = GetWindowThreadProcessId(window, out uint pid);
-            if (
-                pid != Environment.ProcessId
-                || !SetForegroundWindow(window)
-                || GetForegroundWindow() != window
-            )
-                throw new InvalidOperationException(
-                    "The exact test-owned focus window could not become foreground; no keyboard input was sent."
-                );
-            SendKeys.SendWait(chord);
-        }
-        finally
-        {
-            if (!DestroyWindow(window))
-                throw new InvalidOperationException(
-                    "The exact test-owned focus window could not be closed."
-                );
-        }
+        OwnedOperationCleanup.Run(
+            () =>
+            {
+                _ = GetWindowThreadProcessId(window, out uint pid);
+                if (
+                    pid != Environment.ProcessId
+                    || !SetForegroundWindow(window)
+                    || GetForegroundWindow() != window
+                )
+                    throw new InvalidOperationException(
+                        "The exact test-owned focus window could not become foreground; no keyboard input was sent."
+                    );
+                SendKeys.SendWait(chord);
+            },
+            () =>
+            {
+                if (!DestroyWindow(window))
+                    throw new InvalidOperationException(
+                        "The exact test-owned focus window could not be closed."
+                    );
+            }
+        );
     }
 
     internal static void WithReservedChord(uint modifiers, uint key, Action assertion)
@@ -65,31 +67,32 @@ internal static partial class OwnedKeyboardFocus
         );
         if (window == 0)
             throw new InvalidOperationException("The exact collision window could not be created.");
-        try
-        {
-            if (!RegisterHotKey(window, 0x4545, modifiers, key))
-                throw new InvalidOperationException(
-                    "The test-owned collision chord could not be reserved."
-                );
-            try
+        bool registered = false;
+        OwnedOperationCleanup.Run(
+            () =>
             {
+                if (!RegisterHotKey(window, 0x4545, modifiers, key))
+                    throw new InvalidOperationException(
+                        "The test-owned collision chord could not be reserved."
+                    );
+                registered = true;
                 assertion();
-            }
-            finally
+            },
+            () =>
             {
-                if (!UnregisterHotKey(window, 0x4545))
+                if (registered && !UnregisterHotKey(window, 0x4545))
                     throw new InvalidOperationException(
                         "The test-owned collision chord could not be released."
                     );
+            },
+            () =>
+            {
+                if (!DestroyWindow(window))
+                    throw new InvalidOperationException(
+                        "The test-owned collision window could not be destroyed."
+                    );
             }
-        }
-        finally
-        {
-            if (!DestroyWindow(window))
-                throw new InvalidOperationException(
-                    "The test-owned collision window could not be destroyed."
-                );
-        }
+        );
     }
 
     [LibraryImport("user32.dll", StringMarshalling = StringMarshalling.Utf16)]

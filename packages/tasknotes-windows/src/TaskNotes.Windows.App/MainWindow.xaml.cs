@@ -5,7 +5,6 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.VisualStudio.Threading;
-using TaskNotes.Windows.App.Views;
 using TaskNotes.Windows.Host;
 using TaskNotes.Windows.Presentation;
 using Windows.Graphics;
@@ -183,7 +182,12 @@ namespace TaskNotes.Windows.App
                 return false;
             if (!_quickAdd.HasDraft && !_inlineQuickAdd.HasDraft)
                 return true;
-            if (!await ConfirmAsync("Discard unsaved capture drafts and close?"))
+            if (
+                !await ConfirmAsync(
+                    "Discard capture drafts and close?",
+                    "Your unsaved Quick Add and inline capture drafts will be discarded."
+                )
+            )
                 return false;
             return _quickAdd.DiscardDraft() && _inlineQuickAdd.DiscardDraft();
         }
@@ -550,7 +554,7 @@ namespace TaskNotes.Windows.App
                     "set-completion",
                     () =>
                         RunUiOperationAsync(() =>
-                            OwnedAction(
+                            OwnedActionAsync(
                                 task?.ProfileId,
                                 () =>
                                     Store.SetRowCompletionAsync(
@@ -598,7 +602,7 @@ namespace TaskNotes.Windows.App
                     if (await ShowInputDialogAsync("Schedule selected tasks", input, "Apply"))
                     {
                         _ = await RunUiOperationAsync(() =>
-                            OwnedAction(
+                            OwnedActionAsync(
                                 owner,
                                 () =>
                                     Store.ScheduleRowsAsync(
@@ -641,7 +645,7 @@ namespace TaskNotes.Windows.App
                     )
                     {
                         _ = await RunUiOperationAsync(() =>
-                            OwnedAction(
+                            OwnedActionAsync(
                                 owner,
                                 () => Store.PrioritizeRowsAsync(rows, selectedPriority)
                             )
@@ -670,7 +674,7 @@ namespace TaskNotes.Windows.App
                     )
                     {
                         _ = await RunUiOperationAsync(() =>
-                            OwnedAction(owner, () => Store.DeleteRowsAsync(rows))
+                            OwnedActionAsync(owner, () => Store.DeleteRowsAsync(rows))
                         );
                     }
                 }
@@ -791,7 +795,7 @@ namespace TaskNotes.Windows.App
                     };
                     if (await ShowInputDialogAsync("Schedule task", input, "Apply"))
                         _ = await RunUiOperationAsync(() =>
-                            OwnedAction(
+                            OwnedActionAsync(
                                 task.ProfileId,
                                 () =>
                                     Store.ScheduleRowsAsync(
@@ -824,7 +828,10 @@ namespace TaskNotes.Windows.App
                         )
                         {
                             _ = await RunUiOperationAsync(() =>
-                                OwnedAction(task.ProfileId, () => Store.DeleteRowsAsync([task]))
+                                OwnedActionAsync(
+                                    task.ProfileId,
+                                    () => Store.DeleteRowsAsync([task])
+                                )
                             );
                         }
                     }
@@ -861,7 +868,7 @@ namespace TaskNotes.Windows.App
                             && choices.SelectedValue is string status
                         )
                             await RunUiOperationAsync(() =>
-                                OwnedAction(
+                                OwnedActionAsync(
                                     task.ProfileId,
                                     () => Store.SetRowStatusAsync(task, status)
                                 )
@@ -1662,7 +1669,7 @@ namespace TaskNotes.Windows.App
             return await dialog.ShowAsync() == ContentDialogResult.Primary;
         }
 
-        private Task OwnedAction(string? profile, Func<Task> operation)
+        private Task OwnedActionAsync(string? profile, Func<Task> operation)
         {
             if (profile != Store.SelectedProfileId)
                 throw new ArgumentException(
@@ -1676,7 +1683,7 @@ namespace TaskNotes.Windows.App
             return Store.State.AllTasks.SingleOrDefault(task => task.Id == taskId);
         }
 
-        private TaskItem? TaskFromElement(FrameworkElement element)
+        private static TaskItem? TaskFromElement(FrameworkElement element)
         {
             return element.DataContext is TaskRowPresentation row ? row.Task
                 : element.DataContext is TaskItem task ? task

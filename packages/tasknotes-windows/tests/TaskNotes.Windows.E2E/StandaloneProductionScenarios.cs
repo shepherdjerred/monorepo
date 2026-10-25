@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using System.Text.Json;
-using TaskNotes.Windows.App.Acceptance;
 using TaskNotes.Windows.Host;
 
 namespace TaskNotes.Windows.E2E;
