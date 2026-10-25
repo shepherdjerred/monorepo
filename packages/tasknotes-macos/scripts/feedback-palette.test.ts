@@ -36,6 +36,7 @@ describe("first-party coordinated feedback palette", () => {
       expect(ascii(8, 16)).toBe("WAVEfmt ");
       expect(ascii(36, 40)).toBe("data");
       expect(view.getUint32(4, true)).toBe(bytes.length - 8);
+      expect(view.getUint32(16, true)).toBe(16);
       expect(view.getUint32(40, true)).toBe(bytes.length - 44);
       expect(view.getUint16(20, true)).toBe(1);
       expect(view.getUint16(22, true)).toBe(1);

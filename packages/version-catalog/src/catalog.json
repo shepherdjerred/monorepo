@@ -3,6 +3,26 @@
   "schemaVersion": 1,
   "entries": [
     {
+      "name": "realm/SwiftLint",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": { "managed": false },
+      "value": "0.65.1",
+      "notes": [
+        "Linux CI source revision/archive checksum are bound in ci/scripts/swiftlint/pins.json. Upgrades require the complete configured-rule and SourceKit canaries."
+      ]
+    },
+    {
+      "name": "docker.io/library/swift",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": { "managed": false },
+      "value": "6.3.2-jammy@sha256:5f846f008aa76859377d4e9dafe2826c74dde99421bbc60ae2b98d0f1daf72cf",
+      "notes": [
+        "Build-only SwiftLint compiler against a libc compatible with Debian Bookworm. Only its declared SourceKit/runtime libraries and licenses enter the final CI image."
+      ]
+    },
+    {
       "name": "bluemap/archive-cli",
       "category": "upstream",
       "artifactType": "package",

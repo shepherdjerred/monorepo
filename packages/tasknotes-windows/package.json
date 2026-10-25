@@ -6,7 +6,6 @@
   "description": "Native Windows TaskNotes client over the shared Rust core",
   "devDependencies": {
     "@shepherdjerred/eslint-config": "workspace:*",
-    "@tasknotes/e2e": "workspace:*",
     "@tsconfig/node-lts": "^24.0.0",
     "@tsconfig/recommended": "^1.0.13",
     "@tsconfig/strictest": "^2.0.8",

@@ -50,6 +50,7 @@ import {
 } from "./helm-release-core.ts";
 import { repositoryChartInputs } from "./repository-chart-inputs.ts";
 import { publicationOwners } from "@shepherdjerred/ops-model/delivery-catalog/publication-owners.ts";
+import { validateHelmTemplate } from "./helm-template-validation.ts";
 
 const SYNTH_DIRECTORY = "src/cdk8s/dist";
 
@@ -118,13 +119,7 @@ export async function stageChart(
     chartDirectory,
     ...validationArguments,
   ]);
-  await runCommand([
-    "helm",
-    "template",
-    "release-validation",
-    chartDirectory,
-    ...validationArguments,
-  ]);
+  await validateHelmTemplate(chartDirectory, validationArguments);
   await runCommand([
     "helm",
     "package",

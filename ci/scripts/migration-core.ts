@@ -313,6 +313,10 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   cooklang: [...workspacePaths, "packages/cooklang-for-obsidian"],
   "ci-base": [
     "ci/ci-image/Dockerfile",
+    "ci/scripts/swiftlint",
+    "packages/tasknotes-macos/.swiftlint.yml",
+    "packages/tasknotes-macos/.swiftlint-appkit-baseline.json",
+    "packages/version-catalog/src/catalog.json",
     "ci/scripts/images/application-image-runtime.ts",
     "ci/scripts/images/bake-retry.ts",
     "ci/scripts/images/build-ci-image-core.ts",

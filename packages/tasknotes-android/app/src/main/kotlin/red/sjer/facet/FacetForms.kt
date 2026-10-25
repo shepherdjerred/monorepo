@@ -103,7 +103,7 @@ internal fun TaskEditor(profileId: String, task: VaultTask, model: FacetViewMode
             Text("Repeat", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainer) {
                 Column {
-                    FacetRecurrenceField(draft.recurrence, !blocked) { draft = draft.copy(recurrence = it) }
+                    FacetRecurrenceField(draft.recurrence, draft.scheduled, draft.dateCreated, !blocked) { draft = draft.copy(recurrence = it) }
                     if (draft.recurrence.isNotEmpty()) ChoiceField("Anchor", draft.recurrenceAnchor,
                         listOf(WorkflowOption("scheduled", "From planned date"), WorkflowOption("completion", "After completion")), !blocked) { draft = draft.copy(recurrenceAnchor = it) }
                 }
