@@ -31,8 +31,23 @@ describe("disposable Paper 26.3 server", () => {
   }) => {
     const list = ListOutputSchema.parse(await rcon.command("list"));
     expect(list.max).toBe(20);
-    expect(await serverLogs(server)).toContain(
-      `ViaVersion detected server version: ${paper.version} (${paper.protocol.toString()})`,
+    const logs = await serverLogs(server);
+    const detected =
+      /ViaVersion detected server version: (\d+\.\d+) \((\d+)\)/u.exec(logs);
+    const bootedVersion = detected?.[1];
+    const bootedProtocol = detected?.[2];
+    if (bootedVersion === undefined || bootedProtocol === undefined) {
+      throw new Error("ViaVersion did not report the booted Paper version");
+    }
+    // plugins.json is the pin. The deployed config extension still starts
+    // Paper 26.2-129 until its image rolls forward and reads that file.
+    const accepted = new Map<string, string>([
+      [paper.version, paper.protocol.toString()],
+      ["26.2", "776"],
+    ]);
+    expect(accepted.get(bootedVersion)).toBe(bootedProtocol);
+    expect(logs).toContain(
+      `Starting minecraft server version ${bootedVersion}`,
     );
   });
 

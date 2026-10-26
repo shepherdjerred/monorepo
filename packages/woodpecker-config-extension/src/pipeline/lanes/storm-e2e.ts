@@ -6,6 +6,7 @@ import { GITHUB_DOWNLOAD } from "#src/pipeline/lanes/tofu.ts";
 
 const PAPER_SERVER_IMAGE =
   "itzg/minecraft-server:2026.9.1-java25@sha256:e8640538dac5d54c2838d57fa9641e735ad0cf2b71fb0e8a68da3b542a315749";
+const REPO_ROOT = "/woodpecker/src/github.com/shepherdjerred/monorepo";
 const PAPER_WORKSPACE =
   "/woodpecker/src/github.com/shepherdjerred/monorepo/packages/the-storm/.cache/e2e/woodpecker";
 const SHARED_PLUGINS =
@@ -26,6 +27,28 @@ const PAPER_SERVICE_TIER = {
   ephemeralStorageRequest: "2Gi",
   ephemeralStorageLimit: "12Gi",
 } as const;
+
+/**
+ * The deployed extension image is what actually starts Paper. Read the pin
+ * from the checkout so a later plugins.json bump does not wait on another
+ * image rollout. A missing or malformed pin fails the service.
+ */
+function paperStartCommand(dataDir: string, pluginDir: string): string {
+  const manifest = `${REPO_ROOT}/packages/the-storm/server/plugins.json`;
+  return [
+    `mkdir -p ${dataDir}/logs`,
+    "rm -rf /data/logs",
+    `ln -s ${dataDir}/logs /data/logs`,
+    `until test -f ${pluginDir}/.ready; do sleep 1; done`,
+    `manifest=${manifest}`,
+    String.raw`paper_version=$(sed -nE '/"paper"/,/paperDefaults/ s/.*"version": "([0-9][0-9.]*-[0-9]+)".*/\1/p' "$manifest")`,
+    "VERSION=${paper_version%-*}",
+    "PAPER_BUILD=${paper_version#*-}",
+    'if [ -z "$VERSION" ] || [ -z "$PAPER_BUILD" ] || [ "$VERSION-$PAPER_BUILD" != "$paper_version" ]; then echo "Could not read the Paper pin from plugins.json" >&2; exit 1; fi',
+    "export VERSION PAPER_BUILD",
+    "exec /start",
+  ].join("; ");
+}
 
 /** Light Paper smoke checks; extended Minecraft acceptance is committer-run. */
 export function stormE2eSteps(images: CiImages): CiStep[] {
@@ -73,9 +96,7 @@ function stormSmokeStep(images: CiImages): CiStep {
       {
         name: "paper",
         image: PAPER_SERVER_IMAGE,
-        commands: [
-          `mkdir -p ${dataDir}/logs; rm -rf /data/logs; ln -s ${dataDir}/logs /data/logs; until test -f ${pluginDir}/.ready; do sleep 1; done; exec /start`,
-        ],
+        commands: [paperStartCommand(dataDir, pluginDir)],
         environment: {
           EULA: "TRUE",
           TYPE: "PAPER",
