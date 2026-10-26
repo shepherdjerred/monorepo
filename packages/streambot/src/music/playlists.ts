@@ -3,6 +3,8 @@ import { z } from "zod";
 import {
   SourceSchema,
   type Source,
+  withMode,
+  withSpoken,
 } from "@shepherdjerred/streambot/sources/source.ts";
 import { MusicError } from "./errors.ts";
 
@@ -243,7 +245,12 @@ export class PlaylistStore {
           id,
           position,
           item.title,
-          JSON.stringify(SourceSchema.parse(item.source)),
+          JSON.stringify(
+            withSpoken(
+              withMode(SourceSchema.parse(item.source), undefined),
+              undefined,
+            ),
+          ),
         ),
     );
   }

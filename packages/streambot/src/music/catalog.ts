@@ -97,7 +97,11 @@ export class MusicCatalog {
         },
       );
       if (!response.ok)
-        throw new Error("Music catalog is unavailable. Try again shortly.");
+        throw new MusicError(
+          response.status === 404 ? 404 : 503,
+          "catalog_unavailable",
+          "Music catalog is unavailable. Try again shortly.",
+        );
       const value: unknown = await response.json();
       if (this.cache.size >= 500) {
         const key = this.cache.keys().next().value;
@@ -262,7 +266,11 @@ export class MusicCatalog {
         ? ordered[0]
         : ordered.find((r) => r.id === z.uuid().parse(edition));
     if (selected === undefined)
-      throw new Error("This album edition is unavailable.");
+      throw new MusicError(
+        404,
+        "album_edition",
+        "This album edition is unavailable.",
+      );
     const release = z
       .object({ media: z.array(MediumSchema) })
       .parse(

@@ -49,8 +49,8 @@ export async function quickPlay(
     )
   )
     return;
-  await reply.start({ content: "Finding something to play…" });
   const context = await musicCommandContext(issuer, deps);
+  await reply.start({ content: "Finding something to play…" });
   const result = await new PlaybackCommandService(context).play({
     query,
     source: "auto",

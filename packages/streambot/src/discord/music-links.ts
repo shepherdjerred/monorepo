@@ -8,7 +8,11 @@ import {
 } from "discord.js";
 import type { CommandBotDeps } from "./commands/command-bot-deps.ts";
 import { musicCommandContext } from "./music-context.ts";
-import { requireMusicFeature, musicService } from "./music-access.ts";
+import {
+  musicErrorMessage,
+  requireMusicFeature,
+  musicService,
+} from "./music-access.ts";
 import { webPageUrl } from "./web-link.ts";
 import { spotifyLink } from "@shepherdjerred/streambot/music/spotify.ts";
 import { musicSource } from "@shepherdjerred/streambot/music/service.ts";
@@ -125,56 +129,66 @@ export async function loadMusicLink(
     ],
   });
   const music = musicService(deps);
-  const load = music.loads.start(
-    {
-      userId: interaction.user.id,
-      guildId: interaction.guildId ?? "",
-      channelId: context.channelId ?? "",
-      slot: context.playbackChannel,
-    },
-    async (signal, progress) => {
-      let sources: readonly Source[];
-      let complete: boolean | null = true;
-      let warning = "";
-      if (spotify === null) {
-        const items = await deps.expandPlaylist(query, signal, progress);
-        sources = items.map((item) => ({
-          kind: "url",
-          url: item.url,
-          title: item.title,
-          subtitles,
-          ...(mode === null ? {} : { mode }),
-        }));
-      } else {
-        const result = await music.spotify.load(spotify, signal);
-        sources = result.tracks.map((track) => musicSource(track));
-        complete = result.complete;
-        warning = result.warning;
-      }
-      progress(sources.length);
-      if (spotify !== null)
-        await requireMusicFeature(deps, interaction, "spotifyLinks");
-      const result = await queueBatch({
-        deps: context,
-        sources,
-        userId: UserIdSchema.parse(interaction.user.id),
-        placement,
-        signal,
-      });
-      return {
-        count: sources.length,
-        complete,
-        message: result.message + (warning === "" ? "" : " " + warning),
-      };
-    },
-    async (result) => {
-      await reply.edit({
-        content: result.message + suffix,
-        components: [],
-        allowedMentions: { parse: [] },
-      });
-    },
-  );
+  let load: ReturnType<typeof music.loads.start>;
+  try {
+    load = music.loads.start(
+      {
+        userId: interaction.user.id,
+        guildId: interaction.guildId ?? "",
+        channelId: context.channelId ?? "",
+        slot: context.playbackChannel,
+      },
+      async (signal, progress) => {
+        let sources: readonly Source[];
+        let complete: boolean | null = true;
+        let warning = "";
+        if (spotify === null) {
+          const items = await deps.expandPlaylist(query, signal, progress);
+          sources = items.map((item) => ({
+            kind: "url",
+            url: item.url,
+            title: item.title,
+            subtitles,
+            ...(mode === null ? {} : { mode }),
+          }));
+        } else {
+          const result = await music.spotify.load(spotify, signal);
+          sources = result.tracks.map((track) => musicSource(track));
+          complete = result.complete;
+          warning = result.warning;
+        }
+        progress(sources.length);
+        if (spotify !== null)
+          await requireMusicFeature(deps, interaction, "spotifyLinks");
+        const result = await queueBatch({
+          deps: context,
+          sources,
+          userId: UserIdSchema.parse(interaction.user.id),
+          placement,
+          signal,
+        });
+        return {
+          count: sources.length,
+          complete,
+          message: result.message + (warning === "" ? "" : " " + warning),
+        };
+      },
+      async (result) => {
+        await reply.edit({
+          content: result.message + suffix,
+          components: [],
+          allowedMentions: { parse: [] },
+        });
+      },
+    );
+  } catch (error) {
+    await reply.edit({
+      content: musicErrorMessage(error),
+      components: [],
+      allowedMentions: { parse: [] },
+    });
+    return true;
+  }
   await reply.onCancel((component) => {
     void cancel(component, interaction, deps, { id: load.id, reply });
   });

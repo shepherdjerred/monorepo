@@ -22,6 +22,11 @@ import {
 import { fixtureMusic } from "#music-fixture";
 
 const services: ReturnType<typeof fixtureMusic>[] = [];
+const pendingPlaylistLoad = Promise.withResolvers<{
+  count: number;
+  complete: null;
+  message: string;
+}>().promise;
 afterEach(() => {
   for (const music of services.splice(0)) music.loads.close();
 });
@@ -177,6 +182,37 @@ test("a pasted Spotify link queues catalog metadata through the shared cancellab
   expect(f.reply.onCancel).toHaveBeenCalledOnce();
 });
 
+test("a rejected playlist load replaces its loading reply with the error", async () => {
+  const f = await setup();
+  const context = {
+    userId,
+    guildId,
+    channelId: statusChannelId,
+    slot: number(2),
+  };
+  f.music.loads.start(context, () => pendingPlaylistLoad);
+  f.music.loads.start(context, () => pendingPlaylistLoad);
+
+  await quickPlay(
+    f.issuer,
+    f.deps,
+    "https://www.youtube.com/playlist?list=PLfixture",
+    f.reply,
+  );
+
+  expect(f.reply.start).toHaveBeenCalledWith(
+    expect.objectContaining({
+      content: expect.stringContaining("Loading playlist"),
+    }),
+  );
+  expect(f.reply.edit).toHaveBeenCalledWith(
+    expect.objectContaining({
+      content: "A playlist is already loading. Finish or cancel it first.",
+      components: [],
+    }),
+  );
+});
+
 test("quick YouTube playlist loading retains all 250 tracks and the video destination", async () => {
   const f = await setup();
   await quickPlay(
@@ -202,10 +238,12 @@ test("quick play refuses empty requests and missing voice membership without all
   expect(f.reply.start).toHaveBeenCalledWith(
     expect.objectContaining({ content: expect.stringContaining("Try") }),
   );
+  f.reply.start.mockClear();
   f.voice.channelId = null;
   await expect(
     quickPlay(f.issuer, f.deps, "Get Lucky", f.reply),
   ).rejects.toThrow("Join a voice channel");
+  expect(f.reply.start).not.toHaveBeenCalled();
   expect(f.entries.every((entry) => !entry.busy)).toBe(true);
 });
 
