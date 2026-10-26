@@ -10,6 +10,7 @@ import {
   QueueLoadSchema,
 } from "@shepherdjerred/streambot/music/contracts.ts";
 import { musicSource } from "@shepherdjerred/streambot/music/service.ts";
+import { musicArtworkUrl } from "@shepherdjerred/streambot/music/artwork.ts";
 import { waitFor } from "xstate";
 import {
   CommandResultSchema,
@@ -267,30 +268,78 @@ function queueMatch(
     ),
   );
 }
-test("queued and saved songs accept only matching recordings and reject stale queue choices", async () => {
+test.each([undefined, 1, 2])(
+  "recording correction preserves transport on slot %s and rejects stale queue choices",
+  async (slot) => {
+    const f = start();
+    if (slot !== undefined) f.enableNumbered(slot);
+    await f.seed();
+    const album = await json(
+      get("/api/music/album?album=" + ALBUM, f),
+      MusicAlbumSchema,
+    );
+    await f.handler(
+      f.command({
+        action: "play",
+        placement: "queue",
+        selection: { kind: "music", id: album.selectionId },
+      }),
+    );
+    const playback: unknown = await f
+      .command({ action: "volume", percent: 100 })
+      .json();
+    const matches = await json(queueMatch(f, playback), MusicMatchesSchema);
+    expect(matches[0]?.confident).toBe(true);
+    const selected = await queueMatch(f, playback, matches[0]?.selectionId);
+    expect(selected.status).toBe(200);
+    expect(f.actor.getSnapshot().context.queue[0]?.source.kind).toBe("url");
+    expect(f.actor.getSnapshot().context.queue[0]?.source.mode).toBe(
+      slot === 2 ? "video" : "music",
+    );
+    expect(
+      f.actor.getSnapshot().context.queue[0]?.source.music?.artworkId,
+    ).toBe(ALBUM);
+    const stale = await queueMatch(f, playback, matches[0]?.selectionId);
+    expect(stale.status).toBe(409);
+  },
+);
+
+test("playlist cover metadata survives save, copy, pagination, and queue presentation", async () => {
   const f = start();
-  await f.seed();
-  const album = await json(
-    get("/api/music/album?album=" + ALBUM, f),
-    MusicAlbumSchema,
+  if (history === undefined) throw new Error("Missing history fixture");
+  const original = history.playlists.create(
+    { userId: USER, guildId: GUILD },
+    "Artwork",
+    Array.from({ length: 60 }, () => ({
+      title: SONG.title,
+      source: musicSource(SONG),
+    })),
   );
+  const page = await json(
+    get("/api/playlists?id=" + original.id + "&offset=50", f),
+    PlaylistPageSchema,
+  );
+  expect(page.cover?.artworkId).toBe(ALBUM);
+  expect(page.items[0]?.music?.artworkId).toBe(ALBUM);
+  expect(
+    history.playlists.list({ userId: USER, guildId: GUILD }, "mine")[0]?.cover
+      ?.artworkId,
+  ).toBe(ALBUM);
+  const copy = await json(
+    mutate(f, { action: "copy", id: original.id }),
+    PlaylistPageSchema,
+  );
+  expect(copy.cover).toEqual(page.cover);
+  await f.seed();
   await f.handler(
     f.command({
       action: "play",
       placement: "queue",
-      selection: { kind: "music", id: album.selectionId },
+      selection: { kind: "music", id: page.items[0]?.selectionId },
     }),
   );
-  const playback: unknown = await f
-    .command({ action: "volume", percent: 100 })
-    .json();
-  const matches = await json(queueMatch(f, playback), MusicMatchesSchema);
-  expect(matches[0]?.confident).toBe(true);
-  const selected = await queueMatch(f, playback, matches[0]?.selectionId);
-  expect(selected.status).toBe(200);
-  expect(f.actor.getSnapshot().context.queue[0]?.source.kind).toBe("url");
-  const stale = await queueMatch(f, playback, matches[0]?.selectionId);
-  expect(stale.status).toBe(409);
+  const snapshot = await json(get("/api/player", f), SnapshotSchema);
+  expect(snapshot.queue[0]?.artworkUrl).toBe(musicArtworkUrl(SONG, GUILD));
 });
 
 test("play-now album order survives a pending voice join", async () => {

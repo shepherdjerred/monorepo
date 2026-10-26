@@ -18,12 +18,17 @@ import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import { MusicError } from "@shepherdjerred/streambot/music/errors.ts";
+import type { MusicInteraction } from "./music-context.ts";
+import {
+  collectMusicCancellation,
+  type MusicLinkReply,
+} from "./music-link-reply.ts";
 
 async function cancel(
   component: MessageComponentInteraction,
-  interaction: ChatInputCommandInteraction,
+  interaction: MusicInteraction,
   deps: CommandBotDeps,
-  id: string,
+  load: { id: string; reply: MusicLinkReply },
 ) {
   try {
     if (component.user.id !== interaction.user.id) {
@@ -35,11 +40,11 @@ async function cancel(
     }
     await component.deferUpdate();
     const result = musicService(deps).loads.cancel(
-      id,
+      load.id,
       interaction.user.id,
       interaction.guildId ?? "",
     );
-    await interaction.editReply({
+    await load.reply.edit({
       content: result.message,
       components: [],
     });
@@ -56,28 +61,59 @@ export async function runExternalMusicCommand(
   const sub = interaction.options.getSubcommand();
   if (sub !== "play" && sub !== "playnext") return false;
   const query = interaction.options.getString("query", true);
+  return await loadMusicLink(
+    interaction,
+    deps,
+    {
+      query,
+      ...linkOptions(interaction),
+      subtitles: linkSubtitles(interaction),
+    },
+    {
+      start: async (payload) => {
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+        await interaction.editReply(payload);
+      },
+      edit: (payload) => interaction.editReply(payload),
+      onCancel: async (listener) => {
+        collectMusicCancellation(await interaction.fetchReply(), listener);
+      },
+    },
+  );
+}
+
+export async function loadMusicLink(
+  interaction: MusicInteraction,
+  deps: CommandBotDeps,
+  options: {
+    query: string;
+    placement: "queue" | "next" | "now";
+    mode: Source["mode"] | null;
+    subtitles?: Source["subtitles"];
+  },
+  reply: MusicLinkReply,
+): Promise<boolean> {
+  const { query } = options;
   const spotify = spotifyLink(query);
   if (deps.music === undefined) return false;
   if (spotify === null && !isLikelyPlaylist(query)) return false;
   if (spotify !== null)
     await requireMusicFeature(deps, interaction, "spotifyLinks");
   const context = await musicCommandContext(interaction, deps);
-  const { placement, mode } = linkOptions(interaction);
-  const subtitles = linkSubtitles(interaction);
+  const { placement, mode, subtitles } = options;
   if (spotify !== null && (mode === "video" || subtitles?.enabled === true))
     throw new MusicError(
       400,
       "spotify_audio",
       "Spotify links play as music. Use a YouTube link for video or subtitles.",
     );
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const url = await webPageUrl(
     deps.config,
     { guildId: interaction.guildId ?? undefined, userId: interaction.user.id },
     "/music",
   );
   const suffix = url === undefined ? "" : "\n[Open Streambot](" + url + ")";
-  await interaction.editReply({
+  await reply.start({
     content: "Loading playlist…" + suffix,
     components: [
       new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -132,19 +168,15 @@ export async function runExternalMusicCommand(
       };
     },
     async (result) => {
-      await interaction.editReply({
+      await reply.edit({
         content: result.message + suffix,
         components: [],
         allowedMentions: { parse: [] },
       });
     },
   );
-  const message = await interaction.fetchReply();
-  const collector = message.createMessageComponentCollector({
-    time: 5 * 60_000,
-  });
-  collector.on("collect", (component) => {
-    void cancel(component, interaction, deps, load.id);
+  await reply.onCancel((component) => {
+    void cancel(component, interaction, deps, { id: load.id, reply });
   });
   return true;
 }

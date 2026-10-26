@@ -81,14 +81,23 @@ export class PlaylistStore {
     migrate();
   }
   list(viewer: PlaylistViewer, scope: "mine" | "server") {
-    const rows = z.array(RowSchema.extend({ count: z.number() })).parse(
-      this.db
-        .query(
-          `SELECT p.*,COUNT(i.id) AS count FROM music_playlists p LEFT JOIN music_playlist_items i ON i.playlist_id=p.id
+    const rows = z
+      .array(
+        RowSchema.extend({
+          count: z.number(),
+          cover_json: z.string().nullable(),
+        }),
+      )
+      .parse(
+        this.db
+          .query(
+            `SELECT p.*,COUNT(i.id) AS count,
+      (SELECT source_json FROM music_playlist_items WHERE playlist_id=p.id ORDER BY position,id LIMIT 1) AS cover_json
+      FROM music_playlists p LEFT JOIN music_playlist_items i ON i.playlist_id=p.id
       WHERE ${scope === "mine" ? "p.user_id=?1" : "p.guild_id=?1"} GROUP BY p.id ORDER BY p.name,p.id`,
-        )
-        .all(scope === "mine" ? viewer.userId : viewer.guildId),
-    );
+          )
+          .all(scope === "mine" ? viewer.userId : viewer.guildId),
+      );
     return rows.map((row) => ({
       id: row.id,
       name: row.name,
@@ -97,6 +106,9 @@ export class PlaylistStore {
       revision: row.revision,
       count: row.count,
       owned: row.user_id === viewer.userId,
+      ...(row.cover_json === null
+        ? {}
+        : { cover: SourceSchema.parse(JSON.parse(row.cover_json)).music }),
     }));
   }
   read(id: string, viewer: PlaylistViewer): Playlist {

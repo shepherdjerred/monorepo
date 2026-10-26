@@ -3,7 +3,6 @@ import {
   type ChatInputCommandInteraction,
   Client,
   Events,
-  GatewayIntentBits,
   type Guild,
   type Message,
   type MessageComponentInteraction,
@@ -52,6 +51,11 @@ import {
 import { WebDiscordContext } from "@shepherdjerred/streambot/discord/web-context.ts";
 import { handleMusicCommand } from "@shepherdjerred/streambot/discord/commands/music-command-handler.ts";
 import { musicErrorMessage } from "@shepherdjerred/streambot/discord/music-access.ts";
+import {
+  slashPlay,
+  prefixPlay,
+} from "@shepherdjerred/streambot/discord/quick-play.ts";
+import { commandIntents } from "@shepherdjerred/streambot/discord/command-intents.ts";
 
 const log = logger.child("command-bot");
 /** Subcommands that start (or join) a session in the issuer's current voice channel. */
@@ -114,16 +118,7 @@ export class CommandBot {
 
   constructor(deps: CommandBotDeps) {
     this.deps = deps;
-    this.client = new Client({
-      intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildVoiceStates,
-        // Non-privileged, and message *content* is deliberately not requested: the player card only
-        // needs to know that messages are arriving beneath it, so it can re-post before the controls
-        // scroll out of reach.
-        GatewayIntentBits.GuildMessages,
-      ],
-    });
+    this.client = new Client({ intents: [] });
     this.cards = new PlayerCardMessenger(this.client);
     this.web = new WebDiscordContext(this.client);
     this.cardRouter = new PlayerCardRouter({
@@ -178,6 +173,7 @@ export class CommandBot {
     });
     this.client.on(Events.MessageCreate, (message: Message) => {
       this.onChannelMessage(message);
+      void prefixPlay(message, this.deps);
     });
     this.client.on(Events.VoiceStateUpdate, (oldState, newState) => {
       this.voiceTopology.handle(oldState, newState);
@@ -187,6 +183,9 @@ export class CommandBot {
   }
 
   async login(): Promise<void> {
+    this.client.options.intents = this.client.options.intents.add(
+      ...(await commandIntents(this.deps.config.discord.botToken)),
+    );
     await this.client.login(this.deps.config.discord.botToken);
     log.info("command bot logged in", {
       user: this.client.user?.username ?? null,
@@ -215,7 +214,7 @@ export class CommandBot {
 
   /**
    * Feed status-channel traffic to the player cards so they can re-post before scrolling out of
-   * reach. Only the message id and channel are used — the bot does not request message content.
+   * reach. This path only uses message IDs; prefix commands handle content separately.
    */
   private onChannelMessage(message: Message): void {
     const channelId = ChannelIdSchema.safeParse(message.channelId);
@@ -452,6 +451,10 @@ export class CommandBot {
     interaction: ChatInputCommandInteraction,
   ): Promise<void> {
     try {
+      if (interaction.commandName === "play") {
+        await slashPlay(interaction, this.deps);
+        return;
+      }
       if (
         await handleMusicCommand(interaction, this.deps, () =>
           this.issuerVoiceChannel(interaction),

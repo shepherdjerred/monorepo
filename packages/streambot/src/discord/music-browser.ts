@@ -19,6 +19,7 @@ import { MusicError } from "@shepherdjerred/streambot/music/errors.ts";
 import { queueBatch } from "@shepherdjerred/streambot/commands/queue-batch.ts";
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import { musicArtworkUrl } from "@shepherdjerred/streambot/music/artwork.ts";
 
 type Choice = {
   kind: string;
@@ -138,6 +139,11 @@ export class DiscordMusicBrowser {
         next: this.next,
         queueAll: this.all.length > 0,
         url,
+        artworkUrl: musicArtworkUrl(
+          this.all[0]?.music ??
+            this.choices[0]?.source?.music ??
+            this.choices[0]?.entity,
+        ),
       }),
     );
   }

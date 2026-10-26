@@ -9,6 +9,7 @@ export const PlaylistSummarySchema = z.strictObject({
   revision: z.number().int().nonnegative(),
   count: z.number().int().nonnegative(),
   owned: z.boolean(),
+  cover: MusicTrackSchema.optional(),
 });
 export const PlaylistItemSchema = z.strictObject({
   id: z.uuid(),

@@ -1,7 +1,3 @@
-import type {
-  ChatInputCommandInteraction,
-  MessageComponentInteraction,
-} from "discord.js";
 import type { CommandBotDeps } from "./commands/command-bot-deps.ts";
 import type { PlaybackCommandServiceDeps } from "@shepherdjerred/streambot/commands/playback-command-types.ts";
 import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
@@ -12,8 +8,46 @@ import {
 } from "@shepherdjerred/streambot/types/ids.ts";
 import { IDLE_VIEW } from "@shepherdjerred/streambot/session/session-types.ts";
 
-export type MusicInteraction =
-  ChatInputCommandInteraction | MessageComponentInteraction;
+/** Identity and membership come from Discord, independent of the command transport. */
+export type MusicInteraction = {
+  guildId: string | null;
+  channelId: string;
+  user: { id: string };
+  guild: {
+    voiceStates: {
+      cache: { get: (id: string) => { channelId: string | null } | undefined };
+    };
+  } | null;
+};
+
+function guardMusicContext(
+  bound: PlaybackCommandServiceDeps,
+  membershipGuard: () => void,
+): PlaybackCommandServiceDeps {
+  const guard = () => {
+    membershipGuard();
+    bound.assertCurrent?.();
+  };
+  const route = bound.routePlayback;
+  return {
+    ...bound,
+    assertCurrent: guard,
+    dispatch: (event) => {
+      guard();
+      bound.dispatch(event);
+    },
+    ...(route === undefined
+      ? {}
+      : {
+          routePlayback: async (source, resolved, userId) => {
+            guard();
+            const target = await route(source, resolved, userId);
+            guard();
+            return guardMusicContext(target, membershipGuard);
+          },
+        }),
+  };
+}
 
 export async function musicCommandContext(
   interaction: MusicInteraction,
@@ -43,18 +77,7 @@ export async function musicCommandContext(
       scope,
       ChannelIdSchema.parse(interaction.channelId),
     );
-    const guard = () => {
-      membershipGuard();
-      bound.assertCurrent?.();
-    };
-    return {
-      ...bound,
-      assertCurrent: guard,
-      dispatch: (event) => {
-        guard();
-        bound.dispatch(event);
-      },
-    };
+    return guardMusicContext(bound, membershipGuard);
   }
   let handle = sessions.getExisting(guildId, channelId);
   let revision = sessions.revision(guildId, channelId);

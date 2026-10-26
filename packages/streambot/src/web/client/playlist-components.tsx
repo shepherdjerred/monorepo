@@ -8,6 +8,8 @@ import type {
 import { useRouteState } from "./route-state.ts";
 import { MediaActions, type MediaListProps } from "./media-row.tsx";
 import { MusicActions } from "./music-actions.tsx";
+import { Artwork } from "./artwork.tsx";
+import { musicArtworkUrl } from "@shepherdjerred/streambot/music/artwork.ts";
 export type Mutation = Omit<z.infer<typeof PlaylistMutationSchema>, "guildId">;
 
 export function PlaylistItems(
@@ -22,6 +24,10 @@ export function PlaylistItems(
     <ol className="music-tracks" start={(page.offset ?? 0) + 1}>
       {page.items.map((item, index) => (
         <li key={item.id} value={(page.offset ?? 0) + index + 1}>
+          <Artwork
+            url={musicArtworkUrl(item.music, props.guildId)}
+            className="track-artwork"
+          />
           <div>
             <strong>{item.title}</strong>
             {item.music !== undefined && (
@@ -271,6 +277,7 @@ export function PlaylistList(
       <div className="music-grid">
         {list.map((playlist) => (
           <article className="music-card" key={playlist.id}>
+            <Artwork url={musicArtworkUrl(playlist.cover, props.guildId)} />
             <p className="eyebrow">
               {playlist.guildId === null ? "PRIVATE" : "SERVER PLAYLIST"}
             </p>

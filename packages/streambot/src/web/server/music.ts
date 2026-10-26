@@ -108,6 +108,8 @@ export class WebMusic {
     ]);
     if (url.pathname === "/api/music/matches")
       return await this.matches(url, session, guildId, signal);
+    if (url.pathname === "/api/music/artwork")
+      return await musicArtwork(url.searchParams.get("id") ?? "", signal);
     await this.require(session, guildId, "catalog");
     return await this.catalog(url, session, guildId, signal);
   }
@@ -164,8 +166,6 @@ export class WebMusic {
     signal: AbortSignal,
   ) {
     switch (url.pathname) {
-      case "/api/music/artwork":
-        return await musicArtwork(url.searchParams.get("id") ?? "", signal);
       case "/api/music/catalog": {
         const page = await this.service().catalog.browse(
           url.searchParams,

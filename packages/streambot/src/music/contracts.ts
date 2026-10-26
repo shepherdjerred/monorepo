@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isSpotifyArtworkUrl } from "./artwork.ts";
 
 export const MusicTrackSchema = z.strictObject({
   provider: z.enum(["musicbrainz", "spotify"]),
@@ -10,6 +11,7 @@ export const MusicTrackSchema = z.strictObject({
   durationSeconds: z.number().nonnegative().optional(),
   canonicalUrl: z.url(),
   artworkId: z.uuid().optional(),
+  artworkUrl: z.string().refine(isSpotifyArtworkUrl).optional(),
 });
 export type MusicTrack = z.infer<typeof MusicTrackSchema>;
 export const MusicEntitySchema = z.strictObject({

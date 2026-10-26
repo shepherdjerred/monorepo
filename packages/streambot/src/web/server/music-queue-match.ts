@@ -2,6 +2,8 @@ import { z } from "zod";
 import { CommandSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { musicSource } from "@shepherdjerred/streambot/music/service.ts";
 import { canControlItem } from "@shepherdjerred/streambot/discord/permissions.ts";
+import { withMode } from "@shepherdjerred/streambot/sources/source.ts";
+import { assertNumberedPlayback } from "@shepherdjerred/streambot/commands/numbered-playback.ts";
 import type { WebMusicOwner } from "./music-owner.ts";
 import type { WebSession } from "./session-store.ts";
 import { readRequestInput, WebError } from "./errors.ts";
@@ -85,10 +87,16 @@ export class MusicQueueMatch {
         "Choose a video for the same song.",
       );
     context.guard();
+    const corrected = withMode(source, item.source?.mode);
+    assertNumberedPlayback(
+      context.commandDeps.playbackChannel,
+      corrected.mode,
+      false,
+    );
     context.commandDeps.dispatch({
       type: "REPLACE_QUEUED",
       index: input.position,
-      source,
+      source: corrected,
     });
     return Response.json({ message: "Updated the queued recording." });
   }

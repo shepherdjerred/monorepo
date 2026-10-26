@@ -81,6 +81,13 @@ The [Streambot service](https://github.com/shepherdjerred/monorepo/blob/main/pac
 Matching uses artist, title, version, and duration to avoid silently substituting a different recording.
 The listener can correct a queued or saved song through the recording picker.
 Saved sources retain catalog identity alongside the selected video, so recovery can resolve a fresh audio URL.
+Album artwork stays with that identity through saved playlists, queues, recovery, and player cards.
+MusicBrainz uses Cover Art Archive images; Spotify track and album links retain their public album cover.
+Saved playlist covers represent their first track.
+
+`/play` and `!play` accept a title or supported link and share playback routing and playlist loading.
+The message shortcut requires Discord's Message Content Intent; Streambot checks the application's granted capability before requesting it at login.
+The slash command remains available when message content is unavailable.
 
 External playlist links express a request to play now.
 Their metadata loading is temporary; queue entries become ordinary playback requests.

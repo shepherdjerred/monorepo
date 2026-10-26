@@ -15,6 +15,7 @@ export type MusicBrowserPage = {
   next: boolean;
   queueAll: boolean;
   url: string | undefined;
+  artworkUrl?: string | undefined;
 };
 /** Rendering is separate from collectors so fixtures can exercise exact embeds/components. */
 export function musicBrowserView(page: MusicBrowserPage) {
@@ -22,6 +23,7 @@ export function musicBrowserView(page: MusicBrowserPage) {
     .setTitle(page.title.slice(0, 256))
     .setDescription(page.description.slice(0, 512) || "Choose a result below.")
     .setColor(0x47_7e_3b);
+  if (page.artworkUrl !== undefined) embed.setThumbnail(page.artworkUrl);
   for (const item of page.items.slice(0, 10))
     embed.addFields({
       name: item.title.slice(0, 180),

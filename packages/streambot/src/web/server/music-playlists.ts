@@ -45,6 +45,7 @@ export class WebPlaylists {
       revision: playlist.revision,
       count: playlist.items.length,
       owned: playlist.user_id === session.identity.userId,
+      cover: playlist.items[0]?.source.music,
       offset,
       items: playlist.items.slice(offset, offset + 50).map((item) => ({
         id: item.id,

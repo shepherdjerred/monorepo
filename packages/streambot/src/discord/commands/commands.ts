@@ -474,6 +474,15 @@ export const commandDefinitions = [
         ),
     ),
   musicCommand,
+  new SlashCommandBuilder()
+    .setName("play")
+    .setDescription("Play a song, search, or paste a YouTube or Spotify link")
+    .addStringOption((option) =>
+      option
+        .setName("query")
+        .setDescription("Song, artist, title, or link")
+        .setRequired(true),
+    ),
 ];
 
 export const commandJson: RESTPostAPIChatInputApplicationCommandsJSONBody[] =

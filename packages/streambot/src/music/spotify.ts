@@ -2,6 +2,7 @@ import { createRequire } from "node:module";
 import { z } from "zod";
 import type { MusicTrack } from "./contracts.ts";
 import { MusicError } from "./errors.ts";
+import { isSpotifyArtworkUrl } from "./artwork.ts";
 
 const TrackSchema = z.object({
   name: z.string().min(1),
@@ -13,6 +14,7 @@ const DetailsSchema = z.object({
   preview: z.object({
     title: z.string(),
     type: z.enum(["track", "album", "playlist"]),
+    image: z.string().optional(),
   }),
   tracks: z.array(TrackSchema),
 });
@@ -96,6 +98,11 @@ export class SpotifyMetadata {
         artists: [t.artist],
         canonicalUrl: "https://open.spotify.com/track/" + id,
         ...(data.preview.type === "album" ? { album: data.preview.title } : {}),
+        ...(data.preview.type !== "playlist" &&
+        data.preview.image !== undefined &&
+        isSpotifyArtworkUrl(data.preview.image)
+          ? { artworkUrl: data.preview.image }
+          : {}),
         ...(t.duration === undefined
           ? {}
           : { durationSeconds: t.duration / 1000 }),

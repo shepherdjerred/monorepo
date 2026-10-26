@@ -6,6 +6,7 @@ import type {
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import { isRemoteArtworkUrl } from "@shepherdjerred/streambot/metadata/public-artwork.ts";
+import { musicArtworkUrl } from "@shepherdjerred/streambot/music/artwork.ts";
 import { WebError } from "./errors.ts";
 import {
   PlexArtworkUnavailableError,
@@ -35,6 +36,8 @@ export class WebArtwork {
     guildId: string,
     thumbnail?: string,
   ): string | undefined {
+    const cover = musicArtworkUrl(source?.music, guildId);
+    if (cover !== undefined) return cover;
     if (source?.kind === "file") {
       const entry = this.library().find((item) => item.path === source.path);
       return entry === undefined ? undefined : this.forEntry(entry, guildId);

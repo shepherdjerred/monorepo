@@ -11,6 +11,8 @@ import { api, playerCommand } from "./api.ts";
 import { MusicPagination } from "./music.tsx";
 import { useRouteState, pageOffset } from "./route-state.ts";
 import { MediaActions, type MediaListProps } from "./media-row.tsx";
+import { Artwork } from "./artwork.tsx";
+import { musicArtworkUrl } from "@shepherdjerred/streambot/music/artwork.ts";
 import {
   PlaylistEditor,
   PlaylistItems,
@@ -199,9 +201,7 @@ export function Playlists(props: MediaListProps) {
             ← Playlists
           </button>
           <div className="album-heading">
-            <div className="playlist-cover" aria-hidden="true">
-              ♫
-            </div>
+            <Artwork url={musicArtworkUrl(page.cover, props.guildId)} />
             <div>
               <p className="eyebrow">
                 {page.guildId === null ? "PRIVATE PLAYLIST" : "SERVER PLAYLIST"}

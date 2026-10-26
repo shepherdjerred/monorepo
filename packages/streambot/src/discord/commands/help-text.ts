@@ -45,6 +45,7 @@ export function helpText(
         ]),
     "",
     "**Playback**",
+    "• `/play <query>` or `!play <query>` — quick search or YouTube/Spotify link",
     "• `/stream play <query>` · `playnext <query>` · `skip` · `seek <time>`",
     "• `/stream stop` — stop and clear _(admin)_",
     "",

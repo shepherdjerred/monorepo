@@ -6,7 +6,10 @@ import { HistoryProviderSchema } from "@shepherdjerred/streambot/history/provide
 const ArtworkUrlSchema = z
   .string()
   .refine(
-    (value) => value.startsWith("/api/artwork?") || isRemoteArtworkUrl(value),
+    (value) =>
+      value.startsWith("/api/artwork?") ||
+      value.startsWith("/api/music/artwork?") ||
+      isRemoteArtworkUrl(value),
   );
 
 export const GuildSchema = z.strictObject({ id: z.string(), name: z.string() });

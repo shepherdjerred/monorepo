@@ -7,7 +7,7 @@ import {
 } from "@shepherdjerred/streambot/music/contracts.ts";
 
 export const ARTIST = "e9eafc07-7bb7-4e77-9814-4d139a94889d";
-export const ALBUM = "d34ad3c4-16b0-4eba-95cb-d1a88124677b";
+export const ALBUM = "aa997ea0-2936-40bd-884d-3af8a0e064dc";
 export const RELEASE = "db66e369-1173-4b9a-b545-bd8aa99652ac";
 export const SONG: MusicTrack = {
   provider: "musicbrainz",

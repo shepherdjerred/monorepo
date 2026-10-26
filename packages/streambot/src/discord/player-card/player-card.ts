@@ -331,18 +331,19 @@ function buildChapterSelect(view: PlaybackView): SelectSpec | null {
 /** The legacy one-shot announcement, used when the card is disabled by config. */
 function renderPlainAnnouncement(input: PlayerCardInput): PlayerCardPayload {
   const current = input.view.current;
+  const cover = musicArtworkUrl(current?.source?.music) ?? input.posterUrl;
   const title = current?.title ?? "Unknown";
   const who =
     current === null ? "" : ` (requested by <@${current.requesterId}>)`;
   return {
     content: `${input.playbackChannel === undefined ? "" : `${playbackChannelLabel(input.playbackChannel)} · `}▶️ Now playing **${title}**${who}`,
     embed:
-      input.posterUrl === null
+      cover === null
         ? null
         : {
             title,
             description: null,
-            imageUrl: input.posterUrl,
+            imageUrl: cover,
             thumbnailUrl: null,
           },
     rows: [],
@@ -365,7 +366,10 @@ export function renderPlayerCard(input: PlayerCardInput): PlayerCardPayload {
       description: renderDescription(input),
       imageUrl: null,
       thumbnailUrl:
-        input.posterUrl ?? view.current?.provenance?.thumbnailUrl ?? null,
+        musicArtworkUrl(view.current?.source?.music) ??
+        input.posterUrl ??
+        view.current?.provenance?.thumbnailUrl ??
+        null,
     },
     // A finished session keeps its card as readable history, but every control is removed rather
     // than left dangling on a session that no longer exists.
@@ -388,3 +392,4 @@ export function renderPlayerCard(input: PlayerCardInput): PlayerCardPayload {
     select: input.finished ? null : buildChapterSelect(view),
   };
 }
+import { musicArtworkUrl } from "@shepherdjerred/streambot/music/artwork.ts";

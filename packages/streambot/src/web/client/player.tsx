@@ -37,7 +37,9 @@ function PlayerTitle({ snapshot }: Pick<PlayerProps, "snapshot">) {
     <div className="player-title">
       {current?.sportsArtwork === undefined ? (
         <Artwork
-          className="player-artwork"
+          className={
+            "player-artwork" + (current?.music === true ? " album-artwork" : "")
+          }
           {...(current?.artworkUrl === undefined
             ? {}
             : { url: current.artworkUrl })}
@@ -292,7 +294,13 @@ export function Queue({
               </span>
               {item.sportsArtwork === undefined ? (
                 item.artworkUrl !== undefined && (
-                  <Artwork className="queue-artwork" url={item.artworkUrl} />
+                  <Artwork
+                    className={
+                      "queue-artwork" +
+                      (item.music === true ? " album-artwork" : "")
+                    }
+                    url={item.artworkUrl}
+                  />
                 )
               ) : (
                 <SportsArtwork
