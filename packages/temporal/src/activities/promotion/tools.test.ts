@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import { PromotionBrowser } from "./browser.ts";
-import { PromotionGateway } from "./gateway.ts";
+import { PromotionTaskJournal } from "./task.ts";
+import { createPromotionToolHandler } from "./tools.ts";
 import { promotionTarget } from "./manifest.ts";
 import { memoryPromotionStore } from "./test-support.ts";
 import { updatePromotionState } from "./store.ts";
-import { createPromotionToolHandler } from "./tools.ts";
 
 async function harness(
-  preview: boolean,
+  preview = true,
   reconciliation = false,
   maxToolCalls = 80,
 ) {
@@ -20,24 +20,44 @@ async function harness(
   const browser = new PromotionBrowser(
     target,
     "http://browser.invalid",
-    "fixture-browser-key",
+    "fixture-token",
     new AbortController().signal,
   );
+  const action = vi
+    .spyOn(browser, "action")
+    .mockResolvedValue({ success: true });
   const open = vi.spyOn(browser, "open").mockResolvedValue({ url: target.url });
-  const login = vi.spyOn(browser, "login").mockResolvedValue(undefined);
-  const gateway = new PromotionGateway({
-    store,
+  vi.spyOn(browser, "currentUrl").mockResolvedValue(target.url);
+  vi.spyOn(browser, "accessibleControl").mockImplementation((ref) =>
+    Promise.resolve(
+      ref === "e3"
+        ? { ref, role: "button", name: "Log In" }
+        : {
+            ref,
+            role: "textbox",
+            name: ref === "e2" ? "Password" : "Username",
+          },
+    ),
+  );
+  const attribute = vi
+    .spyOn(browser, "attribute")
+    .mockImplementation((ref, name) =>
+      Promise.resolve(
+        name === "disabled" ? null : ref === "e2" ? "password" : "text",
+      ),
+    );
+  const journal = new PromotionTaskJournal({
     target,
+    store,
     occurrenceId: "fixture",
-    preview,
-    now: Date.now,
+    mode: reconciliation ? "reconcile" : preview ? "preview" : "run",
     enabled: () => Promise.resolve(true),
-    submit: vi.fn(),
+    now: Date.now,
     capture: vi.fn(),
   });
   const handle = createPromotionToolHandler({
     browser,
-    gateway,
+    journal,
     store,
     targetId: target.id,
     account: target.account,
@@ -51,87 +71,128 @@ async function harness(
         password: "fixture-password",
       },
     },
-    solverKey: "fixture-solver-key",
-    solverAllowanceMicrousd: 10_000_000,
+    solverKey: "fixture-solver",
+    solverAllowanceMicrousd: 1_000_000,
     signal: new AbortController().signal,
     heartbeat: vi.fn(),
   });
-  return { handle, open, login, target };
+  return { handle, action, open, attribute, target };
 }
 
-describe("promotion tool authority", () => {
-  it.each([true, false])(
-    "uses stored credentials once in preview=%s without returning their values",
-    async (preview) => {
-      const test = await harness(preview);
-      const command = {
-        operation: "login",
-        usernameSelector: "#email",
-        passwordSelector: "#password",
-        submitSelector: "#login",
-      };
-      expect(await test.handle(command)).toEqual({ loginAttempted: true });
-      expect(test.login).toHaveBeenCalledWith(
-        expect.objectContaining({
-          username: "fixture-user",
-          password: "fixture-password",
-        }),
-      );
-      await expect(test.handle(command)).rejects.toThrow(
-        "already attempted login",
-      );
-      expect(test.login).toHaveBeenCalledOnce();
-    },
-  );
-  it("does not retry an ambiguous login failure", async () => {
-    const test = await harness(true);
-    test.login.mockRejectedValueOnce(
-      new Error("Browser connection closed after login"),
-    );
-    const command = {
-      operation: "login",
-      usernameSelector: "#email",
-      passwordSelector: "#password",
-      submitSelector: "#login",
-    };
-    await expect(test.handle(command)).rejects.toThrow("connection closed");
-    await expect(test.handle(command)).rejects.toThrow(
-      "already attempted login",
-    );
-    expect(test.login).toHaveBeenCalledOnce();
+describe("native browser connection", () => {
+  it("lets the agent choose input refs and injects credentials without exposing values", async () => {
+    const test = await harness();
+    expect(
+      await test.handle({
+        endpoint: "action",
+        body: { kind: "fill", ref: "e1", credential: "username" },
+      }),
+    ).toEqual({ filled: true });
+    await test.handle({
+      endpoint: "action",
+      body: { kind: "fill", ref: "e2", credential: "password" },
+    });
+    await test.handle({
+      endpoint: "action",
+      body: { kind: "click", ref: "e3" },
+    });
+    expect(test.action.mock.calls).toEqual([
+      [{ kind: "fill", ref: "e1", text: "fixture-user" }],
+      [{ kind: "fill", ref: "e2", text: "fixture-password" }],
+      [{ kind: "click", ref: "e3" }],
+    ]);
+    await expect(
+      test.handle({ endpoint: "action", body: { kind: "click", ref: "e3" } }),
+    ).rejects.toThrow("already submitted");
   });
-  it("blocks publishing, settlement and paid solving in preview outside the model prompt", async () => {
-    const test = await harness(true);
-    for (const command of [
-      { operation: "publish", selector: "#bump", content: "Native bump" },
-      {
-        operation: "verify",
-        status: "verified",
-        receiptUrl: test.target.url,
-        quote: "Bumped successfully",
-      },
-      { operation: "solve-captcha" },
-    ])
-      await expect(test.handle(command)).rejects.toThrow("Preview cannot");
+  it("refuses password injection into an ordinary input", async () => {
+    const test = await harness();
+    await expect(
+      test.handle({
+        endpoint: "action",
+        body: { kind: "fill", ref: "e1", credential: "password" },
+      }),
+    ).rejects.toThrow("matching native input");
+    expect(test.action).not.toHaveBeenCalled();
+  });
+  it("supports native credential typing and repairs a disabled form before the one submission", async () => {
+    const test = await harness();
+    await test.handle({
+      endpoint: "action",
+      body: { kind: "type", ref: "e2", credential: "password" },
+    });
+    expect(test.action.mock.calls).toEqual([
+      [{ kind: "fill", ref: "e2", text: "" }],
+      [{ kind: "type", ref: "e2", text: "fixture-password" }],
+    ]);
+    test.attribute.mockResolvedValueOnce("");
+    const click = { endpoint: "action", body: { kind: "click", ref: "e3" } };
+    await expect(test.handle(click)).rejects.toThrow("disabled");
+    await test.handle(click);
+    await expect(test.handle(click)).rejects.toThrow("already submitted");
+  });
+  it("never repeats an ambiguous login submission", async () => {
+    const test = await harness();
+    await test.handle({
+      endpoint: "action",
+      body: { kind: "fill", ref: "e2", credential: "password" },
+    });
+    test.action.mockRejectedValueOnce(new Error("Connection closed"));
+    const click = { endpoint: "action", body: { kind: "click", ref: "e3" } };
+    await expect(test.handle(click)).rejects.toThrow("Connection closed");
+    await expect(test.handle(click)).rejects.toThrow("already submitted");
+  });
+  it.each([
+    { endpoint: "action", body: { kind: "fill", ref: "e1", text: "Ad copy" } },
+    { endpoint: "action", body: { kind: "press", ref: "e1", key: "Enter" } },
+    { endpoint: "action", body: { kind: "click", selector: "#submit" } },
+    {
+      endpoint: "navigate",
+      body: { url: "https://www.planetminecraft.com/bump/123" },
+    },
+  ])("blocks a possible publication in preview: %j", async (command) => {
+    const test = await harness();
+    await expect(test.handle(command)).rejects.toThrow("Read-only");
+    expect(test.action).not.toHaveBeenCalled();
     expect(test.open).not.toHaveBeenCalled();
   });
-  it("allows reconciliation reads and refuses new form actions", async () => {
-    const test = await harness(false, true);
-    await test.handle({ operation: "open", url: test.target.url });
-    expect(test.open).toHaveBeenCalledOnce();
+  it("keeps raw credentials, eval, and paid solving out of preview", async () => {
+    const test = await harness();
     await expect(
-      test.handle({ operation: "fill", selector: "#text", text: "New post" }),
-    ).rejects.toThrow("Reconciliation allows");
-    await expect(test.handle({ operation: "solve-captcha" })).rejects.toThrow(
-      "Reconciliation allows",
+      test.handle({
+        endpoint: "attr",
+        body: { selector: "e2", name: "value" },
+      }),
+    ).rejects.toThrow();
+    await expect(
+      test.handle({
+        endpoint: "evaluate",
+        body: { expression: "document.cookie" },
+      }),
+    ).rejects.toThrow();
+    await expect(test.handle({ endpoint: "solve-captcha" })).rejects.toThrow(
+      "Read-only",
     );
+    expect(test.attribute).not.toHaveBeenCalled();
   });
-  it("enforces a total browser-tool budget even across multiple model shell commands", async () => {
+  it("allows normal scrolling and enforces a total tool budget", async () => {
     const test = await harness(true, false, 1);
-    await test.handle({ operation: "open", url: test.target.url });
+    await test.handle({
+      endpoint: "action",
+      body: { kind: "scroll", scrollY: 500 },
+    });
+    await expect(test.handle({ endpoint: "snapshot" })).rejects.toThrow(
+      "budget",
+    );
+    expect(test.action).toHaveBeenCalledOnce();
+  });
+  it("never signs in during reconciliation", async () => {
+    const test = await harness(false, true);
     await expect(
-      test.handle({ operation: "open", url: test.target.url }),
-    ).rejects.toThrow("budget exhausted");
-    expect(test.open).toHaveBeenCalledOnce();
+      test.handle({
+        endpoint: "action",
+        body: { kind: "fill", ref: "e2", credential: "password" },
+      }),
+    ).rejects.toThrow("never signs in");
   });
 });

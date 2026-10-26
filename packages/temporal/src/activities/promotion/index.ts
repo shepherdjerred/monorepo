@@ -60,7 +60,23 @@ function scheduleAfterReceipt(
   const next = { ...state, bufferSeconds: randomInt(900, 1801) };
   return {
     ...next,
-    nextEligibleAt: nextPromotionEligibleAt(target, next, Date.now()),
+    nextEligibleAt:
+      next.preflight === null
+        ? new Date(
+            Math.max(
+              next.nextEligibleAt === null
+                ? 0
+                : Date.parse(next.nextEligibleAt),
+              ...next.attempts
+                .filter((item) => item.status !== "no-action")
+                .map(
+                  (item) =>
+                    Date.parse(item.settledAt ?? item.attemptedAt) +
+                    (target.minimumIntervalSeconds + next.bufferSeconds) * 1000,
+                ),
+            ),
+          ).toISOString()
+        : nextPromotionEligibleAt(target, next, Date.now()),
   };
 }
 
@@ -200,6 +216,7 @@ async function executePromotion(raw: PromotionRunInput) {
       {
         result,
         usage: outcome.usage,
+        browserTrace: outcome.browserTrace,
         targetId: target.id,
         completedAt: new Date().toISOString(),
       },
@@ -220,7 +237,7 @@ async function executePromotion(raw: PromotionRunInput) {
       const blockedReason = uncertain
         ? "Submission outcome uncertain; reconcile the remote result"
         : !verified && result.status === "verified"
-          ? "Agent claimed publication without a verified tool receipt"
+          ? "Agent claimed publication without a verified browser receipt"
           : result.status === "blocked"
             ? result.summary
             : !verified &&

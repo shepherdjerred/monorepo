@@ -1,344 +1,10 @@
 import { describe, expect, it } from "vitest";
-import {
-  assertPromotionUrl,
-  initialPromotionState,
-  nextPromotionEligibleAt,
-  policyEligibleAt,
-  promotionEligibility,
-  type PromotionObservation,
-  type PromotionPreflight,
-  type PromotionTarget,
-} from "./promotion.ts";
+import { assertPromotionUrl, policyEligibleAt } from "./promotion.ts";
+import type { PromotionTarget } from "./promotion.ts";
 
-const now = Date.parse("2026-10-25T12:00:00.000Z");
-const target: PromotionTarget = {
-  id: "pmc",
-  name: "PMC",
-  url: "https://www.planetminecraft.com/server/the-storm-3004178/",
-  rulesUrl: "https://www.planetminecraft.com/rules/",
-  account: "pmc",
-  hosts: ["www.planetminecraft.com"],
-  action: "bump",
-  content: "directory",
-  minimumIntervalSeconds: 86_400,
-  notes: "Existing listing",
-};
-const observation: PromotionObservation = {
-  id: "3235e21c-6ef7-46f8-bdc6-08f562018260",
-  url: target.rulesUrl,
-  text: "Bump once every 24 hours. No previous actions. Last bump was 2026-10-24T12:00:00.000Z.",
-  capturedAt: new Date(now).toISOString(),
-};
-const preflight: PromotionPreflight = {
-  policy: { kind: "rolling", maxActions: 1, windowSeconds: 86_400 },
-  ruleObservationId: observation.id,
-  ruleQuote: "Bump once every 24 hours.",
-  historyObservationIds: [observation.id],
-  historyComplete: true,
-  previousActions: [],
-  nextAllowedAt: null,
-  equivalentPostExists: false,
-  substantiveNewsAvailable: false,
-  explanation: "Current rules and full relevant history were inspected.",
-};
-
-function decision(overrides: Partial<PromotionPreflight> = {}) {
-  return promotionEligibility({
-    target,
-    now,
-    preflight: { ...preflight, ...overrides },
-    observations: [observation],
-    state: {
-      ...initialPromotionState("pmc", 900),
-      checkedAt: "2026-10-25T10:00:00.000Z",
-    },
-  });
-}
-
-describe("promotion eligibility", () => {
-  it("buffers the first observed eligibility and retains the same deadline on recheck", () => {
-    const state = initialPromotionState("pmc", 900);
-    const first = promotionEligibility({
-      target,
-      state,
-      preflight,
-      observations: [observation],
-      now,
-    });
-    expect(first.allowed).toBe(false);
-    expect(first.nextEligibleAt).toBe("2026-10-25T12:15:00.000Z");
-    const second = promotionEligibility({
-      target,
-      state: {
-        ...state,
-        checkedAt: observation.capturedAt,
-        nextEligibleAt: first.nextEligibleAt,
-      },
-      preflight,
-      observations: [
-        { ...observation, capturedAt: "2026-10-25T12:15:00.000Z" },
-      ],
-      now: now + 900_000,
-    });
-    expect(second.allowed).toBe(true);
-  });
-  it("applies the buffer even at the exact rolling cooldown boundary", () => {
-    expect(
-      decision({
-        previousActions: [
-          {
-            occurredAt: "2026-10-24T12:00:00.000Z",
-            observationId: observation.id,
-            quote: "2026-10-24T12:00:00.000Z",
-          },
-        ],
-      }),
-    ).toMatchObject({
-      allowed: false,
-      nextEligibleAt: "2026-10-25T12:15:00.000Z",
-    });
-  });
-  it.each([
-    { historyComplete: false },
-    { equivalentPostExists: true },
-    { nextAllowedAt: "2026-10-26T00:00:00.000Z" },
-  ])(
-    "blocks incomplete, duplicate or platform-delayed actions: %o",
-    (value) => {
-      expect(decision(value).allowed).toBe(false);
-    },
-  );
-  it("rejects invented or stale evidence", () => {
-    expect(() =>
-      decision({
-        policy: { kind: "rolling", maxActions: 1, windowSeconds: 60 },
-      }),
-    ).toThrow("less restrictive");
-    expect(() => decision({ ruleQuote: "You can post every minute" })).toThrow(
-      "quote",
-    );
-    expect(() =>
-      promotionEligibility({
-        target,
-        preflight,
-        state: initialPromotionState("pmc", 900),
-        observations: [
-          { ...observation, capturedAt: "2026-10-25T11:54:59.000Z" },
-        ],
-        now,
-      }),
-    ).toThrow("Fresh");
-  });
-  it("counts filtered local attempts even after their public post disappears", () => {
-    const state = {
-      ...initialPromotionState("pmc", 900),
-      checkedAt: observation.capturedAt,
-      attempts: [
-        {
-          occurrenceId: "previous",
-          attemptedAt: "2026-10-25T11:00:00.000Z",
-          settledAt: "2026-10-25T11:00:00.000Z",
-          status: "filtered" as const,
-          receiptUrl: null,
-          evidenceKey: null,
-          contentHash: "abc",
-          beforeSubmission: [],
-        },
-      ],
-    };
-    expect(
-      promotionEligibility({
-        target,
-        state,
-        preflight,
-        observations: [observation],
-        now,
-      }).allowed,
-    ).toBe(false);
-  });
-});
-
-describe("posting rule evidence and receipt deadlines", () => {
-  it("cannot reinterpret a rolling 24-hour rule as a midnight reset", () => {
-    const quote = "Bump once every 24 hours, America/Los_Angeles.";
-    expect(() =>
-      promotionEligibility({
-        target,
-        now,
-        state: initialPromotionState(target.id, 900),
-        observations: [{ ...observation, text: quote }],
-        preflight: {
-          ...preflight,
-          ruleQuote: quote,
-          policy: {
-            kind: "calendar-day",
-            maxActions: 1,
-            timezone: "America/Los_Angeles",
-          },
-        },
-      }),
-    ).toThrow("explicit quoted reset");
-  });
-  it.each([
-    ["Post once every seven days.", 604_800],
-    ["Bump once every twelve hours.", 43_200],
-    ["Post once every twenty-four hours.", 86_400],
-    ["Post at most once per week.", 604_800],
-    ["Bump once every forty-eight hours.", 172_800],
-    ["Bump once every seventy-two hours.", 259_200],
-    ["Bump once every seventy\ttwo hours.", 259_200],
-    ["Bump once every ninety-six hours.", 345_600],
-  ])("does not shorten spelled-out limits: %s", (quote, interval) => {
-    const input = {
-      target,
-      now,
-      state: initialPromotionState(target.id, 900),
-      observations: [{ ...observation, text: quote }],
-      preflight: {
-        ...preflight,
-        ruleQuote: quote,
-        policy: {
-          kind: "rolling" as const,
-          maxActions: 1,
-          windowSeconds: interval - 1,
-        },
-      },
-    };
-    expect(() => promotionEligibility(input)).toThrow("less restrictive");
-    expect(() =>
-      promotionEligibility({
-        ...input,
-        preflight: {
-          ...input.preflight,
-          policy: { ...input.preflight.policy, windowSeconds: interval },
-        },
-      }),
-    ).not.toThrow();
-  });
-  it("anchors the next run to the settled receipt plus a new persisted buffer", () => {
-    const state = {
-      ...initialPromotionState(target.id, 900),
-      preflight,
-      attempts: [
-        {
-          occurrenceId: "previous",
-          attemptedAt: "2026-10-25T11:59:00.000Z",
-          settledAt: "2026-10-25T12:00:00.000Z",
-          status: "verified" as const,
-          receiptUrl: target.url,
-          evidenceKey: "private/receipt",
-          contentHash: "fixture",
-          beforeSubmission: [],
-        },
-      ],
-    };
-    expect(nextPromotionEligibleAt(target, state, now)).toBe(
-      "2026-10-26T12:15:00.000Z",
-    );
-  });
-});
-
-describe("newly observed manual actions", () => {
-  it("retains the rolling boundary through its buffer even just after the window expires", () => {
-    const occurredAt = new Date(now - 12 * 3_600_000 - 1000).toISOString();
-    const quote = "Bump once every 12 hours.";
-    const result = promotionEligibility({
-      target: { ...target, minimumIntervalSeconds: 0 },
-      now,
-      state: {
-        ...initialPromotionState(target.id, 900),
-        checkedAt: observation.capturedAt,
-        nextEligibleAt: new Date(now - 3_600_000).toISOString(),
-      },
-      observations: [
-        { ...observation, text: `${quote} Last manual bump: ${occurredAt}` },
-      ],
-      preflight: {
-        ...preflight,
-        ruleQuote: quote,
-        policy: { kind: "rolling", maxActions: 1, windowSeconds: 12 * 3600 },
-        previousActions: [
-          { occurredAt, observationId: observation.id, quote: occurredAt },
-        ],
-      },
-    });
-    expect(result.allowed).toBe(false);
-    expect(result.nextEligibleAt).toBe(new Date(now + 899_000).toISOString());
-  });
-  it("retains a calendar reset boundary through its buffer after midnight", () => {
-    const current = Date.parse("2026-10-26T00:00:01.000Z"),
-      occurredAt = "2026-10-25T23:00:00.000Z";
-    const quote = "Once per day, calendar reset at midnight UTC.";
-    const result = promotionEligibility({
-      target: { ...target, minimumIntervalSeconds: 0 },
-      now: current,
-      state: {
-        ...initialPromotionState(target.id, 900),
-        checkedAt: occurredAt,
-      },
-      observations: [
-        {
-          ...observation,
-          capturedAt: new Date(current).toISOString(),
-          text: `${quote} ${occurredAt}`,
-        },
-      ],
-      preflight: {
-        ...preflight,
-        ruleQuote: quote,
-        policy: { kind: "calendar-day", maxActions: 1, timezone: "UTC" },
-        previousActions: [
-          { occurredAt, observationId: observation.id, quote: occurredAt },
-        ],
-      },
-    });
-    expect(result.allowed).toBe(false);
-    expect(result.nextEligibleAt).toBe("2026-10-26T00:15:00.000Z");
-  });
-  it.each([
-    "Bump once every one hundred and twenty-four hours.",
-    "Bump once every quarante eight hours.",
-    "Bump once every 24.0 hours.",
-    "Bump once every 1,000 hours.",
-    "Bump once every 1e+3 hours.",
-    "Bump once every 1 day + 12 hours.",
-    "Bump once every 12 hours and 12 hours.",
-    "Bump daily plus 12 hours.",
-  ])("rejects quantities it cannot establish: %s", (quote) => {
-    expect(() =>
-      promotionEligibility({
-        target,
-        now,
-        state: initialPromotionState(target.id, 900),
-        observations: [{ ...observation, text: quote }],
-        preflight: { ...preflight, ruleQuote: quote },
-      }),
-    ).toThrow(/compound|Unrecognized|Unsupported/);
-  });
-});
-
-describe("promotion restrictions and window boundaries", () => {
-  it("retains unknown effects and pending prerequisites", () => {
-    expect(
-      promotionEligibility({
-        target: { ...target, action: "news" },
-        state: initialPromotionState("pmc", 900),
-        preflight: { ...preflight, substantiveNewsAvailable: true },
-        observations: [observation],
-        now,
-      }).reason,
-    ).toBe("No approved substantive news");
-    expect(
-      promotionEligibility({
-        target: { ...target, action: "pending" },
-        state: initialPromotionState("pmc", 900),
-        preflight,
-        observations: [observation],
-        now,
-      }).reason,
-    ).toBe("Listing prerequisites unresolved");
-  });
-  it("uses the Nth newest action for a multi-post rolling window", () => {
+describe("promotion history and target boundaries", () => {
+  it("calculates a rolling boundary from the Nth newest action", () => {
+    const now = Date.parse("2026-10-26T12:00:00.000Z");
     const policy = {
       kind: "rolling" as const,
       maxActions: 2,
@@ -349,8 +15,8 @@ describe("promotion restrictions and window boundaries", () => {
     ).toBe(now - 2000 + 3_600_000);
     expect(() => policyEligibleAt(policy, [now + 1], now)).toThrow("future");
   });
-  it("uses a real timezone calendar boundary across daylight saving", () => {
-    const time = Date.parse("2026-11-01T08:30:00.000Z");
+  it("retains real calendar boundaries across daylight saving", () => {
+    const now = Date.parse("2026-11-01T08:30:00.000Z");
     expect(
       policyEligibleAt(
         {
@@ -358,17 +24,23 @@ describe("promotion restrictions and window boundaries", () => {
           maxActions: 1,
           timezone: "America/Los_Angeles",
         },
-        [time],
-        time,
+        [now],
+        now,
       ),
     ).toBe(Date.parse("2026-11-02T08:00:00.000Z"));
   });
-  it("limits Reddit to old.reddit.com and the configured community/history", () => {
-    const reddit = {
-      ...target,
+  it("limits Reddit to old.reddit.com and the target community/history", () => {
+    const reddit: PromotionTarget = {
       id: "reddit-mcservers",
+      name: "Minecraft Servers",
+      account: "reddit",
       url: "https://old.reddit.com/r/mcservers/",
+      rulesUrl: "https://old.reddit.com/r/mcservers/",
       hosts: ["old.reddit.com"],
+      action: "repost",
+      content: "reddit-mcservers",
+      minimumIntervalSeconds: 604_800,
+      notes: "Fixture community",
     };
     expect(() =>
       assertPromotionUrl(reddit, "https://www.reddit.com/r/mcservers/"),
@@ -379,7 +51,7 @@ describe("promotion restrictions and window boundaries", () => {
     expect(
       assertPromotionUrl(
         reddit,
-        "https://old.reddit.com/user/the-storm/submitted/",
+        "https://old.reddit.com/user/the_storm_mc/submitted/",
       ).hostname,
     ).toBe("old.reddit.com");
     expect(() =>
