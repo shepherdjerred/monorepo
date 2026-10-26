@@ -10,6 +10,12 @@ import TaskNotesKit
 
 internal enum FacetNativeStyle {
     static let tokens = FacetPresentationTokens.shared
+    static let mobileCaptureDiameter: CGFloat = 56
+    static let mobileCapturePadding: CGFloat = 20
+    static let mobileCaptureClearance: CGFloat = 20
+    static var mobileListBottomMargin: CGFloat {
+        mobileCaptureDiameter + mobileCapturePadding + mobileCaptureClearance
+    }
     static var formMinimumWidth: CGFloat? {
         #if os(macOS)
             340
@@ -58,6 +64,7 @@ internal struct FacetTaskRow: View {
     let desktop: Bool
     var stacked = false
     var completionReceipt: String?
+    let viewerCalendar: ViewerCalendar
     let complete: () -> Void
     let open: () -> Void
     let schedule: () -> Void
@@ -65,7 +72,6 @@ internal struct FacetTaskRow: View {
     @State private var hovering = false
     @State private var completionPulse: String?
     @Environment(\.accessibilityReduceMotion) private var reducedMotion
-    @Environment(\.dynamicTypeSize) private var dynamicType
     @ScaledMetric(relativeTo: .body) private var checkboxSize = CGFloat(
         FacetNativeStyle.tokens.mobile.checkboxSize)
 
@@ -139,6 +145,23 @@ internal struct FacetTaskRow: View {
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }.buttonStyle(.plain).accessibilityHint("View task details")
             }
+            #if os(iOS)
+                if !desktop {
+                    Menu {
+                        Button(task.completed ? "Uncomplete" : "Complete", action: complete)
+                        Button("Schedule…", action: schedule)
+                        Button("Edit…", action: open)
+                        Button("Delete task", role: .destructive, action: delete)
+                    } label: {
+                        Image(systemName: "ellipsis").foregroundStyle(
+                            FacetNativeStyle.secondaryText
+                        )
+                        .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+                    }
+                    .accessibilityLabel("More actions for \(task.title)")
+                    .accessibilityIdentifier("facet.task.actions.\(task.path)")
+                }
+            #endif
         }
         .padding(
             .vertical,
@@ -163,13 +186,9 @@ internal struct FacetTaskRow: View {
     }
 
     @ViewBuilder private var rowMetadata: some View {
-        if !desktop && dynamicType.isAccessibilitySize {
-            VStack(alignment: .leading, spacing: 4) {
-                date
-                metadataText
-                HStack(spacing: 6) { markers }
-            }.frame(maxWidth: .infinity, alignment: .leading)
-        } else {
+        #if os(iOS)
+            FacetMobileRowMetadata(task: task, presentation: presentation, viewer: viewerCalendar)
+        #else
             HStack(spacing: 6) {
                 if desktop, let weight = presentation.priority.weight, weight > 0 {
                     Image(systemName: "exclamationmark").foregroundStyle(
@@ -181,7 +200,7 @@ internal struct FacetTaskRow: View {
                 metadataText
                 markers
             }
-        }
+        #endif
     }
 
     @ViewBuilder private var metadataText: some View {

@@ -1928,6 +1928,8 @@ fn project_task(
         is_blocking: false,
         occurrence_date: None,
         effective_date: None,
+        agenda_section: None,
+        agenda_date_kind: None,
         is_pending: false,
     }))
 }

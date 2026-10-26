@@ -90,9 +90,7 @@ internal struct FacetNativeSidebar: View {
                     title: view.view["name"]?.text ?? view.id,
                     query: view.view["query"]?.object?.fields ?? [:], savedView: view)
             } label: {
-                Label(
-                    view.view["name"]?.text ?? view.id,
-                    systemImage: "line.3.horizontal.decrease.circle")
+                FacetMobileSavedViewLabel(view: view)
             }
         #endif
     }
@@ -127,6 +125,7 @@ internal struct FacetNativeSidebar: View {
             Button {
                 _Concurrency.Task {
                     guard await admitNavigation?() ?? true else { return }
+                    window.leaveSavedView()
                     window.savedQuery = [key: .array([.string(value)])]
                     window.scope = "all"
                     await window.reload(store: store)
@@ -153,42 +152,32 @@ internal struct FacetNativeSidebar: View {
         let title: String
         var query: [String: FacetValue] = [:]
         var savedView: FacetSavedView?
-        @State private var window = FacetWindowState()
-        @State private var detail: FacetTask?
+        @State private var searching = false
         var body: some View {
-            Group {
-                if let snapshot = window.snapshot {
-                    FacetNativeTaskList(
-                        store: store, window: window, snapshot: snapshot, selected: nil
-                    ) { detail = $0 }
-                } else {
-                    ProgressView("Opening view…")
-                }
-            }
+            FacetMobileTaskScreen(
+                store: store, scope: scope, query: query, savedView: savedView
+            )
             .navigationTitle(title)
-            .searchable(text: $window.search)
-            .task {
-                if let savedView {
-                    await window.apply(savedView, store: store)
-                } else {
-                    window.scope = scope == "board" ? "all" : scope
-                    window.board = scope == "board"
-                    window.savedQuery = query
-                    await window.reload(store: store)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Search", systemImage: "magnifyingglass") { searching = true }
+                        .accessibilityIdentifier("facet.search.open")
                 }
             }
-            .onChange(of: window.search) { _Concurrency.Task { await window.reload(store: store) } }
-            .onChange(of: store.snapshot?.version) {
-                _Concurrency.Task { await window.reload(store: store) }
-            }
-            .sheet(item: $detail) { task in
-                if let profileID = window.snapshot?.profileId {
-                    FacetTaskEditor(
-                        store: store, task: task, profileID: profileID,
-                        statuses: store.statuses, priorities: store.priorities
+            .sheet(isPresented: $searching) {
+                NavigationStack {
+                    FacetMobileTaskScreen(
+                        store: store, scope: "all", globalSearch: true
                     )
-                    .presentationDetents([.fraction(0.75), .large]).presentationDragIndicator(
-                        .visible)
+                    .navigationTitle("Search")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") { searching = false }
+                                .accessibilityIdentifier("facet.search.done")
+                        }
+                    }
                 }
             }
         }
@@ -215,6 +204,16 @@ internal struct FacetNativeNotices: View {
                 Button("Use standard configuration") {
                     _Concurrency.Task { await store.approveStandardConfiguration() }
                 }
+                .accessibilityIdentifier("facet.configuration.approve")
+            }
+            if let route = store.notificationRoute {
+                let owner =
+                    store.profiles.first { $0.id == route.profileID }?.name ?? route.profileID
+                Button("Open reminder task in \(owner)") {
+                    _Concurrency.Task { await store.openNotificationRoute() }
+                }
+                .disabled(store.isSaving || store.isLoading)
+                .accessibilityIdentifier("facet.reminder.open")
             }
             if let snapshot = store.snapshot, snapshot.conflictCount > 0 {
                 Button(
@@ -245,6 +244,7 @@ internal struct FacetNativeNotices: View {
             }
         }.padding(
             store.needsStandardConsent || !store.pendingActions.isEmpty
+                || store.notificationRoute != nil
                 || (store.snapshot?.conflictCount ?? 0) > 0 ? 12 : 0)
     }
 }

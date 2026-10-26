@@ -88,6 +88,12 @@ pub(crate) fn local(
     task.is_recurring = !text.trim().is_empty() && recurrence.frequency().is_some();
     task.effective_date =
         day(task.properties.get("due")).or_else(|| day(task.properties.get("scheduled")));
+    if matches!(
+        query.scope.as_deref(),
+        Some("todayAgenda" | "upcomingAgenda")
+    ) {
+        return crate::agenda::project(task, query, &recurrence, occurrences);
+    }
     if task.is_recurring
         && let Some(today) = query.today.as_deref()
     {
@@ -133,7 +139,7 @@ pub(crate) fn local(
     }
     Ok(())
 }
-fn instance_days(task: &TaskSnapshot, key: &str) -> Result<Vec<NaiveDate>> {
+pub(crate) fn instance_days(task: &TaskSnapshot, key: &str) -> Result<Vec<NaiveDate>> {
     task.properties
         .get(key)
         .and_then(Value::as_array)

@@ -26,9 +26,9 @@ final class StandaloneTaskTests: XCTestCase {
         app.buttons["facet.capture.open"].tap()
         let capture = app.textFields["facet.capture.title"]
         XCTAssertTrue(capture.waitForExistence(timeout: 5), app.debugDescription)
-        capture.tap()
+        FacetKeyboardBootstrap.focus(capture, in: app)
         let capturedTitle = "E2E captured task"
-        capture.typeText(capturedTitle)
+        FacetKeyboardBootstrap.typeText(capturedTitle, into: capture, in: app)
         app.buttons["facet.capture.submit"].tap()
 
         let created = taskButton(capturedTitle, in: app)
@@ -39,7 +39,7 @@ final class StandaloneTaskTests: XCTestCase {
 
         let editor = app.textFields["facet.editor.title"]
         XCTAssertTrue(editor.waitForExistence(timeout: 5), app.debugDescription)
-        editor.tap()
+        FacetKeyboardBootstrap.focus(editor, in: app)
         editor.press(forDuration: 1.1)
         let selectAll = app.descendants(matching: .any).matching(
             NSPredicate(format: "label == %@", "Select All")
@@ -83,8 +83,8 @@ final class StandaloneTaskTests: XCTestCase {
         let field = app.textFields["facet.capture.title"]
         XCTAssertTrue(field.waitForExistence(timeout: 5), app.debugDescription)
         XCTAssertTrue(field.isHittable)
-        field.tap()
-        field.typeText("Accessibility draft")
+        FacetKeyboardBootstrap.focus(field, in: app)
+        FacetKeyboardBootstrap.typeText("Accessibility draft", into: field, in: app)
         let submit = app.buttons["facet.capture.submit"]
         XCTAssertTrue(submit.isEnabled)
         XCTAssertTrue(submit.isHittable)
@@ -105,11 +105,13 @@ final class StandaloneTaskTests: XCTestCase {
         if accessibilitySize { app.launchArguments.append("--facet-accessibility-size") }
         app.launch()
         addTeardownBlock { @MainActor in app.terminate() }
+        XCTAssertTrue(app.tabBars.buttons["Inbox"].waitForExistence(timeout: 20))
+        attach(app, named: "00 Workspace ready before task lookup")
         return app
     }
 
     private func taskButton(_ title: String, in app: XCUIApplication) -> XCUIElement {
-        app.buttons.matching(NSPredicate(format: "label == %@", title)).firstMatch
+        app.buttons.containing(.staticText, identifier: title).firstMatch
     }
 
     private func assertCompletedTask(in app: XCUIApplication) {

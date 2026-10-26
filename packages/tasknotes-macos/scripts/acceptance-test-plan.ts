@@ -128,7 +128,10 @@ export function assertExactNativeResults(
         target: "TaskNotesAcceptanceUITests";
         suite: "StandaloneVaultUITests" | "OccurrenceVaultUITests";
       }
-    | { target: "TasksForObsidianUITests"; suite: "OccurrenceTaskTests" } = {
+    | {
+        target: "TasksForObsidianUITests";
+        suite: "OccurrenceTaskTests" | "MobileParityTests";
+      } = {
     target: "TaskNotesAcceptanceUITests",
     suite: "StandaloneVaultUITests",
   },

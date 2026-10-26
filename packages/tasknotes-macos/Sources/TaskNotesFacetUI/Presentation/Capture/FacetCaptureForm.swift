@@ -19,6 +19,8 @@ public struct FacetCaptureForm: View {
     private let retainedPanel: Bool
     private let close: (@MainActor () -> Void)?
     private let expandedChanged: (@MainActor (Bool) -> Void)?
+    private let initialContext: [String: FacetValue]
+    private let pinnedProfileID: String?
     @FocusState private var focused: Bool
     @Environment(\.facetFeedbackOrigin) private var feedbackOrigin
     private struct PreviewIdentity: Hashable {
@@ -28,6 +30,7 @@ public struct FacetCaptureForm: View {
     }
     public init(
         store: FacetStore, draft: FacetCaptureDraft? = nil, preview: FacetCapturePreview? = nil,
+        profileID: String? = nil, context: [String: FacetValue] = [:],
         detailsExpanded: Bool = false, notes: String? = nil,
         properties: [String: FacetValue] = [:],
         focusRequest: Int = 0, retainedPanel: Bool = false,
@@ -35,7 +38,9 @@ public struct FacetCaptureForm: View {
         expandedChanged: (@MainActor (Bool) -> Void)? = nil
     ) {
         self.store = store
-        _profileID = State(initialValue: store.selectedProfileID)
+        _profileID = State(initialValue: profileID ?? store.selectedProfileID)
+        pinnedProfileID = profileID
+        initialContext = context
         self.focusRequest = focusRequest
         self.retainedPanel = retainedPanel
         self.close = close
@@ -158,7 +163,7 @@ public struct FacetCaptureForm: View {
                 }
             }
         }.task(id: focusRequest) {
-            if !hasChanges { profileID = store.selectedProfileID }
+            if !hasChanges, pinnedProfileID == nil { profileID = store.selectedProfileID }
             focused = true
             if let profileID {
                 FacetDraftCoordinator.shared.register(
@@ -184,7 +189,8 @@ public struct FacetCaptureForm: View {
                 input: draft.input, revision: previewRevision, profileID: store.selectedProfileID)
         ) {
             await preview.refresh(
-                store: store, profileID: profileID, input: draft.input, overrides: overrides)
+                store: store, profileID: profileID, input: draft.input, overrides: overrides,
+                context: initialContext)
         }
         .confirmationDialog(
             "Discard this capture draft?", isPresented: $showsDiscard, titleVisibility: .visible
@@ -203,6 +209,9 @@ public struct FacetCaptureForm: View {
         }
         .interactiveDismissDisabled(draft.isSubmitting || discarding || hasChanges)
     }
+}
+
+extension FacetCaptureForm {
     private var hasChanges: Bool {
         bodyOverride != nil || draft.hasChanges(body: "", properties: overrides)
     }
@@ -214,7 +223,7 @@ public struct FacetCaptureForm: View {
         guard canCapture, let profileID,
             draft.begin(
                 store: store, profileID: profileID, properties: overrides,
-                body: bodyOverride, origin: feedbackOrigin)
+                body: bodyOverride, origin: feedbackOrigin, context: initialContext)
         else { return }
         let capturedSeed = store.captureTitle
         _Concurrency.Task {

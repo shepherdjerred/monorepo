@@ -118,11 +118,13 @@ internal struct FacetAppliedFeedbackView: View {
                 $keyboardFocus, equals: .undo
             )
             .accessibilityFocused($accessibilityFocus, equals: .undo)
+            .accessibilityIdentifier("facet.feedback.undo")
         }
         Button("Dismiss", systemImage: "xmark") { store.clearSavedNotice() }
             .labelStyle(.iconOnly)
             .focused($keyboardFocus, equals: .dismiss)
             .accessibilityFocused($accessibilityFocus, equals: .dismiss)
+            .accessibilityIdentifier("facet.feedback.dismiss")
     }
 
     private func undo(_ feedback: FacetAppliedFeedback) {

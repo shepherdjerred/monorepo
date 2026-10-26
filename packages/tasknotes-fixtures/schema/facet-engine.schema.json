@@ -671,6 +671,12 @@
             "null"
           ],
           "format": "date"
+        },
+        "agendaSection": {
+          "enum": ["overdue", "scheduled-today", "due-today", null]
+        },
+        "agendaDateKind": {
+          "enum": ["planned", "deadline", null]
         }
       },
       "required": [
@@ -845,7 +851,9 @@
                 "completed",
                 "undated",
                 "inbox",
-                "agenda"
+                "agenda",
+                "todayAgenda",
+                "upcomingAgenda"
               ]
             },
             {
@@ -874,6 +882,10 @@
               "type": "null"
             }
           ]
+        },
+        "effectiveDay": {
+          "type": ["string", "null"],
+          "format": "date"
         },
         "projects": {
           "anyOf": [
@@ -962,6 +974,9 @@
                 "priority",
                 "status",
                 "dueDate",
+                "scheduledDate",
+                "createdDate",
+                "completedDate",
                 "effectiveDate",
                 "manual"
               ]
@@ -992,7 +1007,8 @@
                 "priority",
                 "project",
                 "context",
-                "effectiveDate"
+                "effectiveDate",
+                "agendaSection"
               ]
             },
             {

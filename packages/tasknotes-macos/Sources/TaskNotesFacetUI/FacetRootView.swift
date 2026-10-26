@@ -13,6 +13,7 @@ public struct FacetRootView: View {
     @State private var importSource: URL?
     @State private var board = false
     @State private var capturePresentation = FacetCapturePresentation()
+    @State private var captureSeed: FacetCaptureSeed?
     @State private var sheets = FacetSheetPresentation()
     @Environment(\.scenePhase) private var scenePhase
     private let afterStart: (@MainActor () async -> Void)?
@@ -27,6 +28,14 @@ public struct FacetRootView: View {
         FacetWorkspaceView(
             store: store, importsFolder: $importsFolder, board: $board,
             capturePresented: capturePresented, sheets: sheets
+        )
+        .environment(
+            \.facetCaptureRequest,
+            FacetCaptureRequest { profileID, context in
+                guard store.selectedProfileID == profileID, !store.showsCapture else { return }
+                captureSeed = FacetCaptureSeed(profileID: profileID, context: context)
+                capturePresented.wrappedValue = true
+            }
         )
         .onAppear { sheets.rootDidAppear() }
         .onDisappear { sheets.rootDidDisappear(store: store) }
@@ -92,16 +101,22 @@ public struct FacetRootView: View {
                     + "The original stays unchanged. Later edits do not sync with the source folder."
             )
         }
-        .sheet(isPresented: capturePresented) {
-            #if os(macOS)
-                FacetCaptureForm(store: store, close: { capturePresented.wrappedValue = false })
-                    .padding().frame(minWidth: 300, minHeight: 180)
-            #else
-                FacetCaptureForm(store: store).padding().frame(minWidth: 300, minHeight: 180)
-                    .presentationDetents([.fraction(0.75), .large])
-                    .presentationDragIndicator(.visible)
-            #endif
-        }
+        .sheet(
+            isPresented: capturePresented, onDismiss: { captureSeed = nil },
+            content: {
+                #if os(macOS)
+                    FacetCaptureForm(store: store, close: { capturePresented.wrappedValue = false })
+                        .padding().frame(minWidth: 300, minHeight: 180)
+                #else
+                    FacetCaptureForm(
+                        store: store, profileID: captureSeed?.profileID,
+                        context: captureSeed?.context ?? [:]
+                    ).padding().frame(minHeight: 180)
+                        .presentationDetents([.fraction(0.75), .large])
+                        .presentationDragIndicator(.visible)
+                #endif
+            }
+        )
         .sheet(isPresented: sheets.conflicts(store: store)) {
             FacetConflictInbox(store: store)
                 .onDisappear { sheets.conflictsDidDisappear(store: store) }
@@ -128,6 +143,7 @@ public struct FacetRootView: View {
             Text(store.savedNotice ?? store.error ?? importFailure ?? "")
         }
         .modifier(FacetFeedbackScene(store: store))
+        .modifier(FacetAppearanceScope())
     }
 
     @State private var importFailure: String?

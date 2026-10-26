@@ -58,6 +58,7 @@ public final class FacetStore {
     public var showsCapture = false {
         didSet { if showsCapture, captureProfileID == nil { captureProfileID = selectedProfileID } }
     }
+    internal var navigationRequestID: UUID?
     public var showsConflicts = false
     public var showsAccount = false
     internal var accountWindowOwnerID: UUID?
@@ -354,8 +355,11 @@ extension FacetStore {
 
     public func handleURL(_ url: URL) {
         if url.host == "today" {
-            scope = "agenda"
-            _Concurrency.Task { await reloadQuery() }
+            navigationRequestID = UUID()
+            #if os(macOS)
+                scope = "agenda"
+                _Concurrency.Task { await reloadQuery() }
+            #endif
             return
         }
         if url.host == "quick-add" {

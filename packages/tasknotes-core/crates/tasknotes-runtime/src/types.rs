@@ -527,9 +527,55 @@ pub struct TaskSnapshot {
     /// Shared effective civil day used for ordering and grouping.
     #[serde(default)]
     pub effective_date: Option<String>,
+    /// Authoritative section for a Today agenda row; absent outside agenda queries.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub agenda_section: Option<AgendaSection>,
+    /// Meaning of the agenda's selected effective day.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub agenda_date_kind: Option<AgendaDateKind>,
     /// This exact task path has a durable unacknowledged upload.
     #[serde(default)]
     pub is_pending: bool,
+}
+
+/// Stable presentation keys for the shared Today agenda policy.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum AgendaSection {
+    /// At least one unfinished planned date or deadline is in the past.
+    Overdue,
+    /// Work planned for today, including an eligible recurring occurrence.
+    ScheduledToday,
+    /// A deadline today without a planned date today or an overdue reason.
+    DueToday,
+}
+
+impl AgendaSection {
+    pub(crate) fn key(self) -> &'static str {
+        match self {
+            Self::Overdue => "overdue",
+            Self::ScheduledToday => "scheduled-today",
+            Self::DueToday => "due-today",
+        }
+    }
+
+    pub(crate) fn order(self) -> u8 {
+        match self {
+            Self::Overdue => 0,
+            Self::ScheduledToday => 1,
+            Self::DueToday => 2,
+        }
+    }
+}
+
+/// Date reason chosen by the shared agenda projection.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum AgendaDateKind {
+    /// The task or occurrence is planned for the selected day.
+    Planned,
+    /// The selected day is the task's deadline.
+    Deadline,
 }
 
 /// Nonfatal indexing diagnostic requiring user attention.
@@ -601,7 +647,7 @@ pub struct Query {
     pub offset: u32,
     /// Page size, capped at 1,000.
     pub limit: Option<u32>,
-    /// Case-insensitive title/body substring.
+    /// Case-insensitive title/body/project/context/tag substring.
     pub text: Option<String>,
     /// Allowed status values; absent means all.
     pub statuses: Option<Vec<String>>,
@@ -612,14 +658,16 @@ pub struct Query {
     /// Include archived tasks.
     #[serde(default)]
     pub include_archived: bool,
-    /// Built-in scope: all, today, upcoming, overdue, completed, undated, or inbox.
+    /// Built-in scope, including explicit Today and Upcoming agenda policies.
     pub scope: Option<String>,
     /// Caller-supplied local civil date for date scopes and recurrence.
     pub today: Option<String>,
     /// Retained wire-compatibility field; elapsed-time projections are withdrawn.
     pub at: Option<String>,
-    /// Days ahead in upcoming scope; default seven.
+    /// Recurrence lookahead: seven in upcoming, 366 in upcomingAgenda.
     pub upcoming_days: Option<u32>,
+    /// Exact projected effective civil day, applied before pagination.
+    pub effective_day: Option<String>,
     /// Project values, matched using the shared wikilink identity rules.
     pub projects: Option<Vec<String>>,
     /// Context values.
@@ -634,11 +682,11 @@ pub struct Query {
     pub due_before: Option<String>,
     /// Exclusive due-date lower bound.
     pub due_after: Option<String>,
-    /// Sort field: title, priority, status, dueDate, effectiveDate, or manual.
+    /// Title, priority, status, manual, effectiveDate, or a supported property date sort.
     pub sort_field: Option<String>,
     /// Sort direction: asc or desc.
     pub sort_direction: Option<String>,
-    /// Group field: status, priority, project, context, or effectiveDate.
+    /// Group field, including authoritative agendaSection in todayAgenda.
     pub group_by: Option<String>,
 }
 

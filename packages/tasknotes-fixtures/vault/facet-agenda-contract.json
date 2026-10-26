@@ -1,0 +1,309 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "agenda-today-query",
+      "definition": "query",
+      "valid": true,
+      "value": {
+        "schemaVersion": 1,
+        "scope": "todayAgenda",
+        "today": "2026-10-25",
+        "groupBy": "agendaSection",
+        "completed": false
+      }
+    },
+    {
+      "id": "agenda-upcoming-selected-day",
+      "definition": "query",
+      "valid": true,
+      "value": {
+        "scope": "upcomingAgenda",
+        "today": "2026-10-25",
+        "effectiveDay": "2027-01-01",
+        "groupBy": "effectiveDate"
+      }
+    },
+    {
+      "id": "agenda-global-search",
+      "definition": "query",
+      "valid": true,
+      "value": { "scope": "all", "text": "project context or tag" }
+    },
+    {
+      "id": "agenda-projectless-inbox",
+      "definition": "query",
+      "valid": true,
+      "value": { "scope": "all", "hasNoProject": true, "completed": false }
+    },
+    {
+      "id": "agenda-planned-sort",
+      "definition": "query",
+      "valid": true,
+      "value": { "sortField": "scheduledDate", "sortDirection": "asc" }
+    },
+    {
+      "id": "agenda-created-sort",
+      "definition": "query",
+      "valid": true,
+      "value": { "sortField": "createdDate", "sortDirection": "desc" }
+    },
+    {
+      "id": "agenda-completed-sort",
+      "definition": "query",
+      "valid": true,
+      "value": { "sortField": "completedDate", "sortDirection": "desc" }
+    },
+    {
+      "id": "agenda-unknown-scope",
+      "definition": "query",
+      "valid": false,
+      "value": { "scope": "guessToday", "today": "2026-10-25" }
+    },
+    {
+      "id": "agenda-unknown-group",
+      "definition": "query",
+      "valid": false,
+      "value": {
+        "scope": "todayAgenda",
+        "today": "2026-10-25",
+        "groupBy": "guessSection"
+      }
+    },
+    {
+      "id": "agenda-removed-timing-sort",
+      "definition": "query",
+      "valid": false,
+      "value": { "sortField": "trackedMinutes" }
+    },
+    {
+      "id": "agenda-unknown-query-property",
+      "definition": "query",
+      "valid": false,
+      "value": { "scope": "all", "guessedFallback": true }
+    },
+    {
+      "id": "agenda-impossible-effective-day",
+      "definition": "query",
+      "valid": false,
+      "value": { "scope": "all", "effectiveDay": "2026-02-30" }
+    },
+    {
+      "id": "agenda-effective-day-type",
+      "definition": "query",
+      "valid": false,
+      "value": { "scope": "all", "effectiveDay": true }
+    },
+    {
+      "id": "agenda-today-planned-row",
+      "definition": "task",
+      "valid": true,
+      "value": {
+        "id": "Tasks/plan.md",
+        "path": "Tasks/plan.md",
+        "title": "Plan",
+        "status": "open",
+        "priority": "normal",
+        "completed": false,
+        "revision": "synthetic",
+        "properties": {},
+        "body": "",
+        "isRecurring": false,
+        "isBlocked": false,
+        "isBlocking": false,
+        "isPending": false,
+        "occurrenceDate": null,
+        "effectiveDate": "2026-10-25",
+        "agendaSection": "scheduled-today",
+        "agendaDateKind": "planned"
+      }
+    },
+    {
+      "id": "agenda-today-deadline-row",
+      "definition": "task",
+      "valid": true,
+      "value": {
+        "id": "Tasks/due.md",
+        "path": "Tasks/due.md",
+        "title": "Deadline",
+        "status": "open",
+        "priority": "normal",
+        "completed": false,
+        "revision": "synthetic",
+        "properties": {},
+        "body": "",
+        "isRecurring": false,
+        "isBlocked": false,
+        "isBlocking": false,
+        "isPending": false,
+        "occurrenceDate": null,
+        "effectiveDate": "2026-10-25",
+        "agendaSection": "due-today",
+        "agendaDateKind": "deadline"
+      }
+    },
+    {
+      "id": "agenda-today-overdue-row",
+      "definition": "task",
+      "valid": true,
+      "value": {
+        "id": "Tasks/old.md",
+        "path": "Tasks/old.md",
+        "title": "Overdue",
+        "status": "open",
+        "priority": "normal",
+        "completed": false,
+        "revision": "synthetic",
+        "properties": {},
+        "body": "",
+        "isRecurring": true,
+        "isBlocked": false,
+        "isBlocking": false,
+        "isPending": false,
+        "occurrenceDate": "2026-10-24",
+        "effectiveDate": "2026-10-24",
+        "agendaSection": "overdue",
+        "agendaDateKind": "planned"
+      }
+    },
+    {
+      "id": "agenda-upcoming-row",
+      "definition": "task",
+      "valid": true,
+      "value": {
+        "id": "Tasks/future.md",
+        "path": "Tasks/future.md",
+        "title": "Future",
+        "status": "open",
+        "priority": "normal",
+        "completed": false,
+        "revision": "synthetic",
+        "properties": {},
+        "body": "",
+        "isRecurring": false,
+        "isBlocked": false,
+        "isBlocking": false,
+        "isPending": false,
+        "occurrenceDate": null,
+        "effectiveDate": "2027-01-01",
+        "agendaDateKind": "planned"
+      }
+    },
+    {
+      "id": "agenda-legacy-row-unchanged",
+      "definition": "task",
+      "valid": true,
+      "value": {
+        "id": "Tasks/legacy.md",
+        "path": "Tasks/legacy.md",
+        "title": "Legacy",
+        "status": "open",
+        "priority": "normal",
+        "completed": false,
+        "revision": "synthetic",
+        "properties": {},
+        "body": "",
+        "isRecurring": false,
+        "isBlocked": false,
+        "isBlocking": false,
+        "isPending": false,
+        "occurrenceDate": null,
+        "effectiveDate": null
+      }
+    },
+    {
+      "id": "agenda-unknown-section",
+      "definition": "task",
+      "valid": false,
+      "value": {
+        "id": "Tasks/a.md",
+        "path": "Tasks/a.md",
+        "title": "Task",
+        "status": "open",
+        "priority": "normal",
+        "completed": false,
+        "revision": "synthetic",
+        "properties": {},
+        "body": "",
+        "isRecurring": false,
+        "isBlocked": false,
+        "isBlocking": false,
+        "isPending": false,
+        "occurrenceDate": null,
+        "effectiveDate": "2026-10-25",
+        "agendaSection": "guess-section",
+        "agendaDateKind": "planned"
+      }
+    },
+    {
+      "id": "agenda-section-type",
+      "definition": "task",
+      "valid": false,
+      "value": {
+        "id": "Tasks/a.md",
+        "path": "Tasks/a.md",
+        "title": "Task",
+        "status": "open",
+        "priority": "normal",
+        "completed": false,
+        "revision": "synthetic",
+        "properties": {},
+        "body": "",
+        "isRecurring": false,
+        "isBlocked": false,
+        "isBlocking": false,
+        "isPending": false,
+        "occurrenceDate": null,
+        "effectiveDate": "2026-10-25",
+        "agendaSection": 7,
+        "agendaDateKind": "planned"
+      }
+    },
+    {
+      "id": "agenda-unknown-date-kind",
+      "definition": "task",
+      "valid": false,
+      "value": {
+        "id": "Tasks/a.md",
+        "path": "Tasks/a.md",
+        "title": "Task",
+        "status": "open",
+        "priority": "normal",
+        "completed": false,
+        "revision": "synthetic",
+        "properties": {},
+        "body": "",
+        "isRecurring": false,
+        "isBlocked": false,
+        "isBlocking": false,
+        "isPending": false,
+        "occurrenceDate": null,
+        "effectiveDate": "2026-10-25",
+        "agendaDateKind": "guess-kind"
+      }
+    },
+    {
+      "id": "agenda-date-kind-type",
+      "definition": "task",
+      "valid": false,
+      "value": {
+        "id": "Tasks/a.md",
+        "path": "Tasks/a.md",
+        "title": "Task",
+        "status": "open",
+        "priority": "normal",
+        "completed": false,
+        "revision": "synthetic",
+        "properties": {},
+        "body": "",
+        "isRecurring": false,
+        "isBlocked": false,
+        "isBlocking": false,
+        "isPending": false,
+        "occurrenceDate": null,
+        "effectiveDate": "2026-10-25",
+        "agendaDateKind": false
+      }
+    }
+  ]
+}

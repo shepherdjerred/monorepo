@@ -994,6 +994,45 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn agenda_contract_cases_exercise_the_real_query_and_typed_row_decoder()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let corpus: Value = serde_json::from_str(include_str!(
+            "../../../../tasknotes-fixtures/vault/facet-agenda-contract.json"
+        ))?;
+        let engine = FfiFacetEngine::new(":memory:", Arc::new(EmptyVault))?;
+        engine.register_profile(
+            r#"{"id":"a","name":"Example","kind":"local_folder","approveStandard":true}"#,
+        )?;
+        engine.refresh("a")?;
+        let cases = corpus["cases"].as_array().ok_or("agenda cases missing")?;
+        assert_eq!(cases.len(), 22);
+        let mut ids = std::collections::BTreeSet::new();
+        for case in cases {
+            assert!(ids.insert(case["id"].as_str().ok_or("agenda case id missing")?));
+            let json = serde_json::to_string(&case["value"])?;
+            let accepted = match case["definition"]
+                .as_str()
+                .ok_or("agenda definition missing")?
+            {
+                "query" => engine.snapshot_json("a", &json).is_ok(),
+                "task" => {
+                    serde_json::from_str::<tasknotes_runtime::types::TaskSnapshot>(&json).is_ok()
+                }
+                other => panic!("unknown agenda definition {other}"),
+            };
+            assert_eq!(
+                accepted,
+                case["valid"]
+                    .as_bool()
+                    .ok_or("agenda expected result missing")?,
+                "{}",
+                case["id"]
+            );
+        }
+        Ok(())
+    }
+
+    #[test]
     fn shared_contract_cases_exercise_the_real_decoder_and_query_seam()
     -> Result<(), Box<dyn std::error::Error>> {
         let corpus: Value = serde_json::from_str(include_str!(

@@ -45,6 +45,9 @@ internal struct FacetNativeSettings: View {
             Section("Feedback") {
                 FacetFeedbackSettings(store: store)
             }
+            #if os(iOS)
+                Section("Display") { FacetAppearanceSettings() }
+            #endif
             Section("Sync and recovery") {
                 Button("Refresh vault", systemImage: "arrow.clockwise") {
                     _Concurrency.Task { await store.refresh() }

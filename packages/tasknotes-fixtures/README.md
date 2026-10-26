@@ -18,6 +18,10 @@ upstream conformance corpus and historical server-backed sync scenarios.
 The standalone engine contract is `schema/facet-engine.schema.json`, with shared
 positive/negative boundary cases in `vault/facet-contract.json`. Occurrence shape
 cases additionally live in `vault/facet-occurrence-contract.json`.
+The separate `vault/facet-agenda-contract.json` corpus covers explicit mobile
+agenda queries, projected date reasons, selected-day filtering, date sorting,
+and rejection of unknown agenda values. Rust exercises its actual query seam
+and typed row decoder; native boundaries validate the same shapes.
 That closed corpus declares every covered definition and unique case identity;
 validators execute every case and reject unknown sections or definitions. It
 covers generation requests, concrete and deferred outcomes, repair actions,

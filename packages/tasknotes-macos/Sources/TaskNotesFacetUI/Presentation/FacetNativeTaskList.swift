@@ -7,12 +7,15 @@ internal struct FacetNativeTaskList: View {
     let snapshot: FacetSnapshot
     let selected: FacetTaskRowID?
     var admitNavigation: (@MainActor () async -> Bool)?
+    var reservesCaptureSpace = false
+    var showsAppliedFeedback = true
     let open: (FacetTask) -> Void
     @State private var admitted: Set<FacetTaskRowID> = []
     @State private var captureDraft = FacetCaptureDraft()
     @State private var deleting: FacetTask?
     @State private var bulkSelection: FacetReviewedSelection?
     @State private var savedViews = false
+    @State private var scheduleTask: FacetTask?
     @Environment(\.accessibilityReduceMotion) private var reducedMotion
     @Environment(\.facetFeedbackOrigin) private var feedbackOrigin
 
@@ -45,7 +48,7 @@ internal struct FacetNativeTaskList: View {
                         _Concurrency.Task { await store.undoLast(profileID: snapshot.profileId) }
                     }
                 #endif
-                if window.selectedTaskIDs.count > 1 {
+                if desktop && window.selectedTaskIDs.count > 1 {
                     Button("Actions for \(window.selectedTaskIDs.count) tasks") {
                         bulkSelection = FacetReviewedSelection(
                             store: store, window: window, snapshot: snapshot)
@@ -54,7 +57,19 @@ internal struct FacetNativeTaskList: View {
             }
         }
         .safeAreaInset(edge: .bottom) {
-            FacetAppliedFeedbackView(store: store, profileID: snapshot.profileId)
+            VStack(spacing: 0) {
+                #if os(iOS)
+                    if window.isSelecting {
+                        FacetMobileSelectionBar(window: window) {
+                            bulkSelection = FacetReviewedSelection(
+                                store: store, window: window, snapshot: snapshot)
+                        }
+                    }
+                #endif
+                if showsAppliedFeedback {
+                    FacetAppliedFeedbackView(store: store, profileID: snapshot.profileId)
+                }
+            }
         }
         .sheet(item: $bulkSelection) { selection in
             FacetBulkForm(
@@ -67,6 +82,14 @@ internal struct FacetNativeTaskList: View {
                 store: store, profileID: snapshot.profileId, board: $window.board, window: window,
                 admitNavigation: admitNavigation)
         }
+        #if os(iOS)
+            .sheet(item: $scheduleTask) { task in
+                FacetScheduleSheet(
+                    store: store, task: task, profileID: snapshot.profileId,
+                    initialField: task.agendaDateKind == "deadline" ? .due : .scheduled,
+                    applied: { _Concurrency.Task { await window.reload(store: store) } })
+            }
+        #endif
     }
 
     private var list: some View {
@@ -83,11 +106,14 @@ internal struct FacetNativeTaskList: View {
                 taskRows(snapshot.tasks)
             } else {
                 ForEach(Array(snapshot.groups.enumerated()), id: \.offset) { _, group in
-                    Section(group.key.isEmpty ? "No date" : group.key) {
+                    Section {
                         taskRows(
                             FacetTaskGroupPresentation.tasks(
                                 snapshot.tasks, in: group,
                                 groupBy: window.displayedQuery?.object?.fields["groupBy"]?.text))
+                    } header: {
+                        Text(groupHeading(group.key)).accessibilityIdentifier(
+                            "facet.group.\(group.key)")
                     }
                 }
             }
@@ -114,6 +140,11 @@ internal struct FacetNativeTaskList: View {
             .listStyle(.inset)
         #else
             .listStyle(.plain)
+            .contentMargins(
+                .bottom,
+                reservesCaptureSpace && !window.isSelecting
+                    ? FacetNativeStyle.mobileListBottomMargin : 0,
+                for: .scrollContent)
         #endif
     }
 
@@ -121,11 +152,16 @@ internal struct FacetNativeTaskList: View {
         ForEach(tasks, id: \.rowID) { task in
             row(task).tag(task.rowID)
                 .swipeActions(edge: .trailing) {
-                    Button("Delete", role: .destructive) { deleting = task }
-                    Button("Schedule") { open(task) }.tint(.orange)
+                    if !window.isSelecting {
+                        Button("Delete", role: .destructive) { deleting = task }.tint(.red)
+                        Button("Schedule") { schedule(task) }.tint(.orange)
+                    }
                 }
                 .swipeActions(edge: .leading) {
-                    Button(task.completed ? "Uncomplete" : "Complete") { toggle(task) }.tint(.green)
+                    if !window.isSelecting {
+                        Button(task.completed ? "Uncomplete" : "Complete") { toggle(task) }.tint(
+                            .green)
+                    }
                 }
         }
     }
@@ -134,7 +170,7 @@ internal struct FacetNativeTaskList: View {
         Binding(
             get: { window.selectedTaskIDs },
             set: { ids in
-                if ids.count == 1, let id = ids.first,
+                if !window.isSelecting, ids.count == 1, let id = ids.first,
                     let task = snapshot.tasks.first(where: { $0.rowID == id })
                 {
                     open(task)
@@ -148,14 +184,8 @@ internal struct FacetNativeTaskList: View {
             try FacetTaskPresentation(task: task, configuration: snapshot.configuration)
         }) {
         case .success(let presentation):
-            FacetTaskRow(
-                task: task, presentation: presentation, desktop: desktop, stacked: stacked,
-                completionReceipt: completionReceipt(for: task),
-                complete: { toggle(task) }, open: { open(task) }, schedule: { open(task) },
-                delete: { deleting = task }
-            )
-            .disabled(admitted.contains(task.rowID))
-            .onTapGesture { open(task) }
+            presentedRow(task, presentation: presentation, stacked: stacked)
+                .disabled(admitted.contains(task.rowID))
             if let diagnostic = presentation.priority.colorDiagnostic
                 ?? presentation.status.colorDiagnostic
             {
@@ -179,6 +209,7 @@ internal struct FacetNativeTaskList: View {
             }
         }
     }
+
     private var board: some View {
         ScrollView(.horizontal) {
             HStack(alignment: .top, spacing: 16) {
@@ -227,6 +258,61 @@ internal struct FacetNativeTaskList: View {
 }
 
 extension FacetNativeTaskList {
+    @ViewBuilder private func presentedRow(
+        _ task: FacetTask, presentation: FacetTaskPresentation, stacked: Bool
+    ) -> some View {
+        #if os(iOS)
+            if window.isSelecting {
+                FacetMobileSelectionRow(
+                    task: task, presentation: presentation,
+                    selected: window.selectedTaskIDs.contains(task.rowID)
+                ) {
+                    if !window.selectedTaskIDs.insert(task.rowID).inserted {
+                        window.selectedTaskIDs.remove(task.rowID)
+                    }
+                }
+            } else {
+                standardRow(task, presentation: presentation, stacked: stacked)
+            }
+        #else
+            standardRow(task, presentation: presentation, stacked: stacked)
+        #endif
+    }
+
+    private func standardRow(_ task: FacetTask, presentation: FacetTaskPresentation, stacked: Bool)
+        -> some View
+    {
+        FacetTaskRow(
+            task: task, presentation: presentation, desktop: desktop, stacked: stacked,
+            completionReceipt: completionReceipt(for: task),
+            viewerCalendar: store.clock.viewerCalendar(),
+            complete: { toggle(task) }, open: { open(task) }, schedule: { schedule(task) },
+            delete: { deleting = task }
+        )
+        .onTapGesture { open(task) }
+    }
+
+    private func groupHeading(_ key: String) -> String {
+        #if os(iOS)
+            let grouping = window.displayedQuery?.object?.fields["groupBy"]?.text
+            if grouping == "effectiveDate" || grouping == "agendaSection" {
+                let viewer = store.clock.viewerCalendar()
+                return FacetMobileDateText.heading(
+                    key, today: viewer.today, timeZone: viewer.timeZone)
+            }
+            return key.isEmpty ? "None" : key
+        #else
+            return key.isEmpty ? "No date" : key
+        #endif
+    }
+
+    private func schedule(_ task: FacetTask) {
+        #if os(iOS)
+            scheduleTask = task
+        #else
+            open(task)
+        #endif
+    }
     private func acceptDrop(_ items: [FacetBoardDragItem], status: String) -> Bool {
         guard items.count == 1, let item = items.first, let task = item.task(in: snapshot),
             task.status != status, store.selectedProfileID == snapshot.profileId,

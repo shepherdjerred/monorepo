@@ -10,6 +10,26 @@ No TaskNotes server is required. `tasks-for-obsidian` remains the workspace name
 First-party code is GPL-3.0-only. The native bundle contains the exact repository
 [license text](../../LICENSE) and separate notices for its locked dependencies.
 
+The mobile interface keeps the Inbox, Today, Upcoming and Browse tabs. Today
+includes overdue work; Upcoming retains future tasks beyond the visible week.
+Search opens a separate vault-wide task list. Lists offer configuration-aware
+filters, sorting and task selection, and saved views have their own editable
+queries, names, symbols, colors and favorites.
+
+Quick Add from Today, a selected Upcoming day or a project carries that context
+and its owning vault into the capture sheet. Rust combines the context with
+recognized input; explicit chip removals and form edits remain authoritative.
+Submission freezes the vault, context, clock and action identity, so a retry does
+not redirect the capture or reinterpret its date. Row scheduling offers native
+calendar selection and Today, Tomorrow, This weekend and Next week shortcuts;
+the shortcuts resolve through Rust against one viewer day. The native calendar
+does not display the former calendar's task-density markers.
+
+Settings offers System, Light and Dark appearance for iOS. This device-local
+choice persists across launches; invalid stored choices require an explicit
+replacement. It does not migrate the former React Native app's AsyncStorage
+preferences. Time tracking, Pomodoro and duration estimates are not supported.
+
 The registered app identity, App Group, widget extension and task App Intents are preserved. Vault credentials live in Keychain;
 the App Group contains only bounded widget snapshots and action requests.
 The shared runtime owns task interpretation, queries, durable mutations,
@@ -248,6 +268,17 @@ three-Markdown-file gate remain unchanged and required separately.
 Both local runners retain file-backed command logs and enforce deadlines on
 actual command exit, including XCTest startup and simulator cleanup. Output
 descriptors inherited by another process cannot extend the command's lifetime.
+
+`bun scripts/ios-parity-acceptance.ts` runs a separate three-stage mobile journey
+on one newly created simulator. It checks Today sections, tasks fourteen days
+ahead, vault-wide metadata search, contextual capture and quick scheduling across
+cold launches, touch selection, filters, sorting and saved-view editing. Its
+synthetic vault uses the actual viewer day and timezone; a change during the run
+fails acceptance. Each stage retains app-only screenshots and verifies the
+persisted Markdown, configuration, reference and attachment bytes. The existing
+two-case local journey and its original preservation gate remain separate and
+required. These local journeys do not establish live Sync or physical-device
+audio and haptic acceptance.
 
 Shared schema positive, negative,
 and raw numeric fixtures run at both Apple and Android boundaries. Retain

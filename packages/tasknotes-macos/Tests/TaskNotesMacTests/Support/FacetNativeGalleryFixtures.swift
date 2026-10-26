@@ -151,6 +151,13 @@ struct FacetNativeGalleryFixture {
         if state == .browse { window.scope = "browse" }
         window.board = state == .board
         window.search = state == .search ? "release" : ""
+        #if os(iOS)
+            window.mobilePresentation = true
+            if state == .search {
+                window.scope = "all"
+                window.showCompleted = true
+            }
+        #endif
         window.vocabulary = FacetWindowState.vocabulary(store.snapshot?.tasks ?? [])
         window.displayedQuery = try window.query()
         if state == .failedAction {
@@ -287,11 +294,27 @@ struct FacetNativeGalleryScene: View {
                 folderAction: "Import vault copy…", sheets: FacetSheetPresentation())
         case .signIn, .verification, .vaultSelection:
             FacetAccountForm(store: fixture.store)
-        case .inbox, .today, .upcoming, .empty, .search, .board, .browse, .connected, .offline:
+        case .inbox, .today, .upcoming, .empty, .board, .browse, .connected, .offline:
             FacetNativeWorkspace(
                 store: fixture.store, importsFolder: .constant(false),
                 capturePresented: .constant(false), sheets: FacetSheetPresentation(),
                 window: fixture.window)
+        case .search:
+            #if os(iOS)
+                NavigationStack {
+                    FacetMobileTaskScreen(
+                        store: fixture.store, scope: "all", globalSearch: true,
+                        initialWindow: fixture.window
+                    )
+                    .navigationTitle("Search")
+                    .navigationBarTitleDisplayMode(.inline)
+                }
+            #else
+                FacetNativeWorkspace(
+                    store: fixture.store, importsFolder: .constant(false),
+                    capturePresented: .constant(false), sheets: FacetSheetPresentation(),
+                    window: fixture.window)
+            #endif
         case .savedViews:
             FacetSavedViewsForm(
                 store: fixture.store, profileID: FacetSurfaceFixtures.profileID,
