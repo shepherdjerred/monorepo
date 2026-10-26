@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { cp, mkdir, readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
+import { isMacSessionPreflightFailure } from "./apple-acceptance/mac-session.ts";
 import {
   acceptanceStages,
   executeAcceptanceStages,
@@ -277,7 +278,11 @@ export async function runAcceptanceUiTests(
     JSON.stringify(
       {
         ...receipt,
-        status: failures.length > 0 ? "failed" : "passed",
+        status: failures.some(isMacSessionPreflightFailure)
+          ? "blocked"
+          : failures.length > 0
+            ? "failed"
+            : "passed",
       },
       null,
       2,

@@ -1,11 +1,12 @@
 //! Bounded failure rows plus one canonical cached relation catalog per snapshot.
 //! The catalog scan is metadata-only and is not bounded by the page row limit.
 use super::{Engine, Mutation, Result, RuntimeError, occurrence_relations::Index};
-use crate::{features::GenerationCursor, types::Command};
+use crate::{commands::occurrence_transitions::Fence, features::GenerationCursor, types::Command};
 use rusqlite::{Connection, OptionalExtension, params};
 use serde::Serialize;
 use serde_json::{Map, Value, json};
 use sha2::{Digest, Sha256};
+use std::collections::{BTreeMap, BTreeSet, btree_map::Entry};
 
 #[derive(Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -133,7 +134,50 @@ fn action(
     }
 }
 
-fn row(db: &Connection, profile: &str, id: &str, occurrences: &Index) -> Result<Option<Value>> {
+struct SourceTasks {
+    paths: Vec<String>,
+    ambiguous: bool,
+}
+
+/// Resolve source occurrence identities in the current cached catalog. Historical
+/// result paths validate deferred provenance; they never select current tasks.
+fn source_tasks(fences: &[Fence], item: &Value, occurrences: &Index) -> Result<SourceTasks> {
+    let parent = item["parentPath"].as_str().ok_or_else(corrupt)?;
+    let deferred = item["kind"] == "deferred_progression";
+    let mut matched = false;
+    let mut paths = BTreeSet::new();
+    let mut ambiguous = false;
+    for fence in fences {
+        if fence.parent_result_path != parent
+            || deferred
+                && (item["completedOccurrenceDate"].as_str()
+                    != Some(fence.occurrence_date.as_str())
+                    || item["childPath"].as_str() != Some(fence.result_path.as_str()))
+        {
+            continue;
+        }
+        matched = true;
+        ambiguous |= occurrences.ambiguous(parent, &fence.occurrence_date);
+        if let Some(path) = occurrences.unique_child(parent, &fence.occurrence_date) {
+            paths.insert(path.to_owned());
+        }
+    }
+    if !matched {
+        return Err(corrupt());
+    }
+    Ok(SourceTasks {
+        paths: paths.into_iter().collect(),
+        ambiguous,
+    })
+}
+
+fn row(
+    db: &Connection,
+    profile: &str,
+    id: &str,
+    occurrences: &Index,
+    primary_fences: &mut BTreeMap<String, Vec<Fence>>,
+) -> Result<Option<Value>> {
     let concrete:Option<(String,String,String,Option<String>)>=db.query_row("SELECT primary_id,intent,state,failure FROM occurrence_successors WHERE profile=? AND id=?",params![profile,id],|row|Ok((row.get(0)?,row.get(1)?,row.get(2)?,row.get(3)?))).optional()?;
     let (primary, item) = if let Some((primary, intent, state, failure)) = concrete {
         let mutation: Mutation = serde_json::from_str(&intent).map_err(|_| corrupt())?;
@@ -160,9 +204,22 @@ fn row(db: &Connection, profile: &str, id: &str, occurrences: &Index) -> Result<
         let item = super::deferred_progressions::render_outcome(db, profile, id, &raw, &state)?;
         (primary, item)
     };
-    let action = action(db, profile, id, &item, occurrences)?;
+    let fences = match primary_fences.entry(primary.clone()) {
+        Entry::Vacant(entry) => {
+            entry.insert(super::occurrence_transitions::load(db, profile, &primary)?)
+        }
+        Entry::Occupied(entry) => entry.into_mut(),
+    };
+    let sources = source_tasks(fences, &item, occurrences)?;
+    let action = if sources.ambiguous {
+        Action::Unrepairable {
+            reason: Unrepairable::ChangedOrAmbiguousIdentity,
+        }
+    } else {
+        action(db, profile, id, &item, occurrences)?
+    };
     Ok(Some(
-        json!({"primaryMutationId":primary,"item":item,"action":action}),
+        json!({"primaryMutationId":primary,"item":item,"action":action,"sourceTaskPaths":sources.paths}),
     ))
 }
 
@@ -199,7 +256,8 @@ impl Engine {
             let more=ids.len()>usize::try_from(limit).map_err(|_|corrupt())?;if more{ids.pop();}drop(query);
             let config:Value=serde_json::from_str(&configuration)?;
             let occurrences=Index::read(&tx,profile,&config)?;
-            let mut items=Vec::new();for id in &ids {if let Some(item)=row(&tx,profile,id,&occurrences)?{items.push(item);}}
+            let mut primary_fences=BTreeMap::new();
+            let mut items=Vec::new();for id in &ids {if let Some(item)=row(&tx,profile,id,&occurrences,&mut primary_fences)?{items.push(item);}}
             let cursor=if more {let last=ids.last().ok_or_else(corrupt)?;Some(GenerationCursor{last_id:last.clone(),version,binding:binding(profile,version,&configuration,last)?})}else{None};
             Ok(json!({"schemaVersion":1,"profileId":profile,"version":version,"inspectedCount":ids.len(),"items":items,"nextCursor":cursor}))
         })

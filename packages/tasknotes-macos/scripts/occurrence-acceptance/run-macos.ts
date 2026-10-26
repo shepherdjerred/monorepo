@@ -11,6 +11,7 @@ import {
   createMacAcceptanceState,
   macAcceptanceTestRun,
   recordMacAcceptanceOutcome,
+  runMacAcceptanceCase,
   retainMacAcceptanceEvidence,
 } from "../apple-acceptance/mac-journey.ts";
 import {
@@ -106,25 +107,10 @@ export async function runMacOccurrenceAcceptance(): Promise<void> {
   );
   const failures: unknown[] = [];
   try {
-    await command([
-      "xcodebuild",
-      "test-without-building",
-      "-xctestrun",
-      testRun,
-      "-destination",
-      "platform=macOS",
-      "-parallel-testing-enabled",
-      "NO",
-      "-resultBundlePath",
-      result,
-      "-collect-test-diagnostics",
-      "never",
-      "-test-timeouts-enabled",
-      "YES",
-      "-maximum-test-execution-time-allowance",
-      "180",
-      `-only-testing:${selector}`,
-    ]);
+    await runMacAcceptanceCase(
+      { evidence, testRun, result, selector, maximumSeconds: 180 },
+      command,
+    );
     const reports = await readAcceptanceResultReports(
       result,
       {

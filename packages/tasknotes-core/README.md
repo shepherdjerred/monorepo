@@ -380,6 +380,24 @@ Two cached feature queries support host maintenance and restart recovery:
   typed repair command with fresh cached revisions or an explicit unrepairable
   identity/state reason. Supporting canonical relation discovery scans cached
   role metadata across the profile; that catalog work is not bounded by page size.
+  Each current failure wrapper also emits `sourceTaskPaths`: sorted unique current
+  child paths, bounded by the existing 1,000-command atomic batch limit. The field
+  is optional in the neutral schema for older responses. An explicit empty array
+  is authoritative; hosts must not substitute historical child paths. Validated
+  primary transition fences supply source occurrence days, and the cached Rust
+  relation catalog resolves their current children. Concrete failures include
+  sources from the same primary action and canonical series; deferred failures
+  select their specific captured source identity. A deleted source contributes
+  no path, and an ambiguous source produces the typed
+  `changed_or_ambiguous_identity` action without guessing a child. Missing or
+  corrupt durable provenance is a storage error. This association follows child
+  renames and excludes ordinary tasks reusing historical paths. Its domain
+  identity remains canonical parent path plus source occurrence day; it does not
+  distinguish replacement notes recreating that exact identity as separate
+  historical objects. No mandatory persistent task UID or migration is introduced.
+  Additive response cases live in
+  `tasknotes-fixtures/vault/facet-generation-sources-contract.json`; the original
+  standalone and occurrence corpora remain unchanged.
 
 Both queries run within one SQLite read snapshot with no provider I/O, recovery,
 body reads or writes. Their closed keyset cursors bind the profile, last row,

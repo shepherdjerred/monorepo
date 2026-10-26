@@ -86,18 +86,9 @@ internal struct FacetAppliedFeedbackView: View {
             available = nil
             guard let feedback = current else { return }
             AccessibilityNotification.Announcement(feedback.message).post()
-            guard
-                let value = await store.readFeature(
-                    ["kind": .string("undo_available")], profileID: profileID)
-            else { return }
-            do {
-                let result = try FacetFeatureProjection.decode(FacetUndoAvailable.self, from: value)
-                if result.canUndo, result.receiptId == feedback.mutationID,
-                    store.appliedFeedback == feedback
-                {
-                    available = feedback
-                }
-            } catch { store.reportNativeFailure(error) }
+            if await store.feedbackUndoAvailable(for: feedback), store.appliedFeedback == feedback {
+                available = feedback
+            }
         }
         .task(id: TimerIdentity(feedback: current, paused: paused)) {
             guard let feedback = current else { return }

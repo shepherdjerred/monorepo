@@ -25,7 +25,7 @@ internal struct FacetOccurrenceGenerationSection: View {
     }
     private var failures: [FacetGenerationFailure] {
         store.occurrenceOverviews[profileID]?.failures.filter {
-            $0.item.parentPath == task.path || $0.item.childPath == task.path
+            $0.applies(toTaskPath: task.path)
         } ?? []
     }
     private var problem: FacetOccurrenceProblem? {

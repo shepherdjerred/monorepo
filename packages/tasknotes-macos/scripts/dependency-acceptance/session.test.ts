@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { validateMacSession } from "./session.ts";
+import { validateMacSession } from "../apple-acceptance/mac-session.ts";
 
 test("only an unlocked on-console Mac passes the native boundary", () => {
   expect(() =>

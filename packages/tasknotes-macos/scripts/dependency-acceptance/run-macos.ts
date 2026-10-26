@@ -10,6 +10,7 @@ import {
   createMacAcceptanceState,
   macAcceptanceTestRun,
   recordMacAcceptanceOutcome,
+  runMacAcceptanceCase,
   retainMacAcceptanceEvidence,
 } from "../apple-acceptance/mac-journey.ts";
 import {
@@ -23,7 +24,6 @@ import {
   seedDependencyVault,
   verifyDependencyVault,
 } from "./fixture.ts";
-import { requireUnlockedMac } from "./session.ts";
 
 export async function runMacDependencyAcceptance(): Promise<void> {
   assert.equal(process.platform, "darwin");
@@ -95,26 +95,16 @@ export async function runMacDependencyAcceptance(): Promise<void> {
   );
   const failures: unknown[] = [];
   try {
-    await requireUnlockedMac(evidence, command);
-    await command([
-      "xcodebuild",
-      "test-without-building",
-      "-xctestrun",
-      testRun,
-      "-destination",
-      "platform=macOS",
-      "-parallel-testing-enabled",
-      "NO",
-      "-resultBundlePath",
-      result,
-      "-collect-test-diagnostics",
-      "never",
-      "-test-timeouts-enabled",
-      "YES",
-      "-maximum-test-execution-time-allowance",
-      "120",
-      `-only-testing:${receipt.selector}`,
-    ]);
+    await runMacAcceptanceCase(
+      {
+        evidence,
+        testRun,
+        result,
+        selector: receipt.selector,
+        maximumSeconds: 120,
+      },
+      command,
+    );
     const reports = await readAcceptanceResultReports(
       result,
       {

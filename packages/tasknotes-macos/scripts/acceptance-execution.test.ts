@@ -43,6 +43,8 @@ function fakeCommand(
   },
 ): AcceptanceCommand {
   return async (argv) => {
+    if (argv[0] === "xcrun" && argv[1] === "swift")
+      return JSON.stringify({ onConsole: true, locked: false });
     const stage = stages.find((entry) => argv.includes(entry.resultBundle));
     if (!stage) throw new Error("Command must target a planned private result");
     const index = stages.indexOf(stage);
@@ -87,6 +89,68 @@ function fakeCommand(
 }
 
 describe("fail-fast native process orchestration", () => {
+  test("rechecks session before every native invocation and blocks a later locked checkpoint", async () => {
+    const stages = await plan();
+    const launches: string[] = [];
+    const delegate = fakeCommand(stages, launches);
+    let checks = 0;
+    const order: string[] = [];
+    const command: AcceptanceCommand = async (argv, capture) => {
+      if (argv[0] === "xcrun" && argv[1] === "swift") {
+        checks++;
+        order.push("preflight");
+        return JSON.stringify({ onConsole: true, locked: checks === 3 });
+      }
+      if (argv[0] === "xcodebuild") order.push("native");
+      return delegate(argv, capture);
+    };
+    await expect(
+      executeAcceptanceStages(stages, "owned.xctestrun", command),
+    ).rejects.toThrow("Native preflight blocked before");
+    expect(order).toEqual([
+      "preflight",
+      "native",
+      "preflight",
+      "native",
+      "preflight",
+    ]);
+    expect(launches).toEqual(stages.slice(0, 2).map((stage) => stage.selector));
+    for (const stage of stages.slice(0, 2))
+      expect(await receipt(stage)).toMatchObject({ status: "passed" });
+    expect(await receipt(stages[2])).toMatchObject({
+      status: "blocked",
+      phase: "preflight",
+      nativeTestStarted: false,
+    });
+    expect(await Bun.file(`${stages[2]?.receipt}.summary.json`).exists()).toBe(
+      false,
+    );
+    expect(
+      await Bun.file(`${stages[2]?.receipt}.session-preflight.json`).json(),
+    ).toEqual({
+      onConsole: true,
+      locked: true,
+    });
+    for (const stage of stages.slice(3))
+      expect(await Bun.file(stage.receipt).exists()).toBe(false);
+  });
+
+  test("off-console first preflight launches no native test or result reads", async () => {
+    const stages = await plan();
+    const commands: string[][] = [];
+    await expect(
+      executeAcceptanceStages(stages, "owned.xctestrun", async (argv) => {
+        commands.push(argv);
+        return JSON.stringify({ onConsole: false, locked: false });
+      }),
+    ).rejects.toThrow("Native preflight blocked before");
+    expect(commands).toHaveLength(1);
+    expect(commands[0]?.slice(0, 3)).toEqual(["xcrun", "swift", "-e"]);
+    expect(await receipt(stages[0])).toMatchObject({
+      status: "blocked",
+      nativeTestStarted: false,
+    });
+  });
   test("same-bundle report reads never overlap across smoke and all workflows", async () => {
     const stages = await plan();
     const launches: string[] = [];
@@ -94,7 +158,8 @@ describe("fail-fast native process orchestration", () => {
     const activeBundles = new Set<string>();
     const reads: string[] = [];
     const command: AcceptanceCommand = async (argv, capture) => {
-      if (argv[0] === "xcodebuild") return delegate(argv, capture);
+      if (argv[0] === "xcodebuild" || argv[1] === "swift")
+        return delegate(argv, capture);
       const bundle = argv.at(-1);
       assert.ok(bundle);
       if (activeBundles.has(bundle))

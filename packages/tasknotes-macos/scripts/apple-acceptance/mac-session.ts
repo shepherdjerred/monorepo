@@ -1,5 +1,22 @@
 import assert from "node:assert/strict";
-import path from "node:path";
+
+export class MacSessionPreflightError extends Error {
+  constructor(cause: unknown) {
+    super(
+      "Mac native preflight did not establish an unlocked on-console session",
+      { cause },
+    );
+    this.name = "MacSessionPreflightError";
+  }
+}
+
+export function isMacSessionPreflightFailure(error: unknown): boolean {
+  return (
+    error instanceof MacSessionPreflightError ||
+    (error instanceof AggregateError &&
+      error.errors.some(isMacSessionPreflightFailure))
+  );
+}
 
 export function validateMacSession(value: unknown): void {
   assert.ok(
@@ -18,9 +35,9 @@ export function validateMacSession(value: unknown): void {
   );
 }
 
-/** Same session predicate as the account driver's requireUnlockedSession. */
+/** One retained readiness observation immediately before each native invocation. */
 export async function requireUnlockedMac(
-  evidence: string,
+  destination: string,
   command: (argv: string[], capture?: boolean) => Promise<string>,
 ): Promise<void> {
   const source = `import ApplicationServices
@@ -30,12 +47,13 @@ let flags = ["onConsole": session["kCGSSessionOnConsoleKey"] as? Bool == true,
              "locked": session["CGSSessionScreenIsLocked"] as? Bool == true]
 let data = try JSONSerialization.data(withJSONObject: flags, options: [.sortedKeys])
 print(String(decoding: data, as: UTF8.self))`;
-  const value: unknown = JSON.parse(
-    await command(["xcrun", "swift", "-e", source], true),
-  );
-  await Bun.write(
-    path.join(evidence, "session-preflight.json"),
-    JSON.stringify(value, null, 2),
-  );
-  validateMacSession(value);
+  try {
+    const value: unknown = JSON.parse(
+      await command(["xcrun", "swift", "-e", source], true),
+    );
+    await Bun.write(destination, JSON.stringify(value, null, 2));
+    validateMacSession(value);
+  } catch (error) {
+    throw new MacSessionPreflightError(error);
+  }
 }
