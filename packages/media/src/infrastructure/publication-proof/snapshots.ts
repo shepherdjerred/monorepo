@@ -1,32 +1,12 @@
 import { createHash } from "node:crypto";
-import type { Prisma } from "#generated/prisma/client.ts";
+import type { Prisma, SubtitleAsset } from "#generated/prisma/client.ts";
 import { videoSubtitleWhere } from "#automation/files/subtitle-lifecycle/ownership.ts";
 import { PublicationAssetSnapshotSchema } from "#shared/publication-proof/intent.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 
-/** Exact DB counterpart of a physical observation; never supplies filesystem identity. */
-export async function snapshotPublicationAsset(
-  tx: Prisma.TransactionClient,
-  assetId: string,
-) {
-  const asset = await tx.libraryAsset.findUniqueOrThrow({
-    where: { id: assetId },
-    include: { coverage: { orderBy: { mediaId: "asc" } } },
-  });
-  const subtitles = await tx.subtitleAsset.findMany({
-    where: { assetId },
-    orderBy: { id: "asc" },
-  });
-  const physical = await tx.subtitleAsset.findMany({
-    where: {
-      assetId,
-      state: { in: ["installed", "superseded"] },
-      AND: [videoSubtitleWhere],
-    },
-    select: { id: true },
-  });
-  const physicalIds = new Set(physical.map((row) => row.id));
-  const snapshots = subtitles.map((row) => ({
+/** Same literal subtitle projection in both publication snapshot versions. */
+export function publicationSubtitleSnapshot(row: SubtitleAsset) {
+  return {
     id: row.id,
     assetId: row.assetId,
     version: row.version,
@@ -50,7 +30,32 @@ export async function snapshotPublicationAsset(
       row.content === null
         ? null
         : createHash("sha256").update(row.content).digest("hex"),
-  }));
+  };
+}
+
+/** Exact DB counterpart of a physical observation; never supplies filesystem identity. */
+export async function snapshotPublicationAsset(
+  tx: Prisma.TransactionClient,
+  assetId: string,
+) {
+  const asset = await tx.libraryAsset.findUniqueOrThrow({
+    where: { id: assetId },
+    include: { coverage: { orderBy: { mediaId: "asc" } } },
+  });
+  const subtitles = await tx.subtitleAsset.findMany({
+    where: { assetId },
+    orderBy: { id: "asc" },
+  });
+  const physical = await tx.subtitleAsset.findMany({
+    where: {
+      assetId,
+      state: { in: ["installed", "superseded"] },
+      AND: [videoSubtitleWhere],
+    },
+    select: { id: true },
+  });
+  const physicalIds = new Set(physical.map((row) => row.id));
+  const snapshots = subtitles.map((row) => publicationSubtitleSnapshot(row));
   return PublicationAssetSnapshotSchema.parse({
     id: asset.id,
     version: asset.version,

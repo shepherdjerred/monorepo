@@ -1,5 +1,5 @@
 import type { FileContext } from "#automation/files/types.ts";
-import type { PublicationIntentRef } from "#shared/publication-proof/intent.ts";
+import type { PublicationIOIntentRef } from "#shared/publication-proof/io.ts";
 import type { PublicationEffect } from "#shared/publication-proof/effects.ts";
 import { FileOperationConflict } from "#filesystem/operations-types.ts";
 import { PublicationEffectState } from "./effect-state.ts";
@@ -9,7 +9,7 @@ import { publicationInverse, type InverseAction } from "./inverse.ts";
 /** Replays only actual durable events. It never upgrades these JSON values into a ContentProof. */
 export function replayPublication(
   context: FileContext,
-  intent: PublicationIntentRef,
+  intent: PublicationIOIntentRef,
   records: readonly PublicationEffect[],
   inverse?: { continuationId: string | null },
 ) {

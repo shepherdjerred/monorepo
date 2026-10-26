@@ -21,7 +21,7 @@ import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import type { ContentProof } from "#filesystem/content-proof.ts";
 import { assertPublicationJournalIdentity } from "#filesystem/publication-proof/journal.ts";
-import type { PublicationIntent } from "#shared/publication-proof/intent.ts";
+import type { PublicationIOIntent } from "#shared/publication-proof/io.ts";
 
 export type PreparedSubtitleLineages = Awaited<
   ReturnType<typeof preparePublicationSubtitleLineages>
@@ -32,7 +32,7 @@ export type PublicationDependencies = {
 };
 
 export function recordedSubtitleDependencies(
-  intent: PublicationIntent,
+  intent: PublicationIOIntent,
 ): PublicationDependencies {
   const references: ContentReference[] = [];
   const operations = [];
@@ -57,7 +57,7 @@ export function recordedSubtitleDependencies(
 export async function assertRecordedSubtitleDependencies(
   context: FileContext,
   content: ContentProof,
-  intent: PublicationIntent,
+  intent: PublicationIOIntent,
 ) {
   for (const entry of intent.entries) {
     const evidence = entry.subtitleEvidence;

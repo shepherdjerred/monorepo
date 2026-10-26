@@ -4,6 +4,10 @@ import {
   advanceSubtitleBindings,
 } from "./subtitle-lifecycle/ownership.ts";
 import { z } from "zod";
+import {
+  MovieEditionScopeSchema,
+  type MovieEditionScope,
+} from "#shared/movie-editions/registry.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";
@@ -237,14 +241,26 @@ async function assertPrevious(
   }
 }
 
-async function commitPublication(input: {
+export async function commitPublication(input: {
   tx: Transaction;
   entry: FilePlanEntry;
   context: FileContext;
   torrentId: string | null;
   recoveryEpoch: number;
+  movieScope?: MovieEditionScope;
 }): Promise<void> {
   const { tx, entry, torrentId } = input;
+  const scope =
+    input.movieScope === undefined
+      ? undefined
+      : MovieEditionScopeSchema.parse(input.movieScope);
+  if (
+    scope !== undefined &&
+    (entry.libraryKind !== "movies" ||
+      entry.mediaIds.length !== 1 ||
+      entry.mediaIds[0] !== scope.mediaId)
+  )
+    throw new FileGuardError("movie_publication_scope_changed");
   if (
     (await tx.libraryAsset.findUnique({ where: { id: entry.assetId } })) !==
     null
@@ -297,8 +313,9 @@ async function commitPublication(input: {
   await tx.libraryAsset.create({
     data: {
       id: entry.assetId,
-      edition: "default",
-      editionRootId: await defaultPhysicalRoot(tx, entry.mediaIds),
+      edition: scope?.edition ?? "default",
+      editionRootId:
+        scope?.rootMediaId ?? (await defaultPhysicalRoot(tx, entry.mediaIds)),
       path: storedFilePath(
         input.context,
         entry.libraryKind,
@@ -325,14 +342,28 @@ async function commitPublication(input: {
   });
   await tx.mediaItem.updateMany({
     where: { id: { in: entry.mediaIds } },
-    data: { availability: "importing", version: { increment: 1 } },
+    data: {
+      ...(scope === undefined || scope.edition === "default"
+        ? { availability: "importing" as const }
+        : {}),
+      version: { increment: 1 },
+    },
   });
-  await mirrorDefaultAvailability(tx, entry.mediaIds, "importing");
+  if (scope === undefined)
+    await mirrorDefaultAvailability(tx, entry.mediaIds, "importing");
+  else
+    await tx.mediaIntent.update({
+      where: {
+        mediaId_edition: { mediaId: scope.mediaId, edition: scope.edition },
+      },
+      data: { availability: "importing" },
+    });
   await tx.applicationEvent.createMany({
     data: entry.mediaIds.map((mediaId) => ({
       mediaId,
       kind: "files_published",
       payload: {
+        ...(scope === undefined ? {} : { schemaVersion: 4, scope }),
         assetId: entry.assetId,
         previousAssetId: entry.previousAssetId,
       },

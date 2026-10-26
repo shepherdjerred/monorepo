@@ -5,6 +5,7 @@ import {
   type PublicationAuthorityReference,
 } from "#shared/publication-proof/references.ts";
 import type { PublicationAssetSnapshot } from "#shared/publication-proof/intent.ts";
+import type { MoviePublicationAssetV2 } from "#shared/movie-editions/publication-v2.ts";
 import { assertPriorNativeBinding } from "#infrastructure/native-archive/prior-binding.ts";
 import { compensationRecord } from "#infrastructure/native-compensation/records.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
@@ -22,8 +23,8 @@ import { assertRecordedCaptionLineage } from "./caption-authority.ts";
 
 /** Only write-once ordinary verified-publication timestamps may follow the physical commit. */
 export function assertPublicationSnapshotSuccessor(
-  before: PublicationAssetSnapshot,
-  current: PublicationAssetSnapshot,
+  before: PublicationAssetSnapshot | MoviePublicationAssetV2,
+  current: PublicationAssetSnapshot | MoviePublicationAssetV2,
 ): void {
   const expected = {
     ...before,

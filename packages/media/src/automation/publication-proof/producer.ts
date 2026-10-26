@@ -28,8 +28,14 @@ import {
   withPublicationPaths,
 } from "./recording.ts";
 import { observePublicationParticipants } from "./participants.ts";
+import type { PublicationIOIntentRef } from "#shared/publication-proof/io.ts";
+import type { PublicationParticipant } from "#shared/publication-proof/intent.ts";
+import type {
+  PublicationEffectRef,
+  PublicationJournal,
+} from "#shared/publication-proof/effects.ts";
 
-type Producer = {
+export type PublicationProducer = {
   context: PublicationContext;
   attempt: AcquisitionAttempt;
   plan: readonly FilePlanEntry[];
@@ -46,11 +52,82 @@ type Producer = {
   commit: (tx: Transaction, entry: FilePlanEntry) => Promise<void>;
 };
 
+export type PublicationOutcomeData<Asset> = {
+  kind: "published";
+  transitionId: string;
+  intentHash: string;
+  filePlanHash: string;
+  birthEpoch: number;
+  effects: PublicationEffectRef[];
+  entries: {
+    entryOperationId: string;
+    predecessor: Asset | null;
+    successor: Asset;
+    participants: PublicationParticipant[];
+    journals: PublicationJournal[];
+  }[];
+  completedAt: string;
+};
+export type PublicationProtocol<
+  Asset,
+  Parent extends PublicationIOIntentRef,
+> = {
+  lockScope: (tx: Transaction, mediaIds: string[]) => Promise<void>;
+  load: (tx: Transaction, attemptId: string) => Promise<Parent | null>;
+  capture: (
+    tx: Transaction,
+    attempt: AcquisitionAttempt,
+    transitionId: string,
+  ) => Promise<Parent>;
+  snapshot: (tx: Transaction, assetId: string) => Promise<Asset>;
+  complete: (
+    tx: Transaction,
+    parent: Parent,
+    outcome: PublicationOutcomeData<Asset>,
+  ) => Promise<void>;
+};
+
 /** The durable intent commits independently before the first publication syscall. */
-export async function producePublication(input: Producer): Promise<void> {
+export async function producePublication(
+  input: PublicationProducer,
+): Promise<void> {
+  await producePublicationWithProtocol(input, {
+    lockScope: lockAcquisitionMedia,
+    load: loadPublicationIntent,
+    capture: async (tx, attempt, transitionId) => {
+      const captured = await capturePublicationIntent(tx, {
+        context: input.context,
+        attempt,
+        plan: input.plan,
+        transitionId,
+        rawFilePlanHash: input.rawFilePlanHash,
+      });
+      assertPublicationActive(input.context);
+      const result = await createPublicationIntent(tx, captured);
+      assertPublicationActive(input.context);
+      return result;
+    },
+    snapshot: snapshotPublicationAsset,
+    complete: async (tx, parent, outcome) => {
+      await commitPublicationOutcome(tx, {
+        intent: parent,
+        outcome: { schemaVersion: 1, ...outcome },
+      });
+    },
+  });
+}
+
+/** Shared original filesystem/WAL sequence; versioned protocols validate and persist their own literal parents. */
+export async function producePublicationWithProtocol<
+  Asset,
+  Parent extends PublicationIOIntentRef,
+>(
+  input: PublicationProducer,
+  protocol: PublicationProtocol<Asset, Parent>,
+): Promise<void> {
   const { context, attempt, plan } = input;
   assertPublicationActive(context);
-  const existing = await loadPublicationIntent(context.db, attempt.id);
+  const existing = await protocol.load(context.db, attempt.id);
   const transitionId = existing?.transitionId ?? crypto.randomUUID();
   const stores = await preparePublicationStores(context, {
     transitionId,
@@ -58,8 +135,12 @@ export async function producePublication(input: Producer): Promise<void> {
   });
   const intent = await context.db.$transaction(
     async (tx) => {
-      const { current, assertAuthority } = await lockProducer(tx, input);
-      const persisted = await loadPublicationIntent(tx, attempt.id);
+      const { current, assertAuthority } = await lockProducer(
+        tx,
+        input,
+        protocol.lockScope,
+      );
+      const persisted = await protocol.load(tx, attempt.id);
       if (persisted !== null) {
         if (
           persisted.transitionId !== transitionId ||
@@ -83,16 +164,7 @@ export async function producePublication(input: Producer): Promise<void> {
         }),
       }));
       return await withPublicationPaths(context, plan, operations, async () => {
-        const captured = await capturePublicationIntent(tx, {
-          context,
-          attempt: current,
-          plan,
-          transitionId,
-          rawFilePlanHash: input.rawFilePlanHash,
-        });
-        assertPublicationActive(context);
-        const result = await createPublicationIntent(tx, captured);
-        assertPublicationActive(context);
+        const result = await protocol.capture(tx, current, transitionId);
         assertAuthority();
         return result;
       });
@@ -103,7 +175,11 @@ export async function producePublication(input: Producer): Promise<void> {
   const recording = publicationRecording(context, intent, stores);
   await context.db.$transaction(
     async (tx) => {
-      const { current, assertAuthority } = await lockProducer(tx, input);
+      const { current, assertAuthority } = await lockProducer(
+        tx,
+        input,
+        protocol.lockScope,
+      );
       for (const store of stores) {
         const physicalAuthority = await publicationAuthorityGuard(tx, context, {
           libraryKind: store.kind,
@@ -150,8 +226,8 @@ export async function producePublication(input: Producer): Promise<void> {
             predecessor:
               entry.previousAssetId === null
                 ? null
-                : await snapshotPublicationAsset(tx, entry.previousAssetId),
-            successor: await snapshotPublicationAsset(tx, entry.assetId),
+                : await protocol.snapshot(tx, entry.previousAssetId),
+            successor: await protocol.snapshot(tx, entry.assetId),
             participants: await observePublicationParticipants(
               context,
               entry,
@@ -171,19 +247,15 @@ export async function producePublication(input: Producer): Promise<void> {
               })
               .map(([, journal]) => journal),
           });
-        await commitPublicationOutcome(tx, {
-          intent,
-          outcome: {
-            schemaVersion: 1,
-            kind: "published",
-            transitionId: intent.transitionId,
-            intentHash: intent.intentHash,
-            filePlanHash: intent.intent.filePlanHash,
-            birthEpoch: intent.intent.birthEpoch,
-            effects: recording.state.refs,
-            entries,
-            completedAt: new Date().toISOString(),
-          },
+        await protocol.complete(tx, intent, {
+          kind: "published",
+          transitionId: intent.transitionId,
+          intentHash: intent.intentHash,
+          filePlanHash: intent.intent.filePlanHash,
+          birthEpoch: intent.intent.birthEpoch,
+          effects: recording.state.refs,
+          entries,
+          completedAt: new Date().toISOString(),
         });
         await context.checkpoint("publication-before-commit");
         for (const store of stores) store.assertActive();
@@ -193,9 +265,13 @@ export async function producePublication(input: Producer): Promise<void> {
   );
 }
 
-async function lockProducer(tx: Transaction, input: Producer) {
+async function lockProducer(
+  tx: Transaction,
+  input: PublicationProducer,
+  lockScope: PublicationProtocol<unknown, PublicationIOIntentRef>["lockScope"],
+) {
   assertPublicationActive(input.context);
-  await lockAcquisitionMedia(tx, input.attempt.mediaIds);
+  await lockScope(tx, input.attempt.mediaIds);
   const current = await tx.acquisitionAttempt.findUniqueOrThrow({
     where: { id: input.attempt.id },
   });

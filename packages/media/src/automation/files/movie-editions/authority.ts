@@ -234,10 +234,37 @@ export async function assertMovieFilePlanV4(
     (previous?.checksum ?? null) !== entry.previousChecksum
   )
     throw new FileGuardError("asset_version_changed");
+  assertMovieSidecarManifest(context, plan, previous);
   await assertMovieLibraryPathV4(tx, context, plan, previous);
   authority.freshness.assertActive();
   context.execution.assertActive();
   return plan;
+}
+
+function assertMovieSidecarManifest(
+  context: PublicationContext,
+  plan: MovieFilePlanV2,
+  previous: Awaited<ReturnType<typeof moviePredecessorV4>>,
+) {
+  const entry = plan.entries[0];
+  const sidecars = previous === null ? [] : ownedSubtitleSidecars(previous);
+  if (
+    sidecars.length !== entry.previousSidecars.length ||
+    entry.previousSidecars.some(
+      (item) =>
+        !sidecars.some(
+          (row) =>
+            row.id === item.subtitleId &&
+            row.checksum === item.checksum &&
+            row.path !== null &&
+            path.relative(
+              context.roots.movies.library,
+              workerFilePath(context, row.path),
+            ) === item.libraryPath,
+        ),
+    )
+  )
+    throw new FileGuardError("subtitle_manifest_changed");
 }
 
 async function assertMovieLibraryPathV4(

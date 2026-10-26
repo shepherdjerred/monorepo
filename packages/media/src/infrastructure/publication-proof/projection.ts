@@ -8,7 +8,9 @@ import {
 } from "#shared/native-recovery/archive.ts";
 
 /** Retained candidate decisions remain hashed in their original record, but grant no physical authority. */
-export function publicationPhysicalSnapshot(asset: PublicationAssetSnapshot) {
+export function publicationPhysicalSnapshot<
+  T extends { subtitleHistory: unknown },
+>(asset: T) {
   const { subtitleHistory: _history, ...physical } = asset;
   return physical;
 }

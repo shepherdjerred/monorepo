@@ -158,6 +158,7 @@ export async function commitEmbedded(input: {
   tx: Transaction;
   entry: FilePlanEntry;
   recoveryEpoch: number;
+  movieScope?: MovieEditionScope;
 }): Promise<void> {
   const { context, tx, entry, recoveryEpoch } = input;
   for (const subtitle of entry.embeddedSubtitles) {
@@ -197,6 +198,12 @@ export async function commitEmbedded(input: {
           checksum: subtitle.checksum,
         },
         matchingEvidence: {
+          ...(input.movieScope === undefined
+            ? {}
+            : {
+                schemaVersion: 4,
+                movieScope: MovieEditionScopeSchema.parse(input.movieScope),
+              }),
           assetVersion: 0,
           assetChecksum: entry.checksum,
           exactMediaMatch: true,
