@@ -1,7 +1,6 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import receiptContract from "homelab/src/minecraft-delivery-receipt.schema.json" with { type: "json" };
-import eligibilityContract from "homelab/src/minecraft-delivery-eligibility.schema.json" with { type: "json" };
 import type {
   DeploymentDetail,
   EvidenceInput,
@@ -57,26 +56,6 @@ export const MinecraftPreservationResultSchema = z
     receiptSha256: z.string().regex(/^sha256:[a-f0-9]{64}$/u),
   })
   .strict();
-const EligibilityContract = z.fromJSONSchema(
-  z
-    .looseObject({ oneOf: z.array(z.record(z.string(), z.unknown())) })
-    .parse(eligibilityContract),
-);
-const EligibilityFields = z.discriminatedUnion("status", [
-  z.object({ status: z.literal("eligible"), players: z.literal(0) }),
-  z.object({
-    status: z.literal("waiting"),
-    reason: z.string(),
-    players: z.number().optional(),
-  }),
-]);
-export type MinecraftEligibility = z.infer<typeof EligibilityFields>;
-export function parseMinecraftEligibility(
-  input: unknown,
-): MinecraftEligibility {
-  return EligibilityFields.parse(EligibilityContract.parse(input));
-}
-
 /**
  * The TSMC server Application an upgrade acts through: the v1 pipeline, or
  * the model sub-recipe carrying the `minecraft-upgrade` step, whose
