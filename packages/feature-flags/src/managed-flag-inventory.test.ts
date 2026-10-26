@@ -6,6 +6,32 @@ import {
   materializeManagedNamespaceEnvironment,
 } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 
+test.each(["beta", "prod"])(
+  "retained economy controls remain off in %s until their readers drain",
+  (environment) => {
+    const flags = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      environment,
+      "scout",
+    );
+    for (const key of [
+      "betting_enabled",
+      "bucks_transfers_enabled",
+      "bucks_dares_enabled",
+      "betting_player_bet_outcome_dm_enabled",
+      "betting_settlement_dm_enabled",
+    ]) {
+      expect(flags.find((flag) => flag.key === key)).toMatchObject({
+        type: "boolean",
+        default: false,
+        rollouts: [],
+        rules: [],
+        thresholdRollouts: [],
+      });
+    }
+  },
+);
+
 function inventory(overrides: unknown[] = []) {
   return {
     version: 3,

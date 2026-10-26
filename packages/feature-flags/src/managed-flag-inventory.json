@@ -858,22 +858,7 @@
       "purpose": "Retained for pre-retirement workers until native execution drainage; removed with the final economy purge.",
       "type": "boolean",
       "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "scout-guild-1337623164146155593",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        }
-      ],
+      "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
     },
@@ -885,22 +870,7 @@
       "purpose": "Retained for pre-retirement workers until native execution drainage; removed with the final economy purge.",
       "type": "boolean",
       "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "scout-guild-1337623164146155593",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        }
-      ],
+      "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
     },
@@ -912,22 +882,7 @@
       "purpose": "Retained for pre-retirement workers until native execution drainage; removed with the final economy purge.",
       "type": "boolean",
       "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "scout-guild-1337623164146155593",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        }
-      ],
+      "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
     },
@@ -1179,22 +1134,7 @@
       "purpose": "Retained for pre-retirement workers until native execution drainage; removed with the final economy purge.",
       "type": "boolean",
       "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "scout-guild-1337623164146155593",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        }
-      ],
+      "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
     },
@@ -1233,22 +1173,7 @@
       "purpose": "Retained for pre-retirement workers until native execution drainage; removed with the final economy purge.",
       "type": "boolean",
       "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "scout-guild-1337623164146155593",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        }
-      ],
+      "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
     },
