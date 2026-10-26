@@ -20,7 +20,7 @@ import {
 } from "@scout-for-lol/temporal/activity-contracts";
 import type { ScoutIntentAttemptRef } from "@scout-for-lol/temporal/pipeline-contracts";
 import { client } from "#src/discord/client.ts";
-import { fetchChannelForDelivery } from "#src/discord/utils/channel.ts";
+import { deliveryGuildId } from "#src/temporal/notification/channel-guild.ts";
 import { DmKindSchema, type DmKind } from "#src/discord/utils/dm-contracts.ts";
 import { sendDM, type DmStatus } from "#src/discord/utils/dm.ts";
 import {
@@ -136,15 +136,16 @@ export function classifyChannelSendFailure(
  * delivered here is the one the render attested. A gatewayless role can
  * legitimately resolve a channel with no guild attached, and that is not a
  * failure: the send is a REST post on the channel id and does not need one.
+ *
+ * Missing Access throws from that fetch instead of returning a channel.
+ * Leaving the throw as a retryable pre-send failure skips `send`, which is
+ * the only place the owner is told. The subscription already names the
+ * guild, so the send still receives it and can DM that owner.
  */
 async function resolveDeliveryGuild(
   channelId: DiscordChannelId,
 ): Promise<DiscordGuildId | undefined> {
-  const channel = await fetchChannelForDelivery(channelId);
-  if (channel === null) return undefined;
-  const guildId: unknown = "guildId" in channel ? channel.guildId : undefined;
-  const parsed = DiscordGuildIdSchema.safeParse(guildId);
-  return parsed.success ? parsed.data : undefined;
+  return await deliveryGuildId(channelId);
 }
 
 /**
