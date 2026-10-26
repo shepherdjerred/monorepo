@@ -33,8 +33,8 @@ describe("shared player travel on native Paper", () => {
     await rcon.command(`deop ${bot.username}`);
     await command(
       bot,
-      "/rtp wilds",
-      /Teleported to wilderness in wilds/u,
+      "/rtp frontier",
+      /Teleported to wilderness in frontier/u,
       45_000,
     );
     expect(bot.inventory.items().some((item) => item.name === "compass")).toBe(
@@ -43,7 +43,7 @@ describe("shared player travel on native Paper", () => {
     await command(bot, "/balance", /500.*crystals/iu);
     await command(bot, "/home", /Teleported to home/u);
     await command(bot, "/balance", /475.*crystals/iu);
-    await command(bot, "/rtp wilds", /You can teleport again/u);
+    await command(bot, "/rtp frontier", /You can teleport again/u);
   }, 75_000);
 
   test("both TPA directions charge only the requester", async ({

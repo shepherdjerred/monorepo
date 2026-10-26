@@ -94,9 +94,9 @@ final class CreativeConfigTest {
     assertThat(config.world()).isEqualTo("creative");
     assertThat(config.plotWidth()).isEqualTo(PlotGrid.PLOT_WIDTH);
     assertThat(config.roadWidth()).isEqualTo(PlotGrid.ROAD_WIDTH);
-    assertThat(config.borderSize()).isEqualTo(PlotGrid.SURVEYED_BORDER_SIZE);
-    assertThat(config.borderCenterX()).isEqualTo(PlotGrid.SURVEYED_BORDER_CENTER_X);
-    assertThat(config.borderCenterZ()).isEqualTo(PlotGrid.SURVEYED_BORDER_CENTER_Z);
+    assertThat(config.borderSize()).isEqualTo(3000);
+    assertThat(config.borderCenterX()).isZero();
+    assertThat(config.borderCenterZ()).isZero();
     assertThat(config.claimCap()).isEqualTo(2);
     assertThat(config.commentLength()).isEqualTo(140);
     assertThat(config.commentCap()).isEqualTo(20);
@@ -118,12 +118,36 @@ final class CreativeConfigTest {
   }
 
   @Test
-  void aShrunkBorderOrADifferentGridIsRefused() {
+  void aPlayableCircleIsIndependentOfArchiveExtentButInvalidBoundsAndGridAreRefused() {
     assertThat(StrictYaml.parse("creative.yml", VALID, CreativeConfig.class).isOk()).isTrue();
     assertThat(
             StrictYaml.parse(
                     "creative.yml",
-                    VALID.replace("borderSize: 8704", "borderSize: 8703"),
+                    VALID.replace("borderSize: 8704", "borderSize: 0"),
+                    CreativeConfig.class)
+                .isOk())
+        .isFalse();
+    assertThat(
+            StrictYaml.parse(
+                    "creative.yml",
+                    VALID
+                        .replace("borderCenterX: 1280", "borderCenterX: 0")
+                        .replace("borderCenterZ: -768", "borderCenterZ: 0")
+                        .replace("borderSize: 8704", "borderSize: 3000"),
+                    CreativeConfig.class)
+                .isOk())
+        .isTrue();
+    assertThat(
+            StrictYaml.parse(
+                    "creative.yml",
+                    VALID.replace("borderSize: 8704", "borderSize: 60000000"),
+                    CreativeConfig.class)
+                .isOk())
+        .isFalse();
+    assertThat(
+            StrictYaml.parse(
+                    "creative.yml",
+                    VALID.replace("borderSize: 8704", "borderSize: 10"),
                     CreativeConfig.class)
                 .isOk())
         .isFalse();

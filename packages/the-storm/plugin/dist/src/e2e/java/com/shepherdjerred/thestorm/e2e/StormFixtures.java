@@ -59,7 +59,7 @@ public final class StormFixtures extends JavaPlugin implements Listener {
     if (worldOn || townsOn) {
       // world.yml lists these worlds and towns.yml claims in them. The skylands
       // module generates skylands itself, so it is stood in only while that module is off.
-      survivalWorlds(!switchedOn(modules, "skylands"));
+      survivalWorlds(!switchedOn(modules, "skylands"), !switchedOn(modules, "creative"));
     }
     if (worldOn) {
       merchantStands();
@@ -167,10 +167,13 @@ public final class StormFixtures extends JavaPlugin implements Listener {
     return modules.getBoolean(module);
   }
 
-  private static void survivalWorlds(boolean skylands) {
-    var names = new ArrayList<>(List.of("frontier", "map2", "wilds", "peaks"));
+  private static void survivalWorlds(boolean skylands, boolean creative) {
+    var names = new ArrayList<>(List.of("frontier", "map2"));
     if (skylands) {
       names.add("skylands");
+    }
+    if (creative) {
+      names.add("creative");
     }
     for (var name : names) {
       Objects.requireNonNull(

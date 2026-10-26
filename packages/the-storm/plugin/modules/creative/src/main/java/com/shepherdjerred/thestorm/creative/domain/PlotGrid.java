@@ -35,7 +35,7 @@ public final class PlotGrid {
 
   /**
    * World-border diameter that contains every saved region, from block {@code -3072,-4608} through
-   * {@code 5631,3071}. Staff may raise the border; they may not shrink it past this.
+   * {@code 5631,3071}. This records archive extent; the playable border is configured separately.
    */
   public static final double SURVEYED_BORDER_SIZE = 8704;
 

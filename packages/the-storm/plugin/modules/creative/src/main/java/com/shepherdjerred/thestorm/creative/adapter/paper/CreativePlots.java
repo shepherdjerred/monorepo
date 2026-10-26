@@ -244,7 +244,7 @@ public final class CreativePlots {
         return Command.SINGLE_SUCCESS;
       }
     }
-    error(player, "You have no plot to go home to.");
+    error(player, "You have no accessible plot inside the world border.");
     return Command.SINGLE_SUCCESS;
   }
 
@@ -254,7 +254,9 @@ public final class CreativePlots {
       return Command.SINGLE_SUCCESS;
     }
     var id = plotId(player, getString(context, "plot").strip());
-    if (id.isPresent() && canVisit(player, id.orElseThrow())) {
+    if (id.isPresent() && !inside(id.orElseThrow())) {
+      error(player, "That plot is outside the world border. Its build and ownership remain saved.");
+    } else if (id.isPresent() && canVisit(player, id.orElseThrow())) {
       teleport(player, id.orElseThrow());
     } else if (id.isPresent()) {
       error(player, "You cannot visit that plot.");
@@ -379,7 +381,7 @@ public final class CreativePlots {
       }
     }
     if (!any) {
-      error(player, "You have no plots.");
+      error(player, "You have no accessible plots inside the world border.");
     }
     return Command.SINGLE_SUCCESS;
   }
@@ -620,7 +622,7 @@ public final class CreativePlots {
       return;
     }
     var view = book.view(at.orElseThrow());
-    if (!canCopy(player, view)) {
+    if (!canUseClaim(player, view)) {
       error(player, "You cannot download that plot.");
       return;
     }
@@ -917,18 +919,14 @@ public final class CreativePlots {
   }
 
   private boolean canVisit(Player player, PlotId id) {
-    var view = book.view(id);
-    if (staff(player) && view.marked()) {
-      return true;
-    }
-    return EditDecision.mayEdit(player.getUniqueId(), view.owner(), view.access());
+    return inside(id) && canUseClaim(player, book.view(id));
   }
 
   private boolean mayEnter(Player player, PlotView view) {
     return PlotRole.mayEnter(staff(player), view.access(), player.getUniqueId());
   }
 
-  private boolean canCopy(Player player, PlotView view) {
+  private boolean canUseClaim(Player player, PlotView view) {
     if (!view.marked()) {
       return false;
     }

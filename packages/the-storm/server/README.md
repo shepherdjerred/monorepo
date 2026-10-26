@@ -2,16 +2,13 @@
 
 `minecraft-tsmc` runs `docker.io/shepherdjerred/the-storm-server`: pinned,
 pre-patched Paper, TheStorm, the MCBridge agent bridge, twelve supporting
-plugins, and repository-owned configuration. The image builds through `docker-bake.hcl`; CI publication and
-the version catalog control its GitOps release.
-
-CI updates the candidate pin `shepherdjerred/the-storm-server`. The live chart
-uses the separately accepted `shepherdjerred/the-storm-server/prod` pin. Publish
-the candidate first, then promote its exact digest into the production pin
-through a PR. A release restarts the existing world volume.
+plugins, and repository-owned configuration. The image builds through `docker-bake.hcl`;
+CI publishes immutable artifacts and Delivery records accepted selections in PostgreSQL.
+Publish and qualify the candidate, complete any required stopped-volume maintenance,
+then request its deployment through Delivery.
 
 The Application declares both the image value and Helm's higher-precedence
-`image.tag` parameter from that same production pin. A release replaces
+`image.tag` parameter from that accepted selection. A release replaces
 operational parameter overrides with the declared list; recording credentials
 remain supplied by the chart's `extraEnv` secret references.
 
@@ -128,6 +125,18 @@ The entrypoint copies only these static files into `bluemap/web` on each boot;
 it never prunes that webroot or replaces settings, maps, or live data. Non-root
 installs use the runtime UID and volume group, including root-owned PVC mounts.
 Archived world viewers are independently published and do not use this bundle.
+
+LiveMap's generated files use the separate `minecraft-tsmc-bluemap` PVC mounted
+at `/data/bluemap`. The world PVC remains backed up; the render PVC is explicitly
+excluded because the maps can be rebuilt. The storage init container uses the
+same pinned upstream base as the server image and runs `bluemap_storage.py`
+before Paper starts.
+Its first run copies the original cache and verifies every file by SHA-256,
+leaving the original intact. Interrupted copies resume; later boots preserve
+new renders instead of copying the original over them. A restored world volume
+without a cache initializes a new render volume. After verifying the mounted
+maps, the maintenance operator can retire the original using the exact verified
+manifest. Removal refuses changes to the original and never selects world files.
 
 `MCBridge.jar` is built from `plugin/bridge` alongside TheStorm.jar. It serves
 the mc-harness agent API on port 25580, which has no Service or ingress and is

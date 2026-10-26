@@ -125,6 +125,33 @@ function synthTsmc(): unknown[] {
 }
 
 describe("minecraft-tsmc runs The Storm's image", () => {
+  test("keeps generated BlueMap renders on a separate excluded 128Gi volume", () => {
+    expect(synthTsmc()).toContainEqual(
+      expect.objectContaining({
+        kind: "PersistentVolumeClaim",
+        metadata: expect.objectContaining({
+          name: "minecraft-tsmc-bluemap",
+          namespace: "minecraft-tsmc",
+          labels: {
+            "velero.io/backup": "disabled",
+            "velero.io/exclude-from-backup": "true",
+          },
+        }),
+        spec: expect.objectContaining({
+          storageClassName: "zfs-ssd-lz4",
+          accessModes: ["ReadWriteOnce"],
+          resources: { requests: { storage: "128Gi" } },
+        }),
+      }),
+    );
+    expect(tsmcValues()["persistence"]).toMatchObject({
+      dataDir: { Size: "128Gi", enabled: true },
+    });
+    expect(tsmcValues()["extraPodSpec"]).toMatchObject({
+      automountServiceAccountToken: "false",
+    });
+  });
+
   test("keeps the existing map route while staging the LiveMap hostname", () => {
     const bindings = synthTsmc()
       .map((manifest) =>
@@ -214,8 +241,27 @@ describe("minecraft-tsmc runs The Storm's image", () => {
       .record(z.string(), z.unknown())
       .parse(values["minecraftServer"]);
     expect(server["pluginUrls"]).toBeUndefined();
-    expect(values["initContainers"]).toBeUndefined();
-    expect(values["extraVolumes"]).toBeUndefined();
+    expect(values["initContainers"]).toEqual([
+      expect.objectContaining({
+        name: "migrate-bluemap",
+        image: `itzg/minecraft-server:${versions["itzg/minecraft-server"]}`,
+        volumeMounts: expect.arrayContaining([
+          { name: "datadir", mountPath: "/source", readOnly: true },
+          { name: "bluemap", mountPath: "/cache" },
+        ]),
+      }),
+    ]);
+    expect(values["extraVolumes"]).toEqual([
+      expect.objectContaining({
+        volumes: expect.arrayContaining([
+          {
+            name: "bluemap",
+            persistentVolumeClaim: { claimName: "minecraft-tsmc-bluemap" },
+          },
+        ]),
+        volumeMounts: [{ name: "bluemap", mountPath: "/data/bluemap" }],
+      }),
+    ]);
     expect(values["extraDeploy"]).toBeUndefined();
     expect(server["type"]).toBe("PAPER");
     expect(server["version"]).toBe(THE_STORM_PAPER_VERSION);

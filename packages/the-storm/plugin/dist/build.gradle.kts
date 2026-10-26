@@ -59,8 +59,12 @@ val archiveTest = tasks.register<Exec>("archiveTest") {
   workingDir(rootProject.file("../server"))
   commandLine(testPython + listOf("-m", "unittest", "-v", "test_archive_progression.py"))
 }
+val worldMaintenanceTest = tasks.register<Exec>("worldMaintenanceTest") {
+  workingDir(rootProject.file("../server"))
+  commandLine(testPython + listOf("-m", "unittest", "-v", "maintenance.test_database", "maintenance.test_retire", "maintenance.test_cache", "maintenance.test_control", "maintenance.test_startup", "maintenance.test_files"))
+}
 tasks.test {
-  dependsOn(archiveTest)
+  dependsOn(archiveTest, worldMaintenanceTest)
   // ModulesTest checks the shipped module inventory against the registry.
   inputs
       .file(rootProject.file("../server/owned/plugins/TheStorm/config.yml"))

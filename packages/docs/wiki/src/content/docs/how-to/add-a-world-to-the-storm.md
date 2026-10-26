@@ -48,23 +48,18 @@ map the repository does not ship.
 
 ## 3. Pregenerate a bordered world
 
-Set the border before starting, so Chunky stops at it. Use `/chunky shape circle`
-for a circular border:
+Ship the owned border configuration before starting. Use an explicit circular
+selection centered at `(0, 0)`:
 
 ```text
-/worldborder set <diameter>
-/chunky world <name>
-/chunky shape square
-/chunky radius <diameter / 2>
-/chunky start
+/chunky start <name> circle 0 0 <radius>
 ```
 
 Chunky resumes after a restart (`continue-on-restart`). Check free space on
-`datadir-minecraft-tsmc-0` first; a 7000-block square is about 191,000 chunks.
-When `/chunky progress` reports 100%, add
-`plugins/Chunky/tasks/<name>.properties` to
-[`server/remove.list`](packages/the-storm/server/remove.list) so a finished
-task never re-queues.
+`datadir-minecraft-tsmc-0` first. When `/chunky progress <name>` reports 100%,
+cancel the completed task record through Chunky; cancellation retains generated chunks.
+For an existing world, follow
+[Change The Storm's world borders](/how-to/change-the-storm-world-borders/).
 
 ## 4. Add it to the spawn hub
 
