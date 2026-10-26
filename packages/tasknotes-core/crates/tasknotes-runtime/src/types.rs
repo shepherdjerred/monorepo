@@ -662,6 +662,9 @@ pub struct Query {
     pub scope: Option<String>,
     /// Caller-supplied local civil date for date scopes and recurrence.
     pub today: Option<String>,
+    /// Opt-in viewer IANA timezone for civil-date display and ordinary filters.
+    /// Required by the explicit agenda scopes; absent retains legacy behavior.
+    pub timezone: Option<String>,
     /// Retained wire-compatibility field; elapsed-time projections are withdrawn.
     pub at: Option<String>,
     /// Recurrence lookahead: seven in upcoming, 366 in upcomingAgenda.

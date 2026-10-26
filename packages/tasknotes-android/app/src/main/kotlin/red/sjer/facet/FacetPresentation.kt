@@ -12,8 +12,9 @@ data class FacetQuery(
     val projects: List<String> = emptyList(), val contexts: List<String> = emptyList(), val tags: List<String> = emptyList(),
     val sort: String = "effectiveDate", val descending: Boolean = false, val group: String? = null,
 ) {
-    fun document(offset: Int = 0, limit: Int = 100, today: String = LocalDate.now().toString(), at: String = Instant.now().toString()): JsonObject = buildJsonObject {
+    fun document(offset: Int = 0, limit: Int = 100, today: String = LocalDate.now().toString(), at: String = Instant.now().toString(), timezone: String? = null): JsonObject = buildJsonObject {
         put("schemaVersion", 1); put("scope", scope); put("today", today); put("at", at); put("offset", offset); put("limit", limit)
+        timezone?.let { put("timezone", it) }
         if (text.isNotEmpty()) put("text", text)
         if (statuses.isNotEmpty()) put("statuses", strings(statuses))
         if (priorities.isNotEmpty()) put("priorities", strings(priorities))

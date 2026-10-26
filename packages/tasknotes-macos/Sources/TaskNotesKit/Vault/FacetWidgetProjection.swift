@@ -51,9 +51,11 @@ public struct FacetWidgetTask: Codable, Sendable {
 }
 
 extension FacetEngine {
-    public func widgetEnvelope(profileID: String, now: Date = .now) throws -> Data {
+    public func widgetEnvelope(
+        profileID: String, now: Date = .now, viewerTimeZone: TimeZone = .current
+    ) throws -> Data {
         var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = .current
+        calendar.timeZone = viewerTimeZone
         let start = calendar.startOfDay(for: now)
         let at = now.ISO8601Format()
         var projections: [String: FacetWidgetDay] = [:]
@@ -66,25 +68,28 @@ extension FacetEngine {
                 Date.ISO8601FormatStyle(timeZone: calendar.timeZone).year().month().day())
             let base: [String: FacetValue] = [
                 "today": .string(civil), "at": .string(at), "limit": .integer(0),
+                "timezone": .string(calendar.timeZone.identifier),
             ]
             var agendaQuery = base
-            agendaQuery["scope"] = .string("agenda")
+            agendaQuery["scope"] = .string("todayAgenda")
             agendaQuery["limit"] = .integer(8)
             let agenda = try snapshot(profileID: profileID, query: .object(agendaQuery))
             if expectedVersion == nil { expectedVersion = agenda.version }
             var totalQuery = base
             totalQuery["completed"] = .bool(false)
             let total = try snapshot(profileID: profileID, query: .object(totalQuery))
-            var overdueQuery = base
-            overdueQuery["scope"] = .string("overdue")
-            let overdue = try snapshot(profileID: profileID, query: .object(overdueQuery))
+            var onDayQuery = base
+            onDayQuery["scope"] = .string("todayAgenda")
+            onDayQuery["effectiveDay"] = .string(civil)
+            let onDay = try snapshot(profileID: profileID, query: .object(onDayQuery))
             guard agenda.version == expectedVersion, agenda.version == total.version,
-                agenda.version == overdue.version
+                agenda.version == onDay.version, agenda.totalCount >= onDay.totalCount
             else {
                 throw FacetContractError.unsupportedResponse
             }
             projections[civil] = FacetWidgetDay(
-                agenda: agenda, total: total.totalCount, overdue: overdue.totalCount)
+                agenda: agenda, total: total.totalCount,
+                overdue: agenda.totalCount - onDay.totalCount)
         }
         return try JSONEncoder().encode(
             FacetWidgetEnvelope(generatedAt: at, projections: projections))

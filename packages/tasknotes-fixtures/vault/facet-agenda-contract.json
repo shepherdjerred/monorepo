@@ -9,6 +9,7 @@
         "schemaVersion": 1,
         "scope": "todayAgenda",
         "today": "2026-10-25",
+        "timezone": "UTC",
         "groupBy": "agendaSection",
         "completed": false
       }
@@ -20,8 +21,81 @@
       "value": {
         "scope": "upcomingAgenda",
         "today": "2026-10-25",
+        "timezone": "Asia/Tokyo",
         "effectiveDay": "2027-01-01",
         "groupBy": "effectiveDate"
+      }
+    },
+    {
+      "id": "agenda-missing-timezone",
+      "definition": "query",
+      "valid": false,
+      "value": { "scope": "todayAgenda", "today": "2026-10-25" }
+    },
+    {
+      "id": "agenda-null-timezone",
+      "definition": "query",
+      "valid": false,
+      "value": {
+        "scope": "upcomingAgenda",
+        "today": "2026-10-25",
+        "timezone": null
+      }
+    },
+    {
+      "id": "agenda-empty-timezone",
+      "definition": "query",
+      "valid": false,
+      "value": { "scope": "todayAgenda", "today": "2026-10-25", "timezone": "" }
+    },
+    {
+      "id": "agenda-whitespace-timezone",
+      "definition": "query",
+      "valid": false,
+      "value": {
+        "scope": "upcomingAgenda",
+        "today": "2026-10-25",
+        "timezone": "  "
+      }
+    },
+    {
+      "id": "agenda-timezone-type",
+      "definition": "query",
+      "valid": false,
+      "value": { "scope": "todayAgenda", "today": "2026-10-25", "timezone": 9 }
+    },
+    {
+      "id": "agenda-legacy-null-timezone",
+      "definition": "query",
+      "valid": true,
+      "value": { "scope": "all", "timezone": null }
+    },
+    {
+      "id": "agenda-saved-selection-without-runtime-context",
+      "definition": "querySelection",
+      "valid": true,
+      "value": {
+        "scope": "todayAgenda",
+        "groupBy": "agendaSection",
+        "completed": false
+      }
+    },
+    {
+      "id": "agenda-saved-view-without-runtime-context",
+      "definition": "savedView",
+      "valid": true,
+      "value": {
+        "id": "agenda",
+        "revision": "synthetic",
+        "view": {
+          "schemaVersion": 1,
+          "name": "Today",
+          "query": {
+            "scope": "todayAgenda",
+            "groupBy": "agendaSection",
+            "completed": false
+          }
+        }
       }
     },
     {

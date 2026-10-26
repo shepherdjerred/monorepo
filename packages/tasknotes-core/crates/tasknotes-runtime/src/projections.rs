@@ -86,8 +86,9 @@ pub(crate) fn local(
         task.properties.get("dateCreated").and_then(Value::as_str),
     );
     task.is_recurring = !text.trim().is_empty() && recurrence.frequency().is_some();
-    task.effective_date =
-        day(task.properties.get("due")).or_else(|| day(task.properties.get("scheduled")));
+    task.effective_date = day(task.properties.get("due"), query)?
+        .or(day(task.properties.get("scheduled"), query)?)
+        .map(|day| day.to_string());
     if matches!(
         query.scope.as_deref(),
         Some("todayAgenda" | "upcomingAgenda")
@@ -153,9 +154,16 @@ pub(crate) fn instance_days(task: &TaskSnapshot, key: &str) -> Result<Vec<NaiveD
         })
         .collect()
 }
-fn day(value: Option<&Value>) -> Option<String> {
-    value
-        .and_then(Value::as_str)
-        .and_then(|value| tasknotes_vault::temporal::date_part(value).ok())
-        .map(|day| day.to_string())
+/// Resolve display and ordinary civil-date filters using explicit viewer context.
+/// The no-context branch retains the historical projection's written-day policy.
+pub(crate) fn day(value: Option<&Value>, query: &Query) -> Result<Option<NaiveDate>> {
+    let Some(value) = value.and_then(Value::as_str) else {
+        return Ok(None);
+    };
+    if let Some(timezone) = query.timezone.as_deref() {
+        return tasknotes_vault::temporal::parse_local_day(value, timezone)
+            .map(Some)
+            .map_err(Into::into);
+    }
+    Ok(tasknotes_vault::temporal::date_part(value).ok())
 }

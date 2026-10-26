@@ -716,7 +716,9 @@ public sealed partial class FacetTaskNotesStore
                 preserved["tint"] = JsonSerializer.SerializeToElement(view.Tint);
                 preserved["favorite"] = JsonSerializer.SerializeToElement(view.IsFavorite);
                 preserved["order"] = JsonSerializer.SerializeToElement(view.Order);
-                preserved["query"] = query.RootElement.Clone();
+                preserved["query"] = JsonSerializer.SerializeToElement(
+                    FacetQueryContext.Selection(query.RootElement)
+                );
                 return new
                 {
                     kind = "save_view",
@@ -745,6 +747,9 @@ public sealed partial class FacetTaskNotesStore
                     view["name"].GetString() + " copy"
                 );
                 view["order"] = JsonSerializer.SerializeToElement(State.SavedViews.Count);
+                view["query"] = JsonSerializer.SerializeToElement(
+                    FacetQueryContext.Selection(view["query"])
+                );
                 await MutateAsync(
                         new
                         {
@@ -2133,10 +2138,7 @@ public sealed partial class FacetTaskNotesStore
     private Dictionary<string, JsonElement> QueryDocument(TaskListQuery query, int offset)
     {
         DateTimeOffset now = _time.GetUtcNow();
-        string today = TimeZoneInfo
-            .ConvertTime(now, _time.LocalTimeZone)
-            .ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-        string at = now.ToString("O", CultureInfo.InvariantCulture);
+        TimeZoneInfo zone = _time.LocalTimeZone;
         if (query.Kind == TaskListKind.SavedView)
         {
             var saved = RequireView(
@@ -2147,64 +2149,70 @@ public sealed partial class FacetTaskNotesStore
             )!;
             request["offset"] = JsonSerializer.SerializeToElement(offset);
             request["limit"] = JsonSerializer.SerializeToElement(1000);
-            request["today"] = JsonSerializer.SerializeToElement(today);
-            request["at"] = JsonSerializer.SerializeToElement(at);
             request["text"] = JsonSerializer.SerializeToElement(query.Search);
-            return request;
+            return FacetQueryContext.Apply(request, now, zone);
         }
-        return JsonSerializer
-            .SerializeToElement(
-                new
-                {
-                    schemaVersion = 1,
-                    offset,
-                    limit = 1000,
-                    text = query.Search,
-                    today,
-                    at,
-                    scope = query.Kind switch
+        return FacetQueryContext.Apply(
+            JsonSerializer
+                .SerializeToElement(
+                    new
                     {
-                        TaskListKind.Today => "today",
-                        TaskListKind.Upcoming => "upcoming",
-                        TaskListKind.Completed => "completed",
-                        TaskListKind.Inbox => "inbox",
-                        _ => "all",
-                    },
-                    statuses = query.Statuses,
-                    priorities = query.Priorities,
-                    projects = query.Kind == TaskListKind.Project
-                        ? new[] { query.Scope ?? throw new ArgumentException("Select a project.") }
-                        : query.Projects,
-                    contexts = query.Kind == TaskListKind.Context
-                        ? new[] { query.Scope ?? throw new ArgumentException("Select a context.") }
-                        : query.Contexts,
-                    tags = query.Kind == TaskListKind.Tag
-                        ? new[] { query.Scope ?? throw new ArgumentException("Select a tag.") }
-                        : query.Tags,
-                    hasNoDueDate = query.HasNoDueDate ? (bool?)true : null,
-                    sortField = query.Sort switch
-                    {
-                        TaskSortChoice.AsSynchronized => "manual",
-                        TaskSortChoice.EffectiveDate => "effectiveDate",
-                        TaskSortChoice.DueDate => "dueDate",
-                        TaskSortChoice.Priority => "priority",
-                        TaskSortChoice.Title => "title",
-                        _ => throw new ArgumentException("Unknown sort."),
-                    },
-                    sortDirection = query.Descending ? "desc" : "asc",
-                    groupBy = query.Group switch
-                    {
-                        TaskGroupChoice.None => null,
-                        TaskGroupChoice.Date => "effectiveDate",
-                        TaskGroupChoice.Status => "status",
-                        TaskGroupChoice.Priority => "priority",
-                        TaskGroupChoice.Project => "project",
-                        _ => throw new ArgumentException("Unknown grouping."),
-                    },
-                }
-            )
-            .EnumerateObject()
-            .ToDictionary(p => p.Name, p => p.Value.Clone(), StringComparer.Ordinal);
+                        schemaVersion = 1,
+                        offset,
+                        limit = 1000,
+                        text = query.Search,
+                        scope = query.Kind switch
+                        {
+                            TaskListKind.Today => "today",
+                            TaskListKind.Upcoming => "upcoming",
+                            TaskListKind.Completed => "completed",
+                            TaskListKind.Inbox => "inbox",
+                            _ => "all",
+                        },
+                        statuses = query.Statuses,
+                        priorities = query.Priorities,
+                        projects = query.Kind == TaskListKind.Project
+                            ? new[]
+                            {
+                                query.Scope ?? throw new ArgumentException("Select a project."),
+                            }
+                            : query.Projects,
+                        contexts = query.Kind == TaskListKind.Context
+                            ? new[]
+                            {
+                                query.Scope ?? throw new ArgumentException("Select a context."),
+                            }
+                            : query.Contexts,
+                        tags = query.Kind == TaskListKind.Tag
+                            ? new[] { query.Scope ?? throw new ArgumentException("Select a tag.") }
+                            : query.Tags,
+                        hasNoDueDate = query.HasNoDueDate ? (bool?)true : null,
+                        sortField = query.Sort switch
+                        {
+                            TaskSortChoice.AsSynchronized => "manual",
+                            TaskSortChoice.EffectiveDate => "effectiveDate",
+                            TaskSortChoice.DueDate => "dueDate",
+                            TaskSortChoice.Priority => "priority",
+                            TaskSortChoice.Title => "title",
+                            _ => throw new ArgumentException("Unknown sort."),
+                        },
+                        sortDirection = query.Descending ? "desc" : "asc",
+                        groupBy = query.Group switch
+                        {
+                            TaskGroupChoice.None => null,
+                            TaskGroupChoice.Date => "effectiveDate",
+                            TaskGroupChoice.Status => "status",
+                            TaskGroupChoice.Priority => "priority",
+                            TaskGroupChoice.Project => "project",
+                            _ => throw new ArgumentException("Unknown grouping."),
+                        },
+                    }
+                )
+                .EnumerateObject()
+                .ToDictionary(p => p.Name, p => p.Value.Clone(), StringComparer.Ordinal),
+            now,
+            zone
+        );
     }
 
     private TaskItem Project(

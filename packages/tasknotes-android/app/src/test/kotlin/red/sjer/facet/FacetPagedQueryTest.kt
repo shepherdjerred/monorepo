@@ -17,6 +17,7 @@ class FacetPagedQueryTest {
         assertEquals(1, clock.reads)
         assertEquals("2026-10-03", second.getValue("today").jsonPrimitive.content)
         assertEquals("2026-10-03T23:59:00Z", second.getValue("at").jsonPrimitive.content)
+        assertEquals("UTC", second.getValue("timezone").jsonPrimitive.content)
         assertEquals(first.filterKeys { it != "offset" && it != "limit" }, second.filterKeys { it != "offset" && it != "limit" })
         assertEquals(100, second.getValue("offset").jsonPrimitive.int)
         assertEquals(1000, second.getValue("limit").jsonPrimitive.int)
@@ -29,15 +30,39 @@ class FacetPagedQueryTest {
     }
 
     @Test fun savedQueryAndOpenVendorValuesRemainFrozenWhileOnlyPageBoundsChange() {
-        val saved = Json.parseToJsonElement("""{"schemaVersion":1,"scope":"all","statuses":["client-approved"],"vendor":{"exact":9007199254740993},"today":"stale","at":"2020-01-01T00:00:00Z"}""").jsonObject
+        val saved = Json.parseToJsonElement("""{"schemaVersion":1,"scope":"todayAgenda","statuses":["client-approved"],"vendor":{"exact":9007199254740993},"today":"stale","at":"2020-01-01T00:00:00Z","timezone":"Asia/Tokyo"}""").jsonObject
         val frozen = FacetPagedQuery.capture("vault", 1, FacetQuery(text = "reviewed"), saved, Clock.fixed(Instant.parse("2026-10-04T01:00:00Z"), ZoneOffset.UTC), ZoneId.of("America/Los_Angeles"))
         val next = frozen.page(200)
         assertEquals("2026-10-03", next.getValue("today").jsonPrimitive.content)
         assertEquals("2026-10-04T01:00:00Z", next.getValue("at").jsonPrimitive.content)
+        assertEquals("America/Los_Angeles", next.getValue("timezone").jsonPrimitive.content)
+        assertEquals("todayAgenda", next.getValue("scope").jsonPrimitive.content)
         assertEquals("reviewed", next.getValue("text").jsonPrimitive.content)
         assertEquals(saved.getValue("vendor"), next.getValue("vendor"))
         assertEquals(saved.getValue("statuses"), next.getValue("statuses"))
         assertEquals("stale", saved.getValue("today").jsonPrimitive.content)
+        assertEquals("Asia/Tokyo", saved.getValue("timezone").jsonPrimitive.content)
+    }
+
+    @Test fun savedAgendaSelectionDoesNotPersistTheAdmittingDevicesClockOrZone() {
+        val query = Json.parseToJsonElement("""{"schemaVersion":1,"scope":"upcomingAgenda","offset":100,"limit":1000,"today":"2026-10-03","at":"2026-10-04T01:00:00Z","timezone":"America/Los_Angeles","statuses":["custom"],"vendor":{"exact":9007199254740993}}""").jsonObject
+        val intent = FacetSavedViewIntent("vault", "view", query, JsonObject(emptyMap()), "Agenda", "mutation")
+        val saved = FacetSavedViewIntent.restore(intent.saved()).command.getValue("view").jsonObject.getValue("query").jsonObject
+        assertEquals(FacetPagedQuery.selection(query), saved)
+        for (key in listOf("offset", "limit", "today", "at", "timezone")) assertFalse(saved.containsKey(key))
+        assertEquals("upcomingAgenda", saved.getValue("scope").jsonPrimitive.content)
+        assertEquals(query.getValue("vendor"), saved.getValue("vendor"))
+        val admitted = FacetPagedQuery.capture("vault", 2, FacetQuery(), saved,
+            Clock.fixed(Instant.parse("2026-10-04T01:00:00Z"), ZoneOffset.UTC), ZoneId.of("Asia/Tokyo"))
+        assertEquals("Asia/Tokyo", admitted.page().getValue("timezone").jsonPrimitive.content)
+        assertEquals("2026-10-04", admitted.page().getValue("today").jsonPrimitive.content)
+    }
+
+    @Test fun aFixedOffsetIsNotSilentlySubstitutedWithUtc() {
+        val query = FacetPagedQuery.capture("vault", 1, FacetQuery(), null,
+            Clock.fixed(Instant.parse("2026-10-03T23:00:00Z"), ZoneOffset.UTC), ZoneOffset.ofHours(5)).page()
+        assertEquals("+05:00", query.getValue("timezone").jsonPrimitive.content)
+        assertEquals("2026-10-04", query.getValue("today").jsonPrimitive.content)
     }
 
     private class AdvancingClock : Clock() {

@@ -456,7 +456,7 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
     }
     internal fun viewIntent(existing: JsonObject? = null): FacetSavedViewIntent {
         val profile = requireNotNull(selected)
-        val viewQuery = savedQuery ?: query.document().let { JsonObject(it - "offset" - "limit" - "today" - "at") }
+        val viewQuery = FacetPagedQuery.selection(savedQuery ?: query.document())
         val previous = existing?.getValue("view")?.jsonObject ?: JsonObject(emptyMap())
         return FacetSavedViewIntent(profile.id, existing?.getValue("id")?.jsonPrimitive?.content ?: UUID.randomUUID().toString(),
             viewQuery, previous, previous["name"]?.jsonPrimitive?.content.orEmpty())
@@ -618,7 +618,7 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
         }
         needsStandardConsent = false
         val all = mutableListOf<VaultTask>(); var page: VaultSnapshot; var total: ULong? = null
-        val vocabulary = FacetPagedQuery(profile.id, request, FacetQuery(scope = "all").document(today = frozen.query.getValue("today").jsonPrimitive.content, at = frozen.query.getValue("at").jsonPrimitive.content))
+        val vocabulary = FacetPagedQuery(profile.id, request, FacetQuery(scope = "all").document(today = frozen.query.getValue("today").jsonPrimitive.content, at = frozen.query.getValue("at").jsonPrimitive.content, timezone = frozen.query.getValue("timezone").jsonPrimitive.content))
         do {
             page = engine.snapshot(profile.id, vocabulary.page(all.size, 1000))
             if (!owns() || request != generation || selected?.id != profile.id) return

@@ -42,6 +42,10 @@
       LogicalName="FacetContractCases.json"
     />
     <EmbeddedResource
+      Include="../../../tasknotes-fixtures/vault/facet-agenda-contract.json"
+      LogicalName="FacetAgendaContractCases.json"
+    />
+    <EmbeddedResource
       Include="../../../tasknotes-fixtures/vault/facet-occurrence-contract.json"
       LogicalName="FacetOccurrenceContractCases.json"
     />

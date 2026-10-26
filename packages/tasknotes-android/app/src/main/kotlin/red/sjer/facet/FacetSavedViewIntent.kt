@@ -10,7 +10,7 @@ internal data class FacetSavedViewIntent(val profileId: String, val viewId: Stri
         put("kind", "save_view"); put("id", viewId)
         put("view", buildJsonObject {
             previous.forEach { (key, value) -> put(key, value) }
-            put("schemaVersion", 1); put("name", name); put("query", query)
+            put("schemaVersion", 1); put("name", name); put("query", FacetPagedQuery.selection(query))
         })
     }
     fun renamed(value: String) = copy(name = value, mutationId = UUID.randomUUID().toString())

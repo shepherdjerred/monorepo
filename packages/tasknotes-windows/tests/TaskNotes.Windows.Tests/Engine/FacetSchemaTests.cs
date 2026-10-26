@@ -57,6 +57,11 @@ public sealed class FacetSchemaTests
     public void SharedNeutralCorpusIsFullyValidated() =>
         ValidateCorpus("FacetContractCases.json", "value", 149);
 
+    /// <summary>Validates every agenda execution, zone-free saved selection and projected task boundary.</summary>
+    [TestMethod]
+    public void SharedAgendaCorpusIsFullyValidated() =>
+        ValidateCorpus("FacetAgendaContractCases.json", "value", 30);
+
     /// <summary>Runs all neutral occurrence feature, command, concrete/deferred, maintenance and repair boundaries.</summary>
     [TestMethod]
     public void SharedOccurrenceCorpusIsFullyValidated() =>

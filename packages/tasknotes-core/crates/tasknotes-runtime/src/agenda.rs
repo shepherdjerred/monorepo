@@ -15,6 +15,23 @@ struct Reason {
     kind: AgendaDateKind,
 }
 
+#[derive(Clone, Copy)]
+struct AgendaDay {
+    local: NaiveDate,
+    // Occurrence identities are canonical written civil days, independent of
+    // the viewer's display timezone and the selected agenda reason.
+    identity: NaiveDate,
+}
+
+impl AgendaDay {
+    fn literal(day: NaiveDate) -> Self {
+        Self {
+            local: day,
+            identity: day,
+        }
+    }
+}
+
 pub(crate) fn project(
     task: &mut TaskSnapshot,
     query: &Query,
@@ -33,8 +50,12 @@ pub(crate) fn project(
         return Ok(());
     }
     let upcoming = query.scope.as_deref() == Some("upcomingAgenda");
-    let scheduled = property_day(task, "scheduled");
-    let due = property_day(task, "due");
+    let timezone = query
+        .timezone
+        .as_deref()
+        .ok_or_else(|| RuntimeError::Validation("agenda scope requires viewer timezone".into()))?;
+    let scheduled = property_day(task, "scheduled", timezone)?;
+    let due = property_day(task, "due", timezone)?;
     let mut planned = scheduled;
     let mut deadline = due;
     let mut completion_day = None;
@@ -43,11 +64,13 @@ pub(crate) fn project(
         let skipped = crate::projections::instance_days(task, "skippedInstances")?;
         let processed = |day| complete.contains(&day) || skipped.contains(&day);
         let covered = |day: NaiveDate| occurrences.covers(&task.path, &day.to_string());
-        let current = scheduled.or(due);
+        let current = scheduled.or(due).map(|day| day.identity);
         if upcoming {
             let current_processed = current.is_some_and(|day| processed(day) || covered(day));
-            planned = scheduled.filter(|day| !processed(*day) && !covered(*day));
-            deadline = due.filter(|day| !current_processed && !processed(*day) && !covered(*day));
+            planned = scheduled.filter(|day| !processed(day.identity) && !covered(day.identity));
+            deadline = due.filter(|day| {
+                !current_processed && !processed(day.identity) && !covered(day.identity)
+            });
             if current_processed || current.is_none() {
                 planned = next_occurrence(
                     recurrence,
@@ -56,17 +79,21 @@ pub(crate) fn project(
                     &complete,
                     &skipped,
                     &covered,
-                )?;
+                )?
+                .map(AgendaDay::literal);
             }
-            completion_day = planned.or(current).or(deadline);
+            completion_day = planned
+                .map(|day| day.identity)
+                .or(current)
+                .or(deadline.map(|day| day.identity));
         } else {
-            planned = scheduled.filter(|day| !processed(*day) && !covered(*day));
+            planned = scheduled.filter(|day| !processed(day.identity) && !covered(day.identity));
             if scheduled.is_none()
                 && occurrence_on(recurrence, today)?
                 && !processed(today)
                 && !covered(today)
             {
-                planned = Some(today);
+                planned = Some(AgendaDay::literal(today));
             }
             // A materialized child is the sole owner of its occurrence. Do not
             // recreate a second virtual row through a parent's due-date reason.
@@ -82,7 +109,8 @@ pub(crate) fn project(
                 Some(today)
             } else {
                 planned
-                    .filter(|day| *day <= today)
+                    .filter(|day| day.local <= today)
+                    .map(|day| day.identity)
                     .or(current)
                     .or(Some(today))
             };
@@ -91,19 +119,19 @@ pub(crate) fn project(
             return Ok(());
         }
     }
-    let eligible = |day: &NaiveDate| {
+    let eligible = |day: &AgendaDay| {
         if upcoming {
-            *day > today
+            day.local > today
         } else {
-            *day <= today
+            day.local <= today
         }
     };
     let planned = planned.filter(eligible).map(|day| Reason {
-        day,
+        day: day.local,
         kind: AgendaDateKind::Planned,
     });
     let deadline = deadline.filter(eligible).map(|day| Reason {
-        day,
+        day: day.local,
         kind: AgendaDateKind::Deadline,
     });
     publish(task, today, upcoming, planned, deadline, completion_day);
@@ -140,11 +168,17 @@ fn publish(
     }
 }
 
-fn property_day(task: &TaskSnapshot, key: &str) -> Option<NaiveDate> {
+fn property_day(task: &TaskSnapshot, key: &str, timezone: &str) -> Result<Option<AgendaDay>> {
     task.properties
         .get(key)
         .and_then(serde_json::Value::as_str)
-        .and_then(|value| tasknotes_vault::temporal::date_part(value).ok())
+        .map(|value| {
+            Ok(AgendaDay {
+                local: tasknotes_vault::temporal::parse_local_day(value, timezone)?,
+                identity: tasknotes_vault::temporal::date_part(value)?,
+            })
+        })
+        .transpose()
 }
 
 fn occurrence_on(recurrence: &Recurrence, day: NaiveDate) -> Result<bool> {

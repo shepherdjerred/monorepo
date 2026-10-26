@@ -42,8 +42,7 @@ import TaskNotesKit
 
     var value: [String: FacetValue] {
         var result = originalFields
-        var storedQuery = query
-        for key in ["at", "today", "offset", "limit"] { storedQuery.removeValue(forKey: key) }
+        let storedQuery = FacetSavedViewQuery.selection(query)
         result.merge([
             "name": .string(name.trimmingCharacters(in: .whitespacesAndNewlines)),
             "symbol": .string(symbol), "tint": .string(tint), "favorite": .bool(favorite),

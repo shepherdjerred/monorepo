@@ -730,7 +730,7 @@
               "type": "string"
             },
             "query": {
-              "$ref": "#/$defs/query"
+              "$ref": "#/$defs/querySelection"
             }
           },
           "required": [
@@ -769,6 +769,17 @@
       "additionalProperties": false
     },
     "query": {
+      "allOf": [
+        { "$ref": "#/$defs/querySelection" },
+        {
+          "anyOf": [
+            { "not": { "properties": { "scope": { "enum": ["todayAgenda", "upcomingAgenda"] } }, "required": ["scope"] } },
+            { "properties": { "timezone": { "type": "string", "minLength": 1, "pattern": "\\S" } }, "required": ["timezone"] }
+          ]
+        }
+      ]
+    },
+    "querySelection": {
       "type": "object",
       "properties": {
         "schemaVersion": {
@@ -870,6 +881,9 @@
               "type": "null"
             }
           ]
+        },
+        "timezone": {
+          "type": ["string", "null"]
         },
         "upcomingDays": {
           "anyOf": [
