@@ -19,8 +19,8 @@ import java.util.zip.GZIPInputStream;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The single respawn stored in a player's saved data. Paper 26.2 writes {@code respawn} as {@code
- * ServerPlayer.RespawnConfig}: one dimension and block, not one bed per world.
+ * The single respawn stored in a player's saved data. The native 26.2/26.3 codec flattens {@code
+ * ServerPlayer.RespawnConfig} into dimension, pos, yaw, pitch, and forced fields.
  */
 public final class SavedRespawn {
 
@@ -111,13 +111,11 @@ public final class SavedRespawn {
     if (!root.containsKey("respawn")) {
       return Optional.empty();
     }
-    var data =
-        compound(required(compound(root.get("respawn"), "respawn"), "respawnData"), "respawnData");
-    var global = compound(required(data, "globalPos"), "globalPos");
-    var pos = coordinates(required(global, "pos"));
+    var data = compound(root.get("respawn"), "respawn");
+    var pos = coordinates(required(data, "pos"));
     return Optional.of(
         new Spot(
-            dimension(required(global, "dimension")),
+            dimension(required(data, "dimension")),
             pos[0],
             pos[1],
             pos[2],

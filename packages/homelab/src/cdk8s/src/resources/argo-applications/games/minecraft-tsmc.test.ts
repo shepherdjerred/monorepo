@@ -126,7 +126,7 @@ function synthTsmc(): unknown[] {
 
 describe("minecraft-tsmc runs The Storm's image", () => {
   test("keeps generated BlueMap renders on a separate excluded 128Gi volume", () => {
-    expect(synthTsmc()).toContainEqual(
+    expect(tsmcValues()["extraDeploy"]).toContainEqual(
       expect.objectContaining({
         kind: "PersistentVolumeClaim",
         metadata: expect.objectContaining({
@@ -141,6 +141,23 @@ describe("minecraft-tsmc runs The Storm's image", () => {
           storageClassName: "zfs-ssd-lz4",
           accessModes: ["ReadWriteOnce"],
           resources: { requests: { storage: "128Gi" } },
+        }),
+      }),
+    );
+    expect(synthTsmc()).not.toContainEqual(
+      expect.objectContaining({
+        kind: "PersistentVolumeClaim",
+        metadata: expect.objectContaining({ name: "minecraft-tsmc-bluemap" }),
+      }),
+    );
+    expect(tsmcValues()["extraDeploy"]).toContainEqual(
+      expect.objectContaining({
+        kind: "ConfigMap",
+        metadata: expect.objectContaining({
+          name: "minecraft-tsmc-bluemap-migration",
+        }),
+        data: expect.objectContaining({
+          "bluemap_storage.py": expect.stringContaining("def copy("),
         }),
       }),
     );
@@ -262,7 +279,6 @@ describe("minecraft-tsmc runs The Storm's image", () => {
         volumeMounts: [{ name: "bluemap", mountPath: "/data/bluemap" }],
       }),
     ]);
-    expect(values["extraDeploy"]).toBeUndefined();
     expect(server["type"]).toBe("PAPER");
     expect(server["version"]).toBe(THE_STORM_PAPER_VERSION);
   });

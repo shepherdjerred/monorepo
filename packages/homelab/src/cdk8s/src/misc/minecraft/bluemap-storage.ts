@@ -1,9 +1,3 @@
-import type { Chart } from "cdk8s";
-import {
-  KubeConfigMap,
-  KubePersistentVolumeClaim,
-  Quantity,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import {
   getPvcBackupLabels,
   getPvcBackupPolicy,
@@ -17,24 +11,32 @@ const migration = await Bun.file(
   new URL("bluemap-storage/bluemap.py", import.meta.url),
 ).text();
 
-/** Render data is reproducible, but migrating it preserves expensive completed renders. */
-export function createBlueMapStorage(chart: Chart): void {
-  new KubePersistentVolumeClaim(chart, BLUEMAP_CLAIM, {
-    metadata: {
-      name: BLUEMAP_CLAIM,
-      namespace: NAMESPACE,
-      labels: getPvcBackupLabels(getPvcBackupPolicy(NAMESPACE, BLUEMAP_CLAIM)),
+/** Keep cache storage and its migration script in the server Application's release. */
+export function blueMapStorageResources(): object[] {
+  return [
+    {
+      apiVersion: "v1",
+      kind: "PersistentVolumeClaim",
+      metadata: {
+        name: BLUEMAP_CLAIM,
+        namespace: NAMESPACE,
+        labels: getPvcBackupLabels(
+          getPvcBackupPolicy(NAMESPACE, BLUEMAP_CLAIM),
+        ),
+      },
+      spec: {
+        accessModes: ["ReadWriteOnce"],
+        storageClassName: zfsNvmeStorageClass(NAMESPACE, BLUEMAP_CLAIM),
+        resources: { requests: { storage: "128Gi" } },
+      },
     },
-    spec: {
-      accessModes: ["ReadWriteOnce"],
-      storageClassName: zfsNvmeStorageClass(NAMESPACE, BLUEMAP_CLAIM),
-      resources: { requests: { storage: Quantity.fromString("128Gi") } },
+    {
+      apiVersion: "v1",
+      kind: "ConfigMap",
+      metadata: { name: `${BLUEMAP_CLAIM}-migration`, namespace: NAMESPACE },
+      data: { "bluemap_storage.py": migration },
     },
-  });
-  new KubeConfigMap(chart, `${BLUEMAP_CLAIM}-migration`, {
-    metadata: { name: `${BLUEMAP_CLAIM}-migration`, namespace: NAMESPACE },
-    data: { "bluemap_storage.py": migration },
-  });
+  ];
 }
 
 export function blueMapStorageVolumes(): object[] {

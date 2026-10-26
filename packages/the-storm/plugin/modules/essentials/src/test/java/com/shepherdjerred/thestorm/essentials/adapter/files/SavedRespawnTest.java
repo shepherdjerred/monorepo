@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.essentials.adapter.files;
 
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -32,9 +33,41 @@ final class SavedRespawnTest {
   }
 
   @Test
+  void aNative263CodecFixtureReadsWithoutRewritingTheFile(@TempDir Path directory)
+      throws IOException {
+    var file = directory.resolve(ALICE + ".dat");
+    // Encoded by ServerPlayer.RespawnConfig.CODEC with NbtOps, not this test's writer.
+    try (var input =
+        requireNonNull(getClass().getResourceAsStream("/native-flat-respawn-26.3.dat"))) {
+      Files.copy(input, file);
+    }
+    var original = Files.readAllBytes(file);
+
+    assertThat(SavedRespawn.read(file))
+        .contains(new SavedRespawn.Spot("minecraft:overworld", 12, 64, -4, 90f));
+    assertThat(Files.readAllBytes(file)).isEqualTo(original);
+  }
+
+  @Test
   void aMalformedRespawnFailsInsteadOfGuessing() {
     assertThatThrownBy(() -> SavedRespawn.read(Map.of("respawn", Map.of())))
         .isInstanceOf(IllegalStateException.class);
+  }
+
+  @Test
+  void invalidNativeCoordinatesAndYawAreReported() {
+    var valid =
+        new java.util.LinkedHashMap<>(
+            respawn(new SavedRespawn.Spot("minecraft:overworld", 12, 64, -4, 90f)));
+    valid.put("pos", new int[] {12, 64});
+    assertThatThrownBy(() -> SavedRespawn.read(Map.of("respawn", valid)))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("pos is not a block position");
+    valid.put("pos", new int[] {12, 64, -4});
+    valid.put("yaw", Float.NaN);
+    assertThatThrownBy(() -> SavedRespawn.read(Map.of("respawn", valid)))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("yaw is not a finite float");
   }
 
   @Test
@@ -98,20 +131,21 @@ final class SavedRespawnTest {
   }
 
   private static Map<String, Object> root(SavedRespawn.Spot spot) {
+    return Map.of("respawn", respawn(spot));
+  }
+
+  private static Map<String, Object> respawn(SavedRespawn.Spot spot) {
     return Map.of(
-        "respawn",
-        Map.of(
-            "respawnData",
-            Map.of(
-                "globalPos",
-                Map.of(
-                    "dimension", spot.dimension(), "pos", new int[] {spot.x(), spot.y(), spot.z()}),
-                "yaw",
-                spot.yaw(),
-                "pitch",
-                0f),
-            "forced",
-            (byte) 0));
+        "dimension",
+        spot.dimension(),
+        "pos",
+        new int[] {spot.x(), spot.y(), spot.z()},
+        "yaw",
+        spot.yaw(),
+        "pitch",
+        0f,
+        "forced",
+        (byte) 0);
   }
 
   private static void write(Path file, Map<String, Object> root) throws IOException {

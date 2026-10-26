@@ -29,6 +29,8 @@ The world claim remains `datadir-minecraft-tsmc-0`.
 The [server construct](packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-tsmc.ts)
 and [backup policy](packages/homelab/src/cdk8s/src/backup-policy/pvc-backup-policy.json)
 declare these separately.
+The Minecraft child chart owns the cache claim and migration ConfigMap through
+`extraDeploy`, alongside the init container that verifies the copy.
 
 Deploy storage changes through the [homelab release path](/how-to/cut-a-homelab-release/), keeping the accepted server image.
 Wait for the init copy's `VERIFIED` receipt, then inspect every existing map in the browser.

@@ -3018,8 +3018,8 @@
       "approvalPolicy": "none",
       "automatic": true,
       "promotionSourceEnvironmentId": "minecraft/sandbox",
-      "recipeRevisionId": "minecraft-tsmc/5",
-      "configurationRevisionId": "minecraft-tsmc/4"
+      "recipeRevisionId": "minecraft-tsmc/6",
+      "configurationRevisionId": "minecraft-tsmc/5"
     },
     {
       "id": "mc-router/prod",
