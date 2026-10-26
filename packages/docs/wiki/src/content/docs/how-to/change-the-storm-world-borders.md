@@ -106,6 +106,10 @@ chunky progress frontier
 
 Use each world's configured radius, including Nether, End, Skylands, and Creative.
 Require completion before starting the next task.
+The image enables `force-load-existing-chunks` so Paper also upgrades historical
+chunks that it would otherwise skip. This preserves their terrain while making
+the native saved format available to BlueMap; do not replace or trim old chunks
+to repair a missing render.
 Cancel completed task records through Chunky without trimming retained terrain.
 Its [command reference](https://github.com/pop4959/Chunky/wiki/Commands)
 distinguishes task cancellation from chunk deletion.

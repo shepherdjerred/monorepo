@@ -7,6 +7,13 @@
         "key": "continue-on-restart",
         "value": true
       }
+    },
+    {
+      "$put": {
+        "path": "$",
+        "key": "force-load-existing-chunks",
+        "value": true
+      }
     }
   ]
 }
