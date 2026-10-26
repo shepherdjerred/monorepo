@@ -3014,8 +3014,8 @@
       "approvalPolicy": "none",
       "automatic": true,
       "promotionSourceEnvironmentId": "minecraft/sandbox",
-      "recipeRevisionId": "minecraft-tsmc/3",
-      "configurationRevisionId": "minecraft-tsmc/2"
+      "recipeRevisionId": "minecraft-tsmc/4",
+      "configurationRevisionId": "minecraft-tsmc/3"
     },
     {
       "id": "mc-router/prod",
@@ -3950,17 +3950,7 @@
     },
     {
       "dependent": "delivery-control-plane/prod",
-      "prerequisite": "cluster-platform/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "delivery-control-plane/prod",
       "prerequisite": "kueue/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "delivery-control-plane/prod",
-      "prerequisite": "openebs/prod",
       "rule": "any-accepted"
     },
     {

@@ -1,6 +1,6 @@
 import { App, Chart } from "cdk8s";
 import { ConfigMap } from "cdk8s-plus-31";
-import { expect, test, vi } from "vitest";
+import { afterAll, beforeAll, expect, test, vi } from "vitest";
 import { z } from "zod";
 import { mkdtemp, mkdir, symlink, rm } from "node:fs/promises";
 import os from "node:os";
@@ -90,6 +90,21 @@ async function synthesizedChartInputs(directory: string) {
   return { app, inputs };
 }
 
+// Both publication checks consume the same immutable synthesis. Build it once
+// as suite setup so they exercise identical chart bytes without duplicate work.
+let synthesisDirectory: string | undefined;
+let synthesis: Awaited<ReturnType<typeof synthesizedChartInputs>>;
+beforeAll(async () => {
+  synthesisDirectory = await mkdtemp(
+    path.join(os.tmpdir(), "delivery-bootstrap-synthesis-"),
+  );
+  synthesis = await synthesizedChartInputs(synthesisDirectory);
+});
+afterAll(async () => {
+  if (synthesisDirectory !== undefined)
+    await rm(synthesisDirectory, { recursive: true, force: true });
+});
+
 test("actual BOTH bootstrap stages and Helm renders reviewed images while retaining original dependencies and unrelated sources", async () => {
   const directory = await mkdtemp(
     path.join(os.tmpdir(), "delivery-bootstrap-both-"),
@@ -118,7 +133,7 @@ test("actual BOTH bootstrap stages and Helm renders reviewed images while retain
     },
   });
   try {
-    const { inputs } = await synthesizedChartInputs(directory);
+    const { inputs } = synthesis;
     const manifests = new Map(
       await Promise.all(
         inputs.map(
@@ -282,7 +297,7 @@ test("normal all-chart publication discovers and packages the actual control-pla
     path.join(os.tmpdir(), "delivery-chart-publication-"),
   );
   try {
-    const { app, inputs } = await synthesizedChartInputs(directory);
+    const { app, inputs } = synthesis;
     const controller = inputs.find(
       (input) => input.name === "delivery-control-plane",
     );

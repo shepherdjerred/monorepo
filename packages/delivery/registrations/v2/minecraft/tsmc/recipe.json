@@ -1,5 +1,5 @@
 {
-  "id": "minecraft-tsmc/3",
+  "id": "minecraft-tsmc/4",
   "definition": {
     "kind": "compound",
     "subRecipes": [
@@ -103,9 +103,6 @@
                 "group": "apps",
                 "kind": "StatefulSet",
                 "jsonPointers": [
-                  "/metadata/annotations/sjer.red~1world-restore-lease",
-                  "/metadata/annotations/sjer.red~1world-restore-phase",
-                  "/metadata/annotations/sjer.red~1world-restore-image",
                   "/spec/podManagementPolicy",
                   "/spec/revisionHistoryLimit",
                   "/spec/persistentVolumeClaimRetentionPolicy",
@@ -116,8 +113,6 @@
                 "kind": "Service",
                 "jsonPointers": [
                   "/metadata/annotations/mc-router.itzg.me~1autoScaleUp",
-                  "/metadata/annotations/sjer.red~1world-restore-lease",
-                  "/spec/selector/sjer.red~1world-restore-access",
                   "/spec/clusterIP",
                   "/spec/clusterIPs",
                   "/spec/ipFamilies",

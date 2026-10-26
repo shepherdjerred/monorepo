@@ -222,14 +222,15 @@ describe("PVC backup policy", () => {
     // Includes one CI RAM scratch mutation per lane profile (verify, browser).
     expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(6);
     expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(6);
-    // Includes PVC backup, ArgoCD, CI pod, restoration update/scale/delete and
-    // Service write/delete paths, mc-harness sandbox pod guards, bounded CI RAM
-    // scratch, the eleven active TSMC controller guards and the read-only Forum
-    // observer CONNECT guard.
-    expect(admissionKinds.get("copy:ValidatingAdmissionPolicy")).toBe(1);
-    expect(admissionKinds.get("copy:ValidatingAdmissionPolicyBinding")).toBe(1);
+    // The retired TSMC restoration controller no longer owns a copy guard.
+    expect(admissionKinds.has("copy:ValidatingAdmissionPolicy")).toBe(false);
+    expect(admissionKinds.has("copy:ValidatingAdmissionPolicyBinding")).toBe(
+      false,
+    );
+    // PVC backup, ArgoCD lifecycle, CI pod and RAM scratch guards, mc-harness
+    // sandbox pods and the read-only Forum observer CONNECT guard remain.
     // Transition rendering adds the Application source-writer policy.
-    const validating = transitionRendering() ? 23 : 22;
+    const validating = transitionRendering() ? 7 : 6;
     expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(validating);
     expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(
       validating,
