@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.creative.adapter.paper;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.getString;
 import static com.mojang.brigadier.arguments.StringArgumentType.greedyString;
+import static com.mojang.brigadier.arguments.StringArgumentType.string;
 import static com.mojang.brigadier.arguments.StringArgumentType.word;
 import static io.papermc.paper.command.brigadier.Commands.argument;
 import static io.papermc.paper.command.brigadier.Commands.literal;
@@ -16,6 +17,8 @@ import com.shepherdjerred.thestorm.creative.adapter.export.SchematicFiles;
 import com.shepherdjerred.thestorm.creative.adapter.worldedit.PlotSchematics;
 import com.shepherdjerred.thestorm.creative.app.ClaimBook;
 import com.shepherdjerred.thestorm.creative.app.ClaimStore;
+import com.shepherdjerred.thestorm.creative.app.ReviewBook;
+import com.shepherdjerred.thestorm.creative.app.ReviewStore;
 import com.shepherdjerred.thestorm.creative.domain.CatalogDrift;
 import com.shepherdjerred.thestorm.creative.domain.ClaimRefusal;
 import com.shepherdjerred.thestorm.creative.domain.ClaimRequest;
@@ -24,12 +27,20 @@ import com.shepherdjerred.thestorm.creative.domain.CreativeConfig;
 import com.shepherdjerred.thestorm.creative.domain.CreativePermissions;
 import com.shepherdjerred.thestorm.creative.domain.DownloadNames;
 import com.shepherdjerred.thestorm.creative.domain.EditDecision;
+import com.shepherdjerred.thestorm.creative.domain.PlotFlag;
+import com.shepherdjerred.thestorm.creative.domain.PlotFootprint;
 import com.shepherdjerred.thestorm.creative.domain.PlotGrid;
 import com.shepherdjerred.thestorm.creative.domain.PlotId;
+import com.shepherdjerred.thestorm.creative.domain.PlotRole;
+import com.shepherdjerred.thestorm.creative.domain.PlotSurface;
 import com.shepherdjerred.thestorm.creative.domain.PlotView;
 import com.shepherdjerred.thestorm.creative.domain.StoredClaim;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -57,6 +68,12 @@ public final class CreativePlots {
   private final Runnable redraw;
   private final SchematicFiles schematics;
   private final PlotGrid grid;
+  private final CreativeSurfaceCommands choices;
+  private final CreativeMaintenanceCommands maintenance;
+  private final CreativeMergeCommands merges;
+  private final CreativeSchematicCommands library;
+  private final CreativeReviewCommands reviews;
+  private final PlotTeleport mover;
 
   /** What the plot commands need. Redraw runs on the main thread after a claim changes. */
   public record Parts(
@@ -66,9 +83,16 @@ public final class CreativePlots {
       CreativeConfig config,
       World world,
       Runnable redraw,
-      SchematicFiles schematics) {}
+      SchematicFiles schematics,
+      PlotFootprint.States template,
+      ReviewBook reviews,
+      ReviewStore reviewStore) {}
 
   public CreativePlots(Parts parts) {
+    this(parts, Player::teleportAsync);
+  }
+
+  CreativePlots(Parts parts, PlotTeleport.Arrival arrival) {
     this.context = parts.context();
     this.book = parts.book();
     this.store = parts.store();
@@ -77,6 +101,49 @@ public final class CreativePlots {
     this.redraw = parts.redraw();
     this.schematics = parts.schematics();
     this.grid = config.grid();
+    this.mover = new PlotTeleport(context, world, grid, arrival);
+    this.choices = new CreativeSurfaceCommands(this::ready, this::owned, this::persist);
+    this.maintenance =
+        new CreativeMaintenanceCommands(
+            new CreativeMaintenanceCommands.Hooks(
+                grid,
+                world,
+                this::ready,
+                this::owned,
+                this::persist,
+                this::removeClaim,
+                this::linked,
+                book::cluster,
+                this::persistAll));
+    this.merges =
+        new CreativeMergeCommands(
+            new CreativeMergeCommands.Hooks(
+                grid,
+                world,
+                parts.template(),
+                this::ready,
+                this::owned,
+                book::view,
+                this::claimRow,
+                book::merged,
+                book::cluster,
+                this::persistAll));
+    this.library =
+        new CreativeSchematicCommands(
+            new CreativeSchematicCommands.Hooks(
+                context, grid, world, schematics, this::ready, this::owned));
+    this.reviews =
+        new CreativeReviewCommands(
+            new CreativeReviewCommands.Hooks(
+                context,
+                config,
+                book,
+                parts.reviews(),
+                parts.reviewStore(),
+                this::ready,
+                this::standing,
+                book::view,
+                this::claimRow));
   }
 
   public void attach(LiteralArgumentBuilder<CommandSourceStack> root) {
@@ -86,13 +153,40 @@ public final class CreativePlots {
         literal("home")
             .executes(this::homeHere)
             .then(argument("plot", greedyString()).executes(this::homePlot)));
+    root.then(literal("tp").then(argument("plot", greedyString()).executes(this::visit)));
+    root.then(literal("member").then(argument("player", word()).executes(this::member)));
+    root.then(literal("unmember").then(argument("player", word()).executes(this::unmember)));
     root.then(literal("trust").then(argument("player", word()).executes(this::trust)));
     root.then(literal("untrust").then(argument("player", word()).executes(this::untrust)));
+    root.then(literal("deny").then(argument("player", word()).executes(this::deny)));
+    root.then(literal("undeny").then(argument("player", word()).executes(this::undeny)));
+    root.then(
+        literal("flag")
+            .then(argument("name", string()).then(argument("value", word()).executes(this::flag))));
     root.then(literal("info").executes(this::info));
     root.then(literal("list").executes(this::list));
     root.then(literal("name").then(argument("name", greedyString()).executes(this::name)));
     root.then(
         literal("desc").then(argument("description", greedyString()).executes(this::describe)));
+    root.then(literal("floor").then(argument("name", word()).executes(choices::floor)));
+    root.then(literal("wall").then(argument("name", word()).executes(choices::wall)));
+    root.then(literal("biome").then(argument("name", word()).executes(choices::biome)));
+    root.then(
+        literal("clear")
+            .executes(maintenance::clearHint)
+            .then(literal("confirm").executes(maintenance::clear)));
+    root.then(literal("reset").executes(maintenance::reset));
+    root.then(literal("unclaim").executes(maintenance::unclaim));
+    root.then(literal("merge").then(argument("plot", greedyString()).executes(merges::merge)));
+    root.then(literal("unlink").executes(merges::unlink));
+    root.then(literal("save").then(argument("name", word()).executes(library::save)));
+    root.then(literal("load").executes(library::load));
+    root.then(literal("paste").then(argument("name", word()).executes(library::paste)));
+    root.then(literal("rate").then(argument("score", word()).executes(reviews::rate)));
+    root.then(
+        literal("comment")
+            .then(literal("delete").executes(reviews::delete))
+            .then(argument("text", greedyString()).executes(reviews::comment)));
     root.then(literal("download").executes(this::download));
     root.then(
         literal("admin")
@@ -168,18 +262,88 @@ public final class CreativePlots {
     return Command.SINGLE_SUCCESS;
   }
 
-  private int trust(CommandContext<CommandSourceStack> context) {
+  private int visit(CommandContext<CommandSourceStack> context) {
     var player = player(context);
-    if (ready(player)) {
-      changeTrust(player, online(player, getString(context, "player")), true);
+    if (!ready(player)) {
+      return Command.SINGLE_SUCCESS;
+    }
+    var id = plotId(player, getString(context, "plot").strip());
+    if (id.isPresent() && mayEnter(player, book.view(id.orElseThrow()))) {
+      teleport(player, id.orElseThrow());
+    } else if (id.isPresent()) {
+      error(player, "You cannot visit that plot.");
     }
     return Command.SINGLE_SUCCESS;
   }
 
+  private int member(CommandContext<CommandSourceStack> context) {
+    return grant(context, PlotRole.MEMBER, true);
+  }
+
+  private int unmember(CommandContext<CommandSourceStack> context) {
+    return grant(context, PlotRole.MEMBER, false);
+  }
+
+  private int trust(CommandContext<CommandSourceStack> context) {
+    return grant(context, PlotRole.TRUSTED, true);
+  }
+
   private int untrust(CommandContext<CommandSourceStack> context) {
+    return grant(context, PlotRole.TRUSTED, false);
+  }
+
+  private int deny(CommandContext<CommandSourceStack> context) {
+    return grant(context, PlotRole.DENIED, true);
+  }
+
+  private int undeny(CommandContext<CommandSourceStack> context) {
+    return grant(context, PlotRole.DENIED, false);
+  }
+
+  private int flag(CommandContext<CommandSourceStack> context) {
+    var player = player(context);
+    if (!ready(player)) {
+      return Command.SINGLE_SUCCESS;
+    }
+    var value = getString(context, "value");
+    if (!value.equals("on") && !value.equals("off")) {
+      error(player, "Use on or off.");
+      return Command.SINGLE_SUCCESS;
+    }
+    var on = value.equals("on");
+    var parsed = PlotFlag.parse(getString(context, "name"));
+    if (parsed.isEmpty()) {
+      error(player, "Unknown flag. Use pvp, use, vehicle, mob-interact, or explosion.");
+      return Command.SINGLE_SUCCESS;
+    }
+    var flag = parsed.orElseThrow();
+    var row = owned(player);
+    if (row.isEmpty()) {
+      error(player, "You do not own the plot you are standing on.");
+      return Command.SINGLE_SUCCESS;
+    }
+    var current = row.orElseThrow();
+    if (current.flags().contains(flag) == on) {
+      error(player, flag.stored() + " is already " + (on ? "on" : "off") + ".");
+      return Command.SINGLE_SUCCESS;
+    }
+    var next = new LinkedHashSet<>(current.flags());
+    if (on) {
+      next.add(flag);
+    } else {
+      next.remove(flag);
+    }
+    persistShared(
+        player,
+        current.withFlags(next),
+        "Set " + flag.stored() + " " + (on ? "on" : "off") + " for " + current.id().text() + ".");
+    return Command.SINGLE_SUCCESS;
+  }
+
+  private int grant(CommandContext<CommandSourceStack> context, PlotRole role, boolean add) {
     var player = player(context);
     if (ready(player)) {
-      changeTrust(player, online(player, getString(context, "player")), false);
+      changeRole(player, online(player, getString(context, "player")), role, add);
     }
     return Command.SINGLE_SUCCESS;
   }
@@ -194,7 +358,11 @@ public final class CreativePlots {
       error(player, "You are standing on a road.");
       return Command.SINGLE_SUCCESS;
     }
-    tell(player, describe(book.view(at.orElseThrow())));
+    var id = at.orElseThrow();
+    tell(player, describe(book.view(id)));
+    for (var line : reviews.lines(id)) {
+      tell(player, line);
+    }
     return Command.SINGLE_SUCCESS;
   }
 
@@ -305,34 +473,124 @@ public final class CreativePlots {
             true,
             view.name(),
             view.description(),
-            Set.of()),
-        "You claimed " + id.text() + ".");
+            Map.of(),
+            Set.of(),
+            PlotSurface.DEFAULT,
+            Optional.empty()),
+        new Notice("You claimed " + id.text() + ".", true));
   }
 
-  private void changeTrust(Player player, @Nullable Player target, boolean add) {
+  private void changeRole(Player actor, @Nullable Player target, PlotRole role, boolean add) {
     if (target == null) {
       return;
     }
-    var row = owned(player);
-    if (row.isEmpty()) {
-      error(player, "You do not own the plot you are standing on.");
+    var at = standing(actor);
+    if (at.isEmpty()) {
+      error(actor, "Stand on a plot to change who can use it.");
       return;
     }
-    if (target.getUniqueId().equals(player.getUniqueId())) {
-      error(player, "You already own that plot.");
+    var id = at.orElseThrow();
+    var view = book.view(id);
+    if (view.owner().isEmpty()) {
+      error(actor, "That plot has no owner.");
       return;
     }
-    var members = new LinkedHashSet<>(row.orElseThrow().trusted());
-    var changed = add ? members.add(target.getUniqueId()) : members.remove(target.getUniqueId());
-    if (!changed) {
-      error(player, add ? "That player is already trusted." : "That player is not trusted.");
+    if (!mayGrant(actor, view, role)) {
+      error(actor, "You cannot change that role.");
       return;
     }
-    var verb = add ? "Trusted " : "Untrusted ";
-    persist(
-        player,
-        row.orElseThrow().withTrusted(members),
-        verb + target.getName() + " on " + row.orElseThrow().id().text() + ".");
+    if (target.getUniqueId().equals(view.owner().orElseThrow())) {
+      error(actor, "That player owns the plot.");
+      return;
+    }
+    if (target.getUniqueId().equals(actor.getUniqueId())) {
+      error(actor, "You cannot change your own role.");
+      return;
+    }
+    var row = claimHere(id, view);
+    var members = new LinkedHashMap<>(row.access());
+    var current = members.get(target.getUniqueId());
+    if (add) {
+      if (current == role) {
+        error(actor, "That player is already " + roleName(role) + ".");
+        return;
+      }
+      if (!owner(actor, view) && current != null) {
+        error(actor, "Only the owner can change that role.");
+        return;
+      }
+      members.put(target.getUniqueId(), role);
+    } else if (current != role) {
+      error(actor, "That player is not " + roleName(role) + ".");
+      return;
+    } else {
+      members.remove(target.getUniqueId());
+    }
+    persistShared(actor, row.withAccess(members), roleMessage(add, role, target.getName(), id));
+  }
+
+  private static boolean owner(Player actor, PlotView view) {
+    return view.owner().isPresent() && view.owner().orElseThrow().equals(actor.getUniqueId());
+  }
+
+  /** The owner manages every role. A trusted player may add or remove members only. */
+  private static boolean mayGrant(Player actor, PlotView view, PlotRole role) {
+    if (owner(actor, view)) {
+      return true;
+    }
+    return view.access().get(actor.getUniqueId()) == PlotRole.TRUSTED && role == PlotRole.MEMBER;
+  }
+
+  private static String roleName(PlotRole role) {
+    return switch (role) {
+      case MEMBER -> "a member";
+      case TRUSTED -> "trusted";
+      case DENIED -> "denied";
+    };
+  }
+
+  private static String roleMessage(boolean add, PlotRole role, String name, PlotId id) {
+    var plot = id.text();
+    if (!add) {
+      return switch (role) {
+        case MEMBER -> "Removed member " + name + " from " + plot + ".";
+        case TRUSTED -> "Removed trust for " + name + " on " + plot + ".";
+        case DENIED -> "Allowed " + name + " onto " + plot + ".";
+      };
+    }
+    return switch (role) {
+      case MEMBER -> "Added " + name + " as a member of " + plot + ".";
+      case TRUSTED -> "Trusted " + name + " on " + plot + ".";
+      case DENIED -> "Denied " + name + " on " + plot + ".";
+    };
+  }
+
+  /** The stored row, or a new one that keeps the catalog owner when the plot was only restored. */
+  private StoredClaim claimHere(PlotId id, PlotView view) {
+    var existing = book.row(id);
+    if (existing.isPresent() && !existing.orElseThrow().released()) {
+      return existing.orElseThrow();
+    }
+    var owner = view.countsTowardCap() ? view.owner() : Optional.<UUID>empty();
+    return new StoredClaim(
+        id,
+        owner,
+        false,
+        view.countsTowardCap(),
+        view.name(),
+        view.description(),
+        view.access(),
+        view.flags(),
+        view.surface(),
+        Optional.empty());
+  }
+
+  private StoredClaim claimRow(PlotId id) {
+    return claimHere(id, book.view(id));
+  }
+
+  private boolean linked(PlotId id) {
+    return book.merged(id).size() > 1;
   }
 
   private void rename(Player player, String text, boolean name) {
@@ -375,7 +633,8 @@ public final class CreativePlots {
     try {
       bytes =
           PlotSchematics.copy(
-              world, grid.bounds(id), world.getMinHeight(), world.getMaxHeight() - 1);
+              new PlotSchematics.Span(
+                  world, grid.bounds(id), world.getMinHeight(), world.getMaxHeight() - 1));
     } catch (RuntimeException failure) {
       context.logger().error("Creative download failed for {}", id.text(), failure);
       error(player, "That plot could not be copied.");
@@ -414,6 +673,10 @@ public final class CreativePlots {
       return;
     }
     var id = at.orElseThrow();
+    if (linked(id)) {
+      error(actor, "Unlink this plot before assigning it.");
+      return;
+    }
     if (!inside(id)) {
       error(actor, "That plot is outside the world border.");
       return;
@@ -428,7 +691,10 @@ public final class CreativePlots {
             false,
             view.name(),
             view.description(),
-            view.trusted()),
+            view.access(),
+            view.flags(),
+            view.surface(),
+            Optional.empty()),
         "Assigned " + id.text() + " to " + target.getName() + ".");
   }
 
@@ -439,10 +705,24 @@ public final class CreativePlots {
       return;
     }
     var id = at.orElseThrow();
+    if (linked(id)) {
+      error(actor, "Unlink this plot before unclaiming it.");
+      return;
+    }
     if (book.catalog().get(id).isPresent()) {
       persist(
           actor,
-          new StoredClaim(id, Optional.empty(), true, false, "", "", Set.of()),
+          new StoredClaim(
+              id,
+              Optional.empty(),
+              true,
+              false,
+              "",
+              "",
+              Map.of(),
+              Set.of(),
+              PlotSurface.DEFAULT,
+              Optional.empty()),
           "Released " + id.text() + ".");
       return;
     }
@@ -450,39 +730,109 @@ public final class CreativePlots {
       error(actor, "That plot is not claimed.");
       return;
     }
-    var previous = book.row(id);
+    removeClaim(actor, id, "Released " + id.text() + ".");
+  }
+
+  private void removeClaim(Player actor, PlotId id, String ok) {
+    var removal = new Removal(actor, id, book.row(id), ok);
     book.remove(id);
     redraw.run();
     var saved =
         store
             .delete(id)
             .whenCompleteAsync(
-                (ignored, failure) -> deleted(actor, id, previous, failure),
+                (ignored, failure) -> removed(removal, failure), context.scheduler().mainThread());
+    var _ = saved;
+  }
+
+  private record Removal(Player actor, PlotId id, Optional<StoredClaim> previous, String ok) {}
+
+  private void removed(Removal removal, @Nullable Throwable failure) {
+    if (failure != null) {
+      restore(removal.id(), removal.previous());
+      context.logger().error("Creative unclaim failed for {}", removal.id().text(), failure);
+      if (removal.actor().isOnline()) {
+        error(removal.actor(), "That could not be saved.");
+      }
+      return;
+    }
+    if (removal.actor().isOnline()) {
+      success(removal.actor(), removal.ok());
+    }
+  }
+
+  /** Chat for a saved claim, and whether that save should then take the player home. */
+  private record Notice(String ok, boolean teleportHome) {}
+
+  /** One optimistic write of several merged rows. */
+  private record SavedBatch(
+      Player player, List<StoredClaim> claims, List<Optional<StoredClaim>> previous, String ok) {}
+
+  /** One optimistic claim write and what to tell the player when it lands. */
+  private record PendingSave(
+      Player player, StoredClaim claim, Optional<StoredClaim> previous, Notice notice) {}
+
+  private void persistShared(Player player, StoredClaim standing, String ok) {
+    var rows = book.cluster(standing.id());
+    if (rows.size() < 2) {
+      persist(player, standing, ok);
+      return;
+    }
+    var next = new ArrayList<StoredClaim>();
+    var seen = false;
+    for (var row : rows) {
+      if (row.id().equals(standing.id())) {
+        next.add(standing);
+        seen = true;
+      } else {
+        next.add(row.withAccess(standing.access()).withFlags(standing.flags()));
+      }
+    }
+    if (!seen) {
+      next.add(standing);
+    }
+    persistAll(player, next, ok);
+  }
+
+  private void persistAll(Player player, List<StoredClaim> claims, String ok) {
+    var previous = new ArrayList<Optional<StoredClaim>>();
+    for (var claim : claims) {
+      previous.add(book.row(claim.id()));
+      book.put(claim);
+    }
+    redraw.run();
+    var batch = new SavedBatch(player, List.copyOf(claims), List.copyOf(previous), ok);
+    var saved =
+        store
+            .saveAll(claims)
+            .whenCompleteAsync(
+                (ignored, failure) -> persistedAll(batch, failure),
                 context.scheduler().mainThread());
     var _ = saved;
   }
 
-  private void deleted(
-      Player actor, PlotId id, Optional<StoredClaim> previous, @Nullable Throwable failure) {
+  private void persistedAll(SavedBatch batch, @Nullable Throwable failure) {
     if (failure != null) {
-      restore(id, previous);
-      context.logger().error("Creative unclaim failed for {}", id.text(), failure);
-      if (actor.isOnline()) {
-        error(actor, "That could not be saved.");
+      for (int i = 0; i < batch.claims().size(); i++) {
+        restore(batch.claims().get(i).id(), batch.previous().get(i));
+      }
+      context.logger().error("Creative claim save failed", failure);
+      if (batch.player().isOnline()) {
+        error(batch.player(), "That could not be saved.");
       }
       return;
     }
-    if (actor.isOnline()) {
-      success(actor, "Released " + id.text() + ".");
+    if (batch.player().isOnline()) {
+      success(batch.player(), batch.ok());
     }
   }
 
-  /** One optimistic claim write and the chat line to send when it lands. */
-  private record PendingSave(
-      Player player, StoredClaim claim, Optional<StoredClaim> previous, String ok) {}
-
   private void persist(Player player, StoredClaim claim, String ok) {
-    var pending = new PendingSave(player, claim, book.row(claim.id()), ok);
+    persist(player, claim, new Notice(ok, false));
+  }
+
+  private void persist(Player player, StoredClaim claim, Notice notice) {
+    var pending = new PendingSave(player, claim, book.row(claim.id()), notice);
     book.put(claim);
     redraw.run();
     var saved =
@@ -505,8 +855,12 @@ public final class CreativePlots {
       }
       return;
     }
-    if (pending.player().isOnline()) {
-      success(pending.player(), pending.ok());
+    if (!pending.player().isOnline()) {
+      return;
+    }
+    success(pending.player(), pending.notice().ok());
+    if (pending.notice().teleportHome()) {
+      teleport(pending.player(), pending.claim().id());
     }
   }
 
@@ -541,7 +895,10 @@ public final class CreativePlots {
             view.countsTowardCap(),
             view.name(),
             view.description(),
-            view.trusted()));
+            view.access(),
+            view.flags(),
+            view.surface(),
+            Optional.empty()));
   }
 
   private boolean ready(Player player) {
@@ -564,7 +921,11 @@ public final class CreativePlots {
     if (staff(player) && view.marked()) {
       return true;
     }
-    return EditDecision.mayEdit(player.getUniqueId(), view.owner(), view.trusted());
+    return EditDecision.mayEdit(player.getUniqueId(), view.owner(), view.access());
+  }
+
+  private boolean mayEnter(Player player, PlotView view) {
+    return PlotRole.mayEnter(staff(player), view.access(), player.getUniqueId());
   }
 
   private boolean canCopy(Player player, PlotView view) {
@@ -574,7 +935,7 @@ public final class CreativePlots {
     if (staff(player)) {
       return true;
     }
-    return EditDecision.mayEdit(player.getUniqueId(), view.owner(), view.trusted());
+    return EditDecision.mayEdit(player.getUniqueId(), view.owner(), view.access());
   }
 
   private boolean free(PlotId id) {
@@ -618,15 +979,7 @@ public final class CreativePlots {
   }
 
   private void teleport(Player player, PlotId id) {
-    var bounds = grid.bounds(id);
-    var x = Math.floorDiv(bounds.minX() + bounds.maxX(), 2) + 0.5;
-    var z = Math.floorDiv(bounds.minZ() + bounds.maxZ(), 2) + 0.5;
-    var moved = player.teleport(new Location(world, x, PlotGrid.SPAWN_Y, z));
-    if (moved) {
-      success(player, "Teleported to " + id.text() + ".");
-    } else {
-      error(player, "Could not teleport to " + id.text() + ".");
-    }
+    mover.teleport(player, id);
   }
 
   private static boolean staff(Player player) {
@@ -635,7 +988,16 @@ public final class CreativePlots {
   }
 
   private static PlotView road() {
-    return new PlotView(new PlotId(0, 0), Optional.empty(), "", "", Set.of(), false, false);
+    return new PlotView(
+        new PlotId(0, 0),
+        Optional.empty(),
+        "",
+        "",
+        Map.of(),
+        false,
+        false,
+        Set.of(),
+        PlotSurface.DEFAULT);
   }
 
   private static String describe(PlotView view) {

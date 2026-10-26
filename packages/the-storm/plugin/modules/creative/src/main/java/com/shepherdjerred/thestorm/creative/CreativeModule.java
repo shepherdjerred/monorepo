@@ -2,11 +2,15 @@ package com.shepherdjerred.thestorm.creative;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
+import com.shepherdjerred.thestorm.core.players.KnownPlayer;
+import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
+import com.shepherdjerred.thestorm.core.schedule.Scheduler;
 import com.shepherdjerred.thestorm.core.snapshot.SavedPlayerData;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.creative.adapter.bluemap.BlueMapPlots;
 import com.shepherdjerred.thestorm.creative.adapter.db.JooqBodyStore;
 import com.shepherdjerred.thestorm.creative.adapter.db.JooqClaimStore;
+import com.shepherdjerred.thestorm.creative.adapter.db.JooqReviewStore;
 import com.shepherdjerred.thestorm.creative.adapter.export.SchematicFiles;
 import com.shepherdjerred.thestorm.creative.adapter.grim.CreativeAnticheat;
 import com.shepherdjerred.thestorm.creative.adapter.paper.CreativeAudit;
@@ -19,13 +23,25 @@ import com.shepherdjerred.thestorm.creative.adapter.paper.CreativeWorld;
 import com.shepherdjerred.thestorm.creative.adapter.paper.PlotGuard;
 import com.shepherdjerred.thestorm.creative.adapter.worldedit.CreativeEdits;
 import com.shepherdjerred.thestorm.creative.app.ClaimBook;
+import com.shepherdjerred.thestorm.creative.app.ReviewBook;
+import com.shepherdjerred.thestorm.creative.app.ReviewStore.Snapshot;
 import com.shepherdjerred.thestorm.creative.domain.CreativeConfig;
+import com.shepherdjerred.thestorm.creative.domain.PlotFootprint;
 import com.shepherdjerred.thestorm.creative.domain.PlotGrid;
+import com.shepherdjerred.thestorm.creative.domain.PlotId;
 import com.shepherdjerred.thestorm.creative.domain.PlotMarkers;
+import com.shepherdjerred.thestorm.creative.domain.PlotView;
 import com.shepherdjerred.thestorm.creative.domain.StoredClaim;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.plugin.Plugin;
 import org.jspecify.annotations.Nullable;
@@ -47,6 +63,9 @@ public final class CreativeModule implements StormModule {
   private @Nullable CreativeAnticheat anticheat;
   private @Nullable Plugin plugin;
   private @Nullable ComponentLogger logger;
+  private @Nullable PlayerDirectory players;
+  private @Nullable Scheduler scheduler;
+  private int mapGeneration;
   private String worldName = "creative";
   private PlotGrid grid = PlotGrid.recovered();
 
@@ -59,6 +78,8 @@ public final class CreativeModule implements StormModule {
   public void enable(ModuleContext context) {
     plugin = context.plugin();
     logger = context.logger();
+    players = context.services().require(PlayerDirectory.class);
+    scheduler = context.scheduler();
     var config = context.loadConfig("creative.yml", CreativeConfig.class);
     worldName = config.world();
     grid = config.grid();
@@ -66,13 +87,13 @@ public final class CreativeModule implements StormModule {
     if (world == null) {
       throw new IllegalStateException("Creative world is not loaded: " + config.world());
     }
-    if (!(world.getGenerator() instanceof CreativeGenerator)) {
-      var generator = world.getGenerator();
+    if (!(world.getGenerator() instanceof CreativeGenerator generator)) {
+      var installed = world.getGenerator();
       throw new IllegalStateException(
           "Creative world "
               + config.world()
               + " is not using TheStorm's plot generator ("
-              + (generator == null ? "no generator" : generator.getClass().getName())
+              + (installed == null ? "no generator" : installed.getClass().getName())
               + ")");
     }
     CreativeAudit.require(context.plugin(), world);
@@ -90,6 +111,9 @@ public final class CreativeModule implements StormModule {
     var book = new ClaimBook(config.catalog());
     claims = book;
     var store = new JooqClaimStore(context.database());
+    var reviews = new ReviewBook();
+    var reviewStore = new JooqReviewStore(context.database());
+    PlotFootprint.States template = generator.template()::stateAt;
     context
         .plugin()
         .getServer()
@@ -118,7 +142,10 @@ public final class CreativeModule implements StormModule {
                     this::redraw,
                     new SchematicFiles(
                         context.database(),
-                        new File(context.plugin().getDataFolder(), "creative-schematics")))));
+                        new File(context.plugin().getDataFolder(), "creative-schematics")),
+                    template,
+                    reviews,
+                    reviewStore)));
     context
         .lifecycle()
         .registerEventHandler(
@@ -129,7 +156,14 @@ public final class CreativeModule implements StormModule {
             .loadAll()
             .whenCompleteAsync(
                 (rows, failure) -> loaded(rows, failure), context.scheduler().mainThread());
+    var reviewed =
+        reviewStore
+            .load()
+            .whenCompleteAsync(
+                (snapshot, failure) -> reviewed(reviews, snapshot, failure),
+                context.scheduler().mainThread());
     var _ = loaded;
+    var _ = reviewed;
     context
         .logger()
         .info(
@@ -151,14 +185,103 @@ public final class CreativeModule implements StormModule {
     redraw();
   }
 
+  private void reviewed(
+      ReviewBook reviews, @Nullable Snapshot snapshot, @Nullable Throwable failure) {
+    var log = logger;
+    if (log == null) {
+      return;
+    }
+    if (failure != null || snapshot == null) {
+      log.error("Creative ratings did not load", failure);
+      return;
+    }
+    reviews.replace(snapshot.ratings(), snapshot.comments());
+  }
+
   private void redraw() {
     var plots = map;
     var book = claims;
-    if (plots == null || book == null) {
+    var directory = players;
+    var hop = scheduler;
+    var owner = plugin;
+    if (plots == null || book == null || directory == null || hop == null || owner == null) {
       return;
     }
-    plots.draw(PlotMarkers.select(worldName, worldName, book.marked(), grid));
+    var generation = ++mapGeneration;
+    var marked = book.marked();
+    var signed = PlotMarkers.signedNames(book.catalog().plots());
+    var known = new HashMap<UUID, String>();
+    var offline = new LinkedHashSet<UUID>();
+    var server = owner.getServer();
+    for (var view : marked) {
+      if (!view.name().isBlank() || view.owner().isEmpty()) {
+        continue;
+      }
+      var id = view.owner().orElseThrow();
+      var online = server.getPlayer(id);
+      if (online != null) {
+        known.put(id, online.getName());
+      } else {
+        offline.add(id);
+      }
+    }
+    if (offline.isEmpty()) {
+      draw(plots, marked, signed, known);
+      return;
+    }
+    var lookups = new ArrayList<CompletableFuture<Optional<KnownPlayer>>>();
+    for (var id : offline) {
+      lookups.add(directory.byId(id));
+    }
+    var resolved =
+        CompletableFuture.allOf(lookups.toArray(CompletableFuture[]::new))
+            .whenCompleteAsync(
+                (done, failure) ->
+                    resolved(
+                        new MapDraw(generation, plots, signed, Map.copyOf(known), lookups),
+                        failure),
+                hop.mainThread());
+    var _ = resolved;
   }
+
+  private void resolved(MapDraw pending, @Nullable Throwable failure) {
+    if (pending.generation() != mapGeneration) {
+      return;
+    }
+    var book = claims;
+    if (book == null) {
+      return;
+    }
+    var known = new HashMap<>(pending.online());
+    if (failure != null) {
+      var log = logger;
+      if (log != null) {
+        log.error("Creative map could not resolve plot owners", failure);
+      }
+    } else {
+      for (var lookup : pending.lookups()) {
+        lookup.resultNow().ifPresent(player -> known.put(player.uuid(), player.lastName()));
+      }
+    }
+    draw(pending.plots(), book.marked(), pending.signed(), known);
+  }
+
+  private void draw(
+      BlueMapPlots plots,
+      List<PlotView> marked,
+      Map<PlotId, String> signed,
+      Map<UUID, String> known) {
+    var captioned = PlotMarkers.presented(marked, PlotMarkers.usernames(marked, signed, known));
+    plots.draw(PlotMarkers.select(worldName, worldName, captioned, grid));
+  }
+
+  /** One in-flight name lookup. A newer redraw drops it. */
+  private record MapDraw(
+      int generation,
+      BlueMapPlots plots,
+      Map<PlotId, String> signed,
+      Map<UUID, String> online,
+      List<CompletableFuture<Optional<KnownPlayer>>> lookups) {}
 
   private void installMap(ModuleContext context, org.bukkit.World world) {
     if (context.plugin().getServer().getPluginManager().getPlugin("BlueMap") == null) {
@@ -194,6 +317,7 @@ public final class CreativeModule implements StormModule {
 
   @Override
   public void disable() {
+    mapGeneration++;
     if (sessions != null) {
       sessions.shutdown();
     }

@@ -5,8 +5,10 @@ import com.shepherdjerred.thestorm.creative.app.ClaimBook;
 import com.shepherdjerred.thestorm.creative.domain.BlockBox;
 import com.shepherdjerred.thestorm.creative.domain.CreativePermissions;
 import com.shepherdjerred.thestorm.creative.domain.EditDecision;
+import com.shepherdjerred.thestorm.creative.domain.PlotArea;
 import com.shepherdjerred.thestorm.creative.domain.PlotGrid;
 import com.shepherdjerred.thestorm.creative.domain.PlotId;
+import com.shepherdjerred.thestorm.creative.domain.PlotMerge;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.IncompleteRegionException;
 import com.sk89q.worldedit.LocalSession;
@@ -26,8 +28,8 @@ import com.sk89q.worldedit.world.World;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.bukkit.entity.Player;
@@ -205,7 +207,7 @@ public final class CreativeEdits implements Listener {
 
   private Extent masked(Extent current, World world, BukkitPlayer actor) {
     var player = actor.getPlayer();
-    var column = new PlotExtent.Column(Optional.empty(), world.getMinY(), world.getMaxY());
+    var column = new PlotExtent.Column(List.of(), world.getMinY(), world.getMaxY());
     if (!worldName.equals(player.getWorld().getName()) || heldBrushTooLarge(actor, player)) {
       return new PlotExtent(current, column, () -> {});
     }
@@ -214,12 +216,10 @@ public final class CreativeEdits implements Listener {
       return new PlotExtent(current, column, () -> {});
     }
     var backup = scheduler.runOnMainThreadLater(Duration.ofMinutes(10), () -> busy.remove(id));
-    var standing = standing(player);
-    var allowed = player.hasPermission(CreativePermissions.BYPASS) || member(player, standing);
-    var mask = EditDecision.mask(grid, standing, allowed);
+    var areas = areasFor(player);
     return new PlotExtent(
         current,
-        new PlotExtent.Column(mask, world.getMinY(), world.getMaxY()),
+        new PlotExtent.Column(areas, world.getMinY(), world.getMaxY()),
         () -> {
           busy.remove(id);
           backup.cancel();
@@ -242,12 +242,45 @@ public final class CreativeEdits implements Listener {
     return !EditDecision.brushFits((int) Math.ceil(brush.getSize()), brushRadius);
   }
 
-  private boolean member(Player player, Optional<PlotId> standing) {
-    if (standing.isEmpty()) {
-      return false;
+  /**
+   * The plots and connecting roads this player may edit from where they stand. Empty on a normal
+   * road, or on a plot they cannot build on. Staff still get an empty mask on a normal road.
+   */
+  private List<PlotArea> areasFor(Player player) {
+    var at = player.getLocation();
+    if (at == null) {
+      return List.of();
     }
-    var view = book.view(standing.orElseThrow());
-    return EditDecision.mayEdit(player.getUniqueId(), view.owner(), view.trusted());
+    int x = at.getBlockX();
+    int z = at.getBlockZ();
+    var standing = grid.plotAt(x, z);
+    boolean staff = player.hasPermission(CreativePermissions.BYPASS);
+    if (standing.isPresent()) {
+      return standingAreas(player, standing.orElseThrow(), staff);
+    }
+    return roadAreas(player, x, z, staff);
+  }
+
+  private List<PlotArea> standingAreas(Player player, PlotId id, boolean staff) {
+    var view = book.view(id);
+    if (!staff && !EditDecision.mayEdit(player.getUniqueId(), view.owner(), view.access())) {
+      return List.of();
+    }
+    return PlotMerge.areas(grid, book.merged(id));
+  }
+
+  private List<PlotArea> roadAreas(Player player, int x, int z, boolean staff) {
+    var column = new PlotMerge.Column(x, z);
+    for (var cluster : book.clusters()) {
+      if (!PlotMerge.roadContains(grid, cluster, column)) {
+        continue;
+      }
+      var view = book.view(cluster.getFirst());
+      if (staff || EditDecision.mayEdit(player.getUniqueId(), view.owner(), view.access())) {
+        return PlotMerge.areas(grid, cluster);
+      }
+    }
+    return List.of();
   }
 
   private boolean selectionLeaves(BukkitPlayer actor, Player player) {
@@ -260,17 +293,14 @@ public final class CreativeEdits implements Listener {
     if (region == null) {
       return false;
     }
-    var standing = standing(player);
-    var allowed = player.hasPermission(CreativePermissions.BYPASS) || member(player, standing);
-    var mask = EditDecision.mask(grid, standing, allowed);
-    if (mask.isEmpty()) {
+    var areas = areasFor(player);
+    if (areas.isEmpty()) {
       return true;
     }
     var min = region.getMinimumPoint();
     var max = region.getMaximumPoint();
     var box = new BlockBox(min.x(), min.y(), min.z(), max.x(), max.y(), max.z());
-    return !EditDecision.selectionFits(
-        mask.orElseThrow(), box, selected.getMinY(), selected.getMaxY());
+    return !PlotMerge.selectionFits(areas, box, selected.getMinY(), selected.getMaxY());
   }
 
   private void limitSideEffects(BukkitPlayer actor) {
@@ -291,14 +321,6 @@ public final class CreativeEdits implements Listener {
       return;
     }
     session(BukkitAdapter.adapt(player)).setSideEffectSet(saved);
-  }
-
-  private Optional<PlotId> standing(Player player) {
-    var at = player.getLocation();
-    if (at == null) {
-      return Optional.empty();
-    }
-    return grid.plotAt(at.getBlockX(), at.getBlockZ());
   }
 
   private static LocalSession session(BukkitPlayer actor) {

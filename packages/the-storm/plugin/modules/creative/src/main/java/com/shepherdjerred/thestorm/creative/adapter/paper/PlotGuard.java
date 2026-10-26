@@ -1,10 +1,14 @@
 package com.shepherdjerred.thestorm.creative.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.text.HouseStyle;
+import com.shepherdjerred.thestorm.creative.domain.CreativePermissions;
 import com.shepherdjerred.thestorm.creative.domain.PlotAccess;
+import com.shepherdjerred.thestorm.creative.domain.PlotFlag;
 import com.shepherdjerred.thestorm.creative.domain.PlotGrid;
 import com.shepherdjerred.thestorm.creative.domain.PlotId;
 import com.shepherdjerred.thestorm.creative.domain.PlotMembership;
+import com.shepherdjerred.thestorm.creative.domain.PlotMerge;
+import com.shepherdjerred.thestorm.creative.domain.PlotRole;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -45,16 +49,20 @@ import org.bukkit.event.player.PlayerBucketEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.util.BoundingBox;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Plot protection for the creative world. Players change a column only when they own it, are
- * trusted there, or hold {@link #BYPASS}. A piston, fluid, or explosion that leaves its plot is
- * cancelled whole. Command blocks, structure blocks, jigsaws, and command minecarts cannot be
- * placed.
+ * Plot protection for the creative world. Players change a column only when they own it, are a
+ * member, are trusted there, or hold {@link #BYPASS}. A denied player cannot enter that plot or be
+ * teleported into it. Visitor actions stay off until the plot's flag is on. A piston, fluid, or
+ * explosion that leaves its plot is cancelled whole. A marked plot also refuses an explosion unless
+ * its explosion flag is on. Flags do not change world gamerules. Command blocks, structure blocks,
+ * jigsaws, and command minecarts cannot be placed.
  */
 public final class PlotGuard implements Listener {
 
@@ -65,6 +73,7 @@ public final class PlotGuard implements Listener {
   private static final Component BANNED =
       Component.text("That block cannot be placed in creative.");
   private static final Component FULL = Component.text("This plot cannot hold another entity.");
+  private static final Component CLOSED_PLOT = Component.text("You cannot enter that plot.");
 
   private final String worldName;
   private final PlotGrid grid;
@@ -76,6 +85,36 @@ public final class PlotGuard implements Listener {
     this.grid = grid;
     this.membership = membership;
     this.entityCap = entityCap;
+  }
+
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  void move(PlayerMoveEvent event) {
+    var to = event.getTo();
+    if (to == null || !in(to.getWorld())) {
+      return;
+    }
+    var from = event.getFrom();
+    if (from.getBlockX() == to.getBlockX() && from.getBlockZ() == to.getBlockZ()) {
+      return;
+    }
+    var player = event.getPlayer();
+    if (mayEnter(player, to)) {
+      return;
+    }
+    if (mayEnter(player, from)) {
+      event.setCancelled(true);
+      return;
+    }
+    event.setTo(spawn(to.getWorld()));
+  }
+
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  void teleport(PlayerTeleportEvent event) {
+    var to = event.getTo();
+    if (to == null || !in(to.getWorld()) || mayEnter(event.getPlayer(), to)) {
+      return;
+    }
+    deny(event, event.getPlayer(), CLOSED_PLOT);
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -128,6 +167,9 @@ public final class PlotGuard implements Listener {
       return;
     }
     if (allowed(event.getPlayer(), block.getX(), block.getZ())) {
+      return;
+    }
+    if (action != Action.LEFT_CLICK_BLOCK && flagOn(block.getLocation(), PlotFlag.USE)) {
       return;
     }
     event.setCancelled(true);
@@ -186,14 +228,16 @@ public final class PlotGuard implements Listener {
       return;
     }
     var location = entity.getLocation();
-    if (!allowed(event.getPlayer(), location.getBlockX(), location.getBlockZ())) {
+    if (!allowed(event.getPlayer(), location.getBlockX(), location.getBlockZ())
+        && !flagOn(location, PlotFlag.MOB_INTERACT)) {
       deny(event, event.getPlayer(), CLOSED);
     }
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void hurt(EntityDamageByEntityEvent event) {
-    if (event.getEntity() instanceof Player) {
+    if (event.getEntity() instanceof Player victim) {
+      guardPvp(event, victim);
       return;
     }
     var attacker = playerFrom(event.getDamager());
@@ -223,7 +267,8 @@ public final class PlotGuard implements Listener {
       return;
     }
     var location = event.getVehicle().getLocation();
-    if (!allowed(player, location.getBlockX(), location.getBlockZ())) {
+    if (!allowed(player, location.getBlockX(), location.getBlockZ())
+        && !flagOn(location, PlotFlag.VEHICLE)) {
       deny(event, player, CLOSED);
     }
   }
@@ -267,9 +312,7 @@ public final class PlotGuard implements Listener {
     if (!in(event.getBlock().getWorld())) {
       return;
     }
-    var from = at(event.getBlock());
-    var to = at(event.getToBlock());
-    if (!PlotAccess.staysInsideOnePlot(List.of(from, to))) {
+    if (!inside(List.of(column(event.getBlock()), column(event.getToBlock())))) {
       event.setCancelled(true);
     }
   }
@@ -279,14 +322,14 @@ public final class PlotGuard implements Listener {
     if (!in(event.getLocation().getWorld())) {
       return;
     }
-    var columns = new ArrayList<Optional<PlotId>>();
-    columns.add(grid.plotAt(event.getLocation().getBlockX(), event.getLocation().getBlockZ()));
+    var columns = new ArrayList<PlotMerge.Column>();
+    columns.add(
+        new PlotMerge.Column(event.getLocation().getBlockX(), event.getLocation().getBlockZ()));
     for (var block : event.blockList()) {
-      columns.add(at(block));
+      columns.add(column(block));
     }
-    if (!PlotAccess.staysInsideOnePlot(columns)) {
-      event.setCancelled(true);
-    }
+    containExplosion(
+        event, event.getLocation().getBlockX(), event.getLocation().getBlockZ(), columns);
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -294,14 +337,12 @@ public final class PlotGuard implements Listener {
     if (!in(event.getBlock().getWorld())) {
       return;
     }
-    var columns = new ArrayList<Optional<PlotId>>();
-    columns.add(at(event.getBlock()));
+    var columns = new ArrayList<PlotMerge.Column>();
+    columns.add(column(event.getBlock()));
     for (var block : event.blockList()) {
-      columns.add(at(block));
+      columns.add(column(block));
     }
-    if (!PlotAccess.staysInsideOnePlot(columns)) {
-      event.setCancelled(true);
-    }
+    containExplosion(event, event.getBlock().getX(), event.getBlock().getZ(), columns);
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -309,7 +350,7 @@ public final class PlotGuard implements Listener {
     if (!in(event.getBlock().getWorld())) {
       return;
     }
-    if (!PlotAccess.staysInsideOnePlot(List.of(at(event.getBlock())))) {
+    if (!inside(List.of(column(event.getBlock())))) {
       event.setCancelled(true);
     }
   }
@@ -337,14 +378,14 @@ public final class PlotGuard implements Listener {
     if (!in(event.getBlock().getWorld())) {
       return;
     }
-    var columns = new ArrayList<Optional<PlotId>>();
-    columns.add(at(event.getBlock()));
-    columns.add(at(event.getBlock().getRelative(event.getDirection())));
+    var columns = new ArrayList<PlotMerge.Column>();
+    columns.add(column(event.getBlock()));
+    columns.add(column(event.getBlock().getRelative(event.getDirection())));
     for (var block : blocks) {
-      columns.add(at(block));
-      columns.add(at(block.getRelative(travel)));
+      columns.add(column(block));
+      columns.add(column(block.getRelative(travel)));
     }
-    if (!PlotAccess.staysInsideOnePlot(columns)) {
+    if (!inside(columns)) {
       event.setCancelled(true);
     }
   }
@@ -402,16 +443,77 @@ public final class PlotGuard implements Listener {
     return present;
   }
 
-  private boolean allowed(Player player, int x, int z) {
-    return PlotAccess.mayChange(
-        player.hasPermission(BYPASS),
-        Optional.of(player.getUniqueId()),
-        grid.plotAt(x, z),
-        membership);
+  private void guardPvp(EntityDamageByEntityEvent event, Player victim) {
+    if (!in(victim.getWorld())) {
+      return;
+    }
+    var attacker = playerFrom(event.getDamager());
+    if (attacker == null) {
+      return;
+    }
+    var location = victim.getLocation();
+    if (location == null || allowed(attacker, location.getBlockX(), location.getBlockZ())) {
+      return;
+    }
+    var plot = grid.plotAt(location.getBlockX(), location.getBlockZ());
+    if (plot.isEmpty() || flagOn(location, PlotFlag.PVP)) {
+      return;
+    }
+    deny(event, attacker, CLOSED);
   }
 
-  private Optional<PlotId> at(Block block) {
-    return grid.plotAt(block.getX(), block.getZ());
+  private void containExplosion(Cancellable event, int x, int z, List<PlotMerge.Column> columns) {
+    if (!inside(columns)) {
+      event.setCancelled(true);
+      return;
+    }
+    var group = PlotMerge.clusterAt(grid, new PlotMerge.Column(x, z), membership.clusters());
+    if (group.isEmpty()) {
+      return;
+    }
+    var id = group.getFirst();
+    if (!PlotFlag.explosionMay(true, membership.marked(id), membership.flags(id))) {
+      event.setCancelled(true);
+    }
+  }
+
+  private boolean inside(List<PlotMerge.Column> columns) {
+    return PlotMerge.contained(grid, columns, membership.clusters());
+  }
+
+  private static PlotMerge.Column column(Block block) {
+    return new PlotMerge.Column(block.getX(), block.getZ());
+  }
+
+  private boolean flagOn(Location at, PlotFlag flag) {
+    var plot = grid.plotAt(at.getBlockX(), at.getBlockZ());
+    return plot.isPresent() && membership.flags(plot.orElseThrow()).contains(flag);
+  }
+
+  private boolean mayEnter(Player player, Location at) {
+    var plot = grid.plotAt(at.getBlockX(), at.getBlockZ());
+    if (plot.isEmpty()) {
+      return true;
+    }
+    var staff = player.hasPermission(BYPASS) || player.hasPermission(CreativePermissions.ADMIN);
+    return PlotRole.mayEnter(staff, membership.access(plot.orElseThrow()), player.getUniqueId());
+  }
+
+  private static Location spawn(World world) {
+    return new Location(world, PlotGrid.SPAWN_X + 0.5, PlotGrid.SPAWN_Y, PlotGrid.SPAWN_Z + 0.5);
+  }
+
+  private boolean allowed(Player player, int x, int z) {
+    var staff = player.hasPermission(BYPASS);
+    var plot = grid.plotAt(x, z);
+    if (PlotAccess.mayChange(staff, Optional.of(player.getUniqueId()), plot, membership)) {
+      return true;
+    }
+    if (staff || plot.isPresent()) {
+      return false;
+    }
+    return PlotMerge.buildsOnRoad(
+        grid, new PlotMerge.Column(x, z), player.getUniqueId(), membership);
   }
 
   private boolean forbidden(Material type) {

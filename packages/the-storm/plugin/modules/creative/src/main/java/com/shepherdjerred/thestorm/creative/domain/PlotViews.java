@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.creative.domain;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -15,12 +16,21 @@ public final class PlotViews {
     var catalogOwner = catalog.flatMap(RecoveredPlot::ownerId);
     var staffHeld = catalog.isPresent() && catalog.orElseThrow().owner().isBlank();
     if (stored.isEmpty()) {
-      return new PlotView(id, catalogOwner, "", "", Set.of(), staffHeld, false);
+      return new PlotView(
+          id, catalogOwner, "", "", Map.of(), staffHeld, false, Set.of(), PlotSurface.DEFAULT);
     }
     var row = stored.orElseThrow();
     if (row.released()) {
       return new PlotView(
-          id, Optional.empty(), row.name(), row.description(), Set.of(), false, false);
+          id,
+          Optional.empty(),
+          row.name(),
+          row.description(),
+          Map.of(),
+          false,
+          false,
+          Set.of(),
+          PlotSurface.DEFAULT);
     }
     if (row.owner().isPresent()) {
       return new PlotView(
@@ -28,11 +38,21 @@ public final class PlotViews {
           row.owner(),
           row.name(),
           row.description(),
-          row.trusted(),
+          row.access(),
           false,
-          row.countsTowardCap());
+          row.countsTowardCap(),
+          row.flags(),
+          row.surface());
     }
     return new PlotView(
-        id, catalogOwner, row.name(), row.description(), row.trusted(), staffHeld, false);
+        id,
+        catalogOwner,
+        row.name(),
+        row.description(),
+        row.access(),
+        staffHeld,
+        false,
+        row.flags(),
+        row.surface());
   }
 }

@@ -120,24 +120,58 @@ terrain stores stop startup; production never creates an empty replacement.
 On enable it freezes that world: random ticks are off, so leaves do not decay and
 crops do not grow, fire does not spread, vines and snow do not advance, and mob
 griefing, TNT, and block-breaking projectiles are off.
-Players enter with `/creative` and leave with
-`/creative leave`; the visit stores their survival body and gives them an empty
-creative one. Recovered plots are the `plots` list in `creative.yml` (a blank
-owner is staff-held); the plugin reads that list and never writes it. A recovered
-owner can change that plot. Roads, staff-held plots, and every other plot stay
-closed, including a piston, fluid, or explosion that would cross an edge.
-`thestorm.creative.bypass` builds anywhere. Command blocks, structure blocks,
-jigsaws, and command minecarts cannot be placed. Players claim an empty cell
-with `/creative claim` or `/creative auto` (two new claims; catalog plots do
-not count; staff with `thestorm.creative.bypass` or `thestorm.creative.admin`
-are exempt). `/creative name`, `/creative desc`, and `/creative trust` persist
-in the claim store. The plugin never writes `creative.yml`. `/creative download`
+Players enter with `/creative`, arriving at the glowstone crossing, and leave
+with `/creative leave`; the visit stores their survival body and gives them an
+empty creative one. Recovered plots are the `plots` list in `creative.yml` (a
+blank owner is staff-held); the plugin reads that list and never writes it. A
+recovered owner can change that plot. Roads, staff-held plots, and every other
+plot stay closed, including a piston, fluid, or explosion that would cross an
+edge. A road between plots the same owner merged can be built on, and a
+piston, fluid, or explosion may cross that road. `thestorm.creative.bypass`
+builds anywhere. Command blocks, structure
+blocks, jigsaws, and command minecarts cannot be placed. Players claim an empty
+cell with `/creative claim` or `/creative auto` (two new claims; catalog plots
+do not count; staff with `thestorm.creative.bypass` or
+`thestorm.creative.admin` are exempt). A claim that saves takes the player to
+the center of that plot. `/creative home` returns them to a plot they can
+already build on. `/creative name`, `/creative desc`, `/creative member`, `/creative trust`,
+`/creative deny`, `/creative flag`, `/creative floor`, `/creative wall`, and
+`/creative biome` persist in the claim store. `/creative flag
+<name> on` or `off` sets `pvp`, `use`, `vehicle`, `mob-interact`, or `explosion`
+for visitors. They default off. Break and place follow the role. A flag does
+not change a world gamerule. A floor, wall, or biome choice is stored on the
+claim and does not rewrite the plot. Grass, stone, and plains stay the generator
+defaults. `/creative clear confirm` restores that plot's footprint, including
+its wall, to the generator plus those choices, and does not change the road.
+`/creative reset` restores flags and those choices without changing blocks,
+members, the name, or the description. `/creative unclaim` deletes a plot the
+player claimed themselves once the footprint matches the generator again and
+the plot is not merged. Recovered plots stay on `/creative admin unclaim`.
+`/creative merge <id>` links the owned plot the player is standing on with
+another plot they own that shares a side. The road stays. `/creative unlink`
+separates them once that road matches the template and copies members, the
+deny list, and flags onto each plot. `/creative save <name>`, `/creative load`,
+and `/creative paste <name>` keep a personal schematic of the one plot the
+player is standing on, under `creative-schematics/<uuid>/<name>.schem`. Paste
+refuses a footprint that is not the generator, a schematic that is not one
+plot, and a command block, structure block, jigsaw, or command minecart.
+`/creative download` remains the staff-fetchable `x_z.schem`. `/creative rate
+<1-5>` stores one score per player. `/creative comment <text>` adds a public
+comment, capped by `commentLength` (140) and `commentCap` (20) in
+`creative.yml`. The owner deletes the latest comment. Anyone else deletes
+their own latest comment. `/creative info` shows the average and the latest
+three comments on a claimed plot. A member or trusted player
+can build. A trusted player can add or remove members. A denied player cannot
+enter that plot or be teleported into it. `/creative tp <id>` visits a plot
+the player is not denied on. `/creative home` still returns to a plot they can
+build on. The plugin never writes `creative.yml`. `/creative download`
 saves one `x_z.schem` under the plugin data folder `creative-schematics` for
 someone to fetch outside the world; it is not mailed. `/creative admin assign`,
 `unclaim`, and `scan` require `thestorm.creative.admin`. Scan reports claim
 drift and does not rewrite the catalog. BlueMap draws a Plots marker set on
-the creative world's maps only; the player-facing map is the map named creative
-on `https://bluemap.ts-mc.net/`, beside survival. GrimAC's owned config has no
+the creative world's maps only. Each plot is labelled with its name, or with
+the owner's username when it has no name. The player-facing map is the map
+named creative on `https://bluemap.ts-mc.net/`, beside survival. GrimAC's owned config has no
 per-world exemption key, so the module pauses flight and creative-break checks
 through Grim's API only while the player's world is creative, then restores the
 checks it paused. The module

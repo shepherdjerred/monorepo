@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.creative.domain;
 
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
@@ -8,9 +9,9 @@ import java.util.UUID;
 
 /**
  * Whether a WorldEdit may change a creative plot. The mask is the plot the actor is standing in,
- * and only when they own it or are trusted. A selection that leaves that column, or that is larger
- * than one column of the world, is refused whole. Command names here are ours: the reference plugin
- * does not ship this denylist.
+ * and only when they own it, are a member, or are trusted. A selection that leaves that column, or
+ * that is larger than one column of the world, is refused whole. Command names here are ours: the
+ * reference plugin does not ship this denylist.
  */
 public final class EditDecision {
 
@@ -72,14 +73,14 @@ public final class EditDecision {
   private EditDecision() {}
 
   /**
-   * Whether {@code actor} may edit a plot owned by {@code owner} with {@code trusted} members. An
-   * unclaimed plot has no editor until someone owns it.
+   * Whether {@code actor} may edit a plot owned by {@code owner}. Members and trusted players may.
+   * Denied players and strangers may not. An unclaimed plot has no editor until someone owns it.
    */
-  public static boolean mayEdit(UUID actor, Optional<UUID> owner, Set<UUID> trusted) {
+  public static boolean mayEdit(UUID actor, Optional<UUID> owner, Map<UUID, PlotRole> access) {
     if (owner.isEmpty()) {
       return false;
     }
-    return owner.orElseThrow().equals(actor) || trusted.contains(actor);
+    return owner.orElseThrow().equals(actor) || PlotRole.builds(access, actor);
   }
 
   /**

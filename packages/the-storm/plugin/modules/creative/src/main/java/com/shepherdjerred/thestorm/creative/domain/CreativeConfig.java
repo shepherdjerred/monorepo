@@ -20,6 +20,8 @@ public record CreativeConfig(
     int claimCap,
     int entityCap,
     int brushRadius,
+    int commentLength,
+    int commentCap,
     List<RecoveredPlot> plots) {
 
   public CreativeConfig {
@@ -49,6 +51,12 @@ public record CreativeConfig(
     }
     if (brushRadius < 1 || brushRadius > 16) {
       throw new IllegalArgumentException("brushRadius must be 1..16");
+    }
+    if (commentLength < 1 || commentLength > 200) {
+      throw new IllegalArgumentException("commentLength must be 1..200");
+    }
+    if (commentCap < 1 || commentCap > 100) {
+      throw new IllegalArgumentException("commentCap must be 1..100");
     }
     plots = List.copyOf(plots);
     var catalog = PlotCatalog.of(plots);

@@ -1,5 +1,7 @@
 package com.shepherdjerred.thestorm.creative.domain;
 
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -13,16 +15,26 @@ public record PlotView(
     Optional<UUID> owner,
     String name,
     String description,
-    Set<UUID> trusted,
+    Map<UUID, PlotRole> access,
     boolean staffHeld,
-    boolean countsTowardCap) {
+    boolean countsTowardCap,
+    Set<PlotFlag> flags,
+    PlotSurface surface) {
 
   public PlotView {
-    trusted = Set.copyOf(trusted);
+    access = Map.copyOf(access);
+    flags = Set.copyOf(flags);
+    Objects.requireNonNull(surface);
   }
 
   /** A claimed or staff-held plot. Empty cells are neither. */
   public boolean marked() {
     return owner.isPresent() || staffHeld;
+  }
+
+  /** The same plot with a different name. Used when the map shows a username in that place. */
+  public PlotView withName(String next) {
+    return new PlotView(
+        id, owner, next, description, access, staffHeld, countsTowardCap, flags, surface);
   }
 }
