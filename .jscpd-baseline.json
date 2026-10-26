@@ -684,22 +684,6 @@
       "clones": 1,
       "tokens": 91
     },
-    "packages/scout-for-lol/packages/backend/src/league/review/__tests__/generator.test.ts|packages/scout-for-lol/packages/backend/src/league/review/__tests__/generator.test.ts": {
-      "clones": 1,
-      "tokens": 78
-    },
-    "packages/scout-for-lol/packages/backend/src/league/review/ai-clients.ts|packages/scout-for-lol/packages/frontend/src/lib/review-tool/provider-clients.ts": {
-      "clones": 1,
-      "tokens": 77
-    },
-    "packages/scout-for-lol/packages/backend/src/league/review/test-reviews-utils.ts|packages/scout-for-lol/packages/backend/src/storage/s3-query.ts": {
-      "clones": 1,
-      "tokens": 80
-    },
-    "packages/scout-for-lol/packages/backend/src/league/review/test-reviews-utils.ts|packages/scout-for-lol/packages/frontend/src/lib/review-tool/s3.ts": {
-      "clones": 1,
-      "tokens": 80
-    },
     "packages/scout-for-lol/packages/backend/src/league/tasks/cleanup/prune-players.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/cleanup/prune-players.test.ts": {
       "clones": 1,
       "tokens": 76
@@ -788,10 +772,6 @@
       "clones": 1,
       "tokens": 81
     },
-    "packages/scout-for-lol/packages/backend/src/storage/s3-query.ts|packages/scout-for-lol/packages/frontend/src/lib/review-tool/s3.ts": {
-      "clones": 1,
-      "tokens": 81
-    },
     "packages/scout-for-lol/packages/backend/src/storage/s3-report-run.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3-report-run.test.ts": {
       "clones": 1,
       "tokens": 83
@@ -831,18 +811,6 @@
     "packages/scout-for-lol/packages/data/src/model/scoutql/parse/cst-to-ast-expr.ts|packages/scout-for-lol/packages/data/src/model/scoutql/parse/cst-to-ast.ts": {
       "clones": 1,
       "tokens": 77
-    },
-    "packages/scout-for-lol/packages/frontend/src/components/review-tool/results/history-panel.tsx|packages/scout-for-lol/packages/frontend/src/components/review-tool/results/ratings-analytics.tsx": {
-      "clones": 1,
-      "tokens": 151
-    },
-    "packages/scout-for-lol/packages/frontend/src/lib/review-tool/history-manager.ts|packages/scout-for-lol/packages/frontend/src/lib/review-tool/indexeddb.ts": {
-      "clones": 1,
-      "tokens": 73
-    },
-    "packages/scout-for-lol/packages/frontend/src/lib/review-tool/s3.ts|packages/scout-for-lol/packages/frontend/src/lib/review-tool/s3.ts": {
-      "clones": 1,
-      "tokens": 79
     },
     "packages/scout-for-lol/packages/report/src/html/charts/competition-chart.ts|packages/scout-for-lol/packages/report/src/html/charts/competition-chart.ts": {
       "clones": 1,
