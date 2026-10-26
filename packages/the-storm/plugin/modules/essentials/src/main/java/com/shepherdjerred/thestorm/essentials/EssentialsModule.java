@@ -13,6 +13,7 @@ import com.shepherdjerred.thestorm.essentials.adapter.db.JooqPlayerStore;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqTeleportAttemptStore;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqTeleportUsageStore;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqWarpStore;
+import com.shepherdjerred.thestorm.essentials.adapter.files.SavedRespawn;
 import com.shepherdjerred.thestorm.essentials.adapter.paper.EssentialsPaper;
 import com.shepherdjerred.thestorm.essentials.app.AfkStatus;
 import com.shepherdjerred.thestorm.essentials.app.AfkTracker;
@@ -24,7 +25,9 @@ import com.shepherdjerred.thestorm.essentials.app.TeleportPayments;
 import com.shepherdjerred.thestorm.essentials.app.WarpDirectory;
 import com.shepherdjerred.thestorm.essentials.domain.config.EssentialsConfig;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.TeleportPricer;
+import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.Nullable;
 
@@ -39,7 +42,17 @@ import org.jspecify.annotations.Nullable;
  */
 public final class EssentialsModule implements StormModule {
 
+  private final Function<ModuleContext, Path> levelDirectory;
   private @Nullable EssentialsPaper paper;
+
+  public EssentialsModule() {
+    this(context -> context.plugin().getServer().getLevelDirectory());
+  }
+
+  /** The level directory is supplied at composition time, before asynchronous file discovery. */
+  public EssentialsModule(Function<ModuleContext, Path> levelDirectory) {
+    this.levelDirectory = levelDirectory;
+  }
 
   @Override
   public String id() {
@@ -97,7 +110,16 @@ public final class EssentialsModule implements StormModule {
             context,
             config,
             new EssentialsPaper.App(
-                payments, guards, afk, moderation, players, warps, stores, protection, sealed));
+                payments,
+                guards,
+                afk,
+                moderation,
+                players,
+                warps,
+                stores,
+                protection,
+                sealed,
+                SavedRespawn.load(levelDirectory.apply(context), context.compute())));
   }
 
   @Override

@@ -1,15 +1,14 @@
 package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
-import com.shepherdjerred.thestorm.core.compute.ComputePool;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
-import com.shepherdjerred.thestorm.core.snapshot.PlayerDataFiles;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
+import com.shepherdjerred.thestorm.essentials.adapter.files.SavedRespawn;
 import com.shepherdjerred.thestorm.essentials.app.store.HomeStore;
 import com.shepherdjerred.thestorm.essentials.domain.place.Position;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import org.bukkit.World;
 import org.jspecify.annotations.Nullable;
@@ -37,14 +36,14 @@ final class BedBackfill implements Cancellable {
    * @param runtime server, scheduler and logger
    * @param homes stored homes
    * @param beds in-memory respawn spots
-   * @param compute off-main-thread file reading
+   * @param savedRespawns off-main-thread file reading
    * @param sealed worlds whose respawns are not survival beds
    */
   record Sources(
       PaperRuntime runtime,
       HomeStore homes,
       BedHomes beds,
-      ComputePool compute,
+      CompletableFuture<SavedRespawn.Scan> savedRespawns,
       SealedWorlds sealed) {}
 
   BedBackfill(Sources sources) {
@@ -53,30 +52,9 @@ final class BedBackfill implements Cancellable {
 
   /** Reads player data, then checks one respawn block per tick. */
   void start() {
-    var level = levelDirectory();
-    if (level == null) {
-      return;
-    }
-    var files = PlayerDataFiles.locate(level);
-    if (files.isEmpty()) {
-      sources
-          .runtime()
-          .logger()
-          .warn("No player-data folder under {}; bed homes were not backfilled", level);
-      return;
-    }
-    var directory = files.orElseThrow().directory();
     var _ =
         sources
-            .compute()
-            .submit(
-                () -> {
-                  try {
-                    return SavedRespawn.readAll(directory);
-                  } catch (java.io.IOException failure) {
-                    throw new java.io.UncheckedIOException(failure);
-                  }
-                })
+            .savedRespawns()
             .whenCompleteAsync(
                 (scan, failure) -> {
                   if (stopped) {
@@ -92,19 +70,6 @@ final class BedBackfill implements Cancellable {
                   begin(scan);
                 },
                 sources.runtime().scheduler().mainThread());
-  }
-
-  /** The server's level directory. Null when this server has no level storage. */
-  private @Nullable Path levelDirectory() {
-    try {
-      return sources.runtime().server().getLevelDirectory();
-    } catch (RuntimeException failure) {
-      if (failure.getClass().getName().endsWith(".UnimplementedOperationException")) {
-        // MockBukkit has no level directory, so there are no player files to read.
-        return null;
-      }
-      throw failure;
-    }
   }
 
   @Override

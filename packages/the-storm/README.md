@@ -111,6 +111,13 @@ command surface and can lose the selected dimension through console dispatch.
 Wait for client chunks before moving newly connected bots or asserting entity
 tracking; the Mineflayer spawn event precedes chunk delivery.
 
+Mineflayer 4.39.0 carries the root dependency patch for its
+[upstream tick-end fix](https://github.com/PrismarineJS/mineflayer/pull/4137).
+Paper 26.3 requires clients to finish each movement tick; the patch sends the
+protocol's `tick_end` after movement, including while chunks are loading.
+Remove it when a published Mineflayer release includes that fix and the
+real-server smoke suite passes against that release.
+
 From the repository root, build the plugin and run the desired server suite
 with Docker available:
 
@@ -455,6 +462,7 @@ Inside a module, packages are layered:
 | `app`              | Use cases and the ports other modules may call                                                                                                                                                                                     |
 | `adapter.paper`    | Listeners and commands. Main thread only, so no JDBC, jOOQ, file or network I/O                                                                                                                                                    |
 | `adapter.db`       | jOOQ repositories over the module's own tables                                                                                                                                                                                     |
+| `adapter.files`    | Saved player-data readers. Capture server metadata on the main thread, then discover directories and read files on `ComputePool`; return value records to Paper callbacks.                                                         |
 | `adapter.citizens` | `rwfbots` only: its single package allowed to use Citizens, and only `net.citizensnpcs.api` and `net.citizensnpcs.trait`. Main thread only, like `adapter.paper`. `npcs` and `companions` bind Citizens from their `adapter.paper` |
 
 Modules reach each other only through the other module's `app` package, and

@@ -50,6 +50,9 @@ import {
 } from "homelab/scripts/ci/bootstrap-selection.ts";
 
 const digest = (value: string) => `sha256:${value.repeat(64)}`;
+// These integration cases run real Helm lint, package and template subprocesses,
+// matching the budget of src/helm-template.test.ts rather than the unit default.
+const HELM_INTEGRATION_TIMEOUT_MS = 60_000;
 function nativeBootstrapApplication(raw: unknown, revision = "2.0.0-600") {
   const doc = z
     .object({ metadata: z.object({ name: z.string() }).loose() })
@@ -105,302 +108,325 @@ afterAll(async () => {
     await rm(synthesisDirectory, { recursive: true, force: true });
 });
 
-test("actual BOTH bootstrap stages and Helm renders reviewed images while retaining original dependencies and unrelated sources", async () => {
-  const directory = await mkdtemp(
-    path.join(os.tmpdir(), "delivery-bootstrap-both-"),
-  );
-  const sourceRevision = "a".repeat(40);
-  const descriptor = BootstrapDescriptorSchema.parse({
-    schema: "delivery-bootstrap/v1",
-    sourceRevision,
-    pullRequest: 1,
-    revision: "2.0.0-701",
-    requestId: "11111111-1111-4111-8111-111111111111",
-    targets: ["woodpecker", "delivery"],
-    images: {
-      woodpecker: {
-        repository: "docker.io/shepherdjerred/woodpecker-config-extension",
-        sourceRevision,
-        version: "2.0.0-701",
-        digest: digest("b"),
-      },
-      delivery: {
-        repository: "docker.io/shepherdjerred/delivery",
-        sourceRevision,
-        version: "2.0.0-701",
-        digest: digest("c"),
-      },
-    },
-  });
-  try {
-    const { inputs } = synthesis;
-    const manifests = new Map(
-      await Promise.all(
-        inputs.map(
-          async (input) =>
-            [input.name, await Bun.file(input.manifestPath).text()] as const,
-        ),
-      ),
+test(
+  "actual BOTH bootstrap stages and Helm renders reviewed images while retaining original dependencies and unrelated sources",
+  async () => {
+    const directory = await mkdtemp(
+      path.join(os.tmpdir(), "delivery-bootstrap-both-"),
     );
-    const previousRoot = bindChartImageDependencies(manifests.get("apps")!, {
-      "shepherdjerred/caddy-s3proxy": digest("d"),
-      "shepherdjerred/velero-plugin": digest("e"),
-      "shepherdjerred/zfs-driver": digest("a"),
-    });
-    const priorDocuments = parseAllDocuments(previousRoot)
-      .map((doc) => doc.toJSON())
-      .filter((doc) => doc.metadata.name !== "delivery-control-plane");
-    const natives = priorDocuments
-      .filter((doc) => doc.kind === "Application")
-      .map((doc) => nativeBootstrapApplication(doc, "2.0.0-700"));
-    const captured = {
-      root: natives.find((native) => native.metadata.name === "apps")!,
-      applications: natives.filter((native) => native.metadata.name !== "apps"),
-      priorRoot: priorDocuments.map((doc) => stringify(doc)).join("---\n"),
-    };
-    const maintenanceImage = `docker.io/shepherdjerred/temporal-worker:2.0.0-600@${digest("f")}`;
-    const nativeWorker = bindChartImageDependencies(
-      manifests.get("woodpecker")!,
-      {
-        "shepherdjerred/woodpecker-config-extension": digest("d"),
-        "shepherdjerred/temporal-worker": digest("f"),
-      },
-    ).replaceAll(
-      `docker.io/shepherdjerred/temporal-worker@${digest("f")}`,
-      maintenanceImage,
-    );
-    const nativeResult = {
-      manifests: parseAllDocuments(nativeWorker).map((doc) =>
-        JSON.stringify(doc.toJSON()),
-      ),
-    };
-    const read = vi.fn(() => Promise.resolve(nativeResult));
-    const bindings = await bootstrapImages(descriptor, captured, read);
-    expect(read).toHaveBeenCalledWith(
-      "/woodpecker/manifests?revision=2.0.0-700",
-    );
-    expect(bindings.maintenanceImage).toBe(maintenanceImage);
-    expect(bindings.digests).not.toHaveProperty("shepherdjerred/caddy-s3proxy");
-    expect(bindings.digests).not.toHaveProperty("shepherdjerred/velero-plugin");
-    expect(bindings.digests).not.toHaveProperty("shepherdjerred/zfs-driver");
-    const rendered = new Map<string, any[]>();
-    for (const name of ["apps", "woodpecker", "delivery"]) {
-      const input = inputs.find((item) => item.name === name)!;
-      const prepared = prepareBootstrapManifest(manifests.get(name)!, name, {
-        descriptor,
-        captured,
-        bindings,
-      });
-      const manifestPath = path.join(directory, `${name}.yaml`);
-      await Bun.write(manifestPath, bootstrapRootTemplate(prepared, name));
-      const archive = await stageChart(
-        { ...input, manifestPath },
-        descriptor.revision,
-        path.join(directory, name),
-      );
-      const child = Bun.spawn(
-        [
-          "helm",
-          "template",
-          name,
-          archive,
-          ...(name === "delivery"
-            ? [
-                "--set-string",
-                `delivery.image=docker.io/shepherdjerred/delivery@${digest("c")}`,
-              ]
-            : []),
-        ],
-        { stdout: "pipe", stderr: "pipe" },
-      );
-      const [text, error, code] = await Promise.all([
-        new Response(child.stdout).text(),
-        new Response(child.stderr).text(),
-        child.exited,
-      ]);
-      expect(error).toBe("");
-      expect(code).toBe(0);
-      rendered.set(
-        name,
-        parseAllDocuments(text, { version: "1.1" }).map((doc) => doc.toJSON()),
-      );
-    }
-    const generator = rendered
-      .get("woodpecker")!
-      .find(
-        (doc) =>
-          doc.kind === "Deployment" &&
-          doc.spec.template.metadata.labels.app ===
-            "woodpecker-config-extension",
-      );
-    const expected = `docker.io/shepherdjerred/woodpecker-config-extension:2.0.0-701@${digest("b")}`;
-    expect(generator.spec.template.spec.containers[0].image).toBe(expected);
-    expect(
-      generator.spec.template.spec.containers[0].env.find(
-        (env: any) => env.name === "CI_GATE_IMAGE",
-      ).value,
-    ).toBe(expected);
-    const maintenance = rendered
-      .get("woodpecker")!
-      .find(
-        (doc) =>
-          doc.kind === "Deployment" &&
-          doc.metadata.name === "temporal-maintenance-worker",
-      );
-    expect(maintenance.spec.template.spec.containers[0].image).toBe(
-      maintenanceImage,
-    );
-    expect(maintenance.spec.template.spec.initContainers[0].image).toBe(
-      maintenanceImage,
-    );
-    const api = rendered
-      .get("delivery")!
-      .find((doc) => doc.kind === "Deployment");
-    expect(api.spec.template.spec.containers[0].image).toBe(
-      `docker.io/shepherdjerred/delivery@${digest("c")}`,
-    );
-    expect(api.spec.template.spec.initContainers[0].image).toBe(
-      `docker.io/shepherdjerred/delivery@${digest("c")}`,
-    );
-    const selectedTargets = new Set<string>(descriptor.targets);
-    for (const native of natives.filter(
-      (item) => !selectedTargets.has(item.metadata.name),
-    ))
-      expect(
-        rendered
-          .get("apps")!
-          .find(
-            (doc) =>
-              doc.kind === "Application" &&
-              doc.metadata.name === native.metadata.name,
-          ).spec,
-      ).toEqual(native.spec);
-    await expect(
-      bootstrapImages(descriptor, captured, () =>
-        Promise.resolve({
-          manifests: nativeResult.manifests.map((raw) =>
-            raw.replace(
-              maintenanceImage,
-              `docker.io/shepherdjerred/temporal-worker@${digest("d")}`,
-            ),
-          ),
-        }),
-      ),
-    ).rejects.toThrow("init/runtime image differs");
-  } finally {
-    await rm(directory, { recursive: true, force: true });
-  }
-});
-
-test("normal all-chart publication discovers and packages the actual control-plane synthesis", async () => {
-  const directory = await mkdtemp(
-    path.join(os.tmpdir(), "delivery-chart-publication-"),
-  );
-  try {
-    const { app, inputs } = synthesis;
-    const controller = inputs.find(
-      (input) => input.name === "delivery-control-plane",
-    );
-    if (controller === undefined)
-      throw new Error(
-        "Actual control-plane chart is absent from publication inventory",
-      );
-    expect(inputs.map((input) => input.name)).toEqual(
-      app.charts.map((chart) => chart.node.id).sort(),
-    );
-    const archive = await stageChart(
-      controller,
-      "2.0.0-1010825",
-      path.join(directory, "staged"),
-    );
-    const validationPath = path.join(directory, "validation.yaml");
-    await Bun.write(
-      validationPath,
-      stringify(chartValidationValues(controller.name)),
-    );
-    const rendered = Bun.spawnSync([
-      "helm",
-      "template",
-      "delivery-control-plane",
-      archive,
-      "--values",
-      validationPath,
-    ]);
-    expect(rendered.exitCode).toBe(0);
-    expect(
-      parseAllDocuments(rendered.stdout.toString()).some(
-        (doc) => doc.toJSON() !== null,
-      ),
-    ).toBe(true);
-  } finally {
-    await rm(directory, { recursive: true, force: true });
-  }
-});
-
-test("original archive bootstrap renders the fixed active hosts and rejects a real inactive ConfigMap archive", async () => {
-  const directory = await mkdtemp(
-    path.join(os.tmpdir(), "delivery-bootstrap-hosts-"),
-  );
-  const image = {
-    uri: "docker.io/shepherdjerred/temporal-worker",
-    version: "2.0.0-800",
-    digest: `sha256:${"a".repeat(64)}`,
-  };
-  try {
-    for (const active of [true, false]) {
-      const output = path.join(directory, active ? "active" : "inactive");
-      const app = new App({ outdir: output });
-      if (active)
-        createDeliveryControlPlaneChart(app, {
-          image: `docker.io/shepherdjerred/delivery@sha256:${"b".repeat(64)}`,
-          serviceItemId: "test-service",
-          executorItemId: "test-executor",
-          argocdItemId: "test-workload-argocd",
-          platformRegistryItemId: "test-registry",
-          platformArgocdItemId: "test-platform-argocd",
-        });
-      else
-        new ConfigMap(
-          new Chart(app, "delivery-control-plane", {
-            namespace: "temporal",
-            disableResourceNameHashes: true,
-          }),
-          "activation",
-          { data: { active: "false" } },
-        );
-      applyOrdinaryDeliveryImageBindings(app);
-      app.synth();
-      const chartDirectory = new URL(
-        "../../helm/delivery-control-plane",
-        import.meta.url,
-      ).pathname;
-      const manifestPath = path.join(output, "delivery-control-plane.k8s.yaml");
-      const archive = await stageChart(
-        {
-          name: "delivery-control-plane",
-          chartDirectory,
-          manifestPath,
-          fingerprint: await fingerprintChart(chartDirectory, manifestPath),
+    const sourceRevision = "a".repeat(40);
+    const descriptor = BootstrapDescriptorSchema.parse({
+      schema: "delivery-bootstrap/v1",
+      sourceRevision,
+      pullRequest: 1,
+      revision: "2.0.0-701",
+      requestId: "11111111-1111-4111-8111-111111111111",
+      targets: ["woodpecker", "delivery"],
+      images: {
+        woodpecker: {
+          repository: "docker.io/shepherdjerred/woodpecker-config-extension",
+          sourceRevision,
+          version: "2.0.0-701",
+          digest: digest("b"),
         },
-        "2.0.0-801",
-        path.join(directory, active ? "active-stage" : "inactive-stage"),
+        delivery: {
+          repository: "docker.io/shepherdjerred/delivery",
+          sourceRevision,
+          version: "2.0.0-701",
+          digest: digest("c"),
+        },
+      },
+    });
+    try {
+      const { inputs } = synthesis;
+      const manifests = new Map(
+        await Promise.all(
+          inputs.map(
+            async (input) =>
+              [input.name, await Bun.file(input.manifestPath).text()] as const,
+          ),
+        ),
       );
-      const verifiedBytes = new Uint8Array(
-        await Bun.file(archive).arrayBuffer(),
+      const previousRoot = bindChartImageDependencies(manifests.get("apps")!, {
+        "shepherdjerred/caddy-s3proxy": digest("d"),
+        "shepherdjerred/velero-plugin": digest("e"),
+        "shepherdjerred/zfs-driver": digest("a"),
+      });
+      const priorDocuments = parseAllDocuments(previousRoot)
+        .map((doc) => doc.toJSON())
+        .filter((doc) => doc.metadata.name !== "delivery-control-plane");
+      const natives = priorDocuments
+        .filter((doc) => doc.kind === "Application")
+        .map((doc) => nativeBootstrapApplication(doc, "2.0.0-700"));
+      const captured = {
+        root: natives.find((native) => native.metadata.name === "apps")!,
+        applications: natives.filter(
+          (native) => native.metadata.name !== "apps",
+        ),
+        priorRoot: priorDocuments.map((doc) => stringify(doc)).join("---\n"),
+      };
+      const maintenanceImage = `docker.io/shepherdjerred/temporal-worker:2.0.0-600@${digest("f")}`;
+      const nativeWorker = bindChartImageDependencies(
+        manifests.get("woodpecker")!,
+        {
+          "shepherdjerred/woodpecker-config-extension": digest("d"),
+          "shepherdjerred/temporal-worker": digest("f"),
+        },
+      ).replaceAll(
+        `docker.io/shepherdjerred/temporal-worker@${digest("f")}`,
+        maintenanceImage,
       );
-      if (active)
-        await expect(
-          renderBootstrapControlPlane(verifiedBytes, image),
-        ).resolves.toBeUndefined();
-      else
-        await expect(
-          renderBootstrapControlPlane(verifiedBytes, image),
-        ).rejects.toThrow("unique delivery host");
+      const nativeResult = {
+        manifests: parseAllDocuments(nativeWorker).map((doc) =>
+          JSON.stringify(doc.toJSON()),
+        ),
+      };
+      const read = vi.fn(() => Promise.resolve(nativeResult));
+      const bindings = await bootstrapImages(descriptor, captured, read);
+      expect(read).toHaveBeenCalledWith(
+        "/woodpecker/manifests?revision=2.0.0-700",
+      );
+      expect(bindings.maintenanceImage).toBe(maintenanceImage);
+      expect(bindings.digests).not.toHaveProperty(
+        "shepherdjerred/caddy-s3proxy",
+      );
+      expect(bindings.digests).not.toHaveProperty(
+        "shepherdjerred/velero-plugin",
+      );
+      expect(bindings.digests).not.toHaveProperty("shepherdjerred/zfs-driver");
+      const rendered = new Map<string, any[]>();
+      for (const name of ["apps", "woodpecker", "delivery"]) {
+        const input = inputs.find((item) => item.name === name)!;
+        const prepared = prepareBootstrapManifest(manifests.get(name)!, name, {
+          descriptor,
+          captured,
+          bindings,
+        });
+        const manifestPath = path.join(directory, `${name}.yaml`);
+        await Bun.write(manifestPath, bootstrapRootTemplate(prepared, name));
+        const archive = await stageChart(
+          { ...input, manifestPath },
+          descriptor.revision,
+          path.join(directory, name),
+        );
+        const child = Bun.spawn(
+          [
+            "helm",
+            "template",
+            name,
+            archive,
+            ...(name === "delivery"
+              ? [
+                  "--set-string",
+                  `delivery.image=docker.io/shepherdjerred/delivery@${digest("c")}`,
+                ]
+              : []),
+          ],
+          { stdout: "pipe", stderr: "pipe" },
+        );
+        const [text, error, code] = await Promise.all([
+          new Response(child.stdout).text(),
+          new Response(child.stderr).text(),
+          child.exited,
+        ]);
+        expect(error).toBe("");
+        expect(code).toBe(0);
+        rendered.set(
+          name,
+          parseAllDocuments(text, { version: "1.1" }).map((doc) =>
+            doc.toJSON(),
+          ),
+        );
+      }
+      const generator = rendered
+        .get("woodpecker")!
+        .find(
+          (doc) =>
+            doc.kind === "Deployment" &&
+            doc.spec.template.metadata.labels.app ===
+              "woodpecker-config-extension",
+        );
+      const expected = `docker.io/shepherdjerred/woodpecker-config-extension:2.0.0-701@${digest("b")}`;
+      expect(generator.spec.template.spec.containers[0].image).toBe(expected);
+      expect(
+        generator.spec.template.spec.containers[0].env.find(
+          (env: any) => env.name === "CI_GATE_IMAGE",
+        ).value,
+      ).toBe(expected);
+      const maintenance = rendered
+        .get("woodpecker")!
+        .find(
+          (doc) =>
+            doc.kind === "Deployment" &&
+            doc.metadata.name === "temporal-maintenance-worker",
+        );
+      expect(maintenance.spec.template.spec.containers[0].image).toBe(
+        maintenanceImage,
+      );
+      expect(maintenance.spec.template.spec.initContainers[0].image).toBe(
+        maintenanceImage,
+      );
+      const api = rendered
+        .get("delivery")!
+        .find((doc) => doc.kind === "Deployment");
+      expect(api.spec.template.spec.containers[0].image).toBe(
+        `docker.io/shepherdjerred/delivery@${digest("c")}`,
+      );
+      expect(api.spec.template.spec.initContainers[0].image).toBe(
+        `docker.io/shepherdjerred/delivery@${digest("c")}`,
+      );
+      const selectedTargets = new Set<string>(descriptor.targets);
+      for (const native of natives.filter(
+        (item) => !selectedTargets.has(item.metadata.name),
+      ))
+        expect(
+          rendered
+            .get("apps")!
+            .find(
+              (doc) =>
+                doc.kind === "Application" &&
+                doc.metadata.name === native.metadata.name,
+            ).spec,
+        ).toEqual(native.spec);
+      await expect(
+        bootstrapImages(descriptor, captured, () =>
+          Promise.resolve({
+            manifests: nativeResult.manifests.map((raw) =>
+              raw.replace(
+                maintenanceImage,
+                `docker.io/shepherdjerred/temporal-worker@${digest("d")}`,
+              ),
+            ),
+          }),
+        ),
+      ).rejects.toThrow("init/runtime image differs");
+    } finally {
+      await rm(directory, { recursive: true, force: true });
     }
-  } finally {
-    await rm(directory, { recursive: true, force: true });
-  }
-});
+  },
+  HELM_INTEGRATION_TIMEOUT_MS,
+);
+
+test(
+  "normal all-chart publication discovers and packages the actual control-plane synthesis",
+  async () => {
+    const directory = await mkdtemp(
+      path.join(os.tmpdir(), "delivery-chart-publication-"),
+    );
+    try {
+      const { app, inputs } = synthesis;
+      const controller = inputs.find(
+        (input) => input.name === "delivery-control-plane",
+      );
+      if (controller === undefined)
+        throw new Error(
+          "Actual control-plane chart is absent from publication inventory",
+        );
+      expect(inputs.map((input) => input.name)).toEqual(
+        app.charts.map((chart) => chart.node.id).sort(),
+      );
+      const archive = await stageChart(
+        controller,
+        "2.0.0-1010825",
+        path.join(directory, "staged"),
+      );
+      const validationPath = path.join(directory, "validation.yaml");
+      await Bun.write(
+        validationPath,
+        stringify(chartValidationValues(controller.name)),
+      );
+      const rendered = Bun.spawnSync([
+        "helm",
+        "template",
+        "delivery-control-plane",
+        archive,
+        "--values",
+        validationPath,
+      ]);
+      expect(rendered.exitCode).toBe(0);
+      expect(
+        parseAllDocuments(rendered.stdout.toString()).some(
+          (doc) => doc.toJSON() !== null,
+        ),
+      ).toBe(true);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  },
+  HELM_INTEGRATION_TIMEOUT_MS,
+);
+
+test(
+  "original archive bootstrap renders the fixed active hosts and rejects a real inactive ConfigMap archive",
+  async () => {
+    const directory = await mkdtemp(
+      path.join(os.tmpdir(), "delivery-bootstrap-hosts-"),
+    );
+    const image = {
+      uri: "docker.io/shepherdjerred/temporal-worker",
+      version: "2.0.0-800",
+      digest: `sha256:${"a".repeat(64)}`,
+    };
+    try {
+      for (const active of [true, false]) {
+        const output = path.join(directory, active ? "active" : "inactive");
+        const app = new App({ outdir: output });
+        if (active)
+          createDeliveryControlPlaneChart(app, {
+            image: `docker.io/shepherdjerred/delivery@sha256:${"b".repeat(64)}`,
+            serviceItemId: "test-service",
+            executorItemId: "test-executor",
+            argocdItemId: "test-workload-argocd",
+            platformRegistryItemId: "test-registry",
+            platformArgocdItemId: "test-platform-argocd",
+          });
+        else
+          new ConfigMap(
+            new Chart(app, "delivery-control-plane", {
+              namespace: "temporal",
+              disableResourceNameHashes: true,
+            }),
+            "activation",
+            { data: { active: "false" } },
+          );
+        applyOrdinaryDeliveryImageBindings(app);
+        app.synth();
+        const chartDirectory = new URL(
+          "../../helm/delivery-control-plane",
+          import.meta.url,
+        ).pathname;
+        const manifestPath = path.join(
+          output,
+          "delivery-control-plane.k8s.yaml",
+        );
+        const archive = await stageChart(
+          {
+            name: "delivery-control-plane",
+            chartDirectory,
+            manifestPath,
+            fingerprint: await fingerprintChart(chartDirectory, manifestPath),
+          },
+          "2.0.0-801",
+          path.join(directory, active ? "active-stage" : "inactive-stage"),
+        );
+        const verifiedBytes = new Uint8Array(
+          await Bun.file(archive).arrayBuffer(),
+        );
+        if (active)
+          await expect(
+            renderBootstrapControlPlane(verifiedBytes, image),
+          ).resolves.toBeUndefined();
+        else
+          await expect(
+            renderBootstrapControlPlane(verifiedBytes, image),
+          ).rejects.toThrow("unique delivery host");
+      }
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  },
+  HELM_INTEGRATION_TIMEOUT_MS,
+);
 
 test("actual root self-reference survives paused account prerequisite then selected API bootstrap", async () => {
   const app = new App();

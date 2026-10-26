@@ -1,14 +1,17 @@
-package com.shepherdjerred.thestorm.essentials.adapter.paper;
+package com.shepherdjerred.thestorm.essentials.adapter.files;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.shepherdjerred.thestorm.core.compute.ComputePool;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Executor;
 import java.util.zip.GZIPOutputStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -45,6 +48,53 @@ final class SavedRespawnTest {
 
     assertThat(scan.problems()).isEmpty();
     assertThat(scan.found()).containsExactly(new SavedRespawn.Found(ALICE, spot));
+  }
+
+  @Test
+  void folderDiscoveryAndFileReadingWaitForTheComputePool(@TempDir Path directory)
+      throws IOException {
+    var tasks = new ArrayDeque<Runnable>();
+    var compute =
+        new ComputePool() {
+          @Override
+          public Executor executor() {
+            return tasks::add;
+          }
+
+          @Override
+          public void close() {}
+        };
+    var result = SavedRespawn.load(directory, compute);
+
+    assertThat(result).isNotDone();
+    var playerData = Files.createDirectories(directory.resolve("players/data"));
+    var spot = new SavedRespawn.Spot("minecraft:overworld", 12, 64, -4, 90f);
+    write(playerData.resolve(ALICE + ".dat"), root(spot));
+    tasks.remove().run();
+    assertThat(result)
+        .isCompletedWithValue(
+            new SavedRespawn.Scan(
+                java.util.List.of(new SavedRespawn.Found(ALICE, spot)), java.util.List.of()));
+  }
+
+  @Test
+  void aCorruptPlayerFileIsReportedWithoutDroppingOtherBeds(@TempDir Path directory)
+      throws IOException {
+    var spot = new SavedRespawn.Spot("minecraft:overworld", 12, 64, -4, 90f);
+    write(directory.resolve(ALICE + ".dat"), root(spot));
+    var corrupt = directory.resolve("00000000-0000-0000-0000-00000000000b.dat");
+    Files.writeString(corrupt, "not compressed player data");
+
+    var scan = SavedRespawn.readAll(directory);
+
+    assertThat(scan.found()).containsExactly(new SavedRespawn.Found(ALICE, spot));
+    assertThat(scan.problems())
+        .singleElement()
+        .satisfies(
+            problem -> {
+              assertThat(problem.file()).isEqualTo(corrupt.toString());
+              assertThat(problem.failure()).isInstanceOf(java.io.UncheckedIOException.class);
+            });
   }
 
   private static Map<String, Object> root(SavedRespawn.Spot spot) {

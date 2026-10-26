@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
+import com.shepherdjerred.thestorm.essentials.adapter.files.SavedRespawn;
 import com.shepherdjerred.thestorm.essentials.app.AfkTracker;
 import com.shepherdjerred.thestorm.essentials.app.GuardRegistry;
 import com.shepherdjerred.thestorm.essentials.app.ModerationService;
@@ -18,6 +19,7 @@ import com.shepherdjerred.thestorm.essentials.domain.config.EssentialsConfig;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 
@@ -66,7 +68,8 @@ public final class EssentialsPaper {
       WarpDirectory warps,
       Stores stores,
       Protection protection,
-      SealedWorlds sealed) {}
+      SealedWorlds sealed,
+      CompletableFuture<SavedRespawn.Scan> savedRespawns) {}
 
   /**
    * Storage used directly by commands and listeners.
@@ -215,7 +218,7 @@ public final class EssentialsPaper {
     var backfill =
         new BedBackfill(
             new BedBackfill.Sources(
-                runtime, app.stores().homes(), beds, context.compute(), app.sealed()));
+                runtime, app.stores().homes(), beds, app.savedRespawns(), app.sealed()));
     backfill.start();
     var tasks =
         List.of(

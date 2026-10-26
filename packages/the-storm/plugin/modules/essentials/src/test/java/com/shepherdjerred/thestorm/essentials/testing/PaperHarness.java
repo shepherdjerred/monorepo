@@ -63,6 +63,11 @@ public final class PaperHarness implements AutoCloseable {
 
   public static PaperHarness start(Path directory, Wallets wallets) {
     var server = MockBukkit.mock();
+    try {
+      Files.createDirectories(directory.resolve("players/data"));
+    } catch (IOException failure) {
+      throw new UncheckedIOException(failure);
+    }
     server.addSimpleWorld("world");
     server.getWorld("world").loadChunk(0, 0);
     writeConfig(directory);
@@ -101,7 +106,7 @@ public final class PaperHarness implements AutoCloseable {
           services.provide(
               com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl.class,
               new com.shepherdjerred.thestorm.core.players.PlayerVisibilityControl(plugin));
-          new EssentialsModule()
+          new EssentialsModule(_ -> directory)
               .enable(
                   new ModuleContext(
                       plugin,

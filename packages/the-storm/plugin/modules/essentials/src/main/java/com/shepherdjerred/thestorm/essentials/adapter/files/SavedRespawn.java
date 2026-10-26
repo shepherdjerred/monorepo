@@ -1,6 +1,8 @@
-package com.shepherdjerred.thestorm.essentials.adapter.paper;
+package com.shepherdjerred.thestorm.essentials.adapter.files;
 
+import com.shepherdjerred.thestorm.core.compute.ComputePool;
 import com.shepherdjerred.thestorm.core.nbt.NbtReader;
+import com.shepherdjerred.thestorm.core.snapshot.PlayerDataFiles;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -12,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.zip.GZIPInputStream;
 import org.jspecify.annotations.Nullable;
 
@@ -19,13 +22,13 @@ import org.jspecify.annotations.Nullable;
  * The single respawn stored in a player's saved data. Paper 26.2 writes {@code respawn} as {@code
  * ServerPlayer.RespawnConfig}: one dimension and block, not one bed per world.
  */
-final class SavedRespawn {
+public final class SavedRespawn {
 
   private SavedRespawn() {}
 
   /** A respawn block and the facing vanilla stored with it. */
-  record Spot(String dimension, int x, int y, int z, float yaw) {
-    Spot {
+  public record Spot(String dimension, int x, int y, int z, float yaw) {
+    public Spot {
       if (dimension.isBlank()) {
         throw new IllegalArgumentException("dimension must not be blank");
       }
@@ -36,13 +39,28 @@ final class SavedRespawn {
   }
 
   /** One player file that contained a respawn. */
-  record Found(UUID player, Spot spot) {}
+  public record Found(UUID player, Spot spot) {}
 
   /** A player file whose respawn could not be read. */
-  record Problem(Path file, Throwable failure) {}
+  public record Problem(String file, Throwable failure) {}
 
   /** Every respawn under {@code directory}, plus the files that could not be read. */
-  record Scan(List<Found> found, List<Problem> problems) {}
+  public record Scan(List<Found> found, List<Problem> problems) {}
+
+  /** All directory discovery and reading run on the compute pool. */
+  public static CompletableFuture<Scan> load(Path level, ComputePool compute) {
+    return compute.submit(
+        () -> {
+          try {
+            var files =
+                PlayerDataFiles.locate(level)
+                    .orElseThrow(() -> new IOException("No player-data folder under " + level));
+            return readAll(files.directory());
+          } catch (IOException failure) {
+            throw new UncheckedIOException(failure);
+          }
+        });
+  }
 
   static Scan readAll(Path directory) throws IOException {
     var found = new ArrayList<Found>();
@@ -69,7 +87,7 @@ final class SavedRespawn {
     try {
       read(file).ifPresent(spot -> found.add(new Found(player, spot)));
     } catch (UncheckedIOException | IllegalStateException failure) {
-      problems.add(new Problem(file, failure));
+      problems.add(new Problem(file.toString(), failure));
     }
   }
 

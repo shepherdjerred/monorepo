@@ -20,14 +20,17 @@ describe("The Storm plugin", () => {
       "economy",
       "essentials",
       "mail",
+      "mobs",
+      "qol",
       "rwf",
       "safety",
       "tickets",
       "towns",
       "tracks",
+      "world",
     ]);
     expect(logs).toContain(
-      "Prepared synthetic fixtures for Storm modules [towns, essentials, rwf]",
+      "Prepared synthetic fixtures for Storm modules [world, towns, essentials, rwf]",
     );
     expect(logs).toContain(
       "[TheStormMechanicsE2E] Enabled real-Paper mechanics E2E harness",
