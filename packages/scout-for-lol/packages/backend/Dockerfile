@@ -206,9 +206,7 @@ WORKDIR /app/packages/scout-for-lol/packages/backend
 
 # Run from source (the backend build bundles with `--external '@duckdb/*'`,
 # but the old CI image ran source directly). Boot order is load-bearing:
-# migrations update Postgres; SQL-only readiness validates the completed import
-# receipt and accounting before traffic. Fresh installs and restores run the
-# explicit import and ScoutQL conversion tools before ordinary startup.
+# migrations update Postgres before the runtime starts accepting traffic.
 CMD ["/bin/sh", "-c", "bun x prisma migrate deploy && bun run src/index.ts"]
 
 FROM runtime AS voice-smoke

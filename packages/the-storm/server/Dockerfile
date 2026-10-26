@@ -104,6 +104,9 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # the path PAPER_CUSTOM_JAR names, and every patch op is a $put (a $set on a
 # key an older file lacks stops the boot).
 RUN set -eu; \
+  paper_version=$(jq -r '.paper.version | split("-")[0]' /opt/the-storm/plugins.json); \
+  [ "$VERSION" = "$paper_version" ]; \
+  [ "$PAPER_CUSTOM_JAR" = "/opt/paper/$(jq -r .paper.file /opt/the-storm/plugins.json)" ]; \
   jq -r '.plugins[] | "\(.sha256)  /plugins/\(.file)"' /opt/the-storm/plugins.json \
     | sha256sum --check --strict -; \
   expected=$( { jq -r '.plugins[].file' /opt/the-storm/plugins.json; \
@@ -112,17 +115,17 @@ RUN set -eu; \
   [ "$expected" = "$actual" ] || { echo "jar set mismatch"; diff <(echo "$expected") <(echo "$actual"); exit 1; }; \
   unzip -p /plugins/TheStorm.jar paper-plugin.yml > /tmp/paper-plugin.yml; \
   grep -qx 'name: TheStorm' /tmp/paper-plugin.yml; \
-  grep -qx "api-version: '26.2'" /tmp/paper-plugin.yml; \
+  grep -Fxq "api-version: '$paper_version'" /tmp/paper-plugin.yml; \
   grep -qx 'main: com.shepherdjerred.thestorm.TheStormPlugin' /tmp/paper-plugin.yml; \
   unzip -l /plugins/TheStorm.jar contracts/companion-chat.json > /dev/null; \
   unzip -l /plugins/TheStorm.jar contracts/content-moderation.json > /dev/null; \
   unzip -l /plugins/TheStorm.jar contracts/evidence-contract.json > /dev/null; \
   unzip -p /plugins/MCBridge.jar paper-plugin.yml > /tmp/mcbridge-plugin.yml; \
   grep -qx 'name: MCBridge' /tmp/mcbridge-plugin.yml; \
-  grep -qx 'api-version: "26.2"' /tmp/mcbridge-plugin.yml; \
+  grep -Fxq "api-version: \"$paper_version\"" /tmp/mcbridge-plugin.yml; \
   grep -qx 'main: com.shepherdjerred.mcbridge.McBridgePlugin' /tmp/mcbridge-plugin.yml; \
   test -f "$PAPER_CUSTOM_JAR"; \
-  test -f /opt/paper/versions/26.2/paper-26.2.jar; \
+  test -f "/opt/paper/versions/$paper_version/paper-$paper_version.jar"; \
   test -f /plugins/TheStorm/config.yml; \
   grep -q '<title>LiveMap</title>' /opt/the-storm/livemap/index.html; \
   for patch in /bundle/patches/*.json; do \

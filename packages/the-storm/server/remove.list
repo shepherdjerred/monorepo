@@ -8,7 +8,7 @@
 # overwriting and nothing now manages. Never list a file that holds world,
 # player or plugin database state.
 
-# Server configs: 26.2 defaults (PAPER_CONFIG_DEFAULTS_REPO) plus patches/
+# Server configs: pinned Paper defaults (PAPER_CONFIG_DEFAULTS_REPO) plus patches/
 # replace these frozen copies of older versions on the same boot.
 bukkit.yml
 spigot.yml

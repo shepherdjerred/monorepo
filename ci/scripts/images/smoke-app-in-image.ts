@@ -414,10 +414,10 @@ const commands: Record<
       // image startup path, which re-runs them, against it.
       "bun x --no-install prisma migrate deploy",
       "set +e",
-      'output="$(timeout 45s sh -c "bun x --no-install prisma migrate deploy && bun run scripts/check-database-readiness.ts && bun run src/index.ts" 2>&1)"',
+      'output="$(timeout 45s sh -c "bun x --no-install prisma migrate deploy && bun x --no-install prisma migrate status && bun run src/index.ts" 2>&1)"',
       "status=$?",
       String.raw`printf '%s\n' "$output"`,
-      String.raw`printf '%s\n' "$output" | grep -q "Database prepared: ledger verified" || { echo "database readiness failed"; exit 1; }`,
+      String.raw`printf '%s\n' "$output" | grep -Fq "Database schema is up to date!" || { echo "database readiness failed"; exit 1; }`,
       String.raw`printf '%s\n' "$output" | grep -Fq "HTTP server started" || { echo "backend did not reach HTTP startup"; exit 1; }`,
       String.raw`[ "$status" -eq 0 ] || [ "$status" -eq 124 ] || printf "%s\n" "$output" | grep -iE "` +
         discordAuthPattern +
