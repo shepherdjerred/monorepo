@@ -20,3 +20,10 @@ export const PromotionTaskResultSchema = PromotionAgentResultSchema.extend({
     .nullable(),
 });
 export type PromotionTaskResult = z.infer<typeof PromotionTaskResultSchema>;
+
+/** A dry run cannot describe an existing placement as a newly verified action. */
+export const PromotionPreviewResultSchema = PromotionTaskResultSchema.extend({
+  status: z.enum(["preview", "deferred", "blocked"]),
+  performedAction: z.literal(false),
+  receipt: z.null(),
+});

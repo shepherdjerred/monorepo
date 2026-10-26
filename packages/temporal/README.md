@@ -994,16 +994,19 @@ required preflight/publish/verify tool sequences.
 
 Each run receives `task.json` with its target and mode, `content.md` with approved
 copy, `history.json` with the latest 50 attempts' metadata, and
-`previous-run.json` with the preceding assessment and prepared content. The
-[target manifest](../the-storm/promotion/targets.json) and approved copy are bundled
+`previous-run.json` with the preceding assessment and prepared content.
+`maintenance.md` context includes the human inventory and recorded manual actions,
+excluding the account locator section. Manual receipts retain their stated date
+precision; the agent still checks current rules and subsequent remote activity.
+The [target manifest](../the-storm/promotion/targets.json) and approved copy are bundled
 into the worker image. Original page baselines remain in private object storage.
 The complete ledger remains available to the runner.
 
-`BROWSER.md` documents native PinchTab navigation, compact scanned snapshots,
+`BROWSER.md` documents native PinchTab navigation, scoped scanned snapshots,
 element references, attributes, screenshots, and actions. The agent chooses its
 own controls and sequence; native input references work inside web components.
 The small connection helper scopes operations to the target's persistent profile.
-Credential placeholders let the agent choose username/password inputs while the
+Credential placeholders let the agent choose username, optional saved email, and password inputs while the
 parent supplies their values privately. A disabled sign-in control can be
 inspected and corrected; an actual or ambiguous sign-in submission is not retried.
 The additional `captcha.ts` helper solves supported response-field reCAPTCHA v2
@@ -1027,6 +1030,11 @@ in-memory task state and no Temporal server or production ledger. It prints
 private temporary paths for the structured results and browser diagnostics.
 Remote posting history is still checked by the agent. The references file
 contains only 1Password locators; credentials are injected in memory.
+Use `--all` instead of target IDs to inspect every configured target. An optional
+`--inventory /path/to/targets.json` adds schema-validated placements for local
+inspection without changing production targets or schedules. Duplicate IDs fail.
+`--profile <existing-profile>` can inspect an existing signed-in browser profile
+in preview only; it does not prove that the deployed per-account profile is ready.
 
 | Operator command                           | Result                                                                  |
 | ------------------------------------------ | ----------------------------------------------------------------------- |
@@ -1060,10 +1068,17 @@ Reddit additionally requires a fresh visible post permalink and original
 publication timestamp. A failed or filtered post still counts conservatively.
 The saved assessment carries context into the next run. Browser diagnostics retain
 endpoint/action/ref/error metadata without credential values.
+Positive preview assessments require exact evidence quotes from captured live
+browser observations at the cited URLs; historical notes cannot stand in for
+live evidence. This provenance check does not itself prove the agent interpreted
+the rule or latest history correctly.
 
 Preview blocks promotion clicks, form edits, Enter submissions, action URLs,
 receipt settlement and paid CAPTCHA tasks outside the prompt. It permits
-navigation, screenshots, scrolling and one stored-credential sign-in.
+navigation, screenshots, scrolling, native read-only search inputs and one
+stored-credential sign-in. Message composers remain blocked. Browser requests
+are serialized within each run, and controls use the refs from its current
+snapshot rather than silently taking another snapshot during credential fill.
 Reconciliation never signs in or creates another effect. These modes use the
 same task-driven agent and browser connection as a publishing run.
 

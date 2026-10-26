@@ -2,7 +2,12 @@ import { agentTaskSecretTokens } from "#activities/agent/agent-task-env.ts";
 
 /** Public account names and map keys must remain usable in scoped browser URLs. */
 export function promotionSecretTokens(
-  logins: Readonly<Record<string, { username: string; password: string }>>,
+  logins: Readonly<
+    Record<
+      string,
+      { username: string; email?: string | undefined; password: string }
+    >
+  >,
   environment: Readonly<Record<string, string | undefined>> = Bun.env,
 ): readonly (string | undefined)[] {
   const source = { ...environment };
@@ -13,6 +18,8 @@ export function promotionSecretTokens(
     ...Object.values(logins).flatMap((login) => [
       login.password,
       JSON.stringify(login.password).slice(1, -1),
+      ...(login.username.includes("@") ? [login.username] : []),
+      ...(login.email === undefined ? [] : [login.email]),
     ]),
   ];
 }

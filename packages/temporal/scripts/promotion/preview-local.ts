@@ -1,10 +1,11 @@
 import { chmod, mkdtemp } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import path from "node:path";
+import { parseArgs } from "node:util";
 import { MockActivityEnvironment } from "@temporalio/testing";
 import { z } from "zod/v4";
 import { runPromotionAgent } from "#activities/promotion/agent.ts";
-import { promotionTarget } from "#activities/promotion/manifest.ts";
+import { promotionManifest } from "#activities/promotion/manifest.ts";
 import { promotionSecretTokens } from "#activities/promotion/redaction.ts";
 import { memoryPromotionStore } from "#activities/promotion/test-support.ts";
 import {
@@ -12,14 +13,52 @@ import {
   updatePromotionState,
 } from "#activities/promotion/store.ts";
 import { PromotionLoginsSchema } from "#activities/promotion/tools.ts";
-import { promotionStateSummary } from "#shared/promotion.ts";
+import {
+  promotionStateSummary,
+  PromotionManifestSchema,
+} from "#shared/promotion.ts";
 import { redactSecrets } from "#shared/redact.ts";
 
 function print(text: string): void {
   process.stdout.write(`${text}\n`);
 }
 
-const targets = Bun.argv.slice(2).map((id) => promotionTarget(id));
+const { values, positionals } = parseArgs({
+  args: Bun.argv.slice(2),
+  options: {
+    all: { type: "boolean" },
+    inventory: { type: "string" },
+    profile: { type: "string" },
+  },
+  allowPositionals: true,
+});
+if (values.all === true && positionals.length > 0)
+  throw new Error("Choose --all or explicit target IDs");
+const extra =
+  values.inventory === undefined
+    ? []
+    : PromotionManifestSchema.parse(await Bun.file(values.inventory).json())
+        .targets;
+const inventory = PromotionManifestSchema.parse({
+  ...promotionManifest,
+  targets: [...promotionManifest.targets, ...extra],
+});
+const ids =
+  values.all === true
+    ? inventory.targets.map((target) => target.id)
+    : positionals;
+const targets = ids.map((id) => {
+  const target = inventory.targets.find((item) => item.id === id);
+  if (target === undefined) throw new Error(`Unknown promotion target: ${id}`);
+  return target;
+});
+const profile =
+  values.profile === undefined
+    ? undefined
+    : z
+        .string()
+        .regex(/^[a-z0-9][\w-]{0,99}$/i)
+        .parse(values.profile);
 if (targets.length === 0)
   throw new Error(
     "Usage: bun packages/temporal/scripts/promotion/preview-local.ts <target> [target...]",
@@ -97,6 +136,7 @@ for (const target of targets) {
         occurrenceId,
         mode: "preview",
         store,
+        ...(profile === undefined ? {} : { browserProfile: profile }),
       }),
     );
   } catch (error: unknown) {

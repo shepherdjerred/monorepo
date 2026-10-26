@@ -21,24 +21,26 @@ async function harness(
     target,
     "http://browser.invalid",
     "fixture-token",
-    new AbortController().signal,
+    { signal: new AbortController().signal },
   );
   const action = vi
     .spyOn(browser, "action")
     .mockResolvedValue({ success: true });
   const open = vi.spyOn(browser, "open").mockResolvedValue({ url: target.url });
   vi.spyOn(browser, "currentUrl").mockResolvedValue(target.url);
-  vi.spyOn(browser, "accessibleControl").mockImplementation((ref) =>
-    Promise.resolve(
-      ref === "e3"
-        ? { ref, role: "button", name: "Log In" }
-        : {
-            ref,
-            role: "textbox",
-            name: ref === "e2" ? "Password" : "Username",
-          },
-    ),
-  );
+  const control = vi
+    .spyOn(browser, "accessibleControl")
+    .mockImplementation((ref) =>
+      Promise.resolve(
+        ref === "e3"
+          ? { ref, role: "button", name: "Log In" }
+          : {
+              ref,
+              role: "textbox",
+              name: ref === "e2" ? "Password" : "Username",
+            },
+      ),
+    );
   const attribute = vi
     .spyOn(browser, "attribute")
     .mockImplementation((ref, name) =>
@@ -68,6 +70,7 @@ async function harness(
     logins: {
       [target.account]: {
         username: "fixture-user",
+        email: "fixture@example.invalid",
         password: "fixture-password",
       },
     },
@@ -76,10 +79,124 @@ async function harness(
     signal: new AbortController().signal,
     heartbeat: vi.fn(),
   });
-  return { handle, action, open, attribute, target };
+  return { handle, action, open, attribute, target, control };
 }
 
 describe("native browser connection", () => {
+  it("injects the saved alternate email privately when the observed form requests it", async () => {
+    const test = await harness();
+    expect(
+      await test.handle({
+        endpoint: "action",
+        body: { kind: "fill", ref: "e1", credential: "email" },
+      }),
+    ).toEqual({ filled: true });
+    expect(test.action).toHaveBeenCalledWith({
+      kind: "fill",
+      ref: "e1",
+      text: "fixture@example.invalid",
+    });
+  });
+  it.each(["Sign In →", "Log In to your account"])(
+    "allows the observed sign-in label %s once",
+    async (name) => {
+      const test = await harness();
+      await test.handle({
+        endpoint: "action",
+        body: { kind: "fill", ref: "e2", credential: "password" },
+      });
+      test.control.mockResolvedValue({
+        ref: "e3",
+        role: "button",
+        name,
+      });
+      await test.handle({
+        endpoint: "action",
+        body: { kind: "click", ref: "e3" },
+      });
+      expect(test.action).toHaveBeenLastCalledWith({
+        kind: "click",
+        ref: "e3",
+      });
+    },
+  );
+  it("blocks a combined login and publication control", async () => {
+    const test = await harness();
+    await test.handle({
+      endpoint: "action",
+      body: { kind: "fill", ref: "e2", credential: "password" },
+    });
+    test.action.mockClear();
+    test.control.mockResolvedValue({
+      ref: "e3",
+      role: "button",
+      name: "Sign In and Bump",
+    });
+    await expect(
+      test.handle({ endpoint: "action", body: { kind: "click", ref: "e3" } }),
+    ).rejects.toThrow("Read-only");
+    expect(test.action).not.toHaveBeenCalled();
+  });
+  it.each([
+    { type: "search", role: null, label: null },
+    { type: "text", role: "searchbox", label: null },
+    { type: null, role: "combobox", label: "Search" },
+  ])(
+    "permits native read-only search without enabling message composers: %j",
+    async (attrs) => {
+      const test = await harness();
+      test.attribute.mockImplementation((_ref, name) =>
+        Promise.resolve(
+          name === "type"
+            ? attrs.type
+            : name === "role"
+              ? attrs.role
+              : attrs.label,
+        ),
+      );
+      await test.handle({
+        endpoint: "action",
+        body: { kind: "fill", ref: "e1", text: "from:the.storm.mc" },
+      });
+      await test.handle({
+        endpoint: "action",
+        body: { kind: "press", ref: "e1", key: "Enter" },
+      });
+      expect(test.action).toHaveBeenCalledTimes(2);
+      test.attribute.mockImplementation((_ref, name) =>
+        Promise.resolve(name === "role" ? "textbox" : null),
+      );
+      await expect(
+        test.handle({
+          endpoint: "action",
+          body: { kind: "fill", ref: "e1", text: "Ad copy" },
+        }),
+      ).rejects.toThrow("Read-only");
+      expect(test.action).toHaveBeenCalledTimes(2);
+    },
+  );
+  it("serializes overlapping commands without losing either request", async () => {
+    const test = await harness();
+    const gate = Promise.withResolvers<{ success: boolean }>();
+    test.action.mockReturnValueOnce(gate.promise);
+    const first = test.handle({
+      endpoint: "action",
+      body: { kind: "scroll", scrollY: 100 },
+    });
+    const second = test.handle({
+      endpoint: "action",
+      body: { kind: "scroll", scrollY: 200 },
+    });
+    await vi.waitFor(() => expect(test.action).toHaveBeenCalledTimes(1));
+    gate.resolve({ success: true });
+    await Promise.all([first, second]);
+    expect(test.action.mock.calls.map(([body]) => body["scrollY"])).toEqual([
+      100, 200,
+    ]);
+  });
+});
+
+describe("credential isolation and preview restrictions", () => {
   it("lets the agent choose input refs and injects credentials without exposing values", async () => {
     const test = await harness();
     expect(

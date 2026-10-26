@@ -6,6 +6,7 @@ import { readPromotionState, updatePromotionState } from "./store.ts";
 import { PromotionTaskJournal } from "./task.ts";
 import {
   PromotionTaskResultSchema,
+  PromotionPreviewResultSchema,
   type PromotionTaskResult,
 } from "./task-contract.ts";
 
@@ -92,6 +93,7 @@ describe("task-driven promotion journal", () => {
     const test = await harness();
     await test.journal.beforeMutation();
     test.journal.mutationFailed();
+    await expect(test.journal.beforeMutation()).rejects.toThrow("uncertain");
     await test.journal.finish({
       ...result,
       status: "blocked",
@@ -100,6 +102,93 @@ describe("task-driven promotion journal", () => {
     const final = await test.state();
     expect(final.attempts[0]?.status).toBe("uncertain");
   });
+  it("preserves the original baseline when later interactions expose the receipt", async () => {
+    const test = await harness();
+    await test.journal.beforeMutation();
+    test.journal.observe({
+      url: test.target.url,
+      text: "The new owner refresh is complete",
+    });
+    await test.journal.beforeMutation();
+    await test.journal.finish({
+      ...result,
+      status: "verified",
+      performedAction: true,
+      nextEligibleAt: "2026-10-27T12:00:00.000Z",
+      receipt: {
+        status: "verified",
+        url: test.target.url,
+        quote: "The new owner refresh is complete",
+        occurrenceId: null,
+      },
+    });
+    const state = await test.state();
+    expect(state.attempts[0]?.beforeSubmission).toHaveLength(1);
+    expect(state.attempts[0]?.status).toBe("verified");
+  });
+});
+
+describe("preview evidence provenance", () => {
+  it("requires positive preview quotes to come from live observations on the cited page", async () => {
+    const test = await harness("preview");
+    await expect(test.journal.finish(result)).rejects.toThrow(
+      "captured live evidence",
+    );
+    await expect(
+      test.journal.finish({
+        ...result,
+        evidence: [
+          { url: test.target.url, quote: "A historical bump deadline" },
+        ],
+      }),
+    ).rejects.toThrow("absent from live browser evidence");
+    await expect(
+      test.journal.finish({
+        ...result,
+        evidence: [
+          {
+            url: test.target.rulesUrl,
+            quote: "Existing placement and its rules",
+          },
+        ],
+      }),
+    ).rejects.toThrow("absent from live browser evidence");
+    await test.journal.finish({
+      ...result,
+      evidence: [
+        { url: test.target.url, quote: "Existing placement and its rules" },
+      ],
+    });
+    const state = await test.state();
+    expect(state.attempts).toEqual([]);
+  });
+  it("accepts exact quotes escaped by native JSON observations", async () => {
+    const test = await harness("preview");
+    test.journal.observe({
+      url: test.target.url,
+      text: JSON.stringify({ name: 'Owner says "Ready"\nToday' }),
+    });
+    await test.journal.finish({
+      ...result,
+      evidence: [{ url: test.target.url, quote: 'Owner says "Ready"\nToday' }],
+    });
+  });
+  it("constrains the provider's preview schema to results without effects", () => {
+    expect(PromotionPreviewResultSchema.safeParse(result).success).toBe(true);
+    expect(
+      PromotionPreviewResultSchema.safeParse({ ...result, status: "verified" })
+        .success,
+    ).toBe(false);
+    expect(
+      PromotionPreviewResultSchema.safeParse({
+        ...result,
+        performedAction: true,
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("promotion ownership and settlement", () => {
   it("refuses to replay the same occurrence after its executor was replaced", async () => {
     const test = await harness();
     await test.journal.beforeMutation();

@@ -7,6 +7,21 @@ import {
 import { redactSecrets } from "#shared/redact.ts";
 
 describe("promotion observation redaction", () => {
+  it("keeps saved sign-in emails out of observations and result artifacts", () => {
+    const tokens = promotionSecretTokens(
+      {
+        account: {
+          username: "PublicName",
+          email: "private-login@example.invalid",
+          password: "fixture-password",
+        },
+      },
+      {},
+    );
+    expect(
+      redactSecrets("PublicName private-login@example.invalid", tokens),
+    ).toBe("PublicName ***");
+  });
   it("redacts sensitive fragments and tolerates malformed URLs in untrusted text", () => {
     expect(
       promotionPublicUrl("https://example.com/#access_token=fixture-secret"),
