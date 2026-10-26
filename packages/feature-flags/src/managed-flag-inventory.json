@@ -851,42 +851,6 @@
       "thresholdRollouts": []
     },
     {
-      "key": "betting_enabled",
-      "owner": "scout",
-      "namespace": "scout",
-      "source": "scout-policy",
-      "purpose": "Retained for pre-retirement workers until native execution drainage; removed with the final economy purge.",
-      "type": "boolean",
-      "default": false,
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
-      "key": "betting_player_bet_outcome_dm_enabled",
-      "owner": "scout",
-      "namespace": "scout",
-      "source": "scout-policy",
-      "purpose": "Retained for pre-retirement workers until native execution drainage; removed with the final economy purge.",
-      "type": "boolean",
-      "default": false,
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
-      "key": "betting_settlement_dm_enabled",
-      "owner": "scout",
-      "namespace": "scout",
-      "source": "scout-policy",
-      "purpose": "Retained for pre-retirement workers until native execution drainage; removed with the final economy purge.",
-      "type": "boolean",
-      "default": false,
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
       "key": "birmel-activity-tracking-enabled",
       "owner": "birmel",
       "namespace": "birmel",
@@ -1127,18 +1091,6 @@
       "thresholdRollouts": []
     },
     {
-      "key": "bucks_dares_enabled",
-      "owner": "scout",
-      "namespace": "scout",
-      "source": "scout-policy",
-      "purpose": "Retained for pre-retirement workers until native execution drainage; removed with the final economy purge.",
-      "type": "boolean",
-      "default": false,
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
       "key": "dares_enabled",
       "owner": "scout",
       "namespace": "scout",
@@ -1162,18 +1114,6 @@
           "result": true
         }
       ],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
-      "key": "bucks_transfers_enabled",
-      "owner": "scout",
-      "namespace": "scout",
-      "source": "scout-policy",
-      "purpose": "Retained for pre-retirement workers until native execution drainage; removed with the final economy purge.",
-      "type": "boolean",
-      "default": false,
-      "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
     },
@@ -1605,18 +1545,6 @@
       "purpose": "Enable Streambot player cards.",
       "type": "boolean",
       "default": true,
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
-      "key": "scout-betting-parlay-ai-model",
-      "owner": "scout",
-      "namespace": "scout",
-      "source": "scout-dynamic",
-      "purpose": "Retained for pre-retirement workers until native execution drainage; removed with the final economy purge.",
-      "type": "variant",
-      "default": "gpt-5.6-sol",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -3616,47 +3544,7 @@
           "thresholdRollouts": []
         },
         {
-          "key": "betting_enabled",
-          "type": "boolean",
-          "default": false,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
-          "key": "betting_player_bet_outcome_dm_enabled",
-          "type": "boolean",
-          "default": false,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
-          "key": "betting_settlement_dm_enabled",
-          "type": "boolean",
-          "default": false,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
-          "key": "bucks_dares_enabled",
-          "type": "boolean",
-          "default": false,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
           "key": "dares_enabled",
-          "type": "boolean",
-          "default": false,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
-          "key": "bucks_transfers_enabled",
           "type": "boolean",
           "default": false,
           "rollouts": [],

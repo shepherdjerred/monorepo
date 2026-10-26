@@ -228,6 +228,18 @@ test("only audited keys are retired, preserving managed targeting and other unkn
     "prod/tracker/tracker-imports-enabled",
     "beta/streambot/streambot-playlist-limit",
     "prod/streambot/streambot-playlist-limit",
+    "beta/scout/betting_enabled",
+    "beta/scout/betting_player_bet_outcome_dm_enabled",
+    "beta/scout/betting_settlement_dm_enabled",
+    "beta/scout/bucks_dares_enabled",
+    "beta/scout/bucks_transfers_enabled",
+    "beta/scout/scout-betting-parlay-ai-model",
+    "prod/scout/betting_enabled",
+    "prod/scout/betting_player_bet_outcome_dm_enabled",
+    "prod/scout/betting_settlement_dm_enabled",
+    "prod/scout/bucks_dares_enabled",
+    "prod/scout/bucks_transfers_enabled",
+    "prod/scout/scout-betting-parlay-ai-model",
   ]);
   const server = fakeServer();
   const managedBefore = structuredClone(
