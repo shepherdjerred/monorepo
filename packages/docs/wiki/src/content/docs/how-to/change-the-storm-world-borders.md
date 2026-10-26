@@ -106,11 +106,14 @@ chunky progress frontier
 
 Use each world's configured radius, including Nether, End, Skylands, and Creative.
 Require completion before starting the next task.
-The image enables `force-load-existing-chunks` so Paper also upgrades historical
-chunks that it would otherwise skip. This preserves their terrain while making
+The [owned Chunky patch](packages/the-storm/server/patches/chunky-config.json)
+enables `force-load-existing-chunks` to
+[load existing chunks instead of skipping them](https://github.com/pop4959/Chunky/wiki/Configuration),
+letting Paper upgrade their historical saved format. This preserves their terrain while making
 the native saved format available to BlueMap; do not replace or trim old chunks
 to repair a missing render.
-The image bounds Chunky to four in-flight chunks and waits for their load
+The [image's JVM options](packages/the-storm/server/Dockerfile)
+bound Chunky to four in-flight chunks and wait for their load
 tickets to be removed, so a scan cannot accumulate unloaded work. Monitor
 container memory and tick times while generating; pause the task if the server
 cannot sustain the load.
