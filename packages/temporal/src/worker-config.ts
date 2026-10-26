@@ -43,6 +43,10 @@ import {
   nativeCompensationNetworkActivities,
   nativeCompensationFileActivities,
 } from "./activities/media/native-compensation.ts";
+import {
+  promotionAgentActivities,
+  promotionControlActivities,
+} from "./activities/promotion/index.ts";
 
 export type QueueWorkerRole =
   | "streambot"
@@ -61,6 +65,7 @@ export type QueueWorkerRole =
   | "media-files"
   | "repo"
   | "reports"
+  | "promotion"
   | "scout"
   | "workflows";
 
@@ -88,6 +93,20 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
     role: "streambot",
     taskQueue: TASK_QUEUES.STREAMBOT,
     activities: { reconcileStreambotPlayback },
+    maxConcurrentActivityTaskExecutions: 1,
+  },
+  {
+    kind: "activity",
+    role: "promotion",
+    taskQueue: TASK_QUEUES.PROMOTION,
+    activities: promotionAgentActivities,
+    maxConcurrentActivityTaskExecutions: 1,
+  },
+  {
+    kind: "activity",
+    role: "promotion",
+    taskQueue: TASK_QUEUES.PROMOTION_CONTROL,
+    activities: promotionControlActivities,
     maxConcurrentActivityTaskExecutions: 1,
   },
   {
