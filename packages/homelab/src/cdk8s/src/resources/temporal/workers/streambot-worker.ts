@@ -7,6 +7,7 @@ import {
 import { createTemporalDomainWorker } from "./domain-worker.ts";
 import { streambotSchedulerSecret } from "@shepherdjerred/homelab/cdk8s/src/resources/streambot/scheduling.ts";
 import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { metricsIngress } from "./worker-network-policies.ts";
 
 export function createStreambotWorker(chart: Chart, serverServiceName: string) {
   const secret = streambotSchedulerSecret(chart);
@@ -39,21 +40,7 @@ export function createStreambotWorker(chart: Chart, serverServiceName: string) {
     spec: {
       podSelector: { matchLabels: { component: "streambot-worker" } },
       policyTypes: ["Ingress", "Egress"],
-      ingress: [
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
-              },
-            },
-          ],
-          ports: [9464, 9465].map((port) => ({
-            port: IntOrString.fromNumber(port),
-            protocol: "TCP",
-          })),
-        },
-      ],
+      ingress: metricsIngress([9464, 9465]),
       egress: [
         dnsEgressRule(),
         {
