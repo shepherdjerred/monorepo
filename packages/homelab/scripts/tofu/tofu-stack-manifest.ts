@@ -113,6 +113,20 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
       { source: "ANIMEZ_PID", target: "TF_VAR_animez_pid" },
     ],
   },
+  backblaze: {
+    externalFiles: [],
+    operatorOnly: true,
+    encrypted: true,
+    credentials: [
+      { source: "B2_APPLICATION_KEY_ID", target: "B2_APPLICATION_KEY_ID" },
+      { source: "B2_APPLICATION_KEY", target: "B2_APPLICATION_KEY" },
+      { source: "OP_ACCOUNT", target: "OP_ACCOUNT" },
+      {
+        source: "TOFU_STATE_ENCRYPTION_PASSPHRASE",
+        target: "TF_VAR_tofu_state_encryption_passphrase",
+      },
+    ],
+  },
   asuswrt: {
     externalFiles: [],
     localProvider: "asuswrt",

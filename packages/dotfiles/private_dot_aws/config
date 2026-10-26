@@ -3,6 +3,10 @@
 endpoint_url = https://seaweedfs-s3.tailnet-1a49.ts.net
 region = us-east-1
 
+[profile b2]
+endpoint_url = https://s3.us-west-004.backblazeb2.com
+region = us-west-004
+
 [profile r2]
 endpoint_url = https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com
 region = auto

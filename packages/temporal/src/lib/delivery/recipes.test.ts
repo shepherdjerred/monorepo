@@ -44,6 +44,7 @@ describe("reviewed isolated deployment Job recipes", () => {
     for (const stack of [
       "argocd",
       "asuswrt",
+      "backblaze",
       "application-secrets",
       "github;echo injected",
     ]) {

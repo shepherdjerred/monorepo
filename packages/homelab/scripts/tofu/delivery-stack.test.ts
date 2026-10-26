@@ -20,6 +20,7 @@ test("malformed private provider JSON never appears in syntax failure diagnostic
 test("rejects operator-only and validation-only stacks before resolving any credentials", async () => {
   for (const stack of [
     "argocd",
+    "backblaze",
     "dockerhub-tokens",
     "google",
     "application-secrets",

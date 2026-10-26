@@ -8,6 +8,7 @@ export const TofuStackSchema = z.enum([
   "argocd",
   "arr",
   "asuswrt",
+  "backblaze",
   "cloudflare",
   "cloudflare-tokens",
   "discord",

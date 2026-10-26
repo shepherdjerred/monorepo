@@ -8,6 +8,7 @@
     "argocd": { "mode": "operator-only", "prerequisites": [] },
     "arr": { "mode": "automatic", "prerequisites": ["tofu:tailscale"] },
     "asuswrt": { "mode": "operator-only", "prerequisites": [] },
+    "backblaze": { "mode": "operator-only", "prerequisites": [] },
     "cloudflare": {
       "mode": "automatic",
       "prerequisites": ["root", "static-sites"]

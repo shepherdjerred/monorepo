@@ -14,6 +14,7 @@ tofu/
 ├── argocd/              # ArgoCD account tokens for Woodpecker and Delivery, stored in 1Password
 ├── arr/                 # Radarr/Sonarr/Prowlarr config, imported from the live instances
 ├── asuswrt/             # Asus routers & APs (custom provider, local-run only)
+├── backblaze/           # Private backup buckets and scoped keys (operator-applied)
 ├── cloudflare/          # DNS zones, bot management, email security (one .tf per domain)
 ├── cloudflare-tokens/   # Scoped API tokens, isolated from the DNS stack
 ├── discord/             # Imported Discord bot application settings
@@ -40,6 +41,7 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
   - `argocd` — ArgoCD admin credentials plus `OP_SERVICE_ACCOUNT_TOKEN` for 1Password item writes
   - `arr` — Radarr/Sonarr/Prowlarr API credentials (see `arr/providers.tf`)
   - `asuswrt` — `TF_VAR_asuswrt_username` / `TF_VAR_asuswrt_password`, the shared router/AP admin login
+  - `backblaze` — master `B2_APPLICATION_KEY_ID` / `B2_APPLICATION_KEY` for an account in `us-west-004`, `OP_ACCOUNT` for the 1Password provider's desktop-app auth, and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
   - `discord` — one bot token per imported application plus `TOFU_STATE_ENCRYPTION_PASSPHRASE`
   - `openai` — `OPENAI_ADMIN_KEY`, `OPENAI_CERTIFICATE_VALUES_JSON`, and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
   - `anthropic` — `ANTHROPIC_ADMIN_API_KEY` and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
@@ -157,7 +159,8 @@ requires connectivity to both the LAN and tailnet; see
 declaration prevents destruction; its lifecycle rule removes only abandoned
 multipart uploads after seven days and never expires completed archives. Retain
 these declarations while the archives exist so ordinary stack applies preserve
-their storage and access policy.
+their storage and access policy. Backup buckets are the operator-applied
+`backblaze` stack. `jerred-archives` stays on R2.
 
 Each domain's `.tf` file owns its existing zone and application-specific records.
 The shared `cloudflare/modules/domain-baseline` module owns DNSSEC, Fastmail MX,
