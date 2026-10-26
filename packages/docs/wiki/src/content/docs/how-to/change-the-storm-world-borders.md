@@ -29,6 +29,8 @@ The world claim remains `datadir-minecraft-tsmc-0`.
 The [server construct](packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-tsmc.ts)
 and [backup policy](packages/homelab/src/cdk8s/src/backup-policy/pvc-backup-policy.json)
 declare these separately.
+The Minecraft child chart owns the cache claim and migration ConfigMap through
+`extraDeploy`, alongside the init container that verifies the copy.
 
 Deploy storage changes through the [homelab release path](/how-to/cut-a-homelab-release/), keeping the accepted server image.
 Wait for the init copy's `VERIFIED` receipt, then inspect every existing map in the browser.
@@ -104,6 +106,17 @@ chunky progress frontier
 
 Use each world's configured radius, including Nether, End, Skylands, and Creative.
 Require completion before starting the next task.
+The [owned Chunky patch](packages/the-storm/server/patches/chunky-config.json)
+enables `force-load-existing-chunks` to
+[load existing chunks instead of skipping them](https://github.com/pop4959/Chunky/wiki/Configuration),
+letting Paper upgrade their historical saved format. This preserves their terrain while making
+the native saved format available to BlueMap; do not replace or trim old chunks
+to repair a missing render.
+The [image's JVM options](packages/the-storm/server/Dockerfile)
+bound Chunky to four in-flight chunks and wait for their load
+tickets to be removed, so a scan cannot accumulate unloaded work. Monitor
+container memory and tick times while generating; pause the task if the server
+cannot sustain the load.
 Cancel completed task records through Chunky without trimming retained terrain.
 Its [command reference](https://github.com/pop4959/Chunky/wiki/Commands)
 distinguishes task cancellation from chunk deletion.

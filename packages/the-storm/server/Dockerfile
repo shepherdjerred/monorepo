@@ -85,7 +85,7 @@ ENV TYPE=PAPER \
   CFG_PROXY_PROTOCOL=false \
   PAPER_CUSTOM_JAR=/opt/paper/paper-26.3-223.jar \
   JVM_DD_OPTS=bundlerRepoDir:/opt/paper \
-  JVM_OPTS=-Dpaper.maxChatCommandInputSize=4096 \
+  JVM_OPTS="-Dpaper.maxChatCommandInputSize=4096 -Dchunky.maxWorkingCount=4 -Dchunky.awaitTicketRemoval=true" \
   PAPER_CONFIG_DEFAULTS_REPO=/opt/paper-defaults \
   PATCH_DEFINITIONS=/bundle/patches \
   SYNC_SKIP_NEWER_IN_DESTINATION=false \

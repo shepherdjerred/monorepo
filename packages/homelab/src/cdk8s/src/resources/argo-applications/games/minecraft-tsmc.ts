@@ -17,8 +17,8 @@ import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/
 import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 import {
   blueMapStorageInit,
+  blueMapStorageResources,
   blueMapStorageVolumes,
-  createBlueMapStorage,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/bluemap-storage.ts";
 
 const NAMESPACE = "minecraft-tsmc";
@@ -58,12 +58,11 @@ export function minecraftChartRepository(
  * minecraft-tsmc runs The Storm's own image (packages/the-storm/server): Paper
  * pre-patched, every plugin jar pinned by sha256 and baked in, and the
  * repository-owned config delivered by the image (itzg's /plugins sync plus
- * PATCH_DEFINITIONS). Kubernetes carries only secrets; there are no plugin
- * URLs, config ConfigMaps or copy init containers here.
+ * PATCH_DEFINITIONS). The child release also owns render-cache storage and its
+ * migration script; gameplay configuration remains in the image.
  */
 /** Objects the root renders beside the Application; the `minecraft-tsmc-companion` companion chart renders the same objects under transition rendering. */
 export function createMinecraftTsmcResources(chart: Chart): void {
-  createBlueMapStorage(chart);
   createMinecraftProxyTrust(chart, NAMESPACE, 25_565);
   createMinecraftPublicStatus(chart);
   // The Storm bridge credentials. Required fields (UPPERCASE_SNAKE labels, matching
@@ -140,6 +139,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
     },
     initContainers: [blueMapStorageInit()],
     extraVolumes: blueMapStorageVolumes(),
+    extraDeploy: blueMapStorageResources(),
     strategyType: "RollingUpdate",
     // mc-router annotation for hostname-based routing (must be top-level)
     serviceAnnotations: {
@@ -159,15 +159,16 @@ export function createMinecraftTsmcApp(chart: Chart) {
     // (packages/the-storm/plugin/modules/rwfbots/LOAD.md) found 100 bots add
     // under one core and that 6 CPUs tick no faster than 4, since the tick is
     // one main thread: survival's earlier 2 cores plus one for the bots. The
-    // heap was not measured and keeps its headroom. CPU stays unlimited so
-    // bursts are not throttled.
+    // 8G heap also needs native-memory headroom while loading and upgrading
+    // chunks: the previous 10Gi container limit OOM-killed a pregeneration scan.
+    // CPU stays unlimited so bursts are not throttled.
     resources: {
       requests: {
-        memory: "8Gi",
+        memory: "10Gi",
         cpu: "3",
       },
       limits: {
-        memory: "10Gi",
+        memory: "16Gi",
       },
     },
     minecraftServer: {
