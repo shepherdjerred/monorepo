@@ -1,134 +1,38 @@
-import { afterAll, beforeAll, expect, test } from "vitest";
+import { afterAll, expect, test } from "vitest";
 import { access, readFile, rm, writeFile } from "node:fs/promises";
-import { createHash } from "node:crypto";
 import nodePath from "node:path";
-import { startMediaTestPostgres } from "#testing/postgres.ts";
-import { recordVerifiedPublication } from "#automation/reconciliation/upgrade-cleanup.ts";
+import { automationTestHarness } from "#testing/automation.ts";
+import { createPublicationActivities } from "#automation/publication.ts";
+import { bindingTestExecution } from "#automation/plex-binding/test-fixture.ts";
+import { observeMediaUpgradeCleanup } from "#automation/plex-binding/cleanup.ts";
+import { retentionPlexContext } from "#automation/retention/fixtures/plex.ts";
 import { PrismaMediaCommands } from "#infrastructure/commands.ts";
-import { fileFixture } from "./test-support.ts";
-import { createMediaFileActivities } from "./activities.ts";
+import { upgradeCleanupFixture } from "./plex-binding/upgrade-cleanup.test-support.ts";
+import { workerFilePath } from "./paths/locations.ts";
 import { FilePlanSchema } from "./types.ts";
 import { QualityRulesSchema } from "#shared/api.ts";
 import { captureMovieAttemptChoice } from "#infrastructure/movie-editions/authority.ts";
 import { fileMovieAccess } from "#automation/editions/access.ts";
 
-let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
+const harness = automationTestHarness();
 const directories: string[] = [];
-beforeAll(async () => {
-  cluster = await startMediaTestPostgres();
-}, 60_000);
 afterAll(async () => {
-  if (cluster !== undefined) await cluster.close();
   for (const directory of directories)
     await rm(directory, { recursive: true, force: true });
 });
 
-async function fixture() {
-  const db = cluster.database;
-  const f = await fileFixture(db);
-  directories.push(f.directory);
-  const original = await f.published();
-  const subtitlePath = nodePath.join(
-    f.roots.library,
-    `${original.entry.libraryPath}.en.srt`,
-  );
-  const subtitle = "1\n00:00:01,000 --> 00:00:03,000\nFixture caption\n";
-  await writeFile(subtitlePath, subtitle);
-  await db.subtitleAsset.create({
-    data: {
-      assetId: original.entry.assetId,
-      language: "en",
-      state: "installed",
-      ownershipEpoch: 0,
-      storageKind: "sidecar",
-      qualityStatus: "unverified",
-      checksum: createHash("sha256").update(subtitle).digest("hex"),
-      videoChecksum: original.entry.checksum,
-      videoVersion: 0,
-      providerId: "fixture",
-      path: subtitlePath,
-      matchingEvidence: {},
-      provenance: {
-        checksum: createHash("sha256").update(subtitle).digest("hex"),
-      },
+function fixture(elapsed = true) {
+  return upgradeCleanupFixture(harness.database(), harness.context(), {
+    elapsed,
+    directoryCreated: (directory) => {
+      directories.push(directory);
     },
   });
-  await db.acquisitionAttempt.update({
-    where: { id: original.attempt.id },
-    data: { state: "completed" },
-  });
-  const inspect = f.context.inspect;
-  if (inspect === undefined) throw new Error("Inspector missing");
-  f.context.inspect = async (path) => {
-    const probe = await inspect(path);
-    return {
-      ...probe,
-      streams: probe.streams.map((stream) =>
-        stream.codec_type === "video"
-          ? { ...stream, width: 3840, height: 1600 }
-          : stream,
-      ),
-    };
-  };
-  const acquired = await f.acquisition("Verified upgraded video contents");
-  const activities = createMediaFileActivities(f.context);
-  expect(await activities.inspectAndStageMedia(acquired.input)).toEqual({
-    status: "staged",
-  });
-  expect(await activities.promoteMediaFiles(acquired.input)).toEqual({
-    status: "published",
-  });
-  const attempt = await db.acquisitionAttempt.findUniqueOrThrow({
-    where: { id: acquired.attempt.id },
-  });
-  const entry = FilePlanSchema.parse(attempt.filePlan)[0];
-  if (entry === undefined) throw new Error("Plan missing");
-  expect(
-    await db.upgradeCleanup.count({
-      where: { assetId: original.entry.assetId },
-    }),
-  ).toBe(0);
-  await db.$transaction(async (tx) => {
-    await tx.mediaItem.update({
-      where: { id: f.media.id },
-      data: { availability: "available" },
-    });
-    await recordVerifiedPublication(tx, [entry.assetId], 0);
-    await tx.acquisitionAttempt.update({
-      where: { id: attempt.id },
-      data: { state: "completed" },
-    });
-    await tx.acquisitionReservation.deleteMany({
-      where: { attemptId: attempt.id },
-    });
-  });
-  const cleanup = await db.upgradeCleanup.findUniqueOrThrow({
-    where: {
-      assetId_successorAssetId: {
-        assetId: original.entry.assetId,
-        successorAssetId: entry.assetId,
-      },
-    },
-  });
-  const old = await db.libraryAsset.findUniqueOrThrow({
-    where: { id: original.entry.assetId },
-    include: { subtitles: true },
-  });
-  return {
-    ...f,
-    original,
-    acquired,
-    entry,
-    old,
-    cleanup,
-    activities,
-    input: { cleanupId: cleanup.id, operationId: crypto.randomUUID() },
-  };
 }
 
 test("cancelled cleanup terminates without touching restored rollback content", async () => {
   const f = await fixture();
-  await cluster.database.upgradeCleanup.update({
+  await harness.database().upgradeCleanup.update({
     where: { id: f.cleanup.id },
     data: { state: "cancelled" },
   });
@@ -139,23 +43,52 @@ test("cancelled cleanup terminates without touching restored rollback content", 
     status: "obsolete",
     reason: "cleanup_cancelled",
   });
-  expect(await readFile(f.old.path, "utf8")).toBe(f.original.content);
+  expect(await readFile(workerFilePath(f.context, f.old.path), "utf8")).toBe(
+    f.original.content,
+  );
 });
 
 test("cleanup starts at verified Plex publication, retains seven full days, and removes only superseded video and sidecars", async () => {
-  const f = await fixture();
-  expect(await f.activities.cleanupSupersededMediaFile(f.input)).toEqual({
+  const fresh = await fixture(false);
+  expect(
+    await fresh.activities.cleanupSupersededMediaFile(fresh.input),
+  ).toEqual({
     status: "protected",
     reason: "rollback_window_incomplete",
   });
-  f.advance(8 * 86_400_000);
-  await cluster.database.$transaction(async (tx) => {
-    await recordVerifiedPublication(tx, [f.entry.assetId], 0);
-  });
-  const repeated = await cluster.database.upgradeCleanup.findUniqueOrThrow({
+  const f = await fixture();
+  const before = await harness
+    .database()
+    .libraryAsset.findUniqueOrThrow({ where: { id: f.entry.assetId } });
+  const publicationOperation = await harness
+    .database()
+    .operation.findUniqueOrThrow({
+      where: { id: f.acquired.input.operationId },
+    });
+  const publicationCalls = [...f.transport.calls];
+  expect(
+    await createPublicationActivities(f.network).publishMediaToPlex(
+      f.acquired.input,
+    ),
+  ).toEqual({ status: "available", reason: null });
+  expect(
+    await harness
+      .database()
+      .operation.findUniqueOrThrow({ where: { id: publicationOperation.id } }),
+  ).toEqual(publicationOperation);
+  expect(f.transport.calls).toEqual(publicationCalls);
+  const repeated = await harness.database().upgradeCleanup.findUniqueOrThrow({
     where: { id: f.cleanup.id },
   });
   expect(repeated.expiresAt).toEqual(f.cleanup.expiresAt);
+  const repeatedAsset = await harness
+    .database()
+    .libraryAsset.findUniqueOrThrow({ where: { id: f.entry.assetId } });
+  expect(repeatedAsset.plexPublishedAt).toEqual(before.plexPublishedAt);
+  expect(
+    f.cleanup.expiresAt.getTime() -
+      (before.plexPublishedAt?.getTime() ?? Number.NaN),
+  ).toBe(7 * 86_400_000);
   f.context.checkpoint = (phase) =>
     phase === "hashing"
       ? Promise.reject(new Error("Final authority must not hash"))
@@ -166,10 +99,12 @@ test("cleanup starts at verified Plex publication, retains seven full days, and 
   expect(await f.activities.cleanupSupersededMediaFile(f.input)).toEqual({
     status: "purged",
   });
-  await expect(access(f.old.path)).rejects.toThrow();
+  await expect(access(workerFilePath(f.context, f.old.path))).rejects.toThrow();
   for (const subtitle of f.old.subtitles)
     if (subtitle.path !== null)
-      await expect(access(subtitle.path)).rejects.toThrow();
+      await expect(
+        access(workerFilePath(f.context, subtitle.path)),
+      ).rejects.toThrow();
   expect(
     await readFile(nodePath.join(f.roots.library, f.entry.libraryPath), "utf8"),
   ).toBe(f.acquired.content);
@@ -179,7 +114,7 @@ test("cleanup starts at verified Plex publication, retains seven full days, and 
       "utf8",
     ),
   ).toBe(f.original.content);
-  const cleanup = await cluster.database.upgradeCleanup.findUniqueOrThrow({
+  const cleanup = await harness.database().upgradeCleanup.findUniqueOrThrow({
     where: { id: f.cleanup.id },
   });
   expect(cleanup.state).toBe("purged");
@@ -187,7 +122,6 @@ test("cleanup starts at verified Plex publication, retains seven full days, and 
 
 test("purge effect followed by transaction failure resumes exact journals without deleting current playback", async () => {
   const f = await fixture();
-  f.advance(8 * 86_400_000);
   f.context.checkpoint = (phase) =>
     phase === "purged"
       ? Promise.reject(new Error("interrupted purge"))
@@ -195,7 +129,7 @@ test("purge effect followed by transaction failure resumes exact journals withou
   await expect(
     f.activities.cleanupSupersededMediaFile(f.input),
   ).rejects.toThrow("interrupted purge");
-  const pending = await cluster.database.upgradeCleanup.findUniqueOrThrow({
+  const pending = await harness.database().upgradeCleanup.findUniqueOrThrow({
     where: { id: f.cleanup.id },
   });
   expect(pending.state).toBe("pending");
@@ -210,7 +144,6 @@ test("purge effect followed by transaction failure resumes exact journals withou
 
 test("Keep can commit during rollback-expiry hashing and prevents the stale purge", async () => {
   const f = await fixture();
-  f.advance(8 * 86_400_000);
   const entered = Promise.withResolvers<undefined>();
   const resume = Promise.withResolvers<undefined>();
   let paused = false;
@@ -224,10 +157,10 @@ test("Keep can commit during rollback-expiry hashing and prevents the stale purg
   const work = f.activities.cleanupSupersededMediaFile(f.input);
   await entered.promise;
   try {
-    const media = await cluster.database.mediaItem.findUniqueOrThrow({
+    const media = await harness.database().mediaItem.findUniqueOrThrow({
       where: { id: f.media.id },
     });
-    await new PrismaMediaCommands(cluster.database, { keepDays: 30 }).act(
+    await new PrismaMediaCommands(harness.database(), { keepDays: 30 }).act(
       { ...f.user, role: "member" },
       crypto.randomUUID(),
       f.media.id,
@@ -240,15 +173,16 @@ test("Keep can commit during rollback-expiry hashing and prevents the stale purg
     status: "protected",
     reason: "cleanup_generation_changed",
   });
-  expect(await readFile(f.old.path, "utf8")).toBe(f.original.content);
+  expect(await readFile(workerFilePath(f.context, f.old.path), "utf8")).toBe(
+    f.original.content,
+  );
 });
 
 test.each(["epoch", "recovery", "ownership", "coverage"] as const)(
   "cleanup protects %s changes",
   async (change) => {
     const f = await fixture();
-    const db = cluster.database;
-    f.advance(8 * 86_400_000);
+    const db = harness.database();
     if (change === "epoch")
       await db.mediaRuntimeState.update({
         where: { id: "singleton" },
@@ -304,13 +238,15 @@ test.each(["epoch", "recovery", "ownership", "coverage"] as const)(
         ? { reason: "cleanup_recovery_dependency" }
         : {}),
     });
-    expect(await readFile(f.old.path, "utf8")).toBe(f.original.content);
+    expect(await readFile(workerFilePath(f.context, f.old.path), "utf8")).toBe(
+      f.original.content,
+    );
   },
 );
 
 test("a later verified upgrade can protect playback while an earlier rollback copy expires", async () => {
   const f = await fixture();
-  const db = cluster.database;
+  const db = harness.database();
   await db.qualityProfile.update({
     where: { id: f.profile.id },
     data: {
@@ -348,18 +284,24 @@ test("a later verified upgrade can protect playback while an earlier rollback co
   });
   const entry = FilePlanSchema.parse(attempt.filePlan)[0];
   if (entry === undefined) throw new Error("Third plan missing");
-  await db.$transaction(async (tx) => {
-    await tx.mediaItem.update({
-      where: { id: f.media.id },
-      data: { availability: "available" },
-    });
-    await tx.acquisitionAttempt.update({
-      where: { id: third.attempt.id },
-      data: { state: "completed" },
-    });
-    await recordVerifiedPublication(tx, [entry.assetId], 0);
+  const transport = await retentionPlexContext(
+    db,
+    harness.context(),
+    attempt.mediaIds,
+  );
+  const network = {
+    ...transport.context,
+    plexBindingExecution: bindingTestExecution,
+  };
+  const publisher = createPublicationActivities(network);
+  expect(await publisher.publishMediaToPlex(third.input)).toEqual({
+    status: "available",
+    reason: null,
   });
-  f.advance(8 * 86_400_000);
+  await publisher.finalizeMediaAcquisition(third.input);
+  expect(
+    await observeMediaUpgradeCleanup(network, f.input, bindingTestExecution()),
+  ).toEqual({ status: "observed" });
   expect(await f.activities.cleanupSupersededMediaFile(f.input)).toEqual({
     status: "purged",
   });
@@ -372,8 +314,8 @@ test.each(["missing_archive", "corrupt_playback"] as const)(
   "cleanup protects %s evidence without claiming a successful deletion",
   async (condition) => {
     const f = await fixture();
-    f.advance(8 * 86_400_000);
-    if (condition === "missing_archive") await rm(f.old.path);
+    if (condition === "missing_archive")
+      await rm(workerFilePath(f.context, f.old.path));
     else
       await writeFile(
         nodePath.join(f.roots.library, f.entry.libraryPath),
@@ -386,7 +328,7 @@ test.each(["missing_archive", "corrupt_playback"] as const)(
           ? "cleanup_missing_unproven"
           : "cleanup_playback_content_changed",
     });
-    const cleanup = await cluster.database.upgradeCleanup.findUniqueOrThrow({
+    const cleanup = await harness.database().upgradeCleanup.findUniqueOrThrow({
       where: { id: f.cleanup.id },
     });
     expect(cleanup.state).toBe("pending");

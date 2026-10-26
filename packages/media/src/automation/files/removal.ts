@@ -1,23 +1,14 @@
-import { assertPublicationUnfenced } from "#automation/publication-proof/fence.ts";
 import { fileMovieAccess } from "#automation/editions/access.ts";
 import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
 import {
   FileGuardError,
-  RemovalPlanSchema,
   type FileContext,
   type RemovalEntry,
+  type Transaction,
   now,
 } from "./types.ts";
-import { defaultScope } from "#shared/editions/scope.ts";
-import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";
-import {
-  assertRetention,
-  assertRuntime,
-  assertNoMediaSubtitleReplacement,
-  lockMedia,
-} from "./guards.ts";
-import { recordsAuthorized } from "#infrastructure/handoff/authority.ts";
+import { assertRetention, lockMedia } from "./guards.ts";
 import {
   PendingLegacyClaimsError,
   reopenLegacyClaimProtection,
@@ -27,7 +18,6 @@ import { advanceSubtitleBindings } from "./subtitle-lifecycle/ownership.ts";
 import { fileOperations } from "./file-operations.ts";
 import { z } from "zod";
 import { prepareRemovalProof } from "./content-proof.ts";
-import { Prisma } from "#generated/prisma/client.ts";
 import { queueLifecycleNotifications } from "#automation/notifications/events.ts";
 import {
   awaitRetentionFreshness,
@@ -35,9 +25,23 @@ import {
   requireFreshRetentionStart,
 } from "./retention-freshness.ts";
 import {
-  assertRestoredGenerations,
-  recordRestoreReceipt,
-} from "./restore-receipt.ts";
+  publicationInvocation,
+  requirePublicationExecution,
+} from "#automation/publication-proof/invocation.ts";
+import { lockRemovalAuthority } from "./plex-binding/locks.ts";
+import {
+  captureRemovalQuarantineScopes,
+  removalPlexAccess,
+  readRetentionPlexAuthority,
+} from "./plex-binding/retention.ts";
+import {
+  retentionPlexFreshness,
+  removalEffectFreshness,
+} from "./plex-binding/freshness.ts";
+import {
+  capturePlexQuarantineCommit,
+  recordCommittedPlexQuarantine,
+} from "#infrastructure/plex-binding/quarantine-commit.ts";
 
 export async function removeFiles(
   initialContext: FileContext,
@@ -45,6 +49,9 @@ export async function removeFiles(
   operationId: string,
   purge: boolean,
 ): Promise<void> {
+  const observed = { wall: Date.now(), monotonic: performance.now() };
+  const execution = initialContext.publicationExecution?.();
+  execution?.assertActive();
   const enabled = purge
     ? initialContext.enabled.purge
     : initialContext.enabled.quarantine;
@@ -56,52 +63,110 @@ export async function removeFiles(
     if (decision.edition !== "default")
       throw new FileGuardError("edition_not_available");
     await lockMedia(tx, [decision.mediaId]);
-    if (decision.state !== (purge ? "purged" : "quarantined"))
+    const completed = decision.state === (purge ? "purged" : "quarantined");
+    const epoch = RetentionEpochSchema.parse(decision.evidence).recoveryEpoch;
+    if (!completed) {
+      const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
+        where: { id: "singleton" },
+      });
+      if (runtime.recoveryEpoch !== epoch)
+        throw new FileGuardError("runtime_protected");
       requireFreshRetentionStart(initialContext, decision.evidence);
+    }
     return {
       plan: await removalPlan(tx, initialContext, decisionId),
-      epoch: RetentionEpochSchema.parse(decision.evidence).recoveryEpoch,
+      epoch,
       ownerOverride:
         z
           .object({ ownerOverride: z.unknown().optional() })
           .parse(decision.evidence).ownerOverride !== undefined,
-      completed: decision.state === (purge ? "purged" : "quarantined"),
+      completed,
+      evidence: decision.evidence,
     };
   });
   const { plan } = snapshot;
+  if (snapshot.completed) return;
+  const invocation = publicationInvocation(
+    initialContext,
+    requirePublicationExecution(execution),
+  );
+  const originalFreshness = snapshot.ownerOverride
+    ? null
+    : retentionPlexFreshness({
+        context: invocation,
+        observed,
+        evidence: snapshot.evidence,
+      });
+  const access = snapshot.ownerOverride
+    ? []
+    : await removalPlexAccess(invocation, plan);
+  originalFreshness?.assertActive();
+  const quarantinedScopes =
+    purge && originalFreshness !== null
+      ? await captureRemovalQuarantineScopes(initialContext.db, {
+          plan,
+          access,
+          freshness: originalFreshness,
+        })
+      : [];
   const mediaIds = [...new Set(plan.flatMap((entry) => entry.mediaIds))];
-  const movieAccess =
-    snapshot.ownerOverride || snapshot.completed
-      ? undefined
-      : await fileMovieAccess(initialContext, mediaIds);
+  const movieAccess = snapshot.ownerOverride
+    ? undefined
+    : await fileMovieAccess(initialContext, mediaIds);
   if (await reopenLegacyClaimProtection(initialContext.db, mediaIds))
     throw new PendingLegacyClaimsError(mediaIds);
-  const context = await prepareRemovalProof(initialContext, plan);
+  const context = await prepareRemovalProof(invocation, plan);
+  originalFreshness?.assertActive();
   await awaitRetentionFreshness(context, {
     decisionId,
     plan,
     epoch: snapshot.epoch,
     purge,
+    assertOriginal: originalFreshness?.assertActive,
   });
+  originalFreshness?.assertActive();
   const completeState = purge ? "purged" : "quarantined";
   const previousSubtitleState = purge ? "quarantined" : "installed";
   await context.db.$transaction(
     async (tx) => {
-      await lockMedia(tx, mediaIds);
+      await lockRemovalAuthority(tx, {
+        plan,
+        epoch: snapshot.epoch,
+        access,
+        evidence: snapshot.evidence,
+        quarantinedScopes,
+      });
       const decision = await tx.retentionDecision.findUniqueOrThrow({
         where: { id: decisionId },
       });
       if (decision.state === completeState) return;
+      const effectFreshness = await removalEffectFreshness(tx, {
+        context: { ...context, execution: invocation.execution },
+        plan,
+        epoch: snapshot.epoch,
+        observed,
+        original: originalFreshness,
+      });
+      const plex = snapshot.ownerOverride
+        ? undefined
+        : await readRetentionPlexAuthority(tx, {
+            plan,
+            purge,
+            access,
+            freshness: effectFreshness,
+          });
+      const receipt =
+        purge || snapshot.ownerOverride
+          ? null
+          : await capturePlexQuarantineCommit(
+              tx,
+              { operationId, decisionId, plan, access },
+              effectFreshness,
+            );
       const choices: MovieChoiceFreshness[] = [];
       for (const entry of plan) {
-        const choice: { current: MovieChoiceFreshness | null } = {
-          current: null,
-        };
-        const authorize = async () => {
-          await context.checkpoint("retention-authorization");
-          if (!(await enabled()))
-            throw new FileGuardError("retention_disabled");
-          choice.current = await assertRetention({
+        const choice = await removeAuthorizedEntry(context, entry, {
+          authorization: {
             tx,
             context,
             decisionId,
@@ -109,51 +174,21 @@ export async function removeFiles(
             generations: entry.generations,
             purge,
             movieAccess,
-          });
-          await assertOwnedAsset(
-            tx,
-            entry,
-            purge ? "quarantined" : "published",
-          );
-          choice.current?.assertActive();
-        };
-        await authorize();
-        const operations = fileOperations(
-          context,
-          context.roots[entry.libraryKind],
-          authorize,
-          () => {
-            choice.current?.assertActive();
+            plex,
           },
-        );
-        await removeEntry(operations, entry, operationId, purge);
-        choices.push({
-          assertActive: () => {
-            choice.current?.assertActive();
-          },
+          operationId,
+          enabled,
+          effectFreshness,
         });
+        if (choice !== null) choices.push(choice);
       }
-      for (const entry of plan) {
-        await tx.libraryAsset.update({
-          where: { id: entry.assetId },
-          data: { state: completeState, version: { increment: 1 } },
-        });
-        await advanceSubtitleBindings(tx, {
-          assetId: entry.assetId,
-          checksum: entry.checksum,
-          epoch: snapshot.epoch,
-          fromVersion: entry.assetVersion + (purge ? 1 : 0),
-          toVersion: entry.assetVersion + (purge ? 2 : 1),
-          fromState: previousSubtitleState,
-          sidecarIds: entry.sidecars.map((item) => item.subtitleId),
-          state: completeState,
-        });
-        if (purge)
-          await tx.assetCoverage.updateMany({
-            where: { assetId: entry.assetId },
-            data: { current: false },
-          });
-      }
+      await commitRemovalEntries(tx, {
+        plan,
+        epoch: snapshot.epoch,
+        purge,
+        completeState,
+        previousSubtitleState,
+      });
       const timestamp = now(context);
       await tx.retentionDecision.updateMany({
         where: {
@@ -173,6 +208,12 @@ export async function removeFiles(
               }),
         },
       });
+      if (receipt !== null)
+        await recordCommittedPlexQuarantine(
+          tx,
+          { expected: receipt },
+          effectFreshness,
+        );
       await tx.mediaItem.updateMany({
         where: { id: { in: mediaIds } },
         data: {
@@ -202,9 +243,86 @@ export async function removeFiles(
         })),
       });
       for (const choice of choices) choice.assertActive();
+      effectFreshness.assertActive();
     },
     { timeout: 30_000, maxWait: 30_000 },
   );
+}
+
+async function commitRemovalEntries(
+  tx: Transaction,
+  input: {
+    plan: readonly RemovalEntry[];
+    epoch: number;
+    purge: boolean;
+    completeState: "purged" | "quarantined";
+    previousSubtitleState: "quarantined" | "installed";
+  },
+) {
+  for (const entry of input.plan) {
+    await tx.libraryAsset.update({
+      where: { id: entry.assetId },
+      data: { state: input.completeState, version: { increment: 1 } },
+    });
+    await advanceSubtitleBindings(tx, {
+      assetId: entry.assetId,
+      checksum: entry.checksum,
+      epoch: input.epoch,
+      fromVersion: entry.assetVersion + (input.purge ? 1 : 0),
+      toVersion: entry.assetVersion + (input.purge ? 2 : 1),
+      fromState: input.previousSubtitleState,
+      sidecarIds: entry.sidecars.map((item) => item.subtitleId),
+      state: input.completeState,
+    });
+    if (input.purge)
+      await tx.assetCoverage.updateMany({
+        where: { assetId: entry.assetId },
+        data: { current: false },
+      });
+  }
+}
+
+async function removeAuthorizedEntry(
+  context: FileContext,
+  entry: RemovalEntry,
+  input: {
+    authorization: Parameters<typeof assertRetention>[0];
+    operationId: string;
+    enabled: () => Promise<boolean>;
+    effectFreshness: MovieChoiceFreshness;
+  },
+) {
+  const choice: { current: MovieChoiceFreshness | null } = { current: null };
+  const authorize = async () => {
+    await context.checkpoint("retention-authorization");
+    if (!(await input.enabled()))
+      throw new FileGuardError("retention_disabled");
+    choice.current = await assertRetention(input.authorization);
+    await assertOwnedAsset(
+      input.authorization.tx,
+      entry,
+      input.authorization.purge ? "quarantined" : "published",
+    );
+    choice.current?.assertActive();
+    input.effectFreshness.assertActive();
+  };
+  await authorize();
+  const operations = fileOperations(
+    context,
+    context.roots[entry.libraryKind],
+    authorize,
+    () => {
+      choice.current?.assertActive();
+      input.effectFreshness.assertActive();
+    },
+  );
+  await removeEntry(
+    operations,
+    entry,
+    input.operationId,
+    input.authorization.purge,
+  );
+  return choice.current;
 }
 
 async function removeEntry(
@@ -223,190 +341,4 @@ async function removeEntry(
     if (purge) await operations.purge(descriptor);
     else await operations.quarantine(descriptor);
   }
-}
-
-export async function restoreFiles(
-  initialContext: FileContext,
-  mediaId: string,
-  operationId: string,
-): Promise<boolean> {
-  if (!(await initialContext.enabled.acquisition()))
-    throw new FileGuardError("acquisition_disabled");
-  const decision = await initialContext.db.retentionDecision.findFirst({
-    where: {
-      edition: "default",
-      mediaId,
-      state: { in: ["quarantined", "restored", "grace_period", "cancelled"] },
-      manifest: { not: Prisma.DbNull },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-  if (decision === null) return false;
-  const plan = RemovalPlanSchema.parse(decision.manifest).assets;
-  const context = await prepareRemovalProof(initialContext, plan);
-  const mediaIds = [...new Set(plan.flatMap((entry) => entry.mediaIds))];
-  await context.db.$transaction(
-    async (tx) => {
-      await lockMedia(tx, mediaIds);
-      const currentDecision = await tx.retentionDecision.findUniqueOrThrow({
-        where: { id: decision.id },
-      });
-      if (
-        JSON.stringify(
-          RemovalPlanSchema.parse(currentDecision.manifest).assets,
-        ) !== JSON.stringify(plan)
-      )
-        throw new FileGuardError("restore_plan_changed");
-      const operation = await tx.operation.findUniqueOrThrow({
-        where: { id: operationId },
-      });
-      const payload = z
-        .object({ mediaId: z.string(), generation: z.number().int() })
-        .parse(operation.payload);
-      if (operation.kind !== "restore_media" || payload.mediaId !== mediaId)
-        throw new FileGuardError("restore_operation_invalid");
-      const intent = await tx.mediaIntent.findUniqueOrThrow({
-        where: targetWhere(defaultScope(mediaId)),
-      });
-      if (!intent.desiredPresence || intent.generation !== payload.generation)
-        throw new FileGuardError("intent_obsolete");
-      const epoch = z
-        .object({ recoveryEpoch: z.number().int() })
-        .parse(currentDecision.evidence).recoveryEpoch;
-      if (currentDecision.state === "restored") {
-        await assertRestoredGenerations(tx, mediaIds, currentDecision.evidence);
-        await recordRestoreReceipt({
-          tx,
-          context,
-          decisionId: currentDecision.id,
-          operationId,
-          mediaIds,
-          recoveryEpoch: epoch,
-          plan,
-        });
-        return;
-      }
-      if (
-        !["quarantined", "grace_period", "cancelled"].includes(
-          currentDecision.state,
-        )
-      )
-        throw new FileGuardError("decision_obsolete");
-      for (const entry of plan) {
-        const authorize = async () => {
-          await context.checkpoint("restore-authorization");
-          await assertPublicationUnfenced(tx, entry.mediaIds, [entry.assetId]);
-          if (!(await context.enabled.acquisition()))
-            throw new FileGuardError("acquisition_disabled");
-          await assertRuntime(tx, epoch);
-          await assertNoMediaSubtitleReplacement(tx, entry.mediaIds);
-          if (
-            !(await recordsAuthorized(tx, {
-              epoch,
-              mediaIds: entry.mediaIds,
-              assetIds: [entry.assetId],
-            }))
-          )
-            throw new FileGuardError("record_ownership_unconfirmed");
-          await assertOwnedAsset(
-            tx,
-            entry,
-            currentDecision.state === "quarantined"
-              ? "quarantined"
-              : "published",
-          );
-        };
-        await authorize();
-        const previousAsset = await tx.libraryAsset.findUniqueOrThrow({
-          where: { id: entry.assetId },
-        });
-        await restoreEntry(context, entry, operationId, authorize);
-        const restoredAsset = await tx.libraryAsset.update({
-          where: { id: entry.assetId },
-          data: { state: "published", version: { increment: 1 } },
-        });
-        await advanceSubtitleBindings(tx, {
-          assetId: entry.assetId,
-          checksum: entry.checksum,
-          epoch,
-          fromVersion: previousAsset.version,
-          toVersion: restoredAsset.version,
-          fromState:
-            previousAsset.state === "quarantined" ? "quarantined" : "installed",
-          sidecarIds: entry.sidecars.map((item) => item.subtitleId),
-          state: "installed",
-        });
-      }
-      const proof = z
-        .record(z.string(), z.json())
-        .parse(currentDecision.evidence);
-      const restoredIntents = await tx.mediaIntent.findMany({
-        where: { mediaId: { in: mediaIds }, edition: "default" },
-      });
-      const restoredGenerations = Object.fromEntries(
-        restoredIntents.map((restoredIntent) => [
-          restoredIntent.mediaId,
-          restoredIntent.generation,
-        ]),
-      );
-      await tx.retentionDecision.updateMany({
-        where: {
-          mediaId: { in: mediaIds },
-          edition: "default",
-          state: { in: ["quarantined", "grace_period", "cancelled"] },
-        },
-        data: {
-          state: "restored",
-          evidence: {
-            ...proof,
-            restoreOperationId: operationId,
-            restoredGenerations,
-          },
-          version: { increment: 1 },
-        },
-      });
-      await tx.mediaItem.updateMany({
-        where: { id: { in: mediaIds } },
-        data: { availability: "importing", version: { increment: 1 } },
-      });
-      await mirrorDefaultAvailability(tx, mediaIds, "importing");
-      await recordRestoreReceipt({
-        tx,
-        context,
-        decisionId: currentDecision.id,
-        operationId,
-        mediaIds,
-        recoveryEpoch: epoch,
-        plan,
-      });
-    },
-    { timeout: 30_000, maxWait: 30_000 },
-  );
-  return true;
-}
-
-async function restoreEntry(
-  context: FileContext,
-  entry: RemovalEntry,
-  operationId: string,
-  authorize: () => Promise<void>,
-): Promise<void> {
-  const operations = fileOperations(
-    context,
-    context.roots[entry.libraryKind],
-    authorize,
-  );
-  await operations.restore({
-    operationId: `${operationId}-restore-${entry.quarantineId}`,
-    quarantineId: entry.quarantineId,
-    libraryPath: entry.libraryPath,
-    sha256: entry.checksum,
-  });
-  for (const sidecar of entry.sidecars)
-    await operations.restore({
-      operationId: `${operationId}-restore-${sidecar.quarantineId}`,
-      quarantineId: sidecar.quarantineId,
-      libraryPath: sidecar.libraryPath,
-      sha256: sidecar.checksum,
-    });
 }

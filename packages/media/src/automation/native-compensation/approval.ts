@@ -1,6 +1,11 @@
 import { FileOperations } from "#filesystem/operations.ts";
+import {
+  captureNativeReviewProof,
+  assertNativeFilesProof,
+} from "#automation/native-recovery/plex-proof.ts";
 import { publicationReferences } from "#automation/publication-proof/participants.ts";
 import { lockNativeCompensationScope } from "#infrastructure/native-compensation/guards.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import {
   finishCompensationPreparation,
   applyCompensationApproval,
@@ -10,8 +15,6 @@ import type {
   NativeCompensationPrepareInput,
   NativeCompensationApplyInput,
 } from "#shared/native-recovery/compensation-runtime.ts";
-import { snapshotHash } from "#migration/profile-import.ts";
-import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { prepareNativeCompensationProof } from "./proof.ts";
 import {
   compensationDeadline,
@@ -20,28 +23,30 @@ import {
 
 async function approvalNetwork(
   context: CompensationFileContext,
-  planId: string,
+  activity: NativeCompensationPrepareInput | NativeCompensationApplyInput,
 ) {
-  const observation =
-    await context.files.db.nativeRecoveryObservation.findFirstOrThrow({
-      where: { planId, kind: "network" },
-      orderBy: { createdAt: "desc" },
-    });
-  if (
-    observation.evidenceHash !==
-      snapshotHash(nativeJson(observation.evidence)) ||
-    observation.expiresAt <= new Date()
-  )
-    throw new Error("Compensation network proof expired or changed");
-  const network = NativeCompensationNetworkEvidenceSchema.parse(
-    observation.evidence,
+  const budget = new PublicationAuthorityReadBudget();
+  const plan = await context.files.db.nativeRecoveryPlan.findUniqueOrThrow({
+    where: { id: activity.planId },
+  });
+  budget.consume(1);
+  const plex = await captureNativeReviewProof(
+    context.files,
+    activity,
+    plan.plan,
+    {
+      execution: context.files.execution,
+      budget,
+      expiresAtMs: context.execution.expiresAtMs,
+    },
   );
+  const network = NativeCompensationNetworkEvidenceSchema.parse(plex.network);
   if (
-    network.planId !== planId ||
+    network.planId !== activity.planId ||
     network.mounts.mounts.some((mount) => mount.podUid !== context.workerPodUid)
   )
     throw new Error("Compensation network proof belongs to another executor");
-  return network;
+  return { network, plex };
 }
 
 /** The same process-local proof spans preparation and its short final identity/authority transaction. */
@@ -49,12 +54,17 @@ export async function approveCompensationFiles(
   context: CompensationFileContext,
   activity: NativeCompensationPrepareInput | NativeCompensationApplyInput,
 ): Promise<void> {
-  const network = await approvalNetwork(context, activity.planId);
+  const { network, plex } = await approvalNetwork(context, activity);
   const prepared = await prepareNativeCompensationProof(
     context,
     activity.planId,
+    plex.budget,
   );
-  const assertActive = compensationDeadline(prepared.context, network);
+  const deadline = compensationDeadline(prepared.context, network);
+  const assertActive = () => {
+    deadline();
+    plex.freshness.assertActive();
+  };
   const plan = prepared.scope.intent.entries.map((item) => item.entry);
   const dependencies = prepared.context.files.publicationDependencies;
   const references = [
@@ -120,22 +130,41 @@ export async function approveCompensationFiles(
     async (tx) => {
       assertActive();
       await lockNativeCompensationScope(tx, prepared.scope);
+      await assertNativeFilesProof(tx, plex);
       assertActive();
       await lockPaths(0, async () => {
         await prepared.assertCurrent();
         assertActive();
         if ("planHash" in activity)
-          await applyCompensationApproval(tx, context, {
-            activity,
-            scope: prepared.scope,
-            evidence: prepared.evidence,
-          });
-        else
-          await finishCompensationPreparation(tx, {
-            activity,
-            scope: prepared.scope,
-            evidence: prepared.evidence,
-          });
+          await applyCompensationApproval(
+            tx,
+            context,
+            {
+              activity,
+              scope: prepared.scope,
+              evidence: prepared.evidence,
+              ...(plex.kind === "paired"
+                ? { plex: { ref: plex.ref, freshness: plex.freshness } }
+                : {}),
+            },
+            plex.budget,
+          );
+        else {
+          if (plex.kind !== "paired")
+            throw new Error(
+              "New compensation preparation requires its paired Plex proof",
+            );
+          await finishCompensationPreparation(
+            tx,
+            {
+              activity,
+              scope: prepared.scope,
+              evidence: prepared.evidence,
+              plex: { ref: plex.ref, freshness: plex.freshness },
+            },
+            plex.budget,
+          );
+        }
         await prepared.assertCurrent();
         assertActive();
       });

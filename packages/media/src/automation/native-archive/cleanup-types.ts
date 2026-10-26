@@ -9,13 +9,20 @@ import type {
 
 export type ArchiveExecution = z.infer<typeof NativeArchiveExecutionSchema>;
 export type ArchiveParticipant = ArchiveExecution["participants"][number];
-export type ArchiveCleanupBase = {
-  content: ContentProof;
+export type ArchiveContentFacts = Pick<
+  ContentProof,
+  "digest" | "reviewIdentity" | "reviewAbsence"
+>;
+export type ArchiveCleanupFacts = {
+  content: ArchiveContentFacts;
   paths: string[];
   execution: ArchiveExecution;
   executionCommitted: boolean;
   descriptor: NativeArchiveContinuation;
   scope: NativeArchiveScope;
+};
+export type ArchiveCleanupBase = Omit<ArchiveCleanupFacts, "content"> & {
+  content: ContentProof;
 };
 export type ArchiveJournalEntries = Map<
   string,
@@ -34,5 +41,8 @@ export type ArchiveJournalProof = {
   ancestors: { path: string; device: string; inode: string }[];
 };
 export type ArchiveCleanupProof = ArchiveCleanupBase & {
+  journals: ArchiveJournalProof[];
+};
+export type ArchiveCleanupMeasuredFacts = ArchiveCleanupFacts & {
   journals: ArchiveJournalProof[];
 };

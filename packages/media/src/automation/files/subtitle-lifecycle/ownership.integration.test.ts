@@ -1,32 +1,31 @@
 import { defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
-import { afterAll, beforeAll, expect, test } from "vitest";
+import { afterAll, expect, test } from "vitest";
 import { createHash } from "node:crypto";
 import { writeFile, readFile, access, rm } from "node:fs/promises";
 import path from "node:path";
-import { startMediaTestPostgres } from "#testing/postgres.ts";
-import { fileFixture } from "#automation/files/test-support.ts";
+import { automationTestHarness } from "#testing/automation.ts";
+import { prepareBoundRetention } from "#automation/retention/lifecycle.test-fixture.ts";
+import { preparePhysicalPublication } from "#automation/plex-binding/test-fixture.ts";
+import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
+import { storedWorkerPath } from "#automation/files/paths/locations.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { subtitleAccepted } from "#domain/subtitle-quality.ts";
 import { ownedSubtitleSidecars } from "./ownership.ts";
 
-let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
+const harness = automationTestHarness();
 const directories: string[] = [];
-beforeAll(async () => {
-  cluster = await startMediaTestPostgres();
-}, 60_000);
 afterAll(async () => {
-  await cluster.close();
   for (const directory of directories)
     await rm(directory, { recursive: true, force: true });
 });
 for (const qualityStatus of ["accepted", "unverified"] as const) {
   for (const interrupted of [false, true]) {
     test(`${interrupted ? "interrupted" : "committed"} quarantine and restore preserve ${qualityStatus} quality while re-proving same-video lifecycle binding`, async () => {
-      const db = cluster.database;
-      const f = await fileFixture(db);
+      const db = harness.database();
+      const f = await mappedPublicationFixture(db);
       directories.push(f.directory);
-      const video = await f.published();
+      const video = await preparePhysicalPublication(f);
       const target = path.join(
         f.roots.library,
         `${video.entry.libraryPath}.en.srt`,
@@ -40,7 +39,7 @@ for (const qualityStatus of ["accepted", "unverified"] as const) {
           assetId: video.entry.assetId,
           language: "en",
           providerId: "synthetic",
-          path: target,
+          path: storedWorkerPath(f.context, "movies", target),
           state: "installed",
           qualityStatus,
           ownershipEpoch: 0,
@@ -73,7 +72,8 @@ for (const qualityStatus of ["accepted", "unverified"] as const) {
           }),
         ),
       );
-      const retention = await f.retention();
+      const bound = await prepareBoundRetention(f, video, harness.context());
+      const retention = bound.retention;
       const activities = createMediaFileActivities(f.context);
       if (interrupted) {
         f.context.checkpoint = (phase) =>
@@ -153,10 +153,12 @@ for (const qualityStatus of ["accepted", "unverified"] as const) {
   }
 }
 test("historical installed labels without ownership protect physical cleanup", async () => {
-  const db = cluster.database;
-  const f = await fileFixture(db);
+  const db = harness.database();
+  const f = await mappedPublicationFixture(db);
   directories.push(f.directory);
-  const video = await f.published();
+  const video = await preparePhysicalPublication(f);
+  const bound = await prepareBoundRetention(f, video, harness.context());
+  const retention = bound.retention;
   await db.subtitleAsset.create({
     data: {
       assetId: video.entry.assetId,
@@ -165,10 +167,13 @@ test("historical installed labels without ownership protect physical cleanup", a
       providerId: "old",
       provenance: {},
       matchingEvidence: {},
-      path: path.join(f.roots.library, "unknown.srt"),
+      path: storedWorkerPath(
+        f.context,
+        "movies",
+        path.join(f.roots.library, "unknown.srt"),
+      ),
     },
   });
-  const retention = await f.retention();
   expect(
     await createMediaFileActivities(f.context).quarantineMediaFiles(
       retention.input,

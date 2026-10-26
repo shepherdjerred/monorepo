@@ -1,7 +1,9 @@
-import { afterAll, beforeAll, expect, test } from "vitest";
+import { afterAll, expect, test } from "vitest";
 import { access, readFile, rm } from "node:fs/promises";
 import nodePath from "node:path";
-import { startMediaTestPostgres } from "#testing/postgres.ts";
+import { automationTestHarness } from "#testing/automation.ts";
+import { boundRetentionFixture } from "#automation/retention/lifecycle.test-fixture.ts";
+import { elapsedQuarantineClient } from "./plex-binding/elapsed-quarantine.test-support.ts";
 import { PrismaMediaCommands } from "#infrastructure/commands.ts";
 import { fileFixture } from "./test-support.ts";
 import { createMediaFileActivities } from "./activities.ts";
@@ -11,13 +13,9 @@ import {
   type FileContext,
 } from "./types.ts";
 
-let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
+const harness = automationTestHarness();
 const directories: string[] = [];
-beforeAll(async () => {
-  cluster = await startMediaTestPostgres();
-}, 60_000);
 afterAll(async () => {
-  if (cluster !== undefined) await cluster.close();
   for (const directory of directories)
     await rm(directory, { recursive: true, force: true });
 });
@@ -44,7 +42,7 @@ function pauseHash(context: FileContext) {
 }
 
 async function keep(f: Awaited<ReturnType<typeof fileFixture>>) {
-  const db = cluster.database;
+  const db = harness.database();
   // A bounded real row-lock probe fails if hashing still holds database authority.
   await db.$transaction(async (tx) => {
     await tx.$executeRaw`SET LOCAL lock_timeout = '500ms'`;
@@ -62,7 +60,7 @@ async function keep(f: Awaited<ReturnType<typeof fileFixture>>) {
 }
 
 test("Keep commits while initial promotion hashes and stale publication preserves staged recovery data", async () => {
-  const f = await fileFixture(cluster.database);
+  const f = await fileFixture(harness.database());
   directories.push(f.directory);
   const acquisition = await f.acquisition();
   const activities = createMediaFileActivities(f.context);
@@ -81,9 +79,11 @@ test("Keep commits while initial promotion hashes and stale publication preserve
     status: "obsolete",
     reason: "intent_obsolete",
   });
-  const attempt = await cluster.database.acquisitionAttempt.findUniqueOrThrow({
-    where: { id: acquisition.attempt.id },
-  });
+  const attempt = await harness
+    .database()
+    .acquisitionAttempt.findUniqueOrThrow({
+      where: { id: acquisition.attempt.id },
+    });
   const entry = FilePlanSchema.parse(attempt.filePlan)[0];
   if (entry === undefined) throw new Error("Plan missing");
   await expect(
@@ -100,43 +100,36 @@ test("Keep commits while initial promotion hashes and stale publication preserve
 test.each(["quarantine", "purge", "restore", "rollback"] as const)(
   "Keep commits during %s hashing and protects the prior file location",
   async (phase) => {
-    const f = await fileFixture(cluster.database);
+    const bound =
+      phase === "rollback"
+        ? null
+        : await boundRetentionFixture(harness.database(), harness.context());
+    const f = bound?.files ?? (await fileFixture(harness.database()));
     directories.push(f.directory);
-    const original = await f.published();
-    const retention = await f.retention();
+    const original = bound?.published ?? (await f.published());
+    const retention = bound?.retention;
+    if (retention === undefined && phase !== "rollback")
+      throw new Error("Bound retention fixture missing");
     const activities = createMediaFileActivities(f.context);
     let file = nodePath.join(f.roots.library, original.entry.libraryPath);
     if (phase === "purge" || phase === "restore") {
-      expect(await activities.quarantineMediaFiles(retention.input)).toEqual({
-        status: "quarantined",
-      });
-      const decision =
-        await cluster.database.retentionDecision.findUniqueOrThrow({
-          where: { id: retention.decision.id },
-        });
-      const entry = RemovalPlanSchema.parse(decision.manifest).assets[0];
-      if (entry === undefined) throw new Error("Removal plan missing");
-      file = nodePath.join(f.roots.control, "quarantine", entry.quarantineId);
-      if (phase === "purge")
-        await cluster.database.retentionDecision.update({
-          where: { id: decision.id },
-          data: {
-            quarantinedAt: new Date(Date.now() - 8 * 86_400_000),
-            purgeAfter: new Date(Date.now() - 86_400_000),
-          },
-        });
+      if (bound === null) throw new Error("Bound quarantine fixture missing");
+      file = await quarantinedHashTarget(bound, phase, activities);
     }
-    const restore = await cluster.database.operation.create({
+    const target = await harness.database().mediaIntent.findUniqueOrThrow({
+      where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
+    });
+    const restore = await harness.database().operation.create({
       data: {
         kind: "restore_media",
-        payload: { mediaId: f.media.id, generation: 0 },
+        payload: { mediaId: f.media.id, generation: target.generation },
       },
     });
     const pause = pauseHash(f.context);
     const operation =
-      phase === "quarantine"
+      phase === "quarantine" && retention !== undefined
         ? activities.quarantineMediaFiles(retention.input)
-        : phase === "purge"
+        : phase === "purge" && retention !== undefined
           ? activities.purgeMediaFiles(retention.input)
           : phase === "restore"
             ? activities.restoreMediaFiles({
@@ -154,3 +147,40 @@ test.each(["quarantine", "purge", "restore", "rollback"] as const)(
     expect(await readFile(file, "utf8")).toBe(original.content);
   },
 );
+
+async function quarantinedHashTarget(
+  bound: Awaited<ReturnType<typeof boundRetentionFixture>>,
+  phase: "purge" | "restore",
+  activities: ReturnType<typeof createMediaFileActivities>,
+) {
+  const { files: f, retention } = bound;
+  const timing =
+    phase === "purge"
+      ? await elapsedQuarantineClient(harness.database(), {
+          ...retention.input,
+          mediaIds: [f.media.id],
+        })
+      : null;
+  f.context.db = timing?.db ?? harness.database();
+  try {
+    expect(await activities.quarantineMediaFiles(retention.input)).toEqual({
+      status: "quarantined",
+    });
+  } finally {
+    f.context.db = harness.database();
+  }
+  await timing?.assertCommitted();
+  const decision = await harness
+    .database()
+    .retentionDecision.findUniqueOrThrow({
+      where: { id: retention.decision.id },
+    });
+  const entry = RemovalPlanSchema.parse(decision.manifest).assets[0];
+  if (entry === undefined) throw new Error("Removal plan missing");
+  const file = nodePath.join(f.roots.control, "quarantine", entry.quarantineId);
+  if (phase === "purge") {
+    await bound.observe(true);
+    expect(await bound.refresh()).toMatchObject({ status: "purge" });
+  }
+  return file;
+}

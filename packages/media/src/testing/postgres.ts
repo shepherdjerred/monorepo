@@ -43,7 +43,8 @@ export async function startMediaTestPostgres(
       | "20261017001800_capacity_observation"
       | "20261017001900_watch_observation_fence"
       | "20261017002000_native_archive_cleanup"
-      | "20261017002100_publication_compensation";
+      | "20261017002100_publication_compensation"
+      | "20261017002200_movie_edition_choice";
   } = {},
 ) {
   const directory = await mkdtemp(path.join(tmpdir(), "media-pg-"));

@@ -1,3 +1,4 @@
+import type { ArchiveReadOptions } from "./receipt-projection.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import {
   NativeArchiveCompletionSchema,
@@ -8,13 +9,17 @@ import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import type { archiveClosure } from "./closure.ts";
 import { archiveCompletionDependency } from "./completion.ts";
-import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { ArchiveReceiptProjection } from "./receipt-projection.ts";
 
 export async function archiveTerminalDependency(
   tx: Prisma.TransactionClient,
   cleanup: Prisma.UpgradeCleanupGetPayload<object>,
   assets: Awaited<ReturnType<typeof archiveClosure>>["assets"],
-  budget?: PublicationAuthorityReadBudget,
+  {
+    budget = new PublicationAuthorityReadBudget(),
+    projection = new ArchiveReceiptProjection(tx, budget),
+  }: ArchiveReadOptions = {},
 ) {
   const old = assets.find((row) => row.id === cleanup.assetId);
   const successor = assets.find((row) => row.id === cleanup.successorAssetId);
@@ -33,9 +38,9 @@ export async function archiveTerminalDependency(
     where: { originalCleanupId: cleanup.id, state: "cleaned" },
     include: { receipt: { include: { plan: true } } },
     orderBy: { createdAt: "desc" },
-    take: Math.min(101, Math.floor((budget?.take ?? 202) / 2) + 1),
+    take: Math.min(101, budget.takeWeighted(3)),
   });
-  budget?.consume(completed.length * 2);
+  budget.consume(completed.length * 3);
   if (completed.length > 100)
     throw new Error("Archive terminal receipt lookup exceeds bound");
   const matches = completed.filter(
@@ -46,6 +51,8 @@ export async function archiveTerminalDependency(
   if (matches.length > 1)
     throw new Error("Archive terminal receipt is ambiguous");
   const row = matches[0];
+  if (row !== undefined)
+    await projection.validateQueried(tx, row.receipt, budget);
   return row === undefined
     ? legacyTerminalDependency(cleanup, old, successor)
     : archiveCompletionDependency(row, cleanup, old, successor);

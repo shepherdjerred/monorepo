@@ -1,28 +1,40 @@
+import type { Prisma } from "#generated/prisma/client.ts";
+import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import { z } from "zod";
 import { MediaError } from "#application/errors.ts";
 import { networkMovieAccess } from "./editions/access.ts";
-import {
-  requestFulfillment,
-  currentFulfillmentAsset,
-} from "./editions/fulfillment.ts";
+import { currentFulfillmentAsset } from "./editions/fulfillment.ts";
 import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
 import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts";
-import {
-  lockMovieChoiceIdentities,
-  type MovieChoiceAccess,
-} from "#infrastructure/movie-editions/access.ts";
+import { lockMovieChoiceIdentities } from "#infrastructure/movie-editions/access.ts";
 import { readMovieDemandFulfillment } from "#infrastructure/movie-editions/fulfillment.ts";
 import { defaultIntent, defaultScope } from "#shared/editions/scope.ts";
-import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
-import type { Prisma } from "#generated/prisma/client.ts";
 import type {
   MediaNetworkActivities,
   MediaOperation,
 } from "#shared/automation.ts";
-import { evaluateRetention, RETENTION_DEFAULTS } from "#domain/retention.ts";
 import type { MediaAutomationContext } from "./context.ts";
-import { observeRequesterWatch, PlexIdentitySchema } from "./watch.ts";
+import { observeRequesterWatch } from "./watch.ts";
+import {
+  prepareBoundMediaCohort,
+  assertBoundMediaCohort,
+  lockBoundCohortRows,
+  type BoundMediaCohort,
+} from "./retention/binding.ts";
+import {
+  evaluateRetentionItem,
+  RetentionEvidenceSchema as EvidenceSchema,
+} from "./retention/evaluation.ts";
+import { reconcileRetentionProjection } from "./retention/projection.ts";
+import { retentionDeadline } from "./retention/deadline.ts";
+import { retentionPlayback } from "./retention/sessions.ts";
+import {
+  plexBindingFreshness,
+  bindPlexTransactionDeadline,
+} from "#infrastructure/plex-binding/freshness.ts";
+import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
+import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
 import {
   mediaInclude,
   lineageResolved,
@@ -31,7 +43,6 @@ import {
   type Media,
 } from "./retention/scope.ts";
 import { serializable } from "./store.ts";
-import { createWarning } from "./notifications/retention-warning.ts";
 import {
   lockRuntimeAuthority,
   runtimeAuthority,
@@ -49,7 +60,6 @@ import {
 type Result = Awaited<
   ReturnType<MediaNetworkActivities["evaluateMediaRetention"]>
 >;
-type Transaction = Prisma.TransactionClient;
 const protect = (reason: string): Result => ({
   status: "protected",
   reason,
@@ -73,7 +83,13 @@ function incompleteWatchReason(observation: {
     ? "quarantine_watch_reconciliation_required"
     : (observation.reason ?? "watch_unknown");
 }
-const EvidenceSchema = z.object({ warningEventId: z.string() });
+type BoundObservation = {
+  ids: string[];
+  snapshots: Media[];
+  observedAt: Date;
+  cohort: BoundMediaCohort;
+  freshness: PlexBindingFreshness;
+};
 async function pendingMovieDemand(
   context: MediaAutomationContext,
   ids: string[],
@@ -99,183 +115,14 @@ async function pendingMovieDemand(
     throw error;
   }
 }
-async function evaluateItem(
-  tx: Transaction,
-  item: Media,
-  authority: {
-    epoch: number;
-    timestamp: Date;
-    movieAccess: MovieChoiceAccess | undefined;
-    captureFreshness: (freshness: MovieChoiceFreshness) => void;
-  },
-): Promise<Result> {
-  const { epoch, timestamp } = authority;
-  const generation = defaultIntent(item.intents)?.generation;
-  if (generation === undefined) return protect("intent_missing");
-  if (!lineageResolved(item)) return protect("lineage_unresolved");
-  let decision = await tx.retentionDecision.findFirst({
-    where: {
-      mediaId: item.id,
-      edition: "default",
-      generation,
-      state: { in: ["warning_pending", "grace_period", "quarantined"] },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-  const warning =
-    decision === null
-      ? null
-      : EvidenceSchema.parse(decision.evidence).warningEventId;
-  const deliveries =
-    warning === null
-      ? []
-      : await tx.notificationDelivery.findMany({
-          where: {
-            eventId: warning,
-            state: "accepted",
-            channel: { in: ["email", "discord"] },
-            OR: [
-              { providerStatus: null },
-              { providerStatus: { not: "bounced" } },
-            ],
-            acceptedAt: { not: null },
-            reconciledAt: {
-              gte: new Date(timestamp.getTime() - 60_000),
-              lte: timestamp,
-            },
-          },
-          orderBy: { acceptedAt: "asc" },
-        });
-  const reserved = await tx.acquisitionReservation.findUnique({
-    where: targetWhere(defaultScope(item.id)),
-  });
-  const currentAsset = await currentFulfillmentAsset(tx, item.id);
-  const fulfillment = new Map<
-    string,
-    Awaited<ReturnType<typeof requestFulfillment>>
-  >();
-  for (const request of item.requests)
-    fulfillment.set(
-      request.id,
-      await requestFulfillment(tx, {
-        kind: item.kind,
-        requestId: request.id,
-        currentAsset,
-        access: authority.movieAccess,
-        captureFreshness: authority.captureFreshness,
-      }),
-    );
-  const evaluation = evaluateRetention({
-    now: timestamp.getTime(),
-    generation,
-    decisionGeneration: decision?.generation ?? generation,
-    owned:
-      item.assets.length > 0 &&
-      item.assets.every(
-        ({ asset }) =>
-          asset.owned &&
-          asset.edition === "default" &&
-          asset.checksum !== null &&
-          ["published", "quarantined"].includes(asset.state),
-      ),
-    identityConfirmed:
-      PlexIdentitySchema.parse(item.externalIds).plexRatingKey !== undefined,
-    activePlayback: false,
-    operationInProgress: reserved !== null,
-    holds: item.holds.map((hold) => ({
-      until: hold.until?.getTime() ?? null,
-      isPin: hold.isPin,
-    })),
-    requesters: item.requests
-      .filter((claim) => item.kind === "movie" || claim.edition === "default")
-      .map((claim) => {
-        const fulfilled = fulfillment.get(claim.id);
-        if (fulfilled === undefined)
-          throw new Error("Retention request fulfillment missing");
-        const watch = item.watchStates.find(
-          (state) => state.userId === claim.userId,
-        );
-        const accepted = deliveries.find(
-          (delivery) => delivery.userId === claim.userId,
-        );
-        return {
-          userId: claim.userId,
-          owner: claim.user.role === "owner",
-          watched: watch?.watched ?? null,
-          observedAt: watch?.observedAt.getTime() ?? null,
-          warningAcceptedAt: accepted?.acceptedAt?.getTime() ?? null,
-          warningFailed: accepted === undefined,
-          fulfillment: fulfilled,
-        };
-      }),
-  });
-  if (evaluation.state === "protected") return protect(evaluation.reason);
-  decision ??= await createWarning(tx, item, generation, epoch);
-  if (evaluation.state === "warning_pending")
-    return {
-      status: "warning",
-      decisionId: decision.id,
-      wakeAt: new Date(timestamp.getTime() + 60_000).toISOString(),
-      reason: "warning_acceptance_pending",
-    };
-  const proof = EvidenceSchema.parse(decision.evidence);
-  const evidence = {
-    ...proof,
-    authorizedAt: timestamp.toISOString(),
-    activePlayback: false,
-    recoveryEpoch: epoch,
-  };
-  const graceUntil = new Date(evaluation.graceUntil);
-  const warningAcceptedAt = new Date(
-    evaluation.graceUntil - RETENTION_DEFAULTS.graceMs,
-  );
-  if (decision.state === "quarantined") {
-    if (
-      decision.quarantinedAt === null ||
-      decision.purgeAfter === null ||
-      decision.manifest === null
-    )
-      return protect("quarantine_manifest_missing");
-    const purgeAt = Math.max(
-      decision.purgeAfter.getTime(),
-      decision.quarantinedAt.getTime() + RETENTION_DEFAULTS.quarantineMs,
-    );
-    await tx.retentionDecision.update({
-      where: { id: decision.id },
-      data: { evidence },
-    });
-    return {
-      status: timestamp.getTime() < purgeAt ? "grace" : "purge",
-      decisionId: decision.id,
-      wakeAt: new Date(purgeAt).toISOString(),
-      reason: null,
-    };
-  }
-  await tx.retentionDecision.update({
-    where: { id: decision.id },
-    data: {
-      state: "grace_period",
-      evidence,
-      graceUntil,
-      warningAcceptedAt,
-      version: { increment: 1 },
-    },
-  });
-  return {
-    status: evaluation.state === "grace_period" ? "grace" : "quarantine",
-    decisionId: decision.id,
-    wakeAt: graceUntil.toISOString(),
-    reason: null,
-  };
-}
-
 async function evaluateGroup(
   context: MediaAutomationContext,
   input: MediaOperation,
-  observation: { ids: string[]; snapshots: Media[]; observedAt: Date },
+  observation: BoundObservation,
 ): Promise<Result> {
   const { ids, snapshots, observedAt } = observation;
   const movieAccess = await networkMovieAccess(context, ids);
+  observation.freshness.assertActive();
   return await serializable(context.db, async (tx) => {
     await lockDefaultScopes(
       tx,
@@ -291,6 +138,13 @@ async function evaluateGroup(
     if (!(await lockRuntimeAuthority(tx, runtime.recoveryEpoch)))
       return protect("runtime_protected");
     await lockMovieChoiceIdentities(tx, { mediaIds: ids });
+    await lockBoundCohortRows(tx, observation.cohort, observation.freshness);
+    const binding = await assertBoundMediaCohort(
+      tx,
+      observation.cohort,
+      observation.freshness,
+    );
+    await bindPlexTransactionDeadline(tx, observation.freshness);
     if (await hasPendingLegacyClaims(tx, ids)) {
       await persistLegacyClaimProtection(tx, ids);
       return protect(LEGACY_CLAIM_PROTECTION);
@@ -338,25 +192,49 @@ async function evaluateGroup(
       };
     if (Date.now() - observedAt.getTime() > 30_000)
       return protect("playback_observation_stale");
+    await reconcileRetentionProjection(
+      tx,
+      { mediaIds: ids, binding },
+      observation.freshness,
+    );
     const results = new Map<string, Result>();
     const freshness: MovieChoiceFreshness[] = [];
     for (const item of items)
       results.set(
         item.id,
-        await evaluateItem(tx, item, {
+        await evaluateRetentionItem(tx, item, {
           epoch: runtime.recoveryEpoch,
           timestamp: observedAt,
           movieAccess,
           captureFreshness: (guard) => freshness.push(guard),
+          binding,
         }),
       );
-    for (const guard of freshness) guard.assertActive();
+    for (const guard of freshness) {
+      guard.assertActive();
+      await bindPlexTransactionDeadline(tx, guard);
+    }
+    observation.freshness.assertActive();
     const result = results.get(input.mediaId);
     if (result === undefined) throw new Error("Retention target missing");
     const protectedResult = [...results.values()].find(
       (value) => value.status === "protected",
     );
     if (protectedResult !== undefined) return protectedResult;
+    const plexExpiresAtMs = z
+      .int()
+      .nonnegative()
+      .parse(
+        Math.floor(
+          Math.min(
+            observation.freshness.expiresAtMs,
+            ...freshness.map((guard) => guard.expiresAtMs),
+          ),
+        ),
+      );
+    await persistDecisionDeadlines(tx, results, plexExpiresAtMs);
+    for (const guard of freshness) guard.assertActive();
+    observation.freshness.assertActive();
     const pending = [...results.values()].find(
       (value) => value.status === "warning",
     );
@@ -388,9 +266,15 @@ async function groupWatch(
   context: MediaAutomationContext,
   ids: string[],
   quarantined: boolean,
+  captureFreshness: (freshness: PlexBindingFreshness) => void,
 ): Promise<Result | null> {
   for (const id of ids) {
-    const watch = await observeRequesterWatch(context, id);
+    const watch = await observeRequesterWatch(
+      context,
+      id,
+      {},
+      captureFreshness,
+    );
     if (!watch.complete)
       return protect(
         incompleteWatchReason({ quarantined, reason: watch.reason }),
@@ -402,11 +286,12 @@ async function groupWatch(
 async function evaluateObservedGroup(
   context: MediaAutomationContext,
   input: MediaOperation,
-  observation: { ids: string[]; snapshots: Media[]; observedAt: Date },
+  observation: BoundObservation,
 ): Promise<Result> {
   try {
     return await evaluateGroup(context, input, observation);
   } catch (error) {
+    if (error instanceof PlexBindingProtection) return protect(error.reason);
     if (
       error instanceof MovieChoiceProtection ||
       (error instanceof MediaError && error.code === "plex_scope_unconfigured")
@@ -417,10 +302,17 @@ async function evaluateObservedGroup(
 }
 
 export function createRetentionActivities(
-  context: MediaAutomationContext,
+  base: MediaAutomationContext,
 ): Pick<MediaNetworkActivities, "evaluateMediaRetention"> {
   return {
     async evaluateMediaRetention(input) {
+      const execution = base.plexBindingExecution();
+      execution.assertActive();
+      const context = {
+        ...base,
+        plexBindingExecution: () => execution,
+        watchExecution: () => execution,
+      };
       const authority = await runtimeAuthority(context.db);
       if (!authority.active) return protect("runtime_protected");
       const ownerOverride = await readOwnerOverride(context, input);
@@ -460,31 +352,126 @@ export function createRetentionActivities(
           : context.gates.quarantine;
       if (!(await gate())) return protect("retention_disabled");
       if (ownerOverride !== null)
-        return (await currentPlayback(context, snapshots))
-          ? protect("active_playback")
-          : await evaluateOwnerOverride(
-              context,
-              input,
-              ownerOverride,
-              new Date(),
-            );
+        return await evaluateOwnerPlayback(context, input, {
+          snapshots,
+          ownerOverride,
+        });
       const pending = await pendingMovieDemand(context, ids);
       if (pending !== null) return protect(pending);
+      const prepared = await prepareRetentionCohort(context, ids, execution);
+      if (prepared.status === "protected") return protect(prepared.reason);
+      const { cohort } = prepared;
+      let { freshness } = prepared;
+      const completeSnapshots = await context.db.mediaItem.findMany({
+        where: { id: { in: cohort.mediaIds } },
+        include: mediaInclude,
+      });
+      freshness.assertActive();
+      const watchFreshness: PlexBindingFreshness[] = [];
       const watch = await groupWatch(
         context,
-        ids,
+        cohort.mediaIds,
         target.availability === "quarantined",
+        (guard) => watchFreshness.push(guard),
       );
       if (watch !== null) return watch;
-      if (!(await refreshRetentionReceipts(context, ids)))
+      freshness = plexBindingFreshness({
+        observed: execution.observed,
+        expiresAtMs: Math.min(
+          freshness.expiresAtMs,
+          ...watchFreshness.map((guard) => guard.expiresAtMs),
+        ),
+        guards: [freshness, ...watchFreshness],
+      });
+      freshness.assertActive();
+      if (!(await refreshRetentionReceipts(context, cohort.mediaIds)))
         return protect("warning_receipt_reconciliation_required");
-      if (await currentPlayback(context, snapshots))
+      freshness.assertActive();
+      if (await retentionPlayback(context, cohort, execution, freshness))
         return protect("active_playback");
+      freshness.assertActive();
       return await evaluateObservedGroup(context, input, {
-        ids,
-        snapshots,
+        ids: cohort.mediaIds,
+        snapshots: completeSnapshots,
         observedAt: new Date(),
+        cohort,
+        freshness,
       });
     },
   };
+}
+
+async function persistDecisionDeadlines(
+  tx: Prisma.TransactionClient,
+  results: ReadonlyMap<string, Result>,
+  plexExpiresAtMs: number,
+) {
+  for (const value of results.values()) {
+    if (value.decisionId === null || value.status === "warning") continue;
+    const decision = await tx.retentionDecision.findUniqueOrThrow({
+      where: { id: value.decisionId },
+    });
+    await tx.retentionDecision.update({
+      where: { id: decision.id },
+      data: {
+        evidence: {
+          ...EvidenceSchema.parse(decision.evidence),
+          plexExpiresAtMs,
+        },
+      },
+    });
+  }
+}
+
+async function prepareRetentionCohort(
+  context: MediaAutomationContext,
+  ids: string[],
+  execution: PlexBindingExecution,
+): Promise<
+  | {
+      status: "ready";
+      cohort: BoundMediaCohort;
+      freshness: PlexBindingFreshness;
+    }
+  | { status: "protected"; reason: string }
+> {
+  try {
+    const initialFreshness = plexBindingFreshness({
+      ...execution,
+      guards: [execution],
+    });
+    const cohort = await prepareBoundMediaCohort(
+      context,
+      ids,
+      initialFreshness,
+    );
+    const freshness = await retentionDeadline(
+      context.db,
+      cohort.access,
+      execution,
+    );
+    return { status: "ready", cohort, freshness };
+  } catch (error) {
+    if (error instanceof PlexBindingProtection)
+      return { status: "protected", reason: error.reason };
+    throw error;
+  }
+}
+
+async function evaluateOwnerPlayback(
+  context: MediaAutomationContext,
+  input: MediaOperation,
+  scope: {
+    snapshots: Media[];
+    ownerOverride: NonNullable<Awaited<ReturnType<typeof readOwnerOverride>>>;
+  },
+): Promise<Result> {
+  return (await currentPlayback(context, scope.snapshots))
+    ? protect("active_playback")
+    : await evaluateOwnerOverride(
+        context,
+        input,
+        scope.ownerOverride,
+        new Date(),
+      );
 }

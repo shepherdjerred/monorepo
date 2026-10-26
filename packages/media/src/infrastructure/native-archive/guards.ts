@@ -12,8 +12,10 @@ import { lockSubtitlePolicies } from "#infrastructure/subtitle-policy.ts";
 import { assertNativeExclusion } from "#infrastructure/native-recovery/guards.ts";
 import { runtimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
-import { buildNativeArchiveScope } from "./scope.ts";
+import { buildNativeArchiveScopeProjection } from "./scope.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { assertNoPublicationCompensationFence } from "#infrastructure/native-compensation/fence.ts";
+import { ArchiveReceiptProjection } from "./receipt-projection.ts";
 
 export async function lockNativeArchiveScope(
   tx: Prisma.TransactionClient,
@@ -75,6 +77,7 @@ export async function assertNativeArchiveSnapshot(
   tx: Prisma.TransactionClient,
   planId: string,
   scope: NativeArchiveScope,
+  budget = new PublicationAuthorityReadBudget(),
 ) {
   await assertNativeExclusion(tx);
   const plan = await tx.nativeRecoveryPlan.findUniqueOrThrow({
@@ -84,6 +87,7 @@ export async function assertNativeArchiveSnapshot(
     where: { id: "singleton" },
   });
   const authority = await runtimeAuthority(tx);
+  budget.consume(1);
   if (
     runtime.recoveryEpoch !== plan.recoveryEpoch ||
     runtime.version !== plan.runtimeVersion ||
@@ -95,11 +99,26 @@ export async function assertNativeArchiveSnapshot(
     throw new Error("Native archive runtime changed");
   if (
     snapshotHash(z.json().parse(NativeArchiveScopeSchema.parse(plan.scope))) !==
-      snapshotHash(z.json().parse(scope)) ||
-    snapshotHash(
-      z.json().parse(await buildNativeArchiveScope(tx, scope.request)),
-    ) !== snapshotHash(z.json().parse(scope))
+    snapshotHash(z.json().parse(scope))
   )
     throw new Error("Native archive reviewed records changed");
-  return { plan, runtime };
+  const projection = new ArchiveReceiptProjection(tx, budget);
+  const captured = await buildNativeArchiveScopeProjection(tx, scope.request, {
+    budget,
+    reviewedStorageRoots: scope.storageRoots,
+    projection,
+  });
+  const current = captured.scope;
+  if (
+    snapshotHash(z.json().parse(current)) !==
+    snapshotHash(z.json().parse(scope))
+  )
+    throw new Error("Native archive reviewed records changed");
+  return {
+    plan,
+    runtime,
+    scope: current,
+    projection,
+    supersessions: captured.supersessions,
+  };
 }

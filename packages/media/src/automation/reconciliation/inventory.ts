@@ -3,6 +3,7 @@ import type { MediaAutomationContext } from "#automation/context.ts";
 import { serializable } from "#automation/store.ts";
 import { queueUpgradeCleanupPage } from "./upgrade-cleanup.ts";
 import { queueNativeArchivePage } from "./native-archive.ts";
+import { queueExistingPlexBinding } from "#automation/plex-binding/queue.ts";
 
 const ProgressSchema = z.object({
   section: z.number().int().min(0).max(4),
@@ -137,6 +138,7 @@ async function reconcileInventory(
       });
       continue;
     }
+    await queueExistingPlexBinding(context, asset.id);
     const observation = await context.db.plexInventoryObservation.findFirst({
       where: { scanId, path: asset.path },
     });

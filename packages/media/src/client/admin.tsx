@@ -7,16 +7,15 @@ import {
   ProviderListSchema,
   SaveProviderSchema,
   SubtitleTargetListSchema,
-  ManualSubtitleSchema,
-  MAX_MANUAL_SUBTITLE_BYTES,
   type ProviderStatus,
   type SaveProvider,
   type ManualSubtitle,
   type SubtitleTarget,
 } from "#shared/admin.ts";
-import { readApi, writeApi, queryClient } from "./api.ts";
+import { readApi, writeApi, queryClient, sessionBoundary } from "./api.ts";
 import { ErrorNotice, Loading, Notice, humanize } from "./components.tsx";
 import { SeedingPolicyEditor, readSeedingPolicy } from "./seeding-policy.tsx";
+import { readSubtitleUpload } from "./subtitle-upload.ts";
 
 const credentialFields: Readonly<Record<string, readonly string[]>> = {
   privatehd: ["username", "password", "pid"],
@@ -227,65 +226,15 @@ export function ProviderAdministration({ user }: { user: MediaUser }) {
   );
 }
 
-async function fileBase64(file: File): Promise<string> {
-  if (file.size === 0 || file.size > MAX_MANUAL_SUBTITLE_BYTES)
-    throw new Error("Choose a subtitle file no larger than 8 MiB.");
-  return await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.addEventListener("error", () => {
-      reject(new Error("Could not read the subtitle file."));
-    });
-    reader.addEventListener("load", () => {
-      const result =
-        typeof reader.result === "string"
-          ? reader.result.split(",")[1]
-          : undefined;
-      if (result === undefined)
-        reject(new Error("Could not encode the subtitle file."));
-      else resolve(result);
-    });
-    reader.readAsDataURL(file);
-  });
-}
-
-async function uploadInput(
-  form: FormData,
-  target: SubtitleTarget,
-): Promise<ManualSubtitle> {
-  const file = form.get("subtitle");
-  if (!(file instanceof File)) throw new TypeError("Choose a subtitle file.");
-  const declaredEncoding = text(form, "encoding");
-  const replacementId = text(form, "replacementFor");
-  const old = target.subtitles.find(
-    (subtitle) => subtitle.id === replacementId,
-  );
-  if (replacementId !== "" && old === undefined)
-    throw new Error(
-      "The replacement subtitle must belong to the selected video.",
-    );
-  return ManualSubtitleSchema.parse({
-    assetId: target.assetId,
-    expectedAssetVersion: target.version,
-    expectedChecksum: target.checksum,
-    language: text(form, "language"),
-    filename: file.name,
-    description: text(form, "description"),
-    contentBase64: await fileBase64(file),
-    confirmedMatchingVideo: form.get("confirmed") === "on",
-    forced: form.get("forced") === "on",
-    ...(text(form, "hearingImpaired") === "unknown"
-      ? {}
-      : { hearingImpaired: text(form, "hearingImpaired") === "yes" }),
-    ...(declaredEncoding === "bom" ? {} : { declaredEncoding }),
-    ...(old === undefined
-      ? {}
-      : {
-          replacementFor: {
-            oldSubtitleId: old.id,
-            expectedOldVersion: old.version,
-          },
-        }),
-  });
+export async function submitSubtitleUpload(
+  input: { actorId: string; form: FormData; target: SubtitleTarget },
+  submit: (subtitle: ManualSubtitle) => Promise<unknown>,
+) {
+  const session = sessionBoundary.capture(input.actorId);
+  const subtitle = await readSubtitleUpload(input.form, input.target);
+  session.assertCurrent();
+  await submit(subtitle);
+  session.assertCurrent();
 }
 
 function SubtitleUploader({
@@ -318,7 +267,10 @@ function SubtitleUploader({
       );
       if (target === undefined)
         throw new Error("Select the exact video version.");
-      await upload.mutateAsync(await uploadInput(data, target));
+      await submitSubtitleUpload(
+        { actorId: user.id, form: data, target },
+        upload.mutateAsync,
+      );
       form.reset();
     } catch {
       setError(

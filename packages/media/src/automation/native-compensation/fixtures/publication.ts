@@ -7,6 +7,7 @@ const serverKeys = new WeakMap<
   NativeCompensationObserverContext,
   Map<string, string>
 >();
+let nextServerKey = 9000;
 
 /** Actual PlexClient parsing over the fixture's synthetic server data; no successful publication DTO is manufactured. */
 export function compensationPublicationContext(
@@ -24,21 +25,53 @@ export function compensationPublicationContext(
     serverKeys.set(source, keys);
   }
   const stableKeys = keys;
+  const seasons = new Map<string, PlexItem>();
+  const key = (original: string) => {
+    let value = stableKeys.get(original);
+    if (value === undefined) {
+      value = String(nextServerKey++);
+      stableKeys.set(original, value);
+    }
+    return value;
+  };
   const translate = (item: PlexItem): PlexItem => {
-    const key = (original: string) => {
-      let value = stableKeys.get(original);
-      if (value === undefined) {
-        value = String(9000 + stableKeys.size);
-        stableKeys.set(original, value);
-      }
-      return value;
-    };
+    let parent = item.parentRatingKey;
+    if (parent === undefined && item.type === "episode") {
+      if (
+        item.grandparentRatingKey === undefined ||
+        item.parentIndex === undefined
+      )
+        throw new Error(
+          "Synthetic TV server requires the original show and season coordinate",
+        );
+      parent = `synthetic-season:${item.grandparentRatingKey}:${String(item.parentIndex)}`;
+      // Explicit injected server hierarchy, not a production inference or a successful proof DTO.
+      seasons.set(parent, {
+        ratingKey: parent,
+        type: "season",
+        title: `Season ${String(item.parentIndex)}`,
+        index: item.parentIndex,
+        parentRatingKey: item.grandparentRatingKey,
+      });
+    }
     return {
       ...item,
       ratingKey: key(item.ratingKey),
+      ...(parent === undefined ? {} : { parentRatingKey: key(parent) }),
       ...(item.grandparentRatingKey === undefined
         ? {}
         : { grandparentRatingKey: key(item.grandparentRatingKey) }),
+      ...(item.Media === undefined
+        ? {}
+        : {
+            Media: item.Media.map((media) => ({
+              ...media,
+              Part: media.Part.map((part) => ({
+                ...part,
+                id: Number(key(`synthetic-part:${part.file}`)),
+              })),
+            })),
+          }),
     };
   };
   const plex = new PlexClient(
@@ -92,7 +125,11 @@ export function compensationPublicationContext(
         return Response.json({
           MediaContainer: {
             size: 1,
-            Metadata: [translate(await source.plex.metadata(original))],
+            Metadata: [
+              translate(
+                seasons.get(original) ?? (await source.plex.metadata(original)),
+              ),
+            ],
           },
         });
       }
@@ -101,5 +138,17 @@ export function compensationPublicationContext(
       );
     },
   );
-  return { ...base, serverMachineId: source.expectedServerMachineId, plex };
+  return {
+    ...base,
+    serverMachineId: source.expectedServerMachineId,
+    plex,
+    plexAccess: async (sectionType) => {
+      const sections = await source.permittedSections();
+      return {
+        serverMachineId: source.expectedServerMachineId,
+        sectionType,
+        sectionId: sectionType === "movie" ? sections.movie : sections.series,
+      };
+    },
+  };
 }

@@ -12,6 +12,7 @@ import type {
   MediaNetworkActivities,
 } from "@shepherdjerred/media/automation";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS } from "#shared/media-activity-budget.ts";
 
 const network = proxyActivities<
   NativeRecoveryNetworkActivities &
@@ -19,11 +20,13 @@ const network = proxyActivities<
 >({
   taskQueue: TASK_QUEUES.MEDIA_NETWORK,
   startToCloseTimeout: "2 minutes",
+  scheduleToCloseTimeout: HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS,
   retry: { maximumAttempts: 2, initialInterval: "5 seconds" },
 });
 const files = proxyActivities<NativeRecoveryFileActivities>({
   taskQueue: TASK_QUEUES.MEDIA_FILES,
   startToCloseTimeout: "12 hours",
+  scheduleToCloseTimeout: HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS,
   heartbeatTimeout: "1 minute",
   cancellationType: ActivityCancellationType.WAIT_CANCELLATION_COMPLETED,
   retry: { maximumAttempts: 2, initialInterval: "5 seconds" },

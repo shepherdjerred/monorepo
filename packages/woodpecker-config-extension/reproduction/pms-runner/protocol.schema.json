@@ -1,0 +1,170 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "oneOf": [
+    { "$ref": "#/definitions/plan" },
+    { "$ref": "#/definitions/record" }
+  ],
+  "definitions": {
+    "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "uuid": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+    },
+    "image": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9./:_-]+@sha256:[a-f0-9]{64}$"
+    },
+    "quantities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cpu", "memory", "ephemeral-storage"],
+      "properties": {
+        "cpu": { "type": "string", "minLength": 1 },
+        "memory": { "type": "string", "minLength": 1 },
+        "ephemeral-storage": { "type": "string", "minLength": 1 }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "uuid", "image", "commands", "volumes", "resources"],
+      "properties": {
+        "name": { "enum": ["clone", "media-pms-wire", "media-pms-native"] },
+        "uuid": { "type": "string", "pattern": "^[a-f0-9-]{36}-[012]$" },
+        "image": { "$ref": "#/definitions/image" },
+        "commands": {
+          "type": "array",
+          "maxItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "volumes": {
+          "type": "array",
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^woodpecker-[a-z0-9-]+:/[a-zA-Z0-9/._-]+$"
+          }
+        },
+        "resources": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["requests", "limits"],
+          "properties": {
+            "requests": { "$ref": "#/definitions/quantities" },
+            "limits": { "$ref": "#/definitions/quantities" }
+          }
+        }
+      }
+    },
+    "plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "schemaVersion",
+        "source",
+        "branch",
+        "requestId",
+        "yamlSha256",
+        "permissionImage",
+        "jobImagePullSecrets",
+        "steps",
+        "componentAcceptanceOnly",
+        "policy"
+      ],
+      "properties": {
+        "kind": { "const": "pms-plan" },
+        "schemaVersion": { "const": 1 },
+        "source": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+        "branch": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "requestId": { "$ref": "#/definitions/uuid" },
+        "yamlSha256": { "$ref": "#/definitions/hash" },
+        "permissionImage": { "$ref": "#/definitions/image" },
+        "jobImagePullSecrets": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": { "const": "dockerhub-pull-woodpecker-ci" }
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "additionalItems": false,
+          "items": [
+            {
+              "allOf": [
+                { "$ref": "#/definitions/step" },
+                { "properties": { "name": { "const": "clone" } } }
+              ]
+            },
+            {
+              "allOf": [
+                { "$ref": "#/definitions/step" },
+                { "properties": { "name": { "const": "media-pms-wire" } } }
+              ]
+            },
+            {
+              "allOf": [
+                { "$ref": "#/definitions/step" },
+                { "properties": { "name": { "const": "media-pms-native" } } }
+              ]
+            }
+          ]
+        },
+        "componentAcceptanceOnly": { "const": true },
+        "policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "backendVersion",
+            "namespace",
+            "node",
+            "queue",
+            "workloadPriority",
+            "podPriority",
+            "serviceAccount",
+            "storageClass",
+            "workspaceSize"
+          ],
+          "properties": {
+            "backendVersion": { "const": "3.19.0" },
+            "namespace": { "const": "woodpecker-ci" },
+            "node": { "const": "liskov" },
+            "queue": { "const": "default" },
+            "workloadPriority": { "const": "ci-draft" },
+            "podPriority": { "const": "batch-low" },
+            "serviceAccount": { "const": "woodpecker-job" },
+            "storageClass": { "const": "ci-workspace" },
+            "workspaceSize": { "const": "32G" }
+          }
+        }
+      }
+    },
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "schemaVersion",
+        "requestId",
+        "planSha256",
+        "resource",
+        "name",
+        "uid",
+        "state"
+      ],
+      "properties": {
+        "kind": { "const": "pms-resource" },
+        "schemaVersion": { "const": 1 },
+        "requestId": { "$ref": "#/definitions/uuid" },
+        "planSha256": { "$ref": "#/definitions/hash" },
+        "resource": { "enum": ["pods", "services", "persistentvolumeclaims"] },
+        "name": { "type": "string", "pattern": "^[a-z0-9-]{1,63}$" },
+        "uid": { "type": "string", "maxLength": 128 },
+        "state": { "enum": ["intent", "owned", "absent", "shared"] }
+      }
+    }
+  }
+}

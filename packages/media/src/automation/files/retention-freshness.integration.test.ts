@@ -1,26 +1,35 @@
 import { defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
-import { afterAll, beforeAll, expect, test } from "vitest";
+import { expect, test } from "vitest";
 import { rm, readFile, access } from "node:fs/promises";
-import { startMediaTestPostgres } from "#testing/postgres.ts";
+import path from "node:path";
+import { automationTestHarness } from "#testing/automation.ts";
+import { boundRetentionFixture } from "#automation/retention/lifecycle.test-fixture.ts";
+import { workerFilePath } from "./paths/locations.ts";
 import { fileFixture } from "./test-support.ts";
 import { createMediaFileActivities } from "./activities.ts";
 import { z } from "zod";
 import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
+import { RemovalPlanSchema } from "./types.ts";
+import { elapsedQuarantineClient } from "./plex-binding/elapsed-quarantine.test-support.ts";
+import {
+  captureWatchReset,
+  assertWatchResetAndNewWarning,
+} from "./plex-binding/watch-reset.test-support.ts";
 
-let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
-beforeAll(async () => {
-  cluster = await startMediaTestPostgres();
-}, 60_000);
-afterAll(async () => {
-  await cluster.close();
-});
+const harness = automationTestHarness();
 
 test("still-valid 31-second authority does not wait for an unnecessary refresh", async () => {
-  const f = await fileFixture(cluster.database);
+  const db = harness.database();
+  const bound = await boundRetentionFixture(db, harness.context());
+  const f = bound.files;
   try {
-    await f.published();
-    const retention = await f.retention();
+    const timing = await elapsedQuarantineClient(db, {
+      ...bound.retention.input,
+      mediaIds: bound.published.entry.mediaIds,
+      timing: "current_transition",
+    });
+    f.context.db = timing.db;
     let waits = 0;
     f.context.checkpoint = async (phase) => {
       if (phase === "content-proof-ready") f.advance(31_000);
@@ -29,108 +38,188 @@ test("still-valid 31-second authority does not wait for an unnecessary refresh",
     };
     expect(
       await createMediaFileActivities(f.context).quarantineMediaFiles(
-        retention.input,
+        bound.retention.input,
       ),
     ).toEqual({ status: "quarantined" });
     expect(waits).toBe(1);
+    const birth = await timing.assertCommitted();
+    expect(birth.committedAt.getTime()).toBeLessThanOrEqual(Date.now());
+  } finally {
+    f.context.db = db;
+    await rm(f.directory, { recursive: true, force: true });
+  }
+});
+
+test("75-second original authority cannot renew during hashing; a new Network proof needs a new Files invocation", async () => {
+  const db = harness.database();
+  const bound = await boundRetentionFixture(db, harness.context());
+  const f = bound.files;
+  try {
+    const original = bound.retention.decision;
+    const originalAsset = await db.libraryAsset.findUniqueOrThrow({
+      where: { id: bound.asset.id },
+    });
+    let hashed = 0;
+    f.context.checkpoint = async (phase) => {
+      if (phase !== "content-proof-ready") return;
+      hashed++;
+      f.advance(75_000);
+      const timestamp = f.context.now?.();
+      if (timestamp === undefined) throw new Error("Fixture clock missing");
+      // Deliberate row-refresh fault injection, NOT a Network observation or new authority.
+      await db.$transaction(async (tx) => {
+        const evidence = z
+          .record(z.string(), z.json())
+          .parse(original.evidence);
+        await tx.retentionDecision.update({
+          where: { id: original.id },
+          data: {
+            evidence: {
+              ...evidence,
+              authorizedAt: timestamp.toISOString(),
+              plexExpiresAtMs: timestamp.getTime() + 60_000,
+            },
+          },
+        });
+        await tx.watchState.updateMany({
+          where: { mediaId: f.media.id },
+          data: { observedAt: timestamp },
+        });
+        await tx.notificationDelivery.updateMany({
+          where: { userId: f.user.id },
+          data: { reconciledAt: timestamp },
+        });
+      });
+    };
+    expect(
+      await createMediaFileActivities(f.context).quarantineMediaFiles(
+        bound.retention.input,
+      ),
+    ).toEqual({ status: "protected", reason: "evidence_stale" });
+    expect(hashed).toBe(1);
+    expect(
+      await db.libraryAsset.findUniqueOrThrow({
+        where: { id: bound.asset.id },
+      }),
+    ).toEqual(originalAsset);
+    expect(
+      await readFile(workerFilePath(f.context, originalAsset.path), "utf8"),
+    ).toBe(bound.published.content);
+    const operation = await db.operation.findUniqueOrThrow({
+      where: { id: bound.retention.input.operationId },
+    });
+    expect(operation.result).toBeNull();
+    expect(
+      await db.retentionDecision.findUniqueOrThrow({
+        where: { id: original.id },
+      }),
+    ).toMatchObject({
+      state: "grace_period",
+      version: original.version,
+      quarantinedAt: null,
+    });
+
+    // The first invocation is CLOSED. Reset only its simulated hashing clock, then use real producers.
+    bound.resetFileClock();
+    f.context.checkpoint = (phase) => {
+      if (phase === "content-proof-ready") hashed++;
+      return Promise.resolve();
+    };
+    expect(await bound.refresh()).toMatchObject({
+      status: "quarantine",
+      decisionId: original.id,
+    });
+    expect(bound.retention.decision.warningAcceptedAt).toEqual(
+      original.warningAcceptedAt,
+    );
+    expect(bound.retention.decision.graceUntil).toEqual(original.graceUntil);
+    expect(
+      await createMediaFileActivities(f.context).quarantineMediaFiles(
+        bound.retention.input,
+      ),
+    ).toEqual({ status: "quarantined" });
+    expect(hashed).toBe(2);
   } finally {
     await rm(f.directory, { recursive: true, force: true });
   }
 });
 
-test.each([false, true])(
-  "retention keeps its content proof while refreshing after long hashing; purge=%s",
-  async (purge) => {
-    const db = cluster.database;
-    const f = await fileFixture(db);
-    try {
-      const published = await f.published();
-      const retention = await f.retention();
-      const activities = createMediaFileActivities(f.context);
-      if (purge) {
-        expect(await activities.quarantineMediaFiles(retention.input)).toEqual({
-          status: "quarantined",
-        });
-        f.advance(8 * 86_400_000);
-        const timestamp = f.context.now?.();
-        if (timestamp === undefined) throw new Error("Fixture clock missing");
-        const evidence = z
-          .record(z.string(), z.json())
-          .parse(retention.decision.evidence);
-        await db.retentionDecision.update({
-          where: { id: retention.decision.id },
-          data: {
-            evidence: { ...evidence, authorizedAt: timestamp.toISOString() },
-          },
-        });
-      }
-      let hashed = 0;
-      let refreshed = false;
-      f.context.checkpoint = async (phase) => {
-        if (phase === "content-proof-ready") {
-          hashed++;
-          f.advance(75_000);
-        }
-        if (phase === "retention-authority-wait" && !refreshed) {
-          refreshed = true;
-          const timestamp = f.context.now?.();
-          if (timestamp === undefined) throw new Error("Fixture clock missing");
-          // This separate transaction represents the network Activity's fresh committed evidence.
-          await db.$transaction(async (tx) => {
-            const decision = await tx.retentionDecision.findUniqueOrThrow({
-              where: { id: retention.decision.id },
-            });
-            const evidence = z
-              .record(z.string(), z.json())
-              .parse(decision.evidence);
-            await tx.retentionDecision.update({
-              where: { id: decision.id },
-              data: {
-                evidence: {
-                  ...evidence,
-                  authorizedAt: timestamp.toISOString(),
-                },
-              },
-            });
-            await tx.watchState.updateMany({
-              where: { mediaId: f.media.id },
-              data: { observedAt: timestamp },
-            });
-            await tx.notificationDelivery.updateMany({
-              where: { userId: f.user.id },
-              data: { reconciledAt: timestamp },
-            });
-          });
-        }
-      };
-      expect(
-        await (purge
-          ? activities.purgeMediaFiles(retention.input)
-          : activities.quarantineMediaFiles(retention.input)),
-      ).toEqual({ status: purge ? "purged" : "quarantined" });
-      expect(hashed).toBe(1);
-      expect(refreshed).toBe(true);
-      const asset = await db.libraryAsset.findUniqueOrThrow({
-        where: { id: published.entry.assetId },
-      });
-      expect(asset.state).toBe(purge ? "purged" : "quarantined");
-    } finally {
-      await rm(f.directory, { recursive: true, force: true });
-    }
-  },
-);
+test("expired automatic purge proof cannot remove bytes or shorten the real quarantine window", async () => {
+  const db = harness.database();
+  const bound = await boundRetentionFixture(db, harness.context());
+  const f = bound.files;
+  try {
+    expect(await bound.quarantine()).toEqual({ status: "quarantined" });
+    const decision = await db.retentionDecision.findUniqueOrThrow({
+      where: { id: bound.retention.decision.id },
+    });
+    const operation = await db.operation.findUniqueOrThrow({
+      where: { id: bound.retention.input.operationId },
+    });
+    const asset = await db.libraryAsset.findUniqueOrThrow({
+      where: { id: bound.asset.id },
+    });
+    const entry = RemovalPlanSchema.parse(decision.manifest).assets[0];
+    if (entry === undefined)
+      throw new Error("Actual quarantine omitted its video manifest");
+    const quarantinedPath = path.join(
+      f.context.roots[entry.libraryKind].control,
+      "quarantine",
+      entry.quarantineId,
+    );
+    f.advance(75_000);
+    expect(
+      await createMediaFileActivities(f.context).purgeMediaFiles(
+        bound.retention.input,
+      ),
+    ).toEqual({ status: "protected", reason: "evidence_stale" });
+    expect(
+      await db.libraryAsset.findUniqueOrThrow({ where: { id: asset.id } }),
+    ).toEqual(asset);
+    expect(
+      await db.operation.findUniqueOrThrow({ where: { id: operation.id } }),
+    ).toEqual(operation);
+    expect(await readFile(quarantinedPath, "utf8")).toBe(
+      bound.published.content,
+    );
+    bound.resetFileClock();
+    expect(await bound.refresh()).toMatchObject({
+      status: "grace",
+      decisionId: decision.id,
+    });
+    expect(
+      await createMediaFileActivities(f.context).purgeMediaFiles(
+        bound.retention.input,
+      ),
+    ).toEqual({ status: "protected", reason: "retention_not_due" });
+    const current = await db.retentionDecision.findUniqueOrThrow({
+      where: { id: decision.id },
+    });
+    expect(current.quarantinedAt).toEqual(decision.quarantinedAt);
+    expect(current.purgeAfter).toEqual(decision.purgeAfter);
+    expect(
+      await db.operation.findUniqueOrThrow({ where: { id: operation.id } }),
+    ).toEqual(operation);
+    expect(await readFile(quarantinedPath, "utf8")).toBe(
+      bound.published.content,
+    );
+  } finally {
+    await rm(f.directory, { recursive: true, force: true });
+  }
+});
 
 test.each(["keep", "unwatched", "cancelled"] as const)(
   "fresh observation cannot revive removal after %s changes",
   async (change) => {
-    const db = cluster.database;
-    const f = await fileFixture(db);
+    const db = harness.database();
+    const bound = await boundRetentionFixture(db, harness.context());
+    const f = bound.files;
     try {
-      const published = await f.published();
-      const retention = await f.retention();
+      const { published } = bound;
+      const before =
+        change === "unwatched" ? await captureWatchReset(bound) : null;
       f.context.checkpoint = async (phase) => {
         if (phase !== "content-proof-ready") return;
-        f.advance(75_000);
         if (change === "keep") {
           const current = await db.mediaItem.findUniqueOrThrow({
             where: { id: f.media.id },
@@ -142,11 +231,6 @@ test.each(["keep", "unwatched", "cancelled"] as const)(
             { action: "keep", expectedVersion: current.version },
           );
         }
-        if (change === "unwatched")
-          await db.watchState.updateMany({
-            where: { mediaId: f.media.id },
-            data: { watched: false },
-          });
         if (change === "cancelled") {
           const currentRequest = await db.mediaRequest.findUniqueOrThrow({
             where: { id: f.request.id },
@@ -158,28 +242,29 @@ test.each(["keep", "unwatched", "cancelled"] as const)(
             currentRequest.version,
           );
         }
-        const timestamp = f.context.now?.();
-        if (timestamp === undefined) throw new Error("Fixture clock missing");
-        const evidence = z
-          .record(z.string(), z.json())
-          .parse(retention.decision.evidence);
-        await db.retentionDecision.update({
-          where: { id: retention.decision.id },
-          data: {
-            evidence: { ...evidence, authorizedAt: timestamp.toISOString() },
-          },
-        });
+        await bound.observe(change === "unwatched" ? false : true);
+        const refreshed = await bound.refresh();
+        if (change === "unwatched")
+          expect(refreshed).toEqual({
+            status: "obsolete",
+            decisionId: null,
+            wakeAt: null,
+            reason: "intent_obsolete",
+          });
+        else expect(refreshed).toMatchObject({ status: "obsolete" });
       };
       expect(
         await createMediaFileActivities(f.context).quarantineMediaFiles(
-          retention.input,
+          bound.retention.input,
         ),
       ).toMatchObject({ status: "protected" });
       const asset = await db.libraryAsset.findUniqueOrThrow({
         where: { id: published.entry.assetId },
       });
-      await access(asset.path);
-      expect(await readFile(asset.path, "utf8")).toBe(published.content);
+      const assetPath = workerFilePath(f.context, asset.path);
+      await access(assetPath);
+      expect(await readFile(assetPath, "utf8")).toBe(published.content);
+      if (before !== null) await assertWatchResetAndNewWarning(bound, before);
     } finally {
       await rm(f.directory, { recursive: true, force: true });
     }
@@ -187,7 +272,7 @@ test.each(["keep", "unwatched", "cancelled"] as const)(
 );
 
 test("explicit owner removal refreshes after long hashing without bypassing quarantine", async () => {
-  const db = cluster.database;
+  const db = harness.database();
   const f = await fileFixture(db);
   try {
     const published = await f.published();

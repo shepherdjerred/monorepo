@@ -20,15 +20,27 @@ export const MediaVisibilitySchema = z.strictObject({
       }),
     )
     .max(7),
-  playback: z.strictObject({
-    scope: z.enum(["title", "collection"]),
-    playable: z.boolean(),
-    playableItems: z.int().nonnegative(),
-    visibleItems: z.int().nonnegative(),
-    currentAssetId: z.uuid().nullable(),
-    currentVersion: z.int().nullable(),
-    upgradeInProgress: z.boolean(),
-  }),
+  playback: z
+    .strictObject({
+      scope: z.enum(["title", "collection"]),
+      playable: z.boolean(),
+      playableItems: z.int().nonnegative(),
+      visibleItems: z.int().nonnegative(),
+      association: z.strictObject({
+        legacyUnverifiedItems: z.int().nonnegative(),
+        reconciliationRequiredItems: z.int().nonnegative(),
+      }),
+      currentAssetId: z.uuid().nullable(),
+      currentVersion: z.int().nullable(),
+      upgradeInProgress: z.boolean(),
+    })
+    .refine(
+      (playback) =>
+        playback.association.legacyUnverifiedItems +
+          playback.association.reconciliationRequiredItems <=
+        playback.visibleItems,
+      "Association counts exceed visible items",
+    ),
   attempts: z
     .array(
       z.strictObject({

@@ -12,6 +12,9 @@ import { assertAttemptMovieChoice } from "#automation/editions/choice.ts";
 import { currentFulfillmentAsset } from "#automation/editions/fulfillment.ts";
 import { requireMovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import { readMovieDemandAuthority } from "#infrastructure/movie-editions/fulfillment.ts";
+import { readCurrentBoundWatch } from "#infrastructure/plex-binding/watch.ts";
+import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
+import type { RetentionPlexAuthority } from "./plex-binding/retention.ts";
 import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
 import {
   FileGuardError,
@@ -154,6 +157,7 @@ export async function assertRetention(input: {
   generations: Readonly<Record<string, number>>;
   purge: boolean;
   movieAccess?: MovieChoiceAccess | undefined;
+  plex?: RetentionPlexAuthority | undefined;
 }): Promise<MovieChoiceFreshness | null> {
   const { tx, context } = input;
   await assertPublicationUnfenced(tx, input.mediaIds);
@@ -176,8 +180,7 @@ export async function assertRetention(input: {
     .safeParse(decision.evidence);
   if (!evidence.success) throw new FileGuardError("evidence_missing");
   const timestamp = now(context).getTime();
-  const age = timestamp - Date.parse(evidence.data.authorizedAt);
-  if (age < 0 || age > 60_000) throw new FileGuardError("evidence_stale");
+  assertRetentionAge(timestamp, evidence.data.authorizedAt);
   await assertRuntime(tx, evidence.data.recoveryEpoch);
   await assertRetentionAuthority(
     tx,
@@ -219,19 +222,29 @@ export async function assertRetention(input: {
       timestamp,
       warningEventId: warning.warningEventId,
       movieAccess: input.movieAccess,
+      plex: input.plex,
     });
-    if (guard !== null) guards.push(guard);
+    guards.push(guard);
   }
   const assertActive = () => {
     for (const guard of guards) guard.assertActive();
   };
+  if (guards.length === 0) throw new FileGuardError("coverage_missing");
   assertActive();
-  return { assertActive };
+  return {
+    assertActive,
+    expiresAtMs: Math.min(...guards.map((guard) => guard.expiresAtMs)),
+  };
 }
 
 function assertWarningGrace(acceptedAt: Date | null, timestamp: number) {
   if (acceptedAt === null || timestamp - acceptedAt.getTime() < 7 * 86_400_000)
     throw new FileGuardError("warning_grace_incomplete");
+}
+
+function assertRetentionAge(timestamp: number, authorizedAt: string) {
+  const age = timestamp - Date.parse(authorizedAt);
+  if (age < 0 || age > 60_000) throw new FileGuardError("evidence_stale");
 }
 
 async function assertRetentionAuthority(
@@ -313,6 +326,7 @@ async function assertRetentionItem(input: {
   timestamp: number;
   warningEventId: string;
   movieAccess?: MovieChoiceAccess | undefined;
+  plex?: RetentionPlexAuthority | undefined;
 }) {
   const { tx, mediaId, generations, timestamp } = input;
   const item = await tx.mediaItem.findUniqueOrThrow({
@@ -335,7 +349,6 @@ async function assertRetentionItem(input: {
         },
         include: { user: true },
       },
-      watchStates: { where: { edition: "default" } },
     },
   });
   if (defaultIntent(item.intents)?.generation !== generations[mediaId])
@@ -357,17 +370,19 @@ async function assertRetentionItem(input: {
   );
   if (requesters.length === 0)
     throw new FileGuardError("owner_only_or_unclaimed");
+  const deadlines: number[] = [];
+  const observed = { wall: Date.now(), monotonic: performance.now() };
   for (const requester of requesters) {
-    const watch = item.watchStates.find(
-      (value) => value.userId === requester.userId,
-    );
-    if (
-      watch === undefined ||
-      !watch.watched ||
-      timestamp - watch.observedAt.getTime() > 900_000 ||
-      watch.observedAt.getTime() > timestamp
-    )
-      throw new FileGuardError("watch_unconfirmed");
+    const authority = input.plex?.byMedia.get(mediaId);
+    if (authority === undefined)
+      throw new FileGuardError("reconciliation_required");
+    const watch = await readCurrentBoundWatch(tx, {
+      userId: requester.userId,
+      authority,
+    });
+    input.plex?.freshness.assertActive();
+    const projection = confirmedWatch(watch);
+    deadlines.push(Date.parse(projection.observedAt) + 900_000);
     const accepted = await tx.notificationDelivery.findFirst({
       where: {
         eventId: input.warningEventId,
@@ -384,13 +399,54 @@ async function assertRetentionItem(input: {
       },
     });
     if (accepted === null) throw new FileGuardError("warning_unconfirmed");
+    if (accepted.reconciledAt === null)
+      throw new Error(
+        "Accepted warning lost its checked reconciliation timestamp",
+      );
+    deadlines.push(accepted.reconciledAt.getTime() + 60_000);
   }
   const reservation = await tx.acquisitionReservation.findUnique({
     where: targetWhere(defaultScope(mediaId)),
   });
   if (reservation !== null) throw new FileGuardError("acquisition_active");
-  movie?.freshness?.assertActive();
-  return movie?.freshness ?? null;
+  if (movie?.freshness !== undefined && movie.freshness !== null)
+    deadlines.push(movie.freshness.expiresAtMs);
+  if (input.plex !== undefined)
+    deadlines.push(input.plex.freshness.expiresAtMs);
+  const deadline = Math.min(...deadlines);
+  const freshness = retentionDeadline(observed, deadline, () => {
+    movie?.freshness?.assertActive();
+    input.plex?.freshness.assertActive();
+  });
+  freshness.assertActive();
+  await bindPlexTransactionDeadline(tx, freshness);
+  return freshness;
+}
+
+function confirmedWatch(
+  watch: Awaited<ReturnType<typeof readCurrentBoundWatch>>,
+) {
+  if (watch.status !== "known" || !watch.projection.watched)
+    throw new FileGuardError("watch_unconfirmed");
+  return watch.projection;
+}
+
+function retentionDeadline(
+  observed: { wall: number; monotonic: number },
+  deadline: number,
+  assertCurrent: () => void,
+) {
+  const monotonicDeadline = observed.monotonic + deadline - observed.wall;
+  const assertActive = () => {
+    assertCurrent();
+    if (
+      Date.now() < observed.wall ||
+      Date.now() >= deadline ||
+      performance.now() >= monotonicDeadline
+    )
+      throw new FileGuardError("retention_evidence_expired");
+  };
+  return { assertActive, expiresAtMs: deadline };
 }
 
 async function assertRetentionFulfillment(

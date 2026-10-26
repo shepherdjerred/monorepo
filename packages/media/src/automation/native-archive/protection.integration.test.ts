@@ -253,6 +253,7 @@ test("deadline crossing a real runtime lock rolls back with an un-aborted invoca
   const controller = new AbortController();
   let expired = false;
   const activities = createNativeArchiveFileActivities(f.context, () => ({
+    ...f.execution(),
     signal: controller.signal,
     assertActive: () => {
       if (expired) throw new Error("Exact invocation deadline expired");
@@ -295,6 +296,7 @@ test("cancellation during hashing leaves execution uncommitted and bytes intact"
       controller.abort(new Error("Exact invocation cancelled"));
   };
   const activities = createNativeArchiveFileActivities(f.context, () => ({
+    ...f.execution(),
     signal: controller.signal,
     assertActive: () => {
       controller.signal.throwIfAborted();

@@ -302,7 +302,7 @@ async function inspectEntry(input: {
   const kind = media.some((item) => item.kind === "movie") ? "movies" : "tv";
   const source = await safeDownloadPath(
     context.roots[kind].downloads,
-    savePath,
+    workerFilePath(context, savePath),
     file.name,
   );
   await context.checkpoint("inspecting");

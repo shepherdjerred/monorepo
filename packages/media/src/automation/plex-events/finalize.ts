@@ -1,15 +1,18 @@
-import type { Prisma } from "#generated/prisma/client.ts";
+import { Prisma } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { queueOperation, serializable } from "#automation/store.ts";
 import { RETENTION_DEFAULTS } from "#domain/retention.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
-import {
-  lockWatchAuthority,
-  watchScope,
-  type WatchAuthority,
-} from "./authority.ts";
+import { lockWatchAuthority, type WatchAuthority } from "./authority.ts";
 import type { PreparedWatchBatch } from "./prepare.ts";
+import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
+import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
+import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
+import {
+  commitBoundWatch,
+  queueQuarantinedUnwatchedRestore,
+} from "#infrastructure/plex-binding/watch.ts";
 import {
   watchAwait,
   assertWatchActive,
@@ -19,7 +22,12 @@ import {
 export type WatchOutcome = {
   userId: string;
   outcome:
-    | { kind: "observed"; watched: boolean; scopedAccess: boolean }
+    | {
+        kind: "observed";
+        watched: boolean;
+        scopedAccess: boolean;
+        freshness: PlexBindingFreshness;
+      }
     | { kind: "unknown" };
 };
 
@@ -52,7 +60,7 @@ export async function finalizeWatchBatch(
   prepared: PreparedWatchBatch,
   outcomes: readonly WatchOutcome[],
   execution: WatchExecution,
-): Promise<"committed" | "superseded"> {
+): Promise<"committed" | "unknown" | "superseded"> {
   if (
     new Set(outcomes.map((item) => item.userId)).size !==
       prepared.readers.length ||
@@ -62,21 +70,37 @@ export async function finalizeWatchBatch(
     )
   )
     throw new Error("Watch batch outcomes do not match its complete cohort");
-  const scope = await watchScope(
-    context,
-    prepared.mediaId,
-    prepared.expectedHint === undefined
-      ? {}
-      : { expectedHint: prepared.expectedHint },
-    execution,
-  );
+  const scope = prepared.authority.scope;
+  const bindingScope = scope.bindingScope;
+  if (bindingScope === null || prepared.authority.binding === null)
+    throw new Error("Prepared watch omitted its binding scope");
+  prepared.freshness.assertActive();
+  const access = await context.plexAccess(bindingScope.access.sectionType);
+  prepared.freshness.assertActive();
+  const configCurrent =
+    identityHash(access) === identityHash(bindingScope.access);
+  const active = {
+    ...execution,
+    assertActive: () => {
+      assertWatchActive(execution);
+      prepared.freshness.assertActive();
+    },
+  };
   return await serializable(context.db, async (tx) => {
-    const authority = await lockWatchAuthority(tx, scope, execution);
-    if (authority?.signature !== prepared.authority.signature)
-      return "superseded";
+    const authority = await lockWatchAuthority(tx, scope, active);
+    if (authority === null) return "superseded";
+    const same =
+      configCurrent &&
+      authority.hintCurrent &&
+      authority.signature === prepared.authority.signature &&
+      identityHash(authority.binding?.authority ?? null) ===
+        identityHash(prepared.authority.binding?.authority ?? null);
+    await bindPlexTransactionDeadline(tx, prepared.freshness);
     await watchAwait(
       execution,
-      tx.$queryRaw`SELECT "mediaId" FROM "WatchObservationFence" WHERE "mediaId"=${prepared.mediaId} AND edition='default' FOR UPDATE`,
+      tx.$queryRaw(
+        Prisma.sql`SELECT "mediaId" FROM "WatchObservationFence" WHERE "mediaId" IN (${Prisma.join(bindingScope.mediaIds)}) AND edition='default' ORDER BY "mediaId" FOR UPDATE`,
+      ),
     );
     const fence = await watchAwait(
       execution,
@@ -110,8 +134,23 @@ export async function finalizeWatchBatch(
       )
     )
       return "superseded";
-    for (const result of outcomes)
-      await applyOutcome(tx, { prepared, authority, result }, execution);
+    for (const result of outcomes) {
+      if (same && result.outcome.kind === "observed") {
+        result.outcome.freshness.assertActive();
+        await bindPlexTransactionDeadline(tx, result.outcome.freshness);
+      }
+      await applyOutcome(
+        tx,
+        {
+          prepared,
+          authority,
+          result: same
+            ? result
+            : { userId: result.userId, outcome: { kind: "unknown" } },
+        },
+        active,
+      );
+    }
     await watchAwait(
       execution,
       tx.watchObservationFence.update({
@@ -126,8 +165,8 @@ export async function finalizeWatchBatch(
         `plex-hint:${prepared.expectedHint.operationId}`,
         execution,
       );
-    assertWatchActive(execution);
-    return "committed";
+    prepared.freshness.assertActive();
+    return same ? "committed" : "unknown";
   });
 }
 
@@ -140,10 +179,26 @@ async function applyOutcome(
   },
   execution: WatchExecution,
 ) {
-  const { prepared, authority, result } = input;
+  const { prepared, result } = input;
+  const original = prepared.authority.binding;
+  if (original === null)
+    throw new Error("Prepared watch omitted its immutable association");
   const key = { userId: result.userId, ...defaultScope(prepared.mediaId) };
   if (result.outcome.kind === "unknown") {
-    await watchAwait(execution, tx.watchState.deleteMany({ where: key }));
+    await watchAwait(
+      execution,
+      commitBoundWatch(
+        tx,
+        {
+          userId: result.userId,
+          authority: original.authority,
+          watchBatchRevision: prepared.revision,
+          observedAt: prepared.startedAt,
+          watched: null,
+        },
+        prepared.freshness,
+      ),
+    );
     return;
   }
   const prior = await watchAwait(
@@ -152,27 +207,42 @@ async function applyOutcome(
   );
   await watchAwait(
     execution,
-    tx.watchState.upsert({
-      where: { userId_mediaId_edition: key },
-      create: {
-        ...key,
-        watched: result.outcome.watched,
+    commitBoundWatch(
+      tx,
+      {
+        userId: result.userId,
+        authority: original.authority,
+        watchBatchRevision: prepared.revision,
         observedAt: prepared.startedAt,
-        source: "plex_current",
-      },
-      update: {
         watched: result.outcome.watched,
-        observedAt: prepared.startedAt,
-        source: "plex_current",
       },
-    }),
+      result.outcome.freshness,
+    ),
   );
   if (result.outcome.watched) return;
+  if (original.authority.purpose === "quarantined") {
+    await watchAwait(
+      execution,
+      queueQuarantinedUnwatchedRestore(
+        tx,
+        {
+          authority: original.authority,
+          userId: result.userId,
+          watchBatchRevision: prepared.revision,
+        },
+        result.outcome.freshness,
+      ),
+    );
+    return;
+  }
+  const mediaIds = prepared.authority.scope.bindingScope?.mediaIds;
+  if (mediaIds === undefined) throw new Error("Watch group disappeared");
   const outstanding = await watchAwait(
     execution,
     tx.retentionDecision.count({
       where: {
-        ...defaultScope(prepared.mediaId),
+        mediaId: { in: mediaIds },
+        edition: "default",
         state: { in: ["eligible", "warning_pending", "grace_period"] },
       },
     }),
@@ -180,15 +250,15 @@ async function applyOutcome(
   if (outstanding === 0 && prior?.watched !== true) return;
   await watchAwait(
     execution,
-    tx.mediaItem.update({
-      where: { id: prepared.mediaId },
+    tx.mediaItem.updateMany({
+      where: { id: { in: mediaIds } },
       data: { version: { increment: 1 } },
     }),
   );
-  const intent = await watchAwait(
+  await watchAwait(
     execution,
-    tx.mediaIntent.update({
-      where: targetWhere(defaultScope(prepared.mediaId)),
+    tx.mediaIntent.updateMany({
+      where: { mediaId: { in: mediaIds }, edition: "default" },
       data: { generation: { increment: 1 }, version: { increment: 1 } },
     }),
   );
@@ -196,10 +266,17 @@ async function applyOutcome(
     execution,
     tx.retentionDecision.updateMany({
       where: {
-        ...defaultScope(prepared.mediaId),
+        mediaId: { in: mediaIds },
+        edition: "default",
         state: { in: ["eligible", "warning_pending", "grace_period"] },
       },
       data: { state: "cancelled", version: { increment: 1 } },
+    }),
+  );
+  const intent = await watchAwait(
+    execution,
+    tx.mediaIntent.findUniqueOrThrow({
+      where: targetWhere(defaultScope(prepared.mediaId)),
     }),
   );
   await watchAwait(
@@ -213,17 +290,4 @@ async function applyOutcome(
       },
     }),
   );
-  if (
-    authority.target.availability === "quarantined" &&
-    intent.automationEpoch === authority.runtime.recoveryEpoch
-  )
-    await watchAwait(
-      execution,
-      queueOperation(tx, {
-        key: `unwatched-restore:${prepared.mediaId}:${String(intent.generation)}`,
-        kind: "restore_media",
-        targetId: prepared.mediaId,
-        payload: { mediaId: prepared.mediaId, generation: intent.generation },
-      }),
-    );
 }

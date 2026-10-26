@@ -40,7 +40,181 @@ enum OperationStatus {
   reconciling
 }
 
+// Internal transaction-local validation work, empty after every successful commit.
+model PlexClaimValidation {
+  transactionId BigInt
+  groupId String
+  @@id([transactionId, groupId], map: "plex_claim_validation_pk")
+}
+
+// Transient commit-deadline work; never evidence or application authority.
+model PlexDeadlineValidation {
+  transactionId BigInt @id(map: "plex_deadline_validation_pk")
+  deadlineMs BigInt
+}
+
+model PlexAssociationEvidence {
+  id String @id @default(uuid())
+  mediaId String
+  edition String
+  target MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict, onUpdate: Restrict)
+  assetId String
+  asset LibraryAsset @relation(fields: [assetId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  serverMachineId String
+  associationHash String
+  evidence Json
+  createdAt DateTime @default(now())
+  current PlexBindingCurrent[]
+  members PlexClaimGroupMember[]
+  items PlexItemClaim[]
+  watches PlexWatchProjection[]
+  @@unique([mediaId, edition, associationHash], map: "plex_evidence_scope_hash")
+  @@unique([id, mediaId, edition, associationHash], map: "plex_evidence_scope_id")
+  @@index([assetId], map: "plex_evidence_asset_idx")
+}
+
+model PlexBindingCurrent {
+  mediaId String
+  edition String
+  target MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict, onUpdate: Restrict)
+  evidenceId String?
+  associationHash String?
+  evidence PlexAssociationEvidence? @relation(fields: [evidenceId, mediaId, edition, associationHash], references: [id, mediaId, edition, associationHash], onDelete: Restrict, onUpdate: Restrict, map: "plex_current_evidence_fk")
+  revision Int @default(0)
+  verifiedStartedAt DateTime?
+  verifiedCompletedAt DateTime?
+  @@id([mediaId, edition], map: "plex_binding_current_pk")
+  @@index([evidenceId], map: "plex_current_evidence_idx")
+}
+
+model PlexClaimGroup {
+  id String @id @default(uuid())
+  serverMachineId String
+  groupHash String
+  group Json
+  members PlexClaimGroupMember[]
+  parts PlexPartClaim[]
+  paths PlexPathClaim[]
+  @@unique([serverMachineId, groupHash], map: "plex_claim_group_key")
+}
+
+model PlexClaimGroupMember {
+  groupId String
+  group PlexClaimGroup @relation(fields: [groupId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  mediaId String
+  edition String
+  evidenceId String
+  associationHash String
+  evidence PlexAssociationEvidence @relation(fields: [evidenceId, mediaId, edition, associationHash], references: [id, mediaId, edition, associationHash], onDelete: Restrict, onUpdate: Restrict, map: "plex_member_evidence_fk")
+  item PlexItemClaim?
+  @@id([groupId, mediaId, edition], map: "plex_claim_member_pk")
+  @@unique([mediaId, edition], map: "plex_claim_member_scope")
+}
+
+model PlexItemClaim {
+  serverMachineId String
+  sectionId String
+  ratingKey String
+  groupId String
+  mediaId String
+  edition String
+  member PlexClaimGroupMember @relation(fields: [groupId, mediaId, edition], references: [groupId, mediaId, edition], onDelete: Restrict, onUpdate: Restrict, map: "plex_item_member_fk")
+  evidenceId String
+  associationHash String
+  evidence PlexAssociationEvidence @relation(fields: [evidenceId, mediaId, edition, associationHash], references: [id, mediaId, edition, associationHash], onDelete: Restrict, onUpdate: Restrict, map: "plex_item_evidence_fk")
+  @@id([serverMachineId, sectionId, ratingKey], map: "plex_item_claim_pk")
+  @@unique([groupId, mediaId, edition], map: "plex_item_member_key")
+}
+
+model PlexPartClaim {
+  serverMachineId String
+  partId String
+  groupId String
+  group PlexClaimGroup @relation(fields: [groupId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  canonicalPath String
+  @@id([serverMachineId, partId], map: "plex_part_claim_pk")
+  @@index([groupId], map: "plex_part_group_idx")
+}
+
+model PlexPathClaim {
+  serverMachineId String
+  canonicalPathHash String
+  canonicalPath String
+  groupId String
+  group PlexClaimGroup @relation(fields: [groupId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  @@id([serverMachineId, canonicalPathHash], map: "plex_path_claim_pk")
+  @@index([groupId], map: "plex_path_group_idx")
+}
+
+model PlexWatchProjection {
+  userId String
+  user MediaUser @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  mediaId String
+  edition String
+  target MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict, onUpdate: Restrict)
+  evidenceId String
+  associationHash String
+  evidence PlexAssociationEvidence @relation(fields: [evidenceId, mediaId, edition, associationHash], references: [id, mediaId, edition, associationHash], onDelete: Restrict, onUpdate: Restrict, map: "plex_watch_evidence_fk")
+  bindingRevision Int
+  purpose String
+  watchBatchRevision BigInt
+  observedAt DateTime
+  watched Boolean
+  source String
+  authority Json
+  authorityHash String
+  @@id([userId, mediaId, edition], map: "plex_watch_projection_pk")
+}
+
+model RetentionPlexProjection {
+  decisionId String @id
+  decision RetentionDecision @relation(fields: [decisionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  projection Json
+  projectionHash String
+  createdAt DateTime @default(now())
+}
+
+model PlexBindingVerificationRequest {
+  operationId String @id
+  operation Operation @relation(fields: [operationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  expected Json
+  expectedHash String
+  recoveryEpoch Int
+  assetIds String[]
+  createdAt DateTime @default(now())
+  receipt PlexBindingVerificationReceipt?
+  @@unique([operationId, expectedHash], map: "plex_verify_request_hash")
+}
+
+model PlexBindingVerificationReceipt {
+  operationId String @id(map: "plex_verify_receipt_pk")
+  expectedHash String
+  request PlexBindingVerificationRequest @relation(fields: [operationId, expectedHash], references: [operationId, expectedHash], onDelete: Restrict, onUpdate: Restrict, map: "plex_verify_receipt_request_fk")
+  completion Json
+  completionHash String
+  createdAt DateTime @default(now())
+  @@unique([operationId, expectedHash], map: "plex_verify_receipt_parent")
+}
+
+model NativePlexProofBatch {
+  id String @id @default(uuid())
+  planId String
+  plan NativeRecoveryPlan @relation(fields: [planId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  operationId String
+  operation Operation @relation(fields: [operationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  networkObservationId String @unique(map: "native_plex_network_key")
+  networkObservation NativeRecoveryObservation @relation("PlexBatchNetwork", fields: [networkObservationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  plexObservationId String @unique(map: "native_plex_observation_key")
+  plexObservation NativeRecoveryObservation @relation("PlexBatchAssociation", fields: [plexObservationId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  batch Json
+  batchHash String
+  createdAt DateTime @default(now())
+  @@index([planId], map: "native_plex_plan_idx")
+  @@index([operationId], map: "native_plex_operation_idx")
+}
+
 model MediaUser {
+  plexWatchProjections PlexWatchProjection[]
   id                 String                 @id @default(uuid())
   plexAccountId      String                 @unique
   displayName        String
@@ -438,6 +612,9 @@ model MediaEditionDefinition {
 }
 
 model MediaIntent {
+  plexEvidence PlexAssociationEvidence[]
+  plexBinding PlexBindingCurrent?
+  plexWatchProjections PlexWatchProjection[]
   watchObservationFence WatchObservationFence?
   automationEpoch Int @default(-1)
   mediaId                String
@@ -594,6 +771,7 @@ model Torrent {
 }
 
 model LibraryAsset {
+  plexEvidence PlexAssociationEvidence[]
   edition String @default("default")
   editionRootId String?
   definition MediaEditionDefinition? @relation(fields: [editionRootId, edition], references: [rootMediaId, key], onDelete: Restrict)
@@ -794,6 +972,7 @@ model RetentionHold {
 }
 
 model RetentionDecision {
+  plexProjection RetentionPlexProjection?
   id                String    @id @default(uuid())
   mediaId           String
   media             MediaItem @relation(fields: [mediaId], references: [id])
@@ -815,6 +994,8 @@ model RetentionDecision {
 }
 
 model Operation {
+  plexVerificationRequest PlexBindingVerificationRequest?
+  nativePlexProofBatches NativePlexProofBatch[]
   compensationExecutionCoordinators NativePublicationCompensationContinuation[] @relation("CompensationExecution")
   compensationPublicationCoordinators NativePublicationCompensationContinuation[] @relation("CompensationPublication")
   nativeArchiveCoordinators NativeArchiveCleanupContinuation[]
@@ -948,6 +1129,7 @@ model LegacyRequesterBinding {
 }
 
 model NativeRecoveryPlan {
+  plexProofBatches NativePlexProofBatch[]
   id String @id @default(uuid())
   restoreOperationId String
   restoreOperation Operation @relation(fields: [restoreOperationId], references: [id], onDelete: Restrict)
@@ -969,6 +1151,8 @@ model NativeRecoveryPlan {
 }
 
 model NativeRecoveryObservation {
+  plexNetworkBatch NativePlexProofBatch? @relation("PlexBatchNetwork")
+  plexAssociationBatch NativePlexProofBatch? @relation("PlexBatchAssociation")
   id String @id @default(uuid())
   planId String
   plan NativeRecoveryPlan @relation(fields: [planId], references: [id], onDelete: Restrict)

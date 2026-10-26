@@ -3,17 +3,20 @@ import type { MediaAutomationContext } from "#automation/context.ts";
 import { serializable } from "#automation/store.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import type { ObservePlexHintInput } from "#shared/plex-events/contract.ts";
+import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
+import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
+import {
+  plexBindingFreshness,
+  bindPlexTransactionDeadline,
+} from "#infrastructure/plex-binding/freshness.ts";
+import { watchDeadline } from "./deadline.ts";
 import {
   lockWatchAuthority,
   watchScope,
   type WatchAuthority,
   type WatchParticipant,
 } from "./authority.ts";
-import {
-  assertWatchActive,
-  watchAwait,
-  type WatchExecution,
-} from "./execution.ts";
+import { watchAwait } from "./execution.ts";
 
 const CredentialSchema = z.object({ serverToken: z.string().min(1) });
 export type PreparedWatchBatch = {
@@ -21,10 +24,12 @@ export type PreparedWatchBatch = {
   revision: bigint;
   startedAt: Date;
   authority: WatchAuthority;
+  freshness: PlexBindingFreshness;
   readers: {
     userId: string;
     serverToken: string | null;
     verifyAccess: boolean;
+    mappingExpiresAtMs: number | null;
   }[];
   expectedHint?: ObservePlexHintInput;
 };
@@ -60,7 +65,12 @@ function reader(
     verifiedAt === null ||
     verifiedAt === undefined
   )
-    return { userId: user.id, serverToken: null, verifyAccess: false };
+    return {
+      userId: user.id,
+      serverToken: null,
+      verifyAccess: false,
+      mappingExpiresAtMs: null,
+    };
   const token = CredentialSchema.parse(
     JSON.parse(
       context.cipher.decrypt(
@@ -73,6 +83,7 @@ function reader(
     userId: user.id,
     serverToken: token.serverToken,
     verifyAccess: now.getTime() - verifiedAt.getTime() > 300_000,
+    mappingExpiresAtMs: verifiedAt.getTime() + 300_000,
   };
 }
 
@@ -80,13 +91,25 @@ export async function prepareWatchBatch(
   context: MediaAutomationContext,
   mediaId: string,
   options: { expectedHint?: ObservePlexHintInput },
-  execution: WatchExecution,
+  execution: PlexBindingExecution,
 ): Promise<PreparedWatchBatch | null> {
-  const startedAt = new Date();
-  const scope = await watchScope(context, mediaId, options, execution);
+  const startedAt = new Date(execution.observed.wall);
+  const initialFreshness = plexBindingFreshness({
+    ...execution,
+    guards: [execution],
+  });
+  const active = {
+    ...execution,
+    assertActive: () => {
+      initialFreshness.assertActive();
+    },
+  };
+  const scope = await watchScope(context, mediaId, options, active);
   return await serializable(context.db, async (tx) => {
-    const authority = await lockWatchAuthority(tx, scope, execution);
-    if (authority === null) return null;
+    const authority = await lockWatchAuthority(tx, scope, active);
+    if (authority?.binding == null || !authority.hintCurrent) return null;
+    const freshness = await watchDeadline(tx, authority, execution);
+    await bindPlexTransactionDeadline(tx, freshness);
     const fence = await watchAwait(
       execution,
       tx.watchObservationFence.upsert({
@@ -101,12 +124,13 @@ export async function prepareWatchBatch(
         now: new Date(),
       }),
     );
-    assertWatchActive(execution);
+    freshness.assertActive();
     return {
       mediaId,
       revision: fence.issuedRevision,
       startedAt,
       authority,
+      freshness,
       readers,
       ...options,
     };

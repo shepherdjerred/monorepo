@@ -22,12 +22,21 @@ import { assertSubtitleTarget } from "#automation/subtitles/install-authority.ts
 import { subtitleTargetsReady } from "#automation/subtitles/authority.ts";
 import { subtitleDestination } from "#domain/subtitle-path.ts";
 import { assertNoSubtitleReplacement } from "#infrastructure/subtitle-replacement/locks.ts";
+import {
+  publicationInvocation,
+  requirePublicationExecution,
+} from "#automation/publication-proof/invocation.ts";
+import { publicationAuthorityDeadline } from "#automation/publication-proof/authority.ts";
+import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
 
 export async function installSubtitle(
-  context: FileContext,
+  initialContext: FileContext,
   subtitleId: string,
   operationId: string,
 ): Promise<void> {
+  let context = initialContext;
+  const execution = context.publicationExecution?.();
+  execution?.assertActive();
   z.string()
     .regex(/^[\w-]{1,100}$/u)
     .parse(subtitleId);
@@ -58,6 +67,12 @@ export async function installSubtitle(
     });
     return;
   }
+  // Safe owned caption installation precedes first Plex publication; no serving prerequisite.
+  const invocation = publicationInvocation(
+    context,
+    requirePublicationExecution(execution),
+  );
+  context = invocation;
   const evidence = z
     .object({
       assetVersion: z.number().int(),
@@ -199,10 +214,16 @@ export async function installSubtitle(
           throw new FileGuardError("subtitle_obsolete");
       };
       await authorize();
+      const freshness = await publicationAuthorityDeadline(tx, invocation, {
+        libraryKind: location.libraryKind,
+        recoveryEpoch: evidence.recoveryEpoch,
+      });
+      await bindPlexTransactionDeadline(tx, freshness);
       await fileOperations(
         context,
         { ...roots, downloads: roots.control },
         authorize,
+        freshness.assertActive,
       ).importFile(descriptor);
       await tx.subtitleAsset.update({
         where: { id: subtitleId },
@@ -242,6 +263,7 @@ export async function installSubtitle(
             language: subtitle.language,
           })),
         });
+      freshness.assertActive();
     },
     { timeout: 60_000 },
   );

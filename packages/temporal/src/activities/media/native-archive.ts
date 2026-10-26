@@ -6,39 +6,53 @@ import {
   getMediaNetworkRuntime,
   getMediaFileRuntime,
 } from "#activities/media.ts";
-import { archiveCall } from "./archive-execution.ts";
+import { archiveCall, type archiveExecution } from "./archive-execution.ts";
+import {
+  createNativePlexReviewActivities,
+  createNativePlexArchiveCleanup,
+} from "./native-plex.ts";
 
 export const nativeArchiveNetworkActivities: NativeArchiveNetworkActivities = {
   observeNativeArchive: (input) =>
-    archiveCall(async () => {
-      const runtime = await getMediaNetworkRuntime();
-      return runtime.activities.observeNativeArchive(input);
-    }),
+    createNativePlexReviewActivities(
+      getMediaNetworkRuntime,
+    ).observeNativeArchive(input),
   observeNativeArchiveCleanup: (input) =>
-    archiveCall(async () => {
-      const runtime = await getMediaNetworkRuntime();
-      return runtime.activities.observeNativeArchiveCleanup(input);
-    }),
+    createNativePlexArchiveCleanup(getMediaNetworkRuntime)(input),
   nativeArchiveCleanupState: (input) =>
     archiveCall(async () => {
       const runtime = await getMediaNetworkRuntime();
       return runtime.activities.nativeArchiveCleanupState(input);
     }),
 };
-export const nativeArchiveFileActivities: NativeArchiveFileActivities = {
-  prepareNativeArchiveFiles: (input) =>
-    archiveCall(async () => {
-      const runtime = await getMediaFileRuntime();
-      return runtime.activities.prepareNativeArchiveFiles(input);
-    }),
-  applyNativeArchiveFiles: (input) =>
-    archiveCall(async () => {
-      const runtime = await getMediaFileRuntime();
-      return runtime.activities.applyNativeArchiveFiles(input);
-    }),
-  cleanupNativeArchiveFiles: (input) =>
-    archiveCall(async () => {
-      const runtime = await getMediaFileRuntime();
-      return runtime.activities.cleanupNativeArchiveFiles(input);
-    }),
+type ArchiveFileRuntime = {
+  nativeFiles: {
+    archive: (
+      execution: ReturnType<typeof archiveExecution>,
+    ) => NativeArchiveFileActivities;
+  };
 };
+
+export function createNativeArchiveFileAdapter(
+  load: () => Promise<ArchiveFileRuntime>,
+): NativeArchiveFileActivities {
+  const withFiles = <T>(
+    work: (activities: NativeArchiveFileActivities) => Promise<T>,
+  ) =>
+    archiveCall(async (execution) => {
+      const runtime = await load();
+      execution.assertActive();
+      return work(runtime.nativeFiles.archive(execution));
+    });
+  return {
+    prepareNativeArchiveFiles: (input) =>
+      withFiles((activities) => activities.prepareNativeArchiveFiles(input)),
+    applyNativeArchiveFiles: (input) =>
+      withFiles((activities) => activities.applyNativeArchiveFiles(input)),
+    cleanupNativeArchiveFiles: (input) =>
+      withFiles((activities) => activities.cleanupNativeArchiveFiles(input)),
+  };
+}
+
+export const nativeArchiveFileActivities =
+  createNativeArchiveFileAdapter(getMediaFileRuntime);

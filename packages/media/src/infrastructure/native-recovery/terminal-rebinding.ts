@@ -8,7 +8,13 @@ import {
 import { snapshotHash } from "#migration/profile-import.ts";
 import { NativeSubtitleSnapshotSchema } from "#shared/native-subtitles.ts";
 import { NativeArchiveScopeSchema } from "#shared/native-recovery/archive.ts";
-import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import {
+  FinishedPublishedPlexV3Schema,
+  FinishedArchivePlexV3Schema,
+} from "#shared/plex-binding/native-version.ts";
+import { validateNativePlexReceipt } from "#infrastructure/plex-binding/native/native-version.ts";
+import { nativeJson } from "./snapshots.ts";
 
 export const TerminalSubtitleBindingSchema = z.object({
   id: z.uuid(),
@@ -48,6 +54,8 @@ const Finished = z.union([
     files: z.json(),
   }),
   FinishedNativeV2Schema,
+  FinishedPublishedPlexV3Schema,
+  FinishedArchivePlexV3Schema,
 ]);
 
 /** Only immutable native receipts may advance a terminal rollback's physical version. */
@@ -65,7 +73,7 @@ export async function terminalRebindingChain(
     originalVersion: number;
     originalEpoch: number;
   },
-  budget?: PublicationAuthorityReadBudget,
+  budget = new PublicationAuthorityReadBudget(),
 ) {
   const { asset } = input;
   const rows = await tx.nativeRecoveryReceipt.findMany({
@@ -77,9 +85,9 @@ export async function terminalRebindingChain(
     },
     include: { plan: true },
     orderBy: { createdAt: "desc" },
-    take: budget?.take ?? 101,
+    take: budget.takeWeighted(2),
   });
-  budget?.consume(rows.length);
+  budget.consume(rows.length * 2);
   if (rows.length > 100)
     throw new Error("Native terminal receipt chain exceeds bounded lookup");
   let version = asset.version;
@@ -113,6 +121,7 @@ export async function terminalRebindingChain(
     if (match === undefined || matches.length !== 1)
       throw new Error("Native terminal version has no unique receipt binding");
     const { row, selection, binding } = match;
+    await validateNativePlexReceipt(tx, row, budget);
     const scope = z
       .union([NativePublishedScopeSchema, NativeArchiveScopeSchema])
       .parse(row.plan.scope);
@@ -208,11 +217,13 @@ function validateReceipt({
     row.planId !== row.plan.id ||
     row.plan.recoveryEpoch !== row.recoveryEpoch ||
     row.plan.planHash !== row.planHash ||
-    snapshotHash(finished) !== row.planHash ||
+    snapshotHash(z.json().parse(row.plan.plan)) !== row.planHash ||
     snapshotHash(z.json().parse(row.plan.scope)) !== finished.scopeHash ||
     snapshotHash(selection.scope) !== finished.scopeHash ||
-    snapshotHash(selection.fileEvidence) !== snapshotHash(finished.files) ||
-    snapshotHash(selection.networkEvidence) !== snapshotHash(finished.network)
+    snapshotHash(selection.fileEvidence) !==
+      snapshotHash(nativeJson(finished.files)) ||
+    snapshotHash(selection.networkEvidence) !==
+      snapshotHash(nativeJson(finished.network))
   )
     throw new Error(
       "Native terminal receipt has invalid immutable plan binding",

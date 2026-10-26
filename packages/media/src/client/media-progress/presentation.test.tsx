@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { MediaVisibility } from "#shared/visibility/detail.ts";
+import { MovieFulfillment } from "#client/movie-editions/fulfillment.tsx";
 import { MediaProgress } from "./panel.tsx";
 import { policyDescription } from "./presentation.ts";
 
@@ -12,6 +13,7 @@ function fixture(): MediaVisibility {
       playableItems: 0,
       visibleItems: 1,
       playable: false,
+      association: { legacyUnverifiedItems: 0, reconciliationRequiredItems: 0 },
       currentAssetId: null,
       currentVersion: null,
       upgradeInProgress: false,
@@ -103,6 +105,7 @@ test("a downloading upgrade preserves independent playable status", () => {
     playableItems: 1,
     visibleItems: 1,
     playable: true,
+    association: { legacyUnverifiedItems: 0, reconciliationRequiredItems: 0 },
     currentAssetId: crypto.randomUUID(),
     currentVersion: 2,
     upgradeInProgress: true,
@@ -121,6 +124,7 @@ test("a partially playable collection names only the visible episode count", () 
     playable: true,
     playableItems: 2,
     visibleItems: 8,
+    association: { legacyUnverifiedItems: 0, reconciliationRequiredItems: 0 },
     currentAssetId: null,
     currentVersion: null,
     upgradeInProgress: false,
@@ -133,6 +137,90 @@ test("a partially playable collection names only the visible episode count", () 
     "Episode totals and acquisition history may be partial",
   );
   expect(html).not.toContain("Your current version is ready");
+});
+
+test("a legacy association and completed torrent do not claim verified playback", () => {
+  const value = fixture();
+  value.playback.association.legacyUnverifiedItems = 1;
+  const html = renderToStaticMarkup(<MediaProgress visibility={value} />);
+  expect(html).toContain("Plex verification needed");
+  expect(html).toContain("legacy Plex association that is unverified");
+  expect(html).toContain("Download complete");
+  expect(html).not.toContain("Ready to watch");
+  expect(html).not.toContain("playback-ready");
+});
+
+test("a copy needing reconciliation stays pending independently of download progress", () => {
+  const value = fixture();
+  value.playback.association.reconciliationRequiredItems = 1;
+  const html = renderToStaticMarkup(<MediaProgress visibility={value} />);
+  expect(html).toContain("Playback needs reconciliation");
+  expect(html).toContain("reconciliation before playback can be verified");
+  expect(html).toContain("100%");
+  expect(html).not.toContain("Ready to watch");
+  expect(html).not.toContain("playback-ready");
+});
+
+test("mixed collection counts separate current playback from legacy and reconciliation without owner details", () => {
+  const value = fixture();
+  value.playback = {
+    scope: "collection",
+    playable: true,
+    playableItems: 2,
+    visibleItems: 5,
+    association: { legacyUnverifiedItems: 2, reconciliationRequiredItems: 1 },
+    currentAssetId: null,
+    currentVersion: null,
+    upgradeInProgress: true,
+  };
+  const torrent = firstTorrent(value);
+  torrent.diagnostics = null;
+  const html = renderToStaticMarkup(<MediaProgress visibility={value} />);
+  expect(html).toContain("Some episodes ready");
+  expect(html).toContain("2 of 5 visible episodes are ready to watch");
+  expect(html).toContain(
+    "2 visible episodes have unverified legacy Plex associations",
+  );
+  expect(html).toContain("1 visible episode needs reconciliation");
+  expect(html).toContain(
+    "Upgrades can continue while these versions remain playable",
+  );
+  expect(html).not.toContain("5 of 5");
+  expect(html).not.toContain(torrent.id);
+  expect(html).not.toContain("knaben");
+  expect(html).not.toContain("Recorded policy");
+});
+
+test("verified household playback does not fulfill a personal request with no edition choice", () => {
+  const value = fixture();
+  const assetId = crypto.randomUUID();
+  const requestId = crypto.randomUUID();
+  value.playback.playable = true;
+  value.playback.playableItems = 1;
+  value.playback.currentAssetId = assetId;
+  value.playback.currentVersion = 2;
+  value.movieRequests = [
+    {
+      requestId,
+      edition: "default",
+      fulfillment: {
+        status: "pending_choice",
+        reason: "movie_edition_choice_required",
+      },
+    },
+  ];
+  const html = renderToStaticMarkup(
+    <>
+      <MediaProgress visibility={value} />
+      <MovieFulfillment requests={value.movieRequests} />
+    </>,
+  );
+  expect(html).toContain("Ready to watch");
+  expect(html).toContain("Edition not selected");
+  expect(html).toContain("Your request remains protected");
+  expect(html).not.toContain("Selected edition fulfilled");
+  expect(html).not.toContain(assetId);
+  expect(html).not.toContain(requestId);
 });
 
 test("work before a torrent exists still exposes its acquisition phase", () => {

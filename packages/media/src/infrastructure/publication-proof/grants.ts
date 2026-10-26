@@ -6,6 +6,7 @@ import type { PublicationAuthorityReference } from "#shared/publication-proof/re
 import { resolvePublicationTransitionAuthority } from "./authority.ts";
 import { publicationArchiveSnapshot } from "./projection.ts";
 import { loadPublicationIntent } from "./store.ts";
+import type { NativeReceiptReadPort } from "#infrastructure/plex-binding/native/receipt-port.ts";
 import type { PublicationAuthorityReadBudget } from "./read-budget.ts";
 
 /** Ordinary acquisitions need no historical native grant; only actual matching receipts are linked. */
@@ -16,6 +17,7 @@ export async function findPublicationOriginalGrant(
     libraryKind: "movies" | "tv";
   },
   budget?: PublicationAuthorityReadBudget,
+  projection?: NativeReceiptReadPort,
 ): Promise<PublicationAuthorityReference | null> {
   const nativeCount = await tx.nativeRecoveryReceipt.count({
     where: {
@@ -33,7 +35,7 @@ export async function findPublicationOriginalGrant(
       tx,
       publicationArchiveSnapshot(input.asset, input.libraryKind),
       input.asset.ownershipEpoch,
-      budget,
+      { budget, projection },
     );
     if (native !== null) return native;
   }
@@ -41,6 +43,7 @@ export async function findPublicationOriginalGrant(
     tx,
     { assetIds: [input.asset.id], recoveryEpoch: input.asset.ownershipEpoch },
     budget,
+    projection,
   );
   if (compensation.length > 1)
     throw new Error("Publication compensation grant is ambiguous");
@@ -101,6 +104,7 @@ export async function findPublicationOriginalGrant(
     tx,
     { transitionId: transition.id, assetId: input.asset.id },
     budget,
+    projection,
   );
   const { originalGrant: _originalGrant, ...reference } = authority;
   return reference;

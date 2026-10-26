@@ -54,89 +54,8 @@ async function inheritedWatchRequest(h: ReturnType<typeof watchHarness>) {
 
 describe("watch authority across external reads", () => {
   const h = watchHarness();
-  test.each([
-    "epoch",
-    "mapping",
-    "credential",
-    "claim",
-    "cohort",
-    "binding",
-    "ambiguous",
-  ])("%s drift fences failure invalidation", async (change) => {
-    const f = await h.fixture();
-    const db = h.database();
-    const paused = pausedTransport(
-      async () => new Response(null, { status: 404 }),
-    );
-    const result = observeRequesterWatch(
-      h.context(paused.transport),
-      f.media.id,
-    );
-    await paused.entered;
-    try {
-      if (change === "epoch")
-        await db.mediaRuntimeState.update({
-          where: { id: "singleton" },
-          data: { recoveryEpoch: 1 },
-        });
-      if (change === "mapping")
-        await db.plexIdentityMapping.update({
-          where: { userId: f.user.id },
-          data: { permittedSectionIds: [], version: { increment: 1 } },
-        });
-      if (change === "credential")
-        await db.credential.update({
-          where: { id: f.token.id },
-          data: {
-            ciphertext: h.cipher.encrypt(
-              JSON.stringify({ serverToken: "rotated" }),
-              `plex:${f.user.plexAccountId}`,
-            ),
-          },
-        });
-      if (change === "claim") {
-        const request = await db.mediaRequest.findUniqueOrThrow({
-          where: { userId_mediaId_edition: f.key },
-        });
-        await new PrismaMediaApplication(db, {
-          keepDays: 30,
-          serverMachineId: "fixture-server",
-        }).cancelRequest(
-          f.user,
-          crypto.randomUUID(),
-          request.id,
-          request.version,
-        );
-      }
-      if (change === "cohort") await h.requester(f.media.id);
-      if (change === "binding")
-        await db.mediaItem.update({
-          where: { id: f.media.id },
-          data: {
-            externalIds: { plexRatingKey: f.ratingKey, plexSectionId: "2" },
-          },
-        });
-      if (change === "ambiguous")
-        await db.mediaItem.create({
-          data: {
-            kind: "movie",
-            title: "Another entry",
-            externalIds: { plexRatingKey: f.ratingKey, plexSectionId: "1" },
-          },
-        });
-    } finally {
-      paused.resume();
-    }
-    expect(await result).toEqual({
-      complete: false,
-      reason: "requester_watch_unknown",
-    });
-    expect(
-      await db.watchState.findUnique({
-        where: { userId_mediaId_edition: f.key },
-      }),
-    ).toMatchObject({ watched: true, observedAt: new Date(0) });
-  });
+  authorityDriftCases(h);
+
   test("root exclusion changes the complete effective cohort", async () => {
     const { f, db, root, commands } = await inheritedWatchRequest(h);
     const paused = pausedTransport(watchedTransport(true));
@@ -163,7 +82,7 @@ describe("watch authority across external reads", () => {
       await db.watchState.findUnique({
         where: { userId_mediaId_edition: f.key },
       }),
-    ).toMatchObject({ observedAt: new Date(0) });
+    ).toBeNull();
   });
   test("named-only requesters never join the default cohort or lose their watch evidence", async () => {
     const f = await h.fixture();
@@ -222,8 +141,43 @@ describe("watch authority across external reads", () => {
       await db.watchObservationFence.findUnique({
         where: { mediaId_edition: defaultScope(f.media.id) },
       }),
-    ).toMatchObject({ issuedRevision: 1n, settledRevision: 1n });
+    ).toMatchObject({
+      issuedRevision: f.fence.issuedRevision + 1n,
+      settledRevision: f.fence.settledRevision + 1n,
+    });
   });
+  test.each(["legacy_section", "legacy_duplicate"])(
+    "%s display data cannot replace a current immutable association",
+    async (change) => {
+      const f = await h.fixture();
+      if (change === "legacy_section")
+        await h.database().mediaItem.update({
+          where: { id: f.media.id },
+          data: {
+            externalIds: { plexRatingKey: f.ratingKey, plexSectionId: "2" },
+          },
+        });
+      else
+        await h.database().mediaItem.create({
+          data: {
+            kind: "movie",
+            title: "Unbound legacy duplicate",
+            externalIds: { plexRatingKey: f.ratingKey, plexSectionId: "1" },
+          },
+        });
+      expect(
+        await observeRequesterWatch(
+          h.context(watchedTransport(true)),
+          f.media.id,
+        ),
+      ).toEqual({ complete: true, reason: null });
+      expect(
+        await h
+          .database()
+          .watchState.findUnique({ where: { userId_mediaId_edition: f.key } }),
+      ).toMatchObject({ watched: true });
+    },
+  );
   test("no target or unresolved lineage creates no observation fence", async () => {
     const db = h.database();
     const media = await db.mediaItem.create({
@@ -244,3 +198,83 @@ describe("watch authority across external reads", () => {
     ).toBe(0);
   });
 });
+
+function authorityDriftCases(h: ReturnType<typeof watchHarness>) {
+  test.each(["epoch", "mapping", "credential", "claim", "cohort", "binding"])(
+    "%s drift cannot commit a value from an old authority",
+    async (change) => {
+      const f = await h.fixture();
+      const db = h.database();
+      const paused = pausedTransport(
+        async () => new Response(null, { status: 404 }),
+      );
+      const result = observeRequesterWatch(
+        h.context(paused.transport),
+        f.media.id,
+      );
+      let winner = f.baseline;
+      await paused.entered;
+      try {
+        if (change === "epoch")
+          await db.mediaRuntimeState.update({
+            where: { id: "singleton" },
+            data: { recoveryEpoch: 1 },
+          });
+        if (change === "mapping")
+          await db.plexIdentityMapping.update({
+            where: { userId: f.user.id },
+            data: { permittedSectionIds: [], version: { increment: 1 } },
+          });
+        if (change === "credential")
+          await db.credential.update({
+            where: { id: f.token.id },
+            data: {
+              ciphertext: h.cipher.encrypt(
+                JSON.stringify({ serverToken: "rotated" }),
+                `plex:${f.user.plexAccountId}`,
+              ),
+            },
+          });
+        if (change === "claim") {
+          const request = await db.mediaRequest.findUniqueOrThrow({
+            where: { userId_mediaId_edition: f.key },
+          });
+          await new PrismaMediaApplication(db, {
+            keepDays: 30,
+            serverMachineId: "fixture-server",
+          }).cancelRequest(
+            f.user,
+            crypto.randomUUID(),
+            request.id,
+            request.version,
+          );
+        }
+        if (change === "cohort") {
+          await h.requester(f.media.id);
+          winner = await db.watchState.findUniqueOrThrow({
+            where: { userId_mediaId_edition: f.key },
+          });
+        }
+        if (change === "binding") {
+          const part = f.item.Media[0]?.Part[0];
+          if (part === undefined)
+            throw new Error("Actual fixture Part missing");
+          part.id++;
+          await f.rebind();
+        }
+      } finally {
+        paused.resume();
+      }
+      expect(await result).toEqual({
+        complete: false,
+        reason: "requester_watch_unknown",
+      });
+      const current = await db.watchState.findUnique({
+        where: { userId_mediaId_edition: f.key },
+      });
+      if (change === "epoch" || change === "cohort")
+        expect(current).toEqual(winner);
+      else expect(current).toBeNull();
+    },
+  );
+}

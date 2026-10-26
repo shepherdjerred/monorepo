@@ -11,20 +11,22 @@ import {
 } from "#infrastructure/native-recovery/snapshots.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeGrantSettlements } from "./native-settlements.ts";
+import { ArchiveReceiptProjection } from "./receipt-projection.ts";
 
 /** Only completed, whole-group physical references can settle an unchanged interrupted attempt. */
 export async function archiveCompensationSettlements(
   tx: Prisma.TransactionClient,
   files: readonly NativeArchiveFile[],
   budget: PublicationAuthorityReadBudget,
+  projection = new ArchiveReceiptProjection(tx, budget),
 ) {
   const attempts = new Set<string>();
   const continuations = new Set<string>();
   for (const file of files) {
-    const reference = await settlementReference(tx, file, budget);
+    const reference = await settlementReference(tx, file, budget, projection);
     const dependencies =
       reference.kind === "prior_native_binding"
-        ? await nativeGrantSettlements(tx, reference, budget)
+        ? await nativeGrantSettlements(tx, reference, budget, projection)
         : [];
     const candidates =
       reference.kind === "compensation_completion"
@@ -39,7 +41,7 @@ export async function archiveCompensationSettlements(
       const attemptId = await validatedSettlement(
         tx,
         { continuationId, dependency, files },
-        budget,
+        { budget, projection },
       );
       attempts.add(attemptId);
     }
@@ -51,6 +53,7 @@ async function settlementReference(
   tx: Prisma.TransactionClient,
   file: NativeArchiveFile,
   budget: PublicationAuthorityReadBudget,
+  projection: ArchiveReceiptProjection,
 ) {
   if (file.authority.kind !== "publication_transition_binding")
     return file.authority;
@@ -58,6 +61,7 @@ async function settlementReference(
     tx,
     { transitionId: file.authority.transitionId, assetId: file.assetId },
     budget,
+    projection,
   );
   return result.originalGrant;
 }
@@ -68,10 +72,21 @@ async function validatedSettlement(
     dependency: z.infer<typeof SettledNativeCompensationSchema> | null;
     files: readonly NativeArchiveFile[];
   },
-  budget: PublicationAuthorityReadBudget,
+  {
+    budget,
+    projection,
+  }: {
+    budget: PublicationAuthorityReadBudget;
+    projection: ArchiveReceiptProjection;
+  },
 ) {
   const { continuationId, dependency, files } = input;
-  const record = await compensationRecord(tx, continuationId, budget);
+  const record = await compensationRecord(
+    tx,
+    continuationId,
+    budget,
+    projection,
+  );
   const completion = record.completion;
   if (
     completion === null ||
@@ -99,6 +114,7 @@ async function validatedSettlement(
   const attempt = await tx.acquisitionAttempt.findUniqueOrThrow({
     where: { id: settlement.attemptId },
   });
+  budget.consume(1);
   if (
     settlement.transitionId !== record.row.transitionId ||
     settlement.attemptId !== record.row.transition.attemptId ||

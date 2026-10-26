@@ -20,6 +20,90 @@ import {
   type PublicationContext,
 } from "./invocation.ts";
 import { assertRecordedSubtitleDependencies } from "./subtitle-lineage.ts";
+import {
+  initializeMeasuredPublicationNamespace,
+  type PublicationNamespaceMeasurement,
+} from "#filesystem/publication-measurement.ts";
+import type { MeasurementAuthority } from "#filesystem/content-measurement.ts";
+
+/** Locked record phase: initialize measured namespaces without reading or hashing record bytes. */
+export async function prepareMeasuredPublicationStores(
+  context: PublicationContext,
+  input: {
+    transitionId: string;
+    continuationId: string;
+    plan: readonly FilePlanEntry[];
+    measurements: readonly {
+      kind: "movies" | "tv";
+      measurement: PublicationNamespaceMeasurement;
+    }[];
+    authority: MeasurementAuthority;
+  },
+): Promise<PublicationStores> {
+  assertPublicationActive(context);
+  input.authority.assertActive();
+  const kinds = [
+    ...new Set(input.plan.map((entry) => entry.libraryKind)),
+  ].sort();
+  if (
+    input.measurements.length !== kinds.length ||
+    new Set(input.measurements.map((item) => item.kind)).size !==
+      kinds.length ||
+    input.measurements.some(
+      ({ kind, measurement }) =>
+        !kinds.includes(kind) ||
+        measurement.binding.transitionId !== input.transitionId ||
+        measurement.binding.continuationId !== input.continuationId ||
+        JSON.stringify(measurement.roots) !==
+          JSON.stringify(context.roots[kind]),
+    )
+  )
+    throw new FileOperationConflict("Measured publication store scope changed");
+  // Reject drift in any root before initializing the first root.
+  await input.authority.assertCurrent();
+  for (const { measurement } of input.measurements) {
+    assertPublicationActive(context);
+    input.authority.assertActive();
+    await measurement.assertUnchanged();
+    input.authority.assertActive();
+  }
+  const stores: PublicationStores = [];
+  const invocationActive = () => {
+    assertPublicationActive(context);
+  };
+  for (const kind of kinds) {
+    const selected = input.measurements.find((item) => item.kind === kind);
+    if (selected === undefined)
+      throw new Error("Measured publication root missing");
+    let boundAuthority = invocationActive;
+    const currentActive = input.authority.assertActive;
+    const guard = () => {
+      assertPublicationActive(context);
+      currentActive();
+      boundAuthority();
+    };
+    const initialized = await initializeMeasuredPublicationNamespace(
+      selected.measurement,
+      {
+        assertActive: guard,
+        assertCurrent: input.authority.assertCurrent,
+      },
+    );
+    const assertActive = initialized.assertActive;
+    assertActive();
+    stores.push({
+      kind,
+      store: initialized.store,
+      observed: initialized.observed,
+      added: [],
+      assertActive,
+      bindAuthority: (nextGuard) => {
+        boundAuthority = nextGuard;
+      },
+    });
+  }
+  return stores;
+}
 
 export async function preparePublicationStores(
   context: PublicationContext,

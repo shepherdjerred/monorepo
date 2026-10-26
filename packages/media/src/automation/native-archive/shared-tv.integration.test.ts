@@ -7,7 +7,7 @@ import { queueNativeArchiveCleanup } from "#infrastructure/native-archive/contin
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { CleanupNativeArchiveInputSchema } from "#shared/native-recovery/archive.ts";
-import { createNativeArchiveCleanupObserver } from "#migration/native-archive/cleanup.ts";
+import { observeArchiveCleanup } from "./fixtures/observe.ts";
 import { nativeArchiveFixture } from "./test-fixture.ts";
 import {
   sharedTvDownloadName,
@@ -119,7 +119,7 @@ test("actual shared-TV A→B→C recovery binds both leaves and one held leaf pr
     [z.uuid().parse(ids[0])]: 0,
     [second]: 1,
   });
-  await createNativeArchiveCleanupObserver(f.observerContext)(input);
+  await observeArchiveCleanup(f.observerContext, input);
   const pin = await f.db.retentionHold.create({
     data: { mediaId: second, userId: f.file.user.id, isPin: true },
   });
@@ -135,7 +135,7 @@ test("actual shared-TV A→B→C recovery binds both leaves and one held leaf pr
     f.publications[0]?.content,
   );
   await f.db.retentionHold.delete({ where: { id: pin.id } });
-  await createNativeArchiveCleanupObserver(f.observerContext)(input);
+  await observeArchiveCleanup(f.observerContext, input);
   expect(await activities.cleanupNativeArchiveFiles(input)).toEqual({
     status: "cleaned",
   });

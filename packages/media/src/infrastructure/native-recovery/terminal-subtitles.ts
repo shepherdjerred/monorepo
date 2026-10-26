@@ -82,6 +82,7 @@ export async function terminalSubtitleChain(
     const subtitle = await tx.subtitleAsset.findUniqueOrThrow({
       where: { id },
     });
+    budget?.consume(1);
     if (isCurrent(subtitle, input, checksum)) {
       const current = nativeSubtitleSnapshot(subtitle);
       assertRenewedSubtitle(expected, current, input);
@@ -91,9 +92,11 @@ export async function terminalSubtitleChain(
     const rows = await tx.subtitleReplacement.findMany({
       where: { oldSubtitleId: id, receipt: { outcome: "installed" } },
       include: { receipt: true },
-      take: Math.min(2, budget?.take ?? 2),
+      take: Math.min(2, budget?.takeWeighted(2) ?? 2),
     });
-    budget?.consume(rows.length);
+    budget?.consume(
+      rows.reduce((count, row) => count + (row.receipt === null ? 1 : 2), 0),
+    );
     const row = rows[0];
     if (row === undefined || rows.length !== 1 || row.receipt === null)
       throw new Error(

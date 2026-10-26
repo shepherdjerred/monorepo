@@ -7,6 +7,8 @@ import { identityFixture } from "#infrastructure/acquisition-identity/test-fixtu
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { createPublicationActivities } from "#automation/publication.ts";
 import { createAcquisitionActivities } from "#automation/acquisition.ts";
+import { visibilityPublicationContext } from "./plex.test-support.ts";
+import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
 import {
   loadProfile,
   searchCandidates,
@@ -16,7 +18,9 @@ const h = automationTestHarness();
 
 test("real verified publication remains playable during a newly submitted upgrade, while promotion and recovery uncertainty do not", async () => {
   const db = h.database();
-  const f = await identityFixture(db, h.context());
+  const f = await identityFixture(db, h.context(), false, {
+    fileFactory: mappedPublicationFixture,
+  });
   try {
     const first = await f.acquire();
     const torrent = await db.torrent.findUniqueOrThrow({
@@ -56,39 +60,12 @@ test("real verified publication remains playable during a newly submitted upgrad
     expect(old.plexPublishedAt).toBeNull();
     const unverified = await f.service.getMedia(f.actor, f.files.media.id);
     expect(unverified.visibility.playback.playable).toBe(false);
-    const network = h.context(async (url) => {
-      if (url.pathname.endsWith("/library/sections"))
-        return Response.json({
-          MediaContainer: {
-            size: 1,
-            Directory: [{ key: "2", title: "TV", type: "show" }],
-          },
-        });
-      if (url.pathname.endsWith("/refresh")) return new Response();
-      const show = {
-        ratingKey: "99124",
-        title: f.series.title,
-        type: "show",
-        Guid: [{ id: `tmdb://${String(f.series.tmdbId)}` }],
-      };
-      const episode = {
-        ratingKey: "99123",
-        title: "First episode",
-        type: "episode",
-        grandparentRatingKey: "99124",
-        index: 1,
-        parentIndex: 1,
-        Media: [{ Part: [{ id: 1, file: old.path }] }],
-      };
-      return Response.json({
-        MediaContainer: {
-          size: 1,
-          totalSize: 1,
-          Metadata: [url.pathname.endsWith("/99124") ? show : episode],
-        },
-      });
-    });
-    const publication = createPublicationActivities(network);
+    const network = await visibilityPublicationContext(
+      db,
+      h.context(),
+      first.attempt.mediaIds,
+    );
+    const publication = createPublicationActivities(network.context);
     expect(await publication.publishMediaToPlex(first.input)).toMatchObject({
       status: "available",
     });
@@ -99,6 +76,7 @@ test("real verified publication remains playable during a newly submitted upgrad
       currentAssetId: old.id,
       currentVersion: old.version,
       upgradeInProgress: false,
+      association: { legacyUnverifiedItems: 0, reconciliationRequiredItems: 0 },
     });
 
     f.source.providerReleaseId = crypto.randomUUID();

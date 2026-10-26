@@ -6,6 +6,9 @@ import { expect, vi } from "vitest";
 import type { Database } from "#infrastructure/database.ts";
 import type { CredentialCipher } from "#application/security.ts";
 import { nativeStorageFixture } from "#automation/native-recovery/test-fixture.ts";
+import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
+import { nativeReviewPlexFixture } from "#automation/native-recovery/fixtures/plex.ts";
+import { NativeStoredScopeSchema } from "#shared/native-recovery/lifecycle.ts";
 import type { fileFixture } from "#automation/files/test-support.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { FilePlanSchema } from "#automation/files/types.ts";
@@ -13,13 +16,11 @@ import { recordVerifiedPublication } from "#automation/reconciliation/upgrade-cl
 import { QualityRulesSchema } from "#shared/api.ts";
 import { StoredTorrentObservationSchema } from "#integrations/qbittorrent.ts";
 import { PrismaNativeArchive } from "#infrastructure/native-archive/service.ts";
-import { createNativeArchiveObserver } from "#migration/native-archive/producer.ts";
 import { archiveContext, type NativeArchiveExecution } from "./execution.ts";
 import { prepareNativeArchiveFiles } from "./files.ts";
 import { finishArchivePreparation } from "./plan.ts";
 import { applyPreparedNativeArchive } from "./apply.ts";
 import type { NativeArchiveObserverContext } from "#migration/native-archive/evidence.ts";
-import { configureArchiveTvPlex } from "./fixtures/shared-tv.ts";
 
 type FileFixture = Awaited<ReturnType<typeof fileFixture>>;
 type Published = Awaited<ReturnType<FileFixture["published"]>>;
@@ -95,6 +96,7 @@ export async function nativeArchiveFixture(
     selected?: "first" | "all";
     publicationAgeDays?: number;
     withArchiveSubtitles?: boolean;
+    omitLegacySubtitlePolicy?: boolean;
     fileFactory?: () => Promise<FileFixture>;
   } = {},
 ) {
@@ -102,17 +104,15 @@ export async function nativeArchiveFixture(
   try {
     const publications: Published[] = [];
     const setup = await nativeStorageFixture(db, cipher, "seeding", {
-      ...(options.fileFactory === undefined
+      ...(options.omitLegacySubtitlePolicy === undefined
         ? {}
-        : {
-            fileFactory: async () => {
-              const file = await options.fileFactory?.();
-              if (file === undefined)
-                throw new Error("Requested archive fixture factory missing");
-              ownedDirectory = file.directory;
-              return file;
-            },
-          }),
+        : { omitLegacySubtitlePolicy: options.omitLegacySubtitlePolicy }),
+      fileFactory: async () => {
+        const file = await (options.fileFactory?.() ??
+          mappedPublicationFixture(db));
+        ownedDirectory = file.directory;
+        return file;
+      },
       settle: async (file, original) => {
         ownedDirectory = file.directory;
         publications.push(original);
@@ -286,7 +286,7 @@ export async function nativeArchiveFixture(
       });
     }
     const execution = testArchiveExecution;
-    const observerContext: NativeArchiveObserverContext = {
+    const originalObserverContext: NativeArchiveObserverContext = {
       describeWorkflow: () => Promise.resolve(null),
       ...setup.prior.context,
       archiveExecution: execution,
@@ -300,12 +300,6 @@ export async function nativeArchiveFixture(
       },
     };
     const context = archiveContext(setup.context, execution());
-    if (setup.file.media.kind === "episode")
-      await configureArchiveTvPlex(db, observerContext, {
-        mediaIds: setup.published.entry.mediaIds,
-        canonicalPath: setup.canonicalPath,
-        sizeBytes: setup.asset.sizeBytes,
-      });
     const cleanups = await db.upgradeCleanup.findMany({
       where: {
         assetId: { in: publications.map((item) => item.entry.assetId) },
@@ -337,7 +331,18 @@ export async function nativeArchiveFixture(
       planId,
       operationId: z.uuid().parse(queued.operationId),
     };
-    const observe = () => createNativeArchiveObserver(observerContext)(planId);
+    const storedPlan = await db.nativeRecoveryPlan.findUniqueOrThrow({
+      where: { id: planId },
+    });
+    const network = await nativeReviewPlexFixture(
+      originalObserverContext,
+      NativeStoredScopeSchema.parse(storedPlan.scope),
+    );
+    const observerContext = Object.assign(network.context, {
+      archiveExecution: execution,
+    });
+    let observedCommand = prepareInput;
+    const observe = (input = observedCommand) => network.observe(input);
     async function prepare() {
       await observe();
       const proof = await prepareNativeArchiveFiles(context, prepareInput);
@@ -348,7 +353,7 @@ export async function nativeArchiveFixture(
       const plan = await db.nativeRecoveryPlan.findUniqueOrThrow({
         where: { id: planId },
       });
-      return await service.apply(
+      const approval = await service.apply(
         setup.prior.actor,
         crypto.randomUUID(),
         planId,
@@ -362,6 +367,11 @@ export async function nativeArchiveFixture(
           acknowledgeSubtitlePolicies: true,
         },
       );
+      observedCommand = {
+        planId,
+        operationId: z.uuid().parse(approval.operationId),
+      };
+      return approval;
     }
     async function apply() {
       const approval = await review();
@@ -384,6 +394,7 @@ export async function nativeArchiveFixture(
       ...setup,
       context,
       observerContext,
+      wire: network.wire,
       execution,
       publications,
       cleanups,
@@ -404,11 +415,18 @@ export async function nativeArchiveFixture(
 }
 
 function testArchiveExecution(): NativeArchiveExecution {
+  const observed = { wall: Date.now(), monotonic: performance.now() };
   const signal = new AbortController().signal;
+  const expiresAtMs = observed.wall + 120_000;
+  const monotonicDeadline = observed.monotonic + 120_000;
   return {
+    observed,
+    expiresAtMs,
     signal,
     assertActive: () => {
       signal.throwIfAborted();
+      if (Date.now() >= expiresAtMs || performance.now() >= monotonicDeadline)
+        throw new Error("Archive fixture invocation expired");
     },
     checkpoint: () => Promise.resolve(),
   };

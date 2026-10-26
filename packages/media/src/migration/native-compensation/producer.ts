@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { NativeCompensationScopeSchema } from "#shared/native-recovery/compensation.ts";
 import type {
   NativeCompensationExecutionContext,
@@ -25,6 +26,7 @@ export async function observeNativeCompensation(
   context: NativeCompensationObserverContext,
   input: NativeCompensationPrepareInput,
   execution: NativeCompensationExecutionContext,
+  budget = new PublicationAuthorityReadBudget(),
 ) {
   assertCompensationActive(execution);
   const plan = await compensationAwait(execution, () =>
@@ -34,13 +36,18 @@ export async function observeNativeCompensation(
   );
   const scope = NativeCompensationScopeSchema.parse(plan.scope);
   await compensationAwait(execution, () =>
-    assertNativeCompensationSnapshot(context.db, { planId: plan.id, scope }),
+    assertNativeCompensationSnapshot(
+      context.db,
+      { planId: plan.id, scope },
+      budget,
+    ),
   );
   await assertCoordinator(context, input, execution);
   const evidence = await observeCompensationEvidence(
     context,
     { planId: plan.id, recoveryEpoch: plan.recoveryEpoch, scope },
     execution,
+    budget,
   );
   const serialized = z.record(z.string(), z.json()).parse(evidence);
   return compensationAwait(execution, () =>
@@ -49,7 +56,11 @@ export async function observeNativeCompensation(
         lockNativeCompensationScope(tx, scope),
       );
       const current = await compensationAwait(execution, () =>
-        assertNativeCompensationSnapshot(tx, { planId: plan.id, scope }),
+        assertNativeCompensationSnapshot(
+          tx,
+          { planId: plan.id, scope },
+          budget,
+        ),
       );
       if (
         !["preparing", "awaiting_review", "applying"].includes(
@@ -68,7 +79,7 @@ export async function observeNativeCompensation(
       assertCanonicalIdentity(
         evidence.mounts,
         await compensationAwait(execution, () =>
-          assertNativeStorageRoots(tx, scope.storageRoots),
+          assertNativeStorageRoots(tx, scope.storageRoots, budget),
         ),
       );
       assertNativeEvidenceFresh(evidence);

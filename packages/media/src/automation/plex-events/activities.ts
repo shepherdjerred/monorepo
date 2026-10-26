@@ -12,7 +12,7 @@ export function createPlexEventActivities(
 ): PlexEventActivities {
   return {
     async observePlexEventHint(raw) {
-      const execution = context.watchExecution();
+      const execution = context.plexBindingExecution();
       await watchCheckpoint(execution);
       const allowed = await enabled();
       await watchCheckpoint(execution);

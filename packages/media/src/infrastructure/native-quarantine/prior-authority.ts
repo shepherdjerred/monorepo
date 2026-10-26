@@ -11,6 +11,9 @@ import { FinishedNativeV2Schema } from "#shared/native-recovery/lifecycle.ts";
 import { RemovalPlanSchema } from "#automation/files/types.ts";
 import { assertQuarantinedSubtitleBindings } from "#automation/native-quarantine/subtitles.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
+import { FinishedQuarantinePlexV3Schema } from "#shared/plex-binding/native-version.ts";
+import { validateNativePlexReceipt } from "#infrastructure/plex-binding/native/native-version.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 const SelectionSchema = z.object({
   scope: NativeQuarantineScopeSchema,
@@ -23,6 +26,7 @@ export async function assertQuarantineGroupAuthority(
   tx: Prisma.TransactionClient,
   group: NativeQuarantineScope["groups"][number],
   files: NativeQuarantineFile[],
+  budget = new PublicationAuthorityReadBudget(),
 ) {
   for (const file of files) assertQuarantinedSubtitleBindings(file);
   const first = group.decisions[0];
@@ -49,10 +53,13 @@ export async function assertQuarantineGroupAuthority(
     },
     include: { receipt: { include: { plan: true } } },
     orderBy: { id: "asc" },
-    take: 101,
+    take: Math.floor((budget.take - 1) / 2) + 1,
   });
+  budget.consume(rows.length * 2);
   if (rows.length > 100)
     throw new Error("Quarantine prior authority lookup exceeds bound");
+  for (const row of rows)
+    await validateNativePlexReceipt(tx, row.receipt, budget);
   const matches = rows.filter((row) => {
     if (
       row.state !== "pending" ||
@@ -65,7 +72,9 @@ export async function assertQuarantineGroupAuthority(
       return false;
     const descriptor = NativeQuarantineContinuationSchema.parse(row.descriptor);
     const selection = SelectionSchema.parse(row.receipt.selection);
-    const finished = FinishedNativeV2Schema.parse(row.receipt.plan.plan);
+    const finished = z
+      .union([FinishedNativeV2Schema, FinishedQuarantinePlexV3Schema])
+      .parse(row.receipt.plan.plan);
     if (
       finished.lifecycleKind !== "committed_quarantine" ||
       digest(finished) !== row.receipt.planHash ||

@@ -5,7 +5,7 @@ import { nativeArchiveFixture } from "#automation/native-archive/test-fixture.ts
 import { NativeArchiveContinuationSchema } from "#shared/native-recovery/archive.ts";
 import { resolveArchiveBindings } from "./bindings.ts";
 import { z } from "zod";
-import { createNativeArchiveObserver } from "#migration/native-archive/producer.ts";
+import { archiveReviewObserver } from "#automation/native-archive/fixtures/observe.ts";
 import { prepareNativeArchiveFiles } from "#automation/native-archive/files.ts";
 import { finishArchivePreparation } from "#automation/native-archive/plan.ts";
 import { applyPreparedNativeArchive } from "#automation/native-archive/apply.ts";
@@ -50,8 +50,8 @@ test("later B-only approval reuses the exact A-only grants without renewing vers
     planId,
     operationId: z.uuid().parse(command.operationId),
   };
-  const observe = () => createNativeArchiveObserver(f.observerContext)(planId);
-  await observe();
+  const observe = archiveReviewObserver(f.observerContext);
+  await observe(prepareInput);
   await finishArchivePreparation(
     f.context,
     prepareInput,
@@ -79,7 +79,7 @@ test("later B-only approval reuses the exact A-only grants without renewing vers
     operationId: z.uuid().parse(approval.operationId),
     planHash: z.string().parse(plan.planHash),
   };
-  await observe();
+  await observe(input);
   const receiptId = await applyPreparedNativeArchive(
     f.context,
     input,

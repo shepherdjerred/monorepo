@@ -4,7 +4,9 @@ import type { MediaFileActivities } from "#shared/automation.ts";
 import { FileGuardError, type FileContext } from "./types.ts";
 import { inspectAndStage } from "./inspection.ts";
 import { promote } from "./publication.ts";
-import { removeFiles, restoreFiles } from "./removal.ts";
+import { removeFiles } from "./removal.ts";
+import { restoreFiles } from "./restoration.ts";
+import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import { installSubtitle } from "./subtitles.ts";
 import { FileOperationConflict } from "#filesystem/operations-types.ts";
 import { rollbackPromotion } from "./rollback.ts";
@@ -28,9 +30,9 @@ export function createMediaFileActivities(
   context: FileContext,
 ): MediaFileActivities {
   return {
-    cleanupSupersededMediaFile: async ({ cleanupId }) => {
+    cleanupSupersededMediaFile: async ({ cleanupId, operationId }) => {
       try {
-        await cleanupUpgrade(context, cleanupId);
+        await cleanupUpgrade(context, cleanupId, operationId);
         return { status: "purged" };
       } catch (error_) {
         const error = physicalError(error_);
@@ -144,6 +146,8 @@ export function createMediaFileActivities(
 }
 
 function physicalError(error: unknown): unknown {
+  if (error instanceof PlexBindingProtection)
+    return new FileGuardError(error.reason);
   if (error instanceof MovieChoiceProtection)
     return new FileGuardError(error.code);
   return error instanceof MediaError &&

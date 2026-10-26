@@ -4,6 +4,7 @@ import { automationTestHarness } from "#testing/automation.ts";
 import {
   archivePublicationTransitionFixture,
   releaseTransitionHousehold,
+  type ArchiveDiagnosticStage,
 } from "./publication-transition.test-support.ts";
 import {
   approveArchiveRenewal,
@@ -12,8 +13,25 @@ import {
   type ArchiveTransitionFixture,
 } from "./renewal.test-support.ts";
 import { restoreNativeFixtureAgain } from "#automation/native-compensation/native-grant-fixture.ts";
+import { traceArchiveReadBudget } from "./tests/read-budget-trace.test-support.ts";
 
 const harness = automationTestHarness();
+traceArchiveReadBudget("archive-renewal-read-diagnostic");
+let stages: ArchiveDiagnosticStage[] = [];
+function traceStage(stage: ArchiveDiagnosticStage) {
+  stages.push(stage);
+}
+beforeEach((context) => {
+  const current: ArchiveDiagnosticStage[] = [];
+  stages = current;
+  context.onTestFinished(() => {
+    if (context.task.result?.state === "fail")
+      console.warn(
+        "archive-renewal-stage-diagnostic",
+        JSON.stringify({ stages: current }),
+      );
+  });
+});
 const directories: string[] = [];
 afterAll(async () => {
   for (const directory of directories)
@@ -29,7 +47,7 @@ describe.each([false, true])(
         harness.database(),
         harness.context().cipher,
         harness.context(),
-        { stopOldCleanup: "allocated" },
+        { stopOldCleanup: "allocated", traceStage },
       );
       directories.push(fixture.file.directory);
     });
@@ -85,7 +103,7 @@ describe.each(["prepared", "complete"] as const)(
         harness.database(),
         harness.context().cipher,
         harness.context(),
-        { stopOldCleanup: phase },
+        { stopOldCleanup: phase, traceStage },
       );
       directories.push(fixture.file.directory);
     });
@@ -121,6 +139,7 @@ describe("fresh second restore after adjacent ordinary publication", () => {
       harness.database(),
       harness.context().cipher,
       harness.context(),
+      { traceStage },
     );
     directories.push(fixture.file.directory);
   });

@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "catalog": [
+    {
+      "key": "lantern",
+      "kind": "movie",
+      "title": "The Paper Lantern",
+      "year": 2024,
+      "tmdbId": 990001,
+      "parentKey": null,
+      "seasonNumber": null,
+      "episodeNumber": null,
+      "absoluteNumber": null,
+      "runtimeMinutes": 100,
+      "originalLanguage": "en",
+      "aliases": [],
+      "externalIds": { "tmdb": "990001" }
+    }
+  ],
+  "requestedKey": "lantern",
+  "current": {
+    "key": "old-web",
+    "providerId": "fictional",
+    "title": "The.Paper.Lantern.2024.1080p.WEB-DL.HEVC.ENG",
+    "sizeBytes": 4000000000,
+    "references": [],
+    "members": null
+  },
+  "candidates": [
+    {
+      "key": "same-quality",
+      "providerId": "fictional",
+      "title": "The.Paper.Lantern.2024.1080p.WEB-DL.HEVC.ENG",
+      "sizeBytes": 4000000000,
+      "references": [],
+      "members": []
+    },
+    {
+      "key": "improved",
+      "providerId": "fictional",
+      "title": "The.Paper.Lantern.2024.1080p.WEB-DL.HEVC.ENG.PROPER",
+      "sizeBytes": 4000000000,
+      "references": [],
+      "members": [
+        {
+          "name": "The.Paper.Lantern.2024.1080p.PROPER.mkv",
+          "sizeBytes": 4000000000,
+          "progress": 1,
+          "probe": {
+            "format": {
+              "duration": "6000",
+              "size": "4000000000",
+              "format_name": "matroska"
+            },
+            "streams": [
+              {
+                "index": 0,
+                "codec_type": "video",
+                "codec_name": "hevc",
+                "width": 1920,
+                "height": 1080
+              },
+              {
+                "index": 1,
+                "codec_type": "audio",
+                "codec_name": "aac",
+                "tags": { "language": "eng" }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

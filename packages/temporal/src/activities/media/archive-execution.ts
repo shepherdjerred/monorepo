@@ -3,6 +3,7 @@ import { CancelledFailure } from "@temporalio/common";
 
 /** The cached runtime retains this factory, never its invocation's context or signal. */
 export function archiveExecution(context = Context.current()) {
+  const observed = { wall: Date.now(), monotonic: performance.now() };
   const info = context.info;
   if (
     [
@@ -18,7 +19,7 @@ export function archiveExecution(context = Context.current()) {
     info.currentAttemptScheduledTimestampMs + info.startToCloseTimeoutMs,
   );
   const monotonicDeadline =
-    performance.now() + Math.max(0, wallDeadline - Date.now());
+    observed.monotonic + Math.max(0, wallDeadline - observed.wall);
   const assertActive = () => {
     if (context.cancellationSignal.aborted)
       throw new CancelledFailure("Archive Activity cancelled");
@@ -29,6 +30,8 @@ export function archiveExecution(context = Context.current()) {
       });
   };
   return {
+    observed,
+    expiresAtMs: wallDeadline,
     signal: context.cancellationSignal,
     assertActive,
     checkpoint: () => {
@@ -39,11 +42,13 @@ export function archiveExecution(context = Context.current()) {
   };
 }
 
-export async function archiveCall<T>(work: () => Promise<T>): Promise<T> {
+export async function archiveCall<T>(
+  work: (execution: ReturnType<typeof archiveExecution>) => Promise<T>,
+): Promise<T> {
   try {
     const execution = archiveExecution();
     execution.assertActive();
-    const result = await work();
+    const result = await work(execution);
     execution.assertActive();
     return result;
   } catch (error) {

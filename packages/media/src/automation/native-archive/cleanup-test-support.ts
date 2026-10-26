@@ -3,7 +3,7 @@ import { rm } from "node:fs/promises";
 import type { Database } from "#infrastructure/database.ts";
 import type { CredentialCipher } from "#application/security.ts";
 import { queueNativeArchiveCleanup } from "#infrastructure/native-archive/continuation.ts";
-import { createNativeArchiveCleanupObserver } from "#migration/native-archive/cleanup.ts";
+import { observeArchiveCleanup } from "./fixtures/observe.ts";
 import { CleanupNativeArchiveInputSchema } from "#shared/native-recovery/archive.ts";
 import { nativeArchiveFixture } from "./test-fixture.ts";
 import { createNativeArchiveFileActivities } from "./activities.ts";
@@ -43,7 +43,7 @@ export async function readyArchiveCleanup(
     });
     const input = CleanupNativeArchiveInputSchema.parse(operation.payload);
     const observeCleanup = () =>
-      createNativeArchiveCleanupObserver(f.observerContext)(input);
+      observeArchiveCleanup(f.observerContext, input);
     if (options.observe !== false) await observeCleanup();
     return {
       ...f,

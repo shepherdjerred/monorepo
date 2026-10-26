@@ -4,7 +4,7 @@ import { FileOperationConflict } from "#filesystem/operations-types.ts";
 import type { NativeArchiveScope } from "#shared/native-recovery/archive.ts";
 import type { PublicationParticipant } from "#shared/publication-proof/intent.ts";
 import { archiveAuthorityParticipants } from "#infrastructure/native-archive/authority.ts";
-import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { nativeLocalPath } from "#automation/native-recovery/files.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
@@ -33,8 +33,8 @@ export async function captureArchiveAuthority(
   context: ArchiveFileContext,
   scope: NativeArchiveScope,
   content: ContentProof,
+  budget: PublicationAuthorityReadBudget,
 ) {
-  const budget = new PublicationAuthorityReadBudget();
   const participants: PublicationParticipant[] = [];
   const subtitleLineages = [];
   for (const file of scope.files) {

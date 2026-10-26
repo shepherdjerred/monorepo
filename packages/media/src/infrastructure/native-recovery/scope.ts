@@ -11,6 +11,7 @@ import { snapshotNativeSubtitles } from "#automation/native-subtitles/snapshot.t
 import { snapshotNativeSubtitlePolicies } from "#automation/native-subtitles/policies.ts";
 import { RecoveryInputSchema } from "#infrastructure/recovery.ts";
 import { resolveNativeStorageRoots } from "./storage-provenance.ts";
+import type { ApprovedStorageRoot } from "#shared/canonical-storage.ts";
 import {
   nativeHousehold,
   nativeLifecycle,
@@ -25,6 +26,8 @@ import { nativeTerminalDependencies } from "./terminal-lifecycle.ts";
 import { NativePublishedScopeSchema } from "#shared/native-recovery/lifecycle.ts";
 import { settledNativeQuarantines } from "#infrastructure/native-quarantine/settled.ts";
 import { settledNativeCompensations } from "#infrastructure/native-compensation/settled.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { ArchiveReceiptProjection } from "#infrastructure/native-archive/receipt-projection.ts";
 
 function stableTorrentObservation(raw: unknown) {
   const observed = z
@@ -39,11 +42,13 @@ function stableTorrentObservation(raw: unknown) {
 export async function assertNativeRestore(
   tx: Prisma.TransactionClient,
   input: z.infer<typeof PrepareNativeRecoverySchema>,
+  budget = new PublicationAuthorityReadBudget(),
 ) {
   const operation = await tx.operation.findUniqueOrThrow({
     where: { id: input.restoreOperationId },
   });
   const request = RecoveryInputSchema.parse(operation.payload);
+  budget.consume(1);
   const result = z
     .strictObject({
       recoveryId: z.uuid(),
@@ -70,8 +75,11 @@ export async function assertNativeRestore(
 export async function buildNativeScope(
   tx: Prisma.TransactionClient,
   input: z.infer<typeof PrepareNativeRecoverySchema>,
+  budget = new PublicationAuthorityReadBudget(),
+  reviewedStorageRoots?: ApprovedStorageRoot[],
 ) {
-  await assertNativeRestore(tx, input);
+  const projection = new ArchiveReceiptProjection(tx, budget);
+  await assertNativeRestore(tx, input, budget);
   const assetIds = [...new Set(input.assetIds)].sort();
   await assertNoSubtitleReplacement(tx, assetIds);
   if (assetIds.length !== input.assetIds.length)
@@ -172,8 +180,14 @@ export async function buildNativeScope(
   const settledQuarantines = await settledNativeQuarantines(
     tx,
     NativeRecoveryScopeSchema.shape.files.parse(files),
+    budget,
   );
-  const settledCompensations = await settledNativeCompensations(tx, assetIds);
+  const settledCompensations = await settledNativeCompensations(
+    tx,
+    assetIds,
+    budget,
+    projection,
+  );
   const lifecycle = await nativeLifecycle(tx, ids, assetIds, {
     decisionIds: settledQuarantines.flatMap((item) => item.decisionIds),
     attemptIds: settledCompensations.map((item) => item.settlement.attemptId),
@@ -186,6 +200,7 @@ export async function buildNativeScope(
     tx,
     cleanupRows,
     assetIds,
+    budget,
   );
   return NativePublishedScopeSchema.parse({
     ...publishedVersion(
@@ -241,7 +256,11 @@ export async function buildNativeScope(
       };
     }),
     files,
-    storageRoots: await resolveNativeStorageRoots(tx),
+    storageRoots: await resolveNativeStorageRoots(
+      tx,
+      budget,
+      reviewedStorageRoots,
+    ),
     subtitlePolicies: await snapshotNativeSubtitlePolicies(tx, ids),
     household: await nativeHousehold(tx, ids, ancestry),
     lifecycle,

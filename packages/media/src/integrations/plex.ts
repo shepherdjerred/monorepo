@@ -10,6 +10,12 @@ import {
 const ItemSchema = z.object({
   ratingKey: z.string(),
   type: z.string(),
+  librarySectionID: z
+    .number()
+    .int()
+    .positive()
+    .max(Number.MAX_SAFE_INTEGER)
+    .optional(),
   title: z.string(),
   guid: z.string().optional(),
   parentRatingKey: z.string().optional(),
@@ -42,6 +48,12 @@ const PageSchema = z.object({
   }),
 });
 export type PlexItem = z.infer<typeof ItemSchema>;
+
+function parsePage(value: unknown) {
+  const parsed = PageSchema.safeParse(value);
+  if (!parsed.success) throw new IntegrationError("plex", "invalid-response");
+  return parsed.data;
+}
 
 /** Instantiate with each user's server token for watch observations; owner tokens are not user watch state. */
 export class PlexClient {
@@ -126,7 +138,7 @@ export class PlexClient {
       .min(1)
       .max(500)
       .parse(input.limit ?? 200);
-    const page = PageSchema.parse(
+    const page = parsePage(
       await this.get(
         `library/sections/${input.sectionId}/all`,
         {
@@ -149,7 +161,7 @@ export class PlexClient {
 
   async metadata(ratingKey: string, signal?: AbortSignal): Promise<PlexItem> {
     z.string().regex(/^\d+$/u).parse(ratingKey);
-    const page = PageSchema.parse(
+    const page = parsePage(
       await this.get(
         `library/metadata/${ratingKey}`,
         { includeGuids: "1" },
@@ -166,13 +178,21 @@ export class PlexClient {
     return item;
   }
 
-  async watched(ratingKey: string, signal?: AbortSignal): Promise<boolean> {
+  async observeWatch(
+    ratingKey: string,
+    signal?: AbortSignal,
+  ): Promise<{ item: PlexItem; watched: boolean }> {
     const item = await this.metadata(ratingKey, signal);
-    return (item.viewCount ?? 0) > 0;
+    return { item, watched: (item.viewCount ?? 0) > 0 };
+  }
+
+  async watched(ratingKey: string, signal?: AbortSignal): Promise<boolean> {
+    const observation = await this.observeWatch(ratingKey, signal);
+    return observation.watched;
   }
 
   async activeSessions(signal?: AbortSignal): Promise<PlexItem[]> {
-    const page = PageSchema.parse(
+    const page = parsePage(
       await this.get("status/sessions", {}, signal),
     ).MediaContainer;
     if (page.size !== (page.Metadata?.length ?? 0))

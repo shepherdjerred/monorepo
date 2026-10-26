@@ -1,5 +1,4 @@
 import type { Prisma } from "#generated/prisma/client.ts";
-import { z } from "zod";
 import { MediaError } from "#application/errors.ts";
 import type { MovieEditionFulfillment } from "#shared/movie-editions/fulfillment.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
@@ -9,7 +8,9 @@ import {
 } from "#infrastructure/editions/cut-context.ts";
 import { evaluateDefaultCut } from "#domain/editions/selection.ts";
 import { readMovieChoice } from "./authority.ts";
-import { compensationPlayback } from "#infrastructure/native-compensation/playback.ts";
+import { readCurrentPlexBinding } from "#infrastructure/plex-binding/read.ts";
+import { readQuarantinedPlexWatchAuthority } from "#infrastructure/plex-binding/quarantine.ts";
+import type { PlexAccess } from "#shared/plex-binding/contract.ts";
 import { lockMovieChoiceIdentities, type MovieChoiceAccess } from "./access.ts";
 import type { MovieChoiceFreshness } from "./freshness.ts";
 
@@ -102,32 +103,51 @@ async function matchingAsset(
     asset.coverage[0].edition !== choice.scope.edition
   )
     return { status: "protected", reason: "movie_edition_asset_mismatch" };
-  const media = await tx.mediaItem.findUniqueOrThrow({
-    where: { id: choice.scope.mediaId },
-  });
-  const playback = await compensationPlayback(tx, {
-    mediaId: media.id,
-    recoveryEpoch: runtime.recoveryEpoch,
-    serverMachineId: input.access.serverMachineId,
-    externalIds: media.externalIds,
-  });
-  const binding = z
-    .object({
-      plexRatingKey: z.string().min(1).optional(),
-      plexSectionId: z.string().min(1).optional(),
-    })
-    .parse(media.externalIds);
-  if (
-    playback.state === "protected" ||
-    (playback.state === "ordinary" && asset.plexPublishedAt === null) ||
-    binding.plexRatingKey === undefined ||
-    binding.plexSectionId !== input.access.movieSectionId
-  )
+  if (!(await hasVerifiedAssociation(tx, input, choice, asset)))
     return {
       status: "pending_asset",
       reason: "movie_edition_asset_unavailable",
     };
   return matchingCut(tx, choice.scope.mediaId, asset.id);
+}
+
+async function hasVerifiedAssociation(
+  tx: Prisma.TransactionClient,
+  input: RequestInput,
+  choice: AuthorizedChoice,
+  asset: { id: string; state: string },
+): Promise<boolean> {
+  const access: PlexAccess = {
+    serverMachineId: input.access.serverMachineId,
+    sectionId: input.access.movieSectionId,
+    sectionType: "movie",
+  };
+  const scope = {
+    mediaId: choice.scope.mediaId,
+    edition: choice.scope.edition,
+  };
+  if (asset.state === "published") {
+    const current = await readCurrentPlexBinding(tx, {
+      scope,
+      assetId: asset.id,
+      access,
+    });
+    return current.status === "current";
+  }
+  const decisions = await tx.retentionDecision.findMany({
+    where: { ...scope, state: "quarantined" },
+    select: { id: true },
+    take: 2,
+  });
+  const decision = decisions[0];
+  if (decision === undefined || decisions.length !== 1) return false;
+  const quarantined = await readQuarantinedPlexWatchAuthority(tx, {
+    decisionId: decision.id,
+    scope,
+    assetId: asset.id,
+    access,
+  });
+  return quarantined.status === "current";
 }
 
 async function matchingCut(
@@ -231,6 +251,7 @@ export async function readMovieDemandAuthority(
     guards.length === 0
       ? null
       : {
+          expiresAtMs: Math.min(...guards.map((guard) => guard.expiresAtMs)),
           assertActive: () => {
             for (const guard of guards) guard.assertActive();
           },

@@ -9,6 +9,7 @@ import { QbittorrentClient } from "#integrations/qbittorrent.ts";
 import { DatabaseProviderRegistry } from "./providers.ts";
 import type { MediaAutomationContext } from "./context.ts";
 import { testWatchExecution } from "#testing/watch-execution.ts";
+import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { grantTestRequesterAccess } from "#testing/authority.ts";
 import { createRetentionActivities } from "./retention.ts";
 import { createNotificationActivities } from "./notifications.ts";
@@ -194,6 +195,13 @@ async function fixture(episode = false) {
   const context: MediaAutomationContext = {
     db,
     watchExecution: testWatchExecution,
+    plexBindingExecution: testPlexBindingExecution,
+    plexAccess: (sectionType) =>
+      Promise.resolve({
+        serverMachineId: "fixture-server",
+        sectionType,
+        sectionId: sectionType === "movie" ? "1" : "2",
+      }),
     serverMachineId: "fixture-server",
     tmdb: new TmdbClient({ kind: "bearer", token: "fixture" }),
     describeWorkflow: async () => null,

@@ -14,6 +14,25 @@ function environment(at = Date.now()) {
     scheduleToCloseTimeoutMs: 300_000,
   });
 }
+test.each([60_000, 300_000])(
+  "numeric compensation deadline retains original SDK minimum with overall %i",
+  async (overall) => {
+    const at = Date.now();
+    const env = new MockActivityEnvironment({
+      scheduledTimestampMs: at,
+      currentAttemptScheduledTimestampMs: at + 10,
+      startToCloseTimeoutMs: 120_000,
+      scheduleToCloseTimeoutMs: overall,
+    });
+    await env.run(async () => {
+      const execution = compensationExecution();
+      const expected = Math.min(at + overall, at + 10 + 120_000);
+      expect(execution.expiresAtMs).toBe(expected);
+      await execution.checkpoint("original-numeric-deadline");
+      expect(execution.expiresAtMs).toBe(expected);
+    });
+  },
+);
 test.each([undefined, NaN, Infinity, -Infinity, 0, -1])(
   "invalid compensation budget %s rejects before bootstrap",
   async (value) => {

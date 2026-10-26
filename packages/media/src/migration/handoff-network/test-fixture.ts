@@ -11,7 +11,11 @@ import { snapshotHash } from "#migration/profile-import.ts";
 import type { HandoffNetworkContext } from "./context.ts";
 
 const hash = (value: string) => snapshotHash(value);
-export async function networkFixture(db: Database, cipher: CredentialCipher) {
+export async function networkFixture(
+  db: Database,
+  cipher: CredentialCipher,
+  serverMachineId = "server",
+) {
   await db.mediaRuntimeState.update({
     where: { id: "singleton" },
     data: {
@@ -29,7 +33,7 @@ export async function networkFixture(db: Database, cipher: CredentialCipher) {
       plexIdentity: {
         create: {
           kind: "account",
-          serverMachineId: "server",
+          serverMachineId,
           permittedSectionIds: ["1", "2"],
           permittedMediaKinds: ["movie", "series"],
         },
@@ -229,13 +233,13 @@ export async function networkFixture(db: Database, cipher: CredentialCipher) {
   const context: HandoffNetworkContext = {
     db,
     cipher,
-    expectedServerMachineId: "server",
+    expectedServerMachineId: serverMachineId,
     permittedSections: () => Promise.resolve({ movie: "1", series: "2" }),
     authentication: {
       resolveServerAccess: () =>
         Promise.resolve({
           accountId: actor.plexAccountId,
-          serverMachineId: "server",
+          serverMachineId,
           serverToken: "synthetic",
           permittedSectionIds: ["1", "2"],
           permittedMediaKinds: ["movie", "series"],
@@ -243,7 +247,7 @@ export async function networkFixture(db: Database, cipher: CredentialCipher) {
         }),
     },
     plex: {
-      machineIdentifier: () => Promise.resolve("server"),
+      machineIdentifier: () => Promise.resolve(serverMachineId),
       sections: () =>
         Promise.resolve([{ key: "1", title: "Movies", type: "movie" }]),
       libraryPage: () => Promise.resolve({ total: 1, items: [item()] }),

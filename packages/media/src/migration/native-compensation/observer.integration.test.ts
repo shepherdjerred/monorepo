@@ -10,10 +10,21 @@ import {
   NativeCompensationNetworkEvidenceSchema,
 } from "#shared/native-recovery/compensation.ts";
 import { observeNativeCompensation } from "./producer.ts";
+import type { NativeCompensationObserverContext } from "./evidence.ts";
 
 const harness = automationTestHarness();
 let fixture: Awaited<ReturnType<typeof nativeCompensationFixture>>;
 let directory: string | undefined;
+function observedPlex(): NativeCompensationObserverContext["plex"] {
+  const plex = fixture.observerContext.plex;
+  return {
+    machineIdentifier: plex.machineIdentifier.bind(plex),
+    sections: plex.sections.bind(plex),
+    libraryPage: plex.libraryPage.bind(plex),
+    metadata: plex.metadata.bind(plex),
+    activeSessions: plex.activeSessions.bind(plex),
+  };
+}
 beforeAll(async () => {
   fixture = await nativeCompensationFixture(
     harness.database(),
@@ -62,7 +73,7 @@ test("actual canonical-path playback blocks compensation even with an unrelated 
   const context = {
     ...fixture.observerContext,
     plex: {
-      ...fixture.observerContext.plex,
+      ...observedPlex(),
       activeSessions: () =>
         Promise.resolve([
           {
@@ -99,7 +110,7 @@ test("a retained control file indexed in an unconfigured video section blocks co
   const context = {
     ...fixture.observerContext,
     plex: {
-      ...fixture.observerContext.plex,
+      ...observedPlex(),
       sections: async () => [
         ...(await fixture.observerContext.plex.sections()),
         { key: "9", type: "movie", title: "Other video library" },
@@ -142,7 +153,7 @@ test("a video section appearing after complete inventory prevents a fresh observ
   const context = {
     ...fixture.observerContext,
     plex: {
-      ...fixture.observerContext.plex,
+      ...observedPlex(),
       sections: async () => {
         const sections = await fixture.observerContext.plex.sections();
         reads += 1;
@@ -178,7 +189,7 @@ test("expiration during the final playback read cannot persist otherwise valid n
   const context = {
     ...fixture.observerContext,
     plex: {
-      ...fixture.observerContext.plex,
+      ...observedPlex(),
       activeSessions: () => {
         expired = true;
         return Promise.resolve([]);

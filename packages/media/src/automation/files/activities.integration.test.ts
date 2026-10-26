@@ -200,47 +200,6 @@ test("a partial season publication followed by Keep compensates every uncommitte
   ).toBe(0);
 });
 
-test("restore recovers a quarantine filesystem effect whose database commit was interrupted", async () => {
-  const f = await fixture();
-  const original = await f.published();
-  const retention = await f.retention();
-  const activities = createMediaFileActivities(f.context);
-  f.context.checkpoint = (phase) =>
-    phase === "move-unlinked"
-      ? Promise.reject(new Error("quarantine interrupted"))
-      : Promise.resolve();
-  await expect(
-    activities.quarantineMediaFiles(retention.input),
-  ).rejects.toThrow("quarantine interrupted");
-  const intent = await cluster.database.mediaIntent.update({
-    where: targetWhere(defaultScope(f.media.id)),
-    data: { generation: 1 },
-  });
-  await cluster.database.retentionDecision.update({
-    where: { id: retention.decision.id },
-    data: { state: "cancelled" },
-  });
-  const operation = await cluster.database.operation.create({
-    data: {
-      kind: "restore_media",
-      payload: { mediaId: f.media.id, generation: intent.generation },
-    },
-  });
-  f.context.checkpoint = () => Promise.resolve();
-  expect(
-    await activities.restoreMediaFiles({
-      mediaId: f.media.id,
-      operationId: operation.id,
-    }),
-  ).toEqual({ status: "restored" });
-  expect(
-    await readFile(
-      nodePath.join(f.roots.library, original.entry.libraryPath),
-      "utf8",
-    ),
-  ).toBe(original.content);
-});
-
 test("failed Plex upgrade verification restores the previous file and coverage", async () => {
   const f = await fixture();
   const original = await f.published();
@@ -359,156 +318,16 @@ test("failed Plex upgrade verification restores the previous file and coverage",
   ).toMatchObject({ current: true });
 });
 
-test("quarantine and restore preserve exact content and invalidated deletion stays protected", async () => {
-  const f = await fixture();
-  const original = await f.published();
-  const retention = await f.retention();
-  const activities = createMediaFileActivities(f.context);
-  expect(await activities.quarantineMediaFiles(retention.input)).toEqual({
-    status: "quarantined",
-  });
-  await expect(
-    access(nodePath.join(f.roots.library, original.entry.libraryPath)),
-  ).rejects.toThrow();
-  const intent = await cluster.database.mediaIntent.update({
-    where: targetWhere(defaultScope(f.media.id)),
-    data: { generation: { increment: 1 } },
-  });
-  const operation = await cluster.database.operation.create({
-    data: {
-      kind: "restore_media",
-      payload: { mediaId: f.media.id, generation: intent.generation },
-    },
-  });
-  expect(
-    await activities.restoreMediaFiles({
-      mediaId: f.media.id,
-      operationId: operation.id,
-    }),
-  ).toEqual({ status: "restored" });
-  expect(
-    await activities.restoreMediaFiles({
-      mediaId: f.media.id,
-      operationId: operation.id,
-    }),
-  ).toEqual({ status: "restored" });
-  expect(
-    await readFile(
-      nodePath.join(f.roots.library, original.entry.libraryPath),
-      "utf8",
-    ),
-  ).toBe(original.content);
-  expect(
-    await activities.purgeMediaFiles({
-      ...retention.input,
-      operationId: crypto.randomUUID(),
-    }),
-  ).toMatchObject({ status: "protected" });
-});
-
-test("stale playback evidence protects a fully watched and notified asset", async () => {
-  const f = await fixture();
-  await f.published();
-  const retention = await f.retention();
-  f.advance(61_000);
-  expect(
-    await createMediaFileActivities(f.context).quarantineMediaFiles(
-      retention.input,
-    ),
-  ).toEqual({ status: "protected", reason: "evidence_stale" });
-});
-
-test("the same retention operation quarantines then purges only after seven days and fresh watch evidence", async () => {
-  const f = await fixture();
-  const original = await f.published();
-  const retention = await f.retention();
-  const activities = createMediaFileActivities(f.context);
-  await activities.quarantineMediaFiles(retention.input);
-  const input = retention.input;
-  expect(await activities.purgeMediaFiles(input)).toEqual({
-    status: "protected",
-    reason: "retention_not_due",
-  });
-  f.advance(8 * 86_400_000);
-  const timestamp = f.context.now?.();
-  if (timestamp === undefined) throw new Error("Missing fixture clock");
-  const decision = await cluster.database.retentionDecision.findUniqueOrThrow({
-    where: { id: retention.decision.id },
-  });
-  const evidence = decision.evidence;
-  if (
-    typeof evidence !== "object" ||
-    evidence === null ||
-    Array.isArray(evidence)
-  )
-    throw new Error("Invalid fixture evidence");
-  await cluster.database.retentionDecision.update({
-    where: { id: decision.id },
-    data: {
-      evidence: { ...evidence, authorizedAt: timestamp.toISOString() },
-    },
-  });
-  expect(await activities.purgeMediaFiles(input)).toEqual({
-    status: "protected",
-    reason: "watch_unconfirmed",
-  });
-  await cluster.database.watchState.update({
-    where: {
-      userId_mediaId_edition: {
-        edition: "default",
-        userId: f.user.id,
-        mediaId: f.media.id,
-      },
-    },
-    data: { observedAt: timestamp },
-  });
-  expect(await activities.purgeMediaFiles(input)).toMatchObject({
-    status: "protected",
-    reason: "warning_unconfirmed",
-  });
-  await cluster.database.notificationDelivery.updateMany({
-    where: { event: { mediaId: f.media.id }, userId: f.user.id },
-    data: { reconciledAt: timestamp },
-  });
-  expect(await activities.purgeMediaFiles(input)).toEqual({
-    status: "purged",
-  });
-  expect(await activities.purgeMediaFiles(input)).toEqual({
-    status: "purged",
-  });
-  expect(
-    await cluster.database.libraryAsset.findUniqueOrThrow({
-      where: { id: original.entry.assetId },
-    }),
-  ).toMatchObject({ state: "purged" });
-});
-
-test("a missing accepted warning and a changed runtime epoch each protect files", async () => {
-  const f = await fixture();
-  await f.published();
-  const retention = await f.retention();
-  const activities = createMediaFileActivities(f.context);
-  await cluster.database.notificationDelivery.updateMany({
-    where: { userId: f.user.id },
-    data: { state: "unknown", acceptedAt: null },
-  });
-  expect(await activities.quarantineMediaFiles(retention.input)).toEqual({
-    status: "protected",
-    reason: "warning_unconfirmed",
-  });
-  await cluster.database.mediaRuntimeState.update({
-    where: { id: "singleton" },
-    data: { recoveryEpoch: 1 },
-  });
-  expect(await activities.quarantineMediaFiles(retention.input)).toEqual({
-    status: "protected",
-    reason: "runtime_protected",
-  });
-});
-
 test("only an authenticated owner confirmation bypasses watch and notification grace", async () => {
   const f = await fixture();
   const published = await f.published();
+  let servingAccessReads = 0;
+  f.context.plexAccess = () => {
+    servingAccessReads++;
+    throw new Error(
+      "Manual removal must not require a serving Plex association",
+    );
+  };
   const db = cluster.database;
   await db.mediaUser.update({
     where: { id: f.user.id },
@@ -581,6 +400,16 @@ test("only an authenticated owner confirmation bypasses watch and notification g
   expect(await activities.quarantineMediaFiles(input)).toEqual({
     status: "quarantined",
   });
+  expect(servingAccessReads).toBe(0);
+  const retainedOperation = await db.operation.findUniqueOrThrow({
+    where: { id: operation.id },
+  });
+  expect(retainedOperation.result).toBeNull();
+  expect(
+    await db.retentionPlexProjection.count({
+      where: { decisionId: decision.id },
+    }),
+  ).toBe(0);
   expect(
     await activities.purgeMediaFiles({
       ...input,

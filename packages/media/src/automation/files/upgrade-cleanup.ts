@@ -12,7 +12,12 @@ import {
   UpgradeCleanupPlanSchema,
   type UpgradeCleanupPlan,
 } from "./upgrade-cleanup-plan.ts";
-import { assertRuntime, lockMedia } from "./guards.ts";
+import { assertRuntime } from "./guards.ts";
+import {
+  publicationInvocation,
+  requirePublicationExecution,
+} from "#automation/publication-proof/invocation.ts";
+import { captureCleanupPlex, lockCleanupPlex } from "./plex-binding/cleanup.ts";
 import { assertPublicationUnfenced } from "#automation/publication-proof/fence.ts";
 import { assertNoSubtitleReplacement } from "#infrastructure/subtitle-replacement/locks.ts";
 import { videoSubtitleWhere } from "./subtitle-lifecycle/ownership.ts";
@@ -33,13 +38,16 @@ import {
   currentPlayback,
   playbackReferences,
   assertCurrentPlayback,
-} from "./cleanup-playback.ts";
+} from "./plex-binding/cleanup-playback.ts";
 
 /** Deletes only the exact superseded version after its successor has been verified for seven days. */
 export async function cleanupUpgrade(
   initialContext: FileContext,
   cleanupId: string,
+  operationId: string,
 ): Promise<void> {
+  const observed = { wall: Date.now(), monotonic: performance.now() };
+  const execution = initialContext.publicationExecution?.();
   const snapshot = await initialContext.db.upgradeCleanup.findUniqueOrThrow({
     where: { id: cleanupId },
   });
@@ -48,21 +56,42 @@ export async function cleanupUpgrade(
     throw new FileGuardError("cleanup_cancelled");
   if (snapshot.state !== "pending")
     throw new FileGuardError("cleanup_state_protected");
+  const runtime = await initialContext.db.mediaRuntimeState.findUniqueOrThrow({
+    where: { id: "singleton" },
+  });
+  if (runtime.recoveryEpoch !== snapshot.recoveryEpoch)
+    throw new FileGuardError("runtime_protected");
   if (!(await initialContext.enabled.purge()))
     throw new FileGuardError("purge_disabled");
   if (snapshot.expiresAt > now(initialContext))
     throw new FileGuardError("rollback_window_incomplete");
-  const plan = await prepareUpgradeCleanupPlan(initialContext, cleanupId);
-  if (await reopenLegacyClaimProtection(initialContext.db, plan.mediaIds))
-    throw new PendingLegacyClaimsError(plan.mediaIds);
-  const intents = await initialContext.db.mediaIntent.findMany({
-    where: { mediaId: { in: plan.mediaIds }, edition: "default" },
-  });
+  const invocation = publicationInvocation(
+    initialContext,
+    requirePublicationExecution(execution),
+  );
+  const proof = await captureCleanupPlex(
+    invocation,
+    { cleanupId, operationId },
+    observed,
+  );
+  if (proof === null) return;
+  const plan = await prepareUpgradeCleanupPlan(invocation, cleanupId);
+  proof.freshness.assertActive();
+  const mediaIds = proof.evidence.expected.mediaIds;
+  if (await reopenLegacyClaimProtection(initialContext.db, mediaIds))
+    throw new PendingLegacyClaimsError(mediaIds);
+  const intents = proof.evidence.expected.targets;
   const generations = new Map(
     intents.map((intent) => [intent.mediaId, intent.generation]),
   );
-  const playback = await currentPlayback(initialContext, plan.mediaIds);
-  const context = await prepareContentProof(initialContext, [
+  const playback = await currentPlayback(invocation, plan.mediaIds);
+  proof.freshness.assertActive();
+  const access = [
+    ...new Map(
+      playback.map((item) => [item.access.sectionType, item.access]),
+    ).values(),
+  ].sort((a, b) => a.sectionType.localeCompare(b.sectionType));
+  const context = await prepareContentProof(invocation, [
     ...plan.files.map((file) => ({
       libraryKind: plan.libraryKind,
       root: "control" as const,
@@ -70,16 +99,22 @@ export async function cleanupUpgrade(
     })),
     ...playbackReferences(initialContext, plan.libraryKind, playback),
   ]);
+  proof.freshness.assertActive();
   await context.db.$transaction(
     async (tx) => {
-      await lockMedia(tx, plan.mediaIds);
-      await tx.$queryRaw`SELECT id FROM "UpgradeCleanup" WHERE id = ${cleanupId} FOR UPDATE`;
+      const freshness = await lockCleanupPlex(tx, {
+        context: { ...context, execution: invocation.execution },
+        proof,
+        plan,
+        access,
+      });
+      if (freshness === null) return;
       const current = await tx.upgradeCleanup.findUniqueOrThrow({
         where: { id: cleanupId },
       });
       if (current.state === "purged") return;
       const authorize = async () => {
-        await assertPublicationUnfenced(tx, plan.mediaIds, [
+        await assertPublicationUnfenced(tx, mediaIds, [
           current.assetId,
           current.successorAssetId,
           ...playback.map((item) => item.id),
@@ -89,11 +124,11 @@ export async function cleanupUpgrade(
         if (!(await context.enabled.purge()))
           throw new FileGuardError("purge_disabled");
         await assertRuntime(tx, snapshot.recoveryEpoch);
-        await assertLegacyClaimsResolved(tx, plan.mediaIds);
+        await assertLegacyClaimsResolved(tx, mediaIds);
         if (
           !(await recordsAuthorized(tx, {
             epoch: snapshot.recoveryEpoch,
-            mediaIds: plan.mediaIds,
+            mediaIds,
             assetIds: [
               current.assetId,
               current.successorAssetId,
@@ -105,7 +140,7 @@ export async function cleanupUpgrade(
         if (
           await tx.recoveryHold.count({
             where: {
-              mediaId: { in: plan.mediaIds },
+              mediaId: { in: mediaIds },
               edition: "default",
               releasedAt: null,
             },
@@ -121,12 +156,12 @@ export async function cleanupUpgrade(
         )
           throw new FileGuardError("cleanup_plan_changed");
         await assertCleanupAssets({ tx, context, cleanup: current, plan });
-        await assertCurrentPlayback(tx, context, playback);
+        await assertCurrentPlayback(tx, context, playback, freshness);
         const latest = await tx.mediaIntent.findMany({
-          where: { mediaId: { in: plan.mediaIds }, edition: "default" },
+          where: { mediaId: { in: mediaIds }, edition: "default" },
         });
         if (
-          latest.length !== plan.mediaIds.length ||
+          latest.length !== mediaIds.length ||
           latest.some(
             (intent) => intent.generation !== generations.get(intent.mediaId),
           )
@@ -134,7 +169,7 @@ export async function cleanupUpgrade(
           throw new FileGuardError("cleanup_generation_changed");
         const held = await tx.retentionHold.count({
           where: {
-            mediaId: { in: plan.mediaIds },
+            mediaId: { in: mediaIds },
             edition: "default",
             OR: [
               { isPin: true },
@@ -145,12 +180,14 @@ export async function cleanupUpgrade(
         });
         if (held !== 0) throw new FileGuardError("cleanup_media_held");
         await assertNoRecoveryReference(tx, current.assetId);
+        freshness.assertActive();
       };
       await authorize();
       const operations = fileOperations(
         context,
         context.roots[plan.libraryKind],
         authorize,
+        freshness.assertActive,
       );
       for (const file of plan.files) {
         if (context.contentProof === undefined)
@@ -207,6 +244,7 @@ export async function cleanupUpgrade(
           payload: { cleanupId, assetId: current.assetId },
         },
       });
+      freshness.assertActive();
     },
     { timeout: 30_000, maxWait: 30_000 },
   );

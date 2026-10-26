@@ -1,4 +1,5 @@
 import type { NativeQuarantineFileActivities } from "#shared/automation.ts";
+import { readNativePlexReceipt } from "#infrastructure/plex-binding/native/native-version.ts";
 import type { NativeFileContext } from "#automation/native-recovery/files.ts";
 import { prepareNativeQuarantineFiles } from "./files.ts";
 import { finishQuarantinePreparation } from "./plan.ts";
@@ -15,23 +16,18 @@ export function createNativeQuarantineFileActivities(
         where: { id: input.planId },
       });
       if (["awaiting_review", "applied"].includes(plan.state)) return;
-      const prepared = await prepareNativeQuarantineFiles(
-        context,
-        input.planId,
-      );
+      const prepared = await prepareNativeQuarantineFiles(context, input);
       await finishQuarantinePreparation(context, input, prepared);
     },
     async applyNativeQuarantineFiles(input) {
-      if (
-        (await context.files.db.nativeRecoveryReceipt.findUnique({
-          where: { planId: input.planId },
-        })) !== null
-      )
+      const receipt = await context.files.db.nativeRecoveryReceipt.findUnique({
+        where: { planId: input.planId },
+      });
+      if (receipt !== null) {
+        await readNativePlexReceipt(context.files.db, receipt.id);
         return;
-      const prepared = await prepareNativeQuarantineFiles(
-        context,
-        input.planId,
-      );
+      }
+      const prepared = await prepareNativeQuarantineFiles(context, input);
       await applyPreparedQuarantine(context, input, prepared);
     },
     async restoreNativeQuarantineFiles(input) {

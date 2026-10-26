@@ -16,6 +16,7 @@ import { NotificationDeliveryCommands } from "./notifications/commands.ts";
 import { VerificationAuthoritySchema } from "#shared/notification-authority.ts";
 import type { Database } from "./database.ts";
 import type { MovieChoiceAccess } from "./movie-editions/access.ts";
+import type { PlexAccess } from "#shared/plex-binding/contract.ts";
 
 export class PrismaNotificationApplication
   extends NotificationDeliveryCommands
@@ -29,11 +30,13 @@ export class PrismaNotificationApplication
       publicOrigin: string;
       discordEnabled?: () => Promise<boolean>;
       movieAccess?: () => Promise<MovieChoiceAccess>;
+      plexAccess?: (sectionType: "movie" | "show") => Promise<PlexAccess>;
     },
   ) {
     super(db, cipher, options.publicOrigin, {
       personalDiscordAvailable: options.discordEnabled,
       movieAccess: options.movieAccess,
+      plexAccess: options.plexAccess,
     });
   }
 

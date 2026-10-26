@@ -4,6 +4,8 @@ import { writeFile, rm } from "node:fs/promises";
 import { z } from "zod";
 import { automationTestHarness } from "#testing/automation.ts";
 import { fileFixture } from "#automation/files/test-support.ts";
+import { preparePhysicalPublication } from "#automation/plex-binding/test-fixture.ts";
+import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { subtitleDestination } from "#domain/subtitle-path.ts";
 import { PrismaAdminApplication } from "#infrastructure/admin-service.ts";
 import { PrismaSubtitleReplacements } from "#infrastructure/subtitle-replacement/service.ts";
@@ -19,11 +21,15 @@ export function replacementHarness() {
   });
   async function setup(
     quality: "accepted" | "unverified" | "rejected" = "unverified",
+    fileFactory: typeof fileFixture = fileFixture,
+    publicationPending = false,
   ) {
     const db = harness.database();
-    const f = await fileFixture(db);
+    const f = await fileFactory(db);
     directories.push(f.directory);
-    const published = await f.published();
+    const published = publicationPending
+      ? await preparePhysicalPublication(f)
+      : await f.published();
     const asset = await db.libraryAsset.findUniqueOrThrow({
       where: { id: published.entry.assetId },
     });
@@ -47,7 +53,8 @@ export function replacementHarness() {
       hearingImpaired: false,
       format: "srt",
     });
-    await writeFile(filename, oldText);
+    const workerFilename = workerFilePath(f.context, filename);
+    await writeFile(workerFilename, oldText);
     const checksum = createHash("sha256").update(oldText).digest("hex");
     const old = await db.subtitleAsset.create({
       data: {
@@ -168,7 +175,8 @@ export function replacementHarness() {
       candidateId,
       oldText,
       newText,
-      filename,
+      filename: workerFilename,
+      initialPublication: published,
       service,
       replacementId,
       prepareInput,
@@ -180,5 +188,5 @@ export function replacementHarness() {
       paths: async () => replacementPaths(f.context, await row()),
     };
   }
-  return { setup };
+  return { setup, network: harness.context };
 }

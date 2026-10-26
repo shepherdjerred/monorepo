@@ -9,6 +9,7 @@ import { snapshotPublicationAsset } from "#infrastructure/publication-proof/snap
 import { compensationRecord } from "./records.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { compensationSubtitleLineage } from "./subtitle-lineage.ts";
+import type { NativeReceiptReadPort } from "#infrastructure/plex-binding/native/receipt-port.ts";
 
 export async function resolveCompensationPhysicalReference(
   tx: Prisma.TransactionClient,
@@ -17,11 +18,13 @@ export async function resolveCompensationPhysicalReference(
     assetId: string;
   },
   budget?: PublicationAuthorityReadBudget,
+  projection?: NativeReceiptReadPort,
 ): Promise<CompensationPhysicalReference> {
   const { row, completion, descriptor } = await compensationRecord(
     tx,
     input.continuationId,
     budget,
+    projection,
   );
   if (completion === null)
     throw new Error("Pending compensation is not a physical ownership receipt");
@@ -67,6 +70,7 @@ export async function findCurrentCompensationReceipts(
     recoveryEpoch: number;
   },
   budget?: PublicationAuthorityReadBudget,
+  projection?: NativeReceiptReadPort,
 ): Promise<CompensationPhysicalReference[]> {
   const rows = await tx.nativePublicationCompensationContinuation.findMany({
     where: {
@@ -82,7 +86,7 @@ export async function findCurrentCompensationReceipts(
     throw new Error("Compensation physical receipt lookup exceeds bound");
   const references = [];
   for (const row of rows) {
-    const record = await compensationRecord(tx, row.id, budget);
+    const record = await compensationRecord(tx, row.id, budget, projection);
     if (record.completion === null)
       throw new Error("Completed compensation has no completion");
     for (const binding of record.completion.predecessorBindings) {
@@ -100,6 +104,7 @@ export async function findCurrentCompensationReceipts(
           tx,
           { continuationId: row.id, assetId: binding.after.id },
           budget,
+          projection,
         ),
       );
     }

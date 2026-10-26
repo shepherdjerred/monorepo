@@ -91,7 +91,7 @@ export type AuthStore = {
   updateAccess: (
     userId: string,
     access: PlexPermissionSnapshot,
-  ) => Promise<void>;
+  ) => Promise<MediaActor>;
 };
 
 export type MediaAuthOptions = {
@@ -231,7 +231,10 @@ export class MediaAuth {
         403,
       );
     }
-    await this.store.updateAccess(session.actor.id, permissionSnapshot(access));
+    const actor = await this.store.updateAccess(
+      session.actor.id,
+      permissionSnapshot(access),
+    );
     if (refreshed || credential.serverToken !== access.serverToken) {
       credential.serverToken = access.serverToken;
       await this.store.updateCredential(
@@ -243,7 +246,7 @@ export class MediaAuth {
         session.encryptedCredential,
       );
     }
-    return { actor: session.actor, csrfHash: session.csrfHash };
+    return { actor, csrfHash: session.csrfHash };
   }
 
   verifyCsrf(token: string | undefined, expectedHash: string): void {

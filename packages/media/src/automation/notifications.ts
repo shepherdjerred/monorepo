@@ -14,6 +14,9 @@ import { reconcileDelivery } from "./notifications/reconcile.ts";
 import { networkMovieAccess } from "./editions/access.ts";
 import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
 import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts";
+import { prepareNotificationBinding } from "./notifications/binding.ts";
+import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
+import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
 
 const result = (
   status: "accepted" | "failed" | "unknown",
@@ -30,6 +33,8 @@ export function createNotificationActivities(
 ): Pick<MediaNetworkActivities, "deliverMediaNotification"> {
   return {
     async deliverMediaNotification(input) {
+      const execution = context.plexBindingExecution();
+      execution.assertActive();
       const snapshot = await context.db.notificationDelivery.findUniqueOrThrow({
         where: { id: input.notificationId },
         include: deliveryInclude,
@@ -48,11 +53,23 @@ export function createNotificationActivities(
       ].includes(snapshot.event.kind)
         ? await networkMovieAccess(context, eventMediaIds(snapshot))
         : undefined;
-      const messageContext = { ...context, movieAccess };
+      let binding: Awaited<ReturnType<typeof prepareNotificationBinding>>;
+      try {
+        binding = await prepareNotificationBinding(
+          context,
+          snapshot,
+          execution,
+        );
+      } catch (error) {
+        if (error instanceof PlexBindingProtection)
+          return result("failed", error.reason);
+        throw error;
+      }
+      const messageContext = { ...context, movieAccess, binding };
       const claim = await context.db
         .$transaction(async (tx) => {
           const guards: MovieChoiceFreshness[] = [];
-          const delivery = await lockDelivery(tx, snapshot.id);
+          const delivery = await lockDelivery(tx, snapshot.id, binding);
           if (delivery.state !== "pending") return null;
           const protectedReason = await deliveryAuthority(tx, delivery);
           if (protectedReason !== null) {
@@ -102,12 +119,17 @@ export function createNotificationActivities(
               version: { increment: 1 },
             },
           });
-          for (const guard of guards) guard.assertActive();
+          for (const guard of guards) {
+            guard.assertActive();
+            await bindPlexTransactionDeadline(tx, guard);
+          }
           return { attemptId: attempt.id, recipientFingerprint };
         })
         .catch((error: unknown) => {
           if (error instanceof MovieChoiceProtection)
             return { protectedReason: error.code };
+          if (error instanceof PlexBindingProtection)
+            return { protectedReason: error.reason };
           throw error;
         });
       if (claim === null)
@@ -119,7 +141,7 @@ export function createNotificationActivities(
         return await context.db.$transaction(
           async (tx) => {
             const guards: MovieChoiceFreshness[] = [];
-            const delivery = await lockDelivery(tx, snapshot.id);
+            const delivery = await lockDelivery(tx, snapshot.id, binding);
             const current = await deliveryAuthority(tx, delivery);
             const message =
               current === null
@@ -155,7 +177,10 @@ export function createNotificationActivities(
               });
               return result("failed", "authority_changed_before_send");
             }
-            for (const guard of guards) guard.assertActive();
+            for (const guard of guards) {
+              guard.assertActive();
+              await bindPlexTransactionDeadline(tx, guard);
+            }
             const sent = await context.notify(
               {
                 ...message,
@@ -206,7 +231,9 @@ async function settleDeliveryFailure(
   input: { deliveryId: string; attemptId: string },
   error: unknown,
 ) {
-  const choiceExpired = error instanceof MovieChoiceProtection;
+  const choiceExpired =
+    error instanceof MovieChoiceProtection ||
+    error instanceof PlexBindingProtection;
   const rejected =
     choiceExpired ||
     (error instanceof IntegrationError &&

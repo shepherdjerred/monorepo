@@ -1,11 +1,14 @@
 import { expect } from "vitest";
-import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
+import type { MediaAutomationContext } from "#automation/context.ts";
 import type { fileFixture } from "#automation/files/test-support.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { FilePlanSchema } from "#automation/files/types.ts";
-import { recordVerifiedPublication } from "#automation/reconciliation/upgrade-cleanup.ts";
-import { UpgradeCleanupPlanSchema } from "#automation/files/upgrade-cleanup-plan.ts";
+import { createPublicationActivities } from "#automation/publication.ts";
+import { retentionPlexContext } from "#automation/retention/fixtures/plex.ts";
+import { bindingTestExecution } from "#automation/plex-binding/test-fixture.ts";
+import { elapsedPublicationClient } from "#automation/files/plex-binding/elapsed-publication.test-support.ts";
+import { observeMediaUpgradeCleanup } from "#automation/plex-binding/cleanup.ts";
 
 type Fixture = Awaited<ReturnType<typeof fileFixture>>;
 type Published = Awaited<ReturnType<Fixture["published"]>>;
@@ -13,13 +16,25 @@ type Published = Awaited<ReturnType<Fixture["published"]>>;
 export function settleTerminalPublication(
   db: Database,
   kind: "purged" | "cancelled",
-  afterRollback?: (file: Fixture, original: Published) => Promise<void>,
+  options: {
+    context: MediaAutomationContext;
+    afterRollback?: (file: Fixture, original: Published) => Promise<void>;
+  },
 ) {
   return async (file: Fixture, original: Published): Promise<Published> => {
-    await db.acquisitionAttempt.update({
-      where: { id: original.attempt.id },
-      data: { state: "completed" },
+    const originalTransport = await retentionPlexContext(
+      db,
+      options.context,
+      original.attempt.mediaIds,
+    );
+    const originalPublisher = createPublicationActivities(
+      originalTransport.context,
+    );
+    expect(await originalPublisher.publishMediaToPlex(original.input)).toEqual({
+      status: "available",
+      reason: null,
     });
+    await originalPublisher.finalizeMediaAcquisition(original.input);
     const inspect = file.context.inspect;
     if (inspect === undefined) throw new Error("Fixture inspector missing");
     file.context.inspect = async (name) => {
@@ -48,13 +63,24 @@ export function settleTerminalPublication(
     });
     const entry = FilePlanSchema.parse(attempt.filePlan)[0];
     if (entry === undefined) throw new Error("Upgraded fixture plan missing");
-    await db.$transaction(async (tx) => {
-      await recordVerifiedPublication(tx, [entry.assetId], 0);
-      await tx.mediaItem.update({
-        where: { id: file.media.id },
-        data: { availability: "available" },
-      });
+    const transport = await retentionPlexContext(
+      db,
+      options.context,
+      attempt.mediaIds,
+    );
+    const timing =
+      kind === "purged"
+        ? await elapsedPublicationClient(db, entry.assetId)
+        : null;
+    const publisher = createPublicationActivities({
+      ...transport.context,
+      db: timing?.db ?? db,
     });
+    expect(await publisher.publishMediaToPlex(acquired.input)).toEqual({
+      status: "available",
+      reason: null,
+    });
+    await timing?.assertWritten();
     const cleanup = await db.upgradeCleanup.findUniqueOrThrow({
       where: {
         assetId_successorAssetId: {
@@ -64,77 +90,43 @@ export function settleTerminalPublication(
       },
     });
     if (kind === "purged") {
-      await db.acquisitionAttempt.update({
-        where: { id: attempt.id },
-        data: { state: "completed" },
+      await createPublicationActivities(
+        transport.context,
+      ).finalizeMediaAcquisition(acquired.input);
+      const operation = await db.operation.findUniqueOrThrow({
+        where: { idempotencyKey: `upgrade-cleanup:${cleanup.id}` },
       });
-      await db.acquisitionReservation.deleteMany({
-        where: { attemptId: attempt.id },
-      });
-      file.advance(8 * 86_400_000);
+      const input = { cleanupId: cleanup.id, operationId: operation.id };
       expect(
-        await activities.cleanupSupersededMediaFile({
-          cleanupId: cleanup.id,
-          operationId: crypto.randomUUID(),
-        }),
-      ).toEqual({ status: "purged" });
+        await observeMediaUpgradeCleanup(
+          transport.context,
+          input,
+          bindingTestExecution(),
+        ),
+      ).toEqual({ status: "observed" });
+      expect(await activities.cleanupSupersededMediaFile(input)).toEqual({
+        status: "purged",
+      });
     } else {
       expect(await activities.rollbackMediaPromotion(acquired.input)).toEqual({
         status: "rolled_back",
       });
-      // The separate Plex readback normally releases this reservation. The fixture's GET
-      // adapter below proves the restored file before any native authority is granted.
-      await db.acquisitionReservation.deleteMany({
-        where: { attemptId: attempt.id },
+      const rollbackTransport = await retentionPlexContext(
+        db,
+        options.context,
+        attempt.mediaIds,
+      );
+      expect(
+        await createPublicationActivities(
+          rollbackTransport.context,
+        ).publishRolledBackMedia(acquired.input),
+      ).toEqual({
+        status: "available",
+        reason: null,
       });
       file.context.inspect = inspect;
-      await afterRollback?.(file, original);
+      await options.afterRollback?.(file, original);
     }
-    await canonicalizeHistory(
-      db,
-      file,
-      [original.entry.assetId, entry.assetId],
-      cleanup.id,
-    );
     return kind === "purged" ? { ...acquired, entry } : original;
   };
-}
-
-async function canonicalizeHistory(
-  db: Database,
-  file: Fixture,
-  assetIds: string[],
-  cleanupId: string,
-) {
-  // Production stores canonical mount names. Real effects use disposable local mounts here;
-  // only DB mount names change, while exact original filesystem journals remain untouched.
-  const canonical = (name: string) =>
-    name
-      .replace(file.roots.control, "/data/movies/.media-control")
-      .replace(file.roots.library, "/data/movies");
-  for (const id of assetIds) {
-    const asset = await db.libraryAsset.findUniqueOrThrow({ where: { id } });
-    await db.libraryAsset.update({
-      where: { id },
-      data: { path: canonical(asset.path) },
-    });
-  }
-  const cleanup = await db.upgradeCleanup.findUniqueOrThrow({
-    where: { id: cleanupId },
-  });
-  if (cleanup.manifest !== null) {
-    const plan = UpgradeCleanupPlanSchema.parse(cleanup.manifest);
-    await db.upgradeCleanup.update({
-      where: { id: cleanupId },
-      data: {
-        manifest: z.record(z.string(), z.json()).parse({
-          ...plan,
-          files: plan.files.map((item) => ({
-            ...item,
-            path: canonical(item.path),
-          })),
-        }),
-      },
-    });
-  }
 }

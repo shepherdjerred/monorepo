@@ -11,6 +11,7 @@ const Root = z.strictObject({
   library: z.string(),
   control: z.string(),
   downloads: z.string(),
+  controlPolicy: z.literal("plex-excluded"),
 });
 const config = z
   .strictObject({
@@ -19,6 +20,7 @@ const config = z
       .refine((value) => new URL(value).hostname === "127.0.0.1"),
     roots: z.strictObject({ movies: Root, tv: Root }),
     workerPodUid: z.string(),
+    serverMachineId: z.string().min(1),
     phase: z.string(),
     input: z.strictObject({
       continuationId: z.uuid(),
@@ -29,13 +31,19 @@ const config = z
   })
   .parse(JSON.parse(await readFile(z.string().parse(process.argv[2]), "utf8")));
 const db = createDatabase(config.databaseUrl);
-const canonicalRoot = (root: z.infer<typeof Root>) =>
+const canonicalRoot = (root: Pick<z.infer<typeof Root>, "library">) =>
   root.library === config.roots.movies.library ? "/data/movies" : "/data/tv";
 const activities = createNativeQuarantineFileActivities({
   workerPodUid: config.workerPodUid,
   files: {
     db,
     roots: config.roots,
+    plexAccess: (sectionType) =>
+      Promise.resolve({
+        serverMachineId: config.serverMachineId,
+        sectionId: sectionType === "movie" ? "1" : "2",
+        sectionType,
+      }),
     enabled: {
       acquisition: () => Promise.resolve(true),
       quarantine: () => Promise.resolve(false),

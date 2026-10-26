@@ -8,17 +8,34 @@ import {
 } from "#shared/native-recovery/compensation-runtime.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
-import { compensationRecord, compensationAncestors } from "./records.ts";
+import { type compensationRecord, compensationAncestors } from "./records.ts";
 import { NativeCompensationProtection } from "./protection.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 /** Immutable acknowledgment only: later demand, publication and restore do not undo history. */
 export async function readVerifiedCompensationPublication(
   tx: Prisma.TransactionClient,
   input: NativeCompensationActivityInput,
+  budget = new PublicationAuthorityReadBudget(),
 ) {
-  const record = await compensationRecord(tx, input.continuationId);
+  const terminal =
+    await tx.nativePublicationCompensationContinuation.findUniqueOrThrow({
+      where: { id: input.continuationId },
+      select: { verifiedPublication: true },
+    });
+  budget.consume(1);
+  if (terminal.verifiedPublication === null) return null;
+  const chain = await compensationAncestors(tx, input.continuationId, budget);
+  const record = chain[0];
+  if (record === undefined)
+    throw new Error("Verified compensation chain is empty");
   const { row, completion } = record;
-  if (row.verifiedPublication === null) return null;
+  if (
+    row.verifiedPublication === null ||
+    snapshotHash(nativeJson(row.verifiedPublication)) !==
+      snapshotHash(nativeJson(terminal.verifiedPublication))
+  )
+    throw new Error("Verified compensation terminal projection changed");
   if (
     row.publicationCoordinatorOperationId !== input.operationId ||
     row.recoveryEpoch !== input.recoveryEpoch
@@ -31,6 +48,7 @@ export async function readVerifiedCompensationPublication(
   const operation = await tx.operation.findUniqueOrThrow({
     where: { id: input.operationId },
   });
+  budget.consume(1);
   const { proof, completionHash, bindingsHash, commandHash, command } =
     verifyPublicationCommand(record, input, operation);
   const assets = completion.predecessorBindings.map(({ after }) => ({
@@ -58,7 +76,6 @@ export async function readVerifiedCompensationPublication(
     )
   )
     throw new Error("Verified compensation publication coverage changed");
-  const chain = await compensationAncestors(tx, row.id);
   for (const ancestor of chain) {
     const release = NativeCompensationFenceReleaseSchema.parse(
       ancestor.row.fenceRelease,

@@ -10,7 +10,11 @@ import { prepareNativeFiles } from "./files.ts";
 import { applyPreparedNative } from "./apply.ts";
 import { prepareMediaRestore } from "#infrastructure/recovery.ts";
 import { grantTestExclusionProofs } from "#testing/exclusion.ts";
-import { createNativeRecoveryObserver } from "#migration/native-network/producer.ts";
+import { NativeStorageAuthoritySchema } from "#shared/canonical-storage.ts";
+import {
+  FinishedNativePlexV3Schema,
+  NativePlexSelectionV3Schema,
+} from "#shared/plex-binding/native-version.ts";
 
 const harness = automationTestHarness();
 const directories: string[] = [];
@@ -43,6 +47,20 @@ test.each(["seeding", "removed"] as const)(
     expect(
       await db.nativeRecoveryReceipt.count({ where: { planId: f.planId } }),
     ).toBe(1);
+    const plan = await db.nativeRecoveryPlan.findUniqueOrThrow({
+      where: { id: f.planId },
+    });
+    const finished = FinishedNativePlexV3Schema.parse(plan.plan);
+    const receipt = await db.nativeRecoveryReceipt.findUniqueOrThrow({
+      where: { planId: f.planId },
+    });
+    const selection = NativePlexSelectionV3Schema.parse(receipt.selection);
+    expect(selection.plex.approved).toEqual(finished.plex);
+    expect(selection.plex.approved.parent.operationId).toBe(
+      f.prepareInput.operationId,
+    );
+    expect(selection.plex.applied.parent.operationId).toBe(input.operationId);
+    expect(selection.plex.applied).not.toEqual(selection.plex.approved);
     expect(
       await db.libraryAsset.findUniqueOrThrow({ where: { id: f.asset.id } }),
     ).toMatchObject({
@@ -109,7 +127,10 @@ test("same bytes at a replaced inode require another native owner review", async
   await writeFile(`${local}.replacement`, await readFile(local));
   await rename(`${local}.replacement`, local);
   await f.observe();
-  const proof = await prepareNativeFiles(f.context, f.planId);
+  const proof = await prepareNativeFiles(f.context, {
+    planId: f.planId,
+    operationId: z.uuid().parse(approval.operationId),
+  });
   await expect(
     applyPreparedNative(
       f.context,
@@ -133,6 +154,20 @@ test("a second restore resolves prior native receipt storage and grants only the
     operationId: z.uuid().parse(first.operationId),
   });
   const db = harness.database();
+  const originalReceipt = await db.nativeRecoveryReceipt.findUniqueOrThrow({
+    where: { planId: f.planId },
+  });
+  const storage = await db.mediaStorageAuthority.findMany({
+    orderBy: { rootPath: "asc" },
+  });
+  const originalRoots = storage.map((row) => {
+    const authority = NativeStorageAuthoritySchema.parse(row.evidence);
+    const root = authority.approvedRoots.find(
+      (candidate) => candidate.rootPath === row.rootPath,
+    );
+    if (root === undefined) throw new Error("Original approved root missing");
+    return root;
+  });
   const recoveryId = crypto.randomUUID();
   await prepareMediaRestore(db, {
     recoveryId,
@@ -168,15 +203,13 @@ test("a second restore resolves prior native receipt storage and grants only the
     assetIds: [f.asset.id],
   });
   const planId = z.uuid().parse(command.nativeRecoveryId);
-  await createNativeRecoveryObserver(f.prior.context)(planId);
+  await f.observe({ planId, operationId: z.uuid().parse(command.operationId) });
   await f.activities.prepareNativeRecoveryFiles({
     planId,
     operationId: z.uuid().parse(command.operationId),
   });
   const reviewed = await f.service.detail(f.prior.actor, planId);
-  expect(
-    reviewed.scope.storageRoots.every((root) => root.receipt.kind === "native"),
-  ).toBe(true);
+  expect(reviewed.scope.storageRoots).toEqual(originalRoots);
   const approval = await f.service.apply(
     f.prior.actor,
     crypto.randomUUID(),
@@ -191,11 +224,19 @@ test("a second restore resolves prior native receipt storage and grants only the
       acknowledgeSubtitlePolicies: true,
     },
   );
-  await createNativeRecoveryObserver(f.prior.context)(planId);
+  await f.observe({
+    planId,
+    operationId: z.uuid().parse(approval.operationId),
+  });
   await f.activities.applyNativeRecoveryFiles({
     planId,
     operationId: z.uuid().parse(approval.operationId),
   });
+  expect(
+    await db.nativeRecoveryReceipt.findUniqueOrThrow({
+      where: { id: originalReceipt.id },
+    }),
+  ).toEqual(originalReceipt);
   expect(
     await db.libraryAsset.findUniqueOrThrow({ where: { id: f.asset.id } }),
   ).toMatchObject({ ownershipEpoch: 2, version: f.asset.version + 2 });

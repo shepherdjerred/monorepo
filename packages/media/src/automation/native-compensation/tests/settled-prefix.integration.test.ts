@@ -5,7 +5,7 @@ import { z } from "zod";
 import { automationTestHarness } from "#testing/automation.ts";
 import { PrismaNativeRecovery } from "#infrastructure/native-recovery/service.ts";
 import { createNativeFileActivities } from "#automation/native-recovery/activities.ts";
-import { createNativeRecoveryObserver } from "#migration/native-network/producer.ts";
+import { nativeReviewPlexFixture } from "#automation/native-recovery/fixtures/plex.ts";
 import { NativePublishedScopeSchema } from "#shared/native-recovery/lifecycle.ts";
 import { restoreNativeFixtureAgain } from "#automation/native-compensation/native-grant-fixture.ts";
 import {
@@ -93,10 +93,14 @@ test("a later native review proves settled sidecar-prefix dependencies without c
     planId: z.uuid().parse(command.nativeRecoveryId),
     operationId: z.uuid().parse(command.operationId),
   };
-  await createNativeRecoveryObserver({
-    ...f.prior.context,
-    plex: publication.plex,
-  })(input.planId);
+  const pending = await db.nativeRecoveryPlan.findUniqueOrThrow({
+    where: { id: input.planId },
+  });
+  const network = await nativeReviewPlexFixture(
+    f.prior.context,
+    NativePublishedScopeSchema.parse(pending.scope),
+  );
+  await network.observe(input);
   await createNativeFileActivities(f.context).prepareNativeRecoveryFiles(input);
   const plan = await db.nativeRecoveryPlan.findUniqueOrThrow({
     where: { id: input.planId },
@@ -120,10 +124,10 @@ test("a later native review proves settled sidecar-prefix dependencies without c
       acknowledgeSubtitlePolicies: true,
     },
   );
-  await createNativeRecoveryObserver({
-    ...f.prior.context,
-    plex: publication.plex,
-  })(input.planId);
+  await network.observe({
+    planId: input.planId,
+    operationId: z.uuid().parse(approved.operationId),
+  });
   await createNativeFileActivities(f.context).applyNativeRecoveryFiles({
     planId: input.planId,
     operationId: z.uuid().parse(approved.operationId),

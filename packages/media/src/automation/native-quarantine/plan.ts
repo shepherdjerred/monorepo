@@ -3,7 +3,8 @@ import {
   NativeQuarantineNetworkEvidenceSchema,
   NativeQuarantineFileEvidenceSchema,
 } from "#shared/native-recovery/quarantine.ts";
-import { FinishedNativeV2Schema } from "#shared/native-recovery/lifecycle.ts";
+import { finishNativePlexPlan } from "#infrastructure/plex-binding/native/native-version.ts";
+import { assertNativeFilesProof } from "#automation/native-recovery/plex-proof.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import {
   lockNativeQuarantineScope,
@@ -47,6 +48,7 @@ export async function finishQuarantinePreparation(
         tx,
         input.planId,
         prepared.scope,
+        prepared.plex.budget,
       );
       if (plan.state === "awaiting_review") return;
       if (plan.state !== "preparing")
@@ -66,29 +68,31 @@ export async function finishQuarantinePreparation(
       )
         throw new Error("Quarantine preparation command authority changed");
       await assertNativeOwner(tx, plan.actorId);
-      const observation = await tx.nativeRecoveryObservation.findFirstOrThrow({
-        where: { planId: plan.id, kind: "network" },
-        orderBy: { createdAt: "desc" },
-      });
-      const network = NativeQuarantineNetworkEvidenceSchema.parse(
-        observation.evidence,
-      );
+      if (prepared.plex.kind !== "paired")
+        throw new Error(
+          "New quarantine preparation requires its paired Plex proof",
+        );
+      const plex = prepared.plex;
+      await assertNativeFilesProof(tx, plex);
+      const network = NativeQuarantineNetworkEvidenceSchema.parse(plex.network);
       if (
-        observation.expiresAt <= new Date() ||
-        observation.evidenceHash !== snapshotHash(network) ||
+        Date.parse(network.expiresAt) <= Date.now() ||
         network.planId !== plan.id ||
         network.recoveryEpoch !== plan.recoveryEpoch
       )
         throw new Error("Quarantine network observation changed");
       await withQuarantineLocks(context, prepared, async () => {
         assertNativeEvidenceFresh(network);
-        const finished = FinishedNativeV2Schema.parse({
-          schemaVersion: 2,
-          lifecycleKind: "committed_quarantine",
-          scopeHash: snapshotHash(prepared.scope),
-          network: stableQuarantineNetwork(network),
-          files: stableQuarantineFiles(prepared.evidence),
-        });
+        const finished = await finishNativePlexPlan(
+          tx,
+          {
+            planId: plan.id,
+            plex: plex.ref,
+            files: stableQuarantineFiles(prepared.evidence),
+          },
+          plex.freshness,
+          plex.budget,
+        );
         await tx.nativeRecoveryObservation.create({
           data: {
             planId: plan.id,
@@ -103,14 +107,16 @@ export async function finishQuarantinePreparation(
           where: { id: plan.id },
           data: {
             state: "awaiting_review",
-            plan: finished,
-            planHash: snapshotHash(finished),
+            plan: z.record(z.string(), z.json()).parse(finished),
+            planHash: snapshotHash(z.json().parse(finished)),
             expiresAt: new Date(Date.now() + 12 * 3_600_000),
             version: { increment: 1 },
           },
         });
         assertNativeEvidenceFresh(network);
+        plex.freshness.assertActive();
       });
+      plex.freshness.assertActive();
     },
     { timeout: 30_000, maxWait: 30_000 },
   );

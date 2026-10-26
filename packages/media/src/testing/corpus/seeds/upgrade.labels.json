@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "authoredBy": "synthetic-fixture-author",
+  "basis": "Same-quality releases do not replace existing web content. The explicit profile awards PROPER five points; the correctly identified same-quality PROPER candidate is an improvement below the remux cutoff. No expected label is fed into matching or scoring.",
+  "candidates": [
+    {
+      "key": "same-quality",
+      "disposition": "reject",
+      "coverage": ["lantern"],
+      "edition": "standard_unmarked",
+      "plan": null
+    },
+    {
+      "key": "improved",
+      "disposition": "accept",
+      "coverage": ["lantern"],
+      "edition": "standard_unmarked",
+      "plan": [
+        {
+          "sourceName": "The.Paper.Lantern.2024.1080p.PROPER.mkv",
+          "coverage": ["lantern"],
+          "libraryPath": "The Paper Lantern (2024) {tmdb-990001}/The Paper Lantern (2024) {tmdb-990001}.mkv"
+        }
+      ]
+    }
+  ],
+  "ranking": ["improved"]
+}

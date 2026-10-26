@@ -230,6 +230,7 @@ export type NativeCompensationApplyInput = NativeCompensationPrepareInput & {
   planHash: string;
 };
 export type NativeCompensationExecutionContext = {
+  readonly expiresAtMs: number;
   signal: AbortSignal;
   assertActive: () => void;
   checkpoint: (name: string) => Promise<void>;

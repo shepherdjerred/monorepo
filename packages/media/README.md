@@ -100,6 +100,94 @@ Media inspection tests also require `ffmpeg` and `ffprobe` on `PATH`; the CI and
 Temporal images install them. The repository's mise configuration supplies the
 upstream `7zz` command used for bounded subtitle archive extraction.
 
+### Local system acceptance
+
+With Docker running, the peer check uses the catalog-pinned qBittorrent image,
+two disposable peers on an internal network, and a generated H.264 video:
+
+```sh
+bun run --cwd packages/media e2e/system/run-peer.ts
+```
+
+It exercises the actual WebAPI adapter, an exact submission retry, a real peer
+transfer, ownership tags, member progress, and an independent byte checksum.
+The peers have no external trackers, DHT, peer exchange, or host-published ports.
+The harness sends actual HTTP through container loopback using Docker exec.
+
+The coordinated movie scenario additionally requires the pinned Temporal CLI
+and Node, PostgreSQL tools, ffmpeg, ffprobe, and Python 3:
+
+```sh
+bun run --cwd packages/temporal scripts/media-system/run.ts
+```
+
+It starts from Plex sign-in and an explicit unmarked-edition request over HTTP,
+then uses real PostgreSQL, outbox dispatch, Temporal orchestration, Network and
+Files Activity queues, qBittorrent, probe/copy/publication, and history replay.
+The credentialless Workflow worker runs separately in Node; Activity workers
+run in Bun. Catalog, provider, identity and PMS wire responses and ownership
+attestations are synthetic. This local scenario does not establish intended-build
+Plex compatibility, live provider compatibility, production isolation, or canary
+acceptance. The separate native PMS lane and household acceptance remain required.
+
+To inspect the completed scenario in the actual built application, first build
+Media, then pass `--inspect-ui` to the coordinated command. It prints the exact
+loopback origin and media ID after the HTTP assertions and both history replays
+pass. Use a verified headless browser, sign in through the fixture Plex flow,
+and capture that title. The process keeps its disposable services available
+until interrupted; Ctrl-C runs teardown. This mode uses the same API and client
+bundle without substituting browser API responses.
+
+Each command prints its owned temporary evidence directory. Results, generated
+media, and diagnostic logs stay there; normal teardown removes only containers
+and networks whose exact ownership labels match the run. Neither command reads
+production credentials or accesses household downloads or libraries.
+
+### Corpus replay
+
+Replay local release, catalog and torrent-member observations through the
+production identity matcher, cut classifier, quality and upgrade evaluators,
+ffprobe response parser, coverage checks and naming functions:
+
+```sh
+cd packages/media
+bun --no-install scripts/corpus/replay.ts \
+  --manifest src/testing/corpus/seeds/manifest.json \
+  --output /tmp/media-corpus-report.json
+```
+
+The output must be a new file; the command never overwrites a report. The bundled
+baseline is fictional. The strict manifest in `src/testing/corpus/contract.ts`
+references SHA256-bound input, profile and independent label artifacts beneath
+its own directory. Inputs contain observed catalog and release fields, optional
+member inventories and literal ffprobe JSON. Expected identity, coverage, cuts,
+ranking and plans belong only in the separate labels; replay cannot consume them
+as authority. Editing artifact bytes requires updating the manifest hash, even
+when the change is formatting only.
+
+A native profile supplies explicit rules. A captured Radarr/Sonarr profile uses
+its original source snapshot, profile ID and verified source version, preserving
+quality definitions, size limits, format scores and upgrade rules. Profiles that
+need regex evidence require `--regex-executable /path/to/RegexOracle`, pointing
+to the actual packaged matcher; no JavaScript-regex substitute is used. Keep
+real captures, private paths and provider identifiers outside the repository in
+an explicitly selected private manifest directory. Do not include credentials,
+download URLs, API keys or tracker passkeys in any artifact.
+
+Reports distinguish synthetic and captured cases. Outcome totals count candidates
+considered, accepted, rejected and successfully planned from actual replay results;
+accepted releases can still have protected or unavailable member plans. Difference
+totals report wrong acceptance, missed valid candidates, protected ambiguity,
+unsupported inputs, ranking differences and plan differences. Wrong acceptance
+or an unsafe plan is a hard failure. Missed valid candidates and explicit ranking
+or plan mismatches also make the command exit nonzero. Labels must be authored
+independently; a legacy application's decision is a comparison, not an oracle.
+
+This is boundary and planning evidence. It does not perform filesystem imports,
+prove file ownership, grant request or edition consent, contact providers or
+establish live compatibility. Those behaviors require the separate integration
+and runtime checks.
+
 ## qBittorrent integration contract
 
 The adapter targets qBittorrent **5.2.4 / WebAPI 2.15.1**. Its committed
@@ -156,6 +244,79 @@ owner diagnostics are omitted. Raw observations, private URLs, torrent hashes,
 filesystem paths and unrelated shared-pack claims do not enter this response.
 Aggregate metrics at `/metrics` remain read-only and contain no media/user/torrent
 identifiers.
+
+## Plex association contract
+
+An availability timestamp or Plex rating key does not establish current playback.
+`infrastructure/plex-binding` stores immutable associations between canonical
+media, complete physical coverage, exact configured server/library, Plex metadata
+and Part identity. TV associations include the actual episode, season and show
+links and numbering. All leaves sharing one video are verified together,
+including members hidden from the viewer. Detail counts include only visible
+leaves; an independent valid physical group can still be playable.
+
+Publication verifies two complete bounded Plex inventories, fresh selected
+metadata and TV ancestors, then server and library identity again. Inventory
+limits are 100 sections and 10,000 items per pass; unsupported multipart files,
+ambiguous identity, incomplete pages and conflicting paths protect the group.
+The final database transaction rechecks the original publication parent,
+ownership, versions, canonical identity and complete lock scope before committing
+the association with availability. The `publicationExecution` adapter captures
+the invocation's original wall and monotonic timestamps and actual SDK expiry
+before awaited work. Fresh authority uses the earliest of entry plus sixty
+seconds, the SDK bound, and the existing proof, mapping, root/storage,
+writer-lease and exclusion deadlines; awaited work cannot restart that window.
+Deferred SQL checks enforce the same minimum at commit, including work performed
+after the last JavaScript guard.
+
+The existing inventory reconciliation can queue default-only cold verification
+for already owned assets. It neither creates requests nor refreshes consent or
+old publication receipts. The `@shepherdjerred/media/plex-binding` export defines
+`reverifyPlexBinding`: its strict input contains schema version, operation ID,
+recovery epoch and up to 100 sorted unique asset IDs. Complete coverage remains
+in PostgreSQL. Its result is verified with a binding count, superseded, or
+protected with a bounded reason; the UTF-8 history envelope is at most 128 bytes.
+An exact completed receipt can be read after proof expiry without new Plex I/O.
+
+Native authority resolvers share one `PublicationAuthorityReadBudget` across an
+invocation. Its 100-record allowance covers receipt and transition provenance,
+including the model rows selected to validate their proof parents. Included
+relations and repeated queries consume the allowance; JSON fields remain part of
+their containing record. Weighted queries request one extra result to detect
+overflow and protect the complete operation.
+
+Known parent rows may be reused within the transaction that read them, under the
+same allowance and required locks, with their raw hashes and bindings checked.
+Each transaction creates its own reader. Current ownership, requests, holds,
+mounts and expiry checks remain live. Complete current scope snapshots retain
+their separate native video, coverage and sidecar bounds.
+
+The allowance can reserve a known query cost before SQL executes. A refused
+charge describes admission cost; it does not establish how many rows the query
+returned. Existing conservative charges remain part of the allowance.
+
+Archive cleanup and publication compensation measure bounded file and journal
+content before acquiring database or path locks. Discovery supplies comparison
+data; it cannot authorize writes. Measurement preserves absent paths and never
+creates parent directories or execution namespaces. A fresh locked transaction
+validates the complete authority, original Plex proof and measurement before
+stat-only sealing and recording execution. Filesystem effects follow that commit
+in another transaction with fresh authority. Both transactions share the original
+invocation allowance and shrinking SDK, proof and storage deadlines. A committed
+compensation execution with a missing namespace remains protected rather than
+recreating it.
+
+`bindPlexTransactionDeadline` queues deferred validation even when a transaction
+writes no Plex association rows. Its transient work record grants no permission
+and is removed on success; deleting it cannot waive the already queued check.
+
+The visibility response exposes
+`playback.association.{legacyUnverifiedItems,reconciliationRequiredItems}`.
+Revision-zero legacy inventory may receive an explicit unverified label but
+cannot grant readiness. Clearing or replacing a binding cannot revive readiness
+from an old timestamp. No current asset is ordinary pending state, with both
+association counts zero. Named movie choices remain subject to the separate
+edition admission contract above.
 
 ## Plex watch event hints
 
@@ -590,7 +751,23 @@ operation and outbox command. Idempotency keys identify retried commands;
 expected versions reject conflicting edits. Workflow delivery must use stable
 operation identities because delivery and execution can be repeated.
 
-Browser request and media controls use the default-only v2 command protocol.
+The browser's `SessionBoundary` retires authenticated read and mutation caches
+before publishing a changed user or authorization fingerprint, including Plex
+account, role, restriction and user version changes. Local forms remount with
+the session generation, and delayed responses or callbacks from the retired
+generation cannot populate the new session. This boundary cannot undo writes
+already sent to the server. Pending command keys remain bound to their original
+actor, path and body; a session change preserves those keys without automatically
+replaying commands. Server-side authorization remains independent of this
+browser isolation.
+
+Changes to an existing Plex access mapping advance the user's version when its
+server identity, permitted libraries, media kinds or Plex restriction changes.
+Authentication returns the refreshed actor, so the first `/me` response exposes
+the new version. Account-row locking makes concurrent identical refreshes advance
+the version once; refreshing unchanged access does not retire the browser cache.
+
+Default-target browser controls use the default-only v2 command protocol.
 `GET /api/v2/media/:id/targets/default` returns the observed media version and
 target version; a null target version means the target is absent. The read never
 creates an intent. `POST /api/v2/media/:id/commands` accepts a strict
@@ -633,6 +810,14 @@ invalidate the pending effect before its final authorization.
 An upgrade preserves a rollback copy and atomically replaces the visible path.
 The operation journal permits reconciliation after process termination; a
 database transaction alone cannot make a filesystem mutation atomic.
+
+Subtitle installation and restoration share `publicationAuthorityDeadline`:
+the original `publicationExecution` clocks and SDK expiry bound the sixty-second
+window and current root/storage, writer-lease and exclusion minima. A later
+authority lookup or transaction cannot renew the original bound. Existing
+embedded or installed subtitle checks and exact restored acknowledgements keep
+their early-return ordering without granting new effect authority. New effects
+and deferred SQL completion retain the same shrinking deadline.
 
 Filesystem scopes retain a separate kernel lock for every exact path. Python 3
 helpers acquire those same ordered locks in batches of at most 128 descriptors,

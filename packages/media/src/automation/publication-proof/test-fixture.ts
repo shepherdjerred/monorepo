@@ -41,7 +41,14 @@ export async function mappedPublicationFixture(
       canonicalRoots,
       workerRoots,
     });
-    const proofs = await grantTestExclusionProofs(db, f.user.id);
+    const serverMachineId = f.context.serverMachineId;
+    if (serverMachineId === undefined)
+      throw new Error("Mapped fixture server identity missing");
+    const proofs = await grantTestExclusionProofs(
+      db,
+      f.user.id,
+      serverMachineId,
+    );
     for (const proof of proofs) {
       const kind = proof.libraryRoot === "/data/movies" ? "movies" : "tv";
       await writeFile(

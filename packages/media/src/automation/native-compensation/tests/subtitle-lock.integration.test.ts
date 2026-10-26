@@ -8,7 +8,10 @@ import { compensatedCaptionFixture } from "#infrastructure/native-compensation/c
 import { chooseCurrentTestMovieEdition } from "#infrastructure/movie-editions/test-support.ts";
 import { PrismaNativeCompensation } from "#infrastructure/native-compensation/service.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
-import { observeNativeCompensation } from "#migration/native-compensation/producer.ts";
+import { createNativePlexObserver } from "#migration/native-plex/review.ts";
+import { bindingTestExecution } from "#automation/plex-binding/test-fixture.ts";
+import { compensationNativePlexFixture } from "#automation/native-compensation/fixtures/native-plex.ts";
+import { NativeCompensationScopeSchema } from "#shared/native-recovery/compensation.ts";
 import { ContentProof } from "#filesystem/content-proof.ts";
 import { FileOperations } from "#filesystem/operations.ts";
 import { FileLockError } from "#filesystem/advisory-lock.ts";
@@ -83,7 +86,7 @@ test("compensation approval cannot bypass a held supplementary installation jour
   const observer = {
     ...f.observerContext,
     qbittorrent: {
-      ...source,
+      login: () => source.login(),
       listAll: async () => [...(await source.listAll()), torrent],
     },
   };
@@ -100,7 +103,17 @@ test("compensation approval cannot bypass a held supplementary installation jour
     planId: z.uuid().parse(command.nativeRecoveryId),
     operationId: z.uuid().parse(command.operationId),
   };
-  await observeNativeCompensation(observer, input, testCompensationExecution());
+  const plan = await db.nativeRecoveryPlan.findUniqueOrThrow({
+    where: { id: input.planId },
+  });
+  const network = await compensationNativePlexFixture(
+    observer,
+    NativeCompensationScopeSchema.parse(plan.scope),
+  );
+  await createNativePlexObserver(network.context)(
+    input,
+    bindingTestExecution(),
+  );
   const proof = new ContentProof();
   const journal = `journal/${operation.id}.json`;
   await proof.capture(path.join(f.file.roots.control, journal), () =>

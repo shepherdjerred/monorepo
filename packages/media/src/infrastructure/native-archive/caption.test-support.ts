@@ -9,7 +9,8 @@ import { recordVerifiedPublication } from "#automation/reconciliation/upgrade-cl
 import { compensatedCaptionFixture } from "#infrastructure/native-compensation/caption.test-support.ts";
 import { PrismaNativeArchive } from "./service.ts";
 import { createNativeArchiveFileActivities } from "#automation/native-archive/activities.ts";
-import { createNativeArchiveObserver } from "#migration/native-archive/producer.ts";
+import { nativeReviewPlexFixture } from "#automation/native-recovery/fixtures/plex.ts";
+import { NativeStoredScopeSchema } from "#shared/native-recovery/lifecycle.ts";
 import { testCompensationExecution } from "#automation/native-compensation/test-fixture.ts";
 import { replaceCompensatedCaption } from "#infrastructure/native-compensation/caption-replacement.test-support.ts";
 import { QualityRulesSchema } from "#shared/api.ts";
@@ -173,18 +174,24 @@ export async function archiveCaptionFixture(
       operationId: z.uuid().parse(command.operationId),
     };
     const execution = () => {
+      const observed = { wall: Date.now(), monotonic: performance.now() };
       const current = testCompensationExecution();
       return {
         ...current,
+        observed,
         checkpoint: () => current.checkpoint("archive-caption"),
       };
     };
-    const observer = createNativeArchiveObserver({
-      ...f.observerContext,
-      archiveExecution: execution,
+    const preparedPlan = await db.nativeRecoveryPlan.findUniqueOrThrow({
+      where: { id: input.planId },
     });
+    const paired = await nativeReviewPlexFixture(
+      f.observerContext,
+      NativeStoredScopeSchema.parse(preparedPlan.scope),
+    );
+    const observer = paired.observe;
     const files = createNativeArchiveFileActivities(f.context, execution);
-    await observer(input.planId);
+    await observer(input);
     await files.prepareNativeArchiveFiles(input);
     const plan = await db.nativeRecoveryPlan.findUniqueOrThrow({
       where: { id: input.planId },
@@ -209,6 +216,7 @@ export async function archiveCaptionFixture(
       cleanup,
       plan,
       observer,
+      observerContext: paired.context,
       files,
       applyInput: {
         planId: plan.id,

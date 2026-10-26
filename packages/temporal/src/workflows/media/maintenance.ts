@@ -9,10 +9,12 @@ import type {
   PlexExclusionOperation,
 } from "@shepherdjerred/media/plex-exclusion";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS } from "#shared/media-activity-budget.ts";
 
 const network = proxyActivities<PlexExclusionNetworkActivities>({
   taskQueue: TASK_QUEUES.MEDIA_NETWORK,
   startToCloseTimeout: "10 minutes",
+  scheduleToCloseTimeout: HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS,
   heartbeatTimeout: "1 minute",
   retry: {
     maximumAttempts: 3,
@@ -23,6 +25,7 @@ const network = proxyActivities<PlexExclusionNetworkActivities>({
 const files = proxyActivities<PlexExclusionFileActivities>({
   taskQueue: TASK_QUEUES.MEDIA_FILES,
   startToCloseTimeout: "2 minutes",
+  scheduleToCloseTimeout: HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS,
   heartbeatTimeout: "1 minute",
   retry: { maximumAttempts: 3, initialInterval: "5 seconds" },
 });

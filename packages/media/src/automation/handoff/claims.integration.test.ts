@@ -125,8 +125,10 @@ test.each(["mapping", "credential"] as const)(
     try {
       await waitForBlockedQuery("MediaStorageAuthority");
       change = changeAccess(f, kind);
+      // Access refresh serializes its account/version before the mapping write;
+      // adoption already holds that account fence through its final commit.
       await waitForBlockedQuery(
-        kind === "mapping" ? "PlexIdentityMapping" : "Credential",
+        kind === "mapping" ? "MediaUser" : "Credential",
       );
       expect(
         await db.mediaHandoffReceipt.count({ where: { planId: f.planId } }),
@@ -154,11 +156,17 @@ test.each(["mapping", "credential"] as const)(
         },
       }),
     ).toMatchObject({ active: true });
-    if (kind === "mapping")
+    if (kind === "mapping") {
       expect(
         await db.plexIdentityMapping.findUniqueOrThrow({
           where: { userId: f.network.actor.id },
         }),
       ).toMatchObject({ permittedSectionIds: [], version: 1 });
+      expect(
+        await db.mediaUser.findUniqueOrThrow({
+          where: { id: f.network.actor.id },
+        }),
+      ).toMatchObject({ version: f.network.actor.version + 1 });
+    }
   },
 );

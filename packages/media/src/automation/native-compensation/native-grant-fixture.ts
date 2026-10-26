@@ -6,7 +6,8 @@ import type { nativeStorageFixture } from "#automation/native-recovery/test-fixt
 import { PrismaNativeRecovery } from "#infrastructure/native-recovery/service.ts";
 import { PrismaRecovery } from "#infrastructure/recovery/service.ts";
 import { prepareMediaRestore } from "#infrastructure/recovery.ts";
-import { createNativeRecoveryObserver } from "#migration/native-network/producer.ts";
+import { NativeStoredScopeSchema } from "#shared/native-recovery/lifecycle.ts";
+import { nativeReviewPlexFixture } from "#automation/native-recovery/fixtures/plex.ts";
 import { createNativeFileActivities } from "#automation/native-recovery/activities.ts";
 import { grantTestExclusionProofs } from "#testing/exclusion.ts";
 
@@ -27,10 +28,15 @@ export async function grantNativePredecessor(db: Database, setup: Setup) {
     planId: z.uuid().parse(prepared.nativeRecoveryId),
     operationId: z.uuid().parse(prepared.operationId),
   };
-  const observe = () =>
-    createNativeRecoveryObserver(prior.context)(input.planId);
+  const plan = await db.nativeRecoveryPlan.findUniqueOrThrow({
+    where: { id: input.planId },
+  });
+  const network = await nativeReviewPlexFixture(
+    prior.context,
+    NativeStoredScopeSchema.parse(plan.scope),
+  );
   const files = createNativeFileActivities(setup.context);
-  await observe();
+  await network.observe(input);
   await files.prepareNativeRecoveryFiles(input);
   const detail = await service.detail(prior.actor, input.planId);
   const approved = await service.apply(
@@ -47,11 +53,12 @@ export async function grantNativePredecessor(db: Database, setup: Setup) {
       acknowledgeSubtitlePolicies: true,
     },
   );
-  await observe();
-  await files.applyNativeRecoveryFiles({
+  const approval = {
     planId: input.planId,
     operationId: z.uuid().parse(approved.operationId),
-  });
+  };
+  await network.observe(approval);
+  await files.applyNativeRecoveryFiles(approval);
   await releaseHousehold(db, setup);
   return db.nativeRecoveryReceipt.findUniqueOrThrow({
     where: { planId: input.planId },

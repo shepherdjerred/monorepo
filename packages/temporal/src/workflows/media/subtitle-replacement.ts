@@ -13,10 +13,12 @@ import type {
 } from "@shepherdjerred/media/subtitle-replacement";
 import type { MediaNetworkActivities } from "@shepherdjerred/media/automation";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS } from "#shared/media-activity-budget.ts";
 
 const files = proxyActivities<SubtitleReplacementFileActivities>({
   taskQueue: TASK_QUEUES.MEDIA_FILES,
   startToCloseTimeout: "12 hours",
+  scheduleToCloseTimeout: HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS,
   heartbeatTimeout: "1 minute",
   cancellationType: ActivityCancellationType.WAIT_CANCELLATION_COMPLETED,
   retry: { maximumAttempts: 2, initialInterval: "5 seconds" },
@@ -27,6 +29,7 @@ const network = proxyActivities<
 >({
   taskQueue: TASK_QUEUES.MEDIA_NETWORK,
   startToCloseTimeout: "1 minute",
+  scheduleToCloseTimeout: HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS,
   retry: { maximumAttempts: 3, initialInterval: "5 seconds" },
 });
 

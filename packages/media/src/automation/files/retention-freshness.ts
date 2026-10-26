@@ -24,7 +24,7 @@ export function requireFreshRetentionStart(
   if (age < 0 || age > 60_000) throw new FileGuardError("evidence_stale");
 }
 
-/** Keep the sealed process-local proof, with no PG/path locks held, while Temporal refreshes authority. */
+/** Wait without locks; an automatic invocation can never outlive its original Network proof. */
 export async function awaitRetentionFreshness(
   context: FileContext,
   input: {
@@ -32,6 +32,7 @@ export async function awaitRetentionFreshness(
     plan: RemovalEntry[];
     epoch: number;
     purge: boolean;
+    assertOriginal?: (() => void) | undefined;
   },
 ): Promise<void> {
   const deadline = performance.now() + 30_000;
@@ -42,6 +43,7 @@ export async function awaitRetentionFreshness(
   );
   for (;;) {
     await context.checkpoint("retention-authority-wait");
+    input.assertOriginal?.();
     const decision = await context.db.retentionDecision.findUniqueOrThrow({
       where: { id: input.decisionId },
     });
@@ -50,6 +52,7 @@ export async function awaitRetentionFreshness(
     if (decision.state !== expectedState)
       throw new FileGuardError("decision_obsolete");
     await assertCurrentIntents(context, generations, input.epoch);
+    input.assertOriginal?.();
     const evidence = RetentionEvidenceSchema.parse(decision.evidence);
     if (evidence.recoveryEpoch !== input.epoch)
       throw new FileGuardError("recovery_epoch_changed");

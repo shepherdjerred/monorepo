@@ -65,7 +65,7 @@ export class PrismaAuthStore implements AuthStore {
         },
         update: { ciphertext: input.encryptedCredential },
       });
-      await saveAccountAccess(db, user.id, input.access);
+      const actor = await saveAccountAccess(db, user.id, input.access);
       await db.mediaSession.create({
         data: {
           id: input.sessionId,
@@ -74,7 +74,7 @@ export class PrismaAuthStore implements AuthStore {
           expiresAt: input.expiresAt,
         },
       });
-      return publicActor(user);
+      return actor;
     });
   }
 
@@ -113,10 +113,10 @@ export class PrismaAuthStore implements AuthStore {
   async updateAccess(
     userId: string,
     access: PlexPermissionSnapshot,
-  ): Promise<void> {
-    await this.database.$transaction(async (db) => {
-      await saveAccountAccess(db, userId, access);
-    });
+  ): Promise<MediaActor> {
+    return this.database.$transaction((db) =>
+      saveAccountAccess(db, userId, access),
+    );
   }
 }
 
@@ -124,7 +124,8 @@ async function saveAccountAccess(
   db: Prisma.TransactionClient,
   userId: string,
   access: PlexPermissionSnapshot,
-): Promise<void> {
+): Promise<MediaActor> {
+  await db.$queryRaw`SELECT id FROM "MediaUser" WHERE id = ${userId} FOR UPDATE`;
   const user = await db.mediaUser.findUniqueOrThrow({ where: { id: userId } });
   if (user.plexAccountId !== access.accountId)
     throw new MediaError(
@@ -164,4 +165,14 @@ async function saveAccountAccess(
         : { serverAccountId: null, homeUserId: null }),
     },
   });
+  // A changed existing scope must reach /me on this same request. Serialize on
+  // the account so concurrent refreshes advance its cache boundary only once.
+  const current =
+    prior !== null && scopeChanged
+      ? await db.mediaUser.update({
+          where: { id: userId },
+          data: { version: { increment: 1 } },
+        })
+      : user;
+  return publicActor(current);
 }

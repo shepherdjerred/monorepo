@@ -24,7 +24,20 @@ import { defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { queueOperation } from "#automation/store.ts";
 import { assertNativeCompensationSnapshot } from "./guards.ts";
+import type { NativePlexProofRef } from "#shared/plex-binding/native.ts";
+import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
+import {
+  FinishedCompensationPlexV3Schema,
+  CompensationPlexSelectionV3Schema,
+} from "#shared/plex-binding/native-version.ts";
+import {
+  assertNativePlexApproval,
+  finishNativePlexPlan,
+} from "#infrastructure/plex-binding/native/native-version.ts";
+import { loadNativePlexProofBatch } from "#infrastructure/plex-binding/native/native.ts";
 import { compensationRecord } from "./records.ts";
+import { compensationPreviousEffects } from "./scope.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import {
   stableCompensationFiles,
   stableCompensationNetwork,
@@ -35,33 +48,30 @@ type ApprovalInput = {
   activity: NativeCompensationApplyInput;
   scope: NativeCompensationScope;
   evidence: NativeCompensationFileEvidence;
+  plex?: { ref: NativePlexProofRef; freshness: PlexBindingFreshness };
 };
-
-async function previousEffects(
-  tx: Prisma.TransactionClient,
-  scope: NativeCompensationScope,
-) {
-  if (scope.previousCompensation === null) return [];
-  const previous = await compensationRecord(
-    tx,
-    scope.previousCompensation.continuationId,
-  );
-  return previous.descriptor.approvedFileEvidence.acknowledgedEffects;
-}
 
 async function existingApproval(
   tx: Prisma.TransactionClient,
   input: ApprovalInput,
   command: { operation: Operation; actorId: string; recoveryEpoch: number },
+  budget: PublicationAuthorityReadBudget,
 ): Promise<string | null> {
   const previous = await tx.nativeRecoveryReceipt.findUnique({
     where: { planId: input.activity.planId },
   });
   if (previous === null) return null;
-  const selection = NativeCompensationSelectionSchema.parse(previous.selection);
+  budget.consume(1);
+  const selection = z
+    .union([
+      NativeCompensationSelectionSchema,
+      CompensationPlexSelectionV3Schema,
+    ])
+    .parse(previous.selection);
   const settled = await compensationRecord(
     tx,
     selection.compensationAuthorization.continuationId,
+    budget,
   );
   if (
     command.operation.idempotencyKey !==
@@ -82,11 +92,16 @@ async function existingApproval(
   return previous.id;
 }
 
-async function currentNetwork(tx: Prisma.TransactionClient, planId: string) {
+async function currentNetwork(
+  tx: Prisma.TransactionClient,
+  planId: string,
+  budget: PublicationAuthorityReadBudget,
+) {
   const observation = await tx.nativeRecoveryObservation.findFirstOrThrow({
     where: { planId, kind: "network" },
     orderBy: { createdAt: "desc" },
   });
+  budget.consume(1);
   if (
     observation.evidenceHash !==
       snapshotHash(nativeJson(observation.evidence)) ||
@@ -107,15 +122,22 @@ export async function finishCompensationPreparation(
     activity: NativeCompensationPrepareInput;
     scope: NativeCompensationScope;
     evidence: NativeCompensationFileEvidence;
+    plex: { ref: NativePlexProofRef; freshness: PlexBindingFreshness };
   },
+  budget = new PublicationAuthorityReadBudget(),
 ): Promise<void> {
-  const { plan } = await assertNativeCompensationSnapshot(tx, {
-    planId: input.activity.planId,
-    scope: input.scope,
-  });
+  const { plan, projection } = await assertNativeCompensationSnapshot(
+    tx,
+    {
+      planId: input.activity.planId,
+      scope: input.scope,
+    },
+    budget,
+  );
   const operation = await tx.operation.findUniqueOrThrow({
     where: { id: input.activity.operationId },
   });
+  budget.consume(1);
   const payload = z
     .object({ planId: z.uuid(), recoveryEpoch: z.int() })
     .parse(operation.payload);
@@ -131,24 +153,33 @@ export async function finishCompensationPreparation(
   if (plan.state === "awaiting_review") return;
   if (plan.state !== "preparing")
     throw new Error("Compensation preparation state changed");
-  const network = await currentNetwork(tx, plan.id);
+  if (input.plex.ref.parent.operationId !== input.activity.operationId)
+    throw new Error("Compensation preparation Plex coordinator changed");
+  const paired = await loadNativePlexProofBatch(
+    tx,
+    input.plex.ref,
+    input.plex.ref.parent,
+    { freshness: input.plex.freshness, budget: budget },
+  );
+  const network = NativeCompensationNetworkEvidenceSchema.parse(paired.network);
   const checked = assertCompensationEvidence(
     input.scope,
     input.evidence,
     network,
-    await previousEffects(tx, input.scope),
+    compensationPreviousEffects(tx, input.scope, projection, budget),
   );
-  const finished = FinishedNativeCompensationSchema.parse({
-    schemaVersion: 2,
-    lifecycleKind: "publication_compensation",
-    scopeHash: snapshotHash(nativeJson(input.scope)),
-    network: {
-      identityHash: snapshotHash(
-        nativeJson(stableCompensationNetwork(network)),
-      ),
+  const finished = await finishNativePlexPlan(
+    tx,
+    {
+      planId: plan.id,
+      plex: input.plex.ref,
+      files: stableCompensationFiles(checked.files),
     },
-    files: stableCompensationFiles(checked.files),
-  });
+    input.plex.freshness,
+    budget,
+  );
+  if (finished.lifecycleKind !== "publication_compensation")
+    throw new Error("Compensation preparation Plex lifecycle changed");
   await tx.nativeRecoveryObservation.create({
     data: {
       planId: plan.id,
@@ -170,16 +201,10 @@ export async function finishCompensationPreparation(
     },
   });
   assertNativeEvidenceFresh(network);
+  input.plex.freshness.assertActive();
 }
 
-export async function applyCompensationApproval(
-  tx: Prisma.TransactionClient,
-  context: NativeFileContext,
-  input: ApprovalInput,
-): Promise<string> {
-  const operation = await tx.operation.findUniqueOrThrow({
-    where: { id: input.activity.operationId },
-  });
+function approvalCommand(operation: Operation, input: ApprovalInput) {
   const payload = z
     .object({
       actorId: z.uuid(),
@@ -197,17 +222,40 @@ export async function applyCompensationApproval(
     payload.recoveryEpoch !== input.scope.request.recoveryEpoch
   )
     throw new Error("Compensation approval operation changed");
-  const previous = await existingApproval(tx, input, {
-    operation,
-    actorId: payload.actorId,
-    recoveryEpoch: payload.recoveryEpoch,
+  return payload;
+}
+
+export async function applyCompensationApproval(
+  tx: Prisma.TransactionClient,
+  context: NativeFileContext,
+  input: ApprovalInput,
+  budget = new PublicationAuthorityReadBudget(),
+): Promise<string> {
+  const operation = await tx.operation.findUniqueOrThrow({
+    where: { id: input.activity.operationId },
   });
+  budget.consume(1);
+  const payload = approvalCommand(operation, input);
+  const previous = await existingApproval(
+    tx,
+    input,
+    {
+      operation,
+      actorId: payload.actorId,
+      recoveryEpoch: payload.recoveryEpoch,
+    },
+    budget,
+  );
   if (previous !== null) return previous;
   await assertNativeOwner(tx, payload.actorId);
-  const { plan, runtime } = await assertNativeCompensationSnapshot(tx, {
-    planId: input.activity.planId,
-    scope: input.scope,
-  });
+  const { plan, runtime, projection } = await assertNativeCompensationSnapshot(
+    tx,
+    {
+      planId: input.activity.planId,
+      scope: input.scope,
+    },
+    budget,
+  );
   if (
     plan.state !== "applying" ||
     plan.planHash !== input.activity.planHash ||
@@ -216,14 +264,23 @@ export async function applyCompensationApproval(
     snapshotHash(nativeJson(plan.plan)) !== plan.planHash
   )
     throw new Error("Compensation approval is missing, changed or expired");
-  const network = await currentNetwork(tx, plan.id);
+  const finished = z
+    .union([FinishedNativeCompensationSchema, FinishedCompensationPlexV3Schema])
+    .parse(plan.plan);
+  const paired =
+    finished.schemaVersion === 3
+      ? await compensationApprovalPlex(tx, input, finished.plex, budget)
+      : null;
+  const network =
+    paired === null
+      ? await currentNetwork(tx, plan.id, budget)
+      : NativeCompensationNetworkEvidenceSchema.parse(paired.applied.network);
   const { files } = assertCompensationEvidence(
     input.scope,
     input.evidence,
     network,
-    await previousEffects(tx, input.scope),
+    compensationPreviousEffects(tx, input.scope, projection, budget),
   );
-  const finished = FinishedNativeCompensationSchema.parse(plan.plan);
   if (
     finished.scopeHash !== snapshotHash(nativeJson(input.scope)) ||
     snapshotHash(nativeJson(finished.files)) !==
@@ -277,7 +334,7 @@ export async function applyCompensationApproval(
       version: { increment: 1 },
     },
   });
-  const selection = NativeCompensationSelectionSchema.parse({
+  const rawSelection = {
     scope: input.scope,
     fileEvidence: files,
     networkEvidence: network,
@@ -291,7 +348,16 @@ export async function applyCompensationApproval(
       descriptorHash,
       recoveryHoldBindings,
     },
-  });
+  };
+  const selection =
+    paired === null
+      ? NativeCompensationSelectionSchema.parse(rawSelection)
+      : CompensationPlexSelectionV3Schema.parse({
+          ...rawSelection,
+          schemaVersion: 3,
+          lifecycleKind: "publication_compensation",
+          plex: { approved: paired.approved.ref, applied: paired.applied.ref },
+        });
   const receipt = await tx.nativeRecoveryReceipt.create({
     data: {
       planId: plan.id,
@@ -343,5 +409,22 @@ export async function applyCompensationApproval(
     data: { state: "applied", version: { increment: 1 } },
   });
   assertNativeEvidenceFresh(network);
+  input.plex?.freshness.assertActive();
   return receipt.id;
+}
+
+async function compensationApprovalPlex(
+  tx: Prisma.TransactionClient,
+  input: ApprovalInput,
+  approved: NativePlexProofRef,
+  budget: PublicationAuthorityReadBudget,
+) {
+  if (input.plex?.ref.parent.operationId !== input.activity.operationId)
+    throw new Error("Compensation apply requires its exact paired Plex proof");
+  return assertNativePlexApproval(
+    tx,
+    { planId: input.activity.planId, approved, applied: input.plex.ref },
+    input.plex.freshness,
+    { budget: budget },
+  );
 }

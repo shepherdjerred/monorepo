@@ -130,7 +130,7 @@ test("aggregate cleanup bindings become stale on same-timestamp raw or policy dr
 
 test("watch cohort excludes cancelled roots and exclusions, includes direct+effective leaf only once and rejects future evidence", async () => {
   await withTvVisibility(h.database(), false, async (f) => {
-    await f.publish();
+    await f.publish(h.context());
     await f.db.mediaRuntimeState.update({
       where: { id: "singleton" },
       data: { mode: "active", ownershipConfirmed: true },

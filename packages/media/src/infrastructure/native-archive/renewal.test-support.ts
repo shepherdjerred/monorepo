@@ -1,8 +1,10 @@
 import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
 import { createNativeArchiveFileActivities } from "#automation/native-archive/activities.ts";
-import { createNativeArchiveObserver } from "#migration/native-archive/producer.ts";
-import { createNativeArchiveCleanupObserver } from "#migration/native-archive/cleanup.ts";
+import {
+  archiveReviewObserver,
+  observeArchiveCleanup,
+} from "#automation/native-archive/fixtures/observe.ts";
 import { CleanupNativeArchiveInputSchema } from "#shared/native-recovery/archive.ts";
 import type { archivePublicationTransitionFixture } from "./publication-transition.test-support.ts";
 import { queueNativeArchiveCleanup } from "./continuation.ts";
@@ -15,6 +17,7 @@ export async function prepareArchiveRenewal(
   f: ArchiveTransitionFixture,
   cleanupIds: string[],
 ) {
+  f.traceStage("review.command");
   const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
     where: { id: "singleton" },
   });
@@ -30,8 +33,10 @@ export async function prepareArchiveRenewal(
     operationId: z.uuid().parse(command.operationId),
   };
   const files = createNativeArchiveFileActivities(f.context, f.execution);
-  const observe = createNativeArchiveObserver(f.observerContext);
-  await observe(input.planId);
+  const observe = archiveReviewObserver(f.observerContext);
+  f.traceStage("review.network");
+  await observe(input);
+  f.traceStage("review.files");
   await files.prepareNativeArchiveFiles(input);
   return { input, files, observe };
 }
@@ -40,6 +45,7 @@ export async function approveArchiveRenewal(
   f: ArchiveTransitionFixture,
   prepared: Awaited<ReturnType<typeof prepareArchiveRenewal>>,
 ) {
+  f.traceStage("apply.command");
   const plan = await db.nativeRecoveryPlan.findUniqueOrThrow({
     where: { id: prepared.input.planId },
   });
@@ -57,14 +63,18 @@ export async function approveArchiveRenewal(
       acknowledgeSubtitlePolicies: true,
     },
   );
-  await prepared.observe(plan.id);
   const input = {
     planId: plan.id,
     operationId: z.uuid().parse(approval.operationId),
     planHash: z.string().parse(plan.planHash),
   };
+  f.traceStage("apply.network");
+  await prepared.observe(input);
+  f.traceStage("apply.files");
   await prepared.files.applyNativeArchiveFiles(input);
+  f.traceStage("apply.ack");
   await prepared.files.applyNativeArchiveFiles(input);
+  f.traceStage("assertions");
   return plan.id;
 }
 export async function cleanRenewedArchive(
@@ -73,6 +83,7 @@ export async function cleanRenewedArchive(
   planId: string,
   originalCleanupId: string,
 ) {
+  f.traceStage("cleanup.queue");
   const row = await db.nativeArchiveCleanupContinuation.findFirstOrThrow({
     where: { receipt: { planId }, originalCleanupId },
   });
@@ -86,9 +97,13 @@ export async function cleanRenewedArchive(
   );
   const operation = await db.operation.findUniqueOrThrow({ where: { id } });
   const input = CleanupNativeArchiveInputSchema.parse(operation.payload);
-  await createNativeArchiveCleanupObserver(f.observerContext)(input);
+  f.traceStage("cleanup.network");
+  await observeArchiveCleanup(f.observerContext, input);
   const files = createNativeArchiveFileActivities(f.context, f.execution);
+  f.traceStage("cleanup.files");
   const result = await files.cleanupNativeArchiveFiles(input);
+  f.traceStage("cleanup.ack");
   const replay = await files.cleanupNativeArchiveFiles(input);
+  f.traceStage("assertions");
   return { result, replay, row };
 }

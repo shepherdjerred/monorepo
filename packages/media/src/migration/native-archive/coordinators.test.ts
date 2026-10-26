@@ -1,6 +1,7 @@
 import { expect, test, vi } from "vitest";
 import { NativeArchiveSupersessionTargetSchema } from "#shared/native-recovery/archive.ts";
 import { observeSupersededCoordinators } from "./coordinators.ts";
+import { testCompensationExecution } from "#automation/native-compensation/test-fixture.ts";
 
 const target = NativeArchiveSupersessionTargetSchema.parse({
   continuationId: crypto.randomUUID(),
@@ -12,8 +13,11 @@ const target = NativeArchiveSupersessionTargetSchema.parse({
   executionHash: null,
 });
 function execution() {
+  const observed = { wall: Date.now(), monotonic: performance.now() };
   const controller = new AbortController();
   return {
+    ...testCompensationExecution(),
+    observed,
     controller,
     signal: controller.signal,
     assertActive: () => controller.signal.throwIfAborted(),

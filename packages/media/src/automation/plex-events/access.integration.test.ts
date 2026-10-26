@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { observeRequesterWatch } from "#automation/watch.ts";
+import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import {
   watchHarness,
   watchedTransport,
@@ -98,7 +99,8 @@ describe("scoped watch permission proof", () => {
     );
     const controller = new AbortController();
     const context = h.context(paused.transport);
-    context.watchExecution = () => ({
+    context.plexBindingExecution = () => ({
+      ...testPlexBindingExecution(),
       signal: controller.signal,
       assertActive: () => controller.signal.throwIfAborted(),
       checkpoint: () => Promise.resolve(),
@@ -113,6 +115,6 @@ describe("scoped watch permission proof", () => {
       await h
         .database()
         .watchState.findUnique({ where: { userId_mediaId_edition: f.key } }),
-    ).toMatchObject({ observedAt: new Date(0) });
+    ).toEqual(f.baseline);
   });
 });

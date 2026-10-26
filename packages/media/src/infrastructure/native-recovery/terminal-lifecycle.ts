@@ -11,6 +11,7 @@ import { terminalRebindingChain } from "./terminal-rebinding.ts";
 import { terminalSubtitleChain } from "./terminal-subtitles.ts";
 import { archiveTerminalDependency } from "#infrastructure/native-archive/terminal.ts";
 import { archiveClosure } from "#infrastructure/native-archive/closure.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import {
   NativeTerminalDependencySchema,
   type NativeTerminalDescriptor,
@@ -40,6 +41,7 @@ export async function nativeTerminalDependencies(
   tx: Prisma.TransactionClient,
   cleanups: UpgradeCleanup[],
   selectedIds: string[],
+  budget = new PublicationAuthorityReadBudget(),
 ) {
   const result: NativeTerminalDescriptor[] = [];
   for (const cleanup of cleanups) {
@@ -54,6 +56,7 @@ export async function nativeTerminalDependencies(
         tx,
         cleanup,
         closure.assets,
+        { budget },
       );
       result.push(terminal.dependency);
       continue;
@@ -84,12 +87,16 @@ export async function nativeTerminalDependencies(
     const detail =
       cleanup.state === "purged"
         ? purged(cleanup, old, successor, selectedIds)
-        : await cancelled(tx, {
-            cleanup,
-            old,
-            successor,
-            selected: selectedIds,
-          });
+        : await cancelled(
+            tx,
+            {
+              cleanup,
+              old,
+              successor,
+              selected: selectedIds,
+            },
+            budget,
+          );
     const rowDigest = snapshotHash(
       nativeJson({
         cleanup,
@@ -217,6 +224,7 @@ async function cancelled(
     successor: Asset;
     selected: string[];
   },
+  budget: PublicationAuthorityReadBudget,
 ) {
   if (
     cleanup.state !== "cancelled" ||
@@ -260,32 +268,40 @@ async function cancelled(
     entry.mediaIds,
   );
   verifyRollbackReceipt({ attempt, old, entry });
-  const nativeReceipts = await terminalRebindingChain(tx, {
-    asset: old,
-    originalVersion: entry.previousVersion + 2,
-    originalEpoch: cleanup.recoveryEpoch,
-  });
+  const nativeReceipts = await terminalRebindingChain(
+    tx,
+    {
+      asset: old,
+      originalVersion: entry.previousVersion + 2,
+      originalEpoch: cleanup.recoveryEpoch,
+    },
+    budget,
+  );
   if (
     await tx.acquisitionReservation.count({ where: { attemptId: attempt.id } })
   )
     throw new Error("Native rollback still has active reservations");
-  const paths = await cancelledPaths(tx, {
-    old,
-    successor,
-    entry,
-    attempt,
-    videoBindings: [
-      { version: entry.previousVersion + 2, epoch: cleanup.recoveryEpoch },
-      ...nativeReceipts.map((receipt) => ({
-        version: receipt.binding.assetVersion,
-        epoch: receipt.binding.ownershipEpoch,
+  const paths = await cancelledPaths(
+    tx,
+    {
+      old,
+      successor,
+      entry,
+      attempt,
+      videoBindings: [
+        { version: entry.previousVersion + 2, epoch: cleanup.recoveryEpoch },
+        ...nativeReceipts.map((receipt) => ({
+          version: receipt.binding.assetVersion,
+          epoch: receipt.binding.ownershipEpoch,
+        })),
+      ],
+      subtitleRenewals: nativeReceipts.map((receipt) => ({
+        bindings: receipt.binding.subtitles,
+        snapshots: receipt.subtitleSnapshots,
       })),
-    ],
-    subtitleRenewals: nativeReceipts.map((receipt) => ({
-      bindings: receipt.binding.subtitles,
-      snapshots: receipt.subtitleSnapshots,
-    })),
-  });
+    },
+    budget,
+  );
   return { ...paths, attempt: { ...paths.attempt, nativeReceipts } };
 }
 
@@ -332,6 +348,7 @@ async function cancelledPaths(
       Parameters<typeof terminalSubtitleChain>[1]["subtitleRenewals"]
     >;
   },
+  budget: PublicationAuthorityReadBudget,
 ) {
   const rollbackId = path.basename(successor.path);
   if (successor.path !== controlPath(entry.libraryKind, "rollback", rollbackId))
@@ -375,15 +392,19 @@ async function cancelledPaths(
       `/data/${entry.libraryKind}`,
       sidecar.libraryPath,
     );
-    const replacement = await terminalSubtitleChain(tx, {
-      subtitleId: sidecar.subtitleId,
-      checksum: sidecar.checksum,
-      canonicalPath,
-      libraryKind: entry.libraryKind,
-      asset: old,
-      videoBindings,
-      subtitleRenewals,
-    });
+    const replacement = await terminalSubtitleChain(
+      tx,
+      {
+        subtitleId: sidecar.subtitleId,
+        checksum: sidecar.checksum,
+        canonicalPath,
+        libraryKind: entry.libraryKind,
+        asset: old,
+        videoBindings,
+        subtitleRenewals,
+      },
+      budget,
+    );
     files.push(...replacement.files);
     journals.push(...replacement.journals);
     replacementHistory.push(...replacement.history);

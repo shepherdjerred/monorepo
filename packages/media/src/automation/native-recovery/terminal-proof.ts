@@ -78,7 +78,7 @@ export async function verifyTerminalJournal(
   const actual = ManifestSchema.parse(JSON.parse(bytes.toString("utf8")));
   const source =
     expected.kind === "import" &&
-    !/^\/data\/(?:movies|tv)\//u.test(expected.source)
+    !/^\/(?:data\/(?:movies|tv)|downloads)\//u.test(expected.source)
       ? expected.source
       : input.resolvePath(expected.source);
   if (
@@ -126,7 +126,10 @@ export async function verifyInstallationJournal(
 }
 
 export async function terminalFileEvidence(
-  input: Pick<ProofInput, "content" | "resolvePath">,
+  input: {
+    content: Pick<ContentProof, "digest" | "reviewAbsence" | "reviewIdentity">;
+    resolvePath: ProofInput["resolvePath"];
+  },
   file: NativeTerminalDescriptor["files"][number],
 ) {
   const local = input.resolvePath(file.canonicalPath);

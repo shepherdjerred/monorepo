@@ -42,7 +42,7 @@ describe("Plex hints invoke authoritative current watch observation", () => {
       await h.database().watchObservationFence.findUnique({
         where: { mediaId_edition: defaultScope(f.media.id) },
       }),
-    ).toMatchObject({ settledRevision: 1n });
+    ).toMatchObject({ settledRevision: f.fence.settledRevision + 1n });
     expect(
       await createPlexEventActivities(
         h.context(),
@@ -50,7 +50,7 @@ describe("Plex hints invoke authoritative current watch observation", () => {
       ).observePlexEventHint(f.input),
     ).toEqual({ status: "superseded", complete: false });
   });
-  test.each(["epoch", "generation", "ambiguity", "operation"])(
+  test.each(["epoch", "generation", "ownership", "operation"])(
     "queued hint becomes inert after %s changes",
     async (change) => {
       const f = await queued();
@@ -65,13 +65,10 @@ describe("Plex hints invoke authoritative current watch observation", () => {
           where: { mediaId_edition: defaultScope(f.media.id) },
           data: { generation: { increment: 1 } },
         });
-      if (change === "ambiguity")
-        await db.mediaItem.create({
-          data: {
-            kind: "movie",
-            title: "Collision",
-            externalIds: { plexSectionId: "1", plexRatingKey: f.ratingKey },
-          },
+      if (change === "ownership")
+        await db.libraryAsset.update({
+          where: { id: f.asset.id },
+          data: { owned: false },
         });
       const input =
         change === "operation"
@@ -87,12 +84,12 @@ describe("Plex hints invoke authoritative current watch observation", () => {
         await db.watchState.findUnique({
           where: { userId_mediaId_edition: f.key },
         }),
-      ).toMatchObject({ observedAt: new Date(0) });
+      ).toEqual(f.baseline);
       expect(
-        await db.watchObservationFence.count({
-          where: { mediaId: f.media.id },
+        await db.watchObservationFence.findUniqueOrThrow({
+          where: { mediaId_edition: defaultScope(f.media.id) },
         }),
-      ).toBe(0);
+      ).toEqual(f.fence);
     },
   );
   test("disabled hint allocates no fence and reads no Plex metadata", async () => {
@@ -106,9 +103,9 @@ describe("Plex hints invoke authoritative current watch observation", () => {
     ).toEqual({ status: "disabled", complete: false });
     expect(flags).toBe(1);
     expect(
-      await h
-        .database()
-        .watchObservationFence.count({ where: { mediaId: f.media.id } }),
-    ).toBe(0);
+      await h.database().watchObservationFence.findUniqueOrThrow({
+        where: { mediaId_edition: defaultScope(f.media.id) },
+      }),
+    ).toEqual(f.fence);
   });
 });

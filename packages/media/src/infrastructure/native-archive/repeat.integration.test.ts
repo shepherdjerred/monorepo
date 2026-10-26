@@ -5,8 +5,10 @@ import { z } from "zod";
 import { automationTestHarness } from "#testing/automation.ts";
 import { nativeArchiveFixture } from "#automation/native-archive/test-fixture.ts";
 import { createNativeArchiveFileActivities } from "#automation/native-archive/activities.ts";
-import { createNativeArchiveObserver } from "#migration/native-archive/producer.ts";
-import { createNativeArchiveCleanupObserver } from "#migration/native-archive/cleanup.ts";
+import {
+  archiveReviewObserver,
+  observeArchiveCleanup,
+} from "#automation/native-archive/fixtures/observe.ts";
 import { prepareMediaRestore } from "#infrastructure/recovery.ts";
 import { grantTestExclusionProofs } from "#testing/exclusion.ts";
 import {
@@ -62,7 +64,7 @@ test("second restored backup proves purged B before rebaselining A→B→current
     where: { id: opId },
   });
   const cleanupInput = CleanupNativeArchiveInputSchema.parse(operation.payload);
-  await createNativeArchiveCleanupObserver(f.observerContext)(cleanupInput);
+  await observeArchiveCleanup(f.observerContext, cleanupInput);
   expect(
     await createNativeArchiveFileActivities(
       f.context,
@@ -114,8 +116,8 @@ test("second restored backup proves purged B before rebaselining A→B→current
     planId,
     operationId: z.uuid().parse(command.operationId),
   };
-  const observe = () => createNativeArchiveObserver(f.observerContext)(planId);
-  await observe();
+  const observe = archiveReviewObserver(f.observerContext);
+  await observe(prepareInput);
   await finishArchivePreparation(
     f.context,
     prepareInput,
@@ -147,7 +149,7 @@ test("second restored backup proves purged B before rebaselining A→B→current
     operationId: z.uuid().parse(approval.operationId),
     planHash: z.string().parse(plan.planHash),
   };
-  await observe();
+  await observe(applyInput);
   await applyPreparedNativeArchive(
     f.context,
     applyInput,

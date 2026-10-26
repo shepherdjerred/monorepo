@@ -1,14 +1,12 @@
 import { z } from "zod";
 import { NativeArchiveNetworkEvidenceSchema } from "#shared/native-recovery/archive.ts";
-import { FinishedNativeV2Schema } from "#shared/native-recovery/lifecycle.ts";
+import { finishNativePlexPlan } from "#infrastructure/plex-binding/native/native-version.ts";
+import { assertNativeFilesProof } from "#automation/native-recovery/plex-proof.ts";
 import {
   lockNativeArchiveScope,
   assertNativeArchiveSnapshot,
 } from "#infrastructure/native-archive/guards.ts";
-import {
-  stableArchiveFiles,
-  stableArchiveNetwork,
-} from "#infrastructure/native-archive/plan.ts";
+import { stableArchiveFiles } from "#infrastructure/native-archive/plan.ts";
 import { assertNativeOwner } from "#infrastructure/native-recovery/owner.ts";
 import { assertNativeEvidenceFresh } from "#automation/native-recovery/authority.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
@@ -31,6 +29,7 @@ export async function finishArchivePreparation(
         tx,
         input.planId,
         prepared.scope,
+        prepared.plex.budget,
       );
       if (plan.state === "awaiting_review") return;
       if (plan.state !== "preparing")
@@ -50,29 +49,31 @@ export async function finishArchivePreparation(
       )
         throw new Error("Archive preparation operation changed");
       await assertNativeOwner(tx, plan.actorId);
-      const observation = await tx.nativeRecoveryObservation.findFirstOrThrow({
-        where: { planId: plan.id, kind: "network" },
-        orderBy: { createdAt: "desc" },
-      });
-      const network = NativeArchiveNetworkEvidenceSchema.parse(
-        observation.evidence,
-      );
+      if (prepared.plex.kind !== "paired")
+        throw new Error(
+          "New archive preparation requires its paired Plex proof",
+        );
+      const plex = prepared.plex;
+      await assertNativeFilesProof(tx, plex);
+      const network = NativeArchiveNetworkEvidenceSchema.parse(plex.network);
       if (
-        observation.expiresAt <= new Date() ||
-        observation.evidenceHash !== snapshotHash(z.json().parse(network)) ||
+        Date.parse(network.expiresAt) <= Date.now() ||
         network.planId !== plan.id ||
         network.recoveryEpoch !== plan.recoveryEpoch
       )
         throw new Error("Archive network evidence changed");
       await withArchiveLocks(context, prepared, async () => {
         assertNativeEvidenceFresh(network);
-        const finished = FinishedNativeV2Schema.parse({
-          schemaVersion: 2,
-          lifecycleKind: "superseded_archive",
-          scopeHash: snapshotHash(z.json().parse(prepared.scope)),
-          network: stableArchiveNetwork(network),
-          files: stableArchiveFiles(prepared.evidence),
-        });
+        const finished = await finishNativePlexPlan(
+          tx,
+          {
+            planId: plan.id,
+            plex: plex.ref,
+            files: stableArchiveFiles(prepared.evidence),
+          },
+          plex.freshness,
+          plex.budget,
+        );
         await tx.nativeRecoveryObservation.create({
           data: {
             planId: plan.id,
@@ -88,17 +89,19 @@ export async function finishArchivePreparation(
           where: { id: plan.id },
           data: {
             state: "awaiting_review",
-            plan: finished,
-            planHash: snapshotHash(finished),
+            plan: z.record(z.string(), z.json()).parse(finished),
+            planHash: snapshotHash(z.json().parse(finished)),
             expiresAt: new Date(Date.now() + 12 * 3_600_000),
             version: { increment: 1 },
           },
         });
         assertArchiveActive(context.execution);
         assertNativeEvidenceFresh(network);
+        plex.freshness.assertActive();
       });
       assertArchiveActive(context.execution);
       assertNativeEvidenceFresh(network);
+      plex.freshness.assertActive();
     },
     { timeout: 30_000, maxWait: 30_000 },
   );

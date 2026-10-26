@@ -7,7 +7,9 @@ import { mappedPublicationFixture } from "#automation/publication-proof/test-fix
 import { sharedTvFileFixture } from "#automation/native-archive/fixtures/shared-tv.ts";
 import { PrismaMediaCommands } from "#infrastructure/commands.ts";
 import { compensationPlayback } from "#infrastructure/native-compensation/playback.ts";
+import { readCurrentPlexBindings } from "#infrastructure/plex-binding/read.ts";
 import { lockWatchAuthority } from "#automation/plex-events/authority.ts";
+import { captureWatchBindingScope } from "#automation/plex-events/binding.ts";
 import {
   NativeCompensationVerifiedPublicationSchema,
   type NativeCompensationActivityInput,
@@ -145,6 +147,41 @@ describe(
         fixture.published.entry.mediaIds.toSorted(),
       );
       expect(row.fenceRelease).not.toBeNull();
+      const committed = await db.$transaction(async (tx) => ({
+        continuation:
+          await tx.nativePublicationCompensationContinuation.findUniqueOrThrow({
+            where: { id: input.continuationId },
+          }),
+        bindings: await readCurrentPlexBindings(
+          tx,
+          fixture.published.entry.mediaIds.map((mediaId) => ({
+            scope: { mediaId, edition: "default" },
+            assetId: before.id,
+            access: {
+              serverMachineId: "server",
+              sectionType: "show",
+              sectionId: "2",
+            },
+          })),
+        ),
+      }));
+      expect(committed.continuation.verifiedPublication).toEqual(
+        row.verifiedPublication,
+      );
+      expect(committed.continuation.fenceRelease).toEqual(row.fenceRelease);
+      expect(committed.bindings).toHaveLength(2);
+      for (const binding of committed.bindings) {
+        expect(binding.status).toBe("current");
+        if (binding.status !== "current")
+          throw new Error("Compensated leaf lacks committed serving binding");
+        expect(proof.items).toContainEqual(
+          expect.objectContaining({
+            mediaId: binding.association.scope.mediaId,
+            assetId: binding.association.group.assetId,
+            ratingKey: binding.association.item.ratingKey,
+          }),
+        );
+      }
       expect(requests.filter((item) => item.endsWith("/refresh"))).toEqual([
         "/library/sections/2/refresh",
       ]);
@@ -159,6 +196,11 @@ describe(
         }),
       ).toEqual(historical);
       for (const mediaId of fixture.published.entry.mediaIds) {
+        const bindingScope = await captureWatchBindingScope(db, mediaId, {
+          serverMachineId: "server",
+          sectionId: "2",
+          sectionType: "show",
+        });
         const authority = await db.$transaction((tx) =>
           lockWatchAuthority(
             tx,
@@ -166,6 +208,7 @@ describe(
               mediaId,
               serverMachineId: "server",
               sections: { movie: "1", series: "2" },
+              bindingScope,
             },
             testWatchExecution(),
           ),

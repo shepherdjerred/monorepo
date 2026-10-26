@@ -3,7 +3,7 @@ import { readFile, writeFile, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import { automationTestHarness } from "#testing/automation.ts";
 import { NativeArchiveFileEvidenceSchema } from "#shared/native-recovery/archive.ts";
-import { FinishedNativeV2Schema } from "#shared/native-recovery/lifecycle.ts";
+import { FinishedNativePlexV3Schema } from "#shared/plex-binding/native-version.ts";
 import { archiveCaptionFixture } from "./caption.test-support.ts";
 
 const harness = automationTestHarness();
@@ -25,13 +25,14 @@ afterAll(async () => {
 test("direct archive approval consumes exact compensated caption proof without another native rebaseline", async () => {
   if (fixture === undefined) throw new Error("Archive caption setup missing");
   const f = fixture;
-  const finished = FinishedNativeV2Schema.parse(f.plan.plan);
+  const finished = FinishedNativePlexV3Schema.parse(f.plan.plan);
+  expect(finished.lifecycleKind).toBe("superseded_archive");
   expect(
     NativeArchiveFileEvidenceSchema.omit({ capturedAt: true })
       .parse(finished.files)
       .subtitleEvidence?.map((item) => item.assetId),
   ).toEqual([f.f.asset.id]);
-  await f.observer(f.plan.id);
+  await f.observer(f.applyInput);
   await f.files.applyNativeArchiveFiles(f.applyInput);
   expect(
     await harness
@@ -56,7 +57,7 @@ test("same-byte installation journal replacement after archive review refuses th
   );
   await writeFile(`${journal}.replacement`, await readFile(journal));
   await rename(`${journal}.replacement`, journal);
-  await f.observer(f.plan.id);
+  await f.observer(f.applyInput);
   await expect(f.files.applyNativeArchiveFiles(f.applyInput)).rejects.toThrow();
   expect(
     await harness
@@ -71,7 +72,8 @@ test("settled replacement of an original compensated caption proves its retained
   const f = fixture;
   const before = f.replacement;
   if (before === null) throw new Error("Actual replacement receipt missing");
-  const finished = FinishedNativeV2Schema.parse(f.plan.plan);
+  const finished = FinishedNativePlexV3Schema.parse(f.plan.plan);
+  expect(finished.lifecycleKind).toBe("superseded_archive");
   const evidence = NativeArchiveFileEvidenceSchema.omit({
     capturedAt: true,
   }).parse(finished.files).subtitleEvidence;
@@ -82,7 +84,7 @@ test("settled replacement of an original compensated caption proves its retained
         file.identity !== null,
     ),
   ).toBe(true);
-  await f.observer(f.plan.id);
+  await f.observer(f.applyInput);
   await f.files.applyNativeArchiveFiles(f.applyInput);
   expect(
     await harness.database().subtitleReplacement.findUniqueOrThrow({

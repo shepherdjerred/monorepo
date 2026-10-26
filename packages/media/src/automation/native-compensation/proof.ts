@@ -3,6 +3,7 @@ import {
   NativeCompensationScopeSchema,
   type NativeCompensationScope,
 } from "#shared/native-recovery/compensation.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { inspectPublicationRecords } from "#filesystem/publication-proof/records.ts";
 import { FileOperationConflict } from "#filesystem/operations-types.ts";
 import { prepareContentProof } from "#automation/files/content-proof.ts";
@@ -29,9 +30,13 @@ import {
 export async function captureCompensationProof(
   initial: CompensationFileContext,
   scope: NativeCompensationScope,
-  planId: string,
-  currentContinuationId?: string,
+  input: {
+    planId: string;
+    currentContinuationId?: string;
+    budget: PublicationAuthorityReadBudget;
+  },
 ) {
+  const { planId, currentContinuationId, budget } = input;
   assertPublicationActive(initial.files);
   const plan = scope.intent.entries.map((item) => item.entry);
   const previous =
@@ -40,6 +45,7 @@ export async function captureCompensationProof(
       : await compensationAncestors(
           initial.files.db,
           scope.previousCompensation.continuationId,
+          budget,
         );
   const namespaces = [
     null,
@@ -176,14 +182,16 @@ export async function captureCompensationProof(
 export async function prepareNativeCompensationProof(
   context: CompensationFileContext,
   planId: string,
+  budget: PublicationAuthorityReadBudget,
 ) {
   const plan = await context.files.db.nativeRecoveryPlan.findUniqueOrThrow({
     where: { id: planId },
   });
+  budget.consume(1);
   assertPublicationActive(context.files);
   return await captureCompensationProof(
     context,
     NativeCompensationScopeSchema.parse(plan.scope),
-    planId,
+    { planId, budget },
   );
 }

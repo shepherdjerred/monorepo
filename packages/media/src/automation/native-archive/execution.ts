@@ -2,6 +2,8 @@ import type { NativeFileContext } from "#automation/native-recovery/files.ts";
 
 /** Invocation-local deadline/cancellation capability; never serialized or cached with the worker. */
 export type NativeArchiveExecution = {
+  readonly observed: { readonly wall: number; readonly monotonic: number };
+  readonly expiresAtMs: number;
   signal: AbortSignal;
   assertActive: () => void;
   checkpoint: () => Promise<void>;

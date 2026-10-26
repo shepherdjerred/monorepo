@@ -1,4 +1,10 @@
 import { z } from "zod";
+import { FinishedArchivePlexV3Schema } from "#shared/plex-binding/native-version.ts";
+import {
+  assertNativeFilesApproval,
+  nativeSelection,
+  nativeSelectionProof,
+} from "#automation/native-recovery/plex-proof.ts";
 import { Prisma } from "#generated/prisma/client.ts";
 import {
   NativeArchiveContinuationSchema,
@@ -30,23 +36,25 @@ import { assertArchiveActive, type ArchiveFileContext } from "./execution.ts";
 import type { PreparedNativeArchive } from "./files.ts";
 import { withArchiveLocks } from "./physical.ts";
 import { rebindArchiveSubtitles } from "./subtitles.ts";
+import type { ArchiveReceiptProjection } from "#infrastructure/native-archive/receipt-projection.ts";
 
 async function rebindFiles(
   tx: Prisma.TransactionClient,
   context: ArchiveFileContext,
   prepared: PreparedNativeArchive,
-  epoch: number,
+  {
+    epoch,
+    projection,
+  }: { epoch: number; projection: ArchiveReceiptProjection },
 ) {
   const bindings: NativeArchiveBinding[] = [];
   for (const file of prepared.scope.files) {
     assertArchiveActive(context.execution);
     if (file.authority.kind !== "rebaseline") {
-      await assertArchiveAuthority(
-        tx,
-        file,
-        file.authority,
-        prepared.authorityProof.budget,
-      );
+      await assertArchiveAuthority(tx, file, file.authority, {
+        budget: prepared.authorityProof.budget,
+        projection,
+      });
       continue;
     }
     if (file.ownershipEpoch >= epoch)
@@ -108,11 +116,13 @@ export async function applyPreparedNativeArchive(
         assertArchiveActive(context.execution);
         return previous.id;
       }
-      const { plan, runtime } = await assertNativeArchiveSnapshot(
-        tx,
-        input.planId,
-        prepared.scope,
-      );
+      const { plan, runtime, projection, supersessions } =
+        await assertNativeArchiveSnapshot(
+          tx,
+          input.planId,
+          prepared.scope,
+          prepared.plex.budget,
+        );
       if (
         plan.state !== "applying" ||
         plan.planHash !== input.planHash ||
@@ -120,28 +130,29 @@ export async function applyPreparedNativeArchive(
         plan.expiresAt <= new Date()
       )
         throw new Error("Archive approval missing or expired");
-      const finished = FinishedNativeV2Schema.parse(plan.plan);
+      const finished = z
+        .union([FinishedNativeV2Schema, FinishedArchivePlexV3Schema])
+        .parse(plan.plan);
       if (
         finished.lifecycleKind !== "superseded_archive" ||
-        snapshotHash(finished) !== plan.planHash ||
+        snapshotHash(z.json().parse(finished)) !== plan.planHash ||
         finished.scopeHash !== snapshotHash(z.json().parse(prepared.scope)) ||
-        snapshotHash(finished.files) !==
+        snapshotHash(z.json().parse(finished.files)) !==
           snapshotHash(z.json().parse(stableArchiveFiles(prepared.evidence)))
       )
         throw new Error("Archive reviewed physical identity changed");
-      const observation = await tx.nativeRecoveryObservation.findFirstOrThrow({
-        where: { planId: plan.id, kind: "network" },
-        orderBy: { createdAt: "desc" },
+      await assertNativeFilesApproval(tx, input, finished, {
+        proof: prepared.plex,
+        snapshot: { transaction: tx, plan, scope: prepared.scope },
       });
       const network = NativeArchiveNetworkEvidenceSchema.parse(
-        observation.evidence,
+        prepared.plex.network,
       );
       if (
         network.planId !== plan.id ||
         network.recoveryEpoch !== runtime.recoveryEpoch ||
-        observation.expiresAt <= new Date() ||
-        observation.evidenceHash !== snapshotHash(z.json().parse(network)) ||
-        snapshotHash(finished.network) !==
+        Date.parse(network.expiresAt) <= Date.now() ||
+        snapshotHash(z.json().parse(finished.network)) !==
           snapshotHash(stableArchiveNetwork(network))
       )
         throw new Error("Archive reviewed network identity changed");
@@ -157,12 +168,10 @@ export async function applyPreparedNativeArchive(
           network,
         });
         assertArchiveActive(context.execution);
-        const bindings = await rebindFiles(
-          tx,
-          context,
-          prepared,
-          runtime.recoveryEpoch,
-        );
+        const bindings = await rebindFiles(tx, context, prepared, {
+          epoch: runtime.recoveryEpoch,
+          projection,
+        });
         const renewedMedia = new Set(
           bindings.flatMap((binding) => binding.mediaIds),
         );
@@ -217,24 +226,33 @@ export async function applyPreparedNativeArchive(
             previousRuntimeVersion: runtime.version,
             runtimeVersion: runtime.version + (runtimeChanged ? 1 : 0),
             actorId,
-            selection: z.record(z.string(), z.json()).parse({
-              scope: prepared.scope,
-              fileEvidence: stableArchiveFiles(prepared.evidence),
-              networkEvidence: stableArchiveNetwork(network),
-              bindings,
-              reusedBindings,
-              policies,
-            }),
+            selection: nativeSelection(
+              {
+                ...nativeSelectionProof(finished, prepared.plex),
+                scope: prepared.scope,
+                fileEvidence: stableArchiveFiles(prepared.evidence),
+                networkEvidence: stableArchiveNetwork(network),
+                bindings,
+                reusedBindings,
+                policies,
+              },
+              prepared.plex,
+            ),
           },
         });
-        await commitArchiveSupersessions(tx, {
-          scope: prepared.scope,
-          fileEvidence: prepared.evidence,
-          networkEvidence: network,
-          planId: plan.id,
-          receiptId: receipt.id,
-          planHash: input.planHash,
-        });
+        await commitArchiveSupersessions(
+          tx,
+          {
+            scope: prepared.scope,
+            fileEvidence: prepared.evidence,
+            networkEvidence: network,
+            planId: plan.id,
+            receiptId: receipt.id,
+            planHash: input.planHash,
+          },
+          prepared.plex.budget,
+          { projection, supersessions },
+        );
         for (const edge of prepared.scope.edges.filter(
           (item) => item.selected,
         )) {
@@ -278,10 +296,12 @@ export async function applyPreparedNativeArchive(
           });
         assertArchiveActive(context.execution);
         assertNativeEvidenceFresh(network);
+        prepared.plex.freshness.assertActive();
         return receipt.id;
       });
       assertArchiveActive(context.execution);
       assertNativeEvidenceFresh(network);
+      prepared.plex.freshness.assertActive();
       return receiptId;
     },
     { timeout: 30_000, maxWait: 30_000 },

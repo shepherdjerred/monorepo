@@ -1,4 +1,6 @@
 import path from "node:path";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { captureNativeReviewProof } from "#automation/native-recovery/plex-proof.ts";
 import { z } from "zod";
 import { ContentProof } from "#filesystem/content-proof.ts";
 import { safePath } from "#filesystem/operations-io.ts";
@@ -48,6 +50,7 @@ export async function prepareNativeArchiveFiles(
   context: ArchiveFileContext,
   input: { planId: string; operationId: string },
 ) {
+  const budget = new PublicationAuthorityReadBudget();
   await context.files.checkpoint("native-archive-prepare");
   const plan = await archiveAwait(
     context.execution,
@@ -55,12 +58,14 @@ export async function prepareNativeArchiveFiles(
       where: { id: input.planId },
     }),
   );
+  budget.consume(1);
   const operation = await archiveAwait(
     context.execution,
     context.files.db.operation.findUniqueOrThrow({
       where: { id: input.operationId },
     }),
   );
+  budget.consume(1);
   const command = z
     .object({ planId: z.uuid(), recoveryEpoch: z.int() })
     .parse(operation.payload);
@@ -77,26 +82,26 @@ export async function prepareNativeArchiveFiles(
   )
     throw new Error("Archive physical preparation command changed");
   const scope = NativeArchiveScopeSchema.parse(plan.scope);
-  const observation = await archiveAwait(
-    context.execution,
-    context.files.db.nativeRecoveryObservation.findFirstOrThrow({
-      where: { planId: plan.id, kind: "network" },
-      orderBy: { createdAt: "desc" },
-    }),
-  );
-  const network = NativeArchiveNetworkEvidenceSchema.parse(
-    observation.evidence,
-  );
+  const plex = await captureNativeReviewProof(context.files, input, plan.plan, {
+    execution: context.execution,
+    budget,
+    expiresAtMs: context.execution.expiresAtMs,
+  });
+  const network = NativeArchiveNetworkEvidenceSchema.parse(plex.network);
   if (
     network.planId !== plan.id ||
     network.recoveryEpoch !== plan.recoveryEpoch ||
-    observation.evidenceHash !== snapshotHash(z.json().parse(network)) ||
-    observation.expiresAt <= new Date()
+    Date.parse(network.expiresAt) <= Date.now()
   )
     throw new Error("Archive network evidence changed");
   assertNativeEvidenceFresh(network);
   const content = new ContentProof();
-  const authorityProof = await captureArchiveAuthority(context, scope, content);
+  const authorityProof = await captureArchiveAuthority(
+    context,
+    scope,
+    content,
+    plex.budget,
+  );
   const supersessions = await captureArchiveSupersessions(
     context,
     scope,
@@ -170,7 +175,16 @@ export async function prepareNativeArchiveFiles(
     ...(scope.supersessions === undefined ? {} : { supersessionEvidence }),
     ...(subtitleEvidence.length === 0 ? {} : { subtitleEvidence }),
   });
-  return { scope, content, journals, evidence, authorityProof, supersessions };
+  plex.freshness.assertActive();
+  return {
+    scope,
+    content,
+    journals,
+    evidence,
+    authorityProof,
+    supersessions,
+    plex,
+  };
 }
 export type PreparedNativeArchive = Awaited<
   ReturnType<typeof prepareNativeArchiveFiles>

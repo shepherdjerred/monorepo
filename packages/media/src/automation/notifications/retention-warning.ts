@@ -1,5 +1,10 @@
 import type { Prisma } from "#generated/prisma/client.ts";
 import { queueOperation } from "#automation/store.ts";
+import { captureRetentionPlexProjection } from "#infrastructure/plex-binding/retention.ts";
+import type {
+  PlexBindingSnapshot,
+  PlexPhysicalGroup,
+} from "#shared/plex-binding/contract.ts";
 
 export async function createWarning(
   tx: Prisma.TransactionClient,
@@ -9,10 +14,28 @@ export async function createWarning(
       include: { user: { include: { notificationPreference: true } } };
     }>[];
   },
-  generation: number,
-  epoch: number,
+  authority: {
+    generation: number;
+    epoch: number;
+    binding: {
+      groups: readonly PlexPhysicalGroup[];
+      bindings: readonly PlexBindingSnapshot[];
+    };
+  },
 ) {
+  const { generation, epoch, binding } = authority;
   const decisionId = crypto.randomUUID();
+  await tx.retentionDecision.create({
+    data: {
+      id: decisionId,
+      mediaId: item.id,
+      generation,
+      edition: "default",
+      state: "eligible",
+      evidence: { recoveryEpoch: epoch },
+    },
+  });
+  await captureRetentionPlexProjection(tx, { decisionId, ...binding });
   const event = await tx.applicationEvent.create({
     data: {
       mediaId: item.id,
@@ -20,13 +43,11 @@ export async function createWarning(
       payload: { decisionId, generation },
     },
   });
-  const decision = await tx.retentionDecision.create({
+  const decision = await tx.retentionDecision.update({
+    where: { id: decisionId },
     data: {
-      id: decisionId,
-      mediaId: item.id,
-      generation,
-      edition: "default",
       state: "warning_pending",
+      version: { increment: 1 },
       evidence: { warningEventId: event.id, recoveryEpoch: epoch },
     },
   });

@@ -123,9 +123,17 @@ test("storage authority rows alone cannot create native recovery approval", asyn
       },
     });
   }
+  const changedRows = await f.context.db.mediaStorageAuthority.findMany({
+    orderBy: { rootPath: "asc" },
+  });
   await expect(resolveNativeStorageRoots(f.context.db)).rejects.toThrow(
-    "no matching durable",
+    "Native storage pinned approval identity changed",
   );
+  expect(
+    await f.context.db.mediaStorageAuthority.findMany({
+      orderBy: { rootPath: "asc" },
+    }),
+  ).toEqual(changedRows);
 });
 test("runtime changes while canonical storage is observed are never overwritten", async () => {
   const f = await fixture();
@@ -178,7 +186,18 @@ test("a later native receipt can supply both durable root approvals for the next
       selection: { scope: f.scope, networkEvidence: network, fileEvidence: [] },
     },
   });
-  const roots = await resolveNativeStorageRoots(f.context.db);
+  // Discovery keeps the installed approvals; selecting the exact newer receipt
+  // is an explicit reviewed operation, never a latest-receipt fallback.
+  expect(await resolveNativeStorageRoots(f.context.db)).toEqual(f.roots);
+  const reviewedRoots = f.roots.map((root) => ({
+    ...root,
+    receipt: { kind: "native" as const, id: receipt.id, planHash },
+  }));
+  const roots = await resolveNativeStorageRoots(
+    f.context.db,
+    undefined,
+    reviewedRoots,
+  );
   expect(
     roots.every(
       (root) =>

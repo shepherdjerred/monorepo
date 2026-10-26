@@ -5,6 +5,7 @@ import type { MediaFileRoots } from "#filesystem/operations-types.ts";
 import type { MediaProbe } from "#filesystem/media-tools.ts";
 import type { ContentProof } from "#filesystem/content-proof.ts";
 import type { MediaPathMapping } from "#filesystem/media-paths.ts";
+import type { PlexAccess } from "#shared/plex-binding/contract.ts";
 import * as filePlan from "#shared/file-plan.ts";
 
 export type Transaction = Prisma.TransactionClient;
@@ -12,10 +13,13 @@ export type FileContext = {
   db: Database;
   serverMachineId?: string;
   permittedMovieSection?: () => Promise<string>;
+  plexAccess: (sectionType: "movie" | "show") => Promise<PlexAccess>;
   roots: { movies: MediaFileRoots; tv: MediaFileRoots };
   pathMapping?: MediaPathMapping;
   checkpoint: (phase: string) => Promise<void>;
   publicationExecution?: () => {
+    readonly observed: { readonly wall: number; readonly monotonic: number };
+    readonly expiresAtMs: number;
     signal: AbortSignal;
     assertActive: () => void;
     checkpoint: () => Promise<void>;

@@ -1,27 +1,28 @@
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
-import { afterAll, beforeAll, expect, test } from "vitest";
+import { afterAll, expect, test } from "vitest";
 import { access, readFile, rm, writeFile } from "node:fs/promises";
 import nodePath from "node:path";
-import { startMediaTestPostgres } from "#testing/postgres.ts";
+import { automationTestHarness } from "#testing/automation.ts";
+import { sharedTvFileFixture } from "#automation/native-archive/fixtures/shared-tv.ts";
+import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
+import { prepareBoundRetention } from "#automation/retention/lifecycle.test-fixture.ts";
+import { preparePhysicalPublication } from "#automation/plex-binding/test-fixture.ts";
+import { workerFilePath } from "./paths/locations.ts";
 import { fileFixture } from "./test-support.ts";
 import { createMediaFileActivities } from "./activities.ts";
 import { FilePlanSchema } from "./types.ts";
 
-let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
+const harness = automationTestHarness();
 const directories: string[] = [];
-beforeAll(async () => {
-  cluster = await startMediaTestPostgres();
-}, 60_000);
 afterAll(async () => {
-  if (cluster !== undefined) await cluster.close();
   for (const directory of directories)
     await rm(directory, { recursive: true, force: true });
 });
 async function fixture(episode = false) {
   const series = episode
-    ? await cluster.database.mediaItem.create({
+    ? await harness.database().mediaItem.create({
         data: {
           kind: "series",
           title: "Coastlines",
@@ -31,7 +32,7 @@ async function fixture(episode = false) {
       })
     : null;
   const result = await fileFixture(
-    cluster.database,
+    harness.database(),
     series === null ? undefined : { seriesId: series.id },
   );
   directories.push(result.directory);
@@ -39,7 +40,7 @@ async function fixture(episode = false) {
 }
 
 async function episodePack(f: Awaited<ReturnType<typeof fixture>>) {
-  const db = cluster.database;
+  const db = harness.database();
   const seriesId = f.media.parentId;
   if (seriesId === null) throw new Error("Episode fixture has no series");
   const second = await db.mediaItem.create({
@@ -119,9 +120,11 @@ test("mixed pack rollback restores old playback and quarantines first publicatio
   expect(await activities.promoteMediaFiles(acquired.input)).toEqual({
     status: "published",
   });
-  const attempt = await cluster.database.acquisitionAttempt.findUniqueOrThrow({
-    where: { id: acquired.attempt.id },
-  });
+  const attempt = await harness
+    .database()
+    .acquisitionAttempt.findUniqueOrThrow({
+      where: { id: acquired.attempt.id },
+    });
   const plan = FilePlanSchema.parse(attempt.filePlan);
   const newEntry = plan.find((entry) => entry.previousAssetId === null);
   if (newEntry === undefined)
@@ -161,32 +164,32 @@ test("mixed pack rollback restores old playback and quarantines first publicatio
     ),
   ).toBe(acquired.content);
   expect(
-    await cluster.database.assetCoverage.findMany({
+    await harness.database().assetCoverage.findMany({
       where: { mediaId: f.media.id, current: true },
     }),
   ).toMatchObject([{ assetId: original.entry.assetId }]);
   expect(
-    await cluster.database.assetCoverage.count({
+    await harness.database().assetCoverage.count({
       where: { mediaId: second.id, current: true },
     }),
   ).toBe(0);
   expect(
-    await cluster.database.mediaItem.findUniqueOrThrow({
+    await harness.database().mediaItem.findUniqueOrThrow({
       where: { id: second.id },
     }),
   ).toMatchObject({ availability: "wanted" });
   expect(
-    await cluster.database.acquisitionReservation.count({
+    await harness.database().acquisitionReservation.count({
       where: { attemptId: acquired.attempt.id },
     }),
   ).toBe(2);
   expect(
-    await cluster.database.mediaItem.findUniqueOrThrow({
+    await harness.database().mediaItem.findUniqueOrThrow({
       where: { id: f.media.id },
     }),
   ).toMatchObject({ availability: "importing" });
   expect(
-    await cluster.database.acquisitionAttempt.findUniqueOrThrow({
+    await harness.database().acquisitionAttempt.findUniqueOrThrow({
       where: { id: acquired.attempt.id },
     }),
   ).toMatchObject({
@@ -202,84 +205,17 @@ test("mixed pack rollback restores old playback and quarantines first publicatio
 });
 
 test("concurrent sibling restore operations receive complete shared-file receipts without another filesystem move", async () => {
-  const f = await fixture(true);
-  const original = await f.published();
-  const retention = await f.retention();
-  const timestamp = f.context.now?.();
-  if (timestamp === undefined) throw new Error("Fixture clock missing");
-  const second = await cluster.database.mediaItem.create({
-    data: {
-      kind: "episode",
-      parentId: f.media.parentId,
-      seasonNumber: 1,
-      episodeNumber: 2,
-      title: "Shared part",
-      availability: "available",
-    },
-  });
-  await cluster.database.$transaction(async (tx) => {
-    await lockDefaultScopes(tx, [defaultScope(second.id)], {
-      createMissing: true,
-    });
-    await tx.mediaIntent.update({
-      where: targetWhere(defaultScope(second.id)),
-      data: {
-        profileId: f.profile.id,
-        automationEpoch: 0,
-        desiredPresence: true,
-        monitoring: true,
-      },
-    });
-    await tx.mediaRequest.create({
-      data: { mediaId: second.id, userId: f.user.id },
-    });
-    await tx.watchState.create({
-      data: {
-        mediaId: second.id,
-        userId: f.user.id,
-        watched: true,
-        observedAt: timestamp,
-        source: "fixture",
-      },
-    });
-    await tx.assetCoverage.create({
-      data: {
-        mediaId: second.id,
-        assetId: original.entry.assetId,
-        current: true,
-      },
-    });
-  });
-  const warning = await cluster.database.applicationEvent.create({
-    data: {
-      mediaId: second.id,
-      kind: "removal_warning",
-      payload: {},
-      notifications: {
-        create: {
-          userId: f.user.id,
-          channel: "email",
-          state: "accepted",
-          acceptedAt: retention.decision.warningAcceptedAt,
-          reconciledAt: timestamp,
-        },
-      },
-    },
-  });
-  await cluster.database.retentionDecision.create({
-    data: {
-      mediaId: second.id,
-      generation: 0,
-      state: "grace_period",
-      graceUntil: retention.decision.graceUntil,
-      warningAcceptedAt: retention.decision.warningAcceptedAt,
-      evidence: {
-        authorizedAt: timestamp.toISOString(),
-        activePlayback: false,
-        recoveryEpoch: 0,
-        warningEventId: warning.id,
-      },
-    },
+  const db = harness.database();
+  const f = await sharedTvFileFixture(db, mappedPublicationFixture);
+  directories.push(f.directory);
+  const original = await preparePhysicalPublication(f);
+  const bound = await prepareBoundRetention(f, original, harness.context());
+  const retention = bound.retention;
+  const siblingId = original.entry.mediaIds.find((id) => id !== f.media.id);
+  if (siblingId === undefined)
+    throw new Error("Actual shared publication omitted its sibling");
+  const second = await db.mediaItem.findUniqueOrThrow({
+    where: { id: siblingId },
   });
   const activities = createMediaFileActivities(f.context);
   expect(await activities.quarantineMediaFiles(retention.input)).toEqual({
@@ -287,11 +223,11 @@ test("concurrent sibling restore operations receive complete shared-file receipt
   });
   const operations = [];
   for (const mediaId of [f.media.id, second.id]) {
-    const intent = await cluster.database.mediaIntent.update({
+    const intent = await harness.database().mediaIntent.update({
       where: targetWhere(defaultScope(mediaId)),
       data: { generation: { increment: 1 } },
     });
-    const operation = await cluster.database.operation.create({
+    const operation = await harness.database().operation.create({
       data: {
         kind: "restore_media",
         payload: { mediaId, generation: intent.generation },
@@ -305,11 +241,11 @@ test("concurrent sibling restore operations receive complete shared-file receipt
       operations.map((operation) => activities.restoreMediaFiles(operation)),
     ),
   ).toEqual([{ status: "restored" }, { status: "restored" }]);
-  const asset = await cluster.database.libraryAsset.findUniqueOrThrow({
+  const asset = await harness.database().libraryAsset.findUniqueOrThrow({
     where: { id: original.entry.assetId },
   });
   for (const input of operations) {
-    const operation = await cluster.database.operation.findUniqueOrThrow({
+    const operation = await harness.database().operation.findUniqueOrThrow({
       where: { id: input.operationId },
     });
     expect(operation.result).toMatchObject({
@@ -330,12 +266,14 @@ test("concurrent sibling restore operations receive complete shared-file receipt
       status: "restored",
     });
   }
-  expect(await readFile(asset.path, "utf8")).toBe(original.content);
-  const newerIntent = await cluster.database.mediaIntent.update({
+  expect(await readFile(workerFilePath(f.context, asset.path), "utf8")).toBe(
+    original.content,
+  );
+  const newerIntent = await harness.database().mediaIntent.update({
     where: targetWhere(defaultScope(second.id)),
     data: { generation: { increment: 1 } },
   });
-  const laterOperation = await cluster.database.operation.create({
+  const laterOperation = await harness.database().operation.create({
     data: {
       kind: "restore_media",
       payload: { mediaId: second.id, generation: newerIntent.generation },
@@ -348,11 +286,11 @@ test("concurrent sibling restore operations receive complete shared-file receipt
     }),
   ).toEqual({ status: "restored" });
   expect(
-    await cluster.database.libraryAsset.findUniqueOrThrow({
+    await harness.database().libraryAsset.findUniqueOrThrow({
       where: { id: asset.id },
     }),
   ).toMatchObject({ version: asset.version, checksum: asset.checksum });
-  const laterReceipt = await cluster.database.operation.findUniqueOrThrow({
+  const laterReceipt = await harness.database().operation.findUniqueOrThrow({
     where: { id: laterOperation.id },
   });
   expect(laterReceipt.result).toMatchObject({
@@ -365,7 +303,7 @@ test("concurrent sibling restore operations receive complete shared-file receipt
   expect(await activities.restoreMediaFiles(first)).toEqual({
     status: "restored",
   });
-  await cluster.database.mediaIntent.update({
+  await harness.database().mediaIntent.update({
     where: targetWhere(defaultScope(second.id)),
     data: { generation: { increment: 1 }, desiredPresence: false },
   });

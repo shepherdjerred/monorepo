@@ -4,9 +4,11 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./testing/system": "./e2e/system/sandbox.ts",
     "./contract": "./src/shared/contract.ts",
     "./capacity": "./src/shared/capacity/contract.ts",
     "./plex-events": "./src/shared/plex-events/contract.ts",
+    "./plex-binding": "./src/shared/plex-binding/activities.ts",
     "./native-archive": "./src/shared/native-recovery/archive.ts",
     "./native-compensation": "./src/shared/native-recovery/compensation-runtime.ts",
     "./automation": "./src/shared/automation.ts",
@@ -50,6 +52,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@shepherdjerred/version-catalog": "workspace:*",
     "@shepherdjerred/architecture": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@types/bun": "1.4.2",

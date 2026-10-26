@@ -3,6 +3,7 @@ import path from "node:path";
 import type { Prisma } from "#generated/prisma/client.ts";
 import {
   NativeCompensationScopeSchema,
+  type NativeCompensationScope,
   type PrepareNativeCompensation,
 } from "#shared/native-recovery/compensation.ts";
 import { assertNativeRestore } from "#infrastructure/native-recovery/scope.ts";
@@ -11,6 +12,7 @@ import {
   nativeJson,
 } from "#infrastructure/native-recovery/snapshots.ts";
 import { resolveNativeStorageRoots } from "#infrastructure/native-recovery/storage-provenance.ts";
+import type { ApprovedStorageRoot } from "#shared/canonical-storage.ts";
 import {
   archiveMedia,
   archiveTorrents,
@@ -28,16 +30,40 @@ import { NativeCompensationProtection } from "./protection.ts";
 import { compensationAncestors } from "./records.ts";
 import { publicationPhysicalSnapshot } from "#infrastructure/publication-proof/projection.ts";
 import { readVerifiedCompensationPublication } from "./publication-receipt.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 export async function buildNativeCompensationScope(
   tx: Prisma.TransactionClient,
   input: PrepareNativeCompensation,
+  budget = new PublicationAuthorityReadBudget(),
+  reviewedStorageRoots?: ApprovedStorageRoot[],
 ) {
-  await assertNativeRestore(tx, { ...input, assetIds: [] });
+  const projection = await buildNativeCompensationScopeProjection(
+    tx,
+    input,
+    budget,
+    reviewedStorageRoots,
+  );
+  return projection.scope;
+}
+
+/** Actual queried ancestry retained only for its caller's same transaction/snapshot. */
+export async function buildNativeCompensationScopeProjection(
+  tx: Prisma.TransactionClient,
+  input: PrepareNativeCompensation,
+  budget: PublicationAuthorityReadBudget,
+  reviewedStorageRoots?: ApprovedStorageRoot[],
+) {
+  await assertNativeRestore(tx, { ...input, assetIds: [] }, budget);
   const transition = await tx.mediaPublicationTransition.findUniqueOrThrow({
     where: { id: input.transitionId },
   });
-  const reference = await loadPublicationIntent(tx, transition.attemptId);
+  budget.consume(1);
+  const reference = await loadPublicationIntent(
+    tx,
+    transition.attemptId,
+    budget,
+  );
   if (reference === null)
     throw new Error("Compensation publication intent missing");
   const intent = reference.intent;
@@ -67,8 +93,9 @@ export async function buildNativeCompensationScope(
   const earlier = await tx.nativePublicationCompensationContinuation.findMany({
     where: { transitionId: transition.id },
     orderBy: { recoveryEpoch: "desc" },
-    take: 101,
+    take: budget.take,
   });
+  budget.consume(earlier.length);
   if (earlier.length > 100)
     throw new NativeCompensationProtection("compensation_history_bound");
   if (earlier.some((row) => row.recoveryEpoch >= input.recoveryEpoch))
@@ -76,13 +103,15 @@ export async function buildNativeCompensationScope(
       "compensation_current_authority_already_exists",
     );
   const previous = earlier[0];
-  await assertPreviousPublication(tx, previous);
+  await assertPreviousPublication(tx, previous, budget);
   if (previous?.coordinatorOperationId === null)
     throw new NativeCompensationProtection(
       "compensation_previous_coordinator_missing",
     );
   const priorChain =
-    previous === undefined ? [] : await compensationAncestors(tx, previous.id);
+    previous === undefined
+      ? []
+      : await compensationAncestors(tx, previous.id, budget);
   const files = await predecessorFiles(tx, intent, {
     recoveryEpoch: input.recoveryEpoch,
     priorChain,
@@ -112,6 +141,7 @@ export async function buildNativeCompensationScope(
   const interruptedWork = await captureInterruptedPublicationWork(
     tx,
     transition.id,
+    budget,
   );
   const ancestors = media.flatMap((row) =>
     [row.parent?.id, row.parent?.parent?.id].filter((id) => id !== undefined),
@@ -125,7 +155,7 @@ export async function buildNativeCompensationScope(
         canonicalPath: `/data/${participant.libraryKind}/.media-control/${participant.physical.path}`,
       })),
   );
-  return NativeCompensationScopeSchema.parse({
+  const scope = NativeCompensationScopeSchema.parse({
     schemaVersion: 2,
     lifecycleKind: "publication_compensation",
     request: input,
@@ -154,15 +184,94 @@ export async function buildNativeCompensationScope(
     requiredAbsences,
     files,
     media,
-    storageRoots: await resolveNativeStorageRoots(tx),
+    storageRoots: await resolveNativeStorageRoots(
+      tx,
+      budget,
+      reviewedStorageRoots,
+    ),
     household: await nativeHousehold(tx, ids, ancestors),
-    lifecycle: await nativeCompensationLifecycle(tx, {
-      mediaIds: ids,
-      assetIds,
-      interrupted: interruptedWork,
-    }),
+    lifecycle: await nativeCompensationLifecycle(
+      tx,
+      {
+        mediaIds: ids,
+        assetIds,
+        interrupted: interruptedWork,
+      },
+      budget,
+    ),
     torrents: await archiveTorrents(tx, assetIds),
   });
+  return {
+    transaction: tx,
+    budget,
+    scope,
+    priorChain,
+    rawHash: scopeProjectionHash(scope, priorChain),
+  };
+}
+
+export type CompensationScopeProjection = Awaited<
+  ReturnType<typeof buildNativeCompensationScopeProjection>
+>;
+
+/** A final writer may project the already validated prefix, never adopt an earlier TX's chain. */
+export function compensationPreviousEffects(
+  tx: Prisma.TransactionClient,
+  scope: NativeCompensationScope,
+  projection: CompensationScopeProjection,
+  budget: PublicationAuthorityReadBudget,
+) {
+  if (
+    projection.transaction !== tx ||
+    projection.budget !== budget ||
+    snapshotHash(nativeJson(scope)) !==
+      snapshotHash(nativeJson(projection.scope)) ||
+    projection.rawHash !==
+      scopeProjectionHash(projection.scope, projection.priorChain)
+  )
+    throw new Error(
+      "Compensation scope projection changed or belongs to another transaction/budget",
+    );
+  const previous = scope.previousCompensation;
+  const record = projection.priorChain[0];
+  if (previous === null) {
+    if (record !== undefined)
+      throw new Error("Compensation scope projection has unexpected ancestry");
+    return [];
+  }
+  if (
+    record?.row.id !== previous.continuationId ||
+    record.row.descriptorHash !== previous.descriptorHash ||
+    record.row.coordinatorOperationId !== previous.coordinatorOperationId ||
+    record.row.transitionId !== scope.transition.transitionId ||
+    (record.row.executionEvidence === null
+      ? null
+      : snapshotHash(nativeJson(record.row.executionEvidence))) !==
+      previous.executionHash
+  )
+    throw new Error("Compensation scope projection prior prefix changed");
+  return record.descriptor.approvedFileEvidence.acknowledgedEffects;
+}
+
+function scopeProjectionHash(
+  scope: NativeCompensationScope,
+  priorChain: Awaited<ReturnType<typeof compensationAncestors>>,
+) {
+  return snapshotHash(
+    nativeJson({
+      scope,
+      chain: priorChain.map(
+        ({ row, descriptor, selection, execution, completion, original }) => ({
+          row,
+          descriptor,
+          selection,
+          execution,
+          completion,
+          original,
+        }),
+      ),
+    }),
+  );
 }
 
 async function predecessorFiles(
@@ -244,16 +353,21 @@ async function assertPreviousPublication(
         Record<string, never>
       >
     | undefined,
+  budget: PublicationAuthorityReadBudget,
 ) {
   if (previous?.fenceRelease != null) {
     if (
       previous.publicationCoordinatorOperationId === null ||
-      (await readVerifiedCompensationPublication(tx, {
-        schemaVersion: 1,
-        continuationId: previous.id,
-        operationId: previous.publicationCoordinatorOperationId,
-        recoveryEpoch: previous.recoveryEpoch,
-      })) === null
+      (await readVerifiedCompensationPublication(
+        tx,
+        {
+          schemaVersion: 1,
+          continuationId: previous.id,
+          operationId: previous.publicationCoordinatorOperationId,
+          recoveryEpoch: previous.recoveryEpoch,
+        },
+        budget,
+      )) === null
     )
       throw new Error(
         "Released latest compensation has no verified publication",

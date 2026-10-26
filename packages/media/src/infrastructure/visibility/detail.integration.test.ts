@@ -1,4 +1,6 @@
 import { expect, test } from "vitest";
+import { z } from "zod";
+import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
 import { automationTestHarness } from "#testing/automation.ts";
 import { visibilityFixture } from "./test-fixture.ts";
 import { recordCleanupEvaluation } from "./seeding.ts";
@@ -73,7 +75,7 @@ test("current direct and root-covered co-requesters see shared progress; exclusi
   });
 });
 
-test("persisted progress precedes assets; playable upgrade and independent cancelled seeding remain separate", async () => {
+test("persisted progress precedes assets; legacy playback labels and cancelled seeding remain separate", async () => {
   const f = await visibilityFixture(h.database());
   const downloading = await f.app.getMedia(f.member, f.media.id);
   expect(downloading.visibility).toMatchObject({
@@ -81,13 +83,14 @@ test("persisted progress precedes assets; playable upgrade and independent cance
     attempts: [{ id: f.attempt.id }],
     torrents: [{ progress: 0.4, freshness: "fresh", diagnostics: null }],
   });
-  const asset = await f.publish();
+  await f.publish();
   const upgraded = await f.app.getMedia(f.owner, f.media.id);
   expect(upgraded.visibility.playback).toMatchObject({
-    playable: true,
-    currentAssetId: asset.id,
-    currentVersion: 3,
-    upgradeInProgress: true,
+    playable: false,
+    currentAssetId: null,
+    currentVersion: null,
+    upgradeInProgress: false,
+    association: { legacyUnverifiedItems: 1, reconciliationRequiredItems: 0 },
   });
   await f.db.acquisitionAttempt.update({
     where: { id: f.attempt.id },
@@ -127,7 +130,11 @@ test("persisted progress precedes assets; playable upgrade and independent cance
   });
   const detail = await f.app.getMedia(f.owner, f.media.id);
   expect(detail.visibility).toMatchObject({
-    playback: { playable: true, upgradeInProgress: false },
+    playback: {
+      playable: false,
+      upgradeInProgress: false,
+      association: { legacyUnverifiedItems: 1, reconciliationRequiredItems: 0 },
+    },
     torrents: [
       {
         ratio: { kind: "infinite" },
@@ -193,7 +200,7 @@ test("current role and exact section govern all detail diagnostics and household
 
 test("shared torrent deduplicates visible collection work and never reveals hidden sibling metadata", async () => {
   await withTvVisibility(h.database(), true, async (f) => {
-    await f.publish();
+    await f.publish(h.context());
     const hidden = f.episodes.find((episode) => episode.id !== f.media.id);
     if (hidden === undefined) throw new Error("Missing shared TV sibling");
     expect([...f.attempt.mediaIds].sort()).toEqual(
@@ -205,6 +212,20 @@ test("shared torrent deduplicates visible collection work and never reveals hidd
       visibleItems: 2,
     });
     expect(complete.visibility.torrents).toHaveLength(1);
+    // A hidden member remains part of physical authority, but its reader section
+    // mapping is independently restricted. This is a visibility fault injection.
+    const hiddenCurrent = await f.db.mediaItem.findUniqueOrThrow({
+      where: { id: hidden.id },
+    });
+    await f.db.mediaItem.update({
+      where: { id: hidden.id },
+      data: {
+        externalIds: {
+          ...z.record(z.string(), z.json()).parse(hiddenCurrent.externalIds),
+          plexSectionId: "9",
+        },
+      },
+    });
     // The producer had full TV access. Revoke only the reader's hidden section.
     await f.db.plexIdentityMapping.update({
       where: { userId: f.member.id },
@@ -348,15 +369,25 @@ test("unmapped episode inherits its actual series library, never an unrelated pe
   const season = await f.db.mediaItem.create({
     data: { kind: "season", title: "Private season", parentId: series.id },
   });
-  await f.db.mediaItem.update({
-    where: { id: f.media.id },
-    data: { kind: "episode", parentId: season.id, externalIds: {} },
+  const episode = await f.db.mediaItem.create({
+    data: {
+      kind: "episode",
+      title: "Private episode",
+      parentId: season.id,
+      seasonNumber: 1,
+      episodeNumber: 1,
+    },
   });
   await f.db.plexIdentityMapping.update({
     where: { userId: f.member.id },
     data: { permittedSectionIds: ["9"], permittedMediaKinds: ["series"] },
   });
-  await expect(f.app.getMedia(f.member, f.media.id)).rejects.toMatchObject({
+  const app = new PrismaMediaApplication(f.db, {
+    keepDays: 30,
+    serverMachineId: "visibility-fixture",
+    visibilitySections: { movie: "1", series: "2" },
+  });
+  await expect(app.getMedia(f.member, episode.id)).rejects.toMatchObject({
     code: "plex_library_access_required",
   });
 });

@@ -10,14 +10,19 @@ import {
   testCompensationExecution,
 } from "#automation/native-compensation/test-fixture.ts";
 import { createNativeCompensationFileActivities } from "#automation/native-compensation/activities.ts";
-import { observeNativeCompensation } from "#migration/native-compensation/producer.ts";
-import { observeCompensationContinuation } from "#migration/native-compensation/continuation.ts";
+import { createNativePlexObserver } from "#migration/native-plex/review.ts";
+import { observePairedCompensationExecution } from "#migration/native-plex/compensation.ts";
+import { bindingTestExecution } from "#automation/plex-binding/test-fixture.ts";
+import { compensationNativePlexFixture } from "#automation/native-compensation/fixtures/native-plex.ts";
+import { NativeCompensationScopeSchema } from "#shared/native-recovery/compensation.ts";
 import { workerFilePath } from "#automation/files/paths/locations.ts";
 import type { NativeCompensationActivityInput } from "#shared/native-recovery/compensation-runtime.ts";
 import { compensationAncestors } from "./records.ts";
 import { assertCompensationEvidence } from "./plan.ts";
+import { traceArchiveReadBudget } from "#infrastructure/native-archive/tests/read-budget-trace.test-support.ts";
 
 const harness = automationTestHarness();
+traceArchiveReadBudget("compensation-repeat-read-diagnostic");
 const directories: string[] = [];
 afterAll(async () => {
   for (const directory of directories)
@@ -79,11 +84,15 @@ async function restoreAgain(
     f.context,
     testCompensationExecution,
   );
-  await observeNativeCompensation(
+  const pending = await db.nativeRecoveryPlan.findUniqueOrThrow({
+    where: { id: prepare.planId },
+  });
+  const network = await compensationNativePlexFixture(
     f.observerContext,
-    prepare,
-    testCompensationExecution(),
+    NativeCompensationScopeSchema.parse(pending.scope),
   );
+  const observe = createNativePlexObserver(network.context);
+  await observe(prepare, bindingTestExecution());
   await activities.prepareNativeCompensationFiles(prepare);
   const plan = await db.nativeRecoveryPlan.findUniqueOrThrow({
     where: { id: prepare.planId },
@@ -108,11 +117,7 @@ async function restoreAgain(
     operationId: z.uuid().parse(approved.operationId),
     planHash,
   };
-  await observeNativeCompensation(
-    f.observerContext,
-    apply,
-    testCompensationExecution(),
-  );
+  await observe(apply, bindingTestExecution());
   await activities.applyNativeCompensationFiles(apply);
   const row =
     await db.nativePublicationCompensationContinuation.findFirstOrThrow({
@@ -124,11 +129,13 @@ async function restoreAgain(
     operationId: z.uuid().parse(row.coordinatorOperationId),
     recoveryEpoch: row.recoveryEpoch,
   };
-  await observeCompensationContinuation(
-    f.observerContext,
-    input,
-    testCompensationExecution(),
-  );
+  expect(
+    await observePairedCompensationExecution(
+      network.context,
+      input,
+      bindingTestExecution(),
+    ),
+  ).toEqual({ status: "ready", reason: null });
   return input;
 }
 
@@ -184,7 +191,10 @@ describe.each([0, 1, 2])(
       directories.push(fixture.file.directory);
       await fixture.prepare();
       let input = await fixture.apply();
-      await fixture.observe(input);
+      expect(await fixture.observe(input)).toEqual({
+        status: "ready",
+        reason: null,
+      });
       const ancestors: string[] = [];
       if (restores === 2) {
         ancestors.push(input.continuationId);

@@ -1,5 +1,5 @@
 import type { MediaActor } from "#application/auth.ts";
-import { MediaError, requireOwner } from "#application/errors.ts";
+import { requireOwner } from "#application/errors.ts";
 import type { MediaApplication } from "#application/ports.ts";
 import { PrismaMediaCommands } from "./commands.ts";
 import type { MediaCommandSettings } from "./command-base.ts";
@@ -11,23 +11,18 @@ import {
   NotificationListSchema,
   ProfileListSchema,
   UserListSchema,
-  MediaDetailSchema,
 } from "#shared/api.ts";
 import { ReleaseListSchema } from "#shared/api.ts";
 import {
-  visibilityReader,
-  publicAssetProperties,
-  scopedRemovalConfirmation,
-  visibilityAncestry,
+  captureVisibilityPlexAccess,
+  type VisibilityPlexAccess,
   type VisibilitySections,
 } from "./visibility/access.ts";
-import { mediaVisibility } from "./visibility/detail.ts";
+import { readMediaDetail } from "./visibility/media-detail.ts";
 import { effectiveRequestWhere } from "./request-claims.ts";
-import { defaultIntent } from "#shared/editions/scope.ts";
-import { subtitleAccepted } from "#domain/subtitle-quality.ts";
-import { currentSubtitlePolicies, policyStatus } from "./subtitle-policy.ts";
 import { OwnerHealthSchema } from "#shared/notification-authority.ts";
 import { readDefaultCommandContext } from "./editions/command-context.ts";
+import { repeatableRead } from "./locks.ts";
 import {
   readMovieEditionContext,
   readMovieEditionRequests,
@@ -41,6 +36,7 @@ export class PrismaMediaApplication
     private readonly db: Database,
     settings: MediaCommandSettings & {
       visibilitySections?: VisibilitySections;
+      plexAccess?: VisibilityPlexAccess;
     },
   ) {
     super(db, {
@@ -52,8 +48,10 @@ export class PrismaMediaApplication
         settings.sections?.movie,
     });
     this.visibilitySections = settings.visibilitySections;
+    this.visibilityPlexAccess = settings.plexAccess;
   }
   private readonly visibilitySections: VisibilitySections | undefined;
+  private readonly visibilityPlexAccess: VisibilityPlexAccess | undefined;
 
   async getMovieEditionContext(
     actor: MediaActor,
@@ -61,14 +59,12 @@ export class PrismaMediaApplication
     subjectUserId: string,
   ) {
     const access = await this.configuredMovieChoiceAccess();
-    return this.db.$transaction(
-      (tx) =>
-        readMovieEditionContext(tx, actor, {
-          mediaId,
-          subjectUserId,
-          access,
-        }),
-      { isolationLevel: "RepeatableRead" },
+    return repeatableRead(this.db, (tx) =>
+      readMovieEditionContext(tx, actor, {
+        mediaId,
+        subjectUserId,
+        access,
+      }),
     );
   }
 
@@ -77,24 +73,20 @@ export class PrismaMediaApplication
     input: { subjectUserId: string; cursor: string | null },
   ) {
     const access = await this.configuredMovieChoiceAccess();
-    return this.db.$transaction(
-      (tx) =>
-        readMovieEditionRequests(tx, actor, {
-          ...input,
-          access,
-        }),
-      { isolationLevel: "RepeatableRead" },
+    return repeatableRead(this.db, (tx) =>
+      readMovieEditionRequests(tx, actor, {
+        ...input,
+        access,
+      }),
     );
   }
 
   getDefaultCommandContext(actor: MediaActor, mediaId: string) {
-    return this.db.$transaction(
-      (tx) =>
-        readDefaultCommandContext(tx, actor, mediaId, {
-          serverMachineId: this.settings.serverMachineId,
-          sections: this.visibilitySections,
-        }),
-      { isolationLevel: "RepeatableRead" },
+    return repeatableRead(this.db, (tx) =>
+      readDefaultCommandContext(tx, actor, mediaId, {
+        serverMachineId: this.settings.serverMachineId,
+        sections: this.visibilitySections,
+      }),
     );
   }
 
@@ -110,156 +102,35 @@ export class PrismaMediaApplication
   }
 
   async getMedia(actor: MediaActor, mediaId: string) {
+    const selected = await this.db.mediaItem.findUnique({
+      where: { id: mediaId },
+      select: { kind: true },
+    });
+    const plexAccess =
+      selected === null
+        ? null
+        : await captureVisibilityPlexAccess(
+            {
+              serverMachineId: this.settings.serverMachineId,
+              movieSectionId: this.settings.movieSectionId,
+              sections: this.visibilitySections ?? this.settings.sections,
+              plexAccess: this.visibilityPlexAccess,
+            },
+            selected.kind,
+          );
     const movieChoiceAccess =
-      this.settings.movieAccess === undefined
+      this.settings.movieAccess === undefined || selected?.kind !== "movie"
         ? undefined
-        : await this.movieChoiceAccessForMedia(mediaId);
-    return this.db.$transaction(async (tx) => {
-      const reader = await visibilityReader(tx, actor, {
-        serverMachineId: this.settings.serverMachineId,
-        sections: this.visibilitySections,
-      });
-      const item = await tx.mediaItem.findUnique({
-        where: { id: mediaId },
-        include: {
-          ...visibilityAncestry,
-          children: {
-            include: visibilityAncestry,
-            orderBy: [{ seasonNumber: "asc" }, { episodeNumber: "asc" }],
-            take: 1000,
-          },
-          intents: { where: { edition: "default" } },
-          requests: {
-            where: {
-              ...effectiveRequestWhere,
-              ...(reader.owner ? {} : { userId: actor.id }),
-            },
-            select: {
-              id: true,
-              userId: true,
-              subtitleLanguages: true,
-              version: true,
-              user: { select: { displayName: true } },
-            },
-          },
-          holds: {
-            where: {
-              edition: "default",
-              ...(reader.owner ? {} : { userId: actor.id }),
-            },
-            select: { id: true, userId: true, until: true, isPin: true },
-          },
-          retention: {
-            where: {
-              edition: "default",
-              state: { notIn: ["cancelled", "purged"] },
-            },
-            orderBy: { createdAt: "desc" },
-            take: 1,
-            select: {
-              id: true,
-              state: true,
-              graceUntil: true,
-              purgeAfter: true,
-              version: true,
-            },
-          },
-          watchStates: {
-            where: {
-              edition: "default",
-              ...(reader.owner ? {} : { userId: actor.id }),
-            },
-            select: { userId: true, watched: true, observedAt: true },
-          },
-          assets: {
-            where: { edition: "default", asset: { edition: "default" } },
-            select: {
-              current: true,
-              edition: true,
-              asset: {
-                select: {
-                  id: true,
-                  checksum: true,
-                  version: true,
-                  owned: true,
-                  ownershipEpoch: true,
-                  properties: true,
-                  state: true,
-                  createdAt: true,
-                  subtitles: true,
-                },
-              },
-            },
-          },
-        },
-      });
-      if (!item)
-        throw new MediaError(
-          "media_not_found",
-          "Media item does not exist",
-          404,
-        );
-      if (!reader.visible(item))
-        throw new MediaError(
-          "plex_library_access_required",
-          "This title is outside your current library access",
-          403,
-        );
-      const events = await tx.applicationEvent.findMany({
-        where: {
-          mediaId,
-          ...(reader.owner
-            ? {}
-            : { OR: [{ actorId: actor.id }, { actorId: null }] }),
-        },
-        orderBy: { createdAt: "desc" },
-        take: 100,
-        select: { id: true, kind: true, createdAt: true },
-      });
-      const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
-        where: { id: "singleton" },
-      });
-      const policies = await currentSubtitlePolicies(tx, [mediaId]);
-      return MediaDetailSchema.parse({
-        ...item,
-        intent: defaultIntent(item.intents),
-        children: item.children.filter((child) => reader.visible(child)),
-        visibility: await mediaVisibility(tx, {
-          media: item,
-          userId: actor.id,
-          owner: reader.owner,
-          epoch: runtime.recoveryEpoch,
-          serverMachineId: this.settings.serverMachineId,
-          movieSectionId: this.settings.movieSectionId,
-          movieChoiceAccess,
-          visible: reader.visible,
-        }),
-        subtitlePolicies: policies,
-        assets: item.assets.map((coverage) => ({
-          ...coverage,
-          asset: {
-            ...coverage.asset,
-            properties: publicAssetProperties(coverage.asset.properties),
-            subtitleStatus: policyStatus({
-              policy: policies[0],
-              asset: coverage.asset,
-              epoch: runtime.recoveryEpoch,
-            }),
-            subtitles: coverage.asset.subtitles.map((subtitle) => ({
-              ...subtitle,
-              accepted: subtitleAccepted({
-                subtitle,
-                asset: coverage.asset,
-                epoch: runtime.recoveryEpoch,
-              }),
-            })),
-          },
-        })),
-        events,
-        ...(reader.owner
-          ? await scopedRemovalConfirmation(tx, mediaId, reader.visible)
-          : {}),
-      });
+        : await this.configuredMovieChoiceAccess();
+    return readMediaDetail(this.db, {
+      actor,
+      mediaId,
+      expectedKind: selected?.kind,
+      plexAccess,
+      movieChoiceAccess,
+      sections: this.visibilitySections,
+      serverMachineId: this.settings.serverMachineId,
+      movieSectionId: this.settings.movieSectionId,
     });
   }
 

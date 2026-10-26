@@ -1,16 +1,24 @@
-import { continueAsNew, proxyActivities, sleep } from "@temporalio/workflow";
+import {
+  ActivityCancellationType,
+  continueAsNew,
+  patched,
+  proxyActivities,
+  sleep,
+} from "@temporalio/workflow";
 import type {
   MediaFileActivities,
   MediaNetworkActivities,
   MediaWorkflowResult,
 } from "@shepherdjerred/media/automation";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS } from "#shared/media-activity-budget.ts";
 
 const files = proxyActivities<
   Pick<MediaFileActivities, "cleanupSupersededMediaFile">
 >({
   taskQueue: TASK_QUEUES.MEDIA_FILES,
   startToCloseTimeout: "12 hours",
+  scheduleToCloseTimeout: HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS,
   heartbeatTimeout: "1 minute",
   retry: {
     initialInterval: "10 seconds",
@@ -23,19 +31,47 @@ const network = proxyActivities<
 >({
   taskQueue: TASK_QUEUES.MEDIA_NETWORK,
   startToCloseTimeout: "5 minutes",
+  scheduleToCloseTimeout: HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS,
   retry: {
     initialInterval: "5 seconds",
     maximumInterval: "1 minute",
     maximumAttempts: 3,
   },
 });
+const observation = proxyActivities<
+  Pick<MediaNetworkActivities, "observeMediaUpgradeCleanup">
+>({
+  taskQueue: TASK_QUEUES.MEDIA_NETWORK,
+  scheduleToStartTimeout: "30 seconds",
+  startToCloseTimeout: "2 minutes",
+  scheduleToCloseTimeout: "3 minutes",
+  heartbeatTimeout: "30 seconds",
+  cancellationType: ActivityCancellationType.WAIT_CANCELLATION_COMPLETED,
+  retry: { maximumAttempts: 2, initialInterval: "2 seconds" },
+});
 
-export async function cleanupMediaUpgradeWorkflow(input: {
+type CleanupInput = {
   operationId: string;
   cleanupId: string;
-}): Promise<MediaWorkflowResult> {
+};
+async function cleanupPass(
+  input: CleanupInput,
+): Promise<
+  Awaited<ReturnType<MediaFileActivities["cleanupSupersededMediaFile"]>>
+> {
+  if (patched("media-upgrade-cleanup-network-observation-v1")) {
+    const proof = await observation.observeMediaUpgradeCleanup(input);
+    return proof.status === "protected"
+      ? { status: "protected", reason: proof.reason }
+      : await files.cleanupSupersededMediaFile(input);
+  }
+  return files.cleanupSupersededMediaFile(input);
+}
+export async function cleanupMediaUpgradeWorkflow(
+  input: CleanupInput,
+): Promise<MediaWorkflowResult> {
   for (let pass = 0; pass < 12; pass++) {
-    const result = await files.cleanupSupersededMediaFile(input);
+    const result = await cleanupPass(input);
     const terminal = result.status !== "protected";
     await network.finishMediaOperation({
       operationId: input.operationId,

@@ -62,6 +62,7 @@ export async function queueOperation(
 }
 
 const workflowTypes: Readonly<Record<string, string>> = {
+  reverify_plex_binding: "reverifyPlexBindingWorkflow",
   prepare_native_compensation: "prepareNativeCompensationWorkflow",
   apply_native_compensation: "applyNativeCompensationWorkflow",
   compensate_native_publication: "compensateNativePublicationWorkflow",

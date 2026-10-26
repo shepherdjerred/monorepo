@@ -6,6 +6,11 @@ import { automationTestHarness } from "#testing/automation.ts";
 import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { NativeCompensationCompletionSchema } from "#shared/native-recovery/compensation-runtime.ts";
 import { nativeCompensationFixture } from "./test-fixture.ts";
+import {
+  FinishedNativePlexV3Schema,
+  NativePlexSelectionV3Schema,
+} from "#shared/plex-binding/native-version.ts";
+import { NativePlexNetworkEnvelopeSchema } from "#shared/plex-binding/native.ts";
 
 const harness = automationTestHarness();
 const directories: string[] = [];
@@ -30,6 +35,36 @@ test("actual complete video ACK followed by PG rollback restores the exact prede
   expect(originalAttempt).toEqual(f.beforeRestore.attempt);
   await f.prepare();
   const input = await f.apply();
+  const plan = await db.nativeRecoveryPlan.findUniqueOrThrow({
+    where: { id: f.input.planId },
+  });
+  const finished = FinishedNativePlexV3Schema.parse(plan.plan);
+  const receipt = await db.nativeRecoveryReceipt.findUniqueOrThrow({
+    where: { planId: plan.id },
+  });
+  const selection = NativePlexSelectionV3Schema.parse(receipt.selection);
+  expect(selection.plex.approved).toEqual(finished.plex);
+  expect(selection.plex.approved.parent.operationId).toBe(f.input.operationId);
+  expect(selection.plex.applied.parent.operationId).not.toBe(
+    f.input.operationId,
+  );
+  const observation = await db.nativeRecoveryObservation.findUniqueOrThrow({
+    where: { id: finished.plex.plex.observationId },
+  });
+  const catalog = NativePlexNetworkEnvelopeSchema.parse(
+    observation.evidence,
+  ).observation;
+  expect(catalog.present).toEqual([]);
+  expect(
+    catalog.compensationCatalog?.flatMap((entry) =>
+      entry.compatiblePhysicalCandidates.map((candidate) => candidate.role),
+    ),
+  ).toEqual(["predecessor", "successor"]);
+  expect(
+    await db.plexBindingCurrent.count({
+      where: { mediaId: f.file.media.id, evidenceId: { not: null } },
+    }),
+  ).toBe(0);
   await f.observe(input);
   expect(await f.activities.compensateNativePublicationFiles(input)).toEqual({
     status: "compensated",

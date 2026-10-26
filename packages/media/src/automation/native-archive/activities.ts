@@ -1,4 +1,6 @@
 import type { NativeArchiveFileActivities } from "#shared/native-recovery/archive.ts";
+import { readNativePlexReceipt } from "#infrastructure/plex-binding/native/native-version.ts";
+import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import type { NativeFileContext } from "#automation/native-recovery/files.ts";
 import { NativeArchiveProtection } from "#infrastructure/native-archive/continuation.ts";
 import {
@@ -48,6 +50,10 @@ export function createNativeArchiveFileActivities(
         }),
       );
       if (receipt !== null) {
+        await archiveAwait(
+          current.execution,
+          readNativePlexReceipt(context.files.db, receipt.id),
+        );
         if (receipt.planHash !== input.planHash)
           throw new Error("Archive replay plan hash changed");
         await archiveAwait(
@@ -93,7 +99,8 @@ export function createNativeArchiveFileActivities(
           );
         }
         const reason =
-          error instanceof NativeArchiveProtection
+          error instanceof NativeArchiveProtection ||
+          error instanceof PlexBindingProtection
             ? error.reason
             : error instanceof PendingLegacyClaimsError
               ? "archive_legacy_claims_unresolved"

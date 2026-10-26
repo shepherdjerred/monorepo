@@ -13,6 +13,7 @@ export class ContentProof {
   private readonly files = new Map<string, VerifiedFileProof | null>();
   private readonly parents = new Map<string, { dev: bigint; ino: bigint }>();
   private sealedAt: number | null = null;
+  private measurementGuard: (() => void) | undefined;
 
   async capture(path: string, checkpoint: () => Promise<void>): Promise<void> {
     if (this.sealedAt !== null)
@@ -41,7 +42,23 @@ export class ContentProof {
     this.sealedAt = performance.now();
   }
 
+  /** Read-only facts before authority. This does not enable filesystem mutations. */
+  async reviewCaptured(path: string) {
+    if (this.sealedAt !== null)
+      throw new FileOperationConflict("Measurement was already sealed");
+    const file = await this.assertIdentity(path);
+    return { file, ancestors: this.reviewAncestors(path) };
+  }
+
+  /** A measured proof retains its original invocation guard after sealing. */
+  sealMeasured(assertActive: () => void): void {
+    assertActive();
+    this.seal();
+    this.measurementGuard = assertActive;
+  }
+
   assertActive(): void {
+    this.measurementGuard?.();
     if (this.sealedAt === null || performance.now() - this.sealedAt > 60_000)
       throw new FileOperationConflict("Content proof is unsealed or expired");
   }
@@ -166,6 +183,12 @@ export class ContentProof {
 
   private async assert(path: string): Promise<VerifiedFileProof | null> {
     this.assertActive();
+    return this.assertIdentity(path);
+  }
+
+  private async assertIdentity(
+    path: string,
+  ): Promise<VerifiedFileProof | null> {
     await this.assertParents(path);
     const proof = this.files.get(path);
     if (proof === undefined)

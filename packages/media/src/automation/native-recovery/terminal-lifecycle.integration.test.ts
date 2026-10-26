@@ -11,7 +11,7 @@ import { applyPreparedNative } from "./apply.ts";
 import { ManifestSchema } from "#filesystem/operations-types.ts";
 import { prepareMediaRestore } from "#infrastructure/recovery.ts";
 import { grantTestExclusionProofs } from "#testing/exclusion.ts";
-import { createNativeRecoveryObserver } from "#migration/native-network/producer.ts";
+import { preparePhysicalPublication } from "#automation/plex-binding/test-fixture.ts";
 
 const harness = automationTestHarness();
 const directories: string[] = [];
@@ -25,7 +25,13 @@ async function fixture(kind: "purged" | "cancelled") {
     harness.database(),
     harness.context().cipher,
     "removed",
-    settleTerminalPublication(harness.database(), kind),
+    {
+      serverMachineId: "fixture-server",
+      publication: preparePhysicalPublication,
+      settle: settleTerminalPublication(harness.database(), kind, {
+        context: harness.context(),
+      }),
+    },
   );
   directories.push(result.file.directory);
   return result;
@@ -82,7 +88,10 @@ test("a purged backup reappearing after proof prevents the native grant", async 
   const f = await fixture("purged");
   const approval = await f.review();
   await f.observe();
-  const prepared = await prepareNativeFiles(f.context, f.planId);
+  const prepared = await prepareNativeFiles(f.context, {
+    planId: f.planId,
+    operationId: z.uuid().parse(approval.operationId),
+  });
   const scope = NativePublishedScopeV2Schema.parse(prepared.scope);
   const dependency = scope.terminalDependencies[0]?.files[0];
   if (dependency === undefined) throw new Error("Terminal dependency missing");
@@ -125,7 +134,7 @@ test("terminal state alone cannot replace the exact completed purge journal", as
     filename,
     JSON.stringify({ ...manifest, sha256: "f".repeat(64) }),
   );
-  await expect(prepareNativeFiles(f.context, f.planId)).rejects.toThrow(
+  await expect(prepareNativeFiles(f.context, f.prepareInput)).rejects.toThrow(
     "does not prove the recorded effect",
   );
   expect(
@@ -139,7 +148,10 @@ test("a changed settled cleanup row invalidates owner review before any grant", 
   const f = await fixture("cancelled");
   const approval = await f.review();
   await f.observe();
-  const prepared = await prepareNativeFiles(f.context, f.planId);
+  const prepared = await prepareNativeFiles(f.context, {
+    planId: f.planId,
+    operationId: z.uuid().parse(approval.operationId),
+  });
   const scope = NativePublishedScopeV2Schema.parse(prepared.scope);
   const cleanupId = z.uuid().parse(scope.terminalDependencies[0]?.cleanupId);
   await harness.database().upgradeCleanup.update({
@@ -175,7 +187,11 @@ test("a second restored backup follows the exact native receipt after a settled 
     expectedEpoch: 1,
     reason: "Repeated terminal rollback restore",
   });
-  const proofs = await grantTestExclusionProofs(db, f.prior.actor.id);
+  const proofs = await grantTestExclusionProofs(
+    db,
+    f.prior.actor.id,
+    z.string().parse(f.file.context.serverMachineId),
+  );
   for (const proof of proofs) {
     const roots =
       f.context.files.roots[
@@ -213,7 +229,7 @@ test("a second restored backup follows the exact native receipt after a settled 
     assetIds: [f.asset.id],
   });
   const planId = z.uuid().parse(command.nativeRecoveryId);
-  await createNativeRecoveryObserver(f.prior.context)(planId);
+  await f.observe({ planId, operationId: z.uuid().parse(command.operationId) });
   await f.activities.prepareNativeRecoveryFiles({
     planId,
     operationId: z.uuid().parse(command.operationId),
@@ -233,7 +249,10 @@ test("a second restored backup follows the exact native receipt after a settled 
       acknowledgeSubtitlePolicies: true,
     },
   );
-  await createNativeRecoveryObserver(f.prior.context)(planId);
+  await f.observe({
+    planId,
+    operationId: z.uuid().parse(approval.operationId),
+  });
   await f.activities.applyNativeRecoveryFiles({
     planId,
     operationId: z.uuid().parse(approval.operationId),

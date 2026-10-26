@@ -15,12 +15,12 @@ export async function publicationSections(
     context.plex.sections(execution?.signal),
   );
   const permitted = await publicationAwait(execution, () =>
-    context.permittedSections(),
+    context.plexAccess(kind === "movie" ? "movie" : "show"),
   );
   return allSections.filter(
     (section) =>
       section.type === (kind === "movie" ? "movie" : "show") &&
-      section.key === (kind === "movie" ? permitted.movie : permitted.series),
+      section.key === permitted.sectionId,
   );
 }
 

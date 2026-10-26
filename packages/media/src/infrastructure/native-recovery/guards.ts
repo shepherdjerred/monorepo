@@ -11,6 +11,7 @@ import {
 import { snapshotHash } from "#migration/profile-import.ts";
 import { runtimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { buildNativeScope } from "./scope.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { requirePlexExclusionDatabaseProof } from "#automation/plex-exclusion/proof.ts";
 import type { NativeTerminalDescriptor } from "#shared/native-recovery/terminal.ts";
 import { assertNoPublicationCompensationFence } from "#infrastructure/native-compensation/fence.ts";
@@ -82,6 +83,7 @@ export async function assertNativeSnapshot(
   tx: Prisma.TransactionClient,
   planId: string,
   scope: NativePublishedScope,
+  budget = new PublicationAuthorityReadBudget(),
 ) {
   await assertNativeExclusion(tx);
   const plan = await tx.nativeRecoveryPlan.findUniqueOrThrow({
@@ -90,6 +92,7 @@ export async function assertNativeSnapshot(
   const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
     where: { id: "singleton" },
   });
+  budget.consume(1);
   const mode = scope.request.activation === "activate" ? "observe" : "active";
   const authority = await runtimeAuthority(tx);
   if (
@@ -104,10 +107,19 @@ export async function assertNativeSnapshot(
   if (
     snapshotHash(
       z.json().parse(NativePublishedScopeSchema.parse(plan.scope)),
-    ) !== snapshotHash(z.json().parse(scope)) ||
-    snapshotHash(z.json().parse(await buildNativeScope(tx, scope.request))) !==
-      snapshotHash(z.json().parse(scope))
+    ) !== snapshotHash(z.json().parse(scope))
   )
     throw new Error("Native recovery reviewed records changed");
-  return { plan, runtime };
+  const current = await buildNativeScope(
+    tx,
+    scope.request,
+    budget,
+    scope.storageRoots,
+  );
+  if (
+    snapshotHash(z.json().parse(current)) !==
+    snapshotHash(z.json().parse(scope))
+  )
+    throw new Error("Native recovery reviewed records changed");
+  return { plan, runtime, scope: current };
 }

@@ -1,7 +1,3 @@
-import path from "node:path";
-import { ContentProof } from "#filesystem/content-proof.ts";
-import { FileOperations } from "#filesystem/operations.ts";
-import { safePath } from "#filesystem/operations-io.ts";
 import { FileOperationConflict } from "#filesystem/operations-types.ts";
 import { terminalFileEvidence } from "#automation/native-recovery/terminal-proof.ts";
 import { assertPublicationJournalIdentity } from "#filesystem/publication-proof/journal.ts";
@@ -21,12 +17,12 @@ import {
 } from "./execution.ts";
 import { archiveAllPaths } from "./paths.ts";
 import { assertArchiveNeighbors } from "./subtitle-proof.ts";
-import { prepareCleanupJournalProof } from "./journal-proof.ts";
 import { archivePurgeManifest } from "./purge-manifest.ts";
+import { readArchiveManifest } from "./cleanup/content.ts";
 import type {
   ArchiveExecution,
   ArchiveParticipant,
-  ArchiveCleanupBase,
+  ArchiveCleanupFacts,
 } from "./cleanup-types.ts";
 
 export function archiveCleanupSubtitleDependencies(
@@ -76,7 +72,7 @@ function subtitleDependencyPaths(descriptor: NativeArchiveContinuation) {
 
 async function assertSubtitleDependencies(
   context: ArchiveFileContext,
-  proof: ArchiveCleanupBase,
+  proof: ArchiveCleanupFacts,
 ) {
   for (const item of archiveCleanupSubtitleDependencies(proof.descriptor)) {
     for (const expected of item.evidence.files) {
@@ -169,72 +165,26 @@ export function executionFor(
   });
 }
 
-export async function prepareArchiveCleanupProof(
-  context: ArchiveFileContext,
-  row: {
-    id: string;
-    descriptorHash: string;
-    recoveryEpoch: number;
-    executionEvidence: unknown;
-  },
+export function archiveCleanupPaths(
   descriptor: NativeArchiveContinuation,
   scope: NativeArchiveScope,
 ) {
-  const expected = executionFor(row, descriptor);
-  const committed =
-    row.executionEvidence === null
-      ? null
-      : NativeArchiveExecutionSchema.parse(row.executionEvidence);
-  if (committed !== null && snapshotHash(committed) !== snapshotHash(expected))
-    throw new Error("Archive execution identity changed");
-  const content = new ContentProof();
-  const paths = [
+  return [
     ...new Set([
       ...archiveAllPaths(descriptor.scope),
       ...archiveAllPaths(scope),
       ...subtitleDependencyPaths(descriptor),
     ]),
   ].sort();
-  for (const name of paths) {
-    const kind = name.startsWith("/data/movies/") ? "movies" : "tv";
-    const roots = context.files.roots[kind];
-    const root = name.startsWith(`/data/${kind}/.media-control/`)
-      ? roots.control
-      : roots.library;
-    const local = nativeLocalPath(context, name);
-    await safePath(root, path.relative(root, local), true);
-    await content.capture(local, () =>
-      context.files.checkpoint("native-archive-cleanup-hashing"),
-    );
-  }
-  content.seal();
-  const proof = {
-    content,
-    paths,
-    execution: expected,
-    executionCommitted: committed !== null,
-    descriptor,
-    scope,
-  };
-  await assertCleanupContent(context, proof);
-  const journals = await prepareCleanupJournalProof(context, proof);
-  return { ...proof, journals };
 }
 
 async function assertParticipant(
   context: ArchiveFileContext,
-  proof: ArchiveCleanupBase,
+  proof: ArchiveCleanupFacts,
   item: ArchiveParticipant,
 ) {
   const local = nativeLocalPath(context, item.canonicalPath);
   const digest = await proof.content.digest(local);
-  const operations = new FileOperations(context.files.roots[item.libraryKind], {
-    authorize: () =>
-      Promise.reject(new Error("Archive inspection cannot mutate")),
-    ...(context.files.verifyPlexExclusion === undefined
-      ? {}
-      : { verifyPlexExclusion: context.files.verifyPlexExclusion }),
-  });
   const expected = archivePurgeManifest(
     context,
     proof.execution.continuationId,
@@ -242,7 +192,7 @@ async function assertParticipant(
   );
   const journal = await archiveAwait(
     context.execution,
-    operations.readManifest(expected.operationId),
+    readArchiveManifest(context, item.libraryKind, expected.operationId),
   );
   if (
     journal !== null &&
@@ -277,7 +227,7 @@ async function assertParticipant(
 
 export async function assertCleanupContent(
   context: ArchiveFileContext,
-  proof: ArchiveCleanupBase,
+  proof: ArchiveCleanupFacts,
 ) {
   assertArchiveActive(context.execution);
   const selected = new Set(
@@ -308,7 +258,7 @@ export async function assertCleanupContent(
 
 async function assertRetainedContent(
   context: ArchiveFileContext,
-  proof: ArchiveCleanupBase,
+  proof: ArchiveCleanupFacts,
   selected: ReadonlySet<string>,
 ) {
   for (const file of proof.scope.files) {

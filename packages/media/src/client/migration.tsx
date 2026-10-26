@@ -11,13 +11,39 @@ import {
   type MigrationRecord,
 } from "#shared/migration.ts";
 import { CommandResultSchema } from "#shared/api.ts";
-import { readApi, writeApi, queryClient } from "./api.ts";
+import { readApi, writeApi, queryClient, sessionBoundary } from "./api.ts";
 import { ErrorNotice, Loading } from "./components.tsx";
 import "./migration.css";
 import { MigrationBundles } from "./migration-bundle.tsx";
 import { MigrationDiscovery } from "./migration-discovery.tsx";
 
 type Proposal = z.infer<typeof MigrationProposalSchema>;
+
+export async function uploadMigrationCapture(
+  actorId: string,
+  file: File | null,
+) {
+  const session = sessionBoundary.capture(actorId);
+  if (file === null) throw new Error("Choose a sanitized capture file");
+  if (file.size > MAX_MIGRATION_BYTES)
+    throw new Error("Capture exceeds the 24 MiB limit");
+  const value: unknown = JSON.parse(await file.text());
+  session.assertCurrent();
+  const envelope = z
+    .object({ snapshot: MigrationSnapshotSchema })
+    .safeParse(value);
+  const snapshot = envelope.success
+    ? envelope.data.snapshot
+    : MigrationSnapshotSchema.parse(value);
+  return writeApi({
+    actorId,
+    path: "/admin/migration",
+    body: { snapshot },
+    schema: MigrationProposalSchema,
+    sensitive: true,
+  });
+}
+
 export function MigrationPage({ user }: { user: MediaUser }) {
   const [file, setFile] = useState<File | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
@@ -27,25 +53,7 @@ export function MigrationPage({ user }: { user: MediaUser }) {
       readApi("/admin/migration", MigrationProposalListSchema),
   });
   const upload = useMutation({
-    mutationFn: async () => {
-      if (file === null) throw new Error("Choose a sanitized capture file");
-      if (file.size > MAX_MIGRATION_BYTES)
-        throw new Error("Capture exceeds the 24 MiB limit");
-      const value: unknown = JSON.parse(await file.text());
-      const envelope = z
-        .object({ snapshot: MigrationSnapshotSchema })
-        .safeParse(value);
-      const snapshot = envelope.success
-        ? envelope.data.snapshot
-        : MigrationSnapshotSchema.parse(value);
-      return await writeApi({
-        actorId: user.id,
-        path: "/admin/migration",
-        body: { snapshot },
-        schema: MigrationProposalSchema,
-        sensitive: true,
-      });
-    },
+    mutationFn: () => uploadMigrationCapture(user.id, file),
     onSuccess: async (proposal) => {
       setSelected(proposal.id);
       await queryClient.invalidateQueries({ queryKey: ["migration"] });

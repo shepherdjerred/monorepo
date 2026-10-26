@@ -1,16 +1,15 @@
 import { z } from "zod";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
-import { currentFulfillmentAsset } from "#automation/editions/fulfillment.ts";
+import {
+  allRequestersWatched,
+  type RequesterWatchContext,
+} from "./requester-watch.ts";
 import { eligibleRequester, isReadiness } from "./readiness.ts";
-import { readMovieDemandAuthority } from "#infrastructure/movie-editions/fulfillment.ts";
-import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
-import { requireMovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import { defaultIntent } from "#shared/editions/scope.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { CredentialCipher } from "#application/security.ts";
 import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
-import { RETENTION_DEFAULTS } from "#domain/retention.ts";
 import {
   OwnerHealthSchema,
   ownerHealthDescriptions,
@@ -20,6 +19,8 @@ import {
   currentSubtitleWork,
   subtitleTargetsReady,
 } from "#automation/subtitles/authority.ts";
+import { assertBoundMediaCohort } from "#automation/retention/binding.ts";
+import { assertRetentionPlexProjection } from "#infrastructure/plex-binding/retention.ts";
 
 export const ItemSchema = z.object({
   mediaId: z.string(),
@@ -53,12 +54,11 @@ export type Message = {
 type Context = {
   cipher: CredentialCipher;
   publicOrigin: string;
-  movieAccess?: MovieChoiceAccess | undefined;
-  captureFreshness?: ((guard: MovieChoiceFreshness) => void) | undefined;
-} & Pick<
-  MediaAutomationContext,
-  "sharedAnnouncements" | "personalDiscordAvailable"
->;
+} & RequesterWatchContext &
+  Pick<
+    MediaAutomationContext,
+    "sharedAnnouncements" | "personalDiscordAvailable"
+  >;
 
 export function eventMediaIds(delivery: Delivery): string[] {
   const batch = BatchSchema.safeParse(delivery.event.payload);
@@ -74,6 +74,24 @@ export async function composeMessage(
   context: Context,
   delivery: Delivery,
 ): Promise<Message | null> {
+  if (
+    isReadiness(delivery.event.kind) ||
+    delivery.event.kind === "retention_warning"
+  ) {
+    if (context.binding === undefined) return null;
+    await assertBoundMediaCohort(
+      tx,
+      context.binding.cohort,
+      context.binding.freshness,
+    );
+    if (
+      context.binding.cohort.original.some(
+        (value) => value.authority.purpose !== "current_serving",
+      )
+    )
+      return null;
+    context.captureFreshness?.(context.binding.freshness);
+  }
   if (delivery.channel === "discord_shared")
     return sharedMessage(tx, context, delivery);
   if (
@@ -380,6 +398,17 @@ async function warning(
     )
   )
     return null;
+  if (context.binding === undefined) return null;
+  const binding = await assertBoundMediaCohort(
+    tx,
+    context.binding.cohort,
+    context.binding.freshness,
+  );
+  await assertRetentionPlexProjection(
+    tx,
+    { decisionId: decision.id, ...binding },
+    context.binding.freshness,
+  );
   const claim = await tx.mediaRequest.findFirst({
     where: {
       userId: delivery.userId,
@@ -391,7 +420,7 @@ async function warning(
   if (
     claim === null ||
     delivery.user.role === "owner" ||
-    !(await allRequestersWatched(tx, decision.mediaId, context))
+    !(await allRequestersWatched(tx, context))
   )
     return null;
   return {
@@ -399,51 +428,6 @@ async function warning(
     subject: `Media: ${decision.media.title.slice(0, 160)}`,
     text: `${decision.media.title} is eligible for removal after at least seven days. Open Media to confirm Keep or pin it.\n${new URL(`/media/${encodeURIComponent(decision.mediaId)}`, context.publicOrigin).toString()}`,
   };
-}
-
-async function allRequestersWatched(
-  tx: Prisma.TransactionClient,
-  mediaId: string,
-  context: Pick<Context, "movieAccess" | "captureFreshness">,
-): Promise<boolean> {
-  const media = await tx.mediaItem.findUniqueOrThrow({
-    where: { id: mediaId },
-  });
-  if (media.kind === "movie") {
-    const { demands, freshness } = await readMovieDemandAuthority(tx, {
-      mediaId,
-      currentAsset: await currentFulfillmentAsset(tx, mediaId),
-      access: requireMovieChoiceAccess(context.movieAccess ?? {}),
-    });
-    if (demands.some((demand) => demand.fulfillment.status !== "fulfilled"))
-      return false;
-    if (freshness !== null) context.captureFreshness?.(freshness);
-  }
-  const claims = await tx.mediaRequest.findMany({
-    where: {
-      mediaId,
-      ...effectiveRequestWhere,
-      edition: "default",
-      user: { role: { not: "owner" } },
-    },
-  });
-  const observations = await tx.watchState.findMany({
-    where: { mediaId, edition: "default" },
-  });
-  const now = Date.now();
-  return (
-    claims.length > 0 &&
-    claims.every((claim) =>
-      observations.some(
-        (observation) =>
-          observation.userId === claim.userId &&
-          observation.watched &&
-          observation.observedAt.getTime() <= now &&
-          now - observation.observedAt.getTime() <=
-            RETENTION_DEFAULTS.maximumWatchAgeMs,
-      ),
-    )
-  );
 }
 
 async function verification(

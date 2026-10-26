@@ -6,6 +6,10 @@ import path from "node:path";
 import { z } from "zod";
 import { automationTestHarness } from "#testing/automation.ts";
 import { nativeQuarantineFixture } from "./test-fixture.ts";
+import {
+  FinishedNativePlexV3Schema,
+  NativePlexSelectionV3Schema,
+} from "#shared/plex-binding/native-version.ts";
 
 const harness = automationTestHarness();
 const directories: string[] = [];
@@ -35,7 +39,32 @@ test("committed quarantine rebaseline preserves bytes, qualities, decisions and 
     orderBy: { id: "asc" },
   });
   const before = await f.bytes();
+  const quarantineOperations = await f.db.operation.findMany({
+    where: { kind: "retain_media", targetId: f.file.media.id },
+    orderBy: { id: "asc" },
+  });
   const continuation = await f.apply();
+  const plan = await f.db.nativeRecoveryPlan.findUniqueOrThrow({
+    where: { id: f.planId },
+  });
+  const finished = FinishedNativePlexV3Schema.parse(plan.plan);
+  const receipt = await f.db.nativeRecoveryReceipt.findUniqueOrThrow({
+    where: { id: continuation.receiptId },
+  });
+  const selection = NativePlexSelectionV3Schema.parse(receipt.selection);
+  expect(selection.plex.approved).toEqual(finished.plex);
+  expect(selection.plex.approved.parent.operationId).toBe(
+    f.prepareInput.operationId,
+  );
+  expect(selection.plex.applied.parent.operationId).not.toBe(
+    f.prepareInput.operationId,
+  );
+  expect(
+    await f.db.operation.findMany({
+      where: { kind: "retain_media", targetId: f.file.media.id },
+      orderBy: { id: "asc" },
+    }),
+  ).toEqual(quarantineOperations);
   expect(await f.bytes()).toBe(before);
   expect(
     await f.db.libraryAsset.findUniqueOrThrow({ where: { id: f.asset.id } }),

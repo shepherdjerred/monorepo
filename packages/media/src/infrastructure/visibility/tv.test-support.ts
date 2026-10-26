@@ -4,14 +4,17 @@ import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
 import type { Torrent } from "#generated/prisma/client.ts";
 import type { MediaActor } from "#application/auth.ts";
-import { fileFixture } from "#automation/files/test-support.ts";
+import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
+import type { MediaAutomationContext } from "#automation/context.ts";
+import { createPublicationActivities } from "#automation/publication.ts";
+import { visibilityPublicationContext } from "./plex.test-support.ts";
 import { sharedTvFileFixture } from "#automation/native-archive/fixtures/shared-tv.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { createCoverageActivities } from "#automation/reconciliation/coverage.ts";
 import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
 import { StoredTorrentObservationSchema } from "#integrations/qbittorrent.ts";
 
-async function completeTvObservation(db: Database, torrent: Torrent) {
+export async function completeTvObservation(db: Database, torrent: Torrent) {
   const raw = z.record(z.string(), z.json()).parse(torrent.observation);
   const prior = z
     .object({
@@ -19,12 +22,13 @@ async function completeTvObservation(db: Database, torrent: Torrent) {
       save_path: z.string(),
     })
     .parse(raw["torrent"]);
-  const [member] = z
-    .tuple([
-      z.object({ name: z.string(), size: z.number().int().nonnegative() }),
-    ])
+  const members = z
+    .array(z.object({ name: z.string(), size: z.number().int().nonnegative() }))
+    .min(1)
     .parse(raw["files"]);
-  // Complete synthetic qBit telemetry around the actual fixture's single file.
+  const member = members[0];
+  if (member === undefined) throw new Error("TV fixture has no torrent files");
+  // Complete synthetic qBit telemetry around the actual fixture's files.
   // Preserve its exact files array, save path, bytes, progress and torrent hash.
   const observation = StoredTorrentObservationSchema.parse({
     hash: torrent.infoHash,
@@ -37,7 +41,7 @@ async function completeTvObservation(db: Database, torrent: Torrent) {
     progress: prior.progress,
     ratio: { kind: "finite", value: 0 },
     seeding_time: 0,
-    size: member.size,
+    size: members.reduce((total, file) => total + file.size, 0),
     save_path: prior.save_path,
     content_path: path.join(prior.save_path, member.name),
     ratio_limit: -1,
@@ -71,11 +75,13 @@ async function singleTvFixture(db: Database) {
           1_000_000_000),
     },
   });
-  return fileFixture(db, { seriesId: series.id });
+  return mappedPublicationFixture(db, { seriesId: series.id });
 }
 
 async function tvVisibilityFixture(db: Database, shared: boolean) {
-  const file = await (shared ? sharedTvFileFixture(db) : singleTvFixture(db));
+  const file = await (shared
+    ? sharedTvFileFixture(db, mappedPublicationFixture)
+    : singleTvFixture(db));
   try {
     const series = await db.mediaItem.findUniqueOrThrow({
       where: { id: z.uuid().parse(file.media.parentId) },
@@ -93,7 +99,12 @@ async function tvVisibilityFixture(db: Database, shared: boolean) {
     for (const episode of episodes)
       await db.mediaItem.update({
         where: { id: episode.id },
-        data: { externalIds: { plexSectionId: sectionFor(episode.id) } },
+        data: {
+          externalIds: {
+            plexSectionId: sectionFor(episode.id),
+            seriesTmdb: series.tmdbId,
+          },
+        },
       });
     if (shared)
       await db.plexIdentityMapping.update({
@@ -110,7 +121,7 @@ async function tvVisibilityFixture(db: Database, shared: boolean) {
       serverMachineId: "fixture-server",
       visibilitySections: { movie: "1", series: "2" },
     });
-    async function publish() {
+    async function publish(network: MediaAutomationContext) {
       const activities = createMediaFileActivities(file.context);
       const staged = await activities.inspectAndStageMedia(acquired.input);
       if (staged.status !== "staged")
@@ -132,23 +143,19 @@ async function tvVisibilityFixture(db: Database, shared: boolean) {
         throw new Error(
           "TV visibility fixture requires complete single-file coverage",
         );
-      // Synthetic Plex verification markers for read-projection assertions only.
-      // The attempt and complete physical asset coverage above are actual producers.
-      await db.libraryAsset.updateMany({
-        where: { id: { in: coverage.map((row) => row.assetId) } },
-        data: { plexPublishedAt: new Date() },
-      });
-      for (const episode of episodes)
-        await db.mediaItem.update({
-          where: { id: episode.id },
-          data: {
-            availability: "available",
-            externalIds: {
-              plexSectionId: sectionFor(episode.id),
-              plexRatingKey: `fixture-${episode.id}`,
-            },
-          },
-        });
+      const fixture = await visibilityPublicationContext(
+        db,
+        network,
+        acquired.attempt.mediaIds,
+      );
+      const published = await createPublicationActivities(
+        fixture.context,
+      ).publishMediaToPlex(acquired.input);
+      if (published.status !== "available")
+        throw new Error(
+          `TV visibility Plex publication failed: ${JSON.stringify(published)}`,
+        );
+      return fixture;
     }
     async function cover(actor: MediaActor) {
       const result = await app.createRequest(actor, crypto.randomUUID(), {

@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "catalog": [
+    {
+      "key": "harbor",
+      "kind": "series",
+      "title": "Cloud Harbor",
+      "year": 2025,
+      "tmdbId": 990002,
+      "parentKey": null,
+      "seasonNumber": null,
+      "episodeNumber": null,
+      "absoluteNumber": null,
+      "runtimeMinutes": 45,
+      "originalLanguage": "en",
+      "aliases": [],
+      "externalIds": { "tmdb": "990002" }
+    },
+    {
+      "key": "harbor-e1",
+      "kind": "episode",
+      "title": "Arrival",
+      "year": 2025,
+      "tmdbId": 990003,
+      "parentKey": "harbor",
+      "seasonNumber": 1,
+      "episodeNumber": 1,
+      "absoluteNumber": 1,
+      "runtimeMinutes": 45,
+      "originalLanguage": "en",
+      "aliases": [],
+      "externalIds": {}
+    },
+    {
+      "key": "harbor-e2",
+      "kind": "episode",
+      "title": "Signal",
+      "year": 2025,
+      "tmdbId": 990004,
+      "parentKey": "harbor",
+      "seasonNumber": 1,
+      "episodeNumber": 2,
+      "absoluteNumber": 2,
+      "runtimeMinutes": 45,
+      "originalLanguage": "en",
+      "aliases": [],
+      "externalIds": {}
+    }
+  ],
+  "requestedKey": "harbor-e2",
+  "current": null,
+  "candidates": [
+    {
+      "key": "season",
+      "providerId": "fictional",
+      "title": "Cloud.Harbor.2025.S01.1080p.WEB-DL.HEVC.ENG",
+      "sizeBytes": 4000000000,
+      "references": [],
+      "members": [
+        {
+          "name": "Cloud.Harbor.S01E01.1080p.mkv",
+          "sizeBytes": 2000000000,
+          "progress": 1,
+          "probe": {
+            "format": {
+              "duration": "2700",
+              "size": "2000000000",
+              "format_name": "matroska"
+            },
+            "streams": [
+              {
+                "index": 0,
+                "codec_type": "video",
+                "codec_name": "hevc",
+                "width": 1920,
+                "height": 1080
+              },
+              {
+                "index": 1,
+                "codec_type": "audio",
+                "codec_name": "aac",
+                "tags": { "language": "eng" }
+              }
+            ]
+          }
+        },
+        {
+          "name": "Cloud.Harbor.S01E02.1080p.mkv",
+          "sizeBytes": 2000000000,
+          "progress": 1,
+          "probe": {
+            "format": {
+              "duration": "2700",
+              "size": "2000000000",
+              "format_name": "matroska"
+            },
+            "streams": [
+              {
+                "index": 0,
+                "codec_type": "video",
+                "codec_name": "hevc",
+                "width": 1920,
+                "height": 1080
+              },
+              {
+                "index": 1,
+                "codec_type": "audio",
+                "codec_name": "aac",
+                "tags": { "language": "eng" }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "key": "other-episode",
+      "providerId": "fictional",
+      "title": "Cloud.Harbor.2025.S01E01.1080p.WEB-DL.HEVC.ENG",
+      "sizeBytes": 2000000000,
+      "references": [],
+      "members": []
+    },
+    {
+      "key": "unknown-episode",
+      "providerId": "fictional",
+      "title": "Cloud.Harbor.2025.S01E03.1080p.WEB-DL.HEVC.ENG",
+      "sizeBytes": 2000000000,
+      "references": [],
+      "members": []
+    }
+  ]
+}

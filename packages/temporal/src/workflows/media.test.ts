@@ -8,8 +8,69 @@ import type {
   MediaFileActivities,
 } from "@shepherdjerred/media/automation";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { plexBindingExecution } from "#activities/media/plex-binding-execution.ts";
+import { compensationExecution } from "#activities/media/compensation-execution.ts";
 
 const workflowsPath = new URL("media.ts", import.meta.url).pathname;
+
+test("real scheduled Network and Files Activities satisfy the production SDK deadline adapters", async () => {
+  const observed: string[] = [];
+  const networkBudget = (phase: string) => {
+    const execution = plexBindingExecution();
+    execution.assertActive();
+    observed.push(phase);
+  };
+  const fileBudget = (phase: string) => {
+    const execution = compensationExecution();
+    execution.assertActive();
+    observed.push(phase);
+  };
+  const result = await runScenario({
+    workflow: "acquireMediaReleaseWorkflow",
+    args: { operationId: "deadline-operation", attemptId: "deadline-attempt" },
+    network: {
+      publishRolledBackMedia: async () => {
+        networkBudget("rollback-check");
+        return { status: "not_applicable", reason: null };
+      },
+      submitMediaTorrent: async () => {
+        networkBudget("submission");
+        return { status: "submitted", reason: null };
+      },
+      observeMediaAcquisition: async () => ({ status: "ready", reason: null }),
+      publishMediaToPlex: async () => {
+        networkBudget("plex");
+        return { status: "available", reason: null };
+      },
+      finalizeMediaAcquisition: async () => {
+        networkBudget("finalize");
+      },
+      finishMediaOperation: async () => {
+        networkBudget("finish");
+      },
+    },
+    files: {
+      inspectAndStageMedia: async () => {
+        fileBudget("stage");
+        return { status: "staged" };
+      },
+      promoteMediaFiles: async () => {
+        fileBudget("promote");
+        return { status: "published" };
+      },
+    },
+  });
+  expect(result).toEqual({ status: "completed" });
+  expect(observed).toEqual([
+    "rollback-check",
+    "submission",
+    "stage",
+    "promote",
+    "plex",
+    "finalize",
+    "finish",
+  ]);
+}, 60_000);
 
 test.each([
   { language: "en" },
@@ -131,11 +192,21 @@ test.each(["purged", "obsolete"] as const)(
   "rollback cleanup remains scheduled through protection and bounded history rollover until %s",
   async (terminalStatus) => {
     let attempts = 0;
+    let observations = 0;
     const checkpoints: string[] = [];
     const result = await runScenario({
       workflow: "cleanupMediaUpgradeWorkflow",
       args: { operationId: "cleanup-operation", cleanupId: "cleanup" },
       network: {
+        observeMediaUpgradeCleanup: async (input) => {
+          expect(input).toEqual({
+            operationId: "cleanup-operation",
+            cleanupId: "cleanup",
+          });
+          expect(observations).toBe(attempts);
+          observations++;
+          return { status: "observed" };
+        },
         finishMediaOperation: async (input) => {
           checkpoints.push(input.status);
         },
@@ -143,6 +214,7 @@ test.each(["purged", "obsolete"] as const)(
       files: {
         cleanupSupersededMediaFile: async (input) => {
           expect(input.cleanupId).toBe("cleanup");
+          expect(observations).toBe(attempts + 1);
           attempts++;
           return attempts <= 15
             ? { status: "protected", reason: "rollback_window_incomplete" }
@@ -154,6 +226,7 @@ test.each(["purged", "obsolete"] as const)(
       status: terminalStatus === "purged" ? "completed" : "obsolete",
     });
     expect(attempts).toBe(16);
+    expect(observations).toBe(16);
     expect(checkpoints).toEqual([
       ...Array.from({ length: 15 }, () => "reconciling"),
       "completed",

@@ -15,12 +15,14 @@ import type {
   MediaWorkflowResult,
 } from "@shepherdjerred/media/automation";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS } from "#shared/media-activity-budget.ts";
 
 const observe = proxyActivities<
   Pick<MediaNetworkActivities, "evaluateMediaRetention">
 >({
   taskQueue: TASK_QUEUES.MEDIA_NETWORK,
   startToCloseTimeout: "45 seconds",
+  scheduleToCloseTimeout: HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS,
   retry: { maximumAttempts: 1 },
   cancellationType: ActivityCancellationType.WAIT_CANCELLATION_COMPLETED,
 });
@@ -29,6 +31,7 @@ const files = proxyActivities<
 >({
   taskQueue: TASK_QUEUES.MEDIA_FILES,
   startToCloseTimeout: "12 hours",
+  scheduleToCloseTimeout: HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS,
   heartbeatTimeout: "1 minute",
   retry: { maximumAttempts: 1 },
   cancellationType: ActivityCancellationType.WAIT_CANCELLATION_COMPLETED,
@@ -41,6 +44,7 @@ const network = proxyActivities<
 >({
   taskQueue: TASK_QUEUES.MEDIA_NETWORK,
   startToCloseTimeout: "5 minutes",
+  scheduleToCloseTimeout: HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS,
   retry: {
     initialInterval: "5 seconds",
     maximumInterval: "1 minute",

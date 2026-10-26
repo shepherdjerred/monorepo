@@ -1,7 +1,6 @@
 import path from "node:path";
 import { lstat, opendir } from "node:fs/promises";
 import { z } from "zod";
-import { FileOperations } from "#filesystem/operations.ts";
 import {
   FileOperationConflict,
   type FileOperationManifest,
@@ -14,12 +13,13 @@ import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeLocalPath } from "#automation/native-recovery/files.ts";
 import { archiveOriginalJournals, archiveAllPaths } from "./paths.ts";
 import type {
-  ArchiveCleanupProof,
-  ArchiveCleanupBase,
+  ArchiveCleanupFacts,
+  ArchiveCleanupMeasuredFacts,
   ArchiveJournalProof,
   ArchiveJournalEntries,
 } from "./cleanup-types.ts";
 import { archivePurgeManifest } from "./purge-manifest.ts";
+import { readArchiveManifest } from "./cleanup/content.ts";
 import {
   assertArchiveActive,
   archiveAwait,
@@ -94,7 +94,7 @@ async function ancestors(directory: string) {
 /** Hash all relevant journal contents once, outside PG; retain every entry's stat identity. */
 export async function prepareCleanupJournalProof(
   context: ArchiveFileContext,
-  proof: ArchiveCleanupBase,
+  proof: ArchiveCleanupFacts,
 ) {
   const originalIds = new Set(
     archiveOriginalJournals(context, proof.descriptor.scope).map(
@@ -188,7 +188,7 @@ async function inspectArchiveJournals(
 /** Only stat/list checks and bounded exact own-manifest readback occur under authority locks. */
 export async function assertCleanupJournalProof(
   context: ArchiveFileContext,
-  proof: ArchiveCleanupProof,
+  proof: ArchiveCleanupMeasuredFacts,
 ) {
   for (const original of proof.journals) {
     const roots = context.files.roots[original.kind];
@@ -273,16 +273,12 @@ async function assertOwnJournals(
     executionCommitted: boolean;
   },
 ) {
-  const roots = context.files.roots[original.kind];
-  const operations = new FileOperations(roots, {
-    authorize: () =>
-      Promise.reject(new Error("Archive journal inspection is read only")),
-    ...(context.files.verifyPlexExclusion === undefined
-      ? {}
-      : { verifyPlexExclusion: context.files.verifyPlexExclusion }),
-  });
   for (const expected of own) {
-    const actual = await operations.readManifest(expected.operationId);
+    const actual = await readArchiveManifest(
+      context,
+      original.kind,
+      expected.operationId,
+    );
     if (actual === null) {
       if (original.entries.has(`${expected.operationId}.json`))
         throw new FileOperationConflict("Archive own journal disappeared");
