@@ -154,6 +154,9 @@ export const ACQUIRED_IMAGE_PARAMETERS: Readonly<
     "grafana.imageRenderer.image.tag": "image:grafana-image-renderer",
   },
   "mc-router": { "image.tag": "image:mc-router" },
+  "minecraft-tsmc": {
+    "initContainers[0].image": "image:minecraft-server",
+  },
   "minecraft-sjerred": {
     "image.tag": "image:minecraft-server-java8",
     "initContainers[0].image": "image:busybox",

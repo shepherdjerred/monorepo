@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 import stat
+from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
 
 RECEIPT = ".the-storm-bluemap-storage.json"
@@ -56,7 +57,7 @@ def checked_manifest(value: object) -> dict[str, str]:
     return result
 
 
-def write_receipt(destination: Path, value: dict[str, object]) -> None:
+def write_receipt(destination: Path, value: Mapping[str, object]) -> None:
     temporary = destination / (RECEIPT + ".writing")
     descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o664)
     with os.fdopen(descriptor, "w", encoding="utf-8") as output:
@@ -106,6 +107,7 @@ def copy(data: Path, destination: Path) -> dict[str, object]:
     if source.is_symlink() or (source.exists() and not source.is_dir()):
         raise ValueError("Original BlueMap cache must be a regular directory")
     receipt_path = destination / RECEIPT
+    receipt: dict[str, object]
     if receipt_path.exists() or receipt_path.is_symlink():
         receipt = read_receipt(destination)
         if receipt.get("phase") in ("VERIFIED", "SOURCE_REMOVED", "NEW_CACHE"):
@@ -120,11 +122,13 @@ def copy(data: Path, destination: Path) -> dict[str, object]:
             receipt = {"schemaVersion": 1, "phase": "NEW_CACHE", "files": {}}
             write_receipt(destination, receipt)
             return {"phase": "NEW_CACHE", "files": 0}
-        receipt = {"schemaVersion": 1, "phase": "COPYING", "files": inventory(source)}
-        receipt["manifestSha256"] = manifest_digest(receipt["files"])
+        original = inventory(source)
+        receipt = {"schemaVersion": 1, "phase": "COPYING", "files": original,
+                   "manifestSha256": manifest_digest(original)}
         write_receipt(destination, receipt)
     expected = checked_manifest(receipt.get("files"))
-    if not source.is_dir() or inventory(source) != expected or manifest_digest(expected) != receipt.get("manifestSha256"):
+    if (not source.is_dir() or inventory(source) != expected
+            or manifest_digest(expected) != receipt.get("manifestSha256")):
         raise ValueError("Original BlueMap cache changed during migration")
     current = inventory(destination)
     if set(current) - set(expected):

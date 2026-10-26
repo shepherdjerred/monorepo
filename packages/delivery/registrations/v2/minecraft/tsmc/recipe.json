@@ -127,6 +127,10 @@
           },
           "chartComponent": "chart:minecraft",
           "artifactParameters": {
+            "initContainers[0].image": {
+              "component": "image:minecraft-server",
+              "format": "reference"
+            },
             "image.tag": {
               "component": "image:the-storm-server",
               "format": "tag-digest"
