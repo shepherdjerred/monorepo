@@ -192,7 +192,7 @@ describe("ManagedFlagInventorySchema", () => {
   });
 
   test("enables Dares only for the beta guild", () => {
-    const betaFlag = scoutPolicyFlag("beta", "bucks_dares_enabled");
+    const betaFlag = scoutPolicyFlag("beta", "dares_enabled");
     expect(betaFlag.default).toBe(false);
     expect(betaFlag.rollouts).toEqual([
       expect.objectContaining({
@@ -201,7 +201,7 @@ describe("ManagedFlagInventorySchema", () => {
       }),
     ]);
 
-    const prodFlag = scoutPolicyFlag("prod", "bucks_dares_enabled");
+    const prodFlag = scoutPolicyFlag("prod", "dares_enabled");
     expect(prodFlag.default).toBe(false);
     expect(prodFlag.rollouts).toEqual([]);
   });

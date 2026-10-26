@@ -1,54 +1,48 @@
-import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
-import path from "node:path";
-import { readdir } from "node:fs/promises";
-import { z } from "zod";
-import { ReplayRuntimeProvider } from "#src/explore/replay/runtime-provider.ts";
 import {
+  exploreAnalysisEnabled,
+  exploreModel,
   initializeDynamicConfig,
   shutdownDynamicConfig,
-  exploreAnalysisEnabled,
 } from "#src/config/dynamic.ts";
-import { prisma } from "#src/database/index.ts";
-import { recoveryToolName } from "#src/explore/replay/recovery-assertions.ts";
-import {
-  createBotRestReader,
-  installBotRestReader,
-} from "#src/lib/discord/bot-rest.ts";
-import { DiscordUpstreamError } from "#src/lib/discord-rest.ts";
-import { databaseSnapshotId } from "./snapshot-identity.ts";
-import { writableRowCounts } from "./writable-rows.ts";
-import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
-import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
-import { lakeSchemaIssues } from "#src/explore/replay/dataset.ts";
 import {
   MY_SERVER,
   addFlagOverride,
   clearFlagOverrides,
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
-import {
-  DiscordAccountIdSchema,
-  DiscordGuildIdSchema,
-} from "@scout-for-lol/data";
-import { parseReplayCorpus } from "#src/explore/replay/corpus.ts";
-import { useStageFlagSemantics } from "./stage-flag-semantics.ts";
-import { replayDynamicConfigSeed } from "./config-seed.ts";
-import { planConversationTurns } from "#src/explore/replay/plan.ts";
-import { buildTranscript } from "#src/explore/store-mappers.ts";
-import { exploreModel } from "#src/config/dynamic.ts";
+import { prisma } from "#src/database/index.ts";
 import { streamExploreAgent } from "#src/explore/agent.ts";
-import { buildDirPath } from "#src/report-lake/paths.ts";
+import { exploreAgentInstructions } from "#src/explore/prompt.ts";
 import {
-  closeDuckDB,
-  withDuckDBConnection,
-} from "#src/reports/duckdb/instance.ts";
+  ReplayCaseCandidateSchema,
+  ReplayCaseIndexEntrySchema,
+  ReplayManifestSchema,
+  appendBundleLine,
+  bundleLocationIssues,
+  bundlePaths,
+  createBundleDirectory,
+  recordedCaseEntries,
+  replayBundleRoot,
+  runIdIssues,
+  writeBundleFile,
+  type ReplayManifest,
+} from "#src/explore/replay/bundle.ts";
+import { resolveReplayCapabilities } from "#src/explore/replay/capabilities.ts";
+import {
+  exploreChipCases,
+  exploreChipCatalogSha256,
+} from "#src/explore/replay/chips.ts";
+import type { ReplayCliOptions } from "#src/explore/replay/cli.ts";
+import { parseReplayCorpus } from "#src/explore/replay/corpus.ts";
 import {
   datasetCoherenceIssues,
   datasetRepairHint,
+  lakeSchemaIssues,
   type ReplayStage,
   type StageDatasetPin,
 } from "#src/explore/replay/dataset.ts";
-import type { ReplayCliOptions } from "#src/explore/replay/cli.ts";
+import type { ReplayBaseline, ReplaySide } from "#src/explore/replay/diff.ts";
+import { planConversationTurns } from "#src/explore/replay/plan.ts";
 import {
   EXPLORE_REPLAY_CAPABILITIES,
   capabilityMismatches,
@@ -58,39 +52,45 @@ import {
   type CapturedGuildConfig,
   type ExploreCapabilitySet,
 } from "#src/explore/replay/profiles.ts";
-import {
-  exploreChipCases,
-  exploreChipCatalogSha256,
-} from "#src/explore/replay/chips.ts";
-import { resolveReplayCapabilities } from "#src/explore/replay/capabilities.ts";
+import { recoveryToolName } from "#src/explore/replay/recovery-assertions.ts";
 import {
   queryFactsFromTrace,
   runReplayCases,
   type ReplayCaseInput,
   type ReplayObservation,
 } from "#src/explore/replay/runner.ts";
-import type { ReplayBaseline, ReplaySide } from "#src/explore/replay/diff.ts";
+import { ReplayRuntimeProvider } from "#src/explore/replay/runtime-provider.ts";
 import { scoreCase } from "#src/explore/replay/scoring.ts";
-import { validateQuery } from "#src/reports/ai/scoutql-tools.ts";
 import {
   harnessIntegritySignals,
   replaySignalWeight,
 } from "#src/explore/replay/signals.ts";
+import { buildTranscript } from "#src/explore/store-mappers.ts";
+import { DiscordUpstreamError } from "#src/lib/discord-rest.ts";
 import {
-  ReplayCaseIndexEntrySchema,
-  ReplayCaseCandidateSchema,
-  ReplayManifestSchema,
-  type ReplayManifest,
-  appendBundleLine,
-  bundleLocationIssues,
-  bundlePaths,
-  recordedCaseEntries,
-  createBundleDirectory,
-  replayBundleRoot,
-  runIdIssues,
-  writeBundleFile,
-} from "#src/explore/replay/bundle.ts";
-import { exploreAgentInstructions } from "#src/explore/prompt.ts";
+  createBotRestReader,
+  installBotRestReader,
+} from "#src/lib/discord/bot-rest.ts";
+import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
+import { buildDirPath } from "#src/report-lake/paths.ts";
+import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
+import { validateQuery } from "#src/reports/ai/scoutql-tools.ts";
+import {
+  closeDuckDB,
+  withDuckDBConnection,
+} from "#src/reports/duckdb/instance.ts";
+import {
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
+import { readdir } from "node:fs/promises";
+import path from "node:path";
+import { z } from "zod";
+import { replayDynamicConfigSeed } from "./config-seed.ts";
+import { databaseSnapshotId } from "./snapshot-identity.ts";
+import { useStageFlagSemantics } from "./stage-flag-semantics.ts";
+import { writableRowCounts } from "./writable-rows.ts";
 
 /**
  * One replay run: verify the dataset, then take each guild through the cases.
@@ -215,10 +215,7 @@ async function verifyDataset(pin: StageDatasetPin): Promise<void> {
  *
  * Each flag is cleared before the guild's own override is added, so the
  * registry ends up saying exactly what the capture recorded and nothing else.
- * That matters for `betting_enabled` in particular: `resolveBucksCapability`
- * bounds its candidates to guilds carrying a whole-guild override, so a
- * leftover override for a different guild would put two betting guilds in
- * play — which `bucks-tools.ts` throws on.
+ * This keeps each replay isolated to the captured guild capabilities.
  */
 function applyGuildFlags(config: CapturedGuildConfig): () => void {
   const overrides = flagOverridesFor(config.capabilities);
@@ -790,7 +787,7 @@ async function runGuild(input: {
       : [];
 
     // A conversation turn answers as the person who asked it, not as the
-    // guild's busiest user: the bucks and challenge tools read the requester,
+    // guild's busiest user: the Dare and challenge tools read the requester,
     // so borrowing someone else's identity would change what the turn can see.
     const conversations = options.includeConversations
       ? await conversationCasesFor(pin.stage)
@@ -887,9 +884,6 @@ async function runGuild(input: {
           (["web", "discord", "voice"] as const).map((promptSurface) =>
             exploreAgentInstructions({
               analysis: exploreAnalysisEnabled(),
-              bucks: config.capabilities.bucks
-                ? { currentTime: "pinned" }
-                : null,
               dares: config.capabilities.dares,
               challenges: config.capabilities.challenges,
               creation: config.capabilities.creation,

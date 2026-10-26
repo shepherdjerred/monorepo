@@ -1,6 +1,3 @@
-import { tool } from "ai";
-import { z } from "zod";
-import { createDareToolExecutors } from "#src/explore/tools/dare-tools.ts";
 import type { DareExploreToolsInput } from "#src/explore/tools/dare-tool-context.ts";
 import {
   DareActionToolInputSchema,
@@ -13,6 +10,9 @@ import {
   DareToolResultSchema,
   ReviseDareToolInputSchema,
 } from "#src/explore/tools/dare-tool-schemas.ts";
+import { createDareToolExecutors } from "#src/explore/tools/dare-tools.ts";
+import { tool } from "ai";
+import { z } from "zod";
 
 export function createDareExploreTools(input: DareExploreToolsInput) {
   const executors = createDareToolExecutors(input);
@@ -47,21 +47,21 @@ export function createDareExploreTools(input: DareExploreToolsInput) {
     }),
     create_dare_draft: tool({
       description:
-        "Save a private, unfunded Dare draft after validation and historical execution. Requires displayTitle and statusPhrases for the Dares list. One-game wording belongs in one game-set CTE.",
+        "Save a private Dare draft after validation and historical execution. Requires displayTitle and statusPhrases for the Dares list. One-game wording belongs in one game-set CTE.",
       inputSchema: DareDefinitionToolInputSchema,
       outputSchema: DareToolResultSchema,
       execute: (raw) => executors.create(raw),
     }),
     revise_dare_draft: tool({
       description:
-        "Append a validated revision to a private, unfunded Dare draft. Requires displayTitle, statusPhrases, and the exact current revision. Never mutates a funded contract.",
+        "Append a validated revision to a private Dare draft. Requires displayTitle, statusPhrases, and the exact current revision. Never mutates a published contract.",
       inputSchema: ReviseDareToolInputSchema,
       outputSchema: DareToolResultSchema,
       execute: (raw) => executors.revise(raw),
     }),
     list_dares: tool({
       description:
-        "List the requester's dares (authored, targeted, or funded) or every funded guild-visible dare, with status and progress.",
+        "List the requester's authored or targeted dares, or all published guild-visible dares, with status and progress.",
       inputSchema: DareListToolInputSchema,
       outputSchema: DareToolResultSchema,
       execute: (raw) => executors.list(raw),
@@ -82,7 +82,7 @@ export function createDareExploreTools(input: DareExploreToolsInput) {
     }),
     delete_dare_draft: tool({
       description:
-        "Delete the requester's own private unfunded draft. Funded or terminal dares cannot be deleted.",
+        "Delete the requester's own private draft. Published or terminal dares cannot be deleted.",
       inputSchema: DareDeleteToolInputSchema,
       outputSchema: DareToolResultSchema,
       execute: (raw) => executors.deleteDraft(raw),

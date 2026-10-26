@@ -1,21 +1,21 @@
-import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
-import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
-import { afterAll, beforeEach, describe, expect, test } from "vitest";
+import { loadMvpVoteLeaderboard } from "#src/mvp-votes/query/leaderboard.ts";
+import { loadMatchMvpTallyForGuilds } from "#src/mvp-votes/query/tally.ts";
+import { upsertMatchMvpVote } from "#src/mvp-votes/vote.ts";
+import {
+  createTrackedTestPlayer,
+  leagueTestDiscordId,
+  leagueTestPuuid,
+} from "#src/testing/league-fixtures.ts";
+import { freezeMvpTestRoster } from "#src/testing/mvp-votes-fixtures.ts";
+import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   RiotMatchIdSchema,
 } from "@scout-for-lol/data";
-import { createTestDatabase } from "#src/testing/test-database.ts";
-import {
-  bucksTestDiscordId,
-  bucksTestPuuid,
-  createTrackedTestPlayer,
-} from "#src/testing/bucks-fixtures.ts";
-import { freezeMvpTestRoster } from "#src/testing/mvp-votes-fixtures.ts";
-import { loadMatchMvpTallyForGuilds } from "#src/mvp-votes/query/tally.ts";
-import { loadMvpVoteLeaderboard } from "#src/mvp-votes/query/leaderboard.ts";
-import { upsertMatchMvpVote } from "#src/mvp-votes/vote.ts";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
 
 const { prisma: db } = createTestDatabase("mvp-votes-query");
 
@@ -51,10 +51,10 @@ async function seedVote(input: {
     {
       matchId: input.matchId,
       serverId: DiscordGuildIdSchema.parse(input.serverId),
-      voterDiscordId: bucksTestDiscordId(input.voter),
+      voterDiscordId: leagueTestDiscordId(input.voter),
       category: "ally",
       nomineeIndex: input.nomineeIndex,
-      voterPuuid: bucksTestPuuid(input.voter),
+      voterPuuid: leagueTestPuuid(input.voter),
       voterTeamId: input.voter < 5 ? 100 : 200,
       ...(input.justification === undefined
         ? {}
@@ -120,8 +120,8 @@ describe("loadMatchMvpTallyForGuilds", () => {
     await createTrackedTestPlayer(db, {
       alias: "alice",
       serverId: GUILD_A,
-      discordId: bucksTestDiscordId(0),
-      accounts: [bucksTestPuuid(0)],
+      discordId: leagueTestDiscordId(0),
+      accounts: [leagueTestPuuid(0)],
       creatorDiscordId: CREATOR,
       createdAt: new Date("2026-09-01T00:00:00.000Z"),
     });
@@ -220,7 +220,7 @@ describe("loadMvpVoteLeaderboard", () => {
     await createTrackedTestPlayer(db, {
       alias: "alice",
       serverId: GUILD_A,
-      accounts: [bucksTestPuuid(0)],
+      accounts: [leagueTestPuuid(0)],
       creatorDiscordId: CREATOR,
       createdAt: new Date("2026-09-01T00:00:00.000Z"),
     });
@@ -260,7 +260,7 @@ describe("loadMvpVoteLeaderboard", () => {
     expect(month.totalVotes).toBe(3);
     expect(month.rows).toEqual([
       {
-        nomineePuuid: bucksTestPuuid(0),
+        nomineePuuid: leagueTestPuuid(0),
         displayName: "alice",
         voteCount: 3,
         matchCount: 2,
@@ -313,7 +313,7 @@ describe("loadMvpVoteLeaderboard", () => {
     );
     expect(result.rows).toEqual([
       {
-        nomineePuuid: bucksTestPuuid(9),
+        nomineePuuid: leagueTestPuuid(9),
         displayName: "Player9#NA1",
         voteCount: 1,
         matchCount: 1,

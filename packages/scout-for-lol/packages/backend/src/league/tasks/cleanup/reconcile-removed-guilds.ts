@@ -1,18 +1,18 @@
-import type { Client } from "discord.js";
-import * as Sentry from "@sentry/bun";
-import {
-  DiscordGuildIdSchema,
-  type DiscordGuildId,
-} from "@scout-for-lol/data/index.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { cleanupRemovedGuild } from "#src/league/tasks/cleanup/remove-guild.ts";
 import { isUnknownGuildError } from "#src/discord/utils/permissions.ts";
-import { getErrorMessage } from "#src/utils/errors.ts";
+import { cleanupRemovedGuild } from "#src/league/tasks/cleanup/remove-guild.ts";
 import {
   defaultInstalledGuildsDependencies,
   installedGuildIdsAmong,
 } from "#src/lib/discord/installed-guilds.ts";
 import { createLogger } from "#src/logger.ts";
+import { getErrorMessage } from "#src/utils/errors.ts";
+import {
+  DiscordGuildIdSchema,
+  type DiscordGuildId,
+} from "@scout-for-lol/data/index.ts";
+import * as Sentry from "@sentry/bun";
+import type { Client } from "discord.js";
 
 const logger = createLogger("cleanup-reconcile-removed-guilds");
 
@@ -106,7 +106,7 @@ export async function reconcileRemovedGuilds(
         select: { serverId: true },
         distinct: ["serverId"],
       }),
-      db.bucksNotificationPreference.findMany({
+      db.dareNotificationPreference.findMany({
         select: { serverId: true },
         distinct: ["serverId"],
       }),

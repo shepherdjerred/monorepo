@@ -1,10 +1,7 @@
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { resolveEnvironment } from "#src/configuration.ts";
+import { DiscordSmokeScenarioNameSchema } from "#src/discord-smoke-scenarios.ts";
 import { createLogger } from "#src/logger.ts";
-import {
-  applyDiscordSmokeScenario,
-  DiscordSmokeScenarioNameSchema,
-} from "#src/discord-smoke-scenarios.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 
 const logger = createLogger("discord-smoke");
 
@@ -20,7 +17,6 @@ const scenario = DiscordSmokeScenarioNameSchema.parse(
 const guildId = DiscordGuildIdSchema.parse(
   Bun.env["SCOUT_DISCORD_SMOKE_GUILD_ID"],
 );
-applyDiscordSmokeScenario(scenario, guildId);
 
 await import("#src/index.ts");
 

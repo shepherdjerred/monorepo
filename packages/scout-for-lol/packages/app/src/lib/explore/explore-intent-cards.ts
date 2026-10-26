@@ -12,7 +12,7 @@ import type { CreatedEntity } from "#src/lib/intent-confirmation.ts";
  * Reading confirmation cards out of a turn's persisted trace.
  *
  * The agent never writes domain state; it emits a tool result describing
- * something a human may then confirm. Both families — the Bryan Bucks dares
+ * something a human may then confirm. Both families — the Dares dares
  * and the three Explore creations — put that proposal in the same place, so
  * one parse produces one ordered list of cards and the renderer only chooses
  * a body per kind.

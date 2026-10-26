@@ -9,7 +9,7 @@ export type ConsumerNavigationAvailability = {
   profilesAvailable: boolean;
   challengesAvailable: boolean;
   clashAvailable?: boolean;
-  bucksAvailable: boolean;
+  daresAvailable: boolean;
   hallAvailable?: boolean;
   hallTo?: string;
   duelsAvailable?: boolean;
@@ -44,7 +44,7 @@ export function consumerNavigationItems(
     ...(input.duelsAvailable === true && input.duelsTo !== undefined
       ? [{ label: "Duels", to: input.duelsTo }]
       : []),
-    ...(input.bucksAvailable ? [{ label: "Bryan Bucks", to: "/bucks" }] : []),
+    ...(input.daresAvailable ? [{ label: "Dares", to: "/dares" }] : []),
     // Last, and only for an operator the server has already agreed to serve.
     // Hiding it is not the access control — the operations router refuses a
     // non-operator whatever this list says — it only keeps the sidebar from

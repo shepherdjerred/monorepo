@@ -1,5 +1,5 @@
-import { fileURLToPath } from "node:url";
 import { challengeFacts, hallOfFameFacts } from "#src/explore/product-facts.ts";
+import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import {
   JUDGE_FAILURES,
@@ -295,7 +295,7 @@ describe("the judge prompt", () => {
       toolResults: [],
       toolNames: [],
       expectation: "answerable",
-      capabilities: { bucks: true, dares: false },
+      capabilities: { dares: false },
     });
     expect(rendered).toContain("FIGURES THE ANSWER ASSERTS: 54, 210");
     expect(rendered).toContain("FEATURES OFF FOR THIS GUILD: dares");
@@ -342,7 +342,7 @@ describe("the judge prompt", () => {
   });
 
   test("grounds findings in feature-tool output, not only in queries", () => {
-    // Six beta answers read straight from list_dares and query_bucks were
+    // Six beta answers read straight from list_dares and list_dares were
     // scored unsupported because the rubric said "unsupported when no query
     // ran" while the evidence it was handed showed the tool result.
     const prompt = judgeSystemPrompt();
@@ -491,20 +491,20 @@ describe("judgeEvidenceFromTrace", () => {
     // judge sees no evidence and calls them unsupported.
     const evidence = judgeEvidenceFromTrace([
       {
-        toolName: "query_bucks_bets",
+        toolName: "list_dares",
         status: "succeeded",
         rawOutput: { kind: "value", value: { winRate: 0.6418, bets: 67 } },
       },
     ]);
     expect(evidence.toolResults).toHaveLength(1);
-    expect(evidence.toolResults[0]?.toolName).toBe("query_bucks_bets");
+    expect(evidence.toolResults[0]?.toolName).toBe("list_dares");
     expect(evidence.toolResults[0]?.summary).toContain("0.6418");
   });
 
   test("bounds a tool result so it cannot crowd out the answer", () => {
     const evidence = judgeEvidenceFromTrace([
       {
-        toolName: "get_bucks_dataset",
+        toolName: "inspect_dare",
         status: "succeeded",
         rawOutput: { kind: "value", value: { rows: "x".repeat(4000) } },
       },
@@ -546,7 +546,7 @@ describe("judgeEvidenceFromTrace", () => {
   test("skips an omitted payload rather than inventing one", () => {
     const evidence = judgeEvidenceFromTrace([
       {
-        toolName: "query_bucks_ledger",
+        toolName: "inspect_dare",
         status: "succeeded",
         rawOutput: { kind: "omitted", reason: "payload_limit", byteLength: 90 },
       },

@@ -1,25 +1,25 @@
-import {
-  type ExceptionalGameResult,
-  type RiotMatchId,
-  type CompletedMatch,
-  type QueueType,
-  type RawMatch,
-  type RawTimeline,
-  type DiscordGuildId,
-  isExceptionalGame,
-  MIN_GAME_DURATION_SECONDS,
-} from "@scout-for-lol/data/index.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
-import {
-  generateMatchReview,
-  selectPlayerIndex,
-} from "#src/league/review/generator.ts";
 import {
   hasAiBeenAttempted,
   markAiAttempted,
 } from "#src/database/ai-attempts.ts";
+import {
+  generateMatchReview,
+  selectPlayerIndex,
+} from "#src/league/review/generator.ts";
 import { LlmBudgetExceeded } from "#src/league/review/openai-budget.ts";
 import { createLogger } from "#src/logger.ts";
+import {
+  type CompletedMatch,
+  type DiscordGuildId,
+  type ExceptionalGameResult,
+  isExceptionalGame,
+  MIN_GAME_DURATION_SECONDS,
+  type QueueType,
+  type RawMatch,
+  type RawTimeline,
+  type RiotMatchId,
+} from "@scout-for-lol/data/index.ts";
 import * as Sentry from "@sentry/bun";
 
 const logger = createLogger("postmatch-match-report-ai-review");
@@ -37,21 +37,6 @@ export function isRankedQueue(queueType: QueueType | undefined): boolean {
   );
 }
 
-/**
- * Queues worth spending a model call on.
- *
- * A 5v5 custom counts, because a custom that reaches the post-match pipeline
- * at all is necessarily a tournament-code game — plain customs are absent from
- * Match-V5 — so reaching this gate is itself the proof that Scout minted it. No
- * separate anti-farming check is needed here, unlike Bryan Bucks, because the
- * only thing at stake is our own spend.
- *
- * Kept separate from `isRankedQueue` on purpose. A function of that name also
- * exists in the report package, where it routes the ranked banner/square
- * designs — and those render rank badges and LP deltas, which a custom has
- * none of. Widening "ranked" in either place to mean "serious" would quietly
- * change the other.
- */
 export function isAiReviewableQueue(queueType: QueueType | undefined): boolean {
   return isRankedQueue(queueType) || queueType === "custom";
 }

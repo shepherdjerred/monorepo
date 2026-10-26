@@ -1,26 +1,7 @@
-import { Context } from "@temporalio/activity";
 import { heartbeatWhile } from "#src/temporal/activity-runtime.ts";
 import type { ScoutMatchActivities } from "#src/temporal/match/match-activity-surface.ts";
+import { Context } from "@temporalio/activity";
 
-/**
- * The Activities of the V2 post-match core, as the Activity Worker sees them.
- *
- * Every one is declared `realtime` in `SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES`.
- * Nothing here decides where they run; that assignment lives once, beside the
- * ID builders, and the `satisfies` on it makes an Activity added without a
- * queue a type error.
- *
- * The surface TYPE lives in `match-activity-surface.ts` rather than here, so
- * that naming it does not drag this module — and everything its dynamic
- * imports reach — into another package's type program.
- *
- * The implementations are DYNAMICALLY imported. Building the activity groups happens during process startup for
- * every role that polls a queue, and a static import chain would pull the
- * betting, progression and league task slices — and the Riot client and Prisma
- * behind them — into a process that may never run a match. Each Activity also
- * heartbeats while it works, so a worker that dies mid-phase is detected by
- * its heartbeat timeout rather than by its start-to-close budget.
- */
 export function createScoutMatchActivities(): ScoutMatchActivities {
   return {
     queueHistoryMatch: async (input) => {

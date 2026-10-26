@@ -1,14 +1,14 @@
-import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
-import { resolveBucksCapability } from "#src/explore/tools/bucks-tools.ts";
-import { dareExploreEnabled } from "#src/explore/tools/dare-tool-context.ts";
-import { challengeExploreEnabled } from "#src/explore/tools/challenge-tools.ts";
 import { resolveCreationCapability } from "#src/explore/creation/capability.ts";
-import { riotHistoryExploreEnabled } from "#src/explore/tools/riot-history-tools.ts";
-import { resolveMvpVotesCapability } from "#src/explore/tools/mvp-votes-tools.ts";
-import { clashExploreEnabled } from "#src/league/clash/access.ts";
-import { resolveHallCapability } from "#src/explore/tools/hall-tools.ts";
-import type { ExploreSurface } from "#src/explore/surface.ts";
 import type { ExploreCapabilitySet } from "#src/explore/replay/profiles.ts";
+import type { ExploreSurface } from "#src/explore/surface.ts";
+import { challengeExploreEnabled } from "#src/explore/tools/challenge-tools.ts";
+import { resolveDareCapability } from "#src/explore/tools/dare-capability.ts";
+import { dareExploreEnabled } from "#src/explore/tools/dare-tool-context.ts";
+import { resolveHallCapability } from "#src/explore/tools/hall-tools.ts";
+import { resolveMvpVotesCapability } from "#src/explore/tools/mvp-votes-tools.ts";
+import { riotHistoryExploreEnabled } from "#src/explore/tools/riot-history-tools.ts";
+import { clashExploreEnabled } from "#src/league/clash/access.ts";
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 
 /**
  * What a turn with these inputs will actually be able to do.
@@ -29,10 +29,10 @@ export async function resolveReplayCapabilities(input: {
   readonly surface: ExploreSurface;
 }): Promise<ExploreCapabilitySet> {
   const guildIds = [...input.guildIds];
-  const bucks = await resolveBucksCapability(guildIds);
+  const capability = await resolveDareCapability(guildIds);
   const [dares, challenges, creation, riotHistory, mvpVotes, clash, hall] =
     await Promise.all([
-      dareExploreEnabled(bucks),
+      dareExploreEnabled(capability),
       challengeExploreEnabled(guildIds),
       resolveCreationCapability({ surface: input.surface, guildIds }),
       riotHistoryExploreEnabled(guildIds),
@@ -41,7 +41,6 @@ export async function resolveReplayCapabilities(input: {
       resolveHallCapability(guildIds),
     ]);
   return {
-    bucks: bucks !== null,
     dares,
     challenges,
     creation: creation !== null,

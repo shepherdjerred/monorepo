@@ -573,13 +573,13 @@ describe("Temporal operations worker isolation", () => {
     expect(repoEnv).toContain("WOODPECKER_TOKEN");
     expect(repoEnv).toContain("OPENAI_API_KEY");
     expect(scoutEnv).toContain("OPENAI_API_KEY");
-    for (const replayOnly of [
+    for (const retiredControl of [
       "SCOUT_BRYAN_BUCKS_CONTROL_URL",
       "SCOUT_BRYAN_BUCKS_CONTROL_TOKEN",
     ]) {
-      expect(scoutEnv).toContain(replayOnly);
-      expect(repoEnv).not.toContain(replayOnly);
-      expect(infraEnv).not.toContain(replayOnly);
+      expect(scoutEnv).not.toContain(retiredControl);
+      expect(repoEnv).not.toContain(retiredControl);
+      expect(infraEnv).not.toContain(retiredControl);
     }
   });
 

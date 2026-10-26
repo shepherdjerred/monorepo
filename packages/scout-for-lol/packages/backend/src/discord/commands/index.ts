@@ -1,25 +1,24 @@
-import type { ChatInputCommandInteraction } from "discord.js";
-import { DiscordAccountIdSchema } from "@scout-for-lol/data/index.ts";
-import { captureBucksMemberActivity } from "#src/analytics/bryan-bucks.ts";
 import { captureDiscordCommandUsed } from "#src/analytics/command-usage.ts";
 import type { DiscordCommandStatus } from "#src/analytics/product-analytics.ts";
-import { createLogger } from "#src/logger.ts";
-import {
-  discordCommandDuration,
-  discordCommandsTotal,
-} from "#src/metrics/index.ts";
+import { executeDare } from "#src/discord/commands/dare.ts";
+import { executeHelp } from "#src/discord/commands/help.ts";
+import { executeList } from "#src/discord/commands/list.ts";
 import {
   executeDocs,
   executeInvite,
   executeSetup,
   executeStatus,
 } from "#src/discord/commands/onboarding.ts";
-import { executeHelp } from "#src/discord/commands/help.ts";
-import { executeList } from "#src/discord/commands/list.ts";
-import { executeTrack } from "#src/discord/commands/track.ts";
-import { executeBb } from "#src/discord/commands/bb/bb.ts";
-import { executeScout } from "#src/discord/commands/scout.ts";
 import { executeScoutVoice } from "#src/discord/commands/scout-voice.ts";
+import { executeScout } from "#src/discord/commands/scout.ts";
+import { executeTrack } from "#src/discord/commands/track.ts";
+import { createLogger } from "#src/logger.ts";
+import {
+  discordCommandDuration,
+  discordCommandsTotal,
+} from "#src/metrics/index.ts";
+import { DiscordAccountIdSchema } from "@scout-for-lol/data/index.ts";
+import type { ChatInputCommandInteraction } from "discord.js";
 
 const logger = createLogger("discord-commands");
 
@@ -66,8 +65,8 @@ export async function handleChatInputCommand(
       case "list":
         await executeList(interaction);
         break;
-      case "bb":
-        await executeBb(interaction);
+      case "dare":
+        await executeDare(interaction);
         break;
       case "scout": {
         // The voice subcommands are their own module: they share the /scout
@@ -117,17 +116,11 @@ export async function handleChatInputCommand(
     await captureDiscordCommandUsed({
       guildId: interaction.guildId,
       commandName,
-      subcommand: interaction.options.getSubcommand(false),
+      subcommand:
+        commandName === "dare"
+          ? null
+          : interaction.options.getSubcommand(false),
       status: commandStatus,
     });
-    if (commandName === "bb") {
-      await captureBucksMemberActivity({
-        serverId: interaction.guildId,
-        discordId: interaction.user.id,
-        activityKind: "command",
-        surface: "command",
-        status: commandStatus,
-      });
-    }
   }
 }

@@ -1,20 +1,18 @@
+import { formatPlayerList } from "#src/league/tasks/prematch/prematch-copy.ts";
+import { getChampionDisplayName } from "#src/utils/champion.ts";
+import type {
+  PlayerConfigEntry,
+  RawCurrentGameInfo,
+} from "@scout-for-lol/data/index.ts";
+import {
+  queueTypeToDisplayString,
+  resolveQueueTypeFromGame,
+} from "@scout-for-lol/data/index.ts";
 import {
   EmbedBuilder,
   type AttachmentBuilder,
   type MessageCreateOptions,
 } from "discord.js";
-import type {
-  RawCurrentGameInfo,
-  PlayerConfigEntry,
-} from "@scout-for-lol/data/index.ts";
-import {
-  resolveQueueTypeFromGame,
-  queueTypeToDisplayString,
-} from "@scout-for-lol/data/index.ts";
-import { getChampionDisplayName } from "#src/utils/champion.ts";
-import { formatPlayerList } from "#src/league/tasks/prematch/prematch-copy.ts";
-import { withBucksDigest } from "#src/betting/markets/prematch-line.ts";
-import type { BucksPrematchAttachment } from "#src/betting/markets/prematch-hook.ts";
 
 const PREMATCH_EMBED_COLOR = 0x00_bc_d4; // Teal - distinct from post-match
 
@@ -75,34 +73,16 @@ export function buildFallbackPrematchEmbed(
  * it go", which the notification Workflow answers.
  */
 export function buildPrematchPayload(input: {
-  betsOpen: boolean;
-  bucks: BucksPrematchAttachment;
   baseContent: string;
   loadingScreenAttachment: AttachmentBuilder | undefined;
   loadingScreenEmbed: EmbedBuilder | undefined;
   fallbackEmbed: () => EmbedBuilder;
 }): MessageCreateOptions {
-  const components =
-    input.betsOpen && input.bucks.rows.length > 0 ? input.bucks.rows : [];
-
-  if (input.loadingScreenAttachment && input.loadingScreenEmbed) {
+  if (input.loadingScreenAttachment && input.loadingScreenEmbed)
     return {
-      content: input.betsOpen
-        ? withBucksDigest(input.baseContent, input.bucks.footer)
-        : input.baseContent,
+      content: input.baseContent,
       files: [input.loadingScreenAttachment],
       embeds: [input.loadingScreenEmbed],
-      components,
     };
-  }
-
-  // The fallback path still carries buttons: a market's validity depends on the
-  // game, not on whether the image rendered.
-  return {
-    ...(input.betsOpen && input.bucks.footer.length > 0
-      ? { content: input.bucks.footer }
-      : {}),
-    embeds: [input.fallbackEmbed()],
-    components,
-  };
+  return { embeds: [input.fallbackEmbed()] };
 }

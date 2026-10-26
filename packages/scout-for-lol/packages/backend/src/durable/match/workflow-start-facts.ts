@@ -1,9 +1,4 @@
 import {
-  WorkflowRunIdSchema,
-  type WorkflowRunId,
-} from "@scout-for-lol/domain/identity/brands.ts";
-import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
-import {
   recordWorkflowStartAccepted,
   requestWorkflowStart,
 } from "#src/database/durable/workflow-start-repository.ts";
@@ -12,6 +7,11 @@ import {
   type DurableFacts,
 } from "#src/durable/match/durable-facts.ts";
 import { toIsoInstant } from "#src/durable/match/match-identity.ts";
+import {
+  WorkflowRunIdSchema,
+  type WorkflowRunId,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
 
 /**
  * The workflow-start request service.
@@ -31,7 +31,7 @@ export type WorkflowStartRequest = {
   readonly requestedWorkflowId: string;
   /** The registered workflow name; also the input envelope's kind. */
   readonly workflowType: string;
-  /** Where the request came from, e.g. `prematch-parlay-generation`. */
+
   readonly requestSource: string;
   /** The operator who asked, or null for a system request. */
   readonly requestedBy: DiscordAccountId | null;

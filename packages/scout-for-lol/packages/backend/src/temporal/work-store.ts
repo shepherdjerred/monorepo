@@ -1,39 +1,22 @@
+import { classifyLlmProviderIssue } from "#src/alerts/provider-metrics.ts";
+import configuration from "#src/configuration.ts";
+import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import { liveDurableFacts } from "#src/durable/match/live-facts.ts";
+import { withRecordedWorkflowStart } from "#src/durable/match/workflow-start-facts.ts";
+import { createLogger } from "#src/logger.ts";
+import { LeaguePuuidSchema, RegionSchema } from "@scout-for-lol/data";
 import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
-import { spectatorGameMatchId } from "#src/durable/match/match-identity.ts";
-import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
-import { z } from "zod";
-import {
-  LeaguePuuidSchema,
-  LoadingScreenDataSchema,
-  PlayerConfigEntrySchema,
-  QueueTypeSchema,
-  RawCurrentGameInfoSchema,
-  RegionSchema,
-} from "@scout-for-lol/data";
 import {
   DETACHED_WORK_MAX_ATTEMPTS,
   SCOUT_WORKFLOW_NAMES,
   scoutDetachedWorkWorkflowId,
   type ScoutDetachedWorkInput,
 } from "@scout-for-lol/temporal";
-import { classifyLlmProviderIssue } from "#src/alerts/provider-metrics.ts";
-import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import configuration from "#src/configuration.ts";
-import { createLogger } from "#src/logger.ts";
-import type { StartParlayGenerationInput } from "#src/betting/parlays/parlay-generation-types.ts";
-import { liveDurableFacts } from "#src/durable/match/live-facts.ts";
-import { withRecordedWorkflowStart } from "#src/durable/match/workflow-start-facts.ts";
+import { z } from "zod";
 import { currentScoutTemporalSupervisor } from "./runtime.ts";
 import { startScoutDetachedWork } from "./starts.ts";
 
 const logger = createLogger("temporal-work-store");
-
-const ParlayWorkPayloadSchema = z.strictObject({
-  gameInfo: RawCurrentGameInfoSchema,
-  trackedPlayers: z.array(PlayerConfigEntrySchema),
-  queueType: QueueTypeSchema.optional(),
-  loadingScreenData: LoadingScreenDataSchema.optional(),
-});
 
 const ChampionMasteryRefreshPayloadSchema = z.strictObject({
   puuid: LeaguePuuidSchema,
@@ -41,10 +24,6 @@ const ChampionMasteryRefreshPayloadSchema = z.strictObject({
 });
 
 const UniqueViolationSchema = z.object({ code: z.literal("P2002") });
-
-export function parlayTemporalWorkId(matchId: RiotMatchId): string {
-  return `parlay:${matchId}`;
-}
 
 export function championMasteryRefreshTemporalWorkId(
   puuid: LeaguePuuid,
@@ -56,7 +35,7 @@ export function championMasteryRefreshTemporalWorkId(
 export async function persistScoutTemporalWork(
   input: {
     id: string;
-    kind: ScoutDetachedWorkInput["kind"];
+    kind: "champion-mastery-refresh";
     payload: string;
   },
   database: ExtendedPrismaClient = prisma,
@@ -108,26 +87,6 @@ async function requestStart(input: ScoutDetachedWorkInput): Promise<void> {
         error,
       },
     );
-  }
-}
-
-export async function enqueueParlayGeneration(
-  input: StartParlayGenerationInput,
-): Promise<void> {
-  const parsed = ParlayWorkPayloadSchema.parse(input);
-  const matchId = spectatorGameMatchId(parsed.gameInfo);
-  const workId = parlayTemporalWorkId(matchId);
-  const created = await persistScoutTemporalWork({
-    id: workId,
-    kind: "parlay-generation",
-    payload: JSON.stringify(parsed),
-  });
-  if (created) {
-    await requestStart({
-      stage: configuration.environment,
-      kind: "parlay-generation",
-      workId,
-    });
   }
 }
 
@@ -221,7 +180,7 @@ export async function findQueuedScoutTemporalWork(
   database: ExtendedPrismaClient = prisma,
 ) {
   return await database.scoutTemporalWork.findMany({
-    where: { state: "queued" },
+    where: { state: "queued", kind: "champion-mastery-refresh" },
     select: { id: true, kind: true },
     orderBy: { createdAt: "asc" },
     take: 100,
@@ -232,6 +191,8 @@ export async function executeScoutTemporalWork(
   input: ScoutDetachedWorkInput,
   attempt = 1,
 ): Promise<void> {
+  // Retained Activity commands never read or write retired economic state.
+  if (input.kind === "parlay-generation") return;
   const work = await prisma.scoutTemporalWork.findUniqueOrThrow({
     where: { id: input.workId },
     select: { kind: true, payload: true, state: true },
@@ -255,21 +216,7 @@ export async function executeScoutTemporalWork(
   });
   try {
     const raw = JSON.parse(work.payload);
-    if (input.kind === "parlay-generation") {
-      const parlayInput = ParlayWorkPayloadSchema.parse(raw);
-      const { runParlayGeneration } =
-        await import("#src/betting/parlays/parlay-generate.ts");
-      await runParlayGeneration(
-        {
-          gameInfo: parlayInput.gameInfo,
-          trackedPlayers: parlayInput.trackedPlayers,
-          queueType: parlayInput.queueType,
-          loadingScreenData: parlayInput.loadingScreenData,
-        },
-        prisma,
-        "temporal",
-      );
-    } else {
+    {
       const masteryInput = ChampionMasteryRefreshPayloadSchema.parse(raw);
       const { refreshChampionMasterySnapshot } =
         await import("#src/league/champion-mastery/snapshots.ts");

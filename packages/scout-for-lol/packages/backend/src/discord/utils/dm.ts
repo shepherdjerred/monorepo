@@ -7,6 +7,20 @@
  */
 
 import {
+  type Db,
+  type ExtendedPrismaClient,
+  prisma,
+} from "#src/database/index.ts";
+import { reserveBudgetedDm } from "#src/discord/utils/dm-budget.ts";
+import type { DmBudget, DmKind } from "#src/discord/utils/dm-contracts.ts";
+import { createLogger } from "#src/logger.ts";
+import { getErrorMessage } from "#src/utils/errors.ts";
+import {
+  type DiscordAccountId,
+  DiscordChannelIdSchema,
+  type DiscordGuildId,
+} from "@scout-for-lol/data/index.ts";
+import {
   type ActionRowBuilder,
   type ButtonBuilder,
   type Client,
@@ -17,20 +31,6 @@ import {
   Routes,
 } from "discord.js";
 import { z } from "zod";
-import type { DmKind, DmBudget } from "#src/discord/utils/dm-contracts.ts";
-import {
-  DiscordChannelIdSchema,
-  type DiscordAccountId,
-  type DiscordGuildId,
-} from "@scout-for-lol/data/index.ts";
-import {
-  prisma,
-  type Db,
-  type ExtendedPrismaClient,
-} from "#src/database/index.ts";
-import { getErrorMessage } from "#src/utils/errors.ts";
-import { reserveBudgetedDm } from "#src/discord/utils/dm-budget.ts";
-import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("discord-dm");
 
@@ -73,8 +73,6 @@ const CORE_DM_KINDS: ReadonlySet<string> = new Set([
   "competition_invite",
   "prune_notice",
   "data_validation",
-  "betting_settlement_receipt",
-  "betting_player_bet_outcome",
   "dare_notification",
   // A match notification is what the recipient subscribed to, so it is product
   // output and carries neither the budget nor its footer.

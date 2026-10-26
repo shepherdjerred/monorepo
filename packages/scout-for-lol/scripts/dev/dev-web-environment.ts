@@ -19,11 +19,7 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   ai_reports_enabled: false,
   ai_reports_unlimited: false,
   ai_reviews_enabled: false,
-  betting_enabled: false,
-  betting_player_bet_outcome_dm_enabled: false,
-  betting_settlement_dm_enabled: false,
-  bucks_dares_enabled: false,
-  bucks_transfers_enabled: false,
+  dares_enabled: false,
   challenge_runs_enabled: false,
   clash_surface: false,
   dare_notifications_enabled: false,
@@ -45,7 +41,6 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   // packages/backend/src/config/dynamic.ts, which already falls back to them
   // gracefully on a refresh failure — listing them here just stops the noisy
   // "no static override" warning on every poll.
-  "scout-betting-parlay-ai-model": "gpt-5.6-sol",
   "scout-explore-model": "gpt-5.6-luna",
   "scout-explore-analysis-enabled": true,
   "scout-explore-model-picker-enabled": true,

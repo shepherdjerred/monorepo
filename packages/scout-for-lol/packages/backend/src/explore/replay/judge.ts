@@ -1,13 +1,13 @@
-import { z } from "zod";
-import { numericClaims } from "#src/explore/replay/diff.ts";
-import { describeThrown } from "#src/explore/replay/describe-thrown.ts";
-import type { ChipExpectation } from "#src/explore/replay/profiles.ts";
 import { LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH } from "#src/explore/lake-coverage.ts";
 import {
   challengeFacts,
   hallOfFameFacts,
   setupFacts,
 } from "#src/explore/product-facts.ts";
+import { describeThrown } from "#src/explore/replay/describe-thrown.ts";
+import { numericClaims } from "#src/explore/replay/diff.ts";
+import type { ChipExpectation } from "#src/explore/replay/profiles.ts";
+import { z } from "zod";
 
 /**
  * Grading a replayed answer on quality, which no other number here measures.
@@ -270,14 +270,7 @@ export type JudgeCaseInput = {
      */
     readonly scope: string | null;
   }[];
-  /**
-   * What the non-ScoutQL tools returned, bounded.
-   *
-   * Bucks, dares, MVP votes, challenges and Clash answer from their own tools
-   * and never touch ScoutQL, so a judge shown only queries sees no evidence at
-   * all and calls a well-grounded answer unsupported. Fifteen of beta's
-   * thirty-three did precisely that.
-   */
+
   readonly toolResults: readonly {
     readonly toolName: string;
     readonly summary: string;
@@ -290,15 +283,8 @@ export type JudgeCaseInput = {
 
 /** Tools that answer from their own data rather than through ScoutQL. */
 const CAPABILITY_TOOL_PATTERN =
-  /^(?:prepare_|lookup_|run_report_query|get_bucks|query_bucks|list_dares|inspect_dare|query_mvp|list_challenge|list_my_challenge|preview_challenge|challenge_leaderboard|get_clash|get_hall|list_competitions|get_competition|get_server_setup|resolve_player|inspect_player_coverage|materialize_query_dataset|materialize_raw_documents|analyze_javascript|select_dataset_values|summarize_match_timeline|review_match)/;
+  /^(?:prepare_|lookup_|run_report_query|list_dares|inspect_dare|query_mvp|list_challenge|list_my_challenge|preview_challenge|challenge_leaderboard|get_clash|get_hall|list_competitions|get_competition|get_server_setup|resolve_player|inspect_player_coverage|materialize_query_dataset|materialize_raw_documents|analyze_javascript|select_dataset_values|summarize_match_timeline|review_match)/;
 
-/**
- * How much of one tool result the judge is shown.
- *
- * Enough to see whether the figures in an answer could have come from it, and
- * bounded because a bucks dataset or a Clash roster is unbounded and would
- * crowd out the answer being judged.
- */
 const TOOL_RESULT_MAX_LENGTH = 500;
 
 function toolResultSummary(

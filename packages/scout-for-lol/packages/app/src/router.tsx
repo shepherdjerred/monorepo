@@ -37,12 +37,9 @@ import {
   ConsumerGuildWorkspace,
   ConsumerWorkspace,
 } from "#src/routes/consumer/consumer-workspace.tsx";
-import { BucksWorkspace } from "#src/routes/bucks/bucks-workspace.tsx";
-import { BucksOverview } from "#src/routes/bucks/bucks-overview.tsx";
-import { BucksDares } from "#src/routes/bucks/bucks-dares.tsx";
-import { BucksHistory } from "#src/routes/bucks/bucks-history.tsx";
-import { BucksLeaderboard } from "#src/routes/bucks/bucks-leaderboard.tsx";
-import { BucksSettings } from "#src/routes/bucks/bucks-settings.tsx";
+import { DaresWorkspace } from "#src/routes/dares/dares-workspace.tsx";
+import { Dares } from "#src/routes/dares/dares.tsx";
+import { DaresSettings } from "#src/routes/dares/dares-settings.tsx";
 import { OnboardingWizard } from "#src/routes/onboarding-wizard.tsx";
 import { InstallLanding } from "#src/routes/install-landing.tsx";
 import { OperationsMatches } from "#src/routes/operations/operations-matches.tsx";
@@ -71,7 +68,7 @@ import {
   accessLoader,
   auditLoader,
   competitionDetailLoader,
-  bucksLoader,
+  daresLoader,
   competitionsLoader,
   consumerPlayerLoader,
   consumerPlayersLoader,
@@ -350,39 +347,12 @@ export const routes: RouteObject[] = [
                 ],
               },
               {
-                // Bryan Bucks is server-side gated by the bucks.status probe;
-                // each child keeps its own errorElement so the section tabs
-                // survive a section failure.
-                path: "bucks",
-                element: <BucksWorkspace />,
-                loader: bucksLoader,
-                errorElement: <RouteErrorPanel />,
+                path: "dares",
+                element: <DaresWorkspace />,
+                loader: daresLoader,
                 children: [
-                  {
-                    index: true,
-                    element: <BucksOverview />,
-                    errorElement: <RouteErrorPanel />,
-                  },
-                  {
-                    path: "dares/:dareId?",
-                    element: <BucksDares />,
-                    errorElement: <RouteErrorPanel />,
-                  },
-                  {
-                    path: "history",
-                    element: <BucksHistory />,
-                    errorElement: <RouteErrorPanel />,
-                  },
-                  {
-                    path: "leaderboard",
-                    element: <BucksLeaderboard />,
-                    errorElement: <RouteErrorPanel />,
-                  },
-                  {
-                    path: "settings",
-                    element: <BucksSettings />,
-                    errorElement: <RouteErrorPanel />,
-                  },
+                  { path: ":dareId?", element: <Dares /> },
+                  { path: "settings", element: <DaresSettings /> },
                 ],
               },
             ],

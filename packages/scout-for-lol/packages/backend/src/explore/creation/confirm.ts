@@ -18,8 +18,29 @@
  * so a confirmation means the same thing wherever it was clicked.
  */
 
-import { TRPCError } from "@trpc/server";
-import { z } from "zod";
+import type { ConfirmationIntent } from "#generated/prisma/client/index.js";
+import { captureFirstSubscriptionCreated } from "#src/analytics/guild-lifecycle.ts";
+import type { SubscriptionSurface } from "#src/analytics/product-analytics.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
+import { InitialEntrantsValidationError } from "#src/database/competition/participants.ts";
+import { prisma, type Db } from "#src/database/index.ts";
+import { recordAudit } from "#src/lib/audit/index.ts";
+import { recordCompetitionCreation } from "#src/lib/competitions/create.ts";
+import {
+  claimAndExecute,
+  type ClaimRefusal,
+} from "#src/lib/confirmation-intent/claim.ts";
+import {
+  executeCreationIntent,
+  type CreationIntentOutcome,
+  type CreationPostCommit,
+} from "#src/lib/confirmation-intent/creation.ts";
+import { readConfirmationIntentPayload } from "#src/lib/confirmation-intent/payload.ts";
+import { runBackfillAfterCommit } from "#src/lib/subscription/add.ts";
+import { notifyReportScheduleReconciler } from "#src/reports/schedule/temporal-schedules.ts";
+import { assertChannelInGuild } from "#src/trpc/guild-guard.ts";
+import { asCompetitionBadRequest } from "#src/trpc/router/competitions/competition-router-helpers.ts";
+import { requireActorIntent } from "#src/trpc/router/explore/explore-intent-access.ts";
 import {
   DiscordGuildIdSchema,
   P,
@@ -32,29 +53,8 @@ import {
   type PermissionDeniedCause,
   type PermissionSet,
 } from "@scout-for-lol/data";
-import type { ConfirmationIntent } from "#generated/prisma/client/index.js";
-import { isPolicyEnabled } from "#src/configuration/flags.ts";
-import { prisma, type Db } from "#src/database/index.ts";
-import { captureFirstSubscriptionCreated } from "#src/analytics/guild-lifecycle.ts";
-import type { SubscriptionSurface } from "#src/analytics/product-analytics.ts";
-import { recordAudit } from "#src/lib/audit/index.ts";
-import {
-  claimAndExecute,
-  type ClaimRefusal,
-} from "#src/lib/confirmation-intent/claim.ts";
-import { InitialEntrantsValidationError } from "#src/database/competition/participants.ts";
-import { asCompetitionBadRequest } from "#src/trpc/router/competitions/competition-router-helpers.ts";
-import {
-  executeCreationIntent,
-  type CreationIntentOutcome,
-  type CreationPostCommit,
-} from "#src/lib/confirmation-intent/creation.ts";
-import { readConfirmationIntentPayload } from "#src/lib/confirmation-intent/payload.ts";
-import { recordCompetitionCreation } from "#src/lib/competitions/create.ts";
-import { runBackfillAfterCommit } from "#src/lib/subscription/add.ts";
-import { notifyReportScheduleReconciler } from "#src/reports/schedule/temporal-schedules.ts";
-import { assertChannelInGuild } from "#src/trpc/guild-guard.ts";
-import { requireActorIntent } from "#src/trpc/router/explore/explore-intent-access.ts";
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 
 /** Who is confirming, and how this surface learns what they may do. */
 export type CreationConfirmer = {
@@ -100,10 +100,9 @@ function asCreationPayload(
     case "competition": {
       return payload;
     }
-    case "dare_fund":
+    case "dare_publish":
     case "dare_accept":
     case "dare_decline":
-    case "dare_contribute":
     case "dare_cancel":
     case "ops_reconcile_pipeline":
     case "ops_retry_notification":

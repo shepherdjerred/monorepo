@@ -1,15 +1,12 @@
-import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
-import { describe, expect, test, vi } from "vitest";
-import { DiscordAccountIdSchema, RiotMatchIdSchema } from "@scout-for-lol/data";
+import { formatDareCustomId } from "#src/dares/lifecycle/dare-custom-id.ts";
 import {
   routeButton,
   type RoutableButtonInteraction,
 } from "#src/discord/interactions.ts";
-import { formatBucksCustomId } from "#src/betting/custom-id.ts";
-import { formatBucksNavigationId } from "#src/betting/navigation.ts";
-import { formatParlayCustomId } from "#src/betting/parlays/parlay-custom-id.ts";
-import { formatDareCustomId } from "#src/betting/dares/lifecycle/dare-custom-id.ts";
 import { formatVoteButtonCustomId } from "#src/mvp-votes/custom-id.ts";
+import { DiscordAccountIdSchema, RiotMatchIdSchema } from "@scout-for-lol/data";
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
+import { describe, expect, test, vi } from "vitest";
 
 const USER_ID = DiscordAccountIdSchema.parse("160509172704739328");
 
@@ -55,7 +52,7 @@ describe("routeButton", () => {
     await routeButton(interaction);
     // Discord shows the clicker nothing for a component no handler claims, so
     // silence here is the correct answer rather than a missing acknowledgement.
-    expect(calls).toEqual([]);
+    expect(calls).toEqual(["deferUpdate"]);
   });
 
   // `isBucksCustomId` is a prefix check, so the router has already claimed
@@ -103,37 +100,6 @@ describe("routeButton", () => {
     expect(calls).toEqual(["deferUpdate"]);
   });
 
-  test("a well-formed ID is not short-circuited as malformed", async () => {
-    const { interaction, calls } = fakeInteraction(
-      formatBucksCustomId({
-        action: "b",
-        matchId: RiotMatchIdSchema.parse("NA1_5000000042"),
-        subjectIndex: 0,
-        side: "W",
-        amount: 10,
-      }),
-    );
-    await routeButton(interaction);
-    // Reached the handler rather than being short-circuited: a null `guildId`
-    // takes its no-server branch, which defers a real reply and answers — no
-    // database, and no `deferUpdate`. What the handler decides for a click
-    // inside a guild is `bet-button.integration.test.ts`'s subject.
-    expect(calls).toEqual(["deferReply", "editReply"]);
-  });
-
-  test("routes a well-formed navigation ID separately from bet buttons", async () => {
-    const { interaction, calls } = fakeInteraction(
-      formatBucksNavigationId({
-        action: "h",
-        ownerId: USER_ID,
-        snapshotId: 42,
-        page: 1,
-      }),
-    );
-    await routeButton(interaction);
-    expect(calls).toEqual(["deferReply", "editReply"]);
-  });
-
   test("ignores stale peek-pass buttons from the retired feature", async () => {
     // Peek passes were removed; a lingering `bbpass:` component on an old
     // ephemeral reply is no longer ours to answer.
@@ -141,30 +107,13 @@ describe("routeButton", () => {
       "bbpass:1:b:160509172704739328:1337623164146155593:42:5",
     );
     await routeButton(interaction);
-    expect(calls).toEqual([]);
+    expect(calls).toEqual(["deferUpdate"]);
   });
 
   test("acknowledges a malformed Scout component with a private explanation", async () => {
     const { interaction, calls } = fakeInteraction("scout:1:publish:broken");
     await routeButton(interaction);
     expect(calls).toEqual(["deferUpdate", "followUp"]);
-  });
-
-  test("acknowledges malformed parlay IDs and routes valid ones", async () => {
-    const malformed = fakeInteraction("bbp:2:b:NA1_1:Y:5");
-    await routeButton(malformed.interaction);
-    expect(malformed.calls).toEqual(["deferUpdate"]);
-
-    const valid = fakeInteraction(
-      formatParlayCustomId({
-        action: "b",
-        matchId: RiotMatchIdSchema.parse("NA1_5000000042"),
-        side: "YES",
-        amount: 5,
-      }),
-    );
-    await routeButton(valid.interaction);
-    expect(valid.calls).toEqual(["deferReply", "editReply"]);
   });
 
   test("acknowledges malformed MVP vote IDs and routes valid ones", async () => {

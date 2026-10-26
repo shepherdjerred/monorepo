@@ -1,8 +1,8 @@
-import type { DiscordGuildId } from "@scout-for-lol/data";
+import type { FeatureTipKey } from "#src/analytics/product-analytics.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma, type Db } from "#src/database/index.ts";
-import type { FeatureTipKey } from "#src/analytics/product-analytics.ts";
 import { FEATURE_TIPS, type FeatureTip } from "#src/tips/tip-catalog.ts";
+import type { DiscordGuildId } from "@scout-for-lol/data";
 
 /**
  * Whether the guild has already used the feature a tip advertises.
@@ -43,12 +43,7 @@ const HAS_USED: Record<
   duels: async (serverId, db) =>
     (await db.duelSeries.count({ where: { guildId: serverId }, take: 1 })) > 0,
   dares: async (serverId, db) =>
-    (await db.bucksDare.count({ where: { serverId }, take: 1 })) > 0,
-  transfers: async (serverId, db) =>
-    (await db.bucksLedgerEntry.count({
-      where: { kind: "transfer_sent", bucksAccount: { serverId } },
-      take: 1,
-    })) > 0,
+    (await db.dare.count({ where: { serverId }, take: 1 })) > 0,
 };
 
 /** Every flag a tip names must be on; a feature with none is always available. */

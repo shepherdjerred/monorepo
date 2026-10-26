@@ -1,5 +1,5 @@
-import { describe, expect, test } from "vitest";
 import { EXPLORE_SUGGESTIONS } from "@scout-for-lol/data";
+import { describe, expect, test } from "vitest";
 import {
   CapturedGuildConfigSchema,
   EXPLORE_REPLAY_CAPABILITIES,
@@ -13,7 +13,6 @@ import {
 } from "./profiles.ts";
 
 const NOTHING: ExploreCapabilitySet = {
-  bucks: false,
   dares: false,
   challenges: false,
   creation: false,
@@ -24,7 +23,6 @@ const NOTHING: ExploreCapabilitySet = {
 };
 
 const EVERYTHING: ExploreCapabilitySet = {
-  bucks: true,
   dares: true,
   challenges: true,
   creation: true,
@@ -54,8 +52,8 @@ describe("CapturedGuildConfigSchema", () => {
     ).toThrow();
   });
 
-  test("takes exactly one guild, so bucks can never see two", () => {
-    // `resolveBucksCapability` throws when more than one betting-enabled guild
+  test("takes exactly one guild, so Dares see exactly one", () => {
+    // `resolveDareCapability` throws when more than one Dare-enabled guild
     // is in scope; one guild per config makes that structurally impossible.
     const parsed = config();
     expect(typeof parsed.guildId).toBe("string");
@@ -73,7 +71,7 @@ describe("CapturedGuildConfigSchema", () => {
 
 describe("conditionCapability", () => {
   test("maps feature conditions onto the capability that gates them", () => {
-    expect(conditionCapability("bucks")).toBe("bucks");
+    expect(conditionCapability("dares")).toBe("dares");
     expect(conditionCapability("dares")).toBe("dares");
     expect(conditionCapability("challenges")).toBe("challenges");
     // Preparing a competition needs the creation tool; reading one does not.
@@ -106,8 +104,8 @@ describe("chipExpectation", () => {
 
   test("a gated condition follows the guild's capabilities", () => {
     // The prod case and the beta case, which is the whole point.
-    expect(chipExpectation(NOTHING, "bucks")).toBe("gated-off");
-    expect(chipExpectation(EVERYTHING, "bucks")).toBe("answerable");
+    expect(chipExpectation(NOTHING, "dares")).toBe("gated-off");
+    expect(chipExpectation(EVERYTHING, "dares")).toBe("answerable");
     expect(chipExpectation(NOTHING, "competition_creation")).toBe("gated-off");
     expect(chipExpectation(EVERYTHING, "competition_creation")).toBe(
       "answerable",
@@ -149,7 +147,7 @@ describe("flagOverridesFor", () => {
     // dareExploreEnabled needs bucks_dares_enabled.
     const overrides = flagOverridesFor(EVERYTHING);
     expect(
-      overrides.find((entry) => entry.flag === "bucks_dares_enabled")?.value,
+      overrides.find((entry) => entry.flag === "dares_enabled")?.value,
     ).toBe(true);
   });
 
@@ -163,7 +161,7 @@ describe("flagOverridesFor", () => {
 
   test("covers every capability that has a gate", () => {
     const flags = new Set(flagOverridesFor(EVERYTHING).map((e) => e.flag));
-    expect(flags.has("betting_enabled")).toBe(true);
+    expect(flags.has("dares_enabled")).toBe(true);
     expect(flags.has("challenge_runs_enabled")).toBe(true);
     expect(flags.has("explore_creation_enabled")).toBe(true);
   });
@@ -175,10 +173,10 @@ describe("guildConfigIssues", () => {
     expect(guildConfigIssues(config({ capabilities: EVERYTHING }))).toEqual([]);
   });
 
-  test("rejects dares without bucks", () => {
+  test("accepts standalone Dares without an economy capability", () => {
     expect(
       guildConfigIssues(config({ capabilities: { ...NOTHING, dares: true } })),
-    ).toEqual([expect.stringContaining("dares resolve from a bucks")]);
+    ).toEqual([]);
   });
 
   test("accepts creation, which every surface now resolves", () => {
@@ -208,10 +206,10 @@ describe("capabilityMismatches", () => {
   test("names the capability, the guild and the direction", () => {
     const issues = capabilityMismatches({
       config: config(),
-      resolved: { ...NOTHING, bucks: true },
+      resolved: { ...NOTHING, dares: true },
     });
     expect(issues).toHaveLength(1);
-    expect(issues[0]).toContain("bucks");
+    expect(issues[0]).toContain("dares");
     expect(issues[0]).toContain("mine");
     expect(issues[0]).toContain("captured false");
     expect(issues[0]).toContain("resolved true");
@@ -227,10 +225,10 @@ describe("capabilityMismatches", () => {
     });
     // Seven, not eight: riotHistory is false on both sides, because a replay
     // never reproduces it.
-    expect(issues).toHaveLength(7);
+    expect(issues).toHaveLength(6);
   });
 
   test("checks every capability", () => {
-    expect(EXPLORE_REPLAY_CAPABILITIES).toHaveLength(8);
+    expect(EXPLORE_REPLAY_CAPABILITIES).toHaveLength(7);
   });
 });

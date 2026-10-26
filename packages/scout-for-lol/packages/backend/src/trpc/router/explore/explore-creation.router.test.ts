@@ -1,11 +1,17 @@
+import { resetConfigurationForTests } from "#src/configuration.ts";
 import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  test,
-} from "vitest";
+  addFlagOverride,
+  resetFlagOverrides,
+} from "#src/configuration/flags.ts";
+import { clearAllRateLimits } from "#src/database/competition/rate-limit.ts";
+import { addSubscription } from "#src/lib/subscription/add.ts";
+import {
+  testAccountId,
+  testChannelId,
+  testGuildId,
+  testPuuid,
+} from "#src/testing/test-ids.ts";
+import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import {
   ConfirmationIntentPayloadSchema,
   permissionKey,
@@ -18,20 +24,14 @@ import {
   initFeatureFlags,
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags";
-import { resetConfigurationForTests } from "#src/configuration.ts";
-import { addSubscription } from "#src/lib/subscription/add.ts";
 import {
-  addFlagOverride,
-  resetFlagOverrides,
-} from "#src/configuration/flags.ts";
-import { clearAllRateLimits } from "#src/database/competition/rate-limit.ts";
-import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
-import {
-  testAccountId,
-  testChannelId,
-  testGuildId,
-  testPuuid,
-} from "#src/testing/test-ids.ts";
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+} from "vitest";
 
 /**
  * The confirm path is the security surface of Explore-driven creation: an AI
@@ -555,22 +555,21 @@ describe("explore.confirmCreationIntent — authorization", () => {
 
   test("a dare intent cannot be confirmed through the creation procedure", async () => {
     await grant({ resource: "reports", action: "create" });
-    const dare = await db.bucksDare.create({
+    const dare = await db.dare.create({
       data: {
         serverId: GUILD,
         channelId: CHANNEL,
         challengerDiscordId: ACTOR,
-        openingStake: 20,
       },
     });
     const intent = await db.confirmationIntent.create({
       data: {
-        kind: "dare_fund",
+        kind: "dare_publish",
         serverId: GUILD,
         dareId: dare.id,
         expectedRevision: 1,
         actorDiscordId: ACTOR,
-        payload: JSON.stringify({ kind: "dare_fund" }),
+        payload: JSON.stringify({ kind: "dare_publish" }),
         idempotencyKey: "explore-creation-dare",
         expiresAt: new Date(Date.now() + 60_000),
       },
@@ -584,7 +583,7 @@ describe("explore.confirmCreationIntent — authorization", () => {
       where: { id: intent.id },
     });
     expect(stored.consumedAt).toBeNull();
-    await db.bucksDare.deleteMany();
+    await db.dare.deleteMany();
   });
 
   test("revoking the feature flag blocks an already-pending intent", async () => {

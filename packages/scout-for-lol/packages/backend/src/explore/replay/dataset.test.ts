@@ -2,8 +2,8 @@ import { describe, expect, test } from "vitest";
 import {
   StageDatasetPinSchema,
   datasetCoherenceIssues,
-  lakeSchemaIssues,
   datasetRepairHint,
+  lakeSchemaIssues,
   replayEnvironmentIssues,
   type DatasetCoherenceFacts,
   type StageDatasetPin,
@@ -37,7 +37,6 @@ const PIN: StageDatasetPin = StageDatasetPinSchema.parse({
       label: "mine",
       requesterId: "160509172704739328",
       capabilities: {
-        bucks: true,
         dares: true,
         challenges: true,
         creation: true,

@@ -1,20 +1,20 @@
-import { afterAll, beforeEach, describe, expect, test } from "vitest";
+import {
+  addFlagOverride,
+  resetFlagOverrides,
+} from "#src/configuration/flags.ts";
+import { upsertMatchMvpVote } from "#src/mvp-votes/vote.ts";
+import {
+  leagueTestDiscordId,
+  leagueTestPuuid,
+} from "#src/testing/league-fixtures.ts";
+import { freezeMvpTestRoster } from "#src/testing/mvp-votes-fixtures.ts";
+import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   RiotMatchIdSchema,
 } from "@scout-for-lol/data";
-import {
-  addFlagOverride,
-  resetFlagOverrides,
-} from "#src/configuration/flags.ts";
-import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
-import { freezeMvpTestRoster } from "#src/testing/mvp-votes-fixtures.ts";
-import { upsertMatchMvpVote } from "#src/mvp-votes/vote.ts";
-import {
-  bucksTestDiscordId,
-  bucksTestPuuid,
-} from "#src/testing/bucks-fixtures.ts";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
 
 const trpc = await createOfflineTrpcHarness("trpc-mvp-votes-test");
 const { prisma: db } = trpc;
@@ -102,10 +102,10 @@ describe("mvpVotes.router", () => {
       {
         matchId: MATCH_ID,
         serverId: guildId,
-        voterDiscordId: bucksTestDiscordId(0),
+        voterDiscordId: leagueTestDiscordId(0),
         category: "ally",
         nomineeIndex: 0,
-        voterPuuid: bucksTestPuuid(0),
+        voterPuuid: leagueTestPuuid(0),
         voterTeamId: 100,
       },
       db,
@@ -114,10 +114,10 @@ describe("mvpVotes.router", () => {
       {
         matchId: MATCH_ID,
         serverId: otherGuildId,
-        voterDiscordId: bucksTestDiscordId(1),
+        voterDiscordId: leagueTestDiscordId(1),
         category: "ally",
         nomineeIndex: 9,
-        voterPuuid: bucksTestPuuid(1),
+        voterPuuid: leagueTestPuuid(1),
         voterTeamId: 100,
       },
       db,

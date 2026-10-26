@@ -1,11 +1,9 @@
-import { tool } from "ai";
-import { z } from "zod";
-import {
-  DiscordGuildIdSchema,
-  RiotMatchIdSchema,
-  type DiscordGuildId,
-} from "@scout-for-lol/data";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
+import {
+  loadMvpVoteLeaderboard,
+  MvpVoteLeaderboardResultSchema,
+  MvpVoteQueueTypeSchema,
+} from "#src/mvp-votes/query/leaderboard.ts";
 import {
   loadMatchMvpTallyForGuild,
   MatchMvpGuildTallySchema,
@@ -13,26 +11,19 @@ import {
   type MatchMvpGuildTally,
   type MatchMvpTallyNominee,
 } from "#src/mvp-votes/query/tally.ts";
-import {
-  loadMvpVoteLeaderboard,
-  MvpVoteLeaderboardResultSchema,
-  MvpVoteQueueTypeSchema,
-} from "#src/mvp-votes/query/leaderboard.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
+import {
+  DiscordGuildIdSchema,
+  RiotMatchIdSchema,
+  type DiscordGuildId,
+} from "@scout-for-lol/data";
+import { tool } from "ai";
+import { z } from "zod";
 
 export type MvpVotesExploreCapability = {
   serverId: DiscordGuildId;
 };
 
-/**
- * Whether — and for which guild — this turn may read community MVP votes.
- *
- * Unlike Bryan Bucks, MVP votes are not production-hard-disabled and can be
- * on for more than one of a viewer's guilds. Flipt is authoritative, so every
- * guild in scope is evaluated with `isPolicyEnabled`. Zero enabled guilds, or
- * more than one, hide the tools: aborting the turn would take down all of
- * Explore for anyone shared by two enabled servers.
- */
 export async function resolveMvpVotesCapability(
   guildIds: readonly DiscordGuildId[],
 ): Promise<MvpVotesExploreCapability | null> {

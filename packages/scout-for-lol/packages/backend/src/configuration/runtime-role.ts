@@ -92,27 +92,7 @@ export type ScoutRuntimeCapabilities = {
   readonly championAssets: boolean;
   /** Verify the pinned voice models and load the Realtime credential. */
   readonly voiceAssistant: boolean;
-  /**
-   * Needs the DuckDB report-lake directory mounted and holding a published
-   * build.
-   *
-   * Wider than {@link reportLakeFold}, and the wider one is what decides
-   * whether a pod can do its job: EVERY embedded Temporal activity queue reads
-   * the lake somewhere. `realtime` reads it settling SQL dares and evaluating
-   * hall progression, `interactive` reads it for every Explore query,
-   * `background` reads it for report runs, parlay generation and the weekly
-   * parlay, and `lake` is the compactor itself. A worker role pointed at an
-   * empty directory does not fail — DuckDB happily scans zero parquet files —
-   * so it records empty query results as successful runs. That is why this is a
-   * declared capability with a boot gate rather than an assumption.
-   *
-   * The queues are not the only readers, so "runs a worker" is not the test.
-   * Discord authoring hands off to interactive Activities. Every remaining
-   * in-process reader is funnelled through
-   * `reports/duckdb/lake.ts`, which asserts this capability at the read site —
-   * the boot gate alone cannot protect a role that declares `false`, because
-   * declaring `false` is what skips the gate.
-   */
+
   readonly reportLakeAccess: boolean;
   /**
    * Fold the lake into a published build at boot, and own the `lake` worker
@@ -224,7 +204,7 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
   "activity-worker": {
     championAssets: true,
     voiceAssistant: false,
-    // Reads the lake (report runs, parlay generation, summoner-index
+    // Reads the lake (report runs, summoner-index
     // backfill) and writes its staging directories (match,
     // prematch and timeline ingest). It does NOT publish builds — see the
     // README for the shared-volume and single-publisher contract.

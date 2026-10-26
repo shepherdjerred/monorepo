@@ -1,10 +1,3 @@
-import { z } from "zod";
-import { inboxRouter } from "#src/trpc/router/operations/inbox.router.ts";
-import {
-  OperationsIntentPayloadSchema,
-  type OperationsIntentPayload,
-} from "@scout-for-lol/data";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import configuration from "#src/configuration.ts";
 import { prisma } from "#src/database/index.ts";
 import { recordMutationAudit } from "#src/lib/audit/audited-mutation.ts";
@@ -27,36 +20,19 @@ import {
   type OperationsWorkflowStart,
 } from "#src/operations/workflow-dispatch.ts";
 import { scoutTemporalStartsAvailable } from "#src/temporal/availability.ts";
-import { router } from "#src/trpc/trpc.ts";
+import { inboxRouter } from "#src/trpc/router/operations/inbox.router.ts";
 import {
   operationsMutationProcedure,
   operationsProcedure,
   requireOperationsIntent,
 } from "#src/trpc/router/operations/operations-access.ts";
-
-/**
- * The operator surface over the durable match pipeline.
- *
- * Every pipeline procedure is built from `operationsProcedure` /
- * `operationsMutationProcedure`, so the allowlist check is structural rather
- * than remembered — see `operations-access.ts` for why that matters here more
- * than elsewhere.
- * The nested support inbox shares the operator allowlist, not the pipeline flag.
- *
- * Nothing acts on a single request. An operation is PREPARED into a
- * confirmation intent and then CONFIRMED, through the same single-use,
- * expiring, actor-bound protocol Explore and Dares use: `prepare` writes
- * nothing but the intent, and `confirm` claims it with a guarded write that is
- * the first statement of its transaction, which is the entire double-spend
- * guard. Re-confirming replays the stored outcome instead of acting twice.
- *
- * `SCOUT_OPERATIONS_GUILD` is handed to `createConfirmationIntent` and
- * `recordMutationAudit` below purely as ATTRIBUTION. Both require a guild by
- * schema and operating the pipeline is global, so operations rows are booked
- * against the control guild the same way `http/weekly-parlay-control.ts` books
- * its actions. It is never an access check: no procedure here asks whether the
- * caller belongs to that guild, and belonging to it authorizes nothing.
- */
+import { router } from "#src/trpc/trpc.ts";
+import {
+  OperationsIntentPayloadSchema,
+  type OperationsIntentPayload,
+} from "@scout-for-lol/data";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { z } from "zod";
 
 /**
  * How long an operator has to confirm. Short on purpose: these act on live

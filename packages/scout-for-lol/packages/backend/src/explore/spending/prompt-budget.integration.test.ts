@@ -1,11 +1,3 @@
-import { afterAll, expect, test, vi } from "vitest";
-import { asSchema, type ToolSet } from "ai";
-import {
-  DiscordAccountIdSchema,
-  DiscordGuildIdSchema,
-  ExploreAnswerWireSchema,
-  EXPLORE_MAX_OUTPUT_TOKENS,
-} from "@scout-for-lol/data";
 import { createExploreTools, type RunState } from "#src/explore/agent-tools.ts";
 import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
 import { createAnalysisTools } from "#src/explore/analysis/tools.ts";
@@ -16,8 +8,16 @@ import {
   dropTestDatabase,
 } from "#src/testing/test-database.ts";
 import {
-  exploreProviderInputBound,
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+  EXPLORE_MAX_OUTPUT_TOKENS,
+  ExploreAnswerWireSchema,
+} from "@scout-for-lol/data";
+import { asSchema, type ToolSet } from "ai";
+import { afterAll, expect, test, vi } from "vitest";
+import {
   EXPLORE_MAX_PROVIDER_INPUT_BOUND,
+  exploreProviderInputBound,
 } from "./input-bound.ts";
 import { reserveExploreCall } from "./ledger.ts";
 
@@ -32,7 +32,6 @@ async function fullPromptBound() {
   const clock = { currentTime: "2026-10-03T00:00:00Z" };
   const skillOptions: ExploreSkillOptions = {
     analysis: true,
-    bucks: clock,
     mvpVotes: clock,
     dares: true,
     challenges: true,
@@ -71,7 +70,7 @@ async function fullPromptBound() {
       params,
       state,
       skillOptions,
-      bucksCapability: { serverId },
+      dareCapability: { serverId },
       mvpVotesCapability: { serverId },
       daresEnabled: true,
       challengesEnabled: true,

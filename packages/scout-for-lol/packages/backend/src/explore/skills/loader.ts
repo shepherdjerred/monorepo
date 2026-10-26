@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { ExploreSurfaceSchema } from "#src/explore/surface.ts";
+import { z } from "zod";
 
 /**
  * Parsing for the Markdown skill files in `content/`.
@@ -14,7 +14,6 @@ import { ExploreSurfaceSchema } from "#src/explore/surface.ts";
 export const EXPLORE_SKILL_CAPABILITIES = [
   "always",
   "analysis",
-  "bucks",
   "dares",
   "challenges",
   "creation",

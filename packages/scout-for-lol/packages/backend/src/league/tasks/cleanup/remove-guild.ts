@@ -10,17 +10,17 @@
  * for an already-clean guild deletes nothing and returns all-zero counts.
  */
 
-import type { DiscordGuildId } from "@scout-for-lol/data";
+import { captureGuildRemoval } from "#src/analytics/guild-lifecycle.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
-import { guildDataCleanupTotal } from "#src/metrics/index.ts";
-import { getErrorMessage } from "#src/utils/errors.ts";
 import { recordConversionIfAny } from "#src/league/tasks/outreach/conversions.ts";
 import { createLogger } from "#src/logger.ts";
-import { captureGuildRemoval } from "#src/analytics/guild-lifecycle.ts";
+import { guildDataCleanupTotal } from "#src/metrics/index.ts";
 import {
   enqueueReportScheduleDeletion,
   notifyReportScheduleReconciler,
 } from "#src/reports/schedule/temporal-schedules.ts";
+import { getErrorMessage } from "#src/utils/errors.ts";
+import type { DiscordGuildId } from "@scout-for-lol/data";
 
 const logger = createLogger("cleanup-removed-guild");
 
@@ -119,7 +119,7 @@ export async function cleanupRemovedGuild(
         where: { serverId },
       });
       const notificationPreferences =
-        await tx.bucksNotificationPreference.deleteMany({
+        await tx.dareNotificationPreference.deleteMany({
           where: { serverId },
         });
       const serverPermissions = await tx.serverPermission.deleteMany({

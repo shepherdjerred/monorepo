@@ -1,16 +1,16 @@
-import type { MessageCreateOptions } from "discord.js";
-import type { NotificationPolicySuppressionReason } from "@scout-for-lol/domain/notifications/intent.ts";
-import type { DareNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
-import { prisma } from "#src/database/index.ts";
-import { getBucksNotificationPreferences } from "#src/betting/notify/notification-preferences.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
+import { getDareNotificationPreferences } from "#src/dares/notification-preferences.ts";
+import { renderDareResult } from "#src/dares/presentation/dare-callout-content.ts";
+import { refreshDareCallout } from "#src/dares/presentation/dare-callout.ts";
 import {
   dareStatusAnnouncementCodec,
   renderDareStatus,
-} from "#src/betting/dares/presentation/notify/dare-status-message.ts";
-import { renderDareResult } from "#src/betting/dares/presentation/dare-callout-content.ts";
-import { refreshDareCallout } from "#src/betting/dares/presentation/dare-callout.ts";
-import { isPolicyEnabled } from "#src/configuration/flags.ts";
+} from "#src/dares/presentation/notify/dare-status-message.ts";
+import type { DareNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
+import { prisma } from "#src/database/index.ts";
 import { MalformedAnnouncementIntentError } from "#src/temporal/notification/announcement-codecs.ts";
+import type { NotificationPolicySuppressionReason } from "@scout-for-lol/domain/notifications/intent.ts";
+import type { MessageCreateOptions } from "discord.js";
 
 export function dareStatusAnnouncementOf(record: DareNotificationIntentRecord) {
   const { intent } = record;
@@ -48,7 +48,7 @@ export async function dareStatusSuppression(
   record: DareNotificationIntentRecord,
 ): Promise<NotificationPolicySuppressionReason | undefined> {
   const announcement = dareStatusAnnouncementOf(record);
-  const dare = await prisma.bucksDare.findUnique({
+  const dare = await prisma.dare.findUnique({
     where: { id: record.dareId },
     select: { serverId: true },
   });
@@ -68,7 +68,7 @@ export async function dareStatusSuppression(
   // The public result post answers to the guild's flag alone; DM
   // preferences are about a participant's inbox, not the Dare's channel.
   if (record.intent.target.kind === "channel") return undefined;
-  const preferences = await getBucksNotificationPreferences({
+  const preferences = await getDareNotificationPreferences({
     serverId: announcement.guildId,
     discordId: record.intent.target.accountId,
   });

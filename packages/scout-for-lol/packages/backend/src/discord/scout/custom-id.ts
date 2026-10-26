@@ -1,6 +1,6 @@
-import { z } from "zod";
 import { ExploreConversationIdSchema } from "@scout-for-lol/data";
-import { MAX_CUSTOM_ID_LENGTH } from "#src/betting/custom-id.ts";
+import { z } from "zod";
+const MAX_CUSTOM_ID_LENGTH = 100;
 
 export const SCOUT_COMPONENT_NAMESPACE = "scout";
 export const SCOUT_COMPONENT_VERSION = "1";

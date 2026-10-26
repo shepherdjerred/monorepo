@@ -71,10 +71,9 @@ Terms agreed by both sides:
 
 1. The challenger plays **jungle** in Ranked Solo/Duo.
 2. The dare settles on the **same game** — cross-game progress does not count.
-3. Stake: **250 Bucks** from the challenger, pile-ons welcome until the game
-   starts.
+3. Every target must accept before the challenge starts.
 
-If the game is remade, the dare returns to *pending* and the stake is released.
+A remake is not an eligible game and does not count toward the challenge.
 `;
 
 export const ReportSummary: Story = { args: { source: reportSummary } };

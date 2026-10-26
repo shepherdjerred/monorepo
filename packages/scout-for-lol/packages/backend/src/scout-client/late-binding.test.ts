@@ -1,20 +1,15 @@
-import { beforeEach, expect, test, vi } from "vitest";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   SCOUT_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
   SCOUT_MATCH_RECEIPT_KINDS,
 } from "@scout-for-lol/temporal/match-receipts";
-import { bucksTestDiscordId } from "#src/testing/bucks-fixtures.ts";
+import { beforeEach, expect, test, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   prisma: {},
   readState: vi.fn(),
   resolveContext: vi.fn(),
   finalizeCustom: vi.fn(),
-  awardBucks: vi.fn(),
-  lateBindingSink: vi.fn(),
-  settlementSink: {},
-  mintStandingIntents: vi.fn(),
   duelNeedsTimeline: vi.fn(),
   fetchTimeline: vi.fn(),
   processDuel: vi.fn(),
@@ -32,9 +27,6 @@ vi.mock("#src/evidence/admission.ts", () => ({
 vi.mock("#src/customs/riot-results.ts", () => ({
   finalizeManagedCustomResult: mocks.finalizeCustom,
 }));
-vi.mock("#src/betting/accounts/earnings.ts", () => ({
-  awardBucksForMatch: mocks.awardBucks,
-}));
 vi.mock("#src/league/tasks/postmatch/match-report-standard.ts", () => ({
   fetchTimelineForDuelProgression: mocks.fetchTimeline,
 }));
@@ -47,10 +39,6 @@ vi.mock("#src/progression/duels/results.ts", () => ({
 }));
 vi.mock("#src/temporal/match/match-context.ts", () => ({
   resolveScoutMatchContext: mocks.resolveContext,
-}));
-vi.mock("#src/temporal/match/match-effects.ts", () => ({
-  lateBindingEarningsCheckpointSink: mocks.lateBindingSink,
-  mintStandingLateBindingEarningIntents: mocks.mintStandingIntents,
 }));
 vi.mock("#src/temporal/match/match-reads.ts", () => ({
   readMatchPipelineState: mocks.readState,
@@ -96,15 +84,6 @@ function expectBindingProjectors(): void {
     matchData,
     "SCOUT_CLIENT",
   );
-  expect(mocks.awardBucks).toHaveBeenCalledWith(
-    matchData,
-    mocks.prisma,
-    mocks.settlementSink,
-  );
-  expect(mocks.mintStandingIntents).toHaveBeenCalledWith({
-    riotMatchId,
-    gameCreation,
-  });
   expect(mocks.fetchTimeline).toHaveBeenCalledWith(matchData, riotMatchId, []);
   expect(mocks.processDuel).toHaveBeenCalledWith(
     matchData,
@@ -125,9 +104,6 @@ beforeEach(() => {
   });
   mocks.duelNeedsTimeline.mockResolvedValue(true);
   mocks.fetchTimeline.mockResolvedValue({ info: { frames: [] } });
-  mocks.awardBucks.mockResolvedValue([]);
-  mocks.lateBindingSink.mockReturnValue(mocks.settlementSink);
-  mocks.mintStandingIntents.mockResolvedValue(undefined);
   mocks.readLegacyCompletion.mockResolvedValue({ completed: false });
 });
 
@@ -138,7 +114,6 @@ test("leaves a new match for its ordinary workflow", async () => {
 
   expect(mocks.resolveContext).not.toHaveBeenCalled();
   expect(mocks.finalizeCustom).not.toHaveBeenCalled();
-  expect(mocks.awardBucks).not.toHaveBeenCalled();
 });
 
 test("leaves an active match pipeline to consume the binding", async () => {
@@ -152,7 +127,6 @@ test("leaves an active match pipeline to consume the binding", async () => {
 
   expect(mocks.resolveContext).not.toHaveBeenCalled();
   expect(mocks.finalizeCustom).not.toHaveBeenCalled();
-  expect(mocks.awardBucks).not.toHaveBeenCalled();
 });
 
 test("acknowledges a durable terminal reconciliation without replaying it", async () => {
@@ -166,7 +140,6 @@ test("acknowledges a durable terminal reconciliation without replaying it", asyn
 
   expect(mocks.resolveContext).not.toHaveBeenCalled();
   expect(mocks.finalizeCustom).not.toHaveBeenCalled();
-  expect(mocks.awardBucks).not.toHaveBeenCalled();
 });
 
 test("replays binding-dependent projectors after their stage receipts stand", async () => {
@@ -185,52 +158,8 @@ test("replays binding-dependent projectors after their stage receipts stand", as
   expectBindingProjectors();
 });
 
-test("checkpoints and mints earnings created by a live late binding", async () => {
-  const earnings = [
-    {
-      serverId: "1337623164146155593",
-      discordId: bucksTestDiscordId(1),
-      alias: "jerred",
-      reasons: ["played"],
-      total: 1,
-    },
-  ];
-  mocks.awardBucks.mockResolvedValue(earnings);
-  mocks.readState.mockResolvedValue(
-    pipelineState([
-      SCOUT_MATCH_RECEIPT_KINDS.settlement,
-      SCOUT_MATCH_RECEIPT_KINDS.progression,
-      SCOUT_MATCH_RECEIPT_KINDS.tournament,
-    ]),
-  );
-
-  await expect(reconcileProcessedClientBinding(riotMatchId)).resolves.toBe(
-    true,
-  );
-
-  expect(mocks.lateBindingSink).toHaveBeenCalledWith(riotMatchId, true);
-  expect(mocks.awardBucks).toHaveBeenCalledWith(
-    matchData,
-    mocks.prisma,
-    mocks.settlementSink,
-  );
-  expect(mocks.mintStandingIntents).toHaveBeenCalledWith({
-    riotMatchId,
-    gameCreation,
-  });
-});
-
-test("historical late binding cannot create earnings or notifications", async () => {
+test("historical late binding cannot replay product effects", async () => {
   mocks.effectsAllowed.mockResolvedValue(false);
-  mocks.awardBucks.mockResolvedValue([
-    {
-      serverId: "1337623164146155593",
-      discordId: bucksTestDiscordId(1),
-      alias: "jerred",
-      reasons: ["played"],
-      total: 1,
-    },
-  ]);
   mocks.readState.mockResolvedValue(
     pipelineState(
       [
@@ -245,38 +174,10 @@ test("historical late binding cannot create earnings or notifications", async ()
   await expect(reconcileProcessedClientBinding(riotMatchId)).resolves.toBe(
     true,
   );
-
-  expect(mocks.lateBindingSink).not.toHaveBeenCalled();
-  expect(mocks.awardBucks).not.toHaveBeenCalled();
   expect(mocks.finalizeCustom).not.toHaveBeenCalled();
-  expect(mocks.mintStandingIntents).not.toHaveBeenCalled();
 });
 
-test("retains the ingress retry when durable delivery minting fails", async () => {
-  mocks.readState.mockResolvedValue(
-    pipelineState([
-      SCOUT_MATCH_RECEIPT_KINDS.settlement,
-      SCOUT_MATCH_RECEIPT_KINDS.progression,
-      SCOUT_MATCH_RECEIPT_KINDS.tournament,
-    ]),
-  );
-  mocks.mintStandingIntents.mockRejectedValue(
-    new Error("notification intent database unavailable"),
-  );
-
-  await expect(reconcileProcessedClientBinding(riotMatchId)).rejects.toThrow(
-    "notification intent database unavailable",
-  );
-
-  expect(mocks.awardBucks).toHaveBeenCalledWith(
-    matchData,
-    mocks.prisma,
-    mocks.settlementSink,
-  );
-  expect(mocks.duelNeedsTimeline).not.toHaveBeenCalled();
-});
-
-test("keeps ARCHIVE_ONLY late binding free of financial and progression effects", async () => {
+test("keeps ARCHIVE_ONLY late binding free of product and progression effects", async () => {
   mocks.effectsAllowed.mockResolvedValue(false);
   mocks.readState.mockResolvedValue(
     pipelineState([SCOUT_MATCH_RECEIPT_KINDS.tournament], {
@@ -289,8 +190,6 @@ test("keeps ARCHIVE_ONLY late binding free of financial and progression effects"
   );
 
   expect(mocks.finalizeCustom).not.toHaveBeenCalled();
-  expect(mocks.awardBucks).not.toHaveBeenCalled();
-  expect(mocks.mintStandingIntents).not.toHaveBeenCalled();
   expect(mocks.duelNeedsTimeline).not.toHaveBeenCalled();
   expect(mocks.fetchTimeline).not.toHaveBeenCalled();
   expect(mocks.processDuel).not.toHaveBeenCalled();

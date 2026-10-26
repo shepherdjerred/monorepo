@@ -26,7 +26,6 @@ const EXACT_ROUTES = new Set<string>([
   "/api/dev/login",
   "/api/summoner-icon",
   "/api/reports/query-agent/stream",
-  "/api/internal/bryan-bucks/analytics-sync",
   "/api/scout-client/v1/pairings",
   "/api/scout-client/v1/check-ins",
   "/api/scout-client/v1/observations/batch",

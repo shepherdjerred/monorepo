@@ -1,42 +1,42 @@
+import {
+  voidDare,
+  type VoidableDareRow,
+} from "#src/dares/settlement/dare-void.ts";
 import { prisma } from "#src/database/index.ts";
 import { getAccountsWithState } from "#src/database/player-accounts.ts";
 import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
-import { MAX_PLAYERS_PER_RUN } from "@scout-for-lol/data/polling-config.ts";
-import { createLogger } from "#src/logger.ts";
-import {
-  voidDareWithFullRefund,
-  type RefundableDareRow,
-} from "#src/betting/dares/settlement/dare-void.ts";
-import { matchHistoryPollingSkipsTotal } from "#src/metrics/index.ts";
-import {
-  markPostMatchPollFailed,
-  type PostMatchPollOwner,
-} from "#src/league/tasks/recovery/app-state.ts";
-import {
-  beginPollingRun,
-  endPollingRun,
-  openPostMatchPoll,
-} from "#src/league/tasks/postmatch/poll-ownership.ts";
 import { getPuuidsBlockedFromLivePolling } from "#src/league/initial-history/live-polling.ts";
-import {
-  deduplicateMatchIntents,
-  orderMatchIntentsByCompletion,
-  type DiscoveredMatchIntent,
-  type MatchDiscovery,
-} from "#src/league/tasks/postmatch/match-intents.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
-import { collectNewMatches } from "#src/league/tasks/postmatch/match-history-collection.ts";
 import {
   activeDareTargetPuuids,
   selectMatchPollAccounts,
   unavailableRequiredPuuids,
   type MatchPollAccount,
 } from "#src/league/tasks/postmatch/match-discovery-selection.ts";
+import { collectNewMatches } from "#src/league/tasks/postmatch/match-history-collection.ts";
+import {
+  deduplicateMatchIntents,
+  orderMatchIntentsByCompletion,
+  type DiscoveredMatchIntent,
+  type MatchDiscovery,
+} from "#src/league/tasks/postmatch/match-intents.ts";
+import {
+  beginPollingRun,
+  endPollingRun,
+  openPostMatchPoll,
+} from "#src/league/tasks/postmatch/poll-ownership.ts";
+import {
+  markPostMatchPollFailed,
+  type PostMatchPollOwner,
+} from "#src/league/tasks/recovery/app-state.ts";
+import { createLogger } from "#src/logger.ts";
+import { matchHistoryPollingSkipsTotal } from "#src/metrics/index.ts";
+import { MAX_PLAYERS_PER_RUN } from "@scout-for-lol/data/polling-config.ts";
 
 const logger = createLogger("postmatch-match-history-polling");
 
 async function recoverUnavailableActiveDares(input: {
-  activeDares: readonly RefundableDareRow[];
+  activeDares: readonly VoidableDareRow[];
   accounts: readonly MatchPollAccount[];
   currentTime: Date;
 }): Promise<Set<string>> {
@@ -51,7 +51,7 @@ async function recoverUnavailableActiveDares(input: {
       logger.warn(
         `Voiding Dare ${dare.id.toString()} because frozen target account(s) are unavailable: ${unavailable.join(", ")}`,
       );
-      await voidDareWithFullRefund(dare, "target_unavailable", prisma, {
+      await voidDare(dare, "target_unavailable", prisma, {
         now: input.currentTime,
       });
       continue;
@@ -69,7 +69,7 @@ async function collectMatchDiscovery(): Promise<MatchDiscovery> {
         await Promise.all([
           getAccountsWithState(tx, getActiveServerIds()),
           getPuuidsBlockedFromLivePolling(tx),
-          tx.bucksDare.findMany({
+          tx.dare.findMany({
             where: { dareState: "active" },
             include: { targets: { orderBy: { id: "asc" } } },
           }),

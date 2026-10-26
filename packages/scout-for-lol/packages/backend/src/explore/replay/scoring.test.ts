@@ -8,7 +8,6 @@ import {
 } from "./scoring.ts";
 
 const CAPS: ExploreCapabilitySet = {
-  bucks: true,
   dares: true,
   challenges: true,
   creation: false,

@@ -1,16 +1,14 @@
-import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
-import { afterEach, describe, expect, test } from "vitest";
-import { ApplicationIntegrationType, InteractionContextType } from "discord.js";
+import { resetConfigurationForTests } from "#src/configuration.ts";
+import { listGuildsWithFlagEnabled } from "#src/configuration/flags.ts";
 import {
   baseCommandDefinitions,
   globalCommandPayload,
   guildCommandPayload,
   guildScopedCommandGroups,
 } from "#src/discord/commands/definitions.ts";
-import { listGuildsWithFlagEnabled } from "#src/configuration/flags.ts";
-import { resetConfigurationForTests } from "#src/configuration.ts";
-import { isPublicBbSubcommand } from "#src/discord/commands/bb/bb.ts";
-import { bbCommand } from "#src/discord/commands/bb/bb-definition.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import { ApplicationIntegrationType, InteractionContextType } from "discord.js";
+import { afterEach, describe, expect, test } from "vitest";
 
 const originalAllowlist = Bun.env["EXPLORE_GUILD_ALLOWLIST"];
 const originalEnvironment = Bun.env["ENVIRONMENT"];
@@ -84,7 +82,7 @@ describe("registered Discord commands", () => {
     Bun.env["ENVIRONMENT"] = "beta";
     Bun.env["EXPLORE_GUILD_ALLOWLIST"] = "100000000000000001";
     resetConfigurationForTests();
-    expect(listGuildsWithFlagEnabled("betting_enabled").length).toBeGreaterThan(
+    expect(listGuildsWithFlagEnabled("dares_enabled").length).toBeGreaterThan(
       0,
     );
     const byCommand = new Map(
@@ -93,7 +91,7 @@ describe("registered Discord commands", () => {
         group.enabledGuildIds(),
       ]),
     );
-    expect(byCommand.get("bb")?.length).toBeGreaterThan(0);
+    expect(byCommand.get("dare")?.length).toBeGreaterThan(0);
     // The /scout registration set is the union of its per-feature gates: the
     // Explore allowlist plus every voice_assistant_enabled guild.
     expect(byCommand.get("scout")).toEqual([
@@ -130,67 +128,6 @@ describe("registered Discord commands", () => {
         ]),
       }),
     );
-  });
-
-  test("registers no /bb ask subcommand — analysis lives in /scout ask", () => {
-    // The Bryan Bucks analyst merged into the Explore agent; a second entry
-    // point coming back is a product decision, not a refactor.
-    const names =
-      bbCommand.toJSON().options?.map((option) => option.name) ?? [];
-    expect(names).not.toContain("ask");
-    expect(isPublicBbSubcommand("rules")).toBe(true);
-    expect(isPublicBbSubcommand("prizes")).toBe(true);
-  });
-
-  test("registers private /bb notifications toggles", () => {
-    const notifications = bbCommand
-      .toJSON()
-      .options?.find((option) => option.name === "notifications");
-    if (notifications === undefined || !("options" in notifications)) {
-      throw new Error("/bb notifications should be a subcommand");
-    }
-
-    expect(notifications).toEqual(
-      expect.objectContaining({
-        name: "notifications",
-        description: "Choose which Bryan Bucks DMs you receive",
-      }),
-    );
-    expect(notifications.options).toEqual([
-      expect.objectContaining({
-        name: "your_bets",
-        required: false,
-        choices: [
-          { name: "On", value: "on" },
-          { name: "Off", value: "off" },
-        ],
-      }),
-      expect.objectContaining({
-        name: "bets_on_you",
-        required: false,
-        choices: [
-          { name: "On", value: "on" },
-          { name: "Off", value: "off" },
-        ],
-      }),
-      expect.objectContaining({
-        name: "dare_lifecycle",
-        required: false,
-        choices: [
-          { name: "On", value: "on" },
-          { name: "Off", value: "off" },
-        ],
-      }),
-      expect.objectContaining({
-        name: "dare_progress",
-        required: false,
-        choices: [
-          { name: "On", value: "on" },
-          { name: "Off", value: "off" },
-        ],
-      }),
-    ]);
-    expect(isPublicBbSubcommand("notifications")).toBe(false);
   });
 
   test("does not register autocomplete options", () => {

@@ -1,5 +1,15 @@
-import { z } from "zod";
 import type { ToolPayloadCapture } from "#src/explore/inspection/tool-payloads.ts";
+import {
+  toolCallActivity,
+  toolResultActivity,
+  toolStartActivity,
+} from "#src/explore/tool-activity.ts";
+import {
+  inspectExploreToolCall,
+  inspectExploreToolResult,
+} from "#src/explore/tool-inspection.ts";
+import { createLogger } from "#src/logger.ts";
+import { parseAgentStreamChunk } from "#src/utils/agent-stream-chunk.ts";
 import {
   EXPLORE_ANSWER_MAX_LENGTH,
   EXPLORE_TRACE_PAYLOAD_MAX_BYTES,
@@ -7,18 +17,8 @@ import {
   type ExploreStreamEvent,
   type ExploreTraceRawValue,
 } from "@scout-for-lol/data";
-import { parseAgentStreamChunk } from "#src/utils/agent-stream-chunk.ts";
-import { createLogger } from "#src/logger.ts";
-import {
-  inspectExploreToolCall,
-  inspectExploreToolResult,
-} from "#src/explore/tool-inspection.ts";
-import {
-  toolCallActivity,
-  toolResultActivity,
-  toolStartActivity,
-} from "#src/explore/tool-activity.ts";
 import { graphemePrefix } from "@shepherdjerred/text";
+import { z } from "zod";
 
 const logger = createLogger("explore-stream");
 type JsonValue = z.infer<ReturnType<typeof z.json>>;
@@ -370,16 +370,6 @@ function toolCallMessage(toolName: string): string {
   if (toolName === "resolve_player") {
     return "Looking up who that is.";
   }
-  if (toolName === "get_bucks_dataset") {
-    return "Reading the Bryan Bucks dataset.";
-  }
-  if (
-    toolName === "query_bucks_accounts" ||
-    toolName === "query_bucks_ledger" ||
-    toolName === "query_bucks_bets"
-  ) {
-    return "Querying Bryan Bucks records.";
-  }
   const dareMessage = DARE_TOOL_CALL_MESSAGES.get(toolName);
   return dareMessage ?? `Running ${toolName}.`;
 }
@@ -402,14 +392,6 @@ function toolResultMessage(toolName: string, ok: boolean): string {
   // holders of a share link.
   if (toolName === "resolve_player") {
     return "Identified the player.";
-  }
-  if (
-    toolName === "get_bucks_dataset" ||
-    toolName === "query_bucks_accounts" ||
-    toolName === "query_bucks_ledger" ||
-    toolName === "query_bucks_bets"
-  ) {
-    return "Got Bryan Bucks results.";
   }
   return DARE_RESULT_TOOL_NAMES.has(toolName)
     ? "Dare action completed."

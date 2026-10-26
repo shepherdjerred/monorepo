@@ -1,36 +1,19 @@
-import type { ExploreQuestionImage } from "#src/explore/analysis/agent-types.ts";
-import path from "node:path";
-import { chmod, mkdir } from "node:fs/promises";
-import {
-  createLlmRuntime,
-  providerCredentialsFromEnv,
-  requireCredentialsFor,
-} from "@shepherdjerred/llm-runtime";
-import type {
-  ExploreMessage,
-  ExploreScenarioCorpus,
-} from "@scout-for-lol/data";
-import configuration from "#src/configuration.ts";
-import { prisma } from "#src/database/index.ts";
 import {
   initializeDynamicConfig,
   shutdownDynamicConfig,
 } from "#src/config/dynamic.ts";
+import configuration from "#src/configuration.ts";
 import { addFlagOverride } from "#src/configuration/flags.ts";
+import { prisma } from "#src/database/index.ts";
 import { streamExploreAgent } from "#src/explore/agent.ts";
-import { closeDuckDB } from "#src/reports/duckdb/instance.ts";
-import { writeAccountsParquet } from "#src/report-lake/compact-accounts.ts";
-import {
-  createBotRestReader,
-  installBotRestReader,
-} from "#src/lib/discord/bot-rest.ts";
-import { ReplayRuntimeProvider } from "#src/explore/replay/runtime-provider.ts";
+import type { ExploreQuestionImage } from "#src/explore/analysis/agent-types.ts";
+import { exploreCapabilityEvalSha256 } from "#src/explore/capability-eval.ts";
+import { emitEvalReport } from "#src/explore/eval-report-output.ts";
 import { resolveReplayCapabilities } from "#src/explore/replay/capabilities.ts";
+import { EXPLORE_JUDGE_MODEL } from "#src/explore/replay/judge.ts";
 import { flagOverridesFor } from "#src/explore/replay/profiles.ts";
 import { runReplayCase } from "#src/explore/replay/runner.ts";
-import { EXPLORE_JUDGE_MODEL } from "#src/explore/replay/judge.ts";
-import { emitEvalReport } from "#src/explore/eval-report-output.ts";
-import { exploreCapabilityEvalSha256 } from "#src/explore/capability-eval.ts";
+import { ReplayRuntimeProvider } from "#src/explore/replay/runtime-provider.ts";
 import { scenarioDiscordTransport } from "#src/explore/scenarios/fake-discord.ts";
 import { seedScenarioWorld } from "#src/explore/scenarios/fixtures.ts";
 import type { ScenarioRunPlan } from "#src/explore/scenarios/plan.ts";
@@ -44,6 +27,23 @@ import {
   renderScenarioQuestion,
   type ScenarioWorld,
 } from "#src/explore/scenarios/world.ts";
+import {
+  createBotRestReader,
+  installBotRestReader,
+} from "#src/lib/discord/bot-rest.ts";
+import { writeAccountsParquet } from "#src/report-lake/compact-accounts.ts";
+import { closeDuckDB } from "#src/reports/duckdb/instance.ts";
+import type {
+  ExploreMessage,
+  ExploreScenarioCorpus,
+} from "@scout-for-lol/data";
+import {
+  createLlmRuntime,
+  providerCredentialsFromEnv,
+  requireCredentialsFor,
+} from "@shepherdjerred/llm-runtime";
+import { chmod, mkdir } from "node:fs/promises";
+import path from "node:path";
 import type { ScenarioCliOptions } from "./scenario-args.ts";
 import {
   gradeTurn,
@@ -254,7 +254,6 @@ export async function runScenarios(
       featureTipPercent: configuration.featureTipPercent,
       featureTipCooldownHours: configuration.featureTipCooldownHours,
       reportAiModel: configuration.reportAiModel ?? "gpt-5.6-sol",
-      bettingParlayAiModel: configuration.bettingParlayAiModel ?? "gpt-5.6-sol",
       temporalCallGraphTracing: false,
     },
     startPolling: false,
@@ -300,7 +299,6 @@ export async function runScenarios(
       // Creation is the one capability a case controls; every other flag
       // keeps prod's registry default, as a real server would see it.
       for (const override of flagOverridesFor({
-        bucks: false,
         dares: false,
         challenges: false,
         creation: run.entry.guild.creationEnabled,

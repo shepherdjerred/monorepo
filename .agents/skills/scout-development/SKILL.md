@@ -1,6 +1,6 @@
 ---
 name: scout-development
-description: Develop, test, or operate Scout for League of Legends across its web apps, Discord bot, report lake, betting, custom games, analytics, and Temporal workflows. Use for work under packages/scout-for-lol.
+description: Develop, test, or operate Scout for League of Legends across its web apps, Discord bot, report lake, Dares, custom games, analytics, and Temporal workflows. Use for work under packages/scout-for-lol.
 ---
 
 # Scout development
@@ -16,7 +16,7 @@ Preserve these contracts:
   implementation.
 - ScoutQL is compiled and validated before DuckDB execution. Guild/global scope,
   identity, deterministic ordering, and participant limits are explicit.
-- Bryan Bucks owns Dare management. Explore owns conversational authoring.
+- Dares owns challenge management. Explore owns conversational authoring.
   Dares are v3 SQL contracts only; `compilerVersion` is stored metadata.
 - Tournament custom games and ordinary Riot match ingestion remain distinct
   provenance paths.

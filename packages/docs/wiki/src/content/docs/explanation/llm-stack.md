@@ -190,7 +190,7 @@ remain organization-wide at each provider despite that runtime isolation.
 Spans carry who a call was made on behalf of, as a `(kind, id)` pair over
 `discord_user`, `guild`, `tracked_player`, and `system`. A bare user ID would
 not have fitted: match reviews are generated for a tracked player nobody asked
-on behalf of, and the betting workloads run on a schedule across players tracked
+on behalf of, and scheduled reports run across players tracked
 in different servers, so they belong to no single guild. Those workloads declare
 `system` rather than borrowing an arbitrary user, which keeps unattributed spend
 visible as unattributed rather than misfiled.

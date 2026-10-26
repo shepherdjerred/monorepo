@@ -1,19 +1,17 @@
-import { describe, expect, test } from "vitest";
 import {
   dareSkillBody,
-  EXPLORE_SKILLS,
   enabledExploreSkills,
+  EXPLORE_SKILLS,
   exploreSkillIndexSection,
   renderExploreSkillBody,
   type ExploreSkillContext,
 } from "#src/explore/skills/registry.ts";
+import { describe, expect, test } from "vitest";
 
-const WEB_CONTEXT: ExploreSkillContext = { bucks: null, surface: "web" };
+const WEB_CONTEXT: ExploreSkillContext = { surface: "web" };
 
 function skillsOn(surface: "web" | "discord" | "voice"): string[] {
-  return enabledExploreSkills({ bucks: null, surface }).map(
-    (candidate) => candidate.name,
-  );
+  return enabledExploreSkills({ surface }).map((candidate) => candidate.name);
 }
 
 function skill(name: string) {
@@ -26,7 +24,7 @@ function skill(name: string) {
 
 describe("enabledExploreSkills", () => {
   test("a plain web turn gets only the always-on skills", () => {
-    const names = enabledExploreSkills({ bucks: null, surface: "web" }).map(
+    const names = enabledExploreSkills({ surface: "web" }).map(
       (candidate) => candidate.name,
     );
     // ScoutQL is in the system prompt, not a skill.
@@ -44,7 +42,6 @@ describe("enabledExploreSkills", () => {
 
   test("capability flags gate their skills", () => {
     const names = enabledExploreSkills({
-      bucks: { currentTime: "2026-08-29T00:00:00.000Z" },
       mvpVotes: { currentTime: "2026-08-29T00:00:00.000Z" },
       dares: true,
       challenges: true,
@@ -52,7 +49,7 @@ describe("enabledExploreSkills", () => {
       creation: true,
       surface: "web",
     }).map((candidate) => candidate.name);
-    expect(names).toContain("bryan-bucks");
+    expect(names).not.toContain("bryan-bucks");
     expect(names).toContain("mvp-votes");
     expect(names).toContain("dares");
     expect(names).toContain("challenges");
@@ -62,7 +59,6 @@ describe("enabledExploreSkills", () => {
 
   test("every surface offers the same capability skills", () => {
     const options = {
-      bucks: { currentTime: "2026-08-29T00:00:00.000Z" },
       mvpVotes: { currentTime: "2026-08-29T00:00:00.000Z" },
       dares: true,
       challenges: true,
@@ -89,7 +85,7 @@ describe("enabledExploreSkills", () => {
 describe("skill bodies", () => {
   test("every enabled body renders without an unresolved placeholder", () => {
     const context: ExploreSkillContext = {
-      bucks: { currentTime: "2026-08-29T00:00:00.000Z" },
+      mvpVotes: { currentTime: "2026-08-29T00:00:00.000Z" },
       surface: "web",
     };
     for (const candidate of EXPLORE_SKILLS) {
@@ -116,32 +112,12 @@ describe("skill bodies", () => {
 
   test("mvp-votes interpolates the turn timestamp and keeps the ScoutQL tripwire", () => {
     const body = renderExploreSkillBody(skill("mvp-votes"), {
-      bucks: null,
       mvpVotes: { currentTime: "2026-08-29T00:00:00.000Z" },
       surface: "web",
     });
     expect(body).toContain("2026-08-29T00:00:00.000Z");
     expect(body).toContain("not Riot honors");
     expect(body).toContain("set queryText to null");
-  });
-
-  test("bryan-bucks interpolates the turn timestamp and keeps definitions", () => {
-    const body = renderExploreSkillBody(skill("bryan-bucks"), {
-      bucks: { currentTime: "2026-08-29T00:00:00.000Z" },
-      surface: "web",
-    });
-    expect(body).toContain("2026-08-29T00:00:00.000Z");
-    expect(body).toContain(
-      "Current balance, ledger delta, and betting P&L are different measures.",
-    );
-    expect(body).toContain("private to the asker");
-    expect(body).toContain("set queryText to null");
-  });
-
-  test("bryan-bucks refuses to render without a bucks context", () => {
-    expect(() =>
-      renderExploreSkillBody(skill("bryan-bucks"), WEB_CONTEXT),
-    ).toThrow(/currentTime/);
   });
 
   test("creation keeps its load-bearing rules", () => {
@@ -189,7 +165,7 @@ describe("skill bodies", () => {
 
   test("no body carries a v1 clause the language no longer has", () => {
     const context: ExploreSkillContext = {
-      bucks: { currentTime: "2026-08-29T00:00:00.000Z" },
+      mvpVotes: { currentTime: "2026-08-29T00:00:00.000Z" },
       surface: "web",
     };
     for (const candidate of EXPLORE_SKILLS) {
@@ -203,7 +179,7 @@ describe("skill bodies", () => {
 
 describe("exploreSkillIndexSection", () => {
   test("lists each enabled skill once with its description and tripwires", () => {
-    const skills = enabledExploreSkills({ bucks: null, surface: "web" });
+    const skills = enabledExploreSkills({ surface: "web" });
     const index = exploreSkillIndexSection(skills);
     expect(index).toContain("## Skills");
     for (const candidate of skills) {

@@ -9,7 +9,7 @@ reference. Load `scout-development` for its working procedure.
 
 - `/scout ask` creates a private saved Explore conversation. Explore owns
   conversational query authoring and continuation.
-- Bryan Bucks owns Dare viewing and management. Preserve origin conversation
+- Dares owns challenge viewing and management. Preserve origin conversation
   links without moving management into Explore.
 - Explore may prepare report, subscription, and competition creations, never
   perform them. A tool mints a guild- and actor-bound confirmation intent; the
@@ -17,16 +17,8 @@ reference. Load `scout-development` for its working procedure.
   same services the web forms call. Confirmation intents are one shared table
   and protocol with Dares: single-use, expiring, claimed by a guarded write
   before any effect.
-- Version stored betting semantics; existing bets keep their original
-  cross-game or same-game interpretation. Dares are v3 SQL contracts only;
-  `compilerVersion` is stored metadata, not a dialect switch.
-- Challenger stake, pile-ons, pot total, settlement, and Discord presentation
-  are different values. Do not collapse them.
-- What a Bucks quantity means and whether a column can hold it are separate.
-  `@scout-for-lol/domain` owns the semantic brands and never bounds them by
-  Int32; `@scout-for-lol/data` owns the storable subtypes, the re-export shim,
-  and `BucksStorageOverflowError`. Never re-declare a branded schema or that
-  error class. Both package READMEs carry the contract.
+- Dares are v3 SQL contracts only; `compilerVersion` is stored metadata, not
+  a dialect switch. Dares have no currency, stakes, contributions, or payouts.
 - Managed custom games, local-client observations, and Riot match ingestion
   keep distinct provenance. Generic Dare conditions remain cross-game unless
   wording explicitly requires one/same game.

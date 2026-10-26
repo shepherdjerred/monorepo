@@ -209,7 +209,7 @@ WORKDIR /app/packages/scout-for-lol/packages/backend
 # migrations update Postgres; SQL-only readiness validates the completed import
 # receipt and accounting before traffic. Fresh installs and restores run the
 # explicit import and ScoutQL conversion tools before ordinary startup.
-CMD ["/bin/sh", "-c", "bun x prisma migrate deploy && bun run scripts/check-database-readiness.ts && bun run src/index.ts"]
+CMD ["/bin/sh", "-c", "bun x prisma migrate deploy && bun run src/index.ts"]
 
 FROM runtime AS voice-smoke
 # Model loading runs as the non-root deploy uid, never root: the published image

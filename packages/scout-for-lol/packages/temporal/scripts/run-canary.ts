@@ -11,7 +11,7 @@ import {
   SCOUT_WORKFLOW_NAMES,
   ScoutQueueCanaryProbeResultSchema,
   ScoutStageSchema,
-  ScoutBackgroundJobInputSchema,
+  ScoutActiveBackgroundJobKindSchema,
   scoutQueueCanaryWorkflowId,
   scoutTaskQueues,
 } from "@scout-for-lol/temporal";
@@ -103,7 +103,7 @@ try {
       {
         stage: options.stage,
         canaryId,
-        backgroundJobKinds: ScoutBackgroundJobInputSchema.shape.kind.options,
+        backgroundJobKinds: ScoutActiveBackgroundJobKindSchema.options,
         includeGateway: options.gateway,
       },
     ],
@@ -132,9 +132,7 @@ try {
     .array(z.object({ backgroundJobKinds: z.array(z.string()) }))
     .length(options.gateway ? 5 : 4)
     .parse(rawResults);
-  const expectedKinds = [
-    ...ScoutBackgroundJobInputSchema.shape.kind.options,
-  ].sort();
+  const expectedKinds = [...ScoutActiveBackgroundJobKindSchema.options].sort();
   for (const result of capabilities) {
     if (
       JSON.stringify([...result.backgroundJobKinds].sort()) !==

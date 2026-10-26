@@ -1,10 +1,3 @@
-import { describe, expect, test, afterAll, beforeEach, vi } from "vitest";
-import {
-  Client,
-  DiscordAPIError,
-  RESTJSONErrorCodes,
-  Routes,
-} from "discord.js";
 import { sendDM } from "#src/discord/utils/dm.ts";
 import { readOutreachState } from "#src/discord/utils/outreach-state.ts";
 import {
@@ -14,8 +7,15 @@ import {
   mockDmClient,
   type DmMessageBody,
 } from "#src/testing/discord-mocks.ts";
-import { testAccountId, testGuildId } from "#src/testing/test-ids.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
+import { testAccountId, testGuildId } from "#src/testing/test-ids.ts";
+import {
+  Client,
+  DiscordAPIError,
+  RESTJSONErrorCodes,
+  Routes,
+} from "discord.js";
+import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 
 const { prisma } = createTestDatabase("dm-audit-test");
 
@@ -129,8 +129,8 @@ describe("sendDM", () => {
     const status = await sendDM({
       client,
       userId: recipientId,
-      message: "<@123456789012345678> placed a bet",
-      kind: "betting_player_bet_outcome",
+      message: "<@123456789012345678> accepted a Dare",
+      kind: "dare_notification",
       guildId,
       prisma,
       suppressMentions: true,
@@ -138,7 +138,7 @@ describe("sendDM", () => {
 
     expect(status).toBe("sent");
     expect(send).toHaveBeenCalledWith({
-      content: "<@123456789012345678> placed a bet",
+      content: "<@123456789012345678> accepted a Dare",
       allowed_mentions: { parse: [] },
     });
   });

@@ -1,15 +1,15 @@
-import { describe, expect, test, afterAll, beforeEach } from "vitest";
-import { DiscordAPIError } from "discord.js";
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { reconcileRemovedGuilds } from "#src/league/tasks/cleanup/reconcile-removed-guilds.ts";
 import { mockClient, mockGuild } from "#src/testing/discord-mocks.ts";
+import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
-  testGuildId,
   testAccountId,
   testChannelId,
+  testGuildId,
 } from "#src/testing/test-ids.ts";
-import { createTestDatabase } from "#src/testing/test-database.ts";
 import type { DiscordGuildId } from "@scout-for-lol/data";
-import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { DiscordAPIError } from "discord.js";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
 
 const { prisma } = createTestDatabase("reconcile-removed-guilds-test");
 
@@ -41,7 +41,7 @@ async function seedGuild(
       consecutiveErrorCount: 3,
     },
   });
-  await db.bucksNotificationPreference.create({
+  await db.dareNotificationPreference.create({
     data: {
       serverId,
       discordId: testAccountId("802"),
@@ -118,7 +118,7 @@ const justAfterMidnight = new Date("2026-07-02T00:05:00.000Z");
 beforeEach(async () => {
   await prisma.player.deleteMany();
   await prisma.guildPermissionError.deleteMany();
-  await prisma.bucksNotificationPreference.deleteMany();
+  await prisma.dareNotificationPreference.deleteMany();
   await prisma.guildRemovalCandidate.deleteMany();
   await prisma.guildInstall.deleteMany();
   // `memberGuild` is a guild Scout is still installed in.
@@ -131,7 +131,7 @@ afterAll(async () => {
 
 describe("reconcileRemovedGuilds", () => {
   test("discovers a removed guild whose only residual data is notification preferences", async () => {
-    await prisma.bucksNotificationPreference.create({
+    await prisma.dareNotificationPreference.create({
       data: {
         serverId: removedGuild,
         discordId: testAccountId("803"),
@@ -142,7 +142,7 @@ describe("reconcileRemovedGuilds", () => {
       now: day1,
     });
     expect(
-      await prisma.bucksNotificationPreference.count({
+      await prisma.dareNotificationPreference.count({
         where: { serverId: removedGuild },
       }),
     ).toBe(1);
@@ -151,7 +151,7 @@ describe("reconcileRemovedGuilds", () => {
       now: day2,
     });
     expect(
-      await prisma.bucksNotificationPreference.count({
+      await prisma.dareNotificationPreference.count({
         where: { serverId: removedGuild },
       }),
     ).toBe(0);
@@ -210,7 +210,7 @@ describe("reconcileRemovedGuilds", () => {
       }),
     ).toBe(0);
     expect(
-      await prisma.bucksNotificationPreference.count({
+      await prisma.dareNotificationPreference.count({
         where: { serverId: removedGuild },
       }),
     ).toBe(0);

@@ -68,7 +68,7 @@ Custom-match results become member-visible only after every invited participant
 accepts the versioned disclosure. That is also why custom games do not feed the
 server-wide Hall.
 
-Competitive progression does not depend on Bryan Bucks. It creates no entry
+Competitive progression creates no entry
 fees, prizes, wagers, or bracket markets.
 
 ## Related

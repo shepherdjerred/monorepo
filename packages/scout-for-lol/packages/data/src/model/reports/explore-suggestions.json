@@ -5,108 +5,63 @@
     "condition": "mvp_votes"
   },
   {
-    "prompt": "How many Bryan Bucks do I have?",
-    "category": "bucks",
-    "condition": "bucks"
-  },
-  {
-    "prompt": "What are the biggest winning bets in Bryan Bucks history?",
-    "category": "bucks",
-    "condition": "bucks"
-  },
-  {
-    "prompt": "Who has lost the most Bryan Bucks on bets?",
-    "category": "bucks",
-    "condition": "bucks"
-  },
-  {
-    "prompt": "Show recent Bryan Bucks transfers",
-    "category": "bucks",
-    "condition": "bucks"
-  },
-  {
-    "prompt": "Who has the best bet win rate in Bryan Bucks?",
-    "category": "bucks",
-    "condition": "bucks"
-  },
-  {
-    "prompt": "Show open betting markets for upcoming matches",
-    "category": "bucks",
-    "condition": "bucks"
-  },
-  {
-    "prompt": "Check if my last bet was paid out",
-    "category": "bucks",
-    "condition": "bucks"
-  },
-  {
-    "prompt": "Who won the Bryan Bucks weekly leaderboard last week?",
-    "category": "bucks",
-    "condition": "bucks"
-  },
-  {
-    "prompt": "Show the biggest payouts in server betting history",
-    "category": "bucks",
-    "condition": "bucks"
-  },
-  {
     "prompt": "What dares are currently open?",
-    "category": "bucks",
+    "category": "dares",
     "condition": "dares"
   },
   {
     "prompt": "Create a dare for someone to play Teemo support",
-    "category": "bucks",
+    "category": "dares",
     "condition": "dares"
   },
   {
-    "prompt": "Create a dare for 100 bucks that our ADC gets 10+ kills",
-    "category": "bucks",
+    "prompt": "Create a dare that our ADC gets 10+ kills",
+    "category": "dares",
     "condition": "dares"
   },
   {
     "prompt": "What dares have I completed recently?",
-    "category": "bucks",
+    "category": "dares",
     "condition": "dares"
   },
   {
     "prompt": "Show me dares waiting for confirmation",
-    "category": "bucks",
+    "category": "dares",
     "condition": "dares"
   },
   {
-    "prompt": "Show my active dare stakes",
-    "category": "bucks",
+    "prompt": "Show progress on my active dares",
+    "category": "dares",
     "condition": "dares"
   },
   {
-    "prompt": "What is the highest stake dare created?",
-    "category": "bucks",
+    "prompt": "Which active dare has the most eligible games?",
+    "category": "dares",
     "condition": "dares"
   },
   {
     "prompt": "Create a dare that someone gets a pentakill",
-    "category": "bucks",
+    "category": "dares",
     "condition": "dares"
   },
   {
     "prompt": "What dares are expiring soon?",
-    "category": "bucks",
+    "category": "dares",
     "condition": "dares"
   },
   {
     "prompt": "Draft a dare for our mid laner to play an assassin",
-    "category": "bucks",
+    "category": "dares",
     "condition": "dares"
   },
   {
     "prompt": "What are the most popular dare terms?",
-    "category": "bucks",
+    "category": "dares",
     "condition": "dares"
   },
   {
     "prompt": "Show failed dares from this past week",
-    "category": "bucks",
+    "category": "dares",
     "condition": "dares"
   },
   {
@@ -198,11 +153,6 @@
     "prompt": "Compare participants in the current competition",
     "category": "competitions",
     "condition": "competitions"
-  },
-  {
-    "prompt": "Create a competition with a Bryan Bucks prize pool",
-    "category": "competitions",
-    "condition": "competition_creation"
   },
   {
     "prompt": "What are the historic winners of server competitions?",

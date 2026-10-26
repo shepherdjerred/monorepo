@@ -1,28 +1,28 @@
-import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
-import type { RESTPostAPIApplicationCommandsJSONBody } from "discord.js";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import configuration from "#src/configuration.ts";
+import {
+  isPolicyEnabled,
+  listGuildsWithFlagEnabled,
+} from "#src/configuration/flags.ts";
+import { dareCommand } from "#src/discord/commands/dare-definition.ts";
 import { helpCommand } from "#src/discord/commands/help.ts";
+import { listCommand } from "#src/discord/commands/list.ts";
 import {
   docsCommand,
   inviteCommand,
   setupCommand,
   statusCommand,
 } from "#src/discord/commands/onboarding.ts";
-import { listCommand } from "#src/discord/commands/list.ts";
-import { trackCommand } from "#src/discord/commands/track.ts";
-import { bbCommand } from "#src/discord/commands/bb/bb-definition.ts";
 import {
   buildScoutGuildCommand,
   scoutGlobalCommand,
   scoutGuildCommand,
   type ScoutGuildFeatures,
 } from "#src/discord/commands/scout-definition.ts";
-import {
-  isPolicyEnabled,
-  listGuildsWithFlagEnabled,
-} from "#src/configuration/flags.ts";
+import { trackCommand } from "#src/discord/commands/track.ts";
 import { exploreGuildCommandGuildIds } from "#src/explore/access.ts";
-import configuration from "#src/configuration.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
+import type { RESTPostAPIApplicationCommandsJSONBody } from "discord.js";
 
 /**
  * The commands every guild gets, registered globally.
@@ -99,12 +99,12 @@ async function scoutGuildCommandPayload(
 
 export const guildScopedCommandGroups: GuildScopedCommandGroup[] = [
   {
-    enabledGuildIds: () => listGuildsWithFlagEnabled("betting_enabled"),
+    enabledGuildIds: () => listGuildsWithFlagEnabled("dares_enabled"),
     isEnabled: async (guildId) =>
-      await isPolicyEnabled("betting_enabled", {
+      await isPolicyEnabled("dares_enabled", {
         server: DiscordGuildIdSchema.parse(guildId),
       }),
-    payload: [bbCommand.toJSON()],
+    payload: [dareCommand.toJSON()],
   },
   {
     enabledGuildIds: () => [

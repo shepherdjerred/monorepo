@@ -1,9 +1,22 @@
 import type {
-  DiscordGuildId,
   DiscordChannelId,
+  DiscordGuildId,
 } from "@scout-for-lol/domain/identity/discord.ts";
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 
+import { dareStatusAnnouncementCodec } from "#src/dares/presentation/notify/dare-status-message.ts";
+import {
+  upsertIntent,
+  upsertSubjectIntent,
+} from "#src/database/durable/intent-repository.ts";
+import { listReceipts } from "#src/database/durable/receipt-repository.ts";
+import { duelStatusAnnouncementCodec } from "#src/progression/duels/status-message.ts";
+import {
+  computeSha256Digest,
+  type StoredObject,
+} from "#src/storage/object-integrity.ts";
+import { createTestDatabase } from "#src/testing/test-database.ts";
+import { testChannelId } from "#src/testing/test-ids.ts";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import {
   IsoInstantSchema,
@@ -17,19 +30,6 @@ import {
   NotificationIntentSchema,
   type NotificationIntentKind,
 } from "@scout-for-lol/domain/notifications/intent.ts";
-import {
-  type StoredObject,
-  computeSha256Digest,
-} from "#src/storage/object-integrity.ts";
-import { createTestDatabase } from "#src/testing/test-database.ts";
-import { testChannelId } from "#src/testing/test-ids.ts";
-import {
-  upsertIntent,
-  upsertSubjectIntent,
-} from "#src/database/durable/intent-repository.ts";
-import { listReceipts } from "#src/database/durable/receipt-repository.ts";
-import { duelStatusAnnouncementCodec } from "#src/progression/duels/status-message.ts";
-import { dareStatusAnnouncementCodec } from "#src/betting/dares/presentation/notify/dare-status-message.ts";
 
 /**
  * The render Activity against real receipts and locks, with the world it

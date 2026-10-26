@@ -37,31 +37,31 @@ describe("RollupCaseSchema", () => {
 describe("rollupByCondition", () => {
   test("groups and counts cases per condition", () => {
     const rows = rollupByCondition([
-      rollupCase({ condition: "bucks" }),
-      rollupCase({ condition: "bucks" }),
+      rollupCase({ condition: "dares" }),
+      rollupCase({ condition: "dares" }),
       rollupCase({ condition: "always" }),
     ]);
-    expect(rows.find((row) => row.condition === "bucks")?.cases).toBe(2);
+    expect(rows.find((row) => row.condition === "dares")?.cases).toBe(2);
     expect(rows.find((row) => row.condition === "always")?.cases).toBe(1);
   });
 
   test("counts only the two expectation-violating signals", () => {
     const rows = rollupByCondition([
-      rollupCase({ condition: "bucks", signals: ["ungated_chip_refused"] }),
+      rollupCase({ condition: "dares", signals: ["ungated_chip_refused"] }),
       rollupCase({
-        condition: "bucks",
+        condition: "dares",
         signals: ["gated_chip_did_not_refuse"],
       }),
       // Not a contradiction of the guild's capabilities, so not a violation.
-      rollupCase({ condition: "bucks", signals: ["numeric_claim_dropped"] }),
+      rollupCase({ condition: "dares", signals: ["numeric_claim_dropped"] }),
     ]);
     expect(rows[0]?.violations).toBe(2);
   });
 
   test("reports mixed when a condition was both gated and ungated", () => {
     const rows = rollupByCondition([
-      rollupCase({ condition: "bucks", expectation: "answerable" }),
-      rollupCase({ condition: "bucks", expectation: "gated-off" }),
+      rollupCase({ condition: "dares", expectation: "answerable" }),
+      rollupCase({ condition: "dares", expectation: "gated-off" }),
     ]);
     expect(rows[0]?.expectation).toBe("mixed");
   });

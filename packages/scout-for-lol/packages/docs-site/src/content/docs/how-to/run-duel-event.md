@@ -7,7 +7,7 @@ sidebar:
 
 Scout uses one duel system for direct challenges, rolling records, and
 structured 1v1 or 2v2 events. It tracks friendly competition only: there are no
-entry fees, prizes, bets, or Bryan Bucks markets.
+entry fees, prizes, or bets.
 
 ## Confirm the feature is available
 

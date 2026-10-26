@@ -1,11 +1,11 @@
-import { describe, expect, test } from "vitest";
-import { EXPLORE_ACTIVITY_MAX_LENGTH } from "@scout-for-lol/data";
 import {
   toolCallActivity,
   toolResultActivity,
   toolStartActivity,
 } from "#src/explore/tool-activity.ts";
 import type { ExploreToolResultInspection } from "#src/explore/tool-inspection.ts";
+import { EXPLORE_ACTIVITY_MAX_LENGTH } from "@scout-for-lol/data";
+import { describe, expect, test } from "vitest";
 
 /**
  * Every tool whose calls can reach the status line. The generic phrase each
@@ -21,10 +21,10 @@ const TOOL_NAMES = [
   "format_report_query",
   "run_report_query",
   "resolve_player",
-  "get_bucks_dataset",
-  "query_bucks_accounts",
-  "query_bucks_ledger",
-  "query_bucks_bets",
+  "inspect_dare",
+  "list_dares_accounts",
+  "inspect_dare",
+  "list_dares",
   "get_dare_language",
   "validate_dare_contract",
   "validate_dare_scoutql",

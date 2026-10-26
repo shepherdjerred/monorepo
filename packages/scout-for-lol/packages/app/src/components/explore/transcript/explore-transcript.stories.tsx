@@ -157,7 +157,7 @@ const MENTION_CANDIDATES: ExploreMentionCandidate[] = [
 ].map((candidate) => ExploreMentionCandidateSchema.parse(candidate));
 
 const seedSuggestionContext: StorySeed = (trpc, queryClient) => {
-  queryClient.setQueryData(trpc.bucks.status.queryOptions().queryKey, {
+  queryClient.setQueryData(trpc.dares.status.queryOptions().queryKey, {
     state: "available",
     guilds: [
       {

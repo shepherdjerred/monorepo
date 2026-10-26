@@ -1,7 +1,18 @@
-import { z } from "zod";
+import configuration from "#src/configuration.ts";
+import {
+  DEFAULT_EXPLORE_QUOTA_LIMITS,
+  ExploreQuotaLimitsInputSchema,
+  type ExploreQuotaLimits,
+} from "#src/configuration/explore-quota.ts";
+import {
+  DEFAULT_EXPLORE_SPEND_POLICY,
+  ExploreSpendPolicySchema,
+} from "#src/configuration/explore-spend.ts";
+import { createLogger } from "#src/logger.ts";
+import { featureFlagMetrics } from "#src/metrics/platform/feature-flags.ts";
 import { defineConfig } from "@shepherdjerred/config";
-import { createConfigSnapshot } from "@shepherdjerred/config/snapshot.ts";
 import { createObservabilityHooks } from "@shepherdjerred/config/observability.ts";
+import { createConfigSnapshot } from "@shepherdjerred/config/snapshot.ts";
 import { createEnvSource } from "@shepherdjerred/config/sources/env.ts";
 import {
   initFeatureFlags,
@@ -9,18 +20,7 @@ import {
   type InitFeatureFlagsOptions,
 } from "@shepherdjerred/feature-flags";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
-import { createLogger } from "#src/logger.ts";
-import { featureFlagMetrics } from "#src/metrics/platform/feature-flags.ts";
-import configuration from "#src/configuration.ts";
-import {
-  DEFAULT_EXPLORE_SPEND_POLICY,
-  ExploreSpendPolicySchema,
-} from "#src/configuration/explore-spend.ts";
-import {
-  DEFAULT_EXPLORE_QUOTA_LIMITS,
-  ExploreQuotaLimitsInputSchema,
-  type ExploreQuotaLimits,
-} from "#src/configuration/explore-quota.ts";
+import { z } from "zod";
 
 const logger = createLogger("config-dynamic");
 
@@ -126,15 +126,6 @@ const DEFINITION = {
     default: "gpt-5.6-sol",
     names: { flag: "scout-report-ai-model", env: "REPORT_AI_MODEL" },
   },
-  bettingParlayAiModel: {
-    schema: z.string().trim().min(1),
-    sources: ["flag", "env", "default"],
-    default: "gpt-5.6-sol",
-    names: {
-      flag: "scout-betting-parlay-ai-model",
-      env: "BETTING_PARLAY_AI_MODEL",
-    },
-  },
   exploreModel: {
     schema: z.string().trim().min(1),
     sources: ["flag", "env", "default"],
@@ -186,7 +177,6 @@ export type DynamicConfigSeed = {
   llmHourlyTokenBudget: number;
   llmDailyTokenBudget: number;
   reportAiModel?: string;
-  bettingParlayAiModel?: string;
   exploreModel?: string;
   featureTipPercent?: number;
   featureTipCooldownHours?: number;
@@ -221,7 +211,6 @@ function buildSnapshot(
                 llmHourlyTokenBudget: "number",
                 llmDailyTokenBudget: "number",
                 reportAiModel: "string",
-                bettingParlayAiModel: "string",
                 exploreModel: "string",
                 featureTipPercent: "number",
                 featureTipCooldownHours: "number",
@@ -360,14 +349,6 @@ export function reportAiModel(): string {
   return (
     snapshot?.get("reportAiModel") ??
     configuration.reportAiModel ??
-    "gpt-5.6-sol"
-  );
-}
-
-export function bettingParlayAiModel(): string {
-  return (
-    snapshot?.get("bettingParlayAiModel") ??
-    configuration.bettingParlayAiModel ??
     "gpt-5.6-sol"
   );
 }

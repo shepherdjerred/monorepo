@@ -13,7 +13,7 @@ import {
   BuilderFieldError,
   builderErrorAttributes,
 } from "#src/components/builder-field-error.tsx";
-import type { CompetitionBuilderState } from "#src/lib/bucks/competition-builder-state.ts";
+import type { CompetitionBuilderState } from "#src/lib/competitions/competition-builder-state.ts";
 
 export function CompetitionBuilderBasics(props: {
   state: CompetitionBuilderState;

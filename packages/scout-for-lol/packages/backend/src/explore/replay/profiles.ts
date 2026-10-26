@@ -1,7 +1,7 @@
+import type { FlagName } from "#src/configuration/flags.ts";
+import type { SuggestionCondition } from "@scout-for-lol/data";
 import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { z } from "zod";
-import type { SuggestionCondition } from "@scout-for-lol/data";
-import type { FlagName } from "#src/configuration/flags.ts";
 
 /**
  * What a guild can actually do, captured rather than invented.
@@ -21,7 +21,6 @@ import type { FlagName } from "#src/configuration/flags.ts";
 
 /** The capabilities the agent resolves per turn (`ExploreSkillOptions` minus surface). */
 export const EXPLORE_REPLAY_CAPABILITIES = [
-  "bucks",
   "dares",
   "challenges",
   "creation",
@@ -36,7 +35,6 @@ export type ExploreReplayCapability =
 
 export const ExploreCapabilitySetSchema = z
   .object({
-    bucks: z.boolean(),
     dares: z.boolean(),
     challenges: z.boolean(),
     creation: z.boolean(),
@@ -51,13 +49,6 @@ export type ExploreCapabilitySet = z.infer<typeof ExploreCapabilitySetSchema>;
 
 export const CapturedGuildConfigSchema = z
   .object({
-    /**
-     * Exactly one guild, never a list.
-     *
-     * `resolveBucksCapability` throws when more than one betting-enabled guild
-     * is in scope (`bucks-tools.ts:79-84`), so one guild per config makes that
-     * failure structurally impossible rather than a thing to remember.
-     */
     guildId: DiscordGuildIdSchema,
     /** How this guild is referred to in a bundle: "mine", "prod-top-1", … */
     label: z.string().min(1),
@@ -107,7 +98,6 @@ const CONDITION_CAPABILITY: Readonly<
   always: null,
   customs: null,
   hall_of_fame: null,
-  bucks: "bucks",
   dares: "dares",
   challenges: "challenges",
   competitions: null,
@@ -147,20 +137,11 @@ export function chipExpectation(
   return capabilities[capability] ? "answerable" : "gated-off";
 }
 
-/**
- * The flag overrides that reproduce a captured capability set.
- *
- * Derived from the set rather than stored beside it, so a pin cannot carry
- * flags that disagree with the capabilities they are supposed to produce.
- * Dares need `bucks_dares_enabled`, which `dareExploreEnabled` requires on top
- * of a bucks capability.
- */
 export function flagOverridesFor(
   capabilities: ExploreCapabilitySet,
 ): readonly ExploreReplayFlagOverride[] {
   return [
-    { flag: "betting_enabled", value: capabilities.bucks },
-    { flag: "bucks_dares_enabled", value: capabilities.dares },
+    { flag: "dares_enabled", value: capabilities.dares },
     { flag: "challenge_runs_enabled", value: capabilities.challenges },
     { flag: "mvp_votes_enabled", value: capabilities.mvpVotes },
     { flag: "clash_surface", value: capabilities.clash },
@@ -181,11 +162,6 @@ export function guildConfigIssues(
   config: CapturedGuildConfig,
 ): readonly string[] {
   const issues: string[] = [];
-  if (config.capabilities.dares && !config.capabilities.bucks) {
-    issues.push(
-      "dares resolve from a bucks capability; a config cannot have dares with bucks off",
-    );
-  }
   if (config.capabilities.riotHistory) {
     // Captured true is possible (it is on for the beta guild), but the replay
     // deliberately never reproduces it, so a config asserting it would fail

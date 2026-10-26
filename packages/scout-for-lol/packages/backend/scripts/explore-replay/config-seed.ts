@@ -1,5 +1,5 @@
-import configuration from "#src/configuration.ts";
 import type { DynamicConfigSeed } from "#src/config/dynamic.ts";
+import configuration from "#src/configuration.ts";
 
 export function replayDynamicConfigSeed(): DynamicConfigSeed {
   return {
@@ -11,7 +11,6 @@ export function replayDynamicConfigSeed(): DynamicConfigSeed {
     featureTipPercent: configuration.featureTipPercent,
     featureTipCooldownHours: configuration.featureTipCooldownHours,
     reportAiModel: configuration.reportAiModel ?? "gpt-5.6-sol",
-    bettingParlayAiModel: configuration.bettingParlayAiModel ?? "gpt-5.6-sol",
     temporalCallGraphTracing: false,
   };
 }

@@ -677,13 +677,11 @@ The shared cluster contains only the active `beta` and `prod` namespaces plus
 Temporal's internal `temporal-system` namespace. Unexpected workflow starts in
 any other namespace raise `TemporalUnexpectedNamespaceStartAttempted`.
 
-The Bryan Bucks analytics schedule runs in `prod`, where the central Workflow
-executor polls `monorepo-workflows`; its `scout` Activity calls the beta Scout
-data endpoint. The central Scout worker also polls the unchanged `scout` queue
-in `beta` to drain retained executions. The central Workflow and reports
-workers also poll `beta` for the explicit notification acceptance canary.
-Other central Activity queues are `prod` only. Schedule registration retires the old beta schedule without cancelling
-existing executions.
+The central Scout worker also polls the unchanged `scout` queue in `beta`
+to drain retained executions. The central Workflow and reports workers also
+poll `beta` for the explicit notification acceptance canary. Other central
+Activity queues are `prod` only. Retired economy schedules are removed by
+schedule reconciliation.
 
 | Role              | Queue or surface                                                                       |               Activity concurrency |
 | ----------------- | -------------------------------------------------------------------------------------- | ---------------------------------: |

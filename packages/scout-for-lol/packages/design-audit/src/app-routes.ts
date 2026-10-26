@@ -194,7 +194,7 @@ export function appRoutes(): AuditRoute[] {
       authenticated: true,
       golden: false,
     },
-    // Clash and Bucks are flag-gated; the fixture guild override renders them.
+    // Clash and Dares are flag-gated; the fixture guild override renders them.
     {
       name: "clash",
       surface: "app",
@@ -203,30 +203,16 @@ export function appRoutes(): AuditRoute[] {
       golden: false,
     },
     {
-      name: "bucks",
+      name: "dares",
       surface: "app",
-      path: "/app/bucks",
+      path: "/app/dares",
       authenticated: true,
       golden: false,
     },
     {
-      name: "bucks-history",
+      name: "dares-settings",
       surface: "app",
-      path: "/app/bucks/history",
-      authenticated: true,
-      golden: false,
-    },
-    {
-      name: "bucks-leaderboard",
-      surface: "app",
-      path: "/app/bucks/leaderboard",
-      authenticated: true,
-      golden: false,
-    },
-    {
-      name: "bucks-settings",
-      surface: "app",
-      path: "/app/bucks/settings",
+      path: "/app/dares/settings",
       authenticated: true,
       golden: false,
     },

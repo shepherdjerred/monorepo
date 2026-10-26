@@ -1,26 +1,23 @@
-import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
-import type { DiscordAccountId, DiscordChannelId } from "@scout-for-lol/data";
-import {
-  createBucksExploreTools,
-  type BucksExploreCapability,
-} from "#src/explore/tools/bucks-tools.ts";
-import {
-  createMvpVotesExploreTools,
-  type MvpVotesExploreCapability,
-} from "#src/explore/tools/mvp-votes-tools.ts";
-import { createDareExploreTools } from "#src/explore/tools/dare-tool-definitions.ts";
-import { createChallengeExploreTools } from "#src/explore/tools/challenge-tools.ts";
+import { prisma } from "#src/database/index.ts";
+import type { CreationCapability } from "#src/explore/creation/capability.ts";
+import { createCreationExploreTools } from "#src/explore/creation/tools.ts";
 import { createChallengeReadTools } from "#src/explore/tools/challenge-read-tools.ts";
-import { createServerSetupTools } from "#src/explore/tools/server-setup-tools.ts";
+import { createChallengeExploreTools } from "#src/explore/tools/challenge-tools.ts";
 import { createCompetitionReadTools } from "#src/explore/tools/competition-read-tools.ts";
+import type { DareExploreCapability } from "#src/explore/tools/dare-capability.ts";
+import { createDareExploreTools } from "#src/explore/tools/dare-tool-definitions.ts";
 import {
   createHallExploreTools,
   type HallExploreCapability,
 } from "#src/explore/tools/hall-tools.ts";
-import { createCreationExploreTools } from "#src/explore/creation/tools.ts";
-import type { CreationCapability } from "#src/explore/creation/capability.ts";
-import { prisma } from "#src/database/index.ts";
+import {
+  createMvpVotesExploreTools,
+  type MvpVotesExploreCapability,
+} from "#src/explore/tools/mvp-votes-tools.ts";
+import { createServerSetupTools } from "#src/explore/tools/server-setup-tools.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
+import type { DiscordAccountId, DiscordChannelId } from "@scout-for-lol/data";
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
 
 /**
  * Explore tools that exist only when a turn's guilds have that capability.
@@ -28,7 +25,7 @@ import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
  * query state; these are independent reads of Postgres-backed features.
  */
 export function createGatedExploreTools(input: {
-  bucksCapability: BucksExploreCapability | null;
+  dareCapability: DareExploreCapability | null;
   mvpVotesCapability: MvpVotesExploreCapability | null;
   daresEnabled: boolean;
   challengesEnabled: boolean;
@@ -41,23 +38,16 @@ export function createGatedExploreTools(input: {
   track: ToolTracker;
 }) {
   return {
-    ...(input.bucksCapability === null
-      ? {}
-      : createBucksExploreTools({
-          capability: input.bucksCapability,
-          requesterId: input.requesterId,
-          track: input.track,
-        })),
     ...(input.mvpVotesCapability === null
       ? {}
       : createMvpVotesExploreTools({
           capability: input.mvpVotesCapability,
           track: input.track,
         })),
-    ...(input.bucksCapability === null || !input.daresEnabled
+    ...(input.dareCapability === null || !input.daresEnabled
       ? {}
       : createDareExploreTools({
-          capability: input.bucksCapability,
+          capability: input.dareCapability,
           requesterId: input.requesterId,
           conversationId: input.conversationId,
           originChannelId: input.originChannelId,

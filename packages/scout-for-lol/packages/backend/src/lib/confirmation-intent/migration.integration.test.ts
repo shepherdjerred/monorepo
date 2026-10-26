@@ -1,10 +1,9 @@
-import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import { z } from "zod";
-import { ConfirmationIntentPayloadSchema } from "@scout-for-lol/data";
 import {
   replayMigrationsBefore,
   type MigrationReplay,
 } from "#src/database/migration-replay.test-fixtures.ts";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { z } from "zod";
 
 /**
  * The confirmation-intent migration moves live rows, so it is verified against
@@ -18,6 +17,19 @@ import {
  */
 
 const MIGRATION = "20260904000000_confirmation_intent";
+
+// This migration predates free Dares. Freeze its historical payload contract;
+// the retirement migration removes these intents before the current app reads them.
+const ConfirmationIntentPayloadSchema = z.discriminatedUnion("kind", [
+  z.strictObject({ kind: z.literal("dare_fund") }),
+  z.strictObject({ kind: z.literal("dare_accept") }),
+  z.strictObject({ kind: z.literal("dare_decline") }),
+  z.strictObject({ kind: z.literal("dare_cancel") }),
+  z.strictObject({
+    kind: z.literal("dare_contribute"),
+    amount: z.number().int().positive(),
+  }),
+]);
 
 const SERVER_A = "100000000000000001";
 const SERVER_B = "100000000000000002";

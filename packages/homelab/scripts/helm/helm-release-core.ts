@@ -31,11 +31,8 @@ const REPOSITORY_CHART_URLS = new Set([
 // Its Service, TunnelBinding, and Tailscale Ingress are stateless retired
 // resources; leaving them live keeps Birmel OutOfSync and blocks the root
 // release health wait.
-// scout-beta is here because the weekly-parlay control object was intentionally
-// renamed to scout-bryan-bucks-control. The replacement still reads the same
-// vault item, while the old OnePasswordItem is a stateless retired resource;
-// leaving it live keeps Scout beta OutOfSync and blocks the root release health
-// wait.
+// Scout beta retires the unused economy control credential mirror.
+// Exact-revision release-root preflight reviews the stateless prune candidate.
 // scout-prod can retire the activity-worker after its staged queue handoff. The
 // absent topology removes its Deployment, Service, ServiceMonitor, NetworkPolicy
 // and retirement gate prerequisites only after a zero-replica retiring release

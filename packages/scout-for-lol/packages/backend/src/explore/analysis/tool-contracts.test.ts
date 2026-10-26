@@ -1,17 +1,17 @@
-import { expect, test } from "vitest";
-import { z } from "zod";
-import { createLoadSkillTool } from "#src/explore/skills/tool.ts";
 import {
-  registerExploreToolContracts,
   inspectRegisteredTool,
+  registerExploreToolContracts,
 } from "#src/explore/inspection/tool-contracts.ts";
 import { sharedToolPayload } from "#src/explore/inspection/tool-payloads.ts";
+import { createLoadSkillTool } from "#src/explore/skills/tool.ts";
+import { expect, test } from "vitest";
+import { z } from "zod";
 
 test("skill inspection uses the executing tool's exact contracts", () => {
   registerExploreToolContracts({
     load_skill: createLoadSkillTool({
       skills: [],
-      context: { bucks: null, surface: "web" },
+      context: { surface: "web" },
       track: async (_name, execute) => await execute(),
       onLoaded: () => {
         /* No skill was executed in this contract test. */

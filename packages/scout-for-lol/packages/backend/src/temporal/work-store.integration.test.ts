@@ -24,7 +24,7 @@ describe("Scout Temporal work ownership", () => {
   test("reports only the first durable insertion as newly created", async () => {
     const work = {
       id: "parlay:NA1_1",
-      kind: "parlay-generation" as const,
+      kind: "champion-mastery-refresh" as const,
       payload: "{}",
     };
 
@@ -92,7 +92,7 @@ describe("Scout Temporal work ownership", () => {
     await prisma.scoutTemporalWork.create({
       data: {
         id: "parlay:NA1_2",
-        kind: "parlay-generation",
+        kind: "champion-mastery-refresh",
         payload: "{}",
         state: "failed",
         failedAt: new Date("2026-08-30T00:00:00Z"),
@@ -129,21 +129,21 @@ describe("Scout Temporal work ownership", () => {
       data: [
         {
           id: "parlay:failed",
-          kind: "parlay-generation",
+          kind: "champion-mastery-refresh",
           payload: "{}",
           state: "failed",
           failedAt: new Date("2026-08-30T00:00:00Z"),
         },
         {
           id: "parlay:queued",
-          kind: "parlay-generation",
+          kind: "champion-mastery-refresh",
           payload: "{}",
         },
       ],
     });
 
     await expect(findQueuedScoutTemporalWork(prisma)).resolves.toEqual([
-      { id: "parlay:queued", kind: "parlay-generation" },
+      { id: "parlay:queued", kind: "champion-mastery-refresh" },
     ]);
   });
 
@@ -152,7 +152,7 @@ describe("Scout Temporal work ownership", () => {
     await prisma.scoutTemporalWork.createMany({
       data: Array.from({ length: 42 }, (_, index) => ({
         id: `parlay:incident-${index.toString()}`,
-        kind: "parlay-generation",
+        kind: "champion-mastery-refresh",
         payload: "{}",
         state: "queued",
         startedAt,
@@ -162,7 +162,7 @@ describe("Scout Temporal work ownership", () => {
     await prisma.scoutTemporalWork.create({
       data: {
         id: "parlay:unaccepted-handoff",
-        kind: "parlay-generation",
+        kind: "champion-mastery-refresh",
         payload: "{}",
       },
     });

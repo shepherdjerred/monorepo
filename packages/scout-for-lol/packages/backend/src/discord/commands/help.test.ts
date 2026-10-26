@@ -1,13 +1,13 @@
-import { afterEach, describe, expect, test, vi } from "vitest";
-import type { ChatInputCommandInteraction } from "discord.js";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import type { CommandReply } from "#src/discord/commands/define-command.ts";
-import { commandList, executeHelp } from "#src/discord/commands/help.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import {
   addFlagOverride,
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
+import type { CommandReply } from "#src/discord/commands/define-command.ts";
+import { commandList, executeHelp } from "#src/discord/commands/help.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import type { ChatInputCommandInteraction } from "discord.js";
+import { afterEach, describe, expect, test, vi } from "vitest";
 
 const originalAllowlist = Bun.env["EXPLORE_GUILD_ALLOWLIST"];
 const originalEnvironment = Bun.env["ENVIRONMENT"];
@@ -24,7 +24,7 @@ afterEach(() => {
     Bun.env["ENVIRONMENT"] = originalEnvironment;
   }
   resetConfigurationForTests();
-  resetFlagOverrides("betting_enabled");
+  resetFlagOverrides("dares_enabled");
   resetFlagOverrides("voice_assistant_enabled");
 });
 
@@ -76,11 +76,11 @@ describe("/help", () => {
     const gatedGuild = "100000000000000003";
     const otherGuild = "100000000000000004";
     const server = DiscordGuildIdSchema.parse(gatedGuild);
-    addFlagOverride("betting_enabled", true, { server });
+    addFlagOverride("dares_enabled", true, { server });
     addFlagOverride("voice_assistant_enabled", true, { server });
 
     const gated = await commandList(DiscordGuildIdSchema.parse(gatedGuild));
-    expect(gated).toContain("`/bb`");
+    expect(gated).toContain("`/dare`");
     // The voice flag alone is not enough: this deployment has no
     // VOICE_ASSISTANT_ENABLED audio pipeline, so /scout join would answer
     // "not switched on" and must not be advertised.
@@ -88,7 +88,7 @@ describe("/help", () => {
     expect(gated).not.toContain("`/lobby`");
 
     const other = await commandList(DiscordGuildIdSchema.parse(otherGuild));
-    expect(other).not.toContain("`/bb`");
+    expect(other).not.toContain("`/dare`");
     expect(other).not.toContain("`/scout join`");
     expect(other).not.toContain("`/lobby`");
   });

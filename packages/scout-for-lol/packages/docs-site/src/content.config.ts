@@ -3,25 +3,7 @@ import { docsSchema } from "@astrojs/starlight/schema";
 import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
 
-/**
- * Bryan Bucks documentation ships on the beta site only.
- *
- * The feature is gated by the `betting_enabled` flag and enabled for exactly
- * one guild, which runs the beta bot, so documenting it on the production site
- * would advertise something no prod reader can use.
- *
- * This is a **build-time exclusion**, not a redirect: excluded entries never
- * enter the collection, so no route is generated and the files are physically
- * absent from the prod `dist/`. Sitemap, Pagefind, and the internal link graph
- * all follow, because they are derived from built routes.
- *
- * Defaults to `prod` — i.e. excluded — so a local `bun run build`, `astro dev`,
- * or any future caller fails closed. `scripts/release/scout-site-release.ts` sets
- * the flavor for both release builds, and `scripts/ci-test-manifest.json` sets
- * `beta` for this workspace so CI compiles and link-checks the whole page set:
- * the beta-only pages are a superset of prod's, and a flavor-less CI build left
- * them uncompiled until a main-only release step found the break.
- */
+/** Dares and duels remain visible only on the beta documentation site. */
 const isBeta = env.PUBLIC_SCOUT_SITE_FLAVOR === "beta";
 
 /** Starlight's own default; reproduced so the pattern can be narrowed. */
@@ -34,8 +16,8 @@ const docs = defineCollection({
       ? ALL_DOCS
       : [
           ALL_DOCS,
-          "!**/bryan-bucks*/**",
-          "!**/bryan-bucks*",
+          "!**/dares*",
+          "!**/author-a-dare*",
           // Duels remain a beta product while the local-observation rollout is
           // evaluated, so their how-to and reference ship on beta only.
           "!**/run-duel-event*",

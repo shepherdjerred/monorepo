@@ -1,7 +1,7 @@
-import type { z } from "zod";
-import type { DareTargetBinding } from "@scout-for-lol/data";
-import type { DareDraftDefinition } from "#src/betting/dares/lifecycle/dare-draft.ts";
+import type { DareDraftDefinition } from "#src/dares/lifecycle/dare-draft.ts";
 import type { DareDefinitionToolInputSchema } from "#src/explore/tools/dare-tool-schemas.ts";
+import type { DareTargetBinding } from "@scout-for-lol/data";
+import type { z } from "zod";
 
 function resolveTargets(
   requestedKeys: readonly string[],
@@ -31,7 +31,6 @@ export function definitionFromTool(
     plainLanguage: input.plainLanguage,
     targets: resolveTargets(input.targetKeys, targets),
     deadlineSpec: input.deadlineSpec,
-    openingStake: input.openingStake,
     competition: input.competition,
     activation: input.activation,
   };

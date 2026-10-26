@@ -41,7 +41,7 @@ function discordErrorCode(error: unknown): number | undefined {
  * the log line that reports a *real* command change worthless, since it was
  * indistinguishable from the 1,439 that changed nothing.
  *
- * The poll itself has to keep running: `betting_enabled` and
+ * The poll itself has to keep running: `dares_enabled` and
  * server-scoped product flags are evaluated per guild against Flipt, not
  * carried in the config snapshot, so nothing short of recomputing the payload
  * can notice an operator flipping one. What is skippable is the write. The
@@ -88,7 +88,7 @@ export async function registerDiscordCommands(
  * Replace each named guild's complete application-command payload.
  *
  * Discord's guild PUT is replacement, not merge. Building one payload from
- * every guild-scoped feature preserves `/bb` while adding `/scout`, and an
+ * every guild-scoped feature preserves `/dare` while adding `/scout`, and an
  * empty payload removes commands left behind by a disabled flag or allowlist.
  */
 export async function reconcileGuildScopedCommands(

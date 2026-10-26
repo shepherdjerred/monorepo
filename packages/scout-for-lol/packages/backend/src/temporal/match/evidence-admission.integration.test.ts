@@ -1,10 +1,10 @@
-import { afterAll, beforeEach, expect, test, vi } from "vitest";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import {
   createTestDatabase,
   testDatabaseModule,
 } from "#src/testing/test-database.ts";
-import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { afterAll, beforeEach, expect, test, vi } from "vitest";
 
 const { prisma } = createTestDatabase("match-evidence-admission");
 const mode = vi.hoisted(() => ({ production: false }));
@@ -216,7 +216,7 @@ test("direct effect Activities reject history before fetching inputs or entering
   const { finalizeTournamentResult } =
     await import("#src/temporal/match/match-tournament.ts");
   await expect(settleMatchMarkets({ riotMatchId: history })).rejects.toThrow(
-    "cannot settle markets",
+    "cannot resolve dares",
   );
   await expect(applyMatchProgression({ riotMatchId: history })).rejects.toThrow(
     "cannot apply progression",

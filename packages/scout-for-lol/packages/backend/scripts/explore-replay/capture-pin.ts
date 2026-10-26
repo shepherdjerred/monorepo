@@ -174,7 +174,7 @@ async function targetGuilds(
  * Whose turn it is for this guild: its most active Explore user.
  *
  * A guild's capabilities do not depend on who asks, but the requester does
- * decide what the bucks and challenge tools can see, so an account with no
+ * decide what the Dare and challenge tools can see, so an account with no
  * history would make several chips answer "nothing here" for reasons that have
  * nothing to do with the model.
  */

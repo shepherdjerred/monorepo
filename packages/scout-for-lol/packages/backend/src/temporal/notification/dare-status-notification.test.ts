@@ -1,13 +1,10 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { dareStatusAnnouncementCodec } from "#src/dares/presentation/notify/dare-status-message.ts";
+import { DareNotificationIntentRecordSchema } from "#src/database/durable/intent-row.ts";
 import {
-  BucksAmountSchema,
-  DarePayoutSchema,
-  DarePotTotalSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
-import { DareNotificationIntentRecordSchema } from "#src/database/durable/intent-row.ts";
-import { dareStatusAnnouncementCodec } from "#src/betting/dares/presentation/notify/dare-status-message.ts";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const stubs = vi.hoisted(() => ({
   findUnique: vi.fn(),
@@ -17,15 +14,15 @@ const stubs = vi.hoisted(() => ({
 }));
 
 vi.mock("#src/database/index.ts", () => ({
-  prisma: { bucksDare: { findUnique: stubs.findUnique } },
+  prisma: { dare: { findUnique: stubs.findUnique } },
 }));
 vi.mock("#src/configuration/flags.ts", () => ({
   isPolicyEnabled: stubs.isPolicyEnabled,
 }));
-vi.mock("#src/betting/notify/notification-preferences.ts", () => ({
-  getBucksNotificationPreferences: stubs.getPreferences,
+vi.mock("#src/dares/notification-preferences.ts", () => ({
+  getDareNotificationPreferences: stubs.getPreferences,
 }));
-vi.mock("#src/betting/dares/presentation/dare-callout.ts", () => ({
+vi.mock("#src/dares/presentation/dare-callout.ts", () => ({
   refreshDareCallout: stubs.refreshCallout,
 }));
 
@@ -91,16 +88,12 @@ function resultRecord(target: "channel" | "dm" = "channel") {
           resolution: "achieved",
           challengerDiscordId: CHALLENGER_ID,
           plainLanguage: "Virmel wins on Twisted Fate",
-          potTotal: DarePotTotalSchema.parse(30),
-          payouts: [
+          winners: [
             {
               discordId: PAYEE_ID,
               alias: "Virmel",
-              net: DarePayoutSchema.parse(28),
-              fee: BucksAmountSchema.parse(2),
             },
           ],
-          refunds: [],
           voidReason: null,
         },
       }),
@@ -154,12 +147,11 @@ describe("the Dare result post", () => {
   test("renders the result and pings exactly the people it names", () => {
     expect(buildDareStatusNotificationMessage(resultRecord())).toEqual({
       content: [
-        "✅ **Scout Dare #902: ACHIEVED**",
+        "**Scout Dare #902: ✅ ACHIEVED**",
         "Virmel wins on Twisted Fate",
-        `Funded by <@${CHALLENGER_ID}>. The **30 BB** pot pays out:`,
-        `• **Virmel** <@${PAYEE_ID}> — +**28 BB** · **2 BB** fee`,
+        `• **Virmel** <@${PAYEE_ID}>`,
       ].join("\n"),
-      allowedMentions: { parse: [], users: [CHALLENGER_ID, PAYEE_ID] },
+      allowedMentions: { parse: [], users: [PAYEE_ID] },
     });
   });
 

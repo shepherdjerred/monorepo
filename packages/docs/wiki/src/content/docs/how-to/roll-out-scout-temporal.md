@@ -21,17 +21,13 @@ Confirm each layer independently:
    failures, nondeterminism, report outbox age, and duplicate-effect claims are
    visible.
 
-Replay retained beta histories against both candidate Workflow bundles before
+Replay retained beta histories against the candidate Workflow bundle before
 changing Worker Deployment routing:
 
 ```bash
 cd packages/scout-for-lol/packages/temporal
 TEMPORAL_ADDRESS=<beta-address> TEMPORAL_TLS=true TEMPORAL_NAMESPACE=beta \
   bun run replay:histories <scout-workflow-id>...
-
-cd packages/temporal
-TEMPORAL_ADDRESS=<beta-address> TEMPORAL_TLS=true TEMPORAL_NAMESPACE=beta \
-  bun run replay:scout-histories <weekly-or-bryan-workflow-id>...
 ```
 
 Protect every open Scout execution regardless of age. A patch can be retired
@@ -48,8 +44,8 @@ rollback to the previous bundle still reads the marker. Remove the
 
 For compatibility removal, enumerate executions with their run IDs and replay
 each protected run explicitly. A Workflow ID alone selects its latest run and
-does not verify earlier runs in a continue-as-new chain. Both history replay
-commands accept repeated `--run <workflow-id> <run-id>` arguments:
+does not verify earlier runs in a continue-as-new chain. The history replay
+command accepts repeated `--run <workflow-id> <run-id>` arguments:
 
 ```bash
 bun run replay:histories \
@@ -246,7 +242,7 @@ proves they are drained.
    announcement follow-up gauge. A missing gauge or a negative value fails
    this check.
 3. Record the pause state and note for competition refresh, competition
-   scheduled updates, weekly Bucks, and outreach Schedules.
+   scheduled updates and outreach Schedules.
    Pause active affected Schedules and wait for their old Activities to finish.
    Preserve Schedules already paused by an operator.
 4. Enable the producer flag for beta through the existing Flipt management
@@ -258,7 +254,7 @@ proves they are drained.
    Confirm frozen content, stable IDs, S3 attachments, and delivery bookkeeping.
 6. Once the beta checks pass, repeat them and the cutover in production.
    Preserve production's existing feature availability. A migration flag does
-   not enable betting, Dares, or other beta features in production.
+   not enable Dares or other beta features in production.
 7. Retire compatibility code only after old-name starts have stopped, affected
    open executions have drained, and open-run replay passes. Roll an
    idle dispatcher with its rollover Signal; let its active child finish.

@@ -1,5 +1,5 @@
-import { z } from "zod";
 import type { DiscordGuildId } from "@scout-for-lol/data";
+import { z } from "zod";
 
 /**
  * Category of DM, used to group/filter rows in the audit log.
@@ -18,6 +18,7 @@ export const DmKindSchema = z.enum([
   "outreach_30d",
   "outreach_manual",
   "data_validation",
+  // Retired kinds only decode historical audit rows.
   "betting_settlement_receipt",
   "betting_player_bet_outcome",
   "dare_notification",

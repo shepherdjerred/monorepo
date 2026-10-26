@@ -43,8 +43,8 @@ import {
   useUnsavedForm,
 } from "#src/hooks/use-unsaved-form.tsx";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { validateForm } from "#src/lib/bucks/competition-form-state.ts";
-import { calendarDateInTimezone } from "#src/lib/bucks/competition-time.ts";
+import { validateForm } from "#src/lib/competitions/competition-form-state.ts";
+import { calendarDateInTimezone } from "#src/lib/competitions/competition-time.ts";
 import { CompetitionFormValueSchema } from "#src/lib/form-schemas.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 

@@ -1,43 +1,31 @@
-import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
-import {
-  IsoInstantSchema,
-  NotificationIntentKeySchema,
-} from "@scout-for-lol/domain/identity/brands.ts";
-import { NotificationAttemptNonceSchema } from "@scout-for-lol/domain/notifications/intent.ts";
-import {
-  beginSend,
-  confirmDelivered,
-  expire,
-  markReady,
-} from "@scout-for-lol/domain/notifications/intent-transitions.ts";
-import { createTestDatabase } from "#src/testing/test-database.ts";
-import { testAccountId, testGuildId } from "#src/testing/test-ids.ts";
 import {
   getSubjectIntent,
   transitionIntent,
 } from "#src/database/durable/intent-repository.ts";
+import { reserveBudgetedDm } from "#src/discord/utils/dm-budget.ts";
+import { sendDM } from "#src/discord/utils/dm.ts";
+import { readOutreachState } from "#src/discord/utils/outreach-state.ts";
 import {
   mintProductAnnouncement,
   productAnnouncementIntentKey,
   productAnnouncementOf,
 } from "#src/temporal/notification/product/announcement.ts";
 import { repairProductAnnouncementFollowUps } from "#src/temporal/notification/product/follow-up.ts";
-import { queueDurableWeeklyLeaderboard } from "#src/betting/leaderboard/durable-weekly-leaderboard.ts";
-import type { WeeklyBucksLeaderboardDependencies } from "#src/betting/leaderboard/weekly-contracts.ts";
-import { sendDM } from "#src/discord/utils/dm.ts";
-import { reserveBudgetedDm } from "#src/discord/utils/dm-budget.ts";
-import { readOutreachState } from "#src/discord/utils/outreach-state.ts";
 import {
   orchestrationMode,
   withOrchestrationProducer,
 } from "#src/temporal/orchestration-cutover.ts";
+import { createTestDatabase } from "#src/testing/test-database.ts";
+import { testAccountId, testGuildId } from "#src/testing/test-ids.ts";
+import { IsoInstantSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { expire } from "@scout-for-lol/domain/notifications/intent-transitions.ts";
+import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 
 const { prisma: db } = createTestDatabase("product-announcement");
 const guildId = testGuildId("8310");
 const accountId = testAccountId("8311");
 const now = new Date();
 const at = IsoInstantSchema.parse(now.toISOString());
-const nonce = NotificationAttemptNonceSchema.parse("product-attempt");
 
 beforeEach(async () => {
   await db.matchNotificationIntent.deleteMany();
@@ -50,21 +38,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await db.$disconnect();
 });
-
-async function deliver(key: string) {
-  const intentKey = NotificationIntentKeySchema.parse(key);
-  await transitionIntent(db, { intentKey, transition: markReady });
-  await transitionIntent(db, {
-    intentKey,
-    transition: (intent) =>
-      beginSend(intent, { attemptNonce: nonce, startedAt: at }),
-  });
-  await transitionIntent(db, {
-    intentKey,
-    transition: (intent) =>
-      confirmDelivered(intent, { attemptNonce: nonce, deliveredAt: at }),
-  });
-}
 
 describe("durable product announcements", () => {
   test("activation drains an in-flight legacy producer before any durable producer can enter", async () => {
@@ -165,68 +138,6 @@ describe("durable product announcements", () => {
 });
 
 describe("durable publication and DM recovery", () => {
-  test("weekly chunks retain their first snapshot and publish standings only after every confirmed delivery", async () => {
-    const dependencies: WeeklyBucksLeaderboardDependencies = {
-      enabledGuilds: async () => [guildId],
-      hasGuild: async () => true,
-      loadRows: vi.fn(async () =>
-        Array.from({ length: 100 }, (_, index) => ({
-          accountId: index + 1,
-          discordId: testAccountId((8400 + index).toString()),
-          balance: 100 - index,
-        })),
-      ),
-      loadStats: async () => ({
-        mostGained: null,
-        mostLost: null,
-        mostBetsWon: null,
-        mostParlaysWon: null,
-      }),
-      sendMessage: async () => {
-        throw new Error("Producer must never send directly");
-      },
-      persistSnapshot: async () => {
-        throw new Error("Delivery must publish the snapshot");
-      },
-      sleep: vi
-        .fn<WeeklyBucksLeaderboardDependencies["sleep"]>()
-        .mockResolvedValue(undefined),
-    };
-    const queued = await queueDurableWeeklyLeaderboard(
-      dependencies,
-      guildId,
-      now,
-      db,
-    );
-    expect(queued.chunkCount).toBeGreaterThan(1);
-    const intents = await db.matchNotificationIntent.findMany({
-      orderBy: { intentKey: "asc" },
-    });
-    expect(intents).toHaveLength(queued.chunkCount);
-    expect(await db.scoutWorkflowStart.count()).toBe(queued.chunkCount);
-    await queueDurableWeeklyLeaderboard(dependencies, guildId, now, db);
-    expect(dependencies.loadRows).toHaveBeenCalledTimes(1);
-    expect(await db.matchNotificationIntent.count()).toBe(queued.chunkCount);
-    const last = intents.at(-1);
-    if (last === undefined) throw new Error("Expected weekly chunks");
-    for (const intent of intents.slice(0, -1)) await deliver(intent.intentKey);
-    await repairProductAnnouncementFollowUps(db);
-    expect(await db.bucksWeeklyLeaderboardSnapshot.count()).toBe(0);
-    // Simulate process loss after Discord delivery is committed but before its follow-up.
-    await deliver(last.intentKey);
-    await repairProductAnnouncementFollowUps(db);
-    await repairProductAnnouncementFollowUps(db);
-    expect(await db.bucksWeeklyLeaderboardSnapshot.count()).toBe(1);
-    expect(
-      await db.matchNotificationIntent.count({
-        where: { followUpCompletedAt: null },
-      }),
-    ).toBe(0);
-    expect(await db.bucksWeeklyPublication.findFirst()).toMatchObject({
-      publishedAt: expect.any(Date),
-    });
-  });
-
   test("uncertain DMs retain their reservation and never send automatically again", async () => {
     const reservation = await db.$transaction(
       async (tx) =>

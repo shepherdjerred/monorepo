@@ -108,9 +108,7 @@ export const MatchLakeRowSchema = z.object({
   // Damage
   total_damage_dealt: z.number(),
   total_damage_dealt_to_champions: z.number(),
-  // Damage splits. Parlay thresholds are only as good as the history behind
-  // them, so a field the model may propose has to be a column it can be priced
-  // against; magicDamageDealtToChampions is already used by live parlays.
+  // Damage splits available to report analysis and ScoutQL.
   magic_damage_dealt_to_champions: z.number(),
   physical_damage_dealt_to_champions: z.number(),
   true_damage_dealt_to_champions: z.number(),
@@ -127,8 +125,7 @@ export const MatchLakeRowSchema = z.object({
   wards_killed: z.number(),
   vision_wards_bought_in_game: z.number(),
   detector_wards_placed: z.number(),
-  // Pings. Carried for the Bryan Bucks parlay catalog, which prices OPPONENT
-  // ping totals — a subject's own pings are free to spam and so unbettable.
+  // Ping counts from Riot match data, available to ScoutQL and Dares.
   all_in_pings: z.number(),
   assist_me_pings: z.number(),
   basic_pings: z.number(),

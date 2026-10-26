@@ -1,24 +1,8 @@
-import type { MessageCreateOptions } from "discord.js";
-import {
-  DiscordChannelIdSchema,
-  DiscordGuildIdSchema,
-  type DiscordAccountId,
-  type DiscordChannelId,
-  type DiscordGuildId,
-} from "@scout-for-lol/domain/identity/discord.ts";
-import { DiscordMessageIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
-import {
-  type NotificationFailure,
-  type NotificationUnsentSuppressionReason,
-  type NotificationTarget,
-  type NotificationIntentKind,
-  ANNOUNCEMENT_INTENT_KINDS,
-} from "@scout-for-lol/domain/notifications/intent.ts";
-import {
-  ScoutNotificationDeliveryResultSchema,
-  type ScoutNotificationDeliveryResult,
-} from "@scout-for-lol/temporal/activity-contracts";
-import type { ScoutIntentAttemptRef } from "@scout-for-lol/temporal/pipeline-contracts";
+import type {
+  MatchNotificationIntentRecord,
+  NotificationIntentRecord,
+} from "#src/database/durable/intent-row.ts";
+import { prisma } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
 import { deliveryGuildId } from "#src/temporal/notification/channel-guild.ts";
 import { DmKindSchema, type DmKind } from "#src/discord/utils/dm-contracts.ts";
@@ -27,40 +11,56 @@ import {
   isMissingChannelError,
   isPermissionError,
 } from "#src/discord/utils/permissions.ts";
+import { deliveryAttemptNonce } from "#src/durable/match/delivery-intents.ts";
 import {
   ChannelSendError,
   isReplyPermissionError,
   send,
 } from "#src/league/discord/channel.ts";
-import { deliveryAttemptNonce } from "#src/durable/match/delivery-intents.ts";
 import { freshBotMember } from "#src/lib/discord/bot-rest.ts";
-import { prisma } from "#src/database/index.ts";
-import type {
-  MatchNotificationIntentRecord,
-  NotificationIntentRecord,
-} from "#src/database/durable/intent-row.ts";
+import { createLogger } from "#src/logger.ts";
 import { ArchivedObjectUnusableError } from "#src/report-store/s3-raw-source.ts";
-import { UndeliverableContentError } from "#src/temporal/notification/undeliverable-content.ts";
+import { requireIntentRecord } from "#src/temporal/notification-lane/notification-reads.ts";
+import {
+  dareStatusAnnouncementOf,
+  dareStatusSuppression,
+} from "#src/temporal/notification/dare-status-notification.ts";
+import { duelStatusSuppression } from "#src/temporal/notification/duel-status-notification.ts";
 import {
   assertHallRecordBreakTargetGuild,
   hallRecordBreakSuppression,
 } from "#src/temporal/notification/hall-record-break-notification.ts";
 import { hallInstallationRetirementOf } from "#src/temporal/notification/intent-audience.ts";
 import { buildAttestedMessage } from "#src/temporal/notification/notification-message.ts";
-import { duelStatusSuppression } from "#src/temporal/notification/duel-status-notification.ts";
-import {
-  dareStatusAnnouncementOf,
-  dareStatusSuppression,
-} from "#src/temporal/notification/dare-status-notification.ts";
+import { resolveNotificationGate } from "#src/temporal/notification/notification-policy.ts";
 import {
   PreSendBudgetExpiredError,
   withPreSendBudget,
 } from "#src/temporal/notification/pre-send-budget.ts";
-import { resolveNotificationGate } from "#src/temporal/notification/notification-policy.ts";
-import { requireIntentRecord } from "#src/temporal/notification-lane/notification-reads.ts";
-import { createLogger } from "#src/logger.ts";
 import { productAnnouncementOf } from "#src/temporal/notification/product/announcement.ts";
 import { productAnnouncementSuppression } from "#src/temporal/notification/product/policy.ts";
+import { UndeliverableContentError } from "#src/temporal/notification/undeliverable-content.ts";
+import { DiscordMessageIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+  type DiscordAccountId,
+  type DiscordChannelId,
+  type DiscordGuildId,
+} from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  ANNOUNCEMENT_INTENT_KINDS,
+  type NotificationFailure,
+  type NotificationIntentKind,
+  type NotificationTarget,
+  type NotificationUnsentSuppressionReason,
+} from "@scout-for-lol/domain/notifications/intent.ts";
+import {
+  ScoutNotificationDeliveryResultSchema,
+  type ScoutNotificationDeliveryResult,
+} from "@scout-for-lol/temporal/activity-contracts";
+import type { ScoutIntentAttemptRef } from "@scout-for-lol/temporal/pipeline-contracts";
+import type { MessageCreateOptions } from "discord.js";
 
 const logger = createLogger("scout-v2-notification-delivery");
 
@@ -462,6 +462,17 @@ async function preSendSuppressionOf(
       : await dareStatusSuppression(record);
 }
 
+async function assertRecoveryAllowsSend(
+  record: NotificationIntentRecord,
+): Promise<void> {
+  const gate = await resolveNotificationGate(record);
+  if (gate.decision === "held") {
+    throw new Error(
+      `Intent ${record.intent.key} reached the send while held by policy ${gate.policy} for a ${gate.target} target; nothing was sent`,
+    );
+  }
+}
+
 async function prepareNotificationSend(
   input: ScoutIntentAttemptRef,
   abortSignal: AbortSignal,
@@ -474,11 +485,11 @@ async function prepareNotificationSend(
   // here held is a broken contract rather than a decision to make — but
   // "no-external permits no external sends" is a property of the SEND, and
   // it holds here without relying on the caller having asked.
-  const gate = await resolveNotificationGate(record);
-  if (gate.decision === "held") {
-    throw new Error(
-      `Intent ${input.intentKey} reached the send while held by policy ${gate.policy} for a ${gate.target} target; nothing was sent`,
-    );
+  await assertRecoveryAllowsSend(record);
+  // Retained attempts may already have a frozen monetary recap. Stop before
+  // reading that presentation, including an Activity resumed after deployment.
+  if (record.intent.kind === "settlement") {
+    return { phase: "suppressed", reason: "feature-disabled" };
   }
   if (unsupportedDmAnnouncement(record)) {
     // A settlement recap or a Dare result is a channel announcement: v1 has no

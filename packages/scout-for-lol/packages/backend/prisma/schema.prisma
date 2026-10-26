@@ -1816,7 +1816,6 @@ model BucksDare {
   targets       BucksDareTarget[]
   contributions BucksDareContribution[]
   evidence      BucksDareEvidence[]
-  intents       ConfirmationIntent[]
   activation    BucksDareActivation?
 
   @@index([challengerDiscordId, dareState, updatedAt])
@@ -1958,7 +1957,7 @@ model ConfirmationIntent {
   resultJson       String?
   createdAt        DateTime   @default(now())
   dareId           Int?
-  dare             BucksDare? @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  dare             Dare? @relation(fields: [dareId], references: [id], onDelete: Cascade)
   expectedRevision Int?
 
   @@index([dareId, expiresAt])
@@ -3246,4 +3245,144 @@ model FeatureTipImpression {
   @@unique([serverId, audienceId, tipKey])
   @@index([serverId, audienceId, shownAt])
   @@index([serverId, audienceId, claimedAt])
+}
+
+// Standalone, non-monetary Dare contracts.
+model Dare {
+  id                    Int       @id @default(autoincrement())
+  serverId              String
+  channelId             String
+  challengerDiscordId   String
+  originConversationId  String?
+  dareState             String    @default("draft")
+  currentRevision       Int       @default(1)
+  publishedRevision        Int?
+  contractJson          String?
+  proposalExpiresAt     DateTime?
+  acceptDeadline        DateTime?
+  activatedAt           DateTime?
+  deadlineAt            DateTime?
+  settledAt             DateTime?
+  // The match whose settlement made this Dare terminal, when one did. Written
+  // in the settling transaction so a retried settlement can still name every
+  // Dare the match resolved after its in-memory result is gone.
+  settledMatchId        String?
+  finalValue            Boolean?
+  proofJson             String?
+  voidReason            String?
+  messageRef            String?
+  calloutClaimId        String?
+  calloutClaimedAt      DateTime?
+  calloutRefreshPending Boolean   @default(false)
+  calloutRefreshVersion Int       @default(0)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  revisions     DareRevision[]
+  targets       DareTarget[]
+  evidence      DareEvidence[]
+  intents       ConfirmationIntent[]
+  activation    DareActivation?
+
+  @@index([challengerDiscordId, dareState, updatedAt])
+  @@index([serverId, dareState, updatedAt])
+  @@index([dareState, acceptDeadline])
+  @@index([dareState, deadlineAt])
+  @@index([calloutRefreshPending, updatedAt])
+  @@index([settledMatchId])
+}
+
+model DareActivation {
+  dareId        Int       @id
+  dare          Dare @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  revision      Int
+  requestedAt   DateTime
+  nextAttemptAt DateTime
+  attemptCount  Int       @default(0)
+  lastAttemptAt DateTime?
+  errorCode     String?
+  snapshotJson  String?
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([completedAt, nextAttemptAt, requestedAt])
+}
+
+model DareRevision {
+  id                  Int       @id @default(autoincrement())
+  dareId              Int
+  dare                Dare @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  revision            Int
+  originalText        String
+  canonicalScoutQl    String
+  compiledPlan        String
+  scoutQlImmutableAst String?
+  scoutQlPlanHash     String?
+  compilerVersion     String
+  evaluatorVersion    String
+  targetsJson         String
+  deadlineSpecJson    String
+  plainLanguage       String
+  semanticProofPlan   String
+  // List-card copy from Explore authoring. Null on revisions written before
+  // this existed; the list then uses originalText and humanized game-set
+  // names rather than inventing a second contract.
+  displayTitle        String?
+  statusPhrasesJson   String?
+  translationJson     String?
+  createdAt           DateTime  @default(now())
+
+  @@unique([dareId, revision])
+}
+
+model DareTarget {
+  id             Int       @id @default(autoincrement())
+  dareId         Int
+  dare           Dare @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  targetKey      String
+  discordId      String
+  playerId       Int
+  alias          String
+  accounts       String
+  acceptedAt     DateTime?
+  declinedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([dareId, targetKey])
+  @@unique([dareId, discordId])
+}
+
+model DareEvidence {
+  id                  Int       @id @default(autoincrement())
+  dareId              Int
+  dare                Dare @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  matchId             String
+  gameStartAt         DateTime
+  gameEndAt           DateTime
+  queueType           String
+  candidateMembership String
+  sourceReferences    String
+  evaluationOutput    String
+  coverageState       String
+  targetDependencies  String
+  evaluationTrace     String
+  planVersion         String
+  createdAt           DateTime  @default(now())
+
+  @@unique([dareId, matchId])
+  @@index([dareId, gameEndAt, matchId])
+}
+
+model DareNotificationPreference {
+  id                        Int       @id @default(autoincrement())
+  serverId                  String
+  discordId                 String
+  dareLifecycleDms          Boolean   @default(true)
+  dareProgressDms           Boolean   @default(true)
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+
+  @@unique([serverId, discordId])
 }

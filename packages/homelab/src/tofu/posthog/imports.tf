@@ -31,10 +31,6 @@ import {
   id = "549883/1975723"
 }
 
-import {
-  to = posthog_dashboard.dashboard_2027696
-  id = "549883/2027696"
-}
 
 import {
   to = posthog_dashboard.dashboard_1977268
@@ -66,10 +62,6 @@ import {
   id = "549883/1975723"
 }
 
-import {
-  to = posthog_dashboard_layout.dashboard_2027696
-  id = "549883/2027696"
-}
 
 import {
   to = posthog_dashboard_layout.dashboard_1977268
@@ -91,55 +83,15 @@ import {
   id = "549883/1977280"
 }
 
-import {
-  to = posthog_insight.insight_11297206
-  id = "549883/11297206"
-}
 
-import {
-  to = posthog_insight.insight_11297203
-  id = "549883/11297203"
-}
 
-import {
-  to = posthog_insight.insight_11297213
-  id = "549883/11297213"
-}
 
-import {
-  to = posthog_insight.insight_11297204
-  id = "549883/11297204"
-}
 
-import {
-  to = posthog_insight.insight_11297201
-  id = "549883/11297201"
-}
 
-import {
-  to = posthog_insight.insight_11297212
-  id = "549883/11297212"
-}
 
-import {
-  to = posthog_insight.insight_11297198
-  id = "549883/11297198"
-}
 
-import {
-  to = posthog_insight.insight_11297197
-  id = "549883/11297197"
-}
 
-import {
-  to = posthog_insight.insight_11297196
-  id = "549883/11297196"
-}
 
-import {
-  to = posthog_insight.insight_11297195
-  id = "549883/11297195"
-}
 
 import {
   to = posthog_insight.insight_11251185

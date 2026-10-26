@@ -1,12 +1,11 @@
-import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
-import type { NotificationPolicySuppressionReason } from "@scout-for-lol/domain/notifications/intent.ts";
 import type { ProductNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { prisma } from "#src/database/index.ts";
-import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import {
   productAnnouncementOf,
   type ProductAnnouncementEffect,
 } from "#src/temporal/notification/product/announcement.ts";
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
+import type { NotificationPolicySuppressionReason } from "@scout-for-lol/domain/notifications/intent.ts";
 type Suppression = NotificationPolicySuppressionReason | undefined;
 
 async function competitionSuppression(
@@ -47,9 +46,7 @@ export async function productAnnouncementSuppression(
     return "recipient-preference";
   switch (effect.kind) {
     case "weekly-bucks":
-      return (await isPolicyEnabled("betting_enabled", { server: guildId }))
-        ? undefined
-        : "feature-disabled";
+      return "feature-disabled";
     case "customs-recruitment":
       // Customs live nights were retired with the Discord Activity. Retained
       // recruitment intents still parse, but none may announce a night.

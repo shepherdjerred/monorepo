@@ -1,4 +1,16 @@
-import { Output, generateText, stepCountIs } from "ai";
+import {
+  capabilityAnswerIssues,
+  EXPLORE_CAPABILITY_EVAL_MODEL,
+  ExploreCapabilityEvalReportSchema,
+  exploreCapabilityEvalSha256,
+} from "#src/explore/capability-eval.ts";
+import { emitEvalReport } from "#src/explore/eval-report-output.ts";
+import { exploreAgentInstructions } from "#src/explore/prompt.ts";
+import {
+  enabledExploreSkills,
+  type ExploreSkillOptions,
+} from "#src/explore/skills/registry.ts";
+import { createLoadSkillTool } from "#src/explore/skills/tool.ts";
 import {
   ExploreAnswerWireSchema,
   ExploreCapabilityCorpusSchema,
@@ -10,19 +22,7 @@ import {
   providerCredentialsFromEnv,
   requireCredentialsFor,
 } from "@shepherdjerred/llm-runtime";
-import {
-  capabilityAnswerIssues,
-  EXPLORE_CAPABILITY_EVAL_MODEL,
-  ExploreCapabilityEvalReportSchema,
-  exploreCapabilityEvalSha256,
-} from "#src/explore/capability-eval.ts";
-import { exploreAgentInstructions } from "#src/explore/prompt.ts";
-import {
-  enabledExploreSkills,
-  type ExploreSkillOptions,
-} from "#src/explore/skills/registry.ts";
-import { createLoadSkillTool } from "#src/explore/skills/tool.ts";
-import { emitEvalReport } from "#src/explore/eval-report-output.ts";
+import { generateText, Output, stepCountIs } from "ai";
 
 /**
  * Does Explore say "Scout does not do that" when Scout does not do that?
@@ -60,7 +60,7 @@ const REPORT_URL = new URL(
 );
 
 function skillOptionsFor(entry: ExploreCapabilityCase): ExploreSkillOptions {
-  return { bucks: null, creation: entry.creationEnabled, surface: "web" };
+  return { creation: entry.creationEnabled, surface: "web" };
 }
 
 function instructionsFor(entry: ExploreCapabilityCase): string {
@@ -71,7 +71,7 @@ function instructionsFor(entry: ExploreCapabilityCase): string {
 function loadSkillToolFor(entry: ExploreCapabilityCase) {
   return createLoadSkillTool({
     skills: enabledExploreSkills(skillOptionsFor(entry)),
-    context: { bucks: null, surface: "web" },
+    context: { surface: "web" },
     track: async (_toolName, work) => await work(),
     onLoaded: () => undefined,
   });

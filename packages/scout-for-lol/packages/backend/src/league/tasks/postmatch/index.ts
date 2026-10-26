@@ -1,19 +1,15 @@
-import { retryPendingBucksEarnings } from "#src/betting/accounts/earnings-retry.ts";
-import { settleEndedDareWindows } from "#src/betting/dares/settlement/dare-sweep.ts";
-import { settleMatureDareSqlRaces } from "#src/betting/dares/settlement/dare-settle-contract.ts";
-import { activatePendingDares } from "#src/betting/dares/lifecycle/dare-activation.ts";
-import { refreshPendingDareCallouts } from "#src/betting/dares/presentation/dare-callout.ts";
-import { DarePartialSettlementError } from "#src/betting/dares/settlement/dare-settle-types.ts";
-import { voidStaleAndAnnounce } from "#src/league/tasks/postmatch/void-stale-announce.ts";
-import { voidStaleParlayMarkets } from "#src/betting/parlays/runtime/parlay-sweep.ts";
+import { activatePendingDares } from "#src/dares/lifecycle/dare-activation.ts";
+import { refreshPendingDareCallouts } from "#src/dares/presentation/dare-callout.ts";
+import { settleMatureDareSqlRaces } from "#src/dares/settlement/dare-settle-contract.ts";
+import { DarePartialSettlementError } from "#src/dares/settlement/dare-settle-types.ts";
+import { settleEndedDareWindows } from "#src/dares/settlement/dare-sweep.ts";
+import { prisma } from "#src/database/index.ts";
 import { runMaintenanceSteps } from "#src/league/tasks/maintenance-steps.ts";
-import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 import {
   markPostMatchPollCompleted,
   markPostMatchPollFailed,
   type PostMatchPollOwner,
 } from "#src/league/tasks/recovery/app-state.ts";
-import { prisma } from "#src/database/index.ts";
 
 /**
  * Run the post-match clocks and close the poll.
@@ -28,12 +24,8 @@ export async function runPostMatchMaintenance(options: {
   dareEvidenceWatermark?: Date | undefined;
   pollOwner: PostMatchPollOwner;
 }): Promise<void> {
-  const bettingHardDisabled = isFeatureHardDisabled("betting_enabled");
   const settleDareV2Deadlines = options.settleDareV2Deadlines;
-  // Dare recovery is never feature-gated. Once a contract is funded its
-  // settlement and refund paths must survive both rollout revocation and the
-  // broader Bryan Bucks hard-disable. Other betting maintenance remains
-  // behind the hard-disable policy.
+  // Published contracts keep resolving after authoring is switched off.
   const steps = [
     {
       name: "dare activation",
@@ -72,23 +64,6 @@ export async function runPostMatchMaintenance(options: {
       },
     },
   ];
-  if (!bettingHardDisabled) {
-    steps.push(
-      {
-        name: "pending earnings retry",
-        run: async () => {
-          await retryPendingBucksEarnings();
-        },
-      },
-      { name: "stale betting pool void", run: voidStaleAndAnnounce },
-      {
-        name: "stale parlay market void",
-        run: async () => {
-          await voidStaleParlayMarkets();
-        },
-      },
-    );
-  }
   const close = { owner: options.pollOwner };
   // Isolated per step, then re-thrown: a persistently failing recovery path
   // cannot starve the remaining clocks while money stays escrowed.

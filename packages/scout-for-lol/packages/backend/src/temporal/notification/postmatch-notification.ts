@@ -1,32 +1,32 @@
-import { AttachmentBuilder, type MessageCreateOptions } from "discord.js";
-import { ApplicationFailure } from "@temporalio/common";
-import { resolveQueueTypeFromGame } from "@scout-for-lol/data";
-import { gameResultTimestamp } from "@scout-for-lol/domain/artifacts/game-result.ts";
-import { readReportScoreboard } from "#src/evidence/report-scoreboard.ts";
-import { getAccountConfigsByPuuids } from "#src/database/player-accounts.ts";
+import type { PostmatchRankChanges } from "#src/dares/lifecycle/dare-rank-capture.ts";
 import { prisma } from "#src/database/index.ts";
-import { buildScoreboardReport } from "#src/league/tasks/postmatch/scoreboard-report.ts";
-import { createMatchImage } from "#src/league/tasks/postmatch/match-report-image.ts";
-import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import { getAccountConfigsByPuuids } from "#src/database/player-accounts.ts";
+import { readReportScoreboard } from "#src/evidence/report-scoreboard.ts";
+import { resolvePostmatchDeliveryChannels } from "#src/league/tasks/notification-filters.ts";
 import { matchLinkComponents } from "#src/league/tasks/postmatch/match-report-components.ts";
-import { withMvpVoteFurniture } from "#src/mvp-votes/components.ts";
-import { emptyMvpTallyEmbed } from "#src/mvp-votes/tally.ts";
 import {
-  generateMatchReport,
   formatGameCompletionMessage,
+  generateMatchReport,
 } from "#src/league/tasks/postmatch/match-report-generator.ts";
 import {
   AI_REVIEW_ATTACHMENT_NAME,
   aiReviewAttachment,
   attachReportImage,
+  createMatchImage,
   reportImageAttachmentName,
 } from "#src/league/tasks/postmatch/match-report-image.ts";
-import { resolvePostmatchDeliveryChannels } from "#src/league/tasks/notification-filters.ts";
+import { buildScoreboardReport } from "#src/league/tasks/postmatch/scoreboard-report.ts";
+import { withMvpVoteFurniture } from "#src/mvp-votes/components.ts";
+import { emptyMvpTallyEmbed } from "#src/mvp-votes/tally.ts";
 import { resolveScoutObservedMatchContext } from "#src/temporal/match/match-context.ts";
-import type { ScoutAttestedReportArtifact } from "#src/temporal/notification/notification-artifact.ts";
 import type { ScoutReportComponentsSchema } from "#src/temporal/notification-lane/notification-receipts.ts";
+import type { ScoutAttestedReportArtifact } from "#src/temporal/notification/notification-artifact.ts";
+import { resolveQueueTypeFromGame } from "@scout-for-lol/data";
+import { gameResultTimestamp } from "@scout-for-lol/domain/artifacts/game-result.ts";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import { ApplicationFailure } from "@temporalio/common";
+import { AttachmentBuilder, type MessageCreateOptions } from "discord.js";
 import type { z } from "zod";
-import type { PostmatchRankChanges } from "#src/betting/dares/lifecycle/dare-rank-capture.ts";
 
 /**
  * The post-match report: what a `postmatch` intent renders and delivers.

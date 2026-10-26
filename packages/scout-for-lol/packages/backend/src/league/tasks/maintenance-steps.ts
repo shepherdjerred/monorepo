@@ -14,22 +14,6 @@ export type MaintenanceStep = {
   run: () => Promise<void>;
 };
 
-/**
- * Run every step even when an earlier one throws, then re-throw.
- *
- * The pre-match and post-match tasks each drive several unrelated clocks in a
- * fixed order, and Bryan Bucks dare refunds are the LAST of them. Running the
- * list as one straight-line `await` chain therefore made a persistently
- * failing earlier step (Riot's API, a dead Discord channel, a broken parlay
- * row) starve those refunds indefinitely: money stayed escrowed because an
- * unrelated subsystem was down.
- *
- * Isolation is per-step, not per-task: the collected failures are re-thrown as
- * an `AggregateError` (a single failure is re-thrown as-is) so the Temporal
- * activity wrapping the task still fails and still retries. Swallowing here
- * would hide a real outage, which is the opposite of what the isolation is
- * for.
- */
 /** A lone failure is re-thrown as-is so callers keep their `instanceof`
  * checks; a non-Error throw is wrapped rather than re-thrown raw. */
 function asMaintenanceError(error: unknown, message: string): Error {

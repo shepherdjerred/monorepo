@@ -1,34 +1,23 @@
-import { TRPCError } from "@trpc/server";
-import { z } from "zod";
 import type { User } from "#generated/prisma/client/index.js";
 import {
-  ConfirmationIntentKindSchema,
-  DiscordAccountIdSchema,
-  DiscordGuildIdSchema,
-  type DiscordAccountId,
-  ExploreConversationIdSchema,
-  ExploreConversationTitleSchema,
-  ExploreRunIdSchema,
-  ExploreRunObserveRequestSchema,
-  ExploreRunOutcomeResultSchema,
-  ExploreTurnRequestSchema,
-  ExploreMentionCandidateSchema,
-  ExploreMentionSearchSchema,
-  ExploreShareTokenSchema,
-} from "@scout-for-lol/data";
-import { consumeDareConfirmationIntent } from "#src/betting/dares/lifecycle/dare-intent-consume.ts";
-import { tryEnsureDareCallout } from "#src/betting/dares/presentation/dare-callout.ts";
+  exploreModelPickerEnabled,
+  exploreSpendPolicy,
+} from "#src/config/dynamic.ts";
+import { consumeDareConfirmationIntent } from "#src/dares/lifecycle/dare-intent-consume.ts";
+import { tryEnsureDareCallout } from "#src/dares/presentation/dare-callout.ts";
 import { prisma } from "#src/database/index.ts";
 import {
   assertExploreAccess,
   isExploreConfigured,
 } from "#src/explore/access.ts";
+import { sharedToolPayload } from "#src/explore/inspection/tool-payloads.ts";
 import { ExploreConversationBusyError } from "#src/explore/rate-limit.ts";
 import {
   ExploreRunRateLimitedError,
   ExploreRunUnavailableError,
   exploreRunManager,
 } from "#src/explore/runs/run-manager.ts";
+import { exploreSpendingStatus } from "#src/explore/spending/ledger.ts";
 import {
   ExploreInvalidTurnError,
   ExploreNotFoundError,
@@ -42,6 +31,7 @@ import {
 } from "#src/explore/store.ts";
 import { scoutExploreSharesTotal } from "#src/metrics/explore.ts";
 import { resolvePlayerIdentities } from "#src/reports/identity.ts";
+import { durableExploreQuotaStatus } from "#src/temporal/durable-quota.ts";
 import { exploreAttachmentProcedures } from "#src/trpc/router/explore/explore-attachment-procedures.ts";
 import { exploreCreationProcedures } from "#src/trpc/router/explore/explore-creation-procedures.ts";
 import {
@@ -56,13 +46,23 @@ import {
   router,
   webMutationProcedure,
 } from "#src/trpc/trpc.ts";
-import { sharedToolPayload } from "#src/explore/inspection/tool-payloads.ts";
 import {
-  exploreModelPickerEnabled,
-  exploreSpendPolicy,
-} from "#src/config/dynamic.ts";
-import { exploreSpendingStatus } from "#src/explore/spending/ledger.ts";
-import { durableExploreQuotaStatus } from "#src/temporal/durable-quota.ts";
+  ConfirmationIntentKindSchema,
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+  ExploreConversationIdSchema,
+  ExploreConversationTitleSchema,
+  ExploreMentionCandidateSchema,
+  ExploreMentionSearchSchema,
+  ExploreRunIdSchema,
+  ExploreRunObserveRequestSchema,
+  ExploreRunOutcomeResultSchema,
+  ExploreShareTokenSchema,
+  ExploreTurnRequestSchema,
+  type DiscordAccountId,
+} from "@scout-for-lol/data";
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 
 /**
  * Conversation management for explore.

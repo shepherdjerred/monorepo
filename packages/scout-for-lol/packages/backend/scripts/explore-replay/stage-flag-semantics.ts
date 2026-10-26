@@ -5,7 +5,7 @@ import type { ReplayStage } from "#src/explore/replay/dataset.ts";
  * Give flag evaluation the pinned stage's semantics without the stage's config.
  *
  * `ENVIRONMENT` does two things to flags, both prod-only:
- * `isFeatureHardDisabled` short-circuits bucks and dares (`flags.ts:219`), and
+ * `isFeatureHardDisabled` short-circuits Dares (`flags.ts:219`), and
  * `applicableOverrides` drops beta-only overrides (`flags.ts:233-238`). A prod
  * run has to see both or it records capabilities prod does not grant.
  *

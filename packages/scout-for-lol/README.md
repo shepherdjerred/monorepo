@@ -133,7 +133,7 @@ for the mechanism.
 - `backend`: `configuration/`, `observability/`, `utils/` and `metrics/` sit
   underneath everything; `database/`, `storage/`, `report-store/`, `durable/`
   and `analytics/` do not reach into features or transports; `http/` reaches
-  only its endpoint adapters (tRPC, Explore, reports, betting, customs, Scout
+  only its endpoint adapters (tRPC, Explore, reports, Dares, customs, Scout
   client, Temporal health). The `layers` list must equal the directories under
   `src/`, so a new directory is forbidden by every rule until it is named.
 - `domain`: identity is a leaf, and the codec, artifacts, match-processing and
@@ -160,14 +160,13 @@ and fails if any boundary lacks one that violates it; `bun run lint` runs
 **Domain boundaries:**
 
 - Explore owns saved conversational queries, including `/scout ask`.
-- Bryan Bucks owns Dare viewing and management while retaining links to the
+- Dares owns challenge viewing and management while retaining links to the
   authoring conversation.
 - Raw S3 match data is canonical; the local DuckDB/Parquet report lake is
   derived and rebuildable.
 - Managed custom games, local observations, and Riot ingestion retain distinct
   provenance. Riot remains preferred when both sources have a complete match.
-- Stored betting and Dare semantics are versioned so existing records do not
-  change meaning during a rollout.
+- Dares freeze versioned SQL contracts and have no currency or financial effects.
 
 **Project Structure:**
 

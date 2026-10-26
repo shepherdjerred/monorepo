@@ -34,7 +34,6 @@ describe("EXPLORE_SUGGESTIONS catalog", () => {
 
   test("includes suggested questions for each specific feature", () => {
     const conditions = new Set(EXPLORE_SUGGESTIONS.map((s) => s.condition));
-    expect(conditions.has("bucks")).toBe(true);
     expect(conditions.has("mvp_votes")).toBe(true);
     expect(conditions.has("dares")).toBe(true);
     expect(conditions.has("competitions")).toBe(true);
@@ -52,7 +51,6 @@ describe("isSuggestionEligible and filterSuggestions", () => {
   });
 
   test("evaluates feature flags accurately", () => {
-    const bucks = dummySuggestion("bucks");
     const mvpVotes = dummySuggestion("mvp_votes");
     const dares = dummySuggestion("dares");
     const competitions = dummySuggestion("competitions");
@@ -63,7 +61,6 @@ describe("isSuggestionEligible and filterSuggestions", () => {
 
     // All disabled
     const emptyCtx: ExploreFeatureContext = {};
-    expect(isSuggestionEligible(bucks, emptyCtx)).toBe(false);
     expect(isSuggestionEligible(mvpVotes, emptyCtx)).toBe(false);
     expect(isSuggestionEligible(dares, emptyCtx)).toBe(false);
     expect(isSuggestionEligible(competitions, emptyCtx)).toBe(false);
@@ -73,7 +70,6 @@ describe("isSuggestionEligible and filterSuggestions", () => {
     expect(isSuggestionEligible(reports, emptyCtx)).toBe(false);
 
     // Each enabled individually
-    expect(isSuggestionEligible(bucks, { bucksEnabled: true })).toBe(true);
     expect(isSuggestionEligible(mvpVotes, { mvpVotesEnabled: true })).toBe(
       true,
     );
@@ -93,11 +89,7 @@ describe("isSuggestionEligible and filterSuggestions", () => {
 
   test("filterSuggestions filters out disabled features while keeping general prompts", () => {
     const filteredNoFlags = filterSuggestions(EXPLORE_SUGGESTIONS, {});
-    expect(
-      filteredNoFlags.some(
-        (s) => s.condition === "bucks" || s.condition === "dares",
-      ),
-    ).toBe(false);
+    expect(filteredNoFlags.some((s) => s.condition === "dares")).toBe(false);
     expect(filteredNoFlags.some((s) => s.condition === "competitions")).toBe(
       false,
     );
@@ -106,14 +98,11 @@ describe("isSuggestionEligible and filterSuggestions", () => {
     );
     expect(filteredNoFlags.every((s) => s.condition === "always")).toBe(true);
 
-    const filteredWithBucks = filterSuggestions(EXPLORE_SUGGESTIONS, {
-      bucksEnabled: true,
+    const filteredWithDares = filterSuggestions(EXPLORE_SUGGESTIONS, {
       daresEnabled: true,
     });
-    expect(
-      filteredWithBucks.some((s) => s.prompt.includes("Bryan Bucks")),
-    ).toBe(true);
-    expect(filteredWithBucks.some((s) => s.condition === "competitions")).toBe(
+    expect(filteredWithDares.some((s) => s.condition === "dares")).toBe(true);
+    expect(filteredWithDares.some((s) => s.condition === "competitions")).toBe(
       false,
     );
   });

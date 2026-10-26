@@ -4,6 +4,7 @@ export {
   InteractiveOutcomeSchema,
   ReportScheduleDrainResultSchema,
   ScoutBackgroundJobInputSchema,
+  ScoutActiveBackgroundJobKindSchema,
   ScoutDetachedWorkInputSchema,
   ScoutIngestionReconciliationInputSchema,
   ScoutInitialHistoryInputSchema,

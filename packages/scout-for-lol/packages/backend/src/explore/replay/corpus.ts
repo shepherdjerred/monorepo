@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { ExploreSurfaceSchema } from "#src/explore/surface.ts";
+import { z } from "zod";
 
 /**
  * The curated conversation corpus: identifiers only, never text.
@@ -36,15 +36,6 @@ export const ReplayGuildSourceSchema = z.enum([
 
 export type ReplayGuildSource = z.infer<typeof ReplayGuildSourceSchema>;
 
-/**
- * What kind of thing this conversation is.
- *
- * `dare-draft` conversations are opened by the Bryan Bucks flow with a
- * templated prompt ("Create one private ScoutQL-backed Dare v2 draft from this
- * exact request: …"), not by someone typing a question. Replaying them is
- * useful, but averaging them together with natural questions would let
- * templated text dominate a bundle's counts, so they stay countable apart.
- */
 export const ReplayConversationKindSchema = z.enum(["question", "dare-draft"]);
 
 export type ReplayConversationKind = z.infer<

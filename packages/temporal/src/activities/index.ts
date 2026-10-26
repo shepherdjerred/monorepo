@@ -42,7 +42,6 @@ import { tasknotesCanaryActivities } from "./maintenance/tasknotes-canary.ts";
 import { reportFreshnessActivities } from "./reports/report-freshness.ts";
 import { ciWorkspaceReaperActivities } from "./maintenance/ci-workspace-reaper.ts";
 import { freshrssActivities } from "./maintenance/freshrss.ts";
-import { scoutBryanBucksActivities } from "./scout/scout-bryan-bucks.ts";
 import { fliptFlagInventoryActivities } from "./flipt-flag-inventory.ts";
 import { seaweedFsBackupActivities } from "./homelab/seaweedfs-backup.ts";
 import { deliveryReplicationActivities } from "./delivery/replication/copy.ts";
@@ -136,7 +135,6 @@ export const scoutActivities = {
   ...scoutImageGcActivities,
   ...scoutShowcaseRefreshActivities,
   ...scoutQueueWindowsActivities,
-  ...scoutBryanBucksActivities,
   ...scheduleRehearsalActivities,
 };
 

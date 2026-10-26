@@ -10,7 +10,7 @@ import type { StorySeed } from "#src/lib/storybook/trpc-stub.ts";
 import {
   initialCompetitionBuilderState,
   type CompetitionBuilderState,
-} from "#src/lib/bucks/competition-builder-state.ts";
+} from "#src/lib/competitions/competition-builder-state.ts";
 import { CompetitionBuilderBasics } from "./competition-builder-basics.tsx";
 import { CompetitionBuilderEntrants } from "./competition-builder-entrants.tsx";
 import { CompetitionBuilderReview } from "./competition-builder-review.tsx";

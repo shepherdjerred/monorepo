@@ -1,53 +1,22 @@
-import { queuesWithoutPostMatchData } from "@scout-for-lol/data";
+import { DISCORD_SERVER_INVITE } from "#src/configuration/subscription-limits.ts";
+import {
+  LAKE_COVERAGE_RULE,
+  LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH,
+} from "#src/explore/lake-coverage.ts";
 import {
   challengeFacts,
   hallOfFameFacts,
   setupFacts,
 } from "#src/explore/product-facts.ts";
-import {
-  LAKE_COVERAGE_RULE,
-  LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH,
-} from "#src/explore/lake-coverage.ts";
-import { DISCORD_SERVER_INVITE } from "#src/configuration/subscription-limits.ts";
-import { scoutQlFieldGuideSection } from "#src/reports/ai/scoutql-field-guide.ts";
 import { exploreScoutQlReference } from "#src/explore/scoutql-reference.ts";
 import {
   enabledExploreSkills,
   exploreSkillIndexSection,
   type ExploreSkillOptions,
 } from "#src/explore/skills/registry.ts";
+import { scoutQlFieldGuideSection } from "#src/reports/ai/scoutql-field-guide.ts";
+import { queuesWithoutPostMatchData } from "@scout-for-lol/data";
 
-/**
- * System prompt for the explore agent.
- *
- * Three properties matter more than the rest and are stated in the strongest
- * terms the prompt can manage:
- *
- * 1. Never answer from model knowledge. A confidently wrong champion win rate
- *    is indistinguishable from a right one to a reader, and it destroys trust
- *    in every other number on the page. Refusing is cheap; being wrong is not.
- * 2. Describe the corpus honestly. It is the matches Scout has ingested — the
- *    games of tracked players and everyone who happened to be in them — not
- *    the League ladder. An answer that implies global coverage is misleading
- *    even when its arithmetic is right.
- * 3. Describe Scout's own capabilities honestly, and immediately. The failure
- *    this guards against is not a wrong number but a wasted conversation: a
- *    user spent forty turns designing a "most losses" competition Scout has no
- *    criterion for, was never told so, and was finally pointed at Challonge.
- *    Saying "Scout does not do that" in the first reply is the whole fix, and
- *    it is why `## Limits` now spells out that its two forbidden ScoutQL
- *    sources say nothing about whether the competition FEATURE exists — the
- *    old wording read as "competitions are out of scope here" and the model
- *    dutifully obeyed it while holding a competition-creation tool.
- *
- * Everything else is progressive disclosure. Domain instructions — ScoutQL
- * itself, visualization kinds, match cards, dares, challenges, creation,
- * Bryan Bucks — live as Markdown skills under `skills/content/` and are
- * loaded on demand through the `load_skill` tool; the prompt carries only the
- * capability-gated index plus each skill's tripwires (the rules that must
- * hold even when its body is never loaded). This keeps a stats question from
- * paying attention to dare SQL minutiae, and vice versa.
- */
 /**
  * The Hall of Fame as Scout actually defines it.
  *
@@ -90,18 +59,6 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     // it has left. In one prod sweep 24 of 39 such turns called no tool at all
     // and blamed the data.
     //
-    // The off branch carries the feature's vocabulary for the same reason.
-    // Without it "Bryan Bucks" is an unknown noun, and the model read it as a
-    // player name — "I can report on Bryan Bucks's recorded League matches
-    // instead, if that's the player you meant" — while another turn improvised
-    // a dare out of nothing because it did not know dares were a Scout feature.
-    ...(options.bucks === null
-      ? [
-          "Bryan Bucks — this server's play-money betting and Dare currency — is not switched on for the servers in scope, so you have no tool for it. It is a Scout feature and it is not a player, a team, or an esports organisation. Say it is not enabled here and that a server admin can turn it on, never that Scout does not have it.",
-        ]
-      : [
-          "This server also has Bryan Bucks (friendly betting) data, answered with the dedicated bucks tools.",
-        ]),
     ...(options.mvpVotes == null
       ? [
           "Community Discord MVP votes are not switched on for the servers in scope, so you have no tool for them. Scout does have the feature — members vote for a match MVP in Discord — so say it is not enabled here, never that Scout does not record MVP votes.",
@@ -112,7 +69,7 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     ...(options.dares === true
       ? []
       : [
-          "Dares — Bryan Bucks wagers on a player meeting a condition — are not switched on for the servers in scope, so you have no tool for them. Never draft, invent, or word a dare yourself: say dares are not enabled here and that a server admin can turn them on.",
+          "Dares — free challenges on a player meeting a condition — are not switched on for the servers in scope, so you have no tool for them. Never draft, invent, or word a dare yourself: say dares are not enabled here and that a server admin can turn them on.",
         ]),
     ...(options.challenges === true
       ? [

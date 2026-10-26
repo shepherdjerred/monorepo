@@ -1,24 +1,24 @@
-import { Context } from "@temporalio/activity";
-import { ApplicationFailure } from "@temporalio/common";
-import type { ScoutTemporalActivityGroups } from "./connected-runtime.ts";
-import { PermanentImportError } from "#src/league/initial-history/errors.ts";
 import {
   classifyLlmProviderIssue,
   providerForError,
   recordProviderIssue,
 } from "#src/alerts/provider-metrics.ts";
+import { PermanentImportError } from "#src/league/initial-history/errors.ts";
+import { createScoutBackgroundActivities } from "#src/temporal/background-activities.ts";
+import { runBackgroundJobByKind } from "#src/temporal/background-jobs.ts";
+import { createScoutLakeActivities } from "#src/temporal/lake/lake-activities.ts";
+import { withOrchestrationProducer } from "#src/temporal/orchestration-cutover.ts";
+import { createRealtimeActivities } from "#src/temporal/realtime-activities.ts";
+import { temporalWorkRetired } from "#src/temporal/work-features.ts";
+import { Context } from "@temporalio/activity";
+import { ApplicationFailure } from "@temporalio/common";
 import {
   heartbeatWhile,
+  NonSupportBackgroundJobInputSchema,
   probeQueue,
   scheduleReconciliationEnabled,
-  NonSupportBackgroundJobInputSchema,
 } from "./activity-runtime.ts";
-import { createRealtimeActivities } from "#src/temporal/realtime-activities.ts";
-import { createScoutBackgroundActivities } from "#src/temporal/background-activities.ts";
-import { createScoutLakeActivities } from "#src/temporal/lake/lake-activities.ts";
-import { temporalWorkHardDisabled } from "#src/temporal/work-features.ts";
-import { runBackgroundJobByKind } from "#src/temporal/background-jobs.ts";
-import { withOrchestrationProducer } from "#src/temporal/orchestration-cutover.ts";
+import type { ScoutTemporalActivityGroups } from "./connected-runtime.ts";
 type DetachedWorkInput = Parameters<
   ScoutTemporalActivityGroups["background"]["runDetachedBackgroundWork"]
 >[0];
@@ -59,7 +59,7 @@ async function runDetachedWork(input: DetachedWorkInput): Promise<void> {
         app: "scout-for-lol",
         provider: providerForError(error),
         kind: "quota",
-        source: "betting_parlay",
+        source: "detached_work",
       });
       throw quotaFailure;
     }
@@ -180,17 +180,13 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             take: 100,
           });
           const parsedDetachedWorks = detachedWorks.map((work) => {
-            if (
-              work.kind !== "parlay-generation" &&
-              work.kind !== "champion-mastery-refresh"
-            ) {
+            if (work.kind !== "champion-mastery-refresh") {
               throw ApplicationFailure.nonRetryable(
                 `Unknown Scout Temporal work kind ${work.kind}`,
                 "InvalidTemporalWorkKind",
               );
             }
-            const kind: "parlay-generation" | "champion-mastery-refresh" =
-              work.kind;
+            const kind: "champion-mastery-refresh" = work.kind;
             return { kind, workId: work.id };
           });
           const parsedInteractiveRuns = interactiveRuns.map((run) => {
@@ -213,7 +209,7 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
     },
     runDetachedBackgroundWork: runDetachedWork,
     runBackgroundJob: async (input) => {
-      if (temporalWorkHardDisabled(input.kind)) return;
+      if (temporalWorkRetired(input.kind)) return;
       if (input.kind === "support-inbox") {
         await heartbeatWhile(
           { kind: input.kind, phase: "running" },
@@ -226,7 +222,6 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
         [
           "competition-refresh",
           "competition-scheduled-updates",
-          "weekly-bucks-leaderboard",
           "outreach",
         ].includes(input.kind)
           ? withOrchestrationProducer(async () => {
@@ -235,25 +230,6 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
           : runBackgroundJobByKind(nonSupportInput),
       );
       Context.current().heartbeat({ kind: input.kind, phase: "complete" });
-    },
-    syncScoutBryanBucksAnalytics: async () => {
-      const result = await heartbeatWhile(
-        { kind: "bryan-bucks-analytics", phase: "running" },
-        async () => {
-          const { syncBucksAnalytics } =
-            await import("#src/analytics/bryan-bucks-sync.ts");
-          return await syncBucksAnalytics();
-        },
-      );
-      Context.current().heartbeat({
-        kind: "bryan-bucks-analytics",
-        phase: "complete",
-        ...result,
-      });
-      return {
-        status: "reconciled" as const,
-        detail: `Published ${result.ledgerEntries.toString()} ledger entries and ${result.snapshots.toString()} snapshots`,
-      };
     },
     drainReportScheduleOutbox: async (input) => {
       if (!scheduleReconciliationEnabled()) {

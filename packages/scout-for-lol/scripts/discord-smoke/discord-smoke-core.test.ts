@@ -13,7 +13,6 @@ const fixture = DiscordSmokeFixtureSchema.parse({
   applicationId: "1542993271477899294",
   botUserId: "1542993271477899294",
   invokingUserId: "1515150733660520496",
-  recipientUserId: "160509172704739328",
   guildId: "100000000000000001",
   channelId: "100000000000000002",
   pinchTabProfile: "scout-discord-smoke",
@@ -51,14 +50,13 @@ test("preflight validates both identities, guild/channel access, app, and profil
     if (url.endsWith("/users/@me/guilds")) {
       return Promise.resolve(response([{ id: fixture.guildId }]));
     }
-    if (url.includes("/channels/")) {
-      return Promise.resolve(
-        response({ id: fixture.channelId, guild_id: fixture.guildId }),
-      );
-    }
-    return url.includes("/members/")
-      ? Promise.resolve(response({ user: { id: fixture.recipientUserId } }))
-      : Promise.resolve(response({ id: fixture.applicationId }));
+    return Promise.resolve(
+      response(
+        url.includes("/channels/")
+          ? { id: fixture.channelId, guild_id: fixture.guildId }
+          : { id: fixture.applicationId },
+      ),
+    );
   });
   const verifyPinchTabProfile = vi.fn(() => Promise.resolve());
 
@@ -68,7 +66,7 @@ test("preflight validates both identities, guild/channel access, app, and profil
     { fetch: fetcher, verifyPinchTabProfile },
   );
 
-  expect(fetcher).toHaveBeenCalledTimes(8);
+  expect(fetcher).toHaveBeenCalledTimes(7);
   expect(verifyPinchTabProfile).toHaveBeenCalledWith(
     "scout-discord-smoke",
     fixture.guildId,
@@ -97,11 +95,10 @@ test("preflight refuses missing credentials before network or browser work", asy
 describe("invocation guard", () => {
   const base = DiscordSmokeManifestSchema.parse({
     runId: "run-1",
-    scenario: "bb-transfer",
+    scenario: "gateway",
     createdAt: "2026-08-29T00:00:00.000Z",
     databaseName: null,
     databaseUrl: null,
-    seededAccounts: null,
     invocationStartedAt: null,
     privateReplyId: null,
     publicMessageId: null,

@@ -54,7 +54,7 @@ S3 (the canonical match store), and posts notifications and report images to
 Discord. Application state (subscriptions, competitions, guilds) lives in
 PostgreSQL via Prisma. Scheduled and user-authored ScoutQL reports compile to SQL
 executed by embedded DuckDB over a Parquet "report lake" derived from the S3
-match objects. Version-three Bryan Bucks Dares use a separately bounded
+match objects. Version-three Dares use a separately bounded
 standard-SQL contract over the same normalized relations; frozen v1 and v2
 contracts retain their original evaluators. The web app SPA talks to the backend
 over tRPC.

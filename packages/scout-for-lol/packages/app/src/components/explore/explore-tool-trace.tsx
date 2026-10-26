@@ -309,19 +309,9 @@ function toolLabel(toolName: string): string {
   if (toolName === "run_report_query") {
     return "Run ScoutQL";
   }
-  if (toolName === "validate_dare_scoutql") {
-    return "Compile Dare ScoutQL";
-  }
-  if (toolName === "get_bucks_dataset") {
-    return "Read Bryan Bucks dataset";
-  }
-  if (toolName === "query_bucks_accounts") {
-    return "Read Bryan Bucks balance";
-  }
-  if (toolName === "query_bucks_ledger") {
-    return "Query Bryan Bucks ledger";
-  }
-  return toolName === "query_bucks_bets" ? "Query Bryan Bucks bets" : toolName;
+  return toolName === "validate_dare_scoutql"
+    ? "Compile Dare ScoutQL"
+    : toolName;
 }
 
 function statusLabel(status: ExploreTraceStatus): string {

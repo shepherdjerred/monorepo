@@ -72,7 +72,6 @@ export type TemporalOperationsWorkerProps = {
   serverServiceName: string;
   secret: ISecret;
   fliptAuthSecret: ISecret;
-  scoutBryanBucksControlSecret: ISecret;
   infraServiceAccount: ServiceAccount;
   homelabAuditEnvironment: Record<string, EnvValue>;
   talosConfigVolume: Volume;
@@ -257,13 +256,6 @@ export function createTemporalOperationsWorkers(
       OPENAI_API_KEY: EnvValue.fromSecretValue({
         secret: props.secret,
         key: "OPENAI_API_KEY",
-      }),
-      SCOUT_BRYAN_BUCKS_CONTROL_URL: EnvValue.fromValue(
-        "http://scout-service-beta.scout-beta.svc.cluster.local:3000/api/internal/bryan-bucks/analytics-sync",
-      ),
-      SCOUT_BRYAN_BUCKS_CONTROL_TOKEN: EnvValue.fromSecretValue({
-        secret: props.scoutBryanBucksControlSecret,
-        key: "token",
       }),
     },
   });

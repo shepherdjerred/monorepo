@@ -21,7 +21,7 @@ const CONSUMER_NAV = {
   exploreAvailable: false,
   profilesAvailable: false,
   challengesAvailable: false,
-  bucksAvailable: false,
+  daresAvailable: false,
 };
 const HELP_LINK = { label: "Help and feedback", to: "/feedback" };
 

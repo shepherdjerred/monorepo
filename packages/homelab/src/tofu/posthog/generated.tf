@@ -90,58 +90,6 @@ resource "posthog_insight" "insight_10892235" {
   tags      = null
 }
 
-# __generated__ by OpenTofu from "549883/11297195"
-resource "posthog_insight" "insight_11297195" {
-  create_in_folder = null
-  dashboard_ids    = [2027696]
-  deleted          = false
-  derived_name     = null
-  description      = "Daily unique non-house Bucks members with activity."
-  name             = "Bryan Bucks daily active members"
-  project_id       = "549883"
-  query_json = jsonencode({
-    kind = "InsightVizNode"
-    source = {
-      dateRange = {
-        date_from                = "-90d"
-        excludeIncompletePeriods = false
-        explicitDate             = false
-      }
-      filterTestAccounts = false
-      interval           = "day"
-      kind               = "TrendsQuery"
-      properties         = []
-      series = [{
-        event = "bryan_bucks_member_activity"
-        kind  = "EventsNode"
-        math  = "dau"
-      }]
-      trendsFilter = {
-        aggregationAxisFormat   = "numeric"
-        display                 = "ActionsLineGraph"
-        excludeBoxPlotOutliers  = true
-        hideWeekends            = false
-        legendPosition          = "bottom"
-        metricColorByDirection  = false
-        metricShowChange        = true
-        metricSummary           = "total"
-        resultCustomizationBy   = "value"
-        showAlertThresholdLines = false
-        showAnnotations         = true
-        showLegend              = false
-        showMultipleYAxes       = false
-        showPercentStackView    = false
-        showValuesOnSeries      = false
-        smoothingIntervals      = 1
-        stackBreakdownValues    = false
-        yAxisScaleType          = "linear"
-        yAxisStartAtZero        = true
-      }
-    }
-  })
-  query_sql = null
-  tags      = null
-}
 
 # __generated__ by OpenTofu from "549883/10881550"
 resource "posthog_insight" "insight_10881550" {
@@ -251,59 +199,6 @@ resource "posthog_insight" "insight_10881554" {
   tags      = null
 }
 
-# __generated__ by OpenTofu from "549883/11297213"
-resource "posthog_insight" "insight_11297213" {
-  create_in_folder = null
-  dashboard_ids    = [2027696]
-  deleted          = false
-  derived_name     = null
-  description      = "Deduplicated daily economy snapshot count; a missing current-day point indicates stale telemetry."
-  name             = "Bryan Bucks snapshot freshness"
-  project_id       = "549883"
-  query_json = jsonencode({
-    kind = "InsightVizNode"
-    source = {
-      dateRange = {
-        date_from                = "-30d"
-        excludeIncompletePeriods = false
-        explicitDate             = false
-      }
-      filterTestAccounts = false
-      interval           = "day"
-      kind               = "TrendsQuery"
-      properties         = []
-      series = [{
-        event      = "bryan_bucks_economy_snapshot"
-        kind       = "EventsNode"
-        math       = "hogql"
-        math_hogql = "count(distinct uuid)"
-      }]
-      trendsFilter = {
-        aggregationAxisFormat   = "numeric"
-        display                 = "ActionsBar"
-        excludeBoxPlotOutliers  = true
-        hideWeekends            = false
-        legendPosition          = "bottom"
-        metricColorByDirection  = false
-        metricShowChange        = true
-        metricSummary           = "total"
-        resultCustomizationBy   = "value"
-        showAlertThresholdLines = false
-        showAnnotations         = true
-        showLegend              = false
-        showMultipleYAxes       = false
-        showPercentStackView    = false
-        showValuesOnSeries      = false
-        smoothingIntervals      = 1
-        stackBreakdownValues    = false
-        yAxisScaleType          = "linear"
-        yAxisStartAtZero        = true
-      }
-    }
-  })
-  query_sql = null
-  tags      = null
-}
 
 # __generated__ by OpenTofu from "019fe7f8-ecce-0000-adca-fe93618022c7/549883"
 resource "posthog_project" "monorepo" {
@@ -1401,47 +1296,7 @@ resource "posthog_dashboard_layout" "dashboard_1977268" {
   ]
 }
 
-# __generated__ by OpenTofu from "549883/11297204"
-resource "posthog_insight" "insight_11297204" {
-  create_in_folder = null
-  dashboard_ids    = [2027696]
-  deleted          = false
-  derived_name     = null
-  description      = "Deduplicated count of every valid Bryan Bucks lifecycle transition; the table preserves every value instead of collapsing low-volume transitions into Other."
-  name             = "Bryan Bucks lifecycle transitions"
-  project_id       = "549883"
-  query_json = jsonencode({
-    display = "ActionsTable"
-    kind    = "DataVisualizationNode"
-    source = {
-      kind  = "HogQLQuery"
-      query = "SELECT properties.transition AS transition, count(DISTINCT uuid) AS transition_count FROM events WHERE event = 'bryan_bucks_lifecycle' AND {filters} GROUP BY transition ORDER BY transition_count DESC"
-    }
-  })
-  query_sql = null
-  tags      = null
-}
 
-# __generated__ by OpenTofu from "549883/11297203"
-resource "posthog_insight" "insight_11297203" {
-  create_in_folder = null
-  dashboard_ids    = [2027696]
-  deleted          = false
-  derived_name     = null
-  description      = "Deduplicated daily stake volume from the economy ledger."
-  name             = "Bryan Bucks stake volume"
-  project_id       = "549883"
-  query_json = jsonencode({
-    display = "ActionsLineGraph"
-    kind    = "DataVisualizationNode"
-    source = {
-      kind  = "HogQLQuery"
-      query = "SELECT day, sum(-delta) AS stake_volume FROM (SELECT uuid, toStartOfDay(timestamp) AS day, argMax(toFloat(properties.delta_bucks), timestamp) AS delta FROM events WHERE event = 'bryan_bucks_economy' AND endsWith(properties.movement, '_stake') AND {filters} GROUP BY uuid, day) GROUP BY day ORDER BY day"
-    }
-  })
-  query_sql = null
-  tags      = null
-}
 
 # __generated__ by OpenTofu from "549883/2022116"
 resource "posthog_dashboard_layout" "dashboard_2022116" {
@@ -2164,15 +2019,6 @@ resource "posthog_insight" "insight_10892225" {
   tags      = null
 }
 
-# __generated__ by OpenTofu from "549883/2027696"
-resource "posthog_dashboard" "dashboard_2027696" {
-  deleted     = false
-  description = "Beta-only Bryan Bucks engagement, market lifecycle, economy, retention, and data freshness. Member retention uses opaque app-owned account identities; house accounts are excluded."
-  name        = "Bryan Bucks Beta Activity"
-  pinned      = false
-  project_id  = "549883"
-  tags        = ["activity", "beta", "bryan-bucks"]
-}
 
 # __generated__ by OpenTofu from "549883/10892179"
 resource "posthog_insight" "insight_10892179" {
@@ -2224,58 +2070,6 @@ resource "posthog_insight" "insight_10892179" {
   tags      = null
 }
 
-# __generated__ by OpenTofu from "549883/11297196"
-resource "posthog_insight" "insight_11297196" {
-  create_in_folder = null
-  dashboard_ids    = [2027696]
-  deleted          = false
-  derived_name     = null
-  description      = "Weekly unique non-house Bucks members with activity."
-  name             = "Bryan Bucks weekly active members"
-  project_id       = "549883"
-  query_json = jsonencode({
-    kind = "InsightVizNode"
-    source = {
-      dateRange = {
-        date_from                = "-90d"
-        excludeIncompletePeriods = false
-        explicitDate             = false
-      }
-      filterTestAccounts = false
-      interval           = "week"
-      kind               = "TrendsQuery"
-      properties         = []
-      series = [{
-        event = "bryan_bucks_member_activity"
-        kind  = "EventsNode"
-        math  = "weekly_active"
-      }]
-      trendsFilter = {
-        aggregationAxisFormat   = "numeric"
-        display                 = "ActionsLineGraph"
-        excludeBoxPlotOutliers  = true
-        hideWeekends            = false
-        legendPosition          = "bottom"
-        metricColorByDirection  = false
-        metricShowChange        = true
-        metricSummary           = "total"
-        resultCustomizationBy   = "value"
-        showAlertThresholdLines = false
-        showAnnotations         = true
-        showLegend              = false
-        showMultipleYAxes       = false
-        showPercentStackView    = false
-        showValuesOnSeries      = false
-        smoothingIntervals      = 1
-        stackBreakdownValues    = false
-        yAxisScaleType          = "linear"
-        yAxisStartAtZero        = true
-      }
-    }
-  })
-  query_sql = null
-  tags      = null
-}
 
 # __generated__ by OpenTofu from "549883/2022116"
 resource "posthog_dashboard" "dashboard_2022116" {
@@ -2767,26 +2561,6 @@ resource "posthog_dashboard_layout" "dashboard_1977278" {
   ]
 }
 
-# __generated__ by OpenTofu from "549883/11297206"
-resource "posthog_insight" "insight_11297206" {
-  create_in_folder = null
-  dashboard_ids    = [2027696]
-  deleted          = false
-  derived_name     = null
-  description      = "Deduplicated daily earnings and payouts from the economy ledger."
-  name             = "Bryan Bucks earnings and payouts"
-  project_id       = "549883"
-  query_json = jsonencode({
-    display = "ActionsLineGraph"
-    kind    = "DataVisualizationNode"
-    source = {
-      kind  = "HogQLQuery"
-      query = "SELECT day, sumIf(delta, startsWith(movement, 'earn_')) AS earnings, sumIf(delta, endsWith(movement, '_payout')) AS payouts FROM (SELECT uuid, toStartOfDay(timestamp) AS day, properties.movement AS movement, argMax(toFloat(properties.delta_bucks), timestamp) AS delta FROM events WHERE event = 'bryan_bucks_economy' AND {filters} GROUP BY uuid, day, movement) GROUP BY day ORDER BY day"
-    }
-  })
-  query_sql = null
-  tags      = null
-}
 
 # __generated__ by OpenTofu from "549883/10892220"
 resource "posthog_insight" "insight_10892220" {
@@ -3086,83 +2860,6 @@ resource "posthog_insight" "insight_10892182" {
   tags      = null
 }
 
-# __generated__ by OpenTofu from "549883/2027696"
-resource "posthog_dashboard_layout" "dashboard_2027696" {
-  dashboard_id = 2027696
-  project_id   = "549883"
-  tiles = [
-    {
-      color            = null
-      insight_id       = 11297213
-      layouts_json     = null
-      show_description = null
-      text_body        = null
-    },
-    {
-      color            = null
-      insight_id       = 11297212
-      layouts_json     = null
-      show_description = null
-      text_body        = null
-    },
-    {
-      color            = null
-      insight_id       = 11297206
-      layouts_json     = null
-      show_description = null
-      text_body        = null
-    },
-    {
-      color            = null
-      insight_id       = 11297204
-      layouts_json     = null
-      show_description = null
-      text_body        = null
-    },
-    {
-      color            = null
-      insight_id       = 11297203
-      layouts_json     = null
-      show_description = null
-      text_body        = null
-    },
-    {
-      color            = null
-      insight_id       = 11297201
-      layouts_json     = null
-      show_description = null
-      text_body        = null
-    },
-    {
-      color            = null
-      insight_id       = 11297198
-      layouts_json     = null
-      show_description = null
-      text_body        = null
-    },
-    {
-      color            = null
-      insight_id       = 11297197
-      layouts_json     = null
-      show_description = null
-      text_body        = null
-    },
-    {
-      color            = null
-      insight_id       = 11297196
-      layouts_json     = null
-      show_description = null
-      text_body        = null
-    },
-    {
-      color            = null
-      insight_id       = 11297195
-      layouts_json     = null
-      show_description = null
-      text_body        = null
-    },
-  ]
-}
 
 # __generated__ by OpenTofu from "549883/10892218"
 resource "posthog_insight" "insight_10892218" {
@@ -3488,51 +3185,6 @@ resource "posthog_insight" "insight_10892214" {
   tags      = null
 }
 
-# __generated__ by OpenTofu from "549883/11297198"
-resource "posthog_insight" "insight_11297198" {
-  create_in_folder = null
-  dashboard_ids    = [2027696]
-  deleted          = false
-  derived_name     = null
-  description      = "Weekly retention after a member first uses Bryan Bucks, beginning with analytics instrumentation on 2026-08-16."
-  name             = "Bryan Bucks first-use retention cohorts"
-  project_id       = "549883"
-  query_json = jsonencode({
-    kind = "InsightVizNode"
-    source = {
-      dateRange = {
-        date_from                = "2026-08-16"
-        excludeIncompletePeriods = false
-        explicitDate             = true
-      }
-      filterTestAccounts = false
-      kind               = "RetentionQuery"
-      properties         = []
-      retentionFilter = {
-        aggregationPropertyType = "event"
-        aggregationType         = "count"
-        cohortLabelStartIndex   = 0
-        cumulative              = false
-        period                  = "Week"
-        retentionReference      = "total"
-        retentionType           = "retention_first_time"
-        returningEntity = {
-          id   = "bryan_bucks_member_activity"
-          name = "Bryan Bucks activity"
-          type = "events"
-        }
-        targetEntity = {
-          id   = "bryan_bucks_member_activity"
-          name = "Bryan Bucks activity"
-          type = "events"
-        }
-        totalIntervals = 8
-      }
-    }
-  })
-  query_sql = null
-  tags      = null
-}
 
 # __generated__ by OpenTofu from "549883/1977278"
 resource "posthog_dashboard" "dashboard_1977278" {
@@ -3641,62 +3293,6 @@ resource "posthog_insight" "insight_10892230" {
   tags      = null
 }
 
-# __generated__ by OpenTofu from "549883/11297197"
-resource "posthog_insight" "insight_11297197" {
-  create_in_folder = null
-  dashboard_ids    = [2027696]
-  deleted          = false
-  derived_name     = null
-  description      = "First-use members compared with daily active members."
-  name             = "Bryan Bucks new versus returning members"
-  project_id       = "549883"
-  query_json = jsonencode({
-    kind = "InsightVizNode"
-    source = {
-      dateRange = {
-        date_from                = "-90d"
-        excludeIncompletePeriods = false
-        explicitDate             = false
-      }
-      filterTestAccounts = false
-      interval           = "day"
-      kind               = "TrendsQuery"
-      properties         = []
-      series = [{
-        event = "bryan_bucks_member_activity"
-        kind  = "EventsNode"
-        math  = "dau"
-        }, {
-        event = "bryan_bucks_member_activity"
-        kind  = "EventsNode"
-        math  = "first_time_for_user"
-      }]
-      trendsFilter = {
-        aggregationAxisFormat   = "numeric"
-        display                 = "ActionsLineGraph"
-        excludeBoxPlotOutliers  = true
-        hideWeekends            = false
-        legendPosition          = "bottom"
-        metricColorByDirection  = false
-        metricShowChange        = true
-        metricSummary           = "total"
-        resultCustomizationBy   = "value"
-        showAlertThresholdLines = false
-        showAnnotations         = true
-        showLegend              = false
-        showMultipleYAxes       = false
-        showPercentStackView    = false
-        showValuesOnSeries      = false
-        smoothingIntervals      = 1
-        stackBreakdownValues    = false
-        yAxisScaleType          = "linear"
-        yAxisStartAtZero        = true
-      }
-    }
-  })
-  query_sql = null
-  tags      = null
-}
 
 # __generated__ by OpenTofu from "549883"
 resource "posthog_project_settings" "monorepo" {
@@ -3833,72 +3429,6 @@ resource "posthog_insight" "insight_10892228" {
   tags      = null
 }
 
-# __generated__ by OpenTofu from "549883/11297212"
-resource "posthog_insight" "insight_11297212" {
-  create_in_folder = null
-  dashboard_ids    = [2027696]
-  deleted          = false
-  derived_name     = null
-  description      = "Daily maximum observed member balance, house balance, and pending liability."
-  name             = "Bryan Bucks economy balances and pending liability"
-  project_id       = "549883"
-  query_json = jsonencode({
-    kind = "InsightVizNode"
-    source = {
-      dateRange = {
-        date_from                = "-90d"
-        excludeIncompletePeriods = false
-        explicitDate             = false
-      }
-      filterTestAccounts = false
-      interval           = "day"
-      kind               = "TrendsQuery"
-      properties         = []
-      series = [{
-        event         = "bryan_bucks_economy_snapshot"
-        kind          = "EventsNode"
-        math          = "max"
-        math_property = "total_member_balance_bucks"
-        name          = "Member balance"
-        }, {
-        event         = "bryan_bucks_economy_snapshot"
-        kind          = "EventsNode"
-        math          = "max"
-        math_property = "pending_stake_bucks"
-        name          = "Pending liability"
-        }, {
-        event         = "bryan_bucks_economy_snapshot"
-        kind          = "EventsNode"
-        math          = "max"
-        math_property = "house_balance_bucks"
-        name          = "House balance"
-      }]
-      trendsFilter = {
-        aggregationAxisFormat   = "numeric"
-        display                 = "ActionsLineGraph"
-        excludeBoxPlotOutliers  = true
-        hideWeekends            = false
-        legendPosition          = "bottom"
-        metricColorByDirection  = false
-        metricShowChange        = true
-        metricSummary           = "total"
-        resultCustomizationBy   = "value"
-        showAlertThresholdLines = false
-        showAnnotations         = true
-        showLegend              = false
-        showMultipleYAxes       = false
-        showPercentStackView    = false
-        showValuesOnSeries      = false
-        smoothingIntervals      = 1
-        stackBreakdownValues    = false
-        yAxisScaleType          = "linear"
-        yAxisStartAtZero        = true
-      }
-    }
-  })
-  query_sql = null
-  tags      = null
-}
 
 # __generated__ by OpenTofu from "549883/11251185"
 resource "posthog_insight" "insight_11251185" {
@@ -4003,66 +3533,6 @@ resource "posthog_insight" "insight_10892219" {
   tags      = null
 }
 
-# __generated__ by OpenTofu from "549883/11297201"
-resource "posthog_insight" "insight_11297201" {
-  create_in_folder = null
-  dashboard_ids    = [2027696]
-  deleted          = false
-  derived_name     = null
-  description      = "Deduplicated interaction volume split by command, button, and web surface. UUID deduplication prevents duplicate delivery; it does not count unique members."
-  name             = "Bryan Bucks interactions by betting surface"
-  project_id       = "549883"
-  query_json = jsonencode({
-    kind = "InsightVizNode"
-    source = {
-      breakdownFilter = {
-        breakdown_type = "event"
-        breakdowns = [{
-          property = "surface"
-          type     = "event"
-        }]
-      }
-      dateRange = {
-        date_from                = "-90d"
-        excludeIncompletePeriods = false
-        explicitDate             = false
-      }
-      filterTestAccounts = false
-      interval           = "day"
-      kind               = "TrendsQuery"
-      properties         = []
-      series = [{
-        event      = "bryan_bucks_member_activity"
-        kind       = "EventsNode"
-        math       = "hogql"
-        math_hogql = "count(distinct uuid)"
-      }]
-      trendsFilter = {
-        aggregationAxisFormat   = "numeric"
-        display                 = "ActionsStackedBar"
-        excludeBoxPlotOutliers  = true
-        hideWeekends            = false
-        legendPosition          = "bottom"
-        metricColorByDirection  = false
-        metricShowChange        = true
-        metricSummary           = "total"
-        resultCustomizationBy   = "value"
-        showAlertThresholdLines = false
-        showAnnotations         = true
-        showLegend              = false
-        showMultipleYAxes       = false
-        showPercentStackView    = false
-        showValuesOnSeries      = false
-        smoothingIntervals      = 1
-        stackBreakdownValues    = false
-        yAxisScaleType          = "linear"
-        yAxisStartAtZero        = true
-      }
-    }
-  })
-  query_sql = null
-  tags      = null
-}
 
 # __generated__ by OpenTofu from "549883/10892233"
 resource "posthog_insight" "insight_10892233" {

@@ -1,12 +1,12 @@
-import { Context } from "@temporalio/activity";
-import { ApplicationFailure } from "@temporalio/common";
-import type { z } from "zod";
 import configuration from "#src/configuration.ts";
 import { ScoutBackgroundJobInputSchema } from "@scout-for-lol/temporal";
 import type {
   ScoutQueueCanaryProbeInput,
   ScoutQueueCanaryProbeResult,
 } from "@scout-for-lol/temporal/contracts";
+import { Context } from "@temporalio/activity";
+import { ApplicationFailure } from "@temporalio/common";
+import type { z } from "zod";
 
 export function unavailable(activity: string): never {
   throw ApplicationFailure.nonRetryable(
@@ -33,7 +33,11 @@ export function scheduleReconciliationEnabled(): boolean {
 
 export const NonSupportBackgroundJobInputSchema =
   ScoutBackgroundJobInputSchema.extend({
-    kind: ScoutBackgroundJobInputSchema.shape.kind.exclude(["support-inbox"]),
+    kind: ScoutBackgroundJobInputSchema.shape.kind.exclude([
+      "support-inbox",
+      "bucks-reconciliation",
+      "weekly-bucks-leaderboard",
+    ]),
   });
 export type NonSupportBackgroundJobInput = z.infer<
   typeof NonSupportBackgroundJobInputSchema

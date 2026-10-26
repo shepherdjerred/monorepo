@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   ConfirmationIntentKindSchema,
   ConfirmationIntentPayloadSchema,
-} from "#src/model/bucks/confirmation-intent.ts";
+} from "#src/model/confirmation-intent.ts";
 import {
   OperationsIntentKindSchema,
   OperationsIntentPayloadSchema,
@@ -105,7 +105,7 @@ describe("operations intent payloads reject junk", () => {
 
   test("a dare or creation payload is not an operations intent", () => {
     expect(
-      OperationsIntentPayloadSchema.safeParse({ kind: "dare_fund" }).success,
+      OperationsIntentPayloadSchema.safeParse({ kind: "dare_publish" }).success,
     ).toBe(false);
   });
 

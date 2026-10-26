@@ -1,8 +1,5 @@
-import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
-import { afterEach, describe, expect, test } from "vitest";
-import { dareDraftComponents } from "#src/betting/dares/presentation/dare-components.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
+import { dareDraftComponents } from "#src/dares/presentation/dare-components.ts";
 import {
   getDocsUrl,
   getExploreConversationUrl,
@@ -11,7 +8,10 @@ import {
 } from "#src/discord/commands/links.ts";
 import { exploreActionRow } from "#src/discord/scout/messages.ts";
 import { buildDiscordInstallUrl } from "#src/lib/discord/install-url.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { PermissionFlagsBits, PermissionsBitField } from "discord.js";
+import { afterEach, describe, expect, test } from "vitest";
 
 const originalOrigin = Bun.env["WEB_APP_ORIGIN"];
 const originalEnvironment = Bun.env["ENVIRONMENT"];

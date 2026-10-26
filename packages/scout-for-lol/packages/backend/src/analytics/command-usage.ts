@@ -27,7 +27,7 @@ const DiscordCommandNameSchema = z.enum([
   "docs",
   "track",
   "list",
-  "bb",
+  "dare",
   "scout",
 ]);
 
@@ -36,18 +36,7 @@ const DiscordCommandNameSchema = z.enum([
  * subcommands simply omit the property — same drop-don't-mint policy as the
  * command names.
  */
-const DiscordCommandSubcommandSchema = z.enum([
-  "balance",
-  "prizes",
-  "rules",
-  "history",
-  "transfer",
-  "dare",
-  "notifications",
-  "ask",
-  "join",
-  "leave",
-]);
+const DiscordCommandSubcommandSchema = z.enum(["ask", "join", "leave"]);
 
 /**
  * Capture one `discord_command_used` product analytics event against the

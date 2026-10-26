@@ -1,66 +1,12 @@
-import {
-  BucksWeeklyLeaderboardEntriesSchema,
-  DiscordGuildIdSchema,
-} from "@scout-for-lol/data";
-import { NotificationIntentKeySchema } from "@scout-for-lol/domain/identity/brands.ts";
-import { DiscordChannelIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
-import {
-  prisma,
-  type Db,
-  type ExtendedPrismaClient,
-} from "#src/database/index.ts";
-import { settleProductAnnouncementBudget } from "#src/temporal/notification/product/budget.ts";
+import { recordCoreOutputDelivered } from "#src/analytics/guild-lifecycle.ts";
 import {
   notificationIntentRowToRecord,
   type ProductNotificationIntentRecord,
 } from "#src/database/durable/intent-row.ts";
-import {
-  productAnnouncementOf,
-  productAnnouncementIntentKey,
-} from "#src/temporal/notification/product/announcement.ts";
-import { COMMON_DENOMINATOR_CHANNEL_ID } from "#src/discord/channels.ts";
-import { recordCoreOutputDelivered } from "#src/analytics/guild-lifecycle.ts";
-
-async function publishWeeklyStandings(
-  db: Db,
-  publicationId: string,
-): Promise<void> {
-  const publication = await db.bucksWeeklyPublication.findUniqueOrThrow({
-    where: { id: publicationId },
-  });
-  if (publication.publishedAt !== null) return;
-  const keys = Array.from({ length: publication.chunkCount }, (_, index) =>
-    productAnnouncementIntentKey(
-      `${publication.id}:chunk:${index.toString()}`,
-      {
-        kind: "channel",
-        channelId: DiscordChannelIdSchema.parse(COMMON_DENOMINATOR_CHANNEL_ID),
-      },
-    ),
-  );
-  const delivered = await db.matchNotificationIntent.count({
-    where: { intentKey: { in: keys }, state: "delivered" },
-  });
-  if (delivered !== publication.chunkCount) return;
-  const entries = BucksWeeklyLeaderboardEntriesSchema.parse(
-    JSON.parse(publication.entries),
-  );
-  const serverId = DiscordGuildIdSchema.parse(publication.serverId);
-  await db.bucksWeeklyLeaderboardSnapshot.upsert({
-    where: { serverId_runWeek: { serverId, runWeek: publication.runWeek } },
-    create: {
-      serverId,
-      runWeek: publication.runWeek,
-      entryCount: entries.length,
-      entries: publication.entries,
-    },
-    update: {},
-  });
-  await db.bucksWeeklyPublication.updateMany({
-    where: { id: publication.id, publishedAt: null },
-    data: { publishedAt: new Date() },
-  });
-}
+import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import { productAnnouncementOf } from "#src/temporal/notification/product/announcement.ts";
+import { settleProductAnnouncementBudget } from "#src/temporal/notification/product/budget.ts";
+import { NotificationIntentKeySchema } from "@scout-for-lol/domain/identity/brands.ts";
 
 /** All required bookkeeping and its completion marker commit together. */
 export async function afterProductAnnouncementDelivered(
@@ -95,7 +41,6 @@ export async function afterProductAnnouncementDelivered(
           });
         break;
       case "weekly-bucks":
-        await publishWeeklyStandings(db, effect.publicationId);
         break;
       case "customs-recruitment":
         if (stored.messageId === null)
