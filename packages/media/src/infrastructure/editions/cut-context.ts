@@ -62,7 +62,10 @@ export async function cutCanonical(
 }
 
 export function releaseCut(
-  release: ReleaseCandidate,
+  release: Pick<
+    ReleaseCandidate,
+    "id" | "providerId" | "providerReleaseId" | "title" | "sourceEvidence"
+  >,
   canonical: CutCanonical,
 ): CutEvidence {
   const source =

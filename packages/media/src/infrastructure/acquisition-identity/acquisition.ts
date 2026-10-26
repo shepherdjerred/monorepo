@@ -15,6 +15,13 @@ import { assertIdentityDecision } from "./authority.ts";
 import { assertAutomaticIdentity } from "./automatic.ts";
 import { captureSponsorAuthority } from "./sponsor.ts";
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
+import {
+  MovieEditionScopeSchema,
+  type MovieEditionScope,
+} from "#shared/movie-editions/registry.ts";
+import { assertMovieCutV2 } from "#infrastructure/movie-editions/cut-v2.ts";
+import { assertMovieAcquisitionOperationV4 } from "#infrastructure/movie-editions/lifecycle/operation.ts";
+import type { MovieCutEvidenceV2 } from "#shared/movie-editions/cut-v2.ts";
 
 export async function operationCoverage(
   tx: Prisma.TransactionClient,
@@ -40,29 +47,90 @@ export async function operationCoverage(
   return input.identityDecision.coverage;
 }
 
+type IdentityInput = {
+  operationId: string;
+  sponsorRequestId: string;
+  epoch: number;
+  mediaIds: string[];
+  serverMachineId?: string;
+  movieAccess?: MovieChoiceAccess | undefined;
+  movieScope?: MovieEditionScope | undefined;
+};
+
+async function candidateScope(
+  tx: Prisma.TransactionClient,
+  release: ReleaseCandidate,
+  input: IdentityInput,
+) {
+  let editionEvidence: MovieCutEvidenceV2 | undefined;
+  const scope =
+    input.movieScope === undefined
+      ? undefined
+      : MovieEditionScopeSchema.parse(input.movieScope);
+  if (scope === undefined)
+    await assertDefaultAcquisitionEdition(tx, {
+      releaseId: release.id,
+      mediaIds: input.mediaIds,
+    });
+  else {
+    if (input.mediaIds.length !== 1 || input.mediaIds[0] !== scope.mediaId)
+      throw new MediaError(
+        "identity_scope_changed",
+        "Movie identity coverage differs from its edition scope",
+        409,
+      );
+    await assertMovieAcquisitionOperationV4(
+      tx,
+      input.operationId,
+      scope,
+      input.epoch,
+    );
+    if (release.sourceEvidence === null)
+      throw new MediaError(
+        "identity_source_missing",
+        "A v4 movie acquisition requires retained provider source evidence",
+        409,
+      );
+    const assessed = await assertMovieCutV2(tx, {
+      scope,
+      releaseId: release.id,
+      predecessorAssetIds: [],
+      phase: "candidate",
+      members: [],
+    });
+    editionEvidence = assessed.candidate;
+  }
+  return { scope, editionEvidence };
+}
+
+async function reviewedDecision(
+  tx: Prisma.TransactionClient,
+  input: IdentityInput,
+  scope: MovieEditionScope | undefined,
+) {
+  const decision = await assertIdentityDecision(tx, input.operationId);
+  if (scope !== undefined && decision !== null)
+    throw new MediaError(
+      "identity_review_scope_required",
+      "Historical unscoped identity review cannot authorize a v4 movie edition",
+      409,
+    );
+  if (decision !== null)
+    await assertReviewedGenerations(tx, input.operationId, decision);
+  return decision;
+}
+
 export async function acquisitionIdentity(
   tx: Prisma.TransactionClient,
   release: ReleaseCandidate,
-  input: {
-    operationId: string;
-    sponsorRequestId: string;
-    epoch: number;
-    mediaIds: string[];
-    serverMachineId?: string;
-    movieAccess?: MovieChoiceAccess | undefined;
-  },
+  input: IdentityInput,
 ) {
-  await assertDefaultAcquisitionEdition(tx, {
-    releaseId: release.id,
-    mediaIds: input.mediaIds,
-  });
+  const { scope, editionEvidence } = await candidateScope(tx, release, input);
   const sponsorAuthority =
     release.sourceEvidence === null
       ? null
       : await captureSponsorAuthority(tx, input);
-  const decision = await assertIdentityDecision(tx, input.operationId);
-  if (decision !== null)
-    await assertReviewedGenerations(tx, input.operationId, decision);
+  const decision = await reviewedDecision(tx, input, scope);
   if (release.sourceEvidence === null) {
     if (decision !== null)
       throw new MediaError(
@@ -95,7 +163,8 @@ export async function acquisitionIdentity(
       409,
     );
   const attributes = PublicReleaseAttributesSchema.parse(release.attributes);
-  if (decision === null) await assertAutomaticIdentity(tx, release, canonical);
+  if (decision === null)
+    await assertAutomaticIdentity(tx, release, canonical, editionEvidence);
   if (decision === null && attributes.identityConfidence !== "exact")
     throw new MediaError(
       "identity_unconfirmed",

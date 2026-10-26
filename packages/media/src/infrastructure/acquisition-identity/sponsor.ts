@@ -11,11 +11,64 @@ import {
 } from "#infrastructure/movie-editions/access.ts";
 import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts";
 import { readMovieAttemptSponsor } from "#infrastructure/movie-editions/attempt-sponsor.ts";
+import {
+  MovieEditionScopeSchema,
+  type MovieEditionScope,
+} from "#shared/movie-editions/registry.ts";
 
 export type AcquisitionAccess = {
   serverMachineId?: string | undefined;
   movieAccess?: MovieChoiceAccess | undefined;
+  movieScope?: MovieEditionScope | undefined;
 };
+
+function sponsorScope(
+  rawScope: MovieEditionScope | undefined,
+  media: { id: string; kind: string },
+  sponsor: { edition: string },
+  mediaIds: readonly string[],
+) {
+  if (rawScope === undefined) return;
+  const scope = MovieEditionScopeSchema.parse(rawScope);
+  if (
+    media.kind !== "movie" ||
+    media.id !== scope.mediaId ||
+    sponsor.edition !== scope.edition ||
+    mediaIds.length !== 1 ||
+    mediaIds[0] !== scope.mediaId
+  )
+    throw new MediaError(
+      "identity_scope_changed",
+      "Acquisition sponsor does not belong to this movie edition",
+      409,
+    );
+  return scope;
+}
+
+function scopedSponsor(input: {
+  movieScope?: MovieEditionScope | undefined;
+  mediaIds: readonly string[];
+}) {
+  if (input.movieScope === undefined)
+    return { scope: undefined, where: effectiveRequestWhere };
+  const scope = MovieEditionScopeSchema.parse(input.movieScope);
+  if (input.mediaIds.length !== 1 || input.mediaIds[0] !== scope.mediaId)
+    throw new MediaError(
+      "identity_scope_changed",
+      "Acquisition coverage differs from its movie edition scope",
+      409,
+    );
+  return {
+    scope,
+    where: {
+      mediaId: scope.mediaId,
+      edition: scope.edition,
+      active: true,
+      excluded: false,
+      direct: true,
+    },
+  };
+}
 
 export async function captureSponsorAuthority(
   tx: Prisma.TransactionClient,
@@ -25,6 +78,7 @@ export async function captureSponsorAuthority(
     mediaIds: string[];
     serverMachineId?: string | undefined;
     movieAccess?: MovieChoiceAccess | undefined;
+    movieScope?: MovieEditionScope | undefined;
   },
 ) {
   if (input.serverMachineId === undefined)
@@ -42,11 +96,13 @@ export async function captureSponsorAuthority(
   const media = await tx.mediaItem.findUniqueOrThrow({
     where: { id: sponsor.mediaId },
   });
+  const scope = sponsorScope(input.movieScope, media, sponsor, input.mediaIds);
   const choice =
     media.kind === "movie"
       ? await readMovieChoice(tx, {
           requestId: sponsor.id,
           access: requireMovieChoiceAccess(input.movieAccess ?? {}),
+          ...(scope === undefined ? {} : { expectedScope: scope }),
         })
       : null;
   if (choice !== null && choice.status !== "authorized")
@@ -79,6 +135,7 @@ export async function captureSponsorAuthority(
     operationId: input.operationId,
     mediaIds: input.mediaIds,
     movieAccess: input.movieAccess,
+    movieScope: input.movieScope,
   });
   return authority;
 }
@@ -174,6 +231,7 @@ export async function assertLegacySubmissionSponsor(
       mediaIds: attempt.mediaIds,
       recordedAttemptId: attempt.id,
       movieAccess: typeof access === "string" ? undefined : access?.movieAccess,
+      movieScope: typeof access === "string" ? undefined : access?.movieScope,
     });
     return;
   }
@@ -194,8 +252,10 @@ export async function assertSponsorAuthority(
     mediaIds: string[];
     movieAccess?: MovieChoiceAccess | undefined;
     recordedAttemptId?: string;
+    movieScope?: MovieEditionScope | undefined;
   },
 ) {
+  const { scope, where } = scopedSponsor(input);
   const operation = await tx.operation.findUnique({
     where: { id: input.operationId },
   });
@@ -222,7 +282,7 @@ export async function assertSponsorAuthority(
     where: {
       id: input.sponsorRequestId,
       userId: input.authority.userId,
-      ...effectiveRequestWhere,
+      ...where,
     },
   });
   if (sponsor === null)
@@ -251,7 +311,9 @@ export async function assertSponsorAuthority(
       409,
     );
   const owner =
-    operation.kind === "acquire_release" && operation.userId !== null
+    (operation.kind === "acquire_release" ||
+      (scope !== undefined && operation.kind === "acquire_movie_edition_v4")) &&
+    operation.userId !== null
       ? await tx.mediaUser.findUniqueOrThrow({
           where: { id: operation.userId },
         })
@@ -287,6 +349,7 @@ async function assertMovieSponsor(
     requestId: string;
     movieAccess?: MovieChoiceAccess | undefined;
     recordedAttemptId?: string;
+    movieScope?: MovieEditionScope | undefined;
   },
 ) {
   const choice =
@@ -295,6 +358,9 @@ async function assertMovieSponsor(
       : await readMovieChoice(tx, {
           requestId: input.requestId,
           access: input.movieAccess,
+          ...(input.movieScope === undefined
+            ? {}
+            : { expectedScope: input.movieScope }),
         });
   if (
     choice !== null &&
@@ -306,6 +372,12 @@ async function assertMovieSponsor(
       ? null
       : await readMovieAttemptSponsor(tx, {
           attemptId: input.recordedAttemptId,
+          ...(input.movieScope === undefined
+            ? {}
+            : {
+                expectedScope: input.movieScope,
+                expectedRequestId: input.requestId,
+              }),
         });
   if (
     recorded !== null &&
