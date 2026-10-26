@@ -6,6 +6,8 @@ import * as ytdlp from "@shepherdjerred/streambot/sources/ytdlp.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
 import { LolEsportsClient, lolSportsEvent } from "./lolesports.ts";
 import { lolMatch } from "#lol-fixture";
+import { buildVideoPrepareOptions } from "@shepherdjerred/streambot/streamer/prepare-options.ts";
+import { prepareStream } from "@shepherdjerred/discord-video-stream";
 
 const config = loadConfig({
   BOT_TOKEN: "bot-token",
@@ -102,6 +104,25 @@ test.each([false, true])(
       headers: candidate.audioInputHeaders,
     });
     expect(resolve).toHaveBeenCalledTimes(preResolved ? 0 : 1);
+    const playback = prepareStream(
+      result.ffmpegInput,
+      buildVideoPrepareOptions({
+        stream: config.stream,
+        resolved: result,
+        startSeconds: 0,
+        volumePercent: 100,
+        pipelineMode: "sw",
+      }),
+    );
+    try {
+      expect(playback.command.args).toContain("1:a:1");
+      expect(playback.command.args).toContain("0:v:1");
+      expect(playback.command.args).not.toContain("1:a:0");
+    } finally {
+      playback.command.kill("SIGKILL");
+      playback.output.destroy();
+      await Promise.allSettled([playback.promise]);
+    }
     if (!preResolved)
       expect(resolve.mock.calls[0]?.[1]).toMatchObject({
         url: "https://www.youtube.com/watch?v=5fD8Ker-Bic",
