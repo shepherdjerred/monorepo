@@ -4,7 +4,7 @@ import {
   type SlashCommandSubcommandBuilder,
   type RESTPostAPIChatInputApplicationCommandsJSONBody,
 } from "discord.js";
-import { musicCommand } from "@shepherdjerred/streambot/discord/music-commands.ts";
+import { musicCommand } from "@shepherdjerred/streambot/discord/commands/music-commands.ts";
 
 /**
  * Options `/stream play` and `/stream playnext` share.

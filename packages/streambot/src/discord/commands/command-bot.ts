@@ -49,7 +49,7 @@ import {
   labelPlaybackInteraction,
 } from "@shepherdjerred/streambot/discord/commands/numbered-command-routing.ts";
 import { WebDiscordContext } from "@shepherdjerred/streambot/discord/web-context.ts";
-import { handleMusicCommand } from "@shepherdjerred/streambot/discord/commands/music-command-handler.ts";
+import { handleMusicCommand } from "@shepherdjerred/streambot/commands/music-command-handler.ts";
 import { musicErrorMessage } from "@shepherdjerred/streambot/discord/music-access.ts";
 import {
   slashPlay,

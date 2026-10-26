@@ -1,5 +1,5 @@
 import type { ChatInputCommandInteraction } from "discord.js";
-import type { CommandBotDeps } from "./command-bot-deps.ts";
+import type { CommandBotDeps } from "@shepherdjerred/streambot/discord/commands/command-bot-deps.ts";
 import { runMusicCommand } from "@shepherdjerred/streambot/discord/music.ts";
 import { runExternalMusicCommand } from "@shepherdjerred/streambot/discord/music-links.ts";
 import {
