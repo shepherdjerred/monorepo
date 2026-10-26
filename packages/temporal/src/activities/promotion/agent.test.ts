@@ -5,6 +5,31 @@ import { initialPromotionState } from "#shared/promotion.ts";
 import { memoryPromotionStore } from "./test-support.ts";
 
 describe("promotion cleanup", () => {
+  it.each([
+    {
+      action: "pending" as const,
+      mode: "preview" as const,
+      error: "no assigned action",
+    },
+    {
+      action: "inspect" as const,
+      mode: "run" as const,
+      error: "Inspection assignments",
+    },
+  ])(
+    "rejects an unassigned execution before opening a transport: %j",
+    async ({ action, mode, error }) => {
+      await expect(
+        runPromotionAgent({
+          target: { ...promotionTarget("pmc"), action },
+          state: initialPromotionState("pmc", 900),
+          occurrenceId: "fixture",
+          mode,
+          store: memoryPromotionStore(),
+        }),
+      ).rejects.toThrow(error);
+    },
+  );
   it("includes recorded manual receipts while excluding account locators", async () => {
     const context = await promotionMaintenanceContext();
     expect(context).toContain("2026-10-25 22:15:21 UTC");

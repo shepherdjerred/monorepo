@@ -13,8 +13,6 @@ import {
 import { envForProvider } from "#activities/agent/agent-task-env.ts";
 import { redactSecrets } from "#shared/redact.ts";
 import { redactAgentTaskPayloadStrings } from "#activities/agent/agent-task-result.ts";
-import { PromotionBrowser } from "./browser.ts";
-import { PromotionTaskJournal } from "./task.ts";
 import {
   PromotionTaskResultSchema,
   PromotionPreviewResultSchema,
@@ -22,15 +20,20 @@ import {
 import { promotionContent, promotionMaintenanceContext } from "./manifest.ts";
 import { promotionPrompt } from "./prompt.ts";
 import { promotionTaskFiles } from "./task-files.ts";
-import {
-  createPromotionToolHandler,
-  PromotionLoginsSchema,
-  PromotionToolSchema,
-} from "./tools.ts";
+import { PromotionLoginsSchema, PromotionToolSchema } from "./tools.ts";
 import { promotionConfig } from "#config/promotion.ts";
 import type { PromotionStore } from "./store.ts";
 import { promotionSecretTokens } from "./redaction.ts";
 import { jsonLog } from "#activities/agent/agent-task-runtime.ts";
+import { PromotionDiscordToolSchema } from "./discord-preview.ts";
+import {
+  promotionTransport,
+  promotionRequiredEnv as required,
+} from "./transport.ts";
+const PromotionAgentToolSchema = z.union([
+  PromotionToolSchema,
+  PromotionDiscordToolSchema,
+]);
 
 export async function cleanupPromotionResources(
   steps: readonly (readonly [string, () => Promise<void>])[],
@@ -45,11 +48,20 @@ export async function cleanupPromotionResources(
   }
 }
 
-function required(name: string): string {
-  const value = Bun.env[name];
-  if (value === undefined || value === "")
-    throw new Error(`${name} is required for promotion`);
-  return value;
+function assertAssignment(
+  target: PromotionTarget,
+  mode: PromotionRunInput["mode"],
+): void {
+  if (target.action === "pending")
+    throw new Error(
+      "Target has no assigned action; omit it or supply a concrete inspection/update task",
+    );
+  if (mode !== "preview" && target.action === "inspect")
+    throw new Error("Inspection assignments use preview mode");
+  if (mode !== "preview" && target.discord !== undefined)
+    throw new Error(
+      "Discord transport currently supports dry run only; publishing is disabled",
+    );
 }
 
 export async function runPromotionAgent(input: {
@@ -62,6 +74,7 @@ export async function runPromotionAgent(input: {
 }) {
   if (input.browserProfile !== undefined && input.mode !== "preview")
     throw new Error("A browser profile override is allowed only in preview");
+  assertAssignment(input.target, input.mode);
   const config = await promotionConfig();
   const uid = promotionProviderUid();
   const context = Context.current();
@@ -76,43 +89,20 @@ export async function runPromotionAgent(input: {
     tmpdir(),
     `storm-promotion-${crypto.randomUUID()}.sock`,
   );
-  const browser = new PromotionBrowser(
-    input.target,
-    required("PINCHTAB_BASE_URL"),
-    required("PINCHTAB_TOKEN"),
-    {
-      signal,
-      ...(input.browserProfile === undefined
-        ? {}
-        : { profile: input.browserProfile }),
-    },
-  );
   const logins = PromotionLoginsSchema.parse(
     JSON.parse(required("STORM_PROMOTION_LOGINS")),
   );
   const redact = promotionSecretTokens(logins);
-  const journal = new PromotionTaskJournal({
+  const transport = promotionTransport({
     ...input,
-    now: Date.now,
+    signal,
+    logins,
+    maxSteps: config.maxSteps,
+    monthlySolverUsd: config.monthlySolverUsd,
     enabled: async () => {
       const latest = await promotionConfig();
       return latest.enabled && latest.enabledTargets.includes(input.target.id);
     },
-    capture: () => browser.capture(input.occurrenceId),
-  });
-  const handle = createPromotionToolHandler({
-    ...input,
-    browser,
-    journal,
-    targetId: input.target.id,
-    account: input.target.account,
-    reconciliation: input.mode === "reconcile",
-    logins,
-    preview: input.mode === "preview",
-    maxToolCalls: config.maxSteps,
-    solverKey: required("ANTI_CAPTCHA_API_KEY"),
-    solverAllowanceMicrousd: Math.floor(config.monthlySolverUsd * 1_000_000),
-    signal,
     heartbeat: () => {
       context.heartbeat({ targetId: input.target.id });
     },
@@ -133,7 +123,7 @@ export async function runPromotionAgent(input: {
         return new Response("Not found", { status: 404 });
       let step: (typeof browserTrace)[number] | undefined;
       try {
-        const body = PromotionToolSchema.parse(await request.json());
+        const body = PromotionAgentToolSchema.parse(await request.json());
         step = {
           endpoint: body.endpoint,
           action: body.endpoint === "action" ? body.body.kind : null,
@@ -142,7 +132,7 @@ export async function runPromotionAgent(input: {
         };
         browserTrace.push(step);
         return Response.json(
-          redactAgentTaskPayloadStrings(await handle(body), (text) =>
+          redactAgentTaskPayloadStrings(await transport.handle(body), (text) =>
             redactSecrets(text, redact),
           ),
         );
@@ -177,6 +167,7 @@ export async function runPromotionAgent(input: {
       content,
       previous: previous?.value ?? null,
     });
+    Object.assign(files, await transport.contextFiles());
     files["maintenance.md"] = await promotionMaintenanceContext();
     for (const [name, body] of Object.entries(files))
       await Bun.write(path.join(workdir, name), body);
@@ -232,7 +223,8 @@ export async function runPromotionAgent(input: {
     const result = PromotionTaskResultSchema.parse(
       JSON.parse(outcome.finalText),
     );
-    await journal.finish(result);
+    transport.validateResult(result);
+    await transport.journal.finish(result);
     if (
       !(await input.store.put(
         `context/${input.target.id}.json`,
@@ -245,6 +237,7 @@ export async function runPromotionAgent(input: {
       result,
       usage: outcome.usage,
       browserTrace,
+      ...transport.audit(),
     };
   } finally {
     completion.abort();
@@ -252,7 +245,7 @@ export async function runPromotionAgent(input: {
     await cleanupPromotionResources(
       [
         ["server", () => server.stop(true)],
-        ["tab", () => browser.close()],
+        ["transport", () => transport.close()],
         ["socket", () => rm(socket, { force: true })],
         ["workspace", () => rm(workdir, { recursive: true, force: true })],
       ],

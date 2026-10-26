@@ -38,26 +38,27 @@ function daemonLogPath(): string {
 // When running from source, process.execPath is the bun binary and Bun.main is
 // the entry script; in the compiled binary, process.execPath IS the toolkit
 // binary and re-invoking it directly is correct.
-function serveArgv(): string[] {
+function serveArgv(passwordLogin: boolean): string[] {
   const isCompiled = !path.basename(process.execPath).startsWith("bun");
-  return isCompiled
+  const argv = isCompiled
     ? [process.execPath, "discord", "serve"]
     : [process.execPath, "run", Bun.main, "discord", "serve"];
+  return passwordLogin ? [...argv, "--password-login"] : argv;
 }
 
-export async function daemonStartCommand(options: {
-  ttlSeconds: number;
-}): Promise<void> {
-  const existing = await readState();
-  if (existing !== null && (await daemonRunning(existing.pid, DAEMON_MARKER))) {
-    console.error(
-      `Discord daemon is already running (pid ${String(existing.pid)}). Use 'toolkit discord daemon stop' first.`,
-    );
-    process.exit(1);
-  }
-  const botToken = Bun.env["DISCORD_BOT_TOKEN"];
-  const userToken = Bun.env["DISCORD_USER_TOKEN"];
+function assertDaemonCredentials(passwordLogin: boolean): void {
+  const botToken = passwordLogin ? undefined : Bun.env["DISCORD_BOT_TOKEN"];
+  const userToken = passwordLogin ? undefined : Bun.env["DISCORD_USER_TOKEN"];
   if (
+    passwordLogin &&
+    ((Bun.env["DISCORD_USER_EMAIL"] ?? "") === "" ||
+      (Bun.env["DISCORD_USER_PASSWORD"] ?? "") === "")
+  )
+    throw new Error(
+      "Password login requires parent-injected DISCORD_USER_EMAIL and DISCORD_USER_PASSWORD",
+    );
+  if (
+    !passwordLogin &&
     (botToken == null || botToken.length === 0) &&
     (userToken == null || userToken.length === 0)
   ) {
@@ -66,23 +67,44 @@ export async function daemonStartCommand(options: {
     );
     process.exit(1);
   }
+}
+
+export async function daemonStartCommand(options: {
+  ttlSeconds: number;
+  passwordLogin?: boolean;
+}): Promise<void> {
+  const existing = await readState();
+  if (existing !== null && (await daemonRunning(existing.pid, DAEMON_MARKER))) {
+    console.error(
+      `Discord daemon is already running (pid ${String(existing.pid)}). Use 'toolkit discord daemon stop' first.`,
+    );
+    process.exit(1);
+  }
+  const passwordLogin = options.passwordLogin === true;
+  assertDaemonCredentials(passwordLogin);
 
   await mkdir(LOGS_DIR, { recursive: true });
   await rm(SOCKET_PATH, { force: true });
   await rm(STATE_PATH, { force: true });
 
-  const [command, ...args] = serveArgv();
+  const [command, ...args] = serveArgv(passwordLogin);
   if (command === undefined) {
     throw new Error("could not determine daemon command");
   }
   // Detached + stdio ignore: the daemon writes its own logs to LOGS_DIR.
+  const env: Record<string, string | undefined> = {
+    ...Bun.env,
+    TOOLKIT_DISCORD_TTL_SECONDS: String(options.ttlSeconds),
+  };
+  delete env["OP_SERVICE_ACCOUNT_TOKEN"];
+  if (passwordLogin) {
+    delete env["DISCORD_BOT_TOKEN"];
+    delete env["DISCORD_USER_TOKEN"];
+  }
   const child = spawn(command, args, {
     detached: true,
     stdio: "ignore",
-    env: {
-      ...Bun.env,
-      TOOLKIT_DISCORD_TTL_SECONDS: String(options.ttlSeconds),
-    },
+    env,
   });
   child.unref();
 

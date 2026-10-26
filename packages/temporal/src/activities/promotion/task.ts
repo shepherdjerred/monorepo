@@ -181,12 +181,12 @@ export class PromotionTaskJournal {
         (next === null || Date.parse(next) <= now())
       )
         throw new Error("Site cooldown needs a future deadline");
-      const deadline =
-        next === null
-          ? state.nextEligibleAt
-          : new Date(
-              Date.parse(next) + state.bufferSeconds * 1000,
-            ).toISOString();
+      const reported =
+        next === null ? 0 : Date.parse(next) + state.bufferSeconds * 1000;
+      const stored =
+        state.nextEligibleAt === null ? 0 : Date.parse(state.nextEligibleAt);
+      const latest = Math.max(reported, stored);
+      const deadline = latest === 0 ? null : new Date(latest).toISOString();
       return {
         ...state,
         checkedAt: new Date(now()).toISOString(),

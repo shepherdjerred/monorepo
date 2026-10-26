@@ -28,12 +28,46 @@ export const PromotionTargetSchema = z.strictObject({
   rulesUrl: z.url().startsWith("https://"),
   account: z.string().min(1),
   hosts: z.array(z.string().min(1)).min(1),
-  action: z.enum(["bump", "repost", "news", "pending"]),
+  action: z.enum(["bump", "repost", "news", "inspect", "pending"]),
   content: z.enum(["directory", "reddit-mcservers", "reddit-minecraftserver"]),
   minimumIntervalSeconds: z.number().int().nonnegative(),
   notes: z.string().min(1),
+  discord: z
+    .strictObject({
+      guildId: z.string().regex(/^\d+$/),
+      channelId: z.string().regex(/^\d+$/),
+      username: z.string().min(1),
+    })
+    .optional(),
 });
 export type PromotionTarget = z.infer<typeof PromotionTargetSchema>;
+
+function assertDiscordAssignment(
+  target: PromotionTarget,
+  context: z.RefinementCtx,
+): void {
+  const url = new URL(target.url);
+  if (target.discord === undefined) {
+    if (url.hostname === "discord.com" && target.action !== "pending")
+      context.addIssue({
+        code: "custom",
+        message: `${target.id}: Discord assignment metadata is required`,
+      });
+    return;
+  }
+  const parts = url.pathname.split("/").filter(Boolean);
+  const channelId = parts[3] === "threads" ? parts[4] : parts[2];
+  if (
+    url.hostname !== "discord.com" ||
+    parts[0] !== "channels" ||
+    parts[1] !== target.discord.guildId ||
+    channelId !== target.discord.channelId
+  )
+    context.addIssue({
+      code: "custom",
+      message: `${target.id}: Discord assignment does not match its URL`,
+    });
+}
 
 export const PromotionManifestSchema = z
   .strictObject({
@@ -49,6 +83,7 @@ export const PromotionManifestSchema = z
         message: "Duplicate promotion target",
       });
     for (const target of value.targets) {
+      assertDiscordAssignment(target, context);
       for (const address of [target.url, target.rulesUrl]) {
         if (!target.hosts.includes(new URL(address).hostname))
           context.addIssue({

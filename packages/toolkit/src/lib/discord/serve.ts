@@ -5,6 +5,7 @@ import {
 } from "@shepherdjerred/unix-socket-daemon";
 import { Client as BotClient, Events, GatewayIntentBits } from "discord.js";
 import { Client as UserClient } from "discord.js-selfbot-v13";
+import { discordPasswordToken } from "#lib/discord/auth.ts";
 import {
   type DaemonContext,
   identities,
@@ -71,12 +72,40 @@ async function loginUser(token: string): Promise<UserClient> {
   return user;
 }
 
-export async function runDiscordDaemon(): Promise<void> {
+async function loginUserWithPassword(): Promise<UserClient> {
+  const email = Bun.env["DISCORD_USER_EMAIL"],
+    password = Bun.env["DISCORD_USER_PASSWORD"];
+  delete Bun.env["DISCORD_USER_EMAIL"];
+  delete Bun.env["DISCORD_USER_PASSWORD"];
+  if (
+    email === undefined ||
+    email === "" ||
+    password === undefined ||
+    password === ""
+  )
+    throw new Error("Discord login credentials are missing");
+  const user = new UserClient();
+  try {
+    const token = await discordPasswordToken(email, password);
+    await Promise.all([waitForReady(user, "user"), user.login(token)]);
+    logLine("user ready", { tag: user.user?.tag });
+    return user;
+  } catch {
+    user.destroy();
+    throw new Error(
+      "Discord credential login failed or requires an interactive challenge; use a saved session token for this account",
+    );
+  }
+}
+
+export async function runDiscordDaemon(
+  options: { passwordLogin?: boolean } = {},
+): Promise<void> {
   const botToken = Bun.env["DISCORD_BOT_TOKEN"];
   const userToken = Bun.env["DISCORD_USER_TOKEN"];
   const hasBot = botToken != null && botToken.length > 0;
   const hasUser = userToken != null && userToken.length > 0;
-  if (!hasBot && !hasUser) {
+  if (!hasBot && !hasUser && options.passwordLogin !== true) {
     throw new Error(
       "At least one of DISCORD_BOT_TOKEN / DISCORD_USER_TOKEN must be set",
     );
@@ -90,7 +119,14 @@ export async function runDiscordDaemon(): Promise<void> {
   await mkdir(LOGS_DIR, { recursive: true });
 
   try {
-    await startDaemon({ botToken, userToken, hasBot, hasUser, ttlSeconds });
+    await startDaemon({
+      botToken,
+      userToken,
+      hasBot,
+      hasUser,
+      ttlSeconds,
+      passwordLogin: options.passwordLogin === true,
+    });
   } catch (error) {
     logLine("fatal startup error", { error: getErrorMessage(error) });
     throw error;
@@ -103,11 +139,20 @@ async function startDaemon(opts: {
   hasBot: boolean;
   hasUser: boolean;
   ttlSeconds: number;
+  passwordLogin: boolean;
 }): Promise<void> {
   const { botToken, userToken, hasBot, hasUser, ttlSeconds } = opts;
   const ctx: DaemonContext = {
-    bot: hasBot && botToken != null ? await loginBot(botToken) : null,
-    user: hasUser && userToken != null ? await loginUser(userToken) : null,
+    bot: opts.passwordLogin
+      ? null
+      : hasBot && botToken != null
+        ? await loginBot(botToken)
+        : null,
+    user: opts.passwordLogin
+      ? await loginUserWithPassword()
+      : hasUser && userToken != null
+        ? await loginUser(userToken)
+        : null,
     voice: null,
     startedAt: new Date().toISOString(),
     ttlSeconds,

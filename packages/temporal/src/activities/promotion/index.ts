@@ -129,7 +129,9 @@ async function inspectPromotionTick() {
             !state.paused &&
             state.lock === null &&
             state.blockedReason === null &&
-            promotionTarget(state.targetId).action !== "pending" &&
+            !["pending", "inspect"].includes(
+              promotionTarget(state.targetId).action,
+            ) &&
             promotionDispatchAt(promotionTarget(state.targetId), state) <=
               Date.now(),
         )
