@@ -48,9 +48,17 @@ def border_radii(borders: Sequence[Mapping[str, object]]) -> dict[str, float]:
     return radii
 
 
+def world_name(world: str) -> str:
+    if not world.startswith("minecraft:"):
+        return world
+    name = world.removeprefix("minecraft:")
+    return {"overworld": "world", "the_nether": "world_nether", "the_end": "world_the_end"}.get(name, name)
+
+
 def outside(world: str, x: float, z: float, radii: Mapping[str, float]) -> bool:
     if not math.isfinite(x) or not math.isfinite(z):
         raise ValueError("Saved location is not finite")
+    world = world_name(world)
     return world in RETIRED or (world in radii and math.hypot(x, z) > radii[world])
 
 
@@ -125,9 +133,12 @@ def prepare(
                     if name in ("qol_grave", "qol_graves"):
                         graves.append((name, value))
                     else:
-                        creative = value["world"] == "creative"
+                        creative = world_name(value.string("world")) == "creative"
+                        target_world = "creative" if creative else "world"
+                        if name == "spells_mark" or value.string("world").startswith("minecraft:"):
+                            target_world = "minecraft:creative" if creative else "minecraft:overworld"
                         plans[(name, row)] = {
-                            "world": "creative" if creative else "world",
+                            "world": target_world,
                             "x": -1.0 if creative else 68.5,
                             "y": 65.0 if creative else 69.0,
                             "z": -1.0 if creative else 66.5,

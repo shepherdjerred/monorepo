@@ -65,7 +65,7 @@ class LiveMapTests(unittest.TestCase):
         **identity: Any,
     ) -> subprocess.CompletedProcess[str]:
         # Load the real entrypoint functions without running its production main.
-        definitions = (SERVER / "storm-entrypoint.sh").read_text().split("\nrequire_progression_preparation\n")[0]
+        definitions = (SERVER / "storm-entrypoint.sh").read_text().split("\nmain() {\n")[0]
         metadata = (volume or self.root).stat()
         return subprocess.run(
             ["bash", "-c", definitions + '\ninstall_livemap "$1" "$2" "$3" "$4"',

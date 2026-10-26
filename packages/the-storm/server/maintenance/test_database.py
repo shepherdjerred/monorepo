@@ -100,6 +100,32 @@ class DatabaseTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "not finite"):
             database.outside("world", float("nan"), 0, self.radii)
 
+    def test_spell_marks_keep_native_world_keys_and_obey_retained_circles(self):
+        with closing(sqlite3.connect(self.source)) as connection, connection:
+            connection.execute(
+                "CREATE TABLE spells_mark(player TEXT PRIMARY KEY,world TEXT,x DOUBLE,y DOUBLE,z DOUBLE)"
+            )
+            connection.executemany(
+                "INSERT INTO spells_mark VALUES(?,?,?,70,?)",
+                [
+                    ("retired", "minecraft:wilds", 0, 0),
+                    ("main", "minecraft:overworld", 7001, 0),
+                    ("creative", "minecraft:creative", 1400, 1400),
+                    ("frontier", "minecraft:frontier", 7001, 0),
+                    ("nether", "minecraft:the_nether", 5001, 0),
+                    ("end", "minecraft:the_end", 1751, 0),
+                    ("edge", "minecraft:frontier", 7000, 0),
+                ],
+            )
+        radii = {**self.radii, "frontier": 7000.0, "world_nether": 5000.0, "world_the_end": 1750.0}
+        database.prepare(self.source, self.target, self.sites, 123456, radii)
+        with closing(sqlite3.connect(self.target)) as target:
+            marks = dict((row[0], row[1:]) for row in target.execute("SELECT player,world,x,y,z FROM spells_mark"))
+            for name in ("retired", "main", "frontier", "nether", "end"):
+                self.assertEqual(marks[name], ("minecraft:overworld", 68.5, 69, 66.5))
+            self.assertEqual(marks["creative"], ("minecraft:creative", -1, 65, -1))
+            self.assertEqual(marks["edge"], ("minecraft:frontier", 7000, 70, 0))
+
     def test_large_unrelated_item_rows_are_verified_without_retaining_their_bytes(self):
         with closing(sqlite3.connect(self.source)) as connection, connection:
             connection.execute("CREATE TABLE archived_items(id INTEGER PRIMARY KEY,item BLOB)")
