@@ -25,7 +25,7 @@ import { MusicError } from "@shepherdjerred/streambot/music/errors.ts";
 import { playbackTransport } from "@shepherdjerred/streambot/types/playback-channel.ts";
 import type { MusicInteraction } from "./music-context.ts";
 import {
-  collectMusicCancellation,
+  interactionMusicLinkReply,
   type MusicLinkReply,
 } from "./music-link-reply.ts";
 
@@ -74,16 +74,7 @@ export async function runExternalMusicCommand(
       ...linkOptions(interaction),
       subtitles: linkSubtitles(interaction),
     },
-    {
-      start: async (payload) => {
-        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-        await interaction.editReply(payload);
-      },
-      edit: (payload) => interaction.editReply(payload),
-      onCancel: async (listener) => {
-        collectMusicCancellation(await interaction.fetchReply(), listener);
-      },
-    },
+    interactionMusicLinkReply(interaction),
   );
 }
 

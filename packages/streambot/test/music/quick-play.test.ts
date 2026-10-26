@@ -32,6 +32,48 @@ const pendingPlaylistLoad = Promise.withResolvers<{
   complete: null;
   message: string;
 }>().promise;
+
+function savedSportsSource(): Source {
+  return {
+    kind: "url",
+    url: "https://example.com/live",
+    sportsEvent: {
+      id: "streameast:123",
+      provider: "streameast",
+      title: "Live game",
+      status: "live",
+      startsAt: null,
+      pageUrl: "https://example.com/live",
+    },
+  };
+}
+
+function gatedQueueDeps(
+  context: Awaited<ReturnType<typeof musicCommandContext>>,
+  options: { sportsStreaming: boolean; lolEsports?: boolean },
+) {
+  const routePlayback = vi.fn();
+  const lolEsports = options.lolEsports;
+  return {
+    routePlayback,
+    deps: {
+      ...context,
+      featureGate: {
+        assistantV2: () => Promise.resolve(false),
+        history: () => Promise.resolve(false),
+        musicOverVoice: () => Promise.resolve(true),
+        sportsStreaming: () => Promise.resolve(options.sportsStreaming),
+        ...(lolEsports === undefined
+          ? {}
+          : {
+              lolEsports: () => Promise.resolve(lolEsports),
+            }),
+      },
+      routePlayback,
+    },
+  };
+}
+
 afterEach(() => {
   for (const music of services.splice(0)) music.loads.close();
 });
@@ -285,18 +327,10 @@ test("YouTube playlists reject subtitle requests on the audio slot", async () =>
 test("saved LoL playlist sources respect the feature gate", async () => {
   const f = await setup();
   const context = await musicCommandContext(f.issuer, f.deps);
-  const routePlayback = vi.fn();
-  const deps = {
-    ...context,
-    featureGate: {
-      assistantV2: () => Promise.resolve(false),
-      history: () => Promise.resolve(false),
-      musicOverVoice: () => Promise.resolve(true),
-      sportsStreaming: () => Promise.resolve(true),
-      lolEsports: () => Promise.resolve(false),
-    },
-    routePlayback,
-  };
+  const { deps, routePlayback } = gatedQueueDeps(context, {
+    sportsStreaming: true,
+    lolEsports: false,
+  });
 
   await expect(
     queueBatch({
@@ -326,35 +360,14 @@ test("saved LoL playlist sources respect the feature gate", async () => {
 test("saved sports playlist sources respect the sports feature gate", async () => {
   const f = await setup();
   const context = await musicCommandContext(f.issuer, f.deps);
-  const routePlayback = vi.fn();
-  const deps = {
-    ...context,
-    featureGate: {
-      assistantV2: () => Promise.resolve(false),
-      history: () => Promise.resolve(false),
-      musicOverVoice: () => Promise.resolve(true),
-      sportsStreaming: () => Promise.resolve(false),
-    },
-    routePlayback,
-  };
+  const { deps, routePlayback } = gatedQueueDeps(context, {
+    sportsStreaming: false,
+  });
 
   await expect(
     queueBatch({
       deps,
-      sources: [
-        {
-          kind: "url",
-          url: "https://example.com/live",
-          sportsEvent: {
-            id: "streameast:123",
-            provider: "streameast",
-            title: "Live game",
-            status: "live",
-            startsAt: null,
-            pageUrl: "https://example.com/live",
-          },
-        },
-      ],
+      sources: [savedSportsSource()],
       userId,
       placement: "queue",
       signal: new AbortController().signal,
@@ -366,6 +379,9 @@ test("saved sports playlist sources respect the sports feature gate", async () =
 test("saved sports playlists reject the audio slot", async () => {
   const f = await setup();
   const context = await musicCommandContext(f.issuer, f.deps);
+  const { deps: gatedDeps } = gatedQueueDeps(context, {
+    sportsStreaming: true,
+  });
   const events: Parameters<typeof context.dispatch>[0][] = [];
   const target = {
     ...context,
@@ -378,29 +394,10 @@ test("saved sports playlists reject the audio slot", async () => {
   await expect(
     queueBatch({
       deps: {
-        ...context,
-        featureGate: {
-          assistantV2: () => Promise.resolve(false),
-          history: () => Promise.resolve(false),
-          musicOverVoice: () => Promise.resolve(true),
-          sportsStreaming: () => Promise.resolve(true),
-        },
+        ...gatedDeps,
         routePlayback: async () => target,
       },
-      sources: [
-        {
-          kind: "url",
-          url: "https://example.com/live",
-          sportsEvent: {
-            id: "streameast:123",
-            provider: "streameast",
-            title: "Live game",
-            status: "live",
-            startsAt: null,
-            pageUrl: "https://example.com/live",
-          },
-        },
-      ],
+      sources: [savedSportsSource()],
       userId,
       placement: "queue",
       signal: new AbortController().signal,
