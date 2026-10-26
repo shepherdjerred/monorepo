@@ -6,6 +6,7 @@ import {
   MovieRequestV4Schema,
   MovieLifecycleCommandV4Schema,
 } from "./lifecycle-v4.ts";
+import { MovieOperationV4Schema } from "./automation-v4.ts";
 
 const mediaId = "10000000-0000-4000-8000-000000000001";
 const subjectUserId = "10000000-0000-4000-8000-000000000002";
@@ -105,5 +106,29 @@ test("removal confirmation from another edition cannot authorize the requested s
       ...input,
       command: { action: "remove" },
     }).success,
+  ).toBe(false);
+});
+
+test("v4 Workflow arguments cannot redirect a scoped command or carry Activity-local source data", () => {
+  const input = {
+    schemaVersion: 4,
+    operationId: subjectUserId,
+    mediaId,
+    generation: 2,
+    scope: { rootMediaId: mediaId, mediaId, edition: "extended_cut" },
+  };
+  expect(MovieOperationV4Schema.parse(input)).toEqual(input);
+  expect(
+    MovieOperationV4Schema.safeParse({ ...input, mediaId: subjectUserId })
+      .success,
+  ).toBe(false);
+  expect(
+    MovieOperationV4Schema.safeParse({
+      ...input,
+      providerDownload: "Activity-local source",
+    }).success,
+  ).toBe(false);
+  expect(
+    MovieOperationV4Schema.safeParse({ ...input, schemaVersion: 3 }).success,
   ).toBe(false);
 });

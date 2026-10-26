@@ -18,7 +18,7 @@ import { matchesMovieDefinition, movieDefinitionRef } from "./definition.ts";
 export async function chooseMovieEdition(
   tx: Prisma.TransactionClient,
   actor: MediaActor,
-  input: MovieRequestV3,
+  input: Omit<MovieRequestV3, "schemaVersion">,
   access: MovieChoiceAccess,
 ) {
   const scope = {
@@ -163,7 +163,7 @@ export async function chooseMovieEdition(
 }
 
 function assertChoiceCas(
-  input: MovieRequestV3,
+  input: Omit<MovieRequestV3, "schemaVersion">,
   current: {
     mediaVersion: number;
     targetVersion: number | null;
