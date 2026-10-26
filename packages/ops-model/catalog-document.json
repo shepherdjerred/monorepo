@@ -892,6 +892,10 @@
           "producer": "first-party"
         },
         {
+          "name": "image:minecraft-server",
+          "producer": "acquisition"
+        },
+        {
           "name": "image:the-storm-server-accepted",
           "producer": "reference",
           "source": {
@@ -3014,8 +3018,8 @@
       "approvalPolicy": "none",
       "automatic": true,
       "promotionSourceEnvironmentId": "minecraft/sandbox",
-      "recipeRevisionId": "minecraft-tsmc/3",
-      "configurationRevisionId": "minecraft-tsmc/2"
+      "recipeRevisionId": "minecraft-tsmc/4",
+      "configurationRevisionId": "minecraft-tsmc/3"
     },
     {
       "id": "mc-router/prod",
