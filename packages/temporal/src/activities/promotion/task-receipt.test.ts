@@ -28,6 +28,52 @@ const receipt = {
 };
 
 describe("task receipt validation", () => {
+  it.each(['Your listing "The Storm" was bumped', "Saved \\ path\nToday"])(
+    "decodes native receipt text and checks freshness consistently: %s",
+    (quote) => {
+      const bump = promotionTarget("pmc");
+      const encoded = JSON.stringify({
+        snapshot: { nodes: [{ name: quote }] },
+      });
+      const capture = { url: bump.url, text: encoded };
+      const confirmation = { ...receipt, url: bump.url, quote };
+      const before = {
+        id: "before",
+        capturedAt: pending.attemptedAt,
+        url: bump.url,
+        text: "Original listing",
+      };
+      expect(() =>
+        assertPromotionTaskReceipt({
+          target: bump,
+          pending: { ...pending, beforeSubmission: [before] },
+          page: capture,
+          receipt: confirmation,
+        }),
+      ).not.toThrow();
+      expect(() =>
+        assertPromotionTaskReceipt({
+          target: bump,
+          pending: {
+            ...pending,
+            beforeSubmission: [{ ...before, text: encoded }],
+          },
+          page: capture,
+          receipt: confirmation,
+        }),
+      ).toThrow("already present");
+    },
+  );
+  it("rejects malformed native observations instead of treating them as plain text", () => {
+    expect(() =>
+      assertPromotionTaskReceipt({
+        target,
+        pending,
+        page: { ...page, text: '{"snapshot":{}' },
+        receipt,
+      }),
+    ).toThrow();
+  });
   it("accepts a fresh receipt bound to the text entered in this run", () => {
     expect(() =>
       assertPromotionTaskReceipt({ target, pending, page, receipt }),

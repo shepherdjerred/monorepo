@@ -106,6 +106,11 @@ describe("native PinchTab transport", () => {
       failSnapshot = true;
       await expect(browser.snapshot()).rejects.toThrow("Snapshot unavailable");
       await expect(browser.accessibleControl("e41")).rejects.toThrow("Refresh");
+      failSnapshot = false;
+      await browser.receiptSnapshot();
+      expect(paths.at(-2)).toBe(
+        "/tabs/page/snapshot?format=json&selector=main&depth=3",
+      );
       await expect(browser.open("https://outside.invalid/")).rejects.toThrow(
         "scope",
       );

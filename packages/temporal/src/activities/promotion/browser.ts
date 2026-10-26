@@ -37,6 +37,10 @@ const InstancesSchema = z.union([
   z.array(InstanceSchema),
   z.object({ instances: z.array(InstanceSchema) }),
 ]);
+type SnapshotScope = {
+  selector?: string | undefined;
+  depth?: number | undefined;
+};
 
 class PromotionBrowserHttpError extends Error {
   readonly status: number;
@@ -53,6 +57,8 @@ export class PromotionBrowser {
   private readonly signal: AbortSignal;
   private tabId: string | undefined;
   private readonly profile: string | undefined;
+  private lastSnapshot:
+    { url: string; scope: SnapshotScope | undefined } | undefined;
   private readonly controls = new Map<
     string,
     z.infer<typeof AccessibleNodeSchema>
@@ -154,6 +160,7 @@ export class PromotionBrowser {
   async open(address: string): Promise<{ url: string }> {
     const url = assertPromotionUrl(this.target, address);
     this.controls.clear();
+    this.lastSnapshot = undefined;
     if (this.tabId === undefined) {
       const profile = this.profile ?? `storm-promotion-${this.target.account}`;
       const response = ProfilesSchema.parse(await this.json("/profiles"));
@@ -174,10 +181,7 @@ export class PromotionBrowser {
     return { url: promotionPublicUrl(await this.currentUrl()) };
   }
 
-  async snapshot(scope?: {
-    selector?: string | undefined;
-    depth?: number | undefined;
-  }): Promise<{
+  async snapshot(scope?: SnapshotScope): Promise<{
     url: string;
     text: string;
     publishedAt: string | null;
@@ -195,7 +199,6 @@ export class PromotionBrowser {
       `${this.tab()}/snapshot?${parameters.toString()}`,
     );
     const snapshot = SnapshotSchema.parse(await response.json());
-    for (const node of snapshot.nodes) this.controls.set(node.ref, node);
     const times = await this.evaluate(
       "Array.from(document.querySelectorAll('time[datetime]')).map(e=>({datetime:e.getAttribute('datetime'),text:e.textContent}))",
     );
@@ -218,6 +221,11 @@ export class PromotionBrowser {
             ),
           )
       : null;
+    for (const node of snapshot.nodes) this.controls.set(node.ref, node);
+    this.lastSnapshot = {
+      url,
+      scope: scope === undefined ? undefined : { ...scope },
+    };
     return { url: promotionPublicUrl(url), text, publishedAt };
   }
 
@@ -296,7 +304,7 @@ export class PromotionBrowser {
     screenshotKey: string;
     publishedAt: string | null;
   }> {
-    const page = await this.snapshot();
+    const page = await this.receiptSnapshot();
     const bytes = await this.screenshot();
     const storage = reportReceiptStore();
     const screenshotKey = `${promotionStoragePrefix()}/evidence/${this.target.id}/${encodeURIComponent(occurrenceId)}/${crypto.randomUUID()}.png`;
@@ -320,6 +328,14 @@ export class PromotionBrowser {
       }),
     );
     return { ...page, screenshotKey };
+  }
+
+  /** Independently reread the last successful region on this same receipt page. */
+  async receiptSnapshot() {
+    const url = await this.currentUrl();
+    const scope =
+      this.lastSnapshot?.url === url ? this.lastSnapshot.scope : undefined;
+    return await this.snapshot(scope);
   }
 
   async close(): Promise<void> {

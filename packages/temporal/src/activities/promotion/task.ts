@@ -14,6 +14,7 @@ import {
 } from "./store.ts";
 
 import type { PromotionTaskResult } from "./task-contract.ts";
+import { promotionObservationText } from "./observation.ts";
 
 /** Checkpoints effects, not website steps. The agent owns policy interpretation. */
 export class PromotionTaskJournal {
@@ -163,8 +164,7 @@ export class PromotionTaskJournal {
       const captured = this.observations.some(
         (page) =>
           page.url === evidence.url &&
-          (page.text.includes(evidence.quote) ||
-            page.text.includes(JSON.stringify(evidence.quote).slice(1, -1))),
+          promotionObservationText(page.text).includes(evidence.quote),
       );
       if (!captured)
         throw new Error(
