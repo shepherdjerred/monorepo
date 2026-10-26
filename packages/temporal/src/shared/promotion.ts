@@ -351,9 +351,8 @@ function assertObservedPostingPolicy(preflight: PromotionPreflight): void {
       if (seconds === undefined)
         throw new Error("Unknown posting interval unit");
       const quantity =
-        (/(?:^|\s)(\S+)$/u.exec(quote
-          .slice(0, match.index)
-          .trimEnd()))?.[1] ?? "";
+        /(?:^|\s)(\S+)$/u.exec(quote.slice(0, match.index).trimEnd())?.[1] ??
+        "";
       if (/^(?:a|an|per|each|every)$/u.test(quantity)) return seconds;
       if (
         !/^\d+$/u.test(quantity) ||
@@ -369,6 +368,10 @@ function assertObservedPostingPolicy(preflight: PromotionPreflight): void {
   if (durations.length === 0)
     throw new Error(
       "Rule evidence must establish an explicit posting interval",
+    );
+  if (durations.length > 1)
+    throw new Error(
+      "Unsupported compound posting duration; establish a single interval",
     );
   if (preflight.policy.maxActions > 1)
     throw new Error("This executor supports one action per posting window");

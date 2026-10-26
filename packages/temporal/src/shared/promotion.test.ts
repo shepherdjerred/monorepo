@@ -299,6 +299,9 @@ describe("newly observed manual actions", () => {
     "Bump once every 24.0 hours.",
     "Bump once every 1,000 hours.",
     "Bump once every 1e+3 hours.",
+    "Bump once every 1 day + 12 hours.",
+    "Bump once every 12 hours and 12 hours.",
+    "Bump daily plus 12 hours.",
   ])("rejects quantities it cannot establish: %s", (quote) => {
     expect(() =>
       promotionEligibility({
