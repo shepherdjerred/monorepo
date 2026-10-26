@@ -296,6 +296,9 @@ describe("newly observed manual actions", () => {
   it.each([
     "Bump once every one hundred and twenty-four hours.",
     "Bump once every quarante eight hours.",
+    "Bump once every 24.0 hours.",
+    "Bump once every 1,000 hours.",
+    "Bump once every 1e+3 hours.",
   ])("rejects quantities it cannot establish: %s", (quote) => {
     expect(() =>
       promotionEligibility({
@@ -305,7 +308,7 @@ describe("newly observed manual actions", () => {
         observations: [{ ...observation, text: quote }],
         preflight: { ...preflight, ruleQuote: quote },
       }),
-    ).toThrow(/compound|Unrecognized/);
+    ).toThrow(/compound|Unrecognized|Unsupported/);
   });
 });
 
