@@ -66,9 +66,26 @@ export function createPromotionToolHandler(input: {
 }) {
   let inFlight = false;
   let toolCalls = 0;
+  let loginAttempted = false;
   function checkBudget() {
     if (++toolCalls > input.maxToolCalls)
       throw new Error("Promotion browser tool budget exhausted");
+  }
+  async function loginOnce(
+    tool: Extract<z.infer<typeof PromotionToolSchema>, { operation: "login" }>,
+  ) {
+    if (loginAttempted)
+      throw new Error(
+        "This occurrence already attempted login; inspect the result instead of retrying",
+      );
+    const login = input.logins[input.account];
+    if (login === undefined)
+      throw new Error(
+        "Login unavailable; authenticate this target's persistent browser profile",
+      );
+    loginAttempted = true;
+    await input.browser.login({ ...login, ...tool });
+    return { loginAttempted: true };
   }
   return async (raw: unknown): Promise<unknown> => {
     if (inFlight) throw new Error("Promotion tool calls must be sequential");
@@ -109,15 +126,7 @@ export function createPromotionToolHandler(input: {
       }
       if (tool.operation === "publish")
         return await input.gateway.publish(tool.selector, tool.content);
-      if (tool.operation === "login") {
-        const login = input.logins[input.account];
-        if (login === undefined)
-          throw new Error(
-            "Login unavailable; authenticate this target's persistent browser profile",
-          );
-        await input.browser.login({ ...login, ...tool });
-        return { loginAttempted: true };
-      }
+      if (tool.operation === "login") return await loginOnce(tool);
       return await solvePromotionChallenge({
         store: input.store,
         occurrenceId: input.occurrenceId,

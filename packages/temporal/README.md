@@ -1036,6 +1036,10 @@ challenges require operator attention. Two attempts per occurrence and durable
 reservations bound paid task creation. The dedicated 1Password item supplies
 the solver key and an account-keyed JSON map of `{ username, password }` logins.
 Browser profiles are named `storm-promotion-<account>` and retain their sessions.
+Preview and publishing runs attempt the stored login once when signed out;
+the parent keeps the credential values outside the agent. A failed or ambiguous
+login is not retried in the same occurrence. Preview still blocks publication,
+receipt settlement and paid CAPTCHA tasks; reconciliation never logs in.
 
 Native owner bumps are distinct from votes. Unknown rules, incomplete history,
 pending ownership and moderation problems block publication. The PMC forum

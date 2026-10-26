@@ -24,6 +24,7 @@ async function harness(
     new AbortController().signal,
   );
   const open = vi.spyOn(browser, "open").mockResolvedValue({ url: target.url });
+  const login = vi.spyOn(browser, "login").mockResolvedValue(undefined);
   const gateway = new PromotionGateway({
     store,
     target,
@@ -44,16 +45,61 @@ async function harness(
     preview,
     reconciliation,
     maxToolCalls,
-    logins: {},
+    logins: {
+      [target.account]: {
+        username: "fixture-user",
+        password: "fixture-password",
+      },
+    },
     solverKey: "fixture-solver-key",
     solverAllowanceMicrousd: 10_000_000,
     signal: new AbortController().signal,
     heartbeat: vi.fn(),
   });
-  return { handle, open, target };
+  return { handle, open, login, target };
 }
 
 describe("promotion tool authority", () => {
+  it.each([true, false])(
+    "uses stored credentials once in preview=%s without returning their values",
+    async (preview) => {
+      const test = await harness(preview);
+      const command = {
+        operation: "login",
+        usernameSelector: "#email",
+        passwordSelector: "#password",
+        submitSelector: "#login",
+      };
+      expect(await test.handle(command)).toEqual({ loginAttempted: true });
+      expect(test.login).toHaveBeenCalledWith(
+        expect.objectContaining({
+          username: "fixture-user",
+          password: "fixture-password",
+        }),
+      );
+      await expect(test.handle(command)).rejects.toThrow(
+        "already attempted login",
+      );
+      expect(test.login).toHaveBeenCalledOnce();
+    },
+  );
+  it("does not retry an ambiguous login failure", async () => {
+    const test = await harness(true);
+    test.login.mockRejectedValueOnce(
+      new Error("Browser connection closed after login"),
+    );
+    const command = {
+      operation: "login",
+      usernameSelector: "#email",
+      passwordSelector: "#password",
+      submitSelector: "#login",
+    };
+    await expect(test.handle(command)).rejects.toThrow("connection closed");
+    await expect(test.handle(command)).rejects.toThrow(
+      "already attempted login",
+    );
+    expect(test.login).toHaveBeenCalledOnce();
+  });
   it("blocks publishing, settlement and paid solving in preview outside the model prompt", async () => {
     const test = await harness(true);
     for (const command of [
