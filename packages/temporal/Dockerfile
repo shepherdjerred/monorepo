@@ -479,7 +479,6 @@ COPY --parents \
   packages/homelab/src/delivery-stage-admission.ts \
   packages/homelab/scripts/tofu/tofu-stack-manifest.ts \
   packages/homelab/src/minecraft-delivery-receipt.schema.json \
-  packages/homelab/src/minecraft-delivery-sandbox.json \
   packages/homelab/scripts/canonical-json.ts \
   packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json \
   packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json \
