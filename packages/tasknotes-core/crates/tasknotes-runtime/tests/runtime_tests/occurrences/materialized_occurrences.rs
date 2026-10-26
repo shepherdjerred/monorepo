@@ -1,6 +1,8 @@
 //! Real SQLite materialization, current provider bytes, recovery and ownership.
 #[path = "deferred_progressions.rs"]
 mod deferred_progressions;
+#[path = "generation_sources.rs"]
+mod generation_sources;
 #[path = "rolling_occurrences.rs"]
 mod rolling_occurrences;
 use super::{

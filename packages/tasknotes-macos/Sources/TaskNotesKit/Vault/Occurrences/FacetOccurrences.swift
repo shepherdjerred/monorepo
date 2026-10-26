@@ -64,6 +64,10 @@ public struct FacetOccurrenceSuccessors: Decodable, Sendable {
 }
 
 public struct FacetGenerationFailure: Decodable, Sendable, Identifiable {
+    public enum SourceTasks: Sendable, Equatable {
+        case legacy
+        case current([String])
+    }
     public struct Action: Decodable, Sendable {
         public let kind: String
         public let command: FacetValue?
@@ -72,7 +76,31 @@ public struct FacetGenerationFailure: Decodable, Sendable, Identifiable {
     public let primaryMutationId: String
     public let item: FacetOccurrenceGenerationItem
     public let action: Action
+    public let sourceTaskPaths: SourceTasks
     public var id: String { item.successorId }
+
+    private enum CodingKeys: String, CodingKey {
+        case primaryMutationId, item, action, sourceTaskPaths
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let fields = try decoder.container(keyedBy: CodingKeys.self)
+        primaryMutationId = try fields.decode(String.self, forKey: .primaryMutationId)
+        item = try fields.decode(FacetOccurrenceGenerationItem.self, forKey: .item)
+        action = try fields.decode(Action.self, forKey: .action)
+        sourceTaskPaths =
+            fields.contains(.sourceTaskPaths)
+            ? .current(try fields.decode([String].self, forKey: .sourceTaskPaths)) : .legacy
+    }
+
+    /// Core's current canonical source identities supersede historical child paths.
+    public func applies(toTaskPath path: String) -> Bool {
+        if item.parentPath == path { return true }
+        switch sourceTaskPaths {
+        case .current(let paths): return paths.contains(path)
+        case .legacy: return item.childPath == path
+        }
+    }
 }
 
 public struct FacetGenerationFailuresPlan: Decodable, Sendable {

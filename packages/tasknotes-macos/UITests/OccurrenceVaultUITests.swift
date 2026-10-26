@@ -52,7 +52,7 @@ final class OccurrenceVaultUITests: XCTestCase {
         try completeChild(context, window: window)
         click(window.buttons["All tasks"])
         click(task("Occurrence rolling parent", window))
-        let generate = window.buttons["facet.series.generate"]
+        let generate = seriesButton("facet.series.generate", window: window)
         click(generate)
         let finished = XCTNSPredicateExpectation(
             predicate: NSPredicate { _, _ in generate.exists && generate.isEnabled }, object: nil)
@@ -70,10 +70,12 @@ final class OccurrenceVaultUITests: XCTestCase {
         try context.wait("completed child") {
             try context.note(context.child).properties["status"] == .string("done")
         }
+        acknowledgeFutureGenerationNotice(context.app)
         click(window.buttons["Completed"])
         click(task("Occurrence repair child", window))
         XCTAssertTrue(
             window.staticTexts["Future occurrence needs attention"].waitForExistence(timeout: 10))
+        _ = seriesButton("facet.series.repair", window: window)
     }
 
     private func proveRepairUndo(
@@ -95,7 +97,7 @@ final class OccurrenceVaultUITests: XCTestCase {
     private func repair(_ context: OccurrenceVaultContext, window: XCUIElement) throws {
         click(window.buttons["All tasks"])
         click(task("Occurrence repair parent", window))
-        let button = window.buttons["facet.series.repair"]
+        let button = seriesButton("facet.series.repair", window: window)
         XCTAssertTrue(button.waitForExistence(timeout: 15))
         XCTAssertEqual(window.buttons.matching(identifier: "facet.series.repair").count, 1)
         click(button)
@@ -116,6 +118,48 @@ final class OccurrenceVaultUITests: XCTestCase {
         XCTAssertTrue(element.waitForExistence(timeout: 15))
         XCTAssertTrue(element.isEnabled)
         element.click()
+    }
+
+    private func seriesButton(_ identifier: String, window: XCUIElement) -> XCUIElement {
+        let buttons = window.buttons.matching(identifier: identifier)
+        XCTAssertTrue(buttons.element.waitForExistence(timeout: 15))
+        XCTAssertEqual(buttons.count, 1)
+        let button = buttons.element
+        let scrollers = window.scrollViews.containing(.button, identifier: identifier)
+        XCTAssertEqual(scrollers.count, 1)
+        let scroller = scrollers.element
+        for _ in 0..<8 {
+            if button.isEnabled && button.isHittable && scroller.frame.contains(button.frame) {
+                break
+            }
+            scroller.scroll(
+                byDeltaX: 0, deltaY: button.frame.midY < scroller.frame.minY ? 220 : -220)
+        }
+        XCTAssertTrue(button.exists && button.isEnabled && button.isHittable)
+        XCTAssertTrue(scroller.frame.contains(button.frame))
+        return button
+    }
+
+    private func acknowledgeFutureGenerationNotice(_ app: XCUIApplication) {
+        let alerts = app.alerts
+        XCTAssertTrue(alerts.element.waitForExistence(timeout: 15))
+        XCTAssertEqual(alerts.count, 1)
+        XCTAssertEqual(app.state, .runningForeground)
+        let alert = alerts.element
+        let message = "Future occurrences need attention in the task’s Series section."
+        for text in ["Saved", message] {
+            XCTAssertEqual(
+                alert.staticTexts.matching(
+                    NSPredicate(format: "value == %@ OR label == %@", text, text)
+                ).count, 1)
+        }
+        XCTAssertEqual(alert.staticTexts.count, 2)
+        XCTAssertEqual(alert.buttons.count, 1)
+        let okay = alert.buttons["OK"]
+        XCTAssertTrue(okay.exists && okay.isEnabled && okay.isHittable)
+        okay.click()
+        XCTAssertTrue(alert.waitForNonExistence(timeout: 10))
+        XCTAssertEqual(app.alerts.count, 0)
     }
 
     private func capture(_ context: OccurrenceVaultContext, window: XCUIElement, name: String)

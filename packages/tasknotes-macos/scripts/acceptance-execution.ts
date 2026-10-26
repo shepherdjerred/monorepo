@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import path from "node:path";
+import { requireUnlockedMac } from "./apple-acceptance/mac-session.ts";
 import {
   assertExactLaunchSmokeResults,
   assertExactStandaloneResults,
@@ -116,6 +117,30 @@ export async function executeAcceptanceStages(
       JSON.stringify({ ...receipt, status: "running" }, null, 2),
     );
     const failures: unknown[] = [];
+    try {
+      await requireUnlockedMac(
+        `${stage.receipt}.session-preflight.json`,
+        command,
+      );
+    } catch (error) {
+      await Bun.write(
+        stage.receipt,
+        JSON.stringify(
+          {
+            ...receipt,
+            status: "blocked",
+            phase: "preflight",
+            nativeTestStarted: false,
+          },
+          null,
+          2,
+        ),
+      );
+      throw new AggregateError(
+        [error],
+        `Native preflight blocked before ${stage.selector}`,
+      );
+    }
     try {
       await command([
         "xcodebuild",

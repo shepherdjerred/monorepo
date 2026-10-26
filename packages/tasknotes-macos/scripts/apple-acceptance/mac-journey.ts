@@ -2,12 +2,51 @@ import assert from "node:assert/strict";
 import { cp, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { acceptanceSigningArguments } from "../acceptance-test-plan.ts";
+import {
+  isMacSessionPreflightFailure,
+  requireUnlockedMac,
+} from "./mac-session.ts";
 
 export type MacJourneyCommand = (
   argv: string[],
   capture?: boolean,
   cwd?: string,
 ) => Promise<string>;
+
+export async function runMacAcceptanceCase(
+  run: {
+    evidence: string;
+    testRun: string;
+    result: string;
+    selector: string;
+    maximumSeconds: 120 | 180;
+  },
+  command: MacJourneyCommand,
+): Promise<void> {
+  await requireUnlockedMac(
+    path.join(run.evidence, "session-preflight.json"),
+    command,
+  );
+  await command([
+    "xcodebuild",
+    "test-without-building",
+    "-xctestrun",
+    run.testRun,
+    "-destination",
+    "platform=macOS",
+    "-parallel-testing-enabled",
+    "NO",
+    "-resultBundlePath",
+    run.result,
+    "-collect-test-diagnostics",
+    "never",
+    "-test-timeouts-enabled",
+    "YES",
+    "-maximum-test-execution-time-allowance",
+    String(run.maximumSeconds),
+    `-only-testing:${run.selector}`,
+  ]);
+}
 
 /** Both isolated journeys build the same signed product; callers retain their deadlines. */
 export async function buildMacAcceptance(
@@ -141,7 +180,14 @@ export async function recordMacAcceptanceOutcome(
   await Bun.write(
     path.join(evidence, "run.json"),
     JSON.stringify(
-      { ...receipt, status: failures.length === 0 ? "passed" : "failed" },
+      {
+        ...receipt,
+        status: failures.some(isMacSessionPreflightFailure)
+          ? "blocked"
+          : failures.length === 0
+            ? "passed"
+            : "failed",
+      },
       null,
       2,
     ),

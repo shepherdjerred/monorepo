@@ -2,12 +2,14 @@ import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, expect, test } from "vitest";
+import { MacSessionPreflightError } from "./mac-session.ts";
 import {
   buildMacAcceptance,
   configureMacAcceptanceTestRun,
   createMacAcceptanceState,
   macAcceptanceTestRun,
   recordMacAcceptanceOutcome,
+  runMacAcceptanceCase,
   retainMacAcceptanceEvidence,
 } from "./mac-journey.ts";
 
@@ -20,6 +22,49 @@ async function directory(): Promise<string> {
 afterEach(async () => {
   for (const root of directories.splice(0)) await rm(root, { recursive: true });
 });
+
+test.each([120, 180] as const)(
+  "isolated native invocation retains its %s second cap after a fresh preflight",
+  async (maximumSeconds) => {
+    const evidence = await directory();
+    const commands: string[][] = [];
+    await runMacAcceptanceCase(
+      {
+        evidence,
+        testRun: "owned.xctestrun",
+        result: "owned.xcresult",
+        selector: "Owned/Suite/exactCase",
+        maximumSeconds,
+      },
+      async (argv) => {
+        commands.push(argv);
+        return argv[0] === "xcrun"
+          ? JSON.stringify({ onConsole: true, locked: false })
+          : "";
+      },
+    );
+    expect(commands[0]?.slice(0, 3)).toEqual(["xcrun", "swift", "-e"]);
+    expect(commands[1]).toEqual([
+      "xcodebuild",
+      "test-without-building",
+      "-xctestrun",
+      "owned.xctestrun",
+      "-destination",
+      "platform=macOS",
+      "-parallel-testing-enabled",
+      "NO",
+      "-resultBundlePath",
+      "owned.xcresult",
+      "-collect-test-diagnostics",
+      "never",
+      "-test-timeouts-enabled",
+      "YES",
+      "-maximum-test-execution-time-allowance",
+      String(maximumSeconds),
+      "-only-testing:Owned/Suite/exactCase",
+    ]);
+  },
+);
 
 test("final outcome persists failure before rethrowing every retained cause", async () => {
   const evidence = await directory();
@@ -48,6 +93,21 @@ test("final outcome persists failure before rethrowing every retained cause", as
   expect(await Bun.file(path.join(evidence, "run.json")).json()).toEqual({
     ...receipt,
     status: "passed",
+  });
+});
+
+test("a preflight block remains distinct from a started native test failure", async () => {
+  const evidence = await directory();
+  await expect(
+    recordMacAcceptanceOutcome(
+      { schemaVersion: 1, runID: "owned-run" },
+      [new MacSessionPreflightError(new Error("off console"))],
+      evidence,
+      "blocked",
+    ),
+  ).rejects.toThrow("blocked");
+  expect(await Bun.file(path.join(evidence, "run.json")).json()).toMatchObject({
+    status: "blocked",
   });
 });
 

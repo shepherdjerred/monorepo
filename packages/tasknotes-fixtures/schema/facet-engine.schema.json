@@ -1523,6 +1523,7 @@
             "type": "object",
             "properties": {
               "primaryMutationId": { "type": "string", "minLength": 1, "maxLength": 256 },
+              "sourceTaskPaths": { "type": "array", "maxItems": 1000, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
               "item": { "$ref": "#/$defs/occurrenceGenerationItem" },
               "action": {
                 "oneOf": [

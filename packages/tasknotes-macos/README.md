@@ -308,6 +308,9 @@ for the lifetime of that window.
 Each workflow runs in its own XCTest invocation. The runner requires that exact
 case to pass before starting the next, stops on the first failure, and merges
 the four actual workflow results for the unchanged complete-suite gate.
+Immediately before each Mac test invocation, a shared preflight requires an
+unlocked on-console session. A blocked preflight records its observation and
+`blocked` outcome without starting XCTest; it is distinct from a failed test.
 `bun run mac:acceptance:e2e --launch-smoke-only` checks just initial and cold
 launch, creates no task notes, and explicitly records that full acceptance was
 not run. It still initializes the synthetic vault and profile.
@@ -340,6 +343,10 @@ cold relaunch. It retains source fingerprints, exact XCTest results, persisted
 Markdown and app-only captures in `.build/occurrence-acceptance/<UUID>`. It uses
 the same signing, capture and process ownership checks as ordinary acceptance.
 The four ordinary workflows and their fixture remain a separate required gate.
+Series repair controls match the core's current canonical `sourceTaskPaths`.
+An explicit empty array excludes historical child paths; older responses without
+that field retain their original child-path behavior. Parent controls remain
+available for their own failures.
 The recurrence build lives under that run's UUID and XCTest launches its exact
 app URL. Each launch journals its PID, UID and start lifetime with the run,
 descriptor and executable; cold termination closes that identity before another
