@@ -47,11 +47,11 @@ final class BeginnerFixtures implements BasicCommand {
       throw new IllegalArgumentException("expected beginner and control player names");
     var player = requireNonNull(plugin.getServer().getPlayerExact(args[0]));
     var control = requireNonNull(plugin.getServer().getPlayerExact(args[1]));
-    if (!player.getWorld().getName().equals("wilds"))
-      throw new IllegalArgumentException("probe requires wilds");
+    if (!player.getWorld().getName().equals("frontier"))
+      throw new IllegalArgumentException("probe requires frontier");
     if (!control.getWorld().equals(player.getWorld())
         || control.getLocation().distanceSquared(player.getLocation()) > 100)
-      throw new IllegalArgumentException("control player must be nearby in wilds");
+      throw new IllegalArgumentException("control player must be nearby in frontier");
     var storm =
         (TheStormPlugin)
             requireNonNull(plugin.getServer().getPluginManager().getPlugin("TheStorm"));

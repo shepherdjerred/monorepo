@@ -4,8 +4,9 @@
 # Grid numbers are the measurement of TheStorm_creative_snapshot-2016-01-10
 # (plot 82 including the stone wall, road 10, surface at y=64). The grass
 # floor inside the wall is 80 by 80. A mismatch with that template refuses
-# to boot. The border starts at the saved regions; raise borderSize to grow
-# the map. Do not shrink it.
+# to boot. The playable circle is centered at 0,0 with radius 1500. Terrain
+# and recovered claims outside it remain saved. borderSize is a diameter and
+# matches the creative circle in world.yml.
 #
 # plots is the 10 Jan 2016 catalog. A row is a claim sign (ID / Owner / name /
 # Claimed, on the road at the plot's north-west corner) or an interior that is
@@ -20,9 +21,9 @@ roadWidth: 10
 roadOffsetX: 0
 roadOffsetZ: 0
 surfaceY: 64
-borderCenterX: 1280
-borderCenterZ: -768
-borderSize: 8704
+borderCenterX: 0
+borderCenterZ: 0
+borderSize: 3000
 claimCap: 2
 entityCap: 200
 brushRadius: 8

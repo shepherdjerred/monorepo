@@ -96,16 +96,16 @@ describe("beginner's luck on native Paper", () => {
         citizenHealth,
       );
       await rcon.command(
-        "execute in minecraft:wilds run fill 2995 64 -5 3005 64 5 minecraft:stone",
+        "execute in minecraft:frontier run fill 2995 64 -5 3005 64 5 minecraft:stone",
       );
       await rcon.command(
-        `execute in minecraft:wilds run minecraft:tp ${bot.username} 3000.5 65 0.5`,
+        `execute in minecraft:frontier run minecraft:tp ${bot.username} 3000.5 65 0.5`,
       );
       await rcon.command(
-        `execute in minecraft:wilds run minecraft:tp ${secondBot.username} 3003.5 65 0.5`,
+        `execute in minecraft:frontier run minecraft:tp ${secondBot.username} 3003.5 65 0.5`,
       );
       await waitUntil(
-        "both players arrive in wilds",
+        "both players arrive in Frontier",
         () =>
           Math.abs(player.entity.position.x - 3000.5) < 1 &&
           Math.abs(veteran.entity.position.x - 3003.5) < 1,

@@ -17,6 +17,22 @@ final class ClaimRulesTest {
   private static final UUID OTHER = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
   @Test
+  void claimsAndAutomaticSelectionRespectTheWholeCircularFootprint() {
+    var grid = PlotGrid.recovered();
+    assertThat(ClaimRules.inside(grid.bounds(new PlotId(10, 10)), 0, 0, 3000)).isTrue();
+    assertThat(ClaimRules.inside(grid.bounds(new PlotId(15, 15)), 0, 0, 3000))
+        .as("the square corner is outside the circle")
+        .isFalse();
+    assertThat(ClaimRules.inside(grid.bounds(new PlotId(12, 12)), 0, 0, 3000))
+        .as("a plot crossing the circle cannot be claimed")
+        .isFalse();
+    var nearest = ClaimRules.nearest(new ClaimRules.Area(grid, 0, 0, 3000, id -> true), 1300, 1300);
+    assertThat(nearest)
+        .hasValueSatisfying(
+            id -> assertThat(ClaimRules.inside(grid.bounds(id), 0, 0, 3000)).isTrue());
+  }
+
+  @Test
   @DisplayName("empty cell")
   void emptyCell() {
     var cell = empty(new PlotId(4, 4));

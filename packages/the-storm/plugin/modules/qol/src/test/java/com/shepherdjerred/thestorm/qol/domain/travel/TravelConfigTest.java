@@ -31,8 +31,8 @@ final class TravelConfigTest {
     assertThat(config.destinations().getFirst().random()).isTrue();
     assertThat(config.destinations())
         .extracting(TravelDestination::world)
-        .containsExactly("frontier", "skylands", "map2", "wilds", "peaks")
-        .doesNotContain("world_nether", "world_the_end");
+        .containsExactly("frontier", "skylands", "map2")
+        .doesNotContain("world_nether", "world_the_end", "wilds", "peaks");
   }
 
   @Test

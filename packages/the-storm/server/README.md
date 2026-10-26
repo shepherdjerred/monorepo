@@ -2,16 +2,13 @@
 
 `minecraft-tsmc` runs `docker.io/shepherdjerred/the-storm-server`: pinned,
 pre-patched Paper, TheStorm, the MCBridge agent bridge, twelve supporting
-plugins, and repository-owned configuration. The image builds through `docker-bake.hcl`; CI publication and
-the version catalog control its GitOps release.
-
-CI updates the candidate pin `shepherdjerred/the-storm-server`. The live chart
-uses the separately accepted `shepherdjerred/the-storm-server/prod` pin. Publish
-the candidate first, then promote its exact digest into the production pin
-through a PR. A release restarts the existing world volume.
+plugins, and repository-owned configuration. The image builds through `docker-bake.hcl`;
+CI publishes immutable artifacts and Delivery records accepted selections in PostgreSQL.
+Publish and qualify the candidate, complete any required stopped-volume maintenance,
+then request its deployment through Delivery.
 
 The Application declares both the image value and Helm's higher-precedence
-`image.tag` parameter from that same production pin. A release replaces
+`image.tag` parameter from that accepted selection. A release replaces
 operational parameter overrides with the declared list; recording credentials
 remain supplied by the chart's `extraEnv` secret references.
 

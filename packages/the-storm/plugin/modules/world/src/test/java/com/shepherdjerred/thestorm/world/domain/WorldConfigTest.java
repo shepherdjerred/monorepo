@@ -37,10 +37,10 @@ final class WorldConfigTest {
                 "America/Los_Angeles"));
     assertThat(config.worlds())
         .extracting(WorldSpec::name)
-        .containsExactly("frontier", "world", "map2", "skylands", "wilds", "peaks");
+        .containsExactly("frontier", "world", "map2", "skylands");
     assertThat(config.worlds())
         .extracting(WorldSpec::preset)
-        .containsExactly("normal", "normal", "normal", "skylands", "large_biomes", "amplified");
+        .containsExactly("normal", "normal", "normal", "skylands");
     assertThat(config.worlds()).allMatch(WorldSpec::rtp);
     assertThat(config.worlds().getFirst().name())
         .as("frontier is the default random-teleport landing")
@@ -48,16 +48,29 @@ final class WorldConfigTest {
     assertThat(config.borders())
         .extracting(WorldBorderSpec::world, WorldBorderSpec::size)
         .contains(
-            org.assertj.core.groups.Tuple.tuple("world_nether", 6000.0),
-            org.assertj.core.groups.Tuple.tuple("world_the_end", 8000.0),
-            org.assertj.core.groups.Tuple.tuple("frontier", 7000.0),
-            org.assertj.core.groups.Tuple.tuple("skylands", 10000.0));
+            org.assertj.core.groups.Tuple.tuple("world_nether", 10000.0),
+            org.assertj.core.groups.Tuple.tuple("world_the_end", 3500.0),
+            org.assertj.core.groups.Tuple.tuple("frontier", 14000.0),
+            org.assertj.core.groups.Tuple.tuple("skylands", 6000.0),
+            org.assertj.core.groups.Tuple.tuple("creative", 3000.0));
     assertThat(config.borders())
         .filteredOn(border -> border.circle().isPresent())
         .extracting(WorldBorderSpec::world, WorldBorderSpec::size)
         .containsExactlyInAnyOrder(
             org.assertj.core.groups.Tuple.tuple("world", 14000.0),
-            org.assertj.core.groups.Tuple.tuple("map2", 24000.0));
+            org.assertj.core.groups.Tuple.tuple("map2", 24000.0),
+            org.assertj.core.groups.Tuple.tuple("world_nether", 10000.0),
+            org.assertj.core.groups.Tuple.tuple("world_the_end", 3500.0),
+            org.assertj.core.groups.Tuple.tuple("frontier", 14000.0),
+            org.assertj.core.groups.Tuple.tuple("skylands", 6000.0),
+            org.assertj.core.groups.Tuple.tuple("creative", 3000.0));
+    assertThat(config.borders())
+        .allSatisfy(
+            border -> {
+              assertThat(border.centerX()).isZero();
+              assertThat(border.centerZ()).isZero();
+              assertThat(border.shape()).isEqualTo("circle");
+            });
     assertThat(SleepFraction.skips(1, 2, config.sleepPercentage())).isTrue();
   }
 

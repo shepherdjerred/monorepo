@@ -5,13 +5,13 @@ description: The survival worlds, how to reach them, and their borders.
 
 Every survival world is permanent; none of them reset. `/worlds` reaches each one, and `/spawn` always brings you back. Every world is on the [live map](https://bluemap.ts-mc.net).
 
-Border radii below are measured from coordinates 0, 0. The two restored maps have round borders; the others are square.
+Every border below is a circle centered at coordinates 0, 0. Measurements are radii.
 
 ## Frontier
 
 The main survival world, where most players build. `/rtp`, the welcome menu and the starter compass all land here, and its entry in `/worlds` sends you to a random spot in its wilderness.
 
-Border radius: 3,500 blocks. All of Frontier is generated ahead of time.
+Round border, radius 7,000 blocks. Terrain inside the border is generated ahead of time.
 
 ## Spawn (Main Map 1)
 
@@ -29,18 +29,12 @@ Round border, radius 12,000 blocks: the edge of the restored map.
 
 Floating islands above the void, with modern biomes. Reach it from `/worlds` or with `/rtp skylands`. Falling off an island is a long way down.
 
-Border radius: 5,000 blocks.
-
-## Wilds and Peaks
-
-Wilds has large biomes and Peaks has amplified mountains. Reach them from `/worlds`, or with `/rtp wilds` and `/rtp peaks`.
-
-No border.
+Round border, radius 3,000 blocks.
 
 ## The Nether
 
-Border radius: 3,000 blocks.
+Round border, radius 5,000 blocks.
 
 ## The End
 
-Border radius: 4,000 blocks.
+Round border, radius 1,750 blocks.

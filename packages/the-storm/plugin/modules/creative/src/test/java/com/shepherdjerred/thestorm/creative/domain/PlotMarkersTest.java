@@ -2,6 +2,8 @@ package com.shepherdjerred.thestorm.creative.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.shepherdjerred.thestorm.core.config.ConfigFiles;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -15,6 +17,21 @@ final class PlotMarkersTest {
 
   private static final UUID OWNER = UUID.fromString("cb488c76-08ba-4755-b425-6613fde02f70");
   private static final PlotGrid GRID = PlotGrid.recovered();
+
+  @Test
+  void liveMapHidesRecoveredPlotsOutsideThePlayableCircle() {
+    var config =
+        ConfigFiles.load(
+            Path.of("../../../server/owned/plugins/TheStorm/creative.yml"), CreativeConfig.class);
+    var near = view(new PlotId(2, 1), Optional.of(OWNER), "", false);
+    var far = view(new PlotId(15, 15), Optional.of(OWNER), "", false);
+    var captioned =
+        PlotMarkers.presented(List.of(near, far), Map.of(near.id(), "Near", far.id(), "Far"));
+    var markers = PlotMarkers.select("creative", config, captioned);
+    assertThat(markers).extracting(PlotMarker::id).containsExactly(near.id());
+    assertThat(markers).extracting(PlotMarker::label).containsExactly("Near");
+    assertThat(config.catalog().size()).isEqualTo(215);
+  }
 
   @Test
   @DisplayName("a named plot is labelled with that name")

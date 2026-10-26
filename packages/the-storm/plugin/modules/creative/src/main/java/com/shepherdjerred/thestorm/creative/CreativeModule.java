@@ -27,7 +27,6 @@ import com.shepherdjerred.thestorm.creative.app.ReviewBook;
 import com.shepherdjerred.thestorm.creative.app.ReviewStore.Snapshot;
 import com.shepherdjerred.thestorm.creative.domain.CreativeConfig;
 import com.shepherdjerred.thestorm.creative.domain.PlotFootprint;
-import com.shepherdjerred.thestorm.creative.domain.PlotGrid;
 import com.shepherdjerred.thestorm.creative.domain.PlotId;
 import com.shepherdjerred.thestorm.creative.domain.PlotMarkers;
 import com.shepherdjerred.thestorm.creative.domain.PlotView;
@@ -67,7 +66,7 @@ public final class CreativeModule implements StormModule {
   private @Nullable Scheduler scheduler;
   private int mapGeneration;
   private String worldName = "creative";
-  private PlotGrid grid = PlotGrid.recovered();
+  private @Nullable CreativeConfig worldConfig;
 
   @Override
   public String id() {
@@ -81,8 +80,8 @@ public final class CreativeModule implements StormModule {
     players = context.services().require(PlayerDirectory.class);
     scheduler = context.scheduler();
     var config = context.loadConfig("creative.yml", CreativeConfig.class);
+    worldConfig = config;
     worldName = config.world();
-    grid = config.grid();
     var world = context.plugin().getServer().getWorld(config.world());
     if (world == null) {
       throw new IllegalStateException("Creative world is not loaded: " + config.world());
@@ -271,8 +270,12 @@ public final class CreativeModule implements StormModule {
       List<PlotView> marked,
       Map<PlotId, String> signed,
       Map<UUID, String> known) {
+    var config = worldConfig;
+    if (config == null) {
+      return;
+    }
     var captioned = PlotMarkers.presented(marked, PlotMarkers.usernames(marked, signed, known));
-    plots.draw(PlotMarkers.select(worldName, worldName, captioned, grid));
+    plots.draw(PlotMarkers.select(worldName, config, captioned));
   }
 
   /** One in-flight name lookup. A newer redraw drops it. */

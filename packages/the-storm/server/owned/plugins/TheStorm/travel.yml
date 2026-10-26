@@ -21,16 +21,6 @@ destinations:
     description: "The restored 2016 main world"
     world: map2
     arrival: spawn
-  - id: wilds
-    label: Wilds
-    description: "Large biomes, never reset"
-    world: wilds
-    arrival: spawn
-  - id: peaks
-    label: Peaks
-    description: "Amplified mountains, never reset"
-    world: peaks
-    arrival: spawn
 # Stargate-style gates at the main spawn: an obsidian frame filled with portal
 # blocks and a destination sign. Each entry is a gate's inner volume in
 # hubWorld, inclusive corners, at most 16 blocks per axis; standing in a gate
