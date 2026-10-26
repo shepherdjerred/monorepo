@@ -1018,7 +1018,10 @@ the stricter interval plus a persistent 15–30 minute buffer, and records inten
 before clicking. Filtered and removed attempts remain in the ledger. An
 ambiguous result holds the target until a real browser receipt resolves it.
 The submission checkpoint retains the original page observations, so a later
-reconciliation cannot accept unchanged bump text as a new receipt. A deferral
+reconciliation cannot accept unchanged bump text as a new receipt.
+The parent retains these page bodies in object storage; operator results and
+provider prompts contain only the latest 50 attempts' metadata and receipt keys.
+The complete ledger remains available to publishing eligibility checks. A deferral
 without a future eligibility deadline blocks the target for inspection rather
 than repeatedly dispatching it.
 The first version supports one action per posting window; a multi-action rule

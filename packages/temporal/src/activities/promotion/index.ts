@@ -7,6 +7,7 @@ import { promotionConfig } from "#config/promotion.ts";
 import {
   PromotionRunInputSchema,
   nextPromotionEligibleAt,
+  promotionStateSummary,
   type PromotionState,
   type PromotionTarget,
   type PromotionRunInput,
@@ -277,10 +278,14 @@ async function managePromotion(raw: z.infer<typeof PromotionControlSchema>) {
       : [promotionTarget(input.targetId)];
   if (input.operation === "status")
     return await Promise.all(
-      targets.map((target) => readPromotionState(promotionStore(), target.id)),
+      targets.map(async (target) =>
+        promotionStateSummary(
+          await readPromotionState(promotionStore(), target.id),
+        ),
+      ),
     );
   const paused = input.operation === "pause";
-  return await Promise.all(
+  const changed = await Promise.all(
     targets.map((target) =>
       updatePromotionState(promotionStore(), target.id, (state) => ({
         ...state,
@@ -294,6 +299,7 @@ async function managePromotion(raw: z.infer<typeof PromotionControlSchema>) {
       })),
     ),
   );
+  return changed.map((state) => promotionStateSummary(state));
 }
 
 async function acknowledgePromotionAlert(
