@@ -121,6 +121,31 @@ export const PromotionStateSchema = z.strictObject({
 });
 export type PromotionState = z.infer<typeof PromotionStateSchema>;
 
+/** Keep stored page bodies out of Temporal results and provider context. */
+export function promotionStateSummary(state: PromotionState) {
+  return {
+    ...state,
+    attemptCount: state.attempts.length,
+    attempts: state.attempts
+      .slice(-50)
+      .map(({ beforeSubmission, ...attempt }) => ({
+        ...attempt,
+        baselineObservationCount: beforeSubmission.length,
+      })),
+    preflight:
+      state.preflight === null
+        ? null
+        : {
+            policy: state.preflight.policy,
+            historyComplete: state.preflight.historyComplete,
+            previousActionCount: state.preflight.previousActions.length,
+            nextAllowedAt: state.preflight.nextAllowedAt,
+            equivalentPostExists: state.preflight.equivalentPostExists,
+            substantiveNewsAvailable: state.preflight.substantiveNewsAvailable,
+          },
+  };
+}
+
 export function initialPromotionState(
   targetId: string,
   bufferSeconds: number,

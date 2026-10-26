@@ -3,7 +3,10 @@ import type {
   PromotionState,
   PromotionTarget,
 } from "#shared/promotion.ts";
-import { PromotionPreflightSchema } from "#shared/promotion.ts";
+import {
+  PromotionPreflightSchema,
+  promotionStateSummary,
+} from "#shared/promotion.ts";
 import { z } from "zod/v4";
 
 export function promotionPrompt(input: {
@@ -32,7 +35,7 @@ export function promotionPrompt(input: {
     "In preview mode, do not publish or solve paid CAPTCHAs; report eligibility and prepared copy. Never pause, resume or loosen configuration yourself.",
     `Mode: ${input.mode}`,
     `Target manifest: ${JSON.stringify(input.target)}`,
-    `Durable history (latest 50 attempts; the publishing tool retains the complete ledger): ${JSON.stringify({ ...input.state, attempts: input.state.attempts.slice(-50) })}`,
+    `Durable history (latest 50 attempts; the publishing tool retains the complete ledger and original page baselines): ${JSON.stringify(promotionStateSummary(input.state))}`,
     `Approved content:\n${input.content}`,
     `Preflight JSON schema: ${JSON.stringify(z.toJSONSchema(PromotionPreflightSchema))}`,
     'Return strict JSON: {"status":"verified|deferred|blocked|preview","summary":"concise outcome and any required operator action"}. Never claim verified without the publish tool\'s verified receipt.',

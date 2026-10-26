@@ -2,6 +2,8 @@ import { MockActivityEnvironment } from "@temporalio/testing";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { promotionConfig } from "#config/promotion.ts";
 import type * as StoreModule from "#activities/promotion/store.ts";
+import { promotionPrompt } from "#activities/promotion/prompt.ts";
+import { promotionTarget } from "#activities/promotion/manifest.ts";
 import {
   promotionAgentActivities,
   promotionControlActivities,
@@ -50,6 +52,30 @@ async function inspect() {
   >(activity);
 }
 
+async function seedLargeHistory() {
+  const text = `baseline-only-${"x".repeat(120_000)}`;
+  return await updatePromotionState(promotionStore(), "pmc", (state) => ({
+    ...state,
+    attempts: Array.from({ length: 60 }, (_, index) => ({
+      occurrenceId: `storm-promotion/pmc/run-${String(index)}`,
+      attemptedAt: "2026-10-25T12:00:00.000Z",
+      settledAt: "2026-10-25T12:00:01.000Z",
+      status: "verified" as const,
+      contentHash: "fixture",
+      receiptUrl: promotionTarget("pmc").url,
+      evidenceKey: "private/receipt.png",
+      beforeSubmission: [
+        {
+          id: crypto.randomUUID(),
+          url: promotionTarget("pmc").url,
+          capturedAt: "2026-10-25T12:00:00.000Z",
+          text,
+        },
+      ],
+    })),
+  }));
+}
+
 describe("promotion execution boundaries", () => {
   beforeEach(() => {
     vi.stubEnv("TEMPORAL_NAMESPACE", "prod");
@@ -75,6 +101,45 @@ describe("promotion execution boundaries", () => {
     });
   });
   afterEach(() => vi.unstubAllEnvs());
+
+  it.each(["status", "pause", "resume"] as const)(
+    "keeps %s results bounded without discarding stored receipt baselines",
+    async (operation) => {
+      await seedLargeHistory();
+      const activity = promotionControlActivities.managePromotion;
+      const result = await environment().run<
+        Parameters<typeof activity>,
+        Awaited<ReturnType<typeof activity>>,
+        typeof activity
+      >(activity, { operation, targetId: "pmc" });
+      const encoded = JSON.stringify(result);
+      expect(encoded.length).toBeLessThan(100_000);
+      expect(encoded).not.toContain("baseline-only");
+      expect(result[0]?.attemptCount).toBe(60);
+      expect(result[0]?.attempts).toHaveLength(50);
+      expect(result[0]?.attempts[0]?.evidenceKey).toBe("private/receipt.png");
+      expect(result[0]?.paused).toBe(operation === "pause");
+      const stored = await readPromotionState(promotionStore(), "pmc");
+      expect(stored.attempts).toHaveLength(60);
+      expect(
+        stored.attempts[0]?.beforeSubmission[0]?.text.length,
+      ).toBeGreaterThan(120_000);
+    },
+  );
+
+  it("omits historical page bodies from the next agent's prompt", async () => {
+    const state = await seedLargeHistory();
+    const prompt = promotionPrompt({
+      target: promotionTarget("pmc"),
+      state,
+      content: "Approved fixture copy",
+      mode: "run",
+    });
+    expect(prompt.length).toBeLessThan(100_000);
+    expect(prompt).not.toContain("baseline-only");
+    expect(prompt).toContain("run-59");
+    expect(prompt).not.toContain('"storm-promotion/pmc/run-0"');
+  });
 
   it("rejects a foreign Workflow identity before acquiring a target claim", async () => {
     await expect(execute("reconcile", "manual/foreign")).rejects.toThrow(
