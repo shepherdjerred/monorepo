@@ -592,62 +592,6 @@
       "clones": 1,
       "tokens": 81
     },
-    "packages/scout-for-lol/packages/backend/src/betting/accounts.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/leaderboard/weekly-leaderboard.integration.test.ts": {
-      "clones": 1,
-      "tokens": 106
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/accounts.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/parlays/parlay.integration.test.ts": {
-      "clones": 1,
-      "tokens": 74
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/accounts/earnings.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/accounts/earnings.integration.test.ts": {
-      "clones": 1,
-      "tokens": 97
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/concurrent-race.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/markets/bet-button.integration.test.ts": {
-      "clones": 1,
-      "tokens": 133
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/concurrent-race.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/markets/place-bet.integration.test.ts": {
-      "clones": 1,
-      "tokens": 156
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/notify/announce.test.ts|packages/scout-for-lol/packages/backend/src/betting/notify/announce.test.ts": {
-      "clones": 2,
-      "tokens": 215
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/notify/message-refresh.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/notify/message-refresh.integration.test.ts": {
-      "clones": 1,
-      "tokens": 129
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/notify/message-refresh.ts|packages/scout-for-lol/packages/backend/src/betting/parlays/runtime/parlay-refresh.ts": {
-      "clones": 1,
-      "tokens": 101
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/parlays/model/parlay-criteria.test.ts|packages/scout-for-lol/packages/backend/src/betting/parlays/model/parlay-criteria.test.ts": {
-      "clones": 5,
-      "tokens": 375
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/parlays/parlay.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/settle.integration.test.ts": {
-      "clones": 1,
-      "tokens": 70
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/parlays/parlay.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/settlement/sweep.integration.test.ts": {
-      "clones": 1,
-      "tokens": 72
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/settle.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/settle.integration.test.ts": {
-      "clones": 3,
-      "tokens": 230
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/settle.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/settlement/sweep.integration.test.ts": {
-      "clones": 1,
-      "tokens": 98
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/settlement/sweep.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/settlement/sweep.integration.test.ts": {
-      "clones": 1,
-      "tokens": 70
-    },
     "packages/scout-for-lol/packages/backend/src/database/competition/participants.integration.test.ts|packages/scout-for-lol/packages/backend/src/database/competition/participants.integration.test.ts": {
       "clones": 4,
       "tokens": 309
@@ -667,10 +611,6 @@
     "packages/scout-for-lol/packages/backend/src/database/season-seeder.ts|packages/scout-for-lol/packages/backend/src/testing/test-template.ts": {
       "clones": 1,
       "tokens": 71
-    },
-    "packages/scout-for-lol/packages/backend/src/discord/commands/definitions.test.ts|packages/scout-for-lol/packages/backend/src/discord/commands/help.test.ts": {
-      "clones": 1,
-      "tokens": 87
     },
     "packages/scout-for-lol/packages/backend/src/discord/embeds/competition.ts|packages/scout-for-lol/packages/backend/src/discord/embeds/competition.ts": {
       "clones": 1,

@@ -1,5 +1,6 @@
 import {
   dareSqlContractCore,
+  dareTargetBinding,
   loadRiftFixture,
   targetMatchAt,
 } from "#src/dares/dare-test-fixtures.ts";
@@ -30,8 +31,6 @@ const CHANNEL = testChannelId("942");
 const CHALLENGER = DiscordAccountIdSchema.parse("100000000000000940");
 const TARGET = DiscordAccountIdSchema.parse("100000000000000941");
 const HASH = "c".repeat(64);
-const TARGET_PUUID =
-  "virmel-puuid000000000000000000000000000000000000000000000000000000000000000000";
 const T0 = new Date("2026-09-01T12:00:00.000Z");
 const MATCH_ID = RiotMatchIdSchema.parse("NA1_7100000041");
 
@@ -58,20 +57,7 @@ function contract(): DareContract {
     activationSnapshot: null,
     originalText: "I bet Virmel cannot win on Twisted Fate",
     plainLanguage: "Virmel wins a game on Twisted Fate",
-    targets: [
-      {
-        key: "T1",
-        discordId: TARGET,
-        playerId: 1,
-        alias: "Virmel",
-        accounts: [
-          {
-            puuid: TARGET_PUUID,
-            trackingStartedAt: "2026-01-01T00:00:00.000Z",
-          },
-        ],
-      },
-    ],
+    targets: [dareTargetBinding(TARGET)],
     serverId: SERVER,
     channelId: CHANNEL,
     revision: 1,
@@ -89,7 +75,7 @@ beforeEach(async () => {
 });
 
 /** An active Dare accepted by its target. */
-async function fundedActiveDare() {
+async function acceptedActiveDare() {
   const parsed = contract();
   const dare = await db.dare.create({
     data: {
@@ -141,7 +127,7 @@ async function resultPosts(dareId: number) {
 
 describe("the Dare result post", () => {
   test("a resolved Dare owes its own channel one post naming the verified result", async () => {
-    const { dare, contract: parsed } = await fundedActiveDare();
+    const { dare, contract: parsed } = await acceptedActiveDare();
 
     const summary = await captureDareSqlForMatch({
       dare,
@@ -183,7 +169,7 @@ describe("the Dare result post", () => {
   });
 
   test("a match owed no public delivery writes no result post", async () => {
-    const { dare, contract: parsed } = await fundedActiveDare();
+    const { dare, contract: parsed } = await acceptedActiveDare();
 
     await captureDareSqlForMatch({
       dare,

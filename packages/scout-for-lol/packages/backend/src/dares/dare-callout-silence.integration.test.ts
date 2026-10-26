@@ -115,7 +115,7 @@ beforeEach(async () => {
  * Built through the real lifecycle rather than inserted, because a
  * hand-written row would prove the query and not the path.
  */
-async function fundedDare(key: string): Promise<number> {
+async function publishedDare(key: string): Promise<number> {
   const draft = await createDareDraft(
     {
       serverId: SERVER,
@@ -155,7 +155,7 @@ async function fundedDare(key: string): Promise<number> {
     deps,
     T0,
   );
-  // Asserted, not assumed: an unfunded Dare has no pending callout, and a
+  // Asserted, not assumed: an unpublished Dare has no pending callout, and a
   // test that silently got one would prove nothing about withholding.
   if (published.kind !== "published") {
     throw new Error(`Expected a published Dare, got ${published.kind}`);
@@ -169,8 +169,8 @@ describe("withholding a Dare callout", () => {
     // decision about one match must not write to rows that match never
     // touched. Retiring from here suppressed unrelated live callouts
     // permanently — strictly worse than the late post it was fixing.
-    const withheld = await fundedDare("publish-callout-withheld");
-    const unrelated = await fundedDare("publish-callout-unrelated");
+    const withheld = await publishedDare("publish-callout-withheld");
+    const unrelated = await publishedDare("publish-callout-unrelated");
     const sendMessage = vi.fn(() =>
       Promise.resolve({ channelId: CHANNEL, id: "never-sent" }),
     );
@@ -201,7 +201,7 @@ describe("withholding a Dare callout", () => {
 
 /** A Dare past acceptance, which a qualifying match then settles. */
 async function activeDare(key: string): Promise<number> {
-  const dareId = await fundedDare(`publish-${key}`);
+  const dareId = await publishedDare(`publish-${key}`);
   const accept = await createDareConfirmationIntent(
     {
       dareId,
@@ -316,7 +316,7 @@ describe("withholding a Dare notification", () => {
       },
     );
 
-    // The Dare settled — the silence is about announcing, never about money.
+    // The Dare settled — the notification disposition only controls its announcement.
     const settled = await db.dare.findUniqueOrThrow({
       where: { id: dareId },
       select: { dareState: true },

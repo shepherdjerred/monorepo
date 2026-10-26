@@ -2,11 +2,34 @@ import {
   DareSqlEvidenceSchema,
   RawMatchSchema,
   RawParticipantSchema,
+  type DareTargetBinding,
   type DareSqlEvidence,
   type RawMatch,
 } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import type { DiscordAccountId } from "@scout-for-lol/domain/identity/discord.ts";
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import { vi } from "vitest";
+
+/** The tracked target shared by lifecycle and notification integration tests. */
+export function dareTargetBinding(
+  discordId: DiscordAccountId,
+): DareTargetBinding {
+  return {
+    key: "T1",
+    discordId,
+    playerId: 1,
+    alias: "Virmel",
+    accounts: [
+      {
+        puuid: LeaguePuuidSchema.parse(
+          "virmel-puuid000000000000000000000000000000000000000000000000000000000000000000",
+        ),
+        trackingStartedAt: "2026-01-01T00:00:00.000Z",
+      },
+    ],
+  };
+}
 
 export function makeTwistedFateMatch(
   fixture: RawMatch,

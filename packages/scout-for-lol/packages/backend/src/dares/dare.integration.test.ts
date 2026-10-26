@@ -1,3 +1,4 @@
+import { lake } from "#src/dares/dare-lake.test-fixtures.ts";
 import {
   addFlagOverride,
   clearFlagOverrides,
@@ -10,9 +11,9 @@ import {
   freezeDareAsMonotone,
 } from "#src/dares/dare-integration.test-fixtures.ts";
 import {
+  dareTargetBinding,
   loadRiftFixture,
   targetMatchAt,
-  type StubbedLake,
 } from "#src/dares/dare-test-fixtures.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
@@ -33,29 +34,17 @@ import {
   describe,
   expect,
   test,
-  vi,
 } from "vitest";
 
 /**
- * The Dare lifecycle end to end: drafting, publishing, acceptance, contribution,
- * evidence capture, settlement, refunds, and the public callout.
+ * The Dare lifecycle end to end: drafting, publishing, acceptance,
+ * evidence capture, resolution, and the public callout.
  *
  * The SQL compiler is real, so drafts carry a genuine frozen AST and query
  * hash. Only lake execution is stubbed: each test says what the contract's
- * evidence is, and everything from the evidence down — finality, the money,
+ * evidence is, and everything from the evidence down — finality and
  * the callout — runs for real.
  */
-
-const lake = vi.hoisted((): StubbedLake => ({
-  achieved: false,
-  sourceMatchIds: [],
-}));
-
-vi.mock("#src/dares/sql/dare-sql.ts", async () => {
-  const { stubbedDareSqlModule } =
-    await import("#src/dares/dare-test-fixtures.ts");
-  return await stubbedDareSqlModule(lake);
-});
 
 const { reviseDareDraft } = await import("#src/dares/lifecycle/dare-draft.ts");
 const { DarePartialSettlementError } =
@@ -84,20 +73,7 @@ const SHARED_WIN_SQL =
   "SELECT COUNT(*) >= 1 AS achieved FROM T1 a JOIN T2 b USING (match_id) WHERE a.win";
 let matchFixture: RawMatch;
 
-const TARGET_BINDING: DareTargetBinding = {
-  key: "T1",
-  discordId: TARGET,
-  playerId: 1,
-  alias: "Virmel",
-  accounts: [
-    {
-      puuid: LeaguePuuidSchema.parse(
-        "virmel-puuid000000000000000000000000000000000000000000000000000000000000000000",
-      ),
-      trackingStartedAt: "2026-01-01T00:00:00.000Z",
-    },
-  ],
-};
+const TARGET_BINDING = dareTargetBinding(TARGET);
 
 const SECOND_TARGET_BINDING: DareTargetBinding = {
   key: "T2",
@@ -288,17 +264,17 @@ describe("Dare draft and lifecycle", () => {
     }
   });
 
-  test("funds once, freezes the revision, and binds the deadline on acceptance", async () => {
+  test("publishes once, freezes the revision, and binds the deadline on acceptance", async () => {
     const dareId = await makeDraft();
-    const fundIntent = await intent({
+    const publishIntent = await intent({
       dareId,
       actor: CHALLENGER,
       action: "publish",
       key: "publish-1",
     });
     const results = await Promise.all([
-      consume(fundIntent, CHALLENGER),
-      consume(fundIntent, CHALLENGER),
+      consume(publishIntent, CHALLENGER),
+      consume(publishIntent, CHALLENGER),
     ]);
     expect(
       results.filter((result) => result.kind === "published"),
@@ -341,21 +317,21 @@ describe("Dare draft and lifecycle", () => {
       where: { dareId_revision: { dareId, revision: 1 } },
       data: { compilerVersion: "dare-scoutql-2" },
     });
-    const fundIntent = await intent({
+    const publishIntent = await intent({
       dareId,
       actor: CHALLENGER,
       action: "publish",
       key: "publish-retired-compiler",
     });
 
-    await expect(consume(fundIntent, CHALLENGER)).rejects.toThrow(
+    await expect(consume(publishIntent, CHALLENGER)).rejects.toThrow(
       "retired compiler dare-scoutql-2",
     );
   });
 });
 
 describe("Dare absolute deadlines", () => {
-  test("expires and fully refunds an acceptance after its absolute deadline", async () => {
+  test("expires an acceptance after its absolute deadline", async () => {
     const deadlineAt = new Date(T0.getTime() + 60_000);
     const dareId = await makeDraft({
       deadlineSpec: {
@@ -364,13 +340,13 @@ describe("Dare absolute deadlines", () => {
         timezone: "America/Los_Angeles",
       },
     });
-    const fundIntent = await intent({
+    const publishIntent = await intent({
       dareId,
       actor: CHALLENGER,
       action: "publish",
       key: "publish-absolute-deadline",
     });
-    const published = await consume(fundIntent, CHALLENGER);
+    const published = await consume(publishIntent, CHALLENGER);
     expect(published.kind).toBe("published");
     await db.dare.update({
       where: { id: dareId },
@@ -480,15 +456,15 @@ describe("Dare draft mutation and cancellation", () => {
 });
 
 describe("Dare published lifecycle", () => {
-  test("challenger cancellation during acceptance refunds the full stake", async () => {
+  test("challenger cancellation during acceptance closes the Dare", async () => {
     const dareId = await makeDraft();
-    const fundIntent = await intent({
+    const publishIntent = await intent({
       dareId,
       actor: CHALLENGER,
       action: "publish",
       key: "publish-cancel",
     });
-    await consume(fundIntent, CHALLENGER);
+    await consume(publishIntent, CHALLENGER);
     const cancelIntent = await intent({
       dareId,
       actor: CHALLENGER,
@@ -624,7 +600,7 @@ describe("Dare partial settlement", () => {
 });
 
 describe("Dare evidence and settlement", () => {
-  test("captures and pays one proof under concurrent match replay", async () => {
+  test("captures and records one proof under concurrent match replay", async () => {
     const dareId = await makeDraft();
     await activate(dareId, "achieved-replay");
     await makeMonotone(dareId);

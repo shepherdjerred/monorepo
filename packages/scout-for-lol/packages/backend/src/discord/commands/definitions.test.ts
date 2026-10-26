@@ -8,28 +8,16 @@ import {
 } from "#src/discord/commands/definitions.ts";
 import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import { ApplicationIntegrationType, InteractionContextType } from "discord.js";
-import { afterEach, describe, expect, test } from "vitest";
-
-const originalAllowlist = Bun.env["EXPLORE_GUILD_ALLOWLIST"];
-const originalEnvironment = Bun.env["ENVIRONMENT"];
+import { afterEach, describe, expect, test, vi } from "vitest";
 
 afterEach(() => {
-  if (originalAllowlist === undefined) {
-    delete Bun.env["EXPLORE_GUILD_ALLOWLIST"];
-  } else {
-    Bun.env["EXPLORE_GUILD_ALLOWLIST"] = originalAllowlist;
-  }
-  if (originalEnvironment === undefined) {
-    delete Bun.env["ENVIRONMENT"];
-  } else {
-    Bun.env["ENVIRONMENT"] = originalEnvironment;
-  }
+  vi.unstubAllEnvs();
   resetConfigurationForTests();
 });
 
 describe("registered Discord commands", () => {
   test("keeps beta's global surface web-first", () => {
-    Bun.env["ENVIRONMENT"] = "beta";
+    vi.stubEnv("ENVIRONMENT", "beta");
     resetConfigurationForTests();
     expect(globalCommandPayload().map((command) => command.name)).toEqual([
       "help",
@@ -43,7 +31,7 @@ describe("registered Discord commands", () => {
   });
 
   test("adds guild-only /scout to production's global surface", () => {
-    Bun.env["ENVIRONMENT"] = "prod";
+    vi.stubEnv("ENVIRONMENT", "prod");
     resetConfigurationForTests();
     const payload = globalCommandPayload();
     expect(payload.map((command) => command.name)).toEqual([
@@ -68,19 +56,18 @@ describe("registered Discord commands", () => {
   });
 
   test("keeps beta-only commands out of the global surface", () => {
-    Bun.env["ENVIRONMENT"] = "prod";
+    vi.stubEnv("ENVIRONMENT", "prod");
     resetConfigurationForTests();
-    // `bb` is registered per guild, so it must not leak into the global list —
-    // that would put it in the picker of every guild Scout is in, where it
-    // cannot do anything.
+    // Dares retain their beta guild scope; the retired economy has no command.
     const globalNames = globalCommandPayload().map((command) => command.name);
+    expect(globalNames).not.toContain("dare");
     expect(globalNames).not.toContain("bb");
     expect(globalNames).not.toContain("lobby");
   });
 
   test("resolves flag and Explore guild scopes independently", () => {
-    Bun.env["ENVIRONMENT"] = "beta";
-    Bun.env["EXPLORE_GUILD_ALLOWLIST"] = "100000000000000001";
+    vi.stubEnv("ENVIRONMENT", "beta");
+    vi.stubEnv("EXPLORE_GUILD_ALLOWLIST", "100000000000000001");
     resetConfigurationForTests();
     expect(listGuildsWithFlagEnabled("dares_enabled").length).toBeGreaterThan(
       0,
@@ -170,8 +157,8 @@ describe("guild /scout payload merge", () => {
   });
 
   test("merges per-feature gates into one per-guild /scout payload", async () => {
-    Bun.env["ENVIRONMENT"] = "beta";
-    Bun.env["EXPLORE_GUILD_ALLOWLIST"] = "100000000000000001";
+    vi.stubEnv("ENVIRONMENT", "beta");
+    vi.stubEnv("EXPLORE_GUILD_ALLOWLIST", "100000000000000001");
     resetConfigurationForTests();
 
     // Explore-only guild: /scout carries ask alone — no dead voice entries.
@@ -198,7 +185,7 @@ describe("guild /scout payload merge", () => {
     ]);
 
     // Both gates on: the full merge, ask first.
-    Bun.env["EXPLORE_GUILD_ALLOWLIST"] = voiceGuild;
+    vi.stubEnv("EXPLORE_GUILD_ALLOWLIST", voiceGuild);
     resetConfigurationForTests();
     const merged = await guildCommandPayload(voiceGuild);
     const mergedScout = merged.find((command) => command.name === "scout");
@@ -209,7 +196,7 @@ describe("guild /scout payload merge", () => {
     ]);
 
     // Neither gate: no /scout registration at all.
-    Bun.env["EXPLORE_GUILD_ALLOWLIST"] = "";
+    vi.stubEnv("EXPLORE_GUILD_ALLOWLIST", "");
     resetConfigurationForTests();
     const neither = await guildCommandPayload(
       DiscordGuildIdSchema.parse("300000000000000003"),

@@ -1,3 +1,4 @@
+import { lake } from "#src/dares/dare-lake.test-fixtures.ts";
 import {
   addFlagOverride,
   clearFlagOverrides,
@@ -9,9 +10,9 @@ import {
   freezeDareAsMonotone,
 } from "#src/dares/dare-integration.test-fixtures.ts";
 import {
+  dareTargetBinding,
   loadRiftFixture,
   targetMatchAt,
-  type StubbedLake,
 } from "#src/dares/dare-test-fixtures.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
@@ -19,13 +20,12 @@ import {
   testChannelId,
   testGuildId,
 } from "#src/testing/test-ids.ts";
-import type { DareTargetBinding, RawMatch } from "@scout-for-lol/data";
+import type { RawMatch } from "@scout-for-lol/data";
 import {
   DiscordMessageIdSchema,
   RiotMatchIdSchema,
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
-import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   afterAll,
   beforeAll,
@@ -43,17 +43,6 @@ import {
  * Drafts compile real SQL; only lake execution is stubbed.
  */
 
-const lake = vi.hoisted((): StubbedLake => ({
-  achieved: false,
-  sourceMatchIds: [],
-}));
-
-vi.mock("#src/dares/sql/dare-sql.ts", async () => {
-  const { stubbedDareSqlModule } =
-    await import("#src/dares/dare-test-fixtures.ts");
-  return await stubbedDareSqlModule(lake);
-});
-
 const { postDareCallout, refreshDareCallout, refreshPendingDareCallouts } =
   await import("#src/dares/presentation/dare-callout.ts");
 const { settleDaresForMatch } =
@@ -67,20 +56,7 @@ const TARGET = testAccountId("954");
 const T0 = new Date("2026-09-01T12:00:00.000Z");
 let matchFixture: RawMatch;
 
-const TARGET_BINDING: DareTargetBinding = {
-  key: "T1",
-  discordId: TARGET,
-  playerId: 1,
-  alias: "Virmel",
-  accounts: [
-    {
-      puuid: LeaguePuuidSchema.parse(
-        "virmel-puuid000000000000000000000000000000000000000000000000000000000000000000",
-      ),
-      trackingStartedAt: "2026-01-01T00:00:00.000Z",
-    },
-  ],
-};
+const TARGET_BINDING = dareTargetBinding(TARGET);
 
 const { makeDraft, intent, consume, publish, activate } =
   createDareLifecycleHarness({
@@ -113,14 +89,11 @@ beforeEach(async () => {
   await clearDareTables(db);
   lake.achieved = false;
   lake.sourceMatchIds = [];
-  for (const flag of ["dares_enabled", "dares_enabled"] as const) {
-    clearFlagOverrides(flag);
-    addFlagOverride(flag, true, { server: SERVER });
-  }
+  clearFlagOverrides("dares_enabled");
+  addFlagOverride("dares_enabled", true, { server: SERVER });
 });
 
 afterAll(async () => {
-  resetFlagOverrides("dares_enabled");
   resetFlagOverrides("dares_enabled");
   await clearDareTables(db);
   await db.$disconnect();

@@ -1,5 +1,6 @@
 import {
   dareSqlContractCore,
+  dareTargetBinding,
   loadRiftFixture,
   targetMatchAt,
 } from "#src/dares/dare-test-fixtures.ts";
@@ -18,25 +19,21 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 /**
  * The Dare settlement silence gate's WIRING.
  *
- * Dares cannot run in production — the whole Bryan Bucks surface is
+ * Dares cannot run in production — the surface is
  * hard-disabled there ahead of Flipt — but in beta they are one operator
  * toggle away, and they deliver to individuals by DM. What is worth proving is
  * not the logic, but that the disposition the settlement was handed REACHES
  * this writer at all.
  *
  * So the contract's SQL evidence machinery is stubbed and everything from
- * the capture entry down is real. The Dare resolves UNACHIEVED with an empty
- * pot, which is what lets this exercise the notify branch without a published
- * wallet: the refund path has nothing to move, and an achieved Dare would
- * need a proof and a payout that prove nothing about the wiring.
+ * the capture entry down is real. The Dare resolves unachieved when its
+ * one-game cap is reached, exercising the notification branch.
  */
 
 const { prisma: db } = createTestDatabase("bucks-dare-settlement-silence");
 const SERVER = testGuildId("931");
 const CHANNEL = testChannelId("932");
 const HASH = "b".repeat(64);
-const TARGET_PUUID =
-  "virmel-puuid000000000000000000000000000000000000000000000000000000000000000000";
 const T0 = new Date("2026-09-01T12:00:00.000Z");
 const MATCH_ID = RiotMatchIdSchema.parse("NA1_7100000001");
 
@@ -62,18 +59,7 @@ function contract(): DareContract {
     originalText: "I bet Virmel cannot do it",
     plainLanguage: "Virmel cannot do it",
     targets: [
-      {
-        key: "T1",
-        discordId: "100000000000000931",
-        playerId: 1,
-        alias: "Virmel",
-        accounts: [
-          {
-            puuid: TARGET_PUUID,
-            trackingStartedAt: "2026-01-01T00:00:00.000Z",
-          },
-        ],
-      },
+      dareTargetBinding(DiscordAccountIdSchema.parse("100000000000000931")),
     ],
     serverId: SERVER,
     channelId: CHANNEL,
@@ -90,7 +76,7 @@ beforeEach(async () => {
   await db.dare.deleteMany();
 });
 
-/** An active Dare with an empty pot and one target. */
+/** An active Dare with one target. */
 async function activeDare() {
   const parsed = contract();
   const created = await db.dare.create({

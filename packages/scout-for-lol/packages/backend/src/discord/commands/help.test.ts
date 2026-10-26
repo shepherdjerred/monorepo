@@ -9,20 +9,8 @@ import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import type { ChatInputCommandInteraction } from "discord.js";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
-const originalAllowlist = Bun.env["EXPLORE_GUILD_ALLOWLIST"];
-const originalEnvironment = Bun.env["ENVIRONMENT"];
-
 afterEach(() => {
-  if (originalAllowlist === undefined) {
-    delete Bun.env["EXPLORE_GUILD_ALLOWLIST"];
-  } else {
-    Bun.env["EXPLORE_GUILD_ALLOWLIST"] = originalAllowlist;
-  }
-  if (originalEnvironment === undefined) {
-    delete Bun.env["ENVIRONMENT"];
-  } else {
-    Bun.env["ENVIRONMENT"] = originalEnvironment;
-  }
+  vi.unstubAllEnvs();
   resetConfigurationForTests();
   resetFlagOverrides("dares_enabled");
   resetFlagOverrides("voice_assistant_enabled");
@@ -52,8 +40,8 @@ describe("/help", () => {
   });
 
   test("includes Scout Explore only inside an allowlisted guild", async () => {
-    Bun.env["ENVIRONMENT"] = "beta";
-    Bun.env["EXPLORE_GUILD_ALLOWLIST"] = "100000000000000001";
+    vi.stubEnv("ENVIRONMENT", "beta");
+    vi.stubEnv("EXPLORE_GUILD_ALLOWLIST", "100000000000000001");
     resetConfigurationForTests();
     const replyMock = vi.fn(
       (payload: Parameters<ChatInputCommandInteraction["reply"]>[0]) =>
@@ -71,7 +59,7 @@ describe("/help", () => {
   });
 
   test("lists flag-gated commands only where their flag is on", async () => {
-    Bun.env["ENVIRONMENT"] = "beta";
+    vi.stubEnv("ENVIRONMENT", "beta");
     resetConfigurationForTests();
     const gatedGuild = "100000000000000003";
     const otherGuild = "100000000000000004";
@@ -94,9 +82,9 @@ describe("/help", () => {
   });
 
   test("advertises voice only when the deployment gate is also on", async () => {
-    Bun.env["ENVIRONMENT"] = "beta";
-    Bun.env["VOICE_ASSISTANT_ENABLED"] = "true";
-    Bun.env["VOICE_OPENAI_API_KEY"] = "test-openai-key";
+    vi.stubEnv("ENVIRONMENT", "beta");
+    vi.stubEnv("VOICE_ASSISTANT_ENABLED", "true");
+    vi.stubEnv("VOICE_OPENAI_API_KEY", "test-openai-key");
     resetConfigurationForTests();
     const gatedGuild = "100000000000000005";
     const server = DiscordGuildIdSchema.parse(gatedGuild);
@@ -106,15 +94,15 @@ describe("/help", () => {
       const gated = await commandList(DiscordGuildIdSchema.parse(gatedGuild));
       expect(gated).toContain("`/scout join`");
     } finally {
-      delete Bun.env["VOICE_ASSISTANT_ENABLED"];
-      delete Bun.env["VOICE_OPENAI_API_KEY"];
+      vi.stubEnv("VOICE_ASSISTANT_ENABLED", undefined);
+      vi.stubEnv("VOICE_OPENAI_API_KEY", undefined);
       resetConfigurationForTests();
     }
   });
 
   test("includes Scout Explore in every production guild", async () => {
-    Bun.env["ENVIRONMENT"] = "prod";
-    delete Bun.env["EXPLORE_GUILD_ALLOWLIST"];
+    vi.stubEnv("ENVIRONMENT", "prod");
+    vi.stubEnv("EXPLORE_GUILD_ALLOWLIST", undefined);
     resetConfigurationForTests();
     const replyMock = vi.fn(
       (payload: Parameters<ChatInputCommandInteraction["reply"]>[0]) =>
