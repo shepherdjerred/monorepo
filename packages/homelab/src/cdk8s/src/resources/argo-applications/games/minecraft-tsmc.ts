@@ -159,15 +159,16 @@ export function createMinecraftTsmcApp(chart: Chart) {
     // (packages/the-storm/plugin/modules/rwfbots/LOAD.md) found 100 bots add
     // under one core and that 6 CPUs tick no faster than 4, since the tick is
     // one main thread: survival's earlier 2 cores plus one for the bots. The
-    // heap was not measured and keeps its headroom. CPU stays unlimited so
-    // bursts are not throttled.
+    // 8G heap also needs native-memory headroom while loading and upgrading
+    // chunks: the previous 10Gi container limit OOM-killed a pregeneration scan.
+    // CPU stays unlimited so bursts are not throttled.
     resources: {
       requests: {
-        memory: "8Gi",
+        memory: "10Gi",
         cpu: "3",
       },
       limits: {
-        memory: "10Gi",
+        memory: "16Gi",
       },
     },
     minecraftServer: {
