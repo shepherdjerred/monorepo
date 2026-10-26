@@ -14,6 +14,31 @@ import {
   type FilePlanEntry,
   type Transaction,
 } from "./types.ts";
+import {
+  MovieEditionScopeSchema,
+  type MovieEditionScope,
+} from "#shared/movie-editions/registry.ts";
+
+function embeddedRequestScope(input: {
+  mediaIds: string[];
+  kind: "movies" | "tv";
+  movieScope?: MovieEditionScope;
+}) {
+  if (input.movieScope === undefined) return effectiveRequestWhere;
+  const scope = MovieEditionScopeSchema.parse(input.movieScope);
+  if (
+    input.kind !== "movies" ||
+    input.mediaIds.length !== 1 ||
+    input.mediaIds[0] !== scope.mediaId
+  )
+    throw new FileGuardError("movie_subtitle_scope_changed");
+  return {
+    edition: scope.edition,
+    active: true,
+    excluded: false,
+    direct: true,
+  };
+}
 
 export async function stageEmbedded(input: {
   context: FileContext;
@@ -22,13 +47,14 @@ export async function stageEmbedded(input: {
   probe: MediaProbe;
   mediaIds: string[];
   assetId: string;
+  movieScope?: MovieEditionScope;
 }): Promise<{
   subtitles: FilePlanEntry["embeddedSubtitles"];
   rejectedStreams: number[];
 }> {
   const { context, kind, source, probe, mediaIds, assetId } = input;
   const requests = await context.db.mediaRequest.findMany({
-    where: { ...effectiveRequestWhere, mediaId: { in: mediaIds } },
+    where: { ...embeddedRequestScope(input), mediaId: { in: mediaIds } },
   });
   const wanted = new Set(
     requests.flatMap((request) => request.subtitleLanguages),

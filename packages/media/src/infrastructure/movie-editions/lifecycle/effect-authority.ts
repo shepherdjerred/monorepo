@@ -66,5 +66,13 @@ export async function movieAttemptEffectAuthorityV4(
   if (!evaluateRelease(candidate, profile, [scope.mediaId]).accepted)
     return null;
   authorized.freshness.assertActive();
-  return { ...authorized, profile, target };
+  return {
+    ...authorized,
+    profile,
+    target,
+    policyMetadata: {
+      runtimeMinutes: current.runtimeMinutes,
+      originalLanguage: current.originalLanguage,
+    },
+  };
 }

@@ -66,6 +66,17 @@ the first literal assessment; profile or catalog changes create another record.
 Version-2 movie acquisition identities bind an exact assessment ID and hash.
 These contracts are internal; the public v3 routes above retain their behavior.
 
+The internal movie Files contract is a version-2 object, separate from the
+historical array file plan. It records exact edition scope, original request
+consent, selected torrent member, assessed release/member cut evidence, measured
+quality, checksum and predecessor. PostgreSQL prevents replacing a captured
+version-2 plan. Inspection rejects conflicting or missing named-cut labels
+before probing. Staging accepts only the operation-owned copy after rechecking
+current consent, profile, source identity and physical authority. The original
+invocation observation, SDK expiry and sixty-second publication bound cover
+copy preparation and final acceptance. Embedded English and Simplified Chinese
+text tracks follow requests for that exact edition.
+
 Playable shared bytes do not fulfill an unchosen request. Readiness delivery
 requires matching choice and verified Plex publication; automatic retention
 keeps every pending subject's demand protective, including owner and named
