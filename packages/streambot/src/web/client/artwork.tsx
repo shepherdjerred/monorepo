@@ -5,7 +5,7 @@ export function Artwork({
   url,
   className = "",
 }: {
-  url?: string;
+  url?: string | undefined;
   className?: string;
 }) {
   const [failedUrl, setFailedUrl] = useState<string>();

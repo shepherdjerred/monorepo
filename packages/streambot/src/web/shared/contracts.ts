@@ -6,7 +6,10 @@ import { HistoryProviderSchema } from "@shepherdjerred/streambot/history/provide
 const ArtworkUrlSchema = z
   .string()
   .refine(
-    (value) => value.startsWith("/api/artwork?") || isRemoteArtworkUrl(value),
+    (value) =>
+      value.startsWith("/api/artwork?") ||
+      value.startsWith("/api/music/artwork?") ||
+      isRemoteArtworkUrl(value),
   );
 
 export const GuildSchema = z.strictObject({ id: z.string(), name: z.string() });
@@ -75,12 +78,19 @@ export const MediaSelectionSchema = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("library"), id: z.string().min(1) }),
   z.strictObject({ kind: z.literal("candidate"), id: z.string().min(1) }),
   z.strictObject({ kind: z.literal("sports"), id: z.string().min(1) }),
+  z.strictObject({ kind: z.literal("music"), id: z.string().min(1) }),
+  z.strictObject({
+    kind: z.literal("playlist"),
+    id: z.string().min(1).max(100),
+    revision: z.number().int().nonnegative(),
+  }),
   z.strictObject({
     kind: z.literal("url"),
     url: z.url().refine((value) => /^https?:\/\//u.test(value)),
   }),
 ]);
 export const PlayerItemSchema = z.strictObject({
+  music: z.boolean().optional(),
   requester: z.strictObject({ id: z.string(), name: z.string() }).optional(),
   queuedAt: z.number().int().nonnegative().nullable().optional(),
   sportsArtwork: SportsArtworkSchema.optional(),
@@ -177,7 +187,10 @@ export const CommandSchema = z.union([
   }),
 ]);
 export type WebCommand = z.infer<typeof CommandSchema>;
-export const CommandResultSchema = z.strictObject({ message: z.string() });
+export const CommandResultSchema = z.strictObject({
+  message: z.string(),
+  loadId: z.string().optional(),
+});
 export const SubtitleMenuSchema = z.strictObject({
   revision: z.string(),
   tracks: z.array(z.strictObject({ token: z.string(), label: z.string() })),

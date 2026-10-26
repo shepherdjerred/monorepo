@@ -1,9 +1,7 @@
+import type { PlaybackActors } from "@shepherdjerred/streambot/machine/playback-actors.ts";
 import { describe, expect, test } from "vitest";
 import { createActor, waitFor } from "xstate";
-import {
-  createPlaybackMachine,
-  type PlaybackActors,
-} from "@shepherdjerred/streambot/machine/playback-machine.ts";
+import { createPlaybackMachine } from "@shepherdjerred/streambot/machine/playback-machine.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type {
   PlaybackInput,

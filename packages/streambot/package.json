@@ -9,6 +9,7 @@
   },
   "imports": {
     "#lol-fixture": "./test/fixtures/lol.ts",
+    "#music-fixture": "./test/music/fixture.ts",
     "#architecture": "./architecture.config.ts",
     "#web-fixture": "./test/web/web-fixture.ts",
     "#numbered-fixture": "./test/session/numbered-fixture.ts"
@@ -45,11 +46,6 @@
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@shepherdjerred/bugsink-config": "workspace:*",
-    "@shepherdjerred/text": "workspace:*",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "react-router": "^8.3.0",
     "@aws-sdk/client-s3": "^3.1001.0",
     "@openai/agents": "0.20.0",
     "@opentelemetry/api": "^1.9.1",
@@ -63,14 +59,20 @@
     "@opentelemetry/sdk-trace-base": "^2.12.0",
     "@opentelemetry/semantic-conventions": "^1.40.0",
     "@sentry/bun": "^11.6.0",
+    "@shepherdjerred/bugsink-config": "workspace:*",
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/discord-stream-lifecycle": "workspace:*",
     "@shepherdjerred/discord-video-stream": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
+    "@shepherdjerred/text": "workspace:*",
     "@shepherdjerred/voice-assistant": "workspace:*",
     "discord.js": "^14.26.4",
     "discord.js-selfbot-v13": "^3.7.1",
     "prom-client": "^15.1.3",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-router": "^8.3.0",
+    "spotify-url-info": "3.3.3",
     "xstate": "^5.32.4",
     "zod": "^4.4.3"
   },

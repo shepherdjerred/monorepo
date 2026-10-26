@@ -24,6 +24,8 @@ const retirementScopes = [
   { environment: "prod", namespace: "alert-dashboard" },
   { environment: "beta", namespace: "tracker" },
   { environment: "prod", namespace: "tracker" },
+  { environment: "beta", namespace: "streambot" },
+  { environment: "prod", namespace: "streambot" },
 ] as const;
 const retiredKeys = retiredFlagDeclarations.map(
   (declaration) => declaration.key,
@@ -81,10 +83,17 @@ function fakeServer(
   const preservedOtherFlags: [string, unknown][] = [
     ["unrelated-unknown", { enabled: true }],
   ];
+  const preservedStreambotFlags: [string, unknown][] = [
+    [
+      "streambot-music-catalog-enabled",
+      { enabled: false, rules: [{ guild: "test" }] },
+    ],
+  ];
   const preservedByNamespace = new Map([
     ["scout", preservedScoutFlags],
     ["temporal", preservedTemporalFlags],
     ["tracker", preservedTrackerFlags],
+    ["streambot", preservedStreambotFlags],
   ]);
   const preservedFlags = (namespace: string): [string, unknown][] =>
     preservedByNamespace.get(namespace) ?? preservedOtherFlags;
@@ -171,7 +180,7 @@ function fakeServer(
   return { flags, flagsIn, scopes, requests, fetcher };
 }
 
-test("only audited Scout and BlueBubbles keys are retired, preserving managed targeting and other unknowns", async () => {
+test("only audited keys are retired, preserving managed targeting and other unknowns", async () => {
   expect(
     retiredFlagDeclarations.map(
       ({ environment, namespace, key }) => `${environment}/${namespace}/${key}`,
@@ -217,6 +226,8 @@ test("only audited Scout and BlueBubbles keys are retired, preserving managed ta
     "prod/scout/custom_nights_enabled",
     "beta/tracker/tracker-imports-enabled",
     "prod/tracker/tracker-imports-enabled",
+    "beta/streambot/streambot-playlist-limit",
+    "prod/streambot/streambot-playlist-limit",
   ]);
   const server = fakeServer();
   const managedBefore = structuredClone(
@@ -259,6 +270,12 @@ test("only audited Scout and BlueBubbles keys are retired, preserving managed ta
   for (const environment of environments) {
     expect([...server.flagsIn(environment, "tracker").keys()]).toEqual([
       "tracker-writes-enabled",
+    ]);
+    expect([...server.flagsIn(environment, "streambot")]).toEqual([
+      [
+        "streambot-music-catalog-enabled",
+        { enabled: false, rules: [{ guild: "test" }] },
+      ],
     ]);
   }
   expect(

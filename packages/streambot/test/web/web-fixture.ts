@@ -35,6 +35,7 @@ import { createWebHandler } from "@shepherdjerred/streambot/web/server/api.ts";
 import { WebSessionStore } from "@shepherdjerred/streambot/web/server/session-store.ts";
 import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
 import type { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
+import type { MusicService } from "@shepherdjerred/streambot/music/service.ts";
 import type { SportsCatalog } from "@shepherdjerred/streambot/sports/types.ts";
 import type { LolPlaybackSchedules } from "@shepherdjerred/streambot/sports/playback-schedules.ts";
 import {
@@ -122,6 +123,16 @@ export function webFixture(
     library?: LibraryEntry[];
     plexArtwork?: LibraryArtworkProvider;
     history?: MediaHistoryStore;
+    music?: MusicService;
+    musicEnabled?: boolean;
+    join?: (input: {
+      guildId: typeof GUILD;
+      channelId: typeof CHANNEL;
+    }) => Promise<{ guildId: typeof GUILD; channelId: typeof CHANNEL }>;
+    expandPlaylist?: (
+      url: string,
+      signal: AbortSignal,
+    ) => Promise<readonly { title: string; url: string }[]>;
     automatic?: boolean;
     resolve?: (source: Source) => ResolvedSource;
     sports?: SportsCatalog;
@@ -169,8 +180,13 @@ export function webFixture(
   let beforeResolve: (() => void) | undefined;
   const actor = createActor(
     createPlaybackMachine({
-      joinVoice: (input) =>
-        Promise.resolve({ guildId: input.guildId, channelId: input.channelId }),
+      joinVoice:
+        options.join ??
+        ((input) =>
+          Promise.resolve({
+            guildId: input.guildId,
+            channelId: input.channelId,
+          })),
       leaveVoice: () => Promise.resolve(),
       resolveSource: (input) => Promise.resolve(resolveFixture(input.source)),
       runStream: (_input, signal) =>
@@ -253,6 +269,9 @@ export function webFixture(
       : { plexArtwork: options.plexArtwork }),
   });
   const featureGate: MediaFeatureGate = {
+    musicCatalog: () => Promise.resolve(options.musicEnabled === true),
+    spotifyLinks: () => Promise.resolve(options.musicEnabled === true),
+    playlists: () => Promise.resolve(options.musicEnabled === true),
     assistantV2: () => Promise.resolve(advanced),
     history: () => Promise.resolve(options.history !== undefined),
     automaticChannelRouting: () => Promise.resolve(options.automatic === true),
@@ -267,6 +286,10 @@ export function webFixture(
     ...(options.schedules === undefined
       ? {}
       : { schedules: options.schedules }),
+    ...(options.music === undefined ? {} : { music: options.music }),
+    ...(options.expandPlaylist === undefined
+      ? {}
+      : { expandPlaylist: options.expandPlaylist }),
     sessions: {
       numbered: {
         selected: () => Promise.resolve(selected()),

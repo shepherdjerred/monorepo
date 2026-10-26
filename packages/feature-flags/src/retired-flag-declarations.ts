@@ -181,4 +181,15 @@ export const retiredFlagDeclarations = [
   // both environments.
   { environment: "beta", namespace: "tracker", key: "tracker-imports-enabled" },
   { environment: "prod", namespace: "tracker", key: "tracker-imports-enabled" },
+  // Playlist links are enumerated without an application track cap.
+  {
+    environment: "beta",
+    namespace: "streambot",
+    key: "streambot-playlist-limit",
+  },
+  {
+    environment: "prod",
+    namespace: "streambot",
+    key: "streambot-playlist-limit",
+  },
 ] as const;

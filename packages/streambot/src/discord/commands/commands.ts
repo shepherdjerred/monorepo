@@ -4,6 +4,7 @@ import {
   type SlashCommandSubcommandBuilder,
   type RESTPostAPIChatInputApplicationCommandsJSONBody,
 } from "discord.js";
+import { musicCommand } from "@shepherdjerred/streambot/discord/commands/music-commands.ts";
 
 /**
  * Options `/stream play` and `/stream playnext` share.
@@ -307,6 +308,9 @@ export const commandDefinitions = [
           .setName("playback")
           .setDescription("Playback session controls")
           .addSubcommand((sub) =>
+            sub.setName("web").setDescription("Open the Streambot web remote"),
+          )
+          .addSubcommand((sub) =>
             sub
               .setName("join")
               .setDescription(
@@ -468,6 +472,16 @@ export const commandDefinitions = [
         .addSubcommand((sub) =>
           sub.setName("status").setDescription("Show capture window status"),
         ),
+    ),
+  musicCommand,
+  new SlashCommandBuilder()
+    .setName("play")
+    .setDescription("Play a song, search, or paste a YouTube or Spotify link")
+    .addStringOption((option) =>
+      option
+        .setName("query")
+        .setDescription("Song, artist, title, or link")
+        .setRequired(true),
     ),
 ];
 

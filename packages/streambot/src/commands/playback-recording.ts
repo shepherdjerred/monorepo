@@ -69,7 +69,7 @@ export function toRecordMedia(
   return {
     title: candidate?.title ?? resolved?.title ?? sourceLabel(source),
     provider: mediaProvider(source, candidate),
-    source,
+    source: resolved?.playbackSource ?? source,
     canonicalUrl: candidate?.canonicalUrl ?? provenance?.canonicalUrl,
     channel: candidate?.channel ?? provenance?.channel,
     thumbnailUrl: candidate?.thumbnailUrl ?? provenance?.thumbnailUrl,

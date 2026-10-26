@@ -10,9 +10,12 @@ import { LolPlaybackSchedules } from "@shepherdjerred/streambot/sports/playback-
 import { lolSportsEvent } from "@shepherdjerred/streambot/sports/lolesports.ts";
 import { matchSportsEvents } from "@shepherdjerred/streambot/sports/sports-service.ts";
 import { lolMatch } from "#lol-fixture";
+import { fixtureMusic, SONG } from "#music-fixture";
+import { musicSource } from "@shepherdjerred/streambot/music/service.ts";
 
 if (import.meta.main) {
-  const origin = "http://127.0.0.1:5188";
+  const port = Number(Bun.argv[2] ?? 5188);
+  const origin = "http://127.0.0.1:" + String(port);
   const history = new MediaHistoryStore(":memory:");
   const upcoming = {
     ...lolMatch(),
@@ -44,6 +47,8 @@ if (import.meta.main) {
     false,
     {
       history,
+      music: fixtureMusic(),
+      musicEnabled: true,
       username: "Morgan",
       automatic: true,
       lol: true,
@@ -61,12 +66,32 @@ if (import.meta.main) {
           ),
       },
       resolve: (source) => ({
-        title: source.kind === "file" ? source.title : "Live session",
+        title:
+          source.music?.title ??
+          (source.kind === "file" ? source.title : "Live session"),
         chapters: [],
         ffmpegInput: "fixture",
-        mediaKind: "video",
+        mediaKind: source.mode === "music" ? "music" : "video",
         durationSeconds: 10_871,
       }),
+    },
+  );
+  history.playlists.create(
+    { userId: USER, guildId: GUILD },
+    "Evening favorites",
+    [{ title: "Daft Punk — Get Lucky", source: musicSource(SONG) }],
+  );
+  const shared = history.playlists.create(
+    { userId: OTHER, guildId: GUILD },
+    "Friday listening",
+    [{ title: "Daft Punk — Get Lucky", source: musicSource(SONG) }],
+  );
+  history.playlists.edit(
+    shared.id,
+    { userId: OTHER, guildId: GUILD },
+    shared.revision,
+    (playlist) => {
+      playlist.guild_id = GUILD;
     },
   );
   fixture.enableNumbered(2);
@@ -133,7 +158,7 @@ if (import.meta.main) {
   await fixture.seed();
   Bun.serve({
     hostname: "127.0.0.1",
-    port: 5188,
+    port,
     fetch: async (request) => {
       const response = await fixture.handler(request);
       if (
@@ -157,5 +182,5 @@ if (import.meta.main) {
       return new Response(null, { status: 302, headers });
     },
   });
-  console.info("Streambot fixture preview ready on 127.0.0.1:5188");
+  console.info("Streambot fixture preview ready on " + origin);
 }

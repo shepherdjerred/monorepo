@@ -190,6 +190,8 @@ export class WebCatalog {
       throw new Error("History selections must be validated by WebHistory");
     if (selection.kind === "sports")
       return this.sports.select(selection.id, owner);
+    if (selection.kind === "music" || selection.kind === "playlist")
+      throw new Error("Music selections must be validated by WebMusic");
     if (selection.kind === "url")
       return {
         source: { kind: "url", url: selection.url },

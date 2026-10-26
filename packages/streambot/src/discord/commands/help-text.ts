@@ -34,17 +34,18 @@ export function helpText(
   automaticRouting = false,
 ): string {
   return [
-    "🎬 **Streambot** — `/stream` commands",
+    "🎬 **Streambot** — `/stream` commands; `/music search` browses artists, albums, and songs.",
     automaticRouting
       ? "• Auto routes music to 1, video to 2. `/stream select channel:<n>` overrides Auto; `auto:true` restores it. `/stream channels` shows your room's slots."
       : "• Channels: 1 music, 2 video, 3+ extra videos. `/stream select channel:<n>` chooses your destination. `/stream channels` shows your room's slots.",
     ...(webUrl === undefined
       ? []
       : [
-          `🌐 **Web remote** — browse Plex, sports, history, and queues: ${webUrl}`,
+          `🌐 **Open Streambot** — music, playlists, Plex, sports, and queues: ${webUrl}`,
         ]),
     "",
     "**Playback**",
+    "• `/play <query>` or `!play <query>` — quick search or YouTube/Spotify link",
     "• `/stream play <query>` · `playnext <query>` · `skip` · `seek <time>`",
     "• `/stream stop` — stop and clear _(admin)_",
     "",
@@ -74,6 +75,8 @@ export function helpText(
     "📡 **Supported sources**",
     "Search defaults to history + local files + YouTube. Direct links and playlists use yt-dlp; DRM and login-only sites are unsupported.",
     "",
+    "• `/music web` · `/stream playback web` — open Streambot",
+    "• `/music playlist list|show|play|save|share|private` — saved playlists",
     "• `/stream help` — show this message",
   ].join("\n");
 }

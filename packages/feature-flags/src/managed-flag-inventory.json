@@ -2093,6 +2093,87 @@
       "thresholdRollouts": []
     },
     {
+      "key": "streambot-music-catalog-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot-music",
+      "purpose": "Enable native artist, album, and song discovery.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "streambot-guild-1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "streambot-spotify-links-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot-music",
+      "purpose": "Enable public Spotify metadata links for queue-only playback.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "streambot-guild-1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "streambot-playlists-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot-music",
+      "purpose": "Enable private and server-shared native playlists independently of history.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "streambot-guild-1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "streambot-player-card-repost-after-messages",
       "owner": "streambot",
       "namespace": "streambot",
@@ -2112,18 +2193,6 @@
       "purpose": "Set Streambot player-card refresh interval.",
       "type": "variant",
       "default": "10000",
-      "rollouts": [],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
-      "key": "streambot-playlist-limit",
-      "owner": "streambot",
-      "namespace": "streambot",
-      "source": "streambot-dynamic",
-      "purpose": "Bound the Streambot playlist.",
-      "type": "variant",
-      "default": "100",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []

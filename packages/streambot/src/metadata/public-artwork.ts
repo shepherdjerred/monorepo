@@ -4,11 +4,16 @@ import {
   LOL_ARTWORK_HOST,
   isSportsThumbnailUrl,
 } from "@shepherdjerred/streambot/sports/artwork.ts";
+import {
+  isSpotifyArtworkUrl,
+  SPOTIFY_ARTWORK_HOSTS,
+} from "@shepherdjerred/streambot/music/artwork.ts";
 
 export const ARTWORK_HOSTS: readonly string[] = [
   "image.tmdb.org",
   "i.ytimg.com",
   "img.youtube.com",
+  ...SPOTIFY_ARTWORK_HOSTS,
   SPORTS_ARTWORK_HOST,
   LOL_ARTWORK_HOST,
   "static-cdn.jtvnw.net",
@@ -24,6 +29,8 @@ export function isRemoteArtworkUrl(value: string): boolean {
       url.password === "" &&
       url.port === "" &&
       ARTWORK_HOSTS.includes(url.hostname) &&
+      (!SPOTIFY_ARTWORK_HOSTS.includes(url.hostname) ||
+        isSpotifyArtworkUrl(value)) &&
       (![SPORTS_ARTWORK_HOST, LOL_ARTWORK_HOST].includes(url.hostname) ||
         isSportsArtworkUrl(value)) &&
       (url.hostname !== "static-cdn.jtvnw.net" || isSportsThumbnailUrl(value))

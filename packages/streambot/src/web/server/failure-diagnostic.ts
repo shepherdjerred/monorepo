@@ -74,6 +74,14 @@ const ENDPOINTS = new Set([
   "/api/library",
   "/api/search",
   "/api/history",
+  "/api/playlists",
+  "/api/music/features",
+  "/api/music/catalog",
+  "/api/music/album",
+  "/api/music/matches",
+  "/api/music/queue-match",
+  "/api/music/artwork",
+  "/api/music/load",
 ]);
 
 export function webFailureEndpoint(request: Request): string {

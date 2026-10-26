@@ -185,17 +185,31 @@ export function buildPlaylistArgs(url: string): string[] {
 }
 
 /**
- * Expand a playlist URL into individual `{ url, title }` items via `yt-dlp --flat-playlist`, capped
- * at `config.playlistLimit`. Adult items are dropped here too (defense before they reach the queue).
+ * Enumerate a playlist without application truncation. Metadata is drained incrementally;
+ * adult items are dropped before they reach the queue.
  */
 export async function expandPlaylist(
   config: Config,
   url: string,
   signal: AbortSignal,
+  progress?: (count: number) => void,
 ): Promise<PlaylistItem[]> {
-  const { stdout, stderr, exitCode } = await runSubprocess(
+  const items: PlaylistItem[] = [];
+  const { stderr, exitCode } = await runSubprocess(
     [config.ytDlpPath, ...buildPlaylistArgs(url)],
     signal,
+    (line) => {
+      const [itemUrl, title] = line.split("\t");
+      const parsed = PlaylistLineSchema.safeParse({ url: itemUrl, title });
+      if (
+        !parsed.success ||
+        isBlockedUrl(parsed.data.url) ||
+        isBlockedText(parsed.data.title)
+      )
+        return;
+      items.push(parsed.data);
+      progress?.(items.length);
+    },
   );
   if (exitCode !== 0) {
     throw new Error(
@@ -203,22 +217,6 @@ export async function expandPlaylist(
     );
   }
 
-  const items: PlaylistItem[] = [];
-  for (const line of stdout.split("\n")) {
-    const [itemUrl, title] = line.split("\t");
-    const parsed = PlaylistLineSchema.safeParse({ url: itemUrl, title });
-    if (!parsed.success) {
-      continue;
-    }
-    if (isBlockedUrl(parsed.data.url) || isBlockedText(parsed.data.title)) {
-      continue;
-    }
-    items.push(parsed.data);
-    if (items.length >= config.playlistLimit) {
-      log.warn("playlist truncated", { limit: config.playlistLimit });
-      break;
-    }
-  }
   return items;
 }
 

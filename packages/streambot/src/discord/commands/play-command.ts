@@ -319,7 +319,7 @@ async function runPlaylist(
     return;
   }
   // One gate evaluation for the whole playlist: every item is queued by the same user in the same
-  // scope, so per-item lookups would be identical flag reads at up to `playlistLimit` items.
+  // scope, so per-item lookups would be identical flag reads for all items.
   const itemMode = await new PlaybackCommandService(deps).resolveMediaMode(
     interaction.userId,
     input.mode,

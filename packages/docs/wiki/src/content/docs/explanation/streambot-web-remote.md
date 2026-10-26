@@ -74,6 +74,38 @@ Completion and cancellation act only on that owned item, preserving replacement 
 
 See [scheduled playback activation](/how-to/enable-streambot-lol-scheduling/) for the operator procedure.
 
+## Music separates catalog identity from playback
+
+MusicBrainz identifies artists, album editions, and recordings without requiring a listener's streaming-service account.
+The [catalog](https://github.com/shepherdjerred/monorepo/blob/feat/streambot-native-music/packages/streambot/src/music/catalog.ts)
+provides those entities; the [Streambot service](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/index.ts)
+searches YouTube for playback sources. The [matcher](https://github.com/shepherdjerred/monorepo/blob/feat/streambot-native-music/packages/streambot/src/music/matching.ts)
+uses artist, title, version, and duration to rank recordings.
+The [web recording picker](https://github.com/shepherdjerred/monorepo/blob/feat/streambot-native-music/packages/streambot/src/web/server/music.ts)
+lets listeners correct a queued or saved song.
+Saved sources retain catalog identity alongside the selected video, so [voice recovery](https://github.com/shepherdjerred/monorepo/blob/feat/streambot-native-music/packages/streambot/src/session/voice-recovery.ts)
+can resolve a fresh audio URL. The [artwork resolver](https://github.com/shepherdjerred/monorepo/blob/feat/streambot-native-music/packages/streambot/src/music/artwork.ts)
+keeps album artwork with saved playlists, queues, recovery, and player cards.
+MusicBrainz covers come from the Cover Art Archive, and [Spotify links](https://github.com/shepherdjerred/monorepo/blob/feat/streambot-native-music/packages/streambot/src/music/spotify.ts)
+retain their public album cover. Saved playlist covers represent their first track.
+
+`/play` and `!play` accept a title or supported link and share playback routing and playlist loading.
+The [message shortcut](https://github.com/shepherdjerred/monorepo/blob/feat/streambot-native-music/packages/streambot/src/discord/quick-play.ts)
+uses Discord's Message Content Intent, and [intent setup](https://github.com/shepherdjerred/monorepo/blob/feat/streambot-native-music/packages/streambot/src/discord/command-intents.ts)
+checks the application's granted capability before requesting it at login.
+The slash command remains available when message content is unavailable.
+
+External playlist links express a request to play now.
+Their metadata loading is temporary; queue entries become ordinary playback requests.
+Explicitly saved playlists have a separate lifetime in the
+[playlist store](https://github.com/shepherdjerred/monorepo/blob/feat/streambot-native-music/packages/streambot/src/music/playlists.ts)
+and [history database](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/history/media-history.ts).
+Private ownership and server sharing keep personal collections separate from a room's active queue.
+Sharing grants playback and copying while keeping edits with the owner.
+The [web playlist API](https://github.com/shepherdjerred/monorepo/blob/feat/streambot-native-music/packages/streambot/src/web/server/music-playlists.ts)
+rechecks server membership and playlist access when a saved selection is used.
+Making a playlist private revokes its previously issued selection tokens.
+
 ## The edge serves the remote
 
 The frontend is built into the Streambot image.

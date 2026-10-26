@@ -37,3 +37,25 @@ export function shuffleQueue<T>(items: readonly T[]): T[] {
   }
   return next;
 }
+export function insertBatch<T>(
+  queue: readonly T[],
+  items: readonly T[],
+  placement: "queue" | "next" | "after-first",
+): T[] {
+  switch (placement) {
+    case "queue":
+      return [...queue, ...items];
+    case "next":
+      return [...items, ...queue];
+    case "after-first":
+      return [...queue.slice(0, 1), ...items, ...queue.slice(1)];
+  }
+}
+
+export function replaceQueued<
+  T extends { source: unknown; preResolved?: unknown },
+>(items: readonly T[], index: number, source: T["source"]): T[] {
+  return items.map((item, position) =>
+    position === index - 1 ? { ...item, source, preResolved: undefined } : item,
+  );
+}

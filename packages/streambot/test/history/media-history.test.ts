@@ -196,7 +196,12 @@ describe("media history", () => {
         {
           title: "First",
           provider: "youtube",
-          source: { kind: "url", url: "https://youtu.be/first" },
+          source: {
+            kind: "url",
+            url: "https://youtu.be/first",
+            mode: "video",
+            spoken: true,
+          },
         },
         {
           title: "Second",
@@ -211,6 +216,12 @@ describe("media history", () => {
           .savedQueue(USER_SCOPE.userId, "covers")
           .map((item) => item.title),
       ).toEqual(["First", "Second"]);
+      expect(
+        history.savedQueue(USER_SCOPE.userId, "covers")[0]?.source,
+      ).toEqual({
+        kind: "url",
+        url: "https://youtu.be/first",
+      });
     } finally {
       history.close();
     }

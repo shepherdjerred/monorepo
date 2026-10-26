@@ -70,8 +70,10 @@ describe("tips", () => {
         },
         "100000000000000099",
       );
-      const url = new URL(tip.slice(tip.indexOf("http:")));
-      expect(url.pathname).toBe("/plex");
+      const link = /\[Open Streambot\]\((https?:\/\/[^)]+)\)/u.exec(tip)?.[1];
+      expect(link).toBeDefined();
+      const url = new URL(link ?? "");
+      expect(url.pathname).toBe("/music");
       expect(url.searchParams.get("guild")).toBe("100000000000000001");
       expect(url.searchParams.get("channel")).toBe(automatic ? null : "1");
     },

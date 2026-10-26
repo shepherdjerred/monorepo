@@ -41,6 +41,9 @@ import {
 import { featureFlagMetrics } from "@shepherdjerred/streambot/observability/metrics.ts";
 import { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
 import { DiscoveryService } from "@shepherdjerred/streambot/discovery/discovery-service.ts";
+import { MusicService } from "@shepherdjerred/streambot/music/service.ts";
+import { MusicCatalog } from "@shepherdjerred/streambot/music/catalog.ts";
+import { SpotifyMetadata } from "@shepherdjerred/streambot/music/spotify.ts";
 import {
   mediaFeatureGate,
   webUiEnabled,
@@ -74,7 +77,6 @@ async function main(): Promise<void> {
       playerCardTickMs: config.playerCard.tickMs,
       playerCardRepostAfterMessages: config.playerCard.repostAfterMessages,
       idleTimeoutSeconds: config.idleTimeoutSeconds,
-      playlistLimit: config.playlistLimit,
     },
     config,
     log: (message) => {
@@ -146,6 +148,11 @@ async function main(): Promise<void> {
     path.join(config.state.dir, "streambot.sqlite"),
   );
   history.prune();
+  const music = new MusicService(
+    new MusicCatalog(),
+    new SpotifyMetadata(),
+    (query, signal, limit) => searchYoutube(config, query, signal, limit),
+  );
   const discovery = new DiscoveryService({
     library: () => library,
     history,
@@ -174,6 +181,7 @@ async function main(): Promise<void> {
   const commandBot = new CommandBot({
     getSchedules: () => schedules,
     userbotIds: () => pool.userIds(),
+    music,
     config,
     getSessions: () => {
       if (refs.sessions === null) {
@@ -182,7 +190,8 @@ async function main(): Promise<void> {
       return refs.sessions;
     },
     library: () => library,
-    expandPlaylist: (url, signal) => expandPlaylist(config, url, signal),
+    expandPlaylist: (url, signal, progress) =>
+      expandPlaylist(config, url, signal, progress),
     listSources: (signal) => listExtractors(config, signal),
     resolvePlaySource: (source, signal) =>
       resolveSource(config, source, signal, { sportsResolver, lol }),
@@ -260,6 +269,9 @@ async function main(): Promise<void> {
           plexPostersEnabled,
           playback: {
             ...(schedules === undefined ? {} : { schedules }),
+            music,
+            expandPlaylist: (url, signal, progress) =>
+              expandPlaylist(config, url, signal, progress),
             sessions,
             bot: commandBot.web,
             featureGate: mediaFeatureGate,
@@ -307,6 +319,7 @@ async function main(): Promise<void> {
     await voiceModels?.close();
     await voiceCaptureManager.shutdown();
     history.close();
+    music.loads.close();
     await shutdownDynamicConfig();
     await shutdownTelemetry();
     await stopMetricsServer();

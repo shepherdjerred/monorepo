@@ -3,6 +3,9 @@ import type { StreambotBooleanFlagKey } from "@shepherdjerred/feature-flags/mana
 import type { DiscoveryScope } from "@shepherdjerred/streambot/discovery/candidate.ts";
 
 export type MediaFeatureGate = {
+  readonly musicCatalog?: (scope: DiscoveryScope) => Promise<boolean>;
+  readonly spotifyLinks?: (scope: DiscoveryScope) => Promise<boolean>;
+  readonly playlists?: (scope: DiscoveryScope) => Promise<boolean>;
   readonly assistantV2: (scope: DiscoveryScope) => Promise<boolean>;
   readonly history: (scope: DiscoveryScope) => Promise<boolean>;
   /**
@@ -35,6 +38,9 @@ async function enabled(
 }
 
 export const mediaFeatureGate: MediaFeatureGate = {
+  musicCatalog: (scope) => enabled("streambot-music-catalog-enabled", scope),
+  spotifyLinks: (scope) => enabled("streambot-spotify-links-enabled", scope),
+  playlists: (scope) => enabled("streambot-playlists-enabled", scope),
   lolEsports: (scope) => enabled("streambot-lol-esports-enabled", scope),
   lolAutoplay: (scope) => enabled("streambot-lol-autoplay-enabled", scope),
   automaticChannelRouting: (scope) =>

@@ -1,5 +1,6 @@
 import type { z } from "zod";
 import type { MediaSelectionSchema } from "@shepherdjerred/streambot/web/shared/contracts.ts";
+import type { WebSnapshot } from "@shepherdjerred/streambot/web/shared/contracts.ts";
 import { Artwork } from "./artwork.tsx";
 import { SportsArtwork } from "./sports-artwork.tsx";
 import type { SportsArtwork as Matchup } from "@shepherdjerred/streambot/sports/artwork.ts";
@@ -12,6 +13,8 @@ export type MediaListProps = {
   advanced: boolean;
   sportsEnabled: boolean;
   historyEnabled?: boolean | undefined;
+  csrfToken?: string;
+  snapshot?: WebSnapshot | null;
   actionLabel?: (
     selection: Selection,
     preferredChannel?: number,

@@ -198,7 +198,15 @@ export class WebAuth {
       return "/";
     const target = new URL(value, this.deps.bootstrap.publicOrigin);
     return target.origin === this.deps.bootstrap.publicOrigin &&
-      ["/", "/plex", "/search", "/sports", "/history"].includes(target.pathname)
+      [
+        "/",
+        "/music",
+        "/playlists",
+        "/plex",
+        "/search",
+        "/sports",
+        "/history",
+      ].includes(target.pathname)
       ? target.pathname + target.search + target.hash
       : "/";
   }

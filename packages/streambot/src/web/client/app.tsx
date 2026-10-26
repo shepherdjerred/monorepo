@@ -93,6 +93,8 @@ export function App() {
           ) : (
             <main className="main-grid">
               <MediaList
+                csrfToken={me.csrfToken}
+                snapshot={snapshot}
                 guildId={remote.guildId}
                 canPlay={
                   snapshot?.channel !== undefined && snapshot.channel !== null
@@ -129,6 +131,8 @@ export function App() {
               />
               {snapshot !== null && (
                 <Queue
+                  guildId={remote.guildId}
+                  csrfToken={me.csrfToken}
                   snapshot={snapshot}
                   busy={remote.busy}
                   send={(action) => {
@@ -284,13 +288,29 @@ function ChannelView({
 }
 
 function Feedback({ remote }: { remote: Remote }) {
-  if (remote.error === "" && remote.notice === "") return null;
+  if (remote.error === "" && remote.notice === "" && !remote.loadingPlaylist)
+    return null;
   return (
     <div
       className={remote.error === "" ? "toast" : "toast toast-error"}
       role={remote.error === "" ? "status" : "alert"}
     >
-      <span>{remote.error === "" ? remote.notice : remote.error}</span>
+      <span>
+        {remote.error === ""
+          ? remote.loadingPlaylist
+            ? (remote.queueLoad?.message ?? "Loading playlist…")
+            : remote.notice
+          : remote.error}
+      </span>
+      {remote.loadingPlaylist && (
+        <button
+          onClick={() => {
+            void remote.cancelLoad();
+          }}
+        >
+          Cancel loading
+        </button>
+      )}
       <button aria-label="Dismiss notification" onClick={remote.clearFeedback}>
         ×
       </button>

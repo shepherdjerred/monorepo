@@ -34,6 +34,11 @@ import {
   type LolEsportsClient,
 } from "@shepherdjerred/streambot/sports/lolesports.ts";
 import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
+import { searchYoutube } from "./ytdlp.ts";
+import {
+  rankMusicMatches,
+  MusicMatchError,
+} from "@shepherdjerred/streambot/music/matching.ts";
 
 const log = logger.child("resolve");
 const FatalResolutionErrorSchema = z.union([
@@ -380,6 +385,7 @@ export async function resolveSource(
   signal: AbortSignal,
   options?: ResolveSourceOptions,
 ): Promise<ResolvedSource> {
+  source = await resolveMusicSourceIfNeeded(config, source, signal, options);
   if (isBlockedSource(source)) {
     throw new BlockedSourceError(sourceLabel(source));
   }
@@ -414,6 +420,7 @@ export async function resolveSource(
   } else {
     resolved = await resolveWithYtdlp(config, source, signal);
   }
+  resolved = withMusicMetadata(source, resolved);
   // For yt-dlp and pre-resolved sources the ffmpeg input only becomes final once a format has been
   // chosen, so the probe runs here — on the URL the streamer will open, not on some earlier
   // candidate. Sports also probe a split audio companion: ffmpeg maps that separate input,
@@ -446,4 +453,47 @@ export async function resolveSource(
   return sportsSource && info !== null
     ? withSportsRenditions(finalized, info)
     : finalized;
+}
+
+async function resolveMusicSourceIfNeeded(
+  config: Config,
+  source: Source,
+  signal: AbortSignal,
+  options?: ResolveSourceOptions,
+): Promise<Source> {
+  return options?.preResolved === undefined
+    ? await resolveMusicSource(config, source, signal)
+    : source;
+}
+
+async function resolveMusicSource(
+  config: Config,
+  source: Source,
+  signal: AbortSignal,
+): Promise<Source> {
+  if (source.music !== undefined && source.kind === "search") {
+    const results = rankMusicMatches(
+      source.music,
+      await searchYoutube(config, source.query, signal, 10),
+    );
+    const match = results.find((item) => item.confident);
+    if (match === undefined) throw new MusicMatchError(results);
+    source = {
+      kind: "url",
+      url: match.url,
+      music: source.music,
+      ...(source.mode === undefined ? {} : { mode: source.mode }),
+      ...(source.spoken === undefined ? {} : { spoken: source.spoken }),
+    };
+  }
+  return source;
+}
+
+function withMusicMetadata(
+  source: Source,
+  resolved: ResolvedSource,
+): ResolvedSource {
+  return source.music === undefined
+    ? resolved
+    : { ...resolved, title: sourceLabel(source), playbackSource: source };
 }
