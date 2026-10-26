@@ -892,6 +892,10 @@
           "producer": "first-party"
         },
         {
+          "name": "image:minecraft-server",
+          "producer": "acquisition"
+        },
+        {
           "name": "image:the-storm-server-accepted",
           "producer": "reference",
           "source": {
