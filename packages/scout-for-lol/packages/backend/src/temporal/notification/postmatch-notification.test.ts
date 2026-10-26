@@ -46,7 +46,7 @@ vi.mock("#src/league/tasks/postmatch/match-report-generator.ts", () => ({
 
 const { buildPostmatchNotificationMessage, renderPostmatchNotification } =
   await import("#src/temporal/notification/postmatch-notification.ts");
-const { matchLinkComponents } =
+const { inlineMatchLink, matchLinkComponents } =
   await import("#src/league/tasks/postmatch/match-report-components.ts");
 const { withMvpVoteFurniture } = await import("#src/mvp-votes/components.ts");
 
@@ -70,17 +70,25 @@ function standardReport(review: boolean): MessageCreateOptions {
       new AttachmentBuilder(Buffer.from(REVIEW)).setName("ai-review.png"),
     );
   }
+  const content = review
+    ? "jerred finished a solo game\n\nA clean carry."
+    : "jerred finished a solo game";
   return {
-    content: review
-      ? "jerred finished a solo game\n\nA clean carry."
-      : "jerred finished a solo game",
+    content: `${content}\n\n${inlineMatchLink(MATCH)}`,
     files,
     embeds: [reportEmbed()],
+  };
+}
+
+function legacyStandardReport(): MessageCreateOptions {
+  return {
+    ...standardReport(false),
+    content: "jerred finished a solo game",
     components: matchLinkComponents(MATCH),
   };
 }
 
-/** An Arena or Classic report: no link button. */
+/** An Arena or Classic report: no link. */
 function reportWithoutLink(): MessageCreateOptions {
   return {
     content: "jerred finished an arena game",
@@ -123,10 +131,15 @@ describe("the round trip", () => {
       name: "a standard report without a review",
       message: standardReport(false),
     },
-    { name: "a report without a link button", message: reportWithoutLink() },
+    { name: "a report without a link", message: reportWithoutLink() },
     {
       name: "a Flex report with MVP vote furniture",
       message: withMvpVoteFurniture(standardReport(false), MATCH),
+    },
+    { name: "a legacy link-button report", message: legacyStandardReport() },
+    {
+      name: "a legacy link-button report with MVP vote furniture",
+      message: withMvpVoteFurniture(legacyStandardReport(), MATCH),
     },
   ])("rebuilds $name exactly as the generator built it", async (scenario) => {
     stubs.generateMatchReport.mockResolvedValue(scenario.message);
@@ -253,7 +266,7 @@ describe("what the disassembly refuses", () => {
       reason: /embeds other than/u,
     },
     {
-      name: "components other than the match link",
+      name: "unsupported match-link components",
       message: {
         ...standardReport(false),
         components: [
@@ -265,7 +278,7 @@ describe("what the disassembly refuses", () => {
           ),
         ],
       },
-      reason: /components other than the match link/u,
+      reason: /unsupported match-link or MVP components/u,
     },
   ])("refuses $name", async (scenario) => {
     stubs.generateMatchReport.mockResolvedValue(scenario.message);

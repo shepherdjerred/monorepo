@@ -30,7 +30,6 @@ import {
 } from "#src/tips/tip-state.ts";
 import { parsePersistedTipKey } from "#src/tips/tip-catalog.ts";
 import { withFeatureTip } from "#src/tips/tip-render.ts";
-import { withSupportAction } from "#src/support/discord.ts";
 import { getSubjectIntent } from "#src/database/durable/intent-repository.ts";
 import { NotificationIntentKeySchema } from "@scout-for-lol/domain/identity/brands.ts";
 
@@ -232,10 +231,7 @@ export async function freezeNotificationMessage(
       if (current.serverId !== guildId)
         throw new Error("Notification presentation destination changed");
       if (current.messageJson !== null) return current.messageJson;
-      let decorated =
-        record.intent.kind === "postmatch"
-          ? await withSupportAction(message, record.matchId, guildId)
-          : message;
+      let decorated = message;
       let chosen: Awaited<ReturnType<typeof selectTip>>;
       const supported = decorated;
       const tip = await selectTip({ serverId: guildId }, { db: tx });

@@ -3,7 +3,10 @@ import { prisma } from "#src/database/index.ts";
 import { getAccountConfigsByPuuids } from "#src/database/player-accounts.ts";
 import { readReportScoreboard } from "#src/evidence/report-scoreboard.ts";
 import { resolvePostmatchDeliveryChannels } from "#src/league/tasks/notification-filters.ts";
-import { matchLinkComponents } from "#src/league/tasks/postmatch/match-report-components.ts";
+import {
+  inlineMatchLink,
+  matchLinkComponents,
+} from "#src/league/tasks/postmatch/match-report-components.ts";
 import {
   formatGameCompletionMessage,
   generateMatchReport,
@@ -108,8 +111,8 @@ export type ScoutPostmatchRender = {
  * them the `MatchMvpContest` row they vote into: the report is never posted,
  * so a contest would have no message to be voted from and would sit in the
  * table as an orphan that anything counting contests reads as real. The
- * receipt then truthfully attests `match-link` rather than
- * `match-link-mvp-vote`. The AI review is kept.
+ * receipt then truthfully attests `inline-match-link` rather than
+ * `inline-match-link-mvp-vote`. The AI review is kept.
  */
 export type ScoutPostmatchRenderMode =
   | { readonly kind: "live" }
@@ -146,21 +149,37 @@ function classifyComponents(
   matchId: RiotMatchId,
 ): ScoutReportComponents {
   const components = message.components ?? [];
-  if (components.length === 0) return "none";
+  const hasInlineLink =
+    typeof message.content === "string" &&
+    message.content.endsWith(`\n\n${inlineMatchLink(matchId)}`);
+  if (components.length === 0) {
+    return hasInlineLink ? "inline-match-link" : "none";
+  }
   if (
     JSON.stringify(components) === JSON.stringify(matchLinkComponents(matchId))
   ) {
     return "match-link";
   }
-  const voteFurniture = withMvpVoteFurniture(
+  const legacyVoteFurniture = withMvpVoteFurniture(
     { components: matchLinkComponents(matchId) },
     matchId,
   );
-  if (JSON.stringify(components) === JSON.stringify(voteFurniture.components)) {
+  if (
+    JSON.stringify(components) ===
+    JSON.stringify(legacyVoteFurniture.components)
+  ) {
     return "match-link-mvp-vote";
   }
+  const inlineVoteFurniture = withMvpVoteFurniture({ components: [] }, matchId);
+  if (
+    hasInlineLink &&
+    JSON.stringify(components) ===
+      JSON.stringify(inlineVoteFurniture.components)
+  ) {
+    return "inline-match-link-mvp-vote";
+  }
   throw new Error(
-    `The report message for ${matchId} carries components other than the match link, which the render receipt cannot describe`,
+    `The report message for ${matchId} carries unsupported match-link or MVP components, which the render receipt cannot describe`,
   );
 }
 
@@ -198,6 +217,7 @@ function disassembleReport(
   const components = classifyComponents(message, matchId);
   const [, expectedEmbed] = attachReportImage(image, matchId);
   const expectedEmbeds =
+    components === "inline-match-link-mvp-vote" ||
     components === "match-link-mvp-vote"
       ? [expectedEmbed, emptyMvpTallyEmbed()]
       : [expectedEmbed];
@@ -320,6 +340,10 @@ export function buildPostmatchNotificationMessage(
     embeds: [embed],
   };
   switch (artifact.evidence.components) {
+    case "inline-match-link":
+      return message;
+    case "inline-match-link-mvp-vote":
+      return withMvpVoteFurniture(message, matchId);
     case "match-link":
       return { ...message, components: matchLinkComponents(matchId) };
     case "match-link-mvp-vote":

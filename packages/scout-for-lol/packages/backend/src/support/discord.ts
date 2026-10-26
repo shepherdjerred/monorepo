@@ -1,7 +1,4 @@
-import {
-  type DiscordGuildId,
-  DiscordAccountIdSchema,
-} from "@scout-for-lol/domain/identity/discord.ts";
+import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   ActionRowBuilder,
@@ -15,12 +12,10 @@ import {
   TextInputStyle,
   MessageFlags,
   type Interaction,
-  type MessageCreateOptions,
 } from "discord.js";
 import type { z } from "zod";
 import { createLogger } from "#src/logger.ts";
 import { TRPCError } from "@trpc/server";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { acceptSupportMessage } from "#src/support/conversations.ts";
 import { SupportContextSchema } from "#src/support/context.ts";
@@ -38,27 +33,6 @@ export function supportContactRow(matchId?: RiotMatchId) {
       .setLabel(matchId === undefined ? "Contact Scout" : "Feedback / help")
       .setCustomId(`support:contact:${matchId ?? ""}`),
   );
-}
-
-/** Passive product control, not an additional outreach message. Freeze before sending. */
-export async function withSupportAction(
-  message: MessageCreateOptions,
-  matchId: RiotMatchId,
-  serverId: DiscordGuildId,
-): Promise<MessageCreateOptions> {
-  if (
-    !(await isPolicyEnabled("scout_support_conversations_enabled")) ||
-    !(await isPolicyEnabled("scout_support_report_action_enabled", {
-      server: DiscordGuildIdSchema.parse(serverId),
-    }))
-  )
-    return message;
-  const components = [...(message.components ?? [])];
-  if (components.length >= 5) return message;
-  return {
-    ...message,
-    components: [...components, supportContactRow(matchId)],
-  };
 }
 
 export function buildSupportModal(matchId?: RiotMatchId) {

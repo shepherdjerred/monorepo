@@ -21,10 +21,7 @@ import {
   transitionIntent,
 } from "#src/database/durable/intent-repository.ts";
 import { expire } from "@scout-for-lol/domain/notifications/intent-transitions.ts";
-import {
-  addFlagOverride,
-  resetFlagOverrides,
-} from "#src/configuration/flags.ts";
+import { supportContactRow } from "#src/support/discord.ts";
 
 const { prisma } = createTestDatabase("notification-presentation");
 const channelFetch = vi.hoisted(() => ({ fetchChannelForDelivery: vi.fn() }));
@@ -83,41 +80,44 @@ function record(
 }
 const guildId = "100000000000000002";
 
-test("report support action is frozen across flag changes and delivered metrics deduplicate retries", async () => {
-  addFlagOverride("scout_support_conversations_enabled", true, {});
-  addFlagOverride("scout_support_report_action_enabled", true, {
-    server: DiscordGuildIdSchema.parse(guildId),
-  });
-  try {
-    const target = record("postmatch");
-    const first = await freezeNotificationMessage(
-      target,
-      { content: "Report" },
-      DiscordGuildIdSchema.parse(guildId),
-      prisma,
-    );
-    expect(JSON.stringify(first)).toContain("support:contact:NA1_9401");
-    expect(await prisma.supportTouchpoint.count()).toBe(0);
-    resetFlagOverrides("scout_support_conversations_enabled");
-    resetFlagOverrides("scout_support_report_action_enabled");
-    const retry = await freezeNotificationMessage(
-      target,
-      { content: "Changed report" },
-      DiscordGuildIdSchema.parse(guildId),
-      prisma,
-    );
-    expect(JSON.stringify(retry)).toBe(JSON.stringify(first));
-    await confirmNotificationTip(record("postmatch", "1", true), prisma);
-    await confirmNotificationTip(record("postmatch", "1", true), prisma);
-    expect(
-      await prisma.supportTouchpoint.findMany({
-        select: { surface: true, action: true },
-      }),
-    ).toEqual([{ surface: "REPORT", action: "DELIVERED" }]);
-  } finally {
-    resetFlagOverrides("scout_support_conversations_enabled");
-    resetFlagOverrides("scout_support_report_action_enabled");
-  }
+test("new report presentations do not add a support action", async () => {
+  const first = await freezeNotificationMessage(
+    record("postmatch"),
+    { content: "Report" },
+    DiscordGuildIdSchema.parse(guildId),
+    prisma,
+  );
+
+  expect(JSON.stringify(first)).not.toContain("support:contact:");
+});
+
+test("legacy report support actions stay frozen and deduplicate delivered metrics", async () => {
+  const target = record("postmatch");
+  const first = await freezeNotificationMessage(
+    target,
+    {
+      content: "Report",
+      components: [supportContactRow(target.matchId)],
+    },
+    DiscordGuildIdSchema.parse(guildId),
+    prisma,
+  );
+  expect(JSON.stringify(first)).toContain("support:contact:NA1_9401");
+  expect(await prisma.supportTouchpoint.count()).toBe(0);
+  const retry = await freezeNotificationMessage(
+    target,
+    { content: "Changed report" },
+    DiscordGuildIdSchema.parse(guildId),
+    prisma,
+  );
+  expect(retry).toEqual(first);
+  await confirmNotificationTip(record("postmatch", "1", true), prisma);
+  await confirmNotificationTip(record("postmatch", "1", true), prisma);
+  expect(
+    await prisma.supportTouchpoint.findMany({
+      select: { surface: true, action: true },
+    }),
+  ).toEqual([{ surface: "REPORT", action: "DELIVERED" }]);
 });
 
 test.each(["prematch", "postmatch"] as const)(

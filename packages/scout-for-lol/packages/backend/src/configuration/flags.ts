@@ -166,7 +166,7 @@ export type FlagName =
   | "scout_client_result_recovery"
   | "scout_operations_console_enabled"
   | "scout_durable_orchestration_enabled"
-  | `scout_support_${"conversations" | "report_action"}_enabled`
+  | "scout_support_conversations_enabled"
   | "scout-consumer-player-profiles-enabled"
   | "voice_assistant_enabled";
 
@@ -333,7 +333,6 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     overrides: [],
   },
   scout_support_conversations_enabled: { default: false, overrides: [] },
-  scout_support_report_action_enabled: { default: false, overrides: [] },
   scout_durable_orchestration_enabled: { default: false, overrides: [] },
   initial_match_history_import_enabled: {
     default: false,
