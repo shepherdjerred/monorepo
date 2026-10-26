@@ -235,7 +235,7 @@ export class PromotionBrowser {
       throw new Error(
         "Fill requires an ordinary visible form field; credentials use login",
       );
-    await this.json(`${this.tab()}/action`, { action: "fill", selector, text });
+    await this.json(`${this.tab()}/action`, { kind: "fill", selector, text });
   }
 
   async navigateLink(selector: string): Promise<{ url: string }> {
@@ -248,7 +248,7 @@ export class PromotionBrowser {
   async submit(selector: string): Promise<void> {
     const control = await this.control(selector);
     assertPromotionSubmitControl(this.target, control.label);
-    await this.json(`${this.tab()}/action`, { action: "click", selector });
+    await this.json(`${this.tab()}/action`, { kind: "click", selector });
     await this.currentUrl();
   }
 
@@ -263,12 +263,12 @@ export class PromotionBrowser {
     if (!password.password)
       throw new Error("Login password selector must identify a password input");
     await this.json(`${this.tab()}/action`, {
-      action: "fill",
+      kind: "fill",
       selector: input.usernameSelector,
       text: input.username,
     });
     await this.json(`${this.tab()}/action`, {
-      action: "fill",
+      kind: "fill",
       selector: input.passwordSelector,
       text: input.password,
     });
@@ -276,7 +276,7 @@ export class PromotionBrowser {
     if (!/log\s*in|sign\s*in/i.test(submit.label))
       throw new Error("Login submit must be labeled Log in or Sign in");
     await this.json(`${this.tab()}/action`, {
-      action: "click",
+      kind: "click",
       selector: input.submitSelector,
     });
     await this.currentUrl();
