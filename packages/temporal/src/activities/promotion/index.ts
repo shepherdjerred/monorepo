@@ -144,6 +144,8 @@ async function executePromotion(raw: PromotionRunInput) {
   const info = Context.current().info;
   if (info.workflowExecution === undefined)
     throw new Error("Promotion requires a Workflow-owned Activity");
+  if (info.workflowExecution.workflowId !== `storm-promotion/${target.id}`)
+    throw new Error("Promotion Workflow ID must be storm-promotion/<targetId>");
   const occurrenceId = `${info.workflowExecution.workflowId}/${info.workflowExecution.runId}`;
   const before = await readPromotionState(store, target.id);
   const config = await promotionConfig();
@@ -220,7 +222,12 @@ async function executePromotion(raw: PromotionRunInput) {
           ? "Agent claimed publication without a verified tool receipt"
           : result.status === "blocked"
             ? result.summary
-            : current.blockedReason;
+            : !verified &&
+                result.status === "deferred" &&
+                (current.nextEligibleAt === null ||
+                  Date.parse(current.nextEligibleAt) <= Date.now())
+              ? "Deferred without a future eligibility deadline; inspect current rules and history"
+              : current.blockedReason;
       const next = {
         ...current,
         blockedReason,

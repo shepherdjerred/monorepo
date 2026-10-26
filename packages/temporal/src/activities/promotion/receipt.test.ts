@@ -3,6 +3,20 @@ import { promotionTarget } from "./manifest.ts";
 import { assertPromotionReceipt } from "./receipt.ts";
 
 describe("remote promotion receipts", () => {
+  it("requires a baseline for a bump receipt even on a previously unseen URL", () => {
+    const target = promotionTarget("pmc");
+    expect(() =>
+      assertPromotionReceipt({
+        target,
+        status: "verified",
+        url: target.url,
+        text: "Server bumped successfully",
+        quote: "Server bumped successfully",
+        attemptedAt: "2026-10-25T12:00:00.000Z",
+        before: [],
+      }),
+    ).toThrow("original page baseline");
+  });
   it("rejects unchanged page text as proof of a new bump", () => {
     const target = promotionTarget("pmc");
     expect(() =>

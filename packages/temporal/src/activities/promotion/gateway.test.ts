@@ -47,6 +47,7 @@ async function harness(preview = false) {
     substantiveNewsAvailable: false,
     explanation: "Confirmed rules and complete current history.",
   };
+  gateway.observe(target.url, "The Storm server listing. Bump this server.");
   return { store, target, submit, enabled, gateway, preflight };
 }
 
@@ -92,6 +93,50 @@ describe("promotion publishing gateway", () => {
     await expect(test.gateway.publish("#bump", "Bump")).rejects.toThrow(
       "already attempted",
     );
+  });
+  it("retains the original receipt baseline when a different run reconciles an uncertain bump", async () => {
+    const test = await harness();
+    test.gateway.observe(test.target.url, "Server bumped successfully");
+    await test.gateway.preflight(test.preflight);
+    await test.gateway.publish("#bump", "Native bump");
+    const original = await readPromotionState(test.store, test.target.id);
+    expect(original.attempts[0]?.beforeSubmission).toContainEqual(
+      expect.objectContaining({ text: "Server bumped successfully" }),
+    );
+    await updatePromotionState(test.store, test.target.id, (state) => ({
+      ...state,
+      lock: { occurrenceId: "run-2", acquiredAt: "2026-10-25T12:01:00.000Z" },
+    }));
+    let text = "Server bumped successfully";
+    const reconcile = new PromotionGateway({
+      store: test.store,
+      target: test.target,
+      occurrenceId: "run-2",
+      preview: false,
+      enabled: test.enabled,
+      now: () => Date.parse("2026-10-25T12:01:00.000Z"),
+      submit: test.submit,
+      capture: () =>
+        Promise.resolve({
+          url: test.target.url,
+          text,
+          screenshotKey: "private/reconcile.png",
+        }),
+    });
+    const receipt = {
+      status: "verified" as const,
+      receiptUrl: test.target.url,
+      quote: text,
+      occurrenceId: "run-1",
+    };
+    await expect(reconcile.verify(receipt)).rejects.toThrow("already present");
+    const uncertain = await readPromotionState(test.store, test.target.id);
+    expect(uncertain.attempts[0]?.status).toBe("uncertain");
+    text = "Server bumped at 12:01 successfully";
+    await reconcile.verify({ ...receipt, quote: text });
+    const verified = await readPromotionState(test.store, test.target.id);
+    expect(verified.attempts[0]?.status).toBe("verified");
+    expect(test.submit).toHaveBeenCalledTimes(1);
   });
   it("rechecks a pause and the fresh enable flag immediately before publication", async () => {
     const test = await harness();

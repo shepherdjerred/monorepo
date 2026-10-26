@@ -1017,6 +1017,10 @@ The publishing tool requires fresh captured rule and history evidence, applies
 the stricter interval plus a persistent 15–30 minute buffer, and records intent
 before clicking. Filtered and removed attempts remain in the ledger. An
 ambiguous result holds the target until a real browser receipt resolves it.
+The submission checkpoint retains the original page observations, so a later
+reconciliation cannot accept unchanged bump text as a new receipt. A deferral
+without a future eligibility deadline blocks the target for inspection rather
+than repeatedly dispatching it.
 The first version supports one action per posting window; a multi-action rule
 can be represented conservatively as one action over its full window.
 Quiet running owners retain their claims; a confirmed closed Workflow releases

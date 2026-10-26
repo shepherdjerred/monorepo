@@ -164,6 +164,11 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
 
   // TASK_QUEUES.AGENT_TASK
   agentTaskWorkflow: "agent",
+  // TASK_QUEUES.PROMOTION / PROMOTION_CONTROL, with report delivery as a dependency.
+  runStormPromotion: "agent",
+  manageStormPromotion: "agent",
+  dispatchStormPromotion: "agent",
+  reportStormPromotion: "agent",
   agentChatWorkflow: "agent",
   blueBubblesIngressWorkflow: "agent",
   imessageAgentChatWorkflow: "agent",

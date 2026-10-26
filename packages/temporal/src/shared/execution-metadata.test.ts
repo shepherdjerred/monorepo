@@ -57,6 +57,16 @@ describe("central Temporal execution metadata", () => {
   });
 
   describe("executionDomainForWorkflow", () => {
+    test.each([
+      "runStormPromotion",
+      "manageStormPromotion",
+      "dispatchStormPromotion",
+      "reportStormPromotion",
+    ])("keeps %s visible in the agent domain", (workflowType) => {
+      expect(
+        executionDomainForWorkflow(workflowType, TASK_QUEUES.WORKFLOWS),
+      ).toBe("agent");
+    });
     test("resolves a known workflowType regardless of the shared WORKFLOWS queue", () => {
       // Every new central execution targets TASK_QUEUES.WORKFLOWS, so
       // taskQueue alone can no longer distinguish home/reports/repo/etc. —
