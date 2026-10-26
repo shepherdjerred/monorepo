@@ -7,6 +7,17 @@ import {
 import { redactSecrets } from "#shared/redact.ts";
 
 describe("promotion observation redaction", () => {
+  it("redacts sensitive fragments and tolerates malformed URLs in untrusted text", () => {
+    expect(
+      promotionPublicUrl("https://example.com/#access_token=fixture-secret"),
+    ).toBe("https://example.com/");
+    expect(promotionPublicUrl("https://example.com/rules#posting")).toBe(
+      "https://example.com/rules#posting",
+    );
+    expect(
+      redactPromotionUrls("Instructions: http://localhost:PORT and http://[::"),
+    ).toBe("Instructions: [unparseable-url] and [unparseable-url]");
+  });
   it("preserves public profile names and destination IDs while masking login and worker secrets", () => {
     const logins = {
       "minecraft-serverlist": {

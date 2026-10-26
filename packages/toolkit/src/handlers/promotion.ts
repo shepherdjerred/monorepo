@@ -55,16 +55,36 @@ export function promotionInvocation(
   ];
 }
 
+type PromotionCommandRuntime = {
+  write: (text: string) => void;
+  run: (args: string[]) => Promise<number>;
+};
+
+const commandRuntime: PromotionCommandRuntime = {
+  write: (text) => {
+    console.log(text);
+  },
+  run: async (args) => {
+    const child = Bun.spawn(args, {
+      stdin: "inherit",
+      stdout: "inherit",
+      stderr: "inherit",
+    });
+    return await child.exited;
+  },
+};
+
 export async function handlePromotionCommand(
   subcommand: string | undefined,
   args: string[],
+  runtime: PromotionCommandRuntime = commandRuntime,
 ): Promise<void> {
   if (
     subcommand === undefined ||
     subcommand === "--help" ||
     subcommand === "-h"
   ) {
-    console.log(USAGE);
+    runtime.write(USAGE);
     return;
   }
   const { values, positionals } = parseArgs({
@@ -82,19 +102,14 @@ export async function handlePromotionCommand(
     values.json,
   );
   if (values["dry-run"]) {
-    console.log(
+    runtime.write(
       JSON.stringify({ command: "toolkit", arguments: invocation }, null, 2),
     );
     return;
   }
   // The established wrapper resolves Temporal credentials; no S3, browser or
   // solver credential is needed on the operator's workstation.
-  const child = Bun.spawn(["toolkit", ...invocation], {
-    stdin: "inherit",
-    stdout: "inherit",
-    stderr: "inherit",
-  });
-  const exitCode = await child.exited;
+  const exitCode = await runtime.run(["toolkit", ...invocation]);
   if (exitCode !== 0)
     throw new Error(`Promotion command failed (${String(exitCode)})`);
 }

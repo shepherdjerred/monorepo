@@ -7,6 +7,8 @@ import { promotionConfig } from "#config/promotion.ts";
 import {
   PromotionRunInputSchema,
   nextPromotionEligibleAt,
+  type PromotionState,
+  type PromotionTarget,
   type PromotionRunInput,
 } from "#shared/promotion.ts";
 import { redactSecrets } from "#shared/redact.ts";
@@ -28,6 +30,38 @@ export const PromotionControlSchema = z.strictObject({
   operation: z.enum(["status", "pause", "resume"]),
   targetId: z.string().optional(),
 });
+
+function verifiedOccurrence(
+  current: PromotionState,
+  started: PromotionState,
+  occurrenceId: string,
+  reconcile: boolean,
+): boolean {
+  return current.attempts.some(
+    (attempt) =>
+      attempt.status === "verified" &&
+      (attempt.occurrenceId === occurrenceId ||
+        (reconcile &&
+          started.attempts.some(
+            (old) =>
+              old.occurrenceId === attempt.occurrenceId &&
+              old.status === "uncertain",
+          ))),
+  );
+}
+
+function scheduleAfterReceipt(
+  target: PromotionTarget,
+  state: PromotionState,
+  verified: boolean,
+): PromotionState {
+  if (!verified) return state;
+  const next = { ...state, bufferSeconds: randomInt(900, 1801) };
+  return {
+    ...next,
+    nextEligibleAt: nextPromotionEligibleAt(target, next, Date.now()),
+  };
+}
 
 async function states() {
   const store = promotionStore();
@@ -174,16 +208,11 @@ async function executePromotion(raw: PromotionRunInput) {
       const uncertain = current.attempts.some(
         (attempt) => attempt.status === "uncertain",
       );
-      const verified = current.attempts.some(
-        (attempt) =>
-          attempt.status === "verified" &&
-          (attempt.occurrenceId === occurrenceId ||
-            (input.mode === "reconcile" &&
-              state.attempts.some(
-                (old) =>
-                  old.occurrenceId === attempt.occurrenceId &&
-                  old.status === "uncertain",
-              ))),
+      const verified = verifiedOccurrence(
+        current,
+        state,
+        occurrenceId,
+        input.mode === "reconcile",
       );
       const blockedReason = uncertain
         ? "Submission outcome uncertain; reconcile the remote result"
@@ -196,14 +225,8 @@ async function executePromotion(raw: PromotionRunInput) {
         ...current,
         blockedReason,
         lock: uncertain ? current.lock : null,
-        bufferSeconds: verified ? randomInt(900, 1801) : current.bufferSeconds,
       };
-      return verified
-        ? {
-            ...next,
-            nextEligibleAt: nextPromotionEligibleAt(target, next, Date.now()),
-          }
-        : next;
+      return scheduleAfterReceipt(target, next, verified);
     });
     return {
       targetId: target.id,
@@ -220,11 +243,20 @@ async function executePromotion(raw: PromotionRunInput) {
       const uncertain = current.attempts.some(
         (attempt) => attempt.status === "uncertain",
       );
-      return {
-        ...current,
-        lock: uncertain ? current.lock : null,
-        blockedReason: reason,
-      };
+      return scheduleAfterReceipt(
+        target,
+        {
+          ...current,
+          lock: uncertain ? current.lock : null,
+          blockedReason: reason,
+        },
+        verifiedOccurrence(
+          current,
+          state,
+          occurrenceId,
+          input.mode === "reconcile",
+        ),
+      );
     });
     return { targetId: target.id, status: "blocked", summary: reason };
   }

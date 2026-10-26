@@ -4,7 +4,7 @@ import path from "node:path";
 import { Context } from "@temporalio/activity";
 import { z } from "zod/v4";
 import { runAgentTurn } from "#lib/agent-runner/run.ts";
-import { providerSubprocessUid } from "#shared/agent/agent-subprocess-identity.ts";
+import { promotionProviderUid } from "./isolation.ts";
 import {
   PromotionAgentResultSchema,
   type PromotionRunInput,
@@ -22,6 +22,20 @@ import { createPromotionToolHandler, PromotionLoginsSchema } from "./tools.ts";
 import { promotionConfig } from "#config/promotion.ts";
 import type { PromotionStore } from "./store.ts";
 import { promotionSecretTokens } from "./redaction.ts";
+import { jsonLog } from "#activities/agent/agent-task-runtime.ts";
+
+export async function cleanupPromotionResources(
+  steps: readonly (readonly [string, () => Promise<void>])[],
+  reportFailure: (name: string, error: unknown) => void,
+): Promise<void> {
+  for (const [name, cleanup] of steps) {
+    try {
+      await cleanup();
+    } catch (error: unknown) {
+      reportFailure(name, error);
+    }
+  }
+}
 
 function required(name: string): string {
   const value = Bun.env[name];
@@ -46,6 +60,7 @@ export async function runPromotionAgent(input: {
   store: PromotionStore;
 }) {
   const config = await promotionConfig();
+  const uid = promotionProviderUid();
   const context = Context.current();
   const completion = new AbortController();
   const signal = AbortSignal.any([
@@ -129,7 +144,6 @@ export async function runPromotionAgent(input: {
   }, 15_000);
   try {
     await chmod(socket, 0o660);
-    const uid = providerSubprocessUid();
     if (uid !== undefined) await chown(socket, 0, uid);
     await Bun.write(path.join(workdir, "tool.ts"), TOOL_CLIENT);
     const env = {
@@ -183,13 +197,23 @@ export async function runPromotionAgent(input: {
   } finally {
     completion.abort();
     clearInterval(heartbeat);
-    await server.stop(true);
-    // Close only this run's tab; retain the authenticated account profile.
-    try {
-      await browser.close();
-    } finally {
-      await rm(socket, { force: true });
-      await rm(workdir, { recursive: true, force: true });
-    }
+    await cleanupPromotionResources(
+      [
+        ["server", () => server.stop(true)],
+        ["tab", () => browser.close()],
+        ["socket", () => rm(socket, { force: true })],
+        ["workspace", () => rm(workdir, { recursive: true, force: true })],
+      ],
+      (step, error) => {
+        jsonLog("warning", "Promotion cleanup failed", {
+          targetId: input.target.id,
+          step,
+          detail: redactSecrets(
+            error instanceof Error ? error.message : String(error),
+            redact,
+          ),
+        });
+      },
+    );
   }
 }

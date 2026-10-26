@@ -30,11 +30,17 @@ export function promotionPublicUrl(address: string): string {
       sensitive.add(key);
   }
   for (const key of sensitive) url.searchParams.delete(key);
+  if (/token|csrf|nonce|auth|password|secret|session|signature/i.test(url.hash))
+    url.hash = "";
   return url.href;
 }
 
 export function redactPromotionUrls(text: string): string {
-  return text.replaceAll(/https?:\/\/[^\s"'<>\\]+/g, (address) =>
-    promotionPublicUrl(address),
-  );
+  return text.replaceAll(/https?:\/\/[^\s"'<>\\]+/g, (address) => {
+    try {
+      return promotionPublicUrl(address);
+    } catch {
+      return "[unparseable-url]";
+    }
+  });
 }

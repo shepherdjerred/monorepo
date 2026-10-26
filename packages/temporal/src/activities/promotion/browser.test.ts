@@ -1,7 +1,10 @@
 import { runInNewContext } from "node:vm";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { assertPromotionSubmitControl, PromotionBrowser } from "./browser.ts";
-import { captchaApplicationScript } from "./browser-scripts.ts";
+import {
+  captchaApplicationScript,
+  PROMOTION_CONTROLS_SCRIPT,
+} from "./browser-scripts.ts";
 import { promotionTarget } from "./manifest.ts";
 
 afterEach(() => {
@@ -9,6 +12,54 @@ afterEach(() => {
 });
 
 describe("promotion browser scope", () => {
+  it("generates usable root paths without IDs and prefers unique named form controls", () => {
+    type ElementFixture = {
+      nodeType: number;
+      tagName: string;
+      id: string;
+      parentElement: ElementFixture | null;
+      children: ElementFixture[];
+      getClientRects: () => number[];
+      getAttribute: (name: string) => string | null;
+    };
+    const element = (
+      tagName: string,
+      parentElement: ElementFixture | null,
+    ): ElementFixture => {
+      const result: ElementFixture = {
+        nodeType: 1,
+        tagName,
+        id: "",
+        parentElement,
+        children: [],
+        getClientRects: () => [1],
+        getAttribute: () => null,
+      };
+      parentElement?.children.push(result);
+      return result;
+    };
+    const html = element("HTML", null),
+      body = element("BODY", html),
+      button = element("BUTTON", body);
+    const inspect = (): unknown =>
+      runInNewContext(PROMOTION_CONTROLS_SCRIPT, {
+        document: { querySelectorAll: () => [button] },
+        CSS: { escape: (value: string) => value },
+      });
+    expect(inspect()).toMatchObject([
+      { selector: "html > body:nth-of-type(1) > button:nth-of-type(1)" },
+    ]);
+    const namedButton = {
+      ...button,
+      getAttribute: (attribute: string) =>
+        attribute === "name" ? "bump" : null,
+    };
+    const named = runInNewContext(PROMOTION_CONTROLS_SCRIPT, {
+      document: { querySelectorAll: () => [namedButton] },
+      CSS: { escape: (value: string) => value },
+    });
+    expect(named).toMatchObject([{ selector: 'button[name="bump"]' }]);
+  });
   it("distinguishes owner bumps from votes and unrelated account actions", () => {
     const target = promotionTarget("pmc");
     expect(() =>
