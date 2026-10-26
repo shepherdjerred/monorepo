@@ -175,6 +175,21 @@ describe("native browser connection", () => {
     );
     expect(test.attribute).not.toHaveBeenCalled();
   });
+  it("rejects conflicting targets before a login reference can authorize another control", async () => {
+    const test = await harness();
+    await test.handle({
+      endpoint: "action",
+      body: { kind: "fill", ref: "e2", credential: "password" },
+    });
+    test.action.mockClear();
+    await expect(
+      test.handle({
+        endpoint: "action",
+        body: { kind: "click", ref: "e3", selector: "#submit" },
+      }),
+    ).rejects.toThrow("never both");
+    expect(test.action).not.toHaveBeenCalled();
+  });
   it("allows normal scrolling and enforces a total tool budget", async () => {
     const test = await harness(true, false, 1);
     await test.handle({

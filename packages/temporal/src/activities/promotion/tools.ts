@@ -8,20 +8,33 @@ import {
 } from "./store.ts";
 import { solvePromotionChallenge } from "./solver.ts";
 
-const ActionSchema = z.strictObject({
-  kind: z.enum(["click", "fill", "type", "select", "press", "scroll", "hover"]),
-  ref: z
-    .string()
-    .regex(/^e\d+$/)
-    .optional(),
-  selector: z.string().min(1).optional(),
-  text: z.string().max(30_000).optional(),
-  value: z.string().max(30_000).optional(),
-  key: z.string().optional(),
-  scrollY: z.number().optional(),
-  scrollX: z.number().optional(),
-  credential: z.enum(["username", "password"]).optional(),
-});
+const ActionSchema = z
+  .strictObject({
+    kind: z.enum([
+      "click",
+      "fill",
+      "type",
+      "select",
+      "press",
+      "scroll",
+      "hover",
+    ]),
+    ref: z
+      .string()
+      .regex(/^e\d+$/)
+      .optional(),
+    selector: z.string().min(1).optional(),
+    text: z.string().max(30_000).optional(),
+    value: z.string().max(30_000).optional(),
+    key: z.string().optional(),
+    scrollY: z.number().optional(),
+    scrollX: z.number().optional(),
+    credential: z.enum(["username", "password"]).optional(),
+  })
+  .refine(
+    (value) => value.ref === undefined || value.selector === undefined,
+    "Choose either ref or selector, never both",
+  );
 export const PromotionToolSchema = z.discriminatedUnion("endpoint", [
   z.strictObject({
     endpoint: z.literal("navigate"),
