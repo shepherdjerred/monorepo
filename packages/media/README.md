@@ -844,12 +844,18 @@ acceptance.
 
 ## Runtime boundaries
 
+The Media API image belongs to the existing media chart's Streambot & media
+release owner. Delivery records its selected artifact; Git contains no running
+Media digest. The chart constructor leaves the parallel application absent
+unless given an explicit image selection. Its synthesis recipe must be bound
+to an immutable artifact by Delivery before rendering a deployment.
+
 The [API](src/server/index.ts) commits intent and an outbox row together. The
 [outbox dispatcher](src/automation/store.ts) starts workflows using stable IDs;
 a failed Temporal connection leaves the command available for later delivery.
 The UI reads PostgreSQL projections rather than querying workflow histories.
 
-[Temporal workflows](../temporal/src/workflows/media.ts) carry identifiers.
+[Temporal workflows](../temporal/src/workflows/media/core.ts) carry identifiers.
 Provider credentials and candidate payloads stay in PostgreSQL and Activity
 processes. The network worker owns authenticated external calls. The file worker
 has read-only download access and writable library access, without provider

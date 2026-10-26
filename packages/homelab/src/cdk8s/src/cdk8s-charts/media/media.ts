@@ -18,13 +18,13 @@ import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src
 import { createUnifiedMediaApplication } from "@shepherdjerred/homelab/cdk8s/src/resources/media/application/index.ts";
 import { mediaImageReference } from "@shepherdjerred/homelab/cdk8s/src/resources/media/application/image.ts";
 import { MEDIA_APPLICATION_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/media/application/environment.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   IntOrString,
   KubeNetworkPolicy,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 
-export async function createMediaChart(app: App) {
+export async function createMediaChart(app: App, applicationImage?: string) {
+  const mediaImage = mediaImageReference(applicationImage);
   const chart = new Chart(app, "media", {
     namespace: "media",
     disableResourceNameHashes: true,
@@ -88,8 +88,6 @@ export async function createMediaChart(app: App) {
     publicProbePath: "/readyz",
   });
 
-  const mediaVersion = versions["shepherdjerred/media"];
-  const mediaImage = mediaImageReference(mediaVersion);
   if (mediaImage !== undefined)
     createUnifiedMediaApplication(chart, {
       image: mediaImage,

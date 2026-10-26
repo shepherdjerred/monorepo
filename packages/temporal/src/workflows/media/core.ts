@@ -17,9 +17,9 @@ import type {
 } from "@shepherdjerred/media/automation";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS } from "#shared/media-activity-budget.ts";
-import * as cleanup from "./media/cleanup.ts";
-import * as notifications from "./media/notifications.ts";
-import * as retention from "./media/retention.ts";
+import * as cleanup from "./cleanup.ts";
+import * as notifications from "./notifications.ts";
+import * as retention from "./retention.ts";
 
 const network = proxyActivities<MediaNetworkActivities>({
   taskQueue: TASK_QUEUES.MEDIA_NETWORK,

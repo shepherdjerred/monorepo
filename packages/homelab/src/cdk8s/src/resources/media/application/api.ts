@@ -35,6 +35,7 @@ export function createMediaApi(
   },
 ) {
   if (
+    props.image !== "docker.io/shepherdjerred/media:delivery-recipe" &&
     !/^docker\.io\/shepherdjerred\/media@sha256:[a-f0-9]{64}$/u.test(
       props.image,
     )

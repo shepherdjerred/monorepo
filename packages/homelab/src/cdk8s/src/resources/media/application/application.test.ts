@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createUnifiedMediaApplication } from "./index.ts";
 import { mediaImageReference } from "./image.ts";
 import { resetProbeRegistry } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
+import { applyOrdinaryDeliveryImageBindings } from "@shepherdjerred/homelab/cdk8s/src/ordinary-delivery-image-bindings.ts";
 import {
   attachDockerHubPullSecrets,
   prepareDockerHubPullSecrets,
@@ -12,7 +13,7 @@ import {
 
 beforeEach(resetProbeRegistry);
 const image = `docker.io/shepherdjerred/media@sha256:${"1".repeat(64)}`;
-function resources() {
+function resources(selection = image, bindSelection = false) {
   const app = new App();
   const chart = new Chart(app, "media", {
     namespace: "media",
@@ -28,13 +29,14 @@ function resources() {
     }),
   };
   createUnifiedMediaApplication(chart, {
-    image,
+    image: selection,
     claims,
     plex: {
       serviceName: "plex",
       tokenSecret: Secret.fromSecretName(chart, "plex-token", "plex-secret"),
     },
   });
+  if (bindSelection) applyOrdinaryDeliveryImageBindings(app);
   prepareDockerHubPullSecrets(app);
   attachDockerHubPullSecrets(app);
   return z
@@ -76,9 +78,48 @@ test("all media deployments can pull their private images through the namespace 
 });
 
 test("unpublished media never opens the image gate", () => {
-  expect(mediaImageReference(`0.0.0@sha256:${"0".repeat(64)}`)).toBeUndefined();
+  expect(mediaImageReference(undefined)).toBeUndefined();
+  expect(() =>
+    mediaImageReference(
+      `docker.io/shepherdjerred/media@sha256:${"0".repeat(64)}`,
+    ),
+  ).toThrow("immutable");
   expect(() => mediaImageReference("latest")).toThrow("immutable");
-  expect(mediaImageReference(`1.0.0@sha256:${"1".repeat(64)}`)).toBe(image);
+  expect(mediaImageReference(image)).toBe(image);
+  expect(
+    mediaImageReference("docker.io/shepherdjerred/media:delivery-recipe"),
+  ).toBe("docker.io/shepherdjerred/media:delivery-recipe");
+});
+
+test("Delivery binds both the API and its migration to the selected Media artifact", () => {
+  const manifests = resources(
+    "docker.io/shepherdjerred/media:delivery-recipe",
+    true,
+  );
+  const api = manifests.find(
+    (resource) =>
+      resource.kind === "Deployment" &&
+      resource.metadata.name === "media-media-api",
+  );
+  expect(api).toBeDefined();
+  const container = z.object({ name: z.string(), image: z.string() });
+  const pod = z
+    .object({
+      template: z.object({
+        spec: z.object({
+          containers: z.array(container),
+          initContainers: z.array(container),
+        }),
+      }),
+    })
+    .parse(api?.spec).template.spec;
+  const selected =
+    '{{ required `Delivery requires image:media` (get (get (.Values.delivery | default dict) "images" | default dict) "media") }}';
+  expect(pod.containers).toContainEqual({ name: "media-api", image: selected });
+  expect(pod.initContainers).toContainEqual({
+    name: "prisma-migrate",
+    image: selected,
+  });
 });
 
 test("separates network credentials from writable media mounts", () => {

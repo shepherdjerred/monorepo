@@ -18,6 +18,7 @@ const images = {
     "mikefarah/yq": "yq",
     "minio/mc": "mc",
     "minio/minio": "minio",
+    "plexinc/pms-docker": `plexinc/pms-docker:1.43.4.10903-e5521bd8c-amd64@sha256:${"c".repeat(64)}`,
   },
 };
 

@@ -16,6 +16,7 @@ const TEST_IMAGES = {
     "mikefarah/yq": "yq-image",
     "minio/mc": "mc-image",
     "minio/minio": "minio-image",
+    "plexinc/pms-docker": `plexinc/pms-docker:1.43.4.10903-e5521bd8c-amd64@sha256:${"c".repeat(64)}`,
   },
 };
 

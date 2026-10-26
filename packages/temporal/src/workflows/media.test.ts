@@ -11,7 +11,7 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { plexBindingExecution } from "#activities/media/plex-binding-execution.ts";
 import { compensationExecution } from "#activities/media/compensation-execution.ts";
 
-const workflowsPath = new URL("media.ts", import.meta.url).pathname;
+const workflowsPath = new URL("media/core.ts", import.meta.url).pathname;
 
 test("real scheduled Network and Files Activities satisfy the production SDK deadline adapters", async () => {
   const observed: string[] = [];

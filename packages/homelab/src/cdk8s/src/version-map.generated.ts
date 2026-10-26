@@ -5,7 +5,6 @@ export const VersionMapSchema = z
   .object({
     "realm/SwiftLint": z.string(),
     "docker.io/library/swift": z.string(),
-    "shepherdjerred/media": z.string(),
     "bluemap/archive-cli": z.string(),
     "minecraft/archive-upgrader": z.string(),
     "itzg/minecraft-server-java17-archive": z.string(),
