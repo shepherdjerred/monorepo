@@ -1,5 +1,7 @@
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
+import type { ProviderCandidate } from "#integrations/providers.ts";
+import { CandidateSourceEvidenceSchema } from "#shared/acquisition/identity.ts";
 import { MediaError } from "#application/errors.ts";
 import { parseMovieCutV2 } from "#domain/editions/parse-v2.ts";
 import { evaluateMovieCutV2 } from "#domain/editions/selection-v2.ts";
@@ -39,6 +41,38 @@ function assess(canonical: CutCanonical, prior: CutEvidence) {
     attribution: prior.attribution,
     texts: prior.texts.map(({ text, provenance }) => ({ text, provenance })),
   });
+}
+
+/** Same source-column projection used before persistence and when rechecking its retained row. */
+export function providerMovieCutV2(
+  id: string,
+  source: ProviderCandidate,
+  canonical: CutCanonical,
+) {
+  const sourceEvidence = z.record(z.string(), z.json()).parse(
+    CandidateSourceEvidenceSchema.parse({
+      infoHash: source.infoHash.toLowerCase(),
+      ...(source.references === undefined
+        ? {}
+        : { references: source.references }),
+      ...(source.editionEvidence === undefined
+        ? {}
+        : { editionEvidence: source.editionEvidence }),
+    }),
+  );
+  return assess(
+    canonical,
+    releaseCut(
+      {
+        id,
+        providerId: source.providerId,
+        providerReleaseId: source.providerReleaseId,
+        title: source.title,
+        sourceEvidence,
+      },
+      canonical,
+    ),
+  );
 }
 
 /** Read-only cut policy. Runtime, choice, quality and physical grants remain separate authority. */

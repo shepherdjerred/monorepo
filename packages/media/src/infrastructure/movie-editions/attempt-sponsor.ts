@@ -2,12 +2,39 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import {
   MovieEditionBirthAuthoritySchema,
   MovieEditionChoiceAuditSchema,
+  type MovieEditionBirthAuthority,
 } from "#shared/movie-editions/authority.ts";
+import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
+
+type SponsorInput = {
+  attemptId: string;
+  expectedScope?: MovieEditionScope | undefined;
+  expectedRequestId?: string | undefined;
+};
+
+function assertExpectedSponsor(
+  input: SponsorInput,
+  proof: MovieEditionBirthAuthority,
+) {
+  if (
+    input.expectedRequestId !== undefined &&
+    input.expectedRequestId !== proof.sponsorRequestId
+  )
+    throw new Error("Recorded movie sponsor belongs to another request");
+  const scope = input.expectedScope;
+  if (
+    scope !== undefined &&
+    (scope.rootMediaId !== proof.rootMediaId ||
+      scope.mediaId !== proof.mediaId ||
+      scope.edition !== proof.edition)
+  )
+    throw new Error("Recorded movie sponsor belongs to another edition scope");
+}
 
 /** Immutable attribution for exact recorded-effect observation. Never fresh choice authority. */
 export async function readMovieAttemptSponsor(
   tx: Prisma.TransactionClient,
-  input: { attemptId: string },
+  input: SponsorInput,
 ) {
   const attempt = await tx.acquisitionAttempt.findUniqueOrThrow({
     where: { id: input.attemptId },
@@ -23,6 +50,7 @@ export async function readMovieAttemptSponsor(
   const proof = MovieEditionBirthAuthoritySchema.parse(
     attempt.movieEditionAuthority,
   );
+  assertExpectedSponsor(input, proof);
   const choice = await tx.movieEditionChoice.findUniqueOrThrow({
     where: { id: proof.choiceId },
   });

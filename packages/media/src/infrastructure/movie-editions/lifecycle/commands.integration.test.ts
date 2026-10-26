@@ -8,6 +8,10 @@ import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
 import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { assertMovieAttemptChoice } from "#infrastructure/movie-editions/authority.ts";
 import { MovieEditionScopeSchema } from "#shared/movie-editions/registry.ts";
+import { captureSponsorAuthority } from "#infrastructure/acquisition-identity/sponsor.ts";
+import { readMovieAttemptSponsor } from "#infrastructure/movie-editions/attempt-sponsor.ts";
+import { acquisitionIdentity } from "#infrastructure/acquisition-identity/acquisition.ts";
+import { retainedMovieCandidate } from "./candidate.test-support.ts";
 
 const h = automationTestHarness();
 const settings = {
@@ -213,6 +217,7 @@ test("v4 choice produces immutable named attempt birth while legacy authority an
   if (result.operationId === null)
     throw new Error("V4 request omitted its operation");
   const operationId = result.operationId;
+  const candidate = await retainedMovieCandidate(h.context(), f);
   const scope = MovieEditionScopeSchema.parse({
     rootMediaId: f.media.id,
     mediaId: f.media.id,
@@ -227,25 +232,102 @@ test("v4 choice produces immutable named attempt birth while legacy authority an
       epoch: 0,
       access: settings,
     });
+    const identity = await acquisitionIdentity(tx, candidate.release, {
+      operationId,
+      sponsorRequestId: result.requestId,
+      epoch: 0,
+      mediaIds: [f.media.id],
+      serverMachineId: settings.serverMachineId,
+      movieAccess: settings,
+      movieScope: scope,
+    });
+    if (identity === null)
+      throw new Error("V4 acquisition omitted canonical identity at birth");
+    expect(identity.proof.kind).toBe("automatic");
+    expect(
+      await captureSponsorAuthority(tx, {
+        operationId,
+        sponsorRequestId: result.requestId,
+        mediaIds: [f.media.id],
+        serverMachineId: settings.serverMachineId,
+        movieAccess: settings,
+        movieScope: scope,
+      }),
+    ).toEqual({
+      userId: f.user.id,
+      actorId: f.user.id,
+      serverMachineId: settings.serverMachineId,
+    });
     birth.freshness.assertActive();
     return await tx.acquisitionAttempt.create({
       data: {
         edition: scope.edition,
         operationId,
         coordinatorOperationId: operationId,
-        releaseId: f.release.id,
+        releaseId: candidate.release.id,
         sponsorRequestId: result.requestId,
         mediaIds: [f.media.id],
         generations: { [f.media.id]: birth.proof.targetGenerationAtCapture },
         movieEditionChoiceId: birth.proof.choiceId,
         movieEditionChoiceRevision: birth.proof.choiceRevision,
         movieEditionAuthority: birth.proof,
+        identityEvidence: identity,
         recoveryEpoch: 0,
         state: "reserved",
       },
     });
   });
   const literalBirth = JSON.stringify(attempt.movieEditionAuthority);
+  const identityInput = {
+    operationId,
+    sponsorRequestId: result.requestId,
+    epoch: 0,
+    mediaIds: [f.media.id],
+    serverMachineId: settings.serverMachineId,
+    movieAccess: settings,
+    movieScope: scope,
+  };
+  await expect(
+    acquisitionIdentity(f.db, candidate.release, {
+      ...identityInput,
+      movieScope: { ...scope, edition: "default" },
+    }),
+  ).rejects.toMatchObject({ code: "identity_scope_changed" });
+  await expect(
+    acquisitionIdentity(f.db, candidate.release, {
+      ...identityInput,
+      epoch: 1,
+    }),
+  ).rejects.toMatchObject({ code: "identity_scope_changed" });
+  await expect(
+    acquisitionIdentity(f.db, candidate.release, {
+      ...identityInput,
+      movieScope: undefined,
+    }),
+  ).rejects.toMatchObject({ code: "edition_candidate_incompatible" });
+  await expect(
+    captureSponsorAuthority(f.db, {
+      operationId,
+      sponsorRequestId: result.requestId,
+      mediaIds: [f.media.id],
+      serverMachineId: settings.serverMachineId,
+      movieAccess: settings,
+    }),
+  ).rejects.toMatchObject({ code: "acquisition_sponsor_changed" });
+  await expect(
+    readMovieAttemptSponsor(f.db, {
+      attemptId: attempt.id,
+      expectedScope: { ...scope, edition: "default" },
+      expectedRequestId: result.requestId,
+    }),
+  ).rejects.toThrow("another edition scope");
+  await expect(
+    readMovieAttemptSponsor(f.db, {
+      attemptId: attempt.id,
+      expectedScope: scope,
+      expectedRequestId: crypto.randomUUID(),
+    }),
+  ).rejects.toThrow("another request");
   await f.db.$transaction(async (tx) => {
     const guard = await assertMovieChoiceV4(tx, {
       attemptId: attempt.id,
