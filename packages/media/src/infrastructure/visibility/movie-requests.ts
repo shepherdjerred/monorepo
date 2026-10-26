@@ -37,16 +37,20 @@ export async function visibleMovieRequests(
     mediaIds: [input.media.id],
     extraUserIds: [input.userId],
   });
-  const covered = await tx.assetCoverage.findMany({
-    where: { mediaId: input.media.id, edition: "default", current: true },
-    select: { asset: { select: { id: true, version: true } } },
-    take: 2,
-  });
-  if (covered.length > 1)
-    throw new Error("Movie has multiple current default assets");
-  const asset = covered[0]?.asset;
   const result = [];
   for (const request of requests) {
+    const covered = await tx.assetCoverage.findMany({
+      where: {
+        mediaId: input.media.id,
+        edition: request.edition,
+        current: true,
+      },
+      select: { asset: { select: { id: true, version: true } } },
+      take: 2,
+    });
+    if (covered.length > 1)
+      throw new Error("Movie target has multiple current physical assets");
+    const asset = covered[0]?.asset;
     let fulfillment: MovieEditionFulfillment;
     try {
       fulfillment = await readMovieRequestFulfillment(tx, {

@@ -163,6 +163,7 @@ export async function readMovieEditionRequests(
     const current = await tx.assetCoverage.findMany({
       where: { mediaId: row.mediaId, edition: row.edition, current: true },
       include: { asset: true },
+      take: 2,
     });
     if (current.length > 1)
       throw new Error("Movie target has multiple current assets");

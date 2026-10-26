@@ -3,6 +3,7 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import {
   PlexAssociationV1Schema,
+  PlexAssociationSchema,
   PlexBindingSnapshotSchema,
   type PlexBindingScope,
 } from "#shared/plex-binding/contract.ts";
@@ -13,6 +14,7 @@ import {
   type ReverifyPlexBindingInput,
 } from "#shared/plex-binding/activities.ts";
 import { PlexBindingVerificationCompletionSchema } from "#shared/plex-binding/observations.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 /** Hash the literal stored JSON before any parser may strip or normalize fields. */
 export function parsePlexRecord<T>(
@@ -28,8 +30,9 @@ export function parsePlexRecord<T>(
 export async function readPlexPointer(
   tx: Prisma.TransactionClient,
   scope: PlexBindingScope,
+  budget?: PublicationAuthorityReadBudget,
 ) {
-  const pointers = await readPlexPointers(tx, [scope]);
+  const pointers = await readPlexPointers(tx, [scope], budget);
   const pointer = pointers[0];
   if (pointer === undefined)
     throw new Error("Plex pointer query omitted requested scope");
@@ -39,11 +42,15 @@ export async function readPlexPointer(
 export async function readPlexPointers(
   tx: Prisma.TransactionClient,
   scopes: readonly PlexBindingScope[],
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const rows = await tx.plexBindingCurrent.findMany({
     where: { OR: [...scopes] },
     include: { evidence: true },
   });
+  budget?.consume(
+    rows.length + rows.filter((row) => row.evidence !== null).length,
+  );
   const byScope = new Map(
     rows.map((row) => [`${row.mediaId}/${row.edition}`, row]),
   );
@@ -69,7 +76,7 @@ function pointerRecord(
   if (row.evidence === null || row.associationHash === null)
     throw new Error("Plex current evidence is missing");
   const association = parsePlexRecord(
-    PlexAssociationV1Schema,
+    PlexAssociationSchema,
     row.evidence.evidence,
     row.associationHash,
   );

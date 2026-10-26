@@ -1,7 +1,7 @@
 import type { Prisma } from "#generated/prisma/client.ts";
 import type {
   PlexAccess,
-  PlexAssociationV1,
+  PlexAssociation,
 } from "#shared/plex-binding/contract.ts";
 import type { BoundWatchAuthority } from "#shared/plex-binding/watch.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
@@ -24,7 +24,7 @@ export type WatchBindingScope = {
 };
 export type WatchBinding = {
   authority: BoundWatchAuthority;
-  association: PlexAssociationV1;
+  association: PlexAssociation;
 };
 
 /** Discover complete physical and receipt membership before any root is locked. */

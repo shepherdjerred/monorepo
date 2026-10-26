@@ -2,7 +2,7 @@ import { Prisma } from "#generated/prisma/client.ts";
 import { z } from "zod";
 import type {
   PlexAccess,
-  PlexAssociationV1,
+  PlexAssociation,
   PlexBindingRead,
   PlexBindingScope,
   LegacyPlexDisplay,
@@ -120,7 +120,7 @@ export async function readPlexPhysicalGroup(
 
 async function assertServingGroup(
   tx: Prisma.TransactionClient,
-  association: PlexAssociationV1,
+  association: PlexAssociation,
   assetId: string,
 ) {
   const { asset, group } = await readPlexPhysicalGroup(tx, assetId);
@@ -131,11 +131,21 @@ async function assertServingGroup(
     asset.state !== "published" ||
     association.group.assetId !== assetId ||
     identityHash(group) !== identityHash(association.group) ||
-    !(await recordsAuthorized(tx, {
-      epoch: runtime.recoveryEpoch,
-      mediaIds: group.coverage.map((row) => row.mediaId),
-      assetIds: [assetId],
-    }))
+    !(association.schemaVersion === 1
+      ? await recordsAuthorized(tx, {
+          epoch: runtime.recoveryEpoch,
+          mediaIds: group.coverage.map((row) => row.mediaId),
+          assetIds: [assetId],
+        })
+      : asset.ownershipEpoch === runtime.recoveryEpoch &&
+        (await tx.mediaIntent.count({
+          where: {
+            mediaId: association.scope.mediaId,
+            edition: association.scope.edition,
+            editionRootId: association.editionRootId,
+            automationEpoch: runtime.recoveryEpoch,
+          },
+        })) === 1)
   )
     throw new PlexBindingProtection("ownership_changed");
   if (
@@ -396,7 +406,7 @@ async function readCurrentBindingMember(
 async function assertCurrentCanonical(
   tx: Prisma.TransactionClient,
   input: BindingInput,
-  association: PlexAssociationV1,
+  association: PlexAssociation,
   state: CurrentReadState,
 ) {
   const target = state.canonicalByKey.get(plexScopeKey(input.scope));

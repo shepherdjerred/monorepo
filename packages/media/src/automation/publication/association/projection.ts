@@ -8,6 +8,7 @@ import { matchesReferences as matchesCanonicalReferences } from "#shared/plex-bi
 import { PlexDecimalIdSchema } from "#shared/plex-events/contract.ts";
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
+import type { PlexAssociation } from "#shared/plex-binding/contract.ts";
 
 export const compare = (a: string, b: string): number =>
   a < b ? -1 : a > b ? 1 : 0;
@@ -113,3 +114,29 @@ export function projectItem(item: PlexItem) {
 }
 
 export type ProjectedItem = ReturnType<typeof projectItem>;
+
+export function observedEditionTitle(item: PlexItem): string | null {
+  return item.editionTitle === "" ? null : (item.editionTitle ?? null);
+}
+
+/** Preserve the original projection unless this caller explicitly verifies movie edition metadata. */
+export function projectMovieEditionItem(item: PlexItem) {
+  return { ...projectItem(item), editionTitle: observedEditionTitle(item) };
+}
+
+/** Compare watch/session data against the literal version of its stored association. */
+export function projectAssociatedItem(
+  item: PlexItem,
+  association: PlexAssociation,
+) {
+  const value = projectItem(item);
+  return {
+    ratingKey: value.ratingKey,
+    type: value.type,
+    guids: value.guids,
+    media: value.media,
+    ...(association.schemaVersion === 2
+      ? { editionTitle: observedEditionTitle(item) }
+      : {}),
+  };
+}

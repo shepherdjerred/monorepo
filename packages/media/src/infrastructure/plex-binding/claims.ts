@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type {
-  PlexAssociationV1,
+  PlexAssociation,
   PlexBindingFreshness,
   PlexPhysicalGroup,
 } from "#shared/plex-binding/contract.ts";
@@ -10,7 +10,7 @@ import { plexCanonicalPathHash } from "./path.ts";
 import { PlexBindingProtection } from "./errors.ts";
 
 type Member = {
-  association: PlexAssociationV1;
+  association: PlexAssociation;
   evidenceId: string;
   associationHash: string;
 };

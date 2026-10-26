@@ -5,6 +5,7 @@ import {
   compare,
   decimalId,
   projectItem,
+  projectMovieEditionItem,
 } from "./projection.ts";
 import { plexRead } from "./io.ts";
 import type { AssociationContext, VideoSection } from "./types.ts";
@@ -59,13 +60,16 @@ export type InventoryItem = {
 };
 
 function appendPage(
-  inventory: InventoryItem[],
-  keys: Set<string>,
+  state: { inventory: InventoryItem[]; keys: Set<string> },
   section: VideoSection,
   items: readonly PlexItem[],
+  movieEditions: boolean,
 ) {
+  const { inventory, keys } = state;
   for (const item of items) {
-    const projection = projectItem(item);
+    const projection = movieEditions
+      ? projectMovieEditionItem(item)
+      : projectItem(item);
     if (keys.has(projection.ratingKey)) {
       throw new PlexBindingProtection("ambiguous_item");
     }
@@ -83,6 +87,7 @@ function appendPage(
 export async function scanInventory(
   context: AssociationContext,
   sections: readonly VideoSection[],
+  movieEditions = false,
 ) {
   const inventory: InventoryItem[] = [];
   const keys = new Set<string>();
@@ -116,7 +121,7 @@ export async function scanInventory(
         throw new PlexBindingProtection("incomplete_inventory");
       }
       total = page.total;
-      appendPage(inventory, keys, section, page.items);
+      appendPage({ inventory, keys }, section, page.items, movieEditions);
       offset += page.items.length;
       if (offset === total) {
         break;

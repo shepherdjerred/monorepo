@@ -8,7 +8,7 @@ import {
   type BoundWatchRead,
 } from "#shared/plex-binding/watch.ts";
 import {
-  PlexAssociationV1Schema,
+  PlexAssociationSchema,
   type PlexBindingFreshness,
 } from "#shared/plex-binding/contract.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
@@ -28,7 +28,7 @@ async function readImmutableWatchAssociation(
     where: { id: authority.binding.evidenceId },
   });
   const association = parsePlexRecord(
-    PlexAssociationV1Schema,
+    PlexAssociationSchema,
     row.evidence,
     authority.binding.associationHash,
   );

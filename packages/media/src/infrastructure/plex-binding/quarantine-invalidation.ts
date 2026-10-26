@@ -6,7 +6,7 @@ import {
 } from "#shared/plex-binding/watch.ts";
 import {
   plexScopeKey,
-  type PlexAssociationV1,
+  type PlexAssociation,
   type PlexBindingFreshness,
 } from "#shared/plex-binding/contract.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
@@ -117,7 +117,7 @@ export async function retireQuarantinedPlexBindings(
 }
 
 type Member = {
-  association: PlexAssociationV1;
+  association: PlexAssociation;
   evidenceId: string;
   associationHash: string;
 };
