@@ -1,5 +1,6 @@
 import type { PromotionAttempt, PromotionTarget } from "#shared/promotion.ts";
 import type { PromotionTaskResult } from "./task-contract.ts";
+import { promotionObservationText } from "./observation.ts";
 
 export function assertPromotionTaskReceipt(input: {
   target: PromotionTarget;
@@ -8,7 +9,8 @@ export function assertPromotionTaskReceipt(input: {
   page: { url: string; text: string; publishedAt?: string | null };
 }): void {
   const { target, pending, receipt, page } = input;
-  if (page.url !== receipt.url || !page.text.includes(receipt.quote))
+  const text = promotionObservationText(page.text);
+  if (page.url !== receipt.url || !text.includes(receipt.quote))
     throw new Error("Receipt requires exact browser readback");
   if (receipt.status !== "verified") return;
   if (
@@ -25,7 +27,9 @@ export function assertPromotionTaskReceipt(input: {
     throw new Error("Bump receipt requires the original page baseline");
   if (
     pending.beforeSubmission.some(
-      (item) => item.url === page.url && item.text.includes(receipt.quote),
+      (item) =>
+        item.url === page.url &&
+        promotionObservationText(item.text).includes(receipt.quote),
     )
   )
     throw new Error("Receipt confirmation was already present before this run");
@@ -38,9 +42,7 @@ export function assertPromotionTaskReceipt(input: {
     !/\/comments\/[a-z0-9]+\//i.test(new URL(page.url).pathname) ||
     !Number.isFinite(published) ||
     published < Date.parse(pending.attemptedAt) - 60_000 ||
-    /removed by|\[removed\]|pending approval|awaiting moderator/i.test(
-      page.text,
-    )
+    /removed by|\[removed\]|pending approval|awaiting moderator/i.test(text)
   )
     throw new Error(
       "Reddit receipt needs this submission's fresh, visible permalink",

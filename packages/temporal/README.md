@@ -1063,6 +1063,9 @@ does not encode website flows.
 The final structured result contains the assessment, evidence, prepared copy,
 next eligibility and any receipt. The runner reads back a claimed receipt and
 captures its screenshot; a verified receipt needs new remote confirmation.
+Receipt readback independently refreshes the last successfully inspected region
+on the same URL, allowing bounded captures on large pages. Quote and freshness
+checks decode native node text and retain support for older plain-text baselines.
 Non-bump confirmation must match content actually entered during this run.
 Reddit additionally requires a fresh visible post permalink and original
 publication timestamp. A failed or filtered post still counts conservatively.

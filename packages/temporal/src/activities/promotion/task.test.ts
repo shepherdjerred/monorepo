@@ -166,7 +166,9 @@ describe("preview evidence provenance", () => {
     const test = await harness("preview");
     test.journal.observe({
       url: test.target.url,
-      text: JSON.stringify({ name: 'Owner says "Ready"\nToday' }),
+      text: JSON.stringify({
+        snapshot: { nodes: [{ name: 'Owner says "Ready"\nToday' }] },
+      }),
     });
     await test.journal.finish({
       ...result,
