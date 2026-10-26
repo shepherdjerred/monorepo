@@ -15,6 +15,7 @@ public record RecoveredPlot(String id, String owner, List<Sign> signs) {
   private static final Pattern ID = Pattern.compile("-?\\d+;-?\\d+");
   private static final Pattern UUID_TEXT =
       Pattern.compile("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
+  private static final Pattern USERNAME = Pattern.compile("[A-Za-z0-9_]{1,16}");
 
   public RecoveredPlot {
     if (!ID.matcher(id).matches()) {
@@ -41,6 +42,22 @@ public record RecoveredPlot(String id, String owner, List<Sign> signs) {
       return Optional.empty();
     }
     return Optional.of(UUID.fromString(owner));
+  }
+
+  /**
+   * The username on the claim sign. A decorative sign in the same plot is ignored. This is the name
+   * a player read in 2016, including a staff-held plot whose owner never matched a player file.
+   */
+  public Optional<String> signedOwner() {
+    for (var sign : signs) {
+      var lines = sign.lines();
+      if (lines.get(0).startsWith("ID: ")
+          && lines.get(1).equals("Owner:")
+          && USERNAME.matcher(lines.get(2)).matches()) {
+        return Optional.of(lines.get(2));
+      }
+    }
+    return Optional.empty();
   }
 
   public PlotId plotId() {

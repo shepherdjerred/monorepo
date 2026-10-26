@@ -17,95 +17,109 @@ final class PlotMarkersTest {
   private static final PlotGrid GRID = PlotGrid.recovered();
 
   @Test
-  @DisplayName("claimed plot")
-  void claimedPlot() {
-    var view =
-        new PlotView(
-            new PlotId(2, 1),
-            Optional.of(OWNER),
-            "Harbor",
-            "A dock",
-            Map.of(),
-            false,
-            true,
-            Set.of(),
-            PlotSurface.DEFAULT);
+  @DisplayName("a named plot is labelled with that name")
+  void aNamedPlotIsLabelledWithThatName() {
+    var view = view(new PlotId(2, 1), Optional.of(OWNER), "Harbor", false);
 
-    var markers = PlotMarkers.select("creative", "creative", List.of(view), GRID);
+    var markers = markers(List.of(view), Map.of(view.id(), "BenTheGamer78"));
 
     assertThat(markers).hasSize(1);
-    assertThat(markers.getFirst().label())
-        .as("claimed plot")
-        .contains("2;1")
-        .contains(OWNER.toString())
-        .contains("Harbor")
-        .contains("A dock");
+    assertThat(markers.getFirst().label()).isEqualTo("Harbor");
   }
 
   @Test
-  @DisplayName("staff-held plot")
-  void staffHeldPlot() {
-    var view =
-        new PlotView(
-            new PlotId(0, 0),
-            Optional.empty(),
-            "Ruins",
-            "Unclaimed build",
-            Map.of(),
-            true,
-            false,
-            Set.of(),
-            PlotSurface.DEFAULT);
+  @DisplayName("an unnamed plot uses the owner's username")
+  void anUnnamedPlotUsesTheOwnersUsername() {
+    var view = view(new PlotId(2, 1), Optional.of(OWNER), "", false);
 
-    var markers = PlotMarkers.select("creative", "creative", List.of(view), GRID);
+    var markers = markers(List.of(view), Map.of(view.id(), "BenTheGamer78"));
 
-    assertThat(markers).hasSize(1);
-    assertThat(markers.getFirst().label())
-        .as("staff-held plot")
-        .contains("0;0")
-        .contains("staff")
-        .contains("Ruins")
-        .contains("Unclaimed build");
+    assertThat(markers.getFirst().label()).isEqualTo("BenTheGamer78");
+  }
+
+  @Test
+  @DisplayName("a named staff-held plot keeps its name")
+  void aNamedStaffHeldPlotKeepsItsName() {
+    var view = view(new PlotId(0, 0), Optional.empty(), "Ruins", true);
+
+    var markers = markers(List.of(view), Map.of());
+
+    assertThat(markers.getFirst().label()).isEqualTo("Ruins");
+  }
+
+  @Test
+  @DisplayName("an unnamed plot with no username reads staff")
+  void anUnnamedPlotWithNoUsernameReadsStaff() {
+    var view = view(new PlotId(0, 0), Optional.empty(), "", true);
+
+    var markers = markers(List.of(view), Map.of());
+
+    assertThat(markers.getFirst().label()).isEqualTo("staff");
+  }
+
+  @Test
+  @DisplayName("a current username replaces the claim-sign name")
+  void aCurrentUsernameReplacesTheClaimSignName() {
+    var id = new PlotId(2, 1);
+    var view = view(id, Optional.of(OWNER), "", false);
+    var signed = Map.of(id, "OldName");
+
+    var names = PlotMarkers.usernames(List.of(view), signed, Map.of(OWNER, "BenTheGamer78"));
+
+    assertThat(names).containsEntry(id, "BenTheGamer78");
+    assertThat(markers(List.of(view), names))
+        .extracting(PlotMarker::label)
+        .containsExactly("BenTheGamer78");
+  }
+
+  @Test
+  @DisplayName("a claim sign names a plot the directory does not")
+  void aClaimSignNamesAPlotTheDirectoryDoesNot() {
+    var plot =
+        new RecoveredPlot(
+            "2;1",
+            OWNER.toString(),
+            List.of(
+                new RecoveredPlot.Sign(1, 65, 1, List.of("tree", "", "", "")),
+                new RecoveredPlot.Sign(
+                    2, 65, 2, List.of("ID: 2;1", "Owner:", "BenTheGamer78", "Claimed")),
+                new RecoveredPlot.Sign(3, 65, 3, List.of("Owner:", "LibraryAddict", "", ""))));
+    var id = plot.plotId();
+    var view = view(id, Optional.of(OWNER), "", false);
+
+    assertThat(plot.signedOwner()).contains("BenTheGamer78");
+    var names =
+        PlotMarkers.usernames(List.of(view), PlotMarkers.signedNames(List.of(plot)), Map.of());
+
+    assertThat(names).containsEntry(id, "BenTheGamer78");
   }
 
   @Test
   @DisplayName("empty cell")
   void emptyCell() {
-    var empty =
-        new PlotView(
-            new PlotId(9, 9),
-            Optional.empty(),
-            "",
-            "",
-            Map.of(),
-            false,
-            false,
-            Set.of(),
-            PlotSurface.DEFAULT);
+    var empty = view(new PlotId(9, 9), Optional.empty(), "", false);
 
     assertThat(empty.marked()).isFalse();
-    assertThat(PlotMarkers.select("creative", "creative", List.of(empty), GRID))
-        .as("empty cell")
-        .isEmpty();
+    assertThat(markers(List.of(empty), Map.of())).as("empty cell").isEmpty();
   }
 
   @Test
   @DisplayName("selection is not applied to a survival map")
   void selectionIsNotAppliedToASurvivalMap() {
-    var view =
-        new PlotView(
-            new PlotId(2, 1),
-            Optional.of(OWNER),
-            "Harbor",
-            "A dock",
-            Map.of(),
-            false,
-            true,
-            Set.of(),
-            PlotSurface.DEFAULT);
+    var view = view(new PlotId(2, 1), Optional.of(OWNER), "Harbor", false);
 
     assertThat(PlotMarkers.select("world", "creative", List.of(view), GRID))
         .as("selection is not applied to a survival map")
         .isEmpty();
+  }
+
+  private static List<PlotMarker> markers(List<PlotView> views, Map<PlotId, String> usernames) {
+    return PlotMarkers.select(
+        "creative", "creative", PlotMarkers.presented(views, usernames), GRID);
+  }
+
+  private static PlotView view(PlotId id, Optional<UUID> owner, String name, boolean staffHeld) {
+    return new PlotView(
+        id, owner, name, "", Map.of(), staffHeld, false, Set.of(), PlotSurface.DEFAULT);
   }
 }

@@ -31,4 +31,10 @@ public record PlotView(
   public boolean marked() {
     return owner.isPresent() || staffHeld;
   }
+
+  /** The same plot with a different name. Used when the map shows a username in that place. */
+  public PlotView withName(String next) {
+    return new PlotView(
+        id, owner, next, description, access, staffHeld, countsTowardCap, flags, surface);
+  }
 }
