@@ -1,6 +1,7 @@
 package red.sjer.facet
 
 import androidx.compose.ui.test.*
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
@@ -176,8 +177,14 @@ class StandaloneCaptureTest {
         }
     }
     private fun waitForText(text: String) {
-        compose.waitUntil(15_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().size == 1 }
-        compose.onNodeWithText(text).assertIsDisplayed()
+        // An outgoing editor may still expose its draft while the saved list reloads.
+        val title = hasText(text) and !hasSetTextAction() and
+            SemanticsMatcher.keyNotDefined(SemanticsProperties.EditableText)
+        compose.waitUntil(15_000) {
+            compose.onAllNodes(title).fetchSemanticsNodes().size == 1 &&
+                compose.onNode(title).isDisplayed()
+        }
+        compose.onNode(title).assertIsDisplayed()
     }
     private fun capture(label: String) {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
