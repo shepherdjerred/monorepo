@@ -97,32 +97,7 @@ function synth(chartName: string, stage?: "beta" | "prod") {
 }
 
 it.each(["beta", "prod"] as const)(
-  "preserves PostgreSQL string parameters through the %s worker chart",
-  async (stage) => {
-    const app = new App();
-    createScoutChart(app, stage);
-    const chart = app.charts[0];
-    if (chart === undefined) throw new Error("Missing actual Scout chart");
-    applyOrdinaryDeliveryImageBindings(app);
-    const source = chart.toJson();
-    const original = source.find((resource) => resource.kind === "postgresql");
-    expect(original).toBeDefined();
-    const resources = await render(
-      chart.node.id,
-      source.map((resource) => stringify(resource)).join("---\n"),
-      pool(`scout-${stage}`, "scout-for-lol"),
-    );
-    expect(
-      resources.find(
-        (resource) =>
-          z.object({ kind: z.string() }).parse(resource).kind === "postgresql",
-      ),
-    ).toEqual(original);
-  },
-);
-
-it.each(["beta", "prod"] as const)(
-  "preserves the shared %s Scout egress policy for every retained host",
+  "preserves %s Scout egress and PostgreSQL string parameters",
   async (stage) => {
     const app = new App();
     createScoutChart(app, stage);
@@ -141,6 +116,14 @@ it.each(["beta", "prod"] as const)(
       source.map((resource) => stringify(resource)).join("---\n"),
       pool(`scout-${stage}`, "scout-for-lol"),
     );
+    const postgres = source.find((resource) => resource.kind === "postgresql");
+    expect(postgres).toBeDefined();
+    expect(
+      resources.find(
+        (resource) =>
+          z.object({ kind: z.string() }).parse(resource).kind === "postgresql",
+      ),
+    ).toEqual(postgres);
     const policies = resources.filter((resource) => {
       const parsed = z
         .object({
