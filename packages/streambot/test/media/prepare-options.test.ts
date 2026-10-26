@@ -161,6 +161,19 @@ describe("buildVideoPrepareOptions", () => {
     expect(options.startTime).toBe(30);
   });
 
+  test("normalizes discontinuous live timestamps and reconnects without seeking", () => {
+    const options = buildVideoPrepareOptions({
+      stream,
+      resolved: { ...VIDEO, discontinuousLive: true },
+      startSeconds: 30,
+      volumePercent: 100,
+      pipelineMode: "hw",
+    });
+    expect(options.normalizeTimestamps).toBe(true);
+    expect(options.hardwarePipelineMode).toBe("upload");
+    expect(options.startTime).toBeUndefined();
+  });
+
   test("hw-upload asks for the upload pipeline, sw asks for no encoder", () => {
     expect(
       buildVideoPrepareOptions({

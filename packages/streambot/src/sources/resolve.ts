@@ -355,6 +355,9 @@ async function resolveLolSource(
         resolved: {
           ...candidate,
           title: event.title,
+          ...(new URL(url).hostname === "www.twitch.tv"
+            ? { discontinuousLive: true }
+            : {}),
           provenance: {
             provider: "url",
             canonicalUrl: event.pageUrl,

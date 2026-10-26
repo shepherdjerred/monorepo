@@ -26,6 +26,8 @@ export type VideoGraphSpec = {
    * framesync doesn't duplicate/drop overlay frames; omitted → lavfi `color` default (25fps).
    */
   frameRate?: number;
+  /** Replace discontinuous live timestamps with a monotonic constant-frame-rate clock. */
+  normalizeTimestamps?: boolean;
   /**
    * Input transfer characteristics: `"hdr"` (PQ/HLG) inserts a tonemap to BT.709 SDR. Without it,
    * HDR sources get range-squashed into SDR and look washed out.
@@ -43,6 +45,17 @@ export type VideoGraphSpec = {
    */
   uploadInput?: boolean;
 };
+
+function normalizedTimestampFilters(spec: VideoGraphSpec): string[] {
+  if (spec.normalizeTimestamps !== true) return [];
+  if (spec.frameRate === undefined) {
+    throw new Error("timestamp normalization requires an output frame rate");
+  }
+  return [
+    `fps=${String(spec.frameRate)}`,
+    `setpts=N/(${String(spec.frameRate)}*TB)`,
+  ];
+}
 
 export type VideoGraph =
   /** Single-branch graph for `-vf`. */
@@ -116,6 +129,7 @@ export function buildSoftwareVideoGraph(
         )
       : []),
     ...encoderOutFilters,
+    ...normalizedTimestampFilters(spec),
   ].filter((filter) => filter.length > 0);
   return { kind: "filterChain", filters };
 }
@@ -140,8 +154,9 @@ export function buildVaapiVideoGraph(spec: VideoGraphSpec): VideoGraph {
   // Upload mode: the decoder emitted system-memory frames; put them on the device first so the
   // rest of the graph is unchanged. See PrepareStreamOptions.hardwarePipelineMode.
   const base = uploadInput ? `hwupload,${chain}` : chain;
+  const normalized = normalizedTimestampFilters(spec);
   if (!subtitle) {
-    return { kind: "filterChain", filters: [base] };
+    return { kind: "filterChain", filters: [base, ...normalized] };
   }
   const canvas = `color=c=black@0:s=${width}x${height}${frameRate === undefined ? "" : `:r=${frameRate}`}`;
   const subsBranch = [
@@ -158,7 +173,7 @@ export function buildVaapiVideoGraph(spec: VideoGraphSpec): VideoGraph {
     graph: [
       `${spec.videoStreamIndex === undefined ? "[0:v]" : `[0:v:${String(spec.videoStreamIndex)}]`}${base}[base]`,
       `${subsBranch}[subs]`,
-      "[base][subs]overlay_vaapi=shortest=1[vout]",
+      `[base][subs]overlay_vaapi=shortest=1${normalized.length === 0 ? "" : `,${normalized.join(",")}`}[vout]`,
     ],
     mapLabel: "vout",
   };

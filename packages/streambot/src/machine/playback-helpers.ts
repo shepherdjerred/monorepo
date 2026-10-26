@@ -222,6 +222,9 @@ export function queueCrashRetryUpdates(
       kind: "retry",
       reason: info.reason,
       title: mustResolved(context).title,
+      ...(mustResolved(context).discontinuousLive === true
+        ? { live: true }
+        : {}),
       positionSeconds: info.positionSeconds,
       attempt,
       maxAttempts: MAX_CRASH_RETRIES,

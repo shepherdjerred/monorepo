@@ -127,7 +127,9 @@ export function buildVideoPrepareOptions(
     // is byte-identical to the value this filter always carried, so a 100% segment emits exactly
     // the command line it did before this option existed.
     audioVolume: Math.max(0, input.volumePercent) / 100,
-    ...startTimeOption(input.startSeconds),
+    ...(resolved.discontinuousLive === true
+      ? { normalizeTimestamps: true }
+      : startTimeOption(input.startSeconds)),
     ...(resolved.subtitle
       ? { subtitleBurn: { path: resolved.subtitle.path } }
       : {}),
@@ -137,10 +139,10 @@ export function buildVideoPrepareOptions(
     ...(useHardware
       ? { encoder: Encoders.vaapi({ device: stream.vaapiDevice }) }
       : {}),
-    // "hw-upload": GPU decode to system memory + hwupload back onto the device for the GPU
-    // filters/encode — the recovery pipeline for sources whose mid-stream hwaccel flip crashes
-    // the full-GPU graph (ffmpeg exit 218). See PipelineMode.
-    ...(input.pipelineMode === "hw-upload"
+    // Discontinuous live input can change decoded frame format at an ad boundary, so keep its
+    // decoder output in system memory from the first attempt; scaling and encoding stay on GPU.
+    ...(input.pipelineMode === "hw-upload" ||
+    (useHardware && resolved.discontinuousLive === true)
       ? { hardwarePipelineMode: "upload" as const }
       : {}),
     ...headerOptions(resolved.ffmpegInputHeaders),
