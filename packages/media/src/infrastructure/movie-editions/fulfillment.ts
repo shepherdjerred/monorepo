@@ -13,6 +13,7 @@ import { readQuarantinedPlexWatchAuthority } from "#infrastructure/plex-binding/
 import type { PlexAccess } from "#shared/plex-binding/contract.ts";
 import { lockMovieChoiceIdentities, type MovieChoiceAccess } from "./access.ts";
 import type { MovieChoiceFreshness } from "./freshness.ts";
+import { movieCutFulfillmentV2 } from "./fulfillment-v2.ts";
 
 export type MovieFulfillmentAsset = {
   assetId: string;
@@ -73,7 +74,10 @@ async function matchingAsset(
   input: RequestInput,
   choice: AuthorizedChoice,
 ): Promise<MovieEditionFulfillment> {
-  if (choice.scope.edition !== "default")
+  if (
+    choice.scope.edition !== "default" &&
+    !(await hasMovieEditionBindingV2(tx, input, choice))
+  )
     return {
       status: "pending_edition",
       reason: "edition_acquisition_not_ready",
@@ -108,7 +112,29 @@ async function matchingAsset(
       status: "pending_asset",
       reason: "movie_edition_asset_unavailable",
     };
-  return matchingCut(tx, choice.scope.mediaId, asset.id);
+  return choice.scope.edition === "default"
+    ? matchingCut(tx, choice.scope.mediaId, asset.id)
+    : movieCutFulfillmentV2(tx, choice.scope, asset.id);
+}
+
+async function hasMovieEditionBindingV2(
+  tx: Prisma.TransactionClient,
+  input: RequestInput,
+  choice: AuthorizedChoice,
+) {
+  if (input.currentAsset === null) return false;
+  const current = await readCurrentPlexBinding(tx, {
+    scope: { mediaId: choice.scope.mediaId, edition: choice.scope.edition },
+    assetId: input.currentAsset.assetId,
+    access: {
+      serverMachineId: input.access.serverMachineId,
+      sectionId: input.access.movieSectionId,
+      sectionType: "movie",
+    },
+  });
+  return (
+    current.status === "current" && current.association.schemaVersion === 2
+  );
 }
 
 async function hasVerifiedAssociation(

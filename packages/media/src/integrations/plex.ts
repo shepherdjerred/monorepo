@@ -17,6 +17,7 @@ const ItemSchema = z.object({
     .max(Number.MAX_SAFE_INTEGER)
     .optional(),
   title: z.string(),
+  editionTitle: z.string().max(256).optional(),
   guid: z.string().optional(),
   parentRatingKey: z.string().optional(),
   grandparentRatingKey: z.string().optional(),

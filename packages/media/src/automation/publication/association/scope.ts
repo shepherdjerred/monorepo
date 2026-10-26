@@ -24,6 +24,7 @@ function assertServingPurpose(purpose: string) {
 function assertCanonicalTargets(
   expected: PlexBindingExpected,
   canonical: readonly PlexCanonicalTarget[],
+  movieEditions: boolean,
 ) {
   const byScope = new Map(
     canonical.map((row) => [plexScopeKey(row.scope), row]),
@@ -31,7 +32,10 @@ function assertCanonicalTargets(
   if (
     byScope.size !== canonical.length ||
     canonical.length !== expected.targets.length ||
-    expected.targets.some((row) => row.scope.edition !== "default")
+    (!movieEditions &&
+      expected.targets.some((row) => row.scope.edition !== "default")) ||
+    (movieEditions &&
+      (canonical.length !== 1 || canonical[0]?.kind !== "movie"))
   ) {
     throw new PlexBindingProtection("scope_changed");
   }
@@ -74,7 +78,10 @@ function assertServingAccess(
 }
 
 /** Trusted producer schemas stay loud; legitimate changed snapshots protect. */
-export function servingScope(input: ServingVerificationInput) {
+export function servingScope(
+  input: ServingVerificationInput,
+  movieEditions = false,
+) {
   const expected = PlexBindingExpectedSchema.parse(input.expected);
   const canonical = input.canonicalTargets.map((row) =>
     PlexCanonicalTargetSchema.parse(row),
@@ -83,7 +90,11 @@ export function servingScope(input: ServingVerificationInput) {
   if (snapshotHash(access) !== snapshotHash(expected.access)) {
     throw new PlexBindingProtection("wrong_section");
   }
-  const canonicalByScope = assertCanonicalTargets(expected, canonical);
+  const canonicalByScope = assertCanonicalTargets(
+    expected,
+    canonical,
+    movieEditions,
+  );
   assertServingPurpose(input.purpose);
   if (expected.newGroups.length === 0) {
     throw new PlexBindingProtection("scope_changed");

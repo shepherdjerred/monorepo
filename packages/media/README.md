@@ -40,8 +40,8 @@ revoked library access does not block self protection.
 | `POST /api/v3/media/:id/movie-requests/:requestId/cancel`        | Cancel the exact request without requiring download permission.                                                                        |
 | `POST /api/v3/media/:id/movie-requests/:requestId/revoke-choice` | Clear the choice while retaining protective demand.                                                                                    |
 
-Named choices currently remain pending with `edition_acquisition_not_ready`.
-They grant no named download or physical classification authority. An unmarked
+The v3 producer leaves named acquisitions pending with `edition_acquisition_not_ready`.
+Those commands grant no named download or physical classification authority. An unmarked
 choice can sponsor ordinary compatible quality upgrades, subject to the existing
 cut checks. Every new movie attempt captures its original choice and revision at
 birth; later retries cannot attach or replace that authority. Search, reservation,
@@ -87,6 +87,16 @@ only its recorded inverse, preserving the downloaded source. Scope, current
 consent, profile, storage authority and the original execution deadline are
 checked before new effects. Provenance reads share one 100-record allowance
 across the invocation. File publication alone does not prove Plex availability.
+
+The internal v4 Plex publisher verifies complete stable server inventories and
+exact metadata readbacks before advancing the selected edition's availability.
+Its version-2 movie association includes the registered edition title as well as
+the exact movie identity, section, file Part and physical asset. A matching movie
+GUID cannot substitute another cut or a merged file. Successful publication
+records a distinct immutable completion and verified timestamp; retries read that
+receipt before current configuration. Matching requests can be fulfilled from
+this exact named association without changing an older request acknowledgement.
+Historical version-1 Plex observations retain their literal format and hashes.
 
 Playable shared bytes do not fulfill an unchosen request. Readiness delivery
 requires matching choice and verified Plex publication; automatic retention

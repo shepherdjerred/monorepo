@@ -25,6 +25,7 @@ import { snapshotMoviePublicationAssetV2 } from "./snapshot.ts";
 import { compensationSubtitleLineage } from "#infrastructure/native-compensation/subtitle-lineage.ts";
 import { assertPublicationSnapshotSuccessor } from "#infrastructure/publication-proof/authority.ts";
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
+import { assertMoviePublicationTimesV2 } from "./timestamps.ts";
 
 const hash = (value: unknown) => snapshotHash(nativeJson(value));
 
@@ -92,6 +93,20 @@ export async function findMoviePublicationReferenceV2(
   assertPublicationSnapshotSuccessor(
     { ...baseline, subtitles: input.asset.subtitles },
     input.asset,
+  );
+  await assertMoviePublicationTimesV2(
+    tx,
+    {
+      baseline,
+      current: input.asset,
+      successor: result.successor,
+      publication: {
+        transitionId: row.id,
+        intentHash: row.intentHash,
+        outcomeHash: parent.outcomeHash,
+      },
+    },
+    budget,
   );
   const lineage = await compensationSubtitleLineage(
     tx,

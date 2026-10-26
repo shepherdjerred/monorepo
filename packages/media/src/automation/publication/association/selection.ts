@@ -1,24 +1,33 @@
 import type { PlexItem } from "#integrations/plex.ts";
 import {
   PlexAssociationV1Schema,
+  PlexMovieAssociationV2Schema,
   plexScopeKey,
   type PlexAssociationV1,
   type PlexBindingScope,
   type PlexPhysicalGroup,
+  type PlexAssociation,
 } from "#shared/plex-binding/contract.ts";
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
-import { associationHash, compare, projectItem } from "./projection.ts";
+import {
+  associationHash,
+  compare,
+  projectItem,
+  projectMovieEditionItem,
+  observedEditionTitle,
+} from "./projection.ts";
 import { matchesTarget, readHierarchy, readMetadata } from "./hierarchy.ts";
 import type { AssociationContext } from "./types.ts";
 import type { ServingScope } from "./scope.ts";
 import type { InventoryItem } from "./scan.ts";
 
-async function groupDetails(
+export async function groupDetails(
   context: AssociationContext,
   group: PlexPhysicalGroup,
   inventory: readonly InventoryItem[],
-  cache: Map<string, PlexItem>,
+  options: { cache: Map<string, PlexItem>; movieEditions?: true },
 ) {
+  const { cache, movieEditions } = options;
   const candidates = inventory.filter((row) =>
     row.projection.media.some((version) =>
       version.parts.some((part) => part.file === group.canonicalPath),
@@ -30,7 +39,9 @@ async function groupDetails(
   const details = [];
   for (const candidate of candidates) {
     const item = await readMetadata(context, candidate.item.ratingKey, cache);
-    const projection = projectItem(item);
+    const projection = movieEditions
+      ? projectMovieEditionItem(item)
+      : projectItem(item);
     if (associationHash(projection) !== associationHash(candidate.projection)) {
       throw new PlexBindingProtection("metadata_changed");
     }
@@ -69,8 +80,8 @@ async function groupDetails(
 function assertInventoryPart(
   row: InventoryItem,
   part: InventoryItem["projection"]["media"][number]["parts"][number],
-  selected: PlexAssociationV1 | undefined,
-  claimed: PlexAssociationV1,
+  selected: PlexAssociation | undefined,
+  claimed: PlexAssociation,
 ) {
   if (
     selected?.group.assetId !== claimed.group.assetId ||
@@ -82,13 +93,13 @@ function assertInventoryPart(
   }
 }
 
-function assertNoForeignParts(
+export function assertNoForeignParts(
   inventory: readonly InventoryItem[],
-  associations: readonly PlexAssociationV1[],
+  associations: readonly PlexAssociation[],
 ) {
   const byKey = new Map(associations.map((row) => [row.item.ratingKey, row]));
-  const byPart = new Map<string, PlexAssociationV1>();
-  const byPath = new Map<string, PlexAssociationV1>();
+  const byPart = new Map<string, PlexAssociation>();
+  const byPath = new Map<string, PlexAssociation>();
   for (const row of associations) {
     const part = row.item.media[0].parts[0];
     for (const prior of [byPart.get(part.id), byPath.get(part.file)]) {
@@ -115,7 +126,7 @@ function assertNoForeignParts(
   }
 }
 
-function selectMember(
+export function selectMember(
   scope: ServingScope,
   group: PlexPhysicalGroup,
   member: PlexBindingScope,
@@ -162,6 +173,40 @@ function selectMember(
   });
 }
 
+/** Movie-only v2 consumer retains exact scope while using the original Part/identity/cohort checks. */
+export async function selectMovieAssociationV2(
+  context: AssociationContext,
+  scope: ServingScope,
+  inventory: readonly InventoryItem[],
+) {
+  const group = scope.expected.newGroups[0];
+  const member = group?.coverage[0];
+  if (
+    group === undefined ||
+    member === undefined ||
+    scope.expected.newGroups.length !== 1 ||
+    group.coverage.length !== 1
+  )
+    throw new PlexBindingProtection("scope_changed");
+  const details = await groupDetails(context, group, inventory, {
+    cache: new Map(),
+    movieEditions: true,
+  });
+  const selected = selectMember(scope, group, member, details);
+  if (selected.kind !== "movie")
+    throw new PlexBindingProtection("scope_changed");
+  const detail = details[0];
+  if (detail === undefined) throw new PlexBindingProtection("ambiguous_item");
+  const parsed = PlexMovieAssociationV2Schema.safeParse({
+    ...selected,
+    schemaVersion: 2,
+    item: { ...selected.item, editionTitle: observedEditionTitle(detail.item) },
+  });
+  if (!parsed.success) throw new PlexBindingProtection("metadata_changed");
+  assertNoForeignParts(inventory, [parsed.data]);
+  return parsed.data;
+}
+
 export async function selectAssociations(
   context: AssociationContext,
   scope: ServingScope,
@@ -170,7 +215,7 @@ export async function selectAssociations(
   const associations: PlexAssociationV1[] = [];
   const cache = new Map<string, PlexItem>();
   for (const group of scope.expected.newGroups) {
-    const details = await groupDetails(context, group, inventory, cache);
+    const details = await groupDetails(context, group, inventory, { cache });
     for (const member of group.coverage) {
       associations.push(selectMember(scope, group, member, details));
     }

@@ -1,11 +1,11 @@
-import type { PlexAssociationV1 } from "#shared/plex-binding/contract.ts";
+import type { PlexAssociation } from "#shared/plex-binding/contract.ts";
 import type { AssociationContext } from "#automation/publication/association/types.ts";
 import {
   plexRead,
   assertAssociationActive,
 } from "#automation/publication/association/io.ts";
 import {
-  projectItem,
+  projectAssociatedItem,
   associationHash,
 } from "#automation/publication/association/projection.ts";
 import { readHierarchy } from "#automation/publication/association/hierarchy.ts";
@@ -14,7 +14,7 @@ import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 /** The boolean belongs to this exact metadata response, never a second key lookup. */
 export async function observeAssociatedWatch(
   context: AssociationContext,
-  association: PlexAssociationV1,
+  association: PlexAssociation,
 ): Promise<boolean | null> {
   try {
     const observed = await plexRead(
@@ -26,14 +26,9 @@ export async function observeAssociatedWatch(
         ),
       "metadata_changed",
     );
-    const item = projectItem(observed.item);
     if (
-      associationHash({
-        ratingKey: item.ratingKey,
-        type: item.type,
-        guids: item.guids,
-        media: item.media,
-      }) !== associationHash(association.item)
+      associationHash(projectAssociatedItem(observed.item, association)) !==
+      associationHash(association.item)
     )
       return null;
     if (association.kind === "episode") {

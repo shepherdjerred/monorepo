@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { DefaultEditionScopeSchema } from "#shared/editions/scope.ts";
-import { MovieEditionKeySchema } from "#shared/movie-editions/registry.ts";
+import {
+  MovieEditionKeySchema,
+  MOVIE_EDITION_REGISTRY,
+} from "#shared/movie-editions/registry.ts";
 import {
   PlexDecimalIdSchema,
   PlexServerIdSchema,
@@ -122,8 +125,30 @@ export const PlexAssociationV1Schema = z
   .refine(associationScopeMatches, "Plex association scope or Part changed")
   .refine(associationHierarchyMatches, "Plex association hierarchy changed");
 
+/** New movie observations bind the exact server edition label; literal v1 records retain their shape. */
+export const PlexMovieAssociationV2Schema = Association.extend({
+  schemaVersion: z.literal(2),
+  kind: z.literal("movie"),
+  item: PlexItemIdentitySchema.extend({
+    type: z.literal("movie"),
+    editionTitle: z.string().min(1).max(256).nullable(),
+  }),
+})
+  .refine(associationScopeMatches, "Movie Plex scope or Part changed")
+  .refine(
+    (value) =>
+      value.item.editionTitle ===
+      (MOVIE_EDITION_REGISTRY[value.scope.edition].plexLabel || null),
+    "Movie Plex edition differs from the requested registered cut",
+  );
+export const PlexAssociationSchema = z.union([
+  PlexAssociationV1Schema,
+  PlexMovieAssociationV2Schema,
+]);
+
 function associationScopeMatches(
-  value: z.infer<typeof Association> & {
+  value: Omit<z.infer<typeof Association>, "schemaVersion"> & {
+    schemaVersion: 1 | 2;
     kind: "movie" | "episode";
     item: z.infer<typeof PlexItemIdentitySchema>;
   },
@@ -218,6 +243,10 @@ export type PlexPartIdentity = z.infer<typeof PlexPartIdentitySchema>;
 export type PlexItemIdentity = z.infer<typeof PlexItemIdentitySchema>;
 export type PlexEpisodeHierarchy = z.infer<typeof PlexEpisodeHierarchySchema>;
 export type PlexAssociationV1 = z.infer<typeof PlexAssociationV1Schema>;
+export type PlexMovieAssociationV2 = z.infer<
+  typeof PlexMovieAssociationV2Schema
+>;
+export type PlexAssociation = z.infer<typeof PlexAssociationSchema>;
 export type PlexBindingSnapshot = z.infer<typeof PlexBindingSnapshotSchema>;
 export type PlexPointerExpected = z.infer<typeof PlexPointerExpectedSchema>;
 export type PlexBindingReason = z.infer<typeof PlexBindingReasonSchema>;
@@ -234,7 +263,7 @@ export type PlexBindingRead =
       status: "current";
       purpose: "current_serving";
       snapshot: PlexBindingSnapshot;
-      association: PlexAssociationV1;
+      association: PlexAssociation;
     }
   | { status: "protected"; reason: PlexBindingReason };
 export type LegacyPlexDisplay =
