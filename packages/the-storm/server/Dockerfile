@@ -73,6 +73,7 @@ COPY server/world-protection/ /bundle/world-protection/
 COPY server/plugins.json /opt/the-storm/plugins.json
 COPY server/assets/server-icon.png /opt/the-storm/server-icon.png
 COPY server/archive-progression.py /opt/the-storm/archive-progression.py
+COPY server/maintenance/startup.py /opt/the-storm/world-retirement.py
 COPY --chmod=0755 server/storm-entrypoint.sh /usr/local/bin/storm-entrypoint
 
 # PAPER_CUSTOM_JAR + bundlerRepoDir: run the pre-patched Paper, no download.

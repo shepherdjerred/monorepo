@@ -70,7 +70,7 @@ final class TownsConfigTest {
         .extracting(com.shepherdjerred.thestorm.towns.domain.region.AdminRegion::id)
         .containsExactly("spawn", "arena", "settlement", "rustworks");
     assertThat(config.claims().worlds())
-        .containsExactlyInAnyOrder("world", "frontier", "map2", "skylands", "wilds", "peaks");
+        .containsExactlyInAnyOrder("world", "frontier", "map2", "skylands");
     assertThat(config.claims().defaultFlags()).containsExactly(ClaimFlag.PVP);
     for (var id : Set.of("settlement", "rustworks")) {
       var region =

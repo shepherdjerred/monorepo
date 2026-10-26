@@ -2272,6 +2272,8 @@ def prepare_resources(
     """Prepare fresh resource metadata independently of the sealed historical activation layout."""
     import restoration_resources
 
+    if (modern_data / ".the-storm-retired-worlds.json").exists():
+        raise ValueError("Wilds and Peaks were retired; fresh resource bootstrap is no longer permitted")
     for path in (staging, paper, bootstrap, candidate, modern_data, backup_proof):
         if path.is_symlink():
             raise ValueError("Resource preparation inputs cannot be linked")

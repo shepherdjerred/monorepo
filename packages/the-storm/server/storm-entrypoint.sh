@@ -130,6 +130,7 @@ install_world_protection() {
   done
 }
 
+python3 /opt/the-storm/world-retirement.py --data /data
 require_progression_preparation
 install -m 0664 /opt/the-storm/server-icon.png /data/server-icon.png
 remove_stale_files

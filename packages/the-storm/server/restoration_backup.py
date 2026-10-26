@@ -9,7 +9,21 @@ import restoration_files as storage
 from restoration_json import JsonObject
 
 DIMENSIONS = frozenset(
-    ("overworld", "the_nether", "the_end", "settlement", "rustworks", "rwf", "rwf_lobby", "wilds", "peaks", "map2")
+    (
+        "overworld",
+        "the_nether",
+        "the_end",
+        "settlement",
+        "rustworks",
+        "rwf",
+        "rwf_lobby",
+        "wilds",
+        "peaks",
+        "map2",
+        "frontier",
+        "skylands",
+        "creative",
+    )
 )
 REQUIRED = frozenset(("world/level.dat", "plugins/TheStorm/the-storm.db"))
 

@@ -35,14 +35,7 @@ final class WorldPaperTest {
   void installsNativeBordersAndSleepRuleOnProvisionedWorlds() {
     for (var name :
         java.util.List.of(
-            "world",
-            "world_nether",
-            "world_the_end",
-            "frontier",
-            "map2",
-            "skylands",
-            "wilds",
-            "peaks")) {
+            "world", "world_nether", "world_the_end", "frontier", "map2", "skylands", "creative")) {
       server.addSimpleWorld(name);
     }
     WorldPaper.install(server, config);

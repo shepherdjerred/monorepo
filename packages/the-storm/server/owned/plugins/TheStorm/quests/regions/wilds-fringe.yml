@@ -1,5 +1,6 @@
 # The permanent main-world fringe gives the Watch a boundary patrol before
-# players enter the unclaimable wilds dimension.
+# players travel to Frontier. Quest IDs retain their historical names so saved
+# progress remains intact after Wilds and Peaks retire.
 factions: {}
 variables: {}
 regions: {}
@@ -15,11 +16,11 @@ quests:
     estimatedMinutes: 30
     requirements: []
     text:
-      offer: The road out of town needs markers before the weather hides it. Help the Watch prepare the main-world approach to the Wilds.
+      offer: The road out of town needs markers before the weather hides it. Help the Watch prepare the road before traveling to Frontier.
       accept: Bring fences and torches. Clear any zombies gathering along the approach.
       decline: The patrol will keep walking by memory for now.
       finish: The approach is marked. Even in a storm, the patrol can find its way back.
-      summary: Prepare the main-world road before the unclaimable Wilds.
+      summary: Prepare the main-world road before traveling to Frontier.
       questions: []
     start: supplies
     stages:

@@ -92,8 +92,7 @@ final class TownsModuleTest {
   void aWorldTheServerHasNotLoadedStopsTheModule() throws Exception {
     var config =
         Files.readString(SHIPPED)
-            .replace(
-                "worlds: [world, frontier, map2, skylands, wilds, peaks]", "worlds: [atlantis]");
+            .replace("worlds: [world, frontier, map2, skylands]", "worlds: [atlantis]");
     Files.writeString(directory.resolve("towns.yml"), config);
 
     assertThatThrownBy(() -> new TownsModule().enable(context()))

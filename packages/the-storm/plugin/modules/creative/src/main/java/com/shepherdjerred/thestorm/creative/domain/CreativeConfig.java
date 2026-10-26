@@ -38,8 +38,15 @@ public record CreativeConfig(
         || !Double.isFinite(borderSize)) {
       throw new IllegalArgumentException("creative border must be finite");
     }
-    if (borderSize < PlotGrid.SURVEYED_BORDER_SIZE) {
-      throw new IllegalArgumentException("creative border is smaller than the restored world");
+    if (Math.abs(borderCenterX) > 29_999_984
+        || Math.abs(borderCenterZ) > 29_999_984
+        || borderSize < 1
+        || borderSize > 59_999_968) {
+      throw new IllegalArgumentException("creative border must fit Minecraft's world bounds");
+    }
+    if (Math.hypot(PlotGrid.SPAWN_X - borderCenterX, PlotGrid.SPAWN_Z - borderCenterZ)
+        >= borderSize / 2) {
+      throw new IllegalArgumentException("creative spawn must be inside its circular border");
     }
     if (claimCap < 0 || claimCap > 100) {
       throw new IllegalArgumentException("claimCap must be 0..100");

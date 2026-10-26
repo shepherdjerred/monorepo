@@ -948,6 +948,16 @@ def writer_manifest(journal: JsonObject) -> JsonObject:
         {"name": "scratch", "emptyDir": {"sizeLimit": "32Gi"}},
         {"name": "temporary", "emptyDir": {"sizeLimit": "64Mi"}},
     ]
+    if journal.get("maintenanceScope") == "bluemap-storage":
+        container.objects("volumeMounts").append(JsonObject({"name": "cache", "mountPath": "/cache"}))
+        spec.objects("volumes").append(
+            JsonObject(
+                {
+                    "name": "cache",
+                    "persistentVolumeClaim": {"claimName": "minecraft-tsmc-bluemap"},
+                }
+            )
+        )
     return manifest
 
 
@@ -2141,7 +2151,35 @@ def private_start(path: Path, journal: JsonObject) -> None:
     if journal.object("installation").get("phase") != "INSTALLED" or journal.get("writerRemoved") is not True:
         raise ValueError("Private startup requires verified installation and writer cleanup")
     resources = journal.object("resourceBootstrap", {})
-    if journal.object("installation").get("scope") == "additive-creative":
+    if journal.object("installation").get("scope") == "bluemap-storage":
+        plan = journal.object("installationPlan")
+        if (
+            plan.get("scope") != "bluemap-storage"
+            or plan.get("requestId") != journal.string("requestId")
+            or plan.get("candidateImage") != journal.string("rollbackImage")
+            or journal.string("candidateImage") != journal.string("rollbackImage")
+            or plan.get("candidateJarSha256") != journal.object("installation").get("candidateJarSha256")
+            or journal.object("installation").get("unrelatedFiles") != "UNCHANGED"
+            or read("pvc", "minecraft-tsmc-bluemap").object("metadata").get("uid") != plan.string("cacheClaimUid")
+            or resources
+        ):
+            raise ValueError("Cache startup requires accepted independent storage and unchanged world data")
+    elif journal.object("installation").get("scope") == "circular-worlds":
+        plan = journal.object("installationPlan")
+        if (
+            plan.get("scope") != "circular-worlds"
+            or plan.get("requestId") != journal.string("requestId")
+            or plan.get("candidateImage") != journal.string("candidateImage")
+            or plan.get("candidateJarSha256") != journal.object("installation").get("candidateJarSha256")
+            or plan.get("backupUid") != journal.object("backup").get("uid")
+            or plan.get("backupProofSha256") != journal.object("restore").get("proofSha256")
+            or journal.object("installation").get("unrelatedFiles") != "UNCHANGED"
+            or journal.object("restore").get("byteVerification") != "VERIFIED"
+            or resources
+        ):
+            raise ValueError("Circular-world startup requires exact verified retirement and unchanged retained data")
+        require_restore(journal)
+    elif journal.object("installation").get("scope") == "additive-creative":
         plan = journal.object("installationPlan")
         if (
             plan.get("scope") != "additive-creative"
@@ -2402,10 +2440,21 @@ def accept(path: Path, journal: JsonObject, evidence_path: Path) -> None:
     statuses = pod.object("status").objects("containerStatuses")
     server_status = server.object("status")
     revision = server_status.string("updateRevision")
+    from maintenance.control import ACCEPTANCE_CHECKS as CIRCULAR_ACCEPTANCE_CHECKS
+    from maintenance.control import CACHE_ACCEPTANCE_CHECKS
+
     checks = (
-        CREATIVE_ACCEPTANCE_CHECKS
-        if journal.object("installation").get("scope") == "additive-creative"
-        else ACCEPTANCE_CHECKS
+        CACHE_ACCEPTANCE_CHECKS
+        if journal.object("installation").get("scope") == "bluemap-storage"
+        else (
+            CIRCULAR_ACCEPTANCE_CHECKS
+            if journal.object("installation").get("scope") == "circular-worlds"
+            else (
+                CREATIVE_ACCEPTANCE_CHECKS
+                if journal.object("installation").get("scope") == "additive-creative"
+                else ACCEPTANCE_CHECKS
+            )
+        )
     )
     if (
         annotations(server).get(PHASE) != "VALIDATING"
@@ -2926,8 +2975,11 @@ def main() -> None:
             "install",
             "revise-installation",
             "select-creative-candidate",
+            "select-maintenance-candidate",
             "plan-creative",
             "install-creative",
+            "retire-worlds",
+            "retire-bluemap-source",
             "bootstrap-resources",
             "remove-writer",
             "private-start",
@@ -2968,11 +3020,15 @@ def main() -> None:
         "install-creative",
     ) and (arguments.staging is None or arguments.candidate is None):
         parser.error("Installation requires --staging and --candidate")
-    if arguments.operation == "accept" and arguments.evidence is None:
-        parser.error("accept requires --evidence")
+    if arguments.operation in ("accept", "retire-worlds", "retire-bluemap-source") and arguments.evidence is None:
+        parser.error("This operation requires --evidence")
+    if arguments.operation == "retire-worlds" and (arguments.staging is None or arguments.candidate is None):
+        parser.error("World retirement requires --staging and --candidate")
+    if arguments.operation == "retire-bluemap-source" and arguments.candidate is None:
+        parser.error("Cache retirement requires --candidate")
     with journal_lock(arguments.journal):
         image = arguments.image
-        if arguments.operation in ("revise-installation", "select-creative-candidate"):
+        if arguments.operation in ("revise-installation", "select-creative-candidate", "select-maintenance-candidate"):
             if arguments.journal.is_symlink() or not arguments.journal.is_file():
                 raise ValueError("Revision requires an existing regular maintenance journal")
             image = JsonObject.parse(arguments.journal.read_bytes()).string("candidateImage")
@@ -3010,7 +3066,7 @@ def main() -> None:
             install(arguments.journal, journal, arguments.staging, arguments.candidate)
         elif arguments.operation == "revise-installation":
             revise_installation(arguments.journal, journal, arguments.staging, arguments.candidate, arguments.image)
-        elif arguments.operation == "select-creative-candidate":
+        elif arguments.operation in ("select-creative-candidate", "select-maintenance-candidate"):
             select_creative_candidate(arguments.journal, journal, arguments.image)
         elif arguments.operation == "plan-creative":
             require_offline(journal)
@@ -3022,6 +3078,21 @@ def main() -> None:
             save(arguments.journal, journal)
         elif arguments.operation == "install-creative":
             install_creative(arguments.journal, journal, arguments.staging, arguments.candidate)
+        elif arguments.operation == "retire-worlds":
+            from maintenance.control import install as retire_worlds
+
+            retire_worlds(
+                sys.modules[__name__],
+                arguments.journal,
+                journal,
+                arguments.staging,
+                arguments.candidate,
+                arguments.evidence,
+            )
+        elif arguments.operation == "retire-bluemap-source":
+            from maintenance.control import retire_cache
+
+            retire_cache(sys.modules[__name__], arguments.journal, journal, arguments.candidate, arguments.evidence)
         elif arguments.operation == "remove-writer":
             remove_writer(arguments.journal, journal)
         elif arguments.operation == "bootstrap-resources":

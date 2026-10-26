@@ -50,19 +50,13 @@ public final class ClaimRules {
     return total;
   }
 
-  /**
-   * Whether the whole footprint sits inside the world border. {@code diameter} is the border size.
-   */
+  /** Whether the whole footprint sits inside the circle. {@code diameter} is the border size. */
   public static boolean inside(PlotBounds bounds, double centerX, double centerZ, double diameter) {
-    var half = diameter / 2.0;
-    var west = centerX - half;
-    var east = centerX + half;
-    var north = centerZ - half;
-    var south = centerZ + half;
-    return bounds.minX() >= west
-        && bounds.maxX() < east
-        && bounds.minZ() >= north
-        && bounds.maxZ() < south;
+    var farthestX =
+        Math.max(Math.abs(bounds.minX() - centerX), Math.abs(bounds.maxX() + 1.0 - centerX));
+    var farthestZ =
+        Math.max(Math.abs(bounds.minZ() - centerZ), Math.abs(bounds.maxZ() + 1.0 - centerZ));
+    return farthestX * farthestX + farthestZ * farthestZ <= diameter * diameter / 4.0;
   }
 
   /**

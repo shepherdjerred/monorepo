@@ -44,8 +44,6 @@ levels:
     frontier: { distanceScale: 1.0, depth: true, moon: true }
     map2: { distanceScale: 1.0, depth: true, moon: true }
     skylands: { distanceScale: 1.0, depth: false, moon: true }
-    wilds: { distanceScale: 1.0, depth: true, moon: true }
-    peaks: { distanceScale: 1.0, depth: true, moon: true }
     world_nether: { distanceScale: 4.0, depth: false, moon: false }
   # Below transitionY, every `period` blocks add `multiplier` x the distance
   # level (rounded down): a level-10 mob at y -58 gains 12 levels.

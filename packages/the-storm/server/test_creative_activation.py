@@ -106,7 +106,7 @@ class CreativeActivationTest(unittest.TestCase):
 
     def test_additive_install_preserves_other_worlds_without_authorizing_their_export(self):
         proof = JsonObject.parse(self.proof.read_bytes())
-        retained = "world/dimensions/minecraft/frontier/region/r.0.0.mca"
+        retained = "world/dimensions/minecraft/unreviewed_realm/region/r.0.0.mca"
         proof.strings("files")[retained] = "c" * 64
         self.proof.write_text(json.dumps(proof))
         self.control.object("restore")["proofSha256"] = storage.digest(self.proof)

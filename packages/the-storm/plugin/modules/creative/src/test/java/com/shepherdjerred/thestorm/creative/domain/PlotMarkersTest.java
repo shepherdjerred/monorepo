@@ -2,6 +2,8 @@ package com.shepherdjerred.thestorm.creative.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.shepherdjerred.thestorm.core.config.ConfigFiles;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -14,6 +16,21 @@ final class PlotMarkersTest {
 
   private static final UUID OWNER = UUID.fromString("cb488c76-08ba-4755-b425-6613fde02f70");
   private static final PlotGrid GRID = PlotGrid.recovered();
+
+  @Test
+  void liveMapHidesRecoveredPlotsOutsideThePlayableCircle() {
+    var config =
+        ConfigFiles.load(
+            Path.of("../../../server/owned/plugins/TheStorm/creative.yml"), CreativeConfig.class);
+    var near =
+        new PlotView(new PlotId(2, 1), Optional.of(OWNER), "Near", "", Set.of(), false, false);
+    var far =
+        new PlotView(new PlotId(15, 15), Optional.of(OWNER), "Far", "", Set.of(), false, false);
+    assertThat(PlotMarkers.select("creative", config, List.of(near, far)))
+        .extracting(PlotMarker::id)
+        .containsExactly(near.id());
+    assertThat(config.catalog().size()).isEqualTo(215);
+  }
 
   @Test
   @DisplayName("claimed plot")

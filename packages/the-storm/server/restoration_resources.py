@@ -65,6 +65,8 @@ def plan(staging: Path, control: JsonObject, candidate: Path) -> JsonObject:
 
 def install(data: Path, payload: Path, prepared: JsonObject, baked_jar: Path) -> JsonObject:
     """Resumable metadata creation; refuse terrain, foreign files and changes to all other data."""
+    if (data / ".the-storm-retired-worlds.json").exists():
+        raise ValueError("Wilds and Peaks were retired; fresh resource bootstrap is no longer permitted")
     expected = validate_files(prepared.strings("installationFiles"))
     if storage.digest(baked_jar) != prepared.string("candidateJarSha256") or storage.files(payload) != expected:
         raise ValueError("Resource bootstrap requires exact published plugin and sealed metadata")

@@ -11,6 +11,22 @@ public final class PlotMarkers {
 
   private PlotMarkers() {}
 
+  /** Only playable, fully contained plots are shown by the live creative map. */
+  public static List<PlotMarker> select(
+      String mapWorld, CreativeConfig config, List<PlotView> views) {
+    var playable =
+        views.stream()
+            .filter(
+                view ->
+                    ClaimRules.inside(
+                        config.grid().bounds(view.id()),
+                        config.borderCenterX(),
+                        config.borderCenterZ(),
+                        config.borderSize()))
+            .toList();
+    return select(mapWorld, config.world(), playable, config.grid());
+  }
+
   public static List<PlotMarker> select(
       String mapWorld, String creativeWorld, List<PlotView> views, PlotGrid grid) {
     if (!creativeWorld.equals(mapWorld)) {

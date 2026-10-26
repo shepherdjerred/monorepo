@@ -20,7 +20,6 @@ import com.shepherdjerred.thestorm.creative.adapter.paper.PlotGuard;
 import com.shepherdjerred.thestorm.creative.adapter.worldedit.CreativeEdits;
 import com.shepherdjerred.thestorm.creative.app.ClaimBook;
 import com.shepherdjerred.thestorm.creative.domain.CreativeConfig;
-import com.shepherdjerred.thestorm.creative.domain.PlotGrid;
 import com.shepherdjerred.thestorm.creative.domain.PlotMarkers;
 import com.shepherdjerred.thestorm.creative.domain.StoredClaim;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -48,7 +47,7 @@ public final class CreativeModule implements StormModule {
   private @Nullable Plugin plugin;
   private @Nullable ComponentLogger logger;
   private String worldName = "creative";
-  private PlotGrid grid = PlotGrid.recovered();
+  private @Nullable CreativeConfig worldConfig;
 
   @Override
   public String id() {
@@ -60,8 +59,8 @@ public final class CreativeModule implements StormModule {
     plugin = context.plugin();
     logger = context.logger();
     var config = context.loadConfig("creative.yml", CreativeConfig.class);
+    worldConfig = config;
     worldName = config.world();
-    grid = config.grid();
     var world = context.plugin().getServer().getWorld(config.world());
     if (world == null) {
       throw new IllegalStateException("Creative world is not loaded: " + config.world());
@@ -154,10 +153,11 @@ public final class CreativeModule implements StormModule {
   private void redraw() {
     var plots = map;
     var book = claims;
-    if (plots == null || book == null) {
+    var config = worldConfig;
+    if (plots == null || book == null || config == null) {
       return;
     }
-    plots.draw(PlotMarkers.select(worldName, worldName, book.marked(), grid));
+    plots.draw(PlotMarkers.select(worldName, config, book.marked()));
   }
 
   private void installMap(ModuleContext context, org.bukkit.World world) {

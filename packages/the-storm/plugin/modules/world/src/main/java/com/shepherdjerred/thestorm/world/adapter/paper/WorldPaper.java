@@ -28,6 +28,15 @@ public final class WorldPaper {
       if (world == null) {
         throw new IllegalStateException("border world " + spec.world() + " must be loaded");
       }
+      var spawn = world.getSpawnLocation();
+      spec.circle()
+          .ifPresent(
+              edge -> {
+                if (!edge.contains(spawn.getX(), spawn.getZ())) {
+                  throw new IllegalStateException(
+                      "border world " + spec.world() + " spawn must be inside its circle");
+                }
+              });
       var border = world.getWorldBorder();
       border.setCenter(spec.centerX(), spec.centerZ());
       border.setSize(spec.size());

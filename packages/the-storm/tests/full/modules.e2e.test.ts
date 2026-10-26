@@ -87,10 +87,10 @@ describe("all modules together", () => {
     expect(await rcon.command("worldborder get")).toContain("14000");
     expect(
       await rcon.command("execute in minecraft:the_nether run worldborder get"),
-    ).toContain("6000");
+    ).toContain("10000");
     expect(
       await rcon.command("execute in minecraft:the_end run worldborder get"),
-    ).toContain("8000");
+    ).toContain("3500");
     // This suite exercises module wiring with a deliberately malformed token;
     // external Discord login remains a separate production acceptance check.
     expect(logs).toContain("Discord login failed; the bridge is offline");

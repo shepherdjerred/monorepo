@@ -3,11 +3,14 @@ title: How to build in creative
 description: Enter the creative plot world, claim a cell, name it, trust a builder, and download it.
 ---
 
-This page describes the creative plot commands. It is not a statement that creative is on the live server.
+Creative is a separate plot world with its own inventory.
 
 Run `/creative` to enter. You switch to creative mode with an empty inventory. Your survival items, experience, and effects stay stored until you leave. Run `/creative leave` to restore that survival body. Creative items, experience, and effects are discarded when you leave. `/plot` remains the survival shop-rental command.
 
 Leaves do not decay there, fire does not spread, and crops, vines, and snow do not grow on their own. Place the block you want.
+
+The playable border is a circle centered at 0, 0 with a radius of 1,500 blocks.
+Recovered builds and ownership outside that circle remain saved, but cannot be visited or claimed through normal play.
 
 ## Claim a cell
 

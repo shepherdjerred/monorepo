@@ -6,10 +6,9 @@
 # the night, on every overworld. Entering a bed is the only vote.
 
 sleepPercentage: 50
-# Border diameters. The restored maps are circles inside the disc their
-# archives were pregenerated as, and their saved terrain past the circle is
-# pruned. A circle keeps the native square at the same diameter as the hard
-# limit. frontier is fully pregenerated inside its border.
+# Border diameters. Every listed world has a circle centered at 0,0. The
+# native square uses the same diameter; the world module enforces the disc.
+# Existing saved terrain outside a circle is retained, including creative.
 borders:
   - { world: world, centerX: 0.0, centerZ: 0.0, size: 14000.0, shape: circle }
   - { world: map2, centerX: 0.0, centerZ: 0.0, size: 24000.0, shape: circle }
@@ -17,24 +16,25 @@ borders:
       world: world_nether,
       centerX: 0.0,
       centerZ: 0.0,
-      size: 6000.0,
-      shape: square,
+      size: 10000.0,
+      shape: circle,
     }
   - {
       world: world_the_end,
       centerX: 0.0,
       centerZ: 0.0,
-      size: 8000.0,
-      shape: square,
+      size: 3500.0,
+      shape: circle,
     }
-  - { world: frontier, centerX: 0.0, centerZ: 0.0, size: 7000.0, shape: square }
   - {
-      world: skylands,
+      world: frontier,
       centerX: 0.0,
       centerZ: 0.0,
-      size: 10000.0,
-      shape: square,
+      size: 14000.0,
+      shape: circle,
     }
+  - { world: skylands, centerX: 0.0, centerZ: 0.0, size: 6000.0, shape: circle }
+  - { world: creative, centerX: 0.0, centerZ: 0.0, size: 3000.0, shape: circle }
 # The crier reads current main-world weather and time only when asked.
 crier:
   enabled: true
@@ -82,10 +82,4 @@ worlds:
     rtp: true
   - name: skylands
     preset: skylands
-    rtp: true
-  - name: wilds
-    preset: large_biomes
-    rtp: true
-  - name: peaks
-    preset: amplified
     rtp: true

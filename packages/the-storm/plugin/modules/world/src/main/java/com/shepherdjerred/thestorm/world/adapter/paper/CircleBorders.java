@@ -19,6 +19,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
 
@@ -28,7 +29,6 @@ import org.bukkit.event.vehicle.VehicleMoveEvent;
  */
 final class CircleBorders implements Listener {
 
-  private static final double MARGIN = 2;
   private static final Component EDGE =
       Component.text("You've reached the edge of the world.", NamedTextColor.GRAY);
 
@@ -84,16 +84,22 @@ final class CircleBorders implements Listener {
     }
   }
 
+  @EventHandler(priority = EventPriority.HIGHEST)
+  public void onRespawn(PlayerRespawnEvent event) {
+    if (!inside(event.getRespawnLocation())) {
+      event.setRespawnLocation(event.getRespawnLocation().getWorld().getSpawnLocation());
+    }
+  }
+
   private boolean inside(Location location) {
     var edge = edges.get(location.getWorld().getName());
     return edge == null || edge.contains(location.getX(), location.getZ());
   }
 
   /**
-   * Loads the inward column's chunk off the server thread, then places the player on its surface.
-   * One return is in flight per player; moves outside the disc meanwhile do not queue more. When
-   * the chunk arrives the player is checked again: one already back inside (another teleport won
-   * the race) is left alone, and one who moved to a column in another chunk starts a fresh return.
+   * Returns invalid saved positions and vehicle passengers to the verified world spawn. A radial
+   * surface projection is unsafe over Skylands/End void or the Nether roof. Load the spawn chunk
+   * off-thread; leave a player alone if another teleport already brought them inside.
    */
   private void returnInside(Player player) {
     var at = requireNonNull(player.getLocation());
@@ -101,12 +107,10 @@ final class CircleBorders implements Listener {
     if (edge == null || !returning.add(player.getUniqueId())) {
       return;
     }
-    var column = edge.inward(at.getX(), at.getZ(), MARGIN);
     var world = at.getWorld();
-    var blockX = (int) Math.floor(column.x());
-    var blockZ = (int) Math.floor(column.z());
+    var destination = world.getSpawnLocation();
     world
-        .getChunkAtAsync(blockX >> 4, blockZ >> 4)
+        .getChunkAtAsync(destination.getBlockX() >> 4, destination.getBlockZ() >> 4)
         .thenAcceptAsync(
             chunk -> {
               returning.remove(player.getUniqueId());
@@ -117,16 +121,9 @@ final class CircleBorders implements Listener {
               if (inside(now)) {
                 return;
               }
-              var current = edge.inward(now.getX(), now.getZ(), MARGIN);
-              var currentX = (int) Math.floor(current.x());
-              var currentZ = (int) Math.floor(current.z());
-              if (currentX >> 4 != chunk.getX() || currentZ >> 4 != chunk.getZ()) {
-                returnInside(player);
-                return;
-              }
-              var y = world.getHighestBlockYAt(currentX, currentZ) + 1;
-              player.teleport(
-                  new Location(world, current.x(), y, current.z(), now.getYaw(), now.getPitch()));
+              destination.setYaw(now.getYaw());
+              destination.setPitch(now.getPitch());
+              player.teleport(destination);
               player.sendActionBar(EDGE);
             },
             mainThread)

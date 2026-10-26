@@ -269,6 +269,45 @@ class RestorationControlTest(unittest.TestCase):
         journal["restore"] = {"byteVerification": "VERIFIED"}
         return journal
 
+    def test_circular_start_requires_its_exact_backup_and_preserves_closed_admission(self):
+        journal = self.creative_fixture()
+        journal.object("installation")["scope"] = "circular-worlds"
+        journal["backup"] = {"uid": "independent-backup"}
+        journal.object("restore")["proofSha256"] = "d" * 64
+        journal["installationPlan"] = {
+            "scope": "circular-worlds",
+            "requestId": journal.string("requestId"),
+            "candidateImage": IMAGE,
+            "candidateJarSha256": "b" * 64,
+            "backupUid": "independent-backup",
+            "backupProofSha256": "d" * 64,
+        }
+        with patch.object(control, "require_restore") as restore:
+            journal.object("installationPlan")["backupUid"] = "foreign-backup"
+            before = len(self.cluster.mutations)
+            with self.assertRaisesRegex(ValueError, "exact verified retirement"):
+                control.private_start(self.path, journal)
+            self.assertEqual(len(self.cluster.mutations), before)
+            restore.assert_not_called()
+            journal.object("installationPlan")["backupUid"] = "independent-backup"
+            control.private_start(self.path, journal)
+            restore.assert_called_once_with(journal)
+        control.assert_closed(journal)
+        self.assertEqual(self.cluster.server.object("spec").integer("replicas"), 1)
+
+    def test_only_cache_maintenance_writer_can_mount_the_unbacked_cache(self):
+        journal = self.initialize()
+        before = control.writer_manifest(journal)
+        self.assertNotIn("cache", [volume["name"] for volume in before.object("spec").objects("volumes")])
+        journal["maintenanceScope"] = "bluemap-storage"
+        after = control.writer_manifest(journal)
+        self.assertEqual(
+            after.object("spec").objects("volumes")[-1].object("persistentVolumeClaim").string("claimName"),
+            "minecraft-tsmc-bluemap",
+        )
+        self.assertFalse(after.object("spec").get("automountServiceAccountToken"))
+        self.assertFalse(after.object("spec").objects("containers")[0].get("env"))
+
     def test_creative_start_preserves_resource_worlds_and_requires_its_own_native_installation(self):
         journal = self.creative_fixture()
         for key, value in (("unrelatedFiles", "CHANGED"), ("candidateJarSha256", "c" * 64)):
@@ -703,7 +742,7 @@ class RestorationControlTest(unittest.TestCase):
         journal, transaction = self.rollback_fixture()
         path = Path(journal.object("restore").string("proofPath"))
         proof = JsonObject.parse(path.read_bytes())
-        for world in ("frontier", "map2"):
+        for world in ("unreviewed_realm", "map2"):
             name = f"world/dimensions/minecraft/{world}/region/r.0.0.mca"
             proof.strings("files")[name] = "f" * 64
             transaction.strings("original")[name] = "f" * 64

@@ -61,7 +61,7 @@ val archiveTest = tasks.register<Exec>("archiveTest") {
 }
 val worldRestoreTest = tasks.register<Exec>("worldRestoreTest") {
   workingDir(rootProject.file("../server"))
-  commandLine(testPython + listOf("-m", "unittest", "-v", "test_world_restore.py", "test_database_restore.py", "test_restoration_control.py", "test_restoration_stopped.py", "test_creative_install.py", "test_creative_activation.py", "test_restoration_json.py", "test_restoration_files.py", "test_restoration_activation.py", "test_restoration_install.py"))
+  commandLine(testPython + listOf("-m", "unittest", "-v", "test_world_restore.py", "test_database_restore.py", "test_restoration_control.py", "test_restoration_stopped.py", "test_creative_install.py", "test_creative_activation.py", "test_restoration_json.py", "test_restoration_files.py", "test_restoration_activation.py", "test_restoration_install.py", "maintenance.test_database", "maintenance.test_retire", "maintenance.test_cache", "maintenance.test_control", "maintenance.test_startup"))
 }
 tasks.test {
   dependsOn(archiveTest, worldRestoreTest)

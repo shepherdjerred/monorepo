@@ -34,8 +34,8 @@ describe("shared player travel on native Paper", () => {
     await rcon.command(`deop ${bot.username}`);
     await command(
       bot,
-      "/rtp wilds",
-      /Teleported to wilderness in wilds/u,
+      "/rtp frontier",
+      /Teleported to wilderness in frontier/u,
       45_000,
     );
     await waitUntil("successful RTP consumes the starter compass", () =>
@@ -49,7 +49,7 @@ describe("shared player travel on native Paper", () => {
       "/home",
       "/back",
       "/warp travel-proof",
-      "/rtp wilds",
+      "/rtp frontier",
     ]) {
       const refusal = await command(
         bot,
