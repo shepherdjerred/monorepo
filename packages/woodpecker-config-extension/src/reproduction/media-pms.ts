@@ -77,12 +77,14 @@ export function renderPmsReproduction(
     throw new Error(
       "PMS reproduction changed its required two-container contract",
     );
-  const yaml = emitWorkflow(lane, {
+  // The standalone compiler requires an event boundary; the server normally
+  // selects extension workflows before compilation.
+  const yaml = `when:\n  - event: [manual]\n${emitWorkflow(lane, {
     commit: identity.source,
     branch: identity.branch,
     event: "manual",
     linkUrl: `https://github.com/shepherdjerred/monorepo/commit/${identity.source}`,
-  });
+  })}`;
   const emitted = z
     .object({
       clone: z.tuple([emittedContainer]),

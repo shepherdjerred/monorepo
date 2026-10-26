@@ -19,9 +19,11 @@ test("PMS preview retains both actual containers and requires separate execution
   );
   const workflow = z
     .object({
+      when: z.array(z.object({ event: z.array(z.string()) })),
       steps: z.array(z.object({ name: z.string(), image: z.string() })),
     })
     .parse(parse(result.yaml));
+  expect(workflow.when).toEqual([{ event: ["manual"] }]);
   expect(workflow.steps).toEqual([
     { name: "media-pms-wire", image: TEST_IMAGES.base },
     {
