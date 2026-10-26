@@ -48,11 +48,15 @@ export function assertPromotionSubmitControl(
   target: PromotionTarget,
   label: string,
 ): void {
-  if (/\b(?:vote|delete|remove|logout|purchase|pay)\b/i.test(label))
+  if (
+    /\b(?:vote|delete|remove|logout|purchase|buy|pay|paid|checkout|premium|sponsor|subscription|upgrade|credits?|coins?|usd|eur|gbp)\b|[$€£]/i.test(
+      label,
+    )
+  )
     throw new Error("Control is not a promotion submission");
   const expected =
     target.action === "bump"
-      ? /\b(?:bump|refresh|renew)\b|update\s+(?:server|listing)/i
+      ? /\b(?:bump|refresh)\b|update\s+(?:server|listing)/i
       : /\b(?:submit|post|publish|reply)\b/i;
   if (!expected.test(label))
     throw new Error(
