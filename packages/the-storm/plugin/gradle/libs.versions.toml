@@ -1,12 +1,12 @@
 # Single source of truth for every dependency and Gradle plugin version.
 # Renovate bumps these; build-logic reads them through the `libs` catalog.
 [versions]
-client-minecraft = "26.2"
+client-minecraft = "26.3"
 fabric-loader = "0.19.5"
-fabric-api = "0.161.0+26.2"
+fabric-api = "0.165.0+26.3"
 fabric-loom = "1.17.21"
 jackson-annotations = "2.22"
-paper = "26.2.build.129-stable"
+paper = "26.3.build.223-stable"
 jspecify = "1.0.1"
 errorprone = "2.50.0"
 nullaway = "0.14.2"
@@ -23,16 +23,17 @@ hikari = "7.1.0"
 junit = "6.1.3"
 assertj = "3.27.7"
 archunit = "1.5.0"
-mockbukkit = "4.116.1"
+mockbukkit = "4.118.0"
 mockito = "5.24.0"
 jda = "6.7.0"
 luckperms = "5.5"
 bluemap = "2.8.1"
 ink = "1.3.2"
-worldedit = "7.4.5"
+worldedit = "7.4.6"
 citizens = "2.0.44-b4256"
+# Maven still publishes 24.1. The server runs 25.1 from public.sjer.red; the methods we call exist in both.
 coreprotect = "24.1"
-grim = "2.3.74-3a9cdf1"
+grim = "2.3.75-d8b8ae4"
 log4j = "2.26.1"
 security-jackson2 = "2.22.3"
 security-plexus-utils = "3.6.1"
@@ -67,7 +68,7 @@ junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 archunit = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "archunit" }
-mockbukkit = { module = "org.mockbukkit.mockbukkit:mockbukkit-v26.2", version.ref = "mockbukkit" }
+mockbukkit = { module = "org.mockbukkit.mockbukkit:mockbukkit-v26.3", version.ref = "mockbukkit" }
 mockito = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 jda = { module = "net.dv8tion:JDA", version.ref = "jda" }
 luckperms-api = { module = "net.luckperms:api", version.ref = "luckperms" }

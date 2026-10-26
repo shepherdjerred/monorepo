@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.npcs.adapter.paper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.shepherdjerred.thestorm.core.paper.Invulnerability;
 import com.shepherdjerred.thestorm.npcs.app.NpcInteractEvent;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -168,7 +169,7 @@ final class NpcsPaperTest {
     assertThat(nat.isCustomNameVisible()).isTrue();
     assertThat(plain(Objects.requireNonNull(nat.getDescription()))).isEqualTo("Test");
     assertThat(nat.isImmovable()).isTrue();
-    assertThat(nat.isInvulnerable()).isFalse();
+    assertThat(Invulnerability.marked(nat)).isFalse();
     assertThat(nat.isPersistent()).isTrue();
     assertThat(nat.getPose()).isEqualTo(Pose.SNEAKING);
     assertThat(nat.getLocation().getX()).isEqualTo(0.5);
@@ -187,7 +188,7 @@ final class NpcsPaperTest {
     server.dispatchCommand(admin, "stormnpc reload");
     server.getScheduler().performTicks(2);
     assertThat(mannequin("nat").getUniqueId()).isEqualTo(nat.getUniqueId());
-    assertThat(nat.isInvulnerable()).isFalse();
+    assertThat(Invulnerability.marked(nat)).isFalse();
     assertThat(nat.getHealth()).isEqualTo(7);
   }
 

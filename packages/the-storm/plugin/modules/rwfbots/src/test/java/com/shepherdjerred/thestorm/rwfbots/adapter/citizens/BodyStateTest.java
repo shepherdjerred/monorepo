@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.rwfbots.adapter.citizens;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.shepherdjerred.thestorm.core.paper.Invulnerability;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -60,7 +61,7 @@ final class BodyStateTest {
     assertThat(replacement.getGameMode()).isEqualTo(GameMode.ADVENTURE);
     assertThat(replacement.getAllowFlight()).isTrue();
     assertThat(replacement.isFlying()).isTrue();
-    assertThat(replacement.isInvulnerable()).isTrue();
+    assertThat(Invulnerability.marked(replacement)).isTrue();
     assertThat(replacement.isCollidable()).isFalse();
     assertThat(replacement.isInvisible()).isTrue();
   }

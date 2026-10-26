@@ -252,7 +252,7 @@ describe("minecraft-tsmc image configuration", () => {
           z.object({
             name: z.string(),
             version: z.string(),
-            url: z.url(),
+            url: z.string().min(1),
             sha256: z.string(),
             file: z.string(),
           }),
@@ -274,11 +274,11 @@ describe("minecraft-tsmc image configuration", () => {
       },
       {
         name: "Geyser-Spigot",
-        version: "2.11.3 build 1247",
-        url: "https://download.geysermc.org/v2/projects/geyser/versions/2.11.3/builds/1247/downloads/spigot",
+        version: "2.12.0 build 1271",
+        url: "https://download.geysermc.org/v2/projects/geyser/versions/2.12.0/builds/1271/downloads/spigot",
         sha256:
-          "6fed2d9711e2db3c365508ec10db36d06a0199abd226159d23d57f82662fd7a6",
-        file: "Geyser-Spigot-2.11.3-b1247.jar",
+          "dd2ad0e4e79cedfce492c4e527a93adf4f9dfa93fc09ea05e6eaf18ac5ea079e",
+        file: "Geyser-Spigot-2.12.0-b1271.jar",
       },
     ]);
   });

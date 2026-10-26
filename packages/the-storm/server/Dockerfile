@@ -80,9 +80,9 @@ COPY --chmod=0755 server/storm-entrypoint.sh /usr/local/bin/storm-entrypoint
 # SYNC_SKIP_NEWER_IN_DESTINATION=false: the image wins over a plugin's rewrite.
 # The towns module owns locks. Every stale top-level jar is retired.
 ENV TYPE=PAPER \
-  VERSION=26.2 \
+  VERSION=26.3 \
   CFG_PROXY_PROTOCOL=false \
-  PAPER_CUSTOM_JAR=/opt/paper/paper-26.2-129.jar \
+  PAPER_CUSTOM_JAR=/opt/paper/paper-26.3-223.jar \
   JVM_DD_OPTS=bundlerRepoDir:/opt/paper \
   JVM_OPTS=-Dpaper.maxChatCommandInputSize=4096 \
   PAPER_CONFIG_DEFAULTS_REPO=/opt/paper-defaults \

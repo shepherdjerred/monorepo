@@ -426,6 +426,10 @@ describe("Paper smoke lane", () => {
     );
     expect(paper.environment["COPY_CONFIG_SRC"]).toBe(`${dataDir}/config`);
     expect(paper.environment["COPY_CONFIG_DEST"]).toBe("/data");
+    expect(paper.commands?.join("\n")).toContain(
+      "packages/the-storm/server/plugins.json",
+    );
+    expect(paper.commands?.join("\n")).toContain("export VERSION PAPER_BUILD");
     const pluginPath = candidate.environment["STORM_E2E_PLUGIN_DIR"];
     if (typeof pluginPath !== "string")
       throw new TypeError(`missing plugin path for ${lane}`);

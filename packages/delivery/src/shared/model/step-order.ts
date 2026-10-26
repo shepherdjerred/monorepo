@@ -1,21 +1,19 @@
 /**
- * Issues for minecraft-upgrade steps on the wrong side of the sync: a
- * verified-restore upgrade preserves the world before the sync switches its
- * image; a retained-volume restart is read back after it.
+ * A minecraft-upgrade reads the retained volume back after sync. Historical
+ * `verified-restore` rows take that same path.
  */
 export function misplacedUpgrades(
   steps: readonly { kind: string; releaseMode?: string }[],
 ) {
   const sync = steps.findIndex((step) => step.kind === "sync");
   return steps.flatMap((step, index) =>
-    step.kind === "minecraft-upgrade" &&
-    index < sync !== (step.releaseMode === "verified-restore")
+    step.kind === "minecraft-upgrade" && index < sync
       ? [
           {
             code: "custom" as const,
             path: ["steps", index],
             message:
-              "A verified-restore minecraft-upgrade runs before sync; a retained-volume restart runs after it",
+              "A minecraft-upgrade runs after sync and reads back the retained volume",
           },
         ]
       : [],

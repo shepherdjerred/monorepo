@@ -5,11 +5,7 @@ import {
   type RecoveryIntentRequest,
 } from "#shared/model/route-contract.ts";
 import type { RecoveryIntentKind } from "#shared/recovery-intent.ts";
-import {
-  forumReleaseOf,
-  minecraftUpgradeOf,
-  siteReleaseOf,
-} from "#shared/model/recipe-view.ts";
+import { forumReleaseOf, siteReleaseOf } from "#shared/model/recipe-view.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
 import {
@@ -36,8 +32,6 @@ export function recoveryKindOf(
   // state marker are inspected by platform recovery.
   if (modelTofuTarget(detail) !== null) return "platform";
   const definition = detail.pipeline.definition;
-  if (minecraftUpgradeOf(definition)?.releaseMode === "verified-restore")
-    return "minecraft";
   return siteReleaseOf(definition) !== undefined ||
     forumReleaseOf(definition) !== undefined
     ? "content"
@@ -109,12 +103,17 @@ async function specializedIntent(
   actor: Principal,
 ): Promise<string> {
   const { kind, deploymentId } = target;
+  if (kind === "minecraft") {
+    this.requestMinecraftRecovery(deploymentId, input, actor);
+    throw new DeliveryError(
+      "INVALID",
+      "Minecraft recovery was removed. Releases restart the retained volume. Scheduled Velero backups are the only backup.",
+    );
+  }
   const requests = {
     platform: async () =>
       this.requestPlatformRecovery(deploymentId, input, actor),
     worker: async () => this.requestWorkerRecovery(deploymentId, input, actor),
-    minecraft: async () =>
-      this.requestMinecraftRecovery(deploymentId, input, actor),
     content: async () =>
       this.requestContentRecovery(deploymentId, input, actor),
   };

@@ -33,7 +33,7 @@ dependencyResolutionManagement {
     }
     maven("https://maven.playpro.com") { content { includeGroup("net.coreprotect") } }
     // Compile against the exact API shipped by the immutable runtime artifact.
-    ivy("https://cdn.modrinth.com/data/LJNGWSvH/versions/QyX6GKLl") {
+    ivy("https://cdn.modrinth.com/data/LJNGWSvH/versions/clrLeCYp") {
       patternLayout { artifact("[artifact]-[revision].[ext]") }
       metadataSources { artifact() }
       content { includeModule("ac.grim.artifact", "grimac-bukkit") }
@@ -90,7 +90,4 @@ modules.forEach { name ->
 // Offline tooling under tools/: not a gameplay module, so dist never shades it
 // and the architecture project (which analyses dist and modules/*) never sees it.
 include("rwfmap")
-include("conversionguard")
-project(":conversionguard").projectDir = file("tools/conversionguard")
-
 project(":rwfmap").projectDir = file("tools/rwfmap")

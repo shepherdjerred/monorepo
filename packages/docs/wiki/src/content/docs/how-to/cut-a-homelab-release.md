@@ -227,7 +227,9 @@ keeps the accepted set revision.
 
    Each candidate is a previously accepted deployment, newest first. The
    accepted one is listed too, so it can be re-asserted. Excluded candidates
-   state why ([D9](packages/delivery/docs/model.md#412-deployment)).
+   state why ([D9](packages/delivery/docs/model.md#412-deployment)). A
+   Minecraft rollback restarts the retained volume and does not restore an
+   older world. Scheduled Velero backups are the only Minecraft backup.
 
 2. Request the rollback by the candidate's deployment id. It restores that
    deployment's set revision, recipe and configuration together:

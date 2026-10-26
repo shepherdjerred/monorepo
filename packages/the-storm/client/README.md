@@ -1,6 +1,6 @@
 # Minecraft preview client
 
-This developer tool controls a rendered Minecraft 26.2 client connected to a
+This developer tool controls a rendered Minecraft 26.3 client connected to a
 disposable local Paper server. The Fabric mod has its own Gradle build and is
 never included in TheStorm.jar. The Bun launcher reuses The Storm's pinned
 server harness, creates a separate client game directory, and keeps the

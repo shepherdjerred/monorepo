@@ -8,7 +8,7 @@ import java.util.Objects;
 import org.bukkit.event.entity.EntityDamageEvent;
 
 /**
- * Keeps native successful-hit callbacks while applying RWF mitigation exactly once. Paper 26.2 has
+ * Keeps native successful-hit callbacks while applying RWF mitigation exactly once. Paper 26.3 has
  * no supported final-damage setter. Its deprecated modifier slots are therefore linked by exact
  * signature at startup, alongside the other pinned native weapon operations. Absorption stays in
  * the event so the server consumes it; a shield-blocked event is never rewritten.
@@ -66,7 +66,7 @@ final class PaperNativeDamage {
           Objects.requireNonNull(modifier.getField("BLOCKING").get(null)),
           Objects.requireNonNull(modifier.getField("ABSORPTION").get(null)));
     } catch (ReflectiveOperationException failure) {
-      throw new IllegalStateException("Pinned Paper 26.2 final-damage linkage failed", failure);
+      throw new IllegalStateException("Pinned Paper 26.3 final-damage linkage failed", failure);
     }
   }
 

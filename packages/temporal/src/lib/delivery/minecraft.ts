@@ -119,10 +119,6 @@ function target(detail: MinecraftDetail) {
     throw new Error(
       "Minecraft upgrade is restricted to the reviewed TSMC target",
     );
-  if (detail.deployment.kind === "rollback")
-    throw new Error(
-      "TSMC cannot reverse an image against a possibly migrated world; use the independent restoration procedure",
-    );
   const component = server.upgrade.imageComponent;
   if (server.imageTag !== component)
     throw new Error(

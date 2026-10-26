@@ -7,7 +7,7 @@ import java.util.Objects;
 import org.bukkit.entity.Player;
 
 /**
- * The three native 26.2 item operations Paper does not expose: actual right-click use, release, and
+ * The three native 26.3 item operations Paper does not expose: actual right-click use, release, and
  * a spear's piercing jab. Exact signatures are linked once at production startup. Missing
  * signatures are a server-version contract failure, never a reason to simulate weaker weapons. No
  * Citizens implementation is used here.
@@ -89,7 +89,7 @@ final class PaperNativeItems {
           Objects.requireNonNull(slot.getField("MAINHAND").get(null)),
           Objects.requireNonNull(components.getField("PIERCING_WEAPON").get(null)));
     } catch (ReflectiveOperationException failure) {
-      throw new IllegalStateException("Pinned Paper 26.2 native weapon linkage failed", failure);
+      throw new IllegalStateException("Pinned Paper 26.3 native weapon linkage failed", failure);
     }
   }
 

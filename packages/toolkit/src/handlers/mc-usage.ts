@@ -11,7 +11,7 @@ Daemon (runs from the monorepo checkout; needs Docker; other commands start it):
   toolkit mc daemon status [--json]
   toolkit mc daemon stop                 Also removes sandboxes not started with --keep
 
-Sandboxes (Paper 26.2 + WorldEdit + MCBridge; build MCBridge first). Profiles:
+Sandboxes (Paper 26.3 + WorldEdit + MCBridge; build MCBridge first). Profiles:
 paper, storm-dev (Docker by default); storm-prod, storm-candidate (the published
 image; cluster by default, ttl ≤ 8h):
   toolkit mc sandbox up [--profile paper] [--provider docker|kubernetes] [--world flat|void] [--ttl 2h] [--keep] [--artifact-file original-artifact.json] [--json]

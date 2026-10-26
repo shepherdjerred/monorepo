@@ -272,7 +272,7 @@ final class RegressionMelee implements BasicCommand {
         weapon.getEnchantmentLevel(knockback),
         player.isSprinting(),
         player.getGameMode().name(),
-        player.isInvulnerable());
+        player.isMarkedInvulnerable());
   }
 
   private Player player(UUID id) {

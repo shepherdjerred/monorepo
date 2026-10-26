@@ -341,7 +341,7 @@ public final class AuthoredCombatFixtures implements BasicCommand, Listener, Aut
         body.isValid(),
         body.isOnline(),
         body.getGameMode().name(),
-        body.isInvulnerable(),
+        body.isMarkedInvulnerable(),
         body.getHealth(),
         body.getAbsorptionAmount(),
         body.getNoDamageTicks(),

@@ -16,8 +16,7 @@ Before you start, you need:
 - the `admin@torvalds` kube context (or `MC_KUBE_CONTEXT`), which can
   impersonate `mc-sandbox:mc-harness`;
 - the homelab release that grants that ServiceAccount read access to
-  `minecraft-tsmc`, port-forward to `minecraft-tsmc-0`, and Velero backup
-  create/read;
+  `minecraft-tsmc` and port-forward to `minecraft-tsmc-0`;
 - a tsmc image with MCBridge on port 25580, which reads `MC_BRIDGE_TOKEN` from
   the `storm-brain` 1Password item.
 
@@ -28,11 +27,10 @@ Before you start, you need:
    kubectl --context admin@torvalds -n minecraft-tsmc $AS auth can-i get statefulset/minecraft-tsmc
    kubectl --context admin@torvalds -n minecraft-tsmc $AS auth can-i get pod/minecraft-tsmc-0
    kubectl --context admin@torvalds -n minecraft-tsmc $AS auth can-i create pod/minecraft-tsmc-0 --subresource=portforward
-   kubectl --context admin@torvalds -n velero $AS auth can-i create backups.velero.io
    kubectl --context admin@torvalds -n minecraft-tsmc $AS auth can-i patch statefulset/minecraft-tsmc
    ```
 
-   The first four must print `yes` and the last `no`: the harness can never
+   The first three must print `yes` and the last `no`: the harness can never
    change replicas or annotations.
 
 2. Start the daemon with the bridge token from the repository root. The token
@@ -57,12 +55,7 @@ Before you start, you need:
    toolkit mc live status
    ```
 
-   Inspect the reported restoration lease before starting a live operation.
-   While restoration holds the lease, await its operator even if a private
-   acceptance server is running. Public routes stay closed during that phase.
-   The harness refuses ordinary live access throughout restoration.
-
-   It also refuses while tsmc is asleep (scaled to zero). For ordinary sleep,
+   It refuses while tsmc is asleep (scaled to zero) or not ready. For ordinary sleep,
    join `ts-mc.net` so mc-router wakes the server. The harness never changes replicas or router annotations.
 
 4. After the live guard accepts the target, run reads and writes with
@@ -90,12 +83,12 @@ Before you start, you need:
 
 ## What the guard asks for
 
-| Write                                                                       | Tier | Needs                                       |
-| --------------------------------------------------------------------------- | ---- | ------------------------------------------- |
-| Console command, actor move, spawn or chat                                  | 0    | `--reason`                                  |
-| WorldEdit, paste, snapshot restore, actor `break`/`place`/`use`             | 1    | `--reason`; the box is snapshotted first    |
-| Region over 1,000,000 blocks                                                | 2    | also a Velero backup from the last 24 hours |
-| `stop`, `kill`, `op`, `whitelist off`, `co rollback`, `//regen` and similar | 2    | also `--confirm-dangerous`                  |
+| Write                                                                       | Tier | Needs                                    |
+| --------------------------------------------------------------------------- | ---- | ---------------------------------------- |
+| Console command, actor move, spawn or chat                                  | 0    | `--reason`                               |
+| WorldEdit, paste, snapshot restore, actor `break`/`place`/`use`             | 1    | `--reason`; the box is snapshotted first |
+| Region over 1,000,000 blocks                                                | 2    | `--reason`                               |
+| `stop`, `kill`, `op`, `whitelist off`, `co rollback`, `//regen` and similar | 2    | also `--confirm-dangerous`               |
 
 The guard refuses outright:
 
@@ -112,28 +105,23 @@ A human within 32 blocks needs `--allow-players`. Citizens NPCs never count.
 WorldEdit shapes that reach beyond the selection, such as `//sphere`, need
 `--affects x1,y1,z1:x2,y2,z2`.
 
-Take a backup before a tier-2 write. The six-hourly scheduled backups also
-count when they are recent:
-
-```bash
-toolkit mc live backup --wait --reason "before regenerating the north field"
-```
+Scheduled Velero backups cover the world volume. The harness does not take
+its own backup, and a tier-2 write does not wait for one. Dangerous commands
+still need `--confirm-dangerous`.
 
 Set `mcLiveWrites = false` in `~/.toolkit/config.toml` to refuse every live
-write. `mcLiveWorlds`, `mcLiveMaxRegionVolume`, `mcLiveBackupMaxAgeHours`,
-`mcLiveNearPlayerRadius` and `mcLiveProtectedRegions` tune the other limits.
+write. `mcLiveWorlds`, `mcLiveMaxRegionVolume`, `mcLiveNearPlayerRadius` and
+`mcLiveProtectedRegions` tune the other limits.
 
 ## If a live call fails
 
 - **412 with a start hint:** the daemon started without `MC_BRIDGE_TOKEN`.
   Restart it as in step 2.
 - **409 asleep:** ask the user to join so the router wakes the server.
-- **409 world restoration:** await the restoration operator. A running private
-  acceptance server does not permit ordinary harness access or public joins.
 - **502 bridge health check:** the running image predates MCBridge or the token
   does not match `storm-brain`.
-- **403 `live write refused`:** the message names the missing flag, the player
-  in the way, or the backup to take.
+- **403 `live write refused`:** the message names the missing flag or the player
+  in the way.
 
 ## Related
 

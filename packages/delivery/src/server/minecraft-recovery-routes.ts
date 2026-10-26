@@ -16,16 +16,13 @@ export function registerMinecraftRecoveryRoutes(
   delivery: Delivery,
   inspect: InspectMinecraftRecovery | undefined,
 ) {
-  app.post("/api/v1/deployments/:id/minecraft-recovery", async (c) =>
-    c.json(
-      await delivery.requestMinecraftRecovery(
-        c.req.param("id"),
-        RequestMinecraftRecoverySchema.parse(await c.req.json()),
-        c.get("principal"),
-      ),
-      201,
-    ),
-  );
+  app.post("/api/v1/deployments/:id/minecraft-recovery", async (c) => {
+    delivery.requestMinecraftRecovery(
+      c.req.param("id"),
+      RequestMinecraftRecoverySchema.parse(await c.req.json()),
+      c.get("principal"),
+    );
+  });
   app.get("/api/v1/minecraft-recovery/pending", async (c) =>
     c.json(await delivery.pendingMinecraftRecovery(c.get("principal"))),
   );

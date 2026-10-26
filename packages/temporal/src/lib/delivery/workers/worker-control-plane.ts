@@ -13,7 +13,6 @@ const components = new Set([
   "delivery-worker",
   "delivery-platform-worker",
   "delivery-workflows",
-  "delivery-tsmc-controller",
 ]);
 export const ControlPlaneTemplatesSchema = z.array(
   z.strictObject({

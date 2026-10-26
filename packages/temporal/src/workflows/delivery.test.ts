@@ -258,7 +258,7 @@ describe("Delivery Workflow", () => {
       expect(recovered).toBe(true);
       expect(forumQualified).toBe(true);
       expect(forumObserved).toBe(true);
-      expect(minecraftRecovered).toBe(true);
+      expect(minecraftRecovered).toBe(false);
     } finally {
       await environment.teardown();
     }
@@ -570,7 +570,7 @@ describe("Delivery preservation and quarantine", () => {
       await environment.teardown();
     }
   }, 60_000);
-  it("durably waits after a safely reopened late join and never selects the candidate before preservation", async () => {
+  it("does not preserve a Minecraft release before applying the retained volume", async () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
     const calls: string[] = [];
     let preserved = false;
@@ -609,13 +609,7 @@ describe("Delivery preservation and quarantine", () => {
           }),
         ),
       );
-      expect(calls).toEqual([
-        "preserve",
-        "preserve",
-        "apply",
-        "verify",
-        "finish",
-      ]);
+      expect(calls).toEqual(["apply", "verify", "finish"]);
       await Worker.runReplayHistory(
         { workflowsPath: new URL("delivery.ts", import.meta.url).pathname },
         await environment.client.workflow.getHandle(workflowId).fetchHistory(),

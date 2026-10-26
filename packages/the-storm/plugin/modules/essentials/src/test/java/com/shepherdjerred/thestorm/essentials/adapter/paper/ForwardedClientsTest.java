@@ -18,7 +18,7 @@ final class ForwardedClientsTest {
     return new org.bukkit.event.player.AsyncPlayerPreLoginEvent(
         "Alice",
         java.net.InetAddress.getByName(forwarded),
-        java.net.InetAddress.getByName(peer),
+        new java.net.InetSocketAddress(java.net.InetAddress.getByName(peer), 0),
         id,
         false,
         new org.mockbukkit.mockbukkit.profile.PlayerProfileMock("Alice", id),

@@ -72,7 +72,7 @@ if (args.op !== undefined) {
 console.warn(`
 The Storm is up with Search and Destroy bots (offline mode).
 
-Join:  localhost:${args.port.toString()}   (Minecraft 26.2; older clients go through ViaBackwards)
+Join:  localhost:${args.port.toString()}   (Minecraft 26.3; older clients go through ViaBackwards)
 ${args.op === undefined ? "Op yourself: rerun with --op <name>, or the showcase command is refused.\n" : `${args.op} is an operator.\n`}
 Then, in game:
   1. /rwf admin showcase 8   start a bots-only match (15 s countdown)

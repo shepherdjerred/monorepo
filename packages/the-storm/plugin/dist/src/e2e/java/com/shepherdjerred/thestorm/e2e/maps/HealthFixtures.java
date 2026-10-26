@@ -200,7 +200,7 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
 
   private MatchState live() {
     var current = joinedLive();
-    if (player().isInvulnerable())
+    if (player().isMarkedInvulnerable())
       throw new IllegalStateException("health trial subject became invulnerable");
     return current;
   }
@@ -221,7 +221,7 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
               + ", dead="
               + player().isDead()
               + ", invulnerable="
-              + player().isInvulnerable());
+              + player().isMarkedInvulnerable());
     var currentWorld = player().getWorld().getUID();
     if (world.isPresent() && world.filter(currentWorld::equals).isEmpty())
       throw new IllegalStateException("health case world changed");
@@ -255,7 +255,7 @@ public final class HealthFixtures implements BasicCommand, Listener, AutoCloseab
   private boolean awaitVulnerability() {
     joinedLive();
     var body = player();
-    if (body.isInvulnerable()) {
+    if (body.isMarkedInvulnerable()) {
       if (!awaitingVulnerability)
         setup(
             "awaiting-native-vulnerability",

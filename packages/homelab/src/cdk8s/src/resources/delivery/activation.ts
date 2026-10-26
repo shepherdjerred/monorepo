@@ -9,7 +9,6 @@ export const DELIVERY_CREDENTIAL_ITEMS: {
   staticStorage: string | undefined;
   staticCache: string | undefined;
   workerRegistry: string | undefined;
-  minecraftRegistry: string | undefined;
   platformRegistry: string | undefined;
   platformArgocd: string | undefined;
   forumReader: string | undefined;
@@ -32,7 +31,6 @@ export const DELIVERY_CREDENTIAL_ITEMS: {
   staticStorage: "l5c76kuxgqckt3xc7pmman6l4u",
   staticCache: "la7gkfl5eqtxiiv2hq3qujx2gi",
   workerRegistry: "ngzmppq52zm7sii6ato2mv3sbi",
-  minecraftRegistry: "ngzmppq52zm7sii6ato2mv3sbi",
   platformRegistry: "ngzmppq52zm7sii6ato2mv3sbi",
   platformArgocd: "orpriiyv36sxmybxe3fg4szdxq",
   forumReader: "6x57e27b4jb7fxgyx2nmhhcldq",
@@ -76,7 +74,6 @@ export type DeliveryExecutorActivation = DeliveryActivation & {
   staticStorageItemId?: string;
   staticCacheItemId?: string;
   workerRegistryItemId?: string;
-  minecraftRegistryItemId?: string;
   platformRegistryItemId?: string;
   platformArgocdItemId?: string;
   npmChannelItemId?: string;
@@ -168,12 +165,6 @@ export function deliveryExecutorActivation():
         ...(DELIVERY_CREDENTIAL_ITEMS.platformArgocd === undefined
           ? {}
           : { platformArgocdItemId: DELIVERY_CREDENTIAL_ITEMS.platformArgocd }),
-        ...(DELIVERY_CREDENTIAL_ITEMS.minecraftRegistry === undefined
-          ? {}
-          : {
-              minecraftRegistryItemId:
-                DELIVERY_CREDENTIAL_ITEMS.minecraftRegistry,
-            }),
         ...(DELIVERY_CREDENTIAL_ITEMS.workerRegistry === undefined
           ? {}
           : { workerRegistryItemId: DELIVERY_CREDENTIAL_ITEMS.workerRegistry }),

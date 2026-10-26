@@ -30,10 +30,6 @@ test.each([undefined, "verified-restore", "retained-volume-restart"] as const)(
         }}
       />,
     );
-    if (releaseMode === "retained-volume-restart") expect(html).toBe("");
-    else {
-      expect(html).toContain("Original server recovery");
-      expect(html).toContain("toolkit deploy minecraft recover");
-    }
+    expect(html).toBe("");
   },
 );

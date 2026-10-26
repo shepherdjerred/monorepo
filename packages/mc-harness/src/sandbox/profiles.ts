@@ -118,7 +118,7 @@ function serverEnv(
 const PAPER_MEMORY = { request: "1536Mi", limit: "2Gi" } as const;
 
 /**
- * The `paper` profile: pinned Paper 26.2 with WorldEdit, Citizens (test
+ * The `paper` profile: pinned Paper 26.3 with WorldEdit, Citizens (test
  * actors) and MCBridge, offline mode, peaceful, no spawn protection, RCON on.
  * The bridge listens on all interfaces inside the container; Docker publishes
  * it to host loopback only and the cluster reaches it by port-forward.

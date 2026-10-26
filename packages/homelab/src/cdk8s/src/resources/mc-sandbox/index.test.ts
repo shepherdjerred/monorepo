@@ -163,18 +163,16 @@ describe("mc-sandbox chart", () => {
     expect(podAccess?.verbs).toEqual(["create"]);
   });
 
-  it("lets the harness take and read Velero backups only", () => {
-    expect(rules("velero")).toEqual([
-      {
-        apiGroups: ["velero.io"],
-        resources: ["backups"],
-        verbs: ["create", "get", "list"],
-      },
-    ]);
+  it("does not grant the harness a Velero role", () => {
+    expect(
+      manifests().filter(
+        (manifest) => manifest.metadata.namespace === "velero",
+      ),
+    ).toEqual([]);
   });
 
   it("binds every role to the impersonated service account", () => {
-    for (const namespace of ["mc-sandbox", "minecraft-tsmc", "velero"]) {
+    for (const namespace of ["mc-sandbox", "minecraft-tsmc"]) {
       const binding = z
         .object({
           subjects: z.array(

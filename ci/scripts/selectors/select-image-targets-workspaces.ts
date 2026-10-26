@@ -53,8 +53,6 @@ const PARTIAL_WORKSPACE_SOURCE_INPUTS: Readonly<
     "packages/the-storm": [
       "packages/the-storm/package.json",
       "packages/the-storm/maintenance-status.json",
-      "packages/the-storm/server/*.py",
-      "packages/the-storm/server/restoration-guards.json",
       "packages/the-storm/server/owned/plugins/TheStorm/plot-reconcile.json",
       "packages/the-storm/server/owned/plugins/TheStorm/rwf-archive.json",
     ],

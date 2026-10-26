@@ -15,7 +15,6 @@ import { PROMETHEUS_GATEWAY_PORT } from "@shepherdjerred/homelab/cdk8s/src/resou
 import { createTemporalDomainWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/domain-worker.ts";
 import type { DeliveryExecutorActivation } from "./activation.ts";
 import { createDeliveryJobs } from "./jobs.ts";
-import { createDeliveryMinecraftController } from "./minecraft-controller.ts";
 import { createDeliveryPlatformWorker } from "./platform-worker.ts";
 import { deliveryTrmnlEnvironment } from "./trmnl-bootstrap.ts";
 
@@ -52,12 +51,6 @@ export function createDeliveryWorker(
       },
       serverServiceName,
     );
-  if (activation.minecraftRegistryItemId !== undefined)
-    createDeliveryMinecraftController(chart, {
-      executorItemId: activation.executorItemId,
-      registryItemId: activation.minecraftRegistryItemId,
-      argocdItemId: activation.argocdItemId,
-    });
   const item = new OnePasswordItem(chart, "delivery-executor", {
     spec: { itemPath: vaultItemPath(activation.executorItemId) },
   });
@@ -213,9 +206,6 @@ export function createDeliveryWorker(
         // Worker poller proofs query Prometheus. NetworkPolicy matches the pod
         // port, the authenticated gateway's, not the Service's 9090.
         { to: [ns("prometheus")], ports: [tcp(PROMETHEUS_GATEWAY_PORT)] },
-        ...(activation.minecraftRegistryItemId === undefined
-          ? []
-          : [{ to: [ns("delivery-tsmc-controller")], ports: [tcp(7356)] }]),
       ],
     },
   });

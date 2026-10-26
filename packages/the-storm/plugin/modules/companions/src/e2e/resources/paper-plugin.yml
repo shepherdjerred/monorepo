@@ -1,7 +1,7 @@
 name: TheStormCompanionsE2E
 version: "1.0.0"
 main: com.shepherdjerred.thestorm.companions.adapter.paper.CompanionsE2EPlugin
-api-version: "26.2"
+api-version: "26.3"
 description: Test-only Citizens survival acceptance harness
 dependencies:
   server:

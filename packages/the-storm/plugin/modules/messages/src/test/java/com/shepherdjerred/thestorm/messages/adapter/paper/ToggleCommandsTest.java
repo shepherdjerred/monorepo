@@ -12,6 +12,7 @@ import com.shepherdjerred.thestorm.messages.domain.Channel;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import java.util.Set;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
@@ -161,5 +162,14 @@ final class ToggleCommandsTest {
     public CommandSourceStack withExecutor(Entity executor) {
       throw new UnsupportedOperationException();
     }
+
+    @Override
+    public void sendReply(ComponentLike message) {}
+
+    @Override
+    public void sendSuccess(ComponentLike message, boolean broadcast) {}
+
+    @Override
+    public void sendFailure(ComponentLike message) {}
   }
 }

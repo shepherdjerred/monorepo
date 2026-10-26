@@ -104,6 +104,12 @@ const replication = proxyActivities<DeliveryReplicationActivities>({
  * qualification and dispatch Activities.
  */
 export const DELIVERY_REPLICATION_PATCH = "delivery-dispatch-replication-v1";
+/** Histories that already scheduled preservation keep that command; new runs do not. */
+export const DROP_MINECRAFT_PRESERVATION_PATCH =
+  "drop-minecraft-preservation-v1";
+/** Histories that already scheduled recovery dispatch keep that command; new runs do not. */
+export const DROP_MINECRAFT_RECOVERY_DISPATCH_PATCH =
+  "drop-minecraft-recovery-dispatch-v1";
 
 /**
  * Deployments of model recipes run the step executor (T3). Histories recorded
@@ -201,6 +207,22 @@ type Ready = Extract<
   { status: "ready" }
 >;
 
+/**
+ * Histories recorded before the preservation command was dropped still run it.
+ * New runs restart the retained volume and do not call it.
+ */
+async function preservedMinecraftHistory(
+  deploymentId: string,
+  minecraftUpgrade: boolean,
+) {
+  if (!minecraftUpgrade || patched(DROP_MINECRAFT_PRESERVATION_PATCH)) return;
+  let preservation = await jobs.preserveDeliveryMinecraft(deploymentId);
+  while (preservation.status === "waiting") {
+    await sleep("30 seconds");
+    preservation = await jobs.preserveDeliveryMinecraft(deploymentId);
+  }
+}
+
 /** TRMNL repair, control-plane and platform releases run one Activity each. */
 async function specializedRelease(deploymentId: string, ready: Ready) {
   if (ready.trmnlRepair)
@@ -242,15 +264,7 @@ export async function deliveryDeploymentWorkflow(input: {
     }
     if (ready.workerHosts)
       await jobs.inspectDeliveryWorkerImages(input.deploymentId);
-    if (ready.minecraftUpgrade) {
-      let preservation = await jobs.preserveDeliveryMinecraft(
-        input.deploymentId,
-      );
-      while (preservation.status === "waiting") {
-        await sleep("30 seconds");
-        preservation = await jobs.preserveDeliveryMinecraft(input.deploymentId);
-      }
-    }
+    await preservedMinecraftHistory(input.deploymentId, ready.minecraftUpgrade);
     await mutation.applyDelivery(input.deploymentId);
     if (ready.workerRollout) {
       const plan = await jobs.prepareDeliveryWorker(input.deploymentId);
@@ -393,7 +407,11 @@ export async function deliveryDispatchWorkflow() {
     qualification.qualifyDeliveryBuilds(),
     metadata.dispatchPendingDeliveries(),
     metadata.dispatchDeliveryWorkerRecoveries(),
-    metadata.dispatchDeliveryMinecraftRecoveries(),
+    // Same command slot as histories that already scheduled this activity.
+    // patched() is true only after its marker, so those histories still dispatch.
+    patched(DROP_MINECRAFT_RECOVERY_DISPATCH_PATCH)
+      ? Promise.resolve()
+      : metadata.dispatchDeliveryMinecraftRecoveries(),
     qualification.qualifyDeliveryForumBundles(),
     metadata.dispatchDeliveryForumBaselines(),
     metadata.dispatchDeliveryPlatformRecoveries(),

@@ -386,29 +386,6 @@ describe("live target reads", () => {
     expect(String(json["error"])).toContain('op read "op://');
     expect(String(json["error"])).toContain("unset OP_SERVICE_ACCOUNT_TOKEN");
   });
-
-  it("rechecks restoration leases before file reads despite cached ready status", async () => {
-    const { ctx, cluster, bridge } = await setup();
-    await expect(ctx.files("live")).resolves.toBeDefined();
-    cluster.sts = {
-      ...sts,
-      metadata: {
-        ...sts.metadata,
-        annotations: {
-          ...sts.metadata.annotations,
-          "sjer.red/world-restore-lease": "restore-test",
-        },
-      },
-    };
-    await expect(ctx.files("live")).rejects.toThrow(
-      /world restoration.*restore-test/u,
-    );
-    const { status, json } = await get(ctx, "/files/live/ls?path=world");
-    expect(status).toBe(409);
-    expect(String(json["error"])).toMatch(/world restoration/u);
-    expect(bridge.calls).toEqual([]);
-    expect(cluster.calls.every((args) => args[5] === "get")).toBe(true);
-  });
 });
 
 describe("live target writes", () => {
@@ -512,7 +489,7 @@ describe("live target writes", () => {
     expect(bridge.calls).toEqual([]);
   });
 
-  it("gates dangerous commands on confirmation and a fresh backup", async () => {
+  it("gates dangerous commands on confirmation", async () => {
     const { ctx, bridge, journal } = await setup();
     const unconfirmed = await post(
       ctx,
@@ -532,46 +509,21 @@ describe("live target writes", () => {
     const [entry] = await journal.list();
     expect(entry).toMatchObject({
       tier: 2,
-      backup: { name: "6hourly-backup-20261004181530" },
+      backup: null,
     });
-  });
-
-  it("refuses dangerous commands when no backup is recent", async () => {
-    const { ctx } = await setup({ cluster: { backups: { items: [] } } });
-    const { status, json } = await post(
-      ctx,
-      "/targets/live/command",
-      { command: "stop" },
-      { reason: "maintenance", confirmDangerous: true },
-    );
-    expect(status).toBe(403);
-    expect(String(json["error"])).toMatch(/live backup --wait/u);
   });
 });
 
 describe("live backups and journal", () => {
-  it("starts a Velero backup with the harness manifest", async () => {
-    const { ctx, cluster, journal } = await setup();
+  it("refuses to create a harness Velero backup", async () => {
+    const { ctx, cluster } = await setup();
     const { status, json } = await post(ctx, "/live/backup", {
       reason: "before regen",
       wait: false,
     });
-    expect(status).toBe(200);
-    expect(json).toMatchObject({
-      name: "mc-harness-20261004t200000z",
-      phase: "New",
-      completedAt: null,
-    });
-    const create = cluster.calls.find((args) => args.includes("create"));
-    expect(create?.slice(0, 5)).toEqual([
-      "--context",
-      "ctx",
-      "--as=system:serviceaccount:mc-sandbox:mc-harness",
-      "-n",
-      "velero",
-    ]);
-    const [entry] = await journal.list();
-    expect(entry).toMatchObject({ kind: "backup", reason: "before regen" });
+    expect(status).toBe(410);
+    expect(String(json["error"])).toMatch(/Scheduled Velero backups/u);
+    expect(cluster.calls.some((args) => args.includes("create"))).toBe(false);
   });
 
   it("lists the journal since a time", async () => {

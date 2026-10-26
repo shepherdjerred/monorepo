@@ -23,7 +23,7 @@ export async function stageWorld(
   const copy = path.join(stagingDir, "world");
   await cp(source, copy, { recursive: true });
   await writableWorld(copy);
-  // Paper 26.2 stores named dimensions within this shared save. Docker creates
+  // Paper 26.3 stores named dimensions within this shared save. Docker creates
   // or merges the root directory while the container is stopped.
   await docker(["cp", copy, `${containerId}:/data/`]);
 }

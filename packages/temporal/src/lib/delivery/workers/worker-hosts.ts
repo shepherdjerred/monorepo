@@ -225,11 +225,9 @@ export async function verifyWorkerHosts(
 
 function isDeliveryControlPlanePod(input: unknown): boolean {
   const pod = Pod.parse(input);
-  return [
-    "delivery-worker",
-    "delivery-tsmc-controller",
-    "delivery-platform-worker",
-  ].includes(pod.metadata.labels["component"] ?? "");
+  return ["delivery-worker", "delivery-platform-worker"].includes(
+    pod.metadata.labels["component"] ?? "",
+  );
 }
 
 /** Control-plane roles keep their own PG-selected original artifact throughout ordinary worker ramps. */

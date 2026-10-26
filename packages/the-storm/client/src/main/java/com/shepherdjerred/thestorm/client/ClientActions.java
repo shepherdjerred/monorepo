@@ -10,6 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import tools.jackson.databind.JsonNode;
@@ -353,7 +354,7 @@ final class ClientActions {
     } else if (hit instanceof EntityHitResult entity) {
       mode.interact(player, entity.getEntity(), entity, InteractionHand.MAIN_HAND);
     } else mode.useItem(player, InteractionHand.MAIN_HAND);
-    player.swing(InteractionHand.MAIN_HAND);
+    player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, false);
     return "Interaction sent";
   }
 }

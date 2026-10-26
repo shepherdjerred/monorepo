@@ -14,12 +14,6 @@ import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
-import {
-  RESTORE_LEASE_ANNOTATION,
-  RESTORE_PHASE_ANNOTATION,
-  RESTORE_IMAGE_ANNOTATION,
-  RESTORE_ACCESS_SELECTOR,
-} from "@shepherdjerred/homelab/cdk8s/src/resources/minecraft-restoration-guard.ts";
 import { applicationProject } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 const NAMESPACE = "minecraft-tsmc";
@@ -39,7 +33,7 @@ const MC_BRIDGE_PORT = 25_580;
  * it). It deliberately does not follow the catalog's `paper` pin, which moves
  * the other servers.
  */
-export const THE_STORM_PAPER_VERSION = "26.2";
+export const THE_STORM_PAPER_VERSION = "26.3";
 
 /** The mirror is qualified by CI; source ownership switches only at explicit cutover. */
 export function minecraftChartRepository(
@@ -313,17 +307,12 @@ export function createMinecraftTsmcApp(chart: Chart) {
         server: "https://kubernetes.default.svc",
         namespace: "minecraft-tsmc",
       },
-      // ArgoCD enforces one replica. Admission guards reject reconciliation
-      // while an exclusive maintenance lock requires zero replicas.
       // Ignore Service fields that Kubernetes fills with defaults (chart templates null/empty values)
       ignoreDifferences: [
         {
           group: "apps",
           kind: "StatefulSet",
           jsonPointers: [
-            `/metadata/annotations/${RESTORE_LEASE_ANNOTATION.replaceAll("/", "~1")}`,
-            `/metadata/annotations/${RESTORE_PHASE_ANNOTATION.replaceAll("/", "~1")}`,
-            `/metadata/annotations/${RESTORE_IMAGE_ANNOTATION.replaceAll("/", "~1")}`,
             "/spec/podManagementPolicy",
             "/spec/revisionHistoryLimit",
             "/spec/persistentVolumeClaimRetentionPolicy",
@@ -338,8 +327,6 @@ export function createMinecraftTsmcApp(chart: Chart) {
           kind: "Service",
           jsonPointers: [
             "/metadata/annotations/mc-router.itzg.me~1autoScaleUp",
-            `/metadata/annotations/${RESTORE_LEASE_ANNOTATION.replaceAll("/", "~1")}`,
-            `/spec/selector/${RESTORE_ACCESS_SELECTOR.replaceAll("/", "~1")}`,
             "/spec/clusterIP",
             "/spec/clusterIPs",
             "/spec/ipFamilies",

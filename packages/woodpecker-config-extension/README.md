@@ -411,6 +411,10 @@ The Paper E2E service loads the staged workspace plugin tree directly through
 `EXTRA_ARGS=--plugins .../sidecar-plugins` and copies Bukkit configuration through
 `COPY_CONFIG_SRC` into `/data`. The preparation step assigns the plugin tree and
 shared log directory to Paper's UID/GID 1000 before writing its startup marker.
+Before `/start`, the service reads the Paper pin from
+`packages/the-storm/server/plugins.json` and exports `VERSION` and
+`PAPER_BUILD`. That read takes effect when this image is the one Woodpecker
+is running.
 The runner reads databases and recordings from the same `TheStorm` folder named
 by `STORM_E2E_STORM_DATA_DIR`. These paths are part of the service contract; an
 empty plugin directory or unreadable shared file is a fixture failure.

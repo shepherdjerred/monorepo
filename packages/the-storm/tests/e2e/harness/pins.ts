@@ -12,7 +12,7 @@ import { z } from "zod";
 // @shepherdjerred/mc-harness; this file pins only what the Mineflayer suite
 // adds on top: the client version and the Via protocol bridge.
 
-// mineflayer 4.39.0 tops out at 26.1; ViaBackwards bridges 26.2 down to it.
+// mineflayer 4.39.0 tops out at 26.1; ViaBackwards bridges 26.3 down to it.
 export const botVersion = "26.1";
 
 // The protocol the bot speaks, read from the pinned minecraft-data so a data
@@ -27,17 +27,17 @@ export const thirdPartyPlugins: readonly PluginPin[] = z
     grim,
     {
       name: "WorldEdit",
-      version: "7.4.5",
-      url: "https://cdn.modrinth.com/data/1u6JkXh5/versions/F5ea2ov3/worldedit-bukkit-7.4.5.jar",
+      version: "7.4.6",
+      url: "https://cdn.modrinth.com/data/1u6JkXh5/versions/YFnqiUlL/worldedit-bukkit-7.4.6.jar",
       sha256:
-        "e5696a6d064b9969437a8888be91b0941148a28e0c3736de1554a00254a5d142",
+        "e0ce67d870ad1fef8a40dd9d7926360caf3bb44722438545d6b20b55f82a0c91",
     },
     {
       name: "CoreProtect",
-      version: "24.1",
-      url: "https://cdn.modrinth.com/data/Lu3KuzdV/versions/3sehX6Sg/CoreProtect-CE-24.1.jar",
+      version: "25.1",
+      url: "https://public.sjer.red/the-storm/plugins/CoreProtect-25.1.jar",
       sha256:
-        "a2acef7c06ef201355cef07d591a6055dfed358ad768faaaaaf4e276865ecc97",
+        "89be1353b9fca3b86ce3dd93c8af78262b2be91f1b53feca8d9018c45e877e5d",
     },
     {
       name: "Citizens",
@@ -48,17 +48,17 @@ export const thirdPartyPlugins: readonly PluginPin[] = z
     },
     {
       name: "ViaVersion",
-      version: "5.12.0",
-      url: "https://cdn.modrinth.com/data/P1OZGk5p/versions/FaishMnD/ViaVersion-5.12.0.jar",
+      version: "5.12.1",
+      url: "https://cdn.modrinth.com/data/P1OZGk5p/versions/5WgnasGG/ViaVersion-5.12.1.jar",
       sha256:
-        "c4d512fa9760fa41d17abaedde12aa1f4c9bde920d0a992fe0fc016962f126be",
+        "551265afd892e78bb869162e08b4fdd151c518e245fce60af36b0603ad695d76",
     },
     {
       name: "ViaBackwards",
-      version: "5.12.0",
-      url: "https://cdn.modrinth.com/data/NpvuJQoq/versions/SxGhdsPK/ViaBackwards-5.12.0.jar",
+      version: "5.12.1",
+      url: "https://cdn.modrinth.com/data/NpvuJQoq/versions/dWw67APC/ViaBackwards-5.12.1.jar",
       sha256:
-        "f902f7da7eb99e8bfaf461f80283c4e2750b7d9727e6b508ea4bb9163f55b1db",
+        "dd72f7a459cbf1ea7862781dac92ed0ba738aa3cb3b7955e716ba379889d612a",
     },
     // TheStorm's required plugins, shared with the mc-harness storm-dev profile.
     luckPerms,

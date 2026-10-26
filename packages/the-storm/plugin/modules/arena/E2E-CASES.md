@@ -50,7 +50,7 @@ crafting grids) on its own. These cases need the real server in
 11. Explosive sheep (wave 5) run at the nearest fighter and explode without
     breaking blocks.
 12. Sulfur cubes (wave 55) hunt and ignite near a fighter. Confirm what
-    `SulfurCube#ignite` does in 26.2; if it does not explode, the archetype
+    `SulfurCube#ignite` does in 26.3; if it does not explode, the archetype
     needs an explosion path like the sheep.
 13. Rainbow sheep (wave 65) follow fighters and never attack.
 

@@ -6,13 +6,13 @@ export const serverImage =
   "itzg/minecraft-server:2026.9.1-java25@sha256:e8640538dac5d54c2838d57fa9641e735ad0cf2b71fb0e8a68da3b542a315749";
 
 export const paper = {
-  version: "26.2",
-  build: 129,
-  // From https://fill.papermc.io/v3/projects/paper/versions/26.2/builds (channel STABLE).
-  url: "https://fill-data.papermc.io/v1/objects/b1d8f6bfa1b6101fa8e947b53041cb3bdf5540e7b83b6547ca19ba7edefeb083/paper-26.2-129.jar",
-  sha256: "b1d8f6bfa1b6101fa8e947b53041cb3bdf5540e7b83b6547ca19ba7edefeb083",
-  // Server protocol reported by ViaVersion on boot: "detected server version: 26.2 (776)".
-  protocol: 776,
+  version: "26.3",
+  build: 223,
+  // From https://fill.papermc.io/v3/projects/paper/versions/26.3/builds (channel STABLE).
+  url: "https://fill-data.papermc.io/v1/objects/f8e684a4fef2a8b46d03aac049b49d59275e9ce5367dba7c6075cb5780f38470/paper-26.3-223.jar",
+  sha256: "f8e684a4fef2a8b46d03aac049b49d59275e9ce5367dba7c6075cb5780f38470",
+  // https://github.com/PrismarineJS/minecraft-data protocolVersions.json: 26.3 is 777.
+  protocol: 777,
 } as const;
 
 export const PluginPinSchema = z.object({
@@ -26,13 +26,13 @@ export type PluginPin = z.infer<typeof PluginPinSchema>;
 /** Same build the production the-storm-server image ships (server/plugins.json). */
 export const worldEdit: PluginPin = PluginPinSchema.parse({
   name: "WorldEdit",
-  version: "7.4.5",
-  url: "https://cdn.modrinth.com/data/1u6JkXh5/versions/F5ea2ov3/worldedit-bukkit-7.4.5.jar",
-  sha256: "e5696a6d064b9969437a8888be91b0941148a28e0c3736de1554a00254a5d142",
+  version: "7.4.6",
+  url: "https://cdn.modrinth.com/data/1u6JkXh5/versions/YFnqiUlL/worldedit-bukkit-7.4.6.jar",
+  sha256: "e0ce67d870ad1fef8a40dd9d7926360caf3bb44722438545d6b20b55f82a0c91",
 });
 
 /**
- * Citizens build for Paper 26.2: MCBridge's test actors (/v1/actors) are
+ * Citizens build for Paper 26.3: MCBridge's test actors (/v1/actors) are
  * Citizens player NPCs. Matches the API the bridge compiles against
  * (citizens-main 2.0.44 in the-storm's version catalog).
  */
@@ -60,9 +60,9 @@ export const luckPerms: PluginPin = PluginPinSchema.parse({
  */
 export const coreProtect: PluginPin = PluginPinSchema.parse({
   name: "CoreProtect",
-  version: "24.1",
-  url: "https://cdn.modrinth.com/data/Lu3KuzdV/versions/3sehX6Sg/CoreProtect-CE-24.1.jar",
-  sha256: "a2acef7c06ef201355cef07d591a6055dfed358ad768faaaaaf4e276865ecc97",
+  version: "25.1",
+  url: "https://public.sjer.red/the-storm/plugins/CoreProtect-25.1.jar",
+  sha256: "89be1353b9fca3b86ce3dd93c8af78262b2be91f1b53feca8d9018c45e877e5d",
 });
 
 /**
@@ -71,15 +71,15 @@ export const coreProtect: PluginPin = PluginPinSchema.parse({
  */
 export const multiverseCore: PluginPin = PluginPinSchema.parse({
   name: "Multiverse-Core",
-  version: "5.8.0",
-  url: "https://cdn.modrinth.com/data/3wmN97b8/versions/bzFXz39N/multiverse-core-5.8.0.jar",
-  sha256: "c527d9e21a25a71cb2442ac1f1bfd3a8a1efb7d89e0cb0e6a94f600304fde6c1",
+  version: "5.8.1",
+  url: "https://cdn.modrinth.com/data/3wmN97b8/versions/YZ2Ji4IS/multiverse-core-5.8.1.jar",
+  sha256: "bc3f34e2d747fdf024f44868747bb016b08fa11d98ccb4ffcac958f083151a83",
 });
 
-/** Exact 26.2 build required by TheStorm's safety module; corrections are separately gated. */
+/** Exact 26.3 build required by TheStorm's safety module; corrections are separately gated. */
 export const grim: PluginPin = PluginPinSchema.parse({
   name: "GrimAC",
-  version: "2.3.74-3a9cdf1",
-  url: "https://cdn.modrinth.com/data/LJNGWSvH/versions/QyX6GKLl/grimac-bukkit-2.3.74-3a9cdf1.jar",
-  sha256: "218e43326553f33e678edfd03b96c3e7671f8818cdbc7b97b298c7714b61f41f",
+  version: "2.3.75-d8b8ae4",
+  url: "https://cdn.modrinth.com/data/LJNGWSvH/versions/clrLeCYp/grimac-bukkit-2.3.75-d8b8ae4.jar",
+  sha256: "9693c1d7ce3e1a4c4288966d6311a6a9f2c20cbf2b3e25462c8f6ecc36310403",
 });

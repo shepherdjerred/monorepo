@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.rwfbots.adapter.citizens;
 
+import com.shepherdjerred.thestorm.core.paper.Invulnerability;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -136,7 +137,7 @@ record BodyState(
     static Flags capture(Player player) {
       return new Flags(
           player.getGameMode(),
-          player.isInvulnerable(),
+          Invulnerability.marked(player),
           player.isCollidable(),
           player.hasGravity(),
           player.isInvisible(),

@@ -146,22 +146,6 @@ expect_bedrock() { # label: first-boot config and generated Floodgate key exist
     fail "$1: Floodgate did not create its runtime key"
 }
 
-# An existing volume must fail before any content or progression mutation.
-new_volume
-on_volume bash -c 'mkdir -p /data/world /data/plugins/TheStorm/npcs; printf preserved-world > /data/world/level.dat; printf preserved-content > /data/plugins/TheStorm/npcs/unowned.yml'
-if on_volume /usr/local/bin/storm-entrypoint >"$logs/unprepared.log" 2>&1; then
-  fail "unprepared: existing volume was accepted without a verified restore"
-fi
-grep -q 'existing data requires archive-progression.py' "$logs/unprepared.log" ||
-  fail "unprepared: failed outside the preparation gate"
-[[ $(on_volume cat /data/world/level.dat) == preserved-world ]] ||
-  fail "unprepared: world data changed"
-[[ $(on_volume cat /data/plugins/TheStorm/npcs/unowned.yml) == preserved-content ]] ||
-  fail "unprepared: content changed before preparation"
-on_volume test ! -e /data/.the-storm-progression-v1.json ||
-  fail "unprepared: preparation marker was created"
-echo '[unprepared] refused activation and preserved existing files'
-
 # ── fresh ────────────────────────────────────────────────────────────────────
 new_volume
 boot fresh-first
@@ -219,7 +203,7 @@ on_volume grep -qxF plugins/Essentials/spawn.yml /data/.the-storm-removed ||
 on_volume test -f /data/plugins/DynamicShop/Shop/SampleShop.yml ||
   fail "legacy: runtime shop data outside remove.list was deleted"
 on_volume grep -q '^_version: 31$' /data/config/paper-global.yml ||
-  fail "legacy: paper-global.yml was not regenerated from the 26.2 defaults"
+  fail "legacy: paper-global.yml was not regenerated from the 26.3 defaults"
 expect_patched legacy
 expect_bedrock legacy
 

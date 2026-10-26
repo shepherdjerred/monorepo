@@ -1,7 +1,7 @@
 /**
  * Read-only view of live minecraft-tsmc from the cluster: the StatefulSet,
- * its pod, and the world-restoration lease. The harness never scales, patches
- * or annotates anything; an asleep or leased server is a refusal, not a wake.
+ * its pod. The harness never scales, patches, or annotates anything; an
+ * asleep server is a refusal, not a wake.
  */
 import { z } from "zod";
 import {
@@ -15,8 +15,6 @@ export const LIVE_POD = "minecraft-tsmc-0";
 /** The itzg chart names the server container after the release fullname. */
 export const LIVE_CONTAINER = "minecraft-tsmc";
 export const LIVE_BRIDGE_PORT = 25_580;
-export const WORLD_RESTORE_LEASE_ANNOTATION = "sjer.red/world-restore-lease";
-export const VELERO_NAMESPACE = "velero";
 
 /** kubectl target for live reads: tsmc's namespace as the scoped ServiceAccount. */
 export function liveKubeTarget(context: string, namespace = LIVE_NAMESPACE) {
@@ -57,7 +55,6 @@ export type LiveClusterStatus = {
   podPhase: string | null;
   podReady: boolean;
   image: string | null;
-  worldRestoreLease: string | null;
 };
 
 export function parseLiveStatus(
@@ -76,18 +73,7 @@ export function parseLiveStatus(
     podPhase: parsedPod?.status?.phase ?? null,
     podReady: ready,
     image: sts.spec.template.spec.containers[0]?.image ?? null,
-    worldRestoreLease:
-      sts.metadata.annotations?.[WORLD_RESTORE_LEASE_ANNOTATION] ?? null,
   };
-}
-
-/** Restoration leases block both bridge operations and direct file reads. */
-export function restorationRefusal(
-  status: Pick<LiveClusterStatus, "worldRestoreLease">,
-): string | null {
-  return status.worldRestoreLease === null
-    ? null
-    : `world restoration holds minecraft-tsmc (request ${status.worldRestoreLease}); use its private acceptance procedure`;
 }
 
 /**
@@ -95,10 +81,6 @@ export function restorationRefusal(
  * deliberately out of scope: ask the user to join it (mc-router wakes it).
  */
 export function liveRefusal(status: LiveClusterStatus): string | null {
-  const restoration = restorationRefusal(status);
-  if (restoration !== null) {
-    return restoration;
-  }
   if (status.replicas === 0) {
     return "minecraft-tsmc is asleep (scaled to 0). Ask the user to join ts-mc.net so mc-router wakes it; the harness never scales the server";
   }

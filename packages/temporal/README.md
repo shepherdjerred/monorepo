@@ -523,37 +523,11 @@ step of another sub-recipe, fails closed.
 brokered operator credentials when Activity workers are unavailable; it never
 resumes effects or accepts the failed release.
 
-TSMC's explicit `retained-volume-restart` pipeline mode skips the preservation
-Activity and uses normal owned Argo reconciliation and exact Ready image checks
-against the retained world PVC. Scheduled backups remain independent. The
-`verified-restore` mode and older pipelines without a mode keep the full
-preservation path; existing Workflow histories keep their recorded branch.
-
-TSMC preservation records an original-source snapshot in the controller's private
-durable journal before returning its native Pod receipt. A failed pre-selection
-deployment can request a separate admin Minecraft recovery intent, including
-after preservation completed or the receipt callback was lost. Recovery may
-reopen the untouched original and clean the exact validation copy. The API then
-independently reads the journal report and Argo source, checks native volume,
-Pod and route identities, and releases only the same quarantined generation.
-Missing original evidence or an admitted `reconcile` stage blocks this path.
-The dedicated controller receives the existing Argo credential solely for its
-original-abort managed-resource read. Its closed Python child environment passes
-that credential without inheriting executor or vault credentials.
-Verification failures report only a fixed source/restored phase, exception class,
-producer exit and classified stream error. Raw child stderr stays bounded in
-memory; world paths, contents and hashes never enter the failed Activity message.
-
-`scripts/rollout/minecraft-delivery-recovery.ts` invokes that same controller and
-independent API verification during a Workflow-worker outage. First inspect the
-intent with `toolkit deploy minecraft recovery <INTENT_ID> --json`, then keep an
-explicit `kubectl --context admin@torvalds -n delivery-tsmc-controller
-port-forward pod/delivery-tsmc-controller-0 17356:7356 --address 127.0.0.1` in a
-separate terminal. Run `bun scripts/rollout/minecraft-delivery-recovery.ts --intent
-<INTENT_ID> --url <DELIVERY_URL> --controller-url http://127.0.0.1:17356` from this
-package. The command brokers only the registered executor credential, requires a
-loopback transport, and reports structured settlement without changing the failed
-deployment result. Stop that exact port-forward after readback.
+TSMC releases restart the retained world PVC through owned Argo reconciliation
+and exact Ready image checks. Scheduled Velero backups are the only backup.
+Open Workflow histories that already scheduled preservation or recovery
+dispatch keep those commands; the activities fail closed and do not take or
+restore a volume.
 
 The cutover uses one coordinated maintenance window: stop legacy CI release
 authority, bootstrap the API and independent control-plane chart, register the

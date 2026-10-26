@@ -2,12 +2,12 @@
  * The live write guard: pure decisions, no I/O. `assessLiveWrite` turns an
  * operation into a tier and the box it changes (refusing shapes it cannot
  * bound or undo); `authorizeLiveWrite` checks the reason, players near the
- * box, backup freshness and confirmations against that assessment.
+ * box and confirmations against that assessment.
  *
  * Tiers: 0 = journal only (commands, actor moves); 1 = block writes, which
  * get a bridge snapshot first so `live undo` can restore them; 2 = large
- * regions and dangerous commands, which also need a recent Velero backup
- * (and `--confirm-dangerous` for dangerous ones).
+ * regions and dangerous commands. Dangerous commands need
+ * `--confirm-dangerous`. Scheduled Velero backups are the only backup.
  */
 import type { BlockPos, Box, Player } from "#protocol/bridge.ts";
 import type { LiveTier, LiveWriteFlags } from "#protocol/live.ts";
@@ -24,10 +24,8 @@ export type LiveGuardConfig = {
   writes: boolean;
   /** Worlds block writes may touch. */
   worlds: readonly string[];
-  /** Block writes larger than this need a recent backup (tier 2). */
+  /** Block writes larger than this are tier 2. */
   maxRegionVolume: number;
-  /** A tier-2 write needs a completed backup at most this old. */
-  backupMaxAgeHours: number;
   /** Humans within this many blocks of the box need `--allow-players`. */
   nearPlayerRadius: number;
   /** Snapshot limit; larger block writes could not be undone and are refused. */
@@ -416,8 +414,6 @@ export type LiveAuthorizationInput = {
   assessment: LiveAssessment;
   flags: LiveWriteFlags;
   players: readonly Player[];
-  /** Completion time of the newest usable Velero backup, if any. */
-  latestBackupAt: Date | null;
   now: Date;
   config: LiveGuardConfig;
 };
@@ -502,19 +498,8 @@ export function authorizeLiveWrite(
   }
   if (assessment.dangerous && flags.confirmDangerous !== true) {
     throw new LiveGuardRefusal(
-      `"${assessment.summary}" is dangerous on the live server; pass --confirm-dangerous after checking a recent backup`,
+      `"${assessment.summary}" is dangerous on the live server; pass --confirm-dangerous`,
     );
-  }
-  if (assessment.tier === 2) {
-    const maxAgeMs = config.backupMaxAgeHours * 60 * 60 * 1000;
-    if (
-      input.latestBackupAt === null ||
-      input.now.getTime() - input.latestBackupAt.getTime() > maxAgeMs
-    ) {
-      throw new LiveGuardRefusal(
-        `tier-2 write ("${assessment.summary}") needs a completed Velero backup from the last ${config.backupMaxAgeHours.toString()}h; run toolkit mc live backup --wait --reason "<why>"`,
-      );
-    }
   }
   return { reason, humansOnline: humans.map((player) => player.name) };
 }

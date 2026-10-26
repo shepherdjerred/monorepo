@@ -122,9 +122,6 @@ function context(): {
       kubectl: new Kubectl(liveKubeTarget("test"), () =>
         Promise.reject(new Error("no cluster in router tests")),
       ),
-      velero: new Kubectl(liveKubeTarget("test", "velero"), () =>
-        Promise.reject(new Error("no cluster in router tests")),
-      ),
       // Router tests never reach live tsmc, so the daemon has no bridge token.
       token: () => "",
       config: () => Promise.reject(new Error("unused")),

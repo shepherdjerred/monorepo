@@ -1,9 +1,9 @@
 /**
  * The live minecraft-tsmc target. Reaches MCBridge on the server pod through
  * a supervised `kubectl port-forward` as the scoped mc-harness ServiceAccount,
- * refuses while the server is asleep or held by world restoration, and runs
- * every write through the guard: reason, players, backups, a snapshot first
- * for block writes, and one journal line per write.
+ * refuses while the server is asleep, and runs every write through the guard:
+ * reason, players, a snapshot first for block writes, and one journal line
+ * per write.
  *
  * The bridge token comes only from the daemon's MC_BRIDGE_TOKEN environment
  * variable; it is never logged, journaled or returned.
@@ -31,7 +31,6 @@ import {
   type Spawn,
 } from "#src/files/data-files.ts";
 import type { Target } from "#src/target.ts";
-import { LiveBackups } from "./backup.ts";
 import {
   type LiveGuardConfig,
   type LiveWriteOp,
@@ -46,7 +45,6 @@ import {
   type LiveClusterStatus,
   liveRefusal,
   readLiveStatus,
-  restorationRefusal,
 } from "./status.ts";
 
 /** A refusal the daemon reports as a client error with this status. */
@@ -63,8 +61,6 @@ export class LiveError extends Error {
 export type LiveServiceOptions = {
   /** kubectl for minecraft-tsmc as the mc-harness ServiceAccount. */
   kubectl: Kubectl;
-  /** kubectl for the velero namespace as the same ServiceAccount. */
-  velero: Kubectl;
   token: () => string | undefined;
   config: () => Promise<LiveGuardConfig>;
   journal?: LiveJournal;
@@ -87,12 +83,10 @@ export class LiveService {
   private port: number | null = null;
   private status: { value: LiveClusterStatus; at: number } | null = null;
   private readonly journal: LiveJournal;
-  private readonly backups: LiveBackups;
   private readonly now: () => Date;
 
   constructor(private readonly options: LiveServiceOptions) {
     this.journal = options.journal ?? new LiveJournal();
-    this.backups = new LiveBackups(options.velero);
     this.now = options.now ?? (() => new Date());
   }
 
@@ -225,15 +219,10 @@ export class LiveService {
   }
 
   /**
-   * tsmc's /data for read-only pulls. Needs a running pod but no bridge
-   * token; restoration leases block reads.
+   * tsmc's /data for read-only pulls. Needs a running pod but no bridge token.
    */
   async files(): Promise<DataFiles> {
     const status = await this.clusterStatus(true);
-    const restoration = restorationRefusal(status);
-    if (restoration !== null) {
-      throw new LiveError(restoration);
-    }
     if (!status.podReady) {
       throw new LiveError(
         `live tsmc has no ready pod (phase ${status.podPhase ?? "none"}); it is probably asleep`,
@@ -286,15 +275,12 @@ export class LiveService {
     if (assessment.read) {
       return run(await this.target());
     }
-    // Writes always re-read the cluster: a restoration may have leased it.
     const target = await this.target(true);
     const players = await this.players(target);
-    const latest = assessment.tier === 2 ? await this.backups.latest() : null;
     const authorization = authorizeLiveWrite({
       assessment,
       flags,
       players,
-      latestBackupAt: latest?.completedAt ?? null,
       now: this.now(),
       config,
     });
@@ -310,13 +296,7 @@ export class LiveService {
       world: assessment.world,
       box: assessment.box,
       humansOnline: authorization.humansOnline,
-      backup:
-        latest === null
-          ? null
-          : {
-              name: latest.name,
-              completedAt: latest.completedAt.toISOString(),
-            },
+      backup: null,
       snapshotId,
       undoes: null,
     };
@@ -344,37 +324,11 @@ export class LiveService {
     return snapshot.id;
   }
 
-  async backup(reason: string, wait: boolean): Promise<LiveBackupResponse> {
-    const name = await this.backups.create(this.now());
-    let completedAt: Date | null = null;
-    let phase = "New";
-    if (wait) {
-      completedAt = await this.backups.wait(name);
-      phase = "Completed";
-    }
-    const entry = await this.entry({
-      kind: "backup",
-      reason,
-      op: { kind: "backup", summary: `Velero backup ${name}` },
-      tier: 0,
-      world: null,
-      box: null,
-      humansOnline: [],
-      backup:
-        completedAt === null
-          ? null
-          : { name, completedAt: completedAt.toISOString() },
-      snapshotId: null,
-      result: "ok",
-      error: null,
-      undoes: null,
-    });
-    return {
-      name,
-      phase,
-      completedAt: completedAt?.toISOString() ?? null,
-      journalId: entry.id,
-    };
+  backup(_reason: string, _wait: boolean): Promise<LiveBackupResponse> {
+    throw new LiveError(
+      "Harness backups were removed. Scheduled Velero backups are the only backup.",
+      410,
+    );
   }
 
   async journalEntries(since?: Date): Promise<LiveJournalEntry[]> {
@@ -415,7 +369,6 @@ export class LiveService {
       assessment,
       flags,
       players: await this.players(target),
-      latestBackupAt: null,
       now: this.now(),
       config,
     });

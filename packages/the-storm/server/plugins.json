@@ -1,39 +1,39 @@
 {
   "paper": {
-    "version": "26.2-129",
-    "url": "https://fill-data.papermc.io/v1/objects/b1d8f6bfa1b6101fa8e947b53041cb3bdf5540e7b83b6547ca19ba7edefeb083/paper-26.2-129.jar",
-    "sha256": "b1d8f6bfa1b6101fa8e947b53041cb3bdf5540e7b83b6547ca19ba7edefeb083",
-    "file": "paper-26.2-129.jar"
+    "version": "26.3-223",
+    "url": "https://fill-data.papermc.io/v1/objects/f8e684a4fef2a8b46d03aac049b49d59275e9ce5367dba7c6075cb5780f38470/paper-26.3-223.jar",
+    "sha256": "f8e684a4fef2a8b46d03aac049b49d59275e9ce5367dba7c6075cb5780f38470",
+    "file": "paper-26.3-223.jar"
   },
   "paperDefaults": [
     {
-      "url": "https://raw.githubusercontent.com/Shonz1/minecraft-default-configs/6aacbe6355508991ad47b07de8dc7ef1c49430a4/26.2/paper-global.yml",
-      "sha256": "0670a9c4367afbcb841898a4754ba6eba0dba6367c4cb159269f0957d25ae762",
-      "file": "26.2/paper-global.yml"
+      "url": "https://raw.githubusercontent.com/Shonz1/minecraft-default-configs/6aacbe6355508991ad47b07de8dc7ef1c49430a4/26.3/paper-global.yml",
+      "sha256": "95c2f8cce190f303d5fd1c249cd68095574211e07248b4f40868e6dc0b3bdbfa",
+      "file": "26.3/paper-global.yml"
     },
     {
-      "url": "https://raw.githubusercontent.com/Shonz1/minecraft-default-configs/6aacbe6355508991ad47b07de8dc7ef1c49430a4/26.2/paper-world-defaults.yml",
+      "url": "https://raw.githubusercontent.com/Shonz1/minecraft-default-configs/6aacbe6355508991ad47b07de8dc7ef1c49430a4/26.3/paper-world-defaults.yml",
       "sha256": "abf93aa72a8498289b81a563f5aef57b684198efb85973f26757ab6353b4acfe",
-      "file": "26.2/paper-world-defaults.yml"
+      "file": "26.3/paper-world-defaults.yml"
     },
     {
-      "url": "https://raw.githubusercontent.com/Shonz1/minecraft-default-configs/6aacbe6355508991ad47b07de8dc7ef1c49430a4/26.2/bukkit.yml",
+      "url": "https://raw.githubusercontent.com/Shonz1/minecraft-default-configs/6aacbe6355508991ad47b07de8dc7ef1c49430a4/26.3/bukkit.yml",
       "sha256": "a72396bbd1b69636b63f990995ed1ce31df7183af275868b4d638071fd4c866a",
-      "file": "26.2/bukkit.yml"
+      "file": "26.3/bukkit.yml"
     },
     {
-      "url": "https://raw.githubusercontent.com/Shonz1/minecraft-default-configs/6aacbe6355508991ad47b07de8dc7ef1c49430a4/26.2/spigot.yml",
-      "sha256": "85d3a58f6b2e2e6dc211ff1a298374de837bf5558776ed9712ff3d2cecf1a11e",
-      "file": "26.2/spigot.yml"
+      "url": "https://raw.githubusercontent.com/Shonz1/minecraft-default-configs/6aacbe6355508991ad47b07de8dc7ef1c49430a4/26.3/spigot.yml",
+      "sha256": "820c68e61d46986fc7aba7516866c7e288502d0df95a5166b60b7425819f9586",
+      "file": "26.3/spigot.yml"
     }
   ],
   "plugins": [
     {
       "name": "GrimAC",
-      "version": "2.3.74-3a9cdf1",
-      "url": "https://cdn.modrinth.com/data/LJNGWSvH/versions/QyX6GKLl/grimac-bukkit-2.3.74-3a9cdf1.jar",
-      "sha256": "218e43326553f33e678edfd03b96c3e7671f8818cdbc7b97b298c7714b61f41f",
-      "file": "GrimAC-2.3.74-3a9cdf1.jar"
+      "version": "2.3.75-d8b8ae4",
+      "url": "https://cdn.modrinth.com/data/LJNGWSvH/versions/clrLeCYp/grimac-bukkit-2.3.75-d8b8ae4.jar",
+      "sha256": "9693c1d7ce3e1a4c4288966d6311a6a9f2c20cbf2b3e25462c8f6ecc36310403",
+      "file": "GrimAC-2.3.75-d8b8ae4.jar"
     },
     {
       "name": "Citizens",
@@ -44,10 +44,10 @@
     },
     {
       "name": "BlueMap",
-      "version": "5.27",
-      "url": "https://github.com/BlueMap-Minecraft/BlueMap/releases/download/v5.27/bluemap-5.27-paper.jar",
-      "sha256": "0e479c9a75de4673e7dcdbc766e3fa9e76245c87341253466b89a6a251e3510b",
-      "file": "BlueMap-5.27.jar"
+      "version": "5.29",
+      "url": "https://github.com/BlueMap-Minecraft/BlueMap/releases/download/v5.29/bluemap-5.29-paper.jar",
+      "sha256": "7bf475936c26107d476c63151c76d5b49e865eebeada12c9e7d92155de877b9f",
+      "file": "BlueMap-5.29.jar"
     },
     {
       "name": "Chunky",
@@ -58,10 +58,10 @@
     },
     {
       "name": "CoreProtect",
-      "version": "24.1",
-      "url": "https://cdn.modrinth.com/data/Lu3KuzdV/versions/3sehX6Sg/CoreProtect-CE-24.1.jar",
-      "sha256": "a2acef7c06ef201355cef07d591a6055dfed358ad768faaaaaf4e276865ecc97",
-      "file": "CoreProtect-24.1.jar"
+      "version": "25.1",
+      "url": "https://public.sjer.red/the-storm/plugins/CoreProtect-25.1.jar",
+      "sha256": "89be1353b9fca3b86ce3dd93c8af78262b2be91f1b53feca8d9018c45e877e5d",
+      "file": "CoreProtect-25.1.jar"
     },
     {
       "name": "floodgate",
@@ -72,10 +72,10 @@
     },
     {
       "name": "Geyser-Spigot",
-      "version": "2.11.3 build 1247",
-      "url": "https://download.geysermc.org/v2/projects/geyser/versions/2.11.3/builds/1247/downloads/spigot",
-      "sha256": "6fed2d9711e2db3c365508ec10db36d06a0199abd226159d23d57f82662fd7a6",
-      "file": "Geyser-Spigot-2.11.3-b1247.jar"
+      "version": "2.12.0 build 1271",
+      "url": "https://download.geysermc.org/v2/projects/geyser/versions/2.12.0/builds/1271/downloads/spigot",
+      "sha256": "dd2ad0e4e79cedfce492c4e527a93adf4f9dfa93fc09ea05e6eaf18ac5ea079e",
+      "file": "Geyser-Spigot-2.12.0-b1271.jar"
     },
     {
       "name": "LuckPerms",
@@ -86,31 +86,31 @@
     },
     {
       "name": "Multiverse-Core",
-      "version": "5.8.0",
-      "url": "https://cdn.modrinth.com/data/3wmN97b8/versions/bzFXz39N/multiverse-core-5.8.0.jar",
-      "sha256": "c527d9e21a25a71cb2442ac1f1bfd3a8a1efb7d89e0cb0e6a94f600304fde6c1",
-      "file": "Multiverse-Core-5.8.0.jar"
+      "version": "5.8.1",
+      "url": "https://cdn.modrinth.com/data/3wmN97b8/versions/YZ2Ji4IS/multiverse-core-5.8.1.jar",
+      "sha256": "bc3f34e2d747fdf024f44868747bb016b08fa11d98ccb4ffcac958f083151a83",
+      "file": "Multiverse-Core-5.8.1.jar"
     },
     {
       "name": "ViaBackwards",
-      "version": "5.12.0",
-      "url": "https://cdn.modrinth.com/data/NpvuJQoq/versions/SxGhdsPK/ViaBackwards-5.12.0.jar",
-      "sha256": "f902f7da7eb99e8bfaf461f80283c4e2750b7d9727e6b508ea4bb9163f55b1db",
-      "file": "ViaBackwards-5.12.0.jar"
+      "version": "5.12.1",
+      "url": "https://cdn.modrinth.com/data/NpvuJQoq/versions/dWw67APC/ViaBackwards-5.12.1.jar",
+      "sha256": "dd72f7a459cbf1ea7862781dac92ed0ba738aa3cb3b7955e716ba379889d612a",
+      "file": "ViaBackwards-5.12.1.jar"
     },
     {
       "name": "ViaVersion",
-      "version": "5.12.0",
-      "url": "https://cdn.modrinth.com/data/P1OZGk5p/versions/FaishMnD/ViaVersion-5.12.0.jar",
-      "sha256": "c4d512fa9760fa41d17abaedde12aa1f4c9bde920d0a992fe0fc016962f126be",
-      "file": "ViaVersion-5.12.0.jar"
+      "version": "5.12.1",
+      "url": "https://cdn.modrinth.com/data/P1OZGk5p/versions/5WgnasGG/ViaVersion-5.12.1.jar",
+      "sha256": "551265afd892e78bb869162e08b4fdd151c518e245fce60af36b0603ad695d76",
+      "file": "ViaVersion-5.12.1.jar"
     },
     {
       "name": "WorldEdit",
-      "version": "7.4.5",
-      "url": "https://cdn.modrinth.com/data/1u6JkXh5/versions/F5ea2ov3/worldedit-bukkit-7.4.5.jar",
-      "sha256": "e5696a6d064b9969437a8888be91b0941148a28e0c3736de1554a00254a5d142",
-      "file": "WorldEdit-7.4.5.jar"
+      "version": "7.4.6",
+      "url": "https://cdn.modrinth.com/data/1u6JkXh5/versions/YFnqiUlL/worldedit-bukkit-7.4.6.jar",
+      "sha256": "e0ce67d870ad1fef8a40dd9d7926360caf3bb44722438545d6b20b55f82a0c91",
+      "file": "WorldEdit-7.4.6.jar"
     }
   ]
 }

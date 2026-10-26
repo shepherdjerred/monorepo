@@ -27,7 +27,7 @@ import org.bukkit.event.entity.LingeringPotionSplashEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectTypeCategory;
+import org.bukkit.potion.PotionEffectType;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -316,6 +316,6 @@ final class CombatListener implements Listener {
 
   private static boolean harmful(Stream<PotionEffect> effects) {
     return effects.anyMatch(
-        effect -> effect.getType().getCategory() == PotionEffectTypeCategory.HARMFUL);
+        effect -> effect.getType().getEffectCategory() == PotionEffectType.Category.HARMFUL);
   }
 }
