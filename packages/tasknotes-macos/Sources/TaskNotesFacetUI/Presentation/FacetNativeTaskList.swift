@@ -211,53 +211,49 @@ internal struct FacetNativeTaskList: View {
     }
 
     private var board: some View {
-        ScrollView(.horizontal) {
-            HStack(alignment: .top, spacing: 16) {
-                ForEach(statusChoices) { status in
-                    let tasks = snapshot.tasks.filter { $0.status == status.value }
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Circle().fill(FacetNativeStyle.tint(status)).frame(width: 8, height: 8)
-                            Text(status.label).font(.headline)
-                            Spacer()
-                            Text("\(tasks.count) loaded").font(.caption).foregroundStyle(.secondary)
-                        }
-                        ForEach(tasks, id: \.rowID) { task in
-                            VStack(alignment: .leading, spacing: 8) {
-                                row(task, stacked: true)
-                                Menu("Move to…") {
-                                    ForEach(statusChoices) { target in
-                                        Button(target.label) {
-                                            action(task) {
-                                                await store.setStatus(
-                                                    task, status: target.value,
-                                                    profileID: snapshot.profileId)
-                                            }
-                                        }
-                                    }
-                                }.font(.caption)
-                            }.padding(12)
-                                .background(.background, in: RoundedRectangle(cornerRadius: 10))
-                                .draggable(
-                                    FacetBoardDragItem(
-                                        profileID: snapshot.profileId, taskID: task.id,
-                                        occurrenceDate: task.occurrenceDate, revision: task.revision
-                                    ))
-                        }
-                    }.padding(12).frame(width: 280)
-                        .background(
-                            .quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 14)
-                        )
-                        .dropDestination(for: FacetBoardDragItem.self) { items, _ in
-                            acceptDrop(items, status: status.value)
-                        }
-                }
-            }.padding().frame(maxHeight: .infinity, alignment: .top)
-        }
+        FacetNativeBoard(
+            snapshot: snapshot, statuses: statusChoices, isLoading: window.isLoading,
+            captureClearance: reservesCaptureSpace && !window.isSelecting
+                ? FacetNativeStyle.mobileListBottomMargin : 0,
+            loadMore: loadBoardPage, acceptDrop: acceptDrop
+        ) { task in boardCard(task) }
     }
 }
 
 extension FacetNativeTaskList {
+    private func boardCard(_ task: FacetTask) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            row(task, stacked: true)
+            Menu("Move to…") {
+                ForEach(statusChoices) { target in
+                    Button(target.label) {
+                        action(task) {
+                            await store.setStatus(
+                                task, status: target.value, profileID: snapshot.profileId)
+                        }
+                    }
+                }
+            }.font(.caption)
+        }.padding(12)
+            .background(.background, in: RoundedRectangle(cornerRadius: 10))
+            .draggable(
+                FacetBoardDragItem(
+                    profileID: snapshot.profileId, taskID: task.id,
+                    occurrenceDate: task.occurrenceDate, revision: task.revision))
+    }
+
+    private func loadBoardPage() {
+        let request = window.generation
+        _Concurrency.Task {
+            guard store.selectedProfileID == snapshot.profileId,
+                window.generation == request,
+                window.snapshot?.profileId == snapshot.profileId,
+                window.snapshot?.version == snapshot.version
+            else { return }
+            await window.loadMore(store: store)
+        }
+    }
+
     @ViewBuilder private func presentedRow(
         _ task: FacetTask, presentation: FacetTaskPresentation, stacked: Bool
     ) -> some View {

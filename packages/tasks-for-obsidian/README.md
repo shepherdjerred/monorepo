@@ -280,6 +280,14 @@ two-case local journey and its original preservation gate remain separate and
 required. These local journeys do not establish live Sync or physical-device
 audio and haptic acceptance.
 
+`bun scripts/board-acceptance/run-ios.ts` uses a separate owned simulator and a
+120-task vault with two active workflow columns. Its two bounded tests scroll to
+a lower loaded card, open and cancel the actual editor, then use the board's
+native Load More control to reach a card beyond the initial 100 tasks. Each
+stage verifies every synthetic task, saved view, configuration, reference and
+attachment byte remains unchanged and retains paired app/simulator screenshots.
+This board journey is separate from the existing local and mobile parity gates.
+
 Shared schema positive, negative,
 and raw numeric fixtures run at both Apple and Android boundaries. Retain
 matched XCFramework/source fingerprints and xcresult/rendered artifacts.

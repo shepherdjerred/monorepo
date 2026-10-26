@@ -130,7 +130,7 @@ export function assertExactNativeResults(
       }
     | {
         target: "TasksForObsidianUITests";
-        suite: "OccurrenceTaskTests" | "MobileParityTests";
+        suite: "OccurrenceTaskTests" | "MobileParityTests" | "BoardTaskTests";
       } = {
     target: "TaskNotesAcceptanceUITests",
     suite: "StandaloneVaultUITests",
