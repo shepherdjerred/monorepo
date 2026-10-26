@@ -9,6 +9,7 @@ import { createPublicationActivities } from "#automation/publication.ts";
 import { createAcquisitionActivities } from "#automation/acquisition.ts";
 import { visibilityPublicationContext } from "./plex.test-support.ts";
 import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
+import { storedFilePath } from "#automation/files/paths/locations.ts";
 import {
   loadProfile,
   searchCandidates,
@@ -39,7 +40,7 @@ test("real verified publication remains playable during a newly submitted upgrad
           torrent: {
             ...observed,
             progress: 1,
-            save_path: f.files.roots.downloads,
+            save_path: storedFilePath(f.files.context, "tv", "downloads", ""),
           },
           files: stored.files,
         },

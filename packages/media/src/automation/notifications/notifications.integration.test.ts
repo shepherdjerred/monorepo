@@ -1,4 +1,7 @@
-import { expect, test, vi } from "vitest";
+import { afterAll, expect, test, vi } from "vitest";
+import { rm } from "node:fs/promises";
+import { verifiedPublicationFixture } from "#automation/publication-proof/verified.test-fixture.ts";
+import { queryFixtureDatabase } from "#testing/query-client.ts";
 import { automationTestHarness } from "#testing/automation.ts";
 import { grantTestLease } from "#testing/authority.ts";
 import {
@@ -17,18 +20,54 @@ import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
 import { chooseTestMovieEdition } from "#infrastructure/movie-editions/test-support.ts";
 import { captureMovieAttemptChoice } from "#infrastructure/movie-editions/authority.ts";
 
-const { database, context, fixture, cipher } = automationTestHarness();
+const { database, context, cipher } = automationTestHarness();
+const directories: string[] = [];
+afterAll(async () => {
+  for (const directory of directories)
+    await rm(directory, { recursive: true, force: true });
+});
 async function setup(kind: "movie" | "episode" = "movie") {
-  const data = await fixture("123", { kind });
   const db = database();
+  const series =
+    kind === "episode"
+      ? await db.mediaItem.create({
+          data: {
+            kind: "series",
+            title: "Example series",
+            tmdbId:
+              (crypto.getRandomValues(new Uint32Array(1))[0] ?? 1) %
+              2_000_000_000,
+          },
+        })
+      : null;
+  const produced = await verifiedPublicationFixture(
+    db,
+    context(),
+    series === null ? undefined : { seriesId: series.id },
+  );
+  const operation = await db.operation.create({
+    data: {
+      kind: "reconcile_media",
+      targetId: produced.files.media.id,
+      payload: { mediaId: produced.files.media.id },
+    },
+  });
+  const data = {
+    ...produced.files,
+    series,
+    // Later notification-grouping fixtures create a separate attempt at birth.
+    input: {
+      operationId: operation.id,
+    },
+    release: await db.releaseCandidate.findUniqueOrThrow({
+      where: { id: produced.published.attempt.releaseId },
+    }),
+  };
+  directories.push(data.directory);
   await grantTestLease(db);
   await db.mediaIntent.update({
     where: { mediaId_edition: { mediaId: data.media.id, edition: "default" } },
     data: { automationEpoch: 0 },
-  });
-  await db.mediaItem.update({
-    where: { id: data.media.id },
-    data: { availability: "available" },
   });
   const user = await db.mediaUser.update({
     where: { id: data.user.id },
@@ -38,29 +77,20 @@ async function setup(kind: "movie" | "episode" = "movie") {
       notificationPreference: { create: { emailEnabled: true } },
     },
   });
-  const asset = await db.libraryAsset.create({
-    data: {
-      path: `/library/${data.media.id}.mkv`,
-      editionRootId: data.series?.id ?? data.media.id,
-      sizeBytes: 10,
-      checksum: "a".repeat(64),
-      owned: true,
-      ownershipEpoch: 0,
-      state: "published",
-      plexPublishedAt: new Date(),
-      properties: { releaseId: data.release.id },
-      coverage: { create: { mediaId: data.media.id, current: true } },
-    },
+  const asset = produced.asset;
+  const intent = await db.mediaIntent.findUniqueOrThrow({
+    where: { mediaId_edition: { mediaId: data.media.id, edition: "default" } },
   });
   const item = {
     mediaId: data.media.id,
-    generation: 1,
+    generation: intent.generation,
     assetId: asset.id,
-    assetVersion: 0,
+    assetVersion: asset.version,
     assetChecksum: asset.checksum ?? "",
   };
   const service = new PrismaNotificationApplication(db, cipher, null, {
     publicOrigin: "https://media.fixture",
+    plexAccess: context().plexAccess,
     movieAccess: () =>
       Promise.resolve({
         serverMachineId: "fixture-server",
@@ -213,6 +243,7 @@ test.each(["movie", "episode"] as const)(
         ? data.service
         : new PrismaNotificationApplication(database(), cipher, null, {
             publicOrigin: "https://media.fixture",
+            plexAccess: context().plexAccess,
             movieAccess: () =>
               Promise.reject(
                 new Error("TV retry must not resolve movie configuration"),
@@ -220,8 +251,25 @@ test.each(["movie", "episode"] as const)(
           });
     const delivery = await queue(data);
     let sends = 0;
+    let initialAttemptWritten = false;
+    // The first rejection is an elapsed fixture precondition. Keep application
+    // and PostgreSQL authority clocks on the same real instant during retry.
+    const elapsedDb = queryFixtureDatabase(database(), {
+      query: {
+        notificationDeliveryAttempt: {
+          create({ args, query }) {
+            if (!initialAttemptWritten) {
+              initialAttemptWritten = true;
+              args.data.startedAt = new Date(Date.now() - 61_000);
+            }
+            return query(args);
+          },
+        },
+      },
+    });
     const runtime = {
       ...context(),
+      db: elapsedDb,
       notify: async () => {
         sends++;
         if (sends === 1) throw new IntegrationError("postal", "authentication");
@@ -243,24 +291,23 @@ test.each(["movie", "episode"] as const)(
     const rejected = await database().notificationDelivery.findUniqueOrThrow({
       where: { id: delivery.id },
     });
-    const time = vi.spyOn(Date, "now").mockReturnValue(Date.now() + 61_000);
     const retryKey = crypto.randomUUID();
-    let retried;
-    try {
-      retried = await service.retryDelivery(
-        data.user,
-        retryKey,
-        delivery.id,
-        rejected.version,
-      );
-    } finally {
-      time.mockRestore();
-    }
+    expect(initialAttemptWritten).toBe(true);
+    const retried = await service.retryDelivery(
+      data.user,
+      retryKey,
+      delivery.id,
+      rejected.version,
+    );
     const saved = await database().idempotencyRecord.findUniqueOrThrow({
       where: { userId_key: { userId: data.user.id, key: retryKey } },
     });
     const replay = new PrismaNotificationApplication(database(), cipher, null, {
       publicOrigin: "https://media.fixture",
+      plexAccess: () =>
+        Promise.reject(
+          new Error("Exact retry replay must precede Plex configuration"),
+        ),
       movieAccess: () =>
         Promise.reject(
           new Error("Exact retry replay must precede configuration"),
@@ -694,7 +741,7 @@ test("shared announcements never use personal content or preferences", async () 
     notificationId: delivery.id,
     operationId: data.input.operationId,
   });
-  expect(text).toContain("Example");
+  expect(text).toContain(data.media.title);
   expect(text).not.toContain(data.user.id);
   expect(text).not.toMatch(/fixture@example|watched|retention|requester/iu);
 });

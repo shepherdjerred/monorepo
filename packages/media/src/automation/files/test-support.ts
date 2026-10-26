@@ -19,24 +19,7 @@ import { recordVerifiedPublication } from "#automation/reconciliation/upgrade-cl
 import type { MediaUser } from "#generated/prisma/client.ts";
 import { fileMovieAccess } from "#automation/editions/access.ts";
 import { fixtureAcquisitionScope } from "./fixtures/acquisition.ts";
-
-function fixturePublicationExecution() {
-  const observed = { wall: Date.now(), monotonic: performance.now() };
-  const signal = new AbortController().signal;
-  const wallDeadline = observed.wall + 300_000;
-  const monotonicDeadline = observed.monotonic + 300_000;
-  return {
-    observed,
-    expiresAtMs: wallDeadline,
-    signal,
-    checkpoint: () => Promise.resolve(),
-    assertActive: () => {
-      signal.throwIfAborted();
-      if (Date.now() >= wallDeadline || performance.now() >= monotonicDeadline)
-        throw new Error("Synthetic publication invocation expired");
-    },
-  };
-}
+import { testPublicationExecution } from "#testing/publication-execution.ts";
 
 async function chooseFixtureMovie(
   db: Database,
@@ -106,7 +89,7 @@ export async function fileFixture(
       purge: () => Promise.resolve(true),
     },
     checkpoint: () => Promise.resolve(),
-    publicationExecution: fixturePublicationExecution,
+    publicationExecution: testPublicationExecution,
     verifyStorageAuthority: () => Promise.resolve(),
     inspect: async (path) => {
       const info = await stat(path);

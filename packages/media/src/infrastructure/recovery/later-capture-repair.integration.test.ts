@@ -86,6 +86,13 @@ test.each([
           f.retention.input,
         ),
       ).toEqual({ status: "quarantined" });
+    const removalCommandsBefore = await f.db.operation.findMany({
+      where: {
+        targetId: f.media.id,
+        kind: { in: ["purge_media", "retain_media"] },
+      },
+      orderBy: { id: "asc" },
+    });
     const before = await f.db.retentionDecision.findUniqueOrThrow({
       where: { id: f.retention.decision.id },
     });
@@ -212,12 +219,13 @@ test.each([
         outbox: { kind: quarantined ? "restore_media" : "reconcile_media" },
       });
     expect(
-      await f.db.operation.count({
+      await f.db.operation.findMany({
         where: {
           targetId: f.media.id,
           kind: { in: ["purge_media", "retain_media"] },
         },
+        orderBy: { id: "asc" },
       }),
-    ).toBe(0);
+    ).toEqual(removalCommandsBefore);
   },
 );

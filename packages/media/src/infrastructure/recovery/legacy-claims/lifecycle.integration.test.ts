@@ -4,7 +4,12 @@ import { z } from "zod";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { createRetentionActivities } from "#automation/retention.ts";
 import { FilePlanSchema } from "#automation/files/types.ts";
-import { recordVerifiedPublication } from "#automation/reconciliation/upgrade-cleanup.ts";
+import { createPublicationActivities } from "#automation/publication.ts";
+import { retentionPlexContext } from "#automation/retention/fixtures/plex.ts";
+import { elapsedPublicationClient } from "#automation/files/plex-binding/elapsed-publication.test-support.ts";
+import { bindingTestExecution } from "#automation/plex-binding/test-fixture.ts";
+import { observeMediaUpgradeCleanup } from "#automation/plex-binding/cleanup.ts";
+import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { buildRecoveryClaims } from "./projection.ts";
 import { legacyLifecycleHarness } from "./lifecycle-fixture.ts";
 import { LEGACY_CLAIM_PROTECTION } from "./protection.ts";
@@ -120,20 +125,26 @@ test("a late claim during upgrade archive hashing prevents cleanup of the recove
   });
   const entry = FilePlanSchema.parse(attempt.filePlan)[0];
   if (entry === undefined) throw new Error("Fixture plan missing");
-  await f.db.$transaction(async (tx) => {
-    await tx.mediaItem.update({
-      where: { id: f.media.id },
-      data: { availability: "available" },
-    });
-    await recordVerifiedPublication(tx, [entry.assetId], 0);
-    await tx.acquisitionAttempt.update({
-      where: { id: attempt.id },
-      data: { state: "completed" },
-    });
-    await tx.acquisitionReservation.deleteMany({
-      where: { attemptId: attempt.id },
-    });
-  });
+  const transport = await retentionPlexContext(
+    f.db,
+    f.network,
+    attempt.mediaIds,
+  );
+  const network = {
+    ...transport.context,
+    plexBindingExecution: bindingTestExecution,
+  };
+  const timing = await elapsedPublicationClient(f.db, entry.assetId);
+  expect(
+    await createPublicationActivities({
+      ...network,
+      db: timing.db,
+    }).publishMediaToPlex(upgrade.input),
+  ).toEqual({ status: "available", reason: null });
+  await timing.assertWritten();
+  await createPublicationActivities(network).finalizeMediaAcquisition(
+    upgrade.input,
+  );
   const cleanup = await f.db.upgradeCleanup.findUniqueOrThrow({
     where: {
       assetId_successorAssetId: {
@@ -145,7 +156,17 @@ test("a late claim during upgrade archive hashing prevents cleanup of the recove
   const old = await f.db.libraryAsset.findUniqueOrThrow({
     where: { id: f.published.entry.assetId },
   });
-  f.advance(8 * 86_400_000);
+  const operation = await f.db.operation.findUniqueOrThrow({
+    where: { idempotencyKey: `upgrade-cleanup:${cleanup.id}` },
+  });
+  const cleanupInput = { cleanupId: cleanup.id, operationId: operation.id };
+  expect(
+    await observeMediaUpgradeCleanup(
+      network,
+      cleanupInput,
+      bindingTestExecution(),
+    ),
+  ).toEqual({ status: "observed" });
   let inserted = false;
   f.context.checkpoint = async (phase) => {
     if (phase === "content-proof-hashing" && !inserted) {
@@ -153,14 +174,14 @@ test("a late claim during upgrade archive hashing prevents cleanup of the recove
       await f.capture(true);
     }
   };
-  expect(
-    await files.cleanupSupersededMediaFile({
-      cleanupId: cleanup.id,
-      operationId: crypto.randomUUID(),
-    }),
-  ).toEqual({ status: "protected", reason: LEGACY_CLAIM_PROTECTION });
+  expect(await files.cleanupSupersededMediaFile(cleanupInput)).toEqual({
+    status: "protected",
+    reason: LEGACY_CLAIM_PROTECTION,
+  });
   expect(inserted).toBe(true);
-  expect(await readFile(old.path, "utf8")).toBe(f.published.content);
+  expect(await readFile(workerFilePath(f.context, old.path), "utf8")).toBe(
+    f.published.content,
+  );
   expect(
     await readFile(`${f.roots.library}/${entry.libraryPath}`, "utf8"),
   ).toBe(upgrade.content);
@@ -250,7 +271,7 @@ test.each([false, true])(
       where: { id: f.retention.decision.id },
     });
     await f.capture(mapped);
-    f.advance(8 * 86_400_000);
+    await f.assertQuarantineAge();
     await f.refresh();
     expect(await files.purgeMediaFiles(f.retention.input)).toMatchObject({
       status: "protected",

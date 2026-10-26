@@ -21,7 +21,9 @@ let rating = 200;
 async function fixture(target = true) {
   const db = harness.database();
   const produced = target
-    ? await plexBindingFixture(db, harness.context())
+    ? await plexBindingFixture(db, harness.context(), {
+        publicationPending: true,
+      })
     : null;
   if (produced !== null) {
     directories.push(produced.files.directory);
