@@ -351,7 +351,7 @@ describe("a match the mint-less core finished", () => {
       riotMatchId: matchId,
       image: { objectKey: `games/2026/09/22/${matchId}/report.png` },
       // No vote controls on a report nobody will see.
-      components: "match-link",
+      components: "inline-match-link",
     });
     // The full post-match output: the AI review is still asked for.
     expect(world.aiReviews).toBe(1);

@@ -40,7 +40,7 @@ import {
 import { z } from "zod";
 import { generateAiReviewIfEnabled } from "./match-report-ai-review.ts";
 import { buildClassicMatch } from "./match-report-classic.ts";
-import { matchLinkComponents } from "./match-report-components.ts";
+import { inlineMatchLink } from "./match-report-components.ts";
 import { logErrorDetails } from "./match-report-debug.ts";
 import { aiReviewAttachment, createMatchImage } from "./match-report-image.ts";
 import { fetchTimelineIfStandardMatch } from "./match-report-standard.ts";
@@ -127,7 +127,7 @@ async function processClassicMatch(
     throw error;
   }
   // No "View match" link: the Explore match page rejects Classic asset
-  // modes (isExploreMatchSnapshotSupported), so a button here would open
+  // modes (isExploreMatchSnapshotSupported), so a link here would open
   // "Match unavailable".
   return {
     content: formatGameCompletionMessage(
@@ -179,7 +179,7 @@ async function processArenaMatch(
   );
 
   // No "View match" link: the Explore match page rejects Arena matches
-  // (isExploreMatchSnapshotSupported), so a button here would open
+  // (isExploreMatchSnapshotSupported), so a link here would open
   // "Match unavailable".
   return {
     content: completionMessage,
@@ -324,8 +324,7 @@ async function processStandardMatch(
   const message: MessageCreateOptions = {
     files: files,
     embeds: [matchReportEmbed],
-    content: messageContent,
-    components: matchLinkComponents(matchId),
+    content: `${messageContent}\n\n${inlineMatchLink(matchId)}`,
   };
   if (
     ctx.omitMvpVotes !== true &&

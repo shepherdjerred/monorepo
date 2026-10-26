@@ -96,14 +96,16 @@ export const ScoutAttestedObjectSchema = z.strictObject({
 
 /**
  * Which message furniture v1's generator attached beside the report image.
- * `match-link` is the Explore "View match" button of a standard-queue report;
- * `match-link-mvp-vote` is that button plus community-MVP vote controls
- * and the empty tally embed. Arena and Classic reports attach nothing.
- * Recorded as a closed name rather than as the component JSON so the receipt
- * stays readable and a component v1 grows later cannot be attested under a
- * name that misdescribes it.
+ * `inline-match-link` attests a link in the content and no components;
+ * `inline-match-link-mvp-vote` adds community-MVP controls and the tally embed.
+ * `match-link` and `match-link-mvp-vote` preserve the legacy button layouts.
+ * Arena and Classic reports attach nothing. Recorded as a closed name rather
+ * than as the component JSON so the receipt stays readable and a component v1
+ * grows later cannot be attested under a name that misdescribes it.
  */
 export const ScoutReportComponentsSchema = z.enum([
+  "inline-match-link",
+  "inline-match-link-mvp-vote",
   "match-link",
   "match-link-mvp-vote",
   "none",

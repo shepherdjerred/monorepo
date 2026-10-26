@@ -7,12 +7,14 @@ import {
 } from "discord.js";
 import { getExploreMatchUrl } from "#src/discord/commands/links.ts";
 
+export function inlineMatchLink(matchId: RiotMatchId): string {
+  return `[View match](${getExploreMatchUrl(matchId)})`;
+}
+
 /**
- * One link button pointing at the match's Explore page. The URL is
- * channel-independent, so the same message can fan out to every subscribed
- * channel unchanged. Standard-path reports only: the Explore match page
- * rejects Arena and Classic asset modes (`isExploreMatchSnapshotSupported`),
- * so those report paths must not attach this button.
+ * Legacy link button retained to rebuild receipts rendered before match links
+ * moved inline. Standard-path reports only: the Explore match page rejects
+ * Arena and Classic asset modes (`isExploreMatchSnapshotSupported`).
  */
 export function matchLinkComponents(
   matchId: RiotMatchId,

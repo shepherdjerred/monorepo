@@ -76,13 +76,13 @@ Muted senders also retain their minimal restriction state.
 
 `scout_support_conversations_enabled` gates new Discord controls, screenshots,
 operator alerts, and reply DMs; stored web messages remain readable and bot DM
-intake still gets receipts. `scout_support_report_action_enabled` additionally
-controls the passive report feedback button. Delivery freezes that button with the
-notification presentation before delivery. These controls create no additional
-outreach messages and do not change existing outreach budgets. Fourteen-day
-Operations measurements exclude operator conversations and count report actions
-delivered/opened/submitted; delivery is not an impression. Analytics never carry
-support text, attachment URLs, or screenshot bytes.
+intake still gets receipts. Match reports do not offer a support action; `/help`
+and the web feedback form are the support entrypoints. These controls create no
+additional outreach messages and do not change existing outreach budgets.
+Fourteen-day Operations measurements exclude operator conversations and retain
+legacy report-action delivered/opened/submitted counts; delivery is not an
+impression. Analytics never carry support text, attachment URLs, or screenshot
+bytes.
 
 Feedback links derive from the application origin. `/help`, website support,
 the permanent form, and existing occasional outreach route to this conversation;
