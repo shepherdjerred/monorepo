@@ -258,6 +258,46 @@ test("saved catalog tracks route to the audio slot when their request mode was s
   });
 });
 
+test("saved LoL playlist sources respect the feature gate", async () => {
+  const f = await setup();
+  const context = await musicCommandContext(f.issuer, f.deps);
+  const routePlayback = vi.fn();
+  const deps = {
+    ...context,
+    featureGate: {
+      assistantV2: () => Promise.resolve(false),
+      history: () => Promise.resolve(false),
+      musicOverVoice: () => Promise.resolve(true),
+      lolEsports: () => Promise.resolve(false),
+    },
+    routePlayback,
+  };
+
+  await expect(
+    queueBatch({
+      deps,
+      sources: [
+        {
+          kind: "url",
+          url: "https://lolesports.com/",
+          sportsEvent: {
+            id: "lolesports:123",
+            provider: "lolesports",
+            title: "LCK",
+            status: "live",
+            startsAt: null,
+            pageUrl: "https://lolesports.com/",
+          },
+        },
+      ],
+      userId,
+      placement: "queue",
+      signal: new AbortController().signal,
+    }),
+  ).rejects.toThrow("LoL Esports is not enabled here.");
+  expect(routePlayback).not.toHaveBeenCalled();
+});
+
 test("quick YouTube playlist loading retains all 250 tracks and the video destination", async () => {
   const f = await setup();
   await quickPlay(

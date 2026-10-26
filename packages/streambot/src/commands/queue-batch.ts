@@ -13,6 +13,7 @@ import { inferMediaIntent } from "@shepherdjerred/streambot/discovery/media-inte
 import { PlaybackCommandBoundaryError } from "./playback-command-errors.ts";
 import { assertNumberedPlayback } from "./numbered-playback.ts";
 import { automaticPlaybackChannel } from "./automatic-channel.ts";
+import { assertLolRequestEnabled } from "@shepherdjerred/streambot/sports/playback-selection.ts";
 
 type BatchInput = {
   deps: PlaybackCommandServiceDeps;
@@ -59,7 +60,17 @@ class QueueBatch {
       this.skipped += 1;
       return;
     }
-    const { userId, placement } = this.input;
+    const { deps, userId, placement } = this.input;
+    await assertLolRequestEnabled({
+      query: "",
+      source: original,
+      provider: undefined,
+      scope:
+        deps.guildId === undefined || deps.channelId === undefined
+          ? null
+          : { guildId: deps.guildId, channelId: deps.channelId, userId },
+      gate: deps.featureGate?.lolEsports,
+    });
     const target = await this.targetFor(original);
     const key =
       (target.guildId ?? "") +
