@@ -6,10 +6,38 @@ import { inferMediaIntent } from "@shepherdjerred/streambot/discovery/media-inte
 import type { RecordMedia } from "@shepherdjerred/streambot/history/types.ts";
 import { fileURLToPath } from "node:url";
 import { PlaybackChannelNumberSchema } from "@shepherdjerred/streambot/types/playback-channel.ts";
+import { LolPlaybackSchedules } from "@shepherdjerred/streambot/sports/playback-schedules.ts";
+import { lolSportsEvent } from "@shepherdjerred/streambot/sports/lolesports.ts";
+import { matchSportsEvents } from "@shepherdjerred/streambot/sports/sports-service.ts";
+import { lolMatch } from "#lol-fixture";
 
 if (import.meta.main) {
   const origin = "http://127.0.0.1:5188";
   const history = new MediaHistoryStore(":memory:");
+  const upcoming = {
+    ...lolMatch(),
+    startTime: new Date(Date.now() + 86_400_000).toISOString(),
+  };
+  const live = {
+    ...lolMatch(),
+    id: "115660540726095041",
+    state: "inProgress" as const,
+    startTime: new Date().toISOString(),
+  };
+  const lolEvents = [lolSportsEvent(live), lolSportsEvent(upcoming)];
+  const schedules = new LolPlaybackSchedules(
+    ":memory:",
+    { find: () => Promise.resolve(upcoming) },
+    {
+      allowed: () => Promise.resolve(true),
+      authority: () => Promise.resolve({ allowed: true, listeners: true }),
+      slot: () => ({ idle: true }),
+      start: () => Promise.resolve("busy" as const),
+      stop: () => {
+        throw new Error("Preview cannot stop a real stream");
+      },
+    },
+  );
   const fixture = webFixture(
     origin,
     fileURLToPath(new URL("../../dist/web", import.meta.url)),
@@ -18,6 +46,20 @@ if (import.meta.main) {
       history,
       username: "Morgan",
       automatic: true,
+      lol: true,
+      schedules,
+      sports: {
+        listToday: () => Promise.resolve([...FIXTURE_EVENTS, ...lolEvents]),
+        listSchedule: () => Promise.resolve(lolEvents),
+        search: (query, provider) =>
+          Promise.resolve(
+            matchSportsEvents(
+              query,
+              [...FIXTURE_EVENTS, ...lolEvents],
+              provider,
+            ),
+          ),
+      },
       resolve: (source) => ({
         title: source.kind === "file" ? source.title : "Live session",
         chapters: [],

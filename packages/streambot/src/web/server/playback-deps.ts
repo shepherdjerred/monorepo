@@ -5,8 +5,10 @@ import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-fe
 import type { WebDiscordContext } from "@shepherdjerred/streambot/discord/web-context.ts";
 import type { ChannelId } from "@shepherdjerred/streambot/types/ids.ts";
 import type { WebCatalog } from "./catalog.ts";
+import type { LolPlaybackSchedules } from "@shepherdjerred/streambot/sports/playback-schedules.ts";
 
 export type WebPlaybackDeps = {
+  schedules?: LolPlaybackSchedules;
   sessions: Pick<
     SessionManager,
     "getExisting" | "ensureForPlay" | "releaseUnused" | "revision"

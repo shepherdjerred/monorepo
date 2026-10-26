@@ -60,6 +60,23 @@ describe("ffmpeg command redaction", () => {
 });
 
 describe("prepareStream audioInput", () => {
+  test("maps the validated nonzero audio stream from a separate companion input", async () => {
+    const { command, output, promise } = prepareStream("video.nut", {
+      includeAudio: true,
+      audioStreamIndex: 1,
+      audioInput: { source: "tcp://127.0.0.1:1", inputOptions: [] },
+    });
+    try {
+      const args = ffmpegArgs(command);
+      expect(args).toContain("1:a:1");
+      expect(args).not.toContain("1:a:0");
+      expect(args).not.toContain("0:a:1");
+    } finally {
+      killQuietly(command);
+      output.destroy();
+      await Promise.allSettled([promise]);
+    }
+  });
   test("maps audio from a separate second input when audioInput is set", () => {
     const { command, output, promise } = prepareStream("video.nut", {
       includeAudio: true,

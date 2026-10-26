@@ -30,12 +30,15 @@ export function MediaRow(
     available?: boolean;
     badge?: "Live" | "Upcoming";
     preferredChannel?: number;
+    onSchedule?: () => void;
   },
 ) {
   return (
     <article
       className={
-        "media-row" + (props.landscape === true ? " landscape-row" : "")
+        "media-row" +
+        (props.landscape === true ? " landscape-row" : "") +
+        (props.onSchedule === undefined ? "" : " schedulable-event")
       }
     >
       {props.selection.kind === "sports" ||
@@ -74,6 +77,7 @@ export function MediaActions(
     selection: Selection;
     available?: boolean;
     preferredChannel?: number;
+    onSchedule?: () => void;
   },
 ) {
   const disabled = !props.canPlay || props.busy || props.available === false;
@@ -81,48 +85,59 @@ export function MediaActions(
     props.actionLabel?.(props.selection, props.preferredChannel) ?? "Play";
   return (
     <div className="row-actions">
-      <button
-        title={
-          props.available === false
-            ? "This item is unavailable to play"
-            : label === "Play"
-              ? "Start playback"
-              : "Add to queue"
-        }
-        aria-label={label + " " + props.title}
-        disabled={disabled}
-        onClick={() => {
-          props.play(props.selection, "queue");
-        }}
-      >
-        {label === "Play" ? "▶" : "+"}
-        <span className="button-label"> {label}</span>
-      </button>
-      <details className="play-options">
-        <summary aria-label={"More playback options for " + props.title}>
-          ···
-        </summary>
-        <div>
+      {props.onSchedule === undefined ? (
+        <>
           <button
+            title={
+              props.available === false
+                ? "This item is unavailable to play"
+                : label === "Play"
+                  ? "Start playback"
+                  : "Add to queue"
+            }
+            aria-label={label + " " + props.title}
             disabled={disabled}
             onClick={() => {
-              props.play(props.selection, "next");
+              props.play(props.selection, "queue");
             }}
           >
-            Play next
+            {label === "Play" ? "▶" : "+"}
+            <span className="button-label"> {label}</span>
           </button>
-          {props.advanced && (
-            <button
-              disabled={disabled}
-              onClick={() => {
-                props.play(props.selection, "now");
-              }}
-            >
-              Play now
-            </button>
-          )}
-        </div>
-      </details>
+          <details className="play-options">
+            <summary aria-label={"More playback options for " + props.title}>
+              ···
+            </summary>
+            <div>
+              <button
+                disabled={disabled}
+                onClick={() => {
+                  props.play(props.selection, "next");
+                }}
+              >
+                Play next
+              </button>
+              {props.advanced && (
+                <button
+                  disabled={disabled}
+                  onClick={() => {
+                    props.play(props.selection, "now");
+                  }}
+                >
+                  Play now
+                </button>
+              )}
+            </div>
+          </details>
+        </>
+      ) : (
+        <button
+          disabled={!props.canPlay || props.busy}
+          onClick={props.onSchedule}
+        >
+          Schedule playback
+        </button>
+      )}
     </div>
   );
 }

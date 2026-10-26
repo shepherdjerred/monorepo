@@ -8,8 +8,7 @@ import type { MediaCandidate } from "@shepherdjerred/streambot/discovery/candida
 import {
   SourceSchema,
   sourceIdentity,
-  withMode,
-  withSpoken,
+  historySource,
 } from "@shepherdjerred/streambot/sources/source.ts";
 
 const RETENTION_MS = 365 * 24 * 60 * 60 * 1000;
@@ -312,7 +311,7 @@ export class MediaHistoryStore {
     // Stripped rather than set to `"auto"`, which is the same thing to every reader of `Source` and
     // additionally keeps this column byte-identical to what it holds today for any item requested
     // without a mode — no silent rewrite of every history row on deploy.
-    const source = withSpoken(withMode(media.source, undefined), undefined);
+    const source = historySource(media.source);
     const id = crypto.randomUUID();
     this.database
       .query(

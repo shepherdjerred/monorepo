@@ -55,6 +55,19 @@ export const CATCHUP_RELAXED = "1 hour";
 // error-typed value. Both literals are valid Temporal `Duration`s at the policies
 // call site.
 export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
+  {
+    id: "streambot-lol-playback",
+    workflowType: "reconcileStreambotPlaybackWorkflow",
+    args: [],
+    timing: { kind: "interval", every: "1 minute" },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "2 minutes",
+    catchupWindow: "1 minute",
+    initialPauseNote:
+      "Awaiting Streambot scheduling listener, dedicated worker and credentials",
+    memo: "Reconcile explicitly scheduled LoL series against live matches, listeners and playback ownership",
+  },
   ...EARLY_SCHEDULES,
   ...SCOUT_SCHEDULES,
   ...BACKUP_SCHEDULES,

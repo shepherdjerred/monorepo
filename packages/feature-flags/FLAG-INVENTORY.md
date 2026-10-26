@@ -12,6 +12,12 @@ every authenticated media request in `src/config/media-features.ts`. It defaults
 off in production and is enabled in the beta environment. Web credential and
 listener bootstrap stay outside Flipt.
 
+Competitive LoL uses `streambot-lol-esports-enabled` for official schedules and
+broadcasts, and `streambot-lol-autoplay-enabled` for one-time automatic playback.
+Both are Boolean gates evaluated per server/user, default off, and target the
+existing beta server initially. They also require `streambot-sports-streaming-enabled`.
+Scheduler credentials and the internal listener are bootstrap, outside Flipt.
+
 | Consumer  | Flipt keys                                                                                                                                                                                                                                                      | Type and targeting                                          | Current source                                |
 | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------- |
 | Streambot | `player-card-enabled`, `subtitles-enabled`                                                                                                                                                                                                                      | Boolean; process snapshot                                   | `src/config/dynamic.ts`                       |

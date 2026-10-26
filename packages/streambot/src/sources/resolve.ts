@@ -1,4 +1,5 @@
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
+import { z } from "zod";
 import {
   sourceLabel,
   type Source,
@@ -23,14 +24,27 @@ import {
 } from "@shepherdjerred/streambot/sources/probe.ts";
 import { setSourceInfo } from "@shepherdjerred/streambot/observability/metrics.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
-import type { SportsResolver } from "@shepherdjerred/streambot/sports/types.ts";
+import type {
+  SportsEvent,
+  SportsResolver,
+} from "@shepherdjerred/streambot/sports/types.ts";
 import { sportsEventForSource } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
+import {
+  lolBroadcasts,
+  type LolEsportsClient,
+} from "@shepherdjerred/streambot/sports/lolesports.ts";
+import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 
 const log = logger.child("resolve");
+const FatalResolutionErrorSchema = z.union([
+  z.object({ code: z.literal("ENOENT") }),
+  z.object({ cause: z.instanceof(z.ZodError) }),
+]);
 
 export type ResolveSourceOptions = {
   readonly preResolved?: ResolvedSource;
   readonly sportsResolver?: SportsResolver;
+  readonly lol?: LolEsportsClient;
 };
 
 type InitialResolution = {
@@ -134,16 +148,34 @@ async function probeAndRecordSourceMetadata(
     readonly title: string;
     readonly headers?: Readonly<Record<string, string>> | undefined;
     readonly inputOptions?: readonly string[] | undefined;
+    readonly audioInput?: string | undefined;
+    readonly audioInputHeaders?: Readonly<Record<string, string>> | undefined;
   },
   signal: AbortSignal,
 ): Promise<MediaInfo | null> {
-  const info = await probeMedia(config, target.input, signal, {
-    headers: target.headers,
-    inputOptions: target.inputOptions,
-  });
-  if (info === null) {
+  const [primary, audio] = await Promise.all([
+    probeMedia(config, target.input, signal, {
+      headers: target.headers,
+      inputOptions: target.inputOptions,
+    }),
+    target.audioInput === undefined
+      ? Promise.resolve(undefined)
+      : probeMedia(config, target.audioInput, signal, {
+          headers: target.audioInputHeaders,
+        }),
+  ]);
+  if (primary === null || audio === null) {
     return null;
   }
+  const info =
+    audio === undefined
+      ? primary
+      : {
+          ...primary,
+          audioCodec: audio.audioCodec,
+          audioChannels: audio.audioChannels,
+          audioStreamIndex: audio.audioStreamIndex ?? 0,
+        };
   const resolution = resolutionBucket(info.height);
   log.info("source probed", {
     title: target.title,
@@ -164,6 +196,26 @@ async function probeAndRecordSourceMetadata(
     resolution,
   });
   return info;
+}
+
+async function probePlaybackSource(
+  config: Config,
+  resolved: ResolvedSource,
+  signal: AbortSignal,
+  sportsSource: boolean,
+): Promise<MediaInfo | null> {
+  return await probeAndRecordSourceMetadata(
+    config,
+    {
+      input: resolved.ffmpegInput,
+      title: resolved.title,
+      headers: resolved.ffmpegInputHeaders,
+      inputOptions: resolved.ffmpegInputOptions,
+      audioInput: sportsSource ? resolved.audioInput : undefined,
+      audioInputHeaders: resolved.audioInputHeaders,
+    },
+    signal,
+  );
 }
 
 /**
@@ -262,6 +314,66 @@ function withSportsRenditions(
  * yt-dlp/subtitle work is skipped and that result is used directly — only the cheap local probe
  * still runs, so observability (source-info metric/log) stays consistent either way.
  */
+async function resolveLolSource(
+  config: Config,
+  event: SportsEvent,
+  signal: AbortSignal,
+  client: LolEsportsClient | undefined,
+): Promise<InitialResolution> {
+  if (client === undefined)
+    throw new Error("LoL Esports resolver is not configured");
+  const match = await client.find(event, signal);
+  if (match?.state !== "inProgress")
+    throw new PlaybackCommandBoundaryError(
+      "This LoL series is not live. Refresh its schedule.",
+    );
+  for (const url of lolBroadcasts(match)) {
+    signal.throwIfAborted();
+    try {
+      const candidate = await resolveWithYtdlp(
+        config,
+        { kind: "url", url, mode: "video" },
+        signal,
+        true,
+      );
+      const probed = await probePlaybackSource(
+        config,
+        { ...candidate, title: event.title },
+        signal,
+        true,
+      );
+      assertSportsHasAudioAndVideo(probed);
+      const thumbnailUrl =
+        event.artwork?.thumbnailUrl ?? event.artwork?.league?.logoUrl;
+      return {
+        probed,
+        resolved: {
+          ...candidate,
+          title: event.title,
+          provenance: {
+            provider: "url",
+            canonicalUrl: event.pageUrl,
+            ...(thumbnailUrl === undefined ? {} : { thumbnailUrl }),
+          },
+        },
+      };
+    } catch (error) {
+      signal.throwIfAborted();
+      if (FatalResolutionErrorSchema.safeParse(error).success) throw error;
+    }
+  }
+  throw new PlaybackCommandBoundaryError(
+    "No official English broadcast with live audio and video could be started.",
+  );
+}
+
+function lolEventForSource(source: Source): SportsEvent | undefined {
+  if (source.kind !== "url") return undefined;
+  return source.sportsEvent?.provider === "lolesports"
+    ? source.sportsEvent
+    : undefined;
+}
+
 export async function resolveSource(
   config: Config,
   source: Source,
@@ -272,11 +384,21 @@ export async function resolveSource(
     throw new BlockedSourceError(sourceLabel(source));
   }
   let resolved: ResolvedSource;
+  const lolEvent = lolEventForSource(source);
   // `undefined` means "not probed yet"; `null` means "probed and it failed". Conflating the two
   // would re-probe a local file whose probe legitimately returned nothing.
   let probed: MediaInfo | null | undefined;
   if (options?.preResolved !== undefined) {
     resolved = options.preResolved;
+  } else if (lolEvent !== undefined) {
+    const initial = await resolveLolSource(
+      config,
+      lolEvent,
+      signal,
+      options?.lol,
+    );
+    resolved = initial.resolved;
+    probed = initial.probed;
   } else if (
     source.kind === "url" &&
     sportsEventForSource(source.url) !== null
@@ -294,23 +416,14 @@ export async function resolveSource(
   }
   // For yt-dlp and pre-resolved sources the ffmpeg input only becomes final once a format has been
   // chosen, so the probe runs here — on the URL the streamer will open, not on some earlier
-  // candidate. (For the split-video case that is the video-only input; its audio companion is
-  // yt-dlp's own pairing and is not separately probed.)
-  const info =
-    probed === undefined
-      ? await probeAndRecordSourceMetadata(
-          config,
-          {
-            input: resolved.ffmpegInput,
-            title: resolved.title,
-            headers: resolved.ffmpegInputHeaders,
-            inputOptions: resolved.ffmpegInputOptions,
-          },
-          signal,
-        )
-      : probed;
+  // candidate. Sports also probe a split audio companion: ffmpeg maps that separate input,
+  // so both its audio and the primary input's video must be usable.
   const sportsSource =
     source.kind === "url" && sportsEventForSource(source.url) !== null;
+  const info =
+    probed === undefined
+      ? await probePlaybackSource(config, resolved, signal, sportsSource)
+      : probed;
   if (sportsSource) assertSportsHasAudioAndVideo(info);
   // Rule 1's authoritative moment, plus the probed HDR flag and duration. The yt-dlp audio-first
   // pass is deliberately blind to "the selected stream has no picture" (it is true of every item

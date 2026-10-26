@@ -222,7 +222,7 @@ export type PrepareStreamOptions = {
   /** Select one video rendition instead of mapping every video stream. Omit to retain legacy mapping. */
   videoStreamIndex?: number;
 
-  /** Select one audio rendition from the primary input. Omit to retain legacy mapping. */
+  /** Select audio from audioInput when present, otherwise the primary input. Omit to retain legacy mapping. */
   audioStreamIndex?: number;
 
   /**
@@ -1117,7 +1117,7 @@ export function prepareStream(
   // audio setup
   const { includeAudio, bitrateAudio, audioInput, audioVolume } = mergedOptions;
   if (includeAudio) {
-    // With a separate audio input, map its first audio stream (a required mapping — the caller
+    // With a separate audio input, map its selected audio stream (a required mapping — the caller
     // promised a stream); otherwise take audio from the primary input if it has any (`?`).
     //
     // The `?` comes off on the audio-only path: audio is then the only output stream, so a source
@@ -1125,7 +1125,7 @@ export function prepareStream(
     // Required mapping turns that into an immediate, classifiable ffmpeg startup failure
     // ("Stream map '' matches no streams") instead of a silent hang.
     const audioMap = audioInput
-      ? "1:a:0"
+      ? `1:a:${String(mergedOptions.audioStreamIndex ?? 0)}`
       : mergedOptions.audioStreamIndex === undefined
         ? audioOnly
           ? "0:a:0"

@@ -26,6 +26,7 @@ const NEXT_ID = "sports_next";
 const PROVIDER_NAMES = {
   streameast: "StreamEast",
   tvsportslive: "TVSportsLive",
+  lolesports: "LoL Esports",
 };
 
 function eventStatus(event: SportsEvent): string {
@@ -36,14 +37,33 @@ function eventStatus(event: SportsEvent): string {
     : `🕒 **Upcoming** · <t:${String(Math.floor(new Date(event.startsAt).valueOf() / 1000))}:t>`;
 }
 
-function listingDescription(events: readonly SportsEvent[]): string {
+function listingDescription(
+  events: readonly SportsEvent[],
+  allowSchedule = false,
+): string {
   if (events.length === 0) return "No sports streams are listed for today.";
+  if (allowSchedule && events.some((event) => event.provider === "lolesports"))
+    return "Choose a live game to play or an upcoming LoL series to schedule once in your current voice channel.";
   return events.every((event) => event.status === "scheduled")
     ? "These games are upcoming. Run `/stream playback sports` again when a game starts to choose a stream."
     : "Choose a live or unconfirmed game to queue in your voice channel.\nUpcoming games are listed for information.";
 }
 
-export function sportsMenuPage(events: readonly SportsEvent[], page: number) {
+function decorateLolEmbed(embed: EmbedBuilder, events: readonly SportsEvent[]) {
+  if (!events.every((event) => event.provider === "lolesports")) return;
+  const first = events[0];
+  const thumbnail =
+    first?.artwork?.league?.logoUrl ?? first?.artwork?.thumbnailUrl;
+  if (thumbnail !== undefined) embed.setThumbnail(thumbnail);
+  if (events.length === 1 && first?.artwork?.thumbnailUrl !== undefined)
+    embed.setImage(first.artwork.thumbnailUrl);
+}
+
+export function sportsMenuPage(
+  events: readonly SportsEvent[],
+  page: number,
+  allowSchedule = false,
+) {
   const pageCount = Math.max(1, Math.ceil(events.length / SPORTS_PAGE_SIZE));
   if (!Number.isInteger(page) || page < 0 || page >= pageCount) {
     throw new Error("Sports listing page is out of range");
@@ -52,12 +72,13 @@ export function sportsMenuPage(events: readonly SportsEvent[], page: number) {
   const shown = events.slice(start, start + SPORTS_PAGE_SIZE);
   const embed = new EmbedBuilder()
     .setColor(0x58_65_f2)
-    .setTitle("Sports today")
-    .setDescription(listingDescription(events))
+    .setTitle(allowSchedule ? "Sports and LoL schedules" : "Sports today")
+    .setDescription(listingDescription(events, allowSchedule))
     .setFooter({
       text: `Page ${String(page + 1)} of ${String(pageCount)} · ${String(events.length)} games`,
     });
   if (shown.length > 0) {
+    decorateLolEmbed(embed, shown);
     embed.addFields(
       shown.map((event) => ({
         name: truncateGraphemes(escapeMarkdown(event.title), 200),
@@ -67,12 +88,13 @@ export function sportsMenuPage(events: readonly SportsEvent[], page: number) {
   }
   const components: ActionRowBuilder<MessageActionRowComponentBuilder>[] = [];
   const options = shown.flatMap((event, index) =>
-    event.status === "scheduled"
+    event.status === "scheduled" &&
+    !(allowSchedule && event.provider === "lolesports")
       ? []
       : [
           {
             label: truncateGraphemes(event.title, 100),
-            description: `${PROVIDER_NAMES[event.provider]} · ${sportsEventTimeLabel(event)}`,
+            description: `${event.status === "scheduled" ? "Schedule · " : ""}${PROVIDER_NAMES[event.provider]} · ${sportsEventTimeLabel(event)}`,
             value: String(start + index),
           },
         ],
@@ -82,7 +104,11 @@ export function sportsMenuPage(events: readonly SportsEvent[], page: number) {
       new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
         new StringSelectMenuBuilder()
           .setCustomId(PICK_ID)
-          .setPlaceholder("Choose a game to play")
+          .setPlaceholder(
+            allowSchedule
+              ? "Choose a game or schedule a LoL series"
+              : "Choose a game to play",
+          )
           .addOptions(options),
       ),
     );
@@ -115,13 +141,18 @@ export function selectedSportsEvent(
   events: readonly SportsEvent[],
   page: number,
   value: string | undefined,
+  allowSchedule = false,
 ): SportsEvent | null {
   if (value === undefined || !/^\d+$/.test(value)) return null;
   const index = Number(value);
   if (index < page * SPORTS_PAGE_SIZE || index >= (page + 1) * SPORTS_PAGE_SIZE)
     return null;
   const event = events[index];
-  return event === undefined || event.status === "scheduled" ? null : event;
+  return event === undefined ||
+    (event.status === "scheduled" &&
+      !(allowSchedule && event.provider === "lolesports"))
+    ? null
+    : event;
 }
 
 async function nextMenuInteraction(
@@ -152,13 +183,14 @@ async function updateSportsPage(
   picked: ButtonInteraction,
   events: readonly SportsEvent[],
   page: number,
+  allowSchedule = false,
 ): Promise<number> {
   const nextPage = page + (picked.customId === NEXT_ID ? 1 : -1);
   if (nextPage < 0 || nextPage >= Math.ceil(events.length / SPORTS_PAGE_SIZE)) {
     await picked.deferUpdate();
     return page;
   }
-  await picked.update(sportsMenuPage(events, nextPage));
+  await picked.update(sportsMenuPage(events, nextPage, allowSchedule));
   return nextPage;
 }
 
@@ -169,9 +201,10 @@ export async function sendSportsMenu(
     picked: StringSelectMenuInteraction,
     event: SportsEvent,
   ) => Promise<string>,
+  allowSchedule = false,
 ): Promise<void> {
   let page = 0;
-  const initial = sportsMenuPage(events, page);
+  const initial = sportsMenuPage(events, page, allowSchedule);
   await interaction.editReply(initial);
   if (initial.components.length === 0) return;
   const message = await interaction.fetchReply();
@@ -191,12 +224,17 @@ export async function sendSportsMenu(
       return;
     }
     if (picked.isButton()) {
-      page = await updateSportsPage(picked, events, page);
+      page = await updateSportsPage(picked, events, page, allowSchedule);
       continue;
     }
     if (!picked.isStringSelectMenu())
       throw new Error("Unexpected sports picker interaction type");
-    const event = selectedSportsEvent(events, page, picked.values[0]);
+    const event = selectedSportsEvent(
+      events,
+      page,
+      picked.values[0],
+      allowSchedule,
+    );
     if (event === null) {
       await picked.reply({
         content:

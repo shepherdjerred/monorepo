@@ -607,6 +607,8 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runScheduleRehearsalWorkflow",
   // One bounded report-delivery Activity; no Workflow-level sleeps.
   "runDailyNotificationCanary",
+  // One bounded reconciliation Activity; no Workflow-level sleeps.
+  "reconcileStreambotPlaybackWorkflow",
 ]);
 
 const SLACK_MS = 5 * ONE_MINUTE;

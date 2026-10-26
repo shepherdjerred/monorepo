@@ -8,6 +8,7 @@
     "./*": "./src/*"
   },
   "imports": {
+    "#lol-fixture": "./test/fixtures/lol.ts",
     "#architecture": "./architecture.config.ts",
     "#web-fixture": "./test/web/web-fixture.ts",
     "#numbered-fixture": "./test/session/numbered-fixture.ts"

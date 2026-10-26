@@ -36,6 +36,7 @@ import { WebSessionStore } from "@shepherdjerred/streambot/web/server/session-st
 import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
 import type { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
 import type { SportsCatalog } from "@shepherdjerred/streambot/sports/types.ts";
+import type { LolPlaybackSchedules } from "@shepherdjerred/streambot/sports/playback-schedules.ts";
 import {
   fixturePoster,
   fixtureSports,
@@ -124,6 +125,8 @@ export function webFixture(
     automatic?: boolean;
     resolve?: (source: Source) => ResolvedSource;
     sports?: SportsCatalog;
+    schedules?: LolPlaybackSchedules;
+    lol?: boolean;
     username?: string;
   } = {},
 ) {
@@ -255,10 +258,15 @@ export function webFixture(
     automaticChannelRouting: () => Promise.resolve(options.automatic === true),
     musicOverVoice: () => Promise.resolve(true),
     sportsStreaming: () => Promise.resolve(sportsEnabled),
+    lolEsports: () => Promise.resolve(options.lol === true),
+    lolAutoplay: () => Promise.resolve(options.lol === true),
   };
   const revision = (_guild = GUILD, _channel = CHANNEL, slot = selected()) =>
     allocated && slot === allocatedChannel ? sessionRevision(owner) : null;
   const playback = new WebPlayback({
+    ...(options.schedules === undefined
+      ? {}
+      : { schedules: options.schedules }),
     sessions: {
       numbered: {
         selected: () => Promise.resolve(selected()),

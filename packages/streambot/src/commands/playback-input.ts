@@ -13,6 +13,31 @@ import type {
 import type { SportsProvider } from "@shepherdjerred/streambot/sports/types.ts";
 import { isHttpUrl } from "@shepherdjerred/streambot/discord/resolve.ts";
 import { PlaybackCommandBoundaryError } from "./playback-command-errors.ts";
+import {
+  findBestMatch,
+  type LibraryEntry,
+} from "@shepherdjerred/streambot/sources/library.ts";
+
+export function selectBasicMediaSource(
+  query: string,
+  requested: VoicePlaySource,
+  library: readonly LibraryEntry[],
+): Source {
+  if (requested !== "youtube" && requested !== "history") {
+    const match = findBestMatch(library, query);
+    if (match !== null)
+      return { kind: "file", path: match.path, title: match.title };
+    if (requested === "local")
+      throw new PlaybackCommandBoundaryError(
+        `I couldn't find ${query} locally.`,
+      );
+  }
+  if (requested === "history")
+    throw new PlaybackCommandBoundaryError(
+      `I couldn't find ${query} in your history.`,
+    );
+  return { kind: "search", query };
+}
 export type VoicePlaySource = "auto" | "history" | "local" | "youtube";
 export type VoicePlayPlacement = "queue" | "next" | "now";
 

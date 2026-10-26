@@ -1,3 +1,4 @@
+import { addSportsCommands } from "./sports-definitions.ts";
 import {
   SlashCommandBuilder,
   type SlashCommandSubcommandBuilder,
@@ -54,6 +55,7 @@ function withRequestOptions(
           { name: "auto (StreamEast first)", value: "auto" },
           { name: "StreamEast", value: "streameast" },
           { name: "TVSportsLive", value: "tvsportslive" },
+          { name: "LoL Esports", value: "lolesports" },
         ),
     );
 }
@@ -300,41 +302,40 @@ export const commandDefinitions = [
         .setDescription("List all commands and supported sources"),
     )
     .addSubcommandGroup((group) =>
-      group
-        .setName("playback")
-        .setDescription("Playback session controls")
-        .addSubcommand((sub) =>
-          sub
-            .setName("join")
-            .setDescription("Join your voice channel and listen for requests"),
-        )
-        .addSubcommand((sub) =>
-          sub
-            .setName("chapters")
-            .setDescription("List the chapters of the current video"),
-        )
-        .addSubcommand((sub) =>
-          sub.setName("pause").setDescription("Pause playback"),
-        )
-        .addSubcommand((sub) =>
-          sub.setName("resume").setDescription("Resume playback"),
-        )
-        .addSubcommand((sub) =>
-          sub.setName("restart").setDescription("Restart the current video"),
-        )
-        .addSubcommand((sub) =>
-          sub
-            .setName("previous")
-            .setDescription("Play the previous server item"),
-        )
-        .addSubcommand((sub) =>
-          sub.setName("leave").setDescription("Leave your voice channel"),
-        )
-        .addSubcommand((sub) =>
-          sub
-            .setName("sports")
-            .setDescription("Show live and upcoming sports listings for today"),
-        ),
+      addSportsCommands(
+        group
+          .setName("playback")
+          .setDescription("Playback session controls")
+          .addSubcommand((sub) =>
+            sub
+              .setName("join")
+              .setDescription(
+                "Join your voice channel and listen for requests",
+              ),
+          )
+          .addSubcommand((sub) =>
+            sub
+              .setName("chapters")
+              .setDescription("List the chapters of the current video"),
+          )
+          .addSubcommand((sub) =>
+            sub.setName("pause").setDescription("Pause playback"),
+          )
+          .addSubcommand((sub) =>
+            sub.setName("resume").setDescription("Resume playback"),
+          )
+          .addSubcommand((sub) =>
+            sub.setName("restart").setDescription("Restart the current video"),
+          )
+          .addSubcommand((sub) =>
+            sub
+              .setName("previous")
+              .setDescription("Play the previous server item"),
+          )
+          .addSubcommand((sub) =>
+            sub.setName("leave").setDescription("Leave your voice channel"),
+          ),
+      ),
     )
     .addSubcommandGroup((group) =>
       group

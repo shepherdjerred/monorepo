@@ -183,6 +183,41 @@ service address and the shared 1Password-backed token. See
 and the [managed flag inventory](../feature-flags/FLAG-INVENTORY.md) for rollout
 scope.
 
+Competitive LoL is available through the **LoL Esports** sports provider. It
+lists official LCK, Worlds, MSI, First Stand, LPL, LEC, and LCS series for today
+or the next seven days. Web dates use the viewer's timezone. Voice can ask for
+a team's next match, and `/stream playback sports provider:lolesports range:week`
+opens the Discord picker. Official English YouTube broadcasts are preferred;
+Twitch is tried when YouTube cannot supply live audio and video. Riot event IDs
+keep different series distinct even when they share one broadcast channel.
+Choose LoL series through the sports catalog; pasted LoL match-page links point
+you back to the live listing. Seven-day schedules are available only for LoL;
+other sports providers list today's events.
+Match cards show official team and competition logos. Live cards also carry the
+official broadcast thumbnail; upcoming series use their team matchup artwork.
+Artwork persists with the event so queues and history keep the same match identity.
+
+Upcoming LoL series can be scheduled once from web or Discord. Scheduling captures
+the requester's current voice channel and selected video slot (2 in automatic
+mode). The series starts only while live, with a human listener, valid channel
+permissions, an idle slot with an empty queue, and available bot capacity. It ends
+when Riot marks the series complete. Cancellation and manual stop prevent another
+automatic start; other queued media and video slots are preserved.
+An explicit new scheduling request can reserve a previously cancelled or failed
+upcoming series again; its earlier schedule remains in history. Use the web's
+**Your scheduled series**, `/stream playback sports-schedules`, and
+`/stream playback sports-cancel id:...` to inspect or cancel your schedules.
+
+Schedules persist independently of playback history. Temporal's declarative
+`streambot-lol-playback` Schedule invokes the isolated `streambot` Activity queue
+and Streambot's authenticated internal listener. The Schedule starts paused;
+activate it only after the dedicated worker and listener are healthy. The
+`streambot-lol-esports-enabled` and `streambot-lol-autoplay-enabled` gates default
+off and require the existing sports gate. `STREAMBOT_SCHEDULER_TOKEN` is credential
+bootstrap; the homelab projects its dedicated 1Password item into the two consumers.
+The package's `e2e:sports` harness accepts `E2E_LOL_LEAGUE=worlds` (or another
+supported league) instead of `E2E_SPORTS_URL` and does not need PinchTab for LoL.
+
 Active playback sessions also expose an end-to-end voice diagnostic path. Each
 wake candidate owns one correlated trace from Discord receive and local
 verification through OpenAI, tool execution, reply drain, and terminal

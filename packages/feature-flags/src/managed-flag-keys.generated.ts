@@ -233,6 +233,8 @@ export const STREAMBOT_BOOLEAN_FLAG_KEYS = [
   "streambot-numbered-channels-enabled",
   "streambot-plex-posters-enabled",
   "streambot-reconnect-enabled",
+  "streambot-lol-esports-enabled",
+  "streambot-lol-autoplay-enabled",
   "streambot-sports-streaming-enabled",
   "streambot-subtitles-include-auto-generated",
   "streambot-web-ui-enabled",

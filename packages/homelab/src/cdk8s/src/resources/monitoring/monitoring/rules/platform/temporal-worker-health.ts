@@ -159,6 +159,14 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       servedNamespaces: ["prod"],
     },
     {
+      queue: "streambot",
+      metricsNamespace: "temporal",
+      deploymentPattern: "temporal-temporal-streambot-worker",
+      servicePattern: ".*temporal-streambot-worker.*metrics.*",
+      activityPoller: true,
+      servedNamespaces: ["prod"],
+    },
+    {
       queue: "maintenance",
       metricsNamespace: "woodpecker-ci",
       deploymentPattern: "temporal-maintenance-worker",

@@ -1,12 +1,17 @@
 import { z } from "zod";
 import { SportsArtworkSchema } from "./artwork.ts";
 
-export const SportsProviderSchema = z.enum(["streameast", "tvsportslive"]);
+export const SportsProviderSchema = z.enum([
+  "streameast",
+  "tvsportslive",
+  "lolesports",
+]);
 export type SportsProvider = z.infer<typeof SportsProviderSchema>;
 export const SportsProviderPreferenceSchema = z.enum([
   "auto",
   "streameast",
   "tvsportslive",
+  "lolesports",
 ]);
 export type SportsProviderPreference = z.infer<
   typeof SportsProviderPreferenceSchema
@@ -20,6 +25,21 @@ export const SportsEventSchema = z.strictObject({
   startsAt: z.iso.datetime().nullable(),
   pageUrl: z.url(),
   artwork: SportsArtworkSchema.optional(),
+  lol: z
+    .strictObject({
+      eventId: z.string().regex(/^\d+$/),
+      league: z.enum([
+        "lck",
+        "worlds",
+        "msi",
+        "first_stand",
+        "lpl",
+        "lec",
+        "lcs",
+      ]),
+      bestOf: z.number().int().positive(),
+    })
+    .optional(),
 });
 export type SportsEvent = z.infer<typeof SportsEventSchema>;
 
@@ -30,6 +50,14 @@ export type SportsSearchResult =
   | { readonly kind: "not-found" };
 
 export type SportsCatalog = {
+  readonly listSchedule?: (
+    signal: AbortSignal,
+    options: {
+      readonly league?: string;
+      readonly range?: "today" | "week";
+      readonly timeZone?: string;
+    },
+  ) => Promise<readonly SportsEvent[]>;
   readonly listToday: (
     signal: AbortSignal,
     provider?: SportsProviderPreference,

@@ -5,4 +5,5 @@ export const HistoryProviderSchema = z.enum([
   "url",
   "streameast",
   "tvsportslive",
+  "lolesports",
 ]);

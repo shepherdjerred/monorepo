@@ -51,12 +51,28 @@ does not delay browsing or playback. YouTube search results carry their provider
 Only supported public image CDNs can reach the browser; local paths and credentials stay on the server.
 TMDB attribution appears in the remote's artwork credits.
 
-The Live sports tab uses the existing StreamEast and TVSportsLive catalog.
+The Live sports tab combines StreamEast, TVSportsLive, and official LoL Esports listings.
 Its event selections are short-lived and bound to the viewer.
 Upcoming games remain visible but cannot be queued. Live selections enter the shared
 playback service, which checks the sports gate and resolves the provider's stream.
 Queued sports retain the stable event page so playback can refresh expiring stream URLs.
 Live sports retain their existing playback control restrictions.
+
+## Scheduled series keep a separate owner
+
+LoL schedules identify a series rather than a broadcast channel, because one channel can carry several consecutive matches.
+The [sports catalog](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/sports/sports-service.ts)
+refreshes official event metadata before resolving English YouTube or Twitch playback.
+Temporary media URLs remain outside persisted history.
+
+Scheduling records the requester's current voice channel and video slot, so later personal channel selections cannot redirect it.
+Temporal drives reconciliation through an authenticated internal listener; process restarts do not lose the user's intent.
+The [application wiring](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/index.ts) joins that listener to the existing session manager.
+Playback requires listeners, permissions, an idle slot, and an available userbot.
+Each automatic play carries an ownership identifier that survives session recovery but is removed from history replays.
+Completion and cancellation act only on that owned item, preserving replacement playback and other queues.
+
+See [scheduled playback activation](/how-to/enable-streambot-lol-scheduling/) for the operator procedure.
 
 ## The edge serves the remote
 

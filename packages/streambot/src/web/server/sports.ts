@@ -13,7 +13,12 @@ export class WebSports {
   private readonly titles = new Map<string, string>();
   constructor(private readonly catalog: SportsCatalog | undefined) {}
 
-  async browse(params: URLSearchParams, owner: string, signal: AbortSignal) {
+  async browse(
+    params: URLSearchParams,
+    owner: string,
+    signal: AbortSignal,
+    capabilities: { lol?: boolean; scheduling?: boolean } = {},
+  ) {
     const query = requestInput(SportsQuerySchema, Object.fromEntries(params));
     if (this.catalog === undefined)
       throw new WebError(
@@ -21,9 +26,14 @@ export class WebSports {
         "sports_unavailable",
         "Live sports listings are temporarily unavailable.",
       );
-    const today = await this.catalog.listToday(signal, query.provider);
+    const today =
+      query.provider === "lolesports" && this.catalog.listSchedule !== undefined
+        ? await this.catalog.listSchedule(signal, query)
+        : await this.catalog.listToday(signal, query.provider);
     const filtered = today.filter(
-      (event) => query.provider === "auto" || event.provider === query.provider,
+      (event) =>
+        (event.provider !== "lolesports" || capabilities.lol === true) &&
+        (query.provider === "auto" || event.provider === query.provider),
     );
     const events =
       query.query === "" ? filtered : searchEvents(query.query, filtered);
@@ -40,6 +50,12 @@ export class WebSports {
       provider: event.provider,
       status: event.status,
       startsAt: event.startsAt,
+      ...(event.provider === "lolesports"
+        ? {
+            canSchedule:
+              capabilities.scheduling === true && event.status === "scheduled",
+          }
+        : {}),
       ...(event.artwork === undefined ? {} : { sportsArtwork: event.artwork }),
     }));
   }
@@ -65,6 +81,21 @@ export class WebSports {
       },
       title: event.title,
     };
+  }
+
+  scheduledEvent(id: string, owner: string): SportsEvent {
+    const event = this.selections.get(owner, id);
+    if (
+      event.provider !== "lolesports" ||
+      event.lol === undefined ||
+      event.status !== "scheduled"
+    )
+      throw new WebError(
+        409,
+        "not_upcoming",
+        "Choose an upcoming LoL series from a fresh listing.",
+      );
+    return event;
   }
 }
 

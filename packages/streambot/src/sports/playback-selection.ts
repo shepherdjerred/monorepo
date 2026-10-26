@@ -14,6 +14,7 @@ import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-fe
 import { isHttpUrl } from "@shepherdjerred/streambot/discord/resolve.ts";
 import { sportsEventForSource } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
 import { throwIfSportsRequestAborted } from "@shepherdjerred/streambot/sports/sports-service.ts";
+import { hasLolSportsCue } from "./lolesports.ts";
 
 export type SportsPlaybackSelection = {
   readonly source: Source;
@@ -22,10 +23,32 @@ export type SportsPlaybackSelection = {
 
 type PlaySource = "auto" | "history" | "local" | "youtube";
 
+export async function assertLolRequestEnabled(input: {
+  query: string;
+  source: Source | undefined;
+  provider: SportsProviderPreference | undefined;
+  scope: DiscoveryScope | null;
+  gate: MediaFeatureGate["lolEsports"];
+}) {
+  const requested =
+    input.provider === "lolesports" ||
+    (input.source?.kind === "url" &&
+      (input.source.sportsEvent?.provider === "lolesports" ||
+        sportsEventForSource(input.source.url)?.provider === "lolesports")) ||
+    (isHttpUrl(input.query) &&
+      sportsEventForSource(input.query)?.provider === "lolesports");
+  if (
+    requested &&
+    (input.scope === null || (await input.gate?.(input.scope)) !== true)
+  )
+    throw new PlaybackCommandBoundaryError("LoL Esports is not enabled here.");
+}
+
 function hasSportsCue(query: string, utterance = ""): boolean {
   return (
-    /\b(?:sports|nfl|nba|wnba|nhl|mlb)\b/i.test(`${query} ${utterance}`) ||
-    /\b[\w.-]+\s+(?:vs\.?|versus)\s+[\w.-]+\b/i.test(query)
+    /\b(?:sports|nfl|nba|wnba|nhl|mlb|lck|worlds|msi|lpl|lec|lcs|first stand|league of legends)\b/i.test(
+      `${query} ${utterance}`,
+    ) || /\b[\w.-]+\s+(?:vs\.?|versus)\s+[\w.-]+\b/i.test(query)
   );
 }
 
@@ -75,6 +98,10 @@ export async function selectDirectRequestUrl(input: {
       "Sports streams are not enabled here.",
     );
   }
+  if (event.provider === "lolesports")
+    throw new PlaybackCommandBoundaryError(
+      "Choose this series from the LoL Esports schedule, then play its live listing.",
+    );
   const source: Source = { kind: "url", url: event.pageUrl, mode: "video" };
   let preResolved: ResolvedSource;
   try {
@@ -103,6 +130,20 @@ export async function selectSportsSourceOverride(input: {
     signal: AbortSignal,
   ) => Promise<ResolvedSource>;
 }): Promise<(SportsPlaybackSelection & { readonly sports: true }) | null> {
+  if (
+    input.source.kind === "url" &&
+    input.source.sportsEvent?.provider === "lolesports"
+  ) {
+    if (input.scope === null || (await input.enabled?.(input.scope)) !== true)
+      throw new PlaybackCommandBoundaryError(
+        "Sports streams are not enabled here.",
+      );
+    return {
+      source: input.source,
+      sports: true,
+      preResolved: await input.resolve(input.source, input.signal),
+    };
+  }
   if (
     input.source.kind !== "url" ||
     sportsEventForSource(input.source.url) === null
@@ -187,6 +228,7 @@ export async function selectSportsForRequest(input: {
   readonly provider: SportsProviderPreference | undefined;
   readonly scope: DiscoveryScope | null;
   readonly enabled: MediaFeatureGate["sportsStreaming"];
+  readonly lolEnabled?: MediaFeatureGate["lolEsports"];
   readonly signal: AbortSignal;
   readonly catalog: SportsCatalog | undefined;
   readonly resolve: (
@@ -227,6 +269,12 @@ export async function selectSportsForRequest(input: {
     }
     return null;
   }
+  if (
+    (input.provider ?? "auto") === "auto" &&
+    hasLolSportsCue(input.query) &&
+    (await input.lolEnabled?.(input.scope)) !== true
+  )
+    return null;
   const selected = await selectSportsPlayback({
     query: input.query,
     provider: input.provider ?? "auto",

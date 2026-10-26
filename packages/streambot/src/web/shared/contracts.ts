@@ -200,17 +200,35 @@ export const SearchQuerySchema = z.object({
 export const SportsQuerySchema = z.object({
   query: z.string().trim().max(300).default(""),
   provider: z
-    .enum(["auto", "streameast", "tvsportslive"])
+    .enum(["auto", "streameast", "tvsportslive", "lolesports"])
     .default("streameast"),
+  league: z
+    .enum(["", "lck", "worlds", "msi", "first_stand", "lpl", "lec", "lcs"])
+    .default(""),
+  range: z.enum(["today", "week"]).default("today"),
+  timeZone: z
+    .string()
+    .min(1)
+    .max(100)
+    .refine((value) => {
+      try {
+        new Intl.DateTimeFormat("en-US", { timeZone: value });
+        return true;
+      } catch {
+        return false;
+      }
+    })
+    .default("UTC"),
 });
 export const SportsResultsSchema = z.array(
   z.strictObject({
     id: z.string(),
     title: z.string(),
-    provider: z.enum(["streameast", "tvsportslive"]),
+    provider: z.enum(["streameast", "tvsportslive", "lolesports"]),
     status: z.enum(["live", "scheduled", "unknown"]),
     startsAt: z.iso.datetime().nullable(),
     sportsArtwork: SportsArtworkSchema.optional(),
+    canSchedule: z.boolean().optional(),
   }),
 );
 

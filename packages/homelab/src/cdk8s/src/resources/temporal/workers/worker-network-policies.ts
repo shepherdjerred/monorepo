@@ -31,7 +31,7 @@ export function monitoringEgress(
   };
 }
 
-function metricsIngress(ports: readonly number[]) {
+export function metricsIngress(ports: readonly number[]) {
   return [
     {
       from: [

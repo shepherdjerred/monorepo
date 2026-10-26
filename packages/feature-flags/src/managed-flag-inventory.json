@@ -2220,6 +2220,60 @@
       "thresholdRollouts": []
     },
     {
+      "key": "streambot-lol-esports-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot-media-assistant",
+      "purpose": "Enable official English competitive LoL schedules and live broadcasts.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "streambot-guild-1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "streambot-lol-autoplay-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot-media-assistant",
+      "purpose": "Enable one-time automatic playback of selected competitive LoL series.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "streambot-guild-1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "streambot-sports-streaming-enabled",
       "owner": "streambot",
       "namespace": "streambot",
