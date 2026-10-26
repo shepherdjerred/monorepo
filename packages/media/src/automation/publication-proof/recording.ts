@@ -5,7 +5,7 @@ import { publicationRecordStore } from "#filesystem/publication-proof/store.ts";
 import { inspectPublicationRecords } from "#filesystem/publication-proof/records.ts";
 import { assertPublicationJournalIdentity } from "#filesystem/publication-proof/journal.ts";
 import type { VerifiedFileProof } from "#filesystem/verification.ts";
-import type { PublicationIntentRef } from "#shared/publication-proof/intent.ts";
+import type { PublicationIOIntentRef } from "#shared/publication-proof/io.ts";
 import type { PublicationEffect } from "#shared/publication-proof/effects.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
@@ -173,7 +173,7 @@ export type PublicationStores = Awaited<
 /** Process-local recorder composition; serialized records alone never instantiate filesystem authority. */
 export function publicationRecording(
   context: PublicationContext,
-  intent: PublicationIntentRef,
+  intent: PublicationIOIntentRef,
   stores: PublicationStores,
   options: {
     inverse?: { continuationId: string | null };

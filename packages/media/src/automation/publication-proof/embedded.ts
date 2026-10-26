@@ -52,7 +52,7 @@ export async function prepareRecordedPublicationProof(
   };
 }
 
-async function prepareEmbeddedContent(
+export async function prepareEmbeddedContent(
   context: PublicationContext,
   plan: readonly FilePlanEntry[],
   proof: ContentProof,

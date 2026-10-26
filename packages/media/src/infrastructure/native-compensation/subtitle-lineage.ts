@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { PublicationAssetSnapshot } from "#shared/publication-proof/intent.ts";
+import type { MoviePublicationAssetV2 } from "#shared/movie-editions/publication-v2.ts";
 import { NativeSubtitleSnapshotSchema } from "#shared/native-subtitles.ts";
 import { PublicationSubtitleLineageSchema } from "#shared/publication-proof/subtitle-lineage.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
@@ -12,13 +13,14 @@ import { snapshotHash } from "#migration/profile-import.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 const digest = (value: unknown) => snapshotHash(nativeJson(value));
+type LineageAsset = PublicationAssetSnapshot | MoviePublicationAssetV2;
 
 /** Every original caption survives exactly or through its own receipt; extras prove their own installation. */
 export async function compensationSubtitleLineage(
   tx: Prisma.TransactionClient,
   input: {
-    baseline: PublicationAssetSnapshot;
-    current: PublicationAssetSnapshot;
+    baseline: LineageAsset;
+    current: LineageAsset;
     libraryKind: "movies" | "tv";
   },
   budget?: PublicationAuthorityReadBudget,
@@ -156,9 +158,9 @@ export async function compensationSubtitleLineage(
 }
 
 function assertEmbedded(
-  current: PublicationAssetSnapshot,
+  current: LineageAsset,
   id: string,
-  unchanged: PublicationAssetSnapshot["subtitles"][number],
+  unchanged: LineageAsset["subtitles"][number],
 ) {
   if (
     digest(current.subtitles.find((item) => item.id === id)) !==

@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { FileContext } from "#automation/files/types.ts";
-import type { PublicationIntent } from "#shared/publication-proof/intent.ts";
+import type { PublicationIOIntent } from "#shared/publication-proof/io.ts";
 import type {
   LockedPublicationEvent,
   PublicationPath,
@@ -25,7 +25,7 @@ export type PublicationStep = {
 /** Exact forward sequence follows the existing FileOperations calls, without synthesizing their ACKs. */
 export function publicationForwardSteps(
   context: Pick<FileContext, "roots">,
-  intent: PublicationIntent,
+  intent: PublicationIOIntent,
 ): PublicationStep[] {
   const result: PublicationStep[] = [];
   for (const { entry } of intent.entries) {

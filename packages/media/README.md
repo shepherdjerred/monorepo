@@ -77,6 +77,17 @@ invocation observation, SDK expiry and sixty-second publication bound cover
 copy preparation and final acceptance. Embedded English and Simplified Chinese
 text tracks follow requests for that exact edition.
 
+Movie publication uses a distinct version-2 intent/outcome containing the exact
+movie scope and literal file-plan hash. It shares the existing filesystem
+executor and causal effect journal. The intent commits before file publication;
+the final transaction records scoped file ownership, extracted caption content
+and the observed physical outcome. Retries retain the original intent and
+completed receipt. Same-epoch cancellation of unfinished publication replays
+only its recorded inverse, preserving the downloaded source. Scope, current
+consent, profile, storage authority and the original execution deadline are
+checked before new effects. Provenance reads share one 100-record allowance
+across the invocation. File publication alone does not prove Plex availability.
+
 Playable shared bytes do not fulfill an unchosen request. Readiness delivery
 requires matching choice and verified Plex publication; automatic retention
 keeps every pending subject's demand protective, including owner and named

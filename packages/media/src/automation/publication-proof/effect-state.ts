@@ -5,7 +5,7 @@ import {
 } from "#filesystem/operations-types.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
-import type { PublicationIntentRef } from "#shared/publication-proof/intent.ts";
+import type { PublicationIOIntentRef } from "#shared/publication-proof/io.ts";
 import {
   PublicationEffectSchema,
   type PublicationEffect,
@@ -33,7 +33,7 @@ export class PublicationEffectState {
   private previousHash: string | null = null;
   private readonly planned: PublicationStep[];
   constructor(
-    readonly intent: PublicationIntentRef,
+    readonly intent: PublicationIOIntentRef,
     steps: readonly PublicationStep[],
   ) {
     this.planned = [...steps];

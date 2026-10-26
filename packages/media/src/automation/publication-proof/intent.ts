@@ -127,7 +127,7 @@ function requireContent(context: PublicationContext) {
   return context.contentProof;
 }
 
-function assertInitialParticipants(
+export function assertInitialParticipants(
   entry: FilePlanEntry,
   participants: readonly PublicationParticipant[],
 ) {
