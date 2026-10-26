@@ -986,9 +986,10 @@ existed carry no `livenessChecks` and render their original report.
 
 ## The Storm promotion task
 
-The promotion role gives an LLM a browser task for one existing server directory,
-PMC placement, or Minecraft subreddit. The agent discovers the current interface,
-checks posting rules and remote history, and chooses its actions. There are no
+The caller selects a target, action, approved content and timing before invoking
+the promotion executor. The LLM discovers the current interface, performs that
+assignment once, and records the site's actual response. Posting-policy and
+cross-community cadence decisions belong to the caller. There are no
 per-site login scripts, generated CSS selectors, posting-rule regex parsers, or
 required preflight/publish/verify tool sequences.
 
@@ -997,7 +998,7 @@ copy, `history.json` with the latest 50 attempts' metadata, and
 `previous-run.json` with the preceding assessment and prepared content.
 `maintenance.md` context includes the human inventory and recorded manual actions,
 excluding the account locator section. Manual receipts retain their stated date
-precision; the agent still checks current rules and subsequent remote activity.
+precision and serve as optional reference for locating existing placements.
 The [target manifest](../the-storm/promotion/targets.json) and approved copy are bundled
 into the worker image. Original page baselines remain in private object storage.
 The complete ledger remains available to the runner.
@@ -1028,7 +1029,8 @@ scripts/onepassword/with-service-account.sh op run \
 This uses the local browser configuration, real LLM and stored logins, with
 in-memory task state and no Temporal server or production ledger. It prints
 private temporary paths for the structured results and browser diagnostics.
-Remote posting history is still checked by the agent. The references file
+The agent inspects the assigned execution path rather than conducting an
+eligibility review. The references file
 contains only 1Password locators; credentials are injected in memory.
 Use `--all` instead of target IDs to inspect every configured target. An optional
 `--inventory /path/to/targets.json` adds schema-validated placements for local
@@ -1036,32 +1038,37 @@ inspection without changing production targets or schedules. Duplicate IDs fail.
 `--profile <existing-profile>` can inspect an existing signed-in browser profile
 in preview only; it does not prove that the deployed per-account profile is ready.
 
-| Operator command                           | Result                                                                  |
-| ------------------------------------------ | ----------------------------------------------------------------------- |
-| `toolkit promotion status [target] --json` | Saved history, ownership, pause state and next eligibility              |
-| `toolkit promotion preview <target>`       | Inspect eligibility and prepare copy without publishing or paid solving |
-| `toolkit promotion run <target>`           | Let the agent perform at most one eligible visibility action            |
-| `toolkit promotion pause [target]`         | Block further promotion mutations                                       |
-| `toolkit promotion resume [target]`        | Resume inspection; uncertain effects still require reconciliation       |
-| `toolkit promotion reconcile <target>`     | Inspect a prior uncertain effect without creating another               |
+| Operator command                           | Result                                                            |
+| ------------------------------------------ | ----------------------------------------------------------------- |
+| `toolkit promotion status [target] --json` | Saved history, ownership, pause state and schedule deadline       |
+| `toolkit promotion preview <target>`       | Prepare the assigned action without publishing or paid solving    |
+| `toolkit promotion run <target>`           | Execute the caller's selected action once and record the outcome  |
+| `toolkit promotion pause [target]`         | Block further promotion mutations                                 |
+| `toolkit promotion resume [target]`        | Resume inspection; uncertain effects still require reconciliation |
+| `toolkit promotion reconcile <target>`     | Inspect a prior uncertain effect without creating another         |
 
-The agent must establish complete relevant history, current limits, their scope,
-removals, filtering, duplicates and any stricter site rule. An enabled button
-alone is insufficient. Missing evidence produces a blocked result. Reddit uses
-`old.reddit.com`; native owner bumps preserve existing directory listings.
-News-only forum updates require separately approved substantive news.
+For a native owner bump, the executor uses the existing listing's bump control
+and records acceptance, rejection or an explicit site cooldown. It does not need
+an independent historical eligibility proof before attempting the selected bump.
+Preview inspects that path and stops before the effect; it cannot prove acceptance.
+Reddit uses `old.reddit.com`. The caller supplies appropriate approved content,
+including substantive news when selecting a forum news action.
 
 The runner retains ownership locks and checks publishing configuration, pauses,
 stored deadlines, the manifest's minimum interval and its persisted 15–30 minute
-buffer. It checkpoints a possible effect before forwarding a browser mutation.
+buffer before starting an executor. It rechecks the saved schedule before
+forwarding a browser mutation and checkpoints possible effects.
 An interrupted or ambiguous effect remains uncertain and blocks another run.
 A completed inspection involving form interactions but no visibility action is
-recorded as `no-action`, which does not count as a post. The LLM interprets live
-rules and decides which browser interactions accomplish the task; the runner
-does not encode website flows.
+recorded as `no-action`, which does not count as a post. The LLM chooses browser
+interactions to accomplish the assignment; the runner does not encode website
+flows. The caller remains responsible for account/community-wide policy and
+cadence; the dispatcher's saved target deadline is not a complete policy engine.
 
-The final structured result contains the assessment, evidence, prepared copy,
-next eligibility and any receipt. The runner reads back a claimed receipt and
+The final structured result contains the execution outcome, evidence, prepared
+copy and any receipt. The executor supplies `nextEligibleAt` only when the site
+actually supplies a deadline; the runner computes normal scheduling after a
+successful receipt. The runner reads back a claimed receipt and
 captures its screenshot; a verified receipt needs new remote confirmation.
 Receipt readback independently refreshes the last successfully inspected region
 on the same URL, allowing bounded captures on large pages. Quote and freshness
@@ -1069,12 +1076,12 @@ checks decode native node text and retain support for older plain-text baselines
 Non-bump confirmation must match content actually entered during this run.
 Reddit additionally requires a fresh visible post permalink and original
 publication timestamp. A failed or filtered post still counts conservatively.
-The saved assessment carries context into the next run. Browser diagnostics retain
+The saved outcome carries context into the next run. Browser diagnostics retain
 endpoint/action/ref/error metadata without credential values.
-Positive preview assessments require exact evidence quotes from captured live
+Prepared previews require exact evidence quotes from captured live
 browser observations at the cited URLs; historical notes cannot stand in for
-live evidence. This provenance check does not itself prove the agent interpreted
-the rule or latest history correctly.
+live evidence. This establishes the inspected execution path rather than a
+posting-policy decision.
 
 Preview blocks promotion clicks, form edits, Enter submissions, action URLs,
 receipt settlement and paid CAPTCHA tasks outside the prompt. It permits

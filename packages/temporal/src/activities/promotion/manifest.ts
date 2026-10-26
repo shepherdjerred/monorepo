@@ -32,7 +32,7 @@ export async function promotionContent(
   return content.join("\n\n");
 }
 
-/** Recorded manual receipts are task context, never proof of current eligibility. */
+/** Inventory reference for locating placements; scheduling belongs to the caller. */
 export async function promotionMaintenanceContext(): Promise<string> {
   const inventory = new URL(
     "manifest.md",

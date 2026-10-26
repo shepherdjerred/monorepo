@@ -6,6 +6,7 @@ import { z } from "zod/v4";
 import { promotionConfig } from "#config/promotion.ts";
 import {
   PromotionRunInputSchema,
+  promotionDispatchAt,
   nextPromotionEligibleAt,
   promotionStateSummary,
   type PromotionState,
@@ -15,6 +16,7 @@ import {
 import { redactSecrets } from "#shared/redact.ts";
 import { agentTaskSecretTokens } from "#activities/agent/agent-task-env.ts";
 import { runPromotionAgent } from "./agent.ts";
+import type { PromotionTaskResult } from "./task-contract.ts";
 import { reconcileClosedPromotionOwner } from "./ownership.ts";
 import { promotionManifest, promotionTarget } from "./manifest.ts";
 import { promotionAlertFingerprint, promotionReport } from "./report.ts";
@@ -128,8 +130,8 @@ async function inspectPromotionTick() {
             state.lock === null &&
             state.blockedReason === null &&
             promotionTarget(state.targetId).action !== "pending" &&
-            (state.nextEligibleAt === null ||
-              Date.parse(state.nextEligibleAt) <= Date.now()),
+            promotionDispatchAt(promotionTarget(state.targetId), state) <=
+              Date.now(),
         )
         .map((state) => state.targetId)
     : [];
@@ -149,13 +151,36 @@ async function inspectPromotionTick() {
   return { dueTargetIds, alerts };
 }
 
-async function executePromotion(raw: PromotionRunInput) {
-  const input = PromotionRunInputSchema.parse(raw);
+function executionBlocker(
+  state: PromotionState,
+  result: PromotionTaskResult,
+  verified: boolean,
+  uncertain: boolean,
+): string | null {
+  if (uncertain)
+    return "Submission outcome uncertain; reconcile the remote result";
+  if (!verified && result.status === "verified")
+    return "Agent claimed publication without a verified browser receipt";
+  if (result.status === "blocked") return result.summary;
+  return !verified &&
+    result.status === "deferred" &&
+    (state.nextEligibleAt === null ||
+      Date.parse(state.nextEligibleAt) <= Date.now())
+    ? "Site cooldown was reported without a future deadline"
+    : state.blockedReason;
+}
+
+function assertPublishingNamespace(mode: PromotionRunInput["mode"]): void {
   if (
-    input.mode === "run" &&
+    mode === "run" &&
     parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]) !== "prod"
   )
     throw new Error("Promotion publishing requires the production namespace");
+}
+
+async function executePromotion(raw: PromotionRunInput) {
+  const input = PromotionRunInputSchema.parse(raw);
+  assertPublishingNamespace(input.mode);
   const target = promotionTarget(input.targetId);
   const store = promotionStore();
   const info = Context.current().info;
@@ -188,6 +213,13 @@ async function executePromotion(raw: PromotionRunInput) {
       status: "blocked",
       summary: before.blockedReason ?? "Target is paused or already owned",
     };
+  const dispatchAt = promotionDispatchAt(target, before);
+  if (input.mode === "run" && dispatchAt > Date.now())
+    return {
+      targetId: target.id,
+      status: "deferred",
+      summary: `Caller schedule defers this action until ${new Date(dispatchAt).toISOString()}`,
+    };
   const state = await updatePromotionState(store, target.id, (current) => {
     if (
       input.mode !== "reconcile" &&
@@ -196,6 +228,11 @@ async function executePromotion(raw: PromotionRunInput) {
           (current.paused || current.blockedReason !== null)))
     )
       throw new Error("Promotion target is already owned or paused");
+    if (
+      input.mode === "run" &&
+      promotionDispatchAt(target, current) > Date.now()
+    )
+      throw new Error("Caller schedule changed before executor claim");
     return {
       ...current,
       lock: { occurrenceId, acquiredAt: new Date().toISOString() },
@@ -234,18 +271,12 @@ async function executePromotion(raw: PromotionRunInput) {
         occurrenceId,
         input.mode === "reconcile",
       );
-      const blockedReason = uncertain
-        ? "Submission outcome uncertain; reconcile the remote result"
-        : !verified && result.status === "verified"
-          ? "Agent claimed publication without a verified browser receipt"
-          : result.status === "blocked"
-            ? result.summary
-            : !verified &&
-                result.status === "deferred" &&
-                (current.nextEligibleAt === null ||
-                  Date.parse(current.nextEligibleAt) <= Date.now())
-              ? "Deferred without a future eligibility deadline; inspect current rules and history"
-              : current.blockedReason;
+      const blockedReason = executionBlocker(
+        current,
+        result,
+        verified,
+        uncertain,
+      );
       const next = {
         ...current,
         blockedReason,

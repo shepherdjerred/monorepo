@@ -13,7 +13,7 @@ import {
 const now = Date.parse("2026-10-26T12:00:00.000Z");
 const result: PromotionTaskResult = {
   status: "preview",
-  summary: "Prepared the eligible native action",
+  summary: "Prepared the assigned native action",
   performedAction: false,
   nextEligibleAt: null,
   preparedContent: "Native owner refresh",
@@ -233,6 +233,30 @@ describe("promotion ownership and settlement", () => {
       Date.parse("2026-10-27T12:00:00.000Z"),
     );
   });
+  it.each([null, "2026-10-25T12:00:00.000Z"])(
+    "settles a verified action without a future deadline (%s)",
+    async (nextEligibleAt) => {
+      const test = await harness();
+      await test.journal.beforeMutation();
+      await test.journal.finish({
+        ...result,
+        status: "verified",
+        performedAction: true,
+        nextEligibleAt,
+        receipt: {
+          status: "verified",
+          url: test.target.url,
+          quote: "The new owner refresh is complete",
+          occurrenceId: null,
+        },
+      });
+      const state = await test.state();
+      expect(state.attempts[0]?.status).toBe("verified");
+      expect(
+        state.nextEligibleAt === null || Date.parse(state.nextEligibleAt) < now,
+      ).toBe(true);
+    },
+  );
   it("refuses a confirmation which existed before the browser interaction", async () => {
     const test = await harness();
     test.journal.observe({
@@ -300,7 +324,7 @@ describe("promotion ownership and settlement", () => {
     ).rejects.toThrow("Preview");
     await expect(
       test.journal.finish({ ...result, status: "deferred" }),
-    ).rejects.toThrow("future eligibility");
+    ).rejects.toThrow("future deadline");
     expect(test.capture).not.toHaveBeenCalled();
   });
   it("validates URLs at runtime while exporting a provider-compatible schema", () => {
