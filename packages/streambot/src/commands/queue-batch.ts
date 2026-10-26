@@ -40,7 +40,7 @@ class QueueBatch {
     // Generic video playlists retain video intent; catalog and Spotify sources carry music intent.
     const routing =
       source.mode === undefined || source.mode === "auto"
-        ? withMode(source, "video")
+        ? withMode(source, source.music === undefined ? "video" : "music")
         : source;
     const number =
       deps.routePlayback === undefined

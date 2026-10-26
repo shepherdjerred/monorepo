@@ -20,6 +20,10 @@ import {
   number,
 } from "#numbered-fixture";
 import { fixtureMusic } from "#music-fixture";
+import { SONG } from "#music-fixture";
+import { musicCommandContext } from "@shepherdjerred/streambot/discord/music-context.ts";
+import { queueBatch } from "@shepherdjerred/streambot/commands/queue-batch.ts";
+import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 
 const services: ReturnType<typeof fixtureMusic>[] = [];
 const pendingPlaylistLoad = Promise.withResolvers<{
@@ -211,6 +215,47 @@ test("a rejected playlist load replaces its loading reply with the error", async
       components: [],
     }),
   );
+});
+
+test("saved catalog tracks route to the audio slot when their request mode was stripped", async () => {
+  const f = await setup();
+  const context = await musicCommandContext(f.issuer, f.deps);
+  const routed: Source[] = [];
+  const events: Parameters<typeof context.dispatch>[0][] = [];
+  const target = {
+    ...context,
+    playbackChannel: number(1),
+    dispatch: (event: Parameters<typeof context.dispatch>[0]) => {
+      events.push(event);
+    },
+  };
+  const deps = {
+    ...context,
+    routePlayback: async (source: Source) => {
+      routed.push(source);
+      return target;
+    },
+  };
+
+  await queueBatch({
+    deps,
+    sources: [
+      {
+        kind: "search",
+        query: "Daft Punk Get Lucky",
+        music: SONG,
+      },
+    ],
+    userId,
+    placement: "queue",
+    signal: new AbortController().signal,
+  });
+
+  expect(routed[0]?.mode).toBe("music");
+  expect(events[0]).toMatchObject({
+    type: "ADD_BATCH",
+    items: [{ source: { music: SONG, mode: undefined } }],
+  });
 });
 
 test("quick YouTube playlist loading retains all 250 tracks and the video destination", async () => {
