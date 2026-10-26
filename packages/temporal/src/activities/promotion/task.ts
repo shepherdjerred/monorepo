@@ -55,6 +55,10 @@ export class PromotionTaskJournal {
     const { mode, enabled, store, target, occurrenceId, now } = this.input;
     if (mode !== "run")
       throw new Error("Read-only mode cannot change a promotion");
+    if (this.uncertainTransport)
+      throw new Error(
+        "Previous browser mutation is uncertain; inspect instead of writing again",
+      );
     if (!(await enabled())) throw new Error("Promotion publishing is disabled");
     if (field !== undefined) this.fields.set(field.key, field.text);
     const content = [...this.fields.values()].join("\n");
@@ -108,7 +112,6 @@ export class PromotionTaskJournal {
                   ...item,
                   contentHash,
                   contentExcerpt,
-                  beforeSubmission: structuredClone(this.observations),
                 }
               : item,
           ),
@@ -152,6 +155,24 @@ export class PromotionTaskJournal {
     return page.screenshotKey;
   }
 
+  private assertEligibilityEvidence(result: PromotionTaskResult): void {
+    if (result.status !== "preview") return;
+    if (result.evidence.length === 0)
+      throw new Error("Positive eligibility needs captured live evidence");
+    for (const evidence of result.evidence) {
+      const captured = this.observations.some(
+        (page) =>
+          page.url === evidence.url &&
+          (page.text.includes(evidence.quote) ||
+            page.text.includes(JSON.stringify(evidence.quote).slice(1, -1))),
+      );
+      if (!captured)
+        throw new Error(
+          `Positive eligibility quote is absent from live browser evidence at ${evidence.url}`,
+        );
+    }
+  }
+
   async finish(result: PromotionTaskResult): Promise<void> {
     const { mode, store, target, occurrenceId, now } = this.input;
     if (
@@ -167,6 +188,7 @@ export class PromotionTaskJournal {
       (receipt?.status !== "verified" || !result.performedAction)
     )
       throw new Error("Verified result requires a remote receipt");
+    this.assertEligibilityEvidence(result);
     const resolving = receipt?.occurrenceId ?? occurrenceId;
     const screenshotKey = await this.receiptKey(receipt, resolving);
     if (mode === "reconcile" && receipt === null) return;

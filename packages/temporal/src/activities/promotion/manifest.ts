@@ -31,3 +31,16 @@ export async function promotionContent(
   );
   return content.join("\n\n");
 }
+
+/** Recorded manual receipts are task context, never proof of current eligibility. */
+export async function promotionMaintenanceContext(): Promise<string> {
+  const inventory = new URL(
+    "manifest.md",
+    import.meta.resolve("@shepherdjerred/the-storm/promotion/targets.json"),
+  );
+  const text = await Bun.file(inventory).text();
+  const end = text.indexOf("## Accounts");
+  if (end === -1)
+    throw new Error("Promotion inventory is missing its account boundary");
+  return text.slice(0, end);
+}

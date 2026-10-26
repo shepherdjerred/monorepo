@@ -12,6 +12,18 @@ const IdentifierSchema = z.object({
   tabId: z.string().optional(),
 });
 const EvaluationSchema = z.object({ result: z.unknown() });
+const AccessibleNodeSchema = z.object({
+  ref: z.string(),
+  role: z.string(),
+  name: z.string().optional(),
+  disabled: z.boolean().optional(),
+});
+const SnapshotSchema = z.object({
+  nodes: z.array(AccessibleNodeSchema),
+  idpiNotice: z.string(),
+  untrustedContent: z.boolean(),
+  idpiWarning: z.string().optional(),
+});
 const ProfileSchema = z.object({ name: z.string() });
 const ProfilesSchema = z.union([
   z.array(ProfileSchema),
@@ -40,17 +52,23 @@ export class PromotionBrowser {
   private readonly token: string;
   private readonly signal: AbortSignal;
   private tabId: string | undefined;
+  private readonly profile: string | undefined;
+  private readonly controls = new Map<
+    string,
+    z.infer<typeof AccessibleNodeSchema>
+  >();
 
   constructor(
     target: PromotionTarget,
     baseUrl: string,
     token: string,
-    signal: AbortSignal,
+    options: { signal: AbortSignal; profile?: string },
   ) {
     this.target = target;
     this.baseUrl = baseUrl.replace(/\/$/, "");
     this.token = token;
-    this.signal = signal;
+    this.signal = options.signal;
+    this.profile = options.profile;
   }
 
   private async request(
@@ -135,8 +153,9 @@ export class PromotionBrowser {
 
   async open(address: string): Promise<{ url: string }> {
     const url = assertPromotionUrl(this.target, address);
+    this.controls.clear();
     if (this.tabId === undefined) {
-      const profile = `storm-promotion-${this.target.account}`;
+      const profile = this.profile ?? `storm-promotion-${this.target.account}`;
       const response = ProfilesSchema.parse(await this.json("/profiles"));
       const profiles = Array.isArray(response) ? response : response.profiles;
       if (!profiles.some((existing) => existing.name === profile))
@@ -155,28 +174,40 @@ export class PromotionBrowser {
     return { url: promotionPublicUrl(await this.currentUrl()) };
   }
 
-  async snapshot(): Promise<{
+  async snapshot(scope?: {
+    selector?: string | undefined;
+    depth?: number | undefined;
+  }): Promise<{
     url: string;
     text: string;
     publishedAt: string | null;
   }> {
+    this.controls.clear();
     const url = await this.currentUrl();
     // PinchTab's snapshot performs its content scanning/wrapping before data
     // enters an agent prompt. Keep that endpoint in the observation path.
+    const parameters = new URLSearchParams({
+      format: "json",
+      ...(scope?.selector === undefined ? {} : { selector: scope.selector }),
+      ...(scope?.depth === undefined ? {} : { depth: String(scope.depth) }),
+    });
     const response = await this.request(
-      `${this.tab()}/snapshot?format=compact`,
+      `${this.tab()}/snapshot?${parameters.toString()}`,
     );
-    const snapshot = await response.text();
+    const snapshot = SnapshotSchema.parse(await response.json());
+    for (const node of snapshot.nodes) this.controls.set(node.ref, node);
     const times = await this.evaluate(
       "Array.from(document.querySelectorAll('time[datetime]')).map(e=>({datetime:e.getAttribute('datetime'),text:e.textContent}))",
     );
     const text = redactPromotionUrls(
-      JSON.stringify({ snapshot, timestamps: times }),
+      JSON.stringify({ snapshot, scope: scope ?? {}, timestamps: times }),
     );
-    if (text.length > 120_000)
+    if (text.length > 120_000) {
+      this.controls.clear();
       throw new Error(
         "Promotion page exceeds observation size limit; use a narrower page",
       );
+    }
     const publishedAt = this.target.id.startsWith("reddit-")
       ? z
           .string()
@@ -191,9 +222,9 @@ export class PromotionBrowser {
   }
 
   async action(body: Record<string, unknown>): Promise<unknown> {
-    await this.currentUrl();
+    const before = await this.currentUrl();
     const result = await this.json(`${this.tab()}/action`, body);
-    await this.currentUrl();
+    if ((await this.currentUrl()) !== before) this.controls.clear();
     return result;
   }
 
@@ -210,20 +241,11 @@ export class PromotionBrowser {
 
   async accessibleControl(ref: string) {
     await this.currentUrl();
-    const snapshot = z
-      .object({
-        nodes: z.array(
-          z.object({
-            ref: z.string(),
-            role: z.string(),
-            name: z.string().optional(),
-          }),
-        ),
-      })
-      .parse(await this.json(`${this.tab()}/snapshot?filter=interactive`));
-    const node = snapshot.nodes.find((item) => item.ref === ref);
+    const node = this.controls.get(ref);
     if (node === undefined)
-      throw new Error("Refresh the snapshot: input reference is absent");
+      throw new Error(
+        "Refresh the relevant snapshot: control reference is absent",
+      );
     return node;
   }
 

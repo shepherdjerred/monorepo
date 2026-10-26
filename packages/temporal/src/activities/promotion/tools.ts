@@ -29,7 +29,7 @@ const ActionSchema = z
     key: z.string().optional(),
     scrollY: z.number().optional(),
     scrollX: z.number().optional(),
-    credential: z.enum(["username", "password"]).optional(),
+    credential: z.enum(["username", "email", "password"]).optional(),
   })
   .refine(
     (value) => value.ref === undefined || value.selector === undefined,
@@ -40,7 +40,15 @@ export const PromotionToolSchema = z.discriminatedUnion("endpoint", [
     endpoint: z.literal("navigate"),
     body: z.strictObject({ url: z.url() }),
   }),
-  z.strictObject({ endpoint: z.literal("snapshot") }),
+  z.strictObject({
+    endpoint: z.literal("snapshot"),
+    body: z
+      .strictObject({
+        selector: z.string().min(1).max(1000).optional(),
+        depth: z.number().int().min(0).max(30).optional(),
+      })
+      .optional(),
+  }),
   z.strictObject({ endpoint: z.literal("screenshot") }),
   z.strictObject({ endpoint: z.literal("action"), body: ActionSchema }),
   z.strictObject({
@@ -63,8 +71,23 @@ export const PromotionToolSchema = z.discriminatedUnion("endpoint", [
 ]);
 export const PromotionLoginsSchema = z.record(
   z.string(),
-  z.strictObject({ username: z.string().min(1), password: z.string().min(1) }),
+  z.strictObject({
+    username: z.string().min(1),
+    email: z.email().optional(),
+    password: z.string().min(1),
+  }),
 );
+
+function isSignInControl(node: {
+  role: string;
+  name?: string | undefined;
+}): boolean {
+  return (
+    node.role === "button" &&
+    /\b(?:log|sign)\s*in\b/i.test(node.name ?? "") &&
+    !/\b(?:bump|vote|publish|post|purchase|delete)\b/i.test(node.name ?? "")
+  );
+}
 
 /** Native browser actions; there are no site-specific sequences or selectors. */
 export function createPromotionToolHandler(input: {
@@ -83,8 +106,8 @@ export function createPromotionToolHandler(input: {
   signal: AbortSignal;
   heartbeat: () => void;
 }) {
-  let inFlight = false,
-    toolCalls = 0,
+  let queue: Promise<unknown> = Promise.resolve();
+  let toolCalls = 0,
     loginSubmitted = false;
   let loginPage: string | undefined;
 
@@ -108,6 +131,15 @@ export function createPromotionToolHandler(input: {
     const login = input.logins[input.account];
     if (login === undefined)
       throw new Error("Stored login is unavailable for this account");
+    const value =
+      body.credential === "email"
+        ? (login.email ??
+          (z.email().safeParse(login.username).success
+            ? login.username
+            : undefined))
+        : login[body.credential];
+    if (value === undefined)
+      throw new Error("Stored email is unavailable for this account");
     const node = await input.browser.accessibleControl(body.ref);
     const type = await input.browser.attribute(body.ref, "type");
     if (
@@ -123,7 +155,7 @@ export function createPromotionToolHandler(input: {
     const { credential, ...nativeAction } = body;
     if (body.kind === "type")
       await input.browser.action({ kind: "fill", ref: body.ref, text: "" });
-    await input.browser.action({ ...nativeAction, text: login[credential] });
+    await input.browser.action({ ...nativeAction, text: value });
     if (credential === "password") loginPage = page;
     return { filled: true };
   }
@@ -150,6 +182,7 @@ export function createPromotionToolHandler(input: {
     if (body.credential !== undefined) return await credentialAction(body);
     if (["scroll", "hover"].includes(body.kind))
       return await input.browser.action(body);
+    if (await isSearchAction(body)) return await input.browser.action(body);
     if (
       body.kind === "click" &&
       body.ref !== undefined &&
@@ -163,10 +196,7 @@ export function createPromotionToolHandler(input: {
           new URL(href, await input.browser.currentUrl()).href,
         );
       }
-      if (
-        node.role === "button" &&
-        /^(?:log\s*in|sign\s*in)$/i.test(node.name?.trim() ?? "")
-      ) {
+      if (isSignInControl(node)) {
         return await submitLogin(body);
       }
     }
@@ -182,6 +212,27 @@ export function createPromotionToolHandler(input: {
       input.journal.mutationFailed();
       throw error;
     }
+  }
+
+  async function isSearchAction(
+    body: z.infer<typeof ActionSchema>,
+  ): Promise<boolean> {
+    if (
+      body.ref === undefined ||
+      !["fill", "type", "press"].includes(body.kind)
+    )
+      return false;
+    if (body.kind === "press" && body.key !== "Enter") return false;
+    const type = await input.browser.attribute(body.ref, "type");
+    if (type === "search") return true;
+    const role = await input.browser.attribute(body.ref, "role");
+    return (
+      role === "searchbox" ||
+      (role === "combobox" &&
+        /\bsearch\b/i.test(
+          (await input.browser.attribute(body.ref, "aria-label")) ?? "",
+        ))
+    );
   }
 
   async function navigate(url: string) {
@@ -200,57 +251,60 @@ export function createPromotionToolHandler(input: {
     }
   }
 
-  return async (raw: unknown): Promise<unknown> => {
-    if (inFlight) throw new Error("Browser calls must be sequential");
+  async function handle(raw: unknown): Promise<unknown> {
     if (input.signal.aborted) throw new Error("Promotion run cancelled");
-    inFlight = true;
-    try {
-      const tool = PromotionToolSchema.parse(raw);
-      if (++toolCalls > input.maxToolCalls)
-        throw new Error("Browser tool budget exhausted");
-      assertPromotionOwnership(
-        await readPromotionState(input.store, input.targetId),
-        input.occurrenceId,
-      );
-      input.heartbeat();
-      switch (tool.endpoint) {
-        case "navigate":
-          return await navigate(tool.body.url);
-        case "snapshot": {
-          const page = await input.browser.snapshot();
-          input.journal.observe(page);
-          return { untrustedPageContent: page };
-        }
-        case "attr":
-          return await input.browser.attribute(
-            tool.body.selector,
-            tool.body.name,
-          );
-        case "action":
-          return await action(tool.body);
-        case "screenshot":
-          return {
-            png: Buffer.from(await input.browser.screenshot()).toString(
-              "base64",
-            ),
-          };
-        case "solve-captcha": {
-          if (input.preview || input.reconciliation)
-            throw new Error("Read-only mode cannot create paid CAPTCHA tasks");
-          return await solvePromotionChallenge({
-            store: input.store,
-            occurrenceId: input.occurrenceId,
-            challenge: await input.browser.challenge(),
-            apiKey: input.solverKey,
-            allowanceMicrousd: input.solverAllowanceMicrousd,
-            signal: input.signal,
-            heartbeat: input.heartbeat,
-            apply: (token) => input.browser.applyChallenge(token),
-          });
-        }
+    const tool = PromotionToolSchema.parse(raw);
+    if (++toolCalls > input.maxToolCalls)
+      throw new Error("Browser tool budget exhausted");
+    assertPromotionOwnership(
+      await readPromotionState(input.store, input.targetId),
+      input.occurrenceId,
+    );
+    input.heartbeat();
+    switch (tool.endpoint) {
+      case "navigate":
+        return await navigate(tool.body.url);
+      case "snapshot": {
+        const page = await input.browser.snapshot(tool.body);
+        input.journal.observe(page);
+        return { untrustedPageContent: page };
       }
+      case "attr":
+        return await input.browser.attribute(
+          tool.body.selector,
+          tool.body.name,
+        );
+      case "action":
+        return await action(tool.body);
+      case "screenshot":
+        return {
+          png: Buffer.from(await input.browser.screenshot()).toString("base64"),
+        };
+      case "solve-captcha": {
+        if (input.preview || input.reconciliation)
+          throw new Error("Read-only mode cannot create paid CAPTCHA tasks");
+        return await solvePromotionChallenge({
+          store: input.store,
+          occurrenceId: input.occurrenceId,
+          challenge: await input.browser.challenge(),
+          apiKey: input.solverKey,
+          allowanceMicrousd: input.solverAllowanceMicrousd,
+          signal: input.signal,
+          heartbeat: input.heartbeat,
+          apply: (token) => input.browser.applyChallenge(token),
+        });
+      }
+    }
+  }
+  return async (raw: unknown): Promise<unknown> => {
+    const previous = queue;
+    const next = Promise.withResolvers<undefined>();
+    queue = next.promise;
+    await previous;
+    try {
+      return await handle(raw);
     } finally {
-      inFlight = false;
+      next.resolve(undefined);
     }
   };
 }

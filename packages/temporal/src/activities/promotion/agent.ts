@@ -15,8 +15,11 @@ import { redactSecrets } from "#shared/redact.ts";
 import { redactAgentTaskPayloadStrings } from "#activities/agent/agent-task-result.ts";
 import { PromotionBrowser } from "./browser.ts";
 import { PromotionTaskJournal } from "./task.ts";
-import { PromotionTaskResultSchema } from "./task-contract.ts";
-import { promotionContent } from "./manifest.ts";
+import {
+  PromotionTaskResultSchema,
+  PromotionPreviewResultSchema,
+} from "./task-contract.ts";
+import { promotionContent, promotionMaintenanceContext } from "./manifest.ts";
 import { promotionPrompt } from "./prompt.ts";
 import { promotionTaskFiles } from "./task-files.ts";
 import {
@@ -55,7 +58,10 @@ export async function runPromotionAgent(input: {
   occurrenceId: string;
   mode: PromotionRunInput["mode"];
   store: PromotionStore;
+  browserProfile?: string;
 }) {
+  if (input.browserProfile !== undefined && input.mode !== "preview")
+    throw new Error("A browser profile override is allowed only in preview");
   const config = await promotionConfig();
   const uid = promotionProviderUid();
   const context = Context.current();
@@ -74,7 +80,12 @@ export async function runPromotionAgent(input: {
     input.target,
     required("PINCHTAB_BASE_URL"),
     required("PINCHTAB_TOKEN"),
-    signal,
+    {
+      signal,
+      ...(input.browserProfile === undefined
+        ? {}
+        : { profile: input.browserProfile }),
+    },
   );
   const logins = PromotionLoginsSchema.parse(
     JSON.parse(required("STORM_PROMOTION_LOGINS")),
@@ -166,6 +177,7 @@ export async function runPromotionAgent(input: {
       content,
       previous: previous?.value ?? null,
     });
+    files["maintenance.md"] = await promotionMaintenanceContext();
     for (const [name, body] of Object.entries(files))
       await Bun.write(path.join(workdir, name), body);
     const env = {
@@ -192,9 +204,14 @@ export async function runPromotionAgent(input: {
         networkAccessEnabled: true,
         webSearchMode: "disabled",
       },
-      outputSchema: z.toJSONSchema(PromotionTaskResultSchema, {
-        target: "draft-7",
-      }),
+      outputSchema: z.toJSONSchema(
+        input.mode === "preview"
+          ? PromotionPreviewResultSchema
+          : PromotionTaskResultSchema,
+        {
+          target: "draft-7",
+        },
+      ),
       requireFinalText: true,
       skipGitRepoCheck: true,
       redactTokens: redact,

@@ -10,6 +10,7 @@ describe("native PinchTab transport", () => {
     const target = promotionTarget("pmc");
     const paths: string[] = [],
       actions: unknown[] = [];
+    let failSnapshot = false;
     const server = Bun.serve({
       hostname: "127.0.0.1",
       port: 0,
@@ -33,14 +34,24 @@ describe("native PinchTab transport", () => {
             result: expression === "location.href" ? target.url : [],
           });
         }
-        if (url.pathname.endsWith("/snapshot"))
-          return url.searchParams.get("format") === "compact"
-            ? new Response(
-                'UNTRUSTED CONTENT\ne36 textbox "Email or username"\ne41 textbox "Password"\nBump once every 24 hours',
-              )
-            : Response.json({
-                nodes: [{ ref: "e41", role: "textbox", name: "Password" }],
-              });
+        if (url.pathname.endsWith("/snapshot")) {
+          if (failSnapshot)
+            return new Response("Snapshot unavailable", { status: 503 });
+          return Response.json({
+            idpiNotice: "UNTRUSTED CONTENT",
+            untrustedContent: true,
+            nodes: [
+              { ref: "e36", role: "textbox", name: "Email or username" },
+              {
+                ref: "e41",
+                role: "textbox",
+                name: "Password",
+                value: "must-not-enter-observations",
+              },
+              { ref: "e42", role: "text", name: "Bump once every 24 hours" },
+            ],
+          });
+        }
         if (url.pathname.endsWith("/attr"))
           return Response.json({ value: "password" });
         if (url.pathname.endsWith("/action")) {
@@ -62,17 +73,23 @@ describe("native PinchTab transport", () => {
         target,
         server.url.origin,
         "fixture-browser-token",
-        new AbortController().signal,
+        { signal: new AbortController().signal },
       );
       await browser.open(target.url);
       const page = await browser.snapshot();
       expect(page.text).toContain("UNTRUSTED CONTENT");
       expect(page.text).toContain("Bump once every 24 hours");
-      expect(paths).toContain("/tabs/page/snapshot?format=compact");
+      expect(paths).toContain("/tabs/page/snapshot?format=json");
+      expect(page.text).not.toContain("must-not-enter-observations");
       expect(await browser.accessibleControl("e41")).toMatchObject({
         role: "textbox",
       });
       expect(await browser.attribute("e41", "type")).toBe("password");
+      expect(paths.filter((path) => path.includes("/snapshot"))).toHaveLength(
+        1,
+      );
+      await browser.snapshot({ selector: "main" });
+      expect(paths).toContain("/tabs/page/snapshot?format=json&selector=main");
       await browser.action({
         kind: "fill",
         ref: "e41",
@@ -82,6 +99,13 @@ describe("native PinchTab transport", () => {
         { kind: "fill", ref: "e41", text: "fixture-password" },
       ]);
       expect(paths).toContain("/tabs/page/attr?selector=e41&name=type");
+      await browser.snapshot({ selector: "main", depth: 3 });
+      expect(paths).toContain(
+        "/tabs/page/snapshot?format=json&selector=main&depth=3",
+      );
+      failSnapshot = true;
+      await expect(browser.snapshot()).rejects.toThrow("Snapshot unavailable");
+      await expect(browser.accessibleControl("e41")).rejects.toThrow("Refresh");
       await expect(browser.open("https://outside.invalid/")).rejects.toThrow(
         "scope",
       );
