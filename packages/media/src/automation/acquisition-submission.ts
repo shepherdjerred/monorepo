@@ -233,12 +233,9 @@ async function prepareAndSubmit(
       status: preparation.wait ? "waiting" : "blocked",
       reason: preparation.reason,
     };
-  const reason = await submitNew(
-    context,
-    attempt,
-    candidate,
-    preparation.bytes,
-  );
+  const reason = await submitNew(context, attempt, candidate, {
+    bytes: preparation.bytes,
+  });
   return reason === null ? null : { status: "blocked", reason };
 }
 
@@ -355,7 +352,7 @@ export async function reconcileUnconfirmedSubmission(
     });
 }
 
-function ownedTorrent(
+export function ownedTorrent(
   context: MediaAutomationContext,
   observed: Parameters<
     MediaAutomationContext["qbittorrent"]["validateOwnership"]
@@ -375,7 +372,7 @@ function ownedTorrent(
   }
 }
 
-async function prepareTorrent(
+export async function prepareTorrent(
   context: MediaAutomationContext,
   candidate: ProviderCandidate,
 ): Promise<{
@@ -405,12 +402,16 @@ async function prepareTorrent(
   }
 }
 
-async function submitNew(
+export async function submitNew(
   context: MediaAutomationContext,
   attempt: AcquisitionAttempt,
   candidate: ProviderCandidate,
-  bytes: Uint8Array<ArrayBuffer> | null,
+  preparation: {
+    bytes: Uint8Array<ArrayBuffer> | null;
+    authorize?: typeof authorizedSubmission;
+  },
 ): Promise<string | null> {
+  const { bytes, authorize = authorizedSubmission } = preparation;
   if (attempt.state === "submitting" || attempt.state === "submission_unknown")
     return "submission_outcome_unknown";
   const claimed = await context.db.acquisitionAttempt.updateMany({
@@ -420,7 +421,7 @@ async function submitNew(
   if (claimed.count !== 1) return "submission_outcome_unknown";
   try {
     const savePath = path.join(context.downloadRoot, "media", attempt.id);
-    const authorized = await authorizedSubmission(
+    const authorized = await authorize(
       context,
       attempt,
       async (signal, beforeMutation) => {
