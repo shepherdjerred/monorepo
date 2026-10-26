@@ -624,7 +624,7 @@ command. Missing starts and unexplained stops remain failures.
 Retained histories use the pre-history verification branch through a Temporal
 patch marker.
 
-Production runs one image in twelve single-replica Kubernetes Deployments. The
+Production runs one image in separate single-replica Kubernetes Deployments. The
 `control` role owns schedule reconciliation and public HTTP/event surfaces
 plus the `agent-chat-ingress` command queue and isolated
 `agent-chat-delivery` queue. The credentialless
@@ -666,6 +666,7 @@ schedule reconciliation.
 | `repo`            | `repo-automation`, `agent-chat-dispatch`, `agent-chat-receipts`                        |                        1 per queue |
 | `scout`           | `scout`                                                                                |                                  1 |
 | `agent`           | `agent-task`                                                                           |                                  1 |
+| `promotion`       | `storm-promotion`, `storm-promotion-control`                                           |                        1 per queue |
 | `glitter-corpus`  | `glitter-corpus`                                                                       |                                  1 |
 | `glitter-context` | `glitter-context`                                                                      |                                  1 |
 | `maintenance`     | `maintenance`                                                                          |                                  1 |
@@ -982,6 +983,58 @@ provider, transport, timeout, or structured-output failure records `unknown`
 with its error class and fails the optional "Liveness verification (web
 search)" check without failing the Activity. Results recorded before the check
 existed carry no `livenessChecks` and render their original report.
+
+## The Storm promotion task
+
+The promotion role runs source-defined LLM browser tasks for the existing
+server directories, PMC, and three Minecraft subreddits through `old.reddit.com`.
+It uses the shared agent runner without changing generic report-only tasks.
+The [target manifest](../the-storm/promotion/targets.json) and existing approved
+copy are bundled into the worker image. Discord and other forum placements
+remain manually maintained.
+
+`runStormPromotion({ targetId, mode })` accepts `run`, `preview`, or `reconcile`.
+The stable Workflow ID is `storm-promotion/<targetId>`. All publishing passes
+through the parent-owned browser gateway; the provider subprocess receives no
+browser, solver, storage, site-login, or report-delivery credential.
+
+| Operator command                           | Result                                                                      |
+| ------------------------------------------ | --------------------------------------------------------------------------- |
+| `toolkit promotion status [target] --json` | Durable history, ownership, pause state and next eligibility                |
+| `toolkit promotion preview <target>`       | Live inspection and prepared copy; publishing and paid solving are disabled |
+| `toolkit promotion run <target>`           | One eligible action with fresh rule/history evidence and a persisted buffer |
+| `toolkit promotion pause [target]`         | Pause publishing, including the final pre-submit check                      |
+| `toolkit promotion resume [target]`        | Resume inspection; uncertain submissions still require reconciliation       |
+| `toolkit promotion reconcile <target>`     | Inspect and verify a held prior attempt without creating another submission |
+
+The `the-storm-promotion-enabled` flag defaults off. The typed
+`the-storm-promotion-settings` JSON selects enabled target IDs, model, step/time
+limits, and the solver allowance. Defaults are an empty target list, 80 steps,
+15 minutes, and $10 per month. Both declared Schedules start paused; worker
+release and an eligible verified canary precede recurring activation.
+
+The publishing tool requires fresh captured rule and history evidence, applies
+the stricter interval plus a persistent 15–30 minute buffer, and records intent
+before clicking. Filtered and removed attempts remain in the ledger. An
+ambiguous result holds the target until a real browser receipt resolves it.
+The first version supports one action per posting window; a multi-action rule
+can be represented conservatively as one action over its full window.
+Quiet running owners retain their claims; a confirmed closed Workflow releases
+a claim only when no submission intent exists.
+
+Namespace-separated SeaweedFS state includes receipts, screenshots, pending
+effects and monthly solver reservations. Anti-Captcha supports visible
+reCAPTCHA v2 and Turnstile response-field widgets; callback-only or unsupported
+challenges require operator attention. Two attempts per occurrence and durable
+reservations bound paid task creation. The dedicated 1Password item supplies
+the solver key and an account-keyed JSON map of `{ username, password }` logins.
+Browser profiles are named `storm-promotion-<account>` and retain their sessions.
+
+Native owner bumps are distinct from votes. Unknown rules, incomplete history,
+pending ownership and moderation problems block publication. The PMC forum
+thread remains inspection-only until substantive news has a source-controlled
+approval contract. A daily report and deduplicated actionable alerts use the
+existing reports worker and Postal recipient.
 
 ## Documentation
 

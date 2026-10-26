@@ -28,6 +28,8 @@ import {
 type CreateTemporalAgentWorkerProps = {
   serviceAccount: ServiceAccount;
   envVariables: Record<string, EnvValue>;
+  name?: string;
+  component?: string;
 };
 
 const AGENT_WORKER_UID = 1000;
@@ -57,7 +59,9 @@ export function createTemporalAgentWorker(
   chart: Chart,
   props: CreateTemporalAgentWorkerProps,
 ): Deployment {
-  const deployment = new Deployment(chart, "temporal-agent-worker", {
+  const name = props.name ?? "temporal-agent-worker";
+  const component = props.component ?? "agent-worker";
+  const deployment = new Deployment(chart, name, {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
     metadata: {
@@ -71,8 +75,8 @@ export function createTemporalAgentWorker(
           TEMPORAL_AGENT_POD_SECURITY_ENFORCEMENT,
       },
       labels: {
-        app: "temporal-agent-worker",
-        component: "agent-worker",
+        app: name,
+        component,
       },
     },
   });
@@ -81,7 +85,7 @@ export function createTemporalAgentWorker(
 
   const firewallRunVolume = Volume.fromEmptyDir(
     chart,
-    "temporal-agent-worker-firewall-run",
+    `${name}-firewall-run`,
     "firewall-run",
   );
   deployment.addInitContainer(
@@ -129,7 +133,7 @@ ip6tables -L OUTPUT -n`,
 
   const container = deployment.addContainer(
     withCommonProps({
-      name: "temporal-agent-worker",
+      name,
       image: firstPartyImageRecipe("temporal-worker"),
       ports: [
         { number: 9464, name: "metrics" },
@@ -178,10 +182,10 @@ ip6tables -L OUTPUT -n`,
 
   const publicClusterCa = Volume.fromConfigMap(
     chart,
-    "temporal-agent-worker-public-cluster-ca",
+    `${name}-public-cluster-ca`,
     ConfigMap.fromConfigMapName(
       chart,
-      "temporal-agent-worker-cluster-ca-config-map",
+      `${name}-cluster-ca-config-map`,
       "kube-root-ca.crt",
     ),
     {
@@ -238,43 +242,39 @@ ip6tables -L OUTPUT -n`,
     }),
   );
 
-  const tmpVolume = Volume.fromEmptyDir(
-    chart,
-    "temporal-agent-worker-tmp",
-    "agent-tmp",
-  );
+  const tmpVolume = Volume.fromEmptyDir(chart, `${name}-tmp`, "agent-tmp");
   container.mount("/tmp", tmpVolume);
 
-  const agentSelector = Pods.select(chart, "temporal-agent-worker-selector", {
-    labels: { component: "agent-worker" },
+  const agentSelector = Pods.select(chart, `${name}-selector`, {
+    labels: { component },
   });
-  new Service(chart, "temporal-agent-worker-metrics-service", {
+  new Service(chart, `${name}-metrics-service`, {
     selector: agentSelector,
     metadata: {
-      labels: { component: "agent-worker-metrics" },
+      labels: { component: `${component}-metrics` },
     },
     ports: [{ port: 9464, name: "metrics" }],
   });
 
   createServiceMonitor(chart, {
-    name: "temporal-agent-worker-metrics",
-    matchLabels: { component: "agent-worker-metrics" },
+    name: `${name}-metrics`,
+    matchLabels: { component: `${component}-metrics` },
   });
 
-  new Service(chart, "temporal-agent-worker-app-metrics-service", {
+  new Service(chart, `${name}-app-metrics-service`, {
     metadata: {
-      name: "temporal-agent-worker-app-metrics",
-      labels: { component: "agent-worker-app-metrics" },
+      name: `${name}-app-metrics`,
+      labels: { component: `${component}-app-metrics` },
     },
     selector: agentSelector,
     ports: [{ name: "app-metrics", port: 9465, targetPort: 9465 }],
   });
 
   createServiceMonitor(chart, {
-    name: "temporal-agent-worker-app-metrics",
+    name: `${name}-app-metrics`,
     port: "app-metrics",
     interval: "30s",
-    matchLabels: { component: "agent-worker-app-metrics" },
+    matchLabels: { component: `${component}-app-metrics` },
   });
 
   return deployment;

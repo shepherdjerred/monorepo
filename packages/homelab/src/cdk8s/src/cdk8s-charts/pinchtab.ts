@@ -41,6 +41,12 @@ export function createPinchtabChart(app: App) {
           from: [
             {
               namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "temporal" },
+              },
+              podSelector: { matchLabels: { component: "promotion-worker" } },
+            },
+            {
+              namespaceSelector: {
                 matchLabels: { "kubernetes.io/metadata.name": "media" },
               },
               podSelector: { matchLabels: { app: "bazarr" } },

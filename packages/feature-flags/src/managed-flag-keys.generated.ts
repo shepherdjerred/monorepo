@@ -316,6 +316,7 @@ export const TEMPORAL_BOOLEAN_FLAG_KEYS = [
   "temporal-agent-chat-photon-enabled",
   "temporal-call-graph-tracing",
   "woodpecker-log-retention-enabled",
+  "the-storm-promotion-enabled",
   "the-storm-rwf-recording-archive-enabled",
 ] as const;
 
@@ -331,6 +332,7 @@ export const TEMPORAL_VARIANT_FLAG_KEYS = [
   "temporal-agent-chat-imessage-codex-model",
   "temporal-agent-chat-photon-owners",
   "woodpecker-log-retention-days",
+  "the-storm-promotion-settings",
 ] as const;
 
 export type TemporalVariantFlagKey =

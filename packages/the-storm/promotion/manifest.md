@@ -1,6 +1,11 @@
 # The Storm promotion manifest
 
-This is the inventory and maintenance reference for The Storm's free, manual advertising.
+This is the inventory and maintenance reference for The Storm's free advertising.
+
+[targets.json](targets.json) is the machine-readable inventory for server-directory,
+PMC and Reddit promotion tasks. The [Temporal task reference](../../temporal/README.md#the-storm-promotion-task)
+defines publishing controls, evidence, scheduling and operator commands. Existing
+copy below remains the approved content source. The remaining placements are manual.
 
 Last reconciled: **2026-10-25** (Discord pass). Dates and times below use UTC unless marked otherwise.
 Listing states record setup and targeted follow-up checks, not continuous monitoring.
@@ -20,8 +25,14 @@ check the current rules and dashboard before taking that action.
 | Monthly                      | Audit every listing's public visibility, connection fields, supported version, tags, banner, website, and invite. Review which placements bring interested players; reduce maintenance of unproductive ones.                                                                                                                                                                                    |
 | After a server change        | Correct affected connection details, compatibility claims, features, rules, copy, and screenshots. Preserve user-edited copy and historical website posts.                                                                                                                                                                                                                                      |
 
-No scheduled jobs, posting scripts, paid promotion, or video production are configured by this manifest.
-Reddit is active on a per-sub cadence (see pending table): mcservers 1/7d, SMPs 1/wk, minecraftservers 24h, Finder 24h, MinecraftServer only after a filter-free path is confirmed. Vary copy per post; at most one sub per day. Owner-hosted play sessions and constant owner presence are not part of the offer.
+Automation checks current rules and posting history before any bump or repost.
+Reddit is active on a manually maintained per-sub cadence (see the inventory
+below): mcservers 1/7d, SMPs 1/wk, minecraftservers 24h, Finder 24h,
+MinecraftServer only after a filter-free path is confirmed. Vary copy per post;
+at most one sub per day. Automated publishing requires verified onboarding of
+each configured target, including its manual posts and earlier filter removals.
+Paid placements, video production, owner-hosted play sessions and constant owner
+presence are not part of the offer.
 
 ## Server directories
 
@@ -109,6 +120,10 @@ replace each state when the external service confirms a change.
 | —                        | `findmcserver.com`                                                                         | Deferred. Rechecked **2026-10-25**: requires 24/7 online status, **3+ months stability outside testing/beta**, MCEW workbook, gallery, and non-Discord contact info. The rebuilding server does not yet meet the stability clause; no submission made.                                                                                               |
 | `reddit`                 | Reddit advertising (`u/the_storm_mc`)                                                      | Active since 2026-10-23. Cadence: mcservers 1/7d (next Oct 30), SMPs 1/wk (next Oct 30), minecraftservers 24h (next ~Oct 26 21:55 UTC), Finder 24h, MinecraftServer only after a filter-free path is confirmed. Vary copy per post; at most one sub per day; logged-out readability check each post.                                                 |
 
+The configured Reddit automation targets require verified onboarding against
+current community rules, account identity and the manual and filtered history
+retained here before activation. Subreddits outside `targets.json` remain manual.
+
 | Subreddit               | Latest post                                                                                                                                                                                                                                                                                                                                                                                                  | Posted (UTC)     | Verified state                                                                                   | Cooldown / next eligible                                                               |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
 | r/mcservers             | [1xd0aj3](https://www.reddit.com/r/mcservers/comments/1xd0aj3/the_storm_smp_java_bedrock_towns_land_claims/)                                                                                                                                                                                                                                                                                                 | 2026-10-23 01:06 | Live, not removed                                                                                | 1/7d — Oct 30                                                                          |
@@ -163,7 +178,7 @@ They replace reliance on the ignored `.cache/the-storm-promotion/` directory or 
 | [short-descriptions.txt](copy/short-descriptions.txt)                                                                                             | Existing short variants for constrained fields.                                                                    |
 | [profile-bio.txt](copy/profile-bio.txt)                                                                                                           | Prepared bio; this is not a claim that every profile uses it.                                                      |
 | [image-captions.txt](copy/image-captions.txt)                                                                                                     | Captions and alt text for the prepared images.                                                                     |
-| [Reddit titles](copy/reddit-titles.txt), [r/mcservers draft](copy/reddit-mcservers.md), [r/MinecraftServer draft](copy/reddit-minecraftserver.md) | Active drafts; vary copy per sub and recheck rules before each use.                                                |
+| [Reddit titles](copy/reddit-titles.txt), [r/mcservers draft](copy/reddit-mcservers.md), [r/MinecraftServer draft](copy/reddit-minecraftserver.md) | Active approved drafts for manual posts and promotion tasks; vary copy per sub and verify current rules and account eligibility before use. |
 | [avatar-512.png](images/avatar-512.png)                                                                                                           | 512 × 512 original cloud-backed TS profile mark.                                                                   |
 | [logo-transparent.png](images/logo-transparent.png)                                                                                               | Original cloud wordmark, 1300px wide, with transparency and its natural proportions.                               |
 | [cover-1200x630.png](images/cover-1200x630.png)                                                                                                   | 1200 × 630 original wordmark and archived spawn promotional card.                                                  |

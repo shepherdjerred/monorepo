@@ -23,6 +23,10 @@ import { reconcileStreambotPlayback } from "./activities/streambot.ts";
 import type { WorkerRole } from "./shared/infra/worker-role.ts";
 import { deliveryActivities } from "./activities/delivery/index.ts";
 import { platformDeliveryActivities } from "./activities/delivery/platform/index.ts";
+import {
+  promotionAgentActivities,
+  promotionControlActivities,
+} from "./activities/promotion/index.ts";
 
 export type QueueWorkerRole =
   | "streambot"
@@ -40,6 +44,7 @@ export type QueueWorkerRole =
   | "maintenance"
   | "repo"
   | "reports"
+  | "promotion"
   | "scout"
   | "workflows";
 
@@ -67,6 +72,20 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
     role: "streambot",
     taskQueue: TASK_QUEUES.STREAMBOT,
     activities: { reconcileStreambotPlayback },
+    maxConcurrentActivityTaskExecutions: 1,
+  },
+  {
+    kind: "activity",
+    role: "promotion",
+    taskQueue: TASK_QUEUES.PROMOTION,
+    activities: promotionAgentActivities,
+    maxConcurrentActivityTaskExecutions: 1,
+  },
+  {
+    kind: "activity",
+    role: "promotion",
+    taskQueue: TASK_QUEUES.PROMOTION_CONTROL,
+    activities: promotionControlActivities,
     maxConcurrentActivityTaskExecutions: 1,
   },
   {

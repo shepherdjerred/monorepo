@@ -2,6 +2,10 @@ import { z } from "zod";
 
 export const TASK_QUEUES = {
   STREAMBOT: "streambot",
+  /** The Storm promotion agents and guarded publishing tools. */
+  PROMOTION: "storm-promotion",
+  /** Quick status/pause/dispatch work stays available while a browser agent runs. */
+  PROMOTION_CONTROL: "storm-promotion-control",
   /** Every new central Workflow execution starts on this deterministic queue. */
   WORKFLOWS: "monorepo-workflows",
   /** Delivery orchestration is owned by its independently released control plane. */
@@ -73,6 +77,8 @@ export type TaskQueue = (typeof TASK_QUEUES)[keyof typeof TASK_QUEUES];
 
 export const TaskQueueSchema = z.enum([
   TASK_QUEUES.STREAMBOT,
+  TASK_QUEUES.PROMOTION,
+  TASK_QUEUES.PROMOTION_CONTROL,
   TASK_QUEUES.WORKFLOWS,
   TASK_QUEUES.DELIVERY_WORKFLOWS,
   TASK_QUEUES.DELIVERY,

@@ -7,6 +7,7 @@
     "./lib/*": "./src/lib/*"
   },
   "imports": {
+    "#handlers/*": "./src/handlers/*",
     "#architecture": "./architecture.config.ts",
     "#build": "./src/build.ts",
     "#lib/*": "./src/lib/*",

@@ -19,6 +19,8 @@ export type TemporalBootstrapMetadata = {
 const EXECUTION_DOMAINS_BY_TASK_QUEUE: Readonly<
   Record<TaskQueue, ExecutionDomain>
 > = {
+  [TASK_QUEUES.PROMOTION]: "agent",
+  [TASK_QUEUES.PROMOTION_CONTROL]: "agent",
   [TASK_QUEUES.WORKFLOWS]: "platform",
   [TASK_QUEUES.STREAMBOT]: "platform",
   [TASK_QUEUES.DELIVERY]: "platform",
