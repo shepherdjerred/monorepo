@@ -460,6 +460,18 @@ or secrets. A drained durable snapshot alone does not prove cloud convergence:
 hosts must also check the current transport, lifecycle phase, and pending host
 work, then verify expected replica contents for live acceptance.
 
+`featuresJson` request `{ "kind": "dependency_editor" }` exposes the strict
+`dependencyEditor` schema: `schemaVersion`, all four canonical
+`relationshipTypes`, and nullable `defaultReltype`. Choices come from Rust's
+dependency validator; the shared `dependencyRelationshipType` enum is checked
+against that authority. The default is only an explicitly configured
+`effective.dependencies.default_reltype` in the cached configuration. An absent
+default or configuration returns null; an invalid configured value fails with a
+typed configuration error. This metadata read performs no provider I/O, writes,
+normalization, or journal work. Editors preserve unchanged dependency objects
+and require an explicit valid choice when no default is configured; migration
+normalizers are not ordinary edit builders.
+
 `featuresJson` request `reminder_plan` returns the `reminderPlan` contract from
 cached SQLite configuration and task metadata, with no provider I/O. Callers
 supply RFC3339 `at`, `from`, `to`, an IANA `timezone`, and optional `limit`

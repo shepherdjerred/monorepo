@@ -1751,6 +1751,7 @@
                 "discovery",
                 "undo_available",
                 "conformance",
+                "dependency_editor",
                 "sync_status"
               ]
             }
@@ -1761,6 +1762,35 @@
           "additionalProperties": false
         }
       ]
+    },
+    "dependencyRelationshipType": {
+      "enum": [
+        "FINISHTOSTART",
+        "STARTTOSTART",
+        "FINISHTOFINISH",
+        "STARTTOFINISH"
+      ]
+    },
+    "dependencyEditor": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "relationshipTypes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/dependencyRelationshipType" },
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true
+        },
+        "defaultReltype": {
+          "anyOf": [
+            { "$ref": "#/$defs/dependencyRelationshipType" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": ["schemaVersion", "relationshipTypes", "defaultReltype"],
+      "additionalProperties": false
     },
     "repairOccurrenceProgressionCommand": {
       "type": "object",

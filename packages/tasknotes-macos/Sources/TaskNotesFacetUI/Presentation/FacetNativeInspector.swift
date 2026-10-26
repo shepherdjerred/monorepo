@@ -96,6 +96,7 @@ internal struct FacetNativeInspector: View {
                         if await draft.flush(store: store, window: window) { advanced = true }
                     }
                 }
+                .accessibilityIdentifier("facet.inspector.relationships")
                 Text(draft.task.path).font(.caption).foregroundStyle(.secondary).textSelection(
                     .enabled)
             }

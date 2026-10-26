@@ -54,6 +54,10 @@ struct FacetTaskExtras: Equatable {
 }
 
 struct FacetTaskExtrasFields: View {
+    let store: FacetStore
+    let profileID: String
+    let owningEngine: FacetEngine?
+    let draftID: UUID
     @Binding var draft: FacetTaskExtras
     var body: some View {
         Section("Tags and attachments") {
@@ -73,6 +77,8 @@ struct FacetTaskExtrasFields: View {
             )
             .font(.caption).foregroundStyle(.secondary)
         }
-        FacetRelationshipsSection(dependencies: $draft.dependencies, reminders: $draft.reminders)
+        FacetRelationshipsSection(
+            store: store, profileID: profileID, owningEngine: owningEngine, draftID: draftID,
+            dependencies: $draft.dependencies, reminders: $draft.reminders)
     }
 }

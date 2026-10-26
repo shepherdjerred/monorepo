@@ -30,6 +30,7 @@
 		7F4C39A329A5BFA7BB433978 /* LiveSyncVaultUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE970B6EE04B52AD7857868D /* LiveSyncVaultUITests.swift */; };
 		7FC704D0EB54DDB12208A276 /* QuickAddControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53407DF630BC00824148CE26 /* QuickAddControl.swift */; };
 		8115E6B624D505275BD876C6 /* TasksWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF24620168AF2CDDE7ACD24 /* TasksWidgetBundle.swift */; };
+		84368482FE6F3694B2E99744 /* DependencyEditorUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13D4F16936861E36121417DC /* DependencyEditorUITests.swift */; };
 		8A76FEF50FC5B281CED6C57D /* AcceptanceVaultPathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FFF6F07E3F17DFCB8E2415A /* AcceptanceVaultPathTests.swift */; };
 		90203752117D2A4D09AB1816 /* TaskShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 723F2DEE626C06A660A4022D /* TaskShortcutsProvider.swift */; };
 		96EBFAA80520FA6A14F9B2B8 /* FacetApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E2F39573B7D1B833BA08ACD /* FacetApp.swift */; };
@@ -88,6 +89,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		13D4F16936861E36121417DC /* DependencyEditorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DependencyEditorUITests.swift; sourceTree = "<group>"; };
 		16E5FAAB06F3019475B51FBC /* FacetBackgroundTasks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacetBackgroundTasks.swift; sourceTree = "<group>"; };
 		198212E9090D23DE654809E2 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		1EE9D7CEE006787A1AE6023F /* FacetPresentationTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FacetPresentationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -158,6 +160,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0139B4BA3C8816B44BB6DCFA /* Dependencies */ = {
+			isa = PBXGroup;
+			children = (
+				13D4F16936861E36121417DC /* DependencyEditorUITests.swift */,
+			);
+			name = Dependencies;
+			path = "../../tasknotes-macos/UITests/Dependencies";
+			sourceTree = "<group>";
+		};
 		11BFFDE88EEF284D42538686 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -221,6 +232,7 @@
 		75584E90AE0A829202CC5248 = {
 			isa = PBXGroup;
 			children = (
+				0139B4BA3C8816B44BB6DCFA /* Dependencies */,
 				500FA6BDBE5C4560D1709129 /* Facet */,
 				3025569A2F02805E1C62636A /* FacetPresentationTests */,
 				89466CA39BB94F6E5FC50406 /* FacetUITests */,
@@ -494,6 +506,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5A6DCDE335C45B1ACCDF54B8 /* BoardTaskTests.swift in Sources */,
+				84368482FE6F3694B2E99744 /* DependencyEditorUITests.swift in Sources */,
 				63504C4BB80245E60E2A8272 /* FacetKeyboardBootstrap.swift in Sources */,
 				13A926586C9F704484833CBB /* LiveSyncConflictUITests.swift in Sources */,
 				45E5C130E2BB9281D646FEC1 /* LiveSyncLifecycleUITests.swift in Sources */,

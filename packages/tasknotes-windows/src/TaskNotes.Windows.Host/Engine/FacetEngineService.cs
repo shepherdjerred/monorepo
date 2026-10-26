@@ -318,6 +318,7 @@ public sealed class FacetEngineService : IAsyncDisposable
                 string definition = document.RootElement.GetProperty("kind").GetString() switch
                 {
                     "capture_preview" => "capturePreview",
+                    "dependency_editor" => "dependencyEditor",
                     "discovery" => "discovery",
                     "mutation_receipt" => "mutationReceipt",
                     "resolution_history" => "resolutionHistory",

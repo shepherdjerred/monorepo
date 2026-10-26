@@ -1,19 +1,24 @@
 import assert from "node:assert/strict";
-import { cp, mkdir, rename } from "node:fs/promises";
+import { mkdir, rename } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
 import { boundedCommand } from "../apple-acceptance/bounded-command.ts";
 import { retireMacRun } from "../apple-acceptance/native-owner.ts";
 import { launchJournal } from "../apple-acceptance/retained-owner.ts";
 import {
+  buildMacAcceptance,
+  configureMacAcceptanceTestRun,
+  createMacAcceptanceState,
+  macAcceptanceTestRun,
+  recordMacAcceptanceOutcome,
+  retainMacAcceptanceEvidence,
+} from "../apple-acceptance/mac-journey.ts";
+import {
   requireStableSources,
   sourceFingerprints,
 } from "../apple-acceptance/source-provenance.ts";
 import { readAcceptanceResultReports } from "../acceptance-execution.ts";
-import {
-  acceptanceSigningArguments,
-  assertExactNativeResults,
-} from "../acceptance-test-plan.ts";
+import { assertExactNativeResults } from "../acceptance-test-plan.ts";
 import {
   seedOccurrenceVault,
   verifyOccurrenceVault,
@@ -64,75 +69,27 @@ export async function runMacOccurrenceAcceptance(): Promise<void> {
   );
   await mkdir(evidence, { recursive: true });
   const sources = await fingerprints();
-  await command(["bun", "run", "mac:preflight"]);
-  await command(["xcodegen", "generate"]);
-  await command([
-    "xcodebuild",
-    "build-for-testing",
-    "-project",
-    "TaskNotes.xcodeproj",
-    "-scheme",
-    "TaskNotesAcceptance",
-    "-configuration",
-    "Debug",
-    "-derivedDataPath",
+  await buildMacAcceptance(
     derived,
-    "-destination",
-    "platform=macOS",
-    "-parallel-testing-enabled",
-    "NO",
-    "-jobs",
-    "2",
-    ...acceptanceSigningArguments(Bun.env["TASKNOTES_UITEST_IDENTITY"]),
-  ]);
+    command,
+    Bun.env["TASKNOTES_UITEST_IDENTITY"],
+  );
   requireStableSources(sources, await fingerprints());
   const binding = { runID, descriptor, executable };
   await retireMacRun(binding, null, evidence);
   const day = viewerDay();
-  await mkdir(path.dirname(state), { recursive: true, mode: 0o700 });
-  await mkdir(state, { recursive: false, mode: 0o700 });
-  await Bun.write(
-    descriptor,
-    JSON.stringify({ schemaVersion: 1, runID, stateDirectory: state }),
-  );
+  await createMacAcceptanceState(state, descriptor, runID);
   await seedOccurrenceVault(vault, day);
-  const testRuns = await Array.fromAsync(
-    new Bun.Glob("*.xctestrun").scan({
-      cwd: path.join(derived, "Build/Products"),
-      absolute: true,
-    }),
+  const testRun = await macAcceptanceTestRun(derived);
+  await configureMacAcceptanceTestRun(
+    testRun,
+    {
+      FACET_E2E_DESCRIPTOR: descriptor,
+      FACET_E2E_RUN_ID: runID,
+      FACET_OCCURRENCE_DAY: day,
+    },
+    command,
   );
-  assert.equal(testRuns.length, 1);
-  const testRun = testRuns[0];
-  assert.ok(testRun);
-  for (const [key, value] of Object.entries({
-    FACET_E2E_DESCRIPTOR: descriptor,
-    FACET_E2E_RUN_ID: runID,
-    FACET_OCCURRENCE_DAY: day,
-  })) {
-    await command([
-      "plutil",
-      "-replace",
-      `TaskNotesAcceptanceUITests.EnvironmentVariables.${key}`,
-      "-string",
-      value,
-      testRun,
-    ]);
-  }
-  for (const [key, value] of [
-    ["SystemAttachmentLifetime", "keepNever"],
-    ["UserAttachmentLifetime", "keepAlways"],
-  ]) {
-    assert.ok(key && value);
-    await command([
-      "plutil",
-      "-replace",
-      `TaskNotesAcceptanceUITests.${key}`,
-      "-string",
-      value,
-      testRun,
-    ]);
-  }
   const receipt = {
     schemaVersion: 1,
     runID,
@@ -262,46 +219,15 @@ export async function runMacOccurrenceAcceptance(): Promise<void> {
   } catch (error) {
     failures.push(error);
   }
-  for (const retain of [
-    () =>
-      cp(state, path.join(evidence, "state"), {
-        recursive: true,
-        errorOnExist: true,
-        force: false,
-      }),
-    async () => {
-      if (await Bun.file(path.join(result, "Info.plist")).exists())
-        await command([
-          "xcrun",
-          "xcresulttool",
-          "export",
-          "attachments",
-          "--path",
-          result,
-          "--output-path",
-          path.join(evidence, "screenshots"),
-        ]);
-    },
-  ]) {
-    try {
-      await retain();
-    } catch (error) {
-      failures.push(error);
-    }
-  }
-  await Bun.write(
-    path.join(evidence, "run.json"),
-    JSON.stringify(
-      { ...receipt, status: failures.length === 0 ? "passed" : "failed" },
-      null,
-      2,
-    ),
+  failures.push(
+    ...(await retainMacAcceptanceEvidence(state, result, evidence, command)),
   );
-  if (failures.length > 0)
-    throw new AggregateError(
-      failures,
-      `Native recurrence acceptance failed; retained ${evidence}`,
-    );
+  await recordMacAcceptanceOutcome(
+    receipt,
+    failures,
+    evidence,
+    `Native recurrence acceptance failed; retained ${evidence}`,
+  );
   console.log(`Native recurrence acceptance passed: ${evidence}`);
 }
 

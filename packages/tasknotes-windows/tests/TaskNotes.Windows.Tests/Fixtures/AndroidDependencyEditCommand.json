@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "path": "Tasks/subject.md",
+  "note": "---\ntitle: Dependency subject\nstatus: open\npriority: normal\ntags: [task]\nid: subject\ndateCreated: 2020-01-01T00:00:00Z\ndateModified: 2020-01-01T00:00:00Z\nblockedBy: [{\"uid\":\"[[Tasks/first, task|Keep alias]]\",\"reltype\":\"STARTTOSTART\",\"gap\":\"-PT15M\",\"vendor\":{\"integer\":9007199254740993,\"tags\":[\"a,b\"]}},{\"uid\":\"[[Tasks/second]]\",\"reltype\":\"FINISHTOFINISH\",\"vendor\":true}]\nexternalNumber: 9007199254740993\n---\nBody\n",
+  "command": {
+    "kind": "edit_task",
+    "path": "Tasks/subject.md",
+    "expectedRevision": "d7c4e507304fdaa6033f71a03c859fd4b0670f4f9bf1999a038bb70b20a69c47",
+    "properties": {
+      "blockedBy": [
+        {
+          "uid": "[[Tasks/new, reference|Alias]]",
+          "reltype": "STARTTOSTART",
+          "gap": "-PT15M",
+          "vendor": {
+            "integer": 9007199254740993,
+            "tags": ["a,b"]
+          }
+        },
+        {
+          "uid": "[[Tasks/second]]",
+          "reltype": "FINISHTOFINISH",
+          "vendor": true
+        }
+      ]
+    }
+  }
+}

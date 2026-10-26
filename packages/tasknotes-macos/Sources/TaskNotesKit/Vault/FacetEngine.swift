@@ -137,6 +137,7 @@ public actor FacetEngine {
         let json = try engine.featuresJson(profileId: profileID, requestJson: encode(request))
         let definitions = [
             "capture_preview": "capturePreview",
+            "dependency_editor": "dependencyEditor",
             "discovery": "discovery",
             "mutation_receipt": "mutationReceipt", "resolution_history": "resolutionHistory",
             "batch_outcome": "batchOutcome", "normalization_preview": "normalizationPreview",

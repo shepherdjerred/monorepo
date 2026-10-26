@@ -91,6 +91,13 @@ overwriting a newer owner. A draft retains its selected occurrence across revisi
 reads. Once a receipt reports an applied change, a failed revision read is retried
 as observation rather than executing the change again.
 
+Dependency editing reads the core's `dependency_editor` metadata through the
+validated feature boundary. Returned choices and an explicitly configured default
+drive new records; an absent default requires a relationship choice. Read-only
+loads are fenced to the original editor, engine and vault, with visible Retry on
+failure. Loading options leaves existing dependency identities, gaps and extension
+properties unchanged.
+
 An ordered action coordinator admits different-row actions without dropping taps.
 Materialized series use the core's versioned rolling plan and durable generation
 failure projections. The shared Apple inspector and task editor expose Generate

@@ -1018,6 +1018,16 @@ impl Engine {
             crate::features::Request::SyncStatus {} => self.sync_status(&profile)?,
             crate::features::Request::Conformance {} => self.conformance(id)?,
             crate::features::Request::UndoAvailable {} => self.undo_available(id)?,
+            crate::features::Request::DependencyEditor {} => self.database(|db| {
+                let encoded: Option<String> = db.query_row(
+                    "SELECT configuration FROM profiles WHERE id=?",
+                    [id],
+                    |row| row.get(0),
+                )?;
+                let configuration: Option<Value> =
+                    encoded.as_deref().map(serde_json::from_str).transpose()?;
+                crate::features::dependency_editor(configuration.as_ref())
+            })?,
             crate::features::Request::OccurrenceSuccessors { mutation_id } => {
                 self.successor_outcome(id, &mutation_id)?
             }

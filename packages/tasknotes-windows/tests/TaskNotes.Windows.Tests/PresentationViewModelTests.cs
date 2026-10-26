@@ -129,7 +129,7 @@ namespace TaskNotes.Windows.Tests
             var properties =
                 System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(
                     """
-                    {"timeEstimate":31.625,"completedDate":"2026-10-03","blockedBy":["one"],"completeInstances":["2026-10-03"],"skippedInstances":["2026-10-04"],"attachments":["[[a.pdf]]"],"reminders":[{"id":"original","type":"relative","relatedTo":"due","offset":"-PT15M","vendor":{"exact":9007199254740993}}]}
+                    {"timeEstimate":31.625,"completedDate":"2026-10-03","blockedBy":[{"uid":"one","reltype":"STARTTOSTART"}],"completeInstances":["2026-10-03"],"skippedInstances":["2026-10-04"],"attachments":["[[a.pdf]]"],"reminders":[{"id":"original","type":"relative","relatedTo":"due","offset":"-PT15M","vendor":{"exact":9007199254740993}}]}
                     """
                 );
             TaskItem task = CreateTask("task", "open") with
@@ -140,7 +140,8 @@ namespace TaskNotes.Windows.Tests
             };
             using TaskEditorViewModel editor = new(store, new TestDispatcher());
             editor.Load(task);
-            Assert.AreEqual("one", editor.BlockedBy);
+            Assert.AreEqual("one", editor.Dependencies.Single().Uid);
+            await editor.LoadDependencyMetadataAsync(TestContext.CancellationToken);
             Assert.AreEqual("2026-10-03", editor.CompletedDate);
             Assert.AreEqual("2026-10-03", editor.CompleteInstances);
             Assert.AreEqual("2026-10-04", editor.SkippedInstances);
@@ -165,7 +166,11 @@ namespace TaskNotes.Windows.Tests
             Assert.AreEqual(task.ExpectedRevision, store.LastEdit.ExpectedRevision);
             editor.Discard();
             Assert.AreEqual(task.Details, editor.Details);
-            editor.BlockedBy = "two, three";
+            await editor.LoadDependencyMetadataAsync(TestContext.CancellationToken);
+            editor.Dependencies.Single().Uid = "two";
+            editor.AddDependency();
+            editor.Dependencies.Last().Uid = "three";
+            editor.Dependencies.Last().RelationType = "FINISHTOFINISH";
             editor.CompletedDate = "";
             editor.DateCreated = "2026-10-03T10:00:00Z";
             editor.CompleteInstances = "2026-10-05";
@@ -187,7 +192,11 @@ namespace TaskNotes.Windows.Tests
                 changed["completedDate"].ValueKind
             );
             Assert.AreEqual("2026-10-03T10:00:00Z", changed["dateCreated"].GetString());
-            Assert.AreEqual("three", changed["blockedBy"][1].GetString());
+            Assert.AreEqual("three", changed["blockedBy"][1].GetProperty("uid").GetString());
+            Assert.AreEqual(
+                "STARTTOSTART",
+                changed["blockedBy"][0].GetProperty("reltype").GetString()
+            );
             Assert.AreEqual(
                 "scheduled",
                 changed["reminders"][0].GetProperty("relatedTo").GetString()

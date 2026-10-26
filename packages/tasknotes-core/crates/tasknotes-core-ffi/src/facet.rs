@@ -776,6 +776,10 @@ fn encode<T: serde::Serialize>(value: &T) -> Result<String, FacetEngineError> {
 }
 
 #[cfg(test)]
+#[path = "facet_dependency_editor_tests.rs"]
+mod dependency_editor_tests;
+
+#[cfg(test)]
 pub(crate) mod tests {
     use super::*;
     use tasknotes_runtime::types::{Command, ConflictResolution};

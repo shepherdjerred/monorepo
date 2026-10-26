@@ -61,7 +61,8 @@ data class TaskEditorDraft(
                 else if (value != before) put(name, strings(splitValues(value)))
             }
             list("projects", projects, original.projects); list("contexts", contexts, original.contexts); list("tags", tags, original.tags)
-            list("completeInstances", completeInstances, original.completeInstances); list("skippedInstances", skippedInstances, original.skippedInstances); list("blockedBy", blockedBy, original.blockedBy)
+            list("completeInstances", completeInstances, original.completeInstances); list("skippedInstances", skippedInstances, original.skippedInstances)
+            if (blockedBy != original.blockedBy) put("blockedBy", Json.parseToJsonElement(blockedBy).jsonArray)
             if (reminders != original.reminders) put("reminders", Json.parseToJsonElement(reminders).jsonArray)
             if (attachments != original.attachments) put("attachments", strings(attachments.lines().map(String::trim).filter(String::isNotEmpty)))
         }
@@ -80,7 +81,8 @@ data class TaskEditorDraft(
                 when (value) { JsonNull -> ""; is JsonArray -> value.joinToString(", ") { if (it is JsonPrimitive) it.content else it.toString() }; is JsonPrimitive -> value.content; else -> value.toString() }
             } ?: ""
             val attachments = task.properties["attachments"]?.let { value -> if (value is JsonArray) value.joinToString("\n") { if (it is JsonPrimitive) it.content else it.toString() } else if (value == JsonNull) "" else value.toString() } ?: ""
-            return TaskEditorDraft(task.title, task.body, task.status, task.priority, scalar("due"), scalar("scheduled"), scalar("recurrence"), scalar("recurrenceAnchor"), list("projects"), list("contexts"), list("tags"), scalar("completedDate"), list("completeInstances"), list("skippedInstances"), list("blockedBy"), task.properties["reminders"]?.toString() ?: "[]", attachments, scalar("dateCreated"))
+            val dependencies = task.properties["blockedBy"]?.takeUnless { it == JsonNull }?.toString() ?: "[]"
+            return TaskEditorDraft(task.title, task.body, task.status, task.priority, scalar("due"), scalar("scheduled"), scalar("recurrence"), scalar("recurrenceAnchor"), list("projects"), list("contexts"), list("tags"), scalar("completedDate"), list("completeInstances"), list("skippedInstances"), dependencies, task.properties["reminders"]?.toString() ?: "[]", attachments, scalar("dateCreated"))
         }
     }
 }

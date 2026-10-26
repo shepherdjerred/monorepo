@@ -104,6 +104,8 @@ struct FacetTaskEditor: View {
                     tokens("Tags", key: "tags", value: $extras.tags)
                 }
                 FacetRelationshipsSection(
+                    store: store, profileID: profileID, owningEngine: owningEngine,
+                    draftID: lifecycleRegistration,
                     dependencies: $extras.dependencies, reminders: $extras.reminders)
                 Section("Additional note fields") {
                     DisclosureGroup("Attachments, skipped dates and creation date") {
@@ -143,6 +145,11 @@ struct FacetTaskEditor: View {
                     }
                 }
             }
+            #if os(macOS)
+                .formStyle(.grouped)
+            #else
+                .accessibilityIdentifier("facet.editor.form")
+            #endif
             .disabled(isSaving || FacetDraftCoordinator.shared.isTransitioning)
             .navigationTitle("Task details")
             .toolbar {

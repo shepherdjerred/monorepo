@@ -30,6 +30,7 @@ final class OccurrenceTaskTests: XCTestCase {
         XCTAssertTrue(complete.waitForExistence(timeout: 15))
         complete.tap()
         XCTAssertTrue(complete.waitForNonExistence(timeout: 15))
+        acknowledgeFutureGenerationNotice(app)
         app.tabBars.buttons["Browse"].tap()
         app.buttons["Completed"].tap()
         open("Tasks/Repair-child.md", title: "Occurrence repair child", in: app)
@@ -156,6 +157,40 @@ final class OccurrenceTaskTests: XCTestCase {
 
     private func attach(_ app: XCUIApplication, name: String) {
         XCTAssertEqual(app.alerts.count, 0)
+        requirePrivateOwnedApp(app)
+        let evidence = XCTAttachment(screenshot: app.screenshot())
+        evidence.name = name
+        evidence.lifetime = .keepAlways
+        add(evidence)
+    }
+
+    private func acknowledgeFutureGenerationNotice(_ app: XCUIApplication) {
+        let alert = app.alerts["Saved"]
+        XCTAssertTrue(alert.waitForExistence(timeout: 15))
+        XCTAssertEqual(app.alerts.count, 1)
+        XCTAssertTrue(alert.isHittable)
+        let message = "Future occurrences need attention in the task’s Series section."
+        XCTAssertEqual(
+            alert.staticTexts.allElementsBoundByIndex.map(\.label).sorted(),
+            ["Saved", message].sorted())
+        XCTAssertEqual(alert.buttons.count, 1)
+        let okay = alert.buttons["OK"]
+        XCTAssertTrue(okay.exists && okay.isEnabled && okay.isHittable)
+        requirePrivateOwnedApp(app)
+        let evidence = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        evidence.name = "02 Saved completion explicitly warns about future generation"
+        evidence.lifetime = .keepAlways
+        add(evidence)
+        okay.tap()
+        XCTAssertTrue(alert.waitForNonExistence(timeout: 10))
+        XCTAssertEqual(app.alerts.count, 0)
+    }
+
+    private func requirePrivateOwnedApp(_ app: XCUIApplication) {
+        let environment = ProcessInfo.processInfo.environment
+        XCTAssertNotNil(environment["FACET_E2E_SIMULATOR"])
+        XCTAssertEqual(environment["FACET_E2E_SIMULATOR"], environment["SIMULATOR_UDID"])
+        XCTAssertEqual(app.state, .runningForeground)
         XCTAssertEqual(app.secureTextFields.count, 0)
         for identifier in [
             "facet.account.email", "facet.account.password", "facet.account.code",
@@ -163,9 +198,5 @@ final class OccurrenceTaskTests: XCTestCase {
         ] {
             XCTAssertFalse(app.descendants(matching: .any)[identifier].exists)
         }
-        let evidence = XCTAttachment(screenshot: app.screenshot())
-        evidence.name = name
-        evidence.lifetime = .keepAlways
-        add(evidence)
     }
 }

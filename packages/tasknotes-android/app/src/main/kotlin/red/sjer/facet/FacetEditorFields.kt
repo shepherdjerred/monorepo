@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import java.util.UUID
 import kotlinx.serialization.json.*
+import red.sjer.facet.host.FacetDependencyEditor
 
 /** Type changes retire incompatible known fields; IDs and unknown entry fields survive. */
 internal fun editEntry(entries: JsonArray, index: Int, field: String, value: String?): JsonArray {
@@ -50,4 +51,48 @@ internal fun TypedReminders(document: String, busy: Boolean, change: (String) ->
     TextButton(onClick = {
         change(JsonArray(parsed + buildJsonObject { put("id", UUID.randomUUID().toString()); put("type", "relative"); put("relatedTo", "due"); put("offset", "-PT15M") }).toString())
     }, enabled = !busy) { Text("Add reminder") }
+}
+
+/** Edit one explicit dependency field without interpreting links, durations or extension data. */
+internal fun editDependencyField(entries: JsonArray, index: Int, field: String, value: String): JsonArray {
+    require(field in setOf("uid", "reltype", "gap"))
+    val updated = JsonObject(entries[index].jsonObject.toMutableMap().apply {
+        if (field == "gap" && value.isEmpty()) remove(field) else put(field, JsonPrimitive(value))
+    })
+    return JsonArray(entries.mapIndexed { position, entry -> if (position == index) updated else entry })
+}
+
+internal fun addDependency(entries: JsonArray, metadata: FacetDependencyEditor): JsonArray = JsonArray(entries + buildJsonObject {
+    put("uid", ""); put("reltype", metadata.defaultReltype.orEmpty())
+})
+
+internal fun removeDependency(entries: JsonArray, index: Int): JsonArray =
+    JsonArray(entries.filterIndexed { position, _ -> position != index })
+
+@Composable
+internal fun TypedDependencies(document: String, metadata: FacetDependencyEditor, busy: Boolean, change: (String) -> Unit) {
+    val parsed = Json.parseToJsonElement(document)
+    if (parsed !is JsonArray) {
+        Text("The existing dependency value is preserved. Replace it explicitly to create a dependency list.")
+        TextButton(onClick = { change("[]") }, enabled = !busy) { Text("Replace dependency list") }
+        return
+    }
+    parsed.forEachIndexed { index, entry ->
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("Dependency ${index + 1}")
+            if (entry !is JsonObject) Text("This existing entry is preserved. Remove it explicitly to replace it.")
+            else {
+                fun value(name: String) = (entry[name] as? JsonPrimitive)?.contentOrNull ?: ""
+                fun set(name: String, value: String) = change(editDependencyField(parsed, index, name, value).toString())
+                OutlinedTextField(value("uid"), { set("uid", it) }, label = { Text("Task reference") }, enabled = !busy, modifier = Modifier.fillMaxWidth())
+                ChoiceField("Relationship", value("reltype"), metadata.relationshipTypes.map {
+                    WorkflowOption(it, it.lowercase().replace("to", " to ").replaceFirstChar(Char::uppercase))
+                }, !busy) { set("reltype", it) }
+                if (value("reltype").isEmpty()) Text("Choose a relationship before saving.", style = MaterialTheme.typography.bodySmall)
+                OutlinedTextField(value("gap"), { set("gap", it) }, label = { Text("Gap · optional ISO 8601 duration") }, enabled = !busy, modifier = Modifier.fillMaxWidth())
+            }
+            TextButton(onClick = { change(removeDependency(parsed, index).toString()) }, enabled = !busy) { Text("Remove dependency") }
+        }
+    }
+    TextButton(onClick = { change(addDependency(parsed, metadata).toString()) }, enabled = !busy) { Text("Add dependency") }
 }
