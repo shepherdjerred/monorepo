@@ -25,6 +25,14 @@ type BatchInput = {
 };
 type Group = { target: PlaybackCommandServiceDeps; items: QueuedSource[] };
 
+function isSportsSource(source: Source): boolean {
+  return (
+    source.kind === "url" &&
+    (source.sportsEvent !== undefined ||
+      sportsEventForSource(source.url) !== null)
+  );
+}
+
 async function assertSourceFeatureGates(
   deps: PlaybackCommandServiceDeps,
   source: Source,
@@ -34,10 +42,7 @@ async function assertSourceFeatureGates(
     deps.guildId === undefined || deps.channelId === undefined
       ? null
       : { guildId: deps.guildId, channelId: deps.channelId, userId };
-  const sports =
-    source.kind === "url" &&
-    (source.sportsEvent !== undefined ||
-      sportsEventForSource(source.url) !== null);
+  const sports = isSportsSource(source);
   if (
     sports &&
     (scope === null ||
@@ -110,7 +115,11 @@ class QueueBatch {
         await service.resolveMediaMode(userId, original.mode),
       );
     const source = withMode(original, this.modes.get(modeKey));
-    assertNumberedPlayback(target.playbackChannel, source.mode, false);
+    assertNumberedPlayback(
+      target.playbackChannel,
+      source.mode,
+      isSportsSource(source),
+    );
     group.items.push({
       source,
       requesterId: userId,

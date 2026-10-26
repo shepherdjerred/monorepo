@@ -363,6 +363,52 @@ test("saved sports playlist sources respect the sports feature gate", async () =
   expect(routePlayback).not.toHaveBeenCalled();
 });
 
+test("saved sports playlists reject the audio slot", async () => {
+  const f = await setup();
+  const context = await musicCommandContext(f.issuer, f.deps);
+  const events: Parameters<typeof context.dispatch>[0][] = [];
+  const target = {
+    ...context,
+    playbackChannel: number(1),
+    dispatch: (event: Parameters<typeof context.dispatch>[0]) => {
+      events.push(event);
+    },
+  };
+
+  await expect(
+    queueBatch({
+      deps: {
+        ...context,
+        featureGate: {
+          assistantV2: () => Promise.resolve(false),
+          history: () => Promise.resolve(false),
+          musicOverVoice: () => Promise.resolve(true),
+          sportsStreaming: () => Promise.resolve(true),
+        },
+        routePlayback: async () => target,
+      },
+      sources: [
+        {
+          kind: "url",
+          url: "https://example.com/live",
+          sportsEvent: {
+            id: "streameast:123",
+            provider: "streameast",
+            title: "Live game",
+            status: "live",
+            startsAt: null,
+            pageUrl: "https://example.com/live",
+          },
+        },
+      ],
+      userId,
+      placement: "queue",
+      signal: new AbortController().signal,
+    }),
+  ).rejects.toThrow("Sports need a video channel.");
+  expect(events).toHaveLength(0);
+});
+
 test("quick YouTube playlist loading retains all 250 tracks and the video destination", async () => {
   const f = await setup();
   await quickPlay(
