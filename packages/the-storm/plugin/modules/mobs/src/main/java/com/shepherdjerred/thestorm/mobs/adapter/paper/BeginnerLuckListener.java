@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.mobs.domain.config.MobsConfig;
 import com.shepherdjerred.thestorm.mobs.domain.scaling.Stat;
+import java.util.Objects;
 import java.util.OptionalLong;
 import org.bukkit.Location;
 import org.bukkit.entity.Boss;
@@ -11,6 +12,7 @@ import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Enemy;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -55,7 +57,26 @@ final class BeginnerLuckListener implements Listener {
 
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   void onTarget(EntityTargetLivingEntityEvent event) {
+    if (event.getTarget() instanceof Player player && crowded(event.getEntity(), player)) {
+      event.setCancelled(true);
+      return;
+    }
     reconcile(event.getEntity(), event.getTarget() instanceof Player player ? player : null);
+  }
+
+  /** A new ordinary target is refused once this player already has maxAggro ordinary enemies. */
+  private boolean crowded(Entity entity, Player player) {
+    if (!(entity instanceof Mob mob) || !ordinary(mob) || active(player).isEmpty()) return false;
+    if (Objects.equals(mob.getTarget(), player)) return false;
+    var radius = config.beginnerLuck().radius();
+    var already = 0;
+    for (var nearby : player.getNearbyEntities(radius, radius, radius)) {
+      if (nearby instanceof Mob other
+          && !Objects.equals(other, mob)
+          && ordinary(other)
+          && Objects.equals(other.getTarget(), player)) already++;
+    }
+    return already >= config.beginnerLuck().maxAggro();
   }
 
   @EventHandler

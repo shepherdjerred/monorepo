@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.essentials.domain.place.Position;
 import java.time.Duration;
-import java.time.Instant;
 import org.junit.jupiter.api.Test;
 
 final class TeleportValuesTest {
@@ -19,43 +18,28 @@ final class TeleportValuesTest {
   }
 
   @Test
-  void pricesAndWeightsMustBeValid() {
-    assertThatThrownBy(() -> new TeleportPrice(-1, Duration.ZERO, 1))
+  void pricesMustBeValid() {
+    assertThatThrownBy(() -> new TeleportPrice(-1, Duration.ZERO))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new TeleportPrice(1, Duration.ofSeconds(-1), 1))
+    assertThatThrownBy(() -> new TeleportPrice(1, Duration.ofSeconds(-1)))
         .isInstanceOf(IllegalArgumentException.class);
-    for (var weight : new double[] {0, -.5, .25, Double.NaN, Double.POSITIVE_INFINITY}) {
-      assertThatThrownBy(() -> new TeleportPrice(1, Duration.ZERO, weight))
-          .isInstanceOf(IllegalArgumentException.class);
-    }
-    assertThat(new TeleportPrice(1, Duration.ZERO, .5).halfPoints()).isEqualTo(1);
   }
 
   @Test
-  void policyRequiresValidWindowAllowanceCapAndFreePeriod() {
+  void theFreePeriodMustNotBeNegative() {
     var prices = TeleportPricerTest.pricing().prices();
-    assertThatThrownBy(() -> new TeleportPricing(prices, Duration.ZERO, 4, 32, Duration.ZERO))
+    assertThatThrownBy(() -> new TeleportPricing(prices, Duration.ofSeconds(-1)))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () -> new TeleportPricing(prices, Duration.ofHours(1), .25, 32, Duration.ZERO))
-        .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () -> new TeleportPricing(prices, Duration.ofHours(1), Double.NaN, 32, Duration.ZERO))
-        .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new TeleportPricing(prices, Duration.ofHours(1), 4, .5, Duration.ZERO))
-        .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(
-            () -> new TeleportPricing(prices, Duration.ofHours(1), 4, 32, Duration.ofSeconds(-1)))
-        .isInstanceOf(IllegalArgumentException.class);
+    assertThat(new TeleportPricing(prices, Duration.ZERO).rtpFreeFor()).isZero();
   }
 
   @Test
   void quotesAndCooldownRefusalsCannotBeNegative() {
-    assertThatThrownBy(() -> new Quote(TeleportKind.HOME, -1, Multiplier.ONE, TeleportUsage.EMPTY))
+    assertThatThrownBy(() -> new Quote(TeleportKind.HOME, -1, Duration.ZERO))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new Quote(TeleportKind.HOME, 0, Duration.ofSeconds(-1)))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new OnCooldown(TeleportKind.HOME, Duration.ZERO))
-        .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new TeleportUse(Instant.EPOCH, 0))
         .isInstanceOf(IllegalArgumentException.class);
   }
 

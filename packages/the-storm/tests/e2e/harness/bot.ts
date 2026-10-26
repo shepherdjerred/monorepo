@@ -9,6 +9,8 @@ export type BotOptions = {
   username: string;
   timeoutMs?: number;
   onMessage?: (message: string) => void;
+  /** Runs after the client exists and before the spawn wait, so early packets are visible. */
+  prepare?: (bot: Bot) => void;
 };
 
 /** Connects an offline-mode bot and resolves once it has spawned in the world. */
@@ -26,6 +28,7 @@ export async function connectBot(options: BotOptions): Promise<Bot> {
   const timeoutMs = options.timeoutMs ?? 20_000;
   // Arrival messages may precede the spawn packet that resolves connectBot.
   if (options.onMessage !== undefined) bot.on("messagestr", options.onMessage);
+  options.prepare?.(bot);
   await new Promise<void>((resolve, reject) => {
     const onKicked = (reason: unknown) => {
       finish(

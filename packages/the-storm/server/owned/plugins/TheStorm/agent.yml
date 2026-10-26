@@ -86,7 +86,7 @@ faq:
 # first-joiners; this is the staff voice on top: starter tips and where to
 # read more.
 onboarding:
-  enabled: true
+  enabled: false
   lines:
     - "Use your compass to choose a biome, or explore spawn first. /guide has the basics."
 

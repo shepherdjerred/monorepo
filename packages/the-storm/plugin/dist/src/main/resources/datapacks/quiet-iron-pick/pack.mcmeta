@@ -1,0 +1,7 @@
+{
+  "pack": {
+    "description": "The starter kit's iron pickaxe completes Isn't It Iron Pick without a toast or chat line.",
+    "max_format": 107,
+    "min_format": [107, 1]
+  }
+}

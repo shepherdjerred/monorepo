@@ -32,6 +32,15 @@ public interface TeleportTravel {
       String description,
       Supplier<CompletableFuture<Result<Landing, Component>>> preparation);
 
+  /**
+   * A free, immediate teleport. Used by the starter compass. It does not quote, charge, warm up, or
+   * start a command cooldown.
+   */
+  void complimentary(
+      Player player,
+      String description,
+      Supplier<CompletableFuture<Result<Landing, Component>>> preparation);
+
   /** Travel to a server destination, such as another world's spawn, priced as a warp. */
   void warp(
       Player player,
@@ -40,7 +49,7 @@ public interface TeleportTravel {
 
   CompletableFuture<Status> status(Player player);
 
-  record Policy(java.time.Duration rtpFreeFor, java.time.Duration window, double allowance) {}
+  record Policy(java.time.Duration rtpFreeFor) {}
 
   /** Supply the existing RTP first-seen source and its legacy payment recovery gate once. */
   void configureRtp(

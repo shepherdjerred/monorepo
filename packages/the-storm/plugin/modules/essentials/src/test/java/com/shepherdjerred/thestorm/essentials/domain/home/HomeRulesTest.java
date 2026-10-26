@@ -83,6 +83,20 @@ final class HomeRulesTest {
   }
 
   @Test
+  void aBedDoesNotConsumeAHomeSlot() {
+    assertThat(HomeRules.set(List.of(name("home")), HomeRules.BED, 1))
+        .isEqualTo(Result.ok(HomeRules.Change.CREATED));
+    assertThat(HomeRules.set(List.of(name("home"), HomeRules.BED), name("mine"), 1))
+        .isEqualTo(Result.err(new HomeError.LimitReached(1)));
+  }
+
+  @Test
+  void withoutANameABedIsPreferred() {
+    var homes = List.of(home("home"), home("bed"), home("mine"));
+    assertThat(HomeRules.resolve(homes, Optional.empty())).isEqualTo(Result.ok(home("bed")));
+  }
+
+  @Test
   void withoutANameSeveralHomesAreAmbiguous() {
     var homes = List.of(home("mine"), home("farm"));
     assertThat(HomeRules.resolve(homes, Optional.empty()))

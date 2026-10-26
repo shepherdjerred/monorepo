@@ -9,7 +9,6 @@ import com.shepherdjerred.thestorm.essentials.app.store.TeleportAttemptStore;
 import com.shepherdjerred.thestorm.essentials.app.store.TeleportUsageStore;
 import com.shepherdjerred.thestorm.essentials.app.store.TeleportUsageStore.Confirmation;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.Exemptions;
-import com.shepherdjerred.thestorm.essentials.domain.teleport.Multiplier;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.OnCooldown;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.Quote;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.TeleportKind;
@@ -46,19 +45,18 @@ final class TeleportPaymentsTest {
     }
 
     @Override
-    public CompletableFuture<Optional<TeleportUsage>> find(UUID player, java.time.Instant since) {
+    public CompletableFuture<Optional<TeleportUsage>> find(UUID player) {
       return completedFuture(Optional.ofNullable(usage.get(player)));
     }
 
     @Override
     public CompletableFuture<Void> confirm(Confirmation confirmation) {
-      var player = confirmation.player();
-      var operation = confirmation.operation();
-      var next = confirmation.usage();
-      if (confirmed.add(operation)) {
-        usage.put(player, next);
+      if (confirmed.add(confirmation.operation())) {
+        var current = usage.getOrDefault(confirmation.player(), TeleportUsage.EMPTY);
+        usage.put(
+            confirmation.player(), current.with(confirmation.kind(), confirmation.cooldownUntil()));
       }
-      return attempts.delete(operation);
+      return attempts.delete(confirmation.operation());
     }
   }
 
@@ -95,18 +93,15 @@ final class TeleportPaymentsTest {
           clock);
 
   static TeleportPricing pricing() {
-    var price = new TeleportPrice(25, Duration.ofMinutes(1), 1);
+    var price = new TeleportPrice(25, Duration.ofMinutes(1));
     return new TeleportPricing(
         new TeleportPrices(
-            new TeleportPrice(0, Duration.ZERO, .5),
+            new TeleportPrice(0, Duration.ZERO),
             price,
-            new TeleportPrice(25, Duration.ofMinutes(1), 2),
+            new TeleportPrice(25, Duration.ofMinutes(1)),
             price,
             price,
             price),
-        Duration.ofHours(1),
-        4,
-        32,
         Duration.ofDays(7));
   }
 
@@ -170,7 +165,7 @@ final class TeleportPaymentsTest {
     var retry = ok(charge(TeleportKind.HOME, Exemptions.NONE));
 
     assertThat(retry.cost()).isEqualTo(25);
-    assertThat(retry.multiplier()).isEqualTo(Multiplier.ONE);
+    assertThat(retry.cooldown()).isEqualTo(Duration.ofMinutes(1));
     assertThat(wallets.balanceOf(WALLET)).isEqualTo(75);
   }
 
@@ -190,19 +185,20 @@ final class TeleportPaymentsTest {
               assertThat(receipt.to()).isEqualTo(new AccountId.Server());
               assertThat(receipt.reason()).isEqualTo("teleport:home");
             });
-    assertThat(usage.usage.get(PLAYER)).extracting(value -> value.trips().size()).isEqualTo(1);
+    assertThat(java.util.Objects.requireNonNull(usage.usage.get(PLAYER)).until(TeleportKind.HOME))
+        .isEqualTo(clock.instant().plus(Duration.ofMinutes(1)));
   }
 
   @Test
-  void theFifthNormalTeleportCostsMore() {
+  void laterTeleportsKeepTheFlatPrice() {
     wallets.deposit(WALLET, 500);
     for (var i = 0; i < 4; i++) {
       assertThat(pay(TeleportKind.HOME, Exemptions.NONE).map(Quote::cost))
           .isEqualTo(Result.ok(25L));
       clock.advance(Duration.ofMinutes(1));
     }
-    assertThat(pay(TeleportKind.HOME, Exemptions.NONE).map(Quote::cost)).isEqualTo(Result.ok(50L));
-    assertThat(wallets.balanceOf(WALLET)).isEqualTo(350);
+    assertThat(pay(TeleportKind.HOME, Exemptions.NONE).map(Quote::cost)).isEqualTo(Result.ok(25L));
+    assertThat(wallets.balanceOf(WALLET)).isEqualTo(375);
   }
 
   @Test
@@ -234,15 +230,12 @@ final class TeleportPaymentsTest {
   }
 
   @Test
-  void cooldownsAreSharedAcrossKinds() {
+  void cooldownsDoNotCrossKinds() {
     wallets.deposit(WALLET, 100);
     pay(TeleportKind.HOME, Exemptions.NONE);
 
-    assertThat(pay(TeleportKind.WARP, Exemptions.NONE))
-        .isEqualTo(
-            Result.err(
-                new TeleportRefusal.Cooldown(
-                    new OnCooldown(TeleportKind.WARP, Duration.ofMinutes(1)))));
+    assertThat(pay(TeleportKind.WARP, Exemptions.NONE).map(Quote::cost)).isEqualTo(Result.ok(25L));
+    assertThat(wallets.balanceOf(WALLET)).isEqualTo(50);
   }
 
   @Test
@@ -253,10 +246,8 @@ final class TeleportPaymentsTest {
     assertThat(paid.map(Quote::cost)).isEqualTo(Result.ok(0L));
     assertThat(exempt.map(Quote::cost)).isEqualTo(Result.ok(0L));
     assertThat(wallets.receipts()).isEmpty();
-    assertThat(usage.usage.get(PLAYER))
-        .isNotNull()
-        .extracting(value -> value.trips().size())
-        .isEqualTo(2);
+    assertThat(java.util.Objects.requireNonNull(usage.usage.get(PLAYER)).cooldownUntil())
+        .containsKeys(TeleportKind.SPAWN, TeleportKind.HOME);
   }
 
   @Test

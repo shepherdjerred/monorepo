@@ -43,7 +43,7 @@ final class TeleportInfoCommands {
                                 context,
                                 player -> category(player, Cmd.string(context, "category")))))
             .build(),
-        "Teleport rules, current prices and shared cooldown");
+        "Teleport prices and cooldowns");
   }
 
   private void category(Player player, String name) {
@@ -70,53 +70,10 @@ final class TeleportInfoCommands {
 
   private static void describe(
       Player player, TeleportTravel.Status status, Optional<TeleportKind> selected) {
-    var rules = status.rules();
-    var active = status.history().active(rules.window(), status.now());
-    var points = active.stream().mapToLong(trip -> trip.halfPoints()).sum() / 2.0;
     Say.info(
         player,
         Say.TELEPORT,
-        "Occasional travel is affordable. Use elytra, happy ghasts and paths for regular journeys.");
-    Say.info(
-        player,
-        Say.TELEPORT,
-        "All travel commands share "
-            + rules.allowance()
-            + " points over the last "
-            + DurationText.format(rules.window())
-            + ". You have used "
-            + points
-            + ".");
-    Say.info(
-        player,
-        Say.TELEPORT,
-        "Each extra point (including your next trip) doubles price and cooldown, capped at x"
-            + number(rules.maxMultiplier())
-            + ". Each completed trip stops counting after "
-            + DurationText.format(rules.window())
-            + ".");
-    if (status.now().isBefore(status.history().cooldownUntil())) {
-      Say.info(
-          player,
-          Say.TELEPORT,
-          "Shared cooldown remaining: "
-              + DurationText.format(
-                  Duration.between(status.now(), status.history().cooldownUntil()))
-              + ".");
-    } else {
-      Say.info(player, Say.TELEPORT, "Shared cooldown: ready.");
-    }
-    active.stream()
-        .map(trip -> trip.at().plus(rules.window()))
-        .min(java.time.Instant::compareTo)
-        .ifPresent(
-            at ->
-                Say.info(
-                    player,
-                    Say.TELEPORT,
-                    "Next usage expires in "
-                        + DurationText.format(Duration.between(status.now(), at))
-                        + "."));
+        "Each command has its own price and cooldown. Elytra, happy ghasts and paths are free.");
     for (var kind : TeleportKind.values()) {
       if (selected.isEmpty() || selected.orElseThrow() == kind) {
         line(player, status, kind);
@@ -126,38 +83,31 @@ final class TeleportInfoCommands {
       Say.info(
           player,
           Say.TELEPORT,
-          "RTP is free for another "
+          "Wilderness teleport is free for another "
               + DurationText.format(Duration.between(status.now(), status.rtpFreeUntil()))
-              + "; its points and escalating cooldown still apply.");
+              + ".");
     }
   }
 
   private static void line(Player player, TeleportTravel.Status status, TeleportKind kind) {
-    var base = status.rules().prices().of(kind);
     var quote = status.quote(kind);
+    var price = quote.cost() == 0 ? "free" : quote.cost() + " crystals";
+    var until = status.history().until(kind);
+    var ready =
+        status.now().isBefore(until)
+            ? "ready in " + DurationText.format(Duration.between(status.now(), until))
+            : "ready";
     Say.info(
         player,
         Say.TELEPORT,
         usage(kind)
             + ": "
-            + base.weight()
-            + " points; base "
-            + base.cost()
-            + " crystals / "
-            + DurationText.format(base.cooldown())
-            + "; now "
-            + quote.cost()
-            + " crystals / "
+            + price
+            + ", "
             + DurationText.format(quote.cooldown())
-            + " ("
-            + quote.multiplier()
-            + ").");
-    if (kind == TeleportKind.TPA) {
-      Say.info(
-          player,
-          Say.TELEPORT,
-          "The requester pays and uses the allowance after /tpaccept. An unanswered request costs nothing.");
-    }
+            + ", "
+            + ready
+            + ".");
   }
 
   private static String usage(TeleportKind kind) {
@@ -174,9 +124,5 @@ final class TeleportInfoCommands {
   static Component help(TeleportKind kind) {
     return Component.text(" [TP rules: /tpinfo " + kind.id() + "]")
         .clickEvent(ClickEvent.runCommand("/tpinfo " + kind.id()));
-  }
-
-  private static String number(double value) {
-    return java.math.BigDecimal.valueOf(value).stripTrailingZeros().toPlainString();
   }
 }

@@ -77,7 +77,7 @@ final class AgentConfigTest {
     assertThat(config.faq().entries())
         .extracting(entry -> entry.id())
         .containsExactly("starter-kit", "server-rules", "report-grief");
-    assertThat(config.onboarding().enabled()).isTrue();
+    assertThat(config.onboarding().enabled()).isFalse();
     assertThat(config.onboarding().lines()).hasSize(1);
   }
 

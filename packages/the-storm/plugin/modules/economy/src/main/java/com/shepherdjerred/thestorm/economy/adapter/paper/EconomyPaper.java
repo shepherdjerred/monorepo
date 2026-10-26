@@ -17,7 +17,7 @@ public final class EconomyPaper {
     var format = config.format();
     server
         .getPluginManager()
-        .registerEvents(new FirstJoinListener(wallets, format, server, replies), context.plugin());
+        .registerEvents(new FirstJoinListener(wallets, replies), context.plugin());
     var commands =
         new EconomyCommands(
             wallets,

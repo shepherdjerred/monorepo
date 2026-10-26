@@ -40,7 +40,7 @@ final class ArrivalDialog {
                   (view, audience) -> {
                     if (audience instanceof Player player) {
                       player.closeDialog();
-                      flow.start(player, world, Optional.of(biome));
+                      flow.start(player, world, Optional.of(biome), true);
                     }
                   },
                   options)));
@@ -57,8 +57,7 @@ final class ArrivalDialog {
                             .body(
                                 List.of(
                                     DialogBody.plainMessage(
-                                        Component.text(
-                                            "Choose a biome to start building, or explore spawn first. Left- or right-click your compass whenever you're ready to leave."))))
+                                        Component.text("Choose a biome, or explore spawn."))))
                             .build())
                     .type(
                         DialogType.multiAction(buttons)

@@ -107,6 +107,11 @@ public final class ArenaModule implements StormModule {
     context.services().provide(ArenaPresence.class, started.presence());
     context
         .services()
+        .provide(
+            com.shepherdjerred.thestorm.core.world.ArenaSessions.class,
+            player -> started.presence().arenaOf(player).isPresent());
+    context
+        .services()
         .find(com.shepherdjerred.thestorm.core.safety.ContentSafety.class)
         .ifPresent(
             safety ->

@@ -223,7 +223,8 @@ async function profileFixtures(
     case "e2e": {
       // The focused suite's mechanics plugin owns its listener and
       // geometry; the full suite instead runs the production module with
-      // disposable worlds.
+      // disposable worlds. World, QoL, and mobs stay on so first join has
+      // the biome dialog, compass, and beginner protection.
       return {
         stormConfig: stormModuleConfig(owned, [
           "economy",
@@ -232,7 +233,10 @@ async function profileFixtures(
           "safety",
           "tracks",
           "towns",
+          "world",
           "essentials",
+          "qol",
+          "mobs",
           "tickets",
           "agent",
           "rwf",

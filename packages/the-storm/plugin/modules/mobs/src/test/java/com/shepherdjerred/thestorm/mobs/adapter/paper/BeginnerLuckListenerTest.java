@@ -227,6 +227,22 @@ final class BeginnerLuckListenerTest {
   }
 
   @Test
+  void aFourthOrdinaryMobDoesNotJoinTheFight() {
+    var player = player("beginner", true);
+    for (var i = 0; i < 3; i++) {
+      var engaged = mob();
+      engaged.setTarget(player);
+      var joined = new EntityTargetLivingEntityEvent(engaged, player, TargetReason.CLOSEST_PLAYER);
+      server.getPluginManager().callEvent(joined);
+      assertThat(joined.isCancelled()).isFalse();
+    }
+    var fourth = mob();
+    var refused = new EntityTargetLivingEntityEvent(fourth, player, TargetReason.CLOSEST_PLAYER);
+    server.getPluginManager().callEvent(refused);
+    assertThat(refused.isCancelled()).isTrue();
+  }
+
+  @Test
   void firstHitCorrectsOldMeleeAttributesAndVeteransShareTheReducedLevel() {
     var beginner = player("beginner", true);
     var veteran = player("veteran", false);

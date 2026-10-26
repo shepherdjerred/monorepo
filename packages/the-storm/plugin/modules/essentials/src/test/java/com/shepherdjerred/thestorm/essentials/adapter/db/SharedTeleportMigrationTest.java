@@ -50,14 +50,13 @@ final class SharedTeleportMigrationTest {
       attempts.insert(pending).join();
 
       apply(database, "V4__shared_teleport_usage.sql");
+      apply(database, "V5__staff.sql");
+      apply(database, "V6__flat_teleport_cooldowns.sql");
 
-      var usage =
-          new JooqTeleportUsageStore(database)
-              .find(player, t0.minusSeconds(3600))
-              .join()
-              .orElseThrow();
-      assertThat(usage.cooldownUntil()).isEqualTo(t0.plusSeconds(120));
-      assertThat(usage.trips()).isEmpty();
+      var usage = new JooqTeleportUsageStore(database).find(player).join().orElseThrow();
+      for (var kind : TeleportKind.values()) {
+        assertThat(usage.until(kind)).isEqualTo(t0.plusSeconds(120));
+      }
       assertThat(attempts.pending().join()).containsExactly(pending);
       var rtp = new TeleportAttempt(UUID.randomUUID(), player, TeleportKind.RTP, 25);
       attempts.insert(rtp).join();

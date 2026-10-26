@@ -1,6 +1,10 @@
 package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
 import com.shepherdjerred.thestorm.essentials.domain.back.BackEntry;
+import com.shepherdjerred.thestorm.essentials.domain.place.Position;
+import java.time.Duration;
+import java.util.Objects;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -23,6 +27,7 @@ final class TeleportListener implements Listener {
   private final BackRecorder back;
   private final SafeTracker safe;
   private final com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations spawn;
+  private final BedHomes beds;
 
   /**
    * Where deaths are recorded and respawns go.
@@ -30,11 +35,13 @@ final class TeleportListener implements Listener {
    * @param back {@code /back} recording
    * @param safe last safe spots
    * @param spawn where bedless players respawn
+   * @param beds saved bed homes, used when the bed block is gone
    */
   record Places(
       BackRecorder back,
       SafeTracker safe,
-      com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations spawn) {}
+      com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations spawn,
+      BedHomes beds) {}
 
   TeleportListener(PaperRuntime runtime, TeleportFlow flow, Places places) {
     this.runtime = runtime;
@@ -42,6 +49,7 @@ final class TeleportListener implements Listener {
     this.back = places.back();
     this.safe = places.safe();
     this.spawn = places.spawn();
+    this.beds = places.beds();
   }
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -76,13 +84,74 @@ final class TeleportListener implements Listener {
         .ifPresent(point -> back.record(player.getUniqueId(), point, BackEntry.Cause.DEATH));
   }
 
-  @EventHandler(priority = EventPriority.HIGH)
+  /**
+   * Runs before the towns arrival handler, which is {@link EventPriority#HIGH}. Towns is registered
+   * first, so an equal priority would let this assignment replace a forbidden-town redirect.
+   */
+  @EventHandler(priority = EventPriority.NORMAL)
   void onRespawn(PlayerRespawnEvent event) {
-    if (event.getRespawnReason() != PlayerRespawnEvent.RespawnReason.DEATH
-        || event.isBedSpawn()
-        || event.isAnchorSpawn()) {
+    if (event.getRespawnReason() != PlayerRespawnEvent.RespawnReason.DEATH) return;
+    var bed = beds.get(event.getPlayer().getUniqueId());
+    if (bed.isPresent()) {
+      placeBed(event, bed.orElseThrow());
+      return;
+    }
+    if (event.isBedSpawn() || event.isAnchorSpawn()) return;
+    Positions.toLocation(runtime.server(), spawn.spawn()).ifPresent(event::setRespawnLocation);
+  }
+
+  /** Uses the saved bed when its column is safe, otherwise the essentials spawn. */
+  private void placeBed(PlayerRespawnEvent event, Position position) {
+    var location = Positions.toLocation(runtime.server(), position);
+    if (location.isEmpty()) return;
+    var spot = location.orElseThrow();
+    var world = spot.getWorld();
+    if (world == null) return;
+    if (!SafeLocations.isLoaded(spot)) {
+      event.setRespawnLocation(spot);
+      var player = event.getPlayer();
+      runtime.onMain(
+          world.getChunkAtAsync(spot),
+          "loading a bed respawn",
+          chunk -> adjustBed(player, spot, false));
+      return;
+    }
+    var safe = SafeLocations.nearestSafe(spot);
+    if (safe.isPresent()) {
+      event.setRespawnLocation(safe.orElseThrow());
       return;
     }
     Positions.toLocation(runtime.server(), spawn.spawn()).ifPresent(event::setRespawnLocation);
+  }
+
+  private void adjustBed(Player player, Location spot, boolean retried) {
+    if (!player.isOnline()) return;
+    if (!stillAtBed(player, spot)) {
+      if (!retried) {
+        runtime
+            .scheduler()
+            .runOnMainThreadLater(Duration.ofMillis(50), () -> adjustBed(player, spot, true));
+      }
+      return;
+    }
+    var safe = SafeLocations.nearestSafe(spot);
+    if (safe.isPresent()) {
+      var landing = safe.orElseThrow();
+      if (landing.getBlockY() != spot.getBlockY()) {
+        var _ = player.teleportAsync(landing);
+      }
+      return;
+    }
+    Positions.toLocation(runtime.server(), spawn.spawn())
+        .ifPresent(
+            fallback -> {
+              var _ = player.teleportAsync(fallback);
+            });
+  }
+
+  private static boolean stillAtBed(Player player, Location spot) {
+    var now = Positions.current(player);
+    if (!Objects.equals(now.getWorld(), spot.getWorld())) return false;
+    return now.distanceSquared(spot) <= 16;
   }
 }

@@ -107,11 +107,28 @@ public final class EssentialsPaper {
     var teleports = config.teleports();
     var back =
         new BackRecorder(runtime, app.stores().back(), teleports.backHistorySize(), app.sealed());
+    var destinations =
+        context
+            .services()
+            .require(com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations.class);
+    var placements = new com.shepherdjerred.thestorm.essentials.app.NewcomerPlacements();
+    context
+        .services()
+        .provide(com.shepherdjerred.thestorm.essentials.app.NewcomerPlacements.class, placements);
+    var beds = new BedHomes();
     var flow =
         new TeleportFlow(
             runtime,
             new TeleportFlow.Services(
-                app.payments(), app.guards(), app.protection(), back, app.sealed()),
+                app.payments(),
+                app.guards(),
+                app.protection(),
+                back,
+                app.sealed(),
+                context
+                    .services()
+                    .require(com.shepherdjerred.thestorm.core.world.SpawnArrivals.class),
+                destinations.spawn()),
             teleports.warmup());
     context
         .services()
@@ -135,9 +152,8 @@ public final class EssentialsPaper {
                 app.stores().back(),
                 app.protection(),
                 app.sealed(),
-                context
-                    .services()
-                    .require(com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations.class)),
+                destinations,
+                beds),
             config);
     var tpaCommands =
         new TpaCommands(
@@ -178,34 +194,34 @@ public final class EssentialsPaper {
             spawnPreparation,
             maintenance,
             new TeleportListener(
+                runtime, flow, new TeleportListener.Places(back, safe, destinations, beds)),
+            new BedListener(runtime, app.stores().homes(), beds, config.homeLimit()),
+            new ReturnListener(
+                context,
                 runtime,
-                flow,
-                new TeleportListener.Places(
-                    back,
-                    safe,
-                    context
-                        .services()
-                        .require(
-                            com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations.class))),
+                new com.shepherdjerred.thestorm.essentials.adapter.db.JooqReturnCharges(
+                    context.database()),
+                flow),
             new BanListener(runtime, app.moderation()),
             new SessionListener(
                 runtime,
                 app.players(),
                 new SessionListener.Presence(app.afk(), tpa, flow, safe),
-                new SessionListener.Arrival(
-                    context
-                        .services()
-                        .require(
-                            com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations.class),
-                    kits)),
+                new SessionListener.Arrival(destinations, kits, placements)),
             afkListener);
     listeners.forEach(
         listener -> server.getPluginManager().registerEvents(listener, context.plugin()));
     var scheduler = context.scheduler();
+    var backfill =
+        new BedBackfill(
+            new BedBackfill.Sources(
+                runtime, app.stores().homes(), beds, context.compute(), app.sealed()));
+    backfill.start();
     var tasks =
         List.of(
             scheduler.repeatOnMainThread(SWEEP_EVERY, SWEEP_EVERY, afkListener::sweep),
-            scheduler.repeatOnMainThread(SWEEP_EVERY, SWEEP_EVERY, tpaCommands::expire));
+            scheduler.repeatOnMainThread(SWEEP_EVERY, SWEEP_EVERY, tpaCommands::expire),
+            backfill);
     return new EssentialsPaper(listeners, tasks, flow, permissions, staff);
   }
 

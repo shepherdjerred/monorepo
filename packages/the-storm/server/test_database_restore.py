@@ -191,6 +191,8 @@ class DatabaseRestoreTest(unittest.TestCase):
         self.assertIn("creative_claims", policy["retainTables"])
         self.assertIn("creative_flags", policy["retainTables"])
         self.assertIn("creative_trust", policy["retainTables"])
+        self.assertIn("essentials_teleport_cooldowns", policy["resetTables"])
+        self.assertIn("essentials_teleport_confirmations", policy["resetTables"])
         self.assertIn("essentials_teleport_state", policy["resetTables"])
         self.assertIn("essentials_teleport_uses", policy["resetTables"])
         self.assertNotIn("essentials_teleport_usage", policy["resetTables"])

@@ -8,11 +8,15 @@ public record BeginnerLuck(
     Duration normalAfter,
     double initialDamageMultiplier,
     int startingLevel,
-    double radius) {
+    double radius,
+    int maxAggro) {
 
   public BeginnerLuck {
     if (startingLevel < 1 || !Double.isFinite(radius) || radius <= 0 || radius > 128) {
       throw new IllegalArgumentException("startingLevel must be positive and radius must be 0-128");
+    }
+    if (maxAggro < 1 || maxAggro > 8) {
+      throw new IllegalArgumentException("maxAggro must be from 1 to 8");
     }
     if (calmFor.isNegative() || normalAfter.toMillis() <= calmFor.toMillis()) {
       throw new IllegalArgumentException(

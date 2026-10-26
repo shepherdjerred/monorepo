@@ -1,6 +1,7 @@
 name: TheStorm
 version: '${version}'
 main: com.shepherdjerred.thestorm.TheStormPlugin
+bootstrapper: com.shepherdjerred.thestorm.TheStormBootstrap
 api-version: '26.2'
 description: The Storm (ts-mc.net) gameplay
 authors: [ShepherdJerred]

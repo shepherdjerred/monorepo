@@ -73,6 +73,19 @@ public final class PaperHarness implements AutoCloseable {
     services.provide(Protection.class, new AllowAllProtection());
     services.provide(SealedWorlds.class, harness.sealed);
     services.provide(
+        com.shepherdjerred.thestorm.core.world.SpawnArrivals.class,
+        new com.shepherdjerred.thestorm.core.world.SpawnArrivals() {
+          @Override
+          public int radius() {
+            return 32;
+          }
+
+          @Override
+          public boolean contains(org.bukkit.Location location) {
+            return false;
+          }
+        });
+    services.provide(
         com.shepherdjerred.thestorm.core.expansion.ExpansionSettings.class,
         new com.shepherdjerred.thestorm.core.expansion.ExpansionSettings(
             2000, 10, 100, 64, 32, 16, 30));

@@ -42,6 +42,7 @@ final class TeleportCommands {
   private final Places places;
   private final EssentialsConfig config;
   private final com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations destinations;
+  private final BedHomes beds;
 
   /**
    * Where players can go.
@@ -50,6 +51,7 @@ final class TeleportCommands {
    * @param warps server warps
    * @param back {@code /back} history
    * @param protection land protection, asked before a home is set
+   * @param beds saved bed homes, cleared when {@code /delhome bed} runs
    */
   record Places(
       HomeStore homes,
@@ -57,7 +59,8 @@ final class TeleportCommands {
       BackStore back,
       Protection protection,
       SealedWorlds sealed,
-      com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations destinations) {}
+      com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations destinations,
+      BedHomes beds) {}
 
   TeleportCommands(
       PaperRuntime runtime, TeleportFlow flow, Places places, EssentialsConfig config) {
@@ -66,6 +69,7 @@ final class TeleportCommands {
     this.places = places;
     this.config = config;
     this.destinations = places.destinations();
+    this.beds = places.beds();
   }
 
   void register(Commands commands) {
@@ -224,6 +228,10 @@ final class TeleportCommands {
   }
 
   private void setHome(Player player, PlaceName name) {
+    if (name.equals(HomeRules.BED)) {
+      Say.error(player, Say.HOMES, "Right-click a bed to set your respawn point.");
+      return;
+    }
     if (places.sealed().isSealed(player.getWorld())) {
       Say.error(player, Say.HOMES, "You can't set a home in this world.");
       return;
@@ -267,6 +275,10 @@ final class TeleportCommands {
         player,
         deleted -> {
           if (deleted) {
+            if (name.equals(HomeRules.BED)) {
+              beds.forget(player.getUniqueId());
+              player.setRespawnLocation(null, false);
+            }
             Say.success(player, Say.HOMES, "Deleted home " + name + ".");
           } else {
             Say.error(player, Say.HOMES, "You have no home called " + name + ".");
@@ -285,15 +297,11 @@ final class TeleportCommands {
             return;
           }
           var names = homes.stream().map(home -> home.name().value()).toList();
+          var counted = homes.stream().filter(home -> !home.name().equals(HomeRules.BED)).count();
           Say.info(
               player,
               Say.HOMES,
-              "Homes ("
-                  + homes.size()
-                  + "/"
-                  + config.homeLimit()
-                  + "): "
-                  + String.join(", ", names));
+              "Homes (" + counted + "/" + config.homeLimit() + "): " + String.join(", ", names));
         });
   }
 

@@ -20,7 +20,7 @@ import java.util.random.RandomGenerator;
 import org.bukkit.World;
 import org.jspecify.annotations.Nullable;
 
-/** Loads two batches of chunks and keeps the farthest safe column. */
+/** Loads up to six batches of chunks and keeps the farthest safe column. */
 final class RtpSearch {
 
   private final WildSpotPicker picker;
@@ -48,7 +48,7 @@ final class RtpSearch {
   }
 
   private void attempt(Pass pass, int tried, RandomGenerator random) {
-    if (tried >= 2) {
+    if (tried >= 6) {
       pass.done().accept(new Outcome(Optional.empty(), null));
       return;
     }

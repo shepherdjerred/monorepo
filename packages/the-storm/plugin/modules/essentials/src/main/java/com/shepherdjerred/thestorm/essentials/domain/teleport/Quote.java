@@ -3,27 +3,20 @@ package com.shepherdjerred.thestorm.essentials.domain.teleport;
 import java.time.Duration;
 
 /**
- * What a teleport costs right now, and the usage to record once it is paid.
+ * What a teleport costs right now. Nothing is recorded until the player arrives.
  *
  * @param kind the teleport kind
  * @param cost crystals to charge; zero means free
- * @param multiplier the multiplier applied to the base price
- * @param next the usage to store after the teleport happens
+ * @param cooldown time before this kind can be used again, starting on arrival
  */
-public record Quote(TeleportKind kind, long cost, Multiplier multiplier, TeleportUsage next) {
+public record Quote(TeleportKind kind, long cost, Duration cooldown) {
 
   public Quote {
     if (cost < 0) {
       throw new IllegalArgumentException("cost must not be negative: " + cost);
     }
-  }
-
-  public Duration cooldown() {
-    return Duration.between(next.trips().getLast().at(), next.cooldownUntil());
-  }
-
-  public double previousPoints() {
-    return next.trips().stream().mapToLong(TeleportUse::halfPoints).sum() / 2.0
-        - next.trips().getLast().halfPoints() / 2.0;
+    if (cooldown.isNegative()) {
+      throw new IllegalArgumentException("cooldown must not be negative: " + cooldown);
+    }
   }
 }

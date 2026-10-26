@@ -12,6 +12,7 @@ import com.shepherdjerred.thestorm.essentials.domain.home.HomeRules;
 import com.shepherdjerred.thestorm.essentials.domain.place.PlaceName;
 import com.shepherdjerred.thestorm.essentials.domain.place.Position;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -68,6 +69,35 @@ public final class JooqHomeStore implements HomeStore {
           }
           return decision;
         });
+  }
+
+  @Override
+  public CompletableFuture<Set<UUID>> bedOwners() {
+    return database.read(
+        dsl ->
+            dsl.select(ESSENTIALS_HOMES.PLAYER)
+                .from(ESSENTIALS_HOMES)
+                .where(ESSENTIALS_HOMES.NAME.eq(HomeRules.BED.value()))
+                .fetchSet(row -> UUID.fromString(row.value1())));
+  }
+
+  @Override
+  public CompletableFuture<Boolean> insertBedIfAbsent(UUID player, Position position) {
+    return database.write(
+        dsl ->
+            dsl.insertInto(ESSENTIALS_HOMES)
+                    .set(ESSENTIALS_HOMES.PLAYER, player.toString())
+                    .set(ESSENTIALS_HOMES.NAME, HomeRules.BED.value())
+                    .set(ESSENTIALS_HOMES.WORLD, position.world())
+                    .set(ESSENTIALS_HOMES.X, position.x())
+                    .set(ESSENTIALS_HOMES.Y, position.y())
+                    .set(ESSENTIALS_HOMES.Z, position.z())
+                    .set(ESSENTIALS_HOMES.YAW, (double) position.yaw())
+                    .set(ESSENTIALS_HOMES.PITCH, (double) position.pitch())
+                    .onConflict(ESSENTIALS_HOMES.PLAYER, ESSENTIALS_HOMES.NAME)
+                    .doNothing()
+                    .execute()
+                == 1);
   }
 
   @Override

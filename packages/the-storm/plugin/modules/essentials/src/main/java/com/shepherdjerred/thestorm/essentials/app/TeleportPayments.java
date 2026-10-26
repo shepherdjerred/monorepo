@@ -74,11 +74,12 @@ public final class TeleportPayments {
     return loaded.thenCompose(
         ready ->
             usage
-                .find(payer, time.instant().minus(pricer.pricing().window()))
+                .find(payer)
                 .thenApply(
                     found ->
                         pricer
-                            .quote(kind, found, exemptions, time.instant())
+                            .quote(
+                                kind, found.orElse(TeleportUsage.EMPTY), exemptions, time.instant())
                             .mapError(TeleportRefusal.Cooldown::new)));
   }
 
@@ -95,17 +96,12 @@ public final class TeleportPayments {
                 });
   }
 
-  /** The player arrived: records usage before clearing the recovery obligation. */
+  /** The player arrived: records that command's cooldown and clears the charge. */
   public CompletableFuture<Void> confirm(UUID payer, Charge charged) {
     var quote = charged.quote();
     var now = time.instant();
     return usage.confirm(
-        new Confirmation(
-            payer,
-            charged.id(),
-            quote.kind(),
-            quote.next().deliveredAt(now),
-            now.minus(pricer.pricing().window().multipliedBy(2))));
+        new Confirmation(payer, charged.id(), quote.kind(), now.plus(quote.cooldown())));
   }
 
   public TeleportPricing pricing() {
@@ -114,13 +110,12 @@ public final class TeleportPayments {
 
   public CompletableFuture<TeleportUsage> history(UUID player) {
     return loaded
-        .thenCompose(ready -> usage.find(player, time.instant().minus(pricer.pricing().window())))
+        .thenCompose(ready -> usage.find(player))
         .thenApply(found -> found.orElse(TeleportUsage.EMPTY));
   }
 
-  public Quote preview(
-      TeleportKind kind, TeleportUsage history, Exemptions exemptions, java.time.Instant now) {
-    return pricer.preview(kind, history, exemptions, now);
+  public Quote preview(TeleportKind kind, Exemptions exemptions) {
+    return pricer.preview(kind, exemptions);
   }
 
   /** The teleport could not happen after {@link #charge}: returns crystals once. */

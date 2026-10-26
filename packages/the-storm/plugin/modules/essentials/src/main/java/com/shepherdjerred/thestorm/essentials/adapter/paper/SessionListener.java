@@ -44,7 +44,8 @@ final class SessionListener implements Listener {
    */
   record Arrival(
       com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations spawn,
-      PlayerCommands.Kits kits) {}
+      PlayerCommands.Kits kits,
+      com.shepherdjerred.thestorm.essentials.app.NewcomerPlacements placements) {}
 
   SessionListener(
       PaperRuntime runtime, PlayerDirectory players, Presence presence, Arrival arrival) {
@@ -83,14 +84,20 @@ final class SessionListener implements Listener {
     presence.flow().left(id);
     presence.safe().forget(id);
     arrival.kits().deliveries().quit(id);
+    arrival.placements().left(id);
   }
 
   private void welcome(Player player) {
-    Positions.toLocation(runtime.server(), arrival.spawn().spawn())
-        .ifPresent(
-            spawn ->
-                runtime.logFailure(player.teleportAsync(spawn), "sending a new player to spawn"));
     arrival.kits().deliveries().deliver(player.getUniqueId());
-    Say.success(player, Say.STORM, "Welcome to The Storm, " + player.getName() + "! Read /rules.");
+    var spawn = Positions.toLocation(runtime.server(), arrival.spawn().spawn());
+    if (spawn.isEmpty()) {
+      arrival.placements().ready(player);
+      return;
+    }
+    runtime.onMain(
+        player.teleportAsync(spawn.orElseThrow()),
+        "sending a new player to spawn",
+        moved -> arrival.placements().ready(player),
+        failed -> arrival.placements().ready(player));
   }
 }

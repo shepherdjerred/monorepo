@@ -41,27 +41,11 @@ final class BeginnerCommands {
   }
 
   static String describe(BeginnerStatus.Status status) {
-    if (!status.enabled())
-      return "Beginner's luck is currently disabled. Your saved progress is preserved.";
-    if (status.active().compareTo(status.normalAfter()) >= 0)
-      return "Beginner's luck complete: "
-          + hours(status.active())
-          + " active hours played. Wilderness difficulty is normal.";
-    var stage =
-        status.active().compareTo(status.calmFor()) < 0
-            ? "Gentle start; difficulty begins rising in "
-                + hours(status.calmFor().minus(status.active()))
-                + " active hours."
-            : "Difficulty is gradually rising.";
-    return "Beginner's luck: "
-        + hours(status.active())
-        + " active hours played. "
-        + stage
-        + " You take "
-        + Math.round(status.damageMultiplier() * 100)
-        + "% of ordinary mob damage. Normal difficulty in "
+    if (!status.enabled()) return "Beginner's luck is off.";
+    if (status.active().compareTo(status.normalAfter()) >= 0) return "Beginner's luck has ended.";
+    return "Wilderness mobs are gentler for "
         + hours(status.normalAfter().minus(status.active()))
-        + " active hours. AFK and offline time pause the clock.";
+        + " more active hours.";
   }
 
   private static String hours(Duration duration) {

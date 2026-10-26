@@ -4,9 +4,9 @@ import com.shepherdjerred.thestorm.arena.app.ArenaPresence;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.qol.app.QolStore;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
@@ -21,7 +21,8 @@ import org.jspecify.annotations.Nullable;
 final class StarterCompass {
   static final int SLOT = 8;
   private static final NamespacedKey OWNER = new NamespacedKey("thestorm", "starter_rtp_owner");
-  private final Set<UUID> pending = new HashSet<>();
+  private final Map<UUID, Integer> charges = new HashMap<>();
+  private final Map<UUID, Integer> holds = new HashMap<>();
   private final ModuleContext context;
   private final QolStore store;
   private final SealedWorlds sealed;
@@ -32,14 +33,18 @@ final class StarterCompass {
     this.sealed = sealed;
   }
 
-  void loaded(Player player, boolean needed) {
-    if (needed) pending.add(player.getUniqueId());
-    else pending.remove(player.getUniqueId());
+  void loaded(Player player, int remaining) {
+    if (remaining > 0) charges.put(player.getUniqueId(), remaining);
+    else charges.remove(player.getUniqueId());
     reconcile(player);
   }
 
   boolean pending(Player player) {
-    return manages(player) && pending.contains(player.getUniqueId());
+    return manages(player) && remaining(player) > 0;
+  }
+
+  int remaining(Player player) {
+    return charges.getOrDefault(player.getUniqueId(), 0);
   }
 
   boolean manages(Player player) {
@@ -57,12 +62,15 @@ final class StarterCompass {
         && item.getItemMeta().getPersistentDataContainer().has(OWNER, PersistentDataType.STRING);
   }
 
-  static ItemStack item(Player player) {
+  static ItemStack item(Player player, int remaining) {
     var item = new ItemStack(Material.COMPASS);
     item.editMeta(
         meta -> {
           meta.displayName(Component.text("Choose a Biome"));
-          meta.lore(List.of(Component.text("Left- or right-click to find your first home.")));
+          meta.lore(
+              List.of(
+                  Component.text(
+                      "Left- or right-click to choose a biome. " + remaining + " trips left.")));
           meta.getPersistentDataContainer()
               .set(OWNER, PersistentDataType.STRING, player.getUniqueId().toString());
         });
@@ -73,8 +81,9 @@ final class StarterCompass {
     if (!manages(player)) return;
     var inventory = player.getInventory();
     var at = inventory.getItem(SLOT);
+    var left = charges.getOrDefault(player.getUniqueId(), 0);
     var inPlace =
-        pending(player)
+        left > 0
             && at != null
             && marked(at)
             && player
@@ -88,7 +97,7 @@ final class StarterCompass {
       if (inPlace && slot == SLOT) continue;
       if (marked(inventory.getItem(slot))) inventory.setItem(slot, null);
     }
-    if (inPlace || !pending(player)) return;
+    if (inPlace || left == 0) return;
     at = inventory.getItem(SLOT);
     if (at != null && !at.isEmpty()) {
       var empty = emptyStorageSlot(inventory);
@@ -98,7 +107,7 @@ final class StarterCompass {
       }
       inventory.setItem(empty, at);
     }
-    inventory.setItem(SLOT, item(player));
+    inventory.setItem(SLOT, item(player, left));
   }
 
   private static int emptyStorageSlot(PlayerInventory inventory) {
@@ -110,26 +119,75 @@ final class StarterCompass {
     return -1;
   }
 
-  void arrived(Player player) {
-    if (!pending(player)) return;
+  /**
+   * Reserves one trip before travel starts. A replayed dialog callback cannot pass this once the
+   * balance is exhausted, including while an earlier trip is still in flight.
+   */
+  boolean hold(Player player) {
     var id = player.getUniqueId();
+    var left = charges.getOrDefault(id, 0);
+    if (left <= 0) return false;
+    var remaining = left - 1;
+    if (remaining > 0) charges.put(id, remaining);
+    else charges.remove(id);
+    holds.merge(id, 1, Integer::sum);
+    reconcile(player);
+    return true;
+  }
+
+  /** Gives back a reservation when the trip does not arrive. */
+  void refund(Player player) {
+    var id = player.getUniqueId();
+    var held = holds.getOrDefault(id, 0);
+    if (held <= 0) return;
+    if (held == 1) holds.remove(id);
+    else holds.put(id, held - 1);
+    if (!player.isOnline()) return;
+    charges.merge(id, 1, Integer::sum);
+    reconcile(player);
+  }
+
+  void arrived(Player player) {
+    var id = player.getUniqueId();
+    var held = holds.getOrDefault(id, 0);
+    var consumed = held > 0;
+    if (consumed) {
+      if (held == 1) holds.remove(id);
+      else holds.put(id, held - 1);
+    } else if (!pending(player)) return;
+    var arrival = new Arrival(player, id, consumed);
     var _ =
         store
-            .completeStarterRtp(id)
+            .spendStarterCharge(id)
             .whenCompleteAsync(
-                (done, failure) -> {
-                  if (failure != null) {
-                    context.logger().error("Could not finish starter RTP for {}", id, failure);
-                    return;
-                  }
-                  pending.remove(id);
-                  if (player.isOnline()) reconcile(player);
-                },
+                (left, failure) -> finishArrival(arrival, left, failure),
                 context.scheduler().mainThread());
   }
 
+  private record Arrival(Player player, UUID id, boolean consumed) {}
+
+  private void finishArrival(Arrival arrival, @Nullable Integer left, @Nullable Throwable failure) {
+    var player = arrival.player();
+    if (failure != null) {
+      context.logger().error("Could not spend a compass trip for {}", arrival.id(), failure);
+      if (arrival.consumed() && player.isOnline()) {
+        charges.merge(arrival.id(), 1, Integer::sum);
+        reconcile(player);
+      }
+      return;
+    }
+    if (!arrival.consumed()) {
+      var remaining = left == null ? 0 : left;
+      if (remaining > 0) charges.put(arrival.id(), remaining);
+      else charges.remove(arrival.id());
+    }
+    if (player.isOnline()) reconcile(player);
+  }
+
   void left(Player player) {
-    pending.remove(player.getUniqueId());
+    var id = player.getUniqueId();
+    charges.remove(id);
+    holds.remove(id);
   }
 
   void afterRespawn(Player player) {
