@@ -2,8 +2,26 @@ using TaskNotes.Windows.Host;
 
 namespace TaskNotes.Windows.Tests
 {
-    internal class TestTaskNotesStore : ITaskNotesStore
+    internal class TestTaskNotesStore : ITaskNotesStore, IFacetDependencyEditorStore
     {
+        internal Func<
+            string,
+            CancellationToken,
+            Task<DependencyEditorMetadata>
+        >? DependencyMetadata { get; set; }
+
+        public Task<DependencyEditorMetadata> ReadDependencyEditorMetadataAsync(
+            string profileId,
+            CancellationToken cancellationToken = default
+        ) =>
+            DependencyMetadata?.Invoke(profileId, cancellationToken)
+            ?? Task.FromResult(
+                new DependencyEditorMetadata(
+                    ["FINISHTOSTART", "STARTTOSTART", "FINISHTOFINISH", "STARTTOFINISH"],
+                    null
+                )
+            );
+
         internal int AddCount { get; private set; }
         internal int DeleteCount { get; private set; }
         internal int RefreshCount { get; private set; }

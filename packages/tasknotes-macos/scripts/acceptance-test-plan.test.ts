@@ -13,6 +13,12 @@ import {
 
 describe.each([
   {
+    suite: "DependencyEditorUITests",
+    method: "testDependencyOptionsAndEditsSurviveColdLaunch",
+    wrongSuite: "MobileParityTests",
+    wrongMethod: "testWrongCase",
+  },
+  {
     suite: "BoardTaskTests",
     method: "testLoadMoreMakesCardBeyondTheInitialHundredReachable",
     wrongSuite: "MobileParityTests",

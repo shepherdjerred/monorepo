@@ -123,7 +123,7 @@ internal fun TaskEditor(profileId: String, task: VaultTask, model: FacetViewMode
             Text("Dependencies", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (basis.isBlocked) Text("Blocked by other work", style = MaterialTheme.typography.bodyMedium)
             if (basis.isBlocking) Text("Blocking other work", style = MaterialTheme.typography.bodyMedium)
-            DraftField("Blocked by task references", draft.blockedBy, blocked) { draft = draft.copy(blockedBy = it) }
+            FacetDependencyField(profileId, basis.id, draft.blockedBy, blocked, model) { draft = draft.copy(blockedBy = it) }
             TextButton(onClick = { deleting = true }, enabled = !blocked) { Icon(Icons.Default.DeleteOutline, null, tint = MaterialTheme.colorScheme.error); Spacer(Modifier.width(8.dp)); Text("Delete task", color = MaterialTheme.colorScheme.error) }
             TextButton(onClick = { extras = !extras }) { Text(if (extras) "Hide additional fields" else "Additional fields"); Icon(if (extras) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null) }
             if (extras) {

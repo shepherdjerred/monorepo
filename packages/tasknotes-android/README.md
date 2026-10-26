@@ -80,6 +80,14 @@ remain authoritative raw text until explicitly edited or replaced. Reminder type
 changes remove only the incompatible known fields of the previous type while
 preserving reminder IDs, descriptions and vendor metadata.
 
+Dependency rows edit the task reference, explicitly selected relationship and
+optional duration gap as structured entries. Edits retain extension data and
+sibling order; unsupported existing values remain visible until explicitly
+removed or replaced. Choices and an optional configured default come from Rust
+for the editing vault; no default means the user must choose a relationship.
+Rust validates references, relationships and gaps when the
+complete revision-fenced task change is submitted, and failures retain the draft.
+
 Foreground lifecycle, imported-copy indexing, configuration consent and actual
 remote ingestion request serial, coalesced maintenance across every eligible
 profile, including offscreen vaults. WorkManager uses the same coordinator under

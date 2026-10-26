@@ -240,6 +240,13 @@ own their drafts without redirecting the main query, selection, or inspector.
 
 Reminder kind changes remove only the previous kind's incompatible fields and
 write the new kind's required values, preserving reminder IDs and extensions.
+Dependency rows edit task references, relationship types and optional gaps as
+structured records. The owning vault's Rust metadata supplies the supported
+relationships and any explicitly configured default; without a default, Add
+requires a relationship choice. Unchanged records and vendor fields are retained,
+and unsupported existing entries remain visible and read-only until explicitly
+removed. Unsupported whole lists require an explicit replacement draft. Metadata failures
+retain the draft for retry, and late responses cannot replace another task's editor.
 Simple repeat controls consume Rust projections and Rust-built rules, preserve
 unchanged rule text exactly, and retain existing calendar selectors and endings
 when changing an interval. Patterns the controls cannot express, including

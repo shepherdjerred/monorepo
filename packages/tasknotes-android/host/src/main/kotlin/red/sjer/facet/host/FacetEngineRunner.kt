@@ -185,6 +185,9 @@ class FacetEngineRunner private constructor(context: Context) {
         }
     }
 
+    suspend fun dependencyEditor(id: String): FacetDependencyEditor = FacetDependencyEditor.parse(schema,
+        features(id, buildJsonObject { put("schemaVersion", 1); put("kind", "dependency_editor") }))
+
     suspend fun features(id: String, request: JsonObject): JsonObject = call {
         schema.validate("featureRequest", request)
         val result = FacetRawJson.parseObject(core.featuresJson(id, request.toString()))
@@ -201,6 +204,7 @@ class FacetEngineRunner private constructor(context: Context) {
             "occurrence_successors" -> "occurrenceSuccessors"
             "rolling_maintenance_plan" -> "rollingMaintenancePlan"
             "occurrence_generation_failures" -> "generationFailuresPlan"
+            "dependency_editor" -> "dependencyEditor"
             else -> error("Unknown shared feature response.")
         }
         schema.validate(definition, result)

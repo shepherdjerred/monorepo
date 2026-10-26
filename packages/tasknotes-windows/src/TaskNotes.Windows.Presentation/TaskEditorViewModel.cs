@@ -248,6 +248,8 @@ namespace TaskNotes.Windows.Presentation
             try
             {
                 _original = task;
+                if (fence)
+                    ResetDependencyMetadata();
                 Title = task.Title;
                 Details = task.Details;
                 Status = task.Status;
@@ -364,7 +366,12 @@ namespace TaskNotes.Windows.Presentation
             long draftGeneration = _draftGeneration;
             var submittedBuffers = Buffers();
             string submittedReminders = ReminderFingerprint();
-            var changes = ChangedFields(original, title, field is null or "reminders");
+            var changes = ChangedFields(
+                original,
+                title,
+                field is null or "reminders",
+                field is null or "blockedBy"
+            );
             bool bodyChanged = !string.Equals(Details, original.Details, StringComparison.Ordinal);
             if (field is not null)
             {
@@ -567,6 +574,7 @@ namespace TaskNotes.Windows.Presentation
             _ownerGeneration++;
             _draftGeneration++;
             _original = null;
+            ResetDependencyMetadata();
             _loading = true;
             try
             {

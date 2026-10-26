@@ -78,6 +78,10 @@ namespace TaskNotes.Windows.App.Views
             EditorFields.IsEnabled = true;
             EmptyInspector.Visibility = Visibility.Collapsed;
             SynchronizeDates();
+            Run(
+                "load-dependency-relationships",
+                () => RequireViewModel().LoadDependencyMetadataAsync()
+            );
         }
 
         internal void Refresh(TaskNotesState state)
@@ -111,6 +115,71 @@ namespace TaskNotes.Windows.App.Views
             RequireViewModel().Clear();
             EditorFields.IsEnabled = false;
             EmptyInspector.Visibility = Visibility.Visible;
+        }
+
+        private void AddDependency_Click(object sender, RoutedEventArgs e)
+        {
+            _ = sender;
+            _ = e;
+            RequireViewModel().AddDependency();
+        }
+
+        private static Visibility VisibleWhen(bool visible) =>
+            visible ? Visibility.Visible : Visibility.Collapsed;
+
+        private void DependencyRelation_SelectionChanged(
+            object sender,
+            SelectionChangedEventArgs args
+        )
+        {
+            if (
+                _synchronizingControls
+                || args.AddedItems.Count == 0
+                || sender
+                    is not ComboBox
+                    {
+                        DataContext: DependencyEditorRow row,
+                        SelectedValue: string relationship
+                    }
+            )
+                return;
+            var model = RequireViewModel();
+            var choice = model.CaptureDependencyRelationChoice(row, relationship);
+            if (choice is null)
+                return;
+            if (model.ApplyDependencyRelationChoice(choice, row, relationship))
+                CommitField(
+                    "blockedBy",
+                    () =>
+                        ReferenceEquals(ViewModel, model)
+                        && model.OwnsDependencyRelationChoice(choice, row)
+                );
+        }
+
+        private void ReplaceDependencyList_Click(object sender, RoutedEventArgs e)
+        {
+            _ = sender;
+            _ = e;
+            RequireViewModel().ReplaceDependencyList();
+        }
+
+        private void RetryDependencies_Click(object sender, RoutedEventArgs e)
+        {
+            _ = sender;
+            _ = e;
+            Run(
+                "reload-dependency-relationships",
+                () => RequireViewModel().LoadDependencyMetadataAsync()
+            );
+        }
+
+        private void RemoveDependency_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement { DataContext: DependencyEditorRow row })
+            {
+                RequireViewModel().RemoveDependency(row);
+                CommitField("blockedBy");
+            }
         }
 
         private void AddReminder_Click(object sender, RoutedEventArgs e)
@@ -192,7 +261,7 @@ namespace TaskNotes.Windows.App.Views
                 _ = DispatcherQueue.TryEnqueue(() => CommitField(field));
         }
 
-        private void CommitField(string field)
+        private void CommitField(string field, Func<bool>? owns = null)
         {
             var viewModel = RequireViewModel();
             if (!viewModel.IsLoaded || _synchronizingControls)
@@ -201,6 +270,8 @@ namespace TaskNotes.Windows.App.Views
                 "commit-editor-field",
                 async () =>
                 {
+                    if (owns is not null && !owns())
+                        return;
                     if (!await viewModel.CommitFieldAsync(field))
                         RequireValidation()(
                             viewModel.CommitError
@@ -259,6 +330,10 @@ namespace TaskNotes.Windows.App.Views
             _ = args;
             RequireViewModel().Discard();
             SynchronizeDates();
+            Run(
+                "reload-dependency-relationships",
+                () => RequireViewModel().LoadDependencyMetadataAsync()
+            );
         }
 
         private void Token_TextChanged(

@@ -176,6 +176,84 @@ class StandaloneCaptureTest {
             finally { engine.close() }
         }
     }
+    @Test fun dependencyEditAndRelaunchPreserveStructuredMetadata() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val id = UUID.randomUUID().toString()
+        val name = "Dependency acceptance ${id.take(8)}"
+        val title = "Dependency editor acceptance"
+        val original = Json.parseToJsonElement("""[{"uid":"[[Tasks/prerequisite, one|Alias]]","reltype":"STARTTOSTART","gap":"-PT15M","vendor":{"integer":9007199254740993,"labels":["keep, comma"]}},{"uid":"[[Tasks/second]]","reltype":"FINISHTOFINISH","vendor":true}]""").jsonArray
+        val changedReference = "[[Tasks/updated, reference|Keep alias]]"
+        val basis = runBlocking {
+            val engine = FacetEngineRunner.open(context)
+            try {
+                engine.registerReplica(id, name, approveStandard = true)
+                engine.refresh(id)
+                val createId = UUID.randomUUID().toString()
+                engine.execute(id, buildJsonObject {
+                    put("kind", "create"); put("body", "Dependency body remains exact.\n")
+                    put("properties", buildJsonObject {
+                        put("title", title); put("tags", JsonArray(listOf(JsonPrimitive("task"))))
+                        put("blockedBy", original); put("externalNumber", Json.parseToJsonElement("9007199254740993"))
+                    })
+                }, createId)
+                engine.discardObservedMutation(createId)
+                engine.refresh(id).tasks.single()
+            } finally { engine.close() }
+        }
+        check(context.getSharedPreferences("facet.presentation", android.content.Context.MODE_PRIVATE).edit().putString("selectedProfile", id).commit())
+        var activity: ActivityScenario<MainActivity>? = null
+        var model: FacetViewModel? = null
+        fun launch() {
+            check(activity == null)
+            activity = ActivityScenario.launch(MainActivity::class.java)
+            requireNotNull(activity).onActivity { model = ViewModelProvider(it)[FacetViewModel::class.java] }
+            waitForText(name)
+            compose.onNodeWithText("Inbox").performClick()
+            waitForText(title)
+        }
+        fun stop() {
+            activity?.close(); activity = null; model = null
+            runBlocking { FacetBackgroundSync.awaitBackgroundDrain() }
+        }
+        try {
+            launch()
+            compose.onNodeWithText(title).performClick()
+            val oldReference = hasSetTextAction() and hasText("[[Tasks/prerequisite, one|Alias]]")
+            compose.waitUntil(15_000) { compose.onAllNodes(oldReference).fetchSemanticsNodes().size == 1 }
+            compose.onNode(oldReference).performScrollTo().performTextReplacement(changedReference)
+            compose.onNode(hasSetTextAction() and hasText("-PT15M")).performScrollTo().performTextReplacement("-PT30M")
+            compose.onNodeWithText("Start to start").performScrollTo().performClick()
+            compose.onNodeWithText("Start to finish").performClick()
+            capture("dependency-edited")
+            compose.onNodeWithText("Save").performClick()
+            compose.waitUntil(30_000) { model?.busy == false && compose.onAllNodesWithText("Task details").fetchSemanticsNodes().isEmpty() }
+            stop()
+            launch()
+            compose.onNodeWithText(title).performClick()
+            val persisted = hasSetTextAction() and hasText(changedReference)
+            compose.waitUntil(15_000) { compose.onAllNodes(persisted).fetchSemanticsNodes().size == 1 }
+            compose.onNode(persisted).performScrollTo().assertIsDisplayed()
+            compose.onNode(hasSetTextAction() and hasText("-PT30M")).performScrollTo().assertIsDisplayed()
+            compose.onNodeWithText("Start to finish").assertIsDisplayed()
+            capture("dependency-relaunched")
+        } catch (failure: Throwable) {
+            try { capture("dependency-failure") } catch (captureFailure: Throwable) { failure.addSuppressed(captureFailure) }
+            throw failure
+        } finally { stop() }
+        runBlocking {
+            val engine = FacetEngineRunner.open(context)
+            try {
+                val actual = engine.refresh(id).tasks.single()
+                val expected = JsonArray(listOf(JsonObject(original[0].jsonObject + mapOf(
+                    "uid" to JsonPrimitive(changedReference), "reltype" to JsonPrimitive("STARTTOFINISH"), "gap" to JsonPrimitive("-PT30M"))), original[1]))
+                assertEquals(expected, actual.properties.getValue("blockedBy"))
+                assertEquals(basis.properties.getValue("externalNumber"), actual.properties.getValue("externalNumber"))
+                assertEquals(basis.body, actual.body)
+                assertEquals(basis.path, actual.path)
+            } finally { engine.close() }
+        }
+    }
+
     private fun waitForText(text: String) {
         // An outgoing editor may still expose its draft while the saved list reloads.
         val title = hasText(text) and !hasSetTextAction() and

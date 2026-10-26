@@ -7,7 +7,6 @@ namespace TaskNotes.Windows.Presentation;
 
 public sealed partial class TaskEditorViewModel
 {
-    private string _blockedBy = string.Empty;
     private string _completedDate = string.Empty;
     private string _dateCreated = string.Empty;
     private string _completeInstances = string.Empty;
@@ -16,12 +15,91 @@ public sealed partial class TaskEditorViewModel
     private IReadOnlyList<WorkflowChoice> _statusChoices = [];
     private IReadOnlyList<WorkflowChoice> _priorityChoices = [];
     private string _reminderBaseline = "";
+    private JsonElement? _unsupportedDependencyList;
+    private bool _dependencyListReplaced;
 
-    /// <summary>Comma-separated dependency identifiers or references.</summary>
-    public string BlockedBy
+    /// <summary>Structured dependency rows retaining exact untouched records and extensions.</summary>
+    public ObservableCollection<DependencyEditorRow> Dependencies { get; } = [];
+
+    /// <summary>An unsupported whole value remains visible until an explicit replacement draft.</summary>
+    public bool CanReplaceDependencyList =>
+        IsLoaded && _unsupportedDependencyList is not null && !_dependencyListReplaced;
+
+    /// <summary>Explains why an unsupported whole value has no editable rows.</summary>
+    public string DependencyListWarning =>
+        CanReplaceDependencyList
+            ? "The existing dependency list is unsupported and is preserved. Replace it explicitly to edit dependencies."
+            : "";
+
+    /// <summary>The original whole value is displayed read-only, without coercing it into a list.</summary>
+    public string DependencyListValue =>
+        CanReplaceDependencyList ? _unsupportedDependencyList!.Value.GetRawText() : "";
+
+    /// <summary>Starts an explicit replacement draft; persistence still requires the ordinary field save.</summary>
+    public void ReplaceDependencyList()
     {
-        get => _blockedBy;
-        set => SetEditorProperty(ref _blockedBy, value);
+        if (!CanReplaceDependencyList)
+            throw new ArgumentException("There is no unsupported dependency list to replace.");
+        _dependencyListReplaced = true;
+        _draftGeneration++;
+        IsDirty = true;
+        NotifyDependencyListChanged();
+    }
+
+    private void NotifyDependencyListChanged()
+    {
+        OnPropertyChanged(nameof(CanReplaceDependencyList));
+        OnPropertyChanged(nameof(DependencyListWarning));
+        OnPropertyChanged(nameof(DependencyListValue));
+        OnPropertyChanged(nameof(CanAddDependency));
+    }
+
+    /// <summary>Starts an owned draft with an explicit, initially unselected relationship.</summary>
+    public void AddDependency()
+    {
+        if (!CanAddDependency)
+            throw new ArgumentException(
+                "Load this vault's dependency relationships before adding a dependency."
+            );
+        AddDependencyRow(
+            new DependencyEditorRow(null, DependencyChoices)
+            {
+                RelationType = _dependencyMetadata!.DefaultReltype ?? "",
+            }
+        );
+        _draftGeneration++;
+        IsDirty = true;
+    }
+
+    /// <summary>Explicitly removes one dependency, including an unsupported entry, preserving sibling order.</summary>
+    public void RemoveDependency(DependencyEditorRow row)
+    {
+        ArgumentNullException.ThrowIfNull(row);
+        if (Dependencies.Remove(row))
+        {
+            _draftGeneration++;
+            IsDirty = true;
+        }
+    }
+
+    private void AddDependencyRow(DependencyEditorRow row)
+    {
+        row.SetChoices(DependencyChoices);
+        row.PropertyChanged += (_, args) =>
+        {
+            if (
+                !_loading
+                && args.PropertyName
+                    is nameof(DependencyEditorRow.Uid)
+                        or nameof(DependencyEditorRow.RelationType)
+                        or nameof(DependencyEditorRow.Gap)
+            )
+            {
+                _draftGeneration++;
+                IsDirty = true;
+            }
+        };
+        Dependencies.Add(row);
     }
 
     /// <summary>Completion civil date.</summary>
@@ -101,7 +179,12 @@ public sealed partial class TaskEditorViewModel
             _statusChoices = [.. _statusChoices, new(task.Status, task.Status)];
         if (!_priorityChoices.Any(choice => choice.Value == task.Priority))
             _priorityChoices = [.. _priorityChoices, new(task.Priority, task.Priority)];
-        BlockedBy = List(task, "blockedBy");
+        Dependencies.Clear();
+        _unsupportedDependencyList = UnsupportedDependencyList(task);
+        _dependencyListReplaced = false;
+        foreach (var row in DependencyRows(task))
+            AddDependencyRow(row);
+        NotifyDependencyListChanged();
         CompletedDate = Scalar(task, "completedDate");
         DateCreated = Scalar(task, "dateCreated");
         CompleteInstances = List(task, "completeInstances");
@@ -124,13 +207,12 @@ public sealed partial class TaskEditorViewModel
 
     private void ClearAdditionalFields()
     {
-        BlockedBy =
-            CompletedDate =
-            CompleteInstances =
-            SkippedInstances =
-            Attachments =
-                string.Empty;
+        CompletedDate = CompleteInstances = SkippedInstances = Attachments = string.Empty;
         Reminders.Clear();
+        Dependencies.Clear();
+        _unsupportedDependencyList = null;
+        _dependencyListReplaced = false;
+        NotifyDependencyListChanged();
         _statusChoices = _priorityChoices = [];
         DateCreated = string.Empty;
     }
@@ -138,7 +220,8 @@ public sealed partial class TaskEditorViewModel
     private Dictionary<string, JsonElement> ChangedFields(
         TaskItem original,
         string title,
-        bool includeReminders = true
+        bool includeReminders = true,
+        bool includeDependencies = true
     )
     {
         var fields = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
@@ -168,7 +251,16 @@ public sealed partial class TaskEditorViewModel
         Values("tags", Tags, string.Join(", ", original.Tags));
         Text("completedDate", CompletedDate, Scalar(original, "completedDate"));
         Text("dateCreated", DateCreated, Scalar(original, "dateCreated"));
-        Values("blockedBy", BlockedBy, List(original, "blockedBy"));
+        if (
+            includeDependencies
+            && DependencyFingerprint()
+                != DependencyFingerprint(
+                    DependencyRows(original),
+                    UnsupportedDependencyList(original),
+                    false
+                )
+        )
+            Put("blockedBy", Dependencies.Select(row => row.Document()).ToArray());
         Values("completeInstances", CompleteInstances, List(original, "completeInstances"));
         Values("skippedInstances", SkippedInstances, List(original, "skippedInstances"));
         if (Attachments != List(original, "attachments", "\n"))
@@ -222,7 +314,7 @@ public sealed partial class TaskEditorViewModel
             ["projects"] = Projects,
             ["contexts"] = Contexts,
             ["tags"] = Tags,
-            ["blockedBy"] = BlockedBy,
+            ["blockedBy"] = DependencyFingerprint(),
             ["completedDate"] = CompletedDate,
             ["dateCreated"] = DateCreated,
             ["completeInstances"] = CompleteInstances,
@@ -244,7 +336,11 @@ public sealed partial class TaskEditorViewModel
             ["projects"] = string.Join(", ", task.Projects),
             ["contexts"] = string.Join(", ", task.Contexts),
             ["tags"] = string.Join(", ", task.Tags),
-            ["blockedBy"] = List(task, "blockedBy"),
+            ["blockedBy"] = DependencyFingerprint(
+                DependencyRows(task),
+                UnsupportedDependencyList(task),
+                false
+            ),
             ["completedDate"] = Scalar(task, "completedDate"),
             ["dateCreated"] = Scalar(task, "dateCreated"),
             ["completeInstances"] = List(task, "completeInstances"),
@@ -290,7 +386,19 @@ public sealed partial class TaskEditorViewModel
                 Tags = value!;
                 break;
             case "blockedBy":
-                BlockedBy = value!;
+                Dependencies.Clear();
+                using (var snapshot = JsonDocument.Parse(value!))
+                {
+                    var unsupported = snapshot.RootElement.GetProperty("unsupported");
+                    _unsupportedDependencyList =
+                        unsupported.ValueKind == JsonValueKind.Null ? null : unsupported.Clone();
+                    _dependencyListReplaced = snapshot
+                        .RootElement.GetProperty("replaced")
+                        .GetBoolean();
+                    foreach (var row in snapshot.RootElement.GetProperty("rows").EnumerateArray())
+                        AddDependencyRow(DependencyEditorRow.Restore(row, DependencyChoices));
+                }
+                NotifyDependencyListChanged();
                 break;
             case "completedDate":
                 CompletedDate = value!;
@@ -320,6 +428,37 @@ public sealed partial class TaskEditorViewModel
                 ? value.GetString()!
                 : value.GetRawText()
             : missing;
+
+    private static IEnumerable<DependencyEditorRow> DependencyRows(TaskItem task) =>
+        task.Properties is JsonElement properties
+        && properties.TryGetProperty("blockedBy", out var value)
+        && value.ValueKind == JsonValueKind.Array
+            ? value.EnumerateArray().Select(item => new DependencyEditorRow(item, []))
+            : [];
+
+    private static JsonElement? UnsupportedDependencyList(TaskItem task) =>
+        task.Properties is JsonElement properties
+        && properties.TryGetProperty("blockedBy", out var value)
+        && value.ValueKind is not (JsonValueKind.Array or JsonValueKind.Null)
+            ? value.Clone()
+            : null;
+
+    private string DependencyFingerprint() =>
+        DependencyFingerprint(Dependencies, _unsupportedDependencyList, _dependencyListReplaced);
+
+    private static string DependencyFingerprint(
+        IEnumerable<DependencyEditorRow> rows,
+        JsonElement? unsupported,
+        bool replaced
+    ) =>
+        JsonSerializer.Serialize(
+            new
+            {
+                rows = rows.Select(row => row.Snapshot()),
+                unsupported,
+                replaced,
+            }
+        );
 
     private static string List(TaskItem task, string key, string separator = ", ") =>
         task.Properties is JsonElement properties

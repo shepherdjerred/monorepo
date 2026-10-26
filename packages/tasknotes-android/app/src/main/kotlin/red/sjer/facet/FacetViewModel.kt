@@ -414,6 +414,20 @@ class FacetViewModel(application: Application) : AndroidViewModel(application) {
         if (selected?.id == profileId) reload(); restoreActions()
       }
     }
+    internal suspend fun dependencyEditor(profileId: String): FacetDependencyEditor = operations.withLock {
+        val ownerEngine = engine
+        val ownerSession = sessionGeneration
+        fun owned() = !cleared && foreground && engine === ownerEngine && sessionGeneration == ownerSession && selected?.id == profileId
+        if (!owned()) throw CancellationException("The dependency editor's vault is no longer active.")
+        val result = try { ownerEngine.dependencyEditor(profileId) }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (failure: Exception) {
+            if (!owned()) throw CancellationException("The dependency editor's owner changed.").apply { initCause(failure) }
+            throw failure
+        }
+        if (!owned()) throw CancellationException("The dependency editor's vault changed while loading choices.")
+        result
+    }
     fun delete(profileId: String, task: VaultTask, saved: () -> Unit) = command(profileId, buildJsonObject { put("kind", "delete"); put("path", task.path); put("expectedRevision", task.revision) }, saved = saved)
     fun toggle(profileId: String, task: VaultTask, saved: () -> Unit = {}) {
         if (task.isRecurring && task.occurrenceDate == null) { error = "Open Today or Agenda to choose a recurring occurrence."; return }

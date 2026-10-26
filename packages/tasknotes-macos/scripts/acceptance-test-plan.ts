@@ -126,11 +126,18 @@ export function assertExactNativeResults(
   identity:
     | {
         target: "TaskNotesAcceptanceUITests";
-        suite: "StandaloneVaultUITests" | "OccurrenceVaultUITests";
+        suite:
+          | "StandaloneVaultUITests"
+          | "OccurrenceVaultUITests"
+          | "DependencyEditorUITests";
       }
     | {
         target: "TasksForObsidianUITests";
-        suite: "OccurrenceTaskTests" | "MobileParityTests" | "BoardTaskTests";
+        suite:
+          | "OccurrenceTaskTests"
+          | "MobileParityTests"
+          | "BoardTaskTests"
+          | "DependencyEditorUITests";
       } = {
     target: "TaskNotesAcceptanceUITests",
     suite: "StandaloneVaultUITests",

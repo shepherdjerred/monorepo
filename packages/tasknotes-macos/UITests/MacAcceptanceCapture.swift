@@ -10,25 +10,6 @@
     /// Each ScreenCaptureKit filter captures one owned window, never the desktop stack.
     @MainActor
     enum MacAcceptanceCapture {
-        private enum CaptureError: Error {
-            case descriptor, process, window, dimensions, permission, capture,
-                timeout
-            case geometry(String)
-            case sessionUnavailable(phase: CapturePhase)
-            case sessionOffConsole(phase: CapturePhase)
-            case sessionLocked(phase: CapturePhase)
-            case applicationState(phase: CapturePhase, rawValue: UInt)
-            case alertCount(phase: CapturePhase, count: Int)
-            case secureFieldCount(phase: CapturePhase, count: Int)
-            case forbiddenControl(phase: CapturePhase, index: Int)
-            case foregroundMismatch(
-                expectedPID: pid_t, actualForegroundPID: pid_t?, phase: CapturePhase)
-        }
-
-        private enum CapturePhase {
-            case beforeActivation, afterActivation, beforeCapture, afterCapture, afterDecode
-        }
-
         private struct Descriptor: Decodable {
             let schemaVersion: Int
             let runID: UUID
@@ -49,21 +30,29 @@
             try unlockedSession(phase: .beforeActivation)
             guard CGPreflightScreenCaptureAccess() else { throw CaptureError.permission }
             let owner = try process(app, foreground: false, phase: .beforeActivation)
-            app.activate()
-            guard try process(app, phase: .afterActivation) == owner else {
-                throw CaptureError.process
+            let diagnostics = owner.diagnostics
+            var completed = false
+            defer {
+                diagnostics.observe(completed ? "completed" : "failed", app: app)
+                diagnostics.retain(test: test, name: name)
             }
+            diagnostics.observe("beforeActivation", app: app)
+            app.activate()
+            diagnostics.observe("afterActivation", app: app)
+            try requireOwner(app, owner: owner, phase: .afterActivation)
             for (index, window) in windows.enumerated() {
                 try safeInterface(app, phase: .afterActivation)
                 try validateWindow(window, app: app)
                 let snapshot = try snapshot(window, pid: owner.pid)
                 let baseName = windows.count == 1 ? name : "\(name) — window \(index + 1)"
                 for (surfaceIndex, surface) in snapshot.surfaces.enumerated() {
+                    diagnostics.observe("beforeCapture", app: app)
                     try validate(
                         snapshot, window: window, app: app, owner: owner, phase: .beforeCapture)
                     let scale = try visibleScale(surface.frame)
                     let deadline = ContinuousClock.now.advanced(by: .seconds(10))
                     let png = try await capture(surface, scale: scale, deadline: deadline)
+                    diagnostics.observe("afterCapture", app: app)
                     try validate(
                         snapshot, window: window, app: app, owner: owner, phase: .afterCapture)
                     guard let image = NSBitmapImageRep(data: png),
@@ -72,6 +61,7 @@
                         abs(Double(image.pixelsHigh) - (surface.frame.height * scale).rounded())
                             <= 1
                     else { throw CaptureError.dimensions }
+                    diagnostics.observe("afterDecode", app: app)
                     try validate(
                         snapshot, window: window, app: app, owner: owner, phase: .afterDecode)
                     let attachment = XCTAttachment(data: png, uniformTypeIdentifier: "public.png")
@@ -82,6 +72,7 @@
                     test.add(attachment)
                 }
             }
+            completed = true
         }
 
         private static func unlockedSession(phase: CapturePhase) throws {
@@ -129,11 +120,21 @@
             else { throw CaptureError.window }
         }
 
-        private struct ProcessOwner: Equatable {
+        private nonisolated struct ProcessOwner: Equatable, Sendable {
             let pid: pid_t
             let seconds: UInt64
             let microseconds: UInt64
             let launch: Date
+            @MainActor var diagnostics: MacAcceptanceCaptureDiagnostics {
+                MacAcceptanceCaptureDiagnostics(
+                    ownerPID: pid, startSeconds: seconds, startMicroseconds: microseconds)
+            }
+        }
+
+        private static func requireOwner(
+            _ app: XCUIApplication, owner: ProcessOwner, phase: CapturePhase
+        ) throws {
+            guard try process(app, phase: phase) == owner else { throw CaptureError.process }
         }
 
         private static func process(
@@ -308,7 +309,7 @@
                         "changed-target", frame: expected.frame, pid: owner.pid, windows: current)
                 }
             }
-            guard try process(app, phase: phase) == owner else { throw CaptureError.process }
+            try requireOwner(app, owner: owner, phase: phase)
         }
     }
 

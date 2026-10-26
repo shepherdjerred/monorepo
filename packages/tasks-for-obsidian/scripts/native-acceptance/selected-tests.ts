@@ -47,7 +47,11 @@ export async function runSelectedIosJourneyTest(
     testRun: string;
     device: string;
     result: string;
-    suite: "BoardTaskTests" | "MobileParityTests" | "OccurrenceTaskTests";
+    suite:
+      | "BoardTaskTests"
+      | "MobileParityTests"
+      | "OccurrenceTaskTests"
+      | "DependencyEditorUITests";
     test: string;
   },
   command: NativeCommand,

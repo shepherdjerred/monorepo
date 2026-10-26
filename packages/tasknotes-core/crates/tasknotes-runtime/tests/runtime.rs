@@ -12,6 +12,9 @@ mod canonical_writes;
 #[path = "runtime_tests/domain_gap_review.rs"]
 mod domain_gap_review;
 
+#[path = "runtime_tests/features/dependency_editor.rs"]
+mod dependency_editor;
+
 #[path = "runtime_tests/instances.rs"]
 mod instances;
 #[path = "runtime_tests/ios_agenda.rs"]

@@ -24,6 +24,7 @@ public sealed class DesktopPresentationTests
         };
         using var editor = new TaskEditorViewModel(store, new Dispatcher());
         editor.Load(TaskRow("Original", "r1"));
+        await editor.LoadDependencyMetadataAsync();
         Assert.AreEqual("vault", editor.ProfileId);
         editor.Title = "Submitted";
         var saving = editor.CommitFieldAsync("title");
@@ -36,7 +37,9 @@ public sealed class DesktopPresentationTests
         editor.Projects = "Alpha, Beta";
         editor.Contexts = "desk, phone";
         editor.Tags = "task, review";
-        editor.BlockedBy = "other.md";
+        editor.AddDependency();
+        editor.Dependencies.Single().Uid = "other.md";
+        editor.Dependencies.Single().RelationType = "STARTTOSTART";
         editor.CompletedDate = "2026-10-08T12:00:00Z";
         editor.DateCreated = "2026-10-03T12:00:00Z";
         editor.CompleteInstances = "2026-10-05";
@@ -75,7 +78,7 @@ public sealed class DesktopPresentationTests
                 editor.Projects,
                 editor.Contexts,
                 editor.Tags,
-                editor.BlockedBy,
+                editor.Dependencies.Single().Uid,
                 editor.CompletedDate,
                 editor.DateCreated,
                 editor.CompleteInstances,
@@ -87,6 +90,7 @@ public sealed class DesktopPresentationTests
         Assert.AreSequenceEqual(["desk", "phone"], editor.ContextsTokens);
         Assert.AreSequenceEqual(["task", "review"], editor.TagsTokens);
         Assert.HasCount(1, editor.Reminders);
+        Assert.AreEqual("STARTTOSTART", editor.Dependencies.Single().RelationType);
         Assert.IsTrue(editor.IsDirty);
         editor.Discard();
         Assert.IsFalse(editor.IsDirty);

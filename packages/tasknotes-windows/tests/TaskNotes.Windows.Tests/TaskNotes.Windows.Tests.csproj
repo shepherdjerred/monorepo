@@ -9,6 +9,10 @@
     <MSTestParallelizeWorkers>0</MSTestParallelizeWorkers>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource
+      Include="Fixtures/AndroidDependencyEditCommand.json"
+      LogicalName="AndroidDependencyEditCommand.json"
+    />
     <Compile
       Include="../TaskNotes.Windows.E2E/OwnedOperationCleanup.cs"
       Link="Adapters/OwnedOperationCleanup.cs"

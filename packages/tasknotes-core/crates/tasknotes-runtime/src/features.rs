@@ -17,6 +17,7 @@ pub(crate) enum Request {
     SyncStatus {},
     Conformance {},
     UndoAvailable {},
+    DependencyEditor {},
     OccurrenceSuccessors {
         mutation_id: String,
     },
@@ -115,6 +116,37 @@ pub(crate) fn parse_request(json: &str) -> Result<Request> {
         }
     }
     Ok(serde_json::from_value(request)?)
+}
+
+pub(crate) fn dependency_editor(configuration: Option<&Value>) -> Result<Value> {
+    let default = if let Some(configuration) = configuration {
+        let dependencies = configuration
+            .pointer("/effective/dependencies")
+            .and_then(Value::as_object)
+            .ok_or_else(|| {
+                RuntimeError::Storage("cached dependencies configuration is corrupt".into())
+            })?;
+        match dependencies.get("default_reltype") {
+            None => None,
+            Some(Value::String(value))
+                if tasknotes_vault::relationships::RELATIONSHIP_TYPES.contains(&value.as_str()) =>
+            {
+                Some(value.as_str())
+            }
+            Some(_) => {
+                return Err(RuntimeError::Configuration(
+                    "dependencies.default_reltype is invalid".into(),
+                ));
+            }
+        }
+    } else {
+        None
+    };
+    Ok(json!({
+        "schemaVersion": 1,
+        "relationshipTypes": tasknotes_vault::relationships::RELATIONSHIP_TYPES,
+        "defaultReltype": default,
+    }))
 }
 
 #[derive(Debug, Deserialize)]
