@@ -111,7 +111,8 @@ public class CreativeClaimCommandsPlugin extends JavaPlugin {
                 new SchematicFiles(database, new File(directory.toFile(), "creative-schematics")),
                 config.grid()::generated,
                 reviews,
-                new MemoryReviews()));
+                new MemoryReviews()),
+            (player, location) -> CompletableFuture.completedFuture(player.teleport(location)));
     var root =
         Commands.literal("creative").requires(source -> source.getSender() instanceof Player);
     plots.attach(root);

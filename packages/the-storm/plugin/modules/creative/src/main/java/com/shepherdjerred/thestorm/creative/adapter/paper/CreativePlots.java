@@ -73,6 +73,7 @@ public final class CreativePlots {
   private final CreativeMergeCommands merges;
   private final CreativeSchematicCommands library;
   private final CreativeReviewCommands reviews;
+  private final PlotTeleport mover;
 
   /** What the plot commands need. Redraw runs on the main thread after a claim changes. */
   public record Parts(
@@ -88,6 +89,10 @@ public final class CreativePlots {
       ReviewStore reviewStore) {}
 
   public CreativePlots(Parts parts) {
+    this(parts, Player::teleportAsync);
+  }
+
+  CreativePlots(Parts parts, PlotTeleport.Arrival arrival) {
     this.context = parts.context();
     this.book = parts.book();
     this.store = parts.store();
@@ -96,6 +101,7 @@ public final class CreativePlots {
     this.redraw = parts.redraw();
     this.schematics = parts.schematics();
     this.grid = config.grid();
+    this.mover = new PlotTeleport(context, world, grid, arrival);
     this.choices = new CreativeSurfaceCommands(this::ready, this::owned, this::persist);
     this.maintenance =
         new CreativeMaintenanceCommands(
@@ -973,13 +979,7 @@ public final class CreativePlots {
   }
 
   private void teleport(Player player, PlotId id) {
-    var home = grid.home(id);
-    var moved = player.teleport(new Location(world, home.x(), home.y(), home.z()));
-    if (moved) {
-      success(player, "Teleported to " + id.text() + ".");
-    } else {
-      error(player, "Could not teleport to " + id.text() + ".");
-    }
+    mover.teleport(player, id);
   }
 
   private static boolean staff(Player player) {
