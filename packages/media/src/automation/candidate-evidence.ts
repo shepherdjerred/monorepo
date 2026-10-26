@@ -21,7 +21,7 @@ function identity(attributes: ReleaseAttributes): string {
     scoreTags: [...attributes.scoreTags].sort(),
   });
 }
-function sourceIdentity(source: ProviderCandidate): string {
+export function candidateSourceIdentity(source: ProviderCandidate): string {
   return JSON.stringify({
     providerId: source.providerId,
     providerReleaseId: source.providerReleaseId,
@@ -109,10 +109,14 @@ export async function persistCandidateSnapshot(
     );
     if (
       identity(current) !== identity(next) ||
-      sourceIdentity(previousSource) !== sourceIdentity(source)
+      candidateSourceIdentity(previousSource) !==
+        candidateSourceIdentity(source)
     )
       return null;
-    if ((await tx.acquisitionAttempt.count({ where: { releaseId } })) > 0)
+    if (
+      (await tx.acquisitionAttempt.count({ where: { releaseId } })) > 0 ||
+      (await tx.movieReleaseAssessment.count({ where: { releaseId } })) > 0
+    )
       return current;
     const attributes = PublicReleaseAttributesSchema.parse(next);
     await tx.releaseCandidate.update({

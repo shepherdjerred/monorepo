@@ -54,6 +54,18 @@ Plex access has a process-local expiry guard checked after final awaited work,
 alongside the existing storage and execution deadlines. Previously committed
 receipts and exact recorded compensation retain their separate recovery paths.
 
+The internal v4 movie producer appends `MovieReleaseAssessment` records rather
+than replacing provider snapshots. Each assessment binds the original source
+digest, one movie edition, canonical metadata, parser version and immutable
+quality-profile version. This allows a result previously rejected by the older
+title parser, including one first discovered for another movie, to receive a
+new interpretation without changing its original attributes, query coverage or
+acquisition receipts. PostgreSQL protects both the assessment and its referenced
+provider snapshot from modification. Concurrent equivalent observations reuse
+the first literal assessment; profile or catalog changes create another record.
+Version-2 movie acquisition identities bind an exact assessment ID and hash.
+These contracts are internal; the public v3 routes above retain their behavior.
+
 Playable shared bytes do not fulfill an unchosen request. Readiness delivery
 requires matching choice and verified Plex publication; automatic retention
 keeps every pending subject's demand protective, including owner and named

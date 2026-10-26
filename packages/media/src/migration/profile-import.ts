@@ -27,10 +27,11 @@ function canonical(value: Json): Json {
           .map(([key, item]) => [key, canonical(item)]),
       );
 }
+export function canonicalJson(value: Json): string {
+  return JSON.stringify(canonical(value));
+}
 export function snapshotHash(value: Json): string {
-  return createHash("sha256")
-    .update(JSON.stringify(canonical(value)))
-    .digest("hex");
+  return createHash("sha256").update(canonicalJson(value)).digest("hex");
 }
 function unique(values: number[], label: string): void {
   if (new Set(values).size !== values.length)

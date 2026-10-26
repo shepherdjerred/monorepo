@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Prisma } from "#generated/prisma/client.ts";
+import type { Prisma, ReleaseCandidate } from "#generated/prisma/client.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
 import { CandidateSourceEvidenceSchema } from "#shared/acquisition/identity.ts";
 import { MediaError } from "#application/errors.ts";
@@ -41,6 +41,13 @@ function assess(canonical: CutCanonical, prior: CutEvidence) {
     attribution: prior.attribution,
     texts: prior.texts.map(({ text, provenance }) => ({ text, provenance })),
   });
+}
+
+export function retainedMovieCutV2(
+  release: ReleaseCandidate,
+  canonical: CutCanonical,
+) {
+  return assess(canonical, releaseCut(release, canonical));
 }
 
 /** Same source-column projection used before persistence and when rechecking its retained row. */

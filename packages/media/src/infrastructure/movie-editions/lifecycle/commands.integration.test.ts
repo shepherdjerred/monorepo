@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import { z } from "zod";
 import { automationTestHarness } from "#testing/automation.ts";
 import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
 import { MovieRequestV4Schema } from "#shared/movie-editions/lifecycle-v4.ts";
@@ -12,6 +13,11 @@ import { captureSponsorAuthority } from "#infrastructure/acquisition-identity/sp
 import { readMovieAttemptSponsor } from "#infrastructure/movie-editions/attempt-sponsor.ts";
 import { acquisitionIdentity } from "#infrastructure/acquisition-identity/acquisition.ts";
 import { retainedMovieCandidate } from "./candidate.test-support.ts";
+import { assessRetainedMovieRelease } from "#automation/movie-editions/release-assessment.ts";
+import { movieAcquisitionIdentityV4 } from "./identity.ts";
+import { MovieAcquisitionIdentityV2Schema } from "#shared/movie-editions/acquisition-v2.ts";
+import type { AcquisitionAttempt } from "#generated/prisma/client.ts";
+import type { Database } from "#infrastructure/database.ts";
 
 const h = automationTestHarness();
 const settings = {
@@ -207,6 +213,62 @@ test("a stale v4 choice conflicts without creating its target or outbox", async 
   ).toBe(0);
 });
 
+async function assertRejectedIdentitySubstitutions(
+  db: Database,
+  attempt: AcquisitionAttempt,
+) {
+  const validIdentity = MovieAcquisitionIdentityV2Schema.parse(
+    attempt.identityEvidence,
+  );
+  for (const identity of [
+    { ...validIdentity, schemaVersion: 1 },
+    {
+      ...validIdentity,
+      assessment: { ...validIdentity.assessment, hash: "f".repeat(64) },
+    },
+    { ...validIdentity, scope: { ...validIdentity.scope, edition: "default" } },
+    {
+      ...validIdentity,
+      source: { ...validIdentity.source, candidateDigest: "f".repeat(64) },
+    },
+    { ...validIdentity, coverage: [crypto.randomUUID()] },
+    { ...validIdentity, birthEpoch: 1 },
+  ]) {
+    await expect(
+      db.acquisitionAttempt.create({
+        data: {
+          edition: attempt.edition,
+          operationId: attempt.operationId,
+          coordinatorOperationId: attempt.coordinatorOperationId,
+          releaseId: attempt.releaseId,
+          sponsorRequestId: attempt.sponsorRequestId,
+          mediaIds: attempt.mediaIds,
+          generations: z
+            .record(z.string(), z.json())
+            .parse(attempt.generations),
+          movieEditionChoiceId: attempt.movieEditionChoiceId,
+          movieEditionChoiceRevision: attempt.movieEditionChoiceRevision,
+          movieEditionAuthority: z
+            .record(z.string(), z.json())
+            .parse(attempt.movieEditionAuthority),
+          identityEvidence: z.record(z.string(), z.json()).parse(identity),
+          recoveryEpoch: attempt.recoveryEpoch,
+          state: "reserved",
+        },
+      }),
+    ).rejects.toThrow(
+      identity.schemaVersion === 1
+        ? "V4 movie attempt requires versioned assessment identity"
+        : "V4 movie attempt assessment scope or identity mismatch",
+    );
+  }
+  expect(
+    await db.acquisitionAttempt.findUniqueOrThrow({
+      where: { id: attempt.id },
+    }),
+  ).toEqual(attempt);
+}
+
 test("v4 choice produces immutable named attempt birth while legacy authority and another edition remain closed", async () => {
   const f = await fixture();
   const result = await f.commands.requestMovieEditionV4(
@@ -223,6 +285,10 @@ test("v4 choice produces immutable named attempt birth while legacy authority an
     mediaId: f.media.id,
     edition: "extended_cut",
   });
+  const assessment = await assessRetainedMovieRelease(h.context(), {
+    releaseId: candidate.release.id,
+    scope,
+  });
   const attempt = await f.db.$transaction(async (tx) => {
     await lockMovieCommand(tx, scope);
     expect(await lockRuntimeAuthority(tx, 0)).toBe(true);
@@ -232,18 +298,20 @@ test("v4 choice produces immutable named attempt birth while legacy authority an
       epoch: 0,
       access: settings,
     });
-    const identity = await acquisitionIdentity(tx, candidate.release, {
+    const identity = await movieAcquisitionIdentityV4(tx, {
       operationId,
+      releaseId: candidate.release.id,
       sponsorRequestId: result.requestId,
       epoch: 0,
-      mediaIds: [f.media.id],
-      serverMachineId: settings.serverMachineId,
-      movieAccess: settings,
-      movieScope: scope,
+      access: settings,
+      scope,
+      assessment: assessment.ref,
     });
     if (identity === null)
       throw new Error("V4 acquisition omitted canonical identity at birth");
     expect(identity.proof.kind).toBe("automatic");
+    expect(identity.schemaVersion).toBe(2);
+    expect(identity.assessment).toEqual(assessment.ref);
     expect(
       await captureSponsorAuthority(tx, {
         operationId,
@@ -278,6 +346,7 @@ test("v4 choice produces immutable named attempt birth while legacy authority an
     });
   });
   const literalBirth = JSON.stringify(attempt.movieEditionAuthority);
+  await assertRejectedIdentitySubstitutions(f.db, attempt);
   const identityInput = {
     operationId,
     sponsorRequestId: result.requestId,

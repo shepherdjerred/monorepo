@@ -80,11 +80,13 @@ export function createAutomationTestContext(
   };
 }
 
-export function automationTestHarness() {
+export function automationTestHarness(
+  postgresOptions: Parameters<typeof startMediaTestPostgres>[0] = {},
+) {
   let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
   const cipher = new CredentialCipher(randomBytes(32).toString("base64"));
   beforeAll(async () => {
-    cluster = await startMediaTestPostgres();
+    cluster = await startMediaTestPostgres(postgresOptions);
   }, 60_000);
   afterAll(async () => {
     await cluster.close();
@@ -250,5 +252,13 @@ export function automationTestHarness() {
     };
   }
 
-  return { database: () => cluster.database, cipher, context, fixture };
+  return {
+    database: () => cluster.database,
+    cipher,
+    context,
+    fixture,
+    applyMigration: (name: string) => {
+      cluster.applyMigration(name);
+    },
+  };
 }

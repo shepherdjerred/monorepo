@@ -4,6 +4,7 @@ import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
 import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
 import type { MovieChoiceAccess } from "./access.ts";
 import { z } from "zod";
+import { MovieRequestV3Schema } from "#shared/movie-editions/commands.ts";
 
 /** Explicit new consent at a fixture boundary; never called implicitly by acquisition or recovery. */
 export async function chooseCurrentTestMovieEdition(
@@ -50,34 +51,32 @@ export async function chooseTestMovieEdition(
     (option) => option.edition === (input.edition ?? "default"),
   );
   if (selected === undefined) throw new Error("Fixture edition option absent");
-  const result = await app.requestMovieEdition(
-    input.actor,
-    crypto.randomUUID(),
-    {
-      schemaVersion: 3,
-      mediaId: input.mediaId,
-      subjectUserId,
-      expected: {
-        mediaVersion: context.mediaVersion,
-        targetVersion: selected.targetVersion,
-        definition: selected.storedDefinition,
-        request:
-          selected.request === null
-            ? null
-            : {
-                id: selected.request.id,
-                version: selected.request.version,
-                choiceRevision: selected.request.choiceRevision,
-              },
-      },
-      selection: {
-        edition: selected.edition,
-        definitionVersion: selected.definitionVersion,
-        definitionDigest: selected.definitionDigest,
-        registryVersion: context.registryVersion,
-      },
-      options: { subtitleLanguages: input.subtitleLanguages ?? [] },
+  const key = crypto.randomUUID();
+  const command = MovieRequestV3Schema.parse({
+    schemaVersion: 3,
+    mediaId: input.mediaId,
+    subjectUserId,
+    expected: {
+      mediaVersion: context.mediaVersion,
+      targetVersion: selected.targetVersion,
+      definition: selected.storedDefinition,
+      request:
+        selected.request === null
+          ? null
+          : {
+              id: selected.request.id,
+              version: selected.request.version,
+              choiceRevision: selected.request.choiceRevision,
+            },
     },
-  );
-  return { app, context, result };
+    selection: {
+      edition: selected.edition,
+      definitionVersion: selected.definitionVersion,
+      definitionDigest: selected.definitionDigest,
+      registryVersion: context.registryVersion,
+    },
+    options: { subtitleLanguages: input.subtitleLanguages ?? [] },
+  });
+  const result = await app.requestMovieEdition(input.actor, key, command);
+  return { app, context, result, key, command };
 }
