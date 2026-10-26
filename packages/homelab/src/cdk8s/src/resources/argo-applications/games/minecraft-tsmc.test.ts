@@ -244,7 +244,7 @@ describe("minecraft-tsmc runs The Storm's image", () => {
     expect(values["initContainers"]).toEqual([
       expect.objectContaining({
         name: "migrate-bluemap",
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}",
+        image: `itzg/minecraft-server:${versions["itzg/minecraft-server"]}`,
         volumeMounts: expect.arrayContaining([
           { name: "datadir", mountPath: "/source", readOnly: true },
           { name: "bluemap", mountPath: "/cache" },

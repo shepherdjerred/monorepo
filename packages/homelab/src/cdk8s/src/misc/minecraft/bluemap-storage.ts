@@ -9,6 +9,7 @@ import {
   getPvcBackupPolicy,
 } from "@shepherdjerred/homelab/cdk8s/src/backup-policy/pvc-backup-policy.ts";
 import { zfsNvmeStorageClass } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export const BLUEMAP_CLAIM = "minecraft-tsmc-bluemap";
 const NAMESPACE = "minecraft-tsmc";
@@ -58,8 +59,9 @@ export function blueMapStorageVolumes(): object[] {
 export function blueMapStorageInit(): object {
   return {
     name: "migrate-bluemap",
-    // Helm renders this with Delivery's exact accepted server image selection.
-    image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}",
+    // The server's pinned upstream base supplies Python without runtime credentials.
+    // Avoid a nested Helm template: the parent apps chart also renders these values.
+    image: `itzg/minecraft-server:${versions["itzg/minecraft-server"]}`,
     command: [
       "python3",
       "/migration/bluemap_storage.py",

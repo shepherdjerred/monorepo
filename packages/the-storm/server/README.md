@@ -132,7 +132,8 @@ Archived world viewers are independently published and do not use this bundle.
 LiveMap's generated files use the separate `minecraft-tsmc-bluemap` PVC mounted
 at `/data/bluemap`. The world PVC remains backed up; the render PVC is explicitly
 excluded because the maps can be rebuilt. The storage init container uses the
-same immutable image as Paper and runs `bluemap_storage.py` before Paper starts.
+same pinned upstream base as the server image and runs `bluemap_storage.py`
+before Paper starts.
 Its first run copies the original cache and verifies every file by SHA-256,
 leaving the original intact. Interrupted copies resume; later boots preserve
 new renders instead of copying the original over them. A restored world volume
