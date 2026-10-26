@@ -6,7 +6,6 @@ import { z } from "zod/v4";
 import { runAgentTurn } from "#lib/agent-runner/run.ts";
 import { promotionProviderUid } from "./isolation.ts";
 import {
-  PromotionAgentResultSchema,
   type PromotionRunInput,
   type PromotionState,
   type PromotionTarget,
@@ -15,10 +14,16 @@ import { envForProvider } from "#activities/agent/agent-task-env.ts";
 import { redactSecrets } from "#shared/redact.ts";
 import { redactAgentTaskPayloadStrings } from "#activities/agent/agent-task-result.ts";
 import { PromotionBrowser } from "./browser.ts";
-import { PromotionGateway } from "./gateway.ts";
+import { PromotionTaskJournal } from "./task.ts";
+import { PromotionTaskResultSchema } from "./task-contract.ts";
 import { promotionContent } from "./manifest.ts";
 import { promotionPrompt } from "./prompt.ts";
-import { createPromotionToolHandler, PromotionLoginsSchema } from "./tools.ts";
+import { promotionTaskFiles } from "./task-files.ts";
+import {
+  createPromotionToolHandler,
+  PromotionLoginsSchema,
+  PromotionToolSchema,
+} from "./tools.ts";
 import { promotionConfig } from "#config/promotion.ts";
 import type { PromotionStore } from "./store.ts";
 import { promotionSecretTokens } from "./redaction.ts";
@@ -43,14 +48,6 @@ function required(name: string): string {
     throw new Error(`${name} is required for promotion`);
   return value;
 }
-
-const TOOL_CLIENT = `const request = JSON.parse(await Bun.stdin.text());
-const socket = process.env.PROMOTION_SOCKET;
-if (!socket) throw new Error("PROMOTION_SOCKET missing");
-const response = await fetch("http://promotion/tool", {unix:socket, method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(request)});
-console.log(await response.text());
-if (!response.ok) process.exitCode=1;
-`;
 
 export async function runPromotionAgent(input: {
   target: PromotionTarget;
@@ -83,21 +80,19 @@ export async function runPromotionAgent(input: {
     JSON.parse(required("STORM_PROMOTION_LOGINS")),
   );
   const redact = promotionSecretTokens(logins);
-  const gateway = new PromotionGateway({
+  const journal = new PromotionTaskJournal({
     ...input,
-    preview: input.mode === "preview",
     now: Date.now,
     enabled: async () => {
       const latest = await promotionConfig();
       return latest.enabled && latest.enabledTargets.includes(input.target.id);
     },
-    submit: (selector) => browser.submit(selector),
     capture: () => browser.capture(input.occurrenceId),
   });
   const handle = createPromotionToolHandler({
     ...input,
     browser,
-    gateway,
+    journal,
     targetId: input.target.id,
     account: input.target.account,
     reconciliation: input.mode === "reconcile",
@@ -111,6 +106,12 @@ export async function runPromotionAgent(input: {
       context.heartbeat({ targetId: input.target.id });
     },
   });
+  const browserTrace: {
+    endpoint: string;
+    action: string | null;
+    ref: string | null;
+    error: string | null;
+  }[] = [];
   const server = Bun.serve({
     unix: socket,
     fetch: async (request) => {
@@ -119,20 +120,30 @@ export async function runPromotionAgent(input: {
         new URL(request.url).pathname !== "/tool"
       )
         return new Response("Not found", { status: 404 });
+      let step: (typeof browserTrace)[number] | undefined;
       try {
-        const body: unknown = await request.json();
+        const body = PromotionToolSchema.parse(await request.json());
+        step = {
+          endpoint: body.endpoint,
+          action: body.endpoint === "action" ? body.body.kind : null,
+          ref: body.endpoint === "action" ? (body.body.ref ?? null) : null,
+          error: null,
+        };
+        browserTrace.push(step);
         return Response.json(
           redactAgentTaskPayloadStrings(await handle(body), (text) =>
             redactSecrets(text, redact),
           ),
         );
       } catch (error: unknown) {
+        const detail = redactSecrets(
+          error instanceof Error ? error.message : String(error),
+          redact,
+        );
+        if (step !== undefined) step.error = detail;
         return Response.json(
           {
-            error: redactSecrets(
-              error instanceof Error ? error.message : String(error),
-              redact,
-            ),
+            error: detail,
           },
           { status: 400 },
         );
@@ -145,7 +156,18 @@ export async function runPromotionAgent(input: {
   try {
     await chmod(socket, 0o660);
     if (uid !== undefined) await chown(socket, 0, uid);
-    await Bun.write(path.join(workdir, "tool.ts"), TOOL_CLIENT);
+    const content = await promotionContent(input.target);
+    const previous = await input.store.read(
+      `context/${input.target.id}.json`,
+      PromotionTaskResultSchema,
+    );
+    const files = promotionTaskFiles({
+      ...input,
+      content,
+      previous: previous?.value ?? null,
+    });
+    for (const [name, body] of Object.entries(files))
+      await Bun.write(path.join(workdir, name), body);
     const env = {
       ...envForProvider("codex", workdir),
       PROMOTION_SOCKET: socket,
@@ -156,7 +178,7 @@ export async function runPromotionAgent(input: {
       callSite: "storm-promotion",
       prompt: promotionPrompt({
         ...input,
-        content: await promotionContent(input.target),
+        content,
       }),
       model: config.model,
       maxTurns: config.maxSteps,
@@ -170,7 +192,7 @@ export async function runPromotionAgent(input: {
         networkAccessEnabled: true,
         webSearchMode: "disabled",
       },
-      outputSchema: z.toJSONSchema(PromotionAgentResultSchema, {
+      outputSchema: z.toJSONSchema(PromotionTaskResultSchema, {
         target: "draft-7",
       }),
       requireFinalText: true,
@@ -190,9 +212,22 @@ export async function runPromotionAgent(input: {
     });
     if (outcome.finalText === undefined)
       throw new Error("Promotion agent omitted structured result");
+    const result = PromotionTaskResultSchema.parse(
+      JSON.parse(outcome.finalText),
+    );
+    await journal.finish(result);
+    if (
+      !(await input.store.put(
+        `context/${input.target.id}.json`,
+        result,
+        previous?.etag,
+      ))
+    )
+      throw new Error("Concurrent promotion context update");
     return {
-      result: PromotionAgentResultSchema.parse(JSON.parse(outcome.finalText)),
+      result,
       usage: outcome.usage,
+      browserTrace,
     };
   } finally {
     completion.abort();

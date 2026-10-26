@@ -986,66 +986,101 @@ existed carry no `livenessChecks` and render their original report.
 
 ## The Storm promotion task
 
-The promotion role runs source-defined LLM browser tasks for the existing
-server directories, PMC, and three Minecraft subreddits through `old.reddit.com`.
-It uses the shared agent runner without changing generic report-only tasks.
-The [target manifest](../the-storm/promotion/targets.json) and existing approved
-copy are bundled into the worker image. Discord and other forum placements
-remain manually maintained.
+The promotion role gives an LLM a browser task for one existing server directory,
+PMC placement, or Minecraft subreddit. The agent discovers the current interface,
+checks posting rules and remote history, and chooses its actions. There are no
+per-site login scripts, generated CSS selectors, posting-rule regex parsers, or
+required preflight/publish/verify tool sequences.
+
+Each run receives `task.json` with its target and mode, `content.md` with approved
+copy, `history.json` with the latest 50 attempts' metadata, and
+`previous-run.json` with the preceding assessment and prepared content. The
+[target manifest](../the-storm/promotion/targets.json) and approved copy are bundled
+into the worker image. Original page baselines remain in private object storage.
+The complete ledger remains available to the runner.
+
+`BROWSER.md` documents native PinchTab navigation, compact scanned snapshots,
+element references, attributes, screenshots, and actions. The agent chooses its
+own controls and sequence; native input references work inside web components.
+The small connection helper scopes operations to the target's persistent profile.
+Credential placeholders let the agent choose username/password inputs while the
+parent supplies their values privately. A disabled sign-in control can be
+inspected and corrected; an actual or ambiguous sign-in submission is not retried.
+The additional `captcha.ts` helper solves supported response-field reCAPTCHA v2
+and Turnstile widgets without submitting the page.
 
 `runStormPromotion({ targetId, mode })` accepts `run`, `preview`, or `reconcile`.
-The stable Workflow ID is `storm-promotion/<targetId>`. All publishing passes
-through the parent-owned browser gateway; the provider subprocess receives no
-browser, solver, storage, site-login, or report-delivery credential.
+The stable Workflow ID is `storm-promotion/<targetId>`.
 
-| Operator command                           | Result                                                                      |
-| ------------------------------------------ | --------------------------------------------------------------------------- |
-| `toolkit promotion status [target] --json` | Durable history, ownership, pause state and next eligibility                |
-| `toolkit promotion preview <target>`       | Live inspection and prepared copy; publishing and paid solving are disabled |
-| `toolkit promotion run <target>`           | One eligible action with fresh rule/history evidence and a persisted buffer |
-| `toolkit promotion pause [target]`         | Pause publishing, including the final pre-submit check                      |
-| `toolkit promotion resume [target]`        | Resume inspection; uncertain submissions still require reconciliation       |
-| `toolkit promotion reconcile <target>`     | Inspect and verify a held prior attempt without creating another submission |
+For a local dry run, start the local PinchTab daemon and run from the repository
+root with the enrolled 1Password service account:
 
-The `the-storm-promotion-enabled` flag defaults off. The typed
-`the-storm-promotion-settings` JSON selects enabled target IDs, model, step/time
-limits, and the solver allowance. Defaults are an empty target list, 80 steps,
-15 minutes, and $10 per month. Both declared Schedules start paused; worker
-release and an eligible verified canary precede recurring activation.
+```bash
+scripts/onepassword/with-service-account.sh op run \
+  --env-file packages/temporal/scripts/promotion/preview-local.env.references \
+  -- env -u OP_SERVICE_ACCOUNT_TOKEN bun packages/temporal/scripts/promotion/preview-local.ts \
+  pmc minecraft-serverlist reddit-mcservers
+```
 
-The publishing tool requires fresh captured rule and history evidence, applies
-the stricter interval plus a persistent 15–30 minute buffer, and records intent
-before clicking. Filtered and removed attempts remain in the ledger. An
-ambiguous result holds the target until a real browser receipt resolves it.
-The submission checkpoint retains the original page observations, so a later
-reconciliation cannot accept unchanged bump text as a new receipt.
-The parent retains these page bodies in object storage; operator results and
-provider prompts contain only the latest 50 attempts' metadata and receipt keys.
-The complete ledger remains available to publishing eligibility checks. A deferral
-without a future eligibility deadline blocks the target for inspection rather
-than repeatedly dispatching it.
-The first version supports one action per posting window; a multi-action rule
-can be represented conservatively as one action over its full window.
-Quiet running owners retain their claims; a confirmed closed Workflow releases
-a claim only when no submission intent exists.
+This uses the local browser configuration, real LLM and stored logins, with
+in-memory task state and no Temporal server or production ledger. It prints
+private temporary paths for the structured results and browser diagnostics.
+Remote posting history is still checked by the agent. The references file
+contains only 1Password locators; credentials are injected in memory.
 
-Namespace-separated SeaweedFS state includes receipts, screenshots, pending
-effects and monthly solver reservations. Anti-Captcha supports visible
-reCAPTCHA v2 and Turnstile response-field widgets; callback-only or unsupported
-challenges require operator attention. Two attempts per occurrence and durable
-reservations bound paid task creation. The dedicated 1Password item supplies
-the solver key and an account-keyed JSON map of `{ username, password }` logins.
-Browser profiles are named `storm-promotion-<account>` and retain their sessions.
-Preview and publishing runs attempt the stored login once when signed out;
-the parent keeps the credential values outside the agent. A failed or ambiguous
-login is not retried in the same occurrence. Preview still blocks publication,
-receipt settlement and paid CAPTCHA tasks; reconciliation never logs in.
+| Operator command                           | Result                                                                  |
+| ------------------------------------------ | ----------------------------------------------------------------------- |
+| `toolkit promotion status [target] --json` | Saved history, ownership, pause state and next eligibility              |
+| `toolkit promotion preview <target>`       | Inspect eligibility and prepare copy without publishing or paid solving |
+| `toolkit promotion run <target>`           | Let the agent perform at most one eligible visibility action            |
+| `toolkit promotion pause [target]`         | Block further promotion mutations                                       |
+| `toolkit promotion resume [target]`        | Resume inspection; uncertain effects still require reconciliation       |
+| `toolkit promotion reconcile <target>`     | Inspect a prior uncertain effect without creating another               |
 
-Native owner bumps are distinct from votes. Unknown rules, incomplete history,
-pending ownership and moderation problems block publication. The PMC forum
-thread remains inspection-only until substantive news has a source-controlled
-approval contract. A daily report and deduplicated actionable alerts use the
-existing reports worker and Postal recipient.
+The agent must establish complete relevant history, current limits, their scope,
+removals, filtering, duplicates and any stricter site rule. An enabled button
+alone is insufficient. Missing evidence produces a blocked result. Reddit uses
+`old.reddit.com`; native owner bumps preserve existing directory listings.
+News-only forum updates require separately approved substantive news.
+
+The runner retains ownership locks and checks publishing configuration, pauses,
+stored deadlines, the manifest's minimum interval and its persisted 15–30 minute
+buffer. It checkpoints a possible effect before forwarding a browser mutation.
+An interrupted or ambiguous effect remains uncertain and blocks another run.
+A completed inspection involving form interactions but no visibility action is
+recorded as `no-action`, which does not count as a post. The LLM interprets live
+rules and decides which browser interactions accomplish the task; the runner
+does not encode website flows.
+
+The final structured result contains the assessment, evidence, prepared copy,
+next eligibility and any receipt. The runner reads back a claimed receipt and
+captures its screenshot; a verified receipt needs new remote confirmation.
+Non-bump confirmation must match content actually entered during this run.
+Reddit additionally requires a fresh visible post permalink and original
+publication timestamp. A failed or filtered post still counts conservatively.
+The saved assessment carries context into the next run. Browser diagnostics retain
+endpoint/action/ref/error metadata without credential values.
+
+Preview blocks promotion clicks, form edits, Enter submissions, action URLs,
+receipt settlement and paid CAPTCHA tasks outside the prompt. It permits
+navigation, screenshots, scrolling and one stored-credential sign-in.
+Reconciliation never signs in or creates another effect. These modes use the
+same task-driven agent and browser connection as a publishing run.
+
+The `the-storm-promotion-enabled` flag defaults off. Typed
+`the-storm-promotion-settings` selects targets, model, step/time limits and solver
+allowance; defaults are an empty target list, 80 steps, 15 minutes and $10 monthly
+solver spending. Both declared Schedules start paused. An authenticated publishing
+canary and its receipt are separate acceptance requirements before activation.
+
+Namespace-separated SeaweedFS state holds assessments, run audits, attempts,
+evidence and solver reservations. The dedicated 1Password item supplies the
+solver key and account-keyed login map; profiles are named
+`storm-promotion-<account>`. Browser, solver, storage, site-login and report
+credentials stay outside the provider subprocess. The separate promotion worker
+uses the shared agent runner. Daily reports and deduplicated actionable alerts
+use the existing reports worker and Postal recipient. Discord placements remain
+manually maintained.
 
 ## Documentation
 

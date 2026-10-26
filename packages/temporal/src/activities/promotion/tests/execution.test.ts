@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { promotionConfig } from "#config/promotion.ts";
 import type * as StoreModule from "#activities/promotion/store.ts";
 import { promotionPrompt } from "#activities/promotion/prompt.ts";
+import { promotionTaskFiles } from "#activities/promotion/task-files.ts";
 import { promotionTarget } from "#activities/promotion/manifest.ts";
 import {
   promotionAgentActivities,
@@ -90,7 +91,16 @@ describe("promotion execution boundaries", () => {
     });
     vi.mocked(runPromotionAgent).mockReset();
     vi.mocked(runPromotionAgent).mockResolvedValue({
-      result: { status: "deferred", summary: "Site requests waiting" },
+      browserTrace: [],
+      result: {
+        status: "deferred",
+        summary: "Site requests waiting",
+        performedAction: false,
+        nextEligibleAt: null,
+        preparedContent: "",
+        evidence: [],
+        receipt: null,
+      },
       usage: {
         inputTokens: 0,
         cachedInputTokens: 0,
@@ -137,8 +147,16 @@ describe("promotion execution boundaries", () => {
     });
     expect(prompt.length).toBeLessThan(100_000);
     expect(prompt).not.toContain("baseline-only");
-    expect(prompt).toContain("run-59");
-    expect(prompt).not.toContain('"storm-promotion/pmc/run-0"');
+    const files = promotionTaskFiles({
+      target: promotionTarget("pmc"),
+      state,
+      content: "Approved fixture copy",
+      mode: "run",
+      previous: null,
+    });
+    expect(files["history.json"]).toContain("run-59");
+    expect(files["history.json"]).not.toContain("baseline-only");
+    expect(files["history.json"]).not.toContain('"storm-promotion/pmc/run-0"');
   });
 
   it("rejects a foreign Workflow identity before acquiring a target claim", async () => {
