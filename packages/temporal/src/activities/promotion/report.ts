@@ -60,7 +60,7 @@ export function promotionReport(
           : "failed",
       summary:
         state.blockedReason ??
-        `${state.paused ? "Paused" : "Ready"}; next eligible: ${state.nextEligibleAt ?? "requires live preflight"}.`,
+        `${state.paused ? "Paused" : "Ready"}; saved schedule deadline: ${state.nextEligibleAt ?? "not set"}.`,
       evidenceReceiptIds: [state.targetId],
     })),
     evidence: states.map((state) => ({
@@ -83,7 +83,7 @@ export function promotionReport(
       evidenceReceiptIds: [state.targetId],
     })),
     limitations: [
-      "A stored receipt proves only the recorded action. Destinations without a fresh preflight have not been verified live.",
+      "A stored receipt proves only the recorded action. The caller selects actions and timing; a dry run does not prove publication.",
     ],
     actions: blocked.map(
       (state) =>

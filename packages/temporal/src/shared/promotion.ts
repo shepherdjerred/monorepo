@@ -128,6 +128,30 @@ export const PromotionStateSchema = z.strictObject({
 });
 export type PromotionState = z.infer<typeof PromotionStateSchema>;
 
+/** The caller checks saved cadence before starting an executor. */
+export function promotionDispatchAt(
+  target: PromotionTarget,
+  state: PromotionState,
+  occurrenceId?: string,
+): number {
+  const latest = Math.max(
+    0,
+    ...state.attempts
+      .filter(
+        (attempt) =>
+          attempt.status !== "no-action" &&
+          attempt.occurrenceId !== occurrenceId,
+      )
+      .map((attempt) => Date.parse(attempt.settledAt ?? attempt.attemptedAt)),
+  );
+  return Math.max(
+    state.nextEligibleAt === null ? 0 : Date.parse(state.nextEligibleAt),
+    latest === 0
+      ? 0
+      : latest + (target.minimumIntervalSeconds + state.bufferSeconds) * 1000,
+  );
+}
+
 /** Keep stored page bodies out of Temporal results and provider context. */
 export function promotionStateSummary(state: PromotionState) {
   return {

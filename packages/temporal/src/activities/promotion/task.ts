@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { assertPromotionTaskReceipt } from "./task-receipt.ts";
 import {
   assertPromotionUrl,
+  promotionDispatchAt,
   type PromotionObservation,
   type PromotionRunInput,
   type PromotionTarget,
@@ -16,7 +17,7 @@ import {
 import type { PromotionTaskResult } from "./task-contract.ts";
 import { promotionObservationText } from "./observation.ts";
 
-/** Checkpoints effects, not website steps. The agent owns policy interpretation. */
+/** Checkpoints execution effects and rechecks the caller's saved schedule. */
 export class PromotionTaskJournal {
   readonly observations: PromotionObservation[] = [];
   private started = false;
@@ -82,27 +83,7 @@ export class PromotionTaskJournal {
         )
       )
         throw new Error("Target paused or a prior effect needs reconciliation");
-      const latest = Math.max(
-        0,
-        ...state.attempts
-          .filter(
-            (item) =>
-              item.status !== "no-action" && item.occurrenceId !== occurrenceId,
-          )
-          .map((item) => Date.parse(item.settledAt ?? item.attemptedAt)),
-      );
-      const floor =
-        latest === 0
-          ? 0
-          : latest +
-            (target.minimumIntervalSeconds + state.bufferSeconds) * 1000;
-      if (
-        now() <
-        Math.max(
-          floor,
-          state.nextEligibleAt === null ? 0 : Date.parse(state.nextEligibleAt),
-        )
-      )
+      if (now() < promotionDispatchAt(target, state, occurrenceId))
         throw new Error("Stored cooldown has not expired");
       if (this.started)
         return {
@@ -156,10 +137,10 @@ export class PromotionTaskJournal {
     return page.screenshotKey;
   }
 
-  private assertEligibilityEvidence(result: PromotionTaskResult): void {
+  private assertPreviewEvidence(result: PromotionTaskResult): void {
     if (result.status !== "preview") return;
     if (result.evidence.length === 0)
-      throw new Error("Positive eligibility needs captured live evidence");
+      throw new Error("Prepared preview needs captured live evidence");
     for (const evidence of result.evidence) {
       const captured = this.observations.some(
         (page) =>
@@ -168,7 +149,7 @@ export class PromotionTaskJournal {
       );
       if (!captured)
         throw new Error(
-          `Positive eligibility quote is absent from live browser evidence at ${evidence.url}`,
+          `Preview quote is absent from live browser evidence at ${evidence.url}`,
         );
     }
   }
@@ -188,7 +169,7 @@ export class PromotionTaskJournal {
       (receipt?.status !== "verified" || !result.performedAction)
     )
       throw new Error("Verified result requires a remote receipt");
-    this.assertEligibilityEvidence(result);
+    this.assertPreviewEvidence(result);
     const resolving = receipt?.occurrenceId ?? occurrenceId;
     const screenshotKey = await this.receiptKey(receipt, resolving);
     if (mode === "reconcile" && receipt === null) return;
@@ -196,13 +177,13 @@ export class PromotionTaskJournal {
       assertPromotionOwnership(state, occurrenceId);
       const next = result.nextEligibleAt;
       if (
-        ["deferred", "verified"].includes(result.status) &&
+        result.status === "deferred" &&
         (next === null || Date.parse(next) <= now())
       )
-        throw new Error("Deferred result needs a future eligibility deadline");
+        throw new Error("Site cooldown needs a future deadline");
       const deadline =
         next === null
-          ? null
+          ? state.nextEligibleAt
           : new Date(
               Date.parse(next) + state.bufferSeconds * 1000,
             ).toISOString();

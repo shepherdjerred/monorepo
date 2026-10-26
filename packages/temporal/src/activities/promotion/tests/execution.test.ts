@@ -170,7 +170,7 @@ describe("promotion execution boundaries", () => {
   });
 
   it.each([null, "2026-01-01T00:00:00.000Z"])(
-    "blocks a deferral without a future eligibility deadline (%s)",
+    "blocks a site cooldown report without a future deadline (%s)",
     async (nextEligibleAt) => {
       await updatePromotionState(promotionStore(), "pmc", (state) => ({
         ...state,
@@ -178,14 +178,14 @@ describe("promotion execution boundaries", () => {
       }));
       const result = await execute("run");
       expect(result.status).toBe("blocked");
-      expect(result.summary).toContain("future eligibility deadline");
+      expect(result.summary).toContain("future deadline");
       const tick = await inspect();
       expect(tick.dueTargetIds).not.toContain("pmc");
       expect(tick.alerts.some((alert) => alert.targetId === "pmc")).toBe(true);
     },
   );
 
-  it("preserves an evidence-backed future deferral", async () => {
+  it("checks a saved deadline before invoking the executor", async () => {
     const nextEligibleAt = new Date(Date.now() + 3_600_000).toISOString();
     await updatePromotionState(promotionStore(), "pmc", (state) => ({
       ...state,
@@ -197,5 +197,55 @@ describe("promotion execution boundaries", () => {
     expect(state.nextEligibleAt).toBe(nextEligibleAt);
     expect(state.blockedReason).toBeNull();
     expect(state.lock).toBeNull();
+    expect(runPromotionAgent).not.toHaveBeenCalled();
+  });
+  it("applies the receipt interval and buffer before dispatch even without a saved deadline", async () => {
+    await seedLargeHistory();
+    const recent = new Date().toISOString();
+    await updatePromotionState(promotionStore(), "pmc", (state) => ({
+      ...state,
+      nextEligibleAt: null,
+      attempts: state.attempts.slice(-1).map((attempt) => ({
+        ...attempt,
+        attemptedAt: recent,
+        settledAt: recent,
+      })),
+    }));
+    const result = await execute("run");
+    expect(result.status).toBe("deferred");
+    expect(result.summary).toContain("Caller schedule");
+    expect(runPromotionAgent).not.toHaveBeenCalled();
+    const tick = await inspect();
+    expect(tick.dueTargetIds).not.toContain("pmc");
+  });
+  it("invokes the selected action without an agent policy preflight", async () => {
+    vi.mocked(runPromotionAgent).mockResolvedValueOnce({
+      browserTrace: [],
+      result: {
+        status: "blocked",
+        summary: "Native bump control is not present",
+        performedAction: false,
+        nextEligibleAt: null,
+        preparedContent: "",
+        evidence: [],
+        receipt: null,
+      },
+      usage: {
+        inputTokens: 0,
+        cachedInputTokens: 0,
+        cacheWriteInputTokens: 0,
+        outputTokens: 0,
+        reasoningTokens: 0,
+      },
+    });
+    const result = await execute("run");
+    expect(runPromotionAgent).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        target: expect.objectContaining({ id: "pmc", action: "bump" }),
+        mode: "run",
+        state: expect.objectContaining({ preflight: null, attempts: [] }),
+      }),
+    );
+    expect(result.summary).toBe("Native bump control is not present");
   });
 });
