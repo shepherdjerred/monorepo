@@ -8,6 +8,7 @@ public enum FacetTaskGroupPresentation {
             guard
                 let index = remaining.firstIndex(where: { task in
                     guard task.id == id else { return false }
+                    if groupBy == "agendaSection" { return task.agendaSection == group.key }
                     guard groupBy == "effectiveDate", let date = task.effectiveDate else {
                         return true
                     }

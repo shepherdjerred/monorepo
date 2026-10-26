@@ -4,6 +4,7 @@
 //! and provider coordination. No host callback runs while a database lock is held.
 #![forbid(unsafe_code)]
 
+mod agenda;
 mod commands;
 pub mod engine;
 mod features;

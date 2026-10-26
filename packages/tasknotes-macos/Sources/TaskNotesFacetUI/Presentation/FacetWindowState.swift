@@ -20,6 +20,10 @@ public final class FacetWindowState {
     }
     public var includeArchived = false
     public var board = false
+    internal var mobilePresentation = false
+    internal private(set) var executesStoredQuery = false
+    internal var isSelecting = false
+    private var invalidStoredQuery = false
     public var savedQuery: [String: FacetValue] = [:]
     public var selectedViewID: String?
     public var selectedTaskIDs: Set<FacetTaskRowID> = [] {
@@ -43,6 +47,20 @@ public final class FacetWindowState {
 
     public init(clock: SystemClock = SystemClock()) { self.clock = clock }
 
+    internal convenience init(
+        mobileScope: String, clock: SystemClock, query: [String: FacetValue] = [:],
+        globalSearch: Bool = false, savedView: FacetSavedView? = nil
+    ) {
+        self.init(clock: clock)
+        mobilePresentation = true
+        scope = mobileScope == "board" ? "all" : mobileScope
+        board = mobileScope == "board"
+        savedQuery = query
+        showCompleted =
+            globalSearch || query["completed"] == .bool(true) || query["completed"] == .null
+        if let savedView { useSavedView(savedView) }
+    }
+
     internal init(store: FacetStore) {
         clock = store.clock
         snapshot = store.snapshot
@@ -51,6 +69,7 @@ public final class FacetWindowState {
     }
 
     public func query(offset: Int = 0) throws -> FacetValue {
+        guard !invalidStoredQuery else { throw FacetContractError.unsupportedResponse }
         guard let exactOffset = UInt32(exactly: offset) else {
             throw FacetContractError.unsupportedResponse
         }
@@ -62,8 +81,11 @@ public final class FacetWindowState {
         fields["limit"] = .integer(100)
         fields["today"] = .string(calendar.today)
         fields["at"] = .string(calendar.instant.ISO8601Format())
-        if scope == "upcoming", fields["groupBy"] == nil {
+        if !executesStoredQuery, scope == "upcoming", fields["groupBy"] == nil {
             fields["groupBy"] = .string("effectiveDate")
+        }
+        if mobilePresentation && !executesStoredQuery {
+            FacetMobileQueryPolicy.apply(scope: scope, fields: &fields)
         }
         fields["includeArchived"] = .bool(includeArchived)
         fields["text"] = search.isEmpty ? nil : .string(search)
@@ -73,6 +95,24 @@ public final class FacetWindowState {
             fields["completed"] = showCompleted || scope == "completed" ? nil : .bool(false)
         }
         return .object(fields)
+    }
+
+    internal func replaceQueryOptions(_ fields: [String: FacetValue]) {
+        status = ""
+        priority = ""
+        showCompleted =
+            fields["completed"] == .bool(true) || fields["completed"] == .null
+            || executesStoredQuery && fields["completed"] == nil
+        savedQuery = fields
+        for key in ["schemaVersion", "scope", "at", "today", "offset", "limit", "text"] {
+            savedQuery.removeValue(forKey: key)
+        }
+        selectedTaskIDs = []
+    }
+
+    internal func leaveSavedView() {
+        executesStoredQuery = false
+        invalidStoredQuery = false
     }
 
     public func reload(store: FacetStore) async {
@@ -156,27 +196,6 @@ public final class FacetWindowState {
         }
     }
 
-    public func apply(_ view: FacetSavedView, store: FacetStore) async {
-        guard let fields = view.view["query"]?.object?.fields else {
-            error = "This saved view has no valid query. Edit it before opening it."
-            return
-        }
-        selectedViewID = view.id
-        scope = fields["scope"]?.text ?? "all"
-        search = fields["text"]?.text ?? ""
-        status =
-            fields["statuses"]?.array?.elements.count == 1
-            ? fields["statuses"]?.array?.elements.first?.text ?? "" : ""
-        priority =
-            fields["priorities"]?.array?.elements.count == 1
-            ? fields["priorities"]?.array?.elements.first?.text ?? "" : ""
-        showCompleted = fields["completed"] != .bool(false)
-        includeArchived = fields["includeArchived"] == .bool(true)
-        board = view.view["viewType"]?.text == "board"
-        savedQuery = fields
-        await reload(store: store)
-    }
-
     internal func reloadVocabulary(
         store: FacetStore, profileID: String,
         read: ((FacetValue) async throws -> FacetSnapshot?)? = nil
@@ -235,5 +254,37 @@ public final class FacetWindowState {
                         .sorted()
                 )
             })
+    }
+}
+
+extension FacetWindowState {
+    @discardableResult internal func useSavedView(_ view: FacetSavedView) -> Bool {
+        guard let fields = view.view["query"]?.object?.fields else {
+            invalidStoredQuery = true
+            snapshot = nil
+            error = "This saved view has no valid query. Edit it before opening it."
+            return false
+        }
+        invalidStoredQuery = false
+        executesStoredQuery = true
+        selectedViewID = view.id
+        scope = fields["scope"]?.text ?? "all"
+        search = fields["text"]?.text ?? ""
+        status =
+            fields["statuses"]?.array?.elements.count == 1
+            ? fields["statuses"]?.array?.elements.first?.text ?? "" : ""
+        priority =
+            fields["priorities"]?.array?.elements.count == 1
+            ? fields["priorities"]?.array?.elements.first?.text ?? "" : ""
+        showCompleted = fields["completed"] != .bool(false)
+        includeArchived = fields["includeArchived"] == .bool(true)
+        board = view.view["viewType"]?.text == "board"
+        savedQuery = fields
+        return true
+    }
+
+    public func apply(_ view: FacetSavedView, store: FacetStore) async {
+        guard useSavedView(view) else { return }
+        await reload(store: store)
     }
 }

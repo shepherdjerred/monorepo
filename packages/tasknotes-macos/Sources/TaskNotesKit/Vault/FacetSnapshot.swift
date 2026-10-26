@@ -46,6 +46,8 @@ public struct FacetTask: Codable, Identifiable, Sendable {
     public let occurrenceDate: String?
     public let effectiveDate: String?
     public let isPending: Bool
+    public let agendaSection: String?
+    public let agendaDateKind: String?
 }
 
 public struct FacetProblem: Codable, Sendable {

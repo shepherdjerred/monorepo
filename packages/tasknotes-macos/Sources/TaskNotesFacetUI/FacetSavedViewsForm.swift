@@ -16,6 +16,8 @@ struct FacetSavedViewsForm: View {
     @State private var action = FacetSavedViewDraft()
     @State private var clearsNameOnSuccess = false
     @State private var lifecycleOwner = UUID()
+    @State private var editor: FacetSavedViewEditorModel?
+    @State private var showsDiscard = false
     @Environment(\.dismiss) private var dismiss
 
     init(
@@ -33,11 +35,18 @@ struct FacetSavedViewsForm: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(editingID == nil ? "Save the current view" : "Update the current view") {
-                    TextField("Name", text: $name)
-                    Button("Save view") { save() }
-                        .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }.disabled(action.isSubmitting || action.hasRetainedSubmission)
+                #if os(iOS)
+                    Section {
+                        Button("Create saved view", systemImage: "plus") { edit(nil) }
+                    }.disabled(action.isSubmitting || action.hasRetainedSubmission)
+                #else
+                    Section(editingID == nil ? "Save the current view" : "Update the current view")
+                    {
+                        TextField("Name", text: $name)
+                        Button("Save view") { save() }
+                            .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }.disabled(action.isSubmitting || action.hasRetainedSubmission)
+                #endif
                 savedRows.disabled(action.isSubmitting || action.hasRetainedSubmission)
                 recovery
             }.disabled(action.isSubmitting)
@@ -51,10 +60,17 @@ struct FacetSavedViewsForm: View {
             .onAppear {
                 FacetDraftCoordinator.shared.register(
                     lifecycleOwner, owner: store, profileID: profileID,
-                    isDirty: { action.hasRetainedSubmission || action.isSubmitting },
-                    flush: { !action.hasRetainedSubmission && !action.isSubmitting })
+                    isDirty: {
+                        action.hasRetainedSubmission || action.isSubmitting
+                            || (editor?.hasChanges ?? false)
+                    },
+                    flush: {
+                        !action.hasRetainedSubmission && !action.isSubmitting
+                            && !(editor?.hasChanges ?? false)
+                    })
             }
             .onDisappear { FacetDraftCoordinator.shared.unregister(lifecycleOwner) }
+            .sheet(item: $editor) { model in editorSheet(model) }
     }
 
     private var savedRows: some View {
@@ -66,18 +82,36 @@ struct FacetSavedViewsForm: View {
 
     private func savedRow(_ view: FacetSavedView) -> some View {
         VStack(alignment: .leading) {
-            Button(view.view["name"]?.text ?? view.id) { open(view) }
+            let title = view.view["name"]?.text ?? view.id
+            #if os(iOS)
+                Button {
+                    edit(view)
+                } label: {
+                    Label(title, systemImage: "pencil")
+                }
+                .accessibilityLabel("Edit \(title)")
+                .accessibilityHint("Change this saved view’s filters and appearance")
+            #else
+                Button(title) { open(view) }
+            #endif
             ViewThatFits(in: .horizontal) {
                 HStack { rowActions(view) }
                 VStack(alignment: .leading) { rowActions(view) }
             }.font(.caption)
         }
+        #if os(iOS)
+            .buttonStyle(.borderless)
+        #endif
     }
 
     @ViewBuilder private func rowActions(_ view: FacetSavedView) -> some View {
-        Button("Update") {
-            editingID = view.id
-            name = view.view["name"]?.text ?? view.id
+        Button(editActionTitle) {
+            #if os(iOS)
+                edit(view)
+            #else
+                editingID = view.id
+                name = view.view["name"]?.text ?? view.id
+            #endif
         }
         Button("Duplicate") { duplicate(view) }
         Button("Earlier") { move(view, by: -1) }
@@ -85,6 +119,14 @@ struct FacetSavedViewsForm: View {
         Button("Delete", role: .destructive) {
             apply(["kind": .string("delete_view"), "id": .string(view.id)])
         }
+    }
+
+    private var editActionTitle: String {
+        #if os(iOS)
+            "Edit"
+        #else
+            "Update"
+        #endif
     }
 
     @ViewBuilder private var recovery: some View {
@@ -119,7 +161,9 @@ struct FacetSavedViewsForm: View {
             }
         }
     }
+}
 
+extension FacetSavedViewsForm {
     private func open(_ view: FacetSavedView) {
         _Concurrency.Task {
             guard store.selectedProfileID == profileID else { return }
@@ -164,6 +208,66 @@ struct FacetSavedViewsForm: View {
             ], clearsName: true)
     }
 
+    private func edit(_ view: FacetSavedView?) {
+        guard !action.isSubmitting, !action.hasRetainedSubmission else { return }
+        do {
+            if let view {
+                editor = try FacetSavedViewEditorModel(id: view.id, fields: view.view, isNew: false)
+                return
+            }
+            #if os(iOS)
+                editor = try FacetSavedViewEditorModel.fresh(id: creatingID, order: rows.count)
+            #else
+                var fields = store.currentView(name: "", board: board)
+                if let window, case .object(let query) = try window.query() {
+                    fields["query"] = .object(query)
+                }
+                fields["order"] = .integer(Int64(rows.count))
+                editor = try FacetSavedViewEditorModel(id: creatingID, fields: fields, isNew: true)
+            #endif
+        } catch { store.reportNativeFailure(error) }
+    }
+
+    private func editorSheet(_ model: FacetSavedViewEditorModel) -> some View {
+        NavigationStack {
+            Form {
+                if let snapshot = window?.snapshot ?? store.snapshot {
+                    FacetSavedViewEditorFields(
+                        editor: model, configuration: snapshot.configuration,
+                        vocabulary: window?.vocabulary
+                            ?? FacetWindowState.vocabulary(snapshot.tasks)
+                    ).disabled(action.isSubmitting || action.hasRetainedSubmission)
+                }
+                recovery
+            }
+            .navigationTitle(model.isNew ? "New saved view" : "Edit saved view")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        if model.hasChanges { showsDiscard = true } else { editor = nil }
+                    }.disabled(action.isSubmitting || action.hasRetainedSubmission)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        apply(
+                            [
+                                "kind": .string("save_view"), "id": .string(model.id),
+                                "view": .object(model.value),
+                            ], clearsName: true)
+                    }.disabled(
+                        !model.canSave || action.isSubmitting || action.hasRetainedSubmission
+                    )
+                    .accessibilityIdentifier("facet.saved-view.save")
+                }
+            }
+            .confirmationDialog("Discard this view’s changes?", isPresented: $showsDiscard) {
+                Button("Discard changes", role: .destructive) { editor = nil }
+                Button("Keep editing", role: .cancel) {}
+            }
+        }.interactiveDismissDisabled(
+            model.hasChanges || action.isSubmitting || action.hasRetainedSubmission)
+    }
+
     private func duplicate(_ view: FacetSavedView) {
         var copy = view.view
         copy["name"] = .string((view.view["name"]?.text ?? view.id) + " copy")
@@ -199,6 +303,7 @@ struct FacetSavedViewsForm: View {
             name = ""
             editingID = nil
             creatingID = UUID().uuidString
+            editor = nil
         }
         clearsNameOnSuccess = false
     }

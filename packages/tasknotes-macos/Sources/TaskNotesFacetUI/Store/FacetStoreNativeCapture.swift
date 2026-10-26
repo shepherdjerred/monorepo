@@ -16,7 +16,7 @@ internal struct FacetCaptureIntent {
 extension FacetStore {
     internal func prepareNativeCapture(
         _ input: String, profileID: String, properties: [String: FacetValue], body: String?,
-        origin: FacetFeedbackOrigin? = nil
+        origin: FacetFeedbackOrigin? = nil, context: [String: FacetValue] = [:]
     ) -> FacetCaptureIntent? {
         guard let engine, selectedProfileID == profileID,
             !removingProfileIDs.contains(profileID)
@@ -28,6 +28,7 @@ extension FacetStore {
             request: .object([
                 "kind": .string("capture_preview"), "input": .string(input),
                 "at": .string(calendar.instant.ISO8601Format()), "today": .string(calendar.today),
+                "context": .object(context),
             ]), properties: properties, body: body, origin: intent.origin,
             activationID: intent.activationID)
     }

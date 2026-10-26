@@ -36,62 +36,75 @@ internal struct FacetNativeWorkspace: View {
     }
 
     var body: some View {
-        platformWorkspace
-            .onAppear {
-                registerDraft()
-                window.feedbackOrigin = feedbackOrigin
-                window.reducedMotion = reducedMotion
-            }
-            .onChange(of: reducedMotion) { window.reducedMotion = reducedMotion }
-            .onChange(of: feedbackOrigin) { window.feedbackOrigin = feedbackOrigin }
-            .onChange(of: store.appliedFeedback) {
-                _Concurrency.Task { await window.reload(store: store) }
-            }
-            .onChange(of: draft?.rowID) { registerDraft() }
-            .onDisappear { FacetDraftCoordinator.shared.unregister(commitRegistration) }
-            .disabled(FacetDraftCoordinator.shared.isTransitioning)
-            #if os(macOS)
-                .background(FacetWindowCloseGuard(flush: flush).frame(width: 0, height: 0))
-                .focusedSceneValue(\.facetWindowCommands, commandActions)
-                .confirmationDialog(
-                    "Delete the selected task notes?", isPresented: $deletingSelection
-                ) {
-                    Button("Delete", role: .destructive) { mutateSelection(deleting: true) }
+        #if os(iOS)
+            FacetMobileWorkspace(
+                store: store, importsFolder: $importsFolder,
+                capturePresented: $capturePresented, sheets: sheets, initialWindow: window)
+        #else
+            platformWorkspace
+                .onAppear {
+                    registerDraft()
+                    window.feedbackOrigin = feedbackOrigin
+                    window.reducedMotion = reducedMotion
                 }
-            #endif
-            .task(id: store.selectedProfileID) {
-                if draft?.profileID != store.selectedProfileID { draft = nil }
-                await window.reload(store: store)
-            }
-            .onChange(of: store.snapshot?.version) {
-                _Concurrency.Task { await window.reload(store: store) }
-            }
-            .onChange(of: window.search) { _Concurrency.Task { await window.reload(store: store) } }
-            .onChange(of: window.scope) { _Concurrency.Task { await window.reload(store: store) } }
-            .sheet(item: $detail) { task in
-                if let snapshot = window.snapshot {
-                    FacetTaskEditor(
-                        store: store, task: task, profileID: snapshot.profileId,
-                        statuses: pairs(snapshot, "statuses"),
-                        priorities: pairs(snapshot, "priorities")
-                    )
-                    #if os(iOS)
-                        .presentationDetents([.fraction(0.75), .large]).presentationDragIndicator(
-                            .visible)
-                    #endif
+                .onChange(of: reducedMotion) { window.reducedMotion = reducedMotion }
+                .onChange(of: feedbackOrigin) { window.feedbackOrigin = feedbackOrigin }
+                .onChange(of: store.appliedFeedback) {
+                    _Concurrency.Task { await window.reload(store: store) }
                 }
-            }
-            .sheet(isPresented: $settings) {
-                NavigationStack {
-                    FacetNativeSettings(store: store, importsFolder: $importsFolder, sheets: sheets)
+                .onChange(of: draft?.rowID) { registerDraft() }
+                .onDisappear { FacetDraftCoordinator.shared.unregister(commitRegistration) }
+                .disabled(FacetDraftCoordinator.shared.isTransitioning)
+                #if os(macOS)
+                    .background(FacetWindowCloseGuard(flush: flush).frame(width: 0, height: 0))
+                    .focusedSceneValue(\.facetWindowCommands, commandActions)
+                    .confirmationDialog(
+                        "Delete the selected task notes?", isPresented: $deletingSelection
+                    ) {
+                        Button("Delete", role: .destructive) { mutateSelection(deleting: true) }
+                    }
+                #endif
+                .task(id: store.selectedProfileID) {
+                    if draft?.profileID != store.selectedProfileID { draft = nil }
+                    await window.reload(store: store)
+                }
+                .onChange(of: store.snapshot?.version) {
+                    _Concurrency.Task { await window.reload(store: store) }
+                }
+                .onChange(of: window.search) {
+                    _Concurrency.Task { await window.reload(store: store) }
+                }
+                .onChange(of: window.scope) {
+                    _Concurrency.Task { await window.reload(store: store) }
+                }
+                .sheet(item: $detail) { task in
+                    if let snapshot = window.snapshot {
+                        FacetTaskEditor(
+                            store: store, task: task, profileID: snapshot.profileId,
+                            statuses: pairs(snapshot, "statuses"),
+                            priorities: pairs(snapshot, "priorities")
+                        )
+                        #if os(iOS)
+                            .presentationDetents([.fraction(0.75), .large])
+                            .presentationDragIndicator(
+                                .visible)
+                        #endif
+                    }
+                }
+                .sheet(isPresented: $settings) {
+                    NavigationStack {
+                        FacetNativeSettings(
+                            store: store, importsFolder: $importsFolder, sheets: sheets
+                        )
                         .toolbar {
                             ToolbarItem(placement: .confirmationAction) {
                                 Button("Done") { settings = false }
                                     .accessibilityIdentifier("facet.settings.done")
                             }
                         }
+                    }
                 }
-            }
+        #endif
     }
 
     @ViewBuilder private var platformWorkspace: some View {
@@ -132,38 +145,9 @@ internal struct FacetNativeWorkspace: View {
                     }
             }
         #else
-            TabView(selection: $route) {
-                ForEach(Self.routes, id: \.id) { item in
-                    NavigationStack {
-                        Group {
-                            if item.id == "browse" {
-                                FacetNativeSidebar(store: store, window: window, choose: navigate)
-                            } else {
-                                content
-                            }
-                        }
-                        .navigationTitle(item.title)
-                        .searchable(
-                            text: $window.search, isPresented: $searching, prompt: "Search tasks"
-                        )
-                        .toolbar { workspaceToolbar }
-                        .overlay(alignment: .bottomTrailing) {
-                            Button {
-                                capturePresented = true
-                            } label: {
-                                Image(systemName: "plus").font(.title2.weight(.semibold))
-                                    .frame(width: 56, height: 56)
-                            }.buttonStyle(.borderedProminent).buttonBorderShape(.circle)
-                                .accessibilityLabel("Add task").accessibilityIdentifier(
-                                    "facet.capture.open"
-                                )
-                                .padding(20)
-                        }
-                    }.tabItem { Label(item.title, systemImage: item.symbol) }.tag(item.id)
-                }
-            }
-            .tint(FacetNativeStyle.brand)
-            .onChange(of: route) { if route != "browse" { navigate(route) } }
+            FacetMobileWorkspace(
+                store: store, importsFolder: $importsFolder,
+                capturePresented: $capturePresented, sheets: sheets, initialWindow: window)
         #endif
     }
 
@@ -284,6 +268,7 @@ extension FacetNativeWorkspace {
             guard await flush() else { return }
             window.savedQuery = [:]
             window.selectedViewID = nil
+            window.leaveSavedView()
             window.scope = scope
             window.board = scope == "board"
             if scope == "board" { window.scope = "all" }

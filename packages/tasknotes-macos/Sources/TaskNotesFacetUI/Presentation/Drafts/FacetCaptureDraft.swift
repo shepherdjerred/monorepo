@@ -52,12 +52,13 @@ public import TaskNotesKit
     public func begin(
         store: FacetStore, profileID: String,
         properties: [String: FacetValue] = [:], body: String? = nil,
-        origin: FacetFeedbackOrigin? = nil
+        origin: FacetFeedbackOrigin? = nil, context: [String: FacetValue] = [:]
     ) -> Bool {
         guard canSubmit else { return false }
         guard
             let intent = store.prepareNativeCapture(
-                input, profileID: profileID, properties: properties, body: body, origin: origin)
+                input, profileID: profileID, properties: properties, body: body, origin: origin,
+                context: context)
         else {
             error = "Open the capture's owning vault before adding a task."
             return false

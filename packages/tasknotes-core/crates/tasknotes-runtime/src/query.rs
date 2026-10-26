@@ -18,52 +18,12 @@ pub(crate) fn apply(
     occurrences: &crate::engine::occurrence_relations::Index,
 ) -> Result<(Vec<TaskSnapshot>, u64, Vec<TaskGroup>)> {
     let scope = query.scope.as_deref().unwrap_or("all");
-    if ![
-        "all",
-        "today",
-        "upcoming",
-        "overdue",
-        "completed",
-        "undated",
-        "inbox",
-        "agenda",
-    ]
-    .contains(&scope)
-    {
-        return Err(RuntimeError::Validation("unknown query scope".to_owned()));
-    }
     let today = query.today.as_deref().map(parse_date).transpose()?;
-    if ["today", "upcoming", "overdue", "agenda"].contains(&scope) && today.is_none() {
-        return Err(RuntimeError::Validation(
-            "date scope requires local today".to_owned(),
-        ));
-    }
     let before = query.due_before.as_deref().map(parse_date).transpose()?;
     let after = query.due_after.as_deref().map(parse_date).transpose()?;
     let direction = query.sort_direction.as_deref().unwrap_or("asc");
-    if !["asc", "desc"].contains(&direction) {
-        return Err(RuntimeError::Validation(
-            "unknown sort direction".to_owned(),
-        ));
-    }
     let sort = query.sort_field.as_deref().unwrap_or("effectiveDate");
-    if ![
-        "title",
-        "priority",
-        "status",
-        "dueDate",
-        "effectiveDate",
-        "manual",
-    ]
-    .contains(&sort)
-    {
-        return Err(RuntimeError::Validation("unknown sort field".to_owned()));
-    }
-    if query.group_by.as_deref().is_some_and(|group| {
-        !["status", "priority", "project", "context", "effectiveDate"].contains(&group)
-    }) {
-        return Err(RuntimeError::Validation("unknown group field".to_owned()));
-    }
+    validate(query, scope, today, sort, direction)?;
     let text = query
         .text
         .as_deref()
@@ -94,11 +54,30 @@ pub(crate) fn apply(
         if limit == 0 {
             continue;
         }
-        // Body search uses the current row, but bodies and unrelated properties
+        // Search uses the current row, but bodies and unrelated properties
         // never accumulate in sort candidates. The database reloads page rows.
         trim_candidate(&mut task);
-        let position = selected
-            .partition_point(|other| compare(other, &task, sort, direction, configuration).is_lt());
+        let position = selected.partition_point(|other| {
+            let section = if query.group_by.as_deref() == Some("agendaSection") {
+                other
+                    .agenda_section
+                    .map(crate::types::AgendaSection::order)
+                    .cmp(&task.agenda_section.map(crate::types::AgendaSection::order))
+            } else {
+                Ordering::Equal
+            };
+            section
+                .then_with(|| {
+                    if query.sort_field.is_none()
+                        && matches!(scope, "todayAgenda" | "upcomingAgenda")
+                    {
+                        compare_agenda(other, &task, scope, direction)
+                    } else {
+                        compare(other, &task, sort, direction, configuration)
+                    }
+                })
+                .is_lt()
+        });
         if position < capacity {
             selected.insert(position, task);
             if selected.len() > capacity {
@@ -111,6 +90,88 @@ pub(crate) fn apply(
     Ok((tasks, total, groups))
 }
 
+fn validate(
+    query: &Query,
+    scope: &str,
+    today: Option<NaiveDate>,
+    sort: &str,
+    direction: &str,
+) -> Result<()> {
+    if ![
+        "all",
+        "today",
+        "upcoming",
+        "overdue",
+        "completed",
+        "undated",
+        "inbox",
+        "agenda",
+        "todayAgenda",
+        "upcomingAgenda",
+    ]
+    .contains(&scope)
+    {
+        return Err(RuntimeError::Validation("unknown query scope".to_owned()));
+    }
+    if [
+        "today",
+        "upcoming",
+        "overdue",
+        "agenda",
+        "todayAgenda",
+        "upcomingAgenda",
+    ]
+    .contains(&scope)
+        && today.is_none()
+    {
+        return Err(RuntimeError::Validation(
+            "date scope requires local today".to_owned(),
+        ));
+    }
+    if let Some(day) = query.effective_day.as_deref() {
+        tasknotes_vault::temporal::parse_day(day)?;
+    }
+    if !["asc", "desc"].contains(&direction) {
+        return Err(RuntimeError::Validation(
+            "unknown sort direction".to_owned(),
+        ));
+    }
+    if ![
+        "title",
+        "priority",
+        "status",
+        "dueDate",
+        "scheduledDate",
+        "createdDate",
+        "completedDate",
+        "effectiveDate",
+        "manual",
+    ]
+    .contains(&sort)
+    {
+        return Err(RuntimeError::Validation("unknown sort field".to_owned()));
+    }
+    if query.group_by.as_deref().is_some_and(|group| {
+        ![
+            "status",
+            "priority",
+            "project",
+            "context",
+            "effectiveDate",
+            "agendaSection",
+        ]
+        .contains(&group)
+    }) {
+        return Err(RuntimeError::Validation("unknown group field".to_owned()));
+    }
+    if query.group_by.as_deref() == Some("agendaSection") && scope != "todayAgenda" {
+        return Err(RuntimeError::Validation(
+            "agenda sections require the todayAgenda scope".into(),
+        ));
+    }
+    Ok(())
+}
+
 fn trim_candidate(task: &mut TaskSnapshot) {
     task.body.clear();
     task.body.shrink_to_fit();
@@ -119,6 +180,8 @@ fn trim_candidate(task: &mut TaskSnapshot) {
             "due",
             "scheduled",
             "sortOrder",
+            "dateCreated",
+            "completedDate",
             "projects",
             "contexts",
             "tags",
@@ -154,7 +217,16 @@ fn matches(
     (!archived || query.include_archived)
         && (text.is_empty()
             || task.title.to_lowercase().contains(text)
-            || task.body.to_lowercase().contains(text))
+            || task.body.to_lowercase().contains(text)
+            || ["projects", "contexts", "tags"].iter().any(|key| {
+                strings(&task.properties, key)
+                    .iter()
+                    .any(|value| value.to_lowercase().contains(text))
+            }))
+        && query
+            .effective_day
+            .as_deref()
+            .is_none_or(|day| task.effective_date.as_deref() == Some(day))
         && query
             .statuses
             .as_ref()
@@ -198,6 +270,8 @@ fn scope_matches(
     effective: Option<NaiveDate>,
 ) -> bool {
     match scope {
+        "todayAgenda" => !task.completed && task.agenda_section.is_some(),
+        "upcomingAgenda" => !task.completed && task.agenda_date_kind.is_some(),
         "today" => {
             if task.is_recurring {
                 task.occurrence_date.as_deref().and_then(date_part) == today && today.is_some()
@@ -299,14 +373,50 @@ fn compare(
                     .and_then(date_part),
                 direction,
             ),
+            "scheduledDate" | "createdDate" | "completedDate" => {
+                let key = match sort {
+                    "scheduledDate" => "scheduled",
+                    "createdDate" => "dateCreated",
+                    _ => "completedDate",
+                };
+                date_compare(sort_instant(left, key), sort_instant(right, key), direction)
+            }
             _ => date_compare(effective_date(left), effective_date(right), direction),
         };
-    let ordering = if direction == "desc" && !["dueDate", "effectiveDate"].contains(&sort) {
+    let ordering = if direction == "desc"
+        && ![
+            "dueDate",
+            "effectiveDate",
+            "scheduledDate",
+            "createdDate",
+            "completedDate",
+        ]
+        .contains(&sort)
+    {
         ordering.reverse()
     } else {
         ordering
     };
     ordering.then_with(|| left.path.cmp(&right.path))
+}
+
+fn compare_agenda(
+    left: &TaskSnapshot,
+    right: &TaskSnapshot,
+    scope: &str,
+    direction: &str,
+) -> Ordering {
+    date_compare(effective_date(left), effective_date(right), direction)
+        .then_with(|| {
+            if scope == "upcomingAgenda" {
+                let planned = Some(crate::types::AgendaDateKind::Planned);
+                (left.agenda_date_kind != planned).cmp(&(right.agenda_date_kind != planned))
+            } else {
+                Ordering::Equal
+            }
+        })
+        .then_with(|| left.title.to_lowercase().cmp(&right.title.to_lowercase()))
+        .then_with(|| left.path.cmp(&right.path))
 }
 
 fn group(tasks: &[TaskSnapshot], query: &Query) -> Vec<TaskGroup> {
@@ -323,6 +433,11 @@ fn group(tasks: &[TaskSnapshot], query: &Query) -> Vec<TaskGroup> {
                 "context" => strings(&task.properties, "contexts")
                     .into_iter()
                     .map(str::to_owned)
+                    .collect(),
+                "agendaSection" => task
+                    .agenda_section
+                    .map(|section| section.key().to_owned())
+                    .into_iter()
                     .collect(),
                 _ => effective_date(task)
                     .map(|date| vec![date.to_string()])
@@ -415,7 +530,19 @@ fn parse_date(value: &str) -> Result<NaiveDate> {
     NaiveDate::parse_from_str(value, "%Y-%m-%d")
         .map_err(|_| RuntimeError::Validation("invalid civil date".to_owned()))
 }
-fn date_compare(left: Option<NaiveDate>, right: Option<NaiveDate>, direction: &str) -> Ordering {
+fn sort_instant(task: &TaskSnapshot, key: &str) -> Option<chrono::DateTime<chrono::Utc>> {
+    let value = task.properties.get(key)?.as_str()?;
+    if value.len() == 10 {
+        tasknotes_vault::temporal::parse_day(value)
+            .ok()?
+            .and_hms_opt(0, 0, 0)
+            .map(|day| day.and_utc())
+    } else {
+        tasknotes_vault::temporal::parse_instant(value).ok()
+    }
+}
+
+fn date_compare<T: Ord>(left: Option<T>, right: Option<T>, direction: &str) -> Ordering {
     match (left, right) {
         (Some(left), Some(right)) => {
             if direction == "desc" {

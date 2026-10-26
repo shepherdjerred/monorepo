@@ -14,6 +14,8 @@ mod domain_gap_review;
 
 #[path = "runtime_tests/instances.rs"]
 mod instances;
+#[path = "runtime_tests/ios_agenda.rs"]
+mod ios_agenda;
 #[path = "runtime_tests/live_configuration.rs"]
 mod live_configuration;
 

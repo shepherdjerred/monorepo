@@ -181,7 +181,10 @@ impl Index {
     }
     pub fn skips_scope(&self, task: &TaskSnapshot, scope: &str) -> bool {
         self.skipped.contains(&task.path)
-            && matches!(scope, "today" | "agenda" | "upcoming" | "overdue")
+            && matches!(
+                scope,
+                "today" | "agenda" | "upcoming" | "overdue" | "todayAgenda" | "upcomingAgenda"
+            )
     }
 }
 

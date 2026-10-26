@@ -27,7 +27,7 @@ public import TaskNotesKit
     }
     public func refresh(
         store: FacetStore, profileID: String?, input: String,
-        overrides: [String: FacetValue]
+        overrides: [String: FacetValue], context: [String: FacetValue] = [:]
     ) async {
         guard let engine = store.engine, let profileID, store.selectedProfileID == profileID else {
             generation += 1
@@ -39,7 +39,7 @@ public import TaskNotesKit
         }
         let calendar = store.clock.viewerCalendar()
         await load(
-            input: input, overrides: overrides,
+            input: input, overrides: overrides, context: context,
             ownsOwner: { store.engine === engine && store.selectedProfileID == profileID },
             read: {
                 try await engine.features(
@@ -48,12 +48,13 @@ public import TaskNotesKit
                         "kind": .string("capture_preview"), "input": .string(input),
                         "at": .string(calendar.instant.ISO8601Format()),
                         "today": .string(calendar.today),
+                        "context": .object(context),
                     ]))
             })
     }
 
     internal func load(
-        input: String, overrides: [String: FacetValue],
+        input: String, overrides: [String: FacetValue], context: [String: FacetValue] = [:],
         delay: Duration = .milliseconds(160), ownsOwner: () -> Bool,
         read: () async throws -> FacetValue
     ) async {
@@ -61,7 +62,7 @@ public import TaskNotesKit
         let request = generation
         error = nil
         if input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            properties = overrides
+            properties = context.merging(overrides) { _, explicit in explicit }
             body = ""
             self.input = input
             isLoading = false

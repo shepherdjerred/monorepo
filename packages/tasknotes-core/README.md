@@ -650,6 +650,29 @@ accepted for wire compatibility but is unused; there are no tracked-minute
 projections. Capture context supplies project/context/tag/scheduled defaults;
 explicit parsed values take precedence.
 
+The explicit `todayAgenda` and `upcomingAgenda` scopes preserve the mobile
+planning workflow without changing the existing `today`, `agenda`, `upcoming`,
+or strict `inbox` policies. `todayAgenda` includes unfinished overdue work and
+returns `agendaSection` keys `overdue`, `scheduled-today`, and `due-today`.
+`upcomingAgenda` includes future ordinary planned dates and deadlines without a
+seven-day cutoff; recurrence previews use a finite 366-day default or the
+caller's `upcomingDays`. An existing unfinished recurring date remains its
+completion target instead of being replaced by a later preview. Materialized
+children remain the sole owners of covered occurrences.
+
+Agenda rows supply the selected `effectiveDate` and `agendaDateKind` (`planned`
+or `deadline`); the native host formats these facts rather than recomputing date
+policy. These optional JSON fields are omitted outside the new scopes.
+`groupBy: agendaSection` requires `todayAgenda` and orders its sections before
+pagination. `effectiveDay` filters the projected civil day before pagination.
+A projectless mobile Inbox uses `scope: all`, `hasNoProject: true`, and
+`completed: false`; global Search uses `scope: all` and matches titles, bodies,
+projects, contexts, and tags. The `scheduledDate`, `createdDate`, and
+`completedDate` sort fields use their respective normalized properties, retain
+instant ordering, and keep missing values last in both directions.
+The separate shared `vault/facet-agenda-contract.json` corpus covers the new
+query/row shapes without changing the original boundary corpus.
+
 `obsidianTransportLimits` supplies the common framing policy: 4 MiB UTF-8 text,
 2 MiB binary pieces, and the 199 MiB default plaintext file limit before service
 negotiation. Hosts enforce framing limits before copying/queuing messages. File
