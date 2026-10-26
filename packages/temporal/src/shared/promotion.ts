@@ -209,16 +209,24 @@ export function policyEligibleAt(
   )
     throw new Error("Invalid or future submission timestamp");
   if (policy.kind === "calendar-day") {
-    const today = calendarDay(now, policy.timezone);
-    return actions.filter(
-      (timestamp) => calendarDay(timestamp, policy.timezone) === today,
-    ).length >= policy.maxActions
-      ? nextDayBoundary(now, policy.timezone)
-      : 0;
+    const days = new Map<string, { count: number; latest: number }>();
+    for (const timestamp of actions) {
+      const key = calendarDay(timestamp, policy.timezone);
+      const current = days.get(key);
+      days.set(key, {
+        count: (current?.count ?? 0) + 1,
+        latest: Math.max(current?.latest ?? 0, timestamp),
+      });
+    }
+    return Math.max(
+      0,
+      ...[...days.values()]
+        .filter((day) => day.count >= policy.maxActions)
+        .map((day) => nextDayBoundary(day.latest, policy.timezone)),
+    );
   }
-  const recent = actions
-    .filter((timestamp) => timestamp + policy.windowSeconds * 1000 > now)
-    .sort((a, b) => b - a);
+  // Retain an expired boundary: the caller still adds its safety buffer.
+  const recent = actions.toSorted((a, b) => b - a);
   const limiting = recent[policy.maxActions - 1];
   return limiting === undefined ? 0 : limiting + policy.windowSeconds * 1000;
 }
@@ -264,8 +272,7 @@ function evidenceActionTimes(input: PromotionEligibilityInput): number[] {
   return [...new Set(times)];
 }
 
-/** The model cannot loosen an explicitly quoted numeric interval. */
-function assertObservedPostingPolicy(preflight: PromotionPreflight): void {
+function normalizedPostingRule(source: string): string {
   const words: Readonly<Record<string, number>> = {
     one: 1,
     two: 2,
@@ -288,20 +295,49 @@ function assertObservedPostingPolicy(preflight: PromotionPreflight): void {
     nineteen: 19,
     twenty: 20,
     thirty: 30,
+    forty: 40,
+    fifty: 50,
+    sixty: 60,
+    seventy: 70,
+    eighty: 80,
+    ninety: 90,
   };
-  const quote = preflight.ruleQuote
+  if (/\b(?:hundred|thousand|million|billion|dozen)\b/i.test(source))
+    throw new Error("Unsupported compound posting interval");
+  const quote = source
     .toLowerCase()
     .replaceAll("-", " ")
     .replaceAll(
-      /\b(?:twenty|thirty)\s+(?:one|two|three|four|five|six|seven|eight|nine)\b/g,
+      /\b(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\s+(?:one|two|three|four|five|six|seven|eight|nine)\b/g,
       (value) =>
         String(
-          value.split(" ").reduce((sum, word) => sum + (words[word] ?? 0), 0),
+          value.split(/\s+/u).reduce((sum, word) => {
+            const number = words[word];
+            if (number === undefined)
+              throw new Error("Unknown number word in posting interval");
+            return sum + number;
+          }, 0),
         ),
     )
     .replaceAll(/\b[a-z]+\b/g, (word) =>
       words[word] === undefined ? word : String(words[word]),
     );
+  for (const match of quote.matchAll(
+    /\b([a-z]+|\d+)\s+\d+\s+(?:minute|hour|day|week)s?\b/g,
+  )) {
+    if (
+      !/^(?:every|per|each|a|an|after|before|within|least|minimum|maximum|than|for|in|of|wait|bump|post|past|next|last|at)$/u.test(
+        match[1] ?? "",
+      )
+    )
+      throw new Error("Unrecognized quantity in posting interval");
+  }
+  return quote;
+}
+
+/** The model cannot loosen an explicitly quoted numeric interval. */
+function assertObservedPostingPolicy(preflight: PromotionPreflight): void {
+  const quote = normalizedPostingRule(preflight.ruleQuote);
   const units: Readonly<Record<string, number>> = {
     minute: 60,
     hour: 3600,

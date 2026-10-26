@@ -1,3 +1,4 @@
+import { WorkflowNotFoundError } from "@temporalio/client";
 import type { PromotionState } from "#shared/promotion.ts";
 import { updatePromotionState, type PromotionStore } from "./store.ts";
 
@@ -14,7 +15,23 @@ export async function reconcileClosedPromotionOwner(input: {
   if (!owner.occurrenceId.startsWith(prefix))
     throw new Error("Promotion lock has an invalid Workflow identity");
   const runId = owner.occurrenceId.slice(prefix.length);
-  if (await input.ownerRunning(workflowId, runId)) return input.state;
+  try {
+    if (await input.ownerRunning(workflowId, runId)) return input.state;
+  } catch (error: unknown) {
+    if (!(error instanceof WorkflowNotFoundError)) throw error;
+    return await updatePromotionState(
+      input.store,
+      input.state.targetId,
+      (state) =>
+        state.lock?.occurrenceId === owner.occurrenceId
+          ? {
+              ...state,
+              blockedReason:
+                "Owning Workflow history is unavailable; retain the claim and reconcile remote history",
+            }
+          : state,
+    );
+  }
   return await updatePromotionState(
     input.store,
     input.state.targetId,

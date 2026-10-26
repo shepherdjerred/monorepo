@@ -183,6 +183,10 @@ describe("posting rule evidence and receipt deadlines", () => {
     ["Bump once every twelve hours.", 43_200],
     ["Post once every twenty-four hours.", 86_400],
     ["Post at most once per week.", 604_800],
+    ["Bump once every forty-eight hours.", 172_800],
+    ["Bump once every seventy-two hours.", 259_200],
+    ["Bump once every seventy\ttwo hours.", 259_200],
+    ["Bump once every ninety-six hours.", 345_600],
   ])("does not shorten spelled-out limits: %s", (quote, interval) => {
     const input = {
       target,
@@ -229,6 +233,79 @@ describe("posting rule evidence and receipt deadlines", () => {
     expect(nextPromotionEligibleAt(target, state, now)).toBe(
       "2026-10-26T12:15:00.000Z",
     );
+  });
+});
+
+describe("newly observed manual actions", () => {
+  it("retains the rolling boundary through its buffer even just after the window expires", () => {
+    const occurredAt = new Date(now - 12 * 3_600_000 - 1000).toISOString();
+    const quote = "Bump once every 12 hours.";
+    const result = promotionEligibility({
+      target: { ...target, minimumIntervalSeconds: 0 },
+      now,
+      state: {
+        ...initialPromotionState(target.id, 900),
+        checkedAt: observation.capturedAt,
+        nextEligibleAt: new Date(now - 3_600_000).toISOString(),
+      },
+      observations: [
+        { ...observation, text: `${quote} Last manual bump: ${occurredAt}` },
+      ],
+      preflight: {
+        ...preflight,
+        ruleQuote: quote,
+        policy: { kind: "rolling", maxActions: 1, windowSeconds: 12 * 3600 },
+        previousActions: [
+          { occurredAt, observationId: observation.id, quote: occurredAt },
+        ],
+      },
+    });
+    expect(result.allowed).toBe(false);
+    expect(result.nextEligibleAt).toBe(new Date(now + 899_000).toISOString());
+  });
+  it("retains a calendar reset boundary through its buffer after midnight", () => {
+    const current = Date.parse("2026-10-26T00:00:01.000Z"),
+      occurredAt = "2026-10-25T23:00:00.000Z";
+    const quote = "Once per day, calendar reset at midnight UTC.";
+    const result = promotionEligibility({
+      target: { ...target, minimumIntervalSeconds: 0 },
+      now: current,
+      state: {
+        ...initialPromotionState(target.id, 900),
+        checkedAt: occurredAt,
+      },
+      observations: [
+        {
+          ...observation,
+          capturedAt: new Date(current).toISOString(),
+          text: `${quote} ${occurredAt}`,
+        },
+      ],
+      preflight: {
+        ...preflight,
+        ruleQuote: quote,
+        policy: { kind: "calendar-day", maxActions: 1, timezone: "UTC" },
+        previousActions: [
+          { occurredAt, observationId: observation.id, quote: occurredAt },
+        ],
+      },
+    });
+    expect(result.allowed).toBe(false);
+    expect(result.nextEligibleAt).toBe("2026-10-26T00:15:00.000Z");
+  });
+  it.each([
+    "Bump once every one hundred and twenty-four hours.",
+    "Bump once every quarante eight hours.",
+  ])("rejects quantities it cannot establish: %s", (quote) => {
+    expect(() =>
+      promotionEligibility({
+        target,
+        now,
+        state: initialPromotionState(target.id, 900),
+        observations: [{ ...observation, text: quote }],
+        preflight: { ...preflight, ruleQuote: quote },
+      }),
+    ).toThrow(/compound|Unrecognized/);
   });
 });
 

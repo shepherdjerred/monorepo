@@ -587,6 +587,14 @@ PinchTab credentials or config.
 - `toolkit discord ...` operates the private local Discord session daemon.
 - `toolkit mc ...` drives disposable Minecraft sandboxes through the
   mc-harness daemon. See [Minecraft sandboxes](#minecraft-sandboxes).
+- `toolkit promotion <status|preview|run|pause|resume|reconcile> [TARGET] [--json] [--dry-run]`
+  operates The Storm's promotion tasks in production Temporal. `preview`, `run`
+  and `reconcile` require an exact target ID; other actions may omit it for all
+  destinations. Previews cannot publish or create paid CAPTCHA tasks. Manual
+  runs retain posting limits and buffers; reconciliation never submits again.
+  `--dry-run` prints the native invocation without starting a Workflow. See the
+  [promotion task reference](../temporal/README.md#the-storm-promotion-task) for
+  target inventory, ownership, credentials and activation requirements.
 - `toolkit history ...` searches the private, rebuildable local agent-history
   index. It never treats prior conversation as current deployment truth.
 
