@@ -585,6 +585,7 @@ model QualityProfileDefault {
 }
 
 model QualityProfileVersion {
+  movieAssessments MovieReleaseAssessment[]
   profileId String
   profile   QualityProfile @relation(fields: [profileId], references: [id])
   version   Int
@@ -612,6 +613,7 @@ model MediaEditionDefinition {
 }
 
 model MediaIntent {
+  movieAssessments MovieReleaseAssessment[]
   plexEvidence PlexAssociationEvidence[]
   plexBinding PlexBindingCurrent?
   plexWatchProjections PlexWatchProjection[]
@@ -643,6 +645,7 @@ model MediaIntent {
 }
 
 model ReleaseCandidate {
+  movieAssessments MovieReleaseAssessment[]
   id                String               @id @default(uuid())
   providerId        String
   providerReleaseId String
@@ -657,6 +660,30 @@ model ReleaseCandidate {
   attempts          AcquisitionAttempt[]
 
   @@unique([providerId, providerReleaseId])
+}
+
+// Append-only interpretation of an original provider snapshot. Old snapshot bytes stay literal.
+model MovieReleaseAssessment {
+  id String @id @default(uuid())
+  releaseId String
+  release ReleaseCandidate @relation(fields: [releaseId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  mediaId String
+  edition String
+  target MediaIntent @relation(fields: [mediaId, edition], references: [mediaId, edition], onDelete: Restrict, onUpdate: Restrict, map: "movie_assessment_target_fk")
+  sourceHash String
+  canonicalHash String
+  profileId String
+  profileVersion Int
+  profile QualityProfileVersion @relation(fields: [profileId, profileVersion], references: [profileId, version], onDelete: Restrict, onUpdate: Restrict, map: "movie_assessment_profile_fk")
+  profileHash String
+  parserVersion String
+  raw String
+  assessment Json
+  assessmentHash String
+  createdAt DateTime @default(now())
+  @@unique([releaseId, mediaId, edition, sourceHash, canonicalHash, profileId, profileVersion, profileHash, parserVersion], name: "lookup", map: "movie_assessment_lookup")
+  @@unique([id, assessmentHash], map: "movie_assessment_identity")
+  @@index([mediaId, edition, createdAt], map: "movie_assessment_target")
 }
 
 model MediaProvider {
