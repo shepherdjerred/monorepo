@@ -192,8 +192,12 @@ export class StatusReporter {
           : "crashed";
     if (notice.kind === "retry") {
       const pipeline = notice.pipelineMode === "sw" ? "software" : "hardware";
+      const recovery =
+        notice.live === true
+          ? "reconnecting to the live stream"
+          : `retrying from ${at}`;
       void this.announce(
-        `⚠️ **${notice.title}** ${what} at ${at} — retrying from there ` +
+        `⚠️ **${notice.title}** ${what} at ${at} — ${recovery} ` +
           `(attempt ${String(notice.attempt)}/${String(notice.maxAttempts)}, ${pipeline})…`,
       );
       return;

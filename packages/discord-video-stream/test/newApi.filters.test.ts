@@ -479,6 +479,48 @@ describe("prepareStream audioVolume", () => {
   });
 });
 
+describe("prepareStream live timestamp normalization", () => {
+  test("opts into monotonic audio/video clocks and otherwise leaves them absent", async () => {
+    const playback = prepareStream("live.m3u8", {
+      frameRate: 30,
+      normalizeTimestamps: true,
+    });
+    try {
+      const args = ffmpegArgs(playback.command);
+      expect(args).toContain("scale=-2:-2,fps=30,setpts=N/(30*TB)");
+      expect(args).toContain(
+        "volume@internal_lib=1.0,aresample=48000,asetpts=N/SR/TB",
+      );
+    } finally {
+      killQuietly(playback.command);
+      playback.output.destroy();
+      await Promise.allSettled([playback.promise]);
+    }
+
+    const ordinary = prepareStream("live.m3u8", { frameRate: 30 });
+    try {
+      const args = ffmpegArgs(ordinary.command);
+      expect(args).not.toContain("fps=30,setpts=N/(30*TB)");
+      expect(args).not.toContain(
+        "volume@internal_lib=1.0,aresample=48000,asetpts=N/SR/TB",
+      );
+    } finally {
+      killQuietly(ordinary.command);
+      ordinary.output.destroy();
+      await Promise.allSettled([ordinary.promise]);
+    }
+  });
+
+  test("rejects normalization when video is copied without filters", () => {
+    expect(() =>
+      prepareStream("live.m3u8", {
+        noTranscoding: true,
+        normalizeTimestamps: true,
+      }),
+    ).toThrow("normalizeTimestamps cannot be applied");
+  });
+});
+
 describe("prepareStream default argument vector (regression lock)", () => {
   test("can select one HLS video rendition without changing the legacy default", () => {
     const { command, output, promise } = prepareStream("live.m3u8", {

@@ -249,7 +249,18 @@ describe("StatusReporter crash notices", () => {
       crashNotice: crashNotice(),
     });
     expect(messages.filter((m) => m.startsWith("⚠️"))).toEqual([
-      "⚠️ **Spider-Man 3 (2007)** crashed at 0:02 — retrying from there (attempt 1/3, hardware)…",
+      "⚠️ **Spider-Man 3 (2007)** crashed at 0:02 — retrying from 0:02 (attempt 1/3, hardware)…",
+    ]);
+  });
+
+  test("announces a live retry as a reconnect instead of a seek", () => {
+    const { reporter, messages } = collector();
+    reporter.handle({
+      ...streaming("Worlds"),
+      crashNotice: crashNotice({ title: "Worlds", live: true }),
+    });
+    expect(messages.filter((m) => m.startsWith("⚠️"))).toEqual([
+      "⚠️ **Worlds** crashed at 0:02 — reconnecting to the live stream (attempt 1/3, hardware)…",
     ]);
   });
 

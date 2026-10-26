@@ -238,7 +238,10 @@ lists official LCK, Worlds, MSI, First Stand, LPL, LEC, and LCS series for today
 or the next seven days. Web dates use the viewer's timezone. Voice can ask for
 a team's next match, and `/stream playback sports provider:lolesports range:week`
 opens the Discord picker. Official English YouTube broadcasts are preferred;
-Twitch is tried when YouTube cannot supply live audio and video. Riot event IDs
+Twitch is tried when YouTube cannot supply live audio and video. Twitch playback
+normalizes timestamps across stitched-ad/live HLS discontinuities and uses GPU
+decode/upload to tolerate frame-format changes; retries reconnect at the live
+edge instead of seeking into the new session. Riot event IDs
 keep different series distinct even when they share one broadcast channel.
 Choose LoL series through the sports catalog; pasted LoL match-page links point
 you back to the live listing. Seven-day schedules are available only for LoL;

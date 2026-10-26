@@ -48,6 +48,8 @@ export type CrashNotice = {
   readonly title: string;
   /** Position (seconds) playback had reached when the segment died. */
   readonly positionSeconds: number;
+  /** Reconnect at the live edge instead of resuming at the failed offset. */
+  readonly live?: boolean;
   /** 1-based retry attempt this notice announces (for `retry`) or the total attempts spent. */
   readonly attempt: number;
   readonly maxAttempts: number;
@@ -101,6 +103,8 @@ export type ResolvedSource = {
   readonly ffmpegInputHeaders?: Readonly<Record<string, string>>;
   /** Provider-specific input demuxer options, never inferred from arbitrary user URLs. */
   readonly ffmpegInputOptions?: readonly string[];
+  /** Live HLS whose segments may restart timestamps at an ad/content discontinuity. */
+  readonly discontinuousLive?: boolean;
   /** Single video rendition to use when an HLS master advertises multiple tracks. */
   readonly ffmpegVideoStreamIndex?: number;
   /** Audio rendition selected by ffprobe for a multi-track live source. */

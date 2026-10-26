@@ -91,6 +91,7 @@ test.each([false, true])(
       ffmpegAudioStreamIndex: 1,
       mediaKind: "video",
     });
+    expect(result.discontinuousLive).toBeUndefined();
     expect(inspect).toHaveBeenCalledWith(
       config,
       candidate.ffmpegInput,
@@ -175,6 +176,7 @@ test("falls back to the muxed Twitch stream when YouTube's companion has no audi
     { lol },
   );
   expect(result.ffmpegInput).toBe("https://twitch.example/live");
+  expect(result.discontinuousLive).toBe(true);
   expect(resolve).toHaveBeenCalledTimes(2);
   expect(resolve.mock.calls[1]?.[1]).toMatchObject({
     url: "https://www.twitch.tv/riotgames",

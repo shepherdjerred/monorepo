@@ -213,6 +213,9 @@ export type PrepareStreamOptions = {
    */
   readrateInitialBurst?: number;
 
+  /** Replace discontinuous live timestamps with monotonic audio/video clocks. */
+  normalizeTimestamps: boolean;
+
   /**
    * Custom input options to pass directly to ffmpeg
    * These will be added to the command before other options
@@ -662,6 +665,7 @@ export function prepareStream(
     minimizeLatency: false,
     lowLatencyMux: false,
     lowDelayAudio: false,
+    normalizeTimestamps: false,
     customHeaders: {
       "User-Agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.3",
@@ -754,6 +758,9 @@ export function prepareStream(
       lowLatencyMux: opts.lowLatencyMux ?? defaultOptions.lowLatencyMux,
 
       lowDelayAudio: opts.lowDelayAudio ?? defaultOptions.lowDelayAudio,
+
+      normalizeTimestamps:
+        opts.normalizeTimestamps ?? defaultOptions.normalizeTimestamps,
 
       customHeaders: {
         ...defaultOptions.customHeaders,
@@ -1011,6 +1018,11 @@ export function prepareStream(
     // `noTranscoding` passes the input video through unmodified, so a filter graph can't apply.
     // Fail fast instead of silently dropping a requested subtitle burn; an HDR input merely keeps
     // its original transfer (the caller opted out of transcoding), so warn rather than throw.
+    if (mergedOptions.normalizeTimestamps) {
+      throw new Error(
+        "normalizeTimestamps cannot be applied when noTranscoding is set",
+      );
+    }
     if (mergedOptions.subtitleBurn !== undefined) {
       throw new Error(
         "subtitleBurn cannot be applied when noTranscoding is set: the input video stream is copied through unmodified. Disable noTranscoding to burn in subtitles.",
@@ -1053,6 +1065,7 @@ export function prepareStream(
         ? {}
         : { videoStreamIndex: mergedOptions.videoStreamIndex }),
       inputColor: mergedOptions.inputColor,
+      normalizeTimestamps: mergedOptions.normalizeTimestamps,
       ...(uploadMode ? { uploadInput: true } : {}),
       ...(frameRate !== undefined ? { frameRate } : {}),
       ...(mergedOptions.subtitleBurn !== undefined
@@ -1144,6 +1157,9 @@ export function prepareStream(
       .audioCodec("libopus")
       .audioBitrate(`${bitrateAudio}k`)
       .audioFilters(`volume@internal_lib=${formatAudioGain(audioVolume)}`);
+    if (mergedOptions.normalizeTimestamps) {
+      commandBuilder.audioFilters("aresample=48000,asetpts=N/SR/TB");
+    }
     // Realtime Opus tuning (see PrepareStreamOptions.lowDelayAudio). libopus private options —
     // they bind to the (only) audio stream, after -c:a above.
     if (mergedOptions.lowDelayAudio)
