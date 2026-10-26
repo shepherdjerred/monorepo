@@ -142,6 +142,7 @@ describe("promotion eligibility", () => {
           receiptUrl: null,
           evidenceKey: null,
           contentHash: "abc",
+          beforeSubmission: [],
         },
       ],
     };
@@ -227,6 +228,7 @@ describe("posting rule evidence and receipt deadlines", () => {
           receiptUrl: target.url,
           evidenceKey: "private/receipt",
           contentHash: "fixture",
+          beforeSubmission: [],
         },
       ],
     };

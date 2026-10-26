@@ -97,6 +97,7 @@ export const PromotionAttemptSchema = z.strictObject({
   receiptUrl: z.url().nullable(),
   evidenceKey: z.string().nullable(),
   contentHash: z.string().min(1),
+  beforeSubmission: z.array(PromotionObservationSchema),
 });
 export type PromotionAttempt = z.infer<typeof PromotionAttemptSchema>;
 

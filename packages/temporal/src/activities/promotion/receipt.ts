@@ -15,6 +15,11 @@ export function assertPromotionReceipt(input: {
 }): void {
   if (input.status !== "verified") return;
   if (
+    input.target.action === "bump" &&
+    !input.before.some((page) => page.url === input.url)
+  )
+    throw new Error("Bump receipt requires the original page baseline");
+  if (
     input.before.some(
       (page) => page.url === input.url && page.text.includes(input.quote),
     )

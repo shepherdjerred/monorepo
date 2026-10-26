@@ -36,7 +36,6 @@ export class PromotionGateway {
   private readonly dependencies: PromotionGatewayDependencies;
   private currentPreflight: PromotionPreflight | undefined;
   private submitted = false;
-  private beforeSubmission: readonly PromotionObservation[] = [];
 
   constructor(dependencies: PromotionGatewayDependencies) {
     this.dependencies = dependencies;
@@ -100,7 +99,7 @@ export class PromotionGateway {
     if (!decision.allowed)
       throw new Error(decision.reason ?? "Promotion is ineligible");
     const contentHash = createHash("sha256").update(content).digest("hex");
-    this.beforeSubmission = [...this.observations];
+    const beforeSubmission = structuredClone(this.observations);
     await updatePromotionState(store, target.id, (state) => {
       assertPromotionOwnership(state, occurrenceId);
       if (
@@ -121,6 +120,7 @@ export class PromotionGateway {
             settledAt: null,
             status: "uncertain",
             contentHash,
+            beforeSubmission,
             receiptUrl: null,
             evidenceKey: null,
           },
@@ -169,7 +169,7 @@ export class PromotionGateway {
       quote: input.quote,
       attemptedAt: pending.attemptedAt,
       publishedAt: evidence.publishedAt,
-      before: this.beforeSubmission,
+      before: pending.beforeSubmission,
     });
     await updatePromotionState(store, target.id, (state) => {
       assertPromotionOwnership(state, occurrenceId);
