@@ -212,10 +212,16 @@ public final class EssentialsPaper {
     listeners.forEach(
         listener -> server.getPluginManager().registerEvents(listener, context.plugin()));
     var scheduler = context.scheduler();
+    var backfill =
+        new BedBackfill(
+            new BedBackfill.Sources(
+                runtime, app.stores().homes(), beds, context.compute(), app.sealed()));
+    backfill.start();
     var tasks =
         List.of(
             scheduler.repeatOnMainThread(SWEEP_EVERY, SWEEP_EVERY, afkListener::sweep),
-            scheduler.repeatOnMainThread(SWEEP_EVERY, SWEEP_EVERY, tpaCommands::expire));
+            scheduler.repeatOnMainThread(SWEEP_EVERY, SWEEP_EVERY, tpaCommands::expire),
+            backfill);
     return new EssentialsPaper(listeners, tasks, flow, permissions, staff);
   }
 

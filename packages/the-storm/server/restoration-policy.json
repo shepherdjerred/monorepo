@@ -51,6 +51,8 @@
     "essentials_kit_claims",
     "essentials_kit_deliveries",
     "essentials_teleport_attempts",
+    "essentials_teleport_cooldowns",
+    "essentials_teleport_confirmations",
     "essentials_teleport_state",
     "essentials_teleport_uses",
     "essentials_warps",

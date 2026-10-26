@@ -39,10 +39,10 @@ borders:
 crier:
   enabled: true
   world: world
-# One weather-grounded archive bark on arrival near the windmill spawn per
-# Pacific date. Event-driven; no repeating task or automatic server broadcast.
+# Arrival barks near the windmill are off. The center stays the measured
+# essentials spawn so turning this back on does not retune the spot.
 ambient:
-  enabled: true
+  enabled: false
   world: world
   # Same measured windmill entrance as essentials.yml.
   spawnX: 68

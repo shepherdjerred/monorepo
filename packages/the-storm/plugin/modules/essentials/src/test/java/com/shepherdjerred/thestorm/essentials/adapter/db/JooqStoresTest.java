@@ -110,6 +110,22 @@ final class JooqStoresTest {
   }
 
   @Test
+  void anExistingBedIsNotReplacedByABackfill() {
+    var homes = new JooqHomeStore(database);
+    var imported = new Position("world", 10.5, 64, -3.5, 180, 0);
+
+    assertThat(homes.bedOwners().join()).isEmpty();
+    assertThat(homes.insertBedIfAbsent(ALICE, imported).join()).isTrue();
+    assertThat(homes.insertBedIfAbsent(ALICE, at(4)).join()).isFalse();
+    assertThat(homes.set(ALICE, home("farm", 2), 1).join())
+        .isEqualTo(Result.ok(HomeRules.Change.CREATED));
+
+    assertThat(homes.bedOwners().join()).containsExactly(ALICE);
+    assertThat(homes.homes(ALICE).join())
+        .containsExactly(new Home(HomeRules.BED, imported), home("farm", 2));
+  }
+
+  @Test
   void warpsAreSavedMovedAndDeleted() {
     var warps = new JooqWarpStore(database);
     var arena = new Warp(new PlaceName("arena"), at(1));

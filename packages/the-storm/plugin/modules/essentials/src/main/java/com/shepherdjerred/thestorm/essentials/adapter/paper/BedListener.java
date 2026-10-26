@@ -40,7 +40,10 @@ final class BedListener implements Listener {
             found.stream()
                 .filter(home -> home.name().equals(HomeRules.BED))
                 .findFirst()
-                .ifPresent(home -> beds.remember(player.getUniqueId(), home.position())));
+                .ifPresent(
+                    home -> {
+                      if (player.isOnline()) beds.keep(player, home.position());
+                    }));
   }
 
   @EventHandler(priority = EventPriority.HIGH)
@@ -67,8 +70,7 @@ final class BedListener implements Listener {
           if (!player.isOnline()) return;
           switch (result) {
             case Result.Ok<HomeRules.Change, HomeError> ignored -> {
-              beds.remember(player.getUniqueId(), position);
-              player.setRespawnLocation(spot, true);
+              beds.keep(player, position);
               Say.success(player, Say.HOMES, "Respawn point set.");
             }
             case Result.Err<HomeRules.Change, HomeError> ignored ->

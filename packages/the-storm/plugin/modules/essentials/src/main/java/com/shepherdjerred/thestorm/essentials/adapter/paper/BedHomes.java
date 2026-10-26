@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.bukkit.entity.Player;
 
 /** The reserved {@code bed} home, remembered so respawn still works after the block is gone. */
 final class BedHomes {
@@ -13,6 +14,13 @@ final class BedHomes {
 
   void remember(UUID player, Position position) {
     beds.put(player, position);
+  }
+
+  /** Remembers {@code position} and forces it as the vanilla respawn, even if the bed is gone. */
+  void keep(Player player, Position position) {
+    remember(player.getUniqueId(), position);
+    Positions.toLocation(player.getServer(), position)
+        .ifPresent(spot -> player.setRespawnLocation(spot, true));
   }
 
   void forget(UUID player) {

@@ -685,9 +685,10 @@ the recovered Storm history (old spawn landmarks, the Bridge Hobo quest, the
 2015 Easter hunt, and Braxton's bank). It makes no claim that those landmarks
 or quests exist in the current world. There is no timer or automatic broadcast.
 
-`world.yml` enables `ambient.enabled`. Its configured center uses the
-block position of the repo-owned Essentials gameplay spawn in `world`
-(`68, 69, 66`), independently of the Bukkit world spawn. A player arriving
+`world.yml` ships `ambient.enabled` false, so arriving at the windmill does
+not produce a crier line. The configured center stays the block position of
+the repo-owned Essentials gameplay spawn in `world` (`68, 69, 66`),
+independently of the Bukkit world spawn. When enabled, a player arriving
 within the configured radius and height of that center hears one crier
 bark, grounded in current weather and a rotating archival fact. Join, world
 entry, and movement into the spawn area can trigger it, at most once per
@@ -1174,6 +1175,13 @@ and ordinary routes are the intended regular transport.
 `/tpinfo [category]` lists each command's price, cooldown, and whether it is
 ready. A successful wilderness search sends one LiveMap link. A failed search
 can be tried again immediately, up to six passes before it gives up.
+
+Right-clicking a bed saves one respawn home named `bed`. It does not count
+toward the three-home limit, and the last bed replaces it, including a bed in
+another world. `/home` with no name goes there; `/home <name>` still goes to
+the other homes. Death respawns at that saved spot after the bed block is
+broken. On startup, each player's saved respawn is copied into that home when
+they do not already have one, including when the bed block is already gone.
 
 Essentials publishes `TeleportTravel`: one reservation, warmup, guard,
 payment, refund, and delivery-confirmation flow. The starter compass uses a

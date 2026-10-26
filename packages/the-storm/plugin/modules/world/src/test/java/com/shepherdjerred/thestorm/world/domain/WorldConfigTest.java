@@ -24,7 +24,7 @@ final class WorldConfigTest {
     assertThat(config.sleepPercentage()).isEqualTo(50);
     assertThat(config.crier()).isEqualTo(new CrierConfig(true, "world"));
     assertThat(config.ambient())
-        .isEqualTo(new AmbientConfig(true, "world", 68, 69, 66, 24, 8, "America/Los_Angeles"));
+        .isEqualTo(new AmbientConfig(false, "world", 68, 69, 66, 24, 8, "America/Los_Angeles"));
     assertThat(config.digest()).isEqualTo(new DigestConfig(true, "world", "America/Los_Angeles"));
     assertThat(config.merchant())
         .isEqualTo(
