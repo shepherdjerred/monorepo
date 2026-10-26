@@ -2,7 +2,10 @@ import { afterAll, expect, test } from "vitest";
 import { createHash } from "node:crypto";
 import { writeFile, readFile, rm } from "node:fs/promises";
 import { automationTestHarness } from "#testing/automation.ts";
-import { fileFixture } from "#automation/files/test-support.ts";
+import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
+import { preparePhysicalPublication } from "#automation/plex-binding/test-fixture.ts";
+import { prepareBoundRetention } from "#automation/retention/lifecycle.test-fixture.ts";
+import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { subtitleDestination } from "#domain/subtitle-path.ts";
 import { PrismaAdminApplication } from "./admin-service.ts";
 import type { ManualSubtitle } from "#shared/admin.ts";
@@ -17,9 +20,10 @@ afterAll(async () => {
 });
 async function fixture() {
   const db = harness.database();
-  const file = await fileFixture(db);
+  const file = await mappedPublicationFixture(db);
   directories.push(file.directory);
-  const published = await file.published();
+  const published = await preparePhysicalPublication(file);
+  const bound = await prepareBoundRetention(file, published, harness.context());
   const asset = await db.libraryAsset.findUniqueOrThrow({
     where: { id: published.entry.assetId },
   });
@@ -42,7 +46,7 @@ async function fixture() {
     hearingImpaired: false,
     format: "srt",
   });
-  await writeFile(path, oldText);
+  await writeFile(workerFilePath(file.context, path), oldText);
   const old = await db.subtitleAsset.create({
     data: {
       assetId: asset.id,
@@ -84,6 +88,7 @@ async function fixture() {
   return {
     db,
     file,
+    retention: bound.retention,
     asset,
     old,
     owner,
@@ -124,7 +129,12 @@ test("manual replacement validates distinct bytes without changing the installed
     },
   });
   expect(await f.db.outboxCommand.count()).toBe(before);
-  expect(await readFile(f.old.path ?? "missing", "utf8")).toBe(f.oldText);
+  expect(
+    await readFile(
+      workerFilePath(f.file.context, f.old.path ?? "missing"),
+      "utf8",
+    ),
+  ).toBe(f.oldText);
   expect(
     await f.db.subtitleAsset.findUniqueOrThrow({ where: { id: f.old.id } }),
   ).toEqual(f.old);
@@ -162,7 +172,12 @@ test("manual replacement rejects stale, cross-epoch, same-byte and different-des
     f.admin.uploadSubtitle(f.owner, crypto.randomUUID(), f.input),
   ).rejects.toMatchObject({ code: "replacement_target_changed" });
   expect(await f.db.subtitleAsset.count()).toBe(count);
-  expect(await readFile(f.old.path ?? "missing", "utf8")).toBe(f.oldText);
+  expect(
+    await readFile(
+      workerFilePath(f.file.context, f.old.path ?? "missing"),
+      "utf8",
+    ),
+  ).toBe(f.oldText);
 });
 
 test("manual replacement fails closed when current demand or owner authorization disappears", async () => {
@@ -208,7 +223,7 @@ test("a prepared manual replacement reserves the video against quarantine and an
     expectedCandidateVersion: candidate.version,
   });
   expect(prepared.subtitleReplacementId).toBeDefined();
-  const retention = await f.file.retention();
+  const retention = f.retention;
   const verified = await f.db.libraryAsset.findUniqueOrThrow({
     where: { id: f.asset.id },
   });
@@ -221,7 +236,12 @@ test("a prepared manual replacement reserves the video against quarantine and an
   await expect(
     f.admin.uploadSubtitle(f.owner, crypto.randomUUID(), f.input),
   ).rejects.toMatchObject({ code: "subtitle_replacement_unsettled" });
-  expect(await readFile(f.old.path ?? "missing", "utf8")).toBe(f.oldText);
+  expect(
+    await readFile(
+      workerFilePath(f.file.context, f.old.path ?? "missing"),
+      "utf8",
+    ),
+  ).toBe(f.oldText);
   expect(
     await f.db.libraryAsset.findUniqueOrThrow({ where: { id: f.asset.id } }),
   ).toEqual(verified);

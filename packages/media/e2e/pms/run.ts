@@ -6,7 +6,7 @@ import path from "node:path";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { ManifestSchema } from "./manifest.ts";
-import { createPmsWire, until } from "./http.ts";
+import { createPmsWire, readPmsBootstrap, until } from "./http.ts";
 import { assertLibraryWire } from "./assertions.ts";
 
 async function stop(child: ChildProcess) {
@@ -111,25 +111,7 @@ try {
         child.exitCode === null && child.signalCode === null,
         "PMS exited during local bootstrap",
       );
-      try {
-        const response = await fetch("http://127.0.0.1:32400/identity", {
-          signal: AbortSignal.any([deadline, AbortSignal.timeout(1000)]),
-        });
-        assert.equal(
-          response.status,
-          200,
-          "Local unclaimed identity must be accessible without auth bypass",
-        );
-        return true;
-      } catch (error) {
-        const system = z.object({ code: z.string() }).safeParse(error);
-        if (
-          system.success &&
-          ["ECONNREFUSED", "ConnectionRefused"].includes(system.data.code)
-        )
-          return null;
-        throw error;
-      }
+      return await readPmsBootstrap(deadline);
     },
     deadline,
   );

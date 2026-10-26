@@ -141,7 +141,7 @@ test.each(["writer_revocation", "storage_revocation", "changed_root"] as const)(
     });
     if (change === "changed_root")
       await expect(f.observe()).rejects.toThrow(
-        "Native recovery storage has no matching durable owner-approved receipt",
+        "Native storage prior authority evidence disagrees with stored identity",
       );
     else
       await expect(f.observe()).rejects.toMatchObject({

@@ -7,6 +7,9 @@ import { PrismaNumberingAdministration } from "#infrastructure/numbering-admin.t
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { FilePlanSchema } from "#automation/files/types.ts";
 import { createPublicationActivities } from "#automation/publication.ts";
+import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
+import { retentionPlexContext } from "#automation/retention/fixtures/plex.ts";
+import { storedFilePath } from "#automation/files/paths/locations.ts";
 
 const harness = automationTestHarness();
 const directories: string[] = [];
@@ -21,6 +24,7 @@ async function fixture() {
       throw new Error("Unexpected external read");
     }),
     true,
+    { fileFactory: mappedPublicationFixture },
   );
   directories.push(value.files.directory);
   return value;
@@ -60,43 +64,11 @@ test("an owner-reviewed absolute file publishes under canonical coordinates and 
   });
   expect(plan[0]?.libraryPath).toContain("Season 01/Example Show - S01E01");
   expect(f.adds()).toBe(1);
-  const asset = await harness
-    .database()
-    .libraryAsset.findUniqueOrThrow({ where: { id: plan[0]?.assetId ?? "" } });
-  const network = harness.context(async (url) => {
-    if (url.hostname !== "plex.fixture")
-      throw new Error("Publication must only call Plex");
-    if (url.pathname.endsWith("/library/sections"))
-      return Response.json({
-        MediaContainer: {
-          size: 1,
-          Directory: [{ key: "2", title: "TV", type: "show" }],
-        },
-      });
-    if (url.pathname.endsWith("/refresh")) return new Response();
-    const series = {
-      ratingKey: "99124",
-      title: f.series.title,
-      type: "show",
-      Guid: [{ id: `tmdb://${String(f.series.tmdbId)}` }],
-    };
-    const episode = {
-      ratingKey: "99123",
-      title: "First episode",
-      type: "episode",
-      grandparentRatingKey: "99124",
-      index: 1,
-      parentIndex: 1,
-      Media: [{ Part: [{ id: 1, file: asset.path }] }],
-    };
-    return Response.json({
-      MediaContainer: {
-        size: 1,
-        totalSize: 1,
-        Metadata: [url.pathname.endsWith("/99124") ? series : episode],
-      },
-    });
-  });
+  const { context: network } = await retentionPlexContext(
+    harness.database(),
+    harness.context(),
+    attempt.mediaIds,
+  );
   const publication = createPublicationActivities(network);
   expect(await publication.publishMediaToPlex(acquired.input)).toEqual({
     status: "available",
@@ -171,7 +143,10 @@ test("torrent file index and name cannot drift after staging", async () => {
     where: { id: torrentId },
     data: {
       observation: {
-        torrent: { progress: 1, save_path: f.files.roots.downloads },
+        torrent: {
+          progress: 1,
+          save_path: storedFilePath(f.files.context, "tv", "downloads", ""),
+        },
         files: [
           {
             index: 0,

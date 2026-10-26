@@ -104,6 +104,35 @@ export function createPmsWire(root: string, signal: AbortSignal) {
 }
 export type PmsWire = ReturnType<typeof createPmsWire>;
 
+/** A starting, unclaimed local PMS can serve HTTP before its identity is ready. */
+export async function readPmsBootstrap(
+  signal: AbortSignal,
+  request: (url: string, init: RequestInit) => Promise<Response> = fetch,
+): Promise<true | null> {
+  signal.throwIfAborted();
+  try {
+    const response = await request(`${ORIGIN}/identity`, {
+      signal: AbortSignal.any([signal, AbortSignal.timeout(1000)]),
+      redirect: "error",
+    });
+    await response.body?.cancel();
+    if (response.status === 503) return null;
+    if (response.status !== 200)
+      throw new Error(
+        `Local unclaimed identity must be accessible without auth bypass: HTTP ${String(response.status)}`,
+      );
+    return true;
+  } catch (error) {
+    const system = z.object({ code: z.string() }).safeParse(error);
+    if (
+      system.success &&
+      ["ECONNREFUSED", "ConnectionRefused"].includes(system.data.code)
+    )
+      return null;
+    throw error;
+  }
+}
+
 /** Poll only reads with a fixed deadline; failed mutations are never retried. */
 export async function until<T>(
   label: string,

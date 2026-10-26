@@ -1,26 +1,24 @@
-import { afterAll, beforeAll, expect, test, vi } from "vitest";
+import { afterAll, beforeAll, expect, test } from "vitest";
 import { PrismaNotificationApplication } from "#infrastructure/notification-service.ts";
 import { randomBytes } from "node:crypto";
+import { rm } from "node:fs/promises";
+import { createAutomationTestContext } from "#testing/automation.ts";
+import { verifiedPublicationFixture } from "#automation/publication-proof/verified.test-fixture.ts";
+import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
+import { sharedTvFileFixture } from "#automation/native-archive/fixtures/shared-tv.ts";
+import { elapsedWarningClient } from "#automation/retention/fixtures/elapsed.ts";
+import { boundRetentionFixture } from "#automation/retention/lifecycle.test-fixture.ts";
 import { startMediaTestPostgres } from "#testing/postgres.ts";
 import { CredentialCipher } from "#application/security.ts";
 import { PlexClient } from "#integrations/plex.ts";
-import { TmdbClient } from "#integrations/tmdb.ts";
-import { QbittorrentClient } from "#integrations/qbittorrent.ts";
 import { DatabaseProviderRegistry } from "./providers.ts";
 import type { MediaAutomationContext } from "./context.ts";
-import { testWatchExecution } from "#testing/watch-execution.ts";
-import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
-import { grantTestRequesterAccess } from "#testing/authority.ts";
 import { createRetentionActivities } from "./retention.ts";
 import { createNotificationActivities } from "./notifications.ts";
 import { createSubtitleActivities } from "./subtitles.ts";
-import { grantTestLease } from "#testing/authority.ts";
-import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
-import { defaultScope } from "#shared/editions/scope.ts";
-import { chooseTestMovieEdition } from "#infrastructure/movie-editions/test-support.ts";
-import { recordVerifiedPublication } from "#automation/reconciliation/upgrade-cleanup.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
+const directories: string[] = [];
 const cipher = new CredentialCipher(randomBytes(32).toString("base64"));
 beforeAll(async () => {
   cluster = await startMediaTestPostgres();
@@ -30,6 +28,8 @@ beforeAll(async () => {
   });
 }, 60_000);
 afterAll(async () => {
+  for (const directory of directories)
+    await rm(directory, { recursive: true, force: true });
   if (cluster !== undefined) await cluster.close();
 });
 
@@ -55,7 +55,8 @@ test("observe mode and a changed recovery epoch cannot send restored pending not
       notifications.deliverMediaNotification(input),
     ).resolves.toMatchObject({
       status: "failed",
-      reason: "notification_runtime_protected",
+      // The exact Plex preflight now rejects the inactive writer before claim.
+      reason: "ownership_changed",
     });
     await cluster.database.mediaRuntimeState.update({
       where: { id: "singleton" },
@@ -65,7 +66,8 @@ test("observe mode and a changed recovery epoch cannot send restored pending not
       notifications.deliverMediaNotification(input),
     ).resolves.toMatchObject({
       status: "failed",
-      reason: "notification_runtime_protected",
+      // The restored epoch cannot reuse the old exact Plex binding.
+      reason: "missing_binding",
     });
     expect(item.observation.sends).toBe(0);
     expect(
@@ -81,76 +83,30 @@ test("observe mode and a changed recovery epoch cannot send restored pending not
   }
 });
 
-async function fixture(episode = false) {
+async function fixture(episode = false, elapsedWarning = false) {
   const db = cluster.database;
-  const ratingKey = String(crypto.getRandomValues(new Uint32Array(1))[0]);
-  await grantTestLease(db);
-  const user = await db.mediaUser.create({
+  const produced = await verifiedPublicationFixture(
+    db,
+    createAutomationTestContext(db, cipher),
+    undefined,
+    episode
+      ? (currentDb) => sharedTvFileFixture(currentDb, mappedPublicationFixture)
+      : mappedPublicationFixture,
+  );
+  directories.push(produced.files.directory);
+  const media = await db.mediaItem.findUniqueOrThrow({
+    where: { id: produced.files.media.id },
+  });
+  const user = await db.mediaUser.update({
+    where: { id: produced.files.user.id },
     data: {
-      plexAccountId: crypto.randomUUID(),
-      displayName: "Requester",
       email: "fixture@example.com",
       emailVerifiedAt: new Date(),
       notificationPreference: { create: { emailEnabled: true } },
     },
   });
-  await grantTestRequesterAccess(db, user.id, "fixture-server");
-  const parent = episode
-    ? await db.mediaItem.create({
-        data: { kind: "series", title: "Fixture series" },
-      })
-    : null;
-  const media = await db.mediaItem.create({
-    data: {
-      kind: episode ? "episode" : "movie",
-      parentId: parent?.id ?? null,
-      title: "Fixture",
-      availability: "available",
-      externalIds: {
-        plexRatingKey: ratingKey,
-        plexSectionId: episode ? "2" : "1",
-      },
-    },
-  });
-  await db.$transaction(async (tx) => {
-    await lockDefaultScopes(tx, [defaultScope(media.id)], {
-      createMissing: true,
-    });
-    await tx.mediaIntent.update({
-      where: { mediaId_edition: defaultScope(media.id) },
-      data: { automationEpoch: 0, desiredPresence: true },
-    });
-    await tx.mediaRequest.create({
-      data: { mediaId: media.id, userId: user.id },
-    });
-  });
-  if (!episode)
-    await chooseTestMovieEdition(db, {
-      actor: { ...user, role: "member" },
-      mediaId: media.id,
-      access: { serverMachineId: "fixture-server", movieSectionId: "1" },
-    });
   const target = await db.mediaIntent.findUniqueOrThrow({
-    where: { mediaId_edition: defaultScope(media.id) },
-  });
-  const asset = await db.libraryAsset.create({
-    data: {
-      path: `/data/movies/${media.id}.mkv`,
-      sizeBytes: 1024,
-      checksum: "a".repeat(64),
-      owned: true,
-      ownershipEpoch: 0,
-      editionRootId: parent?.id ?? media.id,
-      properties: { title: "Fixture.2026.WEB-1080p" },
-      state: "published",
-      coverage: { create: { mediaId: media.id, current: true } },
-    },
-  });
-  // This watch/retention fixture starts after a synthetic exact Plex publication.
-  await db.$transaction((tx) => recordVerifiedPublication(tx, [asset.id], 0));
-  await db.mediaItem.update({
-    where: { id: media.id },
-    data: { availability: "available" },
+    where: { mediaId_edition: { mediaId: media.id, edition: "default" } },
   });
   await db.credential.create({
     data: {
@@ -162,73 +118,30 @@ async function fixture(episode = false) {
       ),
     },
   });
+  const item = produced.items.get(media.id);
+  if (item === undefined)
+    throw new Error("Actual publication omitted its Plex item");
   const observation = {
-    watched: true,
-    playing: false,
+    get watched() {
+      return produced.state.watched === true;
+    },
+    set watched(value: boolean) {
+      produced.state.watched = value;
+    },
+    get playing() {
+      return produced.state.sessions.length > 0;
+    },
+    set playing(value: boolean) {
+      produced.state.sessions = value ? [item] : [];
+    },
     sends: 0,
     loseResponse: false,
     bounced: false,
   };
-  const plex = new PlexClient(
-    {
-      baseUrl: "http://plex.fixture",
-      token: "fixture",
-      clientIdentifier: "test",
-    },
-    async (url) => {
-      const item = {
-        ratingKey,
-        type: "movie",
-        title: "Fixture",
-        viewCount: observation.watched ? 1 : 0,
-      };
-      if (url.pathname.endsWith("sessions"))
-        return Response.json({
-          MediaContainer: {
-            size: observation.playing ? 1 : 0,
-            Metadata: observation.playing ? [item] : [],
-          },
-        });
-      return Response.json({ MediaContainer: { size: 1, Metadata: [item] } });
-    },
-  );
   const context: MediaAutomationContext = {
-    db,
-    watchExecution: testWatchExecution,
-    plexBindingExecution: testPlexBindingExecution,
-    plexAccess: (sectionType) =>
-      Promise.resolve({
-        serverMachineId: "fixture-server",
-        sectionType,
-        sectionId: sectionType === "movie" ? "1" : "2",
-      }),
-    serverMachineId: "fixture-server",
-    tmdb: new TmdbClient({ kind: "bearer", token: "fixture" }),
-    describeWorkflow: async () => null,
-    permittedSections: async () => ({ movie: "1", series: "2" }),
-    refreshExclusionProofs: () => Promise.resolve(),
-    refreshWriterLease: () => Promise.resolve(),
-    cipher,
-    plex,
-    userPlex: () => plex,
-    downloadRoot: "/downloads",
-    qbittorrent: new QbittorrentClient({
-      baseUrl: "http://qbit.fixture",
-      username: "fixture",
-      password: "fixture",
-      category: "media",
-    }),
+    ...produced.context,
+    db: elapsedWarning ? elapsedWarningClient(db, [media.id]) : db,
     providers: new DatabaseProviderRegistry(db, cipher),
-    startWorkflow: async () => {
-      throw new Error("Fixture must not dispatch workflows");
-    },
-    gates: {
-      acquisition: async () => true,
-      sourceCleanup: async () => true,
-      quarantine: async () => true,
-      purge: async () => true,
-    },
-    publicOrigin: "https://media.example.com",
     reconcileNotification: async () => ({
       status: observation.bounced ? "bounced" : "delivered",
       recipient: user.email,
@@ -243,8 +156,9 @@ async function fixture(episode = false) {
     context,
     media,
     user,
-    asset,
+    asset: produced.asset,
     observation,
+    produced,
     input: {
       operationId: crypto.randomUUID(),
       mediaId: media.id,
@@ -273,30 +187,48 @@ test("requires accepted warning and seven full days, then a fresh playback/hold 
   await expect(
     retention.evaluateMediaRetention(item.input),
   ).resolves.toMatchObject({ status: "grace" });
-  await cluster.database.notificationDelivery.update({
-    where: { id: delivery.id },
-    data: { acceptedAt: new Date(Date.now() - 8 * 86_400_000) },
-  });
-  const eligible = await retention.evaluateMediaRetention(item.input);
+  // A separate producer establishes elapsed policy time at its original writes.
+  // The fresh acceptance above remains immutable throughout this scenario.
+  const due = await boundRetentionFixture(
+    cluster.database,
+    createAutomationTestContext(cluster.database, cipher),
+  );
+  directories.push(due.files.directory);
+  const dueRetention = createRetentionActivities(due.context);
+  const eligible = await dueRetention.evaluateMediaRetention(due.input);
   expect(eligible.status).toBe("quarantine");
   const decision = await cluster.database.retentionDecision.findUniqueOrThrow({
     where: { id: eligible.decisionId ?? "missing" },
   });
+  const elapsedDelivery =
+    await cluster.database.notificationDelivery.findFirstOrThrow({
+      where: {
+        userId: due.files.user.id,
+        event: { kind: "retention_warning" },
+      },
+    });
   expect(decision.evidence).toMatchObject({
     activePlayback: false,
     recoveryEpoch: 0,
-    warningEventId: delivery.eventId,
+    warningEventId: elapsedDelivery.eventId,
   });
-  item.observation.playing = true;
+  const playing = due.items.get(due.files.media.id);
+  if (playing === undefined)
+    throw new Error("Actual retention Plex item missing");
+  due.state.sessions = [playing];
   await expect(
-    retention.evaluateMediaRetention(item.input),
+    dueRetention.evaluateMediaRetention(due.input),
   ).resolves.toMatchObject({ reason: "active_playback" });
-  item.observation.playing = false;
+  due.state.sessions = [];
   await cluster.database.retentionHold.create({
-    data: { userId: item.user.id, mediaId: item.media.id, isPin: true },
+    data: {
+      userId: due.files.user.id,
+      mediaId: due.files.media.id,
+      isPin: true,
+    },
   });
   await expect(
-    retention.evaluateMediaRetention(item.input),
+    dueRetention.evaluateMediaRetention(due.input),
   ).resolves.toMatchObject({ reason: "keep_hold" });
 });
 
@@ -330,7 +262,7 @@ test("unknown delivery is not retried or counted as acceptance", async () => {
 });
 
 test("a late bounce revokes grace and explicit retry starts seven fresh days", async () => {
-  const item = await fixture();
+  const item = await fixture(false, true);
   const retention = createRetentionActivities(item.context);
   const notifications = createNotificationActivities(item.context);
   await retention.evaluateMediaRetention(item.input);
@@ -340,10 +272,6 @@ test("a late bounce revokes grace and explicit retry starts seven fresh days", a
   const input = { operationId: "notification", notificationId: delivery.id };
   await notifications.deliverMediaNotification(input);
   await retention.evaluateMediaRetention(item.input);
-  await cluster.database.notificationDelivery.update({
-    where: { id: delivery.id },
-    data: { acceptedAt: new Date(Date.now() - 8 * 86_400_000) },
-  });
   item.observation.bounced = true;
   expect(await retention.evaluateMediaRetention(item.input)).toMatchObject({
     status: "warning",
@@ -359,6 +287,7 @@ test("a late bounce revokes grace and explicit retry starts seven fresh days", a
     null,
     {
       publicOrigin: item.context.publicOrigin,
+      plexAccess: item.context.plexAccess,
       movieAccess: () =>
         Promise.resolve({
           serverMachineId: "fixture-server",
@@ -367,17 +296,12 @@ test("a late bounce revokes grace and explicit retry starts seven fresh days", a
     },
   );
   const now = Date.now();
-  const clock = vi.spyOn(Date, "now").mockReturnValue(now + 61_000);
-  try {
-    await service.retryDelivery(
-      { ...item.user, role: "member" },
-      crypto.randomUUID(),
-      delivery.id,
-      bounced.version,
-    );
-  } finally {
-    clock.mockRestore();
-  }
+  await service.retryDelivery(
+    { ...item.user, role: "member" },
+    crypto.randomUUID(),
+    delivery.id,
+    bounced.version,
+  );
   item.observation.bounced = false;
   await notifications.deliverMediaNotification(input);
   expect(await retention.evaluateMediaRetention(item.input)).toMatchObject({
@@ -433,44 +357,16 @@ test.each(["keep", "unknown_watch", "unwatched", "preferences"] as const)(
 
 test("a shared physical file stays protected for another unwatched requester", async () => {
   const item = await fixture(true);
-  const other = await cluster.database.mediaItem.create({
-    data: {
-      kind: "episode",
-      parentId: item.media.parentId,
-      title: "Other",
-      availability: "available",
-      externalIds: { plexRatingKey: "43", plexSectionId: "2" },
-      intents: {
-        create: { automationEpoch: 0, editionRootId: item.asset.editionRootId },
-      },
-      requests: { create: { userId: item.user.id } },
-      assets: { create: { assetId: item.asset.id, current: true } },
+  const other = await cluster.database.mediaItem.findFirstOrThrow({
+    where: {
+      id: { not: item.media.id },
+      assets: { some: { assetId: item.asset.id, current: true } },
     },
   });
-  item.context.userPlex = () =>
-    new PlexClient(
-      {
-        baseUrl: "http://plex.fixture",
-        token: "fixture",
-        clientIdentifier: "test",
-      },
-      async (url) => {
-        const id = url.pathname.split("/").at(-1);
-        return Response.json({
-          MediaContainer: {
-            size: 1,
-            Metadata: [
-              {
-                ratingKey: id,
-                type: "movie",
-                title: "Fixture",
-                viewCount: id === "42" ? 1 : 0,
-              },
-            ],
-          },
-        });
-      },
-    );
+  const otherItem = item.produced.items.get(other.id);
+  if (otherItem === undefined)
+    throw new Error("Shared publication omitted its second binding");
+  item.produced.state.watchOverrides.set(otherItem.ratingKey, false);
   await expect(
     createRetentionActivities(item.context).evaluateMediaRetention(item.input),
   ).resolves.toMatchObject({ reason: "requester_unwatched" });

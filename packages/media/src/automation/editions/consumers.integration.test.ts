@@ -2,7 +2,9 @@ import { afterEach, expect, test, vi } from "vitest";
 import { readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { automationTestHarness } from "#testing/automation.ts";
-import { fileFixture } from "#automation/files/test-support.ts";
+import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
+import { preparePhysicalPublication } from "#automation/plex-binding/test-fixture.ts";
+import { prepareBoundRetention } from "#automation/retention/lifecycle.test-fixture.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { createRetentionActivities } from "#automation/retention.ts";
 import { createNotificationActivities } from "#automation/notifications.ts";
@@ -25,21 +27,26 @@ afterEach(async () => {
 
 async function fixture(verified = true) {
   const db = h.database();
-  const f = await fileFixture(db);
+  const f = await mappedPublicationFixture(db);
   directories.push(f.directory);
-  const published = await f.published();
-  const retention = verified ? await f.retention() : null;
-  if (verified)
-    await db.mediaItem.update({
-      where: { id: f.media.id },
-      data: { availability: "available" },
-    });
+  const published = verified
+    ? await preparePhysicalPublication(f)
+    : await f.published();
+  const bound = verified
+    ? await prepareBoundRetention(f, published, h.context())
+    : null;
+  const retention = bound?.retention ?? null;
   await db.mediaUser.update({
     where: { id: f.user.id },
     data: {
       email: "recipient@example.com",
       emailVerifiedAt: new Date(),
-      notificationPreference: { create: { emailEnabled: true } },
+      notificationPreference: {
+        upsert: {
+          create: { emailEnabled: true },
+          update: { emailEnabled: true },
+        },
+      },
     },
   });
   const asset = await db.libraryAsset.findUniqueOrThrow({
@@ -53,7 +60,6 @@ async function fixture(verified = true) {
     ...f,
     published,
     retention,
-    createRetention: f.retention,
     asset,
     target,
     app,
@@ -78,7 +84,10 @@ async function queueReady(f: Awaited<ReturnType<typeof fixture>>) {
     }),
   );
   return h.database().notificationDelivery.findFirstOrThrow({
-    where: { userId: f.user.id, event: { kind: "media_available" } },
+    where: {
+      userId: f.user.id,
+      event: { dedupeKey: { startsWith: `choice-ready:${f.media.id}` } },
+    },
   });
 }
 
@@ -251,9 +260,6 @@ test.each(["owner_missing", "member_named"])(
         edition: "extended_cut",
         access,
       });
-    // Build a separate current-generation grace fixture, preserving the cancelled older decision.
-    // This exercises the final request guard independently of command-side invalidation.
-    const currentRetention = await f.createRetention();
     const target = await db.mediaIntent.findUniqueOrThrow({
       where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
     });
@@ -272,9 +278,23 @@ test.each(["owner_missing", "member_named"])(
     ).toMatchObject({ status: "protected", reason: expected });
     expect(
       await createMediaFileActivities(f.context).quarantineMediaFiles(
-        currentRetention.input,
+        f.retention.input,
       ),
-    ).toMatchObject({ status: "protected", reason: expected });
+    ).toEqual({
+      status: "protected",
+      reason: kind === "owner_missing" ? "decision_obsolete" : expected,
+    });
+    // Same-target demand cancels grace; another edition is caught by the final
+    // demand guard. Neither path rewrites the original warning timestamps.
+    expect(
+      await db.retentionDecision.findUniqueOrThrow({
+        where: { id: f.retention.decision.id },
+      }),
+    ).toMatchObject({
+      state: kind === "owner_missing" ? "cancelled" : "grace_period",
+      warningAcceptedAt: f.retention.decision.warningAcceptedAt,
+      graceUntil: f.retention.decision.graceUntil,
+    });
     expect(
       await readFile(
         path.join(f.roots.library, f.published.entry.libraryPath),

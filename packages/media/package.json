@@ -23,6 +23,7 @@
   },
   "imports": {
     "#generated/*": "./generated/*",
+    "#e2e/*": "./e2e/*",
     "#*": "./src/*"
   },
   "scripts": {

@@ -15,6 +15,12 @@ import { AcquisitionIdentitySnapshotSchema } from "#shared/acquisition/identity.
 import { DefaultCommandV2Schema } from "#shared/editions/commands.ts";
 import type { DefaultCommandV2 } from "#shared/editions/commands.ts";
 import type { MediaActor } from "#application/auth.ts";
+import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
+import { retentionPlexContext } from "#automation/retention/fixtures/plex.ts";
+import {
+  storedFilePath,
+  workerFilePath,
+} from "#automation/files/paths/locations.ts";
 
 const harness = automationTestHarness();
 const MediaOperation = z.object({
@@ -23,57 +29,6 @@ const MediaOperation = z.object({
   generation: z.int(),
 });
 const RestoreOperation = MediaOperation.extend({ continuationId: z.uuid() });
-
-function publicationContext(
-  assetPath: string,
-  tmdbId: number | null,
-  calls: string[],
-) {
-  return harness.context(async (url) => {
-    calls.push(url.pathname);
-    if (url.pathname.endsWith("/library/sections"))
-      return Response.json({
-        MediaContainer: {
-          size: 1,
-          Directory: [{ key: "2", title: "TV", type: "show" }],
-        },
-      });
-    if (url.pathname.endsWith("/refresh")) return new Response();
-    if (url.pathname.endsWith("/all"))
-      return Response.json({
-        MediaContainer: {
-          size: 1,
-          totalSize: 1,
-          Metadata: [
-            {
-              ratingKey: "601",
-              type: "episode",
-              title: "Episode",
-              index: 1,
-              parentIndex: 1,
-              grandparentRatingKey: "600",
-              Media: [{ Part: [{ id: 1, file: assetPath }] }],
-            },
-          ],
-        },
-      });
-    if (url.pathname.endsWith("/metadata/600"))
-      return Response.json({
-        MediaContainer: {
-          size: 1,
-          Metadata: [
-            {
-              ratingKey: "600",
-              type: "show",
-              title: "Example Show",
-              Guid: [{ id: `tmdb://${String(tmdbId)}` }],
-            },
-          ],
-        },
-      });
-    throw new Error("Unexpected v2 publication transport");
-  });
-}
 
 async function command(
   app: PrismaMediaApplication,
@@ -99,6 +54,7 @@ test.each(["request", "select_release"])(
   async (mode) => {
     const db = harness.database();
     const f = await identityFixture(db, harness.context(), false, {
+      fileFactory: mappedPublicationFixture,
       releaseTitle:
         mode === "request"
           ? "Example.Show.2020.S01E01.1080p.WEB-DL.H264.ENG"
@@ -194,7 +150,10 @@ test.each(["request", "select_release"])(
         data: {
           state: "ready",
           observation: {
-            torrent: { progress: 1, save_path: f.files.roots.downloads },
+            torrent: {
+              progress: 1,
+              save_path: storedFilePath(f.files.context, "tv", "downloads", ""),
+            },
             files: [{ index: 0, name: filename, size: 20, progress: 1 }],
           },
         },
@@ -220,19 +179,26 @@ test.each(["request", "select_release"])(
       const asset = await db.libraryAsset.findUniqueOrThrow({
         where: { id: entry.assetId },
       });
-      expect(await readFile(asset.path, "utf8")).toBe("Fixture media bytes!");
-      const plexCalls: string[] = [];
-      const network = publicationContext(
-        asset.path,
-        f.series.tmdbId,
-        plexCalls,
+      expect(
+        await readFile(workerFilePath(f.files.context, asset.path), "utf8"),
+      ).toBe("Fixture media bytes!");
+      const plex = await retentionPlexContext(
+        db,
+        harness.context(),
+        attempt.mediaIds,
       );
+      const network = plex.context;
       expect(
         await createPublicationActivities(network).publishMediaToPlex(
           activityInput,
         ),
       ).toEqual({ status: "available", reason: null });
-      expect(plexCalls).toContain("/library/metadata/600");
+      const show = [...plex.metadata.values()].find(
+        (item) => item.type === "show",
+      );
+      if (show === undefined)
+        throw new Error("Actual publication omitted its canonical Plex show");
+      expect(plex.calls).toContain(`/library/metadata/${show.ratingKey}`);
       expect(
         await db.mediaItem.findUniqueOrThrow({
           where: { id: f.files.media.id },
