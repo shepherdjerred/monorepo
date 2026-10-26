@@ -9,6 +9,8 @@ import {
   Message as UserMessage,
 } from "discord.js-selfbot-v13";
 import { createUserMessageUpdateWatcher } from "#lib/discord/deferred-reply.ts";
+import { DaemonError } from "#lib/discord/error.ts";
+import { userChannelInfo } from "#lib/discord/channel.ts";
 import {
   ReadRequestSchema,
   SendRequestSchema,
@@ -30,15 +32,6 @@ export type DaemonContext = {
   ttlSeconds: number;
   lastActivity: number;
 };
-
-export class DaemonError extends Error {
-  constructor(
-    message: string,
-    readonly status = 400,
-  ) {
-    super(message);
-  }
-}
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -471,6 +464,12 @@ async function dispatch(
       return handleGuilds(ctx);
     case "/channels":
       return handleChannels(ctx, requireGuildId(url));
+    case "/channel": {
+      const channelId = url.searchParams.get("channelId");
+      if (channelId === null || channelId === "")
+        throw new DaemonError("channelId is required");
+      return userChannelInfo(ctx.user, channelId);
+    }
     default:
       throw new DaemonError(`Unknown path ${url.pathname}`, 404);
   }

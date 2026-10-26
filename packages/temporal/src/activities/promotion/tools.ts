@@ -29,11 +29,17 @@ const ActionSchema = z
     key: z.string().optional(),
     scrollY: z.number().optional(),
     scrollX: z.number().optional(),
+    waitNav: z.boolean().optional(),
+    submit: z.boolean().optional(),
     credential: z.enum(["username", "email", "password"]).optional(),
   })
   .refine(
     (value) => value.ref === undefined || value.selector === undefined,
     "Choose either ref or selector, never both",
+  )
+  .refine(
+    (value) => value.submit !== true || value.waitNav !== true,
+    "Choose submit or waitNav, never both",
   );
 export const PromotionToolSchema = z.discriminatedUnion("endpoint", [
   z.strictObject({
@@ -64,6 +70,9 @@ export const PromotionToolSchema = z.discriminatedUnion("endpoint", [
         "name",
         "title",
         "aria-label",
+        "aria-expanded",
+        "aria-haspopup",
+        "aria-controls",
       ]),
     }),
   }),
@@ -75,6 +84,7 @@ export const PromotionLoginsSchema = z.record(
     username: z.string().min(1),
     email: z.email().optional(),
     password: z.string().min(1),
+    hosts: z.array(z.string().min(1)).min(1).optional(),
   }),
 );
 
@@ -85,8 +95,15 @@ function isSignInControl(node: {
   return (
     node.role === "button" &&
     /\b(?:log|sign)\s*in\b/i.test(node.name ?? "") &&
-    !/\b(?:bump|vote|publish|post|purchase|delete)\b/i.test(node.name ?? "")
+    !/\b(?:bump|vote|publish|post|reply|submit|send|comment|purchase|delete|remove|save|accept|join)\b/i.test(
+      node.name ?? "",
+    )
   );
+}
+
+function assertLoginHost(hosts: string[] | undefined, page: string): void {
+  if (hosts !== undefined && !hosts.includes(new URL(page).hostname))
+    throw new Error("Stored credentials are not assigned to this login host");
 }
 
 /** Native browser actions; there are no site-specific sequences or selectors. */
@@ -131,6 +148,8 @@ export function createPromotionToolHandler(input: {
     const login = input.logins[input.account];
     if (login === undefined)
       throw new Error("Stored login is unavailable for this account");
+    const page = await input.browser.currentUrl();
+    assertLoginHost(login.hosts, page);
     const value =
       body.credential === "email"
         ? (login.email ??
@@ -151,7 +170,6 @@ export function createPromotionToolHandler(input: {
       throw new Error(
         "Credential reference must identify the matching native input",
       );
-    const page = await input.browser.currentUrl();
     const { credential, ...nativeAction } = body;
     if (body.kind === "type")
       await input.browser.action({ kind: "fill", ref: body.ref, text: "" });
@@ -183,23 +201,9 @@ export function createPromotionToolHandler(input: {
     if (["scroll", "hover"].includes(body.kind))
       return await input.browser.action(body);
     if (await isSearchAction(body)) return await input.browser.action(body);
-    if (
-      body.kind === "click" &&
-      body.ref !== undefined &&
-      !input.reconciliation
-    ) {
-      const node = await input.browser.accessibleControl(body.ref);
-      if (node.role === "link") {
-        const href = await input.browser.attribute(body.ref, "href");
-        if (href === null) throw new Error("Navigation link has no URL");
-        return await navigate(
-          new URL(href, await input.browser.currentUrl()).href,
-        );
-      }
-      if (isSignInControl(node)) {
-        return await submitLogin(body);
-      }
-    }
+    const click = await inspectionClick(body);
+    if (click.handled) return click.result;
+    if (await disclosureAction(body)) return await input.browser.action(body);
     const text = body.text ?? body.value;
     await input.journal.beforeMutation(
       text !== undefined && ["fill", "type"].includes(body.kind)
@@ -212,6 +216,63 @@ export function createPromotionToolHandler(input: {
       input.journal.mutationFailed();
       throw error;
     }
+  }
+
+  async function inspectionClick(
+    body: z.infer<typeof ActionSchema>,
+  ): Promise<{ handled: boolean; result?: unknown }> {
+    if (body.kind !== "click" || body.ref === undefined || input.reconciliation)
+      return { handled: false };
+    const node = await input.browser.accessibleControl(body.ref);
+    if (node.role === "link") {
+      const href = await input.browser.attribute(body.ref, "href");
+      if (href === null) throw new Error("Navigation link has no URL");
+      return {
+        handled: true,
+        result: await navigate(
+          new URL(href, await input.browser.currentUrl()).href,
+        ),
+      };
+    }
+    return isSignInControl(node)
+      ? { handled: true, result: await submitLogin(body) }
+      : { handled: false };
+  }
+
+  async function disclosureAction(
+    body: z.infer<typeof ActionSchema>,
+  ): Promise<boolean> {
+    return !input.preview || body.kind !== "click" || body.ref === undefined
+      ? false
+      : await isDisclosure(
+          body.ref,
+          await input.browser.accessibleControl(body.ref),
+        );
+  }
+
+  async function isDisclosure(
+    ref: string,
+    node: { role: string; name?: string | undefined },
+  ): Promise<boolean> {
+    if (
+      !["button", "tab"].includes(node.role) ||
+      /\b(?:bump|vote|publish|post|reply|comment|send|submit|purchase|delete|remove|save|accept|join)\b/i.test(
+        node.name ?? "",
+      )
+    )
+      return false;
+    const type = await input.browser.attribute(ref, "type");
+    if (type === "submit" || type === "reset") return false;
+    if (node.role === "tab") return true;
+    const popup = await input.browser.attribute(ref, "aria-haspopup");
+    return (
+      ["true", "menu", "listbox", "tree", "grid", "dialog"].includes(
+        popup ?? "",
+      ) ||
+      ["true", "false"].includes(
+        (await input.browser.attribute(ref, "aria-expanded")) ?? "",
+      )
+    );
   }
 
   async function isSearchAction(

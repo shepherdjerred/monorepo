@@ -585,6 +585,14 @@ PinchTab credentials or config.
 - `toolkit bugsink ...` queries teams, projects, issues, events, stacktraces,
   and releases in self-hosted Bugsink.
 - `toolkit discord ...` operates the private local Discord session daemon.
+  `TOOLKIT_DISCORD_DIR` selects an isolated daemon directory and socket.
+  `discord daemon start --password-login` uses parent-injected
+  `DISCORD_USER_EMAIL` and `DISCORD_USER_PASSWORD` for a user-only session,
+  ignores the default bot/user tokens, and never reads desktop 1Password.
+  Credentials are exchanged in memory and removed from the daemon environment;
+  interactive verification fails explicitly. The daemon child never inherits
+  `OP_SERVICE_ACCOUNT_TOKEN`. `/channel?channelId=...` provides native user
+  guild/channel permissions for scoped preview adapters.
 - `toolkit mc ...` drives disposable Minecraft sandboxes through the
   mc-harness daemon. See [Minecraft sandboxes](#minecraft-sandboxes).
 - `toolkit promotion <status|preview|run|pause|resume|reconcile> [TARGET] [--json] [--dry-run]`

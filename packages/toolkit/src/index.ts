@@ -150,7 +150,12 @@ async function resolveCommandCredentials(
     );
     return;
   }
-  const names = requiredCredentialsFor(command, subcommand, Bun.env);
+  const names = requiredCredentialsFor(
+    command,
+    subcommand,
+    Bun.env,
+    args.slice(1),
+  );
   const failures: string[] = [];
   for (const name of names) {
     try {

@@ -1032,11 +1032,34 @@ private temporary paths for the structured results and browser diagnostics.
 The agent inspects the assigned execution path rather than conducting an
 eligibility review. The references file
 contains only 1Password locators; credentials are injected in memory.
-Use `--all` instead of target IDs to inspect every configured target. An optional
+Use `--all` instead of target IDs to inspect every assigned target; pending
+placements have no execution task and are excluded. `inspect` assignments are
+preview-only and can check existing account access without inventing news. An optional
 `--inventory /path/to/targets.json` adds schema-validated placements for local
 inspection without changing production targets or schedules. Duplicate IDs fail.
 `--profile <existing-profile>` can inspect an existing signed-in browser profile
 in preview only; it does not prove that the deployed per-account profile is ready.
+
+Credential enrollment also uses the service account exclusively. Run
+`scripts/promotion/enroll-logins.ts --bindings <bindings.json> --apply` through
+the repository's service-account wrapper. Each non-secret binding contains
+`account`, an `op://<vault-id>/<item-id>` reference, `backend: "service-account"`,
+`hosts`, and optionally `expectedUsername`. Custom credential fields use an
+explicit `fields` mapping with `username`, `password` and optional `email` labels.
+The script validates all sources,
+updates the encrypted login map through an inherited pipe, and checks readback.
+It never falls back to desktop 1Password. Inaccessible items remain blocked.
+
+Local Discord previews use an isolated toolkit userbot daemon, selected by
+`PROMOTION_DISCORD_SOCKET`. Each supplemental target pins `discord.guildId`,
+`discord.channelId` and `discord.username` matching its URL. The bridge checks
+the actual user identity, guild/channel and permissions before exposing reads.
+The model receives `discord.ts` and `DISCORD.md`; its message or slash-command
+tool records one proposed payload without calling Discord's publication APIs.
+Mixed bot/user daemons and account/destination mismatches fail. Discord live
+execution is disabled; production Discord placements remain manually maintained.
+Use `--inventory packages/the-storm/promotion/preview-targets.json --all` to
+include the saved Discord channel assignments in a local preview.
 
 | Operator command                           | Result                                                            |
 | ------------------------------------------ | ----------------------------------------------------------------- |
@@ -1086,7 +1109,10 @@ posting-policy decision.
 Preview blocks promotion clicks, form edits, Enter submissions, action URLs,
 receipt settlement and paid CAPTCHA tasks outside the prompt. It permits
 navigation, screenshots, scrolling, native read-only search inputs and one
-stored-credential sign-in. Message composers remain blocked. Browser requests
+stored-credential sign-in. Message composers remain blocked.
+Preview also permits observed tabs and menu disclosures using their native
+accessibility metadata while blocking submit/reset and effect controls.
+Browser requests
 are serialized within each run, and controls use the refs from its current
 snapshot rather than silently taking another snapshot during credential fill.
 Reconciliation never signs in or creates another effect. These modes use the

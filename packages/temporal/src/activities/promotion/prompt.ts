@@ -11,8 +11,13 @@ export function promotionPrompt(input: {
   mode: PromotionRunInput["mode"];
 }): string {
   return [
+    ...(input.target.discord === undefined
+      ? []
+      : [
+          "Transport: scoped Discord userbot. Read DISCORD.md and discord-context.json and use discord.ts. Browser, credential-fill and CAPTCHA instructions below do not apply to this transport. A dry run must record its proposed message or slash command using that tool; it never sends it.",
+        ]),
     `Execute the assigned ${input.target.action} action for The Storm on the supplied target. The caller has already selected the target, action, content and timing. You are the executor, responsible for discovering the interface and performing that assignment. There is no prescribed sequence of website steps.`,
-    "Read task.json, content.md and BROWSER.md for the assignment, approved copy and normal PinchTab browser operations. history.json and previous-run.json provide execution/reconciliation context. maintenance.md is optional reference for locating existing placements, not a required policy audit. The additional CAPTCHA helper is captcha.ts.",
+    `Read task.json, content.md and ${input.target.discord === undefined ? "BROWSER.md" : "DISCORD.md"} for the assignment, approved copy and transport operations. history.json and previous-run.json provide execution/reconciliation context. maintenance.md is optional reference for locating existing placements, not a required policy audit.`,
     `Mode: ${input.mode}. In run mode, perform the assigned action once and verify the outcome. In preview, inspect the execution path and prepare the assigned action/copy without posting, bumping, or paying for CAPTCHA solves. A preview reports what can be prepared and concrete execution obstacles. In reconcile, inspect the previous uncertain effect without creating another.`,
     "Posting-policy decisions, cross-target cadence and approval belong to the caller before invocation. Do not conduct an independent eligibility review, reinterpret community policy, require a fresh history audit, or substitute a different action or destination. Execute the supplied assignment; report concrete obstacles shown by the interface or returned by the site.",
     "For a native owner bump, use the existing listing's native bump control. In run mode, attempt it once when the site permits the interaction; record acceptance, rejection or an explicit cooldown from the actual response. Do not demand an authoritative prior-bump timestamp as a prerequisite. If a disabled control or site response explicitly requires waiting, report that response and its deadline when supplied. An enabled control is an available execution path, not proof the action has already succeeded. Never repeat an ambiguous submission.",

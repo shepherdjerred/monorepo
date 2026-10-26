@@ -1,8 +1,45 @@
 import { describe, expect, it } from "vitest";
-import { assertPromotionUrl, policyEligibleAt } from "./promotion.ts";
+import {
+  assertPromotionUrl,
+  policyEligibleAt,
+  PromotionManifestSchema,
+} from "./promotion.ts";
 import type { PromotionTarget } from "./promotion.ts";
 
 describe("promotion history and target boundaries", () => {
+  it("requires a fixed Discord assignment matching the actual thread URL", () => {
+    const target = {
+      id: "discord-fixture",
+      name: "Fixture",
+      account: "discord",
+      url: "https://discord.com/channels/111/222/threads/333",
+      rulesUrl: "https://discord.com/channels/111/222/threads/333",
+      hosts: ["discord.com"],
+      action: "repost",
+      content: "directory",
+      minimumIntervalSeconds: 0,
+      notes: "Caller assigned channel",
+    };
+    const manifest = {
+      version: 1,
+      serverIdentity: "the-storm",
+      targets: [target],
+    };
+    expect(PromotionManifestSchema.safeParse(manifest).success).toBe(false);
+    const discord = { guildId: "111", channelId: "333", username: "outreach" };
+    expect(
+      PromotionManifestSchema.safeParse({
+        ...manifest,
+        targets: [{ ...target, discord }],
+      }).success,
+    ).toBe(true);
+    expect(
+      PromotionManifestSchema.safeParse({
+        ...manifest,
+        targets: [{ ...target, discord: { ...discord, channelId: "222" } }],
+      }).success,
+    ).toBe(false);
+  });
   it("calculates a rolling boundary from the Nth newest action", () => {
     const now = Date.parse("2026-10-26T12:00:00.000Z");
     const policy = {

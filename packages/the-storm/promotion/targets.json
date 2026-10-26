@@ -21,10 +21,10 @@
       "rulesUrl": "https://minecraft-mp.com/",
       "account": "minecraft-mp",
       "hosts": ["minecraft-mp.com"],
-      "action": "bump",
+      "action": "pending",
       "content": "directory",
       "minimumIntervalSeconds": 0,
-      "notes": "No owner bump established. Inspect current rules and dashboard; report status-only when no native repeat action exists."
+      "notes": "No native owner bump exists in the inspected dashboard. Omitted from visibility runs until the caller supplies an actual content update."
     },
     {
       "id": "minecraft-server-list",
@@ -33,10 +33,10 @@
       "rulesUrl": "https://minecraft-server-list.com/",
       "account": "minecraft-server-list",
       "hosts": ["minecraft-server-list.com"],
-      "action": "bump",
+      "action": "pending",
       "content": "directory",
       "minimumIntervalSeconds": 0,
-      "notes": "Two-hyphen domain. No owner bump established; inspect before acting."
+      "notes": "Two-hyphen domain. No native owner bump exists in the inspected dashboard. Omitted until an actual content update is assigned."
     },
     {
       "id": "minecraftservers",
@@ -45,10 +45,10 @@
       "rulesUrl": "https://minecraftservers.org/",
       "account": "minecraftservers",
       "hosts": ["minecraftservers.org"],
-      "action": "bump",
+      "action": "pending",
       "content": "directory",
       "minimumIntervalSeconds": 0,
-      "notes": "Use RiotShielder's recovered listing; preserve listing history. No owner bump established."
+      "notes": "RiotShielder's recovered listing is accessible. The owner dashboard exposes Edit/Delete but no native bump. Omitted until an actual content update is assigned; preserve listing history."
     },
     {
       "id": "topg",
@@ -57,10 +57,10 @@
       "rulesUrl": "https://topg.org/",
       "account": "topg",
       "hosts": ["topg.org"],
-      "action": "bump",
+      "action": "pending",
       "content": "directory",
       "minimumIntervalSeconds": 0,
-      "notes": "No owner bump established. Inspect current dashboard and rules."
+      "notes": "No free native owner bump was found. Changelog updates require caller-supplied substantive news; no update is currently assigned."
     },
     {
       "id": "minecraft-buzz",
@@ -69,10 +69,10 @@
       "rulesUrl": "https://minecraft.buzz/",
       "account": "minecraft-buzz",
       "hosts": ["minecraft.buzz"],
-      "action": "bump",
+      "action": "pending",
       "content": "directory",
       "minimumIntervalSeconds": 0,
-      "notes": "Internal listing 24920. Separate service from MinecraftServer.Buzz. No owner bump established."
+      "notes": "Internal listing 24920. Its dashboard offers Edit and Analytics, with no native owner bump. Omitted until an actual content update is assigned."
     },
     {
       "id": "minecraft-serverlist",
@@ -96,7 +96,7 @@
       "action": "bump",
       "content": "directory",
       "minimumIntervalSeconds": 0,
-      "notes": "Native bump requires reCAPTCHA. Reconcile the previously observed Offline status and establish numeric cooldown first."
+      "notes": "Use the existing listing's native bump control. Handle its CAPTCHA and report the actual site response; preserve listing content."
     },
     {
       "id": "minecraftserver-buzz",
@@ -108,7 +108,7 @@
       "action": "bump",
       "content": "directory",
       "minimumIntervalSeconds": 0,
-      "notes": "Use Bump server on the existing approved listing. Establish current cooldown."
+      "notes": "Use Bump server on the existing approved listing and report its response."
     },
     {
       "id": "minebrowse",
@@ -129,10 +129,10 @@
       "rulesUrl": "https://www.planetminecraft.com/rules/",
       "account": "pmc",
       "hosts": ["www.planetminecraft.com", "planetminecraft.com"],
-      "action": "news",
+      "action": "pending",
       "content": "directory",
       "minimumIntervalSeconds": 0,
-      "notes": "Existing thread only. Listing bump rules do not establish forum permission. Requires approved substantive news; do not manufacture updates."
+      "notes": "No substantive news has been supplied by the caller. Omitted until a specific approved news update is assigned to the existing thread."
     },
     {
       "id": "reddit-mcservers",
@@ -144,7 +144,7 @@
       "action": "repost",
       "content": "reddit-mcservers",
       "minimumIntervalSeconds": 604800,
-      "notes": "One post per server per seven days minimum. Check community rules, title tags, all authors advertising this server, account history, removals and prior filtered attempts."
+      "notes": "Use the approved title tags and copy. The caller owns the seven-day cadence; report the actual submission response and observed moderation outcome."
     },
     {
       "id": "reddit-minecraftserver",
@@ -156,7 +156,7 @@
       "action": "repost",
       "content": "reddit-minecraftserver",
       "minimumIntervalSeconds": 0,
-      "notes": "Posting resumed by the owner. Prior attempts were filtered; reconcile moderation status and exact outreach identity before publishing."
+      "notes": "Use u/the_storm_mc and the approved copy. Prior attempts were filtered; report the actual submission outcome without claiming public visibility from an owner-only view."
     },
     {
       "id": "reddit-minecraftserverfinder",
@@ -168,7 +168,7 @@
       "action": "repost",
       "content": "reddit-minecraftserver",
       "minimumIntervalSeconds": 0,
-      "notes": "Prior filtered post: 1x72z1f. Resolve account eligibility, moderation status and current limits before publishing."
+      "notes": "Use u/the_storm_mc and the approved copy. Preserve the history of filtered post 1x72z1f and report the actual submission outcome."
     },
     {
       "id": "minecraftiplist",

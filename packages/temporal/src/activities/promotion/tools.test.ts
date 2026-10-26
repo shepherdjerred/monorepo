@@ -10,6 +10,7 @@ async function harness(
   preview = true,
   reconciliation = false,
   maxToolCalls = 80,
+  loginHosts?: string[],
 ) {
   const target = promotionTarget("pmc"),
     store = memoryPromotionStore();
@@ -27,7 +28,9 @@ async function harness(
     .spyOn(browser, "action")
     .mockResolvedValue({ success: true });
   const open = vi.spyOn(browser, "open").mockResolvedValue({ url: target.url });
-  vi.spyOn(browser, "currentUrl").mockResolvedValue(target.url);
+  const currentUrl = vi
+    .spyOn(browser, "currentUrl")
+    .mockResolvedValue(target.url);
   const control = vi
     .spyOn(browser, "accessibleControl")
     .mockImplementation((ref) =>
@@ -72,6 +75,7 @@ async function harness(
         username: "fixture-user",
         email: "fixture@example.invalid",
         password: "fixture-password",
+        ...(loginHosts === undefined ? {} : { hosts: loginHosts }),
       },
     },
     solverKey: "fixture-solver",
@@ -79,7 +83,7 @@ async function harness(
     signal: new AbortController().signal,
     heartbeat: vi.fn(),
   });
-  return { handle, action, open, attribute, target, control };
+  return { handle, action, open, attribute, target, control, currentUrl };
 }
 
 describe("native browser connection", () => {
@@ -110,17 +114,30 @@ describe("native browser connection", () => {
         role: "button",
         name,
       });
+      await expect(
+        test.handle({
+          endpoint: "action",
+          body: { kind: "click", ref: "e3", waitNav: true, submit: true },
+        }),
+      ).rejects.toThrow("Choose submit or waitNav");
       await test.handle({
         endpoint: "action",
-        body: { kind: "click", ref: "e3" },
+        body: { kind: "click", ref: "e3", submit: true },
       });
       expect(test.action).toHaveBeenLastCalledWith({
         kind: "click",
         ref: "e3",
+        submit: true,
       });
     },
   );
-  it("blocks a combined login and publication control", async () => {
+  it.each([
+    "Sign In and Bump",
+    "Log in and reply",
+    "Sign in & submit",
+    "Sign in and send",
+    "Sign in to comment",
+  ])("blocks a combined login and publication control: %s", async (name) => {
     const test = await harness();
     await test.handle({
       endpoint: "action",
@@ -130,7 +147,7 @@ describe("native browser connection", () => {
     test.control.mockResolvedValue({
       ref: "e3",
       role: "button",
-      name: "Sign In and Bump",
+      name,
     });
     await expect(
       test.handle({ endpoint: "action", body: { kind: "click", ref: "e3" } }),
@@ -193,6 +210,80 @@ describe("native browser connection", () => {
     expect(test.action.mock.calls.map(([body]) => body["scrollY"])).toEqual([
       100, 200,
     ]);
+  });
+});
+
+describe("scoped credentials and preview disclosures", () => {
+  it("keeps SSO credentials on the assigned identity host", async () => {
+    const test = await harness(true, false, 80, ["accounts.google.com"]);
+    const command = {
+      endpoint: "action",
+      body: { kind: "fill", ref: "e2", credential: "password" },
+    };
+    await expect(test.handle(command)).rejects.toThrow("host");
+    expect(test.action).not.toHaveBeenCalled();
+    test.currentUrl.mockResolvedValue("https://accounts.google.com/signin/");
+    await expect(test.handle(command)).resolves.toEqual({ filled: true });
+    expect(test.action).toHaveBeenCalledTimes(1);
+  });
+  it.each([
+    {
+      role: "button",
+      name: "Account",
+      type: "button",
+      popup: "menu",
+      expanded: null,
+    },
+    {
+      role: "button",
+      name: "Manage listing",
+      type: "button",
+      popup: null,
+      expanded: "false",
+    },
+    { role: "tab", name: "Overview", type: null, popup: null, expanded: null },
+  ])("opens an observed preview disclosure: %j", async (node) => {
+    const test = await harness();
+    test.control.mockResolvedValue({
+      ref: "e4",
+      role: node.role,
+      name: node.name,
+    });
+    test.attribute.mockImplementation((_ref, name) =>
+      Promise.resolve(
+        name === "type"
+          ? node.type
+          : name === "aria-haspopup"
+            ? node.popup
+            : node.expanded,
+      ),
+    );
+    await test.handle({
+      endpoint: "action",
+      body: { kind: "click", ref: "e4" },
+    });
+    expect(test.action).toHaveBeenCalledWith({ kind: "click", ref: "e4" });
+  });
+  it.each([
+    { name: "Account", type: "submit" },
+    { name: "Reset", type: "reset" },
+    { name: "Bump server", type: "button" },
+    { name: "Send message", type: "button" },
+    { name: "Accept rules", type: "button" },
+  ])("blocks effects disguised as disclosures: %j", async (node) => {
+    const test = await harness();
+    test.control.mockResolvedValue({
+      ref: "e4",
+      role: "button",
+      name: node.name,
+    });
+    test.attribute.mockImplementation((_ref, name) =>
+      Promise.resolve(name === "type" ? node.type : "true"),
+    );
+    await expect(
+      test.handle({ endpoint: "action", body: { kind: "click", ref: "e4" } }),
+    ).rejects.toThrow("Read-only");
+    expect(test.action).not.toHaveBeenCalled();
   });
 });
 
@@ -263,6 +354,10 @@ describe("credential isolation and preview restrictions", () => {
     { endpoint: "action", body: { kind: "fill", ref: "e1", text: "Ad copy" } },
     { endpoint: "action", body: { kind: "press", ref: "e1", key: "Enter" } },
     { endpoint: "action", body: { kind: "click", selector: "#submit" } },
+    {
+      endpoint: "action",
+      body: { kind: "click", selector: "#submit", submit: true },
+    },
     {
       endpoint: "navigate",
       body: { url: "https://www.planetminecraft.com/bump/123" },

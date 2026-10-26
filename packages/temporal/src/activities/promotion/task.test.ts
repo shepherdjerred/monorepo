@@ -56,6 +56,28 @@ async function harness(mode: "preview" | "run" | "reconcile" = "run") {
   };
 }
 
+describe("inspection deadline preservation", () => {
+  it.each([null, "2026-10-25T12:00:00.000Z", "2026-10-26T13:00:00.000Z"])(
+    "does not shorten the caller's saved deadline after an inspection (%s)",
+    async (nextEligibleAt) => {
+      const test = await harness("preview");
+      const saved = "2026-10-27T12:00:00.000Z";
+      await updatePromotionState(test.store, test.target.id, (state) => ({
+        ...state,
+        nextEligibleAt: saved,
+      }));
+      await test.journal.finish({
+        ...result,
+        status: "blocked",
+        nextEligibleAt,
+      });
+      const state = await test.state();
+      expect(state.nextEligibleAt).toBe(saved);
+      expect(test.capture).not.toHaveBeenCalled();
+    },
+  );
+});
+
 describe("task-driven promotion journal", () => {
   it("checkpoints a possible effect before browser I/O and retains it after ambiguity", async () => {
     const test = await harness();

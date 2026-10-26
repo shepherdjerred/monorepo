@@ -45,7 +45,9 @@ const inventory = PromotionManifestSchema.parse({
 });
 const ids =
   values.all === true
-    ? inventory.targets.map((target) => target.id)
+    ? inventory.targets
+        .filter((target) => target.action !== "pending")
+        .map((target) => target.id)
     : positionals;
 const targets = ids.map((id) => {
   const target = inventory.targets.find((item) => item.id === id);
