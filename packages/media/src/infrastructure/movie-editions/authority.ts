@@ -255,6 +255,7 @@ export async function eligibleAcquisitionSponsors(
   input: {
     scope: MovieEditionScope;
     access: MovieChoiceAccess;
+    protocol?: "movie-v4";
   },
 ) {
   const requests = await tx.mediaRequest.findMany({
@@ -266,12 +267,20 @@ export async function eligibleAcquisitionSponsors(
       direct: true,
     },
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    ...(input.protocol === "movie-v4" ? { take: 101 } : {}),
   });
   const sponsors: Extract<
     Awaited<ReturnType<typeof readMovieChoice>>,
     { status: "authorized" }
   >[] = [];
-  if (input.scope.edition !== "default") return sponsors;
+  if (input.scope.edition !== "default" && input.protocol !== "movie-v4")
+    return sponsors;
+  if (input.protocol === "movie-v4" && requests.length > 100)
+    throw new MediaError(
+      "movie_sponsor_limit",
+      "Movie sponsor scope exceeds its evidence bound",
+      409,
+    );
   await lockMovieChoiceIdentities(tx, { mediaIds: [input.scope.mediaId] });
   for (const request of requests) {
     const result = await readMovieChoice(tx, {
