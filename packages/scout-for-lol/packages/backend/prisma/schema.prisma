@@ -1366,573 +1366,6 @@ model AuditLog {
   @@index([actorDiscordId, createdAt])
 }
 
-// ============================================================================
-// Bryan Bucks — friendly betting economy
-//
-// Gated per guild by the `betting_enabled` flag. Players earn Bucks for ranked
-// games and offer up to an amount on whether a tracked player wins an
-// in-progress game. Human offers and a capped house fill determine the amount
-// actually at risk. No monetary value; nothing transfers to real goods.
-// ============================================================================
-
-// A Bryan Bucks wallet: one per (guild, Discord user).
-//
-// Scoped per guild because `Player`, `Subscription`, and the `betting_enabled`
-// flag are all per guild. A global wallet would let Bucks earned in an opted-in
-// server be spent in one that never opted in.
-//
-// `balance` is a STORED column, not a ledger sum. This does NOT contradict the
-// DmAuditLog "derive, never store" rule: that rule exists because a counter
-// written AFTER a non-transactional side effect (a Discord send) goes stale if
-// its write fails. Here the balance mutation and its BucksLedgerEntry commit in
-// the SAME prisma.$transaction, through the single chokepoint in
-// src/betting/ledger.ts, so they cannot disagree.
-//
-// Storing it is also the only way to check affordability atomically on this
-// stack. `SELECT SUM(delta)` then `INSERT` is a read-then-write inside a WAL
-// transaction, and the libsql adapter opens a deferred BEGIN — a concurrent
-// committer yields SQLITE_BUSY_SNAPSHOT, which `busy_timeout` does NOT retry.
-// One guarded `UPDATE ... WHERE balance >= :stake` is the whole check.
-//
-// `reconcileBucksBalances()` re-derives from the ledger and reports drift
-// rather than trusting this column.
-model BucksAccount {
-  id                Int       @id @default(autoincrement())
-  serverId          String
-  discordId         String
-  // Opaque, app-owned identity for Bryan Bucks PostHog retention. The
-  // Discord snowflake must never become an analytics distinct id.
-  analyticsUserId   String    @unique @default(uuid())
-  // Synthetic per-guild house rows use the reserved account ID. They are
-  // ledger-audited but excluded from user-facing balances and leaderboards.
-  isHouse           Boolean   @default(false)
-  balance           Int       @default(0)
-  // Retired with the peek feature; no code reads or writes this anymore.
-  // Kept for one compatibility release so a rollback to the pre-removal
-  // image (which still writes it) doesn't hit a missing column. Drop in a
-  // follow-up migration once this release is no longer a rollback target.
-  peekPassExpiresAt DateTime?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  ledgerEntries     BucksLedgerEntry[]
-  bets              BucksBet[]
-  parlayBets        BucksParlayBet[]
-  openPositions     BucksOpenPosition[]
-  dareContributions BucksDareContribution[]
-
-  @@unique([serverId, discordId])
-  @@index([serverId, balance])
-}
-
-// Per-user Bryan Bucks settlement DM preferences. Missing rows intentionally
-// resolve to both settings enabled so adding this table preserves the existing
-// beta behavior for users who have not visited `/bb notifications` yet.
-model BucksNotificationPreference {
-  id                        Int       @id @default(autoincrement())
-  serverId                  String
-  discordId                 String
-  ownBetSettlementDms       Boolean   @default(true)
-  betsOnPlayerSettlementDms Boolean   @default(true)
-  dareLifecycleDms          Boolean   @default(true)
-  dareProgressDms           Boolean   @default(true)
-  settlementDmHintShownAt   DateTime?
-  createdAt                 DateTime  @default(now())
-  updatedAt                 DateTime  @updatedAt
-
-  @@unique([serverId, discordId])
-}
-
-// Durable reservation for a Bryan Bucks PostHog event. PostHog's event UUID is
-// deterministic for replay, while this beta database is the idempotency
-// boundary for both the historical backfill and the post-commit live sync.
-model BucksAnalyticsBackfillEvent {
-  id        Int      @id @default(autoincrement())
-  eventId   String   @unique
-  createdAt DateTime @default(now())
-}
-
-// Append-only ledger. Every Buck anyone holds is the sum of these rows.
-//
-// This is what answers "how did they get these points": `kind` says why,
-// `matchId` says which game, `predictedTeamId`/`actualWinningTeamId` say what
-// was predicted versus what happened, and `context` carries the participant
-// snapshot frozen at write time. Player rows are renameable, untrackable, and
-// prunable — a ledger that re-derives its own explanation is not a ledger.
-model BucksLedgerEntry {
-  id             Int          @id @default(autoincrement())
-  bucksAccountId Int
-  bucksAccount   BucksAccount @relation(fields: [bucksAccountId], references: [id], onDelete: Cascade)
-
-  // Signed change. Negative = reserved stake, match funding, or fee paid.
-  // Positive = earning, payout, refund, fee received, or seed grant. Never zero.
-  delta Int
-
-  // Balance AFTER this delta, as of the committing transaction. Makes an audit
-  // read one query, and localizes any drift to a specific row.
-  balanceAfter Int
-
-  // BucksLedgerKind (@scout-for-lol/data): seed | earn_* | bet_stake |
-  // bet_payout | bet_*_refund | winner_fee | house_match | cancel_fee |
-  // parlay_stake | parlay_reserve | parlay_payout | parlay_refund |
-  // parlay_release | transfer_sent | transfer_received | transfer_fee |
-  // dare_stake | dare_payout | dare_refund | dare_fee |
-  // legacy bet_refund/house_rake/peek_pass | adjustment.
-  // Weekly-parlay kinds were removed with that feature; the retirement
-  // migration converted those rows to `adjustment` in place, preserving their
-  // amounts, order, and timestamps.
-  // Not a Prisma enum (kept a plain string through the Postgres migration).
-  // Zod-validated on write
-  // and on read.
-  kind String
-
-  // Platform-qualified Riot match ID. Null only for seed/adjustment.
-  matchId String?
-
-  betId Int?
-  bet   BucksBet? @relation(fields: [betId], references: [id])
-
-  parlayBetId Int?
-  parlayBet   BucksParlayBet? @relation(fields: [parlayBetId], references: [id])
-
-  // Riot team IDs (100/200). Both null for seed/earn_*/adjustment.
-  // `actualWinningTeamId` is also null for bet_stake (unknown at bet time) and
-  // for a refund on a voided match (there is no winner).
-  predictedTeamId     Int?
-  actualWinningTeamId Int?
-
-  // JSON, BucksLedgerContextSchema. Frozen at write time.
-  context String
-
-  createdAt DateTime @default(now())
-
-  analyticsOutbox BucksAnalyticsLedgerOutbox?
-
-  @@index([bucksAccountId, createdAt])
-  @@index([matchId])
-}
-
-// Created atomically with each live ledger entry. Temporal consumes the
-// committed ledger row after the transaction and sends the PostHog event.
-model BucksAnalyticsLedgerOutbox {
-  id            Int              @id @default(autoincrement())
-  ledgerEntryId Int              @unique
-  ledgerEntry   BucksLedgerEntry @relation(fields: [ledgerEntryId], references: [id], onDelete: Cascade)
-  eventId       String           @unique
-  createdAt     DateTime         @default(now())
-
-  @@index([createdAt])
-}
-
-// One user's position on one match in one guild.
-//
-// `stake` is the maximum the user offered and is DEBITED at placement. At
-// close, only matched stake remains at risk and unmatched stake is refunded.
-model BucksBet {
-  id             Int            @id @default(autoincrement())
-  poolId         Int
-  pool           BucksMatchPool @relation(fields: [poolId], references: [id], onDelete: Cascade)
-  bucksAccountId Int
-  bucksAccount   BucksAccount   @relation(fields: [bucksAccountId], references: [id], onDelete: Cascade)
-
-  // Riot team ID the user is backing: 100 or 200.
-  predictedTeamId Int
-
-  // Display-only tracked-player anchor used to identify the game and preserve
-  // the v1 subject-relative button encoding. `predictedTeamId` alone defines
-  // the wager and settlement outcome.
-  subjectPuuid String
-
-  // Running submitted maximum. Adding to an open position increments this;
-  // each increment writes its own bet_stake ledger row.
-  stake Int
-
-  // Null on historical rows written before close-time matching. For new rows,
-  // matchedStake == humanMatchedStake + houseMatchedStake and
-  // stake == matchedStake + unmatchedStake.
-  humanMatchedStake Int?
-  houseMatchedStake Int?
-  matchedStake      Int?
-  unmatchedStake    Int?
-
-  // BucksBetOutcome: pending | won | lost | refunded | cancelled.
-  // Deliberately not named `status` — brand-prisma-types would type it
-  // ParticipantStatus.
-  betOutcome String @default("pending")
-
-  // Matched-stake settlement accounting. Unmatched refunds are separate ledger
-  // entries and are not included here. Cancellation stores the gross submitted
-  // stake, fee, and net refund in these same lifecycle fields.
-  grossPayout Int?
-  fee         Int?
-  payout      Int?
-  cancelledAt DateTime?
-  settledAt   DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  ledgerEntries BucksLedgerEntry[]
-  openPosition  BucksOpenPosition?
-
-  // Historical and cancelled attempts are retained. BucksOpenPosition owns the
-  // one-live-position constraint while the market is open.
-  @@index([poolId, bucksAccountId])
-  @@index([poolId, predictedTeamId])
-}
-
-// The one currently editable offer for a user in a pool. Deleting this slot on
-// cancellation preserves the BucksBet and its ledger links while allowing a
-// fresh offer, including on the other side.
-model BucksOpenPosition {
-  poolId         Int
-  pool           BucksMatchPool @relation(fields: [poolId], references: [id], onDelete: Cascade)
-  bucksAccountId Int
-  bucksAccount   BucksAccount   @relation(fields: [bucksAccountId], references: [id], onDelete: Cascade)
-  betId          Int            @unique
-  bet            BucksBet       @relation(fields: [betId], references: [id], onDelete: Cascade)
-  createdAt      DateTime       @default(now())
-
-  @@id([poolId, bucksAccountId])
-  @@index([poolId])
-}
-
-// The betting market for one Riot match in one guild.
-//
-// Per guild, not per match: one match can be announced in several guilds, and
-// paying guild A's winners out of guild B's losers would be wrong.
-//
-// Staked Bucks outlive the live game, so the pool is its own row.
-model BucksMatchPool {
-  id       Int    @id @default(autoincrement())
-  matchId  String
-  serverId String
-
-  // When the game was detected, which opens the betting window.
-  detectedAt DateTime
-
-  // Retired with the peek feature; no code reads this anymore, but
-  // pool-open.ts still computes and writes a compatibility value (see its
-  // computeLegacyPeekAvailableAt) so a rollback to the pre-removal image —
-  // whose Prisma schema still declares this NOT NULL and whose peek.ts
-  // candidate query decodes it unconditionally — can still read pools this
-  // code creates. Stop writing it and drop the column in a follow-up
-  // migration once this release is no longer a rollback target.
-  peekAvailableAt DateTime?
-
-  // STORED rather than computed, so changing BETTING_WINDOW_MS cannot
-  // retroactively move a window a user was already shown.
-  closesAt DateTime
-
-  queueType String?
-
-  // JSON, BucksPoolRosterSchema: both teams as seen on the loading screen.
-  // Frozen at pool creation — this is what the bettor actually saw.
-  roster String
-
-  // JSON [{ channelId, messageId }] for THIS guild, recorded after the prematch
-  // send so the close sweep can edit exactly the right messages without
-  // re-deriving channel -> guild.
-  messageRefs String @default("[]")
-
-  // The non-betting content of the prematch Discord message. Stored alongside
-  // messageRefs after delivery so live bet summaries can replace message
-  // content with a direct PATCH and no Read Message History permission. Null
-  // identifies a pre-deployment or not-yet-delivered pool and must not be
-  // edited, because reconstructing its existing message would be guesswork.
-  prematchContentBase String?
-
-  // BucksPoolState: open | closed | settled | voided.
-  //
-  // Advanced only by guarded conditional updates. This column IS the settlement
-  // idempotency token — unlike MatchAiAttempt, which must be marked BEFORE its
-  // call because OpenAI spend is external and cannot join a database
-  // transaction. Every side effect here is local, so the state transition
-  // commits WITH the payouts. A separate marker table would reintroduce the
-  // exact "marked but didn't happen" window it was invented to close.
-  poolState String @default("open")
-
-  // Set atomically with close-time allocation. matchingJson is a versioned
-  // BucksMatchingSummary and is the audit record for every matched/refunded BB.
-  matchedAt    DateTime?
-  matchingJson String?
-
-  // Riot team ID that won. Non-null iff poolState == "settled".
-  winningTeamId Int?
-
-  // BucksVoidReason: remake | expired | unsupported_mode, plus historical
-  // no_counterparty and house_unavailable values.
-  // Non-null iff poolState == "voided".
-  voidReason String?
-
-  settledAt DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  bets          BucksBet[]
-  parlayMarket  BucksParlayMarket?
-  openPositions BucksOpenPosition[]
-
-  @@unique([matchId, serverId])
-  @@index([poolState, closesAt])
-  @@index([serverId, poolState, settledAt])
-  @@index([matchId])
-}
-
-// One immutable, model-generated proposition per Riot match. The model chooses
-// only from the versioned criteria catalog; `criteria` is evaluated later by
-// deterministic code against the final RawMatch.
-model BucksParlayDefinition {
-  id             Int    @id @default(autoincrement())
-  matchId        String @unique
-  queueType      String
-  selectedTeamId Int
-
-  // JSON validated by ParlaySubjectsSchema / GeneratedParlaySchema.
-  subjects String
-  criteria String
-
-  yesProbabilityBps Int
-  promptVersion     String
-  catalogVersion    String
-  schemaVersion     Int
-  evaluatorVersion  String
-  generationContext String
-
-  // Pass-one legs, before any number was chosen, and the frozen record of how
-  // the published price was measured. Nullable because definitions written by
-  // the single-pass generator predate both.
-  proposal String?
-  pricing  String?
-
-  requestedModel String
-  resolvedModel  String?
-  usage          String
-  durationMs     Int
-
-  createdAt DateTime @default(now())
-
-  markets BucksParlayMarket[]
-}
-
-// A guild-local publication of the match-global parlay. Its clock starts when
-// the follow-up is published and is independent from the outcome pool clock.
-model BucksParlayMarket {
-  id            Int                   @id @default(autoincrement())
-  definitionId  Int
-  definition    BucksParlayDefinition @relation(fields: [definitionId], references: [id], onDelete: Cascade)
-  outcomePoolId Int                   @unique
-  outcomePool   BucksMatchPool        @relation(fields: [outcomePoolId], references: [id], onDelete: Cascade)
-  matchId       String
-  serverId      String
-
-  publishedAt DateTime
-  closesAt    DateTime
-  messageRefs String   @default("[]")
-
-  // BucksParlayMarketState: publishing | open | closed | settled | voided.
-  marketState String    @default("publishing")
-  yesResult   Boolean?
-  legResults  String?
-  // BucksParlayVoidReason when voided.
-  voidReason  String?
-  settledAt   DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  bets BucksParlayBet[]
-
-  @@unique([matchId, serverId])
-  @@index([marketState, closesAt])
-  @@index([matchId])
-}
-
-// One fixed-odds YES/NO position per user and parlay market. Both the user
-// stake and the maximum house liability are debited when the quote is accepted.
-model BucksParlayBet {
-  id             Int               @id @default(autoincrement())
-  marketId       Int
-  market         BucksParlayMarket @relation(fields: [marketId], references: [id], onDelete: Cascade)
-  bucksAccountId Int
-  bucksAccount   BucksAccount      @relation(fields: [bucksAccountId], references: [id], onDelete: Cascade)
-
-  // BucksParlaySide: YES | NO.
-  side         String
-  stake        Int
-  houseReserve Int
-  grossPayout  Int
-
-  // BucksBetOutcome: pending | won | lost | refunded.
-  betOutcome String    @default("pending")
-  payout     Int?
-  settledAt  DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  ledgerEntries BucksLedgerEntry[]
-
-  @@unique([marketId, bucksAccountId])
-  @@index([marketId, side])
-}
-
-// A SQL-contract Dare. Draft revisions are private and unfunded; funding
-// freezes one revision into contractJson.
-model BucksDare {
-  id                    Int       @id @default(autoincrement())
-  serverId              String
-  channelId             String
-  challengerDiscordId   String
-  originConversationId  String?
-  dareState             String    @default("draft")
-  currentRevision       Int       @default(1)
-  fundedRevision        Int?
-  contractJson          String?
-  openingStake          Int
-  potTotal              Int       @default(0)
-  proposalExpiresAt     DateTime?
-  acceptDeadline        DateTime?
-  activatedAt           DateTime?
-  deadlineAt            DateTime?
-  settledAt             DateTime?
-  // The match whose settlement made this Dare terminal, when one did. Written
-  // in the settling transaction so a retried settlement can still name every
-  // Dare the match resolved after its in-memory result is gone.
-  settledMatchId        String?
-  finalValue            Boolean?
-  proofJson             String?
-  voidReason            String?
-  messageRef            String?
-  calloutClaimId        String?
-  calloutClaimedAt      DateTime?
-  calloutRefreshPending Boolean   @default(false)
-  calloutRefreshVersion Int       @default(0)
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-
-  revisions     BucksDareRevision[]
-  targets       BucksDareTarget[]
-  contributions BucksDareContribution[]
-  evidence      BucksDareEvidence[]
-  activation    BucksDareActivation?
-
-  @@index([challengerDiscordId, dareState, updatedAt])
-  @@index([serverId, dareState, updatedAt])
-  @@index([dareState, acceptDeadline])
-  @@index([dareState, deadlineAt])
-  @@index([calloutRefreshPending, updatedAt])
-  @@index([settledMatchId])
-}
-
-// Durable activation queue for rank and historical-baseline contracts. The
-// frozen snapshot is copied into contractJson before the Dare becomes active.
-model BucksDareActivation {
-  dareId        Int       @id
-  dare          BucksDare @relation(fields: [dareId], references: [id], onDelete: Cascade)
-  revision      Int
-  requestedAt   DateTime
-  nextAttemptAt DateTime
-  attemptCount  Int       @default(0)
-  lastAttemptAt DateTime?
-  errorCode     String?
-  snapshotJson  String?
-  completedAt   DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  @@index([completedAt, nextAttemptAt, requestedAt])
-}
-
-// Immutable history of draft iterations. Replacing a draft appends a revision;
-// it never mutates the ScoutQL/plan the challenger previously reviewed.
-model BucksDareRevision {
-  id                  Int       @id @default(autoincrement())
-  dareId              Int
-  dare                BucksDare @relation(fields: [dareId], references: [id], onDelete: Cascade)
-  revision            Int
-  originalText        String
-  canonicalScoutQl    String
-  compiledPlan        String
-  scoutQlImmutableAst String?
-  scoutQlPlanHash     String?
-  compilerVersion     String
-  evaluatorVersion    String
-  targetsJson         String
-  deadlineSpecJson    String
-  openingStake        Int
-  plainLanguage       String
-  semanticProofPlan   String
-  // List-card copy from Explore authoring. Null on revisions written before
-  // this existed; the list then uses originalText and humanized game-set
-  // names rather than inventing a second contract.
-  displayTitle        String?
-  statusPhrasesJson   String?
-  translationJson     String?
-  createdAt           DateTime  @default(now())
-
-  @@unique([dareId, revision])
-}
-
-model BucksDareTarget {
-  id             Int       @id @default(autoincrement())
-  dareId         Int
-  dare           BucksDare @relation(fields: [dareId], references: [id], onDelete: Cascade)
-  targetKey      String
-  discordId      String
-  playerId       Int
-  alias          String
-  accounts       String
-  bucksAccountId Int?
-  acceptedAt     DateTime?
-  declinedAt     DateTime?
-  payout         Int?
-  fee            Int?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-
-  @@unique([dareId, targetKey])
-  @@unique([dareId, discordId])
-}
-
-model BucksDareContribution {
-  id             Int          @id @default(autoincrement())
-  dareId         Int
-  dare           BucksDare    @relation(fields: [dareId], references: [id], onDelete: Cascade)
-  bucksAccountId Int
-  bucksAccount   BucksAccount @relation(fields: [bucksAccountId], references: [id], onDelete: Cascade)
-  discordId      String
-  amount         Int
-  createdAt      DateTime     @default(now())
-
-  @@index([dareId])
-  @@index([bucksAccountId])
-}
-
-// Immutable one-row-per-match evidence. The plan is re-evaluated from these
-// rows transactionally; ingestion order cannot change the chronological proof.
-model BucksDareEvidence {
-  id                  Int       @id @default(autoincrement())
-  dareId              Int
-  dare                BucksDare @relation(fields: [dareId], references: [id], onDelete: Cascade)
-  matchId             String
-  gameStartAt         DateTime
-  gameEndAt           DateTime
-  queueType           String
-  candidateMembership String
-  sourceReferences    String
-  evaluationOutput    String
-  coverageState       String
-  targetDependencies  String
-  evaluationTrace     String
-  planVersion         String
-  createdAt           DateTime  @default(now())
-
-  @@unique([dareId, matchId])
-  @@index([dareId, gameEndAt, matchId])
-}
-
 // Binding or financial actions are prepared as single-use, actor-bound,
 // expiring intents. The button/control consumes the intent idempotently after
 // a human approves it; nothing writes domain state before that.
@@ -1946,83 +1379,21 @@ model BucksDareEvidence {
 // `dareId`/`expectedRevision` are nullable because an intent need not have an
 // existing target; a dare intent always sets both, keeping its cascade delete.
 model ConfirmationIntent {
-  id               String     @id @default(uuid())
+  id               String    @id @default(uuid())
   kind             String
   serverId         String
   actorDiscordId   String
   payload          String
-  idempotencyKey   String     @unique
+  idempotencyKey   String    @unique
   expiresAt        DateTime
   consumedAt       DateTime?
   resultJson       String?
-  createdAt        DateTime   @default(now())
+  createdAt        DateTime  @default(now())
   dareId           Int?
-  dare             Dare? @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  dare             Dare?     @relation(fields: [dareId], references: [id], onDelete: Cascade)
   expectedRevision Int?
 
   @@index([dareId, expiresAt])
-}
-
-// Durable marker for Bucks EARNINGS on a (match, guild).
-//
-// A pending row is created before wallet funding so house exhaustion leaves a
-// retryable record even though the post-match cursor advances. The awarding
-// transaction claims it as processing with its FIRST write, then completes it
-// with the earn ledger rows. A failed transaction rolls the claim back to
-// pending; the composite primary key still guards concurrent replays.
-// `awardedAt` is refreshed when the pending row completes, so it is the actual
-// award time for completed rows; while pending it is the marker creation time.
-// `retryAt` rotates failed rows out of the bounded recovery batch, and the
-// target snapshot preserves the original guild recipients across config drift;
-// matchCreatedAt points S3 recovery at the match's game-date partition.
-//
-// Earnings need their own marker because, unlike settlement, they have no
-// natural per-(match, guild) row to carry the state.
-model BucksMatchEarning {
-  matchId   String
-  serverId  String
-  awardedAt DateTime @default(now())
-
-  // postmatch is the normal Match-V5 award; prematch is the one-time League
-  // Classic participation grant, which has no supported post-game payload.
-  phase String @default("postmatch")
-
-  // pending means wallet funding was unavailable and the match must be retried;
-  // processing is held only inside the awarding transaction; complete is the
-  // durable exactly-once result.
-  state String @default("complete")
-
-  targetSnapshotJson String   @default("[]")
-  retryAt            DateTime @default(now())
-  matchCreatedAt     DateTime @default(now())
-
-  // Number of ledger rows written, so reconciliation is one comparison once
-  // the marker is complete.
-  entryCount Int
-
-  @@id([matchId, serverId])
-  @@index([phase, state, retryAt])
-  @@index([state, retryAt])
-}
-
-// The complete non-house standings exactly as one Friday 5 PM PT leaderboard
-// post disclosed them. The web leaderboard reads only this table — never live
-// balances — so the deliberate no-on-demand-leaderboard rule survives a second
-// surface, and the table doubles as an audit of exactly what was disclosed
-// each week. `runWeek` shares the weekly post's chunk-nonce clock, so a cron
-// retry upserts its own week instead of duplicating it.
-model BucksWeeklyLeaderboardSnapshot {
-  id         Int      @id @default(autoincrement())
-  serverId   String
-  runWeek    Int
-  postedAt   DateTime @default(now())
-  entryCount Int
-  // JSON, BucksWeeklyLeaderboardEntriesSchema
-  entries    String
-  createdAt  DateTime @default(now())
-
-  @@unique([serverId, runWeek])
-  @@index([serverId, postedAt])
 }
 
 // =============================================================================
@@ -2094,20 +1465,6 @@ model CustomNightOperation {
 model ScoutOrchestrationCutover {
   id          String   @id
   activatedAt DateTime @default(now())
-}
-
-/// Frozen weekly standings and chunk count. Published only after every chunk's
-/// notification intent has a confirmed delivery, including after a restart.
-model BucksWeeklyPublication {
-  id          String    @id
-  serverId    String
-  runWeek     Int
-  entries     String
-  chunkCount  Int
-  publishedAt DateTime?
-  createdAt   DateTime  @default(now())
-
-  @@unique([serverId, runWeek])
 }
 
 model CustomNightCohost {
@@ -3051,61 +2408,6 @@ model MatchNotificationIntent {
   @@index([recoveryBatchId])
 }
 
-/// One item a completed settlement produced, kept so a takeover need not
-/// reproduce it.
-///
-/// Settlement is a sequence of independently committing steps whose results
-/// are one-shot: each returns a summary only for the transition that committed
-/// it, so a re-run settles nothing and returns nothing. A row here is written
-/// INSIDE the same transaction that produces its item, so the item and the
-/// instruction to announce it commit together or not at all.
-///
-/// One row per item rather than one per match, because the steps commit
-/// separately: a match whose third Dare fails after two settled must keep
-/// those two instructions, and a single per-match row could not be written
-/// until every step had finished — which is the window this closes.
-///
-/// ## Why this row carries amounts when the receipt deliberately does not
-///
-/// A MatchProcessingReceipt names identities and no amounts on purpose, and
-/// the notification lane relied on that when it decided presentation inputs
-/// travel on the intent rather than the receipt. That discipline is about
-/// ATTESTED EVIDENCE: a receipt is proof a phase happened, and restated
-/// payouts on it would be a second, divergent source of truth for settlement
-/// arithmetic.
-///
-/// This row attests nothing. It is a recovery note addressed to the next
-/// attempt of one Activity, saying "settlement already produced this; announce
-/// from it rather than re-settling". Nothing downstream reads it as proof and
-/// nothing derives a fact from it.
-///
-/// ## Write-once
-///
-/// Insert-only, with no updatedAt. A second settlement offering a DIFFERENT
-/// payload for a standing (match, family, item) is two producers disagreeing
-/// about what one transition produced, and it surfaces as a durable-write
-/// conflict rather than overwriting. An identical payload re-presented is
-/// already-applied, which is what lets a retry proceed.
-///
-/// ## Retention
-///
-/// Bounded by deletion once the work it protects is finished, never in the hot
-/// path before the receipt exists. A match carrying a settlement receipt has
-/// had its announcements minted and its rows are sweepable; see SJ-203.
-model MatchSettlementAnnouncement {
-  riotMatchId String
-  /// closure | settlement | parlay | earnings | late-earnings
-  family      String
-  /// The item's identity within its family: a guild id, or a Dare id.
-  itemKey     String
-  version     Int
-  payload     String
-  createdAt   DateTime @default(now())
-
-  @@id([riotMatchId, family, itemKey])
-  @@index([riotMatchId])
-}
-
 /// One recovery batch (domain RecoveryBatch). Cursor and count columns mirror
 /// the state union's per-variant payloads, so they are nullable and CHECKed
 /// present exactly in the variant that carries them (cursor in `scanning`,
@@ -3256,7 +2558,7 @@ model Dare {
   originConversationId  String?
   dareState             String    @default("draft")
   currentRevision       Int       @default(1)
-  publishedRevision        Int?
+  publishedRevision     Int?
   contractJson          String?
   proposalExpiresAt     DateTime?
   acceptDeadline        DateTime?
@@ -3278,11 +2580,11 @@ model Dare {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  revisions     DareRevision[]
-  targets       DareTarget[]
-  evidence      DareEvidence[]
-  intents       ConfirmationIntent[]
-  activation    DareActivation?
+  revisions  DareRevision[]
+  targets    DareTarget[]
+  evidence   DareEvidence[]
+  intents    ConfirmationIntent[]
+  activation DareActivation?
 
   @@index([challengerDiscordId, dareState, updatedAt])
   @@index([serverId, dareState, updatedAt])
@@ -3294,7 +2596,7 @@ model Dare {
 
 model DareActivation {
   dareId        Int       @id
-  dare          Dare @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  dare          Dare      @relation(fields: [dareId], references: [id], onDelete: Cascade)
   revision      Int
   requestedAt   DateTime
   nextAttemptAt DateTime
@@ -3310,9 +2612,9 @@ model DareActivation {
 }
 
 model DareRevision {
-  id                  Int       @id @default(autoincrement())
+  id                  Int      @id @default(autoincrement())
   dareId              Int
-  dare                Dare @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  dare                Dare     @relation(fields: [dareId], references: [id], onDelete: Cascade)
   revision            Int
   originalText        String
   canonicalScoutQl    String
@@ -3331,33 +2633,33 @@ model DareRevision {
   displayTitle        String?
   statusPhrasesJson   String?
   translationJson     String?
-  createdAt           DateTime  @default(now())
+  createdAt           DateTime @default(now())
 
   @@unique([dareId, revision])
 }
 
 model DareTarget {
-  id             Int       @id @default(autoincrement())
-  dareId         Int
-  dare           Dare @relation(fields: [dareId], references: [id], onDelete: Cascade)
-  targetKey      String
-  discordId      String
-  playerId       Int
-  alias          String
-  accounts       String
-  acceptedAt     DateTime?
-  declinedAt     DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id         Int       @id @default(autoincrement())
+  dareId     Int
+  dare       Dare      @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  targetKey  String
+  discordId  String
+  playerId   Int
+  alias      String
+  accounts   String
+  acceptedAt DateTime?
+  declinedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   @@unique([dareId, targetKey])
   @@unique([dareId, discordId])
 }
 
 model DareEvidence {
-  id                  Int       @id @default(autoincrement())
+  id                  Int      @id @default(autoincrement())
   dareId              Int
-  dare                Dare @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  dare                Dare     @relation(fields: [dareId], references: [id], onDelete: Cascade)
   matchId             String
   gameStartAt         DateTime
   gameEndAt           DateTime
@@ -3369,20 +2671,20 @@ model DareEvidence {
   targetDependencies  String
   evaluationTrace     String
   planVersion         String
-  createdAt           DateTime  @default(now())
+  createdAt           DateTime @default(now())
 
   @@unique([dareId, matchId])
   @@index([dareId, gameEndAt, matchId])
 }
 
 model DareNotificationPreference {
-  id                        Int       @id @default(autoincrement())
-  serverId                  String
-  discordId                 String
-  dareLifecycleDms          Boolean   @default(true)
-  dareProgressDms           Boolean   @default(true)
-  createdAt                 DateTime  @default(now())
-  updatedAt                 DateTime  @updatedAt
+  id               Int      @id @default(autoincrement())
+  serverId         String
+  discordId        String
+  dareLifecycleDms Boolean  @default(true)
+  dareProgressDms  Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@unique([serverId, discordId])
 }

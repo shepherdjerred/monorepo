@@ -30,8 +30,6 @@ const at = IsoInstantSchema.parse(now.toISOString());
 beforeEach(async () => {
   await db.matchNotificationIntent.deleteMany();
   await db.scoutWorkflowStart.deleteMany();
-  await db.bucksWeeklyPublication.deleteMany();
-  await db.bucksWeeklyLeaderboardSnapshot.deleteMany();
   await db.dmAuditLog.deleteMany();
   await db.scoutOrchestrationCutover.deleteMany();
 });

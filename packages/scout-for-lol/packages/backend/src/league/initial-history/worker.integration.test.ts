@@ -93,7 +93,6 @@ beforeEach(async () => {
   await deleteIfExists(() => prisma.initialMatchHistoryImport.deleteMany());
   await deleteIfExists(() => prisma.currentRankSnapshot.deleteMany());
   await deleteIfExists(() => prisma.matchRankHistory.deleteMany());
-  await deleteIfExists(() => prisma.bucksMatchEarning.deleteMany());
   await deleteIfExists(() => prisma.account.deleteMany());
   await deleteIfExists(() => prisma.player.deleteMany());
 });
@@ -269,7 +268,6 @@ describe("initial history worker", () => {
     );
 
     expect(await prisma.matchRankHistory.count()).toBe(0);
-    expect(await prisma.bucksMatchEarning.count()).toBe(0);
   });
 
   test("rotates fairly between due PUUIDs", async () => {

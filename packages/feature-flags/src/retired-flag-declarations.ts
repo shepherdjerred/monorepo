@@ -192,4 +192,42 @@ export const retiredFlagDeclarations = [
     namespace: "streambot",
     key: "streambot-playlist-limit",
   },
+  // The free-Dares release removed every economy reader. Beta economic work
+  // is drained; the unused production controls never enabled this surface.
+  { environment: "beta", namespace: "scout", key: "betting_enabled" },
+  {
+    environment: "beta",
+    namespace: "scout",
+    key: "betting_player_bet_outcome_dm_enabled",
+  },
+  {
+    environment: "beta",
+    namespace: "scout",
+    key: "betting_settlement_dm_enabled",
+  },
+  { environment: "beta", namespace: "scout", key: "bucks_dares_enabled" },
+  { environment: "beta", namespace: "scout", key: "bucks_transfers_enabled" },
+  {
+    environment: "beta",
+    namespace: "scout",
+    key: "scout-betting-parlay-ai-model",
+  },
+  { environment: "prod", namespace: "scout", key: "betting_enabled" },
+  {
+    environment: "prod",
+    namespace: "scout",
+    key: "betting_player_bet_outcome_dm_enabled",
+  },
+  {
+    environment: "prod",
+    namespace: "scout",
+    key: "betting_settlement_dm_enabled",
+  },
+  { environment: "prod", namespace: "scout", key: "bucks_dares_enabled" },
+  { environment: "prod", namespace: "scout", key: "bucks_transfers_enabled" },
+  {
+    environment: "prod",
+    namespace: "scout",
+    key: "scout-betting-parlay-ai-model",
+  },
 ] as const;

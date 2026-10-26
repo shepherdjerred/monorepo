@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { retiredFlagDeclarations } from "./retired-flag-declarations.ts";
 import {
   ManagedFlagInventorySchema,
   managedFlagInventory,
@@ -7,7 +8,7 @@ import {
 } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 
 test.each(["beta", "prod"])(
-  "retained economy controls remain off in %s until their readers drain",
+  "retires every economy control in %s while retaining standalone Dares",
   (environment) => {
     const flags = materializeManagedNamespaceEnvironment(
       managedFlagInventory,
@@ -16,19 +17,20 @@ test.each(["beta", "prod"])(
     );
     for (const key of [
       "betting_enabled",
-      "bucks_transfers_enabled",
-      "bucks_dares_enabled",
       "betting_player_bet_outcome_dm_enabled",
       "betting_settlement_dm_enabled",
+      "bucks_dares_enabled",
+      "bucks_transfers_enabled",
+      "scout-betting-parlay-ai-model",
     ]) {
-      expect(flags.find((flag) => flag.key === key)).toMatchObject({
-        type: "boolean",
-        default: false,
-        rollouts: [],
-        rules: [],
-        thresholdRollouts: [],
+      expect(flags.some((flag) => flag.key === key)).toBe(false);
+      expect(retiredFlagDeclarations).toContainEqual({
+        environment,
+        namespace: "scout",
+        key,
       });
     }
+    expect(flags.some((flag) => flag.key === "dares_enabled")).toBe(true);
   },
 );
 

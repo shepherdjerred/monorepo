@@ -387,8 +387,6 @@ beforeEach(async () => {
   await db.duelCompetitor.deleteMany();
   await db.account.deleteMany();
   await db.player.deleteMany();
-  await db.bucksLedgerEntry.deleteMany();
-  await db.bucksAccount.deleteMany();
 });
 
 afterAll(async () => {
@@ -444,9 +442,6 @@ describe("duel persistence", () => {
         { accepted: true, ready: false },
       ],
     });
-
-    expect(await db.bucksAccount.count()).toBe(0);
-    expect(await db.bucksLedgerEntry.count()).toBe(0);
 
     await db.account.deleteMany({
       where: { playerId: { in: [first.playerId, second.playerId] } },
