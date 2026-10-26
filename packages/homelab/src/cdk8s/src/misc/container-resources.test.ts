@@ -509,7 +509,7 @@ describe("Burst-memory sharing policy", () => {
     });
     for (const [name, cpu, request, limit, heap, mapPort, mapName] of [
       ["minecraft-shuxin", "500m", "8Gi", "8Gi", "7G", 8100, "bluemap"],
-      ["minecraft-tsmc", "3", "8Gi", "10Gi", "8G", 8100, "bluemap"],
+      ["minecraft-tsmc", "3", "10Gi", "16Gi", "8G", 8100, "bluemap"],
       ["minecraft-sjerred", "2", "6Gi", "8Gi", "5G", 8123, "dynmap"],
     ] as const) {
       const values = applications.find((app) => app.metadata.name === name)
