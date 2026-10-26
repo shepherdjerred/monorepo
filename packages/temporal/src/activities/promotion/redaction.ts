@@ -1,3 +1,22 @@
+import { agentTaskSecretTokens } from "#activities/agent/agent-task-env.ts";
+
+/** Public account names and map keys must remain usable in scoped browser URLs. */
+export function promotionSecretTokens(
+  logins: Readonly<Record<string, { username: string; password: string }>>,
+  environment: Readonly<Record<string, string | undefined>> = Bun.env,
+): readonly (string | undefined)[] {
+  const source = { ...environment };
+  delete source["STORM_PROMOTION_LOGINS"];
+  return [
+    ...agentTaskSecretTokens(undefined, source),
+    environment["STORM_PROMOTION_LOGINS"],
+    ...Object.values(logins).flatMap((login) => [
+      login.password,
+      JSON.stringify(login.password).slice(1, -1),
+    ]),
+  ];
+}
+
 /** Strip navigation nonces before observations enter prompts or evidence storage. */
 export function promotionPublicUrl(address: string): string {
   const url = new URL(address);

@@ -11,10 +11,7 @@ import {
   type PromotionState,
   type PromotionTarget,
 } from "#shared/promotion.ts";
-import {
-  envForProvider,
-  agentTaskSecretTokens,
-} from "#activities/agent/agent-task-env.ts";
+import { envForProvider } from "#activities/agent/agent-task-env.ts";
 import { redactSecrets } from "#shared/redact.ts";
 import { redactAgentTaskPayloadStrings } from "#activities/agent/agent-task-result.ts";
 import { PromotionBrowser } from "./browser.ts";
@@ -24,6 +21,7 @@ import { promotionPrompt } from "./prompt.ts";
 import { createPromotionToolHandler, PromotionLoginsSchema } from "./tools.ts";
 import { promotionConfig } from "#config/promotion.ts";
 import type { PromotionStore } from "./store.ts";
+import { promotionSecretTokens } from "./redaction.ts";
 
 function required(name: string): string {
   const value = Bun.env[name];
@@ -69,7 +67,7 @@ export async function runPromotionAgent(input: {
   const logins = PromotionLoginsSchema.parse(
     JSON.parse(required("STORM_PROMOTION_LOGINS")),
   );
-  const redact = agentTaskSecretTokens(undefined);
+  const redact = promotionSecretTokens(logins);
   const gateway = new PromotionGateway({
     ...input,
     preview: input.mode === "preview",
