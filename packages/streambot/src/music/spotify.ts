@@ -1,8 +1,11 @@
-import { createRequire } from "node:module";
 import { z } from "zod";
 import type { MusicTrack } from "./contracts.ts";
 import { MusicError } from "./errors.ts";
 import { isSpotifyArtworkUrl } from "./artwork.ts";
+
+const spotifyUrlInfoModule = z
+  .object({ default: z.unknown() })
+  .parse(await import("spotify-url-info"));
 
 const TrackSchema = z.object({
   name: z.string().min(1),
@@ -50,7 +53,7 @@ export class SpotifyMetadata {
       .custom<(fetcher: typeof fetch) => unknown>(
         (value) => typeof value === "function",
       )
-      .parse(createRequire(import.meta.url)("spotify-url-info"));
+      .parse(spotifyUrlInfoModule.default);
     const value: unknown = factory(fetcher);
     this.api = z
       .object({

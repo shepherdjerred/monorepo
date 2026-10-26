@@ -61,6 +61,25 @@ export class WebPlaylists {
       })),
     };
   }
+  private async playbackView(
+    command: z.infer<typeof CommandSchema>,
+    guildId: string,
+    session: WebSession,
+  ) {
+    if (command.guildId !== guildId)
+      throw new WebError(
+        400,
+        "guild_changed",
+        "Refresh the playback destination.",
+      );
+    const context = await this.music.playback.commandContext(session, {
+      ...command,
+      action: "volume",
+      percent: 100,
+    });
+    context.guard();
+    return context.handle.view();
+  }
   private async browse(url: URL, session: WebSession) {
     const guildId = url.searchParams.get("guildId") ?? "";
     await this.music.require(session, guildId, "playlists");
@@ -95,19 +114,7 @@ export class WebPlaylists {
     viewer: PlaylistViewer,
   ) {
     const command = requestInput(CommandSchema, input.playback);
-    if (command.guildId !== input.guildId)
-      throw new WebError(
-        400,
-        "guild_changed",
-        "Refresh the playback destination.",
-      );
-    const context = await this.music.playback.commandContext(session, {
-      ...command,
-      action: "volume",
-      percent: 100,
-    });
-    context.guard();
-    const view = context.handle.view();
+    const view = await this.playbackView(command, input.guildId, session);
     const content: PlaylistContent[] = [
       ...(view.current === null ? [] : [view.current]),
       ...view.queue,
@@ -220,19 +227,8 @@ export class WebPlaylists {
     let current: PlaylistContent | undefined;
     if (input.action === "add" && input.playback !== undefined) {
       const command = requestInput(CommandSchema, input.playback);
-      if (command.guildId !== input.guildId)
-        throw new WebError(
-          400,
-          "guild_changed",
-          "Refresh the playback destination.",
-        );
-      const context = await this.music.playback.commandContext(session, {
-        ...command,
-        action: "volume",
-        percent: 100,
-      });
-      context.guard();
-      const item = context.handle.view().current;
+      const view = await this.playbackView(command, input.guildId, session);
+      const item = view.current;
       if (item?.source === undefined)
         throw new MusicError(400, "queue_empty", "Nothing is playing.");
       current = { title: item.title, source: item.source };

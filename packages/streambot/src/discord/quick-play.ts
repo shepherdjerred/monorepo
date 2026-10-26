@@ -1,8 +1,4 @@
-import {
-  MessageFlags,
-  type ChatInputCommandInteraction,
-  type Message,
-} from "discord.js";
+import { type ChatInputCommandInteraction, type Message } from "discord.js";
 import type { CommandBotDeps } from "./commands/command-bot-deps.ts";
 import { PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
@@ -11,6 +7,7 @@ import { musicErrorMessage } from "./music-access.ts";
 import { loadMusicLink } from "./music-links.ts";
 import {
   collectMusicCancellation,
+  interactionMusicLinkReply,
   type MusicLinkReply,
 } from "./music-link-reply.ts";
 import { webPageUrl } from "./web-link.ts";
@@ -79,16 +76,7 @@ export async function slashPlay(
     interaction,
     deps,
     interaction.options.getString("query", true),
-    {
-      start: async (payload) => {
-        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-        await interaction.editReply(payload);
-      },
-      edit: (payload) => interaction.editReply(payload),
-      onCancel: async (listener) => {
-        collectMusicCancellation(await interaction.fetchReply(), listener);
-      },
-    },
+    interactionMusicLinkReply(interaction),
   );
 }
 

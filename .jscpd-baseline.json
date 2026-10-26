@@ -892,10 +892,6 @@
       "clones": 1,
       "tokens": 71
     },
-    "packages/streambot/src/index.ts|packages/streambot/test/unit/config-dynamic.test.ts": {
-      "clones": 1,
-      "tokens": 73
-    },
     "packages/streambot/src/voice/debug-audio-recorder.ts|packages/voice-assistant/src/audio/wave-io.ts": {
       "clones": 1,
       "tokens": 73
@@ -918,7 +914,7 @@
     },
     "packages/streambot/test/unit/config-dynamic.test.ts|packages/streambot/test/unit/config-dynamic.test.ts": {
       "clones": 1,
-      "tokens": 110
+      "tokens": 104
     },
     "packages/streambot/test/voice/fake-realtime-transport.ts|packages/streambot/test/voice/fake-realtime-transport.ts": {
       "clones": 1,
