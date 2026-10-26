@@ -6,6 +6,8 @@ import { createPublicationActivities } from "#automation/publication.ts";
 import { prepareMediaRestore } from "#infrastructure/recovery.ts";
 import { setTimeout } from "node:timers/promises";
 import { grantTestLease } from "#testing/authority.ts";
+import { plexBindingFixture } from "#automation/plex-binding/test-fixture.ts";
+import { rm } from "node:fs/promises";
 
 const { database, context, fixture } = automationTestHarness();
 
@@ -180,32 +182,54 @@ test("cancellation during qBit lookup revokes the final submission authority", a
   expect(current.movieEditionAuthority).toEqual(original.movieEditionAuthority);
 });
 
-test("a restore epoch fences old publication before Plex network effects and finalization", async () => {
-  const f = await fixture();
-  const ctx = context();
-  const reservation = await createAcquisitionActivities(
-    ctx,
-  ).reconcileMediaIntent(f.input);
-  if (reservation.attemptId === null) throw new Error("Reservation absent");
-  await prepareMediaRestore(database(), {
-    recoveryId: crypto.randomUUID(),
-    expectedEpoch: 0,
-    reason: "restore epoch test",
-  });
-  // Simulate a separately reviewed later ownership transfer, leaving old attempt untouched.
-  await grantTestLease(database(), 1);
-  await database().mediaRuntimeState.update({
-    where: { id: "singleton" },
-    data: { mode: "active", ownershipConfirmed: true },
-  });
-  const input = {
-    operationId: f.input.operationId,
-    attemptId: reservation.attemptId,
-  };
-  expect(
-    await createPublicationActivities(ctx).publishMediaToPlex(input),
-  ).toEqual({ status: "blocked", reason: "recovery_epoch_changed" });
-  await expect(
-    createPublicationActivities(ctx).finalizeMediaAcquisition(input),
-  ).rejects.toThrow("Finalization ownership authority changed");
-});
+test.each([false, true])(
+  "a restore epoch fences unfinished publication while preserving completed receipt readback (completed=%s)",
+  async (completed) => {
+    const f = await plexBindingFixture(database(), context(), {
+      publicationPending: true,
+    });
+    try {
+      const ctx = f.context;
+      if (completed)
+        expect(
+          await createPublicationActivities(ctx).publishMediaToPlex(
+            f.published.input,
+          ),
+        ).toEqual({ status: "available", reason: null });
+      const callsBeforeRestore = [...f.calls];
+      await prepareMediaRestore(database(), {
+        recoveryId: crypto.randomUUID(),
+        expectedEpoch: 0,
+        reason: "restore epoch test",
+      });
+      // Simulate a separately reviewed later ownership transfer, leaving old attempt untouched.
+      await grantTestLease(database(), 1);
+      await database().mediaRuntimeState.update({
+        where: { id: "singleton" },
+        data: { mode: "active", ownershipConfirmed: true },
+      });
+      const input = {
+        operationId: f.published.input.operationId,
+        attemptId: f.published.attempt.id,
+      };
+      expect(
+        await createPublicationActivities(ctx).publishMediaToPlex(input),
+      ).toEqual(
+        completed
+          ? { status: "available", reason: null }
+          : { status: "blocked", reason: "recovery_epoch_changed" },
+      );
+      await expect(
+        createPublicationActivities(ctx).finalizeMediaAcquisition(input),
+      ).rejects.toThrow("Plex association requires a fresh exact verification");
+      expect(f.calls).toEqual(callsBeforeRestore);
+      expect(
+        await database().acquisitionAttempt.findUniqueOrThrow({
+          where: { id: input.attemptId },
+        }),
+      ).toMatchObject({ recoveryEpoch: 0, state: "imported" });
+    } finally {
+      await rm(f.files.directory, { recursive: true, force: true });
+    }
+  },
+);

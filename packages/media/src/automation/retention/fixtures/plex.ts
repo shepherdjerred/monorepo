@@ -113,9 +113,31 @@ export async function retentionPlexContext(
   const state: {
     watched: boolean | null;
     sessions: PlexItem[];
+    watchOverrides: Map<string, boolean | null>;
     beforeMetadata?: () => Promise<void>;
-  } = { watched: true, sessions: [] };
+  } = { watched: true, sessions: [], watchOverrides: new Map() };
   const calls: string[] = [];
+  const metadataResponse = async (url: URL) => {
+    await state.beforeMetadata?.();
+    const item = metadata.get(url.pathname.slice("/library/metadata/".length));
+    const watched =
+      item !== undefined && state.watchOverrides.has(item.ratingKey)
+        ? state.watchOverrides.get(item.ratingKey)
+        : state.watched;
+    if (watched === undefined)
+      throw new Error("Synthetic watch override missing");
+    if (
+      item === undefined ||
+      (watched === null && ["movie", "episode"].includes(item.type))
+    )
+      return new Response(null, { status: 404 });
+    return Response.json({
+      MediaContainer: {
+        size: 1,
+        Metadata: [{ ...item, viewCount: watched === true ? 1 : 0 }],
+      },
+    });
+  };
   const transport: FetchTransport = async (url) => {
     calls.push(url.pathname);
     if (url.pathname === "/identity")
@@ -159,23 +181,8 @@ export async function retentionPlexContext(
         });
       }
     }
-    if (url.pathname.startsWith("/library/metadata/")) {
-      await state.beforeMetadata?.();
-      const item = metadata.get(
-        url.pathname.slice("/library/metadata/".length),
-      );
-      if (
-        item === undefined ||
-        (state.watched === null && ["movie", "episode"].includes(item.type))
-      )
-        return new Response(null, { status: 404 });
-      return Response.json({
-        MediaContainer: {
-          size: 1,
-          Metadata: [{ ...item, viewCount: state.watched === true ? 1 : 0 }],
-        },
-      });
-    }
+    if (url.pathname.startsWith("/library/metadata/"))
+      return await metadataResponse(url);
     throw new Error(`Unexpected synthetic retention request ${url.pathname}`);
   };
   const client = (token: string) =>

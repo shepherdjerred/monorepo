@@ -1,13 +1,22 @@
 import { defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
-import { describe, expect, test } from "vitest";
+import { afterAll, describe, expect, test } from "vitest";
+import { rm } from "node:fs/promises";
+import { verifiedPublicationFixture } from "#automation/publication-proof/verified.test-fixture.ts";
 import { createOutboxActivities } from "./store.ts";
 import { observeRequesterWatch } from "./watch.ts";
 import { automationTestHarness } from "#testing/automation.ts";
 describe("durable media Activity invariants in PostgreSQL", () => {
   const { database, context, fixture, cipher } = automationTestHarness();
+  const directories: string[] = [];
+  afterAll(async () => {
+    for (const directory of directories)
+      await rm(directory, { recursive: true, force: true });
+  });
   test("mark-unwatched cancels old grace and advances generation; rewatch cannot reuse it", async () => {
-    const data = await fixture();
+    const produced = await verifiedPublicationFixture(database(), context());
+    const data = produced.files;
+    directories.push(data.directory);
     await database().credential.create({
       data: {
         userId: data.user.id,
@@ -37,36 +46,20 @@ describe("durable media Activity invariants in PostgreSQL", () => {
         graceUntil: new Date(1),
       },
     });
+    produced.state.watched = null;
     expect(
-      await observeRequesterWatch(
-        context(async () => new Response(null, { status: 404 })),
-        data.media.id,
-      ),
+      await observeRequesterWatch(produced.context, data.media.id),
     ).toMatchObject({ complete: false });
     expect(
       await database().watchState.count({ where: { mediaId: data.media.id } }),
     ).toBe(0);
-    const result = await observeRequesterWatch(
-      context(async (_url, init) => {
-        expect(new Headers(init.headers).get("X-Plex-Token")).toBe(
-          "per-user-fixture",
-        );
-        return Response.json({
-          MediaContainer: {
-            size: 1,
-            Metadata: [
-              {
-                ratingKey: "123",
-                type: "movie",
-                title: "Example",
-                viewCount: 0,
-              },
-            ],
-          },
-        });
-      }),
-      data.media.id,
-    );
+    produced.state.watched = false;
+    const userPlex = produced.context.userPlex;
+    produced.context.userPlex = (token) => {
+      expect(token).toBe("per-user-fixture");
+      return userPlex(token);
+    };
+    const result = await observeRequesterWatch(produced.context, data.media.id);
     expect(result.complete).toBe(true);
     expect(
       await database().mediaIntent.findUnique({
@@ -81,7 +74,9 @@ describe("durable media Activity invariants in PostgreSQL", () => {
   });
 
   test("missing requester credentials invalidate formerly fresh watched evidence", async () => {
-    const data = await fixture("124");
+    const produced = await verifiedPublicationFixture(database(), context());
+    const data = produced.files;
+    directories.push(data.directory);
     await database().watchState.create({
       data: {
         userId: data.user.id,
@@ -91,9 +86,9 @@ describe("durable media Activity invariants in PostgreSQL", () => {
         source: "plex_current",
       },
     });
-    expect(await observeRequesterWatch(context(), data.media.id)).toMatchObject(
-      { complete: false },
-    );
+    expect(
+      await observeRequesterWatch(produced.context, data.media.id),
+    ).toMatchObject({ complete: false });
     expect(
       await database().watchState.count({
         where: { mediaId: data.media.id },

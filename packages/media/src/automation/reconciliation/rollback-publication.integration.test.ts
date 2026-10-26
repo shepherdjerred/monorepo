@@ -1,90 +1,68 @@
-import { expect, test } from "vitest";
+import { afterAll, expect, test } from "vitest";
+import { rm } from "node:fs/promises";
 import { automationTestHarness } from "#testing/automation.ts";
 import { createPublicationActivities } from "#automation/publication.ts";
-import { publicationSeries } from "./publication.test-support.ts";
+import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
+import { sharedTvFileFixture } from "#automation/native-archive/fixtures/shared-tv.ts";
+import { preparePhysicalPublication } from "#automation/plex-binding/test-fixture.ts";
+import { retentionPlexContext } from "#automation/retention/fixtures/plex.ts";
+import { createMediaFileActivities } from "#automation/files/activities.ts";
 
-const { database, context, fixture } = automationTestHarness();
+const { database, context } = automationTestHarness();
+const directories: string[] = [];
+afterAll(async () => {
+  for (const directory of directories)
+    await rm(directory, { recursive: true, force: true });
+});
 
 async function rolledBackFixture() {
-  const data = await fixture();
-  const series = await publicationSeries(database(), data.media.id);
-  await database().mediaItem.update({
-    where: { id: data.media.id },
-    data: {
-      kind: "episode",
-      seasonNumber: 1,
-      episodeNumber: 1,
-      externalIds: { seriesTmdb: 999 },
-      availability: "importing",
-    },
+  const db = database();
+  const files = await sharedTvFileFixture(db, mappedPublicationFixture);
+  directories.push(files.directory);
+  const original = await preparePhysicalPublication(files);
+  const originalWire = await retentionPlexContext(
+    db,
+    context(),
+    original.entry.mediaIds,
+  );
+  const publisher = createPublicationActivities(originalWire.context);
+  expect(await publisher.publishMediaToPlex(original.input)).toEqual({
+    status: "available",
+    reason: null,
   });
-  const second = await database().mediaItem.create({
-    data: {
-      kind: "episode",
-      title: "Second",
-      parentId: series.id,
-      seasonNumber: 1,
-      episodeNumber: 2,
-      externalIds: { seriesTmdb: 999 },
-      availability: "importing",
-      intents: {
-        create: {
-          generation: 1,
-          profileId: data.profile.id,
-          automationEpoch: 0,
-          editionRootId: series.id,
-        },
-      },
-    },
+  await publisher.finalizeMediaAcquisition(original.input);
+  const inspect = files.context.inspect;
+  if (inspect === undefined) throw new Error("Missing inspector");
+  files.context.inspect = async (path) => {
+    const probe = await inspect(path);
+    return {
+      ...probe,
+      streams: probe.streams.map((stream) =>
+        stream.codec_type === "video"
+          ? { ...stream, width: 3840, height: 1600 }
+          : stream,
+      ),
+    };
+  };
+  const upgraded = await preparePhysicalPublication({
+    ...files,
+    acquisition: () => files.acquisition("Improved shared TV video contents"),
   });
-  const mediaIds = [data.media.id, second.id];
-  const asset = await database().libraryAsset.create({
-    data: {
-      path: `/fixture/${crypto.randomUUID()}.mkv`,
-      sizeBytes: 1000n,
-      checksum: "abc",
-      owned: true,
-      ownershipEpoch: 0,
-      editionRootId: series.id,
-      properties: {},
-      state: "published",
-      coverage: {
-        create: mediaIds.map((mediaId) => ({ mediaId, current: true })),
-      },
-    },
+  expect(upgraded.entry.previousAssetId).toBe(original.entry.assetId);
+  expect(
+    await createMediaFileActivities(files.context).rollbackMediaPromotion(
+      upgraded.input,
+    ),
+  ).toEqual({ status: "rolled_back" });
+  const attempt = await db.acquisitionAttempt.findUniqueOrThrow({
+    where: { id: upgraded.attempt.id },
   });
-  const request = await database().mediaRequest.findFirstOrThrow({
-    where: { mediaId: data.media.id },
-  });
-  const attempt = await database().acquisitionAttempt.create({
-    data: {
-      operationId: data.input.operationId,
-      releaseId: data.release.id,
-      sponsorRequestId: request.id,
-      mediaIds,
-      generations: Object.fromEntries(mediaIds.map((id) => [id, 1])),
-      state: "rolled_back",
-      failure: {
-        rollbackReceipt: {
-          recoveryEpoch: 0,
-          mediaIds,
-          assets: [
-            {
-              assetId: asset.id,
-              assetVersion: asset.version,
-              checksum: asset.checksum,
-            },
-          ],
-        },
-      },
-      reservations: {
-        create: mediaIds.map((mediaId) => ({ mediaId, generation: 1 })),
-      },
-    },
+  const asset = await db.libraryAsset.findUniqueOrThrow({
+    where: { id: original.entry.assetId },
   });
   // A previous failed scan must not carry its cursor or stale rating keys into rollback.
-  await database().operation.update({
-    where: { id: data.input.operationId },
+  await db.operation.update({
+    where: { id: upgraded.input.operationId },
     data: {
       result: {
         plexScan: {
@@ -96,63 +74,26 @@ async function rolledBackFixture() {
       },
     },
   });
+  const transport = await retentionPlexContext(db, context(), attempt.mediaIds);
   return {
-    ...data,
-    mediaIds,
+    media: files.media,
+    mediaIds: attempt.mediaIds,
     asset,
     attempt,
-    input: { operationId: data.input.operationId, attemptId: attempt.id },
+    input: upgraded.input,
+    transport,
   };
 }
-
 test("rollback keeps all shared-file episodes importing until fresh Plex identity verification", async () => {
   const data = await rolledBackFixture();
   let scans = 0;
-  const ctx = context(async (url) => {
-    if (url.pathname.endsWith("/library/sections"))
-      return Response.json({
-        MediaContainer: {
-          size: 1,
-          Directory: [{ key: "2", title: "TV", type: "show" }],
-        },
-      });
-    if (url.pathname.endsWith("/refresh")) return new Response();
-    if (url.pathname.endsWith("/all")) {
-      expect(url.searchParams.get("X-Plex-Container-Start")).toBe("0");
-      scans++;
-      const episodes = scans === 1 ? [] : [1, 2];
-      return Response.json({
-        MediaContainer: {
-          size: episodes.length,
-          totalSize: episodes.length,
-          Metadata: episodes.map((episode) => ({
-            ratingKey: String(episode),
-            title: "Episode",
-            type: "episode",
-            index: episode,
-            parentIndex: 1,
-            grandparentRatingKey: "500",
-            Media: [{ Part: [{ id: 1, file: data.asset.path }] }],
-          })),
-        },
-      });
-    }
-    if (url.pathname.endsWith("/metadata/500"))
-      return Response.json({
-        MediaContainer: {
-          size: 1,
-          Metadata: [
-            {
-              ratingKey: "500",
-              title: "Series",
-              type: "show",
-              Guid: [{ id: "tmdb://999" }],
-            },
-          ],
-        },
-      });
-    throw new Error("Unexpected Plex request");
-  });
+  const ctx = data.transport.context;
+  const libraryPage = ctx.plex.libraryPage.bind(ctx.plex);
+  ctx.plex.libraryPage = async (input) => {
+    expect(input.offset).toBe(0);
+    scans++;
+    return scans === 1 ? { total: 0, items: [] } : await libraryPage(input);
+  };
   const activities = createPublicationActivities(ctx);
   expect(await activities.publishRolledBackMedia(data.input)).toEqual({
     status: "waiting",

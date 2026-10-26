@@ -1,4 +1,6 @@
-import { expect, test } from "vitest";
+import { afterAll, expect, test } from "vitest";
+import { rm } from "node:fs/promises";
+import { verifiedPublicationFixture } from "#automation/publication-proof/verified.test-fixture.ts";
 import { automationTestHarness } from "#testing/automation.ts";
 import { observeRequesterWatch } from "#automation/watch.ts";
 import { createRetentionActivities } from "#automation/retention.ts";
@@ -12,6 +14,63 @@ import { chooseTestMovieEdition } from "#infrastructure/movie-editions/test-supp
 import { grantTestRequesterAccess } from "#testing/authority.ts";
 
 const h = automationTestHarness();
+const directories: string[] = [];
+afterAll(async () => {
+  for (const directory of directories)
+    await rm(directory, { recursive: true, force: true });
+});
+
+async function publishedSetup() {
+  const db = h.database();
+  const produced = await verifiedPublicationFixture(db, h.context());
+  directories.push(produced.files.directory);
+  const f = produced.files;
+  const namedUser = await db.mediaUser.create({
+    data: {
+      plexAccountId: crypto.randomUUID(),
+      displayName: "Named requester",
+      email: "named@example.com",
+      emailVerifiedAt: new Date(),
+      notificationPreference: { create: { emailEnabled: true } },
+    },
+  });
+  await grantTestRequesterAccess(db, namedUser.id, "fixture-server");
+  await chooseTestMovieEdition(db, {
+    actor: { ...namedUser, role: "member" },
+    mediaId: f.media.id,
+    edition: "extended_cut",
+    access: { serverMachineId: "fixture-server", movieSectionId: "1" },
+  });
+  await db.mediaIntent.update({
+    where: {
+      mediaId_edition: { mediaId: f.media.id, edition: "extended_cut" },
+    },
+    data: { generation: 77 },
+  });
+  await db.mediaUser.update({
+    where: { id: f.user.id },
+    data: {
+      email: "default@example.com",
+      emailVerifiedAt: new Date(),
+      notificationPreference: { create: { emailEnabled: true } },
+    },
+  });
+  const input = {
+    ...produced.published.input,
+    mediaId: f.media.id,
+    generation: produced.published.entry.generations[f.media.id],
+  };
+  if (input.generation === undefined)
+    throw new Error("Publication omitted its generation");
+  return {
+    ...f,
+    db,
+    namedUser,
+    asset: produced.asset,
+    input: { ...input, generation: input.generation },
+    context: produced.context,
+  };
+}
 async function setup() {
   const f = await h.fixture();
   const db = h.database();
@@ -70,7 +129,7 @@ async function setup() {
 }
 
 test("default watch and notifications stay isolated while pending named demand protects automatic retention", async () => {
-  const f = await setup();
+  const f = await publishedSetup();
   const namedWatch = await f.db.watchState.create({
     data: {
       mediaId: f.media.id,
@@ -108,23 +167,7 @@ test("default watch and notifications stay isolated while pending named demand p
       ),
     },
   });
-  const ctx = h.context(async (url) =>
-    Response.json({
-      MediaContainer: url.pathname.endsWith("sessions")
-        ? { size: 0 }
-        : {
-            size: 1,
-            Metadata: [
-              {
-                ratingKey: "42",
-                title: "Default",
-                type: "movie",
-                viewCount: 1,
-              },
-            ],
-          },
-    }),
-  );
+  const ctx = f.context;
   expect(await observeRequesterWatch(ctx, f.media.id)).toEqual({
     complete: true,
     reason: null,
@@ -168,12 +211,14 @@ test("default watch and notifications stay isolated while pending named demand p
     orderBy: { edition: "asc" },
   });
   const subtitleWork = await currentSubtitleWork(f.db, f.asset.id, 0);
+  if (f.asset.checksum === null)
+    throw new Error("Published asset omitted its checksum");
   const item = {
     mediaId: f.media.id,
-    generation: 1,
+    generation: f.input.generation,
     assetId: f.asset.id,
-    assetVersion: 0,
-    assetChecksum: "a".repeat(64),
+    assetVersion: f.asset.version,
+    assetChecksum: f.asset.checksum,
   };
   await f.db.$transaction((tx) =>
     queueLifecycleNotifications(tx, {

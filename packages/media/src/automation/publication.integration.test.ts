@@ -1,183 +1,94 @@
-import { expect, test } from "vitest";
-import { captureMovieAttemptChoice } from "#infrastructure/movie-editions/authority.ts";
+import { rm } from "node:fs/promises";
+import { afterAll, expect, test } from "vitest";
 import { createPublicationActivities } from "./publication.ts";
 import { automationTestHarness } from "#testing/automation.ts";
-import { publicationSeries } from "./reconciliation/publication.test-support.ts";
-const { database, context, fixture } = automationTestHarness();
+import { mappedPublicationFixture } from "./publication-proof/test-fixture.ts";
+import { sharedTvFileFixture } from "./native-archive/fixtures/shared-tv.ts";
+import { preparePhysicalPublication } from "./plex-binding/test-fixture.ts";
+import { retentionPlexContext } from "./retention/fixtures/plex.ts";
+import { prepareBoundRetention } from "./retention/lifecycle.test-fixture.ts";
+import { createMediaFileActivities } from "./files/activities.ts";
+import { defaultScope } from "#shared/editions/scope.ts";
+import { targetWhere } from "#infrastructure/editions/targets.ts";
+import { PrismaMediaCommands } from "#infrastructure/commands.ts";
+import { grantTestRequesterAccess } from "#testing/authority.ts";
+
+const { database, context } = automationTestHarness();
+const directories: string[] = [];
+afterAll(async () => {
+  for (const directory of directories)
+    await rm(directory, { recursive: true, force: true });
+});
+
 test.each(["acquisition", "restore"])(
   "Plex %s publication verifies all episodes sharing one file",
   async (mode) => {
-    const data = await fixture();
-    const series = await publicationSeries(database(), data.media.id);
-    await database().mediaItem.update({
-      where: { id: data.media.id },
-      data: {
-        kind: "episode",
-        seasonNumber: 1,
-        episodeNumber: 1,
-        externalIds: { seriesTmdb: 999 },
-        availability: "importing",
-      },
-    });
-    const second = await database().mediaItem.create({
-      data: {
-        kind: "episode",
-        title: "Second",
-        parentId: series.id,
-        intents: { create: { automationEpoch: 0, editionRootId: series.id } },
-        seasonNumber: 1,
-        episodeNumber: 2,
-        externalIds: { seriesTmdb: 999 },
-        availability: "importing",
-      },
-    });
-    const asset = await database().libraryAsset.create({
-      data: {
-        path: `/fixture/${crypto.randomUUID()}.mkv`,
-        sizeBytes: 1000n,
-        checksum: "abc",
-        owned: true,
-        ownershipEpoch: 0,
-        editionRootId: series.id,
-        properties: {},
-        state: "published",
-        coverage: {
-          create: [
-            { mediaId: data.media.id, current: true },
-            { mediaId: second.id, current: true },
-          ],
-        },
-      },
-    });
+    const db = database();
+    const files = await sharedTvFileFixture(db, mappedPublicationFixture);
+    directories.push(files.directory);
+    const published = await preparePhysicalPublication(files);
+    const mediaIds = published.entry.mediaIds;
+    expect(mediaIds).toHaveLength(2);
+    const transport = await retentionPlexContext(db, context(), mediaIds);
+    let network = transport.context;
+    const generation = published.entry.generations[files.media.id];
+    if (generation === undefined)
+      throw new Error("Publication omitted its generation");
+    let input: { operationId: string; mediaId: string; generation: number } = {
+      operationId: published.input.operationId,
+      mediaId: files.media.id,
+      generation,
+    };
     if (mode === "restore") {
-      const decision = await database().retentionDecision.create({
-        data: {
-          mediaId: data.media.id,
-          generation: 1,
-          state: "restored",
-          evidence: {},
-          manifest: {
-            assets: [
-              { assetId: asset.id, mediaIds: [data.media.id, second.id] },
-            ],
-          },
-        },
+      const bound = await prepareBoundRetention(files, published, context());
+      const activities = createMediaFileActivities(files.context);
+      expect(
+        await activities.quarantineMediaFiles(bound.retention.input),
+      ).toEqual({ status: "quarantined" });
+      await grantTestRequesterAccess(db, files.user.id, "fixture-server");
+      const media = await db.mediaItem.findUniqueOrThrow({
+        where: { id: files.media.id },
       });
-      await database().operation.update({
-        where: { id: data.input.operationId },
-        data: {
-          kind: "restore_media",
-          result: {
-            restoreReceipt: {
-              decisionId: decision.id,
-              mediaIds: [data.media.id, second.id],
-              recoveryEpoch: 0,
-              assets: [
-                {
-                  assetId: asset.id,
-                  assetVersion: asset.version,
-                  checksum: "abc",
-                },
-              ],
-            },
-          },
-        },
+      const command = await new PrismaMediaCommands(db, {
+        keepDays: 30,
+        serverMachineId: "fixture-server",
+      }).act(files.user, crypto.randomUUID(), media.id, {
+        action: "keep",
+        expectedVersion: media.version,
       });
+      if (command.operationId === undefined)
+        throw new Error("Keep omitted restoration operation");
+      const intent = await db.mediaIntent.findUniqueOrThrow({
+        where: targetWhere(defaultScope(media.id)),
+      });
+      input = {
+        mediaId: media.id,
+        operationId: command.operationId,
+        generation: intent.generation,
+      };
+      expect(await activities.restoreMediaFiles(input)).toEqual({
+        status: "restored",
+      });
+      network = bound.context;
     }
-    const request = await database().mediaRequest.findFirstOrThrow({
-      where: { mediaId: data.media.id },
+    const priorIntents = await db.mediaIntent.findMany({
+      where: { mediaId: { in: mediaIds }, edition: "default" },
     });
-    const attempt = await database().acquisitionAttempt.create({
-      data: {
-        operationId: data.input.operationId,
-        releaseId: data.release.id,
-        sponsorRequestId: request.id,
-        mediaIds: [data.media.id, second.id],
-        generations: { [data.media.id]: 1, [second.id]: 0 },
-        state: "imported",
-        filePlan: [
-          {
-            assetId: asset.id,
-            mediaIds: [data.media.id, second.id],
-            checksum: asset.checksum,
-            generations: { [data.media.id]: 1, [second.id]: 1 },
-            previousAssetId: null,
-          },
-        ],
-      },
-    });
-    const ctx = context(async (url) => {
-      if (url.pathname.endsWith("/library/sections"))
-        return Response.json({
-          MediaContainer: {
-            size: 1,
-            Directory: [{ key: "2", title: "TV", type: "show" }],
-          },
-        });
-      if (url.pathname.endsWith("/refresh")) return new Response();
-      if (url.pathname.endsWith("/all"))
-        return Response.json({
-          MediaContainer: {
-            size: 2,
-            totalSize: 2,
-            Metadata: [1, 2].map((episode) => ({
-              ratingKey: String(episode),
-              title: "Episode",
-              type: "episode",
-              index: episode,
-              parentIndex: 1,
-              grandparentRatingKey: "500",
-              Media: [{ Part: [{ id: 1, file: asset.path }] }],
-            })),
-          },
-        });
-      if (url.pathname.endsWith("/metadata/500"))
-        return Response.json({
-          MediaContainer: {
-            size: 1,
-            Metadata: [
-              {
-                ratingKey: "500",
-                title: "Series",
-                type: "show",
-                Guid: [{ id: "tmdb://999" }],
-              },
-            ],
-          },
-        });
-      throw new Error("Unexpected Plex request");
-    });
-    const priorIntents = await database().mediaIntent.findMany({
-      where: {
-        mediaId: { in: [data.media.id, second.id] },
-        edition: "default",
-      },
-    });
+    const activities = createPublicationActivities(network);
     expect(
       mode === "restore"
-        ? await createPublicationActivities(ctx).publishRestoredMedia(
-            data.input,
-          )
-        : await createPublicationActivities(ctx).publishMediaToPlex({
-            operationId: data.input.operationId,
-            attemptId: attempt.id,
-          }),
+        ? await activities.publishRestoredMedia(input)
+        : await activities.publishMediaToPlex(published.input),
     ).toEqual({ status: "available", reason: null });
     expect(
-      await database().mediaItem.count({
-        where: {
-          id: { in: [data.media.id, second.id] },
-          availability: "available",
-        },
+      await db.mediaItem.count({
+        where: { id: { in: mediaIds }, availability: "available" },
       }),
     ).toBe(2);
-    const currentIntents = await database().mediaIntent.findMany({
-      where: {
-        mediaId: { in: [data.media.id, second.id] },
-        edition: "default",
-      },
+    const currentIntents = await db.mediaIntent.findMany({
+      where: { mediaId: { in: mediaIds }, edition: "default" },
     });
-    for (const prior of priorIntents) {
+    for (const prior of priorIntents)
       expect(
         currentIntents.find((intent) => intent.mediaId === prior.mediaId),
       ).toMatchObject({
@@ -186,15 +97,19 @@ test.each(["acquisition", "restore"])(
         version: prior.version,
         automationEpoch: prior.automationEpoch,
       });
-    }
+    expect(
+      await db.plexAssociationEvidence.count({
+        where: { mediaId: { in: mediaIds } },
+      }),
+    ).toBeGreaterThanOrEqual(2);
     if (mode === "restore")
       expect(
-        await database().operation.findUnique({
-          where: { id: data.input.operationId },
+        await db.operation.findUniqueOrThrow({
+          where: { id: input.operationId },
         }),
       ).toMatchObject({
         result: {
-          restoreReceipt: { mediaIds: [data.media.id, second.id] },
+          restoreReceipt: { mediaIds: expect.arrayContaining(mediaIds) },
           plexScan: { sectionId: "2" },
         },
       });
@@ -202,159 +117,71 @@ test.each(["acquisition", "restore"])(
 );
 
 test("a correct Plex path with the wrong canonical movie identity stays unavailable", async () => {
-  const data = await fixture();
-  await database().mediaItem.update({
-    where: { id: data.media.id },
-    data: { tmdbId: 987, availability: "importing" },
-  });
-  const asset = await database().libraryAsset.create({
-    data: {
-      path: `/fixture/${crypto.randomUUID()}.mkv`,
-      sizeBytes: 1000n,
-      owned: true,
-      ownershipEpoch: 0,
-      editionRootId: data.media.id,
-      properties: {},
-      state: "published",
-      coverage: { create: { mediaId: data.media.id, current: true } },
-    },
-  });
-  const request = await database().mediaRequest.findFirstOrThrow({
-    where: { mediaId: data.media.id },
-  });
-  const attempt = await database().acquisitionAttempt.create({
-    data: {
-      ...(await captureMovieAttemptChoice(database(), {
-        sponsorRequestId: request.id,
-        scope: {
-          rootMediaId: data.media.id,
-          mediaId: data.media.id,
-          edition: "default",
-        },
-        access: { serverMachineId: "fixture-server", movieSectionId: "1" },
-      })),
-      operationId: data.input.operationId,
-      releaseId: data.release.id,
-      sponsorRequestId: request.id,
-      mediaIds: [data.media.id],
-      generations: { [data.media.id]: data.input.generation },
-      state: "imported",
-    },
-  });
-  const item = {
-    ratingKey: "123",
-    title: "Wrong match",
-    type: "movie",
-    Guid: [{ id: "tmdb://654" }],
-    Media: [{ Part: [{ id: 1, file: asset.path }] }],
-  };
-  const ctx = context(async (url) => {
-    if (url.pathname.endsWith("/library/sections"))
-      return Response.json({
-        MediaContainer: {
-          size: 1,
-          Directory: [{ key: "1", title: "Movies", type: "movie" }],
-        },
-      });
-    return url.pathname.endsWith("/refresh")
-      ? new Response()
-      : Response.json({
-          MediaContainer: { size: 1, totalSize: 1, Metadata: [item] },
-        });
+  const db = database();
+  const files = await mappedPublicationFixture(db);
+  directories.push(files.directory);
+  const published = await preparePhysicalPublication(files);
+  const transport = await retentionPlexContext(
+    db,
+    context(),
+    published.entry.mediaIds,
+  );
+  const item = transport.items.get(files.media.id);
+  if (item === undefined)
+    throw new Error("Physical publication omitted its Plex item");
+  item.Guid = [{ id: `tmdb://${String((files.media.tmdbId ?? 0) + 1)}` }];
+  expect(
+    await createPublicationActivities(transport.context).publishMediaToPlex(
+      published.input,
+    ),
+  ).toEqual({
+    status: "blocked",
+    reason: "metadata_changed",
   });
   expect(
-    await createPublicationActivities(ctx).publishMediaToPlex({
-      operationId: data.input.operationId,
-      attemptId: attempt.id,
-    }),
-  ).toMatchObject({ status: "blocked", reason: "plex_identity_mismatch" });
-  expect(
-    await database().mediaItem.findUnique({
-      where: { id: data.media.id },
-    }),
+    await db.mediaItem.findUniqueOrThrow({ where: { id: files.media.id } }),
   ).toMatchObject({ availability: "importing" });
+  expect(
+    await db.plexAssociationEvidence.count({
+      where: { mediaId: files.media.id },
+    }),
+  ).toBe(0);
 });
+
 test("Plex verification cannot mark a concurrently quarantined asset available", async () => {
-  const data = await fixture();
-  await database().mediaItem.update({
-    where: { id: data.media.id },
-    data: { tmdbId: 988, availability: "importing" },
-  });
-  const asset = await database().libraryAsset.create({
-    data: {
-      path: `/fixture/${crypto.randomUUID()}.mkv`,
-      sizeBytes: 1000n,
-      checksum: "abc",
-      owned: true,
-      ownershipEpoch: 0,
-      editionRootId: data.media.id,
-      properties: {},
-      state: "published",
-      coverage: { create: { mediaId: data.media.id, current: true } },
-    },
-  });
-  const request = await database().mediaRequest.findFirstOrThrow({
-    where: { mediaId: data.media.id },
-  });
-  const attempt = await database().acquisitionAttempt.create({
-    data: {
-      ...(await captureMovieAttemptChoice(database(), {
-        sponsorRequestId: request.id,
-        scope: {
-          rootMediaId: data.media.id,
-          mediaId: data.media.id,
-          edition: "default",
-        },
-        access: { serverMachineId: "fixture-server", movieSectionId: "1" },
-      })),
-      operationId: data.input.operationId,
-      releaseId: data.release.id,
-      sponsorRequestId: request.id,
-      mediaIds: [data.media.id],
-      generations: { [data.media.id]: data.input.generation },
-      state: "imported",
-    },
-  });
-  const ctx = context(async (url) => {
-    if (url.pathname.endsWith("/library/sections"))
-      return Response.json({
-        MediaContainer: {
-          size: 1,
-          Directory: [{ key: "1", title: "Movies", type: "movie" }],
-        },
-      });
-    if (url.pathname.endsWith("/refresh")) return new Response();
-    await database().libraryAsset.update({
-      where: { id: asset.id },
+  const db = database();
+  const files = await mappedPublicationFixture(db);
+  directories.push(files.directory);
+  const published = await preparePhysicalPublication(files);
+  const transport = await retentionPlexContext(
+    db,
+    context(),
+    published.entry.mediaIds,
+  );
+  let changed = false;
+  transport.state.beforeMetadata = async () => {
+    if (changed) return;
+    changed = true;
+    await db.libraryAsset.update({
+      where: { id: published.entry.assetId },
       data: { state: "quarantined", version: { increment: 1 } },
     });
-    await database().mediaItem.update({
-      where: { id: data.media.id },
+    await db.mediaItem.update({
+      where: { id: files.media.id },
       data: { availability: "quarantined" },
     });
-    return Response.json({
-      MediaContainer: {
-        size: 1,
-        totalSize: 1,
-        Metadata: [
-          {
-            ratingKey: "123",
-            title: "Example",
-            type: "movie",
-            Guid: [{ id: "tmdb://988" }],
-            Media: [{ Part: [{ id: 1, file: asset.path }] }],
-          },
-        ],
-      },
-    });
-  });
-  await expect(
-    createPublicationActivities(ctx).publishMediaToPlex({
-      operationId: data.input.operationId,
-      attemptId: attempt.id,
-    }),
-  ).rejects.toThrow("Publication evidence changed");
+  };
+  const result = await createPublicationActivities(
+    transport.context,
+  ).publishMediaToPlex(published.input);
+  expect(changed).toBe(true);
+  expect(result).toEqual({ status: "blocked", reason: "ownership_changed" });
   expect(
-    await database().mediaItem.findUnique({ where: { id: data.media.id } }),
+    await db.mediaItem.findUniqueOrThrow({ where: { id: files.media.id } }),
   ).toMatchObject({ availability: "quarantined" });
+  expect(
+    await db.plexAssociationEvidence.count({
+      where: { mediaId: files.media.id },
+    }),
+  ).toBe(0);
 });

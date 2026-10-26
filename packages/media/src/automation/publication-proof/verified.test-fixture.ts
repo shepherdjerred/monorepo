@@ -14,8 +14,9 @@ export async function verifiedPublicationFixture(
   db: Database,
   base: MediaAutomationContext,
   episode?: { seriesId: string; title?: string },
+  fileFactory: typeof mappedPublicationFixture = mappedPublicationFixture,
 ) {
-  const files = await mappedPublicationFixture(db, episode);
+  const files = await fileFactory(db, episode);
   try {
     const published = await preparePhysicalPublication(files);
     const transport = await retentionPlexContext(

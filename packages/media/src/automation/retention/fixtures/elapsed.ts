@@ -14,6 +14,8 @@ export function elapsedWarningClient(
   const events = new Set<string>();
   const deliveries = new Set<string>();
   const attempts = new Set<string>();
+  const acceptedDeliveries = new Set<string>();
+  const startedDeliveries = new Set<string>();
   const client = queryFixtureDatabase(db, {
     query: {
       retentionDecision: {
@@ -50,9 +52,12 @@ export function elapsedWarningClient(
         async update({ args, query }) {
           if (
             deliveries.has(args.where.id ?? "") &&
+            !acceptedDeliveries.has(args.where.id ?? "") &&
             args.data.acceptedAt instanceof Date
-          )
+          ) {
             args.data.acceptedAt = historical();
+            acceptedDeliveries.add(z.uuid().parse(args.where.id));
+          }
           return query(args);
         },
       },
@@ -60,8 +65,12 @@ export function elapsedWarningClient(
         async create({ args, query }) {
           const selected =
             args.data.deliveryId !== undefined &&
-            deliveries.has(args.data.deliveryId);
-          if (selected) args.data.startedAt = historical();
+            deliveries.has(args.data.deliveryId) &&
+            !startedDeliveries.has(args.data.deliveryId);
+          if (selected) {
+            args.data.startedAt = historical();
+            startedDeliveries.add(z.uuid().parse(args.data.deliveryId));
+          }
           const row = await query(args);
           if (selected) attempts.add(z.uuid().parse(row.id));
           return row;

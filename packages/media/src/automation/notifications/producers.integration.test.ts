@@ -3,7 +3,8 @@ import { grantTestRequesterAccess } from "#testing/authority.ts";
 import { automationTestHarness } from "#testing/automation.ts";
 import { queueLifecycleNotifications } from "./events.ts";
 import { createOutboxActivities } from "#automation/store.ts";
-import { fileFixture } from "#automation/files/test-support.ts";
+import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
+import { retentionPlexContext } from "#automation/retention/fixtures/plex.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { createAcquisitionActivities } from "#automation/acquisition.ts";
 import { createPublicationActivities } from "#automation/publication.ts";
@@ -17,7 +18,7 @@ const { database, fixture, context } = automationTestHarness();
 
 test("actual committed import Retry publishes once using adopted authority without rewriting file evidence", async () => {
   const db = database();
-  const f = await fileFixture(db);
+  const f = await mappedPublicationFixture(db);
   try {
     await db.qualityProfileVersion.create({
       data: {
@@ -65,31 +66,9 @@ test("actual committed import Retry publishes once using adopted authority witho
     const retryTarget = await db.mediaIntent.findUniqueOrThrow({
       where: { mediaId_edition: defaultScope(f.media.id) },
     });
-    const ctx = context(async (url) => {
-      if (url.pathname.endsWith("/library/sections"))
-        return Response.json({
-          MediaContainer: {
-            size: 1,
-            Directory: [{ key: "1", title: "Movies", type: "movie" }],
-          },
-        });
-      if (url.pathname.endsWith("/refresh")) return new Response();
-      return Response.json({
-        MediaContainer: {
-          size: 1,
-          totalSize: 1,
-          Metadata: [
-            {
-              ratingKey: "321",
-              type: "movie",
-              title: f.media.title,
-              Guid: [{ id: `tmdb://${String(f.media.tmdbId)}` }],
-              Media: [{ Part: [{ id: 1, file: asset.path }] }],
-            },
-          ],
-        },
-      });
-    });
+    const { context: ctx } = await retentionPlexContext(db, context(), [
+      f.media.id,
+    ]);
     expect(
       await createAcquisitionActivities(ctx).reconcileMediaIntent({
         operationId: retry.operationId,

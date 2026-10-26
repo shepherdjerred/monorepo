@@ -4,7 +4,8 @@ import { expect, test } from "vitest";
 import { IntegrationError } from "#integrations/http.ts";
 import { createAcquisitionActivities } from "./acquisition.ts";
 import { automationTestHarness } from "#testing/automation.ts";
-import { fileFixture } from "./files/test-support.ts";
+import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
+import { retentionPlexContext } from "#automation/retention/fixtures/plex.ts";
 import { createMediaFileActivities } from "./files/activities.ts";
 import { PrismaMediaCommands } from "#infrastructure/commands.ts";
 import { QualityRulesSchema } from "#shared/api.ts";
@@ -15,7 +16,7 @@ import { grantTestRequesterAccess } from "#testing/authority.ts";
 const { database, context, fixture, cipher } = automationTestHarness();
 
 test("Retry after committed promotion adopts the coordinator and verifies Plex without republishing", async () => {
-  const f = await fileFixture(database());
+  const f = await mappedPublicationFixture(database());
   try {
     const p = await f.published();
     const before = await database().libraryAsset.findUniqueOrThrow({
@@ -61,33 +62,9 @@ test("Retry after committed promotion adopts the coordinator and verifies Plex w
     const intent = await database().mediaIntent.findUniqueOrThrow({
       where: targetWhere(defaultScope(f.media.id)),
     });
-    const ctx = context(async (url) => {
-      if (url.hostname !== "plex.fixture")
-        throw new Error("Committed publication must not touch qBittorrent");
-      if (url.pathname.endsWith("/library/sections"))
-        return Response.json({
-          MediaContainer: {
-            size: 1,
-            Directory: [{ key: "1", title: "Movies", type: "movie" }],
-          },
-        });
-      if (url.pathname.endsWith("/refresh")) return new Response();
-      return Response.json({
-        MediaContainer: {
-          size: 1,
-          totalSize: 1,
-          Metadata: [
-            {
-              ratingKey: "123",
-              title: "Test Film",
-              type: "movie",
-              Guid: [{ id: `tmdb://${String(f.media.tmdbId)}` }],
-              Media: [{ Part: [{ id: 1, file: before.path }] }],
-            },
-          ],
-        },
-      });
-    });
+    const { context: ctx } = await retentionPlexContext(database(), context(), [
+      f.media.id,
+    ]);
     const acquisition = createAcquisitionActivities(ctx);
     expect(
       await acquisition.reconcileMediaIntent({
