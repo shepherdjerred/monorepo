@@ -20,7 +20,6 @@ flowchart TB
         TEMPORAL["Embedded Temporal Workers"]
         MATCH_POLLER["Match History Poller"]
         REPORT_GEN["Report Generator"]
-        AI_REVIEW["AI Review Generator"]
         COMPETITION["Competition Manager"]
     end
 
@@ -41,7 +40,6 @@ flowchart TB
     RIOT --> MATCH_POLLER
     RIOT --> COMPETITION
     BOT <--> DISCORD_API
-    AI_REVIEW --> OPENAI
     REPORT_GEN --> S3
     Backend --> BUGSINK
 
@@ -49,7 +47,6 @@ flowchart TB
     TEMPORAL --> MATCH_POLLER
     TEMPORAL --> COMPETITION
     MATCH_POLLER --> REPORT_GEN
-    REPORT_GEN --> AI_REVIEW
     REPORT_GEN --> BOT
     BOT --> DB
     COMPETITION --> DB
@@ -88,7 +85,6 @@ sequenceDiagram
     participant Riot as Riot API
     participant DB as Database
     participant Report as Report Package
-    participant AI as OpenAI
     participant S3
     participant Discord
 
@@ -104,13 +100,6 @@ sequenceDiagram
             Riot-->>Cron: Timeline data
             Cron->>Report: Generate PNG
             Report-->>Cron: Image bytes
-            par AI Analysis
-                Cron->>AI: Generate review
-                AI-->>Cron: Analysis text
-            and Art Prompt
-                Cron->>AI: Generate art prompt
-                AI-->>Cron: Art description
-            end
             Cron->>S3: Save match data & images
             Cron->>Discord: Post to channel
             Cron->>DB: Update lastProcessedMatchId
@@ -204,18 +193,16 @@ advance either evidence or the match cursor.
 | Discord Bot         | Command handling, message posting, embed creation       |
 | Match Poller        | Periodic match history checking for subscribed accounts |
 | Report Generator    | Orchestrates match data → PNG report pipeline           |
-| AI Review           | GPT-4o-mini match analysis, art prompt generation       |
 | Competition Manager | Leaderboard calculation, snapshot management            |
 | Temporal Workers    | Run durable polling, cleanup, reports, and LLM work     |
 
 ### Data Package
 
-| Export           | Purpose                                                 |
-| ---------------- | ------------------------------------------------------- |
-| Zod Schemas      | Validate external API responses (RawMatch, RawTimeline) |
-| Model Types      | Shared TypeScript types (Player, Match, Competition)    |
-| Review Utilities | Match data curation, prompt construction                |
-| Constants        | Art styles, themes, lane contexts                       |
+| Export      | Purpose                                                 |
+| ----------- | ------------------------------------------------------- |
+| Zod Schemas | Validate external API responses (RawMatch, RawTimeline) |
+| Model Types | Shared TypeScript types (Player, Match, Competition)    |
+| Constants   | Art styles, themes, lane contexts                       |
 
 ### Report Package
 
@@ -315,5 +302,4 @@ Required environment variables by component:
 ## Next Steps
 
 - [Backend Service](./backend.md) - Detailed backend architecture
-- [AI Review System](./ai-review-system.md) - AI pipeline details
 - [Database Schema](./database.md) - Data model documentation

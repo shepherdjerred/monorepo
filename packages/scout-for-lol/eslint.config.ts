@@ -210,11 +210,7 @@ const config = [
       "packages/frontend/src/**/*.ts",
       "packages/frontend/src/**/*.astro",
     ],
-    ignores: [
-      "packages/frontend/src/components/ui/**",
-      "packages/frontend/src/components/review-tool/ui/**",
-      "**/*.test.*",
-    ],
+    ignores: ["packages/frontend/src/components/ui/**", "**/*.test.*"],
     plugins: { "custom-rules": customRulesPlugin },
     rules: { "custom-rules/no-shadcn-theme-tokens": "error" },
   },
@@ -279,10 +275,7 @@ const config = [
   },
   // UI components use shadcn theme tokens by design
   {
-    files: [
-      "packages/frontend/src/components/ui/**",
-      "packages/frontend/src/components/review-tool/ui/**",
-    ],
+    files: ["packages/frontend/src/components/ui/**"],
     rules: { "custom-rules/no-shadcn-theme-tokens": "off" },
   },
   // The web UI app (`packages/app/`) is a Vite SPA with its own design tokens
@@ -294,14 +287,6 @@ const config = [
   {
     files: ["packages/app/**/*.ts", "packages/app/**/*.tsx"],
     rules: { "custom-rules/no-shadcn-theme-tokens": "off" },
-  },
-  // IndexedDB uses .onerror/.onsuccess as standard API pattern
-  {
-    files: [
-      "packages/frontend/src/lib/review-tool/cache.ts",
-      "packages/frontend/src/lib/review-tool/indexeddb-helpers.ts",
-    ],
-    rules: { "unicorn/prefer-add-event-listener": "off" },
   },
   // Browser evaluation callbacks intentionally reference the page's DOM
   // globals and cannot be moved outside page.evaluate().

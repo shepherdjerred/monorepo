@@ -129,6 +129,10 @@ export function isPrunableImage(
   // Frozen product announcements and other canonical objects have durable PG
   // references. Only the generated match-image prefixes belong to this GC.
   if (!PREFIXES.some((prefix) => key.startsWith(prefix))) return false;
+  // Retired AI reviews are historical archives, including their generated art.
+  // Keep them indefinitely even though ordinary report images are disposable.
+  if (key.includes("/ai-pipeline/") || key.endsWith("/ai-review.png"))
+    return false;
   const suffixes = options?.suffixes ?? IMAGE_SUFFIXES;
   const exemptKeys = options?.exemptKeys ?? new Set<string>();
   if (exemptKeys.has(key)) {

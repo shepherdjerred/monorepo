@@ -1586,7 +1586,7 @@ async function maybeAppendChangelogEntry(
   }
 
   // Ask Opus to analyze deterministically fetched patch notes
-  // (`summary` + per-change data feed the AI review) plus the Scout-focused
+  // (`summary` + per-change data feed Scout analysis) plus the Scout-focused
   // `changelogHighlights` consumed here for the "What's New" entry.
   // Best-effort: a failure (no credential, timeout, bad output) falls back to just
   // the data-refresh line and leaves the committed changeset untouched, rather

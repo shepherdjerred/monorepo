@@ -1,6 +1,6 @@
 # @scout-for-lol/data
 
-Shared Scout domain models, schemas, review pipeline prompts, and the committed
+Shared Scout domain models, schemas, and the committed
 League of Legends static-data snapshot. Other Scout workspaces import from this
 package instead of calling Riot or CommunityDragon at runtime.
 

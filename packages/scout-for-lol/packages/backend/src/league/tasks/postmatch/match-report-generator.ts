@@ -27,7 +27,6 @@ import {
   type Rank,
   rankForQueue,
   type RawMatch,
-  type RawTimeline,
   resolveQueueTypeFromGame,
   type RiotMatchId,
 } from "@scout-for-lol/data/index.ts";
@@ -38,12 +37,10 @@ import {
   type MessageCreateOptions,
 } from "discord.js";
 import { z } from "zod";
-import { generateAiReviewIfEnabled } from "./match-report-ai-review.ts";
 import { buildClassicMatch } from "./match-report-classic.ts";
 import { inlineMatchLink } from "./match-report-components.ts";
 import { logErrorDetails } from "./match-report-debug.ts";
-import { aiReviewAttachment, createMatchImage } from "./match-report-image.ts";
-import { fetchTimelineIfStandardMatch } from "./match-report-standard.ts";
+import { createMatchImage } from "./match-report-image.ts";
 
 const logger = createLogger("postmatch-match-report-generator");
 
@@ -193,7 +190,6 @@ type StandardMatchContext = {
   matchData: RawMatch;
   matchId: RiotMatchId;
   playersInMatch: PlayerConfigEntry[];
-  timelineData: RawTimeline | undefined;
   /** Guild IDs that will receive this match report - used for feature flag checks */
   targetGuildIds: DiscordGuildId[];
   prefetchedRankChanges?: PostmatchRankChanges | undefined;
@@ -212,7 +208,6 @@ async function processStandardMatch(
     matchData,
     matchId,
     playersInMatch,
-    timelineData,
     targetGuildIds,
     prefetchedRankChanges,
     prerenderedImage,
@@ -281,16 +276,6 @@ async function processStandardMatch(
     return undefined;
   }
 
-  // Generate AI review (text and optional image) - gated by feature flag and queue type
-  const { text: reviewText, image: reviewImage } =
-    await generateAiReviewIfEnabled({
-      completedMatch,
-      matchId,
-      matchData,
-      timelineData,
-      targetGuildIds,
-    });
-
   // Create Discord message
   const [matchReportAttachment, matchReportEmbed] = await createMatchImage(
     completedMatch,
@@ -301,12 +286,6 @@ async function processStandardMatch(
   // Build files array - start with match report image
   const files = [matchReportAttachment];
 
-  // Add AI-generated image if available
-  if (reviewImage) {
-    files.push(aiReviewAttachment(reviewImage));
-    logger.info(`[generateMatchReport] ✨ Added AI-generated image to message`);
-  }
-
   // Generate completion message
   const playerAliases = playersInMatch.map((p) => p.alias);
   const queueTypeForMessage = completedMatch.queueType ?? "custom";
@@ -315,16 +294,10 @@ async function processStandardMatch(
     queueTypeForMessage,
   );
 
-  // Combine completion message with review text if available (always include text, even with image)
-  const messageContent =
-    reviewText !== undefined && reviewText.length > 0
-      ? `${completionMessage}\n\n${reviewText}`
-      : completionMessage;
-
   const message: MessageCreateOptions = {
     files: files,
     embeds: [matchReportEmbed],
-    content: `${messageContent}\n\n${inlineMatchLink(matchId)}`,
+    content: `${completionMessage}\n\n${inlineMatchLink(matchId)}`,
   };
   if (
     ctx.omitMvpVotes !== true &&
@@ -347,10 +320,8 @@ async function processStandardMatch(
  * Options for generating a match report
  */
 export type GenerateMatchReportOptions = {
-  /** Guild IDs that will receive this report - used for feature flag checks (e.g., AI reviews) */
+  /** Guild IDs that will receive this report - used for feature flag checks */
   targetGuildIds: DiscordGuildId[];
-  /** A contract-required fetch already ran; null records a conclusive miss. */
-  prefetchedTimeline?: RawTimeline | null | undefined;
   /** Player/rank data captured before Dare settlement. */
   prefetchedPlayers?: Player[] | undefined;
   prefetchedRankChanges?: PostmatchRankChanges | undefined;
@@ -369,7 +340,6 @@ export type GenerateMatchReportOptions = {
 export type GenerateMatchReportDependencies = {
   processClassicMatch: typeof processClassicMatch;
   getPlayer: typeof getPlayer;
-  fetchTimelineIfStandardMatch: typeof fetchTimelineIfStandardMatch;
   processArenaMatch: typeof processArenaMatch;
   processStandardMatch: typeof processStandardMatch;
 };
@@ -378,7 +348,6 @@ const defaultGenerateMatchReportDependencies: GenerateMatchReportDependencies =
   {
     processClassicMatch,
     getPlayer,
-    fetchTimelineIfStandardMatch,
     processArenaMatch,
     processStandardMatch,
   };
@@ -457,16 +426,6 @@ export async function generateMatchReport(
         ),
       ));
 
-    // Fetch timeline data for standard matches (to provide game progression context for AI reviews)
-    const timelineData =
-      options.prefetchedTimeline === undefined
-        ? await dependencies.fetchTimelineIfStandardMatch(
-            matchData,
-            matchId,
-            playersInMatch,
-          )
-        : (options.prefetchedTimeline ?? undefined);
-
     // Process match based on queue type
     const result = isArenaQueueOrMode(
       matchData.info.queueId,
@@ -484,7 +443,6 @@ export async function generateMatchReport(
           matchData,
           matchId,
           playersInMatch,
-          timelineData,
           targetGuildIds: options.targetGuildIds,
           ...(options.prefetchedRankChanges === undefined
             ? {}

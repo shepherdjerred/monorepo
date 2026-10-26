@@ -8,7 +8,7 @@ import {
 import {
   budgetUsageForTests,
   resetBudgetStateForTests,
-} from "#src/league/review/openai-budget.ts";
+} from "#src/lib/llm-budget.ts";
 import { finalizeReportDraft } from "#src/reports/ai/report-query-finalizer.ts";
 
 const PROMPT_TOKENS = 40;

@@ -89,10 +89,5 @@
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
-  },
-  "src/review/generator-helpers.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
   }
 }

@@ -53,7 +53,6 @@ const { withMvpVoteFurniture } = await import("#src/mvp-votes/components.ts");
 const RIOT_MATCH = RiotMatchIdSchema.parse("NA1_9301");
 const MATCH = RiotMatchIdSchema.parse("NA1_9301");
 const IMAGE = new Uint8Array([137, 80, 78, 71, 1]);
-const REVIEW = new Uint8Array([137, 80, 78, 71, 2, 2]);
 const LIVE = { kind: "live" } as const;
 
 function reportEmbed(): EmbedBuilder {
@@ -61,20 +60,12 @@ function reportEmbed(): EmbedBuilder {
 }
 
 /** A standard-queue report exactly as v1's generator builds one. */
-function standardReport(review: boolean): MessageCreateOptions {
+function standardReport(): MessageCreateOptions {
   const files = [
     new AttachmentBuilder(Buffer.from(IMAGE)).setName(`${MATCH}.png`),
   ];
-  if (review) {
-    files.push(
-      new AttachmentBuilder(Buffer.from(REVIEW)).setName("ai-review.png"),
-    );
-  }
-  const content = review
-    ? "jerred finished a solo game\n\nA clean carry."
-    : "jerred finished a solo game";
   return {
-    content: `${content}\n\n${inlineMatchLink(MATCH)}`,
+    content: `jerred finished a solo game\n\n${inlineMatchLink(MATCH)}`,
     files,
     embeds: [reportEmbed()],
   };
@@ -82,7 +73,7 @@ function standardReport(review: boolean): MessageCreateOptions {
 
 function legacyStandardReport(): MessageCreateOptions {
   return {
-    ...standardReport(false),
+    ...standardReport(),
     content: "jerred finished a solo game",
     components: matchLinkComponents(MATCH),
   };
@@ -121,20 +112,19 @@ beforeEach(() => {
     deliverable: [],
     guildIds: ["300000000000000003", "300000000000000004"],
   });
-  stubs.generateMatchReport.mockResolvedValue(standardReport(true));
+  stubs.generateMatchReport.mockResolvedValue(standardReport());
 });
 
 describe("the round trip", () => {
   test.each([
-    { name: "a standard report with a review", message: standardReport(true) },
     {
-      name: "a standard report without a review",
-      message: standardReport(false),
+      name: "a standard report",
+      message: standardReport(),
     },
     { name: "a report without a link", message: reportWithoutLink() },
     {
       name: "a Flex report with MVP vote furniture",
-      message: withMvpVoteFurniture(standardReport(false), MATCH),
+      message: withMvpVoteFurniture(standardReport(), MATCH),
     },
     { name: "a legacy link-button report", message: legacyStandardReport() },
     {
@@ -147,7 +137,6 @@ describe("the round trip", () => {
     const rendered = await renderPostmatchNotification(RIOT_MATCH, LIVE);
     const rebuilt = buildPostmatchNotificationMessage(RIOT_MATCH, {
       image: rendered.image,
-      review: rendered.review,
       evidence: {
         artifact: "report",
         riotMatchId: RIOT_MATCH,
@@ -175,9 +164,6 @@ describe("the round trip", () => {
 
 describe("what the render evaluates", () => {
   test("generates the report against every guild the match's report goes to", async () => {
-    // The AI review is gated per guild and spent once per match; the render
-    // evaluates the gate against the whole audience, as v1 does, so no
-    // channel's review depends on which child rendered first.
     await renderPostmatchNotification(RIOT_MATCH, LIVE);
 
     expect(stubs.resolvePostmatchDeliveryChannels).toHaveBeenCalledWith({
@@ -239,28 +225,28 @@ describe("what the disassembly refuses", () => {
     {
       name: "an attachment under a name it does not know",
       message: {
-        ...standardReport(false),
+        ...standardReport(),
         files: [
-          ...(standardReport(false).files ?? []),
-          new AttachmentBuilder(Buffer.from(REVIEW)).setName("extra.png"),
+          ...(standardReport().files ?? []),
+          new AttachmentBuilder(Buffer.from(IMAGE)).setName("extra.png"),
         ],
       },
       reason: /attachment named extra\.png/u,
     },
     {
       name: "a message with no report image",
-      message: { ...standardReport(false), files: [] },
+      message: { ...standardReport(), files: [] },
       reason: /no report image/u,
     },
     {
       name: "a message with no content line",
-      message: { ...standardReport(false), content: undefined },
+      message: { ...standardReport(), content: undefined },
       reason: /no content line/u,
     },
     {
       name: "an embed the delivery would not rebuild",
       message: {
-        ...standardReport(false),
+        ...standardReport(),
         embeds: [reportEmbed(), new EmbedBuilder({ title: "extra" })],
       },
       reason: /embeds other than/u,
@@ -268,7 +254,7 @@ describe("what the disassembly refuses", () => {
     {
       name: "unsupported match-link components",
       message: {
-        ...standardReport(false),
+        ...standardReport(),
         components: [
           new ActionRowBuilder<ButtonBuilder>().addComponents(
             new ButtonBuilder()

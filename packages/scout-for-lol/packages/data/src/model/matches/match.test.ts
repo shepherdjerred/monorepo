@@ -17,7 +17,7 @@ describe("getLaneOpponent", () => {
     // Riot sends teamPosition "" for a side that is not a full five, which
     // parseLane maps to undefined. Without the guard, `undefined === undefined`
     // matched every enemy and returned an arbitrary one — a fake lane matchup
-    // that then reached the AI review prompt as fact.
+    // that was presented as fact to downstream consumers.
     const player = testChampionInLane("Ally", undefined);
     const opponents = [
       testChampionInLane("Enemy1", undefined),

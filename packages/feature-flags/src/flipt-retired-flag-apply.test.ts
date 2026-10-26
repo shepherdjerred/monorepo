@@ -186,6 +186,8 @@ test("only audited keys are retired, preserving managed targeting and other unkn
       ({ environment, namespace, key }) => `${environment}/${namespace}/${key}`,
     ),
   ).toEqual([
+    "beta/scout/ai_reviews_enabled",
+    "prod/scout/ai_reviews_enabled",
     "beta/scout/scout-tournament-api-mode",
     "beta/scout/scout-tournament-max-open-lobbies",
     "beta/scout/tournament_lobbies_enabled",

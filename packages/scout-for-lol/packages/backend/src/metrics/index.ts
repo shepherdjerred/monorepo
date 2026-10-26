@@ -3,7 +3,6 @@ import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
 import { registry } from "#src/metrics/registry.ts";
 import { databaseMetricSweepsEnabled } from "#src/metrics/sweep-policy.ts";
-import { seedProviderIssueMetrics } from "#src/metrics/provider-issue-seeds.ts";
 import "#src/metrics/season-schedule.ts";
 import "#src/metrics/product-analytics.ts";
 import "#src/metrics/platform/feature-flags.ts";
@@ -480,7 +479,7 @@ export const participantMismatchTotal = new Counter({
  */
 export const scoutOpenaiTokensUsedTotal = new Counter({
   name: "scout_openai_tokens_used_total",
-  help: "Total LLM tokens consumed by the AI review pipeline",
+  help: "Total LLM tokens consumed by Scout text inference",
   labelNames: ["model", "kind"] as const, // kind: prompt | completion
   registers: [registry],
 });
@@ -500,7 +499,7 @@ export const scoutOpenaiBudgetExceededTotal = new Counter({
 /**
  * Provider-side AI API failures that should be handled operationally by
  * Prometheus/Alertmanager instead of Bugsink. `source` is a low-cardinality
- * callsite such as `match_review`; `kind` is a low-cardinality operational
+ * callsite such as `explore`; `kind` is a low-cardinality operational
  * class such as `quota`, `rate_limit`, `budget_exceeded`, or `context_limit`.
  */
 export const aiProviderErrorsTotal = new Counter({
@@ -520,10 +519,6 @@ export const aiProviderIssueActive = new Gauge({
   help: "Whether an AI provider operational issue is currently active for this app/source",
   labelNames: ["app", "provider", "kind", "source"] as const,
   registers: [registry],
-});
-seedProviderIssueMetrics({
-  errorsTotal: aiProviderErrorsTotal,
-  issueActive: aiProviderIssueActive,
 });
 
 // =======================

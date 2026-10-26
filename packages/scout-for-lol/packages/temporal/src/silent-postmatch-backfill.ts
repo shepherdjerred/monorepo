@@ -20,8 +20,7 @@ import { SCOUT_CONTRACT_VERSION } from "./pipeline-contracts.ts";
  * ## What it produces, and what it never can
  *
  * Exactly what a normal run's render produces for the match, through the same
- * fenced render and under the same receipt: the report image (and the AI
- * review image, when the match earns one) in the canonical store, and one
+ * fenced render and under the same receipt: the report image in the canonical store, and one
  * `v2-notification-render-postmatch` receipt naming those bytes.
  *
  * It mints no notification intent and makes no Discord call. That is not a
@@ -84,8 +83,7 @@ export type ScoutSilentPostmatchBackfillResult = z.infer<
 export const SCOUT_SILENT_BACKFILL_MAX_MATCHES = 500;
 
 /**
- * How many matches render at once. Each render is a Satori pass, a PNG encode
- * and possibly an AI review, on the background queue v1's slow jobs and the
+ * How many matches render at once. Each render is a Satori pass and a PNG encode, on the background queue v1's slow jobs and the
  * live renders share; two keeps the backfill from crowding either.
  */
 export const SCOUT_SILENT_BACKFILL_CONCURRENCY = 2;

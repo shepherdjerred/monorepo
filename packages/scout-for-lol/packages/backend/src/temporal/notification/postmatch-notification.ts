@@ -12,8 +12,6 @@ import {
   generateMatchReport,
 } from "#src/league/tasks/postmatch/match-report-generator.ts";
 import {
-  AI_REVIEW_ATTACHMENT_NAME,
-  aiReviewAttachment,
   attachReportImage,
   createMatchImage,
   reportImageAttachmentName,
@@ -32,57 +30,14 @@ import { AttachmentBuilder, type MessageCreateOptions } from "discord.js";
 import type { z } from "zod";
 
 /**
- * The post-match report: what a `postmatch` intent renders and delivers.
- *
- * v1's generator does everything in one pass — it refetches every tracked
- * player's rank and writes this match's `MatchRankHistory`, decides whether
- * the game earns the one AI review a match is allowed and spends it, renders
- * the image, and assembles the message. Every one of those is a fact about
- * the MATCH that must be established once, and two of them are effects on
- * durable state: the rank upsert records the rank at the moment it ran, and
- * the review marks its attempt globally before the model is called. So the
- * generator runs exactly once per match, in the fenced render on the
- * background queue, and what it produced is attested in the render receipt:
- * the image, the review's image, the content line the review's text is part
- * of, and which components were attached.
- *
- * The delivery never calls the generator. It rebuilds the message from the
- * receipt and the verified bytes with the same furniture builders v1 uses —
- * `attachReportImage`, `aiReviewAttachment`, `matchLinkComponents` — so the
- * message every channel receives is the one the render attested, byte for
- * byte and word for word, and a delivery re-driven after the player's next
- * game rewrites no history and generates nothing. It also spends no Riot
- * read and no model call inside the single-attempt, thirty-second send.
- *
- * ## The audience the render evaluates
- *
- * The AI review is gated per guild, and v1 evaluates that gate against every
- * guild whose channel will receive the report, then sends the one message it
- * built to all of them. The render resolves the same audience through the
- * same derivation (`resolvePostmatchDeliveryChannels`) rather than through
- * the intent's own channel: the artifact is per match, every intent on the
- * match delivers it, and a review generated for one channel's guild and
- * withheld from the next would be exactly the per-channel drift v1 does not
- * have.
- *
- * ## Reaching into the message
- *
- * v1 renders and assembles in one step and has no seam for handing the parts
- * back, so this takes the built message apart rather than duplicating the
- * queue branching — Classic, Arena and Standard each render differently, and
- * a second copy of that decision would drift from the one v1 delivers. The
- * disassembly is strict: an attachment under a name this module does not
- * know, an embed the delivery would not rebuild, or components other than
- * the match link (and, on Flex, the MVP vote furniture) is a message the
- * receipt could not describe truthfully, and that is a broken contract with
- * v1's builders rather than a degraded mode.
+ * The post-match renderer captures ranks once and commits the report image,
+ * content and components. Delivery rebuilds that frozen message without
+ * refetching ranks or rendering again.
  */
-
 export type ScoutReportComponents = z.infer<typeof ScoutReportComponentsSchema>;
 
 export type ScoutPostmatchRender = {
   readonly image: Uint8Array;
-  readonly review: Uint8Array | undefined;
   readonly content: string;
   readonly components: ScoutReportComponents;
   /** The queue the report was rendered for, kept as object metadata. */
@@ -112,7 +67,7 @@ export type ScoutPostmatchRender = {
  * so a contest would have no message to be voted from and would sit in the
  * table as an orphan that anything counting contests reads as real. The
  * receipt then truthfully attests `inline-match-link` rather than
- * `inline-match-link-mvp-vote`. The AI review is kept.
+ * `inline-match-link-mvp-vote`.
  */
 export type ScoutPostmatchRenderMode =
   | { readonly kind: "live" }
@@ -196,13 +151,10 @@ function disassembleReport(
     );
   }
   let image: Uint8Array | undefined;
-  let review: Uint8Array | undefined;
   for (const file of message.files ?? []) {
     const attachment = bufferedAttachment(file);
     if (attachment.name === reportImageAttachmentName(matchId)) {
       image = attachment.bytes;
-    } else if (attachment.name === AI_REVIEW_ATTACHMENT_NAME) {
-      review = attachment.bytes;
     } else {
       throw new Error(
         `The report message for ${matchId} carries an attachment named ${attachment.name}, which the render receipt cannot describe`,
@@ -228,7 +180,6 @@ function disassembleReport(
   }
   return {
     image,
-    review,
     content,
     components,
     queueId: game.queueId,
@@ -331,9 +282,6 @@ export function buildPostmatchNotificationMessage(
   const matchId = riotMatchId;
   const [attachment, embed] = attachReportImage(artifact.image, matchId);
   const files = [attachment];
-  if (artifact.review !== undefined) {
-    files.push(aiReviewAttachment(artifact.review));
-  }
   const message: MessageCreateOptions = {
     content: artifact.evidence.content,
     files,

@@ -43,7 +43,6 @@
     "import:report-store:s3": "bun run scripts/import-report-store-from-s3.ts",
     "discover:marketing-showcase": "bun run scripts/discover-marketing-showcase.ts",
     "generate:marketing-showcase": "bun run scripts/generate-marketing-showcase.ts",
-    "test:review": "bun run src/league/review/test-reviews.ts",
     "test:explore:capability-eval": "bun run scripts/evaluate-explore-capability.ts",
     "test:explore:replay": "bun run scripts/explore-replay/replay-explore.ts",
     "explore:capture-guilds": "bun run scripts/explore-replay/capture-guild-config.ts",

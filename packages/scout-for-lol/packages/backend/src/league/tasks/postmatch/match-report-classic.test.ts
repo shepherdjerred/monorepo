@@ -525,15 +525,12 @@ describe("generateMatchReport Classic routing", () => {
     const getPlayerSpy = vi.fn(async () => {
       throw new Error("Classic must not fetch ranked player data");
     });
-    const fetchTimelineSpy = vi.fn(async () => {
-      throw new Error("Classic must not fetch timeline data");
-    });
     const processArenaSpy = vi.fn(async () => {
       throw new Error("Classic must not enter arena processing");
     });
     const processStandardSpy = vi.fn(async () => {
       throw new Error(
-        "Classic must not enter rank-history or AI standard processing",
+        "Classic must not enter rank-history or standard processing",
       );
     });
 
@@ -544,7 +541,6 @@ describe("generateMatchReport Classic routing", () => {
       {
         processClassicMatch: processClassicMatchSpy,
         getPlayer: getPlayerSpy,
-        fetchTimelineIfStandardMatch: fetchTimelineSpy,
         processArenaMatch: processArenaSpy,
         processStandardMatch: processStandardSpy,
       },
@@ -553,7 +549,6 @@ describe("generateMatchReport Classic routing", () => {
     expect(result?.content).toBe("Classic dependency route");
     expect(processClassicMatchSpy).toHaveBeenCalledTimes(1);
     expect(getPlayerSpy).toHaveBeenCalledTimes(0);
-    expect(fetchTimelineSpy).toHaveBeenCalledTimes(0);
     expect(processArenaSpy).toHaveBeenCalledTimes(0);
     expect(processStandardSpy).toHaveBeenCalledTimes(0);
   });

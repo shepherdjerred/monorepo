@@ -93,7 +93,7 @@ currently stands so it does not flood your channel with old games. Matches
 finished **before** you ran `/track` will not post notifications.
 
 Scout quietly imports up to the 20 most recent games for Explore, ScoutQL
-reports, AI review context, and the player profile. Those older games may appear
+reports and the player profile. Those older games may appear
 in history after a few minutes, but they never produce recaps, Dare results,
 earnings, or other automatic messages. Only games completed after the import's
 snapshot can notify.

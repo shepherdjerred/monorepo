@@ -112,33 +112,8 @@ export const ScoutReportComponentsSchema = z.enum([
 ]);
 
 /**
- * What a render receipt claims, by the KIND of notification it rendered.
- *
- * `report` is a post-match report: the image v1's generator rendered, and
- * everything else the message it built carried — the content line (with the
- * AI review's text when one was generated), the review's image when one was,
- * and which components were attached. The delivery rebuilds the message from
- * exactly this, so every fact that shaped it was captured ONCE, on the
- * background queue, at render time: the generator is what refetches ranks
- * and writes `MatchRankHistory`, and what spends the single AI review a
- * match is allowed, and neither may happen again per channel at the send.
- *
- * `image` is a loading screen: the prematch renderer's artifact, delivered
- * around v1's prematch payload built from the archived snapshot.
- *
- * `none` is the honest answer when there is nothing to read back.
- * `unsupported-queue` is the prematch renderer's for a queue the loading
- * screen does not support: v1 sends a text embed for those games, and the
- * V2 delivery does the same, but only because the render attested that there
- * is nothing to read — otherwise a missing artifact and an unsupported queue
- * would be indistinguishable at the send. `text-only` is a kind whose message
- * is text and embeds built at the send — settlement, dare summary — attested
- * so the send can tell "nothing to render" from "never rendered".
- *
- * Which variants a kind may attest is the reader's contract
- * (`notification/notification-artifact.ts`): a receipt attesting something
- * its kind cannot deliver is malformed, and the delivery parks the intent
- * rather than retrying a fact no re-read changes.
+ * Frozen message evidence for each notification kind. Post-match reports
+ * contain the ordinary report image, content and component selection.
  */
 export type ScoutNotificationRenderEvidence = z.infer<
   typeof ScoutNotificationRenderEvidenceSchema
@@ -152,7 +127,6 @@ export const ScoutNotificationRenderEvidenceSchema = z.discriminatedUnion(
       image: ScoutAttestedObjectSchema,
       content: z.string().min(1),
       components: ScoutReportComponentsSchema,
-      review: ScoutAttestedObjectSchema.optional(),
     }),
     z.strictObject({
       artifact: z.literal("image"),
@@ -167,21 +141,27 @@ export const ScoutNotificationRenderEvidenceSchema = z.discriminatedUnion(
   ],
 );
 
-/**
- * Version 2 added the `report` variant. No migration is defined because
- * none is honest: a version-1 receipt attested an image alone, and the
- * content and components the report variant carries were never captured —
- * inventing them would be exactly the in-place reinterpretation a version
- * bump exists to refuse. A version-1 envelope therefore fails the parse
- * loudly. No such envelope exists anywhere: the V2 workflows have no
- * production caller.
- */
+/** Omitting the optional attachment is compatible with existing version-2 readers. */
 export const SCOUT_NOTIFICATION_RENDER_EVIDENCE_VERSION = 2;
+
+// Validate the exact historical contract before discarding its retired field.
+// Persisted receipts and their original text remain unchanged in the database.
+const Version2RenderEvidenceSchema = z.discriminatedUnion("artifact", [
+  ScoutNotificationRenderEvidenceSchema.options[0].extend({
+    review: ScoutAttestedObjectSchema.optional(),
+  }),
+  ScoutNotificationRenderEvidenceSchema.options[1],
+  ScoutNotificationRenderEvidenceSchema.options[2],
+]);
 
 export const scoutNotificationRenderEvidenceCodec = defineVersionedCodec({
   kind: "scout-v2-notification-render-evidence",
   version: SCOUT_NOTIFICATION_RENDER_EVIDENCE_VERSION,
-  schema: ScoutNotificationRenderEvidenceSchema,
+  schema: Version2RenderEvidenceSchema.transform((evidence) => {
+    if (evidence.artifact !== "report") return evidence;
+    const { review: _retiredReview, ...report } = evidence;
+    return report;
+  }),
 });
 
 /**

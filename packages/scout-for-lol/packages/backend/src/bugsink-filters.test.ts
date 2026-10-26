@@ -4,7 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { filterScoutBugsinkEvent } from "#src/bugsink-filters.ts";
 import { RiotHttpError } from "#src/league/api/client/errors.ts";
-import { LlmBudgetExceeded } from "#src/league/review/openai-budget.ts";
+import { LlmBudgetExceeded } from "#src/lib/llm-budget.ts";
 
 function makeHint(originalException: unknown): EventHint {
   return { originalException };

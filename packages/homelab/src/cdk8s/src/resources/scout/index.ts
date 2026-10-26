@@ -21,10 +21,7 @@ import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout
 import { match } from "ts-pattern";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
-import {
-  addAnthropicFederation,
-  geminiApiKeyEnv,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/llm-provider-credentials.ts";
+import { addAnthropicFederation } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-provider-credentials.ts";
 import {
   applyZfsVolumeSelinuxRelabeling,
   zfsVolumeSelinuxLevels,
@@ -335,13 +332,6 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       ),
       key: "OPENAI_API_KEY",
     }),
-    // Gemini image generation runs only on beta; production has no Gemini
-    // project and must not carry a key it never uses.
-    ...(stage === "beta"
-      ? {
-          GEMINI_API_KEY: geminiApiKeyEnv(chart, "scout-beta"),
-        }
-      : {}),
   };
 
   // Beta keeps its operator-managed Explore preview allowlist. Production

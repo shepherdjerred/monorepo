@@ -1638,8 +1638,6 @@
       "version": "0.1.0",
       "dependencies": {
         "@scout-for-lol/domain": "workspace:*",
-        "@shepherdjerred/glitter-context": "workspace:*",
-        "@shepherdjerred/llm-models": "workspace:*",
         "@shepherdjerred/llm-runtime": "workspace:*",
         "chevrotain": "^13.0.0",
         "cron-parser": "^5.5.0",
@@ -1787,13 +1785,9 @@
       "name": "@scout-for-lol/frontend",
       "version": "0.0.1",
       "dependencies": {
-        "@ai-sdk/anthropic": "^4.0.62",
-        "@ai-sdk/google": "^4.0.79",
-        "@ai-sdk/openai": "^4.0.74",
         "@astrojs/mdx": "^8.0.2",
         "@astrojs/react": "^7.0.0",
         "@astrojs/sitemap": "^3.7.2",
-        "@aws-sdk/client-s3": "^3.1001.0",
         "@iconify-json/heroicons": "^1.2.1",
         "@iconify-json/simple-icons": "^1.2.72",
         "@resvg/resvg-js": "^2.6.2",
@@ -1802,18 +1796,12 @@
         "@scout-for-lol/report": "workspace:*",
         "@sentry/browser": "^11.5.0",
         "@shepherdjerred/bugsink-config": "workspace:*",
-        "@shepherdjerred/llm-models": "workspace:*",
-        "@shepherdjerred/text": "workspace:*",
         "@tailwindcss/typography": "^0.5.16",
         "@tailwindcss/vite": "^4.2.4",
-        "ai": "^7.0.137",
         "astro": "^7.3.3",
         "astro-icon": "^1.1.1",
         "astro-opengraph-images": "workspace:*",
         "clsx": "^2.1.1",
-        "date-fns": "^4.1.0",
-        "fuse.js": "^7.1.0",
-        "lucide-react": "^1.14.0",
         "react": "19.3.0",
         "react-dom": "19.3.0",
         "tailwind-merge": "^3.4.0",
@@ -6386,8 +6374,6 @@
     "functional-red-black-tree": ["functional-red-black-tree@1.0.1", "", {}, "sha512-dsKNQNdj6xA3T+QlADDA7mOSlX0qiMINjn0cgr+eGHGsbSHzTabcIogz2+p/iqP1Xs6EP/sS2SbqH+brGTbq0g=="],
 
     "functions-have-names": ["functions-have-names@1.2.3", "", {}, "sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ=="],
-
-    "fuse.js": ["fuse.js@7.5.0", "", {}, "sha512-sQtrEfA+ez/3G0cCZecF70oqpCRttCexYUG4mUrtWL49ULUzUyxokt5kyqwtKzj1270RaKih+hcP3qLcumccow=="],
 
     "fuzzysort": ["fuzzysort@3.1.0", "", {}, "sha512-sR9BNCjBg6LNgwvxlBd0sBABvQitkLzoVY9MYYROQVX/FvfJ4Mai9LsGhDgd8qYdds0bY77VzYd5iuB+v5rwQQ=="],
 

@@ -18,7 +18,6 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
 > = {
   ai_reports_enabled: false,
   ai_reports_unlimited: false,
-  ai_reviews_enabled: false,
   dares_enabled: false,
   challenge_runs_enabled: false,
   clash_surface: false,

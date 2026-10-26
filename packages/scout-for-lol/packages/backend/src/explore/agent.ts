@@ -31,11 +31,8 @@ import { resolveHallCapability } from "#src/explore/tools/hall-tools.ts";
 import { resolveMvpVotesCapability } from "#src/explore/tools/mvp-votes-tools.ts";
 import { riotHistoryExploreEnabled } from "#src/explore/tools/riot-history-tools.ts";
 import { clashExploreEnabled } from "#src/league/clash/access.ts";
-import { getLlmRuntime } from "#src/league/review/ai-clients.ts";
-import {
-  assertWithinBudget,
-  recordTokenUsage,
-} from "#src/league/review/openai-budget.ts";
+import { getLlmRuntime } from "#src/lib/llm-runtime.ts";
+import { assertWithinBudget, recordTokenUsage } from "#src/lib/llm-budget.ts";
 import { createLogger } from "#src/logger.ts";
 import { scoutExploreTokensUsedTotal } from "#src/metrics/explore.ts";
 import {
@@ -44,7 +41,6 @@ import {
   EXPLORE_MAX_STEPS,
   ExploreAnswerSchema,
   ExploreAnswerWireSchema,
-  modelSupportsParameter,
   type ExploreAnswer,
   type ExploreLoadoutCard,
   type ExploreMatchCard,
@@ -176,7 +172,7 @@ async function streamExploreAgentInternal(
     // outright: OpenAI answers a reasoning model's temperature with a 400
     // "Unsupported parameter", so the whole turn fails rather than soft
     // downgrading.
-    ...(modelSupportsParameter(model, "temperature")
+    ...(getModel(model)?.capabilities.supportsTemperature === true
       ? { temperature: 0.2 }
       : {}),
     maxOutputTokens: EXPLORE_MAX_OUTPUT_TOKENS,
