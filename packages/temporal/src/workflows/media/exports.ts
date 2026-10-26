@@ -1,4 +1,4 @@
-import * as m from "#workflows/media.ts";
+import * as m from "#workflows/media/core.ts";
 import * as h from "#workflows/media/handoff.ts";
 export const prepareMediaHandoffWorkflow = h.prepareMediaHandoffWorkflow;
 export const applyMediaHandoffWorkflow = h.applyMediaHandoffWorkflow;

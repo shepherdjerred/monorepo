@@ -44,6 +44,7 @@ export const DELIVERY_FLAG_KEYS = [
 ] as const;
 
 export type DeliveryFlagKey = (typeof DELIVERY_FLAG_KEYS)[number];
+
 export const MEDIA_BOOLEAN_FLAG_KEYS = [
   "media-personal-discord-enabled",
   "media-shared-announcements-enabled",

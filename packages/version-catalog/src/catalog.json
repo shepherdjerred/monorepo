@@ -3,16 +3,6 @@
   "schemaVersion": 1,
   "entries": [
     {
-      "name": "shepherdjerred/media",
-      "category": "internal-image",
-      "artifactType": "image",
-      "management": { "managed": false },
-      "value": "0.0.0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
-      "notes": [
-        "Unpublished initial image; CI replaces the sentinel with a verified candidate digest before deployment."
-      ]
-    },
-    {
       "name": "bluemap/archive-cli",
       "category": "upstream",
       "artifactType": "package",

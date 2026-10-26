@@ -3,7 +3,6 @@ import { z } from "zod";
 
 export const VersionMapSchema = z
   .object({
-    "shepherdjerred/media": z.string(),
     "bluemap/archive-cli": z.string(),
     "minecraft/archive-upgrader": z.string(),
     "itzg/minecraft-server-java17-archive": z.string(),
