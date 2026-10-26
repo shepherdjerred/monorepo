@@ -3,12 +3,12 @@ package com.shepherdjerred.thestorm.essentials.domain.teleport;
 import java.time.Duration;
 
 /**
- * The base price of one kind of teleport, before the usage multiplier.
+ * The price of one kind of teleport.
  *
- * @param cost crystals charged at ×1; zero makes the teleport free
- * @param cooldown time before the next teleport of this kind at ×1
+ * @param cost crystals charged; zero makes the teleport free
+ * @param cooldown time before the next teleport of this kind
  */
-public record TeleportPrice(long cost, Duration cooldown, double weight) {
+public record TeleportPrice(long cost, Duration cooldown) {
 
   public TeleportPrice {
     if (cost < 0) {
@@ -17,16 +17,5 @@ public record TeleportPrice(long cost, Duration cooldown, double weight) {
     if (cooldown.isNegative()) {
       throw new IllegalArgumentException("cooldown must not be negative: " + cooldown);
     }
-    if (!Double.isFinite(weight)
-        || weight <= 0
-        || weight * 2 != Math.rint(weight * 2)
-        || weight > Integer.MAX_VALUE / 2.0) {
-      throw new IllegalArgumentException("weight must be a positive multiple of half a point");
-    }
-  }
-
-  /** Integer half-points avoid rounding in the shared allowance. */
-  public int halfPoints() {
-    return (int) (weight * 2);
   }
 }

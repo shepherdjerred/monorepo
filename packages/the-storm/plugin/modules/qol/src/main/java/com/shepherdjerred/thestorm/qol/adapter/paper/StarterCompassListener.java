@@ -114,7 +114,9 @@ final class StarterCompassListener implements Listener {
     if (!compass.manages(event.getEntity())) return;
     event.getDrops().removeIf(StarterCompass::marked);
     if (!event.getKeepInventory() && compass.pending(event.getEntity()))
-      event.getItemsToKeep().add(StarterCompass.item(event.getEntity()));
+      event
+          .getItemsToKeep()
+          .add(StarterCompass.item(event.getEntity(), compass.remaining(event.getEntity())));
   }
 
   @EventHandler

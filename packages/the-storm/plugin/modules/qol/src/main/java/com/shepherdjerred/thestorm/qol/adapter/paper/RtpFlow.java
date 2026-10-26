@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -49,15 +51,27 @@ final class RtpFlow {
   }
 
   void start(Player player, String worldName, Optional<String> biome) {
+    start(player, worldName, biome, false);
+  }
+
+  void start(Player player, String worldName, Optional<String> biome, boolean fromCompass) {
     var world = destination(player, worldName, biome);
     world.ifPresent(
-        target ->
-            travel.randomTeleport(
-                player, "wilderness in " + worldName, () -> prepare(player, target, biome)));
+        target -> {
+          var description = "wilderness in " + worldName;
+          if (fromCompass) {
+            travel.complimentary(player, description, () -> prepare(player, target, biome, true));
+          } else {
+            travel.randomTeleport(player, description, () -> prepare(player, target, biome, false));
+          }
+        });
   }
 
   private CompletableFuture<Result<TeleportTravel.Landing, Component>> prepare(
-      Player player, World world, Optional<String> biome) {
+      Player player, World world, Optional<String> biome, boolean fromCompass) {
+    if (fromCompass) {
+      return search(player, world, biome, true);
+    }
     return store
         .ensure(player.getUniqueId(), context.time().instant())
         .thenComposeAsync(
@@ -67,20 +81,15 @@ final class RtpFlow {
               if (last.isPresent()
                   && now.isBefore(last.orElseThrow().plus(config.searchIntervalDuration()))) {
                 return CompletableFuture.completedFuture(
-                    Result.err(
-                        Component.text(
-                            "Wait before another wilderness search. /tpinfo shows your travel cooldown.")));
+                    Result.err(Component.text("You can search again in a moment.")));
               }
-              return store
-                  .setLastRtp(player.getUniqueId(), now)
-                  .thenComposeAsync(
-                      done -> search(player, world, biome), context.scheduler().mainThread());
+              return search(player, world, biome, false);
             },
             context.scheduler().mainThread());
   }
 
   private CompletableFuture<Result<TeleportTravel.Landing, Component>> search(
-      Player player, World world, Optional<String> biome) {
+      Player player, World world, Optional<String> biome, boolean fromCompass) {
     var result = new CompletableFuture<Result<TeleportTravel.Landing, Component>>();
     if (!player.isOnline()) {
       result.complete(Result.err(Component.text("You left before the search started.")));
@@ -92,7 +101,7 @@ final class RtpFlow {
         context.random(),
         outcome -> {
           try {
-            completeSearch(player, world, outcome, result);
+            completeSearch(new Attempt(player, world, fromCompass, result), outcome);
           } catch (RuntimeException failure) {
             result.completeExceptionally(failure);
           }
@@ -100,11 +109,16 @@ final class RtpFlow {
     return result;
   }
 
-  private void completeSearch(
+  private record Attempt(
       Player player,
       World world,
-      RtpSearch.Outcome outcome,
-      CompletableFuture<Result<TeleportTravel.Landing, Component>> result) {
+      boolean fromCompass,
+      CompletableFuture<Result<TeleportTravel.Landing, Component>> result) {}
+
+  private void completeSearch(Attempt attempt, RtpSearch.Outcome outcome) {
+    var player = attempt.player();
+    var world = attempt.world();
+    var result = attempt.result();
     if (outcome.failure() != null) {
       context.logger().error("Could not load chunks for random teleport", outcome.failure());
       result.complete(
@@ -128,9 +142,29 @@ final class RtpFlow {
                         destination.getBlockX(),
                         destination.getBlockZ(),
                         context.time().instant());
-                    compass.arrived(player);
+                    if (attempt.fromCompass()) compass.arrived(player);
+                    else {
+                      var _ = store.setLastRtp(player.getUniqueId(), context.time().instant());
+                    }
+                    liveMap(player, destination);
                   })));
     }
+  }
+
+  private static void liveMap(Player player, Location destination) {
+    if (!player.isOnline() || destination.getWorld() == null) return;
+    var url =
+        "https://bluemap.ts-mc.net/#"
+            + destination.getWorld().getName()
+            + ":"
+            + destination.getBlockX()
+            + ":"
+            + destination.getBlockY()
+            + ":"
+            + destination.getBlockZ()
+            + ":40:0:0";
+    player.sendMessage(
+        Component.text("LiveMap", NamedTextColor.AQUA).clickEvent(ClickEvent.openUrl(url)));
   }
 
   private Optional<World> destination(Player player, String worldName, Optional<String> biome) {

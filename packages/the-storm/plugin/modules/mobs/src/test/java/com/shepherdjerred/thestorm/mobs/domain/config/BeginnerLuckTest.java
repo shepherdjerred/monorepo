@@ -11,7 +11,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 final class BeginnerLuckTest {
   private final BeginnerLuck luck =
-      new BeginnerLuck(Duration.ofHours(6), Duration.ofHours(12), 0.1, 1, 64);
+      new BeginnerLuck(Duration.ofHours(6), Duration.ofHours(12), 0.1, 1, 64, 3);
 
   @ParameterizedTest
   @CsvSource({"0, 0.1, 1", "3, 0.1, 1", "6, 0.1, 1", "9, 0.55, 25", "12, 1, 50", "24, 1, 50"})
@@ -36,22 +36,25 @@ final class BeginnerLuckTest {
 
   @Test
   void shortConfiguredWindowsKeepMillisecondPrecision() {
-    var shortWindow = new BeginnerLuck(Duration.ofMillis(100), Duration.ofMillis(500), 0.1, 1, 64);
+    var shortWindow =
+        new BeginnerLuck(Duration.ofMillis(100), Duration.ofMillis(500), 0.1, 1, 64, 3);
     assertThat(shortWindow.progress(300)).isEqualTo(0.5);
-    assertThatThrownBy(() -> new BeginnerLuck(Duration.ZERO, Duration.ofNanos(1), 0.1, 1, 64))
+    assertThatThrownBy(() -> new BeginnerLuck(Duration.ZERO, Duration.ofNanos(1), 0.1, 1, 64, 3))
         .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   void invalidConfigurationAndCorruptPlaytimeAreRejected() {
     assertThatThrownBy(
-            () -> new BeginnerLuck(Duration.ofHours(-1), Duration.ofHours(12), 0.1, 1, 64))
+            () -> new BeginnerLuck(Duration.ofHours(-1), Duration.ofHours(12), 0.1, 1, 64, 3))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new BeginnerLuck(Duration.ofHours(6), Duration.ofHours(6), 0.1, 1, 64))
+    assertThatThrownBy(
+            () -> new BeginnerLuck(Duration.ofHours(6), Duration.ofHours(6), 0.1, 1, 64, 3))
         .isInstanceOf(IllegalArgumentException.class);
     for (var multiplier : new double[] {-0.1, 1.1, Double.NaN, Double.POSITIVE_INFINITY}) {
       assertThatThrownBy(
-              () -> new BeginnerLuck(Duration.ofHours(6), Duration.ofHours(12), multiplier, 1, 64))
+              () ->
+                  new BeginnerLuck(Duration.ofHours(6), Duration.ofHours(12), multiplier, 1, 64, 3))
           .isInstanceOf(IllegalArgumentException.class);
     }
     assertThatThrownBy(() -> luck.progress(-1)).isInstanceOf(IllegalArgumentException.class);

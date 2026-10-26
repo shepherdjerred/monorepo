@@ -3,10 +3,8 @@ package com.shepherdjerred.thestorm.essentials.domain.teleport;
 import com.shepherdjerred.thestorm.core.result.Result;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Optional;
 
-/** Pure pricing: a shared rolling allowance, exponential escalation and one cooldown. */
+/** Flat price and per-command cooldown. A failed or cancelled trip records nothing. */
 public final class TeleportPricer {
   private final TeleportPricing pricing;
 
@@ -19,30 +17,19 @@ public final class TeleportPricer {
   }
 
   public Result<Quote, OnCooldown> quote(
-      TeleportKind kind, Optional<TeleportUsage> usage, Exemptions exemptions, Instant now) {
-    var history = usage.orElse(TeleportUsage.EMPTY);
-    if (!exemptions.ignoresCooldown() && now.isBefore(history.cooldownUntil())) {
-      return Result.err(new OnCooldown(kind, Duration.between(now, history.cooldownUntil())));
+      TeleportKind kind, TeleportUsage usage, Exemptions exemptions, Instant now) {
+    var until = usage.until(kind);
+    if (!exemptions.ignoresCooldown() && now.isBefore(until)) {
+      return Result.err(new OnCooldown(kind, Duration.between(now, until)));
     }
-    return Result.ok(preview(kind, history, exemptions, now));
+    return Result.ok(preview(kind, exemptions));
   }
 
-  /** Read-only preview even during a cooldown; no use is recorded until arrival. */
-  public Quote preview(
-      TeleportKind kind, TeleportUsage history, Exemptions exemptions, Instant now) {
+  /** The price with no cooldown check and no recorded use. */
+  public Quote preview(TeleportKind kind, Exemptions exemptions) {
     var base = pricing.prices().of(kind);
-    var active = new ArrayList<>(history.active(pricing.window(), now));
-    var used = active.stream().mapToLong(TeleportUse::halfPoints).sum();
-    var excess = Math.max(0, used + base.halfPoints() - pricing.allowanceHalfPoints());
-    var steps = Math.ceilDiv(excess, 2);
-    // Clamp before exponentiation, including when a staff member bypasses cooldowns.
-    var multiplier =
-        Multiplier.of(
-            Math.min(pricing.maxMultiplier(), Math.scalb(1.0, (int) Math.min(steps, 63))));
-    var cost = exemptions.free() ? 0 : multiplier.applyTo(base.cost());
-    var cooldown =
-        exemptions.ignoresCooldown() ? Duration.ZERO : multiplier.applyTo(base.cooldown());
-    active.add(new TeleportUse(now, base.halfPoints()));
-    return new Quote(kind, cost, multiplier, new TeleportUsage(active, now.plus(cooldown)));
+    var cost = exemptions.free() ? 0 : base.cost();
+    var cooldown = exemptions.ignoresCooldown() ? Duration.ZERO : base.cooldown();
+    return new Quote(kind, cost, cooldown);
   }
 }

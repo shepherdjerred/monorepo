@@ -97,13 +97,11 @@ questions never cut. Every answer signs its entry, so a sweep redrive never
 answers twice, and staff can force any entry onto any ticket with
 `/agent faq`.
 
-## The greeting is staff voice, not a teleport
+## Join chat stays quiet
 
-Essentials already handles arrival mechanics: spawn, the starter kit, the
-one-line welcome. The agent's onboarding is the staff voice on top — starter
-tips and where to read more — landing a few seconds after joining so it never
-buries the arrival messages. Only players the server has never seen are
-greeted, so restarts and reinstalls stay quiet.
+Essentials sends a new player to the windmill and gives them the starter kit.
+The biome dialog is the welcome. The agent's onboarding lines are disabled, so
+a join does not add a staff greeting. `/guide` still opens the welcome book.
 
 ## Anomaly alerts watch the brain, not the game
 

@@ -16,9 +16,8 @@ async function command(
 }
 
 describe("shared player travel on native Paper", () => {
-  test("free starter RTP records usage and blocks switching to every other travel command", async ({
+  test("a free wilderness teleport does not charge or block home", async ({
     bot,
-    secondBot,
     rcon,
   }) => {
     await rcon.command(`minecraft:tp ${bot.username} 800.5 -60 800.5`);
@@ -38,41 +37,16 @@ describe("shared player travel on native Paper", () => {
       /Teleported to wilderness in wilds/u,
       45_000,
     );
-    await waitUntil("successful RTP consumes the starter compass", () =>
-      bot.inventory.items().every((item) => item.name !== "compass"),
+    expect(bot.inventory.items().some((item) => item.name === "compass")).toBe(
+      true,
     );
-    await command(bot, "/tpinfo rtp", /You have used 1\.0/u);
-    const balance = await command(bot, "/balance", /500.*crystals/iu);
-    expect(balance).toMatch(/500/u);
-    for (const text of [
-      "/spawn",
-      "/home",
-      "/back",
-      "/warp travel-proof",
-      "/rtp wilds",
-    ]) {
-      const refusal = await command(
-        bot,
-        text,
-        /All travel commands share this cooldown.*\/tpinfo/u,
-      );
-      expect(refusal).toContain("/tpinfo");
-    }
-    for (const text of ["tpa", "tpahere"]) {
-      await command(bot, `/${text} ${secondBot.username}`, /Request sent/u);
-      const refusal = waitForMessage(
-        bot,
-        /All travel commands share this cooldown/u,
-      );
-      secondBot.chat(`/tpaccept ${bot.username}`);
-      await refusal;
-      if (text === "tpa") await bot.waitForTicks(210);
-    }
-    await command(bot, "/tpinfo rtp", /You have used 1\.0/u);
     await command(bot, "/balance", /500.*crystals/iu);
+    await command(bot, "/home", /Teleported to home/u);
+    await command(bot, "/balance", /475.*crystals/iu);
+    await command(bot, "/rtp wilds", /You can teleport again/u);
   }, 75_000);
 
-  test("both TPA directions charge the requester and jointly escalate the next home", async ({
+  test("both TPA directions charge only the requester", async ({
     bot,
     secondBot,
   }) => {
@@ -80,8 +54,8 @@ describe("shared player travel on native Paper", () => {
     const first = waitForMessage(bot, /Teleported to/u);
     secondBot.chat(`/tpaccept ${bot.username}`);
     await first;
-    await command(bot, "/tpinfo home", /You have used 2\.0/u);
-    await command(secondBot, "/tpinfo home", /You have used 0\.0/u);
+    await command(bot, "/tpinfo home", /25 crystals/u);
+    await command(secondBot, "/tpinfo home", /25 crystals/u);
     await command(bot, "/balance", /475.*crystals/iu);
     await command(secondBot, "/balance", /500.*crystals/iu);
     // Exercise the configured real cooldown; no privileged travel exemption.
@@ -92,21 +66,21 @@ describe("shared player travel on native Paper", () => {
     await second;
     await command(bot, "/balance", /450.*crystals/iu);
     await command(secondBot, "/balance", /500.*crystals/iu);
-    await command(bot, "/tpinfo home", /now 50 crystals \/ 2m/u);
-    await command(secondBot, "/tpinfo home", /You have used 0\.0/u);
+    await command(bot, "/tpinfo home", /25 crystals/u);
+    await command(secondBot, "/tpinfo home", /25 crystals/u);
   }, 100_000);
 
   test("help and unanswered requests leave prices, cooldown and allowance unchanged", async ({
     bot,
     secondBot,
   }) => {
-    await command(bot, "/tpinfo", /Shared cooldown: ready/u);
-    await command(bot, "/tpinfo tpahere", /requester pays/u);
+    await command(bot, "/tpinfo", /its own price and cooldown/u);
+    await command(bot, "/tpinfo tpa", /25 crystals/u);
     await command(bot, `/tpa ${secondBot.username}`, /Request sent/u);
-    await command(bot, "/tpinfo home", /You have used 0\.0/u);
+    await command(bot, "/tpinfo home", /25 crystals, 1m, ready/u);
     await command(bot, "/balance", /500.*crystals/iu);
     await command(secondBot, "/tpdeny", /Request denied/u);
-    await command(bot, "/tpinfo home", /Shared cooldown: ready/u);
+    await command(bot, "/tpinfo home", /25 crystals, 1m, ready/u);
     await command(bot, "/spawn", /Teleported to spawn/u);
     await command(bot, "/balance", /490.*crystals/iu);
   });

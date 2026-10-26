@@ -29,8 +29,6 @@ import org.mockbukkit.mockbukkit.entity.PlayerMock;
  */
 final class EconomyCommandsTest {
 
-  private static final String WELCOME = "Welcome! You start with 500 crystals.";
-
   @TempDir Path directory;
 
   private ServerMock server;
@@ -56,6 +54,15 @@ final class EconomyCommandsTest {
   }
 
   /** Ticks until {@code player} receives a line containing {@code text}; returns what they saw. */
+  private void awaitGrant(PlayerMock player) throws Exception {
+    var deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+    while (System.nanoTime() < deadline) {
+      if (balance(player).equals(Money.crystals(500))) return;
+      Thread.sleep(20);
+    }
+    throw new AssertionError("starting balance was not granted");
+  }
+
   private List<String> awaitLine(PlayerMock player, String text) throws InterruptedException {
     var seen = new ArrayList<String>();
     for (var attempt = 0; attempt < 400; attempt++) {
@@ -106,7 +113,7 @@ final class EconomyCommandsTest {
         .players()
         .recordJoin(player.getUniqueId(), name, Instant.EPOCH)
         .get(10, TimeUnit.SECONDS);
-    awaitLine(player, WELCOME);
+    awaitGrant(player);
     return player;
   }
 
@@ -140,8 +147,7 @@ final class EconomyCommandsTest {
     server.getPlayerList().setFirstPlayed(alice.getUniqueId(), 1);
     assertThat(alice.hasPlayedBefore()).isTrue();
     server.addPlayer(alice);
-    awaitLine(alice, WELCOME);
-    assertThat(balance(alice)).isEqualTo(Money.crystals(500));
+    awaitGrant(alice);
 
     alice.disconnect();
     alice.reconnect();

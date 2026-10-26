@@ -231,18 +231,18 @@ one test passed.
 `/guide` opens the same welcome book delivered by the starter kit. It is optional
 and available to every player; successful opens record `guide_opened` analytics.
 The three shipped pages cover getting started, protecting a home, and finding
-quests or help. A single delayed arrival tip points back to it. New players
-receive iron tools, sixteen cooked porkchops, and the book. The windmill spawn
-faces outward toward town.
+quests or help. Join chat stays quiet; `/guide` is how a player opens the book.
+New players receive iron tools, one bed, sixteen cooked porkchops, and the book.
+The windmill spawn faces outward toward town.
 
-The arrival dialog gives a two-sentence introduction, twelve biome choices in
-title case, and an **Explore Spawn** exit. Escape also closes it. Until a player's
-first successful RTP, a personal compass occupies hotbar slot nine; either mouse
-button reopens the picker. QoL persists this entitlement separately from the RTP
-search throttle, so failed searches, reconnects, restarts and deaths retain it.
-The compass cannot be dropped or transferred and does not enter graves. Existing
-players do not receive one on migration. A successful RTP through either the
-picker or a command clears the entitlement before removing the item.
+The arrival dialog opens after that spawn teleport. It asks the player to choose
+a biome or explore spawn, lists twelve biomes, and has an **Explore Spawn**
+exit. A new compass starts with eight free trips in hotbar slot nine; either
+mouse button reopens the picker. A successful compass trip spends one charge.
+A miss, disconnect, or cancel spends nothing, and `/rtp` does not spend it.
+The compass cannot be dropped or transferred and does not enter graves. A
+player who already finished the one-shot compass stays finished. A player who
+still had it receives the eight trips.
 Arena sessions and sealed creative worlds own their player inventories. Onboarding keeps
 the entitlement pending there without reserving hotbar slots, changing items,
 blocking inventory actions, or opening its dialog. It reconciles the ordinary
@@ -1164,28 +1164,26 @@ existing rules. Travel pricing, cooldowns and death consequences are unchanged.
 
 ## Command travel
 
-`/spawn`, `/home`, `/back`, `/warp`, `/tpa`, `/tpahere`, and `/rtp` share
-one player-wide cooldown and an allowance of four weighted points over the
-last hour. Spawn and warp consume half a point, home/back/RTP one point, and
-player-to-player travel two points. Include the proposed trip when quoting:
-each point beyond the allowance doubles both price and cooldown, up to x32;
-half a point beyond the allowance starts x2. Each successful trip stops counting
-exactly one hour after arrival. Offline time also expires usage.
+`/spawn`, `/home`, `/back`, `/warp`, `/tpa`, `/tpahere`, and `/rtp` each have
+a flat crystal price and their own cooldown. The cooldown starts on arrival.
+A cancelled or failed trip records nothing. `/tpa` and `/tpahere` charge the
+requester only after accept. RTP is free for the first seven days and still
+waits out its cooldown. Leaving spawn skips the warmup. Elytra, happy ghasts,
+and ordinary routes are the intended regular transport.
 
-`/tpinfo [category]` shows configured rules, current quotes, shared cooldown,
-and the next usage expiration. The requester pays and accumulates usage for
-both TPA directions. Unanswered requests, cancelled warmups, failed searches,
-and failed delivery consume no allowance. Free RTP during the first seven
-days still consumes points and receives the same escalating cooldown.
-Elytra, happy ghasts, and ordinary routes are the intended regular transport.
+`/tpinfo [category]` lists each command's price, cooldown, and whether it is
+ready. A successful wilderness search sends one LiveMap link. A failed search
+can be tried again immediately, up to six passes before it gives up.
 
 Essentials publishes `TeleportTravel`: one reservation, warmup, guard,
-payment, refund, and delivery-confirmation flow. QoL supplies RTP's destination
-search and existing first-seen timestamp. The landing chunk remains held
-through delivery. Successful trips and the shared cooldown live in Essentials;
-confirmation clears the charge obligation in the same database transaction.
-The shared policy is typed in `essentials.yml`; `rtp.yml` owns only search and
-landing settings, including a 15-second search throttle for failed attempts.
+payment, refund, and delivery-confirmation flow. The starter compass uses a
+complimentary path that skips the quote, the charge, the warmup, and the RTP
+cooldown. QoL supplies RTP's destination search and existing first-seen
+timestamp. The landing chunk remains held through delivery. A successful
+command trip records that command's cooldown and clears the charge in the same
+database transaction. Prices live in `essentials.yml`; `rtp.yml` owns search
+and landing settings. The search throttle starts only after a successful
+arrival.
 
 Migration preserves each player's longest existing Essentials cooldown and
 starts the rolling history empty once: the old aggregates cannot reconstruct

@@ -11,7 +11,7 @@ import java.time.Duration;
  * @param tpaTimeout how long a {@code /tpa} or {@code /tpahere} request stays open
  * @param tpaInterval the least time between two requests from one player
  * @param backHistorySize how many places {@code /back} remembers per player
- * @param pricing cost, cooldown and multiplier rules
+ * @param pricing a flat price and cooldown for each command
  */
 public record TeleportSettings(
     Duration warmup,

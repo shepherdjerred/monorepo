@@ -22,6 +22,7 @@ beginnerLuck:
   initialDamageMultiplier: 0.1
   startingLevel: 1
   radius: 64.0
+  maxAggro: 3
 
 levels:
   cap: 50

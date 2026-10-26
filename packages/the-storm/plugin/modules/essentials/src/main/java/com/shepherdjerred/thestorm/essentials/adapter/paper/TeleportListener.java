@@ -23,6 +23,7 @@ final class TeleportListener implements Listener {
   private final BackRecorder back;
   private final SafeTracker safe;
   private final com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations spawn;
+  private final BedHomes beds;
 
   /**
    * Where deaths are recorded and respawns go.
@@ -30,11 +31,13 @@ final class TeleportListener implements Listener {
    * @param back {@code /back} recording
    * @param safe last safe spots
    * @param spawn where bedless players respawn
+   * @param beds saved bed homes, used when the bed block is gone
    */
   record Places(
       BackRecorder back,
       SafeTracker safe,
-      com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations spawn) {}
+      com.shepherdjerred.thestorm.essentials.app.RuntimeDestinations spawn,
+      BedHomes beds) {}
 
   TeleportListener(PaperRuntime runtime, TeleportFlow flow, Places places) {
     this.runtime = runtime;
@@ -42,6 +45,7 @@ final class TeleportListener implements Listener {
     this.back = places.back();
     this.safe = places.safe();
     this.spawn = places.spawn();
+    this.beds = places.beds();
   }
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -78,11 +82,14 @@ final class TeleportListener implements Listener {
 
   @EventHandler(priority = EventPriority.HIGH)
   void onRespawn(PlayerRespawnEvent event) {
-    if (event.getRespawnReason() != PlayerRespawnEvent.RespawnReason.DEATH
-        || event.isBedSpawn()
-        || event.isAnchorSpawn()) {
+    if (event.getRespawnReason() != PlayerRespawnEvent.RespawnReason.DEATH) return;
+    var bed = beds.get(event.getPlayer().getUniqueId());
+    if (bed.isPresent()) {
+      Positions.toLocation(runtime.server(), bed.orElseThrow())
+          .ifPresent(event::setRespawnLocation);
       return;
     }
+    if (event.isBedSpawn() || event.isAnchorSpawn()) return;
     Positions.toLocation(runtime.server(), spawn.spawn()).ifPresent(event::setRespawnLocation);
   }
 }

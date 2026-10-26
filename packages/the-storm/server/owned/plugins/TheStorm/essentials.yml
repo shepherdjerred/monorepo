@@ -24,40 +24,30 @@ teleports:
   tpaInterval: PT10S
   # How many places /back remembers (teleports and deaths).
   backHistorySize: 5
-  # Every command shares a rolling allowance and one cooldown. A successful
-  # trip leaves the history after window. Include the next trip's weight:
-  # each point above allowance doubles both price and cooldown, up to the cap.
-  # Elytra, happy ghasts and lodestones make ordinary journeys without crystals.
+  # Each command has its own price and cooldown. The cooldown starts on arrival.
+  # A cancelled or failed trip records nothing. RTP is free for rtpFreeFor and
+  # still waits out its cooldown. Elytra, happy ghasts and paths cost nothing.
   pricing:
-    window: PT1H
-    allowance: 4.0
-    maxMultiplier: 32.0
     rtpFreeFor: P7D
     prices:
       spawn:
         cost: 10
         cooldown: PT30S
-        weight: 0.5
       home:
         cost: 25
         cooldown: PT1M
-        weight: 1.0
       tpa:
         cost: 25
         cooldown: PT1M
-        weight: 2.0
       back:
         cost: 25
         cooldown: PT1M
-        weight: 1.0
       warp:
         cost: 15
         cooldown: PT30S
-        weight: 0.5
       rtp:
         cost: 25
         cooldown: PT1M
-        weight: 1.0
 
 # How many homes each player may set.
 homeLimit: 3
@@ -90,6 +80,10 @@ kits:
           name: null
           enchantments: {}
         - material: IRON_HOE
+          amount: 1
+          name: null
+          enchantments: {}
+        - material: WHITE_BED
           amount: 1
           name: null
           enchantments: {}

@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.qol.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
+import com.shepherdjerred.thestorm.essentials.app.NewcomerPlacements;
 import com.shepherdjerred.thestorm.qol.app.QolStore;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -13,6 +14,7 @@ final class JoinListener implements Listener {
   private final ArrivalDialog dialog;
   private final ModuleContext context;
   private final StarterCompass compass;
+  private final NewcomerPlacements placements;
 
   JoinListener(
       QolStore store, ArrivalDialog dialog, ModuleContext context, StarterCompass compass) {
@@ -20,6 +22,7 @@ final class JoinListener implements Listener {
     this.dialog = dialog;
     this.context = context;
     this.compass = compass;
+    this.placements = context.services().require(NewcomerPlacements.class);
   }
 
   @EventHandler
@@ -36,9 +39,10 @@ final class JoinListener implements Listener {
                     return;
                   }
                   if (!player.isOnline()) return;
-                  compass.loaded(player, ensured.profile().starterRtpPending());
+                  compass.loaded(player, ensured.profile().starterRtpCharges());
                   if (ensured.created() && compass.pending(player)) {
-                    dialog.show(player);
+                    if (player.hasPlayedBefore()) dialog.show(player);
+                    else placements.whenReady(player, dialog::show);
                   }
                 },
                 context.scheduler().mainThread());

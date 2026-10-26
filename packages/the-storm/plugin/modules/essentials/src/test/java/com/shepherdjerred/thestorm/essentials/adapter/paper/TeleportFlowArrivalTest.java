@@ -58,14 +58,10 @@ final class TeleportFlowArrivalTest {
             harness.clock,
             plugin.getComponentLogger(),
             com.shepherdjerred.thestorm.core.analytics.ProductAnalytics.disabled());
-    var price = new TeleportPrice(25, Duration.ZERO, 1);
+    var price = new TeleportPrice(25, Duration.ZERO);
     var pricing =
         new TeleportPricing(
-            new TeleportPrices(price, price, price, price, price, price),
-            Duration.ofHours(1),
-            4,
-            32,
-            Duration.ofDays(7));
+            new TeleportPrices(price, price, price, price, price, price), Duration.ofDays(7));
     var payments =
         new TeleportPayments(
             new TeleportPricer(pricing),
@@ -82,7 +78,10 @@ final class TeleportFlowArrivalTest {
                 new GuardRegistry(),
                 new AllowAllProtection(),
                 new BackRecorder(runtime, new JooqBackStore(harness.database), 5, harness.sealed),
-                harness.sealed),
+                harness.sealed,
+                nowhere(),
+                new com.shepherdjerred.thestorm.essentials.domain.place.Position(
+                    "unused", 0, 64, 0, 0, 0)),
             Duration.ZERO,
             (player, destination) -> completedFuture(true));
 
@@ -98,5 +97,19 @@ final class TeleportFlowArrivalTest {
     assertThat(observed).anyMatch(message -> message.contains("request completed"));
     assertThat(wallets.balanceOf(new AccountId.Player(alice.getUniqueId()))).isEqualTo(75);
     assertThat(flow.isBusy(alice.getUniqueId())).isFalse();
+  }
+
+  private static com.shepherdjerred.thestorm.core.world.SpawnArrivals nowhere() {
+    return new com.shepherdjerred.thestorm.core.world.SpawnArrivals() {
+      @Override
+      public int radius() {
+        return 32;
+      }
+
+      @Override
+      public boolean contains(org.bukkit.Location location) {
+        return false;
+      }
+    };
   }
 }

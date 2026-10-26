@@ -83,12 +83,12 @@ final class StarterCompassTest {
   void reconnectReplacesAMissingCompassWithoutReplacingOrdinaryItems() {
     var sword = new ItemStack(Material.DIAMOND_SWORD);
     player.getInventory().setItem(8, sword);
-    compass.loaded(player, true);
+    compass.loaded(player, 8);
     assertThat(player.getInventory().getItem(0)).isEqualTo(sword);
     assertThat(StarterCompass.marked(player.getInventory().getItem(8))).isTrue();
-    player.getInventory().setItem(1, StarterCompass.item(player));
+    player.getInventory().setItem(1, StarterCompass.item(player, 8));
     compass.left(player);
-    compass.loaded(player, true);
+    compass.loaded(player, 8);
     assertThat(Arrays.stream(player.getInventory().getContents()).filter(StarterCompass::marked))
         .hasSize(1);
     assertThat(player.getInventory().getItem(0)).isEqualTo(sword);
@@ -99,7 +99,7 @@ final class StarterCompassTest {
     for (var slot = 0; slot < 36; slot++) {
       player.getInventory().setItem(slot, new ItemStack(Material.DIAMOND, 64));
     }
-    compass.loaded(player, true);
+    compass.loaded(player, 8);
     assertThat(player.getInventory().getItem(8)).isEqualTo(new ItemStack(Material.DIAMOND, 64));
     player.getInventory().setItem(20, null);
     compass.reconcile(player);
@@ -109,26 +109,26 @@ final class StarterCompassTest {
 
   @Test
   void onlyDurableSuccessfulArrivalRemovesTheCompass() {
-    var persisted = new CompletableFuture<Void>();
-    when(store.completeStarterRtp(player.getUniqueId())).thenReturn(persisted);
-    compass.loaded(player, true);
+    var persisted = new CompletableFuture<Integer>();
+    when(store.spendStarterCharge(player.getUniqueId())).thenReturn(persisted);
+    compass.loaded(player, 1);
     compass.arrived(player);
     assertThat(compass.pending(player)).isTrue();
     assertThat(StarterCompass.marked(player.getInventory().getItem(8))).isTrue();
-    persisted.complete(null);
+    persisted.complete(0);
     assertThat(compass.pending(player)).isFalse();
     assertThat(player.getInventory().getItem(8)).isNull();
-    compass.loaded(player, false);
+    compass.loaded(player, 0);
     assertThat(player.getInventory().getItem(8)).isNull();
   }
 
   @Test
   void failedPersistenceKeepsTheCompassAndAllowsARetry() {
-    when(store.completeStarterRtp(player.getUniqueId()))
+    when(store.spendStarterCharge(player.getUniqueId()))
         .thenReturn(
             CompletableFuture.failedFuture(new IllegalStateException("fixture write failure")))
-        .thenReturn(CompletableFuture.completedFuture(null));
-    compass.loaded(player, true);
+        .thenReturn(CompletableFuture.completedFuture(0));
+    compass.loaded(player, 1);
     compass.arrived(player);
     assertThat(compass.pending(player)).isTrue();
     assertThat(StarterCompass.marked(player.getInventory().getItem(8))).isTrue();
@@ -138,7 +138,7 @@ final class StarterCompassTest {
 
   @Test
   void leftAndRightClickOpenThePickerAndCancelOrdinaryUse() {
-    compass.loaded(player, true);
+    compass.loaded(player, 8);
     for (var action : new Action[] {Action.LEFT_CLICK_AIR, Action.RIGHT_CLICK_AIR}) {
       var event =
           new PlayerInteractEvent(
@@ -156,7 +156,7 @@ final class StarterCompassTest {
 
   @Test
   void compassClickOnACitizenOpensThePickerInsteadOfDialogueAndCannotBeDropped() {
-    compass.loaded(player, true);
+    compass.loaded(player, 8);
     player.getInventory().setHeldItemSlot(8);
     var click = new NpcInteractEvent(player, mock(NpcRef.class));
     listener.npc(click);
@@ -168,7 +168,7 @@ final class StarterCompassTest {
             server
                 .getWorlds()
                 .getFirst()
-                .dropItem(player.getLocation(), StarterCompass.item(player)));
+                .dropItem(player.getLocation(), StarterCompass.item(player, 8)));
     listener.drop(drop);
     assertThat(drop.isCancelled()).isTrue();
   }
@@ -182,10 +182,10 @@ final class StarterCompassTest {
 
   @Test
   void deathKeepsTheCompassOutOfGraveDropsAndInventoryTransferIsCancelled() {
-    compass.loaded(player, true);
+    compass.loaded(player, 8);
     var drops = new ArrayList<ItemStack>();
     var kept = new ArrayList<ItemStack>();
-    drops.add(StarterCompass.item(player));
+    drops.add(StarterCompass.item(player, 8));
     drops.add(new ItemStack(Material.IRON_PICKAXE));
     var death = mock(PlayerDeathEvent.class);
     when(death.getEntity()).thenReturn(player);
@@ -196,7 +196,7 @@ final class StarterCompassTest {
     assertThat(kept).singleElement().matches(StarterCompass::marked);
     var click = mock(InventoryClickEvent.class);
     when(click.getWhoClicked()).thenReturn(player);
-    when(click.getCurrentItem()).thenReturn(StarterCompass.item(player));
+    when(click.getCurrentItem()).thenReturn(StarterCompass.item(player, 8));
     listener.click(click);
     verify(click).setCancelled(true);
   }
@@ -213,7 +213,7 @@ final class StarterCompassTest {
     player.getInventory().setItem(8, ability);
     player.getInventory().setItem(0, new ItemStack(Material.DIAMOND_SWORD));
     var before = player.getInventory().getContents();
-    compass.loaded(player, true);
+    compass.loaded(player, 8);
     compass.reconcile(player);
     assertThat(player.getInventory().getContents()).containsExactly(before);
     assertThat(compass.pending(player)).isFalse();
@@ -239,7 +239,7 @@ final class StarterCompassTest {
 
   @Test
   void sealedWorldInteractionsAndDeathLeaveEveryInventoryAndDropToItsOwner() {
-    compass.loaded(player, true);
+    compass.loaded(player, 8);
     var creative = server.addSimpleWorld("creative");
     sealed.seal(creative);
     player.teleport(creative.getSpawnLocation());
@@ -248,14 +248,14 @@ final class StarterCompassTest {
         new PlayerInteractEvent(
             player,
             Action.RIGHT_CLICK_AIR,
-            StarterCompass.item(player),
+            StarterCompass.item(player, 8),
             null,
             BlockFace.SELF,
             EquipmentSlot.HAND);
     listener.use(event);
     verify(dialog, never()).show(player);
     var drops = new ArrayList<ItemStack>();
-    drops.add(StarterCompass.item(player));
+    drops.add(StarterCompass.item(player, 8));
     drops.add(new ItemStack(Material.DIAMOND));
     var death = mock(PlayerDeathEvent.class);
     when(death.getEntity()).thenReturn(player);

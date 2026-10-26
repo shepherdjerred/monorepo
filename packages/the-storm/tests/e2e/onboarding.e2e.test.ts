@@ -25,6 +25,7 @@ describe("onboarding", () => {
       "iron_axe",
       "iron_shovel",
       "iron_hoe",
+      "white_bed",
       "written_book",
     ]) {
       expect(
@@ -108,8 +109,11 @@ describe("onboarding", () => {
     await disconnectBot(admitted);
   });
 
-  test("first-joiners are greeted with starter tips", async ({ server }) => {
+  test("first-joiners get the biome dialog and no welcome chat", async ({
+    server,
+  }) => {
     const arrival: string[] = [];
+    const dialogs: unknown[] = [];
     const newcomer = await connectBot({
       host: server.host,
       port: server.gamePort,
@@ -117,18 +121,22 @@ describe("onboarding", () => {
       onMessage: (line) => {
         arrival.push(line);
       },
+      prepare: (bot) => {
+        bot._client.on("packet", (_data: unknown, meta: { name: string }) => {
+          if (meta.name === "show_dialog") dialogs.push(meta.name);
+        });
+      },
     });
     try {
-      // The greeting lands seconds after the arrival burst; one window
-      // catches every line no matter how the packets batch.
-      const seen = [...arrival, ...(await collectMessages(newcomer, 8000))];
+      await waitUntil("biome dialog", () => dialogs.length > 0);
+      const seen = [...arrival, ...(await collectMessages(newcomer, 2000))];
       const shown = (pattern: RegExp) =>
         seen.some((line) => pattern.test(line));
-      expect(shown(/Welcome to The Storm/)).toBe(true);
-      expect(shown(/Use your compass to choose a biome/)).toBe(true);
+      expect(shown(/Welcome to The Storm/)).toBe(false);
+      expect(shown(/Use your compass to choose a biome/)).toBe(false);
+      expect(shown(/You start with/)).toBe(false);
+      expect(shown(/\/guide/)).toBe(false);
       expect(shown(/\/kit\b|You received the .* kit/)).toBe(false);
-      expect(shown(/\/guide/)).toBe(true);
-      expect(shown(/Start with \/rules|File a ticket/)).toBe(false);
     } finally {
       await disconnectBot(newcomer);
     }
@@ -137,6 +145,7 @@ describe("onboarding", () => {
   test("returning players are not greeted again", async ({ server }) => {
     const name = username("r");
     const firstArrival: string[] = [];
+    const dialogs: unknown[] = [];
     const first = await connectBot({
       host: server.host,
       port: server.gamePort,
@@ -144,16 +153,16 @@ describe("onboarding", () => {
       onMessage: (line) => {
         firstArrival.push(line);
       },
+      prepare: (bot) => {
+        bot._client.on("packet", (_data: unknown, meta: { name: string }) => {
+          if (meta.name === "show_dialog") dialogs.push(meta.name);
+        });
+      },
     });
-    // Capture starts before connecting, so an early tip cannot be missed.
-    await waitUntil("compass tip", () =>
-      firstArrival.some((line) =>
-        line.includes("Use your compass to choose a biome"),
-      ),
-    );
+    await waitUntil("biome dialog", () => dialogs.length > 0);
     expect(
       firstArrival.some((line) => line.includes("Welcome to The Storm")),
-    ).toBe(true);
+    ).toBe(false);
     await disconnectBot(first);
 
     const returningArrival: string[] = [];

@@ -50,7 +50,7 @@ final class EssentialsConfigTest {
     var config = parsed(shipped());
 
     assertThat(config.teleports().warmup()).isEqualTo(Duration.ofSeconds(3));
-    assertThat(config.teleports().pricing().maxMultiplier()).isEqualTo(32);
+    assertThat(config.teleports().pricing().rtpFreeFor()).isEqualTo(Duration.ofDays(7));
     assertThat(config.teleports().pricing().prices().of(TeleportKind.HOME).cost()).isEqualTo(25);
     assertThat(config.homeLimit()).isPositive();
     assertThat(config.kits().starter()).isEqualTo("starter");
@@ -64,7 +64,13 @@ final class EssentialsConfigTest {
     assertThat(starter.items())
         .extracting(KitItem::material)
         .containsExactly(
-            "IRON_SWORD", "IRON_PICKAXE", "IRON_AXE", "IRON_SHOVEL", "IRON_HOE", "COOKED_PORKCHOP");
+            "IRON_SWORD",
+            "IRON_PICKAXE",
+            "IRON_AXE",
+            "IRON_SHOVEL",
+            "IRON_HOE",
+            "WHITE_BED",
+            "COOKED_PORKCHOP");
     assertThat(starter.books())
         .singleElement()
         .satisfies(book -> assertThat(book.title()).isEqualTo("Welcome to The Storm"));

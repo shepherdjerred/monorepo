@@ -12,6 +12,9 @@ public final class HomeRules {
   /** The name {@code /sethome} and {@code /home} use when none is given. */
   public static final PlaceName DEFAULT_NAME = new PlaceName("home");
 
+  /** The respawn home saved by right-clicking a bed. It does not count toward the home limit. */
+  public static final PlaceName BED = new PlaceName("bed");
+
   private HomeRules() {}
 
   /** What setting a home did. */
@@ -31,7 +34,11 @@ public final class HomeRules {
     if (existing.contains(name)) {
       return Result.ok(Change.MOVED);
     }
-    if (existing.size() >= limit) {
+    if (name.equals(BED)) {
+      return Result.ok(Change.CREATED);
+    }
+    var counted = existing.stream().filter(home -> !home.equals(BED)).count();
+    if (counted >= limit) {
       return Result.err(new HomeError.LimitReached(limit));
     }
     return Result.ok(Change.CREATED);
@@ -51,6 +58,10 @@ public final class HomeRules {
       return find(homes, name)
           .<Result<Home, HomeError>>map(Result::ok)
           .orElseGet(() -> Result.err(new HomeError.NotFound(name, names)));
+    }
+    var bed = find(homes, BED);
+    if (bed.isPresent()) {
+      return Result.ok(bed.orElseThrow());
     }
     if (homes.size() == 1) {
       return Result.ok(homes.getFirst());

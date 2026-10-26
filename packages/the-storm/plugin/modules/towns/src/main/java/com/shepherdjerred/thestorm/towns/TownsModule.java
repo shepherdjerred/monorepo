@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.protection.SettledLand;
+import com.shepherdjerred.thestorm.core.world.SpawnArrivals;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.towns.adapter.bluemap.BlueMapTownMap;
 import com.shepherdjerred.thestorm.towns.adapter.db.JooqLeaseStore;
@@ -168,6 +169,12 @@ public final class TownsModule implements StormModule {
                     "plot-reconcile.json",
                     com.shepherdjerred.thestorm.towns.domain.parcel.PlotProtocol.class),
                 archiveExecutor));
+    context
+        .services()
+        .provide(
+            SpawnArrivals.class,
+            new com.shepherdjerred.thestorm.towns.adapter.paper.SpawnArrivalCheck(
+                config.spawnRadiusBlocks()));
     context.services().provide(Protection.class, installed.protection());
     context.services().provide(SettledLand.class, installed.settled());
     context.services().provide(TownRead.class, new TownListings(state));

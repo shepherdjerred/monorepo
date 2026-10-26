@@ -47,6 +47,7 @@ final class MobsConfigTest {
   void theShippedFileParsesWithThe2023Balance() throws IOException {
     var config = parsed(shipped());
 
+    assertThat(config.beginnerLuck().maxAggro()).isEqualTo(3);
     assertThat(config.levels().cap()).isEqualTo(50);
     assertThat(config.levels().depth().multiplier()).isEqualTo(0.05);
     assertThat(config.levels().depth().period()).isEqualTo(5);

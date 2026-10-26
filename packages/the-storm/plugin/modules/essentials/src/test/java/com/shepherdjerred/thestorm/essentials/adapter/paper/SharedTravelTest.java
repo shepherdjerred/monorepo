@@ -89,7 +89,10 @@ final class SharedTravelTest {
                 new GuardRegistry(),
                 new AllowAllProtection(),
                 new BackRecorder(runtime, new JooqBackStore(harness.database), 5, harness.sealed),
-                harness.sealed),
+                harness.sealed,
+                nowhere(),
+                new com.shepherdjerred.thestorm.essentials.domain.place.Position(
+                    "unused", 0, 64, 0, 0, 0)),
             Duration.ofSeconds(3),
             (player, target) -> CompletableFuture.completedFuture(player.teleport(target)));
     shared.configureRtp(player -> CompletableFuture.completedFuture(firstSeen), recovery);
@@ -104,7 +107,10 @@ final class SharedTravelTest {
             new GuardRegistry(),
             new AllowAllProtection(),
             new BackRecorder(runtime, new JooqBackStore(harness.database), 5, harness.sealed),
-            harness.sealed),
+            harness.sealed,
+            nowhere(),
+            new com.shepherdjerred.thestorm.essentials.domain.place.Position(
+                "unused", 0, 64, 0, 0, 0)),
         Duration.ofSeconds(3),
         (player, target) -> CompletableFuture.completedFuture(player.teleport(target)));
   }
@@ -130,22 +136,19 @@ final class SharedTravelTest {
   }
 
   @Test
-  void rtpAndHomesShareBothHistoryAndCooldown() {
+  void rtpAndHomesHaveSeparateCooldowns() {
     rtp();
     assertThat(wallets.balanceOf(new AccountId.Player(alice.getUniqueId()))).isEqualTo(1975);
     flow.start(Ticket.self(alice, TeleportKind.HOME, Destination.fixed(landing(), "home")));
     harness.until(() -> !flow.isBusy(alice.getUniqueId()));
-    assertThat(wallets.balanceOf(new AccountId.Player(alice.getUniqueId()))).isEqualTo(1975);
-    assertThat(messages(alice)).anyMatch(line -> line.contains("All travel commands share"));
-    harness.clock.advance(Duration.ofMinutes(1));
-    flow.start(Ticket.self(alice, TeleportKind.HOME, Destination.fixed(landing(), "home")));
-    harness.until(() -> !flow.isBusy(alice.getUniqueId()));
-    assertThat(payments.history(alice.getUniqueId()).join().trips()).hasSize(2);
+    assertThat(wallets.balanceOf(new AccountId.Player(alice.getUniqueId()))).isEqualTo(1950);
+    rtp();
+    assertThat(messages(alice)).anyMatch(line -> line.contains("You can teleport again"));
     assertThat(wallets.balanceOf(new AccountId.Player(alice.getUniqueId()))).isEqualTo(1950);
   }
 
   @Test
-  void sevenDayFreeRtpStillEscalatesAndExpiresExactlyAtTheBoundary() {
+  void sevenDayFreeRtpKeepsItsOwnCooldownAndExpiresExactlyAtTheBoundary() {
     firstSeen = harness.clock.instant();
     for (var i = 0; i < 5; i++) {
       rtp();
@@ -153,9 +156,8 @@ final class SharedTravelTest {
     }
     var status = flow.status(alice).join();
     assertThat(wallets.balanceOf(new AccountId.Player(alice.getUniqueId()))).isEqualTo(2000);
-    assertThat(status.history().trips()).hasSize(5);
-    assertThat(Duration.between(harness.clock.instant(), status.history().cooldownUntil()))
-        .isEqualTo(Duration.ofMinutes(2));
+    assertThat(Duration.between(harness.clock.instant(), status.history().until(TeleportKind.RTP)))
+        .isEqualTo(Duration.ofMinutes(1));
     harness.clock.advance(
         Duration.between(harness.clock.instant(), firstSeen.plus(Duration.ofDays(7))));
     assertThat(flow.status(alice).join().quote(TeleportKind.RTP).cost()).isEqualTo(25);
@@ -169,17 +171,16 @@ final class SharedTravelTest {
     bob.teleport(landing());
     flow.start(new Ticket(alice, alice, TeleportKind.TPA, Destination.player(bob)));
     harness.until(() -> !flow.isBusy(alice.getUniqueId()));
-    assertThat(payments.history(alice.getUniqueId()).join().trips().getFirst().halfPoints())
-        .isEqualTo(4);
-    assertThat(payments.history(bob.getUniqueId()).join().trips()).isEmpty();
+    assertThat(payments.history(alice.getUniqueId()).join().until(TeleportKind.TPA))
+        .isAfter(harness.clock.instant());
+    assertThat(payments.history(bob.getUniqueId()).join().cooldownUntil()).isEmpty();
     harness.clock.advance(Duration.ofMinutes(1));
     flow.start(new Ticket(bob, alice, TeleportKind.TPA, Destination.player(alice)));
     harness.until(() -> !flow.isBusy(alice.getUniqueId()));
-    assertThat(payments.history(alice.getUniqueId()).join().trips()).hasSize(2);
-    assertThat(payments.history(bob.getUniqueId()).join().trips()).isEmpty();
+    assertThat(payments.history(bob.getUniqueId()).join().cooldownUntil()).isEmpty();
     assertThat(wallets.balanceOf(new AccountId.Player(alice.getUniqueId()))).isEqualTo(1950);
     assertThat(wallets.balanceOf(new AccountId.Player(bob.getUniqueId()))).isEqualTo(500);
-    assertThat(flow.status(alice).join().quote(TeleportKind.HOME).cost()).isEqualTo(50);
+    assertThat(flow.status(alice).join().quote(TeleportKind.HOME).cost()).isEqualTo(25);
   }
 
   @Test
@@ -223,12 +224,12 @@ final class SharedTravelTest {
     harness.until(
         () -> {
           seen.addAll(messages(alice));
-          return seen.stream().anyMatch(line -> line.contains("Don't move."));
+          return seen.stream().anyMatch(line -> line.contains("Don't move"));
         });
     flow.damaged(alice);
     assertThat(flow.isBusy(alice.getUniqueId())).isFalse();
     assertThat(released.get()).isEqualTo(1);
-    assertThat(payments.history(alice.getUniqueId()).join().trips()).isEmpty();
+    assertThat(payments.history(alice.getUniqueId()).join().cooldownUntil()).isEmpty();
     assertThat(wallets.receipts()).isEmpty();
   }
 
@@ -252,7 +253,7 @@ final class SharedTravelTest {
     pending.complete(
         Result.ok(new TeleportTravel.Landing(landing(), released::incrementAndGet, () -> {})));
     harness.until(() -> released.get() == 1);
-    assertThat(payments.history(alice.getUniqueId()).join().trips()).isEmpty();
+    assertThat(payments.history(alice.getUniqueId()).join().cooldownUntil()).isEmpty();
   }
 
   @Test
@@ -264,6 +265,20 @@ final class SharedTravelTest {
     gate.completeExceptionally(new IllegalStateException("legacy refund unavailable"));
     harness.until(() -> !flow.isBusy(alice.getUniqueId()));
     assertThat(wallets.receipts()).isEmpty();
-    assertThat(payments.history(alice.getUniqueId()).join().trips()).isEmpty();
+    assertThat(payments.history(alice.getUniqueId()).join().cooldownUntil()).isEmpty();
+  }
+
+  private static com.shepherdjerred.thestorm.core.world.SpawnArrivals nowhere() {
+    return new com.shepherdjerred.thestorm.core.world.SpawnArrivals() {
+      @Override
+      public int radius() {
+        return 32;
+      }
+
+      @Override
+      public boolean contains(org.bukkit.Location location) {
+        return false;
+      }
+    };
   }
 }

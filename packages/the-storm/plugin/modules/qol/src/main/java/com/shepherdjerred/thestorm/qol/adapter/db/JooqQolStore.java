@@ -53,13 +53,28 @@ public final class JooqQolStore implements QolStore {
   }
 
   @Override
-  public CompletableFuture<Void> completeStarterRtp(UUID player) {
-    return write(
-        dsl ->
-            dsl.update(QOL_PLAYER)
-                .set(QOL_PLAYER.STARTER_RTP_PENDING, 0)
-                .where(QOL_PLAYER.PLAYER.eq(player.toString()))
-                .execute());
+  public CompletableFuture<Integer> spendStarterCharge(UUID player) {
+    return database.write(
+        dsl -> {
+          dsl.update(QOL_PLAYER)
+              .set(QOL_PLAYER.STARTER_RTP_CHARGES, QOL_PLAYER.STARTER_RTP_CHARGES.minus(1))
+              .set(
+                  QOL_PLAYER.STARTER_RTP_PENDING,
+                  org.jooq
+                      .impl
+                      .DSL
+                      .when(QOL_PLAYER.STARTER_RTP_CHARGES.minus(1).gt(0), 1)
+                      .otherwise(0))
+              .where(
+                  QOL_PLAYER.PLAYER.eq(player.toString()).and(QOL_PLAYER.STARTER_RTP_CHARGES.gt(0)))
+              .execute();
+          var left =
+              dsl.select(QOL_PLAYER.STARTER_RTP_CHARGES)
+                  .from(QOL_PLAYER)
+                  .where(QOL_PLAYER.PLAYER.eq(player.toString()))
+                  .fetchOne(QOL_PLAYER.STARTER_RTP_CHARGES);
+          return left == null ? 0 : left;
+        });
   }
 
   @Override
@@ -101,8 +116,10 @@ public final class JooqQolStore implements QolStore {
         .set(QOL_PLAYER.PLAYER, player.toString())
         .set(QOL_PLAYER.FIRST_SEEN, now.toEpochMilli())
         .set(QOL_PLAYER.STARTER_RTP_PENDING, 1)
+        .set(QOL_PLAYER.STARTER_RTP_CHARGES, PlayerProfile.STARTER_CHARGES)
         .execute();
-    return new Ensured(new PlayerProfile(player, now, Optional.empty(), true), true);
+    return new Ensured(
+        new PlayerProfile(player, now, Optional.empty(), PlayerProfile.STARTER_CHARGES), true);
   }
 
   private static PlayerProfile profile(
@@ -111,7 +128,7 @@ public final class JooqQolStore implements QolStore {
         UUID.fromString(row.getPlayer()),
         Instant.ofEpochMilli(row.getFirstSeen()),
         instant(row.getLastRtp()),
-        row.getStarterRtpPending() == 1);
+        row.getStarterRtpCharges());
   }
 
   private static Optional<Instant> instant(@Nullable Long millis) {
