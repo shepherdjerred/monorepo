@@ -344,16 +344,26 @@ function assertObservedPostingPolicy(preflight: PromotionPreflight): void {
     day: 86_400,
     week: 604_800,
   };
-  const durations = [
-    ...quote.matchAll(
-      /\b(\d+|a|an|per|each|every)\s+(minute|hour|day|week)s?\b/g,
-    ),
-  ].map((match) => {
-    const unit = match[2];
-    const seconds = unit === undefined ? undefined : units[unit];
-    if (seconds === undefined) throw new Error("Unknown posting interval unit");
-    return (/^\d+$/.test(match[1] ?? "") ? Number(match[1]) : 1) * seconds;
-  });
+  const durations = [...quote.matchAll(/\b(minute|hour|day|week)s?\b/g)].map(
+    (match) => {
+      const unit = match[1];
+      const seconds = unit === undefined ? undefined : units[unit];
+      if (seconds === undefined)
+        throw new Error("Unknown posting interval unit");
+      const quantity =
+        (/(?:^|\s)(\S+)$/u.exec(quote
+          .slice(0, match.index)
+          .trimEnd()))?.[1] ?? "";
+      if (/^(?:a|an|per|each|every)$/u.test(quantity)) return seconds;
+      if (
+        !/^\d+$/u.test(quantity) ||
+        !Number.isSafeInteger(Number(quantity)) ||
+        Number(quantity) <= 0
+      )
+        throw new Error("Unsupported posting interval quantity");
+      return Number(quantity) * seconds;
+    },
+  );
   if (/\bdaily\b/.test(quote)) durations.push(86_400);
   if (/\bweekly\b/.test(quote)) durations.push(604_800);
   if (durations.length === 0)
