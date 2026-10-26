@@ -104,7 +104,11 @@ export function renderPmsReproduction(
       name: command.name,
       uuid: `${identity.requestId}-${index.toString()}`,
       image: command.image,
-      commands: command.commands ?? [],
+      // emitWorkflow escapes every dollar for Woodpecker substitution. The
+      // reviewed plan records the exact commands the runtime will execute.
+      commands: (command.commands ?? []).map((value) =>
+        value.replaceAll("$$", "$"),
+      ),
       resources: command.backend_options.kubernetes.resources,
       volumes: command.volumes ?? [],
     })),

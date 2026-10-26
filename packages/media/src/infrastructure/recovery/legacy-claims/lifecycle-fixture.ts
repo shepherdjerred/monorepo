@@ -2,7 +2,10 @@ import { afterAll } from "vitest";
 import { rm } from "node:fs/promises";
 import { z } from "zod";
 import { automationTestHarness } from "#testing/automation.ts";
-import { fileFixture } from "#automation/files/test-support.ts";
+import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
+import { preparePhysicalPublication } from "#automation/plex-binding/test-fixture.ts";
+import { prepareBoundRetention } from "#automation/retention/lifecycle.test-fixture.ts";
+import { elapsedQuarantineClient } from "#automation/retention/fixtures/elapsed-quarantine.ts";
 import { grantTestRequesterAccess } from "#testing/authority.ts";
 import { PrismaRecovery } from "#infrastructure/recovery/service.ts";
 import { releaseInput } from "#infrastructure/recovery/test-support.ts";
@@ -23,9 +26,8 @@ export function legacyLifecycleHarness() {
   });
   async function fixture() {
     const db = harness.database();
-    const f = await fileFixture(db);
+    const f = await mappedPublicationFixture(db);
     directories.push(f.directory);
-    const published = await f.published();
     const owner = await db.mediaUser.create({
       data: {
         plexAccountId: String(crypto.getRandomValues(new Uint32Array(1))[0]),
@@ -40,8 +42,7 @@ export function legacyLifecycleHarness() {
       },
     });
     for (const actor of [owner, user])
-      await grantTestRequesterAccess(db, actor.id, "lifecycle-fixture");
-    f.context.serverMachineId = "lifecycle-fixture";
+      await grantTestRequesterAccess(db, actor.id, "fixture-server");
     await db.mediaItem.update({
       where: { id: f.media.id },
       data: { externalIds: { plexSectionId: "1" } },
@@ -53,7 +54,7 @@ export function legacyLifecycleHarness() {
         reason: "recovery_request_history_unconfirmed",
       },
     });
-    const recovery = new PrismaRecovery(db, "lifecycle-fixture");
+    const recovery = new PrismaRecovery(db, "fixture-server");
     async function release() {
       const result = await recovery.prepare(owner, crypto.randomUUID(), {
         mediaIds: [f.media.id],
@@ -92,14 +93,18 @@ export function legacyLifecycleHarness() {
     await release();
     await chooseCurrentTestMovieEdition(db, {
       requestId: f.request.id,
-      access: { serverMachineId: "lifecycle-fixture", movieSectionId: "1" },
+      access: { serverMachineId: "fixture-server", movieSectionId: "1" },
     });
-    const retention = await f.retention();
+    const published = await preparePhysicalPublication(f);
+    const bound = await prepareBoundRetention(f, published, harness.context());
+    const retention = bound.retention;
+    const quarantineTiming = await elapsedQuarantineClient(
+      db,
+      retention.decision.id,
+    );
+    f.context.db = quarantineTiming.db;
     async function bind(captureId: string) {
-      const bindings = new PrismaLegacyRequesterBindings(
-        db,
-        "lifecycle-fixture",
-      );
+      const bindings = new PrismaLegacyRequesterBindings(db, "fixture-server");
       const view = await bindings.list(owner, captureId);
       const requester = view.requesters[0];
       if (requester === undefined) throw new Error("Missing fixture requester");
@@ -151,27 +156,8 @@ export function legacyLifecycleHarness() {
       return result.captureId;
     }
     async function refresh() {
-      const timestamp = z.date().parse(f.context.now?.());
-      const decision = await db.retentionDecision.findUniqueOrThrow({
-        where: { id: retention.decision.id },
-      });
-      await db.retentionDecision.update({
-        where: { id: decision.id },
-        data: {
-          evidence: {
-            ...z.record(z.string(), z.json()).parse(decision.evidence),
-            authorizedAt: timestamp.toISOString(),
-          },
-        },
-      });
-      await db.watchState.updateMany({
-        where: { mediaId: f.media.id },
-        data: { observedAt: timestamp },
-      });
-      await db.notificationDelivery.updateMany({
-        where: { userId: user.id },
-        data: { reconciledAt: timestamp },
-      });
+      await bound.observe(true);
+      await bound.refresh();
     }
     return {
       ...f,
@@ -185,7 +171,8 @@ export function legacyLifecycleHarness() {
       bind,
       release,
       refresh,
-      network: { ...harness.context(), serverMachineId: "lifecycle-fixture" },
+      assertQuarantineAge: quarantineTiming.assertWritten,
+      network: bound.context,
     };
   }
   return { fixture };

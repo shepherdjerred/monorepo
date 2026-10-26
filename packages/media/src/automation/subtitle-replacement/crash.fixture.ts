@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createDatabase } from "#infrastructure/database.ts";
 import { createSubtitleReplacementActivities } from "./activities.ts";
+import { testPublicationExecution } from "#testing/publication-execution.ts";
 
 const input = z
   .object({
@@ -22,6 +23,8 @@ if (!input.databaseUrl.startsWith("postgres://media@127.0.0.1:"))
 const db = createDatabase(input.databaseUrl);
 const activities = createSubtitleReplacementActivities({
   db,
+  serverMachineId: "fixture-server",
+  publicationExecution: testPublicationExecution,
   roots: { movies: input.roots, tv: input.roots },
   plexAccess: (sectionType) =>
     Promise.resolve({

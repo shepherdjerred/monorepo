@@ -20,7 +20,9 @@ manifest keeps its Vitest step and separately executes
 `go -C reproduction/pms-runner test -race ./...` from the extension workspace.
 Use the repository-pinned Go toolchain and committed `go.mod`/`go.sum`.
 
-Go tests use fake backends, resource maps and Kubernetes clientsets. They never
+Go tests use fake backends, resource maps and Kubernetes clientsets. The compiler
+contract test invokes Bun and the actual TypeScript emitter from the installed
+workspace, then compiles that workflow through the pinned public compiler. They never
 invoke the live-client constructor, load kubeconfig or launch a workload. Their
 coverage includes partial setup, uncertain ownership, UID replacement, durable
 ledger restart, cleanup failures and the exact admitted image-pull references.
@@ -61,6 +63,9 @@ The binary accepts only its compiled-in source and plan digest, then verifies
 the YAML digest and compiled command/placement policy. The shared
 `protocol.schema.json` is validated by both TypeScript and Go. An altered plan
 requires a new review and matching build.
+
+The standalone workflow admits only manual events. Its YAML retains Woodpecker
+dollar escaping; the plan records the exact commands after that substitution.
 
 Only launch after reviewing the exact artifacts and obtaining the intended
 operator execution window. Run outside Kubernetes with existing operator

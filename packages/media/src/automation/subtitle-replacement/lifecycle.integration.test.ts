@@ -37,7 +37,7 @@ async function upgrade(f: Awaited<ReturnType<typeof installed>>) {
   });
   expect(
     await publisher.publishMediaToPlex(f.initialPublication.input),
-  ).toEqual({ status: "available" });
+  ).toEqual({ status: "available", reason: null });
   await publisher.finalizeMediaAcquisition(f.initialPublication.input);
   const inspect = f.context.inspect;
   if (inspect === undefined) throw new Error("Inspector missing");
@@ -109,7 +109,7 @@ test("verified video expiry removes only its current subtitle and leaves replace
       ...network,
       db: timing.db,
     }).publishMediaToPlex(upgraded.input),
-  ).toEqual({ status: "available" });
+  ).toEqual({ status: "available", reason: null });
   await timing.assertWritten();
   await createPublicationActivities(network).finalizeMediaAcquisition(
     upgraded.input,
