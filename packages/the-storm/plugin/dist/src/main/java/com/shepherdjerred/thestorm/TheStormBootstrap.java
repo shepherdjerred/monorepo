@@ -54,9 +54,22 @@ public final class TheStormBootstrap implements PluginBootstrap {
       throw new IllegalStateException("missing " + PACK_META);
     }
     try {
-      return meta.toURI().resolve(".");
+      return packRoot(meta.toURI());
     } catch (URISyntaxException failure) {
       throw new IllegalStateException("quiet iron pick datapack URI", failure);
     }
+  }
+
+  /**
+   * Parent directory of a {@code pack.mcmeta} URI. A packaged plugin resource is an opaque {@code
+   * jar:} URI, and {@link URI#resolve} on an opaque URI returns the relative argument unchanged.
+   */
+  static URI packRoot(URI meta) {
+    var text = meta.toString();
+    var file = "pack.mcmeta";
+    if (!text.endsWith("/" + file)) {
+      throw new IllegalStateException("quiet iron pick datapack URI");
+    }
+    return URI.create(text.substring(0, text.length() - file.length()));
   }
 }

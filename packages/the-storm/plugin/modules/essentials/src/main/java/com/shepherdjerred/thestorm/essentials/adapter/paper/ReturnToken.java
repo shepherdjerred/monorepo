@@ -76,7 +76,13 @@ final class ReturnToken {
     var at = inventory.getItem(SLOT);
     if (at != null && !at.isEmpty()) {
       var empty = emptyStorageSlot(inventory);
-      if (empty != -1) inventory.setItem(empty, at);
+      if (empty == -1) {
+        player.getWorld().dropItem(Positions.current(player), item);
+        player.sendActionBar(
+            Component.text("Your inventory is full, so Return was dropped at your feet."));
+        return;
+      }
+      inventory.setItem(empty, at);
     }
     inventory.setItem(SLOT, item);
   }

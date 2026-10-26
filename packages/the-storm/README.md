@@ -1179,9 +1179,11 @@ can be tried again immediately, up to six passes before it gives up.
 Right-clicking a bed saves one respawn home named `bed`. It does not count
 toward the three-home limit, and the last bed replaces it, including a bed in
 another world. `/home` with no name goes there; `/home <name>` still goes to
-the other homes. Death respawns at that saved spot after the bed block is
-broken. On startup, each player's saved respawn is copied into that home when
-they do not already have one, including when the bed block is already gone.
+the other homes. Death respawns at a safe spot in that column after the bed
+block is broken, or at spawn if the column is blocked. A town that no longer
+allows the player still redirects that respawn. On startup, each player's saved
+respawn is copied into that home when they do not already have one, including
+when the bed block is already gone.
 
 Essentials publishes `TeleportTravel`: one reservation, warmup, guard,
 payment, refund, and delivery-confirmation flow. The starter compass uses a

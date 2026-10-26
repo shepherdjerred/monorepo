@@ -60,11 +60,25 @@ final class RtpFlow {
         target -> {
           var description = "wilderness in " + worldName;
           if (fromCompass) {
-            travel.complimentary(player, description, () -> prepare(player, target, biome, true));
+            travel.complimentary(player, description, () -> reserved(player, target, biome));
           } else {
             travel.randomTeleport(player, description, () -> prepare(player, target, biome, false));
           }
         });
+  }
+
+  private CompletableFuture<Result<TeleportTravel.Landing, Component>> reserved(
+      Player player, World world, Optional<String> biome) {
+    if (!compass.hold(player)) {
+      return CompletableFuture.completedFuture(
+          Result.err(Component.text("You have no free trips left.")));
+    }
+    return search(player, world, biome, true)
+        .whenCompleteAsync(
+            (result, failure) -> {
+              if (failure != null || result == null || !result.isOk()) compass.refund(player);
+            },
+            context.scheduler().mainThread());
   }
 
   private CompletableFuture<Result<TeleportTravel.Landing, Component>> prepare(
@@ -135,20 +149,28 @@ final class RtpFlow {
           Result.ok(
               new TeleportTravel.Landing(
                   destination,
-                  () -> tickets.release(world, chunkX, chunkZ),
-                  () -> {
-                    memory.remember(
-                        world.getName(),
-                        destination.getBlockX(),
-                        destination.getBlockZ(),
-                        context.time().instant());
-                    if (attempt.fromCompass()) compass.arrived(player);
-                    else {
-                      var _ = store.setLastRtp(player.getUniqueId(), context.time().instant());
-                    }
-                    liveMap(player, destination);
-                  })));
+                  () -> releaseLanding(attempt, world, chunkX, chunkZ),
+                  () -> arrive(attempt, destination))));
     }
+  }
+
+  private void releaseLanding(Attempt attempt, World world, int chunkX, int chunkZ) {
+    tickets.release(world, chunkX, chunkZ);
+    if (attempt.fromCompass()) compass.refund(attempt.player());
+  }
+
+  private void arrive(Attempt attempt, Location destination) {
+    var player = attempt.player();
+    memory.remember(
+        attempt.world().getName(),
+        destination.getBlockX(),
+        destination.getBlockZ(),
+        context.time().instant());
+    if (attempt.fromCompass()) compass.arrived(player);
+    else {
+      var _ = store.setLastRtp(player.getUniqueId(), context.time().instant());
+    }
+    liveMap(player, destination);
   }
 
   private static void liveMap(Player player, Location destination) {

@@ -22,6 +22,7 @@ final class StarterCompass {
   static final int SLOT = 8;
   private static final NamespacedKey OWNER = new NamespacedKey("thestorm", "starter_rtp_owner");
   private final Map<UUID, Integer> charges = new HashMap<>();
+  private final Map<UUID, Integer> holds = new HashMap<>();
   private final ModuleContext context;
   private final QolStore store;
   private final SealedWorlds sealed;
@@ -118,28 +119,75 @@ final class StarterCompass {
     return -1;
   }
 
-  void arrived(Player player) {
-    if (!pending(player)) return;
+  /**
+   * Reserves one trip before travel starts. A replayed dialog callback cannot pass this once the
+   * balance is exhausted, including while an earlier trip is still in flight.
+   */
+  boolean hold(Player player) {
     var id = player.getUniqueId();
+    var left = charges.getOrDefault(id, 0);
+    if (left <= 0) return false;
+    var remaining = left - 1;
+    if (remaining > 0) charges.put(id, remaining);
+    else charges.remove(id);
+    holds.merge(id, 1, Integer::sum);
+    reconcile(player);
+    return true;
+  }
+
+  /** Gives back a reservation when the trip does not arrive. */
+  void refund(Player player) {
+    var id = player.getUniqueId();
+    var held = holds.getOrDefault(id, 0);
+    if (held <= 0) return;
+    if (held == 1) holds.remove(id);
+    else holds.put(id, held - 1);
+    if (!player.isOnline()) return;
+    charges.merge(id, 1, Integer::sum);
+    reconcile(player);
+  }
+
+  void arrived(Player player) {
+    var id = player.getUniqueId();
+    var held = holds.getOrDefault(id, 0);
+    var consumed = held > 0;
+    if (consumed) {
+      if (held == 1) holds.remove(id);
+      else holds.put(id, held - 1);
+    } else if (!pending(player)) return;
+    var arrival = new Arrival(player, id, consumed);
     var _ =
         store
             .spendStarterCharge(id)
             .whenCompleteAsync(
-                (left, failure) -> {
-                  if (failure != null) {
-                    context.logger().error("Could not spend a compass trip for {}", id, failure);
-                    return;
-                  }
-                  var remaining = left == null ? 0 : left;
-                  if (remaining > 0) charges.put(id, remaining);
-                  else charges.remove(id);
-                  if (player.isOnline()) reconcile(player);
-                },
+                (left, failure) -> finishArrival(arrival, left, failure),
                 context.scheduler().mainThread());
   }
 
+  private record Arrival(Player player, UUID id, boolean consumed) {}
+
+  private void finishArrival(Arrival arrival, @Nullable Integer left, @Nullable Throwable failure) {
+    var player = arrival.player();
+    if (failure != null) {
+      context.logger().error("Could not spend a compass trip for {}", arrival.id(), failure);
+      if (arrival.consumed() && player.isOnline()) {
+        charges.merge(arrival.id(), 1, Integer::sum);
+        reconcile(player);
+      }
+      return;
+    }
+    if (!arrival.consumed()) {
+      var remaining = left == null ? 0 : left;
+      if (remaining > 0) charges.put(arrival.id(), remaining);
+      else charges.remove(arrival.id());
+    }
+    if (player.isOnline()) reconcile(player);
+  }
+
   void left(Player player) {
-    charges.remove(player.getUniqueId());
+    var id = player.getUniqueId();
+    charges.remove(id);
+    holds.remove(id);
   }
 
   void afterRespawn(Player player) {

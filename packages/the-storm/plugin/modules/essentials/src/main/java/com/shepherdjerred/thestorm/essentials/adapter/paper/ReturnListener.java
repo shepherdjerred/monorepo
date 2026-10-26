@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.players.Humans;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.world.ArenaSessions;
+import com.shepherdjerred.thestorm.core.world.ChunkTickets;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqReturnCharges;
 import com.shepherdjerred.thestorm.essentials.app.TeleportTravel;
@@ -12,6 +13,7 @@ import java.util.Map;
 import java.util.OptionalInt;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -125,19 +127,50 @@ final class ReturnListener implements Listener {
       Say.error(player, Say.TELEPORT, "That return has no destination.");
       return;
     }
-    var safe = SafeLocations.nearestSafe(destination.orElseThrow());
-    if (safe.isEmpty()) {
-      Say.error(player, Say.TELEPORT, "Couldn't find a safe spot. Try again.");
-      return;
+    var target = destination.orElseThrow();
+    travel.complimentary(player, "where you died", () -> prepareReturn(player, target));
+  }
+
+  private CompletableFuture<Result<TeleportTravel.Landing, Component>> prepareReturn(
+      Player player, Location target) {
+    var ready = new CompletableFuture<Result<TeleportTravel.Landing, Component>>();
+    if (SafeLocations.isLoaded(target)) {
+      ready.complete(returnLanding(player, target));
+      return ready;
     }
-    var landing = safe.orElseThrow();
-    travel.complimentary(
-        player,
-        "where you died",
-        () ->
-            CompletableFuture.completedFuture(
-                Result.ok(
-                    new TeleportTravel.Landing(
-                        landing, () -> {}, () -> ReturnToken.remove(player)))));
+    var world = target.getWorld();
+    if (world == null) {
+      ready.complete(Result.err(Component.text("That return has no destination.")));
+      return ready;
+    }
+    runtime.onMain(
+        world.getChunkAtAsync(target),
+        "loading the return destination",
+        chunk -> ready.complete(returnLanding(player, target)),
+        failure ->
+            ready.complete(Result.err(Component.text("Couldn't load where you died. Try again."))));
+    return ready;
+  }
+
+  private Result<TeleportTravel.Landing, Component> returnLanding(Player player, Location target) {
+    if (!player.isOnline()) {
+      return Result.err(Component.text("You left before the return."));
+    }
+    var safe = SafeLocations.nearestSafe(target);
+    if (safe.isEmpty()) {
+      return Result.err(Component.text("Couldn't find a safe spot. Try again."));
+    }
+    var spot = safe.orElseThrow();
+    var world = spot.getWorld();
+    if (world == null) {
+      return Result.err(Component.text("That return has no destination."));
+    }
+    var tickets = context.services().require(ChunkTickets.class);
+    var chunkX = spot.getBlockX() >> 4;
+    var chunkZ = spot.getBlockZ() >> 4;
+    tickets.hold(world, chunkX, chunkZ);
+    return Result.ok(
+        new TeleportTravel.Landing(
+            spot, () -> tickets.release(world, chunkX, chunkZ), () -> ReturnToken.remove(player)));
   }
 }

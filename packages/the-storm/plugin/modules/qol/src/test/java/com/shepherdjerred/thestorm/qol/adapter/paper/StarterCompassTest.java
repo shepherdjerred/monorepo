@@ -123,6 +123,34 @@ final class StarterCompassTest {
   }
 
   @Test
+  void aReservedTripBlocksAnotherUntilItIsRefundedOrSaved() {
+    when(store.spendStarterCharge(player.getUniqueId()))
+        .thenReturn(CompletableFuture.completedFuture(0));
+    compass.loaded(player, 1);
+    assertThat(compass.hold(player)).isTrue();
+    assertThat(compass.remaining(player)).isZero();
+    assertThat(compass.hold(player)).isFalse();
+    compass.refund(player);
+    assertThat(compass.remaining(player)).isEqualTo(1);
+    assertThat(compass.hold(player)).isTrue();
+    compass.arrived(player);
+    assertThat(compass.remaining(player)).isZero();
+    verify(store).spendStarterCharge(player.getUniqueId());
+  }
+
+  @Test
+  void aFailedSaveRestoresAReservedCharge() {
+    when(store.spendStarterCharge(player.getUniqueId()))
+        .thenReturn(
+            CompletableFuture.failedFuture(new IllegalStateException("fixture write failure")));
+    compass.loaded(player, 1);
+    assertThat(compass.hold(player)).isTrue();
+    compass.arrived(player);
+    assertThat(compass.remaining(player)).isEqualTo(1);
+    assertThat(compass.hold(player)).isTrue();
+  }
+
+  @Test
   void failedPersistenceKeepsTheCompassAndAllowsARetry() {
     when(store.spendStarterCharge(player.getUniqueId()))
         .thenReturn(
