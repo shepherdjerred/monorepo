@@ -9,9 +9,11 @@ import {
   reschedulePath,
   savedViewTitle,
   searchTag,
+  timedViewerPath,
   seedParityVault,
   verifyParityVault,
 } from "./ios-parity-fixture.ts";
+import { timedViewerWitness } from "./native-acceptance/timed-viewer-witness.ts";
 
 const day = "2026-10-30";
 
@@ -54,13 +56,62 @@ async function mutated(vault: string, view = false): Promise<void> {
 test("read-only parity rejects collateral reference changes", async () => {
   await fixture(async (vault) => {
     const verified = await verifyParityVault(vault, day, "collections");
-    expect(Object.keys(verified.markdownHashes)).toHaveLength(7);
+    expect(Object.keys(verified.markdownHashes)).toHaveLength(8);
     await Bun.write(path.join(vault, "Reference.md"), "Changed reference\n");
     await expect(verifyParityVault(vault, day, "collections")).rejects.toThrow(
       "Collateral fixture change",
     );
   });
 });
+
+test.each(["2026-03-08", "2026-11-01"])(
+  "timed witness preserves the viewer day across DST boundary %s",
+  (viewerDay) => {
+    const witness = timedViewerWitness(viewerDay);
+    expect(witness.source.slice(0, 10)).not.toBe(viewerDay);
+    expect(Date.parse(witness.source)).toBe(Date.parse(witness.instant));
+    expect(witness.timeZone).toBe(
+      new Intl.DateTimeFormat().resolvedOptions().timeZone,
+    );
+    expect(
+      new Intl.DateTimeFormat("en-CA", {
+        timeZone: witness.timeZone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date(witness.source)),
+    ).toBe(viewerDay);
+    const canonicalCandidates = ["00:30:00", "23:30:00"].map((time) =>
+      new Date(`${viewerDay}T${time}`).toISOString(),
+    );
+    if (
+      canonicalCandidates.some((source) => source.slice(0, 10) !== viewerDay)
+    ) {
+      expect(witness.source.endsWith("Z")).toBe(true);
+    }
+  },
+);
+
+test.each(["collections", "mutations", "controls"] as const)(
+  "every phase rejects changed timed source bytes: %s",
+  async (phase) => {
+    await fixture(async (vault) => {
+      if (phase !== "collections") await mutated(vault, phase === "controls");
+      await verifyParityVault(vault, day, phase);
+      const witness = timedViewerWitness(day);
+      const timed = path.join(vault, timedViewerPath);
+      const original = await Bun.file(timed).text();
+      expect(original).toContain(`due: '${witness.source}'`);
+      await Bun.write(
+        timed,
+        original.replace(witness.source, `${day}T12:00:00Z`),
+      );
+      await expect(verifyParityVault(vault, day, phase)).rejects.toThrow(
+        `Collateral fixture change: ${timedViewerPath}`,
+      );
+    });
+  },
+);
 
 test("capture parity rejects the wrong persisted day and duplicate captures", async () => {
   await fixture(async (vault) => {

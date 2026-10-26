@@ -44,13 +44,8 @@ internal sealed class FacetMutationJournal
         if (_journal.Pending.TryGetValue(key, out var previous))
             return previous;
         DateTimeOffset now = _time.GetUtcNow();
-        string zone = _time.LocalTimeZone.Id;
-        if (OperatingSystem.IsWindows() && !TimeZoneInfo.TryConvertIanaIdToWindowsId(zone, out _))
-            zone = TimeZoneInfo.TryConvertWindowsIdToIanaId(zone, out string? iana)
-                ? iana
-                : throw new InvalidOperationException(
-                    "The local time zone has no IANA identifier."
-                );
+        TimeZoneInfo localZone = _time.LocalTimeZone;
+        string zone = FacetTimeZone.IanaId(localZone);
         string id = Guid.NewGuid().ToString("N");
         string document = JsonSerializer.Serialize(
             new
@@ -61,7 +56,7 @@ internal sealed class FacetMutationJournal
                 executionContext = new
                 {
                     today = TimeZoneInfo
-                        .ConvertTime(now, _time.LocalTimeZone)
+                        .ConvertTime(now, localZone)
                         .ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                     timezone = zone,
                 },

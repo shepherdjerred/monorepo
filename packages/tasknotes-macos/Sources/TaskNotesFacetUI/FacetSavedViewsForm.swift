@@ -186,13 +186,12 @@ extension FacetSavedViewsForm {
         var view = rows.first(where: { $0.id == editingID })?.view ?? [:]
         if let window {
             do {
-                guard case .object(var query) = try window.query() else {
+                guard case .object(let query) = try window.query() else {
                     throw FacetContractError.unsupportedResponse
                 }
-                for key in ["at", "today", "offset", "limit"] { query.removeValue(forKey: key) }
                 view.merge([
                     "name": .string(name), "viewType": .string(board ? "board" : "list"),
-                    "query": .object(query),
+                    "query": .object(FacetSavedViewQuery.selection(query)),
                 ]) { _, new in new }
             } catch {
                 store.reportNativeFailure(error)
@@ -269,11 +268,12 @@ extension FacetSavedViewsForm {
     }
 
     private func duplicate(_ view: FacetSavedView) {
-        var copy = view.view
-        copy["name"] = .string((view.view["name"]?.text ?? view.id) + " copy")
-        let id = copyIDs[view.id] ?? UUID().uuidString
-        copyIDs[view.id] = id
-        apply(["kind": .string("save_view"), "id": .string(id), "view": .object(copy)])
+        do {
+            let copy = try FacetSavedViewQuery.duplicate(view)
+            let id = copyIDs[view.id] ?? UUID().uuidString
+            copyIDs[view.id] = id
+            apply(["kind": .string("save_view"), "id": .string(id), "view": .object(copy)])
+        } catch { store.reportNativeFailure(error) }
     }
 
     private func move(_ view: FacetSavedView, by amount: Int) {

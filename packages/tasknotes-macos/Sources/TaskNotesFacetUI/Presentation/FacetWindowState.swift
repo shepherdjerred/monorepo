@@ -81,6 +81,7 @@ public final class FacetWindowState {
         fields["limit"] = .integer(100)
         fields["today"] = .string(calendar.today)
         fields["at"] = .string(calendar.instant.ISO8601Format())
+        fields["timezone"] = .string(calendar.timeZone.identifier)
         if !executesStoredQuery, scope == "upcoming", fields["groupBy"] == nil {
             fields["groupBy"] = .string("effectiveDate")
         }
@@ -104,7 +105,8 @@ public final class FacetWindowState {
             fields["completed"] == .bool(true) || fields["completed"] == .null
             || executesStoredQuery && fields["completed"] == nil
         savedQuery = fields
-        for key in ["schemaVersion", "scope", "at", "today", "offset", "limit", "text"] {
+        for key in ["schemaVersion", "scope", "at", "today", "timezone", "offset", "limit", "text"]
+        {
             savedQuery.removeValue(forKey: key)
         }
         selectedTaskIDs = []
@@ -280,6 +282,7 @@ extension FacetWindowState {
         includeArchived = fields["includeArchived"] == .bool(true)
         board = view.view["viewType"]?.text == "board"
         savedQuery = fields
+        savedQuery.removeValue(forKey: "timezone")
         return true
     }
 

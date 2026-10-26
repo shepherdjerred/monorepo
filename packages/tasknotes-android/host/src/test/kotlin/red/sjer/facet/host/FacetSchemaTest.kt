@@ -5,6 +5,22 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class FacetSchemaTest {
+    @Test fun everySharedAgendaExecutionAndSelectionBoundaryIsValidated() {
+        val loader = requireNotNull(javaClass.classLoader)
+        val schema = FacetSchema(requireNotNull(loader.getResourceAsStream("schema/facet-engine.schema.json")).bufferedReader().use { it.readText() })
+        val corpus = Json.parseToJsonElement(requireNotNull(loader.getResourceAsStream("vault/facet-agenda-contract.json")).bufferedReader().use { it.readText() }).jsonObject
+        val cases = corpus.getValue("cases").jsonArray
+        assertEquals(30, cases.size)
+        val seen = mutableSetOf<String>()
+        for (entry in cases) {
+            val test = entry.jsonObject
+            val id = test.getValue("id").jsonPrimitive.content
+            check(seen.add(id)) { "Duplicate agenda boundary case: $id" }
+            val accepted = runCatching { schema.validate(test.getValue("definition").jsonPrimitive.content, test.getValue("value")) }.isSuccess
+            assertEquals(id, test.getValue("valid").jsonPrimitive.boolean, accepted)
+        }
+    }
+
     @Test fun completeSharedOccurrenceCorpusHasClosedMetadataAndCoverage() {
         val loader = requireNotNull(javaClass.classLoader)
         val schema = FacetSchema(requireNotNull(loader.getResourceAsStream("schema/facet-engine.schema.json")).bufferedReader().use { it.readText() })

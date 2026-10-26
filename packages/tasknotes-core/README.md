@@ -650,9 +650,27 @@ accepted for wire compatibility but is unused; there are no tracked-minute
 projections. Capture context supplies project/context/tag/scheduled defaults;
 explicit parsed values take precedence.
 
+Any nonnull `Query.timezone` opts into viewer civil dates and must be a valid
+IANA zone, even on an empty index. Ordinary due/scheduled timestamps resolve
+in that zone for `effectiveDate`, date-scope membership, due bounds, effective-day
+filtering, grouping, and effective-date ordering. Literal dates remain literal;
+raw timestamp properties and explicit property-date sorts retain their existing
+contracts. Missing or null timezone preserves the legacy written-day behavior.
+Recurrence expansion still produces date-only virtual occurrences: its
+canonical days, processed-instance keys, and parent/child ownership do not shift
+with the viewer zone. An explicit timed current row or child may therefore have
+a local display day different from its canonical occurrence identity.
+
 The explicit `todayAgenda` and `upcomingAgenda` scopes preserve the mobile
 planning workflow without changing the existing `today`, `agenda`, `upcoming`,
-or strict `inbox` policies. `todayAgenda` includes unfinished overdue work and
+or strict `inbox` policies. Both explicit agenda scopes require `today` and a
+valid viewer IANA `timezone`, including for an empty vault or literal dates.
+Literal `YYYY-MM-DD` values remain unchanged; timed values resolve into that
+timezone before agenda membership, grouping, and `effectiveDay` filtering.
+Canonical occurrence identities remain independent of this display context.
+Persisted saved-view `querySelection` shapes may omit runtime context; hosts
+inject the current viewer context when executing them through `query`.
+`todayAgenda` includes unfinished overdue work and
 returns `agendaSection` keys `overdue`, `scheduled-today`, and `due-today`.
 `upcomingAgenda` includes future ordinary planned dates and deadlines without a
 seven-day cutoff; recurrence previews use a finite 366-day default or the

@@ -1005,7 +1005,7 @@ pub(crate) mod tests {
         )?;
         engine.refresh("a")?;
         let cases = corpus["cases"].as_array().ok_or("agenda cases missing")?;
-        assert_eq!(cases.len(), 22);
+        assert_eq!(cases.len(), 30);
         let mut ids = std::collections::BTreeSet::new();
         for case in cases {
             assert!(ids.insert(case["id"].as_str().ok_or("agenda case id missing")?));
@@ -1015,6 +1015,10 @@ pub(crate) mod tests {
                 .ok_or("agenda definition missing")?
             {
                 "query" => engine.snapshot_json("a", &json).is_ok(),
+                "querySelection" => decode::<Query>(&json).is_ok(),
+                "savedView" => {
+                    serde_json::from_str::<tasknotes_runtime::types::SavedView>(&json).is_ok()
+                }
                 "task" => {
                     serde_json::from_str::<tasknotes_runtime::types::TaskSnapshot>(&json).is_ok()
                 }

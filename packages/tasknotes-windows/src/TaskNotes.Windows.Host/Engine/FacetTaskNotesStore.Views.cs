@@ -34,7 +34,9 @@ public sealed partial class FacetTaskNotesStore
                     tint,
                     favorite,
                     order = State.SavedViews.Count,
-                    query = QueryDocument(query, 0),
+                    query = FacetQueryContext.Selection(
+                        JsonSerializer.SerializeToElement(QueryDocument(query, 0))
+                    ),
                 },
             }
         );

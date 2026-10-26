@@ -3,6 +3,9 @@
 use super::{Arc, Engine, Memory, ProfileKind, Query, Result, RuntimeError, Value, json, profile};
 use tasknotes_runtime::types::{AgendaDateKind, AgendaSection, Snapshot};
 
+#[path = "agenda/ios_agenda_timezone.rs"]
+mod viewer_timezone;
+
 const TODAY: &str = "2026-10-25";
 
 fn setup(notes: &[(&str, Value)]) -> Result<(Engine, Arc<Memory>)> {
@@ -46,6 +49,7 @@ fn query(scope: &str) -> Query {
     Query {
         scope: Some(scope.into()),
         today: Some(TODAY.into()),
+        timezone: Some("UTC".into()),
         completed: Some(false),
         ..Query::default()
     }
@@ -478,5 +482,252 @@ fn ios_agenda_invalid_dates_and_unknown_contract_values_fail_without_writes() ->
             .exchanges,
         0
     );
+    Ok(())
+}
+
+#[test]
+fn ios_agenda_timed_membership_uses_viewer_day_before_grouping_and_pagination() -> Result<()> {
+    let (engine, files) = setup(&[
+        ("UTC evening", json!({"due":"2026-10-25T16:30:00Z"})),
+        ("UTC morning", json!({"scheduled":"2026-10-25T06:30:00Z"})),
+        (
+            "Offset equivalent",
+            json!({"due":"2026-10-26T01:30:00+09:00"}),
+        ),
+        ("Literal", json!({"due":TODAY})),
+    ])?;
+    let before = engine.snapshot("a", &Query::default())?;
+    for (zone, expected) in [
+        (
+            "Asia/Tokyo",
+            vec![("UTC morning", TODAY), ("Literal", TODAY)],
+        ),
+        (
+            "America/Los_Angeles",
+            vec![
+                ("UTC morning", "2026-10-24"),
+                ("Literal", TODAY),
+                ("Offset equivalent", TODAY),
+                ("UTC evening", TODAY),
+            ],
+        ),
+    ] {
+        let mut request = query("todayAgenda");
+        request.timezone = Some(zone.into());
+        request.group_by = Some("agendaSection".into());
+        let snapshot = engine.snapshot("a", &request)?;
+        let rows = snapshot
+            .tasks
+            .iter()
+            .map(|task| (task.title.as_str(), task.effective_date.as_deref().unwrap()))
+            .collect::<Vec<_>>();
+        assert_eq!(rows, expected, "{zone}");
+        assert_eq!(snapshot.version, before.version);
+    }
+    let mut upcoming = query("upcomingAgenda");
+    upcoming.timezone = Some("Asia/Tokyo".into());
+    upcoming.effective_day = Some("2026-10-26".into());
+    upcoming.group_by = Some("effectiveDate".into());
+    upcoming.limit = Some(1);
+    upcoming.offset = 1;
+    let snapshot = engine.snapshot("a", &upcoming)?;
+    assert_eq!(snapshot.total_count, 2);
+    assert_eq!(titles(&snapshot), ["UTC evening"]);
+    assert_eq!(snapshot.groups[0].key, "2026-10-26");
+    // Browsing never rewrites source offsets, literal dates, or vault bytes.
+    assert_eq!(snapshot.tasks[0].properties["due"], "2026-10-25T16:30:00Z");
+    assert_eq!(
+        files
+            .state
+            .lock()
+            .map_err(|_| RuntimeError::Host("lock".into()))?
+            .exchanges,
+        0
+    );
+    Ok(())
+}
+
+#[test]
+fn ios_agenda_dst_uses_the_zone_offset_at_each_instant_and_keeps_literal_days() -> Result<()> {
+    for (today, fields, expected) in [
+        (
+            "2026-03-08",
+            json!({"scheduled":"2026-03-08T07:30:00Z"}),
+            "2026-03-07",
+        ),
+        (
+            "2026-03-08",
+            json!({"due":"2026-03-08T09:30:00Z"}),
+            "2026-03-08",
+        ),
+        (
+            "2026-03-08",
+            json!({"due":"2026-03-08T10:30:00Z"}),
+            "2026-03-08",
+        ),
+        (
+            "2026-11-01",
+            json!({"due":"2026-11-01T06:30:00Z"}),
+            "2026-10-31",
+        ),
+        (
+            "2026-11-01",
+            json!({"due":"2026-11-01T08:30:00Z"}),
+            "2026-11-01",
+        ),
+        (
+            "2026-11-01",
+            json!({"due":"2026-11-01T09:30:00Z"}),
+            "2026-11-01",
+        ),
+        ("2026-11-01", json!({"due":"2026-11-01"}), "2026-11-01"),
+    ] {
+        let (engine, _) = setup(&[("Witness", fields)])?;
+        let mut request = query("todayAgenda");
+        request.today = Some(today.into());
+        request.timezone = Some("America/Los_Angeles".into());
+        let snapshot = engine.snapshot("a", &request)?;
+        assert_eq!(snapshot.total_count, 1);
+        assert_eq!(snapshot.tasks[0].effective_date.as_deref(), Some(expected));
+        assert_eq!(
+            snapshot.tasks[0].agenda_section,
+            Some(if expected == today {
+                AgendaSection::DueToday
+            } else {
+                AgendaSection::Overdue
+            })
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn ios_agenda_timezone_is_required_and_validated_even_without_timed_tasks() -> Result<()> {
+    for notes in [vec![], vec![("Literal", json!({"due":TODAY}))]] {
+        let (engine, files) = setup(&notes)?;
+        for scope in ["todayAgenda", "upcomingAgenda"] {
+            for zone in [
+                None,
+                Some(""),
+                Some("  "),
+                Some("Mars/Olympus"),
+                Some("+09:00"),
+            ] {
+                let mut request = query(scope);
+                request.timezone = zone.map(str::to_owned);
+                assert!(
+                    matches!(
+                        engine.snapshot("a", &request),
+                        Err(RuntimeError::Validation(_))
+                    ),
+                    "{scope}: {zone:?}"
+                );
+            }
+            for zone in ["UTC", "GMT", "Asia/Tokyo", "America/Los_Angeles"] {
+                let mut request = query(scope);
+                request.timezone = Some(zone.into());
+                engine.snapshot("a", &request)?;
+            }
+        }
+        assert_eq!(
+            files
+                .state
+                .lock()
+                .map_err(|_| RuntimeError::Host("lock".into()))?
+                .exchanges,
+            0
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn ios_agenda_timezone_projection_keeps_canonical_occurrence_ownership() -> Result<()> {
+    let (engine, files) = setup(&[
+        (
+            "Series",
+            json!({"recurrence":"DTSTART:20261026;FREQ=DAILY","scheduled":"2026-10-26T01:30:00Z","recurrenceAnchor":"scheduled"}),
+        ),
+        (
+            "Processed",
+            json!({"recurrence":"DTSTART:20261026;FREQ=DAILY","scheduled":"2026-10-26T01:30:00Z","completeInstances":["2026-10-26"]}),
+        ),
+        (
+            "Skipped",
+            json!({"recurrence":"DTSTART:20261026;FREQ=DAILY","scheduled":"2026-10-26T01:30:00Z","skippedInstances":["2026-10-26"]}),
+        ),
+    ])?;
+    let mut request = query("todayAgenda");
+    request.timezone = Some("America/Los_Angeles".into());
+    let snapshot = engine.snapshot("a", &request)?;
+    assert_eq!(titles(&snapshot), ["Series"]);
+    assert_eq!(snapshot.tasks[0].effective_date.as_deref(), Some(TODAY));
+    assert_eq!(
+        snapshot.tasks[0].occurrence_date.as_deref(),
+        Some("2026-10-26")
+    );
+    seed(
+        &files,
+        "Child",
+        json!({"recurrenceParent":"[[Tasks/Series]]","occurrenceDate":"2026-10-26","scheduled":"2026-10-26T01:30:00Z"}),
+    )?;
+    engine.refresh("a")?;
+    let snapshot = engine.snapshot("a", &request)?;
+    assert_eq!(titles(&snapshot), ["Child"]);
+    assert_eq!(snapshot.tasks[0].effective_date.as_deref(), Some(TODAY));
+    assert_eq!(
+        snapshot.tasks[0].occurrence_date.as_deref(),
+        Some("2026-10-26")
+    );
+    Ok(())
+}
+
+#[test]
+fn ios_agenda_saved_selection_reopens_without_context_and_executes_with_fresh_zone() -> Result<()> {
+    let database =
+        tempfile::NamedTempFile::new().map_err(|error| RuntimeError::Host(error.to_string()))?;
+    let database_path = database.path().to_str().ok_or(RuntimeError::NotFound)?;
+    let files = Arc::new(Memory::default());
+    files.seed("a", "tasknotes.yaml", b"title:\n  storage: frontmatter\n")?;
+    seed(&files, "Timed", json!({"due":"2026-10-26T01:30:00Z"}))?;
+    let selection = json!({"scope":"todayAgenda","completed":false,"groupBy":"agendaSection"});
+    let view = json!({"schemaVersion":1,"name":"Today","query":selection})
+        .as_object()
+        .ok_or(RuntimeError::NotFound)?
+        .clone();
+    let engine = Engine::open(database_path, files.clone())?;
+    engine.register_profile(profile(ProfileKind::LocalFolder))?;
+    engine.refresh("a")?;
+    engine.execute(
+        "a",
+        &super::mutation(
+            "save-agenda",
+            super::Command::SaveView {
+                id: "agenda".into(),
+                view,
+            },
+        ),
+    )?;
+    drop(engine);
+    let engine = Engine::open(database_path, files)?;
+    let snapshot = engine.snapshot("a", &Query::default())?;
+    let view = snapshot
+        .views
+        .iter()
+        .find(|view| view.id == "agenda")
+        .ok_or(RuntimeError::NotFound)?;
+    assert_eq!(view.view["query"], selection);
+    let mut request: Query = serde_json::from_value(selection)?;
+    request.today = Some(TODAY.into());
+    assert!(matches!(
+        engine.snapshot("a", &request),
+        Err(RuntimeError::Validation(_))
+    ));
+    request.timezone = Some("America/Los_Angeles".into());
+    let local = engine.snapshot("a", &request)?;
+    assert_eq!(titles(&local), ["Timed"]);
+    assert_eq!(local.tasks[0].effective_date.as_deref(), Some(TODAY));
+    request.timezone = Some("Asia/Tokyo".into());
+    assert_eq!(engine.snapshot("a", &request)?.total_count, 0);
     Ok(())
 }

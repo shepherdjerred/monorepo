@@ -15,7 +15,7 @@ struct FacetAgendaSchemaTests {
                 contentsOf: packages.appending(
                     path: "tasknotes-fixtures/vault/facet-agenda-contract.json")))
         let cases = try #require(corpus.object?.fields["cases"]?.array?.elements)
-        #expect(cases.count == 22)
+        #expect(cases.count == 30)
         var identifiers: Set<String> = []
         var definitions: Set<String> = []
         for item in cases {
@@ -37,6 +37,6 @@ struct FacetAgendaSchemaTests {
                 _ = try JSONDecoder().decode(FacetTask.self, from: data)
             }
         }
-        #expect(definitions == ["query", "task"])
+        #expect(definitions == ["query", "querySelection", "savedView", "task"])
     }
 }

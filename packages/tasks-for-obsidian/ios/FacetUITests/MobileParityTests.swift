@@ -20,19 +20,32 @@ final class MobileParityTests: XCTestCase {
         let app = try launch()
         XCTAssertTrue(task("Parity reschedule task", in: app).waitForExistence(timeout: 20))
         XCTAssertFalse(task("Parity scoped metadata task", in: app).exists)
+        let inboxTimedRow = element("facet.task.Tasks/TimedViewerDay.md", in: app)
+        let inboxTimedDate = inboxTimedRow.staticTexts["Date, Today"]
+        reveal(inboxTimedDate, in: app.collectionViews.firstMatch, app: app)
+        XCTAssertTrue(inboxTimedDate.exists, app.debugDescription)
+        XCTAssertTrue(inboxTimedDate.isHittable, app.debugDescription)
         attach(app, name: "01 Inbox keeps dated and contextual unprojected tasks")
         tab("Today", in: app)
         for (title, group) in [
             ("Parity overdue task", "overdue"), ("Parity planned today", "scheduled-today"),
             ("Parity due today", "due-today"),
+            ("Parity timed viewer day", "due-today"),
         ] {
             reveal(task(title, in: app), in: app)
             XCTAssertTrue(app.staticTexts["facet.group.\(group)"].exists)
         }
+        let timedRow = element("facet.task.Tasks/TimedViewerDay.md", in: app)
+        let timedDeadline = timedRow.staticTexts["Deadline, Today"]
+        reveal(timedDeadline, in: app.collectionViews.firstMatch, app: app)
+        XCTAssertTrue(timedDeadline.exists, app.debugDescription)
+        XCTAssertTrue(timedDeadline.isHittable, app.debugDescription)
         attach(app, name: "02 Today includes overdue planned and deadline sections")
         tab("Upcoming", in: app)
         assertUpcomingChrome(in: app)
         XCTAssertTrue(element("facet.upcoming.week", in: app).waitForExistence(timeout: 10))
+        XCTAssertTrue(task("Parity timed viewer day", in: app).waitForNonExistence(timeout: 10))
+        XCTAssertFalse(task("Parity timed viewer day", in: app).exists)
         reveal(task("Parity distant future", in: app), in: app)
         attach(app, name: "03 Upcoming retains the task fourteen days away")
         tab("Inbox", in: app)
@@ -228,6 +241,33 @@ extension MobileParityTests {
             app.swipeUp()
         }
         XCTAssertTrue(control.exists && control.isHittable, app.debugDescription)
+    }
+
+    private func reveal(_ control: XCUIElement, in list: XCUIElement, app: XCUIApplication) {
+        requireHittable(list)
+        let tabBar = app.tabBars.firstMatch
+        let navigation = app.navigationBars.firstMatch
+        XCTAssertTrue(tabBar.exists && navigation.exists, app.debugDescription)
+        let top = max(list.frame.minY, navigation.frame.maxY)
+        let bottom = min(list.frame.maxY, tabBar.frame.minY)
+        XCTAssertGreaterThan(bottom, top, app.debugDescription)
+        _ = control.waitForExistence(timeout: 3)
+        for _ in 0..<6 {
+            if control.exists && control.isHittable && control.frame.minY >= top
+                && control.frame.maxY <= bottom
+            {
+                break
+            }
+            let origin = app.coordinate(withNormalizedOffset: .zero)
+            let start = origin.withOffset(
+                CGVector(dx: list.frame.midX, dy: top + (bottom - top) * 0.75))
+            let end = origin.withOffset(
+                CGVector(dx: list.frame.midX, dy: top + (bottom - top) * 0.35))
+            start.press(forDuration: 0.05, thenDragTo: end)
+        }
+        XCTAssertTrue(control.exists && control.isHittable, app.debugDescription)
+        XCTAssertGreaterThanOrEqual(control.frame.minY, top, app.debugDescription)
+        XCTAssertLessThanOrEqual(control.frame.maxY, bottom, app.debugDescription)
     }
 
     private func tapEnabled(_ control: XCUIElement) {

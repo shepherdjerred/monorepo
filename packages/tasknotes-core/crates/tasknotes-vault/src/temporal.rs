@@ -75,11 +75,23 @@ pub fn has_time(value: &str) -> bool {
 /// # Errors
 /// Rejects an invalid instant or unknown timezone.
 pub fn day_in_timezone(instant: &str, timezone: &str) -> Result<NaiveDate> {
-    let zone: Tz = timezone
+    let zone = parse_timezone(timezone)?;
+    Ok(parse_instant(instant)?.with_timezone(&zone).date_naive())
+}
+
+/// Validate explicit viewer context even when no timed values are present.
+///
+/// # Errors
+/// Rejects empty or unrecognized IANA timezone names.
+pub fn validate_timezone(timezone: &str) -> Result<()> {
+    parse_timezone(timezone).map(|_| ())
+}
+
+fn parse_timezone(timezone: &str) -> Result<Tz> {
+    timezone
         .trim()
         .parse()
-        .map_err(|_| VaultError::Document("Invalid timezone".to_owned()))?;
-    Ok(parse_instant(instant)?.with_timezone(&zone).date_naive())
+        .map_err(|_| VaultError::Document("Invalid timezone".to_owned()))
 }
 
 /// UTC anchor for date values, actual instant for offset-qualified datetimes.

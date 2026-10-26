@@ -45,7 +45,7 @@ pub(crate) fn apply(
         if occurrences.skips_scope(&task, scope) {
             continue;
         }
-        if !matches(&task, query, scope, today, before, after, &text) {
+        if !matches(&task, query, scope, today, before, after, &text)? {
             continue;
         }
         total = total
@@ -131,6 +131,15 @@ fn validate(
     if let Some(day) = query.effective_day.as_deref() {
         tasknotes_vault::temporal::parse_day(day)?;
     }
+    if ["todayAgenda", "upcomingAgenda"].contains(&scope) && query.timezone.is_none() {
+        return Err(RuntimeError::Validation(
+            "agenda scope requires viewer timezone".into(),
+        ));
+    }
+    if let Some(timezone) = query.timezone.as_deref() {
+        tasknotes_vault::temporal::validate_timezone(timezone)
+            .map_err(|_| RuntimeError::Validation("query requires valid viewer timezone".into()))?;
+    }
     if !["asc", "desc"].contains(&direction) {
         return Err(RuntimeError::Validation(
             "unknown sort direction".to_owned(),
@@ -198,23 +207,15 @@ fn matches(
     before: Option<NaiveDate>,
     after: Option<NaiveDate>,
     text: &str,
-) -> bool {
-    let due = task
-        .properties
-        .get("due")
-        .and_then(Value::as_str)
-        .and_then(date_part);
+) -> Result<bool> {
+    let due = property_day(task, query, "due")?;
     let effective = effective_date(task);
-    let scheduled = task
-        .properties
-        .get("scheduled")
-        .and_then(Value::as_str)
-        .and_then(date_part);
+    let scheduled = property_day(task, query, "scheduled")?;
     let archived = task
         .properties
         .get("archiveTag")
         .is_some_and(|v| v.as_bool() == Some(true));
-    (!archived || query.include_archived)
+    Ok((!archived || query.include_archived)
         && (text.is_empty()
             || task.title.to_lowercase().contains(text)
             || task.body.to_lowercase().contains(text)
@@ -257,7 +258,16 @@ fn matches(
             .is_none_or(|absent| strings(&task.properties, "projects").is_empty() == absent)
         && before.is_none_or(|bound| due.is_some_and(|date| date < bound))
         && after.is_none_or(|bound| due.is_some_and(|date| date > bound))
-        && scope_matches(task, query, scope, today, due, scheduled, effective)
+        && scope_matches(task, query, scope, today, due, scheduled, effective))
+}
+
+fn property_day(task: &TaskSnapshot, query: &Query, key: &str) -> Result<Option<NaiveDate>> {
+    let value = task.properties.get(key);
+    if query.timezone.is_some() {
+        return crate::projections::day(value, query);
+    }
+    // Preserve the old filter's exact written-prefix grammar without context.
+    Ok(value.and_then(Value::as_str).and_then(date_part))
 }
 
 fn scope_matches(

@@ -4,6 +4,7 @@ import { readAcceptanceResultReports } from "tasknotes-macos/scripts/acceptance-
 import { assertExactNativeResults } from "tasknotes-macos/scripts/acceptance-test-plan.ts";
 import { runIosNativeJourney } from "./ios-native-e2e.ts";
 import { exportIosJourneyAttachments } from "./native-acceptance/attachments.ts";
+import { timedViewerWitness } from "./native-acceptance/timed-viewer-witness.ts";
 import {
   configureIosJourneyTests,
   runSelectedIosJourneyTest,
@@ -39,6 +40,12 @@ export async function runIosParityAcceptance(): Promise<void> {
     },
     execute: async (context) => {
       assert.ok(viewer);
+      const timed = timedViewerWitness(viewer.day);
+      assert.equal(timed.timeZone, viewer.timeZone);
+      await Bun.write(
+        path.join(context.evidence, "parity-timed-viewer-witness.json"),
+        JSON.stringify(timed, null, 2),
+      );
       await Bun.write(
         path.join(context.evidence, "parity-viewer.json"),
         JSON.stringify(viewer, null, 2),

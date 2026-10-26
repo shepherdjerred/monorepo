@@ -13,6 +13,7 @@ extension FacetStore {
         selectedViewID = view.id
         isApplyingView = true
         savedQuery = fields
+        savedQuery.removeValue(forKey: "timezone")
         scope = fields["scope"]?.text ?? "all"
         search = fields["text"]?.text ?? ""
         status = singleChoice(fields["statuses"])
@@ -24,10 +25,8 @@ extension FacetStore {
     }
 
     public func currentView(name: String, board: Bool) -> [String: FacetValue] {
-        var fields = query().object?.fields ?? [:]
-        for key in ["schemaVersion", "offset", "limit", "today", "at"] {
-            fields.removeValue(forKey: key)
-        }
+        var fields = FacetSavedViewQuery.selection(query().object?.fields ?? [:])
+        fields.removeValue(forKey: "schemaVersion")
         return [
             "schemaVersion": .integer(1), "name": .string(name),
             "viewType": .string(board ? "board" : "list"), "query": .object(fields),
@@ -61,6 +60,7 @@ extension FacetStore {
         fields["scope"] = .string(scope)
         fields["today"] = .string(calendar.today)
         fields["at"] = .string(calendar.instant.ISO8601Format())
+        fields["timezone"] = .string(calendar.timeZone.identifier)
         fields["text"] = search.isEmpty ? nil : .string(search)
         if !status.isEmpty { fields["statuses"] = .array([.string(status)]) }
         if !priority.isEmpty { fields["priorities"] = .array([.string(priority)]) }

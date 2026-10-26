@@ -65,6 +65,7 @@ extension FacetStore {
                     "schemaVersion": .integer(1), "scope": .string("all"),
                     "includeArchived": .bool(true), "today": .string(viewer.today),
                     "at": .string(viewer.instant.ISO8601Format()),
+                    "timezone": .string(viewer.timeZone.identifier),
                     "offset": .integer(Int64(offset)),
                     "limit": .integer(100),
                 ]))

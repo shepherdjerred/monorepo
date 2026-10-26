@@ -118,11 +118,7 @@ internal sealed class FacetReminderDelivery : IAsyncDisposable
             return;
         }
         DateTimeOffset at = DateTimeOffset.UtcNow;
-        string timezone =
-            TimeZoneInfo.Local.HasIanaId ? TimeZoneInfo.Local.Id
-            : TimeZoneInfo.TryConvertWindowsIdToIanaId(TimeZoneInfo.Local.Id, out string? iana)
-                ? iana
-            : throw new InvalidDataException("Windows did not provide a supported IANA time zone.");
+        string timezone = FacetTimeZone.IanaId(TimeZoneInfo.Local);
         ulong problems = 0;
         int scheduled = 0;
         List<string> unavailable = [];

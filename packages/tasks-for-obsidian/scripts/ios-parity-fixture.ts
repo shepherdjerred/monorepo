@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { lstat, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
+import { timedViewerWitness } from "./native-acceptance/timed-viewer-witness.ts";
 import {
   followingDay,
   viewerDay,
@@ -13,6 +14,8 @@ export const capturedTitle = "Parity captured sentinel";
 export const savedViewTitle = "Parity saved view";
 export const searchTag = "parity-search-needle";
 export const reschedulePath = "Tasks/Reschedule.md";
+export const timedViewerPath = "Tasks/TimedViewerDay.md";
+export const timedViewerTitle = "Parity timed viewer day";
 
 export function parityViewer(): ParityViewer {
   return {
@@ -54,6 +57,11 @@ export function parityFixture(day: string): Record<string, string> {
       "Parity due today",
       `due: '${day}'\n`,
       "Deadline note stays unchanged.",
+    ),
+    [timedViewerPath]: taskNote(
+      timedViewerTitle,
+      `due: '${timedViewerWitness(day).source}'\n`,
+      "The timed deadline belongs to the viewer day, not its written date prefix.",
     ),
     "Tasks/Future.md": taskNote(
       "Parity distant future",
@@ -115,7 +123,7 @@ export async function verifyParityVault(
   const { hashes, created, views } = await inventory(vault, fixture);
   assert.equal(
     Object.keys(hashes).length,
-    phase === "collections" ? 7 : phase === "mutations" ? 8 : 9,
+    phase === "collections" ? 8 : phase === "mutations" ? 9 : 10,
     "Unexpected added, missing or duplicate Markdown",
   );
   assert.equal(created.length, phase === "collections" ? 0 : 1);
