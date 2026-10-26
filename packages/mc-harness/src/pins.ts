@@ -18,7 +18,7 @@ export const paper = {
 export const PluginPinSchema = z.object({
   name: z.string().min(1),
   version: z.string().min(1),
-  url: z.union([z.url(), z.string().regex(/^vendor\/[\w.-]+$/u)]),
+  url: z.url(),
   sha256: z.string().regex(/^[\da-f]{64}$/u),
 });
 export type PluginPin = z.infer<typeof PluginPinSchema>;
@@ -61,7 +61,7 @@ export const luckPerms: PluginPin = PluginPinSchema.parse({
 export const coreProtect: PluginPin = PluginPinSchema.parse({
   name: "CoreProtect",
   version: "25.1",
-  url: "vendor/CoreProtect-25.1.jar",
+  url: "https://public.sjer.red/the-storm/plugins/CoreProtect-25.1.jar",
   sha256: "89be1353b9fca3b86ce3dd93c8af78262b2be91f1b53feca8d9018c45e877e5d",
 });
 

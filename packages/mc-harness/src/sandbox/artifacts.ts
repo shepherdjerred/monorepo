@@ -7,12 +7,7 @@
 import { createHash } from "node:crypto";
 import { chmod, mkdir } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { paper, type PluginPin } from "#src/pins.ts";
-
-const stormServer = fileURLToPath(
-  new URL("../../../the-storm/server/", import.meta.url),
-);
 
 /** The pinned Paper jar as seeded into `/data`; `basePaperEnv("seeded")` points the image at it. */
 export const paperJarName = `paper-${paper.version}-${paper.build.toString()}.jar`;
@@ -27,13 +22,6 @@ export async function writeThrottleFreeBukkitYml(file: string): Promise<void> {
 }
 
 async function download(url: string): Promise<Uint8Array> {
-  if (url.startsWith("vendor/")) {
-    const file = Bun.file(path.join(stormServer, url));
-    if (!(await file.exists())) {
-      throw new Error(`Missing vendored plugin ${url}`);
-    }
-    return new Uint8Array(await file.arrayBuffer());
-  }
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`GET ${url} failed: ${response.status.toString()}`);

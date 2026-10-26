@@ -24,10 +24,6 @@ packages/scout-for-lol/packages/design-system/assets/fonts/NotoSansCJK/NotoSansC
 packages/scout-for-lol/packages/design-system/assets/fonts/NotoSansCJK/NotoSansCJKkr-Regular.otf
 packages/scout-for-lol/packages/design-system/assets/fonts/NotoSansCJK/NotoSansCJKtc-Regular.otf
 
-# CoreProtect 25.1 is the Paper 26.3 runtime build. It is not published, so the
-# server image copies this jar. The compile API stays the public 24.1 release.
-packages/the-storm/server/vendor/CoreProtect-25.1.jar
-
 # Deterministically baked RWF navigation graphs for large imported maps.
 packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/apex-expanse/nav.rwfnav
 packages/the-storm/server/owned/plugins/TheStorm/rwf/maps/cloned-beanstalks/nav.rwfnav

@@ -112,7 +112,10 @@ arena, moderation, Discord relay, sleep, graves, and native world borders.
 The supporting plugins are LuckPerms, WorldEdit, CoreProtect, BlueMap, Chunky,
 Geyser-Spigot, floodgate, Multiverse-Core, ViaVersion, ViaBackwards, and
 Citizens, and GrimAC. `plugins.json` is the authority for their versions, artifact URLs,
-and hashes. Multiverse loads resource worlds before TheStorm; the world module
+and hashes. CoreProtect 25.1 is unpublished, so the image downloads it from
+`https://public.sjer.red/the-storm/plugins/CoreProtect-25.1.jar`. That object
+sits outside `pr/assets/` and the public bucket keeps it. Compile stays on the
+public 24.1 API. Multiverse loads resource worlds before TheStorm; the world module
 validates those worlds and does not generate them during startup.
 
 Players see the map as **LiveMap**. `build-livemap.sh` extracts its frontend
@@ -267,8 +270,9 @@ pruned before a newer build is accepted, the jar should be mirrored the way
 `packages/macos-cross-compiler` mirrors its SDK tarballs: a private SeaweedFS
 bucket declared in `packages/homelab/src/tofu/seaweedfs/buckets.tf` (for
 example `the-storm-artifacts`, `prevent_destroy`), the object uploaded once
-with the existing S3 client in `packages/toolkit` (`toolkit pr asset` targets
-the public `public-sjer-red` bucket and is not the right place for a jar), and
+with the existing S3 client in `packages/toolkit` (`toolkit pr asset` writes
+under `pr/assets/`, which expires after 365 days; a retained jar uses a stable
+key, the way CoreProtect does), and
 `plugins.json`/`pins.ts` repointed at the bucket URL with the same sha256 so
 `fetch.sh` keeps verifying the bytes. Nothing has been uploaded yet; the pin
 stays on Jenkins until that mirror exists.

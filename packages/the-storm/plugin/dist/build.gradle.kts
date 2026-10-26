@@ -82,7 +82,7 @@ tasks.runServer {
   downloadPlugins {
     url("https://cdn.modrinth.com/data/Vebnzrzj/versions/b0mk8uS6/LuckPerms-Bukkit-5.5.71.jar")
     url("https://cdn.modrinth.com/data/1u6JkXh5/versions/YFnqiUlL/worldedit-bukkit-7.4.6.jar")
-    url(rootProject.file("../server/vendor/CoreProtect-25.1.jar").toURI().toString())
+    url("https://public.sjer.red/the-storm/plugins/CoreProtect-25.1.jar")
   }
 }
 

@@ -31,7 +31,7 @@ bluemap = "2.8.1"
 ink = "1.3.2"
 worldedit = "7.4.6"
 citizens = "2.0.44-b4256"
-# Maven still publishes 24.1. The server runs vendored 25.1; the methods we call exist in both.
+# Maven still publishes 24.1. The server runs 25.1 from public.sjer.red; the methods we call exist in both.
 coreprotect = "24.1"
 grim = "2.3.75-d8b8ae4"
 log4j = "2.26.1"
