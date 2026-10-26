@@ -68,8 +68,8 @@ import {
  * match's notifications deliver") is therefore true by construction rather
  * than by coincidence, and the Satori pass stays on `background`, which is
  * the whole point of the split. For a post-match report that means the
- * generator's side effects — the `MatchRankHistory` upsert and the single AI
- * review — happen exactly once per match, here, under the fence
+ * generator's `MatchRankHistory` upsert happens exactly once per match,
+ * here, under the fence
  * (`notification/postmatch-notification.ts`).
  *
  * ## One render per (match, kind), however many children ask
@@ -197,12 +197,7 @@ function imageEvidence(
   return { artifact: "image", riotMatchId, ...attestedObjectOf(stored) };
 }
 
-/**
- * The post-match report, rendered once through v1's generator and attested
- * whole: the image, the AI review's image when the match earned one, and the
- * message parts the delivery rebuilds around them. Two objects at most, each
- * committed under the fence; the receipt names both.
- */
+/** Commit the report image and freeze the message content and components. */
 async function renderPostmatchArtifact(
   riotMatchId: RiotMatchId,
   fence: ScoutEffectFence,
@@ -222,22 +217,12 @@ async function renderPostmatchArtifact(
     { assetType: "report", metadata, keyDate },
     fence,
   );
-  const review =
-    rendered.review === undefined
-      ? undefined
-      : await commitNotificationImage(
-          riotMatchId,
-          rendered.review,
-          { assetType: "ai-review", metadata, keyDate },
-          fence,
-        );
   return {
     artifact: "report",
     riotMatchId,
     image: attestedObjectOf(image),
     content: rendered.content,
     components: rendered.components,
-    ...(review === undefined ? {} : { review: attestedObjectOf(review) }),
   };
 }
 

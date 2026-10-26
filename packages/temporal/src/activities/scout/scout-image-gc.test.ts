@@ -27,14 +27,12 @@ describe("isPrunableImage", () => {
     ).toBe(true);
   });
 
-  test("prunes the nested ai-pipeline image", () => {
-    expect(
-      isPrunableImage(
-        "games/2026/05/01/M1/ai-pipeline/final-image.png",
-        old,
-        cutoff,
-      ),
-    ).toBe(true);
+  test.each([
+    "games/2026/05/01/M1/ai-pipeline/final-image.png",
+    "games/2026/05/01/M1/ai-pipeline/debug.svg",
+    "games/2026/05/01/M1/ai-review.png",
+  ])("retains historical review archive %s regardless of age", (key) => {
+    expect(isPrunableImage(key, old, cutoff)).toBe(false);
   });
 
   test("keeps an image newer than the cutoff", () => {

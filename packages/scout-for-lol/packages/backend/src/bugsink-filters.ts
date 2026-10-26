@@ -4,7 +4,7 @@ import {
   isExpectedUpstreamError,
   RiotHttpError,
 } from "#src/league/api/client/errors.ts";
-import { LlmBudgetExceeded } from "#src/league/review/openai-budget.ts";
+import { LlmBudgetExceeded } from "#src/lib/llm-budget.ts";
 
 /**
  * Sample rate for Riot API upstream 5xx events. We don't drop all of them

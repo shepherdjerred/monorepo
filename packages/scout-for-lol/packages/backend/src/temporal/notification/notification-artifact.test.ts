@@ -41,7 +41,6 @@ const MATCH = RiotMatchIdSchema.parse("NA1_9301");
 /** The delivery's pre-send budget, standing open for these reads. */
 const NEVER_ABORTED = new AbortController().signal;
 const IMAGE = new Uint8Array([137, 80, 78, 71, 1]);
-const REVIEW = new Uint8Array([137, 80, 78, 71, 2, 2]);
 
 function attested(key: string, bytes: Uint8Array) {
   return {
@@ -58,7 +57,6 @@ const REPORT = {
   image: attested("report.png", IMAGE),
   content: "someone finished a solo game\n\nnice game",
   components: "match-link",
-  review: attested("ai-review.png", REVIEW),
 };
 const LOADING_SCREEN = {
   artifact: "image",
@@ -73,35 +71,22 @@ const NONE = (reason: string) => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  stubs.readVerifiedRawObjectBytes.mockImplementation((args: { key: string }) =>
-    Promise.resolve(args.key.endsWith("ai-review.png") ? REVIEW : IMAGE),
-  );
+  stubs.readVerifiedRawObjectBytes.mockResolvedValue(IMAGE);
 });
 
 describe("the post-match reader", () => {
-  test("reads the report image and the review the receipt names", async () => {
+  test("reads only the attested report image", async () => {
     stubs.readNotificationArtifact.mockResolvedValue(REPORT);
 
     const artifact = await readAttestedReportArtifact(MATCH, NEVER_ABORTED);
 
     expect(artifact.image).toBe(IMAGE);
-    expect(artifact.review).toBe(REVIEW);
     expect(artifact.evidence.content).toBe(REPORT.content);
     expect(stubs.readNotificationArtifact).toHaveBeenCalledWith(
       MATCH,
       "postmatch",
       undefined,
     );
-    expect(stubs.readVerifiedRawObjectBytes).toHaveBeenCalledTimes(2);
-  });
-
-  test("reads a report that earned no review with one object", async () => {
-    const { review: _review, ...withoutReview } = REPORT;
-    stubs.readNotificationArtifact.mockResolvedValue(withoutReview);
-
-    const artifact = await readAttestedReportArtifact(MATCH, NEVER_ABORTED);
-
-    expect(artifact.review).toBeUndefined();
     expect(stubs.readVerifiedRawObjectBytes).toHaveBeenCalledTimes(1);
   });
 
@@ -130,14 +115,14 @@ describe("the post-match reader", () => {
     },
   );
 
-  test("refuses a report whose review bytes do not match their attested size", async () => {
+  test("refuses a report whose image bytes do not match their attested size", async () => {
     // Typed, and therefore terminal at the send. A plain error here was
     // laundered into a retryable failure by the delivery's pre-send boundary,
     // and reconciliation re-drove the same self-contradictory receipt every
     // sweep — the digest matched, so every re-read reproduces it exactly.
     stubs.readNotificationArtifact.mockResolvedValue({
       ...REPORT,
-      review: { ...REPORT.review, bytes: REVIEW.byteLength + 1 },
+      image: { ...REPORT.image, bytes: IMAGE.byteLength + 1 },
     });
 
     const outcome = readAttestedReportArtifact(MATCH, NEVER_ABORTED);

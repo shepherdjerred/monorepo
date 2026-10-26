@@ -67,7 +67,6 @@ const GAME_CREATION = Date.parse("2026-09-23T04:00:00.000Z");
 const world = vi.hoisted(() => ({
   puts: new Array<{ key: string; keyDate: Date | undefined }>(),
   renderOptions: new Array<Record<string, unknown>>(),
-  aiReviews: 0,
   deliverable: 1,
   discordCalls: new Array<string>(),
 }));
@@ -118,17 +117,6 @@ vi.mock("#src/league/model/player.ts", () => ({
       config,
       ranks: { solo: undefined, flex: undefined, ranked5s: undefined },
     }),
-}));
-vi.mock("#src/league/tasks/postmatch/match-report-standard.ts", () => ({
-  fetchTimelineIfStandardMatch: () => Promise.resolve(undefined),
-}));
-// The AI review is KEPT on a historical render; recording the call is what
-// shows the backfill still asks for it.
-vi.mock("#src/league/tasks/postmatch/match-report-ai-review.ts", () => ({
-  generateAiReviewIfEnabled: () => {
-    world.aiReviews += 1;
-    return Promise.resolve({ text: undefined, image: undefined });
-  },
 }));
 vi.mock(
   "#src/league/tasks/postmatch/match-report-image.ts",
@@ -322,7 +310,6 @@ async function durableSideEffects(matchId: RiotMatchId) {
 beforeEach(() => {
   world.puts.length = 0;
   world.renderOptions.length = 0;
-  world.aiReviews = 0;
   world.deliverable = 1;
   world.discordCalls.length = 0;
 });
@@ -353,8 +340,6 @@ describe("a match the mint-less core finished", () => {
       // No vote controls on a report nobody will see.
       components: "inline-match-link",
     });
-    // The full post-match output: the AI review is still asked for.
-    expect(world.aiReviews).toBe(1);
 
     // And nothing that could ever announce it, nor an MVP contest that no
     // message could be voted from.

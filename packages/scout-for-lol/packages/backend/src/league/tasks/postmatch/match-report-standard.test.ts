@@ -33,7 +33,6 @@ const {
   fetchTimelineForDare,
   fetchTimelineForDuelProgression,
   fetchTimelineForProgression,
-  fetchTimelineIfStandardMatch,
 } = await import("./match-report-standard.ts");
 
 const fixtureUrl = new URL(
@@ -88,9 +87,6 @@ describe("required progression timelines", () => {
     await expect(
       fetchTimelineForProgression(fixture.match, matchId, fixture.players),
     ).rejects.toThrow("match processing must retry");
-    await expect(
-      fetchTimelineIfStandardMatch(fixture.match, matchId, fixture.players),
-    ).resolves.toBeUndefined();
     await expect(
       fetchTimelineForDuelProgression(fixture.match, matchId, fixture.players),
     ).resolves.toBeUndefined();

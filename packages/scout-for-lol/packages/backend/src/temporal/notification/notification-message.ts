@@ -21,7 +21,7 @@ import { buildSettlementNotificationMessage } from "#src/temporal/notification/s
  * attested and shaped by the intent's KIND.
  *
  * For a `postmatch` intent the message is rebuilt from the report the render
- * attested — image, review, content and components — with nothing read but the
+ * attested — image, content and components — with nothing read but the
  * receipt and the objects it names: no Riot payload, no rank, no flag, no
  * model. For a `prematch` intent the verified bytes become the loading screen
  * on v1's prematch payload, built from the archived spectator snapshot. In both

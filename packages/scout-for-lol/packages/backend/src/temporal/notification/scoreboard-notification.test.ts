@@ -98,7 +98,6 @@ test.each(modes)(
   async (mode) => {
     const rendered = await renderPostmatchNotification(matchId, mode);
     expect(rendered).toMatchObject({
-      review: undefined,
       content: "Frozen Classic report",
       components: "none",
       queueId: 4310,

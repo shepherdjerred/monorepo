@@ -32,8 +32,7 @@ import {
  * assembles the message from the render receipt and the objects it names, and
  * nothing else: no Riot read, no report generator, no model call. Those ran
  * once, on the background queue, when the artifact was rendered — the
- * generator is what rewrites this match's `MatchRankHistory` and what spends
- * the single AI review a match is allowed, and neither may happen again, per
+ * generator writes this match's `MatchRankHistory`, which may not happen per
  * channel, inside a thirty-second single-attempt send.
  */
 
@@ -41,7 +40,6 @@ const stubs = vi.hoisted(() => ({
   requireIntentRecord: vi.fn(),
   resolveScoutObservedMatchContext: vi.fn(),
   generateMatchReport: vi.fn(),
-  generateAiReviewIfEnabled: vi.fn(),
   readAttestedReportArtifact: vi.fn(),
   readAttestedPrematchArtifact: vi.fn(),
   resolveNotificationGate: vi.fn(),
@@ -59,9 +57,6 @@ vi.mock("#src/temporal/match/match-context.ts", () => ({
 }));
 vi.mock("#src/league/tasks/postmatch/match-report-generator.ts", () => ({
   generateMatchReport: stubs.generateMatchReport,
-}));
-vi.mock("#src/league/tasks/postmatch/match-report-ai-review.ts", () => ({
-  generateAiReviewIfEnabled: stubs.generateAiReviewIfEnabled,
 }));
 vi.mock("#src/temporal/notification/notification-artifact.ts", async () => {
   // The readers are stubbed; the error class is the real one, because the
@@ -105,14 +100,12 @@ const { deliverNotification } =
 
 /** The bytes the render Activity attested, as the read-back hands them over. */
 const ARTIFACT_BYTES = new Uint8Array([137, 80, 78, 71, 7, 7, 7]);
-const REVIEW_BYTES = new Uint8Array([137, 80, 78, 71, 9, 9]);
 const REPORT_CONTENT = "jerred finished a solo game\n\nA clean carry.";
 
 /** The report the render attested, as the post-match reader hands it over. */
-function attestedReport(review: Uint8Array | undefined): unknown {
+function attestedReport(): unknown {
   return {
     image: ARTIFACT_BYTES,
-    review,
     evidence: {
       artifact: "report",
       riotMatchId: "NA1_9301",
@@ -124,16 +117,6 @@ function attestedReport(review: Uint8Array | undefined): unknown {
       },
       content: REPORT_CONTENT,
       components: "match-link",
-      ...(review === undefined
-        ? {}
-        : {
-            review: {
-              objectKey: "games/2026/09/16/NA1_9301/ai-review.png",
-              digest: "e".repeat(64),
-              bytes: review.byteLength,
-              contentType: "image/png",
-            },
-          }),
     },
   };
 }
@@ -158,9 +141,7 @@ beforeEach(() => {
     ],
     embeds: [],
   });
-  stubs.readAttestedReportArtifact.mockResolvedValue(
-    attestedReport(REVIEW_BYTES),
-  );
+  stubs.readAttestedReportArtifact.mockResolvedValue(attestedReport());
   stubs.readAttestedPrematchArtifact.mockResolvedValue({
     artifact: "image",
     bytes: ARTIFACT_BYTES,
@@ -468,24 +449,13 @@ describe("what the send assembles", () => {
   });
 
   test("never runs the report generator, the Riot read or the model", async () => {
-    // The two findings this closes. Running the generator here refetched the
-    // player's CURRENT rank and upserted this older match's
-    // `MatchRankHistory` with it, so a delivery re-driven after the player's
-    // next game rewrote the rank captured at render; and it called the AI
-    // review inside the single-attempt thirty-second send, where a model call
-    // outliving the timeout turns a pre-send failure into an unknown delivery.
     await deliverNotification(attemptRef());
 
     expect(stubs.generateMatchReport).not.toHaveBeenCalled();
     expect(stubs.resolveScoutObservedMatchContext).not.toHaveBeenCalled();
-    expect(stubs.generateAiReviewIfEnabled).not.toHaveBeenCalled();
   });
 
-  test("carries the attested review to every channel, not just the first", async () => {
-    // `markAiAttempted` is global to the match, so a review generated inside
-    // the delivery was consumed by whichever channel was delivered first and
-    // silently missing from every later one. The review belongs to the
-    // artifact now, so each channel's send rebuilds the same message.
+  test("delivers the same attested report to every channel", async () => {
     const deliveries = [];
     for (const channelId of ["100000000000000001", "100000000000000002"]) {
       stubs.requireIntentRecord.mockResolvedValue(
@@ -505,17 +475,16 @@ describe("what the send assembles", () => {
     expect(stubs.send).toHaveBeenCalledTimes(2);
     for (const call of stubs.send.mock.calls) {
       const sent = SentMessageSchema.parse(call[0]);
-      expect(sent.files).toHaveLength(2);
-      expect(sent.files[1]?.name).toBe("ai-review.png");
-      expect(attachmentBytes(sent.files[1]?.attachment)).toEqual(REVIEW_BYTES);
+      expect(sent.files).toHaveLength(1);
+      expect(sent.files[0]?.name).toBe("NA1_9301.png");
+      expect(attachmentBytes(sent.files[0]?.attachment)).toEqual(
+        ARTIFACT_BYTES,
+      );
     }
-    expect(stubs.generateAiReviewIfEnabled).not.toHaveBeenCalled();
   });
 
-  test("attaches only the report when the match earned no review", async () => {
-    stubs.readAttestedReportArtifact.mockResolvedValue(
-      attestedReport(undefined),
-    );
+  test("attaches exactly one report image", async () => {
+    stubs.readAttestedReportArtifact.mockResolvedValue(attestedReport());
 
     await deliverNotification(attemptRef());
 

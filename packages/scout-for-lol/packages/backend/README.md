@@ -1386,17 +1386,22 @@ derived from the intent key, so retrying that Activity keeps one event identity.
 `renderNotificationArtifact` runs on `background` under the effect fence and
 is the only place the report generator runs on the notification lane. That matters
 beyond the Satori cost: the generator refetches every tracked player's rank and
-upserts this match's `MatchRankHistory`, and it spends the one AI review a
-match is allowed (`markAiAttempted` is global to the match). Both are facts
-about the MATCH, established once — so the render evaluates the review's
-per-guild gate against the whole audience the report will reach
-(`resolvePostmatchDeliveryChannels`, shared with intent minting) rather than
-against one channel's guild.
+upserts this match's `MatchRankHistory`. This is established once per match;
+delivery never refetches ranks.
 
-What the generator built is then committed and attested whole: the report image
-and, when the match earned one, the review's image as objects under the report
-key layout, plus the content line and which components were attached
-(`v2-notification-render` evidence version 2, keyed per `(kind, match)`). A
+What the generator built is committed and attested: the report image, content
+line and component selection (`v2-notification-render` evidence version 2,
+keyed per `(kind, match)`). The version-2 reader validates and
+discards the retired review-image reference without changing stored receipts
+or their original text. New reports contain no AI review or generated artwork.
+
+Historical review text, traces and artwork remain archived in S3. Review
+generation, the developer workbench and review-specific readers have been
+removed. Image GC retains `ai-review.png` and all `ai-pipeline/` objects
+indefinitely while ordinary report images keep their existing retention.
+
+A
+A
 prematch render attests the loading screen, or `none` for a queue it cannot
 draw, which the send answers with the fallback embed; the announcement kinds
 attest `none` (`text-only`).
@@ -1407,8 +1412,7 @@ size (`notification/notification-artifact.ts`, one reader per kind), and
 rebuilds the message with the shared furniture builders. It runs no generator, no
 Riot read and no model call, so a delivery re-driven days later — a
 reconciliation sweep after the player's next game — rewrites no history, and
-every channel's message carries the same review rather than the first one
-consuming it. Two failures on that path are terminal, not retryable: an object
+every channel receives the same frozen report. Two failures on that path are terminal, not retryable: an object
 that is missing or hashes differently, and a receipt attesting something its
 kind cannot deliver (`MalformedRenderReceiptError`). Both are deterministic
 facts about persisted evidence that parse the same way on every read, so both
@@ -1476,7 +1480,7 @@ It renders in `historical` mode: the generator receives the rank changes that
 settlement already recorded for the match and does not re-capture today's rank
 over them. It also builds the report without community-MVP vote controls, so no
 `MatchMvpContest` is created for a message that will never be posted. It keeps
-the AI review. The objects are filed under the game's creation date. Reruns are
+the ordinary report. The objects are filed under the game's creation date. Reruns are
 idempotent, because a receipt that already stands turns the match into a skip.
 
 ```bash

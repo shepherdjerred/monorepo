@@ -291,7 +291,7 @@ function computeConfiguration() {
       .get("REPORT_DUCKDB_MAX_TEMP_SIZE")
       .default("7GiB")
       .asString(),
-    // Scout's review and report models are OpenAI, so "inference is
+    // Scout's Explore and report models are OpenAI, so "inference is
     // configured" means the runtime can see OpenAI credentials. Asked of the
     // runtime's own resolver so the environment contract has one home.
     inferenceConfigured: providerCredentialsFromEnv().openai !== undefined,
@@ -334,7 +334,7 @@ function computeConfiguration() {
     // Voice has its own names. It bills a dedicated OpenAI project with its own
     // spend cap, and the direct key outranks the file, so sharing
     // `OPENAI_API_KEY` with text inference would silently move Realtime spend
-    // onto the review project.
+    // onto the text-inference project.
     voiceAssistant: parseVoiceAssistantConfiguration({
       openAiApiKey: getOptionalEnvVar("VOICE_OPENAI_API_KEY"),
       openAiApiKeyFile: getOptionalEnvVar("VOICE_OPENAI_API_KEY_FILE"),

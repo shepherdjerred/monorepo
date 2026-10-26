@@ -1,6 +1,6 @@
 # Scout for LoL - Technical Documentation
 
-Technical documentation for Scout for LoL, a Discord bot that monitors League of Legends matches and generates AI-powered match reviews.
+Technical documentation for Scout for LoL, a Discord bot that monitors League of Legends matches and delivers match reports.
 
 ## Documentation Index
 
@@ -8,7 +8,6 @@ Technical documentation for Scout for LoL, a Discord bot that monitors League of
 | ------------------------------------------ | --------------------------------------------------------- |
 | [Architecture Overview](./architecture.md) | High-level system architecture and component interactions |
 | [Backend Service](./backend.md)            | Discord bot, cron jobs, and API integrations              |
-| [AI Review System](./ai-review-system.md)  | Match analysis and art generation pipeline                |
 | [Database Schema](./database.md)           | Prisma models and data relationships                      |
 
 ## Quick Architecture Overview
@@ -94,5 +93,3 @@ packages/
 - **Match Report**: PNG image with match stats generated via Satori
 - **ScoutQL Report**: Scheduled or user-authored query compiled to SQL and run on the DuckDB report lake
 - **Dare SQL Contract**: Versioned, deterministic standard SQL whose canonical text is binding for preview and settlement
-- **AI Review**: LLM analysis of match performance
-- **Art Generation**: AI-generated artwork based on match review

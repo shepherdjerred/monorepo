@@ -123,7 +123,6 @@ function describeEvidence(evidence: ScoutNotificationRenderEvidence): string {
 /** The post-match report the render attested, bytes verified. */
 export type ScoutAttestedReportArtifact = {
   readonly image: Uint8Array;
-  readonly review: Uint8Array | undefined;
   readonly evidence: Extract<
     ScoutNotificationRenderEvidence,
     { artifact: "report" }
@@ -222,11 +221,7 @@ export async function readAttestedReportArtifact(
     evidence.image,
     abortSignal,
   );
-  const review =
-    evidence.review === undefined
-      ? undefined
-      : await readAttestedObject(riotMatchId, evidence.review, abortSignal);
-  return { image, review, evidence };
+  return { image, evidence };
 }
 
 export async function readAttestedPrematchArtifact(

@@ -812,33 +812,6 @@
       "thresholdRollouts": []
     },
     {
-      "key": "ai_reviews_enabled",
-      "owner": "scout",
-      "namespace": "scout",
-      "source": "scout-policy",
-      "purpose": "Enable Scout post-match AI reviews.",
-      "type": "boolean",
-      "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "scout-guild-1337623164146155593",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        }
-      ],
-      "rules": [],
-      "thresholdRollouts": []
-    },
-    {
       "key": "birmel-activity-tracking-enabled",
       "owner": "birmel",
       "namespace": "birmel",
@@ -3509,14 +3482,6 @@
         },
         {
           "key": "ai_reports_unlimited",
-          "type": "boolean",
-          "default": false,
-          "rollouts": [],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
-          "key": "ai_reviews_enabled",
           "type": "boolean",
           "default": false,
           "rollouts": [],

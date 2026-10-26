@@ -143,9 +143,6 @@ const HOMELAB_PLATFORM_METADATA_PATHS = new Set([
 // provider credential is read. Its chokepoint property is what makes catalog
 // cost accounting and capability validation reliable for every consumer.
 const LLM_RUNTIME_ROOT = "packages/llm-runtime/";
-// The Scout review workbench runs in the operator's browser with keys the
-// operator pastes in; it cannot use the server-side runtime.
-const SCOUT_WORKBENCH_ROOT = "packages/scout-for-lol/packages/frontend/";
 
 // Deployment manifests and bootstrap surfaces that hand each workload its own
 // per-app, per-environment provider credential. Anthropic is federated in
@@ -167,8 +164,6 @@ const PROVIDER_CREDENTIAL_WIRING_PATHS = new Set([
   "packages/justin-principal-engineer/src/host/docker.ts",
   // Operator CLIs document the key they read through providerCredentialsFromEnv.
   "packages/monarch/scripts/match-emails.ts",
-  "packages/scout-for-lol/packages/backend/src/league/review/test-reviews.ts",
-  "packages/scout-for-lol/packages/backend/src/league/review/test-reviews-utils.ts",
   "packages/temporal/scripts/glitter/run-glitter-context-refresh-local.ts",
   // Browser automation test harness seeds a placeholder for config parsing.
   "packages/birmel/src/agent-tools/tools/automation/test-setup.ts",
@@ -328,7 +323,6 @@ const RULE_EXEMPTIONS: Readonly<Record<string, readonly Exemption[]>> = {
   ],
   "direct-provider-sdk": [
     inLlmRuntime,
-    underRoot(SCOUT_WORKBENCH_ROOT),
     inSet(STREAMBOT_VOICE_TTS_PATHS),
     isPath("packages/homelab/scripts/platform-desired-state.ts"),
   ],

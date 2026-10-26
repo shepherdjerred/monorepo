@@ -40,7 +40,6 @@ const PRODUCTION_DENIED_FLAGS = [
 const PRODUCTION_ALLOWED_FLAGS = [
   "ai_reports_enabled",
   "ai_reports_unlimited",
-  "ai_reviews_enabled",
   "challenge_runs_enabled",
   "clash_surface",
   "explore_on_demand_riot_enabled",
@@ -168,7 +167,6 @@ describe("production hard-disable policy", () => {
       provider: new StaticProvider({
         ai_reports_enabled: true,
         ai_reports_unlimited: true,
-        ai_reviews_enabled: true,
         challenge_runs_enabled: true,
         clash_surface: true,
         explore_on_demand_riot_enabled: true,

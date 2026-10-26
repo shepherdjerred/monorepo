@@ -3329,7 +3329,7 @@
       "approvalPolicy": "none",
       "automatic": false,
       "recipeRevisionId": "tofu-google/prod/1",
-      "configurationRevisionId": "tofu-google/prod/1"
+      "configurationRevisionId": "tofu-google/prod/2"
     },
     {
       "id": "tofu-openai/prod",

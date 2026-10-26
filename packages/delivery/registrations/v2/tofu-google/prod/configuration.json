@@ -1,7 +1,7 @@
 {
-  "id": "tofu-google/prod/1",
+  "id": "tofu-google/prod/2",
   "content": {
-    "desired-state.json": "{\n  \"$schema\": \"../platform-desired-state.schema.json\",\n  \"platform\": \"google\",\n  \"google_billing_account_id\": \"01D511-F70137-084AF1\",\n  \"google_quota_project_id\": \"sjerred-llm-admin\",\n  \"google_workloads\": {\n    \"birmel-prod\": {\n      \"project_id\": \"sjerred-llm-birmel-prod\",\n      \"display_name\": \"LLM birmel prod\",\n      \"monthly_budget_usd\": 10,\n      \"ai_studio_spend_cap_usd\": 10,\n      \"gemini_key_revision\": 1,\n      \"onepassword_item_title\": \"llm-gemini-birmel-prod\",\n      \"gemini_quota_limits\": {\n        \"gemini-3-pro-image\": {\n          \"requests_per_minute\": 10\n        }\n      }\n    },\n    \"scout-beta\": {\n      \"project_id\": \"sjerred-llm-scout-beta\",\n      \"display_name\": \"LLM scout beta\",\n      \"monthly_budget_usd\": 5,\n      \"ai_studio_spend_cap_usd\": 5,\n      \"gemini_key_revision\": 1,\n      \"onepassword_item_title\": \"llm-gemini-scout-beta\",\n      \"gemini_quota_limits\": {\n        \"gemini-2.5-flash-preview-image\": {\n          \"requests_per_minute\": 10\n        }\n      }\n    }\n  }\n}\n"
+    "desired-state.json": "{\n  \"$schema\": \"../platform-desired-state.schema.json\",\n  \"platform\": \"google\",\n  \"google_billing_account_id\": \"01D511-F70137-084AF1\",\n  \"google_quota_project_id\": \"sjerred-llm-admin\",\n  \"google_workloads\": {\n    \"birmel-prod\": {\n      \"project_id\": \"sjerred-llm-birmel-prod\",\n      \"display_name\": \"LLM birmel prod\",\n      \"monthly_budget_usd\": 10,\n      \"ai_studio_spend_cap_usd\": 10,\n      \"gemini_key_revision\": 1,\n      \"onepassword_item_title\": \"llm-gemini-birmel-prod\",\n      \"gemini_quota_limits\": {\n        \"gemini-3-pro-image\": {\n          \"requests_per_minute\": 10\n        }\n      }\n    }\n  }\n}\n"
   },
   "forwardOnly": []
 }

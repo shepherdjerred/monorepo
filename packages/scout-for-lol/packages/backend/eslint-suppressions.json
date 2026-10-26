@@ -33,26 +33,6 @@
       "count": 1
     }
   },
-  "scripts/inspect-pipeline-trace.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 2
-    },
-    "@typescript-eslint/prefer-optional-chain": {
-      "count": 1
-    },
-    "custom-rules/prefer-structured-logging": {
-      "count": 25
-    },
-    "regexp/no-useless-lazy": {
-      "count": 1
-    },
-    "unicorn/consistent-existence-index-check": {
-      "count": 3
-    },
-    "unicorn/no-negated-condition": {
-      "count": 1
-    }
-  },
   "scripts/lane-priors/evaluate-lane-priors.ts": {
     "custom-rules/prefer-structured-logging": {
       "count": 1
@@ -157,11 +137,6 @@
     }
   },
   "src/league/initial-history/enqueue.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/league/review/test-reviews.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

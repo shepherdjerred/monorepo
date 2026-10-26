@@ -24,9 +24,6 @@ export function reportImageAttachmentName(matchId: RiotMatchId): string {
   return `${matchId}.png`;
 }
 
-/** The attachment name an AI review's image travels under. */
-export const AI_REVIEW_ATTACHMENT_NAME = "ai-review.png";
-
 /**
  * The message furniture for one report image: the attachment and the embed
  * that displays it.
@@ -47,13 +44,6 @@ export function attachReportImage(
     image: { url: `attachment://${attachmentName}` },
   });
   return [attachment, embed];
-}
-
-/** The AI review's image as v1 attaches it beside the report. */
-export function aiReviewAttachment(image: Uint8Array): AttachmentBuilder {
-  return new AttachmentBuilder(Buffer.from(image)).setName(
-    AI_REVIEW_ATTACHMENT_NAME,
-  );
 }
 
 /**

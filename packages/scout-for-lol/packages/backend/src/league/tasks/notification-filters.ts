@@ -37,7 +37,7 @@ export function channelsPassingQueueFilter(
  *
  * One derivation for every consumer: intents are minted for `deliverable`,
  * and the notification lane renders its attested report against `guildIds`,
- * because the per-guild feature flags the generator evaluates (the AI review)
+ * because the per-guild feature flags the generator evaluates (community MVP voting)
  * must see the same audience the intents name. `subscribed` is the unfiltered
  * set, kept for the log line that explains an empty delivery.
  */

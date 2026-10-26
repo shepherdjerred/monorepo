@@ -53,26 +53,6 @@
       "count": 1
     }
   },
-  "packages/backend/scripts/inspect-pipeline-trace.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 2
-    },
-    "@typescript-eslint/prefer-optional-chain": {
-      "count": 1
-    },
-    "custom-rules/prefer-structured-logging": {
-      "count": 25
-    },
-    "regexp/no-useless-lazy": {
-      "count": 1
-    },
-    "unicorn/consistent-existence-index-check": {
-      "count": 3
-    },
-    "unicorn/no-negated-condition": {
-      "count": 1
-    }
-  },
   "packages/backend/scripts/lane-priors/lane-prior-cli.ts": {
     "@typescript-eslint/no-deprecated": {
       "count": 1
@@ -172,11 +152,6 @@
     }
   },
   "packages/backend/src/league/initial-history/enqueue.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "packages/backend/src/league/review/test-reviews.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -350,11 +325,6 @@
       "count": 1
     }
   },
-  "packages/data/src/review/generator-helpers.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "packages/design-audit/playwright.config.ts": {
     "unicorn/prefer-simple-condition-first": {
       "count": 1
@@ -371,26 +341,6 @@
     }
   },
   "packages/design-system/scripts/outline-font.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "packages/frontend/src/components/review-tool/match/match-reviewer-info.tsx": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "packages/frontend/src/components/review-tool/config/rank-config-panel.tsx": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "packages/frontend/src/components/review-tool/match/use-match-browser.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "packages/frontend/src/lib/review-tool/s3.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

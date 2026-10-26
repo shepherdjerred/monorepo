@@ -24,15 +24,13 @@
   },
   "dependencies": {
     "@scout-for-lol/domain": "workspace:*",
-    "@shepherdjerred/llm-runtime": "workspace:*",
-    "@shepherdjerred/llm-models": "workspace:*",
-    "@shepherdjerred/glitter-context": "workspace:*",
     "chevrotain": "^13.0.0",
     "cron-parser": "^5.5.0",
     "date-fns": "^4.1.0",
     "remeda": "^2.21.2",
     "ts-pattern": "^5.7.0",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "@shepherdjerred/llm-runtime": "workspace:*"
   },
   "devDependencies": {
     "@shepherdjerred/architecture": "workspace:*",

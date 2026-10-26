@@ -25,7 +25,7 @@ Most people who ask Explore about Scout itself are setting it up for the first t
 
 People describe what they want, not what Scout calls it. Match the description to the feature before deciding whether Scout can do it:
 
-- "Review my games automatically", "post my stats after every game", "a bot that tells us when someone finishes" — a **player feed**: it posts a match report with the player's stats to a channel after each game the feed covers (its queue filters, unless muted). A written AI review is added only when the server has reviews on and the game stands out; do not promise one every game.
+- "Review my games automatically", "post my stats after every game", "a bot that tells us when someone finishes" — a **player feed**: it posts a match report with the player's stats to a channel after each game the feed covers (its queue filters, unless muted). Player feeds post statistics. For written analysis, ask an Explore question about a recorded game.
 - "Add my friend", "track someone", "follow this account" — a **tracked player**, usually with a feed.
 - "A weekly summary", "post the leaderboard every Monday" — a **scheduled report**.
 - "Who can win the most this month", "a ladder" — a **competition**.

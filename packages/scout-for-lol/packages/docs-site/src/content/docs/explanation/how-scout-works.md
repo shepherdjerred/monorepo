@@ -49,7 +49,7 @@ feeling immediate and staying within what Riot allows.
 Scout also tracks where each account's history stands, which is what stops a
 freshly created subscription from replaying an entire back catalogue of old
 games into your channel. During onboarding it snapshots and quietly imports up
-to the account's 20 most recent games for Explore, reports, AI review context,
+to the account's 20 most recent games for Explore, reports,
 and the player profile. Matches finished before that snapshot enrich history
 but never post notifications or trigger automatic post-match side effects.
 

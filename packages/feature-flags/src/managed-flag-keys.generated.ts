@@ -135,7 +135,6 @@ export const SCOUT_BOOLEAN_FLAG_KEYS = [
   "scout_support_conversations_enabled",
   "ai_reports_enabled",
   "ai_reports_unlimited",
-  "ai_reviews_enabled",
   "dares_enabled",
   "challenge_runs_enabled",
   "clash_surface",

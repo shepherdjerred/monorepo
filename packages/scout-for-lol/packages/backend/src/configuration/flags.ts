@@ -149,7 +149,6 @@ type FlagConfig = {
 
 export type FlagName =
   | `ai_reports_${"enabled" | "unlimited"}`
-  | "ai_reviews_enabled"
   | "dares_enabled"
   | "dare_notifications_enabled"
   | "challenge_runs_enabled"
@@ -258,16 +257,6 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   ai_reports_unlimited: {
     default: false,
     overrides: [{ value: true, attributes: { user: ME }, betaOnly: true }],
-  },
-  ai_reviews_enabled: {
-    default: false,
-    overrides: [
-      {
-        value: true,
-        attributes: { server: MY_SERVER },
-        betaOnly: true,
-      },
-    ],
   },
   // Free Dares remain limited to the existing beta guild audience.
   dares_enabled: {
@@ -485,9 +474,9 @@ export function getLimit(
  *
  * @example
  * ```typescript
- * const enabled = getFlag("ai_reviews_enabled", { server: serverId });
+ * const enabled = getFlag("ai_reports_enabled", { server: serverId });
  * if (enabled) {
- *   // Generate AI review
+ *   // Offer AI report editing
  * }
  * ```
  */

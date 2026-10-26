@@ -2,15 +2,13 @@ import { defineArchitecture } from "@shepherdjerred/architecture";
 
 /**
  * `@scout-for-lol/data` is the shared vocabulary: schemas, the ScoutQL v2
- * language, the Data Dragon catalogue and the review pipeline. Most of it is
+ * language, the Data Dragon catalogue and static League data. Most of it is
  * one tangle of schemas that import each other freely, and these rules
  * describe only the parts that are genuinely one-way.
  *
  * - `model/scoutql/` is the query language. It builds on the report and core
  *   schemas and on nothing else, so the language can be compiled and tested
  *   without the rest of the model, or any consumer of it.
- * - `review/` is the top of the package: it consumes the model, Data Dragon and
- *   league catalogues. Nothing underneath may import it back.
  *
  * `model/legacy/` (the ScoutQL v1 language) is deliberately not a layer: it is
  * scheduled for deletion and no rule should have to know about it.
@@ -47,7 +45,6 @@ export const layers = [
   "model/riot",
   "model/scoutql",
   "polling-config",
-  "review",
   "scout-client",
   "seasons",
   "testing",
@@ -71,26 +68,10 @@ export default defineArchitecture({
       name: "scoutql-depends-only-on-core-and-reports",
       comment:
         "`model/scoutql/` is the ScoutQL v2 language. It compiles against the core and report " +
-        "schemas and nothing else; reaching into another model slice, a catalogue or the review " +
-        "pipeline would make the language impossible to test or reuse on its own.",
+        "schemas and nothing else; reaching into another model slice or catalogue would " +
+        "make the language impossible to test or reuse on its own.",
       from: "model/scoutql",
       to: everythingExcept("model/scoutql", "model/core", "model/reports"),
-    },
-    {
-      name: "league-does-not-depend-on-review",
-      comment:
-        "`review/` consumes the league catalogues, not the other way round. An import back into " +
-        "the review pipeline would turn a lookup table into part of a cycle.",
-      from: "league",
-      to: ["review"],
-    },
-    {
-      name: "data-dragon-does-not-depend-on-review",
-      comment:
-        "`review/` consumes Data Dragon, not the other way round. Data Dragon is imported by " +
-        "report rendering and the model, which must not transitively pull in the review pipeline.",
-      from: "data-dragon",
-      to: ["review"],
     },
   ],
 });

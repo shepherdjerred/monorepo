@@ -1,13 +1,9 @@
 {
   "dependencies": {
     "@shepherdjerred/bugsink-config": "workspace:*",
-    "@ai-sdk/anthropic": "^4.0.62",
-    "@ai-sdk/google": "^4.0.79",
-    "@ai-sdk/openai": "^4.0.74",
     "@astrojs/mdx": "^8.0.2",
     "@astrojs/react": "^7.0.0",
     "@astrojs/sitemap": "^3.7.2",
-    "@aws-sdk/client-s3": "^3.1001.0",
     "@iconify-json/heroicons": "^1.2.1",
     "@iconify-json/simple-icons": "^1.2.72",
     "@resvg/resvg-js": "^2.6.2",
@@ -15,23 +11,17 @@
     "@scout-for-lol/design-system": "workspace:*",
     "@scout-for-lol/report": "workspace:*",
     "@sentry/browser": "^11.5.0",
-    "@shepherdjerred/llm-models": "workspace:*",
     "@tailwindcss/typography": "^0.5.16",
     "@tailwindcss/vite": "^4.2.4",
-    "ai": "^7.0.137",
     "astro": "^7.3.3",
     "astro-icon": "^1.1.1",
     "astro-opengraph-images": "workspace:*",
     "clsx": "^2.1.1",
-    "date-fns": "^4.1.0",
-    "fuse.js": "^7.1.0",
-    "lucide-react": "^1.14.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.0.0",
-    "zod": "^4.4.3",
-    "@shepherdjerred/text": "workspace:*"
+    "zod": "^4.4.3"
   },
   "name": "@scout-for-lol/frontend",
   "scripts": {

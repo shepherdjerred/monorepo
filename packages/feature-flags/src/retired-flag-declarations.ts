@@ -1,5 +1,7 @@
 /** Audited unused Scout keys, retired only in the environments where they exist. */
 export const retiredFlagDeclarations = [
+  { environment: "beta", namespace: "scout", key: "ai_reviews_enabled" },
+  { environment: "prod", namespace: "scout", key: "ai_reviews_enabled" },
   { environment: "beta", namespace: "scout", key: "scout-tournament-api-mode" },
   {
     environment: "beta",

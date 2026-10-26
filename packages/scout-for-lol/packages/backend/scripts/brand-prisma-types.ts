@@ -319,7 +319,6 @@ function instantiatePayloadReferences(text: string): string {
     "User",
     "GuildInstall",
     "BotState",
-    "MatchAiAttempt",
   ].toSorted((left, right) => right.length - left.length);
   const payloadNames = modelNames
     .map((modelName) => String.raw`\$${modelName}Payload`)

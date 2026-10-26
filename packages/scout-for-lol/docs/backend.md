@@ -28,7 +28,6 @@ flowchart TB
         API_CLIENT["Riot API Client"]
         TASKS["Scheduled Tasks"]
         COMPETITION["Competition System"]
-        REVIEW["Review Generator"]
     end
 
     INDEX --> CONFIG
@@ -42,7 +41,6 @@ flowchart TB
     DISCORD --> EVENTS
     TEMPORAL --> TASKS
     TASKS --> API_CLIENT
-    TASKS --> REVIEW
     TASKS --> COMPETITION
 ```
 
@@ -329,7 +327,6 @@ packages/backend/
 │   ├── league/
 │   │   ├── api/             # Riot API client
 │   │   ├── competition/     # Competition system
-│   │   ├── review/          # AI review generation
 │   │   ├── tasks/           # Scheduled tasks
 │   ├── temporal/             # Activity workers and durable starts
 │   └── league/tasks/         # Workflow activity implementations
@@ -341,5 +338,4 @@ packages/backend/
 
 ## Next Steps
 
-- [AI Review System](./ai-review-system.md) - How AI analysis works
 - [Database Schema](./database.md) - Data model details

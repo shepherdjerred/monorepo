@@ -28,13 +28,6 @@ async function resolvedTimeline(
   return undefined;
 }
 
-export async function fetchTimelineIfStandardMatch(
-  match: RawMatch,
-  matchId: RiotMatchId,
-  players: PlayerConfigEntry[],
-) {
-  return await resolvedTimeline(match, matchId, players, "best_effort");
-}
 export async function fetchTimelineForDare(
   match: RawMatch,
   matchId: RiotMatchId,

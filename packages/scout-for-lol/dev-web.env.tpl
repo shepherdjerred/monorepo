@@ -60,7 +60,6 @@ SCOUT_DEV_CONSUMER_GUILD_ID=1337623164146155593
 # secrets above, and the same fields the deployed beta backend reads, so local
 # spend counts against the beta projects' hard caps.
 OPENAI_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/ufwfqsyzzbpp3nscxku65h6jka
-GEMINI_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/t5wjbs4lung5byzf536svwqgbq
 
 # dev:web derives DEV_USER_GUILDS and EXPLORE_GUILD_ALLOWLIST from the local
 # consumer guild above. Set SCOUT_DEV_CONSUMER_PREVIEW=false and provide those

@@ -1,3 +1,4 @@
+import { getModel } from "@shepherdjerred/llm-models";
 import { stepCountIs, tool, ToolLoopAgent } from "ai";
 import * as Sentry from "@sentry/bun";
 import { z } from "zod";
@@ -6,7 +7,6 @@ import {
   REPORT_AI_MAX_PREVIEW_CALLS,
   REPORT_AI_MAX_STEPS,
   REPORT_AI_MAX_TOOL_CALLS,
-  modelSupportsParameter,
   ReportAiModelPreviewSummarySchema,
   ReportQueryTextSchema,
   type ReportAiEditRequest,
@@ -17,10 +17,7 @@ import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.
 import { formatScoutQl } from "@scout-for-lol/data/model/scoutql/editor/format.ts";
 import { reportAiModel } from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
-import {
-  assertWithinBudget,
-  recordTokenUsage,
-} from "#src/league/review/openai-budget.ts";
+import { assertWithinBudget, recordTokenUsage } from "#src/lib/llm-budget.ts";
 import {
   scoutReportAiToolCallsTotal,
   scoutReportAiTokensUsedTotal,
@@ -30,7 +27,7 @@ import { scoutQlFieldGuideSection } from "#src/reports/ai/scoutql-field-guide.ts
 import { finalizeReportDraft } from "#src/reports/ai/report-query-finalizer.ts";
 import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-summary.ts";
 import { executeReportQuery } from "#src/reports/query/query-engine.ts";
-import { getLlmRuntime } from "#src/league/review/ai-clients.ts";
+import { getLlmRuntime } from "#src/lib/llm-runtime.ts";
 import { guildScope } from "#src/reports/duckdb/scope.ts";
 import {
   createFormatTool,
@@ -95,7 +92,7 @@ async function streamReportQueryAgentInternal(
     // See explore/agent.ts: most current models declare
     // supportsTemperature: false, and the provider rejects temperature for
     // such a model with a 400 that fails the whole run.
-    ...(modelSupportsParameter(model, "temperature")
+    ...(getModel(model)?.capabilities.supportsTemperature === true
       ? { temperature: 0.2 }
       : {}),
     maxOutputTokens: REPORT_AI_MAX_OUTPUT_TOKENS,

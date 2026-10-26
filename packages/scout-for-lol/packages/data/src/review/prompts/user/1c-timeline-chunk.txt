@@ -1,3 +1,0 @@
-Analyze this timeline chunk (<TIME_RANGE>):
-
-<CHUNK_DATA>

@@ -72,7 +72,7 @@ describe("AI architecture guard", () => {
     ).toEqual(["openrouter", "openrouter", "openrouter"]);
   });
 
-  test("constructs provider SDKs only in llm-runtime and the Scout workbench", () => {
+  test("allows the central runtime and rejects direct Scout provider SDKs", () => {
     expect(
       findAiArchitectureViolations([
         {
@@ -88,10 +88,6 @@ describe("AI architecture guard", () => {
           ].join("\n"),
         },
         {
-          path: "packages/scout-for-lol/packages/frontend/src/lib/review-tool/provider-clients.ts",
-          contents: 'import { createOpenAI } from "@ai-sdk/openai";',
-        },
-        {
           path: "packages/app/package.json",
           contents: '"@openai/codex-sdk": "0.147.0"',
         },
@@ -101,11 +97,15 @@ describe("AI architecture guard", () => {
     expect(
       findAiArchitectureViolations([
         {
+          path: "packages/scout-for-lol/packages/frontend/src/lib/review-tool/provider-clients.ts",
+          contents: 'import { createOpenAI } from "@ai-sdk/openai";',
+        },
+        {
           path: "packages/scout-for-lol/packages/backend/src/review.ts",
           contents: 'import { createOpenAI } from "@ai-sdk/openai";',
         },
       ]).map(({ rule }) => rule),
-    ).toEqual(["direct-provider-sdk"]);
+    ).toEqual(["direct-provider-sdk", "direct-provider-sdk"]);
   });
 
   test("never lets a deployed Anthropic key shadow federation", () => {
