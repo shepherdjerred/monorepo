@@ -24,6 +24,7 @@ import { SONG } from "#music-fixture";
 import { musicCommandContext } from "@shepherdjerred/streambot/discord/music-context.ts";
 import { queueBatch } from "@shepherdjerred/streambot/commands/queue-batch.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
+import { loadMusicLink } from "@shepherdjerred/streambot/discord/music-links.ts";
 
 const services: ReturnType<typeof fixtureMusic>[] = [];
 const pendingPlaylistLoad = Promise.withResolvers<{
@@ -256,6 +257,29 @@ test("saved catalog tracks route to the audio slot when their request mode was s
     type: "ADD_BATCH",
     items: [{ source: { music: SONG, mode: undefined } }],
   });
+});
+
+test("YouTube playlists reject subtitle requests on the audio slot", async () => {
+  const f = await setup();
+  await f.manager.numbered.select(
+    { guildId, channelId: voiceChannelId, userId },
+    number(1),
+  );
+
+  await expect(
+    loadMusicLink(
+      f.issuer,
+      f.deps,
+      {
+        query: "https://www.youtube.com/playlist?list=PLfixture",
+        placement: "queue",
+        mode: null,
+        subtitles: { enabled: true },
+      },
+      f.reply,
+    ),
+  ).rejects.toThrow("Channel 1 plays audio only");
+  expect(f.reply.start).not.toHaveBeenCalled();
 });
 
 test("saved LoL playlist sources respect the feature gate", async () => {

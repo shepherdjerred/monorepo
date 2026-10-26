@@ -22,6 +22,7 @@ import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import { MusicError } from "@shepherdjerred/streambot/music/errors.ts";
+import { playbackTransport } from "@shepherdjerred/streambot/types/playback-channel.ts";
 import type { MusicInteraction } from "./music-context.ts";
 import {
   collectMusicCancellation,
@@ -110,6 +111,20 @@ export async function loadMusicLink(
       400,
       "spotify_audio",
       "Spotify links play as music. Use a YouTube link for video or subtitles.",
+    );
+  const requestsSubtitles = subtitles !== undefined;
+  const requestsAudio =
+    context.routePlayback === undefined
+      ? context.playbackChannel !== undefined &&
+        playbackTransport(context.playbackChannel) === "music"
+      : mode === "music";
+  if (requestsSubtitles && requestsAudio)
+    throw new MusicError(
+      400,
+      "subtitle_audio",
+      context.playbackChannel === undefined
+        ? "`mode:music` plays audio only, so subtitles can't be burned in. Drop the subtitle options, or use `mode:video`."
+        : "Channel 1 plays audio only. Select channel 2 or higher for subtitles.",
     );
   const url = await webPageUrl(
     deps.config,
