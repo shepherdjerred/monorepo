@@ -7,6 +7,19 @@ import { MovieCutEvidenceV2Schema, movieCutMatches } from "./cut-v2.ts";
 
 /** Explicitly versioned movie plans; the historical array format is left literal. */
 export const MovieFilePlanEntryV2Schema = FilePlanEntrySchema.strict().extend({
+  previousSidecars: FilePlanEntrySchema.shape.previousSidecars
+    .max(100)
+    .refine(
+      (items) =>
+        new Set(items.map((item) => item.subtitleId)).size === items.length,
+      "Movie predecessor sidecars must be distinct",
+    ),
+  embeddedSubtitles: FilePlanEntrySchema.shape.embeddedSubtitles
+    .max(100)
+    .refine(
+      (items) => new Set(items.map((item) => item.id)).size === items.length,
+      "Movie embedded subtitle identities must be distinct",
+    ),
   identityEvidence: FileIdentityEvidenceSchema.extend({
     parsedCoordinates: z.strictObject({ kind: z.literal("movie") }),
   }),

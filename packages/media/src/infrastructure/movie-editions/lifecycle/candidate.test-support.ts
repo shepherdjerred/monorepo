@@ -6,11 +6,16 @@ import { cutCanonical } from "#infrastructure/editions/cut-context.ts";
 import { providerMovieCutV2 } from "#infrastructure/movie-editions/cut-v2.ts";
 import { chooseUpgrade } from "#domain/quality.ts";
 import { QualityRulesSchema } from "#shared/api.ts";
+import {
+  MOVIE_EDITION_REGISTRY,
+  type MovieEditionKey,
+} from "#shared/movie-editions/registry.ts";
 
 /** Actual adapter, parser, policy and encrypted snapshot producer; only provider HTTP is synthetic. */
 export async function retainedMovieCandidate(
   context: MediaAutomationContext,
   input: {
+    edition?: MovieEditionKey;
     media: { id: string; title: string; year: number | null };
     profile: { id: string; version: number; rules: unknown };
     source: {
@@ -22,13 +27,16 @@ export async function retainedMovieCandidate(
   },
 ) {
   const providerReleaseId = crypto.randomUUID();
+  const cut = MOVIE_EDITION_REGISTRY[
+    input.edition ?? "extended_cut"
+  ].plexLabel.replaceAll(" ", ".");
   const provider = new KnabenProvider(() =>
     Promise.resolve(
       Response.json({
         hits: [
           {
             id: providerReleaseId,
-            title: `${input.media.title}.${String(input.media.year)}.Extended.Cut.1080p.WEB-DL.H264.ENG`,
+            title: `${input.media.title}.${String(input.media.year)}${cut.length === 0 ? "" : `.${cut}`}.1080p.WEB-DL.H264.ENG`,
             bytes: input.source.sizeBytes,
             hash: input.source.infoHash,
             seeders: 5,
