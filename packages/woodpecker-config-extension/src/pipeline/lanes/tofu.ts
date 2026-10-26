@@ -50,6 +50,7 @@ const VALIDATED_STACKS = [
   "seaweedfs",
   "tailscale",
   "arr",
+  "backblaze",
   "github",
   "cloudflare",
   "posthog",

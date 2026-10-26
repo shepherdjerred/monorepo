@@ -1681,6 +1681,20 @@
       ]
     },
     {
+      "id": "tofu-backblaze",
+      "title": "OpenTofu backblaze stack",
+      "package": "homelab",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "gitops",
+      "components": [
+        {
+          "name": "archive:tofu-backblaze",
+          "producer": "first-party"
+        }
+      ]
+    },
+    {
       "id": "tofu-cloudflare",
       "title": "OpenTofu cloudflare stack",
       "package": "homelab",
@@ -3252,6 +3266,14 @@
       "automatic": false,
       "recipeRevisionId": "tofu-asuswrt/prod/1",
       "configurationRevisionId": "tofu-asuswrt/prod/1"
+    },
+    {
+      "id": "tofu-backblaze/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": false,
+      "recipeRevisionId": "tofu-backblaze/prod/1",
+      "configurationRevisionId": "tofu-backblaze/prod/1"
     },
     {
       "id": "tofu-cloudflare/prod",

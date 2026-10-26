@@ -48,6 +48,7 @@ const STACKS: readonly TofuStack[] = [
   "argocd",
   "arr",
   "asuswrt",
+  "backblaze",
   "cloudflare",
   "cloudflare-tokens",
   "discord",

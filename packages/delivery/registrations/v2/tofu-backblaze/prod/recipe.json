@@ -1,0 +1,26 @@
+{
+  "id": "tofu-backblaze/prod/1",
+  "definition": {
+    "kind": "operator-run",
+    "wrapped": {
+      "kind": "tofu",
+      "stack": "backblaze",
+      "archiveComponent": "archive:tofu-backblaze",
+      "runner": { "service": "ci", "component": "image:ci-base" },
+      "steps": [
+        {
+          "kind": "plan",
+          "instance": "stack:backblaze",
+          "pointOfNoReturn": false
+        },
+        {
+          "kind": "apply",
+          "instance": "stack:backblaze",
+          "pointOfNoReturn": false
+        }
+      ],
+      "sharedLock": "platform"
+    },
+    "stages": ["plan", "apply"]
+  }
+}
