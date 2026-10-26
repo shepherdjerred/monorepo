@@ -10,35 +10,15 @@ import {
   restoredTemplate,
   viewerDay,
 } from "tasknotes-macos/scripts/occurrence-acceptance/fixture.ts";
-import {
-  runIosNativeJourney,
-  type IosNativeJourney,
-} from "../ios-native-e2e.ts";
+import { runIosNativeJourney } from "../ios-native-e2e.ts";
+import { exportIosJourneyAttachments } from "../native-acceptance/attachments.ts";
+import { runSelectedIosJourneyTest } from "../native-acceptance/selected-tests.ts";
 
 const tests = [
   "testCompleteChildPreservesPrimaryWhenFutureGenerationFails",
   "testExplicitRepairUndoPreservesTheCompletedPrimary",
   "testRepairAgainSurvivesColdRelaunch",
 ] as const;
-
-async function retainAttachments(
-  context: Parameters<IosNativeJourney["execute"]>[0],
-  result: string,
-  index: number,
-): Promise<void> {
-  if (await Bun.file(path.join(result, "Info.plist")).exists()) {
-    await context.command([
-      "xcrun",
-      "xcresulttool",
-      "export",
-      "attachments",
-      "--path",
-      result,
-      "--output-path",
-      path.join(context.evidence, `screenshots-${index + 1}`),
-    ]);
-  }
-}
 
 export async function runIosOccurrenceAcceptance(): Promise<void> {
   let day = "";
@@ -78,25 +58,10 @@ export async function runIosOccurrenceAcceptance(): Promise<void> {
         bundles.push(result);
         const failures: unknown[] = [];
         try {
-          await command([
-            "xcodebuild",
-            "test-without-building",
-            "-xctestrun",
-            testRun,
-            "-destination",
-            `platform=iOS Simulator,id=${device}`,
-            "-parallel-testing-enabled",
-            "NO",
-            "-resultBundlePath",
-            result,
-            "-collect-test-diagnostics",
-            "never",
-            "-test-timeouts-enabled",
-            "YES",
-            "-maximum-test-execution-time-allowance",
-            "120",
-            `-only-testing:TasksForObsidianUITests/OccurrenceTaskTests/${test}`,
-          ]);
+          await runSelectedIosJourneyTest(
+            { testRun, device, result, suite: "OccurrenceTaskTests", test },
+            command,
+          );
           const reports = await readAcceptanceResultReports(
             result,
             {
@@ -146,7 +111,11 @@ export async function runIosOccurrenceAcceptance(): Promise<void> {
           failures.push(error);
         }
         try {
-          await retainAttachments(context, result, index);
+          await exportIosJourneyAttachments(
+            result,
+            path.join(evidence, `screenshots-${index + 1}`),
+            command,
+          );
         } catch (error) {
           failures.push(error);
         }

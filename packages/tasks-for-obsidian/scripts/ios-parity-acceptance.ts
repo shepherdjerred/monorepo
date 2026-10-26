@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import path from "node:path";
-import { z } from "zod";
 import { readAcceptanceResultReports } from "tasknotes-macos/scripts/acceptance-execution.ts";
 import { assertExactNativeResults } from "tasknotes-macos/scripts/acceptance-test-plan.ts";
+import { runIosNativeJourney } from "./ios-native-e2e.ts";
+import { exportIosJourneyAttachments } from "./native-acceptance/attachments.ts";
 import {
-  runIosNativeJourney,
-  type IosNativeJourney,
-} from "./ios-native-e2e.ts";
+  configureIosJourneyTests,
+  runSelectedIosJourneyTest,
+} from "./native-acceptance/selected-tests.ts";
 import {
   parityViewer,
   seedParityVault,
@@ -27,25 +28,6 @@ const stages: { test: string; phase: ParityPhase }[] = [
   },
 ];
 
-async function retainAttachments(
-  context: Parameters<IosNativeJourney["execute"]>[0],
-  result: string,
-  index: number,
-): Promise<void> {
-  if (await Bun.file(path.join(result, "Info.plist")).exists()) {
-    await context.command([
-      "xcrun",
-      "xcresulttool",
-      "export",
-      "attachments",
-      "--path",
-      result,
-      "--output-path",
-      path.join(context.evidence, `parity-screenshots-${String(index + 1)}`),
-    ]);
-  }
-}
-
 /** Each selector retains the existing runner's 180s command/120s XCTest bounds. */
 export async function runIosParityAcceptance(): Promise<void> {
   let viewer: ParityViewer | undefined;
@@ -61,43 +43,14 @@ export async function runIosParityAcceptance(): Promise<void> {
         path.join(context.evidence, "parity-viewer.json"),
         JSON.stringify(viewer, null, 2),
       );
-      const testConfiguration = z
-        .object({
-          TasksForObsidianUITests: z.object({
-            EnvironmentVariables: z.record(z.string(), z.string()),
-          }),
-        })
-        .parse(
-          JSON.parse(
-            await context.command(
-              ["plutil", "-convert", "json", "-o", "-", context.testRun],
-              true,
-            ),
-          ),
-        );
-      const environment =
-        testConfiguration.TasksForObsidianUITests.EnvironmentVariables;
-      for (const [key, value] of Object.entries({
-        FACET_PARITY_DAY: viewer.day,
-        FACET_PARITY_TIME_ZONE: viewer.timeZone,
-      })) {
-        await context.command([
-          "plutil",
-          environment[key] === undefined ? "-insert" : "-replace",
-          `TasksForObsidianUITests.EnvironmentVariables.${key}`,
-          "-string",
-          value,
-          context.testRun,
-        ]);
-      }
-      await context.command([
-        "plutil",
-        "-replace",
-        "TasksForObsidianUITests.SystemAttachmentLifetime",
-        "-string",
-        "keepNever",
+      await configureIosJourneyTests(
         context.testRun,
-      ]);
+        {
+          FACET_PARITY_DAY: viewer.day,
+          FACET_PARITY_TIME_ZONE: viewer.timeZone,
+        },
+        context.command,
+      );
       const results: string[] = [];
       for (const [index, stage] of stages.entries()) {
         assert.deepEqual(
@@ -112,25 +65,16 @@ export async function runIosParityAcceptance(): Promise<void> {
         results.push(result);
         const failures: unknown[] = [];
         try {
-          await context.command([
-            "xcodebuild",
-            "test-without-building",
-            "-xctestrun",
-            context.testRun,
-            "-destination",
-            `platform=iOS Simulator,id=${context.device}`,
-            "-parallel-testing-enabled",
-            "NO",
-            "-resultBundlePath",
-            result,
-            "-collect-test-diagnostics",
-            "never",
-            "-test-timeouts-enabled",
-            "YES",
-            "-maximum-test-execution-time-allowance",
-            "120",
-            `-only-testing:TasksForObsidianUITests/MobileParityTests/${stage.test}`,
-          ]);
+          await runSelectedIosJourneyTest(
+            {
+              testRun: context.testRun,
+              device: context.device,
+              result,
+              suite: "MobileParityTests",
+              test: stage.test,
+            },
+            context.command,
+          );
           const reports = await readAcceptanceResultReports(
             result,
             {
@@ -175,7 +119,14 @@ export async function runIosParityAcceptance(): Promise<void> {
           failures.push(error);
         }
         try {
-          await retainAttachments(context, result, index);
+          await exportIosJourneyAttachments(
+            result,
+            path.join(
+              context.evidence,
+              `parity-screenshots-${String(index + 1)}`,
+            ),
+            context.command,
+          );
         } catch (error) {
           failures.push(error);
         }

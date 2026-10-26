@@ -11,75 +11,93 @@ import {
   verifyStandaloneNotes,
 } from "./acceptance-test-plan.ts";
 
-describe("dedicated mobile parity selected-test proof", () => {
-  const method = "testTodayUpcomingAndGlobalMetadataSearch";
-  const summary = {
-    result: "Passed",
-    totalTestCount: 1,
-    passedTests: 1,
-    failedTests: 0,
-    skippedTests: 0,
-    expectedFailures: 0,
-  };
-  const entry = {
-    nodeType: "Test Case",
-    result: "Passed",
-    nodeIdentifier: `MobileParityTests/${method}()`,
-    nodeIdentifierURL: `test://com.apple.xcode/TasksForObsidian/TasksForObsidianUITests/MobileParityTests/${method}`,
-  };
-  const identity = {
-    target: "TasksForObsidianUITests",
+describe.each([
+  {
+    suite: "BoardTaskTests",
+    method: "testLoadMoreMakesCardBeyondTheInitialHundredReachable",
+    wrongSuite: "MobileParityTests",
+    wrongMethod: "testWrongCase",
+  },
+  {
     suite: "MobileParityTests",
-  } as const;
+    method: "testTodayUpcomingAndGlobalMetadataSearch",
+    wrongSuite: "StandaloneTaskTests",
+    wrongMethod: "testWrongMethod",
+  },
+] as const)(
+  "dedicated $suite selected-test proof",
+  ({ suite, method, wrongSuite, wrongMethod }) => {
+    const summary = {
+      result: "Passed",
+      totalTestCount: 1,
+      passedTests: 1,
+      failedTests: 0,
+      skippedTests: 0,
+      expectedFailures: 0,
+    };
+    const entry = {
+      nodeType: "Test Case",
+      result: "Passed",
+      nodeIdentifier: `${suite}/${method}()`,
+      nodeIdentifierURL: `test://com.apple.xcode/TasksForObsidian/TasksForObsidianUITests/${suite}/${method}`,
+    };
+    const identity = {
+      target: "TasksForObsidianUITests",
+      suite,
+    } as const;
 
-  test("accepts exactly the selected passing iOS parity method", () => {
-    expect(() =>
-      assertExactNativeResults(
-        summary,
-        { testNodes: [entry] },
-        [method],
-        identity,
-      ),
-    ).not.toThrow();
-  });
-
-  test.each([
-    {
-      ...entry,
-      nodeIdentifierURL: entry.nodeIdentifierURL.replace(
-        "TasksForObsidianUITests",
-        "TaskNotesAcceptanceUITests",
-      ),
-    },
-    { ...entry, nodeIdentifier: `StandaloneTaskTests/${method}()` },
-    {
-      ...entry,
-      nodeIdentifierURL: entry.nodeIdentifierURL.replace(
-        "MobileParityTests",
-        "OccurrenceTaskTests",
-      ),
-    },
-    { ...entry, nodeIdentifier: "MobileParityTests/testWrongMethod()" },
-    { ...entry, result: "Skipped" },
-  ])("rejects a wrong target, suite, method or nonpassing node", (invalid) => {
-    expect(() =>
-      assertExactNativeResults(
-        summary,
-        { testNodes: [invalid] },
-        [method],
-        identity,
-      ),
-    ).toThrow();
-  });
-
-  test("rejects missing or duplicated parity cases even after exit zero", () => {
-    for (const testNodes of [[], [entry, entry]]) {
+    test("accepts exactly the selected passing iOS parity method", () => {
       expect(() =>
-        assertExactNativeResults(summary, { testNodes }, [method], identity),
-      ).toThrow();
-    }
-  });
-});
+        assertExactNativeResults(
+          summary,
+          { testNodes: [entry] },
+          [method],
+          identity,
+        ),
+      ).not.toThrow();
+    });
+
+    test.each([
+      {
+        ...entry,
+        nodeIdentifierURL: entry.nodeIdentifierURL.replace(
+          "TasksForObsidianUITests",
+          "TaskNotesAcceptanceUITests",
+        ),
+      },
+      { ...entry, nodeIdentifier: `${wrongSuite}/${method}()` },
+      {
+        ...entry,
+        nodeIdentifierURL: entry.nodeIdentifierURL.replace(
+          suite,
+          "OccurrenceTaskTests",
+        ),
+      },
+      { ...entry, nodeIdentifier: `${suite}/${wrongMethod}()` },
+      { ...entry, result: "Skipped" },
+    ])(
+      "rejects a wrong target, suite, method or nonpassing node",
+      (invalid) => {
+        expect(() =>
+          assertExactNativeResults(
+            summary,
+            { testNodes: [invalid] },
+            [method],
+            identity,
+          ),
+        ).toThrow();
+      },
+    );
+
+    test("rejects missing or duplicated parity cases even after exit zero", () => {
+      for (const testNodes of [[], [entry, entry]]) {
+        expect(() =>
+          assertExactNativeResults(summary, { testNodes }, [method], identity),
+        ).toThrow();
+      }
+    });
+  },
+);
 
 describe("standalone native test selection", () => {
   test("defaults to every required workflow and retains explicit narrowed selection", () => {
