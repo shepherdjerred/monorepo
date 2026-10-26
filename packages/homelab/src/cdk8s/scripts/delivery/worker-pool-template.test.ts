@@ -64,7 +64,8 @@ async function render(chartName: string, manifest: string, selected: unknown) {
       directory,
     ]);
     if (command.exitCode !== 0) throw new Error(command.stderr.toString());
-    return parseAllDocuments(command.stdout.toString())
+    // ArgoCD's Kubernetes conversion reads YAML 1.1 boolean spellings.
+    return parseAllDocuments(command.stdout.toString(), { version: "1.1" })
       .map((document) => {
         if (document.errors.length > 0)
           throw new Error("Invalid Helm-rendered worker YAML");
@@ -94,6 +95,31 @@ function synth(chartName: string, stage?: "beta" | "prod") {
     resources: chart.toJson(),
   };
 }
+
+it.each(["beta", "prod"] as const)(
+  "preserves PostgreSQL string parameters through the %s worker chart",
+  async (stage) => {
+    const app = new App();
+    createScoutChart(app, stage);
+    const chart = app.charts[0];
+    if (chart === undefined) throw new Error("Missing actual Scout chart");
+    applyOrdinaryDeliveryImageBindings(app);
+    const source = chart.toJson();
+    const original = source.find((resource) => resource.kind === "postgresql");
+    expect(original).toBeDefined();
+    const resources = await render(
+      chart.node.id,
+      source.map((resource) => stringify(resource)).join("---\n"),
+      pool(`scout-${stage}`, "scout-for-lol"),
+    );
+    expect(
+      resources.find(
+        (resource) =>
+          z.object({ kind: z.string() }).parse(resource).kind === "postgresql",
+      ),
+    ).toEqual(original);
+  },
+);
 
 it.each(["beta", "prod"] as const)(
   "preserves the shared %s Scout egress policy for every retained host",

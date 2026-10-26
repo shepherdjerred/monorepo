@@ -132,7 +132,7 @@ function prototypeManifest(
     ];
     prepared["spec"] = deployment.spec;
   }
-  let rendered = stringify(prepared, { lineWidth: 0 })
+  let rendered = stringify(prepared, { lineWidth: 0, version: "1.1" })
     .replaceAll("DELIVERYTRACK", "{{ $track }}")
     .replaceAll("DELIVERYBUILDID", "{{ $worker.buildId | quote }}")
     .replaceAll("DELIVERYIMAGE", "{{ $worker.image | quote }}")
@@ -163,7 +163,7 @@ export function workerPoolTemplate(manifest: string, chart: string): string {
     const name = resource.metadata.name;
     if (name.includes(`${profile.prefix}candidate`))
       prototype.push(prototypeManifest(resource, profile.prefix));
-    else ordinary.push(stringify(resource, { lineWidth: 0 }));
+    else ordinary.push(stringify(resource, { lineWidth: 0, version: "1.1" }));
   }
   if (prototype.length === 0)
     throw new Error(`Missing ${chart} candidate worker prototype`);
