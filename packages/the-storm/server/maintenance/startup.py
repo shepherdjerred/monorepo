@@ -34,6 +34,11 @@ def require_preparation(data: Path) -> None:
             output.write("\n")
             output.flush()
             os.fsync(output.fileno())
+        descriptor = os.open(data, os.O_RDONLY)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
     if not marker.is_file():
         raise ValueError("World retirement marker must be a regular file")
     value = json.loads(marker.read_bytes())

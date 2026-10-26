@@ -132,6 +132,13 @@ def prepare(data: Path, root: Path, plan: JsonObject, original: dict[str, str], 
         expected = installation_files(expected)
         if storage.files(payload) != expected or volume_files(data, plan.string("requestId")) != original:
             raise ValueError("Preparation changed source or carries unapproved payload files")
+        for name in expected:
+            with (payload / name).open("rb") as handle:
+                os.fsync(handle.fileno())
+        for directory in sorted((item for item in payload.rglob("*") if item.is_dir()), reverse=True):
+            storage.sync_directory(directory)
+        storage.sync_directory(payload)
+        storage.sync_directory(root)
         return JsonObject(
             {"phase": "PREPARED", "plan": plan, "files": expected, "native": receipt, "database": database_receipt}
         )
