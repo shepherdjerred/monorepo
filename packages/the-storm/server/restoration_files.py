@@ -54,13 +54,15 @@ def checked_manifest(value: Mapping[str, str]) -> dict[str, str]:
     return dict(sorted(result.items()))
 
 
-def files(root: Path, *, exclude_workspace: bool = False) -> dict[str, str]:
+def files(root: Path, *, exclude_workspace: bool = False, exclude_request: str | None = None) -> dict[str, str]:
     if root.is_symlink() or not root.is_dir():
         raise ValueError("Expected an existing regular directory")
     result = {}
     for path in sorted(root.rglob("*")):
         relative = path.relative_to(root)
         if exclude_workspace and relative.parts[0] == WORKSPACE:
+            continue
+        if exclude_request is not None and relative.parts[:2] == (WORKSPACE, exclude_request):
             continue
         mode = path.lstat().st_mode
         if stat.S_ISLNK(mode) or not (stat.S_ISREG(mode) or stat.S_ISDIR(mode)):
@@ -325,12 +327,20 @@ def stage_whole_rollback(data: Path, restored: Path, request: str) -> JsonObject
     if journal.get("requestId") != request or journal.get("phase") not in ("STAGED", "COMMITTING", "INSTALLED"):
         raise ValueError("Rollback workspace does not identify this installation request")
     expected = checked_manifest(journal.strings("original"))
+    replacement = {name: checksum for name, checksum in expected.items() if PurePosixPath(name).parts[0] != WORKSPACE}
+    archives = {name: checksum for name, checksum in expected.items() if PurePosixPath(name).parts[0] == WORKSPACE}
+    if {
+        name: checksum
+        for name, checksum in files(data, exclude_request=request).items()
+        if PurePosixPath(name).parts[0] == WORKSPACE
+    } != archives:
+        raise ValueError("Retained restoration archives changed before whole-volume rollback")
     if files(restored) != expected:
         raise ValueError("Independent whole-volume restore changed after byte verification")
     staged = root / "rollback-staged"
     if staged.exists() or staged.is_symlink() or "wholeRollback" in journal:
         raise ValueError("Rollback preparation already exists; retain its failed or verified evidence")
-    if shutil.disk_usage(data).free < sum((restored / name).stat().st_size for name in expected) * 2:
+    if shutil.disk_usage(data).free < sum((restored / name).stat().st_size for name in replacement) * 2:
         raise ValueError("Insufficient space for independent whole-volume rollback preparation")
     with ExitStack() as locks:
         lock_roots = [directory for directory in (data, root / "original") if (directory / "world/level.dat").is_file()]
@@ -345,7 +355,7 @@ def stage_whole_rollback(data: Path, restored: Path, request: str) -> JsonObject
         journal["wholeRollback"] = {"phase": "STAGING", "before": current, "targets": targets}
         save(root / "journal.json", journal)
         staged.mkdir(mode=0o700)
-        for name, checksum in expected.items():
+        for name, checksum in replacement.items():
             source, destination = restored / name, staged / name
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, destination)
@@ -355,12 +365,14 @@ def stage_whole_rollback(data: Path, restored: Path, request: str) -> JsonObject
             if digest(destination) != checksum or digest(source) != checksum:
                 raise ValueError("Whole-volume rollback data changed during copy")
         for directory in sorted(restored.rglob("*"), reverse=True):
+            if directory.relative_to(restored).parts[0] == WORKSPACE:
+                continue
             if directory.is_dir():
                 destination = staged / directory.relative_to(restored)
                 destination.mkdir(parents=True, exist_ok=True)
                 preserve_metadata(directory, destination)
         if (
-            files(staged) != expected
+            files(staged) != replacement
             or files(restored) != expected
             or files(data, exclude_workspace=True) != current
             or sorted(path.name for path in data.iterdir() if path.name != WORKSPACE) != targets
@@ -385,7 +397,16 @@ def commit_whole_rollback(data: Path, request: str) -> JsonObject:
     rollback = journal.object("wholeRollback")
     if rollback.get("phase") not in ("STAGED", "COMMITTING", "RESTORED"):
         raise ValueError("Whole-volume rollback requires fully verified staging")
-    expected, before = checked_manifest(journal.strings("original")), rollback.strings("before")
+    original = checked_manifest(journal.strings("original"))
+    expected = {name: checksum for name, checksum in original.items() if PurePosixPath(name).parts[0] != WORKSPACE}
+    archives = {name: checksum for name, checksum in original.items() if PurePosixPath(name).parts[0] == WORKSPACE}
+    if {
+        name: checksum
+        for name, checksum in files(data, exclude_request=request).items()
+        if PurePosixPath(name).parts[0] == WORKSPACE
+    } != archives:
+        raise ValueError("Retained restoration archives changed during whole-volume rollback")
+    before = rollback.strings("before")
     targets = rollback.string_list("targets")
     if len(set(targets)) != len(targets) or any(
         not name or "/" in name or name in (".", "..", WORKSPACE) for name in targets

@@ -948,6 +948,10 @@ def writer_manifest(journal: JsonObject) -> JsonObject:
         {"name": "scratch", "emptyDir": {"sizeLimit": "32Gi"}},
         {"name": "temporary", "emptyDir": {"sizeLimit": "64Mi"}},
     ]
+    if "installationPlan" in journal and journal.object("installationPlan").get("scope") == "circular-worlds":
+        # The complete rollback transfer includes retained restoration archives.
+        container.object("resources").object("limits")["ephemeral-storage"] = "72Gi"
+        spec.objects("volumes")[1].object("emptyDir")["sizeLimit"] = "64Gi"
     if journal.get("maintenanceScope") == "bluemap-storage":
         container.objects("volumeMounts").append(JsonObject({"name": "cache", "mountPath": "/cache"}))
         spec.objects("volumes").append(
@@ -1071,7 +1075,11 @@ def remote_fingerprint(journal: JsonObject, namespace: str, exclude_workspace: b
             "reader",
             "--",
             "tar",
-            *(["--exclude=./" + restoration_files.WORKSPACE] if exclude_workspace else []),
+            *(
+                ["--exclude=./" + restoration_files.WORKSPACE + "/" + journal.string("requestId")]
+                if exclude_workspace
+                else []
+            ),
             "-C",
             "/data",
             "-cf",

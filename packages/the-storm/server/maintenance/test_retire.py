@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import restoration_files as storage
+import restoration_rollback
 from restoration_json import JsonObject
 
 from maintenance import retire
@@ -53,6 +54,7 @@ class RetirementTest(unittest.TestCase):
         self.plan = JsonObject(
             {
                 "scope": "circular-worlds",
+                "candidateImage": "docker.io/shepherdjerred/the-storm-server:fixture@sha256:" + "a" * 64,
                 "requestId": self.request,
                 "backupUid": "backup",
                 "sourceVolumeUid": "source",
@@ -142,6 +144,25 @@ class RetirementTest(unittest.TestCase):
             retire.installation_files(
                 {retire.REGISTRY: "a" * 64, storage.DATABASE: "b" * 64, "world/level.dat": "c" * 64}
             )
+
+    def test_verified_whole_volume_rollback_restores_retired_worlds_and_keeps_older_archives(self):
+        restored = self.root / "independent-restore"
+        restored.mkdir()
+        for name in self.original:
+            destination = restored / name
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes((self.data / name).read_bytes())
+        self.install()
+        result = restoration_rollback.restore(self.data, restored, JsonObject.parse(self.proof.read_bytes()))
+        self.assertEqual(result["phase"], "WHOLE_VOLUME_RESTORED")
+        self.assertEqual(storage.files(self.data, exclude_request=self.request), self.original)
+        self.assertFalse((self.data / retire.MARKER).exists())
+        self.assertEqual(
+            (self.data / ".storm-restoration/previous-request/original/players.dat").read_bytes(), b"recovery archive"
+        )
+        self.assertEqual(
+            restoration_rollback.restore(self.data, restored, JsonObject.parse(self.proof.read_bytes())), result
+        )
 
 
 if __name__ == "__main__":

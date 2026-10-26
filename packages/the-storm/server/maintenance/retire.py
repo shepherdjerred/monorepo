@@ -26,7 +26,12 @@ TASKS = frozenset(
 
 def volume_files(data: Path, request: str) -> dict[str, str]:
     prefix = f"{storage.WORKSPACE}/{request}/circular-worlds/"
-    return {name: checksum for name, checksum in storage.files(data).items() if not name.startswith(prefix)}
+    journal = f"{storage.WORKSPACE}/{request}/journal.json"
+    return {
+        name: checksum
+        for name, checksum in storage.files(data).items()
+        if not name.startswith(prefix) and name != journal
+    }
 
 
 def original_files(proof: JsonObject, plan: JsonObject) -> dict[str, str]:
@@ -41,10 +46,7 @@ def original_files(proof: JsonObject, plan: JsonObject) -> dict[str, str]:
     ):
         raise ValueError("Retirement requires this request's independently verified complete backup")
     original = storage.checked_manifest(proof.strings("files"))
-    if any(
-        name == MARKER or name.startswith(f"{storage.WORKSPACE}/{plan.string('requestId')}/circular-worlds/")
-        for name in original
-    ):
+    if any(name == MARKER or name.startswith(f"{storage.WORKSPACE}/{plan.string('requestId')}/") for name in original):
         raise ValueError("World retirement has already been prepared or applied")
     if not {"world/level.dat", REGISTRY, storage.DATABASE}.issubset(original):
         raise ValueError("Backup lacks required world and identity stores")
@@ -153,11 +155,32 @@ def install(
             raise ValueError("Retirement workspace cannot be linked")
     with storage.stopped(data):
         journal_path = root / "journal.json"
+        rollback_path = root.parent / "journal.json"
         if not journal_path.exists():
             if root.exists() or volume_files(data, request) != original:
                 raise ValueError("Retirement source or workspace changed before staging")
             root.mkdir(parents=True, mode=0o700)
             storage.save(journal_path, {"phase": "PREPARING", "plan": plan})
+        if rollback_path.is_symlink():
+            raise ValueError("Whole-volume rollback journal cannot be linked")
+        rollback = JsonObject(
+            {
+                "requestId": request,
+                "candidateImage": plan.string("candidateImage"),
+                "candidateJarSha256": plan.string("candidateJarSha256"),
+                "backupUid": plan.string("backupUid"),
+                "phase": "STAGED",
+                "original": original,
+            }
+        )
+        if rollback_path.exists():
+            recorded = JsonObject.parse(rollback_path.read_bytes())
+            if any(recorded.get(key) != value for key, value in rollback.items() if key != "phase") or recorded.get(
+                "phase"
+            ) not in ("STAGED", "COMMITTING", "INSTALLED"):
+                raise ValueError("Whole-volume rollback belongs to different maintenance inputs")
+        else:
+            storage.save(rollback_path, rollback)
         receipt = JsonObject.parse(journal_path.read_bytes())
         if receipt.object("plan") != plan:
             raise ValueError("Retirement belongs to different sealed inputs")
@@ -199,6 +222,7 @@ def install(
         if any(current.get(name) not in (None, checksum) for name, checksum in removals.items()):
             raise ValueError("Retired world changed during deletion")
         storage.save(journal_path, {**receipt, "phase": "APPLYING"})
+        storage.save(rollback_path, {**rollback, "phase": "COMMITTING"})
         for name, checksum in expected.items():
             target = data / name
             if current.get(name) == checksum:
@@ -247,6 +271,7 @@ def install(
             candidateJarSha256=plan.string("candidateJarSha256"),
         )
         storage.save(journal_path, receipt)
+        storage.save(rollback_path, {**rollback, "phase": "INSTALLED"})
         return receipt
 
 
