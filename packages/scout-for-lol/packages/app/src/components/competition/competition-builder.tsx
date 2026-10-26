@@ -47,9 +47,9 @@ import {
   buildCompetitionSubmission,
   editableCompetitionBuilderValue,
   initialCompetitionBuilderState,
-} from "#src/lib/bucks/competition-builder-state.ts";
-import { buildCompetitionScenarios } from "#src/lib/bucks/competition-scenarios.ts";
-import { browserTimezone } from "#src/lib/bucks/competition-time.ts";
+} from "#src/lib/competitions/competition-builder-state.ts";
+import { buildCompetitionScenarios } from "#src/lib/competitions/competition-scenarios.ts";
+import { browserTimezone } from "#src/lib/competitions/competition-time.ts";
 import { CompetitionBuilderFormValueSchema } from "#src/lib/form-schemas.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 

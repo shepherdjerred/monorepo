@@ -1,15 +1,16 @@
-import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
-import { describe, expect, test } from "vitest";
+import type { ExploreAgentResult } from "#src/explore/agent.ts";
+import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
 import {
-  type ExploreTraceEntry,
   DiscordAccountIdSchema,
   ExploreAnswerSchema,
   ExploreMessageSchema,
   ExploreStreamEventSchema,
   type ExploreMessage,
+  type ExploreTraceEntry,
 } from "@scout-for-lol/data";
-import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
-import type { ExploreAgentResult } from "#src/explore/agent.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import { describe, expect, test } from "vitest";
+import type { ExploreCapabilitySet } from "./profiles.ts";
 import {
   queryFactsFromTrace,
   runReplayCase,
@@ -17,7 +18,6 @@ import {
   type ReplayCaseInput,
   type ReplayRunnerDependencies,
 } from "./runner.ts";
-import type { ExploreCapabilitySet } from "./profiles.ts";
 
 /**
  * A stand-in for the agent, typed rather than asserted.
@@ -48,7 +48,6 @@ const RESULT: ExploreAgentResult = {
 };
 
 const CAPABILITIES: ExploreCapabilitySet = {
-  bucks: false,
   dares: false,
   challenges: false,
   creation: false,

@@ -26,7 +26,7 @@ import {
 
 /**
  * The cards a turn produces when the agent proposes something a human must
- * authorize — a Bryan Bucks dare or one of the three Explore creations.
+ * authorize — a Dares dare or one of the three Explore creations.
  *
  * The live cards (`ExploreDareIntentCard`, `ExploreCreationIntentCard`) each
  * read their intent's persisted status. Left unseeded here, that query stays

@@ -1,10 +1,10 @@
+import { MY_SERVER } from "#src/configuration/flags.ts";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   type DiscordAccountId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
-import { MY_SERVER } from "#src/configuration/flags.ts";
 
 /**
  * Who may operate the durable match pipeline.
@@ -27,23 +27,6 @@ export const SCOUT_OPERATOR_IDS: readonly DiscordAccountId[] = [
 
 const SCOUT_OPERATORS: ReadonlySet<string> = new Set(SCOUT_OPERATOR_IDS);
 
-/**
- * The guild operations actions are attributed to.
- *
- * Operating the pipeline is global rather than per-server, but a confirmation
- * intent and an audit row both require a guild by schema, so attribution needs
- * one. This is the same control guild the existing bearer-token operations
- * route already attributes its actions to
- * (`http/weekly-parlay-control.ts`), rather than a second constant that could
- * drift away from it.
- *
- * It is attribution ONLY. No operations check consults it, and membership in
- * it grants nothing — {@link isScoutOperator} is the whole access decision.
- *
- * Re-parsed rather than aliased so this is a declaration of its own: the value
- * still comes from the one place that owns it, but the operations layer does
- * not become a second export site for someone else's constant.
- */
 export const SCOUT_OPERATIONS_GUILD: DiscordGuildId =
   DiscordGuildIdSchema.parse(MY_SERVER);
 

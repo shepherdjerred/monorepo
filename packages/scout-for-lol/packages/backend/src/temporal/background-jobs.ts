@@ -1,9 +1,9 @@
-import { Context } from "@temporalio/activity";
 import { client } from "#src/discord/client.ts";
 import {
   unavailable,
   type NonSupportBackgroundJobInput,
 } from "#src/temporal/activity-runtime.ts";
+import { Context } from "@temporalio/activity";
 
 export async function runBackgroundJobByKind(
   input: NonSupportBackgroundJobInput,
@@ -25,23 +25,6 @@ export async function runBackgroundJobByKind(
       const { runDataValidation } =
         await import("#src/league/tasks/cleanup/validate-data.ts");
       await runDataValidation(client);
-      break;
-    }
-    case "bucks-reconciliation": {
-      const { reconcileBucksBalances } =
-        await import("#src/betting/settlement/reconcile.ts");
-      await reconcileBucksBalances();
-      break;
-    }
-    case "weekly-bucks-leaderboard": {
-      const { runWeeklyBucksLeaderboard } =
-        await import("#src/betting/leaderboard/weekly-leaderboard.ts");
-      // First scheduling time is stable across Activity retries, including a
-      // retry crossing the leaderboard's week boundary.
-      await runWeeklyBucksLeaderboard(
-        undefined,
-        new Date(Context.current().info.scheduledTimestampMs),
-      );
       break;
     }
     case "player-pruning": {

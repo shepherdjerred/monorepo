@@ -95,7 +95,7 @@ export const WithDescription: Story = {
   parameters: { controls: { disable: true } },
   render: () => (
     <DescribedSwitch
-      label="Include Bryan Bucks payouts"
+      label="Include Dare progress"
       description="Dare settlements are appended to each match recap."
     />
   ),

@@ -1,8 +1,3 @@
-import "dotenv/config";
-import { providerCredentialsFromEnv } from "@shepherdjerred/llm-runtime";
-import env from "env-var";
-import { z } from "zod";
-import { createLogger } from "#src/logger.ts";
 import {
   DEFAULT_EXPLORE_QUOTA_LIMITS,
   ExploreQuotaLimitsInputSchema,
@@ -11,7 +6,12 @@ import {
   parseScoutRuntimeRole,
   scoutRuntimeCapabilities,
 } from "#src/configuration/runtime-role.ts";
+import { createLogger } from "#src/logger.ts";
 import { ScoutStageSchema } from "@scout-for-lol/temporal";
+import { providerCredentialsFromEnv } from "@shepherdjerred/llm-runtime";
+import "dotenv/config";
+import env from "env-var";
+import { z } from "zod";
 
 const logger = createLogger("config");
 
@@ -296,14 +296,7 @@ function computeConfiguration() {
     // runtime's own resolver so the environment contract has one home.
     inferenceConfigured: providerCredentialsFromEnv().openai !== undefined,
     reportAiModel: getOptionalEnvVar("REPORT_AI_MODEL", "gpt-5.6-sol"),
-    bettingParlayAiModel: getOptionalEnvVar(
-      "BETTING_PARLAY_AI_MODEL",
-      "gpt-5.6-sol",
-    ),
-    // Bearer credential for the internal Bryan Bucks analytics control route
-    // the Temporal analytics Schedule calls. Absent in deployments that do not
     // expose that route.
-    bryanBucksControlToken: getOptionalEnvVar("BRYAN_BUCKS_CONTROL_TOKEN"),
     exploreModel: env.get("EXPLORE_MODEL").default("gpt-5.6-luna").asString(),
     // Beta Explore access is an explicit Discord server allowlist. Production
     // authorizes against the bot's live connected-guild set instead. Unset
@@ -482,12 +475,6 @@ const configuration: Configuration = {
   },
   get reportAiModel() {
     return getConfiguration().reportAiModel;
-  },
-  get bettingParlayAiModel() {
-    return getConfiguration().bettingParlayAiModel;
-  },
-  get bryanBucksControlToken() {
-    return getConfiguration().bryanBucksControlToken;
   },
   get exploreModel() {
     return getConfiguration().exploreModel;

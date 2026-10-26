@@ -1,9 +1,9 @@
-import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
-import { testAccountId, testGuildId } from "#src/testing/test-ids.ts";
-import { createTestDatabase } from "#src/testing/test-database.ts";
 import { captureDiscordCommandUsed } from "#src/analytics/command-usage.ts";
 import type { ProductAnalytics } from "#src/analytics/product-analytics.ts";
 import { createAnalyticsFixture } from "#src/testing/analytics-fixture.ts";
+import { createTestDatabase } from "#src/testing/test-database.ts";
+import { testAccountId, testGuildId } from "#src/testing/test-ids.ts";
+import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 
 const { prisma } = createTestDatabase("command-usage-analytics-test");
 const SERVER_ID = testGuildId("880");
@@ -60,8 +60,8 @@ describe("captureDiscordCommandUsed", () => {
     await captureDiscordCommandUsed(
       {
         guildId: SERVER_ID,
-        commandName: "bb",
-        subcommand: "dare",
+        commandName: "scout",
+        subcommand: "ask",
         status: "success",
       },
       { db: prisma, analytics },
@@ -69,7 +69,7 @@ describe("captureDiscordCommandUsed", () => {
     await captureDiscordCommandUsed(
       {
         guildId: SERVER_ID,
-        commandName: "bb",
+        commandName: "scout",
         subcommand: "not-a-subcommand",
         status: "success",
       },
@@ -78,11 +78,15 @@ describe("captureDiscordCommandUsed", () => {
 
     expect(capture).toHaveBeenNthCalledWith(1, expect.anything(), {
       event: "discord_command_used",
-      properties: { command_name: "bb", status: "success", subcommand: "dare" },
+      properties: {
+        command_name: "scout",
+        status: "success",
+        subcommand: "ask",
+      },
     });
     expect(capture).toHaveBeenNthCalledWith(2, expect.anything(), {
       event: "discord_command_used",
-      properties: { command_name: "bb", status: "success" },
+      properties: { command_name: "scout", status: "success" },
     });
   });
 
@@ -112,17 +116,20 @@ describe("captureDiscordCommandUsed", () => {
     expect(capture).not.toHaveBeenCalled();
   });
 
-  test("skips command names outside the closed union", async () => {
-    await seedInstall();
-    const { analytics, capture } = createAnalyticsFixture();
+  test.each(["stale-command", "bb"])(
+    "skips retired or unknown command %s",
+    async (commandName) => {
+      await seedInstall();
+      const { analytics, capture } = createAnalyticsFixture();
 
-    await captureDiscordCommandUsed(
-      { guildId: SERVER_ID, commandName: "stale-command", status: "success" },
-      { db: prisma, analytics },
-    );
+      await captureDiscordCommandUsed(
+        { guildId: SERVER_ID, commandName, status: "success" },
+        { db: prisma, analytics },
+      );
 
-    expect(capture).not.toHaveBeenCalled();
-  });
+      expect(capture).not.toHaveBeenCalled();
+    },
+  );
 
   test("skips malformed guild ids instead of throwing", async () => {
     const { analytics, capture } = createAnalyticsFixture();
@@ -151,7 +158,7 @@ describe("captureDiscordCommandUsed", () => {
     const { analytics, capture } = createAnalyticsFixture();
 
     await captureDiscordCommandUsed(
-      { guildId: SERVER_ID, commandName: "bb", status: "success" },
+      { guildId: SERVER_ID, commandName: "scout", status: "success" },
       { db: prisma, analytics },
     );
 
@@ -168,8 +175,6 @@ describe("captureDiscordCommandUsed", () => {
     });
     const analytics: ProductAnalytics = {
       capture,
-      captureBucksMember: () => null,
-      captureBucksSystem: () => true,
       shutdown: () => Promise.resolve(),
     };
 

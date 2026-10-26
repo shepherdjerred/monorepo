@@ -128,7 +128,8 @@ export const DefaultOpen: Story = {
         <DialogHeader>
           <DialogTitle>Dare settled</DialogTitle>
           <DialogDescription>
-            Jinx lost the 10-kill dare and owes 250 Bryan Bucks to the pot.
+            Jinx completed the 10-kill dare. View the match evidence for the
+            result.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

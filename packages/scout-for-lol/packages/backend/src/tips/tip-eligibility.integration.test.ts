@@ -1,11 +1,16 @@
 import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  test,
-} from "vitest";
+  addFlagOverride,
+  resetFlagOverrides,
+} from "#src/configuration/flags.ts";
+import { createTestDatabase } from "#src/testing/test-database.ts";
+import { testGuildId } from "#src/testing/test-ids.ts";
+import { eligibleTips } from "#src/tips/tip-eligibility.ts";
+import {
+  claimTip,
+  lastTipShownAt,
+  releaseTipClaim,
+  shownTipKeys,
+} from "#src/tips/tip-state.ts";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
@@ -16,30 +21,20 @@ import {
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags";
 import {
-  addFlagOverride,
-  resetFlagOverrides,
-} from "#src/configuration/flags.ts";
-import { createTestDatabase } from "#src/testing/test-database.ts";
-import { testGuildId } from "#src/testing/test-ids.ts";
-import { FEATURE_TIPS } from "#src/tips/tip-catalog.ts";
-import { eligibleTips } from "#src/tips/tip-eligibility.ts";
-import {
-  claimTip,
-  lastTipShownAt,
-  releaseTipClaim,
-  shownTipKeys,
-} from "#src/tips/tip-state.ts";
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+} from "vitest";
 
 const { prisma: db } = createTestDatabase("feature-tip-eligibility");
 const SERVER_ID = DiscordGuildIdSchema.parse("1200000000000000002");
 const NOW = new Date("2030-01-01T00:00:00Z");
 const CREATOR = DiscordAccountIdSchema.parse("100000000000000001");
 
-const BUCKS_FLAGS = [
-  "betting_enabled",
-  "bucks_dares_enabled",
-  "bucks_transfers_enabled",
-] as const;
+const DARE_FLAGS = ["dares_enabled"] as const;
 
 async function clearAll(): Promise<void> {
   await db.featureTipImpression.deleteMany();
@@ -88,15 +83,22 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  for (const flag of BUCKS_FLAGS) resetFlagOverrides(flag);
+  for (const flag of DARE_FLAGS) resetFlagOverrides(flag);
   await clearAll();
   await shutdownFeatureFlags();
   await db.$disconnect();
 });
 
 beforeEach(async () => {
-  for (const flag of BUCKS_FLAGS) resetFlagOverrides(flag);
+  for (const flag of DARE_FLAGS) resetFlagOverrides(flag);
   await clearAll();
+});
+
+test("offers Dares only when their standalone flag is enabled", async () => {
+  expect(await keys()).not.toContain("dares");
+  addFlagOverride("dares_enabled", true, { server: SERVER_ID });
+  expect(await keys()).toContain("dares");
+  expect(await keys()).not.toContain("transfers");
 });
 
 describe("track-more-players", () => {
@@ -119,30 +121,6 @@ describe("track-more-players", () => {
       DiscordChannelIdSchema.parse("100000000000000010"),
     ]);
     expect(await keys()).not.toContain("track-more-players");
-  });
-});
-
-describe("Bucks tip availability", () => {
-  test("needs the feature's own flag AND the parent betting flag", async () => {
-    addFlagOverride("bucks_dares_enabled", true, { server: SERVER_ID });
-    addFlagOverride("bucks_transfers_enabled", true, { server: SERVER_ID });
-    // `/bb dare` and `/bb transfer` both reject while betting is shut down, so
-    // advertising them then would point at an action that fails.
-    const withoutParent = await keys();
-    expect(withoutParent).not.toContain("dares");
-    expect(withoutParent).not.toContain("transfers");
-
-    addFlagOverride("betting_enabled", true, { server: SERVER_ID });
-    const withParent = await keys();
-    expect(withParent).toContain("dares");
-    expect(withParent).toContain("transfers");
-  });
-
-  test("every Bucks tip names the parent betting flag", () => {
-    for (const key of ["dares", "transfers"] as const) {
-      const tip = FEATURE_TIPS.find((candidate) => candidate.key === key);
-      expect(tip?.flags).toContain("betting_enabled");
-    }
   });
 });
 

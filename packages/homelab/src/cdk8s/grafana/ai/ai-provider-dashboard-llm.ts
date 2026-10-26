@@ -259,7 +259,7 @@ function createSubjectCallPanel() {
   return new timeseries.PanelBuilder()
     .title("Attributed Calls by Subject Kind")
     .description(
-      `Model calls by subject kind. A rising \`system\` share means spend is shifting to scheduled work with no requester, which is expected for match reviews and betting but not for interactive features. ${ATTRIBUTION_NOTE}`,
+      `Model calls by subject kind. A rising \`system\` share means spend is shifting to scheduled work with no requester, which is expected for match reviews and scheduled reports but not for interactive features. ${ATTRIBUTION_NOTE}`,
     )
     .datasource(TEMPO_DATASOURCE)
     .withTarget(

@@ -10,13 +10,6 @@ import type { FlagName } from "#src/configuration/flags.ts";
  * would nag a server that already found it.
  */
 
-/**
- * `flags` are the policy flags a guild needs for the feature to work — ALL of
- * them, and an empty list for a feature every install has. A list rather than
- * a single flag because the Bucks features sit behind their own flag *and*
- * the parent `betting_enabled`: advertising a dare during a betting shutdown
- * would point at an action that rejects.
- */
 export type FeatureTip = {
   key: FeatureTipKey;
   flags: readonly FlagName[];
@@ -61,13 +54,8 @@ export const FEATURE_TIPS: readonly FeatureTip[] = [
   },
   {
     key: "dares",
-    flags: ["betting_enabled", "bucks_dares_enabled"],
-    text: "Tip: `/bb dare` puts a Bryan Bucks bounty on a tracked player's next achievement.",
-  },
-  {
-    key: "transfers",
-    flags: ["betting_enabled", "bucks_transfers_enabled"],
-    text: "Tip: `/bb transfer` sends Bryan Bucks to someone else in your server.",
+    flags: ["dares_enabled"],
+    text: "Tip: `/dare` challenges a tracked player to an in-game achievement.",
   },
 ];
 
@@ -89,6 +77,7 @@ export function parseTipKey(value: string): FeatureTipKey {
 
 /** Removed features retain their original impression history, not eligibility. */
 const RETIRED_FEATURE_TIP_KEYS = [
+  "transfers",
   "tournament-lobbies",
   "custom-nights",
 ] as const;

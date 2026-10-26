@@ -17,8 +17,8 @@ export function ExploreSuggestionChips(props: {
   const { onSelect, enabled = true } = props;
   const trpc = useTRPC();
 
-  const bucksQuery = useQuery({
-    ...trpc.bucks.status.queryOptions(),
+  const daresQuery = useQuery({
+    ...trpc.dares.status.queryOptions(),
     enabled,
   });
   const challengesQuery = useQuery({
@@ -36,11 +36,10 @@ export function ExploreSuggestionChips(props: {
 
   const featureContext = useMemo<ExploreFeatureContext>(
     () => ({
-      bucksEnabled: bucksQuery.data?.state === "available",
       mvpVotesEnabled: mvpVotesQuery.data?.state === "available",
       daresEnabled:
-        bucksQuery.data?.state === "available" &&
-        bucksQuery.data.guilds.some((g) => g.daresAvailable),
+        daresQuery.data?.state === "available" &&
+        daresQuery.data.guilds.some((g) => g.daresAvailable),
       challengesEnabled: challengesQuery.data?.enabled ?? false,
       competitionsEnabled: (guildsQuery.data?.length ?? 0) > 0,
       reportsEnabled: (guildsQuery.data?.length ?? 0) > 0,
@@ -50,7 +49,7 @@ export function ExploreSuggestionChips(props: {
         guildsQuery.data?.some((g) => g.hallOfFameEnabled) ?? false,
     }),
     [
-      bucksQuery.data,
+      daresQuery.data,
       challengesQuery.data,
       guildsQuery.data,
       mvpVotesQuery.data,

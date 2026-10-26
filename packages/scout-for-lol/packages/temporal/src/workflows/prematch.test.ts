@@ -26,7 +26,6 @@ import {
   scoutPrematchActivityStubs,
   CHANNEL_IDS,
   GAME_REF,
-  GUILD_ID,
   OTHER_GAME_REF,
   PREMATCH_RECEIPT_KINDS,
   SAME_GAME_OTHER_ACCOUNT,
@@ -42,17 +41,12 @@ const harness = useScoutWorkflowHarness();
 
 const stage = "dev" as const;
 const GAME_MATCH_ID = prematchMatchIdOf(GAME_REF);
-const CAPTURE = [
-  "archivePrematchSnapshot",
-  "planPrematchFanOut",
-  "openPrematchMarkets",
-];
+const CAPTURE = ["archivePrematchSnapshot", "planPrematchFanOut"];
 /** Everything a first capture of a live game applies, in order. */
 const FIRST_CAPTURE_EFFECTS = [
   PREMATCH_RECEIPT_KINDS.archive,
   PREMATCH_RECEIPT_KINDS.staging,
   ...CHANNEL_IDS.map((channelId) => `intent:${channelId}`),
-  `pool:${GUILD_ID}`,
 ];
 
 async function captureGame(
@@ -397,7 +391,7 @@ describe("V2 prematch delivery", () => {
     prematchIntentKeyOf(GAME_REF, channelId),
   );
 
-  test("starts one notification child per minted intent, after the markets", async () => {
+  test("starts one notification child per minted intent without opening markets", async () => {
     const store = createScoutPrematchStore();
     await harness.startWorkers(scoutPrematchActivityStubs(store));
 
@@ -413,9 +407,7 @@ describe("V2 prematch delivery", () => {
     }
     expect(store.delivered.toSorted()).toEqual(keys.toSorted());
     // The pool stood before either child was started.
-    expect(store.calls.indexOf("openPrematchMarkets")).toBeGreaterThan(
-      store.calls.indexOf("planPrematchFanOut"),
-    );
+    expect(store.calls).not.toContain("openPrematchMarkets");
   }, 90_000);
 
   test("delivers each intent once across a v1 → V2 flip and a second capture", async () => {
@@ -442,17 +434,17 @@ describe("V2 prematch delivery", () => {
     expect(store.childReads).toEqual([v2Key]);
   }, 90_000);
 
-  test("opens the game's pool once across repeated captures", async () => {
+  test("never opens a pool across repeated captures", async () => {
     const store = createScoutPrematchStore();
     await harness.startWorkers(scoutPrematchActivityStubs(store));
 
     await captureGame("prematch-delivery-pool-1");
     await captureGame("prematch-delivery-pool-2");
 
-    expect(store.pools).toEqual([GUILD_ID]);
+    expect(store.pools).toEqual([]);
     expect(
       store.applied.filter((effect) => effect.startsWith("pool:")),
-    ).toEqual([`pool:${GUILD_ID}`]);
+    ).toEqual([]);
   }, 90_000);
 
   test("announces the game even when its markets could not be opened", async () => {

@@ -1,35 +1,18 @@
-import { MessageFlags, type Client, type Interaction } from "discord.js";
-import { captureBucksMemberActivity } from "#src/analytics/bryan-bucks.ts";
-import { handleSupportInteraction } from "#src/support/discord.ts";
-import { handleChatInputCommand } from "#src/discord/commands/index.ts";
-import {
-  handleBetButton,
-  type BetButtonInteraction,
-} from "#src/betting/markets/bet-button.ts";
-import { isBucksCustomId, parseBucksCustomId } from "#src/betting/custom-id.ts";
-import {
-  handleBucksNavigation,
-  isBucksNavigationId,
-  parseBucksNavigationId,
-  type BucksNavigationInteraction,
-} from "#src/betting/navigation.ts";
-import {
-  isParlayCustomId,
-  parseParlayCustomId,
-} from "#src/betting/parlays/parlay-custom-id.ts";
-import { handleParlayBetButton } from "#src/betting/parlays/runtime/parlay-bet-button.ts";
-import type { DareButtonInteraction } from "#src/betting/dares/presentation/dare-button-interaction.ts";
-import { handleDareButton } from "#src/betting/dares/presentation/dare-discord.ts";
 import {
   isDareCustomId,
   parseDareCustomId,
-} from "#src/betting/dares/lifecycle/dare-custom-id.ts";
-import { createLogger } from "#src/logger.ts";
-import { discordComponentsTotal } from "#src/metrics/index.ts";
+} from "#src/dares/lifecycle/dare-custom-id.ts";
+import type { DareButtonInteraction } from "#src/dares/presentation/dare-button-interaction.ts";
+import { handleDareButton } from "#src/dares/presentation/dare-discord.ts";
+import { handleChatInputCommand } from "#src/discord/commands/index.ts";
 import {
-  handleScoutPublishButton,
-  type ScoutPublishButtonInteraction,
-} from "#src/discord/scout/publish.ts";
+  executeScoutFollowUp,
+  type ScoutFollowUpInteraction,
+} from "#src/discord/commands/scout.ts";
+import {
+  handleScoutCreateButton,
+  type ScoutCreateButtonInteraction,
+} from "#src/discord/scout/confirm-creation.ts";
 import {
   isScoutCustomId,
   parseScoutCreateCustomId,
@@ -37,42 +20,28 @@ import {
   parseScoutPublishCustomId,
 } from "#src/discord/scout/custom-id.ts";
 import {
-  handleScoutCreateButton,
-  type ScoutCreateButtonInteraction,
-} from "#src/discord/scout/confirm-creation.ts";
-import {
-  executeScoutFollowUp,
-  type ScoutFollowUpInteraction,
-} from "#src/discord/commands/scout.ts";
+  handleScoutPublishButton,
+  type ScoutPublishButtonInteraction,
+} from "#src/discord/scout/publish.ts";
+import { createLogger } from "#src/logger.ts";
+import { discordComponentsTotal } from "#src/metrics/index.ts";
 import {
   handleMvpVoteButton,
   type VoteButtonInteraction,
 } from "#src/mvp-votes/button-handler.ts";
 import { isVoteCustomId, parseVoteCustomId } from "#src/mvp-votes/custom-id.ts";
 import {
-  handleMvpVoteSelect,
-  type VoteSelectInteraction,
-} from "#src/mvp-votes/select-handler.ts";
-import {
   handleMvpVoteModal,
   type VoteModalInteraction,
 } from "#src/mvp-votes/modal-handler.ts";
+import {
+  handleMvpVoteSelect,
+  type VoteSelectInteraction,
+} from "#src/mvp-votes/select-handler.ts";
+import { handleSupportInteraction } from "#src/support/discord.ts";
+import { MessageFlags, type Client, type Interaction } from "discord.js";
 
 const logger = createLogger("discord-interactions");
-
-async function captureButtonActivity(
-  interaction: RoutableButtonInteraction,
-  activityKind: "outcome_bet" | "parlay_bet" | "navigation" | "dare",
-  status: "success" | "error",
-): Promise<void> {
-  await captureBucksMemberActivity({
-    serverId: interaction.guildId,
-    discordId: interaction.user.id,
-    activityKind,
-    surface: "button",
-    status,
-  });
-}
 
 /**
  * The single `interactionCreate` registration.
@@ -133,9 +102,7 @@ async function routeInteraction(interaction: Interaction): Promise<void> {
  * with no cast, and a test builds a plain one rather than reaching for the
  * `as`-based mock helpers.
  */
-export type RoutableButtonInteraction = BetButtonInteraction &
-  BucksNavigationInteraction &
-  ScoutPublishButtonInteraction &
+export type RoutableButtonInteraction = ScoutPublishButtonInteraction &
   ScoutFollowUpInteraction &
   ScoutCreateButtonInteraction &
   DareButtonInteraction &
@@ -160,17 +127,15 @@ async function routeDareV2Button(
 ): Promise<void> {
   try {
     if (parseDareCustomId(interaction.customId) === undefined) {
-      discordComponentsTotal.inc({ namespace: "bbd2", status: "malformed" });
+      discordComponentsTotal.inc({ namespace: "dare", status: "malformed" });
       await interaction.deferUpdate();
       return;
     }
     await handleDareButton(interaction);
-    await captureButtonActivity(interaction, "dare", "success");
-    discordComponentsTotal.inc({ namespace: "bbd2", status: "success" });
+    discordComponentsTotal.inc({ namespace: "dare", status: "success" });
   } catch (error) {
-    await captureButtonActivity(interaction, "dare", "error");
-    logger.error("Error handling a Bryan Bucks Dare v2 button:", error);
-    discordComponentsTotal.inc({ namespace: "bbd2", status: "error" });
+    logger.error("Error handling a Dare button:", error);
+    discordComponentsTotal.inc({ namespace: "dare", status: "error" });
     if (interaction.deferred || interaction.replied) {
       await interaction.followUp({
         content: "Something went wrong with that dare. Try again shortly.",
@@ -193,58 +158,6 @@ export async function routeButton(
     await routeDareV2Button(interaction);
     return;
   }
-  if (isParlayCustomId(interaction.customId)) {
-    try {
-      if (parseParlayCustomId(interaction.customId) === undefined) {
-        discordComponentsTotal.inc({ namespace: "bbp", status: "malformed" });
-        await interaction.deferUpdate();
-        return;
-      }
-      await handleParlayBetButton(interaction);
-      await captureButtonActivity(interaction, "parlay_bet", "success");
-      discordComponentsTotal.inc({ namespace: "bbp", status: "success" });
-    } catch (error) {
-      await captureButtonActivity(interaction, "parlay_bet", "error");
-      logger.error("❌ Error handling a Bryan Bucks parlay button:", error);
-      discordComponentsTotal.inc({ namespace: "bbp", status: "error" });
-      if (interaction.deferred && !interaction.replied) {
-        await interaction.editReply({
-          content:
-            "😵 Something went wrong placing that parlay bet. Try again shortly.",
-        });
-      }
-    }
-    return;
-  }
-  if (isBucksNavigationId(interaction.customId)) {
-    try {
-      if (parseBucksNavigationId(interaction.customId) === undefined) {
-        discordComponentsTotal.inc({
-          namespace: "bbnav",
-          status: "malformed",
-        });
-        await interaction.deferUpdate();
-        return;
-      }
-
-      await handleBucksNavigation(interaction);
-      await captureButtonActivity(interaction, "navigation", "success");
-      discordComponentsTotal.inc({ namespace: "bbnav", status: "success" });
-    } catch (error) {
-      await captureButtonActivity(interaction, "navigation", "error");
-      logger.error("❌ Error handling Bryan Bucks navigation:", error);
-      discordComponentsTotal.inc({ namespace: "bbnav", status: "error" });
-      if (interaction.deferred && !interaction.replied) {
-        await interaction.editReply({
-          content:
-            "😵 Something went wrong loading that page. Try again shortly.",
-          components: [],
-        });
-      }
-    }
-    return;
-  }
-
   if (isScoutCustomId(interaction.customId)) {
     await routeScoutButton(interaction);
     return;
@@ -253,49 +166,8 @@ export async function routeButton(
     await routeVoteButton(interaction);
     return;
   }
-  if (!isBucksCustomId(interaction.customId)) {
-    // Some other feature's component. Not ours to answer, and Discord shows the
-    // clicker nothing for a component no handler claims.
-    discordComponentsTotal.inc({ namespace: "unknown", status: "ignored" });
-    return;
-  }
-
-  try {
-    if (parseBucksCustomId(interaction.customId) === undefined) {
-      // Claimed by namespace but not a valid v1 ID — a stale button from an
-      // older encoding, or someone poking the API. `isBucksCustomId` is only a
-      // prefix check, so the routing decision is already made and simply
-      // returning would leave the interaction unacknowledged: Discord then
-      // shows the clicker "This interaction failed", which is a worse answer
-      // than silence.
-      //
-      // `deferUpdate` is the silent acknowledgement — the message is left
-      // exactly as it was and no reply appears — which keeps the handler's
-      // deliberate "a stray component is not an error worth reporting" stance
-      // while still closing the interaction out. It is counted as `malformed`
-      // rather than folded into `success`, so the metric cannot report a
-      // handled bet that never happened.
-      discordComponentsTotal.inc({ namespace: "bb", status: "malformed" });
-      await interaction.deferUpdate();
-      return;
-    }
-
-    // discord.js's ButtonInteraction structurally satisfies the handler's
-    // parameter type, so this passes the real object with no cast.
-    await handleBetButton(interaction);
-    await captureButtonActivity(interaction, "outcome_bet", "success");
-    discordComponentsTotal.inc({ namespace: "bb", status: "success" });
-  } catch (error) {
-    await captureButtonActivity(interaction, "outcome_bet", "error");
-    logger.error("❌ Error handling a Bryan Bucks button:", error);
-    discordComponentsTotal.inc({ namespace: "bb", status: "error" });
-
-    if (interaction.deferred && !interaction.replied) {
-      await interaction.editReply({
-        content: "😵 Something went wrong placing that bet. Try again shortly.",
-      });
-    }
-  }
+  discordComponentsTotal.inc({ namespace: "unknown", status: "ignored" });
+  await interaction.deferUpdate();
 }
 
 async function routeVoteButton(

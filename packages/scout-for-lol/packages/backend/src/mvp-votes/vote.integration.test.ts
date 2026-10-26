@@ -1,22 +1,7 @@
-import { afterAll, beforeEach, describe, expect, test } from "vitest";
-import {
-  DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
-  DiscordGuildIdSchema,
-  RiotMatchIdSchema,
-  RawMatchSchema,
-} from "@scout-for-lol/data";
-import { createTestDatabase } from "#src/testing/test-database.ts";
-import {
-  bucksTestDiscordId,
-  bucksTestPuuid,
-  createTrackedTestPlayer,
-} from "#src/testing/bucks-fixtures.ts";
-import { freezeMatchMvpRoster } from "#src/mvp-votes/roster.ts";
-import { freezeMvpTestRoster } from "#src/testing/mvp-votes-fixtures.ts";
-import { findMatchMvpVoter } from "#src/mvp-votes/eligibility.ts";
 import { handleMvpVoteButton } from "#src/mvp-votes/button-handler.ts";
 import { formatVoteButtonCustomId } from "#src/mvp-votes/custom-id.ts";
+import { findMatchMvpVoter } from "#src/mvp-votes/eligibility.ts";
+import { freezeMatchMvpRoster } from "#src/mvp-votes/roster.ts";
 import {
   ensureMatchMvpContest,
   listMatchMvpReportRefs,
@@ -25,13 +10,28 @@ import {
   setMatchMvpJustification,
   upsertMatchMvpVote,
 } from "#src/mvp-votes/vote.ts";
+import {
+  createTrackedTestPlayer,
+  leagueTestDiscordId,
+  leagueTestPuuid,
+} from "#src/testing/league-fixtures.ts";
+import { freezeMvpTestRoster } from "#src/testing/mvp-votes-fixtures.ts";
+import { createTestDatabase } from "#src/testing/test-database.ts";
+import {
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+  RawMatchSchema,
+  RiotMatchIdSchema,
+} from "@scout-for-lol/data";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
 
 const { prisma: db } = createTestDatabase("mvp-votes");
 
 const SERVER_ID = DiscordGuildIdSchema.parse("1337623164146155593");
 const MATCH_ID = RiotMatchIdSchema.parse("NA1_5000000099");
-const VOTER = bucksTestDiscordId(1);
-const OTHER = bucksTestDiscordId(2);
+const VOTER = leagueTestDiscordId(1);
+const OTHER = leagueTestDiscordId(2);
 const RIFT_FIXTURE = new URL("../../../../testdata/rift.json", import.meta.url);
 
 function roster() {
@@ -60,7 +60,7 @@ describe("Match MVP votes", () => {
       alias: "alice",
       serverId: SERVER_ID,
       discordId: VOTER,
-      accounts: [bucksTestPuuid(0)],
+      accounts: [leagueTestPuuid(0)],
       creatorDiscordId: DiscordAccountIdSchema.parse("160509172704739328"),
       createdAt: new Date("2026-09-19T00:00:00.000Z"),
     });
@@ -79,13 +79,13 @@ describe("Match MVP votes", () => {
         voterDiscordId: VOTER,
         category: "ally",
         nomineeIndex: 9,
-        voterPuuid: bucksTestPuuid(0),
+        voterPuuid: leagueTestPuuid(0),
         voterTeamId: 100,
       },
       db,
     );
     expect(ally.nomineeIndex).toBe(9);
-    expect(ally.nomineePuuid).toBe(bucksTestPuuid(9));
+    expect(ally.nomineePuuid).toBe(leagueTestPuuid(9));
     expect(ally.nomineeTeamId).toBe(200);
     expect(ally.justification).toBeNull();
 
@@ -96,7 +96,7 @@ describe("Match MVP votes", () => {
         voterDiscordId: VOTER,
         category: "enemy",
         nomineeIndex: 0,
-        voterPuuid: bucksTestPuuid(0),
+        voterPuuid: leagueTestPuuid(0),
         voterTeamId: 100,
       },
       db,
@@ -109,7 +109,7 @@ describe("Match MVP votes", () => {
         voterDiscordId: VOTER,
         category: "ally",
         nomineeIndex: 1,
-        voterPuuid: bucksTestPuuid(0),
+        voterPuuid: leagueTestPuuid(0),
         voterTeamId: 100,
       },
       db,
@@ -145,7 +145,7 @@ describe("Match MVP votes", () => {
       alias: "spectator",
       serverId: SERVER_ID,
       discordId: VOTER,
-      accounts: [bucksTestPuuid(20)],
+      accounts: [leagueTestPuuid(20)],
       creatorDiscordId: DiscordAccountIdSchema.parse("160509172704739328"),
       createdAt: new Date("2026-09-19T00:00:00.000Z"),
     });
@@ -153,7 +153,7 @@ describe("Match MVP votes", () => {
       alias: "alice",
       serverId: SERVER_ID,
       discordId: VOTER,
-      accounts: [bucksTestPuuid(0)],
+      accounts: [leagueTestPuuid(0)],
       creatorDiscordId: DiscordAccountIdSchema.parse("160509172704739328"),
       createdAt: new Date("2026-09-19T00:00:01.000Z"),
     });
@@ -282,7 +282,7 @@ describe("Match MVP voter eligibility and contest backfill", () => {
       alias: "spectator",
       serverId: SERVER_ID,
       discordId: OTHER,
-      accounts: [bucksTestPuuid(20)],
+      accounts: [leagueTestPuuid(20)],
       creatorDiscordId: DiscordAccountIdSchema.parse("160509172704739328"),
       createdAt: new Date("2026-09-19T00:00:00.000Z"),
     });

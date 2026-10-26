@@ -1,11 +1,11 @@
-import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { resetConfigurationForTests } from "#src/configuration.ts";
-import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import {
   testAccountId,
   testChannelId,
   testGuildId,
 } from "#src/testing/test-ids.ts";
+import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
 
 /**
  * The harness installs module mocks, so it must run before anything imports
@@ -47,7 +47,7 @@ async function seedUsers(): Promise<void> {
 
 beforeEach(async () => {
   await trpc.prisma.confirmationIntent.deleteMany();
-  await trpc.prisma.bucksDare.deleteMany();
+  await trpc.prisma.dare.deleteMany();
   await trpc.prisma.exploreMessage.deleteMany();
   await trpc.prisma.exploreConversation.deleteMany();
   await seedUsers();
@@ -184,22 +184,21 @@ describe("explore management authorization", () => {
   });
 
   test("reloads a confirmation intent's durable outcome for its actor", async () => {
-    const dare = await trpc.prisma.bucksDare.create({
+    const dare = await trpc.prisma.dare.create({
       data: {
         serverId: ALLOWED_GUILD,
         channelId: DARE_CHANNEL,
         challengerDiscordId: OWNER,
-        openingStake: 20,
       },
     });
     const intent = await trpc.prisma.confirmationIntent.create({
       data: {
-        kind: "dare_fund",
+        kind: "dare_publish",
         serverId: ALLOWED_GUILD,
         dareId: dare.id,
         expectedRevision: 1,
         actorDiscordId: OWNER,
-        payload: JSON.stringify({ kind: "dare_fund" }),
+        payload: JSON.stringify({ kind: "dare_publish" }),
         idempotencyKey: "explore-router-durable-intent",
         expiresAt: new Date(Date.now() + 60_000),
       },
@@ -208,7 +207,7 @@ describe("explore management authorization", () => {
 
     expect(
       await owner.explore.intentStatus({ intentId: intent.id }),
-    ).toMatchObject({ state: "pending", kind: "dare_fund", result: null });
+    ).toMatchObject({ state: "pending", kind: "dare_publish", result: null });
 
     await trpc.prisma.confirmationIntent.update({
       where: { id: intent.id },
@@ -221,7 +220,7 @@ describe("explore management authorization", () => {
       await owner.explore.intentStatus({ intentId: intent.id }),
     ).toMatchObject({
       state: "consumed",
-      kind: "dare_fund",
+      kind: "dare_publish",
       result: { kind: "funded" },
     });
     await expect(

@@ -61,7 +61,7 @@ marks a series overdue but never invents a no-show winner.
 
 Duels are gated per server by the default-off `duels_enabled` flag. Custom and
 duel games do not feed the server-wide Hall, and duels create no entry fees,
-prizes, wagers, or Bryan Bucks markets.
+prizes or wagers.
 
 ## Related
 

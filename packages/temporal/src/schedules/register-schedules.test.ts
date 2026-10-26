@@ -560,7 +560,6 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runScoutShowcaseRefresh",
   "runScoutQueueWindowsWatch",
   "runScoutSeasonRefreshWorkflow",
-  "runScoutBryanBucksAnalyticsWorkflow",
   "runZfsMaintenanceWorkflow",
   // Reset sleeps while polling the backup and Job only inside its heartbeat
   // Activity; the Workflow awaits that one bounded Activity.
@@ -698,29 +697,6 @@ describe("Scout lane-prior schedule config", () => {
   });
 });
 
-describe("Scout Bryan Bucks analytics schedule config", () => {
-  test("runs the committed-ledger sync every fifteen minutes", () => {
-    expect(findScheduleById("scout-bryan-bucks-analytics")).toMatchObject({
-      namespace: "prod",
-      workflowType: "runScoutBryanBucksAnalyticsWorkflow",
-      args: [],
-      timing: {
-        kind: "cron",
-        expression: "*/15 * * * *",
-        timezone: "America/Los_Angeles",
-      },
-      taskQueue: TASK_QUEUES.WORKFLOWS,
-      overlap: ScheduleOverlapPolicy.SKIP,
-      workflowExecutionTimeout: "15 minutes",
-    });
-    expect(
-      DELETED_SCHEDULES.filter(
-        (schedule) => schedule.id === "scout-bryan-bucks-analytics",
-      ),
-    ).toEqual([{ id: "scout-bryan-bucks-analytics", namespace: "beta" }]);
-  });
-});
-
 describe("DELETED_SCHEDULE_IDS", () => {
   test("none of the deleted ids appear in active SCHEDULES", () => {
     const activeIds = SCHEDULES.map((s) => s.id);
@@ -821,10 +797,25 @@ test("terminates workflows for schedules being removed", async () => {
   );
 
   expect(queries).toEqual([
+    'WorkflowType = "runScoutBryanBucksAnalyticsWorkflow" AND ExecutionStatus = "Running"',
     'WorkflowType = "runOpenAiComplimentaryUsageReconciliation" AND ExecutionStatus = "Running"',
     'WorkflowType = "runProtobufWatch" AND ExecutionStatus = "Running"',
     'WorkflowType = "runCiIoTelemetry" AND ExecutionStatus = "Running"',
   ]);
+});
+
+test("retired Scout economy schedules have no active producer in either namespace", () => {
+  for (const [id, namespace] of [
+    ["scout-bryan-bucks-analytics", "prod"],
+    ["scout-bryan-bucks-analytics", "beta"],
+    ["scout-prod-bucks-reconciliation", "prod"],
+    ["scout-beta-bucks-reconciliation", "beta"],
+    ["scout-prod-weekly-bucks-leaderboard", "prod"],
+    ["scout-beta-weekly-bucks-leaderboard", "beta"],
+  ] as const) {
+    expect(SCHEDULES.some((schedule) => schedule.id === id)).toBe(false);
+    expect(DELETED_SCHEDULES).toContainEqual({ id, namespace });
+  }
 });
 
 describe("Glitter corpus schedule", () => {

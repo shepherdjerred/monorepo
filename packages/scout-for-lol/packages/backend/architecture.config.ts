@@ -13,7 +13,7 @@ import { defineArchitecture } from "@shepherdjerred/architecture";
  * a small, named set of HTTP-specific endpoint adapters.
  *
  * What is deliberately *not* enforced is a transport boundary around the
- * domain. `league/tasks/` schedules work that posts to Discord, `betting/`
+ * domain. `league/tasks/` schedules work that posts to Discord, `dares/`
  * announces settlements, and `discord/` in turn drives most of the domain:
  * those directories are simultaneously the domain and its composition root.
  * A `domain must not import a transport` rule would be a redesign proposal,
@@ -54,7 +54,7 @@ import { defineArchitecture } from "@shepherdjerred/architecture";
 export const layers = [
   "alerts",
   "analytics",
-  "betting",
+  "dares",
   "config",
   "configuration",
   "consumer",
@@ -109,7 +109,7 @@ export default defineArchitecture({
       "temporal/match/match-context",
       "league/tasks/postmatch/match-report-standard",
       "progression/postmatch",
-      "betting/dares/evaluation/dare-postmatch-timeline",
+      "dares/dares/evaluation/dare-postmatch-timeline",
       "temporal/prematch/prematch-context",
       "temporal/prematch/prematch-reads",
     ].map((from) => ({
@@ -130,7 +130,7 @@ export default defineArchitecture({
         "Evidence resolves inputs; effect and transport consumers may depend on it, never the reverse.",
       from: "evidence",
       to: [
-        "betting",
+        "dares",
         "progression",
         "customs",
         "discord",
@@ -262,8 +262,8 @@ export default defineArchitecture({
     {
       name: "http-is-limited-to-its-endpoint-adapters",
       comment:
-        "`http/` mounts the tRPC handler plus the health, Explore stream, report AI, Bryan " +
-        "Bucks analytics, customs, Scout client and Temporal health endpoints. Those adapters are its complete direct application surface; " +
+        "`http/` mounts the tRPC handler plus the health, Explore stream, report AI, " +
+        "customs, Scout client and Temporal health endpoints. Those adapters are its complete direct application surface; " +
         "a new feature or repository must join tRPC or be introduced explicitly as an HTTP endpoint.",
       from: "http",
       to: everythingExcept(
@@ -274,7 +274,7 @@ export default defineArchitecture({
         "database",
         "explore",
         "reports",
-        "betting",
+        "dares",
         "customs",
         "scout-client",
         "support",

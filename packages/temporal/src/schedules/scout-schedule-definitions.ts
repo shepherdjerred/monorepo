@@ -263,20 +263,6 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       args: [{ stage, kind: "conversion-check" }],
       expression: "30 10 * * *",
     }),
-    cronSchedule(stage, {
-      name: "bucks-reconciliation",
-      workflowType: "scoutBackgroundJobWorkflow",
-      args: [{ stage, kind: "bucks-reconciliation" }],
-      expression: "0 5 * * *",
-    }),
-    cronSchedule(stage, {
-      name: "weekly-bucks-leaderboard",
-      workflowType: "scoutBackgroundJobWorkflow",
-      args: [{ stage, kind: "weekly-bucks-leaderboard" }],
-      expression: "0 17 * * 5",
-      timezone: "America/Los_Angeles",
-      catchupWindow: "12 hours",
-    }),
   ];
 }
 

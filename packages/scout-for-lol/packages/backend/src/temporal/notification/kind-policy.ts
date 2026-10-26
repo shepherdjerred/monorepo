@@ -1,16 +1,16 @@
-import type { NotificationPolicySuppressionReason } from "@scout-for-lol/domain/notifications/intent.ts";
+import { transitionIntent } from "#src/database/durable/intent-repository.ts";
+import type { NotificationIntentRecord } from "#src/database/durable/intent-row.ts";
+import { prisma } from "#src/database/index.ts";
+import { MalformedAnnouncementIntentError } from "#src/temporal/notification/announcement-codecs.ts";
+import { dareStatusSuppression } from "#src/temporal/notification/dare-status-notification.ts";
+import { duelStatusSuppression } from "#src/temporal/notification/duel-status-notification.ts";
+import { hallRecordBreakSuppression } from "#src/temporal/notification/hall-record-break-notification.ts";
+import { productAnnouncementSuppression } from "#src/temporal/notification/product/policy.ts";
 import {
   suppress,
   type NotificationTransitionResult,
 } from "@scout-for-lol/domain/notifications/intent-transitions.ts";
-import { prisma } from "#src/database/index.ts";
-import { transitionIntent } from "#src/database/durable/intent-repository.ts";
-import type { NotificationIntentRecord } from "#src/database/durable/intent-row.ts";
-import { hallRecordBreakSuppression } from "#src/temporal/notification/hall-record-break-notification.ts";
-import { duelStatusSuppression } from "#src/temporal/notification/duel-status-notification.ts";
-import { dareStatusSuppression } from "#src/temporal/notification/dare-status-notification.ts";
-import { MalformedAnnouncementIntentError } from "#src/temporal/notification/announcement-codecs.ts";
-import { productAnnouncementSuppression } from "#src/temporal/notification/product/policy.ts";
+import type { NotificationPolicySuppressionReason } from "@scout-for-lol/domain/notifications/intent.ts";
 
 async function deferMalformedAnnouncement(
   check: () => Promise<NotificationPolicySuppressionReason | undefined>,
@@ -72,8 +72,9 @@ async function kindSuppressionOf(
       );
     case "postmatch":
     case "prematch":
-    case "settlement":
       return undefined;
+    case "settlement":
+      return "feature-disabled";
   }
 }
 

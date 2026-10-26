@@ -1,8 +1,8 @@
-import { describe, expect, test } from "vitest";
 import {
   EXPLORE_SUGGESTIONS,
   PERSISTENT_EXPLORE_SUGGESTION,
 } from "@scout-for-lol/data";
+import { describe, expect, test } from "vitest";
 import {
   chipCaseId,
   exploreChipCases,
@@ -25,7 +25,7 @@ describe("exploreChipCases", () => {
     );
     for (const condition of [
       "always",
-      "bucks",
+      "dares",
       "dares",
       "competitions",
       "hall_of_fame",

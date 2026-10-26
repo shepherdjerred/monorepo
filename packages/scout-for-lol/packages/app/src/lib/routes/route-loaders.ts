@@ -54,15 +54,15 @@ export function requireSessionLoader(): null {
   void preloadQuery(
     queryClient.query(trpcOptions.consumerPlayer.status.queryOptions()),
   );
-  void preloadQuery(queryClient.query(trpcOptions.bucks.status.queryOptions()));
+  void preloadQuery(queryClient.query(trpcOptions.dares.status.queryOptions()));
   void preloadQuery(
     queryClient.query(trpcOptions.challenge.status.queryOptions()),
   );
   return null;
 }
 
-export function bucksLoader(): null {
-  void preloadQuery(queryClient.query(trpcOptions.bucks.status.queryOptions()));
+export function daresLoader(): null {
+  void preloadQuery(queryClient.query(trpcOptions.dares.status.queryOptions()));
   return null;
 }
 

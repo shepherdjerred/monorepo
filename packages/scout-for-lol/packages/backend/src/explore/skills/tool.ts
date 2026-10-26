@@ -1,13 +1,13 @@
-import { tool } from "ai";
-import { z } from "zod";
-import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
-import { scoutExploreSkillLoadsTotal } from "#src/metrics/explore.ts";
+import type { ExploreSkillFile } from "#src/explore/skills/loader.ts";
 import {
   EXPLORE_SKILL_NAMES,
   renderExploreSkillBody,
   type ExploreSkillContext,
 } from "#src/explore/skills/registry.ts";
-import type { ExploreSkillFile } from "#src/explore/skills/loader.ts";
+import { scoutExploreSkillLoadsTotal } from "#src/metrics/explore.ts";
+import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
+import { tool } from "ai";
+import { z } from "zod";
 
 type LoadSkillResult = {
   ok: boolean;
@@ -24,11 +24,6 @@ export type LoadSkillToolInput = {
   onLoaded: (name: string) => void;
 };
 
-/**
- * The executor, separate from the AI-SDK `tool()` wrapper so tests can drive
- * it without constructing a `ToolExecutionOptions` (the same split the bucks
- * tools use).
- */
 export function createLoadSkillExecutor(input: LoadSkillToolInput) {
   return (skillName: string): Promise<LoadSkillResult> =>
     input.track("load_skill", (): Promise<LoadSkillResult> => {

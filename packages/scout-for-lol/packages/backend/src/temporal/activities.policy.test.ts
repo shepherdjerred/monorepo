@@ -1,20 +1,25 @@
 import { describe, expect, test } from "vitest";
 import { providerQuotaApplicationFailure } from "./activities.ts";
-import { hardDisabledFeatureForTemporalWork } from "./work-features.ts";
+import { temporalWorkRetired } from "./work-features.ts";
 
 describe("Scout Temporal production policy", () => {
   test.each([
-    ["progression-reconciliation", null],
-    ["notification-intent-expiry", null],
-    ["bucks-reconciliation", "betting_enabled"],
-    ["weekly-bucks-leaderboard", "betting_enabled"],
-    ["competition-refresh", null],
-    ["clash-snapshot", null],
-    ["prematch", null],
-  ])("maps %s to its hard-disable feature", (kind, expected) => {
-    expect(hardDisabledFeatureForTemporalWork(kind)).toBe(expected);
+    ["progression-reconciliation", false],
+    ["notification-intent-expiry", false],
+    ["competition-refresh", false],
+    ["clash-snapshot", false],
+    ["prematch", false],
+  ])("keeps current %s work active", (kind, expected) => {
+    expect(temporalWorkRetired(kind)).toBe(expected);
   });
 });
+
+test.each(["bucks-reconciliation", "weekly-bucks-leaderboard"])(
+  "retired %s completes without effects in every stage",
+  (kind) => {
+    expect(temporalWorkRetired(kind)).toBe(true);
+  },
+);
 
 describe("Scout detached-work provider failures", () => {
   test("turns provider spend-cap failures into non-retryable activity failures", () => {

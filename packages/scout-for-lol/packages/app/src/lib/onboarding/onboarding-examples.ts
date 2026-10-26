@@ -6,8 +6,8 @@ import {
 import {
   buildCompetitionScenarios,
   type CompetitionScenarioContext,
-} from "#src/lib/bucks/competition-scenarios.ts";
-import { browserTimezone } from "#src/lib/bucks/competition-time.ts";
+} from "#src/lib/competitions/competition-scenarios.ts";
+import { browserTimezone } from "#src/lib/competitions/competition-time.ts";
 
 /**
  * Concrete starter presets shown on the "Report or competition?" page. A

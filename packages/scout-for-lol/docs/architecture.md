@@ -176,7 +176,7 @@ Selected-period analysis recomputes the criterion without mutating that cache.
 
 ### Relational Dare contracts
 
-New Bryan Bucks Dares compile one read-only standard-SQL statement against a
+New Dares compile one read-only standard-SQL statement against a
 closed report-lake catalog. `T1` through `T5` are ordinary participant relations
 bound to the contract's frozen accounts; team-relative conditions join them to
 `match_teams` by `match_id` and `team_id`. Historical preview and post-match
@@ -301,82 +301,16 @@ flowchart TB
 
 Required environment variables by component:
 
-| Variable                  | Component | Required               |
-| ------------------------- | --------- | ---------------------- |
-| `DISCORD_TOKEN`           | Backend   | Yes                    |
-| `APPLICATION_ID`          | Backend   | Yes                    |
-| `RIOT_API_KEY`            | Backend   | Yes                    |
-| `DATABASE_URL`            | Backend   | Yes                    |
-| `OPENAI_API_KEY`          | Backend   | No (disables AI)       |
-| `GEMINI_API_KEY`          | Backend   | No (images fail)       |
-| `BETTING_PARLAY_AI_MODEL` | Backend   | No (`gpt-5.6-sol`)     |
-| `S3_BUCKET_NAME`          | Backend   | No (disables storage)  |
-| `BUGSINK_DSN`             | Backend   | No (disables tracking) |
-
-### Bryan Bucks parlays
-
-Eligible Solo/Duo and Flex prematch notifications keep the existing ten-minute
-outcome market and start one separate five-minute, live/in-play parlay market.
-The match-level definition is shared across guilds; stakes, house reserves,
-close state, and settlement remain guild-local.
-
-Discord delivery uses a durable `publishing` outbox state: preparation
-messages have no buttons, and the recurring prematch task retries activation
-after restarts. The five-minute clock begins only when persisted messages are
-successfully activated.
-
-Scout first builds an ordered shortlist of exactly 20 match-specific targets:
-16 player targets distributed evenly across the tracked subjects and four
-game-wide targets. Every selection is SHA-256-ranked from a versioned match seed,
-so retries and parallel workers reproduce the same order regardless of source
-ordering. Player eligibility combines a universal pool, a reviewed inferred-lane
-pool, and Riot champion-tag pools read from the bundled Data Dragon assets.
-Champion tags are coarse by design; for example, a Support-tagged champion may
-receive a healing target even when its individual kit makes that line dubious.
-Zero-heavy participant objective last-hits, multikills, killing sprees, true
-damage, and player `timePlayed` remain evaluable for stored criteria but are not
-shortlisted.
-
-Global candidates are team win, five history-grounded team-objective counts,
-and game duration. Exactly one of 16 hash buckets admits opponent-team pings;
-when admitted, one of the 13 ping subtypes is selected deterministically and
-occupies one global slot. The versioned generation context stores the exact 20
-candidates for audit, and structured model output is rejected unless every
-target is in that list and bound to its listed subject or team.
-
-GPT-5.6 Sol then generates a versioned 2–6 leg criteria tree through OpenAI
-with medium reasoning, a 4,096-token initial output limit, a 6,144-token
-truncated retry limit, and a shared 60-second deadline. It receives anonymous
-lobby and recent-form context plus only the shortlist. The first pass chooses
-targets and operators while covering every tracked subject; the second pass
-chooses thresholds from measured history. Pricing still replays those thresholds
-over the same history snapshot and is never model-authored. The model never
-supplies code, paths, settlement expressions, or authoritative result prose.
-Settlement evaluates only the persisted canonical tree against the final Riot
-`RawMatch`; the evaluator version is unchanged because existing criteria retain
-identical meaning. Remakes take precedence and refund both outcome and parlay
-markets.
-
-Neither market has a product stake cap. Positive whole-BB positions are bounded
-by wallet balance, parlay house liability, and the existing Int32 persistence
-domain. Parlay liability is reserved when the position is accepted; total
-positions are repriced with integer-ceiling fixed odds on every top-up. Credits
-also preserve Int32 headroom for every pending stake and house reserve, so a
-later cancellation, remake, or stale-market refund is always representable.
-
-Post-game presentation uses separate `BET WINNERS`, `BET LOSERS`,
-`PARLAY WINNERS`, and `PARLAY LOSERS` sections. Winners show net profit and a
-nonzero fee where applicable; losers show the stake actually lost. Matching,
-predicted sides, house fill, pool totals, and gross-return arithmetic remain on
-the pre-game close receipt and are omitted post-game. Outcome and parlay refunds
-are summarized separately without listing refunded bettors. All user-facing
-whole numbers use fixed comma grouping, while game duration and stored parlay
-time fields render as `MM:SS` without wrapping minutes at 60.
-
-Prompt rendering, semantic validation, catalog coverage, and evaluation run in
-ordinary offline tests. Run the opt-in production prompt acceptance suite with
-`bun --cwd packages/scout-for-lol/packages/backend run test:parlay:live`; it
-requires `OPENAI_API_KEY` and fails rather than skipping when absent.
+| Variable         | Component | Required               |
+| ---------------- | --------- | ---------------------- |
+| `DISCORD_TOKEN`  | Backend   | Yes                    |
+| `APPLICATION_ID` | Backend   | Yes                    |
+| `RIOT_API_KEY`   | Backend   | Yes                    |
+| `DATABASE_URL`   | Backend   | Yes                    |
+| `OPENAI_API_KEY` | Backend   | No (disables AI)       |
+| `GEMINI_API_KEY` | Backend   | No (images fail)       |
+| `S3_BUCKET_NAME` | Backend   | No (disables storage)  |
+| `BUGSINK_DSN`    | Backend   | No (disables tracking) |
 
 ## Next Steps
 

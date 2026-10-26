@@ -57,9 +57,6 @@ test("refuses missing credentials, guilds, and unknown scenarios", () => {
 });
 
 test("leaves provider overrides empty so guild-scoped registry flags decide", () => {
-  const launch = buildDevDiscordLaunch(
-    ["--scenario", "bb-transfer"],
-    environment,
-  );
+  const launch = buildDevDiscordLaunch(["--scenario", "gateway"], environment);
   expect(launch.environment["FEATURE_FLAGS_STATIC_OVERRIDES"]).toBe("{}");
 });

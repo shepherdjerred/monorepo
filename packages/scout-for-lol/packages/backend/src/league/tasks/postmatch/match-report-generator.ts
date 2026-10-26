@@ -1,49 +1,49 @@
-import { z } from "zod";
-import {
-  type PlayerConfigEntry,
-  type RiotMatchId,
-  type QueueType,
-  type RawMatch,
-  type RawTimeline,
-  type Rank,
-  type DiscordGuildId,
-  type Player,
-  queueTypeToDisplayString,
-  resolveQueueTypeFromGame,
-  isArenaQueueOrMode,
-  isClassicQueueType,
-  isClassicAssetMode,
-  rankForQueue,
-} from "@scout-for-lol/data/index.ts";
-import type { PostmatchRankChanges } from "#src/betting/dares/lifecycle/dare-rank-capture.ts";
+import type { PostmatchRankChanges } from "#src/dares/lifecycle/dare-rank-capture.ts";
+import { toArenaMatch, toMatch } from "#src/league/model/match.ts";
 import { getPlayer } from "#src/league/model/player.ts";
 import {
-  type MessageCreateOptions,
-  type AttachmentBuilder,
-  type EmbedBuilder,
-} from "discord.js";
-import { matchLinkComponents } from "./match-report-components.ts";
-import { setItemMissHandler } from "@scout-for-lol/report";
-import { aiReviewAttachment, createMatchImage } from "./match-report-image.ts";
-import { toMatch, toArenaMatch } from "#src/league/model/match.ts";
-import { logErrorDetails } from "./match-report-debug.ts";
-import { fetchTimelineIfStandardMatch } from "./match-report-standard.ts";
-import { generateAiReviewIfEnabled } from "./match-report-ai-review.ts";
+  getLatestRankBefore,
+  saveMatchRankHistory,
+} from "#src/league/model/rank-history.ts";
+import { createLogger } from "#src/logger.ts";
+import {
+  classicAssetResolutionFailuresTotal,
+  reportsFailedTotal,
+  reportsGeneratedTotal,
+  scoutItemCacheMissTotal,
+} from "#src/metrics/index.ts";
 import { withMvpVoteFurniture } from "#src/mvp-votes/components.ts";
 import { shouldAttachMvpVotes } from "#src/mvp-votes/eligibility.ts";
 import { ensureMatchMvpContest } from "#src/mvp-votes/vote.ts";
-import { createLogger } from "#src/logger.ts";
 import {
-  saveMatchRankHistory,
-  getLatestRankBefore,
-} from "#src/league/model/rank-history.ts";
+  type DiscordGuildId,
+  isArenaQueueOrMode,
+  isClassicAssetMode,
+  isClassicQueueType,
+  type Player,
+  type PlayerConfigEntry,
+  type QueueType,
+  queueTypeToDisplayString,
+  type Rank,
+  rankForQueue,
+  type RawMatch,
+  type RawTimeline,
+  resolveQueueTypeFromGame,
+  type RiotMatchId,
+} from "@scout-for-lol/data/index.ts";
+import { setItemMissHandler } from "@scout-for-lol/report";
 import {
-  classicAssetResolutionFailuresTotal,
-  reportsGeneratedTotal,
-  reportsFailedTotal,
-  scoutItemCacheMissTotal,
-} from "#src/metrics/index.ts";
+  type AttachmentBuilder,
+  type EmbedBuilder,
+  type MessageCreateOptions,
+} from "discord.js";
+import { z } from "zod";
+import { generateAiReviewIfEnabled } from "./match-report-ai-review.ts";
 import { buildClassicMatch } from "./match-report-classic.ts";
+import { matchLinkComponents } from "./match-report-components.ts";
+import { logErrorDetails } from "./match-report-debug.ts";
+import { aiReviewAttachment, createMatchImage } from "./match-report-image.ts";
+import { fetchTimelineIfStandardMatch } from "./match-report-standard.ts";
 
 const logger = createLogger("postmatch-match-report-generator");
 

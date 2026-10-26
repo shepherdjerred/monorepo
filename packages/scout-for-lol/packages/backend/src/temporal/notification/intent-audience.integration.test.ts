@@ -1,22 +1,22 @@
-import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
-import {
-  RiotMatchIdSchema,
-  type NotificationIntentKey,
-} from "@scout-for-lol/domain/identity/brands.ts";
-import {
-  NotificationIntentSchema,
-  NotificationAttemptNonceSchema,
-  type NotificationAttemptNonce,
-} from "@scout-for-lol/domain/notifications/intent.ts";
-import type { ScoutIntentAttemptRef } from "@scout-for-lol/temporal/pipeline-contracts";
-import type * as InstalledGuildsModule from "#src/lib/discord/installed-guilds.ts";
 import type * as ChannelModule from "#src/league/discord/channel.ts";
+import type * as InstalledGuildsModule from "#src/lib/discord/installed-guilds.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
   testChannelId,
   testGuildId,
   testPuuid,
 } from "#src/testing/test-ids.ts";
+import {
+  RiotMatchIdSchema,
+  type NotificationIntentKey,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  NotificationAttemptNonceSchema,
+  NotificationIntentSchema,
+  type NotificationAttemptNonce,
+} from "@scout-for-lol/domain/notifications/intent.ts";
+import type { ScoutIntentAttemptRef } from "@scout-for-lol/temporal/pipeline-contracts";
+import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 
 /**
  * The send path's half of retirement: `beginNotificationSend` asking whether
@@ -447,25 +447,7 @@ describe("beginNotificationSend and a deleted audience", () => {
     expect(await retiredCount("guild-left")).toBe(1);
   });
 
-  test("a settlement whose channel was deleted retires", async () => {
-    const key = await seedChannelIntent(prisma, {
-      name: "settlement",
-      kind: "settlement",
-      matchId: MATCH,
-      channelId: CHANNEL,
-      state: "ready",
-    });
-    stubs.readChannel.mockResolvedValue(null);
-
-    const begun = await beginNotificationSend(attempt(key, NONCE_A));
-
-    expect(begun.state).toEqual({
-      kind: "suppressed",
-      reason: "channel-deleted",
-    });
-  });
-
-  test("a settlement is never judged by subscriptions", async () => {
+  test("a retained settlement is suppressed before a live audience can send it", async () => {
     // No subscription anywhere: a settlement's audience is the channel its
     // pool was posted in, which Discord says still exists.
     const key = await seedChannelIntent(prisma, {
@@ -478,7 +460,11 @@ describe("beginNotificationSend and a deleted audience", () => {
 
     const begun = await beginNotificationSend(attempt(key, NONCE_A));
 
-    expect(begun.state).toMatchObject({ kind: "sending" });
+    expect(begun.state).toEqual({
+      kind: "suppressed",
+      reason: "feature-disabled",
+    });
+    expect(stubs.readChannel).not.toHaveBeenCalled();
   });
 
   test("an unreachable Discord is no evidence", async () => {

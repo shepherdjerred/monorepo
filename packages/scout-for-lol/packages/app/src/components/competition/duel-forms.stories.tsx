@@ -25,7 +25,7 @@ const CHANNELS = [
 
 const ACCOUNTS = [
   { accountId: 901, accountAlias: "jerred#NA1", playerAlias: "jerred" },
-  { accountId: 902, accountAlias: "bryanbucks#NA1", playerAlias: "bryan" },
+  { accountId: 902, accountAlias: "RiftRunner#NA1", playerAlias: "bryan" },
   { accountId: 903, accountAlias: "huntergatherer#NA1", playerAlias: "hunter" },
   { accountId: 904, accountAlias: "midorfeed#NA1", playerAlias: "casey" },
 ];

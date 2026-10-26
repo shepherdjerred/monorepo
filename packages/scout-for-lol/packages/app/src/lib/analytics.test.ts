@@ -224,9 +224,9 @@ describe("normalizePath", () => {
     expect(normalizePath("/explore/s")).toBe("/not-found");
   });
 
-  test("templates Bryan Bucks Dare ids", () => {
-    expect(normalizePath("/bucks/dares")).toBe("/bucks/dares");
-    expect(normalizePath("/bucks/dares/42")).toBe("/bucks/dares/:dareId");
+  test("templates Dares Dare ids", () => {
+    expect(normalizePath("/dares")).toBe("/dares");
+    expect(normalizePath("/dares/42")).toBe("/dares/:dareId");
   });
 });
 
@@ -475,8 +475,8 @@ describe("route analytics context", () => {
     expect(analyticsContextRoute("/duels/123/events/event-1")).toBe(
       "/duels/123",
     );
-    expect(analyticsContextRoute("/bucks")).toBe("/bucks");
-    expect(analyticsContextRoute("/bucks/history")).toBe("/bucks");
+    expect(analyticsContextRoute("/dares")).toBe("/dares");
+    expect(analyticsContextRoute("/dares/settings")).toBe("/dares");
     expect(analyticsContextRoute("/bucksomething")).toBeUndefined();
     expect(analyticsContextRoute("/")).toBeUndefined();
     expect(analyticsContextRoute("/login")).toBeUndefined();

@@ -1,30 +1,16 @@
-import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
-import { generateText, Output, stepCountIs, ToolLoopAgent } from "ai";
-import { getModel } from "@shepherdjerred/llm-models";
-import { createToolPayloadCapture } from "#src/explore/inspection/tool-payloads.ts";
-import { withExploreSpend } from "#src/explore/spending/model.ts";
+import { exploreAnalysisEnabled, exploreModel } from "#src/config/dynamic.ts";
+import { prisma } from "#src/database/index.ts";
+import { hydrateExploreLoadoutCards } from "#src/explore-match/loadout-view.ts";
+import { hydrateExploreMatchCards } from "#src/explore-match/match-view.ts";
+import { createExploreTools, type RunState } from "#src/explore/agent-tools.ts";
+import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
 import { hydrateInlineEntities } from "#src/explore/analysis/inline-entities.ts";
 import { authorizedProfileLinks } from "#src/explore/analysis/profile-links.ts";
 import {
-  EXPLORE_MAX_HISTORY_TURNS,
-  EXPLORE_MAX_OUTPUT_TOKENS,
-  EXPLORE_MAX_STEPS,
-  ExploreAnswerSchema,
-  ExploreAnswerWireSchema,
-  modelSupportsParameter,
-  type ExploreAnswer,
-  type ExploreMatchCard,
-  type ExploreLoadoutCard,
-  type ExploreMessage,
-  type ReportAiPreviewSummary,
-  type VisualizationSnapshot,
-} from "@scout-for-lol/data";
-import { withLlmSubjectSpan } from "@shepherdjerred/llm-observability/subject";
-import { exploreModel, exploreAnalysisEnabled } from "#src/config/dynamic.ts";
-import { createExploreTools, type RunState } from "#src/explore/agent-tools.ts";
-import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
+  ExploreCardSelectionSchema,
+  repairExploreCardSelection,
+} from "#src/explore/card-selection/repair.ts";
 import { resolveCreationCapability } from "#src/explore/creation/capability.ts";
-import { prisma } from "#src/database/index.ts";
 import {
   creationIntentReplayContext,
   loadCreationIntentStates,
@@ -34,21 +20,17 @@ import {
   exploreAskerSection,
   loadExploreAsker,
 } from "#src/explore/identity/asker.ts";
+import { createToolPayloadCapture } from "#src/explore/inspection/tool-payloads.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
+import { withExploreSpend } from "#src/explore/spending/model.ts";
 import { drainExploreStreams } from "#src/explore/stream.ts";
-import {
-  ExploreCardSelectionSchema,
-  repairExploreCardSelection,
-} from "#src/explore/card-selection/repair.ts";
 import { challengeExploreEnabled } from "#src/explore/tools/challenge-tools.ts";
+import { resolveDareCapability } from "#src/explore/tools/dare-capability.ts";
 import { dareExploreEnabled } from "#src/explore/tools/dare-tool-context.ts";
-import { resolveBucksCapability } from "#src/explore/tools/bucks-tools.ts";
+import { resolveHallCapability } from "#src/explore/tools/hall-tools.ts";
 import { resolveMvpVotesCapability } from "#src/explore/tools/mvp-votes-tools.ts";
 import { riotHistoryExploreEnabled } from "#src/explore/tools/riot-history-tools.ts";
-import { hydrateExploreMatchCards } from "#src/explore-match/match-view.ts";
-import { hydrateExploreLoadoutCards } from "#src/explore-match/loadout-view.ts";
 import { clashExploreEnabled } from "#src/league/clash/access.ts";
-import { resolveHallCapability } from "#src/explore/tools/hall-tools.ts";
 import { getLlmRuntime } from "#src/league/review/ai-clients.ts";
 import {
   assertWithinBudget,
@@ -56,6 +38,24 @@ import {
 } from "#src/league/review/openai-budget.ts";
 import { createLogger } from "#src/logger.ts";
 import { scoutExploreTokensUsedTotal } from "#src/metrics/explore.ts";
+import {
+  EXPLORE_MAX_HISTORY_TURNS,
+  EXPLORE_MAX_OUTPUT_TOKENS,
+  EXPLORE_MAX_STEPS,
+  ExploreAnswerSchema,
+  ExploreAnswerWireSchema,
+  modelSupportsParameter,
+  type ExploreAnswer,
+  type ExploreLoadoutCard,
+  type ExploreMatchCard,
+  type ExploreMessage,
+  type ReportAiPreviewSummary,
+  type VisualizationSnapshot,
+} from "@scout-for-lol/data";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import { getModel } from "@shepherdjerred/llm-models";
+import { withLlmSubjectSpan } from "@shepherdjerred/llm-observability/subject";
+import { generateText, Output, stepCountIs, ToolLoopAgent } from "ai";
 
 const logger = createLogger("explore-agent");
 
@@ -111,11 +111,11 @@ async function streamExploreAgentInternal(
   };
 
   // Derived per turn rather than persisted, so Temporal recovery and flag
-  // revocation both re-evaluate; a guild losing `betting_enabled` loses the
+  // revocation both re-evaluate; a guild losing `dares_enabled` loses the
   // tools on its very next turn.
-  const bucksCapability = await resolveBucksCapability(params.guildIds);
+  const dareCapability = await resolveDareCapability(params.guildIds);
   const mvpVotesCapability = await resolveMvpVotesCapability(params.guildIds);
-  const daresEnabled = await dareExploreEnabled(bucksCapability);
+  const daresEnabled = await dareExploreEnabled(dareCapability);
   const challengesEnabled = await challengeExploreEnabled(params.guildIds);
   // Tier 1 only: a surface comparison and one flag read per guild. The
   // permission work this gates is deferred into the first creation tool call,
@@ -131,7 +131,6 @@ async function streamExploreAgentInternal(
   const clock = { currentTime: new Date().toISOString() };
   const skillOptions = {
     analysis: exploreAnalysisEnabled(),
-    bucks: bucksCapability === null ? null : clock,
     mvpVotes: mvpVotesCapability === null ? null : clock,
     dares: daresEnabled,
     challenges: challengesEnabled,
@@ -162,7 +161,7 @@ async function streamExploreAgentInternal(
       params,
       state,
       skillOptions,
-      bucksCapability,
+      dareCapability,
       mvpVotesCapability,
       daresEnabled,
       challengesEnabled,

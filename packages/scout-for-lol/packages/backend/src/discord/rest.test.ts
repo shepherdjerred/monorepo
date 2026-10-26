@@ -1,5 +1,3 @@
-import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import { listGuildsWithFlagEnabled } from "#src/configuration/flags.ts";
 import { guildCommandPayload } from "#src/discord/commands/definitions.ts";
@@ -9,6 +7,8 @@ import {
   resetGuildCommandWriteCacheForTests,
   type DiscordCommandPut,
 } from "#src/discord/rest.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 const originalAllowlist = Bun.env["EXPLORE_GUILD_ALLOWLIST"];
 const originalEnvironment = Bun.env["ENVIRONMENT"];
@@ -39,10 +39,10 @@ afterEach(() => {
   resetConfigurationForTests();
 });
 
-function bettingGuild(): string {
-  const guildId = listGuildsWithFlagEnabled("betting_enabled")[0];
+function dareGuild(): string {
+  const guildId = listGuildsWithFlagEnabled("dares_enabled")[0];
   if (guildId === undefined) {
-    throw new Error("Tests require one betting-enabled guild fixture.");
+    throw new Error("Tests require one Dare-enabled guild fixture.");
   }
   return guildId;
 }
@@ -56,14 +56,14 @@ describe("Discord command reconciliation", () => {
     // groups have to be merged before sending or the last one would win.
     Bun.env["ENVIRONMENT"] = "beta";
     resetConfigurationForTests();
-    const guildId = bettingGuild();
+    const guildId = dareGuild();
     Bun.env["EXPLORE_GUILD_ALLOWLIST"] = guildId;
     resetConfigurationForTests();
 
     const payload = await guildCommandPayload(
       DiscordGuildIdSchema.parse(guildId),
     );
-    expect(payload.map((command) => command.name)).toEqual(["bb", "scout"]);
+    expect(payload.map((command) => command.name)).toEqual(["dare", "scout"]);
   });
 
   test("sends empty payloads to clear stale guild commands", async () => {

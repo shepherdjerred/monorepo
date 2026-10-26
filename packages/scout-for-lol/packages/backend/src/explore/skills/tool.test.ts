@@ -1,11 +1,11 @@
-import { describe, expect, test } from "vitest";
-import { createLoadSkillExecutor } from "#src/explore/skills/tool.ts";
 import { enabledExploreSkills } from "#src/explore/skills/registry.ts";
+import { createLoadSkillExecutor } from "#src/explore/skills/tool.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
+import { describe, expect, test } from "vitest";
 
-function harness(options?: { bucks?: boolean }) {
-  const bucks =
-    options?.bucks === true
+function harness(options?: { mvpVotes?: boolean }) {
+  const mvpVotes =
+    options?.mvpVotes === true
       ? { currentTime: "2026-08-29T00:00:00.000Z" }
       : null;
   const tracked: string[] = [];
@@ -15,8 +15,8 @@ function harness(options?: { bucks?: boolean }) {
     return await work();
   };
   const execute = createLoadSkillExecutor({
-    skills: enabledExploreSkills({ bucks, surface: "web" }),
-    context: { bucks, surface: "web" },
+    skills: enabledExploreSkills({ mvpVotes, surface: "web" }),
+    context: { mvpVotes, surface: "web" },
     track,
     onLoaded: (name) => loaded.push(name),
   });
@@ -35,7 +35,7 @@ describe("load_skill executor", () => {
 
   test("a capability-gated skill is refused with the available list", async () => {
     const { execute, loaded } = harness();
-    const result = await execute("bryan-bucks");
+    const result = await execute("mvp-votes");
     expect(result.ok).toBe(false);
     expect(result.instructions).toBeNull();
     expect(result.message).toContain("Available skills:");
@@ -43,9 +43,9 @@ describe("load_skill executor", () => {
     expect(loaded).toEqual([]);
   });
 
-  test("the same skill loads once bucks capability exists", async () => {
-    const { execute } = harness({ bucks: true });
-    const result = await execute("bryan-bucks");
+  test("the same skill loads once mvpVotes capability exists", async () => {
+    const { execute } = harness({ mvpVotes: true });
+    const result = await execute("mvp-votes");
     expect(result.ok).toBe(true);
     expect(result.instructions).toContain("2026-08-29T00:00:00.000Z");
   });

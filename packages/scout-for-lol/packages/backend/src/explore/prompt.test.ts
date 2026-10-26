@@ -1,22 +1,22 @@
-import { exploreScoutQlReference } from "#src/explore/scoutql-reference.ts";
-import { describe, expect, test } from "vitest";
-import {
-  COMPETITIVE_PROGRESSION_CATALOG,
-  queuesWithoutPostMatchData,
-} from "@scout-for-lol/data";
 import {
   LAKE_COVERAGE_RULE,
   LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH,
 } from "#src/explore/lake-coverage.ts";
-import { judgeSystemPrompt } from "#src/explore/replay/judge.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
+import { judgeSystemPrompt } from "#src/explore/replay/judge.ts";
+import { exploreScoutQlReference } from "#src/explore/scoutql-reference.ts";
 import { reportAgentInstructions } from "#src/reports/ai/report-query-agent.ts";
 import { scoutQlFieldGuideSection } from "#src/reports/ai/scoutql-field-guide.ts";
 import { scoutQlLanguageReference } from "#src/reports/ai/scoutql-tools.ts";
+import {
+  COMPETITIVE_PROGRESSION_CATALOG,
+  queuesWithoutPostMatchData,
+} from "@scout-for-lol/data";
+import { describe, expect, test } from "vitest";
 
 describe("exploreAgentInstructions", () => {
   test("carries ScoutQL itself, compact, last; domain skills stay on demand", () => {
-    const instructions = exploreAgentInstructions({ bucks: null });
+    const instructions = exploreAgentInstructions({});
 
     expect(instructions).toContain("## Skills");
     expect(instructions).toContain("load_skill");
@@ -34,15 +34,15 @@ describe("exploreAgentInstructions", () => {
   });
 
   test("keeps the answer-shaping rules that apply to every turn", () => {
-    const instructions = exploreAgentInstructions({ bucks: null });
+    const instructions = exploreAgentInstructions({});
     // Claims the judge found wider than their query: an unstated 10-game
     // floor, an alphabetical "top", player-games reported as games.
     expect(instructions).toContain("must ORDER BY that measure");
     expect(instructions).toContain("among players with at least 10 games");
     expect(instructions).toContain("COUNT(DISTINCT match_id)");
-    expect(
-      exploreAgentInstructions({ bucks: null, challenges: true }),
-    ).toContain("Scout challenges carry no reward");
+    expect(exploreAgentInstructions({ challenges: true })).toContain(
+      "Scout challenges carry no reward",
+    );
 
     expect(instructions).toContain(
       "NEVER state a statistic you did not read from a tool result",
@@ -71,9 +71,8 @@ describe("exploreAgentInstructions", () => {
   });
 
   test("lists capability skills only when the capability exists", () => {
-    const plain = exploreAgentInstructions({ bucks: null });
+    const plain = exploreAgentInstructions({});
     const everything = exploreAgentInstructions({
-      bucks: { currentTime: "2026-08-29T00:00:00.000Z" },
       mvpVotes: { currentTime: "2026-08-29T00:00:00.000Z" },
       dares: true,
       challenges: true,
@@ -81,13 +80,7 @@ describe("exploreAgentInstructions", () => {
       surface: "web",
     });
 
-    for (const name of [
-      "bryan-bucks",
-      "dares",
-      "challenges",
-      "creation",
-      "mvp-votes",
-    ]) {
+    for (const name of ["dares", "challenges", "creation", "mvp-votes"]) {
       expect(plain).not.toContain(`- ${name}:`);
       expect(everything).toContain(`- ${name}:`);
     }
@@ -95,7 +88,6 @@ describe("exploreAgentInstructions", () => {
 
   test("carries tripwires but not skill bodies", () => {
     const everything = exploreAgentInstructions({
-      bucks: { currentTime: "2026-08-29T00:00:00.000Z" },
       mvpVotes: { currentTime: "2026-08-29T00:00:00.000Z" },
       dares: true,
       challenges: true,
@@ -106,7 +98,7 @@ describe("exploreAgentInstructions", () => {
     // Tripwires: the rules that must hold even if a skill is never loaded.
     expect(everything).toContain("a proposal, not an entity");
     expect(everything).toContain("Never publish a challenge from Explore");
-    expect(everything).toContain("private to the asker");
+    expect(everything).not.toContain("bryan-bucks");
     expect(everything).toContain("queryText to null");
     expect(everything).toContain("ScoutQL cannot answer Discord MVP ballots");
     expect(everything).toContain("an exact (match_id, puuid) pair");
@@ -125,7 +117,6 @@ describe("exploreAgentInstructions", () => {
 
   test("Discord offers the same card and loadout skills as the web", () => {
     const instructions = exploreAgentInstructions({
-      bucks: null,
       surface: "discord",
     });
 
@@ -139,14 +130,13 @@ describe("exploreAgentInstructions", () => {
   test.each(["discord", "voice"] as const)(
     "%s never claims creations are web-only",
     (surface) => {
-      const instructions = exploreAgentInstructions({ bucks: null, surface });
+      const instructions = exploreAgentInstructions({ surface });
       expect(instructions).not.toContain("never from this surface");
     },
   );
 
   test("offers match cards on the web surface via the skill index", () => {
     const instructions = exploreAgentInstructions({
-      bucks: null,
       surface: "web",
     });
 
@@ -157,7 +147,6 @@ describe("exploreAgentInstructions", () => {
 
   test("voice keeps a full saved answer and a separate spoken rendering", () => {
     const instructions = exploreAgentInstructions({
-      bucks: null,
       surface: "voice",
     });
     expect(instructions).toContain("- voice-response:");
@@ -170,7 +159,7 @@ describe("exploreAgentInstructions", () => {
   });
 
   test("carries no v1 clause the language no longer has", () => {
-    const instructions = exploreAgentInstructions({ bucks: null });
+    const instructions = exploreAgentInstructions({});
 
     for (const clause of ["DURING", "ANALYZE", "BUCKET BY", "COMPARE TO"]) {
       expect(instructions).not.toContain(clause);
@@ -195,7 +184,7 @@ describe("data Scout has that Explore cannot query", () => {
   test("names each unreachable dataset and the rule about it", () => {
     // The agent used to infer "I cannot query bans" and then tell the user
     // "Scout records champion selections, not bans" — against 229,330 ban rows.
-    const instructions = exploreAgentInstructions({ bucks: null });
+    const instructions = exploreAgentInstructions({});
 
     for (const entry of LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH) {
       expect(instructions).toContain(entry);
@@ -217,7 +206,7 @@ describe("sample sizes on records", () => {
     // "52 kills in a single game, across 25,442 games in Scout's data" — the
     // count was the corpus, not the games holding that record, and the judge
     // was right to call the figure unsupported.
-    const instructions = exploreAgentInstructions({ bucks: null });
+    const instructions = exploreAgentInstructions({});
     expect(instructions).toContain("A single extreme value");
     expect(instructions).toContain(
       "never as 'across N games' beside the record",
@@ -229,7 +218,7 @@ describe("sample sizes on records", () => {
 
 describe("team objectives", () => {
   test("points at match_teams and bounds what it can claim", () => {
-    const instructions = exploreAgentInstructions({ bucks: null });
+    const instructions = exploreAgentInstructions({});
     expect(instructions).toContain("match_teams holds one row per team");
     // The trap this exists for: answering "do we win more with first dragon?"
     // from a source that covers the whole lake, as if it were their record.
@@ -251,7 +240,6 @@ describe("gated-off capabilities", () => {
     // A guild without the feature used to get silence: the tool vanished, the
     // skill was filtered out, and the model invented a data reason.
     const off = exploreAgentInstructions({
-      bucks: null,
       mvpVotes: null,
       dares: false,
       challenges: false,
@@ -260,7 +248,6 @@ describe("gated-off capabilities", () => {
     });
 
     for (const phrase of [
-      "Bryan Bucks",
       "MVP votes are not switched on",
       "Dares",
       "challenges",
@@ -271,23 +258,15 @@ describe("gated-off capabilities", () => {
     expect(off).toContain("not switched on for the servers in scope");
   });
 
-  test("says Bryan Bucks is a feature and not a person", () => {
-    // Three chips read it as a player name: "I can report on Bryan Bucks's
-    // recorded League matches instead, if that's the player you meant".
-    const off = exploreAgentInstructions({ bucks: null });
-    expect(off).toContain("not a player");
-  });
-
   test("forbids improvising a dare when dares are off", () => {
     // With dares gated off, a turn answered "I dare our mid laner to lock in
     // an assassin and win lane—or buy the team snacks."
-    const off = exploreAgentInstructions({ bucks: null, dares: false });
+    const off = exploreAgentInstructions({ dares: false });
     expect(off).toContain("Never draft, invent, or word a dare yourself");
   });
 
   test("keeps the enabled wording when a capability is on", () => {
     const on = exploreAgentInstructions({
-      bucks: { currentTime: "now" },
       mvpVotes: { currentTime: "now" },
       dares: true,
       challenges: true,
@@ -295,7 +274,8 @@ describe("gated-off capabilities", () => {
       hallOfFame: true,
       creation: true,
     });
-    expect(on).toContain("dedicated bucks tools");
+    expect(on).toContain("Dares");
+    expect(on).not.toContain("bucks tools");
     expect(on).not.toContain("not switched on for the servers in scope");
   });
 });
@@ -304,13 +284,13 @@ describe("unresolved concepts", () => {
   test("defines who 'our' and 'we' mean", () => {
     // ~23 turns asked for a Riot ID and ~16 declined, for a referent no reader
     // would have found ambiguous.
-    const instructions = exploreAgentInstructions({ bucks: null });
+    const instructions = exploreAgentInstructions({});
     expect(instructions).toContain("the players the user's servers track");
     expect(instructions).toContain("Do not ask which players they meant");
   });
 
   test("says how to choose servers, and asks only when it cannot tell", () => {
-    const instructions = exploreAgentInstructions({ bucks: null });
+    const instructions = exploreAgentInstructions({});
     // Servers are opt-in: over-scoping answered "who has the most" from one
     // server's handful of games and declined 16 answerable prod chips.
     expect(instructions).toContain("Set servers to null by default");
@@ -324,7 +304,7 @@ describe("unresolved concepts", () => {
   });
 
   test("player_groups is allowed with servers and never globally", () => {
-    const instructions = exploreAgentInstructions({ bucks: null });
+    const instructions = exploreAgentInstructions({});
     expect(instructions).toContain("player_groups reads groups");
     expect(instructions).toContain("never runs without them");
     expect(instructions).not.toContain("must never be queried: player_groups");
@@ -339,7 +319,7 @@ describe("unresolved concepts", () => {
   });
 
   test("defines the Hall of Fame, which was once read as a player name", () => {
-    const instructions = exploreAgentInstructions({ bucks: null });
+    const instructions = exploreAgentInstructions({});
     expect(instructions).toContain("Hall of Fame");
     expect(instructions).toContain("not a player");
   });
@@ -348,7 +328,7 @@ describe("unresolved concepts", () => {
     // The loose definition made any extreme a record, so "the kill
     // participation record" was attempted rather than recognised as absent,
     // and "who is in the Hall of Fame?" had no finite answer.
-    const instructions = exploreAgentInstructions({ bucks: null });
+    const instructions = exploreAgentInstructions({});
     const { records, queueFamilies } = COMPETITIVE_PROGRESSION_CATALOG.hall;
     for (const record of records) expect(instructions).toContain(record.label);
     for (const family of queueFamilies) {
@@ -365,12 +345,12 @@ describe("unresolved concepts", () => {
 
 describe("reading features rather than re-deriving them", () => {
   test("the Hall is read from the board when it is on, and called off when not", () => {
-    const on = exploreAgentInstructions({ bucks: null, hallOfFame: true });
+    const on = exploreAgentInstructions({ hallOfFame: true });
     expect(on).toContain(
       "Use get_hall_of_fame for every Hall of Fame question",
     );
     expect(on).not.toContain("The Hall of Fame is not switched on");
-    const off = exploreAgentInstructions({ bucks: null, hallOfFame: false });
+    const off = exploreAgentInstructions({ hallOfFame: false });
     expect(off).toContain("The Hall of Fame is not switched on");
     // Off is not a refusal: even board questions are reconstructed.
     expect(off).toContain("Answer anyway by reconstructing it from match data");
@@ -383,7 +363,6 @@ describe("reading features rather than re-deriving them", () => {
     // creation being off says nothing about reading.
     for (const creation of [true, false]) {
       const instructions = exploreAgentInstructions({
-        bucks: null,
         creation,
         surface: "web",
       });
@@ -395,7 +374,6 @@ describe("reading features rather than re-deriving them", () => {
     }
     expect(
       exploreAgentInstructions({
-        bucks: null,
         creation: false,
         surface: "web",
       }),
@@ -403,7 +381,7 @@ describe("reading features rather than re-deriving them", () => {
   });
 
   test("challenge runs can be read when challenges are on", () => {
-    const on = exploreAgentInstructions({ bucks: null, challenges: true });
+    const on = exploreAgentInstructions({ challenges: true });
     expect(on).toContain("list_my_challenge_runs");
     expect(on).toContain("challenge_leaderboard");
   });
@@ -411,25 +389,25 @@ describe("reading features rather than re-deriving them", () => {
 
 describe("assumptions instead of clarifying questions", () => {
   test("a missing threshold is chosen and stated, not asked for", () => {
-    const instructions = exploreAgentInstructions({ bucks: null });
+    const instructions = exploreAgentInstructions({});
     expect(instructions).toContain("choose the sensible reading yourself");
     expect(instructions).toContain("Do not ask them to choose first");
   });
 
   test("no corpus-wide total without a query that returned it", () => {
-    const instructions = exploreAgentInstructions({ bucks: null });
+    const instructions = exploreAgentInstructions({});
     expect(instructions).toContain(
       "unless a query in this turn returned that exact count",
     );
   });
 
   test("challenges are said to have no end date when they are on", () => {
-    expect(
-      exploreAgentInstructions({ bucks: null, challenges: true }),
-    ).toContain("Scout challenges have no end date");
-    expect(
-      exploreAgentInstructions({ bucks: null, challenges: false }),
-    ).not.toContain("Scout challenges have no end date");
+    expect(exploreAgentInstructions({ challenges: true })).toContain(
+      "Scout challenges have no end date",
+    );
+    expect(exploreAgentInstructions({ challenges: false })).not.toContain(
+      "Scout challenges have no end date",
+    );
   });
 });
 
@@ -437,7 +415,7 @@ describe("queues Riot sends no results for", () => {
   test("fences the list so a prefix cannot be generalised", () => {
     // "aram clash" was read as all ARAM, and every ARAM question refused —
     // against 2,830 ordinary ARAM matches in the prod lake.
-    const instructions = exploreAgentInstructions({ bucks: null });
+    const instructions = exploreAgentInstructions({});
     expect(instructions).toContain("and only these queues");
     expect(instructions).toContain("ordinary 'aram' games do have results");
     for (const queue of queuesWithoutPostMatchData()) {

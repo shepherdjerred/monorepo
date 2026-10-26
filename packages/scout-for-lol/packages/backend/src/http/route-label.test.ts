@@ -6,12 +6,12 @@
  * fixed, finite set — no matter what an internet-facing scanner sends.
  */
 
-import { describe, it, expect } from "vitest";
 import {
   classifyRoute,
-  statusClass,
   OTHER_ROUTE_LABEL,
+  statusClass,
 } from "#src/http/route-label.ts";
+import { describe, expect, it } from "vitest";
 
 describe("classifyRoute", () => {
   it.each([
@@ -27,7 +27,6 @@ describe("classifyRoute", () => {
     "/api/dev/login",
     "/api/summoner-icon",
     "/api/reports/query-agent/stream",
-    "/api/internal/bryan-bucks/analytics-sync",
     "/api/scout-client/v1/pairings",
     "/api/scout-client/v1/check-ins",
     "/api/scout-client/v1/observations/batch",

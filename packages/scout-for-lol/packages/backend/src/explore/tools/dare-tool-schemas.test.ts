@@ -1,8 +1,8 @@
-import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
-import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
-import { describe, expect, test } from "vitest";
-import { prepareDareDraft } from "#src/betting/dares/lifecycle/dare-draft.ts";
+import { prepareDareDraft } from "#src/dares/lifecycle/dare-draft.ts";
 import { DareDefinitionToolInputSchema } from "#src/explore/tools/dare-tool-schemas.ts";
+import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
+import { describe, expect, test } from "vitest";
 
 /** A contract whose lane spelling Riot never emits. */
 const INVALID_LANE_DEFINITION = {
@@ -14,7 +14,6 @@ const INVALID_LANE_DEFINITION = {
     "SELECT COUNT(*) >= 1 AS achieved FROM T1 p WHERE p.team_position = 'MID'",
   plainLanguage: "Virmel plays at least one game in the middle lane.",
   deadlineSpec: { kind: "relative", days: 7 },
-  openingStake: 5,
 };
 
 describe("Dare tool input schema", () => {
@@ -62,7 +61,6 @@ describe("Dare tool input schema", () => {
         },
       ],
       deadlineSpec: parsed.deadlineSpec,
-      openingStake: parsed.openingStake,
     });
     expect(prepared.kind).toBe("invalid");
     expect(

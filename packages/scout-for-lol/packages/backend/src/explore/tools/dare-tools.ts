@@ -1,19 +1,28 @@
-import { buildDareShortlist } from "#src/betting/dares/dare-shortlist.ts";
+import { buildDareShortlist } from "#src/dares/dare-shortlist.ts";
 import {
   createDareDraft,
   deleteDareDraft,
   prepareDareDraft,
   reviseDareDraft,
-} from "#src/betting/dares/lifecycle/dare-draft.ts";
-import { dareLanguagePayload } from "#src/explore/tools/dare-language.ts";
-import { compileDareSql } from "#src/betting/dares/sql/dare-sql.ts";
-import { renderDareSqlSemanticProofPlan } from "#src/betting/dares/sql/dare-sql-description.ts";
-import { createDareConfirmationIntent } from "#src/betting/dares/lifecycle/dare-intent.ts";
+} from "#src/dares/lifecycle/dare-draft.ts";
+import { createDareConfirmationIntent } from "#src/dares/lifecycle/dare-intent.ts";
 import {
   inspectVisibleDare,
   listVisibleDares,
-} from "#src/betting/dares/presentation/dare-view.ts";
+} from "#src/dares/presentation/dare-view.ts";
+import { renderDareSqlSemanticProofPlan } from "#src/dares/sql/dare-sql-description.ts";
+import { compileDareSql } from "#src/dares/sql/dare-sql.ts";
 import { prisma } from "#src/database/index.ts";
+import { dareLanguagePayload } from "#src/explore/tools/dare-language.ts";
+import {
+  dareDraftChannel,
+  type DareExploreToolsInput,
+} from "#src/explore/tools/dare-tool-context.ts";
+import { definitionFromTool } from "#src/explore/tools/dare-tool-definition-resolution.ts";
+import {
+  dareDomainResult,
+  dareToolResult,
+} from "#src/explore/tools/dare-tool-result.ts";
 import {
   DareActionToolInputSchema,
   DareDefinitionToolInputSchema,
@@ -24,15 +33,6 @@ import {
   DareScoutQlToolInputSchema,
   ReviseDareToolInputSchema,
 } from "#src/explore/tools/dare-tool-schemas.ts";
-import { definitionFromTool } from "#src/explore/tools/dare-tool-definition-resolution.ts";
-import {
-  dareDraftChannel,
-  type DareExploreToolsInput,
-} from "#src/explore/tools/dare-tool-context.ts";
-import {
-  dareDomainResult,
-  dareToolResult,
-} from "#src/explore/tools/dare-tool-result.ts";
 
 const result = dareToolResult;
 const safeDomainResult = dareDomainResult;
@@ -201,7 +201,6 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
           ),
           preview: created.draft.preview,
           sqlIsBinding: true,
-          openingStake: created.draft.openingStake,
           targetAliases: created.draft.targets.map((target) => target.alias),
         });
       }),

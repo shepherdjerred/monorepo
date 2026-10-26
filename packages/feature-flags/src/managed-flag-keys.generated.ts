@@ -141,6 +141,7 @@ export const SCOUT_BOOLEAN_FLAG_KEYS = [
   "betting_player_bet_outcome_dm_enabled",
   "betting_settlement_dm_enabled",
   "bucks_dares_enabled",
+  "dares_enabled",
   "bucks_transfers_enabled",
   "challenge_runs_enabled",
   "clash_surface",

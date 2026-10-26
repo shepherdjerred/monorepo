@@ -855,25 +855,10 @@
       "owner": "scout",
       "namespace": "scout",
       "source": "scout-policy",
-      "purpose": "Enable the Scout Bryan Bucks betting economy.",
+      "purpose": "Retained for pre-retirement workers until native execution drainage; removed with the final economy purge.",
       "type": "boolean",
       "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "scout-guild-1337623164146155593",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        }
-      ],
+      "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
     },
@@ -882,25 +867,10 @@
       "owner": "scout",
       "namespace": "scout",
       "source": "scout-policy",
-      "purpose": "Send players a direct message with their bet outcome.",
+      "purpose": "Retained for pre-retirement workers until native execution drainage; removed with the final economy purge.",
       "type": "boolean",
       "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "scout-guild-1337623164146155593",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        }
-      ],
+      "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
     },
@@ -909,25 +879,10 @@
       "owner": "scout",
       "namespace": "scout",
       "source": "scout-policy",
-      "purpose": "Send betting settlement direct messages.",
+      "purpose": "Retained for pre-retirement workers until native execution drainage; removed with the final economy purge.",
       "type": "boolean",
       "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "scout-guild-1337623164146155593",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        }
-      ],
+      "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
     },
@@ -1176,7 +1131,19 @@
       "owner": "scout",
       "namespace": "scout",
       "source": "scout-policy",
-      "purpose": "Enable Bryan Bucks free-text dare bounties.",
+      "purpose": "Retained for pre-retirement workers until native execution drainage; removed with the final economy purge.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "dares_enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Standalone free Dare authoring and management, limited to the current beta guild.",
       "type": "boolean",
       "default": false,
       "rollouts": [
@@ -1203,25 +1170,10 @@
       "owner": "scout",
       "namespace": "scout",
       "source": "scout-policy",
-      "purpose": "Enable fee-bearing Bryan Bucks wallet transfers.",
+      "purpose": "Retained for pre-retirement workers until native execution drainage; removed with the final economy purge.",
       "type": "boolean",
       "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "scout-guild-1337623164146155593",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        }
-      ],
+      "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
     },
@@ -1284,7 +1236,7 @@
       "owner": "scout",
       "namespace": "scout",
       "source": "scout-policy",
-      "purpose": "Enable Bryan Bucks Dare lifecycle and progress DMs.",
+      "purpose": "Enable Dare lifecycle and progress DMs.",
       "type": "boolean",
       "default": false,
       "rollouts": [],
@@ -1466,7 +1418,7 @@
       "source": "karma-dynamic",
       "purpose": "Select the emoji that awards karma.",
       "type": "variant",
-      "default": "\u2b50",
+      "default": "⭐",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -1662,7 +1614,7 @@
       "owner": "scout",
       "namespace": "scout",
       "source": "scout-dynamic",
-      "purpose": "Select the Scout parlay AI model.",
+      "purpose": "Retained for pre-retirement workers until native execution drainage; removed with the final economy purge.",
       "type": "variant",
       "default": "gpt-5.6-sol",
       "rollouts": [],
@@ -3689,6 +3641,14 @@
         },
         {
           "key": "bucks_dares_enabled",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "dares_enabled",
           "type": "boolean",
           "default": false,
           "rollouts": [],

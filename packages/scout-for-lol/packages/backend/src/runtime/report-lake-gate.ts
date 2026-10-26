@@ -1,22 +1,5 @@
-/**
- * The boot gate for a role that reads the report lake.
- *
- * An empty or unmounted lake directory is not an error condition for DuckDB —
- * it scans zero parquet files and returns zero rows — so a pod pointed at one
- * records every report run, parlay generation and dare settlement as a
- * *successful* run that happened to find nothing. That is the failure this
- * gate exists to convert into a refusal to start: a pod that cannot answer
- * correctly must not answer at all.
- *
- * Lives in its own module, rather than inline in `subsystems.ts`, for two
- * reasons. It stays dynamically imported, so a role that never touches the
- * lake does not load the report-lake paths module; and it can be called
- * directly against a temp directory, so the gate is provable in both
- * directions instead of only being reachable through a booting process.
- */
-
-import { readCurrentBuildDir, resolveLakeDir } from "#src/report-lake/paths.ts";
 import { createLogger } from "#src/logger.ts";
+import { readCurrentBuildDir, resolveLakeDir } from "#src/report-lake/paths.ts";
 
 const logger = createLogger("report-lake-gate");
 

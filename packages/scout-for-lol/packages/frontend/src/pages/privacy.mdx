@@ -116,7 +116,7 @@ drafts, revisions, generated ScoutQL, and historical previews are visible only
 to the challenger. Action confirmations are private to the acting user. Funding freezes one revision
 and makes the contract, target aliases, stake and contribution totals, progress,
 and final proof visible to members of that Discord server. Targets must accept
-before scoring begins; they do not stake Bryan Bucks. Server administrators may
+before scoring begins; they carry no financial stake. Server administrators may
 inspect a funded contract but cannot rewrite it.
 
 Dare contracts freeze the selected Scout player and Riot account identities so
@@ -167,13 +167,6 @@ On the website, we may collect or process:
   recording shows layout and interaction rather than content.
 - When you are signed in to the dashboard, an opaque account identifier that we
   generate. It is not your Discord ID.
-- In the private Bryan Bucks beta, server-side activity and economy events use
-  a separate opaque identifier for each Bucks account. This lets us measure
-  member retention and betting activity within the beta guild while keeping the
-  Discord account ID out of analytics. The Bucks identifier is sent alongside
-  the guild ID, so the analytics provider can connect that beta member activity
-  to the guild's Scout installation; it is not used for public profiles or
-  shared outside the provider's analytics project.
 - Player search and profile-open events limited to result state and entry
   surface. We do not send search text, player IDs, Riot IDs, aliases, Discord
   server IDs, or server names with those events.

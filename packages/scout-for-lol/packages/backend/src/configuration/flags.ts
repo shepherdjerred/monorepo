@@ -12,6 +12,7 @@
  * - Explicit defaults: Every limit returns a number (large values for "unlimited")
  */
 
+import { resolveEnvironment } from "#src/configuration.ts";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
@@ -19,9 +20,8 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { isEnabled } from "@shepherdjerred/feature-flags";
-import type { ScoutBooleanFlagKey } from "@shepherdjerred/feature-flags/managed-flag-keys.generated.ts";
 import { isAbsent } from "@shepherdjerred/feature-flags/flag-result.ts";
-import { resolveEnvironment } from "#src/configuration.ts";
+import type { ScoutBooleanFlagKey } from "@shepherdjerred/feature-flags/managed-flag-keys.generated.ts";
 
 // ============================================================================
 // Attribute Types
@@ -150,12 +150,8 @@ type FlagConfig = {
 export type FlagName =
   | `ai_reports_${"enabled" | "unlimited"}`
   | "ai_reviews_enabled"
-  | "betting_enabled"
-  | "bucks_dares_enabled"
+  | "dares_enabled"
   | "dare_notifications_enabled"
-  | "bucks_transfers_enabled"
-  | "betting_player_bet_outcome_dm_enabled"
-  | "betting_settlement_dm_enabled"
   | "challenge_runs_enabled"
   | "clash_surface"
   | "debug"
@@ -184,26 +180,9 @@ type AssertFlagNameSubset<T extends ScoutBooleanFlagKey> = T;
  * compatibility seed and test fixture for provider-unavailable evaluations. */
 export type PolicyFlagName = AssertFlagNameSubset<FlagName>;
 
-/**
- * Product surfaces excluded from production until explicitly promoted. This policy
- * sits above both the local registry and Flipt so an operator override cannot
- * accidentally expose a forbidden production surface.
- *
- * The set is deliberately narrow: real-money-shaped Bryan Bucks surfaces
- * (wallets, betting, parlays, transfers, and the Dares funded from them),
- * duels, the voice assistant, which captures audio, and
- * Scout Client capture and enrichment while its rollout remains beta-only.
- * Everything else is governed by its
- * ordinary flag, so a surface that is merely beta today stays a Flipt
- * decision rather than a code change.
- */
 const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
   [
-    "betting_enabled",
-    "betting_player_bet_outcome_dm_enabled",
-    "betting_settlement_dm_enabled",
-    "bucks_transfers_enabled",
-    "bucks_dares_enabled",
+    "dares_enabled",
     "dare_notifications_enabled",
     "duels_enabled",
     "voice_assistant_enabled",
@@ -290,44 +269,14 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
       },
     ],
   },
-  // Bryan Bucks. Gates the whole betting economy: pool creation, bet placement,
-  // settlement announcements, AND earning. Earning is gated deliberately — an
-  // ungated economy would accrue silently in every server, and enabling the
-  // flag later would hand out a surprise backlog. The trade is that enabling it
-  // starts a guild at zero with no backfill.
-  //
-  // This is a private, single-server beta experiment and is not intended to
-  // become a Scout-wide feature. Production's hard-disable policy wins before
-  // this registry or Flipt is evaluated.
-  betting_enabled: {
-    default: false,
-    overrides: [
-      {
-        value: true,
-        attributes: { server: MY_SERVER },
-      },
-    ],
-  },
-  // SQL-contract Bryan Bucks Dares: drafting, the first funding, the Explore
-  // Dare tools, and the web Dares page. Every later action on a funded Dare
-  // needs only `betting_enabled`, and settlement, refunds, and sweeps are
-  // ungated, so escrowed contributions always resolve after a revocation.
-  // Production's hard-disable policy wins before this registry or Flipt is
-  // evaluated.
-  bucks_dares_enabled: {
+  // Free Dares remain limited to the existing beta guild audience.
+  dares_enabled: {
     default: false,
     overrides: [{ value: true, attributes: { server: MY_SERVER } }],
   },
   dare_notifications_enabled: {
     default: false,
     overrides: [],
-  },
-  // Fee-bearing Bryan Bucks wallet transfers. This is narrower than the
-  // betting economy itself, so the domain requires both flags. Production's
-  // hard-disable policy remains authoritative over local and Flipt values.
-  bucks_transfers_enabled: {
-    default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
   },
   // Feature-discovery tips append a line to messages Scout already sends, so
   // they reach every reader of a channel rather than an opted-in subset. Beta
@@ -338,18 +287,6 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     overrides: [
       { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
     ],
-  },
-  // Settlement messages are a separate rollout from the betting economy: the
-  // economy must keep paying or refunding open positions even while Discord
-  // delivery is disabled. The player-facing notice depends on the bettor
-  // receipt flag so a bettor who is also playing still has exactly one result.
-  betting_settlement_dm_enabled: {
-    default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
-  },
-  betting_player_bet_outcome_dm_enabled: {
-    default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
   },
   debug: {
     default: false,

@@ -1,10 +1,3 @@
-import { afterEach, describe, expect, test } from "vitest";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import {
-  initFeatureFlags,
-  shutdownFeatureFlags,
-} from "@shepherdjerred/feature-flags";
-import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import {
   addFlagOverride,
@@ -16,7 +9,14 @@ import {
   resolveMvpVotesCapability,
   toExploreMatchTally,
 } from "#src/explore/tools/mvp-votes-tools.ts";
-import { bucksTestPuuid } from "#src/testing/bucks-fixtures.ts";
+import { leagueTestPuuid } from "#src/testing/league-fixtures.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import {
+  initFeatureFlags,
+  shutdownFeatureFlags,
+} from "@shepherdjerred/feature-flags";
+import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
+import { afterEach, describe, expect, test } from "vitest";
 
 const ENABLED_GUILD = DiscordGuildIdSchema.parse("1337623164146155593");
 const OTHER_GUILD = DiscordGuildIdSchema.parse("2337623164146155593");
@@ -88,7 +88,7 @@ describe("toExploreMatchTally", () => {
       guildName: "this server",
       blue: [
         {
-          puuid: bucksTestPuuid(0),
+          puuid: leagueTestPuuid(0),
           displayName: "Alice",
           championName: "Ahri",
           voteCount: 2,
@@ -104,7 +104,7 @@ describe("toExploreMatchTally", () => {
     });
     expect(projected.blue).toEqual([
       {
-        puuid: bucksTestPuuid(0),
+        puuid: leagueTestPuuid(0),
         displayName: "Alice",
         championName: "Ahri",
         voteCount: 2,

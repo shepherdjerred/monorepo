@@ -72,8 +72,6 @@ import { runScoutShowcaseRefresh as _runScoutShowcaseRefresh } from "./scout/sco
 import { runScoutQueueWindowsWatch as _runScoutQueueWindowsWatch } from "./scout/scout-queue-windows.ts";
 import type { ScoutQueueWindowsResult } from "#activities/scout/scout-queue-windows.ts";
 import type { ScoutShowcaseRefreshResult } from "#activities/scout/scout-showcase-refresh.ts";
-import { runScoutBryanBucksAnalyticsWorkflow as _runScoutBryanBucksAnalyticsWorkflow } from "./scout/scout-bryan-bucks.ts";
-import type { ScoutBryanBucksAnalyticsResult } from "#activities/scout/scout-bryan-bucks.ts";
 import { runScoutSeasonRefreshWorkflow as _runScoutSeasonRefreshWorkflow } from "./scout/scout-season-refresh.ts";
 import type {
   ScoutSeasonRefreshInput,
@@ -334,10 +332,6 @@ export async function runPokeemeraldDataRefresh(): Promise<PokeemeraldDataRefres
 
 export async function runScoutShowcaseRefresh(): Promise<ScoutShowcaseRefreshResult> {
   return _runScoutShowcaseRefresh();
-}
-
-export async function runScoutBryanBucksAnalyticsWorkflow(): Promise<ScoutBryanBucksAnalyticsResult> {
-  return await _runScoutBryanBucksAnalyticsWorkflow();
 }
 
 export async function runScoutQueueWindowsWatch(): Promise<ScoutQueueWindowsResult> {

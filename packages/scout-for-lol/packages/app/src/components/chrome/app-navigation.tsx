@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { NavLink, useLocation, useNavigate } from "react-router";
 import {
   Bell,
-  Coins,
   Compass,
   FileBarChart,
   KeyRound,
@@ -80,8 +79,8 @@ function ToolNavIcon(props: { to: string }) {
   if (props.to === "/clash") {
     return <Trophy className="size-4 shrink-0 text-scout-subtle" />;
   }
-  if (props.to === "/bucks") {
-    return <Coins className="size-4 shrink-0 text-scout-subtle" />;
+  if (props.to === "/dares") {
+    return <Target className="size-4 shrink-0 text-scout-subtle" />;
   }
   if (props.to.startsWith("/halls")) {
     return <Trophy className="size-4 shrink-0 text-scout-subtle" />;
@@ -335,8 +334,8 @@ export function AppNavigation() {
   const clashQuery = useQuery(
     trpc.clash.status.queryOptions(undefined, { retry: 2 }),
   );
-  const bucksQuery = useQuery(
-    trpc.bucks.status.queryOptions(undefined, { retry: 2 }),
+  const daresQuery = useQuery(
+    trpc.dares.status.queryOptions(undefined, { retry: 2 }),
   );
   const hallQuery = useQuery(
     trpc.hall.status.queryOptions(undefined, { retry: 2 }),
@@ -369,7 +368,7 @@ export function AppNavigation() {
     profilesAvailable: profilesQuery.data?.state === "available",
     challengesAvailable: challengesQuery.data?.enabled === true,
     clashAvailable: clashQuery.data?.state === "available",
-    bucksAvailable: bucksQuery.data?.state === "available",
+    daresAvailable: daresQuery.data?.state === "available",
     hallAvailable: hallQuery.data?.state === "available",
     hallTo,
     duelsAvailable: duelsNav.available,

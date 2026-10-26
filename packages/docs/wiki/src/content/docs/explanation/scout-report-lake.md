@@ -109,8 +109,7 @@ change owners after a game was captured.
 ### Canonical identity is a storage contract
 
 Canonical S3 payloads and database player references use the current PUUID
-domain. Rebuilds, competition standings, pairing stats, and pending-earning
-recovery read those identities directly. Raw-document analysis preserves the
+domain. Rebuilds, competition standings, and pairing stats read those identities directly. Raw-document analysis preserves the
 canonical JSON rather than applying a second map. Its contract contains source
 key, digest, and capture time, but no identity-map metadata.
 
@@ -118,9 +117,7 @@ The archived [database migration](https://github.com/shepherdjerred/monorepo/pul
 and [S3 corpus rewrite](https://github.com/shepherdjerred/monorepo/pull/2868)
 record the identity-domain cutover. Current direct-read paths include
 [`rebuild-sources.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/rebuild-sources.ts),
-[`leaderboard.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/league/competition/leaderboard.ts),
-and
-[`earnings-retry.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/betting/accounts/earnings-retry.ts).
+[`leaderboard.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/league/competition/leaderboard.ts).
 
 The completed cutover's mapping tables, receipts, and approved unresolved
 exceptions are archival evidence, not runtime dependencies. Removing translation
@@ -159,8 +156,7 @@ completes. Guild-scoped lookbacks therefore see the account identities and
 facts together.
 
 The import never enters the normal post-match processor. Historical matches do
-not send Discord messages, generate reports or AI recaps, settle Bryan Bucks,
-award earnings, or fabricate per-match rank deltas.
+not send Discord messages, generate reports or AI recaps, settle Dares or fabricate per-match rank deltas.
 The live poller resumes only after the fixed snapshot is stored and its newest
 ID becomes the cursor, so a game completed during import is notified once.
 
@@ -358,14 +354,14 @@ A participant row also carries its loadout: the final inventory as seven
 slot columns (`item0` through `item6`), both summoner spells, and the rune
 page. A match read selects those columns only when a query names one, and the
 Dare catalog leaves them out
-([dare-sql-catalog.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/betting/dares/sql/dare-sql-catalog.ts)).
+([dare-sql-catalog.ts](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol/packages/backend/src)).
 That is deliberate. Reads name their columns, so
 a build published before a column existed fails any read that names it until
 the schema fingerprint's rebuild publishes. Leaving the loadout out of ordinary
 reads keeps reports working through that window
 ([lake.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/reports/duckdb/lake.ts)).
 
-Bryan Bucks Dares expose those relations, the four timeline
+Dares expose those relations, the four timeline
 relations, and `T1` through `T5`. Each target relation is an ordinary filtered
 view of `match_participants`, bound to the contract's frozen Riot accounts and
 tracking dates. The canonical SQL is the contract; generated prose only explains

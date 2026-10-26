@@ -1,9 +1,4 @@
-import { afterAll, beforeEach, describe, expect, test } from "vitest";
-import {
-  ReportAiPreviewSummarySchema,
-  type ReportAiPreviewSummary,
-  type ExploreStreamEvent,
-} from "@scout-for-lol/data";
+import { ExploreCardSelectionError } from "#src/explore-match/card-selection-error.ts";
 import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
 import {
   getExploreQuotaStatus,
@@ -11,14 +6,19 @@ import {
   tryStartExploreTurn,
 } from "#src/explore/rate-limit.ts";
 import {
-  runPersistedExploreTurn,
   exploreFailureCode,
+  runPersistedExploreTurn,
 } from "#src/explore/runs/run-turn.ts";
-import { ExploreCardSelectionError } from "#src/explore-match/card-selection-error.ts";
 import { ExploreBudgetError } from "#src/explore/spending/ledger.ts";
 import { loadExploreTranscript, startExploreTurn } from "#src/explore/store.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testAccountId } from "#src/testing/test-ids.ts";
+import {
+  ReportAiPreviewSummarySchema,
+  type ExploreStreamEvent,
+  type ReportAiPreviewSummary,
+} from "@scout-for-lol/data";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
 
 const { prisma } = createTestDatabase("explore-run-turn-test");
 const userId = testAccountId("73");
@@ -80,13 +80,13 @@ const successfulAgent = async (params: ExploreAgentParams) => {
 
 // A bucks-tools turn runs no ScoutQL, so its answer carries queryText: null
 // and nothing downstream may require a preview or a chart.
-const bucksOnlyAgent = async (params: ExploreAgentParams) => {
+const dareOnlyAgent = async (params: ExploreAgentParams) => {
   await params.emit({
     type: "tool_result",
     toolCallId: "call-bb",
-    toolName: "query_bucks_bets",
+    toolName: "list_dares",
     status: "succeeded",
-    message: "Got Bryan Bucks results.",
+    message: "Got Dare results.",
     durationMs: 3,
     details: null,
     rawOutput: null,
@@ -94,7 +94,7 @@ const bucksOnlyAgent = async (params: ExploreAgentParams) => {
   return {
     answer: {
       answer: "You are up 12 BB this month.",
-      title: "Monthly Bryan Bucks net",
+      title: "Dare progress",
       queryText: null,
       includeVisualization: false,
       matchCards: [],
@@ -212,7 +212,7 @@ describe("shared persisted Explore turn", () => {
     expect(getExploreQuotaStatus({ userId }).quota[0]?.used).toBe(1);
   });
 
-  test("persists a Bryan-Bucks-only answer with no ScoutQL, preview, or visualization", async () => {
+  test("persists a Dare-only answer with no ScoutQL, preview, or visualization", async () => {
     const prepared = await preparedTurn();
 
     const terminal = await runPersistedExploreTurn(
@@ -225,7 +225,7 @@ describe("shared persisted Explore turn", () => {
       },
       {
         client: prisma,
-        executeAgent: bucksOnlyAgent,
+        executeAgent: dareOnlyAgent,
         now: Date.now,
         timeoutMs: 10_000,
       },

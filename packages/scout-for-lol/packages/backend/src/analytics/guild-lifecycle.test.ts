@@ -1,10 +1,3 @@
-import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
-import {
-  testGuildId,
-  testAccountId,
-  testChannelId,
-} from "#src/testing/test-ids.ts";
-import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
   captureFirstSubscriptionCreated,
   captureGuildRemoval,
@@ -18,6 +11,13 @@ import {
 } from "#src/analytics/guild-lifecycle.ts";
 import type { ProductAnalytics } from "#src/analytics/product-analytics.ts";
 import { createAnalyticsFixture } from "#src/testing/analytics-fixture.ts";
+import { createTestDatabase } from "#src/testing/test-database.ts";
+import {
+  testAccountId,
+  testChannelId,
+  testGuildId,
+} from "#src/testing/test-ids.ts";
+import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 
 const { prisma } = createTestDatabase("guild-lifecycle-analytics-test");
 const SERVER_ID = testGuildId("780");
@@ -428,8 +428,6 @@ describe("guild removal", () => {
     expect(
       await captureGuildRemoval(SERVER_ID, removedAt, prisma, {
         capture,
-        captureBucksMember: () => null,
-        captureBucksSystem: () => true,
         shutdown,
       }),
     ).toBe(true);

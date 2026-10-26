@@ -1,3 +1,21 @@
+import type { ScoutTemporalQueueClass } from "#src/configuration/runtime-role.ts";
+import { createLogger } from "#src/logger.ts";
+import { getTracingRuntime } from "#src/observability/tracing.ts";
+import type {
+  ScoutBackgroundActivities,
+  ScoutLakeActivities,
+  ScoutNotificationActivities,
+} from "#src/temporal/durable-activity-surface.ts";
+import type { ScoutMatchActivities } from "#src/temporal/match/match-activity-surface.ts";
+import type { ScoutStage } from "@scout-for-lol/temporal";
+import { scoutTaskQueues } from "@scout-for-lol/temporal";
+import type { ScoutTemporalActivities } from "@scout-for-lol/temporal/activities";
+import {
+  createTemporalClientTracingInterceptor,
+  createTemporalWorkerTracing,
+} from "@shepherdjerred/temporal-observability/interceptors";
+import { sanitizeTemporalLogFields } from "@shepherdjerred/temporal-observability/log-fields";
+import { createValidatedWorkflowSpanSink } from "@shepherdjerred/temporal-observability/workflow-span-sink";
 import { Client, Connection } from "@temporalio/client";
 import { IllegalStateError } from "@temporalio/common";
 import {
@@ -6,24 +24,6 @@ import {
   Runtime,
   Worker,
 } from "@temporalio/worker";
-import type { ScoutStage } from "@scout-for-lol/temporal";
-import { scoutTaskQueues } from "@scout-for-lol/temporal";
-import type { ScoutTemporalQueueClass } from "#src/configuration/runtime-role.ts";
-import type { ScoutTemporalActivities } from "@scout-for-lol/temporal/activities";
-import type { ScoutMatchActivities } from "#src/temporal/match/match-activity-surface.ts";
-import type {
-  ScoutBackgroundActivities,
-  ScoutLakeActivities,
-  ScoutNotificationActivities,
-} from "#src/temporal/durable-activity-surface.ts";
-import { createLogger } from "#src/logger.ts";
-import {
-  createTemporalClientTracingInterceptor,
-  createTemporalWorkerTracing,
-} from "@shepherdjerred/temporal-observability/interceptors";
-import { createValidatedWorkflowSpanSink } from "@shepherdjerred/temporal-observability/workflow-span-sink";
-import { sanitizeTemporalLogFields } from "@shepherdjerred/temporal-observability/log-fields";
-import { getTracingRuntime } from "#src/observability/tracing.ts";
 
 const logger = createLogger("temporal-supervisor");
 
@@ -172,12 +172,7 @@ type BackgroundActivities = Pick<
   | "markDuelSeriesOverdue"
   | "probeQueue"
 > &
-  ScoutBackgroundActivities & {
-    syncScoutBryanBucksAnalytics: () => Promise<{
-      status: "reconciled" | "skipped";
-      detail: string;
-    }>;
-  };
+  ScoutBackgroundActivities;
 type LakeActivities = Pick<
   ScoutTemporalActivities,
   | "runReportLakeJob"

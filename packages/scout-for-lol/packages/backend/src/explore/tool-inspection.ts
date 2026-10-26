@@ -1,27 +1,15 @@
-import { z } from "zod";
+import {
+  CreationChannelsResultSchema,
+  CreationPrepareResultSchema,
+  CreationTargetsResultSchema,
+  CreationToolKindSchema,
+  ListCreationTargetsToolInputSchema,
+  ListGuildChannelsToolInputSchema,
+  PrepareCompetitionToolInputSchema,
+  PrepareReportToolInputSchema,
+  PrepareSubscriptionToolInputSchema,
+} from "#src/explore/creation/schemas.ts";
 import { inspectRegisteredTool } from "#src/explore/inspection/tool-contracts.ts";
-import type { ExploreTraceDetails } from "@scout-for-lol/data";
-import {
-  BucksAccountQueryResultSchema,
-  BucksAccountQuerySchema,
-  BucksAskDatasetOverviewSchema,
-  BucksBetQueryResultSchema,
-  BucksBetQuerySchema,
-  BucksLedgerQueryResultSchema,
-  BucksLedgerQuerySchema,
-} from "#src/betting/analytics/ask-analytics-schema.ts";
-import {
-  EmptyToolInputSchema,
-  FormatToolOutputSchema,
-  LanguageToolOutputSchema,
-  QueryResultToolOutputSchema,
-  ScoutQlQueryToolInputSchema,
-  ValidationToolOutputSchema,
-} from "#src/reports/ai/scoutql-tools.ts";
-import {
-  HallToolInputSchema,
-  HallToolResultSchema,
-} from "#src/explore/tools/hall-tools.ts";
 import {
   ChallengeCatalogInputSchema,
   ChallengeLeaderboardInputSchema,
@@ -32,7 +20,6 @@ import {
   CompetitionStandingsInputSchema,
   ListCompetitionsInputSchema,
 } from "#src/explore/tools/competition-read-tools.ts";
-import { QueryServersSchema } from "#src/explore/tools/server-scope.ts";
 import {
   DareActionToolInputSchema,
   DareDefinitionToolInputSchema,
@@ -45,44 +32,20 @@ import {
   ReviseDareToolInputSchema,
 } from "#src/explore/tools/dare-tool-schemas.ts";
 import {
-  CreationChannelsResultSchema,
-  CreationToolKindSchema,
-  CreationPrepareResultSchema,
-  CreationTargetsResultSchema,
-  ListCreationTargetsToolInputSchema,
-  ListGuildChannelsToolInputSchema,
-  PrepareCompetitionToolInputSchema,
-  PrepareReportToolInputSchema,
-  PrepareSubscriptionToolInputSchema,
-} from "#src/explore/creation/schemas.ts";
-
-/**
- * The Bryan Bucks tools' validated shapes, keyed by tool name. They carry no
- * curated `details` — the closed `ExploreTraceDetails` union is persisted data
- * and extending it buys little for a one-guild feature — but their raw values
- * are validated before entering the trace like every other tool's.
- */
-const BUCKS_TOOL_SCHEMAS = new Map<
-  string,
-  { input: z.ZodType; output: z.ZodType }
->([
-  [
-    "get_bucks_dataset",
-    { input: EmptyToolInputSchema, output: BucksAskDatasetOverviewSchema },
-  ],
-  [
-    "query_bucks_accounts",
-    { input: BucksAccountQuerySchema, output: BucksAccountQueryResultSchema },
-  ],
-  [
-    "query_bucks_ledger",
-    { input: BucksLedgerQuerySchema, output: BucksLedgerQueryResultSchema },
-  ],
-  [
-    "query_bucks_bets",
-    { input: BucksBetQuerySchema, output: BucksBetQueryResultSchema },
-  ],
-]);
+  HallToolInputSchema,
+  HallToolResultSchema,
+} from "#src/explore/tools/hall-tools.ts";
+import { QueryServersSchema } from "#src/explore/tools/server-scope.ts";
+import {
+  EmptyToolInputSchema,
+  FormatToolOutputSchema,
+  LanguageToolOutputSchema,
+  QueryResultToolOutputSchema,
+  ScoutQlQueryToolInputSchema,
+  ValidationToolOutputSchema,
+} from "#src/reports/ai/scoutql-tools.ts";
+import type { ExploreTraceDetails } from "@scout-for-lol/data";
+import { z } from "zod";
 
 const DARE_TOOL_SCHEMAS = new Map<
   string,
@@ -130,13 +93,6 @@ const DARE_TOOL_SCHEMAS = new Map<
   ],
 ]);
 
-/**
- * The Explore creation tools' validated shapes, keyed by tool name.
- *
- * Like the Bucks and Dare maps they carry no curated `details`: the closed
- * `ExploreTraceDetails` union is persisted data, and these results are already
- * bounded by their own schemas.
- */
 const CREATION_TOOL_SCHEMAS = new Map<
   string,
   { input: z.ZodType; output: z.ZodType }
@@ -178,15 +134,6 @@ const CREATION_TOOL_SCHEMAS = new Map<
   ],
 ]);
 
-/**
- * Explore's feature read tools: Hall of Fame, challenge runs, competitions.
- *
- * Registered so their input and output reach the trace like every other
- * feature tool's. Unregistered, the trace recorded nothing for them — which
- * hid what the model had actually been told, and left the replay judge with
- * no evidence for any figure they supplied. They throw on failure and answer
- * refusals as results, as the Bucks tools do, so they share that branch.
- */
 const FEATURE_READ_TOOL_SCHEMAS = new Map<
   string,
   { input: z.ZodType; output: z.ZodType }
@@ -326,11 +273,10 @@ export function inspectExploreToolCall(
       },
     };
   }
-  const bucks =
-    BUCKS_TOOL_SCHEMAS.get(toolName) ?? FEATURE_READ_TOOL_SCHEMAS.get(toolName);
-  if (bucks !== undefined) {
+  const feature = FEATURE_READ_TOOL_SCHEMAS.get(toolName);
+  if (feature !== undefined) {
     return {
-      rawInput: JsonValueSchema.parse(bucks.input.parse(input)),
+      rawInput: JsonValueSchema.parse(feature.input.parse(input)),
       details: null,
     };
   }
@@ -413,14 +359,13 @@ export function inspectExploreToolResult(
       },
     };
   }
-  const bucks =
-    BUCKS_TOOL_SCHEMAS.get(toolName) ?? FEATURE_READ_TOOL_SCHEMAS.get(toolName);
-  if (bucks !== undefined) {
-    bucks.input.parse(input);
+  const feature = FEATURE_READ_TOOL_SCHEMAS.get(toolName);
+  if (feature !== undefined) {
+    feature.input.parse(input);
     // These tools throw on failure, so a delivered result is a success.
     return {
       succeeded: true,
-      rawOutput: JsonValueSchema.parse(bucks.output.parse(output)),
+      rawOutput: JsonValueSchema.parse(feature.output.parse(output)),
       details: null,
     };
   }

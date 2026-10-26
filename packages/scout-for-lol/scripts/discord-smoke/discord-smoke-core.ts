@@ -10,7 +10,6 @@ export const DiscordSmokeFixtureSchema = z.object({
   applicationId: z.literal(DERREJ_APPLICATION_ID),
   botUserId: z.literal(DERREJ_APPLICATION_ID),
   invokingUserId: z.literal(DERREJ_USER_ID),
-  recipientUserId: SnowflakeSchema,
   guildId: SnowflakeSchema,
   channelId: SnowflakeSchema,
   pinchTabProfile: z.literal("scout-discord-smoke"),
@@ -26,16 +25,6 @@ export const DiscordSmokeManifestSchema = z.object({
     .regex(/^scout_test_[a-z0-9_]+$/u)
     .nullable(),
   databaseUrl: z.url().nullable(),
-  seededAccounts: z
-    .object({
-      senderId: z.number().int().positive(),
-      senderBalance: z.number().int(),
-      recipientId: z.number().int().positive(),
-      recipientBalance: z.number().int(),
-      houseId: z.number().int().positive(),
-      houseBalance: z.number().int(),
-    })
-    .nullable(),
   invocationStartedAt: z.iso.datetime().nullable(),
   privateReplyId: SnowflakeSchema.nullable(),
   publicMessageId: SnowflakeSchema.nullable(),
@@ -51,9 +40,6 @@ const DiscordChannelSchema = z.object({
   guild_id: SnowflakeSchema,
 });
 const DiscordApplicationSchema = z.object({ id: SnowflakeSchema });
-const DiscordGuildMemberSchema = z.object({
-  user: z.object({ id: SnowflakeSchema }),
-});
 const DiscordCommandSchema = z.object({
   id: SnowflakeSchema,
   name: z.string(),
@@ -236,18 +222,6 @@ export async function preflightDiscordSmoke(
   if (application.id !== fixture.applicationId) {
     throw new Error(
       `Discord bot token belongs to application ${application.id}, expected ${fixture.applicationId}`,
-    );
-  }
-  const recipientMember = DiscordGuildMemberSchema.parse(
-    await discordJson(
-      dependencies.fetch,
-      `/guilds/${fixture.guildId}/members/${fixture.recipientUserId}`,
-      botAuthorization,
-    ),
-  );
-  if (recipientMember.user.id !== fixture.recipientUserId) {
-    throw new Error(
-      `Discord smoke recipient resolved user ${recipientMember.user.id}, expected ${fixture.recipientUserId}`,
     );
   }
   await dependencies.verifyPinchTabProfile(

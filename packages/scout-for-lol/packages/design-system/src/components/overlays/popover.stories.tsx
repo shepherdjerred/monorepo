@@ -22,13 +22,13 @@ function ControlledPopover() {
     <div className="scout-stack">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline">Bryan Bucks balance</Button>
+          <Button variant="outline">Dare progress</Button>
         </PopoverTrigger>
         <PopoverContent>
           <div className="scout-stack">
-            <strong>1,250 Bryan Bucks</strong>
+            <strong>3 of 5 wins</strong>
             <p className="scout-muted">
-              320 staked across two open dares this week.
+              Two active dares have eligible match evidence this week.
             </p>
             <Button
               size="sm"

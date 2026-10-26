@@ -22,7 +22,7 @@ import {
  */
 
 /**
- * Conversations opened by the Bryan Bucks flow rather than typed by anyone.
+ * Conversations opened by the Dare flow rather than typed by anyone.
  *
  * Their first message is a template ("Create one private ScoutQL-backed Dare
  * v2 draft from this exact request: …"). Worth replaying, but counted apart:

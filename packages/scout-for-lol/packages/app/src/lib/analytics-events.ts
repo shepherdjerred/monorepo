@@ -91,11 +91,8 @@ const SCOUT_ANALYTICS_EVENTS = [
   "challenge_template_published",
   "duel_challenge_issued",
   "duel_event_created",
-  // Bryan Bucks
-  "bucks_bet_placed",
-  "bucks_bet_cancelled",
-  "bucks_parlay_bet_placed",
-  "bucks_notification_prefs_updated",
+  // Dares
+  "dare_notification_prefs_updated",
   // Feedback prompt
   "feedback_shown",
   "feedback_prompt_visible",

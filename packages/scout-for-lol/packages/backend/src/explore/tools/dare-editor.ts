@@ -1,22 +1,21 @@
-import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
-import { TRPCError } from "@trpc/server";
-import { z } from "zod";
-import {
-  StorableDareChallengerStakeSchema,
-  DareDeadlineSpecSchema,
-  DareTargetBindingSchema,
-  DARE_MAX_QUERY_LENGTH,
-  DiscordGuildIdSchema,
-  type DiscordAccountId,
-} from "@scout-for-lol/data";
 import {
   prepareDareDraft,
   retainedDareDraftSemantics,
   reviseDareDraft,
-} from "#src/betting/dares/lifecycle/dare-draft.ts";
-import { renderDareSqlSemanticProofPlan } from "#src/betting/dares/sql/dare-sql-description.ts";
+} from "#src/dares/lifecycle/dare-draft.ts";
+import { parseStoredStatusPhrases } from "#src/dares/presentation/dare-list-copy.ts";
+import { renderDareSqlSemanticProofPlan } from "#src/dares/sql/dare-sql-description.ts";
 import { prisma } from "#src/database/index.ts";
-import { parseStoredStatusPhrases } from "#src/betting/dares/presentation/dare-list-copy.ts";
+import {
+  DARE_MAX_QUERY_LENGTH,
+  DareDeadlineSpecSchema,
+  DareTargetBindingSchema,
+  DiscordGuildIdSchema,
+  type DiscordAccountId,
+} from "@scout-for-lol/data";
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 
 export const DareDraftEditorInputSchema = z.strictObject({
   dareId: z.number().int().positive(),
@@ -25,7 +24,6 @@ export const DareDraftEditorInputSchema = z.strictObject({
   plainLanguage: z.string().min(1).max(4000),
   queryText: z.string().min(1).max(DARE_MAX_QUERY_LENGTH),
   deadlineSpec: DareDeadlineSpecSchema,
-  openingStake: StorableDareChallengerStakeSchema,
 });
 
 export const DareDraftPreviewInputSchema = DareDraftEditorInputSchema.extend({
@@ -40,7 +38,7 @@ async function loadOwnedDraft(input: {
   userId: DiscordAccountId;
   guildIds: DiscordGuildId[];
 }) {
-  const dare = await prisma.bucksDare.findFirst({
+  const dare = await prisma.dare.findFirst({
     where: {
       id: input.dareId,
       challengerDiscordId: input.userId,
@@ -102,7 +100,6 @@ function contractDefinition(
     plainLanguage: input.plainLanguage,
     targets: owned.targets,
     deadlineSpec: input.deadlineSpec,
-    openingStake: input.openingStake,
     ...retainedDareDraftSemantics(owned.revision.compiledPlan),
   };
 }

@@ -70,7 +70,7 @@ queries.
 
 ## If a call has no subject
 
-Workloads with no requester declare `system` on purpose — scheduled betting runs
+Workloads with no requester declare `system` on purpose — scheduled report runs
 and match reviews are not made on behalf of a person who asked. Those are
 attributed, just not to a human. A span with _no_ subject attributes at all is an
 unwrapped call site.

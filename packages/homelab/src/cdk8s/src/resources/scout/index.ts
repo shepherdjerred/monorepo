@@ -45,13 +45,6 @@ import {
   scoutTemporalMetricsServicePort,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/temporal-metrics.ts";
 
-function requiredBryanBucksControlSecret(secret: ISecret | undefined): ISecret {
-  if (secret === undefined) {
-    throw new Error("Beta Scout requires its Bryan Bucks control secret.");
-  }
-  return secret;
-}
-
 function requiredVoiceOpenAiSecret(secret: ISecret | undefined): ISecret {
   if (secret === undefined) {
     throw new Error("Beta Scout requires its voice OpenAI secret.");
@@ -120,19 +113,6 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       itemPath: path,
     },
   });
-  // The vault item keeps its original name; only the Kubernetes secret and the
-  // environment variable follow the feature that still uses the credential.
-  const bryanBucksControlSecret =
-    stage === "beta"
-      ? Secret.fromSecretName(
-          chart,
-          "scout-bryan-bucks-control-secret",
-          new OnePasswordItem(chart, "scout-bryan-bucks-control-1p", {
-            metadata: { name: "scout-bryan-bucks-control" },
-            spec: { itemPath: vaultItemPath("scout-weekly-parlay-control") },
-          }).name,
-        )
-      : undefined;
   // Hey Scout's OpenAI Realtime credential. A dedicated item rather than a
   // field on scout-for-lol-1p so it rotates on its own (OpenTofu mints it as
   // the `scout-voice-2026-09` service account), and beta-only because
@@ -370,10 +350,6 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     stage === "beta"
       ? {
           ...baseEnvVariables,
-          BRYAN_BUCKS_CONTROL_TOKEN: EnvValue.fromSecretValue({
-            secret: requiredBryanBucksControlSecret(bryanBucksControlSecret),
-            key: "token",
-          }),
           // Beta's entire access gate: sign in, and belong to one of these
           // Discord servers. An unset or empty list denies everyone, so this
           // must be present for anyone to reach /app/explore in beta.

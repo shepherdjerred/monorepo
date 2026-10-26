@@ -39,9 +39,9 @@ const reportLinks = [
   { href: "#custom-games", label: "Custom game scoreboards" },
 ] as const;
 
-const bettingLinks = [
+const dareLinks = [
   { href: "#open-dares", label: "Open dares" },
-  { href: "#leaderboard", label: "Bryan Bucks leaderboard" },
+  { href: "#leaderboard", label: "Dare progress" },
 ] as const;
 
 function ControlledNavigationMenu() {
@@ -60,10 +60,10 @@ function ControlledNavigationMenu() {
               <NavLinkList links={reportLinks} />
             </NavigationMenuContent>
           </NavigationMenuItem>
-          <NavigationMenuItem value="betting">
-            <NavigationMenuTrigger>Bryan Bucks</NavigationMenuTrigger>
+          <NavigationMenuItem value="dares">
+            <NavigationMenuTrigger>Dares</NavigationMenuTrigger>
             <NavigationMenuContent>
-              <NavLinkList links={bettingLinks} />
+              <NavLinkList links={dareLinks} />
             </NavigationMenuContent>
           </NavigationMenuItem>
         </NavigationMenuList>
@@ -131,9 +131,9 @@ export const Vertical: Story = {
           </NavigationMenuContent>
         </NavigationMenuItem>
         <NavigationMenuItem>
-          <NavigationMenuTrigger>Betting</NavigationMenuTrigger>
+          <NavigationMenuTrigger>Dares</NavigationMenuTrigger>
           <NavigationMenuContent>
-            <NavLinkList links={bettingLinks} />
+            <NavLinkList links={dareLinks} />
           </NavigationMenuContent>
         </NavigationMenuItem>
       </NavigationMenuList>

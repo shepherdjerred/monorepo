@@ -52,7 +52,6 @@ describe("pickDiverseSuggestions", () => {
   test("ensures category diversity across picked items", () => {
     // When flags are enabled and we pick 4 items, they should be drawn from different categories
     const ctx: ExploreFeatureContext = {
-      bucksEnabled: true,
       mvpVotesEnabled: true,
       daresEnabled: true,
       competitionsEnabled: true,

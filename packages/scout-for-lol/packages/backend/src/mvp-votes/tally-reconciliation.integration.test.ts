@@ -1,19 +1,19 @@
-import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
-import {
-  DiscordAccountIdSchema,
-  DiscordGuildIdSchema,
-} from "@scout-for-lol/data";
-import { NotificationIntentSchema } from "@scout-for-lol/domain/notifications/intent.ts";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { upsertIntent } from "#src/database/durable/intent-repository.ts";
-import { createTestDatabase } from "#src/testing/test-database.ts";
-import { bucksTestPuuid } from "#src/testing/bucks-fixtures.ts";
-import { freezeMvpTestRoster } from "#src/testing/mvp-votes-fixtures.ts";
 import {
   reconcileMvpTallyRefresh,
   reconcilePendingMvpTallyRefreshes,
 } from "#src/mvp-votes/tally-reconciliation.ts";
 import { upsertMatchMvpVote } from "#src/mvp-votes/vote.ts";
+import { leagueTestPuuid } from "#src/testing/league-fixtures.ts";
+import { freezeMvpTestRoster } from "#src/testing/mvp-votes-fixtures.ts";
+import { createTestDatabase } from "#src/testing/test-database.ts";
+import {
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { NotificationIntentSchema } from "@scout-for-lol/domain/notifications/intent.ts";
+import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 
 const { prisma: db } = createTestDatabase("mvp-tally-reconciliation");
 const matchId = RiotMatchIdSchema.parse("NA1_5000000099");
@@ -29,7 +29,7 @@ async function vote(nomineeIndex: number) {
       voterDiscordId,
       category: "ally",
       nomineeIndex,
-      voterPuuid: bucksTestPuuid(0),
+      voterPuuid: leagueTestPuuid(0),
       voterTeamId: 100,
     },
     db,

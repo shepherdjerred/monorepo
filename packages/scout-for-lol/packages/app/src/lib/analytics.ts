@@ -349,7 +349,7 @@ export function syncAnalyticsIdentity(session: {
  * The part of a path whose analytics context must resolve before this route may
  * emit anything, or undefined when the route carries no context beyond identity.
  *
- * The guild workspace and the Bryan Bucks workspace both register the guild
+ * The guild workspace and the Dares workspace both register the guild
  * super property so their events attribute to the server whose economy they
  * acted on. A future route that registers its own property belongs here too —
  * that is what keeps the gate one rule rather than a race rediscovered per
@@ -359,7 +359,7 @@ export function analyticsContextRoute(pathname: string): string | undefined {
   return (
     /^\/g\/[^/]+/.exec(pathname)?.[0] ??
     /^\/(?:halls|duels)\/[^/]+/.exec(pathname)?.[0] ??
-    /^\/bucks\b/.exec(pathname)?.[0] ??
+    /^\/dares\b/.exec(pathname)?.[0] ??
     undefined
   );
 }
@@ -476,7 +476,7 @@ export function normalizePath(pathname: string): string {
       /\/reports\/(?!new(?:\/|$)|help(?:\/|$))[^/]+/,
       "/reports/:reportId",
     )
-    .replace(/^\/bucks\/dares\/[^/]+/, "/bucks/dares/:dareId")
+    .replace(/^\/dares\/(?!settings$)[^/]+/, "/dares/:dareId")
     // Share token first, so the conversation rule's lookahead then sees the
     // already-templated `s` segment. The token is the share credential — it
     // is templated away before anything reaches PostHog.
@@ -487,7 +487,7 @@ export function normalizePath(pathname: string): string {
       "/explore/:conversationId",
     );
   const knownRoute =
-    /^(?:\/|\/(?:login|welcome|installed|manage)|\/explore(?:\/(?::conversationId|s\/:shareToken|matches\/:matchId))?|\/players(?:\/:playerId(?:\/matches\/:matchId)?)?|\/champions\/:championId|\/halls\/:guildId|\/challenges(?:\/(?:drafts\/:draftId|:templateId))?|\/clash|\/challenge-runs\/:runId|\/duels\/:guildId(?:\/(?:events\/:eventId(?:\/standings)?|series\/:seriesId|head-to-head))?|\/bucks(?:\/(?:dares(?:\/:dareId)?|history|leaderboard|settings))?|\/g\/:guildId(?:\/(?:access|audit|subscriptions|players(?:\/:alias(?:\/manage)?)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?|hall-of-fame)?)?)$/;
+    /^(?:\/|\/(?:login|welcome|installed|manage)|\/explore(?:\/(?::conversationId|s\/:shareToken|matches\/:matchId))?|\/players(?:\/:playerId(?:\/matches\/:matchId)?)?|\/champions\/:championId|\/halls\/:guildId|\/challenges(?:\/(?:drafts\/:draftId|:templateId))?|\/clash|\/challenge-runs\/:runId|\/duels\/:guildId(?:\/(?:events\/:eventId(?:\/standings)?|series\/:seriesId|head-to-head))?|\/dares(?:\/(?:settings|:dareId))?|\/g\/:guildId(?:\/(?:access|audit|subscriptions|players(?:\/:alias(?:\/manage)?)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?|hall-of-fame)?)?)$/;
   return knownRoute.test(normalized) ? normalized : "/not-found";
 }
 

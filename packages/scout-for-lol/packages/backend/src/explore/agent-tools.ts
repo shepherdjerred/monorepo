@@ -1,46 +1,32 @@
-import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
-import { tool } from "ai";
-import { registerExploreToolContracts } from "#src/explore/inspection/tool-contracts.ts";
 import { exploreAnalysisEnabled } from "#src/config/dynamic.ts";
+import { prisma } from "#src/database/index.ts";
+import { loadoutPairsInPreview } from "#src/explore-match/loadout-view.ts";
+import {
+  isExploreMatchSnapshotSupported,
+  matchIdsInPreview,
+} from "#src/explore-match/match-view.ts";
+import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
 import { createMatchReviewTools } from "#src/explore/analysis/review-tool.ts";
 import { createAnalysisTools } from "#src/explore/analysis/tools.ts";
-import type { ExploreAgentParams } from "#src/explore/analysis/agent-types.ts";
-import { z } from "zod";
-import {
-  EXPLORE_MAX_PREVIEW_CALLS,
-  EXPLORE_MAX_TOOL_CALLS,
-  EXPLORE_MODEL_PREVIEW_MAX_ROWS,
-  ReportQueryTextSchema,
-  type ReportAiPreviewSummary,
-  type VisualizationSnapshot,
-} from "@scout-for-lol/data";
-import { quoteScoutQlString } from "@scout-for-lol/data/model/scoutql/editor/format-expr.ts";
-import type { ScoutQlSource } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
-import { prisma } from "#src/database/index.ts";
 import type { CreationCapability } from "#src/explore/creation/capability.ts";
 import { emptyResultReason } from "#src/explore/empty-result-reason.ts";
 import { createGatedExploreTools } from "#src/explore/gated-tools.ts";
-import { ScopeRefusedError } from "#src/reports/duckdb/plan-source.ts";
-import {
-  QueryServersSchema,
-  createListMyServersTool,
-  resolveTurnScope,
-} from "#src/explore/tools/server-scope.ts";
-import type { HallExploreCapability } from "#src/explore/tools/hall-tools.ts";
+import { registerExploreToolContracts } from "#src/explore/inspection/tool-contracts.ts";
 import {
   enabledExploreSkills,
   type ExploreSkillOptions,
 } from "#src/explore/skills/registry.ts";
 import { createLoadSkillTool } from "#src/explore/skills/tool.ts";
-import { type BucksExploreCapability } from "#src/explore/tools/bucks-tools.ts";
 import { createClashExploreTools } from "#src/explore/tools/clash-tools.ts";
+import { type DareExploreCapability } from "#src/explore/tools/dare-capability.ts";
+import type { HallExploreCapability } from "#src/explore/tools/hall-tools.ts";
 import { createLeagueExploreTools } from "#src/explore/tools/league-tools.ts";
 import { type MvpVotesExploreCapability } from "#src/explore/tools/mvp-votes-tools.ts";
 import {
-  isExploreMatchSnapshotSupported,
-  matchIdsInPreview,
-} from "#src/explore-match/match-view.ts";
-import { loadoutPairsInPreview } from "#src/explore-match/loadout-view.ts";
+  createListMyServersTool,
+  QueryServersSchema,
+  resolveTurnScope,
+} from "#src/explore/tools/server-scope.ts";
 import { scoutExploreToolCallsTotal } from "#src/metrics/explore.ts";
 import {
   reportQueryModelPreviewSummary,
@@ -54,8 +40,22 @@ import {
   type ToolTracker,
 } from "#src/reports/ai/scoutql-tools.ts";
 import { fetchMatchSupport } from "#src/reports/duckdb/community/match-support.ts";
+import { ScopeRefusedError } from "#src/reports/duckdb/plan-source.ts";
 import { resolvePlayerIdentities } from "#src/reports/identity.ts";
 import { executeReportQuery } from "#src/reports/query/query-engine.ts";
+import {
+  EXPLORE_MAX_PREVIEW_CALLS,
+  EXPLORE_MAX_TOOL_CALLS,
+  EXPLORE_MODEL_PREVIEW_MAX_ROWS,
+  ReportQueryTextSchema,
+  type ReportAiPreviewSummary,
+  type VisualizationSnapshot,
+} from "@scout-for-lol/data";
+import { quoteScoutQlString } from "@scout-for-lol/data/model/scoutql/editor/format-expr.ts";
+import type { ScoutQlSource } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import { tool } from "ai";
+import { z } from "zod";
 
 const ExploreLoadoutPairKeySchema = z.tuple([z.string(), z.string()]);
 
@@ -87,7 +87,7 @@ type ExploreToolsOptions = {
   params: ExploreAgentParams;
   state: RunState;
   skillOptions: ExploreSkillOptions;
-  bucksCapability: BucksExploreCapability | null;
+  dareCapability: DareExploreCapability | null;
   mvpVotesCapability: MvpVotesExploreCapability | null;
   daresEnabled: boolean;
   challengesEnabled: boolean;
@@ -102,7 +102,7 @@ export function createExploreTools(options: ExploreToolsOptions) {
     params,
     state,
     skillOptions,
-    bucksCapability,
+    dareCapability,
     mvpVotesCapability,
     daresEnabled,
     challengesEnabled,
@@ -348,7 +348,6 @@ export function createExploreTools(options: ExploreToolsOptions) {
     load_skill: createLoadSkillTool({
       skills: enabledExploreSkills(skillOptions),
       context: {
-        bucks: skillOptions.bucks,
         mvpVotes: skillOptions.mvpVotes ?? null,
         surface: params.surface,
       },
@@ -373,7 +372,7 @@ export function createExploreTools(options: ExploreToolsOptions) {
       track,
     }),
     ...createGatedExploreTools({
-      bucksCapability,
+      dareCapability,
       mvpVotesCapability,
       daresEnabled,
       challengesEnabled,

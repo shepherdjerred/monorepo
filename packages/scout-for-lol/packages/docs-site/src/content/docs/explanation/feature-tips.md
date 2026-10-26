@@ -13,7 +13,7 @@ others without turning into an advertisement.
 ## What a tip looks like
 
 A tip is a single line in the footer of a message Scout was already sending —
-a post-match report, a pre-match alert, or a Bryan Bucks settlement DM. It is
+a post-match report or a pre-match alert. It is
 never its own message, so it cannot add to the traffic in your channel.
 
 If a message has no embed, or its footer already says something (a competition
@@ -40,9 +40,6 @@ Two independent limits, and both must allow it:
   server does not get more tips than a quiet one, because the pacing is
   time-based rather than volume-based.
 - A **percentage** — only a fraction of otherwise-eligible messages carry one.
-
-A settlement DM that already carries the `/bb notifications` hint never also
-carries a tip. One aside per message is the limit.
 
 ## Seeing one twice
 

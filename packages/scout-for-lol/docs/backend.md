@@ -90,8 +90,7 @@ sequenceDiagram
 
 Discord registration keeps `/help`, `/setup`, `/status`, `/invite`, `/docs`,
 `/track`, and `/list` global in both stages. Production adds `/scout` globally;
-beta registers it only in allowlisted guilds. `/bb` and `/lobby` remain
-beta-only guild payloads. Guild payloads are reconciled after the gateway
+beta registers it only in allowlisted guilds. `/dare` remains a beta-only guild payload. Guild payloads are reconciled after the gateway
 connects and whenever the bot joins a guild, including empty replacements that
 clear stale commands. `/scout ask` calls the same persisted Explore runner as
 HTTP/SSE; only delivery differs. Publishing reloads the frozen owner-scoped

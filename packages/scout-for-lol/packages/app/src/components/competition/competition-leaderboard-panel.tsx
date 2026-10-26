@@ -14,7 +14,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { competitionAnalysisDateInput } from "#src/lib/bucks/competition-analysis-date.ts";
+import { competitionAnalysisDateInput } from "#src/lib/competitions/competition-analysis-date.ts";
 import { formatDate } from "#src/lib/format/format.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";

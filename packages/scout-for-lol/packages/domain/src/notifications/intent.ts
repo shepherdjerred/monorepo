@@ -30,8 +30,8 @@ import {
  * What the notification announces, which decides how it is rendered and
  * delivered. A `prematch` intent announces a game that has started and is
  * rendered from the archived spectator snapshot; a `postmatch` intent reports
- * a finished game from its MatchV5 payload; a `settlement` intent tells one
- * guild channel how its Bryan Bucks pool and parlay settled; a
+ * a finished game from its MatchV5 payload; `settlement` is retained only to
+ * suppress pre-retirement persisted intents; a
  * `hall-record-break` intent tells one guild's Hall of Fame channel which
  * records a match broke; a `duel-status` intent reports a Duel series; a
  * `dare-status` intent tells a Dare participant by DM, or the Dare's own
@@ -295,7 +295,7 @@ export const NotificationIntentSchema = z
     /**
      * What an announcement kind says, as a versioned envelope the delivery
      * side re-parses with the codec that owns it. Opaque here on purpose:
-     * the presentation inputs are the betting slice's own types, and the
+     * presentation inputs belong to their notification adapters, and the
      * domain must not mirror them. Present exactly for the kinds in
      * `ANNOUNCEMENT_INTENT_KINDS`; the refinement below is what makes a
      * settlement intent with nothing to say, or a report intent smuggling a

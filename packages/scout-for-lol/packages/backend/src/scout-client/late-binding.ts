@@ -1,27 +1,22 @@
-import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
-import { matchEffectsAllowed } from "#src/evidence/admission.ts";
-import {
-  SCOUT_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
-  SCOUT_MATCH_RECEIPT_KINDS,
-  type ScoutMatchPhase,
-} from "@scout-for-lol/temporal/match-receipts";
-import type { ScoutMatchPipelineStateResult } from "@scout-for-lol/temporal/activity-contracts";
-import { awardBucksForMatch } from "#src/betting/accounts/earnings.ts";
 import configuration from "#src/configuration.ts";
 import { finalizeManagedCustomResult } from "#src/customs/riot-results.ts";
 import { prisma } from "#src/database/index.ts";
-import { readLegacyMatchCompletion } from "#src/temporal/match/legacy-completion.ts";
+import { matchEffectsAllowed } from "#src/evidence/admission.ts";
 import { fetchTimelineForDuelProgression } from "#src/league/tasks/postmatch/match-report-standard.ts";
 import {
   duelMatchNeedsTimeline,
   processDuelResult,
 } from "#src/progression/duels/results.ts";
-import {
-  lateBindingEarningsCheckpointSink,
-  mintStandingLateBindingEarningIntents,
-} from "#src/temporal/match/match-effects.ts";
+import { readLegacyMatchCompletion } from "#src/temporal/match/legacy-completion.ts";
 import { resolveScoutMatchContext } from "#src/temporal/match/match-context.ts";
 import { readMatchPipelineState } from "#src/temporal/match/match-reads.ts";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import type { ScoutMatchPipelineStateResult } from "@scout-for-lol/temporal/activity-contracts";
+import {
+  SCOUT_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
+  SCOUT_MATCH_RECEIPT_KINDS,
+  type ScoutMatchPhase,
+} from "@scout-for-lol/temporal/match-receipts";
 
 const ALWAYS_REQUIRED_BINDING_PHASES = [
   "tournament",
@@ -87,18 +82,6 @@ export async function reconcileProcessedClientBinding(
     context.matchDataSource,
   );
   if (state.state.policy !== "FULL") return true;
-  await awardBucksForMatch(
-    context.matchData,
-    prisma,
-    lateBindingEarningsCheckpointSink(
-      riotMatchId,
-      state.state.deliveryMode === "live",
-    ),
-  );
-  await mintStandingLateBindingEarningIntents({
-    riotMatchId,
-    gameCreation: context.matchData.info.gameCreation,
-  });
 
   if (await duelMatchNeedsTimeline(context.matchData)) {
     const timeline = await fetchTimelineForDuelProgression(

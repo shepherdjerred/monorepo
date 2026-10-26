@@ -71,8 +71,7 @@ flowchart LR
 
 Once a match reaches the V2 workflow, it follows the established archive,
 timeline, report-lake, report, notification, competition, duel, and challenge
-stages. Bryan Bucks uses a separate anti-farming gate: a custom match must have
-the exact roster of a scheduled Custom or duel game.
+stages.
 
 Mastery, season milestones, Clash, and challenge observations are latest-value
 player snapshots. Clash snapshots include check-in eligibility, invitations,

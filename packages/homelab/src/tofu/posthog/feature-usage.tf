@@ -193,61 +193,6 @@ resource "posthog_insight" "scout_discord_commands_by_name" {
   tags      = null
 }
 
-resource "posthog_insight" "scout_bb_by_subcommand" {
-  create_in_folder = null
-  dashboard_ids    = [tonumber(posthog_dashboard.scout_feature_usage.id)]
-  deleted          = false
-  derived_name     = null
-  description      = "Bryan Bucks command usage split by subcommand (balance, history, dare, transfer, …)."
-  name             = "/bb usage by subcommand (weekly)"
-  project_id       = "549883"
-  query_json = jsonencode({
-    kind = "InsightVizNode"
-    source = {
-      breakdownFilter = {
-        breakdown      = "subcommand"
-        breakdown_type = "event"
-      }
-      dateRange = {
-        date_from                = "-90d"
-        excludeIncompletePeriods = false
-        explicitDate             = false
-      }
-      filterTestAccounts = false
-      interval           = "week"
-      kind               = "TrendsQuery"
-      properties = {
-        type = "AND"
-        values = [{
-          type = "AND"
-          values = [{
-            key      = "command_name"
-            operator = "exact"
-            type     = "event"
-            value    = ["bb"]
-          }]
-        }]
-      }
-      series = [{
-        event = "discord_command_used"
-        kind  = "EventsNode"
-        name  = "discord_command_used"
-      }]
-      trendsFilter = {
-        aggregationAxisFormat   = "numeric"
-        display                 = "ActionsStackedBar"
-        showAlertThresholdLines = false
-        showLegend              = true
-        showPercentStackView    = false
-        showValuesOnSeries      = false
-        smoothingIntervals      = 1
-        yAxisScaleType          = "linear"
-      }
-    }
-  })
-  query_sql = null
-  tags      = null
-}
 
 resource "posthog_insight" "scout_voice_questions_by_outcome" {
   create_in_folder = null

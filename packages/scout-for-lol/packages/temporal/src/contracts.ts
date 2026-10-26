@@ -143,6 +143,16 @@ export const SCOUT_BACKGROUND_JOB_KINDS_V1 = [
   "clash-snapshot",
 ] as const;
 
+/** Current producers and queue capability probes advertise only these jobs. */
+export const ScoutActiveBackgroundJobKindSchema = z.enum(
+  SCOUT_BACKGROUND_JOB_KINDS_V1.filter(
+    (kind) =>
+      kind !== "custom-nights-expiry" &&
+      kind !== "bucks-reconciliation" &&
+      kind !== "weekly-bucks-leaderboard",
+  ),
+);
+/** Retained Workflow inputs still decode; retired Activities complete without effects. */
 export const ScoutBackgroundJobInputSchema = z.object({
   stage: ScoutStageSchema,
   kind: z.enum(
@@ -157,7 +167,8 @@ export type ScoutBackgroundJobInput = z.infer<
 
 export const ScoutDetachedWorkInputSchema = z.object({
   stage: ScoutStageSchema,
-  kind: z.enum(["parlay-generation", "champion-mastery-refresh"]),
+  // parlay-generation is retained solely to replay issued histories.
+  kind: z.enum(["champion-mastery-refresh", "parlay-generation"]),
   workId: OpaqueIdentifierSchema,
 });
 export type ScoutDetachedWorkInput = z.infer<

@@ -32,6 +32,9 @@ import {
 // allow-list — NOT a blind prune of "anything not in SCHEDULES", which would
 // also delete the ad-hoc/cron agent-task schedules created via the /agent-tasks API.
 export const DELETED_SCHEDULE_IDS = [
+  "scout-bryan-bucks-analytics",
+  "scout-prod-bucks-reconciliation",
+  "scout-prod-weekly-bucks-leaderboard",
   // CI maintenance schedules renamed off the provider: the id is also the
   // `maintenance_job` metric label the homelab staleness alerts watch, so the
   // old ids must be deleted rather than orphaned or both names would appear to
@@ -122,6 +125,8 @@ export const DELETED_SCHEDULE_IDS = [
  * beta-only schedule listed there would never actually be deleted.
  */
 const DELETED_BETA_SCHEDULE_IDS = [
+  "scout-beta-bucks-reconciliation",
+  "scout-beta-weekly-bucks-leaderboard",
   // Hall and Duel delivery now have V2 intent owners. Domain reconciliation
   // remains scheduled; only the drained legacy delivery job is retired.
   "scout-beta-progression-outbox",
@@ -144,6 +149,8 @@ type RetiredWorkflowType = {
 };
 
 const RETIRED_WORKFLOW_TYPES: readonly RetiredWorkflowType[] = [
+  { workflowType: "runScoutBryanBucksAnalyticsWorkflow", namespace: "prod" },
+  { workflowType: "runScoutBryanBucksAnalyticsWorkflow", namespace: "beta" },
   // Keep terminating this workflow until the live OpenAI schedule above is
   // removed by reconciliation.
   {

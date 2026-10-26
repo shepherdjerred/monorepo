@@ -1,12 +1,12 @@
-import { ApplicationFailure } from "@temporalio/common";
-import type { ScoutGuardedEffectResult } from "@scout-for-lol/temporal/activity-contracts";
-import type { ScoutDurableCommit } from "@scout-for-lol/temporal/pipeline-contracts";
 import {
   prisma,
   type Db,
   type ExtendedPrismaClient,
 } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
+import type { ScoutGuardedEffectResult } from "@scout-for-lol/temporal/activity-contracts";
+import type { ScoutDurableCommit } from "@scout-for-lol/temporal/pipeline-contracts";
+import { ApplicationFailure } from "@temporalio/common";
 
 /**
  * The at-most-once fence around a V2 guarded effect.
@@ -90,7 +90,7 @@ import { createLogger } from "#src/logger.ts";
  * The boundaries this closes are the ones V2 owns: the entry into each
  * domain commit and the fact receipt. The v1 code an
  * effect calls BETWEEN two boundaries — settlement's ledger writes inside
- * `settleBucksWithDareTimeline`, progression's writes under
+ * `settleDaresWithTimeline`, progression's writes under
  * `withChallengeProgressionLock` — is not signal-aware, so a zombie that has
  * already entered one of those calls when its fence lapses finishes that call.
  * What bounds those writes is their own design: every ledger transition is

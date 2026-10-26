@@ -1,5 +1,6 @@
 import {
   deprecatePatch,
+  patched,
   isCancellation,
   log,
   startChild,
@@ -211,7 +212,7 @@ export async function scoutPrematchGameWorkflow(
   // `deprecatePatch` keeps the marker here so a rollback to a bundle that
   // still gates on it replays this history.
   deprecatePatch(SCOUT_PREMATCH_DELIVERY_PATCH);
-  if (observedSomething) {
+  if (observedSomething && !patched("scout-free-dares-v1")) {
     await openGameMarkets(activities, {
       stage: input.stage,
       riotMatchId,
@@ -249,26 +250,17 @@ export const SCOUT_PREMATCH_DELIVERY_PATCH = "scout-v2-prematch-delivery";
  */
 export const SCOUT_PREMATCH_MAINTENANCE_PATCH = "scout-v2-prematch-maintenance";
 
-/**
- * Open this game's Bryan Bucks markets before any announcement is sent.
- *
- * Before, because v1 renders the buttons into the message it sends and the V2
- * message is built from the pool rows this writes. A failure here does NOT
- * stop the announcement: it has had its Activity retries, it stays visible in
- * this history as a failed Activity, and the game is announced without a
- * market — v1's promise that a betting bug never takes the loading screen
- * down with it. A cancellation is still the caller's decision.
- */
+/** Preserve the Activity command order of retained prematch histories. */
 async function openGameMarkets(
   activities: ReturnType<typeof realtimePipelineActivities>,
   ref: { stage: ScoutStage; riotMatchId: RiotMatchId },
 ): Promise<void> {
-  setWorkflowPhase("**Phase:** opening the Bryan Bucks markets");
+  setWorkflowPhase("**Phase:** completing the retained prematch step");
   try {
     await activities.openPrematchMarkets(ref);
   } catch (error) {
     if (isCancellation(error)) throw error;
-    log.error("Prematch markets failed; announcing without a market", {
+    log.error("Retained prematch step failed; proceeding to announcement", {
       riotMatchId: ref.riotMatchId,
       error: error instanceof Error ? error.message : String(error),
     });

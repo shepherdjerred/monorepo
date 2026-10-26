@@ -25,8 +25,3 @@ export const docsOrigin = localSurfaceOrigin(
   import.meta.env.VITE_DOCS_ORIGIN,
   "http://localhost:4322",
 );
-
-/** A link into the Scout docs surface, origin-aware for local development. */
-export function docsHref(path: string): string {
-  return `${docsOrigin ?? ""}${path}`;
-}

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import type { MatchProcessingReceiptRecord } from "#src/database/durable/receipt-row.ts";
 import { defineVersionedCodec } from "@scout-for-lol/domain/codec/versioned.ts";
 import type {
   IsoInstant,
@@ -13,7 +13,7 @@ import {
   type ReceiptKind,
   type ReceiptScope,
 } from "@scout-for-lol/domain/match-processing/states.ts";
-import type { MatchProcessingReceiptRecord } from "#src/database/durable/receipt-row.ts";
+import { z } from "zod";
 
 /**
  * The closed set of per-match receipt kinds, and the versioned evidence each
@@ -32,15 +32,13 @@ import type { MatchProcessingReceiptRecord } from "#src/database/durable/receipt
  * lose to `receipt-evidence-mismatch`.
  *
  * Evidence identifies what happened by DURABLE identity — Discord message ids,
- * ledger row ids — never by a count, a local path, or a build id, so a reader
+ * Dare ids — never by a count, a local path, or a build id, so a reader
  * can go find the thing the receipt attests to. It is also always what the v1
  * call site actually observed; nothing here is reconstructed after the fact.
- * No evidence carries a money amount: the identities are enough to find the
- * ledger rows, and the amounts live there under their own storable brands.
  */
 
 export const MATCH_RECEIPT_KINDS = {
-  /** Markets, parlays and Dares settled for the match; balances moved. */
+  /** Dare resolution completed for the match; the receipt kind is stable. */
   settlement: ReceiptKindSchema.parse("settlement"),
   /** The visible post-match report reached a guild. */
   reportDelivery: ReceiptKindSchema.parse("report-delivery"),
@@ -50,31 +48,26 @@ export const MATCH_RECEIPT_KINDS = {
   progression: ReceiptKindSchema.parse("progression"),
 } as const satisfies Record<string, ReceiptKind>;
 
-/** A BucksBet or BucksDare primary key — the ledger's own row identity. */
-const LedgerRowIdSchema = z.int().positive();
+/** A database row identity, including retained settlement receipt IDs. */
+const DatabaseRowIdSchema = z.int().positive();
 
-/**
- * Settlement evidence names the ledger rows the commit touched, keeping market
- * settlement and Dare resolution apart. They are different products with
- * different semantics — a Dare moves balances between two people, a market
- * settles a pool — and the Scout boundaries forbid collapsing them.
- *
- * Parlay settlements are identified by the guild whose parlay settled;
- * earnings are identified by the
- * account awarded, which together with the receipt's match id names the ledger
- * rows exactly. Every list is sorted and deduplicated so a replay of the same
- * commit produces byte-identical evidence.
- */
+const LegacySettlementEvidenceSchema = z.strictObject({
+  closedBetIds: z.array(DatabaseRowIdSchema),
+  settledBetIds: z.array(DatabaseRowIdSchema),
+  resolvedDareIds: z.array(DatabaseRowIdSchema),
+  settledParlayGuildIds: z.array(DiscordGuildIdSchema),
+  earnedDiscordIds: z.array(DiscordAccountIdSchema),
+});
 export const settlementEvidenceCodec = defineVersionedCodec({
   kind: "settlement-evidence",
-  version: 1,
-  schema: z.strictObject({
-    closedBetIds: z.array(LedgerRowIdSchema),
-    settledBetIds: z.array(LedgerRowIdSchema),
-    resolvedDareIds: z.array(LedgerRowIdSchema),
-    settledParlayGuildIds: z.array(DiscordGuildIdSchema),
-    earnedDiscordIds: z.array(DiscordAccountIdSchema),
-  }),
+  version: 2,
+  schema: z.strictObject({ resolvedDareIds: z.array(DatabaseRowIdSchema) }),
+  migrations: {
+    1: (old) => ({
+      resolvedDareIds:
+        LegacySettlementEvidenceSchema.parse(old).resolvedDareIds,
+    }),
+  },
 });
 
 /**

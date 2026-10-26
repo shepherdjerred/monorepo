@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { CapturedGuildConfigSchema } from "#src/explore/replay/profiles.ts";
+import { z } from "zod";
 
 /**
  * Pinning the pair of snapshots a replay run reads, and proving they belong
@@ -27,7 +27,7 @@ import { CapturedGuildConfigSchema } from "#src/explore/replay/profiles.ts";
  */
 export const REPLAY_WRITABLE_TABLES = [
   "ConfirmationIntent",
-  "BucksDare",
+  "Dare",
   // `draft_challenge_contract` writes a ChallengeDraft — a run is what a
   // confirmed contract produces, and a replay never confirms one.
   "ChallengeDraft",
@@ -290,7 +290,7 @@ export function replayEnvironmentIssues(input: {
   }
 
   // ENVIRONMENT changes flag resolution in exactly two ways, and both fire
-  // only at prod: `isFeatureHardDisabled` short-circuits bucks and dares
+  // only at prod: `isFeatureHardDisabled` short-circuits Dares
   // (`flags.ts:219`), and `applicableOverrides` strips beta-only overrides
   // (`flags.ts:233-238`). A prod dataset must see both or it would grant
   // capabilities prod does not have.

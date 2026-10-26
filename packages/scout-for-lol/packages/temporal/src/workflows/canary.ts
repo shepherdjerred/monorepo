@@ -1,6 +1,7 @@
 import {
   ScoutQueueCanaryInputSchema,
   ScoutBackgroundJobInputSchema,
+  ScoutActiveBackgroundJobKindSchema,
   SCOUT_BACKGROUND_JOB_KINDS_V1,
   ScoutQueueCanaryProbeResultSchema,
   type ScoutQueueCanaryInput,
@@ -20,9 +21,11 @@ export async function scoutQueueCanaryWorkflow(
   rawInput: ScoutQueueCanaryInput,
 ): Promise<ScoutQueueCanaryProbeResult[]> {
   const input = ScoutQueueCanaryInputSchema.parse(rawInput);
-  const backgroundJobKind = patched("scout-queue-canary-background-kinds-v2")
-    ? ScoutBackgroundJobInputSchema.shape.kind
-    : z.enum(SCOUT_BACKGROUND_JOB_KINDS_V1);
+  const backgroundJobKind = patched("scout-queue-canary-background-kinds-v3")
+    ? ScoutActiveBackgroundJobKindSchema
+    : patched("scout-queue-canary-background-kinds-v2")
+      ? ScoutBackgroundJobInputSchema.shape.kind
+      : z.enum(SCOUT_BACKGROUND_JOB_KINDS_V1);
   for (const kind of input.backgroundJobKinds ?? []) {
     backgroundJobKind.parse(kind);
   }

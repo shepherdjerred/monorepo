@@ -1,11 +1,10 @@
-import { updateBettingMetrics } from "#src/metrics/betting/betting-sweep.ts";
+import { createLogger } from "#src/logger.ts";
 import { updateDurablePipelineMetrics } from "#src/metrics/durable-pipeline.ts";
 import { updateLimitMetrics } from "#src/metrics/limits.ts";
 import { updateScoutTemporalDurabilityMetrics } from "#src/metrics/platform/temporal.ts";
 import { updateReportDeliveryMetrics } from "#src/metrics/reports/report-delivery.ts";
 import { runRegisteredDatabaseMetricSweeps } from "#src/metrics/sweep-registry.ts";
 import { updateUsageMetrics } from "#src/metrics/usage.ts";
-import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("metrics-sweeps");
 
@@ -113,7 +112,6 @@ export function resetDatabaseMetricSweepStateForTests(): void {
 export async function runDatabaseMetricSweeps(): Promise<void> {
   await updateUsageMetrics();
   await updateLimitMetrics();
-  await updateBettingMetrics();
   await updateScoutTemporalDurabilityMetrics();
   await updateReportDeliveryMetrics();
   await updateDurablePipelineMetrics();

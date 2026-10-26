@@ -1,8 +1,6 @@
-import type { EmbedBuilder, MessageCreateOptions } from "discord.js";
 import { captureFeatureTipShown } from "#src/analytics/feature-tips.ts";
 import type { FeatureTipSurface } from "#src/analytics/product-analytics.ts";
 import { createLogger } from "#src/logger.ts";
-import { getErrorMessage } from "#src/utils/errors.ts";
 import type { FeatureTip } from "#src/tips/tip-catalog.ts";
 import { withFeatureTip, withFeatureTipOnEmbed } from "#src/tips/tip-render.ts";
 import { selectTip, type TipSelectionDeps } from "#src/tips/tip-selection.ts";
@@ -12,6 +10,8 @@ import {
   releaseTipClaim,
   type TipAudience,
 } from "#src/tips/tip-state.ts";
+import { getErrorMessage } from "#src/utils/errors.ts";
+import type { EmbedBuilder, MessageCreateOptions } from "discord.js";
 
 const logger = createLogger("feature-tips");
 
@@ -108,11 +108,6 @@ export async function decorateWithFeatureTip(
   }
 }
 
-/**
- * The embed-level twin of {@link decorateWithFeatureTip}, for surfaces whose
- * transport takes embeds rather than a whole message — Bryan Bucks DMs, whose
- * `sendDM` chokepoint decides the wire shape itself.
- */
 export async function decorateEmbedWithFeatureTip(
   embed: EmbedBuilder,
   audience: TipTarget,

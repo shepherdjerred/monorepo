@@ -70,7 +70,7 @@ const seedEverythingEnabled: StorySeed = (trpc, queryClient) => {
   queryClient.setQueryData(trpc.challenge.status.queryOptions().queryKey, {
     enabled: true,
   });
-  queryClient.setQueryData(trpc.bucks.status.queryOptions().queryKey, {
+  queryClient.setQueryData(trpc.dares.status.queryOptions().queryKey, {
     state: "available",
     guilds: [
       {
@@ -141,7 +141,7 @@ const seedToolsDisabled: StorySeed = (trpc, queryClient) => {
   queryClient.setQueryData(trpc.challenge.status.queryOptions().queryKey, {
     enabled: false,
   });
-  queryClient.setQueryData(trpc.bucks.status.queryOptions().queryKey, {
+  queryClient.setQueryData(trpc.dares.status.queryOptions().queryKey, {
     state: "feature_disabled",
   });
   queryClient.setQueryData(trpc.hall.status.queryOptions().queryKey, {

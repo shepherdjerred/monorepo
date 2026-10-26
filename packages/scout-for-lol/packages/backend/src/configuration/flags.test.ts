@@ -1,13 +1,3 @@
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import {
-  DiscordAccountIdSchema,
-  DiscordGuildIdSchema,
-} from "@scout-for-lol/data/index.ts";
-import {
-  initFeatureFlags,
-  shutdownFeatureFlags,
-} from "@shepherdjerred/feature-flags";
-import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import {
   addFlagOverride,
@@ -19,16 +9,22 @@ import {
   MY_SERVER,
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
+import {
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data/index.ts";
+import {
+  initFeatureFlags,
+  shutdownFeatureFlags,
+} from "@shepherdjerred/feature-flags";
+import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 const OTHER_GUILD = DiscordGuildIdSchema.parse("2337623164146155593");
 const SOMEONE = DiscordAccountIdSchema.parse("160509172704739399");
 const originalEnvironment = Bun.env["ENVIRONMENT"];
 const PRODUCTION_DENIED_FLAGS = [
-  "betting_enabled",
-  "betting_player_bet_outcome_dm_enabled",
-  "betting_settlement_dm_enabled",
-  "bucks_transfers_enabled",
-  "bucks_dares_enabled",
+  "dares_enabled",
   "dare_notifications_enabled",
   "duels_enabled",
   "voice_assistant_enabled",
@@ -91,11 +87,7 @@ describe("production hard-disable policy", () => {
     await initFeatureFlags({
       environment: { FEATURE_FLAGS_MODE: "disabled" },
       provider: new StaticProvider({
-        betting_enabled: true,
-        betting_player_bet_outcome_dm_enabled: true,
-        betting_settlement_dm_enabled: true,
-        bucks_transfers_enabled: true,
-        bucks_dares_enabled: true,
+        dares_enabled: true,
         dare_notifications_enabled: true,
         duels_enabled: true,
         voice_assistant_enabled: true,
@@ -194,40 +186,10 @@ describe("production hard-disable policy", () => {
   });
 });
 
-describe("Bryan Bucks settlement DM flags", () => {
-  test("are off by default and enabled only for the beta guild", () => {
-    expect(
-      getFlag("betting_settlement_dm_enabled", { server: OTHER_GUILD }),
-    ).toBe(false);
-    expect(
-      getFlag("betting_player_bet_outcome_dm_enabled", {
-        server: OTHER_GUILD,
-      }),
-    ).toBe(false);
-    expect(
-      getFlag("betting_settlement_dm_enabled", { server: MY_SERVER }),
-    ).toBe(true);
-    expect(
-      getFlag("betting_player_bet_outcome_dm_enabled", { server: MY_SERVER }),
-    ).toBe(true);
-  });
-});
-
-describe("Bryan Bucks transfer flag", () => {
+describe("Dare flag", () => {
   test("is off by default and enabled only for the beta guild", () => {
-    expect(getFlag("bucks_transfers_enabled", { server: OTHER_GUILD })).toBe(
-      false,
-    );
-    expect(getFlag("bucks_transfers_enabled", { server: MY_SERVER })).toBe(
-      true,
-    );
-  });
-});
-
-describe("Bryan Bucks dare flag", () => {
-  test("is off by default and enabled only for the beta guild", () => {
-    expect(getFlag("bucks_dares_enabled", { server: OTHER_GUILD })).toBe(false);
-    expect(getFlag("bucks_dares_enabled", { server: MY_SERVER })).toBe(true);
+    expect(getFlag("dares_enabled", { server: OTHER_GUILD })).toBe(false);
+    expect(getFlag("dares_enabled", { server: MY_SERVER })).toBe(true);
   });
 });
 
@@ -257,8 +219,8 @@ describe("listGuildsWithFlagEnabled", () => {
   test("returns the guild a flag is switched on for", () => {
     // Reset first: another test file may have cleared this flag, and the
     // registry is shared across the whole process.
-    resetFlagOverrides("betting_enabled");
-    expect(listGuildsWithFlagEnabled("betting_enabled")).toEqual([MY_SERVER]);
+    resetFlagOverrides("dares_enabled");
+    expect(listGuildsWithFlagEnabled("dares_enabled")).toEqual([MY_SERVER]);
   });
 
   test("follows the registry when a second guild is enabled", () => {
@@ -292,9 +254,9 @@ describe("listGuildsWithFlagEnabled", () => {
   });
 
   test("every returned guild actually reads as enabled", () => {
-    resetFlagOverrides("betting_enabled");
-    for (const guild of listGuildsWithFlagEnabled("betting_enabled")) {
-      expect(getFlag("betting_enabled", { server: guild })).toBe(true);
+    resetFlagOverrides("dares_enabled");
+    for (const guild of listGuildsWithFlagEnabled("dares_enabled")) {
+      expect(getFlag("dares_enabled", { server: guild })).toBe(true);
     }
   });
 
@@ -307,8 +269,8 @@ describe("listGuildsWithFlagEnabled", () => {
 
 describe("listGuildsWithFlagDeclared", () => {
   test("returns the guild a flag is switched on for", () => {
-    resetFlagOverrides("betting_enabled");
-    expect(listGuildsWithFlagDeclared("betting_enabled")).toEqual([MY_SERVER]);
+    resetFlagOverrides("dares_enabled");
+    expect(listGuildsWithFlagDeclared("dares_enabled")).toEqual([MY_SERVER]);
   });
 
   // The whole reason this exists next to `listGuildsWithFlagEnabled`. Guild
@@ -357,13 +319,13 @@ describe("isPolicyEnabled", () => {
   test("a resolved false stops the local guild fallback", async () => {
     await initFeatureFlags({
       environment: { FEATURE_FLAGS_MODE: "disabled" },
-      provider: new StaticProvider({ betting_enabled: false }),
+      provider: new StaticProvider({ dares_enabled: false }),
     });
 
     // The static provider's resolved false must stop the local beta fallback;
     // this catches the dangerous false-is-absence regression.
     await expect(
-      isPolicyEnabled("betting_enabled", { server: MY_SERVER }),
+      isPolicyEnabled("dares_enabled", { server: MY_SERVER }),
     ).resolves.toBe(false);
   });
 

@@ -1,14 +1,13 @@
-import { z } from "zod";
 import {
-  StorableDareChallengerStakeSchema,
   DARE_MAX_HORIZON_DAYS,
   DARE_MAX_QUERY_LENGTH,
   DARE_MAX_TARGETS,
-  DareDeadlineSpecSchema,
-  DareSqlCompetitionSchema,
   DareActivationSchema,
+  DareDeadlineSpecSchema,
   DareIntentPayloadSchema,
+  DareSqlCompetitionSchema,
 } from "@scout-for-lol/data";
+import { z } from "zod";
 
 export const DareToolResultSchema = z.strictObject({
   kind: z.string().min(1),
@@ -35,7 +34,6 @@ export const DareDefinitionToolInputSchema = z.strictObject({
   queryText: z.string().min(1).max(DARE_MAX_QUERY_LENGTH),
   plainLanguage: z.string().min(1).max(4000),
   deadlineSpec: DareDeadlineSpecSchema,
-  openingStake: StorableDareChallengerStakeSchema,
   competition: DareSqlCompetitionSchema.default({ kind: "standard" }),
   activation: DareActivationSchema.default({ kind: "immediate" }),
 });

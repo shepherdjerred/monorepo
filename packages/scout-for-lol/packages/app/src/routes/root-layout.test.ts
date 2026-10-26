@@ -70,7 +70,7 @@ describe("RootLayout shell selection", () => {
 
     expect(isExplorePath("/")).toBe(false);
     expect(isExplorePath("/players")).toBe(false);
-    expect(isExplorePath("/bucks")).toBe(false);
+    expect(isExplorePath("/dares")).toBe(false);
     expect(isExplorePath("/manage")).toBe(false);
     expect(isExplorePath("/g/123/reports")).toBe(false);
   });
@@ -83,7 +83,7 @@ describe("RootLayout shell selection", () => {
 
     expect(shouldRenderGlobalFooter("/")).toBe(true);
     expect(shouldRenderGlobalFooter("/players")).toBe(true);
-    expect(shouldRenderGlobalFooter("/bucks")).toBe(true);
+    expect(shouldRenderGlobalFooter("/dares")).toBe(true);
     expect(shouldRenderGlobalFooter("/manage")).toBe(true);
     expect(shouldRenderGlobalFooter("/g/123/reports")).toBe(true);
   });

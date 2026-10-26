@@ -1,8 +1,8 @@
+import type { ConfirmationIntent } from "#generated/prisma/client/index.js";
 import {
   ConfirmationIntentPayloadSchema,
   type ConfirmationIntentPayload,
 } from "@scout-for-lol/data";
-import type { ConfirmationIntent } from "#generated/prisma/client/index.js";
 
 /**
  * Read an intent's stored payload, proving it agrees with the row's `kind`.
@@ -16,7 +16,7 @@ import type { ConfirmationIntent } from "#generated/prisma/client/index.js";
  *
  * Trusting either side alone is what makes that dangerous. A row whose column
  * says one kind and whose payload says another would be reported to the user
- * as the first and executed as the second, and on `dare_fund` or
+ * as the first and executed as the second, and on `dare_publish` or
  * `dare_contribute` the executed one moves real balances. So a mismatch is a
  * hard failure rather than a silent preference for one column over the other.
  */

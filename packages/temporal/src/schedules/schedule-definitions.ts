@@ -218,23 +218,6 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     memo: "Weekly marketing-showcase refresh — regenerates the committed showcase PNGs + asset index from scout-prod, opens a PR on drift (generatedAt-only churn suppressed)",
   },
   {
-    id: "scout-bryan-bucks-analytics",
-    workflowType: "runScoutBryanBucksAnalyticsWorkflow",
-    args: [],
-    timing: {
-      kind: "cron",
-      expression: "*/15 * * * *",
-      timezone: "America/Los_Angeles",
-    },
-    taskQueue: TASK_QUEUES.WORKFLOWS,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    // Five 2m Activity attempts plus 2m10s of retry backoff need more than the
-    // old five-minute Workflow deadline. The 15m cap fits that envelope while
-    // SKIP still prevents concurrent snapshot publication.
-    workflowExecutionTimeout: "15 minutes",
-    memo: "Every-15-minute committed Bryan Bucks ledger and economy analytics sync",
-  },
-  {
     id: "scout-queue-windows-daily",
     workflowType: "runScoutQueueWindowsWatch",
     args: [],

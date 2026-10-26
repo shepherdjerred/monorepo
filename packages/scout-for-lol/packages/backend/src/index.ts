@@ -1,11 +1,14 @@
+import { filterScoutBugsinkEvent } from "#src/bugsink-filters.ts";
+import { temporalCallGraphTracing } from "#src/config/dynamic.ts";
 import configuration from "#src/configuration.ts";
+import { createLogger } from "#src/logger.ts";
+import { featureFlagMetrics } from "#src/metrics/platform/feature-flags.ts";
+import { initializeTracing } from "#src/observability/tracing.ts";
+import { startScoutRuntime } from "#src/runtime/boot.ts";
+import { scoutRuntimeSubsystems } from "#src/runtime/subsystems.ts";
+import "@scout-for-lol/backend/metrics/index.ts";
 import * as Sentry from "@sentry/bun";
 import { bugsinkDataCollection } from "@shepherdjerred/bugsink-config";
-import { createLogger } from "#src/logger.ts";
-import { filterScoutBugsinkEvent } from "#src/bugsink-filters.ts";
-import { initializeTracing } from "#src/observability/tracing.ts";
-import { temporalCallGraphTracing } from "#src/config/dynamic.ts";
-import { featureFlagMetrics } from "#src/metrics/platform/feature-flags.ts";
 
 const logger = createLogger("app");
 
@@ -57,13 +60,10 @@ if (
 
 // Initialize metrics (must be imported early to set up metrics collection)
 logger.info("📊 Initializing metrics system");
-import "@scout-for-lol/backend/metrics/index.ts";
 
 // Fail before the HTTP health server or Discord bot starts if the Data Dragon
 // assets are unavailable.
 logger.info("🖼️  Validating startup assets before starting runtime services");
-import { startScoutRuntime } from "#src/runtime/boot.ts";
-import { scoutRuntimeSubsystems } from "#src/runtime/subsystems.ts";
 // Before the HTTP server and the Discord gateway: guild command registration
 // reads the explore allowlist, and it must see a resolved value. Seeded with
 // the env-derived values, so an unreachable Flipt changes nothing.
@@ -75,7 +75,6 @@ await initializeDynamicConfig({
     llmHourlyTokenBudget: configuration.llmHourlyTokenBudget,
     llmDailyTokenBudget: configuration.llmDailyTokenBudget,
     reportAiModel: configuration.reportAiModel ?? "gpt-5.6-sol",
-    bettingParlayAiModel: configuration.bettingParlayAiModel ?? "gpt-5.6-sol",
     exploreModel: configuration.exploreModel,
     featureTipPercent: configuration.featureTipPercent,
     featureTipCooldownHours: configuration.featureTipCooldownHours,

@@ -2,7 +2,7 @@
 
 The Scout SPA, served at `/app/` on scout-for-lol.com. Members review players
 and matches or ask questions in Explore. Server managers configure tracked
-players, reports, subscriptions, competitions, and Bryan Bucks. Data comes from `@scout-for-lol/backend` over tRPC; UI comes
+players, reports, subscriptions, competitions, and Dares. Data comes from `@scout-for-lol/backend` over tRPC; UI comes
 from `@scout-for-lol/design-system`.
 
 Run it against a local backend with the Scout dev harness rather than this
@@ -120,10 +120,10 @@ nesting routers throws.
 ### Adding a story
 
 Story files are **grouped**: one `*.stories.tsx` per component family,
-colocated with those components (`src/components/bucks/bucks-cards.stories.tsx`
+colocated with those components (`src/components/dares/`
 covers seven card components). Grouping is not cosmetic — `.stories.tsx` counts
 against the 25-file-per-directory source budget, and one file per component
-would break `bucks`, `competition`, and `explore`.
+would break `dares`, `competition`, and `explore`.
 
 Use CSF3 with `satisfies` rather than a type assertion, kebab-case filenames,
 and explicit `.tsx` extensions on relative imports. Files under

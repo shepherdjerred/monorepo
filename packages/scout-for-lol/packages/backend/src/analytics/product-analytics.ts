@@ -1,6 +1,3 @@
-import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
-import { PostHog } from "posthog-node";
-import type { BucksLedgerKind } from "@scout-for-lol/data";
 import configuration, {
   type Environment,
   type ProductAnalyticsConfiguration,
@@ -11,7 +8,8 @@ import {
   productAnalyticsFailuresTotal,
 } from "#src/metrics/product-analytics.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
-import type { BucksLifecycleTransition } from "#src/analytics/bryan-bucks-events.ts";
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
+import { PostHog } from "posthog-node";
 
 const logger = createLogger("product-analytics");
 
@@ -31,10 +29,9 @@ export type FeatureTipKey =
   | "track-more-players"
   | "hall-of-fame"
   | "duels"
-  | "dares"
-  | "transfers";
+  | "dares";
 /** Where a feature tip was appended. */
-export type FeatureTipSurface = "postmatch" | "prematch" | "bucks_dm";
+export type FeatureTipSurface = "postmatch" | "prematch";
 export type CoreOutputKind =
   | "prematch"
   | "postmatch"
@@ -58,28 +55,14 @@ export type DiscordCommandName =
   | "docs"
   | "track"
   | "list"
-  | "bb"
+  | "dare"
   | "scout";
 /**
- * Closed set of subcommand names across the grouped commands (`/bb` and
- * `/scout`). An unrecognized subcommand drops the property, never mints a new
+ * Closed set of subcommand names for `/scout`. An unrecognized subcommand drops the property, never mints a new
  * value — same policy as the command names themselves.
  */
-export type DiscordCommandSubcommand =
-  | "balance"
-  | "prizes"
-  | "rules"
-  | "history"
-  | "transfer"
-  | "dare"
-  | "notifications"
-  | "ask"
-  | "join"
-  | "leave";
+export type DiscordCommandSubcommand = "ask" | "join" | "leave";
 export type DiscordCommandStatus = "success" | "error";
-export type BucksMemberActivityKind =
-  "command" | "outcome_bet" | "parlay_bet" | "navigation" | "dare";
-export type BucksActivitySurface = "command" | "button" | "web" | "unknown";
 /** Hey Scout turn outcomes; the closed set is the whole analytics vocabulary. */
 export type VoiceQuestionOutcome =
   | "answered"
@@ -125,30 +108,6 @@ type ProductAnalyticsEventProperties = {
     attribution_surface: AttributionSurface;
     attribution_timing: AttributionTiming;
   };
-  bryan_bucks_member_activity: {
-    activity_kind: BucksMemberActivityKind;
-    surface: BucksActivitySurface;
-    status: DiscordCommandStatus;
-  };
-  bryan_bucks_lifecycle: {
-    transition: BucksLifecycleTransition;
-    amount_bucks?: number | undefined;
-    matched_bucks?: number | undefined;
-    payout_bucks?: number | undefined;
-    balance_after_bucks?: number | undefined;
-  };
-  bryan_bucks_economy: {
-    movement: BucksLedgerKind;
-    delta_bucks: number;
-    balance_after_bucks: number;
-  };
-  bryan_bucks_economy_snapshot: {
-    member_accounts: number;
-    total_member_balance_bucks: number;
-    pending_stake_bucks: number;
-    house_balance_bucks: number;
-    open_markets: number;
-  };
   /**
    * One Hey Scout wake that reached the cloud gate. Privacy contract: guild
    * identity (via the shared `guild_id` property), the grounded champion and
@@ -171,20 +130,6 @@ export type ProductAnalyticsEvent = {
     properties: ProductAnalyticsEventProperties[EventName];
   };
 }[keyof ProductAnalyticsEventProperties];
-
-type BucksMemberAnalyticsEvent = Extract<
-  ProductAnalyticsEvent,
-  { event: "bryan_bucks_member_activity" }
->;
-type BucksSystemAnalyticsEvent = Extract<
-  ProductAnalyticsEvent,
-  {
-    event:
-      | "bryan_bucks_lifecycle"
-      | "bryan_bucks_economy"
-      | "bryan_bucks_economy_snapshot";
-  }
->;
 
 export type AnalyticsInstallation = {
   analyticsInstallationId: string;
@@ -220,16 +165,6 @@ export type ProductAnalytics = {
     event: ProductAnalyticsEvent,
     options?: ProductAnalyticsEventOptions,
   ) => void;
-  captureBucksMember: (
-    member: { analyticsUserId: string; serverId: DiscordGuildId },
-    event: BucksMemberAnalyticsEvent,
-    options?: ProductAnalyticsEventOptions,
-  ) => void;
-  captureBucksSystem: (
-    serverId: DiscordGuildId,
-    event: BucksSystemAnalyticsEvent,
-    options?: ProductAnalyticsEventOptions,
-  ) => boolean;
   flush?: () => Promise<boolean>;
   shutdown: () => Promise<void>;
 };
@@ -301,12 +236,6 @@ export function createProductAnalytics(options: {
       capture() {
         return;
       },
-      captureBucksMember() {
-        return;
-      },
-      captureBucksSystem() {
-        return true;
-      },
       shutdown() {
         return Promise.resolve();
       },
@@ -376,22 +305,6 @@ export function createProductAnalytics(options: {
             ? "tracked"
             : "legacy",
         },
-      });
-    },
-    captureBucksMember(member, event, eventOptions) {
-      capture({
-        distinctId: `${analyticsConfiguration.siteKey}:bucks-member:${member.analyticsUserId}`,
-        serverId: member.serverId,
-        event,
-        eventOptions,
-      });
-    },
-    captureBucksSystem(serverId, event, eventOptions) {
-      return capture({
-        distinctId: `${analyticsConfiguration.siteKey}:bryan-bucks-system`,
-        serverId,
-        event,
-        eventOptions,
       });
     },
     async flush() {

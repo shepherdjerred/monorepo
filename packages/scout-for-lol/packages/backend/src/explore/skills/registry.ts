@@ -1,8 +1,8 @@
-import type { ExploreSurface } from "#src/explore/surface.ts";
 import {
   loadExploreSkillFiles,
   type ExploreSkillFile,
 } from "#src/explore/skills/loader.ts";
+import type { ExploreSurface } from "#src/explore/surface.ts";
 
 /**
  * The Explore skill registry: which skills exist, which are enabled for a
@@ -22,8 +22,6 @@ const STATIC_PLACEHOLDER_PROVIDERS: Record<string, (() => string) | undefined> =
 const TURN_PLACEHOLDER_NAMES = new Set(["currentTime"]);
 
 export type ExploreSkillContext = {
-  /** Non-null only for a bucks-capable turn; carries the turn's timestamp. */
-  bucks: { currentTime: string } | null;
   /** Non-null only for an MVP-votes-capable turn; shares the clock token. */
   mvpVotes?: { currentTime: string } | null;
   surface: ExploreSurface;
@@ -32,7 +30,6 @@ export type ExploreSkillContext = {
 /** The option shape `exploreAgentInstructions` already takes. */
 export type ExploreSkillOptions = {
   analysis?: boolean;
-  bucks: { currentTime: string } | null;
   mvpVotes?: { currentTime: string } | null | undefined;
   dares?: boolean | undefined;
   challenges?: boolean | undefined;
@@ -83,8 +80,6 @@ export function enabledExploreSkills(
         return true;
       case "analysis":
         return options.analysis === true;
-      case "bucks":
-        return options.bucks !== null;
       case "dares":
         return options.dares === true;
       case "challenges":
@@ -134,7 +129,7 @@ export function renderExploreSkillBody(
         return staticProvider();
       }
       if (name === "currentTime") {
-        const clock = context.bucks ?? context.mvpVotes ?? null;
+        const clock = context.mvpVotes ?? null;
         if (clock === null) {
           throw new Error(
             `Skill '${skill.name}' needs {{currentTime}} but the turn has no clock context.`,
@@ -159,7 +154,7 @@ export function exploreSkillBody(name: string): string {
   if (skill === undefined) {
     throw new Error(`The '${name}' skill file is missing.`);
   }
-  return renderExploreSkillBody(skill, { bucks: null, surface: "web" });
+  return renderExploreSkillBody(skill, { surface: "web" });
 }
 
 /** The dare skill's rendered body. See `exploreSkillBody`. */

@@ -36,7 +36,7 @@ export const layers = [
   "lane-priors",
   "league",
   "model/arena",
-  "model/bucks",
+  "model/dares",
   "model/competitions",
   "model/core",
   "model/matches",

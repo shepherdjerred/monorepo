@@ -1,18 +1,3 @@
-import {
-  DiscordMessageIdSchema,
-  type DiscordMessageId,
-} from "@scout-for-lol/domain/identity/brands.ts";
-import type { DiscordChannelId } from "@scout-for-lol/domain/identity/discord.ts";
-import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
-import {
-  DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
-  DiscordGuildIdSchema,
-  RiotMatchIdSchema,
-} from "@scout-for-lol/data";
-import { createTestDatabase } from "#src/testing/test-database.ts";
-import { bucksTestPuuid } from "#src/testing/bucks-fixtures.ts";
-import { freezeMvpTestRoster } from "#src/testing/mvp-votes-fixtures.ts";
 import { refreshMvpTallyMessages } from "#src/mvp-votes/message-refresh.ts";
 import { reconcileMvpTallyRefresh } from "#src/mvp-votes/tally-reconciliation.ts";
 import {
@@ -20,6 +5,21 @@ import {
   recordMatchMvpReportRefs,
   upsertMatchMvpVote,
 } from "#src/mvp-votes/vote.ts";
+import { leagueTestPuuid } from "#src/testing/league-fixtures.ts";
+import { freezeMvpTestRoster } from "#src/testing/mvp-votes-fixtures.ts";
+import { createTestDatabase } from "#src/testing/test-database.ts";
+import {
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+  RiotMatchIdSchema,
+} from "@scout-for-lol/data";
+import {
+  DiscordMessageIdSchema,
+  type DiscordMessageId,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import type { DiscordChannelId } from "@scout-for-lol/domain/identity/discord.ts";
+import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 
 const stubs = vi.hoisted(() => ({ fetchChannelForDelivery: vi.fn() }));
 vi.mock("#src/discord/utils/channel.ts", () => ({
@@ -81,7 +81,7 @@ beforeEach(async () => {
       voterDiscordId: DiscordAccountIdSchema.parse("160509172704739328"),
       category: "ally",
       nomineeIndex: 1,
-      voterPuuid: bucksTestPuuid(0),
+      voterPuuid: leagueTestPuuid(0),
       voterTeamId: 100,
     },
     db,

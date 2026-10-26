@@ -74,7 +74,7 @@ describe("evaluation instrumentation", () => {
       targetingKey: "service",
     });
     await expect(
-      isEnabled("betting_enabled", {
+      isEnabled("dares_enabled", {
         default: false,
         targetingKey: "service",
       }),
@@ -82,7 +82,7 @@ describe("evaluation instrumentation", () => {
 
     expect(events).toEqual([
       { flag: "ai_reports_enabled", reason: "STATIC", errorCode: undefined },
-      { flag: "betting_enabled", reason: "ERROR", errorCode: "FLAG_NOT_FOUND" },
+      { flag: "dares_enabled", reason: "ERROR", errorCode: "FLAG_NOT_FOUND" },
     ]);
   });
 
@@ -99,7 +99,7 @@ describe("evaluation instrumentation", () => {
       targetingKey: "service",
     });
     await expect(
-      isEnabled("betting_enabled", {
+      isEnabled("dares_enabled", {
         default: false,
         targetingKey: "service",
       }),

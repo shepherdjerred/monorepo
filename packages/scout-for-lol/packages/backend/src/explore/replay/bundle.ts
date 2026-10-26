@@ -1,9 +1,9 @@
-import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
-import { appendFile, mkdir, stat, readdir, chmod } from "node:fs/promises";
-import path from "node:path";
-import { homedir } from "node:os";
-import { z } from "zod";
 import { REPLAY_SIGNALS } from "#src/explore/replay/signals.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import { appendFile, chmod, mkdir, readdir, stat } from "node:fs/promises";
+import { homedir } from "node:os";
+import path from "node:path";
+import { z } from "zod";
 
 /**
  * Where a replay run is written, and the permissions it insists on first.
@@ -172,17 +172,7 @@ export const ReplayManifestSchema = z
     database: z
       .object({
         name: z.string().min(1),
-        /**
-         * The snapshot database's own identity, from the dataset pin.
-         *
-         * The name is reusable — `scout_beta_snapshot` is restored in place on
-         * every pull — so it identifies the slot, not the contents. Two runs
-         * can share a name and a lake build while the relational rows behind
-         * bucks, challenges and conversations have been replaced underneath
-         * them. Postgres gives a recreated database a fresh OID, so this
-         * distinguishes a snapshot from its replacement; a capture timestamp
-         * would only describe when the pin was written.
-         */
+
         snapshotId: z.string().min(1),
       })
       .strict(),

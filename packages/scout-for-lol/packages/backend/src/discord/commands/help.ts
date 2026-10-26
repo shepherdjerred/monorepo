@@ -1,19 +1,19 @@
-import {
-  type Interaction,
-  EmbedBuilder,
-  Colors,
-  SlashCommandBuilder,
-} from "discord.js";
-import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import configuration from "#src/configuration.ts";
-import { createLogger } from "#src/logger.ts";
-import { getDocsUrl, getDashboardUrl } from "#src/discord/commands/links.ts";
-import type { CommandReply } from "#src/discord/commands/define-command.ts";
-import { isExploreGuildAllowed } from "#src/explore/access.ts";
 import { isPolicyEnabled, type FlagName } from "#src/configuration/flags.ts";
+import type { CommandReply } from "#src/discord/commands/define-command.ts";
+import { getDashboardUrl, getDocsUrl } from "#src/discord/commands/links.ts";
 import { getFeedbackUrl } from "#src/discord/utils/feedback.ts";
+import { isExploreGuildAllowed } from "#src/explore/access.ts";
+import { createLogger } from "#src/logger.ts";
 import { supportContactRow } from "#src/support/discord.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  Colors,
+  EmbedBuilder,
+  SlashCommandBuilder,
+  type Interaction,
+} from "discord.js";
 
 const logger = createLogger("commands-help");
 type HelpInteraction = { guildId: Interaction["guildId"]; reply: CommandReply };
@@ -81,8 +81,8 @@ const flagGatedCommands: {
   deploymentGate?: () => boolean;
 }[] = [
   {
-    flag: "betting_enabled",
-    entry: "`/bb` — Bryan Bucks: balances, history, rules, and dares",
+    flag: "dares_enabled",
+    entry: "`/dare` — challenge tracked players to an in-game achievement",
   },
   {
     flag: "voice_assistant_enabled",

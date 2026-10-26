@@ -13,9 +13,9 @@ import { REPLAY_WRITABLE_TABLES } from "#src/explore/replay/dataset.ts";
  * A/B it exists to support could never run twice.
  *
  * Row counts were the next attempt and were not enough: a later pull can
- * change a balance or a dare state without moving a count. Naming a handful of
+ * change a Dare state without moving a count. Naming a handful of
  * tables was the attempt after that, and was not enough either — the agent
- * reads bucks ledgers, reports, competitions, permissions and more, so any
+ * reads Dares, reports, competitions, permissions and more, so any
  * list is a list of the tables somebody remembered.
  *
  * So this hashes *every* base table in the schema, discovered from the catalog

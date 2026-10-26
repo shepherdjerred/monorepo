@@ -1,15 +1,15 @@
-import { describe, expect, test, afterAll, beforeEach } from "vitest";
-import { cleanupRemovedGuild } from "#src/league/tasks/cleanup/remove-guild.ts";
 import { recordPermissionError } from "#src/database/guild-permission-errors.ts";
+import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { cleanupRemovedGuild } from "#src/league/tasks/cleanup/remove-guild.ts";
+import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
-  testGuildId,
   testAccountId,
   testChannelId,
+  testGuildId,
   testPuuid,
 } from "#src/testing/test-ids.ts";
-import { createTestDatabase } from "#src/testing/test-database.ts";
 import type { DiscordGuildId } from "@scout-for-lol/data";
-import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { afterAll, beforeEach, describe, expect, test } from "vitest";
 
 const { prisma } = createTestDatabase("remove-guild-test");
 
@@ -112,11 +112,11 @@ async function seedGuild(
     },
   });
 
-  await db.bucksNotificationPreference.create({
+  await db.dareNotificationPreference.create({
     data: {
       serverId,
       discordId: owner,
-      ownBetSettlementDms: false,
+      dareLifecycleDms: false,
     },
   });
 
@@ -171,7 +171,7 @@ async function countGuild(
     subscriptions: await db.subscription.count({ where: { serverId } }),
     competitions: await db.competition.count({ where: { serverId } }),
     reports: await db.report.count({ where: { serverId } }),
-    notificationPreferences: await db.bucksNotificationPreference.count({
+    notificationPreferences: await db.dareNotificationPreference.count({
       where: { serverId },
     }),
     serverPermissions: await db.serverPermission.count({ where: { serverId } }),
@@ -203,7 +203,7 @@ beforeEach(async () => {
   await prisma.player.deleteMany();
   await prisma.serverPermission.deleteMany();
   await prisma.guildPermissionError.deleteMany();
-  await prisma.bucksNotificationPreference.deleteMany();
+  await prisma.dareNotificationPreference.deleteMany();
   await prisma.featureTipImpression.deleteMany();
 });
 

@@ -1,14 +1,14 @@
+import { dareSqlCatalog } from "#src/dares/sql/dare-sql-catalog.ts";
 import {
   DARE_BUILDING_TYPES,
-  DARE_MONSTER_TYPES,
-  DARE_TEAM_POSITIONS,
-  DARE_TIMELINE_EVENT_TYPES,
   DARE_MAX_ELIGIBLE_GAMES,
   DARE_MAX_HORIZON_DAYS,
   DARE_MAX_QUERY_LENGTH,
   DARE_MAX_TARGETS,
+  DARE_MONSTER_TYPES,
+  DARE_TEAM_POSITIONS,
+  DARE_TIMELINE_EVENT_TYPES,
 } from "@scout-for-lol/data";
-import { dareSqlCatalog } from "#src/betting/dares/sql/dare-sql-catalog.ts";
 
 /**
  * Everything `get_dare_language` tells the model about the contract vocabulary.
@@ -48,7 +48,7 @@ export function dareLanguagePayload(input: {
     },
     listCopy: {
       displayTitle:
-        "Short English list heading that a stranger could read in Discord. Same-game bundles belong in one title. No stake, deadline, SQL, or game-set slugs.",
+        "Short English list heading that a stranger could read in Discord. Same-game bundles belong in one title. No deadline, SQL, or game-set slugs.",
       statusPhrases:
         "Map each game-set name to a countable English phrase the app prefixes with live '{current} of {target}'. Same-game dares have one phrase that names every constraint in that game. Cross-game dares have one phrase per game set. Not a sentence, not a second query, not slugs or gte.",
       examples: {

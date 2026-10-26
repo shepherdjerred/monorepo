@@ -20,7 +20,7 @@ import {
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
 /**
- * The Bryan Bucks half of the Explore confirmation cards.
+ * The Dares half of the Explore confirmation cards.
  *
  * A draft is not a confirmation — nothing is staked until someone funds it —
  * so it keeps its own plain panel and only the intent card wears the shared
@@ -169,10 +169,10 @@ export function ExploreDareIntentCard(props: { intent: DareIntentCardData }) {
             classifyDareIntentConfirmation(props.intent.action, result),
           );
           void queryClient.invalidateQueries({
-            queryKey: trpc.bucks.dareList.pathKey(),
+            queryKey: trpc.dares.dareList.pathKey(),
           });
           void queryClient.invalidateQueries({
-            queryKey: trpc.bucks.dareInspect.pathKey(),
+            queryKey: trpc.dares.dareInspect.pathKey(),
           });
           void queryClient.invalidateQueries({
             queryKey: trpc.explore.intentStatus.queryKey({

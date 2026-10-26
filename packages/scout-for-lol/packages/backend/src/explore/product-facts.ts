@@ -35,7 +35,7 @@ export function hallOfFameFacts(): readonly string[] {
 export function challengeFacts(): readonly string[] {
   return [
     "Scout challenges have no end date: a challenge run stays active until it is completed or archived.",
-    "Scout challenges carry no reward, prize or Bryan Bucks payout.",
+    "Scout challenges carry no reward or prize.",
   ];
 }
 
@@ -73,7 +73,7 @@ export function setupFacts(): readonly string[] {
     `The server's other pages are ${page("hallOfFame")}, ${page("access")} (who may manage what in Scout), ${page("audit")} and ${page("customs")}.`,
     "Every server setting lives in the Scout web app under that server, on the pages named here. Never name any other page, menu, tab, button or setting.",
     "The wording of Scout's match reports and posts cannot be customized: there is no template or message-text setting anywhere in Scout. Say so plainly; never suggest the user look for one.",
-    "The only notification choices are Bryan Bucks direct messages: each person picks which Bucks DMs they receive with /bb notifications. Those toggles choose which DMs arrive, not their wording, and they do not affect match reports.",
+    "Dare notification preferences live on the Dares settings page. Each person can choose lifecycle and progress DMs; these choices do not change match reports or message wording.",
     "Scout cannot post a one-off message to a channel. The closest feature is a scheduled report.",
     "Scout does not send reviews by direct message. A player feed posts to a channel, and Explore reviews any recorded game on request.",
   ];

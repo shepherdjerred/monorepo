@@ -1,7 +1,7 @@
-import { afterEach, describe, expect, test } from "vitest";
-import { mkdtemp, rm, mkdir, stat, chmod } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { afterEach, describe, expect, test } from "vitest";
 import {
   ReplayCaseIndexEntrySchema,
   ReplayManifestSchema,
@@ -12,8 +12,8 @@ import {
   createBundleDirectory,
   isInsideGitCheckout,
   recordedCaseEntries,
-  runIdIssues,
   replayBundleRoot,
+  runIdIssues,
   writeBundleFile,
 } from "./bundle.ts";
 
@@ -377,7 +377,7 @@ describe("ReplayManifestSchema", () => {
       stage: "beta",
       profile: "full",
       guildId: "1337623164146155593",
-      expectedCapabilities: { bucks: true },
+      expectedCapabilities: {},
       lake: { buildId: "b1", schemaFingerprint: "current-schema" },
       database: { name: "scout_beta_snapshot", snapshotId: "1326601" },
       model: "gpt-5.6-luna",
@@ -385,7 +385,7 @@ describe("ReplayManifestSchema", () => {
       corpusSha256: null,
       corpusVersion: null,
       promptSha256: "b".repeat(64),
-      flagOverrides: [{ flag: "betting_enabled", value: true }],
+      flagOverrides: [{ flag: "dares_enabled", value: true }],
       tokenBudgets: { hourly: 1, daily: 2 },
       gitCommit: "abc",
       concurrency: 1,

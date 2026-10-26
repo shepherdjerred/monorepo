@@ -111,7 +111,7 @@ describe("static mode", () => {
       provider: new StaticProvider({ ai_reports_enabled: true }),
     });
     await expect(
-      isEnabled("betting_enabled", {
+      isEnabled("dares_enabled", {
         default: false,
         targetingKey: "service",
       }),

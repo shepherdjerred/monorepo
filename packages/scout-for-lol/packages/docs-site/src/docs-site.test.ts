@@ -71,6 +71,13 @@ function page(route: string): string {
   return html;
 }
 
+test("the economy is absent and free Dares retain beta-only documentation", () => {
+  expect([...pages].some((route) => route.includes("bryan-bucks"))).toBe(false);
+  const isBeta = Bun.env.PUBLIC_SCOUT_SITE_FLAVOR === "beta";
+  expect(pages.has("/docs/reference/dares/")).toBe(isBeta);
+  expect(pages.has("/docs/how-to/author-a-dare/")).toBe(isBeta);
+});
+
 /**
  * Astro escapes text nodes, so a signature containing an apostrophe reaches
  * the page as `player(&#39;name&#39;)`. Comparing decoded text keeps these

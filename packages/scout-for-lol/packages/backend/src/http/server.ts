@@ -1,35 +1,34 @@
 import configuration from "#src/configuration.ts";
-import { getMetrics } from "#src/metrics/index.ts";
-import { handleHealthz, handleLivez } from "#src/http/health-routes.ts";
-import * as Sentry from "@sentry/bun";
-import { createLogger } from "#src/logger.ts";
-import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
-import { appRouter } from "#src/trpc/router/index.ts";
-import { createContext } from "#src/trpc/context.ts";
-import { handleAuthRoutes } from "#src/trpc/auth-web.ts";
-import { handleDevLogin } from "#src/trpc/dev-login.ts";
 import { prisma } from "#src/database/index.ts";
-import { handleImageRoute } from "#src/trpc/image-routes.ts";
-import { handleReportAiRoute } from "#src/reports/ai/http-route.ts";
+import { handleExploreAttachment } from "#src/explore/attachments/http.ts";
 import {
   EXPLORE_STREAM_PATH,
   handleExploreRoute,
 } from "#src/explore/http/http-route.ts";
 import { exploreRunManager } from "#src/explore/runs/run-manager.ts";
-import { handleVersion } from "#src/http/version.ts";
+import { handleHealthz, handleLivez } from "#src/http/health-routes.ts";
 import {
   classifyMethod,
   classifyRoute,
   statusClass,
 } from "#src/http/route-label.ts";
+import { handleVersion } from "#src/http/version.ts";
+import { createLogger } from "#src/logger.ts";
+import { getMetrics } from "#src/metrics/index.ts";
 import {
   httpRequestDuration,
   httpRequestsTotal,
 } from "#src/metrics/platform/web.ts";
-import { handleBryanBucksControl } from "#src/http/bryan-bucks-control.ts";
+import { handleReportAiRoute } from "#src/reports/ai/http-route.ts";
 import { handleScoutClientRoute } from "#src/scout-client/http.ts";
 import { handleSupportScreenshot } from "#src/support/http.ts";
-import { handleExploreAttachment } from "#src/explore/attachments/http.ts";
+import { handleAuthRoutes } from "#src/trpc/auth-web.ts";
+import { createContext } from "#src/trpc/context.ts";
+import { handleDevLogin } from "#src/trpc/dev-login.ts";
+import { handleImageRoute } from "#src/trpc/image-routes.ts";
+import { appRouter } from "#src/trpc/router/index.ts";
+import * as Sentry from "@sentry/bun";
+import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
 const logger = createLogger("http-server");
 
@@ -212,13 +211,6 @@ async function dispatch(request: Request, url: URL): Promise<Response> {
   // Build/deploy identity: version, git SHA, tRPC contract hash
   if (url.pathname === "/api/version") {
     return handleVersion(request, corsHeadersFor(request));
-  }
-
-  // Internal Bryan Bucks analytics reconciliation, driven by the Temporal
-  // analytics Schedule. Absent unless its private bootstrap token is present.
-  const bryanBucksResponse = await handleBryanBucksControl(request, url);
-  if (bryanBucksResponse !== null) {
-    return bryanBucksResponse;
   }
 
   // Metrics endpoint for Prometheus

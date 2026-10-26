@@ -225,7 +225,7 @@ with `appliedRevision` before
 closing an incident; a recorded vote alone does not prove the Discord tally
 was edited.
 
-Detached prediction and parlay work is inserted once before its Temporal
+Detached champion-mastery refresh work is inserted once before its Temporal
 workflow starts. Reconciliation starts only never-accepted `queued` rows.
 After Temporal exhausts the activity's four-attempt budget, the row remains
 terminal `failed`; normal producers cannot restart the same work ID. The
@@ -240,7 +240,7 @@ records the reason and increments the row's requeue count:
 
 ```bash
 bun run temporal:requeue-work -- \
-  --work-id parlay:<match-id> \
+  --work-id <champion-mastery-work-id> \
   --reason "Provider capacity restored and this match was reviewed"
 ```
 
@@ -261,7 +261,7 @@ The Explore agent's system prompt is a lean core — corpus honesty, answer
 shape, limits — plus an index of skills. Everything domain-specific (ScoutQL
 itself, visualization kinds, match cards, League references, Riot acquisition,
 game review, player tendencies, patch impact, champion pools, voice response,
-dares, challenges, creation, Bryan Bucks) is a Markdown file under
+dares, challenges, creation) is a Markdown file under
 `src/explore/skills/content/` that the model
 loads on demand with the `load_skill` tool, mirroring the Agent Skills
 pattern. Adding a skill is adding one `.md` file: the loader discovers files
@@ -373,11 +373,9 @@ chunk's delivery row. There is no separate claim table beside them; see
 [The per-match core](#the-per-match-core) for how the effect fence reads the
 receipt under an advisory lock.
 
-Receipt evidence names things by durable identity — Discord message ids, ledger
-row ids, object key plus content digest — never by a count or a local path, so
-a reader can go find what the receipt attests to. No evidence carries a money
-amount; the identities locate the ledger rows and the amounts live there under
-the storable Bucks brands. The `raw-archive` and `lake-staging` receipt kinds
+Receipt evidence names things by durable identity — Discord message ids, Dare
+ids, object key plus content digest — so a reader can find what the receipt
+attests to. The `raw-archive` and `lake-staging` receipt kinds
 belong to the receipted lake projection in `report-lake/`, which records them
 from the writer that knows the artifact's key and digest; the two vocabularies
 are disjoint, so no receipt identity carries two evidence shapes.
@@ -496,7 +494,7 @@ so an unscoped `min by (environment)` reads a correct deployment as an outage.
 
 `src/temporal/` holds the Activities `scoutMatchProcessingWorkflow` calls. They
 are thin orchestration over shared services — the receipted archive door, the
-Bucks settlement hook, the challenge advisory lock, the durable repositories —
+Dare settlement service, the challenge advisory lock, the durable repositories —
 and their durable writes are strict, not fail-open.
 
 The durable record IS the pipeline's memory: a resumed Workflow decides which
@@ -1022,23 +1020,19 @@ and a tick the server missed by more than a minute is not replayed. Each poll
 detects live games, starts one `scoutPrematchGameWorkflow` per game, and
 then runs `runPrematchMaintenance`
 (`src/temporal/prematch/prematch-maintenance.ts`): Dare accept-window expiry
-and callout refresh, and, unless betting is hard-disabled, parlay market
-activation and betting and parlay window closes. Discovery records one
+and callout refresh. Discovery records one
 `prematch_detections_total{status}` sample per probed account (`game`,
 `idle`, `unreadable`). The maintenance tail's retired
 `scout-v2-prematch-maintenance` gate is deprecated.
 
 Notification intents are keyed `prematch-discord:<matchId>:<channelId>`, a
-delivered or `unknown-delivery` intent is never redriven, and betting pools are
-unique per match and guild.
+delivered or `unknown-delivery` intent is never redriven.
 
 The consumer live view reads `listLivePrematchGames`
 (`src/temporal/prematch/prematch-reads.ts`): `raw-archive-prematch` receipts
 younger than `LIVE_GAME_TTL_MS` (three hours,
 `src/temporal/prematch/prematch-intents.ts`), minus games the report lake
-already holds, with each roster read from the archived spectator snapshot. The
-stale-pool void sweep replies to the delivered post-match intents
-(`postmatchReplyTargets`).
+already holds, with each roster read from the archived spectator snapshot.
 
 ### Games against bots
 
@@ -1066,30 +1060,13 @@ rule in `LoadingScreenDataSchema` exempts that side for the same reason. A
 completed roster is counted as
 `prematch_detections_total{status="client_completed_roster"}`.
 
-### Prematch delivery and markets
+### Prematch delivery
 
-After its capture and plan, `scoutPrematchGameWorkflow` does three things
-(its retired `scout-v2-prematch-delivery` gate is deprecated):
-
-1. `openPrematchMarkets` (`src/temporal/prematch/prematch-markets.ts`)
-   makes the one-of-two Bucks decision behind the effect fence, with a
-   `prematch-markets` receipt. A standard Classic lobby gets the participation
-   point (`awardClassicPrematchForGame`, once per match and guild by its
-   `BucksMatchEarning` marker). Any other bettable game gets one pool per
-   Bucks-enabled guild it is announced in (`openBettingPoolsStrict`, once per
-   match and guild by `BucksMatchPool`'s unique key). A failure is retried,
-   stays visible in the history, and the game is still announced without a
-   market.
-2. One `scoutNotificationWorkflow` child per drivable prematch intent, with
-   the post-match path's reuse policy. The plan leaves out delivered and
-   `unknown-delivery` intents and any unsent intent past its freshness
-   deadline.
-3. Each child builds its message with its guild's buttons when that guild
-   holds an open pool. After delivery, `afterNotificationDelivered` runs
-   `prematch-follow-up.ts`: it appends the message to the pool's refs with a
-   compare-and-set, refreshes the pool's messages, enqueues the parlay once
-   per match and counts the guild's core output. A failed ref write is
-   retried, because the ref is the settlement announcement's only destination.
+After capture and planning, the workflow starts one notification child per
+drivable prematch intent. Each child freezes the game-start message, image,
+Clash decision, and feature tip before delivery. Confirmed delivery records the
+guild's core output. The retained `openPrematchMarkets` Activity is a no-op so
+already-issued Workflow histories remain replayable.
 
 Prematch and postmatch delivery freeze message content, embeds, buttons and
 feature-tip selection in `NotificationPresentation` before sending. A guild
@@ -1339,23 +1316,16 @@ versioned announcement keeps the event category, summary, and guild used by
 the legacy DM. Delivery checks the current guild flag and recipient preference
 before sending through the audited DM path with mentions suppressed.
 
-A Dare that resolves (achieved, unachieved, or voided with money moved) also
-mints one channel-targeted `dare-status` intent for its own channel, keyed
-`dare-result:<dareId>:revision:<revision>`, in the settling transaction. Its
-announcement carries the payouts and refunds the ledger recorded, so the post
-names exactly who was paid or refunded and allowlists only those mentions. It
-answers to `dare_notifications_enabled` alone (DM preferences do not apply),
-and once Discord accepts it the follow-up edits the Dare callout to its final
-state; the pending-callout scan skips a Dare whose post is still owed, so the
-channel reads result first. A match owed no public delivery writes neither the
-DMs nor the post. The settling transaction stamps the Dare's `settledMatchId`,
-which is how a resumed settlement receipt still names a Dare an earlier attempt
-resolved. The
-intent expires thirty days after the event, and an ambiguous DM failure stays
-`unknown-delivery` for operator resolution. The legacy Dare event/delivery
-outbox, its tables and its post-match drain are retired; settlement sinks only
-decide whether the intents may be minted. The drop migration refuses to run
-while a legacy delivery is still owed.
+A resolved Dare also mints one channel-targeted `dare-status` intent for its
+own channel, keyed `dare-result:<dareId>:revision:<revision>`, in the settling
+transaction. Its announcement freezes the result, proof summary, and winners.
+Delivery allowlists only participant mentions and checks
+`dare_notifications_enabled`; DM preferences do not apply to channel results.
+After delivery, the follow-up refreshes the Dare callout to its final state.
+The settling transaction stamps `settledMatchId` so a resumed settlement
+receipt still names Dares resolved by an earlier attempt. The intent expires
+thirty days after the event; an ambiguous send stays `unknown-delivery` for
+operator resolution.
 
 The offline recovery notice is a `product-announcement` intent with the
 `offline-recovery` effect, one per subscribed channel and outage, minted with
@@ -1379,29 +1349,13 @@ prefix). The kind selects the renderer and the message builder: a `prematch`
 intent is rendered from the archived spectator snapshot and delivered as the
 game-start message, and nothing on that arm reads a MatchV5 payload — so a
 prematch intent re-driven after its game ended can never deliver a post-match
-report. A prematch message carries its guild's Bryan Bucks buttons and
-live-market line exactly when that guild holds an open pool for the match,
-and the post-delivery follow-up records the message on the pool so the close
-sweep and the settlement announcement can find it (see
-[Prematch delivery and markets](#prematch-delivery-and-markets)).
+report. Prematch messages carry the game-start report and guild-specific Clash context.
 
 ### The announcement kinds carry their message on the intent
 
-A `settlement` intent is one guild channel's Bryan Bucks recap for one match.
-It has no image — its render attests `none` (`text-only`) — and its message is
-built at the send from an `announcement` envelope on the intent, parsed by the
-codecs in `notification/announcement-codecs.ts`: the settlement summary,
-parlay result and this guild's earnings exactly as settlement produced them.
-The intent carries those presentation inputs rather than the receipt's
-identities on purpose — the receipt names no amounts, and rebuilding pool
-totals and payouts from ledger rows would be a second implementation of
-settlement arithmetic. The arm composes the shared builder
-(`prepareSettlementAnnouncement`) so budgets and mention safety exist once. A
-settlement recap replies to the delivered POSTMATCH intent's `messageId` for
-the same channel (`failIfNotExists: false`), with one plain send when the
-reply itself is refused. It refuses a DM target as terminal: private
-settlement receipts would be a separate, budgeted fan-out, and that is an
-explicit gap.
+Retained `settlement` intents are suppressed as `feature-disabled`; they never
+produce a new Discord send. New Dare results freeze the verified outcome and
+winners on a `dare-status` intent for the Dare’s own channel.
 
 A `hall-record-break` intent is one guild's Hall of Fame announcement for one
 match, keyed `hall-record-break:<riotMatchId>:<guildId>` — by guild, not
@@ -1753,10 +1707,9 @@ before its five-minute success cache is populated. Failures remain errors and
 are not cached as empty guild lists. Re-authentication invalidates both the
 cached result and the old in-flight read's ability to repopulate it.
 
-Gateway events still _write_ installation state. Two background paths that used
+Gateway events still _write_ installation state. The background path that used
 to _read_ the gateway cache now use the same install port, because they run as
 Temporal Activities that a split deployment executes with no shard at all:
-weekly leaderboard delivery (`betting/weekly/weekly-leaderboard.ts`) and
 scheduled report dispatch (`reports/discord-dispatcher.ts`). The consumer and
 Explore eligibility check (`consumer/access.ts`) uses it too.
 
@@ -1851,7 +1804,7 @@ Notes that are easy to get wrong:
 - **Reading the lake is wider than publishing it.** Every embedded Temporal activity
   queue reads the lake somewhere: `realtime` settles SQL dares and evaluates
   hall progression, `interactive` answers Explore queries, `background` runs
-  reports, parlay generation and the summoner-index
+  reports and the summoner-index
   backfill, and `lake` is the compactor. Several of them also write its staging
   directories. `activity-worker` mounts the same ZFS claim as the application
   with write access, on the same node and SELinux level. The volume must have
@@ -1911,19 +1864,8 @@ Notes that are easy to get wrong:
 
 ## Database preparation and startup
 
-Ordinary image startup runs Prisma migrations, verifies the Bucks ledger using
-Postgres only, then boots the selected role:
-
-```bash
-bun x --no-install prisma migrate deploy
-bun run scripts/check-database-readiness.ts
-```
-
-A fresh database needs nothing else: once its migrations are applied it boots
-with no import step. A restored database boots the same way. The readiness
-check refuses only ledger drift (a `BucksAccount` balance that disagrees with
-its ledger sum). Local fixture databases use their existing bootstrap path
-rather than this hosted-image entrypoint.
+Ordinary image startup applies Prisma migrations, then boots the selected
+runtime role. A fresh or restored database needs no economy readiness check.
 
 ### Local PostgreSQL
 
