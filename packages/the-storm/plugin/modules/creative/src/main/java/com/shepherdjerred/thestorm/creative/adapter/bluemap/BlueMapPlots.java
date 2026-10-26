@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.core.schedule.Scheduler;
 import com.shepherdjerred.thestorm.creative.domain.PlotMarker;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
+import de.bluecolored.bluemap.api.markers.HtmlMarker;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
 import de.bluecolored.bluemap.api.markers.ShapeMarker;
 import de.bluecolored.bluemap.api.math.Color;
@@ -25,6 +26,12 @@ public final class BlueMapPlots {
   private static final float MARKER_Y = 64;
   private static final Color LINE = new Color(0x4D, 0xCC, 0xC4, 1f);
   private static final Color FILL = new Color(0x4D, 0xCC, 0xC4, 0.25f);
+
+  /**
+   * Camera distance, in blocks, at which a name has faded out. It stays fully visible closer than
+   * half of this, so a neighborhood still reads and the whole-map view does not.
+   */
+  private static final double NAME_MAX_DISTANCE = 4_000;
 
   private final World world;
   private @Nullable Consumer<BlueMapAPI> onEnable;
@@ -66,7 +73,9 @@ public final class BlueMapPlots {
     var set = markers(map);
     set.getMarkers().clear();
     for (var marker : markers) {
-      set.put(marker.id().x() + "_" + marker.id().z(), shape(marker));
+      var id = marker.id().x() + "_" + marker.id().z();
+      set.put(id, shape(marker));
+      set.put(id + "-name", name(marker));
     }
   }
 
@@ -93,6 +102,21 @@ public final class BlueMapPlots {
         .lineColor(LINE)
         .fillColor(FILL)
         .lineWidth(2)
+        .build();
+  }
+
+  /** The name on the map itself. Unlisted, so the plot outline remains the one sidebar entry. */
+  private static HtmlMarker name(PlotMarker marker) {
+    var x = (marker.minX() + marker.maxX() + 1) / 2.0;
+    var z = (marker.minZ() + marker.maxZ() + 1) / 2.0;
+    return HtmlMarker.builder()
+        .label(marker.label())
+        .position(x, MARKER_Y, z)
+        .html(PlotNameHtml.of(marker.label()))
+        .anchor(0, 0)
+        .listed(false)
+        .minDistance(0)
+        .maxDistance(NAME_MAX_DISTANCE)
         .build();
   }
 }

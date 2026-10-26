@@ -136,8 +136,9 @@ saves one `x_z.schem` under the plugin data folder `creative-schematics` for
 someone to fetch outside the world; it is not mailed. `/creative admin assign`,
 `unclaim`, and `scan` require `thestorm.creative.admin`. Scan reports claim
 drift and does not rewrite the catalog. BlueMap draws a Plots marker set on
-the creative world's maps only; the player-facing map is the map named creative
-on `https://bluemap.ts-mc.net/`, beside survival. GrimAC's owned config has no
+the creative world's maps only. Each plot is labelled with its name, or with
+the owner's username when it has no name. The player-facing map is the map
+named creative on `https://bluemap.ts-mc.net/`, beside survival. GrimAC's owned config has no
 per-world exemption key, so the module pauses flight and creative-break checks
 through Grim's API only while the player's world is creative, then restores the
 checks it paused. The module

@@ -31,6 +31,6 @@ Stand on a plot you own or are trusted on and run `/creative download`. The serv
 
 ## Creative map
 
-Claimed and staff-held plots are labelled on the map named creative. That map is on the same [LiveMap](https://bluemap.ts-mc.net/) site as survival: [creative](https://bluemap.ts-mc.net/#creative). Empty cells are not marked. Survival town markers stay on the survival map.
+Claimed and staff-held plots are labelled on the map named creative. The label is the plot's name when one is set, and the owner's username otherwise. A plot with neither is labelled staff. That map is on the same [LiveMap](https://bluemap.ts-mc.net/) site as survival: [creative](https://bluemap.ts-mc.net/#creative). Empty cells are not marked. Survival town markers stay on the survival map.
 
 WorldEdit in this world changes only the single plot you are standing in, and only when you own it or are trusted there. A road, or an edit that leaves the plot, is refused.
