@@ -20,6 +20,15 @@ describe("promotion browser scope", () => {
     expect(() =>
       assertPromotionSubmitControl(target, "Delete listing"),
     ).toThrow("not a promotion");
+    expect(() => assertPromotionSubmitControl(target, "Premium bump")).toThrow(
+      "not a promotion",
+    );
+    expect(() => assertPromotionSubmitControl(target, "$5 bump")).toThrow(
+      "not a promotion",
+    );
+    expect(() =>
+      assertPromotionSubmitControl(target, "Renew subscription"),
+    ).toThrow("not a promotion");
     expect(() => assertPromotionSubmitControl(target, "Save account")).toThrow(
       "explicitly identify",
     );
