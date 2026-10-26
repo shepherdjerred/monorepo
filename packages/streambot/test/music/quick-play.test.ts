@@ -292,6 +292,7 @@ test("saved LoL playlist sources respect the feature gate", async () => {
       assistantV2: () => Promise.resolve(false),
       history: () => Promise.resolve(false),
       musicOverVoice: () => Promise.resolve(true),
+      sportsStreaming: () => Promise.resolve(true),
       lolEsports: () => Promise.resolve(false),
     },
     routePlayback,
@@ -319,6 +320,46 @@ test("saved LoL playlist sources respect the feature gate", async () => {
       signal: new AbortController().signal,
     }),
   ).rejects.toThrow("LoL Esports is not enabled here.");
+  expect(routePlayback).not.toHaveBeenCalled();
+});
+
+test("saved sports playlist sources respect the sports feature gate", async () => {
+  const f = await setup();
+  const context = await musicCommandContext(f.issuer, f.deps);
+  const routePlayback = vi.fn();
+  const deps = {
+    ...context,
+    featureGate: {
+      assistantV2: () => Promise.resolve(false),
+      history: () => Promise.resolve(false),
+      musicOverVoice: () => Promise.resolve(true),
+      sportsStreaming: () => Promise.resolve(false),
+    },
+    routePlayback,
+  };
+
+  await expect(
+    queueBatch({
+      deps,
+      sources: [
+        {
+          kind: "url",
+          url: "https://example.com/live",
+          sportsEvent: {
+            id: "streameast:123",
+            provider: "streameast",
+            title: "Live game",
+            status: "live",
+            startsAt: null,
+            pageUrl: "https://example.com/live",
+          },
+        },
+      ],
+      userId,
+      placement: "queue",
+      signal: new AbortController().signal,
+    }),
+  ).rejects.toThrow("Sports streams are not enabled here.");
   expect(routePlayback).not.toHaveBeenCalled();
 });
 

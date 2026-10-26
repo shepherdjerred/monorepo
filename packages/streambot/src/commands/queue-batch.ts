@@ -14,6 +14,7 @@ import { PlaybackCommandBoundaryError } from "./playback-command-errors.ts";
 import { assertNumberedPlayback } from "./numbered-playback.ts";
 import { automaticPlaybackChannel } from "./automatic-channel.ts";
 import { assertLolRequestEnabled } from "@shepherdjerred/streambot/sports/playback-selection.ts";
+import { sportsEventForSource } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
 
 type BatchInput = {
   deps: PlaybackCommandServiceDeps;
@@ -23,6 +24,36 @@ type BatchInput = {
   signal: AbortSignal;
 };
 type Group = { target: PlaybackCommandServiceDeps; items: QueuedSource[] };
+
+async function assertSourceFeatureGates(
+  deps: PlaybackCommandServiceDeps,
+  source: Source,
+  userId: UserId,
+): Promise<void> {
+  const scope =
+    deps.guildId === undefined || deps.channelId === undefined
+      ? null
+      : { guildId: deps.guildId, channelId: deps.channelId, userId };
+  const sports =
+    source.kind === "url" &&
+    (source.sportsEvent !== undefined ||
+      sportsEventForSource(source.url) !== null);
+  if (
+    sports &&
+    (scope === null ||
+      (await deps.featureGate?.sportsStreaming?.(scope)) !== true)
+  )
+    throw new PlaybackCommandBoundaryError(
+      "Sports streams are not enabled here.",
+    );
+  await assertLolRequestEnabled({
+    query: "",
+    source,
+    provider: undefined,
+    scope,
+    gate: deps.featureGate?.lolEsports,
+  });
+}
 
 /** Stages metadata and checks authority before committing an ordered batch. */
 class QueueBatch {
@@ -61,16 +92,7 @@ class QueueBatch {
       return;
     }
     const { deps, userId, placement } = this.input;
-    await assertLolRequestEnabled({
-      query: "",
-      source: original,
-      provider: undefined,
-      scope:
-        deps.guildId === undefined || deps.channelId === undefined
-          ? null
-          : { guildId: deps.guildId, channelId: deps.channelId, userId },
-      gate: deps.featureGate?.lolEsports,
-    });
+    await assertSourceFeatureGates(deps, original, userId);
     const target = await this.targetFor(original);
     const key =
       (target.guildId ?? "") +

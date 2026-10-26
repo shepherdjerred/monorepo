@@ -32,6 +32,29 @@ afterEach(() => {
 });
 
 describe("native playlists", () => {
+  test("saved sources drop scheduled playback ownership", () => {
+    history = new MediaHistoryStore(":memory:");
+    const playlist = history.playlists.create(owner, "Scheduled", [
+      {
+        title: "Scheduled stream",
+        source: SourceSchema.parse({
+          kind: "url",
+          url: "https://example.com/live",
+          mode: "video",
+          spoken: false,
+          scheduleId: "f4fe3e25-dfc1-4c2a-a954-872a6d0d7416",
+        }),
+      },
+    ]);
+
+    expect(playlist.items[0]?.source.kind).toBe("url");
+    if (playlist.items[0]?.source.kind === "url") {
+      expect(playlist.items[0].source.scheduleId).toBeUndefined();
+      expect(playlist.items[0].source.mode).toBeUndefined();
+      expect(playlist.items[0].source.spoken).toBeUndefined();
+    }
+  });
+
   test("private by default; public access follows server and owner-only edits", () => {
     history = new MediaHistoryStore(":memory:");
     const store = history.playlists;

@@ -1,10 +1,9 @@
 import type { Database } from "bun:sqlite";
 import { z } from "zod";
 import {
+  historySource,
   SourceSchema,
   type Source,
-  withMode,
-  withSpoken,
 } from "@shepherdjerred/streambot/sources/source.ts";
 import { MusicError } from "./errors.ts";
 
@@ -245,12 +244,7 @@ export class PlaylistStore {
           id,
           position,
           item.title,
-          JSON.stringify(
-            withSpoken(
-              withMode(SourceSchema.parse(item.source), undefined),
-              undefined,
-            ),
-          ),
+          JSON.stringify(historySource(SourceSchema.parse(item.source))),
         ),
     );
   }
