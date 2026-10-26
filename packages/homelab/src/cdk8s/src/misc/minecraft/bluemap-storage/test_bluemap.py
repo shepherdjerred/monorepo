@@ -4,6 +4,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from typing import BinaryIO
 from unittest.mock import patch
 
 import bluemap as storage
@@ -52,21 +53,21 @@ class BlueMapStorageTest(unittest.TestCase):
         self.assertEqual(tile.read_bytes(), b"new render after cutover")
 
     def test_interrupted_copy_resumes_and_replaces_partial_file(self) -> None:
-        def interrupted(source, destination, **_arguments):
+        def interrupted(source: BinaryIO, destination: BinaryIO, **_arguments: object) -> None:
             destination.write(source.read(2))
             raise OSError("interrupted write")
 
-        with patch.object(storage.shutil, "copyfileobj", side_effect=interrupted):
-            with self.assertRaisesRegex(OSError, "interrupted write"):
-                storage.copy(self.data, self.cache)
+        with (patch.object(storage.shutil, "copyfileobj", side_effect=interrupted),
+              self.assertRaisesRegex(OSError, "interrupted write")):
+            storage.copy(self.data, self.cache)
         self.assertEqual(storage.read_receipt(self.cache)["phase"], "COPYING")
         storage.copy(self.data, self.cache)
         self.assertEqual(storage.inventory(self.cache), storage.inventory(self.source))
 
     def test_changed_original_is_refused_on_resume(self) -> None:
-        with patch.object(storage.shutil, "copyfileobj", side_effect=OSError("interrupted")):
-            with self.assertRaises(OSError):
-                storage.copy(self.data, self.cache)
+        with (patch.object(storage.shutil, "copyfileobj", side_effect=OSError("interrupted")),
+              self.assertRaises(OSError)):
+            storage.copy(self.data, self.cache)
         (self.source / "pluginState.json").write_bytes(b"unexpected writer")
         with self.assertRaisesRegex(ValueError, "changed during migration"):
             storage.copy(self.data, self.cache)
@@ -92,7 +93,7 @@ class BlueMapStorageTest(unittest.TestCase):
             storage.retire_source(self.data, self.cache, "a" * 64)
         current = self.cache / "pluginState.json"
         current.write_bytes(b"state updated by BlueMap")
-        storage.retire_source(self.data, self.cache, result["manifestSha256"])
+        storage.retire_source(self.data, self.cache, str(result["manifestSha256"]))
         self.assertFalse(self.source.exists())
         self.assertEqual(current.read_bytes(), b"state updated by BlueMap")
         self.assertEqual((self.data / "world/level.dat").read_bytes(), b"world must survive")
@@ -103,7 +104,7 @@ class BlueMapStorageTest(unittest.TestCase):
         result = storage.copy(self.data, self.cache)
         (self.source / "pluginState.json").write_bytes(b"unreviewed")
         with self.assertRaisesRegex(ValueError, "changed since verified"):
-            storage.retire_source(self.data, self.cache, result["manifestSha256"])
+            storage.retire_source(self.data, self.cache, str(result["manifestSha256"]))
         self.assertTrue(self.source.is_dir())
 
     def test_restored_world_initializes_a_fresh_cache(self) -> None:
@@ -120,7 +121,7 @@ class BlueMapStorageTest(unittest.TestCase):
         receipt["files"] = {"../world/level.dat": "a" * 64}
         (self.cache / storage.RECEIPT).write_text(json.dumps(receipt), encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "Unsafe BlueMap manifest"):
-            storage.retire_source(self.data, self.cache, result["manifestSha256"])
+            storage.retire_source(self.data, self.cache, str(result["manifestSha256"]))
         self.assertEqual((self.data / "world/level.dat").read_bytes(), b"world must survive")
 
 
