@@ -24,13 +24,21 @@ import {
   NativeHouseholdSchema,
 } from "#infrastructure/native-recovery/snapshots.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
-import { captureInterruptedPublicationWork } from "#infrastructure/publication-proof/lifecycle.ts";
+import { captureInterruptedPublicationWorkFromIntent } from "#infrastructure/publication-proof/lifecycle.ts";
 import { snapshotPublicationAsset } from "#infrastructure/publication-proof/snapshots.ts";
-import { compensationRecord } from "./records.ts";
-import { buildNativeCompensationScope } from "./scope.ts";
-import { assertCompensationFenceOwner } from "./fence.ts";
+import {
+  type compensationRecord,
+  type compensationAncestors,
+  lockedCompensationAncestors,
+  readCompensationLockDescriptor,
+} from "./records.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { buildNativeCompensationScopeProjection } from "./scope.ts";
+import { assertValidatedCompensationFenceOwner } from "./fence.ts";
 import { NativeCompensationProtection } from "./protection.ts";
 import { archiveMedia } from "#infrastructure/native-archive/snapshots.ts";
+import type { NativePlexProofRef } from "#shared/plex-binding/native.ts";
+import type { NativeReceiptReadPort } from "#infrastructure/plex-binding/native/receipt-port.ts";
 
 export async function lockNativeCompensationScope(
   tx: Prisma.TransactionClient,
@@ -83,6 +91,7 @@ export async function lockNativeCompensationScope(
 export async function assertNativeCompensationSnapshot(
   tx: Prisma.TransactionClient,
   input: { planId: string; scope: NativeCompensationScope },
+  budget = new PublicationAuthorityReadBudget(),
 ) {
   await assertNativeExclusion(tx);
   const plan = await tx.nativeRecoveryPlan.findUniqueOrThrow({
@@ -92,6 +101,7 @@ export async function assertNativeCompensationSnapshot(
     where: { id: "singleton" },
   });
   const authority = await runtimeAuthority(tx);
+  budget.consume(1);
   if (
     runtime.recoveryEpoch !== plan.recoveryEpoch ||
     runtime.version !== plan.runtimeVersion ||
@@ -104,15 +114,25 @@ export async function assertNativeCompensationSnapshot(
   if (
     snapshotHash(
       nativeJson(NativeCompensationScopeSchema.parse(plan.scope)),
-    ) !== snapshotHash(nativeJson(input.scope)) ||
-    snapshotHash(
-      nativeJson(await buildNativeCompensationScope(tx, input.scope.request)),
     ) !== snapshotHash(nativeJson(input.scope))
   )
     throw new NativeCompensationProtection(
       "compensation_reviewed_records_changed",
     );
-  return { plan, runtime };
+  const projection = await buildNativeCompensationScopeProjection(
+    tx,
+    input.scope.request,
+    budget,
+    input.scope.storageRoots,
+  );
+  const current = projection.scope;
+  if (
+    snapshotHash(nativeJson(current)) !== snapshotHash(nativeJson(input.scope))
+  )
+    throw new NativeCompensationProtection(
+      "compensation_reviewed_records_changed",
+    );
+  return { plan, runtime, scope: current, projection };
 }
 
 export async function assertCompensationOwner(
@@ -131,10 +151,70 @@ export async function assertCompensationOwner(
 export async function assertNativeCompensation(
   tx: Prisma.TransactionClient,
   input: NativeCompensationActivityInput,
-) {
-  const initial = await compensationRecord(tx, input.continuationId);
+  budget = new PublicationAuthorityReadBudget(),
+  projection?: NativeReceiptReadPort,
+): Promise<CompensationExecutionAuthority> {
+  const phase = await assertNativeCompensationPhase(
+    tx,
+    input,
+    budget,
+    projection,
+  );
+  return phase.authority;
+}
+
+type CompensationRecord = Awaited<ReturnType<typeof compensationRecord>>;
+export type CompensationExecutionAuthority = {
+  continuationId: string;
+  receiptId: string;
+  planId: string;
+  version: number;
+  recoveryEpoch: number;
+  descriptor: CompensationRecord["descriptor"];
+  descriptorHash: string;
+  execution: CompensationRecord["execution"];
+  completion: CompensationRecord["completion"];
+  networkScope: NativeCompensationScope;
+};
+export type CompensationExecutionPhase = {
+  transaction: Prisma.TransactionClient;
+  activity: NativeCompensationActivityInput;
+  authority: CompensationExecutionAuthority;
+  chain: Awaited<ReturnType<typeof compensationAncestors>>;
+  operation: Prisma.OperationGetPayload<Record<string, never>>;
+  budget: PublicationAuthorityReadBudget;
+  plex: { ref: NativePlexProofRef; expiresAtMs: number } | null;
+  closed: boolean;
+};
+
+/** One full locked current authority and immutable closure, never reusable across transactions. */
+export async function assertNativeCompensationPhase(
+  tx: Prisma.TransactionClient,
+  input: NativeCompensationActivityInput,
+  budget: PublicationAuthorityReadBudget,
+  projection?: NativeReceiptReadPort,
+): Promise<CompensationExecutionPhase> {
+  projection?.assertTransaction(tx, budget);
+  const initial = await readCompensationLockDescriptor(
+    tx,
+    input.continuationId,
+    budget,
+  );
   await lockNativeCompensationScope(tx, initial.descriptor.scope);
-  const record = await compensationRecord(tx, input.continuationId);
+  const chain = await lockedCompensationAncestors(
+    tx,
+    {
+      id: input.continuationId,
+      transitionId: initial.descriptor.scope.transition.transitionId,
+    },
+    budget,
+    projection,
+  );
+  const record = chain[0];
+  if (record?.row.descriptorHash !== initial.descriptorHash)
+    throw new NativeCompensationProtection(
+      "compensation_reviewed_records_changed",
+    );
   const { row, descriptor, execution, completion } = record;
   if (
     row.coordinatorOperationId !== input.operationId ||
@@ -142,9 +222,11 @@ export async function assertNativeCompensation(
     !["pending", "compensating", "protected", "compensated"].includes(row.state)
   )
     throw new NativeCompensationProtection("compensation_coordinator_changed");
+  await tx.$queryRaw`SELECT id FROM "Operation" WHERE id=${input.operationId} FOR UPDATE`;
   const operation = await tx.operation.findUniqueOrThrow({
     where: { id: input.operationId },
   });
+  budget.consume(1);
   const payload = z
     .strictObject({
       ...NativeCompensationActivityInputSchema.shape,
@@ -159,40 +241,43 @@ export async function assertNativeCompensation(
     snapshotHash(activity) !== snapshotHash(input)
   )
     throw new NativeCompensationProtection("compensation_operation_changed");
-  if (completion !== null)
-    return {
-      continuationId: row.id,
-      receiptId: row.receiptId,
-      planId: row.receipt.planId,
-      version: row.version,
-      recoveryEpoch: row.recoveryEpoch,
-      descriptor,
-      descriptorHash: row.descriptorHash,
-      execution,
-      completion,
-      networkScope: descriptor.scope,
-    };
+  const authority: CompensationExecutionAuthority = {
+    continuationId: row.id,
+    receiptId: row.receiptId,
+    planId: row.receipt.planId,
+    version: row.version,
+    recoveryEpoch: row.recoveryEpoch,
+    descriptor,
+    descriptorHash: row.descriptorHash,
+    execution,
+    completion,
+    networkScope: descriptor.scope,
+  };
+  const phase: CompensationExecutionPhase = {
+    transaction: tx,
+    activity: input,
+    authority,
+    chain,
+    operation,
+    budget,
+    plex: null,
+    closed: false,
+  };
+  if (completion !== null) return phase;
   await assertCompensationOwner(tx, row.receipt.actorId);
   const runtime = await runtimeAuthority(tx);
   if (!runtime.active || runtime.epoch !== row.recoveryEpoch)
     throw new NativeCompensationProtection("compensation_runtime_protected");
   {
-    await assertCompensationFenceOwner(tx, {
-      activity: input,
-      purpose: "compensate",
-    });
-    await assertNoSubtitleReplacement(tx, row.assetIds);
-    await assertNativeExclusion(tx);
-    if (
-      snapshotHash(
-        nativeJson(
-          await captureInterruptedPublicationWork(tx, row.transitionId),
-        ),
-      ) !== snapshotHash(nativeJson(descriptor.scope.interruptedWork))
-    )
-      throw new NativeCompensationProtection(
-        "compensation_interrupted_work_changed",
-      );
+    await assertValidatedCompensationFenceOwner(
+      tx,
+      {
+        activity: input,
+        purpose: "compensate",
+      },
+      chain,
+      budget,
+    );
     for (const file of descriptor.scope.files) {
       const current = await snapshotPublicationAsset(tx, file.assetId);
       if (
@@ -208,23 +293,59 @@ export async function assertNativeCompensation(
         );
     }
   }
-  const networkScope = await currentCompensationScope(tx, record);
-  return {
-    continuationId: row.id,
-    receiptId: row.receiptId,
-    planId: row.receipt.planId,
-    version: row.version,
-    recoveryEpoch: row.recoveryEpoch,
-    descriptor,
-    descriptorHash: row.descriptorHash,
-    execution,
-    completion,
-    networkScope,
-  };
+  authority.networkScope = await currentCompensationScope(tx, record);
+  await assertCompensationPhaseCurrent(tx, phase);
+  return phase;
 }
-export type CompensationExecutionAuthority = Awaited<
-  ReturnType<typeof assertNativeCompensation>
->;
+
+export function assertCompensationPhaseTransaction(
+  tx: Prisma.TransactionClient,
+  phase: CompensationExecutionPhase,
+) {
+  if (phase.transaction !== tx || phase.closed)
+    throw new Error(
+      "Compensation phase is closed or belongs to another transaction",
+    );
+  const record = phase.chain[0];
+  if (record === undefined)
+    throw new Error("Compensation phase omitted its queried record");
+  return record;
+}
+
+/** Locked identities/coordinator stay fixed; unlocked knowledge and exclusion are re-read. */
+export async function assertCompensationPhaseCurrent(
+  tx: Prisma.TransactionClient,
+  phase: CompensationExecutionPhase,
+): Promise<void> {
+  const record = assertCompensationPhaseTransaction(tx, phase);
+  if (phase.authority.completion !== null)
+    throw new Error(
+      "Completed compensation phase cannot authorize new effects",
+    );
+  await assertNoSubtitleReplacement(tx, record.row.assetIds);
+  await assertNativeExclusion(tx);
+  const interrupted = await captureInterruptedPublicationWorkFromIntent(
+    tx,
+    record.original,
+    phase.budget,
+    record.queriedParent,
+  );
+  if (
+    snapshotHash(nativeJson(interrupted)) !==
+    snapshotHash(nativeJson(record.descriptor.scope.interruptedWork))
+  )
+    throw new NativeCompensationProtection(
+      "compensation_interrupted_work_changed",
+    );
+  const current = await currentCompensationScope(tx, record);
+  if (
+    snapshotHash(nativeJson(current)) !==
+    snapshotHash(nativeJson(phase.authority.networkScope))
+  )
+    throw new NativeCompensationProtection(
+      "compensation_reviewed_records_changed",
+    );
+}
 
 async function currentCompensationScope(
   tx: Prisma.TransactionClient,

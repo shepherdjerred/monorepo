@@ -11,52 +11,16 @@ import {
 } from "#shared/publication-proof/effects.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
+import {
+  stableCompensationFiles as projectFiles,
+  stableCompensationNetwork as projectNetwork,
+} from "#shared/plex-binding/native-projections.ts";
 
 export function stableCompensationFiles(raw: unknown) {
-  const {
-    capturedAt: _capturedAt,
-    workerPodUid: _worker,
-    ...files
-  } = NativeCompensationFileEvidenceSchema.parse(raw);
-  return files;
+  return projectFiles(raw);
 }
 export function stableCompensationNetwork(raw: unknown) {
-  const evidence = NativeCompensationNetworkEvidenceSchema.parse(raw);
-  const closed = evidence.previousWorkflowClosed;
-  return {
-    schemaVersion: evidence.schemaVersion,
-    lifecycleKind: evidence.lifecycleKind,
-    planId: evidence.planId,
-    recoveryEpoch: evidence.recoveryEpoch,
-    configurationDigest: evidence.mounts.configurationDigest,
-    targetsDigest: evidence.quiescence.targetsDigest,
-    controllers: evidence.quiescence.controllers,
-    mounts: evidence.mounts.mounts,
-    previousWorkflowClosed:
-      closed === null
-        ? null
-        : {
-            operationId: closed.operationId,
-            workflowId: closed.workflowId,
-            runId: closed.runId,
-            status: closed.status,
-          },
-    plex: {
-      canonicalPaths: evidence.plex.canonicalPaths,
-      retainedAbsence: evidence.plex.retainedAbsence.map(
-        ({ inventoryDigest: _digest, ...item }) => item,
-      ),
-      inventory: evidence.plex.inventory.map(({ sectionId, kind }) => ({
-        sectionId,
-        kind,
-      })),
-      playback: {
-        state: evidence.plex.playback.state,
-        scopeHash: evidence.plex.playback.scopeHash,
-      },
-    },
-    torrents: evidence.torrents,
-  };
+  return projectNetwork(raw);
 }
 
 export function assertCompensationEvidence(

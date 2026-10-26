@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import type { PlexClient } from "#integrations/plex.ts";
 import {
   NativeQuarantineScopeSchema,
@@ -28,17 +29,21 @@ export type NativeQuarantineObserverContext = Omit<
 export function createNativeQuarantineObserver(
   context: NativeQuarantineObserverContext,
 ) {
-  return async (planId: string) => {
+  return async (
+    planId: string,
+    budget = new PublicationAuthorityReadBudget(),
+  ) => {
     const signal = AbortSignal.timeout(60_000);
     const capturedAt = new Date();
     const plan = await context.db.nativeRecoveryPlan.findUniqueOrThrow({
       where: { id: planId },
     });
     const scope = NativeQuarantineScopeSchema.parse(plan.scope);
-    await assertNativeQuarantineSnapshot(context.db, planId, scope);
+    await assertNativeQuarantineSnapshot(context.db, planId, scope, budget);
     const roots = await assertNativeStorageRoots(
       context.db,
       scope.storageRoots,
+      budget,
     );
     const quiescence = QuiescenceEvidenceSchema.parse(
       await context.observer.observe(signal),
@@ -81,7 +86,12 @@ export function createNativeQuarantineObserver(
     return context.db.$transaction(async (tx) => {
       await lockNativeQuarantineScope(tx, scope);
       await tx.$queryRaw`SELECT id FROM "NativeRecoveryPlan" WHERE id = ${planId} FOR SHARE`;
-      const current = await assertNativeQuarantineSnapshot(tx, planId, scope);
+      const current = await assertNativeQuarantineSnapshot(
+        tx,
+        planId,
+        scope,
+        budget,
+      );
       if (
         !["preparing", "awaiting_review", "applying"].includes(
           current.plan.state,
@@ -94,7 +104,7 @@ export function createNativeQuarantineObserver(
       assertWritersQuiescent(quiescence);
       assertCanonicalIdentity(
         mounts,
-        await assertNativeStorageRoots(tx, scope.storageRoots),
+        await assertNativeStorageRoots(tx, scope.storageRoots, budget),
       );
       const observation = await tx.nativeRecoveryObservation.create({
         data: {

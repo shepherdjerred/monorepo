@@ -18,15 +18,22 @@ import {
 } from "#shared/plex-events/contract.ts";
 import { watchAwait, type WatchExecution } from "./execution.ts";
 import { compensationPlayback } from "#infrastructure/native-compensation/playback.ts";
+import {
+  captureWatchBindingScope,
+  readWatchBinding,
+  type WatchBindingScope,
+} from "./binding.ts";
+import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 
 export const PlexIdentitySchema = z.object({
   plexRatingKey: z.string().regex(/^\d+$/u).optional(),
   plexSectionId: z.string().optional(),
 });
-type WatchScope = {
+export type WatchScope = {
   mediaId: string;
   serverMachineId: string;
   sections: { movie: string; series: string };
+  bindingScope: WatchBindingScope | null;
   expectedHint?: ObservePlexHintInput;
 };
 
@@ -56,11 +63,30 @@ export async function watchScope(
 ): Promise<WatchScope> {
   if (context.serverMachineId === undefined)
     throw new Error("Watch observer server identity is unconfigured");
-  const sections = await watchAwait(execution, context.permittedSections());
+  const media = await watchAwait(
+    execution,
+    context.db.mediaItem.findUniqueOrThrow({
+      where: { id: mediaId },
+      select: { kind: true },
+    }),
+  );
+  const access = await watchAwait(
+    execution,
+    context.plexAccess(media.kind === "movie" ? "movie" : "show"),
+  );
+  const bindingScope = await watchAwait(
+    execution,
+    captureWatchBindingScope(context.db, mediaId, access),
+  );
+  const sections = {
+    movie: access.sectionType === "movie" ? access.sectionId : "",
+    series: access.sectionType === "show" ? access.sectionId : "",
+  };
   return {
     mediaId,
     serverMachineId: context.serverMachineId,
     sections,
+    bindingScope,
     ...options,
   };
 }
@@ -75,14 +101,16 @@ export async function lockWatchAuthority(
     tx.mediaItem.findUnique({ where: { id: scope.mediaId } }),
   );
   if (initial === null) return null;
-  await watchAwait(execution, lockCanonicalMedia(tx, [scope.mediaId]));
-  await watchAwait(execution, lockExistingDefaultTargets(tx, [scope.mediaId]));
+  if (scope.bindingScope === null) return null;
+  const mediaIds = scope.bindingScope.mediaIds;
+  await watchAwait(execution, lockCanonicalMedia(tx, mediaIds));
+  await watchAwait(execution, lockExistingDefaultTargets(tx, mediaIds));
   const target = await watchAwait(
     execution,
     findDefaultTarget(tx, defaultScope(scope.mediaId)),
   );
   if (target?.lineage !== "resolved") return null;
-  await watchAwait(execution, lockEffectiveRequests(tx, [scope.mediaId]));
+  await watchAwait(execution, lockEffectiveRequests(tx, mediaIds));
   await watchAwait(
     execution,
     tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id='singleton' FOR SHARE`,
@@ -91,6 +119,13 @@ export async function lockWatchAuthority(
     execution,
     tx.mediaRuntimeState.findUniqueOrThrow({ where: { id: "singleton" } }),
   );
+  if (
+    !(await watchAwait(
+      execution,
+      lockRuntimeAuthority(tx, runtime.recoveryEpoch),
+    ))
+  )
+    return null;
   const media = await watchAwait(
     execution,
     tx.mediaItem.findUniqueOrThrow({
@@ -99,9 +134,7 @@ export async function lockWatchAuthority(
     }),
   );
   if (canonicalRootId(media) !== target.editionRootId) return null;
-  const identity = PlexIdentitySchema.parse(media.externalIds);
   if (media.kind !== "movie" && media.kind !== "episode") return null;
-  if (!(await uniqueBinding(tx, media, identity, execution))) return null;
   const compensation = await watchAwait(
     execution,
     compensationPlayback(tx, {
@@ -112,24 +145,6 @@ export async function lockWatchAuthority(
     }),
   );
   if (compensation.state === "protected") return null;
-  if (
-    !hintTargetMatches(scope, {
-      sectionId: identity.plexSectionId,
-      kind: media.kind,
-      targetEpoch: target.automationEpoch,
-      runtimeEpoch: runtime.recoveryEpoch,
-    })
-  )
-    return null;
-  if (
-    !(await validHint(
-      tx,
-      scope,
-      { identity, epoch: runtime.recoveryEpoch, generation: target.generation },
-      execution,
-    ))
-  )
-    return null;
   const claims = await watchAwait(
     execution,
     tx.mediaRequest.findMany({
@@ -143,7 +158,17 @@ export async function lockWatchAuthority(
       },
     }),
   );
-  const ids = [...new Set(claims.map((claim) => claim.userId))].sort();
+  const cohortClaims = await watchAwait(
+    execution,
+    tx.mediaRequest.findMany({
+      where: {
+        mediaId: { in: mediaIds },
+        ...effectiveRequestWhere,
+      },
+      select: { userId: true },
+    }),
+  );
+  const ids = [...new Set(cohortClaims.map((claim) => claim.userId))].sort();
   if (ids.length > 0) {
     await watchAwait(
       execution,
@@ -174,11 +199,58 @@ export async function lockWatchAuthority(
   );
   if (users.length !== ids.length)
     throw new Error("Watch requester disappeared");
-  const participants = users.filter((user) => user.role !== "owner");
+  const selectedUsers = new Set(claims.map((claim) => claim.userId));
+  const participants = users.filter(
+    (user) => user.role !== "owner" && selectedUsers.has(user.id),
+  );
+  const assets = scope.bindingScope.assetIds;
+  await watchAwait(
+    execution,
+    tx.$queryRaw(
+      Prisma.sql`SELECT id FROM "LibraryAsset" WHERE id IN (${Prisma.join(assets)}) ORDER BY id FOR UPDATE`,
+    ),
+  );
+  await watchAwait(
+    execution,
+    tx.$queryRaw(
+      Prisma.sql`SELECT "assetId","mediaId" FROM "AssetCoverage" WHERE "assetId" IN (${Prisma.join(assets)}) ORDER BY "assetId","mediaId" FOR SHARE`,
+    ),
+  );
+  const continuations = scope.bindingScope.quarantine?.continuationIds ?? [];
+  if (continuations.length > 0)
+    await watchAwait(
+      execution,
+      tx.$queryRaw(
+        Prisma.sql`SELECT id FROM "NativeQuarantineContinuation" WHERE id IN (${Prisma.join(continuations)}) ORDER BY id FOR UPDATE`,
+      ),
+    );
+  const binding = await watchAwait(
+    execution,
+    readWatchBinding(tx, scope.bindingScope),
+  );
+  const identity: z.infer<typeof PlexIdentitySchema> =
+    binding === null
+      ? {}
+      : {
+          plexRatingKey: binding.association.item.ratingKey,
+          plexSectionId: binding.association.access.sectionId,
+        };
+  const hintCurrent =
+    hintTargetMatches(scope, {
+      sectionId: identity.plexSectionId,
+      kind: media.kind,
+      targetEpoch: target.automationEpoch,
+      runtimeEpoch: runtime.recoveryEpoch,
+    }) &&
+    (await validHint(
+      tx,
+      scope,
+      { identity, epoch: runtime.recoveryEpoch, generation: target.generation },
+      execution,
+    ));
   const signature = JSON.stringify({
     mediaId: media.id,
     kind: media.kind,
-    identity,
     ...(compensation.state === "verified"
       ? { compensationPublicationHash: compensation.proofHash }
       : {}),
@@ -216,45 +288,17 @@ export async function lockWatchAuthority(
       })),
     })),
   });
-  return { media, target, runtime, identity, participants, signature };
-}
-
-async function uniqueBinding(
-  tx: Prisma.TransactionClient,
-  media: { id: string; kind: MediaKind },
-  identity: z.infer<typeof PlexIdentitySchema>,
-  execution: WatchExecution,
-) {
-  if (
-    identity.plexRatingKey === undefined ||
-    identity.plexSectionId === undefined
-  )
-    return true;
-  const matches = await watchAwait(
-    execution,
-    tx.mediaItem.findMany({
-      where: {
-        kind: media.kind,
-        AND: [
-          {
-            externalIds: {
-              path: ["plexRatingKey"],
-              equals: identity.plexRatingKey,
-            },
-          },
-          {
-            externalIds: {
-              path: ["plexSectionId"],
-              equals: identity.plexSectionId,
-            },
-          },
-        ],
-      },
-      select: { id: true },
-      take: 2,
-    }),
-  );
-  return matches.length === 1 && matches[0]?.id === media.id;
+  return {
+    media,
+    target,
+    runtime,
+    identity,
+    participants,
+    signature,
+    binding,
+    scope,
+    hintCurrent,
+  };
 }
 
 async function validHint(

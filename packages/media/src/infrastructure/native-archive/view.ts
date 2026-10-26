@@ -201,7 +201,7 @@ async function eligibleClosure(
               cleanupIds: [cleanupId],
               epoch,
             },
-            budget,
+            { budget },
           ),
         );
     }

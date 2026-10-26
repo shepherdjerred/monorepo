@@ -16,7 +16,7 @@ export async function archiveCleanupDeadline(
     network: z.infer<typeof NativeArchiveCleanupNetworkEvidenceSchema>;
     observed: { wall: number; monotonic: number };
   },
-): Promise<() => void> {
+): Promise<{ assertActive: () => void; expiresAtMs: number }> {
   const { network, observed } = input;
   const lease = await tx.legacyWriterLease.findUniqueOrThrow({
     where: { id: "singleton" },
@@ -64,7 +64,7 @@ export async function archiveCleanupDeadline(
       throw new NativeArchiveProtection("archive_authority_expired");
   };
   assertActive();
-  return assertActive;
+  return { assertActive, expiresAtMs: deadline };
 }
 
 function assertLease(

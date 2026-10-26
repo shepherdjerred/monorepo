@@ -4,7 +4,7 @@ import {
   queueRetentionCheck,
 } from "#automation/watch.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
-import { testWatchExecution } from "#testing/watch-execution.ts";
+import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { prepareWatchBatch } from "./prepare.ts";
 import { finalizeWatchBatch } from "./finalize.ts";
 import {
@@ -29,36 +29,73 @@ function eventDelta(
   expect(after.filter((event) => ids.has(event.id))).toEqual(before);
   return after.filter((event) => !ids.has(event.id));
 }
-test("unexpected malformed second-user response commits none of the batch", async () => {
+test("an unexpected internal second-user client failure commits none of the batch", async () => {
   const f = await h.fixture();
   await h.requester(f.media.id);
   const baseline = await events(f.media.id);
-  expect(baseline).toMatchObject([
-    { kind: "movie_edition_chosen", actorId: f.user.id },
-  ]);
-  let calls = 0;
-  await expect(
-    observeRequesterWatch(
-      h.context(async (url, init) => {
-        calls++;
-        return calls === 1
-          ? await watchedTransport(false)(url, init)
-          : Response.json({
-              MediaContainer: { size: 1, Metadata: [{ invalid: true }] },
-            });
+  expect(baseline).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        kind: "movie_edition_chosen",
+        actorId: f.user.id,
       }),
-      f.media.id,
-    ),
-  ).rejects.toThrow();
-  const rows = await h
-    .database()
-    .watchState.findMany({ where: defaultScope(f.media.id) });
+    ]),
+  );
+  const watches = await h.database().watchState.findMany({
+    where: defaultScope(f.media.id),
+    orderBy: { userId: "asc" },
+  });
+  let calls = 0;
+  const context = h.context(watchedTransport(false));
+  const client = context.userPlex;
+  context.userPlex = (token) => {
+    calls++;
+    if (calls === 2)
+      throw new Error("Synthetic internal client contract failure");
+    return client(token);
+  };
+  await expect(observeRequesterWatch(context, f.media.id)).rejects.toThrow(
+    "Synthetic internal client contract failure",
+  );
+  const rows = await h.database().watchState.findMany({
+    where: defaultScope(f.media.id),
+    orderBy: { userId: "asc" },
+  });
   expect(calls).toBe(2);
   expect(rows).toHaveLength(2);
-  expect(
-    rows.every((row) => row.watched && row.observedAt.getTime() === 0),
-  ).toBe(true);
+  expect(rows).toEqual(watches);
   expect(await events(f.media.id)).toEqual(baseline);
+});
+test("malformed external metadata clears only that requester's bound value to unknown", async () => {
+  const f = await h.fixture();
+  const second = await h.requester(f.media.id);
+  const context = h.context(async (url, init) => {
+    const token = new Headers(init.headers).get("X-Plex-Token");
+    return token === second.id
+      ? Response.json({
+          MediaContainer: { size: 1, Metadata: [{ invalid: true }] },
+        })
+      : watchedTransport(true)(url, init);
+  });
+  expect(await observeRequesterWatch(context, f.media.id)).toEqual({
+    complete: false,
+    reason: "requester_watch_unknown",
+  });
+  expect(
+    await h
+      .database()
+      .watchState.findUnique({ where: { userId_mediaId_edition: f.key } }),
+  ).toMatchObject({ watched: true });
+  expect(
+    await h.database().watchState.findUnique({
+      where: { userId_mediaId_edition: { ...f.key, userId: second.id } },
+    }),
+  ).toBeNull();
+  expect(
+    await h.database().plexWatchProjection.count({
+      where: { ...defaultScope(f.media.id), userId: second.id },
+    }),
+  ).toBe(0);
 });
 test("retention queue waits for canonical authority and uses the committed generation", async () => {
   const f = await h.fixture();
@@ -140,11 +177,16 @@ test.each(["success", "failure"])(
 test("newer issuance alone fences an older completion, and replay cannot apply twice", async () => {
   const f = await h.fixture();
   const baseline = await events(f.media.id);
-  expect(baseline).toMatchObject([
-    { kind: "movie_edition_chosen", actorId: f.user.id },
-  ]);
+  expect(baseline).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        kind: "movie_edition_chosen",
+        actorId: f.user.id,
+      }),
+    ]),
+  );
   const ctx = h.context();
-  const execution = testWatchExecution();
+  const execution = testPlexBindingExecution();
   const first = await prepareWatchBatch(ctx, f.media.id, {}, execution);
   const second = await prepareWatchBatch(ctx, f.media.id, {}, execution);
   if (first === null || second === null)
@@ -152,7 +194,12 @@ test("newer issuance alone fences an older completion, and replay cannot apply t
   const outcomes = [
     {
       userId: f.user.id,
-      outcome: { kind: "observed", watched: false, scopedAccess: false },
+      outcome: {
+        kind: "observed",
+        watched: false,
+        scopedAccess: false,
+        freshness: second.freshness,
+      },
     },
   ] as const;
   expect(await finalizeWatchBatch(ctx, first, outcomes, execution)).toBe(
@@ -162,7 +209,7 @@ test("newer issuance alone fences an older completion, and replay cannot apply t
     await h
       .database()
       .watchState.findUnique({ where: { userId_mediaId_edition: f.key } }),
-  ).toMatchObject({ watched: true, observedAt: new Date(0) });
+  ).toEqual(f.baseline);
   expect(await finalizeWatchBatch(ctx, second, outcomes, execution)).toBe(
     "committed",
   );
@@ -183,9 +230,14 @@ test("two legitimate unwatched outcomes commit atomically despite their own gene
   const f = await h.fixture();
   const second = await h.requester(f.media.id);
   const baseline = await events(f.media.id);
-  expect(baseline).toMatchObject([
-    { kind: "movie_edition_chosen", actorId: f.user.id },
-  ]);
+  expect(baseline).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        kind: "movie_edition_chosen",
+        actorId: f.user.id,
+      }),
+    ]),
+  );
   const before = Date.now();
   expect(
     await observeRequesterWatch(h.context(watchedTransport(false)), f.media.id),
@@ -224,7 +276,7 @@ test.each(["future", "stale"])(
   async (kind) => {
     const f = await h.fixture();
     const ctx = h.context();
-    const execution = testWatchExecution();
+    const execution = testPlexBindingExecution();
     const batch = await prepareWatchBatch(ctx, f.media.id, {}, execution);
     if (batch === null) throw new Error("Missing batch");
     batch.startedAt = new Date(
@@ -237,7 +289,12 @@ test.each(["future", "stale"])(
         [
           {
             userId: f.user.id,
-            outcome: { kind: "observed", watched: true, scopedAccess: false },
+            outcome: {
+              kind: "observed",
+              watched: true,
+              scopedAccess: false,
+              freshness: batch.freshness,
+            },
           },
         ],
         execution,
@@ -247,13 +304,13 @@ test.each(["future", "stale"])(
       await h
         .database()
         .watchState.findUnique({ where: { userId_mediaId_edition: f.key } }),
-    ).toMatchObject({ observedAt: new Date(0) });
+    ).toEqual(f.baseline);
   },
 );
 test("a successful batch retains its conservative prepare time", async () => {
   const f = await h.fixture();
   const ctx = h.context();
-  const execution = testWatchExecution();
+  const execution = testPlexBindingExecution();
   const batch = await prepareWatchBatch(ctx, f.media.id, {}, execution);
   if (batch === null) throw new Error("Missing batch");
   batch.startedAt = new Date(Date.now() - 120_000);
@@ -264,7 +321,12 @@ test("a successful batch retains its conservative prepare time", async () => {
       [
         {
           userId: f.user.id,
-          outcome: { kind: "observed", watched: true, scopedAccess: false },
+          outcome: {
+            kind: "observed",
+            watched: true,
+            scopedAccess: false,
+            freshness: batch.freshness,
+          },
         },
       ],
       execution,

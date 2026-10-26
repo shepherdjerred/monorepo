@@ -96,6 +96,7 @@ test("an invocation expiring while a canonical row lock is held cannot persist e
   let expired = false;
   const failure = new Error("Synthetic SDK deadline expired after lock wait");
   const activities = createNativeCompensationFileActivities(f.context, () => ({
+    expiresAtMs: Date.now() + 300_000,
     signal: new AbortController().signal,
     checkpoint: () => Promise.resolve(),
     assertActive: () => {

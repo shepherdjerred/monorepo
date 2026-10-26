@@ -17,6 +17,12 @@ import {
   type MovieChoiceAccess,
 } from "#infrastructure/movie-editions/access.ts";
 import type { MovieChoiceFreshness } from "#infrastructure/movie-editions/freshness.ts";
+import type { PlexAccess } from "#shared/plex-binding/contract.ts";
+import {
+  plexBindingFreshness,
+  bindPlexTransactionDeadline,
+} from "#infrastructure/plex-binding/freshness.ts";
+import { prepareNotificationBinding } from "#automation/notifications/binding.ts";
 
 export class NotificationDeliveryCommands extends MediaCommandBase {
   constructor(
@@ -26,6 +32,8 @@ export class NotificationDeliveryCommands extends MediaCommandBase {
     private readonly deliveryOptions: {
       personalDiscordAvailable?: (() => Promise<boolean>) | undefined;
       movieAccess?: (() => Promise<MovieChoiceAccess>) | undefined;
+      plexAccess?:
+        ((sectionType: "movie" | "show") => Promise<PlexAccess>) | undefined;
     } = {},
   ) {
     super(deliveryDatabase, { keepDays: 30 });
@@ -42,6 +50,7 @@ export class NotificationDeliveryCommands extends MediaCommandBase {
   ) {
     let movieAccess: MovieChoiceAccess | undefined;
     let guards: MovieChoiceFreshness[] = [];
+    let binding: Awaited<ReturnType<typeof prepareNotificationBinding>>;
     return this.commandWithProtocol(
       actor,
       key,
@@ -49,6 +58,7 @@ export class NotificationDeliveryCommands extends MediaCommandBase {
         command: { kind: "retry_notification", input: { id, expectedVersion } },
         decode: (value) => CommandResultSchema.parse(value),
         beforeNewCommand: async () => {
+          const observed = { wall: Date.now(), monotonic: performance.now() };
           const delivery =
             await this.deliveryDatabase.notificationDelivery.findUniqueOrThrow({
               where: { id },
@@ -76,6 +86,23 @@ export class NotificationDeliveryCommands extends MediaCommandBase {
             movieAccess = requireMovieChoiceAccess(
               (await this.deliveryOptions.movieAccess?.()) ?? {},
             );
+          const plexAccess = this.deliveryOptions.plexAccess;
+          if (plexAccess === undefined)
+            throw new MediaError(
+              "plex_scope_unconfigured",
+              "Plex scope must be configured before retrying this notification",
+              409,
+            );
+          const freshness = plexBindingFreshness({
+            observed,
+            expiresAtMs: observed.wall + 60_000,
+            guards: [],
+          });
+          binding = await prepareNotificationBinding(
+            { db: this.deliveryDatabase, plexAccess },
+            delivery,
+            { observed, ...freshness },
+          );
         },
         assertCommit: () => {
           for (const guard of guards) guard.assertActive();
@@ -83,7 +110,7 @@ export class NotificationDeliveryCommands extends MediaCommandBase {
       },
       async (tx) => {
         guards = [];
-        const delivery = await lockDelivery(tx, id);
+        const delivery = await lockDelivery(tx, id, binding);
         if (delivery.userId !== actor.id)
           throw new MediaError(
             "forbidden",
@@ -137,6 +164,7 @@ export class NotificationDeliveryCommands extends MediaCommandBase {
             publicOrigin: this.publicOrigin,
             personalDiscordAvailable: this.personalDiscordAvailable,
             movieAccess,
+            binding,
             captureFreshness: (guard) => guards.push(guard),
           },
           delivery,
@@ -147,6 +175,8 @@ export class NotificationDeliveryCommands extends MediaCommandBase {
             "The event or recipient is no longer eligible",
             409,
           );
+        for (const guard of guards)
+          await bindPlexTransactionDeadline(tx, guard);
         await tx.notificationDelivery.update({
           where: { id },
           data: {

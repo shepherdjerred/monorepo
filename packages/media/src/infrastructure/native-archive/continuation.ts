@@ -19,6 +19,10 @@ import { assertLegacyClaimsResolved } from "#infrastructure/recovery/legacy-clai
 import { assertNoSubtitleReplacement } from "#infrastructure/subtitle-replacement/locks.ts";
 import { lockNativeArchiveScope } from "./guards.ts";
 import { resolveArchiveBindings } from "./bindings.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { ArchiveReceiptProjection } from "./receipt-projection.ts";
+import type { NativePlexProofRef } from "#shared/plex-binding/native.ts";
+import type { NativeReceiptReadPort } from "#infrastructure/plex-binding/native/receipt-port.ts";
 
 export class NativeArchiveProtection extends Error {
   constructor(readonly reason: string) {
@@ -101,16 +105,63 @@ export async function queueNativeArchiveCleanup(
 export async function assertNativeArchiveCleanup(
   tx: Prisma.TransactionClient,
   input: CleanupNativeArchiveInput,
+  budget = new PublicationAuthorityReadBudget(),
+  projection?: NativeReceiptReadPort,
 ) {
+  const phase = await assertNativeArchiveCleanupPhase(
+    tx,
+    input,
+    budget,
+    projection,
+  );
+  return phase.authority;
+}
+
+type ArchiveContinuationRow =
+  Prisma.NativeArchiveCleanupContinuationGetPayload<{
+    include: { receipt: { include: { plan: true } } };
+  }>;
+export type ArchiveCleanupAuthority = Awaited<
+  ReturnType<typeof resolveArchiveBindings>
+> & {
+  row: ArchiveContinuationRow;
+  descriptor: z.infer<typeof NativeArchiveContinuationSchema>;
+  generations: Record<string, number>;
+  currentGenerations: Record<string, number>;
+};
+export type ArchiveExecutionPhase = {
+  transaction: Prisma.TransactionClient;
+  activity: CleanupNativeArchiveInput;
+  authority: ArchiveCleanupAuthority;
+  operation: Prisma.OperationGetPayload<Record<string, never>>;
+  projection: NativeReceiptReadPort;
+  budget: PublicationAuthorityReadBudget;
+  plex: { ref: NativePlexProofRef; expiresAtMs: number } | null;
+  closed: boolean;
+};
+
+export async function assertNativeArchiveCleanupPhase(
+  tx: Prisma.TransactionClient,
+  input: CleanupNativeArchiveInput,
+  budget: PublicationAuthorityReadBudget,
+  projection: NativeReceiptReadPort = new ArchiveReceiptProjection(tx, budget),
+): Promise<ArchiveExecutionPhase> {
+  projection.assertTransaction(tx, budget);
   const initial = await tx.nativeArchiveCleanupContinuation.findUniqueOrThrow({
     where: { id: input.continuationId },
   });
+  budget.consume(1);
+  if (
+    snapshotHash(z.json().parse(initial.descriptor)) !== initial.descriptorHash
+  )
+    throw new NativeArchiveProtection("archive_coordinator_changed");
   const descriptor = NativeArchiveContinuationSchema.parse(initial.descriptor);
   await lockNativeArchiveScope(tx, descriptor.scope);
   const row = await tx.nativeArchiveCleanupContinuation.findUniqueOrThrow({
     where: { id: input.continuationId },
     include: { receipt: { include: { plan: true } } },
   });
+  budget.consume(3);
   if (
     row.coordinatorOperationId !== input.operationId ||
     row.recoveryEpoch !== input.recoveryEpoch ||
@@ -120,6 +171,7 @@ export async function assertNativeArchiveCleanup(
   )
     throw new NativeArchiveProtection("archive_coordinator_changed");
   const receipt = row.receipt;
+  await projection.validateQueried(tx, receipt, budget);
   if (
     receipt.plan.state !== "applied" ||
     receipt.planHash !== receipt.plan.planHash ||
@@ -127,12 +179,15 @@ export async function assertNativeArchiveCleanup(
     receipt.recoveryEpoch !== row.recoveryEpoch
   )
     throw new Error("Archive continuation receipt is inconsistent");
+  await tx.$queryRaw`SELECT id FROM "Operation" WHERE id=${input.operationId} FOR UPDATE`;
   const operation = await tx.operation.findUniqueOrThrow({
     where: { id: input.operationId },
   });
+  budget.consume(1);
   if (
     operation.kind !== "cleanup_native_archive" ||
     operation.targetId !== row.id ||
+    operation.userId !== receipt.actorId ||
     snapshotHash(CleanupNativeArchiveInputSchema.parse(operation.payload)) !==
       snapshotHash(input)
   )
@@ -148,7 +203,10 @@ export async function assertNativeArchiveCleanup(
   // subtitle snapshot parsing; all reviewed participant rows are already locked.
   const reviewedAssetIds = descriptor.scope.files.map((file) => file.assetId);
   await assertCleanupReplacement(tx, reviewedAssetIds);
-  const effective = await resolveArchiveBindings(tx, receipt, descriptor);
+  const effective = await resolveArchiveBindings(tx, receipt, descriptor, {
+    budget,
+    projection,
+  });
   const assetIds = effective.networkScope.files.map((file) => file.assetId);
   const additionalAssetIds = assetIds.filter(
     (id) => !reviewedAssetIds.includes(id),
@@ -167,12 +225,73 @@ export async function assertNativeArchiveCleanup(
     );
   const generations = await assertCleanupEligibility(tx, descriptor, input);
   return {
-    row,
-    descriptor,
-    ...effective,
-    generations,
-    currentGenerations: generations,
+    transaction: tx,
+    activity: input,
+    operation,
+    projection,
+    budget,
+    plex: null,
+    closed: false,
+    authority: {
+      row,
+      descriptor,
+      ...effective,
+      generations,
+      currentGenerations: generations,
+    },
   };
+}
+
+export function assertArchivePhaseTransaction(
+  tx: Prisma.TransactionClient,
+  phase: ArchiveExecutionPhase,
+) {
+  if (phase.transaction !== tx || phase.closed)
+    throw new Error(
+      "Archive phase is closed or belongs to another transaction",
+    );
+  phase.projection.assertTransaction(tx, phase.budget);
+  return phase.authority;
+}
+
+/** Locked assets/receipt/coordinator remain fixed; mutable knowledge and expiry are re-read. */
+export async function assertArchivePhaseCurrent(
+  tx: Prisma.TransactionClient,
+  phase: ArchiveExecutionPhase,
+): Promise<void> {
+  const authority = assertArchivePhaseTransaction(tx, phase);
+  const { row, descriptor, networkScope } = authority;
+  await assertCleanupOwner(tx, row.receipt.actorId);
+  const runtime = await runtimeAuthority(tx);
+  if (!runtime.active || runtime.epoch !== row.recoveryEpoch)
+    throw new NativeArchiveProtection("archive_runtime_protected");
+  const mediaIds = descriptor.scope.media.map((item) => item.id);
+  const assetIds = networkScope.files.map((item) => item.assetId);
+  await assertLegacyClaimsResolved(tx, mediaIds);
+  await assertNativeExclusion(tx);
+  await assertCleanupReplacement(tx, [
+    ...new Set([
+      ...descriptor.scope.files.map((item) => item.assetId),
+      ...assetIds,
+    ]),
+  ]);
+  if (
+    !(await recordsAuthorized(tx, {
+      epoch: row.recoveryEpoch,
+      mediaIds,
+      assetIds,
+    }))
+  )
+    throw new NativeArchiveProtection(
+      "archive_current_record_authority_required",
+    );
+  const generations = await assertCleanupEligibility(
+    tx,
+    descriptor,
+    phase.activity,
+  );
+  if (snapshotHash(generations) !== snapshotHash(authority.generations))
+    throw new NativeArchiveProtection("archive_generation_changed");
 }
 
 async function assertCleanupOwner(

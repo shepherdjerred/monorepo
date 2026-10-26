@@ -7,8 +7,9 @@ import { nativeQuarantineFixture } from "#automation/native-quarantine/test-fixt
 import { prepareMediaRestore } from "#infrastructure/recovery.ts";
 import { grantTestExclusionProofs } from "#testing/exclusion.ts";
 import { PrismaNativeRecovery } from "#infrastructure/native-recovery/service.ts";
-import { createNativeQuarantineObserver } from "#migration/native-network/quarantine.ts";
-import { createNativeRecoveryObserver } from "#migration/native-network/producer.ts";
+import { nativeReviewPlexFixture } from "#automation/native-recovery/fixtures/plex.ts";
+import { NativeStoredScopeSchema } from "#shared/native-recovery/lifecycle.ts";
+import { retentionPlexContext } from "#automation/retention/fixtures/plex.ts";
 import { createNativeFileActivities } from "#automation/native-recovery/activities.ts";
 import { createPublicationActivities } from "#automation/publication.ts";
 import { PrismaRecovery } from "#infrastructure/recovery/service.ts";
@@ -33,6 +34,16 @@ async function fixture() {
   return f;
 }
 type Fixture = Awaited<ReturnType<typeof fixture>>;
+async function pairedObserver(f: Fixture, planId: string) {
+  const plan = await f.db.nativeRecoveryPlan.findUniqueOrThrow({
+    where: { id: planId },
+  });
+  const network = await nativeReviewPlexFixture(
+    f.observerContext,
+    NativeStoredScopeSchema.parse(plan.scope),
+  );
+  return network.observe;
+}
 async function secondRestore(f: Fixture, expectedEpoch = 1) {
   const recoveryId = crypto.randomUUID();
   await prepareMediaRestore(f.db, {
@@ -40,7 +51,11 @@ async function secondRestore(f: Fixture, expectedEpoch = 1) {
     expectedEpoch,
     reason: "Repeated quarantine recovery regression",
   });
-  for (const proof of await grantTestExclusionProofs(f.db, f.prior.actor.id)) {
+  for (const proof of await grantTestExclusionProofs(
+    f.db,
+    f.prior.actor.id,
+    f.observerContext.expectedServerMachineId,
+  )) {
     const roots =
       f.context.files.roots[
         proof.libraryRoot === "/data/movies" ? "movies" : "tv"
@@ -114,14 +129,17 @@ test.each([false, true])(
       },
     );
     const planId = z.uuid().parse(command.nativeRecoveryId);
-    const observe = createNativeQuarantineObserver(f.observerContext);
-    await observe(planId);
+    const observe = await pairedObserver(f, planId);
+    await observe({
+      planId,
+      operationId: z.uuid().parse(command.operationId),
+    });
     await f.activities.prepareNativeQuarantineFiles({
       planId,
       operationId: z.uuid().parse(command.operationId),
     });
     const applied = await approve(f, command, input);
-    await observe(planId);
+    await observe(applied);
     await f.activities.applyNativeQuarantineFiles(applied);
     expect(
       await f.db.libraryAsset.findUniqueOrThrow({ where: { id: f.asset.id } }),
@@ -192,23 +210,13 @@ test.each([
     const media = await f.db.mediaItem.findUniqueOrThrow({
       where: { id: f.file.media.id },
     });
-    const item = {
-      ratingKey: "99123",
-      title: media.title,
-      type: "movie" as const,
-      Guid: [{ id: `tmdb://${String(media.tmdbId)}` }],
-      Media: [{ Part: [{ id: 1, file: f.canonicalPath }] }],
-    };
-    f.observerContext.plex.libraryPage = () =>
-      Promise.resolve({ total: 1, items: [item] });
-    f.observerContext.plex.metadata = () => Promise.resolve(item);
-    const network = harness.context();
-    network.plex.sections = f.observerContext.plex.sections;
-    network.plex.libraryPage = f.observerContext.plex.libraryPage;
-    network.plex.metadata = f.observerContext.plex.metadata;
-    network.plex.refresh = () => Promise.resolve();
+    const network = await retentionPlexContext(f.db, harness.context(), [
+      media.id,
+    ]);
     expect(
-      await createPublicationActivities(network).publishRestoredMedia(restore),
+      await createPublicationActivities(network.context).publishRestoredMedia(
+        restore,
+      ),
     ).toMatchObject({ status: "available" });
     if (mode === "replacement") {
       await negativeHousehold(f, "request");
@@ -282,8 +290,11 @@ test.each([
         ),
         "mutated caption",
       );
-    const observe = createNativeRecoveryObserver(f.observerContext);
-    await observe(planId);
+    const observe = await pairedObserver(f, planId);
+    await observe({
+      planId,
+      operationId: z.uuid().parse(command.operationId),
+    });
     const files = createNativeFileActivities(f.context);
     const preparation = files.prepareNativeRecoveryFiles({
       planId,
@@ -311,7 +322,7 @@ test.each([
       settledQuarantines: [{ continuationId: restore.continuationId }],
     });
     const approved = await approve(f, command, input);
-    await observe(planId);
+    await observe(approved);
     await files.applyNativeRecoveryFiles(approved);
     expect(
       await f.db.libraryAsset.findUniqueOrThrow({ where: { id: f.asset.id } }),
@@ -328,13 +339,17 @@ test.each([
       thirdInput,
     );
     const thirdPlanId = z.uuid().parse(third.nativeRecoveryId);
-    await observe(thirdPlanId);
+    const observeThird = await pairedObserver(f, thirdPlanId);
+    await observeThird({
+      planId: thirdPlanId,
+      operationId: z.uuid().parse(third.operationId),
+    });
     await files.prepareNativeRecoveryFiles({
       planId: thirdPlanId,
       operationId: z.uuid().parse(third.operationId),
     });
     const thirdApproval = await approve(f, third, thirdInput);
-    await observe(thirdPlanId);
+    await observeThird(thirdApproval);
     await files.applyNativeRecoveryFiles(thirdApproval);
     expect(
       await f.db.libraryAsset.findUniqueOrThrow({ where: { id: f.asset.id } }),
@@ -362,7 +377,7 @@ async function negativeHousehold(
   for (const user of await f.db.mediaUser.findMany()) {
     const relevant = user.id === f.prior.actor.id || user.id === f.file.user.id;
     const mapping = {
-      serverMachineId: "server",
+      serverMachineId: f.observerContext.expectedServerMachineId,
       kind: "account",
       permittedSectionIds: relevant ? ["1"] : ["2"],
       permittedMediaKinds: relevant ? ["movie"] : ["series"],
@@ -375,7 +390,10 @@ async function negativeHousehold(
       update: { ...mapping, version: { increment: 1 } },
     });
   }
-  const service = new PrismaRecovery(f.db, "server");
+  const service = new PrismaRecovery(
+    f.db,
+    f.observerContext.expectedServerMachineId,
+  );
   const prepared = await service.prepare(f.prior.actor, crypto.randomUUID(), {
     mediaIds: [f.file.media.id],
   });

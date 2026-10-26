@@ -7,63 +7,112 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const workflowsPath = new URL("handoff.ts", import.meta.url).pathname;
 
-test.each(["long-hash", "failure", "cancel"] as const)(
+async function rejectOnAbort(aborted: Promise<undefined>): Promise<never> {
+  await aborted;
+  throw new Error("Handoff test invocation aborted");
+}
+
+test.for(["long-hash", "failure", "cancel"] as const)(
   "handoff %s preserves fresh authority and durable terminal state, with replay",
-  async (scenario) => {
+  { timeout: 60_000 },
+  async (scenario, { signal }) => {
+    const stages: { phase: string; wall: number; monotonic: number }[] = [];
+    const mark = (phase: string) => {
+      if (stages.length < 32)
+        stages.push({ phase, wall: Date.now(), monotonic: performance.now() });
+    };
+    mark("environment-start");
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    mark("environment-ready");
     const entered = Promise.withResolvers<undefined>();
     const refreshed = Promise.withResolvers<undefined>();
     const release = Promise.withResolvers<undefined>();
+    const aborted = Promise.withResolvers<undefined>();
+    let released = false;
+    const releaseActivity = () => {
+      released = true;
+      release.resolve(undefined);
+    };
+    const diagnose = () => {
+      process.stderr.write(`${JSON.stringify({ scenario, stages })}\n`);
+    };
+    const abort = () => {
+      mark("test-aborted");
+      diagnose();
+      releaseActivity();
+      aborted.resolve(undefined);
+    };
+    signal.addEventListener("abort", abort, { once: true });
+    if (signal.aborted) abort();
+    const wait = <T>(pending: Promise<T>): Promise<T> =>
+      Promise.race([pending, rejectOnAbort(aborted.promise)]);
     let observed = 0;
     let applied = false;
     const finished: string[] = [];
-    const workflowWorker = await Worker.create({
-      connection: environment.nativeConnection,
-      taskQueue: TASK_QUEUES.WORKFLOWS,
-      workflowsPath,
-    });
-    const networkWorker = await Worker.create({
-      connection: environment.nativeConnection,
-      taskQueue: TASK_QUEUES.MEDIA_NETWORK,
-      activities: {
-        async observeMediaHandoff() {
-          if (++observed >= 2) refreshed.resolve(undefined);
-        },
-        async mediaHandoffState() {
-          return { state: applied ? "applied" : "applying", applied };
-        },
-        async finishMediaOperation(input: { status: string }) {
-          finished.push(input.status);
-        },
-      },
-    });
-    const fileWorker = await Worker.create({
-      connection: environment.nativeConnection,
-      taskQueue: TASK_QUEUES.MEDIA_FILES,
-      maxHeartbeatThrottleInterval: 100,
-      activities: {
-        async applyMediaHandoffFiles() {
-          entered.resolve(undefined);
-          if (scenario === "failure")
-            throw ApplicationFailure.create({
-              message: "Fixture evidence changed",
-              nonRetryable: true,
-            });
-          if (scenario === "cancel") {
-            while (!Context.current().cancellationSignal.aborted) {
-              heartbeat({ phase: "fixture-hash" });
-              await Context.current().sleep(25);
-            }
-            await Context.current().cancelled;
-          }
-          await release.promise;
-          applied = true;
-        },
-      },
-    });
-    const networkRun = networkWorker.run();
-    const fileRun = fileWorker.run();
+    const workers: Worker[] = [];
+    const runs: Promise<void>[] = [];
     try {
+      const workflowWorker = await Worker.create({
+        connection: environment.nativeConnection,
+        taskQueue: TASK_QUEUES.WORKFLOWS,
+        workflowsPath,
+      });
+      workers.push(workflowWorker);
+      const networkWorker = await Worker.create({
+        connection: environment.nativeConnection,
+        taskQueue: TASK_QUEUES.MEDIA_NETWORK,
+        activities: {
+          async observeMediaHandoff() {
+            mark("network-observed");
+            if (++observed >= 2) refreshed.resolve(undefined);
+          },
+          async mediaHandoffState() {
+            return { state: applied ? "applied" : "applying", applied };
+          },
+          async finishMediaOperation(input: { status: string }) {
+            finished.push(input.status);
+          },
+        },
+      });
+      workers.push(networkWorker);
+      const fileWorker = await Worker.create({
+        connection: environment.nativeConnection,
+        taskQueue: TASK_QUEUES.MEDIA_FILES,
+        maxHeartbeatThrottleInterval: 100,
+        activities: {
+          async applyMediaHandoffFiles() {
+            mark("files-entered");
+            entered.resolve(undefined);
+            if (scenario === "failure")
+              throw ApplicationFailure.create({
+                message: "Fixture evidence changed",
+                nonRetryable: true,
+              });
+            if (scenario === "cancel") {
+              while (!Context.current().cancellationSignal.aborted) {
+                heartbeat({ phase: "fixture-hash" });
+                await Context.current().sleep(25);
+              }
+              await Context.current().cancelled;
+            }
+            while (!released) {
+              heartbeat({ phase: "fixture-hash" });
+              await Promise.race([
+                release.promise,
+                Context.current().sleep(25),
+              ]);
+            }
+            signal.throwIfAborted();
+            if (Context.current().cancellationSignal.aborted)
+              await Context.current().cancelled;
+            applied = true;
+            mark("files-applied");
+          },
+        },
+      });
+      workers.push(fileWorker);
+      runs.push(networkWorker.run(), fileWorker.run());
+      mark("workers-started");
       const handle = await environment.client.workflow.start(
         "applyMediaHandoffWorkflow",
         {
@@ -73,15 +122,20 @@ test.each(["long-hash", "failure", "cancel"] as const)(
         },
       );
       await workflowWorker.runUntil(async () => {
-        await entered.promise;
+        await wait(entered.promise);
+        mark("entered-wait-completed");
         if (scenario === "long-hash") {
-          await environment.sleep("31 seconds");
-          await refreshed.promise;
-          release.resolve(undefined);
-          await handle.result();
+          mark("server-sleep-start");
+          await wait(environment.sleep("31 seconds"));
+          mark("server-sleep-completed");
+          await wait(refreshed.promise);
+          mark("refresh-wait-completed");
+          releaseActivity();
+          await wait(handle.result());
+          mark("workflow-result-completed");
         } else {
           if (scenario === "cancel") await handle.cancel();
-          await expect(handle.result()).rejects.toBeInstanceOf(
+          await expect(wait(handle.result())).rejects.toBeInstanceOf(
             WorkflowFailedError,
           );
         }
@@ -95,13 +149,21 @@ test.each(["long-hash", "failure", "cancel"] as const)(
         { workflowsPath },
         await handle.fetchHistory(),
       );
+      mark("replay-completed");
+    } catch (error) {
+      mark("test-failed");
+      diagnose();
+      throw error;
     } finally {
-      release.resolve(undefined);
-      networkWorker.shutdown();
-      fileWorker.shutdown();
-      await Promise.all([networkRun, fileRun]);
-      await environment.teardown();
+      signal.removeEventListener("abort", abort);
+      releaseActivity();
+      for (const worker of workers)
+        if (worker.getState() === "RUNNING") worker.shutdown();
+      try {
+        await Promise.all(runs);
+      } finally {
+        await environment.teardown();
+      }
     }
   },
-  60_000,
 );

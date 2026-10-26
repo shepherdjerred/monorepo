@@ -1,8 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useSyncExternalStore } from "react";
 import { NavLink, Navigate, Route, Routes } from "react-router";
-import { UserSchema } from "#shared/contract.ts";
 import type { MediaUser } from "#shared/contract.ts";
-import { ApiError, logout, queryClient, readApi } from "./api.ts";
+import { logout, readSession, sessionBoundary } from "./api.ts";
 import { Login } from "./login.tsx";
 import { ErrorNotice, Loading } from "./components.tsx";
 import { Discover, CatalogPage } from "./catalog.tsx";
@@ -23,16 +23,14 @@ import { SubtitleReplacementPage } from "./subtitle-replacement/page.tsx";
 export function App() {
   const session = useQuery({
     queryKey: ["me"],
-    queryFn: async () => readApi("/me", UserSchema),
+    queryFn: readSession,
   });
-  if (session.isPending)
-    return (
-      <main className="session-state">
-        <Loading />
-      </main>
-    );
-  if (session.error instanceof ApiError && session.error.status === 401)
-    return <Login />;
+  const current = useSyncExternalStore(
+    sessionBoundary.subscribe,
+    sessionBoundary.getSnapshot,
+    sessionBoundary.getSnapshot,
+  );
+  if (current.user === null) return <Login key={current.generation} />;
   if (session.error !== null)
     return (
       <main className="session-state">
@@ -47,13 +45,18 @@ export function App() {
         </button>
       </main>
     );
-  return <Shell user={session.data} />;
+  if (current.user === undefined)
+    return (
+      <main className="session-state">
+        <Loading />
+      </main>
+    );
+  return <Shell key={current.generation} user={current.user} />;
 }
 
 function Shell({ user }: { user: MediaUser }) {
   const signOut = useMutation({
     mutationFn: logout,
-    onSuccess: async () => queryClient.invalidateQueries({ queryKey: ["me"] }),
   });
   return (
     <div className="app-shell">

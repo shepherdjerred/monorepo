@@ -9,17 +9,50 @@ import { readVerifiedCompensationPublication } from "./publication-receipt.ts";
 import { z } from "zod";
 import { NativeCompensationActivityInputSchema } from "#shared/native-recovery/compensation-runtime.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+
+/** Negative terminal lookup grants nothing; only a positive terminal is fully validated for exact ACK. */
+export async function readCompletedNativeCompensationState(
+  tx: Prisma.TransactionClient,
+  input: NativeCompensationActivityInput,
+  budget = new PublicationAuthorityReadBudget(),
+) {
+  const row =
+    await tx.nativePublicationCompensationContinuation.findUniqueOrThrow({
+      where: { id: input.continuationId },
+      select: {
+        completion: true,
+        verifiedPublication: true,
+        coordinatorOperationId: true,
+        publicationCoordinatorOperationId: true,
+      },
+    });
+  budget.consume(1);
+  const completed =
+    row.coordinatorOperationId === input.operationId && row.completion !== null;
+  const published =
+    row.publicationCoordinatorOperationId === input.operationId &&
+    row.verifiedPublication !== null;
+  return !completed && !published
+    ? null
+    : readNativeCompensationState(tx, input, budget);
+}
 
 export async function readNativeCompensationState(
   tx: Prisma.TransactionClient,
   input: NativeCompensationActivityInput,
+  budget = new PublicationAuthorityReadBudget(),
 ) {
-  const record = await compensationRecord(tx, input.continuationId);
+  const record = await compensationRecord(tx, input.continuationId, budget);
   if (
     record.row.verifiedPublication !== null &&
     record.row.publicationCoordinatorOperationId === input.operationId
   ) {
-    const committed = await readVerifiedCompensationPublication(tx, input);
+    const committed = await readVerifiedCompensationPublication(
+      tx,
+      input,
+      budget,
+    );
     return {
       state: NativeCompensationContinuationViewSchema.shape.state.parse(
         record.row.state,
@@ -28,7 +61,7 @@ export async function readNativeCompensationState(
     };
   }
   if (record.row.publicationCoordinatorOperationId === input.operationId) {
-    const authority = await assertCompensatedPublication(tx, input);
+    const authority = await assertCompensatedPublication(tx, input, budget);
     return {
       state: NativeCompensationContinuationViewSchema.shape.state.parse(
         record.row.state,
@@ -44,6 +77,7 @@ export async function readNativeCompensationState(
     const operation = await tx.operation.findUniqueOrThrow({
       where: { id: input.operationId },
     });
+    budget.consume(1);
     const payload = z
       .strictObject({
         ...NativeCompensationActivityInputSchema.shape,
@@ -64,10 +98,14 @@ export async function readNativeCompensationState(
     const verified =
       record.row.publicationCoordinatorOperationId === null
         ? null
-        : await readVerifiedCompensationPublication(tx, {
-            ...input,
-            operationId: record.row.publicationCoordinatorOperationId,
-          });
+        : await readVerifiedCompensationPublication(
+            tx,
+            {
+              ...input,
+              operationId: record.row.publicationCoordinatorOperationId,
+            },
+            budget,
+          );
     return {
       state: NativeCompensationContinuationViewSchema.shape.state.parse(
         record.row.state,
@@ -75,14 +113,18 @@ export async function readNativeCompensationState(
       publicationVerified: verified !== null,
     };
   }
-  await assertNativeCompensation(tx, input);
+  await assertNativeCompensation(tx, input, budget);
   if (record.row.verifiedPublication !== null) {
     if (record.row.publicationCoordinatorOperationId === null)
       throw new Error("Verified compensation publication coordinator missing");
-    const publication = await assertCompensatedPublication(tx, {
-      ...input,
-      operationId: record.row.publicationCoordinatorOperationId,
-    });
+    const publication = await assertCompensatedPublication(
+      tx,
+      {
+        ...input,
+        operationId: record.row.publicationCoordinatorOperationId,
+      },
+      budget,
+    );
     return {
       state: NativeCompensationContinuationViewSchema.shape.state.parse(
         record.row.state,

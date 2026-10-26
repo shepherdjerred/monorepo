@@ -1,5 +1,21 @@
 type Cue = { start: number; end: number; text: string };
 
+/** Match each opener through its first following closer without rescanning an unmatched tail. */
+function stripDelimited(text: string, opener: string, closer: string): string {
+  const visible: string[] = [];
+  let cursor = 0;
+  while (cursor < text.length) {
+    const start = text.indexOf(opener, cursor);
+    if (start === -1) break;
+    const end = text.indexOf(closer, start + 1);
+    if (end === -1) break;
+    visible.push(text.slice(cursor, start));
+    cursor = end + 1;
+  }
+  visible.push(text.slice(cursor));
+  return visible.join("");
+}
+
 function timestamp(value: string, format: "srt" | "vtt" | "ass"): number {
   const pattern =
     format === "ass"
@@ -89,7 +105,7 @@ function blockCue(block: string, format: "srt" | "vtt"): Cue {
   return {
     start: timestamp(match[1], format),
     end: timestamp(match[2], format),
-    text: body.replaceAll(/<[^>]*>/gu, ""),
+    text: stripDelimited(body, "<", ">"),
   };
 }
 
@@ -137,9 +153,7 @@ function assCue(line: string, fields: string[]): Cue {
   const body = values.slice(fields.length - 1).join(",");
   if (/\\p[1-9]/u.test(body))
     throw new Error("Subtitle drawing dialogue needs review");
-  const visible = body
-    .replaceAll(/\{[^}]*\}/gu, "")
-    .replaceAll(/\\[Nnh]/gu, " ");
+  const visible = stripDelimited(body, "{", "}").replaceAll(/\\[Nnh]/gu, " ");
   return {
     start: timestamp(start.trim(), "ass"),
     end: timestamp(end.trim(), "ass"),

@@ -9,6 +9,7 @@ import { snapshotHash } from "#migration/profile-import.ts";
 import { snapshotArchiveFile } from "./file-snapshot.ts";
 import { assertPriorNativeBinding } from "./prior-binding.ts";
 import { recordVerifiedPublication } from "#automation/reconciliation/upgrade-cleanup.ts";
+import { preparePhysicalPublication } from "#automation/plex-binding/test-fixture.ts";
 
 const harness = automationTestHarness();
 const directories: string[] = [];
@@ -25,12 +26,20 @@ test.each([1, 2] as const)(
       harness.cipher,
       "removed",
       version === 2
-        ? settleTerminalPublication(db, "purged")
-        : async (_file, published) => {
-            await db.$transaction((tx) =>
-              recordVerifiedPublication(tx, [published.entry.assetId], 0),
-            );
-            return published;
+        ? {
+            serverMachineId: "fixture-server",
+            publication: preparePhysicalPublication,
+            settle: settleTerminalPublication(db, "purged", {
+              context: harness.context(),
+            }),
+          }
+        : {
+            settle: async (_file, published) => {
+              await db.$transaction((tx) =>
+                recordVerifiedPublication(tx, [published.entry.assetId], 0),
+              );
+              return published;
+            },
           },
     );
     directories.push(f.file.directory);

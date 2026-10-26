@@ -1,4 +1,8 @@
 import { z } from "zod";
+import { finishNativePlexPlan } from "#infrastructure/plex-binding/native/native-version.ts";
+import { FinishedNativePlexV3Schema } from "#shared/plex-binding/native-version.ts";
+import { PublishedPlexStableFilesSchema } from "#shared/plex-binding/native-projections.ts";
+import { assertNativeFilesProof } from "./plex-proof.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { NativeRecoveryNetworkEvidenceSchema } from "#shared/native-recovery.ts";
 import {
@@ -55,6 +59,7 @@ export const FinishedNativeSchema = z.union([
     files: z.json(),
   }),
   FinishedNativeV2Schema,
+  FinishedNativePlexV3Schema,
 ]);
 
 export async function finishNativePreparation(
@@ -66,24 +71,32 @@ export async function finishNativePreparation(
     async (tx) => {
       await lockNativeScope(tx, prepared.scope);
       await tx.$queryRaw`SELECT id FROM "NativeRecoveryPlan" WHERE id = ${planId} FOR UPDATE`;
-      const { plan } = await assertNativeSnapshot(tx, planId, prepared.scope);
+      const { plan } = await assertNativeSnapshot(
+        tx,
+        planId,
+        prepared.scope,
+        prepared.plex.budget,
+      );
       if (plan.state === "awaiting_review") return;
       if (plan.state !== "preparing")
         throw new Error("Native preparation state changed");
-      const network = await tx.nativeRecoveryObservation.findFirstOrThrow({
-        where: { planId, kind: "network" },
-        orderBy: { createdAt: "desc" },
-      });
-      if (network.expiresAt <= new Date())
-        throw new Error("Native network observation expired during inspection");
-      const finished = FinishedNativeSchema.parse({
-        ...(prepared.scope.schemaVersion === 1
-          ? { schemaVersion: 1 }
-          : { schemaVersion: 2, lifecycleKind: "published" }),
-        scopeHash: snapshotHash(z.json().parse(prepared.scope)),
-        network: stableNativeNetwork(network.evidence),
-        files: stableNativeFiles(prepared.evidence),
-      });
+      if (prepared.plex.kind !== "paired")
+        throw new Error(
+          "New native preparation requires its paired Plex proof",
+        );
+      await assertNativeFilesProof(tx, prepared.plex);
+      const finished = await finishNativePlexPlan(
+        tx,
+        {
+          planId,
+          plex: prepared.plex.ref,
+          files: PublishedPlexStableFilesSchema.parse(
+            stableNativeFiles(prepared.evidence),
+          ),
+        },
+        prepared.plex.freshness,
+        prepared.plex.budget,
+      );
       await tx.nativeRecoveryObservation.create({
         data: {
           planId,
@@ -98,12 +111,13 @@ export async function finishNativePreparation(
         where: { id: planId },
         data: {
           state: "awaiting_review",
-          plan: finished,
-          planHash: snapshotHash(finished),
+          plan: z.record(z.string(), z.json()).parse(finished),
+          planHash: snapshotHash(z.json().parse(finished)),
           expiresAt: new Date(Date.now() + 12 * 3_600_000),
           version: { increment: 1 },
         },
       });
+      prepared.plex.freshness.assertActive();
     },
     { timeout: 30_000 },
   );

@@ -66,7 +66,7 @@ export async function measureResolvedEvidence(input: {
     measured.resolvedEvidence = evidence;
   }
 }
-function measureQuality(
+export function measureQuality(
   profile: ResolvedProfile,
   prepared: ResolvedEvidence,
   quality: string,

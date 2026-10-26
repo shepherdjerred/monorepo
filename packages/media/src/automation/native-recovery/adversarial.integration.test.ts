@@ -7,6 +7,7 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import { automationTestHarness } from "#testing/automation.ts";
 import { FileOperations } from "#filesystem/operations.ts";
+import { FileLockError } from "#filesystem/advisory-lock.ts";
 import { nativeFileFixture } from "./test-fixture.ts";
 import { prepareNativeFiles } from "./files.ts";
 import { applyPreparedNative } from "./apply.ts";
@@ -25,7 +26,10 @@ async function fixture() {
   directories.push(f.file.directory);
   const approval = await f.review();
   await f.observe();
-  const prepared = await prepareNativeFiles(f.context, f.planId);
+  const prepared = await prepareNativeFiles(f.context, {
+    planId: f.planId,
+    operationId: z.uuid().parse(approval.operationId),
+  });
   return {
     ...f,
     prepared,
@@ -76,7 +80,11 @@ test("an unresolved real import journal targeting an installed sidecar prevents 
   const operationId = crypto.randomUUID();
   const downloadPath = `${operationId}.srt`;
   await writeFile(path.join(roots.downloads, downloadPath), replacement);
+  const verifyPlexExclusion = f.context.files.verifyPlexExclusion;
+  if (verifyPlexExclusion === undefined)
+    throw new Error("Missing real proof validator");
   const operations = new FileOperations(roots, {
+    verifyPlexExclusion,
     authorize: () =>
       Promise.reject(
         new Error("This test only stages an unresolved operation"),
@@ -212,10 +220,22 @@ test("a changed filesystem journal rolls back authority rows written earlier in 
   ).toEqual(before);
 });
 test("network expiry during exclusion validation under the real file lock cannot grant authority; fresh observation retries the same approval", async () => {
-  const f = await fixture();
+  const setup = await nativeFileFixture(
+    harness.database(),
+    harness.context().cipher,
+  );
+  directories.push(setup.file.directory);
+  const approval = await setup.review();
+  const input = {
+    planId: setup.planId,
+    operationId: z.uuid().parse(approval.operationId),
+  };
   const expiresAt = Date.now() + 2000;
-  f.prior.quiescence.expiresAt = new Date(expiresAt).toISOString();
-  await f.observe();
+  setup.prior.quiescence.expiresAt = new Date(expiresAt).toISOString();
+  await setup.observe(input);
+  const prepared = await prepareNativeFiles(setup.context, input);
+  const f = { ...setup, prepared, input };
+  expect(prepared.plex.freshness.expiresAtMs).toBeLessThanOrEqual(expiresAt);
   const local = path.join(
     f.file.context.roots.movies.library,
     f.published.entry.libraryPath,
@@ -225,14 +245,28 @@ test("network expiry during exclusion validation under the real file lock cannot
   const releaseValidation = Promise.withResolvers<boolean>();
   const original = f.context.files.verifyPlexExclusion;
   if (original === undefined) throw new Error("Missing real proof validator");
+  const operations = new FileOperations(f.file.context.roots.movies, {
+    verifyPlexExclusion: original,
+    authorize: () => Promise.reject(new Error("Read-only test lock")),
+  });
+  let pausedUnderLock = false;
   f.context.files.verifyPlexExclusion = async (...args) => {
     await original(...args);
+    if (pausedUnderLock) return;
+    try {
+      await operations.withFileIdentity(
+        { ...proof, libraryPath: f.published.entry.libraryPath },
+        () => Promise.resolve(),
+      );
+      return;
+    } catch (error) {
+      if (!(error instanceof FileLockError) || error.kind !== "busy")
+        throw error;
+    }
+    pausedUnderLock = true;
     validationReached.resolve(true);
     await releaseValidation.promise;
   };
-  const operations = new FileOperations(f.file.context.roots.movies, {
-    authorize: () => Promise.reject(new Error("Read-only test lock")),
-  });
   const result = captureApply();
   async function captureApply() {
     try {
@@ -248,6 +282,7 @@ test("network expiry during exclusion validation under the real file lock cannot
   }
   try {
     await Promise.race([validationReached.promise, endedBeforePause()]);
+    expect(pausedUnderLock).toBe(true);
     expect(Date.now()).toBeLessThan(expiresAt);
     await expect(
       operations.withFileIdentity(
@@ -263,11 +298,17 @@ test("network expiry during exclusion validation under the real file lock cannot
   }
   const outcome = await result;
   expect(outcome.success).toBe(false);
-  if (!outcome.success) expect(String(outcome.error)).toContain("expired");
+  if (!outcome.success)
+    expect(outcome.error).toMatchObject({
+      code: "verification_expired",
+      reason: "verification_expired",
+    });
   await expectNoGrant(f);
+  f.context.files.verifyPlexExclusion = original;
   f.prior.quiescence.expiresAt = new Date(Date.now() + 90_000).toISOString();
-  await f.observe();
-  await applyPreparedNative(f.context, f.input, f.prepared);
+  await f.observe(f.input);
+  const retry = await prepareNativeFiles(f.context, f.input);
+  await applyPreparedNative(f.context, f.input, retry);
   expect(
     await harness
       .database()

@@ -1,4 +1,3 @@
-import path from "node:path";
 import { z } from "zod";
 import { expect } from "vitest";
 import type { nativeQuarantineFixture } from "#automation/native-quarantine/test-fixture.ts";
@@ -10,7 +9,7 @@ import { PrismaMediaCommands } from "#infrastructure/commands.ts";
 import { grantTestRequesterAccess } from "#testing/authority.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 
-/** Fixture DB mount names follow real local effects; immutable receipts retain executed paths. */
+/** Actual mapped file consumers keep canonical DB paths and worker journal paths distinct. */
 export async function replaceRecoveredSidecar(
   f: Awaited<ReturnType<typeof nativeQuarantineFixture>>,
   cipher: CredentialCipher,
@@ -23,18 +22,6 @@ export async function replaceRecoveredSidecar(
   });
   const old = subtitles.find((row) => row.id === f.subtitle.id);
   if (old === undefined) throw new Error("Original sidecar missing");
-  const local = (name: string) =>
-    path.join(f.file.roots.library, path.relative("/data/movies", name));
-  await f.db.libraryAsset.update({
-    where: { id: asset.id },
-    data: { path: local(asset.path) },
-  });
-  for (const row of subtitles)
-    if (row.path !== null)
-      await f.db.subtitleAsset.update({
-        where: { id: row.id },
-        data: { path: local(row.path) },
-      });
   const uploaded = await new PrismaAdminApplication(
     f.db,
     cipher,
@@ -94,22 +81,6 @@ export async function replaceRecoveredSidecar(
       operationId: z.uuid().parse(approved.operationId),
     }),
   ).toEqual({ state: "applied" });
-  await f.db.libraryAsset.update({
-    where: { id: asset.id },
-    data: { path: asset.path },
-  });
-  for (const subtitle of await f.db.subtitleAsset.findMany({
-    where: { assetId: asset.id },
-  }))
-    if (subtitle.path !== null)
-      await f.db.subtitleAsset.update({
-        where: { id: subtitle.id },
-        data: {
-          path: subtitle.path
-            .replace(f.file.roots.control, "/data/movies/.media-control")
-            .replace(f.file.roots.library, "/data/movies"),
-        },
-      });
   return replacementId;
 }
 
@@ -117,10 +88,14 @@ export async function addRecoveredSidecar(
   f: Awaited<ReturnType<typeof nativeQuarantineFixture>>,
   cipher: CredentialCipher,
 ) {
-  await grantTestRequesterAccess(f.db, f.file.user.id, "server");
+  await grantTestRequesterAccess(
+    f.db,
+    f.file.user.id,
+    f.observerContext.expectedServerMachineId,
+  );
   await new PrismaMediaCommands(f.db, {
     keepDays: 30,
-    serverMachineId: "server",
+    serverMachineId: f.observerContext.expectedServerMachineId,
   }).createRequest(f.file.user, crypto.randomUUID(), {
     mediaId: f.file.media.id,
     subtitleLanguages: ["en"],
@@ -129,19 +104,6 @@ export async function addRecoveredSidecar(
   const asset = await f.db.libraryAsset.findUniqueOrThrow({
     where: { id: f.asset.id },
   });
-  const local = (name: string) =>
-    path.join(f.file.roots.library, path.relative("/data/movies", name));
-  await f.db.libraryAsset.update({
-    where: { id: asset.id },
-    data: { path: local(asset.path) },
-  });
-  for (const row of await f.db.subtitleAsset.findMany({
-    where: { assetId: asset.id, state: "installed", path: { not: null } },
-  }))
-    await f.db.subtitleAsset.update({
-      where: { id: row.id },
-      data: { path: local(z.string().parse(row.path)) },
-    });
   const uploaded = await new PrismaAdminApplication(
     f.db,
     cipher,
@@ -171,22 +133,6 @@ export async function addRecoveredSidecar(
     subtitleId,
     operationId,
   });
-  await f.db.libraryAsset.update({
-    where: { id: asset.id },
-    data: { path: asset.path },
-  });
-  for (const row of await f.db.subtitleAsset.findMany({
-    where: { assetId: asset.id, path: { not: null } },
-  }))
-    await f.db.subtitleAsset.update({
-      where: { id: row.id },
-      data: {
-        path: z
-          .string()
-          .parse(row.path)
-          .replace(f.file.roots.library, "/data/movies"),
-      },
-    });
   return {
     subtitleId,
     operationId,

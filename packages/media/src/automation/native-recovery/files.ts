@@ -1,4 +1,5 @@
 import path from "node:path";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { settledEvidence } from "./settled-proof.ts";
 import {
   compensationDependencyPaths,
@@ -11,6 +12,11 @@ import {
   type CompensationSubtitleLineages,
 } from "./compensation-proof.ts";
 import { z } from "zod";
+import {
+  captureNativeReviewProof,
+  type NativeFilesPlexProof,
+} from "./plex-proof.ts";
+import { requirePublicationExecution } from "#automation/publication-proof/invocation.ts";
 import { ContentProof } from "#filesystem/content-proof.ts";
 import { safePath } from "#filesystem/operations-io.ts";
 import { inspectMedia } from "#filesystem/media-tools.ts";
@@ -33,6 +39,7 @@ import {
 
 export type NativeFileContext = { files: FileContext; workerPodUid: string };
 export type PreparedNativeFiles = {
+  plex: NativeFilesPlexProof;
   scope: NativePublishedScope;
   content: ContentProof;
   journals: JournalProof[];
@@ -66,26 +73,29 @@ export function nativeLocalPath(
 
 export async function prepareNativeFiles(
   context: NativeFileContext,
-  planId: string,
+  input: { planId: string; operationId: string },
 ): Promise<PreparedNativeFiles> {
+  const budget = new PublicationAuthorityReadBudget();
+  const execution = requirePublicationExecution(
+    context.files.publicationExecution?.(),
+  );
+  const { planId } = input;
   const plan = await context.files.db.nativeRecoveryPlan.findUniqueOrThrow({
     where: { id: planId },
   });
+  budget.consume(1);
   if (!["preparing", "applying"].includes(plan.state))
     throw new Error("Native proof requires a live owner command");
   const scope = NativePublishedScopeSchema.parse(plan.scope);
-  const observation =
-    await context.files.db.nativeRecoveryObservation.findFirstOrThrow({
-      where: { planId, kind: "network" },
-      orderBy: { createdAt: "desc" },
-    });
-  const network = NativeRecoveryNetworkEvidenceSchema.parse(
-    observation.evidence,
-  );
+  const plex = await captureNativeReviewProof(context.files, input, plan.plan, {
+    execution,
+    budget,
+  });
+  const network = NativeRecoveryNetworkEvidenceSchema.parse(plex.network);
   if (
     network.planId !== planId ||
     network.recoveryEpoch !== plan.recoveryEpoch ||
-    observation.expiresAt <= new Date()
+    Date.parse(network.expiresAt) <= Date.now()
   )
     throw new Error("Native network evidence is stale");
   const content = new ContentProof();
@@ -179,7 +189,9 @@ export async function prepareNativeFiles(
       sidecarInventory: [],
     });
   }
+  plex.freshness.assertActive();
   return {
+    plex,
     subtitleLineages,
     scope,
     content,

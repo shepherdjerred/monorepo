@@ -4,6 +4,7 @@ import { storedFilePath } from "#automation/files/paths/locations.ts";
 import { requirePlexExclusionDatabaseProof } from "#automation/plex-exclusion/proof.ts";
 import {
   assertPublicationActive,
+  publicationDeadline,
   type PublicationContext,
 } from "./invocation.ts";
 
@@ -13,7 +14,16 @@ export async function publicationAuthorityGuard(
   context: PublicationContext,
   input: { libraryKind: "movies" | "tv"; recoveryEpoch: number },
 ): Promise<() => void> {
-  const observed = { wall: Date.now(), monotonic: performance.now() };
+  const authority = await publicationAuthorityDeadline(tx, context, input);
+  return authority.assertActive;
+}
+
+/** Same authority capture, with its trusted minimum available to deferred commit fencing. */
+export async function publicationAuthorityDeadline(
+  tx: Transaction,
+  context: PublicationContext,
+  input: { libraryKind: "movies" | "tv"; recoveryEpoch: number },
+): Promise<{ assertActive: () => void; expiresAtMs: number }> {
   assertPublicationActive(context);
   const lease = await tx.legacyWriterLease.findUniqueOrThrow({
     where: { id: "singleton" },
@@ -49,15 +59,14 @@ export async function publicationAuthorityGuard(
       .parse(proof.evidence);
     deadlines.push(Date.parse(evidence.topologyCheckedAt) + 900_000);
   }
-  const deadline = Math.min(...deadlines);
-  const monotonicDeadline = observed.monotonic + (deadline - observed.wall);
-  if (!Number.isFinite(deadline) || !Number.isFinite(monotonicDeadline))
-    throw new FileGuardError("publication_authority_expired");
+  const deadline = publicationDeadline(
+    context.execution,
+    Math.min(...deadlines),
+  );
   const assertActive = () => {
     assertPublicationActive(context);
-    if (Date.now() >= deadline || performance.now() >= monotonicDeadline)
-      throw new FileGuardError("publication_authority_expired");
+    deadline.assertActive();
   };
   assertActive();
-  return assertActive;
+  return { assertActive, expiresAtMs: deadline.expiresAtMs };
 }

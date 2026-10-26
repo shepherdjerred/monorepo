@@ -1,5 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { z } from "zod";
+import { UserSchema } from "#shared/contract.ts";
+import { SessionBoundary } from "./session.ts";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -7,6 +9,7 @@ export const queryClient = new QueryClient({
     mutations: { retry: false },
   },
 });
+export const sessionBoundary = new SessionBoundary(queryClient);
 
 const ErrorResponseSchema = z.object({
   error: z.object({ code: z.string(), message: z.string() }),
@@ -28,10 +31,30 @@ export async function readApi<T>(
   schema: z.ZodType<T>,
   version: 1 | 2 | 3 = 1,
 ): Promise<T> {
-  const response = await fetch(`/api/v${String(version)}${path}`, {
-    credentials: "same-origin",
-  });
-  return parseResponse(response, schema);
+  const session = sessionBoundary.capture();
+  try {
+    const response = await fetch(`/api/v${String(version)}${path}`, {
+      credentials: "same-origin",
+      signal: session.signal,
+    });
+    return await parseResponse(response, schema);
+  } finally {
+    session.assertCurrent();
+  }
+}
+
+export async function readSession() {
+  const session = sessionBoundary.capture();
+  try {
+    const user = await readApi("/me", UserSchema);
+    sessionBoundary.publish(user, session.generation, "refresh");
+    return user;
+  } catch (error) {
+    session.assertCurrent();
+    if (!(error instanceof ApiError) || error.status !== 401) throw error;
+    sessionBoundary.publish(null, session.generation, "refresh");
+    return null;
+  }
 }
 
 export async function parseResponse<T>(
@@ -115,6 +138,7 @@ export async function writeApi<T>(input: {
   sensitive?: boolean;
   version?: 1 | 2 | 3;
 }): Promise<T> {
+  const session = sessionBoundary.capture(input.actorId);
   const storage = input.sensitive === true ? transientStorage : sessionStorage;
   const command = await commandKey(
     storage,
@@ -126,46 +150,81 @@ export async function writeApi<T>(input: {
         : input.path,
     input.body,
   );
-  const response = await fetch(
-    `/api/v${String(input.version ?? 1)}${input.path}`,
-    {
-      method: input.method ?? "POST",
-      credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-Token": csrfToken(),
-        "Idempotency-Key": command.key,
+  session.assertCurrent();
+  try {
+    const response = await fetch(
+      `/api/v${String(input.version ?? 1)}${input.path}`,
+      {
+        method: input.method ?? "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken(),
+          "Idempotency-Key": command.key,
+        },
+        body: JSON.stringify(input.body),
       },
-      body: JSON.stringify(input.body),
-    },
-  );
-  const result = await parseResponse(response, input.schema);
-  storage.removeItem(command.storageKey);
-  return result;
+    );
+    const result = await parseResponse(response, input.schema);
+    session.assertCurrent();
+    storage.removeItem(command.storageKey);
+    return result;
+  } finally {
+    session.assertCurrent();
+  }
 }
 
 export async function authPost<T>(
   path: string,
   schema: z.ZodType<T>,
 ): Promise<T> {
-  const response = await fetch(`/api/v1/auth${path}`, {
-    method: "POST",
-    credentials: "same-origin",
-  });
-  return parseResponse(response, schema);
+  const session = sessionBoundary.capture();
+  try {
+    const response = await fetch(`/api/v1/auth${path}`, {
+      method: "POST",
+      credentials: "same-origin",
+      signal: session.signal,
+    });
+    return await parseResponse(response, schema);
+  } finally {
+    session.assertCurrent();
+  }
+}
+
+const LoginPollSchema = z.discriminatedUnion("status", [
+  z.object({ status: z.literal("pending") }),
+  z.object({
+    status: z.literal("authenticated"),
+    user: UserSchema,
+    csrfToken: z.string(),
+  }),
+]);
+
+export async function pollPlexLogin(id: string) {
+  const session = sessionBoundary.capture();
+  const result = await authPost(
+    `/plex/poll/${encodeURIComponent(id)}`,
+    LoginPollSchema,
+  );
+  session.assertCurrent();
+  if (result.status === "authenticated")
+    sessionBoundary.publish(result.user, session.generation, "login");
+  return result;
 }
 
 export async function logout(): Promise<void> {
+  const session = sessionBoundary.capture();
   const response = await fetch("/api/v1/auth/logout", {
     method: "POST",
     credentials: "same-origin",
     headers: { "X-CSRF-Token": csrfToken() },
   });
+  session.assertCurrent();
   if (!response.ok)
     throw new ApiError(
       "logout_failed",
       "Could not sign out. Please retry.",
       response.status,
     );
-  queryClient.clear();
+  sessionBoundary.publish(null, session.generation, "logout");
 }

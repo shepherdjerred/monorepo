@@ -23,6 +23,12 @@ const db = createDatabase(input.databaseUrl);
 const activities = createSubtitleReplacementActivities({
   db,
   roots: { movies: input.roots, tv: input.roots },
+  plexAccess: (sectionType) =>
+    Promise.resolve({
+      serverMachineId: "fixture-server",
+      sectionId: sectionType === "movie" ? "1" : "2",
+      sectionType,
+    }),
   now: () => new Date(input.now),
   minimumFreeBytes: 0,
   enabled: {

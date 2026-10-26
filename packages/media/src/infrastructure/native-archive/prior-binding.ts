@@ -1,3 +1,4 @@
+import type { ArchiveReadOptions } from "./receipt-projection.ts";
 import { NativeArchiveScopeProtection } from "./errors.ts";
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
@@ -14,12 +15,19 @@ import {
 import { NativeRecoveryFileEvidenceSchema } from "#shared/native-recovery.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { nativePhysicalIdentity } from "./physical-identity.ts";
-import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import type { PublicationSubtitleLineage } from "#shared/publication-proof/subtitle-lineage.ts";
 import { archivePublicationSnapshot } from "#infrastructure/publication-proof/projection.ts";
 import { compensationSubtitleLineage } from "#infrastructure/native-compensation/subtitle-lineage.ts";
 import { assertRecordedCaptionLineage } from "#infrastructure/publication-proof/caption-authority.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
+import {
+  FinishedPublishedPlexV3Schema,
+  FinishedArchivePlexV3Schema,
+} from "#shared/plex-binding/native-version.ts";
+import { validateNativePlexReceipt } from "#infrastructure/plex-binding/native/native-version.ts";
+import { ArchiveReceiptProjection } from "./receipt-projection.ts";
+import type { NativeReceiptReadPort } from "#infrastructure/plex-binding/native/receipt-port.ts";
 
 const Version = z.object({
   version: z.int(),
@@ -57,6 +65,8 @@ const Finished = z.union([
     files: z.json(),
   }),
   FinishedNativeV2Schema,
+  FinishedPublishedPlexV3Schema,
+  FinishedArchivePlexV3Schema,
 ]);
 type Receipt = Prisma.NativeRecoveryReceiptGetPayload<{
   include: { plan: true };
@@ -148,32 +158,38 @@ export async function findPriorNativeBinding(
   tx: Prisma.TransactionClient,
   file: NativeArchiveFile,
   currentEpoch: number,
-  budget?: PublicationAuthorityReadBudget,
+  {
+    budget = new PublicationAuthorityReadBudget(),
+    projection,
+  }: ArchiveReadOptions = {},
 ): Promise<PriorNativeBinding | null> {
   if (file.ownershipEpoch !== currentEpoch)
     throw new NativeArchiveScopeProtection(
       "Archive reuse requires exact current epoch",
     );
-  const rows = await tx.nativeRecoveryReceipt.findMany({
-    where: {
-      recoveryEpoch: currentEpoch,
-      selection: {
-        path: ["bindings"],
-        array_contains: [{ assetId: file.assetId }],
-      },
-    },
-    include: { plan: true },
-    orderBy: { createdAt: "desc" },
-    take: budget?.take ?? 101,
-  });
-  budget?.consume(rows.length);
+  const rows =
+    projection === undefined
+      ? await tx.nativeRecoveryReceipt.findMany({
+          where: {
+            recoveryEpoch: currentEpoch,
+            selection: {
+              path: ["bindings"],
+              array_contains: [{ assetId: file.assetId }],
+            },
+          },
+          include: { plan: true },
+          orderBy: { createdAt: "desc" },
+          take: budget.takeWeighted(2),
+        })
+      : await projection.find(tx, file.assetId, currentEpoch, budget);
+  if (projection === undefined) budget.consume(rows.length * 2);
   if (rows.length > 100)
     throw new NativeArchiveScopeProtection(
       "Archive prior receipt lookup exceeds bound",
     );
   const matches = [];
   for (const row of rows) {
-    const match = await currentGrant(tx, { row, file }, budget);
+    const match = await currentGrant(tx, { row, file }, budget, projection);
     if (match !== null) matches.push(match);
   }
   const match = matches[0];
@@ -188,14 +204,12 @@ export async function resolvePriorNativeBinding(
   tx: Prisma.TransactionClient,
   file: NativeArchiveFile,
   currentEpoch: number,
-  budget?: PublicationAuthorityReadBudget,
+  { budget, projection }: ArchiveReadOptions = {},
 ): Promise<PriorNativeBinding> {
-  const reference = await findPriorNativeBinding(
-    tx,
-    file,
-    currentEpoch,
+  const reference = await findPriorNativeBinding(tx, file, currentEpoch, {
     budget,
-  );
+    projection,
+  });
   if (reference === null)
     throw new NativeArchiveScopeProtection(
       "Current archive participant needs an unchanged prior native grant; transition reconciliation required",
@@ -206,13 +220,13 @@ export async function assertPriorNativeBinding(
   tx: Prisma.TransactionClient,
   file: NativeArchiveFile,
   reference: PriorNativeBinding,
-  budget?: PublicationAuthorityReadBudget,
+  {
+    budget = new PublicationAuthorityReadBudget(),
+    projection,
+  }: ArchiveReadOptions = {},
 ) {
-  budget?.consume(1);
-  const row = await tx.nativeRecoveryReceipt.findUniqueOrThrow({
-    where: { id: reference.receiptId },
-    include: { plan: true },
-  });
+  const queried = projection ?? new ArchiveReceiptProjection(tx, budget);
+  const row = await queried.read(tx, reference.receiptId, budget);
   const result = grant(row, file, reference.subtitleLineage);
   if (
     result === null ||
@@ -229,13 +243,17 @@ export async function priorNativeFileEvidence(
   tx: Prisma.TransactionClient,
   file: NativeArchiveFile,
   reference: PriorNativeBinding,
-  budget?: PublicationAuthorityReadBudget,
+  {
+    budget = new PublicationAuthorityReadBudget(),
+    projection,
+  }: ArchiveReadOptions = {},
 ) {
-  await assertPriorNativeBinding(tx, file, reference, budget);
-  budget?.consume(1);
-  const row = await tx.nativeRecoveryReceipt.findUniqueOrThrow({
-    where: { id: reference.receiptId },
+  const queried = projection ?? new ArchiveReceiptProjection(tx, budget);
+  await assertPriorNativeBinding(tx, file, reference, {
+    budget,
+    projection: queried,
   });
+  const row = await queried.read(tx, reference.receiptId, budget);
   const matches = Selection.parse(row.selection)
     .fileEvidence.files.map((raw) =>
       NativeRecoveryFileEvidenceSchema.shape.files.element.parse(raw),
@@ -257,6 +275,8 @@ function assertReceipt(
   file: NativeArchiveFile,
   selection: z.infer<typeof Selection>,
 ) {
+  if (snapshotHash(z.json().parse(row.plan.plan)) !== row.planHash)
+    throw new NativeArchiveScopeProtection("Archive prior raw plan changed");
   const finished = Finished.parse(row.plan.plan);
   if (
     row.plan.state !== "applied" ||
@@ -267,8 +287,9 @@ function assertReceipt(
     snapshotHash(z.json().parse(row.plan.scope)) !== finished.scopeHash ||
     snapshotHash(selection.scope) !== finished.scopeHash ||
     snapshotHash(z.json().parse(selection.fileEvidence)) !==
-      snapshotHash(finished.files) ||
-    snapshotHash(selection.networkEvidence) !== snapshotHash(finished.network)
+      snapshotHash(nativeJson(finished.files)) ||
+    snapshotHash(selection.networkEvidence) !==
+      snapshotHash(nativeJson(finished.network))
   )
     throw new NativeArchiveScopeProtection(
       "Archive prior receipt authority changed",
@@ -412,9 +433,13 @@ function assertPhysicalGrant(
 async function currentGrant(
   tx: Prisma.TransactionClient,
   input: { row: Receipt; file: NativeArchiveFile },
-  budget?: PublicationAuthorityReadBudget,
+  budget: PublicationAuthorityReadBudget,
+  projection?: NativeReceiptReadPort,
 ) {
   const { row, file } = input;
+  if (projection === undefined)
+    await validateNativePlexReceipt(tx, row, budget);
+  else await projection.validateQueried(tx, row, budget);
   const scope = NativeStoredScopeSchema.parse(row.plan.scope);
   if (
     scope.schemaVersion === 2 &&

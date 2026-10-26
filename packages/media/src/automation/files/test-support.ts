@@ -20,6 +20,24 @@ import type { MediaUser } from "#generated/prisma/client.ts";
 import { fileMovieAccess } from "#automation/editions/access.ts";
 import { fixtureAcquisitionScope } from "./fixtures/acquisition.ts";
 
+function fixturePublicationExecution() {
+  const observed = { wall: Date.now(), monotonic: performance.now() };
+  const signal = new AbortController().signal;
+  const wallDeadline = observed.wall + 300_000;
+  const monotonicDeadline = observed.monotonic + 300_000;
+  return {
+    observed,
+    expiresAtMs: wallDeadline,
+    signal,
+    checkpoint: () => Promise.resolve(),
+    assertActive: () => {
+      signal.throwIfAborted();
+      if (Date.now() >= wallDeadline || performance.now() >= monotonicDeadline)
+        throw new Error("Synthetic publication invocation expired");
+    },
+  };
+}
+
 async function chooseFixtureMovie(
   db: Database,
   media: { id: string; kind: string },
@@ -73,6 +91,12 @@ export async function fileFixture(
     db,
     serverMachineId: "fixture-server",
     permittedMovieSection: () => Promise.resolve("1"),
+    plexAccess: (sectionType) =>
+      Promise.resolve({
+        serverMachineId: "fixture-server",
+        sectionId: sectionType === "movie" ? "1" : "2",
+        sectionType,
+      }),
     roots: { movies: roots, tv: roots },
     now: () => clock,
     minimumFreeBytes: 0,
@@ -82,23 +106,7 @@ export async function fileFixture(
       purge: () => Promise.resolve(true),
     },
     checkpoint: () => Promise.resolve(),
-    publicationExecution: () => {
-      const signal = new AbortController().signal;
-      const wallDeadline = Date.now() + 300_000;
-      const monotonicDeadline = performance.now() + 300_000;
-      return {
-        signal,
-        checkpoint: () => Promise.resolve(),
-        assertActive: () => {
-          signal.throwIfAborted();
-          if (
-            Date.now() >= wallDeadline ||
-            performance.now() >= monotonicDeadline
-          )
-            throw new Error("Synthetic publication invocation expired");
-        },
-      };
-    },
+    publicationExecution: fixturePublicationExecution,
     verifyStorageAuthority: () => Promise.resolve(),
     inspect: async (path) => {
       const info = await stat(path);
@@ -250,7 +258,15 @@ export async function fileFixture(
         state: "ready",
         seedingPolicy: { kind: "public" },
         observation: {
-          torrent: { progress: 1, save_path: roots.downloads },
+          torrent: {
+            progress: 1,
+            save_path:
+              context.pathMapping?.canonical(
+                media.kind === "movie" ? "movies" : "tv",
+                "downloads",
+                "",
+              ) ?? roots.downloads,
+          },
           files: [
             {
               index: 0,

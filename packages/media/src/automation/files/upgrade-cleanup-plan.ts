@@ -74,7 +74,7 @@ export async function prepareUpgradeCleanupPlan(
       asset: {
         include: {
           coverage: { include: { media: true } },
-          subtitles: { where: videoSubtitleWhere },
+          subtitles: { where: videoSubtitleWhere, orderBy: { id: "asc" } },
         },
       },
     },

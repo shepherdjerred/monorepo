@@ -6,6 +6,8 @@ import type { ProviderRegistry } from "./providers.ts";
 import type { WorkflowStarter } from "./store.ts";
 import type { TmdbClient } from "#integrations/tmdb.ts";
 import type { WatchExecution } from "./plex-events/execution.ts";
+import type { PlexAccess } from "#shared/plex-binding/contract.ts";
+import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import type {
   ReceiptQuery,
   ReceiptObservation,
@@ -14,6 +16,8 @@ import type {
 export type MediaAutomationContext = {
   db: Database;
   watchExecution: () => WatchExecution;
+  plexAccess: (sectionType: "movie" | "show") => Promise<PlexAccess>;
+  plexBindingExecution: () => PlexBindingExecution;
   serverMachineId?: string;
   tmdb: TmdbClient;
   cipher: CredentialCipher;

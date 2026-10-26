@@ -1,8 +1,17 @@
-import { ApplicationFailure, heartbeat, Context } from "@temporalio/activity";
+import { heartbeat, Context } from "@temporalio/activity";
 import { CancelledFailure } from "@temporalio/common";
 import { watchExecution } from "./media/watch-execution.ts";
 import { archiveExecution } from "./media/archive-execution.ts";
 import { compensationExecution } from "./media/compensation-execution.ts";
+import { createPlexBindingNetworkActivities } from "./media/plex-binding.ts";
+import { plexBindingExecution } from "./media/plex-binding-execution.ts";
+import { createPlexPublicationActivities } from "./media/plex-publication.ts";
+import { createPlexWatchActivities } from "./media/plex-watch.ts";
+import { mediaCall } from "./media/call.ts";
+import { createPlexBoundConsumerActivities } from "./media/plex-consumers.ts";
+import { createPlexCleanupActivities } from "./media/plex-cleanup.ts";
+import { createNativePlexReviewActivities } from "./media/native-plex.ts";
+import type { PlexBindingActivities } from "@shepherdjerred/media/plex-binding";
 import type {
   SubtitleReplacementFileActivities,
   SubtitleReplacementNetworkActivities,
@@ -29,6 +38,20 @@ type NetworkActivities = MediaNetworkActivities &
   SubtitleReplacementNetworkActivities &
   NativeRecoveryNetworkActivities &
   NativeQuarantineNetworkActivities;
+type CoreNetworkActivities = Omit<
+  NetworkActivities,
+  | keyof PlexBindingActivities
+  | "publishMediaToPlex"
+  | "publishRolledBackMedia"
+  | "publishRestoredMedia"
+  | "evaluateMediaRetention"
+  | "sweepMediaWork"
+  | "finalizeMediaAcquisition"
+  | "deliverMediaNotification"
+  | "observeMediaUpgradeCleanup"
+  | "observeNativeRecovery"
+  | "observeNativeQuarantine"
+>;
 type FileActivities = MediaFileActivities &
   MediaHandoffFileActivities &
   SubtitleReplacementFileActivities &
@@ -39,7 +62,7 @@ export async function getMediaNetworkRuntime() {
     Bun.env,
     watchExecution,
     archiveExecution,
-    compensationExecution,
+    { compensation: compensationExecution, plexBinding: plexBindingExecution },
   );
   try {
     const runtime = await networkRuntime;
@@ -69,7 +92,7 @@ export async function getMediaFileRuntime() {
   }
 }
 
-async function network(): Promise<NetworkActivities> {
+async function network(): Promise<CoreNetworkActivities> {
   const runtime = await getMediaNetworkRuntime();
   return runtime.activities;
 }
@@ -81,36 +104,14 @@ async function files(): Promise<FileActivities> {
 
 /** Do not serialize Prisma queries, provider URLs, or credentials into Workflow history. */
 async function withNetwork<T>(
-  work: (activities: NetworkActivities) => Promise<T>,
+  work: (activities: CoreNetworkActivities) => Promise<T>,
 ): Promise<T> {
-  try {
-    assertNotCancelled();
-    const result = await work(await network());
-    assertNotCancelled();
-    return result;
-  } catch (error) {
-    if (error instanceof CancelledFailure) throw error;
-    throw ApplicationFailure.create({
-      message: "Media Activity failed; inspect sanitized operation status",
-      type: "MediaActivityFailure",
-    });
-  }
+  return mediaCall(async () => work(await network()));
 }
 async function withFiles<T>(
   work: (activities: FileActivities) => Promise<T>,
 ): Promise<T> {
-  try {
-    assertNotCancelled();
-    const result = await work(await files());
-    assertNotCancelled();
-    return result;
-  } catch (error) {
-    if (error instanceof CancelledFailure) throw error;
-    throw ApplicationFailure.create({
-      message: "Media Activity failed; inspect sanitized operation status",
-      type: "MediaActivityFailure",
-    });
-  }
+  return mediaCall(async () => work(await files()));
 }
 
 function assertNotCancelled(): void {
@@ -119,6 +120,12 @@ function assertNotCancelled(): void {
 }
 
 export const mediaNetworkWorkerActivities: NetworkActivities = {
+  observeMediaUpgradeCleanup: createPlexCleanupActivities(
+    getMediaNetworkRuntime,
+  ).observeMediaUpgradeCleanup,
+  reverifyPlexBinding: createPlexBindingNetworkActivities(
+    getMediaNetworkRuntime,
+  ).reverifyPlexBinding,
   beginSubtitleReplacementReconciliation: (input) =>
     withNetwork((activities) =>
       activities.beginSubtitleReplacementReconciliation(input),
@@ -130,9 +137,13 @@ export const mediaNetworkWorkerActivities: NetworkActivities = {
       activities.queueSubtitleReplacementCleanup(input),
     ),
   observeNativeRecovery: (input) =>
-    withNetwork((activities) => activities.observeNativeRecovery(input)),
+    createNativePlexReviewActivities(
+      getMediaNetworkRuntime,
+    ).observeNativeRecovery(input),
   observeNativeQuarantine: (input) =>
-    withNetwork((activities) => activities.observeNativeQuarantine(input)),
+    createNativePlexReviewActivities(
+      getMediaNetworkRuntime,
+    ).observeNativeQuarantine(input),
   nativeRecoveryState: (input) =>
     withNetwork((activities) => activities.nativeRecoveryState(input)),
   observeMediaHandoff: (input) =>
@@ -148,7 +159,7 @@ export const mediaNetworkWorkerActivities: NetworkActivities = {
   dispatchMediaOutbox: () =>
     withNetwork((activities) => activities.dispatchMediaOutbox()),
   sweepMediaWork: (input) =>
-    withNetwork((activities) => activities.sweepMediaWork(input)),
+    createPlexWatchActivities(getMediaNetworkRuntime).sweepMediaWork(input),
   reconcileMediaIntent: (input) =>
     withNetwork((activities) => activities.reconcileMediaIntent(input)),
   submitMediaTorrent: (input) =>
@@ -156,13 +167,21 @@ export const mediaNetworkWorkerActivities: NetworkActivities = {
   observeMediaAcquisition: (input) =>
     withNetwork((activities) => activities.observeMediaAcquisition(input)),
   publishMediaToPlex: (input) =>
-    withNetwork((activities) => activities.publishMediaToPlex(input)),
+    createPlexPublicationActivities(getMediaNetworkRuntime).publishMediaToPlex(
+      input,
+    ),
   publishRolledBackMedia: (input) =>
-    withNetwork((activities) => activities.publishRolledBackMedia(input)),
+    createPlexPublicationActivities(
+      getMediaNetworkRuntime,
+    ).publishRolledBackMedia(input),
   publishRestoredMedia: (input) =>
-    withNetwork((activities) => activities.publishRestoredMedia(input)),
+    createPlexPublicationActivities(
+      getMediaNetworkRuntime,
+    ).publishRestoredMedia(input),
   finalizeMediaAcquisition: (input) =>
-    withNetwork((activities) => activities.finalizeMediaAcquisition(input)),
+    createPlexBoundConsumerActivities(
+      getMediaNetworkRuntime,
+    ).finalizeMediaAcquisition(input),
   findMediaSubtitles: (input) =>
     withNetwork((activities) => activities.findMediaSubtitles(input)),
   evaluateMediaSeeding: (input) =>
@@ -170,9 +189,13 @@ export const mediaNetworkWorkerActivities: NetworkActivities = {
   removeMediaTorrent: (input) =>
     withNetwork((activities) => activities.removeMediaTorrent(input)),
   evaluateMediaRetention: (input) =>
-    withNetwork((activities) => activities.evaluateMediaRetention(input)),
+    createPlexWatchActivities(getMediaNetworkRuntime).evaluateMediaRetention(
+      input,
+    ),
   deliverMediaNotification: (input) =>
-    withNetwork((activities) => activities.deliverMediaNotification(input)),
+    createPlexBoundConsumerActivities(
+      getMediaNetworkRuntime,
+    ).deliverMediaNotification(input),
   finishMediaOperation: (input) =>
     withNetwork((activities) => activities.finishMediaOperation(input)),
 };

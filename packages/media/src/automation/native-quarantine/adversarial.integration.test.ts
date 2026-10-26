@@ -43,6 +43,10 @@ test.each(["move-unlinked", "native-quarantine-restored-before-commit"])(
         databaseUrl: `postgres://media@127.0.0.1:${String(port)}/postgres`,
         roots: f.context.files.roots,
         workerPodUid: f.context.workerPodUid,
+        serverMachineId: z
+          .string()
+          .min(1)
+          .parse(f.file.context.serverMachineId),
         input,
         phase,
       }),
@@ -135,7 +139,10 @@ test("a substituted canonical ancestor after review cannot receive physical owne
   const f = await fixture();
   const approval = await f.approve();
   await f.observe();
-  const prepared = await prepareNativeQuarantineFiles(f.context, f.planId);
+  const prepared = await prepareNativeQuarantineFiles(f.context, {
+    planId: f.planId,
+    operationId: z.uuid().parse(approval.operationId),
+  });
   const library = f.file.roots.library;
   await rename(library, `${library}-original`);
   // Rename the original tree back under a new directory is insufficient: the parent inode itself is bound.
@@ -198,13 +205,18 @@ test("network authority expiring while awaiting filesystem validation cannot com
   const f = await fixture();
   const approval = await f.approve();
   await f.observe();
-  const prepared = await prepareNativeQuarantineFiles(f.context, f.planId);
+  const prepared = await prepareNativeQuarantineFiles(f.context, {
+    planId: f.planId,
+    operationId: z.uuid().parse(approval.operationId),
+  });
   const verify = f.context.files.verifyPlexExclusion;
   if (verify === undefined) throw new Error("Fixture exclusion guard missing");
   let clock: { mockRestore: () => void } | undefined;
   const future = Date.now() + 120_001;
+  let validationReached = false;
   f.context.files.verifyPlexExclusion = async (roots) => {
     await verify(roots);
+    validationReached = true;
     clock ??= vi.spyOn(Date, "now").mockReturnValue(future);
   };
   try {
@@ -214,10 +226,14 @@ test("network authority expiring while awaiting filesystem validation cannot com
         { planId: f.planId, operationId: z.uuid().parse(approval.operationId) },
         prepared,
       ),
-    ).rejects.toThrow(/expired|freshness/u);
+    ).rejects.toMatchObject({
+      code: "verification_expired",
+      reason: "verification_expired",
+    });
   } finally {
     clock?.mockRestore();
   }
+  expect(validationReached).toBe(true);
   expect(
     await f.db.nativeRecoveryReceipt.count({ where: { planId: f.planId } }),
   ).toBe(0);

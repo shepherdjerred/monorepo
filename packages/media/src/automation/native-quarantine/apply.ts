@@ -1,4 +1,11 @@
 import { defaultScope } from "#shared/editions/scope.ts";
+import { z } from "zod";
+import { FinishedQuarantinePlexV3Schema } from "#shared/plex-binding/native-version.ts";
+import {
+  assertNativeFilesApproval,
+  nativeSelection,
+  nativeSelectionProof,
+} from "#automation/native-recovery/plex-proof.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { Prisma } from "#generated/prisma/client.ts";
 import { FinishedNativeV2Schema } from "#shared/native-recovery/lifecycle.ts";
@@ -40,6 +47,7 @@ export async function applyPreparedQuarantine(
         tx,
         input.planId,
         prepared.scope,
+        prepared.plex.budget,
       );
       if (
         plan.state !== "applying" ||
@@ -48,28 +56,28 @@ export async function applyPreparedQuarantine(
         plan.expiresAt <= new Date()
       )
         throw new Error("Quarantine owner approval missing or expired");
-      const finished = FinishedNativeV2Schema.parse(plan.plan);
+      const finished = z
+        .union([FinishedNativeV2Schema, FinishedQuarantinePlexV3Schema])
+        .parse(plan.plan);
       if (
         finished.lifecycleKind !== "committed_quarantine" ||
-        snapshotHash(finished) !== plan.planHash ||
+        snapshotHash(z.json().parse(finished)) !== plan.planHash ||
         finished.scopeHash !== snapshotHash(prepared.scope) ||
-        snapshotHash(finished.files) !==
+        snapshotHash(z.json().parse(finished.files)) !==
           snapshotHash(stableQuarantineFiles(prepared.evidence))
       )
         throw new Error("Quarantine reviewed physical identity changed");
-      const observation = await tx.nativeRecoveryObservation.findFirstOrThrow({
-        where: { planId: plan.id, kind: "network" },
-        orderBy: { createdAt: "desc" },
+      await assertNativeFilesApproval(tx, input, finished, {
+        proof: prepared.plex,
       });
       const network = NativeQuarantineNetworkEvidenceSchema.parse(
-        observation.evidence,
+        prepared.plex.network,
       );
       if (
         network.planId !== plan.id ||
         network.recoveryEpoch !== runtime.recoveryEpoch ||
-        observation.expiresAt <= new Date() ||
-        observation.evidenceHash !== snapshotHash(network) ||
-        snapshotHash(finished.network) !==
+        Date.parse(network.expiresAt) <= Date.now() ||
+        snapshotHash(z.json().parse(finished.network)) !==
           snapshotHash(stableQuarantineNetwork(network))
       )
         throw new Error("Quarantine reviewed network identity changed");
@@ -84,6 +92,7 @@ export async function applyPreparedQuarantine(
         context,
         prepared,
         async () => {
+          prepared.plex.freshness.assertActive();
           await installNativeAuthority(tx, context, {
             scope: prepared.scope,
             network,
@@ -152,13 +161,17 @@ export async function applyPreparedQuarantine(
               previousRuntimeVersion: runtime.version,
               runtimeVersion: runtime.version + 1,
               actorId,
-              selection: {
-                scope: prepared.scope,
-                fileEvidence: stableQuarantineFiles(prepared.evidence),
-                networkEvidence: stableQuarantineNetwork(network),
-                bindings,
-                policies,
-              },
+              selection: nativeSelection(
+                {
+                  ...nativeSelectionProof(finished, prepared.plex),
+                  scope: prepared.scope,
+                  fileEvidence: stableQuarantineFiles(prepared.evidence),
+                  networkEvidence: stableQuarantineNetwork(network),
+                  bindings,
+                  policies,
+                },
+                prepared.plex,
+              ),
             },
           });
           for (const group of prepared.scope.groups) {
@@ -207,11 +220,13 @@ export async function applyPreparedQuarantine(
               },
             });
           assertNativeEvidenceFresh(network);
+          prepared.plex.freshness.assertActive();
           return receipt.id;
         },
       );
       // Scope exit validates identities asynchronously; expiry must still hold afterwards.
       assertNativeEvidenceFresh(network);
+      prepared.plex.freshness.assertActive();
       return receiptId;
     },
     { timeout: 30_000, maxWait: 30_000 },

@@ -3,6 +3,10 @@ import type { Prisma, MediaItem } from "#generated/prisma/client.ts";
 import type { MediaActor } from "#application/auth.ts";
 import { MediaError } from "#application/errors.ts";
 import { removalConfirmation } from "#infrastructure/removal-confirmation.ts";
+import {
+  PlexAccessSchema,
+  type PlexAccess,
+} from "#shared/plex-binding/contract.ts";
 
 export type VisibleMedia = Pick<MediaItem, "kind" | "externalIds"> & {
   parent?:
@@ -12,6 +16,50 @@ export type VisibleMedia = Pick<MediaItem, "kind" | "externalIds"> & {
     | null;
 };
 export type VisibilitySections = { movie: string; series: string };
+export type VisibilityPlexAccess = (
+  sectionType: "movie" | "show",
+) => Promise<PlexAccess>;
+
+/** Capture only the requested kind, outside the read transaction. */
+export async function captureVisibilityPlexAccess(
+  settings: {
+    serverMachineId?: string | undefined;
+    movieSectionId?: string | undefined;
+    sections?: VisibilitySections | undefined;
+    plexAccess?: VisibilityPlexAccess | undefined;
+  },
+  kind: MediaItem["kind"],
+): Promise<PlexAccess> {
+  const sectionType = kind === "movie" ? "movie" : "show";
+  if (settings.plexAccess !== undefined) {
+    const access = PlexAccessSchema.parse(
+      await settings.plexAccess(sectionType),
+    );
+    if (
+      access.sectionType !== sectionType ||
+      access.serverMachineId !== settings.serverMachineId
+    )
+      throw new Error(
+        "Visibility Plex configuration returned a different server or kind",
+      );
+    return access;
+  }
+  const sectionId =
+    sectionType === "movie"
+      ? (settings.movieSectionId ?? settings.sections?.movie)
+      : settings.sections?.series;
+  if (sectionId === undefined || settings.serverMachineId === undefined)
+    throw new MediaError(
+      "plex_scope_unconfigured",
+      "Configure the requested Plex library",
+      409,
+    );
+  return PlexAccessSchema.parse({
+    serverMachineId: settings.serverMachineId,
+    sectionId,
+    sectionType,
+  });
+}
 export const visibilityAncestry = {
   parent: { include: { parent: true } },
 } as const;
@@ -22,7 +70,7 @@ export async function visibilityReader(
   actor: MediaActor,
   settings: {
     serverMachineId?: string | undefined;
-    sections?: VisibilitySections | undefined;
+    sections?: Partial<VisibilitySections> | undefined;
   },
 ) {
   const access = await assessVisibilityAccess(tx, actor, settings);
@@ -41,7 +89,7 @@ export async function assessVisibilityAccess(
   actor: MediaActor,
   settings: {
     serverMachineId?: string | undefined;
-    sections?: VisibilitySections | undefined;
+    sections?: Partial<VisibilitySections> | undefined;
   },
 ) {
   await tx.$queryRaw`SELECT id FROM "MediaUser" WHERE id = ${actor.id} FOR SHARE`;

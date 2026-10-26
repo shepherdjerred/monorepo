@@ -1,3 +1,4 @@
+import type { ArchiveReadOptions } from "./receipt-projection.ts";
 import { z } from "zod";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
@@ -11,15 +12,19 @@ import { archiveClosure } from "./closure.ts";
 import { archiveTerminalDependency } from "./terminal.ts";
 import { assertArchiveAuthority } from "./authority.ts";
 import { PublicationAuthorityReferenceSchema } from "#shared/publication-proof/references.ts";
-import { nativePhysicalIdentity } from "./physical-identity.ts";
+import { effectiveGrant } from "./physical-identity.ts";
 import { snapshotArchiveSubtitles } from "#automation/native-archive/subtitles.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { ArchiveReceiptProjection } from "./receipt-projection.ts";
 
 export async function resolveArchiveBindings(
   tx: Prisma.TransactionClient,
   receipt: Prisma.NativeRecoveryReceiptGetPayload<object>,
   descriptor: NativeArchiveContinuation,
-  budget = new PublicationAuthorityReadBudget(),
+  {
+    budget = new PublicationAuthorityReadBudget(),
+    projection = new ArchiveReceiptProjection(tx, budget),
+  }: ArchiveReadOptions = {},
 ) {
   budget.consume(1);
   const selection = z
@@ -53,17 +58,18 @@ export async function resolveArchiveBindings(
       if (cleanup === undefined)
         throw new Error("Archive terminal pair missing");
       terminalDependencies.push(
-        await archiveTerminalDependency(tx, cleanup, closure.assets, budget),
+        await archiveTerminalDependency(tx, cleanup, closure.assets, {
+          budget,
+          projection,
+        }),
       );
       continue;
     }
     const { reference, current } = effectiveGrant(receipt, descriptor, file);
-    const verified = await assertArchiveAuthority(
-      tx,
-      current,
-      reference,
+    const verified = await assertArchiveAuthority(tx, current, reference, {
       budget,
-    );
+      projection,
+    });
     await assertCurrentFile(tx, actual, current);
     files.push({ ...current, authority: reference });
     bindings.push(verified);
@@ -85,52 +91,6 @@ export async function resolveArchiveBindings(
     terminalDependencies,
     networkScope: { ...descriptor.scope, files, terminalDependencies },
   };
-}
-function effectiveGrant(
-  receipt: Prisma.NativeRecoveryReceiptGetPayload<object>,
-  descriptor: NativeArchiveContinuation,
-  file: NativeArchiveFile,
-) {
-  let reference = descriptor.reusedBindings.find(
-    (row) => row.assetId === file.assetId,
-  );
-  const binding = descriptor.bindings.find(
-    (row) => row.assetId === file.assetId,
-  );
-  let current = file;
-  if (binding !== undefined) {
-    if (reference !== undefined)
-      throw new Error("Archive grant and reuse overlap");
-    current = {
-      ...file,
-      assetVersion: binding.assetVersion,
-      ownershipEpoch: binding.ownershipEpoch,
-      subtitles: file.subtitles.map((subtitle) => {
-        const transition = binding.subtitles.find(
-          (item) => item.id === subtitle.id,
-        );
-        if (transition === undefined)
-          throw new Error("Archive subtitle transition missing");
-        return { ...subtitle, ...transition.after };
-      }),
-    };
-    const proof = descriptor.fileEvidence.files.find(
-      (item) => item.assetId === file.assetId,
-    );
-    if (proof === undefined) throw new Error("Archive physical proof missing");
-    reference = {
-      kind: "prior_native_binding",
-      receiptLifecycle: "superseded_archive",
-      receiptId: receipt.id,
-      planHash: receipt.planHash,
-      assetId: file.assetId,
-      bindingHash: snapshotHash(binding),
-      physicalEvidenceHash: snapshotHash(nativePhysicalIdentity(proof)),
-    };
-  }
-  if (reference === undefined)
-    throw new Error("Archive continuation participant lacks effective binding");
-  return { reference, current };
 }
 async function assertCurrentFile(
   tx: Prisma.TransactionClient,

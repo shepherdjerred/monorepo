@@ -17,6 +17,8 @@ import {
 import { assertNoSubtitleReplacement } from "#infrastructure/subtitle-replacement/locks.ts";
 import { NativeQuarantineProtection } from "./errors.ts";
 import { assertNoPublicationCompensationFence } from "#infrastructure/native-compensation/fence.ts";
+import { validateNativePlexReceipt } from "#infrastructure/plex-binding/native/native-version.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 export type NativeQuarantineRestoreInput = {
   operationId: string;
@@ -116,10 +118,12 @@ export async function routeNativeQuarantineOperation(
 export async function assertNativeQuarantineRestore(
   tx: Prisma.TransactionClient,
   input: NativeQuarantineRestoreInput,
+  budget = new PublicationAuthorityReadBudget(),
 ) {
   const initial = await tx.nativeQuarantineContinuation.findUniqueOrThrow({
     where: { id: input.continuationId },
   });
+  budget.consume(1);
   const descriptor = NativeQuarantineContinuationSchema.parse(
     initial.descriptor,
   );
@@ -143,6 +147,7 @@ export async function assertNativeQuarantineRestore(
     where: { id: input.continuationId },
     include: { receipt: { include: { plan: true } } },
   });
+  budget.consume(2);
   if (
     row.coordinatorOperationId !== input.operationId ||
     !["pending", "restoring", "protected", "restored"].includes(row.state) ||
@@ -153,6 +158,7 @@ export async function assertNativeQuarantineRestore(
       "native_quarantine_coordinator_changed",
     );
   const receipt = row.receipt;
+  await validateNativePlexReceipt(tx, receipt, budget);
   if (
     receipt.recoveryEpoch !== row.recoveryEpoch ||
     receipt.plan.state !== "applied" ||

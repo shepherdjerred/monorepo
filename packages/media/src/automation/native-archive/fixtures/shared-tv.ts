@@ -3,6 +3,7 @@ import { rm, writeFile } from "node:fs/promises";
 import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
 import { fileFixture } from "#automation/files/test-support.ts";
+import { storedFilePath } from "#automation/files/paths/locations.ts";
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
@@ -86,7 +87,10 @@ export async function sharedTvFileFixture(
         where: { id: z.uuid().parse(acquired.attempt.torrentId) },
         data: {
           observation: {
-            torrent: { progress: 1, save_path: f.roots.downloads },
+            torrent: {
+              progress: 1,
+              save_path: storedFilePath(f.context, "tv", "downloads", ""),
+            },
             files: [
               {
                 index: 0,

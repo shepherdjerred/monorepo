@@ -14,8 +14,11 @@ import type { NativeRecoveryScopeSchema } from "#shared/native-recovery.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { terminalRebindingChain } from "#infrastructure/native-recovery/terminal-rebinding.ts";
 import { terminalSubtitleChain } from "#infrastructure/native-recovery/terminal-subtitles.ts";
+import { FinishedQuarantinePlexV3Schema } from "#shared/plex-binding/native-version.ts";
+import { validateNativePlexReceipt } from "#infrastructure/plex-binding/native/native-version.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { settledInstalledSubtitle } from "./installed-subtitles.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 const digest = (value: unknown) => snapshotHash(z.json().parse(value));
 type File = z.infer<typeof NativeRecoveryScopeSchema>["files"][number];
@@ -24,6 +27,7 @@ type File = z.infer<typeof NativeRecoveryScopeSchema>["files"][number];
 export async function settledNativeQuarantines(
   tx: Prisma.TransactionClient,
   files: File[],
+  budget = new PublicationAuthorityReadBudget(),
 ) {
   const mediaIds = files.flatMap((file) => file.mediaIds);
   const decisions = await tx.retentionDecision.findMany({
@@ -48,12 +52,14 @@ export async function settledNativeQuarantines(
     },
     include: { receipt: { include: { plan: true } } },
     orderBy: { id: "asc" },
-    take: 101,
+    take: Math.floor((budget.take - 1) / 2) + 1,
   });
+  budget.consume(rows.length * 2);
   if (rows.length > 100)
     throw new Error("Native settled continuation lookup exceeds bound");
   const settled: z.infer<typeof SettledNativeQuarantineSchema>[] = [];
   for (const row of rows) {
+    await validateNativePlexReceipt(tx, row.receipt, budget);
     const descriptor = NativeQuarantineContinuationSchema.parse(row.descriptor);
     if (
       !descriptor.group.decisions.some((item) =>
@@ -115,7 +121,9 @@ function assertSettledReceipt(row: Row, descriptor: Descriptor, files: File[]) {
       bindings: z.array(NativeQuarantineBindingSchema),
     })
     .parse(row.receipt.selection);
-  const finished = FinishedNativeV2Schema.parse(row.receipt.plan.plan);
+  const finished = z
+    .union([FinishedNativeV2Schema, FinishedQuarantinePlexV3Schema])
+    .parse(row.receipt.plan.plan);
   const restored = NativeQuarantineRestorationSchema.parse(row.restoration);
   if (
     finished.lifecycleKind !== "committed_quarantine" ||

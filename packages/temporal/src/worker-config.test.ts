@@ -72,6 +72,19 @@ describe("Temporal worker role contracts", () => {
     ])
       expect(activityNamesFor("delivery")).not.toContain(platformOnly);
   });
+  it("registers Plex binding verification only on the existing network worker", () => {
+    const owners = QUEUE_WORKER_DEFINITIONS.filter(
+      (definition) =>
+        definition.kind === "activity" &&
+        Object.hasOwn(definition.activities, "reverifyPlexBinding"),
+    );
+    expect(owners.map((definition) => definition.role)).toEqual([
+      "media-network",
+    ]);
+    expect(activityNamesFor("media-files")).not.toContain(
+      "reverifyPlexBinding",
+    );
+  });
   it("leaves forum activities with the workers that mount each forum's files", () => {
     for (const taskQueue of [
       TASK_QUEUES.STORM_FORUM_BETA,

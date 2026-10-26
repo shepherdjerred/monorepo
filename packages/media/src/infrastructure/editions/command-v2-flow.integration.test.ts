@@ -98,14 +98,12 @@ test.each(["request", "select_release"])(
   "v2 %s dispatches unchanged work through qBittorrent, file promotion and exact Plex publication",
   async (mode) => {
     const db = harness.database();
-    const f = await identityFixture(
-      db,
-      harness.context(),
-      false,
-      mode === "request"
-        ? "Example.Show.2020.S01E01.1080p.WEB-DL.H264.ENG"
-        : undefined,
-    );
+    const f = await identityFixture(db, harness.context(), false, {
+      releaseTitle:
+        mode === "request"
+          ? "Example.Show.2020.S01E01.1080p.WEB-DL.H264.ENG"
+          : undefined,
+    });
     try {
       const requested = await command(f.service, f.actor, f.files.media.id, {
         action: "request",

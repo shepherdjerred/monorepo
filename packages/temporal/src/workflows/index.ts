@@ -450,53 +450,54 @@ export const deliveryPlatformRecoveryWorkflow =
 export const deliveryHandoffWorkflow = delivery.deliveryHandoffWorkflow;
 import { reconcileStreambotPlaybackWorkflow as reconcileStreambot } from "./streambot/streambot.ts";
 export const reconcileStreambotPlaybackWorkflow = () => reconcileStreambot();
-import * as m from "./media.ts";
-import * as h from "./media/handoff.ts";
-export const prepareMediaHandoffWorkflow = h.prepareMediaHandoffWorkflow;
-export const applyMediaHandoffWorkflow = h.applyMediaHandoffWorkflow;
-import * as n from "./media/native-recovery.ts";
-import * as quarantine from "./media/native-quarantine.ts";
-import * as archive from "./media/native-archive.ts";
-export const prepareNativeArchiveWorkflow = archive.prepare;
-export const applyNativeArchiveWorkflow = archive.apply;
-export const cleanupNativeArchiveWorkflow = archive.cleanup;
-export const prepareNativeQuarantineWorkflow = quarantine.prepare;
-export const applyNativeQuarantineWorkflow = quarantine.apply;
-export const restoreNativeQuarantineWorkflow = quarantine.restore;
-export const prepareNativeRecoveryWorkflow = n.prepareNativeRecoveryWorkflow;
-export const applyNativeRecoveryWorkflow = n.applyNativeRecoveryWorkflow;
-import * as p from "./media/maintenance.ts";
-export const preparePlexExclusionWorkflow = p.preparePlexExclusionWorkflow;
-export const executePlexExclusionWorkflow = p.executePlexExclusionWorkflow;
-export const recoverPlexExclusionWorkflow = p.recoverPlexExclusionWorkflow;
-export const reconcileMediaWorkflow = m.reconcileMediaWorkflow;
-export const acquireMediaReleaseWorkflow = m.acquireMediaReleaseWorkflow;
-export const acquireMediaSubtitlesWorkflow = m.acquireMediaSubtitlesWorkflow;
-export const installMediaSubtitleWorkflow = m.installMediaSubtitleWorkflow;
-export const cleanupMediaUpgradeWorkflow = m.cleanupMediaUpgradeWorkflow;
-export const maintainMediaTorrentWorkflow = m.maintainMediaTorrentWorkflow;
-export const retainMediaWorkflow = m.retainMediaWorkflow;
-export const restoreMediaWorkflow = m.restoreMediaWorkflow;
-export const deliverMediaNotificationWorkflow =
-  m.deliverMediaNotificationWorkflow;
-export const dispatchMediaOutboxWorkflow = m.dispatchMediaOutboxWorkflow;
-export const sweepMediaWorkflow = m.sweepMediaWorkflow;
-export const expandMediaRequestWorkflow = m.expandMediaRequestWorkflow;
-export const refreshMediaCatalogWorkflow = m.refreshMediaCatalogWorkflow;
-export const expandCatalogRequestsWorkflow = m.expandCatalogRequestsWorkflow;
-import * as replacement from "./media/subtitle-replacement.ts";
-export const prepareSubtitleReplacementWorkflow = replacement.prepare;
-export const applySubtitleReplacementWorkflow = replacement.apply;
-export const reconcileSubtitleReplacementWorkflow = replacement.reconcile;
-export const cleanupSubtitleReplacementWorkflow = replacement.cleanup;
-import * as capacity from "./media/capacity.ts";
-export const observeMediaCapacityWorkflow =
-  capacity.observeMediaCapacityWorkflow;
-import * as plexEvents from "./media/plex-events.ts";
-export const observePlexEventHintWorkflow =
-  plexEvents.observePlexEventHintWorkflow;
-import * as compensation from "./media/native-compensation.ts";
-export const prepareNativeCompensationWorkflow = compensation.prepare;
-export const applyNativeCompensationWorkflow = compensation.apply;
-export const compensateNativePublicationWorkflow = compensation.compensate;
-export const publishCompensatedMediaWorkflow = compensation.publish;
+import * as mediaWorkflows from "./media/exports.ts";
+export const prepareMediaHandoffWorkflow =
+    mediaWorkflows.prepareMediaHandoffWorkflow,
+  applyMediaHandoffWorkflow = mediaWorkflows.applyMediaHandoffWorkflow,
+  prepareNativeArchiveWorkflow = mediaWorkflows.prepareNativeArchiveWorkflow,
+  applyNativeArchiveWorkflow = mediaWorkflows.applyNativeArchiveWorkflow,
+  cleanupNativeArchiveWorkflow = mediaWorkflows.cleanupNativeArchiveWorkflow,
+  prepareNativeQuarantineWorkflow =
+    mediaWorkflows.prepareNativeQuarantineWorkflow,
+  applyNativeQuarantineWorkflow = mediaWorkflows.applyNativeQuarantineWorkflow,
+  restoreNativeQuarantineWorkflow =
+    mediaWorkflows.restoreNativeQuarantineWorkflow,
+  prepareNativeRecoveryWorkflow = mediaWorkflows.prepareNativeRecoveryWorkflow,
+  applyNativeRecoveryWorkflow = mediaWorkflows.applyNativeRecoveryWorkflow,
+  preparePlexExclusionWorkflow = mediaWorkflows.preparePlexExclusionWorkflow,
+  executePlexExclusionWorkflow = mediaWorkflows.executePlexExclusionWorkflow,
+  recoverPlexExclusionWorkflow = mediaWorkflows.recoverPlexExclusionWorkflow,
+  reconcileMediaWorkflow = mediaWorkflows.reconcileMediaWorkflow,
+  acquireMediaReleaseWorkflow = mediaWorkflows.acquireMediaReleaseWorkflow,
+  acquireMediaSubtitlesWorkflow = mediaWorkflows.acquireMediaSubtitlesWorkflow,
+  installMediaSubtitleWorkflow = mediaWorkflows.installMediaSubtitleWorkflow,
+  cleanupMediaUpgradeWorkflow = mediaWorkflows.cleanupMediaUpgradeWorkflow,
+  maintainMediaTorrentWorkflow = mediaWorkflows.maintainMediaTorrentWorkflow,
+  retainMediaWorkflow = mediaWorkflows.retainMediaWorkflow,
+  restoreMediaWorkflow = mediaWorkflows.restoreMediaWorkflow,
+  deliverMediaNotificationWorkflow =
+    mediaWorkflows.deliverMediaNotificationWorkflow,
+  dispatchMediaOutboxWorkflow = mediaWorkflows.dispatchMediaOutboxWorkflow,
+  sweepMediaWorkflow = mediaWorkflows.sweepMediaWorkflow,
+  expandMediaRequestWorkflow = mediaWorkflows.expandMediaRequestWorkflow,
+  refreshMediaCatalogWorkflow = mediaWorkflows.refreshMediaCatalogWorkflow,
+  expandCatalogRequestsWorkflow = mediaWorkflows.expandCatalogRequestsWorkflow,
+  prepareSubtitleReplacementWorkflow =
+    mediaWorkflows.prepareSubtitleReplacementWorkflow,
+  applySubtitleReplacementWorkflow =
+    mediaWorkflows.applySubtitleReplacementWorkflow,
+  reconcileSubtitleReplacementWorkflow =
+    mediaWorkflows.reconcileSubtitleReplacementWorkflow,
+  cleanupSubtitleReplacementWorkflow =
+    mediaWorkflows.cleanupSubtitleReplacementWorkflow,
+  observeMediaCapacityWorkflow = mediaWorkflows.observeMediaCapacityWorkflow,
+  reverifyPlexBindingWorkflow = mediaWorkflows.reverifyPlexBindingWorkflow,
+  observePlexEventHintWorkflow = mediaWorkflows.observePlexEventHintWorkflow,
+  prepareNativeCompensationWorkflow =
+    mediaWorkflows.prepareNativeCompensationWorkflow,
+  applyNativeCompensationWorkflow =
+    mediaWorkflows.applyNativeCompensationWorkflow,
+  compensateNativePublicationWorkflow =
+    mediaWorkflows.compensateNativePublicationWorkflow,
+  publishCompensatedMediaWorkflow =
+    mediaWorkflows.publishCompensatedMediaWorkflow;

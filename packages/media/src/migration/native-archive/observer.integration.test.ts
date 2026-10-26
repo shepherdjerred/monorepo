@@ -22,7 +22,7 @@ async function fixture() {
 test("actual A→B→C observation proves current C, every archive absence and sessions last", async () => {
   const f = await fixture();
   const calls: string[] = [];
-  const page = f.observerContext.plex.libraryPage;
+  const page = f.observerContext.plex.libraryPage.bind(f.observerContext.plex);
   f.observerContext.plex.libraryPage = async (...args) => {
     calls.push("inventory");
     return await page(...args);
@@ -63,7 +63,9 @@ test.each([
   "fresh Plex %s protects without persisting successful evidence",
   async (mode) => {
     const f = await fixture();
-    const page = f.observerContext.plex.libraryPage;
+    const page = f.observerContext.plex.libraryPage.bind(
+      f.observerContext.plex,
+    );
     let reads = 0;
     f.observerContext.plex.libraryPage = async (...args) => {
       const result = await page(...args);
@@ -134,7 +136,9 @@ test.each(["extra_archive", "sections_changed"] as const)(
   "all-video-section boundary protects %s",
   async (mode) => {
     const f = await fixture();
-    const sections = f.observerContext.plex.sections;
+    const sections = f.observerContext.plex.sections.bind(
+      f.observerContext.plex,
+    );
     let reads = 0;
     f.observerContext.plex.sections = async (signal) => {
       const original = await sections(signal);
@@ -146,7 +150,9 @@ test.each(["extra_archive", "sections_changed"] as const)(
           ]
         : original;
     };
-    const page = f.observerContext.plex.libraryPage;
+    const page = f.observerContext.plex.libraryPage.bind(
+      f.observerContext.plex,
+    );
     f.observerContext.plex.libraryPage = async (input, signal) => {
       if (input.sectionId !== "unconfigured") return await page(input, signal);
       const archived = await harness.database().libraryAsset.findUniqueOrThrow({

@@ -1,3 +1,17 @@
+import {
+  CommonBootstrapSchema,
+  NetworkBootstrapSchema,
+  FilesBootstrapSchema,
+  DeliveryBootstrapSchema,
+  createGates,
+} from "./network/bootstrap.ts";
+import {
+  createPlexRuntimeFacets,
+  createNativePlexFacet,
+  createNativePlanObservers,
+} from "./network/plex-facets.ts";
+import { createNativeFileFacets } from "./network/native-files.ts";
+import { capturePublicationExecution } from "./publication-proof/invocation.ts";
 import { z } from "zod";
 import { createDatabase } from "#infrastructure/database.ts";
 import { CredentialCipher } from "#application/security.ts";
@@ -5,6 +19,11 @@ import { mediaBehaviorConfig } from "#infrastructure/config.ts";
 import { PlexClient } from "#integrations/plex.ts";
 import { QbittorrentClient } from "#integrations/qbittorrent.ts";
 import type { MediaNetworkActivities } from "#shared/automation.ts";
+import type {
+  PlexBindingActivities,
+  PlexBindingExecution,
+} from "#shared/plex-binding/activities.ts";
+import { PlexAccessSchema } from "#shared/plex-binding/contract.ts";
 import { DatabaseProviderRegistry } from "./providers.ts";
 import { createAcquisitionActivities } from "./acquisition.ts";
 import { createPublicationActivities } from "./publication.ts";
@@ -39,8 +58,9 @@ import { createHandoffFileActivities } from "./handoff/activities.ts";
 import { createNativeFileActivities } from "./native-recovery/activities.ts";
 import { createSubtitleReplacementActivities } from "./subtitle-replacement/activities.ts";
 import { createSubtitleReplacementNetworkActivities } from "#infrastructure/subtitle-replacement/activities.ts";
-import { createNativeRecoveryObserver } from "#migration/native-network/producer.ts";
-import { createNativeQuarantineObserver } from "#migration/native-network/quarantine.ts";
+import { createNativePlexObserver } from "#migration/native-plex/review.ts";
+import { observePairedCompensationExecution } from "#migration/native-plex/compensation.ts";
+import { observePairedArchiveCleanup } from "#migration/native-plex/archive.ts";
 import { createNativeQuarantineFileActivities } from "#automation/native-quarantine/activities.ts";
 import type { FileContext } from "./files/types.ts";
 import { createCapacityFileProducer } from "./capacity/files.ts";
@@ -61,7 +81,10 @@ type LifecycleActivities = Pick<
 export function createMediaNetworkActivities(
   context: MediaAutomationContext,
   lifecycle: LifecycleActivities,
-): MediaNetworkActivities {
+): Omit<
+  MediaNetworkActivities,
+  keyof PlexBindingActivities | "observeMediaUpgradeCleanup"
+> {
   const outbox = createOutboxActivities(context.db, context.startWorkflow);
   return {
     ...createAcquisitionActivities(context),
@@ -97,58 +120,6 @@ export function createMediaNetworkActivities(
   };
 }
 
-const CommonBootstrapSchema = z.object({
-  DATABASE_URL: z.url(),
-  ENVIRONMENT: z.string().default("production"),
-});
-const NetworkBootstrapSchema = CommonBootstrapSchema.extend({
-  MEDIA_CREDENTIAL_KEY: z.string().min(1),
-  PLEX_SERVER_URL: z.url(),
-  PLEX_SERVER_TOKEN: z.string().min(1),
-  PLEX_SERVER_MACHINE_ID: z.string().min(1),
-  QBITTORRENT_URL: z.url(),
-  QBITTORRENT_USERNAME: z.string().min(1),
-  QBITTORRENT_PASSWORD: z.string().min(1),
-  QBITTORRENT_DOWNLOAD_ROOT: z.literal("/downloads"),
-  PUBLIC_ORIGIN: z.url(),
-  TMDB_API_KEY: z.string().min(1).optional(),
-  TMDB_TOKEN: z.string().min(1).optional(),
-}).refine(
-  (value) =>
-    (value.TMDB_API_KEY === undefined) !== (value.TMDB_TOKEN === undefined),
-  "Exactly one TMDB credential is required",
-);
-const FilesBootstrapSchema = CommonBootstrapSchema.extend({
-  PLEX_SERVER_MACHINE_ID: z.string().min(1),
-  MEDIA_FILE_WORKER_POD_UID: z.string().min(1),
-  MEDIA_MOVIES_DOWNLOAD_ROOT: z.string().min(1),
-  MEDIA_MOVIES_LIBRARY_ROOT: z.string().min(1),
-  MEDIA_MOVIES_CONTROL_ROOT: z.string().min(1),
-  MEDIA_TV_DOWNLOAD_ROOT: z.string().min(1),
-  MEDIA_TV_LIBRARY_ROOT: z.string().min(1),
-  MEDIA_TV_CONTROL_ROOT: z.string().min(1),
-});
-
-function createGates(stage: string) {
-  const behavior = mediaBehaviorConfig(stage, true);
-  const read = async (
-    key:
-      | "acquisitionEnabled"
-      | "sourceCleanupEnabled"
-      | "quarantineEnabled"
-      | "purgeEnabled",
-  ) => {
-    const result = await behavior.get(key);
-    return result.value;
-  };
-  return {
-    acquisition: () => read("acquisitionEnabled"),
-    sourceCleanup: () => read("sourceCleanupEnabled"),
-    quarantine: () => read("quarantineEnabled"),
-    purge: () => read("purgeEnabled"),
-  };
-}
-
 export async function createMediaNetworkContext(
   environment: Record<string, string | undefined>,
   ports: Pick<
@@ -160,6 +131,7 @@ export async function createMediaNetworkContext(
     | "sharedAnnouncements"
     | "personalDiscordAvailable"
     | "watchExecution"
+    | "plexBindingExecution"
   >,
 ): Promise<MediaAutomationContext> {
   const config = NetworkBootstrapSchema.parse(environment);
@@ -175,6 +147,18 @@ export async function createMediaNetworkContext(
   return {
     db,
     serverMachineId: config.PLEX_SERVER_MACHINE_ID,
+    async plexAccess(sectionType) {
+      const configured = await behavior.get(
+        sectionType === "movie"
+          ? "permittedMovieSectionId"
+          : "permittedTvSectionId",
+      );
+      return PlexAccessSchema.parse({
+        serverMachineId: config.PLEX_SERVER_MACHINE_ID,
+        sectionId: configured.value,
+        sectionType,
+      });
+    },
     refreshWriterLease: async () => {
       const observer = createLegacyObserver(environment);
       await refreshWriterLease(db, () => observer.observe());
@@ -251,6 +235,18 @@ export async function createMediaFileRuntime(
   const fileContext: FileContext = {
     db,
     serverMachineId: config.PLEX_SERVER_MACHINE_ID,
+    async plexAccess(sectionType) {
+      const configured = await behavior.get(
+        sectionType === "movie"
+          ? "permittedMovieSectionId"
+          : "permittedTvSectionId",
+      );
+      return PlexAccessSchema.parse({
+        serverMachineId: config.PLEX_SERVER_MACHINE_ID,
+        sectionId: configured.value,
+        sectionType,
+      });
+    },
     permittedMovieSection: async () => {
       const configured = await behavior.get("permittedMovieSectionId");
       return configured.value;
@@ -261,14 +257,8 @@ export async function createMediaFileRuntime(
       workerRoots: roots,
     }),
     checkpoint,
-    publicationExecution: () => {
-      const execution = compensationExecution();
-      return {
-        signal: execution.signal,
-        assertActive: execution.assertActive,
-        checkpoint: () => execution.checkpoint("publication"),
-      };
-    },
+    publicationExecution: () =>
+      capturePublicationExecution(compensationExecution, "publication"),
     verifyStorageAuthority: (root) =>
       requireStorageAuthority(
         db,
@@ -304,6 +294,10 @@ export async function createMediaFileRuntime(
   };
   return {
     activities,
+    nativeFiles: createNativeFileFacets({
+      files: fileContext,
+      workerPodUid: config.MEDIA_FILE_WORKER_POD_UID,
+    }),
     capacity: {
       sampleMediaCapacity: createCapacityFileProducer({
         db,
@@ -319,28 +313,19 @@ export async function createMediaFileRuntime(
   };
 }
 
-const DeliveryBootstrapSchema = z
-  .object({
-    TEMPORAL_ADDRESS: z.string().min(1),
-    TEMPORAL_NAMESPACE: z.string().min(1),
-    POSTAL_HOST: z.url().optional(),
-    POSTAL_API_KEY: z.string().min(1).optional(),
-    POSTAL_HOST_HEADER: z.string().min(1).optional(),
-    DISCORD_BOT_TOKEN: z.string().min(1).optional(),
-  })
-  .refine(
-    (value) =>
-      (value.POSTAL_HOST === undefined) ===
-      (value.POSTAL_API_KEY === undefined),
-    { message: "Both Postal bootstrap credentials must be supplied together" },
-  );
-
 export async function createMediaNetworkRuntime(
   environment: Record<string, string | undefined>,
   watchExecution: MediaAutomationContext["watchExecution"],
   archiveExecution: () => NativeArchiveExecution,
-  compensationExecution: () => NativeCompensationExecutionContext,
+  executions: {
+    compensation: () => NativeCompensationExecutionContext;
+    plexBinding: () => PlexBindingExecution;
+  },
 ) {
+  const {
+    compensation: compensationExecution,
+    plexBinding: plexBindingExecution,
+  } = executions;
   const config = DeliveryBootstrapSchema.parse(environment);
   const temporal = createMediaWorkflowStarter({
     address: config.TEMPORAL_ADDRESS,
@@ -373,6 +358,7 @@ export async function createMediaNetworkRuntime(
   };
   const context = await createMediaNetworkContext(environment, {
     watchExecution,
+    plexBindingExecution,
     startWorkflow: temporal.start,
     describeWorkflow: temporal.describe,
     personalDiscordAvailable: async () => {
@@ -406,6 +392,12 @@ export async function createMediaNetworkRuntime(
     ...createSubtitleActivities(context),
   };
   const bootstrap = NetworkBootstrapSchema.parse(environment);
+  const nativeContext = {
+    ...context,
+    observer: createLegacyObserver(environment),
+    expectedServerMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+  };
+  const observeNative = createNativePlexObserver(nativeContext);
   const handoff = async (planId: string) => {
     const sections = await context.permittedSections();
     await context.qbittorrent.login();
@@ -424,6 +416,11 @@ export async function createMediaNetworkRuntime(
     })(planId);
   };
   return {
+    nativePlex: createNativePlexFacet(nativeContext, observeNative),
+    ...createPlexRuntimeFacets(context, async () => {
+      const flag = await behavior.get("plexEventHintsEnabled");
+      return flag.value;
+    }),
     capacity: {
       observeMediaCapacityMounts: createCapacityNetworkProducer({
         db: context.db,
@@ -456,22 +453,23 @@ export async function createMediaNetworkRuntime(
         return flag.value;
       }),
       ...createSubtitleReplacementNetworkActivities(context.db),
-      observeNativeRecovery: async (input: { planId: string }) => {
-        await context.qbittorrent.login();
-        await createNativeRecoveryObserver({
-          ...context,
-          observer: createLegacyObserver(environment),
-          expectedServerMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
-        })(input.planId);
-      },
-      observeNativeQuarantine: async (input: { planId: string }) => {
-        await context.qbittorrent.login();
-        await createNativeQuarantineObserver({
-          ...context,
-          observer: createLegacyObserver(environment),
-          expectedServerMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
-        })(input.planId);
-      },
+      ...createNativePlanObservers(observeNative, plexBindingExecution),
+      observeNativeCompensationExecution: (
+        input: Parameters<typeof observePairedCompensationExecution>[1],
+      ) =>
+        observePairedCompensationExecution(
+          nativeContext,
+          input,
+          plexBindingExecution(),
+        ),
+      observeNativeArchiveCleanup: (
+        input: Parameters<typeof observePairedArchiveCleanup>[1],
+      ) =>
+        observePairedArchiveCleanup(
+          nativeContext,
+          input,
+          plexBindingExecution(),
+        ),
       nativeRecoveryState: async (input: { planId: string }) => {
         const plan = await context.db.nativeRecoveryPlan.findUniqueOrThrow({
           where: { id: input.planId },

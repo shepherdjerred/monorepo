@@ -2,18 +2,23 @@ import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { NativeQuarantineRestorationSchema } from "#shared/native-recovery/quarantine.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
+import { validateNativePlexReceipt } from "#infrastructure/plex-binding/native/native-version.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 export async function nativeRestorePublication(
   tx: Prisma.TransactionClient,
   operationId: string,
   raw: unknown,
+  budget = new PublicationAuthorityReadBudget(),
 ) {
   const receipt = NativeQuarantineRestorationSchema.parse(raw);
   const row = await tx.nativeQuarantineContinuation.findUniqueOrThrow({
     where: { id: receipt.continuationId },
     include: { receipt: { include: { plan: true } } },
   });
+  budget.consume(2);
   const original = NativeQuarantineRestorationSchema.parse(row.restoration);
+  await validateNativePlexReceipt(tx, row.receipt, budget);
   const stable = ({
     generations: _generations,
     ...rest

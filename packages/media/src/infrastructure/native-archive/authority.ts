@@ -1,3 +1,4 @@
+import type { ArchiveReadOptions } from "./receipt-projection.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import {
   NativeArchiveBindingSchema,
@@ -17,21 +18,32 @@ import { compensationRecord } from "#infrastructure/native-compensation/records.
 import {
   assertPriorNativeBinding,
   priorNativeFileEvidence,
+  findPriorNativeBinding,
 } from "./prior-binding.ts";
 import { PublicationParticipantSchema } from "#shared/publication-proof/intent.ts";
 import { NativeArchiveScopeProtection } from "./errors.ts";
-import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import type { NativeReceiptReadPort } from "#infrastructure/plex-binding/native/receipt-port.ts";
 
 export async function resolveArchiveAuthority(
   tx: Prisma.TransactionClient,
   file: NativeArchiveFile,
-  budget?: PublicationAuthorityReadBudget,
+  budget = new PublicationAuthorityReadBudget(),
+  projection?: NativeReceiptReadPort,
 ): Promise<PublicationAuthorityReference> {
+  if (projection !== undefined) {
+    const native = await findPriorNativeBinding(tx, file, file.ownershipEpoch, {
+      budget,
+      projection,
+    });
+    if (native !== null) return native;
+  }
   const asset = await snapshotPublicationAsset(tx, file.assetId);
   const reference = await findPublicationOriginalGrant(
     tx,
     { asset, libraryKind: file.libraryKind },
     budget,
+    projection,
   );
   if (reference === null)
     throw new NativeArchiveScopeProtection(
@@ -45,11 +57,17 @@ export async function assertArchiveAuthority(
   tx: Prisma.TransactionClient,
   file: NativeArchiveFile,
   reference: PublicationAuthorityReference,
-  budget?: PublicationAuthorityReadBudget,
+  {
+    budget = new PublicationAuthorityReadBudget(),
+    projection,
+  }: ArchiveReadOptions = {},
 ): Promise<NativeArchiveBinding> {
   if (reference.kind === "prior_native_binding")
     return NativeArchiveBindingSchema.parse({
-      ...(await assertPriorNativeBinding(tx, file, reference, budget)),
+      ...(await assertPriorNativeBinding(tx, file, reference, {
+        budget,
+        projection,
+      })),
       physicalIdentityHash: reference.physicalEvidenceHash,
     });
   const actual =
@@ -58,11 +76,13 @@ export async function assertArchiveAuthority(
           tx,
           { continuationId: reference.continuationId, assetId: file.assetId },
           budget,
+          projection,
         )
       : await resolvePublicationTransitionAuthority(
           tx,
           { transitionId: reference.transitionId, assetId: file.assetId },
           budget,
+          projection,
         );
   const comparable =
     actual.kind === "publication_transition_binding"
@@ -110,7 +130,8 @@ export async function assertArchiveAuthority(
 export async function archiveAuthorityParticipants(
   tx: Prisma.TransactionClient,
   reference: PublicationAuthorityReference,
-  budget?: PublicationAuthorityReadBudget,
+  budget = new PublicationAuthorityReadBudget(),
+  projection?: NativeReceiptReadPort,
 ) {
   if (reference.kind === "prior_native_binding") {
     const asset = await snapshotPublicationAsset(tx, reference.assetId);
@@ -122,7 +143,10 @@ export async function archiveAuthorityParticipants(
     if (libraryKind === null)
       throw new Error("Native physical evidence library root changed");
     const file = publicationArchiveSnapshot(asset, libraryKind);
-    const evidence = await priorNativeFileEvidence(tx, file, reference, budget);
+    const evidence = await priorNativeFileEvidence(tx, file, reference, {
+      budget,
+      projection,
+    });
     const replacements = new Set(
       reference.subtitleLineage?.replacements.map((item) => item.beforeId),
     );
@@ -169,6 +193,7 @@ export async function archiveAuthorityParticipants(
       tx,
       { continuationId: reference.continuationId, assetId: reference.assetId },
       budget,
+      projection,
     );
     if (
       snapshotHash(nativeJson(actual)) !== snapshotHash(nativeJson(reference))
@@ -178,6 +203,7 @@ export async function archiveAuthorityParticipants(
       tx,
       reference.continuationId,
       budget,
+      projection,
     );
     const binding = record.completion?.predecessorBindings.find(
       (item) => item.after.id === reference.assetId,
@@ -198,10 +224,11 @@ export async function archiveAuthorityParticipants(
       tx,
       { transitionId: reference.transitionId, assetId: reference.assetId },
       budget,
+      projection,
     );
   if (snapshotHash(nativeJson(actual)) !== snapshotHash(nativeJson(reference)))
     throw new Error("Archive transition reference changed");
-  budget?.consume(1);
+  budget.consume(1);
   const row = await tx.mediaPublicationTransition.findUniqueOrThrow({
     where: { id: reference.transitionId },
   });

@@ -8,7 +8,11 @@ import { requirePlexExclusionDatabaseProof } from "#automation/plex-exclusion/pr
 import type { PlexExclusionPlan } from "#shared/plex-exclusion.ts";
 
 /** Synthetic scanner observations for disposable DB tests; the production validator remains active. */
-export async function grantTestExclusionProofs(db: Database, ownerId: string) {
+export async function grantTestExclusionProofs(
+  db: Database,
+  ownerId: string,
+  serverMachineId = "server",
+) {
   const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
     where: { id: "singleton" },
   });
@@ -24,7 +28,7 @@ export async function grantTestExclusionProofs(db: Database, ownerId: string) {
       rootMarkerBefore: null,
       controlMarkerBefore: null,
       topology: {
-        serverMachineId: "server",
+        serverMachineId,
         serverVersion: "synthetic-fixture",
         sectionId: kind === "movie" ? "1" : "2",
         sectionUuid: `section-${kind}`,

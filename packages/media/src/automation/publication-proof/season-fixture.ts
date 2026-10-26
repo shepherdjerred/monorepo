@@ -6,6 +6,7 @@ import { FilePlanSchema } from "#automation/files/types.ts";
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { mappedPublicationFixture } from "./test-fixture.ts";
+import { storedFilePath } from "#automation/files/paths/locations.ts";
 
 export async function seasonPublicationFixture(db: Database, count = 26) {
   if (!Number.isInteger(count) || count < 1 || count > 100)
@@ -111,7 +112,10 @@ export async function seasonPublicationFixture(db: Database, count = 26) {
         state: "ready",
         seedingPolicy: { kind: "public" },
         observation: {
-          torrent: { progress: 1, save_path: f.roots.downloads },
+          torrent: {
+            progress: 1,
+            save_path: storedFilePath(f.context, "tv", "downloads", ""),
+          },
           files: files.map(({ content: _content, ...file }) => file),
         },
       },

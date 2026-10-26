@@ -1,4 +1,5 @@
 import type { NativeQuarantineObserverContext } from "#migration/native-network/quarantine.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { NativeCompensationProtection } from "#infrastructure/native-compensation/protection.ts";
 import { ClosedCoordinatorObservationSchema } from "#shared/publication-proof/references.ts";
@@ -30,6 +31,7 @@ export async function observeCompensationEvidence(
     scope: NativeCompensationScope;
   },
   execution: NativeCompensationExecutionContext,
+  budget = new PublicationAuthorityReadBudget(),
 ) {
   assertCompensationActive(execution);
   const capturedAt = new Date();
@@ -38,7 +40,7 @@ export async function observeCompensationEvidence(
     AbortSignal.timeout(60_000),
   ]);
   const roots = await compensationAwait(execution, () =>
-    assertNativeStorageRoots(context.db, input.scope.storageRoots),
+    assertNativeStorageRoots(context.db, input.scope.storageRoots, budget),
   );
   const quiescence = QuiescenceEvidenceSchema.parse(
     await compensationAwait(execution, () => context.observer.observe(signal)),
@@ -87,7 +89,7 @@ export async function observeCompensationEvidence(
   });
 }
 
-async function previousCoordinator(
+export async function previousCoordinator(
   context: NativeCompensationObserverContext,
   scope: NativeCompensationScope,
   execution: NativeCompensationExecutionContext,

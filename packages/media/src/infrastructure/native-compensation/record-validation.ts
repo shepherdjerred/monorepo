@@ -1,4 +1,4 @@
-import type { z } from "zod";
+import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import {
   type NativeCompensationDescriptorSchema,
@@ -14,13 +14,19 @@ import { snapshotHash } from "#migration/profile-import.ts";
 import { stableCompensationNetwork } from "./plan.ts";
 import { publicationPhysicalSnapshot } from "#infrastructure/publication-proof/projection.ts";
 import { assertCompensationRestoredParticipants } from "./completion-proof.ts";
+import {
+  FinishedCompensationPlexV3Schema,
+  type CompensationPlexSelectionV3Schema,
+} from "#shared/plex-binding/native-version.ts";
 
 type RecordProof = {
   row: Prisma.NativePublicationCompensationContinuationGetPayload<{
     include: { receipt: { include: { plan: true } }; transition: true };
   }>;
   descriptor: z.infer<typeof NativeCompensationDescriptorSchema>;
-  selection: z.infer<typeof NativeCompensationSelectionSchema>;
+  selection:
+    | z.infer<typeof NativeCompensationSelectionSchema>
+    | z.infer<typeof CompensationPlexSelectionV3Schema>;
   execution: z.infer<typeof NativeCompensationExecutionSchema> | null;
   completion: z.infer<typeof NativeCompensationCompletionSchema> | null;
 };
@@ -32,7 +38,9 @@ export function assertCompensationRecord(proof: RecordProof) {
 }
 function assertReviewEvidence({ row, descriptor, selection }: RecordProof) {
   const plan = row.receipt.plan;
-  const finished = FinishedNativeCompensationSchema.parse(plan.plan);
+  const finished = z
+    .union([FinishedNativeCompensationSchema, FinishedCompensationPlexV3Schema])
+    .parse(plan.plan);
   const {
     capturedAt: _capturedAt,
     workerPodUid: _worker,

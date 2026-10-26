@@ -14,6 +14,7 @@ import {
   nativeJson,
 } from "#infrastructure/native-recovery/snapshots.ts";
 import { resolveNativeStorageRoots } from "#infrastructure/native-recovery/storage-provenance.ts";
+import type { ApprovedStorageRoot } from "#shared/canonical-storage.ts";
 import { assertNoSubtitleReplacement } from "#infrastructure/subtitle-replacement/locks.ts";
 import { snapshotNativeSubtitlePolicies } from "#automation/native-subtitles/policies.ts";
 import { snapshotQuarantinedSubtitles } from "#automation/native-quarantine/subtitles.ts";
@@ -24,12 +25,15 @@ import { StoredTorrentObservationSchema } from "#integrations/qbittorrent.ts";
 import { normalizeTorrentObservation } from "#migration/capture/torrent-capture.ts";
 import { torrentIdentity } from "#migration/handoff-network/torrents.ts";
 import { assertQuarantineGroupAuthority } from "./prior-authority.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 export async function buildNativeQuarantineScope(
   tx: Prisma.TransactionClient,
   input: z.infer<typeof PrepareNativeQuarantineSchema>,
+  budget = new PublicationAuthorityReadBudget(),
+  reviewedStorageRoots?: ApprovedStorageRoot[],
 ) {
-  await assertNativeRestore(tx, input);
+  await assertNativeRestore(tx, input, budget);
   const assetIds = [...new Set(input.assetIds)].sort();
   if (assetIds.length !== input.assetIds.length)
     throw new Error("Duplicate native quarantine selection");
@@ -147,6 +151,7 @@ export async function buildNativeQuarantineScope(
       tx,
       group,
       files.filter((file) => group.assetIds.includes(file.assetId)),
+      budget,
     );
   const ancestry = media.flatMap((item) =>
     [item.parent?.id, item.parent?.parent?.id].filter((id) => id !== undefined),
@@ -203,7 +208,11 @@ export async function buildNativeQuarantineScope(
               },
       };
     }),
-    storageRoots: await resolveNativeStorageRoots(tx),
+    storageRoots: await resolveNativeStorageRoots(
+      tx,
+      budget,
+      reviewedStorageRoots,
+    ),
     subtitlePolicies: await snapshotNativeSubtitlePolicies(tx, ids),
     household: await nativeHousehold(tx, ids, ancestry),
     lifecycle: await quarantineLifecycle(tx, ids, assetIds),

@@ -1,4 +1,7 @@
 import { ContentProof } from "#filesystem/content-proof.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { captureNativeReviewProof } from "#automation/native-recovery/plex-proof.ts";
+import { requirePublicationExecution } from "#automation/publication-proof/invocation.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import {
   verifyJournalProof,
@@ -20,26 +23,29 @@ import {
 
 export async function prepareNativeQuarantineFiles(
   context: NativeFileContext,
-  planId: string,
+  input: { planId: string; operationId: string },
 ) {
+  const budget = new PublicationAuthorityReadBudget();
+  const execution = requirePublicationExecution(
+    context.files.publicationExecution?.(),
+  );
+  const { planId } = input;
   const plan = await context.files.db.nativeRecoveryPlan.findUniqueOrThrow({
     where: { id: planId },
   });
+  budget.consume(1);
   if (!["preparing", "applying"].includes(plan.state))
     throw new Error("Quarantine proof requires a current owner command");
   const scope = NativeQuarantineScopeSchema.parse(plan.scope);
-  const observation =
-    await context.files.db.nativeRecoveryObservation.findFirstOrThrow({
-      where: { planId, kind: "network" },
-      orderBy: { createdAt: "desc" },
-    });
-  const network = NativeQuarantineNetworkEvidenceSchema.parse(
-    observation.evidence,
-  );
+  const plex = await captureNativeReviewProof(context.files, input, plan.plan, {
+    execution,
+    budget,
+  });
+  const network = NativeQuarantineNetworkEvidenceSchema.parse(plex.network);
   if (
     network.planId !== planId ||
     network.recoveryEpoch !== plan.recoveryEpoch ||
-    observation.expiresAt <= new Date()
+    Date.parse(network.expiresAt) <= Date.now()
   )
     throw new Error("Quarantine network evidence is stale");
   assertNativeEvidenceFresh(network);
@@ -89,7 +95,8 @@ export async function prepareNativeQuarantineFiles(
     journalDigest: snapshotHash(journals.map((journal) => journal.digest)),
     groupJournals: groupJournals.groups,
   });
-  return { scope, content, journals, evidence };
+  plex.freshness.assertActive();
+  return { scope, content, journals, evidence, plex };
 }
 export type PreparedNativeQuarantine = Awaited<
   ReturnType<typeof prepareNativeQuarantineFiles>

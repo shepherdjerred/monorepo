@@ -4,6 +4,7 @@ import type * as FsPromises from "node:fs/promises";
 import path from "node:path";
 import { automationTestHarness } from "#testing/automation.ts";
 import { fileFixture } from "#automation/files/test-support.ts";
+import { boundRetentionFixture } from "#automation/retention/lifecycle.test-fixture.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { FilePlanSchema, RemovalPlanSchema } from "#automation/files/types.ts";
 import { ContentProof } from "#filesystem/content-proof.ts";
@@ -37,10 +38,11 @@ afterEach(async () => {
 
 test("automatic quarantine rechecks the complete movie cohort at its final target stat", async () => {
   const db = h.database();
-  const f = await fileFixture(db);
+  const bound = await boundRetentionFixture(db, h.context());
+  const f = bound.files;
   directories.push(f.directory);
-  const published = await f.published();
-  const retention = await f.retention();
+  const published = bound.published;
+  const retention = bound.retention;
   const clock = Date.now();
   await db.plexIdentityMapping.update({
     where: { userId: f.user.id },

@@ -18,8 +18,39 @@ import { FilePlanSchema } from "#automation/files/types.ts";
 import { queueNativeArchiveCleanup } from "./continuation.ts";
 import { CleanupNativeArchiveInputSchema } from "#shared/native-recovery/archive.ts";
 import { createNativeArchiveFileActivities } from "#automation/native-archive/activities.ts";
-import { createNativeArchiveCleanupObserver } from "#migration/native-archive/cleanup.ts";
+import { observeArchiveCleanup } from "#automation/native-archive/fixtures/observe.ts";
+import { nativePlexWireFixture } from "#migration/native-plex/test-fixture.ts";
+import { readPlexCanonicalTargets } from "#infrastructure/plex-binding/canonical.ts";
 import { chooseCurrentTestMovieEdition } from "#infrastructure/movie-editions/test-support.ts";
+
+export type ArchiveDiagnosticStage =
+  | "fixture.archive-base"
+  | "fixture.initial-review"
+  | "fixture.initial-apply"
+  | "fixture.household"
+  | "fixture.old-cleanup-queue"
+  | "fixture.old-cleanup-network"
+  | "fixture.old-cleanup-files"
+  | "fixture.snapshots"
+  | "fixture.successor-choice"
+  | "fixture.successor-acquisition"
+  | "fixture.successor-stage"
+  | "fixture.successor-promote"
+  | "fixture.successor-publication"
+  | "fixture.successor-finalize"
+  | "fixture.ready"
+  | "review.command"
+  | "review.network"
+  | "review.files"
+  | "apply.command"
+  | "apply.network"
+  | "apply.files"
+  | "apply.ack"
+  | "cleanup.queue"
+  | "cleanup.network"
+  | "cleanup.files"
+  | "cleanup.ack"
+  | "assertions";
 
 /** Real household declarations; the only injected authority is the fixture's scoped Plex identity mapping. */
 export async function releaseTransitionHousehold(
@@ -72,8 +103,17 @@ export async function archivePublicationTransitionFixture(
   db: Database,
   cipher: CredentialCipher,
   network: MediaAutomationContext,
-  options: { stopOldCleanup?: "allocated" | "prepared" | "complete" } = {},
+  options: {
+    stopOldCleanup?: "allocated" | "prepared" | "complete";
+    traceStage?: (stage: ArchiveDiagnosticStage) => void;
+  } = {},
 ) {
+  const traceStage =
+    options.traceStage ??
+    (() => {
+      // Stage diagnostics are optional for unrelated fixture consumers.
+    });
+  traceStage("fixture.archive-base");
   const f = await nativeArchiveFixture(db, cipher, {
     chain: 3,
     selected: "first",
@@ -81,9 +121,13 @@ export async function archivePublicationTransitionFixture(
     fileFactory: () => mappedPublicationFixture(db),
   });
   try {
+    traceStage("fixture.initial-review");
     await f.prepare();
+    traceStage("fixture.initial-apply");
     const receiptId = await f.apply();
+    traceStage("fixture.household");
     await releaseTransitionHousehold(db, f);
+    traceStage("fixture.old-cleanup-queue");
     const old = await db.nativeArchiveCleanupContinuation.findFirstOrThrow({
       where: { receiptId, originalCleanupId: f.first.id },
     });
@@ -100,7 +144,8 @@ export async function archivePublicationTransitionFixture(
         where: { id: coordinatorOperationId },
       });
       const cleanup = CleanupNativeArchiveInputSchema.parse(operation.payload);
-      await createNativeArchiveCleanupObserver(f.observerContext)(cleanup);
+      traceStage("fixture.old-cleanup-network");
+      await observeArchiveCleanup(f.observerContext, cleanup);
       const checkpoint = f.context.files.checkpoint;
       const interrupted = new Error(
         `Actual old cleanup stopped at ${options.stopOldCleanup}`,
@@ -116,6 +161,7 @@ export async function archivePublicationTransitionFixture(
         if (phase === stop) throw interrupted;
       };
       try {
+        traceStage("fixture.old-cleanup-files");
         await expect(
           createNativeArchiveFileActivities(
             f.context,
@@ -126,6 +172,7 @@ export async function archivePublicationTransitionFixture(
         f.context.files.checkpoint = checkpoint;
       }
     }
+    traceStage("fixture.snapshots");
     const oldContinuation =
       await db.nativeArchiveCleanupContinuation.findUniqueOrThrow({
         where: { id: old.id },
@@ -155,10 +202,12 @@ export async function archivePublicationTransitionFixture(
       },
     });
     f.file.context.serverMachineId = "server";
+    traceStage("fixture.successor-choice");
     await chooseCurrentTestMovieEdition(db, {
       requestId: f.file.request.id,
       access: { serverMachineId: "server", movieSectionId: "1" },
     });
+    traceStage("fixture.successor-acquisition");
     const acquired = await f.file.acquisition(
       "Actual adjacent serving version D",
     );
@@ -176,9 +225,11 @@ export async function archivePublicationTransitionFixture(
       },
     });
     const activities = createMediaFileActivities(f.file.context);
+    traceStage("fixture.successor-stage");
     expect(await activities.inspectAndStageMedia(acquired.input)).toEqual({
       status: "staged",
     });
+    traceStage("fixture.successor-promote");
     expect(await activities.promoteMediaFiles(acquired.input)).toEqual({
       status: "published",
     });
@@ -188,48 +239,45 @@ export async function archivePublicationTransitionFixture(
     const entry = FilePlanSchema.parse(attempt.filePlan)[0];
     if (entry === undefined)
       throw new Error("Actual D publication plan missing");
-    const item = {
-      ratingKey: "native",
-      title: f.file.media.title,
-      type: "movie",
-      Guid: [{ id: `tmdb://${String(f.file.media.tmdbId)}` }],
-      Media: [
+    const access = await f.observerContext.plexAccess("movie");
+    const serving = await db.libraryAsset.findUniqueOrThrow({
+      where: { id: entry.assetId },
+    });
+    const wire = nativePlexWireFixture({
+      access: [access],
+      groups: [
         {
-          Part: [
-            {
-              id: 1,
-              file: f.canonicalPath,
-              size: Buffer.byteLength(acquired.content),
-            },
-          ],
+          canonicalPath: serving.path,
+          sizeBytes: serving.sizeBytes.toString(),
+          targets: await readPlexCanonicalTargets(
+            db,
+            entry.mediaIds.map((mediaId) => ({ mediaId, edition: "default" })),
+          ),
         },
       ],
-    };
-    f.observerContext.plex.metadata = () => Promise.resolve(item);
-    f.observerContext.plex.libraryPage = ({ sectionId }) =>
-      Promise.resolve({
-        total: sectionId === "1" ? 1 : 0,
-        items: sectionId === "1" ? [item] : [],
-      });
-    network.plex.metadata = f.observerContext.plex.metadata;
-    network.plex.libraryPage = f.observerContext.plex.libraryPage;
-    network.plex.sections = f.observerContext.plex.sections;
-    network.plex.machineIdentifier = f.observerContext.plex.machineIdentifier;
-    network.plex.activeSessions = f.observerContext.plex.activeSessions;
-    network.plex.refresh = (sectionId) => {
-      expect(sectionId).toBe("1");
-      return Promise.resolve();
-    };
+    });
+    f.observerContext.plex = wire.create((url) => {
+      if (url.pathname.endsWith("/refresh")) {
+        expect(url.pathname).toBe(
+          `/library/sections/${access.sectionId}/refresh`,
+        );
+        return new Response(null, { status: 200 });
+      }
+      return;
+    });
     const publication = createPublicationActivities({
       ...network,
-      serverMachineId: "server",
+      serverMachineId: access.serverMachineId,
+      plexAccess: f.observerContext.plexAccess,
       permittedSections: f.observerContext.permittedSections,
-      plex: network.plex,
+      plex: f.observerContext.plex,
     });
+    traceStage("fixture.successor-publication");
     expect(await publication.publishMediaToPlex(acquired.input)).toEqual({
       status: "available",
       reason: null,
     });
+    traceStage("fixture.successor-finalize");
     await publication.finalizeMediaAcquisition(acquired.input);
     const sources = await f.observerContext.qbittorrent.listAll();
     const source = {
@@ -259,7 +307,16 @@ export async function archivePublicationTransitionFixture(
         runId: `closed-${coordinatorOperationId}`,
       });
     };
-    return { ...f, acquired, entry, oldContinuation, oldReceipt, oldCleanups };
+    traceStage("fixture.ready");
+    return {
+      ...f,
+      acquired,
+      entry,
+      oldContinuation,
+      oldReceipt,
+      oldCleanups,
+      traceStage,
+    };
   } catch (error) {
     await rm(f.file.directory, { recursive: true, force: true });
     throw error;

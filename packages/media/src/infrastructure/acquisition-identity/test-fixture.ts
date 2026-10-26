@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { fileFixture } from "#automation/files/test-support.ts";
+import { storedFilePath } from "#automation/files/paths/locations.ts";
 import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
 import { PrismaNumberingAdministration } from "#infrastructure/numbering-admin.ts";
 import {
@@ -24,8 +25,12 @@ export async function identityFixture(
   db: Database,
   base: MediaAutomationContext,
   absolute = false,
-  releaseTitle?: string,
+  options: {
+    releaseTitle?: string | undefined;
+    fileFactory?: typeof fileFixture;
+  } = {},
 ) {
+  const { releaseTitle, fileFactory = fileFixture } = options;
   const series = await db.mediaItem.create({
     data: {
       kind: "series",
@@ -35,7 +40,7 @@ export async function identityFixture(
       catalogState: "ready",
     },
   });
-  const files = await fileFixture(db, {
+  const files = await fileFactory(db, {
     seriesId: series.id,
     title: "First episode",
   });
@@ -179,6 +184,7 @@ export async function identityFixture(
   const service = new PrismaMediaApplication(db, {
     keepDays: 30,
     serverMachineId: "fixture-server",
+    plexAccess: network.plexAccess,
   });
   const review = () =>
     service.identityPreview(actor, files.media.id, release.id, {
@@ -242,7 +248,10 @@ export async function identityFixture(
       data: {
         state: "ready",
         observation: {
-          torrent: { progress: 1, save_path: files.roots.downloads },
+          torrent: {
+            progress: 1,
+            save_path: storedFilePath(files.context, "tv", "downloads", ""),
+          },
           files: [{ index: 0, name: filename, size: 20, progress: 1 }],
         },
       },

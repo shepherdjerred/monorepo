@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "corpusId": "fictional-boundary-baseline",
+  "cases": [
+    {
+      "id": "movie-default",
+      "input": {
+        "path": "movie.json",
+        "sha256": "d55a21a0ec1f924ab722f1414e99abc998024d7ede0aef2c621115c2380d75e1"
+      },
+      "labels": {
+        "path": "movie.labels.json",
+        "sha256": "d4eb544bd6883fd5d881e4044468be15b3be1457f7379dac23bcfe2a8c4ad9ab"
+      },
+      "provenance": {
+        "kind": "synthetic",
+        "source": "fictional-boundary-fixtures",
+        "sourceVersion": "1",
+        "capturedAt": "2026-10-24T00:00:00.000Z",
+        "sanitization": "allowlisted-boundaries-v1",
+        "notes": "Authored fictional titles and identifiers; no captured provider responses, credentials or private paths."
+      },
+      "profile": {
+        "kind": "native_rules",
+        "artifact": {
+          "path": "profile.json",
+          "sha256": "15dda0369ebb17bcbb6ab3b15ffc9bc87cd2a35bf4941298dd402cc5f159e7e0"
+        },
+        "provenance": {
+          "kind": "synthetic",
+          "source": "fictional-policy",
+          "sourceVersion": "1",
+          "capturedAt": "2026-10-24T00:00:00.000Z",
+          "sanitization": "allowlisted-boundaries-v1",
+          "notes": "Explicit synthetic policy only; never substituted for a captured source profile."
+        }
+      }
+    },
+    {
+      "id": "complete-season",
+      "input": {
+        "path": "series.json",
+        "sha256": "ddf537607ad7e32fad4f694072c2ebf1408901be39af805751282abc001a63d9"
+      },
+      "labels": {
+        "path": "series.labels.json",
+        "sha256": "cc164c709b51b0f475c0e3161c57a3011b0b8831afe0cbecb3cbb2fd54dfc391"
+      },
+      "provenance": {
+        "kind": "synthetic",
+        "source": "fictional-boundary-fixtures",
+        "sourceVersion": "1",
+        "capturedAt": "2026-10-24T00:00:00.000Z",
+        "sanitization": "allowlisted-boundaries-v1",
+        "notes": "Two fictional episodes; full membership independently labelled before replay."
+      },
+      "profile": {
+        "kind": "native_rules",
+        "artifact": {
+          "path": "profile.json",
+          "sha256": "15dda0369ebb17bcbb6ab3b15ffc9bc87cd2a35bf4941298dd402cc5f159e7e0"
+        },
+        "provenance": {
+          "kind": "synthetic",
+          "source": "fictional-policy",
+          "sourceVersion": "1",
+          "capturedAt": "2026-10-24T00:00:00.000Z",
+          "sanitization": "allowlisted-boundaries-v1",
+          "notes": "Explicit synthetic policy only; never substituted for a captured source profile."
+        }
+      }
+    },
+    {
+      "id": "same-quality-upgrade",
+      "input": {
+        "path": "upgrade.json",
+        "sha256": "3a74b99c7af170f67459466907d6ff59e013aab284a20d5e8720cb513910de85"
+      },
+      "labels": {
+        "path": "upgrade.labels.json",
+        "sha256": "ee16f10b794422bead1e13cd3b44cadc709a84521c51d7fe1334f32a87ff74db"
+      },
+      "provenance": {
+        "kind": "synthetic",
+        "source": "fictional-boundary-fixtures",
+        "sourceVersion": "1",
+        "capturedAt": "2026-10-24T00:00:00.000Z",
+        "sanitization": "allowlisted-boundaries-v1",
+        "notes": "Fictional old and proposed releases with explicit score improvement and no-improvement controls."
+      },
+      "profile": {
+        "kind": "native_rules",
+        "artifact": {
+          "path": "profile.json",
+          "sha256": "15dda0369ebb17bcbb6ab3b15ffc9bc87cd2a35bf4941298dd402cc5f159e7e0"
+        },
+        "provenance": {
+          "kind": "synthetic",
+          "source": "fictional-policy",
+          "sourceVersion": "1",
+          "capturedAt": "2026-10-24T00:00:00.000Z",
+          "sanitization": "allowlisted-boundaries-v1",
+          "notes": "Explicit synthetic policy only; never substituted for a captured source profile."
+        }
+      }
+    }
+  ]
+}

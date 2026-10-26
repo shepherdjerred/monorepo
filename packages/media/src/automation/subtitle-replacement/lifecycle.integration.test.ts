@@ -3,14 +3,22 @@ import { access, readFile } from "node:fs/promises";
 import { z } from "zod";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { FilePlanSchema } from "#automation/files/types.ts";
-import { recordVerifiedPublication } from "#automation/reconciliation/upgrade-cleanup.ts";
+import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
+import { prepareBoundRetention } from "#automation/retention/lifecycle.test-fixture.ts";
+import { elapsedQuarantineClient } from "#automation/files/plex-binding/elapsed-quarantine.test-support.ts";
+import { elapsedPublicationClient } from "#automation/files/plex-binding/elapsed-publication.test-support.ts";
+import { retentionPlexContext } from "#automation/retention/fixtures/plex.ts";
+import { bindingTestExecution } from "#automation/plex-binding/test-fixture.ts";
+import { observeMediaUpgradeCleanup } from "#automation/plex-binding/cleanup.ts";
+import { createPublicationActivities } from "#automation/publication.ts";
+import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { subtitleAccepted } from "#domain/subtitle-quality.ts";
 import { replacementHarness } from "./test-fixture.ts";
 
 const harness = replacementHarness();
 
 async function installed() {
-  const f = await harness.setup();
+  const f = await harness.setup("unverified", mappedPublicationFixture, true);
   expect(
     await f.activities().applySubtitleReplacement(await f.approve()),
   ).toEqual({ state: "applied" });
@@ -20,10 +28,17 @@ async function installed() {
 }
 
 async function upgrade(f: Awaited<ReturnType<typeof installed>>) {
-  await f.db.acquisitionAttempt.updateMany({
-    where: { mediaIds: { has: f.media.id } },
-    data: { state: "completed" },
+  const transport = await retentionPlexContext(f.db, harness.network(), [
+    f.media.id,
+  ]);
+  const publisher = createPublicationActivities({
+    ...transport.context,
+    plexBindingExecution: bindingTestExecution,
   });
+  expect(
+    await publisher.publishMediaToPlex(f.initialPublication.input),
+  ).toEqual({ status: "available" });
+  await publisher.finalizeMediaAcquisition(f.initialPublication.input);
   const inspect = f.context.inspect;
   if (inspect === undefined) throw new Error("Inspector missing");
   f.context.inspect = async (filename) => {
@@ -81,20 +96,24 @@ test("completed replacement survives actual video upgrade and rollback without m
 test("verified video expiry removes only its current subtitle and leaves replacement archive to its own receipt", async () => {
   const f = await installed();
   const upgraded = await upgrade(f);
-  await f.db.$transaction(async (tx) => {
-    await tx.mediaItem.update({
-      where: { id: f.media.id },
-      data: { availability: "available" },
-    });
-    await recordVerifiedPublication(tx, [upgraded.entry.assetId], 0);
-    await tx.acquisitionAttempt.update({
-      where: { id: upgraded.attempt.id },
-      data: { state: "completed" },
-    });
-    await tx.acquisitionReservation.deleteMany({
-      where: { attemptId: upgraded.attempt.id },
-    });
-  });
+  const transport = await retentionPlexContext(f.db, harness.network(), [
+    f.media.id,
+  ]);
+  const network = {
+    ...transport.context,
+    plexBindingExecution: bindingTestExecution,
+  };
+  const timing = await elapsedPublicationClient(f.db, upgraded.entry.assetId);
+  expect(
+    await createPublicationActivities({
+      ...network,
+      db: timing.db,
+    }).publishMediaToPlex(upgraded.input),
+  ).toEqual({ status: "available" });
+  await timing.assertWritten();
+  await createPublicationActivities(network).finalizeMediaAcquisition(
+    upgraded.input,
+  );
   const cleanup = await f.db.upgradeCleanup.findUniqueOrThrow({
     where: {
       assetId_successorAssetId: {
@@ -103,55 +122,53 @@ test("verified video expiry removes only its current subtitle and leaves replace
       },
     },
   });
-  f.advance(8 * 86_400_000);
+  const operation = await f.db.operation.findUniqueOrThrow({
+    where: { idempotencyKey: `upgrade-cleanup:${cleanup.id}` },
+  });
+  const input = { cleanupId: cleanup.id, operationId: operation.id };
   expect(
-    await f.files.cleanupSupersededMediaFile({
-      cleanupId: cleanup.id,
-      operationId: crypto.randomUUID(),
-    }),
-  ).toEqual({ status: "purged" });
+    await observeMediaUpgradeCleanup(network, input, bindingTestExecution()),
+  ).toEqual({ status: "observed" });
+  expect(await f.files.cleanupSupersededMediaFile(input)).toEqual({
+    status: "purged",
+  });
   const candidate = await f.db.subtitleAsset.findUniqueOrThrow({
     where: { id: f.candidateId },
   });
   expect(candidate.state).toBe("purged");
   expect(candidate.provenance).toEqual(f.candidate.provenance);
-  await expect(access(z.string().parse(candidate.path))).rejects.toThrow();
+  await expect(
+    access(workerFilePath(f.context, z.string().parse(candidate.path))),
+  ).rejects.toThrow();
   expect(await readFile(f.paths.oldArchive, "utf8")).toBe(f.oldText);
+  f.advance(8 * 86_400_000);
   expect(await f.cleanup()).toEqual({ state: "cleaned" });
   await expect(access(f.paths.oldArchive)).rejects.toThrow();
 });
 
 test("quarantine and purge consume the replacement checksum without changing quality or its independent archive", async () => {
   const f = await installed();
-  const retention = await f.retention();
-  expect(await f.files.quarantineMediaFiles(retention.input)).toEqual({
-    status: "quarantined",
+  const bound = await prepareBoundRetention(
+    f,
+    f.initialPublication,
+    harness.network(),
+  );
+  const timing = await elapsedQuarantineClient(f.db, {
+    ...bound.retention.input,
+    mediaIds: [f.media.id],
   });
+  f.context.db = timing.db;
+  try {
+    expect(await bound.quarantine()).toEqual({ status: "quarantined" });
+  } finally {
+    f.context.db = f.db;
+  }
+  const birth = await timing.assertCommitted();
   await expect(access(f.filename)).rejects.toThrow();
   expect(await readFile(f.paths.oldArchive, "utf8")).toBe(f.oldText);
-  f.advance(8 * 86_400_000);
-  const timestamp = z.date().parse(f.context.now?.());
-  const evidence = z
-    .record(z.string(), z.json())
-    .parse(retention.decision.evidence);
-  await f.db.retentionDecision.update({
-    where: { id: retention.decision.id },
-    data: { evidence: { ...evidence, authorizedAt: timestamp.toISOString() } },
-  });
-  await f.db.watchState.update({
-    where: {
-      userId_mediaId_edition: {
-        edition: "default",
-        userId: f.user.id,
-        mediaId: f.media.id,
-      },
-    },
-    data: { observedAt: timestamp },
-  });
-  await f.db.notificationDelivery.updateMany({
-    where: { userId: f.user.id },
-    data: { reconciledAt: timestamp },
-  });
+  await bound.observe(true);
+  expect(await bound.refresh()).toMatchObject({ status: "purge" });
+  const retention = bound.retention;
   expect(await f.files.purgeMediaFiles(retention.input)).toEqual({
     status: "purged",
   });
@@ -165,11 +182,18 @@ test("quarantine and purge consume the replacement checksum without changing qua
     provenance: f.candidate.provenance,
   });
   expect(await readFile(f.paths.oldArchive, "utf8")).toBe(f.oldText);
+  expect(await timing.assertCommitted()).toEqual(birth);
+  f.advance(8 * 86_400_000);
   expect(await f.cleanup()).toEqual({ state: "cleaned" });
 });
 
 test("missing authoritative checksum protects replacement video operations even when provenance contains one", async () => {
   const f = await installed();
+  const bound = await prepareBoundRetention(
+    f,
+    f.initialPublication,
+    harness.network(),
+  );
   await f.db.subtitleAsset.update({
     where: { id: f.candidateId },
     data: {
@@ -181,7 +205,7 @@ test("missing authoritative checksum protects replacement video operations even 
       },
     },
   });
-  const retention = await f.retention();
+  const retention = bound.retention;
   expect(await f.files.quarantineMediaFiles(retention.input)).toMatchObject({
     status: "protected",
   });

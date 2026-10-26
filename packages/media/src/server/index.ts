@@ -129,6 +129,21 @@ const app = createMediaApp({
     keepDays: keepDays.value,
     serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
     movieAccess,
+    plexAccess: async (sectionType) => {
+      const section = await mediaBehaviorConfig(
+        bootstrap.ENVIRONMENT,
+        true,
+      ).get(
+        sectionType === "movie"
+          ? "permittedMovieSectionId"
+          : "permittedTvSectionId",
+      );
+      return {
+        serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+        sectionId: section.value,
+        sectionType,
+      };
+    },
     visibilitySections: {
       movie: permittedMovieSectionId.value,
       series: permittedTvSectionId.value,
@@ -137,6 +152,21 @@ const app = createMediaApp({
   notifications: new PrismaNotificationApplication(database, cipher, discord, {
     publicOrigin: bootstrap.PUBLIC_ORIGIN,
     movieAccess,
+    plexAccess: async (sectionType) => {
+      const section = await mediaBehaviorConfig(
+        bootstrap.ENVIRONMENT,
+        true,
+      ).get(
+        sectionType === "movie"
+          ? "permittedMovieSectionId"
+          : "permittedTvSectionId",
+      );
+      return {
+        serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+        sectionId: section.value,
+        sectionType,
+      };
+    },
     discordEnabled: async () => {
       const flag = await mediaBehaviorConfig(bootstrap.ENVIRONMENT, true).get(
         "personalDiscordEnabled",

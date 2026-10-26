@@ -5,7 +5,9 @@ import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
 import type { CredentialCipher } from "#application/security.ts";
 import { nativeNetworkFixture } from "#migration/native-network/test-fixture.ts";
-import { createNativeRecoveryObserver } from "#migration/native-network/producer.ts";
+import { NativeStoredScopeSchema } from "#shared/native-recovery/lifecycle.ts";
+import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
+import { nativeReviewPlexFixture } from "./fixtures/plex.ts";
 import { fileFixture } from "#automation/files/test-support.ts";
 import { prepareMediaRestore } from "#infrastructure/recovery.ts";
 import { grantTestExclusionProofs } from "#testing/exclusion.ts";
@@ -23,7 +25,13 @@ export async function nativeStorageFixture(
   sourceState: "seeding" | "removed" = "seeding",
   options: {
     omitLegacySubtitlePolicy?: boolean;
+    serverMachineId?: string;
     fileFactory?: () => Promise<Awaited<ReturnType<typeof fileFixture>>>;
+    publication?: (
+      file: Awaited<ReturnType<typeof fileFixture>>,
+    ) => Promise<
+      Awaited<ReturnType<Awaited<ReturnType<typeof fileFixture>>["published"]>>
+    >;
     settle?: (
       file: Awaited<ReturnType<typeof fileFixture>>,
       original: Awaited<
@@ -42,9 +50,11 @@ export async function nativeStorageFixture(
     }) => Promise<void>;
   } = {},
 ) {
-  const prior = await nativeNetworkFixture(db, cipher);
+  const prior = await nativeNetworkFixture(db, cipher, options.serverMachineId);
   const file = await (options.fileFactory?.() ?? fileFixture(db));
-  const original = await file.published();
+  const original = await (options.publication === undefined
+    ? file.published()
+    : options.publication(file));
   const published =
     options.settle === undefined
       ? original
@@ -119,10 +129,11 @@ export async function nativeStorageFixture(
       matchingEvidence: { exactMediaMatch: true, videoVersionMatch: true },
     },
   });
-  await db.acquisitionAttempt.update({
-    where: { id: published.attempt.id },
-    data: { state: "completed" },
-  });
+  if (options.publication === undefined)
+    await db.acquisitionAttempt.update({
+      where: { id: published.attempt.id },
+      data: { state: "completed" },
+    });
   const observation = TorrentObservationSchema.parse({
     ...TorrentPolicySchema.parse(protocol.explicitMinutes),
     ...protocol.uploads.find((item) => item.kind === "hybrid"),
@@ -196,7 +207,11 @@ export async function nativeStorageFixture(
   const restore = await db.operation.findUniqueOrThrow({
     where: { idempotencyKey: `restore-observe:${recoveryId}` },
   });
-  const proofs = await grantTestExclusionProofs(db, prior.actor.id);
+  const proofs = await grantTestExclusionProofs(
+    db,
+    prior.actor.id,
+    options.serverMachineId,
+  );
   const unusedKind = libraryKind === "movies" ? "tv" : "movies";
   const unused =
     file.context.pathMapping === undefined
@@ -273,14 +288,15 @@ export async function nativeFileFixture(
   db: Database,
   cipher: CredentialCipher,
   sourceState: "seeding" | "removed" = "seeding",
-  settle?: NonNullable<Parameters<typeof nativeStorageFixture>[3]>["settle"],
+  options: Pick<
+    NonNullable<Parameters<typeof nativeStorageFixture>[3]>,
+    "settle" | "publication" | "serverMachineId"
+  > = {},
 ) {
-  const setup = await nativeStorageFixture(
-    db,
-    cipher,
-    sourceState,
-    settle === undefined ? {} : { settle },
-  );
+  const setup = await nativeStorageFixture(db, cipher, sourceState, {
+    fileFactory: () => mappedPublicationFixture(db),
+    ...options,
+  });
   const {
     prior,
     file,
@@ -304,7 +320,19 @@ export async function nativeFileFixture(
     assetIds: [asset.id],
   });
   const planId = z.uuid().parse(prepared.nativeRecoveryId);
-  const observe = () => createNativeRecoveryObserver(prior.context)(planId);
+  const prepareInput = {
+    planId,
+    operationId: z.uuid().parse(prepared.operationId),
+  };
+  const storedPlan = await db.nativeRecoveryPlan.findUniqueOrThrow({
+    where: { id: planId },
+  });
+  const network = await nativeReviewPlexFixture(
+    prior.context,
+    NativeStoredScopeSchema.parse(storedPlan.scope),
+  );
+  let observedCommand = prepareInput;
+  const observe = (input = observedCommand) => network.observe(input);
   const activities = createNativeFileActivities(context);
   async function review() {
     await observe();
@@ -313,15 +341,25 @@ export async function nativeFileFixture(
       operationId: z.uuid().parse(prepared.operationId),
     });
     const detail = await service.detail(prior.actor, planId);
-    return service.apply(prior.actor, crypto.randomUUID(), planId, {
-      expectedVersion: detail.version,
-      planHash: z.string().parse(detail.planHash),
-      recoveryEpoch: runtime.recoveryEpoch,
-      runtimeVersion: runtime.version,
-      acknowledgePhysicalOwnershipOnly: true,
-      acknowledgeRecoveryHolds: true,
-      acknowledgeSubtitlePolicies: true,
-    });
+    const approval = await service.apply(
+      prior.actor,
+      crypto.randomUUID(),
+      planId,
+      {
+        expectedVersion: detail.version,
+        planHash: z.string().parse(detail.planHash),
+        recoveryEpoch: runtime.recoveryEpoch,
+        runtimeVersion: runtime.version,
+        acknowledgePhysicalOwnershipOnly: true,
+        acknowledgeRecoveryHolds: true,
+        acknowledgeSubtitlePolicies: true,
+      },
+    );
+    observedCommand = {
+      planId,
+      operationId: z.uuid().parse(approval.operationId),
+    };
+    return approval;
   }
   return {
     prior,
@@ -335,6 +373,9 @@ export async function nativeFileFixture(
     service,
     context,
     planId,
+    prepareInput,
+    observerContext: network.context,
+    wire: network.wire,
     observe,
     activities,
     review,

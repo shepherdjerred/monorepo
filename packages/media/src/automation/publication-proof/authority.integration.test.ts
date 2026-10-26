@@ -9,6 +9,9 @@ import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { mappedPublicationFixture } from "./test-fixture.ts";
 import { PrismaMediaCommands } from "#infrastructure/commands.ts";
+import { publicationInvocation } from "./invocation.ts";
+import { publicationAuthorityDeadline } from "./authority.ts";
+import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
 const directories: string[] = [];
@@ -107,6 +110,8 @@ test("invocation expiry after effect-transaction authority still prevents the fi
   let intentCommitted = false;
   let authorizations = 0;
   f.context.publicationExecution = () => ({
+    observed: { wall: Date.now(), monotonic: performance.now() },
+    expiresAtMs: deadline,
     signal: new AbortController().signal,
     checkpoint: () => Promise.resolve(),
     assertActive: () => {
@@ -135,3 +140,38 @@ test("invocation expiry after effect-transaction authority still prevents the fi
   expect(transition.outcome).toBeNull();
   await unpublished(f);
 });
+
+test.each([60_000, 25_000])(
+  "real deferred SQL commit accepts the original %sms invocation bound with longer lease/storage authority",
+  async (duration) => {
+    const f = await mappedPublicationFixture(cluster.database);
+    directories.push(f.directory);
+    const factory = f.context.publicationExecution;
+    if (factory === undefined) throw new Error("Publication execution missing");
+    const original = factory();
+    const execution = {
+      ...original,
+      // This fixture declares its synthetic SDK deadline before any authority read.
+      expiresAtMs: original.observed.wall + duration,
+    };
+    const context = publicationInvocation(f.context, execution);
+    await cluster.database.$transaction(async (tx) => {
+      const lease = await tx.legacyWriterLease.findUniqueOrThrow({
+        where: { id: "singleton" },
+      });
+      const storage = await tx.mediaStorageAuthority.findUniqueOrThrow({
+        where: { rootPath: "/data/movies" },
+      });
+      expect(lease.expiresAt.getTime()).toBeGreaterThan(execution.expiresAtMs);
+      expect(storage.expiresAt.getTime()).toBeGreaterThan(
+        execution.expiresAtMs,
+      );
+      const deadline = await publicationAuthorityDeadline(tx, context, {
+        libraryKind: "movies",
+        recoveryEpoch: 0,
+      });
+      expect(deadline.expiresAtMs).toBe(execution.expiresAtMs);
+      await bindPlexTransactionDeadline(tx, deadline);
+    });
+  },
+);

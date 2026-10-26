@@ -15,12 +15,69 @@ import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { testWatchExecution } from "./watch-execution.ts";
+import { testPlexBindingExecution } from "./plex-binding-execution.ts";
 
 export async function ensureTestProvider(db: Database) {
   await db.mediaProvider.createMany({
     data: [{ id: "knaben", enabled: true, seedingPolicy: { kind: "public" } }],
     skipDuplicates: true,
   });
+}
+
+export function createAutomationTestContext(
+  db: Database,
+  cipher: CredentialCipher,
+  transport: FetchTransport = () =>
+    Promise.reject(new Error("Unexpected network call")),
+): MediaAutomationContext {
+  const plexConfig = {
+    baseUrl: "http://plex.fixture",
+    token: "fixture",
+    clientIdentifier: "media-fixture",
+  };
+  return {
+    db,
+    watchExecution: testWatchExecution,
+    plexBindingExecution: testPlexBindingExecution,
+    plexAccess: (sectionType) =>
+      Promise.resolve({
+        serverMachineId: "fixture-server",
+        sectionType,
+        sectionId: sectionType === "movie" ? "1" : "2",
+      }),
+    serverMachineId: "fixture-server",
+    tmdb: new TmdbClient({ kind: "api-key", apiKey: "fixture" }, transport),
+    cipher,
+    providers: {
+      withProvider: () => Promise.reject(new Error("Unexpected tracker call")),
+    },
+    plex: new PlexClient(plexConfig, transport),
+    userPlex: (token) => new PlexClient({ ...plexConfig, token }, transport),
+    qbittorrent: new QbittorrentClient(
+      {
+        baseUrl: "http://qbit.fixture",
+        username: "fixture",
+        password: "fixture",
+        category: "media",
+      },
+      transport,
+    ),
+    gates: {
+      acquisition: () => Promise.resolve(true),
+      sourceCleanup: () => Promise.resolve(true),
+      quarantine: () => Promise.resolve(true),
+      purge: () => Promise.resolve(true),
+    },
+    publicOrigin: "https://media.fixture",
+    downloadRoot: "/downloads",
+    startWorkflow: () => Promise.reject(new Error("Unexpected workflow start")),
+    describeWorkflow: () =>
+      Promise.reject(new Error("Unexpected workflow description")),
+    permittedSections: () => Promise.resolve({ movie: "1", series: "2" }),
+    refreshExclusionProofs: () => Promise.resolve(),
+    refreshWriterLease: () => grantTestLease(db),
+    notify: () => Promise.reject(new Error("Unexpected notification")),
+  };
 }
 
 export function automationTestHarness() {
@@ -37,49 +94,7 @@ export function automationTestHarness() {
     transport: FetchTransport = () =>
       Promise.reject(new Error("Unexpected network call")),
   ): MediaAutomationContext {
-    const plexConfig = {
-      baseUrl: "http://plex.fixture",
-      token: "fixture",
-      clientIdentifier: "media-fixture",
-    };
-    return {
-      db: cluster.database,
-      watchExecution: testWatchExecution,
-      serverMachineId: "fixture-server",
-      tmdb: new TmdbClient({ kind: "api-key", apiKey: "fixture" }, transport),
-      cipher,
-      providers: {
-        withProvider: () =>
-          Promise.reject(new Error("Unexpected tracker call")),
-      },
-      plex: new PlexClient(plexConfig, transport),
-      userPlex: (token) => new PlexClient({ ...plexConfig, token }, transport),
-      qbittorrent: new QbittorrentClient(
-        {
-          baseUrl: "http://qbit.fixture",
-          username: "fixture",
-          password: "fixture",
-          category: "media",
-        },
-        transport,
-      ),
-      gates: {
-        acquisition: () => Promise.resolve(true),
-        sourceCleanup: () => Promise.resolve(true),
-        quarantine: () => Promise.resolve(true),
-        purge: () => Promise.resolve(true),
-      },
-      publicOrigin: "https://media.fixture",
-      downloadRoot: "/downloads",
-      startWorkflow: () =>
-        Promise.reject(new Error("Unexpected workflow start")),
-      describeWorkflow: () =>
-        Promise.reject(new Error("Unexpected workflow description")),
-      permittedSections: () => Promise.resolve({ movie: "1", series: "2" }),
-      refreshExclusionProofs: () => Promise.resolve(),
-      refreshWriterLease: () => grantTestLease(cluster.database),
-      notify: () => Promise.reject(new Error("Unexpected notification")),
-    };
+    return createAutomationTestContext(cluster.database, cipher, transport);
   }
 
   async function fixture(

@@ -10,6 +10,7 @@ import { compensationRecord } from "#infrastructure/native-compensation/records.
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { loadPublicationIntent } from "./store.ts";
+import type { NativeReceiptReadPort } from "#infrastructure/plex-binding/native/receipt-port.ts";
 import { snapshotPublicationAsset } from "./snapshots.ts";
 import {
   publicationArchiveSnapshot,
@@ -44,8 +45,12 @@ export async function resolvePublicationTransitionAuthority(
   tx: Prisma.TransactionClient,
   input: { transitionId: string; assetId: string },
   budget?: PublicationAuthorityReadBudget,
+  projection?: NativeReceiptReadPort,
 ) {
-  const result = await resolveTransition(tx, input, new Set<string>(), budget);
+  const result = await resolveTransition(tx, input, new Set<string>(), {
+    budget,
+    projection,
+  });
   const current = await snapshotPublicationAsset(tx, input.assetId);
   assertPublicationSnapshotSuccessor(
     { ...result.snapshot, subtitles: current.subtitles },
@@ -82,11 +87,33 @@ export type PublicationTransitionAuthority = Awaited<
   ReturnType<typeof resolvePublicationTransitionAuthority>
 >;
 
+/** Validate a frozen predecessor's original grant, never synthesize authority for a later version. */
+export async function assertRecordedPublicationGrant(
+  tx: Prisma.TransactionClient,
+  input: {
+    reference: PublicationAuthorityReference;
+    snapshot: PublicationAssetSnapshot;
+    libraryKind: "movies" | "tv";
+  },
+  budget?: PublicationAuthorityReadBudget,
+  projection?: NativeReceiptReadPort,
+): Promise<void> {
+  await validateOriginal(
+    tx,
+    { ...input, seen: new Set<string>() },
+    budget,
+    projection,
+  );
+}
+
 async function resolveTransition(
   tx: Prisma.TransactionClient,
   input: { transitionId: string; assetId: string },
   seen: Set<string>,
-  budget?: PublicationAuthorityReadBudget,
+  options: {
+    budget: PublicationAuthorityReadBudget | undefined;
+    projection: NativeReceiptReadPort | undefined;
+  },
 ): Promise<{
   reference: ReturnType<typeof PublicationTransitionReferenceSchema.parse>;
   originalGrant: Exclude<
@@ -97,6 +124,7 @@ async function resolveTransition(
   outcome: ReturnType<typeof PublicationOutcomeSchema.parse>;
   libraryKind: "movies" | "tv";
 }> {
+  const { budget, projection } = options;
   if (seen.has(input.transitionId) || seen.size >= 100)
     throw new Error("Publication transition chain exceeds bound");
   seen.add(input.transitionId);
@@ -136,6 +164,7 @@ async function resolveTransition(
       seen,
     },
     budget,
+    projection,
   );
   return {
     reference: PublicationTransitionReferenceSchema.parse({
@@ -163,6 +192,7 @@ async function validateOriginal(
     seen: Set<string>;
   },
   budget?: PublicationAuthorityReadBudget,
+  projection?: NativeReceiptReadPort,
 ): Promise<
   Exclude<
     PublicationAuthorityReference,
@@ -177,7 +207,7 @@ async function validateOriginal(
       tx,
       publicationArchiveSnapshot(snapshot, libraryKind),
       reference,
-      budget,
+      { budget, projection },
     );
     return reference;
   }
@@ -186,6 +216,7 @@ async function validateOriginal(
       tx,
       reference.continuationId,
       budget,
+      projection,
     );
     const binding = record.completion?.predecessorBindings.find(
       (item) => item.after.id === snapshot.id,
@@ -222,7 +253,7 @@ async function validateOriginal(
     tx,
     { transitionId: reference.transitionId, assetId: reference.assetId },
     seen,
-    budget,
+    { budget, projection },
   );
   const { subtitleLineage, ...originalReference } = reference;
   if (

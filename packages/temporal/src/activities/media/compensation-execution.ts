@@ -17,6 +17,8 @@ export function compensationExecution(context = Context.current()) {
     info.scheduledTimestampMs + info.scheduleToCloseTimeoutMs,
     info.currentAttemptScheduledTimestampMs + info.startToCloseTimeoutMs,
   );
+  if (!Number.isSafeInteger(wallDeadline) || wallDeadline <= 0)
+    throw new Error("Compensation Activity requires a safe SDK deadline");
   const monotonicDeadline =
     performance.now() + Math.max(0, wallDeadline - Date.now());
   const assertActive = () => {
@@ -29,6 +31,7 @@ export function compensationExecution(context = Context.current()) {
       });
   };
   return {
+    expiresAtMs: wallDeadline,
     signal: context.cancellationSignal,
     assertActive,
     checkpoint: (phase: string) => {
@@ -61,11 +64,14 @@ export async function compensationCall<T>(
 
 export function compensationRuntimeCall<R, T>(
   load: () => Promise<R>,
-  work: (runtime: R) => Promise<T>,
+  work: (
+    runtime: R,
+    execution: ReturnType<typeof compensationExecution>,
+  ) => Promise<T>,
 ): Promise<T> {
   return compensationCall(async (execution) => {
     const runtime = await load();
     execution.assertActive();
-    return work(runtime);
+    return work(runtime, execution);
   });
 }

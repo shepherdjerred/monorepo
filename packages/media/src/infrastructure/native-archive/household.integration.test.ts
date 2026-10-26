@@ -5,7 +5,8 @@ import { automationTestHarness } from "#testing/automation.ts";
 import { nativeArchiveFixture } from "#automation/native-archive/test-fixture.ts";
 import { PrismaRecovery } from "#infrastructure/recovery/service.ts";
 import { CleanupNativeArchiveInputSchema } from "#shared/native-recovery/archive.ts";
-import { createNativeArchiveNetworkActivities } from "#migration/native-archive/activities.ts";
+import { observePairedArchiveCleanup } from "#migration/native-plex/archive.ts";
+import { bindingTestExecution } from "#automation/plex-binding/test-fixture.ts";
 import { createNativeArchiveFileActivities } from "#automation/native-archive/activities.ts";
 import { queueNativeArchiveCleanup } from "./continuation.ts";
 
@@ -43,13 +44,12 @@ test("real household review releases archive hold; closed coordinator retry pres
     where: { id: operationId },
   });
   const input = CleanupNativeArchiveInputSchema.parse(operation.payload);
-  const observe = createNativeArchiveNetworkActivities({
-    ...f.observerContext,
-    qbittorrent: {
-      ...f.observerContext.qbittorrent,
-      login: () => Promise.resolve(),
-    },
-  }).observeNativeArchiveCleanup;
+  const observe = (command: typeof input) =>
+    observePairedArchiveCleanup(
+      f.observerContext,
+      command,
+      bindingTestExecution(),
+    );
   expect(await observe(input)).toMatchObject({ status: "protected" });
   const blocked = await db.nativeArchiveCleanupContinuation.findUniqueOrThrow({
     where: { id: continuation.id },
@@ -137,7 +137,9 @@ test("real household review releases archive hold; closed coordinator retry pres
     where: { id: retryId },
   });
   const retry = CleanupNativeArchiveInputSchema.parse(retryOperation.payload);
-  await expect(observe(input)).rejects.toThrow("coordinator changed");
+  await expect(observe(input)).rejects.toThrow(
+    "Archive coordinator or raw descriptor changed",
+  );
   expect(await observe(retry)).toEqual({ status: "ready" });
   expect(
     await createNativeArchiveFileActivities(

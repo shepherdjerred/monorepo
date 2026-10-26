@@ -217,16 +217,27 @@ export async function unlinkRegular(
   beforeEffect?.();
   await unlink(path);
 }
-export async function syncFile(path: string): Promise<void> {
+export async function syncFile(
+  path: string,
+  assertActive?: () => void,
+): Promise<void> {
+  assertActive?.();
   const handle = await open(path, "r");
   try {
+    assertActive?.();
     await handle.sync();
+    assertActive?.();
   } finally {
     await handle.close();
+    assertActive?.();
   }
 }
-export async function syncDirectory(path: string): Promise<void> {
-  await syncFile(path);
+/** Guarded callers retain the original invocation fence through open, sync and close. */
+export async function syncDirectory(
+  path: string,
+  assertActive?: () => void,
+): Promise<void> {
+  await syncFile(path, assertActive);
 }
 
 export async function sha256File(

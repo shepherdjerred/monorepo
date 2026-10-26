@@ -15,9 +15,15 @@ import {
 } from "#infrastructure/native-recovery/snapshots.ts";
 import { historicalDefaultRow } from "#infrastructure/native-recovery/legacy-snapshot.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
-import { loadPublicationIntent } from "./store.ts";
+import {
+  loadPublicationIntent,
+  assertQueriedPublicationParent,
+  type QueriedPublicationParent,
+} from "./store.ts";
+import type { NativeReceiptReadPort } from "#infrastructure/plex-binding/native/receipt-port.ts";
 import { compensationRecord } from "#infrastructure/native-compensation/records.ts";
 import { PublicationAuthorityReadBudget } from "./read-budget.ts";
+import type { PublicationIntentRef } from "#shared/publication-proof/intent.ts";
 
 export type NativeLifecycleSnapshot = z.infer<typeof NativeLifecycleSchema>;
 async function reservations(tx: Prisma.TransactionClient, attemptId: string) {
@@ -31,16 +37,43 @@ async function reservations(tx: Prisma.TransactionClient, attemptId: string) {
 export async function captureInterruptedPublicationWork(
   tx: Prisma.TransactionClient,
   transitionId: string,
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<InterruptedPublicationWork> {
   const row = await tx.mediaPublicationTransition.findUniqueOrThrow({
     where: { id: transitionId },
   });
-  const reference = await loadPublicationIntent(tx, row.attemptId);
+  budget?.consume(1);
+  const reference = await loadPublicationIntent(tx, row.attemptId, budget);
   if (reference?.transitionId !== transitionId)
     throw new Error("Publication transition missing");
-  const attempt = await tx.acquisitionAttempt.findUniqueOrThrow({
-    where: { id: row.attemptId },
-  });
+  return captureInterruptedPublicationWorkFromIntent(tx, reference, budget);
+}
+
+/** The caller just validated this raw immutable intent in the same locked phase. */
+export async function captureInterruptedPublicationWorkFromIntent(
+  tx: Prisma.TransactionClient,
+  reference: PublicationIntentRef,
+  budget?: PublicationAuthorityReadBudget,
+  parent?: QueriedPublicationParent,
+): Promise<InterruptedPublicationWork> {
+  if (parent !== undefined) {
+    if (budget === undefined)
+      throw new Error(
+        "Queried publication parent requires its original budget",
+      );
+    assertQueriedPublicationParent(tx, parent, budget);
+    if (
+      snapshotHash(nativeJson(reference)) !==
+      snapshotHash(nativeJson(parent.reference))
+    )
+      throw new Error("Interrupted publication queried parent changed");
+  }
+  const attempt =
+    parent?.attempt ??
+    (await tx.acquisitionAttempt.findUniqueOrThrow({
+      where: { id: reference.intent.attemptId },
+    }));
+  if (parent === undefined) budget?.consume(1);
   if (
     attempt.edition !== "default" ||
     attempt.recoveryEpoch !== reference.intent.birthEpoch ||
@@ -54,7 +87,7 @@ export async function captureInterruptedPublicationWork(
   if (selected.some((item) => !attempt.mediaIds.includes(item.mediaId)))
     throw new Error("Interrupted reservation exceeds the complete attempt");
   return InterruptedPublicationWorkSchema.parse({
-    transitionId,
+    transitionId: reference.transitionId,
     intentHash: reference.intentHash,
     attemptId: attempt.id,
     birthEpoch: reference.intent.birthEpoch,
@@ -72,12 +105,17 @@ export async function nativeCompensationLifecycle(
     assetIds: readonly string[];
     interrupted: InterruptedPublicationWork;
   },
+  budget = new PublicationAuthorityReadBudget(),
 ): Promise<NativeLifecycleSnapshot> {
   const { mediaIds, assetIds, interrupted } = input;
   if (
     snapshotHash(
       nativeJson(
-        await captureInterruptedPublicationWork(tx, interrupted.transitionId),
+        await captureInterruptedPublicationWork(
+          tx,
+          interrupted.transitionId,
+          budget,
+        ),
       ),
     ) !== snapshotHash(nativeJson(interrupted))
   )
@@ -107,7 +145,6 @@ export async function nativeCompensationLifecycle(
     take: 101,
   });
   const unsettled = [];
-  const budget = new PublicationAuthorityReadBudget();
   for (const row of attempts) {
     if (
       row.id === interrupted.attemptId ||
@@ -146,11 +183,28 @@ export async function nativeCompensationLifecycle(
 export async function settleReviewedReservations(
   tx: Prisma.TransactionClient,
   reviewed: InterruptedPublicationWork,
+  queriedIntent?: PublicationIntentRef,
+  {
+    budget,
+    parent,
+  }: {
+    budget?: PublicationAuthorityReadBudget | undefined;
+    parent?: QueriedPublicationParent;
+  } = {},
 ): Promise<CompensationSettlement> {
-  const current = await captureInterruptedPublicationWork(
-    tx,
-    reviewed.transitionId,
-  );
+  const current =
+    queriedIntent === undefined
+      ? await captureInterruptedPublicationWork(
+          tx,
+          reviewed.transitionId,
+          budget,
+        )
+      : await captureInterruptedPublicationWorkFromIntent(
+          tx,
+          queriedIntent,
+          budget,
+          parent,
+        );
   if (snapshotHash(nativeJson(current)) !== snapshotHash(nativeJson(reviewed)))
     throw new Error("Reviewed revoked reservations or attempt changed");
   for (const row of reviewed.reservations) {
@@ -177,6 +231,7 @@ export async function resolveCompletedCompensationSettlement(
   tx: Prisma.TransactionClient,
   attemptId: string,
   budget?: PublicationAuthorityReadBudget,
+  projection?: NativeReceiptReadPort,
 ): Promise<CompensationSettlement | null> {
   const rows = await tx.nativePublicationCompensationContinuation.findMany({
     where: { state: "compensated", transition: { attemptId } },
@@ -189,8 +244,9 @@ export async function resolveCompletedCompensationSettlement(
   const attempt = await tx.acquisitionAttempt.findUniqueOrThrow({
     where: { id: attemptId },
   });
+  budget?.consume(1);
   for (const row of rows) {
-    const validated = await compensationRecord(tx, row.id, budget);
+    const validated = await compensationRecord(tx, row.id, budget, projection);
     const completion = NativeCompensationCompletionSchema.parse(
       validated.completion,
     );

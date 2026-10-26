@@ -1,4 +1,14 @@
 import { z } from "zod";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { plexBindingFreshness } from "#infrastructure/plex-binding/freshness.ts";
+import { readCompletedNativeArchiveCleanup } from "#infrastructure/plex-binding/native/native-archive-ack.ts";
+import { commitArchivePhaseCompletion } from "#infrastructure/native-archive/execution-phase.ts";
+import {
+  discoverNativeArchiveExecution,
+  type ArchiveExecutionDiscovery,
+} from "#infrastructure/native-archive/execution/discovery.ts";
+import { persistArchiveDiscoveryExecution } from "#infrastructure/native-archive/execution/discovery-check.ts";
+import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import {
   NativeArchiveCompletionSchema,
   NativeArchiveContinuationSchema,
@@ -13,12 +23,16 @@ import {
 } from "#infrastructure/recovery/legacy-claims/protection.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeLocalPath } from "#automation/native-recovery/files.ts";
+import { NativeArchiveProtection } from "#infrastructure/native-archive/continuation.ts";
 import { assertArchiveActive, type ArchiveFileContext } from "./execution.ts";
 import {
   archiveCleanupAuthority,
+  captureArchiveCleanupAuthority,
+  assertArchiveCleanupCurrent,
   assertArchiveCleanupFresh,
+  type ArchiveCleanupPlexProof,
 } from "./cleanup-authority.ts";
-import { prepareArchiveCleanupProof } from "./cleanup-proof.ts";
+import { measureArchiveCleanup } from "./cleanup/measurement.ts";
 import type { ArchiveCleanupProof } from "./cleanup-types.ts";
 import { archivePurgeId } from "./purge-manifest.ts";
 import { withCleanupLocks } from "./cleanup-locks.ts";
@@ -28,81 +42,184 @@ export async function cleanupNativeArchive(
   raw: CleanupNativeArchiveInput,
 ) {
   const input = CleanupNativeArchiveInputSchema.parse(raw);
+  const observed = context.execution.observed;
+  const budget = new PublicationAuthorityReadBudget();
   assertArchiveActive(context.execution);
+  const completed = await context.files.db.$transaction((tx) =>
+    readCompletedNativeArchiveCleanup(tx, input, budget),
+  );
+  assertArchiveActive(context.execution);
+  // Exact committed acknowledgement precedes fresh config, proof and filesystem work.
+  if (completed !== null) return;
+  const original = plexBindingFreshness({
+    observed,
+    expiresAtMs: Math.min(
+      context.execution.expiresAtMs,
+      observed.wall + 60_000,
+    ),
+    guards: [context.execution],
+  });
+  const execution: PlexBindingExecution = {
+    observed,
+    expiresAtMs: original.expiresAtMs,
+    signal: context.execution.signal,
+    assertActive: () => {
+      assertArchiveActive(context.execution);
+      original.assertActive();
+    },
+    checkpoint: context.execution.checkpoint,
+  };
+  // Negative admission only: a restored epoch must protect before old scanner
+  // evidence is inspected. Each complete locked phase still checks authority.
+  execution.assertActive();
+  budget.consume(1);
+  const runtime = await context.files.db.mediaRuntimeState.findUniqueOrThrow({
+    where: { id: "singleton" },
+    select: { mode: true, ownershipConfirmed: true, recoveryEpoch: true },
+  });
+  execution.assertActive();
+  if (
+    runtime.mode !== "active" ||
+    !runtime.ownershipConfirmed ||
+    runtime.recoveryEpoch !== input.recoveryEpoch
+  )
+    throw new NativeArchiveProtection("archive_runtime_protected");
+  budget.consume(1);
   const initial =
     await context.files.db.nativeArchiveCleanupContinuation.findUniqueOrThrow({
       where: { id: input.continuationId },
     });
-  if (initial.state === "cleaned") {
-    const completion = NativeArchiveCompletionSchema.parse(initial.completion);
-    if (
-      initial.recoveryEpoch !== input.recoveryEpoch ||
-      completion.continuationId !== initial.id ||
-      completion.descriptorHash !== initial.descriptorHash
-    )
-      throw new Error("Archive completed receipt changed");
-    // Already committed acknowledgement is not a new filesystem effect or authority grant.
-    assertArchiveActive(context.execution);
-    return;
-  }
+  execution.assertActive();
+  if (
+    snapshotHash(z.json().parse(initial.descriptor)) !== initial.descriptorHash
+  )
+    throw new Error("Archive raw cleanup descriptor changed");
   const descriptor = NativeArchiveContinuationSchema.parse(initial.descriptor);
+  const selectedEdge = descriptor.scope.edges.find(
+    (edge) => edge.id === descriptor.selectedCleanupId && edge.selected,
+  );
+  if (selectedEdge === undefined)
+    throw new Error("Archive selected measurement edge missing");
+  // A negative admission check preserves the original no-hash rollback window;
+  // it cannot grant authority and is repeated by each complete locked phase.
+  if (Date.parse(selectedEdge.expiresAt) > Date.now())
+    throw new NativeArchiveProtection("archive_rollback_window_incomplete");
   const mediaIds = descriptor.scope.media.map((media) => media.id);
   if (await reopenLegacyClaimProtection(context.files.db, mediaIds))
     throw new PendingLegacyClaimsError(mediaIds);
-  const before = await context.files.db.$transaction(async (tx) => {
-    const result = await archiveCleanupAuthority(tx, context, input);
-    assertArchiveActive(context.execution);
-    return result;
-  });
-  const proof = await prepareArchiveCleanupProof(
-    context,
-    before.row,
-    before.descriptor,
-    before.networkScope,
+  execution.assertActive();
+  const discovery = await context.files.db.$transaction((tx) =>
+    discoverNativeArchiveExecution(tx, input, { execution, budget }),
   );
-  await persistExecution(context, input, proof, before.scopeHash);
-  proof.executionCommitted = true;
+  execution.assertActive();
+  const measurementClock = plexBindingFreshness({
+    observed,
+    expiresAtMs: Math.min(execution.expiresAtMs, discovery.expiresAtMs),
+    guards: [execution],
+  });
+  const measured = await measureArchiveCleanup(
+    context,
+    discovery,
+    measurementClock.assertActive,
+  );
+  await context.files.checkpoint("native-archive-cleanup-measured");
+  measurementClock.assertActive();
+  const selected = await persistExecution(context, input, {
+    measured,
+    discovery,
+    execution,
+    budget,
+  });
+  selected.proof.executionCommitted = true;
   await context.files.checkpoint("native-archive-execution-committed");
-  await executeCleanup(context, input, proof, before.scopeHash);
+  selected.plex.freshness.assertActive();
+  await executeCleanup(context, input, selected);
 }
+
+type SelectedCleanup = {
+  proof: ArchiveCleanupProof;
+  scopeHash: string;
+  plex: ArchiveCleanupPlexProof;
+  discovery: ArchiveExecutionDiscovery;
+  execution: PlexBindingExecution;
+};
 
 async function persistExecution(
   context: ArchiveFileContext,
   input: CleanupNativeArchiveInput,
-  proof: ArchiveCleanupProof,
-  scopeHash: string,
+  measuredInput: {
+    measured: Awaited<ReturnType<typeof measureArchiveCleanup>>;
+    discovery: ArchiveExecutionDiscovery;
+    execution: PlexBindingExecution;
+    budget: PublicationAuthorityReadBudget;
+  },
 ) {
-  await context.files.db.$transaction(
+  const { measured, discovery, execution, budget } = measuredInput;
+  return await context.files.db.$transaction(
     async (tx) => {
-      const current = await archiveCleanupAuthority(tx, context, input);
+      const {
+        phase,
+        authority: current,
+        plex,
+      } = await captureArchiveCleanupAuthority(tx, context, input, {
+        discovery,
+        execution,
+        budget,
+      });
+      const scopeHash = measured.scopeHash;
       if (current.scopeHash !== scopeHash)
         throw new Error("Archive selection changed during hashing");
       const authorize = async () => {
-        const latest = await archiveCleanupAuthority(tx, context, input);
+        const latest = await assertArchiveCleanupCurrent(
+          tx,
+          context,
+          plex,
+          phase,
+        );
         if (latest.scopeHash !== scopeHash)
           throw new Error("Archive selection changed before execution");
         return latest.beforeEffect;
       };
-      await withCleanupLocks(context, proof, authorize, async () => {
-        if (current.row.executionEvidence === null)
-          await tx.nativeArchiveCleanupContinuation.update({
-            where: { id: input.continuationId },
-            data: {
-              executionEvidence: proof.execution,
-              version: { increment: 1 },
-            },
-          });
-        else if (
-          snapshotHash(z.json().parse(current.row.executionEvidence)) !==
-          snapshotHash(proof.execution)
-        )
-          throw new Error("Archive persisted execution changed");
-        assertArchiveActive(context.execution);
-        assertArchiveCleanupFresh(current.network);
+      const proof = await measured.seal({
+        assertActive: () => {
+          plex.freshness.assertActive();
+        },
+        assertCurrent: async () => {
+          await authorize();
+        },
       });
+      const advanced = await withCleanupLocks(
+        context,
+        proof,
+        authorize,
+        async () => {
+          const result = await persistArchiveDiscoveryExecution(
+            tx,
+            proof.execution,
+            phase,
+            {
+              discovery,
+              execution,
+              freshness: plex.freshness,
+              budget,
+            },
+          );
+          assertArchiveActive(context.execution);
+          assertArchiveCleanupFresh(current.network);
+          current.beforeEffect();
+          return result;
+        },
+      );
       assertArchiveActive(context.execution);
       assertArchiveCleanupFresh(current.network);
       current.beforeEffect();
+      return {
+        proof,
+        scopeHash,
+        plex,
+        discovery: advanced,
+        execution,
+      } satisfies SelectedCleanup;
     },
     { timeout: 30_000, maxWait: 30_000 },
   );
@@ -111,16 +228,26 @@ async function persistExecution(
 async function executeCleanup(
   context: ArchiveFileContext,
   input: CleanupNativeArchiveInput,
-  proof: ArchiveCleanupProof,
-  scopeHash: string,
+  selected: SelectedCleanup,
 ) {
+  const { proof, scopeHash, plex } = selected;
   await context.files.db.$transaction(
     async (tx) => {
-      const current = await archiveCleanupAuthority(tx, context, input);
+      const { phase, authority: current } = await archiveCleanupAuthority(
+        tx,
+        context,
+        input,
+        { plex, discovery: selected.discovery, execution: selected.execution },
+      );
       if (current.scopeHash !== scopeHash)
         throw new Error("Archive selection changed before effects");
       const authorize = async () => {
-        const latest = await archiveCleanupAuthority(tx, context, input);
+        const latest = await assertArchiveCleanupCurrent(
+          tx,
+          context,
+          plex,
+          phase,
+        );
         if (
           latest.scopeHash !== scopeHash ||
           snapshotHash(z.json().parse(latest.row.executionEvidence)) !==
@@ -164,6 +291,7 @@ async function executeCleanup(
         }
         await authorize();
         await context.files.checkpoint("native-archive-before-commit");
+        await authorize();
         const file = current.networkScope.files.find(
           (item) => item.assetId === proof.execution.participants[0]?.assetId,
         );
@@ -229,12 +357,13 @@ async function executeCleanup(
           absences,
           completedAt: new Date().toISOString(),
         });
-        await tx.nativeArchiveCleanupContinuation.update({
-          where: { id: input.continuationId },
-          data: { state: "cleaned", completion, version: { increment: 1 } },
+        await commitArchivePhaseCompletion(tx, completion, phase, {
+          freshness: plex.freshness,
+          budget: plex.budget,
         });
         assertArchiveActive(context.execution);
         assertArchiveCleanupFresh(current.network);
+        current.beforeEffect();
       });
       const authority = await runtimeAuthority(tx);
       if (!authority.active || authority.epoch !== input.recoveryEpoch)

@@ -1,7 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { UserSchema } from "#shared/contract.ts";
-import { authPost, queryClient } from "./api.ts";
+import { authPost, pollPlexLogin } from "./api.ts";
 import { ErrorNotice } from "./components.tsx";
 
 const LoginSchema = z.object({
@@ -9,14 +8,6 @@ const LoginSchema = z.object({
   authorizationUrl: z.url(),
   expiresAt: z.iso.datetime(),
 });
-const PollSchema = z.discriminatedUnion("status", [
-  z.object({ status: z.literal("pending") }),
-  z.object({
-    status: z.literal("authenticated"),
-    user: UserSchema,
-    csrfToken: z.string(),
-  }),
-]);
 
 export function Login() {
   const start = useMutation({
@@ -28,13 +19,7 @@ export function Login() {
     enabled: login !== undefined,
     queryFn: async () => {
       if (login === undefined) throw new Error("Sign-in was not started");
-      const result = await authPost(
-        `/plex/poll/${encodeURIComponent(login.id)}`,
-        PollSchema,
-      );
-      if (result.status === "authenticated")
-        queryClient.setQueryData(["me"], result.user);
-      return result;
+      return pollPlexLogin(login.id);
     },
     refetchInterval: (query) =>
       query.state.status === "error" ||

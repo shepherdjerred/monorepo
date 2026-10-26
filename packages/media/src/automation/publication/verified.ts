@@ -8,7 +8,8 @@ import type {
 } from "#shared/native-recovery/compensation-runtime.ts";
 import type { publicationCoverageInclude } from "#automation/reconciliation/publication-evidence.ts";
 import { verifyCompensatedPlexItem } from "#automation/native-compensation/plex-proof.ts";
-import { matchedItem } from "./plex.ts";
+import type { VerifiedServingPlex } from "#shared/plex-binding/observations.ts";
+import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 
 const ExternalIdsSchema = z.record(z.string(), z.json());
 
@@ -21,7 +22,8 @@ export async function verifiedPublicationItems(
     items: Map<string, PlexItem[]>;
     sectionId: string;
     compensation: boolean;
-    execution?: NativeCompensationExecutionContext | undefined;
+    execution: NativeCompensationExecutionContext;
+    binding: VerifiedServingPlex;
   },
 ) {
   const verified: {
@@ -31,14 +33,29 @@ export async function verifiedPublicationItems(
     externalIds: z.infer<typeof ExternalIdsSchema>;
   }[] = [];
   const compensationItems: NativeCompensationVerifiedPublication["items"] = [];
+  const associations = new Map(
+    input.binding.associations.map((association) => [
+      association.scope.mediaId,
+      association,
+    ]),
+  );
+  if (
+    new Set(input.coverages.map((coverage) => coverage.mediaId)).size !==
+    input.coverages.length
+  )
+    throw new Error("Publication coverage repeats a canonical leaf");
   for (const coverage of input.coverages) {
-    const item = await matchedItem(
-      context,
-      coverage.media,
-      input.items.get(coverage.asset.path) ?? [],
-      input.execution,
-    );
-    if (item === undefined) return null;
+    const association = associations.get(coverage.mediaId);
+    if (
+      association?.group.assetId !== coverage.assetId ||
+      association.group.assetVersion !== coverage.asset.version ||
+      association.access.sectionId !== input.sectionId
+    )
+      throw new PlexBindingProtection("metadata_changed");
+    const item = input.items
+      .get(coverage.asset.path)
+      ?.find((candidate) => candidate.ratingKey === association.item.ratingKey);
+    if (item === undefined) throw new PlexBindingProtection("metadata_changed");
     if (input.compensation)
       compensationItems.push(
         await verifyCompensatedPlexItem(
@@ -48,6 +65,8 @@ export async function verifiedPublicationItems(
             asset: coverage.asset,
             item,
             sectionId: input.sectionId,
+            association,
+            freshness: input.binding.freshness,
           },
           input.execution,
         ),

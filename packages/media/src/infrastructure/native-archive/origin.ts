@@ -1,3 +1,4 @@
+import type { ArchiveReadOptions } from "./receipt-projection.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import {
   NativeArchiveScopeSchema,
@@ -6,14 +7,18 @@ import {
 } from "#shared/native-recovery/archive.ts";
 import { resolvePriorNativeBinding } from "./prior-binding.ts";
 import { NativeArchiveScopeProtection } from "./errors.ts";
-import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { ArchiveReceiptProjection } from "./receipt-projection.ts";
 
 /** Version changes after the committed import require exact immutable archive grants. */
 export async function assertArchiveOrigin(
   tx: Prisma.TransactionClient,
   file: NativeArchiveFile,
   edge: NativeArchiveEdge,
-  budget?: PublicationAuthorityReadBudget,
+  {
+    budget = new PublicationAuthorityReadBudget(),
+    projection = new ArchiveReceiptProjection(tx, budget),
+  }: ArchiveReadOptions = {},
 ) {
   let cursor = file;
   for (
@@ -29,17 +34,13 @@ export async function assertArchiveOrigin(
       tx,
       cursor,
       cursor.ownershipEpoch,
-      budget,
+      { budget, projection },
     );
     if (reference.receiptLifecycle !== "superseded_archive")
       throw new NativeArchiveScopeProtection(
         "Archive transition has no original archive grant",
       );
-    budget?.consume(1);
-    const receipt = await tx.nativeRecoveryReceipt.findUniqueOrThrow({
-      where: { id: reference.receiptId },
-      include: { plan: true },
-    });
+    const receipt = await projection.read(tx, reference.receiptId, budget);
     const scope = NativeArchiveScopeSchema.parse(receipt.plan.scope);
     const before = scope.files.find((item) => item.assetId === file.assetId);
     if (before?.assetVersion !== cursor.assetVersion - 1)

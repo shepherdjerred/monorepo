@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import type { FetchTransport } from "#integrations/http.ts";
 import { MAX_MIGRATION_BYTES, MAX_MIGRATION_PAGES } from "#shared/migration.ts";
 
 export class CaptureReadError extends Error {
@@ -13,7 +14,7 @@ export class CaptureReader {
   private bytes = 0;
   constructor(
     private readonly source: { baseUrl: string; apiKey: string },
-    private readonly fetcher: typeof fetch = fetch,
+    private readonly fetcher: FetchTransport = fetch,
   ) {
     const url = new URL(source.baseUrl);
     if (

@@ -4,12 +4,14 @@ import type {
   MediaWorkflowResult,
 } from "@shepherdjerred/media/automation";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS } from "#shared/media-activity-budget.ts";
 
 const writes = proxyActivities<
   Pick<MediaNetworkActivities, "deliverMediaNotification">
 >({
   taskQueue: TASK_QUEUES.MEDIA_NETWORK,
   startToCloseTimeout: "5 minutes",
+  scheduleToCloseTimeout: HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS,
   retry: { maximumAttempts: 1 },
 });
 const lifecycle = proxyActivities<
@@ -17,6 +19,7 @@ const lifecycle = proxyActivities<
 >({
   taskQueue: TASK_QUEUES.MEDIA_NETWORK,
   startToCloseTimeout: "5 minutes",
+  scheduleToCloseTimeout: HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS,
   retry: {
     initialInterval: "5 seconds",
     maximumInterval: "1 minute",

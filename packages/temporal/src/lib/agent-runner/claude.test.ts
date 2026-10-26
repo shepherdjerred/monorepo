@@ -1,4 +1,4 @@
-import { chmod, mkdtemp, rm, stat } from "node:fs/promises";
+import { chmod, mkdtemp, realpath, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -455,6 +455,23 @@ describe("runClaudeAgentTurn", () => {
   });
 });
 
+async function traversableAncestors(directory: string, providerUid: number) {
+  const ancestors: { directory: string; mode: number; uid: number }[] = [];
+  for (;;) {
+    const entry = await stat(directory);
+    const mode = entry.mode & 0o7777;
+    const executeBit = providerUid === entry.uid ? 0o100 : 0o001;
+    if (!entry.isDirectory() || (mode & executeBit) === 0)
+      throw new Error(
+        "Provider fixture requires traversable existing ancestors",
+      );
+    ancestors.push({ directory, mode, uid: entry.uid });
+    const parent = path.dirname(directory);
+    if (parent === directory) return ancestors;
+    directory = parent;
+  }
+}
+
 describe("Claude provider home isolation", () => {
   test("uses the worker provider uid for workspace and subprocess isolation", async () => {
     vi.stubEnv("AGENT_PROVIDER_UID", "1001");
@@ -463,6 +480,8 @@ describe("Claude provider home isolation", () => {
     // protected per-user directory that a different uid cannot traverse.
     // Only this test-owned lifecycle parent may need its execute bits changed.
     const sharedParent = "/tmp";
+    const temporaryRoot = await realpath(sharedParent);
+    const ancestors = await traversableAncestors(temporaryRoot, 1001);
     const ancestorModes = await Promise.all(
       [sharedParent, path.parse(sharedParent).root].map(async (directory) => {
         const directoryStat = await stat(directory);
@@ -470,9 +489,8 @@ describe("Claude provider home isolation", () => {
       }),
     );
     const lifecycleDirectory = await mkdtemp(
-      path.join(sharedParent, "claude-runner-home-"),
+      path.join(temporaryRoot, "claude-runner-home-"),
     );
-    await chmod(lifecycleDirectory, 0o700);
     const home = path.join(lifecycleDirectory, "home");
     queryMock.mockImplementation(() =>
       (async function* () {
@@ -482,6 +500,9 @@ describe("Claude provider home isolation", () => {
       })(),
     );
     try {
+      await chmod(lifecycleDirectory, 0o700);
+      const initialLifecycle = await stat(lifecycleDirectory);
+      expect(initialLifecycle.mode & 0o777).toBe(0o700);
       await runClaudeAgentTurn({
         ...input(),
         env: { ...input().env, HOME: home },
@@ -503,6 +524,9 @@ describe("Claude provider home isolation", () => {
       }
     } finally {
       await rm(lifecycleDirectory, { recursive: true, force: true });
+      expect(await traversableAncestors(temporaryRoot, 1001)).toEqual(
+        ancestors,
+      );
     }
 
     expect(prepareProviderWorkspaceMock).toHaveBeenCalledWith(

@@ -1,6 +1,8 @@
-import { afterAll, beforeAll, expect, test } from "vitest";
-import { startMediaTestPostgres } from "#testing/postgres.ts";
-import { lockDefaultScopes } from "#infrastructure/editions/locks.ts";
+import { afterAll, expect, test } from "vitest";
+import { rm } from "node:fs/promises";
+import { automationTestHarness } from "#testing/automation.ts";
+import { plexBindingFixture } from "#automation/plex-binding/test-fixture.ts";
+import { createPublicationActivities } from "#automation/publication.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import {
   ObservePlexHintInputSchema,
@@ -9,53 +11,60 @@ import {
 import { PrismaPlexEventIngress } from "./ingress.ts";
 import { createOutboxActivities } from "#automation/store.ts";
 
-let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
-beforeAll(async () => {
-  cluster = await startMediaTestPostgres();
-}, 60_000);
+const harness = automationTestHarness();
+const directories: string[] = [];
 afterAll(async () => {
-  await cluster.close();
+  for (const directory of directories)
+    await rm(directory, { recursive: true, force: true });
 });
 let rating = 200;
 async function fixture(target = true) {
-  const db = cluster.database;
+  const db = harness.database();
+  const produced = target
+    ? await plexBindingFixture(db, harness.context())
+    : null;
+  if (produced !== null) {
+    directories.push(produced.files.directory);
+    const result = await createPublicationActivities(
+      produced.context,
+    ).publishMediaToPlex(produced.published.input);
+    if (result.status !== "available")
+      throw new Error("Actual ingress fixture failed publication");
+  }
   const hint: PlexWatchHint = {
     schemaVersion: 1,
     event: "media.scrobble",
     serverMachineId: "fixture-server",
     sectionId: "1",
-    ratingKey: String(++rating),
+    ratingKey: produced?.item.ratingKey ?? String(++rating),
     mediaKind: "movie",
   };
-  const media = await db.mediaItem.create({
-    data: {
-      kind: "movie",
-      title: "Private title",
-      externalIds: {
-        plexRatingKey: hint.ratingKey,
-        plexSectionId: hint.sectionId,
+  const media =
+    produced?.files.media ??
+    (await db.mediaItem.create({
+      data: {
+        kind: "movie",
+        title: "Private title",
+        externalIds: {
+          plexRatingKey: hint.ratingKey,
+          plexSectionId: hint.sectionId,
+        },
       },
-    },
-  });
+    }));
   await db.mediaRuntimeState.update({
     where: { id: "singleton" },
     data: { recoveryEpoch: 0 },
   });
   if (target)
-    await db.$transaction(async (tx) => {
-      await lockDefaultScopes(tx, [defaultScope(media.id)], {
-        createMissing: true,
-      });
-      await tx.mediaIntent.update({
-        where: { mediaId_edition: defaultScope(media.id) },
-        data: { automationEpoch: 0, generation: 7 },
-      });
+    await db.mediaIntent.update({
+      where: { mediaId_edition: defaultScope(media.id) },
+      data: { automationEpoch: 0, generation: 7 },
     });
   const service = new PrismaPlexEventIngress(db, {
     serverMachineId: "fixture-server",
     permittedSections: async () => ({ movie: "1", series: "2" }),
   });
-  return { db, media, hint, service };
+  return { db, media, hint, service, asset: produced?.asset ?? null };
 }
 
 test("concurrent duplicate delivery and lost ACK queue one exact private-free operation", async () => {
@@ -63,7 +72,7 @@ test("concurrent duplicate delivery and lost ACK queue one exact private-free op
   await Promise.all([f.service.accept(f.hint), f.service.accept(f.hint)]);
   await f.service.accept({ ...f.hint, event: "media.stop" });
   const rows = await f.db.operation.findMany({
-    where: { targetId: f.media.id },
+    where: { targetId: f.media.id, kind: "observe_plex_hint" },
     include: { outbox: true },
   });
   expect(rows).toHaveLength(1);
@@ -95,6 +104,7 @@ test("concurrent duplicate delivery and lost ACK queue one exact private-free op
   expect(JSON.stringify(rows)).not.toMatch(
     /Private title|scrobble|Account|thumb|capability/u,
   );
+  expect(JSON.stringify(rows)).not.toContain(f.media.title);
   expect(await f.db.watchState.count({ where: { mediaId: f.media.id } })).toBe(
     0,
   );
@@ -106,7 +116,7 @@ test("concurrent duplicate delivery and lost ACK queue one exact private-free op
   ).toBe(0);
 });
 
-test("server, section, unknown/ambiguous identities and catalog-only targets admit no work", async () => {
+test("server, section, unknown identities and catalog-only targets admit no work", async () => {
   const f = await fixture();
   for (const change of [
     { serverMachineId: "other" },
@@ -114,17 +124,11 @@ test("server, section, unknown/ambiguous identities and catalog-only targets adm
     { ratingKey: "999999" },
   ])
     await f.service.accept({ ...f.hint, ...change });
-  await f.db.mediaItem.create({
-    data: {
-      kind: "movie",
-      title: "Duplicate",
-      externalIds: { plexSectionId: "1", plexRatingKey: f.hint.ratingKey },
-    },
-  });
-  await f.service.accept(f.hint);
-  expect(await f.db.operation.count({ where: { targetId: f.media.id } })).toBe(
-    0,
-  );
+  expect(
+    await f.db.operation.count({
+      where: { targetId: f.media.id, kind: "observe_plex_hint" },
+    }),
+  ).toBe(0);
   const catalog = await fixture(false);
   await catalog.service.accept(catalog.hint);
   expect(
@@ -133,7 +137,9 @@ test("server, section, unknown/ambiguous identities and catalog-only targets adm
     }),
   ).toBe(0);
   expect(
-    await catalog.db.operation.count({ where: { targetId: catalog.media.id } }),
+    await catalog.db.operation.count({
+      where: { targetId: catalog.media.id, kind: "observe_plex_hint" },
+    }),
   ).toBe(0);
 });
 
@@ -147,19 +153,62 @@ test("new epochs cannot reinterpret an old target and matching numeric IDs in an
     },
   });
   await f.service.accept(f.hint);
-  expect(await f.db.operation.count({ where: { targetId: f.media.id } })).toBe(
-    1,
-  );
+  expect(
+    await f.db.operation.count({
+      where: { targetId: f.media.id, kind: "observe_plex_hint" },
+    }),
+  ).toBe(1);
   await f.db.mediaRuntimeState.update({
     where: { id: "singleton" },
     data: { recoveryEpoch: 1 },
   });
   await f.service.accept(f.hint);
   const rows = await f.db.operation.findMany({
-    where: { targetId: f.media.id },
+    where: { targetId: f.media.id, kind: "observe_plex_hint" },
   });
   expect(rows).toHaveLength(1);
   expect(ObservePlexHintInputSchema.parse(rows[0]?.payload).recoveryEpoch).toBe(
     0,
   );
+});
+
+test("duplicate legacy display identity cannot replace or invalidate a current owned Plex claim", async () => {
+  const f = await fixture();
+  await f.db.mediaItem.create({
+    data: {
+      kind: "movie",
+      title: "Unbound duplicate",
+      externalIds: {
+        plexSectionId: f.hint.sectionId,
+        plexRatingKey: f.hint.ratingKey,
+      },
+    },
+  });
+  await f.service.accept(f.hint);
+  expect(
+    await f.db.operation.count({
+      where: { kind: "observe_plex_hint", targetId: f.media.id },
+    }),
+  ).toBe(1);
+  expect(await f.db.watchState.count({ where: { mediaId: f.media.id } })).toBe(
+    0,
+  );
+});
+
+test("an old claim without current physical ownership cannot queue observation through a legacy display fallback", async () => {
+  const f = await fixture();
+  if (f.asset === null) throw new Error("Actual ingress binding asset missing");
+  await f.db.libraryAsset.update({
+    where: { id: f.asset.id },
+    data: { owned: false },
+  });
+  await f.service.accept(f.hint);
+  expect(
+    await f.db.operation.count({
+      where: { kind: "observe_plex_hint", targetId: f.media.id },
+    }),
+  ).toBe(0);
+  expect(
+    await f.db.watchObservationFence.count({ where: { mediaId: f.media.id } }),
+  ).toBe(0);
 });

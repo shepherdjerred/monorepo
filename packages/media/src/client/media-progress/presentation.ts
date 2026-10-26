@@ -5,18 +5,51 @@ type Torrent = MediaVisibility["torrents"][number];
 type Diagnostics = NonNullable<Torrent["diagnostics"]>;
 type Policy = Diagnostics["policy"];
 
+function collectionAssociationMessage(
+  association: MediaVisibility["playback"]["association"],
+): string {
+  const messages: string[] = [];
+  if (association.legacyUnverifiedItems > 0)
+    messages.push(
+      `${String(association.legacyUnverifiedItems)} visible ${association.legacyUnverifiedItems === 1 ? "episode has an unverified legacy Plex association" : "episodes have unverified legacy Plex associations"}.`,
+    );
+  if (association.reconciliationRequiredItems > 0)
+    messages.push(
+      `${String(association.reconciliationRequiredItems)} visible ${association.reconciliationRequiredItems === 1 ? "episode needs" : "episodes need"} reconciliation before playback can be verified.`,
+    );
+  return messages.join(" ");
+}
+
 export function playbackMessage(playback: MediaVisibility["playback"]): string {
   if (playback.scope === "collection")
-    return `${String(playback.playableItems)} of ${String(playback.visibleItems)} visible episodes are ready to watch.${playback.upgradeInProgress ? " Upgrades can continue while these versions remain playable." : ""}`;
+    return [
+      `${String(playback.playableItems)} of ${String(playback.visibleItems)} visible episodes are ready to watch.`,
+      collectionAssociationMessage(playback.association),
+      playback.playable && playback.upgradeInProgress
+        ? "Upgrades can continue while these versions remain playable."
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
   if (playback.playable)
     return playback.upgradeInProgress
       ? "Your current version is ready to watch while an upgrade is in progress."
       : "Your current version is ready to watch in Plex.";
-  return "Playback has not been verified. A completed download still needs import and Plex checks.";
+  if (playback.association.reconciliationRequiredItems > 0)
+    return "This copy needs reconciliation before playback can be verified.";
+  return playback.association.legacyUnverifiedItems > 0
+    ? "An existing copy has a legacy Plex association that is unverified. Playback needs fresh verification."
+    : "Playback has not been verified. A completed download still needs import and Plex checks.";
 }
 
 export function playbackHeading(playback: MediaVisibility["playback"]): string {
-  if (!playback.playable) return "Playback pending";
+  if (!playback.playable) {
+    if (playback.association.reconciliationRequiredItems > 0)
+      return "Playback needs reconciliation";
+    return playback.association.legacyUnverifiedItems > 0
+      ? "Plex verification needed"
+      : "Playback pending";
+  }
   return playback.scope === "collection" &&
     playback.playableItems < playback.visibleItems
     ? "Some episodes ready"

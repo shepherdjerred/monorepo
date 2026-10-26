@@ -14,18 +14,63 @@ import { snapshotHash } from "#migration/profile-import.ts";
 import { settleReviewedReservations } from "#infrastructure/publication-proof/lifecycle.ts";
 import { snapshotPublicationAsset } from "#infrastructure/publication-proof/snapshots.ts";
 import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";
-import { assertNativeCompensation } from "./guards.ts";
+import {
+  assertNativeCompensationPhase,
+  assertCompensationPhaseCurrent,
+  assertCompensationPhaseTransaction,
+  type CompensationExecutionAuthority,
+  type CompensationExecutionPhase,
+} from "./guards.ts";
 import { NativeCompensationProtection } from "./protection.ts";
 import { assertCompensationRestoredParticipants } from "./completion-proof.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
+
+type ExecutionInput = {
+  activity: NativeCompensationActivityInput;
+  execution: NativeCompensationExecution;
+};
+type CompletionInput = {
+  activity: NativeCompensationActivityInput;
+  completion: NativeCompensationCompletion;
+};
+type PhaseWriteOptions = {
+  freshness: PlexBindingFreshness;
+  budget: PublicationAuthorityReadBudget;
+};
+type WriteOptions = {
+  freshness?: PlexBindingFreshness | undefined;
+  budget: PublicationAuthorityReadBudget;
+};
 
 export async function persistCompensationExecution(
   tx: Prisma.TransactionClient,
-  input: {
-    activity: NativeCompensationActivityInput;
-    execution: NativeCompensationExecution;
-  },
+  input: ExecutionInput,
+  budget = new PublicationAuthorityReadBudget(),
 ): Promise<void> {
-  const authority = await assertNativeCompensation(tx, input.activity);
+  const phase = await assertNativeCompensationPhase(tx, input.activity, budget);
+  return persistExecution(tx, input, phase, { budget });
+}
+
+export async function persistCompensationPhaseExecution(
+  tx: Prisma.TransactionClient,
+  input: ExecutionInput,
+  phase: CompensationExecutionPhase,
+  { freshness, budget }: PhaseWriteOptions,
+): Promise<void> {
+  freshness.assertActive();
+  assertPairedWriterPhase(tx, phase, freshness, budget);
+  return persistExecution(tx, input, phase, { budget, freshness });
+}
+
+async function persistExecution(
+  tx: Prisma.TransactionClient,
+  input: ExecutionInput,
+  phase: CompensationExecutionPhase,
+  { budget, freshness }: WriteOptions,
+): Promise<void> {
+  const record = assertWriterPhase(tx, input.activity, phase);
+  const authority = phase.authority;
   const execution = NativeCompensationExecutionSchema.parse(input.execution);
   if (
     execution.continuationId !== authority.continuationId ||
@@ -53,24 +98,64 @@ export async function persistCompensationExecution(
   }
   if (authority.completion !== null)
     throw new Error("Completed compensation lacks execution identity");
-  await tx.nativePublicationCompensationContinuation.update({
-    where: { id: authority.continuationId },
-    data: {
+  await assertCompensationPhaseCurrent(tx, phase);
+  freshness?.assertActive();
+  const changed = await tx.nativePublicationCompensationContinuation.updateMany(
+    {
+      where: phaseWhere(phase),
+      data: {
+        executionEvidence: z.record(z.string(), z.json()).parse(execution),
+        state: "compensating",
+        version: { increment: 1 },
+      },
+    },
+  );
+  if (changed.count !== 1)
+    throw new Error("Compensation execution compare-and-swap changed");
+  const current = await readPhaseWrite(
+    tx,
+    phase,
+    {
       executionEvidence: z.record(z.string(), z.json()).parse(execution),
       state: "compensating",
-      version: { increment: 1 },
+      version: record.row.version + 1,
     },
-  });
+    { budget, freshness },
+  );
+  record.row = { ...record.row, ...current };
+  record.execution = execution;
+  authority.version = current.version;
+  authority.execution = execution;
 }
 
 export async function commitNativeCompensation(
   tx: Prisma.TransactionClient,
-  input: {
-    activity: NativeCompensationActivityInput;
-    completion: NativeCompensationCompletion;
-  },
+  input: CompletionInput,
+  budget = new PublicationAuthorityReadBudget(),
 ): Promise<void> {
-  const authority = await assertNativeCompensation(tx, input.activity);
+  const phase = await assertNativeCompensationPhase(tx, input.activity, budget);
+  return commitCompletion(tx, input, phase, { budget });
+}
+
+export async function commitCompensationPhaseCompletion(
+  tx: Prisma.TransactionClient,
+  input: CompletionInput,
+  phase: CompensationExecutionPhase,
+  { freshness, budget }: PhaseWriteOptions,
+): Promise<void> {
+  freshness.assertActive();
+  assertPairedWriterPhase(tx, phase, freshness, budget);
+  return commitCompletion(tx, input, phase, { budget, freshness });
+}
+
+async function commitCompletion(
+  tx: Prisma.TransactionClient,
+  input: CompletionInput,
+  phase: CompensationExecutionPhase,
+  { budget, freshness }: WriteOptions,
+): Promise<void> {
+  const record = assertWriterPhase(tx, input.activity, phase);
+  const authority = phase.authority;
   const completion = NativeCompensationCompletionSchema.parse(input.completion);
   if (authority.completion !== null) {
     if (
@@ -84,6 +169,8 @@ export async function commitNativeCompensation(
     throw new Error(
       "Compensation cannot complete without persisted execution identity",
     );
+  await assertCompensationPhaseCurrent(tx, phase);
+  freshness?.assertActive();
   if (
     completion.continuationId !== authority.continuationId ||
     completion.receiptId !== authority.receiptId ||
@@ -104,6 +191,8 @@ export async function commitNativeCompensation(
   const settlement = await settleReviewedReservations(
     tx,
     authority.descriptor.scope.interruptedWork,
+    record.original,
+    { budget: phase.budget, parent: record.queriedParent },
   );
   if (
     snapshotHash(nativeJson(settlement)) !==
@@ -151,19 +240,115 @@ export async function commitNativeCompensation(
     data: { availability: "importing", version: { increment: 1 } },
   });
   await mirrorDefaultAvailability(tx, ids, "importing");
-  await tx.nativePublicationCompensationContinuation.update({
-    where: { id: authority.continuationId },
-    data: {
+  freshness?.assertActive();
+  const changed = await tx.nativePublicationCompensationContinuation.updateMany(
+    {
+      where: phaseWhere(phase),
+      data: {
+        completion: z.record(z.string(), z.json()).parse(completion),
+        state: "compensated",
+        version: { increment: 1 },
+      },
+    },
+  );
+  if (changed.count !== 1)
+    throw new Error("Compensation completion compare-and-swap changed");
+  await readPhaseWrite(
+    tx,
+    phase,
+    {
       completion: z.record(z.string(), z.json()).parse(completion),
       state: "compensated",
-      version: { increment: 1 },
+      version: authority.version + 1,
     },
-  });
+    { budget, freshness },
+  );
+  phase.closed = true;
+}
+
+function assertWriterPhase(
+  tx: Prisma.TransactionClient,
+  input: NativeCompensationActivityInput,
+  phase: CompensationExecutionPhase,
+) {
+  const record = assertCompensationPhaseTransaction(tx, phase);
+  if (snapshotHash(input) !== snapshotHash(phase.activity))
+    throw new Error("Compensation write changed the phase command");
+  return record;
+}
+
+function assertPairedWriterPhase(
+  tx: Prisma.TransactionClient,
+  phase: CompensationExecutionPhase,
+  freshness: PlexBindingFreshness,
+  budget: PublicationAuthorityReadBudget,
+) {
+  assertCompensationPhaseTransaction(tx, phase);
+  if (
+    phase.budget !== budget ||
+    phase.plex === null ||
+    freshness.expiresAtMs > phase.plex.expiresAtMs
+  )
+    throw new Error(
+      "Compensation writer requires the phase's original budget and Plex deadline",
+    );
+}
+
+function phaseWhere(phase: CompensationExecutionPhase) {
+  const row = phase.chain[0]?.row;
+  if (row === undefined) throw new Error("Compensation phase record missing");
+  return {
+    id: row.id,
+    version: row.version,
+    state: row.state,
+    coordinatorOperationId: phase.activity.operationId,
+    recoveryEpoch: phase.activity.recoveryEpoch,
+    descriptorHash: row.descriptorHash,
+    receiptId: row.receiptId,
+  };
+}
+
+async function readPhaseWrite(
+  tx: Prisma.TransactionClient,
+  phase: CompensationExecutionPhase,
+  patch: Partial<
+    Pick<
+      Prisma.NativePublicationCompensationContinuationGetPayload<
+        Record<string, never>
+      >,
+      "executionEvidence" | "completion" | "state" | "version"
+    >
+  >,
+  { budget, freshness }: WriteOptions,
+) {
+  freshness?.assertActive();
+  const record = assertCompensationPhaseTransaction(tx, phase);
+  const current =
+    await tx.nativePublicationCompensationContinuation.findUniqueOrThrow({
+      where: { id: record.row.id },
+    });
+  budget.consume(1);
+  freshness?.assertActive();
+  const {
+    receipt: _receipt,
+    transition: _transition,
+    updatedAt: _beforeTime,
+    ...before
+  } = record.row;
+  const { updatedAt: _afterTime, ...after } = current;
+  if (
+    snapshotHash(nativeJson({ ...before, ...patch })) !==
+    snapshotHash(nativeJson(after))
+  )
+    throw new Error(
+      "Compensation own-write readback differs from its exact transition",
+    );
+  return current;
 }
 
 async function assertPredecessorBindings(
   tx: Prisma.TransactionClient,
-  authority: Awaited<ReturnType<typeof assertNativeCompensation>>,
+  authority: CompensationExecutionAuthority,
   completion: NativeCompensationCompletion,
 ) {
   const files = authority.descriptor.scope.files;

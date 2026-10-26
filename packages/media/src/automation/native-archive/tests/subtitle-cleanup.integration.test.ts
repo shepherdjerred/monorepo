@@ -5,13 +5,14 @@ import { z } from "zod";
 import { automationTestHarness } from "#testing/automation.ts";
 import { archiveCaptionFixture } from "#infrastructure/native-archive/caption.test-support.ts";
 import { queueNativeArchiveCleanup } from "#infrastructure/native-archive/continuation.ts";
-import { createNativeArchiveCleanupObserver } from "#migration/native-archive/cleanup.ts";
+import { observeArchiveCleanup } from "#automation/native-archive/fixtures/observe.ts";
 import { CleanupNativeArchiveInputSchema } from "#shared/native-recovery/archive.ts";
 import { reconcileCompensationHousehold } from "#automation/native-compensation/fixtures/household.ts";
-import { testCompensationExecution } from "#automation/native-compensation/test-fixture.ts";
 import { nativeLocalPath } from "#automation/native-recovery/files.ts";
+import { traceArchiveReadBudget } from "#infrastructure/native-archive/tests/read-budget-trace.test-support.ts";
 
 const harness = automationTestHarness();
+traceArchiveReadBudget("archive-caption-read-diagnostic");
 let fixture: Awaited<ReturnType<typeof archiveCaptionFixture>> | undefined;
 beforeEach(async () => {
   fixture = await archiveCaptionFixture(
@@ -20,7 +21,7 @@ beforeEach(async () => {
     false,
     8,
   );
-  await fixture.observer(fixture.plan.id);
+  await fixture.observer(fixture.applyInput);
   await fixture.files.applyNativeArchiveFiles(fixture.applyInput);
 });
 afterEach(async () => {
@@ -53,16 +54,7 @@ test("archive cleanup refuses a substituted supplementary caption journal before
     where: { id: z.uuid().parse(operationId) },
   });
   const input = CleanupNativeArchiveInputSchema.parse(operation.payload);
-  await createNativeArchiveCleanupObserver({
-    ...f.f.observerContext,
-    archiveExecution: () => {
-      const execution = testCompensationExecution();
-      return {
-        ...execution,
-        checkpoint: () => execution.checkpoint("archive-cleanup"),
-      };
-    },
-  })(input);
+  await observeArchiveCleanup(f.observerContext, input);
   const asset = await db.libraryAsset.findUniqueOrThrow({
     where: { id: f.cleanup.assetId },
   });

@@ -1,4 +1,5 @@
 import type { NativeArchiveExecution } from "#automation/native-archive/execution.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import {
   archiveAwait,
   assertArchiveActive,
@@ -30,6 +31,7 @@ export async function observeArchiveEvidence(
   context: NativeArchiveObserverContext,
   input: { planId: string; recoveryEpoch: number; scope: NativeArchiveScope },
   execution: NativeArchiveExecution,
+  budget = new PublicationAuthorityReadBudget(),
 ) {
   assertArchiveActive(execution);
   const capturedAt = new Date();
@@ -39,7 +41,7 @@ export async function observeArchiveEvidence(
   ]);
   const roots = await archiveAwait(
     execution,
-    assertNativeStorageRoots(context.db, input.scope.storageRoots),
+    assertNativeStorageRoots(context.db, input.scope.storageRoots, budget),
   );
   const quiescence = QuiescenceEvidenceSchema.parse(
     await archiveAwait(execution, context.observer.observe(signal)),

@@ -484,6 +484,18 @@
         {
           "runner": "vitest",
           "args": ["test"]
+        },
+        {
+          "runner": "command",
+          "name": "pms-runner",
+          "command": [
+            "go",
+            "-C",
+            "reproduction/pms-runner",
+            "test",
+            "-race",
+            "./..."
+          ]
         }
       ]
     },

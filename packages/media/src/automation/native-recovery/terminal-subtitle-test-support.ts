@@ -1,4 +1,3 @@
-import path from "node:path";
 import { createHash } from "node:crypto";
 import { writeFile } from "node:fs/promises";
 import { expect } from "vitest";
@@ -8,8 +7,11 @@ import type { CredentialCipher } from "#application/security.ts";
 import { PrismaAdminApplication } from "#infrastructure/admin-service.ts";
 import { PrismaSubtitleReplacements } from "#infrastructure/subtitle-replacement/service.ts";
 import { createSubtitleReplacementActivities } from "#automation/subtitle-replacement/activities.ts";
+import { createSubtitleReplacementNetworkActivities } from "#infrastructure/subtitle-replacement/activities.ts";
+import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { settleTerminalPublication } from "./terminal-test-support.ts";
 import type { fileFixture } from "#automation/files/test-support.ts";
+import { createAutomationTestContext } from "#testing/automation.ts";
 
 type Fixture = Awaited<ReturnType<typeof fileFixture>>;
 type Published = Awaited<ReturnType<Fixture["published"]>>;
@@ -36,7 +38,7 @@ export function settleReplacedRollback(
     });
     const filename = asset.path.replace(/\.[^.]+$/u, ".en.forced.srt");
     const content = "1\n00:00:01,000 --> 00:00:03,000\nOriginal captions.\n";
-    await writeFile(filename, content);
+    await writeFile(workerFilePath(file.context, filename), content);
     const subtitle = await db.subtitleAsset.create({
       data: {
         assetId: asset.id,
@@ -56,10 +58,9 @@ export function settleReplacedRollback(
         matchingEvidence: {},
       },
     });
-    const settled = await settleTerminalPublication(
-      db,
-      "cancelled",
-      async () => {
+    const settled = await settleTerminalPublication(db, "cancelled", {
+      context: createAutomationTestContext(db, cipher),
+      afterRollback: async () => {
         const current = await db.libraryAsset.findUniqueOrThrow({
           where: { id: asset.id },
         });
@@ -135,11 +136,15 @@ export function settleReplacedRollback(
         ).toMatchObject({ outcome: "installed" });
         if (cleanup) {
           file.advance(8 * 86_400_000);
-          const operation = await db.operation.create({
-            data: {
-              kind: "cleanup_subtitle_replacement",
-              targetId: replacementId,
-              payload: { replacementId },
+          await createSubtitleReplacementNetworkActivities(
+            db,
+          ).queueSubtitleReplacementCleanup({
+            replacementId,
+            operationId: z.uuid().parse(approved.operationId),
+          });
+          const operation = await db.operation.findUniqueOrThrow({
+            where: {
+              idempotencyKey: `subtitle-replacement-cleanup:${replacementId}`,
             },
           });
           expect(
@@ -150,22 +155,7 @@ export function settleReplacedRollback(
           ).toEqual({ state: "cleaned" });
         }
       },
-    )(file, original);
-    // Match the production canonical mounts; the immutable receipts and real journals retain
-    // their original exact temporary paths and are checked through the trusted test mapping.
-    for (const row of await db.subtitleAsset.findMany({
-      where: { assetId: asset.id, path: { not: null } },
-    })) {
-      const oldPath = z.string().parse(row.path);
-      const control = path.relative(file.roots.control, oldPath);
-      const canonical = control.startsWith("..")
-        ? path.join("/data/movies", path.relative(file.roots.library, oldPath))
-        : path.join("/data/movies/.media-control", control);
-      await db.subtitleAsset.update({
-        where: { id: row.id },
-        data: { path: canonical },
-      });
-    }
+    })(file, original);
     return settled;
   };
 }

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { observeRequesterWatch } from "#automation/watch.ts";
-import { testWatchExecution } from "#testing/watch-execution.ts";
+import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { prepareWatchBatch } from "./prepare.ts";
 import { finalizeWatchBatch } from "./finalize.ts";
 import {
@@ -17,8 +17,8 @@ describe("watch invocation deadline fences", () => {
     const paused = pausedTransport(watchedTransport(true));
     let expired = false;
     const context = h.context(paused.transport);
-    const execution = testWatchExecution();
-    context.watchExecution = () => ({
+    const execution = testPlexBindingExecution();
+    context.plexBindingExecution = () => ({
       ...execution,
       assertActive: () => {
         if (expired) throw new Error("deadline expired");
@@ -35,7 +35,7 @@ describe("watch invocation deadline fences", () => {
       await h
         .database()
         .watchState.findUnique({ where: { userId_mediaId_edition: f.key } }),
-    ).toMatchObject({ observedAt: new Date(0) });
+    ).toEqual(f.baseline);
     expect(
       await observeRequesterWatch(
         h.context(watchedTransport(true)),
@@ -46,7 +46,7 @@ describe("watch invocation deadline fences", () => {
   test("deadline passing during a PostgreSQL lock wait aborts without changing cache or fence", async () => {
     const f = await h.fixture();
     const context = h.context();
-    const execution = testWatchExecution();
+    const execution = testPlexBindingExecution();
     const prepared = await prepareWatchBatch(
       context,
       f.media.id,
@@ -69,7 +69,12 @@ describe("watch invocation deadline fences", () => {
       [
         {
           userId: f.user.id,
-          outcome: { kind: "observed", watched: true, scopedAccess: false },
+          outcome: {
+            kind: "observed",
+            watched: true,
+            scopedAccess: false,
+            freshness: prepared.freshness,
+          },
         },
       ],
       {
@@ -100,13 +105,16 @@ describe("watch invocation deadline fences", () => {
       await h
         .database()
         .watchState.findUnique({ where: { userId_mediaId_edition: f.key } }),
-    ).toMatchObject({ observedAt: new Date(0) });
+    ).toEqual(f.baseline);
     expect(
       await h.database().watchObservationFence.findUnique({
         where: {
           mediaId_edition: { mediaId: f.media.id, edition: "default" },
         },
       }),
-    ).toMatchObject({ issuedRevision: 1n, settledRevision: 0n });
+    ).toMatchObject({
+      issuedRevision: f.fence.issuedRevision + 1n,
+      settledRevision: f.fence.settledRevision,
+    });
   });
 });

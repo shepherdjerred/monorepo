@@ -5,6 +5,7 @@ import { automationTestHarness } from "#testing/automation.ts";
 import { nativeQuarantineFixture } from "#automation/native-quarantine/test-fixture.ts";
 import { createPublicationActivities } from "#automation/publication.ts";
 import { PrismaMediaCommands } from "#infrastructure/commands.ts";
+import { retentionPlexContext } from "#automation/retention/fixtures/plex.ts";
 
 const harness = automationTestHarness();
 const directories: string[] = [];
@@ -30,14 +31,14 @@ test("a fresh authorized request resumes physically restored quarantine without 
     where: { userId: f.file.user.id },
     create: {
       userId: f.file.user.id,
-      serverMachineId: "server",
+      serverMachineId: f.observerContext.expectedServerMachineId,
       kind: "account",
       permittedSectionIds: ["1"],
       permittedMediaKinds: ["movie"],
       verifiedAt: new Date(),
     },
     update: {
-      serverMachineId: "server",
+      serverMachineId: f.observerContext.expectedServerMachineId,
       kind: "account",
       permittedSectionIds: ["1"],
       permittedMediaKinds: ["movie"],
@@ -46,7 +47,7 @@ test("a fresh authorized request resumes physically restored quarantine without 
   });
   const commands = new PrismaMediaCommands(db, {
     keepDays: 30,
-    serverMachineId: "server",
+    serverMachineId: f.observerContext.expectedServerMachineId,
   });
   const requested = await commands.createRequest(
     f.file.user,
@@ -79,36 +80,9 @@ test("a fresh authorized request resumes physically restored quarantine without 
   const media = await db.mediaItem.findUniqueOrThrow({
     where: { id: f.file.media.id },
   });
-  const context = harness.context(async (url) => {
-    if (url.pathname.endsWith("/library/sections"))
-      return Response.json({
-        MediaContainer: {
-          size: 1,
-          Directory: [{ key: "1", title: "Movies", type: "movie" }],
-        },
-      });
-    if (url.pathname.endsWith("/refresh")) return new Response();
-    if (
-      url.pathname.endsWith("/all") ||
-      url.pathname.endsWith("/metadata/99123")
-    )
-      return Response.json({
-        MediaContainer: {
-          size: 1,
-          totalSize: 1,
-          Metadata: [
-            {
-              ratingKey: "99123",
-              title: media.title,
-              type: "movie",
-              Guid: [{ id: `tmdb://${String(media.tmdbId)}` }],
-              Media: [{ Part: [{ id: 1, file: asset.path }] }],
-            },
-          ],
-        },
-      });
-    throw new Error("Unexpected native publication network call");
-  });
+  const { context } = await retentionPlexContext(db, harness.context(), [
+    media.id,
+  ]);
   expect(
     await createPublicationActivities(context).publishRestoredMedia(input),
   ).toEqual({ status: "available", reason: null });

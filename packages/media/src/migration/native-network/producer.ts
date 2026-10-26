@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { NativeRecoveryNetworkEvidenceSchema } from "#shared/native-recovery.ts";
 import { NativePublishedScopeSchema } from "#shared/native-recovery/lifecycle.ts";
 import { CanonicalMountEvidenceSchema } from "#shared/canonical-storage.ts";
@@ -28,17 +29,21 @@ export type NativeRecoveryObserverContext = Pick<
 export function createNativeRecoveryObserver(
   context: NativeRecoveryObserverContext,
 ) {
-  return async (planId: string) => {
+  return async (
+    planId: string,
+    budget = new PublicationAuthorityReadBudget(),
+  ) => {
     const signal = AbortSignal.timeout(60_000);
     const capturedAt = new Date();
     const plan = await context.db.nativeRecoveryPlan.findUniqueOrThrow({
       where: { id: planId },
     });
     const scope = NativePublishedScopeSchema.parse(plan.scope);
-    await assertNativeSnapshot(context.db, planId, scope);
+    await assertNativeSnapshot(context.db, planId, scope, budget);
     const roots = await assertNativeStorageRoots(
       context.db,
       scope.storageRoots,
+      budget,
     );
     const quiescence = QuiescenceEvidenceSchema.parse(
       await context.observer.observe(signal),
@@ -84,7 +89,7 @@ export function createNativeRecoveryObserver(
     return context.db.$transaction(async (tx) => {
       await lockNativeScope(tx, scope);
       await tx.$queryRaw`SELECT id FROM "NativeRecoveryPlan" WHERE id = ${planId} FOR SHARE`;
-      const current = await assertNativeSnapshot(tx, planId, scope);
+      const current = await assertNativeSnapshot(tx, planId, scope, budget);
       if (
         !["preparing", "awaiting_review", "applying"].includes(
           current.plan.state,
@@ -95,7 +100,7 @@ export function createNativeRecoveryObserver(
       assertWritersQuiescent(quiescence);
       assertCanonicalIdentity(
         mounts,
-        await assertNativeStorageRoots(tx, scope.storageRoots),
+        await assertNativeStorageRoots(tx, scope.storageRoots, budget),
       );
       const observation = await tx.nativeRecoveryObservation.create({
         data: {

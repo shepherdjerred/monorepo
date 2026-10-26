@@ -1,22 +1,24 @@
 import type { NativeCompensationActivityInput } from "#shared/native-recovery/compensation-runtime.ts";
-import { publicationRecordStore } from "#filesystem/publication-proof/store.ts";
+import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { plexBindingFreshness } from "#infrastructure/plex-binding/freshness.ts";
+import { readCompletedNativeCompensationState } from "#infrastructure/native-compensation/state.ts";
+import { discoverNativeCompensationExecution } from "#infrastructure/native-compensation/execution/discovery.ts";
+import { assertCompensationDiscovery } from "#infrastructure/native-compensation/execution/discovery-check.ts";
 import { FileOperationConflict } from "#filesystem/operations-types.ts";
-import {
-  persistCompensationExecution,
-  commitNativeCompensation,
-} from "#infrastructure/native-compensation/completion.ts";
-import {
-  preparePublicationStores,
-  publicationRecording,
-  withPublicationPaths,
-} from "#automation/publication-proof/recording.ts";
-import { publicationAuthorityGuard } from "#automation/publication-proof/authority.ts";
+import { commitCompensationPhaseCompletion } from "#infrastructure/native-compensation/completion.ts";
+import { withPublicationPaths } from "#automation/publication-proof/recording.ts";
 import { assertPublicationActive } from "#automation/publication-proof/invocation.ts";
 import { executePublicationInverse } from "#automation/publication-proof/inverse.ts";
-import { snapshotHash } from "#migration/profile-import.ts";
-import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
-import { compensationAuthority } from "./authority.ts";
-import { captureCompensationProof } from "./proof.ts";
+import {
+  compensationAuthority,
+  assertCompensationAuthorityCurrent,
+} from "./authority.ts";
+import { measureCompensationExecution } from "./measurement.ts";
+import {
+  recordCompensationMeasurement,
+  compensationRootFreshness,
+} from "./record.ts";
 import {
   compensationDeadline,
   type CompensationFileContext,
@@ -28,152 +30,146 @@ export async function executeNativeCompensation(
   activity: NativeCompensationActivityInput,
 ): Promise<void> {
   const db = initial.files.db;
-  const authority = await db.$transaction((tx) =>
-    compensationAuthority(tx, initial, activity),
-  );
-  if (authority.completion !== null) return;
-  const plan = authority.descriptor.scope.intent.entries.map(
-    (item) => item.entry,
-  );
-  for (const kind of [
-    ...new Set(plan.map((entry) => entry.libraryKind)),
-  ].sort())
-    await publicationRecordStore(initial.files.roots[kind], {
-      transitionId: authority.descriptor.scope.transition.transitionId,
-      continuationId: activity.continuationId,
-      assertActive: compensationDeadline(initial, authority.network),
-      ...(initial.files.verifyPlexExclusion === undefined
-        ? {}
-        : { verifyPlexExclusion: initial.files.verifyPlexExclusion }),
-    });
-  const prepared = await captureCompensationProof(
-    initial,
-    authority.descriptor.scope,
-    authority.planId,
-    activity.continuationId,
-  );
-  const { context } = prepared;
-  const approved = authority.descriptor.approvedFileEvidence;
-  const allRecords = prepared.evidence.acknowledgedEffects;
-  if (
-    snapshotHash(
-      nativeJson(allRecords.slice(0, approved.acknowledgedEffects.length)),
-    ) !== approved.effectPrefixHash ||
-    allRecords
-      .slice(approved.acknowledgedEffects.length)
-      .some((record) => record.continuationId !== activity.continuationId)
-  )
-    throw new FileOperationConflict(
-      "Compensation prefix no longer extends the exact owner review",
-    );
-  if (
-    authority.execution === null &&
-    (allRecords.length !== approved.acknowledgedEffects.length ||
-      snapshotHash(nativeJson(prepared.evidence.participants)) !==
-        snapshotHash(nativeJson(approved.participants)))
-  )
-    throw new FileOperationConflict(
-      "Compensation effects lack durable execution identity",
-    );
-  const stores = await preparePublicationStores(context.files, {
-    transitionId: prepared.intent.transitionId,
-    continuationId: activity.continuationId,
-    plan,
+  const budget = new PublicationAuthorityReadBudget();
+  // Capture once before even the terminal ACK read; no hashing or later phase renews it.
+  const observed = { wall: Date.now(), monotonic: performance.now() };
+  const original = plexBindingFreshness({
+    observed,
+    expiresAtMs: Math.min(
+      initial.execution.expiresAtMs,
+      observed.wall + 60_000,
+    ),
+    guards: [initial.files.execution],
   });
-  const recording = publicationRecording(
-    context.files,
-    prepared.intent,
-    stores,
-    {
-      inverse: { continuationId: activity.continuationId },
-      acknowledged: allRecords.filter(
-        (record) => record.continuationId !== activity.continuationId,
-      ),
+  const execution: PlexBindingExecution = {
+    observed,
+    expiresAtMs: original.expiresAtMs,
+    signal: initial.files.execution.signal,
+    assertActive: () => {
+      initial.files.execution.signal.throwIfAborted();
+      original.assertActive();
     },
-  );
-  const assertActive = compensationDeadline(context, authority.network);
-  const execution = {
-    schemaVersion: 1 as const,
-    continuationId: activity.continuationId,
-    descriptorHash: authority.descriptorHash,
-    recoveryEpoch: activity.recoveryEpoch,
-    transition: authority.descriptor.scope.transition,
-    effectPrefixHash: approved.effectPrefixHash,
-    participants: approved.participants,
+    checkpoint: initial.files.execution.checkpoint,
   };
-  await db.$transaction(
-    async (tx) => {
-      assertActive();
-      const current = await compensationAuthority(tx, context, activity);
-      if (current.completion !== null) return;
-      const operations = recording.operations(async () => {
-        await compensationAuthority(tx, context, activity);
-        assertActive();
-      });
-      await withPublicationPaths(context.files, plan, operations, async () => {
-        await recording.assertCurrent();
-        await prepared.assertCurrent();
-        assertActive();
-        await persistCompensationExecution(tx, { activity, execution });
-        assertActive();
-      });
-    },
-    { timeout: 30_000, maxWait: 30_000 },
+  const settled = await db.$transaction((tx) =>
+    readCompletedNativeCompensationState(tx, activity, budget),
   );
+  if (settled !== null) return;
+  execution.assertActive();
+  const discovery = await db.$transaction((tx) =>
+    discoverNativeCompensationExecution(tx, activity, { execution, budget }),
+  );
+  const measurementClock = plexBindingFreshness({
+    observed,
+    expiresAtMs: Math.min(execution.expiresAtMs, discovery.expiresAtMs),
+    guards: [execution],
+  });
+  const measured = await measureCompensationExecution(
+    initial,
+    discovery,
+    measurementClock.assertActive,
+  );
+  await initial.files.checkpoint("native-compensation-measured");
+  measurementClock.assertActive();
+  const recorded = await recordCompensationMeasurement(initial, {
+    activity,
+    execution,
+    discovery,
+    measured,
+    budget,
+  });
+  if (recorded === null) return;
+  const { plex, context, stores, recording } = recorded;
   await context.files.checkpoint("native-compensation-execution-committed");
   await db.$transaction(
     async (tx) => {
-      const current = await compensationAuthority(tx, context, activity);
-      if (current.completion !== null) return;
+      const current = await compensationAuthority(tx, context, activity, plex);
+      if (current === null) return;
+      assertCompensationDiscovery(tx, current.phase, recorded.discovery, {
+        execution,
+        budget,
+      });
+      const deadline = compensationDeadline(context, current.authority.network);
+      const assertActive = () => {
+        deadline();
+        plex.freshness.assertActive();
+        execution.assertActive();
+      };
       assertActive();
-      for (const store of stores) {
-        const authorityDeadline = await publicationAuthorityGuard(
-          tx,
-          context.files,
-          { libraryKind: store.kind, recoveryEpoch: activity.recoveryEpoch },
-        );
+      const physicalFreshness = await compensationRootFreshness(tx, context, {
+        activity,
+        execution,
+        plex,
+        kinds: stores.map((store) => store.kind),
+      });
+      for (const store of stores)
         store.bindAuthority(() => {
           assertActive();
-          authorityDeadline();
+          physicalFreshness.assertActive();
         });
-      }
       const operations = recording.operations(async () => {
-        await compensationAuthority(tx, context, activity);
-        assertActive();
-      });
-      await withPublicationPaths(context.files, plan, operations, async () => {
-        await recording.assertCurrent();
-        for (const observation of prepared.observations)
-          if (observation.continuationId !== activity.continuationId)
-            await observation.assertUnchanged();
-        for (const journal of prepared.journals)
-          await journal.assertCurrent(recording.state);
-        for (const action of recording.actions) {
-          const item = operations.find(
-            (candidate) => candidate.kind === action.entry.libraryKind,
-          );
-          if (item === undefined)
-            throw new Error("Compensation root executor missing");
-          await executePublicationInverse(item.files, action);
-        }
-        if (recording.state.next !== undefined)
-          throw new FileOperationConflict("Compensation inverse is incomplete");
-        await recording.assertCurrent();
-        for (const journal of prepared.journals)
-          await journal.assertCurrent(recording.state);
-        const completion = await compensationCompletion(
+        await assertCompensationAuthorityCurrent(
           tx,
-          context.files,
-          activity,
-          { authority: current, state: recording.state },
+          context,
+          plex,
+          current.phase,
         );
-        await compensationAuthority(tx, context, activity);
-        await commitNativeCompensation(tx, { activity, completion });
-        await context.files.checkpoint("native-compensation-before-commit");
-        await recording.assertCurrent();
-        for (const store of stores) store.assertActive();
-        assertPublicationActive(context.files);
+        assertActive();
+        physicalFreshness.assertActive();
       });
+      await withPublicationPaths(
+        context.files,
+        measured.plan,
+        operations,
+        async () => {
+          await recording.assertCurrent();
+          for (const observation of measured.observations)
+            await observation.assertUnchanged();
+          for (const journal of measured.journals)
+            await journal.assertCurrent(recording.state);
+          for (const action of recording.actions) {
+            const item = operations.find(
+              (candidate) => candidate.kind === action.entry.libraryKind,
+            );
+            if (item === undefined)
+              throw new Error("Compensation root executor missing");
+            await executePublicationInverse(item.files, action);
+          }
+          if (recording.state.next !== undefined)
+            throw new FileOperationConflict(
+              "Compensation inverse is incomplete",
+            );
+          await recording.assertCurrent();
+          for (const journal of measured.journals)
+            await journal.assertCurrent(recording.state);
+          const completion = await compensationCompletion(
+            tx,
+            context.files,
+            activity,
+            { authority: current.authority, state: recording.state },
+          );
+          await assertCompensationAuthorityCurrent(
+            tx,
+            context,
+            plex,
+            current.phase,
+          );
+          await commitCompensationPhaseCompletion(
+            tx,
+            { activity, completion },
+            current.phase,
+            { freshness: physicalFreshness, budget },
+          );
+          await context.files.checkpoint("native-compensation-before-commit");
+          await recording.assertCurrent();
+          for (const store of stores) store.assertActive();
+          assertPublicationActive(context.files);
+          assertActive();
+          physicalFreshness.assertActive();
+        },
+      );
+      assertActive();
+      physicalFreshness.assertActive();
     },
     { timeout: 30_000, maxWait: 30_000 },
   );

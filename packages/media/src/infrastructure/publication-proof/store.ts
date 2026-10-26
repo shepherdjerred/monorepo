@@ -25,11 +25,95 @@ export async function loadPublicationIntent(
   attemptId: string,
   budget?: PublicationAuthorityReadBudget,
 ): Promise<PublicationIntentRef | null> {
+  const record = await loadPublicationIntentRecord(tx, attemptId, budget);
+  return record?.reference ?? null;
+}
+
+/** One call-local immutable parent read, including its already raw-hash-validated outcome. */
+export async function loadPublicationIntentRecord(
+  tx: Prisma.TransactionClient,
+  attemptId: string,
+  budget?: PublicationAuthorityReadBudget,
+): Promise<{
+  reference: PublicationIntentRef;
+  outcome: PublicationOutcome | null;
+} | null> {
   const row = await tx.mediaPublicationTransition.findUnique({
     where: { attemptId },
   });
   if (row === null) return null;
   budget?.consume(1);
+  const { reference, outcome } = await validatePublicationIntentRow(
+    tx,
+    row,
+    budget,
+  );
+  return { reference, outcome };
+}
+
+type TransitionRow = Prisma.MediaPublicationTransitionGetPayload<
+  Record<string, never>
+>;
+
+/** Actual queried immutable parent and locked attempt, local to one transaction. */
+export type QueriedPublicationParent = Awaited<
+  ReturnType<typeof loadPublicationIntentFromQueriedTransition>
+>;
+
+export async function loadPublicationIntentFromQueriedTransition(
+  tx: Prisma.TransactionClient,
+  input: {
+    transaction: Prisma.TransactionClient;
+    transition: TransitionRow;
+    budget: PublicationAuthorityReadBudget;
+  },
+) {
+  if (input.transaction !== tx)
+    throw new Error("Publication parent belongs to another transaction");
+  const record = await validatePublicationIntentRow(
+    tx,
+    input.transition,
+    input.budget,
+  );
+  return {
+    ...record,
+    transaction: tx,
+    budget: input.budget,
+    transition: input.transition,
+    rawHash: snapshotHash(
+      nativeJson({ transition: input.transition, ...record }),
+    ),
+  };
+}
+
+export function assertQueriedPublicationParent(
+  tx: Prisma.TransactionClient,
+  parent: QueriedPublicationParent,
+  budget: PublicationAuthorityReadBudget,
+) {
+  if (
+    parent.transaction !== tx ||
+    parent.budget !== budget ||
+    parent.rawHash !==
+      snapshotHash(
+        nativeJson({
+          transition: parent.transition,
+          reference: parent.reference,
+          outcome: parent.outcome,
+          attempt: parent.attempt,
+        }),
+      )
+  )
+    throw new Error(
+      "Publication parent changed or belongs to another transaction/budget",
+    );
+}
+
+async function validatePublicationIntentRow(
+  tx: Prisma.TransactionClient,
+  row: TransitionRow,
+  budget?: PublicationAuthorityReadBudget,
+) {
   if (
     snapshotHash(nativeJson(row.intent)) !== row.intentHash ||
     (row.outcome !== null &&
@@ -41,6 +125,7 @@ export async function loadPublicationIntent(
   const attempt = await tx.acquisitionAttempt.findUniqueOrThrow({
     where: { id: row.attemptId },
   });
+  budget?.consume(1);
   if (
     snapshotHash(nativeJson(attempt.filePlan)) !== row.filePlanHash ||
     attempt.recoveryEpoch !== row.birthEpoch ||
@@ -58,12 +143,13 @@ export async function loadPublicationIntent(
     row.intentHash !== snapshotHash(nativeJson(intent))
   )
     throw new Error("Publication intent row binding changed");
-  assertStoredOutcome(row);
-  return PublicationIntentRefSchema.parse({
+  const outcome = assertStoredOutcome(row);
+  const reference = PublicationIntentRefSchema.parse({
     transitionId: row.id,
     intentHash: row.intentHash,
     intent,
   });
+  return { reference, outcome, attempt };
 }
 
 /** Caller holds the complete acquisition locks and actual path proofs before this separate commit. */
@@ -179,7 +265,9 @@ function assertStoredOutcome(
       outcome.birthEpoch !== row.birthEpoch
     )
       throw new Error("Publication outcome parent changed");
+    return outcome;
   }
+  return null;
 }
 
 async function assertEntry(

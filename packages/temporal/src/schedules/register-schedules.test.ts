@@ -609,6 +609,14 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runDailyNotificationCanary",
   // One bounded reconciliation Activity; no Workflow-level sleeps.
   "reconcileStreambotPlaybackWorkflow",
+  // Network mount observation followed by conditional Files sampling; neither
+  // branch starts a child Workflow or waits on a Workflow timer.
+  "observeMediaCapacityWorkflow",
+  // One outbox-dispatch Activity; dispatched operations run independently.
+  "dispatchMediaOutboxWorkflow",
+  // At most 20 page Activities per run, then return or continue-as-new. No
+  // Workflow timers; continue-as-new retains the chain execution timeout.
+  "sweepMediaWorkflow",
 ]);
 
 const SLACK_MS = 5 * ONE_MINUTE;

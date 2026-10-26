@@ -30,6 +30,10 @@ export async function visibilityFixture(db: Database) {
     data: {
       kind: "movie",
       title: "Visibility movie",
+      tmdbId:
+        (z.int().parse(crypto.getRandomValues(new Uint32Array(1))[0]) %
+          1_000_000_000) +
+        1,
       externalIds: { plexSectionId: "1" },
       availability: "downloading",
     },
@@ -126,6 +130,7 @@ export async function visibilityFixture(db: Database) {
     serverMachineId: "visibility-fixture",
     movieSectionId: "1",
   });
+  // Historical display-only fixture: deliberately no verified association/pointer.
   async function publish() {
     const current = await db.mediaItem.findUniqueOrThrow({
       where: { id: media.id },
@@ -136,7 +141,9 @@ export async function visibilityFixture(db: Database) {
         availability: "available",
         externalIds: {
           ...z.record(z.string(), z.json()).parse(current.externalIds),
-          plexRatingKey: "fixture-rating",
+          plexRatingKey: String(
+            z.int().parse(crypto.getRandomValues(new Uint32Array(1))[0]) + 1,
+          ),
         },
       },
     });
@@ -146,6 +153,7 @@ export async function visibilityFixture(db: Database) {
         checksum: "b".repeat(64),
         sizeBytes: 1000,
         owned: true,
+        editionRootId: intent.editionRootId,
         ownershipEpoch: runtime.recoveryEpoch,
         state: "published",
         plexPublishedAt: new Date(),

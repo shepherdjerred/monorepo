@@ -7,6 +7,7 @@ import { videoSubtitleWhere } from "#automation/files/subtitle-lifecycle/ownersh
 import { NativeArchiveEdgeSchema } from "#shared/native-recovery/archive.ts";
 import { UpgradeCleanupPlanSchema } from "#shared/native-recovery/archive-plan.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 export async function archiveClosure(
   tx: Prisma.TransactionClient,
@@ -98,7 +99,10 @@ export async function archiveEdge(
   tx: Prisma.TransactionClient,
   cleanup: Prisma.UpgradeCleanupGetPayload<object>,
   assets: Awaited<ReturnType<typeof archiveClosure>>["assets"],
-  selected: boolean,
+  {
+    selected,
+    budget,
+  }: { selected: boolean; budget: PublicationAuthorityReadBudget },
 ) {
   const asset = assets.find((row) => row.id === cleanup.assetId);
   const successor = assets.find((row) => row.id === cleanup.successorAssetId);
@@ -121,8 +125,9 @@ export async function archiveEdge(
         array_contains: [{ assetId: successor.id, previousAssetId: asset.id }],
       },
     },
-    take: 2,
+    take: Math.min(2, budget.take),
   });
+  budget.consume(attempts.length);
   const attempt = attempts[0];
   if (attempt === undefined || attempts.length !== 1)
     throw new NativeArchiveScopeProtection(

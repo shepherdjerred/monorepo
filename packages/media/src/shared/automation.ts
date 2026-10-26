@@ -51,7 +51,10 @@ export type MediaWorkflowResult = {
 };
 
 /** Workflow payloads contain identifiers only. Providers and paths stay in Activities. */
-export type MediaNetworkActivities = {
+export type MediaNetworkActivities = PlexBindingActivities & {
+  observeMediaUpgradeCleanup: (
+    input: UpgradeCleanupPlexInput,
+  ) => Promise<ObserveMediaUpgradeCleanupResult>;
   refreshMediaCatalog: (input: {
     operationId: string;
     mediaId: string;
@@ -189,3 +192,8 @@ export type MediaFileActivities = {
     reason?: string;
   }>;
 };
+import type { PlexBindingActivities } from "./plex-binding/activities.ts";
+import type {
+  UpgradeCleanupPlexInput,
+  ObserveMediaUpgradeCleanupResult,
+} from "./plex-binding/cleanup.ts";

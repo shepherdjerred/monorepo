@@ -81,6 +81,39 @@ test("deadline after an awaited result and monotonic elapsed time cannot publish
     ).rejects.toThrow("cancelled");
   });
 });
+test.each([
+  { attempt: 120_000, overall: 30_000, expected: 30_000 },
+  { attempt: 20_000, overall: 300_000, expected: 20_000 },
+])(
+  "numeric expiry preserves the original SDK minimum $expected",
+  async ({ attempt, overall, expected }) => {
+    const at = Date.now();
+    const env = new MockActivityEnvironment({
+      scheduledTimestampMs: at,
+      currentAttemptScheduledTimestampMs: at,
+      startToCloseTimeoutMs: attempt,
+      scheduleToCloseTimeoutMs: overall,
+    });
+    await env.run(async () => {
+      const original = archiveExecution();
+      const observed = original.observed;
+      expect(original.expiresAtMs).toBe(at + expected);
+      await original.checkpoint();
+      expect(original.observed).toBe(observed);
+      expect(original.expiresAtMs).toBe(at + expected);
+      const monotonic = vi
+        .spyOn(performance, "now")
+        .mockReturnValue(performance.now() + expected + 1);
+      try {
+        expect(() => original.assertActive()).toThrow("deadline exceeded");
+        // The numeric wall minimum stays fixed even when monotonic elapsed time rejects first.
+        expect(original.expiresAtMs).toBe(at + expected);
+      } finally {
+        monotonic.mockRestore();
+      }
+    });
+  },
+);
 test("each invocation gets a new signal and raw failure details never escape", async () => {
   const first = environment();
   const signal = await first.run(() =>

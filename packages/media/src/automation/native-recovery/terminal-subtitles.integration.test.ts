@@ -9,7 +9,7 @@ import { applyPreparedNative } from "./apply.ts";
 import path from "node:path";
 import { prepareMediaRestore } from "#infrastructure/recovery.ts";
 import { grantTestExclusionProofs } from "#testing/exclusion.ts";
-import { createNativeRecoveryObserver } from "#migration/native-network/producer.ts";
+import { preparePhysicalPublication } from "#automation/plex-binding/test-fixture.ts";
 
 const harness = automationTestHarness();
 const directories: string[] = [];
@@ -22,11 +22,15 @@ async function fixture(cleanup = false) {
     harness.database(),
     harness.context().cipher,
     "removed",
-    settleReplacedRollback(
-      harness.database(),
-      harness.context().cipher,
-      cleanup,
-    ),
+    {
+      serverMachineId: "fixture-server",
+      publication: preparePhysicalPublication,
+      settle: settleReplacedRollback(
+        harness.database(),
+        harness.context().cipher,
+        cleanup,
+      ),
+    },
   );
   directories.push(f.file.directory);
   return f;
@@ -78,7 +82,10 @@ test("a replaced rollback subtitle archive mutated after proof prevents native a
   const db = harness.database();
   const approval = await f.review();
   await f.observe();
-  const prepared = await prepareNativeFiles(f.context, f.planId);
+  const prepared = await prepareNativeFiles(f.context, {
+    planId: f.planId,
+    operationId: z.uuid().parse(approval.operationId),
+  });
   const replacement = await db.subtitleReplacement.findFirstOrThrow({
     where: { assetId: f.asset.id },
   });
@@ -130,7 +137,11 @@ test("replacement quality and exact subtitle bindings survive another native res
     expectedEpoch: 1,
     reason: "Repeated restore after exact caption replacement",
   });
-  for (const proof of await grantTestExclusionProofs(db, f.prior.actor.id)) {
+  for (const proof of await grantTestExclusionProofs(
+    db,
+    f.prior.actor.id,
+    z.string().parse(f.file.context.serverMachineId),
+  )) {
     const roots =
       f.context.files.roots[
         proof.libraryRoot === "/data/movies" ? "movies" : "tv"
@@ -158,7 +169,7 @@ test("replacement quality and exact subtitle bindings survive another native res
     assetIds: [f.asset.id],
   });
   const planId = z.uuid().parse(command.nativeRecoveryId);
-  await createNativeRecoveryObserver(f.prior.context)(planId);
+  await f.observe({ planId, operationId: z.uuid().parse(command.operationId) });
   await f.activities.prepareNativeRecoveryFiles({
     planId,
     operationId: z.uuid().parse(command.operationId),
@@ -178,7 +189,10 @@ test("replacement quality and exact subtitle bindings survive another native res
       acknowledgeSubtitlePolicies: true,
     },
   );
-  await createNativeRecoveryObserver(f.prior.context)(planId);
+  await f.observe({
+    planId,
+    operationId: z.uuid().parse(approval.operationId),
+  });
   await f.activities.applyNativeRecoveryFiles({
     planId,
     operationId: z.uuid().parse(approval.operationId),

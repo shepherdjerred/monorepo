@@ -724,6 +724,28 @@ The application image publication gate controls whether the Media workloads are
 synthesized. Media schedules are declared initially paused; their existence does
 not establish that application workers or recovery procedures are ready.
 
+Media Activity declarations provide finite schedule-to-close deadlines as well
+as start-to-close deadlines. Ordinary acquisition, notification, recovery and
+cleanup Activities explicitly retain their historical 315,360,000,000 ms total
+window, because servers normalize omitted totals differently. Per-attempt
+timeouts and retry limits are unchanged. Dedicated observation, Archive and
+Compensation queues retain their explicitly declared total windows.
+Execution adapters reject missing or zero SDK deadlines and retain the original
+minimum through configuration, network, and filesystem work. Changing a Workflow
+declaration does not rewrite an Activity already recorded in history; an older
+unbounded Activity remains protected and needs reconciliation through fresh work.
+
+`reverifyPlexBindingWorkflow` runs cold verification on `media-network` through
+the existing inventory outbox. Its arguments contain operation/epoch/asset IDs;
+complete expected coverage and immutable evidence remain in Media PostgreSQL.
+Its bounded result contains a count or a protected/superseded outcome, never
+Plex metadata, paths or household identities. Invocation-local wall/monotonic
+clocks and cancellation are captured before lazy runtime initialization. The
+sixty-second verification window is separate from the SDK deadline: an exact
+committed receipt may still be acknowledged after proof expiry while the SDK
+invocation remains active. No additional schedule or file-worker credential is
+required.
+
 Plex event hints use the existing durable outbox to start
 `observePlexEventHintWorkflow` on `monorepo-workflows`; its only observation
 Activity runs on `media-network`. History contains bounded media/mapping IDs,

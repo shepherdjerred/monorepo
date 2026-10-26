@@ -1,11 +1,23 @@
 import { z } from "zod";
+import type { PairedNativeProof } from "#automation/native-recovery/plex-proof.ts";
+import { loadNativeArchivePlexPhase } from "#infrastructure/plex-binding/native/native-parent.ts";
+import {
+  plexBindingFreshness,
+  bindPlexTransactionDeadline,
+} from "#infrastructure/plex-binding/freshness.ts";
+import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
+import type { ArchiveExecutionDiscovery } from "#infrastructure/native-archive/execution/discovery.ts";
+import { assertArchiveDiscovery } from "#infrastructure/native-archive/execution/discovery-check.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import {
   NativeArchiveCleanupNetworkEvidenceSchema,
   type CleanupNativeArchiveInput,
 } from "#shared/native-recovery/archive.ts";
 import {
-  assertNativeArchiveCleanup,
+  assertArchivePhaseCurrent,
+  type ArchiveExecutionPhase,
+  type ArchiveCleanupAuthority,
   NativeArchiveProtection,
 } from "#infrastructure/native-archive/continuation.ts";
 import { assertNativeEvidenceFresh } from "#automation/native-recovery/authority.ts";
@@ -13,40 +25,154 @@ import { snapshotHash } from "#migration/profile-import.ts";
 import { assertArchiveActive, type ArchiveFileContext } from "./execution.ts";
 import { archiveCleanupDeadline } from "./cleanup/deadline.ts";
 
+export type ArchiveCleanupPlexProof = PairedNativeProof & {
+  observed: { wall: number; monotonic: number };
+};
+
+/** Capture the exact proof and its current authority in one locked phase. */
+export async function captureArchiveCleanupAuthority(
+  tx: Prisma.TransactionClient,
+  context: ArchiveFileContext,
+  input: CleanupNativeArchiveInput,
+  timing: {
+    execution: PlexBindingExecution;
+    discovery: ArchiveExecutionDiscovery;
+    budget: PublicationAuthorityReadBudget;
+  },
+) {
+  assertArchiveActive(context.execution);
+  const { execution, discovery } = timing;
+  const freshness = plexBindingFreshness({
+    observed: execution.observed,
+    expiresAtMs: Math.min(execution.expiresAtMs, discovery.expiresAtMs),
+    guards: [execution],
+  });
+  const { phase, proof } = await loadNativeArchivePlexPhase(
+    tx,
+    input,
+    { freshness, expectedRef: discovery.ref },
+    timing.budget,
+  );
+  assertArchiveDiscovery(tx, phase, discovery, timing);
+  assertArchiveActive(context.execution);
+  const plex: ArchiveCleanupPlexProof = {
+    kind: "paired",
+    ref: proof.ref,
+    network: proof.network,
+    observed: execution.observed,
+    freshness: plexBindingFreshness({
+      observed: execution.observed,
+      expiresAtMs: Math.min(freshness.expiresAtMs, proof.expiresAtMs),
+      guards: [freshness],
+    }),
+    budget: timing.budget,
+  };
+  const authority = await assertArchiveCleanupCurrent(tx, context, plex, phase);
+  return { plex, authority, phase };
+}
+
+/** Each later transaction loads one new complete phase against the original proof. */
 export async function archiveCleanupAuthority(
   tx: Prisma.TransactionClient,
   context: ArchiveFileContext,
   input: CleanupNativeArchiveInput,
+  {
+    plex,
+    discovery,
+    execution,
+  }: {
+    plex: ArchiveCleanupPlexProof;
+    discovery: ArchiveExecutionDiscovery;
+    execution: PlexBindingExecution;
+  },
 ) {
-  const observed = { wall: Date.now(), monotonic: performance.now() };
   assertArchiveActive(context.execution);
-  const current = await assertNativeArchiveCleanup(tx, input);
+  plex.freshness.assertActive();
+  const { phase } = await loadNativeArchivePlexPhase(
+    tx,
+    input,
+    { freshness: plex.freshness, expectedRef: plex.ref },
+    plex.budget,
+  );
+  assertArchiveDiscovery(tx, phase, discovery, {
+    execution,
+    budget: plex.budget,
+  });
   assertArchiveActive(context.execution);
+  const authority = await assertArchiveCleanupCurrent(tx, context, plex, phase);
+  return { phase, authority };
+}
+
+/** Recheck mutable authority and actual markers, without another immutable graph traversal. */
+export async function assertArchiveCleanupCurrent(
+  tx: Prisma.TransactionClient,
+  context: ArchiveFileContext,
+  plex: ArchiveCleanupPlexProof,
+  phase: ArchiveExecutionPhase,
+) {
+  assertArchiveActive(context.execution);
+  plex.freshness.assertActive();
+  await assertArchivePhaseCurrent(tx, phase);
+  assertArchiveActive(context.execution);
+  plex.freshness.assertActive();
   if (!(await context.files.enabled.purge()))
     throw new NativeArchiveProtection("archive_purge_disabled");
-  const observation = await tx.nativeRecoveryObservation.findFirstOrThrow({
-    where: {
-      planId: current.row.receipt.planId,
-      kind: "archive_cleanup_network",
-      AND: [
-        {
-          evidence: { path: ["continuationId"], equals: input.continuationId },
-        },
-        { evidence: { path: ["operationId"], equals: input.operationId } },
-      ],
-    },
-    orderBy: { createdAt: "desc" },
+  assertArchiveActive(context.execution);
+  plex.freshness.assertActive();
+  const current = phase.authority;
+  const network = archiveCleanupNetwork(current, phase.activity, plex);
+  for (const kind of ["movies", "tv"] as const) {
+    if (
+      network.mounts.mounts.find((mount) => mount.root === `/data/${kind}`)
+        ?.podUid !== context.workerPodUid
+    )
+      throw new NativeArchiveProtection("archive_executor_changed");
+    if (context.files.verifyPlexExclusion === undefined)
+      throw new NativeArchiveProtection("archive_exclusion_unverified");
+    await context.files.verifyPlexExclusion(context.files.roots[kind]);
+    assertArchiveActive(context.execution);
+    plex.freshness.assertActive();
+    await context.files.verifyStorageAuthority(context.files.roots[kind]);
+    assertArchiveActive(context.execution);
+    plex.freshness.assertActive();
+  }
+  assertArchiveCleanupFresh(network);
+  plex.freshness.assertActive();
+  const deadline = await archiveCleanupDeadline(tx, context, {
+    network,
+    observed: plex.observed,
   });
-  const network = NativeArchiveCleanupNetworkEvidenceSchema.parse(
-    observation.evidence,
-  );
+  const previous = plex.freshness;
+  plex.freshness = plexBindingFreshness({
+    observed: plex.observed,
+    expiresAtMs: Math.min(previous.expiresAtMs, deadline.expiresAtMs),
+    guards: [previous, deadline],
+  });
+  await bindPlexTransactionDeadline(tx, plex.freshness);
+  plex.freshness.assertActive();
+  return {
+    ...current,
+    network,
+    beforeEffect: () => {
+      plex.freshness.assertActive();
+    },
+    scopeHash: snapshotHash(z.json().parse(current.networkScope)),
+  };
+}
+
+function archiveCleanupNetwork(
+  current: ArchiveCleanupAuthority,
+  input: CleanupNativeArchiveInput,
+  plex: PairedNativeProof,
+) {
+  const network = NativeArchiveCleanupNetworkEvidenceSchema.parse(plex.network);
   if (
     network.continuationId !== input.continuationId ||
     network.operationId !== input.operationId ||
     network.recoveryEpoch !== input.recoveryEpoch ||
     network.planId !== current.row.receipt.planId ||
-    snapshotHash(z.json().parse(network)) !== observation.evidenceHash ||
-    observation.expiresAt <= new Date()
+    plex.ref.parent.operationId !== input.operationId ||
+    Date.parse(network.expiresAt) <= Date.now()
   )
     throw new NativeArchiveProtection("archive_network_evidence_changed");
   assertArchiveCleanupFresh(network);
@@ -93,28 +219,7 @@ export async function archiveCleanupAuthority(
     )
   )
     throw new NativeArchiveProtection("archive_absence_scope_changed");
-  for (const kind of ["movies", "tv"] as const) {
-    if (
-      network.mounts.mounts.find((mount) => mount.root === `/data/${kind}`)
-        ?.podUid !== context.workerPodUid
-    )
-      throw new NativeArchiveProtection("archive_executor_changed");
-    if (context.files.verifyPlexExclusion === undefined)
-      throw new NativeArchiveProtection("archive_exclusion_unverified");
-    await context.files.verifyPlexExclusion(context.files.roots[kind]);
-    await context.files.verifyStorageAuthority(context.files.roots[kind]);
-    assertArchiveActive(context.execution);
-  }
-  assertArchiveCleanupFresh(network);
-  return {
-    ...current,
-    network,
-    beforeEffect: await archiveCleanupDeadline(tx, context, {
-      network,
-      observed,
-    }),
-    scopeHash: snapshotHash(z.json().parse(current.networkScope)),
-  };
+  return network;
 }
 
 export function assertArchiveCleanupFresh(

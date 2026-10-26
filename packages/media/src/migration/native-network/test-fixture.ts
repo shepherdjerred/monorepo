@@ -14,8 +14,9 @@ import { grantTestExclusionProofs } from "#testing/exclusion.ts";
 export async function nativeNetworkFixture(
   db: Database,
   cipher: CredentialCipher,
+  serverMachineId = "server",
 ) {
-  const legacy = await networkFixture(db, cipher);
+  const legacy = await networkFixture(db, cipher, serverMachineId);
   const source = canonicalFixture();
   const canonical = await observeCanonicalMounts({
     request: source.request,
@@ -130,7 +131,7 @@ export async function nativeNetworkFixture(
   const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
     where: { id: "singleton" },
   });
-  await grantTestExclusionProofs(db, legacy.actor.id);
+  await grantTestExclusionProofs(db, legacy.actor.id, serverMachineId);
   const scope = await buildNativeScope(db, {
     restoreOperationId: operation.id,
     recoveryEpoch: runtime.recoveryEpoch,

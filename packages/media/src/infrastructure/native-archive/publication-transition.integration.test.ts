@@ -3,24 +3,44 @@ import { rm } from "node:fs/promises";
 import { z } from "zod";
 import { automationTestHarness } from "#testing/automation.ts";
 import { createNativeArchiveFileActivities } from "#automation/native-archive/activities.ts";
-import { createNativeArchiveObserver } from "#migration/native-archive/producer.ts";
-import { createNativeArchiveCleanupObserver } from "#migration/native-archive/cleanup.ts";
+import {
+  archiveReviewObserver,
+  observeArchiveCleanup,
+} from "#automation/native-archive/fixtures/observe.ts";
 import {
   NativeArchiveScopeSchema,
   CleanupNativeArchiveInputSchema,
 } from "#shared/native-recovery/archive.ts";
-import { archivePublicationTransitionFixture } from "./publication-transition.test-support.ts";
+import {
+  archivePublicationTransitionFixture,
+  type ArchiveDiagnosticStage,
+} from "./publication-transition.test-support.ts";
 import { queueNativeArchiveCleanup } from "./continuation.ts";
+import { traceArchiveReadBudget } from "./tests/read-budget-trace.test-support.ts";
 
 const harness = automationTestHarness();
+traceArchiveReadBudget("archive-publication-read-diagnostic");
 const directories: string[] = [];
 let fixture:
   Awaited<ReturnType<typeof archivePublicationTransitionFixture>> | undefined;
-beforeEach(async () => {
+beforeEach(async (context) => {
+  const stages: ArchiveDiagnosticStage[] = [];
+  context.onTestFinished(() => {
+    if (context.task.result?.state === "fail")
+      console.warn(
+        "archive-publication-stage-diagnostic",
+        JSON.stringify({ stages }),
+      );
+  });
   fixture = await archivePublicationTransitionFixture(
     harness.database(),
     harness.context().cipher,
     harness.context(),
+    {
+      traceStage: (stage) => {
+        stages.push(stage);
+      },
+    },
   );
   directories.push(fixture.file.directory);
 });
@@ -34,6 +54,7 @@ test("actual C→D publication replaces only terminal no-effect A authority befo
     throw new Error("Actual adjacent transition setup missing");
   const f = fixture;
   const db = harness.database();
+  f.traceStage("assertions");
   const transition = await db.mediaPublicationTransition.findUniqueOrThrow({
     where: { attemptId: f.acquired.attempt.id },
   });
@@ -62,6 +83,7 @@ test("actual C→D publication replaces only terminal no-effect A authority befo
   const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
     where: { id: "singleton" },
   });
+  f.traceStage("review.command");
   const command = await f.service.prepare(f.prior.actor, crypto.randomUUID(), {
     restoreOperationId: f.restore.id,
     recoveryEpoch: runtime.recoveryEpoch,
@@ -75,9 +97,12 @@ test("actual C→D publication replaces only terminal no-effect A authority befo
     operationId: z.uuid().parse(command.operationId),
   };
   const files = createNativeArchiveFileActivities(f.context, f.execution);
-  const observe = createNativeArchiveObserver(f.observerContext);
-  await observe(planId);
+  const observe = archiveReviewObserver(f.observerContext);
+  f.traceStage("review.network");
+  await observe(prepareInput);
+  f.traceStage("review.files");
   await files.prepareNativeArchiveFiles(prepareInput);
+  f.traceStage("assertions");
   const plan = await db.nativeRecoveryPlan.findUniqueOrThrow({
     where: { id: planId },
   });
@@ -90,6 +115,7 @@ test("actual C→D publication replaces only terminal no-effect A authority befo
   expect(scope.supersessions?.map((item) => item.continuationId)).toEqual([
     f.oldContinuation.id,
   ]);
+  f.traceStage("apply.command");
   const approval = await f.service.apply(
     f.prior.actor,
     crypto.randomUUID(),
@@ -109,9 +135,13 @@ test("actual C→D publication replaces only terminal no-effect A authority befo
     operationId: z.uuid().parse(approval.operationId),
     planHash: z.string().parse(plan.planHash),
   };
-  await observe(planId);
+  f.traceStage("apply.network");
+  await observe(applyInput);
+  f.traceStage("apply.files");
   await files.applyNativeArchiveFiles(applyInput);
+  f.traceStage("apply.ack");
   await files.applyNativeArchiveFiles(applyInput);
+  f.traceStage("assertions");
   expect(
     await db.recoveryHold.count({
       where: { mediaId: f.file.media.id, releasedAt: null },
@@ -147,6 +177,7 @@ test("actual C→D publication replaces only terminal no-effect A authority befo
       }),
     ),
   ).toBeNull();
+  f.traceStage("cleanup.queue");
   const next = await db.nativeArchiveCleanupContinuation.findFirstOrThrow({
     where: { receipt: { planId }, originalCleanupId: f.first.id },
   });
@@ -162,13 +193,17 @@ test("actual C→D publication replaces only terminal no-effect A authority befo
     where: { id: operationId },
   });
   const cleanup = CleanupNativeArchiveInputSchema.parse(operation.payload);
-  await createNativeArchiveCleanupObserver(f.observerContext)(cleanup);
+  f.traceStage("cleanup.network");
+  await observeArchiveCleanup(f.observerContext, cleanup);
+  f.traceStage("cleanup.files");
   expect(await files.cleanupNativeArchiveFiles(cleanup)).toEqual({
     status: "cleaned",
   });
+  f.traceStage("cleanup.ack");
   expect(await files.cleanupNativeArchiveFiles(cleanup)).toEqual({
     status: "cleaned",
   });
+  f.traceStage("assertions");
   expect(
     await db.libraryAsset.findUniqueOrThrow({ where: { id: current.id } }),
   ).toEqual(current);

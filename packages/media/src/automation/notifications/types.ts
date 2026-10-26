@@ -11,6 +11,8 @@ export type NotificationContext = Pick<
   | "personalDiscordAvailable"
   | "serverMachineId"
   | "permittedSections"
+  | "plexAccess"
+  | "plexBindingExecution"
 > & {
   /** Activity cancellation/heartbeat boundary after the durable claim, with no authority locks held. */
   checkpoint?: (phase: "notification-claimed") => Promise<void>;

@@ -16,6 +16,7 @@ import type {
   MediaWorkflowResult,
 } from "@shepherdjerred/media/automation";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS } from "#shared/media-activity-budget.ts";
 import * as cleanup from "./media/cleanup.ts";
 import * as notifications from "./media/notifications.ts";
 import * as retention from "./media/retention.ts";
@@ -23,6 +24,7 @@ import * as retention from "./media/retention.ts";
 const network = proxyActivities<MediaNetworkActivities>({
   taskQueue: TASK_QUEUES.MEDIA_NETWORK,
   startToCloseTimeout: "5 minutes",
+  scheduleToCloseTimeout: HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS,
   retry: {
     initialInterval: "5 seconds",
     maximumInterval: "1 minute",
@@ -32,6 +34,7 @@ const network = proxyActivities<MediaNetworkActivities>({
 const files = proxyActivities<MediaFileActivities>({
   taskQueue: TASK_QUEUES.MEDIA_FILES,
   startToCloseTimeout: "12 hours",
+  scheduleToCloseTimeout: HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS,
   heartbeatTimeout: "1 minute",
   retry: {
     initialInterval: "10 seconds",
@@ -47,6 +50,7 @@ const writes = proxyActivities<
 >({
   taskQueue: TASK_QUEUES.MEDIA_NETWORK,
   startToCloseTimeout: "5 minutes",
+  scheduleToCloseTimeout: HISTORICAL_MEDIA_SCHEDULE_TO_CLOSE_MS,
   retry: { maximumAttempts: 1 },
 });
 

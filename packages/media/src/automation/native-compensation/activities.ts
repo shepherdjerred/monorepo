@@ -1,4 +1,7 @@
 import type { NativeFileContext } from "#automation/native-recovery/files.ts";
+import { z } from "zod";
+import { CompensationPlexSelectionV3Schema } from "#shared/plex-binding/native-version.ts";
+import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import {
   NativeCompensationSelectionSchema,
   type NativeCompensationFileActivities,
@@ -19,6 +22,7 @@ import { approveCompensationFiles } from "./approval.ts";
 import { executeNativeCompensation } from "./execute.ts";
 
 function compensationProtectionReason(error: unknown): string | null {
+  if (error instanceof PlexBindingProtection) return error.reason;
   if (error instanceof NativeCompensationProtection) return error.reason;
   if (error instanceof PendingLegacyClaimsError)
     return "compensation_legacy_claims_unresolved";
@@ -33,10 +37,13 @@ export function createNativeCompensationFileActivities(
 ): NativeCompensationFileActivities {
   return {
     async prepareNativeCompensationFiles(input) {
-      await approveCompensationFiles(
-        compensationInvocation(context, execution()),
-        input,
-      );
+      const current = compensationInvocation(context, execution());
+      const plan = await context.files.db.nativeRecoveryPlan.findUniqueOrThrow({
+        where: { id: input.planId },
+      });
+      assertPublicationActive(current.files);
+      if (["awaiting_review", "applied"].includes(plan.state)) return;
+      await approveCompensationFiles(current, input);
     },
     async applyNativeCompensationFiles(input) {
       const current = compensationInvocation(context, execution());
@@ -45,9 +52,12 @@ export function createNativeCompensationFileActivities(
       });
       assertPublicationActive(current.files);
       if (receipt !== null) {
-        const selection = NativeCompensationSelectionSchema.parse(
-          receipt.selection,
-        );
+        const selection = z
+          .union([
+            NativeCompensationSelectionSchema,
+            CompensationPlexSelectionV3Schema,
+          ])
+          .parse(receipt.selection);
         await context.files.db.$transaction(async (tx) => {
           assertPublicationActive(current.files);
           await applyCompensationApproval(tx, current, {

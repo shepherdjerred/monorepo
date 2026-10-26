@@ -6,42 +6,65 @@ import {
   getMediaNetworkRuntime,
   getMediaFileRuntime,
 } from "#activities/media.ts";
-import { compensationRuntimeCall } from "./compensation-execution.ts";
+import {
+  compensationRuntimeCall,
+  type compensationExecution,
+} from "./compensation-execution.ts";
+import { createPlexCompensatedPublication } from "./plex-publication.ts";
+import {
+  createNativePlexReviewActivities,
+  createNativePlexCompensationExecution,
+} from "./native-plex.ts";
 
 export const nativeCompensationNetworkActivities: NativeCompensationNetworkActivities =
   {
     observeNativeCompensation: (input) =>
-      withNetwork((runtime) =>
-        runtime.activities.observeNativeCompensation(input),
-      ),
+      createNativePlexReviewActivities(
+        getMediaNetworkRuntime,
+      ).observeNativeCompensation(input),
     observeNativeCompensationExecution: (input) =>
-      withNetwork((runtime) =>
-        runtime.activities.observeNativeCompensationExecution(input),
-      ),
-    publishCompensatedMedia: (input) =>
-      withNetwork((runtime) =>
-        runtime.activities.publishCompensatedMedia(input),
-      ),
+      createNativePlexCompensationExecution(getMediaNetworkRuntime)(input),
+    publishCompensatedMedia: createPlexCompensatedPublication(
+      getMediaNetworkRuntime,
+    ),
     nativeCompensationState: (input) =>
       withNetwork((runtime) =>
         runtime.activities.nativeCompensationState(input),
       ),
   };
-export const nativeCompensationFileActivities: NativeCompensationFileActivities =
-  {
+type CompensationFileRuntime = {
+  nativeFiles: {
+    compensation: (
+      execution: ReturnType<typeof compensationExecution>,
+    ) => NativeCompensationFileActivities;
+  };
+};
+
+export function createNativeCompensationFileAdapter(
+  load: () => Promise<CompensationFileRuntime>,
+): NativeCompensationFileActivities {
+  const withFiles = <T>(
+    work: (activities: NativeCompensationFileActivities) => Promise<T>,
+  ) =>
+    compensationRuntimeCall(load, (runtime, execution) =>
+      work(runtime.nativeFiles.compensation(execution)),
+    );
+  return {
     prepareNativeCompensationFiles: (input) =>
-      withFiles((runtime) =>
-        runtime.activities.prepareNativeCompensationFiles(input),
+      withFiles((activities) =>
+        activities.prepareNativeCompensationFiles(input),
       ),
     applyNativeCompensationFiles: (input) =>
-      withFiles((runtime) =>
-        runtime.activities.applyNativeCompensationFiles(input),
-      ),
+      withFiles((activities) => activities.applyNativeCompensationFiles(input)),
     compensateNativePublicationFiles: (input) =>
-      withFiles((runtime) =>
-        runtime.activities.compensateNativePublicationFiles(input),
+      withFiles((activities) =>
+        activities.compensateNativePublicationFiles(input),
       ),
   };
+}
+
+export const nativeCompensationFileActivities =
+  createNativeCompensationFileAdapter(getMediaFileRuntime);
 
 function withNetwork<T>(
   work: (
@@ -49,11 +72,4 @@ function withNetwork<T>(
   ) => Promise<T>,
 ) {
   return compensationRuntimeCall(getMediaNetworkRuntime, work);
-}
-function withFiles<T>(
-  work: (
-    runtime: Awaited<ReturnType<typeof getMediaFileRuntime>>,
-  ) => Promise<T>,
-) {
-  return compensationRuntimeCall(getMediaFileRuntime, work);
 }

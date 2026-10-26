@@ -30,12 +30,21 @@ import {
   replacementEffectState,
 } from "./execution.ts";
 import { settleReplacement } from "./settle.ts";
+import {
+  publicationInvocation,
+  requirePublicationExecution,
+} from "#automation/publication-proof/invocation.ts";
+import { publicationAuthorityDeadline } from "#automation/publication-proof/authority.ts";
+import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
 
 export async function applyReplacement(
-  context: FileContext,
+  initialContext: FileContext,
   input: SubtitleReplacementInput,
   reconcile = false,
 ): Promise<SubtitleReplacementResult> {
+  let context = initialContext;
+  const execution = context.publicationExecution?.();
+  execution?.assertActive();
   let row = await context.db.$transaction(async (tx) => {
     const { row: current } = await lockReplacement(tx, input.replacementId);
     await assertReplacementOperation(
@@ -61,6 +70,11 @@ export async function applyReplacement(
     return current;
   });
   if (row.receipt !== null) return receiptResult(row.receipt.outcome);
+  const invocation = publicationInvocation(
+    context,
+    requirePublicationExecution(execution),
+  );
+  context = invocation;
   if (reconcile && row.executionEvidence === null)
     return await abandonUnstarted(context, input);
   if (row.executionEvidence === null) {
@@ -163,10 +177,38 @@ export async function applyReplacement(
           throw new FileGuardError("acquisition_disabled");
         await context.checkpoint("subtitle-replacement-authorized");
       };
+      await authorize();
+      const freshness = await publicationAuthorityDeadline(
+        tx,
+        { ...invocation, contentProof: proof.content },
+        {
+          libraryKind: proof.paths.scope.libraryKind,
+          recoveryEpoch: current.recoveryEpoch,
+        },
+      );
+      const observed = { wall: Date.now(), monotonic: performance.now() };
+      const reviewDeadline = current.review.expiresAt.getTime();
+      const assertActive = () => {
+        freshness.assertActive();
+        if (
+          forward &&
+          (Date.now() >= reviewDeadline ||
+            performance.now() >=
+              observed.monotonic + reviewDeadline - observed.wall)
+        )
+          throw new FileGuardError("subtitle_replacement_approval_expired");
+      };
+      await bindPlexTransactionDeadline(tx, {
+        assertActive,
+        expiresAtMs: forward
+          ? Math.min(freshness.expiresAtMs, reviewDeadline)
+          : freshness.expiresAtMs,
+      });
       const files = fileOperations(
         { ...context, contentProof: proof.content },
         { ...proof.paths.roots, downloads: proof.paths.roots.control },
         authorize,
+        assertActive,
       );
       const identities = await Promise.all(
         [proof.paths.video, proof.paths.target].map(async (filename) => ({
@@ -189,6 +231,7 @@ export async function applyReplacement(
             outcome: "installed",
             proof,
           });
+          assertActive();
           return { state: "applied" as const };
         }
         if (effect === "promoted")
@@ -204,6 +247,7 @@ export async function applyReplacement(
           outcome: effect === "old" ? "abandoned" : "compensated",
           proof,
         });
+        assertActive();
         return { state: "rolled_back" as const };
       }, [current.importOperationId, current.rollbackOperationId]);
     },

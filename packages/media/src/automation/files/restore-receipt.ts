@@ -1,4 +1,4 @@
-import nodePath from "node:path";
+import { storedFilePath } from "./paths/locations.ts";
 import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
 import { z } from "zod";
 import {
@@ -49,8 +49,10 @@ export async function recordRestoreReceipt(input: {
       asset.state !== "published" ||
       asset.checksum !== entry.checksum ||
       asset.path !==
-        nodePath.join(
-          context.roots[entry.libraryKind].library,
+        storedFilePath(
+          context,
+          entry.libraryKind,
+          "library",
           entry.libraryPath,
         ) ||
       asset.coverage.length !== entry.mediaIds.length ||

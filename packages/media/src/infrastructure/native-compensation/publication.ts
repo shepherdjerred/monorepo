@@ -31,15 +31,17 @@ import { assertCompensationFenceOwner } from "./fence.ts";
 import { NativeCompensationProtection } from "./protection.ts";
 import { readVerifiedCompensationPublication } from "./publication-receipt.ts";
 import { publicationFreshness } from "./publication-freshness.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 async function publicationContext(
   tx: Prisma.TransactionClient,
   continuationId: string,
+  budget: PublicationAuthorityReadBudget,
 ) {
   const observed = { wall: Date.now(), monotonic: performance.now() };
-  const initial = await compensationRecord(tx, continuationId);
+  const initial = await compensationRecord(tx, continuationId, budget);
   await lockNativeCompensationScope(tx, initial.descriptor.scope);
-  const record = await compensationRecord(tx, continuationId);
+  const record = await compensationRecord(tx, continuationId, budget);
   const { row, descriptor, completion } = record;
   if (completion === null)
     throw new NativeCompensationProtection(
@@ -90,7 +92,7 @@ async function publicationContext(
       "compensation_household_reconciliation_required",
     );
   await assertLegacyClaimsResolved(tx, row.mediaIds);
-  await assertNativeStorageRoots(tx, descriptor.scope.storageRoots);
+  await assertNativeStorageRoots(tx, descriptor.scope.storageRoots, budget);
   const roots = await tx.mediaStorageAuthority.findMany({
     where: {
       rootPath: {
@@ -174,13 +176,14 @@ export async function queueCompensatedPublication(
     triggerKey: string;
     previousWorkflowClosed?: ClosedCoordinatorObservation;
   },
+  budget = new PublicationAuthorityReadBudget(),
 ): Promise<string | null> {
-  const initial = await compensationRecord(tx, input.continuationId);
+  const initial = await compensationRecord(tx, input.continuationId, budget);
   if (initial.completion === null || initial.row.fenceRelease !== null)
     return null;
   let context;
   try {
-    context = await publicationContext(tx, input.continuationId);
+    context = await publicationContext(tx, input.continuationId, budget);
   } catch (error) {
     if (error instanceof NativeCompensationProtection) return null;
     throw error;
@@ -267,10 +270,15 @@ function assertPublicationCommand(
 export async function assertCompensatedPublication(
   tx: Prisma.TransactionClient,
   input: NativeCompensationActivityInput,
+  budget = new PublicationAuthorityReadBudget(),
 ) {
-  const committed = await readVerifiedCompensationPublication(tx, input);
+  const committed = await readVerifiedCompensationPublication(
+    tx,
+    input,
+    budget,
+  );
   if (committed !== null) return { ...committed, freshness: null };
-  const context = await publicationContext(tx, input.continuationId);
+  const context = await publicationContext(tx, input.continuationId, budget);
   const { row, completionHash, bindingsHash, generations, assets } = context;
   if (
     row.publicationCoordinatorOperationId !== input.operationId ||
@@ -282,6 +290,7 @@ export async function assertCompensatedPublication(
   const operation = await tx.operation.findUniqueOrThrow({
     where: { id: input.operationId },
   });
+  budget.consume(1);
   const payload = NativeCompensationPublicationCommandSchema.extend({
     operationId: z.uuid(),
     kind: z.literal("publish_compensated_media"),
@@ -293,7 +302,7 @@ export async function assertCompensatedPublication(
     input,
     context,
   );
-  const chain = await compensationAncestors(tx, row.id);
+  const chain = await compensationAncestors(tx, row.id, budget);
   const commandHash = snapshotHash(command);
   const verifiedPublication =
     row.verifiedPublication === null
@@ -302,10 +311,14 @@ export async function assertCompensatedPublication(
           row.verifiedPublication,
         );
   if (verifiedPublication === null) {
-    await assertCompensationFenceOwner(tx, {
-      activity: input,
-      purpose: "publish",
-    });
+    await assertCompensationFenceOwner(
+      tx,
+      {
+        activity: input,
+        purpose: "publish",
+      },
+      budget,
+    );
   } else {
     if (
       verifiedPublication.continuationId !== row.id ||
@@ -380,8 +393,13 @@ export async function commitCompensatedPublication(
     activity: NativeCompensationActivityInput;
     publication: NativeCompensationVerifiedPublication;
   },
+  budget = new PublicationAuthorityReadBudget(),
 ): Promise<void> {
-  const authority = await assertCompensatedPublication(tx, input.activity);
+  const authority = await assertCompensatedPublication(
+    tx,
+    input.activity,
+    budget,
+  );
   const proof = NativeCompensationVerifiedPublicationSchema.parse(
     input.publication,
   );
@@ -412,7 +430,11 @@ export async function commitCompensatedPublication(
         "Compensation verified Plex item differs from completed physical binding",
       );
   }
-  const chain = await compensationAncestors(tx, authority.continuationId);
+  const chain = await compensationAncestors(
+    tx,
+    authority.continuationId,
+    budget,
+  );
   for (const ancestor of chain) {
     if (ancestor.row.fenceRelease !== null)
       throw new Error("Compensation ancestor fence was already released");

@@ -300,12 +300,9 @@ test("retained adopted original parent path participates; generated basename nev
 
 test("named candidate blocks real automatic selection and owner identity confirmation before add", async () => {
   const db = database();
-  const f = await identityFixture(
-    db,
-    context(),
-    false,
-    "Example.Show.2020.S01E01.Extended.Cut.1080p.WEB-DL.H264.ENG",
-  );
+  const f = await identityFixture(db, context(), false, {
+    releaseTitle: "Example.Show.2020.S01E01.Extended.Cut.1080p.WEB-DL.H264.ENG",
+  });
   try {
     expect(await f.review()).toMatchObject({
       confirmationAllowed: false,

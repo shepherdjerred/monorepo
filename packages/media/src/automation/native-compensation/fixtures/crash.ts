@@ -62,9 +62,13 @@ const canonical = (root: z.infer<typeof Root>) =>
     ? canonicalRoots.movies
     : canonicalRoots.tv;
 const execution = () => {
+  const observed = { wall: Date.now(), monotonic: performance.now() };
   const signal = new AbortController().signal;
-  const deadline = performance.now() + 30_000;
+  const expiresAtMs = observed.wall + 30_000;
+  const deadline = observed.monotonic + 30_000;
   return {
+    observed,
+    expiresAtMs,
     signal,
     assertActive: () => {
       signal.throwIfAborted();
@@ -78,6 +82,20 @@ const movieSectionId = config.movieSectionId;
 const files = {
   db,
   roots: config.roots,
+  plexAccess: (sectionType: "movie" | "show") =>
+    Promise.resolve({
+      serverMachineId:
+        "attemptId" in config.input
+          ? z.string().min(1).parse(config.serverMachineId)
+          : "server",
+      sectionId:
+        sectionType === "show"
+          ? "2"
+          : "attemptId" in config.input
+            ? z.string().min(1).parse(config.movieSectionId)
+            : "1",
+      sectionType,
+    }),
   pathMapping: createMediaPathMapping({
     canonicalRoots,
     workerRoots: config.roots,

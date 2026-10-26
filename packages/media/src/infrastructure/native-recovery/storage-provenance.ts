@@ -3,6 +3,7 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import { MountEvidenceSchema } from "#shared/legacy-observer.ts";
 import {
   ApprovedStorageRootsSchema,
+  ApprovedStorageRootSchema,
   CanonicalMountSchema,
   NativeStorageAuthoritySchema,
   type ApprovedStorageRoot,
@@ -13,7 +14,21 @@ import { NativeStoredScopeSchema } from "#shared/native-recovery/lifecycle.ts";
 import { NativeCompensationSelectionSchema } from "#shared/native-recovery/compensation-runtime.ts";
 import { FinishedNativeCompensationSchema } from "#shared/native-recovery/compensation.ts";
 import { stableCompensationNetwork } from "#infrastructure/native-compensation/plan.ts";
-import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import {
+  FinishedCompensationPlexV3Schema,
+  CompensationPlexSelectionV3Schema,
+} from "#shared/plex-binding/native-version.ts";
+import { validateNativePlexReceipt } from "#infrastructure/plex-binding/native/native-version.ts";
+
+const CompensationSelection = z.union([
+  NativeCompensationSelectionSchema,
+  CompensationPlexSelectionV3Schema,
+]);
+const CompensationFinished = z.union([
+  FinishedNativeCompensationSchema,
+  FinishedCompensationPlexV3Schema,
+]);
 
 type StorageRow = Prisma.MediaStorageAuthorityGetPayload<Record<string, never>>;
 const LegacySelection = z.object({
@@ -29,7 +44,10 @@ const NativeSelection = z.object({
   }),
 });
 function sameStorage(
-  root: ApprovedStorageRoot,
+  root: Pick<
+    ApprovedStorageRoot,
+    "rootPath" | "pvcUid" | "volumeName" | "volumePath"
+  >,
   mount: {
     root: string;
     pvcUid: string;
@@ -98,12 +116,10 @@ function approvedPlan(receipt: {
     z.object({ lifecycleKind: z.string().optional() }).parse(receipt.plan.plan)
       .lifecycleKind === "publication_compensation";
   const matchingNetwork = compensation
-    ? FinishedNativeCompensationSchema.parse(receipt.plan.plan).network
-        .identityHash ===
+    ? CompensationFinished.parse(receipt.plan.plan).network.identityHash ===
       snapshotHash(
         stableCompensationNetwork(
-          NativeCompensationSelectionSchema.parse(receipt.selection)
-            .networkEvidence,
+          CompensationSelection.parse(receipt.selection).networkEvidence,
         ),
       )
     : finished.success &&
@@ -129,7 +145,7 @@ function nativeStorageProof(receipt: {
     scope.schemaVersion === 2 &&
     scope.lifecycleKind === "publication_compensation"
   ) {
-    const network = NativeCompensationSelectionSchema.parse(
+    const network = CompensationSelection.parse(
       receipt.selection,
     ).networkEvidence;
     return {
@@ -139,57 +155,148 @@ function nativeStorageProof(receipt: {
   }
   return NativeSelection.parse(receipt.selection).networkEvidence;
 }
-export async function assertNativeStorageRoots(
-  tx: Prisma.TransactionClient,
-  raw: unknown,
-  budget?: PublicationAuthorityReadBudget,
-): Promise<ApprovedStorageRoot[]> {
-  const roots = ApprovedStorageRootsSchema.parse(raw);
+
+type StorageProof = {
+  kind: "legacy" | "native";
+  id: string;
+  planHash: string;
+  approved: boolean;
+  configurationDigest: string;
+  mounts: {
+    root: string;
+    pvcUid: string;
+    volumeName: string;
+    volumePath: string;
+  }[];
+};
+function legacyStorageProof(
+  receipt: Prisma.MediaHandoffReceiptGetPayload<{ include: { plan: true } }>,
+): StorageProof & {
+  sourceBindings: z.infer<typeof MountEvidenceSchema>["bindings"];
+} {
+  if (
+    receipt.plan.plan === null ||
+    snapshotHash(z.json().parse(receipt.plan.plan)) !== receipt.planHash
+  )
+    throw new Error("Legacy storage raw approval changed");
+  const proof = LegacySelection.parse(receipt.selection).networkEvidence;
+  return {
+    kind: "legacy",
+    id: receipt.id,
+    planHash: receipt.planHash,
+    approved: approvedPlan(receipt),
+    sourceBindings: proof.mounts,
+    configurationDigest: proof.configurationDigest,
+    mounts: proof.mounts.map((mount) => mount.canonical),
+  };
+}
+function queriedNativeStorageProof(
+  receipt: Prisma.NativeRecoveryReceiptGetPayload<{ include: { plan: true } }>,
+): StorageProof {
+  return {
+    kind: "native",
+    id: receipt.id,
+    planHash: receipt.planHash,
+    approved: approvedPlan(receipt),
+    ...nativeStorageProof(receipt),
+  };
+}
+
+/** Pure per-root projection from THIS call's queried and validated immutable receipt graph. */
+function assertQueriedStorageRoots(
+  roots: ApprovedStorageRoot[],
+  rows: StorageRow[],
+  proofs: StorageProof[],
+) {
   for (const root of roots) {
-    const row = await tx.mediaStorageAuthority.findUniqueOrThrow({
-      where: { rootPath: root.rootPath },
-    });
+    const row = rows.find((value) => value.rootPath === root.rootPath);
+    if (row === undefined)
+      throw new Error("Native storage authority root missing");
     assertStoredEvidence(row);
     if (!rowMatches(root, row))
       throw new Error("Native storage authority identity changed");
-    budget?.consume(1);
-    if (root.receipt.kind === "legacy") {
-      const receipt = await tx.mediaHandoffReceipt.findUniqueOrThrow({
-        where: { id: root.receipt.id },
-        include: { plan: true },
-      });
-      const proof = LegacySelection.parse(receipt.selection).networkEvidence;
-      if (
-        !approvedPlan(receipt) ||
-        receipt.planHash !== root.receipt.planHash ||
-        proof.configurationDigest !== snapshotHash(LEGACY_OBSERVER_CONFIG) ||
-        proof.mounts.filter((mount) => sameStorage(root, mount.canonical))
-          .length !== 1
-      )
-        throw new Error("Native storage legacy approval missing or changed");
-    } else {
-      const receipt = await tx.nativeRecoveryReceipt.findUniqueOrThrow({
-        where: { id: root.receipt.id },
-        include: { plan: true },
-      });
-      const proof = nativeStorageProof(receipt);
-      if (
-        !approvedPlan(receipt) ||
-        receipt.planHash !== root.receipt.planHash ||
-        proof.configurationDigest !== snapshotHash(LEGACY_OBSERVER_CONFIG) ||
-        proof.mounts.filter((mount) => sameStorage(root, mount)).length !== 1
-      )
-        throw new Error("Native storage native approval missing or changed");
-    }
+    const proof = proofs.find(
+      (value) =>
+        value.kind === root.receipt.kind && value.id === root.receipt.id,
+    );
+    if (
+      proof === undefined ||
+      !proof.approved ||
+      proof.planHash !== root.receipt.planHash ||
+      proof.configurationDigest !== snapshotHash(LEGACY_OBSERVER_CONFIG) ||
+      proof.mounts.filter((mount) => sameStorage(root, mount)).length !== 1
+    )
+      throw new Error("Native storage approval missing or changed");
   }
   return roots;
+}
+export async function assertNativeStorageRoots(
+  tx: Prisma.TransactionClient,
+  raw: unknown,
+  budget = new PublicationAuthorityReadBudget(),
+): Promise<ApprovedStorageRoot[]> {
+  const roots = ApprovedStorageRootsSchema.parse(raw);
+  const rows = await tx.mediaStorageAuthority.findMany({
+    where: { rootPath: { in: roots.map((root) => root.rootPath) } },
+  });
+  const proofs = await readStorageProofs(tx, roots, budget);
+  return assertQueriedStorageRoots(roots, rows, proofs);
+}
+
+async function readStorageProofs(
+  tx: Prisma.TransactionClient,
+  roots: ApprovedStorageRoot[],
+  budget: PublicationAuthorityReadBudget,
+  queried: StorageProof[] = [],
+) {
+  const ids = (kind: "legacy" | "native") => [
+    ...new Set(
+      roots
+        .filter(
+          (root) =>
+            root.receipt.kind === kind &&
+            !queried.some(
+              (proof) => proof.kind === kind && proof.id === root.receipt.id,
+            ),
+        )
+        .map((root) => root.receipt.id),
+    ),
+  ];
+  const legacyIds = ids("legacy");
+  const nativeIds = ids("native");
+  const legacy =
+    legacyIds.length === 0
+      ? []
+      : await tx.mediaHandoffReceipt.findMany({
+          where: { id: { in: legacyIds } },
+          include: { plan: true },
+        });
+  budget.consume(legacy.length * 2);
+  const native =
+    nativeIds.length === 0
+      ? []
+      : await tx.nativeRecoveryReceipt.findMany({
+          where: { id: { in: nativeIds } },
+          include: { plan: true },
+        });
+  budget.consume(native.length * 2);
+  for (const receipt of native)
+    await validateNativePlexReceipt(tx, receipt, budget);
+  return [
+    ...queried,
+    ...legacy.map((row) => legacyStorageProof(row)),
+    ...native.map((row) => queriedNativeStorageProof(row)),
+  ];
 }
 
 /** Find prior owner-approved receipts, never approve a storage authority row by itself. */
 export async function resolveNativeStorageRoots(
   tx: Prisma.TransactionClient,
-  budget?: PublicationAuthorityReadBudget,
+  budget = new PublicationAuthorityReadBudget(),
+  reviewedRoots?: ApprovedStorageRoot[],
 ): Promise<ApprovedStorageRoot[]> {
+  if (reviewedRoots !== undefined)
+    return await assertNativeStorageRoots(tx, reviewedRoots, budget);
   const rows = await tx.mediaStorageAuthority.findMany({
     where: { rootPath: { in: ["/data/movies", "/data/tv"] } },
     orderBy: { rootPath: "asc" },
@@ -198,41 +305,36 @@ export async function resolveNativeStorageRoots(
     throw new Error(
       "Native recovery requires prior approval of both library roots",
     );
-  const legacy = await tx.mediaHandoffReceipt.findMany({
-    orderBy: { createdAt: "desc" },
-    take: budget?.take ?? 100,
-    include: { plan: true },
-  });
-  budget?.consume(legacy.length);
-  const native = await tx.nativeRecoveryReceipt.findMany({
-    orderBy: { createdAt: "desc" },
-    take: budget?.take ?? 100,
-    include: { plan: true },
-  });
-  budget?.consume(native.length);
+  const pinned = new Map<string, ApprovedStorageRoot>();
+  const legacyRows = [];
+  for (const row of rows) {
+    assertStoredEvidence(row);
+    const native = NativeStorageAuthoritySchema.safeParse(row.evidence);
+    if (!native.success) {
+      legacyRows.push(row);
+      continue;
+    }
+    const root = native.data.approvedRoots.find(
+      (entry) => entry.rootPath === row.rootPath,
+    );
+    if (root === undefined || !rowMatches(root, row))
+      throw new Error("Native storage pinned approval identity changed");
+    pinned.set(row.rootPath, root);
+  }
+  const legacy = await discoverLegacyStorageProofs(tx, legacyRows, budget);
   const roots = rows.map((row) => {
+    const inherited = pinned.get(row.rootPath);
+    if (inherited !== undefined) return inherited;
     const base = {
       rootPath: row.rootPath,
       pvcUid: row.pvcUid,
       volumeName: row.volumeName,
       volumePath: row.volumePath,
     };
-    const candidate = [
-      ...native.map((receipt) => ({
-        kind: "native" as const,
-        receipt,
-        mounts: nativeStorageProof(receipt).mounts,
-      })),
-      ...legacy.map((receipt) => ({
-        kind: "legacy" as const,
-        receipt,
-        mounts: LegacySelection.parse(
-          receipt.selection,
-        ).networkEvidence.mounts.map((mount) => mount.canonical),
-      })),
-    ].find(
+    const candidate = legacy.find(
       (entry) =>
-        approvedPlan(entry.receipt) &&
+        entry.approved &&
+        legacySourceMatches(legacyStorageIdentity(row), entry.sourceBindings) &&
         entry.mounts.some(
           (mount) =>
             mount.root === base.rootPath &&
@@ -249,10 +351,97 @@ export async function resolveNativeStorageRoots(
       ...base,
       receipt: {
         kind: candidate.kind,
-        id: candidate.receipt.id,
-        planHash: candidate.receipt.planHash,
+        id: candidate.id,
+        planHash: candidate.planHash,
       },
     };
   });
-  return assertNativeStorageRoots(tx, roots, budget);
+  const parsed = ApprovedStorageRootsSchema.parse(roots);
+  const proofs = await readStorageProofs(tx, parsed, budget, legacy);
+  return assertQueriedStorageRoots(parsed, rows, proofs);
+}
+
+function legacyStorageIdentity(row: StorageRow) {
+  const evidence = MountEvidenceSchema.parse(row.evidence);
+  const bindings = evidence.bindings.filter(
+    (binding) => binding.canonical.root === row.rootPath,
+  );
+  const binding = bindings[0];
+  if (binding === undefined || bindings.length !== 1)
+    throw new Error("Legacy storage source identity missing");
+  return {
+    source: binding.source,
+    canonical: {
+      root: ApprovedStorageRootSchema.shape.rootPath.parse(row.rootPath),
+      pvcUid: row.pvcUid,
+      volumeName: row.volumeName,
+      volumePath: row.volumePath,
+    },
+    configurationDigest: evidence.configurationDigest,
+  };
+}
+
+async function discoverLegacyStorageProofs(
+  tx: Prisma.TransactionClient,
+  rows: StorageRow[],
+  budget: PublicationAuthorityReadBudget,
+): Promise<ReturnType<typeof legacyStorageProof>[]> {
+  if (rows.length === 0) return [];
+  const identities = rows.map((row) => legacyStorageIdentity(row));
+  const receipts = await tx.mediaHandoffReceipt.findMany({
+    where: {
+      OR: identities.map(({ configurationDigest, ...binding }) => ({
+        AND: [
+          {
+            selection: {
+              path: ["networkEvidence", "configurationDigest"],
+              equals: configurationDigest,
+            },
+          },
+          {
+            selection: {
+              path: ["networkEvidence", "mounts"],
+              array_contains: [binding],
+            },
+          },
+        ],
+      })),
+    },
+    orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+    take: budget.takeWeighted(2),
+    include: { plan: true },
+  });
+  budget.consume(receipts.length * 2);
+  return receipts.map((receipt) => {
+    // Validate the literal raw plan before projecting its stored network proof.
+    if (
+      receipt.plan.plan === null ||
+      snapshotHash(z.json().parse(receipt.plan.plan)) !== receipt.planHash ||
+      !approvedPlan(receipt)
+    )
+      throw new Error("Legacy storage eligible approval changed");
+    const network = LegacySelection.parse(receipt.selection).networkEvidence;
+    if (
+      !identities.some((identity) =>
+        legacySourceMatches(identity, network.mounts),
+      )
+    )
+      throw new Error("Legacy storage eligible source changed");
+    return legacyStorageProof(receipt);
+  });
+}
+
+function legacySourceMatches(
+  identity: ReturnType<typeof legacyStorageIdentity>,
+  bindings: z.infer<typeof MountEvidenceSchema>["bindings"],
+) {
+  return bindings.some(
+    (binding) =>
+      snapshotHash(z.json().parse(binding.source)) ===
+        snapshotHash(z.json().parse(identity.source)) &&
+      sameStorage(
+        { rootPath: identity.canonical.root, ...identity.canonical },
+        binding.canonical,
+      ),
+  );
 }

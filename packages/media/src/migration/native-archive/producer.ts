@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { NativeArchiveScopeSchema } from "#shared/native-recovery/archive.ts";
 import {
   lockNativeArchiveScope,
@@ -23,7 +24,10 @@ import {
 export function createNativeArchiveObserver(
   context: NativeArchiveObserverContext,
 ) {
-  return async (planId: string) => {
+  return async (
+    planId: string,
+    budget = new PublicationAuthorityReadBudget(),
+  ) => {
     const execution = context.archiveExecution();
     assertArchiveActive(execution);
     const plan = await archiveAwait(
@@ -35,12 +39,13 @@ export function createNativeArchiveObserver(
     const scope = NativeArchiveScopeSchema.parse(plan.scope);
     await archiveAwait(
       execution,
-      assertNativeArchiveSnapshot(context.db, planId, scope),
+      assertNativeArchiveSnapshot(context.db, planId, scope, budget),
     );
     const evidence = await observeArchiveEvidence(
       context,
       { planId, recoveryEpoch: plan.recoveryEpoch, scope },
       execution,
+      budget,
     );
     const serialized = z.record(z.string(), z.json()).parse(evidence);
     const evidenceHash = snapshotHash(serialized);
@@ -54,7 +59,7 @@ export function createNativeArchiveObserver(
         );
         const current = await archiveAwait(
           execution,
-          assertNativeArchiveSnapshot(tx, planId, scope),
+          assertNativeArchiveSnapshot(tx, planId, scope, budget),
         );
         if (
           !["preparing", "awaiting_review", "applying"].includes(
@@ -68,7 +73,7 @@ export function createNativeArchiveObserver(
           evidence.mounts,
           await archiveAwait(
             execution,
-            assertNativeStorageRoots(tx, scope.storageRoots),
+            assertNativeStorageRoots(tx, scope.storageRoots, budget),
           ),
         );
         assertNativeEvidenceFresh(evidence);

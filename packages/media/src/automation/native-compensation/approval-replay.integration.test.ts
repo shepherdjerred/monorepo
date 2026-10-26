@@ -3,6 +3,8 @@ import { rm } from "node:fs/promises";
 import { z } from "zod";
 import { automationTestHarness } from "#testing/automation.ts";
 import { nativeCompensationFixture } from "./test-fixture.ts";
+import { createNativePlexObserver } from "#migration/native-plex/review.ts";
+import { bindingTestExecution } from "#automation/plex-binding/test-fixture.ts";
 
 const harness = automationTestHarness();
 let fixture: Awaited<ReturnType<typeof nativeCompensationFixture>> | undefined;
@@ -103,6 +105,10 @@ test("revoking an approver before the first physical grant still rejects without
   const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
     where: { id: "singleton" },
   });
+  await createNativePlexObserver(f.observerContext)(
+    { planId: plan.id, operationId: z.uuid().parse(approved.operationId) },
+    bindingTestExecution(),
+  );
   await db.mediaUser.update({
     where: { id: f.prior.actor.id },
     data: { restricted: true },

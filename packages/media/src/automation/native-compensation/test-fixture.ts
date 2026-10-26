@@ -11,8 +11,11 @@ import { nativeStorageFixture } from "#automation/native-recovery/test-fixture.t
 import { mappedPublicationFixture } from "#automation/publication-proof/test-fixture.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { PrismaNativeCompensation } from "#infrastructure/native-compensation/service.ts";
-import { observeNativeCompensation } from "#migration/native-compensation/producer.ts";
-import { observeCompensationContinuation } from "#migration/native-compensation/continuation.ts";
+import { createNativePlexObserver } from "#migration/native-plex/review.ts";
+import { observePairedCompensationExecution } from "#migration/native-plex/compensation.ts";
+import { NativeCompensationScopeSchema } from "#shared/native-recovery/compensation.ts";
+import { bindingTestExecution } from "#automation/plex-binding/test-fixture.ts";
+import { compensationNativePlexFixture } from "./fixtures/native-plex.ts";
 import type { NativeCompensationObserverContext } from "#migration/native-compensation/evidence.ts";
 import type {
   NativeCompensationActivityInput,
@@ -34,6 +37,7 @@ export function testCompensationExecution(): NativeCompensationExecutionContext 
   const wall = Date.now() + 300_000;
   const monotonic = performance.now() + 300_000;
   return {
+    expiresAtMs: wall,
     signal,
     checkpoint: () => Promise.resolve(),
     assertActive: () => {
@@ -198,7 +202,7 @@ export async function nativeCompensationFixture(
         observation: { torrent: successorObservation },
       },
     });
-    const observerContext: NativeCompensationObserverContext = {
+    const originalObserverContext: NativeCompensationObserverContext = {
       ...setup.prior.context,
       plex: {
         ...setup.prior.context.plex,
@@ -212,7 +216,7 @@ export async function nativeCompensationFixture(
       describeWorkflow: () => Promise.resolve(null),
     };
     if (setup.file.media.kind === "episode")
-      await configureArchiveTvPlex(db, observerContext, {
+      await configureArchiveTvPlex(db, originalObserverContext, {
         mediaIds: setup.published.entry.mediaIds,
         canonicalPath: setup.canonicalPath,
         sizeBytes: setup.asset.sizeBytes,
@@ -222,7 +226,7 @@ export async function nativeCompensationFixture(
     });
     const service = new PrismaNativeCompensation(
       db,
-      observerContext.describeWorkflow,
+      originalObserverContext.describeWorkflow,
     );
     const command = await service.prepare(
       setup.prior.actor,
@@ -240,15 +244,22 @@ export async function nativeCompensationFixture(
       planId: z.uuid().parse(command.nativeRecoveryId),
       operationId: z.uuid().parse(command.operationId),
     };
+    const storedPlan = await db.nativeRecoveryPlan.findUniqueOrThrow({
+      where: { id: input.planId },
+    });
+    const network = await compensationNativePlexFixture(
+      originalObserverContext,
+      NativeCompensationScopeSchema.parse(storedPlan.scope),
+    );
+    const observerContext = network.context;
     const activities = createNativeCompensationFileActivities(
       setup.context,
       testCompensationExecution,
     );
     const prepare = async () => {
-      await observeNativeCompensation(
-        observerContext,
+      await createNativePlexObserver(observerContext)(
         input,
-        testCompensationExecution(),
+        bindingTestExecution(),
       );
       await activities.prepareNativeCompensationFiles(input);
     };
@@ -276,10 +287,9 @@ export async function nativeCompensationFixture(
         operationId: z.uuid().parse(approved.operationId),
         planHash,
       };
-      await observeNativeCompensation(
-        observerContext,
-        approval,
-        testCompensationExecution(),
+      await createNativePlexObserver(observerContext)(
+        { planId: approval.planId, operationId: approval.operationId },
+        bindingTestExecution(),
       );
       await activities.applyNativeCompensationFiles(approval);
       const continuation =
@@ -294,10 +304,10 @@ export async function nativeCompensationFixture(
       };
     };
     const observe = (activity: NativeCompensationActivityInput) =>
-      observeCompensationContinuation(
+      observePairedCompensationExecution(
         observerContext,
         activity,
-        testCompensationExecution(),
+        bindingTestExecution(),
       );
     return {
       ...setup,
@@ -307,6 +317,7 @@ export async function nativeCompensationFixture(
       priorNativeReceipt,
       settledReplacement,
       observerContext,
+      wire: network.wire,
       service,
       activities,
       input,

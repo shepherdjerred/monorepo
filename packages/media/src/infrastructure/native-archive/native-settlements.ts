@@ -10,21 +10,29 @@ import type { PublicationAuthorityReadBudget } from "#infrastructure/publication
 import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { nativePhysicalIdentity } from "./physical-identity.ts";
+import {
+  FinishedPublishedPlexV3Schema,
+  FinishedArchivePlexV3Schema,
+} from "#shared/plex-binding/native-version.ts";
+import { ArchiveReceiptProjection } from "./receipt-projection.ts";
 
 /** Immutable dependencies of an already validated native grant, never new effect authority. */
 export async function nativeGrantSettlements(
   tx: Prisma.TransactionClient,
   reference: PriorNativeBinding,
   budget: PublicationAuthorityReadBudget,
+  projection = new ArchiveReceiptProjection(tx, budget),
 ) {
-  budget.consume(1);
-  const row = await tx.nativeRecoveryReceipt.findUniqueOrThrow({
-    where: { id: reference.receiptId },
-    include: { plan: true },
-  });
+  const row = await projection.read(tx, reference.receiptId, budget);
   const scope = NativeStoredScopeSchema.parse(row.plan.scope);
   if (scope.schemaVersion === 1) return [];
-  const finished = FinishedNativeV2Schema.parse(row.plan.plan);
+  const finished = z
+    .union([
+      FinishedNativeV2Schema,
+      FinishedPublishedPlexV3Schema,
+      FinishedArchivePlexV3Schema,
+    ])
+    .parse(row.plan.plan);
   const selection = z
     .object({
       scope: z.json(),
@@ -52,9 +60,9 @@ export async function nativeGrantSettlements(
     snapshotHash(nativeJson(row.plan.scope)) !== finished.scopeHash ||
     snapshotHash(selection.scope) !== finished.scopeHash ||
     snapshotHash(nativeJson(selection.fileEvidence)) !==
-      snapshotHash(finished.files) ||
+      snapshotHash(nativeJson(finished.files)) ||
     snapshotHash(selection.networkEvidence) !==
-      snapshotHash(finished.network) ||
+      snapshotHash(nativeJson(finished.network)) ||
     bindings.length !== 1 ||
     snapshotHash(z.json().parse(bindings[0])) !== reference.bindingHash ||
     evidence.length !== 1 ||

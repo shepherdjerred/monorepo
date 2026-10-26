@@ -1,4 +1,11 @@
 import type { Database } from "#infrastructure/database.ts";
+import { Prisma } from "#generated/prisma/client.ts";
+import {
+  captureWatchBindingScope,
+  readWatchBinding,
+} from "#automation/plex-events/binding.ts";
+import { lockMovieChoiceIdentities } from "#infrastructure/movie-editions/access.ts";
+import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import {
   lockCanonicalMedia,
   lockExistingDefaultTargets,
@@ -12,6 +19,66 @@ import {
   ObservePlexHintInputSchema,
   type PlexWatchHint,
 } from "#shared/plex-events/contract.ts";
+
+async function captureHintTarget(
+  tx: Prisma.TransactionClient,
+  hint: PlexWatchHint,
+) {
+  const claims = await tx.plexItemClaim.findMany({
+    where: {
+      serverMachineId: hint.serverMachineId,
+      sectionId: hint.sectionId,
+      ratingKey: hint.ratingKey,
+      edition: "default",
+    },
+    select: { mediaId: true },
+    take: 2,
+  });
+  if (claims.length > 1) return null;
+  // Legacy display identity discovers only a quarantined candidate; its exact
+  // immutable receipt must establish authority below before an operation exists.
+  const matches =
+    claims.length === 1
+      ? claims.map((claim) => ({ id: claim.mediaId }))
+      : await tx.mediaItem.findMany({
+          where: {
+            kind: hint.mediaKind,
+            availability: "quarantined",
+            AND: [
+              {
+                externalIds: {
+                  path: ["plexSectionId"],
+                  equals: hint.sectionId,
+                },
+              },
+              {
+                externalIds: {
+                  path: ["plexRatingKey"],
+                  equals: hint.ratingKey,
+                },
+              },
+            ],
+          },
+          select: { id: true },
+          take: 2,
+        });
+  const match = matches[0];
+  if (match === undefined || matches.length !== 1) return null;
+  const access = {
+    serverMachineId: hint.serverMachineId,
+    sectionId: hint.sectionId,
+    sectionType:
+      hint.mediaKind === "movie" ? ("movie" as const) : ("show" as const),
+  };
+  const scope = await captureWatchBindingScope(tx, match.id, access);
+  if (scope === null || (claims.length === 0 && scope.quarantine === null))
+    return null;
+  const original = await readWatchBinding(tx, scope);
+  return original?.association.item.ratingKey !== hint.ratingKey ||
+    original.association.item.type !== hint.mediaKind
+    ? null
+    : { match, scope, original };
+}
 
 export class PrismaPlexEventIngress {
   constructor(
@@ -34,27 +101,25 @@ export class PrismaPlexEventIngress {
       return;
     const bucket = Math.floor(Date.now() / 30_000);
     await serializable(this.db, async (tx) => {
-      const matches = await tx.mediaItem.findMany({
-        where: {
-          kind: hint.mediaKind,
-          AND: [
-            {
-              externalIds: { path: ["plexSectionId"], equals: hint.sectionId },
-            },
-            {
-              externalIds: { path: ["plexRatingKey"], equals: hint.ratingKey },
-            },
-          ],
-        },
-        select: { id: true },
-        take: 2,
-      });
-      const match = matches[0];
-      if (match === undefined || matches.length !== 1) return;
-      await lockCanonicalMedia(tx, [match.id]);
-      await lockExistingDefaultTargets(tx, [match.id]);
-      await lockEffectiveRequests(tx, [match.id]);
+      const captured = await captureHintTarget(tx, hint);
+      if (captured === null) return;
+      const { match, scope, original } = captured;
+      await lockCanonicalMedia(tx, scope.mediaIds);
+      await lockExistingDefaultTargets(tx, scope.mediaIds);
+      await lockEffectiveRequests(tx, scope.mediaIds);
       await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
+      await lockMovieChoiceIdentities(tx, { mediaIds: scope.mediaIds });
+      await tx.$queryRaw(
+        Prisma.sql`SELECT id FROM "LibraryAsset" WHERE id IN (${Prisma.join(scope.assetIds)}) ORDER BY id FOR UPDATE`,
+      );
+      await tx.$queryRaw(
+        Prisma.sql`SELECT "assetId","mediaId" FROM "AssetCoverage" WHERE "assetId" IN (${Prisma.join(scope.assetIds)}) ORDER BY "assetId","mediaId" FOR SHARE`,
+      );
+      const continuationIds = scope.quarantine?.continuationIds ?? [];
+      if (continuationIds.length > 0)
+        await tx.$queryRaw(
+          Prisma.sql`SELECT id FROM "NativeQuarantineContinuation" WHERE id IN (${Prisma.join(continuationIds)}) ORDER BY id FOR UPDATE`,
+        );
       const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
         where: { id: "singleton" },
       });
@@ -74,22 +139,14 @@ export class PrismaPlexEventIngress {
         target.automationEpoch !== runtime.recoveryEpoch
       )
         return;
-      // Recheck the exact external mapping after acquiring canonical locks.
-      const current = await tx.mediaItem.count({
-        where: {
-          id: match.id,
-          kind: hint.mediaKind,
-          AND: [
-            {
-              externalIds: { path: ["plexSectionId"], equals: hint.sectionId },
-            },
-            {
-              externalIds: { path: ["plexRatingKey"], equals: hint.ratingKey },
-            },
-          ],
-        },
-      });
-      if (current !== 1) return;
+      const current = await readWatchBinding(tx, scope);
+      if (
+        current === null ||
+        media.kind !== hint.mediaKind ||
+        identityHash(current.authority) !== identityHash(original.authority) ||
+        current.association.item.ratingKey !== hint.ratingKey
+      )
+        return;
       const payload = {
         schemaVersion: 1,
         edition: "default",

@@ -26,6 +26,7 @@ import { scoutSteps } from "#src/pipeline/lanes/scout.ts";
 import { siteSteps } from "#src/pipeline/lanes/sites.ts";
 import { observabilityE2eSteps } from "#src/pipeline/lanes/observability-e2e.ts";
 import { stormE2eSteps } from "#src/pipeline/lanes/storm-e2e.ts";
+import { mediaPmsSteps } from "#src/pipeline/lanes/media-pms.ts";
 import { prGateSteps } from "#src/pipeline/lanes/pr-gates.ts";
 import {
   TURBO_CACHE_TOKEN,
@@ -204,6 +205,7 @@ export function buildPipelineSteps({
     // session. The lane definitions stay in macos.ts for restoration.
     ...observabilityE2eSteps(images),
     ...stormE2eSteps(images),
+    ...mediaPmsSteps(images),
     ...prGateSteps(images, trustedGateImage),
   ];
 

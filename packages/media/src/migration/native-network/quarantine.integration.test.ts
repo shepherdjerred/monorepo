@@ -9,6 +9,7 @@ import {
 } from "./quarantine.ts";
 import { refreshStorageAuthorities } from "#infrastructure/handoff/storage-observer.ts";
 import { resolveNativeStorageRoots } from "#infrastructure/native-recovery/storage-provenance.ts";
+import { NativeStorageAuthoritySchema } from "#shared/canonical-storage.ts";
 
 const harness = automationTestHarness();
 const directories: string[] = [];
@@ -122,11 +123,24 @@ test.each([
   },
 );
 
-test("applied quarantine receipt remains canonical storage authority through a same-volume Pod replacement", async () => {
+test("applied quarantine preserves exact storage approval through a same-volume Pod replacement", async () => {
   const f = await fixture();
-  await f.apply();
+  const reviewedRoots = await resolveNativeStorageRoots(f.db);
+  const continuation = await f.apply();
   const roots = await resolveNativeStorageRoots(f.db);
-  expect(roots.every((root) => root.receipt.kind === "native")).toBe(true);
+  // Installation retains the exact approvals consumed by the reviewed plan;
+  // discovering a newer receipt must never substitute a different authority.
+  expect(roots).toEqual(reviewedRoots);
+  const receipt = await f.db.nativeRecoveryReceipt.findUniqueOrThrow({
+    where: { planId: f.planId },
+  });
+  expect(continuation.receiptId).toBe(receipt.id);
+  const installed = await f.db.mediaStorageAuthority.findMany();
+  expect(installed).toHaveLength(2);
+  for (const row of installed)
+    expect(
+      NativeStorageAuthoritySchema.parse(row.evidence).approvedRoots,
+    ).toEqual(reviewedRoots);
   for (const mount of f.prior.canonical.mounts)
     mount.podUid = "replacement-native-quarantine-pod";
   f.observerContext.observer.observeMountBindings = () =>

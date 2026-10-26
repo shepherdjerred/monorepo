@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { FetchTransport } from "#integrations/http.ts";
 import {
   SourceInventorySchema,
   type SourceInventory,
@@ -26,7 +27,7 @@ export function inventoryUrl(baseUrl: string, endpoint: string): URL {
 async function get(
   source: InventorySource,
   endpoint: string,
-  fetcher: typeof fetch,
+  fetcher: FetchTransport,
 ): Promise<unknown> {
   try {
     const response = await fetcher(inventoryUrl(source.baseUrl, endpoint), {
@@ -60,7 +61,7 @@ async function get(
 }
 async function capture(
   source: InventorySource,
-  fetcher: typeof fetch,
+  fetcher: FetchTransport,
 ): Promise<SourceInventory> {
   const [profiles, customFormats, qualityDefinitions, status, management] =
     await Promise.all(
@@ -89,7 +90,7 @@ async function capture(
 /** Two equal consecutive captures prevent silently combining profiles from a concurrent source edit. */
 export async function inventoryProfiles(
   source: InventorySource,
-  fetcher: typeof fetch = fetch,
+  fetcher: FetchTransport = fetch,
 ): Promise<SourceInventory> {
   const first = await capture(source, fetcher);
   const second = await capture(source, fetcher);
