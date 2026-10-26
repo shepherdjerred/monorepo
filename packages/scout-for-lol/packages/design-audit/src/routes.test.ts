@@ -34,17 +34,17 @@ describe("Scout design audit matrix", () => {
       6,
     );
     expect(routes.filter((route) => route.surface === "docs")).toHaveLength(29);
-    expect(routes.filter((route) => route.surface === "app")).toHaveLength(28);
+    expect(routes.filter((route) => route.surface === "app")).toHaveLength(26);
     expect(routes.filter((route) => route.golden)).toHaveLength(16);
   });
 
-  test("runs exactly the intentional 664 browser cases", () => {
+  test("runs exactly the intentional 648 browser cases", () => {
     const cases = auditCases();
     const keys = cases.map(
       ({ project, route, theme }) =>
         `${project.name}/${route.name}/${theme.name}`,
     );
-    expect(cases).toHaveLength(664);
+    expect(cases).toHaveLength(648);
     expect(new Set(keys).size).toBe(cases.length);
 
     for (const project of auditProjects) {
@@ -109,5 +109,17 @@ describe("Scout design audit matrix", () => {
     );
     expect(routes.some((route) => route.path.endsWith("/new"))).toBe(true);
     expect(routes.some((route) => route.path.endsWith("/edit"))).toBe(true);
+  });
+
+  test("covers free Dares without retired financial routes", () => {
+    const routes = appRoutes();
+    expect(
+      routes
+        .filter((route) => route.path.startsWith("/app/dares"))
+        .map((route) => route.path),
+    ).toEqual(["/app/dares", "/app/dares/settings"]);
+    expect(routes.some((route) => route.path.startsWith("/app/bucks"))).toBe(
+      false,
+    );
   });
 });
