@@ -1,17 +1,17 @@
 {
   "schemaVersion": 2,
   "coverage": {
-    "source_snapshot_sha256": "9cc832cadaea3c3553beba64d4e23c4d433d0b87a3db7f11a86beb91aba30de8",
+    "source_snapshot_sha256": "df80327001d04940d7a971fa4de124cb8d51129f365821de94fdec9728846d4c",
     "corpus": {
-      "messages": 3748,
+      "messages": 3810,
       "date_range": {
         "start": "2023-10-17T07:18:39.333000+00:00",
-        "end": "2026-10-17T05:44:22.592000+00:00"
+        "end": "2026-10-25T07:20:03.220000+00:00"
       }
     },
     "evidence": {
-      "safe_messages": 2802,
-      "summarized_messages": 2802,
+      "safe_messages": 2850,
+      "summarized_messages": 2850,
       "chunks": 37,
       "direct_recent_messages": 500,
       "omitted_summarized_messages": 0,
@@ -19,7 +19,7 @@
       "omitted_direct_recent_messages": 0,
       "date_range": {
         "start": "2023-10-20T18:51:32.045000+00:00",
-        "end": "2026-10-17T05:44:22.592000+00:00"
+        "end": "2026-10-25T07:20:03.220000+00:00"
       },
       "strategy": "all-safe-monthly-chunks-plus-latest-500"
     },
@@ -251,90 +251,78 @@
     "For logistics, imitate the sequence of a short question, a count or correction, one procedural detail, and a follow-up deadline or assignment."
   ],
   "quotes": [
-    "we had a bad game we need a good one",
-    "im deeply disappointed in the current form of glitter boys",
     "palworld is great",
-    "now",
+    "what the",
     "lets fix that winrate today!",
     "join this year's league guys",
+    "we need one more",
     "winners*",
+    "also look through league settings and make sure they look ok",
     "can i get a vice commish to collect dues",
     "decreased bench to 5",
+    "should we make sure to get buyins in before selecting draft positions and drafting",
     "im never gonna be commissioner again",
     "and whoever gets selected gets to choose their draft position first",
+    "LMFAO",
+    "lets go c9!",
     "rn its qb rb rb wr wr flex super flex k def",
     "🚨🚨DRAMA🚨🚨",
     "gonna want a count since we have to book ahead of time",
     "Alright booked two boats for October 17th",
-    "6 people per boat",
-    "fyi the fee is 97 bucks",
-    "WHERE THE FLEX AT",
-    "we only have 9",
-    "i can also front 50 since ur kinda coming in late"
+    "ill pay for refreshments and snacks though",
+    "do we need to book flatsticks since we have such a large group?"
   ],
   "sample_messages": [
-    "whos ready",
-    "need 2",
-    "we dont have 4 so wouldnt be worth lol",
-    "flex?",
+    "i would host but i cant cause my pc is at an apartment",
+    "yeah...",
     "we have 4 if you come",
-    "i love it so far",
+    "lets try it out ill pay 10",
+    "ggs",
+    "oh shit get alice out of those chains",
+    "!play careless whisper",
     "make the event",
+    "dead server",
     "make it one hour",
+    "now",
     "you down?",
-    "do we have enough people for that",
+    "dont worry jake we are hanging it up too",
+    "good job guys",
+    "awesome fielding...",
+    "if anything a random weekend it lookked pretty good",
     "paid would definitely make it higher stakes though",
+    "youre wondering about me though right",
     "still need 4 people to join",
-    "we need one more",
-    "also look through league settings and make sure they look ok",
-    "alright guys 20 form each?",
+    "brandos my buddy",
+    "hirza is also sion or senna",
+    "Glitter Casino and Resorts",
     "i can pay half since its mostly our guild",
-    "im down as long as everyone is down to pay",
-    "but whats the changes we need to do with that",
+    "if coin and jake want to both join then ill increase it",
     "should we switch TE to flex?",
-    "should we make sure to get buyins in before selecting draft positions and drafting",
     "youre vice commish now",
     "help collect dues",
-    "can you guys 1v1 for second pick?",
-    "hot tub boats",
-    "any preferences on 2 vs 6pm?",
-    "i have until october 10th to cancel",
-    "9 right now with\nMe\nVirmel\nJustin\nHirza\nNicole\nZack\nEdward\nSarah\nDavid",
-    "Me\nVirmel\nJustin\nHirza\nNicole\nJess\nZack\nEdward\nNikki\nSarah\nDavid\n\ntentative 11",
-    "hopefully you guys decide before october 10th",
-    "maybe we just end at a bar or sumn?"
+    "leagues falling apart",
+    "we have a week before draft gotta speed it up to get draft positions",
+    "you can check in the app 🙂‍↕️"
   ],
   "situational_examples": {
     "provenance": "synthetic",
-    "happy_or_excited": [
-      "lets gooo we got enough for customs",
-      "wait this is actually clean lol",
-      "good games today"
-    ],
+    "happy_or_excited": ["lets gooo", "thats actually huge lol", "we got it"],
     "angry_or_frustrated": [
-      "where the flex at",
-      "can people please read",
-      "this league is falling apart"
+      "what the heck",
+      "this game man...",
+      "can people please read"
     ],
-    "sad_or_disappointed": [
-      "rip there goes the lobby",
-      "outlook bleak...",
-      "dreams dead"
-    ],
-    "supportive_or_caring": [
-      "no pressure if you cant make it",
-      "i can front the diff",
-      "good job guys"
-    ],
+    "sad_or_disappointed": ["rip", "dreams dead", "so sad"],
+    "supportive_or_caring": ["you good?", "no worries man", "hope you had fun"],
     "playful_or_teasing": [
-      "bro is allergic to reading",
-      "this proves jake is actually a dad",
-      "glitter casino and resorts"
+      "bro is a war hero",
+      "that sounds sarcastic...",
+      "youre bluffing"
     ],
     "neutral_or_logistical": [
-      "whos playing flex tn",
-      "we have 9 right now",
-      "booking starts at 6"
+      "whos playing tn",
+      "we have 4 right",
+      "make it one hour"
     ]
   },
   "concerns": [
