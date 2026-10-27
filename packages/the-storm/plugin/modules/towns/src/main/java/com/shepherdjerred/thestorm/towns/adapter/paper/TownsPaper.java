@@ -31,6 +31,7 @@ import com.shepherdjerred.thestorm.tracks.app.TrackLevels;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.Executor;
 import org.bukkit.NamespacedKey;
@@ -53,8 +54,10 @@ public final class TownsPaper {
    * @param settling the towns and their storage
    * @param locks every lock and its storage
    * @param pvp players' own PvP switches
+   * @param spawnSites archive spawn sites that keep players fed and quicker
    */
-  public record Loaded(Settling settling, LockService locks, PvpService pvp) {}
+  public record Loaded(
+      Settling settling, LockService locks, PvpService pvp, Set<String> spawnSites) {}
 
   /** The protection and settled-land ports published for other modules. */
   public record Installed(Protection protection, SettledLand settled, TownMilestones milestones) {}
@@ -229,6 +232,7 @@ public final class TownsPaper {
             new ContactListener(guard, server),
             new ArrivalListener(guard),
             new SpawnListener(guard),
+            new SpawnComfort(state, loaded.spawnSites()),
             new LockListener(
                 locks,
                 loaded.locks(),
