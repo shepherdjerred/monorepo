@@ -4,6 +4,7 @@ import {
   HandoffFileSchema,
   HandoffScopeSchema,
   HandoffNetworkEvidenceSchema,
+  HandoffFileEvidenceSchema,
   ApplyHandoffSchema,
 } from "./handoff.ts";
 import {
@@ -12,6 +13,8 @@ import {
 } from "./movie-editions/registry.ts";
 import { MovieCutEvidenceV2Schema } from "./movie-editions/cut-v2.ts";
 import { EvidenceHashSchema } from "./migration.ts";
+import { MoviePublicationAssetV2Schema } from "./movie-editions/publication-v2.ts";
+import { PublicationAssetSnapshotSchema } from "./publication-proof/intent.ts";
 
 const Resolution = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("conventional") }),
@@ -107,6 +110,29 @@ export const HandoffNetworkProtocolSchema = z.union([
 ]);
 export type HandoffProtocolScope = z.infer<typeof HandoffScopeProtocolSchema>;
 export type LibraryHandoffScopeV2 = z.infer<typeof LibraryHandoffScopeV2Schema>;
+export const FinishedLibraryHandoffV2Schema = z.strictObject({
+  schemaVersion: z.literal(2),
+  scopeHash: EvidenceHashSchema,
+  network: z.json(),
+  files: z.json(),
+});
+export const LibraryHandoffSelectionV2Schema = z.strictObject({
+  schemaVersion: z.literal(2),
+  scope: LibraryHandoffScopeV2Schema,
+  fileEvidence: HandoffFileEvidenceSchema.pick({
+    planId: true,
+    recoveryEpoch: true,
+    workerPodUid: true,
+    files: true,
+  }),
+  networkEvidence: z.json(),
+  protected: LibraryHandoffScopeV2Schema.shape.protected,
+  assets: z
+    .array(
+      z.union([MoviePublicationAssetV2Schema, PublicationAssetSnapshotSchema]),
+    )
+    .max(25),
+});
 
 export function handoffProtocolVersion(scope: HandoffProtocolScope): 1 | 2 {
   return "schemaVersion" in scope ? 2 : 1;
