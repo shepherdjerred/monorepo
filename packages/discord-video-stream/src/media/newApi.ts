@@ -990,7 +990,9 @@ export function prepareStream(
   }
 
   // general output options
-  commandBuilder.output(output).outputFormat("nut");
+  commandBuilder
+    .output(output)
+    .outputFormat(mergedOptions.normalizeTimestamps ? "matroska" : "nut");
 
   // video setup (the `encoder` is resolved earlier, into `encoderSettings`/`hwPipeline`)
   const {
@@ -1065,7 +1067,6 @@ export function prepareStream(
         ? {}
         : { videoStreamIndex: mergedOptions.videoStreamIndex }),
       inputColor: mergedOptions.inputColor,
-      normalizeTimestamps: mergedOptions.normalizeTimestamps,
       ...(uploadMode ? { uploadInput: true } : {}),
       ...(frameRate !== undefined ? { frameRate } : {}),
       ...(mergedOptions.subtitleBurn !== undefined
@@ -1157,9 +1158,6 @@ export function prepareStream(
       .audioCodec("libopus")
       .audioBitrate(`${bitrateAudio}k`)
       .audioFilters(`volume@internal_lib=${formatAudioGain(audioVolume)}`);
-    if (mergedOptions.normalizeTimestamps) {
-      commandBuilder.audioFilters("aresample=48000,asetpts=N/SR/TB");
-    }
     // Realtime Opus tuning (see PrepareStreamOptions.lowDelayAudio). libopus private options —
     // they bind to the (only) audio stream, after -c:a above.
     if (mergedOptions.lowDelayAudio)
@@ -1357,6 +1355,9 @@ export type PlayStreamOptions = {
    * Set format of the stream
    */
   format: "matroska" | "nut";
+
+  /** Assign monotonic packet clocks after demuxing a discontinuous live source. */
+  normalizeTimestamps?: boolean;
 
   /**
    * Override video width sent to Discord.

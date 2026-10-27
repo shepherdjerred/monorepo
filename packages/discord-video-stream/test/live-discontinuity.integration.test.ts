@@ -2,9 +2,9 @@ import { afterAll, beforeAll, expect, test } from "vitest";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { Readable } from "node:stream";
+import { Demuxer } from "node-av";
 import { prepareStream } from "../src/media/newApi.ts";
-import { demux } from "../src/media/LibavDemuxer.ts";
+import { PacketTimestampNormalizer } from "../src/media/LibavDemuxer.ts";
 
 // Exercise the system FFmpeg used by hosted consumers. The Linux static build
 // crashes while opening MPEG-TS HLS, before timestamp normalization runs.
@@ -30,16 +30,19 @@ function ffmpeg(args: string[]): Bun.SpawnSyncResult {
 beforeAll(async () => {
   directory = await mkdtemp(path.join(tmpdir(), "live-discontinuity-"));
   playlist = path.join(directory, "live.m3u8");
-  for (const [name, frequency] of [["ad", 440], ["live", 880]] as const) {
+  for (const [name, frequency, size, sampleRate] of [
+    ["ad", 440, "320x180", 44_100],
+    ["live", 880, "640x360", 44_100],
+  ] as const) {
     const result = ffmpeg([
       "-f",
       "lavfi",
       "-i",
-      "testsrc2=size=320x180:rate=30:duration=2",
+      `testsrc2=size=${size}:rate=30:duration=2`,
       "-f",
       "lavfi",
       "-i",
-      `sine=frequency=${frequency}:duration=2`,
+      `sine=frequency=${frequency}:sample_rate=${sampleRate}:duration=2`,
       "-c:v",
       "libx264",
       "-g",
@@ -105,6 +108,7 @@ test("normalizes timestamps across an HLS discontinuity", async () => {
     height: 180,
     frameRate: 30,
     normalizeTimestamps: true,
+    customInputOptions: ["-re"],
     ffmpegPath,
   });
   const chunks: Buffer[] = [];
@@ -114,23 +118,37 @@ test("normalizes timestamps across an HLS discontinuity", async () => {
   await Promise.all([prepared.promise, collecting]);
   expect(chunks.length).toBeGreaterThan(0);
 
-  const { video, audio } = await demux(Readable.from(chunks), {
-    format: "nut",
-  });
-  expect(video).toBeDefined();
-  expect(audio).toBeDefined();
-  await Promise.all(
-    [video?.stream, audio?.stream].map(async (stream) => {
-      if (stream === undefined) throw new Error("missing normalized stream");
-      const timestamps: bigint[] = [];
-      for await (const packet of stream) {
-        timestamps.push(BigInt(packet.pts));
-        packet.free();
-      }
-      expect(timestamps.length).toBeGreaterThan(30);
+  await writeFile(
+    path.join(directory, "normalized.mkv"),
+    Buffer.concat(chunks),
+  );
+  const demuxer = await Demuxer.open(path.join(directory, "normalized.mkv"));
+  const video = demuxer.video();
+  const audio = demuxer.audio();
+  if (!video || !audio) throw new Error("missing normalized stream");
+  const normalizer = new PacketTimestampNormalizer({ num: 1, den: 30 });
+  try {
+    const [videoTimestamps, audioTimestamps] = await Promise.all(
+      [video, audio].map(async (stream) => {
+        const timestamps: bigint[] = [];
+        for await (const packet of demuxer.packets(stream.index)) {
+          if (packet === null) continue;
+          if (stream.index === video.index) normalizer.video(packet);
+          else normalizer.audio(packet);
+          timestamps.push(BigInt(packet.pts ?? 0));
+          packet.free();
+        }
+        return timestamps;
+      }),
+    );
+    expect(videoTimestamps).toHaveLength(121);
+    expect(audioTimestamps.length).toBeGreaterThan(180);
+    for (const timestamps of [videoTimestamps, audioTimestamps]) {
       expect(
         timestamps.slice(1).every((pts, index) => pts > timestamps[index]!),
       ).toBe(true);
-    }),
-  );
+    }
+  } finally {
+    await demuxer.close();
+  }
 });

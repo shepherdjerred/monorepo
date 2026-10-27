@@ -109,7 +109,37 @@ function parseOpusPacketDuration(frame: Uint8Array) {
 type DemuxerOptions = {
   format: "matroska" | "nut";
   observer?: StreamObserver;
+  normalizeTimestamps?: boolean;
 };
+
+export class PacketTimestampNormalizer {
+  private videoPts = 0n;
+  private audioPts = 0n;
+
+  constructor(private readonly videoTimeBase?: {
+    num: number;
+    den: number;
+  }) {}
+
+  video(packet: Packet): void {
+    if (this.videoTimeBase === undefined) {
+      throw new Error("cannot normalize video without a frame rate");
+    }
+    packet.pts = this.videoPts;
+    packet.dts = this.videoPts;
+    packet.duration = 1n;
+    packet.timeBase = this.videoTimeBase;
+    this.videoPts += 1n;
+  }
+
+  audio(packet: Packet): void {
+    const duration = packet.duration;
+    packet.pts = this.audioPts;
+    packet.dts = this.audioPts;
+    packet.timeBase = { num: 1, den: 48_000 };
+    this.audioPts += duration;
+  }
+}
 
 function packetReadyStats(
   kind: PacketReadyStats["kind"],
@@ -126,7 +156,7 @@ function packetReadyStats(
 
 export async function demux(
   input: Readable,
-  { format, observer }: DemuxerOptions,
+  { format, observer, normalizeTimestamps = false }: DemuxerOptions,
 ) {
   const loggerFormat = new Log("demux:format");
   const loggerFrameCommon = new Log("demux:frame:common");
@@ -268,6 +298,13 @@ export async function demux(
     );
   }
 
+  const normalizer = normalizeTimestamps
+    ? new PacketTimestampNormalizer(
+        vInfo && vInfo.framerate_num > 0 && vInfo.framerate_den > 0
+          ? { num: vInfo.framerate_den, den: vInfo.framerate_num }
+          : undefined,
+      )
+    : undefined;
   const packetIterator = demuxer.packets();
   const applyBitStreamFilters = async (
     input: Packet | null,
@@ -310,6 +347,7 @@ export async function demux(
             // dropping these video packets. Track backpressure separately.
             for (const packet of packets) {
               if (!packet) continue;
+              normalizer?.video(packet);
               observer?.onPacketReady?.(packetReadyStats("video", packet));
               if (!vPipe.write(packet)) resume = false;
             }
@@ -325,6 +363,7 @@ export async function demux(
               continue;
             }
             packet.duration ||= BigInt(parseOpusPacketDuration(packet.data));
+            normalizer?.audio(packet);
             observer?.onPacketReady?.(packetReadyStats("audio", packet));
             if (!aPipe.write(packet)) resume = false;
           }

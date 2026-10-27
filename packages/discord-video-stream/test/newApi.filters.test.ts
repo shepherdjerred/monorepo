@@ -480,17 +480,14 @@ describe("prepareStream audioVolume", () => {
 });
 
 describe("prepareStream live timestamp normalization", () => {
-  test("opts into monotonic audio/video clocks and otherwise leaves them absent", async () => {
+  test("uses a tolerant container for packet-clock normalization", async () => {
     const playback = prepareStream("live.m3u8", {
       frameRate: 30,
       normalizeTimestamps: true,
     });
     try {
       const args = ffmpegArgs(playback.command);
-      expect(args).toContain("scale=-2:-2,fps=30,setpts=N/(30*TB)");
-      expect(args).toContain(
-        "volume@internal_lib=1.0,aresample=48000,asetpts=N/SR/TB",
-      );
+      expect(args.slice(-2)).toEqual(["matroska", "pipe:1"]);
     } finally {
       killQuietly(playback.command);
       playback.output.destroy();
@@ -499,11 +496,10 @@ describe("prepareStream live timestamp normalization", () => {
 
     const ordinary = prepareStream("live.m3u8", { frameRate: 30 });
     try {
-      const args = ffmpegArgs(ordinary.command);
-      expect(args).not.toContain("fps=30,setpts=N/(30*TB)");
-      expect(args).not.toContain(
-        "volume@internal_lib=1.0,aresample=48000,asetpts=N/SR/TB",
-      );
+      expect(ffmpegArgs(ordinary.command).slice(-2)).toEqual([
+        "nut",
+        "pipe:1",
+      ]);
     } finally {
       killQuietly(ordinary.command);
       ordinary.output.destroy();

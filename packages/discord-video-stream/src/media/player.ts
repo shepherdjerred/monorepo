@@ -188,7 +188,15 @@ export function createSeekablePlayer(
         conn,
         streamer,
         output,
-        { ...mergedPlay, configureConn: !connConfigured },
+        {
+          ...mergedPlay,
+          format:
+            prepareOptions.normalizeTimestamps === true
+              ? "matroska"
+              : mergedPlay.format,
+          normalizeTimestamps: prepareOptions.normalizeTimestamps,
+          configureConn: !connConfigured,
+        },
         abort.signal,
       );
     } catch (err) {
