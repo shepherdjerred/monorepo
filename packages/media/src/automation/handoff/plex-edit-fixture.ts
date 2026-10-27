@@ -11,10 +11,16 @@ import { handoffFixture } from "./test-fixture.ts";
 export async function libraryPlexFixture(
   db: Database,
   edition: MovieEditionKey,
+  options: {
+    classify?: "from_filename" | "owner_review";
+    fileName?: string;
+  } = {},
 ) {
   const label = MOVIE_EDITION_REGISTRY[edition].plexLabel;
   const f = await handoffFixture(db, {
-    fileName: `Synthetic Film${edition === "default" ? "" : ` {edition-${label}}`}.mkv`,
+    fileName:
+      options.fileName ??
+      `Synthetic Film${edition === "default" ? "" : ` {edition-${label}}`}.mkv`,
     prepareRequest({ request, report }) {
       const files = report.entries.filter((entry) => entry.kind === "file");
       return PrepareLibraryHandoffV3Schema.parse({
@@ -26,11 +32,20 @@ export async function libraryPlexFixture(
           provenanceKey: file.provenanceKey,
           evidenceHash: file.observationHash,
         })),
-        movies: files.map((file) => ({
-          provenanceKey: file.provenanceKey,
-          edition,
-          resolution: { kind: "conventional" },
-        })),
+        movies:
+          options.classify === "from_filename"
+            ? []
+            : files.map((file) => ({
+                provenanceKey: file.provenanceKey,
+                edition,
+                resolution:
+                  options.classify === "owner_review"
+                    ? {
+                        kind: "owner_review",
+                        reason: "Owner confirmed the synthetic fixture cut",
+                      }
+                    : { kind: "conventional" },
+              })),
       });
     },
   });
