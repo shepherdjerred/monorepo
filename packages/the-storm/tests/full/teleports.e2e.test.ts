@@ -37,6 +37,11 @@ describe("shared player travel on native Paper", () => {
       /Teleported to wilderness in frontier/u,
       45_000,
     );
+    expect(
+      await rcon.command(
+        `execute as ${bot.username} at @s if block ~ ~ ~ minecraft:air if block ~ ~1 ~ minecraft:air`,
+      ),
+    ).toContain("Test passed");
     expect(bot.inventory.items().some((item) => item.name === "compass")).toBe(
       true,
     );

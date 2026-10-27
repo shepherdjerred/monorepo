@@ -124,25 +124,40 @@ describe("all modules together", () => {
     rcon,
   }) => {
     await rcon.command("setblock 72 63 61 minecraft:stone");
-    await rcon.command(`minecraft:tp ${bot.username} 72.5 64 61.5`);
+    await rcon.command(`minecraft:tp ${bot.username} 72.5 69 61.5`);
     await waitUntil(
       "farm arrival",
-      () => bot.entity.position.distanceTo(new Vec3(72.5, 64, 61.5)) < 0.5,
+      () => bot.entity.position.distanceTo(new Vec3(72.5, 69, 61.5)) < 0.5,
     );
     await waitUntil("Martha player body", () =>
       Object.values(bot.entities).some(
         (entity) =>
           entity.type === "player" &&
-          entity.position.distanceTo(new Vec3(72.5, 64, 59.5)) < 0.5,
+          entity.position.distanceTo(new Vec3(72.5, 69, 59.5)) < 0.5,
       ),
     );
     const martha = Object.values(bot.entities).find(
       (entity) =>
         entity.type === "player" &&
-        entity.position.distanceTo(new Vec3(72.5, 64, 59.5)) < 0.5,
+        entity.position.distanceTo(new Vec3(72.5, 69, 59.5)) < 0.5,
     );
     if (martha === undefined)
       throw new Error("Martha disappeared before interaction");
+    expect(
+      await rcon.command(
+        "data get entity @e[tag=thestorm_npc_martha,limit=1] Pos",
+      ),
+    ).toContain("69.0d");
+    expect(
+      await rcon.command(
+        "data get entity @e[tag=thestorm_npc_martha,limit=1] CustomName",
+      ),
+    ).toContain('"Martha · Farmer"');
+    expect(
+      await rcon.command(
+        "data get entity @e[tag=thestorm_npc_windmill-guard,limit=1] Pos",
+      ),
+    ).toContain("71.5d");
     const dialogs: unknown[] = [];
     bot._client.on("packet", (data: unknown, meta: { name: string }) => {
       if (meta.name === "show_dialog") dialogs.push(data);

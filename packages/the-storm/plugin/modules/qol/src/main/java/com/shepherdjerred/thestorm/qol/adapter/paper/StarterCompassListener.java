@@ -73,7 +73,10 @@ final class StarterCompassListener implements Listener {
   @EventHandler
   void drop(PlayerDropItemEvent event) {
     if (!compass.manages(event.getPlayer())) return;
-    if (StarterCompass.marked(event.getItemDrop().getItemStack())) event.setCancelled(true);
+    var item = event.getItemDrop().getItemStack();
+    if (!StarterCompass.marked(item)) return;
+    event.setCancelled(true);
+    compass.discard(event.getPlayer(), item);
   }
 
   @EventHandler

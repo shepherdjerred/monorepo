@@ -167,7 +167,7 @@ final class NpcsPaperTest {
     var nat = mannequin("nat");
     assertThat(plain(Objects.requireNonNull(nat.customName()))).isEqualTo("Nat · Tavern");
     assertThat(nat.isCustomNameVisible()).isTrue();
-    assertThat(plain(Objects.requireNonNull(nat.getDescription()))).isEqualTo("Test");
+    assertThat(plain(Objects.requireNonNull(nat.getDescription()))).isEmpty();
     assertThat(nat.isImmovable()).isTrue();
     assertThat(Invulnerability.marked(nat)).isFalse();
     assertThat(nat.isPersistent()).isTrue();

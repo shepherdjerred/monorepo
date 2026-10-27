@@ -244,12 +244,13 @@ The windmill spawn faces outward toward town.
 
 The arrival dialog opens after that spawn teleport. It asks the player to choose
 a biome or explore spawn, lists twelve biomes, and has an **Explore Spawn**
-exit. A new compass starts with eight free trips in hotbar slot nine; either
+exit. A new compass starts with 15 free trips in hotbar slot nine; either
 mouse button reopens the picker. A successful compass trip spends one charge.
 A miss, disconnect, or cancel spends nothing, and `/rtp` does not spend it.
-The compass cannot be dropped or transferred and does not enter graves. A
-player who already finished the one-shot compass stays finished. A player who
-still had it receives the eight trips.
+Dropping the compass permanently discards its remaining entitlement after the
+discard is saved; it cannot be transferred and does not enter graves. A player
+who already finished the compass stays finished. Existing active compasses
+received seven additional trips when the allowance increased.
 Arena sessions and sealed creative worlds own their player inventories. Onboarding keeps
 the entitlement pending there without reserving hotbar slots, changing items,
 blocking inventory actions, or opening its dialog. It reconciles the ordinary
@@ -499,7 +500,10 @@ declared and loaded.
 The NPC module reads strict content from `server/owned/plugins/TheStorm/npcs/`
 and combat settings from `npcs.yml`. Spawn has eight guards: the captain and
 east, west, market, tavern, windmill, north, and southeast watches. The captain
-stays at his post; the other guards patrol short local routes.
+stays at his post; the other guards patrol short local routes. The windmill
+watch stands across the path from Anna. Martha works above ground in the wheat
+field. Overhead NPC names use a single plain-white, player-style nameplate;
+roles and descriptions remain in dialogue and metadata instead.
 
 All NPCs can take damage and die, including from projectiles, damaging spells,
 and the environment. Non-damaging spells cannot freeze, push, trap, or otherwise
@@ -675,6 +679,12 @@ stable economy transfer key. If the server stops between these steps, towns
 replays pending payouts on the next module start; a failed payout remains
 recorded and is logged for recovery. Treasury deposits and withdrawals hold the
 town busy until their transfers finish, so deletion cannot race a balance change.
+
+### Empty-server arrivals
+
+When the first human joins an empty server, every loaded overworld immediately
+becomes a clear morning (1000 ticks). Later joins do not reset time or weather,
+and Citizens bodies do not count as human presence.
 
 ### Main-world crier
 
@@ -1148,9 +1158,11 @@ it excludes offline and AFK time, includes active minigame time, and survives
 reconnects, restarts and flag disable/re-enable. It never imports historical
 playtime or depends on analytics. `/beginnersluck` shows personal progress.
 
-Mobs remain aggressive. For six active hours, mobs within 64 blocks of a
-protected player, and existing mobs engaging them, become actual level one;
-incoming hostile melee, projectile and explosion damage is reduced by 90%.
+Up to three levelled hostile mobs can gather near a protected player; further
+natural spawns are refused and additional mobs cannot join that fight. For six
+active hours, mobs within 64 blocks of a protected player, and existing mobs
+engaging them, become actual level one; incoming hostile melee, projectile and
+explosion damage is reduced by 90%.
 From hours six to twelve, levels and incoming damage rise to normal. Overlapping
 beginners use the gentlest applicable level. Nearby veterans see and fight the
 same weaker mob, without receiving the beginner's personal damage reduction.

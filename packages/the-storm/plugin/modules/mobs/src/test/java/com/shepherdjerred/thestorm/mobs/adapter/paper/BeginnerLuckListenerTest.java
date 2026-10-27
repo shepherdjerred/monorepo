@@ -337,6 +337,34 @@ final class BeginnerLuckListenerTest {
   }
 
   @Test
+  void aFourthLevelledNaturalSpawnIsRefusedNearABeginner() {
+    player("beginner", true);
+    for (var i = 0; i < 3; i++) mob();
+    var arriving = mob();
+    var event =
+        new org.bukkit.event.entity.CreatureSpawnEvent(
+            arriving, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.NATURAL);
+
+    listener.onSpawn(event);
+
+    assertThat(event.isCancelled()).isTrue();
+  }
+
+  @Test
+  void densityCapDoesNotApplyWithoutABeginnerNearby() {
+    player("veteran", false);
+    for (var i = 0; i < 3; i++) mob();
+    var arriving = mob();
+    var event =
+        new org.bukkit.event.entity.CreatureSpawnEvent(
+            arriving, org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.NATURAL);
+
+    listener.onSpawn(event);
+
+    assertThat(event.isCancelled()).isFalse();
+  }
+
+  @Test
   void pvpEnvironmentalDamageAndArenaCombatKeepTheirRules() {
     var beginner = player("beginner", true);
     var veteran = player("veteran", false);

@@ -78,6 +78,17 @@ public final class JooqQolStore implements QolStore {
   }
 
   @Override
+  public CompletableFuture<Void> discardStarterCompass(UUID player) {
+    return write(
+        dsl ->
+            dsl.update(QOL_PLAYER)
+                .set(QOL_PLAYER.STARTER_RTP_CHARGES, 0)
+                .set(QOL_PLAYER.STARTER_RTP_PENDING, 0)
+                .where(QOL_PLAYER.PLAYER.eq(player.toString()))
+                .execute());
+  }
+
+  @Override
   public CompletableFuture<List<RtpAttempt>> pendingRtpAttempts() {
     return database.read(
         dsl ->

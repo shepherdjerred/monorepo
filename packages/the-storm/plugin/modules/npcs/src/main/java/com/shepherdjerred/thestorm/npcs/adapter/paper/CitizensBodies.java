@@ -15,6 +15,8 @@ import net.citizensnpcs.api.npc.NPCRegistry;
 import net.citizensnpcs.npc.skin.SkinnableEntity.PlayerSkinModelType;
 import net.citizensnpcs.trait.SkinTrait;
 import net.citizensnpcs.trait.SleepTrait;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -153,6 +155,8 @@ public final class CitizensBodies implements NpcBodies, Listener {
     configure(npc, definition);
     npc.data().setPersistent(FINGERPRINT, definition.fingerprint());
     entity.getPersistentDataContainer().set(keys.npc(), PersistentDataType.STRING, definition.id());
+    entity.customName(Component.text(definition.name(), NamedTextColor.WHITE));
+    entity.setCustomNameVisible(true);
     var equipment = entity.getEquipment();
     if (equipment == null) throw new IllegalStateException("NPC lacks equipment");
     equipment.setItemInMainHand(

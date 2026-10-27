@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.world.adapter.paper.AmbientBarks;
 import com.shepherdjerred.thestorm.world.adapter.paper.CrierCommands;
 import com.shepherdjerred.thestorm.world.adapter.paper.DailyActivityListener;
 import com.shepherdjerred.thestorm.world.adapter.paper.DailyDigestCommands;
+import com.shepherdjerred.thestorm.world.adapter.paper.EmptyServerArrival;
 import com.shepherdjerred.thestorm.world.adapter.paper.WindmillMerchant;
 import com.shepherdjerred.thestorm.world.adapter.paper.WorldPaper;
 import com.shepherdjerred.thestorm.world.adapter.remote.FliptCrierGate;
@@ -41,6 +42,11 @@ public final class WorldModule implements StormModule {
   public void enable(ModuleContext context) {
     var config = context.loadConfig("world.yml", WorldConfig.class);
     var worlds = WorldPaper.install(context.plugin().getServer(), config);
+    context
+        .plugin()
+        .getServer()
+        .getPluginManager()
+        .registerEvents(new EmptyServerArrival(context.plugin().getServer()), context.plugin());
     WorldPaper.circles(config, context.scheduler().mainThread())
         .ifPresent(
             circles ->

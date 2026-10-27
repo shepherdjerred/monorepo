@@ -9,8 +9,8 @@ import java.util.Optional;
  */
 public final class SafeSpots {
 
-  /** How many blocks above and below the destination the search looks. */
-  public static final int SEARCH_DISTANCE = 8;
+  /** How many horizontal blocks away the search looks after trying the original column. */
+  public static final int HORIZONTAL_SEARCH_DISTANCE = 8;
 
   private SafeSpots() {}
 
@@ -84,19 +84,49 @@ public final class SafeSpots {
   }
 
   /**
-   * The nearest safe spot in {@code start}'s column: {@code start} itself, then one block up, one
-   * down, two up, two down and so on, up to {@link #SEARCH_DISTANCE}. Empty if there is none.
+   * The nearest safe spot in {@code start}'s full-height column, then in nearby columns up to
+   * {@link #HORIZONTAL_SEARCH_DISTANCE} blocks away. Empty if no safe standing space exists.
    */
   public static Optional<BlockPos> find(BlockView view, HeightRange range, BlockPos start) {
-    for (var distance = 0; distance <= SEARCH_DISTANCE; distance++) {
-      var above = start.up(distance);
-      if (isSafe(view, range, above)) {
-        return Optional.of(above);
+    var original = findInColumn(view, range, start);
+    if (original.isPresent()) return original;
+    for (var radius = 1; radius <= HORIZONTAL_SEARCH_DISTANCE; radius++) {
+      var nearby = findInRing(view, range, start, radius);
+      if (nearby.isPresent()) return nearby;
+    }
+    return Optional.empty();
+  }
+
+  private static Optional<BlockPos> findInRing(
+      BlockView view, HeightRange range, BlockPos start, int radius) {
+    var best = Optional.<BlockPos>empty();
+    for (var x = start.x() - radius; x <= start.x() + radius; x++) {
+      for (var z = start.z() - radius; z <= start.z() + radius; z++) {
+        if (Math.max(Math.abs(x - start.x()), Math.abs(z - start.z())) != radius) continue;
+        var nearby = findInColumn(view, range, new BlockPos(x, start.y(), z));
+        best = nearerHeight(best, nearby, start);
       }
-      var below = start.up(-distance);
-      if (distance > 0 && isSafe(view, range, below)) {
-        return Optional.of(below);
-      }
+    }
+    return best;
+  }
+
+  private static Optional<BlockPos> nearerHeight(
+      Optional<BlockPos> current, Optional<BlockPos> candidate, BlockPos start) {
+    if (candidate.isEmpty()) return current;
+    if (current.isEmpty()) return candidate;
+    var currentDistance = Math.abs(current.orElseThrow().y() - start.y());
+    var candidateDistance = Math.abs(candidate.orElseThrow().y() - start.y());
+    return candidateDistance < currentDistance ? candidate : current;
+  }
+
+  private static Optional<BlockPos> findInColumn(
+      BlockView view, HeightRange range, BlockPos start) {
+    var distance = Math.max(start.y() - range.min(), range.max() - 1 - start.y());
+    for (var offset = 0; offset <= distance; offset++) {
+      var above = start.up(offset);
+      if (isSafe(view, range, above)) return Optional.of(above);
+      var below = start.up(-offset);
+      if (offset > 0 && isSafe(view, range, below)) return Optional.of(below);
     }
     return Optional.empty();
   }
