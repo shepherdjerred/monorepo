@@ -1,7 +1,0 @@
-{
-  "pack": {
-    "description": "The Storm advancements. Toasts only: nothing is announced in chat.",
-    "max_format": 107,
-    "min_format": [107, 1]
-  }
-}

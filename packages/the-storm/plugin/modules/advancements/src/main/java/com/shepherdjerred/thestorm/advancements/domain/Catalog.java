@@ -5,7 +5,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-/** The advancements datapack. The JSON files under {@code datapacks/the-storm} match this list. */
+/**
+ * The Storm advancement tabs. The JSON files under {@code datapacks/quiet-iron-pick} match this
+ * list. They share that pack with the quiet iron-pick override.
+ */
 public final class Catalog {
 
   public static final String NAMESPACE = "thestorm";

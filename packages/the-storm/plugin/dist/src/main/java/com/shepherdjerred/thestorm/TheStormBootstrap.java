@@ -12,16 +12,17 @@ import java.net.URISyntaxException;
 import net.kyori.adventure.text.Component;
 
 /**
- * Registers datapacks before worlds load. The quiet iron-pick pack keeps {@code
- * minecraft:story/iron_tools} ("Isn't It Iron Pick?") and turns off its toast and chat line,
- * because the starter kit hands every new player an iron pickaxe. The Storm pack adds the server's
- * advancement tabs. It is not pinned above vanilla packs.
+ * Registers the plugin datapack before worlds load. It keeps {@code minecraft:story/iron_tools}
+ * ("Isn't It Iron Pick?") from toasting or announcing, because the starter kit hands every new
+ * player an iron pickaxe, and it adds The Storm advancement tabs under {@code thestorm:}.
+ *
+ * <p>Paper 26.2 compares plugin-pack titles while selecting datapacks, before the registry exists.
+ * A second plugin pack makes that comparison throw, and the CI smoke image still runs that build,
+ * so the tabs live in this one pack. Pinning it above vanilla only overrides {@code iron_tools}.
  */
 public final class TheStormBootstrap implements PluginBootstrap {
 
   static final String PACK_META = "/datapacks/quiet-iron-pick/pack.mcmeta";
-
-  private static final String STORM_PACK_META = "/datapacks/the-storm/pack.mcmeta";
 
   @Override
   public void bootstrap(BootstrapContext context) {
@@ -41,15 +42,6 @@ public final class TheStormBootstrap implements PluginBootstrap {
             true,
             "the quiet iron pick datapack was rejected",
             "the quiet iron pick datapack could not be read"));
-    discover(
-        registrar,
-        new Pack(
-            resourceRoot(STORM_PACK_META, "the storm datapack URI"),
-            "the_storm",
-            "The Storm",
-            false,
-            "the storm datapack was rejected",
-            "the storm datapack could not be read"));
   }
 
   /** A datapack registered before worlds load. {@code top} pins it above vanilla packs. */

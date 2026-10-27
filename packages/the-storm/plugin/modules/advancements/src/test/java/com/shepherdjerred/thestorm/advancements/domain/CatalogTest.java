@@ -18,11 +18,7 @@ final class CatalogTest {
 
   @Test
   void theDatapackMatchesTheCatalog() throws IOException {
-    var pack = packRoot();
-    assertThat(Files.readString(pack.resolve("pack.mcmeta"))).contains("\"min_format\": [107, 1]");
-    assertThat(Files.exists(pack.resolve("data/minecraft"))).isFalse();
-
-    var folder = pack.resolve("data/thestorm/advancement");
+    var folder = advancementFolder();
     var files = new ArrayList<String>();
     try (var walk = Files.walk(folder)) {
       walk.filter(path -> path.toString().endsWith(".json"))
@@ -104,10 +100,12 @@ final class CatalogTest {
     return slash < 0 ? path : path.substring(0, slash);
   }
 
-  private static Path packRoot() throws IOException {
-    var resource = Catalog.class.getResource("/datapacks/the-storm/pack.mcmeta");
+  private static Path advancementFolder() throws IOException {
+    var resource =
+        Catalog.class.getResource(
+            "/datapacks/quiet-iron-pick/data/thestorm/advancement/a_survival.json");
     if (resource == null) {
-      throw new IOException("missing the-storm pack");
+      throw new IOException("missing storm advancements");
     }
     try {
       return Path.of(resource.toURI()).getParent();
