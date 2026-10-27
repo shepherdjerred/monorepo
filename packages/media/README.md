@@ -66,6 +66,18 @@ the first literal assessment; profile or catalog changes create another record.
 Version-2 movie acquisition identities bind an exact assessment ID and hash.
 These contracts are internal; the public v3 routes above retain their behavior.
 
+Within the current authorized ownership epoch, cancelling a v4 request or
+revoking its reviewed choice releases that attempt's
+exact edition reservation when no file publication is prepared. Its original
+request/choice identity and acquisition birth remain unchanged. An in-flight or
+uncertain torrent add retains its reservation until its outcome is recorded;
+recording a successful prior add preserves independent seeding responsibility
+before releasing a cancelled request's reservation. Prepared or imported file
+publications retain their reservation for their existing recovery path. These
+transitions do not remove files, remove transfers or change another cut's intent.
+Cancellation remains available while ownership is paused; reservation settlement
+waits for authorized acquisition reconciliation in the same epoch.
+
 The internal movie Files contract is a version-2 object, separate from the
 historical array file plan. It records exact edition scope, original request
 consent, selected torrent member, assessed release/member cut evidence, measured
