@@ -254,6 +254,9 @@ final class TownCommands {
   private LiteralCommandNode<CommandSourceStack> claim() {
     return Commands.literal("claim")
         .executes(context -> asPlayer(context, this::claimHere))
+        .then(
+            Commands.literal("personal").executes(context -> asPlayer(context, this::personalHere)))
+        .then(Commands.literal("shared").executes(context -> asPlayer(context, this::sharedHere)))
         .then(Commands.literal("info").executes(context -> asPlayer(context, this::describeHere)))
         .then(
             Commands.literal("flag")
@@ -304,7 +307,14 @@ final class TownCommands {
     var town = state.townOf(player.getUniqueId());
     if (town.isEmpty()) {
       player.sendMessage(
-          Notices.info("You are not in a town. Found one with /town create <name>."));
+          Notices.info("You are not in a town. A camp is the usual start: /camp help."));
+      return;
+    }
+    if (town.get().isCamp()) {
+      player.sendMessage(
+          Notices.info(
+              "You have a camp. /camp shows it. At Governor I, /camp graduate <name> makes it a"
+                  + " town."));
       return;
     }
     parts.members().info(player, town.get());
@@ -315,7 +325,8 @@ final class TownCommands {
     if (!player.hasPermission(Track.GOVERNOR.permission(1))) {
       player.sendMessage(
           Notices.error(
-              "Founding a town takes Governor I. Train it with the Governor trainer or /perks."));
+              "Founding a town takes Governor I. A camp is the usual start: /camp help. Train"
+                  + " Governor with the trainer or /perks, then /camp graduate <name>."));
       return;
     }
     var level = parts.levels().of(player);
@@ -399,6 +410,31 @@ final class TownCommands {
                 "Claimed chunk " + chunk.x() + ", " + chunk.z() + " for " + nameOf(claim) + "."));
     if (result instanceof Result.Ok<Change<Claim>, List<ClaimProblem>>(var change))
       parts.runtime().measured(player, change.saved(), ProductAnalytics.Action.LAND_CLAIMED);
+  }
+
+  private void personalHere(Player player) {
+    var chunk = chunkOf(player);
+    onClaim(
+        player,
+        towns.personal(player.getUniqueId(), chunk),
+        claim ->
+            Notices.success(
+                "Chunk "
+                    + chunk.x()
+                    + ", "
+                    + chunk.z()
+                    + " is yours. Other camp members cannot build or open containers there."
+                    + " /claim shared opens it again."));
+  }
+
+  private void sharedHere(Player player) {
+    var chunk = chunkOf(player);
+    onClaim(
+        player,
+        towns.shared(player.getUniqueId(), chunk),
+        claim ->
+            Notices.success(
+                "Chunk " + chunk.x() + ", " + chunk.z() + " is shared with your camp again."));
   }
 
   private void unclaimHere(Player player) {

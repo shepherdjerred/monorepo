@@ -14,6 +14,9 @@ public sealed interface TreasuryProblem {
   /** The paying side holds only {@code balance} crystals. */
   record Insufficient(long balance) implements TreasuryProblem {}
 
+  /** Camps have no treasury. */
+  record TownsOnly() implements TreasuryProblem {}
+
   /** The town is being changed or deleted; its treasury waits until that is saved. */
   record Busy() implements TreasuryProblem {}
 }

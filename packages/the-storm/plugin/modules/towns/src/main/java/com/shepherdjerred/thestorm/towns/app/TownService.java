@@ -15,6 +15,7 @@ import com.shepherdjerred.thestorm.towns.domain.town.TownRules;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -48,6 +49,105 @@ public final class TownService {
   /** Saved foundings and growth, for relays such as Discord. */
   public TownMilestones milestones() {
     return milestones;
+  }
+
+  /** Founds a camp owned by {@code founder}. A camp is not announced. */
+  public Result<Change<Town>, List<TownProblem>> foundCamp(UUID founder) {
+    if (settling.isPlayerBusy(founder)) {
+      return Result.err(List.of(new TownProblem.Busy()));
+    }
+    var existing = state().townOf(founder);
+    if (existing.isPresent()) {
+      return Result.err(
+          List.of(
+              existing.get().isCamp()
+                  ? new TownProblem.AlreadyInCamp()
+                  : new TownProblem.AlreadyInTown(existing.get().name())));
+    }
+    var clocks = settling.clocks();
+    var town = Town.camp(TownRules.newId(clocks.random()), clocks.time().instant(), founder);
+    state().addTown(town);
+    return Result.ok(
+        settling.persist(
+            town, settling.store().createTown(town), Settling.Busy.of(town, Set.of())));
+  }
+
+  /** Turns {@code player}'s camp into a town named {@code name} at Governor {@code level}. */
+  public Result<Change<Town>, List<TownProblem>> graduate(UUID player, String name, int level) {
+    if (settling.isPlayerBusy(player)) {
+      return Result.err(List.of(new TownProblem.Busy()));
+    }
+    if (state().heritageNameReserved(name, state().townOf(player).map(Town::id))) {
+      return Result.err(List.of(new TownProblem.NameTaken(name)));
+    }
+    return TownRules.graduate(player, name, level, state())
+        .map(
+            town ->
+                settling.persist(
+                    town,
+                    settling.store().saveTown(town),
+                    Settling.Busy.of(town, Set.of()),
+                    () -> {
+                      state().replaceTown(town);
+                      settling.events().landChanged(town.id());
+                      milestones.publish(new TownMilestones.Milestone.Founded(town.name(), player));
+                    }));
+  }
+
+  /** Deletes {@code player}'s camp once they repeat {@code delete}. */
+  public Result<Change<Town>, List<TownProblem>> disbandCamp(
+      UUID player, String confirmation, Map<UUID, String> notices) {
+    if (settling.isPlayerBusy(player)) {
+      return Result.err(List.of(new TownProblem.Busy()));
+    }
+    return TownRules.disbandCamp(player, confirmation, state())
+        .map(
+            town ->
+                settling.persist(
+                    town,
+                    settling.store().deleteCamp(town.id(), notices),
+                    Settling.Busy.of(town, Set.of()),
+                    () -> {
+                      state().removeTown(town.id());
+                      settling.events().removed(town.id());
+                    }));
+  }
+
+  /** Refreshes a camp's idle clock when {@code player}, one of its members, is on the server. */
+  public void touchCamp(UUID player) {
+    var town = state().townOf(player);
+    if (town.isEmpty()
+        || !town.get().isCamp()
+        || settling.isBusy(Settling.Busy.of(town.get(), Set.of()))) {
+      return;
+    }
+    var updated = town.get().seen(now());
+    state().replaceTown(updated);
+    var _ =
+        settling.persist(
+            updated, settling.store().saveTown(updated), Settling.Busy.of(updated, Set.of()));
+  }
+
+  /** Marks {@code camp} warned for this idle period. */
+  public void warnCamp(Town camp) {
+    if (!camp.isCamp()
+        || camp.expiryWarned()
+        || settling.isBusy(Settling.Busy.of(camp, Set.of()))) {
+      return;
+    }
+    var updated = camp.warned();
+    state().replaceTown(updated);
+    var _ =
+        settling.persist(
+            updated, settling.store().saveTown(updated), Settling.Busy.of(updated, Set.of()));
+  }
+
+  public Result<Change<Claim>, List<ClaimProblem>> personal(UUID player, ChunkPos chunk) {
+    return attempt(player, chunk).flatMap(claiming::personal).map(claim -> replace(claim, true));
+  }
+
+  public Result<Change<Claim>, List<ClaimProblem>> shared(UUID player, ChunkPos chunk) {
+    return attempt(player, chunk).flatMap(claiming::shared).map(claim -> replace(claim, false));
   }
 
   /** Founds a town owned by {@code founder}, whose Governor level is {@code governorLevel}. */
@@ -139,10 +239,13 @@ public final class TownService {
           state()
               .town(claim.townId())
               .ifPresent(
-                  grown ->
+                  grown -> {
+                    if (!grown.isCamp()) {
                       milestones.publish(
                           new TownMilestones.Milestone.Grew(
-                              grown.id(), grown.name(), state().claimsOf(grown.id()).size())));
+                              grown.id(), grown.name(), state().claimsOf(grown.id()).size()));
+                    }
+                  });
         });
   }
 
@@ -192,6 +295,7 @@ public final class TownService {
           if (!restrictive) {
             state().replaceClaim(claim);
           }
+          settling.events().landChanged(claim.townId());
         });
   }
 

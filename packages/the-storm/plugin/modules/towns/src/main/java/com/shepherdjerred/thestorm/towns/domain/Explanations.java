@@ -28,7 +28,8 @@ public final class Explanations {
   /** Explains {@code problem}; {@code townName} names a town by id. */
   public static String explain(ClaimProblem problem, Function<UUID, String> townName) {
     return switch (problem) {
-      case ClaimProblem.NotInTown() -> "You are not in a town. Found one with /town create <name>.";
+      case ClaimProblem.NotInTown() ->
+          "You have no camp or town. Start one with /camp create, or read /camp help.";
       case ClaimProblem.CannotManageClaims(var role) ->
           "Only a town's owner or assistants manage its land; you are " + article(role) + ".";
       case ClaimProblem.WorldNotClaimable(var world) -> "Land in " + world + " cannot be claimed.";
@@ -57,12 +58,28 @@ public final class Explanations {
           player + " is in your town already; members build everywhere on its land.";
       case ClaimProblem.AlreadyTrusted(var player) -> player + " is already trusted here.";
       case ClaimProblem.NotTrusted(var player) -> player + " is not trusted here.";
+      case ClaimProblem.AlreadyPersonal() -> "This chunk is already yours.";
+      case ClaimProblem.AlreadyShared() -> "This chunk is already shared with your whole group.";
+      case ClaimProblem.NotYourChunk() ->
+          "Only that chunk's resident, or the owner, can change it.";
     };
   }
 
   public static String explain(TownProblem problem) {
     return switch (problem) {
       case TownProblem.AlreadyInTown(var town) -> "You already belong to " + town + ".";
+      case TownProblem.AlreadyInCamp() ->
+          "You already have a camp. Graduate it with /camp graduate <name>.";
+      case TownProblem.NeedsGovernor() ->
+          "A town takes Governor I. A camp is the usual start: /camp create.";
+      case TownProblem.CampFull(var limit) ->
+          "A camp holds at most " + limit + " people, including the owner.";
+      case TownProblem.NotACamp() -> "That is for a camp. You are in a town.";
+      case TownProblem.UseCampDelete() -> "Delete a camp with /camp delete delete.";
+      case TownProblem.ConfirmCamp() -> "To delete your camp, type /camp delete delete.";
+      case TownProblem.TownsOnly() ->
+          "Camps don't have that. Graduate with /camp graduate <name> once you have Governor I.";
+      case TownProblem.ReservedName(var name) -> "\"" + name + "\" is reserved.";
       case TownProblem.InvalidName(var name) ->
           "\""
               + name

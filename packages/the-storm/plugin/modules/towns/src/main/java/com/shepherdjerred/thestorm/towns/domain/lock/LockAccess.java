@@ -29,6 +29,16 @@ public final class LockAccess {
 
     /** True when {@code player} is the owner or an assistant of {@code townId}. */
     boolean manages(UUID player, UUID townId);
+
+    /**
+     * True when one of {@code blocks} is a personal chunk whose resident is not {@code player}, so
+     * sharing the lock with the town does not open it for them.
+     */
+    default boolean blocksTownShare(
+        UUID player,
+        java.util.Collection<com.shepherdjerred.thestorm.towns.domain.land.BlockPos> blocks) {
+      return false;
+    }
   }
 
   /** Why a player may use a lock; staff hear when they only got in by bypass. */
@@ -55,7 +65,9 @@ public final class LockAccess {
     if (lock.trusted().containsKey(player)) {
       return Optional.of(Right.TRUSTED);
     }
-    if (lock.options().sharedWithTown() && sameTown(lock.owner(), player)) {
+    if (lock.options().sharedWithTown()
+        && sameTown(lock.owner(), player)
+        && !towns.blocksTownShare(player, lock.blocks())) {
       return Optional.of(Right.TOWN);
     }
     return managerOrStaff(lock, player, bypass, landTown);

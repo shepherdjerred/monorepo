@@ -26,6 +26,8 @@ public final class BlueMapTownMap implements TownMap {
 
   private static final String SET_ID = "thestorm-towns";
   private static final String SET_LABEL = "Towns";
+  private static final String CAMP_SET_ID = "thestorm-camps";
+  private static final String CAMP_SET_LABEL = "Camps";
 
   /** Where the flat markers are drawn; BlueMap draws them over the terrain. */
   private static final float MARKER_Y = 64;
@@ -34,6 +36,16 @@ public final class BlueMapTownMap implements TownMap {
   private static final Color LINE = new Color(0x4D, 0xCC, 0xC4, 1f);
 
   private static final Color FILL = new Color(0x4D, 0xCC, 0xC4, 0.25f);
+
+  /** A warm amber so a camp is distinct from a town. */
+  private static final Color CAMP_LINE = new Color(0xE0, 0xA0, 0x45, 1f);
+
+  private static final Color CAMP_FILL = new Color(0xE0, 0xA0, 0x45, 0.25f);
+
+  /** A deeper mark for one member's chunk inside a camp. */
+  private static final Color PERSONAL_LINE = new Color(0xC4, 0x78, 0x3A, 1f);
+
+  private static final Color PERSONAL_FILL = new Color(0xC4, 0x78, 0x3A, 0.35f);
 
   private final Server server;
   private @Nullable Consumer<BlueMapAPI> onEnable;
@@ -59,6 +71,42 @@ public final class BlueMapTownMap implements TownMap {
       BlueMapAPI.unregisterListener(listener);
       onEnable = null;
     }
+  }
+
+  @Override
+  public void drawCamp(
+      UUID townId,
+      String name,
+      Map<String, List<Outline>> outlines,
+      List<TownMap.Labelled> personal) {
+    BlueMapAPI.getInstance()
+        .ifPresent(
+            api -> {
+              erase(api, townId);
+              outlines.forEach(
+                  (worldName, pieces) ->
+                      paint(
+                          api,
+                          new Stroke(
+                              worldName, campPrefix(townId), name, pieces, CAMP_LINE, CAMP_FILL)));
+              for (var i = 0; i < personal.size(); i++) {
+                var piece = personal.get(i);
+                var index = i;
+                piece
+                    .outlines()
+                    .forEach(
+                        (worldName, pieces) ->
+                            paint(
+                                api,
+                                new Stroke(
+                                    worldName,
+                                    campPrefix(townId) + "p-" + index + "-",
+                                    piece.name(),
+                                    pieces,
+                                    PERSONAL_LINE,
+                                    PERSONAL_FILL)));
+              }
+            });
   }
 
   @Override
@@ -89,7 +137,7 @@ public final class BlueMapTownMap implements TownMap {
               for (var map : blueWorld.getMaps()) {
                 var set = markers(map);
                 for (var i = 0; i < pieces.size(); i++) {
-                  set.put(markerId(townId, i), marker(name, pieces.get(i)));
+                  set.put(markerId(townId, i), marker(name, pieces.get(i), LINE, FILL));
                 }
               }
             });
@@ -101,12 +149,17 @@ public final class BlueMapTownMap implements TownMap {
   }
 
   private static void erase(BlueMapAPI api, UUID townId) {
-    var prefix = prefix(townId);
+    var townPrefix = prefix(townId);
+    var camps = campPrefix(townId);
     for (var map : api.getMaps()) {
-      var set = map.getMarkerSets().get(SET_ID);
-      if (set != null) {
-        set.getMarkers().keySet().removeIf(id -> id.startsWith(prefix));
-      }
+      removePrefix(map.getMarkerSets().get(SET_ID), townPrefix);
+      removePrefix(map.getMarkerSets().get(CAMP_SET_ID), camps);
+    }
+  }
+
+  private static void removePrefix(@Nullable MarkerSet set, String markerPrefix) {
+    if (set != null) {
+      set.getMarkers().keySet().removeIf(id -> id.startsWith(markerPrefix));
     }
   }
 
@@ -120,6 +173,10 @@ public final class BlueMapTownMap implements TownMap {
                 if (set != null) {
                   set.getMarkers().clear();
                 }
+                var camps = map.getMarkerSets().get(CAMP_SET_ID);
+                if (camps != null) {
+                  camps.getMarkers().clear();
+                }
               }
             });
   }
@@ -130,21 +187,59 @@ public final class BlueMapTownMap implements TownMap {
             SET_ID, id -> MarkerSet.builder().label(SET_LABEL).toggleable(true).build());
   }
 
-  private static ShapeMarker marker(String name, Outline outline) {
+  private record Stroke(
+      String worldName,
+      String idPrefix,
+      String name,
+      List<Outline> pieces,
+      Color line,
+      Color fill) {}
+
+  private void paint(BlueMapAPI api, Stroke stroke) {
+    var world = server.getWorld(stroke.worldName());
+    if (world == null) {
+      throw new IllegalStateException(
+          "claim " + stroke.name() + " holds land in unloaded world " + stroke.worldName());
+    }
+    api.getWorld(world)
+        .ifPresent(
+            blueWorld -> {
+              for (var map : blueWorld.getMaps()) {
+                var set = campMarkers(map);
+                for (var i = 0; i < stroke.pieces().size(); i++) {
+                  set.put(
+                      stroke.idPrefix() + i,
+                      marker(stroke.name(), stroke.pieces().get(i), stroke.line(), stroke.fill()));
+                }
+              }
+            });
+  }
+
+  private static MarkerSet campMarkers(BlueMapMap map) {
+    return map.getMarkerSets()
+        .computeIfAbsent(
+            CAMP_SET_ID, id -> MarkerSet.builder().label(CAMP_SET_LABEL).toggleable(true).build());
+  }
+
+  private static ShapeMarker marker(String name, Outline outline, Color line, Color fill) {
     var holes = outline.holes().stream().map(BlueMapTownMap::shape).toArray(Shape[]::new);
     return ShapeMarker.builder()
         .label(name)
         .shape(shape(outline.ring()), MARKER_Y)
         .holes(holes)
         .depthTestEnabled(false)
-        .lineColor(LINE)
-        .fillColor(FILL)
+        .lineColor(line)
+        .fillColor(fill)
         .lineWidth(2)
         .build();
   }
 
   private static Shape shape(List<Outline.Corner> corners) {
     return new Shape(corners.stream().map(corner -> new Vector2d(corner.x(), corner.z())).toList());
+  }
+
+  private static String campPrefix(UUID townId) {
+    return "camp-" + townId + "-";
   }
 
   private static String prefix(UUID townId) {

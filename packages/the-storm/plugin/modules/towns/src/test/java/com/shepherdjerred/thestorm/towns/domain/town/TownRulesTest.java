@@ -59,7 +59,16 @@ final class TownRulesTest {
   @Test
   void aTownHasExactlyOneOwner() {
     assertThatThrownBy(
-            () -> new Town(NEW_ID, "Nowhere", FOUNDED, Map.of(MEMBER, TownRole.MEMBER), 0))
+            () ->
+                new Town(
+                    NEW_ID,
+                    "Nowhere",
+                    FOUNDED,
+                    Map.of(MEMBER, TownRole.MEMBER),
+                    0,
+                    TownKind.TOWN,
+                    Optional.empty(),
+                    false))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(
             () ->
@@ -68,7 +77,10 @@ final class TownRulesTest {
                     "Twice",
                     FOUNDED,
                     Map.of(OWNER, TownRole.OWNER, MEMBER, TownRole.OWNER),
-                    0))
+                    0,
+                    TownKind.TOWN,
+                    Optional.empty(),
+                    false))
         .isInstanceOf(IllegalArgumentException.class);
     assertThat(Fixtures.townA().owner()).isEqualTo(OWNER);
     assertThat(Fixtures.townA().roleOf(ASSISTANT)).contains(TownRole.ASSISTANT);
@@ -97,15 +109,21 @@ final class TownRulesTest {
 
   @Test
   void foundingReportsEveryProblem() {
-    var result = TownRules.found(new Founding(MEMBER, "aEGIS", NEW_ID, FOUNDED, 0), directory);
+    var result = TownRules.found(new Founding(MEMBER, "aEGIS", NEW_ID, FOUNDED, 2), directory);
 
     assertThat(result)
         .isEqualTo(
             Result.err(
                 List.of(
                     new TownProblem.AlreadyInTown("Aegis"), new TownProblem.NameTaken("aEGIS"))));
-    assertThat(TownRules.found(new Founding(NOMAD, "x y", NEW_ID, FOUNDED, 0), directory))
+    assertThat(TownRules.found(new Founding(NOMAD, "x y", NEW_ID, FOUNDED, 2), directory))
         .isEqualTo(Result.err(List.of(new TownProblem.InvalidName("x y"))));
+  }
+
+  @Test
+  void foundingATownTakesGovernorI() {
+    assertThat(TownRules.found(new Founding(NOMAD, "Carthage", NEW_ID, FOUNDED, 0), directory))
+        .isEqualTo(Result.err(List.of(new TownProblem.NeedsGovernor())));
   }
 
   @Test

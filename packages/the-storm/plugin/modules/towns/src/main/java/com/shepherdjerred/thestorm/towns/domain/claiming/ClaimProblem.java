@@ -50,4 +50,13 @@ public sealed interface ClaimProblem {
 
   /** The named player is not trusted on this claim. */
   record NotTrusted(String player) implements ClaimProblem {}
+
+  /** This chunk is already that member's. */
+  record AlreadyPersonal() implements ClaimProblem {}
+
+  /** This chunk already belongs to the whole group. */
+  record AlreadyShared() implements ClaimProblem {}
+
+  /** Only the resident or the owner may return a personal chunk to the group. */
+  record NotYourChunk() implements ClaimProblem {}
 }

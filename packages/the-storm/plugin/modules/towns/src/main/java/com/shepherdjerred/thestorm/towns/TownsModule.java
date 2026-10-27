@@ -202,7 +202,14 @@ public final class TownsModule implements StormModule {
       return TownEvents.NONE;
     }
     var blueMap = new BlueMapTownMap(server);
-    var sync = new MapSync(state, blueMap);
+    var sync =
+        new MapSync(
+            state,
+            blueMap,
+            id -> {
+              var name = server.getOfflinePlayer(id).getName();
+              return name == null ? "a player" : name;
+            });
     blueMap.start(context.scheduler(), sync::redrawAll);
     stopMap = blueMap::stop;
     return sync;

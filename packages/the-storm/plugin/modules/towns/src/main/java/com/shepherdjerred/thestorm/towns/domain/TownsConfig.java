@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.towns.domain.claiming.ClaimPolicy;
 import com.shepherdjerred.thestorm.towns.domain.lock.LockPolicy;
 import com.shepherdjerred.thestorm.towns.domain.pvp.PvpPolicy;
 import com.shepherdjerred.thestorm.towns.domain.region.AdminRegion;
+import com.shepherdjerred.thestorm.towns.domain.town.CampPolicy;
 import com.shepherdjerred.thestorm.towns.domain.town.MembershipPolicy;
 import java.util.HashSet;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.List;
  * {@code plugins/TheStorm/towns.yml}, owned by the repository.
  *
  * @param claims how towns may claim land
+ * @param camps how camps claim land and how long they last
  * @param membership how long invitations and handovers stay open
  * @param locks how container locks behave
  * @param pvp how often players may change their own PvP switch
@@ -21,6 +23,7 @@ import java.util.List;
  */
 public record TownsConfig(
     ClaimPolicy claims,
+    CampPolicy camps,
     MembershipPolicy membership,
     LockPolicy locks,
     PvpPolicy pvp,

@@ -191,7 +191,7 @@ final class PerksCommandsTest {
 
     var lines = awaitLine(alice, "Sovereign");
     assertThat(lines.getFirst()).startsWith("[Tracks]: Governor: Found and grow a town.");
-    assertThat(lines).contains(" - I Founder", "     Found a town.");
+    assertThat(lines).contains(" - I Founder", "     Found a town, or graduate a camp into one.");
   }
 
   @Test

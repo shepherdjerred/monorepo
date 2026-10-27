@@ -40,7 +40,7 @@ final class ExplanationsTest {
             problems.stream()
                 .map(problem -> Explanations.explain(problem, ExplanationsTest::bastion)))
         .containsExactly(
-            "You are not in a town. Found one with /town create <name>.",
+            "You have no camp or town. Start one with /camp create, or read /camp help.",
             "Only a town's owner or assistants manage its land; you are a member.",
             "Land in world_the_end cannot be claimed.",
             "Spawn is protected and cannot be claimed.",

@@ -29,6 +29,7 @@ public final class MembershipService {
   private final Invitations invitations;
   private final PendingTransfers transfers;
   private final Hooks hooks;
+  private final int campMembers;
 
   /**
    * What membership needs from outside the town itself.
@@ -58,10 +59,16 @@ public final class MembershipService {
   }
 
   public MembershipService(Settling settling, MembershipPolicy policy, Hooks hooks) {
+    this(settling, policy, hooks, Integer.MAX_VALUE);
+  }
+
+  public MembershipService(
+      Settling settling, MembershipPolicy policy, Hooks hooks, int campMembers) {
     this.settling = settling;
     this.invitations = new Invitations(policy.inviteExpiry());
     this.transfers = new PendingTransfers(policy.transferWindow());
     this.hooks = hooks;
+    this.campMembers = campMembers;
   }
 
   /** Invites {@code invitee} to {@code inviter}'s town; returns that town. */
@@ -69,7 +76,7 @@ public final class MembershipService {
     if (settling.isPlayerBusy(inviter) || settling.isPlayerBusy(invitee.id())) {
       return Result.err(List.of(new TownProblem.Busy()));
     }
-    return Membership.invite(inviter, invitee, state())
+    return Membership.invite(inviter, invitee, state(), campMembers)
         .map(
             town -> {
               invitations.invite(town.id(), invitee.id(), now());
@@ -84,7 +91,11 @@ public final class MembershipService {
         .flatMap(
             town ->
                 Membership.join(
-                    player, town, invitations.isInvited(town.id(), player, now()), state()))
+                    player,
+                    town,
+                    state(),
+                    new Membership.JoinTerms(
+                        invitations.isInvited(town.id(), player, now()), campMembers)))
         .map(
             town -> {
               return save(town, player, () -> invitations.forgetInvitee(player));
@@ -257,6 +268,8 @@ public final class MembershipService {
     // Settling reloads the stored state if the write fails.
     state().replaceTown(updated);
     state().removeClaimTrust(updated.id(), departed);
+    state().releasePersonalChunks(updated.id(), departed);
+    settling.events().landChanged(updated.id());
     return settling.persistResult(
         updated,
         write,

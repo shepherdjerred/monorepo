@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -22,6 +23,7 @@ final class FakeTownsStore implements TownsStore {
   private final Map<UUID, Town> towns = new LinkedHashMap<>();
   private final Map<ChunkPos, Claim> claims = new LinkedHashMap<>();
   private final Map<UUID, TownPayout> payouts = new LinkedHashMap<>();
+  private final Map<UUID, String> notices = new LinkedHashMap<>();
   private final List<Write> pending = new ArrayList<>();
   private boolean holdReload;
   private CompletableFuture<TownsSnapshot> heldReload = new CompletableFuture<>();
@@ -104,8 +106,15 @@ final class FakeTownsStore implements TownsStore {
             () -> {
               towns.put(town.id(), town);
               claims.replaceAll(
-                  (chunk, claim) ->
-                      claim.townId().equals(town.id()) ? claim.withTrust(departed, false) : claim);
+                  (chunk, claim) -> {
+                    if (!claim.townId().equals(town.id())) {
+                      return claim;
+                    }
+                    var next = claim.withTrust(departed, false);
+                    return next.resident().filter(departed::equals).isPresent()
+                        ? next.withResident(Optional.empty())
+                        : next;
+                  });
             })
         .thenApply(done -> Set.of());
   }
@@ -121,6 +130,29 @@ final class FakeTownsStore implements TownsStore {
           claims.clear();
           claims.putAll(remaining);
         });
+  }
+
+  @Override
+  public CompletableFuture<Void> deleteCamp(UUID townId, Map<UUID, String> messages) {
+    return record(
+        () -> {
+          towns.remove(townId);
+          var remaining = new HashMap<>(claims);
+          remaining.values().removeIf(claim -> claim.townId().equals(townId));
+          claims.clear();
+          claims.putAll(remaining);
+          notices.putAll(messages);
+        });
+  }
+
+  @Override
+  public CompletableFuture<Optional<String>> notice(UUID player) {
+    return CompletableFuture.completedFuture(Optional.ofNullable(notices.get(player)));
+  }
+
+  @Override
+  public CompletableFuture<Void> clearNotice(UUID player) {
+    return record(() -> notices.remove(player));
   }
 
   @Override

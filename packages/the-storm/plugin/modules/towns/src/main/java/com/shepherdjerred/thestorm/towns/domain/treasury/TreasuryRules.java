@@ -17,7 +17,11 @@ public final class TreasuryRules {
   public static Result<Town, TreasuryProblem> member(UUID player, TownDirectory towns) {
     return towns
         .townOf(player)
-        .<Result<Town, TreasuryProblem>>map(Result::ok)
+        .<Result<Town, TreasuryProblem>>map(
+            town ->
+                town.isCamp()
+                    ? Result.err(new TreasuryProblem.TownsOnly())
+                    : Result.<Town, TreasuryProblem>ok(town))
         .orElseGet(() -> Result.err(new TreasuryProblem.NotInTown()));
   }
 

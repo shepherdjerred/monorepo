@@ -275,6 +275,32 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup, L
     }
   }
 
+  /** Returns {@code player}'s personal chunks in {@code townId} to the group. */
+  public void releasePersonalChunks(UUID townId, UUID player) {
+    for (var claim : claimsOf(townId)) {
+      if (claim.resident().filter(player::equals).isPresent()) {
+        replaceClaim(claim.withResident(java.util.Optional.empty()));
+      }
+    }
+  }
+
+  @Override
+  public boolean blocksTownShare(
+      UUID player,
+      java.util.Collection<com.shepherdjerred.thestorm.towns.domain.land.BlockPos> blocks) {
+    for (var block : blocks) {
+      var claim =
+          claimAt(
+              com.shepherdjerred.thestorm.towns.domain.land.ChunkPos.ofBlock(
+                  block.world(), block.x(), block.z()));
+      if (claim.isPresent()
+          && claim.get().resident().filter(resident -> !resident.equals(player)).isPresent()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @Override
   public TrustLevel trustOf(UUID player, Claim claim, Act act) {
     var town = towns.get(claim.townId());

@@ -33,13 +33,15 @@ Gather wood and find an unoccupied place for a small shelter. Build on your own 
 
 ## 4. Claim your land
 
-Run `/town create <name>`, replacing `<name>` with your town's name. Then run `/claim` while standing where you want to build. The server confirms the chunk is claimed.
+A camp is the usual first home. Start a shelter and the server can create one for you: place a bed, or a chest and a door. You can also run `/camp create`. The chunk you are building in is claimed, and a default home is set if you do not already have one. `/camp help` explains claims, personal chunks, invites, and how long a camp lasts.
 
-Your first town can be just you. You can invite friends later. `/town list` shows other towns, and `/help town` explains the available commands.
+A camp holds 16 chunks in one connected shape. Any member can `/claim` the next chunk, and that chunk has to share a full side with the camp. `/claim personal` keeps the chunk you stand in for you alone. `/claim shared` opens it to the camp again.
+
+At Governor I, `/camp graduate <name>` turns the camp into a public town and stops the idle clock. `/town create <name>` still founds a town directly, and it also takes Governor I. `/town list` shows towns, not camps.
 
 ## 5. Save your home and protect your supplies
 
-Run `/sethome` at your shelter. `/home` returns you there later; it costs crystals and follows the travel cooldown. `/tpinfo` shows your current travel prices.
+Run `/sethome` at your shelter if a camp did not set one for you. `/home` returns you there later; it costs crystals and follows the travel cooldown. `/tpinfo` shows your current travel prices.
 
 Craft and place a chest. Newly placed containers lock automatically. Look at the chest and run `/lock info` to check its lock. Keep valuable supplies in locked containers.
 

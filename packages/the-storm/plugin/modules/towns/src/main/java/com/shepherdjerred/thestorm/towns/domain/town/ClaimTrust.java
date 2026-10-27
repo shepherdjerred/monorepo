@@ -19,6 +19,9 @@ public final class ClaimTrust {
     if (!town.id().equals(claim.townId())) {
       throw new IllegalArgumentException(town.name() + " does not hold " + claim.chunk());
     }
+    if (claim.resident().isPresent() && !claim.resident().orElseThrow().equals(player)) {
+      return TrustLevel.OUTSIDER;
+    }
     var role = town.roleOf(player);
     if (role.isPresent()) {
       return role.get().trust();

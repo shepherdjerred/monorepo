@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 
 /**
  * Keeps a {@link TownMap} showing every town's land: redraws a town when its claims or name change,
@@ -20,10 +21,16 @@ public final class MapSync implements TownEvents {
 
   private final TownsState state;
   private final TownMap map;
+  private final Function<UUID, String> names;
 
   public MapSync(TownsState state, TownMap map) {
+    this(state, map, id -> "a player");
+  }
+
+  public MapSync(TownsState state, TownMap map, Function<UUID, String> names) {
     this.state = state;
     this.map = map;
+    this.names = names;
   }
 
   @Override
@@ -36,6 +43,21 @@ public final class MapSync implements TownEvents {
     var chunks = state.claimsOf(townId).stream().map(Claim::chunk).toList();
     if (chunks.isEmpty()) {
       map.erase(townId);
+      return;
+    }
+    if (town.get().isCamp()) {
+      var personal =
+          state.claimsOf(townId).stream()
+              .filter(claim -> claim.resident().isPresent())
+              .map(
+                  claim ->
+                      new TownMap.Labelled(
+                          personalId(townId, claim.chunk()),
+                          names.apply(claim.resident().orElseThrow()),
+                          ClaimOutlines.of(List.of(claim.chunk()))))
+              .toList();
+      map.drawCamp(
+          townId, "Camp " + names.apply(town.get().owner()), ClaimOutlines.of(chunks), personal);
       return;
     }
     map.draw(townId, town.get().name(), ClaimOutlines.of(chunks));
@@ -91,6 +113,11 @@ public final class MapSync implements TownEvents {
     var outlines = new ArrayList<>(ClaimOutlines.of(chunks).getOrDefault(site.world(), List.of()));
     site.protectedAreas().forEach(area -> outlines.add(outline(area)));
     return Map.of(site.world(), List.copyOf(outlines));
+  }
+
+  private static UUID personalId(UUID townId, ChunkPos chunk) {
+    var key = "personal:" + townId + ":" + chunk.world() + ":" + chunk.x() + ":" + chunk.z();
+    return UUID.nameUUIDFromBytes(key.getBytes(java.nio.charset.StandardCharsets.UTF_8));
   }
 
   private static Outline outline(Cuboid area) {
