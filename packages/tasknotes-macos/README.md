@@ -332,8 +332,27 @@ of the original task, reference note and configuration. To diagnose one flow,
 use `bun run mac:acceptance:e2e --only-testing=testQuickAddRetainsHiddenDraftAndAddsAnother`;
 a narrowed run is recorded as such and does not establish the full suite.
 
-`bun run mac:occurrences:e2e --vm <running-VM>` runs a separate local recurrence
-journey in a fresh `Native acceptance` vault. It checks automatic rolling
+Prepare an explicit signed build before running a guest case:
+
+```bash
+bun run mac:occurrences:e2e --vm <running-VM> --prepare
+bun run mac:occurrences:e2e --vm <running-VM> --artifact-build <build-UUID> --setup-capture
+bun run mac:occurrences:e2e --vm <running-VM> --artifact-build <build-UUID>
+```
+
+Preparation exports the exact build without running app UI. Replays require its
+explicit UUID and matching source, signing and artifact fingerprints; they never
+rebuild or select a latest cached artifact. `--setup-capture` runs only
+`CaptureReadinessUITests/testOwnedSyntheticWindowCapture` on a fresh synthetic
+vault. Its separate `native-capture-readiness-macos` receipt becomes `capture-ready`
+only after the exact native result, named owned-window PNG, completed capture
+diagnostics, unchanged original seed files and one closed launch are retained.
+Normal rolling maintenance may add children. Capture readiness does not establish
+recurrence acceptance. The same stable signed Runner bundle is reused for guest
+permission provisioning and recurrence, while every case gets a fresh app state.
+
+Replaying without `--setup-capture` runs the separate local recurrence journey
+in a fresh `Native acceptance` vault. It checks automatic rolling
 generation, the production Generate button preserving completion Undo when it has
 nothing to create, and a missing-template failure that preserves a completed
 child. With the owned app stopped, the harness restores only its synthetic

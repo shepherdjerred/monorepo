@@ -242,6 +242,7 @@ targets:
       - path: UITests/StandaloneVaultUITests.swift
       - path: UITests/Dependencies/DependencyEditorUITests.swift
       - path: UITests/OccurrenceVaultUITests.swift
+      - path: UITests/CaptureReadinessUITests.swift
       - path: UITests/OccurrenceVaultContext.swift
       - path: UITests/OccurrenceLaunchOwnership.swift
       - path: UITests/MacAcceptanceOwnership.swift
@@ -285,6 +286,7 @@ targets:
           - StandaloneVaultUITests.swift
           - Dependencies
           - OccurrenceVaultUITests.swift
+          - CaptureReadinessUITests.swift
           - OccurrenceVaultContext.swift
           - OccurrenceLaunchOwnership.swift
           - LiveSyncVaultUITests.swift

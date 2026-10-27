@@ -23,12 +23,35 @@ import { assertExactNativeResults } from "../acceptance-test-plan.ts";
 import {
   seedOccurrenceVault,
   verifyOccurrenceVault,
+  occurrenceFixture,
   viewerDay,
 } from "./fixture.ts";
+import { requireMacReadinessCapture } from "../apple-acceptance/mac-evidence.ts";
 
 const packageRoot = path.resolve(import.meta.dir, "../..");
-const test = "testGenerationRepairUndoAndColdRelaunch";
-const selector = `TaskNotesAcceptanceUITests/OccurrenceVaultUITests/${test}`;
+export type MacAcceptanceMode = "recurrence" | "capture-readiness";
+
+export function macAcceptancePlan(mode: MacAcceptanceMode = "recurrence") {
+  assert.ok(mode === "recurrence" || mode === "capture-readiness");
+  const readiness = mode === "capture-readiness";
+  const test = readiness
+    ? "testOwnedSyntheticWindowCapture"
+    : "testGenerationRepairUndoAndColdRelaunch";
+  const suite: "CaptureReadinessUITests" | "OccurrenceVaultUITests" = readiness
+    ? "CaptureReadinessUITests"
+    : "OccurrenceVaultUITests";
+  return {
+    test,
+    suite,
+    selector: `TaskNotesAcceptanceUITests/${suite}/${test}`,
+    kind: readiness
+      ? "native-capture-readiness-macos"
+      : "native-occurrence-macos",
+    result: readiness ? "CaptureReadiness.xcresult" : "Occurrence.xcresult",
+    launches: readiness ? 1 : 3,
+    successStatus: readiness ? ("capture-ready" as const) : ("passed" as const),
+  };
+}
 
 export function occurrenceCommand(root: string, evidence: string) {
   return (argv: string[], capture = false, cwd = root) =>
@@ -87,8 +110,12 @@ export async function runPreparedMacOccurrence(run: {
   sources: Record<string, string>;
   verifyInputs: () => Promise<void>;
   provenance?: Record<string, unknown>;
+  mode?: MacAcceptanceMode;
+  runnerBundlePath?: string;
 }): Promise<void> {
   const { packageRoot, runID, sources } = run;
+  const mode = run.mode ?? "recurrence";
+  const plan = macAcceptancePlan(mode);
   const evidence = path.join(
     packageRoot,
     ".build/occurrence-acceptance",
@@ -104,7 +131,7 @@ export async function runPreparedMacOccurrence(run: {
   );
   const descriptor = path.join(state, "acceptance.json");
   const vault = path.join(state, "Native acceptance");
-  const result = path.join(evidence, "Occurrence.xcresult");
+  const result = path.join(evidence, plan.result);
   const executable = path.join(
     derived,
     "Build/Products/Debug/FacetAcceptance.app/Contents/MacOS/FacetAcceptance",
@@ -123,14 +150,15 @@ export async function runPreparedMacOccurrence(run: {
       FACET_OCCURRENCE_DAY: day,
     },
     command,
+    run.runnerBundlePath,
   );
   const receipt = {
     ...run.provenance,
     schemaVersion: 1,
     runID,
     day,
-    kind: "native-occurrence-macos",
-    selector,
+    kind: plan.kind,
+    selector: plan.selector,
     accountEntryCaptured: false,
     remoteVaultAuthorized: false,
     sources,
@@ -142,7 +170,13 @@ export async function runPreparedMacOccurrence(run: {
   const failures: unknown[] = [];
   try {
     await runMacAcceptanceCase(
-      { evidence, testRun, result, selector, maximumSeconds: 180 },
+      {
+        evidence,
+        testRun,
+        result,
+        selector: plan.selector,
+        maximumSeconds: 180,
+      },
       command,
     );
     const reports = await readAcceptanceResultReports(
@@ -156,35 +190,44 @@ export async function runPreparedMacOccurrence(run: {
     assertExactNativeResults(
       JSON.parse(reports.summaryJSON),
       JSON.parse(reports.testsJSON),
-      [test],
-      { target: "TaskNotesAcceptanceUITests", suite: "OccurrenceVaultUITests" },
+      [plan.test],
+      { target: "TaskNotesAcceptanceUITests", suite: plan.suite },
     );
-    const primary: unknown = await Bun.file(
-      path.join(state, "occurrence-primary.json"),
-    ).json();
-    assert.ok(typeof primary === "object" && primary !== null);
-    assert.deepEqual(Object.keys(primary).sort(), [
-      "child",
-      "day",
-      "parent",
-      "runID",
-      "schemaVersion",
-    ]);
-    assert.equal(Reflect.get(primary, "schemaVersion"), 1);
-    assert.equal(Reflect.get(primary, "runID"), runID);
-    assert.equal(Reflect.get(primary, "day"), day);
-    const child: unknown = Reflect.get(primary, "child");
-    const parent: unknown = Reflect.get(primary, "parent");
-    assert.ok(typeof child === "string" && typeof parent === "string");
-    assert.equal(Buffer.from(child, "base64").toString("base64"), child);
-    assert.equal(Buffer.from(parent, "base64").toString("base64"), parent);
-    await verifyOccurrenceVault(
-      vault,
-      day,
-      "repaired",
-      Buffer.from(child, "base64").toString("utf8"),
-      Buffer.from(parent, "base64").toString("utf8"),
-    );
+    if (mode === "capture-readiness") {
+      for (const [relative, original] of Object.entries(occurrenceFixture(day)))
+        assert.equal(
+          await Bun.file(path.join(vault, relative)).text(),
+          original,
+          `Capture readiness changed seed: ${relative}`,
+        );
+    } else {
+      const primary: unknown = await Bun.file(
+        path.join(state, "occurrence-primary.json"),
+      ).json();
+      assert.ok(typeof primary === "object" && primary !== null);
+      assert.deepEqual(Object.keys(primary).sort(), [
+        "child",
+        "day",
+        "parent",
+        "runID",
+        "schemaVersion",
+      ]);
+      assert.equal(Reflect.get(primary, "schemaVersion"), 1);
+      assert.equal(Reflect.get(primary, "runID"), runID);
+      assert.equal(Reflect.get(primary, "day"), day);
+      const child: unknown = Reflect.get(primary, "child");
+      const parent: unknown = Reflect.get(primary, "parent");
+      assert.ok(typeof child === "string" && typeof parent === "string");
+      assert.equal(Buffer.from(child, "base64").toString("base64"), child);
+      assert.equal(Buffer.from(parent, "base64").toString("base64"), parent);
+      await verifyOccurrenceVault(
+        vault,
+        day,
+        "repaired",
+        Buffer.from(child, "base64").toString("utf8"),
+        Buffer.from(parent, "base64").toString("utf8"),
+      );
+    }
     assert.equal(
       viewerDay(),
       day,
@@ -197,8 +240,8 @@ export async function runPreparedMacOccurrence(run: {
     );
     assert.equal(
       proof.launches.length,
-      3,
-      "All three cold-launch identities must be retained",
+      plan.launches,
+      "The selected journey must retain every exact launch identity",
     );
     assert.ok(proof.launches.every((launch) => launch.state === "closed"));
   } catch (error) {
@@ -242,13 +285,21 @@ export async function runPreparedMacOccurrence(run: {
   failures.push(
     ...(await retainMacAcceptanceEvidence(state, result, evidence, command)),
   );
+  if (mode === "capture-readiness" && failures.length === 0) {
+    try {
+      await requireMacReadinessCapture(evidence);
+    } catch (error) {
+      failures.push(error);
+    }
+  }
   await recordMacAcceptanceOutcome(
     receipt,
     failures,
     evidence,
-    `Native recurrence acceptance failed; retained ${evidence}`,
+    `Native ${mode} acceptance failed; retained ${evidence}`,
+    plan.successStatus,
   );
-  console.log(`Native recurrence acceptance passed: ${evidence}`);
+  console.log(`Native ${mode} acceptance ${plan.successStatus}: ${evidence}`);
 }
 
 if (import.meta.main) await runMacOccurrenceAcceptance();
