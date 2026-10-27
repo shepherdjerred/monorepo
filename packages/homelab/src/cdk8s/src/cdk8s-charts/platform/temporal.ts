@@ -266,16 +266,16 @@ export function createTemporalChart(app: App) {
           ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
         },
         {
-          // The agent poller has a dedicated pod label and egress policy. Its
+          // Agent pollers have dedicated pod labels and egress policies. Each
           // provider subprocess runs under a uid that the pod-local firewall
           // rejects on this port, so only the SDK poller can use this ingress.
-          from: [
-            {
+          from: ["temporal-agent-worker", "temporal-promotion-worker"].map(
+            (workerApp) => ({
               podSelector: {
-                matchLabels: { app: "temporal-agent-worker" },
+                matchLabels: { app: workerApp },
               },
-            },
-          ],
+            }),
+          ),
           ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
         },
         {

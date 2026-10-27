@@ -624,7 +624,7 @@ command. Missing starts and unexplained stops remain failures.
 Retained histories use the pre-history verification branch through a Temporal
 patch marker.
 
-Production runs one image in twelve single-replica Kubernetes Deployments. The
+Production runs one image in separate single-replica Kubernetes Deployments. The
 `control` role owns schedule reconciliation and public HTTP/event surfaces
 plus the `agent-chat-ingress` command queue and isolated
 `agent-chat-delivery` queue. The credentialless
@@ -666,6 +666,7 @@ schedule reconciliation.
 | `repo`            | `repo-automation`, `agent-chat-dispatch`, `agent-chat-receipts`                        |                        1 per queue |
 | `scout`           | `scout`                                                                                |                                  1 |
 | `agent`           | `agent-task`                                                                           |                                  1 |
+| `promotion`       | `storm-promotion`, `storm-promotion-control`                                           |                        1 per queue |
 | `glitter-corpus`  | `glitter-corpus`                                                                       |                                  1 |
 | `glitter-context` | `glitter-context`                                                                      |                                  1 |
 | `maintenance`     | `maintenance`                                                                          |                                  1 |
@@ -982,6 +983,174 @@ provider, transport, timeout, or structured-output failure records `unknown`
 with its error class and fails the optional "Liveness verification (web
 search)" check without failing the Activity. Results recorded before the check
 existed carry no `livenessChecks` and render their original report.
+
+## The Storm promotion task
+
+The caller selects a target, action, approved content and timing before invoking
+the promotion executor. The LLM discovers the current interface, performs that
+assignment once, and records the site's actual response. Posting-policy and
+cross-community cadence decisions belong to the caller. There are no
+per-site login scripts, generated CSS selectors, posting-rule regex parsers, or
+required preflight/publish/verify tool sequences.
+
+Each run receives `task.json` with its target and mode, `content.md` with approved
+copy, `history.json` with the latest 50 attempts' metadata, and
+`previous-run.json` with the preceding assessment and prepared content.
+`maintenance.md` context includes the human inventory and recorded manual actions,
+excluding the account locator section. Manual receipts retain their stated date
+precision and serve as optional reference for locating existing placements.
+The [target manifest](../the-storm/promotion/targets.json) and approved copy are bundled
+into the worker image. Original page baselines remain in private object storage.
+The complete ledger remains available to the runner.
+
+`BROWSER.md` documents native PinchTab navigation, scoped scanned snapshots,
+element references, attributes, screenshots, and actions. The agent chooses its
+own controls and sequence; native input references work inside web components.
+The small connection helper scopes operations to the target's persistent profile.
+Credential placeholders let the agent choose username, optional saved email, and password inputs while the
+parent supplies their values privately. A disabled sign-in control can be
+inspected and corrected; an actual or ambiguous sign-in submission is not retried.
+The additional `captcha.ts` helper solves supported response-field reCAPTCHA v2
+and Turnstile widgets without submitting the page.
+
+`runStormPromotion({ targetId, mode })` accepts `run`, `preview`, or `reconcile`.
+The stable Workflow ID is `storm-promotion/<targetId>`.
+
+For a local dry run, start the local PinchTab daemon and run from the repository
+root with the enrolled 1Password service account:
+
+```bash
+scripts/onepassword/with-service-account.sh op run \
+  --env-file packages/temporal/scripts/promotion/preview-local.env.references \
+  -- env -u OP_SERVICE_ACCOUNT_TOKEN bun packages/temporal/scripts/promotion/preview-local.ts \
+  pmc minecraft-serverlist reddit-mcservers
+```
+
+This uses the local browser configuration, real LLM and stored logins, with
+in-memory task state and no Temporal server or production ledger. It prints
+private temporary paths for the structured results and browser diagnostics.
+The agent inspects the assigned execution path rather than conducting an
+eligibility review. The references file
+contains only 1Password locators; credentials are injected in memory.
+Use `--all` instead of target IDs to inspect every assigned target; pending
+placements have no execution task and are excluded. `inspect` assignments are
+preview-only and can check existing account access without inventing news. An optional
+`--inventory /path/to/targets.json` adds schema-validated placements for local
+inspection without changing production targets or schedules. Duplicate IDs fail.
+`--profile <existing-profile>` can inspect an existing signed-in browser profile
+in preview only; it does not prove that the deployed per-account profile is ready.
+
+Credential enrollment also uses the service account exclusively. Run
+`scripts/promotion/enroll-logins.ts --bindings <bindings.json> --apply` through
+the repository's service-account wrapper. Each non-secret binding contains
+`account`, an `op://<vault-id>/<item-id>` reference, `backend: "service-account"`,
+`hosts`, and optionally `expectedUsername`. Custom credential fields use an
+explicit `fields` mapping with `username`, `password` and optional `email`/`otp` labels.
+An enrolled OTP field contains its `otpauth://totp` URI; the parent generates and
+privately injects one code into an observed verification input, then permits one
+verification submission. Seeds, codes and solver tokens stay outside agent output.
+The script validates all sources,
+updates the encrypted login map through an inherited pipe, and checks readback.
+It never falls back to desktop 1Password. Inaccessible items remain blocked.
+
+Local Discord previews use an isolated toolkit userbot daemon, selected by
+`PROMOTION_DISCORD_SOCKET`. Each supplemental target pins `discord.guildId`,
+`discord.channelId` and `discord.username` matching its URL. The bridge checks
+the actual user identity, guild/channel and permissions before exposing reads.
+The model receives `discord.ts` and `DISCORD.md`; its message or slash-command
+tool records one proposed payload without calling Discord's publication APIs.
+Mixed bot/user daemons and account/destination mismatches fail. Discord live
+execution is disabled; production Discord placements remain manually maintained.
+Use `--inventory packages/the-storm/promotion/preview-targets.json --all` to
+include the saved Discord channel assignments in a local preview.
+Start that daemon with `scripts/promotion/start-discord.ts` through the same
+service-account `op run` injection and `env -u OP_SERVICE_ACCOUNT_TOKEN` boundary.
+It uses the login-map account `discord`, verifies `the.storm.mc` in the isolated
+session, and refuses unrelated identities. Missing credentials fail without
+desktop lookup. The script prints the socket path for `PROMOTION_DISCORD_SOCKET`.
+
+| Operator command                           | Result                                                            |
+| ------------------------------------------ | ----------------------------------------------------------------- |
+| `toolkit promotion status [target] --json` | Saved history, ownership, pause state and schedule deadline       |
+| `toolkit promotion preview <target>`       | Prepare without publishing; permit budgeted access CAPTCHA solves |
+| `toolkit promotion run <target>`           | Execute the caller's selected action once and record the outcome  |
+| `toolkit promotion pause [target]`         | Block further promotion mutations                                 |
+| `toolkit promotion resume [target]`        | Resume inspection; uncertain effects still require reconciliation |
+| `toolkit promotion reconcile <target>`     | Inspect a prior uncertain effect without creating another         |
+
+For a native owner bump, the executor uses the existing listing's bump control
+and records acceptance, rejection or an explicit site cooldown. It does not need
+an independent historical eligibility proof before attempting the selected bump.
+Preview inspects that path and stops before the effect; it cannot prove acceptance.
+Reddit uses `old.reddit.com`. The caller supplies appropriate approved content,
+including substantive news when selecting a forum news action.
+
+The runner retains ownership locks and checks publishing configuration, pauses,
+stored deadlines, the manifest's minimum interval and its persisted 15–30 minute
+buffer before starting an executor. It rechecks the saved schedule before
+forwarding a browser mutation and checkpoints possible effects.
+An interrupted or ambiguous effect remains uncertain and blocks another run.
+A completed inspection involving form interactions but no visibility action is
+recorded as `no-action`, which does not count as a post. The LLM chooses browser
+interactions to accomplish the assignment; the runner does not encode website
+flows. The caller remains responsible for account/community-wide policy and
+cadence; the dispatcher's saved target deadline is not a complete policy engine.
+
+The final structured result contains the execution outcome, evidence, prepared
+copy and any receipt. The executor supplies `nextEligibleAt` only when the site
+actually supplies a deadline; the runner computes normal scheduling after a
+successful receipt. The runner reads back a claimed receipt and
+captures its screenshot; a verified receipt needs new remote confirmation.
+Receipt readback independently refreshes the last successfully inspected region
+on the same URL, allowing bounded captures on large pages. Quote and freshness
+checks decode native node text and retain support for older plain-text baselines.
+Non-bump confirmation must match content actually entered during this run.
+Reddit additionally requires a fresh visible post permalink and original
+publication timestamp. A failed or filtered post still counts conservatively.
+The saved outcome carries context into the next run. Browser diagnostics retain
+endpoint/action/ref/error metadata without credential values.
+Agents return evidence as `{ observationId, ref }` selections from successful
+snapshots. The parent resolves immutable captured nodes to their exact URL and
+text; foreign observations, empty nodes and model-authored quotes are rejected.
+Discord status/read operations supply equivalent references. Stored results
+retain the URL/quote format. Failed runs retain the rejected draft, captured
+observations and redacted tool trace under private `diagnostics/` keys, including
+local preview artifacts. Historical notes cannot stand in for captured evidence.
+
+Preview blocks promotion clicks, form edits, Enter submissions, action URLs and
+receipt settlement outside the prompt. Budgeted CAPTCHA solving is available;
+the local suite shares one solver budget and reports reservations, actual costs
+and unsettled charges. A staged response token need not change the visible
+checkbox; site acceptance remains unverified until an authorized submission.
+Ordinary form callbacks never run automatically. Captured Cloudflare
+interstitial callbacks may complete security navigation. Managed challenges that
+render before capture installation still require a browser page-init capability;
+current-document evaluation alone does not guarantee managed-challenge coverage.
+Preview permits
+navigation, screenshots, scrolling, native read-only search inputs and one
+stored-credential sign-in. Message composers remain blocked.
+Preview also permits observed tabs and menu disclosures using their native
+accessibility metadata while blocking submit/reset and effect controls.
+Browser requests
+are serialized within each run, and controls use the refs from its current
+snapshot rather than silently taking another snapshot during credential fill.
+Reconciliation never signs in or creates another effect. These modes use the
+same task-driven agent and browser connection as a publishing run.
+
+The `the-storm-promotion-enabled` flag defaults off. Typed
+`the-storm-promotion-settings` selects targets, model, step/time limits and solver
+allowance; defaults are an empty target list, 80 steps, 15 minutes and $10 monthly
+solver spending. Both declared Schedules start paused. An authenticated publishing
+canary and its receipt are separate acceptance requirements before activation.
+
+Namespace-separated SeaweedFS state holds assessments, run audits, attempts,
+evidence and solver reservations. The dedicated 1Password item supplies the
+solver key and account-keyed login map; profiles are named
+`storm-promotion-<account>`. Browser, solver, storage, site-login and report
+credentials stay outside the provider subprocess. The separate promotion worker
+uses the shared agent runner. Daily reports and deduplicated actionable alerts
+use the existing reports worker and Postal recipient. Discord placements remain
+manually maintained.
 
 ## Documentation
 

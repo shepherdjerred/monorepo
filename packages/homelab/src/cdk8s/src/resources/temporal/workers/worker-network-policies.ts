@@ -90,6 +90,7 @@ const FLIPT_CONSUMER_COMPONENTS = [
   "glitter-corpus-worker",
   "glitter-context-worker",
   "agent-worker",
+  "promotion-worker",
   "backup-worker",
 ] as const;
 

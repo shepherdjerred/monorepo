@@ -47,6 +47,7 @@ Monorepo workflows:
   screenshot-server <PKG>      Start a site without browser credentials
   alerts <list|show>           Query the durable alert ledger
   ops summary [--needs-me]     Summarize the homelab ops snapshot
+  promotion <ACTION> [TARGET]  Operate The Storm promotion agents and posting history
   bugsink <SUBCOMMAND>         Query self-hosted error tracking
   discord <SUBCOMMAND>         Use the local Discord session daemon
   mc <SUBCOMMAND>              Drive Minecraft sandboxes (WorldEdit, console, snapshots)
@@ -83,6 +84,11 @@ type SubcommandHandler = (
 
 /** Workflow commands dispatched as `<command> <subcommand> [args...]`. */
 const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
+  [
+    "promotion",
+    () =>
+      import("./handlers/promotion.ts").then((m) => m.handlePromotionCommand),
+  ],
   [
     "tracker",
     () => import("./handlers/tracker.ts").then((m) => m.handleTrackerCommand),
@@ -144,7 +150,12 @@ async function resolveCommandCredentials(
     );
     return;
   }
-  const names = requiredCredentialsFor(command, subcommand, Bun.env);
+  const names = requiredCredentialsFor(
+    command,
+    subcommand,
+    Bun.env,
+    args.slice(1),
+  );
   const failures: string[] = [];
   for (const name of names) {
     try {

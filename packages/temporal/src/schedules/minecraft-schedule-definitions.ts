@@ -4,6 +4,36 @@ import { schedulesInNamespace } from "./schedule-types.ts";
 
 export const MINECRAFT_SCHEDULES = schedulesInNamespace("prod", [
   {
+    id: "the-storm-promotion-dispatch",
+    workflowType: "dispatchStormPromotion",
+    args: [],
+    timing: { kind: "interval", every: "1 minute" },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    catchupWindow: "1 minute",
+    workflowExecutionTimeout: "10 minutes",
+    memo: "Dispatch eligible promotion targets; durable claims and buffered posting limits prevent duplicate actions",
+    initialPauseNote:
+      "Awaiting promotion worker provisioning and eligible live canary acceptance",
+  },
+  {
+    id: "the-storm-promotion-daily",
+    workflowType: "reportStormPromotion",
+    args: [],
+    timing: {
+      kind: "cron",
+      expression: "0 8 * * *",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    catchupWindow: "1 hour",
+    workflowExecutionTimeout: "10 minutes",
+    memo: "Email promotion receipts, blocked destinations, next eligibility and monthly solver spending",
+    initialPauseNote:
+      "Awaiting promotion worker provisioning and report acceptance",
+  },
+  {
     id: "the-storm-shop-reconciliation",
     workflowType: "runStormPlotReconciliationWorkflow",
     args: [],

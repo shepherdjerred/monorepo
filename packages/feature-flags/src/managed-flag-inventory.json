@@ -2580,6 +2580,30 @@
       "thresholdRollouts": []
     },
     {
+      "key": "the-storm-promotion-enabled",
+      "owner": "the-storm",
+      "namespace": "temporal",
+      "source": "the-storm-promotion",
+      "purpose": "Enable eligible promotion agent submissions after worker provisioning and live acceptance.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "the-storm-promotion-settings",
+      "owner": "the-storm",
+      "namespace": "temporal",
+      "source": "the-storm-promotion",
+      "purpose": "Validated promotion agent model, step/time budgets, solver allowance and enabled target IDs.",
+      "type": "variant",
+      "default": "{\"model\":\"gpt-5.6-luna\",\"maxSteps\":80,\"timeoutMinutes\":15,\"monthlySolverUsd\":10,\"enabledTargets\":[]}",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "the-storm-rwf-recording-archive-enabled",
       "owner": "the-storm",
       "namespace": "temporal",

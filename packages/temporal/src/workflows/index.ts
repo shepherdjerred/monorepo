@@ -1,4 +1,9 @@
 // Declare explicit workflow wrappers, deriving their contracts from delegates.
+import * as promotion from "./promotion/index.ts";
+export const runStormPromotion = promotion.runStormPromotion;
+export const dispatchStormPromotion = promotion.dispatchStormPromotion;
+export const manageStormPromotion = promotion.manageStormPromotion;
+export const reportStormPromotion = promotion.reportStormPromotion;
 import * as canary from "./notification-canary.ts";
 export const runDailyNotificationCanary = canary.runDailyNotificationCanary;
 import * as stormForum from "./homelab/storm-forum.ts";

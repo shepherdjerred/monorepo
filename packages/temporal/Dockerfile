@@ -63,6 +63,8 @@ COPY --parents \
   tsconfig.base.json \
   packages/scout-for-lol/tsconfig.base.json \
   packages/temporal \
+  packages/the-storm/package.json \
+  packages/the-storm/promotion/ \
   packages/delivery/src/shared \
   packages/homelab \
   scripts/lib \
@@ -449,6 +451,8 @@ COPY --from=prod-deps --exclude=package.json --exclude=bun.lock --exclude=bunfig
 COPY --parents \
   tsconfig.base.json \
   packages/temporal \
+  packages/the-storm/package.json \
+  packages/the-storm/promotion/ \
   packages/delivery/src/shared \
   packages/delivery/src/domain/error.ts \
   packages/delivery/src/infrastructure/artifact-stores/oci-registry.ts \

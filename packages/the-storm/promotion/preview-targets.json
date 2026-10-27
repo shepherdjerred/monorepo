@@ -1,0 +1,227 @@
+{
+  "version": 1,
+  "serverIdentity": "the-storm",
+  "targets": [
+    {
+      "id": "discord-mcadverts",
+      "name": "MCAdverts server channel",
+      "url": "https://discord.com/channels/1002626712321921074/1137725670491947069",
+      "rulesUrl": "https://discord.com/channels/1002626712321921074/1137725670491947069",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 7200,
+      "notes": "Prepare the caller-selected message for this exact existing channel/thread using the outreach userbot. Record the payload without sending. Report actual account or channel-access obstacles.",
+      "discord": {
+        "guildId": "1002626712321921074",
+        "channelId": "1137725670491947069",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-fast",
+      "name": "Minecraft LFG fast channel",
+      "url": "https://discord.com/channels/877714016351453184/1054901030644617327",
+      "rulesUrl": "https://discord.com/channels/877714016351453184/1054901030644617327",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 60,
+      "notes": "Prepare the caller-selected message for this exact existing channel/thread using the outreach userbot. Record the payload without sending. Report actual account or channel-access obstacles.",
+      "discord": {
+        "guildId": "877714016351453184",
+        "channelId": "1054901030644617327",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-find-forum",
+      "name": "Minecraft LFG find-servers forum thread",
+      "url": "https://discord.com/channels/1088178322070065193/1560702451550519488",
+      "rulesUrl": "https://discord.com/channels/1088178322070065193/1560702451550519488",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 172800,
+      "notes": "Prepare the caller-selected message for this exact existing channel/thread using the outreach userbot. Record the payload without sending. Report actual account or channel-access obstacles.",
+      "discord": {
+        "guildId": "1088178322070065193",
+        "channelId": "1560702451550519488",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-6-hour",
+      "name": "Minecraft LFG six-hour channel",
+      "url": "https://discord.com/channels/877714016351453184/1061826526913507429",
+      "rulesUrl": "https://discord.com/channels/877714016351453184/1061826526913507429",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 21600,
+      "notes": "Prepare the caller-selected message for this exact existing channel/thread using the outreach userbot. Record the payload without sending. Report actual account or channel-access obstacles.",
+      "discord": {
+        "guildId": "877714016351453184",
+        "channelId": "1061826526913507429",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-2-hour",
+      "name": "Minecraft LFG two-hour channel",
+      "url": "https://discord.com/channels/877714016351453184/1061826335317696552",
+      "rulesUrl": "https://discord.com/channels/877714016351453184/1061826335317696552",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 7200,
+      "notes": "Prepare the caller-selected message for this exact existing channel/thread using the outreach userbot. Record the payload without sending. Report actual account or channel-access obstacles.",
+      "discord": {
+        "guildId": "877714016351453184",
+        "channelId": "1061826335317696552",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-1-hour",
+      "name": "Minecraft LFG one-hour channel",
+      "url": "https://discord.com/channels/877714016351453184/1061826190190587925",
+      "rulesUrl": "https://discord.com/channels/877714016351453184/1061826190190587925",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 3600,
+      "notes": "Prepare the caller-selected message for this exact existing channel/thread using the outreach userbot. Record the payload without sending. Report actual account or channel-access obstacles.",
+      "discord": {
+        "guildId": "877714016351453184",
+        "channelId": "1061826190190587925",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-bedrock",
+      "name": "Minecraft LFG Bedrock",
+      "url": "https://discord.com/channels/877714016351453184/878037115403902986",
+      "rulesUrl": "https://discord.com/channels/877714016351453184/878037115403902986",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 86400,
+      "notes": "Prepare the caller-selected message for this exact existing channel/thread using the outreach userbot. Record the payload without sending. Report actual account or channel-access obstacles.",
+      "discord": {
+        "guildId": "877714016351453184",
+        "channelId": "878037115403902986",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-java",
+      "name": "Minecraft LFG Java",
+      "url": "https://discord.com/channels/877714016351453184/877718073858199592",
+      "rulesUrl": "https://discord.com/channels/877714016351453184/877718073858199592",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 86400,
+      "notes": "Prepare the caller-selected message for this exact existing channel/thread using the outreach userbot. Record the payload without sending. Report actual account or channel-access obstacles.",
+      "discord": {
+        "guildId": "877714016351453184",
+        "channelId": "877718073858199592",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-smp",
+      "name": "Minecraft LFG SMP",
+      "url": "https://discord.com/channels/877714016351453184/877718112919781417",
+      "rulesUrl": "https://discord.com/channels/877714016351453184/877718112919781417",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 86400,
+      "notes": "Prepare the caller-selected message for this exact existing channel/thread using the outreach userbot. Record the payload without sending. Report actual account or channel-access obstacles.",
+      "discord": {
+        "guildId": "877714016351453184",
+        "channelId": "877718112919781417",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-advertisement-forum",
+      "name": "Minecraft Advertisement forum thread",
+      "url": "https://discord.com/channels/993668335642349579/1560703712056443081",
+      "rulesUrl": "https://discord.com/channels/993668335642349579/1560703712056443081",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 0,
+      "notes": "Prepare the caller-selected message for this exact existing channel/thread using the outreach userbot. Record the payload without sending. Report actual account or channel-access obstacles.",
+      "discord": {
+        "guildId": "993668335642349579",
+        "channelId": "1560703712056443081",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-5-minute",
+      "name": "Minecraft LFG 5-minute reserve",
+      "url": "https://discord.com/channels/877714016351453184/1061825536449593365",
+      "rulesUrl": "https://discord.com/channels/877714016351453184/1061825536449593365",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 300,
+      "notes": "Prepare the caller-selected message for this exact existing channel/thread using the outreach userbot. Record the payload without sending. Report actual account or channel-access obstacles.",
+      "discord": {
+        "guildId": "877714016351453184",
+        "channelId": "1061825536449593365",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-15-minute",
+      "name": "Minecraft LFG 15-minute reserve",
+      "url": "https://discord.com/channels/877714016351453184/1061825928155643908",
+      "rulesUrl": "https://discord.com/channels/877714016351453184/1061825928155643908",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 900,
+      "notes": "Prepare the caller-selected message for this exact existing channel/thread using the outreach userbot. Record the payload without sending. Report actual account or channel-access obstacles.",
+      "discord": {
+        "guildId": "877714016351453184",
+        "channelId": "1061825928155643908",
+        "username": "the.storm.mc"
+      }
+    },
+    {
+      "id": "discord-lfg-30-minute",
+      "name": "Minecraft LFG 30-minute reserve",
+      "url": "https://discord.com/channels/877714016351453184/1061826016345071636",
+      "rulesUrl": "https://discord.com/channels/877714016351453184/1061826016345071636",
+      "account": "discord",
+      "hosts": ["discord.com"],
+      "action": "repost",
+      "content": "directory",
+      "minimumIntervalSeconds": 1800,
+      "notes": "Prepare the caller-selected message for this exact existing channel/thread using the outreach userbot. Record the payload without sending. Report actual account or channel-access obstacles.",
+      "discord": {
+        "guildId": "877714016351453184",
+        "channelId": "1061826016345071636",
+        "username": "the.storm.mc"
+      }
+    }
+  ]
+}

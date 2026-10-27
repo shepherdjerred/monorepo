@@ -35,6 +35,7 @@ import {
 import { temporalFeatureFlagEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/feature-flags.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
+import { createTemporalPromotionWorker } from "./promotion-worker.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
   serverServiceName: string;
@@ -54,6 +55,10 @@ export function createTemporalWorkerDeployment(
     "temporal-worker-secret",
     onePasswordItem.name,
   );
+  const promotionDeployment = createTemporalPromotionWorker(chart, {
+    serverServiceName: props.serverServiceName,
+    temporalSecret: secret,
+  });
   const fliptAuthItem = new OnePasswordItem(chart, "temporal-flipt-auth-1p", {
     metadata: { name: "temporal-flipt-auth" },
     spec: { itemPath: vaultItemPath("3mvuwmlazccxpq7tz7myqigtvq") },
@@ -376,6 +381,7 @@ export function createTemporalWorkerDeployment(
   });
 
   return {
+    promotionDeployment,
     agentDeployment,
     gatewayDeployment,
     homeDeployment,

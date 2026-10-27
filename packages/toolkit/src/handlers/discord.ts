@@ -71,12 +71,18 @@ async function handleDaemon(args: string[]): Promise<void> {
     case "start": {
       const { values } = parseArgs({
         args: rest,
-        options: { ttl: { type: "string" } },
+        options: {
+          ttl: { type: "string" },
+          "password-login": { type: "boolean", default: false },
+        },
         allowPositionals: false,
       });
       const ttlSeconds =
         values.ttl == null ? DEFAULT_TTL_SECONDS : parseTtl(values.ttl);
-      await daemonStartCommand({ ttlSeconds });
+      await daemonStartCommand({
+        ttlSeconds,
+        passwordLogin: values["password-login"],
+      });
       break;
     }
     case "stop": {
@@ -258,7 +264,9 @@ export async function handleDiscordCommand(
       case "serve": {
         // hidden: the daemon process itself, spawned by `daemon start`
         const { runDiscordDaemon } = await import("#lib/discord/serve.ts");
-        await runDiscordDaemon();
+        await runDiscordDaemon({
+          passwordLogin: args.includes("--password-login"),
+        });
         break;
       }
       case "whoami":
