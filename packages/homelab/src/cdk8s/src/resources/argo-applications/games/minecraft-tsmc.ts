@@ -27,6 +27,7 @@ const SECRET_NAME = "minecraft-tsmc-discord";
 const RCON_SECRET_NAME = "minecraft-tsmc-brain";
 const BRAIN_SECRET_NAME = "minecraft-tsmc-storm-brain";
 const RWF_RECORDING_SECRET_NAME = "minecraft-tsmc-rwf-recording";
+const COREPROTECT_SECRET_NAME = "minecraft-tsmc-coreprotect";
 // MCBridge agent API (packages/the-storm/plugin/bridge); port-forward only.
 const MC_BRIDGE_PORT = 25_580;
 
@@ -96,6 +97,14 @@ export function createMinecraftTsmcResources(chart: Chart): void {
   new OnePasswordItem(chart, "minecraft-tsmc-rwf-recording-1p", {
     spec: { itemPath: vaultItemPath("the-storm-rwf-recording") },
     metadata: { name: RWF_RECORDING_SECRET_NAME, namespace: NAMESPACE },
+  });
+
+  // CoreProtect donation key. Its own item so it is projected only into the
+  // game namespace. Required field (concealed, UPPERCASE_SNAKE label):
+  // COREPROTECT_DONATION_KEY.
+  new OnePasswordItem(chart, "minecraft-tsmc-coreprotect-1p", {
+    spec: { itemPath: vaultItemPath("the-storm-coreprotect") },
+    metadata: { name: COREPROTECT_SECRET_NAME, namespace: NAMESPACE },
   });
 
   createIngress(chart, "minecraft-tsmc-bluemap-ingress", {
@@ -276,6 +285,16 @@ export function createMinecraftTsmcApp(chart: Chart) {
           secretKeyRef: {
             name: RWF_RECORDING_SECRET_NAME,
             key: "RWF_RECORDING_SALT",
+          },
+        },
+      },
+      // Empty in the image so CI and sandboxes boot unregistered. Production
+      // replaces that default; a missing secret refuses to start the pod.
+      CFG_COREPROTECT_DONATION_KEY: {
+        valueFrom: {
+          secretKeyRef: {
+            name: COREPROTECT_SECRET_NAME,
+            key: "COREPROTECT_DONATION_KEY",
           },
         },
       },

@@ -450,6 +450,7 @@ describe("minecraft-tsmc image configuration", () => {
     expect(envValue(text, "PAPER_CUSTOM_JAR")).toBe(
       `/opt/paper/${manifest.paper.file}`,
     );
+    expect(envValue(text, "CFG_COREPROTECT_DONATION_KEY")).toBe('""');
   });
 });
 
@@ -480,6 +481,36 @@ describe("minecraft-tsmc MCBridge", () => {
       containerPort: 25_580,
       name: "bridge",
       ingress: { enabled: false },
+    });
+  });
+});
+
+describe("minecraft-tsmc CoreProtect", () => {
+  test("projects the donation key from its own item", () => {
+    const manifests = synthTsmc();
+    const items = manifests
+      .map((manifest) => OpItemSchema.safeParse(manifest))
+      .flatMap((result) => (result.success ? [result.data] : []));
+    const item = items.find(
+      ({ metadata }) => metadata.name === "minecraft-tsmc-coreprotect",
+    );
+    expect(item?.spec.itemPath).toMatch(/\/items\/the-storm-coreprotect$/u);
+    expect(
+      items.filter(({ spec }) =>
+        spec.itemPath.endsWith("/items/the-storm-coreprotect"),
+      ),
+    ).toHaveLength(1);
+
+    const extraEnv = z
+      .record(z.string(), z.unknown())
+      .parse(tsmcValues()["extraEnv"]);
+    expect(extraEnv["CFG_COREPROTECT_DONATION_KEY"]).toEqual({
+      valueFrom: {
+        secretKeyRef: {
+          name: "minecraft-tsmc-coreprotect",
+          key: "COREPROTECT_DONATION_KEY",
+        },
+      },
     });
   });
 });

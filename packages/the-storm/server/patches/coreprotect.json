@@ -36,6 +36,13 @@
     { "$put": { "path": "$", "key": "worldedit", "value": true } },
     { "$put": { "path": "$", "key": "rollback-items", "value": true } },
     { "$put": { "path": "$", "key": "rollback-entities", "value": true } },
-    { "$put": { "path": "$", "key": "skip-generic-data", "value": false } }
+    { "$put": { "path": "$", "key": "skip-generic-data", "value": false } },
+    {
+      "$put": {
+        "path": "$",
+        "key": "donation-key",
+        "value": "${CFG_COREPROTECT_DONATION_KEY}"
+      }
+    }
   ]
 }
