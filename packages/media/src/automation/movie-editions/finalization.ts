@@ -19,6 +19,7 @@ import {
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { queueMovieSubtitleTargetsV4 } from "./subtitles/queue.ts";
+import { queueMoviePublicationNoticesV4 } from "./notifications/producer.ts";
 
 /** Logical completion uses the real immutable Plex publication, never a fabricated acquisition parent. */
 export async function finalizeMovieAcquisitionV4(
@@ -132,6 +133,11 @@ export async function finalizeMovieAcquisitionV4(
       },
       budget,
     );
+    const notices = await queueMoviePublicationNoticesV4(
+      tx,
+      { input, access },
+      budget,
+    );
     await tx.applicationEvent.upsert({
       where: { dedupeKey: `movie-finalized-v4:${current.id}` },
       update: {},
@@ -150,6 +156,7 @@ export async function finalizeMovieAcquisitionV4(
         },
       },
     });
+    for (const guard of notices.guards) guard.assertActive();
     freshness.assertActive();
   });
   execution.assertActive();

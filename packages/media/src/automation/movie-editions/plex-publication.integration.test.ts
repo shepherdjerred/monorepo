@@ -2,12 +2,9 @@ import { afterEach, beforeAll, expect, test, vi } from "vitest";
 import { z } from "zod";
 import { rm, readFile } from "node:fs/promises";
 import { automationTestHarness } from "#testing/automation.ts";
-import { movieFilesV4Fixture } from "#testing/movie-files-v4.ts";
+import { moviePlexV4Fixture } from "#testing/movie-plex-v4.ts";
 import { movieVideoFixture } from "#testing/movie-video.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
-import { inspectAndStageMovieV4 } from "#automation/files/movie-editions/inspection.ts";
-import { promoteMovieV4 } from "#automation/files/movie-editions/publication.ts";
-import { PlexClient, type PlexItem } from "#integrations/plex.ts";
 import {
   MovieEditionKeySchema,
   MOVIE_EDITION_REGISTRY,
@@ -27,7 +24,6 @@ import { finalizeMovieAcquisitionV4 } from "./finalization.ts";
 const h = automationTestHarness();
 const directories: string[] = [];
 let bytes: Uint8Array;
-let partId = 710_000;
 beforeAll(async () => {
   bytes = await movieVideoFixture();
 });
@@ -38,77 +34,14 @@ afterEach(async () => {
 });
 
 async function fixture(edition: MovieEditionKey = "extended_cut") {
-  const f = await movieFilesV4Fixture(
+  const f = await moviePlexV4Fixture(
     h.database(),
     h.context(),
     await h.fixture(),
     { edition, bytes },
   );
   directories.push(f.files.directory);
-  await inspectAndStageMovieV4(f.files.context, f.input);
-  await promoteMovieV4(f.files.context, f.input);
-  const assets = await h.database().assetCoverage.findMany({
-    where: { mediaId: f.media.id, edition, current: true },
-    include: { asset: true },
-  });
-  const asset = assets[0]?.asset;
-  if (asset === undefined || assets.length !== 1)
-    throw new Error("Actual file publication missing");
-  const item: PlexItem = {
-    ratingKey: String(++partId),
-    type: "movie",
-    title: f.media.title,
-    Guid: [{ id: `tmdb://${String(f.media.tmdbId)}` }],
-    Media: [
-      { Part: [{ id: partId, file: asset.path, size: bytes.byteLength }] },
-    ],
-    ...(edition === "default"
-      ? {}
-      : { editionTitle: MOVIE_EDITION_REGISTRY[edition].plexLabel }),
-  };
-  const calls: URL[] = [];
-  let checkpoint = (_url: URL) => Promise.resolve();
-  const plex = new PlexClient(
-    {
-      baseUrl: "http://plex.fixture",
-      token: "fixture",
-      clientIdentifier: "fixture",
-    },
-    async (url) => {
-      calls.push(url);
-      await checkpoint(url);
-      if (url.pathname === "/identity")
-        return Response.json({
-          MediaContainer: { machineIdentifier: "fixture-server" },
-        });
-      if (url.pathname === "/library/sections")
-        return Response.json({
-          MediaContainer: {
-            size: 1,
-            Directory: [{ key: "1", type: "movie", title: "Movies" }],
-          },
-        });
-      if (url.pathname === "/library/sections/1/refresh")
-        return new Response(null, { status: 204 });
-      if (url.pathname === "/library/sections/1/all")
-        return Response.json({
-          MediaContainer: { size: 1, totalSize: 1, Metadata: [item] },
-        });
-      if (url.pathname === `/library/metadata/${item.ratingKey}`)
-        return Response.json({ MediaContainer: { size: 1, Metadata: [item] } });
-      throw new Error(`Unexpected scoped Plex fixture path: ${url.pathname}`);
-    },
-  );
-  return {
-    ...f,
-    asset,
-    item,
-    calls,
-    network: { ...f.context, plex },
-    checkpoint: (value: typeof checkpoint) => {
-      checkpoint = value;
-    },
-  };
+  return f;
 }
 
 test.each(MovieEditionKeySchema.options)(
