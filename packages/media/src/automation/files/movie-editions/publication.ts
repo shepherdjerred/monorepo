@@ -14,7 +14,7 @@ import {
   MovieAttemptOperationV4Schema,
   type MovieAttemptOperationV4,
 } from "#shared/movie-editions/automation-v4.ts";
-import { MovieFilePlanV2Schema } from "#shared/movie-editions/file-plan-v2.ts";
+import { MovieFilePlanSchema } from "#shared/movie-editions/management/contracts.ts";
 import { MoviePublicationOutcomeV2Schema } from "#shared/movie-editions/publication-v2.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
@@ -43,13 +43,16 @@ export async function promoteMovieV4(
   const execution = requirePublicationExecution(
     initial.publicationExecution?.(),
   );
-  const invocation = publicationInvocation(initial, execution);
-  const input = MovieAttemptOperationV4Schema.parse(raw);
   const budget = new PublicationAuthorityReadBudget();
+  const invocation = {
+    ...publicationInvocation(initial, execution),
+    movieManagement: { execution, budget },
+  };
+  const input = MovieAttemptOperationV4Schema.parse(raw);
   const attempt = await initial.db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: input.attemptId },
   });
-  const plan = MovieFilePlanV2Schema.parse(attempt.filePlan);
+  const plan = MovieFilePlanSchema.parse(attempt.filePlan);
   if (
     attempt.coordinatorOperationId !== input.operationId ||
     plan.attemptId !== attempt.id ||

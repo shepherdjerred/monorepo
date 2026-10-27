@@ -25,6 +25,7 @@ import {
 } from "#infrastructure/movie-editions/definition.ts";
 import { compensationPlayback } from "#infrastructure/native-compensation/playback.ts";
 import type { PlexCanonicalTarget } from "#shared/plex-binding/canonical.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 type BindingInput = {
   scope: PlexBindingScope;
@@ -179,8 +180,9 @@ export async function readCurrentPlexBinding(
     assetId: string;
     access: PlexAccess;
   },
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<PlexBindingRead> {
-  const results = await readCurrentPlexBindings(tx, [input]);
+  const results = await readCurrentPlexBindings(tx, [input], budget);
   const result = results[0];
   if (result === undefined)
     throw new Error("Plex current read omitted its scope");
@@ -316,6 +318,7 @@ export async function readCurrentPlexBindings(
     assetId: string;
     access: PlexAccess;
   }[],
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<PlexBindingRead[]> {
   if (inputs.length === 0) return [];
   if (
@@ -331,6 +334,7 @@ export async function readCurrentPlexBindings(
     const pointers = await readPlexPointers(
       tx,
       sorted.map((input) => input.scope),
+      budget,
     );
     const canonical = await readPlexCanonicalTargets(
       tx,

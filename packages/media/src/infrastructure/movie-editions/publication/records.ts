@@ -11,7 +11,7 @@ import {
   type MoviePublicationIntentRefV2,
   type MoviePublicationOutcomeV2,
 } from "#shared/movie-editions/publication-v2.ts";
-import { MovieFilePlanV2Schema } from "#shared/movie-editions/file-plan-v2.ts";
+import { MovieFilePlanSchema } from "#shared/movie-editions/management/contracts.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
@@ -70,7 +70,7 @@ function assertStoredMoviePlan(
   intent: MoviePublicationIntentV2,
   attempt: AcquisitionAttempt,
 ) {
-  const plan = MovieFilePlanV2Schema.parse(attempt.filePlan);
+  const plan = MovieFilePlanSchema.parse(attempt.filePlan);
   const entry = intent.entries[0];
   if (
     hash(plan) !== row.filePlanHash ||

@@ -13,7 +13,7 @@ export function nativeJson(value: unknown) {
 export function nativeAttempt(row: {
   id: string;
   releaseId: string;
-  sponsorRequestId: string;
+  sponsorRequestId: string | null;
   mediaIds: string[];
   generations: Prisma.JsonValue;
   state: string;

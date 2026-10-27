@@ -5,13 +5,17 @@ import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts
 import { movieAssessmentContext } from "#infrastructure/movie-editions/release-assessment.ts";
 import { evaluateRelease } from "#domain/quality.ts";
 import { assertMovieAttemptIdentityV4 } from "./attempt-identity.ts";
+import type { MovieManagementInvocation } from "#infrastructure/movie-editions/management/authority.ts";
 
 /** Complete scope and runtime locks belong to the caller. No version, birth or observation is renewed here. */
 export async function movieAttemptEffectAuthorityV4(
   tx: Prisma.TransactionClient,
   attempt: AcquisitionAttempt,
   scope: MovieEditionScope,
-  access: MovieChoiceAccess,
+  authority: {
+    access: MovieChoiceAccess;
+    invocation?: MovieManagementInvocation;
+  },
 ) {
   const target = await tx.mediaIntent.findUniqueOrThrow({
     where: {
@@ -50,7 +54,7 @@ export async function movieAttemptEffectAuthorityV4(
     tx,
     attempt,
     scope,
-    access,
+    authority,
   );
   const candidate = {
     id: authorized.release.id,

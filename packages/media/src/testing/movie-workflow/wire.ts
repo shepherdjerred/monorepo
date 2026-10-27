@@ -19,15 +19,30 @@ export function movieWorkflowWire(
     edition: MovieEditionKey;
     downloads: string;
     bytes: Uint8Array;
+    title?: string;
+    year?: number;
+    resolution?: 1080 | 2160;
+    sceneStyle?: boolean;
+    providerReleaseId?: string;
+    ratingKey?: string;
+    partId?: number;
+    playback?: { viewCount: number; lastViewedAt: number; viewOffset: number };
   },
 ) {
   const hash = randomBytes(20).toString("hex");
   const label = MOVIE_EDITION_REGISTRY[input.edition].plexLabel;
-  const title = `Workflow.Fixture.2020${label === "" ? "" : `.${label.replaceAll(" ", ".")}`}.1080p.WEB-DL.H264.ENG`;
+  const title = `${(input.title ?? "Workflow Fixture").replaceAll(" ", ".")}.${String(input.year ?? 2020)}${label === "" ? "" : `.${label.replaceAll(" ", ".")}`}.${String(input.resolution ?? 1080)}p.WEB-DL.H264.${input.sceneStyle === true ? "English-MEDIA" : "ENG"}`;
   const name = `${title}.mkv`;
   let torrent: Record<string, unknown> | null = null;
   let adds = 0;
-  const ratingKey = "750001";
+  const control = {
+    loseAddReply: false,
+    visible: true,
+    beforeProvider: () => Promise.resolve(),
+    beforeInfo: () => Promise.resolve(),
+    beforeAddReply: () => Promise.resolve(),
+  };
+  const ratingKey = input.ratingKey ?? "750001";
   let watched = true;
   const providers = {
     withProvider: <T>(
@@ -35,23 +50,22 @@ export function movieWorkflowWire(
       work: (client: KnabenProvider) => Promise<T>,
     ) =>
       work(
-        new KnabenProvider(() =>
-          Promise.resolve(
-            Response.json({
-              hits: [
-                {
-                  id: "synthetic-workflow-release",
-                  title,
-                  bytes: input.bytes.byteLength,
-                  hash,
-                  seeders: 2,
-                  details: "https://knaben.org/fixture",
-                  magnetUrl: null,
-                },
-              ],
-            }),
-          ),
-        ),
+        new KnabenProvider(async () => {
+          await control.beforeProvider();
+          return Response.json({
+            hits: [
+              {
+                id: input.providerReleaseId ?? "synthetic-workflow-release",
+                title,
+                bytes: input.bytes.byteLength,
+                hash,
+                seeders: 2,
+                details: "https://knaben.org/fixture",
+                magnetUrl: null,
+              },
+            ],
+          });
+        }),
       ),
   };
   const qbittorrent = new QbittorrentClient(
@@ -66,8 +80,12 @@ export function movieWorkflowWire(
         return new Response("Ok.", {
           headers: { "Set-Cookie": "SID=synthetic" },
         });
-      if (url.pathname.endsWith("/torrents/info"))
-        return Response.json(torrent === null ? [] : [torrent]);
+      if (url.pathname.endsWith("/torrents/info")) {
+        await control.beforeInfo();
+        return Response.json(
+          torrent === null || !control.visible ? [] : [torrent],
+        );
+      }
       if (url.pathname.endsWith("/torrents/files"))
         return Response.json([
           {
@@ -121,6 +139,8 @@ export function movieWorkflowWire(
         auto_tmm: false,
         force_start: false,
       };
+      await control.beforeAddReply();
+      if (control.loseAddReply) return new Response("", { status: 503 });
       return Response.json({
         added_torrent_ids: [hash],
         success_count: 1,
@@ -170,6 +190,7 @@ export function movieWorkflowWire(
           {
             ratingKey,
             type: "movie",
+            ...input.playback,
             ...(new Headers(init.headers).get("X-Plex-Token") ===
             "synthetic-requester"
               ? { viewCount: watched ? 1 : 0 }
@@ -181,7 +202,7 @@ export function movieWorkflowWire(
               {
                 Part: [
                   {
-                    id: 750_001,
+                    id: input.partId ?? 750_001,
                     file: asset.path,
                     size: Number(asset.sizeBytes),
                   },
@@ -212,5 +233,6 @@ export function movieWorkflowWire(
     setWatched: (value: boolean) => {
       watched = value;
     },
+    control,
   };
 }

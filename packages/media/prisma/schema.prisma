@@ -744,7 +744,7 @@ model AcquisitionAttempt {
   id               String                   @id @default(uuid())
   releaseId        String
   release          ReleaseCandidate         @relation(fields: [releaseId], references: [id])
-  sponsorRequestId String
+  sponsorRequestId String?
   mediaIds         String[]
   generations      Json
   state            String

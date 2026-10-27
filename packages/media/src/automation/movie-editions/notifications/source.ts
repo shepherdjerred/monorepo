@@ -1,6 +1,6 @@
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { MovieAttemptOperationV4 } from "#shared/movie-editions/automation-v4.ts";
-import { MovieFilePlanV2Schema } from "#shared/movie-editions/file-plan-v2.ts";
+import { MovieFilePlanSchema } from "#shared/movie-editions/management/contracts.ts";
 import { readMoviePlexReceiptV2 } from "#infrastructure/movie-editions/plex/receipt.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
@@ -64,7 +64,7 @@ export async function readMovieNoticeSource(
     where: { id: input.attemptId },
   });
   budget.consume(1);
-  const plan = MovieFilePlanV2Schema.parse(attempt.filePlan);
+  const plan = MovieFilePlanSchema.parse(attempt.filePlan);
   const group = receipt.expected.newGroups[0];
   if (group === undefined)
     throw new Error(

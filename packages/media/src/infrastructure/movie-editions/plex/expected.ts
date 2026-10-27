@@ -18,14 +18,19 @@ import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import type { MoviePublicationAssetV2 } from "#shared/movie-editions/publication-v2.ts";
 import { assertPublicationSnapshotSuccessor } from "#infrastructure/publication-proof/authority.ts";
+import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 
 /** Caller starts at the complete canonical/target/request scope; every later phase recaptures this exact snapshot. */
 export async function captureMoviePlexExpectedV2(
   tx: Prisma.TransactionClient,
   input: MovieAttemptOperationV4,
   access: MovieChoiceAccess,
-  budget: PublicationAuthorityReadBudget,
+  invocation: {
+    budget: PublicationAuthorityReadBudget;
+    execution?: PlexBindingExecution;
+  },
 ) {
+  const { budget, execution } = invocation;
   await lockMovieCommand(tx, input.scope);
   const attempt = await tx.acquisitionAttempt.findUniqueOrThrow({
     where: { id: input.attemptId },
@@ -47,7 +52,10 @@ export async function captureMoviePlexExpectedV2(
     tx,
     attempt,
     input.scope,
-    access,
+    {
+      access,
+      ...(execution === undefined ? {} : { invocation: { execution, budget } }),
+    },
   );
   if (authority === null) throw new PlexBindingProtection("scope_changed");
   const coordinator = await assertMovieAcquisitionOperationV4(

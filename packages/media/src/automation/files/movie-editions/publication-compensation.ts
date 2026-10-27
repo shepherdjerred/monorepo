@@ -6,7 +6,7 @@ import { commitMoviePublicationOutcomeV2 } from "#infrastructure/movie-editions/
 import { loadMoviePublicationV2 } from "#infrastructure/movie-editions/publication/records.ts";
 import { snapshotMoviePublicationAssetV2 } from "#infrastructure/movie-editions/publication/snapshot.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
-import type { MovieFilePlanV2 } from "#shared/movie-editions/file-plan-v2.ts";
+import type { MovieFilePlan } from "#shared/movie-editions/management/contracts.ts";
 import {
   MoviePublicationOutcomeV2Schema,
   type MoviePublicationIntentRefV2,
@@ -33,7 +33,7 @@ const hash = (value: unknown) => snapshotHash(nativeJson(value));
 /** Same-epoch cancellation uses the exact causal WAL inverse, independently of withdrawn request consent. */
 export async function compensateMoviePublicationV2(
   context: PublicationContext,
-  plan: MovieFilePlanV2,
+  plan: MovieFilePlan,
   budget: PublicationAuthorityReadBudget,
 ): Promise<boolean> {
   const existing = await loadMoviePublicationV2(

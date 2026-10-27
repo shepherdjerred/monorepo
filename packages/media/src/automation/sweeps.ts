@@ -9,6 +9,12 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import { queueMediaSubtitleTargets } from "./subtitles/queue.ts";
 import { defaultIntent } from "#shared/editions/scope.ts";
 import {
+  LIBRARY_MOVIE_DUE_CURSOR,
+  queueLibraryMovieDue,
+  sweepLibraryMovieDue,
+} from "./reconciliation/library-movies.ts";
+import { movieManagementContext } from "./movie-editions/management-context.ts";
+import {
   MOVIE_WATCH_CURSOR,
   sweepMovieWatch,
 } from "./reconciliation/movie-watch.ts";
@@ -19,6 +25,12 @@ export function createSweepActivities(
 ): Pick<MediaNetworkActivities, "sweepMediaWork"> {
   return {
     async sweepMediaWork(input) {
+      const invocation = movieManagementContext(context);
+      if (
+        input.kind === "due" &&
+        input.cursor?.startsWith(LIBRARY_MOVIE_DUE_CURSOR) === true
+      )
+        return sweepLibraryMovieDue(invocation, input.cursor);
       if (
         input.kind === "watch" &&
         input.cursor?.startsWith(MOVIE_WATCH_CURSOR) === true
@@ -30,7 +42,10 @@ export function createSweepActivities(
         return sweepFeeds(context, input.cursor, input.sweepId);
       return input.kind === "inventory"
         ? sweepInventory(context, input.sweepId)
-        : sweepIntentPage(context, { kind: input.kind, cursor: input.cursor });
+        : sweepIntentPage(invocation, {
+            kind: input.kind,
+            cursor: input.cursor,
+          });
     },
   };
 }
@@ -80,7 +95,7 @@ async function sweepIntentPage(
         ? (media.at(-1)?.id ?? null)
         : input.kind === "watch"
           ? `${MOVIE_WATCH_CURSOR}start`
-          : null,
+          : `${LIBRARY_MOVIE_DUE_CURSOR}start`,
   };
 }
 
@@ -95,6 +110,15 @@ async function queueDue(
     queueMediaSubtitleTargets(tx, item.id),
   );
   if (!intent.monitoring) return;
+  if (
+    item.kind === "movie" &&
+    (await queueLibraryMovieDue(context, {
+      rootMediaId: item.id,
+      mediaId: item.id,
+      edition: "default",
+    })) !== null
+  )
+    return;
   if (item.airDate !== null && item.airDate.getTime() > Date.now()) return;
   await serializable(context.db, async (tx) => {
     await queueOperation(tx, {

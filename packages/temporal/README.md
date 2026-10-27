@@ -734,6 +734,13 @@ caption lookups have one automatic attempt. Original SDK observations precede
 lazy runtime loading and stay attached to the producer's proof window. These
 versioned histories leave the ordinary Media contracts below unchanged.
 
+The same movie coordinator also accepts work queued by an actual adopted-library
+management policy. Network Activities resolve the immutable import approval and
+current owner/monitoring/profile authority; Workflow history carries scoped IDs
+and outcomes, without the grant, library paths or personal requester fabrication.
+Only the newly created transfer becomes Media-owned. The existing reconciliation
+sweep supplies this work without a separate Schedule or Workflow type.
+
 `applyLibraryHandoffV3Workflow` runs the separately
 approved initial-library label corrections: `media-files` proves each reviewed
 movie before `media-network` records its send intent and edits the existing Plex

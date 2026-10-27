@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { AcquisitionAttempt } from "#generated/prisma/client.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
+import { movieManagementContext } from "./management-context.ts";
 import { serializable, queueOperation } from "#automation/store.ts";
 import { networkMovieAccess } from "#automation/editions/access.ts";
 import { requireActiveRuntime } from "#automation/runtime.ts";
@@ -64,9 +65,10 @@ async function prepareMovieTorrent(
 }
 
 export async function validMovieAttemptV4(
-  context: MediaAutomationContext,
+  initial: MediaAutomationContext,
   raw: MovieAttemptOperationV4,
 ) {
+  const context = movieManagementContext(initial);
   const input = MovieAttemptOperationV4Schema.parse(raw);
   const access = requireMovieChoiceAccess(
     (await networkMovieAccess(context, [input.scope.mediaId])) ?? {},
@@ -90,7 +92,7 @@ export async function validMovieAttemptV4(
       tx,
       current,
       input.scope,
-      access,
+      { access, invocation: context.movieManagement },
     );
     authorized?.freshness.assertActive();
     return authorized !== null;
@@ -134,7 +136,10 @@ export async function submitMovieTorrentV4(
 ): ReturnType<MediaNetworkActivities["submitMediaTorrent"]> {
   const execution = initial.plexBindingExecution();
   execution.assertActive();
-  const context = { ...initial, plexBindingExecution: () => execution };
+  const context = movieManagementContext({
+    ...initial,
+    plexBindingExecution: () => execution,
+  });
   const input = MovieAttemptOperationV4Schema.parse(raw);
   const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: input.attemptId },
@@ -294,12 +299,12 @@ async function projectRecordedMovieSubmissionV4(
       return;
     let authorized: Awaited<ReturnType<typeof movieAttemptEffectAuthorityV4>>;
     try {
-      authorized = await movieAttemptEffectAuthorityV4(
-        tx,
-        current,
-        scope,
+      authorized = await movieAttemptEffectAuthorityV4(tx, current, scope, {
         access,
-      );
+        ...(context.movieManagement === undefined
+          ? {}
+          : { invocation: context.movieManagement }),
+      });
     } catch (error) {
       if (!(error instanceof MediaError)) throw error;
       authorized = null;

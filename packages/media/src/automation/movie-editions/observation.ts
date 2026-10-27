@@ -14,11 +14,13 @@ import {
 } from "#shared/movie-editions/automation-v4.ts";
 import type { MediaNetworkActivities } from "#shared/automation.ts";
 import { validMovieAttemptV4 } from "./submission.ts";
+import { movieManagementContext } from "./management-context.ts";
 
 export async function observeMovieAcquisitionV4(
-  context: MediaAutomationContext,
+  initial: MediaAutomationContext,
   raw: MovieAttemptOperationV4,
 ): ReturnType<MediaNetworkActivities["observeMediaAcquisition"]> {
+  const context = movieManagementContext(initial);
   const execution = context.plexBindingExecution();
   execution.assertActive();
   const input = MovieAttemptOperationV4Schema.parse(raw);
@@ -83,7 +85,7 @@ export async function observeMovieAcquisitionV4(
       tx,
       current,
       input.scope,
-      access,
+      { access, invocation: context.movieManagement },
     );
     if (authority === null) return false;
     execution.assertActive();

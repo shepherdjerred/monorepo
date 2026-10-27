@@ -4,7 +4,7 @@ import type {
   AcquisitionIdentitySnapshot,
   FileIdentityEvidence,
 } from "#shared/acquisition/identity.ts";
-import type { MovieAcquisitionIdentityV2 } from "#shared/movie-editions/acquisition-v2.ts";
+import type { MovieAcquisitionIdentity } from "#shared/movie-editions/management/contracts.ts";
 import { parseEpisodeCoordinates } from "#domain/acquisition-identity/parser.ts";
 import { resolveEpisodeCoordinates } from "#domain/acquisition-identity/coordinates.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
@@ -19,7 +19,7 @@ export const IdentityTorrentFileSchema = z.object({
 export type IdentityTorrentFile = z.infer<typeof IdentityTorrentFileSchema>;
 
 export function fileIdentityEvidence(
-  identity: AcquisitionIdentitySnapshot | MovieAcquisitionIdentityV2,
+  identity: AcquisitionIdentitySnapshot | MovieAcquisitionIdentity,
   file: IdentityTorrentFile,
 ): FileIdentityEvidence {
   if (file.index === undefined)
@@ -54,7 +54,7 @@ export function fileIdentityEvidence(
 }
 
 export function assertFileIdentity(
-  identity: AcquisitionIdentitySnapshot | MovieAcquisitionIdentityV2,
+  identity: AcquisitionIdentitySnapshot | MovieAcquisitionIdentity,
   entry: FilePlanEntry,
   files: IdentityTorrentFile[],
 ): void {

@@ -14,13 +14,18 @@ import { MediaError } from "#application/errors.ts";
 import { MovieAcquisitionIdentityV2Schema } from "#shared/movie-editions/acquisition-v2.ts";
 import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
 import type { MovieReleaseAssessmentRef } from "#shared/movie-editions/release-assessment.ts";
+import {
+  MovieAcquisitionIdentityV3Schema,
+  type LibraryMovieManagementAuthority,
+} from "#shared/movie-editions/management/contracts.ts";
 
 /** Caller owns canonical, target, request and runtime locks; identity locks follow them. */
 export async function movieAcquisitionIdentityV4(
   tx: Prisma.TransactionClient,
   input: {
     operationId: string;
-    sponsorRequestId: string;
+    sponsorRequestId: string | null;
+    management?: LibraryMovieManagementAuthority;
     releaseId: string;
     epoch: number;
     scope: MovieEditionScope;
@@ -63,14 +68,17 @@ export async function movieAcquisitionIdentityV4(
       "Movie source cut assessment changed",
       409,
     );
-  const sponsorAuthority = await captureSponsorAuthority(tx, {
-    operationId: input.operationId,
-    sponsorRequestId: input.sponsorRequestId,
-    mediaIds: [input.scope.mediaId],
-    serverMachineId: input.access.serverMachineId,
-    movieAccess: input.access,
-    movieScope: input.scope,
-  });
+  const sponsorAuthority =
+    input.sponsorRequestId === null
+      ? null
+      : await captureSponsorAuthority(tx, {
+          operationId: input.operationId,
+          sponsorRequestId: input.sponsorRequestId,
+          mediaIds: [input.scope.mediaId],
+          serverMachineId: input.access.serverMachineId,
+          movieAccess: input.access,
+          movieScope: input.scope,
+        });
   const proof = sourceIdentityProof(assessed.current.media, assessed.release);
   const blockers = await coordinateBlockers(
     tx,
@@ -102,8 +110,9 @@ export async function movieAcquisitionIdentityV4(
       "Movie release identity needs owner confirmation",
       409,
     );
-  return MovieAcquisitionIdentityV2Schema.parse({
-    schemaVersion: 2,
+  const schemaVersion = input.sponsorRequestId === null ? 3 : 2;
+  const common = {
+    schemaVersion,
     scope: input.scope,
     assessment: assessed.ref,
     source: {
@@ -112,19 +121,27 @@ export async function movieAcquisitionIdentityV4(
     },
     canonical: assessed.value.canonical,
     coverage: [input.scope.mediaId],
-    sponsorRequestId: input.sponsorRequestId,
-    sponsorAuthority,
     birthEpoch: input.epoch,
     proof: {
       kind: "automatic",
       ...proof,
       evidenceHash: identityHash({
-        schemaVersion: 2,
+        schemaVersion,
         scope: input.scope,
         assessment: assessed.ref,
         canonical: assessed.value.canonical,
         digest: assessed.value.sourceHash,
       }),
     },
-  });
+  };
+  return input.sponsorRequestId === null
+    ? MovieAcquisitionIdentityV3Schema.parse({
+        ...common,
+        management: input.management,
+      })
+    : MovieAcquisitionIdentityV2Schema.parse({
+        ...common,
+        sponsorRequestId: input.sponsorRequestId,
+        sponsorAuthority,
+      });
 }

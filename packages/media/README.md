@@ -627,6 +627,33 @@ original records before current flags or intent. This ownership proof creates
 no acquisition attempt, requester consent or authority over existing torrents;
 new acquisition sponsorship remains a separate check.
 
+For an adopted movie, the actual applied library approval can authorize monitored
+quality upgrades independently of personal requests. The coordinator reads the
+original receipt and plan, current owner role, monitored target, profile version,
+recovery epoch and exact Plex binding. Discovery and every later effect retain
+the invocation's original SDK deadline and shared provenance allowance. A new
+management acquisition uses identity version 3 and file-plan version 3 with a
+null request sponsor; its immutable birth identifies the real import approval.
+Personal acquisitions retain their existing formats and consent checks. Neither
+path creates historical acquisitions or authority over existing torrents.
+
+Imported quality evidence retains its measured bytes, audio, quality and unknown
+revision. Current catalog duration and original language are read-only inputs
+to the current comparison. A higher quality below cutoff can improve an imported
+file with unknown revision; same-quality revision upgrades require known evidence.
+Movie scene parsing removes assessed cut spans only for quality recognition and
+keeps those tokens in the simplified title used by custom-format rules. The
+original release, filename and cut evidence remain unchanged.
+
+The recurring reconciliation sweep queues adopted movie scopes through the
+registered movie coordinator. Revoked monitoring, permission, profile or target
+generation stops an unsubmitted acquisition and releases its reservation. An
+uncertain add retains the reservation until observation records its actual
+outcome and independent seeding responsibility. A prepared publication retains
+its reservation for recovery. New Plex completion receipts use version 3 for
+management acquisitions; original receipts and physical publication records
+retain their literal formats.
+
 Each batch covers at most 25 physical files and 100 canonical media items.
 `activation: "activate"` changes the reviewed observe runtime to active at its
 existing recovery epoch. Later `activation: "extend"` batches require current

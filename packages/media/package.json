@@ -8,6 +8,7 @@
     "./testing/library-binding": "./src/testing/library-binding.ts",
     "./testing/provider-feed": "./src/testing/provider-feed.ts",
     "./testing/movie-workflow": "./src/testing/movie-workflow/fixture.ts",
+    "./testing/managed-movie-workflow": "./src/testing/movie-workflow/managed-role-fixture.ts",
     "./contract": "./src/shared/contract.ts",
     "./capacity": "./src/shared/capacity/contract.ts",
     "./plex-events": "./src/shared/plex-events/contract.ts",
