@@ -7,7 +7,7 @@ import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { assertNoPublicationCompensationFence } from "#infrastructure/native-compensation/fence.ts";
 import { assertAttemptIdentity } from "#infrastructure/acquisition-identity/authority.ts";
 import { GenerationsSchema } from "#shared/file-plan.ts";
-import { protectLibraryManagement } from "#infrastructure/acquisition-identity/library-management.ts";
+import { protectLibraryManagement } from "#infrastructure/acquisition-identity/library-policy.ts";
 import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
 
 type Context = Pick<

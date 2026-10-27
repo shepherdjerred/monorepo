@@ -3,30 +3,23 @@ import type {
   MediaItem,
   Prisma,
 } from "#generated/prisma/client.ts";
-import { MediaError } from "#application/errors.ts";
 import {
   readLibraryHandoffReceipt,
   type LibraryHandoffReceipt,
 } from "#infrastructure/handoff/library-receipt.ts";
-import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import {
   LibrarySeriesManagementSchema,
   type LibrarySeriesManagement,
 } from "#shared/acquisition/library-management.ts";
 import { identityHash } from "./snapshot.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
+import type { PlexAccess } from "#shared/plex-binding/contract.ts";
 import {
-  PlexAssociationSchema,
-  type PlexAccess,
-  type PlexBindingFreshness,
-} from "#shared/plex-binding/contract.ts";
-import { parsePlexRecord } from "#infrastructure/plex-binding/records.ts";
-
-export type LibraryManagementInvocation = {
-  freshness: PlexBindingFreshness;
-  budget: PublicationAuthorityReadBudget;
-  access: PlexAccess;
-};
+  protectLibraryManagement,
+  type LibraryManagementInvocation,
+} from "./library-policy.ts";
+import { librarySourceAssociation } from "./library-association.ts";
+import { readLibrarySeriesPolicy } from "./series-policy.ts";
 type Input = {
   mediaIds: readonly string[];
   epoch: number;
@@ -34,13 +27,6 @@ type Input = {
   expected?: LibrarySeriesManagement;
 };
 const hash = (value: unknown) => identityHash(nativeJson(value));
-export function protectLibraryManagement(): never {
-  throw new MediaError(
-    "library_management_unconfirmed",
-    "Existing-library monitoring needs its current owner-approved policy",
-    409,
-  );
-}
 
 /** Caller holds canonical/target/runtime locks for mutation. Historical source rows consume the caller's one allowance. */
 export async function readLibrarySeriesManagement(
@@ -49,12 +35,20 @@ export async function readLibrarySeriesManagement(
   invocation: LibraryManagementInvocation,
 ) {
   invocation.freshness.assertActive();
+  if (hash(input.access) !== hash(invocation.access))
+    protectLibraryManagement();
   const leaves = await tx.mediaItem.findMany({
     where: { id: { in: [...input.mediaIds] } },
     include: { parent: true },
     orderBy: { id: "asc" },
   });
   const seriesId = managementSeries(leaves, input.mediaIds);
+  if (input.expected?.schemaVersion === 2)
+    return readSeriesManagedCoverage(
+      tx,
+      { input, seriesId, leaves },
+      invocation,
+    );
   const origins =
     input.expected === undefined
       ? await tx.mediaHandoffReceipt.findMany({
@@ -75,7 +69,12 @@ export async function readLibrarySeriesManagement(
       : [{ id: input.expected.receiptId, runtimeVersion: -1 }];
   if (input.expected === undefined) invocation.budget.consume(origins.length);
   const origin = origins[0];
-  if (origin === undefined) return null;
+  if (origin === undefined)
+    return readSeriesManagedCoverage(
+      tx,
+      { input, seriesId, leaves },
+      invocation,
+    );
   if (origins[1]?.runtimeVersion === origin.runtimeVersion)
     protectLibraryManagement();
   const approval = await readLibraryHandoffReceipt(
@@ -103,9 +102,13 @@ export async function readLibrarySeriesManagement(
   const profile = await tx.qualityProfile.findUniqueOrThrow({
     where: { id: policy.profileId },
   });
-  const association = await sourceAssociation(
+  const association = await librarySourceAssociation(
     tx,
-    { approval, root, input },
+    {
+      approval,
+      root,
+      ...(input.expected === undefined ? {} : { expected: input.expected }),
+    },
     invocation,
   );
   const proof = LibrarySeriesManagementSchema.parse({
@@ -131,6 +134,64 @@ export async function readLibrarySeriesManagement(
         mediaId: target.mediaId,
         generation: target.generation,
       })),
+  });
+  if (input.expected !== undefined && hash(proof) !== hash(input.expected))
+    protectLibraryManagement();
+  invocation.freshness.assertActive();
+  return { proof, freshness: invocation.freshness };
+}
+
+async function readSeriesManagedCoverage(
+  tx: Prisma.TransactionClient,
+  state: {
+    input: Input;
+    seriesId: string;
+    leaves: { seasonNumber: number | null }[];
+  },
+  invocation: LibraryManagementInvocation,
+) {
+  const { input, seriesId, leaves } = state;
+  if (input.expected?.schemaVersion === 1)
+    throw new Error("Episode approval cannot change its policy family");
+  const policy = await readLibrarySeriesPolicy(
+    tx,
+    {
+      seriesId,
+      epoch: input.epoch,
+      ...(input.expected === undefined ? {} : { expected: input.expected }),
+    },
+    invocation,
+  );
+  if (policy === null) {
+    if (input.expected !== undefined) protectLibraryManagement();
+    return null;
+  }
+  if (!policy.includeSpecials && leaves.some((leaf) => leaf.seasonNumber === 0))
+    protectLibraryManagement();
+  const targets = await tx.mediaIntent.findMany({
+    where: { edition: "default", mediaId: { in: [...input.mediaIds] } },
+    orderBy: { mediaId: "asc" },
+  });
+  if (
+    targets.length !== input.mediaIds.length ||
+    targets.some(
+      (target) =>
+        target.editionRootId !== seriesId ||
+        target.automationEpoch !== input.epoch ||
+        !target.desiredPresence ||
+        !target.monitoring ||
+        !target.libraryMonitoring ||
+        target.intentionallyRemovedAt !== null ||
+        target.profileId !== policy.profileId,
+    )
+  )
+    protectLibraryManagement();
+  const proof = LibrarySeriesManagementSchema.parse({
+    ...policy,
+    targets: targets.map((target) => ({
+      mediaId: target.mediaId,
+      generation: target.generation,
+    })),
   });
   if (input.expected !== undefined && hash(proof) !== hash(input.expected))
     protectLibraryManagement();
@@ -218,53 +279,4 @@ function managementPolicy(
   )
     protectLibraryManagement();
   return { root, selected, profileId: policy.profileId };
-}
-
-async function sourceAssociation(
-  tx: Prisma.TransactionClient,
-  state: { approval: LibraryHandoffReceipt; root: MediaItem; input: Input },
-  invocation: LibraryManagementInvocation,
-) {
-  const { approval, root, input } = state;
-  const files = approval.selection.scope.files.filter(
-    (file) => file.libraryKind === "tv",
-  );
-  const where =
-    input.expected === undefined
-      ? {
-          assetId: { in: files.map((file) => file.assetId) },
-          serverMachineId: input.access.serverMachineId,
-          edition: "default",
-          evidence: { path: ["editionRootId"], equals: root.id },
-        }
-      : { id: input.expected.association.evidenceId };
-  const rows = await tx.plexAssociationEvidence.findMany({
-    where,
-    orderBy: { id: "asc" },
-    take: 1,
-  });
-  invocation.budget.consume(rows.length);
-  const row = rows[0];
-  if (row === undefined) protectLibraryManagement();
-  const evidence = parsePlexRecord(
-    PlexAssociationSchema,
-    row.evidence,
-    row.associationHash,
-  );
-  if (
-    evidence.kind !== "episode" ||
-    evidence.editionRootId !== root.id ||
-    evidence.scope.edition !== "default" ||
-    evidence.access.serverMachineId !== input.access.serverMachineId ||
-    evidence.access.sectionId !== input.access.sectionId ||
-    !files.some(
-      (file) =>
-        file.assetId === row.assetId &&
-        file.mediaIds.includes(evidence.scope.mediaId),
-    ) ||
-    root.tmdbId === null ||
-    !evidence.hierarchy.show.guids.includes(`tmdb://${String(root.tmdbId)}`)
-  )
-    protectLibraryManagement();
-  return { evidenceId: row.id, associationHash: row.associationHash };
 }

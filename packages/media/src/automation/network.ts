@@ -18,24 +18,13 @@ import { CredentialCipher } from "#application/security.ts";
 import { mediaBehaviorConfig } from "#infrastructure/config.ts";
 import { PlexClient } from "#integrations/plex.ts";
 import { QbittorrentClient } from "#integrations/qbittorrent.ts";
-import type { MediaNetworkActivities } from "#shared/automation.ts";
-import type {
-  PlexBindingActivities,
-  PlexBindingExecution,
-} from "#shared/plex-binding/activities.ts";
+import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import { PlexAccessSchema } from "#shared/plex-binding/contract.ts";
 import { DatabaseProviderRegistry } from "./providers.ts";
-import { createAcquisitionActivities } from "./acquisition.ts";
-import { createPublicationActivities } from "./publication.ts";
-import { createSeedingActivities } from "./seeding.ts";
-import { createSweepActivities } from "./sweeps.ts";
-import { matchProviderFeedSourceV1 } from "./feeds/matching.ts";
 import { createMovieNetworkFacetV4 } from "./movie-editions/activities.ts";
 import { createMovieFileFacetV4 } from "./files/movie-editions/activities.ts";
-import { createCoverageActivities } from "./reconciliation/coverage.ts";
-import { createCatalogActivities } from "./reconciliation/catalog.ts";
+import { createCatalogCoverageFacet } from "./reconciliation/library-series.ts";
 import { TmdbClient } from "#integrations/tmdb.ts";
-import { createOutboxActivities } from "./store.ts";
 import type { MediaAutomationContext } from "./context.ts";
 import { createMediaFileActivities } from "./files/activities.ts";
 import { createRetentionActivities } from "./retention.ts";
@@ -44,8 +33,7 @@ import { createNotificationTransport } from "#integrations/notification-transpor
 import { createNotificationReceiptReader } from "#integrations/notifications/receipts.ts";
 import { createMediaWorkflowStarter } from "./temporal-client.ts";
 import { createSubtitleActivities } from "./subtitles.ts";
-import { cleanupSubtitleBrowser } from "./subtitle-browser-lifecycle.ts";
-import { IntegrationError } from "#integrations/http.ts";
+import { createMediaNetworkActivities } from "./network/activities.ts";
 import {
   requirePlexExclusionProof,
   refreshPlexExclusionProofs,
@@ -83,54 +71,6 @@ import {
   createAcquisitionNetworkFacet,
   createAcquisitionFileFacet,
 } from "./acquisition-management/facets.ts";
-
-type LifecycleActivities = Pick<
-  MediaNetworkActivities,
-  "evaluateMediaRetention" | "deliverMediaNotification" | "findMediaSubtitles"
->;
-export function createMediaNetworkActivities(
-  context: MediaAutomationContext,
-  lifecycle: LifecycleActivities,
-): Omit<
-  MediaNetworkActivities,
-  keyof PlexBindingActivities | "observeMediaUpgradeCleanup"
-> {
-  const outbox = createOutboxActivities(context.db, context.startWorkflow);
-  return {
-    ...createAcquisitionActivities(context),
-    ...createPublicationActivities(context),
-    ...createSeedingActivities(context),
-    ...createSweepActivities(context),
-    matchProviderFeedSource: (input) =>
-      matchProviderFeedSourceV1(context, input),
-    ...createCoverageActivities(context),
-    ...createCatalogActivities(context),
-    ...outbox,
-    async finishMediaOperation(input) {
-      try {
-        await cleanupSubtitleBrowser(
-          context,
-          input.operationId,
-          input.reason ?? input.status,
-        );
-      } catch (error) {
-        if (
-          !(error instanceof IntegrationError) ||
-          error.kind !== "outcome-unknown"
-        )
-          throw error;
-        await outbox.finishMediaOperation({
-          ...input,
-          status: "reconciling",
-          reason: "subtitle_browser_cleanup_requires_review",
-        });
-        return;
-      }
-      await outbox.finishMediaOperation(input);
-    },
-    ...lifecycle,
-  };
-}
 
 export async function createMediaNetworkContext(
   environment: Record<string, string | undefined>,
@@ -425,6 +365,7 @@ export async function createMediaNetworkRuntime(
   return {
     libraryHandoff: createLibraryHandoffNetworkFacet(nativeContext),
     acquisition: createAcquisitionNetworkFacet(context),
+    catalogCoverage: createCatalogCoverageFacet(context),
     movie: createMovieNetworkFacetV4(context),
     nativePlex: createNativePlexFacet(nativeContext, observeNative),
     ...createPlexRuntimeFacets(context, async () => {

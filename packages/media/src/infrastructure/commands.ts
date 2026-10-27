@@ -246,6 +246,7 @@ export class PrismaMediaCommands extends MovieEditionCommands {
           data: {
             desiredPresence: false,
             monitoring: false,
+            libraryMonitoring: false,
             intentionallyRemovedAt: new Date(),
             generation: { increment: 1 },
             version: { increment: 1 },

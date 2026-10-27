@@ -7,6 +7,7 @@ import {
   ApplyLibraryHandoffV3Schema,
   FinishedLibraryHandoffV3Schema,
 } from "#shared/handoff/library-v3.ts";
+import type { LibrarySeriesMonitoringV1Schema } from "#shared/handoff/library-v3.ts";
 import {
   MovieEditionKeySchema,
   MOVIE_EDITION_REGISTRY,
@@ -161,6 +162,7 @@ function PlanReview({
         subtitle policies · {scope.request.profiles.length} quality profile
         bindings
       </p>
+      <SeriesMonitoringReview policies={scope.request.seriesMonitoring ?? []} />
       {scope.protected.length > 0 && (
         <div className="notice">
           <p>Protected records</p>
@@ -186,8 +188,9 @@ function PlanReview({
                 setAcknowledged(event.target.checked);
               }}
             />
-            I approve these file classifications and Plex label changes, and
-            understand recovery holds remain in effect.
+            I approve these file classifications, Plex label changes and
+            selected series monitoring, and understand recovery holds remain in
+            effect.
           </label>
           <button
             className="button primary"
@@ -217,6 +220,34 @@ function PlanReview({
         <p>Keep this page URL to return to this plan.</p>
       </details>
       {apply.error !== null && <ErrorNotice error={apply.error} />}
+    </section>
+  );
+}
+
+function SeriesMonitoringReview({
+  policies,
+}: {
+  policies: z.infer<typeof LibrarySeriesMonitoringV1Schema>[];
+}) {
+  if (policies.length === 0) return null;
+  return (
+    <section>
+      <h3>Series monitoring</h3>
+      <p>
+        Approve monitoring for later episodes with the captured quality profile.
+        Existing episode overrides remain in effect.
+      </p>
+      <ul>
+        {policies.map((policy) => (
+          <li key={policy.seriesId}>
+            <Link to={`/media/${policy.seriesId}`}>{policy.title}</Link> ·
+            future episodes ·{" "}
+            {policy.includeSpecials
+              ? "including specials"
+              : "excluding specials"}
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

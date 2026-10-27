@@ -2,6 +2,7 @@ import { mkdtemp, chown, rm, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { createDatabase } from "#infrastructure/database.ts";
+import { historicalIntentFixtureDatabase } from "./historical-intent-client.ts";
 
 const packageRoot = `${import.meta.dir}/../..`;
 function run(
@@ -114,13 +115,18 @@ export async function startMediaTestPostgres(
     else
       for (const migration of migrations.filter((name) => name <= ceiling))
         applyMigration(migration);
-    const database = createDatabase(url);
+    const base = createDatabase(url);
+    const database =
+      ceiling === undefined
+        ? base
+        : await historicalIntentFixtureDatabase(base, url);
     return {
       database,
       url,
       applyMigration,
       async close() {
         await database.$disconnect();
+        if (database !== base) await base.$disconnect();
         await stop();
       },
     };

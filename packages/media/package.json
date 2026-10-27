@@ -10,6 +10,7 @@
     "./testing/movie-workflow": "./src/testing/movie-workflow/fixture.ts",
     "./testing/managed-movie-workflow": "./src/testing/movie-workflow/managed-role-fixture.ts",
     "./testing/managed-series-workflow": "./src/testing/series-workflow/role-fixture.ts",
+    "./testing/future-series-workflow": "./src/testing/series-workflow/future-role-fixture.ts",
     "./contract": "./src/shared/contract.ts",
     "./capacity": "./src/shared/capacity/contract.ts",
     "./plex-events": "./src/shared/plex-events/contract.ts",
@@ -33,7 +34,7 @@
     "#*": "./src/*"
   },
   "scripts": {
-    "generate": "prisma generate",
+    "generate": "bun scripts/generate.ts",
     "build": "vite build",
     "start": "bun src/server/index.ts",
     "migrate:deploy": "prisma migrate deploy",

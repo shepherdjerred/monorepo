@@ -6,6 +6,7 @@ import { verifyLibraryPlexBinding } from "#automation/plex-binding/library.ts";
 import { LibraryPlexBindingInputV1Schema } from "#shared/plex-binding/activities.ts";
 import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { createSweepActivities } from "#automation/sweeps.ts";
+import { LIBRARY_MOVIE_DUE_CURSOR } from "#automation/reconciliation/library-movies.ts";
 import { createAcquisitionActivities } from "#automation/acquisition.ts";
 import { createMediaFileActivities } from "#automation/files/activities.ts";
 import { createPublicationActivities } from "#automation/publication.ts";
@@ -16,12 +17,19 @@ import type { Database } from "#infrastructure/database.ts";
 export async function createManagedSeriesFixture(
   db: Database,
   directoryCreated: (directory: string) => void,
-  bytes: { original: Uint8Array; upgrade: Uint8Array },
+  bytes: {
+    original: Uint8Array;
+    upgrade: Uint8Array;
+    monitorSeries?: { includeSpecials: boolean };
+  },
 ) {
   const f = await libraryTvBindingFixture(db, directoryCreated, {
     bytes: bytes.original,
     qualitySourceId: "5",
     title: `Synthetic Anime ${crypto.randomUUID()}`,
+    ...(bytes.monitorSeries === undefined
+      ? {}
+      : { monitorSeries: bytes.monitorSeries }),
   });
   await db.mediaItem.update({
     where: { id: f.series.id },
@@ -88,11 +96,15 @@ export async function createManagedSeriesFixture(
     create: { id: "knaben", enabled: true, seedingPolicy: { kind: "public" } },
     update: { enabled: true },
   });
-  await createSweepActivities(context).sweepMediaWork({
-    kind: "due",
-    cursor: null,
-    sweepId: crypto.randomUUID(),
-  });
+  let cursor: string | null = null;
+  do {
+    const page = await createSweepActivities(context).sweepMediaWork({
+      kind: "due",
+      cursor,
+      sweepId: crypto.randomUUID(),
+    });
+    cursor = page.nextCursor;
+  } while (cursor !== null && !cursor.startsWith(LIBRARY_MOVIE_DUE_CURSOR));
   const operation = await db.operation.findFirstOrThrow({
     where: { targetId: z.uuid().parse(ids[0]), kind: "reconcile_media" },
     orderBy: { createdAt: "desc" },
@@ -109,6 +121,7 @@ export async function createManagedSeriesFixture(
     ...f,
     db,
     ids,
+    plexShow: f.wire.show,
     wire,
     context,
     files,

@@ -7,10 +7,8 @@ import {
   DefaultAcquisitionIdentitySchema,
   type DefaultAcquisitionIdentity,
 } from "#shared/acquisition/library-management.ts";
-import {
-  readLibrarySeriesManagement,
-  protectLibraryManagement,
-} from "./library-management.ts";
+import { readLibrarySeriesManagement } from "./library-management.ts";
+import { protectLibraryManagement } from "./library-policy.ts";
 import {
   buildCanonicalIdentity,
   canonicalSemantics,

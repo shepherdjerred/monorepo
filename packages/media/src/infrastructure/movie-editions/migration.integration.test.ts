@@ -37,6 +37,21 @@ test("populated021 request/attempt projections remain literal; historical NULL b
     await db.$transaction((tx) =>
       lockDefaultScopes(tx, [defaultScope(media.id)], { createMissing: true }),
     );
+    expect(
+      await db.mediaIntent.findUniqueOrThrow({
+        where: { mediaId_edition: defaultScope(media.id) },
+      }),
+    ).toMatchObject({ libraryMonitoring: false });
+    expect(
+      await db.$queryRaw`SELECT to_jsonb(t) ? 'libraryMonitoring' AS present
+        FROM "MediaIntent" t WHERE "mediaId"=${media.id}`,
+    ).toEqual([{ present: false }]);
+    await expect(
+      db.mediaIntent.update({
+        where: { mediaId_edition: defaultScope(media.id) },
+        data: { libraryMonitoring: true },
+      }),
+    ).rejects.toThrow("Unknown argument");
     const requestId = crypto.randomUUID();
     await db.$executeRaw`INSERT INTO "MediaRequest"
       ("id", "mediaId", "userId", "version", "subtitleLanguages", "createdAt", "updatedAt")

@@ -84,6 +84,7 @@ describe("default scope populated migration", () => {
         snapshotHash(historicalHousehold),
       );
       const target = await db.mediaIntent.findUniqueOrThrow({
+        omit: { libraryMonitoring: true },
         where: { mediaId_edition: { mediaId: movie, edition: "default" } },
       });
       expect(target).toMatchObject({
@@ -104,6 +105,7 @@ describe("default scope populated migration", () => {
         orphanSeason,
       ]) {
         const inert = await db.mediaIntent.findUniqueOrThrow({
+          omit: { libraryMonitoring: true },
           where: { mediaId_edition: { mediaId: id, edition: "default" } },
         });
         expect(inert).toMatchObject({
@@ -138,6 +140,7 @@ describe("default scope populated migration", () => {
       for (const id of sparse.ids) {
         expect(
           await db.mediaIntent.findUniqueOrThrow({
+            omit: { libraryMonitoring: true },
             where: { mediaId_edition: { mediaId: id, edition: "default" } },
           }),
         ).toMatchObject({

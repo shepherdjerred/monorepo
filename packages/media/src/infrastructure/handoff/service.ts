@@ -1,4 +1,4 @@
-import type { z } from "zod";
+import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
 import type { MediaActor } from "#application/auth.ts";
 import { MediaError, requireOwner } from "#application/errors.ts";
@@ -110,7 +110,7 @@ export class PrismaMediaHandoff extends MediaCommandBase {
             recoveryEpoch: input.recoveryEpoch,
             runtimeVersion: input.runtimeVersion,
             bundleReviewVersion: input.bundleReviewVersion,
-            requestHash: snapshotHash(input),
+            requestHash: snapshotHash(z.json().parse(input)),
             scope,
           },
         });

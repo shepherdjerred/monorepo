@@ -16,6 +16,7 @@ export async function libraryTvBindingFixture(
     bytes?: Uint8Array;
     qualitySourceId?: string;
     title?: string;
+    monitorSeries?: { includeSpecials: boolean };
   } = {},
 ) {
   const series = await db.mediaItem.create({
@@ -133,6 +134,14 @@ export async function libraryTvBindingFixture(
     kind: "tv",
     edition: "default",
     media,
+    ...(options.monitorSeries === undefined
+      ? {}
+      : {
+          monitorSeries: {
+            seriesId: series.id,
+            includeSpecials: options.monitorSeries.includeSpecials,
+          },
+        }),
     ...(options.qualitySourceId === undefined
       ? {}
       : { qualitySourceId: options.qualitySourceId }),

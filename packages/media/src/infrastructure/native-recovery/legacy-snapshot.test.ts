@@ -40,6 +40,7 @@ test("new target availability and root never enter historical intent evidence", 
     edition: "default",
     editionRootId: "root",
     availability: "available",
+    libraryMonitoring: true,
   };
   expect(JSON.stringify(historicalDefaultIntent(migrated))).toBe(
     JSON.stringify(original),

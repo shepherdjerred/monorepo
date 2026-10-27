@@ -25,6 +25,7 @@ export function LibraryBatch({
     cuts: {},
     profiles: {},
     chinese: {},
+    seriesMonitoring: {},
   });
   const [, setSearchParams] = useSearchParams();
   const profiles = useQuery({
@@ -164,6 +165,80 @@ export function LibraryBatch({
               });
             }}
           />
+          {batch.media
+            .filter(
+              (entry) =>
+                entry.sourceRecord.kind === "media" &&
+                entry.sourceRecord.mediaKind === "series",
+            )
+            .map((entry) => {
+              const policy = choices.seriesMonitoring?.[entry.provenanceKey];
+              const eligible =
+                entry.confidence === "exact" &&
+                entry.sourceRecord.kind === "media" &&
+                entry.mediaIds.length === 1;
+              return (
+                <fieldset key={entry.provenanceKey}>
+                  <legend>
+                    {entry.mappedMedia
+                      .map((item) => item.title ?? item.mediaId)
+                      .join(", ")}
+                  </legend>
+                  <label className="checkbox-row">
+                    <input
+                      type="checkbox"
+                      disabled={!eligible}
+                      checked={policy?.enabled === true}
+                      onChange={(event) => {
+                        setChoices({
+                          ...choices,
+                          seriesMonitoring: {
+                            ...choices.seriesMonitoring,
+                            [entry.provenanceKey]: {
+                              enabled: event.target.checked,
+                              includeSpecials: policy?.includeSpecials === true,
+                            },
+                          },
+                        });
+                      }}
+                    />
+                    Monitor this series, including future episodes
+                  </label>
+                  <p>
+                    Media will use the selected quality profile for newly
+                    discovered episodes and preserve existing episode overrides.
+                    This creates household monitoring, not personal requests.
+                  </p>
+                  {policy?.enabled === true && (
+                    <label className="checkbox-row">
+                      <input
+                        type="checkbox"
+                        checked={policy.includeSpecials}
+                        onChange={(event) => {
+                          setChoices({
+                            ...choices,
+                            seriesMonitoring: {
+                              ...choices.seriesMonitoring,
+                              [entry.provenanceKey]: {
+                                enabled: true,
+                                includeSpecials: event.target.checked,
+                              },
+                            },
+                          });
+                        }}
+                      />
+                      Include specials
+                    </label>
+                  )}
+                  {!eligible && (
+                    <p>
+                      The captured series must have an exact mapping before it
+                      can supply this policy.
+                    </p>
+                  )}
+                </fieldset>
+              );
+            })}
           <p>
             {batch.entries.filter((entry) => entry.kind === "subtitle").length}{" "}
             exactly associated captions will be checked with these files.

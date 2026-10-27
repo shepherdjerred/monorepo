@@ -56,6 +56,10 @@ test("selected completed-root leaves reconcile without changing outside intent, 
   const outsideIntent = await f.db.mediaIntent.findUniqueOrThrow({
     where: targetWhere(defaultScope(outside.id)),
   });
+  await f.db.mediaIntent.update({
+    where: targetWhere(defaultScope(f.media.id)),
+    data: { libraryMonitoring: true },
+  });
   const review = await f.prepare();
   expect(review.scope.blockers).toEqual([]);
   for (const user of [f.owner, f.member])
@@ -90,6 +94,11 @@ test("selected completed-root leaves reconcile without changing outside intent, 
   expect(
     await f.db.mediaRequest.findUniqueOrThrow({ where: { id: f.claim.id } }),
   ).toMatchObject({ direct: true, active: false, excluded: true });
+  expect(
+    await f.db.mediaIntent.findUniqueOrThrow({
+      where: targetWhere(defaultScope(f.media.id)),
+    }),
+  ).toMatchObject({ libraryMonitoring: false, monitoring: false });
   const future = await f.db.mediaItem.create({
     data: {
       kind: "episode",

@@ -11,7 +11,7 @@ import {
 } from "#infrastructure/movie-editions/access.ts";
 import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts";
 import { readMovieAttemptSponsor } from "#infrastructure/movie-editions/attempt-sponsor.ts";
-import type { LibraryManagementInvocation } from "./library-management.ts";
+import type { LibraryManagementInvocation } from "./library-policy.ts";
 import {
   MovieEditionScopeSchema,
   type MovieEditionScope,

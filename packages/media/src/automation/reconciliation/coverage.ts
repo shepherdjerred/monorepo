@@ -23,6 +23,10 @@ import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { defaultScope, assertDefaultEdition } from "#shared/editions/scope.ts";
 import type { MediaNetworkActivities } from "#shared/automation.ts";
 import { commandAutomationEpoch } from "#infrastructure/handoff/authority.ts";
+import {
+  personalRequestGenerationChange,
+  requestMonitoring,
+} from "#infrastructure/library-monitoring/intent.ts";
 
 /** Each transaction projects at most 25 episodes; its source version is durable. */
 export function createCoverageActivities(
@@ -248,6 +252,7 @@ async function projectEpisode(
   const previous = await tx.requestCoverage.findUnique({
     where: { rootRequestId_mediaId: { rootRequestId: root.id, mediaId } },
   });
+  if (!active && previous === null) return;
   if (previous?.sourceVersion === root.version && previous.active === active)
     return;
   const claim = await tx.mediaRequest.upsert({
@@ -307,6 +312,7 @@ async function projectEpisode(
   });
   // A cancelled container never resurrects intentionally removed episodes.
   const wants = active && claimActive;
+  const monitoring = requestMonitoring(prior, count);
   const intent = await tx.mediaIntent.upsert({
     where: targetWhere(defaultScope(mediaId)),
     create: {
@@ -315,16 +321,16 @@ async function projectEpisode(
       generation: 1,
       automationEpoch: wants ? input.automationEpoch : -1,
       desiredPresence: wants,
-      monitoring: count > 0,
+      monitoring,
     },
     update: {
       ...(wants && input.automationEpoch >= 0
         ? { automationEpoch: input.automationEpoch }
         : {}),
       profileId: prior?.profileId ?? input.profileId,
-      generation: { increment: 1 },
+      ...personalRequestGenerationChange(prior, input.automationEpoch),
       version: input.targetExisted ? { increment: 1 } : 0,
-      monitoring: count > 0,
+      monitoring,
       ...(wants ? { desiredPresence: true, intentionallyRemovedAt: null } : {}),
     },
   });
