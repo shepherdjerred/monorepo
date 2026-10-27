@@ -122,7 +122,7 @@
         "can't set up a feed",
         "cannot set up a feed"
       ],
-      "rationale": "A user was told Explore cannot do this and removed the bot 93 minutes later. A player feed posts a match report after every game; the answer must say so instead of refusing."
+      "rationale": "A player feed posts a statistics report after every game, which Explore can offer to configure. Automatic written reviews and AI artwork are unavailable; distinguish those from the feed and offer on-demand game analysis in Explore."
     },
     {
       "id": "notification-text-not-customizable",

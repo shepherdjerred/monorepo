@@ -44,7 +44,7 @@ export function challengeFacts(): readonly string[] {
  *
  * Explore answers setup questions more than any other kind from people new to
  * Scout, and every wrong answer in prod was a fact about the product, not the
- * data: it refused an "automatic review after every game" that player feeds
+ * data: it refused an "automatic report after every game" that player feeds
  * already post, and invented a settings page for editing notification text.
  * Pages are named from `SCOUT_GUILD_PAGES`, the list the app's router serves,
  * so a page this names is a page that exists.
@@ -68,6 +68,7 @@ export function setupFacts(): readonly string[] {
   return [
     `A tracked player is a Riot account Scout follows for a server, under a display name (its alias). Tracked players are listed and added on ${page("players")}.`,
     `A player feed (a subscription) posts a match report with the player's stats to a chosen Discord channel after each game a tracked player finishes that the feed covers. It is Scout's automatic post-game report. A feed can be limited to certain queues by its filters, and can be muted; a muted or filtered-out game is not posted. Player feeds post statistics, not automatic written analysis. Feeds are managed on ${page("subscriptions")}, and Explore can prepare one.`,
+    "Scout does not generate automatic written match reviews or AI artwork. Player feeds provide statistics reports; Explore analyzes recorded games when asked.",
     `A scheduled report runs a saved question on a schedule and posts the result to a channel. Reports are listed, edited, disabled and deleted on ${page("reports")}. Each person and each server may have only a few active reports; get_server_setup says how many.`,
     `A competition ranks a server's tracked players over a period by one scoring rule. Competitions are on ${page("competitions")}.`,
     `The server's other pages are ${page("hallOfFame")}, ${page("access")} (who may manage what in Scout), ${page("audit")} and ${page("customs")}.`,

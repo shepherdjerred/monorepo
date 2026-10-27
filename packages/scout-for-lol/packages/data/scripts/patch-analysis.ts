@@ -39,8 +39,8 @@ export function buildAnalysisPrompt(
 ): string {
   return [
     'You analyze League of Legends patch notes for "Scout for League of Legends",',
-    "a Discord bot that writes post-match reviews. Your analysis feeds an AI that",
-    "roasts players about their games, so it should be specific and player-facing.",
+    "a Discord bot with match reports and on-demand game analysis in Explore.",
+    "Your analysis provides structured patch context, so it should be specific and player-facing.",
     "",
     `The official patch ${patch.patch} notes were fetched from ${patch.url}.`,
     "Analyze only the official content enclosed below:",
@@ -52,7 +52,7 @@ export function buildAnalysisPrompt(
     "{",
     '  "overview": string,   // 1-3 sentence freeform summary of the patch\'s theme',
     '  "themes": string[],   // 0-4 short tags, e.g. ["ADC item tuning","jungle buffs"]',
-    '  "summary": string[],  // 2-4 short player-facing balance highlight bullets (for the review)',
+    '  "summary": string[],  // 2-4 short player-facing balance highlight bullets for Explore',
     '  "changelogHighlights": string[],  // 0-4 bullets for Scout\'s public changelog (see rules)',
     '  "champions": [{ "name": string, "direction": "buff"|"nerf"|"adjustment", "magnitude": "minor"|"moderate"|"major", "summary": string, "details": string }],',
     '  "items": [{ "name": string, "direction": "buff"|"nerf"|"adjustment"|"new"|"removed", "magnitude": "minor"|"moderate"|"major", "summary": string, "details": string }],',
@@ -74,7 +74,7 @@ export function buildAnalysisPrompt(
     "  reports + prematch), new Arena augments or mechanics Scout renders, or",
     "  role-specific starting items / other changes to what Scout tracks or renders.",
     '- Do NOT put routine champion/item buffs or nerfs in "changelogHighlights" —',
-    '  those belong in "summary" for the review.',
+    '  those belong in "summary" for Explore.',
     "- You may add AT MOST ONE short headline balance/meta-theme line to",
     '  "changelogHighlights" (e.g. "Enchanter supports and mid-lane mages',
     '  reshuffled") — never a per-champion list.',
