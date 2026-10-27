@@ -69,6 +69,17 @@ mirror_owned_roots() {
   done </bundle/owned.roots
 }
 
+install_livemap_directory() {
+  local directory=$1 owner=$2 group=$3
+  # A separate PVC root can belong to root with fsGroup write access. A
+  # non-root process can use it, but cannot chown or chmod that mount root.
+  if [[ -d $directory && $(id -u) != 0 && $(stat -c '%u' "$directory") != "$(id -u)" ]]; then
+    [[ -w $directory && -x $directory ]] || fail "LiveMap directory is not writable: $directory"
+  else
+    install -d -m 2775 -o "$owner" -g "$group" "$directory"
+  fi
+}
+
 install_livemap() {
   # Only copy bundled static files. Never prune this webroot: BlueMap owns
   # settings.json, maps, and live data, and open tabs may still use old assets.
@@ -84,11 +95,12 @@ install_livemap() {
   if [[ $runtime_owner != 0 ]]; then
     data_owner=$runtime_owner
   fi
-  install -d -m 2775 -o "$data_owner" -g "$data_group" "$(dirname "$target")" "$target"
+  install_livemap_directory "$(dirname "$target")" "$data_owner" "$data_group"
+  install_livemap_directory "$target" "$data_owner" "$data_group"
   while IFS= read -r -d '' file; do
     destination=$target/${file#"$source/"}
     directory=$(dirname "$destination")
-    install -d -m 2775 -o "$data_owner" -g "$data_group" "$directory"
+    install_livemap_directory "$directory" "$data_owner" "$data_group"
     install -m 0664 -o "$data_owner" -g "$data_group" "$file" "$destination"
   done < <(find "$source" -type f -print0)
 }

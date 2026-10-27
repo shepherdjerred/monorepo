@@ -124,6 +124,9 @@ content hashes in their URLs so cached default branding cannot leak through.
 The entrypoint copies only these static files into `bluemap/web` on each boot;
 it never prunes that webroot or replaces settings, maps, or live data. Non-root
 installs use the runtime UID and volume group, including root-owned PVC mounts.
+Existing directories owned by another UID retain their ownership and permissions
+when the runtime user has write and search access. This includes the separate
+render volume root provisioned with Kubernetes `fsGroup` permissions.
 Archived world viewers are independently published and do not use this bundle.
 
 LiveMap's generated files use the separate `minecraft-tsmc-bluemap` PVC mounted
