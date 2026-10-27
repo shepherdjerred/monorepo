@@ -258,7 +258,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: red.sjer.tasknotes.mac.acceptance.uitests
-        CODE_SIGN_ENTITLEMENTS: ""
+        CODE_SIGN_ENTITLEMENTS: UITests/AcceptanceRunner.entitlements
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: "$(TASKNOTES_UITEST_IDENTITY:default=-)"
         GENERATE_INFOPLIST_FILE: YES
