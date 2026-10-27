@@ -8,10 +8,8 @@ import {
 } from "#shared/migration.ts";
 import { IdempotencyKeySchema } from "#infrastructure/commands.ts";
 import { parseInput, readJson } from "./validation.ts";
-import {
-  CreateBundleSchema,
-  ReviewBundleSchema,
-} from "#shared/migration-handoff.ts";
+import { ReviewBundleSchema } from "#shared/migration-handoff.ts";
+import { CreateBundleProtocolSchema } from "#shared/handoff/library-bundle.ts";
 import { DiscoverMigrationCatalogSchema } from "#shared/migration-catalog.ts";
 export type MigrationAdministration = Pick<
   PrismaMigrationAdministration,
@@ -41,7 +39,7 @@ export function registerMigrationRoutes(
     c.json(
       await migration.bundles.create(
         c.get("actor"),
-        parseInput(CreateBundleSchema, await readJson(c.req.raw)),
+        parseInput(CreateBundleProtocolSchema, await readJson(c.req.raw)),
       ),
     ),
   );

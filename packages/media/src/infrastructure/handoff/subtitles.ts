@@ -1,16 +1,14 @@
 import path from "node:path";
 import type { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
-import type {
-  BundleReportSchema,
-  MigrationBundleSchema,
-} from "#shared/migration-handoff.ts";
+import type { BundleReportSchema } from "#shared/migration-handoff.ts";
+import type { MigrationBundleProtocolSchema } from "#shared/handoff/library-bundle.ts";
 import type { HandoffScope, PrepareHandoffSchema } from "#shared/handoff.ts";
 import { HandoffSubtitleSchema } from "#shared/subtitle-handoff.ts";
 import { translateSubtitlePolicy } from "#domain/subtitle-policy.ts";
 
 type Entry = z.infer<typeof BundleReportSchema>["entries"][number];
-type Manifest = z.infer<typeof MigrationBundleSchema>;
+type Manifest = z.infer<typeof MigrationBundleProtocolSchema>;
 export async function projectHandoffSubtitles(input: {
   tx: Prisma.TransactionClient;
   request: z.infer<typeof PrepareHandoffSchema>;
