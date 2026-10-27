@@ -193,7 +193,7 @@ export async function adoptSubtitles(
   for (const policy of input.scope.subtitlePolicies) {
     for (const mediaId of policy.mediaIds) {
       const latest = await tx.mediaSubtitlePolicyVersion.findFirst({
-        where: { mediaId },
+        where: { mediaId, edition: "default" },
         orderBy: { version: "desc" },
       });
       if ((latest?.version ?? -1) !== policy.expectedPolicyVersion)

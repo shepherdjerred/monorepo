@@ -2,6 +2,10 @@ import { z } from "zod";
 import type { PlexItem } from "#integrations/plex.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { protectedEvidence, type HandoffNetworkContext } from "./context.ts";
+import {
+  MOVIE_EDITION_REGISTRY,
+  type MovieEditionKey,
+} from "#shared/movie-editions/registry.ts";
 
 type Media = {
   id: string;
@@ -17,6 +21,8 @@ type File = {
   sizeBytes: string;
   mediaIds: string[];
   libraryKind: "movies" | "tv";
+  assetId?: string;
+  edition?: MovieEditionKey;
 };
 export type PlexCoverageInput = { media: Media[]; scope: { files: File[] } };
 type Context = Pick<
@@ -191,12 +197,20 @@ async function matchFile({
       (parts[0].size !== undefined && String(parts[0].size) !== file.sizeBytes)
     )
       throw protectedEvidence("handoff_plex_path_changed");
+    const edition = editionIdentity(
+      file,
+      found.metadata,
+      parts[0].id,
+      sectionId,
+    );
     evidence.push({
+      ...edition,
       mediaId,
       ratingKey: found.metadata.ratingKey,
       sectionId,
       canonicalPath: file.canonicalPath,
       identityHash: snapshotHash({
+        ...editionHash(edition),
         server,
         sectionId,
         mediaId,
@@ -210,4 +224,35 @@ async function matchFile({
     });
   }
   return evidence;
+}
+
+function editionIdentity(
+  file: File,
+  item: PlexItem,
+  partId: number,
+  sectionId: string,
+) {
+  if (file.edition === undefined) return null;
+  if (String(item.librarySectionID) !== sectionId)
+    throw protectedEvidence("handoff_plex_library_changed");
+  if (
+    file.libraryKind === "movies" &&
+    (item.editionTitle ?? "") !== MOVIE_EDITION_REGISTRY[file.edition].plexLabel
+  )
+    throw protectedEvidence("handoff_plex_edition_requires_review");
+  return {
+    assetId: z.uuid().parse(file.assetId),
+    edition: file.edition,
+    editionTitle: item.editionTitle ?? null,
+    partId: z.int().nonnegative().parse(partId),
+  };
+}
+
+function editionHash(edition: ReturnType<typeof editionIdentity>) {
+  if (edition === null) return {};
+  return {
+    edition: edition.edition,
+    editionTitle: edition.editionTitle,
+    partId: edition.partId,
+  };
 }

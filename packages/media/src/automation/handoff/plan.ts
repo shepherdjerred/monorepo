@@ -2,22 +2,26 @@ import { defaultIntent } from "#shared/editions/scope.ts";
 import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
 import { Prisma } from "#generated/prisma/client.ts";
+import { HandoffFileEvidenceSchema } from "#shared/handoff.ts";
 import {
-  HandoffFileEvidenceSchema,
-  HandoffNetworkEvidenceSchema,
-  HandoffScopeSchema,
-  type HandoffScope,
-} from "#shared/handoff.ts";
+  HandoffScopeProtocolSchema,
+  HandoffNetworkProtocolSchema,
+  type HandoffProtocolScope,
+} from "#shared/handoff-v2.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
-import { lockDefaultMedia } from "#infrastructure/handoff/default-edition.ts";
+import {
+  lockHandoffScopes,
+  assertLibraryHandoffSnapshot,
+} from "#infrastructure/handoff/scoped-snapshot.ts";
 import type { PreparedHandoffFiles } from "./files.ts";
 
 export function stableNetwork(raw: unknown) {
-  const network = HandoffNetworkEvidenceSchema.parse(raw);
+  const network = HandoffNetworkProtocolSchema.parse(raw);
   const torrents = network.torrents.map(
     ({ observationHash: _observationHash, ...identity }) => identity,
   );
   return {
+    ...(network.schemaVersion === 2 ? { schemaVersion: 2 } : {}),
     planId: network.planId,
     recoveryEpoch: network.recoveryEpoch,
     controllers: network.quiescence.controllers,
@@ -38,17 +42,21 @@ export function stableFiles(raw: unknown) {
     files: files.files,
   };
 }
-export const FinishedHandoffSchema = z.strictObject({
+const FinishedV1 = z.strictObject({
   schemaVersion: z.literal(1),
   scopeHash: z.string(),
   network: z.json(),
   files: z.json(),
 });
+export const FinishedHandoffSchema = z.union([
+  FinishedV1,
+  FinishedV1.extend({ schemaVersion: z.literal(2) }),
+]);
 
 export async function assertHandoffSnapshot(
   tx: Prisma.TransactionClient,
   planId: string,
-  scope: HandoffScope,
+  scope: HandoffProtocolScope,
 ) {
   const profileIds = [
     ...new Set(
@@ -77,10 +85,11 @@ export async function assertHandoffSnapshot(
     plan.bundleReview.status !== "approved" ||
     plan.bundleReview.version !== plan.bundleReviewVersion ||
     plan.bundleReview.reportHash !== scope.request.reportHash ||
-    JSON.stringify(HandoffScopeSchema.parse(plan.scope)) !==
+    JSON.stringify(HandoffScopeProtocolSchema.parse(plan.scope)) !==
       JSON.stringify(scope)
   )
     throw new Error("Handoff runtime, approval, or immutable scope changed");
+  await assertLibraryHandoffSnapshot(tx, scope);
   const media = await tx.mediaItem.findMany({
     where: { id: { in: scope.media.map((item) => item.mediaId) } },
     include: { intents: { where: { edition: "default" } } },
@@ -112,10 +121,7 @@ export async function finishHandoffPreparation(
 ): Promise<void> {
   await db.$transaction(
     async (tx) => {
-      await lockDefaultMedia(
-        tx,
-        prepared.scope.media.map((item) => item.mediaId),
-      );
+      await lockHandoffScopes(tx, prepared.scope);
       await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
       await tx.$queryRaw`SELECT id FROM "MediaHandoffPlan" WHERE id = ${planId} FOR UPDATE`;
       const { plan } = await assertHandoffSnapshot(tx, planId, prepared.scope);
@@ -130,7 +136,7 @@ export async function finishHandoffPreparation(
         throw new Error("Handoff network proof expired during file inspection");
       const files = stableFiles(prepared.evidence);
       const complete = FinishedHandoffSchema.parse({
-        schemaVersion: 1,
+        schemaVersion: "schemaVersion" in prepared.scope ? 2 : 1,
         scopeHash: snapshotHash(z.json().parse(prepared.scope)),
         network: stableNetwork(network.evidence),
         files,

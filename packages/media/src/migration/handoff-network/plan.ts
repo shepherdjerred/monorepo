@@ -1,6 +1,7 @@
 import { defaultIntent } from "#shared/editions/scope.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
-import { HandoffScopeSchema } from "#shared/handoff.ts";
+import { HandoffScopeProtocolSchema } from "#shared/handoff-v2.ts";
+import { assertLibraryHandoffSnapshot } from "#infrastructure/handoff/scoped-snapshot.ts";
 import {
   MigrationBundleSchema,
   BundleReportSchema,
@@ -19,7 +20,7 @@ export async function readHandoffPlan(
     where: { id: planId },
     include: { bundleReview: { include: { bundle: true } } },
   });
-  const scope = HandoffScopeSchema.parse(plan.scope);
+  const scope = HandoffScopeProtocolSchema.parse(plan.scope);
   const manifest = MigrationBundleSchema.parse(
     plan.bundleReview.bundle.manifest,
   );
@@ -46,6 +47,7 @@ export async function readHandoffPlan(
       ? runtime.mode === "observe" && !runtime.ownershipConfirmed
       : authority.active;
   if (!validMode) throw protectedEvidence("handoff_runtime_changed");
+  await assertLibraryHandoffSnapshot(db, scope);
   const media = await db.mediaItem.findMany({
     where: { id: { in: scope.media.map((item) => item.mediaId) } },
     include: {
@@ -77,7 +79,7 @@ function assertReview(input: {
   plan: Prisma.MediaHandoffPlanGetPayload<{
     include: { bundleReview: { include: { bundle: true } } };
   }>;
-  scope: ReturnType<typeof HandoffScopeSchema.parse>;
+  scope: ReturnType<typeof HandoffScopeProtocolSchema.parse>;
   manifest: ReturnType<typeof MigrationBundleSchema.parse>;
   report: ReturnType<typeof BundleReportSchema.parse>;
   approved: ReturnType<typeof MigrationSelectionSchema.parse>;

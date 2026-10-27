@@ -11,8 +11,12 @@ export async function observeHandoffMounts(
 ) {
   const bindings: MountBindingRequest[] = [];
   for (const [kind, deployment, root] of [
-    ["radarr", "media-radarr", "/data/movies"],
-    ["sonarr", "media-sonarr", "/data/tv"],
+    [
+      "radarr",
+      "media-radarr",
+      context.canonicalRoots?.movies ?? "/data/movies",
+    ],
+    ["sonarr", "media-sonarr", context.canonicalRoots?.tv ?? "/data/tv"],
   ]) {
     if (kind === undefined || deployment === undefined || root === undefined)
       throw new Error("Invalid root registry");

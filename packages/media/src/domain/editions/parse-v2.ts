@@ -81,7 +81,13 @@ export function parseMovieCutV2(
     schemaVersion: 2 as const,
     parserVersion: "cut-markers-v2" as const,
   };
-  if (original.issues.includes("input_limit_exceeded")) return base;
+  return { ...base, ...conventionalMovieCutTexts(original) };
+}
+
+export function conventionalMovieCutTexts(
+  original: Pick<MovieCutEvidenceV2, "texts" | "issues" | "conclusion">,
+): Pick<MovieCutEvidenceV2, "texts" | "issues" | "conclusion"> {
+  if (original.issues.includes("input_limit_exceeded")) return original;
   const texts = original.texts.map((text) => {
     const wrappers = plexMarkers(text.text).filter(
       (marker) => !contained(marker, text.canonicalSpans),
@@ -113,7 +119,6 @@ export function parseMovieCutV2(
   });
   const markers = texts.flatMap((text) => text.markers);
   return {
-    ...base,
     texts,
     issues: markers.some((marker) => marker.cut === null)
       ? ["unsupported_cut_qualifier"]

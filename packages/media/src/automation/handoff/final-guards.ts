@@ -35,7 +35,10 @@ export async function assertApplyActor(
 /** Never replace a newer revocation with an older stopped-writer observation. */
 export async function assertLatestLease(
   tx: Prisma.TransactionClient,
-  network: z.infer<typeof HandoffNetworkEvidenceSchema>,
+  network: Pick<
+    z.infer<typeof HandoffNetworkEvidenceSchema>,
+    "quiescence" | "recoveryEpoch"
+  >,
 ) {
   const evidence = network.quiescence;
   const captured = Date.parse(evidence.capturedAt);

@@ -18,6 +18,7 @@ export type HandoffNetworkContext = {
   authentication: Pick<PlexAuthentication, "resolveServerAccess">;
   permittedSections: () => Promise<{ movie: string; series: string }>;
   expectedServerMachineId: string;
+  canonicalRoots?: { movies: string; tv: string };
 };
 export const protectedEvidence = (code: string) =>
   new MediaError(
