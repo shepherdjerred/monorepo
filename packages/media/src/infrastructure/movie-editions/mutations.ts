@@ -7,6 +7,7 @@ import type {
 import { invalidateRetention } from "#infrastructure/action-guards.ts";
 import { movieChoiceSubject, type MovieProtectionAccess } from "./access.ts";
 import { lockMovieCommand, movieCommandConflict } from "./locks.ts";
+import { releaseCancelledMovieReservationV4 } from "./lifecycle/cancellation.ts";
 
 export async function removeMovieChoice(
   tx: Prisma.TransactionClient,
@@ -64,6 +65,7 @@ export async function removeMovieChoice(
       ...(remaining === 0 ? { monitoring: false } : {}),
     },
   });
+  await releaseCancelledMovieReservationV4(tx, input.scope, request.id);
   await tx.mediaItem.update({
     where: { id: request.mediaId },
     data: { version: { increment: 1 } },

@@ -9,6 +9,10 @@ import { reserveMovieCandidateV4 } from "./reservation.ts";
 import { submitMovieTorrentV4 } from "./submission.ts";
 import { observeMovieAcquisitionV4 } from "./observation.ts";
 import { QualityRulesSchema } from "#shared/api.ts";
+import {
+  MovieEditionKeySchema,
+  type MovieEditionKey,
+} from "#shared/movie-editions/registry.ts";
 
 const h = automationTestHarness();
 afterEach(() => vi.restoreAllMocks());
@@ -109,7 +113,7 @@ function qbitWire() {
   return { state, transport };
 }
 
-async function fixture() {
+async function fixture(edition: MovieEditionKey = "extended_cut") {
   const f = await h.fixture();
   const db = h.database();
   await db.qualityProfileDefault.upsert({
@@ -117,13 +121,11 @@ async function fixture() {
     create: { kind: "movie", profileId: f.profile.id },
     update: { profileId: f.profile.id },
   });
-  const request = await requestTestMovieV4(
-    db,
-    f.user,
-    f.media.id,
-    "extended_cut",
-  );
-  const candidate = await retainedMovieCandidate(h.context(), f);
+  const request = await requestTestMovieV4(db, f.user, f.media.id, edition);
+  const candidate = await retainedMovieCandidate(h.context(), {
+    ...f,
+    edition,
+  });
   const wire = qbitWire();
   const context = h.context(wire.transport);
   const selected = await storeMovieCandidateV4(
@@ -263,8 +265,8 @@ test("choice cancellation during qBit lookup is rechecked under locks before the
     if (index === 1) await f.cancel();
   };
   expect(await submitMovieTorrentV4(f.context, f.input)).toEqual({
-    status: "blocked",
-    reason: "submission_authority_changed",
+    status: "obsolete",
+    reason: "intent_changed",
   });
   expect(f.wire.state.adds).toBe(0);
   expect(
@@ -272,10 +274,15 @@ test("choice cancellation during qBit lookup is rechecked under locks before the
       where: { id: f.attempt.id },
     }),
   ).toMatchObject({
-    state: "reserved",
+    state: "cancelled",
     torrentId: null,
     movieEditionAuthority: f.attempt.movieEditionAuthority,
   });
+  expect(
+    await f.db.acquisitionReservation.count({
+      where: { attemptId: f.attempt.id },
+    }),
+  ).toBe(0);
 });
 
 test("cancellation waits behind the final authorization and add, and a proven prior add keeps its seeding obligation", async () => {
@@ -315,6 +322,153 @@ test("cancellation waits behind the final authorization and add, and a proven pr
       where: { id: f.result.requestId },
     }),
   ).toMatchObject({ active: false });
+  expect(
+    await f.db.acquisitionReservation.count({
+      where: { attemptId: f.attempt.id },
+    }),
+  ).toBe(0);
+});
+
+test("cancellation after the submission claim releases its reservation once the fenced add is rejected", async () => {
+  const f = await fixture();
+  const sections = f.context.permittedSections;
+  let reads = 0;
+  f.context.permittedSections = async () => {
+    if (++reads === 2) {
+      expect(
+        await f.db.acquisitionAttempt.findUniqueOrThrow({
+          where: { id: f.attempt.id },
+        }),
+      ).toMatchObject({ state: "submitting" });
+      await f.cancel();
+      expect(
+        await f.db.acquisitionReservation.count({
+          where: { attemptId: f.attempt.id },
+        }),
+      ).toBe(1);
+    }
+    return sections();
+  };
+  expect(await submitMovieTorrentV4(f.context, f.input)).toEqual({
+    status: "obsolete",
+    reason: "intent_changed",
+  });
+  expect(f.wire.state.adds).toBe(0);
+  expect(
+    await f.db.acquisitionReservation.count({
+      where: { attemptId: f.attempt.id },
+    }),
+  ).toBe(0);
+  expect(
+    await f.db.acquisitionAttempt.findUniqueOrThrow({
+      where: { id: f.attempt.id },
+    }),
+  ).toMatchObject({
+    state: "cancelled",
+    identityEvidence: f.attempt.identityEvidence,
+  });
+});
+
+test("revoking the reviewed choice releases its reservation while keeping the request pending", async () => {
+  const f = await fixture();
+  await f.commands.revokeMovieEditionChoice(f.user, crypto.randomUUID(), {
+    schemaVersion: 3,
+    action: "revoke_choice",
+    subjectUserId: f.user.id,
+    scope: f.input.scope,
+    requestId: f.result.requestId,
+    expected: {
+      targetVersion: f.result.applied.targetVersion,
+      requestVersion: f.result.applied.requestVersion,
+      choiceRevision: f.result.applied.choiceRevision,
+    },
+  });
+  expect(
+    await f.db.mediaRequest.findUniqueOrThrow({
+      where: { id: f.result.requestId },
+    }),
+  ).toMatchObject({ active: true, movieEditionChoiceId: null });
+  expect(
+    await f.db.acquisitionReservation.count({
+      where: { attemptId: f.attempt.id },
+    }),
+  ).toBe(0);
+  expect(f.wire.state.calls).toEqual([]);
+});
+
+test("cancellation remains protective while ownership is paused and settles on an authorized resume", async () => {
+  const f = await fixture();
+  await f.db.mediaRuntimeState.update({
+    where: { id: "singleton" },
+    data: { mode: "observe", ownershipConfirmed: false },
+  });
+  await f.cancel();
+  expect(
+    await f.db.acquisitionReservation.count({
+      where: { attemptId: f.attempt.id },
+    }),
+  ).toBe(1);
+  await f.db.mediaRuntimeState.update({
+    where: { id: "singleton" },
+    data: { mode: "active", ownershipConfirmed: true },
+  });
+  expect(await submitMovieTorrentV4(f.context, f.input)).toEqual({
+    status: "obsolete",
+    reason: "intent_changed",
+  });
+  expect(
+    await f.db.acquisitionReservation.count({
+      where: { attemptId: f.attempt.id },
+    }),
+  ).toBe(0);
+  expect(f.wire.state.calls).toEqual([]);
+});
+
+test("cancelling one cut preserves the other cut's actual reservation", async () => {
+  const f = await fixture();
+  const other = await requestTestMovieV4(
+    f.db,
+    f.user,
+    f.media.id,
+    "theatrical_cut",
+  );
+  const candidate = await retainedMovieCandidate(f.context, {
+    ...f,
+    edition: "theatrical_cut",
+  });
+  const selected = await storeMovieCandidateV4(
+    f.context,
+    other.input.scope,
+    candidate.source,
+  );
+  if (selected === null)
+    throw new Error("Actual other-cut assessment was rejected");
+  const attemptId = await reserveMovieCandidateV4(
+    f.context,
+    other.input,
+    selected,
+    0,
+  );
+  if (attemptId === null)
+    throw new Error("Actual other-cut reservation was rejected");
+  const original = await f.db.acquisitionReservation.findUniqueOrThrow({
+    where: {
+      mediaId_edition: { mediaId: f.media.id, edition: "theatrical_cut" },
+    },
+  });
+  await f.cancel();
+  expect(
+    await f.db.acquisitionReservation.findUniqueOrThrow({
+      where: {
+        mediaId_edition: { mediaId: f.media.id, edition: "theatrical_cut" },
+      },
+    }),
+  ).toEqual(original);
+  expect(
+    await f.db.acquisitionReservation.count({
+      where: { attemptId: f.attempt.id },
+    }),
+  ).toBe(0);
 });
 
 test("lost add reply is observed after cancellation without a second add, preserving literal birth and independent seeding", async () => {
@@ -353,6 +507,11 @@ test("lost add reply is observed after cancellation without a second add, preser
       where: { idempotencyKey: `seed:${torrent.id}` },
     }),
   ).toBe(1);
+  expect(
+    await f.db.acquisitionReservation.count({
+      where: { attemptId: f.attempt.id },
+    }),
+  ).toBe(0);
 });
 
 test("an uncertain absent torrent is protected and never blindly submitted again", async () => {
@@ -363,17 +522,66 @@ test("an uncertain absent torrent is protected and never blindly submitted again
     reason: "outcome-unknown",
   });
   f.wire.state.visible = false;
+  await f.cancel();
   expect(await submitMovieTorrentV4(f.context, f.input)).toEqual({
     status: "blocked",
     reason: "submission_outcome_unknown",
   });
   expect(f.wire.state.adds).toBe(1);
   expect(
+    await f.db.acquisitionReservation.count({
+      where: { attemptId: f.attempt.id },
+    }),
+  ).toBe(1);
+  expect(
     await f.db.torrent.count({
       where: { infoHash: f.candidate.source.infoHash },
     }),
   ).toBe(0);
 });
+
+test.each(MovieEditionKeySchema.options)(
+  "cancelling a reserved %s request releases only its reservation and preserves literal birth",
+  async (edition) => {
+    const f = await fixture(edition);
+    const defaultBefore = await f.db.mediaIntent.findUniqueOrThrow({
+      where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
+    });
+    await f.cancel();
+    const cancelled = await f.db.acquisitionAttempt.findUniqueOrThrow({
+      where: { id: f.attempt.id },
+    });
+    expect(cancelled).toMatchObject({
+      state: "cancelled",
+      torrentId: null,
+      identityEvidence: f.attempt.identityEvidence,
+      movieEditionAuthority: f.attempt.movieEditionAuthority,
+      operationId: f.attempt.operationId,
+      coordinatorOperationId: f.attempt.coordinatorOperationId,
+      generations: f.attempt.generations,
+      recoveryEpoch: f.attempt.recoveryEpoch,
+    });
+    expect(
+      await f.db.acquisitionReservation.count({
+        where: { attemptId: f.attempt.id },
+      }),
+    ).toBe(0);
+    expect(await submitMovieTorrentV4(f.context, f.input)).toEqual({
+      status: "obsolete",
+      reason: "intent_changed",
+    });
+    expect(f.wire.state.calls).toEqual([]);
+    expect(f.wire.state.adds).toBe(0);
+    if (edition !== "default")
+      expect(
+        await f.db.mediaIntent.findUniqueOrThrow({
+          where: {
+            mediaId_edition: { mediaId: f.media.id, edition: "default" },
+          },
+        }),
+      ).toEqual(defaultBefore);
+  },
+);
 
 test("original mapping expiry during the client's final observation prevents the actual add without renewing consent", async () => {
   const f = await fixture();

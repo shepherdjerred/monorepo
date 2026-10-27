@@ -16,6 +16,7 @@ import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { assertNoPublicationCompensationFence } from "#infrastructure/native-compensation/fence.ts";
 import { movieAttemptEffectAuthorityV4 } from "#infrastructure/movie-editions/lifecycle/effect-authority.ts";
 import { readMovieAttemptIdentityV4 } from "#infrastructure/movie-editions/lifecycle/attempt-identity.ts";
+import { releaseCancelledMovieReservationV4 } from "#infrastructure/movie-editions/lifecycle/cancellation.ts";
 import { hasApplicationSeedingPolicy } from "#integrations/qbittorrent-policy.ts";
 import type { TorrentObservation } from "#integrations/qbittorrent.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
@@ -44,7 +45,22 @@ async function prepareMovieTorrent(
     authorize: (_ctx, current, effect) =>
       authorizedMovieSubmissionV4(context, current, input.scope, effect),
   });
-  return reason === null ? null : { status: "blocked" as const, reason };
+  if (reason === null) return null;
+  const state = await serializable(context.db, async (tx) => {
+    await lockMovieCommand(tx, input.scope);
+    await releaseCancelledMovieReservationV4(
+      tx,
+      input.scope,
+      attempt.sponsorRequestId,
+    );
+    const current = await tx.acquisitionAttempt.findUniqueOrThrow({
+      where: { id: attempt.id },
+    });
+    return current.state;
+  });
+  return state === "cancelled"
+    ? { status: "obsolete" as const, reason: "intent_changed" }
+    : { status: "blocked" as const, reason };
 }
 
 export async function validMovieAttemptV4(
@@ -65,6 +81,11 @@ export async function validMovieAttemptV4(
     });
     if (!(await lockRuntimeAuthority(tx, current.recoveryEpoch))) return false;
     if (current.coordinatorOperationId !== input.operationId) return false;
+    await releaseCancelledMovieReservationV4(
+      tx,
+      input.scope,
+      current.sponsorRequestId,
+    );
     const authorized = await movieAttemptEffectAuthorityV4(
       tx,
       current,
@@ -267,6 +288,12 @@ async function projectRecordedMovieSubmissionV4(
       where: { id: current.id },
       data: { state: authorized === null ? "cancelled" : "downloading" },
     });
+    if (authorized === null)
+      await releaseCancelledMovieReservationV4(
+        tx,
+        scope,
+        current.sponsorRequestId,
+      );
     if (authorized !== null) {
       await tx.mediaIntent.update({
         where: {

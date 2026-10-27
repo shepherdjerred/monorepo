@@ -405,6 +405,11 @@ test("a metadata-only verification timestamp cannot grant publication lineage wi
 
 test("cancel during actual Plex observations prevents availability without deleting the published file or source", async () => {
   const f = await fixture();
+  const reservation = await h
+    .database()
+    .acquisitionReservation.findFirstOrThrow({
+      where: { attemptId: f.input.attemptId },
+    });
   let machines = 0;
   f.checkpoint(async (url) => {
     if (url.pathname !== "/identity" || ++machines !== 2) return;
@@ -442,4 +447,9 @@ test("cancel during actual Plex observations prevents availability without delet
       .libraryAsset.findUniqueOrThrow({ where: { id: f.asset.id } }),
   ).toMatchObject({ plexPublishedAt: null, state: "published" });
   expect(await readFile(f.source)).toEqual(Buffer.from(bytes));
+  expect(
+    await h.database().acquisitionReservation.findFirstOrThrow({
+      where: { attemptId: f.input.attemptId },
+    }),
+  ).toEqual(reservation);
 });
