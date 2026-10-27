@@ -26,6 +26,17 @@ const SearchSchema = z.object({
   page: z.number().int().positive().default(1),
 });
 export type ProviderSearch = z.input<typeof SearchSchema>;
+const RecentInputSchema = z.object({
+  page: z
+    .int()
+    .positive()
+    .max(Math.floor(Number.MAX_SAFE_INTEGER / 100)),
+});
+export type ProviderRecentPage = {
+  candidates: ProviderCandidate[];
+  scanned: number;
+  nextPage: number | null;
+};
 
 /** Activity-local only: private download URLs can contain passkeys. Never emit this type into workflow history or UI responses. */
 export type ProviderCandidate = {
@@ -99,6 +110,34 @@ export class KnabenProvider {
       f: String((query.page - 1) * 100),
       o: "seeders",
     }).toString();
+    const response = await this.readPage(url, signal);
+    return this.candidates(response);
+  }
+
+  /** Native date-ordered browsing; no title query or seeded-search substitute. */
+  async recent(
+    input: { page: number },
+    signal?: AbortSignal,
+  ): Promise<ProviderRecentPage> {
+    const { page } = RecentInputSchema.parse(input);
+    const url = endpoint("https://api.knaben.org", "v2/browse");
+    url.search = new URLSearchParams({
+      o: "date",
+      d: "desc",
+      s: "100",
+      f: String((page - 1) * 100),
+    }).toString();
+    const response = await this.readPage(url, signal);
+    if (response.hits.length > 100)
+      throw new IntegrationError("knaben", "invalid-response");
+    return {
+      candidates: this.candidates(response),
+      scanned: response.hits.length,
+      nextPage: response.hits.length === 100 ? page + 1 : null,
+    };
+  }
+
+  private async readPage(url: URL, signal?: AbortSignal) {
     const response = KnabenResponseSchema.parse(
       await json(
         await request(this.transport, "knaben", url, {
@@ -107,6 +146,12 @@ export class KnabenProvider {
         "knaben",
       ),
     );
+    return response;
+  }
+
+  private candidates(
+    response: z.infer<typeof KnabenResponseSchema>,
+  ): ProviderCandidate[] {
     // Some meta-index entries only offer another site's landing page. They cannot be submitted as verified torrents.
     return response.hits.flatMap((hit): ProviderCandidate[] =>
       hit.hash === null
@@ -256,6 +301,36 @@ export class AvistazFamilyProvider {
         ? {}
         : { in: "1", type: query.kind === "movie" ? "1" : "2" }),
     }).toString();
+    return this.readPage(url, signal);
+  }
+
+  /** The family's empty search is its actual recent listing; AnimeZ has no in/type parameters. */
+  async recent(
+    input: { page: number },
+    signal?: AbortSignal,
+  ): Promise<ProviderRecentPage> {
+    const { page } = RecentInputSchema.parse(input);
+    const url = endpoint(this.baseUrl, "api/v1/jackett/torrents");
+    url.search = new URLSearchParams({
+      search: "",
+      limit: "50",
+      page: String(page),
+      ...(this.config.providerId === "animez" ? {} : { in: "1", type: "0" }),
+    }).toString();
+    const candidates = await this.readPage(url, signal);
+    if (candidates.length > 50)
+      throw new IntegrationError(this.config.providerId, "invalid-response");
+    return {
+      candidates,
+      scanned: candidates.length,
+      nextPage: candidates.length === 50 ? page + 1 : null,
+    };
+  }
+
+  private async readPage(
+    url: URL,
+    signal?: AbortSignal,
+  ): Promise<ProviderCandidate[]> {
     const response = await request(
       this.transport,
       this.config.providerId,

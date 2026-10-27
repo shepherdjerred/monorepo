@@ -39,6 +39,80 @@ describe("public tracker contracts", () => {
     ).resolves.toMatchObject([{ infoHash: hash, sizeBytes: 123 }]);
   });
 
+  it("reads native Knaben recent pages and counts non-downloadable rows when continuing", async () => {
+    const calls: URL[] = [];
+    const row = {
+      id: "recent",
+      title: "Synthetic Film.2020.Extended.Cut",
+      bytes: 123,
+      hash,
+      seeders: 2,
+      details: "https://knaben.org/fixture",
+      magnetUrl: null,
+      link: null,
+    };
+    const provider = new KnabenProvider((url) => {
+      calls.push(url);
+      expect(url.pathname).toBe("/v2/browse");
+      expect(Object.fromEntries(url.searchParams)).toMatchObject({
+        o: "date",
+        d: "desc",
+        s: "100",
+      });
+      expect(url.searchParams.has("q")).toBe(false);
+      return Promise.resolve(
+        Response.json({
+          hits:
+            url.searchParams.get("f") === "0"
+              ? Array.from({ length: 100 }, (_, i) => ({
+                  ...row,
+                  id: String(i),
+                  hash: null,
+                }))
+              : [row],
+        }),
+      );
+    });
+    expect(await provider.recent({ page: 1 })).toEqual({
+      candidates: [],
+      scanned: 100,
+      nextPage: 2,
+    });
+    expect(await provider.recent({ page: 2 })).toMatchObject({
+      candidates: [
+        {
+          providerId: "knaben",
+          infoHash: hash,
+          editionEvidence: [{ text: row.title }],
+        },
+      ],
+      scanned: 1,
+      nextPage: null,
+    });
+    expect(calls.map((url) => url.searchParams.get("f"))).toEqual(["0", "100"]);
+  });
+
+  it("rejects an oversized recent response instead of silently dropping the unseen tail", async () => {
+    const provider = new KnabenProvider(() =>
+      Promise.resolve(
+        Response.json({
+          hits: Array.from({ length: 101 }, (_, i) => ({
+            id: String(i),
+            title: "Synthetic",
+            bytes: 123,
+            hash: null,
+            seeders: 0,
+            details: "https://knaben.org/fixture",
+            magnetUrl: null,
+          })),
+        }),
+      ),
+    );
+    await expect(provider.recent({ page: 1 })).rejects.toThrow(
+      "invalid-response",
+    );
+  });
+
   it("normalizes TPB's numeric strings and explicit empty sentinel", async () => {
     const provider = new PirateBayProvider(async () =>
       Response.json([
@@ -91,6 +165,77 @@ describe("public tracker contracts", () => {
 });
 
 describe("private family protocol", () => {
+  it.each(["privatehd", "avistaz", "animez"] as const)(
+    "reads %s recent pages without requiring a title or narrowing to one media type",
+    async (providerId) => {
+      const pages: string[] = [];
+      const row = {
+        url: `https://${providerId}.to/torrent/42`,
+        download: `https://${providerId}.to/download/42?token=synthetic`,
+        file_name: "Synthetic.2020.Extended.Cut.mkv",
+        release_title: "Synthetic alternate title",
+        info_hash: hash,
+        file_size: 1024,
+        seed: 1,
+      };
+      const provider = new AvistazFamilyProvider(
+        {
+          providerId,
+          username: "synthetic",
+          password: "synthetic",
+          pid: "synthetic",
+        },
+        (url, init) => {
+          if (url.pathname.endsWith("/auth"))
+            return Promise.resolve(Response.json({ token: "synthetic" }));
+          expect(new Headers(init.headers).get("Authorization")).toBe(
+            "Bearer synthetic",
+          );
+          expect(url.pathname).toBe("/api/v1/jackett/torrents");
+          expect(url.searchParams.get("search")).toBe("");
+          expect(url.searchParams.get("limit")).toBe("50");
+          expect(url.searchParams.get("in")).toBe(
+            providerId === "animez" ? null : "1",
+          );
+          expect(url.searchParams.get("type")).toBe(
+            providerId === "animez" ? null : "0",
+          );
+          const page = url.searchParams.get("page");
+          pages.push(page ?? "missing");
+          return Promise.resolve(
+            Response.json({
+              data:
+                page === "1"
+                  ? Array.from({ length: 50 }, (_, i) => ({
+                      ...row,
+                      url: `https://${providerId}.to/torrent/${String(i)}`,
+                    }))
+                  : [row],
+            }),
+          );
+        },
+      );
+      await provider.login();
+      const first = await provider.recent({ page: 1 });
+      expect(first).toMatchObject({ scanned: 50, nextPage: 2 });
+      expect(first.candidates).toHaveLength(50);
+      expect(await provider.recent({ page: 2 })).toMatchObject({
+        scanned: 1,
+        nextPage: null,
+        candidates: [
+          {
+            providerId,
+            infoHash: hash,
+            editionEvidence: [
+              { text: row.file_name },
+              { text: row.release_title },
+            ],
+          },
+        ],
+      });
+      expect(pages).toEqual(["1", "2"]);
+    },
+  );
   it.each(["privatehd", "avistaz", "animez"] as const)(
     "authenticates %s directly and bounds credential destinations",
     async (providerId) => {
