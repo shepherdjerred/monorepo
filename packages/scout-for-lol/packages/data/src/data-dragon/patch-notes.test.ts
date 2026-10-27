@@ -1,17 +1,9 @@
 import { describe, expect, test } from "vitest";
 import {
   getPatchChangeset,
-  selectRelevantPatchChanges,
-  formatPatchNotes,
   PatchChangesetSchema,
   type PatchChangeset,
 } from "#src/data-dragon/patch-notes.ts";
-import { getItemInfo } from "#src/data-dragon/item.ts";
-
-// A stable item that always exists in Data Dragon; we read its canonical name at
-// runtime so the item-matching test doesn't hardcode a version-specific string.
-const BOOTS_ITEM_ID = 1001;
-const bootsName = getItemInfo(BOOTS_ITEM_ID)?.name ?? "Boots";
 
 function buildChangeset(): PatchChangeset {
   return PatchChangesetSchema.parse({
@@ -41,7 +33,7 @@ function buildChangeset(): PatchChangeset {
     ],
     items: [
       {
-        name: bootsName,
+        name: "Boots",
         direction: "buff",
         magnitude: "moderate",
         summary: "Cheaper",
@@ -107,76 +99,5 @@ describe("changelogHighlights", () => {
         changelogHighlights: ["a", "b", "c", "d", "e"],
       }),
     ).toThrow();
-  });
-});
-
-describe("selectRelevantPatchChanges", () => {
-  test("keeps only changes touching the player's champs, role, and items", () => {
-    const changeset = buildChangeset();
-    const subset = selectRelevantPatchChanges(changeset, {
-      // Data Dragon key form (no space) — must still match "Lee Sin"
-      champions: ["LeeSin"],
-      lanes: ["jungle"],
-      items: [BOOTS_ITEM_ID],
-    });
-
-    expect(subset.champions.map((c) => c.name)).toEqual(["Lee Sin"]);
-    expect(subset.systems.map((s) => s.area)).toEqual(["Jungle"]);
-    expect(subset.items.map((i) => i.name)).toEqual([bootsName]);
-  });
-
-  test("ranks matched champion changes by magnitude (major first)", () => {
-    const changeset = buildChangeset();
-    const subset = selectRelevantPatchChanges(changeset, {
-      champions: ["Yasuo", "LeeSin"],
-      lanes: [],
-      items: [],
-    });
-    expect(subset.champions.map((c) => c.name)).toEqual(["Lee Sin", "Yasuo"]);
-  });
-
-  test("drops everything when nothing matches", () => {
-    const changeset = buildChangeset();
-    const subset = selectRelevantPatchChanges(changeset, {
-      champions: ["Teemo"],
-      lanes: ["top"],
-      items: [],
-    });
-    expect(subset.champions).toEqual([]);
-    expect(subset.systems).toEqual([]);
-    expect(subset.items).toEqual([]);
-  });
-});
-
-describe("formatPatchNotes", () => {
-  test("renders targeted changes with prose details", () => {
-    const changeset = buildChangeset();
-    const subset = selectRelevantPatchChanges(changeset, {
-      champions: ["LeeSin"],
-      lanes: ["jungle"],
-      items: [],
-    });
-    const text = formatPatchNotes(changeset, subset);
-    expect(text).toContain("PATCH 26.13");
-    expect(text).toContain("Lee Sin (buff, major)");
-    expect(text).toContain("Jungle (buff, moderate)");
-  });
-
-  test("falls back to overview + summary bullets when nothing matches", () => {
-    const changeset = buildChangeset();
-    const subset = selectRelevantPatchChanges(changeset, {
-      champions: ["Teemo"],
-      lanes: ["top"],
-      items: [],
-    });
-    const text = formatPatchNotes(changeset, subset);
-    expect(text).toContain(changeset.overview);
-    expect(text).toContain("Junglers eat better early");
-    expect(text).not.toContain("Lee Sin");
-  });
-
-  test("returns empty string when there is no changeset", () => {
-    const noChangeset: PatchChangeset | undefined = undefined;
-    expect(formatPatchNotes(noChangeset)).toBe("");
   });
 });

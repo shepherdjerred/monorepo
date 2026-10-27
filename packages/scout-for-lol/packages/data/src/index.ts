@@ -43,8 +43,6 @@ export {
 export {
   getPatchChangeset,
   getPatchChangesets,
-  selectRelevantPatchChanges,
-  formatPatchNotes,
 } from "./data-dragon/patch-notes.ts";
 export { getCachedAugmentNameById } from "./data-dragon/augment-names.ts";
 

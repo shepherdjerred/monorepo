@@ -144,8 +144,8 @@ for the mechanism.
   notification slices keep their one-way order.
 - `temporal`: `contracts` is a leaf, and the V2 activity, workflow, receipt and
   backfill contract modules may import only contract modules.
-- `data`: `model/scoutql` depends only on `model/core` and `model/reports`, and
-  `league/` and `data-dragon/` must not import `review/`. `model/legacy` is
+- `data`: `model/scoutql` depends only on `model/core` and `model/reports`.
+  `model/legacy` is
   deliberately not a layer because it is being deleted.
 - `report`: `html/shared` must not import a layout, and `assets` is a leaf.
 - Type-only edge: `app` may `import type` from

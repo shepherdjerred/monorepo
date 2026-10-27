@@ -169,13 +169,14 @@
             ],
             "rubric": [
               "Explains that Scout posts a match report to a channel after every game for each tracked player with a feed.",
+              "Distinguishes automatic statistics reports from written game analysis: automatic AI reviews and artwork are unavailable; Explore can analyze recorded games on request.",
               "Offers to set that up, or tells the user exactly how.",
               "Does not claim Scout cannot post something after each game."
             ]
           }
         }
       ],
-      "origin": "A user asked for 'auto game review after every game', was told Explore cannot, and removed the bot 93 minutes later — player feeds already do this."
+      "origin": "A user asked for 'auto game review after every game', was told Explore cannot, and removed the bot 93 minutes later. Player feeds offer automatic statistics reports; written game analysis is available in Explore on request."
     },
     {
       "id": "edit-bot-message",

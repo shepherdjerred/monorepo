@@ -46,7 +46,7 @@ const ASSETS_DIR = `${import.meta.dir}/../src/data-dragon/assets`;
 const IMG_DIR = `${ASSETS_DIR}/img`;
 // scout-for-lol/packages/data/scripts → scout-for-lol/packages/frontend/...
 const CHANGELOG_FILE = `${import.meta.dir}/../../frontend/src/data/changelog.tsx`;
-// Structured patch changeset consumed at review time (bundled asset).
+// Structured patch changeset consumed by Explore (bundled asset).
 const PATCH_NOTES_ASSET = `${ASSETS_DIR}/patch-notes.json`;
 const PATCH_NOTES_HISTORY_ASSET = `${ASSETS_DIR}/patch-notes-history.json`;
 // Raw patch-notes provenance — committed but not imported at runtime.
@@ -1512,7 +1512,7 @@ async function readPreviousVersion(): Promise<string | undefined> {
  */
 /**
  * Archive the raw patch-notes page for provenance/re-analysis. Best-effort: a
- * fetch failure is logged and skipped (the structured changeset is what reviews
+ * fetch failure is logged and skipped (the structured changeset is what Explore
  * actually consume). Committed but excluded from formatting and never imported.
  */
 async function saveRawPatchNotes(

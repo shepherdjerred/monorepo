@@ -202,7 +202,7 @@ advance either evidence or the match cursor.
 | ----------- | ------------------------------------------------------- |
 | Zod Schemas | Validate external API responses (RawMatch, RawTimeline) |
 | Model Types | Shared TypeScript types (Player, Match, Competition)    |
-| Constants   | Art styles, themes, lane contexts                       |
+| Constants   | Queue types, lane contexts, game-mode metadata          |
 
 ### Report Package
 
