@@ -10,7 +10,11 @@ export const ContainerSchema = z.object({
   MediaContainer: z.record(z.string(), z.unknown()),
 });
 
-export function createPmsWire(root: string, signal: AbortSignal) {
+export function createPmsWire(
+  root: string,
+  signal: AbortSignal,
+  network: FetchTransport = fetch,
+) {
   const calls: { method: string; path: string; status: number }[] = [];
   const fixtures = new Map<
     string,
@@ -28,7 +32,7 @@ export function createPmsWire(root: string, signal: AbortSignal) {
       throw new Error(
         "PMS fixture requested an endpoint outside its wire whitelist",
       );
-    const response = await fetch(url, {
+    const response = await network(url, {
       ...init,
       signal: AbortSignal.any([signal, AbortSignal.timeout(10_000)]),
       redirect: "error",
@@ -82,7 +86,6 @@ export function createPmsWire(root: string, signal: AbortSignal) {
       headers: {
         Accept: "application/json",
         "X-Plex-Client-Identifier": "media-disposable-wire-fixture",
-        "X-Plex-Pms-Api-Version": "1.2.3",
       },
     });
     const body = await response.text();

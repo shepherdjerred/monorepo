@@ -18,7 +18,10 @@ const Sections = z.array(
   }),
 );
 
-export async function createLibraries(wire: PmsWire, manifest: Manifest) {
+export async function createLibraries(
+  wire: PmsWire,
+  manifest: Pick<Manifest, "root">,
+) {
   const providers = await wire.request("/media/providers/metadata");
   const agents = z
     .array(z.object({ identifier: z.string() }))
@@ -31,27 +34,25 @@ export async function createLibraries(wire: PmsWire, manifest: Manifest) {
   const specifications = [
     {
       kind: "movie",
-      type: "1",
       agent: "tv.plex.agents.movie",
       scanner: "Plex Movie",
     },
     {
       kind: "show",
-      type: "2",
       agent: "tv.plex.agents.series",
       scanner: "Plex TV Series",
     },
   ] as const;
   for (const item of specifications)
     await wire.request(
-      "/library/sections/all",
+      "/library/sections",
       {
         name: `Synthetic ${item.kind}`,
-        type: item.type,
+        type: item.kind,
         agent: item.agent,
         scanner: item.scanner,
         language: "en-US",
-        locations: path.join(manifest.root, "media", item.kind),
+        location: path.join(manifest.root, "media", item.kind),
       },
       "POST",
     );
