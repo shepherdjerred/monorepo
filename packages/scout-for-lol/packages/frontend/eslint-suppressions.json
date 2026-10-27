@@ -1,26 +1,6 @@
 {
-  "src/components/review-tool/match/match-reviewer-info.tsx": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/components/review-tool/config/rank-config-panel.tsx": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/components/review-tool/match/use-match-browser.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/data/changelog.tsx": {
     "max-lines": {
-      "count": 1
-    }
-  },
-  "src/lib/review-tool/s3.ts": {
-    "sonarjs/cognitive-complexity": {
       "count": 1
     }
   }

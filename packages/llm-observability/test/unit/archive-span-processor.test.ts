@@ -127,7 +127,7 @@ test("archives a span with gen_ai.* body attributes and forwards it with full co
       "gen_ai.usage.input_tokens": 12,
       "gen_ai.usage.output_tokens": 3,
       "llm.service": "scout-backend",
-      "llm.call_site": "scout-review",
+      "llm.call_site": "archive-test",
       "gen_ai.input.messages": JSON.stringify([
         { role: "user", content: "hi" },
       ]),

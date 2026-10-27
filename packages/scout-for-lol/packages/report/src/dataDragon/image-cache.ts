@@ -103,8 +103,8 @@ export function getChampionImage(championName: string): string {
 // Dragon refreshes), returns a "?" placeholder data URI rather than an
 // empty string — satori throws "Image source is not provided." on empty
 // src, which previously crashed the entire match report. Stale icon is
-// recoverable on the next refresh; a perpetual render crash burned the
-// AI pipeline on every poll for the affected match.
+// recoverable on the next refresh; a perpetual render crash blocks report
+// delivery for the affected match.
 //
 // Item ID 0 (empty slot) is handled by the renderer (item.tsx renders an
 // empty div) and never reaches this function, so the placeholder return

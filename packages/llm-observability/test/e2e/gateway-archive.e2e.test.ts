@@ -37,7 +37,7 @@ test("end-to-end: gateway span -> Tempo + private archive", async () => {
   const response = await withLlmSpan(
     {
       service: "e2e-test-provider",
-      callSite: "scout-review",
+      callSite: "archive-test",
       system: "openai",
     },
     {
@@ -115,7 +115,7 @@ test("end-to-end: gateway span -> Tempo + private archive", async () => {
     v: 1,
     service: "e2e-test-provider",
     provider: "openai",
-    callSite: "scout-review",
+    callSite: "archive-test",
   });
   const parsedEnvelope = InputMessagesEnvelopeSchema.parse(envelope);
   expect(parsedEnvelope["gen_ai.input.messages"]).toEqual([
