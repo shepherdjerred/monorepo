@@ -15,11 +15,47 @@ import { snapshotHash } from "#migration/profile-import.ts";
 import { queueOperation } from "#automation/store.ts";
 import { buildHandoffScope } from "./scope.ts";
 import { runtimeAuthority } from "./authority.ts";
+import {
+  LibrarySubtitlePolicyIdsSchema,
+  LibrarySubtitlePolicyVersionsSchema,
+} from "#shared/handoff/library-v3.ts";
 
 /** Commands only enqueue work; trusted worker observations are never accepted over HTTP. */
 export class PrismaMediaHandoff extends MediaCommandBase {
   constructor(private readonly db: Database) {
     super(db, { keepDays: 30 });
+  }
+
+  async subtitlePolicyVersions(
+    actor: MediaActor,
+    raw: z.input<typeof LibrarySubtitlePolicyIdsSchema>,
+  ) {
+    requireOwner(actor);
+    const ids = LibrarySubtitlePolicyIdsSchema.parse(raw);
+    const media = await this.db.mediaItem.findMany({
+      where: { id: { in: ids } },
+      select: {
+        id: true,
+        subtitlePolicies: {
+          where: { edition: "default" },
+          orderBy: { version: "desc" },
+          take: 1,
+          select: { version: true },
+        },
+      },
+    });
+    if (media.length !== ids.length)
+      throw new MediaError(
+        "handoff_policy_target_changed",
+        "A subtitle policy target no longer exists",
+        409,
+      );
+    return LibrarySubtitlePolicyVersionsSchema.parse(
+      media.map((item) => ({
+        mediaId: item.id,
+        version: item.subtitlePolicies[0]?.version ?? -1,
+      })),
+    );
   }
 
   async prepare(

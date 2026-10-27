@@ -77,6 +77,17 @@ export const LibraryHandoffSelectionV3Schema =
     plexEdits: z.array(PlexEditionProofV1Schema).max(25),
   });
 export type LibraryHandoffScopeV3 = z.infer<typeof LibraryHandoffScopeV3Schema>;
+export const LibrarySubtitlePolicyIdsSchema = z
+  .array(z.uuid())
+  .min(1)
+  .max(100)
+  .refine(
+    (ids) => new Set(ids).size === ids.length,
+    "Duplicate policy targets",
+  );
+export const LibrarySubtitlePolicyVersionsSchema = z
+  .array(z.strictObject({ mediaId: z.uuid(), version: z.int().min(-1) }))
+  .max(100);
 export const LibraryPlexEditOperationV3Schema = z.strictObject({
   schemaVersion: z.literal(3),
   operationId: z.uuid(),

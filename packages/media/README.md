@@ -466,11 +466,12 @@ Normal session authentication, CSRF protection, and an `Idempotency-Key` apply t
 commands. The application never accepts caller assertions of stopped managers,
 verified files, or trusted mount identities.
 
-| Endpoint                                | Contract                                                                                                                                                                                                                                                                                                    |
-| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /api/v1/admin/handoffs`           | Exact bundle/review hashes and versions, runtime epoch/version, explicit provenance selection, and immutable imported profile bindings. Initial library adoption uses per-file movie classifications; schema version 3 adds explicitly approved Plex label correction. Returns an operation and handoff ID. |
-| `GET /api/v1/admin/handoffs/:id`        | Current preparation state, exact selected scope, complete proof plan/hash, expiry, and eventual receipt ID.                                                                                                                                                                                                 |
-| `POST /api/v1/admin/handoffs/:id/apply` | Exact prepared plan hash/version and runtime epoch/version, with the matching protocol. `ApplyLibraryHandoffV2Schema` acknowledges household holds; historical `ApplyHandoffSchema` also acknowledges protected legacy sources. Queues fresh proof and an apply operation.                                  |
+| Endpoint                                                   | Contract                                                                                                                                                                                                                                                                                                    |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/v1/admin/handoffs`                              | Exact bundle/review hashes and versions, runtime epoch/version, explicit provenance selection, and immutable imported profile bindings. Initial library adoption uses per-file movie classifications; schema version 3 adds explicitly approved Plex label correction. Returns an operation and handoff ID. |
+| `GET /api/v1/admin/handoffs/:id`                           | Current preparation state, exact selected scope, complete proof plan/hash, expiry, and eventual receipt ID.                                                                                                                                                                                                 |
+| `GET /api/v1/admin/handoffs/subtitle-policies?mediaId=:id` | Owner-only, bounded lookup of each target's own default-edition policy version, or `-1` when absent. Inherited effective policies do not substitute for a local version.                                                                                                                                    |
+| `POST /api/v1/admin/handoffs/:id/apply`                    | Exact prepared plan hash/version and runtime epoch/version, with the matching protocol. `ApplyLibraryHandoffV2Schema` acknowledges household holds; historical `ApplyHandoffSchema` also acknowledges protected legacy sources. Queues fresh proof and an apply operation.                                  |
 
 Preparation authorizes observation only. File hashing and probing run on
 `media-files`; a concurrent Temporal activity refreshes network evidence every
@@ -486,6 +487,16 @@ They exclude request and torrent captures, associations and requester inventory.
 Proposed source/canonical roots remain unverified until the trusted handoff
 observer proves the actual mounts. Earlier complete-bundle bodies and hashes
 retain their original format and source requirements.
+
+The owner screen builds this library-only report from selected captures and
+explicit source/Media root paths. After approving the canonical mappings, select
+up to 25 existing files, choose the matching imported quality profiles, and
+resolve any ambiguous movie cuts. Captions and policies are associated by exact
+manager instance, source ancestry and video path. Generic Chinese remains
+unresolved unless the owner selects Simplified Chinese. The separately prepared
+review shows the classified files and exact before/after Plex edition labels;
+its URL retains the handoff ID for reloads. Adoption requires that plan's explicit
+approval and current proof, rather than report approval alone.
 
 Initial library adoption uses schema version 2 for observation or schema version 3
 with `plexEditionLabels: "update_in_place"` for automatic label correction.
