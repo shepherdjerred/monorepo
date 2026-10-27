@@ -11,6 +11,8 @@ import { snapshotMoviePublicationAssetV2 } from "./publication/snapshot.ts";
 import { findMoviePublicationReferenceV2 } from "./publication/store.ts";
 import { loadMovieLibraryParentV2 } from "./library-records.ts";
 import { loadLibraryAssetParentV1 } from "#infrastructure/handoff/library-asset.ts";
+import { libraryPlexPhysicalGroup } from "#infrastructure/plex-binding/library/authority.ts";
+import { readPlexPhysicalGroup } from "#infrastructure/plex-binding/read.ts";
 import { queueMovieSubtitleTargetsV4 } from "#automation/movie-editions/subtitles/queue.ts";
 import { findMovieSubtitlesV4 } from "#automation/movie-editions/subtitles/network.ts";
 import { installMovieSubtitlesV4 } from "#automation/files/movie-editions/subtitles.ts";
@@ -283,6 +285,14 @@ test.each(MovieEditionKeySchema.options)(
       budget,
     );
     expect(physical?.subtitleLineage?.installations).toHaveLength(1);
+    const originalVideo = await loadLibraryAssetParentV1(
+      f.db,
+      { receiptId: f.receiptId, assetId: f.asset.id },
+      budget,
+    );
+    const servingVideo = await readPlexPhysicalGroup(f.db, f.asset.id);
+    expect(current.version).toBe(originalVideo.asset.version);
+    expect(servingVideo.group).toEqual(libraryPlexPhysicalGroup(originalVideo));
     f.context.files.enabled.acquisition = () => Promise.resolve(false);
     await expect(
       installMovieSubtitlesV4(f.context.files, input),
