@@ -7,6 +7,9 @@ import type { MigrationProposalListSchema } from "#shared/migration.ts";
 import { CommandResultSchema } from "#shared/api.ts";
 import { readApi, writeApi, queryClient } from "./api.ts";
 import { ErrorNotice, Loading } from "./components.tsx";
+import { LibraryBundleForm } from "./library-import/bundle-form.tsx";
+import { LibraryBatch } from "./library-import/batch.tsx";
+import { LibraryPlan } from "./library-import/plan.tsx";
 
 export function MigrationBundles({
   captures,
@@ -15,72 +18,21 @@ export function MigrationBundles({
   captures: z.infer<typeof MigrationProposalListSchema>;
   actorId: string;
 }) {
-  const [selected, setSelected] = useState<string[]>([]);
   const [reviewId, setReviewId] = useState<string | null>(null);
   const summaries = useQuery({
     queryKey: ["migration", "bundles"],
     queryFn: async () =>
       readApi("/admin/migration/bundles", BundleReviewListSchema),
   });
-  const create = useMutation({
-    mutationFn: async () =>
-      writeApi({
-        actorId,
-        path: "/admin/migration/bundles",
-        body: { captureIds: selected },
-        schema: BundleReviewProtocolSchema,
-      }),
-    onSuccess: async (result) => {
-      setReviewId(result.id);
-      await queryClient.invalidateQueries({
-        queryKey: ["migration", "bundles"],
-      });
-    },
-  });
-  const distinct = [
-    ...new Map(
-      captures.map((capture) => [capture.captureId, capture]),
-    ).values(),
-  ];
   return (
     <section className="panel">
-      <h2>Review the complete handoff set</h2>
-      <p>
-        Choose one stable capture per source instance: Radarr, Sonarr, Seerr,
-        Bazarr and qBittorrent. A partial set stays protected. This review
-        cannot activate automation.
-      </p>
-      <fieldset>
-        <legend>Immutable source captures</legend>
-        {distinct.map((capture) => (
-          <label className="checkbox-row" key={capture.captureId}>
-            <input
-              type="checkbox"
-              checked={selected.includes(capture.captureId)}
-              onChange={(event) => {
-                setSelected(
-                  event.target.checked
-                    ? [...selected, capture.captureId]
-                    : selected.filter((id) => id !== capture.captureId),
-                );
-              }}
-            />
-            {capture.source.kind} {capture.source.version} ·{" "}
-            {new Date(capture.createdAt).toLocaleString()} ·{" "}
-            {capture.captureHash.slice(0, 12)}
-          </label>
-        ))}
-      </fieldset>
-      <button
-        className="button primary"
-        disabled={selected.length === 0 || create.isPending}
-        onClick={() => {
-          create.mutate();
-        }}
-      >
-        {create.isPending ? "Comparing sources…" : "Build combined report"}
-      </button>
-      {create.error !== null && <ErrorNotice error={create.error} />}
+      <h2>Review your existing library</h2>
+      <LibraryBundleForm
+        captures={captures}
+        actorId={actorId}
+        onCreated={setReviewId}
+      />
+      <LibraryPlan actorId={actorId} />
       {summaries.error !== null && <ErrorNotice error={summaries.error} />}
       <div className="action-row">
         {summaries.data?.map((review) => (
@@ -166,7 +118,7 @@ function BundleSelection({
           ? "Complete, stable source set."
           : "Protected: source roles are missing or observations changed."}{" "}
         Files still require fresh mount identity, checksum and manager handoff
-        proof. Nothing is owned by this application.
+        proof. This report does not transfer ownership.
       </p>
       <details>
         <summary>Review fingerprints and source bindings</summary>
@@ -241,7 +193,7 @@ function BundleSelection({
                       .map((reason) => reason.replaceAll("_", " "))
                       .join("; ")}
                     <br />
-                    Unowned
+                    Review evidence only
                   </td>
                 </tr>
               ))}
@@ -296,6 +248,9 @@ function BundleSelection({
           : "Record selection approval"}
       </button>
       {mutation.error !== null && <ErrorNotice error={mutation.error} />}
+      {review.status === "approved" && (
+        <LibraryBatch review={review} actorId={actorId} />
+      )}
     </section>
   );
 }

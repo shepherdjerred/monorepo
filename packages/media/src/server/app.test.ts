@@ -61,6 +61,9 @@ const migrationFixture: MediaAppDependencies["migrationAdmin"] = {
 };
 
 const handoffFixture = {
+  async subtitlePolicyVersions() {
+    throw new Error("Unexpected fixture subtitle policy versions");
+  },
   async prepare() {
     throw new Error("Unexpected fixture handoff prepare");
   },

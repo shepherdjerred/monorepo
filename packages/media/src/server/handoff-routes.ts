@@ -8,16 +8,28 @@ import {
   PrepareHandoffProtocolSchema,
 } from "#shared/handoff/protocol.ts";
 import { parseInput, readJson } from "./validation.ts";
+import { LibrarySubtitlePolicyIdsSchema } from "#shared/handoff/library-v3.ts";
 
 export type HandoffAdministration = Pick<
   PrismaMediaHandoff,
-  "prepare" | "detail" | "apply"
+  "prepare" | "detail" | "apply" | "subtitlePolicyVersions"
 >;
 
 export function registerHandoffRoutes(
   app: Hono<{ Variables: { actor: MediaActor; requestId: string } }>,
   handoff: HandoffAdministration,
 ) {
+  app.get("/api/v1/admin/handoffs/subtitle-policies", async (c) =>
+    c.json(
+      await handoff.subtitlePolicyVersions(
+        c.get("actor"),
+        parseInput(
+          LibrarySubtitlePolicyIdsSchema,
+          c.req.queries("mediaId") ?? [],
+        ),
+      ),
+    ),
+  );
   app.post("/api/v1/admin/handoffs", async (c) =>
     c.json(
       await handoff.prepare(

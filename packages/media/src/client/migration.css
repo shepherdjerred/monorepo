@@ -60,3 +60,32 @@
   gap: 0.6rem;
   margin: 1rem 0;
 }
+@media (max-width: 640px) {
+  .migration-page .library-plan thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .migration-page .library-plan tbody,
+  .migration-page .library-plan tr,
+  .migration-page .library-plan td {
+    display: block;
+  }
+  .migration-page .library-plan tr {
+    border-bottom: 1px solid var(--line);
+    padding: 10px 0;
+  }
+  .migration-page .library-plan td {
+    border: 0;
+    padding: 8px 0;
+  }
+  .migration-page .library-plan td::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+}
