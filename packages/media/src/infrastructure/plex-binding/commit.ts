@@ -123,7 +123,7 @@ export async function commitVerifiedPlexBindings(
     },
     freshness,
   );
-  await writePointers(
+  await writePlexBindingPointers(
     tx,
     {
       expected,
@@ -180,10 +180,10 @@ function assertVerifiedCoverage(
   }
 }
 
-async function writePointers(
+export async function writePlexBindingPointers(
   tx: Prisma.TransactionClient,
   input: {
-    expected: PlexBindingExpected;
+    expected: Pick<PlexBindingExpected, "previous">;
     bindings: PlexBindingSnapshot[];
     startedAt: string;
     completedAt: string;
@@ -278,7 +278,7 @@ export async function invalidatePlexBindings(
     },
     freshness,
   );
-  await writePointers(
+  await writePlexBindingPointers(
     tx,
     {
       expected: input.expected,

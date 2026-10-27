@@ -755,6 +755,15 @@ committed receipt may still be acknowledged after proof expiry while the SDK
 invocation remains active. No additional schedule or file-worker credential is
 required.
 
+Initial library receipts queue `verifyLibraryPlexBindingWorkflow` separately
+from the retained handoff histories. This Network-only Workflow receives
+operation, receipt, asset and epoch IDs and uses the same bounded result and
+invocation adapter. Media resolves the original approved file and source report,
+verifies the exact movie cut or complete TV hierarchy in two stable passes, and
+commits the serving bindings and immutable receipt together. It creates no
+request or acquisition attempt. Files and label correction complete through
+the original handoff before this read-only Plex check is queued.
+
 Plex event hints use the existing durable outbox to start
 `observePlexEventHintWorkflow` on `monorepo-workflows`; its only observation
 Activity runs on `media-network`. History contains bounded media/mapping IDs,

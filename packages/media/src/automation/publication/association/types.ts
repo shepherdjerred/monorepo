@@ -1,6 +1,6 @@
 import type { PlexClient } from "#integrations/plex.ts";
 import type { PlexCanonicalTarget } from "#shared/plex-binding/canonical.ts";
-import type { PlexBindingExpected } from "#shared/plex-binding/expected.ts";
+import type { PlexServingExpected } from "#shared/plex-binding/library.ts";
 import type {
   PlexAccess,
   PlexBindingFreshness,
@@ -14,7 +14,7 @@ export type AssociationExecution = {
 
 export type ServingVerificationInput = {
   purpose: "current_serving";
-  expected: PlexBindingExpected;
+  expected: PlexServingExpected;
   canonicalTargets: readonly PlexCanonicalTarget[];
   access: readonly PlexAccess[];
   /** Captured by the invocation before config/canonical reads, never renewed here. */

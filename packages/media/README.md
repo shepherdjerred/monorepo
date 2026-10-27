@@ -528,6 +528,18 @@ distinct Part IDs to those episode items despite their identical physical path;
 each item retains its own Part identity. Serving verification still requires
 complete coverage, the exact path and size, and the canonical show/season/episode
 hierarchy in both stable passes.
+
+The adoption transaction queues one `verify_library_plex_binding` command for
+each physical file. Its separate Network Workflow receives only operation,
+receipt, asset and epoch IDs. It resolves the original approved receipt and
+literal source report, then verifies the current Plex cut or complete TV
+hierarchy in two stable passes before installing serving bindings. Catalog
+refreshes may add identifiers; changing an original title identifier or episode
+coordinate requires reconciliation. The receipt preserves its original SDK,
+writer and 60-second verification bounds. Historical acknowledgements use the
+immutable source and association rows independently of current ownership or
+configuration. Adoption creates no personal requests or acquisition attempts,
+and the serving check does not edit Plex watch history.
 The receipt retains the initial asset and caption snapshots as well as the
 reviewed filesystem and Plex evidence, plus actual label-edit checkpoints for
 schema version 3. Caption ownership does not establish

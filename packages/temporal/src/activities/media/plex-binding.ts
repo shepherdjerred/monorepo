@@ -1,6 +1,9 @@
 import {
   ReverifyPlexBindingInputSchema,
   ReverifyPlexBindingResultSchema,
+  LibraryPlexBindingInputV1Schema,
+  type LibraryPlexBindingActivities,
+  type LibraryPlexBindingInputV1,
   type PlexBindingActivities,
   type PlexBindingExecution,
   type ReverifyPlexBindingInput,
@@ -28,6 +31,32 @@ export function createPlexBindingNetworkActivities(
         const runtime = await load();
         execution.assertActive();
         const result = await runtime.plexBinding.reverify(parsed, execution);
+        execution.assertActive();
+        return ReverifyPlexBindingResultSchema.parse(result);
+      }),
+  };
+}
+
+export function createLibraryPlexBindingNetworkActivities(
+  load: () => Promise<{
+    plexBinding: {
+      verifyLibrary: (
+        input: LibraryPlexBindingInputV1,
+        execution: PlexBindingExecution,
+      ) => Promise<ReverifyPlexBindingResult>;
+    };
+  }>,
+): LibraryPlexBindingActivities {
+  return {
+    verifyLibraryPlexBinding: (input) =>
+      plexBindingCall(async (execution) => {
+        const parsed = LibraryPlexBindingInputV1Schema.parse(input);
+        const runtime = await load();
+        execution.assertActive();
+        const result = await runtime.plexBinding.verifyLibrary(
+          parsed,
+          execution,
+        );
         execution.assertActive();
         return ReverifyPlexBindingResultSchema.parse(result);
       }),

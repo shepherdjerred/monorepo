@@ -3,9 +3,9 @@ import {
   type PlexCanonicalTarget,
 } from "#shared/plex-binding/canonical.ts";
 import {
-  PlexBindingExpectedSchema,
-  type PlexBindingExpected,
-} from "#shared/plex-binding/expected.ts";
+  PlexServingExpectedProtocolSchema,
+  type PlexServingExpected,
+} from "#shared/plex-binding/library.ts";
 import {
   PlexAccessSchema,
   plexScopeKey,
@@ -22,7 +22,7 @@ function assertServingPurpose(purpose: string) {
 }
 
 function assertCanonicalTargets(
-  expected: PlexBindingExpected,
+  expected: PlexServingExpected,
   canonical: readonly PlexCanonicalTarget[],
   movieEditions: boolean,
 ) {
@@ -82,7 +82,7 @@ export function servingScope(
   input: ServingVerificationInput,
   movieEditions = false,
 ) {
-  const expected = PlexBindingExpectedSchema.parse(input.expected);
+  const expected = PlexServingExpectedProtocolSchema.parse(input.expected);
   const canonical = input.canonicalTargets.map((row) =>
     PlexCanonicalTargetSchema.parse(row),
   );

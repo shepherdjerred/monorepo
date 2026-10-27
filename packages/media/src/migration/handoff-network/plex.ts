@@ -14,7 +14,11 @@ type Media = {
   externalIds: unknown;
   seasonNumber: number | null;
   episodeNumber: number | null;
-  parent?: { parent?: { tmdbId: number | null } | null } | null;
+  parent?: {
+    kind?: string;
+    tmdbId?: number | null;
+    parent?: { tmdbId: number | null } | null;
+  } | null;
 };
 type File = {
   canonicalPath: string;
@@ -43,7 +47,7 @@ export function exactPlexIdentity(
   const ids = identity?.Guid?.map((guid) => guid.id) ?? [];
   const expectedTmdb =
     media.kind === "episode"
-      ? (media.parent?.parent?.tmdbId ?? external.seriesTmdb)
+      ? episodeSeriesTmdb(media, external.seriesTmdb)
       : media.tmdbId;
   if (expectedTmdb == null || !ids.includes(`tmdb://${String(expectedTmdb)}`))
     return false;
@@ -66,6 +70,17 @@ export function exactPlexIdentity(
           imdb != null &&
           ids.some((id) => id.startsWith("imdb://") && id !== `imdb://${imdb}`)
         );
+}
+
+function episodeSeriesTmdb(
+  media: Media,
+  historicalSeriesTmdb: number | undefined,
+) {
+  const parent = media.parent;
+  if (parent?.kind === "series") return parent.tmdbId;
+  if (parent?.kind !== undefined && parent.kind !== "season") return null;
+  // Older retained native scopes store the canonical series ID in externalIds.
+  return parent?.parent?.tmdbId ?? historicalSeriesTmdb;
 }
 
 async function scanSection(

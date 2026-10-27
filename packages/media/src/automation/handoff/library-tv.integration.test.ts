@@ -7,6 +7,8 @@ import { inspectMedia } from "#filesystem/media-tools.ts";
 import { PrepareLibraryHandoffV2Schema } from "#shared/handoff-v2.ts";
 import { handoffFixture } from "./test-fixture.ts";
 import { applyPreparedHandoff } from "./apply.ts";
+import { loadLibraryAssetParentV1 } from "#infrastructure/handoff/library-asset.ts";
+import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
 let bytes: Uint8Array;
@@ -171,6 +173,20 @@ test("initial TV/anime adoption preserves one physical pack, both exact episode 
     .parse(receipt.selection);
   expect(selection.assets).toHaveLength(1);
   expect(selection.assets[0]?.id).toBe(asset.id);
+  const parent = await loadLibraryAssetParentV1(
+    cluster.database,
+    { receiptId: receipt.id, assetId: asset.id },
+    new PublicationAuthorityReadBudget(),
+  );
+  expect(parent.reference).toMatchObject({
+    kind: "library_adoption_v1",
+    receiptId: receipt.id,
+    assetId: asset.id,
+    assetVersion: 0,
+  });
+  expect(parent.asset.coverage.map((item) => item.mediaId).sort()).toEqual(
+    [...f.episodeIds].sort(),
+  );
   expect(selection.networkEvidence.plex).toEqual(
     f.episodeIds.map((id, index) =>
       expect.objectContaining({

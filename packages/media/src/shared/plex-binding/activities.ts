@@ -46,3 +46,20 @@ export type PlexBindingExecution = {
   assertActive: () => void;
   checkpoint: () => Promise<void>;
 };
+
+export const LibraryPlexBindingInputV1Schema = z.strictObject({
+  schemaVersion: z.literal(1),
+  kind: z.literal("verify_library_plex_binding"),
+  operationId: z.uuid(),
+  recoveryEpoch: z.int().nonnegative(),
+  receiptId: z.uuid(),
+  assetId: z.uuid(),
+});
+export type LibraryPlexBindingInputV1 = z.infer<
+  typeof LibraryPlexBindingInputV1Schema
+>;
+export type LibraryPlexBindingActivities = {
+  verifyLibraryPlexBinding: (
+    input: LibraryPlexBindingInputV1,
+  ) => Promise<ReverifyPlexBindingResult>;
+};

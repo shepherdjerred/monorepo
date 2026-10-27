@@ -150,7 +150,7 @@ export function associationFixture(
     },
   };
   const observed = { wall: Date.now(), monotonic: performance.now() };
-  const input: ServingVerificationInput = {
+  const input: ServingVerificationInput & { expected: typeof expected } = {
     purpose: "current_serving",
     expected,
     canonicalTargets,

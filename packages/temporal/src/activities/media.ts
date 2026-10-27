@@ -3,7 +3,10 @@ import { CancelledFailure } from "@temporalio/common";
 import { watchExecution } from "./media/watch-execution.ts";
 import { archiveExecution } from "./media/archive-execution.ts";
 import { compensationExecution } from "./media/compensation-execution.ts";
-import { createPlexBindingNetworkActivities } from "./media/plex-binding.ts";
+import {
+  createPlexBindingNetworkActivities,
+  createLibraryPlexBindingNetworkActivities,
+} from "./media/plex-binding.ts";
 import { plexBindingExecution } from "./media/plex-binding-execution.ts";
 import { createPlexPublicationActivities } from "./media/plex-publication.ts";
 import { createPlexWatchActivities } from "./media/plex-watch.ts";
@@ -15,7 +18,10 @@ import {
   createLibraryHandoffFileActivities,
   createLibraryHandoffNetworkActivities,
 } from "./media/library-handoff.ts";
-import type { PlexBindingActivities } from "@shepherdjerred/media/plex-binding";
+import type {
+  PlexBindingActivities,
+  LibraryPlexBindingActivities,
+} from "@shepherdjerred/media/plex-binding";
 import type {
   SubtitleReplacementFileActivities,
   SubtitleReplacementNetworkActivities,
@@ -40,6 +46,7 @@ import {
 let networkRuntime: ReturnType<typeof createMediaNetworkRuntime> | undefined;
 let fileRuntime: ReturnType<typeof createMediaFileRuntime> | undefined;
 type NetworkActivities = MediaNetworkActivities &
+  LibraryPlexBindingActivities &
   LibraryHandoffNetworkActivities &
   MediaHandoffNetworkActivities &
   SubtitleReplacementNetworkActivities &
@@ -48,6 +55,7 @@ type NetworkActivities = MediaNetworkActivities &
 type CoreNetworkActivities = Omit<
   NetworkActivities,
   | keyof PlexBindingActivities
+  | keyof LibraryPlexBindingActivities
   | keyof LibraryHandoffNetworkActivities
   | "publishMediaToPlex"
   | "publishRolledBackMedia"
@@ -133,6 +141,7 @@ function assertNotCancelled(): void {
 }
 
 export const mediaNetworkWorkerActivities: NetworkActivities = {
+  ...createLibraryPlexBindingNetworkActivities(getMediaNetworkRuntime),
   ...createLibraryHandoffNetworkActivities(getMediaNetworkRuntime),
   observeMediaUpgradeCleanup: createPlexCleanupActivities(
     getMediaNetworkRuntime,

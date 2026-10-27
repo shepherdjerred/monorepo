@@ -26,6 +26,7 @@ import { initialLibrarySnapshots } from "./library-snapshots.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { assertNoPendingPlexEdits } from "#infrastructure/handoff/plex-edit-records.ts";
 import { readPlexEditProofsV1 } from "#infrastructure/handoff/plex-edit-proofs.ts";
+import { queueLibraryPlexBinding } from "#infrastructure/plex-binding/library/queue.ts";
 import {
   handoffPlexIdentityV3,
   assertHandoffPlexLabelsV3,
@@ -188,6 +189,15 @@ export async function applyPreparedHandoff(
           where: { id: planId },
           data: { state: "applied", version: { increment: 1 } },
         });
+        if ("schemaVersion" in prepared.scope)
+          for (const file of prepared.scope.files)
+            await queueLibraryPlexBinding(tx, {
+              receiptId: receipt.id,
+              assetId: file.assetId,
+              recoveryEpoch: receipt.recoveryEpoch,
+              actorId,
+              renewalBucket: 0,
+            });
         await tx.applicationEvent.create({
           data: {
             actorId,
