@@ -495,6 +495,7 @@ reviewed filesystem and Plex evidence. Caption ownership does not establish
 subtitle quality. These reads share one 100-record provenance allowance across
 the batch. Request consent and existing torrent ownership are not inferred.
 Request and torrent records are excluded from this library-only protocol;
+its network observations do not authenticate with or inventory qBittorrent.
 Overseerr request import is optional and separate. Historical handoff records
 retain their original format and acknowledgement behavior.
 

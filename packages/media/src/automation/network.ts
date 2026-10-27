@@ -52,8 +52,7 @@ import { createLegacyObserver } from "#integrations/legacy-observer/runtime.ts";
 import { refreshWriterLease } from "#infrastructure/handoff/lease.ts";
 import { refreshStorageAuthorities } from "#infrastructure/handoff/storage-observer.ts";
 import { requireStorageAuthority } from "#infrastructure/handoff/storage.ts";
-import { createHandoffNetworkProducer } from "#migration/handoff-network/producer.ts";
-import { PlexPinAuthentication } from "#infrastructure/plex-auth.ts";
+import { createHandoffNetworkActivities } from "./network/handoff.ts";
 import { createHandoffFileActivities } from "./handoff/activities.ts";
 import { createNativeFileActivities } from "./native-recovery/activities.ts";
 import { createSubtitleReplacementActivities } from "./subtitle-replacement/activities.ts";
@@ -398,23 +397,12 @@ export async function createMediaNetworkRuntime(
     expectedServerMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
   };
   const observeNative = createNativePlexObserver(nativeContext);
-  const handoff = async (planId: string) => {
-    const sections = await context.permittedSections();
-    await context.qbittorrent.login();
-    await createHandoffNetworkProducer({
-      ...context,
-      observer: createLegacyObserver(environment),
-      expectedServerMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
-      authentication: new PlexPinAuthentication({
-        serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
-        serverUrl: bootstrap.PLEX_SERVER_URL,
-        permittedMovieSectionId: sections.movie,
-        permittedTvSectionId: sections.series,
-        applicationName: "Media",
-        returnUrl: bootstrap.PUBLIC_ORIGIN,
-      }),
-    })(planId);
-  };
+  const handoff = createHandoffNetworkActivities(context, {
+    observer: nativeContext.observer,
+    expectedServerMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
+    serverUrl: bootstrap.PLEX_SERVER_URL,
+    publicOrigin: bootstrap.PUBLIC_ORIGIN,
+  });
   return {
     nativePlex: createNativePlexFacet(nativeContext, observeNative),
     ...createPlexRuntimeFacets(context, async () => {
@@ -477,15 +465,7 @@ export async function createMediaNetworkRuntime(
         });
         return { state: plan.state, applied: plan.receipt !== null };
       },
-      observeMediaHandoff: async (input: { planId: string }) =>
-        handoff(input.planId),
-      mediaHandoffState: async (input: { planId: string }) => {
-        const plan = await context.db.mediaHandoffPlan.findUniqueOrThrow({
-          where: { id: input.planId },
-          include: { receipt: true },
-        });
-        return { state: plan.state, applied: plan.receipt !== null };
-      },
+      ...handoff,
     },
     close: async () => {
       await temporal.close();
