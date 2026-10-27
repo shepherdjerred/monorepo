@@ -30,9 +30,8 @@ const LakeIntSchema = z.union([z.bigint(), z.number()]).transform(Number);
 
 /**
  * Typed row-level reads over the report lake for non-report consumers
- * (AI-review player history, summoner-index backfill). Same safety model as
- * the report compiler: fixed SQL shapes, closed column lists, every runtime
- * value parameter-bound.
+ * such as summoner-index backfill. Same safety model as the report compiler:
+ * fixed SQL shapes, closed column lists, every runtime value parameter-bound.
  */
 
 /**

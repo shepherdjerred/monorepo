@@ -295,7 +295,6 @@ Required environment variables by component:
 | `RIOT_API_KEY`   | Backend   | Yes                    |
 | `DATABASE_URL`   | Backend   | Yes                    |
 | `OPENAI_API_KEY` | Backend   | No (disables AI)       |
-| `GEMINI_API_KEY` | Backend   | No (images fail)       |
 | `S3_BUCKET_NAME` | Backend   | No (disables storage)  |
 | `BUGSINK_DSN`    | Backend   | No (disables tracking) |
 
