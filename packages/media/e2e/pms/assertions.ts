@@ -75,7 +75,7 @@ export async function createLibraries(wire: PmsWire, manifest: Manifest) {
   return sections;
 }
 
-async function allItems(
+export async function allItems(
   wire: PmsWire,
   sectionId: string,
   kind: "movie" | "episode",

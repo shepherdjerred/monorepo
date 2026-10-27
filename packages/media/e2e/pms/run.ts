@@ -8,6 +8,7 @@ import { z } from "zod";
 import { ManifestSchema } from "./manifest.ts";
 import { createPmsWire, readPmsBootstrap, until } from "./http.ts";
 import { assertLibraryWire } from "./assertions.ts";
+import { assertEditionEdits } from "./edition-edits.ts";
 
 async function stop(child: ChildProcess) {
   // Spawn failure has no process group to clean. A successful spawn owns exactly this group.
@@ -129,6 +130,7 @@ try {
   );
   report["identity"] = identity;
   report["libraries"] = await assertLibraryWire(wire, manifest, deadline);
+  report["editionEdits"] = await assertEditionEdits(wire, deadline);
   report["status"] = "passed";
 } catch (error) {
   failures.push(error);

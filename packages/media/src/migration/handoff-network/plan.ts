@@ -1,6 +1,6 @@
 import { defaultIntent } from "#shared/editions/scope.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
-import { HandoffScopeProtocolSchema } from "#shared/handoff-v2.ts";
+import { HandoffScopeProtocolSchema } from "#shared/handoff/protocol.ts";
 import { assertLibraryHandoffSnapshot } from "#infrastructure/handoff/scoped-snapshot.ts";
 import {
   MigrationBundleSchema,

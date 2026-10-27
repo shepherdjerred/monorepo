@@ -2,6 +2,9 @@ import * as m from "#workflows/media/core.ts";
 import * as h from "#workflows/media/handoff.ts";
 export const prepareMediaHandoffWorkflow = h.prepareMediaHandoffWorkflow;
 export const applyMediaHandoffWorkflow = h.applyMediaHandoffWorkflow;
+import * as libraryHandoff from "#workflows/media/library-handoff-v3.ts";
+export const applyLibraryHandoffV3Workflow =
+  libraryHandoff.applyLibraryHandoffV3Workflow;
 import * as n from "#workflows/media/native-recovery.ts";
 import * as quarantine from "#workflows/media/native-quarantine.ts";
 import * as archive from "#workflows/media/native-archive.ts";

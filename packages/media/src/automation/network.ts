@@ -54,6 +54,10 @@ import { refreshStorageAuthorities } from "#infrastructure/handoff/storage-obser
 import { requireStorageAuthority } from "#infrastructure/handoff/storage.ts";
 import { createHandoffNetworkActivities } from "./network/handoff.ts";
 import { createHandoffFileActivities } from "./handoff/activities.ts";
+import {
+  createLibraryHandoffFileFacet,
+  createLibraryHandoffNetworkFacet,
+} from "./handoff/plex-edit-facets.ts";
 import { createNativeFileActivities } from "./native-recovery/activities.ts";
 import { createSubtitleReplacementActivities } from "./subtitle-replacement/activities.ts";
 import { createSubtitleReplacementNetworkActivities } from "#infrastructure/subtitle-replacement/activities.ts";
@@ -293,6 +297,10 @@ export async function createMediaFileRuntime(
   };
   return {
     activities,
+    libraryHandoff: createLibraryHandoffFileFacet({
+      files: fileContext,
+      workerPodUid: config.MEDIA_FILE_WORKER_POD_UID,
+    }),
     nativeFiles: createNativeFileFacets({
       files: fileContext,
       workerPodUid: config.MEDIA_FILE_WORKER_POD_UID,
@@ -404,6 +412,7 @@ export async function createMediaNetworkRuntime(
     publicOrigin: bootstrap.PUBLIC_ORIGIN,
   });
   return {
+    libraryHandoff: createLibraryHandoffNetworkFacet(nativeContext),
     nativePlex: createNativePlexFacet(nativeContext, observeNative),
     ...createPlexRuntimeFacets(context, async () => {
       const flag = await behavior.get("plexEventHintsEnabled");

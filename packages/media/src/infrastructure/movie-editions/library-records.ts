@@ -1,10 +1,16 @@
 import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
+import { HandoffNetworkV2Schema } from "#shared/handoff-v2.ts";
 import {
-  FinishedLibraryHandoffV2Schema,
-  LibraryHandoffSelectionV2Schema,
-  HandoffNetworkV2Schema,
-} from "#shared/handoff-v2.ts";
+  FinishedLibraryHandoffProtocolSchema,
+  LibraryHandoffSelectionProtocolSchema,
+} from "#shared/handoff/protocol.ts";
+import { StableHandoffNetworkV3Schema } from "#shared/handoff/library-v3.ts";
+import {
+  handoffPlexIdentityV3,
+  assertHandoffPlexLabelsV3,
+} from "#automation/handoff/plex-edit-plan.ts";
+import { readPlexEditProofsV1 } from "#infrastructure/handoff/plex-edit-proofs.ts";
 import {
   MovieLibraryReferenceV2Schema,
   MoviePublicationAssetV2Schema,
@@ -19,7 +25,7 @@ const hash = (value: unknown) => identityHash(nativeJson(value));
 type Receipt = Prisma.MediaHandoffReceiptGetPayload<{
   include: { plan: true };
 }>;
-type Selection = z.infer<typeof LibraryHandoffSelectionV2Schema>;
+type Selection = z.infer<typeof LibraryHandoffSelectionProtocolSchema>;
 type Asset = z.infer<typeof MoviePublicationAssetV2Schema>;
 
 /** Read original immutable ownership, without consulting current intent, flags or runtime. */
@@ -38,10 +44,31 @@ export async function loadMovieLibraryParentV2(
     hash(receipt.plan.plan) !== receipt.planHash
   )
     throw new Error("Initial library parent literal plan hash changed");
-  const finished = FinishedLibraryHandoffV2Schema.parse(receipt.plan.plan);
-  const selection = LibraryHandoffSelectionV2Schema.parse(receipt.selection);
+  const finished = FinishedLibraryHandoffProtocolSchema.parse(
+    receipt.plan.plan,
+  );
+  const selection = LibraryHandoffSelectionProtocolSchema.parse(
+    receipt.selection,
+  );
   assertApproval(receipt, finished, selection);
   assertEvidenceHeaders(receipt, selection);
+  if (finished.schemaVersion === 3) {
+    if (selection.schemaVersion !== 3)
+      throw new Error("Initial library protocol changed");
+    const actual = await readPlexEditProofsV1(
+      tx,
+      {
+        planId: receipt.planId,
+        planHash: receipt.planHash,
+        recoveryEpoch: receipt.recoveryEpoch,
+        changes: finished.plexEdits,
+      },
+      budget,
+    );
+    if (hash(actual) !== hash(selection.plexEdits))
+      throw new Error("Initial library Plex edit proofs changed");
+    assertHandoffPlexLabelsV3(selection.networkEvidence);
+  }
   const scope = selection.scope;
   const files = scope.files.filter((file) => file.assetId === input.assetId);
   const snapshots = selection.assets.filter(
@@ -77,11 +104,21 @@ export async function loadMovieLibraryParentV2(
 
 function assertApproval(
   receipt: Receipt,
-  finished: z.infer<typeof FinishedLibraryHandoffV2Schema>,
+  finished: z.infer<typeof FinishedLibraryHandoffProtocolSchema>,
   selection: Selection,
 ) {
   const scope = selection.scope;
+  const network =
+    finished.schemaVersion === 3
+      ? handoffPlexIdentityV3(selection.networkEvidence)
+      : selection.networkEvidence;
+  const reviewedNetwork =
+    finished.schemaVersion === 3
+      ? handoffPlexIdentityV3(finished.network)
+      : finished.network;
   if (
+    selection.schemaVersion !== finished.schemaVersion ||
+    scope.schemaVersion !== finished.schemaVersion ||
     receipt.plan.state !== "applied" ||
     receipt.planId !== receipt.plan.id ||
     receipt.plan.planHash !== receipt.planHash ||
@@ -96,7 +133,7 @@ function assertApproval(
     hash(receipt.plan.scope) !== finished.scopeHash ||
     hash(scope) !== finished.scopeHash ||
     hash(selection.fileEvidence) !== hash(finished.files) ||
-    hash(selection.networkEvidence) !== hash(finished.network)
+    hash(network) !== hash(reviewedNetwork)
   )
     throw new Error(
       "Initial library parent approval or literal evidence changed",
@@ -106,7 +143,7 @@ function assertApproval(
 function assertEvidenceHeaders(receipt: Receipt, selection: Selection) {
   const network = z
     .object({
-      schemaVersion: z.literal(2),
+      schemaVersion: z.literal(selection.schemaVersion),
       planId: z.uuid(),
       recoveryEpoch: z.int().nonnegative(),
     })
@@ -159,13 +196,19 @@ function assertOwner(
 }
 
 function plexAssociation(network: unknown, asset: Asset) {
-  const plex = z
-    .object({
-      schemaVersion: z.literal(2),
-      plex: HandoffNetworkV2Schema.shape.plex,
-    })
-    .parse(network)
-    .plex.filter((item) => item.assetId === asset.id);
+  const protocol = z
+    .object({ schemaVersion: z.union([z.literal(2), z.literal(3)]) })
+    .parse(network);
+  const plex = (
+    protocol.schemaVersion === 3
+      ? StableHandoffNetworkV3Schema.parse(network)
+      : z
+          .object({
+            schemaVersion: z.literal(2),
+            plex: HandoffNetworkV2Schema.shape.plex,
+          })
+          .parse(network)
+  ).plex.filter((item) => item.assetId === asset.id);
   const association = plex[0];
   if (
     plex.length !== 1 ||

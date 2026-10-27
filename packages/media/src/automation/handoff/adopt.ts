@@ -4,11 +4,11 @@ import { Prisma } from "#generated/prisma/client.ts";
 import { z } from "zod";
 import type { HandoffFileEvidenceSchema } from "#shared/handoff.ts";
 import {
-  HandoffNetworkV2Schema,
+  LibraryHandoffNetworkProtocolSchema,
   type HandoffProtocolScope,
   type HandoffNetworkProtocolSchema,
   handoffFileEdition,
-} from "#shared/handoff-v2.ts";
+} from "#shared/handoff/protocol.ts";
 import type { HandoffScope } from "#shared/handoff.ts";
 import { adoptLibraryTargets } from "./library-adopt.ts";
 import { queueOperation } from "#automation/store.ts";
@@ -38,7 +38,7 @@ export async function adoptHandoffRecords(
     await adoptLibraryTargets(tx, {
       ...input,
       scope: input.scope,
-      network: HandoffNetworkV2Schema.parse(input.network),
+      network: LibraryHandoffNetworkProtocolSchema.parse(input.network),
     });
   else await adoptMedia(tx, { ...input, scope: input.scope });
   await adoptFiles(tx, input);

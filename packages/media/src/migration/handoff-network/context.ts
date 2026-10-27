@@ -12,7 +12,8 @@ export type HandoffNetworkContext = {
   plex: Pick<
     PlexClient,
     "machineIdentifier" | "sections" | "libraryPage" | "metadata"
-  >;
+  > &
+    Partial<Pick<PlexClient, "metadataForEditionEdit">>;
   qbittorrent: Pick<QbittorrentClient, "listAll">;
   observer: ReturnType<typeof createLegacyObserver>;
   authentication: Pick<PlexAuthentication, "resolveServerAccess">;

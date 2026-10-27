@@ -6,7 +6,7 @@ import { IdempotencyKeySchema } from "#infrastructure/commands.ts";
 import {
   ApplyHandoffProtocolSchema,
   PrepareHandoffProtocolSchema,
-} from "#shared/handoff-v2.ts";
+} from "#shared/handoff/protocol.ts";
 import { parseInput, readJson } from "./validation.ts";
 
 export type HandoffAdministration = Pick<

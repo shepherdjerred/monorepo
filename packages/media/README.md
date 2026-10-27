@@ -466,11 +466,11 @@ Normal session authentication, CSRF protection, and an `Idempotency-Key` apply t
 commands. The application never accepts caller assertions of stopped managers,
 verified files, or trusted mount identities.
 
-| Endpoint                                | Contract                                                                                                                                                                                                                                                                        |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /api/v1/admin/handoffs`           | Exact bundle/review hashes and versions, runtime epoch/version, explicit provenance selection, and immutable imported profile bindings. Initial library adoption uses `PrepareLibraryHandoffV2Schema` with per-file movie classifications. Returns an operation and handoff ID. |
-| `GET /api/v1/admin/handoffs/:id`        | Current preparation state, exact selected scope, complete proof plan/hash, expiry, and eventual receipt ID.                                                                                                                                                                     |
-| `POST /api/v1/admin/handoffs/:id/apply` | Exact prepared plan hash/version and runtime epoch/version, with the matching protocol. `ApplyLibraryHandoffV2Schema` acknowledges household holds; historical `ApplyHandoffSchema` also acknowledges protected legacy sources. Queues fresh proof and an apply operation.      |
+| Endpoint                                | Contract                                                                                                                                                                                                                                                                                                    |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/v1/admin/handoffs`           | Exact bundle/review hashes and versions, runtime epoch/version, explicit provenance selection, and immutable imported profile bindings. Initial library adoption uses per-file movie classifications; schema version 3 adds explicitly approved Plex label correction. Returns an operation and handoff ID. |
+| `GET /api/v1/admin/handoffs/:id`        | Current preparation state, exact selected scope, complete proof plan/hash, expiry, and eventual receipt ID.                                                                                                                                                                                                 |
+| `POST /api/v1/admin/handoffs/:id/apply` | Exact prepared plan hash/version and runtime epoch/version, with the matching protocol. `ApplyLibraryHandoffV2Schema` acknowledges household holds; historical `ApplyHandoffSchema` also acknowledges protected legacy sources. Queues fresh proof and an apply operation.                                  |
 
 Preparation authorizes observation only. File hashing and probing run on
 `media-files`; a concurrent Temporal activity refreshes network evidence every
@@ -479,7 +479,9 @@ identity evidence, and checks current owner authority under the final database
 locks. Video content remains unchanged. A durable receipt makes a committed
 apply idempotent after an interrupted response.
 
-Initial library adoption uses schema version 2. Each selected movie file needs
+Initial library adoption uses schema version 2 for observation or schema version 3
+with `plexEditionLabels: "update_in_place"` for automatic label correction.
+Each selected movie file needs
 one registered edition and either matching conventional filename evidence or an
 explicit owner resolution of that exact captured source record. Missing cut
 labels establish only an unmarked release; `DC` requires review. Classification
@@ -488,10 +490,19 @@ cannot reassign an already tracked file. Multiple cuts of one movie retain
 separate assets and targets. TV/anime shared files retain exact episode coverage.
 
 The network observer verifies the same server, section, movie/episode identity,
-Plex Part, existing path and registered movie edition label. A changed or mismatched
-Plex label protects adoption; this protocol performs no Plex metadata edits.
+Plex Part, existing path and registered movie edition label. Schema version 2
+protects adoption when a label differs. Schema version 3 presents exact per-file
+label changes in the owner-reviewed plan, including clearing the label for an
+unmarked release. Files Activities reprove the reviewed bytes before Network
+Activities edit only the existing item's edition field. A durable intent precedes
+each PUT; a retry observes that intent without resending it. Readback must retain
+the same server, section, item, Part, path and identity, with no decrease in watch
+count or progress. An uncertain write fences later ownership of that file until
+confirmed. Failed or cancelled application requires owner review. Historical
+completed acknowledgements retain their original sources and SDK expiry.
 The receipt retains the initial asset and caption snapshots as well as the
-reviewed filesystem and Plex evidence. Caption ownership does not establish
+reviewed filesystem and Plex evidence, plus actual label-edit checkpoints for
+schema version 3. Caption ownership does not establish
 subtitle quality. These reads share one 100-record provenance allowance across
 the batch. Request consent and existing torrent ownership are not inferred.
 Request and torrent records are excluded from this library-only protocol;

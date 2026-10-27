@@ -82,6 +82,7 @@ const workflowTypes: Readonly<Record<string, string>> = {
   apply_native_recovery: "applyNativeRecoveryWorkflow",
   prepare_handoff: "prepareMediaHandoffWorkflow",
   apply_handoff: "applyMediaHandoffWorkflow",
+  apply_library_handoff_v3: "applyLibraryHandoffV3Workflow",
   plex_exclusion_prepare: "preparePlexExclusionWorkflow",
   plex_exclusion_execute: "executePlexExclusionWorkflow",
   plex_exclusion_recover: "recoverPlexExclusionWorkflow",

@@ -3,11 +3,12 @@ import { z } from "zod";
 import { Prisma } from "#generated/prisma/client.ts";
 import { MediaError } from "#application/errors.ts";
 import { BundleReportSchema } from "#shared/migration-handoff.ts";
+import type { PrepareLibraryHandoffV2Schema } from "#shared/handoff-v2.ts";
 import {
-  LibraryHandoffScopeV2Schema,
-  type PrepareLibraryHandoffV2Schema,
-  type LibraryHandoffScopeV2,
-} from "#shared/handoff-v2.ts";
+  LibraryHandoffScopeProtocolSchema,
+  type PrepareLibraryHandoffProtocolSchema,
+  type LibraryHandoffScope,
+} from "#shared/handoff/protocol.ts";
 import { analyzeCutTexts } from "#domain/editions/parse.ts";
 import { conventionalMovieCutTexts } from "#domain/editions/parse-v2.ts";
 import { movieCutMatches } from "#shared/movie-editions/cut-v2.ts";
@@ -29,8 +30,8 @@ const conflict = (code: string) =>
 /** Classify before the first physical owner. No requester or transfer authority is created. */
 export async function buildLibraryHandoffScope(
   tx: Prisma.TransactionClient,
-  input: z.infer<typeof PrepareLibraryHandoffV2Schema>,
-): Promise<LibraryHandoffScopeV2> {
+  input: z.infer<typeof PrepareLibraryHandoffProtocolSchema>,
+): Promise<LibraryHandoffScope> {
   const review = await tx.migrationBundleReview.findUniqueOrThrow({
     where: { id: input.bundleReviewId },
   });
@@ -41,12 +42,7 @@ export async function buildLibraryHandoffScope(
     ),
   );
   assertLibrarySelection(selected, input);
-  const {
-    schemaVersion: _schemaVersion,
-    movies: _movies,
-    ...baseRequest
-  } = input;
-  const base = await buildHandoffScope(tx, baseRequest);
+  const base = await buildHandoffScope(tx, librarySourceRequest(input));
   const files = [];
   for (const file of base.files) {
     if (file.existingAssetId !== null)
@@ -73,7 +69,7 @@ export async function buildLibraryHandoffScope(
     string,
     {
       mediaId: string;
-      edition: LibraryHandoffScopeV2["targets"][number]["edition"];
+      edition: LibraryHandoffScope["targets"][number]["edition"];
     }
   >();
   for (const file of files)
@@ -100,9 +96,9 @@ export async function buildLibraryHandoffScope(
       version: current?.version ?? null,
     });
   }
-  return LibraryHandoffScopeV2Schema.parse({
+  return LibraryHandoffScopeProtocolSchema.parse({
     ...base,
-    schemaVersion: 2,
+    schemaVersion: input.schemaVersion,
     request: input,
     files,
     targets,
@@ -111,7 +107,7 @@ export async function buildLibraryHandoffScope(
 
 function assertLibrarySelection(
   selected: z.infer<typeof BundleReportSchema>["entries"],
-  input: z.infer<typeof PrepareLibraryHandoffV2Schema>,
+  input: z.infer<typeof PrepareLibraryHandoffProtocolSchema>,
 ) {
   if (
     selected.some(
@@ -140,7 +136,7 @@ function assertLibrarySelection(
 async function classifyMovie(
   tx: Prisma.TransactionClient,
   options: {
-    input: z.infer<typeof PrepareLibraryHandoffV2Schema>;
+    input: z.infer<typeof PrepareLibraryHandoffProtocolSchema>;
     file: Awaited<ReturnType<typeof buildHandoffScope>>["files"][number];
     report: z.infer<typeof BundleReportSchema>;
   },
@@ -217,4 +213,21 @@ async function classifyMovie(
       },
     },
   };
+}
+
+/** Source projection only; the complete versioned request remains in the final owner scope. */
+function librarySourceRequest(
+  input: z.infer<typeof PrepareLibraryHandoffProtocolSchema>,
+): ReturnType<typeof librarySourceRequestV2> {
+  if (input.schemaVersion === 3) {
+    const { plexEditionLabels: _labels, ...source } = input;
+    return librarySourceRequestV2({ ...source, schemaVersion: 2 });
+  }
+  return librarySourceRequestV2(input);
+}
+function librarySourceRequestV2(
+  input: z.infer<typeof PrepareLibraryHandoffV2Schema>,
+) {
+  const { schemaVersion: _version, movies: _movies, ...source } = input;
+  return source;
 }

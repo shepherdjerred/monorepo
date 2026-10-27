@@ -104,6 +104,7 @@ export async function observePlex(
   context: Context,
   input: PlexCoverageInput,
   signal: AbortSignal,
+  options?: { editionLabels: "observe" },
 ) {
   const server = await context.plex.machineIdentifier(signal);
   if (server !== context.expectedServerMachineId)
@@ -139,6 +140,7 @@ export async function observePlex(
           sectionId,
           items,
           file,
+          enforceEditionLabel: options === undefined,
         })),
       );
   }
@@ -153,6 +155,7 @@ async function matchFile({
   sectionId,
   items,
   file,
+  enforceEditionLabel,
 }: {
   context: Context;
   input: PlexCoverageInput;
@@ -161,6 +164,7 @@ async function matchFile({
   sectionId: string;
   items: PlexItem[];
   file: File;
+  enforceEditionLabel: boolean;
 }) {
   const matches = items.filter(
     (item) =>
@@ -197,12 +201,11 @@ async function matchFile({
       (parts[0].size !== undefined && String(parts[0].size) !== file.sizeBytes)
     )
       throw protectedEvidence("handoff_plex_path_changed");
-    const edition = editionIdentity(
-      file,
-      found.metadata,
-      parts[0].id,
+    const edition = editionIdentity(file, found.metadata, {
+      partId: parts[0].id,
       sectionId,
-    );
+      enforceEditionLabel,
+    });
     evidence.push({
       ...edition,
       mediaId,
@@ -229,14 +232,18 @@ async function matchFile({
 function editionIdentity(
   file: File,
   item: PlexItem,
-  partId: number,
-  sectionId: string,
+  observation: {
+    partId: number;
+    sectionId: string;
+    enforceEditionLabel: boolean;
+  },
 ) {
   if (file.edition === undefined) return null;
-  if (String(item.librarySectionID) !== sectionId)
+  if (String(item.librarySectionID) !== observation.sectionId)
     throw protectedEvidence("handoff_plex_library_changed");
   if (
     file.libraryKind === "movies" &&
+    observation.enforceEditionLabel &&
     (item.editionTitle ?? "") !== MOVIE_EDITION_REGISTRY[file.edition].plexLabel
   )
     throw protectedEvidence("handoff_plex_edition_requires_review");
@@ -244,7 +251,7 @@ function editionIdentity(
     assetId: z.uuid().parse(file.assetId),
     edition: file.edition,
     editionTitle: item.editionTitle ?? null,
-    partId: z.int().nonnegative().parse(partId),
+    partId: z.int().nonnegative().parse(observation.partId),
   };
 }
 

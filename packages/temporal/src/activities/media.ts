@@ -11,6 +11,10 @@ import { mediaCall } from "./media/call.ts";
 import { createPlexBoundConsumerActivities } from "./media/plex-consumers.ts";
 import { createPlexCleanupActivities } from "./media/plex-cleanup.ts";
 import { createNativePlexReviewActivities } from "./media/native-plex.ts";
+import {
+  createLibraryHandoffFileActivities,
+  createLibraryHandoffNetworkActivities,
+} from "./media/library-handoff.ts";
 import type { PlexBindingActivities } from "@shepherdjerred/media/plex-binding";
 import type {
   SubtitleReplacementFileActivities,
@@ -21,6 +25,8 @@ import type {
   MediaFileActivities,
   MediaHandoffNetworkActivities,
   MediaHandoffFileActivities,
+  LibraryHandoffNetworkActivities,
+  LibraryHandoffFileActivities,
   NativeRecoveryNetworkActivities,
   NativeRecoveryFileActivities,
   NativeQuarantineNetworkActivities,
@@ -34,6 +40,7 @@ import {
 let networkRuntime: ReturnType<typeof createMediaNetworkRuntime> | undefined;
 let fileRuntime: ReturnType<typeof createMediaFileRuntime> | undefined;
 type NetworkActivities = MediaNetworkActivities &
+  LibraryHandoffNetworkActivities &
   MediaHandoffNetworkActivities &
   SubtitleReplacementNetworkActivities &
   NativeRecoveryNetworkActivities &
@@ -41,6 +48,7 @@ type NetworkActivities = MediaNetworkActivities &
 type CoreNetworkActivities = Omit<
   NetworkActivities,
   | keyof PlexBindingActivities
+  | keyof LibraryHandoffNetworkActivities
   | "publishMediaToPlex"
   | "publishRolledBackMedia"
   | "publishRestoredMedia"
@@ -53,10 +61,15 @@ type CoreNetworkActivities = Omit<
   | "observeNativeQuarantine"
 >;
 type FileActivities = MediaFileActivities &
+  LibraryHandoffFileActivities &
   MediaHandoffFileActivities &
   SubtitleReplacementFileActivities &
   NativeRecoveryFileActivities &
   NativeQuarantineFileActivities;
+type CoreFileActivities = Omit<
+  FileActivities,
+  keyof LibraryHandoffFileActivities
+>;
 export async function getMediaNetworkRuntime() {
   networkRuntime ??= createMediaNetworkRuntime(
     Bun.env,
@@ -97,7 +110,7 @@ async function network(): Promise<CoreNetworkActivities> {
   return runtime.activities;
 }
 
-async function files(): Promise<FileActivities> {
+async function files(): Promise<CoreFileActivities> {
   const runtime = await getMediaFileRuntime();
   return runtime.activities;
 }
@@ -109,7 +122,7 @@ async function withNetwork<T>(
   return mediaCall(async () => work(await network()));
 }
 async function withFiles<T>(
-  work: (activities: FileActivities) => Promise<T>,
+  work: (activities: CoreFileActivities) => Promise<T>,
 ): Promise<T> {
   return mediaCall(async () => work(await files()));
 }
@@ -120,6 +133,7 @@ function assertNotCancelled(): void {
 }
 
 export const mediaNetworkWorkerActivities: NetworkActivities = {
+  ...createLibraryHandoffNetworkActivities(getMediaNetworkRuntime),
   observeMediaUpgradeCleanup: createPlexCleanupActivities(
     getMediaNetworkRuntime,
   ).observeMediaUpgradeCleanup,
@@ -200,6 +214,7 @@ export const mediaNetworkWorkerActivities: NetworkActivities = {
     withNetwork((activities) => activities.finishMediaOperation(input)),
 };
 export const mediaFileWorkerActivities: FileActivities = {
+  ...createLibraryHandoffFileActivities(getMediaFileRuntime),
   prepareSubtitleReplacement: (input) =>
     withFiles((activities) => activities.prepareSubtitleReplacement(input)),
   applySubtitleReplacement: (input) =>

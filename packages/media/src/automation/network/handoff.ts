@@ -1,6 +1,6 @@
 import type { MediaAutomationContext } from "#automation/context.ts";
 import type { MediaHandoffNetworkActivities } from "#shared/automation.ts";
-import { HandoffScopeProtocolSchema } from "#shared/handoff-v2.ts";
+import { HandoffScopeProtocolSchema } from "#shared/handoff/protocol.ts";
 import { createHandoffNetworkProducer } from "#migration/handoff-network/producer.ts";
 import type { HandoffNetworkContext } from "#migration/handoff-network/context.ts";
 import { PlexPinAuthentication } from "#infrastructure/plex-auth.ts";

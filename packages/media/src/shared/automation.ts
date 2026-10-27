@@ -5,6 +5,27 @@ export type MediaOperation = {
 };
 export type MediaAttemptOperation = { operationId: string; attemptId: string };
 export type MediaHandoffOperation = { operationId: string; planId: string };
+export type LibraryPlexEditOperation = MediaHandoffOperation & {
+  schemaVersion: 3;
+  assetId: string;
+};
+export type HandoffObservationReference = { id: string; evidenceHash: string };
+export type LibraryHandoffNetworkActivities = {
+  plannedLibraryPlexEdits: (
+    input: MediaHandoffOperation,
+  ) => Promise<{ assetIds: string[] }>;
+  editLibraryPlexEdition: (
+    input: LibraryPlexEditOperation & {
+      filesObservation: HandoffObservationReference;
+    },
+  ) => Promise<HandoffObservationReference>;
+  protectLibraryHandoff: (input: MediaHandoffOperation) => Promise<void>;
+};
+export type LibraryHandoffFileActivities = {
+  prepareLibraryPlexEditFile: (
+    input: LibraryPlexEditOperation,
+  ) => Promise<HandoffObservationReference>;
+};
 export type NativeRecoveryOperation = { operationId: string; planId: string };
 export type NativeQuarantineRestoreOperation = MediaOperation & {
   continuationId: string;

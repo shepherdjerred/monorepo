@@ -1,5 +1,5 @@
 import { Prisma } from "#generated/prisma/client.ts";
-import type { HandoffProtocolScope } from "#shared/handoff-v2.ts";
+import type { HandoffProtocolScope } from "#shared/handoff/protocol.ts";
 import { lockDefaultMedia } from "./default-edition.ts";
 import {
   matchesMovieDefinition,
