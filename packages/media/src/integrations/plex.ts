@@ -1,5 +1,10 @@
 import { z } from "zod";
 import {
+  MovieEditionKeySchema,
+  MOVIE_EDITION_REGISTRY,
+  type MovieEditionKey,
+} from "#shared/movie-editions/registry.ts";
+import {
   endpoint,
   IntegrationError,
   json,
@@ -49,6 +54,11 @@ const PageSchema = z.object({
   }),
 });
 export type PlexItem = z.infer<typeof ItemSchema>;
+const EditionItemSchema = ItemSchema.extend({
+  type: z.literal("movie"),
+  viewOffset: z.number().int().nonnegative().optional(),
+});
+export type PlexEditionItem = z.infer<typeof EditionItemSchema>;
 
 function parsePage(value: unknown) {
   const parsed = PageSchema.safeParse(value);
@@ -187,6 +197,36 @@ export class PlexClient {
     return { item, watched: (item.viewCount ?? 0) > 0 };
   }
 
+  /** New edit observations retain playback progress without changing historical item projections. */
+  async metadataForEditionEdit(
+    ratingKey: string,
+    signal: AbortSignal,
+  ): Promise<PlexEditionItem> {
+    z.string()
+      .regex(/^[1-9]\d*$/u)
+      .parse(ratingKey);
+    signal.throwIfAborted();
+    const parsed = z
+      .object({
+        MediaContainer: z.object({
+          size: z.literal(1),
+          Metadata: z.array(EditionItemSchema).length(1),
+        }),
+      })
+      .safeParse(
+        await this.get(
+          `library/metadata/${ratingKey}`,
+          { includeGuids: "1" },
+          signal,
+        ),
+      );
+    if (!parsed.success) throw new IntegrationError("plex", "invalid-response");
+    const item = parsed.data.MediaContainer.Metadata[0];
+    if (item?.ratingKey !== ratingKey)
+      throw new IntegrationError("plex", "invalid-response");
+    return item;
+  }
+
   async watched(ratingKey: string, signal?: AbortSignal): Promise<boolean> {
     const observation = await this.observeWatch(ratingKey, signal);
     return observation.watched;
@@ -214,6 +254,39 @@ export class PlexClient {
         ...(signal === undefined ? {} : { signal }),
       },
     );
+  }
+
+  /** One existing movie only. The caller owns approval, effect checkpoints and readback. */
+  async editMovieEdition(
+    input: { sectionId: string; ratingKey: string; edition: MovieEditionKey },
+    signal: AbortSignal,
+  ): Promise<void> {
+    const sectionId = z
+      .string()
+      .regex(/^[1-9]\d*$/u)
+      .parse(input.sectionId);
+    const ratingKey = z
+      .string()
+      .regex(/^[1-9]\d*$/u)
+      .parse(input.ratingKey);
+    const edition = MovieEditionKeySchema.parse(input.edition);
+    signal.throwIfAborted();
+    const url = endpoint(
+      this.config.baseUrl,
+      `library/sections/${sectionId}/all`,
+    );
+    url.search = new URLSearchParams({
+      type: "1",
+      id: ratingKey,
+      "editionTitle.value": MOVIE_EDITION_REGISTRY[edition].plexLabel,
+      "editionTitle.locked": "1",
+    }).toString();
+    await request(this.transport, "plex", url, {
+      method: "PUT",
+      headers: this.headers(),
+      mutation: true,
+      signal,
+    });
   }
 
   private headers(): Record<string, string> {
