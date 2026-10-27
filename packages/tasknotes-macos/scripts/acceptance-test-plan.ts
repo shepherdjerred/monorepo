@@ -129,6 +129,7 @@ export function assertExactNativeResults(
         suite:
           | "StandaloneVaultUITests"
           | "OccurrenceVaultUITests"
+          | "CaptureReadinessUITests"
           | "DependencyEditorUITests";
       }
     | {

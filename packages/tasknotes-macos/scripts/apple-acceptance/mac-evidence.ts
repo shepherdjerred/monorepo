@@ -8,6 +8,7 @@ const maximumTotalBytes = 256 * 1024 * 1024;
 const maximumFileBytes = 64 * 1024 * 1024;
 const evidenceRoots = new Set([
   "Occurrence.xcresult",
+  "CaptureReadiness.xcresult",
   "screenshots",
   "state",
   "commands",
@@ -22,6 +23,87 @@ const evidenceFiles = new Set([
   "vm-error.json",
 ]);
 type EvidenceFile = { path: string; bytes: number; sha256: string };
+
+/** A passing provisioning case must retain its actual PNG and completed bounded trace. */
+export async function requireMacReadinessCapture(
+  evidence: string,
+): Promise<void> {
+  const screenshots = path.join(evidence, "screenshots");
+  const manifest: unknown = await Bun.file(
+    path.join(screenshots, "manifest.json"),
+  ).json();
+  assert.ok(Array.isArray(manifest) && manifest.length === 1);
+  const entry: unknown = manifest[0];
+  assert.ok(entry !== null && typeof entry === "object");
+  assert.equal(
+    Reflect.get(entry, "testIdentifier"),
+    "CaptureReadinessUITests/testOwnedSyntheticWindowCapture()",
+  );
+  const attachments: unknown = Reflect.get(entry, "attachments");
+  assert.ok(Array.isArray(attachments));
+  const name = "Capture readiness — owned synthetic workspace";
+  for (const [prefix, suffix] of [
+    [name, ".png"],
+    [`Capture state diagnostics — ${name}`, ".json"],
+  ] as const) {
+    const matches: unknown[] = attachments.filter((raw: unknown) => {
+      if (raw === null || typeof raw !== "object") return false;
+      const label: unknown = Reflect.get(raw, "suggestedHumanReadableName");
+      return (
+        typeof label === "string" &&
+        label.startsWith(`${prefix}_`) &&
+        label.endsWith(suffix)
+      );
+    });
+    assert.equal(
+      matches.length,
+      1,
+      `Exactly one ${suffix} readiness attachment is required`,
+    );
+    const match: unknown = matches[0];
+    assert.ok(match !== null && typeof match === "object");
+    const file: unknown = Reflect.get(match, "exportedFileName");
+    assert.ok(typeof file === "string" && path.basename(file) === file);
+    safeMacRelative(file);
+    const target = path.join(screenshots, file),
+      metadata = await lstat(target);
+    assert.ok(
+      metadata.isFile() &&
+        !metadata.isSymbolicLink() &&
+        metadata.size > 0 &&
+        metadata.size <= maximumFileBytes,
+    );
+    if (suffix === ".png") {
+      assert.deepEqual(
+        Buffer.from(await Bun.file(target).slice(0, 8).arrayBuffer()),
+        Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+      );
+    } else {
+      const trace: unknown = await Bun.file(target).json();
+      assert.ok(trace !== null && typeof trace === "object");
+      assert.equal(Reflect.get(trace, "schemaVersion"), 1);
+      assert.equal(Reflect.get(trace, "omittedSamples"), 0);
+      const samples: unknown = Reflect.get(trace, "samples");
+      assert.ok(
+        Array.isArray(samples) && samples.length > 0 && samples.length <= 64,
+      );
+      assert.deepEqual(
+        samples.map((sample: unknown) => {
+          assert.ok(sample !== null && typeof sample === "object");
+          return Reflect.get(sample, "phase");
+        }),
+        [
+          "beforeActivation",
+          "afterActivation",
+          "beforeCapture",
+          "afterCapture",
+          "afterDecode",
+          "completed",
+        ],
+      );
+    }
+  }
+}
 
 function allowedMacEvidencePath(file: string): boolean {
   safeMacRelative(file);

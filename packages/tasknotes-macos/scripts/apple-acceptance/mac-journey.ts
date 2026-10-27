@@ -183,7 +183,81 @@ export async function configureMacAcceptanceTestRun(
   testRun: string,
   environment: Record<string, string>,
   command: MacJourneyCommand,
+  runnerBundlePath?: string,
 ): Promise<void> {
+  if (runnerBundlePath !== undefined) {
+    assert.ok(path.isAbsolute(runnerBundlePath));
+    assert.equal(path.normalize(runnerBundlePath), runnerBundlePath);
+    assert.equal(
+      path.basename(runnerBundlePath),
+      "TaskNotesAcceptanceUITests-Runner.app",
+    );
+    const originalRunner =
+      "__TESTROOT__/Debug/TaskNotesAcceptanceUITests-Runner.app";
+    const originalProducts: unknown = JSON.parse(
+      await command(
+        [
+          "plutil",
+          "-extract",
+          "TaskNotesAcceptanceUITests.DependentProductPaths",
+          "json",
+          "-o",
+          "-",
+          testRun,
+        ],
+        true,
+      ),
+    );
+    assert.deepEqual(originalProducts, [
+      "__TESTROOT__/Debug/FacetAcceptance.app",
+      originalRunner,
+      `${originalRunner}/Contents/PlugIns/TaskNotesAcceptanceUITests.xctest`,
+    ]);
+    for (const [key, expected] of [
+      ["TestHostPath", originalRunner],
+      [
+        "TestBundlePath",
+        "__TESTHOST__/Contents/PlugIns/TaskNotesAcceptanceUITests.xctest",
+      ],
+    ] as const)
+      assert.equal(
+        (
+          await command(
+            [
+              "plutil",
+              "-extract",
+              `TaskNotesAcceptanceUITests.${key}`,
+              "raw",
+              "-o",
+              "-",
+              testRun,
+            ],
+            true,
+          )
+        ).trim(),
+        expected,
+      );
+    for (const [key, value] of [
+      ["TestHostPath", runnerBundlePath],
+      ["DependentProductPaths.1", runnerBundlePath],
+      [
+        "DependentProductPaths.2",
+        path.join(
+          runnerBundlePath,
+          "Contents/PlugIns/TaskNotesAcceptanceUITests.xctest",
+        ),
+      ],
+    ] as const) {
+      await command([
+        "plutil",
+        "-replace",
+        `TaskNotesAcceptanceUITests.${key}`,
+        "-string",
+        value,
+        testRun,
+      ]);
+    }
+  }
   for (const [key, value] of Object.entries(environment)) {
     await command([
       "plutil",
@@ -252,6 +326,7 @@ export async function recordMacAcceptanceOutcome(
   failures: unknown[],
   evidence: string,
   failureMessage: string,
+  successStatus: "passed" | "capture-ready" = "passed",
 ): Promise<void> {
   await Bun.write(
     path.join(evidence, "run.json"),
@@ -261,7 +336,7 @@ export async function recordMacAcceptanceOutcome(
         status: failures.some(isMacSessionPreflightFailure)
           ? "blocked"
           : failures.length === 0
-            ? "passed"
+            ? successStatus
             : "failed",
       },
       null,
