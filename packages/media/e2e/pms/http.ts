@@ -100,9 +100,41 @@ export function createPmsWire(root: string, signal: AbortSignal) {
     },
     transport,
   );
-  return { request, client, calls, fixtures };
+  return {
+    request,
+    client,
+    calls,
+    fixtures,
+    libraryReady: () =>
+      readPmsLibraryReady(signal, (url, init) => transport(new URL(url), init)),
+  };
 }
 export type PmsWire = ReturnType<typeof createPmsWire>;
+
+/** The identity route can succeed while the library plugin's routes are still unavailable. */
+export async function readPmsLibraryReady(
+  signal: AbortSignal,
+  request: (url: string, init: RequestInit) => Promise<Response> = fetch,
+): Promise<true | null> {
+  signal.throwIfAborted();
+  const response = await request(`${ORIGIN}/library/sections`, {
+    headers: { Accept: "application/json" },
+    signal: AbortSignal.any([signal, AbortSignal.timeout(1000)]),
+    redirect: "error",
+  });
+  if (response.status === 404 || response.status === 503) {
+    await response.body?.cancel();
+    return null;
+  }
+  if (response.status !== 200) {
+    await response.body?.cancel();
+    throw new Error(
+      `Local unclaimed library API must be accessible without auth bypass: HTTP ${String(response.status)}`,
+    );
+  }
+  ContainerSchema.parse(await response.json());
+  return true;
+}
 
 /** A starting, unclaimed local PMS can serve HTTP before its identity is ready. */
 export async function readPmsBootstrap(

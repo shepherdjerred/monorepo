@@ -129,6 +129,7 @@ try {
     "Disposable server unexpectedly claimed",
   );
   report["identity"] = identity;
+  await until("PMS library API readiness", wire.libraryReady, deadline);
   report["libraries"] = await assertLibraryWire(wire, manifest, deadline);
   report["editionEdits"] = await assertEditionEdits(wire, deadline);
   report["status"] = "passed";
