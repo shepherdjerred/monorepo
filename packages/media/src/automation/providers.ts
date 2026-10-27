@@ -11,6 +11,7 @@ import {
   AvistazFamilyProvider,
   type ProviderCandidate,
   type ProviderSearch,
+  type ProviderRecentPage,
 } from "#integrations/providers.ts";
 import { MagnetDownloadProvider } from "#integrations/magnetdownload.ts";
 import { IntegrationError, type FetchTransport } from "#integrations/http.ts";
@@ -41,6 +42,7 @@ export const StoredCandidateSchema = z.object({
 });
 export type TrackerClient = {
   search: (input: ProviderSearch) => Promise<ProviderCandidate[]>;
+  recent?: (input: { page: number }) => Promise<ProviderRecentPage>;
   download?: (candidate: ProviderCandidate) => Promise<Uint8Array<ArrayBuffer>>;
 };
 export type ProviderRegistry = {

@@ -872,9 +872,13 @@ Only observed terminal runs permit takeover; missing or active child history hol
 ambiguous submissions. Stable recovery keys preserve the existing acquisition and
 its external-effect journals. Inventory scans record Plex observations in bounded
 pages without claiming foreign files. Missing-path diagnostics require both
-configured libraries to finish enumeration. Current provider adapters have no
-verified recent-release feed; their durable feed status reports
-`unsupported_recent_feed`, while six-hour due searches remain separate.
+configured libraries to finish enumeration. Knaben exposes a date-ordered native
+recent-page reader; the AvistaZ family exposes empty-query recent pages with
+separate AnimeZ parameters. Readers retain the source-row count for pagination,
+reject oversized pages and keep private download URLs inside Activities. The
+periodic sweep still reports `unsupported_recent_feed` until its durable
+ingestion and matching path is connected. Six-hour due searches remain separate;
+TPB and MagnetDownload provide title searches only.
 
 Catalog adoption and refresh store a versioned `externalIds.catalogIdentity`
 snapshot with namespace-qualified TMDB/IMDb/TVDB references, original titles and
