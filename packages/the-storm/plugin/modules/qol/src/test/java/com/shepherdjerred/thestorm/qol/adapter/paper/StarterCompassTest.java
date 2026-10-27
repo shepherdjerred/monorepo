@@ -151,6 +151,29 @@ final class StarterCompassTest {
   }
 
   @Test
+  void aDiscardedCompassStaysGoneWhenAnInFlightTripIsRefundedOrFailsToSave() {
+    var persisted = new CompletableFuture<Integer>();
+    when(store.spendStarterCharge(player.getUniqueId())).thenReturn(persisted);
+    when(store.discardStarterCompass(player.getUniqueId()))
+        .thenReturn(CompletableFuture.completedFuture(null));
+    compass.loaded(player, 2);
+    assertThat(compass.hold(player)).isTrue();
+    compass.discard(player, StarterCompass.item(player, 2));
+    compass.refund(player);
+    assertThat(compass.remaining(player)).isZero();
+    assertThat(compass.hold(player)).isFalse();
+
+    compass.loaded(player, 1);
+    assertThat(compass.hold(player)).isTrue();
+    compass.arrived(player);
+    compass.discard(player, StarterCompass.item(player, 1));
+    persisted.completeExceptionally(new IllegalStateException("fixture write failure"));
+    assertThat(compass.remaining(player)).isZero();
+    assertThat(compass.hold(player)).isFalse();
+    assertThat(player.getInventory().getContents()).noneMatch(StarterCompass::marked);
+  }
+
+  @Test
   void failedPersistenceKeepsTheCompassAndAllowsARetry() {
     when(store.spendStarterCharge(player.getUniqueId()))
         .thenReturn(

@@ -137,7 +137,9 @@ final class TeleportListener implements Listener {
     var safe = SafeLocations.nearestSafe(spot);
     if (safe.isPresent()) {
       var landing = safe.orElseThrow();
-      if (landing.getBlockY() != spot.getBlockY()) {
+      if (landing.getBlockX() != spot.getBlockX()
+          || landing.getBlockY() != spot.getBlockY()
+          || landing.getBlockZ() != spot.getBlockZ()) {
         var _ = player.teleportAsync(landing);
       }
       return;

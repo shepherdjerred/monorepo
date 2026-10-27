@@ -26,6 +26,10 @@ final class StarterCompass {
   private final Map<UUID, Integer> charges = new HashMap<>();
   private final Map<UUID, Integer> holds = new HashMap<>();
   private final Set<UUID> discarding = new HashSet<>();
+
+  /** Players whose compass was durably discarded and must not be restored by an in-flight trip. */
+  private final Set<UUID> discarded = new HashSet<>();
+
   private final ModuleContext context;
   private final QolStore store;
   private final SealedWorlds sealed;
@@ -37,8 +41,10 @@ final class StarterCompass {
   }
 
   void loaded(Player player, int remaining) {
-    if (remaining > 0) charges.put(player.getUniqueId(), remaining);
-    else charges.remove(player.getUniqueId());
+    var id = player.getUniqueId();
+    discarded.remove(id);
+    if (remaining > 0) charges.put(id, remaining);
+    else charges.remove(id);
     reconcile(player);
   }
 
@@ -145,7 +151,7 @@ final class StarterCompass {
     if (held <= 0) return;
     if (held == 1) holds.remove(id);
     else holds.put(id, held - 1);
-    if (!player.isOnline()) return;
+    if (discarded.contains(id) || !player.isOnline()) return;
     charges.merge(id, 1, Integer::sum);
     reconcile(player);
   }
@@ -173,7 +179,7 @@ final class StarterCompass {
     var player = arrival.player();
     if (failure != null) {
       context.logger().error("Could not spend a compass trip for {}", arrival.id(), failure);
-      if (arrival.consumed() && player.isOnline()) {
+      if (arrival.consumed() && player.isOnline() && !discarded.contains(arrival.id())) {
         charges.merge(arrival.id(), 1, Integer::sum);
         reconcile(player);
       }
@@ -208,6 +214,8 @@ final class StarterCompass {
                     return;
                   }
                   charges.remove(id);
+                  holds.remove(id);
+                  this.discarded.add(id);
                   if (!player.isOnline()) return;
                   reconcile(player);
                   var at = Blocks.at(player);
@@ -222,6 +230,7 @@ final class StarterCompass {
     charges.remove(id);
     holds.remove(id);
     discarding.remove(id);
+    discarded.remove(id);
   }
 
   void afterRespawn(Player player) {
