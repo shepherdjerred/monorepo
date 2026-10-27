@@ -33,6 +33,7 @@ import com.shepherdjerred.thestorm.creative.domain.PlotGrid;
 import com.shepherdjerred.thestorm.creative.domain.PlotId;
 import com.shepherdjerred.thestorm.creative.domain.PlotRole;
 import com.shepherdjerred.thestorm.creative.domain.PlotSurface;
+import com.shepherdjerred.thestorm.creative.domain.PlotTemplate;
 import com.shepherdjerred.thestorm.creative.domain.PlotView;
 import com.shepherdjerred.thestorm.creative.domain.StoredClaim;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -88,7 +89,9 @@ public final class CreativePlots {
       SchematicFiles schematics,
       PlotFootprint.States template,
       ReviewBook reviews,
-      ReviewStore reviewStore) {}
+      ReviewStore reviewStore,
+      PlotTemplate empty,
+      PlotSchematics.Columns columns) {}
 
   public CreativePlots(Parts parts) {
     this(parts, Player::teleportAsync);
@@ -151,14 +154,15 @@ public final class CreativePlots {
             new CreativeAdminCommands.Hooks(
                 grid,
                 world,
-                EmptyPlot.load(grid),
+                parts.empty(),
+                parts.columns(),
                 book::ready,
                 this::inside,
                 this::linked,
                 book::view,
                 id -> book.catalog().get(id).isPresent(),
                 this::persist,
-                this::persistAll,
+                this::transfer,
                 this::removeClaim));
   }
 
@@ -761,7 +765,8 @@ public final class CreativePlots {
       CommandSender sender,
       List<StoredClaim> claims,
       List<Optional<StoredClaim>> previous,
-      String ok) {}
+      String ok,
+      Runnable undo) {}
 
   /** One optimistic claim write and what to tell the sender when it lands. */
   private record PendingSave(
@@ -789,14 +794,23 @@ public final class CreativePlots {
     persistAll(player, next, ok);
   }
 
+  private void transfer(CommandSender sender, List<StoredClaim> claims, String ok, Runnable undo) {
+    persistAll(sender, claims, ok, undo);
+  }
+
   private void persistAll(CommandSender sender, List<StoredClaim> claims, String ok) {
+    persistAll(sender, claims, ok, () -> {});
+  }
+
+  private void persistAll(
+      CommandSender sender, List<StoredClaim> claims, String ok, Runnable undo) {
     var previous = new ArrayList<Optional<StoredClaim>>();
     for (var claim : claims) {
       previous.add(book.row(claim.id()));
       book.put(claim);
     }
     redraw.run();
-    var batch = new SavedBatch(sender, List.copyOf(claims), List.copyOf(previous), ok);
+    var batch = new SavedBatch(sender, List.copyOf(claims), List.copyOf(previous), ok, undo);
     var saved =
         store
             .saveAll(claims)
@@ -808,6 +822,11 @@ public final class CreativePlots {
 
   private void persistedAll(SavedBatch batch, @Nullable Throwable failure) {
     if (failure != null) {
+      try {
+        batch.undo().run();
+      } catch (RuntimeException undone) {
+        context.logger().error("Creative plot change could not be undone", undone);
+      }
       for (int i = 0; i < batch.claims().size(); i++) {
         restore(batch.claims().get(i).id(), batch.previous().get(i));
       }

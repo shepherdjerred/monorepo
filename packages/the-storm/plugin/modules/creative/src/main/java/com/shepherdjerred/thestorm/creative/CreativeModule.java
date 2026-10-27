@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.core.schedule.Scheduler;
 import com.shepherdjerred.thestorm.core.snapshot.SavedPlayerData;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.creative.adapter.bluemap.BlueMapPlots;
+import com.shepherdjerred.thestorm.creative.adapter.bundle.BundledTemplate;
 import com.shepherdjerred.thestorm.creative.adapter.db.JooqBodyStore;
 import com.shepherdjerred.thestorm.creative.adapter.db.JooqClaimStore;
 import com.shepherdjerred.thestorm.creative.adapter.db.JooqReviewStore;
@@ -22,6 +23,7 @@ import com.shepherdjerred.thestorm.creative.adapter.paper.CreativeSessions;
 import com.shepherdjerred.thestorm.creative.adapter.paper.CreativeWorld;
 import com.shepherdjerred.thestorm.creative.adapter.paper.PlotGuard;
 import com.shepherdjerred.thestorm.creative.adapter.worldedit.CreativeEdits;
+import com.shepherdjerred.thestorm.creative.adapter.worldedit.PlotSchematics;
 import com.shepherdjerred.thestorm.creative.app.ClaimBook;
 import com.shepherdjerred.thestorm.creative.app.ReviewBook;
 import com.shepherdjerred.thestorm.creative.app.ReviewStore.Snapshot;
@@ -29,6 +31,7 @@ import com.shepherdjerred.thestorm.creative.domain.CreativeConfig;
 import com.shepherdjerred.thestorm.creative.domain.PlotFootprint;
 import com.shepherdjerred.thestorm.creative.domain.PlotId;
 import com.shepherdjerred.thestorm.creative.domain.PlotMarkers;
+import com.shepherdjerred.thestorm.creative.domain.PlotTemplate;
 import com.shepherdjerred.thestorm.creative.domain.PlotView;
 import com.shepherdjerred.thestorm.creative.domain.StoredClaim;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -41,6 +44,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.plugin.Plugin;
 import org.jspecify.annotations.Nullable;
@@ -80,6 +84,10 @@ public final class CreativeModule implements StormModule {
     players = context.services().require(PlayerDirectory.class);
     scheduler = context.scheduler();
     var config = context.loadConfig("creative.yml", CreativeConfig.class);
+    var emptyPlot =
+        context
+            .compute()
+            .submit(() -> BundledTemplate.read(config.grid(), "/creative-empty-plot.bin"));
     worldConfig = config;
     worldName = config.world();
     var world = context.plugin().getServer().getWorld(config.world());
@@ -144,7 +152,9 @@ public final class CreativeModule implements StormModule {
                         new File(context.plugin().getDataFolder(), "creative-schematics")),
                     template,
                     reviews,
-                    reviewStore)));
+                    reviewStore,
+                    empty(emptyPlot),
+                    PlotSchematics.columns())));
     context
         .lifecycle()
         .registerEventHandler(
@@ -168,6 +178,16 @@ public final class CreativeModule implements StormModule {
         .info(
             "Sealed creative plots in {} with CoreProtect history and plot protection",
             world.getName());
+  }
+
+  private static PlotTemplate empty(CompletableFuture<PlotTemplate> loading) {
+    try {
+      return loading.join();
+    } catch (CompletionException failure) {
+      var cause = failure.getCause();
+      throw new IllegalStateException(
+          "creative empty plot was not read", cause == null ? failure : cause);
+    }
   }
 
   private void loaded(List<StoredClaim> rows, @Nullable Throwable failure) {

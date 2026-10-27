@@ -39,8 +39,8 @@ final class CreativeAdminCommands {
   }
 
   @FunctionalInterface
-  interface SaveAll {
-    void save(CommandSender sender, List<StoredClaim> claims, String message);
+  interface Transfer {
+    void save(CommandSender sender, List<StoredClaim> claims, String message, Runnable undo);
   }
 
   @FunctionalInterface
@@ -52,13 +52,14 @@ final class CreativeAdminCommands {
       PlotGrid grid,
       World world,
       PlotTemplate empty,
+      PlotSchematics.Columns columns,
       BooleanSupplier ready,
       Predicate<PlotId> inside,
       Predicate<PlotId> linked,
       Function<PlotId, PlotView> view,
       Predicate<PlotId> catalog,
       Save save,
-      SaveAll saveAll,
+      Transfer transfer,
       Removal remove) {}
 
   private final Hooks hooks;
@@ -117,33 +118,52 @@ final class CreativeAdminCommands {
     if (!movable(sender, source, destination)) {
       return Command.SINGLE_SUCCESS;
     }
-    var bytes =
-        PlotSchematics.copy(
-            new PlotSchematics.Span(
-                hooks.world(),
-                hooks.grid().bounds(source),
-                hooks.world().getMinHeight(),
-                hooks.world().getMaxHeight() - 1));
-    var problem =
-        PlotSchematics.paste(
-            new PlotSchematics.Span(
-                hooks.world(),
-                hooks.grid().bounds(destination),
-                hooks.world().getMinHeight(),
-                hooks.world().getMaxHeight() - 1),
-            bytes);
+    var sourceSpan = span(source);
+    var destinationSpan = span(destination);
+    var sourceBytes = hooks.columns().copy(sourceSpan);
+    var destinationBytes = hooks.columns().copy(destinationSpan);
+    var problem = hooks.columns().paste(destinationSpan, sourceBytes);
     if (problem.isPresent()) {
       error(sender, "That plot could not be copied.");
       return Command.SINGLE_SUCCESS;
     }
-    EmptyPlot.write(hooks.world(), hooks.empty(), hooks.grid().bounds(source));
+    try {
+      EmptyPlot.write(hooks.world(), hooks.empty(), hooks.grid().bounds(source));
+    } catch (RuntimeException failure) {
+      restore(destinationSpan, destinationBytes, sourceSpan, sourceBytes);
+      error(sender, "That plot could not be copied.");
+      return Command.SINGLE_SUCCESS;
+    }
     hooks
-        .saveAll()
+        .transfer()
         .save(
             sender,
             List.of(carried(hooks.view().apply(source), destination), released(source)),
-            "Moved " + source.text() + " to " + destination.text() + ".");
+            "Moved " + source.text() + " to " + destination.text() + ".",
+            () -> restore(destinationSpan, destinationBytes, sourceSpan, sourceBytes));
     return Command.SINGLE_SUCCESS;
+  }
+
+  private PlotSchematics.Span span(PlotId id) {
+    return new PlotSchematics.Span(
+        hooks.world(),
+        hooks.grid().bounds(id),
+        hooks.world().getMinHeight(),
+        hooks.world().getMaxHeight() - 1);
+  }
+
+  private void restore(
+      PlotSchematics.Span destination,
+      byte[] destinationBytes,
+      PlotSchematics.Span source,
+      byte[] sourceBytes) {
+    EmptyPlot.removeResidents(hooks.world(), destination.bounds());
+    EmptyPlot.removeResidents(hooks.world(), source.bounds());
+    var destinationProblem = hooks.columns().paste(destination, destinationBytes);
+    var sourceProblem = hooks.columns().paste(source, sourceBytes);
+    if (destinationProblem.isPresent() || sourceProblem.isPresent()) {
+      throw new IllegalStateException("creative move could not restore both plots");
+    }
   }
 
   private boolean movable(CommandSender sender, PlotId source, PlotId destination) {

@@ -90,6 +90,28 @@ final class CreativeAdminCommandTest {
   }
 
   @Test
+  void failedMoveRestoresBothPlots() {
+    var owner = playerAt(6, 80, 6);
+    assertThat(owner.performCommand("creative claim")).isTrue();
+    settle();
+    var world = owner.getWorld();
+    var build = world.getBlockAt(20, 80, 6);
+    var destination = world.getBlockAt(98, 80, 98);
+    build.setType(Material.OAK_PLANKS);
+    destination.setType(Material.DIAMOND_BLOCK);
+    CreativeClaimCommandsPlugin.failSave = true;
+
+    assertThat(console("creative admin move 1;1 2;2")).isTrue();
+    settle();
+    assertThat(consoleLines()).anyMatch(line -> line.contains("could not be saved"));
+    var book = CreativeClaimCommandsPlugin.claims();
+    assertThat(book.view(EAST).marked()).isTrue();
+    assertThat(book.view(OTHER).marked()).isFalse();
+    assertThat(build.getType()).isEqualTo(Material.OAK_PLANKS);
+    assertThat(destination.getType()).isEqualTo(Material.DIAMOND_BLOCK);
+  }
+
+  @Test
   void moveOntoAnOccupiedCellChangesNothing() {
     var owner = playerAt(6, 80, 6);
     assertThat(owner.performCommand("creative claim")).isTrue();

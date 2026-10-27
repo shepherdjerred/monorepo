@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.creative.adapter.paper;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 
 import com.shepherdjerred.thestorm.core.analytics.ProductAnalytics;
@@ -8,7 +9,9 @@ import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.creative.adapter.bundle.BundledTemplate;
 import com.shepherdjerred.thestorm.creative.adapter.export.SchematicFiles;
+import com.shepherdjerred.thestorm.creative.adapter.worldedit.PlotSchematics;
 import com.shepherdjerred.thestorm.creative.app.ClaimBook;
 import com.shepherdjerred.thestorm.creative.app.ClaimStore;
 import com.shepherdjerred.thestorm.creative.app.ReviewBook;
@@ -34,6 +37,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.random.RandomGenerator;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jspecify.annotations.Nullable;
 
@@ -116,7 +121,9 @@ public class CreativeClaimCommandsPlugin extends JavaPlugin {
                 new SchematicFiles(database, new File(directory.toFile(), "creative-schematics")),
                 config.grid()::generated,
                 reviews,
-                new MemoryReviews()),
+                new MemoryReviews(),
+                BundledTemplate.read(config.grid(), "/creative-empty-plot.bin"),
+                new MemoryColumns()),
             (player, location) -> CompletableFuture.completedFuture(player.teleport(location)));
     var root = Commands.literal("creative");
     plots.attach(root);
@@ -163,6 +170,91 @@ public class CreativeClaimCommandsPlugin extends JavaPlugin {
     public CompletableFuture<Void> delete(PlotId id) {
       rows.remove(id);
       return CompletableFuture.completedFuture(null);
+    }
+  }
+
+  /** Block snapshots for move tests. MockBukkit has no WorldEdit plugin. */
+  private static final class MemoryColumns implements PlotSchematics.Columns {
+
+    @Override
+    public byte[] copy(PlotSchematics.Span span) {
+      var lines = new StringBuilder();
+      for (var block : placed(span)) {
+        var type = block.getType();
+        if (type == Material.AIR) {
+          continue;
+        }
+        lines
+            .append(block.getX())
+            .append(',')
+            .append(block.getY())
+            .append(',')
+            .append(block.getZ())
+            .append(',')
+            .append(type.name())
+            .append('\n');
+      }
+      return lines.toString().getBytes(UTF_8);
+    }
+
+    @Override
+    public Optional<PlotSchematics.Problem> paste(PlotSchematics.Span span, byte[] bytes) {
+      for (var block : placed(span)) {
+        if (block.getType() != Material.AIR) {
+          block.setType(Material.AIR);
+        }
+      }
+      var text = new String(bytes, UTF_8);
+      if (!text.isEmpty()) {
+        for (var line : text.split("\n", -1)) {
+          if (line.isEmpty()) {
+            continue;
+          }
+          var part = line.split(",", -1);
+          span.world()
+              .getBlockAt(
+                  Integer.parseInt(part[0]), Integer.parseInt(part[1]), Integer.parseInt(part[2]))
+              .setType(Material.valueOf(part[3]));
+        }
+      }
+      return Optional.empty();
+    }
+
+    private static List<Block> placed(PlotSchematics.Span span) {
+      var bounds = span.bounds();
+      var found = new ArrayList<Block>();
+      for (var block : stored(span.world())) {
+        if (block.getX() < bounds.minX()
+            || block.getX() > bounds.maxX()
+            || block.getZ() < bounds.minZ()
+            || block.getZ() > bounds.maxZ()
+            || block.getY() < span.minY()
+            || block.getY() > span.maxY()) {
+          continue;
+        }
+        found.add(block);
+      }
+      return found;
+    }
+
+    private static List<Block> stored(org.bukkit.World world) {
+      try {
+        var field = world.getClass().getDeclaredField("blocks");
+        field.setAccessible(true);
+        var stored = field.get(world);
+        if (!(stored instanceof Map<?, ?> map)) {
+          throw new IllegalStateException("creative test world has no block map");
+        }
+        var found = new ArrayList<Block>();
+        for (var value : map.values()) {
+          if (value instanceof Block block) {
+            found.add(block);
+          }
+        }
+        return found;
+      } catch (ReflectiveOperationException failure) {
+        throw new IllegalStateException("creative test world blocks were not read", failure);
+      }
     }
   }
 
