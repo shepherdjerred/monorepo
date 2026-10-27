@@ -17,7 +17,8 @@ export function createSweepActivities(
     async sweepMediaWork(input) {
       if (input.kind === "downloads")
         return sweepDownloads(context, input.cursor);
-      if (input.kind === "feeds") return sweepFeeds(context, input.cursor);
+      if (input.kind === "feeds")
+        return sweepFeeds(context, input.cursor, input.sweepId);
       return input.kind === "inventory"
         ? sweepInventory(context, input.sweepId)
         : sweepIntentPage(context, { kind: input.kind, cursor: input.cursor });

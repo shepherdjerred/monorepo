@@ -6,6 +6,7 @@
   "exports": {
     "./testing/system": "./e2e/system/sandbox.ts",
     "./testing/library-binding": "./src/testing/library-binding.ts",
+    "./testing/provider-feed": "./src/testing/provider-feed.ts",
     "./contract": "./src/shared/contract.ts",
     "./capacity": "./src/shared/capacity/contract.ts",
     "./plex-events": "./src/shared/plex-events/contract.ts",

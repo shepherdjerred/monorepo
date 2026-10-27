@@ -82,6 +82,7 @@ async function retainSource(
   context: MediaAutomationContext,
   input: MovieEditionScope,
   source: ProviderCandidate,
+  matchedOnly = false,
 ) {
   const existing = await context.db.releaseCandidate.findUnique({
     where: {
@@ -125,6 +126,12 @@ async function retainSource(
   ).attributes;
   if (referenceConflict(target.media, source.references ?? []))
     attributes.identityConfidence = "mismatch";
+  if (
+    matchedOnly &&
+    (attributes.identityConfidence !== "exact" ||
+      !attributes.mediaIds.includes(input.mediaId))
+  )
+    return null;
   const profile = {
     id: target.profile.id,
     version: target.profile.version,
@@ -154,9 +161,11 @@ export async function storeMovieCandidateV4(
   context: MediaAutomationContext,
   input: MovieEditionScope,
   source: ProviderCandidate,
+  matchedOnly = false,
 ): Promise<MovieCandidateV4 | null> {
   const scope = MovieEditionScopeSchema.parse(input);
-  const releaseId = await retainSource(context, scope, source);
+  const releaseId = await retainSource(context, scope, source, matchedOnly);
+  if (releaseId === null) return null;
   const assessment = await assessRetainedMovieRelease(context, {
     scope,
     releaseId,

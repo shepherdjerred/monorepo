@@ -142,7 +142,11 @@ async function storeCandidate(
   context: MediaAutomationContext,
   candidate: ProviderCandidate,
   target: Awaited<ReturnType<typeof searchTarget>>,
-  policy: { profile: QualityProfile; current: ReleaseAttributes | null },
+  policy: {
+    profile: QualityProfile;
+    current: ReleaseAttributes | null;
+    matchedOnly?: boolean;
+  },
 ) {
   const id = crypto.randomUUID();
   const parsed = matchRelease({
@@ -175,6 +179,12 @@ async function storeCandidate(
     )
   )
     attributes.identityConfidence = "mismatch";
+  if (
+    policy.matchedOnly === true &&
+    (attributes.identityConfidence !== "exact" ||
+      !attributes.mediaIds.includes(target.identity.id))
+  )
+    return null;
   if (policy.profile.resolved !== undefined) {
     attributes.resolvedEvidence = await collectResolvedEvidence(
       policy.profile.resolved,
@@ -225,6 +235,25 @@ async function storeCandidate(
         score: authoritative.evaluation.score,
       }
     : null;
+}
+
+/** A broad feed must prove canonical coverage before retaining a target-specific interpretation. */
+export async function assessDefaultFeedCandidate(
+  context: MediaAutomationContext,
+  mediaId: string,
+  source: ProviderCandidate,
+) {
+  const profile = await loadProfile(context.db, mediaId);
+  if (profile === null) return null;
+  const target = await searchTarget(context, mediaId);
+  const selected = await storeCandidate(context, source, target, {
+    profile,
+    current: await currentRelease(context, mediaId),
+    matchedOnly: true,
+  });
+  return selected === null
+    ? null
+    : { ...selected, profileId: profile.id, profileVersion: profile.version };
 }
 
 export async function searchCandidates(

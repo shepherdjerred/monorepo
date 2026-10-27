@@ -7,6 +7,7 @@ import {
   AdminProviderIdSchema,
   ProviderListSchema,
   ProviderConfigurationSchema,
+  defaultProviderConfiguration,
   ProviderSeedingPolicySchema,
   TrackerProviderIdSchema,
   MAX_MANUAL_SUBTITLE_BYTES,
@@ -151,8 +152,7 @@ export class PrismaAdminApplication extends PrismaMediaCommands {
           configured: row !== undefined,
           credentialConfigured: row?.credentialId != null,
           configuration: ProviderConfigurationSchema.parse({
-            minimumIntervalSeconds: 30,
-            dailyDownloadLimit: 10,
+            ...defaultProviderConfiguration,
             ...z
               .record(z.string(), z.unknown())
               .parse(row?.configuration ?? {}),

@@ -1,4 +1,7 @@
 import * as m from "#workflows/media/core.ts";
+import * as providerFeed from "#workflows/media/provider-feed.ts";
+export const matchProviderFeedSourceWorkflow =
+  providerFeed.matchProviderFeedSourceWorkflow;
 import * as h from "#workflows/media/handoff.ts";
 export const prepareMediaHandoffWorkflow = h.prepareMediaHandoffWorkflow;
 export const applyMediaHandoffWorkflow = h.applyMediaHandoffWorkflow;

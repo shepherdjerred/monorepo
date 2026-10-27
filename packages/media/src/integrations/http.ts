@@ -60,7 +60,8 @@ export async function request(
   let response: Response;
   try {
     response = await transport(url, { ...init, signal, redirect: "manual" });
-  } catch {
+  } catch (error) {
+    if (error instanceof IntegrationError) throw error;
     throw new IntegrationError(
       service,
       init.mutation === true ? "outcome-unknown" : "unavailable",

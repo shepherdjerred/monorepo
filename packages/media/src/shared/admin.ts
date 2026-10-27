@@ -26,6 +26,10 @@ export const ProviderConfigurationSchema = z
     dailyDownloadLimit: z.number().int().min(1).max(1000),
   })
   .strict();
+export const defaultProviderConfiguration = {
+  minimumIntervalSeconds: 30,
+  dailyDownloadLimit: 10,
+} satisfies z.infer<typeof ProviderConfigurationSchema>;
 const PrivatePolicyProof = {
   verified: z.boolean(),
   evidence: z.string().trim().min(10).max(2000),
@@ -116,7 +120,14 @@ export const ProviderStatusSchema = z.object({
     ])
     .nullable(),
   nextAllowedAt: DateTimeSchema.nullable(),
-  feedState: z.enum(["unconfigured", "unsupported_recent_feed"]),
+  feedState: z.enum([
+    "unconfigured",
+    "unsupported_recent_feed",
+    "current",
+    "catching_up",
+    "error",
+    "paused",
+  ]),
   lastFeedAt: DateTimeSchema.nullable(),
 });
 export const ProviderListSchema = z.array(ProviderStatusSchema);

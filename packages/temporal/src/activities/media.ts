@@ -181,6 +181,8 @@ export const mediaNetworkWorkerActivities: NetworkActivities = {
     withNetwork((activities) => activities.expandMediaRequest(input)),
   dispatchMediaOutbox: () =>
     withNetwork((activities) => activities.dispatchMediaOutbox()),
+  matchProviderFeedSource: (input) =>
+    withNetwork((activities) => activities.matchProviderFeedSource(input)),
   sweepMediaWork: (input) =>
     createPlexWatchActivities(getMediaNetworkRuntime).sweepMediaWork(input),
   reconcileMediaIntent: (input) =>
