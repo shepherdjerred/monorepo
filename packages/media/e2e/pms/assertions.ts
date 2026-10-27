@@ -55,6 +55,7 @@ export async function createLibraries(
         location: path.join(manifest.root, "media", item.kind),
       },
       "POST",
+      201,
     );
   const container = await wire.request("/library/sections");
   const sections = Sections.parse(container["Directory"]);
