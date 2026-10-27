@@ -48,19 +48,23 @@ final class SafeLocations {
   /** Whether a player can stand with their feet in {@code feet}'s block. */
   static boolean isSafe(Location feet) {
     var world = feet.getWorld();
-    return SafeSpots.isSafe(view(world), range(world), BlockPos.of(Positions.of(feet)));
+    var at = BlockPos.of(Positions.of(feet));
+    return SafeSpots.isSafe(view(world, at), range(world), at);
   }
 
   /**
-   * {@code target} moved up or down its column to the nearest safe block, keeping its horizontal
-   * position and facing; empty if there is none within {@link SafeSpots#SEARCH_DISTANCE}.
+   * {@code target} moved to the nearest safe standing position, preferring its own full-height
+   * column and then nearby columns while keeping its facing.
    */
   static Optional<Location> nearestSafe(Location target) {
     var world = target.getWorld();
-    return SafeSpots.find(view(world), range(world), BlockPos.of(Positions.of(target)))
+    var at = BlockPos.of(Positions.of(target));
+    return SafeSpots.find(view(world, at), range(world), at)
         .map(
             spot -> {
               var safe = target.clone();
+              if (spot.x() != target.getBlockX()) safe.setX(spot.x() + 0.5);
+              if (spot.z() != target.getBlockZ()) safe.setZ(spot.z() + 0.5);
               safe.setY(spot.y());
               return safe;
             });
@@ -71,8 +75,13 @@ final class SafeLocations {
     return location.getWorld().isChunkLoaded(location.getBlockX() >> 4, location.getBlockZ() >> 4);
   }
 
-  private static SafeSpots.BlockView view(World world) {
-    return (x, y, z) -> ground(world.getBlockAt(x, y, z).getType());
+  private static SafeSpots.BlockView view(World world, BlockPos origin) {
+    return (x, y, z) -> {
+      var originalChunk = x >> 4 == origin.x() >> 4 && z >> 4 == origin.z() >> 4;
+      return originalChunk || world.isChunkLoaded(x >> 4, z >> 4)
+          ? ground(world.getBlockAt(x, y, z).getType())
+          : Ground.HAZARD;
+    };
   }
 
   private static HeightRange range(World world) {

@@ -5,6 +5,7 @@
 # warmup, cooldown and the seven-day cost waiver live in essentials.yml.
 searchInterval: PT15S
 landingMemory: PT5M
+# Up to 24 batches are searched per request, including exact-biome requests.
 batchSize: 24
 minGap: 512
 band: 1500

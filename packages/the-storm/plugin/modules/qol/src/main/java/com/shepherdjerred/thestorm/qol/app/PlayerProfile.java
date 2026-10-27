@@ -14,8 +14,8 @@ import java.util.UUID;
  */
 public record PlayerProfile(
     UUID player, Instant firstSeen, Optional<Instant> lastRtp, int starterRtpCharges) {
-  /** Compass trips a new profile, and a profile still holding the one-shot compass, receives. */
-  public static final int STARTER_CHARGES = 8;
+  /** Compass trips a new profile receives. */
+  public static final int STARTER_CHARGES = 15;
 
   public PlayerProfile {
     if (starterRtpCharges < 0) {

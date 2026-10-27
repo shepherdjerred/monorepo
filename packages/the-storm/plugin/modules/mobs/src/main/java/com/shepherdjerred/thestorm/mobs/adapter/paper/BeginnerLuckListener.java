@@ -52,7 +52,29 @@ final class BeginnerLuckListener implements Listener {
 
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   void onSpawn(CreatureSpawnEvent event) {
-    reconcile(event.getEntity());
+    var mob = event.getEntity();
+    if (ordinary(mob) && levels.levelOf(mob).isPresent() && tooManyNearby(mob)) {
+      event.setCancelled(true);
+      return;
+    }
+    reconcile(mob);
+  }
+
+  private boolean tooManyNearby(LivingEntity mob) {
+    var radius = config.beginnerLuck().radius();
+    for (var player : mob.getWorld().getNearbyPlayers(mob.getLocation(), radius)) {
+      if (!capped(player)) continue;
+      var nearby = player.getNearbyEntities(radius, radius, radius);
+      var count =
+          nearby.stream()
+              .filter(entity -> !entity.equals(mob))
+              .filter(LivingEntity.class::isInstance)
+              .map(LivingEntity.class::cast)
+              .filter(entity -> ordinary(entity) && levels.levelOf(entity).isPresent())
+              .count();
+      if (count >= config.beginnerLuck().maxAggro()) return true;
+    }
+    return false;
   }
 
   @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -64,9 +86,15 @@ final class BeginnerLuckListener implements Listener {
     reconcile(event.getEntity(), event.getTarget() instanceof Player player ? player : null);
   }
 
+  private boolean capped(Player player) {
+    var active = active(player);
+    return active.isPresent()
+        && active.getAsLong() < config.beginnerLuck().normalAfter().toMillis();
+  }
+
   /** A new ordinary target is refused once this player already has maxAggro ordinary enemies. */
   private boolean crowded(Entity entity, Player player) {
-    if (!(entity instanceof Mob mob) || !ordinary(mob) || active(player).isEmpty()) return false;
+    if (!(entity instanceof Mob mob) || !ordinary(mob) || !capped(player)) return false;
     if (Objects.equals(mob.getTarget(), player)) return false;
     var radius = config.beginnerLuck().radius();
     var already = 0;

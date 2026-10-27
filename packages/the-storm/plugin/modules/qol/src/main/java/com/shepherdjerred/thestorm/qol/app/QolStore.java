@@ -20,6 +20,9 @@ public interface QolStore {
    */
   CompletableFuture<Integer> spendStarterCharge(UUID player);
 
+  /** Permanently discards the starter compass and all of its remaining trips. */
+  CompletableFuture<Void> discardStarterCompass(UUID player);
+
   /** Legacy RTP entitlement storage retained for recovery; new charges use Essentials. */
   CompletableFuture<Void> insertRtpAttempt(RtpAttempt attempt);
 

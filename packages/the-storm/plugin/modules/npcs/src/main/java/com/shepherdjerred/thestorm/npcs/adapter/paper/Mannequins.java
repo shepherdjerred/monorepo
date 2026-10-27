@@ -1,7 +1,6 @@
 package com.shepherdjerred.thestorm.npcs.adapter.paper;
 
 import com.destroystokyo.paper.profile.ProfileProperty;
-import com.shepherdjerred.thestorm.core.text.HouseStyle;
 import com.shepherdjerred.thestorm.npcs.domain.geo.Rotation;
 import com.shepherdjerred.thestorm.npcs.domain.geo.Spot;
 import com.shepherdjerred.thestorm.npcs.domain.geo.Vec3;
@@ -76,12 +75,9 @@ final class Mannequins {
 
   /** Applies everything the definition says about the entity itself. */
   void dress(Mannequin mannequin, NpcDefinition npc) {
-    mannequin.customName(Component.text(npc.name(), HouseStyle.BRAND));
+    mannequin.customName(Component.text(npc.name(), NamedTextColor.WHITE));
     mannequin.setCustomNameVisible(true);
-    mannequin.setDescription(
-        npc.description().isBlank()
-            ? Component.empty()
-            : Component.text(npc.description(), NamedTextColor.GRAY));
+    mannequin.setDescription(Component.empty());
     mannequin.setImmovable(true);
     mannequin.setInvulnerable(false);
     mannequin.setSilent(true);

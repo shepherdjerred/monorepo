@@ -30,7 +30,8 @@ final class SafeColumn {
 
   /** Feet y of a surface landing at ({@code x}, {@code z}), if one exists. */
   static Optional<Integer> surface(World world, int x, int z) {
-    return below(world, x, world.getHighestBlockYAt(x, z), z);
+    var highest = world.getHighestBlockYAt(x, z);
+    return standable(world, x, highest, z) ? Optional.of(highest + 1) : Optional.empty();
   }
 
   /** Feet y at or below {@code fromY}, for a death in a cave. */

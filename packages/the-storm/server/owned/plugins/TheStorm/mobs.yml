@@ -12,8 +12,10 @@
 
 # Everyone starts a fresh active-play allowance when the flag first enables.
 # AFK and offline time pause it; active minigame time still counts.
-# Mobs stay aggressive. Shared levels are reduced near beginners, including
-# existing mobs. Levels and personal incoming damage ramp to normal at 12 hours.
+# At most maxAggro levelled hostile mobs can gather near a beginner; additional
+# natural spawns are refused and extra mobs cannot join the fight. Shared levels
+# are reduced near beginners, including existing mobs. Levels and personal
+# incoming damage ramp to normal at 12 hours.
 # Bosses, PvP, environmental hazards and sealed minigames keep their rules.
 # Enabled through the managed the-storm-beginners-luck-enabled flag.
 beginnerLuck:

@@ -5,8 +5,10 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.qol.app.QolStore;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
@@ -23,6 +25,7 @@ final class StarterCompass {
   private static final NamespacedKey OWNER = new NamespacedKey("thestorm", "starter_rtp_owner");
   private final Map<UUID, Integer> charges = new HashMap<>();
   private final Map<UUID, Integer> holds = new HashMap<>();
+  private final Set<UUID> discarding = new HashSet<>();
   private final ModuleContext context;
   private final QolStore store;
   private final SealedWorlds sealed;
@@ -184,10 +187,41 @@ final class StarterCompass {
     if (player.isOnline()) reconcile(player);
   }
 
+  void discard(Player player, ItemStack item) {
+    var id = player.getUniqueId();
+    if (!discarding.add(id)) return;
+    var discarded = item.clone();
+    var _ =
+        store
+            .discardStarterCompass(id)
+            .whenCompleteAsync(
+                (ignored, failure) -> {
+                  discarding.remove(id);
+                  if (failure != null) {
+                    context
+                        .logger()
+                        .error("Could not discard the travel compass for {}", id, failure);
+                    if (player.isOnline()) {
+                      player.sendActionBar(
+                          Component.text("Could not discard your compass. Try again."));
+                    }
+                    return;
+                  }
+                  charges.remove(id);
+                  if (!player.isOnline()) return;
+                  reconcile(player);
+                  var at = Blocks.at(player);
+                  var drop = player.getWorld().dropItem(at, discarded);
+                  drop.setVelocity(at.getDirection().multiply(0.3));
+                },
+                context.scheduler().mainThread());
+  }
+
   void left(Player player) {
     var id = player.getUniqueId();
     charges.remove(id);
     holds.remove(id);
+    discarding.remove(id);
   }
 
   void afterRespawn(Player player) {

@@ -20,7 +20,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -107,11 +106,6 @@ final class ReturnListener implements Listener {
     var waiting = pending.remove(player.getUniqueId());
     if (waiting == null || !player.isOnline()) return;
     ReturnToken.place(player, ReturnToken.item(player, waiting.death(), waiting.shown()));
-  }
-
-  @EventHandler
-  void onDrop(PlayerDropItemEvent event) {
-    if (ReturnToken.marked(event.getItemDrop().getItemStack())) event.setCancelled(true);
   }
 
   @EventHandler

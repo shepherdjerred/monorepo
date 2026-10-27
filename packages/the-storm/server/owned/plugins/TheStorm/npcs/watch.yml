@@ -16,7 +16,7 @@ places:
     pitch: 0.0
   windmill-watch-turn:
     world: minecraft:overworld
-    x: 65.5
+    x: 71.5
     y: 69
     z: 67.5
     yaw: 180.0
@@ -117,10 +117,10 @@ npcs:
     skin: vanilla:wide/zuri
     home:
       world: minecraft:overworld
-      x: 66.5
+      x: 71.5
       y: 69
-      z: 66.5
-      yaw: 0.0
+      z: 64.5
+      yaw: 90.0
       pitch: 0.0
     pose: standing
     roles: [guard, beginner-safe]

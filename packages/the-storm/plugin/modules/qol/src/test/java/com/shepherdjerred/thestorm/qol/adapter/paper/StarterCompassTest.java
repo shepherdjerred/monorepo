@@ -183,8 +183,10 @@ final class StarterCompassTest {
   }
 
   @Test
-  void compassClickOnACitizenOpensThePickerInsteadOfDialogueAndCannotBeDropped() {
-    compass.loaded(player, 8);
+  void compassClickOnACitizenOpensThePickerAndDroppingDiscardsItAfterSaving() {
+    when(store.discardStarterCompass(player.getUniqueId()))
+        .thenReturn(CompletableFuture.completedFuture(null));
+    compass.loaded(player, 15);
     player.getInventory().setHeldItemSlot(8);
     var click = new NpcInteractEvent(player, mock(NpcRef.class));
     listener.npc(click);
@@ -196,9 +198,31 @@ final class StarterCompassTest {
             server
                 .getWorlds()
                 .getFirst()
-                .dropItem(player.getLocation(), StarterCompass.item(player, 8)));
+                .dropItem(player.getLocation(), StarterCompass.item(player, 15)));
     listener.drop(drop);
     assertThat(drop.isCancelled()).isTrue();
+    assertThat(compass.pending(player)).isFalse();
+    compass.reconcile(player);
+    assertThat(player.getInventory().getContents()).noneMatch(StarterCompass::marked);
+    verify(store).discardStarterCompass(player.getUniqueId());
+  }
+
+  @Test
+  void failedDiscardKeepsTheCompassAndItsCharges() {
+    when(store.discardStarterCompass(player.getUniqueId()))
+        .thenReturn(
+            CompletableFuture.failedFuture(new IllegalStateException("fixture write failure")));
+    compass.loaded(player, 15);
+    var drop =
+        new PlayerDropItemEvent(
+            player,
+            player.getWorld().dropItem(player.getLocation(), StarterCompass.item(player, 15)));
+
+    listener.drop(drop);
+
+    assertThat(drop.isCancelled()).isTrue();
+    assertThat(compass.remaining(player)).isEqualTo(15);
+    assertThat(StarterCompass.marked(player.getInventory().getItem(8))).isTrue();
   }
 
   @Test

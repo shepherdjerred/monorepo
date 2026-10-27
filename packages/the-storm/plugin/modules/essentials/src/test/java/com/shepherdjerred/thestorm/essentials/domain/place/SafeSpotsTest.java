@@ -116,17 +116,18 @@ final class SafeSpotsTest {
   }
 
   @Test
-  void findGivesUpBeyondTheSearchDistance() {
-    var column = new Column().set(64 - SafeSpots.SEARCH_DISTANCE - 2, Ground.FLOOR);
+  void findSearchesTheWholeOriginalColumn() {
+    var column = new Column().set(50, Ground.FLOOR);
 
-    assertThat(SafeSpots.find(column, RANGE, at(64))).isEmpty();
+    assertThat(SafeSpots.find(column, RANGE, at(64))).contains(at(51));
   }
 
   @Test
-  void findReachesExactlyTheSearchDistance() {
-    var column = new Column().set(64 - SafeSpots.SEARCH_DISTANCE - 1, Ground.FLOOR);
+  void findUsesANearbyColumnWhenTheOriginalHasNoSafeSpace() {
+    SafeSpots.BlockView columns =
+        (x, y, z) -> x == 1 && z == 0 && y == 63 ? Ground.FLOOR : Ground.OPEN;
 
-    assertThat(SafeSpots.find(column, RANGE, at(64))).contains(at(64 - SafeSpots.SEARCH_DISTANCE));
+    assertThat(SafeSpots.find(columns, RANGE, at(64))).contains(new BlockPos(1, 64, 0));
   }
 
   @Test
