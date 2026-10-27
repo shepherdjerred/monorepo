@@ -7,10 +7,12 @@ import { PrepareLibraryHandoffV2Schema } from "#shared/handoff-v2.ts";
 import { createAutomationTestContext } from "#testing/automation.ts";
 import { adoptLibraryBindingSource } from "./library.test-fixture.ts";
 import { tvBindingContext } from "./tv.test-fixture.ts";
+import { inspectMedia } from "#filesystem/media-tools.ts";
 
 export async function libraryTvBindingFixture(
   db: Database,
   directoryCreated: (directory: string) => void,
+  options: { bytes?: Uint8Array; qualitySourceId?: string } = {},
 ) {
   const series = await db.mediaItem.create({
     data: {
@@ -35,6 +37,7 @@ export async function libraryTvBindingFixture(
       }),
     );
   const f = await handoffFixture(db, {
+    ...(options.bytes === undefined ? {} : { bytes: options.bytes }),
     sourceKind: "sonarr",
     fileName: "Synthetic Anime.S01E01-E02.mkv",
     prepareRequest({ request, report }) {
@@ -70,6 +73,7 @@ export async function libraryTvBindingFixture(
     },
   });
   directoryCreated(f.directory);
+  if (options.bytes !== undefined) f.context.files.inspect = inspectMedia;
   const items = episodes.map((episode, index) => ({
     ratingKey: String(900_002 + index),
     type: "episode",
@@ -125,11 +129,23 @@ export async function libraryTvBindingFixture(
     kind: "tv",
     edition: "default",
     media,
+    ...(options.qualitySourceId === undefined
+      ? {}
+      : { qualitySourceId: options.qualitySourceId }),
   });
   const wire = await tvBindingContext(
     db,
     createAutomationTestContext(db, f.network.context.cipher),
     episodes.map((episode) => episode.id),
+    { ratingKeyBase: 1_000_000 + (await db.mediaItem.count()) * 100 },
   );
-  return { ...f, ...adopted, wire, context: wire.context, series, episodes };
+  return {
+    ...f,
+    ...adopted,
+    files: f.context.files,
+    wire,
+    context: wire.context,
+    series,
+    episodes,
+  };
 }

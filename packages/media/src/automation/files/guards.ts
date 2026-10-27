@@ -26,6 +26,8 @@ import {
 import { assertOwnerRemoval } from "./owner-removal.ts";
 import { assertAcquisitionIdentity } from "./acquisition-identity/guard.ts";
 import { assertLegacySubmissionSponsor } from "#infrastructure/acquisition-identity/sponsor.ts";
+import type { AcquisitionAccess } from "#infrastructure/acquisition-identity/sponsor.ts";
+import { managedSeriesIdentity } from "#shared/acquisition/library-management.ts";
 import { MediaError } from "#application/errors.ts";
 import { lockDefaultMedia } from "#infrastructure/handoff/default-edition.ts";
 import { assertLegacyClaimsResolved } from "#infrastructure/recovery/legacy-claims/protection.ts";
@@ -77,10 +79,7 @@ export async function assertRuntime(
 export async function assertAcquisition(
   tx: Transaction,
   attemptId: string,
-  authority: {
-    serverMachineId?: string | undefined;
-    movieAccess?: MovieChoiceAccess | undefined;
-  } = {},
+  authority: AcquisitionAccess = {},
 ) {
   const attempt = await tx.acquisitionAttempt.findUniqueOrThrow({
     where: { id: attemptId },
@@ -129,6 +128,7 @@ export async function assertAcquisition(
     select: { mediaId: true },
   });
   if (
+    managedSeriesIdentity(attempt.identityEvidence) === null &&
     attempt.mediaIds.some(
       (mediaId) => !claimed.some((request) => request.mediaId === mediaId),
     )

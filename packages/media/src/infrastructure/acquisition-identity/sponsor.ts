@@ -11,12 +11,14 @@ import {
 } from "#infrastructure/movie-editions/access.ts";
 import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts";
 import { readMovieAttemptSponsor } from "#infrastructure/movie-editions/attempt-sponsor.ts";
+import type { LibraryManagementInvocation } from "./library-management.ts";
 import {
   MovieEditionScopeSchema,
   type MovieEditionScope,
 } from "#shared/movie-editions/registry.ts";
 
 export type AcquisitionAccess = {
+  libraryManagement?: LibraryManagementInvocation | undefined;
   serverMachineId?: string | undefined;
   movieAccess?: MovieChoiceAccess | undefined;
   movieScope?: MovieEditionScope | undefined;

@@ -7,7 +7,16 @@ export async function tvBindingContext(
   db: Database,
   base: MediaAutomationContext,
   mediaIds: readonly string[],
+  options: { ratingKeyBase?: number } = {},
 ) {
+  const showKey =
+    options.ratingKeyBase === undefined ? "10" : String(options.ratingKeyBase);
+  const seasonKey =
+    options.ratingKeyBase === undefined
+      ? "20"
+      : String(options.ratingKeyBase + 1);
+  const episodeBase =
+    options.ratingKeyBase === undefined ? 1000 : options.ratingKeyBase + 2;
   const rows = await db.assetCoverage.findMany({
     where: {
       mediaId: { in: [...mediaIds] },
@@ -35,18 +44,20 @@ export async function tvBindingContext(
       throw new Error("Unexpected TV fixture coordinate");
     const coverage = rows.find((row) => row.mediaId === media.id);
     return {
-      ratingKey: String(1000 + index),
+      ratingKey: String(episodeBase + index),
       type: "episode",
       title: media.title,
       index: media.episodeNumber,
       parentIndex: 1,
-      parentRatingKey: "20",
-      grandparentRatingKey: "10",
+      parentRatingKey: seasonKey,
+      grandparentRatingKey: showKey,
       Media: [
         {
           Part: [
             {
-              id: coverage === undefined ? 20_000 + index : 10_000 + index,
+              id:
+                (options.ratingKeyBase ?? 0) +
+                (coverage === undefined ? 20_000 + index : 10_000 + index),
               file: coverage?.asset.path ?? `/data/tv/foreign/${media.id}.mkv`,
               size: Number(coverage?.asset.sizeBytes ?? 1n),
             },
@@ -56,17 +67,17 @@ export async function tvBindingContext(
     };
   });
   const show: PlexItem = {
-    ratingKey: "10",
+    ratingKey: showKey,
     type: "show",
     title: series.title,
     Guid: [{ id: `tmdb://${String(series.tmdbId)}` }],
   };
   const season: PlexItem = {
-    ratingKey: "20",
+    ratingKey: seasonKey,
     type: "season",
     title: "Season 1",
     index: 1,
-    parentRatingKey: "10",
+    parentRatingKey: showKey,
   };
   const pages: number[] = [];
   const context: MediaAutomationContext = {
@@ -121,9 +132,9 @@ export async function tvBindingContext(
         }
         const key = url.pathname.slice("/library/metadata/".length);
         const item =
-          key === "10"
+          key === showKey
             ? show
-            : key === "20"
+            : key === seasonKey
               ? season
               : items.find((value) => value.ratingKey === key);
         return item === undefined ||

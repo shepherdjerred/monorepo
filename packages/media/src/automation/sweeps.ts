@@ -37,7 +37,7 @@ export function createSweepActivities(
       )
         return sweepMovieWatch(context, input.cursor);
       if (input.kind === "downloads")
-        return sweepDownloads(context, input.cursor);
+        return sweepDownloads(invocation, input.cursor);
       if (input.kind === "feeds")
         return sweepFeeds(context, input.cursor, input.sweepId);
       return input.kind === "inventory"

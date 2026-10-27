@@ -13,6 +13,10 @@ import { createPlexWatchActivities } from "./media/plex-watch.ts";
 import { createMovieWatchWorkerActivitiesV4 } from "./media/movie-watch.ts";
 import { mediaCall } from "./media/call.ts";
 import {
+  createAcquisitionNetworkWorkerActivities,
+  createAcquisitionFileWorkerActivities,
+} from "./media/acquisition.ts";
+import {
   createMovieNetworkWorkerActivitiesV4,
   createMovieFileWorkerActivitiesV4,
 } from "./media/movie-editions.ts";
@@ -81,6 +85,9 @@ type CoreNetworkActivities = Omit<
   | "observeMediaUpgradeCleanup"
   | "observeNativeRecovery"
   | "observeNativeQuarantine"
+  | "reconcileMediaIntent"
+  | "submitMediaTorrent"
+  | "observeMediaAcquisition"
 >;
 type FileActivities = MediaFileActivities &
   MovieFileActivitiesV4 &
@@ -91,7 +98,10 @@ type FileActivities = MediaFileActivities &
   NativeQuarantineFileActivities;
 type CoreFileActivities = Omit<
   FileActivities,
-  keyof LibraryHandoffFileActivities | keyof MovieFileActivitiesV4
+  | keyof LibraryHandoffFileActivities
+  | keyof MovieFileActivitiesV4
+  | "inspectAndStageMedia"
+  | "promoteMediaFiles"
 >;
 export async function getMediaNetworkRuntime() {
   networkRuntime ??= createMediaNetworkRuntime(
@@ -156,6 +166,7 @@ function assertNotCancelled(): void {
 }
 
 export const mediaNetworkWorkerActivities: NetworkActivities = {
+  ...createAcquisitionNetworkWorkerActivities(getMediaNetworkRuntime),
   ...createMovieWatchWorkerActivitiesV4(getMediaNetworkRuntime),
   ...createMovieNetworkWorkerActivitiesV4(getMediaNetworkRuntime),
   ...createLibraryPlexBindingNetworkActivities(getMediaNetworkRuntime),
@@ -202,12 +213,6 @@ export const mediaNetworkWorkerActivities: NetworkActivities = {
     withNetwork((activities) => activities.matchProviderFeedSource(input)),
   sweepMediaWork: (input) =>
     createPlexWatchActivities(getMediaNetworkRuntime).sweepMediaWork(input),
-  reconcileMediaIntent: (input) =>
-    withNetwork((activities) => activities.reconcileMediaIntent(input)),
-  submitMediaTorrent: (input) =>
-    withNetwork((activities) => activities.submitMediaTorrent(input)),
-  observeMediaAcquisition: (input) =>
-    withNetwork((activities) => activities.observeMediaAcquisition(input)),
   publishMediaToPlex: (input) =>
     createPlexPublicationActivities(getMediaNetworkRuntime).publishMediaToPlex(
       input,
@@ -242,6 +247,7 @@ export const mediaNetworkWorkerActivities: NetworkActivities = {
     withNetwork((activities) => activities.finishMediaOperation(input)),
 };
 export const mediaFileWorkerActivities: FileActivities = {
+  ...createAcquisitionFileWorkerActivities(getMediaFileRuntime),
   ...createMovieFileWorkerActivitiesV4(getMediaFileRuntime),
   ...createLibraryHandoffFileActivities(getMediaFileRuntime),
   prepareSubtitleReplacement: (input) =>
@@ -268,10 +274,6 @@ export const mediaFileWorkerActivities: FileActivities = {
     withFiles((activities) => activities.applyMediaHandoffFiles(input)),
   cleanupSupersededMediaFile: (input) =>
     withFiles((activities) => activities.cleanupSupersededMediaFile(input)),
-  inspectAndStageMedia: (input) =>
-    withFiles((activities) => activities.inspectAndStageMedia(input)),
-  promoteMediaFiles: (input) =>
-    withFiles((activities) => activities.promoteMediaFiles(input)),
   rollbackMediaPromotion: (input) =>
     withFiles((activities) => activities.rollbackMediaPromotion(input)),
   quarantineMediaFiles: (input) =>

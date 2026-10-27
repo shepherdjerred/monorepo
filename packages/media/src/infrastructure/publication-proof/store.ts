@@ -156,10 +156,11 @@ async function validatePublicationIntentRow(
 export async function createPublicationIntent(
   tx: Prisma.TransactionClient,
   input: PublicationIntent,
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<PublicationIntentRef> {
   const intent = PublicationIntentSchema.parse(input);
   for (const entry of intent.entries) assertPublicationSubtitleEvidence(entry);
-  const previous = await loadPublicationIntent(tx, intent.attemptId);
+  const previous = await loadPublicationIntent(tx, intent.attemptId, budget);
   if (previous !== null) {
     if (previous.intentHash !== snapshotHash(nativeJson(intent)))
       throw new Error("Publication intent cannot be replaced");
@@ -189,7 +190,7 @@ export async function createPublicationIntent(
     .parse(attempt.filePlan);
   if (plan.length !== intent.entries.length)
     throw new Error("Publication intent omitted plan entries");
-  for (const item of intent.entries) await assertEntry(tx, item, plan);
+  for (const item of intent.entries) await assertEntry(tx, item, plan, budget);
   const intentHash = snapshotHash(nativeJson(intent));
   await tx.mediaPublicationTransition.create({
     data: {
@@ -208,9 +209,14 @@ export async function createPublicationIntent(
 export async function commitPublicationOutcome(
   tx: Prisma.TransactionClient,
   input: { intent: PublicationIntentRef; outcome: PublicationOutcome },
+  budget?: PublicationAuthorityReadBudget,
 ): Promise<void> {
   await tx.$queryRaw`SELECT id FROM "MediaPublicationTransition" WHERE id=${input.intent.transitionId} FOR UPDATE`;
-  const stored = await loadPublicationIntent(tx, input.intent.intent.attemptId);
+  const stored = await loadPublicationIntent(
+    tx,
+    input.intent.intent.attemptId,
+    budget,
+  );
   if (
     stored === null ||
     snapshotHash(nativeJson(stored)) !== snapshotHash(nativeJson(input.intent))
@@ -238,7 +244,7 @@ export async function commitPublicationOutcome(
       throw new Error("Publication outcome is immutable");
     return;
   }
-  await assertOutcomeEntries(tx, stored, outcome);
+  await assertOutcomeEntries(tx, stored, outcome, budget);
   if (outcome.effects.some((effect, index) => effect.ordinal !== index))
     throw new Error("Publication outcome effect prefix is not contiguous");
   await tx.mediaPublicationTransition.update({
@@ -274,6 +280,7 @@ async function assertEntry(
   tx: Prisma.TransactionClient,
   item: PublicationIntent["entries"][number],
   plan: z.infer<typeof FilePlanEntrySchema>[],
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const entry = plan.find((row) => row.operationId === item.entry.operationId);
   if (
@@ -290,7 +297,9 @@ async function assertEntry(
     item.predecessor.version !== entry.previousVersion ||
     item.predecessor.checksum !== entry.previousChecksum ||
     snapshotHash(
-      nativeJson(await snapshotPublicationAsset(tx, entry.previousAssetId)),
+      nativeJson(
+        await snapshotPublicationAsset(tx, entry.previousAssetId, budget),
+      ),
     ) !== snapshotHash(nativeJson(item.predecessor))
   ) {
     throw new Error("Publication predecessor snapshot changed");
@@ -311,6 +320,7 @@ async function assertOutcomeEntries(
   tx: Prisma.TransactionClient,
   stored: PublicationIntentRef,
   outcome: PublicationOutcome,
+  budget?: PublicationAuthorityReadBudget,
 ) {
   for (const result of outcome.entries) {
     const item = stored.intent.entries.find(
@@ -322,7 +332,7 @@ async function assertOutcomeEntries(
       if (
         asset !== null &&
         snapshotHash(
-          nativeJson(await snapshotPublicationAsset(tx, asset.id)),
+          nativeJson(await snapshotPublicationAsset(tx, asset.id, budget)),
         ) !== snapshotHash(nativeJson(asset))
       )
         throw new Error(

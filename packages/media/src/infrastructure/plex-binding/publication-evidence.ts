@@ -4,13 +4,13 @@ import {
   PlexAssociationV1Schema,
   plexScopeKey,
 } from "#shared/plex-binding/contract.ts";
-import type { AcquisitionPlexPublicationReceipt } from "#shared/plex-binding/publication.ts";
+import type { DefaultAcquisitionPlexReceipt } from "#shared/acquisition/library-publication.ts";
 import { parsePlexRecord } from "./records.ts";
 
 /** Historical immutable evidence only; current pointers and later ownership are irrelevant to ACK. */
 export async function assertAcquisitionPlexEvidence(
   tx: Prisma.TransactionClient,
-  receipt: AcquisitionPlexPublicationReceipt,
+  receipt: DefaultAcquisitionPlexReceipt,
 ) {
   const { expected, completion } = receipt;
   const expectedScopes = expected.newGroups

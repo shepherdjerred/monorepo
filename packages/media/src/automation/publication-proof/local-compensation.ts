@@ -35,7 +35,11 @@ export async function compensateRecordedPublication(
   attemptId: string,
   plan: readonly FilePlanEntry[],
 ): Promise<boolean> {
-  const intent = await loadPublicationIntent(context.db, attemptId);
+  const intent = await loadPublicationIntent(
+    context.db,
+    attemptId,
+    context.libraryManagement?.budget,
+  );
   if (intent === null) return false;
   const settled = await context.db.mediaPublicationTransition.findUniqueOrThrow(
     { where: { id: intent.transitionId } },
@@ -108,7 +112,11 @@ export async function compensateRecordedPublication(
             predecessor:
               entry.previousAssetId === null
                 ? null
-                : await snapshotPublicationAsset(tx, entry.previousAssetId),
+                : await snapshotPublicationAsset(
+                    tx,
+                    entry.previousAssetId,
+                    context.libraryManagement?.budget,
+                  ),
             successor: null,
             participants: await observePublicationParticipants(context, entry),
             journals: [...recording.state.journals.entries()]
@@ -128,20 +136,24 @@ export async function compensateRecordedPublication(
               )
               .map(([, value]) => value),
           });
-        await commitPublicationOutcome(tx, {
-          intent,
-          outcome: {
-            schemaVersion: 1,
-            kind: "compensated",
-            transitionId: intent.transitionId,
-            intentHash: intent.intentHash,
-            filePlanHash: intent.intent.filePlanHash,
-            birthEpoch: intent.intent.birthEpoch,
-            effects: recording.state.refs,
-            entries,
-            completedAt: new Date().toISOString(),
+        await commitPublicationOutcome(
+          tx,
+          {
+            intent,
+            outcome: {
+              schemaVersion: 1,
+              kind: "compensated",
+              transitionId: intent.transitionId,
+              intentHash: intent.intentHash,
+              filePlanHash: intent.intent.filePlanHash,
+              birthEpoch: intent.intent.birthEpoch,
+              effects: recording.state.refs,
+              entries,
+              completedAt: new Date().toISOString(),
+            },
           },
-        });
+          context.libraryManagement?.budget,
+        );
         await tx.acquisitionAttempt.update({
           where: { id: attemptId },
           data: {

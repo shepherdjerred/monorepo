@@ -8,6 +8,7 @@ import { FileGuardError, type Transaction } from "./types.ts";
 import { z } from "zod";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
+import { currentMeasuredQuality } from "#automation/acquisition-management/current-quality.ts";
 
 const StoredReleaseSchema = PublicReleaseAttributesSchema.extend({
   id: z.string(),
@@ -37,11 +38,25 @@ export async function assertMeasuredUpgrade(
       throw new FileGuardError("measured_quality_rejected");
     const coverage = await db.assetCoverage.findMany({
       where: { mediaId, edition: "default", current: true },
-      include: { asset: true },
+      include: {
+        asset: {
+          include: {
+            coverage: {
+              where: { current: true },
+              include: {
+                media: { include: { parent: { include: { parent: true } } } },
+              },
+            },
+          },
+        },
+      },
     });
     for (const current of coverage) {
       if (current.assetId === publishedAssetId) continue;
-      const previous = StoredReleaseSchema.parse(current.asset.properties);
+      const previous = currentMeasuredQuality(
+        StoredReleaseSchema.parse(current.asset.properties),
+        current.asset.coverage.map((item) => item.media),
+      );
       const decision = chooseUpgrade({
         candidate: measured,
         current: previous,

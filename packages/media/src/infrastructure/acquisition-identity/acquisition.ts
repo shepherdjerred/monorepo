@@ -5,6 +5,10 @@ import { z } from "zod";
 import type { Prisma, ReleaseCandidate } from "#generated/prisma/client.ts";
 import { MediaError } from "#application/errors.ts";
 import { AcquisitionIdentitySnapshotSchema } from "#shared/acquisition/identity.ts";
+import {
+  ManagedSeriesAcquisitionIdentitySchema,
+  type LibrarySeriesManagement,
+} from "#shared/acquisition/library-management.ts";
 import { PublicReleaseAttributesSchema } from "#shared/api.ts";
 import {
   buildCanonicalIdentity,
@@ -49,7 +53,8 @@ export async function operationCoverage(
 
 type IdentityInput = {
   operationId: string;
-  sponsorRequestId: string;
+  sponsorRequestId: string | null;
+  management?: LibrarySeriesManagement;
   epoch: number;
   mediaIds: string[];
   serverMachineId?: string;
@@ -127,9 +132,19 @@ export async function acquisitionIdentity(
 ) {
   const { scope, editionEvidence } = await candidateScope(tx, release, input);
   const sponsorAuthority =
-    release.sourceEvidence === null
+    release.sourceEvidence === null || input.management !== undefined
       ? null
-      : await captureSponsorAuthority(tx, input);
+      : await captureSponsorAuthority(tx, {
+          ...input,
+          sponsorRequestId: z.uuid().parse(input.sponsorRequestId),
+        });
+  if (
+    input.management !== undefined &&
+    (input.sponsorRequestId !== null || release.sourceEvidence === null)
+  )
+    throw new Error(
+      "Managed library acquisition needs its own actual retained source and no request sponsor",
+    );
   const decision = await reviewedDecision(tx, input, scope);
   if (release.sourceEvidence === null) {
     if (decision !== null)
@@ -182,8 +197,7 @@ export async function acquisitionIdentity(
       "Reviewed release or recovery epoch changed",
       409,
     );
-  return AcquisitionIdentitySnapshotSchema.parse({
-    schemaVersion: 1,
+  const common = {
     source: { releaseId: release.id, candidateDigest: digest },
     proof:
       decision === null
@@ -199,10 +213,20 @@ export async function acquisitionIdentity(
           },
     canonical,
     coverage: [...input.mediaIds].sort(),
-    sponsorRequestId: input.sponsorRequestId,
-    sponsorAuthority,
     birthEpoch: input.epoch,
-  });
+  };
+  return input.management === undefined
+    ? AcquisitionIdentitySnapshotSchema.parse({
+        schemaVersion: 1,
+        ...common,
+        sponsorRequestId: input.sponsorRequestId,
+        sponsorAuthority,
+      })
+    : ManagedSeriesAcquisitionIdentitySchema.parse({
+        schemaVersion: 4,
+        ...common,
+        management: input.management,
+      });
 }
 async function assertReviewedGenerations(
   tx: Prisma.TransactionClient,

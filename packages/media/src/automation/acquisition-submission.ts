@@ -1,3 +1,4 @@
+import { ownedTorrent } from "./acquisition-management/ownership.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { networkMovieAccess } from "./editions/access.ts";
 import { assertAttemptMovieChoice } from "./editions/choice.ts";
@@ -27,6 +28,12 @@ import { effectiveCandidate } from "#domain/acquisition-identity/effective.ts";
 import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";
+import { managedSeriesIdentity } from "#shared/acquisition/library-management.ts";
+import { acknowledgeManagedAcquisition } from "./acquisition-management/acknowledgement.ts";
+import {
+  validManagedAttempt,
+  projectManagedSubmission,
+} from "./acquisition-management/attempt.ts";
 const GenerationsSchema = z.record(z.string(), z.number().int().nonnegative());
 const ProfileSnapshotSchema = z.object({
   profileId: z.string(),
@@ -36,7 +43,7 @@ const ProfileSnapshotSchema = z.object({
 export async function validAttempt(
   context: Pick<
     MediaAutomationContext,
-    "db" | "serverMachineId" | "permittedSections"
+    "db" | "serverMachineId" | "permittedSections" | "libraryManagement"
   >,
   attemptId: string,
 ): Promise<boolean> {
@@ -47,6 +54,8 @@ export async function validAttempt(
   const runtime = await requireActiveRuntime(context.db);
   if (attempt.edition !== "default") return false;
   if (!runtime.active || runtime.epoch !== attempt.recoveryEpoch) return false;
+  if (managedSeriesIdentity(attempt.identityEvidence) !== null)
+    return validManagedAttempt(context, attempt);
   const movieAccess =
     attempt.state === "imported"
       ? undefined
@@ -163,6 +172,8 @@ export async function submit(
   });
   const recovering =
     attempt.state === "submitting" || attempt.state === "submission_unknown";
+  if (await acknowledgeManagedAcquisition(context, input, attempt))
+    return { status: "submitted", reason: "resume_committed_publication" };
   const prerequisite = await submissionPrerequisite(
     context,
     attempt,
@@ -226,7 +237,10 @@ async function prepareAndSubmit(
   context: MediaAutomationContext,
   attempt: AcquisitionAttempt,
   candidate: ProviderCandidate,
-): Promise<{ status: "waiting" | "blocked"; reason: string } | null> {
+): Promise<{
+  status: "waiting" | "blocked" | "obsolete";
+  reason: string;
+} | null> {
   const preparation = await prepareTorrent(context, candidate);
   if (preparation.reason !== null)
     return {
@@ -236,6 +250,12 @@ async function prepareAndSubmit(
   const reason = await submitNew(context, attempt, candidate, {
     bytes: preparation.bytes,
   });
+  if (
+    reason === "submission_authority_changed" &&
+    managedSeriesIdentity(attempt.identityEvidence) !== null &&
+    !(await validManagedAttempt(context, attempt))
+  )
+    return { status: "obsolete", reason: "intent_changed" };
   return reason === null ? null : { status: "blocked", reason };
 }
 
@@ -246,6 +266,7 @@ async function registerObservedSubmission(
   observed: TorrentObservation,
 ): ReturnType<MediaNetworkActivities["submitMediaTorrent"]> {
   const policySafe = hasApplicationSeedingPolicy(observed);
+  const managed = managedSeriesIdentity(attempt.identityEvidence) !== null;
   const provider = await context.db.mediaProvider.findUniqueOrThrow({
     where: { id: candidate.providerId },
   });
@@ -275,6 +296,7 @@ async function registerObservedSubmission(
       where: { edition: "default", mediaId: { in: attempt.mediaIds } },
     });
     const canProject =
+      !managed &&
       activeClaims.length === attempt.mediaIds.length &&
       currentIntents.every(
         (intent) =>
@@ -299,11 +321,20 @@ async function registerObservedSubmission(
     });
     if (!torrent.owned || torrent.ownershipEpoch !== attempt.recoveryEpoch)
       throw new Error("Cannot adopt unowned torrent");
-    await tx.acquisitionAttempt.update({
-      where: { id: attempt.id },
+    await tx.acquisitionAttempt.updateMany({
+      where: {
+        id: attempt.id,
+        ...(managed
+          ? { state: { notIn: ["validating", "imported", "completed"] } }
+          : {}),
+      },
       data: {
         torrentId: torrent.id,
-        state: canProject ? "downloading" : "cancelled",
+        state: managed
+          ? "submission_observed"
+          : canProject
+            ? "downloading"
+            : "cancelled",
       },
     });
     await queueOperation(tx, {
@@ -323,53 +354,10 @@ async function registerObservedSubmission(
   });
   if (!registered)
     return { status: "blocked", reason: "recovery_epoch_changed" };
+  if (managed) await projectManagedSubmission(context, attempt);
   return policySafe
     ? { status: "submitted", reason: null }
     : { status: "blocked", reason: "torrent_policy_drift" };
-}
-
-/** Observe a journaled uncertain add even after its requesting claim was cancelled. */
-export async function reconcileUnconfirmedSubmission(
-  context: MediaAutomationContext,
-  attemptId: string,
-): Promise<void> {
-  const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
-    where: { id: attemptId },
-  });
-  if (
-    attempt.torrentId !== null ||
-    !["submitting", "submission_unknown"].includes(attempt.state)
-  )
-    return;
-  const result = await submit(context, {
-    operationId: attempt.operationId,
-    attemptId,
-  });
-  if (result.status === "blocked")
-    await context.db.operation.update({
-      where: { id: attempt.coordinatorOperationId ?? attempt.operationId },
-      data: { status: "reconciling" },
-    });
-}
-
-export function ownedTorrent(
-  context: MediaAutomationContext,
-  observed: Parameters<
-    MediaAutomationContext["qbittorrent"]["validateOwnership"]
-  >[0],
-  attempt: { id: string; operationId: string },
-): boolean {
-  try {
-    context.qbittorrent.validateOwnership(observed, {
-      operationId: attempt.operationId,
-      attemptId: attempt.id,
-      savePath: path.join(context.downloadRoot, "media", attempt.id),
-    });
-    return true;
-  } catch (error) {
-    if (!(error instanceof IntegrationError)) throw error;
-    return false;
-  }
 }
 
 export async function prepareTorrent(

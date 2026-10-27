@@ -654,6 +654,25 @@ its reservation for recovery. New Plex completion receipts use version 3 for
 management acquisitions; original receipts and physical publication records
 retain their literal formats.
 
+For TV/anime, selected monitored episodes can use their actual applied library
+approval for upgrades without personal requests. Shared-file and pack acquisitions
+require approval and current policy for every covered episode, one canonical
+series, and the configured Plex show section. An episode selection grants no
+permission to acquire episodes outside that selection. The management birth
+retains the original approval, owner, profile, epoch, exact episode generations,
+and immutable Plex association. It uses acquisition identity version 4; existing
+file-plan and physical publication formats remain literal. Plex completion uses
+receipt version 2 under `managedEpisodePlexReceiptV2`, separately from the original
+request-sponsored receipt marker. Completed retries acknowledge that immutable
+receipt before evaluating current policy and cannot project downloading again.
+The Network and Files adapters capture their SDK capabilities before loading
+the runtime; each Activity shares one provenance allowance across its phases.
+Download reconciliation chooses the handler from the literal retained identity,
+including legacy attempts, and shares the sweep's original execution and allowance.
+Recording a proven transfer's independent seeding responsibility commits before
+current library-policy projection, so revoked permission or an exhausted allowance
+cannot discard that responsibility.
+
 Each batch covers at most 25 physical files and 100 canonical media items.
 `activation: "activate"` changes the reviewed observe runtime to active at its
 existing recovery epoch. Later `activation: "extend"` batches require current

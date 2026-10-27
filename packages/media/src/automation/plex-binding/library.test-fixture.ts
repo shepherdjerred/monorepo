@@ -77,6 +77,7 @@ export async function adoptLibraryBindingSource(
     kind: "movies" | "tv";
     edition: MovieEditionKey;
     media: SourceMedia[];
+    qualitySourceId?: string;
   },
 ) {
   const db = f.context.files.db;
@@ -106,7 +107,7 @@ export async function adoptLibraryBindingSource(
       sizeBytes: Buffer.byteLength(f.bytes),
       checksum: null,
       downloadHash: null,
-      qualitySourceId: "3",
+      qualitySourceId: options.qualitySourceId ?? "3",
     },
   ];
   const uploaded = await administration.upload(f.network.actor, {

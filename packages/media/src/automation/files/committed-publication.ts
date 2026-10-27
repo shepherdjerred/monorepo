@@ -9,6 +9,11 @@ import { QualityRulesSchema } from "#shared/api.ts";
 import { FileOperationConflict } from "#filesystem/operations-types.ts";
 import type { VerifiedFileProof } from "#filesystem/verification.ts";
 import { assertAcquisition } from "./guards.ts";
+import { managedSeriesIdentity } from "#shared/acquisition/library-management.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import { loadPublicationIntentRecord } from "#infrastructure/publication-proof/store.ts";
+import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
+import { requirePublicationExecution } from "#automation/publication-proof/invocation.ts";
 import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
 import { fileOperations } from "./file-operations.ts";
 import { storedMeasuredRelease } from "./quality-guard.ts";
@@ -32,6 +37,9 @@ function sameIds(left: readonly string[], right: readonly string[]): boolean {
 export async function resumeCommittedPublication(input: {
   context: FileContext;
   attemptId: string;
+  budget?: PublicationAuthorityReadBudget;
+  execution?: ReturnType<typeof requirePublicationExecution>;
+  managedOnly?: true;
 }): Promise<boolean> {
   const { context, attemptId } = input;
   const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
@@ -39,6 +47,31 @@ export async function resumeCommittedPublication(input: {
   });
   if (attempt.edition !== "default")
     throw new FileGuardError("edition_not_available");
+  if (
+    managedSeriesIdentity(attempt.identityEvidence) !== null &&
+    ["imported", "completed"].includes(attempt.state)
+  ) {
+    const execution = requirePublicationExecution(input.execution);
+    const budget = input.budget ?? context.libraryManagement?.budget;
+    if (budget === undefined)
+      throw new Error(
+        "Managed publication acknowledgement requires its caller's provenance allowance",
+      );
+    const original = await loadPublicationIntentRecord(
+      context.db,
+      attempt.id,
+      budget,
+    );
+    execution.assertActive();
+    execution.signal.throwIfAborted();
+    if (
+      original?.outcome?.kind !== "published" ||
+      original.reference.intent.filePlanHash !== identityHash(attempt.filePlan)
+    )
+      throw new Error("Managed publication lost its literal committed parent");
+    return true;
+  }
+  if (input.managedOnly === true) return false;
   if (attempt.state !== "imported") return false;
   if (attempt.filePlan === null)
     throw new FileGuardError("committed_plan_missing");
@@ -79,6 +112,7 @@ export async function resumeCommittedPublication(input: {
       // Checks adopted intent/reservation generations, never rewrites the physical-effect snapshot.
       await assertAcquisition(tx, attemptId, {
         serverMachineId: context.serverMachineId,
+        libraryManagement: context.libraryManagement,
       });
       for (const entry of plan) {
         await assertCommittedAsset({

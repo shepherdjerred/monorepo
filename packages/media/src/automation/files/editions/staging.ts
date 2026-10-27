@@ -31,6 +31,7 @@ export async function stageAuthorizedPlan(
     const choice = await assertAcquisition(tx, input.attemptId, {
       serverMachineId: context.serverMachineId,
       movieAccess: input.movieAccess,
+      libraryManagement: context.libraryManagement,
     });
     const current = await tx.acquisitionAttempt.findUniqueOrThrow({
       where: { id: input.attemptId },

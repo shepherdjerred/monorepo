@@ -93,7 +93,12 @@ export async function producePublication(
 ): Promise<void> {
   await producePublicationWithProtocol(input, {
     lockScope: lockAcquisitionMedia,
-    load: loadPublicationIntent,
+    load: (tx, attemptId) =>
+      loadPublicationIntent(
+        tx,
+        attemptId,
+        input.context.libraryManagement?.budget,
+      ),
     capture: async (tx, attempt, transitionId) => {
       const captured = await capturePublicationIntent(tx, {
         context: input.context,
@@ -103,16 +108,29 @@ export async function producePublication(
         rawFilePlanHash: input.rawFilePlanHash,
       });
       assertPublicationActive(input.context);
-      const result = await createPublicationIntent(tx, captured);
+      const result = await createPublicationIntent(
+        tx,
+        captured,
+        input.context.libraryManagement?.budget,
+      );
       assertPublicationActive(input.context);
       return result;
     },
-    snapshot: snapshotPublicationAsset,
+    snapshot: (tx, assetId) =>
+      snapshotPublicationAsset(
+        tx,
+        assetId,
+        input.context.libraryManagement?.budget,
+      ),
     complete: async (tx, parent, outcome) => {
-      await commitPublicationOutcome(tx, {
-        intent: parent,
-        outcome: { schemaVersion: 1, ...outcome },
-      });
+      await commitPublicationOutcome(
+        tx,
+        {
+          intent: parent,
+          outcome: { schemaVersion: 1, ...outcome },
+        },
+        input.context.libraryManagement?.budget,
+      );
     },
   });
 }

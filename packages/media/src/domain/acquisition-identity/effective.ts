@@ -1,10 +1,10 @@
 import type { ReleaseAttributes } from "#shared/contract.ts";
-import type { AcquisitionIdentitySnapshot } from "#shared/acquisition/identity.ts";
+import type { DefaultAcquisitionIdentity } from "#shared/acquisition/library-management.ts";
 
 /** The caller verifies immutable source evidence and current authority before projecting it. */
 export function effectiveCandidate(
   candidate: ReleaseAttributes,
-  verifiedIdentity: AcquisitionIdentitySnapshot,
+  verifiedIdentity: DefaultAcquisitionIdentity,
 ): ReleaseAttributes {
   if (candidate.id !== verifiedIdentity.source.releaseId)
     throw new Error("Identity proof belongs to a different release");

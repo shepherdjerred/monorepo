@@ -32,6 +32,16 @@ export const ResolvedEvidenceSchema = z.object({
   }),
 });
 export type ResolvedEvidence = z.infer<typeof ResolvedEvidenceSchema>;
+/** Current catalog facts are evaluation inputs; the retained measured evidence stays literal. */
+export function projectResolvedCatalog(
+  evidence: ResolvedEvidence,
+  metadata: { runtimeMinutes: number | null; originalLanguage: string | null },
+): ResolvedEvidence {
+  return ResolvedEvidenceSchema.parse({
+    ...evidence,
+    release: { ...evidence.release, ...metadata },
+  });
+}
 export function evidenceMatcher(
   evidence: readonly ResolvedEvidence[],
 ): RegexMatcher {

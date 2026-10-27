@@ -4,15 +4,14 @@ import {
 } from "#infrastructure/editions/locks.ts";
 import { MediaError } from "#application/errors.ts";
 import { networkMovieAccess } from "./editions/access.ts";
+import { assertAttemptMovieChoice } from "./editions/choice.ts";
 import {
-  requireMovieSponsor,
-  assertAttemptMovieChoice,
-} from "./editions/choice.ts";
-import { captureMovieAttemptChoice } from "#infrastructure/movie-editions/authority.ts";
-import {
-  requireMovieChoiceAccess,
-  type MovieChoiceAccess,
-} from "#infrastructure/movie-editions/access.ts";
+  reservationAuthority,
+  reservationMovieChoice,
+} from "./acquisition-management/reservation.ts";
+import { candidateUpgradeAllowed } from "./acquisition-management/quality.ts";
+import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
+import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";
 import {
@@ -32,7 +31,7 @@ import type {
   MediaNetworkActivities,
 } from "#shared/automation.ts";
 import type { QualityProfile } from "#shared/contract.ts";
-import { chooseUpgrade, evaluateRelease } from "#domain/quality.ts";
+import { evaluateRelease } from "#domain/quality.ts";
 import { serializable } from "./store.ts";
 import { lockAcquisitionMedia } from "#infrastructure/acquisition-identity/locks.ts";
 import { assertNoPublicationCompensationFence } from "#infrastructure/native-compensation/fence.ts";
@@ -46,7 +45,6 @@ import { captureSponsorAuthority } from "#infrastructure/acquisition-identity/sp
 import { candidateDigest } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { effectiveCandidate } from "#domain/acquisition-identity/effective.ts";
 import { sponsorClaim } from "#infrastructure/action-guards.ts";
-import { currentRelease } from "./acquisition-candidates.ts";
 import {
   lockRuntimeAuthority,
   recordsAuthorized,
@@ -168,21 +166,20 @@ async function reserveLockedCandidate(
     where: targetWhere(defaultScope(input.mediaId)),
   });
   if (existing !== null) return null;
-  const chosen = await requireMovieSponsor(
-    tx,
-    input.mediaId,
-    options.movieAccess,
-  );
-  const sponsor =
-    chosen?.request ??
-    (await tx.mediaRequest.findFirst({
-      where: { mediaId: input.mediaId, ...effectiveRequestWhere },
-      orderBy: { createdAt: "asc" },
-    }));
-  if (sponsor === null) return null;
+  const authority = await reservationAuthority(tx, context, {
+    mediaId: input.mediaId,
+    mediaIds: proposedIds,
+    epoch,
+    movieAccess: options.movieAccess,
+  });
+  if (authority === null) return null;
+  if (authority.kind === "library")
+    await bindPlexTransactionDeadline(tx, authority.freshness);
+  const sponsor = authority.sponsor;
   const identity = await reservationIdentity(tx, context, proposed, {
     operationId: input.operationId,
-    sponsorRequestId: sponsor.id,
+    sponsorRequestId: sponsor?.id ?? null,
+    ...(authority.kind === "library" ? { management: authority.proof } : {}),
     epoch,
     mediaIds: proposedIds,
     movieAccess: options.movieAccess,
@@ -197,26 +194,15 @@ async function reserveLockedCandidate(
   )
     return null;
   const mediaIds = [...new Set(identity?.coverage ?? release.mediaIds)].sort();
-  const rawCandidate = {
-    id: release.id,
-    providerId: release.providerId,
-    title: release.title,
-    ...PublicReleaseAttributesSchema.parse(release.attributes),
-  };
-  const candidate =
-    identity === null
-      ? rawCandidate
-      : effectiveCandidate(rawCandidate, identity);
-  for (const mediaId of mediaIds)
-    if (
-      !chooseUpgrade({
-        candidate,
-        current: await currentRelease(context, mediaId),
-        profile,
-        mediaIds: [mediaId],
-      }).upgrade
-    )
-      return null;
+  if (
+    !(await candidateUpgradeAllowed(context, {
+      release,
+      identity,
+      profile,
+      mediaIds,
+    }))
+  )
+    return null;
   if (!mediaIds.includes(input.mediaId))
     throw new Error("Candidate coverage omitted requested media");
   const generations = await claimCoverage(tx, {
@@ -228,19 +214,16 @@ async function reserveLockedCandidate(
     newTargetIds,
   });
   if (generations === null) return null;
-  const choice =
-    chosen === null
-      ? {}
-      : await captureMovieAttemptChoice(tx, {
-          sponsorRequestId: sponsor.id,
-          scope: chosen.scope,
-          access: requireMovieChoiceAccess(options.movieAccess ?? {}),
-        });
+  const choice = await reservationMovieChoice(
+    tx,
+    authority,
+    options.movieAccess,
+  );
   const attempt = await tx.acquisitionAttempt.create({
     data: {
       ...choice,
       releaseId,
-      sponsorRequestId: sponsor.id,
+      sponsorRequestId: sponsor?.id ?? null,
       mediaIds,
       generations,
       state: "reserved",
@@ -270,6 +253,7 @@ async function reserveLockedCandidate(
     data: { availability: "searching" },
   });
   await mirrorDefaultAvailability(tx, [input.mediaId], "searching");
+  if (authority.kind === "library") authority.freshness.assertActive();
   return attempt.id;
 }
 
@@ -305,7 +289,10 @@ async function reservationIdentity(
       : { serverMachineId: context.serverMachineId }),
   };
   if (release.sourceEvidence === null)
-    await captureSponsorAuthority(tx, authority);
+    await captureSponsorAuthority(tx, {
+      ...authority,
+      sponsorRequestId: z.uuid().parse(input.sponsorRequestId),
+    });
   return await acquisitionIdentity(tx, release, authority);
 }
 
@@ -370,7 +357,11 @@ export async function adoptReservation(
     const identity = await assertAttemptIdentity(
       tx,
       reservation.attempt,
-      { serverMachineId: context.serverMachineId, movieAccess },
+      {
+        serverMachineId: context.serverMachineId,
+        movieAccess,
+        libraryManagement: context.libraryManagement,
+      },
       "resume_recorded_submission",
     );
     const rawAttributes = {
@@ -433,14 +424,13 @@ export async function adoptReservation(
     };
   });
 }
-import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 
 async function claimCoverage(
   tx: Prisma.TransactionClient,
   input: {
     mediaIds: string[];
     primaryId: string;
-    sponsor: MediaRequest;
+    sponsor: MediaRequest | null;
     profileId: string;
     epoch: number;
     newTargetIds: ReadonlySet<string>;
@@ -485,7 +475,7 @@ async function claimCoverage(
       },
     });
     generations[mediaId] = claimed.generation;
-    if (mediaId !== input.primaryId)
+    if (mediaId !== input.primaryId && input.sponsor !== null)
       await sponsorClaim(tx, input.sponsor.userId, input.sponsor.id, {
         mediaId,
         subtitleLanguages: input.sponsor.subtitleLanguages,

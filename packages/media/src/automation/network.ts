@@ -79,6 +79,10 @@ import { createNativeCompensationNetworkActivities } from "#migration/native-com
 import { createNativeCompensationFileActivities } from "./native-compensation/activities.ts";
 import type { NativeCompensationExecutionContext } from "#shared/native-recovery/compensation-runtime.ts";
 import { createMediaPathMapping } from "#filesystem/media-paths.ts";
+import {
+  createAcquisitionNetworkFacet,
+  createAcquisitionFileFacet,
+} from "./acquisition-management/facets.ts";
 
 type LifecycleActivities = Pick<
   MediaNetworkActivities,
@@ -302,6 +306,7 @@ export async function createMediaFileRuntime(
   };
   return {
     activities,
+    acquisition: createAcquisitionFileFacet(fileContext),
     movie: createMovieFileFacetV4(fileContext),
     libraryHandoff: createLibraryHandoffFileFacet({
       files: fileContext,
@@ -419,6 +424,7 @@ export async function createMediaNetworkRuntime(
   });
   return {
     libraryHandoff: createLibraryHandoffNetworkFacet(nativeContext),
+    acquisition: createAcquisitionNetworkFacet(context),
     movie: createMovieNetworkFacetV4(context),
     nativePlex: createNativePlexFacet(nativeContext, observeNative),
     ...createPlexRuntimeFacets(context, async () => {

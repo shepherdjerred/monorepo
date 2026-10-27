@@ -2,6 +2,7 @@ import { z } from "zod";
 import { constants, open } from "node:fs/promises";
 import type { Database } from "#infrastructure/database.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
+import { currentPlexExclusionProof } from "./lookup.ts";
 import type { PlexMaintenanceClient } from "#integrations/plex-maintenance.ts";
 import {
   PlexExclusionPlanSchema,
@@ -86,34 +87,24 @@ export async function requirePlexExclusionProof(
   roots: { library: string; control: string },
 ): Promise<void> {
   const proof = await requirePlexExclusionDatabaseProof(db, roots);
+  const [rootHash, controlHash] = await Promise.all([
+    markerHash(roots.library),
+    markerHash(roots.control),
+  ]);
   if (
-    (await markerHash(roots.library)) !== proof.rootMarkerSha256 ||
-    (await markerHash(roots.control)) !== proof.controlMarkerSha256
+    rootHash !== proof.rootMarkerSha256 ||
+    controlHash !== proof.controlMarkerSha256
   )
     throw new Error("Plex exclusion markers changed after proof");
 }
 
 /** API precondition only; files worker must also revalidate the actual marker bytes. */
 export async function requirePlexExclusionDatabaseProof(
-  db: Pick<
-    Prisma.TransactionClient,
-    "mediaRuntimeState" | "plexExclusionProof"
-  >,
+  db: Pick<Prisma.TransactionClient, "$queryRaw">,
   roots: { library: string; control: string },
 ) {
-  const runtime = await db.mediaRuntimeState.findUniqueOrThrow({
-    where: { id: "singleton" },
-  });
-  const proof = await db.plexExclusionProof.findFirst({
-    where: {
-      libraryRoot: roots.library,
-      controlRoot: roots.control,
-      recoveryEpoch: runtime.recoveryEpoch,
-      revokedAt: null,
-    },
-    include: { run: true },
-    orderBy: { verifiedAt: "desc" },
-  });
+  const runtime = await currentPlexExclusionProof(db, roots);
+  const { proof } = runtime;
   if (proof?.run.state !== "verified")
     throw new Error("Plex exclusion requires a completed scanner proof");
   const plan = PlexExclusionPlanSchema.parse(proof.run.plan);

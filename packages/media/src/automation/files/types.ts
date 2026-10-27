@@ -6,11 +6,13 @@ import type { MediaProbe } from "#filesystem/media-tools.ts";
 import type { ContentProof } from "#filesystem/content-proof.ts";
 import type { MediaPathMapping } from "#filesystem/media-paths.ts";
 import type { PlexAccess } from "#shared/plex-binding/contract.ts";
+import type { LibraryManagementInvocation } from "#infrastructure/acquisition-identity/library-management.ts";
 import * as filePlan from "#shared/file-plan.ts";
 
 export type Transaction = Prisma.TransactionClient;
 export type FileContext = {
   db: Database;
+  libraryManagement?: LibraryManagementInvocation;
   serverMachineId?: string;
   permittedMovieSection?: () => Promise<string>;
   plexAccess: (sectionType: "movie" | "show") => Promise<PlexAccess>;

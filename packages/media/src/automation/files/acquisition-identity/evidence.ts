@@ -1,9 +1,7 @@
 import nodePath from "node:path";
 import { z } from "zod";
-import type {
-  AcquisitionIdentitySnapshot,
-  FileIdentityEvidence,
-} from "#shared/acquisition/identity.ts";
+import type { FileIdentityEvidence } from "#shared/acquisition/identity.ts";
+import type { DefaultAcquisitionIdentity } from "#shared/acquisition/library-management.ts";
 import type { MovieAcquisitionIdentity } from "#shared/movie-editions/management/contracts.ts";
 import { parseEpisodeCoordinates } from "#domain/acquisition-identity/parser.ts";
 import { resolveEpisodeCoordinates } from "#domain/acquisition-identity/coordinates.ts";
@@ -19,7 +17,7 @@ export const IdentityTorrentFileSchema = z.object({
 export type IdentityTorrentFile = z.infer<typeof IdentityTorrentFileSchema>;
 
 export function fileIdentityEvidence(
-  identity: AcquisitionIdentitySnapshot | MovieAcquisitionIdentity,
+  identity: DefaultAcquisitionIdentity | MovieAcquisitionIdentity,
   file: IdentityTorrentFile,
 ): FileIdentityEvidence {
   if (file.index === undefined)
@@ -54,7 +52,7 @@ export function fileIdentityEvidence(
 }
 
 export function assertFileIdentity(
-  identity: AcquisitionIdentitySnapshot | MovieAcquisitionIdentity,
+  identity: DefaultAcquisitionIdentity | MovieAcquisitionIdentity,
   entry: FilePlanEntry,
   files: IdentityTorrentFile[],
 ): void {

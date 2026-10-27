@@ -2,11 +2,15 @@ import { z } from "zod";
 import { assertDefaultAcquisitionEdition } from "#infrastructure/editions/acquisition.ts";
 import type { AcquisitionAttempt, Prisma } from "#generated/prisma/client.ts";
 import { MediaError, requireOwner } from "#application/errors.ts";
+import { IdentityDecisionSchema } from "#shared/acquisition/identity.ts";
 import {
-  AcquisitionIdentitySnapshotSchema,
-  IdentityDecisionSchema,
-  type AcquisitionIdentitySnapshot,
-} from "#shared/acquisition/identity.ts";
+  DefaultAcquisitionIdentitySchema,
+  type DefaultAcquisitionIdentity,
+} from "#shared/acquisition/library-management.ts";
+import {
+  readLibrarySeriesManagement,
+  protectLibraryManagement,
+} from "./library-management.ts";
 import {
   buildCanonicalIdentity,
   canonicalSemantics,
@@ -69,7 +73,7 @@ export async function assertAttemptIdentity(
   attempt: AcquisitionAttempt,
   access?: string | AcquisitionAccess,
   purpose: "new_effect" | "resume_recorded_submission" = "new_effect",
-): Promise<AcquisitionIdentitySnapshot | null> {
+): Promise<DefaultAcquisitionIdentity | null> {
   const authority =
     typeof access === "string" ? { serverMachineId: access } : access;
   const serverMachineId = authority?.serverMachineId;
@@ -81,12 +85,14 @@ export async function assertAttemptIdentity(
     );
   await assertAttemptCut(tx, attempt, purpose);
   if (attempt.identityEvidence === null) return null;
-  const identity = AcquisitionIdentitySnapshotSchema.parse(
+  const identity = DefaultAcquisitionIdentitySchema.parse(
     attempt.identityEvidence,
   );
   if (
     serverMachineId === undefined ||
-    identity.sponsorAuthority.serverMachineId !== serverMachineId
+    (identity.schemaVersion === 1
+      ? identity.sponsorAuthority.serverMachineId
+      : identity.management.serverMachineId) !== serverMachineId
   )
     throw new MediaError(
       "acquisition_server_changed",
@@ -96,19 +102,13 @@ export async function assertAttemptIdentity(
   if (
     identity.birthEpoch !== attempt.recoveryEpoch ||
     identity.source.releaseId !== attempt.releaseId ||
-    identity.sponsorRequestId !== attempt.sponsorRequestId ||
+    (identity.schemaVersion === 1 ? identity.sponsorRequestId : null) !==
+      attempt.sponsorRequestId ||
     identityHash([...identity.coverage].sort()) !==
       identityHash([...attempt.mediaIds].sort())
   )
     throw new Error("Acquisition identity evidence binding is corrupt");
-  await assertSponsorAuthority(tx, {
-    authority: identity.sponsorAuthority,
-    sponsorRequestId: identity.sponsorRequestId,
-    operationId: attempt.operationId,
-    mediaIds: attempt.mediaIds,
-    movieAccess: authority?.movieAccess,
-    recordedAttemptId: attempt.id,
-  });
+  await assertIdentityPermission(tx, attempt, identity, authority);
   await assertAttemptOwnerDecision(tx, attempt.recoveryEpoch, identity);
   const current = await buildCanonicalIdentity(tx, attempt.mediaIds);
   if (
@@ -135,10 +135,44 @@ export async function assertAttemptIdentity(
   return identity;
 }
 
+async function assertIdentityPermission(
+  tx: Prisma.TransactionClient,
+  attempt: AcquisitionAttempt,
+  identity: DefaultAcquisitionIdentity,
+  authority: AcquisitionAccess | undefined,
+) {
+  if (identity.schemaVersion === 4) {
+    if (authority?.libraryManagement === undefined)
+      throw new Error(
+        "Managed TV acquisition requires the original invocation and provenance allowance",
+      );
+    const management = await readLibrarySeriesManagement(
+      tx,
+      {
+        mediaIds: identity.coverage,
+        epoch: identity.birthEpoch,
+        access: authority.libraryManagement.access,
+        expected: identity.management,
+      },
+      authority.libraryManagement,
+    );
+    if (management === null) protectLibraryManagement();
+    management.freshness.assertActive();
+  } else
+    await assertSponsorAuthority(tx, {
+      authority: identity.sponsorAuthority,
+      sponsorRequestId: identity.sponsorRequestId,
+      operationId: attempt.operationId,
+      mediaIds: attempt.mediaIds,
+      movieAccess: authority?.movieAccess,
+      recordedAttemptId: attempt.id,
+    });
+}
+
 async function assertAttemptOwnerDecision(
   tx: Prisma.TransactionClient,
   epoch: number,
-  identity: AcquisitionIdentitySnapshot,
+  identity: DefaultAcquisitionIdentity,
 ) {
   if (identity.proof.kind !== "owner") return;
   const decision = await assertIdentityDecision(
@@ -149,7 +183,10 @@ async function assertAttemptOwnerDecision(
     decision?.evidenceHash !== identity.proof.decisionHash ||
     decision.recoveryEpoch !== epoch ||
     decision.candidateDigest !== identity.source.candidateDigest ||
-    decision.serverMachineId !== identity.sponsorAuthority.serverMachineId ||
+    decision.serverMachineId !==
+      (identity.schemaVersion === 1
+        ? identity.sponsorAuthority.serverMachineId
+        : identity.management.serverMachineId) ||
     identityHash(canonicalSemantics(decision.canonical)) !==
       identityHash(canonicalSemantics(identity.canonical))
   )
