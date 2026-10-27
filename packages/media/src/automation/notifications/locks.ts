@@ -12,6 +12,8 @@ import {
 } from "#automation/retention/binding.ts";
 import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
 import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
+import { readMoviePublicationNoticeV4 } from "#shared/movie-editions/notifications-v4.ts";
+import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
 
 /** Match Keep/unwatch and root-cancellation ordering before locking delivery authority. */
 export async function lockDelivery(
@@ -29,13 +31,18 @@ export async function lockDelivery(
       ...(binding?.cohort.mediaIds ?? []),
     ]),
   ].sort();
-  await lockDefaultScopes(
-    tx,
-    mediaIds.map((mediaId) => defaultScope(mediaId)),
-    {
-      createMissing: false,
-    },
-  );
+  const movieNotice = readMoviePublicationNoticeV4(snapshot.event.payload);
+  if (movieNotice === null)
+    await lockDefaultScopes(
+      tx,
+      mediaIds.map((mediaId) => defaultScope(mediaId)),
+      { createMissing: false },
+    );
+  else {
+    if (snapshot.event.mediaId !== movieNotice.source.scope.mediaId)
+      throw new Error("Movie notification locks require the exact event scope");
+    await lockMovieCommand(tx, movieNotice.source.scope);
+  }
   await lockEffectiveRequests(tx, mediaIds);
   await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
   await tx.$queryRaw`SELECT id FROM "LegacyWriterLease" WHERE id = 'singleton' FOR SHARE`;

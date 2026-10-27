@@ -17,6 +17,11 @@ import { MovieChoiceProtection } from "#infrastructure/movie-editions/errors.ts"
 import { prepareNotificationBinding } from "./notifications/binding.ts";
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import { bindPlexTransactionDeadline } from "#infrastructure/plex-binding/freshness.ts";
+import {
+  prepareMovieNoticeV4,
+  assertMovieNoticeConfiguration,
+} from "./movie-editions/notifications/authority.ts";
+import { assertMovieNoticeAcknowledgement } from "./movie-editions/notifications/acknowledgement.ts";
 
 const result = (
   status: "accepted" | "failed" | "unknown",
@@ -39,8 +44,11 @@ export function createNotificationActivities(
         where: { id: input.notificationId },
         include: deliveryInclude,
       });
-      if (["sending", "unknown", "accepted"].includes(snapshot.state))
+      if (["sending", "unknown", "accepted"].includes(snapshot.state)) {
+        await assertMovieNoticeAcknowledgement(context.db, snapshot);
+        execution.assertActive();
         return reconcileDelivery(context, snapshot);
+      }
       if (snapshot.state === "failed")
         return result("failed", "delivery_requires_explicit_retry");
       if (snapshot.state !== "pending")
@@ -54,7 +62,13 @@ export function createNotificationActivities(
         ? await networkMovieAccess(context, eventMediaIds(snapshot))
         : undefined;
       let binding: Awaited<ReturnType<typeof prepareNotificationBinding>>;
+      let movieNotice: Awaited<ReturnType<typeof prepareMovieNoticeV4>>;
       try {
+        movieNotice = await prepareMovieNoticeV4(context, {
+          delivery: snapshot,
+          execution,
+          access: movieAccess,
+        });
         binding = await prepareNotificationBinding(
           context,
           snapshot,
@@ -63,9 +77,11 @@ export function createNotificationActivities(
       } catch (error) {
         if (error instanceof PlexBindingProtection)
           return result("failed", error.reason);
+        if (error instanceof MovieChoiceProtection)
+          return result("failed", error.code);
         throw error;
       }
-      const messageContext = { ...context, movieAccess, binding };
+      const messageContext = { ...context, movieAccess, binding, movieNotice };
       const claim = await context.db
         .$transaction(async (tx) => {
           const guards: MovieChoiceFreshness[] = [];
@@ -138,6 +154,7 @@ export function createNotificationActivities(
         return result("failed", claim.protectedReason);
       try {
         await context.checkpoint?.("notification-claimed");
+        await assertMovieNoticeConfiguration(context, movieNotice);
         return await context.db.$transaction(
           async (tx) => {
             const guards: MovieChoiceFreshness[] = [];

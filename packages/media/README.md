@@ -106,6 +106,16 @@ expired invocation/writer authority cannot advance finalization. Completed
 retries validate the original publication before consulting current
 configuration; they do not repeat downstream work.
 
+Movie publication notices use a separate version-4 body tied to the actual Plex
+receipt, physical asset and recipient's immutable edition choice. They reuse the
+delivery-attempt journal while checking current consent, generation, library
+access, preferences and serving bindings before claim and send. The original
+SDK, writer and Plex mapping deadlines span both phases; refreshing a lease or
+mapping cannot extend them. Source and recipient selection are immutable, and
+receipt reconciliation does not authorize another send. Email subjects and
+bodies retain the selected edition label. Older default-only event bodies retain
+their existing semantics.
+
 The internal movie subtitle protocol carries version-4 operation IDs, asset IDs,
 exact edition scope and a current target digest. Named editions inherit the
 canonical movie's household subtitle policy when no edition override exists.

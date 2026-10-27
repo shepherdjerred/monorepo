@@ -21,6 +21,9 @@ import {
 } from "#automation/subtitles/authority.ts";
 import { assertBoundMediaCohort } from "#automation/retention/binding.ts";
 import { assertRetentionPlexProjection } from "#infrastructure/plex-binding/retention.ts";
+import { readMoviePublicationNoticeV4 } from "#shared/movie-editions/notifications-v4.ts";
+import { composeMovieNoticeV4 } from "#automation/movie-editions/notifications/message.ts";
+import type { PreparedMovieNoticeV4 } from "#automation/movie-editions/notifications/authority.ts";
 
 export const ItemSchema = z.object({
   mediaId: z.string(),
@@ -54,6 +57,7 @@ export type Message = {
 type Context = {
   cipher: CredentialCipher;
   publicOrigin: string;
+  movieNotice?: PreparedMovieNoticeV4 | undefined;
 } & RequesterWatchContext &
   Pick<
     MediaAutomationContext,
@@ -74,6 +78,16 @@ export async function composeMessage(
   context: Context,
   delivery: Delivery,
 ): Promise<Message | null> {
+  if (readMoviePublicationNoticeV4(delivery.event.payload) !== null)
+    return composeMovieNoticeV4(
+      tx,
+      {
+        ...context,
+        movieNotice: context.movieNotice,
+        captureFreshness: context.captureFreshness,
+      },
+      delivery,
+    );
   if (
     isReadiness(delivery.event.kind) ||
     delivery.event.kind === "retention_warning"
