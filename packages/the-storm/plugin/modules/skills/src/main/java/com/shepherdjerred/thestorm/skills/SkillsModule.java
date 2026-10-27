@@ -6,10 +6,9 @@ import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
 import com.shepherdjerred.thestorm.skills.adapter.db.JooqSkillLevels;
 import com.shepherdjerred.thestorm.skills.adapter.discord.SkillDiscordPosts;
 import com.shepherdjerred.thestorm.skills.adapter.paper.SkillsPaper;
-import com.shepherdjerred.thestorm.skills.app.SkillLevelUp;
 import com.shepherdjerred.thestorm.skills.app.SkillLevels;
+import com.shepherdjerred.thestorm.skills.app.SkillSignals;
 import com.shepherdjerred.thestorm.skills.domain.SkillsConfig;
-import java.util.function.Consumer;
 
 /**
  * Eleven retro skills with persistent 1–1000 progression and a power-level ranking. When the
@@ -33,14 +32,14 @@ public final class SkillsModule implements StormModule {
         .register(id(), store::reset);
     SkillLevels levels = store;
     context.services().provide(SkillLevels.class, levels);
+    var signals = new SkillSignals();
     var server = context.plugin().getServer();
-    Consumer<SkillLevelUp> levelUps =
-        context
-            .services()
-            .find(DiscordRelay.class)
-            .map(relay -> new SkillDiscordPosts(relay, server, context.logger()))
-            .<Consumer<SkillLevelUp>>map(posts -> posts::accept)
-            .orElse(levelUp -> {});
-    SkillsPaper.install(context, levels, config, levelUps);
+    context
+        .services()
+        .find(DiscordRelay.class)
+        .map(relay -> new SkillDiscordPosts(relay, server, context.logger()))
+        .ifPresent(posts -> signals.subscribe(posts::accept));
+    context.services().provide(SkillSignals.class, signals);
+    SkillsPaper.install(context, levels, config, signals::publish);
   }
 }

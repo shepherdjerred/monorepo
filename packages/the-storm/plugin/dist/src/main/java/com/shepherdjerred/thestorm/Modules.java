@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm;
 
+import com.shepherdjerred.thestorm.advancements.AdvancementsModule;
 import com.shepherdjerred.thestorm.agent.AgentModule;
 import com.shepherdjerred.thestorm.arena.ArenaModule;
 import com.shepherdjerred.thestorm.chat.ChatModule;
@@ -41,7 +42,8 @@ import java.util.List;
  * and reads essentials moderation history when that module is on. Quests, arena, rwf (Search and
  * Destroy), skills and seasonal post through discord when it is on, so they come after it; arena
  * and rwf also need economy. Rwfbots provides rwf's bot roster and so comes after rwf. World loads
- * before qol, which teleports into those worlds.
+ * before qol, which teleports into those worlds. Reset follows companions. Advancements is last: it
+ * awards milestones the other modules have already saved.
  */
 final class Modules {
 
@@ -77,6 +79,7 @@ final class Modules {
         new WorldModule(),
         new QolModule(),
         new CompanionsModule(),
-        new ResetModule());
+        new ResetModule(),
+        new AdvancementsModule());
   }
 }

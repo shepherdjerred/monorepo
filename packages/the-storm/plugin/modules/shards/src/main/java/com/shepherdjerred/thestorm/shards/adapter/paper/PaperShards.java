@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.shards.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
+import com.shepherdjerred.thestorm.shards.app.ShardUpgrades;
 import com.shepherdjerred.thestorm.shards.app.StormShards;
 import com.shepherdjerred.thestorm.shards.domain.Altars;
 import com.shepherdjerred.thestorm.shards.domain.Bonuses;
@@ -25,7 +26,8 @@ public final class PaperShards {
    * @throws IllegalStateException when a material, entity type, spawn reason or world in {@code
    *     shards.yml} does not exist on this server
    */
-  public static StormShards install(ModuleContext context, ShardsConfig config) {
+  public static StormShards install(
+      ModuleContext context, ShardsConfig config, ShardUpgrades reachedTiers) {
     var plugin = context.plugin();
     var problems = PaperNames.problems(config, plugin.getServer());
     if (!problems.isEmpty()) {
@@ -63,7 +65,9 @@ public final class PaperShards {
                     new NamespacedKey(plugin, "excluded_shard_origin"),
                     new NamespacedKey(plugin, "fresh_shard_chunk"))),
             new AltarListener(
-                new AltarSetup(altars, upgrades, context.scheduler(), AltarSetup::paperSky), kit),
+                new AltarSetup(altars, upgrades, context.scheduler(), AltarSetup::paperSky),
+                kit,
+                reachedTiers),
             new CombatListener(bonuses, gear),
             new CraftingGuard(shards));
     var _ =

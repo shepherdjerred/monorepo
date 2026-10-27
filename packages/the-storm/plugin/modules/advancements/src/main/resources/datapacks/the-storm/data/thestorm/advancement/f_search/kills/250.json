@@ -1,0 +1,19 @@
+{
+  "parent": "thestorm:f_search/kills/100",
+  "display": {
+    "icon": {
+      "id": "minecraft:netherite_sword"
+    },
+    "title": "Two hundred fifty kills",
+    "description": "Get two hundred fifty kills.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "sends_telemetry_event": false
+}

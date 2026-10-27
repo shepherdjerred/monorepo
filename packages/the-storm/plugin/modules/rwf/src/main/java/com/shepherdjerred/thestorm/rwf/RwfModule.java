@@ -36,8 +36,10 @@ import com.shepherdjerred.thestorm.rwf.app.PayoutService;
 import com.shepherdjerred.thestorm.rwf.app.Pseudonyms;
 import com.shepherdjerred.thestorm.rwf.app.Recorder;
 import com.shepherdjerred.thestorm.rwf.app.RecordingSummary;
+import com.shepherdjerred.thestorm.rwf.app.RwfCareers;
 import com.shepherdjerred.thestorm.rwf.app.RwfFeatures;
 import com.shepherdjerred.thestorm.rwf.app.shop.KitShop;
+import com.shepherdjerred.thestorm.rwf.app.store.StatsStore;
 import com.shepherdjerred.thestorm.rwf.domain.map.MapDefinition;
 import com.shepherdjerred.thestorm.rwf.domain.record.Frame;
 import com.shepherdjerred.thestorm.rwf.domain.record.InputFrame;
@@ -62,10 +64,11 @@ import org.jspecify.annotations.Nullable;
 /**
  * Red Warfare Search and Destroy. Loads {@code rwf.yml}, the kits and the maps, migrates its
  * tables, replays payouts a crash left in the outbox, prunes old recordings, then wires the Paper
- * side over the sealed world and publishes {@link MatchView}, {@link MatchEvents} and {@link
- * CombatantActions} for the bots module. When the discord module is on, lobbies and results are
- * announced there. The economy module must be enabled first; the configured map world must be
- * loaded already. RWF creates or loads its explicitly owned void lobby before starting gameplay.
+ * side over the sealed world and publishes {@link MatchView}, {@link MatchEvents}, {@link
+ * CombatantActions}, {@link StatsStore} and {@link RwfCareers}. When the discord module is on,
+ * lobbies and results are announced there. The economy module must be enabled first; the configured
+ * map world must be loaded already. RWF creates or loads its explicitly owned void lobby before
+ * starting gameplay.
  */
 public final class RwfModule implements StormModule {
 
@@ -157,6 +160,10 @@ public final class RwfModule implements StormModule {
     var pseudonyms = pseudonyms(config);
     var recording = recorder(context, config, pseudonyms.isPresent());
     recorder = recording;
+    var stats = new JooqStatsStore(context.database());
+    var careers = new RwfCareers();
+    context.services().provide(StatsStore.class, stats);
+    context.services().provide(RwfCareers.class, careers);
     var started =
         RwfPaper.start(
             context,
@@ -177,12 +184,13 @@ public final class RwfModule implements StormModule {
                         () ->
                             ServerHooks.production(context.services().require(ChunkTickets.class))),
                 features(context, config),
-                new JooqStatsStore(context.database()),
+                stats,
                 new com.shepherdjerred.thestorm.rwf.adapter.db.JooqQuarantineStore(
                     context.database()),
                 new com.shepherdjerred.thestorm.rwf.adapter.db.JooqStreakStore(
                     context.database())));
     paper = started;
+    started.onSettled(careers::settled);
     context
         .services()
         .provide(com.shepherdjerred.thestorm.rwf.app.map.MapLoading.class, started.loading());

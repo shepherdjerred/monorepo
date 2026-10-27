@@ -24,6 +24,7 @@ final class ModulesTest {
   /** The modules the shipped config enables: every registered module. */
   private static final Set<String> SHIPPED_ENABLED =
       Set.of(
+          "advancements",
           "agent",
           "arena",
           "chat",
@@ -79,7 +80,7 @@ final class ModulesTest {
     var config = ConfigFiles.load(SHIPPED_CONFIG, PluginConfig.class);
     var registered = ModuleRegistry.ids(Modules.all());
 
-    assertThat(registered).hasSize(29);
+    assertThat(registered).hasSize(30);
     assertThat(config.modules().keySet()).containsExactlyInAnyOrderElementsOf(registered);
     assertThat(
             config.modules().entrySet().stream()

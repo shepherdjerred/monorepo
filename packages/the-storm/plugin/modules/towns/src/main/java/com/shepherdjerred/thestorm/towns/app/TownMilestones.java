@@ -39,5 +39,13 @@ public interface TownMilestones {
      * @param claims how many chunks it claims now
      */
     record Grew(UUID townId, String town, int claims) implements Milestone {}
+
+    /**
+     * A player joined a town, and that membership is saved.
+     *
+     * @param town its name
+     * @param player who joined
+     */
+    record Joined(String town, UUID player) implements Milestone {}
   }
 }

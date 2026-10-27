@@ -44,6 +44,7 @@ public final class PurchaseService implements TrackPurchases {
   private final Wallets wallets;
   private final PurchaseRules rules;
   private final BooleanSupplier groupsReady;
+  private TrackSignals signals = new TrackSignals();
 
   /** Each player's running purchase, completed once it has been paid and stored or refunded. */
   private final Map<UUID, CompletableFuture<Void>> buying = new ConcurrentHashMap<>();
@@ -56,6 +57,11 @@ public final class PurchaseService implements TrackPurchases {
     this.wallets = wallets;
     this.rules = rules;
     this.groupsReady = groupsReady;
+  }
+
+  /** Tells {@code signals} when a paid level is stored. The notice runs on the main thread. */
+  public void watch(TrackSignals signals) {
+    this.signals = signals;
   }
 
   /** The ledger reason for buying {@code quote}, for example {@code track:mechanic:2}. */
@@ -336,6 +342,8 @@ public final class PurchaseService implements TrackPurchases {
     return recorded.map(
         stored -> {
           runtime.changed(player, stored.progress());
+          var quote = stored.purchase().quote();
+          signals.purchased(player, quote.track(), quote.level());
           return stored.purchase();
         });
   }

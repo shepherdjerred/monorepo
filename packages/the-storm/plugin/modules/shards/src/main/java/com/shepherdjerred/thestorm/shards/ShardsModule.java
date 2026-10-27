@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.shards;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.shards.adapter.paper.PaperShards;
+import com.shepherdjerred.thestorm.shards.app.ShardUpgrades;
 import com.shepherdjerred.thestorm.shards.app.StormShards;
 import com.shepherdjerred.thestorm.shards.domain.ShardsConfig;
 
@@ -24,6 +25,8 @@ public final class ShardsModule implements StormModule {
         .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
         .stateless(id());
     var config = context.loadConfig("shards.yml", ShardsConfig.class);
-    context.services().provide(StormShards.class, PaperShards.install(context, config));
+    var upgrades = new ShardUpgrades();
+    context.services().provide(ShardUpgrades.class, upgrades);
+    context.services().provide(StormShards.class, PaperShards.install(context, config, upgrades));
   }
 }

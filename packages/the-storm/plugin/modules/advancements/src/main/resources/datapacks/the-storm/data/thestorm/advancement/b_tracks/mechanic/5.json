@@ -1,0 +1,19 @@
+{
+  "parent": "thestorm:b_tracks/mechanic/4",
+  "display": {
+    "icon": {
+      "id": "minecraft:redstone"
+    },
+    "title": "Mechanic V",
+    "description": "Reach Mechanic V.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "sends_telemetry_event": false
+}

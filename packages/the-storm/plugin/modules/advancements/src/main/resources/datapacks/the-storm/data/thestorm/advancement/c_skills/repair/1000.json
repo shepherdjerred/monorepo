@@ -1,0 +1,19 @@
+{
+  "parent": "thestorm:c_skills/repair/500",
+  "display": {
+    "icon": {
+      "id": "minecraft:anvil"
+    },
+    "title": "Repair 1000",
+    "description": "Reach Repair level 1000.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "sends_telemetry_event": false
+}

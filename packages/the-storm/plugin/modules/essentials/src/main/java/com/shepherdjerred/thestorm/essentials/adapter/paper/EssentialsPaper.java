@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.essentials.adapter.files.SavedRespawn;
 import com.shepherdjerred.thestorm.essentials.app.AfkTracker;
 import com.shepherdjerred.thestorm.essentials.app.GuardRegistry;
+import com.shepherdjerred.thestorm.essentials.app.HomeSignals;
 import com.shepherdjerred.thestorm.essentials.app.ModerationService;
 import com.shepherdjerred.thestorm.essentials.app.PlayerDirectory;
 import com.shepherdjerred.thestorm.essentials.app.TeleportPayments;
@@ -84,7 +85,8 @@ public final class EssentialsPaper {
    * Registers everything. Throws if the configured kits name unknown items or enchantments, or the
    * spawn is unsafe. An unloaded existing spawn is checked asynchronously with logins held closed.
    */
-  public static EssentialsPaper start(ModuleContext context, EssentialsConfig config, App app) {
+  public static EssentialsPaper start(
+      ModuleContext context, EssentialsConfig config, App app, HomeSignals homes) {
     var server = context.plugin().getServer();
     var runtime =
         new PaperRuntime(
@@ -162,7 +164,8 @@ public final class EssentialsPaper {
                 app.protection(),
                 app.sealed(),
                 destinations,
-                beds),
+                beds,
+                homes),
             config);
     var tpaCommands =
         new TpaCommands(
@@ -204,7 +207,11 @@ public final class EssentialsPaper {
             maintenance,
             new TeleportListener(
                 runtime, flow, new TeleportListener.Places(back, safe, destinations, beds)),
-            new BedListener(runtime, app.stores().homes(), beds, config.homeLimit()),
+            new BedListener(
+                runtime,
+                app.stores().homes(),
+                beds,
+                new BedListener.Policy(config.homeLimit(), homes)),
             new ReturnListener(
                 context,
                 runtime,
@@ -224,7 +231,7 @@ public final class EssentialsPaper {
     var backfill =
         new BedBackfill(
             new BedBackfill.Sources(
-                runtime, app.stores().homes(), beds, app.savedRespawns(), app.sealed()));
+                runtime, app.stores().homes(), beds, app.savedRespawns(), app.sealed(), homes));
     backfill.start();
     var tasks =
         List.of(

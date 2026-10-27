@@ -1,0 +1,19 @@
+{
+  "parent": "thestorm:a_survival/town/1",
+  "display": {
+    "icon": {
+      "id": "minecraft:bricks"
+    },
+    "title": "Growing town",
+    "description": "Claim 25 chunks.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "sends_telemetry_event": false
+}

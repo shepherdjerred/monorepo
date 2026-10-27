@@ -22,6 +22,7 @@ import com.shepherdjerred.thestorm.quests.adapter.discord.QuestDiscordPosts;
 import com.shepherdjerred.thestorm.quests.adapter.luckperms.LuckPermsGrants;
 import com.shepherdjerred.thestorm.quests.adapter.paper.QuestsPaper;
 import com.shepherdjerred.thestorm.quests.adapter.paper.Registries;
+import com.shepherdjerred.thestorm.quests.app.QuestCompletions;
 import com.shepherdjerred.thestorm.quests.app.QuestHooks;
 import com.shepherdjerred.thestorm.quests.app.QuestProgress;
 import com.shepherdjerred.thestorm.quests.app.QuestService;
@@ -123,6 +124,7 @@ public final class QuestsModule implements StormModule {
         .ifPresent(posts -> service.onMilestone(posts::accept));
     services.provide(QuestHooks.class, service);
     services.provide(QuestProgress.class, service);
+    services.provide(QuestCompletions.class, service);
     tick = paper.install(service, paper.dialogJournal(service));
     context
         .logger()

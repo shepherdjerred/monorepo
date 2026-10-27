@@ -35,3 +35,4 @@ modules:
   # Red Warfare Search and Destroy and its bots; the rwf world is provisioned on live.
   rwf: true
   rwfbots: true
+  advancements: true

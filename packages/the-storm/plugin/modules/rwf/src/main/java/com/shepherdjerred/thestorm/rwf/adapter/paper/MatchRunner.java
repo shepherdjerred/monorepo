@@ -133,6 +133,7 @@ final class MatchRunner implements MatchView, MatchEvents {
   private final Effects effects = new Effects();
   private final ArrayDeque<MatchEvent> waiting = new ArrayDeque<>();
   private final List<Consumer<MatchNotification>> listeners = new ArrayList<>();
+  private final List<Consumer<MatchStats>> settledListeners = new ArrayList<>();
   private final Battlefield field;
   private final MatchLedger ledger = new MatchLedger();
   private final Map<BlockPos, Instant> hissed = new HashMap<>();
@@ -437,6 +438,11 @@ final class MatchRunner implements MatchView, MatchEvents {
   public Subscription subscribe(Consumer<MatchNotification> listener) {
     listeners.add(listener);
     return () -> listeners.remove(listener);
+  }
+
+  /** Runs on the main thread after the match's payouts and statistics are stored. */
+  void onSettled(Consumer<MatchStats> listener) {
+    settledListeners.add(listener);
   }
 
   // ---- write side ------------------------------------------------------------------------------
@@ -946,7 +952,12 @@ final class MatchRunner implements MatchView, MatchEvents {
           .context()
           .onMain(
               parts.payouts().settle(row, rows, Optional.of(stats)),
-              paid -> Texts.charged(parts.context().server(), paid),
+              paid -> {
+                Texts.charged(parts.context().server(), paid);
+                for (var listener : List.copyOf(settledListeners)) {
+                  listener.accept(stats);
+                }
+              },
               "settle rwf match " + row.matchId());
     }
 

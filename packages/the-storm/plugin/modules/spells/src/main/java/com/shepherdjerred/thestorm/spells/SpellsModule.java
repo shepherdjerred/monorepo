@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.spells.adapter.db.JooqSpellStore;
 import com.shepherdjerred.thestorm.spells.adapter.paper.SpellsPaper;
+import com.shepherdjerred.thestorm.spells.app.SpellCasts;
 import com.shepherdjerred.thestorm.spells.app.SpellScrolls;
 import com.shepherdjerred.thestorm.spells.domain.config.SpellsConfig;
 import org.jspecify.annotations.Nullable;
@@ -12,7 +13,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * Spells: the Spellcaster track's spell items (reusable foci and single-use scrolls), gated by
  * track tier and quest learning, paid in reagents, and checked against land protection. Requires
- * {@link Protection} (the towns module); publishes {@link SpellScrolls}.
+ * {@link Protection} (the towns module); publishes {@link SpellScrolls} and {@link SpellCasts}.
  */
 public final class SpellsModule implements StormModule {
 
@@ -33,7 +34,10 @@ public final class SpellsModule implements StormModule {
         .services()
         .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
         .register(id(), store::reset);
-    var installed = SpellsPaper.install(context, config, store, protection);
+    var casts = new SpellCasts();
+    context.services().provide(SpellCasts.class, casts);
+    var installed =
+        SpellsPaper.install(context, config, store, new SpellsPaper.Hooks(protection, casts));
     paper = installed;
     context.services().provide(SpellScrolls.class, installed.scrolls());
   }

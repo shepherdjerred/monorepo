@@ -21,6 +21,7 @@ public final class TrackSessions {
 
   private final TrackRuntime runtime;
   private final Consumer<UUID> tellLoadFailed;
+  private Consumer<UUID> loaded = player -> {};
 
   /**
    * @param runtime shared services
@@ -29,6 +30,11 @@ public final class TrackSessions {
   public TrackSessions(TrackRuntime runtime, Consumer<UUID> tellLoadFailed) {
     this.runtime = runtime;
     this.tellLoadFailed = tellLoadFailed;
+  }
+
+  /** Tells {@code loaded} once a join's progress is in memory. */
+  public void watch(TrackSignals signals) {
+    this.loaded = signals::loaded;
   }
 
   /** The wait before retry number {@code attempt} (1 for the first retry). */
@@ -68,6 +74,7 @@ public final class TrackSessions {
                   }
                   runtime.cache().loaded(player, token, progress);
                   runtime.syncPermissions(player);
+                  loaded.accept(player);
                 },
                 runtime.mainThread());
   }

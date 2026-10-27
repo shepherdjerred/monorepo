@@ -1,0 +1,19 @@
+{
+  "parent": "thestorm:b_tracks/spellcaster/2",
+  "display": {
+    "icon": {
+      "id": "minecraft:blaze_powder"
+    },
+    "title": "Spellcaster III",
+    "description": "Reach Spellcaster III.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "sends_telemetry_event": false
+}

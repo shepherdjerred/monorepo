@@ -31,6 +31,7 @@ public final class LockService {
 
   private final LockBook book;
   private final LocksStore store;
+  private LockSaves saves = new LockSaves();
   private final LockPolicy policy;
   private final Clocks clocks;
   private final Predicate<UUID> ownerBusy;
@@ -62,6 +63,11 @@ public final class LockService {
 
   public LockBook book() {
     return book;
+  }
+
+  /** Tells {@code saves} the owner each time a lock is stored. */
+  public void watchSaves(LockSaves saves) {
+    this.saves = saves;
   }
 
   public LockPolicy policy() {
@@ -203,7 +209,7 @@ public final class LockService {
     var lock = found.get();
     if (lock.blocks().size() == 1) {
       book.remove(lock.id());
-      var _ = persist(lock, store.delete(lock.id()));
+      var _ = persist(lock, store.delete(lock.id()), () -> {}, false);
       return;
     }
     var shrunk = lock.withoutBlock(block);
@@ -249,10 +255,15 @@ public final class LockService {
   }
 
   private Change<Lock> persist(Lock lock, CompletableFuture<Void> write) {
-    return persist(lock, write, () -> {});
+    return persist(lock, write, () -> {}, true);
   }
 
   private Change<Lock> persist(Lock lock, CompletableFuture<Void> write, Runnable afterSave) {
+    return persist(lock, write, afterSave, true);
+  }
+
+  private Change<Lock> persist(
+      Lock lock, CompletableFuture<Void> write, Runnable afterSave, boolean savedLock) {
     busy.merge(lock.id(), 1, Integer::sum);
     var saved = new CompletableFuture<Void>();
     var _ =
@@ -260,12 +271,17 @@ public final class LockService {
             (ok, failure) -> {
               settle(lock.id());
               if (failure == null) {
+                var committed = false;
                 try {
                   afterSave.run();
                   flushDeferred();
                   saved.complete(null);
+                  committed = true;
                 } catch (RuntimeException callbackFailure) {
                   reload(saved, callbackFailure);
+                }
+                if (committed && savedLock) {
+                  saves.saved(lock.owner());
                 }
               } else {
                 reload(saved, failure);

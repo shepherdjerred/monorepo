@@ -150,6 +150,15 @@ public final class TownService {
     return attempt(player, chunk).flatMap(claiming::shared).map(claim -> replace(claim, false));
   }
 
+  /** A saved join of a town. Camps, leaving, and kicks are not joins. */
+  public void memberJoined(String town, UUID player) {
+    var joined = state().named(town);
+    if (joined.isEmpty() || joined.get().isCamp()) {
+      return;
+    }
+    milestones.publish(new TownMilestones.Milestone.Joined(town, player));
+  }
+
   /** Founds a town owned by {@code founder}, whose Governor level is {@code governorLevel}. */
   public Result<Change<Town>, List<TownProblem>> found(
       UUID founder, String name, int governorLevel) {

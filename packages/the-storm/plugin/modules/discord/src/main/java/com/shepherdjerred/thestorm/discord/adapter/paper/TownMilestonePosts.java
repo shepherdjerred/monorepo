@@ -35,6 +35,7 @@ public final class TownMilestonePosts {
         }
         case TownMilestones.Milestone.Grew(var townId, var town, var claims) ->
             relay.onTownGrew(townId, town, claims);
+        case TownMilestones.Milestone.Joined ignored -> {}
       }
     } catch (RuntimeException e) {
       logger.error(Component.text("discord: posting a town milestone failed"), e);

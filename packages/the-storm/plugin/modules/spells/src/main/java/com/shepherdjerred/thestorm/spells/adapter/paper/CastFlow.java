@@ -6,6 +6,7 @@ import com.shepherdjerred.thestorm.spells.adapter.paper.spell.CastProblem;
 import com.shepherdjerred.thestorm.spells.adapter.paper.spell.Effect;
 import com.shepherdjerred.thestorm.spells.adapter.paper.spell.Spell;
 import com.shepherdjerred.thestorm.spells.adapter.paper.spell.Toolbox;
+import com.shepherdjerred.thestorm.spells.app.SpellCasts;
 import com.shepherdjerred.thestorm.spells.domain.Refusal;
 import com.shepherdjerred.thestorm.spells.domain.SpellKind;
 import com.shepherdjerred.thestorm.spells.domain.cast.CastAttempt;
@@ -45,14 +46,18 @@ final class CastFlow {
   private final Spellbook book;
   private final Toolbox tools;
   private final ProductAnalytics analytics;
+  private final SpellCasts casts;
   private final Set<CooldownKey> pending = new HashSet<>();
 
-  CastFlow(
-      Map<SpellKind, Spell> spells, Spellbook book, Toolbox tools, ProductAnalytics analytics) {
+  /** Analytics and the advancement signal for a spell that went off. */
+  record Reported(ProductAnalytics analytics, SpellCasts casts) {}
+
+  CastFlow(Map<SpellKind, Spell> spells, Spellbook book, Toolbox tools, Reported reported) {
     this.spells = new EnumMap<>(spells);
     this.book = book;
     this.tools = tools;
-    this.analytics = analytics;
+    this.analytics = reported.analytics();
+    this.casts = reported.casts();
   }
 
   /**
@@ -63,8 +68,9 @@ final class CastFlow {
    * @param mode focus or scroll
    * @param terms the spell's terms
    * @param effect the prepared effect
+   * @param kind which spell
    */
-  record Prepared(Player caster, CastMode mode, SpellTerms terms, Effect effect) {}
+  record Prepared(Player caster, CastMode mode, SpellTerms terms, Effect effect, SpellKind kind) {}
 
   /**
    * Casts {@code kind} from {@code item} at once; true when the spell went off (and was paid for).
@@ -111,7 +117,7 @@ final class CastFlow {
         yield Optional.empty();
       }
       case Result.Ok<Effect, CastProblem>(var effect) ->
-          Optional.of(new Prepared(caster, mode, terms, effect));
+          Optional.of(new Prepared(caster, mode, terms, effect, kind));
     };
   }
 
@@ -179,6 +185,7 @@ final class CastFlow {
     caster.setCooldown(item, (int) (terms.cooldown().toMillis() / MILLIS_PER_TICK));
     cast.effect().apply();
     analytics.interaction(caster.getUniqueId(), ProductAnalytics.Action.SPELL_CAST);
+    casts.cast(caster.getUniqueId(), cast.kind().id());
   }
 
   private CasterState state(Player caster, SpellKind kind, SpellTerms terms) {

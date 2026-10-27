@@ -1,0 +1,19 @@
+{
+  "parent": "thestorm:e_arena/wave/10",
+  "display": {
+    "icon": {
+      "id": "minecraft:shield"
+    },
+    "title": "Wave twenty-five",
+    "description": "Clear wave twenty-five.",
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "sends_telemetry_event": false
+}

@@ -21,14 +21,20 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
+import org.bukkit.advancement.Advancement;
+import org.bukkit.advancement.AdvancementRequirements;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
+import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.jspecify.annotations.Nullable;
@@ -154,6 +160,155 @@ final class ServerEventsListenerTest {
 
     assertThat(posts).isEmpty();
     PlayerVisibility.resolveJoinAnnouncement(player.getUniqueId(), token);
+  }
+
+  @Test
+  void relaysAnnouncedAdvancementsFromOrdinaryWorlds() {
+    var alice = server.addPlayer("Alice");
+
+    listener.onAdvancement(done(alice, "minecraft:story/mine_stone", "Stone Age"));
+
+    assertThat(posts).containsExactly("**Alice** has made the advancement **Stone Age**");
+  }
+
+  @Test
+  void relaysStormMilestonesFromASealedWorld() {
+    sealed.seal("rwf");
+    var match = server.addSimpleWorld("rwf");
+    var alice = server.addPlayer("Alice");
+    alice.teleport(new Location(match, 0.5, 5, 0.5));
+
+    listener.onAdvancement(done(alice, "thestorm:f_search/matches/1", "In the fight"));
+
+    assertThat(posts).containsExactly("**Alice** has made the advancement **In the fight**");
+  }
+
+  @Test
+  void skipsOrdinaryAdvancementsInASealedWorld() {
+    sealed.seal("rwf");
+    var match = server.addSimpleWorld("rwf");
+    var alice = server.addPlayer("Alice");
+    alice.teleport(new Location(match, 0.5, 5, 0.5));
+
+    listener.onAdvancement(done(alice, "minecraft:story/mine_stone", "Stone Age"));
+
+    assertThat(posts).isEmpty();
+  }
+
+  @Test
+  void skipsAHiddenPlayersAdvancement() {
+    var alice = server.addPlayer("Alice");
+    PlayerVisibility.set(alice, true);
+    try {
+      listener.onAdvancement(done(alice, "thestorm:a_survival/home", "A place to return"));
+      assertThat(posts).isEmpty();
+    } finally {
+      PlayerVisibility.set(alice, false);
+    }
+  }
+
+  private static PlayerAdvancementDoneEvent done(Player player, String id, String title) {
+    return new PlayerAdvancementDoneEvent(player, new Announced(id, title), Component.text(title));
+  }
+
+  /** An advancement with a display that announces to chat. */
+  private static final class Announced implements Advancement {
+    private final String id;
+    private final String title;
+
+    private Announced(String id, String title) {
+      this.id = id;
+      this.title = title;
+    }
+
+    @Override
+    public NamespacedKey getKey() {
+      var key = NamespacedKey.fromString(id);
+      if (key == null) {
+        throw new IllegalStateException(id);
+      }
+      return key;
+    }
+
+    @Override
+    public io.papermc.paper.advancement.AdvancementDisplay getDisplay() {
+      return new io.papermc.paper.advancement.AdvancementDisplay() {
+        @Override
+        public io.papermc.paper.advancement.AdvancementDisplay.Frame frame() {
+          return io.papermc.paper.advancement.AdvancementDisplay.Frame.TASK;
+        }
+
+        @Override
+        public Component title() {
+          return Component.text(title);
+        }
+
+        @Override
+        public Component description() {
+          return Component.empty();
+        }
+
+        @Override
+        public org.bukkit.inventory.ItemStack icon() {
+          throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean doesShowToast() {
+          return true;
+        }
+
+        @Override
+        public boolean doesAnnounceToChat() {
+          return true;
+        }
+
+        @Override
+        public boolean isHidden() {
+          return false;
+        }
+
+        @Override
+        public NamespacedKey backgroundPath() {
+          return NamespacedKey.minecraft("stone");
+        }
+
+        @Override
+        public Component displayName() {
+          return Component.text(title);
+        }
+      };
+    }
+
+    @Override
+    public Collection<String> getCriteria() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public AdvancementRequirements getRequirements() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Component displayName() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Advancement getParent() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Collection<Advancement> getChildren() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Advancement getRoot() {
+      throw new UnsupportedOperationException();
+    }
   }
 
   private static PlayerDeathEvent death(PlayerMock player, String message) {

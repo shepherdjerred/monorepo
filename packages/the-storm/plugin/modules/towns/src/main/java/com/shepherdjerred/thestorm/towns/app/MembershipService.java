@@ -42,10 +42,28 @@ public final class MembershipService {
       OwnerLevels levels,
       ClaimLimits limits,
       Departures departures,
-      BooleanSupplier locksSettling) {
+      BooleanSupplier locksSettling,
+      Joins joins) {
     public Hooks(OwnerLevels levels, ClaimLimits limits, Departures departures) {
-      this(levels, limits, departures, () -> false);
+      this(levels, limits, departures, () -> false, Joins.NONE);
     }
+
+    public Hooks(
+        OwnerLevels levels,
+        ClaimLimits limits,
+        Departures departures,
+        BooleanSupplier locksSettling) {
+      this(levels, limits, departures, locksSettling, Joins.NONE);
+    }
+  }
+
+  /** Told once a player's join is saved. */
+  @FunctionalInterface
+  public interface Joins {
+
+    Joins NONE = (town, player) -> {};
+
+    void joined(String town, UUID player);
   }
 
   /** Told when a player has left a town, or been kicked from it, and that is saved. */
@@ -97,9 +115,14 @@ public final class MembershipService {
                     new Membership.JoinTerms(
                         invitations.isInvited(town.id(), player, now()), campMembers)))
         .map(
-            town -> {
-              return save(town, player, () -> invitations.forgetInvitee(player));
-            });
+            town ->
+                save(
+                    town,
+                    player,
+                    () -> {
+                      invitations.forgetInvitee(player);
+                      hooks.joins().joined(town.name(), player);
+                    }));
   }
 
   /** {@code player} turns down the town named {@code townName}; returns that town. */
