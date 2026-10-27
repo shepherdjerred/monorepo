@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
 import { afterAll, expect, test } from "vitest";
-import { readPmsBootstrap, until } from "#e2e/pms/http.ts";
+import { readPmsBootstrap, readPmsLibraryReady, until } from "#e2e/pms/http.ts";
 
 const statuses: number[] = [];
 const paths: string[] = [];
@@ -71,3 +71,42 @@ test("local bootstrap retains its caller deadline while PMS stays unavailable", 
   ).rejects.toThrow("Synthetic bootstrap deadline expired");
   expect(paths.length).toBe(before + 1);
 });
+
+test("library readiness waits through startup 404/503 and proves the read API before any mutation", async () => {
+  const seen: string[] = [];
+  const responses = [
+    new Response("Not found", { status: 404 }),
+    new Response("Starting", { status: 503 }),
+    Response.json({ MediaContainer: { size: 0 } }),
+  ];
+  const signal = AbortSignal.timeout(2000);
+  expect(
+    await until(
+      "Synthetic library startup",
+      () =>
+        readPmsLibraryReady(signal, (url, init) => {
+          seen.push(url);
+          expect(init.method).toBeUndefined();
+          const response = responses.shift();
+          if (response === undefined)
+            throw new Error("Unexpected startup read");
+          return Promise.resolve(response);
+        }),
+      signal,
+    ),
+  ).toBe(true);
+  expect(seen).toEqual(
+    Array.from({ length: 3 }, () => "http://127.0.0.1:32400/library/sections"),
+  );
+});
+
+test.each([401, 403, 500])(
+  "library readiness refuses HTTP %s rather than retrying a mutation",
+  async (status) => {
+    await expect(
+      readPmsLibraryReady(AbortSignal.timeout(2000), () =>
+        Promise.resolve(new Response("Unavailable", { status })),
+      ),
+    ).rejects.toThrow(`HTTP ${String(status)}`);
+  },
+);
