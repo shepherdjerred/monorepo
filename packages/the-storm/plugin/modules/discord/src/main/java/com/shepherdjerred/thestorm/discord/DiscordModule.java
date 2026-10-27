@@ -89,6 +89,10 @@ public final class DiscordModule implements StormModule {
             new PendingLinks(LINK_CODE_LIFETIME),
             context.time(),
             context.random());
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .register(id(), player -> links.unlink(player).thenAccept(removed -> {}));
     var _ =
         links
             .load()

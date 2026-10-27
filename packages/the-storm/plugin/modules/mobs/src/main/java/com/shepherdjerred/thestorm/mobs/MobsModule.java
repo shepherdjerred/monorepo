@@ -32,6 +32,10 @@ public final class MobsModule implements StormModule {
     var started =
         MobsPaper.start(context, config, () -> context.services().require(Protection.class));
     paper = started;
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .register(id(), started::reset);
     context.services().provide(MobLevels.class, started.levels());
     context.services().provide(BeginnerStatus.class, started.beginnerStatus());
   }

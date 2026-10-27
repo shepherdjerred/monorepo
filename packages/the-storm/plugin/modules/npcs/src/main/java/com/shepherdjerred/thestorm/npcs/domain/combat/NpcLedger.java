@@ -92,6 +92,12 @@ public final class NpcLedger {
     }
   }
 
+  /** Removes one player's warnings and wanted records, leaving NPC deaths untouched. */
+  public void reset(UUID player) {
+    warnings.values().removeIf(warning -> warning.player().equals(player));
+    wanted.values().removeIf(offender -> offender.player().equals(player));
+  }
+
   public Snapshot snapshot() {
     return new Snapshot(
         List.copyOf(warnings.values()), List.copyOf(wanted.values()), List.copyOf(deaths.values()));

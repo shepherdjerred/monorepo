@@ -22,6 +22,7 @@ describe("The Storm plugin", () => {
       "mail",
       "mobs",
       "qol",
+      "reset",
       "rwf",
       "safety",
       "tickets",

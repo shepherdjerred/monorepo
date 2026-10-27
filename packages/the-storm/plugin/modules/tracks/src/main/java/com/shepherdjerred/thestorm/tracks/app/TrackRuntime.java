@@ -89,6 +89,18 @@ public final class TrackRuntime {
     syncing.remove(player);
   }
 
+  /** Clears progress and prevents an older permission sync from restoring it. */
+  public java.util.concurrent.CompletableFuture<Void> reset(UUID player) {
+    stopPermissions(player);
+    cache.quit(player);
+    return store
+        .update(
+            player,
+            current ->
+                new com.shepherdjerred.thestorm.core.result.Result.Ok<>(TrackProgress.empty()))
+        .thenAccept(ignored -> {});
+  }
+
   /** Ends outstanding retries when the module shuts down. */
   public void stop() {
     stopped = true;

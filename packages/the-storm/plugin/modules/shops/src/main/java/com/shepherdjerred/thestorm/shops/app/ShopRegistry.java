@@ -137,6 +137,11 @@ public final class ShopRegistry {
             });
   }
 
+  /** Removes every shop owned by a reset account after storage has deleted them. */
+  public void reset(UUID player) {
+    shopsOf(player).forEach(shop -> remove(shop.id()));
+  }
+
   /** Every shop. */
   public List<SignShop> all() {
     return List.copyOf(byId.values());

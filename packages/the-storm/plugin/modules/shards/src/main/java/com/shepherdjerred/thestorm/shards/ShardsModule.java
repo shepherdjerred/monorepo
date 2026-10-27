@@ -19,6 +19,10 @@ public final class ShardsModule implements StormModule {
 
   @Override
   public void enable(ModuleContext context) {
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .stateless(id());
     var config = context.loadConfig("shards.yml", ShardsConfig.class);
     context.services().provide(StormShards.class, PaperShards.install(context, config));
   }

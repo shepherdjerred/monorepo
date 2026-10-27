@@ -9,4 +9,6 @@ public interface BeginnerTimeStore {
   CompletableFuture<Map<UUID, Long>> load();
 
   CompletableFuture<Void> save(UUID player, long activeMillis);
+
+  CompletableFuture<Void> reset(UUID player);
 }

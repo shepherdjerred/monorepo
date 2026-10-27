@@ -68,7 +68,11 @@ public final class ShopsPaper {
    * @param drain settles trades in flight when the module stops
    * @param reconcile validates loaded admin shops before publishing readiness
    */
-  public record Installed(ServerShops serverShops, ShutdownDrain drain, Runnable reconcile) {}
+  public record Installed(
+      ServerShops serverShops,
+      ShutdownDrain drain,
+      Runnable reconcile,
+      java.util.function.Consumer<java.util.UUID> forget) {}
 
   /**
    * Registers everything and returns the NPC shops for other modules.
@@ -178,7 +182,11 @@ public final class ShopsPaper {
     return new Installed(
         serverShops,
         new ShutdownDrain(mainThread, locks, journal),
-        chestShops::closeLoopingAdminShops);
+        chestShops::closeLoopingAdminShops,
+        player -> {
+          state.registry().reset(player);
+          usage.reset(player);
+        });
   }
 
   /**

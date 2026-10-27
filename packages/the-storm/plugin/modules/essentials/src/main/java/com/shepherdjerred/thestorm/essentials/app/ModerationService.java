@@ -122,6 +122,11 @@ public final class ModerationService {
                     .toList());
   }
 
+  /** Evicts a reset account's replayed standing. */
+  public void forget(UUID player) {
+    standings.remove(player);
+  }
+
   private void apply(AuditEntry entry) {
     standings.compute(
         entry.target(), (id, old) -> (old == null ? Standing.CLEAN : old).apply(entry));

@@ -81,6 +81,21 @@ public final class EssentialsModule implements StormModule {
         new com.shepherdjerred.thestorm.essentials.app.StaffState(
             new com.shepherdjerred.thestorm.essentials.adapter.db.JooqStaffStore(database));
     context.services().provide(com.shepherdjerred.thestorm.essentials.app.StaffState.class, staff);
+    var reset = new com.shepherdjerred.thestorm.essentials.adapter.db.JooqPlayerReset(database);
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .register(
+            id(),
+            player ->
+                reset
+                    .reset(player)
+                    .thenRun(
+                        () -> {
+                          moderation.forget(player);
+                          players.forget(player);
+                          staff.forget(player.toString());
+                        }));
     context
         .services()
         .provide(

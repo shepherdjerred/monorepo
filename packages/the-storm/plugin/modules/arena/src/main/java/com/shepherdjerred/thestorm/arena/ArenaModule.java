@@ -74,6 +74,11 @@ public final class ArenaModule implements StormModule {
             .withRules(survival);
     context.database().migrate(id(), getClass().getClassLoader());
     var database = context.database();
+    var reset = new com.shepherdjerred.thestorm.arena.adapter.db.JooqPlayerReset(database);
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .register(id(), reset::reset);
     var leaderboard = new JooqLeaderboardStore(database);
     com.shepherdjerred.thestorm.arena.app.SurvivalGate rollout;
     var flipt = System.getenv("FLIPT_URL");

@@ -24,6 +24,10 @@ public final class CompanionsModule implements StormModule {
 
   @Override
   public void enable(ModuleContext context) {
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .stateless(id());
     var config = context.loadConfig("companions.yml", CompanionsConfig.class);
     context.database().migrate(id(), getClass().getClassLoader());
     var plugin = context.plugin().getServer().getPluginManager().getPlugin("CoreProtect");

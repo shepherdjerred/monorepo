@@ -65,7 +65,10 @@ public final class NpcsPaper {
   }
 
   /** What is running, for other modules and for shutdown. */
-  public record Installed(MarkerService markers, Cancellable shutdown) {}
+  public record Installed(
+      MarkerService markers,
+      Cancellable shutdown,
+      com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.Handler reset) {}
 
   public static Installed install(
       ModuleContext context, NpcsConfig config, Parts parts, Hooks hooks) {
@@ -131,6 +134,7 @@ public final class NpcsPaper {
         () -> {
           ticker.cancel();
           world.shutdown();
-        });
+        },
+        combat::reset);
   }
 }

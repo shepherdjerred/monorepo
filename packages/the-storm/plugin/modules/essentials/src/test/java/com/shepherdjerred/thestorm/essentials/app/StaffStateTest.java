@@ -84,6 +84,19 @@ final class StaffStateTest {
   }
 
   @Test
+  void forgettingAnEmptyAccountDoesNotThrow() {
+    try (var db = StormDatabase.open(directory.resolve("empty-staff.db"))) {
+      db.migrate("essentials", getClass().getClassLoader());
+      var state = new StaffState(new JooqStaffStore(db));
+      state.loaded().join();
+
+      org.assertj.core.api.Assertions.assertThatCode(
+              () -> state.forget(UUID.randomUUID().toString()))
+          .doesNotThrowAnyException();
+    }
+  }
+
+  @Test
   void elapsedSentencesAreInactiveEvenBeforeTheReleaseSweepPersistsThem() {
     var expires = Instant.parse("2026-10-04T12:00:00Z");
     var active =

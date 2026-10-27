@@ -192,6 +192,20 @@ public final class QuestService implements QuestHooks, QuestProgress {
     finishDeparture(player);
   }
 
+  /** Invalidates all live work after the durable quest state has been erased. */
+  public void forget(UUID player) {
+    generations.merge(player, 1L, Long::sum);
+    sessions.remove(player);
+    loading.remove(player);
+    saving.remove(player);
+    deferredDiscoveries.remove(player);
+    queued.remove(player);
+    departing.remove(player);
+    delivering.remove(player);
+    deliveryRequested.remove(player);
+    pendingHandins.remove(player);
+  }
+
   /** The loaded state of an online player. */
   public Optional<PlayerQuests> state(UUID player) {
     return departing.contains(player) || handoverPending(player)

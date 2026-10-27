@@ -46,6 +46,21 @@ public final class JooqQuestStore implements QuestStore {
     this.database = database;
   }
 
+  /** Deletes quest state and its independent pending-world outbox. */
+  public CompletableFuture<Void> reset(UUID player) {
+    var id = player.toString();
+    return database
+        .write(
+            dsl -> {
+              dsl.deleteFrom(QUESTS_PENDING_WORLD)
+                  .where(QUESTS_PENDING_WORLD.PLAYER_ID.eq(id))
+                  .execute();
+              dsl.deleteFrom(QUESTS_PLAYER).where(QUESTS_PLAYER.PLAYER_ID.eq(id)).execute();
+              return true;
+            })
+        .thenAccept(ignored -> {});
+  }
+
   @Override
   public CompletableFuture<PlayerQuests> load(UUID player) {
     return database.read(dsl -> fetch(dsl, player));

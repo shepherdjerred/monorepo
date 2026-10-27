@@ -33,6 +33,19 @@ public final class JooqSpellStore implements SpellStore {
     this.database = database;
   }
 
+  /** Deletes account bindings; temporary world blocks retain their independent recovery journal. */
+  public CompletableFuture<Void> reset(UUID player) {
+    var id = player.toString();
+    return database
+        .write(
+            dsl -> {
+              dsl.deleteFrom(SPELLS_MARK).where(SPELLS_MARK.PLAYER_ID.eq(id)).execute();
+              dsl.deleteFrom(SPELLS_FOCUS).where(SPELLS_FOCUS.PLAYER_ID.eq(id)).execute();
+              return true;
+            })
+        .thenAccept(ignored -> {});
+  }
+
   @Override
   public CompletableFuture<List<TemporaryBlock>> temporaryBlocks() {
     return database.read(

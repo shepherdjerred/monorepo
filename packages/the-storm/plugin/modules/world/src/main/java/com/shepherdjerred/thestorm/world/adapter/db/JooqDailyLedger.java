@@ -73,6 +73,17 @@ public final class JooqDailyLedger implements DailyLedger {
         });
   }
 
+  /** Removes only this player's arrivals; aggregate deaths have no player identity to delete. */
+  public CompletableFuture<Void> reset(UUID player) {
+    return database
+        .write(
+            dsl ->
+                dsl.deleteFrom(WORLD_DIGEST_ARRIVAL)
+                    .where(WORLD_DIGEST_ARRIVAL.PLAYER_UUID.eq(player.toString()))
+                    .execute())
+        .thenAccept(ignored -> {});
+  }
+
   private CompletableFuture<Void> write(Consumer<DSLContext> work) {
     return database
         .write(

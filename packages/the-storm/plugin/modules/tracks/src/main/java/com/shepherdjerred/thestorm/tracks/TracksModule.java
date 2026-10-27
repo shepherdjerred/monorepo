@@ -57,6 +57,10 @@ public final class TracksModule implements StormModule {
             new TrackRuntime.RuntimeServices(
                 context.scheduler(), context.time(), context.logger()));
     this.runtime = runtime;
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .register(id(), runtime::reset);
     var groups =
         new TrackGroupDeclarations(
             permissions,

@@ -41,6 +41,12 @@ final class BeginnerClockTest {
       saved.merge(id, millis, Math::max);
       return CompletableFuture.completedFuture(null);
     }
+
+    @Override
+    public CompletableFuture<Void> reset(UUID id) {
+      saved.remove(id);
+      return CompletableFuture.completedFuture(null);
+    }
   }
 
   final Time time = new Time();
@@ -119,6 +125,11 @@ final class BeginnerClockTest {
           @Override
           public CompletableFuture<Void> save(UUID id, long millis) {
             throw new AssertionError("must not save");
+          }
+
+          @Override
+          public CompletableFuture<Void> reset(UUID id) {
+            throw new AssertionError("must not reset");
           }
         };
     var clock = new BeginnerClock(time, broken, observed::add, (id, millis) -> {});

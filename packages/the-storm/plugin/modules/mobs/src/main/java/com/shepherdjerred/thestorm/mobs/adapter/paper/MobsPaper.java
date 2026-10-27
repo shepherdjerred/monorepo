@@ -124,6 +124,10 @@ public final class MobsPaper {
     return beginner;
   }
 
+  public java.util.concurrent.CompletableFuture<Void> reset(java.util.UUID player) {
+    return beginner.reset(player);
+  }
+
   private static void requireKnownNames(MobsConfig config) {
     var types = new HashSet<String>();
     for (var type : EntityType.values()) {

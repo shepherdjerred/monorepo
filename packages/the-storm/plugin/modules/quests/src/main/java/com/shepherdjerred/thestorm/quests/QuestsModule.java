@@ -97,13 +97,14 @@ public final class QuestsModule implements StormModule {
             services.require(Wallets.class),
             services.require(MoneyFormatter.class),
             new LuckPermsGrants(LuckPermsProvider.get()));
+    var store = new JooqQuestStore(context.database());
     var service =
         new QuestService(
             new QuestService.Wiring(
                 content,
                 collections,
                 config,
-                new JooqQuestStore(context.database()),
+                store,
                 paper.world(content),
                 rewards,
                 npc -> npcs.find(npc).map(QuestsModule::shortName).orElse(npc),
@@ -113,6 +114,9 @@ public final class QuestsModule implements StormModule {
                 context.logger(),
                 context.analytics()),
             ink);
+    services
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .register(id(), player -> store.reset(player).thenRun(() -> service.forget(player)));
     services
         .find(DiscordRelay.class)
         .map(relay -> new QuestDiscordPosts(relay, context.plugin().getServer(), context.logger()))

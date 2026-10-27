@@ -64,6 +64,14 @@ public final class PlayerDirectory {
     return byId.values().stream().map(KnownPlayer::name).sorted().toList();
   }
 
+  /** Evicts a reset account so its next join is treated as its first. */
+  public void forget(UUID player) {
+    var previous = byId.remove(player);
+    if (previous != null) {
+      byName.remove(previous.name().toLowerCase(Locale.ROOT), previous);
+    }
+  }
+
   private void remember(KnownPlayer player) {
     var previous = byId.put(player.uuid(), player);
     if (previous != null) {

@@ -29,6 +29,10 @@ public final class EconomyModule implements StormModule {
     var config = context.loadConfig("economy.yml", EconomyConfig.class);
     context.database().migrate(id(), EconomyModule.class.getClassLoader());
     var store = new JooqLedgerStore(context.database(), context.time(), TransferRules.standard());
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .register(id(), store::reset);
     var wallets = new LedgerWallets(store, config.startingCrystals());
     context.services().provide(Wallets.class, wallets);
     context.services().provide(PlayerLeaderboard.class, wallets::leaderboard);

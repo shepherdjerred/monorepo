@@ -66,6 +66,12 @@ public final class AgentModule implements StormModule {
   public void enable(ModuleContext context) {
     var config = context.loadConfig("agent.yml", AgentConfig.class);
     context.database().migrate(id(), getClass().getClassLoader());
+    var reset =
+        new com.shepherdjerred.thestorm.agent.adapter.db.JooqPlayerReset(context.database());
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .register(id(), reset::reset);
     var log = new JooqDecisionLog(context.database(), config.serverId());
     context.services().provide(DecisionLog.class, log);
     context.services().provide(AgentConfig.class, config);

@@ -32,6 +32,12 @@ public final class TicketsModule implements StormModule {
   public void enable(ModuleContext context) {
     var config = context.loadConfig("tickets.yml", TicketConfig.class);
     context.database().migrate(id(), getClass().getClassLoader());
+    var reset =
+        new com.shepherdjerred.thestorm.tickets.adapter.db.JooqPlayerReset(context.database());
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .register(id(), reset::reset);
 
     var players = context.services().require(PlayerDirectory.class);
     var service =

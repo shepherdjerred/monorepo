@@ -29,6 +29,10 @@ public final class SeasonalModule implements StormModule {
 
   @Override
   public void enable(ModuleContext context) {
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .stateless(id());
     var config = context.loadConfig("seasonal.yml", SeasonalConfig.class);
     var world = context.plugin().getServer().getWorld(config.mainWorld());
     if (world == null) {
