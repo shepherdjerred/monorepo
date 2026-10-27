@@ -9,6 +9,7 @@ import {
   runDirectory,
   type Manifest,
 } from "./model";
+import { requestGuest } from "./transport/client";
 
 const officialCLI = "/Applications/Obsidian.app/Contents/MacOS/obsidian-cli";
 
@@ -100,6 +101,64 @@ async function officialRead(argv: string[], vault: string, timeoutMS: number) {
 }
 
 export async function waitForOfficialPublication(
+  manifest: Manifest,
+  relative: string,
+  expected: Uint8Array,
+  caseID: string,
+) {
+  return manifest.schemaVersion === 3
+    ? waitForGuestPublication(manifest, relative, expected, caseID)
+    : waitForLocalPublication(manifest, relative, expected, caseID);
+}
+
+async function waitForGuestPublication(
+  manifest: Extract<Manifest, { schemaVersion: 3 }>,
+  relative: string,
+  expected: Uint8Array,
+  caseID: string,
+) {
+  if (manifest.scope !== "macos" || manifest.allowedRemoteVaultID === null)
+    throw new Error(
+      "Official remote publication proof is only for a bound Mac-only run",
+    );
+  const requestedAt = new Date().toISOString();
+  const result = await requestGuest(manifest, {
+    kind: "official-publication",
+    relative,
+    expectedBytes: Buffer.from(expected).toString("base64"),
+    caseID,
+  });
+  if (
+    result.kind !== "official-publication" ||
+    result.caseID !== caseID ||
+    result.relative !== relative ||
+    result.fingerprint.sha256 !== digest(expected) ||
+    result.fingerprint.size !== expected.length
+  )
+    throw new Error(
+      "Guest official publication differs from the exact conflict bytes",
+    );
+  await atomicJSON(
+    path.join(
+      runDirectory(manifest.runID),
+      `conflict-macos-publication-${caseID}.json`,
+    ),
+    {
+      schemaVersion: 1,
+      runID: manifest.runID,
+      round: manifest.round,
+      caseID,
+      source: "official-obsidian-cli-remote-version",
+      requestedAt,
+      observedAt: new Date().toISOString(),
+      relative,
+      ...result.head,
+      ...result.fingerprint,
+    },
+  );
+}
+
+async function waitForLocalPublication(
   manifest: Manifest,
   relative: string,
   expected: Uint8Array,

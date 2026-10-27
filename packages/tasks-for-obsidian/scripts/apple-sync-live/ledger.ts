@@ -2,6 +2,13 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import {
+  currentOfficialPlugin,
+  currentOfficialVersion,
+} from "./replicas/official";
+import { readVaultFile } from "./replicas/access";
+import { GuestExecutionSchema } from "./transport/contract";
+import { verifyGuestLiveRun } from "./transport/execution/host";
+import {
   atomicJSON,
   digest,
   requiredCases,
@@ -16,10 +23,7 @@ import {
 import { command, save } from "./platform";
 import { waitForConvergence } from "./native";
 import { fingerprintApp } from "./prepare";
-import {
-  assertSealedOfficialPlugin,
-  inspectOfficialPlugin,
-} from "./official-plugin";
+import { assertSealedOfficialPlugin } from "./official-plugin";
 
 export function assertRoundComplete(manifest: Manifest): void {
   if (manifest.failures.length > 0 || manifest.stage === "failed")
@@ -109,6 +113,19 @@ export function acceptanceProvenance(manifest: Manifest, value: unknown) {
     expectedTaskNotesVersion: z.literal("4.13.8"),
     officialObsidianVersion: z.string().nullable(),
   };
+  if (manifest.schemaVersion === 3)
+    return z
+      .strictObject({
+        ...common,
+        schemaVersion: z.literal(3),
+        scope: z.literal(manifest.scope),
+        execution: GuestExecutionSchema,
+        macAppDirectory: z.string(),
+        ...(manifest.scope === "apple"
+          ? { iosApp: z.record(z.string(), sha256) }
+          : {}),
+      })
+      .parse(value);
   return manifest.schemaVersion === 2
     ? z
         .strictObject({
@@ -132,6 +149,14 @@ export async function assertUnchangedBuild(manifest: Manifest) {
     manifest,
     await Bun.file(path.join(directory, "provenance.json")).json(),
   );
+  if (
+    manifest.schemaVersion === 3 &&
+    "execution" in provenance &&
+    JSON.stringify(provenance.execution) !== JSON.stringify(manifest.execution)
+  )
+    throw new Error(
+      "Guest execution binding changed during the acceptance sequence",
+    );
   const listing = await command(
     [
       "git",
@@ -154,7 +179,19 @@ export async function assertUnchangedBuild(manifest: Manifest) {
         "Source changed during the acceptance sequence; rebuild in a new run",
       );
   }
+  await verifyClientArtifacts(manifest, provenance);
+}
+
+async function verifyClientArtifacts(
+  manifest: Manifest,
+  provenance: ReturnType<typeof acceptanceProvenance>,
+) {
+  const directory = runDirectory(manifest.runID);
   for (const client of activeClients(manifest)) {
+    if (client === "macos" && manifest.schemaVersion === 3) {
+      await verifyGuestArtifact(manifest, provenance);
+      continue;
+    }
     const app =
       client === "ios"
         ? "ios/Build/Products/Debug-iphonesimulator/TasksForObsidian.app"
@@ -167,6 +204,18 @@ export async function assertUnchangedBuild(manifest: Manifest) {
     if (JSON.stringify(actual) !== JSON.stringify(expected))
       throw new Error("Native artifact changed during the acceptance sequence");
   }
+}
+
+async function verifyGuestArtifact(
+  manifest: Extract<Manifest, { schemaVersion: 3 }>,
+  provenance: ReturnType<typeof acceptanceProvenance>,
+) {
+  if (!("macAppDirectory" in provenance))
+    throw new Error("Missing prepared guest artifact path");
+  const actual = await fingerprintApp(provenance.macAppDirectory);
+  if (JSON.stringify(actual) !== JSON.stringify(provenance.macApp))
+    throw new Error("Prepared guest app artifact changed");
+  await verifyGuestLiveRun(manifest);
 }
 
 async function assertPriorEvidence(manifest: Manifest) {
@@ -183,14 +232,22 @@ async function assertPriorEvidence(manifest: Manifest) {
       cases: z.record(z.string(), z.string()),
     };
     const evidence = (
-      manifest.schemaVersion === 2
+      manifest.schemaVersion === 3
         ? z.object({
             ...fields,
-            schemaVersion: z.literal(2),
-            scope: z.literal("macos"),
-            replicaCount: z.literal(2),
+            schemaVersion: z.literal(3),
+            scope: z.literal(manifest.scope),
+            replicaCount: z.literal(activeClients(manifest).length + 1),
+            execution: GuestExecutionSchema,
           })
-        : z.object({ ...fields, schemaVersion: z.literal(1) })
+        : manifest.schemaVersion === 2
+          ? z.object({
+              ...fields,
+              schemaVersion: z.literal(2),
+              scope: z.literal("macos"),
+              replicaCount: z.literal(2),
+            })
+          : z.object({ ...fields, schemaVersion: z.literal(1) })
     ).parse(JSON.parse(bytes.toString("utf8")));
     if (
       requiredCases.some(
@@ -212,29 +269,18 @@ async function assertPriorEvidence(manifest: Manifest) {
     .parse(
       await Bun.file(path.join(directory, "official-reference.json")).json(),
     );
-  const pluginManifest = await readFile(
-    path.join(
-      directory,
-      "reference-vault/.obsidian/plugins/tasknotes/manifest.json",
-    ),
+  const pluginManifest = await readVaultFile(
+    manifest,
+    "official",
+    ".obsidian/plugins/tasknotes/manifest.json",
   );
   if (digest(pluginManifest) !== reference.pluginManifestSHA256)
     throw new Error("Installed official plugin changed during acceptance");
   assertSealedOfficialPlugin(
     reference.pluginEvidence,
-    await inspectOfficialPlugin(
-      path.join(directory, "reference-vault/.obsidian/plugins/tasknotes"),
-    ),
+    await currentOfficialPlugin(manifest),
   );
-  const version = await command([
-    "plutil",
-    "-extract",
-    "CFBundleShortVersionString",
-    "raw",
-    "-o",
-    "-",
-    "/Applications/Obsidian.app/Contents/Info.plist",
-  ]);
+  const version = await currentOfficialVersion(manifest);
   if (version !== reference.officialVersion)
     throw new Error("Official Obsidian changed during acceptance");
 }
@@ -251,9 +297,16 @@ export async function completeRound(manifest: Manifest) {
       .unknown()
       .parse(await Bun.file(path.join(directory, relative)).json());
   const proof = {
-    ...(manifest.schemaVersion === 2
-      ? { schemaVersion: 2, scope: manifest.scope, replicaCount: 2 }
-      : { schemaVersion: 1 }),
+    ...(manifest.schemaVersion === 3
+      ? {
+          schemaVersion: 3,
+          scope: manifest.scope,
+          replicaCount: activeClients(manifest).length + 1,
+          execution: manifest.execution,
+        }
+      : manifest.schemaVersion === 2
+        ? { schemaVersion: 2, scope: manifest.scope, replicaCount: 2 }
+        : { schemaVersion: 1 }),
     runID: manifest.runID,
     round: manifest.round,
     capturedAt: new Date().toISOString(),

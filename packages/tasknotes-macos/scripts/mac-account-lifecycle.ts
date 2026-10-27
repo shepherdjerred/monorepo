@@ -9,6 +9,7 @@ import {
   verifyReplica,
 } from "../../tasks-for-obsidian/scripts/apple-sync-live/model.ts";
 import { replicaDirectory } from "../../tasks-for-obsidian/scripts/apple-sync-live/native.ts";
+import { verifyVaultEndpoint } from "../../tasks-for-obsidian/scripts/apple-sync-live/replicas/access.ts";
 
 export function lifecycleCheckpoint(
   manifest: Manifest,
@@ -16,7 +17,7 @@ export function lifecycleCheckpoint(
   round: number,
 ) {
   const checkpoint = LifecycleCheckpointSchema.parse(value);
-  assert.equal(manifest.schemaVersion, 2);
+  assert.ok(manifest.schemaVersion === 2 || manifest.schemaVersion === 3);
   assert.equal(manifest.stage, "initial-verified");
   assert.equal(checkpoint.runID, manifest.runID);
   assert.equal(checkpoint.round, manifest.round);
@@ -77,10 +78,18 @@ export async function verifyLifecycleReplica(
   manifest: Manifest,
   checkpoint: ReturnType<typeof lifecycleCheckpoint>,
 ) {
-  await verifyReplica(
-    replicaDirectory(manifest, "macos", checkpoint.profileID),
-    checkpoint.expected,
-  );
+  if (manifest.schemaVersion === 3) {
+    await verifyVaultEndpoint(
+      manifest,
+      { client: "macos", profileID: checkpoint.profileID },
+      checkpoint.expected,
+    );
+  } else {
+    await verifyReplica(
+      replicaDirectory(manifest, "macos", checkpoint.profileID),
+      checkpoint.expected,
+    );
+  }
   return outboxSnapshot(manifest, "macos", checkpoint.profileID);
 }
 

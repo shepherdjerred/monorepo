@@ -51,6 +51,7 @@ export async function runSelectedIosJourneyTest(
       | "BoardTaskTests"
       | "MobileParityTests"
       | "OccurrenceTaskTests"
+      | "AccountInputUITests"
       | "DependencyEditorUITests";
     test: string;
   },

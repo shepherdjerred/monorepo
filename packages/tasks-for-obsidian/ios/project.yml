@@ -104,12 +104,16 @@ targets:
     platform: iOS
     sources:
       - path: FacetUITests
+      - path: ../scripts/ios-account/account-input.schema.json
+        buildPhase: resources
       - path: ../../tasknotes-macos/UITests/Dependencies/DependencyEditorUITests.swift
       - path: ../../tasknotes-macos/UITests/LiveSyncVaultUITests.swift
       - path: ../../tasknotes-macos/UITests/LiveSyncConflictUITests.swift
       - path: ../../tasknotes-macos/UITests/LiveSyncLifecycleUITests.swift
     dependencies:
       - target: TasksForObsidian
+      - package: FacetApple
+        product: TaskNotesKit
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.reactjs.native.example.TasksForObsidian.UITests

@@ -4,13 +4,11 @@ import { z } from "zod";
 import {
   packageRoot,
   macBundle,
-  uuid,
   type Client,
   type Manifest,
   StatusSchema,
   validate,
   settledProfile,
-  verifyReplica,
   assertOwnedSimulator,
   runDirectory,
   atomicJSON,
@@ -24,6 +22,7 @@ import {
   descriptor,
   statuses,
   launch,
+  requireHostUI,
 } from "./platform";
 import {
   assertExactNativeJourney,
@@ -31,39 +30,40 @@ import {
   selectedInitialConfigurationJourneys,
   assertSelectedNativeClients,
 } from "./native-evidence";
+import {
+  readVaultFile,
+  verifyVaultEndpoint,
+  localVault,
+} from "./replicas/access";
+import { guestControl } from "./transport/client";
+import { localControl } from "./replicas/control";
+import {
+  runGuestNativeTest,
+  selectedClientConfiguration,
+  type NativeTestOptions,
+} from "./replicas/native";
 
 export function nativeClientConfiguration(manifest: Manifest, client: Client) {
-  const state = clientState(manifest, client);
-  if (manifest.allowedRemoteVaultID === null)
-    throw new Error("Native live journeys require a bound, authenticated run");
-  if (client === "ios" && manifest.simulator === null)
-    throw new Error("The iOS acceptance simulator is missing");
-  return {
-    state,
-    target:
-      client === "ios"
-        ? "TasksForObsidianUITests"
-        : "TaskNotesAcceptanceUITests",
-    destination:
-      client === "ios" && manifest.simulator !== null
-        ? `platform=iOS Simulator,id=${manifest.simulator.id}`
-        : "platform=macOS",
-    simulatorEnvironment:
-      client === "ios" && manifest.simulator !== null
-        ? { FACET_E2E_SIMULATOR: manifest.simulator.id }
-        : {},
-  };
+  return selectedClientConfiguration(manifest, client);
 }
 
 export async function runNativeTest(
   manifest: Manifest,
   client: Client,
   selector: string,
-  options: {
-    label: string;
-    extra?: Record<string, string>;
-    timeoutMS?: number;
-  },
+  options: NativeTestOptions,
+) {
+  if (client === "macos" && manifest.schemaVersion === 3)
+    return runGuestNativeTest(manifest, selector, options);
+  if (client === "macos") requireHostUI(manifest);
+  return runLocalNativeTest(manifest, client, selector, options);
+}
+
+async function runLocalNativeTest(
+  manifest: Manifest,
+  client: Client,
+  selector: string,
+  options: NativeTestOptions,
 ) {
   const selected = nativeClientConfiguration(manifest, client);
   const { label, extra = {}, timeoutMS = 600_000 } = options;
@@ -265,19 +265,13 @@ export async function waitForConvergence(
           manifest.allowedRemoteVaultID,
           Date.now(),
         );
-        await verifyReplica(
-          path.join(
-            clientState(manifest, client).stateDirectory,
-            "replicas",
-            profile.profileID,
-          ),
+        await verifyVaultEndpoint(
+          manifest,
+          { client, profileID: profile.profileID },
           expected,
         );
       }
-      await verifyReplica(
-        path.join(runDirectory(manifest.runID), "reference-vault"),
-        expected,
-      );
+      await verifyVaultEndpoint(manifest, "official", expected);
       return current;
     } catch (error) {
       lastFailure =
@@ -362,9 +356,8 @@ export function replicaDirectory(
   client: Client,
   profileID: string,
 ) {
-  const state = clientState(manifest, client);
-  uuid.parse(profileID);
-  return path.join(state.stateDirectory, "replicas", profileID);
+  clientState(manifest, client);
+  return localVault(manifest, { client, profileID });
 }
 
 export async function control(
@@ -373,45 +366,14 @@ export async function control(
   kind: "refresh" | "interrupt" | "resume",
   profileID?: string,
 ) {
-  const state = clientState(manifest, client);
+  clientState(manifest, client);
   if (manifest.clients === null || manifest.allowedRemoteVaultID === null)
     throw new Error("Run is not bound");
-  const directory = path.join(state.stateDirectory, "control");
-  const commandID = crypto.randomUUID();
-  const message = {
-    schemaVersion: 1,
-    runID: manifest.runID,
-    commandID,
-    kind,
-    ...(profileID === undefined ? {} : { profileID }),
-  };
-  validate("command", message);
-  await atomicJSON(path.join(directory, "command.json"), message);
-  const deadline = Date.now() + 120_000;
-  while (Date.now() < deadline) {
-    const resultFile = Bun.file(path.join(directory, "result.json"));
-    if (await resultFile.exists()) {
-      const value: unknown = await resultFile.json();
-      validate("result", value);
-      const result = z
-        .object({
-          runID: uuid,
-          commandID: uuid,
-          outcome: z.enum(["applied", "rejected"]),
-        })
-        .parse(value);
-      if (result.runID.toLowerCase() !== manifest.runID)
-        throw new Error("Wrong control acknowledgement run");
-      if (result.commandID === commandID) {
-        if (result.outcome !== "applied")
-          throw new Error("Acceptance control rejected the command");
-        console.log(`${client}: ${kind} acknowledged`);
-        return;
-      }
-    }
-    await Bun.sleep(250);
+  if (client === "macos" && manifest.schemaVersion === 3) {
+    await guestControl(manifest, kind, profileID);
+    return;
   }
-  throw new Error("Acceptance control acknowledgement deadline exceeded");
+  return localControl(manifest, client, kind, profileID);
 }
 
 export async function verify(manifest: Manifest) {
@@ -436,9 +398,12 @@ export async function verify(manifest: Manifest) {
   try {
     await launch(manifest, false, undefined, remainingMS());
     await waitForConvergence(manifest, manifest.reference, remainingMS());
-    const note = await Bun.file(
-      path.join(directory, "reference-vault/Tasks/Existing.md"),
-    ).text();
+    const bytes = await readVaultFile(
+      manifest,
+      "official",
+      "Tasks/Existing.md",
+    );
+    const note = bytes.toString("utf8");
     const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/u.exec(
       note,
     )?.[1];

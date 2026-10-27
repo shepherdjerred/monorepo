@@ -18,7 +18,7 @@ import {
 import {
   prepare,
   sealReference,
-  parsePreparationArguments,
+  parseExecutionArguments,
 } from "./apple-sync-live/prepare";
 import { control, verify } from "./apple-sync-live/native";
 import {
@@ -137,18 +137,27 @@ const evidenceStages = new Set([
 async function main() {
   if (process.platform !== "darwin")
     throw new Error("Apple live acceptance requires macOS and Xcode");
-  const [operation, runID, ...arguments_] = Bun.argv.slice(2);
+  const raw = Bun.argv.slice(2);
+  const [operation, runID, ...arguments_] = raw.filter(
+    (argument) => argument !== "--host-ui",
+  );
   if (operation === undefined)
     throw new Error("Specify a live acceptance stage");
   if (operation === "prepare") {
-    const scope = parsePreparationArguments(Bun.argv.slice(3));
+    const { scope, vm, officialApp } = parseExecutionArguments(raw.slice(1));
     await mkdir(runs, { recursive: true, mode: 0o700 });
-    await prepare(scope);
+    await prepare(scope, vm, officialApp);
     return;
   }
   if (runID === undefined)
     throw new Error(`Specify a runID for: ${Object.keys(handlers).join(", ")}`);
   const manifest = await readManifest(runID);
+  if (manifest.schemaVersion !== 3 && !raw.includes("--host-ui"))
+    throw new Error(
+      "Legacy live runs require explicit --host-ui; automated acceptance uses --vm",
+    );
+  if (manifest.schemaVersion === 3 && raw.includes("--host-ui"))
+    throw new Error("A guest run cannot fall back to host UI");
   const handler = handlers[operation];
   if (handler === undefined) throw new Error("Unknown live acceptance stage");
   if (!evidenceStages.has(operation)) {

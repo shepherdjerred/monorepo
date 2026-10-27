@@ -1,4 +1,3 @@
-import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import {
@@ -11,6 +10,9 @@ import {
 import { save } from "./platform";
 import { waitForConvergence } from "./native";
 import { readOfficialArtifact } from "./official-artifact";
+import { readVaultFile, vaultSnapshot } from "./replicas/access";
+import { retainGuestEvidence } from "./replicas/evidence";
+import { requestGuest } from "./transport/client";
 
 export const officialSteps = z.enum([
   "create",
@@ -66,11 +68,32 @@ export async function officialUI(manifest: Manifest, step: Step) {
   if (manifest.cases["initial-download"] !== "pass")
     throw new Error("Verify the initial download first");
   const directory = runDirectory(manifest.runID);
+  if (manifest.schemaVersion === 3) {
+    const result = await requestGuest(manifest, {
+      kind: "official-step",
+      step,
+    });
+    const expectedPath = `official-ui/round-${String(manifest.round)}/${step}.png`;
+    if (
+      result.kind !== "official-step" ||
+      result.step !== step ||
+      result.evidenceRelative !== expectedPath
+    )
+      throw new Error("Guest official UI evidence belongs to another step");
+    await retainGuestEvidence(manifest, [result.evidenceRelative]);
+    const retained = await Bun.file(
+      path.join(directory, result.evidenceRelative),
+    ).bytes();
+    if (
+      retained.length !== result.fingerprint.size ||
+      digest(retained) !== result.fingerprint.sha256
+    )
+      throw new Error("Official UI capture changed before evidence retention");
+  }
   const artifact = await readOfficialArtifact(
     path.join(directory, "official-ui", `round-${String(manifest.round)}`),
     step,
   );
-  const vault = path.join(directory, "reference-vault");
   const checkpointFile = path.join(
     directory,
     `official-ui-round-${String(manifest.round)}.json`,
@@ -78,13 +101,9 @@ export async function officialUI(manifest: Manifest, step: Step) {
   const title = `Official UI ${manifest.runID}-${String(manifest.round)}${step === "create" ? "" : " edited"}`;
   let relative: string;
   if (step === "create") {
-    const additions = [
-      ...new Bun.Glob("**/*").scanSync({
-        cwd: vault,
-        dot: true,
-        onlyFiles: true,
-      }),
-    ].filter(
+    const additions = Object.keys(
+      await vaultSnapshot(manifest, "official"),
+    ).filter(
       (filename) =>
         !filename.startsWith(".obsidian/") && !(filename in manifest.reference),
     );
@@ -101,7 +120,7 @@ export async function officialUI(manifest: Manifest, step: Step) {
       .parse(await Bun.file(checkpointFile).json());
     relative = checkpoint.relative;
   }
-  const bytes = await readFile(path.join(vault, relative));
+  const bytes = await readVaultFile(manifest, "official", relative);
   assertOfficialTask(bytes, title, step === "complete");
   const expected = {
     ...manifest.reference,
@@ -119,7 +138,9 @@ export async function officialUI(manifest: Manifest, step: Step) {
     schemaVersion: 1,
     runID: manifest.runID,
     round: manifest.round,
-    ownerAttestedAction: `TaskNotes UI ${step}`,
+    ...(manifest.schemaVersion === 3
+      ? { guestExecutedAction: `TaskNotes UI ${step}` }
+      : { ownerAttestedAction: `TaskNotes UI ${step}` }),
     artifact: {
       ...artifact,
       filename: path.relative(directory, artifact.filename),

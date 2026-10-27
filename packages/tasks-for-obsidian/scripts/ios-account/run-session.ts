@@ -1,0 +1,192 @@
+import assert from "node:assert/strict";
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { readAcceptanceResultReports } from "tasknotes-macos/scripts/acceptance-execution.ts";
+import {
+  assertUnchangedBuild,
+  acceptanceProvenance,
+} from "../apple-sync-live/ledger";
+import { assertExactNativeJourney } from "../apple-sync-live/native-evidence";
+import { runDirectory, type Manifest } from "../apple-sync-live/model";
+import { runSelectedIosJourneyTest } from "../native-acceptance/selected-tests";
+import { exportIosJourneyAttachments } from "../native-acceptance/attachments";
+import { withPrivateAccountInput, type AccountInputClient } from "./connection";
+import {
+  prepareAccountInvocation,
+  privateAccountSelector,
+  privateNativeCommand,
+  runnerOwnerValidator,
+  waitForPrivateSocket,
+} from "./runtime";
+
+type SessionAction = (
+  session: AccountInputClient,
+) => Promise<Record<string, unknown>>;
+
+export async function executePrivateAccountSession(
+  manifest: Manifest,
+  options: {
+    operation: "probe" | "credentials";
+    originalProfileID?: string;
+    action: SessionAction;
+    inspectEvidence?: (directory: string) => Promise<void>;
+  },
+) {
+  await assertUnchangedBuild(manifest);
+  const run = runDirectory(manifest.runID);
+  const provenance = acceptanceProvenance(
+    manifest,
+    await Bun.file(path.join(run, "provenance.json")).json(),
+  );
+  const probeID = crypto.randomUUID();
+  const evidence = path.join(
+    run,
+    "ios-account",
+    options.operation === "probe" ? "probes" : "entries",
+    probeID,
+  );
+  await mkdir(evidence, { recursive: true, mode: 0o700 });
+  const invocation = await prepareAccountInvocation(
+    manifest,
+    crypto.randomUUID(),
+    options.originalProfileID,
+  );
+  const command = privateNativeCommand(evidence);
+  const result = path.join(evidence, "AccountInput.xcresult");
+  let nativeEnded = false;
+  const native = (async () => {
+    try {
+      await runSelectedIosJourneyTest(
+        {
+          testRun: invocation.testRun,
+          device: invocation.device,
+          result,
+          suite: "AccountInputUITests",
+          test: "testPrivateAccountInput",
+        },
+        command,
+      );
+    } finally {
+      nativeEnded = true;
+    }
+  })();
+  const input = (async () => {
+    const directory = await waitForPrivateSocket(
+      invocation.device,
+      invocation.identity.sessionID,
+      () => nativeEnded,
+    );
+    const hash = invocation.runnerFiles["TasksForObsidianUITests-Runner"];
+    assert.ok(
+      hash !== undefined,
+      "Private input runner lacks its expected executable fingerprint",
+    );
+    return withPrivateAccountInput(
+      {
+        directory,
+        identity: invocation.identity,
+        validateOwner: runnerOwnerValidator(invocation.device, hash),
+      },
+      options.action,
+    );
+  })();
+  const outcomes = await Promise.allSettled([native, input]);
+  const failures: unknown[] = [];
+  for (const outcome of outcomes) {
+    if (outcome.status === "rejected") failures.push(outcome.reason);
+  }
+  try {
+    const reports = await readAcceptanceResultReports(
+      result,
+      {
+        summary: path.join(evidence, "summary.json"),
+        tests: path.join(evidence, "tests.json"),
+      },
+      command,
+    );
+    await exportIosJourneyAttachments(
+      result,
+      path.join(evidence, "attachments"),
+      command,
+    );
+    for (const kind of ["action", "console"]) {
+      const output = await command(
+        [
+          "xcrun",
+          "xcresulttool",
+          "get",
+          "log",
+          "--path",
+          result,
+          "--type",
+          kind,
+          "--compact",
+        ],
+        true,
+      );
+      await writeFile(path.join(evidence, `${kind}.json`), output, {
+        flag: "wx",
+        mode: 0o600,
+      });
+    }
+    const activities = await command(
+      [
+        "xcrun",
+        "xcresulttool",
+        "get",
+        "test-results",
+        "activities",
+        "--path",
+        result,
+        "--test-id",
+        privateAccountSelector + "()",
+        "--compact",
+      ],
+      true,
+    );
+    await writeFile(path.join(evidence, "activities.json"), activities, {
+      flag: "wx",
+      mode: 0o600,
+    });
+    assertExactNativeJourney(
+      JSON.parse(reports.summaryJSON),
+      JSON.parse(reports.testsJSON),
+      "TasksForObsidianUITests",
+      privateAccountSelector,
+    );
+    await assertUnchangedBuild(manifest);
+  } catch (error) {
+    failures.push(error);
+  }
+  try {
+    await options.inspectEvidence?.(evidence);
+  } catch (error) {
+    failures.push(error);
+  }
+  if (failures.length > 0) {
+    await writeFile(
+      path.join(evidence, "outcome.json"),
+      JSON.stringify({
+        schemaVersion: 1,
+        runID: manifest.runID,
+        operation: options.operation,
+        status: "failed",
+        credentialsReady: false,
+      }),
+      { flag: "wx", mode: 0o600 },
+    );
+    throw new Error(
+      "Private iOS input failed; inspect private synthetic evidence and do not repeat an uncertain submission",
+    );
+  }
+  const reply = outcomes[1];
+  assert.equal(reply.status, "fulfilled");
+  return {
+    evidence,
+    probeID,
+    runnerFiles: invocation.runnerFiles,
+    sourceFiles: provenance.sourceFiles,
+    sourceHead: provenance.sourceHead,
+    receipt: reply.value,
+  };
+}

@@ -1,4 +1,7 @@
 import { expect, test } from "vitest";
+import { mkdtemp, rm } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import {
   launchJournal,
   retireRetainedOwner,
@@ -22,6 +25,51 @@ const journal: LaunchJournal = {
   schemaVersion: 1,
   launches: [{ pid: 45001, identity, state: "running" }],
 };
+test("emitted ownership validator embeds the neutral schema without a mutable sidecar", async () => {
+  const directory = await mkdtemp(
+    path.join(os.tmpdir(), "facet-retained-schema-"),
+  );
+  try {
+    const built = await Bun.build({
+      entrypoints: [path.join(import.meta.dir, "retained-owner.ts")],
+      outdir: directory,
+      naming: "retained-owner.js",
+      target: "bun",
+    });
+    expect(built.success).toBe(true);
+    const invoke = async (value: unknown) => {
+      const child = Bun.spawn(
+        [
+          process.execPath,
+          "-e",
+          "const [file,value,binding]=process.argv.slice(1);const m=await import(file);console.log(JSON.stringify(m.launchJournal(JSON.parse(value),JSON.parse(binding))));",
+          path.join(directory, "retained-owner.js"),
+          JSON.stringify(value),
+          JSON.stringify(binding),
+        ],
+        {
+          stdin: "ignore",
+          stdout: "pipe",
+          stderr: "pipe",
+          env: { PATH: "/usr/bin:/bin" },
+        },
+      );
+      return {
+        code: await child.exited,
+        output: await new Response(child.stdout).text(),
+      };
+    };
+    expect(await invoke(journal)).toEqual({
+      code: 0,
+      output: JSON.stringify(journal) + "\n",
+    });
+    const invalid = await invoke({ ...journal, extra: true });
+    expect(invalid.code).not.toBe(0);
+    expect(invalid.output).toBe("");
+  } finally {
+    await rm(directory, { recursive: true });
+  }
+});
 function controls(owners: number[], observed = identity) {
   const signalled: number[] = [];
   let present = owners;

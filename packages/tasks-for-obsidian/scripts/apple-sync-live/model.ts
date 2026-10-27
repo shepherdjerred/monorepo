@@ -3,6 +3,8 @@ import path from "node:path";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 import { z } from "zod";
+import { GuestExecutionSchema } from "./transport/contract";
+import acceptanceDefinition from "@tasknotes/fixtures/schema/facet-acceptance.schema.json";
 
 export const packageRoot = path.resolve(import.meta.dir, "../..");
 
@@ -27,6 +29,9 @@ export const provenancePaths = [
   "packages/tasks-for-obsidian/package.json",
   "packages/tasks-for-obsidian/scripts/apple-sync-live.ts",
   "packages/tasks-for-obsidian/scripts/apple-sync-live",
+  "packages/tasks-for-obsidian/scripts/ios-account.ts",
+  "packages/tasks-for-obsidian/scripts/ios-account",
+  "packages/tasks-for-obsidian/scripts/native-acceptance",
 ];
 export class PendingCheckpoint extends Error {}
 
@@ -109,33 +114,80 @@ export const ManifestSchema = z.discriminatedUnion("schemaVersion", [
     simulator: z.null(),
     clients: z.strictObject({ macos: ClientSchema }).nullable(),
   }),
+  z
+    .strictObject({
+      ...manifestFields,
+      schemaVersion: z.literal(3),
+      scope: z.enum(["apple", "macos"]),
+      execution: GuestExecutionSchema,
+      simulator: z.strictObject({ id: uuid, name: z.string() }).nullable(),
+      clients: z
+        .union([
+          z.strictObject({ macos: ClientSchema }),
+          z.strictObject({ ios: ClientSchema, macos: ClientSchema }),
+        ])
+        .nullable(),
+    })
+    .superRefine((value, context) => {
+      if (value.execution.guestRunID !== value.runID)
+        context.addIssue({
+          code: "custom",
+          message: "Guest execution belongs to another run",
+        });
+      if (
+        value.scope === "macos" &&
+        (value.simulator !== null ||
+          (value.clients !== null && "ios" in value.clients))
+      )
+        context.addIssue({
+          code: "custom",
+          message: "Mac-only guest scope contains iOS state",
+        });
+      if (
+        value.scope === "apple" &&
+        value.clients !== null &&
+        !("ios" in value.clients)
+      )
+        context.addIssue({
+          code: "custom",
+          message: "Apple guest scope requires both native clients",
+        });
+    }),
 ]);
 
 export type Manifest = z.infer<typeof ManifestSchema>;
 export type ClientState = z.infer<typeof ClientSchema>;
 
 export function activeClients(manifest: Manifest): Client[] {
-  return manifest.schemaVersion === 2 ? ["macos"] : ["ios", "macos"];
+  return hasIOS(manifest) ? ["ios", "macos"] : ["macos"];
+}
+
+export function hasIOS(manifest: Manifest): boolean {
+  return (
+    manifest.schemaVersion === 1 ||
+    (manifest.schemaVersion === 3 && manifest.scope === "apple")
+  );
 }
 
 export function clientState(manifest: Manifest, client: Client): ClientState {
   clients.parse(client);
-  if (client !== "macos" && manifest.schemaVersion === 2)
+  if (client === "ios" && !hasIOS(manifest))
     throw new Error("Client is not selected for this acceptance scope");
   if (manifest.clients === null) throw new Error("Apps are not prepared");
-  return manifest.schemaVersion === 1
-    ? manifest.clients[client]
-    : manifest.clients.macos;
+  if (client === "macos") return manifest.clients.macos;
+  if (!("ios" in manifest.clients))
+    throw new Error("Missing selected iOS client");
+  return manifest.clients.ios;
 }
 
-export const StatusSchema = z.object({
+export const StatusSchema = z.looseObject({
   schemaVersion: z.literal(1),
   runID: uuid,
   capturedAt: z.iso.datetime(),
   accountBusy: z.boolean(),
   accountStage: z.string(),
   profiles: z.array(
-    z.object({
+    z.looseObject({
       profileID: uuid,
       profileKind: z.enum(["local_folder", "obsidian_sync"]),
       remoteVaultID: z.string().nullable(),
@@ -143,7 +195,7 @@ export const StatusSchema = z.object({
       transport: z.string(),
       hostWorkPending: z.boolean(),
       durable: z
-        .object({
+        .looseObject({
           schemaVersion: z.literal(1),
           profileId: uuid,
           profileKind: z.enum(["local_folder", "obsidian_sync"]),
@@ -164,11 +216,7 @@ addFormats(contract);
 
 export const acceptanceSchema = z
   .record(z.string(), z.unknown())
-  .parse(
-    await Bun.file(
-      path.join(fixtures, "schema/facet-acceptance.schema.json"),
-    ).json(),
-  );
+  .parse(acceptanceDefinition);
 
 export const validators = new Map<
   string,

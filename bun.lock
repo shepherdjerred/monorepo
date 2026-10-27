@@ -2313,6 +2313,7 @@
         "@react-navigation/core": "^7.21.5",
         "@shepherdjerred/eslint-config": "workspace:*",
         "@tasknotes/e2e": "workspace:*",
+        "@tasknotes/fixtures": "workspace:*",
         "@types/bun": "1.4.2",
         "@types/react": "19.3.0",
         "@typescript-eslint/utils": "^8.71.1",

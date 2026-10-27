@@ -11,7 +11,8 @@ var executable = ""
 var container = ""
 var state = ""
 var lifecycle: LifecycleFence?
-let bindingKeys: Set<String> = [
+var guestConfigSHA256: String?
+var bindingKeys: Set<String> = [
     "runID", "remoteID", "runDirectory", "executable", "container", "stateDirectory", "lifecycle",
 ]
 func bind(_ input: [String: Any]) throws {
@@ -40,6 +41,16 @@ func bind(_ input: [String: Any]) throws {
     executable = program
     container = ownedContainer
     state = ownedState
+    if let configHash = input["guestConfigSHA256"] as? String {
+        guard LifecycleFence.isHash(configHash) else { throw Failure.input }
+        var virtualized: Int32 = 0
+        var length = MemoryLayout<Int32>.size
+        guard sysctlbyname("kern.hv_vmm_present", &virtualized, &length, nil, 0) == 0,
+            virtualized == 1
+        else { throw Failure.run }
+        guestConfigSHA256 = configHash
+        bindingKeys.insert("guestConfigSHA256")
+    }
     if let fence = input["lifecycle"] as? [String: Any] {
         lifecycle = try LifecycleFence(fence)
     } else {
@@ -110,8 +121,12 @@ func requireUnlockedSession() throws {
 }
 func validateManifest() throws {
     phase = "run"
-    let manifest = try json(directory + "/manifest.json")
     let descriptor = try json(state + "/acceptance.json")
+    if let guestConfigSHA256 {
+        try validateGuestCheckpoint(descriptor, configHash: guestConfigSHA256)
+        return
+    }
+    let manifest = try json(directory + "/manifest.json")
     let clients = manifest["clients"] as? [String: [String: String]]
     guard manifest["schemaVersion"] as? Int == 2, manifest["scope"] as? String == "macos",
         manifest["simulator"] is NSNull, manifest["runID"] as? String == runID,
@@ -135,6 +150,40 @@ func validateManifest() throws {
             (manifest["cases"] as? [String: String])?["initial-download"] == "pass",
             (manifest["operations"] as? [String: String])?["lifecycle-begin:macos"] == "pass",
             (manifest["operations"] as? [String: String])?["lifecycle-finish:macos"] == nil
+        else { throw Failure.run }
+    }
+}
+
+private func validateGuestCheckpoint(_ descriptor: [String: Any], configHash: String) throws {
+    let stored = try json(directory + "/account-checkpoint.json")
+    guard Set(stored.keys) == [
+        "schemaVersion", "kind", "binding", "checkpoint", "guestConfigSHA256",
+    ], stored["schemaVersion"] as? Int == 1,
+        stored["kind"] as? String == "tart-guest-account-checkpoint",
+        stored["guestConfigSHA256"] as? String == configHash,
+        let binding = stored["binding"] as? [String: Any],
+        Set(binding.keys) == ["runID", "allowedRemoteVaultID", "round"],
+        binding["runID"] as? String == runID,
+        binding["allowedRemoteVaultID"] as? String == remoteID,
+        let selectedRound = binding["round"] as? Int, (1...3).contains(selectedRound),
+        let checkpoint = stored["checkpoint"] as? [String: Any],
+        Set(checkpoint.keys) == [
+            "stage", "scope", "officialReferencePassed", "initialDownloadPassed",
+            "lifecycleBeginPassed", "lifecycleFinishPresent", "failuresCount", "completedRounds",
+        ], ["macos", "apple"].contains(checkpoint["scope"] as? String ?? ""),
+        checkpoint["failuresCount"] as? Int == 0,
+        checkpoint["officialReferencePassed"] as? Bool == true,
+        checkpoint["stage"] as? String == (lifecycle == nil ? "bound" : "initial-verified"),
+        Set(descriptor.keys) == ["schemaVersion", "runID", "stateDirectory", "allowedRemoteVaultID"],
+        descriptor["schemaVersion"] as? Int == 1, descriptor["runID"] as? String == runID,
+        descriptor["stateDirectory"] as? String == state,
+        descriptor["allowedRemoteVaultID"] as? String == remoteID
+    else { throw Failure.run }
+    if let lifecycle {
+        guard selectedRound == lifecycle.round,
+            checkpoint["initialDownloadPassed"] as? Bool == true,
+            checkpoint["lifecycleBeginPassed"] as? Bool == true,
+            checkpoint["lifecycleFinishPresent"] as? Bool == false
         else { throw Failure.run }
     }
 }

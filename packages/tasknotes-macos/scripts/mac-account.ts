@@ -185,6 +185,16 @@ export async function main(args: string[]) {
     const manifest = ManifestSchema.parse(
       await safeJSON(path.join(directory, "manifest.json")),
     );
+    if (manifest.schemaVersion === 3) {
+      const { runHostGuestAccount } =
+        await import("../../tasks-for-obsidian/scripts/apple-sync-live/transport/execution/account-host.ts");
+      return runHostGuestAccount({
+        manifest,
+        operation,
+        parameters,
+        ...(lifecycleRound === undefined ? {} : { lifecycleRound }),
+      });
+    }
     const binding = bindingFor(
       runID,
       manifest,
