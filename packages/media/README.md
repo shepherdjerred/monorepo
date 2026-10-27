@@ -116,6 +116,14 @@ receipt reconciliation does not authorize another send. Email subjects and
 bodies retain the selected edition label. Older default-only event bodies retain
 their existing semantics.
 
+Movie caption-ready notices use the actual caption installation receipt and its
+original video parent, including an initial library adoption with no acquisition
+attempt. Both caption installation and serving publication check for completed
+requirements, so either completion order queues the same readiness notice.
+Household policy alone does not create personal notification consent. Delivery
+rechecks the current cut's complete requirements and serving binding while
+retaining the source receipt and one invocation-wide provenance allowance.
+
 The internal movie subtitle protocol carries version-4 operation IDs, asset IDs,
 exact edition scope and a current target digest. Named editions inherit the
 canonical movie's household subtitle policy when no edition override exists.

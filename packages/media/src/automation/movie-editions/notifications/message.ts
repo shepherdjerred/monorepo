@@ -26,7 +26,7 @@ export async function composeMovieNoticeV4(
     );
   const current = await assertPreparedMovieNoticeV4(tx, delivery, prepared);
   context.captureFreshness?.(prepared.freshness);
-  context.captureFreshness?.(current.choice.freshness);
+  context.captureFreshness?.(current.freshness);
   const target = await personalTarget(context, delivery);
   if (target === null) return null;
   const media = await tx.mediaItem.findUniqueOrThrow({
@@ -36,9 +36,11 @@ export async function composeMovieNoticeV4(
   const description =
     prepared.payload.eventKind === "media_available"
       ? "is available in Plex"
-      : "has been upgraded in Plex";
+      : prepared.payload.eventKind === "media_upgraded"
+        ? "has been upgraded in Plex"
+        : "has requested subtitles ready";
   prepared.freshness.assertActive();
-  current.choice.freshness.assertActive();
+  current.freshness.assertActive();
   const prefix = "Media: ";
   const suffix = ` (${label})`;
   return {

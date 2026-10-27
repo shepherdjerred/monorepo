@@ -19,6 +19,8 @@ import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { bindingAccess } from "./access.ts";
+import { queueReadyMovieCaptionNoticesV4 } from "#automation/movie-editions/notifications/captions.ts";
+import { MovieEditionScopeSchema } from "#shared/movie-editions/registry.ts";
 
 /** SDK observation precedes lazy initialization; immutable ACK precedes current authority and Plex I/O. */
 export async function verifyLibraryPlexBinding(
@@ -84,8 +86,8 @@ export async function verifyLibraryPlexBinding(
     if (identityHash(refreshedAccess) !== identityHash(access))
       throw new PlexBindingProtection("wrong_section");
     const { freshness: guarded, ...observation } = verified;
-    const receipt = await serializable(context.db, (tx) =>
-      commitLibraryPlexBinding(
+    const receipt = await serializable(context.db, async (tx) => {
+      const completed = await commitLibraryPlexBinding(
         tx,
         {
           input,
@@ -97,8 +99,33 @@ export async function verifyLibraryPlexBinding(
           writerExpiresAtMs: capture.writerExpiresAtMs,
         },
         budget,
-      ),
-    );
+      );
+      const server = access[0];
+      if (kind === "movie") {
+        if (server === undefined)
+          throw new Error("Library movie serving access missing");
+        const notices = await queueReadyMovieCaptionNoticesV4(
+          tx,
+          {
+            scope: MovieEditionScopeSchema.parse({
+              mediaId: original.request.parent.asset.editionRootId,
+              rootMediaId: original.request.parent.asset.editionRootId,
+              edition: original.request.parent.asset.edition,
+            }),
+            assetId: input.assetId,
+            epoch: input.recoveryEpoch,
+            access: {
+              serverMachineId: server.serverMachineId,
+              movieSectionId: server.sectionId,
+            },
+          },
+          budget,
+        );
+        for (const guard of notices.guards) guard.assertActive();
+      }
+      guarded.assertActive();
+      return completed;
+    });
     execution.assertActive();
     return { status: "verified", bindingCount: receipt.bindings.length };
   } catch (error) {

@@ -38,6 +38,7 @@ import {
 } from "#shared/movie-editions/subtitles-v4.ts";
 import { MovieSubtitleReceiptV4Schema } from "#shared/movie-editions/subtitle-receipt-v4.ts";
 import { currentMovieSubtitleWorkV4 } from "#automation/movie-editions/subtitles/authority.ts";
+import { queueReadyMovieCaptionNoticesV4 } from "#automation/movie-editions/notifications/captions.ts";
 import { assertMovieSubtitleOperationV4 } from "#automation/movie-editions/subtitles/operation.ts";
 import {
   reusableSubtitle,
@@ -293,6 +294,17 @@ export async function installMovieSubtitlesV4(
           },
           update: {},
         });
+      const notices = await queueReadyMovieCaptionNoticesV4(
+        tx,
+        {
+          scope: input.scope,
+          assetId: input.assetId,
+          epoch: target.recoveryEpoch,
+          access,
+        },
+        budget,
+      );
+      for (const guard of notices.guards) guard.assertActive();
       freshness.assertActive();
     },
     { timeout: 60_000 },

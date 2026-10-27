@@ -24,6 +24,16 @@ export async function readMovieSubtitleReceiptV4(
   input: MovieSubtitleInstallV4,
   budget: PublicationAuthorityReadBudget,
 ) {
+  const completion = await readMovieSubtitleCompletionV4(tx, input, budget);
+  return completion?.receipt ?? null;
+}
+
+/** Retain the validated physical parent instead of traversing it again for a downstream effect. */
+export async function readMovieSubtitleCompletionV4(
+  tx: Prisma.TransactionClient,
+  input: MovieSubtitleInstallV4,
+  budget: PublicationAuthorityReadBudget,
+) {
   const command = await tx.operation.findUniqueOrThrow({
     where: { id: input.operationId },
   });
@@ -54,9 +64,9 @@ export async function readMovieSubtitleReceiptV4(
     receipt.command.payloadHash !== identityHash(command.payload)
   )
     throw new Error("Movie subtitle completion command changed");
-  await assertReceiptParent(tx, receipt, budget);
+  const asset = await assertReceiptParent(tx, receipt, budget);
   assertMovieSubtitleReceiptV4(receipt);
-  return receipt;
+  return { receipt, asset };
 }
 
 async function assertReceiptParent(
@@ -82,7 +92,7 @@ async function assertReceiptParent(
       throw new Error(
         "Movie subtitle completion lost its actual initial library parent",
       );
-    return;
+    return parent.asset;
   }
   const row = await tx.mediaPublicationTransition.findUniqueOrThrow({
     where: { id: reference.transitionId },
@@ -97,6 +107,9 @@ async function assertReceiptParent(
     parent.reference.intentHash,
     parent.outcomeHash,
   );
+  const asset = parent.outcome.entries[0].successor;
+  if (asset === null) throw new Error("Movie caption parent has no successor");
+  return asset;
 }
 
 function assertReceiptPublication(
