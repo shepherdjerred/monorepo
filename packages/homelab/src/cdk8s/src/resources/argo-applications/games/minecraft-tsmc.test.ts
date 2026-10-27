@@ -124,6 +124,32 @@ function synthTsmc(): unknown[] {
   return Testing.synth(chart);
 }
 
+function expectOwnItem(secretName: string, itemId: string): void {
+  const items = synthTsmc()
+    .map((manifest) => OpItemSchema.safeParse(manifest))
+    .flatMap((result) => (result.success ? [result.data] : []));
+  const item = items.find(({ metadata }) => metadata.name === secretName);
+  expect(item?.spec.itemPath).toBe(
+    `vaults/v64ocnykdqju4ui6j6pua56xw4/items/${itemId}`,
+  );
+  expect(
+    items.filter(({ spec }) => spec.itemPath.endsWith(`/items/${itemId}`)),
+  ).toHaveLength(1);
+}
+
+function expectSecretEnv(
+  envName: string,
+  secretName: string,
+  key: string,
+): void {
+  const extraEnv = z
+    .record(z.string(), z.unknown())
+    .parse(tsmcValues()["extraEnv"]);
+  expect(extraEnv[envName]).toEqual({
+    valueFrom: { secretKeyRef: { name: secretName, key } },
+  });
+}
+
 describe("minecraft-tsmc runs The Storm's image", () => {
   test("keeps generated BlueMap renders on a separate excluded 128Gi volume", () => {
     expect(tsmcValues()["extraDeploy"]).toContainEqual(
@@ -450,6 +476,7 @@ describe("minecraft-tsmc image configuration", () => {
     expect(envValue(text, "PAPER_CUSTOM_JAR")).toBe(
       `/opt/paper/${manifest.paper.file}`,
     );
+    expect(envValue(text, "CFG_COREPROTECT_DONATION_KEY")).toBe('""');
   });
 });
 
@@ -484,32 +511,24 @@ describe("minecraft-tsmc MCBridge", () => {
   });
 });
 
+describe("minecraft-tsmc CoreProtect", () => {
+  test("projects the donation key from its own item", () => {
+    expectOwnItem("minecraft-tsmc-coreprotect", "the-storm-coreprotect");
+    expectSecretEnv(
+      "CFG_COREPROTECT_DONATION_KEY",
+      "minecraft-tsmc-coreprotect",
+      "COREPROTECT_DONATION_KEY",
+    );
+  });
+});
+
 describe("minecraft-tsmc Search and Destroy recordings", () => {
   test("projects the rwf recording salt from its own item", () => {
-    const manifests = synthTsmc();
-    const items = manifests
-      .map((manifest) => OpItemSchema.safeParse(manifest))
-      .flatMap((result) => (result.success ? [result.data] : []));
-    const item = items.find(
-      ({ metadata }) => metadata.name === "minecraft-tsmc-rwf-recording",
+    expectOwnItem("minecraft-tsmc-rwf-recording", "the-storm-rwf-recording");
+    expectSecretEnv(
+      "RWF_RECORDING_SALT",
+      "minecraft-tsmc-rwf-recording",
+      "RWF_RECORDING_SALT",
     );
-    expect(item?.spec.itemPath).toMatch(/\/items\/the-storm-rwf-recording$/u);
-    expect(
-      items.filter(({ spec }) =>
-        spec.itemPath.endsWith("/items/the-storm-rwf-recording"),
-      ),
-    ).toHaveLength(1);
-
-    const extraEnv = z
-      .record(z.string(), z.unknown())
-      .parse(tsmcValues()["extraEnv"]);
-    expect(extraEnv["RWF_RECORDING_SALT"]).toEqual({
-      valueFrom: {
-        secretKeyRef: {
-          name: "minecraft-tsmc-rwf-recording",
-          key: "RWF_RECORDING_SALT",
-        },
-      },
-    });
   });
 });

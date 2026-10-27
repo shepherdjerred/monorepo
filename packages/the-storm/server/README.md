@@ -222,7 +222,8 @@ remain enabled. The game SQLite database uses full synchronous WAL commits.
 Safety evidence has no automatic purge path.
 
 Required external credentials are supplied through the existing 1Password
-grants: Storm Discord token/channel, brain bearer token, and RCON credentials.
+grants: Storm Discord token/channel, brain bearer token, RCON credentials, and
+the CoreProtect donation key.
 The active agent uses the homelab brain service. Unlocked chest theft and
 permitted PvP are allowed; ban and temporary-ban recommendations escalate to
 human staff. Crier and merchant visits additionally require their production

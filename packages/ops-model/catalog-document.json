@@ -3033,7 +3033,7 @@
       "automatic": true,
       "promotionSourceEnvironmentId": "minecraft/sandbox",
       "recipeRevisionId": "minecraft-tsmc/7",
-      "configurationRevisionId": "minecraft-tsmc/6"
+      "configurationRevisionId": "minecraft-tsmc/7"
     },
     {
       "id": "mc-router/prod",
