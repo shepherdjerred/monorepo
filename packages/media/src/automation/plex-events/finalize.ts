@@ -71,6 +71,7 @@ export async function finalizeWatchBatch(
   )
     throw new Error("Watch batch outcomes do not match its complete cohort");
   const scope = prepared.authority.scope;
+  const edition = scope.edition ?? "default";
   const bindingScope = scope.bindingScope;
   if (bindingScope === null || prepared.authority.binding === null)
     throw new Error("Prepared watch omitted its binding scope");
@@ -99,13 +100,13 @@ export async function finalizeWatchBatch(
     await watchAwait(
       execution,
       tx.$queryRaw(
-        Prisma.sql`SELECT "mediaId" FROM "WatchObservationFence" WHERE "mediaId" IN (${Prisma.join(bindingScope.mediaIds)}) AND edition='default' ORDER BY "mediaId" FOR UPDATE`,
+        Prisma.sql`SELECT "mediaId" FROM "WatchObservationFence" WHERE "mediaId" IN (${Prisma.join(bindingScope.mediaIds)}) AND edition=${edition} ORDER BY "mediaId" FOR UPDATE`,
       ),
     );
     const fence = await watchAwait(
       execution,
       tx.watchObservationFence.findUniqueOrThrow({
-        where: { mediaId_edition: defaultScope(prepared.mediaId) },
+        where: { mediaId_edition: { mediaId: prepared.mediaId, edition } },
       }),
     );
     if (
@@ -154,7 +155,7 @@ export async function finalizeWatchBatch(
     await watchAwait(
       execution,
       tx.watchObservationFence.update({
-        where: { mediaId_edition: defaultScope(prepared.mediaId) },
+        where: { mediaId_edition: { mediaId: prepared.mediaId, edition } },
         data: { settledRevision: prepared.revision },
       }),
     );
@@ -180,10 +181,11 @@ async function applyOutcome(
   execution: WatchExecution,
 ) {
   const { prepared, result } = input;
+  const edition = prepared.authority.scope.edition ?? "default";
   const original = prepared.authority.binding;
   if (original === null)
     throw new Error("Prepared watch omitted its immutable association");
-  const key = { userId: result.userId, ...defaultScope(prepared.mediaId) };
+  const key = { userId: result.userId, mediaId: prepared.mediaId, edition };
   if (result.outcome.kind === "unknown") {
     await watchAwait(
       execution,
@@ -242,7 +244,7 @@ async function applyOutcome(
     tx.retentionDecision.count({
       where: {
         mediaId: { in: mediaIds },
-        edition: "default",
+        edition,
         state: { in: ["eligible", "warning_pending", "grace_period"] },
       },
     }),
@@ -258,7 +260,7 @@ async function applyOutcome(
   await watchAwait(
     execution,
     tx.mediaIntent.updateMany({
-      where: { mediaId: { in: mediaIds }, edition: "default" },
+      where: { mediaId: { in: mediaIds }, edition },
       data: { generation: { increment: 1 }, version: { increment: 1 } },
     }),
   );
@@ -267,7 +269,7 @@ async function applyOutcome(
     tx.retentionDecision.updateMany({
       where: {
         mediaId: { in: mediaIds },
-        edition: "default",
+        edition,
         state: { in: ["eligible", "warning_pending", "grace_period"] },
       },
       data: { state: "cancelled", version: { increment: 1 } },
@@ -276,7 +278,7 @@ async function applyOutcome(
   const intent = await watchAwait(
     execution,
     tx.mediaIntent.findUniqueOrThrow({
-      where: targetWhere(defaultScope(prepared.mediaId)),
+      where: { mediaId_edition: { mediaId: prepared.mediaId, edition } },
     }),
   );
   await watchAwait(
@@ -286,7 +288,10 @@ async function applyOutcome(
         mediaId: prepared.mediaId,
         actorId: result.userId,
         kind: "media_marked_unwatched",
-        payload: { generation: intent.generation },
+        payload: {
+          generation: intent.generation,
+          ...(edition === "default" ? {} : { edition }),
+        },
       },
     }),
   );

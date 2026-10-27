@@ -14,9 +14,11 @@ import {
 } from "#infrastructure/plex-binding/quarantine.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
+import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
 
 export type WatchBindingScope = {
   mediaId: string;
+  edition?: MovieEditionKey;
   access: PlexAccess;
   mediaIds: string[];
   assetIds: string[];
@@ -32,9 +34,10 @@ export async function captureWatchBindingScope(
   tx: Prisma.TransactionClient,
   mediaId: string,
   access: PlexAccess,
+  edition: MovieEditionKey = "default",
 ): Promise<WatchBindingScope | null> {
   const coverage = await tx.assetCoverage.findMany({
-    where: { ...defaultScope(mediaId), current: true },
+    where: { mediaId, edition, current: true },
     include: { asset: { include: { coverage: { where: { current: true } } } } },
   });
   if (coverage.length !== 1) return null;
@@ -42,6 +45,7 @@ export async function captureWatchBindingScope(
   if (selected === undefined)
     throw new Error("Watch physical scope omitted its selected row");
   if (selected.asset.state === "quarantined") {
+    if (edition !== "default") return null;
     const decisions = await tx.retentionDecision.findMany({
       where: { ...defaultScope(mediaId), state: "quarantined" },
       take: 2,
@@ -64,13 +68,14 @@ export async function captureWatchBindingScope(
   }
   if (
     selected.asset.state !== "published" ||
-    selected.asset.coverage.some((row) => row.edition !== "default")
+    selected.asset.coverage.some((row) => row.edition !== edition)
   )
     return null;
   const mediaIds = selected.asset.coverage.map((row) => row.mediaId).sort();
   if (mediaIds.length === 0 || mediaIds.length > 10_000) return null;
   return {
     mediaId,
+    ...(edition === "default" ? {} : { edition }),
     access,
     mediaIds,
     assetIds: [selected.assetId],
@@ -104,7 +109,7 @@ export async function readWatchBinding(
       "Serving watch scope must have one complete physical group",
     );
   const result = await readCurrentPlexBinding(tx, {
-    scope: defaultScope(scope.mediaId),
+    scope: { mediaId: scope.mediaId, edition: scope.edition ?? "default" },
     assetId,
     access: scope.access,
   });

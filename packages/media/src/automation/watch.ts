@@ -1,7 +1,10 @@
 import type { MediaAutomationContext } from "./context.ts";
 import { serializable } from "./store.ts";
-import type { ObservePlexHintInput } from "#shared/plex-events/contract.ts";
-import { lockWatchAuthority, watchScope } from "./plex-events/authority.ts";
+import {
+  lockWatchAuthority,
+  watchScope,
+  type WatchObservationOptions,
+} from "./plex-events/authority.ts";
 import * as watchAuthority from "./plex-events/authority.ts";
 import { observeWatchBatch } from "./plex-events/observe.ts";
 import { queueCurrentRetention } from "./plex-events/finalize.ts";
@@ -17,7 +20,7 @@ import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
 export async function observeRequesterWatch(
   context: MediaAutomationContext,
   mediaId: string,
-  options: { expectedHint?: ObservePlexHintInput } = {},
+  options: WatchObservationOptions = {},
   captureFreshness?: (freshness: PlexBindingFreshness) => void,
 ): Promise<{ complete: boolean; reason: string | null }> {
   const execution = context.plexBindingExecution();

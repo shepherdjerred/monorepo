@@ -1,6 +1,6 @@
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { IntegrationError } from "#integrations/http.ts";
-import type { ObservePlexHintInput } from "#shared/plex-events/contract.ts";
+import type { WatchObservationOptions } from "./authority.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import { plexBindingFreshness } from "#infrastructure/plex-binding/freshness.ts";
 import { observeAssociatedWatch } from "./metadata.ts";
@@ -85,7 +85,7 @@ async function readRequester(
 export async function observeWatchBatch(
   context: MediaAutomationContext,
   mediaId: string,
-  options: { expectedHint?: ObservePlexHintInput },
+  options: WatchObservationOptions,
   execution: PlexBindingExecution,
 ) {
   await watchCheckpoint(execution);

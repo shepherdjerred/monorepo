@@ -6,8 +6,8 @@ import {
   lockCanonicalMedia,
   lockExistingDefaultTargets,
 } from "#infrastructure/editions/locks.ts";
-import { findDefaultTarget } from "#infrastructure/editions/targets.ts";
-import { defaultScope } from "#shared/editions/scope.ts";
+import { MediaError } from "#application/errors.ts";
+import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
 import {
   effectiveRequestWhere,
   lockEffectiveRequests,
@@ -29,12 +29,15 @@ export const PlexIdentitySchema = z.object({
   plexRatingKey: z.string().regex(/^\d+$/u).optional(),
   plexSectionId: z.string().optional(),
 });
-export type WatchScope = {
+export type WatchObservationOptions = {
+  expectedHint?: ObservePlexHintInput;
+  edition?: MovieEditionKey;
+};
+export type WatchScope = WatchObservationOptions & {
   mediaId: string;
   serverMachineId: string;
   sections: { movie: string; series: string };
   bindingScope: WatchBindingScope | null;
-  expectedHint?: ObservePlexHintInput;
 };
 
 function hintTargetMatches(
@@ -58,7 +61,7 @@ function hintTargetMatches(
 export async function watchScope(
   context: MediaAutomationContext,
   mediaId: string,
-  options: { expectedHint?: ObservePlexHintInput },
+  options: WatchObservationOptions,
   execution: WatchExecution,
 ): Promise<WatchScope> {
   if (context.serverMachineId === undefined)
@@ -70,13 +73,22 @@ export async function watchScope(
       select: { kind: true },
     }),
   );
+  const edition = options.edition ?? "default";
+  if (edition !== "default" && media.kind !== "movie")
+    throw new MediaError(
+      "movie_scope_required",
+      "Named cuts require a movie",
+      422,
+    );
+  if (edition !== "default" && options.expectedHint !== undefined)
+    throw new Error("An unscoped Plex hint cannot identify a named movie cut");
   const access = await watchAwait(
     execution,
     context.plexAccess(media.kind === "movie" ? "movie" : "show"),
   );
   const bindingScope = await watchAwait(
     execution,
-    captureWatchBindingScope(context.db, mediaId, access),
+    captureWatchBindingScope(context.db, mediaId, access, edition),
   );
   const sections = {
     movie: access.sectionType === "movie" ? access.sectionId : "",
@@ -103,14 +115,17 @@ export async function lockWatchAuthority(
   if (initial === null) return null;
   if (scope.bindingScope === null) return null;
   const mediaIds = scope.bindingScope.mediaIds;
+  const edition = scope.edition ?? "default";
   await watchAwait(execution, lockCanonicalMedia(tx, mediaIds));
-  await watchAwait(execution, lockExistingDefaultTargets(tx, mediaIds));
+  await watchAwait(execution, lockWatchTargets(tx, mediaIds, edition));
   const target = await watchAwait(
     execution,
-    findDefaultTarget(tx, defaultScope(scope.mediaId)),
+    tx.mediaIntent.findUnique({
+      where: { mediaId_edition: { mediaId: scope.mediaId, edition } },
+    }),
   );
-  if (target?.lineage !== "resolved") return null;
-  await watchAwait(execution, lockEffectiveRequests(tx, mediaIds));
+  if (target?.editionRootId == null) return null;
+  await watchAwait(execution, lockWatchRequests(tx, mediaIds, edition));
   await watchAwait(
     execution,
     tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id='singleton' FOR SHARE`,
@@ -145,10 +160,11 @@ export async function lockWatchAuthority(
     }),
   );
   if (compensation.state === "protected") return null;
+  const requestWhere = watchRequests(edition);
   const claims = await watchAwait(
     execution,
     tx.mediaRequest.findMany({
-      where: { ...defaultScope(scope.mediaId), ...effectiveRequestWhere },
+      where: { mediaId: scope.mediaId, ...requestWhere },
       orderBy: { id: "asc" },
       include: {
         coverageSources: {
@@ -163,7 +179,7 @@ export async function lockWatchAuthority(
     tx.mediaRequest.findMany({
       where: {
         mediaId: { in: mediaIds },
-        ...effectiveRequestWhere,
+        ...requestWhere,
       },
       select: { userId: true },
     }),
@@ -250,6 +266,7 @@ export async function lockWatchAuthority(
     ));
   const signature = JSON.stringify({
     mediaId: media.id,
+    ...(edition === "default" ? {} : { edition }),
     kind: media.kind,
     ...(compensation.state === "verified"
       ? { compensationPublicationHash: compensation.proofHash }
@@ -299,6 +316,34 @@ export async function lockWatchAuthority(
     scope,
     hintCurrent,
   };
+}
+
+async function lockWatchTargets(
+  tx: Prisma.TransactionClient,
+  mediaIds: string[],
+  edition: MovieEditionKey,
+): Promise<void> {
+  if (edition === "default") return lockExistingDefaultTargets(tx, mediaIds);
+  await tx.$queryRaw(
+    Prisma.sql`SELECT "mediaId" FROM "MediaIntent" WHERE "mediaId" IN (${Prisma.join(mediaIds)}) AND edition=${edition} ORDER BY "mediaId" FOR UPDATE`,
+  );
+}
+
+async function lockWatchRequests(
+  tx: Prisma.TransactionClient,
+  mediaIds: string[],
+  edition: MovieEditionKey,
+): Promise<void> {
+  if (edition === "default") return lockEffectiveRequests(tx, mediaIds);
+  await tx.$queryRaw(
+    Prisma.sql`SELECT id FROM "MediaRequest" WHERE "mediaId" IN (${Prisma.join(mediaIds)}) AND edition=${edition} ORDER BY id FOR SHARE`,
+  );
+}
+
+function watchRequests(edition: MovieEditionKey) {
+  return edition === "default"
+    ? effectiveRequestWhere
+    : { edition, active: true, excluded: false, direct: true };
 }
 
 async function validHint(
