@@ -8,7 +8,7 @@ import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { requestTestMovieV4 } from "#testing/movie-v4.ts";
 import { LibraryPlexBindingInputV1Schema } from "#shared/plex-binding/activities.ts";
 import { MovieEditionKeySchema } from "#shared/movie-editions/registry.ts";
-import { observeRequesterWatch } from "#automation/watch.ts";
+import { createSweepActivities } from "#automation/sweeps.ts";
 import { PlexClient } from "#integrations/plex.ts";
 
 const h = automationTestHarness();
@@ -80,10 +80,16 @@ test.each(MovieEditionKeySchema.options)(
         );
       },
     };
-    expect(await observeRequesterWatch(context, mediaId, { edition })).toEqual({
-      complete: true,
-      reason: null,
-    });
+    const sweeps = createSweepActivities(context);
+    let cursor: string | null = null;
+    do {
+      const result = await sweeps.sweepMediaWork({
+        kind: "watch",
+        cursor,
+        sweepId: "synthetic-adopted-watch",
+      });
+      cursor = result.nextCursor;
+    } while (cursor !== null);
     expect(
       await db.watchState.findUniqueOrThrow({
         where: {

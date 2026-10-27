@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { serializable } from "#automation/store.ts";
-import type { ObservePlexHintInput } from "#shared/plex-events/contract.ts";
+import type { ObserveWatchHint } from "#shared/plex-events/contract.ts";
 import type { PlexBindingExecution } from "#shared/plex-binding/activities.ts";
 import type { PlexBindingFreshness } from "#shared/plex-binding/contract.ts";
 import {
@@ -31,7 +31,7 @@ export type PreparedWatchBatch = {
     verifyAccess: boolean;
     mappingExpiresAtMs: number | null;
   }[];
-  expectedHint?: ObservePlexHintInput;
+  expectedHint?: ObserveWatchHint;
 };
 
 function reader(

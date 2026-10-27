@@ -492,6 +492,7 @@ export const prepareMediaHandoffWorkflow = media.prepareMediaHandoffWorkflow,
   reverifyPlexBindingWorkflow = media.reverifyPlexBindingWorkflow,
   verifyLibraryPlexBindingWorkflow = media.verifyLibraryPlexBindingWorkflow,
   observePlexEventHintWorkflow = media.observePlexEventHintWorkflow,
+  observeMoviePlexHintV4Workflow = media.observeMoviePlexHintV4Workflow,
   prepareNativeCompensationWorkflow = media.prepareNativeCompensationWorkflow,
   applyNativeCompensationWorkflow = media.applyNativeCompensationWorkflow,
   compensateNativePublicationWorkflow =

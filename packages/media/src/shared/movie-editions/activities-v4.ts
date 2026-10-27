@@ -6,6 +6,16 @@ import type {
   MovieSubtitleOperationV4,
   MovieSubtitleInstallV4,
 } from "./subtitles-v4.ts";
+import type {
+  ObserveMoviePlexHintV4,
+  ObservePlexHintResult,
+} from "#shared/plex-events/contract.ts";
+
+export type MovieWatchActivitiesV4 = {
+  observeMoviePlexHintV4: (
+    input: ObserveMoviePlexHintV4,
+  ) => Promise<ObservePlexHintResult>;
+};
 
 /** Scoped IDs only; private releases, file plans and credentials stay in Activities. */
 export type MovieNetworkActivitiesV4 = {

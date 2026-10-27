@@ -8,6 +8,10 @@ import { sweepInventory } from "./reconciliation/inventory.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { queueMediaSubtitleTargets } from "./subtitles/queue.ts";
 import { defaultIntent } from "#shared/editions/scope.ts";
+import {
+  MOVIE_WATCH_CURSOR,
+  sweepMovieWatch,
+} from "./reconciliation/movie-watch.ts";
 
 /** Each page is bounded and cursor order is stable under concurrent inserts. */
 export function createSweepActivities(
@@ -15,6 +19,11 @@ export function createSweepActivities(
 ): Pick<MediaNetworkActivities, "sweepMediaWork"> {
   return {
     async sweepMediaWork(input) {
+      if (
+        input.kind === "watch" &&
+        input.cursor?.startsWith(MOVIE_WATCH_CURSOR) === true
+      )
+        return sweepMovieWatch(context, input.cursor);
       if (input.kind === "downloads")
         return sweepDownloads(context, input.cursor);
       if (input.kind === "feeds")
@@ -66,7 +75,12 @@ async function sweepIntentPage(
   }
   return {
     processed: media.length,
-    nextCursor: media.length === 50 ? (media.at(-1)?.id ?? null) : null,
+    nextCursor:
+      media.length === 50
+        ? (media.at(-1)?.id ?? null)
+        : input.kind === "watch"
+          ? `${MOVIE_WATCH_CURSOR}start`
+          : null,
   };
 }
 

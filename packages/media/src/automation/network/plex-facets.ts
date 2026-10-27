@@ -9,6 +9,7 @@ import { observeMediaUpgradeCleanup } from "#automation/plex-binding/cleanup.ts"
 import { createPublicationActivities } from "#automation/publication.ts";
 import { createNotificationActivities } from "#automation/notifications.ts";
 import { watchInvocation } from "#automation/plex-events/runtime.ts";
+import { createMovieWatchFacetV4 } from "#automation/plex-events/movie-activities.ts";
 import type { NativePlexContext } from "#migration/native-plex/producer.ts";
 import { observePairedCompensationExecution } from "#migration/native-plex/compensation.ts";
 import { observePairedArchiveCleanup } from "#migration/native-plex/archive.ts";
@@ -18,6 +19,7 @@ export function createPlexRuntimeFacets(
   hintsEnabled: () => Promise<boolean>,
 ) {
   return {
+    movieWatch: createMovieWatchFacetV4(context, hintsEnabled),
     plexWatch: {
       evaluateMediaRetention: (
         input: Parameters<MediaNetworkActivities["evaluateMediaRetention"]>[0],

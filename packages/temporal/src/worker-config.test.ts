@@ -82,6 +82,7 @@ describe("Temporal worker role contracts", () => {
     "observeMovieAcquisitionV4",
     "publishMovieToPlexV4",
     "finalizeMovieAcquisitionV4",
+    "observeMoviePlexHintV4",
   ])("registers %s only on the existing network worker", (activity) => {
     const owners = QUEUE_WORKER_DEFINITIONS.filter(
       (definition) =>

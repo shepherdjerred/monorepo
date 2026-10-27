@@ -11,6 +11,54 @@ import {
 } from "./movie-editions.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { verifyMovieHistory } from "./testing/replay.ts";
+import { createMovieWatchWorkerActivitiesV4 } from "./movie-watch.ts";
+
+function pinnedRuntimes() {
+  const temporal = Bun.which("temporal");
+  if (temporal === null) throw new Error("Pinned Temporal CLI required");
+  const resolved = Bun.spawnSync(["mise", "which", "node"], {
+    stdout: "pipe",
+    stderr: "inherit",
+  });
+  if (resolved.exitCode !== 0) throw new Error("Pinned Node required");
+  return { temporal, node: resolved.stdout.toString().trim() };
+}
+
+async function observeFixtureWatch(
+  scenario: Awaited<ReturnType<typeof createMovieWorkflowFixture>>,
+  environment: TestWorkflowEnvironment,
+) {
+  const input = await scenario.watchOperation();
+  if (input === null) return null;
+  expect(await scenario.watchEvidence()).toEqual([]);
+  const dispatched = await scenario.dispatch(async (start) => {
+    if (start.input["operationId"] !== input.operationId)
+      throw new Error("Only the actual scoped hint is dispatched here");
+    expect(start.workflowType).toBe("observeMoviePlexHintV4Workflow");
+    await environment.client.workflow.start(start.workflowType, {
+      workflowId: start.workflowId,
+      taskQueue: TASK_QUEUES.WORKFLOWS,
+      args: [start.input],
+    });
+  });
+  expect(dispatched.dispatched).toBe(1);
+  const handle = environment.client.workflow.getHandle(
+    `media-operation-${input.operationId}`,
+  );
+  expect(
+    await environment.client.connection.withDeadline(Date.now() + 20_000, () =>
+      handle.result(),
+    ),
+  ).toEqual({ status: "observed", complete: true });
+  expect(await scenario.watchEvidence()).toEqual([
+    expect.objectContaining({
+      mediaId: input.mediaId,
+      edition: input.scope.edition,
+      watched: false,
+    }),
+  ]);
+  return handle;
+}
 
 async function startWorkflowWorker(options: {
   node: string;
@@ -64,14 +112,7 @@ test.each([
 ] as const)(
   "real role workers execute and replay a %s acquisition from the consent outbox through Plex completion",
   async (edition) => {
-    const temporal = Bun.which("temporal");
-    if (temporal === null) throw new Error("Pinned Temporal CLI required");
-    const resolved = Bun.spawnSync(["mise", "which", "node"], {
-      stdout: "pipe",
-      stderr: "inherit",
-    });
-    if (resolved.exitCode !== 0) throw new Error("Pinned Node required");
-    const node = resolved.stdout.toString().trim();
+    const { temporal, node } = pinnedRuntimes();
     const directory = await mkdtemp(path.join(tmpdir(), "media-movie-role-"));
     const environment = await TestWorkflowEnvironment.createLocal({
       server: {
@@ -110,6 +151,9 @@ test.each([
         namespace: "dev",
         taskQueue: TASK_QUEUES.MEDIA_NETWORK,
         activities: {
+          ...createMovieWatchWorkerActivitiesV4(() =>
+            Promise.resolve({ movieWatch: scenario.movieWatch }),
+          ),
           ...createMovieNetworkWorkerActivitiesV4(() =>
             Promise.resolve({ movie: scenario.movie }),
           ),
@@ -219,6 +263,7 @@ test.each([
           expect.objectContaining({ language: "zh-Hans", state: "installed" }),
         ]),
       );
+      const watch = await observeFixtureWatch(scenario, environment);
       for (const [name, handle] of [
         ["parent", parent],
         [
@@ -229,6 +274,7 @@ test.each([
           (captionHandle, index) =>
             [`captions-${String(index)}`, captionHandle] as const,
         ),
+        ...(watch === null ? [] : [["watch", watch] as const]),
       ] as const) {
         await verifyMovieHistory(await handle.fetchHistory(), {
           node,

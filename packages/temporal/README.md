@@ -781,6 +781,14 @@ never the webhook capability, raw payload, account or poster. The default-off
 hint gate does not replace polling or final retention checks. A hint requests a
 fresh scoped watch read; it grants no deletion authority.
 
+Named movie item claims instead dispatch `observeMoviePlexHintV4Workflow` with
+the exact canonical movie/edition and recorded generation/epoch. Its Network
+Activity carries the original SDK clock across lazy runtime loading and uses
+the same default-off hint gate and requester-scoped observer. The regular watch
+sweep also visits named targets in bounded pages after default movies and TV;
+its existing Workflow loop and Activity budgets are unchanged. Historical
+default hints retain their original Workflow and payload identity.
+
 Each watch observation obtains the current Activity cancellation signal and a
 wall/monotonic deadline before IO. The current attempt's scheduled timestamp
 plus its explicit start-to-close timeout bounds work conservatively, including

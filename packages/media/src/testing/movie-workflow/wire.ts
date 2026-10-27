@@ -5,6 +5,7 @@ import type { Database } from "#infrastructure/database.ts";
 import { KnabenProvider } from "#integrations/providers.ts";
 import { QbittorrentClient } from "#integrations/qbittorrent.ts";
 import { PlexClient } from "#integrations/plex.ts";
+import type { FetchTransport } from "#integrations/http.ts";
 import {
   MOVIE_EDITION_REGISTRY,
   type MovieEditionKey,
@@ -27,6 +28,7 @@ export function movieWorkflowWire(
   let torrent: Record<string, unknown> | null = null;
   let adds = 0;
   const ratingKey = "750001";
+  let watched = true;
   const providers = {
     withProvider: <T>(
       _id: string,
@@ -127,72 +129,88 @@ export function movieWorkflowWire(
       });
     },
   );
-  const plex = new PlexClient(
-    {
-      baseUrl: "http://plex.fixture",
-      token: "synthetic",
-      clientIdentifier: "synthetic-workflow",
-    },
-    async (url) => {
-      if (url.pathname === "/identity")
-        return Response.json({
-          MediaContainer: { machineIdentifier: "fixture-server" },
-        });
-      if (url.pathname === "/library/sections")
-        return Response.json({
-          MediaContainer: {
-            size: 1,
-            Directory: [{ key: "1", type: "movie", title: "Movies" }],
-          },
-        });
-      if (url.pathname === "/library/sections/1/refresh")
-        return new Response(null, { status: 200 });
-      if (
-        url.pathname !== "/library/sections/1/all" &&
-        url.pathname !== `/library/metadata/${ratingKey}`
-      )
-        throw new Error("Unexpected synthetic Plex route");
-      const coverage = await db.assetCoverage.findMany({
-        where: {
-          mediaId: input.mediaId,
-          edition: input.edition,
-          current: true,
-        },
-        include: { asset: true },
+  const plexTransport: FetchTransport = async (url, init) => {
+    if (url.pathname === "/identity")
+      return Response.json({
+        MediaContainer: { machineIdentifier: "fixture-server" },
       });
-      if (coverage.length !== 1 || coverage[0] === undefined)
-        throw new Error("Plex observation requires one actual published file");
-      const asset = coverage[0].asset;
-      const media = await db.mediaItem.findUniqueOrThrow({
-        where: { id: input.mediaId },
-      });
+    if (url.pathname === "/library/sections")
       return Response.json({
         MediaContainer: {
           size: 1,
-          totalSize: 1,
-          Metadata: [
-            {
-              ratingKey,
-              type: "movie",
-              title: media.title,
-              Guid: [{ id: `tmdb://${String(media.tmdbId)}` }],
-              ...(label === "" ? {} : { editionTitle: label }),
-              Media: [
-                {
-                  Part: [
-                    {
-                      id: 750_001,
-                      file: asset.path,
-                      size: Number(asset.sizeBytes),
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
+          Directory: [{ key: "1", type: "movie", title: "Movies" }],
         },
       });
+    if (url.pathname === "/library/sections/1/refresh")
+      return new Response(null, { status: 200 });
+    if (
+      url.pathname !== "/library/sections/1/all" &&
+      url.pathname !== `/library/metadata/${ratingKey}`
+    )
+      throw new Error("Unexpected synthetic Plex route");
+    const coverage = await db.assetCoverage.findMany({
+      where: {
+        mediaId: input.mediaId,
+        edition: input.edition,
+        current: true,
+      },
+      include: { asset: true },
+    });
+    if (coverage.length !== 1 || coverage[0] === undefined)
+      throw new Error("Plex observation requires one actual published file");
+    const asset = coverage[0].asset;
+    const media = await db.mediaItem.findUniqueOrThrow({
+      where: { id: input.mediaId },
+    });
+    return Response.json({
+      MediaContainer: {
+        size: 1,
+        totalSize: 1,
+        Metadata: [
+          {
+            ratingKey,
+            type: "movie",
+            ...(new Headers(init.headers).get("X-Plex-Token") ===
+            "synthetic-requester"
+              ? { viewCount: watched ? 1 : 0 }
+              : {}),
+            title: media.title,
+            Guid: [{ id: `tmdb://${String(media.tmdbId)}` }],
+            ...(label === "" ? {} : { editionTitle: label }),
+            Media: [
+              {
+                Part: [
+                  {
+                    id: 750_001,
+                    file: asset.path,
+                    size: Number(asset.sizeBytes),
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    });
+  };
+  const plexClient = (token: string) =>
+    new PlexClient(
+      {
+        baseUrl: "http://plex.fixture",
+        token,
+        clientIdentifier: "synthetic-workflow",
+      },
+      plexTransport,
+    );
+  return {
+    providers,
+    qbittorrent,
+    plex: plexClient("synthetic"),
+    userPlex: plexClient,
+    additions: () => adds,
+    ratingKey,
+    setWatched: (value: boolean) => {
+      watched = value;
     },
-  );
-  return { providers, qbittorrent, plex, additions: () => adds };
+  };
 }

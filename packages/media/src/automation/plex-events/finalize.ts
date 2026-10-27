@@ -159,16 +159,26 @@ export async function finalizeWatchBatch(
         data: { settledRevision: prepared.revision },
       }),
     );
-    if (prepared.expectedHint !== undefined)
-      await queueCurrentRetention(
-        tx,
-        authority,
-        `plex-hint:${prepared.expectedHint.operationId}`,
-        execution,
-      );
+    await queueHintRetention(tx, prepared, authority, execution);
     prepared.freshness.assertActive();
     return same ? "committed" : "unknown";
   });
+}
+
+async function queueHintRetention(
+  tx: Prisma.TransactionClient,
+  prepared: PreparedWatchBatch,
+  authority: WatchAuthority,
+  execution: WatchExecution,
+) {
+  if ((prepared.authority.scope.edition ?? "default") !== "default") return;
+  if (prepared.expectedHint === undefined) return;
+  await queueCurrentRetention(
+    tx,
+    authority,
+    `plex-hint:${prepared.expectedHint.operationId}`,
+    execution,
+  );
 }
 
 async function applyOutcome(

@@ -93,8 +93,17 @@ movie. Acquired and initial-library files use their actual current Plex binding;
 the requester response must retain the same item, cut label, GUIDs and Part.
 Observation fences, known/unknown projections and unwatched intent changes stay
 within that edition. Unknown metadata clears the bound value without crediting
-another cut, and an older batch cannot overwrite a newer observation. Unscoped
-Plex hints and committed-quarantine watch use the separate default-scope contract.
+another cut, and an older batch cannot overwrite a newer observation.
+
+The periodic watch sweep follows its existing default/TV phase with bounded,
+ordered pages of available named movie targets. Initial-library files use their
+actual adoption binding without constructing acquisition history. Plex hints
+resolve the exact current item claim; named cuts queue version-4 scoped watch
+work, while default hints retain their original payloads and hashes. Each hint
+checks its stored operation, generation, epoch and binding before reading the
+requester's current metadata. A scrobble event alone never proves watched state.
+Named hints cannot enqueue default-edition retention work. Committed-quarantine
+watch retains its separate default-scope contract.
 
 The internal movie Files contract is a version-2 object, separate from the
 historical array file plan. It records exact edition scope, original request

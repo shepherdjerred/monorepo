@@ -6,6 +6,7 @@ import {
   createMovieFileWorkerActivitiesV4,
 } from "./movie-editions.ts";
 import { assertPrivateHistory } from "./testing/history.ts";
+import { createMovieWatchWorkerActivitiesV4 } from "./movie-watch.ts";
 
 afterEach(() => vi.restoreAllMocks());
 function history(encoding: string, value: unknown) {
@@ -83,6 +84,50 @@ function environment(at = Date.now()) {
     heartbeatTimeoutMs: 30_000,
   });
 }
+
+test("scoped Plex hints retain original SDK expiry and cancellation across lazy loading", async () => {
+  const hint = {
+    schemaVersion: 4 as const,
+    kind: "observe_movie_plex_hint_v4" as const,
+    operationId: input.operationId,
+    recoveryEpoch: 0,
+    mediaId: input.mediaId,
+    scope: input.scope,
+    generation: 1,
+    serverMachineId: "synthetic",
+    sectionId: "1",
+    ratingKey: "2",
+  };
+  const at = Date.now();
+  const clock = vi.spyOn(Date, "now").mockReturnValue(at);
+  const effect = vi.fn();
+  const activities = createMovieWatchWorkerActivitiesV4(() => {
+    clock.mockReturnValue(at + 120_001);
+    return Promise.resolve({
+      movieWatch: {
+        observeMoviePlexHintV4: (_input, execution) => {
+          expect(execution.observed.wall).toBe(at);
+          execution.assertActive();
+          effect();
+          return Promise.resolve({
+            status: "observed" as const,
+            complete: true,
+          });
+        },
+      },
+    });
+  });
+  await expect(
+    environment(at).run(activities.observeMoviePlexHintV4, hint),
+  ).rejects.toMatchObject({ type: "WatchObservationFailure" });
+  expect(effect).not.toHaveBeenCalled();
+  clock.mockReturnValue(at);
+  const cancelled = environment(at);
+  cancelled.cancel();
+  await expect(
+    cancelled.run(activities.observeMoviePlexHintV4, hint),
+  ).rejects.toThrow("cancelled");
+});
 
 function networkRuntime(check: (execution: PlexBindingExecution) => void) {
   return {

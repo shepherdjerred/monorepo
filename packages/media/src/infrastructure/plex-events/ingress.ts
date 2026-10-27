@@ -12,11 +12,14 @@ import {
   canonicalRootId,
 } from "#infrastructure/editions/locks.ts";
 import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
+import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
+import { MovieEditionKeySchema } from "#shared/movie-editions/registry.ts";
 import { queueOperation, serializable } from "#automation/store.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import {
   PlexWatchHintSchema,
   ObservePlexHintInputSchema,
+  ObserveMoviePlexHintV4Schema,
   type PlexWatchHint,
 } from "#shared/plex-events/contract.ts";
 
@@ -29,39 +32,45 @@ async function captureHintTarget(
       serverMachineId: hint.serverMachineId,
       sectionId: hint.sectionId,
       ratingKey: hint.ratingKey,
-      edition: "default",
     },
-    select: { mediaId: true },
+    select: { mediaId: true, edition: true },
     take: 2,
   });
   if (claims.length > 1) return null;
   // Legacy display identity discovers only a quarantined candidate; its exact
   // immutable receipt must establish authority below before an operation exists.
-  const matches =
-    claims.length === 1
-      ? claims.map((claim) => ({ id: claim.mediaId }))
-      : await tx.mediaItem.findMany({
-          where: {
-            kind: hint.mediaKind,
-            availability: "quarantined",
-            AND: [
-              {
-                externalIds: {
-                  path: ["plexSectionId"],
-                  equals: hint.sectionId,
-                },
-              },
-              {
-                externalIds: {
-                  path: ["plexRatingKey"],
-                  equals: hint.ratingKey,
-                },
-              },
-            ],
+  let matches = claims.map((claim) => ({
+    id: claim.mediaId,
+    edition: MovieEditionKeySchema.parse(claim.edition),
+  }));
+  if (claims.length === 0) {
+    const legacyMatches = await tx.mediaItem.findMany({
+      where: {
+        kind: hint.mediaKind,
+        availability: "quarantined",
+        AND: [
+          {
+            externalIds: {
+              path: ["plexSectionId"],
+              equals: hint.sectionId,
+            },
           },
-          select: { id: true },
-          take: 2,
-        });
+          {
+            externalIds: {
+              path: ["plexRatingKey"],
+              equals: hint.ratingKey,
+            },
+          },
+        ],
+      },
+      select: { id: true },
+      take: 2,
+    });
+    matches = legacyMatches.map((media) => ({
+      ...media,
+      edition: "default" as const,
+    }));
+  }
   const match = matches[0];
   if (match === undefined || matches.length !== 1) return null;
   const access = {
@@ -70,7 +79,13 @@ async function captureHintTarget(
     sectionType:
       hint.mediaKind === "movie" ? ("movie" as const) : ("show" as const),
   };
-  const scope = await captureWatchBindingScope(tx, match.id, access);
+  if (match.edition !== "default" && hint.mediaKind !== "movie") return null;
+  const scope = await captureWatchBindingScope(
+    tx,
+    match.id,
+    access,
+    match.edition,
+  );
   if (scope === null || (claims.length === 0 && scope.quarantine === null))
     return null;
   const original = await readWatchBinding(tx, scope);
@@ -104,9 +119,17 @@ export class PrismaPlexEventIngress {
       const captured = await captureHintTarget(tx, hint);
       if (captured === null) return;
       const { match, scope, original } = captured;
-      await lockCanonicalMedia(tx, scope.mediaIds);
-      await lockExistingDefaultTargets(tx, scope.mediaIds);
-      await lockEffectiveRequests(tx, scope.mediaIds);
+      if (match.edition === "default") {
+        await lockCanonicalMedia(tx, scope.mediaIds);
+        await lockExistingDefaultTargets(tx, scope.mediaIds);
+        await lockEffectiveRequests(tx, scope.mediaIds);
+      } else {
+        await lockMovieCommand(tx, {
+          rootMediaId: match.id,
+          mediaId: match.id,
+          edition: match.edition,
+        });
+      }
       await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR SHARE`;
       await lockMovieChoiceIdentities(tx, { mediaIds: scope.mediaIds });
       await tx.$queryRaw(
@@ -127,7 +150,7 @@ export class PrismaPlexEventIngress {
         where: { id: match.id },
         include: {
           parent: { include: { parent: true } },
-          intents: { where: { edition: "default" } },
+          intents: { where: { edition: match.edition } },
         },
       });
       const target = media.intents[0];
@@ -147,26 +170,41 @@ export class PrismaPlexEventIngress {
         current.association.item.ratingKey !== hint.ratingKey
       )
         return;
-      const payload = {
-        schemaVersion: 1,
-        edition: "default",
+      const identity = {
         mediaId: media.id,
         generation: target.generation,
         serverMachineId: hint.serverMachineId,
         sectionId: hint.sectionId,
         ratingKey: hint.ratingKey,
       };
-      const key = `plex-hint:${snapshotHash({ ...payload, recoveryEpoch: runtime.recoveryEpoch, bucket })}`;
+      const payload =
+        match.edition === "default"
+          ? { schemaVersion: 1, edition: "default", ...identity }
+          : {
+              schemaVersion: 4,
+              scope: {
+                rootMediaId: media.id,
+                mediaId: media.id,
+                edition: match.edition,
+              },
+              ...identity,
+            };
+      const key = `${match.edition === "default" ? "plex-hint" : "movie-plex-hint-v4"}:${snapshotHash({ ...payload, recoveryEpoch: runtime.recoveryEpoch, bucket })}`;
       const operationId = await queueOperation(tx, {
         key,
-        kind: "observe_plex_hint",
+        kind:
+          match.edition === "default"
+            ? "observe_plex_hint"
+            : "observe_movie_plex_hint_v4",
         targetId: media.id,
         payload,
       });
       const operation = await tx.operation.findUniqueOrThrow({
         where: { id: operationId },
       });
-      ObservePlexHintInputSchema.parse(operation.payload);
+      if (match.edition === "default")
+        ObservePlexHintInputSchema.parse(operation.payload);
+      else ObserveMoviePlexHintV4Schema.parse(operation.payload);
     });
   }
 }
