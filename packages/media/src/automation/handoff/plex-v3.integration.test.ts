@@ -6,6 +6,7 @@ import { libraryPlexFixture } from "./plex-edit-fixture.ts";
 import { prepareHandoffFiles } from "./files.ts";
 import { finishHandoffPreparation } from "./plan.ts";
 import {
+  PrepareLibraryHandoffV3Schema,
   FinishedLibraryHandoffV3Schema,
   LibraryPlexFileProofV1Schema,
 } from "#shared/handoff/library-v3.ts";
@@ -34,8 +35,12 @@ afterAll(async () => {
     await rm(directory, { recursive: true, force: true });
 });
 
-async function fixture(edition: MovieEditionKey) {
-  const f = await libraryPlexFixture(cluster.database, edition);
+async function fixture(edition: MovieEditionKey, classify?: "from_filename") {
+  const f = await libraryPlexFixture(
+    cluster.database,
+    edition,
+    classify === undefined ? {} : { classify },
+  );
   directories.push(f.directory);
   return f;
 }
@@ -161,7 +166,7 @@ test("original read SDK expiry cannot be reset by later file proof work", async 
 test.each(MovieEditionKeySchema.options)(
   "v3 updates only the %s label and preserves the item, original bytes and watch progress",
   async (edition) => {
-    const f = await fixture(edition);
+    const f = await fixture(edition, "from_filename");
     const ready = await f.ready();
     const input = {
       schemaVersion: 3 as const,
@@ -272,6 +277,29 @@ test.each(MovieEditionKeySchema.options)(
     expect(await readFile(f.target, "utf8")).toBe(f.bytes);
   },
 );
+
+test("automatic v3 suggestions protect DC until the exact file has explicit owner classification", async () => {
+  const f = await libraryPlexFixture(cluster.database, "directors_cut", {
+    classify: "owner_review",
+    fileName: "Synthetic Film.DC.mkv",
+  });
+  directories.push(f.directory);
+  const detail = await f.commands.detail(f.network.actor, f.planId);
+  const input = PrepareLibraryHandoffV3Schema.parse({
+    ...detail.scope.request,
+    movies: [],
+  });
+  await expect(
+    f.commands.prepare(f.network.actor, crypto.randomUUID(), input),
+  ).rejects.toMatchObject({
+    code: "library_movie_classification_requires_review",
+  });
+  expect(
+    await cluster.database.libraryAsset.findUnique({
+      where: { path: f.target },
+    }),
+  ).toBeNull();
+});
 
 test("v3 observes a delivered edit after a lost response and never resends it", async () => {
   const f = await fixture("directors_cut");

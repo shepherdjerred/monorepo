@@ -57,9 +57,15 @@ export async function buildLibraryHandoffScope(
       classification: classification?.evidence ?? null,
     });
   }
+  const movieFiles = files.filter((file) => file.libraryKind === "movies");
   if (
-    input.movies.length !==
-    files.filter((file) => file.libraryKind === "movies").length
+    (input.schemaVersion === 2 && input.movies.length !== movieFiles.length) ||
+    input.movies.some(
+      (override) =>
+        !movieFiles.some(
+          (file) => file.provenanceKey === override.provenanceKey,
+        ),
+    )
   )
     throw conflict("library_classification_selection_changed");
   await tx.$queryRaw(
@@ -142,7 +148,7 @@ async function classifyMovie(
   },
 ) {
   const { input, file, report } = options;
-  const resolution = input.movies.find(
+  const selectedResolution = input.movies.find(
     (item) => item.provenanceKey === file.provenanceKey,
   );
   const entry = report.entries.find(
@@ -152,7 +158,6 @@ async function classifyMovie(
     where: { id: z.uuid().parse(file.mediaIds[0]) },
   });
   if (
-    resolution === undefined ||
     entry === undefined ||
     file.mediaIds.length !== 1 ||
     media.kind !== "movie"
@@ -184,6 +189,9 @@ async function classifyMovie(
       ],
     }),
   );
+  const resolution =
+    selectedResolution ??
+    conventionalResolution(input, file.provenanceKey, analysis.conclusion);
   if (
     resolution.resolution.kind === "conventional" &&
     !movieCutMatches(resolution.edition, analysis.conclusion)
@@ -213,6 +221,29 @@ async function classifyMovie(
       },
     },
   };
+}
+
+/** V3 prepares suggestions for the existing owner review; ambiguous labels never become suggestions. */
+function conventionalResolution(
+  input: z.infer<typeof PrepareLibraryHandoffProtocolSchema>,
+  provenanceKey: string,
+  conclusion: Parameters<typeof movieCutMatches>[1],
+) {
+  if (input.schemaVersion !== 3)
+    throw conflict("library_movie_classification_required");
+  if (conclusion.kind === "standard_unmarked")
+    return {
+      provenanceKey,
+      edition: "default" as const,
+      resolution: { kind: "conventional" as const },
+    };
+  if (conclusion.kind === "named")
+    return {
+      provenanceKey,
+      edition: conclusion.cut,
+      resolution: { kind: "conventional" as const },
+    };
+  throw conflict("library_movie_classification_requires_review");
 }
 
 /** Source projection only; the complete versioned request remains in the final owner scope. */

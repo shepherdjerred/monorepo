@@ -493,6 +493,10 @@ Each selected movie file needs
 one registered edition and either matching conventional filename evidence or an
 explicit owner resolution of that exact captured source record. Missing cut
 labels establish only an unmarked release; `DC` requires review. Classification
+suggestions in schema version 3 can come from conventional filenames before the
+separate owner review. Omitted movie overrides do not approve the suggestion or
+grant file ownership; ambiguous names require an explicit file-level override.
+Classification
 precedes the first physical ownership record, retains the existing path, and
 cannot reassign an already tracked file. Multiple cuts of one movie retain
 separate assets and targets. TV/anime shared files retain exact episode coverage.

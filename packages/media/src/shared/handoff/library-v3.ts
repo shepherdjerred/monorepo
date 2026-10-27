@@ -21,6 +21,7 @@ export const PrepareLibraryHandoffV3Schema =
   PrepareLibraryHandoffV2Schema.extend({
     schemaVersion: z.literal(3),
     plexEditionLabels: z.literal("update_in_place"),
+    movies: PrepareLibraryHandoffV2Schema.shape.movies.default([]),
   });
 export const ApplyLibraryHandoffV3Schema = ApplyLibraryHandoffV2Schema.extend({
   schemaVersion: z.literal(3),
