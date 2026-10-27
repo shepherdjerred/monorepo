@@ -64,6 +64,7 @@ final class JooqReviewStoreTest {
         Map.of(),
         Set.of(),
         PlotSurface.DEFAULT,
-        Optional.empty());
+        Optional.empty(),
+        false);
   }
 }

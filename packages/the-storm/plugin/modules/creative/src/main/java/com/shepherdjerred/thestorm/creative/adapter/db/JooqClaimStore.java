@@ -102,6 +102,7 @@ public final class JooqClaimStore implements ClaimStore {
             .set(CREATIVE_CLAIMS.BIOME, claim.surface().biome().orElse(null))
             .set(CREATIVE_CLAIMS.CLUSTER_X, claim.cluster().map(PlotId::x).orElse(null))
             .set(CREATIVE_CLAIMS.CLUSTER_Z, claim.cluster().map(PlotId::z).orElse(null))
+            .set(CREATIVE_CLAIMS.STAFF_HELD, claim.staffHeld())
             .where(CREATIVE_CLAIMS.PLOT_X.eq(claim.id().x()))
             .and(CREATIVE_CLAIMS.PLOT_Z.eq(claim.id().z()))
             .execute();
@@ -119,6 +120,7 @@ public final class JooqClaimStore implements ClaimStore {
           .set(CREATIVE_CLAIMS.BIOME, claim.surface().biome().orElse(null))
           .set(CREATIVE_CLAIMS.CLUSTER_X, claim.cluster().map(PlotId::x).orElse(null))
           .set(CREATIVE_CLAIMS.CLUSTER_Z, claim.cluster().map(PlotId::z).orElse(null))
+          .set(CREATIVE_CLAIMS.STAFF_HELD, claim.staffHeld())
           .execute();
     }
     dsl.deleteFrom(CREATIVE_TRUST)
@@ -161,7 +163,8 @@ public final class JooqClaimStore implements ClaimStore {
         access,
         flags,
         surface(row),
-        cluster(row));
+        cluster(row),
+        column(row.getStaffHeld(), "staff_held"));
   }
 
   private static Optional<PlotId> cluster(CreativeClaimsRecord row) {

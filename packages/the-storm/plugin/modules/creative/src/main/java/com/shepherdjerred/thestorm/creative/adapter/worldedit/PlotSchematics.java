@@ -34,7 +34,28 @@ public final class PlotSchematics {
   /** One plot column, from {@code minY} through {@code maxY}. */
   public record Span(World world, PlotBounds bounds, int minY, int maxY) {}
 
+  /** Copies and pastes one plot column. Production uses {@link PlotSchematics}. */
+  public interface Columns {
+    byte[] copy(Span span);
+
+    Optional<Problem> paste(Span span, byte[] bytes);
+  }
+
   private PlotSchematics() {}
+
+  public static Columns columns() {
+    return new Columns() {
+      @Override
+      public byte[] copy(Span span) {
+        return PlotSchematics.copy(span);
+      }
+
+      @Override
+      public Optional<Problem> paste(Span span, byte[] bytes) {
+        return PlotSchematics.paste(span, bytes);
+      }
+    };
+  }
 
   /**
    * Pastes {@code bytes} onto {@code span}. Empty means the plot changed. A problem means nothing

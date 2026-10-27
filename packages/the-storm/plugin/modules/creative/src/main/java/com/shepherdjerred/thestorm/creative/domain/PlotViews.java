@@ -32,6 +32,18 @@ public final class PlotViews {
           Set.of(),
           PlotSurface.DEFAULT);
     }
+    if (row.staffHeld()) {
+      return new PlotView(
+          id,
+          Optional.empty(),
+          row.name(),
+          row.description(),
+          row.access(),
+          true,
+          false,
+          row.flags(),
+          row.surface());
+    }
     if (row.owner().isPresent()) {
       return new PlotView(
           id,
