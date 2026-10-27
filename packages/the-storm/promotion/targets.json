@@ -117,10 +117,10 @@
       "rulesUrl": "https://minebrowse.com/",
       "account": "minebrowse",
       "hosts": ["minebrowse.com"],
-      "action": "bump",
+      "action": "inspect",
       "content": "directory",
       "minimumIntervalSeconds": 0,
-      "notes": "Previously Offline; reconcile status. No owner bump established."
+      "notes": "Inspect existing account/listing access and edit controls. No native owner bump is available and no content edit is assigned. Preserve the existing listing."
     },
     {
       "id": "pmc-forum",

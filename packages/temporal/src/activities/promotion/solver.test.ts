@@ -55,7 +55,7 @@ describe("Anti-Captcha accounting", () => {
     const result = solvePromotionChallenge(test.input);
     await vi.runAllTimersAsync();
     expect(await result).toEqual({ taskId: 123, costMicrousd: 2000 });
-    expect(test.apply).toHaveBeenCalledWith("fixture-answer");
+    expect(test.apply).toHaveBeenCalledWith("fixture-answer", undefined);
     const budget = await test.store.read(
       "solver/2026-10.json",
       SolverBudgetSchema,

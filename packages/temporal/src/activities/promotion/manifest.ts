@@ -3,6 +3,7 @@ import {
   PromotionManifestSchema,
   type PromotionTarget,
 } from "#shared/promotion.ts";
+import { z } from "zod/v4";
 
 export const promotionManifest = PromotionManifestSchema.parse(manifest);
 
@@ -29,7 +30,42 @@ export async function promotionContent(
         `${file}:\n${await Bun.file(new URL(`copy/${file}`, root)).text()}`,
     ),
   );
-  return content.join("\n\n");
+  let title = target.title;
+  if (title === undefined && target.content !== "directory") {
+    const titleSource = await Bun.file(
+      new URL("copy/reddit-titles.txt", root),
+    ).text();
+    const titles: Record<string, string> = Object.fromEntries(
+      titleSource
+        .trim()
+        .split(/\n\s*\n/)
+        .map((block) => {
+          const [community, ...lines] = block.split("\n");
+          return [
+            z.string().min(1).parse(community),
+            z.string().min(1).parse(lines.join("\n")),
+          ] as const;
+        }),
+    );
+    title = z
+      .string()
+      .min(1)
+      .parse(
+        titles[
+          target.content === "reddit-mcservers"
+            ? "r/mcservers"
+            : "r/MinecraftServer"
+        ],
+      );
+  }
+  return [
+    ...(title === undefined
+      ? []
+      : [
+          `Assigned title: ${title}\nUse this supplied title for the assigned destination; no additional community-specific title approval is required.`,
+        ]),
+    ...content,
+  ].join("\n\n");
 }
 
 /** Inventory reference for locating placements; scheduling belongs to the caller. */

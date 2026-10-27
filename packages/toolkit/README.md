@@ -598,7 +598,7 @@ PinchTab credentials or config.
 - `toolkit promotion <status|preview|run|pause|resume|reconcile> [TARGET] [--json] [--dry-run]`
   operates The Storm's promotion tasks in production Temporal. `preview`, `run`
   and `reconcile` require an exact target ID; other actions may omit it for all
-  destinations. Previews cannot publish or create paid CAPTCHA tasks. Manual
+  destinations. Previews cannot publish; budgeted CAPTCHA solving may prepare access. Manual
   runs retain posting limits and buffers; reconciliation never submits again.
   `--dry-run` prints the native invocation without starting a Workflow. See the
   [promotion task reference](../temporal/README.md#the-storm-promotion-task) for

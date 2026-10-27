@@ -21,6 +21,23 @@ export const PromotionTaskResultSchema = PromotionAgentResultSchema.extend({
 });
 export type PromotionTaskResult = z.infer<typeof PromotionTaskResultSchema>;
 
+/** The model selects captured nodes; the parent supplies their exact URL/text. */
+export const PromotionTaskDraftSchema = PromotionTaskResultSchema.extend({
+  evidence: z
+    .array(
+      z.strictObject({
+        observationId: z.string().regex(/^o[1-9]\d{0,3}$/),
+        ref: z.string().min(1),
+      }),
+    )
+    .max(30),
+});
+export const PromotionPreviewDraftSchema = PromotionTaskDraftSchema.extend({
+  status: z.enum(["preview", "deferred", "blocked"]),
+  performedAction: z.literal(false),
+  receipt: z.null(),
+});
+
 /** A dry run cannot describe an existing placement as a newly verified action. */
 export const PromotionPreviewResultSchema = PromotionTaskResultSchema.extend({
   status: z.enum(["preview", "deferred", "blocked"]),

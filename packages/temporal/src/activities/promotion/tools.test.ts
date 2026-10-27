@@ -1,90 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { PromotionBrowser } from "./browser.ts";
-import { PromotionTaskJournal } from "./task.ts";
-import { createPromotionToolHandler } from "./tools.ts";
-import { promotionTarget } from "./manifest.ts";
-import { memoryPromotionStore } from "./test-support.ts";
-import { updatePromotionState } from "./store.ts";
-
-async function harness(
-  preview = true,
-  reconciliation = false,
-  maxToolCalls = 80,
-  loginHosts?: string[],
-) {
-  const target = promotionTarget("pmc"),
-    store = memoryPromotionStore();
-  await updatePromotionState(store, target.id, (state) => ({
-    ...state,
-    lock: { occurrenceId: "fixture", acquiredAt: new Date().toISOString() },
-  }));
-  const browser = new PromotionBrowser(
-    target,
-    "http://browser.invalid",
-    "fixture-token",
-    { signal: new AbortController().signal },
-  );
-  const action = vi
-    .spyOn(browser, "action")
-    .mockResolvedValue({ success: true });
-  const open = vi.spyOn(browser, "open").mockResolvedValue({ url: target.url });
-  const currentUrl = vi
-    .spyOn(browser, "currentUrl")
-    .mockResolvedValue(target.url);
-  const control = vi
-    .spyOn(browser, "accessibleControl")
-    .mockImplementation((ref) =>
-      Promise.resolve(
-        ref === "e3"
-          ? { ref, role: "button", name: "Log In" }
-          : {
-              ref,
-              role: "textbox",
-              name: ref === "e2" ? "Password" : "Username",
-            },
-      ),
-    );
-  const attribute = vi
-    .spyOn(browser, "attribute")
-    .mockImplementation((ref, name) =>
-      Promise.resolve(
-        name === "disabled" ? null : ref === "e2" ? "password" : "text",
-      ),
-    );
-  const journal = new PromotionTaskJournal({
-    target,
-    store,
-    occurrenceId: "fixture",
-    mode: reconciliation ? "reconcile" : preview ? "preview" : "run",
-    enabled: () => Promise.resolve(true),
-    now: Date.now,
-    capture: vi.fn(),
-  });
-  const handle = createPromotionToolHandler({
-    browser,
-    journal,
-    store,
-    targetId: target.id,
-    account: target.account,
-    occurrenceId: "fixture",
-    preview,
-    reconciliation,
-    maxToolCalls,
-    logins: {
-      [target.account]: {
-        username: "fixture-user",
-        email: "fixture@example.invalid",
-        password: "fixture-password",
-        ...(loginHosts === undefined ? {} : { hosts: loginHosts }),
-      },
-    },
-    solverKey: "fixture-solver",
-    solverAllowanceMicrousd: 1_000_000,
-    signal: new AbortController().signal,
-    heartbeat: vi.fn(),
-  });
-  return { handle, action, open, attribute, target, control, currentUrl };
-}
+import { harness } from "./tool-test-support.ts";
 
 describe("native browser connection", () => {
   it("injects the saved alternate email privately when the observed form requests it", async () => {
@@ -215,7 +130,9 @@ describe("native browser connection", () => {
 
 describe("scoped credentials and preview disclosures", () => {
   it("keeps SSO credentials on the assigned identity host", async () => {
-    const test = await harness(true, false, 80, ["accounts.google.com"]);
+    const test = await harness(true, false, 80, {
+      hosts: ["accounts.google.com"],
+    });
     const command = {
       endpoint: "action",
       body: { kind: "fill", ref: "e2", credential: "password" },
@@ -368,7 +285,7 @@ describe("credential isolation and preview restrictions", () => {
     expect(test.action).not.toHaveBeenCalled();
     expect(test.open).not.toHaveBeenCalled();
   });
-  it("keeps raw credentials, eval, and paid solving out of preview", async () => {
+  it("keeps raw credentials and eval out of preview, and solving out of reconciliation", async () => {
     const test = await harness();
     await expect(
       test.handle({
@@ -382,9 +299,10 @@ describe("credential isolation and preview restrictions", () => {
         body: { expression: "document.cookie" },
       }),
     ).rejects.toThrow();
-    await expect(test.handle({ endpoint: "solve-captcha" })).rejects.toThrow(
-      "Read-only",
-    );
+    const reconciliation = await harness(true, true);
+    await expect(
+      reconciliation.handle({ endpoint: "solve-captcha" }),
+    ).rejects.toThrow("Read-only");
     expect(test.attribute).not.toHaveBeenCalled();
   });
   it("rejects conflicting targets before a login reference can authorize another control", async () => {
@@ -421,5 +339,47 @@ describe("credential isolation and preview restrictions", () => {
         body: { kind: "fill", ref: "e2", credential: "password" },
       }),
     ).rejects.toThrow("never signs in");
+  });
+});
+
+describe("preview access CAPTCHA solving", () => {
+  it("solves under budget while publication controls remain blocked", async () => {
+    vi.useFakeTimers();
+    const request = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(Response.json({ errorId: 0, taskId: 123 }))
+      .mockResolvedValue(
+        Response.json({
+          errorId: 0,
+          status: "ready",
+          cost: 0.002,
+          solution: { token: "fixture-response" },
+        }),
+      );
+    try {
+      const test = await harness();
+      vi.spyOn(test.browser, "challenge").mockResolvedValue({
+        type: "TurnstileTaskProxyless",
+        websiteURL: test.target.url,
+        websiteKey: "fixture-key",
+      });
+      const apply = vi
+        .spyOn(test.browser, "applyChallenge")
+        .mockResolvedValue(undefined);
+      const result = test.handle({ endpoint: "solve-captcha" });
+      await vi.runAllTimersAsync();
+      expect(await result).toMatchObject({ taskId: 123, costMicrousd: 2000 });
+      expect(apply).toHaveBeenCalledWith("fixture-response");
+      expect(test.action).not.toHaveBeenCalled();
+      await expect(
+        test.handle({
+          endpoint: "action",
+          body: { kind: "click", selector: "#submit" },
+        }),
+      ).rejects.toThrow("Read-only");
+    } finally {
+      request.mockRestore();
+      vi.useRealTimers();
+    }
   });
 });

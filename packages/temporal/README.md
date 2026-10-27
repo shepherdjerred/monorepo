@@ -1045,7 +1045,10 @@ Credential enrollment also uses the service account exclusively. Run
 the repository's service-account wrapper. Each non-secret binding contains
 `account`, an `op://<vault-id>/<item-id>` reference, `backend: "service-account"`,
 `hosts`, and optionally `expectedUsername`. Custom credential fields use an
-explicit `fields` mapping with `username`, `password` and optional `email` labels.
+explicit `fields` mapping with `username`, `password` and optional `email`/`otp` labels.
+An enrolled OTP field contains its `otpauth://totp` URI; the parent generates and
+privately injects one code into an observed verification input, then permits one
+verification submission. Seeds, codes and solver tokens stay outside agent output.
 The script validates all sources,
 updates the encrypted login map through an inherited pipe, and checks readback.
 It never falls back to desktop 1Password. Inaccessible items remain blocked.
@@ -1060,11 +1063,16 @@ Mixed bot/user daemons and account/destination mismatches fail. Discord live
 execution is disabled; production Discord placements remain manually maintained.
 Use `--inventory packages/the-storm/promotion/preview-targets.json --all` to
 include the saved Discord channel assignments in a local preview.
+Start that daemon with `scripts/promotion/start-discord.ts` through the same
+service-account `op run` injection and `env -u OP_SERVICE_ACCOUNT_TOKEN` boundary.
+It uses the login-map account `discord`, verifies `the.storm.mc` in the isolated
+session, and refuses unrelated identities. Missing credentials fail without
+desktop lookup. The script prints the socket path for `PROMOTION_DISCORD_SOCKET`.
 
 | Operator command                           | Result                                                            |
 | ------------------------------------------ | ----------------------------------------------------------------- |
 | `toolkit promotion status [target] --json` | Saved history, ownership, pause state and schedule deadline       |
-| `toolkit promotion preview <target>`       | Prepare the assigned action without publishing or paid solving    |
+| `toolkit promotion preview <target>`       | Prepare without publishing; permit budgeted access CAPTCHA solves |
 | `toolkit promotion run <target>`           | Execute the caller's selected action once and record the outcome  |
 | `toolkit promotion pause [target]`         | Block further promotion mutations                                 |
 | `toolkit promotion resume [target]`        | Resume inspection; uncertain effects still require reconciliation |
@@ -1101,13 +1109,24 @@ Reddit additionally requires a fresh visible post permalink and original
 publication timestamp. A failed or filtered post still counts conservatively.
 The saved outcome carries context into the next run. Browser diagnostics retain
 endpoint/action/ref/error metadata without credential values.
-Prepared previews require exact evidence quotes from captured live
-browser observations at the cited URLs; historical notes cannot stand in for
-live evidence. This establishes the inspected execution path rather than a
-posting-policy decision.
+Agents return evidence as `{ observationId, ref }` selections from successful
+snapshots. The parent resolves immutable captured nodes to their exact URL and
+text; foreign observations, empty nodes and model-authored quotes are rejected.
+Discord status/read operations supply equivalent references. Stored results
+retain the URL/quote format. Failed runs retain the rejected draft, captured
+observations and redacted tool trace under private `diagnostics/` keys, including
+local preview artifacts. Historical notes cannot stand in for captured evidence.
 
-Preview blocks promotion clicks, form edits, Enter submissions, action URLs,
-receipt settlement and paid CAPTCHA tasks outside the prompt. It permits
+Preview blocks promotion clicks, form edits, Enter submissions, action URLs and
+receipt settlement outside the prompt. Budgeted CAPTCHA solving is available;
+the local suite shares one solver budget and reports reservations, actual costs
+and unsettled charges. A staged response token need not change the visible
+checkbox; site acceptance remains unverified until an authorized submission.
+Ordinary form callbacks never run automatically. Captured Cloudflare
+interstitial callbacks may complete security navigation. Managed challenges that
+render before capture installation still require a browser page-init capability;
+current-document evaluation alone does not guarantee managed-challenge coverage.
+Preview permits
 navigation, screenshots, scrolling, native read-only search inputs and one
 stored-credential sign-in. Message composers remain blocked.
 Preview also permits observed tabs and menu disclosures using their native
