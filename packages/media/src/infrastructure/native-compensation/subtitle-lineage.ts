@@ -119,19 +119,24 @@ export async function compensationSubtitleLineage(
   for (const item of current.subtitles.filter(
     (subtitle) => !matched.has(subtitle.id),
   )) {
-    const installed = await settledInstalledSubtitle(tx, {
-      subtitle: NativeSubtitleSnapshotSchema.parse(item),
-      chain,
-      video: {
-        path: current.path,
-        checksum: current.checksum,
-        mediaIds: current.coverage
-          .filter((row) => row.current)
-          .map((row) => row.mediaId),
-        libraryKind: input.libraryKind,
+    const installed = await settledInstalledSubtitle(
+      tx,
+      {
+        subtitle: NativeSubtitleSnapshotSchema.parse(item),
+        chain,
+        video: {
+          path: current.path,
+          checksum: current.checksum,
+          mediaIds: current.coverage
+            .filter((row) => row.current)
+            .map((row) => row.mediaId),
+          libraryKind: input.libraryKind,
+        },
+        videoBindings,
+        ...movieSubtitleScope(current),
       },
-      videoBindings,
-    });
+      budget,
+    );
     installations.push(installed.installation);
     history.push(installed.history);
   }
@@ -155,6 +160,10 @@ export async function compensationSubtitleLineage(
           installations,
         });
   return { chain, lineage };
+}
+
+function movieSubtitleScope(asset: LineageAsset) {
+  return "schemaVersion" in asset ? { movieScope: asset.scope } : {};
 }
 
 function assertEmbedded(

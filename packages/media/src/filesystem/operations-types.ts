@@ -39,6 +39,8 @@ export type ImportFile = {
   previousSha256?: string;
   /** Stage the verified copy without publishing it. Resume with the same operation ID. */
   stopAfterStaging?: boolean;
+  /** False requires review of identical pre-existing files; completed own-journal retries remain acknowledgements. */
+  allowDuplicateTarget?: boolean;
 };
 
 export type MoveFile = {

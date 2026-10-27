@@ -7,7 +7,7 @@ import { lockRuntimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { movieAttemptEffectAuthorityV4 } from "#infrastructure/movie-editions/lifecycle/effect-authority.ts";
 import { assertNoPublicationCompensationFence } from "#infrastructure/native-compensation/fence.ts";
 import { lockMovieChoiceIdentities } from "#infrastructure/movie-editions/access.ts";
-import { loadMoviePublicationV2 } from "#infrastructure/movie-editions/publication/store.ts";
+import { loadMoviePublicationV2 } from "#infrastructure/movie-editions/publication/records.ts";
 import { snapshotMoviePublicationAssetV2 } from "#infrastructure/movie-editions/publication/snapshot.ts";
 import { readPlexCanonicalTargets } from "#infrastructure/plex-binding/canonical.ts";
 import { readPlexDefinition } from "#infrastructure/plex-binding/read.ts";

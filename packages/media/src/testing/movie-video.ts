@@ -4,7 +4,10 @@ import { tmpdir } from "node:os";
 import { runMediaTool } from "#filesystem/media-tools.ts";
 
 /** Disposable real MKV with known video/audio and independently labelled English/Simplified Chinese text tracks. */
-export async function movieVideoFixture(width = 1920) {
+export async function movieVideoFixture(
+  width = 1920,
+  englishTracks = [{ forced: false, hearingImpaired: false }],
+) {
   const directory = await realpath(
     await mkdtemp(path.join(tmpdir(), "media-movie-video-")),
   );
@@ -46,8 +49,7 @@ export async function movieVideoFixture(width = 1920) {
         "0:v:0",
         "-map",
         "1:a:0",
-        "-map",
-        "2:s:0",
+        ...englishTracks.flatMap(() => ["-map", "2:s:0"]),
         "-map",
         "3:s:0",
         "-c:v",
@@ -62,9 +64,18 @@ export async function movieVideoFixture(width = 1920) {
         "srt",
         "-metadata:s:a:0",
         "language=eng",
-        "-metadata:s:s:0",
-        "language=eng",
-        "-metadata:s:s:1",
+        ...englishTracks.flatMap((track, index) => [
+          `-metadata:s:s:${String(index)}`,
+          "language=eng",
+          `-disposition:s:${String(index)}`,
+          [
+            track.forced ? "forced" : "",
+            track.hearingImpaired ? "hearing_impaired" : "",
+          ]
+            .filter((value) => value !== "")
+            .join("+") || "0",
+        ]),
+        `-metadata:s:s:${String(englishTracks.length)}`,
         "language=zho",
         output,
       ],

@@ -75,7 +75,7 @@ before probing. Staging accepts only the operation-owned copy after rechecking
 current consent, profile, source identity and physical authority. The original
 invocation observation, SDK expiry and sixty-second publication bound cover
 copy preparation and final acceptance. Embedded English and Simplified Chinese
-text tracks follow requests for that exact edition.
+text tracks follow requests and applicable policy for that exact edition.
 
 Movie publication uses a distinct version-2 intent/outcome containing the exact
 movie scope and literal file-plan hash. It shares the existing filesystem
@@ -97,6 +97,36 @@ records a distinct immutable completion and verified timestamp; retries read tha
 receipt before current configuration. Matching requests can be fulfilled from
 this exact named association without changing an older request acknowledgement.
 Historical version-1 Plex observations retain their literal format and hashes.
+
+The internal movie subtitle protocol carries version-4 operation IDs, asset IDs,
+exact edition scope and a current target digest. Named editions inherit the
+canonical movie's household subtitle policy when no edition override exists.
+An explicit empty override is honored; malformed rules and unconfirmed epochs
+remain protected. Personal subtitle targets require current edition consent.
+Caption progress does not change the digest for a sibling target.
+
+New inspections record version-2 embedded-stream observations alongside their
+literal file plans. Each normalized extraction binds the actual probe hash,
+stream index, video checksum and observed forced/hearing-impaired flags.
+Missing historical observations remain unknown. Regular, forced and SDH tracks
+remain distinct, including when policy alone requires extraction. Exact new
+extractions can be reused without provider calls. Provider lookup uses the same
+adapters, ordering, global quotas and uncertain-download claims as TV, while
+retaining the imported release filename's exact version and cut.
+Quota-consuming download claims recheck the current target while retaining the
+lookup's original requester observation.
+
+Movie caption installation stages validated bytes outside PostgreSQL and checks
+current scope, policy, consent, runtime, storage and physical publication before
+the library write. Writer, storage and requester observations captured before
+staging keep their original expiry through final publication. Identical
+unmanaged destination bytes require owner review.
+A distinct immutable completion binds the actual installation journal, original
+invocation/SDK deadline, caption facts and physical video parent. Completed
+retries acknowledge that record before dynamic configuration. Later publication
+lineage follows the actual caption completion using the caller's shared
+100-record allowance. These v4 producers remain internal until complete
+downstream lifecycle and Temporal/API dispatch support is present.
 
 Playable shared bytes do not fulfill an unchosen request. Readiness delivery
 requires matching choice and verified Plex publication; automatic retention
@@ -1100,6 +1130,8 @@ tracks use separate `.en.srt` and `.en.forced.srt` paths; known hearing-impaired
 tracks add `.sdh`. Staged candidates from superseded authority are not reused;
 installed quality can still satisfy the same current video and target. Readiness
 and personal subtitle-ready notifications require every applicable target.
+An identical existing sidecar still requires its own completed installation
+journal or owner review; matching bytes do not promote an unverified record.
 
 OpenSubtitles uses `foreign_parts_only` and `hearing_impaired` filters
 (`include`, `exclude`, `only`) from its pinned

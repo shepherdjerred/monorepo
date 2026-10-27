@@ -6,6 +6,9 @@ import type { NativeTerminalDescriptor } from "#shared/native-recovery/terminal.
 import type { terminalRebindingChain } from "#infrastructure/native-recovery/terminal-rebinding.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { subtitleDestination } from "#domain/subtitle-path.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
+import type { MovieEditionScope } from "#shared/movie-editions/registry.ts";
+import { installedMovieSubtitleOperationV4 } from "#infrastructure/movie-editions/subtitle-installation.ts";
 
 type Chain = Awaited<ReturnType<typeof terminalRebindingChain>>;
 const Evidence = z.object({
@@ -30,7 +33,9 @@ export async function settledInstalledSubtitle(
       libraryKind: "movies" | "tv";
     };
     videoBindings: { version: number; epoch: number }[];
+    movieScope?: MovieEditionScope;
   },
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const original = installationSnapshot(input.subtitle, input.chain);
   const evidence = Evidence.parse(original.matchingEvidence);
@@ -68,7 +73,12 @@ export async function settledInstalledSubtitle(
       })
   )
     throw new Error("Native additional subtitle installation binding changed");
-  const operations = await installationOperations(tx, original);
+  const operations = await installationOperations(
+    tx,
+    original,
+    input.movieScope,
+    budget,
+  );
   const journals: NativeTerminalDescriptor["journals"] = operations.map(
     (operation) => ({
       operationId: operation.id,
@@ -91,7 +101,23 @@ export async function settledInstalledSubtitle(
 async function installationOperations(
   tx: Prisma.TransactionClient,
   original: NativeSubtitleSnapshot,
+  movieScope?: MovieEditionScope,
+  budget?: PublicationAuthorityReadBudget,
 ) {
+  const marker = z
+    .object({ movieInstallationV4: z.unknown().optional() })
+    .parse(original.matchingEvidence).movieInstallationV4;
+  if (marker !== undefined) {
+    if (movieScope === undefined || budget === undefined)
+      throw new Error(
+        "Native movie subtitle installation requires exact versioned scope and caller budget",
+      );
+    return installedMovieSubtitleOperationV4(tx, original, movieScope, budget);
+  }
+  if (movieScope !== undefined && movieScope.edition !== "default")
+    throw new Error(
+      "Unscoped subtitle operations cannot authorize a named movie caption",
+    );
   if (original.providerId === "manual") {
     const { uploadedBy } = z
       .object({ uploadedBy: z.uuid() })
@@ -102,6 +128,7 @@ async function installationOperations(
     const operation = await tx.operation.findUniqueOrThrow({
       where: { idempotencyKey: `manual-subtitle:${original.id}` },
     });
+    budget?.consume(1);
     const payload = z
       .object({ subtitleId: z.uuid(), recoveryEpoch: z.int() })
       .parse(operation.payload);
@@ -115,6 +142,14 @@ async function installationOperations(
       throw new Error("Native additional subtitle operation changed");
     return [{ id: operation.id, payload: operation.payload }];
   }
+  return automaticInstallationOperations(tx, original, budget);
+}
+
+async function automaticInstallationOperations(
+  tx: Prisma.TransactionClient,
+  original: NativeSubtitleSnapshot,
+  budget?: PublicationAuthorityReadBudget,
+) {
   const evidence = z
     .object({
       targetAuthority: z.string(),
@@ -142,8 +177,9 @@ async function installationOperations(
       payload: { path: ["recoveryEpoch"], equals: original.ownershipEpoch },
     },
     orderBy: { id: "asc" },
-    take: 101,
+    take: budget?.take ?? 101,
   });
+  budget?.consume(rows.length);
   if (rows.length > 100)
     throw new Error("Native subtitle installation lookup exceeds bound");
   const matches = rows.flatMap((row) => {

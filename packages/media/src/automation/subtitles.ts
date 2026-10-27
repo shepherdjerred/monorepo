@@ -22,40 +22,25 @@ import {
   recordsAuthorized,
 } from "#infrastructure/handoff/authority.ts";
 import type { MediaNetworkActivities } from "#shared/automation.ts";
-import { IntegrationError } from "#integrations/http.ts";
-import {
-  validateSubtitle,
-  isMachineLabelled,
-} from "#integrations/subtitle-validation.ts";
+import { isMachineLabelled } from "#integrations/subtitle-validation.ts";
 import { evaluateSubtitle } from "#domain/subtitles.ts";
 import type { MediaAutomationContext } from "./context.ts";
 import {
-  fromAssrt,
-  fromOpenSubtitles,
   subtitleVersionMatches,
   subtitleMetadataMatches,
   type SubtitleSearch,
   type SubtitleSource,
 } from "./subtitle-sources.ts";
 import {
-  fromSubhd,
-  fromZimuku,
-  type SubtitleLookup,
-} from "./subtitle-browser-sources.ts";
+  defaultSources,
+  searchSubtitleProviders,
+  validateProviderSubtitle,
+  type SubtitleSourceLoader as Source,
+} from "./subtitles/providers.ts";
 import { serializable } from "./store.ts";
 
 type Result = Awaited<ReturnType<MediaNetworkActivities["findMediaSubtitles"]>>;
-type Source = (
-  context: MediaAutomationContext,
-  input: SubtitleSearch,
-) => Promise<SubtitleLookup>;
 type SubtitleAsset = Awaited<ReturnType<typeof loadAsset>>;
-const defaultSources: Readonly<Record<string, Source>> = {
-  opensubtitles: fromOpenSubtitles,
-  assrt: fromAssrt,
-  subhd: fromSubhd,
-  zimuku: fromZimuku,
-};
 const blocked = (reason: string): Result => ({
   status: "blocked",
   subtitleId: null,
@@ -77,65 +62,6 @@ async function loadAsset(context: MediaAutomationContext, assetId: string) {
   assertDefaultEdition(asset.edition);
   for (const coverage of asset.coverage) assertDefaultEdition(coverage.edition);
   return asset;
-}
-
-async function withProvider(
-  context: MediaAutomationContext,
-  id: string,
-  input: SubtitleSearch,
-  source: Source,
-): Promise<SubtitleLookup> {
-  const provider = await context.db.mediaProvider.findUniqueOrThrow({
-    where: { id },
-  });
-  const policy = z
-    .object({
-      minimumIntervalSeconds: z.number().int().min(1).max(3600).default(30),
-      dailyDownloadLimit: z.number().int().min(1).max(1000).default(10),
-    })
-    .parse(provider.configuration);
-  const now = new Date();
-  await context.db.providerLease.upsert({
-    where: { providerId: id },
-    create: { providerId: id, nextAllowedAt: now },
-    update: {},
-  });
-  const ownerId = crypto.randomUUID();
-  const claim = await context.db.providerLease.updateMany({
-    where: {
-      providerId: id,
-      nextAllowedAt: { lte: now },
-      OR: [{ leaseUntil: null }, { leaseUntil: { lt: now } }],
-    },
-    data: { ownerId, leaseUntil: new Date(now.getTime() + 300_000) },
-  });
-  if (claim.count !== 1) throw new IntegrationError(id, "rate-limited");
-  let delay = policy.minimumIntervalSeconds;
-  try {
-    const downloads = await context.db.applicationEvent.count({
-      where: {
-        kind: "subtitle_download_requested",
-        createdAt: { gte: new Date(now.getTime() - 86_400_000) },
-        payload: { path: ["providerId"], equals: id },
-      },
-    });
-    if (downloads >= policy.dailyDownloadLimit)
-      throw new IntegrationError(id, "rate-limited");
-    return await source(context, input);
-  } catch (error) {
-    if (error instanceof IntegrationError)
-      delay = Math.max(delay, error.retryAfterSeconds ?? 60);
-    throw error;
-  } finally {
-    await context.db.providerLease.updateMany({
-      where: { providerId: id, ownerId },
-      data: {
-        ownerId: null,
-        leaseUntil: null,
-        nextAllowedAt: new Date(Date.now() + delay * 1000),
-      },
-    });
-  }
 }
 
 async function persist(
@@ -287,24 +213,6 @@ async function persist(
   });
 }
 
-function validateProviderSubtitle(source: SubtitleSource, simplified: boolean) {
-  try {
-    return validateSubtitle({
-      bytes: source.bytes,
-      filename: source.filename,
-      provenanceText: source.description,
-      requireSimplified: simplified,
-      ...(source.declaredEncoding === undefined
-        ? {}
-        : { declaredEncoding: source.declaredEncoding }),
-    });
-  } catch (error) {
-    // This pure parser processes untrusted provider content; errors describe invalid subtitle input.
-    if (error instanceof Error) return null;
-    throw error;
-  }
-}
-
 function searchInput(
   asset: SubtitleAsset,
   input: SubtitleTarget & { operationId: string },
@@ -325,25 +233,6 @@ function searchInput(
   };
 }
 
-async function providerResult(
-  context: MediaAutomationContext,
-  asset: SubtitleAsset,
-  result: Exclude<SubtitleLookup, null>,
-  selection: SubtitleTarget & {
-    providerId: string;
-    recoveryEpoch: number;
-    targetAuthority: string;
-  },
-): Promise<Result> {
-  return "pending" in result
-    ? {
-        status: "waiting",
-        subtitleId: null,
-        reason: "subtitle_browser_pending",
-      }
-    : await persist(context, asset, result, selection);
-}
-
 async function search(
   context: MediaAutomationContext,
   asset: SubtitleAsset,
@@ -357,44 +246,11 @@ async function search(
   sources: Readonly<Record<string, Source>>,
 ): Promise<Result> {
   const query = searchInput(asset, input);
-  if (query === null) return blocked("source_identity_missing");
-  const providers = await context.db.mediaProvider.findMany({
-    where: { id: { in: Object.keys(sources) }, enabled: true },
-  });
-  let failure: string | null = null;
-  for (const id of ["opensubtitles", "assrt", "subhd", "zimuku"]) {
-    const source = sources[id];
-    if (
-      source === undefined ||
-      !providers.some((provider) => provider.id === id)
-    )
-      continue;
-    try {
-      const result = await withProvider(context, id, query, source);
-      if (result === null) continue;
-      const outcome = await providerResult(context, asset, result, {
-        ...input,
-        providerId: id,
-        language: input.language,
-        recoveryEpoch: input.recoveryEpoch,
-      });
-      return outcome;
-    } catch (error) {
-      if (!(error instanceof IntegrationError)) throw error;
-      await context.db.mediaProvider.update({
-        where: { id },
-        data: { lastError: error.kind },
-      });
-      if (error.kind === "outcome-unknown")
-        return blocked("subtitle_download_outcome_unknown");
-      failure = error.kind;
-    }
-  }
-  const missing =
-    providers.length === 0
-      ? "subtitle_providers_not_configured"
-      : "matching_subtitles_not_found";
-  return { status: "waiting", subtitleId: null, reason: failure ?? missing };
+  return query === null
+    ? blocked("source_identity_missing")
+    : searchSubtitleProviders(context, query, sources, (source, providerId) =>
+        persist(context, asset, source, { ...input, providerId }),
+      );
 }
 
 export function createSubtitleActivities(

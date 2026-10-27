@@ -22,7 +22,7 @@ import { getEtcdCustomRuleGroups } from "./rules/platform/etcd-custom.ts";
 import { getZfsMaintenanceRuleGroups } from "./rules/storage/zfs-maintenance.ts";
 import { getTemporalRuleGroups } from "./rules/platform/temporal.ts";
 import { getStreambotRuleGroups } from "./rules/streambot.ts";
-import { getMediaRuleGroups } from "./rules/media.ts";
+import { getMediaRuleGroups } from "./rules/media/automation.ts";
 import { getDiscordPlaysGoalRuleGroups } from "./rules/discord-plays-goal.ts";
 import { getAlertDashboardRuleGroups } from "./rules/alert-dashboard.ts";
 import { getFliptRuleGroups } from "./rules/flipt.ts";

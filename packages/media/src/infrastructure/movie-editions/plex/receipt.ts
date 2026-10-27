@@ -14,7 +14,7 @@ import {
   type MovieFilePlanV2,
 } from "#shared/movie-editions/file-plan-v2.ts";
 import { PlexMovieAssociationV2Schema } from "#shared/plex-binding/contract.ts";
-import { loadMoviePublicationV2 } from "#infrastructure/movie-editions/publication/store.ts";
+import { loadMoviePublicationV2 } from "#infrastructure/movie-editions/publication/records.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { parsePlexRecord } from "#infrastructure/plex-binding/records.ts";
