@@ -30,6 +30,8 @@ import { createPublicationActivities } from "./publication.ts";
 import { createSeedingActivities } from "./seeding.ts";
 import { createSweepActivities } from "./sweeps.ts";
 import { matchProviderFeedSourceV1 } from "./feeds/matching.ts";
+import { createMovieNetworkFacetV4 } from "./movie-editions/activities.ts";
+import { createMovieFileFacetV4 } from "./files/movie-editions/activities.ts";
 import { createCoverageActivities } from "./reconciliation/coverage.ts";
 import { createCatalogActivities } from "./reconciliation/catalog.ts";
 import { TmdbClient } from "#integrations/tmdb.ts";
@@ -300,6 +302,7 @@ export async function createMediaFileRuntime(
   };
   return {
     activities,
+    movie: createMovieFileFacetV4(fileContext),
     libraryHandoff: createLibraryHandoffFileFacet({
       files: fileContext,
       workerPodUid: config.MEDIA_FILE_WORKER_POD_UID,
@@ -416,6 +419,7 @@ export async function createMediaNetworkRuntime(
   });
   return {
     libraryHandoff: createLibraryHandoffNetworkFacet(nativeContext),
+    movie: createMovieNetworkFacetV4(context),
     nativePlex: createNativePlexFacet(nativeContext, observeNative),
     ...createPlexRuntimeFacets(context, async () => {
       const flag = await behavior.get("plexEventHintsEnabled");

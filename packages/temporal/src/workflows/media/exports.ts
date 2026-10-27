@@ -1,4 +1,12 @@
 import * as m from "#workflows/media/core.ts";
+import * as movie from "#workflows/media/movie-editions/acquisition.ts";
+import * as movieSubtitles from "#workflows/media/movie-editions/subtitles.ts";
+export const acquireMovieSubtitlesV4Workflow =
+  movieSubtitles.acquireMovieSubtitlesV4Workflow;
+export const reconcileMovieEditionV4Workflow =
+  movie.reconcileMovieEditionV4Workflow;
+export const acquireMovieEditionV4Workflow =
+  movie.acquireMovieEditionV4Workflow;
 import * as providerFeed from "#workflows/media/provider-feed.ts";
 export const matchProviderFeedSourceWorkflow =
   providerFeed.matchProviderFeedSourceWorkflow;

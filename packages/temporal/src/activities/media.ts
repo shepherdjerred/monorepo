@@ -11,6 +11,14 @@ import { plexBindingExecution } from "./media/plex-binding-execution.ts";
 import { createPlexPublicationActivities } from "./media/plex-publication.ts";
 import { createPlexWatchActivities } from "./media/plex-watch.ts";
 import { mediaCall } from "./media/call.ts";
+import {
+  createMovieNetworkWorkerActivitiesV4,
+  createMovieFileWorkerActivitiesV4,
+} from "./media/movie-editions.ts";
+import type {
+  MovieNetworkActivitiesV4,
+  MovieFileActivitiesV4,
+} from "@shepherdjerred/media/movie-lifecycle";
 import { createPlexBoundConsumerActivities } from "./media/plex-consumers.ts";
 import { createPlexCleanupActivities } from "./media/plex-cleanup.ts";
 import { createNativePlexReviewActivities } from "./media/native-plex.ts";
@@ -46,6 +54,7 @@ import {
 let networkRuntime: ReturnType<typeof createMediaNetworkRuntime> | undefined;
 let fileRuntime: ReturnType<typeof createMediaFileRuntime> | undefined;
 type NetworkActivities = MediaNetworkActivities &
+  MovieNetworkActivitiesV4 &
   LibraryPlexBindingActivities &
   LibraryHandoffNetworkActivities &
   MediaHandoffNetworkActivities &
@@ -55,6 +64,7 @@ type NetworkActivities = MediaNetworkActivities &
 type CoreNetworkActivities = Omit<
   NetworkActivities,
   | keyof PlexBindingActivities
+  | keyof MovieNetworkActivitiesV4
   | keyof LibraryPlexBindingActivities
   | keyof LibraryHandoffNetworkActivities
   | "publishMediaToPlex"
@@ -69,6 +79,7 @@ type CoreNetworkActivities = Omit<
   | "observeNativeQuarantine"
 >;
 type FileActivities = MediaFileActivities &
+  MovieFileActivitiesV4 &
   LibraryHandoffFileActivities &
   MediaHandoffFileActivities &
   SubtitleReplacementFileActivities &
@@ -76,7 +87,7 @@ type FileActivities = MediaFileActivities &
   NativeQuarantineFileActivities;
 type CoreFileActivities = Omit<
   FileActivities,
-  keyof LibraryHandoffFileActivities
+  keyof LibraryHandoffFileActivities | keyof MovieFileActivitiesV4
 >;
 export async function getMediaNetworkRuntime() {
   networkRuntime ??= createMediaNetworkRuntime(
@@ -141,6 +152,7 @@ function assertNotCancelled(): void {
 }
 
 export const mediaNetworkWorkerActivities: NetworkActivities = {
+  ...createMovieNetworkWorkerActivitiesV4(getMediaNetworkRuntime),
   ...createLibraryPlexBindingNetworkActivities(getMediaNetworkRuntime),
   ...createLibraryHandoffNetworkActivities(getMediaNetworkRuntime),
   observeMediaUpgradeCleanup: createPlexCleanupActivities(
@@ -225,6 +237,7 @@ export const mediaNetworkWorkerActivities: NetworkActivities = {
     withNetwork((activities) => activities.finishMediaOperation(input)),
 };
 export const mediaFileWorkerActivities: FileActivities = {
+  ...createMovieFileWorkerActivitiesV4(getMediaFileRuntime),
   ...createLibraryHandoffFileActivities(getMediaFileRuntime),
   prepareSubtitleReplacement: (input) =>
     withFiles((activities) => activities.prepareSubtitleReplacement(input)),

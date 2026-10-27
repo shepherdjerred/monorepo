@@ -16,6 +16,8 @@ export async function authorizedMovieSubmissionV4(
   scope: MovieEditionScope,
   effect: (signal: AbortSignal, beforeMutation: () => void) => Promise<void>,
 ) {
+  const execution = context.plexBindingExecution();
+  execution.assertActive();
   const access = requireMovieChoiceAccess(
     (await networkMovieAccess(context, [scope.mediaId])) ?? {},
   );
@@ -46,11 +48,18 @@ export async function authorizedMovieSubmissionV4(
       const lease = await tx.legacyWriterLease.findUniqueOrThrow({
         where: { id: "singleton" },
       });
-      const observed = { wall: Date.now(), monotonic: performance.now() };
-      const deadline = lease.expiresAt.getTime();
-      const monotonicDeadline = observed.monotonic + deadline - observed.wall;
-      const signal = AbortSignal.timeout(10_000);
+      const deadline = Math.min(
+        lease.expiresAt.getTime(),
+        execution.expiresAtMs,
+      );
+      const monotonicDeadline =
+        execution.observed.monotonic + deadline - execution.observed.wall;
+      const signal = AbortSignal.any([
+        execution.signal,
+        AbortSignal.timeout(10_000),
+      ]);
       const beforeMutation = () => {
+        execution.assertActive();
         signal.throwIfAborted();
         authorized.freshness.assertActive();
         if (
@@ -66,6 +75,7 @@ export async function authorizedMovieSubmissionV4(
       };
       beforeMutation();
       await effect(signal, beforeMutation);
+      execution.assertActive();
       return true;
     },
     { timeout: 20_000 },

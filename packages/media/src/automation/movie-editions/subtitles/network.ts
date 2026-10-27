@@ -35,6 +35,7 @@ import { currentMovieSubtitleWorkV4 } from "./authority.ts";
 import { assertMovieSubtitleOperationV4 } from "./operation.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { FileGuardError } from "#automation/files/types.ts";
+import { plexBindingFreshness } from "#infrastructure/plex-binding/freshness.ts";
 
 type Result = Awaited<ReturnType<MediaNetworkActivities["findMediaSubtitles"]>>;
 const blocked = (reason: string): Result => ({
@@ -80,8 +81,14 @@ async function authorizedWork(
       !targetRequired(work, movieSubtitleTargetV4(input))
     )
       return null;
-    work.freshness.assertActive();
-    return work;
+    const execution = context.plexBindingExecution();
+    const freshness = plexBindingFreshness({
+      observed: execution.observed,
+      expiresAtMs: Math.min(execution.expiresAtMs, work.freshness.expiresAtMs),
+      guards: [execution, work.freshness],
+    });
+    freshness.assertActive();
+    return { ...work, freshness };
   });
 }
 
@@ -210,10 +217,13 @@ async function persist(
 
 /** Same real adapters and quotas as TV, with explicit edition operation and final scoped persistence. */
 export async function findMovieSubtitlesV4(
-  context: MediaAutomationContext,
+  initial: MediaAutomationContext,
   raw: MovieSubtitleOperationV4,
   sources: Readonly<Record<string, SubtitleSourceLoader>> = defaultSources,
 ): Promise<Result> {
+  const execution = initial.plexBindingExecution();
+  execution.assertActive();
+  const context = { ...initial, plexBindingExecution: () => execution };
   const input = MovieSubtitleOperationV4Schema.parse(raw);
   const budget = new PublicationAuthorityReadBudget();
   if (!(await context.gates.acquisition()))

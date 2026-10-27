@@ -19,16 +19,24 @@ export async function observeMovieAcquisitionV4(
   context: MediaAutomationContext,
   raw: MovieAttemptOperationV4,
 ): ReturnType<MediaNetworkActivities["observeMediaAcquisition"]> {
+  const execution = context.plexBindingExecution();
+  execution.assertActive();
   const input = MovieAttemptOperationV4Schema.parse(raw);
   const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: input.attemptId },
     include: { torrent: true },
   });
   await readMovieAttemptIdentityV4(context.db, attempt, input.scope);
-  if (attempt.state === "imported")
+  if (attempt.state === "imported" || attempt.state === "completed")
     return { status: "ready", reason: "resume_committed_publication" };
   if (!(await validMovieAttemptV4(context, input)))
-    return { status: "obsolete", reason: "intent_changed" };
+    return {
+      status: attempt.filePlan === null ? "obsolete" : "blocked",
+      reason:
+        attempt.filePlan === null
+          ? "intent_changed"
+          : "movie_publication_reconciliation_required",
+    };
   if (attempt.torrent === null)
     return { status: "blocked", reason: "torrent_missing" };
   const torrentId = attempt.torrent.id;
@@ -37,13 +45,21 @@ export async function observeMovieAcquisitionV4(
     attempt.torrent.ownershipEpoch !== attempt.recoveryEpoch
   )
     return { status: "blocked", reason: "record_ownership_unconfirmed" };
-  await context.qbittorrent.login();
-  const torrent = await context.qbittorrent.observe(attempt.torrent.infoHash);
+  await context.qbittorrent.login(execution.signal);
+  execution.assertActive();
+  const torrent = await context.qbittorrent.observe(
+    attempt.torrent.infoHash,
+    execution.signal,
+  );
+  execution.assertActive();
   if (torrent === null) return { status: "blocked", reason: "torrent_missing" };
   if (!ownedTorrent(context, torrent, attempt))
     return { status: "blocked", reason: "torrent_ownership_conflict" };
   const files =
-    torrent.progress === 1 ? await context.qbittorrent.files(torrent.hash) : [];
+    torrent.progress === 1
+      ? await context.qbittorrent.files(torrent.hash, execution.signal)
+      : [];
+  execution.assertActive();
   if (files.length > 100)
     return { status: "blocked", reason: "torrent_inventory_limit" };
   const access = requireMovieChoiceAccess(
@@ -70,6 +86,7 @@ export async function observeMovieAcquisitionV4(
       access,
     );
     if (authority === null) return false;
+    execution.assertActive();
     await tx.torrent.update({
       where: { id: torrentId },
       data: {
@@ -79,6 +96,7 @@ export async function observeMovieAcquisitionV4(
       },
     });
     authority.freshness.assertActive();
+    execution.assertActive();
     return true;
   });
   if (!recorded) return { status: "obsolete", reason: "intent_changed" };

@@ -66,6 +66,16 @@ the first literal assessment; profile or catalog changes create another record.
 Version-2 movie acquisition identities bind an exact assessment ID and hash.
 These contracts are internal; the public v3 routes above retain their behavior.
 
+Scoped v4 acquisition commands dispatch to dedicated movie coordinators. Discovery,
+reservation and transfer observation run on the Network queue; inspection,
+staging and publication run on Files; exact Plex verification and finalization
+return to Network. Each worker captures its original execution before lazy
+initialization. A quota-bearing add has one automatic attempt, and an uncertain
+outcome remains observation-only. Imported/completed attempts resume from their
+actual publication receipts. A prepared publication whose consent changes stays
+under reconciliation. Workflow inputs and results carry scoped IDs and status,
+while source data, file plans and credentials remain inside Activities.
+
 Within the current authorized ownership epoch, cancelling a v4 request or
 revoking its reviewed choice releases that attempt's
 exact edition reservation when no file publication is prepared. Its original
@@ -171,8 +181,11 @@ A distinct immutable completion binds the actual installation journal, original
 invocation/SDK deadline, caption facts and physical video parent. Completed
 retries acknowledge that record before dynamic configuration. Later publication
 lineage follows the actual caption completion using the caller's shared
-100-record allowance. These v4 producers remain internal until complete
-downstream lifecycle and Temporal/API dispatch support is present.
+100-record allowance. Scoped caption commands dispatch to their own Workflow:
+Network finds or reuses the candidate and Files installs it. A validated embedded
+track still needs that installation step; it does not consume a provider download.
+Quota-bearing lookups use the durable download journal and one automatic attempt.
+Public v4 routes remain closed until the downstream lifecycle is complete.
 
 Playable shared bytes do not fulfill an unchosen request. Readiness delivery
 requires matching choice and verified Plex publication; automatic retention

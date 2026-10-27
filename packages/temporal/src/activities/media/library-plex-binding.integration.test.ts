@@ -5,6 +5,7 @@ import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import { Context } from "@temporalio/activity";
 import { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
+import { assertPrivateHistory } from "./testing/history.ts";
 import { expect, test } from "vitest";
 import { createLibraryBindingWorkerFixture } from "@shepherdjerred/media/testing/library-binding";
 import { createLibraryPlexBindingNetworkActivities } from "./plex-binding.ts";
@@ -115,8 +116,7 @@ test("initial library outbox reaches the real Network Activity and retains repla
       evidence.calls.filter((call) => call === "/library/sections/1/all"),
     ).toHaveLength(2);
     const history = historyToJSON(await handle.fetchHistory());
-    expect(history).not.toContain("Synthetic Film");
-    expect(history).not.toContain("libraryPlexReceiptV1");
+    assertPrivateHistory(history, ["Synthetic Film", "libraryPlexReceiptV1"]);
     const historyPath = path.join(directory, "history.json");
     await Bun.write(historyPath, history);
     const replay = Bun.spawn(

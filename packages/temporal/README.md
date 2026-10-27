@@ -724,6 +724,16 @@ The application image publication gate controls whether the Media workloads are
 synthesized. Media schedules are declared initially paused; their existence does
 not establish that application workers or recovery procedures are ready.
 
+`reconcileMovieEditionV4Workflow` dispatches a scoped acquisition child through
+Network discovery/submission, Files inspection/publication and Network Plex
+verification/finalization. `acquireMovieSubtitlesV4Workflow` uses Network lookup
+and Files installation for downloaded or validated embedded captions. Their
+Activities declare two-minute attempts, three-minute totals and a thirty-second
+queue wait; Files have a thirty-second heartbeat timeout. Quota-bearing torrent adds and
+caption lookups have one automatic attempt. Original SDK observations precede
+lazy runtime loading and stay attached to the producer's proof window. These
+versioned histories leave the ordinary Media contracts below unchanged.
+
 `applyLibraryHandoffV3Workflow` runs the separately
 approved initial-library label corrections: `media-files` proves each reviewed
 movie before `media-network` records its send intent and edits the existing Plex
