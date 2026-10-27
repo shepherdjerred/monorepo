@@ -99,7 +99,7 @@ internal struct FacetAppliedFeedbackView: View {
             }
             let duration = lifetime.resume()
             do { try await _Concurrency.Task.sleep(for: duration) } catch { return }
-            if current == feedback, !paused { store.clearSavedNotice() }
+            if current == feedback, !paused { store.clearAppliedFeedback(ifMatching: feedback) }
         }
     }
 
@@ -111,7 +111,7 @@ internal struct FacetAppliedFeedbackView: View {
             .accessibilityFocused($accessibilityFocus, equals: .undo)
             .accessibilityIdentifier("facet.feedback.undo")
         }
-        Button("Dismiss", systemImage: "xmark") { store.clearSavedNotice() }
+        Button("Dismiss", systemImage: "xmark") { store.clearAppliedFeedback(ifMatching: feedback) }
             .labelStyle(.iconOnly)
             .focused($keyboardFocus, equals: .dismiss)
             .accessibilityFocused($accessibilityFocus, equals: .dismiss)

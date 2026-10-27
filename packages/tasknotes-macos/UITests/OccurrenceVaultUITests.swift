@@ -70,7 +70,7 @@ final class OccurrenceVaultUITests: XCTestCase {
         try context.wait("completed child") {
             try context.note(context.child).properties["status"] == .string("done")
         }
-        acknowledgeFutureGenerationNotice(context.app)
+        acknowledgeFutureGenerationNotice(context.app, window: window)
         click(window.buttons["Completed"])
         click(task("Occurrence repair child", window))
         XCTAssertTrue(
@@ -140,12 +140,14 @@ final class OccurrenceVaultUITests: XCTestCase {
         return button
     }
 
-    private func acknowledgeFutureGenerationNotice(_ app: XCUIApplication) {
-        let alerts = app.alerts
-        XCTAssertTrue(alerts.element.waitForExistence(timeout: 15))
-        XCTAssertEqual(alerts.count, 1)
+    private func acknowledgeFutureGenerationNotice(_ app: XCUIApplication, window: XCUIElement) {
+        XCTAssertTrue(window.exists && window.identifier.hasPrefix("facet.workspace."))
+        let sheets = window.sheets
+        let alert = sheets.element
+        XCTAssertTrue(alert.waitForExistence(timeout: 15))
+        XCTAssertEqual(sheets.count, 1)
+        XCTAssertEqual(app.sheets.count, 1)
         XCTAssertEqual(app.state, .runningForeground)
-        let alert = alerts.element
         let message = "Future occurrences need attention in the task’s Series section."
         for text in ["Saved", message] {
             XCTAssertEqual(
@@ -159,7 +161,10 @@ final class OccurrenceVaultUITests: XCTestCase {
         XCTAssertTrue(okay.exists && okay.isEnabled && okay.isHittable)
         okay.click()
         XCTAssertTrue(alert.waitForNonExistence(timeout: 10))
+        XCTAssertEqual(window.sheets.count, 0)
+        XCTAssertEqual(app.sheets.count, 0)
         XCTAssertEqual(app.alerts.count, 0)
+        XCTAssertEqual(app.state, .runningForeground)
     }
 
     private func capture(_ context: OccurrenceVaultContext, window: XCUIElement, name: String)
