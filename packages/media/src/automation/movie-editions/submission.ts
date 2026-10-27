@@ -109,7 +109,7 @@ async function submissionPrerequisiteV4(
   const runtime = await requireActiveRuntime(context.db);
   if (!runtime.active || runtime.epoch !== attempt.recoveryEpoch)
     return { status: "blocked", reason: "recovery_epoch_changed" };
-  if (attempt.state === "imported")
+  if (attempt.state === "imported" || attempt.state === "completed")
     return { status: "submitted", reason: "resume_committed_publication" };
   const recovering =
     attempt.state === "submitting" || attempt.state === "submission_unknown";
@@ -117,15 +117,24 @@ async function submissionPrerequisiteV4(
     if (!(await context.gates.acquisition()))
       return { status: "blocked", reason: "acquisition_disabled" };
     if (!(await validMovieAttemptV4(context, input)))
-      return { status: "obsolete", reason: "intent_changed" };
+      return {
+        status: attempt.filePlan === null ? "obsolete" : "blocked",
+        reason:
+          attempt.filePlan === null
+            ? "intent_changed"
+            : "movie_publication_reconciliation_required",
+      };
   }
   return null;
 }
 
 export async function submitMovieTorrentV4(
-  context: MediaAutomationContext,
+  initial: MediaAutomationContext,
   raw: MovieAttemptOperationV4,
 ): ReturnType<MediaNetworkActivities["submitMediaTorrent"]> {
+  const execution = initial.plexBindingExecution();
+  execution.assertActive();
+  const context = { ...initial, plexBindingExecution: () => execution };
   const input = MovieAttemptOperationV4Schema.parse(raw);
   const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
     where: { id: input.attemptId },
@@ -146,8 +155,14 @@ export async function submitMovieTorrentV4(
       ),
     ),
   );
-  await context.qbittorrent.login();
-  const existing = await context.qbittorrent.observe(source.infoHash);
+  execution.assertActive();
+  await context.qbittorrent.login(execution.signal);
+  execution.assertActive();
+  const existing = await context.qbittorrent.observe(
+    source.infoHash,
+    execution.signal,
+  );
+  execution.assertActive();
   if (existing === null) {
     if (recovering)
       return { status: "blocked", reason: "submission_outcome_unknown" };
@@ -158,7 +173,12 @@ export async function submitMovieTorrentV4(
     if (result !== null) return result;
   } else if (!ownedTorrent(context, existing, attempt))
     return { status: "blocked", reason: "torrent_ownership_conflict" };
-  const observed = await context.qbittorrent.observe(source.infoHash);
+  execution.assertActive();
+  const observed = await context.qbittorrent.observe(
+    source.infoHash,
+    execution.signal,
+  );
+  execution.assertActive();
   if (observed === null)
     return { status: "waiting", reason: "submission_visibility_pending" };
   return ownedTorrent(context, observed, attempt)

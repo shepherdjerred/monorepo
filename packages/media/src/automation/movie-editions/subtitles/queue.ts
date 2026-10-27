@@ -7,7 +7,7 @@ import { subtitleAccepted } from "#domain/subtitle-quality.ts";
 import { currentMovieSubtitleWorkV4 } from "./authority.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
-/** Transactional producer; held from dispatch until its complete v4 Workflow is registered. */
+/** Transactional producer for the exact scoped caption Workflow. */
 export async function queueMovieSubtitleTargetsV4(
   tx: Prisma.TransactionClient,
   input: {

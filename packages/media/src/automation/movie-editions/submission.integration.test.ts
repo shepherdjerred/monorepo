@@ -9,6 +9,7 @@ import { reserveMovieCandidateV4 } from "./reservation.ts";
 import { submitMovieTorrentV4 } from "./submission.ts";
 import { observeMovieAcquisitionV4 } from "./observation.ts";
 import { QualityRulesSchema } from "#shared/api.ts";
+import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import {
   MovieEditionKeySchema,
   type MovieEditionKey,
@@ -283,6 +284,35 @@ test("choice cancellation during qBit lookup is rechecked under locks before the
       where: { attemptId: f.attempt.id },
     }),
   ).toBe(0);
+});
+
+test("the original SDK deadline fences the actual qBit add after its final lookup", async () => {
+  const f = await fixture();
+  const original = testPlexBindingExecution();
+  const at = original.observed.wall;
+  const clock = vi.spyOn(Date, "now").mockReturnValue(at);
+  f.context.plexBindingExecution = () => ({
+    ...original,
+    expiresAtMs: at + 1000,
+    assertActive: () => {
+      original.assertActive();
+      if (Date.now() >= at + 1000)
+        throw new Error("Original movie SDK deadline expired");
+    },
+  });
+  f.wire.state.beforeInfo = (index) => {
+    if (index === 2) clock.mockReturnValue(at + 1001);
+    return Promise.resolve();
+  };
+  await expect(submitMovieTorrentV4(f.context, f.input)).rejects.toThrow(
+    "Original movie SDK deadline expired",
+  );
+  expect(f.wire.state.adds).toBe(0);
+  expect(
+    await f.db.acquisitionReservation.count({
+      where: { attemptId: f.attempt.id },
+    }),
+  ).toBe(1);
 });
 
 test("cancellation waits behind the final authorization and add, and a proven prior add keeps its seeding obligation", async () => {

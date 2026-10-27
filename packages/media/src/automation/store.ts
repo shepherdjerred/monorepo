@@ -62,6 +62,9 @@ export async function queueOperation(
 }
 
 const workflowTypes: Readonly<Record<string, string>> = {
+  acquire_movie_subtitles_v4: "acquireMovieSubtitlesV4Workflow",
+  reconcile_movie_edition_v4: "reconcileMovieEditionV4Workflow",
+  acquire_movie_edition_v4: "reconcileMovieEditionV4Workflow",
   match_provider_feed_source_v1: "matchProviderFeedSourceWorkflow",
   reverify_plex_binding: "reverifyPlexBindingWorkflow",
   verify_library_plex_binding: "verifyLibraryPlexBindingWorkflow",

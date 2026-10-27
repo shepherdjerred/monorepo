@@ -8,6 +8,7 @@ import { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
 import { expect, test } from "vitest";
 import { createProviderFeedWorkerFixture } from "@shepherdjerred/media/testing/provider-feed";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { assertPrivateHistory } from "./testing/history.ts";
 
 test("native source outbox executes matching on the real Network worker and replays an IDs-only history", async () => {
   const temporal = Bun.which("temporal");
@@ -108,13 +109,12 @@ test("native source outbox executes matching on the real Network worker and repl
     expect(evidence.attempts).toBe(0);
     expect(evidence.torrents).toBe(0);
     const history = historyToJSON(await handle.fetchHistory());
-    for (const privateValue of [
+    assertPrivateHistory(history, [
       "Feed.Fixture",
       "magnet:",
       "encryptedSource",
       "sourceHash",
-    ])
-      expect(history).not.toContain(privateValue);
+    ]);
     const historyPath = path.join(directory, "history.json");
     await Bun.write(historyPath, history);
     const replay = Bun.spawn(

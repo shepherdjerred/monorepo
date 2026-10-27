@@ -1,0 +1,260 @@
+import { MockActivityEnvironment } from "@temporalio/testing";
+import { afterEach, expect, test, vi } from "vitest";
+import type { PlexBindingExecution } from "@shepherdjerred/media/plex-binding";
+import {
+  createMovieNetworkWorkerActivitiesV4,
+  createMovieFileWorkerActivitiesV4,
+} from "./movie-editions.ts";
+import { assertPrivateHistory } from "./testing/history.ts";
+
+afterEach(() => vi.restoreAllMocks());
+function history(encoding: string, value: unknown) {
+  return JSON.stringify({
+    events: [
+      {
+        input: {
+          payloads: [
+            {
+              metadata: {
+                encoding: Buffer.from(encoding).toString("base64"),
+              },
+              data: Buffer.from(JSON.stringify(value)).toString("base64"),
+            },
+          ],
+        },
+      },
+    ],
+  });
+}
+test("history privacy inspects encoded payload bytes and refuses unexpected binary inputs", () => {
+  expect(() =>
+    assertPrivateHistory(history("json/plain", { sourceId: "synthetic-id" }), [
+      "magnet:",
+    ]),
+  ).not.toThrow();
+  expect(() =>
+    assertPrivateHistory(
+      history("json/plain", { privateSource: "magnet:synthetic" }),
+      ["magnet:"],
+    ),
+  ).toThrow("private input");
+  expect(() =>
+    assertPrivateHistory(history("binary/plain", "synthetic bytes"), [
+      "magnet:",
+    ]),
+  ).toThrow("unexpected binary");
+});
+const input = {
+  schemaVersion: 4 as const,
+  operationId: "00000000-0000-4000-8000-000000000001",
+  attemptId: "00000000-0000-4000-8000-000000000002",
+  mediaId: "00000000-0000-4000-8000-000000000003",
+  generation: 1,
+  assetId: "00000000-0000-4000-8000-000000000004",
+  subtitleId: "00000000-0000-4000-8000-000000000005",
+  language: "en",
+  recoveryEpoch: 0,
+  targetAuthority: "a".repeat(64),
+  scope: {
+    mediaId: "00000000-0000-4000-8000-000000000003",
+    rootMediaId: "00000000-0000-4000-8000-000000000003",
+    edition: "extended_cut" as const,
+  },
+};
+const networkMethods = [
+  "findMovieSubtitlesV4",
+  "reconcileMovieIntentV4",
+  "submitMovieTorrentV4",
+  "observeMovieAcquisitionV4",
+  "publishMovieToPlexV4",
+  "finalizeMovieAcquisitionV4",
+] as const;
+const fileMethods = [
+  "inspectAndStageMovieV4",
+  "promoteMovieFilesV4",
+  "installMovieSubtitlesV4",
+] as const;
+function environment(at = Date.now()) {
+  return new MockActivityEnvironment({
+    scheduledTimestampMs: at,
+    currentAttemptScheduledTimestampMs: at,
+    startToCloseTimeoutMs: 120_000,
+    scheduleToCloseTimeoutMs: 180_000,
+    heartbeatTimeoutMs: 30_000,
+  });
+}
+
+function networkRuntime(check: (execution: PlexBindingExecution) => void) {
+  return {
+    movie: {
+      findMovieSubtitlesV4: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({
+          status: "waiting" as const,
+          subtitleId: null,
+          reason: null,
+        });
+      },
+      reconcileMovieIntentV4: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({
+          status: "waiting" as const,
+          attemptId: null,
+          reason: null,
+        });
+      },
+      submitMovieTorrentV4: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "submitted" as const, reason: null });
+      },
+      observeMovieAcquisitionV4: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({
+          status: "downloading" as const,
+          reason: null,
+        });
+      },
+      publishMovieToPlexV4: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "available" as const, reason: null });
+      },
+      finalizeMovieAcquisitionV4: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve();
+      },
+    },
+  };
+}
+function fileRuntime(check: (execution: PlexBindingExecution) => void) {
+  return {
+    movie: {
+      installMovieSubtitlesV4: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "installed" as const });
+      },
+      inspectAndStageMovieV4: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "staged" as const });
+      },
+      promoteMovieFilesV4: (
+        _input: unknown,
+        execution: PlexBindingExecution,
+      ) => {
+        check(execution);
+        return Promise.resolve({ status: "published" as const });
+      },
+    },
+  };
+}
+
+test.each(networkMethods)(
+  "%s refuses queued expiry and cancellation before lazy initialization",
+  async (method) => {
+    const load = vi.fn(() =>
+      Promise.reject(new Error("Runtime must not initialize")),
+    );
+    const activities = createMovieNetworkWorkerActivitiesV4(load);
+    await expect(
+      environment(Date.now() - 120_001).run(() => activities[method](input)),
+    ).rejects.toThrow("Plex binding Activity failed");
+    const cancelled = environment();
+    cancelled.cancel();
+    await expect(
+      cancelled.run(() => activities[method](input)),
+    ).rejects.toThrow("cancelled");
+    expect(load).not.toHaveBeenCalled();
+  },
+);
+
+test.each(networkMethods)(
+  "%s retains its original proof clock through a cold runtime load",
+  async (method) => {
+    const at = Date.now();
+    const clock = vi.spyOn(Date, "now").mockReturnValue(at);
+    const check = vi.fn((execution: PlexBindingExecution) => {
+      expect(execution.observed.wall).toBe(at);
+      expect(execution.expiresAtMs).toBe(at + 60_000);
+      execution.assertActive();
+    });
+    const activities = createMovieNetworkWorkerActivitiesV4(() => {
+      clock.mockReturnValue(at + 61_000);
+      return Promise.resolve(networkRuntime(check));
+    });
+    await environment(at).run(() => activities[method](input));
+    expect(check).toHaveBeenCalledTimes(1);
+  },
+);
+
+test.each(fileMethods)(
+  "%s captures the original Files invocation before runtime loading",
+  async (method) => {
+    const at = Date.now();
+    const clock = vi.spyOn(Date, "now").mockReturnValue(at);
+    const check = vi.fn((execution: PlexBindingExecution) => {
+      expect(execution.observed.wall).toBe(at);
+      expect(execution.expiresAtMs).toBe(at + 120_000);
+      execution.assertActive();
+    });
+    const activities = createMovieFileWorkerActivitiesV4(() => {
+      clock.mockReturnValue(at + 61_000);
+      return Promise.resolve(fileRuntime(check));
+    });
+    await environment(at).run(() => activities[method](input));
+    expect(check).toHaveBeenCalledTimes(1);
+  },
+);
+
+test.each(fileMethods)(
+  "%s rejects SDK expiry during runtime loading before any file effect",
+  async (method) => {
+    const at = Date.now();
+    const clock = vi.spyOn(Date, "now").mockReturnValue(at);
+    const check = vi.fn();
+    const activities = createMovieFileWorkerActivitiesV4(() => {
+      clock.mockReturnValue(at + 120_001);
+      return Promise.resolve(fileRuntime(check));
+    });
+    await expect(
+      environment(at).run(() => activities[method](input)),
+    ).rejects.toThrow("Compensation Activity failed");
+    expect(check).not.toHaveBeenCalled();
+  },
+);
+
+test("movie Network SDK expiry after lazy load never dispatches an acquisition producer", async () => {
+  const at = Date.now();
+  const clock = vi.spyOn(Date, "now").mockReturnValue(at);
+  const check = vi.fn();
+  const activities = createMovieNetworkWorkerActivitiesV4(() => {
+    clock.mockReturnValue(at + 120_001);
+    return Promise.resolve(networkRuntime(check));
+  });
+  await expect(
+    environment(at).run(() => activities.submitMovieTorrentV4(input)),
+  ).rejects.toThrow("Plex binding Activity failed");
+  expect(check).not.toHaveBeenCalled();
+});
