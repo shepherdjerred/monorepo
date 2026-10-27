@@ -1,6 +1,9 @@
 import * as m from "#workflows/media/core.ts";
 import * as movie from "#workflows/media/movie-editions/acquisition.ts";
 import * as movieSubtitles from "#workflows/media/movie-editions/subtitles.ts";
+import * as movieWatch from "#workflows/media/movie-editions/watch.ts";
+export const observeMoviePlexHintV4Workflow =
+  movieWatch.observeMoviePlexHintV4Workflow;
 export const acquireMovieSubtitlesV4Workflow =
   movieSubtitles.acquireMovieSubtitlesV4Workflow;
 export const reconcileMovieEditionV4Workflow =

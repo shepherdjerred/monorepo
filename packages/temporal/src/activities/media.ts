@@ -10,6 +10,7 @@ import {
 import { plexBindingExecution } from "./media/plex-binding-execution.ts";
 import { createPlexPublicationActivities } from "./media/plex-publication.ts";
 import { createPlexWatchActivities } from "./media/plex-watch.ts";
+import { createMovieWatchWorkerActivitiesV4 } from "./media/movie-watch.ts";
 import { mediaCall } from "./media/call.ts";
 import {
   createMovieNetworkWorkerActivitiesV4,
@@ -18,6 +19,7 @@ import {
 import type {
   MovieNetworkActivitiesV4,
   MovieFileActivitiesV4,
+  MovieWatchActivitiesV4,
 } from "@shepherdjerred/media/movie-lifecycle";
 import { createPlexBoundConsumerActivities } from "./media/plex-consumers.ts";
 import { createPlexCleanupActivities } from "./media/plex-cleanup.ts";
@@ -54,6 +56,7 @@ import {
 let networkRuntime: ReturnType<typeof createMediaNetworkRuntime> | undefined;
 let fileRuntime: ReturnType<typeof createMediaFileRuntime> | undefined;
 type NetworkActivities = MediaNetworkActivities &
+  MovieWatchActivitiesV4 &
   MovieNetworkActivitiesV4 &
   LibraryPlexBindingActivities &
   LibraryHandoffNetworkActivities &
@@ -65,6 +68,7 @@ type CoreNetworkActivities = Omit<
   NetworkActivities,
   | keyof PlexBindingActivities
   | keyof MovieNetworkActivitiesV4
+  | keyof MovieWatchActivitiesV4
   | keyof LibraryPlexBindingActivities
   | keyof LibraryHandoffNetworkActivities
   | "publishMediaToPlex"
@@ -152,6 +156,7 @@ function assertNotCancelled(): void {
 }
 
 export const mediaNetworkWorkerActivities: NetworkActivities = {
+  ...createMovieWatchWorkerActivitiesV4(getMediaNetworkRuntime),
   ...createMovieNetworkWorkerActivitiesV4(getMediaNetworkRuntime),
   ...createLibraryPlexBindingNetworkActivities(getMediaNetworkRuntime),
   ...createLibraryHandoffNetworkActivities(getMediaNetworkRuntime),

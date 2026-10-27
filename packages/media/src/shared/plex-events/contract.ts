@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MovieEditionScopeSchema } from "#shared/movie-editions/registry.ts";
 
 export const PlexDecimalIdSchema = z.string().regex(/^[1-9]\d{0,19}$/u);
 export const PlexServerIdSchema = z.string().min(1).max(256);
@@ -38,6 +39,31 @@ export const ObservePlexHintInputSchema = z
   })
   .strict();
 export type ObservePlexHintInput = z.infer<typeof ObservePlexHintInputSchema>;
+
+/** A new operation identity; recorded version-1 default hints keep their literal contract. */
+export const ObserveMoviePlexHintV4Schema = z
+  .strictObject({
+    schemaVersion: z.literal(4),
+    kind: z.literal("observe_movie_plex_hint_v4"),
+    operationId: z.uuid(),
+    recoveryEpoch: z.int().nonnegative(),
+    mediaId: z.uuid(),
+    scope: MovieEditionScopeSchema,
+    generation: z.int().nonnegative(),
+    serverMachineId: PlexServerIdSchema,
+    sectionId: PlexDecimalIdSchema,
+    ratingKey: PlexDecimalIdSchema,
+  })
+  .refine(
+    (input) =>
+      input.mediaId === input.scope.mediaId &&
+      input.mediaId === input.scope.rootMediaId,
+    "A movie hint must identify one canonical movie edition",
+  );
+export type ObserveMoviePlexHintV4 = z.infer<
+  typeof ObserveMoviePlexHintV4Schema
+>;
+export type ObserveWatchHint = ObservePlexHintInput | ObserveMoviePlexHintV4;
 
 export const ObservePlexHintResultSchema = z
   .object({

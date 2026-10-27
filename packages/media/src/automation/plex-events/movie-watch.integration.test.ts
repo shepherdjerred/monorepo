@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, expect, test } from "vitest";
+import { afterEach, beforeAll, describe, expect, test } from "vitest";
 import { rm } from "node:fs/promises";
 import { automationTestHarness } from "#testing/automation.ts";
 import { movieVideoFixture } from "#testing/movie-video.ts";
@@ -14,6 +14,10 @@ import {
 import type { PlexItem } from "#integrations/plex.ts";
 import { BoundWatchAuthoritySchema } from "#shared/plex-binding/watch.ts";
 import { readCurrentBoundWatch } from "#infrastructure/plex-binding/watch.ts";
+import { PrismaPlexEventIngress } from "#infrastructure/plex-events/ingress.ts";
+import { ObserveMoviePlexHintV4Schema } from "#shared/plex-events/contract.ts";
+import { createMovieWatchFacetV4 } from "./movie-activities.ts";
+import { createSweepActivities } from "#automation/sweeps.ts";
 
 const h = automationTestHarness();
 const directories: string[] = [];
@@ -26,12 +30,17 @@ afterEach(async () => {
     await rm(directory, { recursive: true, force: true });
 });
 
-async function fixture(edition: MovieEditionKey = "extended_cut") {
-  const base = await h.fixture();
-  const f = await moviePlexV4Fixture(h.database(), h.context(), base, {
-    edition,
-    bytes,
-  });
+async function fixture(edition: MovieEditionKey = "extended_cut", source = h) {
+  const base = await source.fixture();
+  const f = await moviePlexV4Fixture(
+    source.database(),
+    source.context(),
+    base,
+    {
+      edition,
+      bytes,
+    },
+  );
   directories.push(f.files.directory);
   expect(
     await publishMoviePlexV4(f.network, f.input, testPlexBindingExecution()),
@@ -41,11 +50,11 @@ async function fixture(edition: MovieEditionKey = "extended_cut") {
     f.input,
     testPlexBindingExecution(),
   );
-  await h.database().credential.create({
+  await source.database().credential.create({
     data: {
       userId: base.user.id,
       kind: "plex",
-      ciphertext: h.cipher.encrypt(
+      ciphertext: source.cipher.encrypt(
         JSON.stringify({ serverToken: "synthetic-requester" }),
         `plex:${base.user.plexAccountId}`,
       ),
@@ -62,7 +71,7 @@ async function fixture(edition: MovieEditionKey = "extended_cut") {
     beforeRead: () => Promise.resolve(),
     calls: [],
   };
-  const userContext = h.context(async (url, init) => {
+  const userContext = source.context(async (url, init) => {
     wire.calls.push(url.pathname);
     expect(new Headers(init.headers).get("X-Plex-Token")).toBe(
       "synthetic-requester",
@@ -90,7 +99,7 @@ async function fixture(edition: MovieEditionKey = "extended_cut") {
   const context = { ...f.network, userPlex: userContext.userPlex };
   const key = { userId: base.user.id, mediaId: f.media.id, edition };
   const read = () =>
-    h
+    source
       .database()
       .watchState.findUnique({ where: { userId_mediaId_edition: key } });
   const observe = () => observeRequesterWatch(context, f.media.id, { edition });
@@ -264,4 +273,128 @@ test("an expired named-cut watch invocation cannot replace its original known ob
     "Original watch invocation expired",
   );
   expect(await f.read()).toEqual(baseline);
+});
+
+async function queueHint(f: Awaited<ReturnType<typeof fixture>>) {
+  await new PrismaPlexEventIngress(h.database(), {
+    serverMachineId: "fixture-server",
+    permittedSections: () => Promise.resolve({ movie: "1", series: "2" }),
+  }).accept({
+    schemaVersion: 1,
+    event: "media.scrobble",
+    serverMachineId: "fixture-server",
+    sectionId: "1",
+    ratingKey: f.item.ratingKey,
+    mediaKind: "movie",
+  });
+  const operation = await h.database().operation.findFirstOrThrow({
+    where: { targetId: f.media.id, kind: "observe_movie_plex_hint_v4" },
+  });
+  return ObserveMoviePlexHintV4Schema.parse(operation.payload);
+}
+
+test.each(
+  MovieEditionKeySchema.options.filter((edition) => edition !== "default"),
+)(
+  "actual %s Plex hints refresh only their claimed cut and distrust the event's scrobble status",
+  async (edition) => {
+    const f = await fixture(edition);
+    const defaultBefore = await h.database().mediaIntent.findUniqueOrThrow({
+      where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
+    });
+    const input = await queueHint(f);
+    f.wire.watched = false;
+    expect(
+      await createMovieWatchFacetV4(f.context, () =>
+        Promise.resolve(true),
+      ).observeMoviePlexHintV4(input, testPlexBindingExecution()),
+    ).toEqual({
+      status: "observed",
+      complete: true,
+    });
+    expect(await f.read()).toMatchObject({ watched: false });
+    expect(input.scope).toEqual({
+      rootMediaId: f.media.id,
+      mediaId: f.media.id,
+      edition,
+    });
+    expect(
+      await h.database().watchState.count({
+        where: { mediaId: f.media.id, edition: "default" },
+      }),
+    ).toBe(0);
+    expect(
+      await h.database().mediaIntent.findUniqueOrThrow({
+        where: { mediaId_edition: { mediaId: f.media.id, edition: "default" } },
+      }),
+    ).toEqual(defaultBefore);
+    expect(
+      await h.database().operation.count({
+        where: { targetId: f.media.id, kind: "retain_media" },
+      }),
+    ).toBe(0);
+  },
+);
+
+test.each(["generation", "epoch", "binding", "disabled", "forged"] as const)(
+  "a %s named-cut hint cannot change the prior observation",
+  async (change) => {
+    const f = await fixture();
+    expect(await f.observe()).toMatchObject({ complete: true });
+    const before = await f.read();
+    let input = await queueHint(f);
+    const db = h.database();
+    if (change === "generation")
+      await db.mediaIntent.update({
+        where: {
+          mediaId_edition: { mediaId: f.media.id, edition: "extended_cut" },
+        },
+        data: { generation: { increment: 1 } },
+      });
+    if (change === "epoch")
+      await db.mediaRuntimeState.update({
+        where: { id: "singleton" },
+        data: { recoveryEpoch: 1 },
+      });
+    if (change === "binding")
+      await db.libraryAsset.update({
+        where: { id: f.asset.id },
+        data: { owned: false },
+      });
+    if (change === "forged")
+      input = { ...input, scope: { ...input.scope, edition: "directors_cut" } };
+    f.wire.calls.splice(0);
+    expect(
+      await createMovieWatchFacetV4(f.context, () =>
+        Promise.resolve(change !== "disabled"),
+      ).observeMoviePlexHintV4(input, testPlexBindingExecution()),
+    ).toEqual({
+      status: change === "disabled" ? "disabled" : "superseded",
+      complete: false,
+    });
+    expect(f.wire.calls).toEqual([]);
+    expect(await f.read()).toEqual(before);
+  },
+);
+
+describe("periodic named watch polling", () => {
+  const isolated = automationTestHarness();
+  test("the periodic watch sweep reaches a named cut whose default target is unavailable", async () => {
+    const f = await fixture("extended_cut", isolated);
+    const activities = createSweepActivities(f.context);
+    const first = await activities.sweepMediaWork({
+      kind: "watch",
+      sweepId: crypto.randomUUID(),
+      cursor: null,
+    });
+    expect(await f.read()).toBeNull();
+    expect(first.nextCursor).toBe("movie-watch:start");
+    const named = await activities.sweepMediaWork({
+      kind: "watch",
+      sweepId: crypto.randomUUID(),
+      cursor: first.nextCursor,
+    });
+    expect(named).toEqual({ processed: 1, nextCursor: null });
+    expect(await f.read()).toMatchObject({ watched: true });
+  });
 });

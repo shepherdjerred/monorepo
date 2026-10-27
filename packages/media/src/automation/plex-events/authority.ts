@@ -14,7 +14,8 @@ import {
 } from "#infrastructure/request-claims.ts";
 import {
   ObservePlexHintInputSchema,
-  type ObservePlexHintInput,
+  ObserveMoviePlexHintV4Schema,
+  type ObserveWatchHint,
 } from "#shared/plex-events/contract.ts";
 import { watchAwait, type WatchExecution } from "./execution.ts";
 import { compensationPlayback } from "#infrastructure/native-compensation/playback.ts";
@@ -30,7 +31,7 @@ export const PlexIdentitySchema = z.object({
   plexSectionId: z.string().optional(),
 });
 export type WatchObservationOptions = {
-  expectedHint?: ObservePlexHintInput;
+  expectedHint?: ObserveWatchHint;
   edition?: MovieEditionKey;
 };
 export type WatchScope = WatchObservationOptions & {
@@ -80,8 +81,14 @@ export async function watchScope(
       "Named cuts require a movie",
       422,
     );
-  if (edition !== "default" && options.expectedHint !== undefined)
+  if (edition !== "default" && options.expectedHint?.schemaVersion === 1)
     throw new Error("An unscoped Plex hint cannot identify a named movie cut");
+  if (
+    options.expectedHint?.schemaVersion === 4 &&
+    (options.expectedHint.scope.edition !== edition ||
+      options.expectedHint.scope.mediaId !== mediaId)
+  )
+    throw new Error("Movie watch observation differs from its hint scope");
   const access = await watchAwait(
     execution,
     context.plexAccess(media.kind === "movie" ? "movie" : "show"),
@@ -362,13 +369,16 @@ async function validHint(
     execution,
     tx.operation.findUnique({ where: { id: hint.operationId } }),
   );
-  const stored = ObservePlexHintInputSchema.safeParse(operation?.payload);
+  const schema =
+    hint.schemaVersion === 1
+      ? ObservePlexHintInputSchema
+      : ObserveMoviePlexHintV4Schema;
+  const stored = schema.safeParse(operation?.payload);
   return (
-    operation?.kind === "observe_plex_hint" &&
+    operation?.kind === hint.kind &&
     operation.targetId === scope.mediaId &&
     stored.success &&
-    JSON.stringify(stored.data) ===
-      JSON.stringify(ObservePlexHintInputSchema.parse(hint)) &&
+    JSON.stringify(stored.data) === JSON.stringify(schema.parse(hint)) &&
     hint.recoveryEpoch === current.epoch &&
     hint.generation === current.generation &&
     hint.mediaId === scope.mediaId &&

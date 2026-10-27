@@ -18,6 +18,9 @@ import {
 import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
 import { movieWorkflowFiles } from "./files.ts";
 import { movieWorkflowWire } from "./wire.ts";
+import { createMovieWatchFacetV4 } from "#automation/plex-events/movie-activities.ts";
+import { PrismaPlexEventIngress } from "#infrastructure/plex-events/ingress.ts";
+import { ObserveMoviePlexHintV4Schema } from "#shared/plex-events/contract.ts";
 
 /** Full producer journey starts at real consent/outbox, before any attempt, torrent or file publication. */
 export async function createMovieWorkflowFixture(
@@ -103,6 +106,16 @@ export async function createMovieWorkflowFixture(
       options.missingEnglish === true
         ? await captionProviderFixture(context)
         : undefined;
+    await db.credential.create({
+      data: {
+        userId: user.id,
+        kind: "plex",
+        ciphertext: context.cipher.encrypt(
+          JSON.stringify({ serverToken: "synthetic-requester" }),
+          `plex:${user.plexAccountId}`,
+        ),
+      },
+    });
     const request = await requestTestMovieV4(db, user, media.id, edition);
     const completion = createOutboxActivities(db, () =>
       Promise.reject(new Error("Completion cannot dispatch")),
@@ -111,6 +124,28 @@ export async function createMovieWorkflowFixture(
     return {
       input: request.input,
       movie: createMovieNetworkFacetV4(context, sources),
+      movieWatch: createMovieWatchFacetV4(context, () => Promise.resolve(true)),
+      watchOperation: async () => {
+        if (edition === "default") return null;
+        wire.setWatched(false);
+        await new PrismaPlexEventIngress(db, {
+          serverMachineId: "fixture-server",
+          permittedSections: () => Promise.resolve({ movie: "1", series: "2" }),
+        }).accept({
+          schemaVersion: 1,
+          event: "media.scrobble",
+          serverMachineId: "fixture-server",
+          sectionId: "1",
+          ratingKey: wire.ratingKey,
+          mediaKind: "movie",
+        });
+        const operation = await db.operation.findFirstOrThrow({
+          where: { targetId: media.id, kind: "observe_movie_plex_hint_v4" },
+        });
+        return ObserveMoviePlexHintV4Schema.parse(operation.payload);
+      },
+      watchEvidence: () =>
+        db.watchState.findMany({ where: { mediaId: media.id } }),
       fileMovie: createMovieFileFacetV4(files.context),
       finishMediaOperation: completion.finishMediaOperation,
       dispatch: (start: WorkflowStarter) =>
