@@ -1,4 +1,3 @@
-import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import {
@@ -8,7 +7,6 @@ import {
   FileSchema,
   type Manifest,
   digest,
-  verifyReplica,
   runDirectory,
   atomicJSON,
   activeClients,
@@ -20,12 +18,16 @@ import {
   waitForConvergence,
   ownedProfile,
   waitForProfile,
-  replicaDirectory,
   control,
 } from "./native";
 import { augmentFromOfficial } from "./journeys";
 import { outboxSnapshot } from "./outbox";
 import { waitForOfficialPublication } from "./official-artifact";
+import {
+  changeReference,
+  readVaultFile,
+  verifyVaultEndpoint,
+} from "./replicas/access";
 
 export function taskTitle(bytes: Uint8Array) {
   const source = new TextDecoder().decode(bytes);
@@ -53,8 +55,9 @@ async function waitForPeer(
     );
     if (profile.phase === "synced") {
       try {
-        await verifyReplica(
-          replicaDirectory(manifest, peer, profile.profileID),
+        await verifyVaultEndpoint(
+          manifest,
+          { client: peer, profileID: profile.profileID },
           expected,
         );
         return;
@@ -76,8 +79,7 @@ async function conflictOnClient(manifest: Manifest, client: Client) {
   const profile = await ownedProfile(manifest, client);
   const caseID = crypto.randomUUID().toLowerCase();
   const sourcePath = "Tasks/Existing.md";
-  const vault = path.join(runDirectory(manifest.runID), "reference-vault");
-  const original = await readFile(path.join(vault, sourcePath));
+  const original = await readVaultFile(manifest, "official", sourcePath);
   const environment = {
     FACET_E2E_CONFLICT_CASE_ID: caseID,
     FACET_E2E_CONFLICT_ORIGINAL_TITLE: taskTitle(original),
@@ -96,11 +98,10 @@ async function conflictOnClient(manifest: Manifest, client: Client) {
     (offlineProfile.durable?.pendingUploadCount ?? 0) < 1
   )
     throw new Error("Conflict setup lost its pending offline mutation");
-  const local = await readFile(
-    path.join(
-      replicaDirectory(manifest, client, profile.profileID),
-      sourcePath,
-    ),
+  const local = await readVaultFile(
+    manifest,
+    { client, profileID: profile.profileID },
+    sourcePath,
   );
   if (taskTitle(local) !== `Facet local conflict ${caseID}`)
     throw new Error("Offline conflict task title did not persist");
@@ -111,7 +112,7 @@ async function conflictOnClient(manifest: Manifest, client: Client) {
   );
   if (taskTitle(remote) !== `Facet remote conflict ${caseID}`)
     throw new Error("Reference conflict title replacement failed");
-  await Bun.write(path.join(vault, sourcePath), remote);
+  await changeReference(manifest, sourcePath, remote);
   const expected: Manifest["reference"] = {
     ...manifest.reference,
     [sourcePath]: { size: remote.length, sha256: digest(remote) },
@@ -186,14 +187,13 @@ export async function lifecycleBegin(manifest: Manifest, client: Client) {
   if (outbox.count !== pendingCount)
     throw new Error("Lifecycle durable status and outbox snapshot differ");
   const title = `Lifecycle ${client === "ios" ? "iOS" : "macOS"} ${manifest.runID}-${String(manifest.round)} edited`;
-  const expected = await augmentFromOfficial(
+  const expected = await augmentFromOfficial(manifest, [title], false, {
+    client,
+    profileID: profile.profileID,
+  });
+  await verifyVaultEndpoint(
     manifest,
-    [title],
-    false,
-    replicaDirectory(manifest, client, profile.profileID),
-  );
-  await verifyReplica(
-    replicaDirectory(manifest, client, profile.profileID),
+    { client, profileID: profile.profileID },
     expected,
   );
   await runNativeTest(
@@ -226,8 +226,9 @@ export async function lifecycleBegin(manifest: Manifest, client: Client) {
   );
   if (JSON.stringify(signedOutOutbox) !== JSON.stringify(outbox))
     throw new Error("Sign-out changed immutable outbox operation identities");
-  await verifyReplica(
-    replicaDirectory(manifest, client, profile.profileID),
+  await verifyVaultEndpoint(
+    manifest,
+    { client, profileID: profile.profileID },
     expected,
   );
   await atomicJSON(
@@ -294,8 +295,9 @@ export async function lifecycleFinish(manifest: Manifest, client: Client) {
     throw new Error(
       "Reauthorization did not retain the existing bound replica",
     );
-  await verifyReplica(
-    replicaDirectory(manifest, client, profile.profileID),
+  await verifyVaultEndpoint(
+    manifest,
+    { client, profileID: profile.profileID },
     checkpoint.expected,
   );
   const reauthorizedOutbox = await outboxSnapshot(

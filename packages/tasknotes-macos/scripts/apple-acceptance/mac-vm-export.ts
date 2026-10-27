@@ -22,6 +22,7 @@ import {
 import { buildMacArtifact, type MacJourneyCommand } from "./mac-journey.ts";
 import { retireMacRun } from "./native-owner.ts";
 import type { RunBinding } from "./retained-owner.ts";
+import { readExactHandle } from "./owned-handle.ts";
 import {
   requireStableSources,
   sourceFingerprints,
@@ -56,18 +57,7 @@ export async function readOwnedMacVMJSON(
       metadata.size > 0 && metadata.size <= maximumBytes,
       "VM metadata exceeds its bound",
     );
-    const bytes = new Uint8Array(metadata.size);
-    let offset = 0;
-    while (offset < bytes.length) {
-      const read = await handle.read(
-        bytes,
-        offset,
-        bytes.length - offset,
-        offset,
-      );
-      assert.ok(read.bytesRead > 0);
-      offset += read.bytesRead;
-    }
+    const bytes = await readExactHandle(handle, metadata.size, maximumBytes);
     const after = await handle.stat();
     assert.equal(after.size, metadata.size);
     assert.equal(after.mtimeMs, metadata.mtimeMs);

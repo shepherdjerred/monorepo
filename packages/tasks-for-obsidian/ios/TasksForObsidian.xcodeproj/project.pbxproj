@@ -13,11 +13,13 @@
 		15CCDA632D7D90E3CC9292AB /* AddTaskIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0551C3579148BC83303F1BF /* AddTaskIntent.swift */; };
 		1A0B5037D6A491F17C9C6CE8 /* FacetBackgroundTasks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16E5FAAB06F3019475B51FBC /* FacetBackgroundTasks.swift */; };
 		2152BC46B66CE6EC5542E377 /* ThirdPartyNotices.txt in Resources */ = {isa = PBXBuildFile; fileRef = F8C245C44AB0D651366FB161 /* ThirdPartyNotices.txt */; };
+		2437D55DBD1408BE03FE951E /* AccountInputUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B939A59EBE483721A8AC92E /* AccountInputUITests.swift */; };
 		346852036A4FE2AD0150F607 /* WidgetTaskData.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDA151A27A535E9FA36866B7 /* WidgetTaskData.swift */; };
 		3C44E83452BCAB256C22B944 /* FirstPartyLicense.txt in Resources */ = {isa = PBXBuildFile; fileRef = B3597F195C7228F52ACBCDA6 /* FirstPartyLicense.txt */; };
 		3CF03EA3A6136D76C0F60D02 /* TaskNotesFacetUI in Frameworks */ = {isa = PBXBuildFile; productRef = 8E93EF9EAB1C58E3A2EE7FE9 /* TaskNotesFacetUI */; };
 		450C86296E7C5C954C7B83B5 /* TaskNotesKit in Frameworks */ = {isa = PBXBuildFile; productRef = E7863B45044A7056D1557AFF /* TaskNotesKit */; };
 		45E5C130E2BB9281D646FEC1 /* LiveSyncLifecycleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5235AB9742DC842D3303532D /* LiveSyncLifecycleUITests.swift */; };
+		4AE68BDD9152C45D1EEBB243 /* AccountInputSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1EB8C89E98DF40C5B3484B0 /* AccountInputSocket.swift */; };
 		4E6985EC943E01996BBC1153 /* TodayTasksProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6BF83CBECB8F58FCC65ADA5 /* TodayTasksProvider.swift */; };
 		5A6DCDE335C45B1ACCDF54B8 /* BoardTaskTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72682CFAC1D4EB470162937D /* BoardTaskTests.swift */; };
 		5E35F12DFBC5E4D7348AFDBD /* StandaloneTaskTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C1FE2E1714BD10C069C8089 /* StandaloneTaskTests.swift */; };
@@ -26,6 +28,8 @@
 		63504C4BB80245E60E2A8272 /* FacetKeyboardBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F1C5B84F4C7CA48E82226A9 /* FacetKeyboardBootstrap.swift */; };
 		64907EA8AEB3D46D7849F719 /* FacetSurfaceFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79DE99B929CC788F441D435B /* FacetSurfaceFixtures.swift */; };
 		653D4BE33D88FAB27BA1D25F /* TaskNotesFacetUI in Frameworks */ = {isa = PBXBuildFile; productRef = 5E72BC67665E5578FA52DD2C /* TaskNotesFacetUI */; };
+		6A5DC52CDE4BADD6C1A74B02 /* AccountInputProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D65F5C2B470437E4AE95AAA /* AccountInputProtocol.swift */; };
+		731ABA47AE467526B02E9ED3 /* account-input.schema.json in Resources */ = {isa = PBXBuildFile; fileRef = 7BBCFDC4D36E629D7344ECB7 /* account-input.schema.json */; };
 		7334E2D08BECCBCFF0276DD4 /* ShowTodayIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAAE9579B3F7C4994E642188 /* ShowTodayIntent.swift */; };
 		7F4C39A329A5BFA7BB433978 /* LiveSyncVaultUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE970B6EE04B52AD7857868D /* LiveSyncVaultUITests.swift */; };
 		7FC704D0EB54DDB12208A276 /* QuickAddControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53407DF630BC00824148CE26 /* QuickAddControl.swift */; };
@@ -37,9 +41,11 @@
 		A6F3F9F4DDCF4D154097C4A4 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9AA2B4C15E18713C3F2425A2 /* Images.xcassets */; };
 		B362A546A501D1EFBD21179F /* FacetAccountRenderFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7846D25C474ABAC2ABD134CF /* FacetAccountRenderFixture.swift */; };
 		BA193902757571848D61269F /* TodayTasksWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8E83C6DA31E3B637A745D46 /* TodayTasksWidget.swift */; };
+		BBF181943F6C1DD10CA6218A /* AccountInputForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47C4249CFA2A28DB37EE9A93 /* AccountInputForm.swift */; };
 		C67365CB821A80210909E7DE /* TaskNotesKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6ED2E69C5C7F08C7894ED288 /* TaskNotesKit */; };
 		CA2C3018BB6189460AB63160 /* ComponentKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D62E6AFDB17C7FB87674C26 /* ComponentKeys.swift */; };
 		CC2B1A38C105224F135EE31D /* NativeCheckpointTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D86DDC74750E83E474D98304 /* NativeCheckpointTests.swift */; };
+		D94E6F01B14AD5C645FBA019 /* TaskNotesKit in Frameworks */ = {isa = PBXBuildFile; productRef = EBD22684FB75EC82CEC4EDA0 /* TaskNotesKit */; };
 		E3D436BA38277C0B7D67D49C /* ThirdPartyNotices.txt in Resources */ = {isa = PBXBuildFile; fileRef = F8C245C44AB0D651366FB161 /* ThirdPartyNotices.txt */; };
 		E5749667862993D2E64EBB46 /* TaskNotesKit in Frameworks */ = {isa = PBXBuildFile; productRef = EF3123F128552877ED5CD5F8 /* TaskNotesKit */; };
 		E69FC13BAD3F31D581B981EC /* FacetDelightGalleryFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC73F7B09BE57D9707A6260B /* FacetDelightGalleryFixtures.swift */; };
@@ -89,14 +95,17 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0B939A59EBE483721A8AC92E /* AccountInputUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountInputUITests.swift; sourceTree = "<group>"; };
 		13D4F16936861E36121417DC /* DependencyEditorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DependencyEditorUITests.swift; sourceTree = "<group>"; };
 		16E5FAAB06F3019475B51FBC /* FacetBackgroundTasks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacetBackgroundTasks.swift; sourceTree = "<group>"; };
 		198212E9090D23DE654809E2 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		1EE9D7CEE006787A1AE6023F /* FacetPresentationTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FacetPresentationTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2D65F5C2B470437E4AE95AAA /* AccountInputProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountInputProtocol.swift; sourceTree = "<group>"; };
 		2F1C5B84F4C7CA48E82226A9 /* FacetKeyboardBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacetKeyboardBootstrap.swift; sourceTree = "<group>"; };
 		32DC94CF5EEA15A26B6B524F /* TasksForObsidianUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TasksForObsidianUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		38FB2A2990D633E3F148854F /* OccurrenceTaskTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OccurrenceTaskTests.swift; sourceTree = "<group>"; };
 		3FFF6F07E3F17DFCB8E2415A /* AcceptanceVaultPathTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcceptanceVaultPathTests.swift; sourceTree = "<group>"; };
+		47C4249CFA2A28DB37EE9A93 /* AccountInputForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountInputForm.swift; sourceTree = "<group>"; };
 		4C1FE2E1714BD10C069C8089 /* StandaloneTaskTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StandaloneTaskTests.swift; sourceTree = "<group>"; };
 		5235AB9742DC842D3303532D /* LiveSyncLifecycleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveSyncLifecycleUITests.swift; sourceTree = "<group>"; };
 		53407DF630BC00824148CE26 /* QuickAddControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddControl.swift; sourceTree = "<group>"; };
@@ -107,6 +116,7 @@
 		72682CFAC1D4EB470162937D /* BoardTaskTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardTaskTests.swift; sourceTree = "<group>"; };
 		7846D25C474ABAC2ABD134CF /* FacetAccountRenderFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacetAccountRenderFixture.swift; sourceTree = "<group>"; };
 		79DE99B929CC788F441D435B /* FacetSurfaceFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FacetSurfaceFixtures.swift; sourceTree = "<group>"; };
+		7BBCFDC4D36E629D7344ECB7 /* account-input.schema.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "account-input.schema.json"; sourceTree = "<group>"; };
 		8CDC691E8EC7FF52D91BE422 /* native-license-inventory.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "native-license-inventory.json"; sourceTree = "<group>"; };
 		948471B3C8F8B0172CDCBCD5 /* tasknotes-macos */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "tasknotes-macos"; path = "../../tasknotes-macos"; sourceTree = SOURCE_ROOT; };
 		9881866560205578B184C28C /* TasksWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TasksWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -121,6 +131,7 @@
 		BAAE9579B3F7C4994E642188 /* ShowTodayIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowTodayIntent.swift; sourceTree = "<group>"; };
 		C6BF83CBECB8F58FCC65ADA5 /* TodayTasksProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayTasksProvider.swift; sourceTree = "<group>"; };
 		CAF24620168AF2CDDE7ACD24 /* TasksWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TasksWidgetBundle.swift; sourceTree = "<group>"; };
+		D1EB8C89E98DF40C5B3484B0 /* AccountInputSocket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountInputSocket.swift; sourceTree = "<group>"; };
 		D86DDC74750E83E474D98304 /* NativeCheckpointTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeCheckpointTests.swift; sourceTree = "<group>"; };
 		DDA151A27A535E9FA36866B7 /* WidgetTaskData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetTaskData.swift; sourceTree = "<group>"; };
 		EAC0D0E1DE43BD5AD7367A49 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -137,6 +148,14 @@
 			files = (
 				653D4BE33D88FAB27BA1D25F /* TaskNotesFacetUI in Frameworks */,
 				450C86296E7C5C954C7B83B5 /* TaskNotesKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		32CE35B9AB08F9DFA90ECA04 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D94E6F01B14AD5C645FBA019 /* TaskNotesKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -210,6 +229,17 @@
 			path = Facet;
 			sourceTree = "<group>";
 		};
+		5948A859A9C226DA17D77733 /* Accounts */ = {
+			isa = PBXGroup;
+			children = (
+				47C4249CFA2A28DB37EE9A93 /* AccountInputForm.swift */,
+				2D65F5C2B470437E4AE95AAA /* AccountInputProtocol.swift */,
+				D1EB8C89E98DF40C5B3484B0 /* AccountInputSocket.swift */,
+				0B939A59EBE483721A8AC92E /* AccountInputUITests.swift */,
+			);
+			path = Accounts;
+			sourceTree = "<group>";
+		};
 		68B55F39BFDDAC1A0FCE0213 /* UITests */ = {
 			isa = PBXGroup;
 			children = (
@@ -238,6 +268,7 @@
 				89466CA39BB94F6E5FC50406 /* FacetUITests */,
 				AA7F34AC8106BA1B07CDA3B5 /* Intents */,
 				1AAEB9824313465DDDA12145 /* ios */,
+				F1FFCCD059607FBAB6E9B1BC /* ios-account */,
 				FB068F4E4FAA83256ACCAB33 /* Packages */,
 				A4E4217B6C583D05C0BACA13 /* Support */,
 				FB4472FA046702E8BD0471AA /* TasksForObsidian */,
@@ -268,6 +299,7 @@
 				B7CAE5513F4B8E99AC1B2990 /* MobileParityTests.swift */,
 				38FB2A2990D633E3F148854F /* OccurrenceTaskTests.swift */,
 				4C1FE2E1714BD10C069C8089 /* StandaloneTaskTests.swift */,
+				5948A859A9C226DA17D77733 /* Accounts */,
 				69293CCB0B682DC84674C663 /* Boards */,
 			);
 			path = FacetUITests;
@@ -295,6 +327,15 @@
 			);
 			name = Intents;
 			path = TasksForObsidian/Intents;
+			sourceTree = "<group>";
+		};
+		F1FFCCD059607FBAB6E9B1BC /* ios-account */ = {
+			isa = PBXGroup;
+			children = (
+				7BBCFDC4D36E629D7344ECB7 /* account-input.schema.json */,
+			);
+			name = "ios-account";
+			path = "../scripts/ios-account";
 			sourceTree = "<group>";
 		};
 		FB068F4E4FAA83256ACCAB33 /* Packages */ = {
@@ -363,6 +404,8 @@
 			buildConfigurationList = DC5A2B4938132A310A72B301 /* Build configuration list for PBXNativeTarget "TasksForObsidianUITests" */;
 			buildPhases = (
 				AB01E8EA44665B893D89F0F6 /* Sources */,
+				07990134772C43CCDBE4FD62 /* Resources */,
+				32CE35B9AB08F9DFA90ECA04 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -371,6 +414,7 @@
 			);
 			name = TasksForObsidianUITests;
 			packageProductDependencies = (
+				EBD22684FB75EC82CEC4EDA0 /* TaskNotesKit */,
 			);
 			productName = TasksForObsidianUITests;
 			productReference = 32DC94CF5EEA15A26B6B524F /* TasksForObsidianUITests.xctest */;
@@ -449,6 +493,14 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		07990134772C43CCDBE4FD62 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				731ABA47AE467526B02E9ED3 /* account-input.schema.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		803663BF41195A58A3C91BD0 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -505,6 +557,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BBF181943F6C1DD10CA6218A /* AccountInputForm.swift in Sources */,
+				6A5DC52CDE4BADD6C1A74B02 /* AccountInputProtocol.swift in Sources */,
+				4AE68BDD9152C45D1EEBB243 /* AccountInputSocket.swift in Sources */,
+				2437D55DBD1408BE03FE951E /* AccountInputUITests.swift in Sources */,
 				5A6DCDE335C45B1ACCDF54B8 /* BoardTaskTests.swift in Sources */,
 				84368482FE6F3694B2E99744 /* DependencyEditorUITests.swift in Sources */,
 				63504C4BB80245E60E2A8272 /* FacetKeyboardBootstrap.swift in Sources */,
@@ -896,6 +952,10 @@
 			productName = TaskNotesFacetUI;
 		};
 		E7863B45044A7056D1557AFF /* TaskNotesKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TaskNotesKit;
+		};
+		EBD22684FB75EC82CEC4EDA0 /* TaskNotesKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TaskNotesKit;
 		};

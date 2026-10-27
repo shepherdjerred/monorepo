@@ -1,4 +1,3 @@
-import { readFile, rename, unlink } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import {
@@ -7,7 +6,6 @@ import {
   digest,
   runDirectory,
   atomicJSON,
-  verifyReplica,
   activeClients,
 } from "./model";
 import { save, launch, statuses } from "./platform";
@@ -16,8 +14,15 @@ import {
   waitForConvergence,
   control,
   ownedProfile,
-  replicaDirectory,
 } from "./native";
+import {
+  changeReference,
+  readVaultFile,
+  renameReference,
+  vaultSnapshot,
+  verifyVaultEndpoint,
+  type VaultTarget,
+} from "./replicas/access";
 import { assertCurrentConfigurationProof } from "./configuration";
 import { outboxSnapshot } from "./outbox";
 import {
@@ -29,18 +34,15 @@ export async function augmentFromOfficial(
   manifest: Manifest,
   titles: string[],
   highPriority = false,
-  directory?: string,
+  target: VaultTarget = "official",
 ) {
-  const vault =
-    directory ?? path.join(runDirectory(manifest.runID), "reference-vault");
   const expected = { ...manifest.reference };
   const matches = new Set<string>();
-  for (const relative of new Bun.Glob("**/*.md").scanSync({
-    cwd: vault,
-    dot: true,
-  })) {
+  for (const relative of Object.keys(
+    await vaultSnapshot(manifest, target),
+  ).filter((entry) => entry.endsWith(".md"))) {
     if (relative in manifest.reference) continue;
-    const bytes = await readFile(path.join(vault, relative));
+    const bytes = await readVaultFile(manifest, target, relative);
     const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/u.exec(
       bytes.toString("utf8"),
     )?.[1];
@@ -147,7 +149,6 @@ export async function referenceChange(
   bytes: Uint8Array | null,
   label: string,
 ) {
-  const vault = path.join(runDirectory(manifest.runID), "reference-vault");
   if (
     relative !== ".obsidian/plugins/tasknotes/data.json" &&
     !relative.startsWith("Tasks/") &&
@@ -161,10 +162,8 @@ export async function referenceChange(
       ([key]) => bytes !== null || key !== relative,
     ),
   );
-  if (bytes === null) {
-    await unlink(path.join(vault, relative));
-  } else {
-    await Bun.write(path.join(vault, relative), bytes);
+  await changeReference(manifest, relative, bytes);
+  if (bytes !== null) {
     expected[relative] = { size: bytes.length, sha256: digest(bytes) };
   }
   const evidence = await waitForConvergence(manifest, expected);
@@ -214,8 +213,7 @@ export async function referenceChanges(manifest: Manifest) {
     "official-uncompleted",
   );
   const destination = `Tasks/Official renamed ${manifest.runID}.md`;
-  const vault = path.join(runDirectory(manifest.runID), "reference-vault");
-  await rename(path.join(vault, relative), path.join(vault, destination));
+  await renameReference(manifest, relative, destination);
   const expected = Object.fromEntries(
     Object.entries(manifest.reference).filter(([key]) => key !== relative),
   );
@@ -234,9 +232,10 @@ export async function referenceChanges(manifest: Manifest) {
   manifest.cases["file-operations"] = "pass";
   await save(manifest);
   const settingsPath = ".obsidian/plugins/tasknotes/data.json";
+  const settingsBytes = await readVaultFile(manifest, "official", settingsPath);
   const settings = z
     .record(z.string(), z.unknown())
-    .parse(await Bun.file(path.join(vault, settingsPath)).json());
+    .parse(JSON.parse(settingsBytes.toString("utf8")));
   await referenceChange(
     manifest,
     settingsPath,
@@ -304,14 +303,14 @@ export async function offline(manifest: Manifest) {
       manifest.allowedRemoteVaultID,
       await outboxSnapshot(manifest, client, profile.profileID),
     );
-    const replica = replicaDirectory(manifest, client, profile.profileID);
+    const replica = { client, profileID: profile.profileID };
     const retained = await augmentFromOfficial(
       manifest,
       [title],
       false,
       replica,
     );
-    await verifyReplica(replica, retained);
+    await verifyVaultEndpoint(manifest, replica, retained);
     const after = await ownedProfile(
       manifest,
       client,

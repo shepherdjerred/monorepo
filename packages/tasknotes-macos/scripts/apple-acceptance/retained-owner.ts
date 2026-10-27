@@ -1,9 +1,7 @@
 import assert from "node:assert/strict";
-import path from "node:path";
+import definition from "./occurrence-launches.schema.json";
 
-const schema: unknown = await Bun.file(
-  path.join(import.meta.dir, "occurrence-launches.schema.json"),
-).json();
+const schema: unknown = definition;
 
 export type Lifetime = {
   uid: number;

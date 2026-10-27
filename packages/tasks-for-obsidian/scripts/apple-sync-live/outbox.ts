@@ -3,6 +3,7 @@ import { lstat, realpath } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { digest, uuid, clientState, type Client, type Manifest } from "./model";
+import { guestOutbox } from "./transport/client";
 
 const selection = `SELECT o.sequence,o.profile,o.id,o.path,o.bytes,o.revision,o.remote_revision,
   o.created_ms,o.modified_ms,o.related_path,p.size AS payload_size,p.revision AS payload_revision,
@@ -54,6 +55,8 @@ export async function outboxSnapshot(
   client: Client,
   profileID: string,
 ) {
+  if (client === "macos" && manifest.schemaVersion === 3)
+    return guestOutbox(manifest, profileID);
   const state = clientState(manifest, client);
   const filename = path.join(state.stateDirectory, "facet.sqlite3");
   const stat = await lstat(filename);

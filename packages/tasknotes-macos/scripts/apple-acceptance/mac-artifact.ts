@@ -272,6 +272,7 @@ export async function verifyMacArtifact(
   artifact: MacArtifact,
   products: string,
   command: MacJourneyCommand,
+  capabilityDirectory = path.dirname(products),
 ): Promise<void> {
   for (const [file, expected] of Object.entries(artifact.files))
     if (macRuntimeFile(file) && !file.endsWith(".xctestrun")) {
@@ -298,7 +299,7 @@ export async function verifyMacArtifact(
       path.join(products, "Debug", app),
     ]);
     const entitlementFile = path.join(
-      path.dirname(products),
+      capabilityDirectory,
       `capabilities-${app}.plist`,
     );
     await command([

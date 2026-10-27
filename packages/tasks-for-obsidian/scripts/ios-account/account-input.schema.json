@@ -1,0 +1,278 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "uuid": { "type": "string", "format": "uuid" },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "sessionID",
+        "runID",
+        "deviceID",
+        "requestID",
+        "kind"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "sessionID": { "$ref": "#/$defs/uuid" },
+        "runID": { "$ref": "#/$defs/uuid" },
+        "deviceID": { "$ref": "#/$defs/uuid" },
+        "requestID": { "$ref": "#/$defs/uuid" },
+        "kind": {
+          "enum": [
+            "fill",
+            "submit",
+            "observe",
+            "fill-verification",
+            "submit-verification",
+            "fill-vault-password",
+            "connect",
+            "finish"
+          ]
+        },
+        "email": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+        },
+        "password": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+        },
+        "code": { "type": "string", "pattern": "^[0-9]{6}$" },
+        "vaultPassword": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+        },
+        "remoteVaultID": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+        },
+        "profileID": { "$ref": "#/$defs/uuid" }
+      },
+      "anyOf": [
+        {
+          "properties": { "kind": { "const": "fill" } },
+          "required": ["email", "password"],
+          "not": {
+            "anyOf": [
+              { "required": ["code"] },
+              { "required": ["vaultPassword"] },
+              { "required": ["remoteVaultID"] },
+              { "required": ["profileID"] }
+            ]
+          }
+        },
+        {
+          "properties": { "kind": { "const": "fill-verification" } },
+          "required": ["code"],
+          "not": {
+            "anyOf": [
+              { "required": ["email"] },
+              { "required": ["password"] },
+              { "required": ["vaultPassword"] },
+              { "required": ["remoteVaultID"] },
+              { "required": ["profileID"] }
+            ]
+          }
+        },
+        {
+          "properties": { "kind": { "const": "fill-vault-password" } },
+          "required": ["vaultPassword"],
+          "not": {
+            "anyOf": [
+              { "required": ["email"] },
+              { "required": ["password"] },
+              { "required": ["code"] },
+              { "required": ["remoteVaultID"] },
+              { "required": ["profileID"] }
+            ]
+          }
+        },
+        {
+          "properties": { "kind": { "const": "connect" } },
+          "required": ["remoteVaultID"],
+          "not": {
+            "anyOf": [
+              { "required": ["email"] },
+              { "required": ["password"] },
+              { "required": ["code"] },
+              { "required": ["vaultPassword"] }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "kind": {
+              "enum": ["submit", "submit-verification", "observe", "finish"]
+            }
+          },
+          "not": {
+            "anyOf": [
+              { "required": ["email"] },
+              { "required": ["password"] },
+              { "required": ["code"] },
+              { "required": ["vaultPassword"] },
+              { "required": ["remoteVaultID"] },
+              { "required": ["profileID"] }
+            ]
+          }
+        }
+      ]
+    },
+    "reply": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "sessionID", "runID", "deviceID", "kind"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "sessionID": { "$ref": "#/$defs/uuid" },
+        "runID": { "$ref": "#/$defs/uuid" },
+        "deviceID": { "$ref": "#/$defs/uuid" },
+        "requestID": { "$ref": "#/$defs/uuid" },
+        "kind": {
+          "enum": [
+            "ready",
+            "filled",
+            "submitted",
+            "observed",
+            "verification-filled",
+            "verification-submitted",
+            "vault-password-filled",
+            "connect-submitted",
+            "finished",
+            "rejected"
+          ]
+        },
+        "runnerPID": { "type": "integer", "minimum": 1 },
+        "stage": {
+          "enum": [
+            "credentials",
+            "verification",
+            "vaults",
+            "connected",
+            "rejected"
+          ]
+        },
+        "signInEnabled": { "type": "boolean" },
+        "connectEnabled": { "type": "boolean" },
+        "busy": { "const": false },
+        "disabledCheckpoints": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        },
+        "submitActionCount": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "reason": {
+          "enum": ["input", "ownership", "form", "focus", "deadline", "socket"]
+        }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "kind": { "const": "ready" },
+            "stage": { "enum": ["credentials", "verification", "vaults"] }
+          },
+          "required": ["runnerPID", "stage", "signInEnabled"],
+          "anyOf": [
+            {
+              "properties": {
+                "stage": { "enum": ["credentials", "verification"] }
+              }
+            },
+            {
+              "properties": { "stage": { "const": "vaults" } },
+              "required": ["connectEnabled"]
+            }
+          ]
+        },
+        {
+          "properties": {
+            "kind": { "const": "filled" },
+            "disabledCheckpoints": { "const": 2 },
+            "signInEnabled": { "const": true },
+            "submitActionCount": { "const": 0 }
+          },
+          "required": [
+            "requestID",
+            "disabledCheckpoints",
+            "signInEnabled",
+            "submitActionCount"
+          ]
+        },
+        {
+          "properties": {
+            "kind": { "const": "submitted" },
+            "submitActionCount": { "const": 1 }
+          },
+          "required": ["requestID", "submitActionCount"]
+        },
+        {
+          "properties": {
+            "kind": { "const": "verification-filled" },
+            "signInEnabled": { "const": true },
+            "submitActionCount": { "const": 0 }
+          },
+          "required": ["requestID", "signInEnabled", "submitActionCount"]
+        },
+        {
+          "properties": {
+            "kind": { "enum": ["verification-submitted", "connect-submitted"] },
+            "submitActionCount": { "const": 1 }
+          },
+          "required": ["requestID", "submitActionCount"]
+        },
+        {
+          "properties": {
+            "kind": { "const": "vault-password-filled" },
+            "disabledCheckpoints": { "const": 1 },
+            "connectEnabled": { "const": true },
+            "submitActionCount": { "const": 0 }
+          },
+          "required": [
+            "requestID",
+            "disabledCheckpoints",
+            "connectEnabled",
+            "submitActionCount"
+          ]
+        },
+        {
+          "properties": {
+            "kind": { "const": "observed" },
+            "stage": {
+              "enum": ["verification", "vaults", "connected", "rejected"]
+            }
+          },
+          "required": ["requestID", "stage", "busy"],
+          "anyOf": [
+            {
+              "properties": {
+                "stage": { "enum": ["verification", "connected", "rejected"] }
+              }
+            },
+            {
+              "properties": { "stage": { "const": "vaults" } },
+              "required": ["connectEnabled"]
+            }
+          ]
+        },
+        {
+          "properties": { "kind": { "const": "finished" } },
+          "required": ["requestID", "submitActionCount"]
+        },
+        {
+          "properties": { "kind": { "const": "rejected" } },
+          "required": ["reason"]
+        }
+      ]
+    }
+  }
+}

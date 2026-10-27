@@ -15,13 +15,31 @@ import {
   ManifestSchema,
   type Manifest,
   digest,
-  verifyReplica,
   runDirectory,
   atomicJSON,
   activeClients,
+  hasIOS,
 } from "./model";
 import { command, save, writeDescriptors } from "./platform";
-import { inspectOfficialPlugin } from "./official-plugin";
+import {
+  prepareGuestClients,
+  preparedScopeProvenance,
+  parsePreparationArguments as parseScope,
+  parseExecutionArguments as parseExecution,
+  type OfficialAppInput,
+} from "./replicas/preparation";
+export type PreparationScope = "apple" | "macos";
+export function parsePreparationArguments(args: string[]): PreparationScope {
+  return parseScope(args);
+}
+export function parseExecutionArguments(args: string[]) {
+  return parseExecution(args);
+}
+import {
+  currentOfficialPlugin,
+  currentOfficialVersion,
+} from "./replicas/official";
+import { readVaultFile, verifyVaultEndpoint } from "./replicas/access";
 
 export async function seed(directory: string) {
   await cp(path.join(fixtures, "e2e/local-vault"), directory, {
@@ -134,15 +152,11 @@ async function sourceFingerprints() {
   return files;
 }
 
-export type PreparationScope = "apple" | "macos";
-
-export function parsePreparationArguments(args: string[]): PreparationScope {
-  if (args.length === 0) return "apple";
-  z.tuple([z.literal("--clients"), z.literal("macos")]).parse(args);
-  return "macos";
-}
-
-export async function prepare(scope: PreparationScope = "apple") {
+export async function prepare(
+  scope: PreparationScope = "apple",
+  vm?: string,
+  officialApp?: OfficialAppInput,
+) {
   const runnerIdentity = z
     .string()
     .regex(/^[a-f0-9]{40}$/iu)
@@ -152,7 +166,7 @@ export async function prepare(scope: PreparationScope = "apple") {
   const directory = runDirectory(runID);
   await mkdir(directory, { recursive: false, mode: 0o700 });
   const seeded = await seed(path.join(directory, "reference-vault"));
-  const manifest = ManifestSchema.parse({
+  let manifest = ManifestSchema.parse({
     ...(scope === "macos" ? { schemaVersion: 2, scope } : { schemaVersion: 1 }),
     runID,
     createdAt: new Date().toISOString(),
@@ -171,12 +185,24 @@ export async function prepare(scope: PreparationScope = "apple") {
   console.log(`Preparing owned live run ${runID}`);
   try {
     const sourceFiles = await sourceFingerprints();
-    const { iosApp, macApp } = await prepareNativeClients(
-      manifest,
-      command,
-      save,
-      runnerIdentity,
-    );
+    let iosApp: string | undefined;
+    let macApp: string;
+    if (vm === undefined) {
+      ({ iosApp, macApp } = await prepareNativeClients(
+        manifest,
+        command,
+        save,
+        runnerIdentity,
+      ));
+    } else {
+      ({ manifest, iosApp, macApp } = await prepareGuestClients(manifest, {
+        scope,
+        vm,
+        sourceFiles,
+        runnerIdentity,
+        officialApp,
+      }));
+    }
     await writeDescriptors(manifest, null);
     if (
       JSON.stringify(await sourceFingerprints()) !== JSON.stringify(sourceFiles)
@@ -184,16 +210,11 @@ export async function prepare(scope: PreparationScope = "apple") {
       throw new Error(
         "Source changed during native preparation; retain this failed run and rebuild from one source state",
       );
-    let scopeProvenance;
-    if (manifest.schemaVersion === 2) {
-      scopeProvenance = { schemaVersion: 2, scope: manifest.scope };
-    } else {
-      if (iosApp === undefined) throw new Error("Missing built iOS artifact");
-      scopeProvenance = {
-        schemaVersion: 1,
-        iosApp: await fingerprintApp(iosApp),
-      };
-    }
+    const scopeProvenance = await preparedScopeProvenance(
+      manifest,
+      macApp,
+      iosApp,
+    );
     await atomicJSON(path.join(directory, "provenance.json"), {
       ...scopeProvenance,
       runID,
@@ -210,7 +231,7 @@ export async function prepare(scope: PreparationScope = "apple") {
     manifest.stage = "owner-setup";
     await save(manifest);
     console.log(
-      `Reference vault: ${path.join(directory, "reference-vault")}\nOpen that folder in official Obsidian, install/enable TaskNotes 4.13.8, and connect only the designated synthetic encrypted remote vault. Enable Sync all other types and vault configuration, including Installed community plugins (which includes plugin settings), restart and let Sync finish. Store its separate vault password in 1Password. No recordings during credential entry.\nSelected clients: ${activeClients(manifest).join(", ")} (${String(activeClients(manifest).length + 1)} replicas including official Obsidian).\nThen run in order:\nbun run apple:sync:live seal-reference ${runID}\nbun run apple:sync:live discover ${runID}\nSign in manually with recording off and identify only the exact synthetic vault.\nbun run apple:sync:live bind-vault ${runID} <nonsecret-remote-vault-id>\nbun run apple:sync:live resume ${runID}`,
+      `${manifest.schemaVersion === 3 ? "Official reference and Mac replica reside only in the selected headless guest. The host reference-vault is an immutable seed, not a Sync replica." : `Reference vault: ${path.join(directory, "reference-vault")}`}\nConfigure only the designated synthetic encrypted vault in official Obsidian with TaskNotes 4.13.8. Keep credential recording off.\nSelected clients: ${activeClients(manifest).join(", ")} (${String(activeClients(manifest).length + 1)} replicas).\nThen seal-reference, discover, bind-vault and resume this run: ${runID}`,
     );
   } catch (error) {
     manifest.stage = "failed";
@@ -236,13 +257,13 @@ export async function prepareNativeClients(
     {},
     { timeoutMS: 900_000 },
   );
-  if (manifest.schemaVersion === 1)
-    await runCommand(["bun", "run", "ios:native:generate"]);
-  await runCommand(
-    ["xcodegen", "generate"],
-    path.resolve(packageRoot, "../tasknotes-macos"),
-  );
-  if (manifest.schemaVersion === 1) {
+  if (hasIOS(manifest)) await runCommand(["bun", "run", "ios:native:generate"]);
+  if (manifest.schemaVersion !== 3)
+    await runCommand(
+      ["xcodegen", "generate"],
+      path.resolve(packageRoot, "../tasknotes-macos"),
+    );
+  if (hasIOS(manifest)) {
     const name = `Facet Live Sync ${runID}`;
     manifest.simulator = {
       name,
@@ -265,7 +286,10 @@ async function buildNativeClients(
   runnerIdentity?: string,
 ) {
   const directory = runDirectory(manifest.runID);
-  for (const client of activeClients(manifest)) {
+  const selected = activeClients(manifest).filter(
+    (client) => client === "ios" || manifest.schemaVersion !== 3,
+  );
+  for (const client of selected) {
     const mac = client === "macos";
     let destination = "platform=macOS";
     if (!mac) {
@@ -321,7 +345,7 @@ async function assignPreparedClients(
     "macos/Build/Products/Debug/FacetAcceptance.app",
   );
   let iosContainer: string | undefined;
-  if (manifest.schemaVersion === 1) {
+  if (hasIOS(manifest)) {
     if (manifest.simulator === null) throw new Error("Missing owned simulator");
     const device = manifest.simulator.id;
     await runCommand(["xcrun", "simctl", "install", device, iosApp]);
@@ -340,23 +364,25 @@ async function assignPreparedClients(
     macBundle,
     "Data",
   );
-  const macos = {
-    container: macContainer,
-    descriptor: path.join(
-      macContainer,
-      "Library/Application Support/FacetAcceptance",
-      runID,
-      "acceptance.json",
-    ),
-    stateDirectory: path.join(
-      macContainer,
-      "Library/Application Support/FacetAcceptance",
-      runID,
-    ),
-  };
-  if (manifest.schemaVersion === 2) {
-    manifest.clients = { macos };
-  } else {
+  const macos =
+    manifest.schemaVersion === 3
+      ? manifest.clients?.macos
+      : {
+          container: macContainer,
+          descriptor: path.join(
+            macContainer,
+            "Library/Application Support/FacetAcceptance",
+            runID,
+            "acceptance.json",
+          ),
+          stateDirectory: path.join(
+            macContainer,
+            "Library/Application Support/FacetAcceptance",
+            runID,
+          ),
+        };
+  if (macos === undefined) throw new Error("Missing prepared guest Mac client");
+  if (hasIOS(manifest)) {
     if (iosContainer === undefined) throw new Error("Missing iOS container");
     manifest.clients = {
       macos,
@@ -370,44 +396,43 @@ async function assignPreparedClients(
         ),
       },
     };
-  }
-  return { iosApp: manifest.schemaVersion === 1 ? iosApp : undefined, macApp };
+  } else manifest.clients = { macos };
+  return { iosApp: hasIOS(manifest) ? iosApp : undefined, macApp };
 }
 
 export async function sealReference(manifest: Manifest) {
   if (manifest.stage !== "owner-setup")
     throw new Error("Seal the official reference before binding live clients");
-  const directory = path.join(runDirectory(manifest.runID), "reference-vault");
   const settingsPath = ".obsidian/plugins/tasknotes/data.json";
-  const pluginEvidence = await inspectOfficialPlugin(
-    path.join(directory, ".obsidian/plugins/tasknotes"),
-  );
+  const pluginEvidence = await currentOfficialPlugin(manifest);
   const originalSettings = manifest.reference[settingsPath];
   if (originalSettings === undefined)
     throw new Error("Missing seeded plugin settings");
   for (const [relative, expected] of Object.entries(manifest.reference)) {
     if (relative === settingsPath) continue;
-    const bytes = await readFile(path.join(directory, relative));
+    const bytes = await readVaultFile(manifest, "official", relative);
     if (bytes.length !== expected.size || digest(bytes) !== expected.sha256)
       throw new Error(`Official setup changed a synthetic seed: ${relative}`);
   }
+  const pluginBytes = await readVaultFile(
+    manifest,
+    "official",
+    ".obsidian/plugins/tasknotes/manifest.json",
+  );
+  const enabledBytes = await readVaultFile(
+    manifest,
+    "official",
+    ".obsidian/community-plugins.json",
+  );
   const plugin = z
     .object({ id: z.literal("tasknotes"), version: z.literal("4.13.8") })
-    .parse(
-      await Bun.file(
-        path.join(directory, ".obsidian/plugins/tasknotes/manifest.json"),
-      ).json(),
-    );
+    .parse(JSON.parse(pluginBytes.toString("utf8")));
   const enabled = z
     .array(z.string())
-    .parse(
-      await Bun.file(
-        path.join(directory, ".obsidian/community-plugins.json"),
-      ).json(),
-    );
+    .parse(JSON.parse(enabledBytes.toString("utf8")));
   if (!enabled.includes(plugin.id))
     throw new Error("TaskNotes 4.13.8 must be enabled in official Obsidian");
-  const settings = await readFile(path.join(directory, settingsPath));
+  const settings = await readVaultFile(manifest, "official", settingsPath);
   z.object({
     storeTitleInFilename: z.literal(false),
     defaultTaskStatus: z.literal("open"),
@@ -417,21 +442,13 @@ export async function sealReference(manifest: Manifest) {
       status: z.literal("status"),
     }),
   }).parse(JSON.parse(settings.toString("utf8")));
-  const officialVersion = await command([
-    "plutil",
-    "-extract",
-    "CFBundleShortVersionString",
-    "raw",
-    "-o",
-    "-",
-    "/Applications/Obsidian.app/Contents/Info.plist",
-  ]);
+  const officialVersion = await currentOfficialVersion(manifest);
   z.string().min(1).max(64).parse(officialVersion);
   manifest.reference[settingsPath] = {
     size: settings.length,
     sha256: digest(settings),
   };
-  await verifyReplica(directory, manifest.reference);
+  await verifyVaultEndpoint(manifest, "official", manifest.reference);
   await atomicJSON(
     path.join(runDirectory(manifest.runID), "official-reference.json"),
     {
@@ -442,8 +459,10 @@ export async function sealReference(manifest: Manifest) {
       taskNotesVersion: plugin.version,
       pluginEvidence,
       pluginManifestSHA256: digest(
-        await readFile(
-          path.join(directory, ".obsidian/plugins/tasknotes/manifest.json"),
+        await readVaultFile(
+          manifest,
+          "official",
+          ".obsidian/plugins/tasknotes/manifest.json",
         ),
       ),
       seededSettingsSHA256: originalSettings.sha256,

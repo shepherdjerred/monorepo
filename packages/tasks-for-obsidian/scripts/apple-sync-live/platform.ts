@@ -18,7 +18,9 @@ import {
   atomicJSON,
   activeClients,
   clientState,
+  hasIOS,
 } from "./model";
+import { guestStatus, requestGuest } from "./transport/client";
 
 export async function command(
   argv: string[],
@@ -100,8 +102,12 @@ async function captureCommandOutput(
 }
 
 async function rebaseOwnedIOS(manifest: Manifest, ios: string) {
-  if (manifest.schemaVersion !== 1) throw new Error("iOS is not selected");
-  if (manifest.clients === null || ios === manifest.clients.ios.container)
+  if (!hasIOS(manifest)) throw new Error("iOS is not selected");
+  if (
+    manifest.clients === null ||
+    !("ios" in manifest.clients) ||
+    ios === manifest.clients.ios.container
+  )
     return;
   // Xcode may relocate an existing data container. Its copied descriptor must
   // still bind this exact run and vault before we accept the new root.
@@ -152,7 +158,7 @@ export async function readManifest(
       "Data",
     );
     let ios: string | undefined;
-    if (manifest.schemaVersion === 1) {
+    if (hasIOS(manifest)) {
       if (manifest.simulator === null)
         throw new Error("Missing owned simulator");
       assertOwnedSimulator(
@@ -189,6 +195,7 @@ export async function readManifest(
 
 function assertClientContainers(manifest: Manifest, mac: string, ios?: string) {
   for (const client of activeClients(manifest)) {
+    if (client === "macos" && manifest.schemaVersion === 3) continue;
     const expected = client === "ios" ? ios : mac;
     if (expected === undefined) throw new Error("Missing selected container");
     const actual = clientState(manifest, client);
@@ -215,10 +222,31 @@ function assertClientContainers(manifest: Manifest, mac: string, ios?: string) {
 }
 
 export async function save(manifest: Manifest) {
+  const accepted = ManifestSchema.parse(manifest);
   await atomicJSON(
-    path.join(runDirectory(manifest.runID), "manifest.json"),
-    manifest,
+    path.join(runDirectory(accepted.runID), "manifest.json"),
+    accepted,
   );
+  if (accepted.schemaVersion === 3) {
+    const result = await requestGuest(accepted, {
+      kind: "checkpoint",
+      checkpoint: {
+        stage: accepted.stage,
+        scope: accepted.scope,
+        officialReferencePassed:
+          accepted.cases["official-reference"] === "pass",
+        initialDownloadPassed: accepted.cases["initial-download"] === "pass",
+        lifecycleBeginPassed:
+          accepted.operations["lifecycle-begin:macos"] === "pass",
+        lifecycleFinishPresent:
+          accepted.operations["lifecycle-finish:macos"] !== undefined,
+        failuresCount: accepted.failures.length,
+        completedRounds: accepted.completedRounds,
+      },
+    });
+    if (result.kind !== "checkpoint")
+      throw new Error("Wrong guest checkpoint response");
+  }
 }
 
 export function descriptor(
@@ -246,6 +274,10 @@ export async function writeDescriptors(
   for (const client of activeClients(manifest)) {
     const value = descriptor(manifest, client, vaultID);
     validate("descriptor", value);
+    if (client === "macos" && manifest.schemaVersion === 3) {
+      await requestGuest(manifest, { kind: "descriptor", vaultID });
+      continue;
+    }
     await atomicJSON(clientState(manifest, client).descriptor, value);
   }
 }
@@ -317,6 +349,15 @@ export async function launch(
     "macos/Build/Products/Debug/FacetAcceptance.app",
   );
   if (selected.includes("macos")) {
+    if (manifest.schemaVersion === 3) {
+      await requestGuest(manifest, {
+        kind: "launch",
+        discovery,
+        timeoutMS: remainingMS(),
+      });
+      return;
+    }
+    requireHostUI(manifest);
     const executable = path.join(app, "Contents/MacOS/FacetAcceptance");
     await stopOwnedMacProcess(executable, remainingMS);
     await runCommand([
@@ -335,16 +376,19 @@ export async function statuses(manifest: Manifest) {
   return Promise.all(
     activeClients(manifest).map(async (client) => ({
       client,
-      value: z
-        .unknown()
-        .parse(
-          await Bun.file(
-            path.join(
-              clientState(manifest, client).stateDirectory,
-              "control/status.json",
-            ),
-          ).json(),
-        ),
+      value:
+        client === "macos" && manifest.schemaVersion === 3
+          ? await guestStatus(manifest)
+          : z
+              .unknown()
+              .parse(
+                await Bun.file(
+                  path.join(
+                    clientState(manifest, client).stateDirectory,
+                    "control/status.json",
+                  ),
+                ).json(),
+              ),
     })),
   );
 }
@@ -361,7 +405,7 @@ export async function cleanup(manifest: Manifest) {
     throw new Error(
       "Acceptance is incomplete; retain the failed/pending run for diagnosis",
     );
-  if (manifest.schemaVersion === 2) {
+  if (!hasIOS(manifest)) {
     manifest.stage = "cleaned";
     await save(manifest);
     console.log(
@@ -395,4 +439,11 @@ export async function cleanup(manifest: Manifest) {
   console.log(
     "Deleted only the manifest-owned disposable simulator. Remote vault and private evidence retained.",
   );
+}
+
+export function requireHostUI(manifest: Manifest) {
+  if (manifest.schemaVersion !== 3 && !Bun.argv.includes("--host-ui"))
+    throw new Error(
+      "Host Mac UI requires explicit --host-ui; automated live acceptance requires --vm",
+    );
 }

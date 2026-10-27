@@ -102,22 +102,40 @@ task_detection:
 
 ### Live Apple Sync acceptance
 
-`bun run apple:sync:live prepare` builds the current Debug iOS app on a new
-disposable simulator and the separate `TaskNotesAcceptance` macOS app. It creates
-a synthetic reference seed for the encrypted Sync vault under
-`.build/live-sync/<runID>/reference-vault`
-and records source, app, fixture and attachment hashes. The live seed omits
+Automated live acceptance requires an already provisioned, running headless Tart
+guest. Prepare with explicit guest and immutable official-app export identities:
+
+```bash
+bun run apple:sync:live prepare --vm <running-VM> \
+  --official-export <export-UUID> --official-sha256 <archive-SHA256>
+# Add --clients macos to omit iOS while retaining the complete two-replica matrix.
+```
+
+Preparation builds the current Debug iOS app on an owned disposable simulator
+when selected and exports the separately signed Mac acceptance app. Its schema-3
+manifest binds the guest, run, source, signed artifacts, immutable configuration
+and executable bundle. The official Obsidian vault and Mac replica exist inside
+the guest. The host's `.build/live-sync/<runID>/reference-vault` is only an
+immutable seed; it is never counted as a syncing replica. Status, complete file
+inventories, exact bytes, outbox fingerprints and reference mutations cross a
+closed, freshness-checked Guest Agent protocol. Failed guest operations never
+fall back to the host desktop. This command does not download or boot a VM,
+copy user account data, or grant privacy permissions.
+
+The live seed omits
 `tasknotes.yaml` so portable configuration cannot mask official plugin settings.
 It uses complete status definitions pinned to official TaskNotes 4.13.8; partial
 status entries from the immutable mapping corpus are not valid plugin settings.
 Existing app identities, vaults and simulators are outside this runner's ownership.
 
 For Mac acceptance without an iOS simulator, use
-`bun run apple:sync:live prepare --clients macos`. This builds only the Mac
+`bun run apple:sync:live prepare --clients macos --host-ui`. This explicit manual path builds only the Mac
 acceptance app, performs no iOS generation or simulator operations, and records a
 schema-version-2 manifest/provenance with `scope: "macos"`. Only the Mac artifact
-is fingerprinted. The default command retains schema-version-1 dual-client
-behavior, and existing runs keep their original requirements. Mac-only results
+is fingerprinted. The manual dual-client command is `prepare --host-ui`; it
+retains schema-version-1 behavior. Existing schema-1/2 runs require `--host-ui` on
+every subsequent command. Omitting both execution choices fails before
+preparation; a guest manifest cannot be reopened in host UI mode. Mac-only results
 prove two replicas (official Obsidian and Facet Mac); they do not establish iOS or
 three-client acceptance. Every case and all three consecutive rounds are still
 required for the selected scope. Commands naming an unselected client fail.
@@ -138,16 +156,68 @@ harmless child:
 bun scripts/apple-sync-live/mac-process-owner.native-controls.ts
 ```
 
-Open the printed reference folder in official Obsidian, install and enable
-TaskNotes **4.13.8**, and connect only the designated synthetic encrypted remote
-vault. Preserve existing remote vaults; provision a new one only when explicitly
-authorized. Enable all other attachment types and vault configuration/plugin
-data in Sync, including **Installed community plugins** (which also synchronizes
-plugin settings), restart Obsidian, and wait for synchronization. Store the separate
-vault password in 1Password. Account entry and MFA are manual, with recording off.
-Mac-only runs may use the reviewed [`mac:account` driver](../tasknotes-macos/README.md#isolated-native-acceptance)
+For guest execution, the owner-setup entry launches only the exact exported
+official app and owned reference, installs the separately exported pinned plugin,
+and presents normal account controls:
+
+```bash
+bun scripts/apple-sync-live/transport/execution/official-host.ts <runID> launch
+bun scripts/apple-sync-live/transport/execution/official-host.ts <runID> plugin --plugin-export <UUID>
+bun scripts/apple-sync-live/transport/execution/official-host.ts <runID> present
+bun scripts/apple-sync-live/transport/execution/official-host.ts <runID> probe
+bun scripts/apple-sync-live/transport/execution/official-host.ts <runID> credentials \\
+  --account <1Password-account-ID> --vault <vault-ID> --item <item-ID>
+```
+
+The probe uses synthetic values and zero submits; real entry requires its measured
+privacy proof and performs one normal submit. Account success, conditional MFA,
+and selection of the designated remote vault require observed follow-up; a submit
+receipt alone proves none of them. No unknown submission is repeated automatically.
+Manual host execution requires opening the owned reference and installing
+TaskNotes **4.13.8** explicitly. Both modes must connect only the designated
+synthetic encrypted remote vault. Preserve existing remote vaults; provision a new
+one only when explicitly authorized. Enable all other attachment types and vault
+configuration/plugin data in Sync, including **Installed community plugins**
+(which also synchronizes plugin settings), restart Obsidian, and verify synchronization.
+Store the separate vault password in 1Password. Account captures stay off.
+The reviewed [`mac:account` driver](../tasknotes-macos/README.md#isolated-native-acceptance)
 for normal account controls and existing-profile lifecycle reauthorization through
 1Password. Recording stays off; driver receipts do not establish live acceptance.
+
+The iOS private input driver uses the prepared run's exact signed UI Runner and
+an owned, bounded Unix socket inside its simulator container. It never uses a
+clipboard, credential arguments, environment values or credential files. First
+run the synthetic-only privacy probe against that exact artifact:
+
+```bash
+bun run ios:account <runID> probe
+```
+
+The probe fills generated email and password sentinels, finishes with zero submit
+actions, and scans stdout, stderr, decoded XCTest activity/console records, raw
+result files and attachments. Any sentinel leakage, unexpected visual artifact,
+failed native assertion or incomplete evidence blocks real credential reads.
+Results are retained without redaction. A successful proof is bound to the run,
+full source inventory, exact Runner bytes and immutable retained evidence.
+
+Only after that proof may the operator invoke:
+
+```bash
+bun run ios:account <runID> credentials \
+  --account <1Password-account-ID> --vault <vault-ID> --item <item-ID> \
+  --vault-password-ref <op-reference> --vault-password-backend service-account
+# Personal vault-password items require the explicit desktop backend.
+# Reauthorization adds --lifecycle-round <1|2|3> and uses the original profile.
+```
+
+The host reads 1Password only after the owned form is ready, rechecks ownership
+after approval, and sends values through private memory-only input. Credential
+entry, optional verification, and connection each have separate submit actions;
+only the descriptor-bound remote vault and retained reconnect profile are allowed.
+The session stays alive until actual UI and control status settle. A successful
+finish relaunches the same owned app to resume Sync; replica convergence remains
+the matrix's responsibility. Unknown submission outcomes retain inspectable
+state and stop without automatic resubmission.
 
 ```bash
 bun run apple:sync:live seal-reference <runID>
@@ -200,8 +270,10 @@ reconnection. Authentication fixture evidence is distinct from live account/MFA
 acceptance. Conflict journeys preview both divergent versions, keep both and
 verify their exact bytes across all replicas. Session journeys preserve the
 original profile and pending uploads through sign-out, cold launch and manual
-reauthorization. Official TaskNotes UI actions remain owner-attested. For each
-create, edit, complete and uncomplete action, save a real PNG screenshot beneath
+reauthorization. In guest mode, official TaskNotes UI actions are followed by
+measured app-only captures through the guest endpoint. In manual host mode, those
+actions remain owner-attested: for each create, edit, complete and uncomplete action,
+save a real PNG screenshot beneath
 `.build/live-sync/<runID>/official-ui/round-<round>/<step>.png`, showing only the
 synthetic vault and task. Create this private directory before saving the first
 image. Missing images leave that checkpoint pending; account entry, credentials,
