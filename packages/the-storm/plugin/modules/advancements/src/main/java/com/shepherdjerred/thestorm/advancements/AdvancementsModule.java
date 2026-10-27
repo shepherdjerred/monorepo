@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.arena.app.ArenaEvents;
 import com.shepherdjerred.thestorm.arena.app.ArenaRecords;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
+import com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry;
 import com.shepherdjerred.thestorm.essentials.app.HomeSignals;
 import com.shepherdjerred.thestorm.essentials.app.store.HomeStore;
 import com.shepherdjerred.thestorm.quests.app.QuestCompletions;
@@ -38,6 +39,7 @@ public final class AdvancementsModule implements StormModule {
 
   @Override
   public void enable(ModuleContext context) {
+    context.services().require(PlayerResetRegistry.class).stateless(id());
     var server = context.plugin().getServer();
     var awarder = new AdvancementAwarder(server);
     awarder.requireInstalled();

@@ -69,9 +69,7 @@ public final class AdvancementFeeds implements Listener {
     this.arenas = sources.arenas();
     this.stats = sources.stats();
     this.homes = sources.homes();
-    sources
-        .quests()
-        .subscribe(standing -> award(standing.player(), Grants.quests(standing.counted())));
+    sources.quests().subscribe(this::quests);
     sources.townMilestones().subscribe(this::town);
     sources
         .shardUpgrades()
@@ -329,6 +327,15 @@ public final class AdvancementFeeds implements Listener {
         row.matches(), wins, row.kills(), row.assists(), row.bestWinStreak(), row.bestStreak());
   }
 
+  /** A quest count restored on join is filled in quietly. One just completed is announced. */
+  private void quests(QuestCompletions.Standing standing) {
+    var paths = Grants.quests(standing.counted());
+    switch (standing.origin()) {
+      case LOADED -> recall(standing.player(), paths);
+      case EARNED -> award(standing.player(), paths);
+    }
+  }
+
   private void award(UUID player, List<String> paths) {
     if (paths.isEmpty()) {
       return;
@@ -336,6 +343,16 @@ public final class AdvancementFeeds implements Listener {
     var online = server.getPlayer(player);
     if (online != null) {
       awarder.grant(online, paths);
+    }
+  }
+
+  private void recall(UUID player, List<String> paths) {
+    if (paths.isEmpty()) {
+      return;
+    }
+    var online = server.getPlayer(player);
+    if (online != null) {
+      awarder.catchUp(online, paths);
     }
   }
 }

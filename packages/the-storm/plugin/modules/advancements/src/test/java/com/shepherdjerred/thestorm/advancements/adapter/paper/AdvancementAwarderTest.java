@@ -60,6 +60,27 @@ final class AdvancementAwarderTest {
   }
 
   @Test
+  void aVanishedPlayersStormMilestoneDropsTheChatLine() {
+    PlayerVisibility.set(alice, true);
+    var event = done(alice, "thestorm:a_survival/home", Component.text("vanished"));
+
+    awarder.quietCatchUp(event);
+
+    assertThat(event.message()).isNull();
+  }
+
+  @Test
+  void aVanishedPlayersVanillaAdvancementKeepsTheChatLine() {
+    PlayerVisibility.set(alice, true);
+    var message = Component.text("Stone Age");
+    var event = done(alice, "minecraft:story/mine_stone", message);
+
+    awarder.quietCatchUp(event);
+
+    assertThat(event.message()).isEqualTo(message);
+  }
+
+  @Test
   void saysAStormMilestoneWhenTheWorldHidesAdvancementChat() {
     var bob = server.addPlayer("Bob");
     var message = Component.text("has made the advancement");

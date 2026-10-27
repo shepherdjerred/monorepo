@@ -16,7 +16,8 @@ import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 
 /**
  * Grants catalog advancements on the main thread. A milestone just reached is announced. One the
- * player already had is filled in without a chat line or a Discord post.
+ * player already had, and a Storm milestone earned while vanished, are filled in without a chat
+ * line or a Discord post.
  */
 public final class AdvancementAwarder implements Listener {
 
@@ -81,12 +82,20 @@ public final class AdvancementAwarder implements Listener {
     }
   }
 
-  /** Catch-up grants drop the chat line before Discord or the broadcaster can see it. */
+  /**
+   * Catch-up grants, and a vanished player's Storm milestone, drop the chat line before Discord or
+   * the broadcaster can see it. Vanilla advancements are left alone.
+   */
   @EventHandler(priority = EventPriority.LOWEST)
   void quietCatchUp(PlayerAdvancementDoneEvent event) {
-    if (!earnedNow) {
+    if (!earnedNow || vanishedStorm(event)) {
       event.message(null);
     }
+  }
+
+  private static boolean vanishedStorm(PlayerAdvancementDoneEvent event) {
+    return PlayerVisibility.hidden(event.getPlayer())
+        && Catalog.NAMESPACE.equals(event.getAdvancement().getKey().getNamespace());
   }
 
   /** Worlds that hide advancement chat, such as Search and Destroy, still say a Storm milestone. */

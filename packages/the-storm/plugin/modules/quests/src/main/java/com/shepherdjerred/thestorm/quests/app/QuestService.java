@@ -154,7 +154,7 @@ public final class QuestService implements QuestHooks, QuestProgress, QuestCompl
                   pendingHandins.put(player, handins(loaded.pending()));
                   handinNoticeSent.remove(player);
                   sessions.put(player, loaded.state());
-                  publishStanding(player);
+                  publishStanding(player, Standing.Origin.LOADED);
                   deliverPending(player);
                   flushDiscoveries(player);
                   refresh(player);
@@ -1000,16 +1000,16 @@ public final class QuestService implements QuestHooks, QuestProgress, QuestCompl
       }
     }
     if (counted) {
-      publishStanding(player);
+      publishStanding(player, Standing.Origin.EARNED);
     }
   }
 
-  private void publishStanding(UUID player) {
+  private void publishStanding(UUID player, Standing.Origin origin) {
     var state = sessions.get(player);
     if (state == null) {
       return;
     }
-    var standing = new Standing(player, count(state));
+    var standing = new Standing(player, count(state), origin);
     List.copyOf(standings).forEach(listener -> listener.accept(standing));
   }
 
