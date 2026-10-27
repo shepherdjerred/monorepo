@@ -43,6 +43,10 @@ test("fresh torrent evidence preserves stable handoff identity across normal see
   const entry = captured.report.entries[0];
   if (!entry) throw new Error("Captured torrent missing");
   const input = await readHandoffPlan(context.db, plan.id);
+  if (input.manifest.schemaVersion !== 1)
+    throw new Error(
+      "Historical torrent fixture must use its original complete bundle",
+    );
   input.manifest.captures.push({
     captureId: captured.captureId,
     captureHash: captured.captureHash,

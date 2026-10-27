@@ -7,6 +7,96 @@ import { MigrationCatalogDiscovery } from "./catalog-discovery.ts";
 import { captureFixture, mediaFixture } from "./bundle-test-fixtures.ts";
 
 const { database, context } = automationTestHarness();
+
+test("initial-library report creation and owner approval need no request or torrent capture", async () => {
+  const db = database();
+  const actor = await db.mediaUser.create({
+    data: {
+      role: "owner",
+      plexAccountId: crypto.randomUUID(),
+      displayName: "Library owner",
+    },
+  });
+  await db.mediaItem.create({
+    data: {
+      kind: "movie",
+      tmdbId: 331_442,
+      title: "Library movie",
+      externalIds: {},
+    },
+  });
+  const service = new PrismaMigrationAdministration(db);
+  const movie = await service.upload(actor, {
+    snapshot: captureFixture("radarr", [
+      mediaFixture("1", "movie", { tmdb: 331_442 }),
+    ]),
+  });
+  const tv = await service.upload(actor, {
+    snapshot: captureFixture("sonarr"),
+  });
+  const input = {
+    schemaVersion: 2 as const,
+    purpose: "initial_library" as const,
+    captureIds: [movie.captureId, tv.captureId],
+    rootMappings: [
+      {
+        captureId: movie.captureId,
+        sourceRoot: "/movies",
+        canonicalRoot: "/data/movies",
+        verified: false as const,
+      },
+      {
+        captureId: tv.captureId,
+        sourceRoot: "/tv",
+        canonicalRoot: "/data/tv",
+        verified: false as const,
+      },
+    ],
+  };
+  const review = await service.bundles.create(actor, input);
+  expect(review).toMatchObject({
+    status: "awaiting_review",
+    manifest: {
+      schemaVersion: 2,
+      purpose: "initial_library",
+      complete: true,
+      stable: true,
+      associations: [],
+      requiredSources: ["radarr", "sonarr"],
+    },
+  });
+  expect(review.manifest.rootMappings).toHaveLength(2);
+  expect(review.manifest.rootMappings).toEqual(
+    expect.arrayContaining(input.rootMappings),
+  );
+  await service.bundles.review(actor, crypto.randomUUID(), review.id, {
+    expectedVersion: review.version,
+    reportHash: review.report.reportHash,
+    bundleHash: review.manifest.bundleHash,
+    recoveryEpoch: review.recoveryEpoch,
+    runtimeVersion: review.runtimeVersion,
+    action: "approve",
+    selected: review.report.entries.map((entry) => ({
+      provenanceKey: entry.provenanceKey,
+      evidenceHash: entry.observationHash,
+    })),
+    acknowledgeNoOwnershipTransfer: true,
+  });
+  expect(await service.bundles.detail(actor, review.id)).toMatchObject({
+    status: "approved",
+  });
+  expect(await db.libraryAsset.count()).toBe(0);
+  expect(await db.mediaRequest.count()).toBe(0);
+  const torrent = await service.upload(actor, {
+    snapshot: captureFixture("qbittorrent"),
+  });
+  await expect(
+    service.bundles.create(actor, {
+      ...input,
+      captureIds: [...input.captureIds, torrent.captureId],
+    }),
+  ).rejects.toMatchObject({ code: "library_capture_required" });
+});
 async function catalogResponse(url: URL) {
   if (url.pathname.endsWith("/movie/33/alternative_titles"))
     return Response.json({ id: 33, titles: [] });

@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { z } from "zod";
-import {
-  BundleReviewSchema,
-  BundleReviewListSchema,
-} from "#shared/migration-handoff.ts";
+import { BundleReviewListSchema } from "#shared/migration-handoff.ts";
+import { BundleReviewProtocolSchema } from "#shared/handoff/library-bundle.ts";
 import type { MigrationProposalListSchema } from "#shared/migration.ts";
 import { CommandResultSchema } from "#shared/api.ts";
 import { readApi, writeApi, queryClient } from "./api.ts";
@@ -30,7 +28,7 @@ export function MigrationBundles({
         actorId,
         path: "/admin/migration/bundles",
         body: { captureIds: selected },
-        schema: BundleReviewSchema,
+        schema: BundleReviewProtocolSchema,
       }),
     onSuccess: async (result) => {
       setReviewId(result.id);
@@ -108,7 +106,7 @@ function BundleDetail({ id, actorId }: { id: string; actorId: string }) {
   const detail = useQuery({
     queryKey: ["migration", "bundles", id],
     queryFn: async () =>
-      readApi(`/admin/migration/bundles/${id}`, BundleReviewSchema),
+      readApi(`/admin/migration/bundles/${id}`, BundleReviewProtocolSchema),
   });
   if (detail.isPending) return <Loading />;
   if (detail.error !== null) return <ErrorNotice error={detail.error} />;
@@ -124,7 +122,7 @@ function BundleSelection({
   review,
   actorId,
 }: {
-  review: z.infer<typeof BundleReviewSchema>;
+  review: z.infer<typeof BundleReviewProtocolSchema>;
   actorId: string;
 }) {
   const [selected, setSelected] = useState(

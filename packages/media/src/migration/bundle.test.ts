@@ -1,6 +1,10 @@
 import { expect, test } from "vitest";
 import { buildMigrationBundle, validateBundleSelection } from "./bundle.ts";
 import { captureFixture, mediaFixture } from "./bundle-test-fixtures.ts";
+import {
+  LibraryMigrationBundleV2Schema,
+  MigrationBundleProtocolSchema,
+} from "#shared/handoff/library-bundle.ts";
 
 function captures() {
   return (["radarr", "sonarr", "seerr", "bazarr", "qbittorrent"] as const).map(
@@ -88,4 +92,57 @@ test("proposed root mappings bind exact capture and mount identity without grant
       rootMappings: [{ ...mapping, captureId: crypto.randomUUID() }],
     }),
   ).toThrow("outside this bundle");
+});
+
+test.each([true, false])(
+  "a library-only report needs no request or torrent capture (captions %s)",
+  (captions) => {
+    const sources = captures().filter(
+      (capture) =>
+        capture.snapshot.sourceKind === "radarr" ||
+        capture.snapshot.sourceKind === "sonarr" ||
+        (captions && capture.snapshot.sourceKind === "bazarr"),
+    );
+    const ctx = context();
+    const actual = buildMigrationBundle(sources, ctx, "initial_library");
+    expect(LibraryMigrationBundleV2Schema.parse(actual.manifest)).toMatchObject(
+      {
+        schemaVersion: 2,
+        purpose: "initial_library",
+        complete: true,
+        stable: true,
+        associations: [],
+      },
+    );
+    expect(
+      actual.manifest.requiredSources.toSorted((a, b) => a.localeCompare(b)),
+    ).toEqual(
+      ["radarr", "sonarr", ...(captions ? ["bazarr"] : [])].toSorted((a, b) =>
+        a.localeCompare(b),
+      ),
+    );
+    expect(actual.report.mayTransferOwnership).toBe(false);
+    expect(
+      buildMigrationBundle(sources.toReversed(), ctx, "initial_library"),
+    ).toEqual(actual);
+    expect(buildMigrationBundle(sources, ctx).report.complete).toBe(false);
+  },
+);
+
+test("library reports reject transfer/request sources and preserve the old complete-bundle literal body", () => {
+  const sources = captures();
+  const ctx = context();
+  expect(() => buildMigrationBundle(sources, ctx, "initial_library")).toThrow();
+  const library = sources.filter(
+    (capture) => capture.snapshot.sourceKind === "bazarr",
+  );
+  expect(
+    buildMigrationBundle(library, ctx, "initial_library").report.complete,
+  ).toBe(false);
+  const original = buildMigrationBundle(sources, ctx);
+  expect(original.manifest).not.toHaveProperty("purpose");
+  expect(original.manifest.schemaVersion).toBe(1);
+  expect(MigrationBundleProtocolSchema.parse(original.manifest)).toEqual(
+    original.manifest,
+  );
 });

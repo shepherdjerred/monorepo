@@ -8,11 +8,14 @@ import {
   MigrationSnapshotSchema,
 } from "#shared/migration.ts";
 import {
-  CreateBundleSchema,
   ReviewBundleSchema,
-  BundleReviewSchema,
   BundleReportSchema,
 } from "#shared/migration-handoff.ts";
+import {
+  CreateBundleProtocolSchema,
+  BundleReviewProtocolSchema,
+  LibraryCaptureKindSchema,
+} from "#shared/handoff/library-bundle.ts";
 import { buildMigrationBundle, validateBundleSelection } from "./bundle.ts";
 import { migrationTargets } from "./catalog-targets.ts";
 
@@ -28,7 +31,7 @@ function dto(row: {
   createdAt: Date;
   bundle: { manifest: unknown };
 }) {
-  return BundleReviewSchema.parse({
+  return BundleReviewProtocolSchema.parse({
     id: row.id,
     bundleId: row.bundleId,
     manifest: row.bundle.manifest,
@@ -45,9 +48,12 @@ export class PrismaMigrationBundles extends MediaCommandBase {
   constructor(private readonly db: Database) {
     super(db, { keepDays: 30 });
   }
-  async create(actor: MediaActor, value: z.input<typeof CreateBundleSchema>) {
+  async create(
+    actor: MediaActor,
+    value: z.input<typeof CreateBundleProtocolSchema>,
+  ) {
     requireOwner(actor);
-    const input = CreateBundleSchema.parse(value);
+    const input = CreateBundleProtocolSchema.parse(value);
     if (new Set(input.captureIds).size !== input.captureIds.length)
       throw new MediaError("invalid_bundle", "Capture IDs must be unique", 422);
     return await this.db.$transaction(
@@ -65,10 +71,27 @@ export class PrismaMigrationBundles extends MediaCommandBase {
             "A selected capture is absent",
             422,
           );
-        const users = await tx.mediaUser.findMany({
-          take: MAX_MIGRATION_RECORDS + 1,
-          select: { id: true, plexAccountId: true },
-        });
+        if (
+          "schemaVersion" in input &&
+          captures.some(
+            (capture) =>
+              !LibraryCaptureKindSchema.safeParse(
+                MigrationSnapshotSchema.parse(capture.manifest).sourceKind,
+              ).success,
+          )
+        )
+          throw new MediaError(
+            "library_capture_required",
+            "Choose movie, TV or subtitle library captures for this report",
+            422,
+          );
+        const users =
+          "schemaVersion" in input
+            ? []
+            : await tx.mediaUser.findMany({
+                take: MAX_MIGRATION_RECORDS + 1,
+                select: { id: true, plexAccountId: true },
+              });
         const context = {
           targets: await migrationTargets(tx),
           requesters: users.map((user) => ({
@@ -89,6 +112,7 @@ export class PrismaMigrationBundles extends MediaCommandBase {
             snapshot: MigrationSnapshotSchema.parse(capture.manifest),
           })),
           context,
+          "schemaVersion" in input ? input.purpose : undefined,
         );
         const bundle = await tx.migrationBundle.upsert({
           where: { bundleHash: manifest.bundleHash },

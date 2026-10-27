@@ -1,14 +1,12 @@
 import type { z } from "zod";
-import type {
-  BundleReportSchema,
-  MigrationBundleSchema,
-} from "#shared/migration-handoff.ts";
+import type { BundleReportSchema } from "#shared/migration-handoff.ts";
+import type { MigrationBundleProtocolSchema } from "#shared/handoff/library-bundle.ts";
 
 type Entry = z.infer<typeof BundleReportSchema>["entries"][number];
 /** Opaque source identities are explicit owner declarations, never numeric-ID inference. */
 export function associateSubtitleRecords(
   entries: Entry[],
-  manifest: z.infer<typeof MigrationBundleSchema>,
+  manifest: z.infer<typeof MigrationBundleProtocolSchema>,
 ) {
   for (const entry of entries) {
     const record = entry.sourceRecord;

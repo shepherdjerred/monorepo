@@ -479,6 +479,14 @@ identity evidence, and checks current owner authority under the final database
 locks. Video content remains unchanged. A durable receipt makes a committed
 apply idempotent after an interrupted response.
 
+Library-only reports use an explicit `schemaVersion: 2` and
+`purpose: "initial_library"` when creating the review bundle. They require the
+Radarr and Sonarr library captures; Bazarr captions and policies are optional.
+They exclude request and torrent captures, associations and requester inventory.
+Proposed source/canonical roots remain unverified until the trusted handoff
+observer proves the actual mounts. Earlier complete-bundle bodies and hashes
+retain their original format and source requirements.
+
 Initial library adoption uses schema version 2 for observation or schema version 3
 with `plexEditionLabels: "update_in_place"` for automatic label correction.
 Each selected movie file needs

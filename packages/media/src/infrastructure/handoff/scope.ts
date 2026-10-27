@@ -8,9 +8,9 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import { MediaError } from "#application/errors.ts";
 import {
   BundleReportSchema,
-  MigrationBundleSchema,
   MigrationSelectionSchema,
 } from "#shared/migration-handoff.ts";
+import { MigrationBundleProtocolSchema } from "#shared/handoff/library-bundle.ts";
 import {
   HandoffScopeSchema,
   type PrepareHandoffSchema,
@@ -47,7 +47,7 @@ async function reviewedBundle(tx: Prisma.TransactionClient, input: Input) {
     where: { id: input.bundleReviewId },
     include: { bundle: true },
   });
-  const manifest = MigrationBundleSchema.parse(review.bundle.manifest);
+  const manifest = MigrationBundleProtocolSchema.parse(review.bundle.manifest);
   const report = BundleReportSchema.parse(review.report);
   if (
     review.status !== "approved" ||
@@ -69,7 +69,7 @@ async function projectScope(
   tx: Prisma.TransactionClient,
   options: {
     input: Input;
-    manifest: z.infer<typeof MigrationBundleSchema>;
+    manifest: z.infer<typeof MigrationBundleProtocolSchema>;
     report: z.infer<typeof BundleReportSchema>;
     selected: Entry[];
   },
@@ -198,7 +198,7 @@ async function projectClaim(tx: Prisma.TransactionClient, entry: Entry) {
 async function resolveProfiles(
   tx: Prisma.TransactionClient,
   input: Input,
-  manifest: z.infer<typeof MigrationBundleSchema>,
+  manifest: z.infer<typeof MigrationBundleProtocolSchema>,
 ) {
   const result = new Map<string, { id: string; version: number }>();
   for (const binding of input.profiles) {
@@ -239,7 +239,7 @@ async function resolveProfiles(
 async function projectFile(
   tx: Prisma.TransactionClient,
   entry: Entry,
-  manifest: z.infer<typeof MigrationBundleSchema>,
+  manifest: z.infer<typeof MigrationBundleProtocolSchema>,
   media: { id: string; kind: string }[],
 ) {
   const source = entry.sourceRecord;

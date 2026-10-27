@@ -3,10 +3,10 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import { HandoffScopeProtocolSchema } from "#shared/handoff/protocol.ts";
 import { assertLibraryHandoffSnapshot } from "#infrastructure/handoff/scoped-snapshot.ts";
 import {
-  MigrationBundleSchema,
   BundleReportSchema,
   MigrationSelectionSchema,
 } from "#shared/migration-handoff.ts";
+import { MigrationBundleProtocolSchema } from "#shared/handoff/library-bundle.ts";
 import { runtimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { protectedEvidence } from "./context.ts";
@@ -21,7 +21,7 @@ export async function readHandoffPlan(
     include: { bundleReview: { include: { bundle: true } } },
   });
   const scope = HandoffScopeProtocolSchema.parse(plan.scope);
-  const manifest = MigrationBundleSchema.parse(
+  const manifest = MigrationBundleProtocolSchema.parse(
     plan.bundleReview.bundle.manifest,
   );
   const report = BundleReportSchema.parse(plan.bundleReview.report);
@@ -80,7 +80,7 @@ function assertReview(input: {
     include: { bundleReview: { include: { bundle: true } } };
   }>;
   scope: ReturnType<typeof HandoffScopeProtocolSchema.parse>;
-  manifest: ReturnType<typeof MigrationBundleSchema.parse>;
+  manifest: ReturnType<typeof MigrationBundleProtocolSchema.parse>;
   report: ReturnType<typeof BundleReportSchema.parse>;
   approved: ReturnType<typeof MigrationSelectionSchema.parse>;
 }) {

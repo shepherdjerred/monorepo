@@ -10,6 +10,11 @@ import {
   MigrationSelectionSchema,
   MigrationRootMappingSchema,
 } from "#shared/migration-handoff.ts";
+import {
+  LibraryMigrationBundleV2Schema,
+  LibraryCaptureKindSchema,
+  LibraryRootMappingV2Schema,
+} from "#shared/handoff/library-bundle.ts";
 import { validateCapture } from "#migration/capture/capture-validation.ts";
 import { snapshotHash } from "./profile-import.ts";
 import { normalizeCapture } from "./normalize.ts";
@@ -21,7 +26,10 @@ type Captured = { id: string; snapshot: MigrationSnapshot };
 type Context = {
   targets: z.infer<typeof AdoptionTargetSchema>[];
   requesters: { userId: string; plexAccountId: string }[];
-  rootMappings?: z.infer<typeof MigrationRootMappingSchema>[];
+  rootMappings?: (
+    | z.infer<typeof MigrationRootMappingSchema>
+    | z.infer<typeof LibraryRootMappingV2Schema>
+  )[];
 };
 function checkedCaptures(captures: Captured[]) {
   if (
@@ -72,11 +80,19 @@ function protectEntries(
   }
 }
 /** Captures remain immutable. Cross-source identity evidence is never itself an ownership handoff. */
-export function buildMigrationBundle(captures: Captured[], context: Context) {
-  const checked = checkedCaptures(captures);
+export function buildMigrationBundle(
+  captures: Captured[],
+  context: Context,
+  purpose?: "initial_library",
+) {
+  const checked = checkedBundleCaptures(captures, purpose);
   const kinds = new Set(checked.map((capture) => capture.snapshot.sourceKind));
   const rootMappings = z
-    .array(MigrationRootMappingSchema)
+    .array(
+      purpose === "initial_library"
+        ? LibraryRootMappingV2Schema
+        : MigrationRootMappingSchema,
+    )
     .max(100)
     .parse(context.rootMappings ?? []);
   if (
@@ -86,23 +102,29 @@ export function buildMigrationBundle(captures: Captured[], context: Context) {
     )
   )
     throw new Error("Root mapping references a capture outside this bundle");
-  const requiredSources = [
-    "radarr",
-    "sonarr",
-    "bazarr",
-    "qbittorrent",
-    kinds.has("seerr")
-      ? "seerr"
-      : kinds.has("jellyseerr")
-        ? "jellyseerr"
-        : "overseerr",
-  ] as const;
+  const requiredSources =
+    purpose === "initial_library"
+      ? LibraryCaptureKindSchema.options.filter(
+          (kind) => kind !== "bazarr" || kinds.has(kind),
+        )
+      : ([
+          "radarr",
+          "sonarr",
+          "bazarr",
+          "qbittorrent",
+          kinds.has("seerr")
+            ? "seerr"
+            : kinds.has("jellyseerr")
+              ? "jellyseerr"
+              : "overseerr",
+        ] as const);
   const complete =
     requiredSources.every((kind) => kinds.has(kind)) &&
     checked.every((capture) => capture.complete);
   const stable = complete && checked.every((capture) => capture.stable);
   const descriptor = {
-    schemaVersion: 1,
+    schemaVersion: purpose === "initial_library" ? 2 : 1,
+    ...(purpose === "initial_library" ? { purpose } : {}),
     captures: checked
       .map((capture) => ({
         captureId: capture.id,
@@ -111,9 +133,10 @@ export function buildMigrationBundle(captures: Captured[], context: Context) {
         sourceInstanceId: capture.snapshot.sourceInstanceId,
       }))
       .sort((a, b) => canonicalOrder(a.captureHash, b.captureHash)),
-    associations: bundleAssociations(checked).sort((a, b) =>
-      canonicalOrder(a.evidenceHash, b.evidenceHash),
-    ),
+    associations: (purpose === "initial_library"
+      ? []
+      : bundleAssociations(checked)
+    ).sort((a, b) => canonicalOrder(a.evidenceHash, b.evidenceHash)),
     requiredSources: [...requiredSources],
     complete,
     stable,
@@ -124,7 +147,11 @@ export function buildMigrationBundle(captures: Captured[], context: Context) {
       ),
     ),
   };
-  const manifest = MigrationBundleSchema.parse({
+  const manifest = (
+    purpose === "initial_library"
+      ? LibraryMigrationBundleV2Schema
+      : MigrationBundleSchema
+  ).parse({
     ...descriptor,
     bundleHash: snapshotHash(z.json().parse(descriptor)),
   });
@@ -152,6 +179,17 @@ export function buildMigrationBundle(captures: Captured[], context: Context) {
       reportHash: snapshotHash(z.json().parse(report)),
     }),
   };
+}
+
+function checkedBundleCaptures(
+  captures: Captured[],
+  purpose: "initial_library" | undefined,
+) {
+  const checked = checkedCaptures(captures);
+  if (purpose === "initial_library")
+    for (const capture of checked)
+      LibraryCaptureKindSchema.parse(capture.snapshot.sourceKind);
+  return checked;
 }
 export function validateBundleSelection(
   report: z.infer<typeof BundleReportSchema>,
