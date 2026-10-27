@@ -191,7 +191,7 @@ bun run --filter='./packages/scout-for-lol' dev:web
 
 The command first runs Turbo's dependency-aware build for the backend and SPA
 workspace closures, then starts the existing development server. This prepares
-runtime exports such as the LLM and Glitter packages on a clean checkout while
+runtime exports such as the LLM model catalog on a clean checkout while
 preserving all arguments passed after `--`.
 
 - `mise run check` runs typecheck, lint, format, and test across all packages;

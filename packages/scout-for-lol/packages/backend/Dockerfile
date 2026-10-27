@@ -42,14 +42,11 @@ FROM deps AS build
 COPY --parents \
   tsconfig.base.json \
   packages/scout-for-lol/tsconfig.base.json \
-  packages/glitter-context \
   packages/llm-models \
   packages/scout-for-lol/packages/domain \
   packages/scout-for-lol/packages/data \
   packages/scout-for-lol/packages/backend \
   ./
-# @shepherdjerred/glitter-context also publishes a gitignored `dist/`.
-RUN cd packages/glitter-context && bun run build
 # @shepherdjerred/llm-models' package `main`/`types` resolve to a gitignored
 # `dist/`, so any consumer (scout's data package imports it) crashes at
 # startup with `Cannot find module '@shepherdjerred/llm-models'` unless the
@@ -173,7 +170,6 @@ COPY --parents \
 RUN cd packages/scout-for-lol/packages/backend && CHECKPOINT_DISABLE=1 bun x --trust prisma generate \
  && rm -rf "$HOME/.cache/checkpoint-nodejs" "$HOME/.config/prisma-nodejs"
 # Built artifacts from the build stage.
-COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/dist
 COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
 COPY --from=build /app/packages/scout-for-lol/packages/backend/generated packages/scout-for-lol/packages/backend/generated
 # Pinned voice assets. Present in every image, loaded only when
