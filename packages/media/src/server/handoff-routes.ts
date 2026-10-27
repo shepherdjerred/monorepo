@@ -3,7 +3,10 @@ import { z } from "zod";
 import type { MediaActor } from "#application/auth.ts";
 import type { PrismaMediaHandoff } from "#infrastructure/handoff/service.ts";
 import { IdempotencyKeySchema } from "#infrastructure/commands.ts";
-import { PrepareHandoffSchema, ApplyHandoffSchema } from "#shared/handoff.ts";
+import {
+  ApplyHandoffProtocolSchema,
+  PrepareHandoffProtocolSchema,
+} from "#shared/handoff-v2.ts";
 import { parseInput, readJson } from "./validation.ts";
 
 export type HandoffAdministration = Pick<
@@ -20,7 +23,7 @@ export function registerHandoffRoutes(
       await handoff.prepare(
         c.get("actor"),
         parseInput(IdempotencyKeySchema, c.req.header("Idempotency-Key")),
-        parseInput(PrepareHandoffSchema, await readJson(c.req.raw)),
+        parseInput(PrepareHandoffProtocolSchema, await readJson(c.req.raw)),
       ),
       202,
     ),
@@ -39,7 +42,7 @@ export function registerHandoffRoutes(
         c.get("actor"),
         parseInput(IdempotencyKeySchema, c.req.header("Idempotency-Key")),
         parseInput(z.uuid(), c.req.param("id")),
-        parseInput(ApplyHandoffSchema, await readJson(c.req.raw)),
+        parseInput(ApplyHandoffProtocolSchema, await readJson(c.req.raw)),
       ),
       202,
     ),

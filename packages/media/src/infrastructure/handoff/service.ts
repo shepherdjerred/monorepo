@@ -3,11 +3,14 @@ import type { Database } from "#infrastructure/database.ts";
 import type { MediaActor } from "#application/auth.ts";
 import { MediaError, requireOwner } from "#application/errors.ts";
 import { MediaCommandBase } from "#infrastructure/command-base.ts";
+import { HandoffDetailSchema } from "#shared/handoff.ts";
 import {
-  PrepareHandoffSchema,
-  ApplyHandoffSchema,
-  HandoffDetailSchema,
-} from "#shared/handoff.ts";
+  PrepareHandoffProtocolSchema,
+  HandoffScopeProtocolSchema,
+  ApplyHandoffProtocolSchema,
+  handoffProtocolVersion,
+} from "#shared/handoff-v2.ts";
+import { buildLibraryHandoffScope } from "./library-scope.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { queueOperation } from "#automation/store.ts";
 import { buildHandoffScope } from "./scope.ts";
@@ -22,10 +25,10 @@ export class PrismaMediaHandoff extends MediaCommandBase {
   async prepare(
     actor: MediaActor,
     key: string,
-    raw: z.input<typeof PrepareHandoffSchema>,
+    raw: z.input<typeof PrepareHandoffProtocolSchema>,
   ) {
     requireOwner(actor);
-    const input = PrepareHandoffSchema.parse(raw);
+    const input = PrepareHandoffProtocolSchema.parse(raw);
     return this.command(
       actor,
       key,
@@ -50,7 +53,20 @@ export class PrismaMediaHandoff extends MediaCommandBase {
             "Handoff requires the reviewed runtime and authority",
             409,
           );
-        const scope = await buildHandoffScope(tx, input);
+        const scope =
+          "schemaVersion" in input
+            ? await buildLibraryHandoffScope(tx, input)
+            : await buildHandoffScope(tx, input);
+        if (
+          !("schemaVersion" in input) &&
+          input.purpose === "migration" &&
+          scope.files.some((file) => file.libraryKind === "movies")
+        )
+          throw new MediaError(
+            "library_handoff_version_required",
+            "Initial movie adoption requires a reviewed per-file classification",
+            409,
+          );
         const plan = await tx.mediaHandoffPlan.create({
           data: {
             bundleReviewId: input.bundleReviewId,
@@ -91,7 +107,9 @@ export class PrismaMediaHandoff extends MediaCommandBase {
         "Handoff plan does not exist",
         404,
       );
-    return HandoffDetailSchema.parse({
+    return HandoffDetailSchema.safeExtend({
+      scope: HandoffScopeProtocolSchema,
+    }).parse({
       id: row.id,
       state: row.state,
       version: row.version,
@@ -107,10 +125,10 @@ export class PrismaMediaHandoff extends MediaCommandBase {
     actor: MediaActor,
     key: string,
     id: string,
-    raw: z.input<typeof ApplyHandoffSchema>,
+    raw: z.input<typeof ApplyHandoffProtocolSchema>,
   ) {
     requireOwner(actor);
-    const input = ApplyHandoffSchema.parse(raw);
+    const input = ApplyHandoffProtocolSchema.parse(raw);
     return this.command(
       actor,
       key,
@@ -121,6 +139,9 @@ export class PrismaMediaHandoff extends MediaCommandBase {
           where: { id },
         });
         if (
+          handoffProtocolVersion(
+            HandoffScopeProtocolSchema.parse(plan.scope),
+          ) !== ("schemaVersion" in input ? 2 : 1) ||
           plan.state !== "awaiting_review" ||
           plan.version !== input.expectedVersion ||
           plan.planHash !== input.planHash ||

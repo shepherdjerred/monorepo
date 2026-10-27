@@ -96,7 +96,7 @@ async function projectPolicy(
     );
   for (const mediaId of entry.mediaIds) {
     const current = await input.tx.mediaSubtitlePolicyVersion.findFirst({
-      where: { mediaId },
+      where: { mediaId, edition: "default" },
       orderBy: { version: "desc" },
     });
     if ((current?.version ?? -1) !== resolution.expectedPolicyVersion)

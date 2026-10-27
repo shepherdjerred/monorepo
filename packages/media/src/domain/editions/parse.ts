@@ -41,9 +41,19 @@ export function parseCutEvidence(input: {
     canonicalDigest: value.canonical.digest,
     attribution: value.attribution,
   };
+  return { ...base, ...analyzeCutTexts(value) };
+}
+
+/** Text analysis carries no asset, transfer, or request authority. */
+export function analyzeCutTexts(value: {
+  canonical: CutCanonical;
+  attribution: CutEvidence["attribution"];
+  texts: readonly EditionText[];
+}): Pick<CutEvidence, "texts" | "issues" | "conclusion"> {
+  CutCanonicalSchema.parse(value.canonical);
+  z.array(EditionTextSchema).parse(value.texts);
   if (exceedsBounds(value))
     return {
-      ...base,
       texts: [],
       issues: ["input_limit_exceeded"],
       conclusion: { kind: "ambiguous" },
@@ -52,13 +62,12 @@ export function parseCutEvidence(input: {
   const markers = texts.flatMap((item) => item.markers);
   const ambiguous = markers.some((marker) => marker.cut === null);
   return {
-    ...base,
     texts,
     issues: ambiguous ? ["unsupported_cut_qualifier"] : [],
     conclusion: conclusion(markers),
   };
 }
-function exceedsBounds(value: z.infer<typeof Input>): boolean {
+function exceedsBounds(value: Parameters<typeof analyzeCutTexts>[0]): boolean {
   const maximum = value.attribution === "torrent_member" ? 4096 : 500;
   return (
     value.texts.length === 0 ||

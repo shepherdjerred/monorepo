@@ -2,11 +2,15 @@ import { defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
 import { Prisma } from "#generated/prisma/client.ts";
 import { z } from "zod";
-import type {
-  HandoffScope,
-  HandoffFileEvidenceSchema,
-  HandoffNetworkEvidenceSchema,
-} from "#shared/handoff.ts";
+import type { HandoffFileEvidenceSchema } from "#shared/handoff.ts";
+import {
+  HandoffNetworkV2Schema,
+  type HandoffProtocolScope,
+  type HandoffNetworkProtocolSchema,
+  handoffFileEdition,
+} from "#shared/handoff-v2.ts";
+import type { HandoffScope } from "#shared/handoff.ts";
+import { adoptLibraryTargets } from "./library-adopt.ts";
 import { queueOperation } from "#automation/store.ts";
 import { invalidateRetention } from "#infrastructure/action-guards.ts";
 import { BundleReportSchema } from "#shared/migration-handoff.ts";
@@ -17,21 +21,27 @@ import {
 } from "#infrastructure/handoff/default-edition.ts";
 import { mirrorDefaultAvailability } from "#infrastructure/editions/availability.ts";
 
-type Network = z.infer<typeof HandoffNetworkEvidenceSchema>;
+type Network = z.infer<typeof HandoffNetworkProtocolSchema>;
 type Files = z.infer<typeof HandoffFileEvidenceSchema>;
 
 export async function adoptHandoffRecords(
   tx: Prisma.TransactionClient,
   input: {
     planId: string;
-    scope: HandoffScope;
+    scope: HandoffProtocolScope;
     files: Files;
     network: Network;
     report: unknown;
   },
 ) {
-  await adoptMedia(tx, input);
-  await adoptFiles(tx, input.scope, input.files);
+  if ("schemaVersion" in input.scope)
+    await adoptLibraryTargets(tx, {
+      ...input,
+      scope: input.scope,
+      network: HandoffNetworkV2Schema.parse(input.network),
+    });
+  else await adoptMedia(tx, { ...input, scope: input.scope });
+  await adoptFiles(tx, input);
   const plan = await tx.mediaHandoffPlan.findUniqueOrThrow({
     where: { id: input.planId },
   });
@@ -41,13 +51,17 @@ export async function adoptHandoffRecords(
     actorId: plan.actorId,
     evidence: input.files.files.flatMap((file) => file.subtitles),
   });
-  await adoptClaims(tx, input.scope, input.planId);
-  await recordProtectedTorrents(tx, input.scope, input.report);
+  if (!("schemaVersion" in input.scope)) {
+    await adoptClaims(tx, input.scope, input.planId);
+    await recordProtectedTorrents(tx, input.scope, input.report);
+  }
 }
 
 async function adoptMedia(
   tx: Prisma.TransactionClient,
-  input: Parameters<typeof adoptHandoffRecords>[1],
+  input: Omit<Parameters<typeof adoptHandoffRecords>[1], "scope"> & {
+    scope: HandoffScope;
+  },
 ) {
   const { scope, network, planId } = input;
   const epoch = scope.request.recoveryEpoch;
@@ -132,18 +146,19 @@ async function adoptMedia(
 
 async function adoptFiles(
   tx: Prisma.TransactionClient,
-  scope: HandoffScope,
-  files: Files,
+  input: Parameters<typeof adoptHandoffRecords>[1],
 ) {
+  const { scope, files } = input;
   const epoch = scope.request.recoveryEpoch;
   for (const file of scope.files) {
+    const edition = handoffFileEdition(file);
     const evidence = files.files.find((item) => item.assetId === file.assetId);
     if (evidence === undefined)
       throw new Error("Handoff file evidence incomplete");
     const coverage = await tx.assetCoverage.findMany({
       where: {
         mediaId: { in: file.mediaIds },
-        edition: "default",
+        edition,
         current: true,
       },
     });
@@ -157,6 +172,16 @@ async function adoptFiles(
       checksum: evidence.checksum,
       sizeBytes: BigInt(evidence.sizeBytes),
       properties: {
+        ...("edition" in file
+          ? {
+              libraryAdoptionV2: {
+                schemaVersion: 2,
+                planId: input.planId,
+                edition: file.edition,
+                classification: file.classification,
+              },
+            }
+          : {}),
         ...z.record(z.string(), z.json()).parse(evidence.properties),
         handoffSidecarsUnresolved: evidence.unmanagedSidecars.some(
           (item) =>
@@ -178,8 +203,8 @@ async function adoptFiles(
       await tx.libraryAsset.create({
         data: {
           id: file.assetId,
-          edition: "default",
-          editionRootId: await defaultPhysicalRoot(tx, file.mediaIds),
+          edition,
+          editionRootId: await physicalRoot(tx, file),
           path: file.canonicalPath,
           ...data,
           coverage: {
@@ -204,6 +229,15 @@ async function adoptFiles(
         throw new Error("Handoff existing asset changed");
     }
   }
+}
+
+async function physicalRoot(
+  tx: Prisma.TransactionClient,
+  file: HandoffProtocolScope["files"][number],
+) {
+  return handoffFileEdition(file) === "default"
+    ? defaultPhysicalRoot(tx, file.mediaIds)
+    : z.uuid().parse(file.mediaIds[0]);
 }
 
 async function assertExistingCoverage(

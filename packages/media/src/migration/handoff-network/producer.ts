@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { HandoffNetworkEvidenceSchema } from "#shared/handoff.ts";
+import { HandoffNetworkProtocolSchema } from "#shared/handoff-v2.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import { readHandoffPlan } from "./plan.ts";
 import { observeHandoffMounts } from "./mounts.ts";
@@ -25,8 +25,12 @@ export function createHandoffNetworkProducer(context: HandoffNetworkContext) {
     );
     const [plex, claims, torrents] = await Promise.all([
       observePlex(context, input, signal),
-      observeClaims(context, input, signal),
-      observeTorrents(context, input, signal),
+      "schemaVersion" in input.scope
+        ? Promise.resolve([])
+        : observeClaims(context, input, signal),
+      "schemaVersion" in input.scope
+        ? Promise.resolve([])
+        : observeTorrents(context, input, signal),
     ]);
     signal.throwIfAborted();
     const expiresAt = new Date(
@@ -36,8 +40,8 @@ export function createHandoffNetworkProducer(context: HandoffNetworkContext) {
         capturedAt.getTime() + 90_000,
       ),
     );
-    const evidence = HandoffNetworkEvidenceSchema.parse({
-      schemaVersion: 1,
+    const evidence = HandoffNetworkProtocolSchema.parse({
+      schemaVersion: "schemaVersion" in input.scope ? 2 : 1,
       planId,
       recoveryEpoch: input.plan.recoveryEpoch,
       quiescence,

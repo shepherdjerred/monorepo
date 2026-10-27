@@ -3,6 +3,7 @@ import type { Prisma, SubtitleAsset } from "#generated/prisma/client.ts";
 import { videoSubtitleWhere } from "#automation/files/subtitle-lifecycle/ownership.ts";
 import { PublicationAssetSnapshotSchema } from "#shared/publication-proof/intent.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
+import type { PublicationAuthorityReadBudget } from "./read-budget.ts";
 
 /** Same literal subtitle projection in both publication snapshot versions. */
 export function publicationSubtitleSnapshot(row: SubtitleAsset) {
@@ -37,15 +38,24 @@ export function publicationSubtitleSnapshot(row: SubtitleAsset) {
 export async function snapshotPublicationAsset(
   tx: Prisma.TransactionClient,
   assetId: string,
+  budget?: PublicationAuthorityReadBudget,
 ) {
   const asset = await tx.libraryAsset.findUniqueOrThrow({
     where: { id: assetId },
-    include: { coverage: { orderBy: { mediaId: "asc" } } },
+    include: {
+      coverage: {
+        orderBy: { mediaId: "asc" },
+        ...(budget === undefined ? {} : { take: budget.take }),
+      },
+    },
   });
+  budget?.consume(1 + asset.coverage.length);
   const subtitles = await tx.subtitleAsset.findMany({
     where: { assetId },
     orderBy: { id: "asc" },
+    ...(budget === undefined ? {} : { take: budget.take }),
   });
+  budget?.consume(subtitles.length);
   const physical = await tx.subtitleAsset.findMany({
     where: {
       assetId,
@@ -53,7 +63,9 @@ export async function snapshotPublicationAsset(
       AND: [videoSubtitleWhere],
     },
     select: { id: true },
+    ...(budget === undefined ? {} : { take: budget.take }),
   });
+  budget?.consume(physical.length);
   const physicalIds = new Set(physical.map((row) => row.id));
   const snapshots = subtitles.map((row) => publicationSubtitleSnapshot(row));
   return PublicationAssetSnapshotSchema.parse({

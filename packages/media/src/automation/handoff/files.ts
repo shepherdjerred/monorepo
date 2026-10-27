@@ -1,12 +1,16 @@
 import path from "node:path";
 import { z } from "zod";
 import {
-  HandoffScopeSchema,
-  HandoffNetworkEvidenceSchema,
   HandoffFileEvidenceSchema,
   type HandoffScope,
   type HandoffFile,
 } from "#shared/handoff.ts";
+import {
+  HandoffScopeProtocolSchema,
+  HandoffNetworkProtocolSchema,
+  type HandoffProtocolScope,
+  assertHandoffNetworkProtocol,
+} from "#shared/handoff-v2.ts";
 import { ContentProof } from "#filesystem/content-proof.ts";
 import { safePath, verifyControlExclusion } from "#filesystem/operations-io.ts";
 import { inspectMedia } from "#filesystem/media-tools.ts";
@@ -21,7 +25,7 @@ import { captureHandoffSubtitles, subtitleFileEvidence } from "./subtitles.ts";
 
 export type HandoffFileContext = { files: FileContext; workerPodUid: string };
 export type PreparedHandoffFiles = {
-  scope: HandoffScope;
+  scope: HandoffProtocolScope;
   content: ContentProof;
   journals: JournalProof[];
   evidence: z.infer<typeof HandoffFileEvidenceSchema>;
@@ -38,7 +42,7 @@ export async function prepareHandoffFiles(
   });
   if (!["preparing", "applying"].includes(plan.state))
     throw new Error("Handoff file proof has no live owner command");
-  const scope = HandoffScopeSchema.parse(plan.scope);
+  const scope = HandoffScopeProtocolSchema.parse(plan.scope);
   if (
     new Set(scope.files.map((file) => file.canonicalPath)).size !==
       scope.files.length ||
@@ -49,7 +53,8 @@ export async function prepareHandoffFiles(
     where: { planId, kind: "network" },
     orderBy: { createdAt: "desc" },
   });
-  const network = HandoffNetworkEvidenceSchema.parse(observation.evidence);
+  const network = HandoffNetworkProtocolSchema.parse(observation.evidence);
+  assertHandoffNetworkProtocol(scope, network);
   if (
     network.recoveryEpoch !== plan.recoveryEpoch ||
     network.planId !== planId ||

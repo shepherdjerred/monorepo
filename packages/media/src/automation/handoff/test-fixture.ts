@@ -26,10 +26,24 @@ import { PrismaMediaHandoff } from "#infrastructure/handoff/service.ts";
 import { LEGACY_OBSERVER_CONFIG } from "#integrations/legacy-observer/config.ts";
 import { prepareHandoffFiles } from "./files.ts";
 import { finishHandoffPreparation } from "./plan.ts";
+import type { PrepareHandoffProtocolSchema } from "#shared/handoff-v2.ts";
+import { createHandoffNetworkProducer } from "#migration/handoff-network/producer.ts";
+import {
+  MOVIE_EDITION_REGISTRY,
+  type MovieEditionKey,
+} from "#shared/movie-editions/registry.ts";
 
 export async function handoffFixture(
   db: Database,
   options: {
+    fileName?: string;
+    bytes?: Uint8Array;
+    sourceKind?: "radarr" | "sonarr";
+    initialEdition?: MovieEditionKey;
+    prepareRequest?: (input: {
+      request: z.infer<typeof PrepareHandoffSchema>;
+      report: z.infer<typeof BundleReportSchema>;
+    }) => z.input<typeof PrepareHandoffProtocolSchema>;
     subtitlePolicyResolution?: "unresolved" | "require_simplified";
     extendReport?: (input: {
       report: z.infer<typeof BundleReportSchema>;
@@ -68,10 +82,16 @@ export async function handoffFixture(
   await mkdir(tv.library);
   await mkdir(tv.control);
   file.context.roots.tv = tv;
-  const target = path.join(roots.library, "Film.mkv");
-  const bytes = "Synthetic immutable media";
+  const fileName = options.fileName ?? "Film.mkv";
+  const target = path.join(
+    options.sourceKind === "sonarr" ? tv.library : roots.library,
+    fileName,
+  );
+  const bytes = options.bytes ?? "Synthetic immutable media";
   await writeFile(target, bytes);
-  const resolved = importResolvedProfiles(snapshot)[0]?.profiles[0];
+  const resolved = importResolvedProfiles(snapshot).find(
+    (inventory) => inventory.source === (options.sourceKind ?? "radarr"),
+  )?.profiles[0];
   if (resolved === undefined) throw new Error("Resolved fixture missing");
   resolved.profile.formatItems = [];
   const rules = { ...QualityRulesSchema.parse(file.profile.rules), resolved };
@@ -95,15 +115,18 @@ export async function handoffFixture(
       mapping.sourceRoot === "/movies" ? roots.library : tv.library;
   const report = BundleReportSchema.parse(network.review.report);
   const mediaEntry = report.entries[0];
-  const capture = manifest.captures[0];
+  const capture = manifest.captures.find(
+    (item) => item.sourceKind === (options.sourceKind ?? "radarr"),
+  );
   if (capture === undefined || mediaEntry?.sourceRecord.kind !== "media")
     throw new Error("Media report fixture missing");
   mediaEntry.sourceRecord.profileSourceId = String(resolved.profile.id);
+  mediaEntry.captureHash = capture.captureHash;
   const sourceRecord = {
     kind: "file" as const,
     sourceId: "file1",
     mediaSourceIds: ["1"],
-    path: "/movies/Film.mkv",
+    path: `${options.sourceKind === "sonarr" ? "/tv" : "/movies"}/${fileName}`,
     sizeBytes: Buffer.byteLength(bytes),
     checksum: null,
     downloadHash: null,
@@ -112,6 +135,7 @@ export async function handoffFixture(
   const fileEntry = {
     ...mediaEntry,
     sourceRecord,
+    captureHash: capture.captureHash,
     sourceId: "file1",
     kind: "file" as const,
     provenanceKey: snapshotHash({ file: target }),
@@ -139,6 +163,8 @@ export async function handoffFixture(
   };
   report.entries.push(requestEntry);
   await options.extendReport?.({ report, manifest, target });
+  for (const entry of report.entries)
+    entry.observationHash = snapshotHash(z.json().parse(entry.sourceRecord));
   report.bundleHash = manifest.bundleHash;
   report.reportHash = snapshotHash({
     source: report.reportHash,
@@ -217,7 +243,7 @@ export async function handoffFixture(
   const result = await commands.prepare(
     network.actor,
     crypto.randomUUID(),
-    request,
+    options.prepareRequest?.({ request, report }) ?? request,
   );
   const planId = z.uuid().parse(result.handoffId);
   network.quiescence.targetsDigest = snapshotHash(
@@ -227,6 +253,14 @@ export async function handoffFixture(
     ratingKey: "fixture",
     title: network.media.title,
     type: "movie",
+    librarySectionID: 1,
+    ...(options.initialEdition === undefined ||
+    options.initialEdition === "default"
+      ? {}
+      : {
+          editionTitle:
+            MOVIE_EDITION_REGISTRY[options.initialEdition].plexLabel,
+        }),
     Guid: [{ id: `tmdb://${String(network.media.tmdbId)}` }],
     Media: [
       { Part: [{ id: 1, file: target, size: Buffer.byteLength(bytes) }] },
@@ -235,7 +269,13 @@ export async function handoffFixture(
   network.context.plex.libraryPage = () =>
     Promise.resolve({ total: 1, items: [plexItem] });
   network.context.plex.metadata = () => Promise.resolve(plexItem);
+  network.context.canonicalRoots = { movies: roots.library, tv: tv.library };
   const observe = async () => {
+    const stored = await db.mediaHandoffPlan.findUniqueOrThrow({
+      where: { id: planId },
+    });
+    if ("schemaVersion" in z.record(z.string(), z.json()).parse(stored.scope))
+      return createHandoffNetworkProducer(network.context)(planId);
     const quiescence = await network.context.observer.observe();
     const mounts = await network.context.observer.observeMountBindings([
       {
@@ -305,7 +345,9 @@ export async function handoffFixture(
         planHash: z.string().parse(detail.planHash),
         recoveryEpoch: 0,
         runtimeVersion: 0,
-        acknowledgeProtectedLegacySources: true,
+        ...("schemaVersion" in detail.scope
+          ? { schemaVersion: 2 as const }
+          : { acknowledgeProtectedLegacySources: true as const }),
         acknowledgeRecoveryHolds: true,
       },
     );

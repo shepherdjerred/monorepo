@@ -281,8 +281,9 @@ another writer. Limit times are minutes; elapsed seeding time is seconds.
 An infinite observed ratio is represented as `{ "kind": "infinite" }`.
 
 These labels route new transfers around the legacy hook; they do not prove
-ownership of an existing torrent. Adoption requires an explicit ownership
-handoff and quiescing/draining in-flight legacy hook processes before labeling.
+ownership of an existing torrent. Existing torrents remain outside Media's
+ownership; library adoption grants no authority to label them or clean up
+their source data. Media manages seeding and source cleanup for transfers it creates.
 An unknown add outcome is reconciled without blindly submitting again, including
 after the requesting claim is cancelled.
 
@@ -465,11 +466,11 @@ Normal session authentication, CSRF protection, and an `Idempotency-Key` apply t
 commands. The application never accepts caller assertions of stopped managers,
 verified files, or trusted mount identities.
 
-| Endpoint                                | Contract                                                                                                                                                                                                             |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /api/v1/admin/handoffs`           | `PrepareHandoffSchema`: exact bundle/review hashes and versions, runtime epoch/version, explicit provenance selection, and immutable imported profile bindings. Returns an operation and handoff ID.                 |
-| `GET /api/v1/admin/handoffs/:id`        | Current preparation state, exact selected scope, complete proof plan/hash, expiry, and eventual receipt ID.                                                                                                          |
-| `POST /api/v1/admin/handoffs/:id/apply` | `ApplyHandoffSchema`: exact prepared plan hash/version and runtime epoch/version, plus explicit acknowledgements of protected legacy sources and household recovery holds. Queues a fresh proof and apply operation. |
+| Endpoint                                | Contract                                                                                                                                                                                                                                                                        |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/v1/admin/handoffs`           | Exact bundle/review hashes and versions, runtime epoch/version, explicit provenance selection, and immutable imported profile bindings. Initial library adoption uses `PrepareLibraryHandoffV2Schema` with per-file movie classifications. Returns an operation and handoff ID. |
+| `GET /api/v1/admin/handoffs/:id`        | Current preparation state, exact selected scope, complete proof plan/hash, expiry, and eventual receipt ID.                                                                                                                                                                     |
+| `POST /api/v1/admin/handoffs/:id/apply` | Exact prepared plan hash/version and runtime epoch/version, with the matching protocol. `ApplyLibraryHandoffV2Schema` acknowledges household holds; historical `ApplyHandoffSchema` also acknowledges protected legacy sources. Queues fresh proof and an apply operation.      |
 
 Preparation authorizes observation only. File hashing and probing run on
 `media-files`; a concurrent Temporal activity refreshes network evidence every
@@ -477,6 +478,25 @@ Preparation authorizes observation only. File hashing and probing run on
 identity evidence, and checks current owner authority under the final database
 locks. Video content remains unchanged. A durable receipt makes a committed
 apply idempotent after an interrupted response.
+
+Initial library adoption uses schema version 2. Each selected movie file needs
+one registered edition and either matching conventional filename evidence or an
+explicit owner resolution of that exact captured source record. Missing cut
+labels establish only an unmarked release; `DC` requires review. Classification
+precedes the first physical ownership record, retains the existing path, and
+cannot reassign an already tracked file. Multiple cuts of one movie retain
+separate assets and targets. TV/anime shared files retain exact episode coverage.
+
+The network observer verifies the same server, section, movie/episode identity,
+Plex Part, existing path and registered movie edition label. A changed or mismatched
+Plex label protects adoption; this protocol performs no Plex metadata edits.
+The receipt retains the initial asset and caption snapshots as well as the
+reviewed filesystem and Plex evidence. Caption ownership does not establish
+subtitle quality. These reads share one 100-record provenance allowance across
+the batch. Request consent and existing torrent ownership are not inferred.
+Request and torrent records are excluded from this library-only protocol;
+Overseerr request import is optional and separate. Historical handoff records
+retain their original format and acknowledgement behavior.
 
 Each batch covers at most 25 physical files and 100 canonical media items.
 `activation: "activate"` changes the reviewed observe runtime to active at its

@@ -1,9 +1,9 @@
 import path from "node:path";
 import { z } from "zod";
 import { Prisma } from "#generated/prisma/client.ts";
-import { HandoffNetworkEvidenceSchema } from "#shared/handoff.ts";
+import { HandoffNetworkProtocolSchema } from "#shared/handoff-v2.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
-import { lockDefaultMedia } from "#infrastructure/handoff/default-edition.ts";
+import { lockHandoffScopes } from "#infrastructure/handoff/scoped-snapshot.ts";
 import { runtimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { FileOperations } from "#filesystem/operations.ts";
 import { verifyControlExclusion } from "#filesystem/operations-io.ts";
@@ -19,6 +19,7 @@ import { adoptHandoffRecords } from "./adopt.ts";
 import { assertApplyActor, assertLatestLease } from "./final-guards.ts";
 import { unmanagedSidecars } from "./sidecars.ts";
 import { queueMediaSubtitleTargets } from "#automation/subtitles/queue.ts";
+import { initialLibrarySnapshots } from "./library-snapshots.ts";
 
 /** The hash work is complete; this transaction only checks exact identities and grants selected records. */
 export async function applyPreparedHandoff(
@@ -30,10 +31,7 @@ export async function applyPreparedHandoff(
   const db = context.files.db;
   return db.$transaction(
     async (tx) => {
-      await lockDefaultMedia(
-        tx,
-        prepared.scope.media.map((item) => item.mediaId),
-      );
+      await lockHandoffScopes(tx, prepared.scope);
       await tx.$queryRaw`SELECT id FROM "MediaRuntimeState" WHERE id = 'singleton' FOR UPDATE`;
       await tx.$queryRaw`SELECT id FROM "MediaHandoffPlan" WHERE id = ${planId} FOR UPDATE`;
       const previous = await tx.mediaHandoffReceipt.findUnique({
@@ -57,6 +55,10 @@ export async function applyPreparedHandoff(
         throw new Error("Handoff extension authority expired");
       const finished = FinishedHandoffSchema.parse(plan.plan);
       if (
+        finished.schemaVersion !== ("schemaVersion" in prepared.scope ? 2 : 1)
+      )
+        throw new Error("Handoff finished plan protocol changed");
+      if (
         snapshotHash(finished) !== plan.planHash ||
         finished.scopeHash !== snapshotHash(z.json().parse(prepared.scope)) ||
         snapshotHash(finished.files) !==
@@ -67,9 +69,10 @@ export async function applyPreparedHandoff(
         where: { planId, kind: "network" },
         orderBy: { createdAt: "desc" },
       });
-      const network = HandoffNetworkEvidenceSchema.parse(observed.evidence);
+      const network = HandoffNetworkProtocolSchema.parse(observed.evidence);
       if (
         observed.expiresAt <= new Date() ||
+        network.schemaVersion !== finished.schemaVersion ||
         network.recoveryEpoch !== runtime.recoveryEpoch ||
         snapshotHash(finished.network) !==
           snapshotHash(z.json().parse(stableNetwork(network)))
@@ -129,8 +132,9 @@ export async function applyPreparedHandoff(
             version: { increment: 1 },
           },
         });
-        for (const selected of prepared.scope.media)
-          await queueMediaSubtitleTargets(tx, selected.mediaId);
+        if (!("schemaVersion" in prepared.scope))
+          for (const selected of prepared.scope.media)
+            await queueMediaSubtitleTargets(tx, selected.mediaId);
         const receipt = await tx.mediaHandoffReceipt.create({
           data: {
             planId,
@@ -140,6 +144,7 @@ export async function applyPreparedHandoff(
             runtimeVersion: runtime.version + 1,
             actorId,
             selection: {
+              ...(await initialLibrarySnapshots(tx, prepared.scope)),
               scope: prepared.scope,
               fileEvidence: z.json().parse(stableFiles(prepared.evidence)),
               networkEvidence: stableNetwork(network),
@@ -172,7 +177,7 @@ export async function applyPreparedHandoff(
 
 async function assertClaims(
   tx: Prisma.TransactionClient,
-  network: z.infer<typeof HandoffNetworkEvidenceSchema>,
+  network: z.infer<typeof HandoffNetworkProtocolSchema>,
 ) {
   const ids = [...new Set(network.claims.map((item) => item.userId))].sort();
   if (ids.length > 0)
@@ -207,7 +212,7 @@ async function assertClaims(
 async function installStorageAuthority(
   tx: Prisma.TransactionClient,
   context: HandoffFileContext,
-  network: z.infer<typeof HandoffNetworkEvidenceSchema>,
+  network: z.infer<typeof HandoffNetworkProtocolSchema>,
 ) {
   if (
     !network.quiescence.quiescent ||
