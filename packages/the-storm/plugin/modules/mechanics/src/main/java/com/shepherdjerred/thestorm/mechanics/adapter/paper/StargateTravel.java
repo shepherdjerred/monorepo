@@ -10,9 +10,7 @@ import com.shepherdjerred.thestorm.mechanics.app.StargateBook;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.Direction;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.Pos;
 import com.shepherdjerred.thestorm.mechanics.domain.stargate.Stargate;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -35,7 +33,7 @@ final class StargateTravel {
   private final TeleportTravel travel;
   private final ChunkTickets tickets;
   private final Predicate<Stargate> open;
-  private final Map<UUID, Trip> trips = new HashMap<>();
+  private final PendingGateTrips<Trip> trips = new PendingGateTrips<>();
 
   StargateTravel(
       ModuleContext context, StargateBook book, StargateAccess access, Predicate<Stargate> open) {
@@ -64,7 +62,7 @@ final class StargateTravel {
           Result.err(Component.text("The destination world is not loaded.")));
     var chunks = chunks(target);
     var id = player.getUniqueId();
-    trips.put(id, new Trip(source.id(), target.id()));
+    var trip = trips.start(id, new Trip(source.id(), target.id()));
     var loads =
         chunks.stream()
             .map(chunk -> world.getChunkAtAsync(chunk.x(), chunk.z()))
@@ -75,7 +73,7 @@ final class StargateTravel {
               var held = hold(world, chunks);
               Runnable release =
                   () -> {
-                    trips.remove(id);
+                    trips.finish(id, trip);
                     for (var chunk : held) tickets.release(world, chunk.x(), chunk.z());
                   };
               try {
@@ -100,7 +98,7 @@ final class StargateTravel {
             context.scheduler().mainThread())
         .whenCompleteAsync(
             (ignored, failure) -> {
-              if (failure != null) trips.remove(id);
+              if (failure != null) trips.finish(id, trip);
             },
             context.scheduler().mainThread());
   }

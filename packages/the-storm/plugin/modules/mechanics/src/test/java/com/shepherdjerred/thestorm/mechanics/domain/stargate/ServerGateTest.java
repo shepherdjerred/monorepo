@@ -70,6 +70,34 @@ final class ServerGateTest {
   }
 
   @Test
+  void duplicateServerGateIdsAreRejected() {
+    var destination =
+        new ServerGate.Destination("2015", "world", ServerGate.Kind.WORLD, new Pos(1, 70, 1));
+    var first =
+        new ServerGate(
+            "hub",
+            "world",
+            new Pos(6, 73, 110),
+            Direction.WEST,
+            new Pos(9, 75, 111),
+            true,
+            List.of(destination));
+    var second =
+        new ServerGate(
+            "hub",
+            "world",
+            new Pos(30, 73, 110),
+            Direction.WEST,
+            new Pos(33, 75, 111),
+            true,
+            List.of(destination));
+    assertThatThrownBy(
+            () -> new StargateConfig(java.time.Duration.ofSeconds(10), List.of(first, second)))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("duplicate server Stargate id");
+  }
+
+  @Test
   void shippedWelcomeGateHasApprovedCircleAndAllFourDestinations() throws Exception {
     var yaml = Files.readString(Path.of("../../../server/owned/plugins/TheStorm/stargates.yml"));
     var result = StrictYaml.parse("stargates.yml", yaml, StargateConfig.class);

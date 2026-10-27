@@ -135,6 +135,11 @@ service. The server evaluates the managed
 evaluate it; a flag change requires a restart. The welcome-plaza gate is configured
 for protected Spawn with an approved interior exception. Place and verify the
 reviewed plaza and its destination landings before enabling the flag.
+Until the gate registry loads, the plugin cannot distinguish stored gates from
+ordinary blocks. It therefore blocks sign edits, edits to obsidian, portal blocks,
+signs and buttons, and portal travel across all worlds. If loading fails, the
+server logs the failure and those protections remain until a successful restart;
+repair the storage issue before restarting.
 
 The supporting plugins are LuckPerms, WorldEdit, CoreProtect, BlueMap, Chunky,
 Geyser-Spigot, floodgate, Multiverse-Core, ViaVersion, ViaBackwards, and

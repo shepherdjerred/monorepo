@@ -82,7 +82,7 @@ final class StargateServerHub implements Listener {
   private final List<Hub> hubs;
   private final Map<UUID, Integer> selection = new HashMap<>();
   private final Map<UUID, Open> active = new HashMap<>();
-  private final Map<UUID, Hub> trips = new HashMap<>();
+  private final PendingGateTrips<Hub> trips = new PendingGateTrips<>();
   private final Set<UUID> inside = new HashSet<>();
 
   StargateServerHub(
@@ -294,7 +294,7 @@ final class StargateServerHub implements Listener {
     var x = spawn.x() >> 4;
     var z = spawn.z() >> 4;
     var id = player.getUniqueId();
-    trips.put(id, hub);
+    var trip = trips.start(id, hub);
     return world
         .getChunkAtAsync(x, z)
         .thenApplyAsync(
@@ -302,7 +302,7 @@ final class StargateServerHub implements Listener {
               tickets.hold(world, x, z);
               Runnable release =
                   () -> {
-                    trips.remove(id);
+                    trips.finish(id, trip);
                     tickets.release(world, x, z);
                   };
               try {
@@ -328,7 +328,7 @@ final class StargateServerHub implements Listener {
             context.scheduler().mainThread())
         .whenCompleteAsync(
             (result, failure) -> {
-              if (failure != null) trips.remove(id);
+              if (failure != null) trips.finish(id, trip);
             },
             context.scheduler().mainThread());
   }
