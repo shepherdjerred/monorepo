@@ -122,6 +122,39 @@ public final class StargateBook {
                     }));
   }
 
+  /** Remove an account's gates, invitations and owned private networks atomically. */
+  public CompletableFuture<Void> resetPlayer(UUID player) {
+    var current = current();
+    var removedNetworks =
+        current.networks().stream()
+            .filter(
+                network ->
+                    network.access() instanceof NetworkAccess.Private(var owner, _)
+                        && owner.equals(player))
+            .map(StargateNetwork::id)
+            .collect(java.util.stream.Collectors.toUnmodifiableSet());
+    var networks =
+        current.networks().stream()
+            .filter(network -> !removedNetworks.contains(network.id()))
+            .map(
+                network -> {
+                  if (!(network.access() instanceof NetworkAccess.Private(var owner, var invited)))
+                    return network;
+                  var remaining = new java.util.HashSet<>(invited);
+                  remaining.remove(player);
+                  return new StargateNetwork(
+                      network.id(), network.name(), new NetworkAccess.Private(owner, remaining));
+                })
+            .toList();
+    var gates =
+        current.gates().stream()
+            .filter(
+                gate ->
+                    !gate.ownerId().equals(player) && !removedNetworks.contains(gate.networkId()))
+            .toList();
+    return save(new StargateStore.Snapshot(networks, gates), () -> store.resetPlayer(player));
+  }
+
   private StargateStore.Snapshot current() {
     if (!ready()) throw new IllegalStateException("Stargates are loading or saving");
     return java.util.Objects.requireNonNull(snapshot);

@@ -42,6 +42,10 @@ public final class StargatesPaper {
             context.services().require(TownMembership.class));
     var settings = new StargateSettings(config.openFor(), enabled::get);
     var portals = new StargatePortals(context, book, access, settings);
+    context
+        .services()
+        .require(com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry.class)
+        .register("stargates", portals::resetPlayer);
     var serverHub = new StargateServerHub(context, book, settings, config.serverGates());
     var events = context.plugin().getServer().getPluginManager();
     events.registerEvents(new StargateProtection(book), context.plugin());

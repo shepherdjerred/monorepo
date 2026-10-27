@@ -86,4 +86,60 @@ final class JooqStargateStoreTest {
     assertThat(store.load().get().networks())
         .containsExactly(new StargateNetwork(NETWORK, "Road", new NetworkAccess.Public()));
   }
+
+  @Test
+  void resetRemovesOwnedPrivateNetworksOwnedGatesAndInvitationsOnly() throws Exception {
+    var publicId = new UUID(1, 1);
+    var otherPrivateId = new UUID(1, 2);
+    var other = new UUID(1, 3);
+    var privateNetwork =
+        new StargateNetwork(NETWORK, "Mine", new NetworkAccess.Private(OWNER, Set.of(GUEST)));
+    var publicNetwork = new StargateNetwork(publicId, "Road", new NetworkAccess.Public());
+    var otherNetwork =
+        new StargateNetwork(
+            otherPrivateId, "Theirs", new NetworkAccess.Private(other, Set.of(OWNER, GUEST)));
+    store.createNetwork(privateNetwork).get();
+    store.createNetwork(publicNetwork).get();
+    store.createNetwork(otherNetwork).get();
+    var myGate =
+        new Stargate(
+            GATE,
+            publicId,
+            "Mine",
+            OWNER,
+            WORLD,
+            new Pos(1, 65, 2),
+            new StargateFrame(new Pos(2, 63, 3), Direction.EAST));
+    var guestGate =
+        new Stargate(
+            new UUID(2, 1),
+            NETWORK,
+            "Guest",
+            GUEST,
+            WORLD,
+            new Pos(11, 65, 2),
+            new StargateFrame(new Pos(12, 63, 3), Direction.EAST));
+    var keptGate =
+        new Stargate(
+            new UUID(2, 2),
+            publicId,
+            "Kept",
+            other,
+            WORLD,
+            new Pos(21, 65, 2),
+            new StargateFrame(new Pos(22, 63, 3), Direction.EAST));
+    store.createGate(myGate).get();
+    store.createGate(guestGate).get();
+    store.createGate(keptGate).get();
+
+    store.resetPlayer(OWNER).get();
+    store.resetPlayer(OWNER).get();
+    var result = store.load().get();
+    assertThat(result.networks())
+        .containsExactlyInAnyOrder(
+            publicNetwork,
+            new StargateNetwork(
+                otherPrivateId, "Theirs", new NetworkAccess.Private(other, Set.of(GUEST))));
+    assertThat(result.gates()).containsExactly(keptGate);
+  }
 }

@@ -42,7 +42,8 @@ final class PlayerResetStoresTest {
               "rwf",
               "skills",
               "world",
-              "qol")) {
+              "qol",
+              "mechanics")) {
         database.migrate(module, getClass().getClassLoader());
       }
       var player = UUID.randomUUID();
@@ -64,6 +65,9 @@ final class PlayerResetStoresTest {
               .reset(player));
       await(
           new com.shepherdjerred.thestorm.mail.adapter.db.JooqPlayerReset(database).reset(player));
+      await(
+          new com.shepherdjerred.thestorm.mechanics.adapter.db.JooqStargateStore(database)
+              .resetPlayer(player));
       await(new com.shepherdjerred.thestorm.qol.adapter.db.JooqPlayerReset(database).reset(player));
       await(
           new com.shepherdjerred.thestorm.quests.adapter.db.JooqQuestStore(database).reset(player));

@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.core.world.ChunkTickets;
 import com.shepherdjerred.thestorm.core.world.SealedWorlds;
 import com.shepherdjerred.thestorm.mechanics.app.StargateAccess;
 import com.shepherdjerred.thestorm.mechanics.app.StargateBook;
+import com.shepherdjerred.thestorm.mechanics.domain.stargate.NetworkAccess;
 import com.shepherdjerred.thestorm.mechanics.domain.stargate.Stargate;
 import java.time.Duration;
 import java.util.HashMap;
@@ -16,6 +17,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Axis;
 import org.bukkit.Material;
@@ -40,6 +42,8 @@ import org.bukkit.inventory.EquipmentSlot;
 /** Sign selection, button activation and walk-in travel for player gates. */
 final class StargatePortals implements Listener {
   private record Chunk(int x, int z) {}
+
+  private record WorldChunk(org.bukkit.World world, int x, int z) {}
 
   private record OpenGate(Stargate gate, UUID target, Cancellable closing, Set<Chunk> chunks) {}
 
@@ -269,6 +273,79 @@ final class StargatePortals implements Listener {
     var grid = new PaperGrid(world);
     return gate.frame().interior().stream()
         .allMatch(pos -> grid.loaded(pos) && !grid.cellAt(pos).is("minecraft:nether_portal"));
+  }
+
+  CompletableFuture<Void> resetPlayer(UUID player) {
+    if (!book.ready())
+      return CompletableFuture.failedFuture(
+          new IllegalStateException("Stargates are not ready for reset"));
+    var registry = book.registry();
+    var affected =
+        registry.gates().stream()
+            .filter(
+                gate ->
+                    gate.ownerId().equals(player)
+                        || (registry.network(gate.networkId()).orElseThrow().access()
+                                instanceof NetworkAccess.Private(var owner, _)
+                            && owner.equals(player)))
+            .toList();
+    var chunks = new HashSet<WorldChunk>();
+    for (var gate : affected) {
+      var world = context.plugin().getServer().getWorld(gate.worldId());
+      if (world == null)
+        return CompletableFuture.failedFuture(
+            new IllegalStateException("Stargate world is not loaded"));
+      var positions = new java.util.ArrayList<>(gate.frame().frameBlocks());
+      positions.addAll(gate.frame().interior());
+      positions.add(gate.sign());
+      positions.add(gate.button());
+      positions.forEach(pos -> chunks.add(new WorldChunk(world, pos.x() >> 4, pos.z() >> 4)));
+    }
+    var loads =
+        chunks.stream()
+            .map(chunk -> chunk.world().getChunkAtAsync(chunk.x(), chunk.z()))
+            .toArray(CompletableFuture<?>[]::new);
+    return CompletableFuture.allOf(loads)
+        .thenComposeAsync(
+            ignored -> finishReset(player, registry, affected, chunks),
+            context.scheduler().mainThread());
+  }
+
+  private CompletableFuture<Void> finishReset(
+      UUID player,
+      com.shepherdjerred.thestorm.mechanics.app.StargateRegistry registry,
+      java.util.List<Stargate> affected,
+      Set<WorldChunk> chunks) {
+    if (!book.ready() || book.registry() != registry)
+      return CompletableFuture.failedFuture(
+          new IllegalStateException("Stargates changed during reset"));
+    var held = new java.util.ArrayList<WorldChunk>();
+    try {
+      for (var chunk : chunks) {
+        tickets.hold(chunk.world(), chunk.x(), chunk.z());
+        held.add(chunk);
+      }
+      for (var gate : affected) {
+        var open = active.get(gate.id());
+        if (open != null) {
+          open.closing().cancel();
+          close(gate.id());
+        }
+        recover(gate);
+        if (!canRemove(gate))
+          throw new IllegalStateException("Stargate could not be safely closed: " + gate.name());
+      }
+      return book.resetPlayer(player)
+          .whenCompleteAsync(
+              (done, failure) -> releaseResetChunks(held), context.scheduler().mainThread());
+    } catch (RuntimeException failure) {
+      releaseResetChunks(held);
+      return CompletableFuture.failedFuture(failure);
+    }
+  }
+
+  private void releaseResetChunks(java.util.List<WorldChunk> chunks) {
+    for (var chunk : chunks) tickets.release(chunk.world(), chunk.x(), chunk.z());
   }
 
   private void recover(Stargate gate) {

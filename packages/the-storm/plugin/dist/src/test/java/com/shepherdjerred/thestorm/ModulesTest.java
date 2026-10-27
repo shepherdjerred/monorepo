@@ -80,7 +80,7 @@ final class ModulesTest {
     var config = ConfigFiles.load(SHIPPED_CONFIG, PluginConfig.class);
     var registered = ModuleRegistry.ids(Modules.all());
 
-    assertThat(registered).hasSize(29);
+    assertThat(registered).hasSize(30);
     assertThat(config.modules().keySet()).containsExactlyInAnyOrderElementsOf(registered);
     assertThat(
             config.modules().entrySet().stream()

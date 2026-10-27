@@ -34,7 +34,7 @@ repository.
 
 ## Plugin and configuration ownership
 
-`owned/plugins/TheStorm/config.yml` registers and enables all 29 Storm modules,
+`owned/plugins/TheStorm/config.yml` registers and enables all 30 Storm modules,
 including `creative`, `rwf`, and `rwfbots`. The creative world is the recovered
 2016 plot map. Keep its Multiverse `auto-load` setting false: Multiverse enables
 before TheStorm and cannot obtain its generator then. TheStorm opens existing

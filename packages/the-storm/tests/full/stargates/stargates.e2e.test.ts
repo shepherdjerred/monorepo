@@ -1,13 +1,40 @@
 import { once } from "node:events";
+import type { Bot } from "mineflayer";
 import { Vec3 } from "vec3";
 import { expect } from "vitest";
 import { test } from "#e2e/fixtures.ts";
 import { waitForMessage, waitUntil } from "#e2e/harness/bot.ts";
+import { serverLogs } from "#e2e/harness/external/files.ts";
+import type { RconClient } from "#e2e/harness/rcon.ts";
+
+async function verifyResetCompleted(
+  secondBot: Bot,
+  rcon: RconClient,
+  server: Parameters<typeof serverLogs>[0],
+) {
+  await waitUntil("player reset completed", async () => {
+    const logs = await serverLogs(server);
+    return logs.includes("Permissions reset complete for ");
+  });
+  expect(
+    await rcon.command("execute if block 400 71 0 minecraft:air"),
+  ).toContain("Test passed");
+  const visitorGranted = waitForMessage(
+    secondBot,
+    /admin set your Mechanic to III/iu,
+  );
+  await rcon.command(`perks admin set ${secondBot.username} mechanic 3`);
+  await visitorGranted;
+  const recreated = waitForMessage(secondBot, /Created network Testgate/iu);
+  secondBot.chat("/stargate network create private Testgate");
+  await recreated;
+}
 
 test("a private Stargate network admits its invited players and denies others", async ({
   bot,
   secondBot,
   rcon,
+  server,
 }) => {
   const messages: string[] = [];
   bot.on("messagestr", (message) => {
@@ -182,4 +209,23 @@ test("a private Stargate network admits its invited players and denies others", 
       cause: error,
     });
   }
+
+  await rcon.command(`tp ${bot.username} 399.5 71 2.5`);
+  await waitUntil("owner returns to gate", () => bot.entity.position.x < 405);
+  if (bot.blockAt(new Vec3(400, 71, 0))?.name !== "nether_portal") {
+    const resetButton = bot.blockAt(new Vec3(398, 72, 1));
+    if (resetButton === null) throw new Error("First gate button is missing");
+    await bot.activateBlock(resetButton);
+  }
+  await waitUntil(
+    "portal is open before reset",
+    () => bot.blockAt(new Vec3(400, 71, 0))?.name === "nether_portal",
+  );
+  await rcon.command(`reset ${bot.username}`);
+  const kicked = new Promise<void>((resolve) =>
+    bot.once("end", () => resolve()),
+  );
+  await rcon.command(`reset ${bot.username}`);
+  await kicked;
+  await verifyResetCompleted(secondBot, rcon, server);
 });

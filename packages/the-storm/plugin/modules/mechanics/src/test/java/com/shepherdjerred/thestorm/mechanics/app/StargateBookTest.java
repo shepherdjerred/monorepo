@@ -63,5 +63,10 @@ final class StargateBookTest {
     public CompletableFuture<Boolean> deleteGate(UUID id) {
       throw new UnsupportedOperationException();
     }
+
+    @Override
+    public CompletableFuture<Void> resetPlayer(UUID player) {
+      throw new UnsupportedOperationException();
+    }
   }
 }

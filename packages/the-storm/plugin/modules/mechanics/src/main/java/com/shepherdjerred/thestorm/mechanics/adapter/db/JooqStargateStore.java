@@ -144,6 +144,36 @@ public final class JooqStargateStore implements StargateStore {
                 == 1);
   }
 
+  @Override
+  public CompletableFuture<Void> resetPlayer(UUID player) {
+    var id = player.toString();
+    return database.write(
+        dsl -> {
+          var ownedNetworks =
+              dsl.select(MECHANICS_STARGATE_NETWORK.ID)
+                  .from(MECHANICS_STARGATE_NETWORK)
+                  .where(MECHANICS_STARGATE_NETWORK.OWNER_ID.eq(id));
+          dsl.deleteFrom(MECHANICS_STARGATE_GATE)
+              .where(
+                  MECHANICS_STARGATE_GATE
+                      .OWNER_ID
+                      .eq(id)
+                      .or(MECHANICS_STARGATE_GATE.NETWORK_ID.in(ownedNetworks)))
+              .execute();
+          dsl.deleteFrom(MECHANICS_STARGATE_INVITE)
+              .where(
+                  MECHANICS_STARGATE_INVITE
+                      .PLAYER_ID
+                      .eq(id)
+                      .or(MECHANICS_STARGATE_INVITE.NETWORK_ID.in(ownedNetworks)))
+              .execute();
+          dsl.deleteFrom(MECHANICS_STARGATE_NETWORK)
+              .where(MECHANICS_STARGATE_NETWORK.OWNER_ID.eq(id))
+              .execute();
+          return null;
+        });
+  }
+
   private static String key(String name) {
     return name.toLowerCase(Locale.ROOT);
   }
