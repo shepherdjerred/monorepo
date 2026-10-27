@@ -98,6 +98,14 @@ receipt before current configuration. Matching requests can be fulfilled from
 this exact named association without changing an older request acknowledgement.
 Historical version-1 Plex observations retain their literal format and hashes.
 
+Movie finalization consumes that actual Plex receipt and the current scoped
+serving binding. It completes the imported attempt, releases its edition's
+reservation, reuses the Media-created transfer's seeding command and queues that
+cut's subtitle requirements in one transaction. An unverified publication or
+expired invocation/writer authority cannot advance finalization. Completed
+retries validate the original publication before consulting current
+configuration; they do not repeat downstream work.
+
 The internal movie subtitle protocol carries version-4 operation IDs, asset IDs,
 exact edition scope and a current target digest. Named editions inherit the
 canonical movie's household subtitle policy when no edition override exists.

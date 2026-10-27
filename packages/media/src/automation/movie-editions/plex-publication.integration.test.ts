@@ -22,6 +22,7 @@ import { snapshotMoviePublicationAssetV2 } from "#infrastructure/movie-editions/
 import { findMoviePublicationReferenceV2 } from "#infrastructure/movie-editions/publication/store.ts";
 import { visibleMovieRequests } from "#infrastructure/visibility/movie-requests.ts";
 import { publishMoviePlexV4 } from "./plex-publication.ts";
+import { finalizeMovieAcquisitionV4 } from "./finalization.ts";
 
 const h = automationTestHarness();
 const directories: string[] = [];
@@ -216,7 +217,42 @@ test.each(MovieEditionKeySchema.options)(
       scope: f.input.scope,
       assetId: f.asset.id,
     });
+    await finalizeMovieAcquisitionV4(
+      f.network,
+      f.input,
+      testPlexBindingExecution(),
+    );
+    const completed = await h.database().acquisitionAttempt.findUniqueOrThrow({
+      where: { id: f.input.attemptId },
+    });
+    expect(completed.state).toBe("completed");
+    expect(
+      await h
+        .database()
+        .acquisitionReservation.count({ where: { attemptId: completed.id } }),
+    ).toBe(0);
+    expect(
+      await h.database().operation.findUniqueOrThrow({
+        where: { idempotencyKey: `seed:${String(completed.torrentId)}` },
+      }),
+    ).toMatchObject({
+      kind: "maintain_torrent",
+      targetId: completed.torrentId,
+    });
+    const captions = await h.database().operation.findMany({
+      where: { kind: "acquire_movie_subtitles_v4", targetId: f.asset.id },
+    });
+    expect(captions).toHaveLength(2);
+    expect(
+      captions.map(
+        (row) => z.object({ scope: z.unknown() }).parse(row.payload).scope,
+      ),
+    ).toEqual([f.input.scope, f.input.scope]);
     const calls = f.calls.length;
+    await h.database().mediaRuntimeState.update({
+      where: { id: "singleton" },
+      data: { mode: "observe", ownershipConfirmed: false },
+    });
     f.network.gates.acquisition = () => Promise.resolve(false);
     f.network.permittedSections = () =>
       Promise.reject(
@@ -225,6 +261,16 @@ test.each(MovieEditionKeySchema.options)(
     await expect(
       publishMoviePlexV4(f.network, f.input, testPlexBindingExecution()),
     ).resolves.toEqual({ status: "available", reason: null });
+    await finalizeMovieAcquisitionV4(
+      f.network,
+      f.input,
+      testPlexBindingExecution(),
+    );
+    expect(
+      await h.database().operation.count({
+        where: { kind: "acquire_movie_subtitles_v4", targetId: f.asset.id },
+      }),
+    ).toBe(2);
     expect(f.calls).toHaveLength(calls);
     expect(
       await h
@@ -241,6 +287,85 @@ test.each(MovieEditionKeySchema.options)(
         },
       }),
     ).rejects.toThrow("Committed movie Plex receipt");
+  },
+);
+
+test("unverified movie publication cannot release reservations or queue downstream work", async () => {
+  const f = await fixture("directors_cut");
+  await expect(
+    finalizeMovieAcquisitionV4(f.network, f.input, testPlexBindingExecution()),
+  ).rejects.toMatchObject({ reason: "missing_binding" });
+  expect(
+    await h.database().acquisitionAttempt.findUniqueOrThrow({
+      where: { id: f.input.attemptId },
+    }),
+  ).toMatchObject({ state: "imported" });
+  expect(
+    await h.database().acquisitionReservation.count({
+      where: { attemptId: f.input.attemptId },
+    }),
+  ).toBe(1);
+  expect(
+    await h.database().operation.count({
+      where: { kind: "acquire_movie_subtitles_v4", targetId: f.asset.id },
+    }),
+  ).toBe(0);
+});
+
+test.each(["writer", "invocation"] as const)(
+  "original %s expiry prevents movie finalization effects",
+  async (mode) => {
+    const f = await fixture("final_cut");
+    const originalAttempt = await h
+      .database()
+      .acquisitionAttempt.findUniqueOrThrow({
+        where: { id: f.input.attemptId },
+      });
+    const seeding = await h.database().operation.findUniqueOrThrow({
+      where: { idempotencyKey: `seed:${String(originalAttempt.torrentId)}` },
+    });
+    expect(
+      await publishMoviePlexV4(f.network, f.input, testPlexBindingExecution()),
+    ).toEqual({ status: "available", reason: null });
+    let execution = testPlexBindingExecution();
+    if (mode === "writer")
+      await h.database().legacyWriterLease.update({
+        where: { id: "singleton" },
+        data: { expiresAt: new Date(Date.now() - 1) },
+      });
+    else
+      execution = {
+        ...execution,
+        observed: {
+          wall: execution.observed.wall - 60_001,
+          monotonic: execution.observed.monotonic - 60_001,
+        },
+        expiresAtMs: execution.expiresAtMs - 60_001,
+      };
+    await expect(
+      finalizeMovieAcquisitionV4(f.network, f.input, execution),
+    ).rejects.toMatchObject({
+      reason: mode === "writer" ? "ownership_changed" : "verification_expired",
+    });
+    const attempt = await h.database().acquisitionAttempt.findUniqueOrThrow({
+      where: { id: f.input.attemptId },
+    });
+    expect(attempt.state).toBe("imported");
+    expect(
+      await h
+        .database()
+        .acquisitionReservation.count({ where: { attemptId: attempt.id } }),
+    ).toBe(1);
+    expect(
+      await h.database().operation.findUniqueOrThrow({
+        where: { idempotencyKey: `seed:${String(attempt.torrentId)}` },
+      }),
+    ).toEqual(seeding);
+    expect(
+      await h.database().operation.count({
+        where: { kind: "acquire_movie_subtitles_v4", targetId: f.asset.id },
+      }),
+    ).toBe(0);
   },
 );
 
