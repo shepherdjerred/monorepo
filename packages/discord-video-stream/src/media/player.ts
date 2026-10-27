@@ -184,17 +184,18 @@ export function createSeekablePlayer(
 
     let pipeline: AttachedPipeline;
     try {
+      const normalizeTimestamps = prepareOptions.normalizeTimestamps;
       pipeline = await attachPipeline(
         conn,
         streamer,
         output,
         {
           ...mergedPlay,
-          format:
-            prepareOptions.normalizeTimestamps === true
-              ? "matroska"
-              : mergedPlay.format,
-          normalizeTimestamps: prepareOptions.normalizeTimestamps,
+          ...(normalizeTimestamps === true
+            ? { format: "matroska" as const, normalizeTimestamps: true }
+            : normalizeTimestamps === false
+              ? { normalizeTimestamps: false }
+              : {}),
           configureConn: !connConfigured,
         },
         abort.signal,

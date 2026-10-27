@@ -141,8 +141,15 @@ test("normalizes timestamps across an HLS discontinuity", async () => {
         return timestamps;
       }),
     );
-    expect(videoTimestamps).toHaveLength(121);
+    // Four seconds at 30 fps is 120 frames. Some Matroska muxers append one
+    // terminal duplicate, so 121 is also a complete read.
+    expect(videoTimestamps.length).toBeGreaterThanOrEqual(120);
+    expect(videoTimestamps.length).toBeLessThanOrEqual(121);
     expect(audioTimestamps.length).toBeGreaterThan(180);
+    const audioSteps = audioTimestamps
+      .slice(1)
+      .map((pts, index) => pts - audioTimestamps[index]!);
+    expect(audioSteps.every((step) => step === 960n)).toBe(true);
     for (const timestamps of [videoTimestamps, audioTimestamps]) {
       expect(
         timestamps.slice(1).every((pts, index) => pts > timestamps[index]!),

@@ -1483,6 +1483,10 @@ export function mergePlayStreamOptions(
     ...(opts.observer !== undefined ? { observer: opts.observer } : {}),
 
     ...(opts.audioSink !== undefined ? { audioSink: opts.audioSink } : {}),
+
+    ...(typeof opts.normalizeTimestamps === "boolean"
+      ? { normalizeTimestamps: opts.normalizeTimestamps }
+      : {}),
   } satisfies PlayStreamOptions;
 }
 
@@ -1523,6 +1527,9 @@ export async function attachPipeline(
   const { video, audio } = await demux(input, {
     format: options.format,
     ...(options.observer === undefined ? {} : { observer: options.observer }),
+    ...(typeof options.normalizeTimestamps === "boolean"
+      ? { normalizeTimestamps: options.normalizeTimestamps }
+      : {}),
   });
   cancelSignal?.throwIfAborted();
 

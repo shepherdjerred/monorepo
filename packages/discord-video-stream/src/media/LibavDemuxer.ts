@@ -133,12 +133,30 @@ export class PacketTimestampNormalizer {
   }
 
   audio(packet: Packet): void {
-    const duration = packet.duration;
+    const samples = audioDurationSamples(packet);
     packet.pts = this.audioPts;
     packet.dts = this.audioPts;
+    packet.duration = samples;
     packet.timeBase = { num: 1, den: 48_000 };
-    this.audioPts += duration;
+    this.audioPts += samples;
   }
+}
+
+/** 48 kHz sample count. A container duration stays in that container's timebase until this converts it. */
+function audioDurationSamples(packet: Packet): bigint {
+  if (packet.duration > 0n) {
+    const { num, den } = packet.timeBase;
+    if (!Number.isInteger(num) || !Number.isInteger(den) || den === 0) {
+      throw new Error("cannot normalize audio with an invalid timebase");
+    }
+    const samples = (packet.duration * BigInt(num) * 48_000n) / BigInt(den);
+    if (samples <= 0n) {
+      throw new Error("cannot normalize a zero-length audio packet");
+    }
+    return samples;
+  }
+  if (!packet.data) throw new Error("cannot normalize audio without a duration");
+  return BigInt(parseOpusPacketDuration(packet.data));
 }
 
 function packetReadyStats(
@@ -362,8 +380,8 @@ export async function demux(
               inPacket.free();
               continue;
             }
-            packet.duration ||= BigInt(parseOpusPacketDuration(packet.data));
-            normalizer?.audio(packet);
+            if (normalizer) normalizer.audio(packet);
+            else packet.duration ||= BigInt(parseOpusPacketDuration(packet.data));
             observer?.onPacketReady?.(packetReadyStats("audio", packet));
             if (!aPipe.write(packet)) resume = false;
           }
