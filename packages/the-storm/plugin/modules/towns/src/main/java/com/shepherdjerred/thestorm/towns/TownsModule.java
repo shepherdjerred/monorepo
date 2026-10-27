@@ -1,5 +1,7 @@
 package com.shepherdjerred.thestorm.towns;
 
+import static java.util.stream.Collectors.toUnmodifiableSet;
+
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.core.protection.Protection;
@@ -29,6 +31,7 @@ import com.shepherdjerred.thestorm.towns.app.TownMilestones;
 import com.shepherdjerred.thestorm.towns.app.TownRead;
 import com.shepherdjerred.thestorm.towns.app.TownsState;
 import com.shepherdjerred.thestorm.towns.domain.TownsConfig;
+import com.shepherdjerred.thestorm.towns.domain.heritage.HeritageArchive;
 import com.shepherdjerred.thestorm.towns.domain.parcel.ParcelsConfig;
 import com.shepherdjerred.thestorm.towns.domain.region.RegionIndex;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
@@ -153,10 +156,12 @@ public final class TownsModule implements StormModule {
     // Schematic and item archive encoding is CPU work for core's bounded pool, which closes
     // with the plugin.
     var archiveExecutor = context.compute().executor();
+    var spawnSites =
+        heritage.archives().stream().map(HeritageArchive::spawnSite).collect(toUnmodifiableSet());
     var installed =
         TownsPaper.install(
             context,
-            new TownsPaper.Loaded(settling, locks, pvp),
+            new TownsPaper.Loaded(settling, locks, pvp, spawnSites),
             config,
             new TownsPaper.Plots(
                 parcels,
