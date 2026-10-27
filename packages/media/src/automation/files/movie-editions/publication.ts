@@ -4,10 +4,10 @@ import { fileMovieAccess } from "#automation/editions/access.ts";
 import { requireMovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
 import {
-  loadMoviePublicationV2,
   createMoviePublicationV2,
   commitMoviePublicationOutcomeV2,
 } from "#infrastructure/movie-editions/publication/store.ts";
+import { loadMoviePublicationV2 } from "#infrastructure/movie-editions/publication/records.ts";
 import { snapshotMoviePublicationAssetV2 } from "#infrastructure/movie-editions/publication/snapshot.ts";
 import { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import {

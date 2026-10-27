@@ -28,6 +28,11 @@ export type SubtitleSearch = SubtitleTarget & {
   language: string;
   season?: number;
   episode?: number;
+  /** Invocation-local capability; never a Workflow payload or persisted browser state. */
+  downloadAuthority?: {
+    authorize: () => Promise<void>;
+    assertActive: () => void;
+  };
 };
 const normalize = (name: string) =>
   nodePath
@@ -104,6 +109,11 @@ export async function claimSubtitleDownload(
   providerId: string,
   candidateId: string,
 ): Promise<void> {
+  if (input.downloadAuthority !== undefined) {
+    input.downloadAuthority.assertActive();
+    await input.downloadAuthority.authorize();
+    input.downloadAuthority.assertActive();
+  }
   await context.db.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Operation" WHERE id = ${input.operationId} FOR UPDATE`;
     const operation = await tx.operation.findUniqueOrThrow({
@@ -129,6 +139,7 @@ export async function claimSubtitleDownload(
       },
     });
   });
+  input.downloadAuthority?.assertActive();
 }
 
 export async function fromOpenSubtitles(

@@ -5,7 +5,10 @@ import {
   copyImportPartial,
   type PreparedImport,
 } from "./operations/staging.ts";
-import { completeDuplicateImport } from "./operations/import.ts";
+import {
+  completeDuplicateImport,
+  preserveImportPredecessor,
+} from "./operations/import.ts";
 import {
   orderedMovePaths,
   assertSameMoveIdentity,
@@ -220,25 +223,17 @@ export class FileOperations {
                 manifest,
                 staged,
                 recorded: this.options.effectRecorder !== undefined,
+                allowDuplicateTarget: input.allowDuplicateTarget !== false,
               });
-            if (
-              input.previousSha256 === undefined ||
-              digest !== input.previousSha256
-            )
-              throw new FileOperationConflict(
-                "Publication would replace an unrecognized file",
-              );
-            if (await exists(backup))
-              await this.requireDigest(backup, input.previousSha256);
-            else {
-              await this.content.link(target, backup, {
-                manifest,
-                step: "import_backup_link",
-              });
-              await syncDirectory(nodePath.dirname(backup));
-            }
-            await this.checkpoint("previous-version-preserved");
-            await this.requireDigest(target, input.previousSha256);
+            await preserveImportPredecessor({
+              file: input,
+              digest,
+              target,
+              backup,
+              manifest,
+              content: this.content,
+              checkpoint: () => this.checkpoint("previous-version-preserved"),
+            });
           } else if (input.previousSha256 !== undefined) {
             await this.requireDigest(backup, input.previousSha256);
           }

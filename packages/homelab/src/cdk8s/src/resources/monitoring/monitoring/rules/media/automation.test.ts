@@ -2,7 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { expect, test } from "vitest";
-import { getMediaRuleGroups } from "./media.ts";
+import { getMediaRuleGroups } from "./automation.ts";
 
 test("watch alerts distinguish stale evidence from fresh, inactive, and unneeded observations", async () => {
   const expression = getMediaRuleGroups()

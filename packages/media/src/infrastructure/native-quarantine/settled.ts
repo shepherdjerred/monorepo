@@ -71,9 +71,8 @@ export async function settledNativeQuarantines(
     assertSettledDecisions(descriptor, decisions);
     const dependencies = await assertSettledFiles(
       tx,
-      descriptor,
-      restored,
-      files,
+      { descriptor, restored, files },
+      budget,
     );
     settled.push(
       SettledNativeQuarantineSchema.parse({
@@ -173,9 +172,16 @@ function assertSettledDecisions(
 }
 async function assertSettledFiles(
   tx: Prisma.TransactionClient,
-  descriptor: Descriptor,
-  restored: z.infer<typeof NativeQuarantineRestorationSchema>,
-  files: File[],
+  {
+    descriptor,
+    restored,
+    files,
+  }: {
+    descriptor: Descriptor;
+    restored: z.infer<typeof NativeQuarantineRestorationSchema>;
+    files: File[];
+  },
+  budget: PublicationAuthorityReadBudget,
 ) {
   const replacementFiles = [];
   const replacementJournals = [];
@@ -223,11 +229,15 @@ async function assertSettledFiles(
       ownershipEpoch: current.ownershipEpoch,
       coverage: current.mediaIds.map((mediaId) => ({ mediaId, current: true })),
     };
-    const chain = await terminalRebindingChain(tx, {
-      asset,
-      originalVersion: restoration.assetVersion,
-      originalEpoch: restored.recoveryEpoch,
-    });
+    const chain = await terminalRebindingChain(
+      tx,
+      {
+        asset,
+        originalVersion: restoration.assetVersion,
+        originalEpoch: restored.recoveryEpoch,
+      },
+      budget,
+    );
     history.push(chain);
     const { subtitles: _currentSubtitles, ...currentVideo } = current;
     const { subtitles: _expectedSubtitles, ...expectedVideo } = expected;
@@ -242,13 +252,17 @@ async function assertSettledFiles(
       throw new Error("Native settled video identity changed");
     const matched: string[] = [];
     for (const subtitle of expected.subtitles) {
-      const proof = await settledSubtitle(tx, {
-        subtitle,
-        current,
-        chain,
-        restored,
-        asset,
-      });
+      const proof = await settledSubtitle(
+        tx,
+        {
+          subtitle,
+          current,
+          chain,
+          restored,
+          asset,
+        },
+        budget,
+      );
       matched.push(proof.id);
       replacementFiles.push(...proof.files);
       replacementJournals.push(...proof.journals);
@@ -259,23 +273,30 @@ async function assertSettledFiles(
     for (const subtitle of current.subtitles.filter(
       (item) => !matched.includes(item.id),
     )) {
-      const installed = await settledInstalledSubtitle(tx, {
-        subtitle,
-        chain,
-        video: {
-          path: current.canonicalPath,
-          checksum: current.checksum,
-          mediaIds: current.mediaIds,
-          libraryKind: current.libraryKind,
+      const installed = await settledInstalledSubtitle(
+        tx,
+        {
+          subtitle,
+          chain,
+          video: {
+            path: current.canonicalPath,
+            checksum: current.checksum,
+            mediaIds: current.mediaIds,
+            libraryKind: current.libraryKind,
+          },
+          videoBindings: [
+            {
+              version: restoration.assetVersion,
+              epoch: restored.recoveryEpoch,
+            },
+            ...chain.map((item) => ({
+              version: item.binding.assetVersion,
+              epoch: item.binding.ownershipEpoch,
+            })),
+          ],
         },
-        videoBindings: [
-          { version: restoration.assetVersion, epoch: restored.recoveryEpoch },
-          ...chain.map((item) => ({
-            version: item.binding.assetVersion,
-            epoch: item.binding.ownershipEpoch,
-          })),
-        ],
-      });
+        budget,
+      );
       installations.push(installed.installation);
       history.push(installed.history);
     }
@@ -303,6 +324,7 @@ async function settledSubtitle(
     restored: z.infer<typeof NativeQuarantineRestorationSchema>;
     asset: Parameters<typeof terminalRebindingChain>[1]["asset"];
   },
+  budget: PublicationAuthorityReadBudget,
 ) {
   const unchanged = {
     ...subtitle,
@@ -316,24 +338,28 @@ async function settledSubtitle(
       throw new Error("Native settled embedded subtitle changed");
     return { id: subtitle.id, files: [], journals: [], history: [] };
   }
-  const replacement = await terminalSubtitleChain(tx, {
-    subtitleId: subtitle.id,
-    checksum: z.string().parse(subtitle.checksum),
-    canonicalPath: z.string().parse(subtitle.path),
-    libraryKind: current.libraryKind,
-    asset,
-    videoBindings: [
-      { version: subtitle.videoVersion, epoch: restored.recoveryEpoch },
-      ...chain.map((item) => ({
-        version: item.binding.assetVersion,
-        epoch: item.binding.ownershipEpoch,
+  const replacement = await terminalSubtitleChain(
+    tx,
+    {
+      subtitleId: subtitle.id,
+      checksum: z.string().parse(subtitle.checksum),
+      canonicalPath: z.string().parse(subtitle.path),
+      libraryKind: current.libraryKind,
+      asset,
+      videoBindings: [
+        { version: subtitle.videoVersion, epoch: restored.recoveryEpoch },
+        ...chain.map((item) => ({
+          version: item.binding.assetVersion,
+          epoch: item.binding.ownershipEpoch,
+        })),
+      ],
+      subtitleRenewals: chain.map((item) => ({
+        bindings: item.binding.subtitles,
+        snapshots: item.subtitleSnapshots,
       })),
-    ],
-    subtitleRenewals: chain.map((item) => ({
-      bindings: item.binding.subtitles,
-      snapshots: item.subtitleSnapshots,
-    })),
-  });
+    },
+    budget,
+  );
   const actual = current.subtitles.find(
     (item) => item.id === replacement.current.id,
   );

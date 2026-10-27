@@ -181,3 +181,59 @@ test("an owned unverified normal sidecar requires visible replacement review and
     subtitleTargetsReady(await currentSubtitleWork(f.db, f.asset.id, 0), 0),
   ).toBe(false);
 });
+
+test("an identical unverified sidecar keeps its ownership and quality until explicit review", async () => {
+  const f = await harness.setup();
+  await f.queue();
+  const inputs = await f.inputs();
+  const input = inputs.find((item) => !item.forced);
+  if (input === undefined) throw new Error("No normal target");
+  const provider = subtitleTransport();
+  const found = await createSubtitleActivities(f.network, {
+    opensubtitles: (context, search) =>
+      fromOpenSubtitles(context, search, provider.transport),
+  }).findMediaSubtitles(input);
+  expect(found.status).toBe("found");
+  const candidate = await f.db.subtitleAsset.findUniqueOrThrow({
+    where: { id: found.subtitleId ?? "missing" },
+  });
+  const path =
+    f.asset.path.slice(0, -nodePath.extname(f.asset.path).length) + ".en.srt";
+  const content = Buffer.from(candidate.content ?? []);
+  await writeFile(path, content, { flag: "wx" });
+  const original = await f.db.subtitleAsset.create({
+    data: {
+      assetId: f.asset.id,
+      language: "en",
+      providerId: "migration",
+      state: "installed",
+      qualityStatus: "unverified",
+      storageKind: "sidecar",
+      ownershipEpoch: 0,
+      checksum: candidate.checksum,
+      videoChecksum: f.asset.checksum,
+      videoVersion: f.asset.version,
+      forced: false,
+      hearingImpaired: false,
+      path,
+      provenance: {},
+      matchingEvidence: {},
+    },
+  });
+  expect(
+    await createMediaFileActivities(f.context).installMediaSubtitles({
+      operationId: input.operationId,
+      subtitleId: candidate.id,
+    }),
+  ).toEqual({
+    status: "blocked",
+    reason: "subtitle_path_requires_owner_review",
+  });
+  expect(await readFile(path)).toEqual(content);
+  expect(
+    await f.db.subtitleAsset.findUniqueOrThrow({ where: { id: original.id } }),
+  ).toEqual(original);
+  expect(
+    await f.db.subtitleAsset.findUniqueOrThrow({ where: { id: candidate.id } }),
+  ).toEqual(candidate);
+});

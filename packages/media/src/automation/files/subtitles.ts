@@ -1,10 +1,6 @@
 import { assertDefaultPhysicalAsset } from "#infrastructure/handoff/default-edition.ts";
-import nodePath from "node:path";
 import { storedFilePath } from "./paths/locations.ts";
-import { createHash } from "node:crypto";
-import { mkdir, writeFile, readFile, realpath, lstat } from "node:fs/promises";
 import { z } from "zod";
-import { validateSubtitle } from "#integrations/subtitle-validation.ts";
 import {
   FileGuardError,
   GenerationsSchema,
@@ -12,15 +8,17 @@ import {
 } from "./types.ts";
 import { assertRuntime, lockMedia } from "./guards.ts";
 import { assertPublicationUnfenced } from "#automation/publication-proof/fence.ts";
-import { libraryLocation } from "./removal-plan.ts";
 import { fileOperations } from "./file-operations.ts";
 import { queueLifecycleNotifications } from "#automation/notifications/events.ts";
 import { subtitleAccepted } from "#domain/subtitle-quality.ts";
 import { lockEffectiveRequests } from "#infrastructure/request-claims.ts";
 import { lockSubtitlePolicies } from "#infrastructure/subtitle-policy.ts";
-import { assertSubtitleTarget } from "#automation/subtitles/install-authority.ts";
+import {
+  assertSubtitleTarget,
+  installedEmbeddedEvidence,
+} from "#automation/subtitles/install-authority.ts";
 import { subtitleTargetsReady } from "#automation/subtitles/authority.ts";
-import { subtitleDestination } from "#domain/subtitle-path.ts";
+import { stageSubtitleContent } from "./subtitle-lifecycle/content.ts";
 import { assertNoSubtitleReplacement } from "#infrastructure/subtitle-replacement/locks.ts";
 import {
   publicationInvocation,
@@ -92,65 +90,8 @@ export async function installSubtitle(
     })
   )
     throw new FileGuardError("subtitle_quality_unaccepted");
-  const provenance = z
-    .object({
-      filename: z.string(),
-      description: z.string(),
-      format: z.enum(["srt", "ass", "ssa", "vtt"]),
-    })
-    .loose()
-    .parse(subtitle.provenance);
-  if (subtitle.content === null)
-    throw new FileGuardError("subtitle_content_missing");
-  const validated = validateSubtitle({
-    bytes: subtitle.content,
-    filename: provenance.filename,
-    requireSimplified: ["zh-CN", "zh-Hans"].includes(subtitle.language),
-    provenanceText: provenance.description,
-  });
-  if (validated.format !== provenance.format)
-    throw new FileGuardError("subtitle_format_mismatch");
-  const bytes = Buffer.from(validated.text);
-  const checksum = createHash("sha256").update(bytes).digest("hex");
-  const location = libraryLocation(context, subtitle.asset.path);
-  const roots = context.roots[location.libraryKind];
-  const files = fileOperations(
-    context,
-    { ...roots, downloads: roots.control },
-    () => Promise.reject(new Error("Subtitle staging cannot publish")),
-  );
-  // Reading a journal checks the configured Plex exclusion before any control-root write.
-  await files.readManifest(operationId);
-  const relativeSource = `subtitles/${subtitleId}.${validated.format}`;
-  const source = nodePath.join(roots.control, relativeSource);
-  await mkdir(nodePath.dirname(source), { recursive: true });
-  if ((await realpath(nodePath.dirname(source))) !== nodePath.dirname(source))
-    throw new FileGuardError("subtitle_staging_unsafe");
-  try {
-    await writeFile(source, bytes, { flag: "wx", mode: 0o600 });
-  } catch (error) {
-    if (!z.object({ code: z.literal("EEXIST") }).safeParse(error).success)
-      throw error;
-    const existing = await lstat(source);
-    if (!existing.isFile() || (await realpath(source)) !== source)
-      throw new FileGuardError("subtitle_staging_unsafe");
-    if (!bytes.equals(await readFile(source)))
-      throw new FileGuardError("subtitle_staging_conflict");
-  }
-  const libraryPath = subtitleDestination({
-    videoPath: location.libraryPath,
-    language: subtitle.language,
-    forced: subtitle.forced,
-    hearingImpaired: subtitle.hearingImpaired,
-    format: validated.format,
-  });
-  const descriptor = {
-    operationId,
-    downloadPath: relativeSource,
-    libraryPath,
-    sha256: checksum,
-  };
-  await files.importFile({ ...descriptor, stopAfterStaging: true });
+  const { provenance, checksum, location, roots, libraryPath, descriptor } =
+    await stageSubtitleContent(invocation, subtitle, operationId);
   await context.db.$transaction(
     async (tx) => {
       const mediaIds = subtitle.asset.coverage.map(
@@ -224,7 +165,18 @@ export async function installSubtitle(
         { ...roots, downloads: roots.control },
         authorize,
         freshness.assertActive,
-      ).importFile(descriptor);
+      ).importFile({ ...descriptor, allowDuplicateTarget: false });
+      const installation = {
+        operationId,
+        subtitleId,
+        epoch: evidence.recoveryEpoch,
+      };
+      const currentWork = await assertSubtitleTarget(tx, installation);
+      const matchingEvidence = await installedEmbeddedEvidence(
+        tx,
+        installation,
+        currentWork,
+      );
       await tx.subtitleAsset.update({
         where: { id: subtitleId },
         data: {
@@ -237,6 +189,7 @@ export async function installSubtitle(
           ),
           provenance: { ...provenance, checksum },
           checksum,
+          matchingEvidence,
           version: { increment: 1 },
         },
       });

@@ -32,6 +32,7 @@ import {
 import type { MovieChoiceAccess } from "#infrastructure/movie-editions/access.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import { stageEmbedded } from "./embedded.ts";
+import { captureEmbeddedStreamFacts } from "./subtitle-lifecycle/embedded-facts.ts";
 import { assertMeasuredUpgrade } from "./quality-guard.ts";
 import { newLibraryPath, type NamingItem } from "./library-path.ts";
 import { resumeCommittedPublication } from "./committed-publication.ts";
@@ -400,6 +401,12 @@ async function inspectEntry(input: {
       releaseId: attempt.releaseId,
       profileVersions,
       embeddedRejectedStreams: embeddedSubtitles.rejectedStreams,
+      embeddedStreamFactsV2: captureEmbeddedStreamFacts({
+        assetId,
+        checksum,
+        probe,
+        subtitles: embeddedSubtitles.subtitles,
+      }),
     }),
     previousAssetId: previous?.id ?? null,
     previousChecksum: previous?.checksum ?? null,

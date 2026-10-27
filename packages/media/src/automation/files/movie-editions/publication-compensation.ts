@@ -2,10 +2,8 @@ import { FileGuardError, type Transaction } from "#automation/files/types.ts";
 import { assertRuntime } from "#automation/files/guards.ts";
 import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
 import { lockPublicationRows } from "#infrastructure/publication-proof/locks.ts";
-import {
-  loadMoviePublicationV2,
-  commitMoviePublicationOutcomeV2,
-} from "#infrastructure/movie-editions/publication/store.ts";
+import { commitMoviePublicationOutcomeV2 } from "#infrastructure/movie-editions/publication/store.ts";
+import { loadMoviePublicationV2 } from "#infrastructure/movie-editions/publication/records.ts";
 import { snapshotMoviePublicationAssetV2 } from "#infrastructure/movie-editions/publication/snapshot.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import type { MovieFilePlanV2 } from "#shared/movie-editions/file-plan-v2.ts";

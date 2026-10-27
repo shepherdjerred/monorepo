@@ -6,8 +6,11 @@ import { effectiveRequestWhere } from "#infrastructure/request-claims.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 import {
   subtitleAccepted,
+  type SubtitleQuality,
   type SubtitleTarget,
+  type SubtitleVideo,
 } from "#domain/subtitle-quality.ts";
+import { reusableEmbeddedSubtitle } from "./embedded.ts";
 
 export const SubtitleTargetSchema = z.object({
   language: z.string().regex(/^[a-z]{2,3}(?:-[A-Za-z]{2,8})?$/u),
@@ -24,7 +27,47 @@ export function targetKey(target: SubtitleTarget): string {
   return `${target.language}:${target.forced === undefined ? "any" : target.forced ? "forced" : "regular"}:${target.hearingImpaired ?? "any"}`;
 }
 
-function policyRequirements(
+export type SubtitleWork = {
+  asset: SubtitleVideo & {
+    properties: unknown;
+    subtitles: (SubtitleQuality & {
+      id: string;
+      providerId: string;
+      matchingEvidence: unknown;
+    })[];
+  };
+  targets: SubtitleTarget[];
+  authority: string;
+  protectedReasons: string[];
+};
+
+export function distinctSubtitleTargets(targets: SubtitleTarget[]) {
+  const distinct = [
+    ...new Map(targets.map((target) => [targetKey(target), target])).values(),
+  ];
+  return distinct
+    .filter(
+      (target) =>
+        target.forced !== undefined ||
+        !distinct.some(
+          (other) =>
+            other.language === target.language && other.forced !== undefined,
+        ),
+    )
+    .filter(
+      (target) =>
+        target.hearingImpaired !== "any" ||
+        !distinct.some(
+          (other) =>
+            other.language === target.language &&
+            other.forced === target.forced &&
+            other.hearingImpaired !== "any",
+        ),
+    )
+    .sort((a, b) => targetKey(a).localeCompare(targetKey(b)));
+}
+
+export function policyRequirements(
   policies: Awaited<ReturnType<typeof currentSubtitlePolicies>>,
   audio: string[] | null,
   epoch: number,
@@ -116,29 +159,7 @@ export async function currentSubtitleWork(
     )
   )
     reasons.push("subtitle_intent_not_authorized");
-  const distinct = [
-    ...new Map(targets.map((target) => [targetKey(target), target])).values(),
-  ];
-  const unique = distinct
-    .filter(
-      (target) =>
-        target.forced !== undefined ||
-        !distinct.some(
-          (other) =>
-            other.language === target.language && other.forced !== undefined,
-        ),
-    )
-    .filter(
-      (target) =>
-        target.hearingImpaired !== "any" ||
-        !distinct.some(
-          (other) =>
-            other.language === target.language &&
-            other.forced === target.forced &&
-            other.hearingImpaired !== "any",
-        ),
-    )
-    .sort((a, b) => targetKey(a).localeCompare(targetKey(b)));
+  const unique = distinctSubtitleTargets(targets);
   const authority = snapshotHash({
     assetId,
     version: asset.version,
@@ -176,7 +197,7 @@ export async function currentSubtitleWork(
 }
 
 export function targetRequired(
-  work: Awaited<ReturnType<typeof currentSubtitleWork>>,
+  work: Pick<SubtitleWork, "targets">,
   target: SubtitleTarget,
 ): boolean {
   return work.targets.some(
@@ -187,7 +208,7 @@ export function reusableSubtitle(
   subtitle: Awaited<
     ReturnType<typeof currentSubtitleWork>
   >["asset"]["subtitles"][number],
-  work: Awaited<ReturnType<typeof currentSubtitleWork>>,
+  work: Pick<SubtitleWork, "asset" | "authority">,
   epoch: number,
   target: SubtitleTarget,
 ): boolean {
@@ -208,13 +229,14 @@ export function reusableSubtitle(
       .safeParse(subtitle.matchingEvidence).success
   )
     return false;
+  if (reusableEmbeddedSubtitle(subtitle, work.asset)) return true;
   const binding = z
     .object({ targetAuthority: z.literal(work.authority) })
     .safeParse(subtitle.matchingEvidence);
   return binding.success;
 }
 export function subtitleTargetsReady(
-  work: Awaited<ReturnType<typeof currentSubtitleWork>>,
+  work: SubtitleWork,
   epoch: number,
 ): boolean {
   return (

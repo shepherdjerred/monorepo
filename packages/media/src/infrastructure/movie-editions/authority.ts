@@ -1,4 +1,8 @@
-import type { Prisma } from "#generated/prisma/client.ts";
+import type {
+  Prisma,
+  MediaRequest,
+  MovieEditionChoice,
+} from "#generated/prisma/client.ts";
 import { MediaError } from "#application/errors.ts";
 import {
   MovieEditionChoiceAuditSchema,
@@ -18,6 +22,7 @@ import {
 import { matchesMovieDefinition, movieDefinitionRef } from "./definition.ts";
 import { MovieChoiceProtection } from "./errors.ts";
 import type { MovieChoiceFreshness } from "./freshness.ts";
+import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 
 function protectedChoice(reason: MovieEditionReason) {
   return { status: "protected" as const, reason };
@@ -30,6 +35,7 @@ export async function readMovieChoice(
     requestId: string;
     expectedScope?: MovieEditionScope;
     access: MovieChoiceAccess;
+    budget?: PublicationAuthorityReadBudget;
   },
 ) {
   const request = await tx.mediaRequest.findUniqueOrThrow({
@@ -58,17 +64,9 @@ export async function readMovieChoice(
   const choice = await tx.movieEditionChoice.findUniqueOrThrow({
     where: { id: request.movieEditionChoiceId },
   });
+  input.budget?.consume(1);
   const audit = MovieEditionChoiceAuditSchema.parse(choice.authority);
-  if (
-    choice.requestId !== request.id ||
-    choice.choiceRevision !== request.movieEditionChoiceRevision ||
-    choice.subjectUserId !== request.userId ||
-    choice.rootMediaId !== media.id ||
-    choice.edition !== request.edition
-  )
-    throw new Error(
-      "Movie choice pointer violates its immutable request scope",
-    );
+  assertChoicePointer(request, choice, media.id);
   const target = await tx.mediaIntent.findUniqueOrThrow({
     where: { mediaId_edition: { mediaId: media.id, edition: request.edition } },
   });
@@ -78,6 +76,7 @@ export async function readMovieChoice(
   const definition = await tx.mediaEditionDefinition.findUniqueOrThrow({
     where: { rootMediaId_key: { rootMediaId: media.id, key: scope.edition } },
   });
+  input.budget?.consume(1);
   if (
     !matchesMovieDefinition(definition, expected.definition) ||
     choice.registryVersion !== 1 ||
@@ -103,6 +102,23 @@ export async function readMovieChoice(
     subject: identity.subject,
     freshness: identity.freshness,
   };
+}
+
+function assertChoicePointer(
+  request: MediaRequest,
+  choice: MovieEditionChoice,
+  mediaId: string,
+) {
+  if (
+    choice.requestId !== request.id ||
+    choice.choiceRevision !== request.movieEditionChoiceRevision ||
+    choice.subjectUserId !== request.userId ||
+    choice.rootMediaId !== mediaId ||
+    choice.edition !== request.edition
+  )
+    throw new Error(
+      "Movie choice pointer violates its immutable request scope",
+    );
 }
 
 async function currentChoiceIdentity(
@@ -256,6 +272,7 @@ export async function eligibleAcquisitionSponsors(
     scope: MovieEditionScope;
     access: MovieChoiceAccess;
     protocol?: "movie-v4";
+    budget?: PublicationAuthorityReadBudget;
   },
 ) {
   const requests = await tx.mediaRequest.findMany({
@@ -287,6 +304,7 @@ export async function eligibleAcquisitionSponsors(
       requestId: request.id,
       expectedScope: input.scope,
       access: input.access,
+      ...(input.budget === undefined ? {} : { budget: input.budget }),
     });
     if (result.status === "authorized") sponsors.push(result);
   }

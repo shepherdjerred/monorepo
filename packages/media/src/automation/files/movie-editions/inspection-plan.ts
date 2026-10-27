@@ -15,6 +15,7 @@ import {
 import { workerFilePath } from "#automation/files/paths/locations.ts";
 import { movieEditionLibraryPath } from "#automation/files/editions/movie-path.ts";
 import { stageEmbedded } from "#automation/files/embedded.ts";
+import { captureEmbeddedStreamFacts } from "#automation/files/subtitle-lifecycle/embedded-facts.ts";
 import { ownedSubtitleSidecars } from "#automation/files/subtitle-lifecycle/ownership.ts";
 import { FileGuardError } from "#automation/files/types.ts";
 import { assertMovieCutV2 } from "#infrastructure/movie-editions/cut-v2.ts";
@@ -193,6 +194,12 @@ export async function prepareMovieFilePlanV4(
             [input.scope.mediaId]: authority.profile.version,
           },
           embeddedRejectedStreams: embedded.rejectedStreams,
+          embeddedStreamFactsV2: captureEmbeddedStreamFacts({
+            assetId,
+            checksum,
+            probe,
+            subtitles: embedded.subtitles,
+          }),
         }),
       },
     ],
