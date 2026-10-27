@@ -352,13 +352,13 @@ describe("MatchNotificationIntent codec", () => {
       }),
     ],
     [
-      "settlement carrying its announcement",
+      "Hall record carrying its announcement",
       NotificationIntentSchema.parse({
-        key: "settlement-discord:NA1_5312279829:300000000000000001",
-        kind: "settlement",
+        key: "hall-record-break-discord:NA1_5312279829:300000000000000001",
+        kind: "hall-record-break",
         origin: { kind: "live" },
         announcement: {
-          kind: "scout-settlement-announcement",
+          kind: "scout-hall-record-break-announcement",
           version: 1,
           data: { summary: { matchId: "NA1_5312279829" } },
         },

@@ -55,24 +55,8 @@ describe("routeButton", () => {
     expect(calls).toEqual(["deferUpdate"]);
   });
 
-  // `isBucksCustomId` is a prefix check, so the router has already claimed
-  // these. Returning without acknowledging left the clicker looking at
-  // Discord's red "This interaction failed" — and the router counted it as a
-  // successful `bb` handling.
-  test.each([
-    ["bb:1:b:NA1_1:0:W", "too few segments — an older encoding"],
-    ["bb:2:b:NA1_1:0:W:10", "a version this build does not speak"],
-    ["bb:1:z:NA1_1:0:W:10", "an action outside the schema"],
-    ["bb:1:b:NA1_1:99:W:10", "a roster index outside the frozen snapshot"],
-    ["bb:", "the bare namespace"],
-  ])("acknowledges a claimed but unparseable ID (%s)", async (customId) => {
-    const { interaction, calls } = fakeInteraction(customId);
-    await routeButton(interaction);
-    expect(calls).toEqual(["deferUpdate"]);
-  });
-
-  test("acknowledges malformed Dare v2 IDs and routes valid ones", async () => {
-    const malformed = fakeInteraction("bbd2:1:q:0:1:a:0");
+  test("acknowledges malformed Dare IDs and routes valid ones", async () => {
+    const malformed = fakeInteraction("dare:1:q:0:1:a:0");
     await routeButton(malformed.interaction);
     expect(malformed.calls).toEqual(["deferUpdate"]);
 
@@ -85,29 +69,6 @@ describe("routeButton", () => {
     );
     await routeButton(valid.interaction);
     expect(valid.calls).toEqual(["deferReply", "editReply"]);
-  });
-
-  test.each([
-    "bbnav:",
-    "bbnav:2:h:160509172704739328:42:0",
-    "bbnav:1:x:160509172704739328:42:0",
-    "bbnav:1:h:not-a-user:42:0",
-    "bbnav:1:h:160509172704739328:0:0",
-    "bbnav:1:h:160509172704739328:42:-1",
-  ])("acknowledges malformed navigation ID %s", async (customId) => {
-    const { interaction, calls } = fakeInteraction(customId);
-    await routeButton(interaction);
-    expect(calls).toEqual(["deferUpdate"]);
-  });
-
-  test("ignores stale peek-pass buttons from the retired feature", async () => {
-    // Peek passes were removed; a lingering `bbpass:` component on an old
-    // ephemeral reply is no longer ours to answer.
-    const { interaction, calls } = fakeInteraction(
-      "bbpass:1:b:160509172704739328:1337623164146155593:42:5",
-    );
-    await routeButton(interaction);
-    expect(calls).toEqual(["deferUpdate"]);
   });
 
   test("acknowledges a malformed Scout component with a private explanation", async () => {

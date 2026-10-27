@@ -49,7 +49,7 @@ describe("runMaintenanceSteps", () => {
         recordingStep("pending earnings retry", ran, () => {
           throw first;
         }),
-        recordingStep("stale betting pool void", ran, () => {
+        recordingStep("stale report cleanup", ran, () => {
           throw second;
         }),
         recordingStep("dare window settle", ran),
@@ -60,7 +60,7 @@ describe("runMaintenanceSteps", () => {
     }
     expect(ran).toEqual([
       "pending earnings retry",
-      "stale betting pool void",
+      "stale report cleanup",
       "dare window settle",
       "dare summary delivery",
     ]);

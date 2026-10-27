@@ -78,7 +78,7 @@ const successfulAgent = async (params: ExploreAgentParams) => {
   };
 };
 
-// A bucks-tools turn runs no ScoutQL, so its answer carries queryText: null
+// A tool-only turn runs no ScoutQL, so its answer carries queryText: null
 // and nothing downstream may require a preview or a chart.
 const dareOnlyAgent = async (params: ExploreAgentParams) => {
   await params.emit({

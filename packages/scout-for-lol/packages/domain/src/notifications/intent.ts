@@ -30,8 +30,7 @@ import {
  * What the notification announces, which decides how it is rendered and
  * delivered. A `prematch` intent announces a game that has started and is
  * rendered from the archived spectator snapshot; a `postmatch` intent reports
- * a finished game from its MatchV5 payload; `settlement` is retained only to
- * suppress pre-retirement persisted intents; a
+ * a finished game from its MatchV5 payload; a
  * `hall-record-break` intent tells one guild's Hall of Fame channel which
  * records a match broke; a `duel-status` intent reports a Duel series; a
  * `dare-status` intent tells a Dare participant by DM, or the Dare's own
@@ -39,7 +38,7 @@ import {
  * decision to notify, fixed at mint, so a consumer never has to infer it from
  * the key or from whatever payload happens to be available when it runs.
  *
- * The three announcement kinds carry their presentation inputs on the intent
+ * The announcement kinds carry their presentation inputs on the intent
  * (see `announcement` below); the two report kinds carry nothing, because
  * everything they deliver is derived from the match's own durable artifacts.
  */
@@ -49,23 +48,21 @@ export type NotificationIntentKind = z.infer<
 export const NotificationIntentKindSchema = z.enum([
   "postmatch",
   "prematch",
-  "settlement",
   "hall-record-break",
   "duel-status",
   "dare-status",
   "product-announcement",
 ]);
 
-/** Match artifact rendering is intentionally closed over these four kinds. */
+/** Match artifact rendering is intentionally closed over these three kinds. */
 export type MatchNotificationIntentKind = Extract<
   NotificationIntentKind,
-  "postmatch" | "prematch" | "settlement" | "hall-record-break"
+  "postmatch" | "prematch" | "hall-record-break"
 >;
 
 /** The kinds whose message is built from an `announcement` payload. */
 export const ANNOUNCEMENT_INTENT_KINDS: ReadonlySet<NotificationIntentKind> =
   new Set<NotificationIntentKind>([
-    "settlement",
     "hall-record-break",
     "duel-status",
     "dare-status",
@@ -298,7 +295,7 @@ export const NotificationIntentSchema = z
      * presentation inputs belong to their notification adapters, and the
      * domain must not mirror them. Present exactly for the kinds in
      * `ANNOUNCEMENT_INTENT_KINDS`; the refinement below is what makes a
-     * settlement intent with nothing to say, or a report intent smuggling a
+     * Hall announcement with nothing to say, or a report intent smuggling a
      * payload, unrepresentable.
      */
     announcement: OpaqueVersionedEnvelopeSchema.optional(),

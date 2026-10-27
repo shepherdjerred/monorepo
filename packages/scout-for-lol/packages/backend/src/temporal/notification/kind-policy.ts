@@ -73,8 +73,6 @@ async function kindSuppressionOf(
     case "postmatch":
     case "prematch":
       return undefined;
-    case "settlement":
-      return "feature-disabled";
   }
 }
 

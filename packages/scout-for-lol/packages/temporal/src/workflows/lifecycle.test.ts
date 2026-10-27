@@ -313,7 +313,10 @@ test("ingestion reconciliation recovers detached and pending interactive work", 
       reconcileIngestion: () => ({
         initialHistoryPuuids: [],
         detachedWorks: [
-          { kind: "parlay-generation", workId: "parlay:NA1_300" },
+          {
+            kind: "champion-mastery-refresh",
+            workId: "champion-mastery:NA1_300",
+          },
         ],
         interactiveRuns: [
           { kind: "explore", databaseRunId: "interactive_300" },
@@ -350,7 +353,7 @@ test("ingestion reconciliation recovers detached and pending interactive work", 
       args: [{ stage: "dev", trigger: "schedule" }],
     }),
   ).resolves.toBe("completed");
-  await expect.poll(() => detached).toEqual(["parlay:NA1_300"]);
+  await expect.poll(() => detached).toEqual(["champion-mastery:NA1_300"]);
   await expect.poll(() => interactive).toEqual(["interactive_300"]);
 });
 

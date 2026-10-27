@@ -93,7 +93,7 @@ test("the active subject lands on the span that carries usage", async () => {
   // never be summed together by one query. The subject has to be stamped onto
   // the same span as the usage, which is what this asserts.
   await withLlmSubjectSpan(
-    "scout.bucks-ask",
+    "scout.explore",
     { kind: "discord_user", id: "160509172704739328" },
     () => {
       telemetry.onStart({
@@ -106,7 +106,7 @@ test("the active subject lands on the span that carries usage", async () => {
         runtimeContext: {},
         headers: undefined,
         providerOptions: undefined,
-        functionId: "scout.bucks-ask",
+        functionId: "scout.explore",
         recordInputs: true,
         recordOutputs: true,
       });
@@ -175,7 +175,7 @@ test("the active subject lands on the span that carries usage", async () => {
   expect(genAi?.attributes[LLM_SUBJECT_ID_ATTRIBUTE]).toBe(
     "160509172704739328",
   );
-  expect(genAi?.attributes["llm.call_site"]).toBe("scout.bucks-ask");
+  expect(genAi?.attributes["llm.call_site"]).toBe("scout.explore");
 });
 
 test("a call with no enclosing subject span carries no subject attributes", () => {

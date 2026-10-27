@@ -45,7 +45,6 @@ import { listReceipts } from "#src/database/durable/receipt-repository.ts";
 export const SCOUT_NOTIFICATION_RENDER_RECEIPT_KINDS = {
   postmatch: ReceiptKindSchema.parse("v2-notification-render-postmatch"),
   prematch: ReceiptKindSchema.parse("v2-notification-render-prematch"),
-  settlement: ReceiptKindSchema.parse("v2-notification-render-settlement"),
   "hall-record-break": ReceiptKindSchema.parse(
     "v2-notification-render-hall-record-break",
   ),

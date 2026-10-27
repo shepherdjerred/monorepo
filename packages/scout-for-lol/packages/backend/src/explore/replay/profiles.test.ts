@@ -144,7 +144,7 @@ describe("flagOverridesFor", () => {
   });
 
   test("sets the Dares flag with the dares capability", () => {
-    // dareExploreEnabled needs bucks_dares_enabled.
+    // dareExploreEnabled needs dares_enabled.
     const overrides = flagOverridesFor(EVERYTHING);
     expect(
       overrides.find((entry) => entry.flag === "dares_enabled")?.value,

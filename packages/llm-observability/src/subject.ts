@@ -12,7 +12,7 @@ import { getLlmTracer, runSpanLifecycle } from "./span-helpers.ts";
  *
  * Not every workload has a requester. Scout's most expensive workload generates
  * match reports for a tracked player nobody explicitly asked on behalf of, and
- * the betting workloads run on a schedule for a whole guild. Modelling this as a
+ * guild-wide summaries can run on a schedule. Modelling this as a
  * bare user id would force those callers to either lie or opt out, so the kind
  * travels with the id.
  */

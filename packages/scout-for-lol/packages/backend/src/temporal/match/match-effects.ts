@@ -28,8 +28,8 @@ import type {
 import { ApplicationFailure } from "@temporalio/common";
 const logger = createLogger("scout-match-effects");
 
-/** The Activity name and receipt remain stable for retained Workflow histories. */
-export async function settleMatchMarkets(input: {
+/** Resolve free Dares; the Activity adapter keeps its historical wire name. */
+export async function settleMatchDares(input: {
   riotMatchId: RiotMatchId;
 }): Promise<ScoutGuardedEffectResult> {
   if (!(await matchEffectsAllowed(input.riotMatchId)))
@@ -144,10 +144,8 @@ export async function applyMatchProgression(input: {
 /**
  * Mint the visible post-match report's intents for this match.
  *
- * Its own Activity rather than part of the settlement effect, because the
- * report is owed whatever settlement did — a match with no pool still gets a
- * report — and because it needs only the match and its audience, which the
- * context already holds.
+ * Its own Activity because the report is owed independently of Dare results
+ * and needs only the match and its observed audience.
  *
  * Idempotent by read-before-write, so no receipt gates it: a resumed run finds
  * the rows its predecessor minted and writes nothing. A silent-backfill match

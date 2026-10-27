@@ -78,9 +78,9 @@ export function createScoutMatchActivities(): ScoutMatchActivities {
       await heartbeatWhile(
         { riotMatchId: input.riotMatchId, phase: "settling-match-v2" },
         async () => {
-          const { settleMatchMarkets } =
+          const { settleMatchDares } =
             await import("#src/temporal/match/match-effects.ts");
-          return await settleMatchMarkets(input);
+          return await settleMatchDares(input);
         },
       ),
     applyMatchProgression: async (input) =>

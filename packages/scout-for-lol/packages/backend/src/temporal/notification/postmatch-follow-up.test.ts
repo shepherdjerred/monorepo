@@ -41,7 +41,7 @@ function identity(record: MatchProcessingReceiptRecord): string {
 }
 
 const stubs = vi.hoisted(() => ({
-  prematchGuildOfChannel: vi.fn(),
+  subscriptionGuildOfChannel: vi.fn(),
   recordCoreOutputsDelivered: vi.fn(),
 }));
 vi.mock("#src/database/index.ts", () => ({ prisma: {} }));
@@ -61,8 +61,8 @@ vi.mock("#src/database/durable/receipt-repository.ts", () => ({
       : { outcome: "conflict", reason: "receipt-evidence-mismatch" };
   },
 }));
-vi.mock("#src/temporal/prematch/prematch-markets.ts", () => ({
-  prematchGuildOfChannel: stubs.prematchGuildOfChannel,
+vi.mock("#src/temporal/notification/subscription-guild.ts", () => ({
+  subscriptionGuildOfChannel: stubs.subscriptionGuildOfChannel,
 }));
 vi.mock("#src/analytics/guild-lifecycle.ts", () => ({
   recordCoreOutputsDelivered: stubs.recordCoreOutputsDelivered,
@@ -107,7 +107,7 @@ function postmatchRecord(
 beforeEach(() => {
   vi.clearAllMocks();
   receipts.rows.clear();
-  stubs.prematchGuildOfChannel.mockResolvedValue(GUILD_ID);
+  stubs.subscriptionGuildOfChannel.mockResolvedValue(GUILD_ID);
   stubs.recordCoreOutputsDelivered.mockResolvedValue(undefined);
 });
 
@@ -115,7 +115,7 @@ describe("the post-match follow-up", () => {
   test("counts the delivered report against its channel's guild, under a guild-scoped receipt", async () => {
     await afterPostmatchDelivered(postmatchRecord(DELIVERED));
 
-    expect(stubs.prematchGuildOfChannel).toHaveBeenCalledWith(CHANNEL_ID);
+    expect(stubs.subscriptionGuildOfChannel).toHaveBeenCalledWith(CHANNEL_ID);
     expect(stubs.recordCoreOutputsDelivered).toHaveBeenCalledWith(
       [GUILD_ID],
       "postmatch",
@@ -146,7 +146,7 @@ describe("the post-match follow-up", () => {
   });
 
   test("counts each guild a report reached separately", async () => {
-    stubs.prematchGuildOfChannel.mockImplementation((channelId) =>
+    stubs.subscriptionGuildOfChannel.mockImplementation((channelId) =>
       Promise.resolve(channelId === CHANNEL_ID ? GUILD_ID : OTHER_GUILD_ID),
     );
 
@@ -160,7 +160,7 @@ describe("the post-match follow-up", () => {
   });
 
   test("counts nothing for a channel no subscription names any more", async () => {
-    stubs.prematchGuildOfChannel.mockResolvedValue(null);
+    stubs.subscriptionGuildOfChannel.mockResolvedValue(null);
 
     await afterPostmatchDelivered(postmatchRecord(DELIVERED));
 
@@ -173,7 +173,7 @@ describe("the post-match follow-up", () => {
       postmatchRecord(NotificationIntentStateSchema.parse({ kind: "ready" })),
     );
 
-    expect(stubs.prematchGuildOfChannel).not.toHaveBeenCalled();
+    expect(stubs.subscriptionGuildOfChannel).not.toHaveBeenCalled();
     expect(stubs.recordCoreOutputsDelivered).not.toHaveBeenCalled();
   });
 });

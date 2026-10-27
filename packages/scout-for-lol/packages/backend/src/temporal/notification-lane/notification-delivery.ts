@@ -486,16 +486,9 @@ async function prepareNotificationSend(
   // "no-external permits no external sends" is a property of the SEND, and
   // it holds here without relying on the caller having asked.
   await assertRecoveryAllowsSend(record);
-  // Retained attempts may already have a frozen monetary recap. Stop before
-  // reading that presentation, including an Activity resumed after deployment.
-  if (record.intent.kind === "settlement") {
-    return { phase: "suppressed", reason: "feature-disabled" };
-  }
   if (unsupportedDmAnnouncement(record)) {
-    // A settlement recap or a Dare result is a channel announcement: v1 has no
-    // DM shape for either — its private settlement receipts are a separate,
-    // budgeted fan-out this kind does not port — so a DM target is a producer
-    // contract that does not exist. Terminal, decided pre-send.
+    // This announcement has no DM shape. Reject the producer contract before
+    // attempting an external send.
     logger.error(
       `Intent ${input.intentKey} is a ${record.intent.kind} intent targeting a DM, which that kind cannot deliver`,
     );

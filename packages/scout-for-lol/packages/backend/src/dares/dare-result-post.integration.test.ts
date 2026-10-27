@@ -25,7 +25,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
  * stored intent exactly as the notification Workflow would.
  */
 
-const { prisma: db } = createTestDatabase("bucks-dare-result-post");
+const { prisma: db } = createTestDatabase("dare-result-post");
 const SERVER = testGuildId("941");
 const CHANNEL = testChannelId("942");
 const CHALLENGER = DiscordAccountIdSchema.parse("100000000000000940");

@@ -251,28 +251,28 @@ describe("bounded history context", () => {
       message("user", "Opening request"),
       message("assistant", "Unrelated setup"),
       message("tool", "tool output unrelated"),
-      message("assistant", "Bryan Bucks model analysis"),
-      message("tool", "Bryan Bucks calibration output"),
+      message("assistant", "Match Reports model analysis"),
+      message("tool", "Match Reports calibration output"),
       message("tool", "credentials output unrelated"),
       message("assistant", "Final answer"),
     ];
     const selected = selectShowMessages(messages, {
-      query: '"Bryan Bucks"',
+      query: '"Match Reports"',
       messageLimit: 4,
       includeTools: false,
     });
     expect(selected.messages.map((entry) => entry.text)).toContain(
-      "Bryan Bucks model analysis",
+      "Match Reports model analysis",
     );
     expect(selected.messages.map((entry) => entry.text)).toContain(
-      "Bryan Bucks calibration output",
+      "Match Reports calibration output",
     );
     expect(selected.messages.map((entry) => entry.text)).not.toContain(
       "credentials output unrelated",
     );
 
     const withTools = selectShowMessages(messages, {
-      query: '"Bryan Bucks"',
+      query: '"Match Reports"',
       messageLimit: 7,
       includeTools: true,
     });
@@ -286,17 +286,17 @@ describe("bounded history context", () => {
       ...Array.from({ length: 10 }, (_, index) =>
         message("assistant", `Unrelated dialogue ${String(index)}`),
       ),
-      message("tool", "Bryan Bucks branch result"),
+      message("tool", "Match Reports branch result"),
       message("assistant", "Latest unrelated dialogue"),
     ];
     const selected = selectShowMessages(messages, {
-      query: "Bryan Bucks",
+      query: "Match Reports",
       messageLimit: 4,
       includeTools: false,
     });
 
     expect(selected.messages.map((entry) => entry.text)).toContain(
-      "Bryan Bucks branch result",
+      "Match Reports branch result",
     );
     expect(selected.messages[0]?.text).toBe("Unrelated dialogue 8");
   });
@@ -343,11 +343,11 @@ describe("query-aware bounded history context", () => {
   test("preserves the query when truncating a long matching tool message", () => {
     const selected = selectShowMessages(
       [
-        message("assistant", "Relevant dialogue about Bryan Bucks"),
-        message("tool", `${"x".repeat(7000)} Bryan Bucks tool result`),
+        message("assistant", "Relevant dialogue about Match Reports"),
+        message("tool", `${"x".repeat(7000)} Match Reports tool result`),
       ],
       {
-        query: "Bryan Bucks",
+        query: "Match Reports",
         messageLimit: 2,
         includeTools: false,
       },
@@ -355,7 +355,7 @@ describe("query-aware bounded history context", () => {
     const tool = selected.messages.find((entry) => entry.role === "tool");
 
     expect(tool).toBeDefined();
-    expect(messageMatchesQuery(tool?.text ?? "", "Bryan Bucks")).toBe(true);
+    expect(messageMatchesQuery(tool?.text ?? "", "Match Reports")).toBe(true);
     expect(selected.truncated).toBe(true);
   });
 
@@ -363,18 +363,18 @@ describe("query-aware bounded history context", () => {
     const selected = selectShowMessages(
       [
         message("assistant", `Earlier context ${"x".repeat(7000)}`),
-        message("assistant", "Bryan Bucks centered answer"),
+        message("assistant", "Match Reports centered answer"),
         message("assistant", "Later context"),
       ],
       {
-        query: "Bryan Bucks",
+        query: "Match Reports",
         messageLimit: 3,
         includeTools: false,
       },
     );
 
     expect(selected.messages.map((entry) => entry.text)).toContain(
-      "Bryan Bucks centered answer",
+      "Match Reports centered answer",
     );
     expect(
       selected.messages.reduce((total, entry) => total + entry.text.length, 0),
@@ -388,12 +388,12 @@ describe("query-aware bounded history context", () => {
         message("assistant", "Earlier context"),
         message(
           "assistant",
-          `${"a".repeat(3500)} Bryan Bucks ${"b".repeat(3500)}`,
+          `${"a".repeat(3500)} Match Reports ${"b".repeat(3500)}`,
         ),
         message("assistant", "Later context"),
       ],
       {
-        query: "Bryan Bucks",
+        query: "Match Reports",
         messageLimit: 3,
         includeTools: false,
       },
@@ -407,7 +407,7 @@ describe("query-aware bounded history context", () => {
     );
     expect(
       selected.messages.some((entry) =>
-        messageMatchesQuery(entry.text, "Bryan Bucks"),
+        messageMatchesQuery(entry.text, "Match Reports"),
       ),
     ).toBe(true);
   });
@@ -453,8 +453,8 @@ describe("query-aware bounded history context", () => {
   });
 
   test("uses AND-prefix matching and dialogue-first excerpts", () => {
-    expect(messageMatchesQuery("Deploy Bryan Bucks", "depl buck")).toBe(true);
-    expect(messageMatchesQuery("Bryan model Bucks", '"Bryan Bucks"')).toBe(
+    expect(messageMatchesQuery("Deploy Match Reports", "depl rep")).toBe(true);
+    expect(messageMatchesQuery("Match model Reports", '"Match Reports"')).toBe(
       false,
     );
     expect(messageMatchesQuery("Deploy foo.bar safely", '"foo bar"')).toBe(
@@ -466,16 +466,21 @@ describe("query-aware bounded history context", () => {
     expect(messageMatchesQuery("the artist", '"he art"')).toBe(false);
     const excerpt = dialogueFirstExcerpt(
       [
-        message("assistant", "Dialogue explains Bryan Bucks in context"),
-        message("tool", "Tool branch bryan-bucks-v1"),
+        message("assistant", "Dialogue explains Match Reports in context"),
+        message("tool", "Tool branch match-reports-v1"),
       ],
-      "Bryan Bucks",
+      "Match Reports",
     );
     expect(excerpt.startsWith("Dialogue explains")).toBe(true);
     expect(
       dialogueFirstExcerpt(
-        [message("user", `prefix ${"detail ".repeat(100)}Bryan Bucks result`)],
-        "Bryan Bucks",
+        [
+          message(
+            "user",
+            `prefix ${"detail ".repeat(100)}Match Reports result`,
+          ),
+        ],
+        "Match Reports",
       ).length,
     ).toBeLessThanOrEqual(360);
   });

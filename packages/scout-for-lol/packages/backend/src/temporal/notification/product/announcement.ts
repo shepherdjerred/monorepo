@@ -48,10 +48,6 @@ export const ProductAnnouncementEffectSchema = z.discriminatedUnion("kind", [
     occurredAt: IsoInstantSchema,
   }),
   z.strictObject({
-    kind: z.literal("weekly-bucks"),
-    publicationId: z.string().min(1),
-  }),
-  z.strictObject({
     kind: z.literal("customs-recruitment"),
     nightId: z.uuid(),
     generation: z.int().nonnegative(),

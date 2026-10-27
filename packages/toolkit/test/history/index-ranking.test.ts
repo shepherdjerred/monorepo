@@ -79,17 +79,17 @@ describe("history BM25 index", () => {
       result([
         document("substantive", {
           dialogue:
-            "Bryan Bucks betting model analysis with calibration and bankroll evaluation",
+            "Match Reports model analysis with calibration and accuracy evaluation",
           createdAt: "2026-08-01T00:00:00.000Z",
         }),
         document("branch", {
-          tool: "git branch list pull-up-bryan-bucks-v1",
+          tool: "git branch list pull-up-match-reports-v1",
           createdAt: "2026-08-18T00:00:00.000Z",
         }),
       ]),
     ]);
 
-    const matches = index.search("Bryan Bucks", {
+    const matches = index.search("Match Reports", {
       since: null,
       source: null,
     });
@@ -105,9 +105,9 @@ describe("history BM25 index", () => {
     const index = await HistoryIndex.open(paths);
     await index.ingest([
       result([
-        document("exact", { dialogue: "Deploy Bryan Bucks model safely" }),
+        document("exact", { dialogue: "Deploy Match Reports model safely" }),
         document("separated", {
-          dialogue: "Deploy Bryan experimental model before Bucks reporting",
+          dialogue: "Deploy Match experimental model before Reports reporting",
         }),
         document("punctuated", { dialogue: "Deploy foo bar safely" }),
         document("accented", { dialogue: "Review the café forecast" }),
@@ -116,16 +116,18 @@ describe("history BM25 index", () => {
 
     expect(
       index
-        .search('"Bryan Bucks"', { since: null, source: null })
+        .search('"Match Reports"', { since: null, source: null })
         .map((match) => match.sourceId),
     ).toEqual(["exact"]);
     expect(
       index
-        .search("depl buck", { since: null, source: null })
+        .search("depl rep", { since: null, source: null })
         .map((match) => match.sourceId)
         .sort(),
     ).toEqual(["exact", "separated"]);
-    expect(ftsQuery('"Bryan Bucks" model')).toBe('"bryan bucks" AND "model"*');
+    expect(ftsQuery('"Match Reports" model')).toBe(
+      '"match reports" AND "model"*',
+    );
     expect(ftsQuery('"foo.bar"')).toBe('"foo bar"');
     expect(
       index

@@ -434,29 +434,12 @@ describe("V2 prematch delivery", () => {
     expect(store.childReads).toEqual([v2Key]);
   }, 90_000);
 
-  test("never opens a pool across repeated captures", async () => {
+  test("repeated captures never schedule the retired Activity", async () => {
     const store = createScoutPrematchStore();
     await harness.startWorkers(scoutPrematchActivityStubs(store));
-
-    await captureGame("prematch-delivery-pool-1");
-    await captureGame("prematch-delivery-pool-2");
-
-    expect(store.pools).toEqual([]);
-    expect(
-      store.applied.filter((effect) => effect.startsWith("pool:")),
-    ).toEqual([]);
-  }, 90_000);
-
-  test("announces the game even when its markets could not be opened", async () => {
-    const store = createScoutPrematchStore({ marketsFail: true });
-    await harness.startWorkers(scoutPrematchActivityStubs(store));
-
-    const result = await captureGame("prematch-delivery-no-market");
-
-    expect(store.pools).toEqual([]);
-    expect(result).toMatchObject({
-      data: { status: "completed", childrenStarted: { notifications: 2 } },
-    });
+    await captureGame("prematch-delivery-repeat-1");
+    await captureGame("prematch-delivery-repeat-2");
+    expect(store.calls).not.toContain("openPrematchMarkets");
   }, 90_000);
 
   test("opens no market for a game that ended before the capture ran", async () => {

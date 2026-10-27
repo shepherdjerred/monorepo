@@ -447,26 +447,6 @@ describe("beginNotificationSend and a deleted audience", () => {
     expect(await retiredCount("guild-left")).toBe(1);
   });
 
-  test("a retained settlement is suppressed before a live audience can send it", async () => {
-    // No subscription anywhere: a settlement's audience is the channel its
-    // pool was posted in, which Discord says still exists.
-    const key = await seedChannelIntent(prisma, {
-      name: "settlement-live",
-      kind: "settlement",
-      matchId: MATCH,
-      channelId: CHANNEL,
-      state: "ready",
-    });
-
-    const begun = await beginNotificationSend(attempt(key, NONCE_A));
-
-    expect(begun.state).toEqual({
-      kind: "suppressed",
-      reason: "feature-disabled",
-    });
-    expect(stubs.readChannel).not.toHaveBeenCalled();
-  });
-
   test("an unreachable Discord is no evidence", async () => {
     await seedLiveAudience();
     const key = await readyIntent("unreachable");

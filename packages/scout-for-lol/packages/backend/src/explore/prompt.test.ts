@@ -98,20 +98,17 @@ describe("exploreAgentInstructions", () => {
     // Tripwires: the rules that must hold even if a skill is never loaded.
     expect(everything).toContain("a proposal, not an entity");
     expect(everything).toContain("Never publish a challenge from Explore");
-    expect(everything).not.toContain("bryan-bucks");
     expect(everything).toContain("queryText to null");
     expect(everything).toContain("ScoutQL cannot answer Discord MVP ballots");
     expect(everything).toContain("an exact (match_id, puuid) pair");
 
     // Bodies stay out: one marker line per moved section.
     expect(everything).not.toContain("game-set CTE");
-    expect(everything).not.toContain("Betting P&L is gross payout minus stake");
     expect(everything).not.toContain("catalog: 'current_champions'");
     expect(everything).not.toContain("NOTHING HAS BEEN CREATED YET");
     expect(everything).not.toContain("RENDER kpi_card");
     expect(everything).not.toContain("six item slots into one row per item");
-    // The per-turn timestamp lives in the bryan-bucks skill body now, so the
-    // prompt stays byte-stable across turns for the provider prompt cache.
+    // The shared prompt stays byte-stable across turns for the provider cache.
     expect(everything).not.toContain("2026-08-29T00:00:00.000Z");
   });
 

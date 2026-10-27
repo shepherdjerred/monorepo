@@ -3,7 +3,7 @@
  *
  * The gate had no test at all, which matters more than usual here: it is the
  * only thing standing between a worker pod with an unmounted volume and an
- * hour of report runs, parlay generations and dare settlements that each
+ * hour of report runs, history refreshes and Dare resolutions that each
  * "succeed" while finding nothing. Nothing below stubs `readCurrentBuildDir` —
  * the publish protocol it reads (a `CURRENT` pointer naming a non-empty build
  * directory) is exactly what a mounted volume does or does not have.

@@ -303,7 +303,6 @@ async function renderByKind(
         fence,
         options.presentation,
       );
-    case "settlement":
     case "hall-record-break":
       return { artifact: "none", riotMatchId, reason: "text-only" };
   }

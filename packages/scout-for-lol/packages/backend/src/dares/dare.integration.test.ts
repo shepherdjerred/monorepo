@@ -62,7 +62,7 @@ const { settleDaresForMatch } =
 const { settleEndedDareWindows } =
   await import("#src/dares/settlement/dare-sweep.ts");
 
-const { prisma: db } = createTestDatabase("bucks-dare");
+const { prisma: db } = createTestDatabase("dare");
 const SERVER = testGuildId("921");
 const CHANNEL = testChannelId("922");
 const CHALLENGER = testAccountId("923");

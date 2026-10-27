@@ -496,8 +496,8 @@ const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
 };
 
 // Escape hatch for a long-sleeping workflow that deliberately runs without a
-// chain-wide execution timeout. Empty since the weekly parlay lifecycle — its
-// only member — was retired; a new entry needs that same explicit rationale.
+// chain-wide execution timeout. Every current workflow has a bounded chain;
+// adding an exception requires an explicit rationale.
 const WORKFLOWS_WITHOUT_EXECUTION_TIMEOUT = new Set<string>();
 
 const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([

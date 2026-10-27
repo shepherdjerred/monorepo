@@ -4,7 +4,7 @@ import { heartbeatWhile } from "#src/temporal/activity-runtime.ts";
 
 /**
  * The Activities of the V2 prematch path, as the Activity Worker sees them:
- * the three that detect and capture live games, the market open, and the
+ * the three that detect and capture live games, and the
  * maintenance pass the discovery poll ends with.
  *
  * All are declared `realtime` in `SCOUT_PIPELINE_ACTIVITY_QUEUE_CLASSES`, and that
@@ -49,18 +49,13 @@ export function createScoutPrematchActivities(): ScoutPrematchActivities {
           return await archivePrematchSnapshot(input);
         },
       ),
-    openPrematchMarkets: async (input) =>
-      await heartbeatWhile(
-        {
-          riotMatchId: input.riotMatchId,
-          phase: "opening-prematch-markets-v2",
-        },
-        async () => {
-          const { openPrematchMarkets } =
-            await import("#src/temporal/prematch/prematch-markets.ts");
-          return await openPrematchMarkets(input);
-        },
-      ),
+    // Wire-only alias for retained histories. New Workflows skip this command.
+    openPrematchMarkets: () =>
+      Promise.resolve({
+        guard: { outcome: "already-applied" },
+        fact: { outcome: "already-applied" },
+        effects: 0,
+      }),
     planPrematchFanOut: async (input) =>
       await heartbeatWhile(
         {
