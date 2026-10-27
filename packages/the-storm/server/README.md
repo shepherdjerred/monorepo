@@ -129,6 +129,11 @@ when the runtime user has write and search access. This includes the separate
 render volume root provisioned with Kubernetes `fsGroup` permissions.
 Archived world viewers are independently published and do not use this bundle.
 
+BlueMap renders with two low-priority worker threads. This bounds background
+map parallelism within the server's three-CPU request while leaving the main
+server thread at its normal priority. Monitor tick rate and container memory
+during bulk generation and rendering.
+
 LiveMap's generated files use the separate `minecraft-tsmc-bluemap` PVC mounted
 at `/data/bluemap`. The world PVC remains backed up; the render PVC is explicitly
 excluded because the maps can be rebuilt. The storage init container uses the
