@@ -110,9 +110,32 @@ export function createPmsWire(
     fixtures,
     libraryReady: () =>
       readPmsLibraryReady(signal, (url, init) => transport(new URL(url), init)),
+    pluginsReady: () =>
+      readPmsPluginsReady(signal, (url, init) => transport(new URL(url), init)),
   };
 }
 export type PmsWire = ReturnType<typeof createPmsWire>;
+
+/** A successful identity/library read can precede mutation readiness on the pinned server. */
+export async function readPmsPluginsReady(
+  signal: AbortSignal,
+  request: (url: string, init: RequestInit) => Promise<Response> = fetch,
+): Promise<true | null> {
+  const response = await request(`${ORIGIN}/identity`, {
+    headers: { Accept: "application/json" },
+    signal: AbortSignal.any([signal, AbortSignal.timeout(1000)]),
+    redirect: "error",
+  });
+  if (response.status !== 200) {
+    await response.body?.cancel();
+    throw new Error(`PMS plugin readiness: HTTP ${String(response.status)}`);
+  }
+  const identity = ContainerSchema.parse(await response.json()).MediaContainer;
+  const state = z
+    .object({ startState: z.literal("startingPlugins").optional() })
+    .parse(identity);
+  return state.startState === undefined ? true : null;
+}
 
 /** The identity route can succeed while the library plugin's routes are still unavailable. */
 export async function readPmsLibraryReady(

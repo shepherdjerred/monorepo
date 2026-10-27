@@ -119,6 +119,7 @@ try {
     },
     deadline,
   );
+  await until("PMS plugin startup", wire.pluginsReady, deadline);
   const identity = z
     .object({
       version: z.string(),
@@ -161,6 +162,9 @@ try {
     try {
       report["startupErrors"] = await pmsStartupErrors(
         path.join(config, "pms-startup.log"),
+      );
+      report["serverErrors"] = await pmsStartupErrors(
+        path.join(config, "Plex Media Server", "Logs", "Plex Media Server.log"),
       );
     } catch (error) {
       cleanupFailures.push(error);

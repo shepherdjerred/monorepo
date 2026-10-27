@@ -1,6 +1,11 @@
 import { createServer } from "node:http";
 import { afterAll, expect, test } from "vitest";
-import { readPmsBootstrap, readPmsLibraryReady, until } from "#e2e/pms/http.ts";
+import {
+  readPmsBootstrap,
+  readPmsLibraryReady,
+  readPmsPluginsReady,
+  until,
+} from "#e2e/pms/http.ts";
 
 const statuses: number[] = [];
 const paths: string[] = [];
@@ -110,3 +115,34 @@ test.each([401, 403, 500])(
     ).rejects.toThrow(`HTTP ${String(status)}`);
   },
 );
+
+test("mutation readiness waits for the actual startup state to clear without sending a mutation", async () => {
+  const states = [{ startState: "startingPlugins" }, {}];
+  const methods: (string | undefined)[] = [];
+  const signal = AbortSignal.timeout(2000);
+  expect(
+    await until(
+      "PMS plugins",
+      () =>
+        readPmsPluginsReady(signal, (url, init) => {
+          expect(url).toBe("http://127.0.0.1:32400/identity");
+          methods.push(init.method);
+          const state = states.shift();
+          if (state === undefined) throw new Error("Unexpected readiness read");
+          return Promise.resolve(Response.json({ MediaContainer: state }));
+        }),
+      signal,
+    ),
+  ).toBe(true);
+  expect(methods).toEqual([undefined, undefined]);
+});
+
+test("unknown startup states fail rather than being assumed ready", async () => {
+  await expect(
+    readPmsPluginsReady(AbortSignal.timeout(2000), () =>
+      Promise.resolve(
+        Response.json({ MediaContainer: { startState: "unexpected" } }),
+      ),
+    ),
+  ).rejects.toThrow();
+});
